@@ -39,15 +39,14 @@ void divide(const BigInt& x, const BigInt& y_arg, BigInt& q, BigInt& r)
    BigInt y = y_arg;
    const u32bit y_words = y.sig_words();
    r = x;
+   q = 0;
 
    r.set_sign(BigInt::Positive);
    y.set_sign(BigInt::Positive);
 
    s32bit compare = r.cmp(y);
 
-   if(compare < 0)
-      q = 0;
-   else if(compare ==  0)
+   if(compare == 0)
       {
       q = 1;
       r = 0;

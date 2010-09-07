@@ -167,7 +167,7 @@ SecureVector<byte> hex_decode(const char input[],
                                input_length,
                                ignore_ws);
 
-   bin.truncate(written);
+   bin.resize(written);
    return bin;
    }
 

@@ -3,7 +3,6 @@
  - Switch default PKCS #8 encryption algorithm from AES-128 to AES-256
  - Use smaller tables in the first round of AES
  - Add hex encoding/decoding functions that can be used without a Pipe
- - Add new function MemoryRegion::truncate
  - Allow using PBKDF2 with empty passphrases
  - Support use of HMAC(SHA-256) and CMAC(Blowfish) in passhash9
  - Support dynamic loading on Windows

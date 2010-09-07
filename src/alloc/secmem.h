@@ -146,7 +146,7 @@ class MemoryRegion
       * @param n the size of the array data
       */
       void append(const T data[], u32bit n)
-         { grow_to(size()+n); copy(size() - n, data, n); }
+         { resize(size()+n); copy(size() - n, data, n); }
 
       /**
       * Append a single element.
@@ -162,16 +162,6 @@ class MemoryRegion
          { append(other.begin(), other.size()); }
 
       /**
-      * Truncate the buffer to at most n elements
-      * @param n the length of the resulting buffer
-      */
-      void truncate(u32bit n)
-         {
-         if(n < used)
-            used = n;
-         }
-
-      /**
       * Zeroise the bytes of this buffer. The length remains unchanged.
       */
       void clear() { clear_mem(buf, allocated); }
@@ -182,20 +172,12 @@ class MemoryRegion
       void destroy() { resize(0); }
 
       /**
-      * Reset this buffer to a buffer of specified length. The content will be
-      * initialized to zero bytes.
-      * @param n the new length of the buffer
+      * Inserts or erases elements at the end such that the size
+      * becomes n, leaving elements in the range 0...n unmodified if
+      * set or otherwise zero-initialized
+      * @param n length of the new buffer
       */
       void resize(u32bit n);
-
-      /**
-      * Change the size to n elements. If n is >= size(), preexisting
-      * elements remain unchanged, with later elements
-      * zero-initialized.  If n < size(), then the last (size() - N)
-      * elements are removed.
-      * @param n the new size
-      */
-      void grow_to(u32bit n);
 
       /**
       * Swap this buffer with another object.
@@ -240,30 +222,18 @@ class MemoryRegion
    };
 
 /*
-* Create a new buffer
+* Change the size of the buffer
 */
 template<typename T>
 void MemoryRegion<T>::resize(u32bit n)
    {
-   if(n <= allocated) { clear(); used = n; return; }
-   deallocate(buf, allocated);
-   buf = allocate(n);
-   allocated = used = n;
-   }
-
-/*
-* Increase the size of the buffer
-*/
-template<typename T>
-void MemoryRegion<T>::grow_to(u32bit n)
-   {
-   if(n > used && n <= allocated)
+   if(n <= allocated)
       {
-      clear_mem(buf + used, n - used);
+      u32bit zap = std::min(used, n);
+      clear_mem(buf + zap, allocated - zap);
       used = n;
-      return;
       }
-   else if(n > allocated)
+   else
       {
       T* new_buf = allocate(n);
       copy_mem(new_buf, buf, used);

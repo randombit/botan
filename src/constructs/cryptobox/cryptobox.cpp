@@ -73,16 +73,18 @@ std::string encrypt(const byte input[], u32bit input_len,
       mac (20 bytes)
       ciphertext
    */
-   u32bit ciphertext_len = pipe.remaining(0);
+   const u32bit ciphertext_len = pipe.remaining(0);
 
-   SecureVector<byte> out_buf;
+   SecureVector<byte> out_buf(VERSION_CODE_LEN +
+                              PBKDF_SALT_LEN +
+                              MAC_OUTPUT_LEN +
+                              ciphertext_len);
 
    for(u32bit i = 0; i != VERSION_CODE_LEN; ++i)
-      out_buf.append(get_byte(i, CRYPTOBOX_VERSION_CODE));
+     out_buf[i] = get_byte(i, CRYPTOBOX_VERSION_CODE);
 
-   out_buf.append(pbkdf_salt.begin(), pbkdf_salt.size());
+   out_buf.copy(VERSION_CODE_LEN, pbkdf_salt, PBKDF_SALT_LEN);
 
-   out_buf.grow_to(out_buf.size() + MAC_OUTPUT_LEN + ciphertext_len);
    pipe.read(out_buf + VERSION_CODE_LEN + PBKDF_SALT_LEN, MAC_OUTPUT_LEN, 1);
    pipe.read(out_buf + VERSION_CODE_LEN + PBKDF_SALT_LEN + MAC_OUTPUT_LEN,
              ciphertext_len, 0);
@@ -138,6 +140,14 @@ std::string decrypt(const byte input[], u32bit input_len,
       throw Decoding_Error("CryptoBox integrity failure");
 
    return pipe.read_all_as_string(0);
+   }
+
+std::string decrypt(const std::string& input,
+                    const std::string& passphrase)
+   {
+   return decrypt(reinterpret_cast<const byte*>(&input[0]),
+                  input.size(),
+                  passphrase);
    }
 
 }
