@@ -146,7 +146,7 @@ void report_results(const std::string& algo,
 
    std::cout << algo;
 
-#if defined(__GNUC__) && __GNUC__ <= 3
+#if (defined(__GNUC__) && __GNUC__ <= 3) || defined(__SUNPRO_CC)
    // Work around GCC 3.x bug, reverse iterators don't work
    for(std::map<double, std::string>::const_iterator i = results.begin(); i != results.end(); ++i)
 #else
