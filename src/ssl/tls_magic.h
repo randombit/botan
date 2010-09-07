@@ -183,7 +183,7 @@ enum TLS_Handshake_Extension_Type {
    TLSEXT_EC_POINT_FORMATS       = 11,
 
    TLSEXT_CERTIFICATE_TYPES      = 9,
-   TLSEXT_SESSION_TICKET         = 35,
+   TLSEXT_SESSION_TICKET         = 35
 };
 
 }
