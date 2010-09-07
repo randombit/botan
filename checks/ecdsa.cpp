@@ -38,10 +38,10 @@ std::string to_hex(const SecureVector<byte>& bin)
 
 /**
 
-* Tests whether the the signing routine will work correctly in case the integer e
-* that is constructed from the message (thus the hash value) is larger than n, the order of the base point.
-* Tests the signing function of the pk signer object
-*/
+* Tests whether the the signing routine will work correctly in case
+* the integer e that is constructed from the message (thus the hash
+* value) is larger than n, the order of the base point.  Tests the
+* signing function of the pk signer object */
 
 void test_hash_larger_than_n(RandomNumberGenerator& rng)
    {
@@ -441,6 +441,7 @@ u32bit do_ecdsa_tests(Botan::RandomNumberGenerator& rng)
    {
    std::cout << "Testing ECDSA (InSiTo unit tests): ";
 
+   test_hash_larger_than_n(rng);
    test_decode_ecdsa_X509();
    test_decode_ver_link_SHA256();
    test_decode_ver_link_SHA1();
