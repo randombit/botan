@@ -23,6 +23,10 @@
   #include <botan/passhash9.h>
 #endif
 
+#if defined(BOTAN_HAS_CRYPTO_BOX)
+  #include <botan/cryptobox.h>
+#endif
+
 using namespace Botan;
 
 #include "validate.h"
@@ -52,6 +56,42 @@ u32bit random_word(Botan::RandomNumberGenerator& rng,
       r = (r << 8) | rng.next_byte();
    return ((r % max) + 1); // return between 1 and max inclusive
 #endif
+   }
+
+bool test_cryptobox(RandomNumberGenerator& rng)
+   {
+#if defined(BOTAN_HAS_CRYPTO_BOX)
+
+   std::cout << "Testing CryptoBox: " << std::flush;
+
+   const byte msg[] = { 0xAA, 0xBB, 0xCC };
+   std::string ciphertext = CryptoBox::encrypt(msg, sizeof(msg),
+                                               "secret password",
+                                               rng);
+
+   std::cout << "." << std::flush;
+
+   try
+      {
+      std::string plaintext = CryptoBox::decrypt(ciphertext,
+                                                 "secret password");
+
+      std::cout << "." << std::flush;
+
+      if(plaintext.size() != sizeof(msg) ||
+         !same_mem(reinterpret_cast<const byte*>(&plaintext[0]), msg, sizeof(msg)))
+         return false;
+
+      std::cout << std::endl;
+      }
+   catch(std::exception& e)
+      {
+      std::cout << "Error during Cryptobox test " << e.what() << "\n";
+      return false;
+      }
+#endif
+
+   return true;
    }
 
 bool test_passhash(RandomNumberGenerator& rng)
@@ -222,6 +262,12 @@ u32bit do_validation_tests(const std::string& filename,
    if(should_pass && !test_passhash(rng))
       {
       std::cout << "Passhash9 tests failed" << std::endl;
+      errors++;
+      }
+
+   if(should_pass && !test_cryptobox(rng))
+      {
+      std::cout << "Cryptobox tests failed" << std::endl;
       errors++;
       }
 
