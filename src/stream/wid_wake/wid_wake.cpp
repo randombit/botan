@@ -139,10 +139,10 @@ void WiderWake_41_BE::set_iv(const byte iv[], u32bit length)
 void WiderWake_41_BE::clear()
    {
    position = 0;
-   t_key.clear();
-   state.clear();
-   T.clear();
-   buffer.clear();
+   zeroise(t_key);
+   zeroise(state);
+   zeroise(T);
+   zeroise(buffer);
    }
 
 }

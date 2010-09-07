@@ -693,10 +693,10 @@ AES::AES(u32bit key_size) : BlockCipher(16, key_size)
 */
 void AES::clear()
    {
-   EK.clear();
-   DK.clear();
-   ME.clear();
-   MD.clear();
+   zeroise(EK);
+   zeroise(DK);
+   zeroise(ME);
+   zeroise(MD);
    }
 
 }

@@ -149,9 +149,9 @@ void Randpool::clear()
    {
    cipher->clear();
    mac->clear();
-   pool.clear();
-   buffer.clear();
-   counter.clear();
+   zeroise(pool);
+   zeroise(buffer);
+   zeroise(counter);
    seeded = false;
    }
 

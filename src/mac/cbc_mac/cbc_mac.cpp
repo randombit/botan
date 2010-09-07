@@ -47,7 +47,7 @@ void CBC_MAC::final_result(byte mac[])
       e->encrypt(state);
 
    copy_mem(mac, state.begin(), state.size());
-   state.clear();
+   zeroise(state);
    position = 0;
    }
 
@@ -65,7 +65,7 @@ void CBC_MAC::key_schedule(const byte key[], u32bit length)
 void CBC_MAC::clear()
    {
    e->clear();
-   state.clear();
+   zeroise(state);
    position = 0;
    }
 

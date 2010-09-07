@@ -220,11 +220,11 @@ void Twofish::rs_mul(byte S[4], byte key, u32bit offset)
 */
 void Twofish::clear()
    {
-   SBox0.clear();
-   SBox1.clear();
-   SBox2.clear();
-   SBox3.clear();
-   round_key.clear();
+   zeroise(SBox0);
+   zeroise(SBox1);
+   zeroise(SBox2);
+   zeroise(SBox3);
+   zeroise(round_key);
    }
 
 }

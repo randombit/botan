@@ -244,7 +244,9 @@ u32bit Record_Reader::get_record(byte& msg_type,
       throw TLS_Exception(BAD_RECORD_MAC, "Record_Reader: MAC failure");
 
    msg_type = header[0];
-   output.set(&plaintext[iv_size], plain_length);
+
+   output.resize(plain_length);
+   copy_mem(&output[0], &plaintext[iv_size], plain_length);
    return 0;
    }
 

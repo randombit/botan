@@ -21,7 +21,7 @@ class BOTAN_DLL DESX : public BlockCipher
       void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
 
-      void clear() { des.clear(); K1.clear(); K2.clear(); }
+      void clear() { des.clear(); zeroise(K1); zeroise(K2); }
       std::string name() const { return "DESX"; }
       BlockCipher* clone() const { return new DESX; }
 

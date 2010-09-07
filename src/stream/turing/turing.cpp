@@ -300,12 +300,12 @@ void Turing::set_iv(const byte iv[], u32bit length)
 */
 void Turing::clear()
    {
-   S0.clear();
-   S1.clear();
-   S2.clear();
-   S3.clear();
+   zeroise(S0);
+   zeroise(S1);
+   zeroise(S2);
+   zeroise(S3);
 
-   buffer.clear();
+   zeroise(buffer);
    position = 0;
    }
 

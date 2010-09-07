@@ -61,8 +61,8 @@ void HMAC::key_schedule(const byte key[], u32bit length)
 void HMAC::clear()
    {
    hash->clear();
-   i_key.clear();
-   o_key.clear();
+   zeroise(i_key);
+   zeroise(o_key);
    }
 
 /*

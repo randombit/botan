@@ -21,7 +21,7 @@ class BOTAN_DLL MARS : public BlockCipher
       void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
 
-      void clear() { EK.clear(); }
+      void clear() { zeroise(EK); }
       std::string name() const { return "MARS"; }
       BlockCipher* clone() const { return new MARS; }
 

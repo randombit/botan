@@ -38,7 +38,7 @@ OFB::~OFB()
 void OFB::clear()
    {
    permutation->clear();
-   buffer.clear();
+   zeroise(buffer);
    position = 0;
    }
 
@@ -87,7 +87,7 @@ void OFB::set_iv(const byte iv[], u32bit iv_len)
    if(!valid_iv_length(iv_len))
       throw Invalid_IV_Length(name(), iv_len);
 
-   buffer.clear();
+   zeroise(buffer);
    buffer.copy(0, iv, iv_len);
 
    permutation->encrypt(buffer);

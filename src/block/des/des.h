@@ -21,7 +21,7 @@ class BOTAN_DLL DES : public BlockCipher
       void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
 
-      void clear() { round_key.clear(); }
+      void clear() { zeroise(round_key); }
       std::string name() const { return "DES"; }
       BlockCipher* clone() const { return new DES; }
 
@@ -41,7 +41,7 @@ class BOTAN_DLL TripleDES : public BlockCipher
       void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
 
-      void clear() { round_key.clear(); }
+      void clear() { zeroise(round_key); }
       std::string name() const { return "TripleDES"; }
       BlockCipher* clone() const { return new TripleDES; }
 

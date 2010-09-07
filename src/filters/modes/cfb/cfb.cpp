@@ -58,7 +58,7 @@ void CFB_Encryption::set_iv(const InitializationVector& iv)
       throw Invalid_IV_Length(name(), iv.length());
 
    state = iv.bits_of();
-   buffer.clear();
+   zeroise(buffer);
    position = 0;
 
    cipher->encrypt(state, buffer);
@@ -135,7 +135,7 @@ void CFB_Decryption::set_iv(const InitializationVector& iv)
       throw Invalid_IV_Length(name(), iv.length());
 
    state = iv.bits_of();
-   buffer.clear();
+   zeroise(buffer);
    position = 0;
 
    cipher->encrypt(state, buffer);

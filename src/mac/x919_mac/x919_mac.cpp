@@ -46,7 +46,7 @@ void ANSI_X919_MAC::final_result(byte mac[])
       e->encrypt(state);
    d->decrypt(state, mac);
    e->encrypt(mac);
-   state.clear();
+   zeroise(state);
    position = 0;
    }
 
@@ -67,7 +67,7 @@ void ANSI_X919_MAC::clear()
    {
    e->clear();
    d->clear();
-   state.clear();
+   zeroise(state);
    position = 0;
    }
 

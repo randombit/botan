@@ -451,7 +451,9 @@ BER_Decoder& BER_Decoder::decode(MemoryRegion<byte>& buffer,
       {
       if(obj.value[0] >= 8)
          throw BER_Decoding_Error("Bad number of unused bits in BIT STRING");
-      buffer.set(obj.value + 1, obj.value.size() - 1);
+
+      buffer.resize(obj.value.size() - 1);
+      copy_mem(&buffer[0], &obj.value[1], obj.value.size() - 1);
       }
    return (*this);
    }
@@ -467,7 +469,7 @@ BER_Decoder& BER_Decoder::decode_optional_string(MemoryRegion<byte>& out,
 
    ASN1_Tag type_tag = static_cast<ASN1_Tag>(type_no);
 
-   out.clear();
+   out.destroy();
    push_back(obj);
 
    if(obj.type_tag == type_tag && obj.class_tag == CONTEXT_SPECIFIC)

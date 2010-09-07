@@ -162,7 +162,7 @@ int main()
    Row_Encryptor test_pbkdf_salt_copy(secret_passphrase,
                                       encryptor.get_pbkdf_salt());
 
-   salt.clear(); // all-0
+   zeroise(salt);
    std::string test = test_pbkdf_salt_copy.decrypt(encrypted_values[0], salt);
    if(test != original_inputs[0])
       std::cout << "PBKDF salt copy failed to decrypt properly\n";

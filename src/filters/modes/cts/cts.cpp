@@ -47,7 +47,7 @@ void CTS_Encryption::set_iv(const InitializationVector& iv)
       throw Invalid_IV_Length(name(), iv.length());
 
    state = iv.bits_of();
-   buffer.clear();
+   zeroise(buffer);
    position = 0;
    }
 
@@ -149,7 +149,7 @@ void CTS_Decryption::set_iv(const InitializationVector& iv)
       throw Invalid_IV_Length(name(), iv.length());
 
    state = iv.bits_of();
-   buffer.clear();
+   zeroise(buffer);
    position = 0;
    }
 

@@ -203,8 +203,8 @@ void Noekeon::key_schedule(const byte key[], u32bit)
 */
 void Noekeon::clear()
    {
-   EK.clear();
-   DK.clear();
+   zeroise(EK);
+   zeroise(DK);
    }
 
 }

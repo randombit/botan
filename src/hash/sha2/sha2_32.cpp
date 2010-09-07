@@ -181,7 +181,7 @@ void SHA_224::copy_out(byte output[])
 void SHA_224::clear()
    {
    MDx_HashFunction::clear();
-   W.clear();
+   zeroise(W);
    digest[0] = 0xC1059ED8;
    digest[1] = 0x367CD507;
    digest[2] = 0x3070DD17;
@@ -215,7 +215,7 @@ void SHA_256::copy_out(byte output[])
 void SHA_256::clear()
    {
    MDx_HashFunction::clear();
-   W.clear();
+   zeroise(W);
    digest[0] = 0x6A09E667;
    digest[1] = 0xBB67AE85;
    digest[2] = 0x3C6EF372;

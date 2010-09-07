@@ -26,8 +26,8 @@ GOST_34_11::GOST_34_11() :
 void GOST_34_11::clear()
    {
    cipher.clear();
-   sum.clear();
-   hash.clear();
+   zeroise(sum);
+   zeroise(hash);
    count = 0;
    position = 0;
    }

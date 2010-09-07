@@ -81,8 +81,8 @@ void CMAC::final_result(byte mac[])
    for(u32bit j = 0; j != OUTPUT_LENGTH; ++j)
       mac[j] = state[j];
 
-   state.clear();
-   buffer.clear();
+   zeroise(state);
+   zeroise(buffer);
    position = 0;
    }
 
@@ -104,10 +104,10 @@ void CMAC::key_schedule(const byte key[], u32bit length)
 void CMAC::clear()
    {
    e->clear();
-   state.clear();
-   buffer.clear();
-   B.clear();
-   P.clear();
+   zeroise(state);
+   zeroise(buffer);
+   zeroise(B);
+   zeroise(P);
    position = 0;
    }
 

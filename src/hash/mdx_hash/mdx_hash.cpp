@@ -30,7 +30,7 @@ MDx_HashFunction::MDx_HashFunction(u32bit hash_len, u32bit block_len,
 */
 void MDx_HashFunction::clear()
    {
-   buffer.clear();
+   zeroise(buffer);
    count = position = 0;
    }
 
@@ -76,7 +76,7 @@ void MDx_HashFunction::final_result(byte output[])
    if(position >= HASH_BLOCK_SIZE - COUNT_SIZE)
       {
       compress_n(buffer, 1);
-      buffer.clear();
+      zeroise(buffer);
       }
 
    write_count(buffer + HASH_BLOCK_SIZE - COUNT_SIZE);

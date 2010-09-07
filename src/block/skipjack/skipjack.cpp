@@ -189,7 +189,7 @@ void Skipjack::key_schedule(const byte key[], u32bit)
 */
 void Skipjack::clear()
    {
-   FTAB.clear();
+   zeroise(FTAB);
    }
 
 }

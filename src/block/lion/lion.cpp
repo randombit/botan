@@ -99,8 +99,8 @@ void Lion::clear()
    {
    hash->clear();
    cipher->clear();
-   key1.clear();
-   key2.clear();
+   zeroise(key1);
+   zeroise(key2);
    }
 
 /*

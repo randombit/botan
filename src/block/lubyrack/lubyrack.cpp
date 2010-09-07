@@ -94,8 +94,8 @@ void LubyRackoff::key_schedule(const byte key[], u32bit length)
 */
 void LubyRackoff::clear()
    {
-   K1.clear();
-   K2.clear();
+   zeroise(K1);
+   zeroise(K2);
    hash->clear();
    }
 

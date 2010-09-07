@@ -107,7 +107,7 @@ void HMAC_RNG::reseed(u32bit poll_bits)
    extractor->set_key(K, K.size());
 
    // Reset state
-   K.clear();
+   zeroise(K);
    counter = 0;
    user_input_len = 0;
 
@@ -147,7 +147,7 @@ void HMAC_RNG::clear()
    {
    extractor->clear();
    prf->clear();
-   K.clear();
+   zeroise(K);
    counter = 0;
    user_input_len = 0;
    seeded = false;

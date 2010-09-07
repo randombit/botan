@@ -99,9 +99,9 @@ void MD2::final_result(byte output[])
 */
 void MD2::clear()
    {
-   X.clear();
-   checksum.clear();
-   buffer.clear();
+   zeroise(X);
+   zeroise(checksum);
+   zeroise(buffer);
    position = 0;
    }
 

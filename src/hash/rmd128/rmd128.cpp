@@ -166,7 +166,7 @@ void RIPEMD_128::copy_out(byte output[])
 void RIPEMD_128::clear()
    {
    MDx_HashFunction::clear();
-   M.clear();
+   zeroise(M);
    digest[0] = 0x67452301;
    digest[1] = 0xEFCDAB89;
    digest[2] = 0x98BADCFE;

@@ -46,7 +46,7 @@ void PointGFp::monty_mult(BigInt& z,
    const u32bit p_size = curve.get_p_words();
    const word p_dash = curve.get_p_dash();
 
-   workspace.clear();
+   zeroise(workspace);
 
    bigint_mul(workspace, workspace.size(), 0,
               x.data(), x.size(), x.sig_words(),
@@ -73,7 +73,7 @@ void PointGFp::monty_sqr(BigInt& z, const BigInt& x,
    const u32bit p_size = curve.get_p_words();
    const word p_dash = curve.get_p_dash();
 
-   workspace.clear();
+   zeroise(workspace);
 
    bigint_sqr(workspace, workspace.size(), 0,
               x.data(), x.size(), x.sig_words());

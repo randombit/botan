@@ -206,10 +206,10 @@ void Square::transform(u32bit round_key[4])
 */
 void Square::clear()
    {
-   EK.clear();
-   DK.clear();
-   ME.clear();
-   MD.clear();
+   zeroise(EK);
+   zeroise(DK);
+   zeroise(ME);
+   zeroise(MD);
    }
 
 }

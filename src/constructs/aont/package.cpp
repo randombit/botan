@@ -49,7 +49,7 @@ void aont_package(RandomNumberGenerator& rng,
       u32bit left = std::min<u32bit>(cipher->BLOCK_SIZE,
                                      input_len - cipher->BLOCK_SIZE * i);
 
-      buf.clear();
+      zeroise(buf);
       copy_mem(&buf[0], output + cipher->BLOCK_SIZE * i, left);
 
       for(u32bit j = 0; j != 4; ++j)
@@ -95,7 +95,7 @@ void aont_unpackage(BlockCipher* cipher,
       u32bit left = std::min<u32bit>(cipher->BLOCK_SIZE,
                                      input_len - cipher->BLOCK_SIZE * (i+1));
 
-      buf.clear();
+      zeroise(buf);
       copy_mem(&buf[0], input + cipher->BLOCK_SIZE * i, left);
 
       for(u32bit j = 0; j != 4; ++j)

@@ -21,7 +21,7 @@ class BOTAN_DLL SEED : public BlockCipher
       void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
 
-      void clear() { K.clear(); }
+      void clear() { zeroise(K); }
       std::string name() const { return "SEED"; }
       BlockCipher* clone() const { return new SEED; }
 

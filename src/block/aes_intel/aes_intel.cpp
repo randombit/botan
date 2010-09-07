@@ -306,8 +306,8 @@ void AES_128_Intel::key_schedule(const byte key[], u32bit)
 */
 void AES_128_Intel::clear()
    {
-   EK.clear();
-   DK.clear();
+   zeroise(EK);
+   zeroise(DK);
    }
 
 /*
@@ -522,8 +522,8 @@ void AES_192_Intel::key_schedule(const byte key[], u32bit)
 */
 void AES_192_Intel::clear()
    {
-   EK.clear();
-   DK.clear();
+   zeroise(EK);
+   zeroise(DK);
    }
 
 /*
@@ -772,8 +772,8 @@ void AES_256_Intel::key_schedule(const byte key[], u32bit)
 */
 void AES_256_Intel::clear()
    {
-   EK.clear();
-   DK.clear();
+   zeroise(EK);
+   zeroise(DK);
    }
 
 }

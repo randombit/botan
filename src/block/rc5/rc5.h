@@ -21,7 +21,7 @@ class BOTAN_DLL RC5 : public BlockCipher
       void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
 
-      void clear() { S.clear(); }
+      void clear() { zeroise(S); }
       std::string name() const;
       BlockCipher* clone() const { return new RC5(ROUNDS); }
 

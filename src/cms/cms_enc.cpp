@@ -46,7 +46,7 @@ SecureVector<byte> CMS_Encoder::get_contents()
       end_explicit().
    end_cons();
 
-   data.clear();
+   data.destroy();
 
    return encoder.get_contents();
    }

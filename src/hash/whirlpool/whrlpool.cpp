@@ -139,8 +139,8 @@ void Whirlpool::copy_out(byte output[])
 void Whirlpool::clear()
    {
    MDx_HashFunction::clear();
-   M.clear();
-   digest.clear();
+   zeroise(M);
+   zeroise(digest);
    }
 
 }

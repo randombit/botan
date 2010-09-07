@@ -186,9 +186,9 @@ HashFunction* Skein_512::clone() const
 
 void Skein_512::clear()
    {
-   H.clear();
-   T.clear();
-   buffer.clear();
+   zeroise(H);
+   zeroise(T);
+   zeroise(buffer);
    buf_pos = 0;
    }
 

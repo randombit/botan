@@ -178,8 +178,8 @@ void BMW_512::copy_out(byte output[])
 void BMW_512::clear()
    {
    MDx_HashFunction::clear();
-   M.clear();
-   Q.clear();
+   zeroise(M);
+   zeroise(Q);
 
    H[ 0] = 0x8081828384858687;
    H[ 1] = 0x88898A8B8C8D8E8F;

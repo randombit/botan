@@ -348,7 +348,7 @@ void BigInt::binary_decode(const byte buf[], u32bit length)
    {
    const u32bit WORD_BYTES = sizeof(word);
 
-   reg.clear();
+   clear();
    reg.resize(round_up<u32bit>((length / WORD_BYTES) + 1, 8));
 
    for(u32bit j = 0; j != length / WORD_BYTES; ++j)

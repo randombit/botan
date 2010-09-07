@@ -26,8 +26,6 @@ SecureVector<byte> EME1::pad(const byte in[], u32bit in_length,
 
    SecureVector<byte> out(key_length);
 
-   out.clear();
-
    rng.randomize(out, HASH_LENGTH);
 
    out.copy(HASH_LENGTH, Phash, Phash.size());

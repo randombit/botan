@@ -136,7 +136,7 @@ void Tiger::pass(u64bit& A, u64bit& B, u64bit& C, u64bit X[8], byte mul)
 void Tiger::clear()
    {
    MDx_HashFunction::clear();
-   X.clear();
+   zeroise(X);
    digest[0] = 0x0123456789ABCDEF;
    digest[1] = 0xFEDCBA9876543210;
    digest[2] = 0xF096A5B4C3B2E187;

@@ -30,7 +30,7 @@ void Record_Writer::reset()
    cipher.reset();
    mac.reset();
 
-   buffer.clear();
+   zeroise(buffer);
    buf_pos = 0;
 
    major = minor = buf_type = 0;

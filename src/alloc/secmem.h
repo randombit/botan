@@ -126,21 +126,6 @@ class MemoryRegion
          { copy_mem(buf + off, in, (n > size() - off) ? (size() - off) : n); }
 
       /**
-      * Set the contents of this according to the argument. The size of
-      * *this is increased if necessary.
-      * @param in the array of objects of type T to copy the contents from
-      * @param n the size of array in
-      */
-      void set(const T in[], u32bit n)    { resize(n); copy(in, n); }
-
-      /**
-      * Set the contents of this according to the argument. The size of
-      * *this is increased if necessary.
-      * @param in the buffer to copy the contents from
-      */
-      void set(const MemoryRegion<T>& in) { set(in.begin(), in.size()); }
-
-      /**
       * Append data to the end of this buffer.
       * @param data the array containing the data to append
       * @param n the size of the array data
@@ -160,11 +145,6 @@ class MemoryRegion
       */
       void append(const MemoryRegion<T>& other)
          { append(other.begin(), other.size()); }
-
-      /**
-      * Zeroise the bytes of this buffer. The length remains unchanged.
-      */
-      void clear() { clear_mem(buf, allocated); }
 
       /**
       * Reset this buffer to an empty buffer with size zero.
@@ -206,6 +186,22 @@ class MemoryRegion
       */
       void init(bool locking, u32bit length = 0)
          { alloc = Allocator::get(locking); resize(length); }
+
+      /**
+      * Set the contents of this according to the argument. The size of
+      * *this is increased if necessary.
+      * @param in the array of objects of type T to copy the contents from
+      * @param n the size of array in
+      */
+      void set(const T in[], u32bit n)    { resize(n); copy(in, n); }
+
+      /**
+      * Set the contents of this according to the argument. The size of
+      * *this is increased if necessary.
+      * @param in the buffer to copy the contents from
+      */
+      void set(const MemoryRegion<T>& in) { set(in.begin(), in.size()); }
+
    private:
       T* allocate(u32bit n)
          {
@@ -392,6 +388,16 @@ class SecureVector : public MemoryRegion<T>
       SecureVector(const MemoryRegion<T>& in1, const MemoryRegion<T>& in2)
          { init(true); set(in1); append(in2); }
    };
+
+/**
+* Zeroise the values; length remains unchanged
+* @param vec the vector to zeroise
+*/
+template<typename T>
+void zeroise(MemoryRegion<T>& vec)
+   {
+   clear_mem(&vec[0], vec.size());
+   }
 
 }
 

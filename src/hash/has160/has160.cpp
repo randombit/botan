@@ -154,7 +154,7 @@ void HAS_160::copy_out(byte output[])
 void HAS_160::clear()
    {
    MDx_HashFunction::clear();
-   X.clear();
+   zeroise(X);
    digest[0] = 0x67452301;
    digest[1] = 0xEFCDAB89;
    digest[2] = 0x98BADCFE;

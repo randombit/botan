@@ -21,7 +21,7 @@ class BOTAN_DLL CAST_256 : public BlockCipher
       void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
 
-      void clear() { MK.clear(); RK.clear(); }
+      void clear() { zeroise(MK); zeroise(RK); }
       std::string name() const { return "CAST-256"; }
       BlockCipher* clone() const { return new CAST_256; }
 

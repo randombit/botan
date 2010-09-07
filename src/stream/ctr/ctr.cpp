@@ -40,8 +40,8 @@ CTR_BE::~CTR_BE()
 void CTR_BE::clear()
    {
    permutation->clear();
-   buffer.clear();
-   counter.clear();
+   zeroise(buffer);
+   zeroise(counter);
    position = 0;
    }
 
@@ -91,7 +91,7 @@ void CTR_BE::set_iv(const byte iv[], u32bit iv_len)
 
    const u32bit BLOCK_SIZE = permutation->BLOCK_SIZE;
 
-   counter.clear();
+   zeroise(counter);
 
    counter.copy(0, iv, iv_len);
 

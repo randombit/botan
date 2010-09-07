@@ -140,7 +140,7 @@ class BOTAN_DLL BigInt
      /**
      * Zeroize the BigInt
      */
-     void clear() { get_reg().clear(); }
+     void clear() { zeroise(reg); }
 
      /**
      * Compare this to another BigInt

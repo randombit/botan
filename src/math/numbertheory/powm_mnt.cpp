@@ -66,7 +66,7 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
       const BigInt& y = g[j-1];
       const u32bit y_sig = y.sig_words();
 
-      z.clear();
+      zeroise(z);
       bigint_mul(z.begin(), z.size(), workspace,
                  x.data(), x.size(), x_sig,
                  y.data(), y.size(), y_sig);
@@ -90,7 +90,7 @@ BigInt Montgomery_Exponentiator::execute() const
       {
       for(u32bit k = 0; k != window_bits; ++k)
          {
-         z.clear();
+         zeroise(z);
          bigint_sqr(z.begin(), z.size(), workspace,
                     x.data(), x.size(), x.sig_words());
 
@@ -102,7 +102,7 @@ BigInt Montgomery_Exponentiator::execute() const
          {
          const BigInt& y = g[nibble-1];
 
-         z.clear();
+         zeroise(z);
          bigint_mul(z.begin(), z.size(), workspace,
                     x.data(), x.size(), x.sig_words(),
                     y.data(), y.size(), y.sig_words());
@@ -111,7 +111,7 @@ BigInt Montgomery_Exponentiator::execute() const
          }
       }
 
-   z.clear();
+   zeroise(z);
    z.copy(x.data(), x.size());
 
    montgomery_reduce(x, z, modulus, mod_words, mod_prime);

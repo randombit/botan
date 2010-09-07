@@ -21,7 +21,7 @@ class BOTAN_DLL IDEA : public BlockCipher
       void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
       void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
 
-      void clear() { EK.clear(); DK.clear(); }
+      void clear() { zeroise(EK); zeroise(DK); }
       std::string name() const { return "IDEA"; }
       BlockCipher* clone() const { return new IDEA; }
 

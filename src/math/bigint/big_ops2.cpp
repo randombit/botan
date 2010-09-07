@@ -37,7 +37,7 @@ BigInt& BigInt::operator+=(const BigInt& y)
          }
       else if(relative_size == 0)
          {
-         get_reg().clear();
+         zeroise(reg);
          set_sign(Positive);
          }
       else if(relative_size > 0)
@@ -72,7 +72,7 @@ BigInt& BigInt::operator-=(const BigInt& y)
       {
       if(sign() == y.sign())
          {
-         get_reg().clear();
+         clear();
          set_sign(Positive);
          }
       else
@@ -99,7 +99,7 @@ BigInt& BigInt::operator*=(const BigInt& y)
 
    if(x_sw == 0 || y_sw == 0)
       {
-      get_reg().clear();
+      clear();
       set_sign(Positive);
       }
    else if(x_sw == 1 && y_sw)
