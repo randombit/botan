@@ -9,6 +9,7 @@
 #include <botan/internal/unix_cmd.h>
 #include <botan/parsing.h>
 #include <algorithm>
+
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <sys/resource.h>
@@ -22,7 +23,12 @@ namespace {
 * Sort ordering by priority
 */
 bool Unix_Program_Cmp(const Unix_Program& a, const Unix_Program& b)
-   { return (a.priority < b.priority); }
+   {
+   if(a.priority == b.priority)
+      return (a.name_and_args < b.name_and_args);
+
+   return (a.priority < b.priority);
+   }
 
 }
 
@@ -32,7 +38,8 @@ bool Unix_Program_Cmp(const Unix_Program& a, const Unix_Program& b)
 Unix_EntropySource::Unix_EntropySource(const std::vector<std::string>& path) :
    PATH(path)
    {
-   add_default_sources(sources);
+   std::vector<Unix_Program> default_sources = get_default_sources();
+   add_sources(&default_sources[0], default_sources.size());
    }
 
 /**
@@ -74,10 +81,8 @@ void Unix_EntropySource::poll(Entropy_Accumulator& accum)
    accum.add(::getpid(),  0);
    accum.add(::getppid(), 0);
    accum.add(::getuid(),  0);
-   accum.add(::geteuid(), 0);
-   accum.add(::getegid(), 0);
+   accum.add(::getgid(), 0);
    accum.add(::getpgrp(), 0);
-   accum.add(::getsid(0), 0);
 
    struct ::rusage usage;
    ::getrusage(RUSAGE_SELF, &usage);
