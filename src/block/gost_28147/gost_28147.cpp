@@ -125,7 +125,7 @@ void GOST_28147_89::decrypt_n(const byte in[], byte out[], u32bit blocks) const
       GOST_2ROUND(N1, N2, 4, 5);
       GOST_2ROUND(N1, N2, 6, 7);
 
-      for(size_t i = 0; i != 3; ++i)
+      for(size_t j = 0; j != 3; ++j)
          {
          GOST_2ROUND(N1, N2, 7, 6);
          GOST_2ROUND(N1, N2, 5, 4);
