@@ -13,4 +13,5 @@ simd_engine
 gcc
 clang
 msvc
+sunstudio
 </cc>
