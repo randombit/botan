@@ -8,15 +8,13 @@ add_include_dir_option -I
 add_lib_dir_option -L
 add_lib_option -l
 
-# The compiler supports up to -xO5, but anything higher than -xO2 causes
-# incorrect results, infinite loops, other badness. :(
-lib_opt_flags "-xO2"
+lib_opt_flags "-xO5"
 check_opt_flags "-xO2"
 debug_flags -g
 no_debug_flags ""
 shared_flags "-KPIC"
 warning_flags "+w"
-lang_flags "+p -D__EXTENSIONS__"
+lang_flags "+p -features=extensions -D__FUNCTION__=__func__"
 
 ar_command "CC -xar -o"
 
@@ -30,9 +28,15 @@ default -> "$(CXX) -G -h$(SONAME)"
 i386       -> "-xtarget=486"
 i486       -> "-xtarget=486"
 i586       -> "-xtarget=pentium"
-i686       -> "-xtarget=pentium_pro"
-pentium4   -> "-xtarget=pentium_pro"
 k6         -> "-xtarget=pentium"
+i686       -> "-xtarget=pentium_pro"
+
+pentium3   -> "-xtarget=pentium3"
+pentium4   -> "-xtarget=pentium4"
+
+core2      -> "-xtarget=core2"
+opteron    -> "-xtarget=opteron"
+nehalem    -> "-xtarget=nehalem"
 
 sparc32-v9 -> "-xchip=ultra -xarch=v8"
 
