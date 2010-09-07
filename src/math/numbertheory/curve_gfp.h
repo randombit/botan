@@ -33,8 +33,9 @@ class BOTAN_DLL CurveGFp
       * @param a first coefficient
       * @param b second coefficient
       */
-      CurveGFp(const BigInt& p, const BigInt& a, const BigInt& b) :
-         p(p), a(a), b(b), reducer_p(p)
+      CurveGFp(const BigInt& p_in,
+               const BigInt& a_in, const BigInt& b_in) :
+         p(p_in), a(a_in), b(b_in), reducer_p(p)
          {
          r = 1;
          r <<= p.sig_words() * BOTAN_MP_WORD_BITS;
