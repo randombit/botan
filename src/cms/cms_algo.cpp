@@ -41,7 +41,7 @@ SecureVector<byte> do_rfc3217_wrap(RandomNumberGenerator& rng,
             {
             for(u32bit j = 0; j != buf.size(); j++)
                send(buf[buf.size()-j-1]);
-            buf.destroy();
+            buf.clear();
             }
          Flip_Bytes(const SecureVector<byte>& prefix) { buf.append(prefix); }
       private:

@@ -110,7 +110,7 @@ u32bit find_eoc(DataSource* ber)
       }
 
    DataSource_Memory source(data);
-   data.destroy();
+   data.clear();
 
    u32bit length = 0;
    while(true)
@@ -168,7 +168,7 @@ BER_Decoder& BER_Decoder::verify_end()
 */
 BER_Decoder& BER_Decoder::raw_bytes(MemoryRegion<byte>& out)
    {
-   out.destroy();
+   out.clear();
    byte buf;
    while(source->read_byte(buf))
       out.append(buf);
@@ -469,7 +469,7 @@ BER_Decoder& BER_Decoder::decode_optional_string(MemoryRegion<byte>& out,
 
    ASN1_Tag type_tag = static_cast<ASN1_Tag>(type_no);
 
-   out.destroy();
+   out.clear();
    push_back(obj);
 
    if(obj.type_tag == type_tag && obj.class_tag == CONTEXT_SPECIFIC)

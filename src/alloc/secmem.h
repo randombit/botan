@@ -149,7 +149,7 @@ class MemoryRegion
       /**
       * Reset this buffer to an empty buffer with size zero.
       */
-      void destroy() { resize(0); }
+      void clear() { resize(0); }
 
       /**
       * Inserts or erases elements at the end such that the size

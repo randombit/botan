@@ -22,9 +22,9 @@ void EMSA_Raw::update(const byte input[], u32bit length)
 */
 SecureVector<byte> EMSA_Raw::raw_data()
    {
-   SecureVector<byte> buf = message;
-   message.destroy();
-   return buf;
+   SecureVector<byte> output;
+   std::swap(message, output);
+   return output;
    }
 
 /*

@@ -113,7 +113,7 @@ void ANSI_X931_RNG::clear()
    cipher->clear();
    prng->clear();
    zeroise(R);
-   V.destroy();
+   V.clear();
 
    position = 0;
    }

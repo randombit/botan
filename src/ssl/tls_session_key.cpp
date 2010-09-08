@@ -84,7 +84,7 @@ SymmetricKey SessionKeys::ssl3_keygen(u32bit prf_gen,
 
    master_sec = prf.derive_key(48, pre_master, salt);
 
-   salt.destroy();
+   salt.clear();
    salt.append(server_random);
    salt.append(client_random);
 
@@ -115,7 +115,7 @@ SymmetricKey SessionKeys::tls1_keygen(u32bit prf_gen,
 
    master_sec = prf.derive_key(48, pre_master, salt);
 
-   salt.destroy();
+   salt.clear();
    salt.append(KEY_GEN_MAGIC, sizeof(KEY_GEN_MAGIC));
    salt.append(server_random);
    salt.append(client_random);

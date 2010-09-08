@@ -86,7 +86,7 @@ SecureVector<byte> DER_Encoder::DER_Sequence::get_contents()
    retval.append(encoded_tag);
    retval.append(encoded_length);
    retval.append(contents);
-   contents.destroy();
+   contents.clear();
    return retval;
    }
 
@@ -125,10 +125,9 @@ SecureVector<byte> DER_Encoder::get_contents()
    if(subsequences.size() != 0)
       throw Invalid_State("DER_Encoder: Sequence hasn't been marked done");
 
-   SecureVector<byte> retval;
-   retval = contents;
-   contents.destroy();
-   return retval;
+   SecureVector<byte> output;
+   std::swap(output, contents);
+   return output;
    }
 
 /*

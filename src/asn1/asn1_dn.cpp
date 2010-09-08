@@ -67,7 +67,7 @@ void X509_DN::add_attribute(const OID& oid, const std::string& str)
          return;
 
    multimap_insert(dn_info, oid, ASN1_String(str));
-   dn_bits.destroy();
+   dn_bits.clear();
    }
 
 /*

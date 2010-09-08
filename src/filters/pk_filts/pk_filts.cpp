@@ -23,7 +23,7 @@ void PK_Encryptor_Filter::write(const byte input[], u32bit length)
 void PK_Encryptor_Filter::end_msg()
    {
    send(cipher->encrypt(buffer, buffer.size(), rng));
-   buffer.destroy();
+   buffer.clear();
    }
 
 /*
@@ -40,7 +40,7 @@ void PK_Decryptor_Filter::write(const byte input[], u32bit length)
 void PK_Decryptor_Filter::end_msg()
    {
    send(cipher->decrypt(buffer, buffer.size()));
-   buffer.destroy();
+   buffer.clear();
    }
 
 /*
