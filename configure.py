@@ -28,6 +28,7 @@ import subprocess
 import logging
 import getpass
 import time
+import errno
 
 from optparse import (OptionParser, OptionGroup,
                       IndentedHelpFormatter, SUPPRESS_HELP)
@@ -222,6 +223,10 @@ def process_command_line(args):
 
     build_group.add_option('--maintainer-mode', dest='maintainer_mode',
                            action='store_true', default=False,
+                           help=SUPPRESS_HELP)
+
+    build_group.add_option('--dirty-tree', dest='clean_build_tree',
+                           action='store_false', default=True,
                            help=SUPPRESS_HELP)
 
     wrapper_group = OptionGroup(parser, 'Wrapper options')
@@ -1237,12 +1242,17 @@ def setup_build(build_config, options, template_vars):
 
     # First delete the build tree, if existing
     try:
-        shutil.rmtree(build_config.build_dir)
+        if options.clean_build_tree:
+            shutil.rmtree(build_config.build_dir)
     except OSError, e:
-        logging.debug('Error while removing build dir: %s' % (e))
+        logging.error('Problem while removing build dir: %s' % (e))
 
     for dir in build_config.build_dirs():
-        os.makedirs(dir)
+        try:
+            os.makedirs(dir)
+        except OSError, e:
+            if e.errno != errno.EEXIST:
+                logging.error('Error while creating "%s": %s' % (dir, e))
 
     makefile_template = os.path.join(
         options.makefile_dir,
@@ -1286,7 +1296,12 @@ def setup_build(build_config, options, template_vars):
             len(header_list), type, dir))
 
         for header_file in header_list:
-            portable_symlink(header_file, dir)
+            try:
+                portable_symlink(header_file, dir)
+            except OSError, e:
+                if e.errno != errno.EEXIST:
+                    logging.error('Error linking %s into %s: %s' % (
+                        header_file, dir, e))
 
     link_headers(build_config.public_headers, 'public',
                  build_config.botan_include_dir)
