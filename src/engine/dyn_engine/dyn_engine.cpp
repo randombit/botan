@@ -13,9 +13,8 @@ namespace Botan {
 namespace {
 
 extern "C" {
-   typedef Engine* (*creator_function)(void);
-   typedef void (*destructor_function)(Engine*);
-   typedef u32bit (*module_version)(void);
+   typedef Engine* (*creator_func)(void);
+   typedef u32bit (*module_version_func)(void);
 }
 
 }
@@ -28,22 +27,24 @@ Dynamically_Loaded_Engine::Dynamically_Loaded_Engine(
 
    try
       {
-      module_version version =
-         lib->resolve<module_version>("module_version");
+      module_version_func get_version =
+         lib->resolve<module_version_func>("module_version");
 
-      u32bit mod_version = version();
+      const u32bit mod_version = get_version();
 
-      if(mod_version != 20100728)
-         throw std::runtime_error("Unexpected or incompatible version in " +
-                                  library_path);
+      if(mod_version != 20100908)
+         throw std::runtime_error("Incompatible version in " +
+                                  library_path + " of " +
+                                  to_string(mod_version));
 
-      creator_function creator =
-         lib->resolve<creator_function>("create_engine");
+      creator_func creator =
+         lib->resolve<creator_func>("create_engine");
 
       engine = creator();
 
       if(!engine)
-         throw std::runtime_error("Creator function in " + library_path + " failed");
+         throw std::runtime_error("Creator function in " +
+                                  library_path + " failed");
       }
    catch(...)
       {
@@ -55,24 +56,8 @@ Dynamically_Loaded_Engine::Dynamically_Loaded_Engine(
 
 Dynamically_Loaded_Engine::~Dynamically_Loaded_Engine()
    {
-   if(lib && engine)
-      {
-      try
-         {
-         destructor_function destroy =
-            lib->resolve<destructor_function>("destroy_engine");
-         destroy(engine);
-         }
-      catch(...)
-         {
-         delete lib;
-         lib = 0;
-         throw;
-         }
-      }
-
-   if(lib)
-      delete lib;
+   delete engine;
+   delete lib;
    }
 
 }
