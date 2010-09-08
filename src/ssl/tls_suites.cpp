@@ -215,7 +215,7 @@ namespace {
 std::pair<std::string, u32bit> cipher_code_to_name(TLS_Ciphersuite_Algos algo)
    {
    if((algo & TLS_ALGO_CIPHER_MASK) == TLS_ALGO_CIPHER_RC4_128)
-      return std::make_pair("ARC4", 128);
+      return std::make_pair("ARC4", 16);
 
    if((algo & TLS_ALGO_CIPHER_MASK) == TLS_ALGO_CIPHER_3DES_CBC)
       return std::make_pair("3DES", 24);
