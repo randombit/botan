@@ -171,18 +171,17 @@ std::string DataSource_Stream::id() const
 DataSource_Stream::DataSource_Stream(const std::string& path,
                                      bool use_binary) :
    identifier(path),
-   source_p(use_binary ?
-            new std::ifstream(path.c_str()) :
-            new std::ifstream(path.c_str(), std::ios::binary)),
-   source(*source_p)
+   source_p(new std::ifstream(
+               path.c_str(),
+               use_binary ? std::ios::binary : std::ios::in)),
+   source(*source_p),
+   total_read(0)
    {
    if(!source.good())
       {
       delete source_p;
       throw Stream_IO_Error("DataSource: Failure opening file " + path);
       }
-
-   total_read = 0;
    }
 
 /*
@@ -192,9 +191,9 @@ DataSource_Stream::DataSource_Stream(std::istream& in,
                                      const std::string& name) :
    identifier(name),
    source_p(0),
-   source(in)
+   source(in),
+   total_read(0)
    {
-   total_read = 0;
    }
 
 /*
