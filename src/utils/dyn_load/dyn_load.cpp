@@ -54,7 +54,7 @@ Dynamically_Loaded_Library::~Dynamically_Loaded_Library()
 #if defined(BOTAN_TARGET_OS_HAS_DLOPEN)
    ::dlclose(lib);
 #elif defined(BOTAN_TARGET_OS_HAS_LOADLIBRARY)
-   ::FreeLibrary(lib);
+   ::FreeLibrary((HMODULE)lib);
 #endif
    }
 
@@ -65,7 +65,7 @@ void* Dynamically_Loaded_Library::resolve_symbol(const std::string& symbol)
 #if defined(BOTAN_TARGET_OS_HAS_DLOPEN)
    addr = ::dlsym(lib, symbol.c_str());
 #elif defined(BOTAN_TARGET_OS_HAS_LOADLIBRARY)
-   addr = ::GetProcAddress(lib, symbol.c_str());
+   addr = ::GetProcAddress((HMODULE)lib, symbol.c_str());
 #endif
 
    if(!addr)
