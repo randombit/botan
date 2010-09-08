@@ -15,20 +15,35 @@ using namespace Botan;
 #include <iostream>
 #include <memory>
 
-int main()
+int main(int argc, char* argv[])
    {
+   if(argc != 2 && argc != 3)
+      {
+      printf("Usage: %s host [port]\n", argv[0]);
+      return 1;
+      }
+
    try
       {
       LibraryInitializer init;
 
-      Unix_Socket sock("www.randombit.net", 443);
+      std::string host = argv[1];
+      u32bit port = argc == 3 ? Botan::to_u32bit(argv[2]) : 443;
+
+      printf("Connecting to %s:%d...\n", host.c_str(), port);
+
+      Unix_Socket sock(argv[1], port);
 
       std::auto_ptr<Botan::RandomNumberGenerator> rng(
          Botan::RandomNumberGenerator::make_rng());
 
       TLS_Client tls(*rng, sock);
 
-      std::string http_command = "GET /bitbashing\r\n";
+      printf("Handshake extablished...\n");
+
+      std::string http_command = "GET / HTTP/1.1\r\n"
+                                 "Server: " + host + ':' + to_string(port) + "\r\n\r\n";
+
       tls.write((const byte*)http_command.c_str(), http_command.length());
 
       u32bit total_got = 0;
