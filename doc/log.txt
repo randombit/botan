@@ -1,12 +1,15 @@
 
 * 1.9.11-dev, ????-??-??
- - Switch default PKCS #8 encryption algorithm from AES-128 to AES-256
- - Use smaller tables in the first round of AES
+ - SSL: Fix handshake failures when using RC4 ciphersuites
+ - Changed semantics of MemoryRegion::resize and clear to match STL
+ - Use small tables in the first round of AES
  - Add hex encoding/decoding functions that can be used without a Pipe
  - Allow using PBKDF2 with empty passphrases
  - Support use of HMAC(SHA-256) and CMAC(Blowfish) in passhash9
+ - Switch default PKCS #8 encryption algorithm from AES-128 to AES-256
  - Support dynamic loading on Windows
  - Improve support for Intel Atom processors
+ - Fix compilation under Sun Studio
 
 * 1.8.10, 2010-08-31
  - Switch default PKCS #8 encryption algorithm from 3DES to AES-256
