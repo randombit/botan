@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
       int skipped = 0;
       for(int j = 2; argv[j] != 0; j++)
          {
-         std::ifstream file(argv[j]);
+         std::ifstream file(argv[j], std::ios::binary);
          if(!file)
             {
             std::cout << "ERROR: could not open " << argv[j] << std::endl;
