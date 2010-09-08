@@ -6,6 +6,7 @@ freebsd
 openbsd
 netbsd
 solaris
+windows
 </os>
 
 <libs>
