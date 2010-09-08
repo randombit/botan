@@ -69,6 +69,7 @@ $(BOTAN_LIB): $(LIBOBJS)
 ### Fake Targets
 clean:
 	$(RM) %{build_dir}\lib\* %{build_dir}\checks\*
+	$(RM) *.manifest *.exp *.dll
 	$(RM) $(LIBRARIES) $(CHECK)
 
 distclean: clean
