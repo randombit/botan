@@ -81,8 +81,8 @@ class MemoryRegion
          }
 
       /**
-      * Compare two buffers lexicographically.
-      * @return true if this buffer is lexicographically smaller than other.
+      * Compare two buffers
+      * @return true iff this is ordered before other
       */
       bool operator<(const MemoryRegion<T>& other) const;
 
@@ -245,16 +245,19 @@ void MemoryRegion<T>::resize(u32bit n)
 template<typename T>
 bool MemoryRegion<T>::operator<(const MemoryRegion<T>& other) const
    {
-   if(size() < other.size()) return true;
-   if(size() > other.size()) return false;
+   const u32bit min_size = std::min(size(), other.size());
 
-   for(u32bit j = 0; j != size(); j++)
+   // This should probably be rewritten to run in constant time
+   for(u32bit i = 0; i != min_size; ++i)
       {
-      if(buf[j] < other[j]) return true;
-      if(buf[j] > other[j]) return false;
+      if(buf[i] < other[i])
+         return true;
+      if(buf[i] > other[i])
+         return false;
       }
 
-   return false;
+   // First min_size bytes are equal, shorter is first
+   return (size() < other.size());
    }
 
 /*
