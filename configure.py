@@ -1245,7 +1245,8 @@ def setup_build(build_config, options, template_vars):
         if options.clean_build_tree:
             shutil.rmtree(build_config.build_dir)
     except OSError, e:
-        logging.error('Problem while removing build dir: %s' % (e))
+        if e.errno != errno.ENOENT:
+            logging.error('Problem while removing build dir: %s' % (e))
 
     for dir in build_config.build_dirs():
         try:
