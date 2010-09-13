@@ -113,7 +113,7 @@ void MISTY1::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 
       for(u32bit j = 0; j != 12; j += 3)
          {
-         const u16bit* RK = EK + 8 * j;
+         const u16bit* RK = &EK[8 * j];
 
          B1 ^= B0 & RK[0];
          B0 ^= B1 | RK[1];
@@ -163,7 +163,7 @@ void MISTY1::decrypt_n(const byte in[], byte out[], u32bit blocks) const
 
       for(u32bit j = 0; j != 12; j += 3)
          {
-         const u16bit* RK = DK + 8 * j;
+         const u16bit* RK = &DK[8 * j];
 
          B2 ^= B3 | RK[0];
          B3 ^= B2 & RK[1];

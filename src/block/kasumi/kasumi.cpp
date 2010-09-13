@@ -120,7 +120,7 @@ void KASUMI::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 
       for(u32bit j = 0; j != 8; j += 2)
          {
-         const u16bit* K = EK + 8*j;
+         const u16bit* K = &EK[8*j];
 
          u16bit R = B1 ^ (rotate_left(B0, 1) & K[0]);
          u16bit L = B0 ^ (rotate_left(R, 1) | K[1]);
@@ -164,7 +164,7 @@ void KASUMI::decrypt_n(const byte in[], byte out[], u32bit blocks) const
 
       for(u32bit j = 0; j != 8; j += 2)
          {
-         const u16bit* K = EK + 8*(6-j);
+         const u16bit* K = &EK[8*(6-j)];
 
          u16bit L = B2, R = B3;
 

@@ -196,9 +196,11 @@ void idea_op_8(const byte in[64], byte out[64], const u16bit EK[52])
 */
 void IDEA_SSE2::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
+   const u16bit* KS = &this->get_EK()[0];
+
    while(blocks >= 8)
       {
-      idea_op_8(in, out, this->get_EK());
+      idea_op_8(in, out, KS);
       in += 8 * BLOCK_SIZE;
       out += 8 * BLOCK_SIZE;
       blocks -= 8;
@@ -213,9 +215,11 @@ void IDEA_SSE2::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 */
 void IDEA_SSE2::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
+   const u16bit* KS = &this->get_DK()[0];
+
    while(blocks >= 8)
       {
-      idea_op_8(in, out, this->get_DK());
+      idea_op_8(in, out, KS);
       in += 8 * BLOCK_SIZE;
       out += 8 * BLOCK_SIZE;
       blocks -= 8;

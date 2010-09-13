@@ -103,10 +103,10 @@ u32bit find_eoc(DataSource* ber)
 
    while(true)
       {
-      const u32bit got = ber->peek(buffer, buffer.size(), data.size());
+      const u32bit got = ber->peek(&buffer[0], buffer.size(), data.size());
       if(got == 0)
          break;
-      data.append(buffer, got);
+      data.append(&buffer[0], got);
       }
 
    DataSource_Memory source(data);
@@ -206,7 +206,7 @@ BER_Object BER_Decoder::get_next_object()
 
    u32bit length = decode_length(source);
    next.value.resize(length);
-   if(source->read(next.value, length) != length)
+   if(source->read(&next.value[0], length) != length)
       throw BER_Decoding_Error("Value truncated");
 
    if(next.type_tag == EOC && next.class_tag == UNIVERSAL)
@@ -234,7 +234,7 @@ BER_Decoder BER_Decoder::start_cons(ASN1_Tag type_tag,
    BER_Object obj = get_next_object();
    obj.assert_is_a(type_tag, ASN1_Tag(class_tag | CONSTRUCTED));
 
-   BER_Decoder result(obj.value, obj.value.size());
+   BER_Decoder result(&obj.value[0], obj.value.size());
    result.parent = this;
    return result;
    }
@@ -415,7 +415,7 @@ BER_Decoder& BER_Decoder::decode(BigInt& out,
             obj.value[j] = ~obj.value[j];
          }
 
-      out = BigInt(obj.value, obj.value.size());
+      out = BigInt(&obj.value[0], obj.value.size());
 
       if(negative)
          out.flip_sign();

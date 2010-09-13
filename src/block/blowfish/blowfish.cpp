@@ -15,10 +15,10 @@ namespace Botan {
 */
 void Blowfish::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   const u32bit* S1 = S + 0;
-   const u32bit* S2 = S + 256;
-   const u32bit* S3 = S + 512;
-   const u32bit* S4 = S + 768;
+   const u32bit* S1 = &S[0];
+   const u32bit* S2 = &S[256];
+   const u32bit* S3 = &S[512];
+   const u32bit* S4 = &S[768];
 
    for(u32bit i = 0; i != blocks; ++i)
       {
@@ -50,10 +50,10 @@ void Blowfish::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 */
 void Blowfish::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   const u32bit* S1 = S + 0;
-   const u32bit* S2 = S + 256;
-   const u32bit* S3 = S + 512;
-   const u32bit* S4 = S + 768;
+   const u32bit* S1 = &S[0];
+   const u32bit* S2 = &S[256];
+   const u32bit* S3 = &S[512];
+   const u32bit* S4 = &S[768];
 
    for(u32bit i = 0; i != blocks; ++i)
       {
@@ -92,22 +92,22 @@ void Blowfish::key_schedule(const byte key[], u32bit length)
                           key[(k+2) % length], key[(k+3) % length]);
 
    u32bit L = 0, R = 0;
-   generate_sbox(P,  18,  L, R);
-   generate_sbox(S, 1024, L, R);
+   generate_sbox(P, L, R);
+   generate_sbox(S, L, R);
    }
 
 /*
 * Generate one of the Sboxes
 */
-void Blowfish::generate_sbox(u32bit Box[], u32bit size,
+void Blowfish::generate_sbox(MemoryRegion<u32bit>& box,
                              u32bit& L, u32bit& R) const
    {
-   const u32bit* S1 = S + 0;
-   const u32bit* S2 = S + 256;
-   const u32bit* S3 = S + 512;
-   const u32bit* S4 = S + 768;
+   const u32bit* S1 = &S[0];
+   const u32bit* S2 = &S[256];
+   const u32bit* S3 = &S[512];
+   const u32bit* S4 = &S[768];
 
-   for(u32bit j = 0; j != size; j += 2)
+   for(u32bit j = 0; j != box.size(); j += 2)
       {
       for(u32bit k = 0; k != 16; k += 2)
          {
@@ -121,7 +121,8 @@ void Blowfish::generate_sbox(u32bit Box[], u32bit size,
          }
 
       u32bit T = R; R = L ^ P[16]; L = T ^ P[17];
-      Box[j] = L; Box[j+1] = R;
+      box[j] = L;
+      box[j+1] = R;
       }
    }
 

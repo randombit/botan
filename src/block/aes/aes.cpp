@@ -661,12 +661,12 @@ void AES::key_schedule(const byte key[], u32bit length)
 
    for(u32bit j = 0; j != 4; ++j)
       {
-      store_be(XEK[j+4*ROUNDS], ME + 4*j);
-      store_be(XEK[j], MD + 4*j);
+      store_be(XEK[j+4*ROUNDS], &ME[4*j]);
+      store_be(XEK[j], &MD[4*j]);
       }
 
-   EK.copy(XEK, length + 24);
-   DK.copy(XDK, length + 24);
+   EK.copy(&XEK[0], length + 24);
+   DK.copy(&XDK[0], length + 24);
    }
 
 /*

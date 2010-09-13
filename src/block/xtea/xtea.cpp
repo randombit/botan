@@ -63,7 +63,7 @@ void XTEA::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
    while(blocks >= 4)
       {
-      xtea_encrypt_4(in, out, this->EK);
+      xtea_encrypt_4(in, out, &(this->EK[0]));
       in += 4 * BLOCK_SIZE;
       out += 4 * BLOCK_SIZE;
       blocks -= 4;
@@ -93,7 +93,7 @@ void XTEA::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
    while(blocks >= 4)
       {
-      xtea_decrypt_4(in, out, this->EK);
+      xtea_decrypt_4(in, out, &(this->EK[0]));
       in += 4 * BLOCK_SIZE;
       out += 4 * BLOCK_SIZE;
       blocks -= 4;

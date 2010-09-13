@@ -77,6 +77,8 @@ void step_Bi(u16bit& W2, u16bit& W3, u32bit round, const byte FTAB[])
 */
 void Skipjack::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
+   const byte* ftab = &FTAB[0];
+
    for(u32bit i = 0; i != blocks; ++i)
       {
       u16bit W1 = load_le<u16bit>(in, 3);
@@ -84,25 +86,25 @@ void Skipjack::encrypt_n(const byte in[], byte out[], u32bit blocks) const
       u16bit W3 = load_le<u16bit>(in, 1);
       u16bit W4 = load_le<u16bit>(in, 0);
 
-      step_A(W1, W4,  1, FTAB); step_A(W4, W3,  2, FTAB);
-      step_A(W3, W2,  3, FTAB); step_A(W2, W1,  4, FTAB);
-      step_A(W1, W4,  5, FTAB); step_A(W4, W3,  6, FTAB);
-      step_A(W3, W2,  7, FTAB); step_A(W2, W1,  8, FTAB);
+      step_A(W1, W4,  1, ftab); step_A(W4, W3,  2, ftab);
+      step_A(W3, W2,  3, ftab); step_A(W2, W1,  4, ftab);
+      step_A(W1, W4,  5, ftab); step_A(W4, W3,  6, ftab);
+      step_A(W3, W2,  7, ftab); step_A(W2, W1,  8, ftab);
 
-      step_B(W1, W2,  9, FTAB); step_B(W4, W1, 10, FTAB);
-      step_B(W3, W4, 11, FTAB); step_B(W2, W3, 12, FTAB);
-      step_B(W1, W2, 13, FTAB); step_B(W4, W1, 14, FTAB);
-      step_B(W3, W4, 15, FTAB); step_B(W2, W3, 16, FTAB);
+      step_B(W1, W2,  9, ftab); step_B(W4, W1, 10, ftab);
+      step_B(W3, W4, 11, ftab); step_B(W2, W3, 12, ftab);
+      step_B(W1, W2, 13, ftab); step_B(W4, W1, 14, ftab);
+      step_B(W3, W4, 15, ftab); step_B(W2, W3, 16, ftab);
 
-      step_A(W1, W4, 17, FTAB); step_A(W4, W3, 18, FTAB);
-      step_A(W3, W2, 19, FTAB); step_A(W2, W1, 20, FTAB);
-      step_A(W1, W4, 21, FTAB); step_A(W4, W3, 22, FTAB);
-      step_A(W3, W2, 23, FTAB); step_A(W2, W1, 24, FTAB);
+      step_A(W1, W4, 17, ftab); step_A(W4, W3, 18, ftab);
+      step_A(W3, W2, 19, ftab); step_A(W2, W1, 20, ftab);
+      step_A(W1, W4, 21, ftab); step_A(W4, W3, 22, ftab);
+      step_A(W3, W2, 23, ftab); step_A(W2, W1, 24, ftab);
 
-      step_B(W1, W2, 25, FTAB); step_B(W4, W1, 26, FTAB);
-      step_B(W3, W4, 27, FTAB); step_B(W2, W3, 28, FTAB);
-      step_B(W1, W2, 29, FTAB); step_B(W4, W1, 30, FTAB);
-      step_B(W3, W4, 31, FTAB); step_B(W2, W3, 32, FTAB);
+      step_B(W1, W2, 25, ftab); step_B(W4, W1, 26, ftab);
+      step_B(W3, W4, 27, ftab); step_B(W2, W3, 28, ftab);
+      step_B(W1, W2, 29, ftab); step_B(W4, W1, 30, ftab);
+      step_B(W3, W4, 31, ftab); step_B(W2, W3, 32, ftab);
 
       store_le(out, W4, W3, W2, W1);
 
@@ -116,6 +118,8 @@ void Skipjack::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 */
 void Skipjack::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
+   const byte* ftab = &FTAB[0];
+
    for(u32bit i = 0; i != blocks; ++i)
       {
       u16bit W1 = load_le<u16bit>(in, 3);
@@ -123,25 +127,25 @@ void Skipjack::decrypt_n(const byte in[], byte out[], u32bit blocks) const
       u16bit W3 = load_le<u16bit>(in, 1);
       u16bit W4 = load_le<u16bit>(in, 0);
 
-      step_Bi(W2, W3, 32, FTAB); step_Bi(W3, W4, 31, FTAB);
-      step_Bi(W4, W1, 30, FTAB); step_Bi(W1, W2, 29, FTAB);
-      step_Bi(W2, W3, 28, FTAB); step_Bi(W3, W4, 27, FTAB);
-      step_Bi(W4, W1, 26, FTAB); step_Bi(W1, W2, 25, FTAB);
+      step_Bi(W2, W3, 32, ftab); step_Bi(W3, W4, 31, ftab);
+      step_Bi(W4, W1, 30, ftab); step_Bi(W1, W2, 29, ftab);
+      step_Bi(W2, W3, 28, ftab); step_Bi(W3, W4, 27, ftab);
+      step_Bi(W4, W1, 26, ftab); step_Bi(W1, W2, 25, ftab);
 
-      step_Ai(W1, W2, 24, FTAB); step_Ai(W2, W3, 23, FTAB);
-      step_Ai(W3, W4, 22, FTAB); step_Ai(W4, W1, 21, FTAB);
-      step_Ai(W1, W2, 20, FTAB); step_Ai(W2, W3, 19, FTAB);
-      step_Ai(W3, W4, 18, FTAB); step_Ai(W4, W1, 17, FTAB);
+      step_Ai(W1, W2, 24, ftab); step_Ai(W2, W3, 23, ftab);
+      step_Ai(W3, W4, 22, ftab); step_Ai(W4, W1, 21, ftab);
+      step_Ai(W1, W2, 20, ftab); step_Ai(W2, W3, 19, ftab);
+      step_Ai(W3, W4, 18, ftab); step_Ai(W4, W1, 17, ftab);
 
-      step_Bi(W2, W3, 16, FTAB); step_Bi(W3, W4, 15, FTAB);
-      step_Bi(W4, W1, 14, FTAB); step_Bi(W1, W2, 13, FTAB);
-      step_Bi(W2, W3, 12, FTAB); step_Bi(W3, W4, 11, FTAB);
-      step_Bi(W4, W1, 10, FTAB); step_Bi(W1, W2,  9, FTAB);
+      step_Bi(W2, W3, 16, ftab); step_Bi(W3, W4, 15, ftab);
+      step_Bi(W4, W1, 14, ftab); step_Bi(W1, W2, 13, ftab);
+      step_Bi(W2, W3, 12, ftab); step_Bi(W3, W4, 11, ftab);
+      step_Bi(W4, W1, 10, ftab); step_Bi(W1, W2,  9, ftab);
 
-      step_Ai(W1, W2,  8, FTAB); step_Ai(W2, W3,  7, FTAB);
-      step_Ai(W3, W4,  6, FTAB); step_Ai(W4, W1,  5, FTAB);
-      step_Ai(W1, W2,  4, FTAB); step_Ai(W2, W3,  3, FTAB);
-      step_Ai(W3, W4,  2, FTAB); step_Ai(W4, W1,  1, FTAB);
+      step_Ai(W1, W2,  8, ftab); step_Ai(W2, W3,  7, ftab);
+      step_Ai(W3, W4,  6, ftab); step_Ai(W4, W1,  5, ftab);
+      step_Ai(W1, W2,  4, ftab); step_Ai(W2, W3,  3, ftab);
+      step_Ai(W3, W4,  2, ftab); step_Ai(W4, W1,  1, ftab);
 
       store_le(out, W4, W3, W2, W1);
 

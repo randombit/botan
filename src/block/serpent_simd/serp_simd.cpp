@@ -180,9 +180,11 @@ void serpent_decrypt_4(const byte in[64],
 */
 void Serpent_SIMD::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
+   const u32bit* KS = &(this->get_round_keys()[0]);
+
    while(blocks >= 4)
       {
-      serpent_encrypt_4(in, out, this->get_round_keys());
+      serpent_encrypt_4(in, out, KS);
       in += 4 * BLOCK_SIZE;
       out += 4 * BLOCK_SIZE;
       blocks -= 4;
@@ -197,9 +199,11 @@ void Serpent_SIMD::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 */
 void Serpent_SIMD::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
+   const u32bit* KS = &(this->get_round_keys()[0]);
+
    while(blocks >= 4)
       {
-      serpent_decrypt_4(in, out, this->get_round_keys());
+      serpent_decrypt_4(in, out, KS);
       in += 4 * BLOCK_SIZE;
       out += 4 * BLOCK_SIZE;
       blocks -= 4;

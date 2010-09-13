@@ -123,8 +123,8 @@ void CAST_128::key_schedule(const byte key[], u32bit length)
    for(u32bit j = 0; j != length; ++j)
       X[j/4] = (X[j/4] << 8) + key[j];
 
-   key_schedule(MK, X);
-   key_schedule(RK, X);
+   cast_ks(MK, X);
+   cast_ks(RK, X);
 
    for(u32bit j = 0; j != 16; ++j)
       RK[j] %= 32;
@@ -133,7 +133,8 @@ void CAST_128::key_schedule(const byte key[], u32bit length)
 /*
 * S-Box Based Key Expansion
 */
-void CAST_128::key_schedule(u32bit K[16], u32bit X[4])
+void CAST_128::cast_ks(MemoryRegion<u32bit>& K,
+                       MemoryRegion<u32bit>& X)
    {
    class ByteReader
       {
@@ -145,7 +146,7 @@ void CAST_128::key_schedule(u32bit K[16], u32bit X[4])
       };
 
    SecureVector<u32bit, 4> Z;
-   ByteReader x(X), z(Z);
+   ByteReader x(&X[0]), z(&Z[0]);
 
    Z[0]  = X[0] ^ S5[x(13)] ^ S6[x(15)] ^ S7[x(12)] ^ S8[x(14)] ^ S7[x( 8)];
    Z[1]  = X[2] ^ S5[z( 0)] ^ S6[z( 2)] ^ S7[z( 1)] ^ S8[z( 3)] ^ S8[x(10)];

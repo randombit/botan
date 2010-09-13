@@ -16,11 +16,12 @@ namespace Botan {
 */
 void Lion::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   SecureVector<byte> buffer(LEFT_SIZE);
+   SecureVector<byte> buffer_vec(LEFT_SIZE);
+   byte* buffer = &buffer_vec[0];
 
    for(u32bit i = 0; i != blocks; ++i)
       {
-      xor_buf(buffer, in, key1, LEFT_SIZE);
+      xor_buf(buffer, in, &key1[0], LEFT_SIZE);
       cipher->set_key(buffer, LEFT_SIZE);
       cipher->cipher(in + LEFT_SIZE, out + LEFT_SIZE, RIGHT_SIZE);
 
@@ -28,7 +29,7 @@ void Lion::encrypt_n(const byte in[], byte out[], u32bit blocks) const
       hash->final(buffer);
       xor_buf(out, in, buffer, LEFT_SIZE);
 
-      xor_buf(buffer, out, key2, LEFT_SIZE);
+      xor_buf(buffer, out, &key2[0], LEFT_SIZE);
       cipher->set_key(buffer, LEFT_SIZE);
       cipher->cipher1(out + LEFT_SIZE, RIGHT_SIZE);
 
@@ -42,11 +43,12 @@ void Lion::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 */
 void Lion::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   SecureVector<byte> buffer(LEFT_SIZE);
+   SecureVector<byte> buffer_vec(LEFT_SIZE);
+   byte* buffer = &buffer_vec[0];
 
    for(u32bit i = 0; i != blocks; ++i)
       {
-      xor_buf(buffer, in, key2, LEFT_SIZE);
+      xor_buf(buffer, in, &key2[0], LEFT_SIZE);
       cipher->set_key(buffer, LEFT_SIZE);
       cipher->cipher(in + LEFT_SIZE, out + LEFT_SIZE, RIGHT_SIZE);
 
@@ -54,7 +56,7 @@ void Lion::decrypt_n(const byte in[], byte out[], u32bit blocks) const
       hash->final(buffer);
       xor_buf(out, in, buffer, LEFT_SIZE);
 
-      xor_buf(buffer, out, key1, LEFT_SIZE);
+      xor_buf(buffer, out, &key1[0], LEFT_SIZE);
       cipher->set_key(buffer, LEFT_SIZE);
       cipher->cipher1(out + LEFT_SIZE, RIGHT_SIZE);
 

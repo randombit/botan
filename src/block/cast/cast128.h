@@ -29,7 +29,8 @@ class BOTAN_DLL CAST_128 : public BlockCipher
    private:
       void key_schedule(const byte[], u32bit);
 
-      static void key_schedule(u32bit[16], u32bit[4]);
+      static void cast_ks(MemoryRegion<u32bit>& ks,
+                          MemoryRegion<u32bit>& user_key);
 
       static const u32bit S5[256];
       static const u32bit S6[256];

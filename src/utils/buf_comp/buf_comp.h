@@ -37,7 +37,10 @@ class BOTAN_DLL BufferedComputation
       * Add new input to process.
       * @param in the input to process as a MemoryRegion
       */
-      void update(const MemoryRegion<byte>& in) { add_data(in, in.size()); }
+      void update(const MemoryRegion<byte>& in)
+         {
+         add_data(&in[0], in.size());
+         }
 
       /**
       * Add new input to process.
@@ -72,7 +75,7 @@ class BOTAN_DLL BufferedComputation
       SecureVector<byte> final()
          {
          SecureVector<byte> output(OUTPUT_LENGTH);
-         final_result(output);
+         final_result(&output[0]);
          return output;
          }
 
@@ -97,7 +100,7 @@ class BOTAN_DLL BufferedComputation
       */
       SecureVector<byte> process(const MemoryRegion<byte>& in)
          {
-         add_data(in, in.size());
+         add_data(&in[0], in.size());
          return final();
          }
 

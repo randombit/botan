@@ -96,7 +96,7 @@ void Noekeon::encrypt_n(const byte in[], byte out[], u32bit blocks) const
       for(u32bit j = 0; j != 16; ++j)
          {
          A0 ^= RC[j];
-         theta(A0, A1, A2, A3, EK);
+         theta(A0, A1, A2, A3, &EK[0]);
 
          A1 = rotate_left(A1, 1);
          A2 = rotate_left(A2, 5);
@@ -110,7 +110,7 @@ void Noekeon::encrypt_n(const byte in[], byte out[], u32bit blocks) const
          }
 
       A0 ^= RC[16];
-      theta(A0, A1, A2, A3, EK);
+      theta(A0, A1, A2, A3, &EK[0]);
 
       store_be(out, A0, A1, A2, A3);
 
@@ -133,7 +133,7 @@ void Noekeon::decrypt_n(const byte in[], byte out[], u32bit blocks) const
 
       for(u32bit j = 16; j != 0; --j)
          {
-         theta(A0, A1, A2, A3, DK);
+         theta(A0, A1, A2, A3, &DK[0]);
          A0 ^= RC[j];
 
          A1 = rotate_left(A1, 1);
@@ -147,7 +147,7 @@ void Noekeon::decrypt_n(const byte in[], byte out[], u32bit blocks) const
          A3 = rotate_right(A3, 2);
          }
 
-      theta(A0, A1, A2, A3, DK);
+      theta(A0, A1, A2, A3, &DK[0]);
       A0 ^= RC[0];
 
       store_be(out, A0, A1, A2, A3);

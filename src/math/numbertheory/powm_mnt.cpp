@@ -52,7 +52,7 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
    SecureVector<word> workspace(z.size());
 
    g[0] = (base >= modulus) ? (base % modulus) : base;
-   bigint_mul(&z[0], z.size(), workspace,
+   bigint_mul(&z[0], z.size(), &workspace[0],
               g[0].data(), g[0].size(), g[0].sig_words(),
               R2.data(), R2.size(), R2.sig_words());
 
@@ -67,7 +67,7 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
       const u32bit y_sig = y.sig_words();
 
       zeroise(z);
-      bigint_mul(&z[0], z.size(), workspace,
+      bigint_mul(&z[0], z.size(), &workspace[0],
                  x.data(), x.size(), x_sig,
                  y.data(), y.size(), y_sig);
 
@@ -91,7 +91,7 @@ BigInt Montgomery_Exponentiator::execute() const
       for(u32bit k = 0; k != window_bits; ++k)
          {
          zeroise(z);
-         bigint_sqr(&z[0], z.size(), workspace,
+         bigint_sqr(&z[0], z.size(), &workspace[0],
                     x.data(), x.size(), x.sig_words());
 
          montgomery_reduce(x, z, modulus, mod_words, mod_prime);
@@ -103,7 +103,7 @@ BigInt Montgomery_Exponentiator::execute() const
          const BigInt& y = g[nibble-1];
 
          zeroise(z);
-         bigint_mul(&z[0], z.size(), workspace,
+         bigint_mul(&z[0], z.size(), &workspace[0],
                     x.data(), x.size(), x.sig_words(),
                     y.data(), y.size(), y.sig_words());
 

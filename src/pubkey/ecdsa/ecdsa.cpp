@@ -55,8 +55,8 @@ ECDSA_Signature_Operation::sign(const byte msg[], u32bit msg_len,
    BigInt s = mod_order.multiply(inverse_mod(k, order), mul_add(x, r, m));
 
    SecureVector<byte> output(2*order.bytes());
-   r.binary_encode(output + (output.size() / 2 - r.bytes()));
-   s.binary_encode(output + (output.size() - s.bytes()));
+   r.binary_encode(&output[output.size() / 2 - r.bytes()]);
+   s.binary_encode(&output[output.size() - s.bytes()]);
    return output;
    }
 

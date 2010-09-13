@@ -230,7 +230,8 @@ class BOTAN_DLL PK_Verifier
       bool verify_message(const MemoryRegion<byte>& msg,
                           const MemoryRegion<byte>& sig)
          {
-         return verify_message(msg, msg.size(), sig, sig.size());
+         return verify_message(&msg[0], msg.size(),
+                               &sig[0], sig.size());
          }
 
       /**

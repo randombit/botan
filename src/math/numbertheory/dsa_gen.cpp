@@ -98,10 +98,10 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
          {
          ++seed;
          hash->update(seed);
-         hash->final(V + HASH_SIZE * (n-k));
+         hash->final(&V[HASH_SIZE * (n-k)]);
          }
 
-      X.binary_decode(V + (HASH_SIZE - 1 - b/8),
+      X.binary_decode(&V[HASH_SIZE - 1 - b/8],
                       V.size() - (HASH_SIZE - 1 - b/8));
       X.set_bit(pbits-1);
 
@@ -125,7 +125,7 @@ SecureVector<byte> generate_dsa_primes(RandomNumberGenerator& rng,
 
    while(true)
       {
-      rng.randomize(seed, seed.size());
+      rng.randomize(&seed[0], seed.size());
 
       if(generate_dsa_primes(rng, af, p, q, pbits, qbits, seed))
          return seed;
