@@ -13,7 +13,7 @@ using namespace Botan;
 class XOR_Cipher : public StreamCipher
    {
    public:
-      void clear() throw() { mask.destroy(); mask_pos = 0; }
+      void clear() throw() { mask.clear(); mask_pos = 0; }
 
       // what we want to call this cipher
       std::string name() const { return "XOR"; }

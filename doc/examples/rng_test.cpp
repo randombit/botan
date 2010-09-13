@@ -29,7 +29,7 @@ SecureVector<byte> decode_hex(const std::string& in)
    }
    catch(std::exception& e)
       {
-      result.destroy();
+      result.clear();
       }
    return result;
    }
