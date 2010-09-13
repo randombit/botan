@@ -87,7 +87,7 @@ std::string encrypt(const byte input[], u32bit input_len,
    for(u32bit i = 0; i != VERSION_CODE_LEN; ++i)
      out_buf[i] = get_byte(i, CRYPTOBOX_VERSION_CODE);
 
-   out_buf.copy(VERSION_CODE_LEN, &pbkdf_salt[0], PBKDF_SALT_LEN);
+   copy_mem(&out_buf[VERSION_CODE_LEN], &pbkdf_salt[0],  PBKDF_SALT_LEN);
 
    pipe.read(&out_buf[VERSION_CODE_LEN + PBKDF_SALT_LEN], MAC_OUTPUT_LEN, 1);
    pipe.read(&out_buf[VERSION_CODE_LEN + PBKDF_SALT_LEN + MAC_OUTPUT_LEN],
