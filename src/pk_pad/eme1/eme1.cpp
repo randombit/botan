@@ -28,11 +28,15 @@ SecureVector<byte> EME1::pad(const byte in[], u32bit in_length,
 
    rng.randomize(&out[0], HASH_LENGTH);
 
-   out.copy(HASH_LENGTH, Phash, Phash.size());
+   out.copy(HASH_LENGTH, &Phash[0], Phash.size());
    out[out.size() - in_length - 1] = 0x01;
    out.copy(out.size() - in_length, in, in_length);
-   mgf->mask(out, HASH_LENGTH, out + HASH_LENGTH, out.size() - HASH_LENGTH);
-   mgf->mask(out + HASH_LENGTH, out.size() - HASH_LENGTH, out, HASH_LENGTH);
+
+   mgf->mask(&out[0], HASH_LENGTH,
+             &out[HASH_LENGTH], out.size() - HASH_LENGTH);
+
+   mgf->mask(&out[HASH_LENGTH], out.size() - HASH_LENGTH,
+             &out[0], HASH_LENGTH);
 
    return out;
    }
@@ -64,8 +68,10 @@ SecureVector<byte> EME1::unpad(const byte in[], u32bit in_length,
    SecureVector<byte> tmp(key_length);
    tmp.copy(key_length - in_length, in, in_length);
 
-   mgf->mask(tmp + HASH_LENGTH, tmp.size() - HASH_LENGTH, tmp, HASH_LENGTH);
-   mgf->mask(tmp, HASH_LENGTH, tmp + HASH_LENGTH, tmp.size() - HASH_LENGTH);
+   mgf->mask(&tmp[HASH_LENGTH], tmp.size() - HASH_LENGTH,
+             &tmp[0], HASH_LENGTH);
+   mgf->mask(&tmp[0], HASH_LENGTH,
+             &tmp[HASH_LENGTH], tmp.size() - HASH_LENGTH);
 
    const bool phash_ok = same_mem(&tmp[HASH_LENGTH], &Phash[0], Phash.size());
 
@@ -86,7 +92,7 @@ SecureVector<byte> EME1::unpad(const byte in[], u32bit in_length,
 
    if(delim_idx && delim_ok && phash_ok)
       {
-      return SecureVector<byte>(tmp + delim_idx + 1,
+      return SecureVector<byte>(&tmp[delim_idx + 1],
                                 tmp.size() - delim_idx - 1);
       }
 

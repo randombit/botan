@@ -57,7 +57,7 @@ PK_Encryptor_EME::enc(const byte msg[],
    if(8*(message.size() - 1) + high_bit(message[0]) > op->max_input_bits())
       throw Invalid_Argument("PK_Encryptor_EME: Input is too large");
 
-   return op->encrypt(message, message.size(), rng);
+   return op->encrypt(&message[0], message.size(), rng);
    }
 
 /*
@@ -201,7 +201,7 @@ SecureVector<byte> PK_Signer::signature(RandomNumberGenerator& rng)
                                                   op->max_input_bits(),
                                                   rng);
 
-   SecureVector<byte> plain_sig = op->sign(encoded, encoded.size(), rng);
+   SecureVector<byte> plain_sig = op->sign(&encoded[0], encoded.size(), rng);
 
    if(verify_op && !self_test_signature(encoded, plain_sig))
       throw Internal_Error("PK_Signer consistency check failed");
@@ -217,7 +217,7 @@ SecureVector<byte> PK_Signer::signature(RandomNumberGenerator& rng)
 
       std::vector<BigInt> sig_parts(op->message_parts());
       for(u32bit j = 0; j != sig_parts.size(); ++j)
-         sig_parts[j].binary_decode(plain_sig + SIZE_OF_PART*j, SIZE_OF_PART);
+         sig_parts[j].binary_decode(&plain_sig[SIZE_OF_PART*j], SIZE_OF_PART);
 
       return DER_Encoder()
          .start_cons(SEQUENCE)
@@ -310,7 +310,7 @@ bool PK_Verifier::check_signature(const byte sig[], u32bit length)
             throw Decoding_Error("PK_Verifier: signature size invalid");
 
          return validate_signature(emsa->raw_data(),
-                                   real_sig, real_sig.size());
+                                   &real_sig[0], real_sig.size());
          }
       else
          throw Decoding_Error("PK_Verifier: Unknown signature format " +
@@ -337,7 +337,7 @@ bool PK_Verifier::validate_signature(const MemoryRegion<byte>& msg,
       SecureVector<byte> encoded =
          emsa->encoding_of(msg, op->max_input_bits(), rng);
 
-      return op->verify(encoded, encoded.size(), sig, sig_len);
+      return op->verify(&encoded[0], encoded.size(), sig, sig_len);
       }
    }
 

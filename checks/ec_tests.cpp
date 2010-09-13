@@ -644,11 +644,7 @@ void test_gfp_store_restore()
 
    //store point (to std::string)
    SecureVector<byte> sv_mes = EC2OSP(p, PointGFp::COMPRESSED);
-   std::string storrage = hex_encode(sv_mes, sv_mes.size());
-
-   // restore point (from std::string)
-   SecureVector<byte> sv_new_point = hex_decode(storrage);
-   PointGFp new_p = OS2ECP(sv_new_point, dom_pars.get_curve());
+   PointGFp new_p = OS2ECP(sv_mes, dom_pars.get_curve());
 
    CHECK_MESSAGE( p == new_p, "original and restored point are different!");
    }

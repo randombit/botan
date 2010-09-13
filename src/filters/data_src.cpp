@@ -47,7 +47,7 @@ u32bit DataSource::discard_next(u32bit n)
 u32bit DataSource_Memory::read(byte out[], u32bit length)
    {
    u32bit got = std::min(source.size() - offset, length);
-   copy_mem(out, source + offset, got);
+   copy_mem(out, &source[offset], got);
    offset += got;
    return got;
    }
@@ -62,7 +62,7 @@ u32bit DataSource_Memory::peek(byte out[], u32bit length,
    if(peek_offset >= bytes_left) return 0;
 
    u32bit got = std::min(bytes_left - peek_offset, length);
-   copy_mem(out, source + offset + peek_offset, got);
+   copy_mem(out, &source[offset + peek_offset], got);
    return got;
    }
 

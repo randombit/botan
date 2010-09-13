@@ -115,9 +115,7 @@ class KDF_Filter : public Filter
          { secret.append(in, len); }
       void end_msg()
          {
-         SymmetricKey x = kdf->derive_key(outlen,
-                                          secret, secret.size(),
-                                          salt, salt.size());
+         SymmetricKey x = kdf->derive_key(outlen, secret, salt);
          send(x.bits_of(), x.length());
          }
       KDF_Filter(KDF* algo, const SymmetricKey& s, u32bit o)
@@ -154,9 +152,7 @@ void RNG_Filter::write(const byte[], u32bit length)
    {
    if(length)
       {
-      SecureVector<byte> out(length);
-      rng->randomize(out, out.size());
-      send(out);
+      send(rng->random_vec(length));
       }
    }
 

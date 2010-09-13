@@ -70,8 +70,8 @@ void Pipe::write(DataSource& source)
    SecureVector<byte> buffer(DEFAULT_BUFFERSIZE);
    while(!source.end_of_data())
       {
-      u32bit got = source.read(buffer, buffer.size());
-      write(buffer, got);
+      u32bit got = source.read(&buffer[0], buffer.size());
+      write(&buffer[0], got);
       }
    }
 
@@ -106,7 +106,8 @@ SecureVector<byte> Pipe::read_all(message_id msg)
    {
    msg = ((msg != DEFAULT_MESSAGE) ? msg : default_msg());
    SecureVector<byte> buffer(remaining(msg));
-   read(buffer, buffer.size(), msg);
+   u32bit got = read(&buffer[0], buffer.size(), msg);
+   buffer.resize(got);
    return buffer;
    }
 
@@ -122,7 +123,7 @@ std::string Pipe::read_all_as_string(message_id msg)
 
    while(true)
       {
-      u32bit got = read(buffer, buffer.size(), msg);
+      u32bit got = read(&buffer[0], buffer.size(), msg);
       if(got == 0)
          break;
       str.append(reinterpret_cast<const char*>(&buffer[0]), got);

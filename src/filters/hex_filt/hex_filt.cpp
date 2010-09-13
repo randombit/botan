@@ -57,7 +57,7 @@ void Hex_Encoder::encode_and_send(const byte block[], u32bit length)
       while(remaining)
          {
          u32bit sent = std::min(line_length - counter, remaining);
-         send(out + offset, sent);
+         send(&out[offset], sent);
          counter += sent;
          remaining -= sent;
          offset += sent;
@@ -78,7 +78,7 @@ void Hex_Encoder::write(const byte input[], u32bit length)
    in.copy(position, input, length);
    if(position + length >= in.size())
       {
-      encode_and_send(in, in.size());
+      encode_and_send(&in[0], in.size());
       input += (in.size() - position);
       length -= (in.size() - position);
       while(length >= in.size())
@@ -98,7 +98,7 @@ void Hex_Encoder::write(const byte input[], u32bit length)
 */
 void Hex_Encoder::end_msg()
    {
-   encode_and_send(in, position);
+   encode_and_send(&in[0], position);
    if(counter && line_length)
       send('\n');
    counter = position = 0;

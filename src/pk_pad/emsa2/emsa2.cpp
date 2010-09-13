@@ -38,8 +38,8 @@ SecureVector<byte> emsa2_encoding(const MemoryRegion<byte>& msg,
 
    output[0] = (empty ? 0x4B : 0x6B);
    output[output_length - 3 - HASH_SIZE] = 0xBA;
-   set_mem(output + 1, output_length - 4 - HASH_SIZE, 0xBB);
-   output.copy(output_length - (HASH_SIZE + 2), msg, msg.size());
+   set_mem(&output[1], output_length - 4 - HASH_SIZE, 0xBB);
+   output.copy(output_length - (HASH_SIZE + 2), &msg[0], msg.size());
    output[output_length-2] = hash_id;
    output[output_length-1] = 0xCC;
 

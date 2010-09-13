@@ -23,8 +23,8 @@ MemoryVector<byte> GOST_3410_PublicKey::x509_subject_public_key() const
 
    MemoryVector<byte> bits(2*part_size);
 
-   x.binary_encode(bits + (part_size - x.bytes()));
-   y.binary_encode(bits + (2*part_size - y.bytes()));
+   x.binary_encode(&bits[part_size - x.bytes()]);
+   y.binary_encode(&bits[2*part_size - y.bytes()]);
 
    // Keys are stored in little endian format (WTF)
    for(u32bit i = 0; i != part_size / 2; ++i)
@@ -69,8 +69,8 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
       std::swap(bits[part_size+i], bits[2*part_size-1-i]);
       }
 
-   BigInt x(bits, part_size);
-   BigInt y(bits + part_size, part_size);
+   BigInt x(&bits[0], part_size);
+   BigInt y(&bits[part_size], part_size);
 
    public_key = PointGFp(domain().get_curve(), x, y);
 
@@ -87,7 +87,7 @@ BigInt decode_le(const byte msg[], u32bit msg_len)
    for(size_t i = 0; i != msg_le.size() / 2; ++i)
       std::swap(msg_le[i], msg_le[msg_le.size()-1-i]);
 
-   return BigInt(msg_le, msg_le.size());
+   return BigInt(&msg_le[0], msg_le.size());
    }
 
 }
@@ -129,8 +129,8 @@ GOST_3410_Signature_Operation::sign(const byte msg[], u32bit msg_len,
       throw Invalid_State("GOST 34.10: r == 0 || s == 0");
 
    SecureVector<byte> output(2*order.bytes());
-   r.binary_encode(output + (output.size() / 2 - r.bytes()));
-   s.binary_encode(output + (output.size() - s.bytes()));
+   r.binary_encode(&output[output.size() / 2 - r.bytes()]);
+   s.binary_encode(&output[output.size() - s.bytes()]);
    return output;
    }
 

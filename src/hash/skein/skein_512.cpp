@@ -27,7 +27,9 @@ enum type_code {
    SKEIN_OUTPUT = 63
 };
 
-void ubi_512(u64bit H[9], u64bit T[], const byte msg[], u32bit msg_len)
+void ubi_512(MemoryRegion<u64bit>& H,
+             MemoryRegion<u64bit>& T,
+             const byte msg[], u32bit msg_len)
    {
    do
       {
@@ -122,16 +124,19 @@ void ubi_512(u64bit H[9], u64bit T[], const byte msg[], u32bit msg_len)
       } while(msg_len);
    }
 
-void reset_tweak(u64bit T[3], type_code type, bool final)
+void reset_tweak(MemoryRegion<u64bit>& T,
+                 type_code type, bool final)
    {
    T[0] = 0;
    T[1] = ((u64bit)type << 56) | ((u64bit)1 << 62) | ((u64bit)final << 63);
    }
 
-void initial_block(u64bit H[9], u64bit T[3], u32bit output_bits,
+void initial_block(MemoryRegion<u64bit>& H,
+                   MemoryRegion<u64bit>& T,
+                   u32bit output_bits,
                    const std::string& personalization)
    {
-   clear_mem(H, 9);
+   zeroise(H);
 
    // ASCII("SHA3") followed by version (0x0001) code
    byte config_str[32] = { 0x53, 0x48, 0x41, 0x33, 0x01, 0x00, 0 };

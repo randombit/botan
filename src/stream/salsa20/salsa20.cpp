@@ -109,7 +109,7 @@ void Salsa20::cipher(const byte in[], byte out[], u32bit length)
       length -= (buffer.size() - position);
       in += (buffer.size() - position);
       out += (buffer.size() - position);
-      salsa20(&buffer[0], state);
+      salsa20(&buffer[0], &state[0]);
 
       ++state[8];
       if(!state[8]) // if overflow in state[8]
@@ -194,7 +194,7 @@ void Salsa20::set_iv(const byte iv[], u32bit length)
       state[9] = load_le<u32bit>(iv, 3);
 
       SecureVector<u32bit> hsalsa(8);
-      hsalsa20(hsalsa, state);
+      hsalsa20(&hsalsa[0], &state[0]);
 
       state[ 1] = hsalsa[0];
       state[ 2] = hsalsa[1];
@@ -211,7 +211,7 @@ void Salsa20::set_iv(const byte iv[], u32bit length)
    state[8] = 0;
    state[9] = 0;
 
-   salsa20(&buffer[0], state);
+   salsa20(&buffer[0], &state[0]);
    ++state[8];
    if(!state[8]) // if overflow in state[8]
       ++state[9]; // carry to state[9]

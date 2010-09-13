@@ -17,17 +17,17 @@ namespace {
 /*
 * Perform an N-way PHT
 */
-inline void PHT(u32bit buf[], u32bit buf_size)
+inline void PHT(MemoryRegion<u32bit>& B)
    {
    u32bit sum = 0;
-   for(u32bit i = 0; i < buf_size - 1; ++i)
-      sum += buf[i];
+   for(u32bit i = 0; i < B.size() - 1; ++i)
+      sum += B[i];
 
-   buf[buf_size-1] += sum;
+   B[B.size()-1] += sum;
 
-   sum = buf[buf_size-1];
-   for(u32bit i = 0; i < buf_size - 1; ++i)
-      buf[i] += sum;
+   sum = B[B.size()-1];
+   for(u32bit i = 0; i < B.size() - 1; ++i)
+      B[i] += sum;
    }
 
 }
@@ -195,11 +195,11 @@ void Turing::generate()
       C += R9;
       D += R5;
 
-      store_be(A, buffer + 20*j + 0);
-      store_be(B, buffer + 20*j + 4);
-      store_be(C, buffer + 20*j + 8);
-      store_be(D, buffer + 20*j + 12);
-      store_be(E, buffer + 20*j + 16);
+      store_be(A, &buffer[20*j + 0]);
+      store_be(B, &buffer[20*j + 4]);
+      store_be(C, &buffer[20*j + 8]);
+      store_be(D, &buffer[20*j + 12]);
+      store_be(E, &buffer[20*j + 16]);
       }
 
    position = 0;
@@ -232,7 +232,7 @@ void Turing::key_schedule(const byte key[], u32bit length)
    for(u32bit j = 0; j != K.size(); ++j)
       K[j] = fixedS(K[j]);
 
-   PHT(K, K.size());
+   PHT(K);
 
    for(u32bit i = 0; i != 256; ++i)
       {
@@ -290,7 +290,7 @@ void Turing::set_iv(const byte iv[], u32bit length)
              S2[get_byte(2, W)] ^ S3[get_byte(3, W)];
       }
 
-   PHT(R, 17);
+   PHT(R);
 
    generate();
    }

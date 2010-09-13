@@ -87,10 +87,10 @@ std::string encrypt(const byte input[], u32bit input_len,
    for(u32bit i = 0; i != VERSION_CODE_LEN; ++i)
      out_buf[i] = get_byte(i, CRYPTOBOX_VERSION_CODE);
 
-   out_buf.copy(VERSION_CODE_LEN, pbkdf_salt, PBKDF_SALT_LEN);
+   out_buf.copy(VERSION_CODE_LEN, &pbkdf_salt[0], PBKDF_SALT_LEN);
 
-   pipe.read(out_buf + VERSION_CODE_LEN + PBKDF_SALT_LEN, MAC_OUTPUT_LEN, 1);
-   pipe.read(out_buf + VERSION_CODE_LEN + PBKDF_SALT_LEN + MAC_OUTPUT_LEN,
+   pipe.read(&out_buf[VERSION_CODE_LEN + PBKDF_SALT_LEN], MAC_OUTPUT_LEN, 1);
+   pipe.read(&out_buf[VERSION_CODE_LEN + PBKDF_SALT_LEN + MAC_OUTPUT_LEN],
              ciphertext_len, 0);
 
    return PEM_Code::encode(out_buf, "BOTAN CRYPTOBOX MESSAGE");
@@ -111,15 +111,15 @@ std::string decrypt(const byte input[], u32bit input_len,
       if(ciphertext[i] != get_byte(i, CRYPTOBOX_VERSION_CODE))
          throw Decoding_Error("Bad CryptoBox version");
 
-   SecureVector<byte> pbkdf_salt(ciphertext + VERSION_CODE_LEN, PBKDF_SALT_LEN);
+   const byte* pbkdf_salt = &ciphertext[VERSION_CODE_LEN];
 
    PKCS5_PBKDF2 pbkdf(new HMAC(new SHA_512));
 
    OctetString master_key = pbkdf.derive_key(
       PBKDF_OUTPUT_LEN,
       passphrase,
-      &pbkdf_salt[0],
-      pbkdf_salt.size(),
+      pbkdf_salt,
+      PBKDF_SALT_LEN,
       PBKDF_ITERATIONS);
 
    const byte* mk = master_key.begin();
@@ -136,13 +136,14 @@ std::string decrypt(const byte input[], u32bit input_len,
    const u32bit ciphertext_offset =
       VERSION_CODE_LEN + PBKDF_SALT_LEN + MAC_OUTPUT_LEN;
 
-   pipe.process_msg(ciphertext + ciphertext_offset,
+   pipe.process_msg(&ciphertext[ciphertext_offset],
                     ciphertext.size() - ciphertext_offset);
 
    byte computed_mac[MAC_OUTPUT_LEN];
    pipe.read(computed_mac, MAC_OUTPUT_LEN, 1);
 
-   if(!same_mem(computed_mac, ciphertext + VERSION_CODE_LEN + PBKDF_SALT_LEN,
+   if(!same_mem(computed_mac,
+                &ciphertext[VERSION_CODE_LEN + PBKDF_SALT_LEN],
                 MAC_OUTPUT_LEN))
       throw Decoding_Error("CryptoBox integrity failure");
 

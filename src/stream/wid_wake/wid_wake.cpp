@@ -18,13 +18,13 @@ void WiderWake_41_BE::cipher(const byte in[], byte out[], u32bit length)
    {
    while(length >= buffer.size() - position)
       {
-      xor_buf(out, in, buffer + position, buffer.size() - position);
+      xor_buf(out, in, &buffer[position], buffer.size() - position);
       length -= (buffer.size() - position);
       in += (buffer.size() - position);
       out += (buffer.size() - position);
       generate(buffer.size());
       }
-   xor_buf(out, in, buffer + position, length);
+   xor_buf(out, in, &buffer[position], length);
    position += length;
    }
 
@@ -41,7 +41,7 @@ void WiderWake_41_BE::generate(u32bit length)
       {
       u32bit R0a;
 
-      store_be(R3, buffer + j);
+      store_be(R3, &buffer[j]);
 
       R0a = R4 + R3; R3 += R2; R2 += R1; R1 += R0;
       R0a = (R0a >> 8) ^ T[(R0a & 0xFF)];
@@ -50,7 +50,7 @@ void WiderWake_41_BE::generate(u32bit length)
       R3  = (R3  >> 8) ^ T[(R3  & 0xFF)];
       R4 = R0; R0 = R0a;
 
-      store_be(R3, buffer + j + 4);
+      store_be(R3, &buffer[j + 4]);
 
       R0a = R4 + R3; R3 += R2; R2 += R1; R1 += R0;
       R0a = (R0a >> 8) ^ T[(R0a & 0xFF)];

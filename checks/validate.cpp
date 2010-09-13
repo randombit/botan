@@ -346,7 +346,7 @@ bool failed_test(const std::string& algo,
       pipe.append(new Botan::Hex_Encoder);
 
       Botan::SecureVector<byte> data = Botan::hex_decode(in);
-      const byte* data_ptr = data;
+      const byte* data_ptr = &data[0];
 
       // this can help catch errors with buffering, etc
       u32bit len = data.size();
@@ -394,7 +394,7 @@ bool failed_test(const std::string& algo,
       u32bit length = random_word(rng, pipe.remaining() - offset);
 
       Botan::SecureVector<byte> peekbuf(length);
-      pipe.peek(peekbuf, length, offset);
+      pipe.peek(&peekbuf[0], peekbuf.size(), offset);
 
       output = pipe.read_all_as_string();
 

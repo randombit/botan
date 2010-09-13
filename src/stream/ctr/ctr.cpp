@@ -121,7 +121,7 @@ void CTR_BE::increment_counter()
 
    for(u32bit i = 0; i != PARALLEL_BLOCKS; ++i)
       {
-      byte* this_ctr = counter + i*permutation->BLOCK_SIZE;
+      byte* this_ctr = &counter[i * permutation->BLOCK_SIZE];
 
       byte last_byte = this_ctr[permutation->BLOCK_SIZE-1];
       last_byte += PARALLEL_BLOCKS;

@@ -178,7 +178,7 @@ void validate_signature(PK_Verifier& v, PK_Signer& s, const std::string& algo,
 
    SecureVector<byte> expected = hex_decode(exp);
 
-   SecureVector<byte> sig = s.sign_message(message, message.size(), rng);
+   SecureVector<byte> sig = s.sign_message(message, rng);
 
    if(sig != expected)
       {
@@ -187,7 +187,7 @@ void validate_signature(PK_Verifier& v, PK_Signer& s, const std::string& algo,
       failure = true;
       }
 
-   if(!v.verify_message(message, message.size(), sig, sig.size()))
+   if(!v.verify_message(message, sig))
       {
       std::cout << "FAILED (verify): " << algo << std::endl;
       failure = true;
@@ -196,7 +196,7 @@ void validate_signature(PK_Verifier& v, PK_Signer& s, const std::string& algo,
    /* This isn't a very thorough testing method, but it will hopefully
       catch any really horrible errors */
    sig[0]++;
-   if(v.verify_message(message, message.size(), sig, sig.size()))
+   if(v.verify_message(message, sig))
       {
       std::cout << "FAILED (accepted bad sig): " << algo << std::endl;
       failure = true;
@@ -220,7 +220,7 @@ void validate_kas(PK_Key_Agreement& kas, const std::string& algo,
    SecureVector<byte> expected = hex_decode(output);
 
    SecureVector<byte> got = kas.derive_key(keylen,
-                                           pubkey, pubkey.size()).bits_of();
+                                           pubkey).bits_of();
 
    if(got != expected)
       {
@@ -371,7 +371,7 @@ u32bit validate_rsa_ver(const std::string& algo,
    SecureVector<byte> sig = hex_decode(str[3]);
 
    bool passed = true;
-   passed = v.verify_message(msg, msg.size(), sig, sig.size());
+   passed = v.verify_message(msg, sig);
    return (passed ? 0 : 1);
 #endif
 
@@ -402,7 +402,7 @@ u32bit validate_rsa_ver_x509(const std::string& algo,
    SecureVector<byte> msg = hex_decode(str[1]);
    SecureVector<byte> sig = hex_decode(str[2]);
 
-   bool passed = v.verify_message(msg, msg.size(), sig, sig.size());
+   bool passed = v.verify_message(msg, sig);
    return (passed ? 0 : 1);
 
 #endif
@@ -427,7 +427,7 @@ u32bit validate_rw_ver(const std::string& algo,
    SecureVector<byte> sig = hex_decode(str[3]);
 
    bool passed = true;
-   passed = v.verify_message(msg, msg.size(), sig, sig.size());
+   passed = v.verify_message(msg, sig);
    return (passed ? 0 : 1);
 #endif
 
@@ -542,7 +542,7 @@ u32bit validate_gost_ver(const std::string& algo,
    SecureVector<byte> msg = hex_decode(str[2]);
    SecureVector<byte> sig = hex_decode(str[3]);
 
-   bool passed = v.verify_message(msg, msg.size(), sig, sig.size());
+   bool passed = v.verify_message(msg, sig);
    return (passed ? 0 : 1);
 #endif
 
@@ -575,7 +575,7 @@ u32bit validate_dsa_ver(const std::string& algo,
    SecureVector<byte> sig = hex_decode(str[2]);
 
    v.set_input_format(DER_SEQUENCE);
-   bool passed = v.verify_message(msg, msg.size(), sig, sig.size());
+   bool passed = v.verify_message(msg, sig);
    return (passed ? 0 : 1);
 #endif
 

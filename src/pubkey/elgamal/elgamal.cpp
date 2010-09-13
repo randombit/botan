@@ -93,8 +93,8 @@ ElGamal_Encryption_Operation::encrypt(const byte msg[], u32bit msg_len,
    BigInt b = mod_p.multiply(m, powermod_y_p(k));
 
    SecureVector<byte> output(2*p.bytes());
-   a.binary_encode(output + (p.bytes() - a.bytes()));
-   b.binary_encode(output + output.size() / 2 + (p.bytes() - b.bytes()));
+   a.binary_encode(&output[p.bytes() - a.bytes()]);
+   b.binary_encode(&output[output.size() / 2 + (p.bytes() - b.bytes())]);
    return output;
    }
 

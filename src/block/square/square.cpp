@@ -152,9 +152,10 @@ void Square::key_schedule(const byte key[], u32bit)
       XEK[4*i+6] = XEK[4*i+2] ^ XEK[4*i+5];
       XEK[4*i+7] = XEK[4*i+3] ^ XEK[4*i+6];
 
-      XDK.copy(28 - 4*i, XEK + 4*(i+1), 4);
+      for(u32bit j = 0; j != 4; ++j)
+         XDK[28 - 4*i + j] = XEK[4*(i+1)+j];
 
-      transform(XEK + 4*i);
+      transform(&XEK[4*i]);
       }
 
    for(u32bit i = 0; i != 4; ++i)
@@ -166,8 +167,8 @@ void Square::key_schedule(const byte key[], u32bit)
          MD[4*i+j+16] = get_byte(j, XEK[i   ]);
          }
 
-   EK.copy(XEK + 4, 28);
-   DK.copy(XDK + 4, 28);
+   EK.copy(&XEK[4], 28);
+   DK.copy(&XDK[4], 28);
    }
 
 /*

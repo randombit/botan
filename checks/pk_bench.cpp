@@ -162,8 +162,7 @@ void benchmark_sig_ver(PK_Verifier& ver, PK_Signer& sig,
 
          if((i % 100) == 0)
             {
-            sig_random.resize(signature.size());
-            rng.randomize(sig_random, sig_random.size());
+            sig_random = rng.random_vec(signature.size());
 
             verify_timer.start();
             bool verified2 = ver.verify_message(message, sig_random);

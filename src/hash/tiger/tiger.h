@@ -35,7 +35,9 @@ class BOTAN_DLL Tiger : public MDx_HashFunction
       void compress_n(const byte[], u32bit block);
       void copy_out(byte[]);
 
-      static void pass(u64bit&, u64bit&, u64bit&, u64bit[8], byte);
+      static void pass(u64bit& A, u64bit& B, u64bit& C,
+                       const MemoryRegion<u64bit>& M,
+                       byte mul);
 
       static const u64bit SBOX1[256];
       static const u64bit SBOX2[256];

@@ -16,7 +16,7 @@ SecureVector<byte> KDF::derive_key(u32bit key_len,
                                    const MemoryRegion<byte>& secret,
                                    const std::string& salt) const
    {
-   return derive_key(key_len, secret, secret.size(),
+   return derive_key(key_len, &secret[0], secret.size(),
                      reinterpret_cast<const byte*>(salt.data()),
                      salt.length());
    }

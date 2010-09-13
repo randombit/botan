@@ -20,8 +20,7 @@ namespace Botan {
 OctetString::OctetString(RandomNumberGenerator& rng,
                          u32bit length)
    {
-   bits.resize(length);
-   rng.randomize(bits, length);
+   bits = rng.random_vec(length);
    }
 
 /*

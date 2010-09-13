@@ -75,7 +75,7 @@ void CRL_Entry::encode_into(DER_Encoder& der) const
    extensions.add(new Cert_Extension::CRL_ReasonCode(reason));
 
    der.start_cons(SEQUENCE)
-         .encode(BigInt::decode(serial, serial.size()))
+      .encode(BigInt::decode(serial))
          .encode(time)
          .encode(extensions)
       .end_cons();

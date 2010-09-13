@@ -28,10 +28,10 @@ SecureVector<byte> emsa3_encoding(const MemoryRegion<byte>& msg,
    const u32bit P_LENGTH = output_length - msg.size() - hash_id_length - 2;
 
    T[0] = 0x01;
-   set_mem(T+1, P_LENGTH, 0xFF);
+   set_mem(&T[1], P_LENGTH, 0xFF);
    T[P_LENGTH+1] = 0x00;
    T.copy(P_LENGTH+2, hash_id, hash_id_length);
-   T.copy(output_length-msg.size(), msg, msg.size());
+   T.copy(output_length-msg.size(), &msg[0], msg.size());
    return T;
    }
 
@@ -64,7 +64,7 @@ SecureVector<byte> EMSA3::encoding_of(const MemoryRegion<byte>& msg,
       throw Encoding_Error("EMSA3::encoding_of: Bad input length");
 
    return emsa3_encoding(msg, output_bits,
-                         hash_id, hash_id.size());
+                         &hash_id[0], hash_id.size());
    }
 
 /*
@@ -80,7 +80,7 @@ bool EMSA3::verify(const MemoryRegion<byte>& coded,
    try
       {
       return (coded == emsa3_encoding(raw, key_bits,
-                                      hash_id, hash_id.size()));
+                                      &hash_id[0], hash_id.size()));
       }
    catch(...)
       {

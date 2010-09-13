@@ -26,7 +26,7 @@ SecureVector<byte> EME::encode(const MemoryRegion<byte>& msg,
                                u32bit key_bits,
                                RandomNumberGenerator& rng) const
    {
-   return pad(msg, msg.size(), key_bits, rng);
+   return pad(&msg[0], msg.size(), key_bits, rng);
    }
 
 /*
@@ -44,7 +44,7 @@ SecureVector<byte> EME::decode(const byte msg[], u32bit msg_len,
 SecureVector<byte> EME::decode(const MemoryRegion<byte>& msg,
                                u32bit key_bits) const
    {
-   return unpad(msg, msg.size(), key_bits);
+   return unpad(&msg[0], msg.size(), key_bits);
    }
 
 }

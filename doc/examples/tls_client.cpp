@@ -41,8 +41,12 @@ int main(int argc, char* argv[])
 
       printf("Handshake extablished...\n");
 
+#if 0
       std::string http_command = "GET / HTTP/1.1\r\n"
                                  "Server: " + host + ':' + to_string(port) + "\r\n\r\n";
+#else
+      std::string http_command = "GET / HTTP/1.0\r\n\r\n";
+#endif
 
       tls.write((const byte*)http_command.c_str(), http_command.length());
 
@@ -61,7 +65,7 @@ int main(int argc, char* argv[])
          total_got += got;
          }
 
-      printf("Retrieved %d bytes total\n", total_got);
+      printf("\nRetrieved %d bytes total\n", total_got);
    }
    catch(std::exception& e)
       {

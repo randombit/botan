@@ -23,7 +23,7 @@ void SHA_160_IA32::compress_n(const byte input[], u32bit blocks)
    {
    for(u32bit i = 0; i != blocks; ++i)
       {
-      botan_sha160_ia32_compress(digest, input, W);
+      botan_sha160_ia32_compress(&digest[0], input, &W[0]);
       input += HASH_BLOCK_SIZE;
       }
    }

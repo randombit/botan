@@ -103,7 +103,7 @@ void Unix_EntropySource::poll(Entropy_Accumulator& accum)
 
       while(!pipe.end_of_data())
          {
-         u32bit got_this_loop = pipe.read(io_buffer, io_buffer.size());
+         u32bit got_this_loop = pipe.read(&io_buffer[0], io_buffer.size());
          got_from_src += got_this_loop;
 
          accum.add(&io_buffer[0], got_this_loop, .005);

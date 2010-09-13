@@ -75,13 +75,13 @@ void MDx_HashFunction::final_result(byte output[])
 
    if(position >= HASH_BLOCK_SIZE - COUNT_SIZE)
       {
-      compress_n(buffer, 1);
+      compress_n(&buffer[0], 1);
       zeroise(buffer);
       }
 
-   write_count(buffer + HASH_BLOCK_SIZE - COUNT_SIZE);
+   write_count(&buffer[HASH_BLOCK_SIZE - COUNT_SIZE]);
 
-   compress_n(buffer, 1);
+   compress_n(&buffer[0], 1);
    copy_out(output);
    clear();
    }
