@@ -18,7 +18,7 @@ std::ostream& operator<<(std::ostream& stream, Pipe& pipe)
    SecureVector<byte> buffer(DEFAULT_BUFFERSIZE);
    while(stream.good() && pipe.remaining())
       {
-      u32bit got = pipe.read(buffer, buffer.size());
+      u32bit got = pipe.read(&buffer[0], buffer.size());
       stream.write(reinterpret_cast<const char*>(&buffer[0]), got);
       }
    if(!stream.good())
@@ -35,7 +35,7 @@ std::istream& operator>>(std::istream& stream, Pipe& pipe)
    while(stream.good())
       {
       stream.read(reinterpret_cast<char*>(&buffer[0]), buffer.size());
-      pipe.write(buffer, stream.gcount());
+      pipe.write(&buffer[0], stream.gcount());
       }
    if(stream.bad() || (stream.fail() && !stream.eof()))
       throw Stream_IO_Error("Pipe input operator (iostream) has failed");

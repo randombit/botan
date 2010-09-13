@@ -32,6 +32,13 @@ class BOTAN_DLL RandomNumberGenerator
       */
       virtual void randomize(byte output[], u32bit length) = 0;
 
+      SecureVector<byte> random_vec(u32bit bytes)
+         {
+         SecureVector<byte> output(bytes);
+         randomize(&output[0], output.size());
+         return output;
+         }
+
       /**
       * Return a random byte
       * @return random byte

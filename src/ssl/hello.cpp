@@ -29,7 +29,7 @@ void HandshakeMessage::send(Record_Writer& writer, HandshakeHash& hash) const
 
    hash.update(send_buf);
 
-   writer.send(HANDSHAKE, send_buf, send_buf.size());
+   writer.send(HANDSHAKE, &send_buf[0], send_buf.size());
    writer.flush();
    }
 
@@ -66,8 +66,7 @@ Client_Hello::Client_Hello(RandomNumberGenerator& rng,
                            Record_Writer& writer, const TLS_Policy* policy,
                            HandshakeHash& hash)
    {
-   c_random.resize(32);
-   rng.randomize(c_random, c_random.size());
+   c_random = rng.random_vec(32);
 
    suites = policy->ciphersuites();
    comp_algos = policy->compression();
@@ -249,8 +248,7 @@ Server_Hello::Server_Hello(RandomNumberGenerator& rng,
    comp_algo = policy->choose_compression(c_hello.compression_algos());
 
    s_version = ver;
-   s_random.resize(32);
-   rng.randomize(s_random, s_random.size());
+   s_random = rng.random_vec(32);
 
    send(writer, hash);
    }

@@ -43,8 +43,7 @@ SecureVector<byte> EMSA4::encoding_of(const MemoryRegion<byte>& msg,
 
    const u32bit output_length = (output_bits + 7) / 8;
 
-   SecureVector<byte> salt(SALT_SIZE);
-   rng.randomize(salt, SALT_SIZE);
+   SecureVector<byte> salt = rng.random_vec(SALT_SIZE);
 
    for(u32bit j = 0; j != 8; ++j)
       hash->update(0);

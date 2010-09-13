@@ -180,7 +180,7 @@ bool Server_Key_Exchange::verify(const X509_Certificate& cert,
    verifier.update(s_random);
    verifier.update(params_got);
 
-   return verifier.check_signature(signature, signature.size());
+   return verifier.check_signature(signature);
    }
 
 }

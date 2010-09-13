@@ -29,8 +29,8 @@ bool encryption_consistency_check(RandomNumberGenerator& rng,
    if(encryptor.maximum_input_size() == 0)
       return true;
 
-   SecureVector<byte> plaintext(encryptor.maximum_input_size() - 1);
-   rng.randomize(plaintext, plaintext.size());
+   SecureVector<byte> plaintext =
+      rng.random_vec(encryptor.maximum_input_size() - 1);
 
    SecureVector<byte> ciphertext = encryptor.encrypt(plaintext, rng);
    if(ciphertext == plaintext)
@@ -51,8 +51,7 @@ bool signature_consistency_check(RandomNumberGenerator& rng,
    PK_Signer signer(key, padding);
    PK_Verifier verifier(key, padding);
 
-   SecureVector<byte> message(16);
-   rng.randomize(message, message.size());
+   SecureVector<byte> message = rng.random_vec(16);
 
    SecureVector<byte> signature;
 

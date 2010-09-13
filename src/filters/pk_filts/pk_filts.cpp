@@ -22,7 +22,7 @@ void PK_Encryptor_Filter::write(const byte input[], u32bit length)
 */
 void PK_Encryptor_Filter::end_msg()
    {
-   send(cipher->encrypt(buffer, buffer.size(), rng));
+   send(cipher->encrypt(buffer, rng));
    buffer.clear();
    }
 
@@ -39,7 +39,7 @@ void PK_Decryptor_Filter::write(const byte input[], u32bit length)
 */
 void PK_Decryptor_Filter::end_msg()
    {
-   send(cipher->decrypt(buffer, buffer.size()));
+   send(cipher->decrypt(buffer));
    buffer.clear();
    }
 
@@ -74,7 +74,7 @@ void PK_Verifier_Filter::end_msg()
    {
    if(signature.empty())
       throw Invalid_State("PK_Verifier_Filter: No signature to check against");
-   bool is_valid = verifier->check_signature(signature, signature.size());
+   bool is_valid = verifier->check_signature(signature);
    send((is_valid ? 1 : 0));
    }
 

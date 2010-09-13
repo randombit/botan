@@ -32,7 +32,7 @@ void Filter::send(const byte input[], u32bit length)
       if(next[j])
          {
          if(write_queue.size())
-            next[j]->write(write_queue, write_queue.size());
+            next[j]->write(&write_queue[0], write_queue.size());
          next[j]->write(input, length);
          nothing_attached = false;
          }

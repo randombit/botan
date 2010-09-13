@@ -167,7 +167,7 @@ u32bit Record_Reader::get_record(byte& msg_type,
    SecureVector<byte> buffer(record_len);
 
    input_queue.read(header, sizeof(header)); // pull off the header
-   input_queue.read(buffer, buffer.size());
+   input_queue.read(&buffer[0], buffer.size());
 
    /*
    * We are handshaking, no crypto to do so return as-is

@@ -121,7 +121,7 @@ bool check_passhash9(const std::string& pass, const std::string& hash)
    byte alg_id = bin[0];
 
    u32bit kdf_iterations =
-      WORK_FACTOR_SCALE * load_be<u16bit>(bin + ALGID_BYTES, 0);
+      WORK_FACTOR_SCALE * load_be<u16bit>(&bin[ALGID_BYTES], 0);
 
    if(kdf_iterations == 0)
       return false;

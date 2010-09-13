@@ -40,7 +40,7 @@ void MD2::hash(const byte input[])
       0x9F, 0x11, 0x83, 0x14 };
 
    X.copy(16, input, HASH_BLOCK_SIZE);
-   xor_buf(X + 32, X, X + 16, HASH_BLOCK_SIZE);
+   xor_buf(&X[32], &X[0], &X[16], HASH_BLOCK_SIZE);
    byte T = 0;
    for(u32bit j = 0; j != 18; ++j)
       {
@@ -88,8 +88,8 @@ void MD2::final_result(byte output[])
    {
    for(u32bit j = position; j != HASH_BLOCK_SIZE; ++j)
       buffer[j] = static_cast<byte>(HASH_BLOCK_SIZE - position);
-   hash(buffer);
-   hash(checksum);
+   hash(&buffer[0]);
+   hash(&checksum[0]);
    copy_mem(output, &X[0], OUTPUT_LENGTH);
    clear();
    }

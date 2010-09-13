@@ -121,11 +121,9 @@ SecureVector<byte> generate_dsa_primes(RandomNumberGenerator& rng,
                                        BigInt& p, BigInt& q,
                                        u32bit pbits, u32bit qbits)
    {
-   SecureVector<byte> seed(qbits/8);
-
    while(true)
       {
-      rng.randomize(&seed[0], seed.size());
+      SecureVector<byte> seed = rng.random_vec(qbits / 8);
 
       if(generate_dsa_primes(rng, af, p, q, pbits, qbits, seed))
          return seed;

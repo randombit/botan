@@ -40,8 +40,7 @@ Client_Key_Exchange::Client_Key_Exchange(RandomNumberGenerator& rng,
       }
    else if(const RSA_PublicKey* rsa_pub = dynamic_cast<const RSA_PublicKey*>(pub_key))
       {
-      pre_master.resize(48);
-      rng.randomize(pre_master, 48);
+      pre_master = rng.random_vec(48);
       pre_master[0] = (pref_version >> 8) & 0xFF;
       pre_master[1] = (pref_version     ) & 0xFF;
 
@@ -123,8 +122,13 @@ Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
       }
       catch(...)
          {
-         pre_master.resize(dh_priv->public_value().size());
-         rng.randomize(pre_master, pre_master.size());
+         /*
+         * Something failed in the DH computation. To avoid possible
+         * timing attacks, randomize the pre-master output and carry
+         * on, allowing the protocol to fail later in the finished
+         * checks.
+         */
+         pre_master = rng.random_vec(dh_priv->public_value().size());
          }
 
       return pre_master;
@@ -142,8 +146,7 @@ Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
       }
       catch(...)
          {
-         pre_master.resize(48);
-         rng.randomize(pre_master, pre_master.size());
+         pre_master = rng.random_vec(48);
          pre_master[0] = (version >> 8) & 0xFF;
          pre_master[1] = (version     ) & 0xFF;
          }
