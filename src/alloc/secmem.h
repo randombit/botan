@@ -320,15 +320,6 @@ class MemoryVector : public MemoryRegion<T>
       */
       MemoryVector(const MemoryRegion<T>& in)
          { init(false); set(&in[0], in.size()); }
-
-      /**
-      * Create a buffer whose content is the concatenation of two other
-      * buffers.
-      * @param in1 the first part of the new contents
-      * @param in2 the contents to be appended to in1
-      */
-      MemoryVector(const MemoryRegion<T>& in1, const MemoryRegion<T>& in2)
-         { init(false); set(&in1[0], in1.size()); append(in2); }
    };
 
 /**
@@ -389,15 +380,6 @@ class SecureVector : public MemoryRegion<T>
          else
             set(&in[0], in.size());
          }
-
-      /**
-      * Create a buffer whose content is the concatenation of two other
-      * buffers.
-      * @param in1 the first part of the new contents
-      * @param in2 the contents to be appended to in1
-      */
-      SecureVector(const MemoryRegion<T>& in1, const MemoryRegion<T>& in2)
-         { init(true); set(&in1[0], in1.size()); append(in2); }
    };
 
 /**

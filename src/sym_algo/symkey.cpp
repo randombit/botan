@@ -116,7 +116,10 @@ bool operator!=(const OctetString& s1, const OctetString& s2)
 */
 OctetString operator+(const OctetString& k1, const OctetString& k2)
    {
-   return OctetString(SecureVector<byte>(k1.bits_of(), k2.bits_of()));
+   SecureVector<byte> out;
+   out.append(k1.bits_of());
+   out.append(k2.bits_of());
+   return OctetString(out);
    }
 
 /*
