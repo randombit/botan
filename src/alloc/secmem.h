@@ -122,7 +122,9 @@ class MemoryRegion
       * @param n the length of in
       */
       void copy(const T in[], u32bit n)
-         { copy(0, in, n); }
+         {
+         copy_mem(buf, in, std::min(n, size()));
+         }
 
       /**
       * Copy the contents of an array of objects of type T into this buffer.
@@ -134,7 +136,9 @@ class MemoryRegion
       * @param n the length of in
       */
       void copy(u32bit off, const T in[], u32bit n)
-         { copy_mem(buf + off, in, (n > size() - off) ? (size() - off) : n); }
+         {
+         copy_mem(buf + off, in, std::min(n, size() - off));
+         }
 
       /**
       * Set the contents of this according to the argument. The size of
@@ -150,7 +154,10 @@ class MemoryRegion
       * @param n the size of the array data
       */
       void append(const T data[], u32bit n)
-         { resize(size()+n); copy(size() - n, data, n); }
+         {
+         resize(size()+n);
+         copy_mem(buf + size() - n, data, n);
+         }
 
       /**
       * Append a single element.
@@ -163,7 +170,9 @@ class MemoryRegion
       * @param other the buffer containing the data to append
       */
       void append(const MemoryRegion<T>& other)
-         { append(&other[0], other.size()); }
+         {
+         append(&other[0], other.size());
+         }
 
       /**
       * Reset this buffer to an empty buffer with size zero.
@@ -284,9 +293,6 @@ template<typename T>
 class MemoryVector : public MemoryRegion<T>
    {
    public:
-      using MemoryRegion<T>::set;
-      using MemoryRegion<T>::append;
-
       /**
       * Copy the contents of another buffer into this buffer.
       * @param in the buffer to copy the contents from
@@ -295,7 +301,7 @@ class MemoryVector : public MemoryRegion<T>
       MemoryVector<T>& operator=(const MemoryRegion<T>& in)
          {
          if(this != &in)
-            set(&in[0], in.size());
+            this->set(&in[0], in.size());
          return (*this);
          }
 
@@ -312,13 +318,13 @@ class MemoryVector : public MemoryRegion<T>
       * @param n the size of the arry in
       */
       MemoryVector(const T in[], u32bit n)
-         { this->init(false); set(in, n); }
+         { this->init(false); this->set(in, n); }
 
       /**
       * Copy constructor.
       */
       MemoryVector(const MemoryRegion<T>& in)
-         { this->init(false); set(&in[0], in.size()); }
+         { this->init(false); this->set(&in[0], in.size()); }
    };
 
 /**
@@ -331,17 +337,13 @@ template<typename T, u32bit INITIAL_LEN = 0>
 class SecureVector : public MemoryRegion<T>
    {
    public:
-      using MemoryRegion<T>::copy;
-      using MemoryRegion<T>::set;
-      using MemoryRegion<T>::append;
-
       /**
       * Copy the contents of another buffer into this buffer.
       * @param in the buffer to copy the contents from
       * @return reference to *this
       */
       SecureVector<T>& operator=(const MemoryRegion<T>& in)
-         { if(this != &in) set(&in[0], in.size()); return (*this); }
+         { if(this != &in) this->set(&in[0], in.size()); return (*this); }
 
       /**
       * Create a buffer of the specified length.
@@ -360,9 +362,9 @@ class SecureVector : public MemoryRegion<T>
          {
          this->init(true, INITIAL_LEN);
          if(INITIAL_LEN)
-            copy(&in[0], n);
+            this->copy(&in[0], n);
          else
-            set(&in[0], n);
+            this->set(&in[0], n);
          }
 
       /**
@@ -374,9 +376,9 @@ class SecureVector : public MemoryRegion<T>
          {
          this->init(true, INITIAL_LEN);
          if(INITIAL_LEN)
-            copy(&in[0], in.size());
+            this->copy(&in[0], in.size());
          else
-            set(&in[0], in.size());
+            this->set(&in[0], in.size());
          }
    };
 
