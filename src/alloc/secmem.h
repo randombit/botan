@@ -285,7 +285,6 @@ class MemoryVector : public MemoryRegion<T>
    {
    public:
       using MemoryRegion<T>::set;
-      using MemoryRegion<T>::init;
       using MemoryRegion<T>::append;
 
       /**
@@ -304,7 +303,7 @@ class MemoryVector : public MemoryRegion<T>
       * Create a buffer of the specified length.
       * @param n the length of the buffer to create.
       */
-      MemoryVector(u32bit n = 0) { init(false, n); }
+      MemoryVector(u32bit n = 0) { this->init(false, n); }
 
       /**
       * Create a buffer with the specified contents.
@@ -313,13 +312,13 @@ class MemoryVector : public MemoryRegion<T>
       * @param n the size of the arry in
       */
       MemoryVector(const T in[], u32bit n)
-         { init(false); set(in, n); }
+         { this->init(false); set(in, n); }
 
       /**
       * Copy constructor.
       */
       MemoryVector(const MemoryRegion<T>& in)
-         { init(false); set(&in[0], in.size()); }
+         { this->init(false); set(&in[0], in.size()); }
    };
 
 /**
@@ -334,7 +333,6 @@ class SecureVector : public MemoryRegion<T>
    public:
       using MemoryRegion<T>::copy;
       using MemoryRegion<T>::set;
-      using MemoryRegion<T>::init;
       using MemoryRegion<T>::append;
 
       /**
@@ -350,7 +348,7 @@ class SecureVector : public MemoryRegion<T>
       * @param n the length of the buffer to create.
       */
       SecureVector(u32bit n = INITIAL_LEN)
-         { init(true, n); }
+         { this->init(true, n); }
 
       /**
       * Create a buffer with the specified contents.
@@ -360,7 +358,7 @@ class SecureVector : public MemoryRegion<T>
       */
       SecureVector(const T in[], u32bit n)
          {
-         init(true, INITIAL_LEN);
+         this->init(true, INITIAL_LEN);
          if(INITIAL_LEN)
             copy(&in[0], n);
          else
@@ -374,7 +372,7 @@ class SecureVector : public MemoryRegion<T>
       */
       SecureVector(const MemoryRegion<T>& in)
          {
-         init(true, INITIAL_LEN);
+         this->init(true, INITIAL_LEN);
          if(INITIAL_LEN)
             copy(&in[0], in.size());
          else
