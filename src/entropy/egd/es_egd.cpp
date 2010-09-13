@@ -143,11 +143,11 @@ void EGD_EntropySource::poll(Entropy_Accumulator& accum)
 
    for(size_t i = 0; i != sockets.size(); ++i)
       {
-      u32bit got = sockets[i].read(io_buffer.begin(), io_buffer.size());
+      u32bit got = sockets[i].read(&io_buffer[0], io_buffer.size());
 
       if(got)
          {
-         accum.add(io_buffer.begin(), got, 8);
+         accum.add(&io_buffer[0], got, 8);
          break;
          }
       }

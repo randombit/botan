@@ -22,8 +22,10 @@ class BOTAN_DLL HandshakeHash
    public:
       void update(const byte in[], u32bit length)
          { data.append(in, length); }
+
       void update(const MemoryRegion<byte>& in)
-         { update(in.begin(), in.size()); }
+         { update(&in[0], in.size()); }
+
       void update(byte in)
          { update(&in, 1); }
 

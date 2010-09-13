@@ -69,12 +69,12 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
 
       Fixed_Output_RNG(const Botan::SecureVector<byte>& in)
          {
-         buf.insert(buf.end(), in.begin(), in.begin() + in.size());
+         buf.insert(buf.end(), in.begin(), in.end());
          }
       Fixed_Output_RNG(const std::string& in_str)
          {
          Botan::SecureVector<byte> in = Botan::hex_decode(in_str);
-         buf.insert(buf.end(), in.begin(), in.begin() + in.size());
+         buf.insert(buf.end(), in.begin(), in.end());
          }
 
       Fixed_Output_RNG() {}

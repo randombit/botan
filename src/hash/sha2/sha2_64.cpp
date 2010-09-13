@@ -55,7 +55,7 @@ void sha2_64_compress(MemoryRegion<u64bit>& W,
 
    for(u32bit i = 0; i != blocks; ++i)
       {
-      load_be(W.begin(), input, 16);
+      load_be(&W[0], input, 16);
 
       for(u32bit j = 16; j != 80; j += 8)
          {

@@ -192,8 +192,8 @@ RTSS_Share::reconstruct(const std::vector<RTSS_Share>& shares)
       if(shares[i].size() < RTSS_HEADER_SIZE)
          throw Decoding_Error("Missing or malformed RTSS header");
 
-      if(!same_mem(shares[0].contents.begin(),
-                   shares[i].contents.begin(), RTSS_HEADER_SIZE))
+      if(!same_mem(&shares[0].contents[0],
+                   &shares[i].contents[0], RTSS_HEADER_SIZE))
          throw Decoding_Error("Different RTSS headers detected");
       }
 
@@ -250,7 +250,7 @@ RTSS_Share::reconstruct(const std::vector<RTSS_Share>& shares)
    hash->update(secret, secret_len);
    SecureVector<byte> hash_check = hash->final();
 
-   if(!same_mem(hash_check.begin(), secret + secret_len, hash->OUTPUT_LENGTH))
+   if(!same_mem(&hash_check[0], secret + secret_len, hash->OUTPUT_LENGTH))
       throw Decoding_Error("RTSS hash check failed");
 
    return SecureVector<byte>(secret, secret_len);

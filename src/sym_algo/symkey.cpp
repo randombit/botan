@@ -92,7 +92,7 @@ std::string OctetString::as_string() const
 OctetString& OctetString::operator^=(const OctetString& k)
    {
    if(&k == this) { zeroise(bits); return (*this); }
-   xor_buf(bits.begin(), k.begin(), std::min(length(), k.length()));
+   xor_buf(&bits[0], k.begin(), std::min(length(), k.length()));
    return (*this);
    }
 

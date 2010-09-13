@@ -240,7 +240,7 @@ void Skein_512::final_result(byte out[])
       {
       const u32bit to_proc = std::min<u32bit>(out_bytes, 64);
 
-      H_out.copy(H.begin(), 8);
+      H_out.copy(&H[0], 8);
 
       reset_tweak(T, SKEIN_OUTPUT, true);
       ubi_512(H_out, T, counter, sizeof(counter));

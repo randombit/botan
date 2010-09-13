@@ -139,8 +139,8 @@ bool check_passhash9(const std::string& pass, const std::string& hash)
       &bin[ALGID_BYTES + WORKFACTOR_BYTES], SALT_BYTES,
       kdf_iterations).bits_of();
 
-   return same_mem(cmp.begin(),
-                   bin.begin() + ALGID_BYTES + WORKFACTOR_BYTES + SALT_BYTES,
+   return same_mem(&cmp[0],
+                   &bin[ALGID_BYTES + WORKFACTOR_BYTES + SALT_BYTES],
                    PASSHASH9_PBKDF_OUTPUT_LEN);
    }
 

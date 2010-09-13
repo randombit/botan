@@ -25,7 +25,7 @@ void Whirlpool::compress_n(const byte in[], u32bit blocks)
 
    for(u32bit i = 0; i != blocks; ++i)
       {
-      load_be(M.begin(), in, M.size());
+      load_be(&M[0], in, M.size());
 
       u64bit K0, K1, K2, K3, K4, K5, K6, K7;
       K0 = digest[0]; K1 = digest[1]; K2 = digest[2]; K3 = digest[3];

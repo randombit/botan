@@ -127,7 +127,7 @@ void Pipe::process_msg(const byte input[], u32bit length)
 */
 void Pipe::process_msg(const MemoryRegion<byte>& input)
    {
-   process_msg(input.begin(), input.size());
+   process_msg(&input[0], input.size());
    }
 
 /*

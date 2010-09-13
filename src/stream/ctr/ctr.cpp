@@ -71,13 +71,13 @@ void CTR_BE::cipher(const byte in[], byte out[], u32bit length)
    {
    while(length >= buffer.size() - position)
       {
-      xor_buf(out, in, buffer.begin() + position, buffer.size() - position);
+      xor_buf(out, in, &buffer[position], buffer.size() - position);
       length -= (buffer.size() - position);
       in += (buffer.size() - position);
       out += (buffer.size() - position);
       increment_counter();
       }
-   xor_buf(out, in, buffer.begin() + position, length);
+   xor_buf(out, in, &buffer[position], length);
    position += length;
    }
 
@@ -100,7 +100,8 @@ void CTR_BE::set_iv(const byte iv[], u32bit iv_len)
    for(u32bit i = 1; i != PARALLEL_BLOCKS; ++i)
       {
       counter.copy(i*BLOCK_SIZE,
-                   counter.begin() + (i-1)*BLOCK_SIZE, BLOCK_SIZE);
+                   &counter[(i-1)*BLOCK_SIZE],
+                   BLOCK_SIZE);
 
       for(s32bit j = BLOCK_SIZE - 1; j >= 0; --j)
          if(++counter[i*BLOCK_SIZE+j])

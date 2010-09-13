@@ -65,7 +65,7 @@ class BOTAN_DLL Filter
       /**
       * @param in some input for the filter
       */
-      void send(const MemoryRegion<byte>& in) { send(in.begin(), in.size()); }
+      void send(const MemoryRegion<byte>& in) { send(&in[0], in.size()); }
       Filter();
    private:
       Filter(const Filter&) {}

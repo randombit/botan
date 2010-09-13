@@ -76,7 +76,7 @@ void Certificate_Req::deserialize(const MemoryRegion<byte>& buf)
    if(buf.size() != names_size + types_size + 3)
       throw Decoding_Error("Certificate_Req: Bad certificate request");
 
-   BER_Decoder decoder(buf.begin() + types_size + 3, names_size);
+   BER_Decoder decoder(&buf[types_size + 3], names_size);
 
    while(decoder.more_items())
       {

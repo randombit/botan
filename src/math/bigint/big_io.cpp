@@ -31,7 +31,7 @@ std::ostream& operator<<(std::ostream& stream, const BigInt& n)
       u32bit skip = 0;
       while(buffer[skip] == '0' && skip < buffer.size())
          ++skip;
-      stream.write(reinterpret_cast<const char*>(buffer.begin()) + skip,
+      stream.write(reinterpret_cast<const char*>(&buffer[0]) + skip,
                    buffer.size() - skip);
       }
    if(!stream.good())

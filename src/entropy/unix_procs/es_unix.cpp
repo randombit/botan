@@ -106,7 +106,7 @@ void Unix_EntropySource::poll(Entropy_Accumulator& accum)
          u32bit got_this_loop = pipe.read(io_buffer, io_buffer.size());
          got_from_src += got_this_loop;
 
-         accum.add(io_buffer.begin(), got_this_loop, .005);
+         accum.add(&io_buffer[0], got_this_loop, .005);
          }
 
       sources[j].working = (got_from_src >= MINIMAL_WORKING) ? true : false;

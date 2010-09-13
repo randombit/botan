@@ -61,7 +61,7 @@ void SHA_160::compress_n(const byte input[], u32bit blocks)
 
    for(u32bit i = 0; i != blocks; ++i)
       {
-      load_be(W.begin(), input, 16);
+      load_be(&W[0], input, 16);
 
       for(u32bit j = 16; j != 80; j += 8)
          {

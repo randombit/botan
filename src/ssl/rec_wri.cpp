@@ -160,7 +160,7 @@ void Record_Writer::send(byte type, const byte input[], u32bit length)
 */
 void Record_Writer::flush()
    {
-   const byte* buf_ptr = buffer.begin();
+   const byte* buf_ptr = &buffer[0];
    u32bit offset = 0;
 
    while(offset != buf_pos)

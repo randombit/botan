@@ -88,7 +88,7 @@ void CTS_Encryption::write(const byte input[], u32bit length)
       }
    else
       {
-      copy_mem(buffer.begin(), buffer + cipher->BLOCK_SIZE, cipher->BLOCK_SIZE);
+      copy_mem(&buffer[0], buffer + cipher->BLOCK_SIZE, cipher->BLOCK_SIZE);
       position = cipher->BLOCK_SIZE;
       }
    buffer.copy(position, input, length);
@@ -191,7 +191,7 @@ void CTS_Decryption::write(const byte input[], u32bit length)
       }
    else
       {
-      copy_mem(buffer.begin(), buffer + cipher->BLOCK_SIZE, cipher->BLOCK_SIZE);
+      copy_mem(&buffer[0], buffer + cipher->BLOCK_SIZE, cipher->BLOCK_SIZE);
       position = cipher->BLOCK_SIZE;
       }
    buffer.copy(position, input, length);

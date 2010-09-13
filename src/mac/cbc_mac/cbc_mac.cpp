@@ -46,7 +46,7 @@ void CBC_MAC::final_result(byte mac[])
    if(position)
       e->encrypt(state);
 
-   copy_mem(mac, state.begin(), state.size());
+   copy_mem(mac, &state[0], state.size());
    zeroise(state);
    position = 0;
    }

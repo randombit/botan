@@ -64,7 +64,7 @@ void MD5::compress_n(const byte input[], u32bit blocks)
 
    for(u32bit i = 0; i != blocks; ++i)
       {
-      load_le(M.begin(), input, M.size());
+      load_le(&M[0], input, M.size());
 
       FF(A,B,C,D,M[ 0], 7,0xD76AA478);   FF(D,A,B,C,M[ 1],12,0xE8C7B756);
       FF(C,D,A,B,M[ 2],17,0x242070DB);   FF(B,C,D,A,M[ 3],22,0xC1BDCEEE);

@@ -101,7 +101,11 @@ class MemoryRegion
       * @return reference to *this
       */
       MemoryRegion<T>& operator=(const MemoryRegion<T>& other)
-         { if(this != &other) set(other); return (*this); }
+         {
+         if(this != &other)
+            set(&other[0], other.size());
+         return (*this);
+         }
 
       /**
       * Copy the contents of an array of objects of type T into this buffer.
@@ -126,6 +130,14 @@ class MemoryRegion
          { copy_mem(buf + off, in, (n > size() - off) ? (size() - off) : n); }
 
       /**
+      * Set the contents of this according to the argument. The size of
+      * this is increased if necessary.
+      * @param in the array of objects of type T to copy the contents from
+      * @param n the size of array in
+      */
+      void set(const T in[], u32bit n)    { resize(n); copy(in, n); }
+
+      /**
       * Append data to the end of this buffer.
       * @param data the array containing the data to append
       * @param n the size of the array data
@@ -144,7 +156,7 @@ class MemoryRegion
       * @param other the buffer containing the data to append
       */
       void append(const MemoryRegion<T>& other)
-         { append(other.begin(), other.size()); }
+         { append(&other[0], other.size()); }
 
       /**
       * Reset this buffer to an empty buffer with size zero.
@@ -186,21 +198,6 @@ class MemoryRegion
       */
       void init(bool locking, u32bit length = 0)
          { alloc = Allocator::get(locking); resize(length); }
-
-      /**
-      * Set the contents of this according to the argument. The size of
-      * *this is increased if necessary.
-      * @param in the array of objects of type T to copy the contents from
-      * @param n the size of array in
-      */
-      void set(const T in[], u32bit n)    { resize(n); copy(in, n); }
-
-      /**
-      * Set the contents of this according to the argument. The size of
-      * *this is increased if necessary.
-      * @param in the buffer to copy the contents from
-      */
-      void set(const MemoryRegion<T>& in) { set(in.begin(), in.size()); }
 
    private:
       T* allocate(u32bit n)
@@ -290,7 +287,11 @@ class MemoryVector : public MemoryRegion<T>
       * @return reference to *this
       */
       MemoryVector<T>& operator=(const MemoryRegion<T>& in)
-         { if(this != &in) set(in); return (*this); }
+         {
+         if(this != &in)
+            set(&in[0], in.size());
+         return (*this);
+         }
 
       /**
       * Create a buffer of the specified length.
@@ -311,7 +312,7 @@ class MemoryVector : public MemoryRegion<T>
       * Copy constructor.
       */
       MemoryVector(const MemoryRegion<T>& in)
-         { init(false); set(in); }
+         { init(false); set(&in[0], in.size()); }
 
       /**
       * Create a buffer whose content is the concatenation of two other
@@ -320,7 +321,7 @@ class MemoryVector : public MemoryRegion<T>
       * @param in2 the contents to be appended to in1
       */
       MemoryVector(const MemoryRegion<T>& in1, const MemoryRegion<T>& in2)
-         { init(false); set(in1); append(in2); }
+         { init(false); set(&in1[0], in1.size()); append(in2); }
    };
 
 /**
@@ -344,7 +345,7 @@ class SecureVector : public MemoryRegion<T>
       * @return reference to *this
       */
       SecureVector<T>& operator=(const MemoryRegion<T>& in)
-         { if(this != &in) set(in); return (*this); }
+         { if(this != &in) set(&in[0], in.size()); return (*this); }
 
       /**
       * Create a buffer of the specified length.
@@ -363,9 +364,9 @@ class SecureVector : public MemoryRegion<T>
          {
          init(true, INITIAL_LEN);
          if(INITIAL_LEN)
-            copy(in, n);
+            copy(&in[0], n);
          else
-            set(in, n);
+            set(&in[0], n);
          }
 
       /**
@@ -377,9 +378,9 @@ class SecureVector : public MemoryRegion<T>
          {
          init(true, INITIAL_LEN);
          if(INITIAL_LEN)
-            copy(in, in.size());
+            copy(&in[0], in.size());
          else
-            set(in);
+            set(&in[0], in.size());
          }
 
       /**
@@ -389,7 +390,7 @@ class SecureVector : public MemoryRegion<T>
       * @param in2 the contents to be appended to in1
       */
       SecureVector(const MemoryRegion<T>& in1, const MemoryRegion<T>& in2)
-         { init(true); set(in1); append(in2); }
+         { init(true); set(&in1[0], in1.size()); append(in2); }
    };
 
 /**

@@ -43,7 +43,7 @@ void Pipe::write(const byte input[], u32bit length)
 */
 void Pipe::write(const MemoryRegion<byte>& input)
    {
-   write(input.begin(), input.size());
+   write(&input[0], input.size());
    }
 
 /*
@@ -125,7 +125,7 @@ std::string Pipe::read_all_as_string(message_id msg)
       u32bit got = read(buffer, buffer.size(), msg);
       if(got == 0)
          break;
-      str.append(reinterpret_cast<const char*>(buffer.begin()), got);
+      str.append(reinterpret_cast<const char*>(&buffer[0]), got);
       }
 
    return str;

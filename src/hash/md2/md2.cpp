@@ -66,7 +66,7 @@ void MD2::add_data(const byte input[], u32bit length)
    buffer.copy(position, input, length);
    if(position + length >= HASH_BLOCK_SIZE)
       {
-      hash(buffer.begin());
+      hash(&buffer[0]);
       input += (HASH_BLOCK_SIZE - position);
       length -= (HASH_BLOCK_SIZE - position);
       while(length >= HASH_BLOCK_SIZE)
@@ -90,7 +90,7 @@ void MD2::final_result(byte output[])
       buffer[j] = static_cast<byte>(HASH_BLOCK_SIZE - position);
    hash(buffer);
    hash(checksum);
-   copy_mem(output, X.begin(), OUTPUT_LENGTH);
+   copy_mem(output, &X[0], OUTPUT_LENGTH);
    clear();
    }
 

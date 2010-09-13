@@ -20,7 +20,7 @@ inline void montgomery_reduce(BigInt& out, MemoryRegion<word>& z_buf,
                               const BigInt& x_bn, u32bit x_size, word u)
    {
    const word* x = x_bn.data();
-   word* z = z_buf.begin();
+   word* z = &z_buf[0];
    u32bit z_size = z_buf.size();
 
    bigint_monty_redc(z, z_size, x, x_size, u);
@@ -52,7 +52,7 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
    SecureVector<word> workspace(z.size());
 
    g[0] = (base >= modulus) ? (base % modulus) : base;
-   bigint_mul(z.begin(), z.size(), workspace,
+   bigint_mul(&z[0], z.size(), workspace,
               g[0].data(), g[0].size(), g[0].sig_words(),
               R2.data(), R2.size(), R2.sig_words());
 
@@ -67,7 +67,7 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
       const u32bit y_sig = y.sig_words();
 
       zeroise(z);
-      bigint_mul(z.begin(), z.size(), workspace,
+      bigint_mul(&z[0], z.size(), workspace,
                  x.data(), x.size(), x_sig,
                  y.data(), y.size(), y_sig);
 
@@ -91,7 +91,7 @@ BigInt Montgomery_Exponentiator::execute() const
       for(u32bit k = 0; k != window_bits; ++k)
          {
          zeroise(z);
-         bigint_sqr(z.begin(), z.size(), workspace,
+         bigint_sqr(&z[0], z.size(), workspace,
                     x.data(), x.size(), x.sig_words());
 
          montgomery_reduce(x, z, modulus, mod_words, mod_prime);
@@ -103,7 +103,7 @@ BigInt Montgomery_Exponentiator::execute() const
          const BigInt& y = g[nibble-1];
 
          zeroise(z);
-         bigint_mul(z.begin(), z.size(), workspace,
+         bigint_mul(&z[0], z.size(), workspace,
                     x.data(), x.size(), x.sig_words(),
                     y.data(), y.size(), y.sig_words());
 

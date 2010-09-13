@@ -56,7 +56,7 @@ void PointGFp::monty_mult(BigInt& z,
                      p.data(), p_size, p_dash);
 
    z.get_reg().resize(p_size);
-   copy_mem(z.get_reg().begin(), &workspace[p_size], p_size);
+   copy_mem(&z.get_reg()[0], &workspace[p_size], p_size);
    }
 
 // Montgomery squaring
@@ -82,7 +82,7 @@ void PointGFp::monty_sqr(BigInt& z, const BigInt& x,
                      p.data(), p_size, p_dash);
 
    z.get_reg().resize(p_size);
-   copy_mem(z.get_reg().begin(), &workspace[p_size], p_size);
+   copy_mem(&z.get_reg()[0], &workspace[p_size], p_size);
    }
 
 // Point addition
@@ -475,8 +475,8 @@ SecureVector<byte> EC2OSP(const PointGFp& point, byte format)
       SecureVector<byte> result(2*p_bytes+1);
       result[0] = 4;
 
-      result.copy(1, bX.begin(), p_bytes);
-      result.copy(p_bytes+1, bY.begin(), p_bytes);
+      result.copy(1, &bX[0], p_bytes);
+      result.copy(p_bytes+1, &bY[0], p_bytes);
       return result;
       }
    else if(format == PointGFp::COMPRESSED)
@@ -484,7 +484,7 @@ SecureVector<byte> EC2OSP(const PointGFp& point, byte format)
       SecureVector<byte> result(p_bytes+1);
       result[0] = 2;
 
-      result.copy(1, bX.begin(), bX.size());
+      result.copy(1, &bX[0], bX.size());
 
       if(y.get_bit(0))
          result[0] |= 1;
@@ -496,8 +496,8 @@ SecureVector<byte> EC2OSP(const PointGFp& point, byte format)
       SecureVector<byte> result(2*p_bytes+1);
       result[0] = 6;
 
-      result.copy(1, bX.begin(), bX.size());
-      result.copy(p_bytes+1, bY.begin(), bY.size());
+      result.copy(1, &bX[0], bX.size());
+      result.copy(p_bytes+1, &bY[0], bY.size());
 
       if(y.get_bit(0))
          result[0] |= 1;

@@ -180,7 +180,7 @@ DER_Encoder& DER_Encoder::end_explicit()
 */
 DER_Encoder& DER_Encoder::raw_bytes(const MemoryRegion<byte>& val)
    {
-   return raw_bytes(val.begin(), val.size());
+   return raw_bytes(&val[0], val.size());
    }
 
 /*
@@ -234,7 +234,7 @@ DER_Encoder& DER_Encoder::encode(const BigInt& n)
 DER_Encoder& DER_Encoder::encode(const MemoryRegion<byte>& bytes,
                                  ASN1_Tag real_type)
    {
-   return encode(bytes.begin(), bytes.size(),
+   return encode(&bytes[0], bytes.size(),
                  real_type, real_type, UNIVERSAL);
    }
 
@@ -277,7 +277,7 @@ DER_Encoder& DER_Encoder::encode(const BigInt& n,
 
    bool extra_zero = (n.bits() % 8 == 0);
    SecureVector<byte> contents(extra_zero + n.bytes());
-   BigInt::encode(contents.begin() + extra_zero, n);
+   BigInt::encode(&contents[extra_zero], n);
    if(n < 0)
       {
       for(u32bit j = 0; j != contents.size(); ++j)
@@ -297,7 +297,7 @@ DER_Encoder& DER_Encoder::encode(const MemoryRegion<byte>& bytes,
                                  ASN1_Tag real_type,
                                  ASN1_Tag type_tag, ASN1_Tag class_tag)
    {
-   return encode(bytes.begin(), bytes.size(),
+   return encode(&bytes[0], bytes.size(),
                  real_type, type_tag, class_tag);
    }
 
@@ -364,7 +364,7 @@ DER_Encoder& DER_Encoder::add_object(ASN1_Tag type_tag, ASN1_Tag class_tag,
 DER_Encoder& DER_Encoder::add_object(ASN1_Tag type_tag, ASN1_Tag class_tag,
                                      const MemoryRegion<byte>& rep_buf)
    {
-   const byte* rep = rep_buf.begin();
+   const byte* rep = &rep_buf[0];
    const u32bit rep_len = rep_buf.size();
    return add_object(type_tag, class_tag, rep, rep_len);
    }

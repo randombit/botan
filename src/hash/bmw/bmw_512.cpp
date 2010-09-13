@@ -143,7 +143,7 @@ void BMW_512::compress_n(const byte input[], u32bit blocks)
    {
    for(u32bit i = 0; i != blocks; ++i)
       {
-      load_le(M.begin(), input, M.size());
+      load_le(&M[0], input, M.size());
 
       BMW_512_compress(H, M, Q);
 

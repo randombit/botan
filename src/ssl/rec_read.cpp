@@ -217,7 +217,7 @@ u32bit Record_Reader::get_record(byte& msg_type,
       throw Decoding_Error("Record_Reader: Record truncated");
 
    const u32bit mac_offset = plaintext.size() - (mac_size + pad_size);
-   SecureVector<byte> recieved_mac(plaintext.begin() + mac_offset,
+   SecureVector<byte> recieved_mac(&plaintext[mac_offset],
                                    mac_size);
 
    const u16bit plain_length = plaintext.size() - (mac_size + pad_size + iv_size);

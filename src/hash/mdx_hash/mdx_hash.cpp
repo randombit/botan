@@ -47,7 +47,7 @@ void MDx_HashFunction::add_data(const byte input[], u32bit length)
 
       if(position + length >= HASH_BLOCK_SIZE)
          {
-         compress_n(buffer.begin(), 1);
+         compress_n(&buffer[0], 1);
          input += (HASH_BLOCK_SIZE - position);
          length -= (HASH_BLOCK_SIZE - position);
          position = 0;

@@ -35,7 +35,7 @@ OctetString PKCS5_PBKDF2::derive_key(u32bit key_len,
 
    SecureVector<byte> key(key_len);
 
-   byte* T = key.begin();
+   byte* T = &key[0];
 
    u32bit counter = 1;
    while(key_len)

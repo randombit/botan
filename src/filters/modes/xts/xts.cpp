@@ -98,7 +98,7 @@ void XTS_Encryption::set_iv(const InitializationVector& iv)
    for(u32bit i = 1; i < blocks_in_tweak; ++i)
       {
       tweak.copy(i*cipher->BLOCK_SIZE,
-                 tweak.begin() + (i-1)*cipher->BLOCK_SIZE,
+                 &tweak[(i-1)*cipher->BLOCK_SIZE],
                  cipher->BLOCK_SIZE);
 
       poly_double(&tweak[i*cipher->BLOCK_SIZE], cipher->BLOCK_SIZE);
@@ -158,7 +158,7 @@ void XTS_Encryption::buffered_block(const byte input[], u32bit length)
       for(u32bit i = 1; i < blocks_in_tweak; ++i)
          {
          tweak.copy(i*cipher->BLOCK_SIZE,
-                    tweak.begin() + (i-1)*cipher->BLOCK_SIZE,
+                    &tweak[(i-1)*cipher->BLOCK_SIZE],
                     cipher->BLOCK_SIZE);
 
          poly_double(&tweak[i*cipher->BLOCK_SIZE], cipher->BLOCK_SIZE);
@@ -270,7 +270,7 @@ void XTS_Decryption::set_iv(const InitializationVector& iv)
    for(u32bit i = 1; i < blocks_in_tweak; ++i)
       {
       tweak.copy(i*cipher->BLOCK_SIZE,
-                 tweak.begin() + (i-1)*cipher->BLOCK_SIZE,
+                 &tweak[(i-1)*cipher->BLOCK_SIZE],
                  cipher->BLOCK_SIZE);
 
       poly_double(&tweak[i*cipher->BLOCK_SIZE], cipher->BLOCK_SIZE);
@@ -331,7 +331,7 @@ void XTS_Decryption::buffered_block(const byte input[], u32bit input_length)
       for(u32bit i = 1; i < blocks_in_tweak; ++i)
          {
          tweak.copy(i*cipher->BLOCK_SIZE,
-                    tweak.begin() + (i-1)*cipher->BLOCK_SIZE,
+                    &tweak[(i-1)*cipher->BLOCK_SIZE],
                     cipher->BLOCK_SIZE);
 
          poly_double(&tweak[i*cipher->BLOCK_SIZE], cipher->BLOCK_SIZE);

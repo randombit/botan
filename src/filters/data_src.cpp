@@ -128,7 +128,7 @@ u32bit DataSource_Stream::peek(byte out[], u32bit length, u32bit offset) const
    if(offset)
       {
       SecureVector<byte> buf(offset);
-      source.read(reinterpret_cast<char*>(buf.begin()), buf.size());
+      source.read(reinterpret_cast<char*>(&buf[0]), buf.size());
       if(source.bad())
          throw Stream_IO_Error("DataSource_Stream::peek: Source failure");
       got = source.gcount();

@@ -32,7 +32,7 @@ BigInt& BigInt::operator+=(const BigInt& y)
          {
          SecureVector<word> z(reg_size - 1);
          bigint_sub3(z, y.data(), reg_size - 1, data(), x_sw);
-         copy_mem(get_reg().begin(), z.begin(), z.size());
+         copy_mem(&reg[0], &z[0], z.size());
          set_sign(y.sign());
          }
       else if(relative_size == 0)

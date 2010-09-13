@@ -291,7 +291,7 @@ class BOTAN_DLL BigInt
      */
      u32bit sig_words() const
         {
-        const word* x = reg.begin();
+        const word* x = &reg[0];
         u32bit sig = reg.size();
 
         while(sig && (x[sig-1] == 0))
@@ -316,7 +316,7 @@ class BOTAN_DLL BigInt
      * @result a pointer to the start of the internal register of
      * the integer value
      */
-     const word* data() const { return reg.begin(); }
+     const word* data() const { return &reg[0]; }
 
      /**
      * return a reference to the internal register containing the value

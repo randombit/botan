@@ -39,13 +39,13 @@ void Turing::cipher(const byte in[], byte out[], u32bit length)
    {
    while(length >= buffer.size() - position)
       {
-      xor_buf(out, in, buffer.begin() + position, buffer.size() - position);
+      xor_buf(out, in, &buffer[position], buffer.size() - position);
       length -= (buffer.size() - position);
       in += (buffer.size() - position);
       out += (buffer.size() - position);
       generate();
       }
-   xor_buf(out, in, buffer.begin() + position, length);
+   xor_buf(out, in, &buffer[position], length);
    position += length;
    }
 

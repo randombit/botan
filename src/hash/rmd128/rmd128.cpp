@@ -68,7 +68,7 @@ void RIPEMD_128::compress_n(const byte input[], u32bit blocks)
 
    for(u32bit i = 0; i != blocks; ++i)
       {
-      load_le(M.begin(), input, M.size());
+      load_le(&M[0], input, M.size());
 
       u32bit A1 = digest[0], A2 = A1, B1 = digest[1], B2 = B1,
              C1 = digest[2], C2 = C1, D1 = digest[3], D2 = D1;

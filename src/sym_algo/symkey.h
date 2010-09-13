@@ -32,12 +32,12 @@ class BOTAN_DLL OctetString
       /**
       * @return start of this string
       */
-      const byte* begin() const { return bits.begin(); }
+      const byte* begin() const { return &bits[0]; }
 
       /**
       * @return end of this string
       */
-      const byte* end() const   { return bits.end(); }
+      const byte* end() const   { return &bits[bits.size()]; }
 
       /**
       * @return this encoded as hex

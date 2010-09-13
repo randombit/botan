@@ -217,7 +217,7 @@ void AlternativeName::decode_from(BER_Decoder& source)
          {
          if(obj.value.size() == 4)
             {
-            u32bit ip = load_be<u32bit>(obj.value.begin(), 0);
+            u32bit ip = load_be<u32bit>(&obj.value[0], 0);
             add_attribute("IP", ipv4_to_string(ip));
             }
          }

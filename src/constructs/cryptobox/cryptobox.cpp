@@ -45,18 +45,22 @@ std::string encrypt(const byte input[], u32bit input_len,
                     RandomNumberGenerator& rng)
    {
    SecureVector<byte> pbkdf_salt(PBKDF_SALT_LEN);
-   rng.randomize(pbkdf_salt.begin(), pbkdf_salt.size());
+   rng.randomize(&pbkdf_salt[0], pbkdf_salt.size());
 
    PKCS5_PBKDF2 pbkdf(new HMAC(new SHA_512));
 
-   OctetString mk = pbkdf.derive_key(PBKDF_OUTPUT_LEN, passphrase,
-                                     &pbkdf_salt[0], pbkdf_salt.size(),
-                                     PBKDF_ITERATIONS);
+   OctetString master_key = pbkdf.derive_key(
+      PBKDF_OUTPUT_LEN,
+      passphrase,
+      &pbkdf_salt[0],
+      pbkdf_salt.size(),
+      PBKDF_ITERATIONS);
 
-   SymmetricKey cipher_key(mk.begin(), CIPHER_KEY_LEN);
-   SymmetricKey mac_key(mk.begin() + CIPHER_KEY_LEN, MAC_KEY_LEN);
-   InitializationVector iv(mk.begin() + CIPHER_KEY_LEN + MAC_KEY_LEN,
-                           CIPHER_IV_LEN);
+   const byte* mk = master_key.begin();
+
+   SymmetricKey cipher_key(&mk[0], CIPHER_KEY_LEN);
+   SymmetricKey mac_key(&mk[CIPHER_KEY_LEN], MAC_KEY_LEN);
+   InitializationVector iv(&mk[CIPHER_KEY_LEN + MAC_KEY_LEN], CIPHER_IV_LEN);
 
    Pipe pipe(get_cipher("Serpent/CTR-BE", cipher_key, iv, ENCRYPTION),
              new Fork(
@@ -89,8 +93,7 @@ std::string encrypt(const byte input[], u32bit input_len,
    pipe.read(out_buf + VERSION_CODE_LEN + PBKDF_SALT_LEN + MAC_OUTPUT_LEN,
              ciphertext_len, 0);
 
-   return PEM_Code::encode(out_buf.begin(), out_buf.size(),
-                           "BOTAN CRYPTOBOX MESSAGE");
+   return PEM_Code::encode(out_buf, "BOTAN CRYPTOBOX MESSAGE");
    }
 
 std::string decrypt(const byte input[], u32bit input_len,
@@ -112,14 +115,18 @@ std::string decrypt(const byte input[], u32bit input_len,
 
    PKCS5_PBKDF2 pbkdf(new HMAC(new SHA_512));
 
-   OctetString mk = pbkdf.derive_key(PBKDF_OUTPUT_LEN, passphrase,
-                                     &pbkdf_salt[0], pbkdf_salt.size(),
-                                     PBKDF_ITERATIONS);
+   OctetString master_key = pbkdf.derive_key(
+      PBKDF_OUTPUT_LEN,
+      passphrase,
+      &pbkdf_salt[0],
+      pbkdf_salt.size(),
+      PBKDF_ITERATIONS);
 
-   SymmetricKey cipher_key(mk.begin(), CIPHER_KEY_LEN);
-   SymmetricKey mac_key(mk.begin() + CIPHER_KEY_LEN, MAC_KEY_LEN);
-   InitializationVector iv(mk.begin() + CIPHER_KEY_LEN + MAC_KEY_LEN,
-                           CIPHER_IV_LEN);
+   const byte* mk = master_key.begin();
+
+   SymmetricKey cipher_key(&mk[0], CIPHER_KEY_LEN);
+   SymmetricKey mac_key(&mk[CIPHER_KEY_LEN], MAC_KEY_LEN);
+   InitializationVector iv(&mk[CIPHER_KEY_LEN + MAC_KEY_LEN], CIPHER_IV_LEN);
 
    Pipe pipe(new Fork(
                 get_cipher("Serpent/CTR-BE", cipher_key, iv, DECRYPTION),

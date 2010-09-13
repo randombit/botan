@@ -111,12 +111,12 @@ void Device_EntropySource::poll(Entropy_Accumulator& accum)
 
    for(size_t i = 0; i != devices.size(); ++i)
       {
-      u32bit got = devices[i].get(io_buffer.begin(), io_buffer.size(),
+      u32bit got = devices[i].get(&io_buffer[0], io_buffer.size(),
                                   read_wait_ms);
 
       if(got)
          {
-         accum.add(io_buffer.begin(), got, 8);
+         accum.add(&io_buffer[0], got, 8);
          break;
          }
       }

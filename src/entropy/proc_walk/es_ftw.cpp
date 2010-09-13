@@ -146,11 +146,11 @@ void FTW_EntropySource::poll(Entropy_Accumulator& accum)
          break;
          }
 
-      ssize_t got = ::read(fd, io_buffer.begin(), io_buffer.size());
+      ssize_t got = ::read(fd, &io_buffer[0], io_buffer.size());
       ::close(fd);
 
       if(got > 0)
-         accum.add(io_buffer.begin(), got, .01);
+         accum.add(&io_buffer[0], got, .01);
 
       if(accum.polling_goal_achieved())
          break;

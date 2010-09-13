@@ -86,7 +86,7 @@ std::string CMS_Decoder::get_data() const
    {
    if(layer_type() != DATA)
       throw Invalid_State("CMS: Cannot retrieve data from non-DATA layer");
-   return std::string((const char*)data.begin(), data.size());
+   return std::string((const char*)&data[0], data.size());
    }
 
 /*

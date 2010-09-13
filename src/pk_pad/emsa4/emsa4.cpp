@@ -94,8 +94,8 @@ bool EMSA4::verify(const MemoryRegion<byte>& const_coded,
    if(TOP_BITS > 8 - high_bit(coded[0]))
       return false;
 
-   SecureVector<byte> DB(coded.begin(), coded.size() - HASH_SIZE - 1);
-   SecureVector<byte> H(coded + coded.size() - HASH_SIZE - 1, HASH_SIZE);
+   SecureVector<byte> DB(&coded[0], coded.size() - HASH_SIZE - 1);
+   SecureVector<byte> H(&coded[coded.size() - HASH_SIZE - 1], HASH_SIZE);
 
    mgf->mask(H, H.size(), DB, coded.size() - H.size() - 1);
    DB[0] &= 0xFF >> TOP_BITS;

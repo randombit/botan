@@ -75,9 +75,9 @@ void test_point_turn_on_sp_red_mul()
    SecureVector<byte> sv_a_secp = hex_decode(a_secp);
    SecureVector<byte> sv_b_secp = hex_decode(b_secp);
    SecureVector<byte> sv_G_secp_comp = hex_decode(G_secp_comp);
-   BigInt bi_p_secp = BigInt::decode(sv_p_secp.begin(), sv_p_secp.size());
-   BigInt bi_a_secp = BigInt::decode(sv_a_secp.begin(), sv_a_secp.size());
-   BigInt bi_b_secp = BigInt::decode(sv_b_secp.begin(), sv_b_secp.size());
+   BigInt bi_p_secp = BigInt::decode(&sv_p_secp[0], sv_p_secp.size());
+   BigInt bi_a_secp = BigInt::decode(&sv_a_secp[0], sv_a_secp.size());
+   BigInt bi_b_secp = BigInt::decode(&sv_b_secp[0], sv_b_secp.size());
    CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
    PointGFp p_G = OS2ECP(sv_G_secp_comp, secp160r1);
 
@@ -139,9 +139,9 @@ void test_coordinates()
    SecureVector<byte> sv_b_secp = hex_decode ( b_secp );
    SecureVector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
 
-   BigInt bi_p_secp = BigInt::decode ( sv_p_secp.begin(), sv_p_secp.size() );
-   BigInt bi_a_secp = BigInt::decode ( sv_a_secp.begin(), sv_a_secp.size() );
-   BigInt bi_b_secp = BigInt::decode ( sv_b_secp.begin(), sv_b_secp.size() );
+   BigInt bi_p_secp = BigInt::decode ( &sv_p_secp[0], sv_p_secp.size() );
+   BigInt bi_a_secp = BigInt::decode ( &sv_a_secp[0], sv_a_secp.size() );
+   BigInt bi_b_secp = BigInt::decode ( &sv_b_secp[0], sv_b_secp.size() );
    CurveGFp secp160r1 (bi_p_secp, bi_a_secp, bi_b_secp);
    PointGFp p_G = OS2ECP ( sv_G_secp_comp, secp160r1 );
    PointGFp p0 = p_G;
@@ -214,9 +214,9 @@ void test_point_negative()
    SecureVector<byte> sv_a_secp = hex_decode ( a_secp );
    SecureVector<byte> sv_b_secp = hex_decode ( b_secp );
    SecureVector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
-   BigInt bi_p_secp = BigInt::decode ( sv_p_secp.begin(), sv_p_secp.size() );
-   BigInt bi_a_secp = BigInt::decode ( sv_a_secp.begin(), sv_a_secp.size() );
-   BigInt bi_b_secp = BigInt::decode ( sv_b_secp.begin(), sv_b_secp.size() );
+   BigInt bi_p_secp = BigInt::decode ( &sv_p_secp[0], sv_p_secp.size() );
+   BigInt bi_a_secp = BigInt::decode ( &sv_a_secp[0], sv_a_secp.size() );
+   BigInt bi_b_secp = BigInt::decode ( &sv_b_secp[0], sv_b_secp.size() );
    CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
    PointGFp p_G = OS2ECP ( sv_G_secp_comp, secp160r1 );
 
@@ -326,9 +326,9 @@ void test_add_point()
    SecureVector<byte> sv_a_secp = hex_decode ( a_secp );
    SecureVector<byte> sv_b_secp = hex_decode ( b_secp );
    SecureVector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
-   BigInt bi_p_secp = BigInt::decode ( sv_p_secp.begin(), sv_p_secp.size() );
-   BigInt bi_a_secp = BigInt::decode ( sv_a_secp.begin(), sv_a_secp.size() );
-   BigInt bi_b_secp = BigInt::decode ( sv_b_secp.begin(), sv_b_secp.size() );
+   BigInt bi_p_secp = BigInt::decode ( &sv_p_secp[0], sv_p_secp.size() );
+   BigInt bi_a_secp = BigInt::decode ( &sv_a_secp[0], sv_a_secp.size() );
+   BigInt bi_b_secp = BigInt::decode ( &sv_b_secp[0], sv_b_secp.size() );
    CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
    PointGFp p_G = OS2ECP ( sv_G_secp_comp, secp160r1 );
 
@@ -362,9 +362,9 @@ void test_sub_point()
    SecureVector<byte> sv_a_secp = hex_decode ( a_secp );
    SecureVector<byte> sv_b_secp = hex_decode ( b_secp );
    SecureVector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
-   BigInt bi_p_secp = BigInt::decode ( sv_p_secp.begin(), sv_p_secp.size() );
-   BigInt bi_a_secp = BigInt::decode ( sv_a_secp.begin(), sv_a_secp.size() );
-   BigInt bi_b_secp = BigInt::decode ( sv_b_secp.begin(), sv_b_secp.size() );
+   BigInt bi_p_secp = BigInt::decode ( &sv_p_secp[0], sv_p_secp.size() );
+   BigInt bi_a_secp = BigInt::decode ( &sv_a_secp[0], sv_a_secp.size() );
+   BigInt bi_b_secp = BigInt::decode ( &sv_b_secp[0], sv_b_secp.size() );
    CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
    PointGFp p_G = OS2ECP ( sv_G_secp_comp, secp160r1 );
 
@@ -397,9 +397,9 @@ void test_mult_point()
    SecureVector<byte> sv_a_secp = hex_decode ( a_secp );
    SecureVector<byte> sv_b_secp = hex_decode ( b_secp );
    SecureVector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
-   BigInt bi_p_secp = BigInt::decode ( sv_p_secp.begin(), sv_p_secp.size() );
-   BigInt bi_a_secp = BigInt::decode ( sv_a_secp.begin(), sv_a_secp.size() );
-   BigInt bi_b_secp = BigInt::decode ( sv_b_secp.begin(), sv_b_secp.size() );
+   BigInt bi_p_secp = BigInt::decode ( &sv_p_secp[0], sv_p_secp.size() );
+   BigInt bi_a_secp = BigInt::decode ( &sv_a_secp[0], sv_a_secp.size() );
+   BigInt bi_b_secp = BigInt::decode ( &sv_b_secp[0], sv_b_secp.size() );
    CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
    PointGFp p_G = OS2ECP ( sv_G_secp_comp, secp160r1 );
 
@@ -426,9 +426,9 @@ void test_basic_operations()
    SecureVector<byte> sv_a_secp = hex_decode ( a_secp );
    SecureVector<byte> sv_b_secp = hex_decode ( b_secp );
    SecureVector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
-   BigInt bi_p_secp = BigInt::decode ( sv_p_secp.begin(), sv_p_secp.size() );
-   BigInt bi_a_secp = BigInt::decode ( sv_a_secp.begin(), sv_a_secp.size() );
-   BigInt bi_b_secp = BigInt::decode ( sv_b_secp.begin(), sv_b_secp.size() );
+   BigInt bi_p_secp = BigInt::decode ( &sv_p_secp[0], sv_p_secp.size() );
+   BigInt bi_a_secp = BigInt::decode ( &sv_a_secp[0], sv_a_secp.size() );
+   BigInt bi_b_secp = BigInt::decode ( &sv_b_secp[0], sv_b_secp.size() );
    CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
 
    PointGFp p_G = OS2ECP ( sv_G_secp_comp, secp160r1 );
@@ -490,9 +490,9 @@ void test_enc_dec_compressed_160()
    SecureVector<byte> sv_b_secp = hex_decode ( b_secp );
    SecureVector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
 
-   BigInt bi_p_secp = BigInt::decode ( sv_p_secp.begin(), sv_p_secp.size() );
-   BigInt bi_a_secp = BigInt::decode ( sv_a_secp.begin(), sv_a_secp.size() );
-   BigInt bi_b_secp = BigInt::decode ( sv_b_secp.begin(), sv_b_secp.size() );
+   BigInt bi_p_secp = BigInt::decode ( &sv_p_secp[0], sv_p_secp.size() );
+   BigInt bi_a_secp = BigInt::decode ( &sv_a_secp[0], sv_a_secp.size() );
+   BigInt bi_b_secp = BigInt::decode ( &sv_b_secp[0], sv_b_secp.size() );
 
    CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
 
@@ -519,9 +519,9 @@ void test_enc_dec_compressed_256()
    SecureVector<byte> sv_b_secp = hex_decode ( b_secp );
    SecureVector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
 
-   BigInt bi_p_secp = BigInt::decode ( sv_p_secp.begin(), sv_p_secp.size() );
-   BigInt bi_a_secp = BigInt::decode ( sv_a_secp.begin(), sv_a_secp.size() );
-   BigInt bi_b_secp = BigInt::decode ( sv_b_secp.begin(), sv_b_secp.size() );
+   BigInt bi_p_secp = BigInt::decode ( &sv_p_secp[0], sv_p_secp.size() );
+   BigInt bi_a_secp = BigInt::decode ( &sv_a_secp[0], sv_a_secp.size() );
+   BigInt bi_b_secp = BigInt::decode ( &sv_b_secp[0], sv_b_secp.size() );
 
    CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
 
@@ -550,9 +550,9 @@ void test_enc_dec_uncompressed_112()
    SecureVector<byte> sv_b_secp = hex_decode ( b_secp );
    SecureVector<byte> sv_G_secp_uncomp = hex_decode ( G_secp_uncomp );
 
-   BigInt bi_p_secp = BigInt::decode ( sv_p_secp.begin(), sv_p_secp.size() );
-   BigInt bi_a_secp = BigInt::decode ( sv_a_secp.begin(), sv_a_secp.size() );
-   BigInt bi_b_secp = BigInt::decode ( sv_b_secp.begin(), sv_b_secp.size() );
+   BigInt bi_p_secp = BigInt::decode ( &sv_p_secp[0], sv_p_secp.size() );
+   BigInt bi_a_secp = BigInt::decode ( &sv_a_secp[0], sv_a_secp.size() );
+   BigInt bi_b_secp = BigInt::decode ( &sv_b_secp[0], sv_b_secp.size() );
 
    CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
 
@@ -579,17 +579,17 @@ void test_enc_dec_uncompressed_521()
    SecureVector<byte> sv_b_secp = hex_decode ( b_secp );
    SecureVector<byte> sv_G_secp_uncomp = hex_decode ( G_secp_uncomp );
 
-   BigInt bi_p_secp = BigInt::decode ( sv_p_secp.begin(), sv_p_secp.size() );
-   BigInt bi_a_secp = BigInt::decode ( sv_a_secp.begin(), sv_a_secp.size() );
-   BigInt bi_b_secp = BigInt::decode ( sv_b_secp.begin(), sv_b_secp.size() );
+   BigInt bi_p_secp = BigInt::decode ( &sv_p_secp[0], sv_p_secp.size() );
+   BigInt bi_a_secp = BigInt::decode ( &sv_a_secp[0], sv_a_secp.size() );
+   BigInt bi_b_secp = BigInt::decode ( &sv_b_secp[0], sv_b_secp.size() );
 
    CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
 
    PointGFp p_G = OS2ECP ( sv_G_secp_uncomp, secp160r1 );
 
    SecureVector<byte> sv_result = EC2OSP(p_G, PointGFp::UNCOMPRESSED);
-   std::string result = hex_encode(sv_result.begin(), sv_result.size());
-   std::string exp_result = hex_encode(sv_G_secp_uncomp.begin(), sv_G_secp_uncomp.size());
+   std::string result = hex_encode(&sv_result[0], sv_result.size());
+   std::string exp_result = hex_encode(&sv_G_secp_uncomp[0], sv_G_secp_uncomp.size());
 
    CHECK_MESSAGE( sv_result == sv_G_secp_uncomp, "\ncalc. result = " << result << "\nexp. result = " << exp_result << "\n");
    }
@@ -611,9 +611,9 @@ void test_enc_dec_uncompressed_521_prime_too_large()
    SecureVector<byte> sv_b_secp = hex_decode ( b_secp );
    SecureVector<byte> sv_G_secp_uncomp = hex_decode ( G_secp_uncomp );
 
-   BigInt bi_p_secp = BigInt::decode ( sv_p_secp.begin(), sv_p_secp.size() );
-   BigInt bi_a_secp = BigInt::decode ( sv_a_secp.begin(), sv_a_secp.size() );
-   BigInt bi_b_secp = BigInt::decode ( sv_b_secp.begin(), sv_b_secp.size() );
+   BigInt bi_p_secp = BigInt::decode ( &sv_p_secp[0], sv_p_secp.size() );
+   BigInt bi_a_secp = BigInt::decode ( &sv_a_secp[0], sv_a_secp.size() );
+   BigInt bi_b_secp = BigInt::decode ( &sv_b_secp[0], sv_b_secp.size() );
 
    CurveGFp secp521r1 (bi_p_secp, bi_a_secp, bi_b_secp);
    std::auto_ptr<PointGFp> p_G;

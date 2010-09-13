@@ -45,7 +45,7 @@ void GOST_34_11::add_data(const byte input[], u32bit length)
 
       if(position + length >= HASH_BLOCK_SIZE)
          {
-         compress_n(buffer.begin(), 1);
+         compress_n(&buffer[0], 1);
          input += (HASH_BLOCK_SIZE - position);
          length -= (HASH_BLOCK_SIZE - position);
          position = 0;
@@ -219,7 +219,7 @@ void GOST_34_11::final_result(byte out[])
    {
    if(position)
       {
-      clear_mem(buffer.begin() + position, buffer.size() - position);
+      clear_mem(&buffer[0] + position, buffer.size() - position);
       compress_n(buffer, 1);
       }
 
@@ -232,7 +232,7 @@ void GOST_34_11::final_result(byte out[])
    compress_n(length_buf, 1);
    compress_n(sum_buf, 1);
 
-   copy_mem(out, hash.begin(), 32);
+   copy_mem(out, &hash[0], 32);
 
    clear();
    }

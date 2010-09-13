@@ -67,7 +67,7 @@ void HAS_160::compress_n(const byte input[], u32bit blocks)
 
    for(u32bit i = 0; i != blocks; ++i)
       {
-      load_le(X.begin(), input, 16);
+      load_le(&X[0], input, 16);
 
       X[16] = X[ 0] ^ X[ 1] ^ X[ 2] ^ X[ 3];
       X[17] = X[ 4] ^ X[ 5] ^ X[ 6] ^ X[ 7];
