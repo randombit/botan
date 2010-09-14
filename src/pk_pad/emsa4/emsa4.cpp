@@ -110,7 +110,7 @@ bool EMSA4::verify(const MemoryRegion<byte>& const_coded,
    if(salt_offset == 0)
       return false;
 
-   SecureVector<byte> salt(DB + salt_offset, DB.size() - salt_offset);
+   SecureVector<byte> salt(&DB[salt_offset], DB.size() - salt_offset);
 
    for(u32bit j = 0; j != 8; ++j)
       hash->update(0);

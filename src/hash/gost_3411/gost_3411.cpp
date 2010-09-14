@@ -82,7 +82,7 @@ void GOST_34_11::compress_n(const byte input[], u32bit blocks)
       byte S[32] = { 0 };
 
       u64bit U[4], V[4];
-      load_be(U, hash, 4);
+      load_be(U, &hash[0], 4);
       load_be(V, input + 32*i, 4);
 
       for(u32bit j = 0; j != 4; ++j)
@@ -95,7 +95,7 @@ void GOST_34_11::compress_n(const byte input[], u32bit blocks)
                key[4*l+k] = get_byte(l, U[k]) ^ get_byte(l, V[k]);
 
          cipher.set_key(key, 32);
-         cipher.encrypt(hash + 8*j, S + 8*j);
+         cipher.encrypt(&hash[8*j], S + 8*j);
 
          if(j == 3)
             break;
@@ -169,7 +169,7 @@ void GOST_34_11::compress_n(const byte input[], u32bit blocks)
       S[30] = S2[0];
       S[31] = S2[1];
 
-      xor_buf(S, hash, 32);
+      xor_buf(S, &hash[0], 32);
 
       // 61 rounds of psi
       S2[ 0] = S[ 2] ^ S[ 6] ^ S[14] ^ S[20] ^ S[22] ^ S[26] ^ S[28] ^ S[30];
@@ -223,17 +223,17 @@ void GOST_34_11::final_result(byte out[])
    if(position)
       {
       clear_mem(&buffer[0] + position, buffer.size() - position);
-      compress_n(buffer, 1);
+      compress_n(&buffer[0], 1);
       }
 
    SecureVector<byte> length_buf(32);
    const u64bit bit_count = count * 8;
-   store_le(bit_count, length_buf);
+   store_le(bit_count, &length_buf[0]);
 
    SecureVector<byte> sum_buf = sum;
 
-   compress_n(length_buf, 1);
-   compress_n(sum_buf, 1);
+   compress_n(&length_buf[0], 1);
+   compress_n(&sum_buf[0], 1);
 
    copy_mem(out, &hash[0], 32);
 

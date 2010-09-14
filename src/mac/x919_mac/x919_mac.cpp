@@ -17,7 +17,7 @@ namespace Botan {
 void ANSI_X919_MAC::add_data(const byte input[], u32bit length)
    {
    u32bit xored = std::min(8 - position, length);
-   xor_buf(state + position, input, xored);
+   xor_buf(&state[position], input, xored);
    position += xored;
 
    if(position < 8) return;
