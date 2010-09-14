@@ -34,7 +34,7 @@ OctetString PKCS5_PBKDF1::derive_key(u32bit key_len,
       hash->final(key);
       }
 
-   return OctetString(key, std::min(key_len, key.size()));
+   return OctetString(key, std::min<u32bit>(key_len, key.size()));
    }
 
 }

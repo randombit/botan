@@ -37,7 +37,7 @@ void Randpool::randomize(byte out[], u32bit length)
    update_buffer();
    while(length)
       {
-      const u32bit copied = std::min(length, buffer.size());
+      const u32bit copied = std::min<u32bit>(length, buffer.size());
       copy_mem(out, &buffer[0], copied);
       out += copied;
       length -= copied;

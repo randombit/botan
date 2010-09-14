@@ -66,7 +66,7 @@ void CTS_Encryption::encrypt(const byte block[])
 */
 void CTS_Encryption::write(const byte input[], u32bit length)
    {
-   u32bit copied = std::min(buffer.size() - position, length);
+   u32bit copied = std::min<u32bit>(buffer.size() - position, length);
    buffer.copy(position, input, copied);
    length -= copied;
    input += copied;
@@ -169,7 +169,7 @@ void CTS_Decryption::decrypt(const byte block[])
 */
 void CTS_Decryption::write(const byte input[], u32bit length)
    {
-   u32bit copied = std::min(buffer.size() - position, length);
+   u32bit copied = std::min<u32bit>(buffer.size() - position, length);
    buffer.copy(position, input, copied);
    length -= copied;
    input += copied;

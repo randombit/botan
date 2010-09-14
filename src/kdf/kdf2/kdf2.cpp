@@ -28,7 +28,7 @@ SecureVector<byte> KDF2::derive(u32bit out_len,
       hash->update(P, P_len);
       SecureVector<byte> hash_result = hash->final();
 
-      u32bit added = std::min(hash_result.size(), out_len);
+      u32bit added = std::min<u32bit>(hash_result.size(), out_len);
       output.append(hash_result, added);
       out_len -= added;
 

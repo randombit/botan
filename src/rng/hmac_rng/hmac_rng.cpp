@@ -46,7 +46,7 @@ void HMAC_RNG::randomize(byte out[], u32bit length)
       {
       hmac_prf(prf, K, counter, "rng");
 
-      const u32bit copied = std::min(K.size(), length);
+      const u32bit copied = std::min<u32bit>(K.size(), length);
 
       copy_mem(out, &K[0], copied);
       out += copied;

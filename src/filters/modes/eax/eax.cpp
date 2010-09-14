@@ -115,7 +115,7 @@ void EAX_Encryption::write(const byte input[], u32bit length)
    {
    while(length)
       {
-      u32bit copied = std::min(length, ctr_buf.size());
+      u32bit copied = std::min<u32bit>(length, ctr_buf.size());
 
       ctr->cipher(input, ctr_buf, copied);
       cmac->update(ctr_buf, copied);

@@ -77,7 +77,8 @@ void RC5::decrypt_n(const byte in[], byte out[], u32bit blocks) const
 void RC5::key_schedule(const byte key[], u32bit length)
    {
    const u32bit WORD_KEYLENGTH = (((length - 1) / 4) + 1),
-                MIX_ROUNDS     = 3*std::max(WORD_KEYLENGTH, S.size());
+                MIX_ROUNDS     = 3*std::max<u32bit>(WORD_KEYLENGTH, S.size());
+
    S[0] = 0xB7E15163;
    for(u32bit j = 1; j != S.size(); ++j)
       S[j] = S[j-1] + 0x9E3779B9;

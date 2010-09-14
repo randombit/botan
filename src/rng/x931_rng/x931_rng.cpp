@@ -24,9 +24,9 @@ void ANSI_X931_RNG::randomize(byte out[], u32bit length)
       if(position == R.size())
          update_buffer();
 
-      const u32bit copied = std::min(length, R.size() - position);
+      const u32bit copied = std::min<u32bit>(length, R.size() - position);
 
-      copy_mem(out, R + position, copied);
+      copy_mem(out, &R[position], copied);
       out += copied;
       length -= copied;
       position += copied;
@@ -38,9 +38,7 @@ void ANSI_X931_RNG::randomize(byte out[], u32bit length)
 */
 void ANSI_X931_RNG::update_buffer()
    {
-   SecureVector<byte> DT(cipher->BLOCK_SIZE);
-
-   prng->randomize(DT, DT.size());
+   SecureVector<byte> DT = prng->random_vec(cipher->BLOCK_SIZE);
    cipher->encrypt(DT);
 
    xor_buf(R, V, DT, cipher->BLOCK_SIZE);

@@ -23,7 +23,7 @@ class SecureQueueNode
 
       u32bit write(const byte input[], u32bit length)
          {
-         u32bit copied = std::min(length, buffer.size() - end);
+         u32bit copied = std::min<u32bit>(length, buffer.size() - end);
          copy_mem(buffer + end, input, copied);
          end += copied;
          return copied;

@@ -68,7 +68,7 @@ void StreamCipher_Filter::write(const byte input[], u32bit length)
    {
    while(length)
       {
-      u32bit copied = std::min(length, buffer.size());
+      u32bit copied = std::min<u32bit>(length, buffer.size());
       cipher->cipher(input, &buffer[0], copied);
       send(buffer, copied);
       input += copied;
@@ -94,7 +94,7 @@ void Hash_Filter::end_msg()
    {
    SecureVector<byte> output = hash->final();
    if(OUTPUT_LENGTH)
-      send(output, std::min(OUTPUT_LENGTH, output.size()));
+      send(output, std::min<u32bit>(OUTPUT_LENGTH, output.size()));
    else
       send(output);
    }
@@ -127,7 +127,7 @@ void MAC_Filter::end_msg()
    {
    SecureVector<byte> output = mac->final();
    if(OUTPUT_LENGTH)
-      send(output, std::min(OUTPUT_LENGTH, output.size()));
+      send(output, std::min<u32bit>(OUTPUT_LENGTH, output.size()));
    else
       send(output);
    }

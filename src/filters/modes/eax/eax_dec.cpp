@@ -45,7 +45,7 @@ void EAX_Decryption::write(const byte input[], u32bit length)
    {
    while(length)
       {
-      const u32bit copied = std::min(length, queue.size() - queue_end);
+      const u32bit copied = std::min<u32bit>(length, queue.size() - queue_end);
 
       queue.copy(queue_end, input, copied);
       input += copied;
@@ -78,7 +78,7 @@ void EAX_Decryption::do_write(const byte input[], u32bit length)
    {
    while(length)
       {
-      u32bit copied = std::min(length, ctr_buf.size());
+      u32bit copied = std::min<u32bit>(length, ctr_buf.size());
 
       /*
       Process same block with cmac and ctr at the same time to
