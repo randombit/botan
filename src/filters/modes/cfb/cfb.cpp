@@ -72,8 +72,8 @@ void CFB_Encryption::write(const byte input[], u32bit length)
    while(length)
       {
       u32bit xored = std::min(feedback - position, length);
-      xor_buf(buffer + position, input, xored);
-      send(buffer + position, xored);
+      xor_buf(&buffer[position], input, xored);
+      send(&buffer[position], xored);
       input += xored;
       length -= xored;
       position += xored;
@@ -149,8 +149,8 @@ void CFB_Decryption::write(const byte input[], u32bit length)
    while(length)
       {
       u32bit xored = std::min(feedback - position, length);
-      xor_buf(buffer + position, input, xored);
-      send(buffer + position, xored);
+      xor_buf(&buffer[position], input, xored);
+      send(&buffer[position], xored);
       buffer.copy(position, input, xored);
       input += xored;
       length -= xored;

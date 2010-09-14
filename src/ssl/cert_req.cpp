@@ -131,7 +131,7 @@ void Certificate::deserialize(const MemoryRegion<byte>& buf)
    u32bit total_size = make_u32bit(0, buf[0], buf[1], buf[2]);
 
    SecureQueue queue;
-   queue.write(buf + 3, buf.size() - 3);
+   queue.write(&buf[3], buf.size() - 3);
 
    if(queue.size() != total_size)
       throw Decoding_Error("Certificate: Message malformed");

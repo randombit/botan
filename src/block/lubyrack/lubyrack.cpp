@@ -17,28 +17,29 @@ void LubyRackoff::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
    const u32bit len = hash->OUTPUT_LENGTH;
 
-   SecureVector<byte> buffer(len);
+   SecureVector<byte> buffer_vec(len);
+   byte* buffer = &buffer_vec[0];
 
    for(u32bit i = 0; i != blocks; ++i)
       {
       hash->update(K1);
       hash->update(in, len);
-      hash->final(&buffer[0]);
+      hash->final(buffer);
       xor_buf(out + len, in + len, buffer, len);
 
       hash->update(K2);
       hash->update(out + len, len);
-      hash->final(&buffer[0]);
+      hash->final(buffer);
       xor_buf(out, in, buffer, len);
 
       hash->update(K1);
       hash->update(out, len);
-      hash->final(&buffer[0]);
+      hash->final(buffer);
       xor_buf(out + len, buffer, len);
 
       hash->update(K2);
       hash->update(out + len, len);
-      hash->final(&buffer[0]);
+      hash->final(buffer);
       xor_buf(out, buffer, len);
 
       in += BLOCK_SIZE;
@@ -53,28 +54,29 @@ void LubyRackoff::decrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
    const u32bit len = hash->OUTPUT_LENGTH;
 
-   SecureVector<byte> buffer(len);
+   SecureVector<byte> buffer_vec(len);
+   byte* buffer = &buffer_vec[0];
 
    for(u32bit i = 0; i != blocks; ++i)
       {
       hash->update(K2);
       hash->update(in + len, len);
-      hash->final(&buffer[0]);
+      hash->final(buffer);
       xor_buf(out, in, buffer, len);
 
       hash->update(K1);
       hash->update(out, len);
-      hash->final(&buffer[0]);
+      hash->final(buffer);
       xor_buf(out + len, in + len, buffer, len);
 
       hash->update(K2);
       hash->update(out + len, len);
-      hash->final(&buffer[0]);
+      hash->final(buffer);
       xor_buf(out, buffer, len);
 
       hash->update(K1);
       hash->update(out, len);
-      hash->final(&buffer[0]);
+      hash->final(buffer);
       xor_buf(out + len, buffer, len);
 
       in += BLOCK_SIZE;

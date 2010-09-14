@@ -55,7 +55,7 @@ void EAX_Decryption::write(const byte input[], u32bit length)
       while((queue_end - queue_start) > TAG_SIZE)
          {
          u32bit removed = (queue_end - queue_start) - TAG_SIZE;
-         do_write(queue + queue_start, removed);
+         do_write(&queue[queue_start], removed);
          queue_start += removed;
          }
 
@@ -63,8 +63,8 @@ void EAX_Decryption::write(const byte input[], u32bit length)
          queue_start >= queue.size() / 2)
          {
          SecureVector<byte> queue_data(TAG_SIZE);
-         queue_data.copy(queue + queue_start, TAG_SIZE);
-         queue.copy(queue_data, TAG_SIZE);
+         queue_data.copy(&queue[queue_start], TAG_SIZE);
+         queue.copy(&queue_data[0], TAG_SIZE);
          queue_start = 0;
          queue_end = TAG_SIZE;
          }
@@ -85,7 +85,7 @@ void EAX_Decryption::do_write(const byte input[], u32bit length)
       help cache locality.
       */
       cmac->update(input, copied);
-      ctr->cipher(input, ctr_buf, copied);
+      ctr->cipher(input, &ctr_buf[0], copied);
       send(ctr_buf, copied);
       input += copied;
       length -= copied;

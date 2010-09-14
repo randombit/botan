@@ -17,7 +17,7 @@ namespace Botan {
 void CBC_MAC::add_data(const byte input[], u32bit length)
    {
    u32bit xored = std::min(OUTPUT_LENGTH - position, length);
-   xor_buf(state + position, input, xored);
+   xor_buf(&state[position], input, xored);
    position += xored;
 
    if(position < OUTPUT_LENGTH)

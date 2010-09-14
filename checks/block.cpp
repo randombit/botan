@@ -70,15 +70,15 @@ void ECB_Encryption_ErrorCheck::write(const byte input[], u32bit length)
       cipher->encrypt(buffer);
       send(buffer, BLOCKSIZE);
       cipher->decrypt(buffer);
-      decrypt_hash->update(buffer, BLOCKSIZE);
+      decrypt_hash->update(&buffer[0], BLOCKSIZE);
       input += (BLOCKSIZE - position);
       length -= (BLOCKSIZE - position);
       while(length >= BLOCKSIZE)
          {
-         cipher->encrypt(input, buffer);
+         cipher->encrypt(input, &buffer[0]);
          send(buffer, BLOCKSIZE);
          cipher->decrypt(buffer);
-         decrypt_hash->update(buffer, BLOCKSIZE);
+         decrypt_hash->update(&buffer[0], BLOCKSIZE);
          input += BLOCKSIZE;
          length -= BLOCKSIZE;
          }

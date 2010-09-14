@@ -42,8 +42,8 @@ void Base64_Encoder::encode_and_send(const byte block[], u32bit length)
    {
    for(u32bit j = 0; j != length; j += 3)
       {
-      encode(block + j, out);
-      do_output(out, 4);
+      encode(block + j, &out[0]);
+      do_output(&out[0], 4);
       }
    }
 
@@ -81,7 +81,7 @@ void Base64_Encoder::write(const byte input[], u32bit length)
    in.copy(position, input, length);
    if(position + length >= in.size())
       {
-      encode_and_send(in, in.size());
+      encode_and_send(&in[0], in.size());
       input += (in.size() - position);
       length -= (in.size() - position);
       while(length >= in.size())
@@ -103,14 +103,14 @@ void Base64_Encoder::end_msg()
    {
    u32bit start_of_last_block = 3 * (position / 3),
           left_over = position % 3;
-   encode_and_send(in, start_of_last_block);
+   encode_and_send(&in[0], start_of_last_block);
 
    if(left_over)
       {
       SecureVector<byte> remainder(3);
       copy_mem(&remainder[0], &in[start_of_last_block], left_over);
 
-      encode(remainder, out);
+      encode(&remainder[0], &out[0]);
 
       u32bit empty_bits = 8 * (3 - left_over), index = 4 - 1;
       while(empty_bits >= 8)
@@ -119,7 +119,7 @@ void Base64_Encoder::end_msg()
          empty_bits -= 6;
          }
 
-      do_output(out, 4);
+      do_output(&out[0], 4);
       }
 
    if(trailing_newline || (counter && line_length))
@@ -163,7 +163,7 @@ void Base64_Decoder::decode_and_send(const byte block[], u32bit length)
    {
    for(u32bit j = 0; j != length; j += 4)
       {
-      decode(block + j, out);
+      decode(block + j, &out[0]);
       send(out, 3);
       }
    }
@@ -199,7 +199,7 @@ void Base64_Decoder::write(const byte input[], u32bit length)
 
       if(position == in.size())
          {
-         decode_and_send(in, in.size());
+         decode_and_send(&in[0], in.size());
          position = 0;
          }
       }
@@ -214,13 +214,13 @@ void Base64_Decoder::end_msg()
       {
       u32bit start_of_last_block = 4 * (position / 4),
              left_over = position % 4;
-      decode_and_send(in, start_of_last_block);
+      decode_and_send(&in[0], start_of_last_block);
 
       if(left_over)
          {
          SecureVector<byte> remainder(4);
          copy_mem(&remainder[0], &in[start_of_last_block], left_over);
-         decode(remainder, out);
+         decode(&remainder[0], &out[0]);
          send(out, ((left_over == 1) ? (1) : (left_over - 1)));
          }
       }

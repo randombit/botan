@@ -198,7 +198,7 @@ void XTS_Encryption::buffered_final(const byte input[], u32bit length)
       cipher->encrypt(temp);
       xor_buf(temp, tweak, cipher->BLOCK_SIZE);
 
-      poly_double(tweak, cipher->BLOCK_SIZE);
+      poly_double(&tweak[0], cipher->BLOCK_SIZE);
 
       for(u32bit i = 0; i != length - cipher->BLOCK_SIZE; ++i)
          std::swap(temp[i], temp[i + cipher->BLOCK_SIZE]);
@@ -364,7 +364,7 @@ void XTS_Decryption::buffered_final(const byte input[], u32bit length)
       SecureVector<byte> temp(input, length);
       SecureVector<byte> tweak_copy(&tweak[0], cipher->BLOCK_SIZE);
 
-      poly_double(tweak_copy, cipher->BLOCK_SIZE);
+      poly_double(&tweak_copy[0], cipher->BLOCK_SIZE);
 
       xor_buf(temp, tweak_copy, cipher->BLOCK_SIZE);
       cipher->decrypt(temp);

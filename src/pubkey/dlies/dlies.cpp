@@ -43,18 +43,18 @@ SecureVector<byte> DLIES_Encryptor::enc(const byte in[], u32bit length,
       throw Invalid_State("DLIES: The other key was never set");
 
    SecureVector<byte> out(my_key.size() + length + mac->OUTPUT_LENGTH);
-   out.copy(my_key, my_key.size());
+   out.copy(&my_key[0], my_key.size());
    out.copy(my_key.size(), in, length);
 
    SecureVector<byte> vz = my_key;
    vz.append(ka.derive_key(0, other_key).bits_of());
 
    const u32bit K_LENGTH = length + mac_keylen;
-   OctetString K = kdf->derive_key(K_LENGTH, vz, vz.size());
+   OctetString K = kdf->derive_key(K_LENGTH, vz);
 
    if(K.length() != K_LENGTH)
       throw Encoding_Error("DLIES: KDF did not provide sufficient output");
-   byte* C = out + my_key.size();
+   byte* C = &out[my_key.size()];
 
    xor_buf(C, K.begin() + mac_keylen, length);
    mac->set_key(K.begin(), mac_keylen);
@@ -123,7 +123,7 @@ SecureVector<byte> DLIES_Decryptor::dec(const byte msg[], u32bit length) const
    vz.append(ka.derive_key(0, v).bits_of());
 
    const u32bit K_LENGTH = C.size() + mac_keylen;
-   OctetString K = kdf->derive_key(K_LENGTH, vz, vz.size());
+   OctetString K = kdf->derive_key(K_LENGTH, vz);
    if(K.length() != K_LENGTH)
       throw Encoding_Error("DLIES: KDF did not provide sufficient output");
 
