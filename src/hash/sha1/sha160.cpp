@@ -156,7 +156,7 @@ void SHA_160::clear()
 * SHA_160 Constructor
 */
 SHA_160::SHA_160() :
-   MDx_HashFunction(20, 64, true, true), W(80)
+   MDx_HashFunction(20, 64, true, true), digest(5), W(80)
    {
    clear();
    }
@@ -165,7 +165,7 @@ SHA_160::SHA_160() :
 * SHA_160 Constructor
 */
 SHA_160::SHA_160(u32bit W_size) :
-   MDx_HashFunction(20, 64, true, true), W(W_size)
+   MDx_HashFunction(20, 64, true, true), digest(5), W(W_size)
    {
    clear();
    }

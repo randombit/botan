@@ -17,7 +17,10 @@ namespace Botan {
 */
 GOST_34_11::GOST_34_11() :
    HashFunction(32, 32),
-   cipher(GOST_28147_89_Params("R3411_CryptoPro"))
+   cipher(GOST_28147_89_Params("R3411_CryptoPro")),
+   buffer(32),
+   sum(32),
+   hash(32)
    {
    count = 0;
    position = 0;
@@ -223,11 +226,11 @@ void GOST_34_11::final_result(byte out[])
       compress_n(buffer, 1);
       }
 
-   SecureVector<byte, 32> length_buf;
+   SecureVector<byte> length_buf(32);
    const u64bit bit_count = count * 8;
    store_le(bit_count, length_buf);
 
-   SecureVector<byte, 32> sum_buf(sum);
+   SecureVector<byte> sum_buf = sum;
 
    compress_n(length_buf, 1);
    compress_n(sum_buf, 1);

@@ -25,7 +25,7 @@ class BOTAN_DLL Blowfish : public BlockCipher
       std::string name() const { return "Blowfish"; }
       BlockCipher* clone() const { return new Blowfish; }
 
-      Blowfish() : BlockCipher(8, 1, 56) {}
+      Blowfish() : BlockCipher(8, 1, 56), S(1024), P(18) {}
    private:
       void key_schedule(const byte[], u32bit);
       void generate_sbox(MemoryRegion<u32bit>& box,
@@ -34,8 +34,8 @@ class BOTAN_DLL Blowfish : public BlockCipher
       static const u32bit P_INIT[18];
       static const u32bit S_INIT[1024];
 
-      SecureVector<u32bit, 1024> S;
-      SecureVector<u32bit, 18> P;
+      SecureVector<u32bit> S;
+      SecureVector<u32bit> P;
    };
 
 }

@@ -25,11 +25,11 @@ class BOTAN_DLL AES_128_SSSE3 : public BlockCipher
       std::string name() const { return "AES-128"; }
       BlockCipher* clone() const { return new AES_128_SSSE3; }
 
-      AES_128_SSSE3() : BlockCipher(16, 16) {}
+      AES_128_SSSE3() : BlockCipher(16, 16), EK(44), DK(44) {}
    private:
       void key_schedule(const byte[], u32bit);
 
-      SecureVector<u32bit, 44> EK, DK;
+      SecureVector<u32bit> EK, DK;
    };
 
 /**
@@ -45,11 +45,11 @@ class BOTAN_DLL AES_192_SSSE3 : public BlockCipher
       std::string name() const { return "AES-192"; }
       BlockCipher* clone() const { return new AES_192_SSSE3; }
 
-      AES_192_SSSE3() : BlockCipher(16, 24) {}
+      AES_192_SSSE3() : BlockCipher(16, 24), EK(52), DK(52) {}
    private:
       void key_schedule(const byte[], u32bit);
 
-      SecureVector<u32bit, 52> EK, DK;
+      SecureVector<u32bit> EK, DK;
    };
 
 /**
@@ -65,11 +65,11 @@ class BOTAN_DLL AES_256_SSSE3 : public BlockCipher
       std::string name() const { return "AES-256"; }
       BlockCipher* clone() const { return new AES_256_SSSE3; }
 
-      AES_256_SSSE3() : BlockCipher(16, 32) {}
+      AES_256_SSSE3() : BlockCipher(16, 32), EK(60), DK(60) {}
    private:
       void key_schedule(const byte[], u32bit);
 
-      SecureVector<u32bit, 60> EK, DK;
+      SecureVector<u32bit> EK, DK;
    };
 
 }

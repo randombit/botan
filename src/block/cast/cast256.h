@@ -25,15 +25,15 @@ class BOTAN_DLL CAST_256 : public BlockCipher
       std::string name() const { return "CAST-256"; }
       BlockCipher* clone() const { return new CAST_256; }
 
-      CAST_256() : BlockCipher(16, 4, 32, 4) {}
+      CAST_256() : BlockCipher(16, 4, 32, 4), MK(48), RK(48) {}
    private:
       void key_schedule(const byte[], u32bit);
 
       static const u32bit KEY_MASK[192];
       static const byte   KEY_ROT[32];
 
-      SecureVector<u32bit, 48> MK;
-      SecureVector<byte, 48> RK;
+      SecureVector<u32bit> MK;
+      SecureVector<byte> RK;
    };
 
 extern const u32bit CAST_SBOX1[256];

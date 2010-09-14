@@ -25,21 +25,21 @@ class BOTAN_DLL IDEA : public BlockCipher
       std::string name() const { return "IDEA"; }
       BlockCipher* clone() const { return new IDEA; }
 
-      IDEA() : BlockCipher(8, 16) {}
+      IDEA() : BlockCipher(8, 16), EK(52), DK(52) {}
    protected:
       /**
       * @return const reference to encryption subkeys
       */
-      const SecureVector<u16bit, 52>& get_EK() const { return EK; }
+      const SecureVector<u16bit>& get_EK() const { return EK; }
 
       /**
       * @return const reference to decryption subkeys
       */
-      const SecureVector<u16bit, 52>& get_DK() const { return DK; }
+      const SecureVector<u16bit>& get_DK() const { return DK; }
 
    private:
       void key_schedule(const byte[], u32bit);
-      SecureVector<u16bit, 52> EK, DK;
+      SecureVector<u16bit> EK, DK;
    };
 
 }

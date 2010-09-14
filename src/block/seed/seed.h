@@ -25,7 +25,7 @@ class BOTAN_DLL SEED : public BlockCipher
       std::string name() const { return "SEED"; }
       BlockCipher* clone() const { return new SEED; }
 
-      SEED() : BlockCipher(16, 16) {}
+      SEED() : BlockCipher(16, 16), K(32) {}
    private:
       void key_schedule(const byte[], u32bit);
 
@@ -37,7 +37,7 @@ class BOTAN_DLL SEED : public BlockCipher
             static const u32bit S0[256], S1[256], S2[256], S3[256];
          };
 
-      SecureVector<u32bit, 32> K;
+      SecureVector<u32bit> K;
    };
 
 }

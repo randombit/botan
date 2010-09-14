@@ -25,11 +25,11 @@ class BOTAN_DLL Skipjack : public BlockCipher
       std::string name() const { return "Skipjack"; }
       BlockCipher* clone() const { return new Skipjack; }
 
-      Skipjack() : BlockCipher(8, 10) {}
+      Skipjack() : BlockCipher(8, 10), FTAB(2560) {}
    private:
       void key_schedule(const byte[], u32bit);
 
-      SecureVector<byte, 2560> FTAB;
+      SecureVector<byte> FTAB;
    };
 
 }

@@ -111,7 +111,7 @@ void SEED::key_schedule(const byte key[], u32bit)
       0x779B99E3, 0xEF3733C6, 0xDE6E678D, 0xBCDCCF1B
    };
 
-   SecureVector<u32bit, 4> WK;
+   SecureVector<u32bit> WK(4);
 
    for(u32bit j = 0; j != 4; ++j)
       WK[j] = load_be<u32bit>(key, j);

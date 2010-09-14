@@ -35,7 +35,7 @@ class BOTAN_DLL ANSI_X919_MAC : public MessageAuthenticationCode
 
       BlockCipher* e;
       BlockCipher* d;
-      SecureVector<byte, 8> state;
+      SecureVector<byte> state;
       u32bit position;
    };
 

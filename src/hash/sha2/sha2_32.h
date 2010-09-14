@@ -22,13 +22,14 @@ class BOTAN_DLL SHA_224 : public MDx_HashFunction
       void clear();
       std::string name() const { return "SHA-224"; }
       HashFunction* clone() const { return new SHA_224; }
-      SHA_224() : MDx_HashFunction(28, 64, true, true) { clear(); }
+
+      SHA_224() : MDx_HashFunction(28, 64, true, true), W(64), digest(8)
+         { clear(); }
    private:
       void compress_n(const byte[], u32bit blocks);
       void copy_out(byte[]);
 
-      SecureVector<u32bit, 64> W;
-      SecureVector<u32bit, 8> digest;
+      SecureVector<u32bit> W, digest;
    };
 
 /**
@@ -40,13 +41,14 @@ class BOTAN_DLL SHA_256 : public MDx_HashFunction
       void clear();
       std::string name() const { return "SHA-256"; }
       HashFunction* clone() const { return new SHA_256; }
-      SHA_256() : MDx_HashFunction(32, 64, true, true) { clear(); }
+
+      SHA_256() : MDx_HashFunction(32, 64, true, true), W(64), digest(8)
+         { clear(); }
    private:
       void compress_n(const byte[], u32bit blocks);
       void copy_out(byte[]);
 
-      SecureVector<u32bit, 64> W;
-      SecureVector<u32bit, 8> digest;
+      SecureVector<u32bit> W, digest;
    };
 
 }

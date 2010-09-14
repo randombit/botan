@@ -25,7 +25,7 @@ class BOTAN_DLL Noekeon : public BlockCipher
       std::string name() const { return "Noekeon"; }
       BlockCipher* clone() const { return new Noekeon; }
 
-      Noekeon() : BlockCipher(16, 16) {}
+      Noekeon() : BlockCipher(16, 16), EK(4), DK(4) {}
    protected:
       /**
       * The Noekeon round constants
@@ -35,16 +35,16 @@ class BOTAN_DLL Noekeon : public BlockCipher
       /**
       * @return const reference to encryption subkeys
       */
-      const SecureVector<u32bit, 4>& get_EK() const { return EK; }
+      const SecureVector<u32bit>& get_EK() const { return EK; }
 
       /**
       * @return const reference to decryption subkeys
       */
-      const SecureVector<u32bit, 4>& get_DK() const { return DK; }
+      const SecureVector<u32bit>& get_DK() const { return DK; }
 
    private:
       void key_schedule(const byte[], u32bit);
-      SecureVector<u32bit, 4> EK, DK;
+      SecureVector<u32bit> EK, DK;
    };
 
 }

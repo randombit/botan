@@ -89,7 +89,7 @@ ANSI_X919_MAC::ANSI_X919_MAC(BlockCipher* e_in) :
                              e_in->MINIMUM_KEYLENGTH,
                              2*e_in->MAXIMUM_KEYLENGTH,
                              2*e_in->KEYLENGTH_MULTIPLE),
-   e(e_in), d(e->clone()), position(0)
+   e(e_in), d(e->clone()), state(e->BLOCK_SIZE), position(0)
    {
    if(e->name() != "DES")
       throw Invalid_Argument("ANSI X9.19 MAC only supports DES");

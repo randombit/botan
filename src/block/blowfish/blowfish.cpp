@@ -131,8 +131,10 @@ void Blowfish::generate_sbox(MemoryRegion<u32bit>& box,
 */
 void Blowfish::clear()
    {
-   P.copy(P_INIT, 18);
-   S.copy(S_INIT, 1024);
+   std::copy(P_INIT, P_INIT + 18, P.begin());
+   std::copy(S_INIT, S_INIT + 1024, S.begin());
+   //P.copy(P_INIT, 18);
+   //S.copy(S_INIT, 1024);
    }
 
 }

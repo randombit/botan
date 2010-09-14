@@ -25,10 +25,10 @@ class BOTAN_DLL DESX : public BlockCipher
       std::string name() const { return "DESX"; }
       BlockCipher* clone() const { return new DESX; }
 
-      DESX() : BlockCipher(8, 24) {}
+      DESX() : BlockCipher(8, 24), K1(8), K2(8) {}
    private:
       void key_schedule(const byte[], u32bit);
-      SecureVector<byte, 8> K1, K2;
+      SecureVector<byte> K1, K2;
       DES des;
    };
 

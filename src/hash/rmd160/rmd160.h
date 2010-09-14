@@ -21,13 +21,14 @@ class BOTAN_DLL RIPEMD_160 : public MDx_HashFunction
       void clear();
       std::string name() const { return "RIPEMD-160"; }
       HashFunction* clone() const { return new RIPEMD_160; }
-      RIPEMD_160() : MDx_HashFunction(20, 64, false, true) { clear(); }
+
+      RIPEMD_160() : MDx_HashFunction(20, 64, false, true), M(16), digest(5)
+         { clear(); }
    private:
       void compress_n(const byte[], u32bit blocks);
       void copy_out(byte[]);
 
-      SecureVector<u32bit, 16> M;
-      SecureVector<u32bit, 5> digest;
+      SecureVector<u32bit> M, digest;
    };
 
 }

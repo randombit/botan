@@ -167,7 +167,10 @@ std::string Tiger::name() const
 * Tiger Constructor
 */
 Tiger::Tiger(u32bit hashlen, u32bit pass) :
-   MDx_HashFunction(hashlen, 64, false, false), PASS(pass)
+   MDx_HashFunction(hashlen, 64, false, false),
+   X(8),
+   digest(3),
+   PASS(pass)
    {
    if(OUTPUT_LENGTH != 16 && OUTPUT_LENGTH != 20 && OUTPUT_LENGTH != 24)
       throw Invalid_Argument("Tiger: Illegal hash output size: " +

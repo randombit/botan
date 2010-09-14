@@ -25,16 +25,16 @@ class BOTAN_DLL XTEA : public BlockCipher
       std::string name() const { return "XTEA"; }
       BlockCipher* clone() const { return new XTEA; }
 
-      XTEA() : BlockCipher(8, 16) {}
+      XTEA() : BlockCipher(8, 16), EK(64) {}
    protected:
       /**
       * @return const reference to the key schedule
       */
-      const SecureVector<u32bit, 64>& get_EK() const { return EK; }
+      const SecureVector<u32bit>& get_EK() const { return EK; }
 
    private:
       void key_schedule(const byte[], u32bit);
-      SecureVector<u32bit, 64> EK;
+      SecureVector<u32bit> EK;
    };
 
 }

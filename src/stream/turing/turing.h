@@ -27,7 +27,12 @@ class BOTAN_DLL Turing : public StreamCipher
       void clear();
       std::string name() const { return "Turing"; }
       StreamCipher* clone() const { return new Turing; }
-      Turing() : StreamCipher(4, 32, 4) { position = 0; }
+
+      Turing() : StreamCipher(4, 32, 4),
+                 S0(256), S1(256), S2(256), S3(256),
+                 R(17), buffer(340)
+         { position = 0; }
+
    private:
       void key_schedule(const byte[], u32bit);
       void generate();
@@ -37,10 +42,10 @@ class BOTAN_DLL Turing : public StreamCipher
       static const u32bit Q_BOX[256];
       static const byte SBOX[256];
 
-      SecureVector<u32bit, 256> S0, S1, S2, S3;
-      SecureVector<u32bit, 17> R;
+      SecureVector<u32bit> S0, S1, S2, S3;
+      SecureVector<u32bit> R;
       SecureVector<u32bit> K;
-      SecureVector<byte, 340> buffer;
+      SecureVector<byte> buffer;
       u32bit position;
    };
 

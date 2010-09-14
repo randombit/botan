@@ -24,13 +24,13 @@ class BOTAN_DLL Serpent : public BlockCipher
       void clear() { zeroise(round_key); }
       std::string name() const { return "Serpent"; }
       BlockCipher* clone() const { return new Serpent; }
-      Serpent() : BlockCipher(16, 16, 32, 8) {}
+      Serpent() : BlockCipher(16, 16, 32, 8), round_key(132) {}
    protected:
       /**
       * For use by subclasses using SIMD, asm, etc
       * @return const reference to the key schedule
       */
-      const SecureVector<u32bit, 132>& get_round_keys() const
+      const SecureVector<u32bit>& get_round_keys() const
          { return round_key; }
 
       /**
@@ -42,7 +42,7 @@ class BOTAN_DLL Serpent : public BlockCipher
 
    private:
       void key_schedule(const byte key[], u32bit length);
-      SecureVector<u32bit, 132> round_key;
+      SecureVector<u32bit> round_key;
    };
 
 }

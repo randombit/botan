@@ -138,12 +138,13 @@ void CAST_256::decrypt_n(const byte in[], byte out[], u32bit blocks) const
 */
 void CAST_256::key_schedule(const byte key[], u32bit length)
    {
-   SecureVector<u32bit, 8> TMP;
+   SecureVector<u32bit> K(8);
    for(u32bit j = 0; j != length; ++j)
-      TMP[j/4] = (TMP[j/4] << 8) + key[j];
+      K[j/4] = (K[j/4] << 8) + key[j];
 
-   u32bit A = TMP[0], B = TMP[1], C = TMP[2], D = TMP[3],
-          E = TMP[4], F = TMP[5], G = TMP[6], H = TMP[7];
+   u32bit A = K[0], B = K[1], C = K[2], D = K[3],
+          E = K[4], F = K[5], G = K[6], H = K[7];
+
    for(u32bit j = 0; j != 48; j += 4)
       {
       round1(G, H, KEY_MASK[4*j+ 0], KEY_ROT[(4*j+ 0) % 32]);

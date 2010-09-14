@@ -25,11 +25,11 @@ class BOTAN_DLL MARS : public BlockCipher
       std::string name() const { return "MARS"; }
       BlockCipher* clone() const { return new MARS; }
 
-      MARS() : BlockCipher(16, 16, 32, 4) {}
+      MARS() : BlockCipher(16, 16, 32, 4), EK(40) {}
    private:
       void key_schedule(const byte[], u32bit);
 
-      SecureVector<u32bit, 40> EK;
+      SecureVector<u32bit> EK;
    };
 
 }

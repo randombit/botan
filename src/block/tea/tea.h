@@ -25,10 +25,10 @@ class BOTAN_DLL TEA : public BlockCipher
       std::string name() const { return "TEA"; }
       BlockCipher* clone() const { return new TEA; }
 
-      TEA() : BlockCipher(8, 16) {}
+      TEA() : BlockCipher(8, 16), K(4) {}
    private:
       void key_schedule(const byte[], u32bit);
-      SecureVector<u32bit, 4> K;
+      SecureVector<u32bit> K;
    };
 
 }

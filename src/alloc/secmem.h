@@ -333,7 +333,7 @@ class MemoryVector : public MemoryRegion<T>
 * swapped out to disk. In this way, a security hole allowing attackers
 * to find swapped out secret keys is closed.
 */
-template<typename T, u32bit INITIAL_LEN = 0>
+template<typename T>
 class SecureVector : public MemoryRegion<T>
    {
    public:
@@ -349,8 +349,7 @@ class SecureVector : public MemoryRegion<T>
       * Create a buffer of the specified length.
       * @param n the length of the buffer to create.
       */
-      SecureVector(u32bit n = INITIAL_LEN)
-         { this->init(true, n); }
+      SecureVector(u32bit n = 0) { this->init(true, n); }
 
       /**
       * Create a buffer with the specified contents.
@@ -360,11 +359,8 @@ class SecureVector : public MemoryRegion<T>
       */
       SecureVector(const T in[], u32bit n)
          {
-         this->init(true, INITIAL_LEN);
-         if(INITIAL_LEN)
-            this->copy(&in[0], n);
-         else
-            this->set(&in[0], n);
+         this->init(true);
+         this->set(&in[0], n);
          }
 
       /**
@@ -374,11 +370,8 @@ class SecureVector : public MemoryRegion<T>
       */
       SecureVector(const MemoryRegion<T>& in)
          {
-         this->init(true, INITIAL_LEN);
-         if(INITIAL_LEN)
-            this->copy(&in[0], in.size());
-         else
-            this->set(&in[0], in.size());
+         this->init(true);
+         this->set(&in[0], in.size());
          }
    };
 

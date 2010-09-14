@@ -119,7 +119,7 @@ void CAST_128::decrypt_n(const byte in[], byte out[], u32bit blocks) const
 void CAST_128::key_schedule(const byte key[], u32bit length)
    {
    clear();
-   SecureVector<u32bit, 4> X;
+   SecureVector<u32bit> X(4);
    for(u32bit j = 0; j != length; ++j)
       X[j/4] = (X[j/4] << 8) + key[j];
 
@@ -145,7 +145,7 @@ void CAST_128::cast_ks(MemoryRegion<u32bit>& K,
          const u32bit* X;
       };
 
-   SecureVector<u32bit, 4> Z;
+   SecureVector<u32bit> Z(4);
    ByteReader x(&X[0]), z(&Z[0]);
 
    Z[0]  = X[0] ^ S5[x(13)] ^ S6[x(15)] ^ S7[x(12)] ^ S8[x(14)] ^ S7[x( 8)];

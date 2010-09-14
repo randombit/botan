@@ -25,7 +25,7 @@ class BOTAN_DLL Square : public BlockCipher
       std::string name() const { return "Square"; }
       BlockCipher* clone() const { return new Square; }
 
-      Square() : BlockCipher(16, 16) {}
+      Square() : BlockCipher(16, 16), EK(28), DK(28), ME(32), MD(32) {}
    private:
       void key_schedule(const byte[], u32bit);
 
@@ -45,8 +45,8 @@ class BOTAN_DLL Square : public BlockCipher
       static const u32bit TD2[256];
       static const u32bit TD3[256];
 
-      SecureVector<u32bit, 28> EK, DK;
-      SecureVector<byte, 32> ME, MD;
+      SecureVector<u32bit> EK, DK;
+      SecureVector<byte> ME, MD;
    };
 
 }

@@ -170,12 +170,12 @@ Skein_512::Skein_512(u32bit arg_output_bits,
                      const std::string& arg_personalization) :
    HashFunction(arg_output_bits / 8, 64),
    personalization(arg_personalization),
-   output_bits(arg_output_bits)
+   output_bits(arg_output_bits),
+   H(9), T(3), buffer(64), buf_pos(0)
    {
    if(output_bits == 0 || output_bits % 8 != 0)
       throw Invalid_Argument("Bad output bits size for Skein-512");
 
-   buf_pos = 0;
    initial_block(H, T, output_bits, personalization);
    }
 
@@ -239,7 +239,7 @@ void Skein_512::final_result(byte out[])
 
    u32bit out_bytes = output_bits / 8;
 
-   SecureVector<u64bit, 9> H_out;
+   SecureVector<u64bit> H_out(9);
 
    while(out_bytes)
       {

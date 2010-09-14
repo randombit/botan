@@ -627,7 +627,7 @@ void AES::key_schedule(const byte key[], u32bit length)
 
    ROUNDS = (length / 4) + 6;
 
-   SecureVector<u32bit, 64> XEK, XDK;
+   SecureVector<u32bit> XEK(64), XDK(64);
 
    const u32bit X = length / 4;
    for(u32bit j = 0; j != X; ++j)
@@ -681,7 +681,8 @@ u32bit AES::S(u32bit input)
 /*
 * AES Constructor
 */
-AES::AES(u32bit key_size) : BlockCipher(16, key_size)
+AES::AES(u32bit key_size) : BlockCipher(16, key_size),
+                            EK(56), ME(16), DK(56), MD(16)
    {
    if(key_size != 16 && key_size != 24 && key_size != 32)
       throw Invalid_Key_Length(name(), key_size);

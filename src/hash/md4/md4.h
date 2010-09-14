@@ -21,13 +21,14 @@ class BOTAN_DLL MD4 : public MDx_HashFunction
       void clear();
       std::string name() const { return "MD4"; }
       HashFunction* clone() const { return new MD4; }
-      MD4() : MDx_HashFunction(16, 64, false, true) { clear(); }
+
+      MD4() : MDx_HashFunction(16, 64, false, true), M(16), digest(4)
+         { clear(); }
    protected:
       void compress_n(const byte input[], u32bit blocks);
       void copy_out(byte[]);
 
-      SecureVector<u32bit, 16> M;
-      SecureVector<u32bit, 4> digest;
+      SecureVector<u32bit> M, digest;
    };
 
 }

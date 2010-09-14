@@ -25,11 +25,11 @@ class BOTAN_DLL DES : public BlockCipher
       std::string name() const { return "DES"; }
       BlockCipher* clone() const { return new DES; }
 
-      DES() : BlockCipher(8, 8) {}
+      DES() : BlockCipher(8, 8), round_key(32) {}
    private:
       void key_schedule(const byte[], u32bit);
 
-      SecureVector<u32bit, 32> round_key;
+      SecureVector<u32bit> round_key;
    };
 
 /**
@@ -45,11 +45,11 @@ class BOTAN_DLL TripleDES : public BlockCipher
       std::string name() const { return "TripleDES"; }
       BlockCipher* clone() const { return new TripleDES; }
 
-      TripleDES() : BlockCipher(8, 16, 24, 8) {}
+      TripleDES() : BlockCipher(8, 16, 24, 8), round_key(96) {}
    private:
       void key_schedule(const byte[], u32bit);
 
-      SecureVector<u32bit, 96> round_key;
+      SecureVector<u32bit> round_key;
    };
 
 /*

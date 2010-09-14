@@ -91,7 +91,7 @@ void SAFER_SK::decrypt_n(const byte in[], byte out[], u32bit blocks) const
 */
 void SAFER_SK::key_schedule(const byte key[], u32bit)
    {
-   SecureVector<byte, 18> KB;
+   SecureVector<byte> KB(18);
 
    for(u32bit j = 0; j != 8; ++j)
       {

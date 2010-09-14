@@ -204,7 +204,7 @@ void MISTY1::decrypt_n(const byte in[], byte out[], u32bit blocks) const
 */
 void MISTY1::key_schedule(const byte key[], u32bit length)
    {
-   SecureVector<u16bit, 32> KS;
+   SecureVector<u16bit> KS(32);
    for(u32bit j = 0; j != length / 2; ++j)
       KS[j] = load_be<u16bit>(key, j);
 
@@ -251,7 +251,7 @@ void MISTY1::key_schedule(const byte key[], u32bit length)
 /*
 * MISTY1 Constructor
 */
-MISTY1::MISTY1(u32bit rounds) : BlockCipher(8, 16)
+MISTY1::MISTY1(u32bit rounds) : BlockCipher(8, 16), EK(100), DK(100)
    {
    if(rounds != 8)
       throw Invalid_Argument("MISTY1: Invalid number of rounds: "

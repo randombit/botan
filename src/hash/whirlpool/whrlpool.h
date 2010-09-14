@@ -21,7 +21,9 @@ class BOTAN_DLL Whirlpool : public MDx_HashFunction
       void clear();
       std::string name() const { return "Whirlpool"; }
       HashFunction* clone() const { return new Whirlpool; }
-      Whirlpool() : MDx_HashFunction(64, 64, true, true, 32) { clear(); }
+
+      Whirlpool() : MDx_HashFunction(64, 64, true, true, 32), M(8), digest(8)
+         { clear(); }
    private:
       void compress_n(const byte[], u32bit blocks);
       void copy_out(byte[]);
@@ -34,7 +36,8 @@ class BOTAN_DLL Whirlpool : public MDx_HashFunction
       static const u64bit C5[256];
       static const u64bit C6[256];
       static const u64bit C7[256];
-      SecureVector<u64bit, 8> M, digest;
+
+      SecureVector<u64bit> M, digest;
    };
 
 }

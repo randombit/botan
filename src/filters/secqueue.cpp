@@ -16,7 +16,9 @@ namespace Botan {
 class SecureQueueNode
    {
    public:
-      SecureQueueNode()  { next = 0; start = end = 0; }
+      SecureQueueNode() : buffer(DEFAULT_BUFFERSIZE)
+         { next = 0; start = end = 0; }
+
       ~SecureQueueNode() { next = 0; start = end = 0; }
 
       u32bit write(const byte input[], u32bit length)
@@ -48,7 +50,7 @@ class SecureQueueNode
    private:
       friend class SecureQueue;
       SecureQueueNode* next;
-      SecureVector<byte, DEFAULT_BUFFERSIZE> buffer;
+      SecureVector<byte> buffer;
       u32bit start, end;
    };
 

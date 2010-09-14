@@ -25,7 +25,7 @@ class BOTAN_DLL Twofish : public BlockCipher
       std::string name() const { return "Twofish"; }
       BlockCipher* clone() const { return new Twofish; }
 
-      Twofish() : BlockCipher(16, 16, 32, 8) {}
+      Twofish() : BlockCipher(16, 16, 32, 8), SB(1024), RK(40) {}
    private:
       void key_schedule(const byte[], u32bit);
 
@@ -41,8 +41,7 @@ class BOTAN_DLL Twofish : public BlockCipher
       static const byte EXP_TO_POLY[255];
       static const byte POLY_TO_EXP[255];
 
-      SecureVector<u32bit, 256> SBox0, SBox1, SBox2, SBox3;
-      SecureVector<u32bit, 40> round_key;
+      SecureVector<u32bit> SB, RK;
    };
 
 }

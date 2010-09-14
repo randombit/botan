@@ -22,13 +22,14 @@ class BOTAN_DLL HAS_160 : public MDx_HashFunction
       void clear();
       std::string name() const { return "HAS-160"; }
       HashFunction* clone() const { return new HAS_160; }
-      HAS_160() : MDx_HashFunction(20, 64, false, true) { clear(); }
+
+      HAS_160() : MDx_HashFunction(20, 64, false, true), X(20), digest(5)
+         { clear(); }
    private:
       void compress_n(const byte[], u32bit blocks);
       void copy_out(byte[]);
 
-      SecureVector<u32bit, 20> X;
-      SecureVector<u32bit, 5> digest;
+      SecureVector<u32bit> X, digest;
    };
 
 }

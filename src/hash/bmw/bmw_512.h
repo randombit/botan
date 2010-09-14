@@ -21,13 +21,14 @@ class BOTAN_DLL BMW_512 : public MDx_HashFunction
       void clear();
       std::string name() const { return "BMW512"; }
       HashFunction* clone() const { return new BMW_512; }
-      BMW_512() : MDx_HashFunction(64, 128, false, true) { clear(); }
+
+      BMW_512() : MDx_HashFunction(64, 128, false, true), H(16), M(16), Q(32)
+         { clear(); }
    private:
       void compress_n(const byte input[], u32bit blocks);
       void copy_out(byte output[]);
 
-      SecureVector<u64bit, 16> H, M;
-      SecureVector<u64bit, 32> Q;
+      SecureVector<u64bit> H, M, Q;
    };
 
 }

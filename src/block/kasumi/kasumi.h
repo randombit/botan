@@ -25,11 +25,11 @@ class BOTAN_DLL KASUMI : public BlockCipher
       std::string name() const { return "KASUMI"; }
       BlockCipher* clone() const { return new KASUMI; }
 
-      KASUMI() : BlockCipher(8, 16) {}
+      KASUMI() : BlockCipher(8, 16), EK(64) {}
    private:
       void key_schedule(const byte[], u32bit);
 
-      SecureVector<u16bit, 64> EK;
+      SecureVector<u16bit> EK;
    };
 
 }

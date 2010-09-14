@@ -25,11 +25,11 @@ class BOTAN_DLL RC6 : public BlockCipher
       std::string name() const { return "RC6"; }
       BlockCipher* clone() const { return new RC6; }
 
-      RC6() : BlockCipher(16, 1, 32) {}
+      RC6() : BlockCipher(16, 1, 32), S(44) {}
    private:
       void key_schedule(const byte[], u32bit);
 
-      SecureVector<u32bit, 44> S;
+      SecureVector<u32bit> S;
    };
 
 }
