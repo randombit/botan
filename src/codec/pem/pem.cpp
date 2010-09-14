@@ -33,7 +33,7 @@ std::string encode(const byte der[], u32bit length, const std::string& label,
 std::string encode(const MemoryRegion<byte>& data, const std::string& label,
                    u32bit width)
    {
-   return encode(data, data.size(), label, width);
+   return encode(&data[0], data.size(), label, width);
    }
 
 /*
@@ -119,7 +119,7 @@ bool matches(DataSource& source, const std::string& extra,
    const std::string PEM_HEADER = "-----BEGIN " + extra;
 
    SecureVector<byte> search_buf(search_range);
-   u32bit got = source.peek(search_buf, search_buf.size(), 0);
+   u32bit got = source.peek(&search_buf[0], search_buf.size(), 0);
 
    if(got < PEM_HEADER.length())
       return false;

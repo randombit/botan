@@ -101,7 +101,7 @@ SecureVector<byte> PKCS8_decode(DataSource& source, const User_Interface& ui,
             pbe->set_key(passphrase);
             Pipe decryptor(pbe.release());
 
-            decryptor.process_msg(key_data, key_data.size());
+            decryptor.process_msg(key_data);
             key = decryptor.read_all();
             }
 

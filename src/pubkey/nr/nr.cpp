@@ -104,8 +104,8 @@ NR_Signature_Operation::sign(const byte msg[], u32bit msg_len,
       }
 
    SecureVector<byte> output(2*q.bytes());
-   c.binary_encode(output + (output.size() / 2 - c.bytes()));
-   d.binary_encode(output + (output.size() - d.bytes()));
+   c.binary_encode(&output[output.size() / 2 - c.bytes()]);
+   d.binary_encode(&output[output.size() - d.bytes()]);
    return output;
    }
 

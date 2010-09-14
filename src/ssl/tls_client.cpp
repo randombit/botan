@@ -276,7 +276,7 @@ void TLS_Client::state_machine()
    else if(rec_type == APPLICATION_DATA)
       {
       if(active)
-         read_buf.write(record, record.size());
+         read_buf.write(&record[0], record.size());
       else
          throw Unexpected_Message("Application data before handshake done");
       }
@@ -312,7 +312,7 @@ void TLS_Client::read_handshake(byte rec_type,
                                 const MemoryRegion<byte>& rec_buf)
    {
    if(rec_type == HANDSHAKE)
-      state->queue.write(rec_buf, rec_buf.size());
+      state->queue.write(&rec_buf[0], rec_buf.size());
 
    while(true)
       {
@@ -333,7 +333,7 @@ void TLS_Client::read_handshake(byte rec_type,
                type = static_cast<Handshake_Type>(head[0]);
                contents.resize(length);
                state->queue.read(head, 4);
-               state->queue.read(contents, contents.size());
+               state->queue.read(&contents[0], contents.size());
                }
             }
          }

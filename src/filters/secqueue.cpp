@@ -24,7 +24,7 @@ class SecureQueueNode
       u32bit write(const byte input[], u32bit length)
          {
          u32bit copied = std::min<u32bit>(length, buffer.size() - end);
-         copy_mem(buffer + end, input, copied);
+         copy_mem(&buffer[end], input, copied);
          end += copied;
          return copied;
          }
@@ -32,7 +32,7 @@ class SecureQueueNode
       u32bit read(byte output[], u32bit length)
          {
          u32bit copied = std::min(length, end - start);
-         copy_mem(output, buffer + start, copied);
+         copy_mem(output, &buffer[start], copied);
          start += copied;
          return copied;
          }
@@ -42,7 +42,7 @@ class SecureQueueNode
          const u32bit left = end - start;
          if(offset >= left) return 0;
          u32bit copied = std::min(length, left - offset);
-         copy_mem(output, buffer + start + offset, copied);
+         copy_mem(output, &buffer[start + offset], copied);
          return copied;
          }
 
@@ -75,7 +75,7 @@ SecureQueue::SecureQueue(const SecureQueue& input) :
    SecureQueueNode* temp = input.head;
    while(temp)
       {
-      write(temp->buffer + temp->start, temp->end - temp->start);
+      write(&temp->buffer[temp->start], temp->end - temp->start);
       temp = temp->next;
       }
    }
@@ -105,7 +105,7 @@ SecureQueue& SecureQueue::operator=(const SecureQueue& input)
    SecureQueueNode* temp = input.head;
    while(temp)
       {
-      write(temp->buffer + temp->start, temp->end - temp->start);
+      write(&temp->buffer[temp->start], temp->end - temp->start);
       temp = temp->next;
       }
    return (*this);

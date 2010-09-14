@@ -108,7 +108,7 @@ void CTR_BE::set_iv(const byte iv[], u32bit iv_len)
             break;
       }
 
-   permutation->encrypt_n(counter, buffer, PARALLEL_BLOCKS);
+   permutation->encrypt_n(&counter[0], &buffer[0], PARALLEL_BLOCKS);
    position = 0;
    }
 
@@ -134,7 +134,7 @@ void CTR_BE::increment_counter()
       this_ctr[permutation->BLOCK_SIZE-1] = last_byte;
       }
 
-   permutation->encrypt_n(counter, buffer, PARALLEL_BLOCKS);
+   permutation->encrypt_n(&counter[0], &buffer[0], PARALLEL_BLOCKS);
 
    position = 0;
    }

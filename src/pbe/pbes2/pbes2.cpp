@@ -75,7 +75,7 @@ void PBE_PKCS5v20::flush_pipe(bool safe_to_skip)
    SecureVector<byte> buffer(DEFAULT_BUFFERSIZE);
    while(pipe.remaining())
       {
-      u32bit got = pipe.read(buffer, buffer.size());
+      u32bit got = pipe.read(&buffer[0], buffer.size());
       send(buffer, got);
       }
    }

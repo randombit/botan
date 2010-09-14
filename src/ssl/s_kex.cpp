@@ -118,7 +118,7 @@ void Server_Key_Exchange::deserialize(const MemoryRegion<byte>& buf)
       if(len + so_far > buf.size())
          throw Decoding_Error("Server_Key_Exchange: Packet corrupted");
 
-      values[j].set(buf + so_far, len);
+      values[j].set(&buf[so_far], len);
       so_far += len;
 
       if(j == 2 && so_far == buf.size())

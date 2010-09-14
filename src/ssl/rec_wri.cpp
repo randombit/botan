@@ -140,7 +140,7 @@ void Record_Writer::send(byte type, const byte input[], u32bit length)
    buffer.copy(buf_pos, input, length);
    if(buf_pos + length >= BUFFER_SIZE)
       {
-      send_record(buf_type, buffer, length);
+      send_record(buf_type, &buffer[0], length);
       input += (BUFFER_SIZE - buf_pos);
       length -= (BUFFER_SIZE - buf_pos);
       while(length >= BUFFER_SIZE)
@@ -237,7 +237,7 @@ void Record_Writer::send_record(byte type, const byte buf[], u32bit length)
 
       SecureVector<byte> output = cipher.read_all(Pipe::LAST_MESSAGE);
 
-      send_record(type, major, minor, output, output.size());
+      send_record(type, major, minor, &output[0], output.size());
 
       seq_no++;
       }

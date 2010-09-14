@@ -145,7 +145,7 @@ void BMW_512::compress_n(const byte input[], u32bit blocks)
       {
       load_le(&M[0], input, M.size());
 
-      BMW_512_compress(H, M, Q);
+      BMW_512_compress(&H[0], &M[0], &Q[0]);
 
       input += HASH_BLOCK_SIZE;
       }
@@ -166,7 +166,7 @@ void BMW_512::copy_out(byte output[])
       0xAAAAAAAAAAAAAAAC,  0xAAAAAAAAAAAAAAAD,
       0xAAAAAAAAAAAAAAAE,  0xAAAAAAAAAAAAAAAF };
 
-   BMW_512_compress(final, H, Q);
+   BMW_512_compress(final, &H[0], &Q[0]);
 
    for(u32bit i = 0; i != OUTPUT_LENGTH; i += 8)
       store_le(final[8 + i/8], output + i);

@@ -55,7 +55,7 @@ void Randpool::update_buffer()
          break;
 
    mac->update(static_cast<byte>(GEN_OUTPUT));
-   mac->update(counter, counter.size());
+   mac->update(counter);
    SecureVector<byte> mac_val = mac->final();
 
    for(u32bit i = 0; i != mac_val.size(); ++i)
@@ -74,19 +74,19 @@ void Randpool::mix_pool()
    const u32bit BLOCK_SIZE = cipher->BLOCK_SIZE;
 
    mac->update(static_cast<byte>(MAC_KEY));
-   mac->update(pool, pool.size());
+   mac->update(pool);
    mac->set_key(mac->final());
 
    mac->update(static_cast<byte>(CIPHER_KEY));
-   mac->update(pool, pool.size());
+   mac->update(pool);
    cipher->set_key(mac->final());
 
    xor_buf(pool, buffer, BLOCK_SIZE);
    cipher->encrypt(pool);
    for(u32bit i = 1; i != POOL_BLOCKS; ++i)
       {
-      const byte* previous_block = pool + BLOCK_SIZE*(i-1);
-      byte* this_block = pool + BLOCK_SIZE*i;
+      const byte* previous_block = &pool[BLOCK_SIZE*(i-1)];
+      byte* this_block = &pool[BLOCK_SIZE*i];
       xor_buf(this_block, previous_block, BLOCK_SIZE);
       cipher->encrypt(this_block);
       }

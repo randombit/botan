@@ -20,11 +20,11 @@ void hmac_prf(MessageAuthenticationCode* prf,
               u32bit& counter,
               const std::string& label)
    {
-   prf->update(K, K.size());
+   prf->update(K);
    prf->update(label);
    for(u32bit i = 0; i != 4; ++i)
       prf->update(get_byte(i, counter));
-   prf->final(K);
+   prf->final(&K[0]);
 
    ++counter;
    }
@@ -104,7 +104,7 @@ void HMAC_RNG::reseed(u32bit poll_bits)
 
    // Now generate a new PRF output to use as the XTS extractor salt
    hmac_prf(prf, K, counter, "xts");
-   extractor->set_key(K, K.size());
+   extractor->set_key(K);
 
    // Reset state
    zeroise(K);

@@ -22,7 +22,7 @@ void BigInt::encode(byte output[], const BigInt& n, Base base)
    else if(base == Hexadecimal)
       {
       SecureVector<byte> binary(n.encoded_size(Binary));
-      n.binary_encode(binary);
+      n.binary_encode(&binary[0]);
 
       hex_encode(reinterpret_cast<char*>(output),
                  &binary[0], binary.size());
@@ -62,7 +62,7 @@ void BigInt::encode(byte output[], const BigInt& n, Base base)
 SecureVector<byte> BigInt::encode(const BigInt& n, Base base)
    {
    SecureVector<byte> output(n.encoded_size(base));
-   encode(output, n, base);
+   encode(&output[0], n, base);
    if(base != Binary)
       for(u32bit j = 0; j != output.size(); ++j)
          if(output[j] == 0)
@@ -82,7 +82,7 @@ SecureVector<byte> BigInt::encode_1363(const BigInt& n, u32bit bytes)
    const u32bit leading_0s = bytes - n_bytes;
 
    SecureVector<byte> output(bytes);
-   encode(output + leading_0s, n, Binary);
+   encode(&output[leading_0s], n, Binary);
    return output;
    }
 
@@ -91,7 +91,7 @@ SecureVector<byte> BigInt::encode_1363(const BigInt& n, u32bit bytes)
 */
 BigInt BigInt::decode(const MemoryRegion<byte>& buf, Base base)
    {
-   return BigInt::decode(buf, buf.size(), base);
+   return BigInt::decode(&buf[0], buf.size(), base);
    }
 
 /*
@@ -121,7 +121,7 @@ BigInt BigInt::decode(const byte buf[], u32bit length, Base base)
          binary = hex_decode(reinterpret_cast<const char*>(buf),
                              length, false);
 
-      r.binary_decode(binary, binary.size());
+      r.binary_decode(&binary[0], binary.size());
       }
    else if(base == Decimal || base == Octal)
       {

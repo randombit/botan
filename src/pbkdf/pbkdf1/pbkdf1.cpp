@@ -31,10 +31,10 @@ OctetString PKCS5_PBKDF1::derive_key(u32bit key_len,
    for(u32bit j = 1; j != iterations; ++j)
       {
       hash->update(key);
-      hash->final(key);
+      hash->final(&key[0]);
       }
 
-   return OctetString(key, std::min<u32bit>(key_len, key.size()));
+   return OctetString(&key[0], std::min<u32bit>(key_len, key.size()));
    }
 
 }

@@ -39,7 +39,7 @@ OctetString next_hash(u32bit where, u32bit want,
    md5.update(sha1_hash);
    SecureVector<byte> md5_hash = md5.final();
 
-   return OctetString(md5_hash, want);
+   return OctetString(&md5_hash[0], want);
    }
 
 }

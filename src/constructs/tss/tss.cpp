@@ -247,14 +247,14 @@ RTSS_Share::reconstruct(const std::vector<RTSS_Share>& shares)
    if(secret.size() != secret_len + hash->OUTPUT_LENGTH)
       throw Decoding_Error("Bad length in RTSS output");
 
-   hash->update(secret, secret_len);
+   hash->update(&secret[0], secret_len);
    SecureVector<byte> hash_check = hash->final();
 
    if(!same_mem(&hash_check[0],
                 &secret[secret_len], hash->OUTPUT_LENGTH))
       throw Decoding_Error("RTSS hash check failed");
 
-   return SecureVector<byte>(secret, secret_len);
+   return SecureVector<byte>(&secret[0], secret_len);
    }
 
 }
