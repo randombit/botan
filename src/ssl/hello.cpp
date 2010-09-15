@@ -86,22 +86,9 @@ SecureVector<byte> Client_Hello::serialize() const
    buf.push_back(static_cast<byte>(c_version     ));
    buf += c_random;
 
-   buf.push_back(static_cast<byte>(sess_id.size()));
-   buf += sess_id;
-
-   u16bit suites_size = 2*suites.size();
-
-   buf.push_back(get_byte(0, suites_size));
-   buf.push_back(get_byte(1, suites_size));
-   for(u32bit i = 0; i != suites.size(); i++)
-      {
-      buf.push_back(get_byte(0, suites[i]));
-      buf.push_back(get_byte(1, suites[i]));
-      }
-
-   buf.push_back(static_cast<byte>(comp_algos.size()));
-   for(u32bit i = 0; i != comp_algos.size(); i++)
-      buf.push_back(comp_algos[i]);
+   append_tls_length_value(buf, sess_id, 1);
+   append_tls_length_value(buf, suites, 2);
+   append_tls_length_value(buf, comp_algos, 1);
 
    return buf;
    }
@@ -265,8 +252,7 @@ SecureVector<byte> Server_Hello::serialize() const
    buf.push_back(static_cast<byte>(s_version     ));
    buf += s_random;
 
-   buf.push_back(static_cast<byte>(sess_id.size()));
-   buf += sess_id;
+   append_tls_length_value(buf, sess_id, 1);
 
    buf.push_back(get_byte(0, suite));
    buf.push_back(get_byte(1, suite));

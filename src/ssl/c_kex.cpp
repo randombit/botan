@@ -77,17 +77,14 @@ Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
 */
 SecureVector<byte> Client_Key_Exchange::serialize() const
    {
-   SecureVector<byte> buf;
-
    if(include_length)
       {
-      u16bit key_size = key_material.size();
-      buf.push_back(get_byte(0, key_size));
-      buf.push_back(get_byte(1, key_size));
+      SecureVector<byte> buf;
+      append_tls_length_value(buf, key_material, 2);
+      return buf;
       }
-   buf += key_material;
-
-   return buf;
+   else
+      return key_material;
    }
 
 /**

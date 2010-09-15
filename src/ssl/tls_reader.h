@@ -138,6 +138,49 @@ class TLS_Data_Reader
       u32bit offset;
    };
 
+/**
+* Helper function for encoding length-tagged vectors
+*/
+template<typename T>
+void append_tls_length_value(MemoryRegion<byte>& buf,
+                             const T* vals,
+                             u32bit vals_size,
+                             u32bit tag_size)
+   {
+   const u32bit T_size = sizeof(T);
+   const u32bit val_bytes = T_size * vals_size;
+
+   if(tag_size != 1 && tag_size != 2)
+      throw std::invalid_argument("append_tls_length_value: invalid tag size");
+
+   if((tag_size == 1 && val_bytes > 255) ||
+      (tag_size == 2 && val_bytes > 65535))
+      throw std::invalid_argument("append_tls_length_value: value too large");
+
+   for(u32bit i = 0; i != tag_size; ++i)
+      buf.push_back(get_byte(4-tag_size+i, val_bytes));
+
+   for(u32bit i = 0; i != vals_size; ++i)
+      for(u32bit j = 0; j != T_size; ++j)
+         buf.push_back(get_byte(j, vals[i]));
+   }
+
+template<typename T>
+void append_tls_length_value(MemoryRegion<byte>& buf,
+                             const MemoryRegion<T>& vals,
+                             u32bit tag_size)
+   {
+   append_tls_length_value(buf, &vals[0], vals.size(), tag_size);
+   }
+
+template<typename T>
+void append_tls_length_value(MemoryRegion<byte>& buf,
+                             const std::vector<T>& vals,
+                             u32bit tag_size)
+   {
+   append_tls_length_value(buf, &vals[0], vals.size(), tag_size);
+   }
+
 }
 
 #endif

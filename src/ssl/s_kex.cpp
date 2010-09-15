@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/tls_messages.h>
+#include <botan/internal/tls_reader.h>
 #include <botan/pubkey.h>
 #include <botan/dh.h>
 #include <botan/rsa.h>
@@ -74,10 +75,7 @@ Server_Key_Exchange::Server_Key_Exchange(RandomNumberGenerator& rng,
 SecureVector<byte> Server_Key_Exchange::serialize() const
    {
    SecureVector<byte> buf = serialize_params();
-   u16bit sig_len = signature.size();
-   buf.push_back(get_byte(0, sig_len));
-   buf.push_back(get_byte(1, sig_len));
-   buf += signature;
+   append_tls_length_value(buf, signature, 2);
    return buf;
    }
 
@@ -87,15 +85,10 @@ SecureVector<byte> Server_Key_Exchange::serialize() const
 SecureVector<byte> Server_Key_Exchange::serialize_params() const
    {
    SecureVector<byte> buf;
-   for(u32bit j = 0; j != params.size(); j++)
-      {
-      SecureVector<byte> param = BigInt::encode(params[j]);
-      u16bit param_size = param.size();
 
-      buf.push_back(get_byte(0, param_size));
-      buf.push_back(get_byte(1, param_size));
-      buf += param;
-      }
+   for(u32bit j = 0; j != params.size(); j++)
+      append_tls_length_value(buf, BigInt::encode(params[j]), 2);
+
    return buf;
    }
 

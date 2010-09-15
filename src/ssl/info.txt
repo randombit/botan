@@ -52,7 +52,7 @@ md5
 rng
 rsa
 sha1
-ssl3_mac
+ssl3mac
 ssl_prf
 tls_prf
 x509

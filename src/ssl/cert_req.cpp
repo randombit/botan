@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/tls_messages.h>
+#include <botan/internal/tls_reader.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/loadstor.h>
@@ -37,20 +38,13 @@ SecureVector<byte> Certificate_Req::serialize() const
    {
    SecureVector<byte> buf;
 
-   buf.push_back(types.size());
-   for(u32bit i = 0; i != types.size(); i++)
-      buf.push_back(types[i]);
+   append_tls_length_value(buf, types, 1);
 
    DER_Encoder encoder;
    for(u32bit i = 0; i != names.size(); i++)
       encoder.encode(names[i]);
 
-   SecureVector<byte> der_names = encoder.get_contents();
-   u16bit names_size = der_names.size();
-
-   buf.push_back(get_byte(0, names_size));
-   buf.push_back(get_byte(1, names_size));
-   buf += der_names;
+   append_tls_length_value(buf, encoder.get_contents(), 2);
 
    return buf;
    }
