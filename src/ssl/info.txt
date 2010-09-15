@@ -40,21 +40,20 @@ tls_suites.cpp
 </source>
 
 <requires>
-alloc
+aes
+arc4
 asn1
-bigint
+des
 dh
-dl_group
 dsa
 filters
-libstate
+hmac
 md5
-pubkey
 rng
 rsa
 sha1
+ssl3_mac
 ssl_prf
-sym_algo
 tls_prf
 x509
 </requires>
