@@ -373,9 +373,7 @@ template<typename T>
 MemoryRegion<T>& operator+=(MemoryRegion<T>& out,
                             T in)
    {
-   const u32bit copy_offset = out.size();
-   out.resize(out.size() + 1);
-   copy_mem(&out[copy_offset], &in, 1);
+   out.push_back(in);
    return out;
    }
 
