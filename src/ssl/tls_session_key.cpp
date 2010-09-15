@@ -79,14 +79,14 @@ SymmetricKey SessionKeys::ssl3_keygen(u32bit prf_gen,
    SSL3_PRF prf;
 
    SecureVector<byte> salt;
-   salt.append(client_random);
-   salt.append(server_random);
+   salt += client_random;
+   salt += server_random;
 
    master_sec = prf.derive_key(48, pre_master, salt);
 
    salt.clear();
-   salt.append(server_random);
-   salt.append(client_random);
+   salt += server_random;
+   salt += client_random;
 
    return prf.derive_key(prf_gen, master_sec, salt);
    }
@@ -109,16 +109,16 @@ SymmetricKey SessionKeys::tls1_keygen(u32bit prf_gen,
    TLS_PRF prf;
 
    SecureVector<byte> salt;
-   salt.append(MASTER_SECRET_MAGIC, sizeof(MASTER_SECRET_MAGIC));
-   salt.append(client_random);
-   salt.append(server_random);
+   salt += std::make_pair(MASTER_SECRET_MAGIC, sizeof(MASTER_SECRET_MAGIC));
+   salt += client_random;
+   salt += server_random;
 
    master_sec = prf.derive_key(48, pre_master, salt);
 
    salt.clear();
-   salt.append(KEY_GEN_MAGIC, sizeof(KEY_GEN_MAGIC));
-   salt.append(server_random);
-   salt.append(client_random);
+   salt += std::make_pair(KEY_GEN_MAGIC, sizeof(KEY_GEN_MAGIC));
+   salt += server_random;
+   salt += client_random;
 
    return prf.derive_key(prf_gen, master_sec, salt);
    }

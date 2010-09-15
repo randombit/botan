@@ -24,8 +24,8 @@ SecureVector<byte> HandshakeHash::final()
    sha1.update(data);
 
    SecureVector<byte> output;
-   output.append(md5.final());
-   output.append(sha1.final());
+   output += md5.final();
+   output += sha1.final();
    return output;
    }
 
@@ -58,8 +58,8 @@ SecureVector<byte> HandshakeHash::final_ssl3(const MemoryRegion<byte>& secret)
    sha1.update(inner_sha1);
 
    SecureVector<byte> output;
-   output.append(md5.final());
-   output.append(sha1.final());
+   output += md5.final();
+   output += sha1.final();
    return output;
    }
 

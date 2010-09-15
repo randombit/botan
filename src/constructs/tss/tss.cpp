@@ -138,20 +138,20 @@ RTSS_Share::split(byte M, byte N,
    // Create RTSS header in each share
    for(byte i = 0; i != N; ++i)
       {
-      shares[i].contents.append(identifier, 16);
-      shares[i].contents.append(rtss_hash_id(hash.name()));
-      shares[i].contents.append(M);
-      shares[i].contents.append(get_byte(0, S_len));
-      shares[i].contents.append(get_byte(1, S_len));
+      shares[i].contents += std::make_pair(identifier, 16);
+      shares[i].contents += rtss_hash_id(hash.name());
+      shares[i].contents += M;
+      shares[i].contents += get_byte(0, S_len);
+      shares[i].contents += get_byte(1, S_len);
       }
 
    // Choose sequential values for X starting from 1
    for(byte i = 0; i != N; ++i)
-      shares[i].contents.append(i+1);
+      shares[i].contents.push_back(i+1);
 
    // secret = S || H(S)
    SecureVector<byte> secret(S, S_len);
-   secret.append(hash.process(S, S_len));
+   secret += hash.process(S, S_len);
 
    for(size_t i = 0; i != secret.size(); ++i)
       {
@@ -171,7 +171,7 @@ RTSS_Share::split(byte M, byte N,
             X_i  = gfp_mul(X_i, X);
             }
 
-         shares[j].contents.append(sum);
+         shares[j].contents.push_back(sum);
          }
       }
 
@@ -241,7 +241,7 @@ RTSS_Share::reconstruct(const std::vector<RTSS_Share>& shares)
 
          r ^= gfp_mul(V[k], r2);
          }
-      secret.append(r);
+      secret.push_back(r);
       }
 
    if(secret.size() != secret_len + hash->OUTPUT_LENGTH)

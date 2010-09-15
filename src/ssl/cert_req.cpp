@@ -37,9 +37,9 @@ SecureVector<byte> Certificate_Req::serialize() const
    {
    SecureVector<byte> buf;
 
-   buf.append(types.size());
+   buf.push_back(types.size());
    for(u32bit i = 0; i != types.size(); i++)
-      buf.append(types[i]);
+      buf.push_back(types[i]);
 
    DER_Encoder encoder;
    for(u32bit i = 0; i != names.size(); i++)
@@ -48,9 +48,9 @@ SecureVector<byte> Certificate_Req::serialize() const
    SecureVector<byte> der_names = encoder.get_contents();
    u16bit names_size = der_names.size();
 
-   buf.append(get_byte(0, names_size));
-   buf.append(get_byte(1, names_size));
-   buf.append(der_names);
+   buf.push_back(get_byte(0, names_size));
+   buf.push_back(get_byte(1, names_size));
+   buf += der_names;
 
    return buf;
    }
@@ -109,8 +109,8 @@ SecureVector<byte> Certificate::serialize() const
       SecureVector<byte> raw_cert = certs[i].BER_encode();
       u32bit cert_size = raw_cert.size();
       for(u32bit j = 0; j != 3; j++)
-         buf.append(get_byte(j+1, cert_size));
-      buf.append(raw_cert);
+         buf.push_back(get_byte(j+1, cert_size));
+      buf += raw_cert;
       }
 
    u32bit buf_size = buf.size() - 3;

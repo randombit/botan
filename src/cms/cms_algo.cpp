@@ -35,7 +35,7 @@ SecureVector<byte> do_rfc3217_wrap(RandomNumberGenerator& rng,
 
          void write(const byte data[], u32bit length)
             {
-            buf.append(data, length);
+            buf += std::make_pair(data, length);
             }
          void end_msg()
             {
@@ -43,7 +43,8 @@ SecureVector<byte> do_rfc3217_wrap(RandomNumberGenerator& rng,
                send(buf[buf.size()-j-1]);
             buf.clear();
             }
-         Flip_Bytes(const SecureVector<byte>& prefix) { buf.append(prefix); }
+
+         Flip_Bytes(const SecureVector<byte>& prefix) : buf(prefix) {}
       private:
          SecureVector<byte> buf;
       };
@@ -98,10 +99,10 @@ SecureVector<byte> CMS_Encoder::wrap_key(RandomNumberGenerator& rng,
          throw Encoding_Error("CMS: 128-bit KEKs must be used with " + cipher);
 
       SecureVector<byte> lcekpad;
-      lcekpad.append((byte)cek.length());
-      lcekpad.append(cek.bits_of());
+      lcekpad.push_back((byte)cek.length());
+      lcekpad += cek.bits_of();
       while(lcekpad.size() % 8)
-         lcekpad.append(rng.next_byte());
+         lcekpad.push_back(rng.next_byte());
       return do_rfc3217_wrap(rng, cipher, kek, lcekpad);
       }
 #endif

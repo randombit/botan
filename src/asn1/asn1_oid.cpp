@@ -130,20 +130,20 @@ void OID::encode_into(DER_Encoder& der) const
       throw Invalid_Argument("OID::encode_into: OID is invalid");
 
    MemoryVector<byte> encoding;
-   encoding.append(40 * id[0] + id[1]);
+   encoding.push_back(40 * id[0] + id[1]);
 
    for(u32bit j = 2; j != id.size(); ++j)
       {
       if(id[j] == 0)
-         encoding.append(0);
+         encoding.push_back(0);
       else
          {
          u32bit blocks = high_bit(id[j]) + 6;
          blocks = (blocks - (blocks % 7)) / 7;
 
          for(u32bit k = 0; k != blocks - 1; ++k)
-            encoding.append(0x80 | ((id[j] >> 7*(blocks-k-1)) & 0x7F));
-         encoding.append(id[j] & 0x7F);
+            encoding.push_back(0x80 | ((id[j] >> 7*(blocks-k-1)) & 0x7F));
+         encoding.push_back(id[j] & 0x7F);
          }
       }
    der.add_object(OBJECT_ID, UNIVERSAL, encoding);

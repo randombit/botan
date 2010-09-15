@@ -38,7 +38,7 @@ MemoryVector<byte> ECDSA_Signature::get_concatenation() const
    SecureVector<byte> sv_s = BigInt::encode_1363(m_s, enc_len);
 
    SecureVector<byte> result(sv_r);
-   result.append(sv_s);
+   result += sv_s;
    return result;
    }
 

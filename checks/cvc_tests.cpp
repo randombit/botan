@@ -60,13 +60,13 @@ bool helper_files_equal(std::string const& file_path1, std::string const& file_p
       {
       char now;
       cert_1_in.read(&now, 1);
-      sv1.append(now);
+      sv1.push_back(now);
       }
    while (!cert_2_in.eof())
       {
       char now;
       cert_2_in.read(&now, 1);
-      sv2.append(now);
+      sv2.push_back(now);
       }
    if (sv1.size() == 0)
       {
@@ -122,13 +122,13 @@ void test_enc_gen_selfsigned(RandomNumberGenerator& rng)
       char now;
 
       cert_1_in.read(&now, 1);
-      sv1.append(now);
+      sv1.push_back(now);
       }
    while (!cert_2_in.eof())
       {
       char now;
       cert_2_in.read(&now, 1);
-      sv2.append(now);
+      sv2.push_back(now);
       }
    CHECK(sv1.size() > 10);
    CHECK_MESSAGE(sv1 == sv2, "reencoded file of cert without domain parameters is different from original");

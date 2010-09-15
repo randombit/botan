@@ -25,7 +25,7 @@ void HandshakeMessage::send(Record_Writer& writer, HandshakeHash& hash) const
    send_buf[2] = get_byte(2, buf_size);
    send_buf[3] = get_byte(3, buf_size);
 
-   send_buf.append(buf);
+   send_buf += buf;
 
    hash.update(send_buf);
 
@@ -82,25 +82,26 @@ SecureVector<byte> Client_Hello::serialize() const
    {
    SecureVector<byte> buf;
 
-   buf.append(static_cast<byte>(c_version >> 8));
-   buf.append(static_cast<byte>(c_version     ));
-   buf.append(c_random);
-   buf.append(static_cast<byte>(sess_id.size()));
-   buf.append(sess_id);
+   buf.push_back(static_cast<byte>(c_version >> 8));
+   buf.push_back(static_cast<byte>(c_version     ));
+   buf += c_random;
+
+   buf.push_back(static_cast<byte>(sess_id.size()));
+   buf += sess_id;
 
    u16bit suites_size = 2*suites.size();
 
-   buf.append(get_byte(0, suites_size));
-   buf.append(get_byte(1, suites_size));
+   buf.push_back(get_byte(0, suites_size));
+   buf.push_back(get_byte(1, suites_size));
    for(u32bit i = 0; i != suites.size(); i++)
       {
-      buf.append(get_byte(0, suites[i]));
-      buf.append(get_byte(1, suites[i]));
+      buf.push_back(get_byte(0, suites[i]));
+      buf.push_back(get_byte(1, suites[i]));
       }
 
-   buf.append(static_cast<byte>(comp_algos.size()));
+   buf.push_back(static_cast<byte>(comp_algos.size()));
    for(u32bit i = 0; i != comp_algos.size(); i++)
-      buf.append(comp_algos[i]);
+      buf.push_back(comp_algos[i]);
 
    return buf;
    }
@@ -260,16 +261,17 @@ SecureVector<byte> Server_Hello::serialize() const
    {
    SecureVector<byte> buf;
 
-   buf.append(static_cast<byte>(s_version >> 8));
-   buf.append(static_cast<byte>(s_version     ));
-   buf.append(s_random);
-   buf.append(static_cast<byte>(sess_id.size()));
-   buf.append(sess_id);
+   buf.push_back(static_cast<byte>(s_version >> 8));
+   buf.push_back(static_cast<byte>(s_version     ));
+   buf += s_random;
 
-   buf.append(get_byte(0, suite));
-   buf.append(get_byte(1, suite));
+   buf.push_back(static_cast<byte>(sess_id.size()));
+   buf += sess_id;
 
-   buf.append(comp_algo);
+   buf.push_back(get_byte(0, suite));
+   buf.push_back(get_byte(1, suite));
+
+   buf.push_back(comp_algo);
 
    return buf;
    }

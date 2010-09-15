@@ -106,7 +106,8 @@ u32bit find_eoc(DataSource* ber)
       const u32bit got = ber->peek(&buffer[0], buffer.size(), data.size());
       if(got == 0)
          break;
-      data.append(&buffer[0], got);
+
+      data += std::make_pair(&buffer[0], got);
       }
 
    DataSource_Memory source(data);
@@ -171,7 +172,7 @@ BER_Decoder& BER_Decoder::raw_bytes(MemoryRegion<byte>& out)
    out.clear();
    byte buf;
    while(source->read_byte(buf))
-      out.append(buf);
+      out.push_back(buf);
    return (*this);
    }
 

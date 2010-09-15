@@ -109,7 +109,7 @@ EMSA3::~EMSA3()
 */
 void EMSA3_Raw::update(const byte input[], u32bit length)
    {
-   message.append(input, length);
+   message += std::make_pair(input, length);
    }
 
 /*

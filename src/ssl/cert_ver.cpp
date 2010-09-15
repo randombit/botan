@@ -51,9 +51,9 @@ SecureVector<byte> Certificate_Verify::serialize() const
    SecureVector<byte> buf;
 
    u16bit sig_len = signature.size();
-   buf.append(get_byte(0, sig_len));
-   buf.append(get_byte(1, sig_len));
-   buf.append(signature);
+   buf.push_back(get_byte(0, sig_len));
+   buf.push_back(get_byte(1, sig_len));
+   buf += signature;
 
    return buf;
    }

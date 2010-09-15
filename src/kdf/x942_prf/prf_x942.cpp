@@ -69,7 +69,8 @@ SecureVector<byte> X942_PRF::derive(u32bit key_len,
          );
 
       SecureVector<byte> digest = hash.final();
-      key.append(digest, std::min(digest.size(), key_len - key.size()));
+      const u32bit needed = std::min(digest.size(), key_len - key.size());
+      key += std::make_pair(&digest[0], needed);
 
       ++counter;
       }

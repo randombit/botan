@@ -52,11 +52,9 @@ void test_hash_larger_than_n(RandomNumberGenerator& rng)
    // 0x0100000000000000000001f4c8f927aed3ca752257 // 21 bytes
    // -> shouldn't work with SHA224 which outputs 23 bytes
    ECDSA_PrivateKey priv_key(rng, dom_pars);
-   SecureVector<byte> message;
-   for (unsigned j= 0; j<20; j++)
-      {
-      message.append(j);
-      }
+   SecureVector<byte> message(20);
+   for (unsigned i = 0; i != 20; ++i)
+      message[i] = i;
 
    for (int i = 0; i<3; i++)
       {

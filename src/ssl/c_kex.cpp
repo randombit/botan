@@ -82,10 +82,10 @@ SecureVector<byte> Client_Key_Exchange::serialize() const
    if(include_length)
       {
       u16bit key_size = key_material.size();
-      buf.append(get_byte(0, key_size));
-      buf.append(get_byte(1, key_size));
+      buf.push_back(get_byte(0, key_size));
+      buf.push_back(get_byte(1, key_size));
       }
-   buf.append(key_material);
+   buf += key_material;
 
    return buf;
    }

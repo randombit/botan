@@ -86,10 +86,10 @@ SecureVector<byte> Finished::compute_verify(const MemoryRegion<byte>& secret,
 
       SecureVector<byte> input;
       if(side == CLIENT)
-         input.append(TLS_CLIENT_LABEL, sizeof(TLS_CLIENT_LABEL));
+         input += std::make_pair(TLS_CLIENT_LABEL, sizeof(TLS_CLIENT_LABEL));
       else
-         input.append(TLS_SERVER_LABEL, sizeof(TLS_SERVER_LABEL));
-      input.append(hash.final());
+         input += std::make_pair(TLS_SERVER_LABEL, sizeof(TLS_SERVER_LABEL));
+      input += hash.final();
 
       return prf.derive_key(12, secret, input);
       }

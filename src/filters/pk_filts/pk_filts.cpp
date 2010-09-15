@@ -14,7 +14,7 @@ namespace Botan {
 */
 void PK_Encryptor_Filter::write(const byte input[], u32bit length)
    {
-   buffer.append(input, length);
+   buffer += std::make_pair(input, length);
    }
 
 /*
@@ -31,7 +31,7 @@ void PK_Encryptor_Filter::end_msg()
 */
 void PK_Decryptor_Filter::write(const byte input[], u32bit length)
    {
-   buffer.append(input, length);
+   buffer += std::make_pair(input, length);
    }
 
 /*

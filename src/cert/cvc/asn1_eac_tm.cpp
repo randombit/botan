@@ -23,15 +23,15 @@ SecureVector<byte> enc_two_digit(u32bit in)
    SecureVector<byte> result;
    in %= 100;
    if (in < 10)
-      result.append(0x00);
+      result.push_back(0x00);
    else
       {
       u32bit y_first_pos = round_down<u32bit>(in, 10) / 10;
-      result.append(static_cast<byte>(y_first_pos));
+      result.push_back(static_cast<byte>(y_first_pos));
       }
 
    u32bit y_sec_pos = in % 10;
-   result.append(static_cast<byte>(y_sec_pos));
+   result.push_back(static_cast<byte>(y_sec_pos));
    return result;
    }
 
@@ -300,9 +300,9 @@ u32bit EAC_Time::get_day() const
 SecureVector<byte> EAC_Time::encoded_eac_time() const
    {
    SecureVector<byte> result;
-   result.append(enc_two_digit(year));
-   result.append(enc_two_digit(month));
-   result.append(enc_two_digit(day));
+   result += enc_two_digit(year);
+   result += enc_two_digit(month);
+   result += enc_two_digit(day);
    return result;
    }
 

@@ -112,10 +112,9 @@ BigInt BigInt::decode(const byte buf[], u32bit length, Base base)
          const char buf0_with_leading_0[2] = { '0', buf[0] };
          binary = hex_decode(buf0_with_leading_0, 2);
 
-         binary.append(hex_decode(reinterpret_cast<const char*>(&buf[1]),
-                                  length - 1,
-                                  false));
-
+         binary += hex_decode(reinterpret_cast<const char*>(&buf[1]),
+                              length - 1,
+                              false);
          }
       else
          binary = hex_decode(reinterpret_cast<const char*>(buf),

@@ -112,12 +112,14 @@ class KDF_Filter : public Filter
       std::string name() const { return "KDF_Filter"; }
 
       void write(const byte in[], u32bit len)
-         { secret.append(in, len); }
+         { secret += std::make_pair(in, len); }
+
       void end_msg()
          {
          SymmetricKey x = kdf->derive_key(outlen, secret, salt);
          send(x.bits_of(), x.length());
          }
+
       KDF_Filter(KDF* algo, const SymmetricKey& s, u32bit o)
          {
          kdf = algo;

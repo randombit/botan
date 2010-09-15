@@ -75,9 +75,9 @@ SecureVector<byte> Server_Key_Exchange::serialize() const
    {
    SecureVector<byte> buf = serialize_params();
    u16bit sig_len = signature.size();
-   buf.append(get_byte(0, sig_len));
-   buf.append(get_byte(1, sig_len));
-   buf.append(signature);
+   buf.push_back(get_byte(0, sig_len));
+   buf.push_back(get_byte(1, sig_len));
+   buf += signature;
    return buf;
    }
 
@@ -92,9 +92,9 @@ SecureVector<byte> Server_Key_Exchange::serialize_params() const
       SecureVector<byte> param = BigInt::encode(params[j]);
       u16bit param_size = param.size();
 
-      buf.append(get_byte(0, param_size));
-      buf.append(get_byte(1, param_size));
-      buf.append(param);
+      buf.push_back(get_byte(0, param_size));
+      buf.push_back(get_byte(1, param_size));
+      buf += param;
       }
    return buf;
    }

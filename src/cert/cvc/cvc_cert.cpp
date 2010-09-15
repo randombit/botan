@@ -106,10 +106,10 @@ EAC1_1_CVC make_cvc_cert(PK_Signer& signer,
    {
    OID chat_oid(OIDS::lookup("CertificateHolderAuthorizationTemplate"));
    MemoryVector<byte> enc_chat_val;
-   enc_chat_val.append(holder_auth_templ);
+   enc_chat_val.push_back(holder_auth_templ);
 
    MemoryVector<byte> enc_cpi;
-   enc_cpi.append(0x00);
+   enc_cpi.push_back(0x00);
    MemoryVector<byte> tbs = DER_Encoder()
       .encode(enc_cpi, OCTET_STRING, ASN1_Tag(41), APPLICATION) // cpi
       .encode(car)

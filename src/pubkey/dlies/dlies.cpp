@@ -47,7 +47,7 @@ SecureVector<byte> DLIES_Encryptor::enc(const byte in[], u32bit length,
    out.copy(my_key.size(), in, length);
 
    SecureVector<byte> vz = my_key;
-   vz.append(ka.derive_key(0, other_key).bits_of());
+   vz += ka.derive_key(0, other_key).bits_of();
 
    const u32bit K_LENGTH = length + mac_keylen;
    OctetString K = kdf->derive_key(K_LENGTH, vz);
@@ -120,7 +120,7 @@ SecureVector<byte> DLIES_Decryptor::dec(const byte msg[], u32bit length) const
    SecureVector<byte> T(msg + my_key.size() + CIPHER_LEN, mac->OUTPUT_LENGTH);
 
    SecureVector<byte> vz(msg, my_key.size());
-   vz.append(ka.derive_key(0, v).bits_of());
+   vz += ka.derive_key(0, v).bits_of();
 
    const u32bit K_LENGTH = C.size() + mac_keylen;
    OctetString K = kdf->derive_key(K_LENGTH, vz);

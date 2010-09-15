@@ -87,12 +87,8 @@ void EAC1_1_ADO::decode_info(DataSource& source,
       .end_cons()
       .get_contents();
 
-   SecureVector<byte> enc_car = DER_Encoder()
-      .encode(car)
-      .get_contents();
-
    res_tbs_bits = enc_cert;
-   res_tbs_bits.append(enc_car);
+   res_tbs_bits += DER_Encoder().encode(car).get_contents();
    res_sig = decode_concatenation(concat_sig);
    }
 

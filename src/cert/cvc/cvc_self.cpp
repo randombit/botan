@@ -136,7 +136,7 @@ EAC1_1_Req create_cvc_req(Private_Key const& key,
    MemoryVector<byte> enc_public_key = eac_1_1_encoding(priv_key, sig_algo.oid);
 
    MemoryVector<byte> enc_cpi;
-   enc_cpi.append(0x00);
+   enc_cpi.push_back(0x00);
    MemoryVector<byte> tbs = DER_Encoder()
       .encode(enc_cpi, OCTET_STRING, ASN1_Tag(41), APPLICATION)
       .raw_bytes(enc_public_key)
@@ -166,8 +166,10 @@ EAC1_1_ADO create_ado_req(Private_Key const& key,
    std::string padding_and_hash = padding_and_hash_from_oid(req.signature_algorithm().oid);
    PK_Signer signer(*priv_key, padding_and_hash);
    SecureVector<byte> tbs_bits = req.BER_encode();
-   tbs_bits.append(DER_Encoder().encode(car).get_contents());
-   MemoryVector<byte> signed_cert = EAC1_1_ADO::make_signed(signer, tbs_bits, rng);
+   tbs_bits += DER_Encoder().encode(car).get_contents();
+
+   MemoryVector<byte> signed_cert =
+      EAC1_1_ADO::make_signed(signer, tbs_bits, rng);
 
    DataSource_Memory source(signed_cert);
    return EAC1_1_ADO(source);
