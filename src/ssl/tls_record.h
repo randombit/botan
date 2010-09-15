@@ -9,8 +9,8 @@
 #define BOTAN_TLS_RECORDS_H__
 
 #include <botan/tls_session_key.h>
-#include <botan/socket.h>
 #include <botan/tls_suites.h>
+#include <botan/socket.h>
 #include <botan/pipe.h>
 #include <botan/secqueue.h>
 #include <vector>

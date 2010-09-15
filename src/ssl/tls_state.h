@@ -1,5 +1,5 @@
 /*
-* TLS Handshaking
+* TLS Handshake State
 * (C) 2004-2006 Jack Lloyd
 *
 * Released under the terms of the Botan license
@@ -8,7 +8,7 @@
 #ifndef BOTAN_TLS_HANDSHAKE_H__
 #define BOTAN_TLS_HANDSHAKE_H__
 
-#include <botan/tls_messages.h>
+#include <botan/internal/tls_messages.h>
 #include <botan/secqueue.h>
 
 namespace Botan {
@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * SSL/TLS Handshake State
 */
-class BOTAN_DLL Handshake_State
+class Handshake_State
    {
    public:
       Client_Hello* client_hello;

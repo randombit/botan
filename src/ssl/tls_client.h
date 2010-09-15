@@ -9,7 +9,9 @@
 #define BOTAN_TLS_CLIENT_H__
 
 #include <botan/tls_connection.h>
-#include <botan/tls_state.h>
+#include <botan/tls_policy.h>
+#include <botan/tls_record.h>
+#include <botan/socket.h>
 #include <vector>
 #include <string>
 
@@ -69,7 +71,7 @@ class BOTAN_DLL TLS_Client : public TLS_Connection
       std::vector<X509_Certificate> certs, peer_certs;
       std::vector<Private_Key*> keys;
 
-      Handshake_State* state;
+      class Handshake_State* state;
       SecureVector<byte> session_id;
       SecureQueue read_buf;
       std::string peer_id;

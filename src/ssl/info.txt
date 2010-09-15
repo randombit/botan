@@ -1,24 +1,24 @@
 define SSL_TLS
 
 <header:public>
-handshake_hash.h
 socket.h
-tls_alerts.h
 tls_client.h
 tls_connection.h
 tls_exceptn.h
 tls_magic.h
-tls_messages.h
 tls_policy.h
 tls_record.h
 tls_server.h
 tls_session_key.h
-tls_state.h
 tls_suites.h
 </header:public>
 
 <header:internal>
+tls_alerts.h
+tls_handshake_hash.h
+tls_messages.h
 tls_reader.h
+tls_state.h
 </header:internal>
 
 <source>
@@ -26,8 +26,7 @@ c_kex.cpp
 cert_req.cpp
 cert_ver.cpp
 finished.cpp
-handshake_hash.cpp
-handshake_state.cpp
+tls_handshake_hash.cpp
 hello.cpp
 rec_read.cpp
 rec_wri.cpp
@@ -36,6 +35,7 @@ tls_client.cpp
 tls_policy.cpp
 tls_server.cpp
 tls_session_key.cpp
+tls_state.cpp
 tls_suites.cpp
 </source>
 

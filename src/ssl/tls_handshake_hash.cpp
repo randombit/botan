@@ -5,7 +5,7 @@
 * Released under the terms of the Botan license
 */
 
-#include <botan/handshake_hash.h>
+#include <botan/internal/tls_handshake_hash.h>
 #include <botan/md5.h>
 #include <botan/sha160.h>
 #include <memory>

@@ -9,7 +9,9 @@
 #define BOTAN_TLS_SERVER_H__
 
 #include <botan/tls_connection.h>
-#include <botan/tls_state.h>
+#include <botan/tls_record.h>
+#include <botan/tls_policy.h>
+#include <botan/socket.h>
 #include <vector>
 
 namespace Botan {
@@ -62,7 +64,7 @@ class BOTAN_DLL TLS_Server : public TLS_Connection
       std::vector<X509_Certificate> cert_chain, peer_certs;
       Private_Key* private_key;
 
-      Handshake_State* state;
+      class Handshake_State* state;
       SecureVector<byte> session_id;
       SecureQueue read_buf;
       std::string peer_id;

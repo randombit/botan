@@ -5,7 +5,7 @@
 * Released under the terms of the Botan license
 */
 
-#include <botan/tls_state.h>
+#include <botan/internal/tls_state.h>
 
 namespace Botan {
 

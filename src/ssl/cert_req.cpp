@@ -5,7 +5,7 @@
 * Released under the terms of the Botan license
 */
 
-#include <botan/tls_messages.h>
+#include <botan/internal/tls_messages.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/loadstor.h>

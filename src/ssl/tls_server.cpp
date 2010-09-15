@@ -6,8 +6,8 @@
 */
 
 #include <botan/tls_server.h>
-#include <botan/tls_alerts.h>
-#include <botan/tls_state.h>
+#include <botan/internal/tls_alerts.h>
+#include <botan/internal/tls_state.h>
 #include <botan/loadstor.h>
 #include <botan/rsa.h>
 #include <botan/dh.h>
