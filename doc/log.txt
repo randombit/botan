@@ -1,11 +1,12 @@
 
 * 1.9.11-dev, ????-??-??
  - Fix SSL handshake failures when using RC4 ciphersuites
- - Changed semantics of MemoryRegion::resize and clear to match STL
- - Add hex encoding/decoding functions that can be used without a Pipe
  - Use small tables in the first round of AES
+ - Add hex encoding/decoding functions that can be used without a Pipe
  - Add support for dynamic engine loading on Windows
  - Allow using PBKDF2 with empty passphrases
+ - Changed semantics of MemoryRegion::resize and clear to match STL
+ - Removed MemoryRegion::append, replaced by push_back and operator+=
  - Support use of HMAC(SHA-256) and CMAC(Blowfish) in passhash9
  - Switch default PKCS #8 encryption algorithm from AES-128 to AES-256
  - Improve support for Intel Atom processors
