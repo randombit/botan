@@ -149,29 +149,13 @@ class MemoryRegion
       void set(const T in[], u32bit n)    { resize(n); copy(in, n); }
 
       /**
-      * Append data to the end of this buffer.
-      * @param data the array containing the data to append
-      * @param n the size of the array data
-      */
-      void append(const T data[], u32bit n)
-         {
-         resize(size()+n);
-         copy_mem(buf + size() - n, data, n);
-         }
-
-      /**
       * Append a single element.
       * @param x the element to append
       */
-      void append(T x) { append(&x, 1); }
-
-      /**
-      * Append data to the end of this buffer.
-      * @param other the buffer containing the data to append
-      */
-      void append(const MemoryRegion<T>& other)
+      void push_back(T x)
          {
-         append(&other[0], other.size());
+         resize(size() + 1);
+         buf[size()-1] = x;
          }
 
       /**
@@ -374,6 +358,46 @@ class SecureVector : public MemoryRegion<T>
          this->set(&in[0], in.size());
          }
    };
+
+template<typename T>
+MemoryRegion<T>& operator+=(MemoryRegion<T>& out,
+                            const MemoryRegion<T>& in)
+   {
+   const u32bit copy_offset = out.size();
+   out.resize(out.size() + in.size());
+   copy_mem(&out[copy_offset], &in[0], in.size());
+   return out;
+   }
+
+template<typename T>
+MemoryRegion<T>& operator+=(MemoryRegion<T>& out,
+                            T in)
+   {
+   const u32bit copy_offset = out.size();
+   out.resize(out.size() + 1);
+   copy_mem(&out[copy_offset], &in, 1);
+   return out;
+   }
+
+template<typename T, typename L>
+MemoryRegion<T>& operator+=(MemoryRegion<T>& out,
+                            const std::pair<const T*, L>& in)
+   {
+   const u32bit copy_offset = out.size();
+   out.resize(out.size() + in.second);
+   copy_mem(&out[copy_offset], in.first, in.second);
+   return out;
+   }
+
+template<typename T, typename L>
+MemoryRegion<T>& operator+=(MemoryRegion<T>& out,
+                            const std::pair<T*, L>& in)
+   {
+   const u32bit copy_offset = out.size();
+   out.resize(out.size() + in.second);
+   copy_mem(&out[copy_offset], in.first, in.second);
+   return out;
+   }
 
 /**
 * Zeroise the values; length remains unchanged
