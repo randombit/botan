@@ -12,5 +12,5 @@ pem
 pubkey
 sha1
 sym_algo
-x509
+x509cert
 </requires>

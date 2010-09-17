@@ -19,7 +19,7 @@
   #include <botan/ecdsa.h>
 #endif
 
-#ifdef BOTAN_HAS_X509
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
   #include <botan/x509self.h>
   #include <botan/x509stor.h>
   #include <botan/x509_ca.h>
@@ -34,7 +34,9 @@ using namespace Botan;
 #include "validate.h"
 #include "common.h"
 
-#if defined(BOTAN_HAS_X509) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_DSA)
+#if defined(BOTAN_HAS_X509_CERTIFICATES) && \
+    defined(BOTAN_HAS_RSA) && \
+    defined(BOTAN_HAS_DSA)
 
 namespace {
 

@@ -55,5 +55,5 @@ sha1
 ssl3mac
 ssl_prf
 tls_prf
-x509
+x509cert
 </requires>
