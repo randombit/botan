@@ -9,40 +9,35 @@
 
 namespace Botan {
 
-/*
-* Search by name
-*/
-std::vector<X509_Certificate>
-Certificate_Store::by_name(const std::string&) const
+void Certificate_Store_Memory::add_certificate(const X509_Certificate& cert)
    {
-   return std::vector<X509_Certificate>();
+   certs.push_back(cert);
    }
 
-/*
-* Search by email
-*/
-std::vector<X509_Certificate>
-Certificate_Store::by_email(const std::string&) const
+Certificate_Store* Certificate_Store_Memory::clone() const
    {
-   return std::vector<X509_Certificate>();
+   return new Certificate_Store_Memory(*this);
    }
 
-/*
-* Search by X.500 distinguished name
-*/
 std::vector<X509_Certificate>
-Certificate_Store::by_dn(const X509_DN&) const
+Certificate_Store_Memory::find_by_subject_and_key_id(
+   const X509_DN& subject_dn,
+   const MemoryRegion<byte>& key_id)
    {
-   return std::vector<X509_Certificate>();
-   }
+   std::vector<X509_Certificate> result;
 
-/*
-* Find any CRLs that might be useful
-*/
-std::vector<X509_CRL>
-Certificate_Store::get_crls_for(const X509_Certificate&) const
-   {
-   return std::vector<X509_CRL>();
+   for(size_t i = 0; i != certs.size(); ++i)
+      {
+      MemoryVector<byte> skid = certs[i].subject_key_id();
+
+      if(key_id.size() && skid.size() && skid != key_id)
+         continue;
+
+      if(certs[i].subject_dn() == subject_dn)
+         result.push_back(certs[i]);
+      }
+
+   return result;
    }
 
 }

@@ -274,22 +274,16 @@ u32bit X509_Store::find_parent_of(const X509_Certificate& cert)
    if(index != NO_CERT_FOUND)
       return index;
 
-   if(auth_key_id.size())
+   for(u32bit j = 0; j != stores.size(); ++j)
       {
-      for(u32bit j = 0; j != stores.size(); ++j)
-         {
-         std::vector<X509_Certificate> got = stores[j]->by_SKID(auth_key_id);
+      std::vector<X509_Certificate> got =
+         stores[j]->find_by_subject_and_key_id(issuer_dn, auth_key_id);
 
-         if(got.empty())
-            continue;
-
-         for(u32bit k = 0; k != got.size(); ++k)
-            add_cert(got[k]);
-         return find_cert(issuer_dn, auth_key_id);
-         }
+      for(u32bit k = 0; k != got.size(); ++k)
+         add_cert(got[k]);
       }
 
-   return NO_CERT_FOUND;
+   return find_cert(issuer_dn, auth_key_id);
    }
 
 /*
