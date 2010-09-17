@@ -145,6 +145,8 @@ bool BOTAN_DLL operator==(const X509_Time&, const X509_Time&);
 bool BOTAN_DLL operator!=(const X509_Time&, const X509_Time&);
 bool BOTAN_DLL operator<=(const X509_Time&, const X509_Time&);
 bool BOTAN_DLL operator>=(const X509_Time&, const X509_Time&);
+bool BOTAN_DLL operator<(const X509_Time&, const X509_Time&);
+bool BOTAN_DLL operator>(const X509_Time&, const X509_Time&);
 
 bool BOTAN_DLL operator==(const X509_DN&, const X509_DN&);
 bool BOTAN_DLL operator!=(const X509_DN&, const X509_DN&);

@@ -271,9 +271,15 @@ bool operator==(const X509_Time& t1, const X509_Time& t2)
    { return (t1.cmp(t2) == 0); }
 bool operator!=(const X509_Time& t1, const X509_Time& t2)
    { return (t1.cmp(t2) != 0); }
+
 bool operator<=(const X509_Time& t1, const X509_Time& t2)
    { return (t1.cmp(t2) <= 0); }
 bool operator>=(const X509_Time& t1, const X509_Time& t2)
    { return (t1.cmp(t2) >= 0); }
+
+bool operator<(const X509_Time& t1, const X509_Time& t2)
+   { return (t1.cmp(t2) < 0); }
+bool operator>(const X509_Time& t1, const X509_Time& t2)
+   { return (t1.cmp(t2) > 0); }
 
 }
