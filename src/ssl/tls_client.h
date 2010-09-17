@@ -33,21 +33,16 @@ class BOTAN_DLL TLS_Client : public TLS_Connection
       void close();
       bool is_closed() const;
 
-      TLS_Client(RandomNumberGenerator& rng,
-                 Socket& peer,
-                 const TLS_Policy* policy = 0);
+      TLS_Client(const TLS_Policy& policy,
+                 RandomNumberGenerator& rng,
+                 Socket& peer);
 
-#if 0
-      void add_cert(const X509_Certificate& cert,
-                    const Private_Key& cert_key);
-#endif
-
-      // FIXME: support multiple cert/key pairs
-      TLS_Client(RandomNumberGenerator& rng,
+      // FIXME: support multiple/arbitrary # of cert/key pairs
+      TLS_Client(const TLS_Policy& policy,
+                 RandomNumberGenerator& rng,
                  Socket& peer,
                  const X509_Certificate& cert,
-                 const Private_Key& cert_key,
-                 const TLS_Policy* policy = 0);
+                 const Private_Key& cert_key);
 
       ~TLS_Client();
    private:
@@ -60,13 +55,12 @@ class BOTAN_DLL TLS_Client : public TLS_Connection
       void read_handshake(byte, const MemoryRegion<byte>&);
       void process_handshake_msg(Handshake_Type, const MemoryRegion<byte>&);
 
+      const TLS_Policy& policy;
       RandomNumberGenerator& rng;
-
       Socket& peer;
 
       Record_Writer writer;
       Record_Reader reader;
-      const TLS_Policy* policy;
 
       std::vector<X509_Certificate> certs, peer_certs;
       std::vector<Private_Key*> keys;
@@ -74,7 +68,6 @@ class BOTAN_DLL TLS_Client : public TLS_Connection
       class Handshake_State* state;
       SecureVector<byte> session_id;
       SecureQueue read_buf;
-      std::string peer_id;
       bool active;
    };
 

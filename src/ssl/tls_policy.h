@@ -16,7 +16,7 @@
 namespace Botan {
 
 /**
-* TLS_Policy Base Class
+* TLS Policy Base Class
 * Inherit and overload as desired to suite local policy concerns
 */
 class BOTAN_DLL TLS_Policy
@@ -42,8 +42,7 @@ class BOTAN_DLL TLS_Policy
       virtual Version_Code min_version() const { return SSL_V3; }
       virtual Version_Code pref_version() const { return TLS_V11; }
 
-      virtual bool check_cert(const std::vector<X509_Certificate>&,
-                              const std::string&) const;
+      virtual bool check_cert(const std::vector<X509_Certificate>& cert_chain) const;
 
       virtual ~TLS_Policy() {}
    private:

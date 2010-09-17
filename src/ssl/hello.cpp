@@ -63,14 +63,15 @@ void Hello_Request::deserialize(const MemoryRegion<byte>& buf)
 * Create a new Client Hello message
 */
 Client_Hello::Client_Hello(RandomNumberGenerator& rng,
-                           Record_Writer& writer, const TLS_Policy* policy,
+                           Record_Writer& writer,
+                           const TLS_Policy& policy,
                            HandshakeHash& hash)
    {
    c_random = rng.random_vec(32);
 
-   suites = policy->ciphersuites();
-   comp_algos = policy->compression();
-   c_version = policy->pref_version();
+   suites = policy.ciphersuites();
+   comp_algos = policy.compression();
+   c_version = policy.pref_version();
 
    send(writer, hash);
    }
@@ -210,9 +211,11 @@ bool Client_Hello::offered_suite(u16bit ciphersuite) const
 * Create a new Server Hello message
 */
 Server_Hello::Server_Hello(RandomNumberGenerator& rng,
-                           Record_Writer& writer, const TLS_Policy* policy,
+                           Record_Writer& writer,
+                           const TLS_Policy& policy,
                            const std::vector<X509_Certificate>& certs,
-                           const Client_Hello& c_hello, Version_Code ver,
+                           const Client_Hello& c_hello,
+                           Version_Code ver,
                            HandshakeHash& hash)
    {
    bool have_rsa = false, have_dsa = false;
@@ -227,13 +230,13 @@ Server_Hello::Server_Hello(RandomNumberGenerator& rng,
          have_dsa = true;
       }
 
-   suite = policy->choose_suite(c_hello.ciphersuites(), have_rsa, have_dsa);
+   suite = policy.choose_suite(c_hello.ciphersuites(), have_rsa, have_dsa);
 
    if(suite == 0)
       throw TLS_Exception(PROTOCOL_VERSION,
                           "Can't agree on a ciphersuite with client");
 
-   comp_algo = policy->choose_compression(c_hello.compression_algos());
+   comp_algo = policy.choose_compression(c_hello.compression_algos());
 
    s_version = ver;
    s_random = rng.random_vec(32);

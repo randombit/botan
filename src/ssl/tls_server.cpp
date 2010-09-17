@@ -85,14 +85,16 @@ void server_check_state(Handshake_Type new_msg, Handshake_State* state)
 /**
 * TLS Server Constructor
 */
-TLS_Server::TLS_Server(RandomNumberGenerator& r,
-                       Socket& sock, const X509_Certificate& cert,
-                       const Private_Key& key, const TLS_Policy* pol) :
-   rng(r), peer(sock),
-   writer(sock), policy(pol ? pol : new TLS_Policy)
+TLS_Server::TLS_Server(const TLS_Policy& pol,
+                       RandomNumberGenerator& r,
+                       Socket& sock,
+                       const X509_Certificate& cert,
+                       const Private_Key& key) :
+   policy(pol),
+   rng(r),
+   peer(sock),
+   writer(sock)
    {
-   peer_id = sock.peer_id();
-
    state = 0;
 
    cert_chain.push_back(cert);
@@ -125,7 +127,6 @@ TLS_Server::~TLS_Server()
    {
    close();
    delete private_key;
-   delete policy;
    delete state;
    }
 
@@ -353,7 +354,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       client_requested_hostname = state->client_hello->hostname();
 
       state->version = choose_version(state->client_hello->version(),
-                                      policy->min_version());
+                                      policy.min_version());
 
       writer.set_version(state->version);
       reader.set_version(state->version);
@@ -378,11 +379,11 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
          if(state->suite.kex_type() == TLS_ALGO_KEYEXCH_RSA)
             {
             state->kex_priv = new RSA_PrivateKey(rng,
-                                                 policy->rsa_export_keysize());
+                                                 policy.rsa_export_keysize());
             }
          else if(state->suite.kex_type() == TLS_ALGO_KEYEXCH_DH)
             {
-            state->kex_priv = new DH_PrivateKey(rng, policy->dh_group());
+            state->kex_priv = new DH_PrivateKey(rng, policy.dh_group());
             }
          else
             throw Internal_Error("TLS_Server: Unknown ciphersuite kex type");
@@ -395,7 +396,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
                                     state->hash);
          }
 
-      if(policy->require_client_auth())
+      if(policy.require_client_auth())
          {
          state->do_client_auth = true;
          throw Internal_Error("Client auth not implemented");

@@ -81,25 +81,30 @@ void client_check_state(Handshake_Type new_msg, Handshake_State* state)
 /**
 * TLS Client Constructor
 */
-TLS_Client::TLS_Client(RandomNumberGenerator& r,
-                       Socket& sock, const TLS_Policy* pol) :
-   rng(r), peer(sock), writer(sock), policy(pol ? pol : new TLS_Policy)
+TLS_Client::TLS_Client(const TLS_Policy& pol,
+                       RandomNumberGenerator& r,
+                       Socket& sock) :
+   policy(pol),
+   rng(r),
+   peer(sock),
+   writer(sock)
    {
-   peer_id = sock.peer_id();
-
    initialize();
    }
 
 /**
 * TLS Client Constructor
 */
-TLS_Client::TLS_Client(RandomNumberGenerator& r,
-                       Socket& sock, const X509_Certificate& cert,
-                       const Private_Key& key, const TLS_Policy* pol) :
-   rng(r), peer(sock), writer(sock), policy(pol ? pol : new TLS_Policy)
+TLS_Client::TLS_Client(const TLS_Policy& pol,
+                       RandomNumberGenerator& r,
+                       Socket& sock,
+                       const X509_Certificate& cert,
+                       const Private_Key& key) :
+   policy(pol),
+   rng(r),
+   peer(sock),
+   writer(sock)
    {
-   peer_id = sock.peer_id();
-
    certs.push_back(cert);
    keys.push_back(PKCS8::copy_key(key, rng));
 
@@ -114,7 +119,6 @@ TLS_Client::~TLS_Client()
    close();
    for(u32bit j = 0; j != keys.size(); j++)
       delete keys[j];
-   delete policy;
    delete state;
    }
 
@@ -129,7 +133,7 @@ void TLS_Client::initialize()
    try {
       state = 0;
       active = false;
-      writer.set_version(policy->pref_version());
+      writer.set_version(policy.pref_version());
       do_handshake();
    }
    catch(TLS_Exception& e)
@@ -411,7 +415,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
          throw TLS_Exception(HANDSHAKE_FAILURE,
                              "TLS_Client: Server replied with bad version");
 
-      if(state->version < policy->min_version())
+      if(state->version < policy.min_version())
          throw TLS_Exception(PROTOCOL_VERSION,
                              "TLS_Client: Server is too old for specified policy");
 
@@ -434,7 +438,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
          throw TLS_Exception(HANDSHAKE_FAILURE,
                              "TLS_Client: No certificates sent by server");
 
-      if(!policy->check_cert(peer_certs, peer_id))
+      if(!policy.check_cert(peer_certs))
          throw TLS_Exception(BAD_CERTIFICATE,
                              "TLS_Client: Server certificate is not valid");
 

@@ -118,8 +118,7 @@ DL_Group TLS_Policy::dh_group() const
 /**
 * Default certificate check
 */
-bool TLS_Policy::check_cert(const std::vector<X509_Certificate>&,
-                            const std::string&) const
+bool TLS_Policy::check_cert(const std::vector<X509_Certificate>& certs) const
    {
    return true;
    }
