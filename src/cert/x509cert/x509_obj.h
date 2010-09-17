@@ -27,12 +27,12 @@ class BOTAN_DLL X509_Object
       * The underlying data that is to be or was signed
       * @return data that is or was signed
       */
-      SecureVector<byte> tbs_data() const;
+      MemoryVector<byte> tbs_data() const;
 
       /**
       * @return signature on tbs_data()
       */
-      SecureVector<byte> signature() const;
+      MemoryVector<byte> signature() const;
 
       /**
       * @return signature algorithm that was used to generate signature
@@ -70,7 +70,7 @@ class BOTAN_DLL X509_Object
       /**
       * @return BER encoding of this
       */
-      SecureVector<byte> BER_encode() const;
+      MemoryVector<byte> BER_encode() const;
 
       /**
       * @return PEM encoding of this
@@ -93,7 +93,7 @@ class BOTAN_DLL X509_Object
       void do_decode();
       X509_Object() {}
       AlgorithmIdentifier sig_algo;
-      SecureVector<byte> tbs_bits, sig;
+      MemoryVector<byte> tbs_bits, sig;
    private:
       virtual void force_decode() = 0;
       void init(DataSource&, const std::string&);

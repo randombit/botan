@@ -222,7 +222,7 @@ MemoryVector<byte> Key_Usage::encode_inner() const
 
    const u32bit unused_bits = low_bit(constraints) - 1;
 
-   SecureVector<byte> der;
+   MemoryVector<byte> der;
    der.push_back(BIT_STRING);
    der.push_back(2 + ((unused_bits < 8) ? 1 : 0));
    der.push_back(unused_bits % 8);

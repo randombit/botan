@@ -97,7 +97,7 @@ void X509_Object::encode(Pipe& out, X509_Encoding encoding) const
 /*
 * Return a BER encoded X.509 object
 */
-SecureVector<byte> X509_Object::BER_encode() const
+MemoryVector<byte> X509_Object::BER_encode() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
@@ -121,7 +121,7 @@ std::string X509_Object::PEM_encode() const
 /*
 * Return the TBS data
 */
-SecureVector<byte> X509_Object::tbs_data() const
+MemoryVector<byte> X509_Object::tbs_data() const
    {
    return ASN1::put_in_sequence(tbs_bits);
    }
@@ -129,7 +129,7 @@ SecureVector<byte> X509_Object::tbs_data() const
 /*
 * Return the signature of this object
 */
-SecureVector<byte> X509_Object::signature() const
+MemoryVector<byte> X509_Object::signature() const
    {
    return sig;
    }
