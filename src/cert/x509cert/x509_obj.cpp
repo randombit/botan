@@ -145,6 +145,15 @@ AlgorithmIdentifier X509_Object::signature_algorithm() const
 /*
 * Check the signature on an object
 */
+bool X509_Object::check_signature(Public_Key* pub_key) const
+   {
+   std::auto_ptr<Public_Key> key(pub_key);
+   return check_signature(*key);
+   }
+
+/*
+* Check the signature on an object
+*/
 bool X509_Object::check_signature(Public_Key& pub_key) const
    {
    try {
@@ -195,15 +204,13 @@ void X509_Object::do_decode()
       }
    catch(Decoding_Error& e)
       {
-      const std::string what = e.what();
       throw Decoding_Error(PEM_label_pref + " decoding failed (" +
-                           what.substr(23, std::string::npos) + ")");
+                           e.what() + ")");
       }
    catch(Invalid_Argument& e)
       {
-      const std::string what = e.what();
       throw Decoding_Error(PEM_label_pref + " decoding failed (" +
-                           what.substr(7, std::string::npos) + ")");
+                           e.what() + ")");
       }
    }
 

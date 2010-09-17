@@ -6,7 +6,6 @@
 */
 
 #include <botan/x509_ca.h>
-#include <botan/x509stor.h>
 #include <botan/pubkey.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
@@ -155,9 +154,7 @@ X509_CRL X509_CA::update_crl(const X509_CRL& crl,
    std::vector<CRL_Entry> already_revoked = crl.get_revoked();
    std::vector<CRL_Entry> all_revoked;
 
-   X509_Store store;
-   store.add_cert(cert, true);
-   if(store.add_crl(crl) != VERIFIED)
+   if(!crl.check_signature(cert.subject_public_key()))
       throw Invalid_Argument("X509_CA::update_crl: Invalid CRL provided");
 
    std::set<SecureVector<byte> > removed_from_crl;

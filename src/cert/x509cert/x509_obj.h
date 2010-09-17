@@ -61,6 +61,14 @@ class BOTAN_DLL X509_Object
       bool check_signature(class Public_Key& key) const;
 
       /**
+      * Check the signature on this data
+      * @param key the public key purportedly used to sign this data
+      *        the pointer will be deleted after use
+      * @return true if the signature is valid, otherwise false
+      */
+      bool check_signature(class Public_Key* key) const;
+
+      /**
       * Encode this to a pipe
       * @deprecated use BER_encode or PEM_encode instead
       * @param out the pipe to write to

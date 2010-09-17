@@ -6,11 +6,11 @@
 */
 
 #include <botan/pkcs10.h>
+#include <botan/x509_ext.h>
+#include <botan/x509cert.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/parsing.h>
-#include <botan/x509stor.h>
-#include <botan/x509_ext.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
 
@@ -84,8 +84,7 @@ void PKCS10_Request::force_decode()
 
    cert_req_info.verify_end();
 
-   X509_Code sig_check = X509_Store::check_sig(*this, subject_public_key());
-   if(sig_check != VERIFIED)
+   if(!this->check_signature(subject_public_key()))
       throw Decoding_Error("PKCS #10 request: Bad signature detected");
    }
 
