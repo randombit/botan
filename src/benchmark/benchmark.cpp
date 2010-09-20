@@ -119,6 +119,22 @@ bench_mac(MessageAuthenticationCode* mac,
 
 std::map<std::string, double>
 algorithm_benchmark(const std::string& name,
+                    Algorithm_Factory& af,
+                    RandomNumberGenerator& rng,
+                    u32bit milliseconds,
+                    u32bit)
+   {
+   Default_Benchmark_Timer timer;
+
+   return algorithm_benchmark(name,
+                              milliseconds,
+                              timer,
+                              rng,
+                              af);
+   }
+
+std::map<std::string, double>
+algorithm_benchmark(const std::string& name,
                     u32bit milliseconds,
                     Timer& timer,
                     RandomNumberGenerator& rng,

@@ -40,6 +40,8 @@ namespace Botan {
 
 /**
 * Algorithm benchmark
+* @deprecated Use the version that doesn't take a timer for
+*             compatability with future releases.
 * @param name the name of the algorithm to test (cipher, hash, or MAC)
 * @param milliseconds total time for the benchmark to run
 * @param timer the timer to use
@@ -48,11 +50,27 @@ namespace Botan {
 * @return results a map from provider to speed in mebibytes per second
 */
 std::map<std::string, double>
-algorithm_benchmark(const std::string& name,
-                    u32bit milliseconds,
-                    Timer& timer,
-                    RandomNumberGenerator& rng,
-                    Algorithm_Factory& af);
+BOTAN_DLL algorithm_benchmark(const std::string& name,
+                              u32bit milliseconds,
+                              Timer& timer,
+                              RandomNumberGenerator& rng,
+                              Algorithm_Factory& af);
+
+/**
+* Algorithm benchmark
+* @param name the name of the algorithm to test (cipher, hash, or MAC)
+* @param af the algorithm factory used to create objects
+* @param rng the rng to use to generate random inputs
+* @param milliseconds total time for the benchmark to run
+* @param buf_size size of buffer to benchmark against, in KiB
+* @return results a map from provider to speed in mebibytes per second
+*/
+std::map<std::string, double>
+BOTAN_DLL algorithm_benchmark(const std::string& name,
+                              Algorithm_Factory& af,
+                              RandomNumberGenerator& rng,
+                              u32bit milliseconds,
+                              u32bit buf_size);
 
 }
 
