@@ -22,7 +22,7 @@ namespace Botan {
 bool lock_mem(void* ptr, u32bit bytes)
    {
 #if defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
-   return (mlock(ptr, bytes) == 0);
+   return (mlock((char*)ptr, bytes) == 0);
 #elif defined(BOTAN_TARGET_OS_HAS_WIN32_VIRTUAL_LOCK)
    return (VirtualLock(ptr, bytes) != 0);
 #else
@@ -36,7 +36,7 @@ bool lock_mem(void* ptr, u32bit bytes)
 void unlock_mem(void* ptr, u32bit bytes)
    {
 #if defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
-   munlock(ptr, bytes);
+   munlock((char*)ptr, bytes);
 #elif defined(BOTAN_TARGET_OS_HAS_WIN32_VIRTUAL_LOCK)
    VirtualUnlock(ptr, bytes);
 #endif

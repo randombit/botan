@@ -113,11 +113,11 @@ void MemoryMapping_Allocator::dealloc_block(void* ptr, u32bit n)
       {
       std::memset(ptr, PATTERNS[j], n);
 
-      if(::msync(ptr, n, MS_SYNC))
+      if(::msync((char*)ptr, n, MS_SYNC))
          throw MemoryMapping_Failed("Sync operation failed");
       }
 
-   if(::munmap(ptr, n))
+   if(::munmap((char*)ptr, n))
       throw MemoryMapping_Failed("Could not unmap file");
    }
 
