@@ -28,4 +28,5 @@ default -> "$(CXX) /LD"
 
 <mach_abi_linking>
 all -> "/MD"
+all-debug -> "/MDd"
 </mach_abi_linking>

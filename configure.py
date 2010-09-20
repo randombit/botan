@@ -478,10 +478,15 @@ class CompilerInfo(object):
 
         del self.mach_opt
 
-    def mach_abi_link_flags(self, osname, arch, submodel):
+    def mach_abi_link_flags(self, osname, arch, submodel, debug_p):
+
+        def all():
+            if debug_p:
+                return 'all-debug'
+            return 'all'
 
         abi_link = set()
-        for what in ['all', osname, arch, submodel]:
+        for what in [all(), osname, arch, submodel]:
             if self.mach_abi_linking.get(what) != None:
                 abi_link.add(self.mach_abi_linking.get(what))
 
@@ -714,9 +719,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'mp_bits': choose_mp_bits(),
 
-        'cc': cc.binary_name + cc.mach_abi_link_flags(options.os,
-                                                      options.arch,
-                                                      options.cpu),
+        'cc': cc.binary_name + cc.mach_abi_link_flags(
+            options.os, options.arch, options.cpu, options.debug_build),
 
         'lib_opt': cc.lib_opt_flags,
         'mach_opt': cc.mach_opts(options.arch, options.cpu),
