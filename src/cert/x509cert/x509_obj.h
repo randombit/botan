@@ -40,6 +40,11 @@ class BOTAN_DLL X509_Object
       AlgorithmIdentifier signature_algorithm() const;
 
       /**
+      * @return hash algorithm that was used to generate signature
+      */
+      std::string hash_used_for_signature() const;
+
+      /**
       * Create a signed X509 object.
       * @param signer the signer used to sign the object
       * @param rng the random number generator to use

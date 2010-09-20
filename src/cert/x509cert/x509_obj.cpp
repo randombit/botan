@@ -143,6 +143,27 @@ AlgorithmIdentifier X509_Object::signature_algorithm() const
    }
 
 /*
+* Return the hash used in generating the signature
+*/
+std::string X509_Object::hash_used_for_signature() const
+   {
+   std::vector<std::string> sig_info =
+      split_on(OIDS::lookup(sig_algo.oid), '/');
+
+   if(sig_info.size() != 2)
+      throw Internal_Error("Invalid name format found for " +
+                           sig_algo.oid.as_string());
+
+   std::vector<std::string> pad_and_hash =
+      parse_algorithm_name(sig_info[1]);
+
+   if(pad_and_hash.size() != 2)
+      throw Internal_Error("Invalid name format " + sig_info[1]);
+
+   return pad_and_hash[1];
+   }
+
+/*
 * Check the signature on an object
 */
 bool X509_Object::check_signature(Public_Key* pub_key) const
