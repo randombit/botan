@@ -277,7 +277,7 @@ u32bit X509_Store::find_parent_of(const X509_Certificate& cert)
    for(u32bit j = 0; j != stores.size(); ++j)
       {
       std::vector<X509_Certificate> got =
-         stores[j]->find_by_subject_and_key_id(issuer_dn, auth_key_id);
+         stores[j]->find_cert_by_subject_and_key_id(issuer_dn, auth_key_id);
 
       for(u32bit k = 0; k != got.size(); ++k)
          add_cert(got[k]);
