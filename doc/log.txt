@@ -1,4 +1,9 @@
 
+* 1.8.11, ????-??-??
+ - When building a debug library under VC++, use the debug runtime
+ - Fix static libraries under Sun Studio
+ - The Perl build script has been removed in this release
+
 * 1.8.10, 2010-08-31
  - Switch default PKCS #8 encryption algorithm from 3DES to AES-256
  - Increase default hash iterations from 2048 to 10000 in PBES1 and PBES2
