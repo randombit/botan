@@ -81,8 +81,6 @@ class BOTAN_DLL X509_Store
 
       void add_new_certstore(Certificate_Store*);
 
-      static X509_Code check_sig(const X509_Object&, Public_Key*);
-
       X509_Store(u32bit time_slack = 24*60*60,
                  u32bit cache_results = 30*60);
 
@@ -117,6 +115,8 @@ class BOTAN_DLL X509_Store
             mutable X509_Code result;
             mutable u64bit last_checked;
          };
+
+      static X509_Code check_sig(const X509_Object&, Public_Key*);
 
       u32bit find_cert(const X509_DN&, const MemoryRegion<byte>&) const;
       X509_Code check_sig(const Cert_Info&, const Cert_Info&) const;
