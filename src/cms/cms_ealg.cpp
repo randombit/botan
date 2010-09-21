@@ -14,7 +14,6 @@
 #include <botan/oids.h>
 #include <botan/pipe.h>
 #include <botan/pubkey.h>
-#include <botan/x509find.h>
 #include <memory>
 
 namespace Botan {

@@ -6,7 +6,6 @@
 */
 
 #include <botan/cms_dec.h>
-#include <botan/x509find.h>
 #include <botan/ber_dec.h>
 #include <botan/oids.h>
 #include <botan/hash.h>
@@ -43,6 +42,7 @@ std::vector<X509_Certificate> get_cert(BER_Decoder& signer_info,
 
    std::vector<X509_Certificate> found;
 
+#if 0
    if(id.type_tag == SEQUENCE && id.class_tag == CONSTRUCTED)
       {
       X509_DN issuer;
@@ -57,6 +57,8 @@ std::vector<X509_Certificate> get_cert(BER_Decoder& signer_info,
       found = store.get_certs(SKID_Match(id.value));
    else
       throw Decoding_Error("CMS: Unknown tag for cert identifier");
+#endif
+   throw Internal_Error("Not implemented");
 
    // verify cert if found
 
