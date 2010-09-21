@@ -1,6 +1,6 @@
 /*
 * SHA-1 using SSE2
-* (C) 2009 Jack Lloyd
+* (C) 2009-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 *
@@ -17,8 +17,8 @@ namespace Botan {
 namespace {
 
 /*
-First 16 bytes just need byte swapping. Preparing just means
-adding in the round constants.
+* First 16 bytes just need byte swapping. Preparing just means
+* adding in the round constants.
 */
 
 #define prep00_15(P, W)                                      \
@@ -31,7 +31,7 @@ adding in the round constants.
    } while(0)
 
 /*
-for each multiple of 4, t, we want to calculate this:
+For each multiple of 4, t, we want to calculate this:
 
 W[t+0] = rol(W[t-3] ^ W[t-8] ^ W[t-14] ^ W[t-16], 1);
 W[t+1] = rol(W[t-2] ^ W[t-7] ^ W[t-13] ^ W[t-15], 1);
@@ -156,27 +156,22 @@ void SHA_160_SSE2::compress_n(const byte input_bytes[], u32bit blocks)
    const __m128i K40_59 = _mm_set1_epi32(0x8F1BBCDC);
    const __m128i K60_79 = _mm_set1_epi32(0xCA62C1D6);
 
-   u32bit A = digest[0], B = digest[1], C = digest[2],
-          D = digest[3], E = digest[4];
+   u32bit A = digest[0],
+          B = digest[1],
+          C = digest[2],
+          D = digest[3],
+          E = digest[4];
 
    const __m128i* input = reinterpret_cast<const __m128i*>(input_bytes);
 
    for(u32bit i = 0; i != blocks; ++i)
       {
-
-      /* I've tried arranging the SSE2 code to be 4, 8, 12, and 16
-      * steps ahead of the integer code. 12 steps ahead seems to
-      * produce the best performance. -dean
-      *
-      * Todo: check this is still true on Barcelona and Core2 -Jack
-      */
-
       union v4si {
          u32bit u32[4];
          __m128i u128;
          };
 
-      v4si P0, P1, P2;
+      v4si P0, P1, P2, P3;
 
       __m128i W0 = _mm_loadu_si128(&input[0]);
       prep00_15(P0, W0);
@@ -188,6 +183,7 @@ void SHA_160_SSE2::compress_n(const byte input_bytes[], u32bit blocks)
       prep00_15(P2, W2);
 
       __m128i W3 = _mm_loadu_si128(&input[3]);
+      prep00_15(P3, W3);
 
       /*
       Using SSE4; slower on Core2 and Nehalem
@@ -203,118 +199,117 @@ void SHA_160_SSE2::compress_n(const byte input_bytes[], u32bit blocks)
       F1(E, A, B, C, D, GET_P_32(P0, 1));
       F1(D, E, A, B, C, GET_P_32(P0, 2));
       F1(C, D, E, A, B, GET_P_32(P0, 3));
-      prep00_15(P0, W3);
+      prep(P0, W0, W1, W2, W3, K00_19);
 
       F1(B, C, D, E, A, GET_P_32(P1, 0));
       F1(A, B, C, D, E, GET_P_32(P1, 1));
       F1(E, A, B, C, D, GET_P_32(P1, 2));
       F1(D, E, A, B, C, GET_P_32(P1, 3));
-      prep(P1, W0, W1, W2, W3, K00_19);
+      prep(P1, W1, W2, W3, W0, K20_39);
 
       F1(C, D, E, A, B, GET_P_32(P2, 0));
       F1(B, C, D, E, A, GET_P_32(P2, 1));
       F1(A, B, C, D, E, GET_P_32(P2, 2));
       F1(E, A, B, C, D, GET_P_32(P2, 3));
-      prep(P2, W1, W2, W3, W0, K20_39);
+      prep(P2, W2, W3, W0, W1, K20_39);
 
-      F1(D, E, A, B, C, GET_P_32(P0, 0));
-      F1(C, D, E, A, B, GET_P_32(P0, 1));
-      F1(B, C, D, E, A, GET_P_32(P0, 2));
-      F1(A, B, C, D, E, GET_P_32(P0, 3));
-      prep(P0, W2, W3, W0, W1, K20_39);
+      F1(D, E, A, B, C, GET_P_32(P3, 0));
+      F1(C, D, E, A, B, GET_P_32(P3, 1));
+      F1(B, C, D, E, A, GET_P_32(P3, 2));
+      F1(A, B, C, D, E, GET_P_32(P3, 3));
+      prep(P3, W3, W0, W1, W2, K20_39);
 
-      F1(E, A, B, C, D, GET_P_32(P1, 0));
-      F1(D, E, A, B, C, GET_P_32(P1, 1));
-      F1(C, D, E, A, B, GET_P_32(P1, 2));
-      F1(B, C, D, E, A, GET_P_32(P1, 3));
-      prep(P1, W3, W0, W1, W2, K20_39);
+      F1(E, A, B, C, D, GET_P_32(P0, 0));
+      F1(D, E, A, B, C, GET_P_32(P0, 1));
+      F1(C, D, E, A, B, GET_P_32(P0, 2));
+      F1(B, C, D, E, A, GET_P_32(P0, 3));
+      prep(P0, W0, W1, W2, W3, K20_39);
 
-      F2(A, B, C, D, E, GET_P_32(P2, 0));
-      F2(E, A, B, C, D, GET_P_32(P2, 1));
-      F2(D, E, A, B, C, GET_P_32(P2, 2));
-      F2(C, D, E, A, B, GET_P_32(P2, 3));
-      prep(P2, W0, W1, W2, W3, K20_39);
+      F2(A, B, C, D, E, GET_P_32(P1, 0));
+      F2(E, A, B, C, D, GET_P_32(P1, 1));
+      F2(D, E, A, B, C, GET_P_32(P1, 2));
+      F2(C, D, E, A, B, GET_P_32(P1, 3));
+      prep(P1, W1, W2, W3, W0, K20_39);
 
-      F2(B, C, D, E, A, GET_P_32(P0, 0));
-      F2(A, B, C, D, E, GET_P_32(P0, 1));
-      F2(E, A, B, C, D, GET_P_32(P0, 2));
-      F2(D, E, A, B, C, GET_P_32(P0, 3));
-      prep(P0, W1, W2, W3, W0, K20_39);
+      F2(B, C, D, E, A, GET_P_32(P2, 0));
+      F2(A, B, C, D, E, GET_P_32(P2, 1));
+      F2(E, A, B, C, D, GET_P_32(P2, 2));
+      F2(D, E, A, B, C, GET_P_32(P2, 3));
+      prep(P2, W2, W3, W0, W1, K40_59);
 
-      F2(C, D, E, A, B, GET_P_32(P1, 0));
-      F2(B, C, D, E, A, GET_P_32(P1, 1));
-      F2(A, B, C, D, E, GET_P_32(P1, 2));
-      F2(E, A, B, C, D, GET_P_32(P1, 3));
-      prep(P1, W2, W3, W0, W1, K40_59);
+      F2(C, D, E, A, B, GET_P_32(P3, 0));
+      F2(B, C, D, E, A, GET_P_32(P3, 1));
+      F2(A, B, C, D, E, GET_P_32(P3, 2));
+      F2(E, A, B, C, D, GET_P_32(P3, 3));
+      prep(P3, W3, W0, W1, W2, K40_59);
 
-      F2(D, E, A, B, C, GET_P_32(P2, 0));
-      F2(C, D, E, A, B, GET_P_32(P2, 1));
-      F2(B, C, D, E, A, GET_P_32(P2, 2));
-      F2(A, B, C, D, E, GET_P_32(P2, 3));
-      prep(P2, W3, W0, W1, W2, K40_59);
-
-      F2(E, A, B, C, D, GET_P_32(P0, 0));
-      F2(D, E, A, B, C, GET_P_32(P0, 1));
-      F2(C, D, E, A, B, GET_P_32(P0, 2));
-      F2(B, C, D, E, A, GET_P_32(P0, 3));
+      F2(D, E, A, B, C, GET_P_32(P0, 0));
+      F2(C, D, E, A, B, GET_P_32(P0, 1));
+      F2(B, C, D, E, A, GET_P_32(P0, 2));
+      F2(A, B, C, D, E, GET_P_32(P0, 3));
       prep(P0, W0, W1, W2, W3, K40_59);
 
-      F3(A, B, C, D, E, GET_P_32(P1, 0));
-      F3(E, A, B, C, D, GET_P_32(P1, 1));
-      F3(D, E, A, B, C, GET_P_32(P1, 2));
-      F3(C, D, E, A, B, GET_P_32(P1, 3));
+      F2(E, A, B, C, D, GET_P_32(P1, 0));
+      F2(D, E, A, B, C, GET_P_32(P1, 1));
+      F2(C, D, E, A, B, GET_P_32(P1, 2));
+      F2(B, C, D, E, A, GET_P_32(P1, 3));
       prep(P1, W1, W2, W3, W0, K40_59);
 
-      F3(B, C, D, E, A, GET_P_32(P2, 0));
-      F3(A, B, C, D, E, GET_P_32(P2, 1));
-      F3(E, A, B, C, D, GET_P_32(P2, 2));
-      F3(D, E, A, B, C, GET_P_32(P2, 3));
+      F3(A, B, C, D, E, GET_P_32(P2, 0));
+      F3(E, A, B, C, D, GET_P_32(P2, 1));
+      F3(D, E, A, B, C, GET_P_32(P2, 2));
+      F3(C, D, E, A, B, GET_P_32(P2, 3));
       prep(P2, W2, W3, W0, W1, K40_59);
+
+      F3(B, C, D, E, A, GET_P_32(P3, 0));
+      F3(A, B, C, D, E, GET_P_32(P3, 1));
+      F3(E, A, B, C, D, GET_P_32(P3, 2));
+      F3(D, E, A, B, C, GET_P_32(P3, 3));
+      prep(P3, W3, W0, W1, W2, K60_79);
 
       F3(C, D, E, A, B, GET_P_32(P0, 0));
       F3(B, C, D, E, A, GET_P_32(P0, 1));
       F3(A, B, C, D, E, GET_P_32(P0, 2));
       F3(E, A, B, C, D, GET_P_32(P0, 3));
-      prep(P0, W3, W0, W1, W2, K60_79);
+      prep(P0, W0, W1, W2, W3, K60_79);
 
       F3(D, E, A, B, C, GET_P_32(P1, 0));
       F3(C, D, E, A, B, GET_P_32(P1, 1));
       F3(B, C, D, E, A, GET_P_32(P1, 2));
       F3(A, B, C, D, E, GET_P_32(P1, 3));
-      prep(P1, W0, W1, W2, W3, K60_79);
+      prep(P1, W1, W2, W3, W0, K60_79);
 
       F3(E, A, B, C, D, GET_P_32(P2, 0));
       F3(D, E, A, B, C, GET_P_32(P2, 1));
       F3(C, D, E, A, B, GET_P_32(P2, 2));
       F3(B, C, D, E, A, GET_P_32(P2, 3));
-      prep(P2, W1, W2, W3, W0, K60_79);
+      prep(P2, W2, W3, W0, W1, K60_79);
 
-      F4(A, B, C, D, E, GET_P_32(P0, 0));
-      F4(E, A, B, C, D, GET_P_32(P0, 1));
-      F4(D, E, A, B, C, GET_P_32(P0, 2));
-      F4(C, D, E, A, B, GET_P_32(P0, 3));
-      prep(P0, W2, W3, W0, W1, K60_79);
+      F4(A, B, C, D, E, GET_P_32(P3, 0));
+      F4(E, A, B, C, D, GET_P_32(P3, 1));
+      F4(D, E, A, B, C, GET_P_32(P3, 2));
+      F4(C, D, E, A, B, GET_P_32(P3, 3));
+      prep(P3, W3, W0, W1, W2, K60_79);
 
-      F4(B, C, D, E, A, GET_P_32(P1, 0));
-      F4(A, B, C, D, E, GET_P_32(P1, 1));
-      F4(E, A, B, C, D, GET_P_32(P1, 2));
-      F4(D, E, A, B, C, GET_P_32(P1, 3));
-      prep(P1, W3, W0, W1, W2, K60_79);
+      F4(B, C, D, E, A, GET_P_32(P0, 0));
+      F4(A, B, C, D, E, GET_P_32(P0, 1));
+      F4(E, A, B, C, D, GET_P_32(P0, 2));
+      F4(D, E, A, B, C, GET_P_32(P0, 3));
 
-      F4(C, D, E, A, B, GET_P_32(P2, 0));
-      F4(B, C, D, E, A, GET_P_32(P2, 1));
-      F4(A, B, C, D, E, GET_P_32(P2, 2));
-      F4(E, A, B, C, D, GET_P_32(P2, 3));
+      F4(C, D, E, A, B, GET_P_32(P1, 0));
+      F4(B, C, D, E, A, GET_P_32(P1, 1));
+      F4(A, B, C, D, E, GET_P_32(P1, 2));
+      F4(E, A, B, C, D, GET_P_32(P1, 3));
 
-      F4(D, E, A, B, C, GET_P_32(P0, 0));
-      F4(C, D, E, A, B, GET_P_32(P0, 1));
-      F4(B, C, D, E, A, GET_P_32(P0, 2));
-      F4(A, B, C, D, E, GET_P_32(P0, 3));
+      F4(D, E, A, B, C, GET_P_32(P2, 0));
+      F4(C, D, E, A, B, GET_P_32(P2, 1));
+      F4(B, C, D, E, A, GET_P_32(P2, 2));
+      F4(A, B, C, D, E, GET_P_32(P2, 3));
 
-      F4(E, A, B, C, D, GET_P_32(P1, 0));
-      F4(D, E, A, B, C, GET_P_32(P1, 1));
-      F4(C, D, E, A, B, GET_P_32(P1, 2));
-      F4(B, C, D, E, A, GET_P_32(P1, 3));
+      F4(E, A, B, C, D, GET_P_32(P3, 0));
+      F4(D, E, A, B, C, GET_P_32(P3, 1));
+      F4(C, D, E, A, B, GET_P_32(P3, 2));
+      F4(B, C, D, E, A, GET_P_32(P3, 3));
 
       A = (digest[0] += A);
       B = (digest[1] += B);
