@@ -26,12 +26,13 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
       throw Invalid_Argument(algo_name() + ": Invalid encryption exponent");
 
    e = exp;
-   p = random_prime(rng, (bits + 1) / 2, e);
-   q = random_prime(rng, bits - p.bits(), e);
-   n = p * q;
 
-   if(n.bits() != bits)
-      throw Self_Test_Failure(algo_name() + " private key generation failed");
+   do
+      {
+      p = random_prime(rng, (bits + 1) / 2, e);
+      q = random_prime(rng, bits - p.bits(), e);
+      n = p * q;
+      } while(n.bits() != bits);
 
    d = inverse_mod(e, lcm(p - 1, q - 1));
    d1 = d % (p - 1);

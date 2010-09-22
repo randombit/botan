@@ -26,13 +26,13 @@ RW_PrivateKey::RW_PrivateKey(RandomNumberGenerator& rng,
       throw Invalid_Argument(algo_name() + ": Invalid encryption exponent");
 
    e = exp;
-   p = random_prime(rng, (bits + 1) / 2, e / 2, 3, 4);
-   q = random_prime(rng, bits - p.bits(), e / 2, ((p % 8 == 3) ? 7 : 3), 8);
 
-   n = p * q;
-
-   if(n.bits() != bits)
-      throw Self_Test_Failure(algo_name() + " private key generation failed");
+   do
+      {
+      p = random_prime(rng, (bits + 1) / 2, e / 2, 3, 4);
+      q = random_prime(rng, bits - p.bits(), e / 2, ((p % 8 == 3) ? 7 : 3), 8);
+      n = p * q;
+      } while(n.bits() != bits);
 
    d = inverse_mod(e, lcm(p - 1, q - 1) >> 1);
    d1 = d % (p - 1);
