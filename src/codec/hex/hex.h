@@ -37,6 +37,15 @@ std::string BOTAN_DLL hex_encode(const byte input[],
                                  bool uppercase = true);
 
 /**
+* Perform hex encoding
+* @param input some input
+* @param uppercase should output be upper or lower case?
+* @return hexadecimal representation of input
+*/
+std::string BOTAN_DLL hex_encode(const MemoryRegion<byte>& input,
+                                 bool uppercase = true);
+
+/**
 * Perform hex decoding
 * @param output an array of at least input_length/2 bytes
 * @param input some hex input
