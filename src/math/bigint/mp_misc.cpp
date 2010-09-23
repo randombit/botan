@@ -15,19 +15,23 @@ extern "C" {
 /*
 * Core Division Operation
 */
-u32bit bigint_divcore(word q, word y1, word y2,
-                      word x1, word x2, word x3)
+u32bit bigint_divcore(word q, word y2, word y1,
+                      word x3, word x2, word x1)
    {
-   word y0 = 0;
-   y2 = word_madd2(q, y2, &y0);
-   y1 = word_madd2(q, y1, &y0);
+   // Compute (y2,y1) * q
 
-   if(y0 > x1) return 1;
-   if(y0 < x1) return 0;
-   if(y1 > x2)  return 1;
-   if(y1 < x2)  return 0;
-   if(y2 > x3)  return 1;
-   if(y2 < x3)  return 0;
+   word y3 = 0;
+   y1 = word_madd2(q, y1, &y3);
+   y2 = word_madd2(q, y2, &y3);
+
+   // Return (y3,y2,y1) >? (x3,x2,x1)
+
+   if(y3 > x3) return 1;
+   if(y3 < x3) return 0;
+   if(y2 > x2) return 1;
+   if(y2 < x2) return 0;
+   if(y1 > x1) return 1;
+   if(y1 < x1) return 0;
    return 0;
    }
 
@@ -45,11 +49,15 @@ s32bit bigint_cmp(const word x[], u32bit x_size,
          return 1;
       x_size--;
       }
+
    for(u32bit j = x_size; j > 0; --j)
       {
-      if(x[j-1] > y[j-1]) return 1;
-      if(x[j-1] < y[j-1]) return -1;
+      if(x[j-1] > y[j-1])
+         return 1;
+      if(x[j-1] < y[j-1])
+         return -1;
       }
+
    return 0;
    }
 

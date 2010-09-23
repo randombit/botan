@@ -86,8 +86,8 @@ void bigint_monty_redc(word z[], u32bit z_size,
 /*
 * Misc Utility Operations
 */
-u32bit bigint_divcore(word q, word y1, word y2,
-                      word x1, word x2, word x3);
+u32bit bigint_divcore(word q, word y2, word y1,
+                      word x3, word x2, word x1);
 
 /**
 * Compare x and y
