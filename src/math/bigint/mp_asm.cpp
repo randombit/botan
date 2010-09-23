@@ -1,6 +1,6 @@
 /*
 * Lowest Level MPI Algorithms
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *     2006 Luca Piccarreta
 *
 * Distributed under the terms of the Botan license
@@ -31,14 +31,10 @@ word bigint_add2_nc(word x[], u32bit x_size, const word y[], u32bit y_size)
    for(u32bit j = blocks; j != y_size; ++j)
       x[j] = word_add(x[j], y[j], &carry);
 
-   if(!carry)
-      return 0;
-
    for(u32bit j = y_size; j != x_size; ++j)
-      if(++x[j])
-         return 0;
+      x[j] = word_add(x[j], 0, &carry);
 
-   return 1;
+   return carry;
    }
 
 /*
@@ -61,12 +57,7 @@ word bigint_add3_nc(word z[], const word x[], u32bit x_size,
       z[j] = word_add(x[j], y[j], &carry);
 
    for(u32bit j = y_size; j != x_size; ++j)
-      {
-      word x_j = x[j] + carry;
-      if(carry && x_j)
-         carry = 0;
-      z[j] = x_j;
-      }
+      z[j] = word_add(x[j], 0, &carry);
 
    return carry;
    }
@@ -76,8 +67,7 @@ word bigint_add3_nc(word z[], const word x[], u32bit x_size,
 */
 void bigint_add2(word x[], u32bit x_size, const word y[], u32bit y_size)
    {
-   if(bigint_add2_nc(x, x_size, y, y_size))
-      ++x[x_size];
+   x[x_size] += bigint_add2_nc(x, x_size, y, y_size);
    }
 
 /*
@@ -86,8 +76,8 @@ void bigint_add2(word x[], u32bit x_size, const word y[], u32bit y_size)
 void bigint_add3(word z[], const word x[], u32bit x_size,
                            const word y[], u32bit y_size)
    {
-   if(bigint_add3_nc(z, x, x_size, y, y_size))
-      ++z[(x_size > y_size ? x_size : y_size)];
+   z[(x_size > y_size ? x_size : y_size)] +=
+      bigint_add3_nc(z, x, x_size, y, y_size);
    }
 
 /*
@@ -105,13 +95,8 @@ void bigint_sub2(word x[], u32bit x_size, const word y[], u32bit y_size)
    for(u32bit j = blocks; j != y_size; ++j)
       x[j] = word_sub(x[j], y[j], &carry);
 
-   if(!carry) return;
-
    for(u32bit j = y_size; j != x_size; ++j)
-      {
-      --x[j];
-      if(x[j] != MP_WORD_MAX) return;
-      }
+      x[j] = word_sub(x[j], 0, &carry);
    }
 
 /*
@@ -150,12 +135,7 @@ void bigint_sub3(word z[], const word x[], u32bit x_size,
       z[j] = word_sub(x[j], y[j], &carry);
 
    for(u32bit j = y_size; j != x_size; ++j)
-      {
-      word x_j = x[j] - carry;
-      if(carry && x_j != MP_WORD_MAX)
-         carry = 0;
-      z[j] = x_j;
-      }
+      z[j] = word_sub(x[j], 0, &carry);
    }
 
 /*
