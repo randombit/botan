@@ -33,29 +33,26 @@ inline u16bit mul(u16bit x, u16bit y)
 
 /*
 * Find multiplicative inverses modulo 65537
+*
+* 65537 is prime; thus Fermat's little theorem tells us that
+* x^65537 == x modulo 65537, which means
+* x^(65537-2) == x^-1 modulo 65537 since
+* x^(65537-2) * x == 1 mod 65537
+*
+* Do the exponentiation with a basic square and multiply: all bits are
+* of exponent are 1 so we always multiply
 */
 u16bit mul_inv(u16bit x)
    {
-   if(x <= 1)
-      return x;
+   u16bit y = x;
 
-   u16bit t0 = static_cast<u16bit>(65537 / x), t1 = 1;
-   u16bit y = static_cast<u16bit>(65537 % x);
-
-   while(y != 1)
+   for(u32bit i = 0; i != 15; ++i)
       {
-      u16bit q = x / y;
-      x %= y;
-      t1 += q * t0;
-
-      if(x == 1)
-         return t1;
-
-      q = y / x;
-      y %= x;
-      t0 += q * t1;
+      y = mul(y, y); // square
+      y = mul(y, x);
       }
-   return (1 - t0);
+
+   return y;
    }
 
 /**
