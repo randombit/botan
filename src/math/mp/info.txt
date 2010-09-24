@@ -1,0 +1,23 @@
+define BIGINT_MP
+
+<source>
+mp_asm.cpp
+mp_comba.cpp
+mp_karat.cpp
+mp_misc.cpp
+mp_shift.cpp
+</source>
+
+<header:public>
+mp_types.h
+</header:public>
+
+<header:internal>
+mp_core.h
+</header:internal>
+
+<requires>
+mp_amd64|mp_msvc64|mp_asm64|mp_ia32|mp_ia32_msvc|mp_generic
+monty_generic
+mulop_generic
+</requires>

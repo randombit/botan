@@ -5,12 +5,7 @@ define BIGINT
 <header:public>
 bigint.h
 divide.h
-mp_types.h
 </header:public>
-
-<header:internal>
-mp_core.h
-</header:internal>
 
 <source>
 big_code.cpp
@@ -20,18 +15,11 @@ big_ops3.cpp
 big_rand.cpp
 bigint.cpp
 divide.cpp
-mp_asm.cpp
-mp_comba.cpp
-mp_karat.cpp
-mp_misc.cpp
-mp_shift.cpp
 </source>
 
 <requires>
 alloc
+mp
 hex
-mp_amd64|mp_msvc64|mp_asm64|mp_ia32|mp_ia32_msvc|mp_generic
-monty_generic
-mulop_generic
 rng
 </requires>
