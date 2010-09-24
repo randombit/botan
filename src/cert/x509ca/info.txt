@@ -1,1 +1,6 @@
 define X509_CA
+
+<requires>
+pkcs10
+x509cert
+</requires>

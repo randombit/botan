@@ -1,1 +1,5 @@
 define CERTIFICATE_STORE
+
+<requires>
+asn1
+</requires>
