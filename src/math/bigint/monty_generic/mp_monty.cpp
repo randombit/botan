@@ -63,9 +63,8 @@ void bigint_monty_redc(word z[], u32bit z_size,
 
    copy_mem(ws + x_size + 1, z + x_size, x_size + 1);
 
-   clear_mem(z, z_size);
-
    copy_mem(z, ws + borrow*(x_size+1), x_size + 1);
+   clear_mem(z + x_size + 1, z_size - x_size - 1);
    }
 
 }
