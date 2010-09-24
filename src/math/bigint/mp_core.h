@@ -1,6 +1,6 @@
 /*
 * MPI Algorithms
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -35,7 +35,7 @@ word bigint_add3_nc(word z[],
                     const word x[], u32bit x_size,
                     const word y[], u32bit y_size);
 
-void bigint_sub2(word x[], u32bit x_size,
+word bigint_sub2(word x[], u32bit x_size,
                  const word y[], u32bit y_size);
 
 /**
@@ -43,7 +43,7 @@ void bigint_sub2(word x[], u32bit x_size,
 */
 void bigint_sub2_rev(word x[], const word y[], u32bit y_size);
 
-void bigint_sub3(word z[],
+word bigint_sub3(word z[],
                  const word x[], u32bit x_size,
                  const word y[], u32bit y_size);
 
@@ -79,12 +79,20 @@ void bigint_linmul3(word z[], const word x[], u32bit x_size, word y);
 
 /*
 * Montgomery Reduction
+* @param z integer to reduce (also output in first x_size+1 words)
+* @param z_size size of z (should be >= 2*x_size+1)
+* @param workspace array of at least 2*(x_size+1) words
+* @param x modulus
+* @param x_size size of x
+* @param u Montgomery value
 */
 void bigint_monty_redc(word z[], u32bit z_size,
-                       const word x[], u32bit x_size, word u);
+                       word workspace[],
+                       const word x[], u32bit x_size,
+                       word u);
 
 /*
-* Misc Utility Operations
+* Division operation
 */
 u32bit bigint_divcore(word q, word y2, word y1,
                       word x3, word x2, word x1);

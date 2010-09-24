@@ -1,6 +1,6 @@
 /*
 * Montgomery Exponentiation
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -10,25 +10,6 @@
 #include <botan/internal/mp_core.h>
 
 namespace Botan {
-
-namespace {
-
-/*
-* Montgomery Reduction
-*/
-inline void montgomery_reduce(BigInt& out, MemoryRegion<word>& z_buf,
-                              const BigInt& x_bn, u32bit x_size, word u)
-   {
-   const word* x = x_bn.data();
-   word* z = &z_buf[0];
-   u32bit z_size = z_buf.size();
-
-   bigint_monty_redc(z, z_size, x, x_size, u);
-
-   out.get_reg().set(z + x_size, x_size + 1);
-   }
-
-}
 
 /*
 * Set the exponent
@@ -56,14 +37,18 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
               g[0].data(), g[0].size(), g[0].sig_words(),
               R2.data(), R2.size(), R2.sig_words());
 
-   montgomery_reduce(g[0], z, modulus, mod_words, mod_prime);
+   bigint_monty_redc(&z[0], z.size(),
+                     &workspace[0],
+                     modulus.data(), mod_words, mod_prime);
+
+   g[0].get_reg().set(&z[0], mod_words + 1);
 
    const BigInt& x = g[0];
    const u32bit x_sig = x.sig_words();
 
-   for(u32bit j = 1; j != g.size(); ++j)
+   for(u32bit i = 1; i != g.size(); ++i)
       {
-      const BigInt& y = g[j-1];
+      const BigInt& y = g[i-1];
       const u32bit y_sig = y.sig_words();
 
       zeroise(z);
@@ -71,7 +56,11 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
                  x.data(), x.size(), x_sig,
                  y.data(), y.size(), y_sig);
 
-      montgomery_reduce(g[j], z, modulus, mod_words, mod_prime);
+      bigint_monty_redc(&z[0], z.size(),
+                        &workspace[0],
+                        modulus.data(), mod_words, mod_prime);
+
+      g[i].get_reg().set(&z[0], mod_words + 1);
       }
    }
 
@@ -86,7 +75,7 @@ BigInt Montgomery_Exponentiator::execute() const
    SecureVector<word> z(2 * (mod_words + 1));
    SecureVector<word> workspace(2 * (mod_words + 1));
 
-   for(u32bit j = exp_nibbles; j > 0; --j)
+   for(u32bit i = exp_nibbles; i > 0; --i)
       {
       for(u32bit k = 0; k != window_bits; ++k)
          {
@@ -94,10 +83,14 @@ BigInt Montgomery_Exponentiator::execute() const
          bigint_sqr(&z[0], z.size(), &workspace[0],
                     x.data(), x.size(), x.sig_words());
 
-         montgomery_reduce(x, z, modulus, mod_words, mod_prime);
+         bigint_monty_redc(&z[0], z.size(),
+                           &workspace[0],
+                           modulus.data(), mod_words, mod_prime);
+
+         x.get_reg().set(&z[0], mod_words + 1);
          }
 
-      u32bit nibble = exp.get_substring(window_bits*(j-1), window_bits);
+      u32bit nibble = exp.get_substring(window_bits*(i-1), window_bits);
       if(nibble)
          {
          const BigInt& y = g[nibble-1];
@@ -107,14 +100,22 @@ BigInt Montgomery_Exponentiator::execute() const
                     x.data(), x.size(), x.sig_words(),
                     y.data(), y.size(), y.sig_words());
 
-         montgomery_reduce(x, z, modulus, mod_words, mod_prime);
+         bigint_monty_redc(&z[0], z.size(),
+                           &workspace[0],
+                           modulus.data(), mod_words, mod_prime);
+
+         x.get_reg().set(&z[0], mod_words + 1);
          }
       }
 
-   zeroise(z);
-   z.copy(x.data(), x.size());
+   x.get_reg().resize(2*mod_words+1);
 
-   montgomery_reduce(x, z, modulus, mod_words, mod_prime);
+   bigint_monty_redc(&x[0], x.size(),
+                     &workspace[0],
+                     modulus.data(), mod_words, mod_prime);
+
+   x.get_reg().resize(mod_words+1);
+
    return x;
    }
 

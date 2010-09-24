@@ -179,6 +179,7 @@ class BOTAN_DLL PointGFp
 
       /**
       * Montgomery multiplication/reduction
+      * @warning z cannot alias x or y
       * @param z output
       * @param x first multiplicand
       * @param y second multiplicand
@@ -203,6 +204,7 @@ class BOTAN_DLL PointGFp
 
       /**
       * Montgomery squaring/reduction
+      * @warning z cannot alias x
       * @param z output
       * @param x multiplicand
       * @param workspace temp space

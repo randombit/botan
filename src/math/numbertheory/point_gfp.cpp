@@ -36,6 +36,8 @@ void PointGFp::monty_mult(BigInt& z,
                           const BigInt& x, const BigInt& y,
                           MemoryRegion<word>& workspace) const
    {
+   //assert(&z != &x && &z != &y);
+
    if(x.is_zero() || y.is_zero())
       {
       z = 0;
@@ -46,23 +48,26 @@ void PointGFp::monty_mult(BigInt& z,
    const u32bit p_size = curve.get_p_words();
    const word p_dash = curve.get_p_dash();
 
-   zeroise(workspace);
+   SecureVector<word>& z_reg = z.get_reg();
+   z_reg.resize(2*p_size+1);
+   zeroise(z_reg);
 
-   bigint_mul(workspace, workspace.size(), 0,
+   bigint_mul(&z_reg[0], z_reg.size(),
+              &workspace[0],
               x.data(), x.size(), x.sig_words(),
               y.data(), y.size(), y.sig_words());
 
-   bigint_monty_redc(workspace, workspace.size(),
+   bigint_monty_redc(&z[0], z.size(),
+                     &workspace[0],
                      p.data(), p_size, p_dash);
-
-   z.get_reg().resize(p_size);
-   copy_mem(&z.get_reg()[0], &workspace[p_size], p_size);
    }
 
 // Montgomery squaring
 void PointGFp::monty_sqr(BigInt& z, const BigInt& x,
                          MemoryRegion<word>& workspace) const
    {
+   //assert(&z != &x);
+
    if(x.is_zero())
       {
       z = 0;
@@ -73,16 +78,17 @@ void PointGFp::monty_sqr(BigInt& z, const BigInt& x,
    const u32bit p_size = curve.get_p_words();
    const word p_dash = curve.get_p_dash();
 
-   zeroise(workspace);
+   SecureVector<word>& z_reg = z.get_reg();
+   z_reg.resize(2*p_size+1);
+   zeroise(z_reg);
 
-   bigint_sqr(workspace, workspace.size(), 0,
+   bigint_sqr(&z[0], z.size(),
+              &workspace[0],
               x.data(), x.size(), x.sig_words());
 
-   bigint_monty_redc(workspace, workspace.size(),
+   bigint_monty_redc(&z[0], z.size(),
+                     &workspace[0],
                      p.data(), p_size, p_dash);
-
-   z.get_reg().resize(p_size);
-   copy_mem(&z.get_reg()[0], &workspace[p_size], p_size);
    }
 
 // Point addition
@@ -152,7 +158,7 @@ void PointGFp::add(const PointGFp& rhs, Workspace& workspace)
 
    monty_mult(S2, U2, H, ws);
 
-   monty_mult(U2, U1, U2, ws);
+   U2 = monty_mult(U1, U2, ws);
 
    monty_sqr(x, r, ws);
    x -= S2;
