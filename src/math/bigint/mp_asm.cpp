@@ -83,20 +83,22 @@ void bigint_add3(word z[], const word x[], u32bit x_size,
 /*
 * Two Operand Subtraction
 */
-void bigint_sub2(word x[], u32bit x_size, const word y[], u32bit y_size)
+word bigint_sub2(word x[], u32bit x_size, const word y[], u32bit y_size)
    {
-   word carry = 0;
+   word borrow = 0;
 
    const u32bit blocks = y_size - (y_size % 8);
 
    for(u32bit i = 0; i != blocks; i += 8)
-      carry = word8_sub2(x + i, y + i, carry);
+      borrow = word8_sub2(x + i, y + i, borrow);
 
    for(u32bit i = blocks; i != y_size; ++i)
-      x[i] = word_sub(x[i], y[i], &carry);
+      x[i] = word_sub(x[i], y[i], &borrow);
 
    for(u32bit i = y_size; i != x_size; ++i)
-      x[i] = word_sub(x[i], 0, &carry);
+      x[i] = word_sub(x[i], 0, &borrow);
+
+   return borrow;
    }
 
 /*
@@ -104,38 +106,40 @@ void bigint_sub2(word x[], u32bit x_size, const word y[], u32bit y_size)
 */
 void bigint_sub2_rev(word x[],  const word y[], u32bit y_size)
    {
-   word carry = 0;
+   word borrow = 0;
 
    const u32bit blocks = y_size - (y_size % 8);
 
    for(u32bit i = 0; i != blocks; i += 8)
-      carry = word8_sub2_rev(x + i, y + i, carry);
+      borrow = word8_sub2_rev(x + i, y + i, borrow);
 
    for(u32bit i = blocks; i != y_size; ++i)
-      x[i] = word_sub(y[i], x[i], &carry);
+      x[i] = word_sub(y[i], x[i], &borrow);
 
-   if(carry)
+   if(borrow)
       throw Internal_Error("bigint_sub2_rev: x >= y");
    }
 
 /*
 * Three Operand Subtraction
 */
-void bigint_sub3(word z[], const word x[], u32bit x_size,
+word bigint_sub3(word z[], const word x[], u32bit x_size,
                            const word y[], u32bit y_size)
    {
-   word carry = 0;
+   word borrow = 0;
 
    const u32bit blocks = y_size - (y_size % 8);
 
    for(u32bit i = 0; i != blocks; i += 8)
-      carry = word8_sub3(z + i, x + i, y + i, carry);
+      borrow = word8_sub3(z + i, x + i, y + i, borrow);
 
    for(u32bit i = blocks; i != y_size; ++i)
-      z[i] = word_sub(x[i], y[i], &carry);
+      z[i] = word_sub(x[i], y[i], &borrow);
 
    for(u32bit i = y_size; i != x_size; ++i)
-      z[i] = word_sub(x[i], 0, &carry);
+      z[i] = word_sub(x[i], 0, &borrow);
+
+   return borrow;
    }
 
 /*
