@@ -25,14 +25,14 @@ word bigint_add2_nc(word x[], u32bit x_size, const word y[], u32bit y_size)
 
    const u32bit blocks = y_size - (y_size % 8);
 
-   for(u32bit j = 0; j != blocks; j += 8)
-      carry = word8_add2(x + j, y + j, carry);
+   for(u32bit i = 0; i != blocks; i += 8)
+      carry = word8_add2(x + i, y + i, carry);
 
-   for(u32bit j = blocks; j != y_size; ++j)
-      x[j] = word_add(x[j], y[j], &carry);
+   for(u32bit i = blocks; i != y_size; ++i)
+      x[i] = word_add(x[i], y[i], &carry);
 
-   for(u32bit j = y_size; j != x_size; ++j)
-      x[j] = word_add(x[j], 0, &carry);
+   for(u32bit i = y_size; i != x_size; ++i)
+      x[i] = word_add(x[i], 0, &carry);
 
    return carry;
    }
@@ -50,14 +50,14 @@ word bigint_add3_nc(word z[], const word x[], u32bit x_size,
 
    const u32bit blocks = y_size - (y_size % 8);
 
-   for(u32bit j = 0; j != blocks; j += 8)
-      carry = word8_add3(z + j, x + j, y + j, carry);
+   for(u32bit i = 0; i != blocks; i += 8)
+      carry = word8_add3(z + i, x + i, y + i, carry);
 
-   for(u32bit j = blocks; j != y_size; ++j)
-      z[j] = word_add(x[j], y[j], &carry);
+   for(u32bit i = blocks; i != y_size; ++i)
+      z[i] = word_add(x[i], y[i], &carry);
 
-   for(u32bit j = y_size; j != x_size; ++j)
-      z[j] = word_add(x[j], 0, &carry);
+   for(u32bit i = y_size; i != x_size; ++i)
+      z[i] = word_add(x[i], 0, &carry);
 
    return carry;
    }
@@ -89,14 +89,14 @@ void bigint_sub2(word x[], u32bit x_size, const word y[], u32bit y_size)
 
    const u32bit blocks = y_size - (y_size % 8);
 
-   for(u32bit j = 0; j != blocks; j += 8)
-      carry = word8_sub2(x + j, y + j, carry);
+   for(u32bit i = 0; i != blocks; i += 8)
+      carry = word8_sub2(x + i, y + i, carry);
 
-   for(u32bit j = blocks; j != y_size; ++j)
-      x[j] = word_sub(x[j], y[j], &carry);
+   for(u32bit i = blocks; i != y_size; ++i)
+      x[i] = word_sub(x[i], y[i], &carry);
 
-   for(u32bit j = y_size; j != x_size; ++j)
-      x[j] = word_sub(x[j], 0, &carry);
+   for(u32bit i = y_size; i != x_size; ++i)
+      x[i] = word_sub(x[i], 0, &carry);
    }
 
 /*
@@ -108,11 +108,11 @@ void bigint_sub2_rev(word x[],  const word y[], u32bit y_size)
 
    const u32bit blocks = y_size - (y_size % 8);
 
-   for(u32bit j = 0; j != blocks; j += 8)
-      carry = word8_sub2_rev(x + j, y + j, carry);
+   for(u32bit i = 0; i != blocks; i += 8)
+      carry = word8_sub2_rev(x + i, y + i, carry);
 
-   for(u32bit j = blocks; j != y_size; ++j)
-      x[j] = word_sub(y[j], x[j], &carry);
+   for(u32bit i = blocks; i != y_size; ++i)
+      x[i] = word_sub(y[i], x[i], &carry);
 
    if(carry)
       throw Internal_Error("bigint_sub2_rev: x >= y");
@@ -128,14 +128,14 @@ void bigint_sub3(word z[], const word x[], u32bit x_size,
 
    const u32bit blocks = y_size - (y_size % 8);
 
-   for(u32bit j = 0; j != blocks; j += 8)
-      carry = word8_sub3(z + j, x + j, y + j, carry);
+   for(u32bit i = 0; i != blocks; i += 8)
+      carry = word8_sub3(z + i, x + i, y + i, carry);
 
-   for(u32bit j = blocks; j != y_size; ++j)
-      z[j] = word_sub(x[j], y[j], &carry);
+   for(u32bit i = blocks; i != y_size; ++i)
+      z[i] = word_sub(x[i], y[i], &carry);
 
-   for(u32bit j = y_size; j != x_size; ++j)
-      z[j] = word_sub(x[j], 0, &carry);
+   for(u32bit i = y_size; i != x_size; ++i)
+      z[i] = word_sub(x[i], 0, &carry);
    }
 
 /*
@@ -147,11 +147,11 @@ void bigint_linmul2(word x[], u32bit x_size, word y)
 
    word carry = 0;
 
-   for(u32bit j = 0; j != blocks; j += 8)
-      carry = word8_linmul2(x + j, y, carry);
+   for(u32bit i = 0; i != blocks; i += 8)
+      carry = word8_linmul2(x + i, y, carry);
 
-   for(u32bit j = blocks; j != x_size; ++j)
-      x[j] = word_madd2(x[j], y, &carry);
+   for(u32bit i = blocks; i != x_size; ++i)
+      x[i] = word_madd2(x[i], y, &carry);
 
    x[x_size] = carry;
    }
@@ -165,11 +165,11 @@ void bigint_linmul3(word z[], const word x[], u32bit x_size, word y)
 
    word carry = 0;
 
-   for(u32bit j = 0; j != blocks; j += 8)
-      carry = word8_linmul3(z + j, x + j, y, carry);
+   for(u32bit i = 0; i != blocks; i += 8)
+      carry = word8_linmul3(z + i, x + i, y, carry);
 
-   for(u32bit j = blocks; j != x_size; ++j)
-      z[j] = word_madd2(x[j], y, &carry);
+   for(u32bit i = blocks; i != x_size; ++i)
+      z[i] = word_madd2(x[i], y, &carry);
 
    z[x_size] = carry;
    }
