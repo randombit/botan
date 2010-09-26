@@ -5,9 +5,9 @@
 * Distributed under the terms of the Botan license
 */
 
+#include <botan/internal/mp_core.h>
 #include <botan/internal/mp_asm.h>
 #include <botan/internal/mp_asmi.h>
-#include <botan/internal/mp_core.h>
 #include <botan/mem_ops.h>
 
 namespace Botan {
@@ -42,14 +42,14 @@ void bigint_simple_mul(word z[], const word x[], u32bit x_size,
 
 /*
 * Simple O(N^2) Squaring
-
-This is exactly the same algorithm as bigint_simple_mul,
-however because C/C++ compilers suck at alias analysis it
-is good to have the version where the compiler knows
-that x == y
-
-There is an O(n^1.5) squaring algorithm specified in Handbook of
-Applied Cryptography, chapter 14
+*
+* This is exactly the same algorithm as bigint_simple_mul, however
+* because C/C++ compilers suck at alias analysis it is good to have
+* the version where the compiler knows that x == y
+*
+* There is an O(n^1.5) squaring algorithm specified in Handbook of
+* Applied Cryptography, chapter 14
+*
 */
 void bigint_simple_sqr(word z[], const word x[], u32bit x_size)
    {
