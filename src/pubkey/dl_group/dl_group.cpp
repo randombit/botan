@@ -14,6 +14,7 @@
 #include <botan/pipe.h>
 #include <botan/pem.h>
 #include <botan/internal/workfactor.h>
+#include <botan/internal/assert.h>
 
 namespace Botan {
 
@@ -312,23 +313,22 @@ void DL_Group::PEM_decode(DataSource& source)
    }
 
 /*
-* Create a random DSA-style generator
+* Create generator of the q-sized subgroup (DSA style generator)
 */
 BigInt DL_Group::make_dsa_generator(const BigInt& p, const BigInt& q)
    {
    BigInt g, e = (p - 1) / q;
 
-   for(u32bit j = 0; j != PRIME_TABLE_SIZE; ++j)
+   BOTAN_ASSERT(e > 0, "q does not divide p, invalid group");
+
+   for(u32bit i = 0; i != PRIME_TABLE_SIZE; ++i)
       {
-      g = power_mod(PRIMES[j], e, p);
-      if(g != 1)
-         break;
+      g = power_mod(PRIMES[i], e, p);
+      if(g > 1)
+         return g;
       }
 
-   if(g == 1)
-      throw Internal_Error("DL_Group: Couldn't create a suitable generator");
-
-   return g;
+   throw Internal_Error("DL_Group: Couldn't create a suitable generator");
    }
 
 }

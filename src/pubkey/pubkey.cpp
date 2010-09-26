@@ -14,6 +14,7 @@
 #include <botan/engine.h>
 #include <botan/lookup.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/assert.h>
 #include <memory>
 
 namespace Botan {
@@ -169,6 +170,9 @@ void PK_Signer::update(const byte in[], u32bit length)
 bool PK_Signer::self_test_signature(const MemoryRegion<byte>& msg,
                                     const MemoryRegion<byte>& sig) const
    {
+   if(!verify_op)
+      return true; // checking disabled, assume ok
+
    if(verify_op->with_recovery())
       {
       SecureVector<byte> recovered =
@@ -203,8 +207,8 @@ SecureVector<byte> PK_Signer::signature(RandomNumberGenerator& rng)
 
    SecureVector<byte> plain_sig = op->sign(&encoded[0], encoded.size(), rng);
 
-   if(verify_op && !self_test_signature(encoded, plain_sig))
-      throw Internal_Error("PK_Signer consistency check failed");
+   BOTAN_ASSERT(self_test_signature(encoded, plain_sig),
+                "PK_Signer consistency check failed");
 
    if(op->message_parts() == 1 || sig_format == IEEE_1363)
       return plain_sig;

@@ -10,6 +10,7 @@
 #include <botan/gost_3410.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
+#include <botan/internal/assert.h>
 
 namespace Botan {
 
@@ -74,8 +75,8 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
 
    public_key = PointGFp(domain().get_curve(), x, y);
 
-   if(!public_key.on_the_curve())
-      throw Internal_Error("Loaded GOST 34.10 public key failed self test");
+   BOTAN_ASSERT(public_key.on_the_curve(),
+                "Loaded GOST 34.10 public key not on the curve");
    }
 
 namespace {
@@ -118,8 +119,8 @@ GOST_3410_Signature_Operation::sign(const byte msg[], u32bit msg_len,
 
    PointGFp k_times_P = base_point * k;
 
-   if(!k_times_P.on_the_curve())
-      throw Internal_Error("GOST 34.10 k*g not on the curve");
+   BOTAN_ASSERT(k_times_P.on_the_curve(),
+                "GOST 34.10 k*g not on the curve");
 
    BigInt r = k_times_P.get_affine_x() % order;
 

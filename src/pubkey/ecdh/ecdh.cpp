@@ -8,6 +8,7 @@
 */
 
 #include <botan/ecdh.h>
+#include <botan/internal/assert.h>
 
 namespace Botan {
 
@@ -25,8 +26,8 @@ SecureVector<byte> ECDH_KA_Operation::agree(const byte w[], u32bit w_len)
 
    PointGFp S = (cofactor * point) * l_times_priv;
 
-   if(!S.on_the_curve())
-      throw Internal_Error("ECDH: Agreed value was not on the curve");
+   BOTAN_ASSERT(S.on_the_curve(),
+                "ECDH agreed value not on the curve");
 
    return BigInt::encode_1363(S.get_affine_x(),
                               curve.get_p().bytes());

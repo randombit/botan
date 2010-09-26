@@ -10,6 +10,7 @@
 #include <botan/parsing.h>
 #include <botan/numthry.h>
 #include <botan/keypair.h>
+#include <botan/internal/assert.h>
 
 namespace Botan {
 
@@ -108,8 +109,8 @@ RSA_Private_Operation::decrypt(const byte msg[], u32bit msg_len)
    BigInt m(msg, msg_len);
    BigInt x = blinder.unblind(private_op(blinder.blind(m)));
 
-   if(m != powermod_e_n(x))
-      throw Internal_Error("RSA private op failed consistency check");
+   BOTAN_ASSERT(m == powermod_e_n(x),
+                "RSA private op failed consistency check");
 
    return BigInt::encode(x);
    }

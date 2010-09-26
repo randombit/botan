@@ -10,6 +10,7 @@
 #include <botan/exceptn.h>
 #include <botan/sha160.h>
 #include <botan/md5.h>
+#include <botan/internal/assert.h>
 #include <memory>
 
 namespace Botan {
@@ -24,8 +25,7 @@ OctetString next_hash(u32bit where, u32bit want,
                       const byte secret[], u32bit secret_len,
                       const byte seed[], u32bit seed_len)
    {
-   if(want > md5.OUTPUT_LENGTH)
-      throw Internal_Error("SSL3_PRF:next_hash: want is too big");
+   BOTAN_ASSERT(want <= md5.OUTPUT_LENGTH, "Desired output too large");
 
    const byte ASCII_A_CHAR = 0x41;
 
@@ -52,7 +52,7 @@ SecureVector<byte> SSL3_PRF::derive(u32bit key_len,
                                     const byte seed[], u32bit seed_len) const
    {
    if(key_len > 416)
-      throw Internal_Error("SSL3_PRF: Requested key length is too large");
+      throw Invalid_Argument("SSL3_PRF: Requested key length is too large");
 
    MD5 md5;
    SHA_160 sha1;

@@ -124,8 +124,8 @@ EC_Domain_Params::DER_encode(EC_Domain_Params_Encoding form) const
       return DER_Encoder().encode(get_oid()).get_contents();
    else if(form == EC_DOMPAR_ENC_IMPLICITCA)
       return DER_Encoder().encode_null().get_contents();
-
-   throw Internal_Error("EC_Domain_Params::encode_DER: Unknown encoding");
+   else
+      throw Internal_Error("EC_Domain_Params::DER_encode: Unknown encoding");
    }
 
 std::string EC_Domain_Params::PEM_encode() const

@@ -7,6 +7,7 @@
 
 #include <botan/internal/out_buf.h>
 #include <botan/secqueue.h>
+#include <botan/internal/assert.h>
 
 namespace Botan {
 
@@ -51,11 +52,10 @@ u32bit Output_Buffers::remaining(Pipe::message_id msg) const
 */
 void Output_Buffers::add(SecureQueue* queue)
    {
-   if(!queue)
-      throw Internal_Error("Output_Buffers::add: Argument was NULL");
+   BOTAN_ASSERT(queue, "argument was NULL");
 
-   if(buffers.size() == buffers.max_size())
-      throw Internal_Error("Output_Buffers::add: No more room in container");
+   BOTAN_ASSERT(buffers.size() < buffers.max_size(),
+                "No more room in container");
 
    buffers.push_back(queue);
    }
@@ -85,8 +85,9 @@ SecureQueue* Output_Buffers::get(Pipe::message_id msg) const
    {
    if(msg < offset)
       return 0;
-   if(msg > message_count())
-      throw Internal_Error("Output_Buffers::get: msg > size");
+
+   BOTAN_ASSERT(msg < message_count(),
+                "Message number out of range");
 
    return buffers[msg-offset];
    }

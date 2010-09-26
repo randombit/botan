@@ -14,6 +14,7 @@
 #include <botan/ber_dec.h>
 #include <botan/secmem.h>
 #include <botan/point_gfp.h>
+#include <botan/internal/assert.h>
 
 namespace Botan {
 
@@ -99,8 +100,8 @@ EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
    private_key = BigInt::random_integer(rng, 1, domain().get_order());
    public_key = domain().get_base_point() * private_key;
 
-   if(!public_key.on_the_curve())
-      throw Internal_Error("ECC private key generation failed");
+   BOTAN_ASSERT(public_key.on_the_curve(),
+                "generated ECC private key was not on the curve");
    }
 
 MemoryVector<byte> EC_PrivateKey::pkcs8_private_key() const
@@ -129,8 +130,8 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
 
    public_key = domain().get_base_point() * private_key;
 
-   if(!public_key.on_the_curve())
-      throw Internal_Error("Loaded ECC private key failed self test");
+   BOTAN_ASSERT(public_key.on_the_curve(),
+                "Loaded ECC private key not on the curve");
    }
 
 }
