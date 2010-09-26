@@ -3,6 +3,7 @@ define UTIL_FUNCTIONS
 load_on always
 
 <source>
+assert.cpp
 charset.cpp
 cpuid.cpp
 mlock.cpp
@@ -13,6 +14,7 @@ version.cpp
 </source>
 
 <header:internal>
+assert.h
 bit_ops.h
 debug.h
 mlock.h
