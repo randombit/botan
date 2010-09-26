@@ -38,21 +38,23 @@ ECDSA_Signature_Operation::sign(const byte msg[], u32bit msg_len,
    {
    rng.add_entropy(msg, msg_len);
 
-   BigInt k;
-   k.randomize(rng, order.bits());
-
-   while(k >= order)
-      k.randomize(rng, order.bits() - 1);
-
    BigInt m(msg, msg_len);
 
-   PointGFp k_times_P = base_point * k;
-   BigInt r = mod_order.reduce(k_times_P.get_affine_x());
+   BigInt r = 0, s = 0;
 
-   if(r == 0)
-      throw Internal_Error("ECDSA_Signature_Operation: r was zero");
+   while(r == 0 || s == 0)
+      {
+      // This contortion is necessary for the tests
+      BigInt k;
+      k.randomize(rng, order.bits());
 
-   BigInt s = mod_order.multiply(inverse_mod(k, order), mul_add(x, r, m));
+      while(k >= order)
+         k.randomize(rng, order.bits() - 1);
+
+      PointGFp k_times_P = base_point * k;
+      r = mod_order.reduce(k_times_P.get_affine_x());
+      s = mod_order.multiply(inverse_mod(k, order), mul_add(x, r, m));
+      }
 
    SecureVector<byte> output(2*order.bytes());
    r.binary_encode(&output[output.size() / 2 - r.bytes()]);
