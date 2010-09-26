@@ -38,6 +38,7 @@ void divide(const BigInt& x, const BigInt& y_arg, BigInt& q, BigInt& r)
 
    BigInt y = y_arg;
    const u32bit y_words = y.sig_words();
+
    r = x;
    q = 0;
 
@@ -51,7 +52,7 @@ void divide(const BigInt& x, const BigInt& y_arg, BigInt& q, BigInt& r)
       q = 1;
       r = 0;
       }
-   else
+   else if(compare > 0)
       {
       u32bit shifts = 0;
       word y_top = y[y.sig_words()-1];
@@ -60,6 +61,9 @@ void divide(const BigInt& x, const BigInt& y_arg, BigInt& q, BigInt& r)
       r <<= shifts;
 
       const u32bit n = r.sig_words() - 1, t = y_words - 1;
+
+      if(n < t)
+         throw Internal_Error("BigInt division word sizes");
 
       q.get_reg().resize(n - t + 1);
       if(n <= t)
