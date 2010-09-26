@@ -36,7 +36,7 @@ SecureVector<byte> hash_of(const SecureVector<byte>& content,
 * Find a cert based on SignerIdentifier
 */
 std::vector<X509_Certificate> get_cert(BER_Decoder& signer_info,
-                                       X509_Store& store)
+                                       X509_Store&)
    {
    BER_Object id = signer_info.get_next_object();
 
