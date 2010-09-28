@@ -2,6 +2,10 @@ define SHA1_AMD64
 
 load_on asm_ok
 
+<arch>
+amd64
+</arch>
+
 <requires>
 asm_engine
 asm_amd64

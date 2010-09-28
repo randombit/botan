@@ -2,6 +2,10 @@ define SHA1_IA32
 
 load_on asm_ok
 
+<arch>
+ia32
+</arch>
+
 <requires>
 asm_ia32
 sha1

@@ -2,6 +2,10 @@ define MD5_IA32
 
 load_on asm_ok
 
+<arch>
+ia32
+</arch>
+
 <requires>
 asm_ia32
 md5

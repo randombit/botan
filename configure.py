@@ -1071,12 +1071,12 @@ def choose_modules_to_use(modules, archinfo, options):
         elif modname in options.enabled_modules:
             to_load.append(modname) # trust the user
 
-        elif not module.compatible_cpu(archinfo, options):
-            cannot_use_because(modname, 'incompatible CPU')
         elif not module.compatible_os(options.os):
             cannot_use_because(modname, 'incompatible OS')
         elif not module.compatible_compiler(options.compiler):
             cannot_use_because(modname, 'incompatible compiler')
+        elif not module.compatible_cpu(archinfo, options):
+            cannot_use_because(modname, 'incompatible CPU')
         elif not module.tr1_ok(options.with_tr1):
             cannot_use_because(modname, 'missing TR1')
 
