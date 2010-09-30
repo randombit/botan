@@ -60,6 +60,7 @@
 
 #if defined(BOTAN_HAS_SHA2_32)
   #include <botan/sha2_32.h>
+#endif
 
 #if defined(BOTAN_HAS_SHA2_64)
   #include <botan/sha2_64.h>
