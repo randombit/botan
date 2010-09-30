@@ -8,10 +8,11 @@
 #ifndef BOTAN_X509_PUBLIC_KEY_H__
 #define BOTAN_X509_PUBLIC_KEY_H__
 
-#include <botan/pipe.h>
 #include <botan/pk_keys.h>
 #include <botan/alg_id.h>
 #include <botan/pubkey_enums.h>
+#include <botan/pipe.h>
+#include <string>
 
 namespace Botan {
 
@@ -83,8 +84,8 @@ BOTAN_DLL Key_Constraints find_constraints(const Public_Key& pub_key,
 * @param encoding the encoding type to use
 */
 inline void encode(const Public_Key& key,
-                      Pipe& pipe,
-                      X509_Encoding encoding = PEM)
+                   Pipe& pipe,
+                   X509_Encoding encoding = PEM)
    {
    if(encoding == PEM)
       pipe.write(X509::PEM_encode(key));

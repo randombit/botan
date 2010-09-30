@@ -324,7 +324,8 @@ PointGFp operator*(const BigInt& scalar, const PointGFp& point)
 
    while(bits_left >= window_size)
       {
-      u32bit nibble = scalar.get_substring(bits_left - window_size, window_size);
+      u32bit nibble = scalar.get_substring(bits_left - window_size,
+                                           window_size);
 
       for(u32bit i = 0; i != window_size; ++i)
          H.mult2(ws);
