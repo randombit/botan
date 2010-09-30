@@ -6,7 +6,7 @@ ctr
 hmac
 rng
 serpent
-sha2
+sha2_64
 base64
 pbkdf2
 pem

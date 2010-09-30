@@ -2,6 +2,6 @@ define FORMAT_PRESERVING_ENCRYPTION
 
 <requires>
 hmac
-sha2
+sha2_32
 bigint
 </requires>
