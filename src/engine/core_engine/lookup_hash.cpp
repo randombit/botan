@@ -58,8 +58,10 @@
   #include <botan/sha160.h>
 #endif
 
-#if defined(BOTAN_HAS_SHA2)
+#if defined(BOTAN_HAS_SHA2_32)
   #include <botan/sha2_32.h>
+
+#if defined(BOTAN_HAS_SHA2_64)
   #include <botan/sha2_64.h>
 #endif
 
@@ -151,11 +153,14 @@ HashFunction* Core_Engine::find_hash(const SCAN_Name& request,
       return new SHA_160;
 #endif
 
-#if defined(BOTAN_HAS_SHA2)
+#if defined(BOTAN_HAS_SHA2_32)
    if(request.algo_name() == "SHA-224")
       return new SHA_224;
    if(request.algo_name() == "SHA-256")
       return new SHA_256;
+#endif
+
+#if defined(BOTAN_HAS_SHA2_64)
    if(request.algo_name() == "SHA-384")
       return new SHA_384;
    if(request.algo_name() == "SHA-512")
