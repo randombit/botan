@@ -231,7 +231,7 @@ same key; that is very much a no-no.
 
    // now read the MAC from message #2. Message numbers start from 0
    SecureVector<byte> hmac = pipe.read_all(1);
-   outfile.write((const char*)hmac.ptr(), hmac.size());
+   outfile.write((const char*)&hmac[0], hmac.size());
 \end{verbatim}
 
 The receiver can check the size of the file (in bytes), and since it knows how
@@ -302,14 +302,14 @@ made:
                 )
       );
 
-   outfile.write((const char*)the_salt.ptr(), the_salt.size());
+   outfile.write((const char*)&the_salt[0], the_salt.size());
 
    pipe.start_msg();
    infile >> pipe;
    pipe.end_msg();
 
    SecureVector<byte> hmac = pipe.read_all(1);
-   outfile.write((const char*)hmac.ptr(), hmac.size());
+   outfile.write((const char*)&hmac[0], hmac.size());
 \end{verbatim}
 
 \subsubsection{Another buffering technique}
@@ -324,7 +324,7 @@ that memory pressure is reduced in the case of large inputs.
    SecureBuffer<byte, 1024> buffer;
    while(infile.good())
       {
-      infile.read((char*)buffer.ptr(), buffer.size());
+      infile.read((char*)&buffer[0], buffer.size());
       u32bit got_from_infile = infile.gcount();
       pipe.write(buffer, got_from_infile);
 
@@ -334,7 +334,7 @@ that memory pressure is reduced in the case of large inputs.
       while(pipe.remaining() > 0)
          {
          u32bit buffered = pipe.read(buffer, buffer.size());
-         outfile.write((const char*)buffer.ptr(), buffered);
+         outfile.write((const char*)&buffer[0], buffered);
          }
       }
    if(infile.bad() || (infile.fail() && !infile.eof()))
