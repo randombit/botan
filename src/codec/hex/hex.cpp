@@ -168,7 +168,7 @@ SecureVector<byte> hex_decode(const char input[],
                               u32bit input_length,
                               bool ignore_ws)
    {
-   SecureVector<byte> bin(input_length / 2);
+   SecureVector<byte> bin(1 + input_length / 2);
 
    u32bit written = hex_decode(&bin[0],
                                input,
