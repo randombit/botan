@@ -28,7 +28,7 @@ OctetString::OctetString(RandomNumberGenerator& rng,
 */
 void OctetString::change(const std::string& hex_string)
    {
-   SecureVector<byte> decoded(hex_string.length() / 2);
+   SecureVector<byte> decoded(1 + hex_string.length() / 2);
 
    u32bit written = hex_decode(&decoded[0], hex_string);
 
