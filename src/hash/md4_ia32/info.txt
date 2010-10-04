@@ -31,5 +31,6 @@ solaris
 
 <requires>
 asm_ia32
+eng_ia32
 md4
 </requires>
