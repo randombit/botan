@@ -16,7 +16,6 @@ version.cpp
 <header:internal>
 assert.h
 bit_ops.h
-debug.h
 mlock.h
 prefetch.h
 rounding.h
