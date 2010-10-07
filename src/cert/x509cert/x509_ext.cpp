@@ -34,6 +34,7 @@ Certificate_Extension* Extensions::get_extension(const OID& oid)
    X509_EXTENSION("X509v3.SubjectAlternativeName", Subject_Alternative_Name);
    X509_EXTENSION("X509v3.CRLNumber", CRL_Number);
    X509_EXTENSION("X509v3.CertificatePolicies", Certificate_Policies);
+   X509_EXTENSION("X509v3.ReasonCode", CRL_ReasonCode);
 
    return 0;
    }
@@ -109,6 +110,7 @@ void Extensions::decode_from(BER_Decoder& from_source)
    extensions.clear();
 
    BER_Decoder sequence = from_source.start_cons(SEQUENCE);
+
    while(sequence.more_items())
       {
       OID oid;

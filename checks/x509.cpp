@@ -220,7 +220,6 @@ void do_x509_tests(RandomNumberGenerator& rng)
    if(store.validate_cert(user2_cert) != CERT_IS_REVOKED)
       std::cout << "\nFAILED: User cert #2 was not revoked" << std::endl;
 
-#if 0
    revoked.clear();
    revoked.push_back(CRL_Entry(user1_cert, REMOVE_FROM_CRL));
    X509_CRL crl3 = ca.update_crl(crl2, revoked, rng);
@@ -230,7 +229,6 @@ void do_x509_tests(RandomNumberGenerator& rng)
 
    if(store.validate_cert(user1_cert) != VERIFIED)
       std::cout << "\nFAILED: User cert #1 was not un-revoked" << std::endl;
-#endif
 
    check_against_copy(ca_key, rng);
    check_against_copy(user1_key, rng);

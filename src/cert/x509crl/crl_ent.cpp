@@ -58,14 +58,6 @@ bool operator!=(const CRL_Entry& a1, const CRL_Entry& a2)
    }
 
 /*
-* Compare two CRL_Entrys
-*/
-bool operator<(const CRL_Entry& a1, const CRL_Entry& a2)
-   {
-   return (a1.expire_time().cmp(a2.expire_time()) < 0);
-   }
-
-/*
 * DER encode a CRL_Entry
 */
 void CRL_Entry::encode_into(DER_Encoder& der) const
