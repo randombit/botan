@@ -8,7 +8,6 @@
 #include <botan/tls_record.h>
 #include <botan/lookup.h>
 #include <botan/loadstor.h>
-#include <botan/internal/debug.h>
 
 namespace Botan {
 
