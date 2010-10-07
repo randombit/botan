@@ -1,6 +1,7 @@
 
 * 1.9.11-dev, ????-??-??
  - Fix SSL handshake failures when using RC4 ciphersuites
+ - Fix a number of CRL encoding and decoding bugs
  - Use small tables in the first round of AES
  - Add hex encoding/decoding functions that can be used without a Pipe
  - Add support for dynamic engine loading on Windows

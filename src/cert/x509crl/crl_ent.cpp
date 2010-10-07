@@ -1,6 +1,6 @@
 /*
 * CRL Entry
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -77,7 +77,9 @@ void CRL_Entry::encode_into(DER_Encoder& der) const
    der.start_cons(SEQUENCE)
       .encode(BigInt::decode(serial))
          .encode(time)
-         .encode(extensions)
+         .start_cons(SEQUENCE)
+            .encode(extensions)
+          .end_cons()
       .end_cons();
    }
 
@@ -87,19 +89,22 @@ void CRL_Entry::encode_into(DER_Encoder& der) const
 void CRL_Entry::decode_from(BER_Decoder& source)
    {
    BigInt serial_number_bn;
+   reason = UNSPECIFIED;
 
-   source.start_cons(SEQUENCE)
-      .decode(serial_number_bn)
-      .decode(time);
+   BER_Decoder entry = source.start_cons(SEQUENCE);
 
-   if(source.more_items())
+   entry.decode(serial_number_bn).decode(time);
+
+   if(entry.more_items())
       {
       Extensions extensions(throw_on_unknown_critical);
-      source.decode(extensions);
+      entry.decode(extensions);
       Data_Store info;
       extensions.contents_to(info, info);
       reason = CRL_Code(info.get1_u32bit("X509v3.CRLReasonCode"));
       }
+
+   entry.end_cons();
 
    serial = BigInt::encode(serial_number_bn);
    }
