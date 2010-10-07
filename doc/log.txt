@@ -1,5 +1,6 @@
 
 * 1.8.11, ????-??-??
+ - Fix a number of CRL encoding and decoding bugs
  - When building a debug library under VC++, use the debug runtime
  - Fix compilation under Sun Studio on Linux and Solaris
  - The Perl build script has been removed in this release
