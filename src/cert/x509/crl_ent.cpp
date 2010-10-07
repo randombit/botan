@@ -40,13 +40,9 @@ CRL_Entry::CRL_Entry(const X509_Certificate& cert, CRL_Code why) :
 */
 bool operator==(const CRL_Entry& a1, const CRL_Entry& a2)
    {
-   if(a1.serial_number() != a2.serial_number())
-      return false;
-   if(a1.expire_time() != a2.expire_time())
-      return false;
-   if(a1.reason_code() != a2.reason_code())
-      return false;
-   return true;
+   return (a1.serial_number() == a2.serial_number() &&
+           a1.expire_time() == a2.expire_time() &&
+           a1.reason_code() == a2.reason_code());
    }
 
 /*
@@ -55,14 +51,6 @@ bool operator==(const CRL_Entry& a1, const CRL_Entry& a2)
 bool operator!=(const CRL_Entry& a1, const CRL_Entry& a2)
    {
    return !(a1 == a2);
-   }
-
-/*
-* Compare two CRL_Entrys
-*/
-bool operator<(const CRL_Entry& a1, const CRL_Entry& a2)
-   {
-   return (a1.expire_time().cmp(a2.expire_time()) < 0);
    }
 
 /*

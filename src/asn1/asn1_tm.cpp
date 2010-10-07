@@ -118,18 +118,18 @@ void X509_Time::set_to(const std::string& time_str)
 /*
 * Set the time with an ISO time format string
 */
-void X509_Time::set_to(const std::string& t_spec, ASN1_Tag tag)
+void X509_Time::set_to(const std::string& t_spec, ASN1_Tag spec_tag)
    {
-   if(tag != GENERALIZED_TIME && tag != UTC_TIME)
-      throw Invalid_Argument("X509_Time: Invalid tag " + to_string(tag));
-   if(tag == GENERALIZED_TIME && t_spec.size() != 13 && t_spec.size() != 15)
+   if(spec_tag != GENERALIZED_TIME && spec_tag != UTC_TIME)
+      throw Invalid_Argument("X509_Time: Invalid tag " + to_string(spec_tag));
+   if(spec_tag == GENERALIZED_TIME && t_spec.size() != 13 && t_spec.size() != 15)
       throw Invalid_Argument("Invalid GeneralizedTime: " + t_spec);
-   if(tag == UTC_TIME && t_spec.size() != 11 && t_spec.size() != 13)
+   if(spec_tag == UTC_TIME && t_spec.size() != 11 && t_spec.size() != 13)
       throw Invalid_Argument("Invalid UTCTime: " + t_spec);
    if(t_spec[t_spec.size()-1] != 'Z')
       throw Invalid_Argument("Invalid time encoding: " + t_spec);
 
-   const u32bit YEAR_SIZE = (tag == UTC_TIME) ? 2 : 4;
+   const u32bit YEAR_SIZE = (spec_tag == UTC_TIME) ? 2 : 4;
 
    std::vector<std::string> params;
    std::string current;
@@ -155,8 +155,9 @@ void X509_Time::set_to(const std::string& t_spec, ASN1_Tag tag)
    hour   = to_u32bit(params[3]);
    minute = to_u32bit(params[4]);
    second = (params.size() == 6) ? to_u32bit(params[5]) : 0;
+   tag    = spec_tag;
 
-   if(tag == UTC_TIME)
+   if(spec_tag == UTC_TIME)
       {
       if(year >= 50) year += 1900;
       else           year += 2000;
@@ -173,6 +174,7 @@ void X509_Time::encode_into(DER_Encoder& der) const
    {
    if(tag != GENERALIZED_TIME && tag != UTC_TIME)
       throw Invalid_Argument("X509_Time: Bad encoding tag");
+
    der.add_object(tag, UNIVERSAL,
                   Charset::transcode(as_string(),
                                      LOCAL_CHARSET, LATIN1_CHARSET));

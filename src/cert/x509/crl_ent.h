@@ -68,11 +68,6 @@ BOTAN_DLL bool operator==(const CRL_Entry&, const CRL_Entry&);
 */
 BOTAN_DLL bool operator!=(const CRL_Entry&, const CRL_Entry&);
 
-/**
-* Order two entries based on the revocation date.
-*/
-BOTAN_DLL bool operator<(const CRL_Entry&, const CRL_Entry&);
-
 }
 
 #endif

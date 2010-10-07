@@ -143,38 +143,12 @@ X509_CRL X509_CA::update_crl(const X509_CRL& crl,
                              RandomNumberGenerator& rng,
                              u32bit next_update) const
    {
-   std::vector<CRL_Entry> already_revoked = crl.get_revoked();
-   std::vector<CRL_Entry> all_revoked;
+   std::vector<CRL_Entry> revoked = crl.get_revoked();
 
-   X509_Store store;
-   store.add_cert(cert, true);
-   if(store.add_crl(crl) != VERIFIED)
-      throw Invalid_Argument("X509_CA::update_crl: Invalid CRL provided");
+   std::copy(new_revoked.begin(), new_revoked.end(),
+             std::back_inserter(revoked));
 
-   std::set<SecureVector<byte> > removed_from_crl;
-   for(u32bit j = 0; j != new_revoked.size(); ++j)
-      {
-      if(new_revoked[j].reason_code() == DELETE_CRL_ENTRY)
-         removed_from_crl.insert(new_revoked[j].serial_number());
-      else
-         all_revoked.push_back(new_revoked[j]);
-      }
-
-   for(u32bit j = 0; j != already_revoked.size(); ++j)
-      {
-      std::set<SecureVector<byte> >::const_iterator i;
-      i = removed_from_crl.find(already_revoked[j].serial_number());
-
-      if(i == removed_from_crl.end())
-         all_revoked.push_back(already_revoked[j]);
-      }
-   std::sort(all_revoked.begin(), all_revoked.end());
-
-   std::vector<CRL_Entry> cert_list;
-   std::unique_copy(all_revoked.begin(), all_revoked.end(),
-                    std::back_inserter(cert_list));
-
-   return make_crl(cert_list, crl.crl_number() + 1, next_update, rng);
+   return make_crl(revoked, crl.crl_number() + 1, next_update, rng);
    }
 
 /*
