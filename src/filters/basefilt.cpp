@@ -30,9 +30,9 @@ Chain::Chain(Filter* f1, Filter* f2, Filter* f3, Filter* f4)
 /*
 * Chain Constructor
 */
-Chain::Chain(Filter* filters[], u32bit count)
+Chain::Chain(Filter* filters[], size_t count)
    {
-   for(u32bit j = 0; j != count; ++j)
+   for(size_t j = 0; j != count; ++j)
       if(filters[j])
          {
          attach(filters[j]);
@@ -57,7 +57,7 @@ Fork::Fork(Filter* f1, Filter* f2, Filter* f3, Filter* f4)
 /*
 * Fork Constructor
 */
-Fork::Fork(Filter* filters[], u32bit count)
+Fork::Fork(Filter* filters[], size_t count)
    {
    set_next(filters, count);
    }

@@ -29,7 +29,7 @@ class BOTAN_DLL DataSource
       * @return length in bytes that was actually read and put
       * into out
       */
-      virtual u32bit read(byte out[], u32bit length) = 0;
+      virtual size_t read(byte out[], size_t length) = 0;
 
       /**
       * Read from the source but do not modify the internal
@@ -42,8 +42,8 @@ class BOTAN_DLL DataSource
       * @return length in bytes that was actually read and put
       * into out
       */
-      virtual u32bit peek(byte out[], u32bit length,
-                          u32bit peek_offset) const = 0;
+      virtual size_t peek(byte out[], size_t length,
+                          size_t peek_offset) const = 0;
 
       /**
       * Test whether the source still has data that can be read.
@@ -62,7 +62,7 @@ class BOTAN_DLL DataSource
       * @return length in bytes that was actually read and put
       * into out
       */
-      u32bit read_byte(byte& out);
+      size_t read_byte(byte& out);
 
       /**
       * Peek at one byte.
@@ -70,14 +70,14 @@ class BOTAN_DLL DataSource
       * @return length in bytes that was actually read and put
       * into out
       */
-      u32bit peek_byte(byte& out) const;
+      size_t peek_byte(byte& out) const;
 
       /**
       * Discard the next N bytes of the data
       * @param N the number of bytes to discard
       * @return number of bytes actually discarded
       */
-      u32bit discard_next(u32bit N);
+      size_t discard_next(size_t N);
 
       DataSource() {}
       virtual ~DataSource() {}
@@ -92,8 +92,8 @@ class BOTAN_DLL DataSource
 class BOTAN_DLL DataSource_Memory : public DataSource
    {
    public:
-      u32bit read(byte[], u32bit);
-      u32bit peek(byte[], u32bit, u32bit) const;
+      size_t read(byte[], size_t);
+      size_t peek(byte[], size_t, size_t) const;
       bool end_of_data() const;
 
       /**
@@ -107,7 +107,7 @@ class BOTAN_DLL DataSource_Memory : public DataSource
       * @param in the byte array to read from
       * @param length the length of the byte array
       */
-      DataSource_Memory(const byte in[], u32bit length);
+      DataSource_Memory(const byte in[], size_t length);
 
       /**
       * Construct a memory source that reads from a MemoryRegion
@@ -116,7 +116,7 @@ class BOTAN_DLL DataSource_Memory : public DataSource
       DataSource_Memory(const MemoryRegion<byte>& in);
    private:
       SecureVector<byte> source;
-      u32bit offset;
+      size_t offset;
    };
 
 /**
@@ -125,8 +125,8 @@ class BOTAN_DLL DataSource_Memory : public DataSource
 class BOTAN_DLL DataSource_Stream : public DataSource
    {
    public:
-      u32bit read(byte[], u32bit);
-      u32bit peek(byte[], u32bit, u32bit) const;
+      size_t read(byte[], size_t);
+      size_t peek(byte[], size_t, size_t) const;
       bool end_of_data() const;
       std::string id() const;
 
@@ -146,7 +146,7 @@ class BOTAN_DLL DataSource_Stream : public DataSource
 
       std::istream* source_p;
       std::istream& source;
-      u32bit total_read;
+      size_t total_read;
    };
 
 }

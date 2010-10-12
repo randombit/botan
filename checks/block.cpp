@@ -27,7 +27,7 @@ class ECB_Encryption_ErrorCheck : public Filter
       std::string name() const
          { return "ECB_ErrCheck(" + cipher->name() + ")"; }
 
-      void write(const byte[], u32bit);
+      void write(const byte[], size_t);
 
       void end_msg();
 
@@ -61,7 +61,7 @@ class ECB_Encryption_ErrorCheck : public Filter
       HashFunction* input_hash, *decrypt_hash;
    };
 
-void ECB_Encryption_ErrorCheck::write(const byte input[], u32bit length)
+void ECB_Encryption_ErrorCheck::write(const byte input[], size_t length)
    {
    input_hash->update(input, length);
    buffer.copy(position, input, length);

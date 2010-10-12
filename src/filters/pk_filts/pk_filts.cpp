@@ -12,7 +12,7 @@ namespace Botan {
 /*
 * Append to the buffer
 */
-void PK_Encryptor_Filter::write(const byte input[], u32bit length)
+void PK_Encryptor_Filter::write(const byte input[], size_t length)
    {
    buffer += std::make_pair(input, length);
    }
@@ -29,7 +29,7 @@ void PK_Encryptor_Filter::end_msg()
 /*
 * Append to the buffer
 */
-void PK_Decryptor_Filter::write(const byte input[], u32bit length)
+void PK_Decryptor_Filter::write(const byte input[], size_t length)
    {
    buffer += std::make_pair(input, length);
    }
@@ -46,7 +46,7 @@ void PK_Decryptor_Filter::end_msg()
 /*
 * Add more data
 */
-void PK_Signer_Filter::write(const byte input[], u32bit length)
+void PK_Signer_Filter::write(const byte input[], size_t length)
    {
    signer->update(input, length);
    }
@@ -62,7 +62,7 @@ void PK_Signer_Filter::end_msg()
 /*
 * Add more data
 */
-void PK_Verifier_Filter::write(const byte input[], u32bit length)
+void PK_Verifier_Filter::write(const byte input[], size_t length)
    {
    verifier->update(input, length);
    }
@@ -81,7 +81,7 @@ void PK_Verifier_Filter::end_msg()
 /*
 * Set the signature to check
 */
-void PK_Verifier_Filter::set_signature(const byte sig[], u32bit length)
+void PK_Verifier_Filter::set_signature(const byte sig[], size_t length)
    {
    signature.set(sig, length);
    }
@@ -98,7 +98,7 @@ void PK_Verifier_Filter::set_signature(const MemoryRegion<byte>& sig)
 * PK_Verifier_Filter Constructor
 */
 PK_Verifier_Filter::PK_Verifier_Filter(PK_Verifier* v, const byte sig[],
-                                       u32bit length) :
+                                       size_t length) :
    verifier(v), signature(sig, length)
    {
    }

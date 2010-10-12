@@ -14,7 +14,7 @@ namespace Botan {
 /*
 * Read data from a message
 */
-u32bit Output_Buffers::read(byte output[], u32bit length,
+size_t Output_Buffers::read(byte output[], size_t length,
                             Pipe::message_id msg)
    {
    SecureQueue* q = get(msg);
@@ -26,8 +26,8 @@ u32bit Output_Buffers::read(byte output[], u32bit length,
 /*
 * Peek at data in a message
 */
-u32bit Output_Buffers::peek(byte output[], u32bit length,
-                            u32bit stream_offset,
+size_t Output_Buffers::peek(byte output[], size_t length,
+                            size_t stream_offset,
                             Pipe::message_id msg) const
    {
    SecureQueue* q = get(msg);
@@ -39,7 +39,7 @@ u32bit Output_Buffers::peek(byte output[], u32bit length,
 /*
 * Check available bytes in a message
 */
-u32bit Output_Buffers::remaining(Pipe::message_id msg) const
+size_t Output_Buffers::remaining(Pipe::message_id msg) const
    {
    SecureQueue* q = get(msg);
    if(q)
@@ -113,7 +113,7 @@ Output_Buffers::Output_Buffers()
 */
 Output_Buffers::~Output_Buffers()
    {
-   for(u32bit j = 0; j != buffers.size(); ++j)
+   for(size_t j = 0; j != buffers.size(); ++j)
       delete buffers[j];
    }
 

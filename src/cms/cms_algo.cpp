@@ -33,7 +33,7 @@ SecureVector<byte> do_rfc3217_wrap(RandomNumberGenerator& rng,
       public:
          std::string name() const { return "Fip_Bytes"; }
 
-         void write(const byte data[], u32bit length)
+         void write(const byte data[], size_t length)
             {
             buf += std::make_pair(data, length);
             }

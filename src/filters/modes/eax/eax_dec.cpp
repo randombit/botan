@@ -16,7 +16,7 @@ namespace Botan {
 * EAX_Decryption Constructor
 */
 EAX_Decryption::EAX_Decryption(BlockCipher* ciph,
-                               u32bit tag_size) :
+                               size_t tag_size) :
    EAX_Base(ciph, tag_size)
    {
    queue.resize(2*TAG_SIZE + DEFAULT_BUFFERSIZE);
@@ -29,7 +29,7 @@ EAX_Decryption::EAX_Decryption(BlockCipher* ciph,
 EAX_Decryption::EAX_Decryption(BlockCipher* ciph,
                                const SymmetricKey& key,
                                const InitializationVector& iv,
-                               u32bit tag_size) :
+                               size_t tag_size) :
    EAX_Base(ciph, tag_size)
    {
    set_key(key);
@@ -41,11 +41,11 @@ EAX_Decryption::EAX_Decryption(BlockCipher* ciph,
 /*
 * Decrypt in EAX mode
 */
-void EAX_Decryption::write(const byte input[], u32bit length)
+void EAX_Decryption::write(const byte input[], size_t length)
    {
    while(length)
       {
-      const u32bit copied = std::min<u32bit>(length, queue.size() - queue_end);
+      const size_t copied = std::min<size_t>(length, queue.size() - queue_end);
 
       queue.copy(queue_end, input, copied);
       input += copied;
@@ -54,7 +54,7 @@ void EAX_Decryption::write(const byte input[], u32bit length)
 
       while((queue_end - queue_start) > TAG_SIZE)
          {
-         u32bit removed = (queue_end - queue_start) - TAG_SIZE;
+         size_t removed = (queue_end - queue_start) - TAG_SIZE;
          do_write(&queue[queue_start], removed);
          queue_start += removed;
          }
@@ -74,11 +74,11 @@ void EAX_Decryption::write(const byte input[], u32bit length)
 /*
 * Decrypt in EAX mode
 */
-void EAX_Decryption::do_write(const byte input[], u32bit length)
+void EAX_Decryption::do_write(const byte input[], size_t length)
    {
    while(length)
       {
-      u32bit copied = std::min<u32bit>(length, ctr_buf.size());
+      size_t copied = std::min<size_t>(length, ctr_buf.size());
 
       /*
       Process same block with cmac and ctr at the same time to
@@ -102,7 +102,7 @@ void EAX_Decryption::end_msg()
 
    SecureVector<byte> data_mac = cmac->final();
 
-   for(u32bit j = 0; j != TAG_SIZE; ++j)
+   for(size_t j = 0; j != TAG_SIZE; ++j)
       if(queue[queue_start+j] != (data_mac[j] ^ nonce_mac[j] ^ header_mac[j]))
          throw Decoding_Error(name() + ": Message authentication failure");
 

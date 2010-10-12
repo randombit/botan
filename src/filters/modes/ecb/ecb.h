@@ -26,7 +26,7 @@ class BOTAN_DLL ECB_Encryption : public Keyed_Filter,
 
       void set_key(const SymmetricKey& key) { cipher->set_key(key); }
 
-      bool valid_keylength(u32bit key_len) const
+      bool valid_keylength(size_t key_len) const
          { return cipher->valid_keylength(key_len); }
 
       ECB_Encryption(BlockCipher* ciph,
@@ -38,10 +38,10 @@ class BOTAN_DLL ECB_Encryption : public Keyed_Filter,
 
       ~ECB_Encryption();
    private:
-      void buffered_block(const byte input[], u32bit input_length);
-      void buffered_final(const byte input[], u32bit input_length);
+      void buffered_block(const byte input[], size_t input_length);
+      void buffered_final(const byte input[], size_t input_length);
 
-      void write(const byte input[], u32bit input_length);
+      void write(const byte input[], size_t input_length);
       void end_msg();
 
       BlockCipher* cipher;
@@ -60,7 +60,7 @@ class BOTAN_DLL ECB_Decryption : public Keyed_Filter,
 
       void set_key(const SymmetricKey& key) { cipher->set_key(key); }
 
-      bool valid_keylength(u32bit key_len) const
+      bool valid_keylength(size_t key_len) const
          { return cipher->valid_keylength(key_len); }
 
       ECB_Decryption(BlockCipher* ciph,
@@ -72,10 +72,10 @@ class BOTAN_DLL ECB_Decryption : public Keyed_Filter,
 
       ~ECB_Decryption();
    private:
-      void buffered_block(const byte input[], u32bit input_length);
-      void buffered_final(const byte input[], u32bit input_length);
+      void buffered_block(const byte input[], size_t input_length);
+      void buffered_final(const byte input[], size_t input_length);
 
-      void write(const byte input[], u32bit input_length);
+      void write(const byte input[], size_t input_length);
       void end_msg();
 
       BlockCipher* cipher;

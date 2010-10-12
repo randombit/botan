@@ -65,7 +65,7 @@ class PBKDF_Filter : public Filter
    public:
       std::string name() const { return pbkdf->name(); }
 
-      void write(const byte in[], u32bit len)
+      void write(const byte in[], size_t len)
          { passphrase += std::string(reinterpret_cast<const char*>(in), len); }
 
       void end_msg()
@@ -98,7 +98,7 @@ class RNG_Filter : public Filter
    public:
       std::string name() const { return rng->name(); }
 
-      void write(const byte[], u32bit);
+      void write(const byte[], size_t);
 
       RNG_Filter(RandomNumberGenerator* r) : rng(r) {}
       ~RNG_Filter() { delete rng; }
@@ -111,7 +111,7 @@ class KDF_Filter : public Filter
    public:
       std::string name() const { return "KDF_Filter"; }
 
-      void write(const byte in[], u32bit len)
+      void write(const byte in[], size_t len)
          { secret += std::make_pair(in, len); }
 
       void end_msg()
@@ -150,7 +150,7 @@ Filter* lookup_pbkdf(const std::string& algname,
    return 0;
    }
 
-void RNG_Filter::write(const byte[], u32bit length)
+void RNG_Filter::write(const byte[], size_t length)
    {
    if(length)
       {

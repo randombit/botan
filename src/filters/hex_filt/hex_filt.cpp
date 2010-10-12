@@ -17,12 +17,12 @@ namespace Botan {
 /**
 * Size used for internal buffer in hex encoder/decoder
 */
-const u32bit HEX_CODEC_BUFFER_SIZE = 256;
+const size_t HEX_CODEC_BUFFER_SIZE = 256;
 
 /*
 * Hex_Encoder Constructor
 */
-Hex_Encoder::Hex_Encoder(bool breaks, u32bit length, Case c) :
+Hex_Encoder::Hex_Encoder(bool breaks, size_t length, Case c) :
    casing(c), line_length(breaks ? length : 0)
    {
    in.resize(HEX_CODEC_BUFFER_SIZE);
@@ -43,7 +43,7 @@ Hex_Encoder::Hex_Encoder(Case c) : casing(c), line_length(0)
 /*
 * Encode and send a block
 */
-void Hex_Encoder::encode_and_send(const byte block[], u32bit length)
+void Hex_Encoder::encode_and_send(const byte block[], size_t length)
    {
    hex_encode(reinterpret_cast<char*>(&out[0]),
               block, length,
@@ -53,10 +53,10 @@ void Hex_Encoder::encode_and_send(const byte block[], u32bit length)
       send(out, 2*length);
    else
       {
-      u32bit remaining = 2*length, offset = 0;
+      size_t remaining = 2*length, offset = 0;
       while(remaining)
          {
-         u32bit sent = std::min(line_length - counter, remaining);
+         size_t sent = std::min(line_length - counter, remaining);
          send(&out[offset], sent);
          counter += sent;
          remaining -= sent;
@@ -73,7 +73,7 @@ void Hex_Encoder::encode_and_send(const byte block[], u32bit length)
 /*
 * Convert some data into hex format
 */
-void Hex_Encoder::write(const byte input[], u32bit length)
+void Hex_Encoder::write(const byte input[], size_t length)
    {
    in.copy(position, input, length);
    if(position + length >= in.size())
@@ -117,16 +117,16 @@ Hex_Decoder::Hex_Decoder(Decoder_Checking c) : checking(c)
 /*
 * Convert some data from hex format
 */
-void Hex_Decoder::write(const byte input[], u32bit length)
+void Hex_Decoder::write(const byte input[], size_t length)
    {
    while(length)
       {
-      u32bit to_copy = std::min<u32bit>(length, in.size() - position);
+      size_t to_copy = std::min<size_t>(length, in.size() - position);
       copy_mem(&in[position], input, to_copy);
       position += to_copy;
 
       size_t consumed = 0;
-      u32bit written = hex_decode(&out[0],
+      size_t written = hex_decode(&out[0],
                                   reinterpret_cast<const char*>(&in[0]),
                                   position,
                                   consumed,
@@ -153,7 +153,7 @@ void Hex_Decoder::write(const byte input[], u32bit length)
 void Hex_Decoder::end_msg()
    {
    size_t consumed = 0;
-   u32bit written = hex_decode(&out[0],
+   size_t written = hex_decode(&out[0],
                                reinterpret_cast<const char*>(&in[0]),
                                position,
                                consumed,

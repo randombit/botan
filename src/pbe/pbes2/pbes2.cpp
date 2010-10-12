@@ -24,11 +24,11 @@ namespace Botan {
 /*
 * Encrypt some bytes using PBES2
 */
-void PBE_PKCS5v20::write(const byte input[], u32bit length)
+void PBE_PKCS5v20::write(const byte input[], size_t length)
    {
    while(length)
       {
-      u32bit put = std::min(DEFAULT_BUFFERSIZE, length);
+      size_t put = std::min(DEFAULT_BUFFERSIZE, length);
       pipe.write(input, length);
       flush_pipe(true);
       length -= put;
@@ -75,7 +75,7 @@ void PBE_PKCS5v20::flush_pipe(bool safe_to_skip)
    SecureVector<byte> buffer(DEFAULT_BUFFERSIZE);
    while(pipe.remaining())
       {
-      u32bit got = pipe.read(&buffer[0], buffer.size());
+      size_t got = pipe.read(&buffer[0], buffer.size());
       send(buffer, got);
       }
    }

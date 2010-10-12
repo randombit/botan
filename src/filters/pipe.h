@@ -28,7 +28,7 @@ class BOTAN_DLL Pipe : public DataSource
       /*
       * An opaque type that identifies a message in this Pipe
       */
-      typedef u32bit message_id;
+      typedef size_t message_id;
 
       /**
       * Exception if you use an invalid message as an argument to
@@ -61,7 +61,7 @@ class BOTAN_DLL Pipe : public DataSource
       * @param in the byte array to write
       * @param length the length of the byte array in
       */
-      void write(const byte in[], u32bit length);
+      void write(const byte in[], size_t length);
 
       /**
       * Write input to the pipe, i.e. to its first filter.
@@ -92,7 +92,7 @@ class BOTAN_DLL Pipe : public DataSource
       * @param in the byte array containing the data to write
       * @param length the length of the byte array to write
       */
-      void process_msg(const byte in[], u32bit length);
+      void process_msg(const byte in[], size_t length);
 
       /**
       * Perform start_msg(), write() and end_msg() sequentially.
@@ -118,7 +118,7 @@ class BOTAN_DLL Pipe : public DataSource
       * for which the information is desired
       * @return number of bytes that can still be read
       */
-      u32bit remaining(message_id msg = DEFAULT_MESSAGE) const;
+      size_t remaining(message_id msg = DEFAULT_MESSAGE) const;
 
       /**
       * Read the default message from the pipe. Moves the internal
@@ -129,7 +129,7 @@ class BOTAN_DLL Pipe : public DataSource
       * @param length the length of the byte array output
       * @return number of bytes actually read into output
       */
-      u32bit read(byte output[], u32bit length);
+      size_t read(byte output[], size_t length);
 
       /**
       * Read a specified message from the pipe. Moves the internal
@@ -140,7 +140,7 @@ class BOTAN_DLL Pipe : public DataSource
       * @param msg the number identifying the message to read from
       * @return number of bytes actually read into output
       */
-      u32bit read(byte output[], u32bit length, message_id msg);
+      size_t read(byte output[], size_t length, message_id msg);
 
       /**
       * Read a single byte from the pipe. Moves the internal offset so
@@ -151,7 +151,7 @@ class BOTAN_DLL Pipe : public DataSource
       * @param msg the message to read from
       * @return number of bytes actually read into output
       */
-      u32bit read(byte& output, message_id msg = DEFAULT_MESSAGE);
+      size_t read(byte& output, message_id msg = DEFAULT_MESSAGE);
 
       /**
       * Read the full contents of the pipe.
@@ -175,7 +175,7 @@ class BOTAN_DLL Pipe : public DataSource
       * @param offset the offset from the current position in message
       * @return number of bytes actually peeked and written into output
       */
-      u32bit peek(byte output[], u32bit length, u32bit offset) const;
+      size_t peek(byte output[], size_t length, size_t offset) const;
 
       /** Read from the specified message but do not modify the
       * internal offset. Consecutive calls to peek() will return
@@ -186,8 +186,8 @@ class BOTAN_DLL Pipe : public DataSource
       * @param msg the number identifying the message to peek from
       * @return number of bytes actually peeked and written into output
       */
-      u32bit peek(byte output[], u32bit length,
-                  u32bit offset, message_id msg) const;
+      size_t peek(byte output[], size_t length,
+                  size_t offset, message_id msg) const;
 
       /** Read a single byte from the specified message but do not
       * modify the internal offset. Consecutive calls to peek() will
@@ -197,13 +197,13 @@ class BOTAN_DLL Pipe : public DataSource
       * @param msg the number identifying the message to peek from
       * @return number of bytes actually peeked and written into output
       */
-      u32bit peek(byte& output, u32bit offset,
+      size_t peek(byte& output, size_t offset,
                   message_id msg = DEFAULT_MESSAGE) const;
 
       /**
       * @return currently set default message
       */
-      u32bit default_msg() const { return default_read; }
+      size_t default_msg() const { return default_read; }
 
       /**
       * Set the default message
@@ -268,7 +268,7 @@ class BOTAN_DLL Pipe : public DataSource
       * @param filters the set of filters to use
       * @param count the number of elements in filters
       */
-      Pipe(Filter* filters[], u32bit count);
+      Pipe(Filter* filters[], size_t count);
       ~Pipe();
    private:
       Pipe(const Pipe&) : DataSource() {}

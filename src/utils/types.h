@@ -52,7 +52,7 @@ typedef signed int s32bit;
 /**
 * A default buffer size; typically a memory page
 */
-static const u32bit DEFAULT_BUFFERSIZE = BOTAN_DEFAULT_BUFFER_SIZE;
+static const size_t DEFAULT_BUFFERSIZE = BOTAN_DEFAULT_BUFFER_SIZE;
 
 }
 

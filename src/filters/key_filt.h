@@ -38,14 +38,14 @@ class BOTAN_DLL Keyed_Filter : public Filter
       * @param length the key length to be checked for validity
       * @return true if the key length is valid, false otherwise
       */
-      virtual bool valid_keylength(u32bit length) const = 0;
+      virtual bool valid_keylength(size_t length) const = 0;
 
       /**
       * Check whether an IV length is valid for this filter
       * @param length the IV length to be checked for validity
       * @return true if the IV length is valid, false otherwise
       */
-      virtual bool valid_iv_length(u32bit length) const
+      virtual bool valid_iv_length(size_t length) const
          { return (length == 0); }
    };
 

@@ -14,12 +14,12 @@ namespace Botan {
 
 namespace {
 
-void poly_double(byte tweak[], u32bit size)
+void poly_double(byte tweak[], size_t size)
    {
    const byte polynomial = (size == 16) ? 0x87 : 0x1B;
 
    byte carry = 0;
-   for(u32bit i = 0; i != size; ++i)
+   for(size_t i = 0; i != size; ++i)
       {
       byte carry2 = (tweak[i] >> 7);
       tweak[i] = (tweak[i] << 1) | carry;
@@ -33,9 +33,9 @@ void poly_double(byte tweak[], u32bit size)
 /* XTS needs to process at least 2 blocks in parallel
    because block_size+1 bytes are needed at the end
 */
-u32bit xts_parallelism(BlockCipher* cipher)
+size_t xts_parallelism(BlockCipher* cipher)
    {
-   return std::max<u32bit>(cipher->parallel_bytes(),
+   return std::max<size_t>(cipher->parallel_bytes(),
                            2 * cipher->BLOCK_SIZE);
    }
 
@@ -90,12 +90,12 @@ void XTS_Encryption::set_iv(const InitializationVector& iv)
    if(!valid_iv_length(iv.length()))
       throw Invalid_IV_Length(name(), iv.length());
 
-   const u32bit blocks_in_tweak = tweak.size() / cipher->BLOCK_SIZE;
+   const size_t blocks_in_tweak = tweak.size() / cipher->BLOCK_SIZE;
 
    tweak.copy(iv.begin(), iv.length());
    cipher2->encrypt(tweak);
 
-   for(u32bit i = 1; i < blocks_in_tweak; ++i)
+   for(size_t i = 1; i < blocks_in_tweak; ++i)
       {
       tweak.copy(i*cipher->BLOCK_SIZE,
                  &tweak[(i-1)*cipher->BLOCK_SIZE],
@@ -107,7 +107,7 @@ void XTS_Encryption::set_iv(const InitializationVector& iv)
 
 void XTS_Encryption::set_key(const SymmetricKey& key)
    {
-   u32bit key_half = key.length() / 2;
+   size_t key_half = key.length() / 2;
 
    if(key.length() % 2 == 1 || !cipher->valid_keylength(key_half))
       throw Invalid_Key_Length(name(), key.length());
@@ -119,7 +119,7 @@ void XTS_Encryption::set_key(const SymmetricKey& key)
 /*
 * Encrypt in XTS mode
 */
-void XTS_Encryption::write(const byte input[], u32bit length)
+void XTS_Encryption::write(const byte input[], size_t length)
    {
    Buffered_Filter::write(input, length);
    }
@@ -131,17 +131,17 @@ void XTS_Encryption::end_msg()
    Buffered_Filter::end_msg();
    }
 
-void XTS_Encryption::buffered_block(const byte input[], u32bit length)
+void XTS_Encryption::buffered_block(const byte input[], size_t length)
    {
-   const u32bit blocks_in_tweak = tweak.size() / cipher->BLOCK_SIZE;
-   u32bit blocks = length / cipher->BLOCK_SIZE;
+   const size_t blocks_in_tweak = tweak.size() / cipher->BLOCK_SIZE;
+   size_t blocks = length / cipher->BLOCK_SIZE;
 
    SecureVector<byte> temp(tweak.size());
 
    while(blocks)
       {
-      u32bit to_proc = std::min(blocks, blocks_in_tweak);
-      u32bit to_proc_bytes = to_proc * cipher->BLOCK_SIZE;
+      size_t to_proc = std::min(blocks, blocks_in_tweak);
+      size_t to_proc_bytes = to_proc * cipher->BLOCK_SIZE;
 
       xor_buf(temp, input, tweak, to_proc_bytes);
 
@@ -155,7 +155,7 @@ void XTS_Encryption::buffered_block(const byte input[], u32bit length)
                  cipher->BLOCK_SIZE);
       poly_double(&tweak[0], cipher->BLOCK_SIZE);
 
-      for(u32bit i = 1; i < blocks_in_tweak; ++i)
+      for(size_t i = 1; i < blocks_in_tweak; ++i)
          {
          tweak.copy(i*cipher->BLOCK_SIZE,
                     &tweak[(i-1)*cipher->BLOCK_SIZE],
@@ -172,7 +172,7 @@ void XTS_Encryption::buffered_block(const byte input[], u32bit length)
 /*
 * Finish encrypting in XTS mode
 */
-void XTS_Encryption::buffered_final(const byte input[], u32bit length)
+void XTS_Encryption::buffered_final(const byte input[], size_t length)
    {
    if(length <= cipher->BLOCK_SIZE)
       throw Encoding_Error("XTS_Encryption: insufficient data to encrypt");
@@ -184,7 +184,7 @@ void XTS_Encryption::buffered_final(const byte input[], u32bit length)
    else
       { // steal ciphertext
 
-      u32bit leftover_blocks =
+      size_t leftover_blocks =
          ((length / cipher->BLOCK_SIZE) - 1) * cipher->BLOCK_SIZE;
 
       buffered_block(input, leftover_blocks);
@@ -200,7 +200,7 @@ void XTS_Encryption::buffered_final(const byte input[], u32bit length)
 
       poly_double(&tweak[0], cipher->BLOCK_SIZE);
 
-      for(u32bit i = 0; i != length - cipher->BLOCK_SIZE; ++i)
+      for(size_t i = 0; i != length - cipher->BLOCK_SIZE; ++i)
          std::swap(temp[i], temp[i + cipher->BLOCK_SIZE]);
 
       xor_buf(temp, tweak, cipher->BLOCK_SIZE);
@@ -262,12 +262,12 @@ void XTS_Decryption::set_iv(const InitializationVector& iv)
    if(!valid_iv_length(iv.length()))
       throw Invalid_IV_Length(name(), iv.length());
 
-   const u32bit blocks_in_tweak = tweak.size() / cipher->BLOCK_SIZE;
+   const size_t blocks_in_tweak = tweak.size() / cipher->BLOCK_SIZE;
 
    tweak.copy(iv.begin(), iv.length());
    cipher2->encrypt(tweak);
 
-   for(u32bit i = 1; i < blocks_in_tweak; ++i)
+   for(size_t i = 1; i < blocks_in_tweak; ++i)
       {
       tweak.copy(i*cipher->BLOCK_SIZE,
                  &tweak[(i-1)*cipher->BLOCK_SIZE],
@@ -279,7 +279,7 @@ void XTS_Decryption::set_iv(const InitializationVector& iv)
 
 void XTS_Decryption::set_key(const SymmetricKey& key)
    {
-   u32bit key_half = key.length() / 2;
+   size_t key_half = key.length() / 2;
 
    if(key.length() % 2 == 1 || !cipher->valid_keylength(key_half))
       throw Invalid_Key_Length(name(), key.length());
@@ -291,7 +291,7 @@ void XTS_Decryption::set_key(const SymmetricKey& key)
 /*
 * Decrypt in XTS mode
 */
-void XTS_Decryption::write(const byte input[], u32bit length)
+void XTS_Decryption::write(const byte input[], size_t length)
    {
    Buffered_Filter::write(input, length);
    }
@@ -304,17 +304,17 @@ void XTS_Decryption::end_msg()
    Buffered_Filter::end_msg();
    }
 
-void XTS_Decryption::buffered_block(const byte input[], u32bit input_length)
+void XTS_Decryption::buffered_block(const byte input[], size_t input_length)
    {
-   const u32bit blocks_in_tweak = tweak.size() / cipher->BLOCK_SIZE;
-   u32bit blocks = input_length / cipher->BLOCK_SIZE;
+   const size_t blocks_in_tweak = tweak.size() / cipher->BLOCK_SIZE;
+   size_t blocks = input_length / cipher->BLOCK_SIZE;
 
    SecureVector<byte> temp(tweak.size());
 
    while(blocks)
       {
-      u32bit to_proc = std::min(blocks, blocks_in_tweak);
-      u32bit to_proc_bytes = to_proc * cipher->BLOCK_SIZE;
+      size_t to_proc = std::min(blocks, blocks_in_tweak);
+      size_t to_proc_bytes = to_proc * cipher->BLOCK_SIZE;
 
       xor_buf(temp, input, tweak, to_proc_bytes);
 
@@ -328,7 +328,7 @@ void XTS_Decryption::buffered_block(const byte input[], u32bit input_length)
                  cipher->BLOCK_SIZE);
       poly_double(&tweak[0], cipher->BLOCK_SIZE);
 
-      for(u32bit i = 1; i < blocks_in_tweak; ++i)
+      for(size_t i = 1; i < blocks_in_tweak; ++i)
          {
          tweak.copy(i*cipher->BLOCK_SIZE,
                     &tweak[(i-1)*cipher->BLOCK_SIZE],
@@ -342,7 +342,7 @@ void XTS_Decryption::buffered_block(const byte input[], u32bit input_length)
       }
    }
 
-void XTS_Decryption::buffered_final(const byte input[], u32bit length)
+void XTS_Decryption::buffered_final(const byte input[], size_t length)
    {
    if(length <= cipher->BLOCK_SIZE)
       throw Decoding_Error("XTS_Decryption: insufficient data to decrypt");
@@ -353,7 +353,7 @@ void XTS_Decryption::buffered_final(const byte input[], u32bit length)
       }
    else
       {
-      u32bit leftover_blocks =
+      size_t leftover_blocks =
          ((length / cipher->BLOCK_SIZE) - 1) * cipher->BLOCK_SIZE;
 
       buffered_block(input, leftover_blocks);
@@ -370,7 +370,7 @@ void XTS_Decryption::buffered_final(const byte input[], u32bit length)
       cipher->decrypt(temp);
       xor_buf(temp, tweak_copy, cipher->BLOCK_SIZE);
 
-      for(u32bit i = 0; i != length - cipher->BLOCK_SIZE; ++i)
+      for(size_t i = 0; i != length - cipher->BLOCK_SIZE; ++i)
          std::swap(temp[i], temp[i + cipher->BLOCK_SIZE]);
 
       xor_buf(temp, tweak, cipher->BLOCK_SIZE);

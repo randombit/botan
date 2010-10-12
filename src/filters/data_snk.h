@@ -35,7 +35,7 @@ class BOTAN_DLL DataSink_Stream : public DataSink
    public:
       std::string name() const { return identifier; }
 
-      void write(const byte[], u32bit);
+      void write(const byte[], size_t);
 
       /**
       * Construct a DataSink_Stream from a stream.

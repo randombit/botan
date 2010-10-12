@@ -166,7 +166,7 @@ u32bit TLS_Server::read(byte out[], u32bit length)
          break;
       }
 
-   u32bit got = std::min(read_buf.size(), length);
+   u32bit got = std::min<size_t>(read_buf.size(), length);
    read_buf.read(out, got);
    return got;
    }

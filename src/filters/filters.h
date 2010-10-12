@@ -44,9 +44,9 @@ class BOTAN_DLL StreamCipher_Filter : public Keyed_Filter
       * @param input data
       * @param input_len length of input in bytes
       */
-      void write(const byte input[], u32bit input_len);
+      void write(const byte input[], size_t input_len);
 
-      bool valid_iv_length(u32bit iv_len) const
+      bool valid_iv_length(size_t iv_len) const
          { return cipher->valid_iv_length(iv_len); }
 
       /**
@@ -66,7 +66,7 @@ class BOTAN_DLL StreamCipher_Filter : public Keyed_Filter
       * @param length the key length to be checked for validity
       * @return true if the key length is valid, false otherwise
       */
-      bool valid_keylength(u32bit length) const
+      bool valid_keylength(size_t length) const
          { return cipher->valid_keylength(length); }
 
       /**
@@ -107,7 +107,7 @@ class BOTAN_DLL StreamCipher_Filter : public Keyed_Filter
 class BOTAN_DLL Hash_Filter : public Filter
    {
    public:
-      void write(const byte input[], u32bit len) { hash->update(input, len); }
+      void write(const byte input[], size_t len) { hash->update(input, len); }
       void end_msg();
 
       std::string name() const { return hash->name(); }
@@ -120,7 +120,7 @@ class BOTAN_DLL Hash_Filter : public Filter
       * hash. Otherwise, specify a smaller value here so that the
       * output of the hash algorithm will be cut off.
       */
-      Hash_Filter(HashFunction* hash_fun, u32bit len = 0) :
+      Hash_Filter(HashFunction* hash_fun, size_t len = 0) :
          OUTPUT_LENGTH(len), hash(hash_fun) {}
 
       /**
@@ -131,11 +131,11 @@ class BOTAN_DLL Hash_Filter : public Filter
       * hash. Otherwise, specify a smaller value here so that the
       * output of the hash algorithm will be cut off.
       */
-      Hash_Filter(const std::string& request, u32bit len = 0);
+      Hash_Filter(const std::string& request, size_t len = 0);
 
       ~Hash_Filter() { delete hash; }
    private:
-      const u32bit OUTPUT_LENGTH;
+      const size_t OUTPUT_LENGTH;
       HashFunction* hash;
    };
 
@@ -145,7 +145,7 @@ class BOTAN_DLL Hash_Filter : public Filter
 class BOTAN_DLL MAC_Filter : public Keyed_Filter
    {
    public:
-      void write(const byte input[], u32bit len) { mac->update(input, len); }
+      void write(const byte input[], size_t len) { mac->update(input, len); }
       void end_msg();
 
       std::string name() const { return mac->name(); }
@@ -161,7 +161,7 @@ class BOTAN_DLL MAC_Filter : public Keyed_Filter
       * @param length the key length to be checked for validity
       * @return true if the key length is valid, false otherwise
       */
-      bool valid_keylength(u32bit length) const
+      bool valid_keylength(size_t length) const
          { return mac->valid_keylength(length); }
 
       /**
@@ -173,7 +173,7 @@ class BOTAN_DLL MAC_Filter : public Keyed_Filter
       * output of the MAC will be cut off.
       */
       MAC_Filter(MessageAuthenticationCode* mac_obj,
-                 u32bit out_len = 0) : OUTPUT_LENGTH(out_len)
+                 size_t out_len = 0) : OUTPUT_LENGTH(out_len)
          {
          mac = mac_obj;
          }
@@ -189,7 +189,7 @@ class BOTAN_DLL MAC_Filter : public Keyed_Filter
       */
       MAC_Filter(MessageAuthenticationCode* mac_obj,
                  const SymmetricKey& key,
-                 u32bit out_len = 0) : OUTPUT_LENGTH(out_len)
+                 size_t out_len = 0) : OUTPUT_LENGTH(out_len)
          {
          mac = mac_obj;
          mac->set_key(key);
@@ -203,7 +203,7 @@ class BOTAN_DLL MAC_Filter : public Keyed_Filter
       * MAC. Otherwise, specify a smaller value here so that the
       * output of the MAC will be cut off.
       */
-      MAC_Filter(const std::string& mac, u32bit len = 0);
+      MAC_Filter(const std::string& mac, size_t len = 0);
 
       /**
       * Construct a MAC filter.
@@ -215,11 +215,11 @@ class BOTAN_DLL MAC_Filter : public Keyed_Filter
       * output of the MAC will be cut off.
       */
       MAC_Filter(const std::string& mac, const SymmetricKey& key,
-                 u32bit len = 0);
+                 size_t len = 0);
 
       ~MAC_Filter() { delete mac; }
    private:
-      const u32bit OUTPUT_LENGTH;
+      const size_t OUTPUT_LENGTH;
       MessageAuthenticationCode* mac;
    };
 

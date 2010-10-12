@@ -21,13 +21,13 @@ class BOTAN_DLL SecureQueue : public Fanout_Filter, public DataSource
    public:
       std::string name() const { return "Queue"; }
 
-      void write(const byte[], u32bit);
+      void write(const byte[], size_t);
 
-      u32bit read(byte[], u32bit);
-      u32bit peek(byte[], u32bit, u32bit = 0) const;
+      size_t read(byte[], size_t);
+      size_t peek(byte[], size_t, size_t = 0) const;
 
       bool end_of_data() const;
-      u32bit size() const;
+      size_t size() const;
       bool attachable() { return false; }
 
       SecureQueue& operator=(const SecureQueue&);

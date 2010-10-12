@@ -28,10 +28,10 @@ class BOTAN_DLL CBC_Encryption : public Keyed_Filter,
 
       void set_key(const SymmetricKey& key) { cipher->set_key(key); }
 
-      bool valid_keylength(u32bit key_len) const
+      bool valid_keylength(size_t key_len) const
          { return cipher->valid_keylength(key_len); }
 
-      bool valid_iv_length(u32bit iv_len) const
+      bool valid_iv_length(size_t iv_len) const
          { return (iv_len == cipher->BLOCK_SIZE); }
 
       CBC_Encryption(BlockCipher* cipher,
@@ -44,10 +44,10 @@ class BOTAN_DLL CBC_Encryption : public Keyed_Filter,
 
       ~CBC_Encryption() { delete cipher; delete padder; }
    private:
-      void buffered_block(const byte input[], u32bit input_length);
-      void buffered_final(const byte input[], u32bit input_length);
+      void buffered_block(const byte input[], size_t input_length);
+      void buffered_final(const byte input[], size_t input_length);
 
-      void write(const byte input[], u32bit input_length);
+      void write(const byte input[], size_t input_length);
       void end_msg();
 
       BlockCipher* cipher;
@@ -68,10 +68,10 @@ class BOTAN_DLL CBC_Decryption : public Keyed_Filter,
 
       void set_key(const SymmetricKey& key) { cipher->set_key(key); }
 
-      bool valid_keylength(u32bit key_len) const
+      bool valid_keylength(size_t key_len) const
          { return cipher->valid_keylength(key_len); }
 
-      bool valid_iv_length(u32bit iv_len) const
+      bool valid_iv_length(size_t iv_len) const
          { return (iv_len == cipher->BLOCK_SIZE); }
 
       CBC_Decryption(BlockCipher* cipher,
@@ -84,10 +84,10 @@ class BOTAN_DLL CBC_Decryption : public Keyed_Filter,
 
       ~CBC_Decryption() { delete cipher; delete padder; }
    private:
-      void buffered_block(const byte input[], u32bit input_length);
-      void buffered_final(const byte input[], u32bit input_length);
+      void buffered_block(const byte input[], size_t input_length);
+      void buffered_final(const byte input[], size_t input_length);
 
-      void write(const byte[], u32bit);
+      void write(const byte[], size_t);
       void end_msg();
 
       BlockCipher* cipher;

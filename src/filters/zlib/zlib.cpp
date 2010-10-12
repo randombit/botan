@@ -24,7 +24,7 @@ namespace {
 class Zlib_Alloc_Info
    {
    public:
-      std::map<void*, u32bit> current_allocs;
+      std::map<void*, size_t> current_allocs;
       Allocator* alloc;
 
       Zlib_Alloc_Info() { alloc = Allocator::get(false); }
@@ -47,7 +47,7 @@ void* zlib_malloc(void* info_ptr, unsigned int n, unsigned int size)
 void zlib_free(void* info_ptr, void* ptr)
    {
    Zlib_Alloc_Info* info = static_cast<Zlib_Alloc_Info*>(info_ptr);
-   std::map<void*, u32bit>::const_iterator i = info->current_allocs.find(ptr);
+   std::map<void*, size_t>::const_iterator i = info->current_allocs.find(ptr);
    if(i == info->current_allocs.end())
       throw Invalid_Argument("zlib_free: Got pointer not allocated by us");
    info->alloc->deallocate(ptr, i->second);
@@ -91,7 +91,7 @@ class Zlib_Stream
 /*
 * Zlib_Compression Constructor
 */
-Zlib_Compression::Zlib_Compression(u32bit l) :
+Zlib_Compression::Zlib_Compression(size_t l) :
    level((l >= 9) ? 9 : l), buffer(DEFAULT_BUFFERSIZE)
    {
    zlib = 0;
@@ -111,7 +111,7 @@ void Zlib_Compression::start_msg()
 /*
 * Compress Input with Zlib
 */
-void Zlib_Compression::write(const byte input[], u32bit length)
+void Zlib_Compression::write(const byte input[], size_t length)
    {
    zlib->stream.next_in = static_cast<Bytef*>(const_cast<byte*>(input));
    zlib->stream.avail_in = length;
@@ -203,7 +203,7 @@ void Zlib_Decompression::start_msg()
 /*
 * Decompress Input with Zlib
 */
-void Zlib_Decompression::write(const byte input_arr[], u32bit length)
+void Zlib_Decompression::write(const byte input_arr[], size_t length)
    {
    if(length) no_writes = false;
 
@@ -237,7 +237,7 @@ void Zlib_Decompression::write(const byte input_arr[], u32bit length)
 
       if(rc == Z_STREAM_END)
          {
-         u32bit read_from_block = length - zlib->stream.avail_in;
+         size_t read_from_block = length - zlib->stream.avail_in;
          start_msg();
 
          zlib->stream.next_in = input + read_from_block;

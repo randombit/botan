@@ -21,18 +21,18 @@ class BOTAN_DLL Bzip_Compression : public Filter
    public:
       std::string name() const { return "Bzip_Compression"; }
 
-      void write(const byte input[], u32bit length);
+      void write(const byte input[], size_t length);
       void start_msg();
       void end_msg();
 
       void flush();
 
-      Bzip_Compression(u32bit = 9);
+      Bzip_Compression(size_t = 9);
       ~Bzip_Compression() { clear(); }
    private:
       void clear();
 
-      const u32bit level;
+      const size_t level;
       SecureVector<byte> buffer;
       class Bzip_Stream* bz;
    };
@@ -45,7 +45,7 @@ class BOTAN_DLL Bzip_Decompression : public Filter
    public:
       std::string name() const { return "Bzip_Decompression"; }
 
-      void write(const byte input[], u32bit length);
+      void write(const byte input[], size_t length);
       void start_msg();
       void end_msg();
 

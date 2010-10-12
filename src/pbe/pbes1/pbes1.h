@@ -23,7 +23,7 @@ class BOTAN_DLL PBE_PKCS5v15 : public PBE
    public:
       std::string name() const;
 
-      void write(const byte[], u32bit);
+      void write(const byte[], size_t);
       void start_msg();
       void end_msg();
 

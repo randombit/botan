@@ -24,10 +24,10 @@ class BOTAN_DLL XTS_Encryption : public Keyed_Filter,
       void set_key(const SymmetricKey& key);
       void set_iv(const InitializationVector& iv);
 
-      bool valid_keylength(u32bit key_len) const
+      bool valid_keylength(size_t key_len) const
          { return cipher->valid_keylength(key_len); }
 
-      bool valid_iv_length(u32bit iv_len) const
+      bool valid_iv_length(size_t iv_len) const
          { return (iv_len == cipher->BLOCK_SIZE); }
 
       std::string name() const;
@@ -40,11 +40,11 @@ class BOTAN_DLL XTS_Encryption : public Keyed_Filter,
 
       ~XTS_Encryption() { delete cipher; delete cipher2; }
    private:
-      void write(const byte[], u32bit);
+      void write(const byte[], size_t);
       void end_msg();
 
-      void buffered_block(const byte input[], u32bit input_length);
-      void buffered_final(const byte input[], u32bit input_length);
+      void buffered_block(const byte input[], size_t input_length);
+      void buffered_final(const byte input[], size_t input_length);
 
       BlockCipher* cipher;
       BlockCipher* cipher2;
@@ -61,10 +61,10 @@ class BOTAN_DLL XTS_Decryption : public Keyed_Filter,
       void set_key(const SymmetricKey& key);
       void set_iv(const InitializationVector& iv);
 
-      bool valid_keylength(u32bit key_len) const
+      bool valid_keylength(size_t key_len) const
          { return cipher->valid_keylength(key_len); }
 
-      bool valid_iv_length(u32bit iv_len) const
+      bool valid_iv_length(size_t iv_len) const
          { return (iv_len == cipher->BLOCK_SIZE); }
 
       std::string name() const;
@@ -77,11 +77,11 @@ class BOTAN_DLL XTS_Decryption : public Keyed_Filter,
 
       ~XTS_Decryption() { delete cipher; delete cipher2; }
    private:
-      void write(const byte[], u32bit);
+      void write(const byte[], size_t);
       void end_msg();
 
-      void buffered_block(const byte input[], u32bit input_length);
-      void buffered_final(const byte input[], u32bit input_length);
+      void buffered_block(const byte input[], size_t input_length);
+      void buffered_final(const byte input[], size_t input_length);
 
       BlockCipher* cipher;
       BlockCipher* cipher2;

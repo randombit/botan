@@ -16,7 +16,7 @@ namespace Botan {
 /*
 * Read a single byte from the DataSource
 */
-u32bit DataSource::read_byte(byte& out)
+size_t DataSource::read_byte(byte& out)
    {
    return read(&out, 1);
    }
@@ -24,7 +24,7 @@ u32bit DataSource::read_byte(byte& out)
 /*
 * Peek a single byte from the DataSource
 */
-u32bit DataSource::peek_byte(byte& out) const
+size_t DataSource::peek_byte(byte& out) const
    {
    return peek(&out, 1, 0);
    }
@@ -32,11 +32,11 @@ u32bit DataSource::peek_byte(byte& out) const
 /*
 * Discard the next N bytes of the data
 */
-u32bit DataSource::discard_next(u32bit n)
+size_t DataSource::discard_next(size_t n)
    {
-   u32bit discarded = 0;
+   size_t discarded = 0;
    byte dummy;
-   for(u32bit j = 0; j != n; ++j)
+   for(size_t j = 0; j != n; ++j)
       discarded += read_byte(dummy);
    return discarded;
    }
@@ -44,9 +44,9 @@ u32bit DataSource::discard_next(u32bit n)
 /*
 * Read from a memory buffer
 */
-u32bit DataSource_Memory::read(byte out[], u32bit length)
+size_t DataSource_Memory::read(byte out[], size_t length)
    {
-   u32bit got = std::min<u32bit>(source.size() - offset, length);
+   size_t got = std::min<size_t>(source.size() - offset, length);
    copy_mem(out, &source[offset], got);
    offset += got;
    return got;
@@ -55,13 +55,13 @@ u32bit DataSource_Memory::read(byte out[], u32bit length)
 /*
 * Peek into a memory buffer
 */
-u32bit DataSource_Memory::peek(byte out[], u32bit length,
-                               u32bit peek_offset) const
+size_t DataSource_Memory::peek(byte out[], size_t length,
+                               size_t peek_offset) const
    {
-   const u32bit bytes_left = source.size() - offset;
+   const size_t bytes_left = source.size() - offset;
    if(peek_offset >= bytes_left) return 0;
 
-   u32bit got = std::min(bytes_left - peek_offset, length);
+   size_t got = std::min(bytes_left - peek_offset, length);
    copy_mem(out, &source[offset + peek_offset], got);
    return got;
    }
@@ -77,7 +77,7 @@ bool DataSource_Memory::end_of_data() const
 /*
 * DataSource_Memory Constructor
 */
-DataSource_Memory::DataSource_Memory(const byte in[], u32bit length)
+DataSource_Memory::DataSource_Memory(const byte in[], size_t length)
    {
    source.set(in, length);
    offset = 0;
@@ -104,13 +104,13 @@ DataSource_Memory::DataSource_Memory(const std::string& in)
 /*
 * Read from a stream
 */
-u32bit DataSource_Stream::read(byte out[], u32bit length)
+size_t DataSource_Stream::read(byte out[], size_t length)
    {
    source.read(reinterpret_cast<char*>(out), length);
    if(source.bad())
       throw Stream_IO_Error("DataSource_Stream::read: Source failure");
 
-   u32bit got = source.gcount();
+   size_t got = source.gcount();
    total_read += got;
    return got;
    }
@@ -118,12 +118,12 @@ u32bit DataSource_Stream::read(byte out[], u32bit length)
 /*
 * Peek into a stream
 */
-u32bit DataSource_Stream::peek(byte out[], u32bit length, u32bit offset) const
+size_t DataSource_Stream::peek(byte out[], size_t length, size_t offset) const
    {
    if(end_of_data())
       throw Invalid_State("DataSource_Stream: Cannot peek when out of data");
 
-   u32bit got = 0;
+   size_t got = 0;
 
    if(offset)
       {

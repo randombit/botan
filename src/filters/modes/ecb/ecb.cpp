@@ -58,7 +58,7 @@ std::string ECB_Encryption::name() const
 /*
 * Encrypt in ECB mode
 */
-void ECB_Encryption::write(const byte input[], u32bit length)
+void ECB_Encryption::write(const byte input[], size_t length)
    {
    Buffered_Filter::write(input, length);
    }
@@ -68,26 +68,26 @@ void ECB_Encryption::write(const byte input[], u32bit length)
 */
 void ECB_Encryption::end_msg()
    {
-   u32bit last_block = current_position() % cipher->BLOCK_SIZE;
+   size_t last_block = current_position() % cipher->BLOCK_SIZE;
 
    SecureVector<byte> padding(cipher->BLOCK_SIZE);
    padder->pad(padding, padding.size(), last_block);
 
-   u32bit pad_bytes = padder->pad_bytes(cipher->BLOCK_SIZE, last_block);
+   size_t pad_bytes = padder->pad_bytes(cipher->BLOCK_SIZE, last_block);
 
    if(pad_bytes)
       Buffered_Filter::write(padding, pad_bytes);
    Buffered_Filter::end_msg();
    }
 
-void ECB_Encryption::buffered_block(const byte input[], u32bit input_length)
+void ECB_Encryption::buffered_block(const byte input[], size_t input_length)
    {
-   const u32bit blocks_in_temp = temp.size() / cipher->BLOCK_SIZE;
-   u32bit blocks = input_length / cipher->BLOCK_SIZE;
+   const size_t blocks_in_temp = temp.size() / cipher->BLOCK_SIZE;
+   size_t blocks = input_length / cipher->BLOCK_SIZE;
 
    while(blocks)
       {
-      u32bit to_proc = std::min(blocks, blocks_in_temp);
+      size_t to_proc = std::min(blocks, blocks_in_temp);
 
       cipher->encrypt_n(input, &temp[0], to_proc);
 
@@ -98,7 +98,7 @@ void ECB_Encryption::buffered_block(const byte input[], u32bit input_length)
       }
    }
 
-void ECB_Encryption::buffered_final(const byte input[], u32bit input_length)
+void ECB_Encryption::buffered_final(const byte input[], size_t input_length)
    {
    if(input_length % cipher->BLOCK_SIZE == 0)
       buffered_block(input, input_length);
@@ -155,7 +155,7 @@ std::string ECB_Decryption::name() const
 /*
 * Decrypt in ECB mode
 */
-void ECB_Decryption::write(const byte input[], u32bit length)
+void ECB_Decryption::write(const byte input[], size_t length)
    {
    Buffered_Filter::write(input, length);
    }
@@ -171,14 +171,14 @@ void ECB_Decryption::end_msg()
 /*
 * Decrypt in ECB mode
 */
-void ECB_Decryption::buffered_block(const byte input[], u32bit length)
+void ECB_Decryption::buffered_block(const byte input[], size_t length)
    {
-   const u32bit blocks_in_temp = temp.size() / cipher->BLOCK_SIZE;
-   u32bit blocks = length / cipher->BLOCK_SIZE;
+   const size_t blocks_in_temp = temp.size() / cipher->BLOCK_SIZE;
+   size_t blocks = length / cipher->BLOCK_SIZE;
 
    while(blocks)
       {
-      u32bit to_proc = std::min(blocks, blocks_in_temp);
+      size_t to_proc = std::min(blocks, blocks_in_temp);
 
       cipher->decrypt_n(input, &temp[0], to_proc);
 
@@ -192,7 +192,7 @@ void ECB_Decryption::buffered_block(const byte input[], u32bit length)
 /*
 * Finish encrypting in ECB mode
 */
-void ECB_Decryption::buffered_final(const byte input[], u32bit length)
+void ECB_Decryption::buffered_final(const byte input[], size_t length)
    {
    if(length == 0 || length % cipher->BLOCK_SIZE != 0)
       throw Decoding_Error(name() + ": Ciphertext not multiple of block size");

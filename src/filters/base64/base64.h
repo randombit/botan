@@ -27,7 +27,7 @@ class BOTAN_DLL Base64_Encoder : public Filter
       * @param input the message to input as a byte array
       * @param length the length of the byte array input
       */
-      void write(const byte input[], u32bit length);
+      void write(const byte input[], size_t length);
 
       /**
       * Inform the Encoder that the current message shall be closed.
@@ -40,17 +40,17 @@ class BOTAN_DLL Base64_Encoder : public Filter
       * @param length the length of the lines of the output
       * @param t_n whether to use a trailing newline
       */
-      Base64_Encoder(bool breaks = false, u32bit length = 72,
+      Base64_Encoder(bool breaks = false, size_t length = 72,
                      bool t_n = false);
    private:
-      void encode_and_send(const byte[], u32bit);
-      void do_output(const byte[], u32bit);
+      void encode_and_send(const byte[], size_t);
+      void do_output(const byte[], size_t);
       static const byte BIN_TO_BASE64[64];
 
-      const u32bit line_length;
+      const size_t line_length;
       const bool trailing_newline;
       SecureVector<byte> in, out;
-      u32bit position, counter;
+      size_t position, counter;
    };
 
 /**
@@ -70,7 +70,7 @@ class BOTAN_DLL Base64_Decoder : public Filter
       * @param input the message to input as a byte array
       * @param length the length of the byte array input
       */
-      void write(const byte input[], u32bit length);
+      void write(const byte input[], size_t length);
 
       /**
       * Inform the Encoder that the current message shall be closed.
@@ -84,13 +84,13 @@ class BOTAN_DLL Base64_Decoder : public Filter
       */
       Base64_Decoder(Decoder_Checking checking = NONE);
    private:
-      void decode_and_send(const byte[], u32bit);
+      void decode_and_send(const byte[], size_t);
       void handle_bad_char(byte);
       static const byte BASE64_TO_BIN[256];
 
       const Decoder_Checking checking;
       SecureVector<byte> in, out;
-      u32bit position;
+      size_t position;
    };
 
 }

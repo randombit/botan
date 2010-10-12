@@ -59,11 +59,11 @@ void CBC_Encryption::set_iv(const InitializationVector& iv)
 /*
 * Encrypt in CBC mode
 */
-void CBC_Encryption::buffered_block(const byte input[], u32bit length)
+void CBC_Encryption::buffered_block(const byte input[], size_t length)
    {
-   u32bit blocks = length / state.size();
+   size_t blocks = length / state.size();
 
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       xor_buf(state, input + i * cipher->BLOCK_SIZE, state.size());
       cipher->encrypt(state);
@@ -74,7 +74,7 @@ void CBC_Encryption::buffered_block(const byte input[], u32bit length)
 /*
 * Finish encrypting in CBC mode
 */
-void CBC_Encryption::buffered_final(const byte input[], u32bit length)
+void CBC_Encryption::buffered_final(const byte input[], size_t length)
    {
    if(length % cipher->BLOCK_SIZE == 0)
       buffered_block(input, length);
@@ -82,19 +82,19 @@ void CBC_Encryption::buffered_final(const byte input[], u32bit length)
       throw Encoding_Error(name() + ": Did not pad to full blocksize");
    }
 
-void CBC_Encryption::write(const byte input[], u32bit input_length)
+void CBC_Encryption::write(const byte input[], size_t input_length)
    {
    Buffered_Filter::write(input, input_length);
    }
 
 void CBC_Encryption::end_msg()
    {
-   u32bit last_block = current_position() % cipher->BLOCK_SIZE;
+   size_t last_block = current_position() % cipher->BLOCK_SIZE;
 
    SecureVector<byte> padding(cipher->BLOCK_SIZE);
    padder->pad(padding, padding.size(), last_block);
 
-   u32bit pad_bytes = padder->pad_bytes(cipher->BLOCK_SIZE, last_block);
+   size_t pad_bytes = padder->pad_bytes(cipher->BLOCK_SIZE, last_block);
 
    if(pad_bytes)
       Buffered_Filter::write(padding, pad_bytes);
@@ -159,20 +159,20 @@ void CBC_Decryption::set_iv(const InitializationVector& iv)
 /*
 * Decrypt in CBC mode
 */
-void CBC_Decryption::buffered_block(const byte input[], u32bit length)
+void CBC_Decryption::buffered_block(const byte input[], size_t length)
    {
-   const u32bit blocks_in_temp = temp.size() / cipher->BLOCK_SIZE;
-   u32bit blocks = length / cipher->BLOCK_SIZE;
+   const size_t blocks_in_temp = temp.size() / cipher->BLOCK_SIZE;
+   size_t blocks = length / cipher->BLOCK_SIZE;
 
    while(blocks)
       {
-      u32bit to_proc = std::min<u32bit>(blocks, blocks_in_temp);
+      size_t to_proc = std::min<size_t>(blocks, blocks_in_temp);
 
       cipher->decrypt_n(input, &temp[0], to_proc);
 
       xor_buf(temp, state, cipher->BLOCK_SIZE);
 
-      for(u32bit i = 1; i < to_proc; ++i)
+      for(size_t i = 1; i < to_proc; ++i)
          xor_buf(&temp[i * cipher->BLOCK_SIZE],
                  input + (i-1) * cipher->BLOCK_SIZE,
                  cipher->BLOCK_SIZE);
@@ -189,7 +189,7 @@ void CBC_Decryption::buffered_block(const byte input[], u32bit length)
 /*
 * Finish encrypting in CBC mode
 */
-void CBC_Decryption::buffered_final(const byte input[], u32bit length)
+void CBC_Decryption::buffered_final(const byte input[], size_t length)
    {
    if(length == 0 || length % cipher->BLOCK_SIZE != 0)
       throw Decoding_Error(name() + ": Ciphertext not multiple of block size");
@@ -210,7 +210,7 @@ void CBC_Decryption::buffered_final(const byte input[], u32bit length)
 /*
 * Decrypt in CBC mode
 */
-void CBC_Decryption::write(const byte input[], u32bit length)
+void CBC_Decryption::write(const byte input[], size_t length)
    {
    Buffered_Filter::write(input, length);
    }

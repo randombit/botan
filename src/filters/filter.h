@@ -29,7 +29,7 @@ class BOTAN_DLL Filter
       * @param input the input as a byte array
       * @param length the length of the byte array input
       */
-      virtual void write(const byte input[], u32bit length) = 0;
+      virtual void write(const byte input[], size_t length) = 0;
 
       /**
       * Start a new message. Must be closed by end_msg() before another
@@ -55,7 +55,7 @@ class BOTAN_DLL Filter
       * @param in some input for the filter
       * @param length the length of in
       */
-      void send(const byte in[], u32bit length);
+      void send(const byte in[], size_t length);
 
       /**
       * @param in some input for the filter
@@ -70,7 +70,7 @@ class BOTAN_DLL Filter
       /**
       * @param in some input for the filter
       */
-      void send(const MemoryRegion<byte>& in, u32bit length)
+      void send(const MemoryRegion<byte>& in, size_t length)
          {
          send(&in[0], length);
          }
@@ -95,16 +95,16 @@ class BOTAN_DLL Filter
       friend class Pipe;
       friend class Fanout_Filter;
 
-      u32bit total_ports() const;
-      u32bit current_port() const { return port_num; }
+      size_t total_ports() const;
+      size_t current_port() const { return port_num; }
 
       /**
       * Set the active port
       * @param new_port the new value
       */
-      void set_port(u32bit new_port);
+      void set_port(size_t new_port);
 
-      u32bit owns() const { return filter_owns; }
+      size_t owns() const { return filter_owns; }
 
       /**
       * Attach another filter to this one
@@ -116,12 +116,12 @@ class BOTAN_DLL Filter
       * @param filters the filters to set
       * @param count number of items in filters
       */
-      void set_next(Filter* filters[], u32bit count);
+      void set_next(Filter* filters[], size_t count);
       Filter* get_next() const;
 
       SecureVector<byte> write_queue;
       std::vector<Filter*> next;
-      u32bit port_num, filter_owns;
+      size_t port_num, filter_owns;
 
       // true if filter belongs to a pipe --> prohibit filter sharing!
       bool owned;
@@ -138,9 +138,9 @@ class BOTAN_DLL Fanout_Filter : public Filter
       */
       void incr_owns() { ++filter_owns; }
 
-      void set_port(u32bit n) { Filter::set_port(n); }
+      void set_port(size_t n) { Filter::set_port(n); }
 
-      void set_next(Filter* f[], u32bit n) { Filter::set_next(f, n); }
+      void set_next(Filter* f[], size_t n) { Filter::set_next(f, n); }
 
       void attach(Filter* f) { Filter::attach(f); }
    };

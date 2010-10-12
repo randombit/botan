@@ -19,11 +19,11 @@ namespace {
 /*
 * EAX MAC-based PRF
 */
-SecureVector<byte> eax_prf(byte tag, u32bit BLOCK_SIZE,
+SecureVector<byte> eax_prf(byte tag, size_t BLOCK_SIZE,
                            MessageAuthenticationCode* mac,
-                           const byte in[], u32bit length)
+                           const byte in[], size_t length)
    {
-   for(u32bit j = 0; j != BLOCK_SIZE - 1; ++j)
+   for(size_t j = 0; j != BLOCK_SIZE - 1; ++j)
       mac->update(0);
    mac->update(tag);
    mac->update(in, length);
@@ -35,7 +35,7 @@ SecureVector<byte> eax_prf(byte tag, u32bit BLOCK_SIZE,
 /*
 * EAX_Base Constructor
 */
-EAX_Base::EAX_Base(BlockCipher* cipher, u32bit tag_size) :
+EAX_Base::EAX_Base(BlockCipher* cipher, size_t tag_size) :
    BLOCK_SIZE(cipher->BLOCK_SIZE),
    TAG_SIZE(tag_size ? tag_size / 8 : BLOCK_SIZE),
    cipher_name(cipher->name()),
@@ -51,7 +51,7 @@ EAX_Base::EAX_Base(BlockCipher* cipher, u32bit tag_size) :
 /*
 * Check if a keylength is valid for EAX
 */
-bool EAX_Base::valid_keylength(u32bit n) const
+bool EAX_Base::valid_keylength(size_t n) const
    {
    if(!ctr->valid_keylength(n))
       return false;
@@ -78,7 +78,7 @@ void EAX_Base::set_key(const SymmetricKey& key)
 */
 void EAX_Base::start_msg()
    {
-   for(u32bit j = 0; j != BLOCK_SIZE - 1; ++j)
+   for(size_t j = 0; j != BLOCK_SIZE - 1; ++j)
       cmac->update(0);
    cmac->update(2);
    }
@@ -95,7 +95,7 @@ void EAX_Base::set_iv(const InitializationVector& iv)
 /*
 * Set the EAX header
 */
-void EAX_Base::set_header(const byte header[], u32bit length)
+void EAX_Base::set_header(const byte header[], size_t length)
    {
    header_mac = eax_prf(1, BLOCK_SIZE, cmac, header, length);
    }
@@ -111,11 +111,11 @@ std::string EAX_Base::name() const
 /*
 * Encrypt in EAX mode
 */
-void EAX_Encryption::write(const byte input[], u32bit length)
+void EAX_Encryption::write(const byte input[], size_t length)
    {
    while(length)
       {
-      u32bit copied = std::min<u32bit>(length, ctr_buf.size());
+      size_t copied = std::min<size_t>(length, ctr_buf.size());
 
       ctr->cipher(input, &ctr_buf[0], copied);
       cmac->update(&ctr_buf[0], copied);

@@ -26,7 +26,7 @@ class BOTAN_DLL Hex_Encoder : public Filter
 
       std::string name() const { return "Hex_Encoder"; }
 
-      void write(const byte in[], u32bit length);
+      void write(const byte in[], size_t length);
       void end_msg();
 
       /**
@@ -42,15 +42,15 @@ class BOTAN_DLL Hex_Encoder : public Filter
       * @param the_case the case to use in the encoded strings
       */
       Hex_Encoder(bool newlines = false,
-                  u32bit line_length = 72,
+                  size_t line_length = 72,
                   Case the_case = Uppercase);
    private:
-      void encode_and_send(const byte[], u32bit);
+      void encode_and_send(const byte[], size_t);
 
       const Case casing;
-      const u32bit line_length;
+      const size_t line_length;
       SecureVector<byte> in, out;
-      u32bit position, counter;
+      size_t position, counter;
    };
 
 /**
@@ -61,7 +61,7 @@ class BOTAN_DLL Hex_Decoder : public Filter
    public:
       std::string name() const { return "Hex_Decoder"; }
 
-      void write(const byte[], u32bit);
+      void write(const byte[], size_t);
       void end_msg();
 
       /**
@@ -73,7 +73,7 @@ class BOTAN_DLL Hex_Decoder : public Filter
    private:
       const Decoder_Checking checking;
       SecureVector<byte> in, out;
-      u32bit position;
+      size_t position;
    };
 
 }

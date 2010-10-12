@@ -25,7 +25,7 @@ namespace {
 class Bzip_Alloc_Info
    {
    public:
-      std::map<void*, u32bit> current_allocs;
+      std::map<void*, size_t> current_allocs;
       Allocator* alloc;
 
       Bzip_Alloc_Info() { alloc = Allocator::get(false); }
@@ -48,7 +48,7 @@ void* bzip_malloc(void* info_ptr, int n, int size)
 void bzip_free(void* info_ptr, void* ptr)
    {
    Bzip_Alloc_Info* info = static_cast<Bzip_Alloc_Info*>(info_ptr);
-   std::map<void*, u32bit>::const_iterator i = info->current_allocs.find(ptr);
+   std::map<void*, size_t>::const_iterator i = info->current_allocs.find(ptr);
    if(i == info->current_allocs.end())
       throw Invalid_Argument("bzip_free: Got pointer not allocated by us");
    info->alloc->deallocate(ptr, i->second);
@@ -92,7 +92,7 @@ class Bzip_Stream
 /*
 * Bzip_Compression Constructor
 */
-Bzip_Compression::Bzip_Compression(u32bit l) :
+Bzip_Compression::Bzip_Compression(size_t l) :
    level((l >= 9) ? 9 : l), buffer(DEFAULT_BUFFERSIZE)
    {
    bz = 0;
@@ -112,7 +112,7 @@ void Bzip_Compression::start_msg()
 /*
 * Compress Input with Bzip
 */
-void Bzip_Compression::write(const byte input[], u32bit length)
+void Bzip_Compression::write(const byte input[], size_t length)
    {
    bz->stream.next_in = reinterpret_cast<char*>(const_cast<byte*>(input));
    bz->stream.avail_in = length;
@@ -187,7 +187,7 @@ Bzip_Decompression::Bzip_Decompression(bool s) :
 /*
 * Decompress Input with Bzip
 */
-void Bzip_Decompression::write(const byte input_arr[], u32bit length)
+void Bzip_Decompression::write(const byte input_arr[], size_t length)
    {
    if(length) no_writes = false;
 
@@ -221,7 +221,7 @@ void Bzip_Decompression::write(const byte input_arr[], u32bit length)
 
       if(rc == BZ_STREAM_END)
          {
-         u32bit read_from_block = length - bz->stream.avail_in;
+         size_t read_from_block = length - bz->stream.avail_in;
          start_msg();
          bz->stream.next_in = input + read_from_block;
          bz->stream.avail_in = length - read_from_block;

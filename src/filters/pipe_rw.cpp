@@ -31,7 +31,7 @@ Pipe::message_id Pipe::get_message_no(const std::string& func_name,
 /*
 * Write into a Pipe
 */
-void Pipe::write(const byte input[], u32bit length)
+void Pipe::write(const byte input[], size_t length)
    {
    if(!inside_msg)
       throw Invalid_State("Cannot write to a Pipe while it is not processing");
@@ -70,7 +70,7 @@ void Pipe::write(DataSource& source)
    SecureVector<byte> buffer(DEFAULT_BUFFERSIZE);
    while(!source.end_of_data())
       {
-      u32bit got = source.read(&buffer[0], buffer.size());
+      size_t got = source.read(&buffer[0], buffer.size());
       write(&buffer[0], got);
       }
    }
@@ -78,7 +78,7 @@ void Pipe::write(DataSource& source)
 /*
 * Read some data from the pipe
 */
-u32bit Pipe::read(byte output[], u32bit length, message_id msg)
+size_t Pipe::read(byte output[], size_t length, message_id msg)
    {
    return outputs->read(output, length, get_message_no("read", msg));
    }
@@ -86,7 +86,7 @@ u32bit Pipe::read(byte output[], u32bit length, message_id msg)
 /*
 * Read some data from the pipe
 */
-u32bit Pipe::read(byte output[], u32bit length)
+size_t Pipe::read(byte output[], size_t length)
    {
    return read(output, length, DEFAULT_MESSAGE);
    }
@@ -94,7 +94,7 @@ u32bit Pipe::read(byte output[], u32bit length)
 /*
 * Read a single byte from the pipe
 */
-u32bit Pipe::read(byte& out, message_id msg)
+size_t Pipe::read(byte& out, message_id msg)
    {
    return read(&out, 1, msg);
    }
@@ -106,7 +106,7 @@ SecureVector<byte> Pipe::read_all(message_id msg)
    {
    msg = ((msg != DEFAULT_MESSAGE) ? msg : default_msg());
    SecureVector<byte> buffer(remaining(msg));
-   u32bit got = read(&buffer[0], buffer.size(), msg);
+   size_t got = read(&buffer[0], buffer.size(), msg);
    buffer.resize(got);
    return buffer;
    }
@@ -123,7 +123,7 @@ std::string Pipe::read_all_as_string(message_id msg)
 
    while(true)
       {
-      u32bit got = read(&buffer[0], buffer.size(), msg);
+      size_t got = read(&buffer[0], buffer.size(), msg);
       if(got == 0)
          break;
       str.append(reinterpret_cast<const char*>(&buffer[0]), got);
@@ -135,7 +135,7 @@ std::string Pipe::read_all_as_string(message_id msg)
 /*
 * Find out how many bytes are ready to read
 */
-u32bit Pipe::remaining(message_id msg) const
+size_t Pipe::remaining(message_id msg) const
    {
    return outputs->remaining(get_message_no("remaining", msg));
    }
@@ -143,8 +143,8 @@ u32bit Pipe::remaining(message_id msg) const
 /*
 * Peek at some data in the pipe
 */
-u32bit Pipe::peek(byte output[], u32bit length,
-                  u32bit offset, message_id msg) const
+size_t Pipe::peek(byte output[], size_t length,
+                  size_t offset, message_id msg) const
    {
    return outputs->peek(output, length, offset, get_message_no("peek", msg));
    }
@@ -152,7 +152,7 @@ u32bit Pipe::peek(byte output[], u32bit length,
 /*
 * Peek at some data in the pipe
 */
-u32bit Pipe::peek(byte output[], u32bit length, u32bit offset) const
+size_t Pipe::peek(byte output[], size_t length, size_t offset) const
    {
    return peek(output, length, offset, DEFAULT_MESSAGE);
    }
@@ -160,7 +160,7 @@ u32bit Pipe::peek(byte output[], u32bit length, u32bit offset) const
 /*
 * Peek at a byte in the pipe
 */
-u32bit Pipe::peek(byte& out, u32bit offset, message_id msg) const
+size_t Pipe::peek(byte& out, size_t offset, message_id msg) const
    {
    return peek(&out, 1, offset, msg);
    }

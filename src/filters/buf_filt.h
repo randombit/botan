@@ -19,35 +19,35 @@ namespace Botan {
 class BOTAN_DLL Buffered_Filter
    {
    public:
-      void write(const byte[], u32bit);
+      void write(const byte[], size_t);
       void end_msg();
 
-      Buffered_Filter(u32bit block_size, u32bit final_minimum);
+      Buffered_Filter(size_t block_size, size_t final_minimum);
 
       virtual ~Buffered_Filter() {}
    protected:
-      virtual void buffered_block(const byte input[], u32bit length) = 0;
-      virtual void buffered_final(const byte input[], u32bit length) = 0;
+      virtual void buffered_block(const byte input[], size_t length) = 0;
+      virtual void buffered_final(const byte input[], size_t length) = 0;
 
       /**
       * @return block size of inputs
       */
-      u32bit buffered_block_size() const { return main_block_mod; }
+      size_t buffered_block_size() const { return main_block_mod; }
 
       /**
       * @return current position in the buffer
       */
-      u32bit current_position() const { return buffer_pos; }
+      size_t current_position() const { return buffer_pos; }
 
       /**
       * Reset the buffer position
       */
       void buffer_reset() { buffer_pos = 0; }
    private:
-      u32bit main_block_mod, final_minimum;
+      size_t main_block_mod, final_minimum;
 
       SecureVector<byte> buffer;
-      u32bit buffer_pos;
+      size_t buffer_pos;
    };
 
 }

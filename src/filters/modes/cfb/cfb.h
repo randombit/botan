@@ -25,26 +25,26 @@ class BOTAN_DLL CFB_Encryption : public Keyed_Filter
 
       void set_key(const SymmetricKey& key) { cipher->set_key(key); }
 
-      bool valid_keylength(u32bit key_len) const
+      bool valid_keylength(size_t key_len) const
          { return cipher->valid_keylength(key_len); }
 
-      bool valid_iv_length(u32bit iv_len) const
+      bool valid_iv_length(size_t iv_len) const
          { return (iv_len == cipher->BLOCK_SIZE); }
 
-      CFB_Encryption(BlockCipher* cipher, u32bit feedback = 0);
+      CFB_Encryption(BlockCipher* cipher, size_t feedback = 0);
 
       CFB_Encryption(BlockCipher* cipher,
                      const SymmetricKey& key,
                      const InitializationVector& iv,
-                     u32bit feedback = 0);
+                     size_t feedback = 0);
 
       ~CFB_Encryption() { delete cipher; }
    private:
-      void write(const byte[], u32bit);
+      void write(const byte[], size_t);
 
       BlockCipher* cipher;
       SecureVector<byte> buffer, state;
-      u32bit position, feedback;
+      size_t position, feedback;
    };
 
 /**
@@ -59,26 +59,26 @@ class BOTAN_DLL CFB_Decryption : public Keyed_Filter
 
       void set_key(const SymmetricKey& key) { cipher->set_key(key); }
 
-      bool valid_keylength(u32bit key_len) const
+      bool valid_keylength(size_t key_len) const
          { return cipher->valid_keylength(key_len); }
 
-      bool valid_iv_length(u32bit iv_len) const
+      bool valid_iv_length(size_t iv_len) const
          { return (iv_len == cipher->BLOCK_SIZE); }
 
-      CFB_Decryption(BlockCipher* cipher, u32bit feedback = 0);
+      CFB_Decryption(BlockCipher* cipher, size_t feedback = 0);
 
       CFB_Decryption(BlockCipher* cipher,
                      const SymmetricKey& key,
                      const InitializationVector& iv,
-                     u32bit feedback = 0);
+                     size_t feedback = 0);
 
       ~CFB_Decryption() { delete cipher; }
    private:
-      void write(const byte[], u32bit);
+      void write(const byte[], size_t);
 
       BlockCipher* cipher;
       SecureVector<byte> buffer, state;
-      u32bit position, feedback;
+      size_t position, feedback;
    };
 
 }

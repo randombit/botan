@@ -17,7 +17,7 @@ namespace Botan {
 */
 struct BOTAN_DLL BitBucket : public Filter
    {
-   void write(const byte[], u32bit) {}
+   void write(const byte[], size_t) {}
 
    std::string name() const { return "BitBucket"; }
    };
@@ -31,7 +31,7 @@ struct BOTAN_DLL BitBucket : public Filter
 class BOTAN_DLL Chain : public Fanout_Filter
    {
    public:
-      void write(const byte input[], u32bit length) { send(input, length); }
+      void write(const byte input[], size_t length) { send(input, length); }
 
       std::string name() const;
 
@@ -46,7 +46,7 @@ class BOTAN_DLL Chain : public Fanout_Filter
       * @param filter_arr the list of filters
       * @param length how many filters
       */
-      Chain(Filter* filter_arr[], u32bit length);
+      Chain(Filter* filter_arr[], size_t length);
    };
 
 /**
@@ -57,8 +57,8 @@ class BOTAN_DLL Chain : public Fanout_Filter
 class BOTAN_DLL Fork : public Fanout_Filter
    {
    public:
-      void write(const byte input[], u32bit length) { send(input, length); }
-      void set_port(u32bit n) { Fanout_Filter::set_port(n); }
+      void write(const byte input[], size_t length) { send(input, length); }
+      void set_port(size_t n) { Fanout_Filter::set_port(n); }
 
       std::string name() const;
 
@@ -72,7 +72,7 @@ class BOTAN_DLL Fork : public Fanout_Filter
       * @param filter_arr the list of filters
       * @param length how many filters
       */
-      Fork(Filter* filter_arr[], u32bit length);
+      Fork(Filter* filter_arr[], size_t length);
    };
 
 }

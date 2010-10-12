@@ -49,8 +49,8 @@ struct Unix_Program
 class DataSource_Command : public DataSource
    {
    public:
-      u32bit read(byte[], u32bit);
-      u32bit peek(byte[], u32bit, u32bit) const;
+      size_t read(byte[], size_t);
+      size_t peek(byte[], size_t, size_t) const;
       bool end_of_data() const;
       std::string id() const;
 

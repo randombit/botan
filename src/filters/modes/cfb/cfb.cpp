@@ -15,7 +15,7 @@ namespace Botan {
 /*
 * CFB Encryption Constructor
 */
-CFB_Encryption::CFB_Encryption(BlockCipher* ciph, u32bit fback_bits)
+CFB_Encryption::CFB_Encryption(BlockCipher* ciph, size_t fback_bits)
    {
    cipher = ciph;
    feedback = fback_bits ? fback_bits / 8: cipher->BLOCK_SIZE;
@@ -35,7 +35,7 @@ CFB_Encryption::CFB_Encryption(BlockCipher* ciph, u32bit fback_bits)
 CFB_Encryption::CFB_Encryption(BlockCipher* ciph,
                                const SymmetricKey& key,
                                const InitializationVector& iv,
-                               u32bit fback_bits)
+                               size_t fback_bits)
    {
    cipher = ciph;
    feedback = fback_bits ? fback_bits / 8: cipher->BLOCK_SIZE;
@@ -67,11 +67,11 @@ void CFB_Encryption::set_iv(const InitializationVector& iv)
 /*
 * Encrypt data in CFB mode
 */
-void CFB_Encryption::write(const byte input[], u32bit length)
+void CFB_Encryption::write(const byte input[], size_t length)
    {
    while(length)
       {
-      u32bit xored = std::min(feedback - position, length);
+      size_t xored = std::min(feedback - position, length);
       xor_buf(&buffer[position], input, xored);
       send(&buffer[position], xored);
       input += xored;
@@ -80,7 +80,7 @@ void CFB_Encryption::write(const byte input[], u32bit length)
 
       if(position == feedback)
          {
-         for(u32bit j = 0; j != cipher->BLOCK_SIZE - feedback; ++j)
+         for(size_t j = 0; j != cipher->BLOCK_SIZE - feedback; ++j)
             state[j] = state[j + feedback];
          state.copy(cipher->BLOCK_SIZE - feedback, buffer, feedback);
          cipher->encrypt(state, buffer);
@@ -92,7 +92,7 @@ void CFB_Encryption::write(const byte input[], u32bit length)
 /*
 * CFB Decryption Constructor
 */
-CFB_Decryption::CFB_Decryption(BlockCipher* ciph, u32bit fback_bits)
+CFB_Decryption::CFB_Decryption(BlockCipher* ciph, size_t fback_bits)
    {
    cipher = ciph;
    feedback = fback_bits ? fback_bits / 8: cipher->BLOCK_SIZE;
@@ -112,7 +112,7 @@ CFB_Decryption::CFB_Decryption(BlockCipher* ciph, u32bit fback_bits)
 CFB_Decryption::CFB_Decryption(BlockCipher* ciph,
                                const SymmetricKey& key,
                                const InitializationVector& iv,
-                               u32bit fback_bits)
+                               size_t fback_bits)
    {
    cipher = ciph;
    feedback = fback_bits ? fback_bits / 8: cipher->BLOCK_SIZE;
@@ -144,11 +144,11 @@ void CFB_Decryption::set_iv(const InitializationVector& iv)
 /*
 * Decrypt data in CFB mode
 */
-void CFB_Decryption::write(const byte input[], u32bit length)
+void CFB_Decryption::write(const byte input[], size_t length)
    {
    while(length)
       {
-      u32bit xored = std::min(feedback - position, length);
+      size_t xored = std::min(feedback - position, length);
       xor_buf(&buffer[position], input, xored);
       send(&buffer[position], xored);
       buffer.copy(position, input, xored);
@@ -157,7 +157,7 @@ void CFB_Decryption::write(const byte input[], u32bit length)
       position += xored;
       if(position == feedback)
          {
-         for(u32bit j = 0; j != cipher->BLOCK_SIZE - feedback; ++j)
+         for(size_t j = 0; j != cipher->BLOCK_SIZE - feedback; ++j)
             state[j] = state[j + feedback];
          state.copy(cipher->BLOCK_SIZE - feedback, buffer, feedback);
          cipher->encrypt(state, buffer);

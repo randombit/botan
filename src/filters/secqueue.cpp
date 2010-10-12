@@ -21,37 +21,37 @@ class SecureQueueNode
 
       ~SecureQueueNode() { next = 0; start = end = 0; }
 
-      u32bit write(const byte input[], u32bit length)
+      size_t write(const byte input[], size_t length)
          {
-         u32bit copied = std::min<u32bit>(length, buffer.size() - end);
+         size_t copied = std::min<size_t>(length, buffer.size() - end);
          copy_mem(&buffer[end], input, copied);
          end += copied;
          return copied;
          }
 
-      u32bit read(byte output[], u32bit length)
+      size_t read(byte output[], size_t length)
          {
-         u32bit copied = std::min(length, end - start);
+         size_t copied = std::min(length, end - start);
          copy_mem(output, &buffer[start], copied);
          start += copied;
          return copied;
          }
 
-      u32bit peek(byte output[], u32bit length, u32bit offset = 0)
+      size_t peek(byte output[], size_t length, size_t offset = 0)
          {
-         const u32bit left = end - start;
+         const size_t left = end - start;
          if(offset >= left) return 0;
-         u32bit copied = std::min(length, left - offset);
+         size_t copied = std::min(length, left - offset);
          copy_mem(output, &buffer[start + offset], copied);
          return copied;
          }
 
-      u32bit size() const { return (end - start); }
+      size_t size() const { return (end - start); }
    private:
       friend class SecureQueue;
       SecureQueueNode* next;
       SecureVector<byte> buffer;
-      u32bit start, end;
+      size_t start, end;
    };
 
 /*
@@ -114,13 +114,13 @@ SecureQueue& SecureQueue::operator=(const SecureQueue& input)
 /*
 * Add some bytes to the queue
 */
-void SecureQueue::write(const byte input[], u32bit length)
+void SecureQueue::write(const byte input[], size_t length)
    {
    if(!head)
       head = tail = new SecureQueueNode;
    while(length)
       {
-      const u32bit n = tail->write(input, length);
+      const size_t n = tail->write(input, length);
       input += n;
       length -= n;
       if(length)
@@ -134,12 +134,12 @@ void SecureQueue::write(const byte input[], u32bit length)
 /*
 * Read some bytes from the queue
 */
-u32bit SecureQueue::read(byte output[], u32bit length)
+size_t SecureQueue::read(byte output[], size_t length)
    {
-   u32bit got = 0;
+   size_t got = 0;
    while(length && head)
       {
-      const u32bit n = head->read(output, length);
+      const size_t n = head->read(output, length);
       output += n;
       got += n;
       length -= n;
@@ -156,7 +156,7 @@ u32bit SecureQueue::read(byte output[], u32bit length)
 /*
 * Read data, but do not remove it from queue
 */
-u32bit SecureQueue::peek(byte output[], u32bit length, u32bit offset) const
+size_t SecureQueue::peek(byte output[], size_t length, size_t offset) const
    {
    SecureQueueNode* current = head;
 
@@ -171,10 +171,10 @@ u32bit SecureQueue::peek(byte output[], u32bit length, u32bit offset) const
          break;
       }
 
-   u32bit got = 0;
+   size_t got = 0;
    while(length && current)
       {
-      const u32bit n = current->peek(output, length, offset);
+      const size_t n = current->peek(output, length, offset);
       offset = 0;
       output += n;
       got += n;
@@ -187,10 +187,10 @@ u32bit SecureQueue::peek(byte output[], u32bit length, u32bit offset) const
 /*
 * Return how many bytes the queue holds
 */
-u32bit SecureQueue::size() const
+size_t SecureQueue::size() const
    {
    SecureQueueNode* current = head;
-   u32bit count = 0;
+   size_t count = 0;
 
    while(current)
       {

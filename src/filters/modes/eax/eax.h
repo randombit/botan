@@ -30,19 +30,19 @@ class BOTAN_DLL EAX_Base : public Keyed_Filter
       * @param header the header contents
       * @param header_len length of header in bytes
       */
-      void set_header(const byte header[], u32bit header_len);
+      void set_header(const byte header[], size_t header_len);
 
       /**
       * @return name of this mode
       */
       std::string name() const;
 
-      bool valid_keylength(u32bit key_len) const;
+      bool valid_keylength(size_t key_len) const;
 
       /**
       * EAX supports arbitrary IV lengths
       */
-      bool valid_iv_length(u32bit) const { return true; }
+      bool valid_iv_length(size_t) const { return true; }
 
       ~EAX_Base() { delete ctr; delete cmac; }
    protected:
@@ -50,10 +50,10 @@ class BOTAN_DLL EAX_Base : public Keyed_Filter
       * @param cipher the cipher to use
       * @param tag_size is how big the auth tag will be
       */
-      EAX_Base(BlockCipher* cipher, u32bit tag_size);
+      EAX_Base(BlockCipher* cipher, size_t tag_size);
       void start_msg();
 
-      const u32bit BLOCK_SIZE, TAG_SIZE;
+      const size_t BLOCK_SIZE, TAG_SIZE;
       std::string cipher_name;
 
       StreamCipher* ctr;
@@ -73,7 +73,7 @@ class BOTAN_DLL EAX_Encryption : public EAX_Base
       * @param ciph the cipher to use
       * @param tag_size is how big the auth tag will be
       */
-      EAX_Encryption(BlockCipher* ciph, u32bit tag_size = 0) :
+      EAX_Encryption(BlockCipher* ciph, size_t tag_size = 0) :
          EAX_Base(ciph, tag_size) {}
 
       /**
@@ -84,13 +84,13 @@ class BOTAN_DLL EAX_Encryption : public EAX_Base
       */
       EAX_Encryption(BlockCipher* ciph, const SymmetricKey& key,
                      const InitializationVector& iv,
-                     u32bit tag_size) : EAX_Base(ciph, tag_size)
+                     size_t tag_size) : EAX_Base(ciph, tag_size)
          {
          set_key(key);
          set_iv(iv);
          }
    private:
-      void write(const byte[], u32bit);
+      void write(const byte[], size_t);
       void end_msg();
    };
 
@@ -104,7 +104,7 @@ class BOTAN_DLL EAX_Decryption : public EAX_Base
       * @param ciph the cipher to use
       * @param tag_size is how big the auth tag will be
       */
-      EAX_Decryption(BlockCipher* ciph, u32bit tag_size = 0);
+      EAX_Decryption(BlockCipher* ciph, size_t tag_size = 0);
 
       /**
       * @param ciph the cipher to use
@@ -114,14 +114,14 @@ class BOTAN_DLL EAX_Decryption : public EAX_Base
       */
       EAX_Decryption(BlockCipher* ciph, const SymmetricKey& key,
                      const InitializationVector& iv,
-                     u32bit tag_size = 0);
+                     size_t tag_size = 0);
    private:
-      void write(const byte[], u32bit);
-      void do_write(const byte[], u32bit);
+      void write(const byte[], size_t);
+      void do_write(const byte[], size_t);
       void end_msg();
 
       SecureVector<byte> queue;
-      u32bit queue_start, queue_end;
+      size_t queue_start, queue_end;
    };
 
 }

@@ -20,9 +20,9 @@ namespace Botan {
 class Output_Buffers
    {
    public:
-      u32bit read(byte[], u32bit, Pipe::message_id);
-      u32bit peek(byte[], u32bit, u32bit, Pipe::message_id) const;
-      u32bit remaining(Pipe::message_id) const;
+      size_t read(byte[], size_t, Pipe::message_id);
+      size_t peek(byte[], size_t, size_t, Pipe::message_id) const;
+      size_t remaining(Pipe::message_id) const;
 
       void add(class SecureQueue*);
       void retire();

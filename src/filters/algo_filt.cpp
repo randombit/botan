@@ -64,11 +64,11 @@ void StreamCipher_Filter::set_iv(const InitializationVector& iv)
 /*
 * Write data into a StreamCipher_Filter
 */
-void StreamCipher_Filter::write(const byte input[], u32bit length)
+void StreamCipher_Filter::write(const byte input[], size_t length)
    {
    while(length)
       {
-      u32bit copied = std::min<u32bit>(length, buffer.size());
+      size_t copied = std::min<size_t>(length, buffer.size());
       cipher->cipher(input, &buffer[0], copied);
       send(buffer, copied);
       input += copied;
@@ -80,7 +80,7 @@ void StreamCipher_Filter::write(const byte input[], u32bit length)
 * Hash_Filter Constructor
 */
 Hash_Filter::Hash_Filter(const std::string& algo_spec,
-                         u32bit len) :
+                         size_t len) :
    OUTPUT_LENGTH(len)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
@@ -94,7 +94,7 @@ void Hash_Filter::end_msg()
    {
    SecureVector<byte> output = hash->final();
    if(OUTPUT_LENGTH)
-      send(output, std::min<u32bit>(OUTPUT_LENGTH, output.size()));
+      send(output, std::min<size_t>(OUTPUT_LENGTH, output.size()));
    else
       send(output);
    }
@@ -102,7 +102,7 @@ void Hash_Filter::end_msg()
 /*
 * MAC_Filter Constructor
 */
-MAC_Filter::MAC_Filter(const std::string& mac_name, u32bit len) :
+MAC_Filter::MAC_Filter(const std::string& mac_name, size_t len) :
    OUTPUT_LENGTH(len)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
@@ -113,7 +113,7 @@ MAC_Filter::MAC_Filter(const std::string& mac_name, u32bit len) :
 * MAC_Filter Constructor
 */
 MAC_Filter::MAC_Filter(const std::string& mac_name, const SymmetricKey& key,
-                       u32bit len) : OUTPUT_LENGTH(len)
+                       size_t len) : OUTPUT_LENGTH(len)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
    mac = af.make_mac(mac_name);
@@ -127,7 +127,7 @@ void MAC_Filter::end_msg()
    {
    SecureVector<byte> output = mac->final();
    if(OUTPUT_LENGTH)
-      send(output, std::min<u32bit>(OUTPUT_LENGTH, output.size()));
+      send(output, std::min<size_t>(OUTPUT_LENGTH, output.size()));
    else
       send(output);
    }

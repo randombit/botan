@@ -25,10 +25,10 @@ class BOTAN_DLL CTS_Encryption : public Keyed_Filter
 
       void set_key(const SymmetricKey& key) { cipher->set_key(key); }
 
-      bool valid_keylength(u32bit key_len) const
+      bool valid_keylength(size_t key_len) const
          { return cipher->valid_keylength(key_len); }
 
-      bool valid_iv_length(u32bit iv_len) const
+      bool valid_iv_length(size_t iv_len) const
          { return (iv_len == cipher->BLOCK_SIZE); }
 
       CTS_Encryption(BlockCipher* cipher);
@@ -39,13 +39,13 @@ class BOTAN_DLL CTS_Encryption : public Keyed_Filter
 
       ~CTS_Encryption() { delete cipher; }
    private:
-      void write(const byte[], u32bit);
+      void write(const byte[], size_t);
       void end_msg();
       void encrypt(const byte[]);
 
       BlockCipher* cipher;
       SecureVector<byte> buffer, state;
-      u32bit position;
+      size_t position;
    };
 
 /**
@@ -60,10 +60,10 @@ class BOTAN_DLL CTS_Decryption : public Keyed_Filter
 
       void set_key(const SymmetricKey& key) { cipher->set_key(key); }
 
-      bool valid_keylength(u32bit key_len) const
+      bool valid_keylength(size_t key_len) const
          { return cipher->valid_keylength(key_len); }
 
-      bool valid_iv_length(u32bit iv_len) const
+      bool valid_iv_length(size_t iv_len) const
          { return (iv_len == cipher->BLOCK_SIZE); }
 
       CTS_Decryption(BlockCipher* cipher);
@@ -74,13 +74,13 @@ class BOTAN_DLL CTS_Decryption : public Keyed_Filter
 
       ~CTS_Decryption() { delete cipher; }
    private:
-      void write(const byte[], u32bit);
+      void write(const byte[], size_t);
       void end_msg();
       void decrypt(const byte[]);
 
       BlockCipher* cipher;
       SecureVector<byte> buffer, state, temp;
-      u32bit position;
+      size_t position;
    };
 
 }
