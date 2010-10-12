@@ -52,18 +52,18 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
          return out;
          }
 
-      void reseed(u32bit) {}
+      void reseed(size_t) {}
 
-      void randomize(byte out[], u32bit len)
+      void randomize(byte out[], size_t len)
          {
-         for(u32bit j = 0; j != len; j++)
+         for(size_t j = 0; j != len; j++)
             out[j] = random();
          }
 
       std::string name() const { return "Fixed_Output_RNG"; }
 
       void add_entropy_source(Botan::EntropySource* src) { delete src; }
-      void add_entropy(const byte[], u32bit) {};
+      void add_entropy(const byte[], size_t) {};
 
       void clear() throw() {}
 
