@@ -14,7 +14,7 @@ namespace Botan {
 * EMSA1 BSI Encode Operation
 */
 SecureVector<byte> EMSA1_BSI::encoding_of(const MemoryRegion<byte>& msg,
-                                          u32bit output_bits,
+                                          size_t output_bits,
                                           RandomNumberGenerator&)
    {
    if(msg.size() != hash_ptr()->OUTPUT_LENGTH)

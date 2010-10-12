@@ -16,16 +16,16 @@ namespace {
 * EMSA3 Encode Operation
 */
 SecureVector<byte> emsa3_encoding(const MemoryRegion<byte>& msg,
-                                  u32bit output_bits,
+                                  size_t output_bits,
                                   const byte hash_id[],
-                                  u32bit hash_id_length)
+                                  size_t hash_id_length)
    {
-   u32bit output_length = output_bits / 8;
+   size_t output_length = output_bits / 8;
    if(output_length < hash_id_length + msg.size() + 10)
       throw Encoding_Error("emsa3_encoding: Output length is too small");
 
    SecureVector<byte> T(output_length);
-   const u32bit P_LENGTH = output_length - msg.size() - hash_id_length - 2;
+   const size_t P_LENGTH = output_length - msg.size() - hash_id_length - 2;
 
    T[0] = 0x01;
    set_mem(&T[1], P_LENGTH, 0xFF);
@@ -40,7 +40,7 @@ SecureVector<byte> emsa3_encoding(const MemoryRegion<byte>& msg,
 /*
 * EMSA3 Update Operation
 */
-void EMSA3::update(const byte input[], u32bit length)
+void EMSA3::update(const byte input[], size_t length)
    {
    hash->update(input, length);
    }
@@ -57,7 +57,7 @@ SecureVector<byte> EMSA3::raw_data()
 * EMSA3 Encode Operation
 */
 SecureVector<byte> EMSA3::encoding_of(const MemoryRegion<byte>& msg,
-                                      u32bit output_bits,
+                                      size_t output_bits,
                                       RandomNumberGenerator&)
    {
    if(msg.size() != hash->OUTPUT_LENGTH)
@@ -72,7 +72,7 @@ SecureVector<byte> EMSA3::encoding_of(const MemoryRegion<byte>& msg,
 */
 bool EMSA3::verify(const MemoryRegion<byte>& coded,
                    const MemoryRegion<byte>& raw,
-                   u32bit key_bits)
+                   size_t key_bits)
    {
    if(raw.size() != hash->OUTPUT_LENGTH)
       return false;
@@ -107,7 +107,7 @@ EMSA3::~EMSA3()
 /*
 * EMSA3_Raw Update Operation
 */
-void EMSA3_Raw::update(const byte input[], u32bit length)
+void EMSA3_Raw::update(const byte input[], size_t length)
    {
    message += std::make_pair(input, length);
    }
@@ -126,7 +126,7 @@ SecureVector<byte> EMSA3_Raw::raw_data()
 * EMSA3_Raw Encode Operation
 */
 SecureVector<byte> EMSA3_Raw::encoding_of(const MemoryRegion<byte>& msg,
-                                          u32bit output_bits,
+                                          size_t output_bits,
                                           RandomNumberGenerator&)
    {
    return emsa3_encoding(msg, output_bits, 0, 0);
@@ -137,7 +137,7 @@ SecureVector<byte> EMSA3_Raw::encoding_of(const MemoryRegion<byte>& msg,
 */
 bool EMSA3_Raw::verify(const MemoryRegion<byte>& coded,
                        const MemoryRegion<byte>& raw,
-                       u32bit key_bits)
+                       size_t key_bits)
    {
    try
       {

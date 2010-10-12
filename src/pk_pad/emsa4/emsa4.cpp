@@ -14,7 +14,7 @@ namespace Botan {
 /*
 * EMSA4 Update Operation
 */
-void EMSA4::update(const byte input[], u32bit length)
+void EMSA4::update(const byte input[], size_t length)
    {
    hash->update(input, length);
    }
@@ -31,21 +31,21 @@ SecureVector<byte> EMSA4::raw_data()
 * EMSA4 Encode Operation
 */
 SecureVector<byte> EMSA4::encoding_of(const MemoryRegion<byte>& msg,
-                                      u32bit output_bits,
+                                      size_t output_bits,
                                       RandomNumberGenerator& rng)
    {
-   const u32bit HASH_SIZE = hash->OUTPUT_LENGTH;
+   const size_t HASH_SIZE = hash->OUTPUT_LENGTH;
 
    if(msg.size() != HASH_SIZE)
       throw Encoding_Error("EMSA4::encoding_of: Bad input length");
    if(output_bits < 8*HASH_SIZE + 8*SALT_SIZE + 9)
       throw Encoding_Error("EMSA4::encoding_of: Output length is too small");
 
-   const u32bit output_length = (output_bits + 7) / 8;
+   const size_t output_length = (output_bits + 7) / 8;
 
    SecureVector<byte> salt = rng.random_vec(SALT_SIZE);
 
-   for(u32bit j = 0; j != 8; ++j)
+   for(size_t j = 0; j != 8; ++j)
       hash->update(0);
    hash->update(msg);
    hash->update(salt, SALT_SIZE);
@@ -67,10 +67,10 @@ SecureVector<byte> EMSA4::encoding_of(const MemoryRegion<byte>& msg,
 * EMSA4 Decode/Verify Operation
 */
 bool EMSA4::verify(const MemoryRegion<byte>& const_coded,
-                   const MemoryRegion<byte>& raw, u32bit key_bits)
+                   const MemoryRegion<byte>& raw, size_t key_bits)
    {
-   const u32bit HASH_SIZE = hash->OUTPUT_LENGTH;
-   const u32bit KEY_BYTES = (key_bits + 7) / 8;
+   const size_t HASH_SIZE = hash->OUTPUT_LENGTH;
+   const size_t KEY_BYTES = (key_bits + 7) / 8;
 
    if(key_bits < 8*HASH_SIZE + 9)
       return false;
@@ -89,7 +89,7 @@ bool EMSA4::verify(const MemoryRegion<byte>& const_coded,
       coded = temp;
       }
 
-   const u32bit TOP_BITS = 8 * ((key_bits + 7) / 8) - key_bits;
+   const size_t TOP_BITS = 8 * ((key_bits + 7) / 8) - key_bits;
    if(TOP_BITS > 8 - high_bit(coded[0]))
       return false;
 
@@ -99,8 +99,8 @@ bool EMSA4::verify(const MemoryRegion<byte>& const_coded,
    mgf->mask(H, H.size(), DB, coded.size() - H.size() - 1);
    DB[0] &= 0xFF >> TOP_BITS;
 
-   u32bit salt_offset = 0;
-   for(u32bit j = 0; j != DB.size(); ++j)
+   size_t salt_offset = 0;
+   for(size_t j = 0; j != DB.size(); ++j)
       {
       if(DB[j] == 0x01)
          { salt_offset = j + 1; break; }
@@ -112,7 +112,7 @@ bool EMSA4::verify(const MemoryRegion<byte>& const_coded,
 
    SecureVector<byte> salt(&DB[salt_offset], DB.size() - salt_offset);
 
-   for(u32bit j = 0; j != 8; ++j)
+   for(size_t j = 0; j != 8; ++j)
       hash->update(0);
    hash->update(raw);
    hash->update(salt);
@@ -133,7 +133,7 @@ EMSA4::EMSA4(HashFunction* h) :
 /*
 * EMSA4 Constructor
 */
-EMSA4::EMSA4(HashFunction* h, u32bit salt_size) :
+EMSA4::EMSA4(HashFunction* h, size_t salt_size) :
    SALT_SIZE(salt_size), hash(h)
    {
    mgf = new MGF1(hash->clone());

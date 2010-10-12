@@ -12,23 +12,23 @@ namespace Botan {
 namespace {
 
 SecureVector<byte> emsa1_encoding(const MemoryRegion<byte>& msg,
-                                  u32bit output_bits)
+                                  size_t output_bits)
    {
    if(8*msg.size() <= output_bits)
       return msg;
 
-   u32bit shift = 8*msg.size() - output_bits;
+   size_t shift = 8*msg.size() - output_bits;
 
-   u32bit byte_shift = shift / 8, bit_shift = shift % 8;
+   size_t byte_shift = shift / 8, bit_shift = shift % 8;
    SecureVector<byte> digest(msg.size() - byte_shift);
 
-   for(u32bit j = 0; j != msg.size() - byte_shift; ++j)
+   for(size_t j = 0; j != msg.size() - byte_shift; ++j)
       digest[j] = msg[j];
 
    if(bit_shift)
       {
       byte carry = 0;
-      for(u32bit j = 0; j != digest.size(); ++j)
+      for(size_t j = 0; j != digest.size(); ++j)
          {
          byte temp = digest[j];
          digest[j] = (temp >> bit_shift) | carry;
@@ -43,7 +43,7 @@ SecureVector<byte> emsa1_encoding(const MemoryRegion<byte>& msg,
 /*
 * EMSA1 Update Operation
 */
-void EMSA1::update(const byte input[], u32bit length)
+void EMSA1::update(const byte input[], size_t length)
    {
    hash->update(input, length);
    }
@@ -60,7 +60,7 @@ SecureVector<byte> EMSA1::raw_data()
 * EMSA1 Encode Operation
 */
 SecureVector<byte> EMSA1::encoding_of(const MemoryRegion<byte>& msg,
-                                      u32bit output_bits,
+                                      size_t output_bits,
                                       RandomNumberGenerator&)
    {
    if(msg.size() != hash->OUTPUT_LENGTH)
@@ -72,7 +72,7 @@ SecureVector<byte> EMSA1::encoding_of(const MemoryRegion<byte>& msg,
 * EMSA1 Decode/Verify Operation
 */
 bool EMSA1::verify(const MemoryRegion<byte>& coded,
-                   const MemoryRegion<byte>& raw, u32bit key_bits)
+                   const MemoryRegion<byte>& raw, size_t key_bits)
    {
    try {
       if(raw.size() != hash->OUTPUT_LENGTH)
@@ -84,13 +84,13 @@ bool EMSA1::verify(const MemoryRegion<byte>& coded,
       if(our_coding[0] != 0) return false;
       if(our_coding.size() <= coded.size()) return false;
 
-      u32bit offset = 0;
+      size_t offset = 0;
       while(our_coding[offset] == 0 && offset < our_coding.size())
          ++offset;
       if(our_coding.size() - offset != coded.size())
          return false;
 
-      for(u32bit j = 0; j != coded.size(); ++j)
+      for(size_t j = 0; j != coded.size(); ++j)
          if(coded[j] != our_coding[j+offset])
             return false;
 

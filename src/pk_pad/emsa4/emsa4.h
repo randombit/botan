@@ -29,19 +29,19 @@ class BOTAN_DLL EMSA4 : public EMSA
       * @param hash the hash object to use
       * @param salt_size the size of the salt to use in bytes
       */
-      EMSA4(HashFunction* hash, u32bit salt_size);
+      EMSA4(HashFunction* hash, size_t salt_size);
 
       ~EMSA4() { delete hash; delete mgf; }
    private:
-      void update(const byte[], u32bit);
+      void update(const byte[], size_t);
       SecureVector<byte> raw_data();
 
-      SecureVector<byte> encoding_of(const MemoryRegion<byte>&, u32bit,
+      SecureVector<byte> encoding_of(const MemoryRegion<byte>&, size_t,
                                      RandomNumberGenerator& rng);
       bool verify(const MemoryRegion<byte>&, const MemoryRegion<byte>&,
-                  u32bit);
+                  size_t);
 
-      u32bit SALT_SIZE;
+      size_t SALT_SIZE;
       HashFunction* hash;
       const MGF* mgf;
    };

@@ -24,7 +24,7 @@ class BOTAN_DLL EME
       * @param keybits the size of the key in bits
       * @return upper bound of input in bytes
       */
-      virtual u32bit maximum_input_size(u32bit keybits) const = 0;
+      virtual size_t maximum_input_size(size_t keybits) const = 0;
 
       /**
       * Encode an input
@@ -35,8 +35,8 @@ class BOTAN_DLL EME
       * @return encoded plaintext
       */
       SecureVector<byte> encode(const byte in[],
-                                u32bit in_length,
-                                u32bit key_length,
+                                size_t in_length,
+                                size_t key_length,
                                 RandomNumberGenerator& rng) const;
 
       /**
@@ -47,7 +47,7 @@ class BOTAN_DLL EME
       * @return encoded plaintext
       */
       SecureVector<byte> encode(const MemoryRegion<byte>& in,
-                                u32bit key_length,
+                                size_t key_length,
                                 RandomNumberGenerator& rng) const;
 
       /**
@@ -58,8 +58,8 @@ class BOTAN_DLL EME
       * @return plaintext
       */
       SecureVector<byte> decode(const byte in[],
-                                u32bit in_length,
-                                u32bit key_length) const;
+                                size_t in_length,
+                                size_t key_length) const;
 
       /**
       * Decode an input
@@ -68,7 +68,7 @@ class BOTAN_DLL EME
       * @return plaintext
       */
       SecureVector<byte> decode(const MemoryRegion<byte>& in,
-                                u32bit key_length) const;
+                                size_t key_length) const;
 
       virtual ~EME() {}
    private:
@@ -81,8 +81,8 @@ class BOTAN_DLL EME
       * @return encoded plaintext
       */
       virtual SecureVector<byte> pad(const byte in[],
-                                     u32bit in_length,
-                                     u32bit key_length,
+                                     size_t in_length,
+                                     size_t key_length,
                                      RandomNumberGenerator& rng) const = 0;
 
       /**
@@ -93,8 +93,8 @@ class BOTAN_DLL EME
       * @return plaintext
       */
       virtual SecureVector<byte> unpad(const byte in[],
-                                       u32bit in_length,
-                                       u32bit key_length) const = 0;
+                                       size_t in_length,
+                                       size_t key_length) const = 0;
    };
 
 }

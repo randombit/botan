@@ -16,13 +16,13 @@ namespace {
 * EMSA2 Encode Operation
 */
 SecureVector<byte> emsa2_encoding(const MemoryRegion<byte>& msg,
-                                  u32bit output_bits,
+                                  size_t output_bits,
                                   const MemoryRegion<byte>& empty_hash,
                                   byte hash_id)
    {
-   const u32bit HASH_SIZE = empty_hash.size();
+   const size_t HASH_SIZE = empty_hash.size();
 
-   u32bit output_length = (output_bits + 1) / 8;
+   size_t output_length = (output_bits + 1) / 8;
 
    if(msg.size() != HASH_SIZE)
       throw Encoding_Error("EMSA2::encoding_of: Bad input length");
@@ -30,7 +30,7 @@ SecureVector<byte> emsa2_encoding(const MemoryRegion<byte>& msg,
       throw Encoding_Error("EMSA2::encoding_of: Output length is too small");
 
    bool empty = true;
-   for(u32bit j = 0; j != HASH_SIZE; ++j)
+   for(size_t j = 0; j != HASH_SIZE; ++j)
       if(empty_hash[j] != msg[j])
          empty = false;
 
@@ -51,7 +51,7 @@ SecureVector<byte> emsa2_encoding(const MemoryRegion<byte>& msg,
 /*
 * EMSA2 Update Operation
 */
-void EMSA2::update(const byte input[], u32bit length)
+void EMSA2::update(const byte input[], size_t length)
    {
    hash->update(input, length);
    }
@@ -68,7 +68,7 @@ SecureVector<byte> EMSA2::raw_data()
 * EMSA2 Encode Operation
 */
 SecureVector<byte> EMSA2::encoding_of(const MemoryRegion<byte>& msg,
-                                      u32bit output_bits,
+                                      size_t output_bits,
                                       RandomNumberGenerator&)
    {
    return emsa2_encoding(msg, output_bits, empty_hash, hash_id);
@@ -79,7 +79,7 @@ SecureVector<byte> EMSA2::encoding_of(const MemoryRegion<byte>& msg,
 */
 bool EMSA2::verify(const MemoryRegion<byte>& coded,
                    const MemoryRegion<byte>& raw,
-                   u32bit key_bits)
+                   size_t key_bits)
    {
    try
       {

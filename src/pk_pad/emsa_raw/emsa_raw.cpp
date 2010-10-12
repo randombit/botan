@@ -12,7 +12,7 @@ namespace Botan {
 /*
 * EMSA-Raw Encode Operation
 */
-void EMSA_Raw::update(const byte input[], u32bit length)
+void EMSA_Raw::update(const byte input[], size_t length)
    {
    message += std::make_pair(input, length);
    }
@@ -31,7 +31,7 @@ SecureVector<byte> EMSA_Raw::raw_data()
 * EMSA-Raw Encode Operation
 */
 SecureVector<byte> EMSA_Raw::encoding_of(const MemoryRegion<byte>& msg,
-                                         u32bit,
+                                         size_t,
                                          RandomNumberGenerator&)
    {
    return msg;
@@ -42,7 +42,7 @@ SecureVector<byte> EMSA_Raw::encoding_of(const MemoryRegion<byte>& msg,
 */
 bool EMSA_Raw::verify(const MemoryRegion<byte>& coded,
                       const MemoryRegion<byte>& raw,
-                      u32bit)
+                      size_t)
    {
    if(coded.size() == raw.size())
       return (coded == raw);
@@ -51,11 +51,11 @@ bool EMSA_Raw::verify(const MemoryRegion<byte>& coded,
       return false;
 
    // handle zero padding differences
-   const u32bit leading_zeros_expected = raw.size() - coded.size();
+   const size_t leading_zeros_expected = raw.size() - coded.size();
 
    bool same_modulo_leading_zeros = true;
 
-   for(u32bit i = 0; i != leading_zeros_expected; ++i)
+   for(size_t i = 0; i != leading_zeros_expected; ++i)
       if(raw[i])
          same_modulo_leading_zeros = false;
 

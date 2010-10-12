@@ -12,8 +12,8 @@ namespace Botan {
 /*
 * Encode a message
 */
-SecureVector<byte> EME::encode(const byte msg[], u32bit msg_len,
-                               u32bit key_bits,
+SecureVector<byte> EME::encode(const byte msg[], size_t msg_len,
+                               size_t key_bits,
                                RandomNumberGenerator& rng) const
    {
    return pad(msg, msg_len, key_bits, rng);
@@ -23,7 +23,7 @@ SecureVector<byte> EME::encode(const byte msg[], u32bit msg_len,
 * Encode a message
 */
 SecureVector<byte> EME::encode(const MemoryRegion<byte>& msg,
-                               u32bit key_bits,
+                               size_t key_bits,
                                RandomNumberGenerator& rng) const
    {
    return pad(&msg[0], msg.size(), key_bits, rng);
@@ -32,8 +32,8 @@ SecureVector<byte> EME::encode(const MemoryRegion<byte>& msg,
 /*
 * Decode a message
 */
-SecureVector<byte> EME::decode(const byte msg[], u32bit msg_len,
-                               u32bit key_bits) const
+SecureVector<byte> EME::decode(const byte msg[], size_t msg_len,
+                               size_t key_bits) const
    {
    return unpad(msg, msg_len, key_bits);
    }
@@ -42,7 +42,7 @@ SecureVector<byte> EME::decode(const byte msg[], u32bit msg_len,
 * Decode a message
 */
 SecureVector<byte> EME::decode(const MemoryRegion<byte>& msg,
-                               u32bit key_bits) const
+                               size_t key_bits) const
    {
    return unpad(&msg[0], msg.size(), key_bits);
    }

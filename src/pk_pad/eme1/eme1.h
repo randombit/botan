@@ -20,7 +20,7 @@ namespace Botan {
 class BOTAN_DLL EME1 : public EME
    {
    public:
-      u32bit maximum_input_size(u32bit) const;
+      size_t maximum_input_size(size_t) const;
 
       /**
       * @param hash object to use for hashing (takes ownership)
@@ -30,11 +30,11 @@ class BOTAN_DLL EME1 : public EME
 
       ~EME1() { delete mgf; }
    private:
-      SecureVector<byte> pad(const byte[], u32bit, u32bit,
+      SecureVector<byte> pad(const byte[], size_t, size_t,
                              RandomNumberGenerator&) const;
-      SecureVector<byte> unpad(const byte[], u32bit, u32bit) const;
+      SecureVector<byte> unpad(const byte[], size_t, size_t) const;
 
-      const u32bit HASH_LENGTH;
+      const size_t HASH_LENGTH;
       SecureVector<byte> Phash;
       MGF* mgf;
    };

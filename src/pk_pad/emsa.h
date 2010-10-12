@@ -24,7 +24,7 @@ class BOTAN_DLL EMSA
       * @param input some data
       * @param length length of input in bytes
       */
-      virtual void update(const byte input[], u32bit length) = 0;
+      virtual void update(const byte input[], size_t length) = 0;
 
       /**
       * @return raw hash
@@ -39,7 +39,7 @@ class BOTAN_DLL EMSA
       * @return encoded signature
       */
       virtual SecureVector<byte> encoding_of(const MemoryRegion<byte>& msg,
-                                             u32bit output_bits,
+                                             size_t output_bits,
                                              RandomNumberGenerator& rng) = 0;
 
       /**
@@ -51,7 +51,7 @@ class BOTAN_DLL EMSA
       */
       virtual bool verify(const MemoryRegion<byte>& coded,
                           const MemoryRegion<byte>& raw,
-                          u32bit key_bits) = 0;
+                          size_t key_bits) = 0;
       virtual ~EMSA() {}
    };
 
