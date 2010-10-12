@@ -6,7 +6,7 @@
 
 #include <botan/botan.h>
 #include <botan/x931_rng.h>
-#include <botan/filters.h>
+#include <botan/hex.h>
 #include <botan/lookup.h>
 
 #include <iostream>
@@ -17,29 +17,6 @@
 using namespace Botan;
 
 namespace {
-
-SecureVector<byte> decode_hex(const std::string& in)
-   {
-   SecureVector<byte> result;
-
-   try {
-      Botan::Pipe pipe(new Botan::Hex_Decoder);
-      pipe.process_msg(in);
-      result = pipe.read_all();
-   }
-   catch(std::exception& e)
-      {
-      result.clear();
-      }
-   return result;
-   }
-
-std::string hex_encode(const byte in[], u32bit len)
-   {
-   Botan::Pipe pipe(new Botan::Hex_Encoder);
-   pipe.process_msg(in, len);
-   return pipe.read_all_as_string();
-   }
 
 class Fixed_Output_RNG : public RandomNumberGenerator
    {
@@ -56,19 +33,19 @@ class Fixed_Output_RNG : public RandomNumberGenerator
          return out;
          }
 
-      void randomize(byte out[], u32bit len) throw()
+      void randomize(byte out[], size_t len) throw()
          {
-         for(u32bit j = 0; j != len; j++)
+         for(size_t j = 0; j != len; j++)
             out[j] = random();
          }
 
       std::string name() const { return "Fixed_Output_RNG"; }
 
-      void reseed(u32bit) {}
+      void reseed(size_t) {}
 
       void clear() throw() {}
 
-      void add_entropy(const byte in[], u32bit len)
+      void add_entropy(const byte in[], size_t len)
          {
          buf.insert(buf.end(), in, in + len);
          }
@@ -91,19 +68,19 @@ void x931_tests(std::vector<std::pair<std::string, std::string> > vecs,
       ANSI_X931_RNG prng(get_block_cipher(cipher),
                          new Fixed_Output_RNG);
 
-      SecureVector<byte> x = decode_hex(input);
+      SecureVector<byte> x = hex_decode(input);
       prng.add_entropy(x.begin(), x.size());
 
       SecureVector<byte> output(result.size() / 2);
       prng.randomize(output, output.size());
 
-      if(decode_hex(result) != output)
+      if(hex_decode(result) != output)
          std::cout << "FAIL";
       else
          std::cout << "PASS";
 
       std::cout << " Seed " << input << " "
-                   << "Got " << hex_encode(output, output.size()) << " "
+                   << "Got " << hex_encode(output) << " "
                    << "Exp " << result << "\n";
       }
 

@@ -91,7 +91,8 @@ int main(int argc, char* argv[])
          a problem.
       */
       SymmetricKey masterkey(rng,
-                             std::min(32U, encryptor.maximum_input_size()));
+                             std::min<size_t>(32,
+                                              encryptor.maximum_input_size()));
 
       SymmetricKey cast_key = derive_key("CAST", masterkey, 16);
       SymmetricKey mac_key  = derive_key("MAC",  masterkey, 16);

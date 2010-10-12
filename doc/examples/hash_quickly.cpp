@@ -34,7 +34,7 @@ void set_fastest_implementation(const std::string& algo,
    Botan::Algorithm_Factory& af = Botan::global_state().algorithm_factory();
 
    std::map<std::string, double> results =
-      Botan::algorithm_benchmark(algo, ms, rng, af);
+      Botan::algorithm_benchmark(algo, af, rng, ms, 16*1024);
 
    std::string fastest_provider = "";
    double best_res = 0;

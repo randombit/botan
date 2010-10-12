@@ -74,7 +74,7 @@ void benchmark_algo(const std::string& algo,
    Algorithm_Factory& af = global_state().algorithm_factory();
 
    std::map<std::string, double> speeds =
-      algorithm_benchmark(algo, milliseconds, rng, af);
+      algorithm_benchmark(algo, af, rng, milliseconds, 16*1024);
 
    std::cout << algo << ":";
 
