@@ -45,10 +45,10 @@ class BOTAN_DLL PBKDF
       * @param salt_len length of salt in bytes
       * @param iterations the number of iterations to use (use 10K or more)
       */
-      virtual OctetString derive_key(u32bit output_len,
+      virtual OctetString derive_key(size_t output_len,
                                      const std::string& passphrase,
-                                     const byte salt[], u32bit salt_len,
-                                     u32bit iterations) const = 0;
+                                     const byte salt[], size_t salt_len,
+                                     size_t iterations) const = 0;
 
       PBKDF() {}
       virtual ~PBKDF() {}

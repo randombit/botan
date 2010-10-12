@@ -36,10 +36,10 @@ class BOTAN_DLL OpenPGP_S2K : public PBKDF
          return new OpenPGP_S2K(hash->clone());
          }
 
-      OctetString derive_key(u32bit output_len,
+      OctetString derive_key(size_t output_len,
                              const std::string& passphrase,
-                             const byte salt[], u32bit salt_len,
-                             u32bit iterations) const;
+                             const byte salt[], size_t salt_len,
+                             size_t iterations) const;
    private:
       HashFunction* hash;
    };

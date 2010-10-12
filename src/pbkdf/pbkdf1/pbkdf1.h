@@ -46,10 +46,10 @@ class BOTAN_DLL PKCS5_PBKDF1 : public PBKDF
          return new PKCS5_PBKDF1(hash->clone());
          }
 
-      OctetString derive_key(u32bit output_len,
+      OctetString derive_key(size_t output_len,
                              const std::string& passphrase,
-                             const byte salt[], u32bit salt_len,
-                             u32bit iterations) const;
+                             const byte salt[], size_t salt_len,
+                             size_t iterations) const;
    private:
       HashFunction* hash;
    };

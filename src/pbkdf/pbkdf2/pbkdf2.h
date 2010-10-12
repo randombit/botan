@@ -29,10 +29,10 @@ class BOTAN_DLL PKCS5_PBKDF2 : public PBKDF
          return new PKCS5_PBKDF2(mac->clone());
          }
 
-      OctetString derive_key(u32bit output_len,
+      OctetString derive_key(size_t output_len,
                              const std::string& passphrase,
-                             const byte salt[], u32bit salt_len,
-                             u32bit iterations) const;
+                             const byte salt[], size_t salt_len,
+                             size_t iterations) const;
 
       /**
       * Create a PKCS #5 instance using the specified message auth code
