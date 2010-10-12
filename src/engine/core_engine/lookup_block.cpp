@@ -170,7 +170,7 @@ BlockCipher* Core_Engine::find_block_cipher(const SCAN_Name& request,
 
 #if defined(BOTAN_HAS_MISTY1)
    if(request.algo_name() == "MISTY1")
-      return new MISTY1(request.arg_as_u32bit(0, 8));
+      return new MISTY1(request.arg_as_integer(0, 8));
 #endif
 
 #if defined(BOTAN_HAS_NOEKEON)
@@ -185,7 +185,7 @@ BlockCipher* Core_Engine::find_block_cipher(const SCAN_Name& request,
 
 #if defined(BOTAN_HAS_RC5)
    if(request.algo_name() == "RC5")
-      return new RC5(request.arg_as_u32bit(0, 12));
+      return new RC5(request.arg_as_integer(0, 12));
 #endif
 
 #if defined(BOTAN_HAS_RC6)
@@ -195,7 +195,7 @@ BlockCipher* Core_Engine::find_block_cipher(const SCAN_Name& request,
 
 #if defined(BOTAN_HAS_SAFER)
    if(request.algo_name() == "SAFER-SK")
-      return new SAFER_SK(request.arg_as_u32bit(0, 10));
+      return new SAFER_SK(request.arg_as_integer(0, 10));
 #endif
 
 #if defined(BOTAN_HAS_SEED)
@@ -257,7 +257,7 @@ BlockCipher* Core_Engine::find_block_cipher(const SCAN_Name& request,
 #if defined(BOTAN_HAS_LION)
    if(request.algo_name() == "Lion" && request.arg_count_between(2, 3))
       {
-      const u32bit block_size = request.arg_as_u32bit(2, 1024);
+      const u32bit block_size = request.arg_as_integer(2, 1024);
 
       const HashFunction* hash =
          af.prototype_hash_function(request.arg(0));

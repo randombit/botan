@@ -170,13 +170,13 @@ HashFunction* Core_Engine::find_hash(const SCAN_Name& request,
 
 #if defined(BOTAN_HAS_TIGER)
    if(request.algo_name() == "Tiger")
-      return new Tiger(request.arg_as_u32bit(0, 24), // hash output
-                       request.arg_as_u32bit(1, 3)); // # passes
+      return new Tiger(request.arg_as_integer(0, 24), // hash output
+                       request.arg_as_integer(1, 3)); // # passes
 #endif
 
 #if defined(BOTAN_HAS_SKEIN_512)
    if(request.algo_name() == "Skein-512")
-      return new Skein_512(request.arg_as_u32bit(0, 512),
+      return new Skein_512(request.arg_as_integer(0, 512),
                            request.arg(1, ""));
 #endif
 

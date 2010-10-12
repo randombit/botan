@@ -161,7 +161,7 @@ EMSA* get_emsa(const std::string& algo_spec)
 
       if(request.arg_count() == 3)
          return new EMSA4(af.make_hash_function(request.arg(0)),
-                          request.arg_as_u32bit(2, 0));
+                          request.arg_as_integer(2, 0));
       }
 #endif
 

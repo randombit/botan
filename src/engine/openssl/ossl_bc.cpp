@@ -213,7 +213,7 @@ OpenSSL_Engine::find_block_cipher(const SCAN_Name& request,
 
 #if !defined(OPENSSL_NO_RC5)
    if(request.algo_name() == "RC5")
-      if(request.arg_as_u32bit(0, 12) == 12)
+      if(request.arg_as_integer(0, 12) == 12)
          return new EVP_BlockCipher(EVP_rc5_32_12_16_ecb(),
                                     "RC5(12)", 1, 32, 1);
 #endif

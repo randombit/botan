@@ -16,14 +16,14 @@ namespace Botan {
 namespace {
 
 std::string make_arg(
-   const std::vector<std::pair<u32bit, std::string> >& name, u32bit start)
+   const std::vector<std::pair<size_t, std::string> >& name, size_t start)
    {
    std::string output = name[start].second;
-   u32bit level = name[start].first;
+   size_t level = name[start].first;
 
-   u32bit paren_depth = 0;
+   size_t paren_depth = 0;
 
-   for(u32bit i = start + 1; i != name.size(); ++i)
+   for(size_t i = start + 1; i != name.size(); ++i)
       {
       if(name[i].first <= name[start].first)
          break;
@@ -48,14 +48,14 @@ std::string make_arg(
       level = name[i].first;
       }
 
-   for(u32bit i = 0; i != paren_depth; ++i)
+   for(size_t i = 0; i != paren_depth; ++i)
       output += ')';
 
    return output;
    }
 
-std::pair<u32bit, std::string>
-deref_aliases(const std::pair<u32bit, std::string>& in)
+std::pair<size_t, std::string>
+deref_aliases(const std::pair<size_t, std::string>& in)
    {
    return std::make_pair(in.first,
                          global_state().deref_alias(in.second));
@@ -67,15 +67,15 @@ SCAN_Name::SCAN_Name(std::string algo_spec)
    {
    orig_algo_spec = algo_spec;
 
-   std::vector<std::pair<u32bit, std::string> > name;
-   u32bit level = 0;
-   std::pair<u32bit, std::string> accum = std::make_pair(level, "");
+   std::vector<std::pair<size_t, std::string> > name;
+   size_t level = 0;
+   std::pair<size_t, std::string> accum = std::make_pair(level, "");
 
    std::string decoding_error = "Bad SCAN name '" + algo_spec + "': ";
 
    algo_spec = global_state().deref_alias(algo_spec);
 
-   for(u32bit i = 0; i != algo_spec.size(); ++i)
+   for(size_t i = 0; i != algo_spec.size(); ++i)
       {
       char c = algo_spec[i];
 
@@ -116,7 +116,7 @@ SCAN_Name::SCAN_Name(std::string algo_spec)
 
    bool in_modes = false;
 
-   for(u32bit i = 1; i != name.size(); ++i)
+   for(size_t i = 1; i != name.size(); ++i)
       {
       if(name[i].first == 0)
          {
@@ -137,7 +137,7 @@ std::string SCAN_Name::algo_name_and_args() const
    if(arg_count())
       {
       out += '(';
-      for(u32bit i = 0; i != arg_count(); ++i)
+      for(size_t i = 0; i != arg_count(); ++i)
          {
          out += arg(i);
          if(i != arg_count() - 1)
@@ -150,21 +150,21 @@ std::string SCAN_Name::algo_name_and_args() const
    return out;
    }
 
-std::string SCAN_Name::arg(u32bit i) const
+std::string SCAN_Name::arg(size_t i) const
    {
    if(i >= arg_count())
       throw std::range_error("SCAN_Name::argument - i out of range");
    return args[i];
    }
 
-std::string SCAN_Name::arg(u32bit i, const std::string& def_value) const
+std::string SCAN_Name::arg(size_t i, const std::string& def_value) const
    {
    if(i >= arg_count())
       return def_value;
    return args[i];
    }
 
-u32bit SCAN_Name::arg_as_u32bit(u32bit i, u32bit def_value) const
+size_t SCAN_Name::arg_as_integer(size_t i, size_t def_value) const
    {
    if(i >= arg_count())
       return def_value;

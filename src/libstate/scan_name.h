@@ -45,35 +45,35 @@ class BOTAN_DLL SCAN_Name
       /**
       * @return number of arguments
       */
-      u32bit arg_count() const { return args.size(); }
+      size_t arg_count() const { return args.size(); }
 
       /**
       * @param lower is the lower bound
       * @param upper is the upper bound
       * @return if the number of arguments is between lower and upper
       */
-      bool arg_count_between(u32bit lower, u32bit upper) const
+      bool arg_count_between(size_t lower, size_t upper) const
          { return ((arg_count() >= lower) && (arg_count() <= upper)); }
 
       /**
       * @param i which argument
       * @return ith argument
       */
-      std::string arg(u32bit i) const;
+      std::string arg(size_t i) const;
 
       /**
       * @param i which argument
       * @param def_value the default value
       * @return ith argument or the default value
       */
-      std::string arg(u32bit i, const std::string& def_value) const;
+      std::string arg(size_t i, const std::string& def_value) const;
 
       /**
       * @param i which argument
       * @param def_value the default value
-      * @return ith argument as a u32bit, or the default value
+      * @return ith argument as an integer, or the default value
       */
-      u32bit arg_as_u32bit(u32bit i, u32bit def_value) const;
+      size_t arg_as_integer(size_t i, size_t def_value) const;
 
       /**
       * @return cipher mode (if any)
