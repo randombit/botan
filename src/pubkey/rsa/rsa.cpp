@@ -18,7 +18,7 @@ namespace Botan {
 * Create a RSA private key
 */
 RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
-                               u32bit bits, u32bit exp)
+                               size_t bits, size_t exp)
    {
    if(bits < 512)
       throw Invalid_Argument(algo_name() + ": Can't make a key that is only " +
@@ -87,7 +87,7 @@ BigInt RSA_Private_Operation::private_op(const BigInt& m) const
    }
 
 SecureVector<byte>
-RSA_Private_Operation::sign(const byte msg[], u32bit msg_len,
+RSA_Private_Operation::sign(const byte msg[], size_t msg_len,
                             RandomNumberGenerator&)
    {
    /* We don't check signatures against powermod_e_n here because
@@ -104,7 +104,7 @@ RSA_Private_Operation::sign(const byte msg[], u32bit msg_len,
 * RSA Decryption Operation
 */
 SecureVector<byte>
-RSA_Private_Operation::decrypt(const byte msg[], u32bit msg_len)
+RSA_Private_Operation::decrypt(const byte msg[], size_t msg_len)
    {
    BigInt m(msg, msg_len);
    BigInt x = blinder.unblind(private_op(blinder.blind(m)));

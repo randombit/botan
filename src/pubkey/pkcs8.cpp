@@ -77,9 +77,9 @@ SecureVector<byte> PKCS8_decode(DataSource& source, const User_Interface& ui,
    if(!is_encrypted)
       key = key_data;
 
-   const u32bit MAX_TRIES = 3;
+   const size_t MAX_TRIES = 3;
 
-   u32bit tries = 0;
+   size_t tries = 0;
    while(true)
       {
       try {

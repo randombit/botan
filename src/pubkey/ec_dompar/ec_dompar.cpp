@@ -96,10 +96,10 @@ EC_Domain_Params::DER_encode(EC_Domain_Params_Encoding form) const
    {
    if(form == EC_DOMPAR_ENC_EXPLICIT)
       {
-      u32bit ecpVers1 = 1;
+      const u32bit ecpVers1 = 1;
       OID curve_type("1.2.840.10045.1.1");
 
-      const u32bit p_bytes = curve.get_p().bytes();
+      const size_t p_bytes = curve.get_p().bytes();
 
       return DER_Encoder()
          .start_cons(SEQUENCE)

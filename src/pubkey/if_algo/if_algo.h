@@ -43,7 +43,7 @@ class BOTAN_DLL IF_Scheme_PublicKey : public virtual Public_Key
       */
       const BigInt& get_e() const { return e; }
 
-      u32bit max_input_bits() const { return (n.bits() - 1); }
+      size_t max_input_bits() const { return (n.bits() - 1); }
 
    protected:
       IF_Scheme_PublicKey() {}

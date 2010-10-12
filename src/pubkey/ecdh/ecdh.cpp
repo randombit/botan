@@ -20,7 +20,7 @@ ECDH_KA_Operation::ECDH_KA_Operation(const ECDH_PrivateKey& key) :
                   key.private_value();
    }
 
-SecureVector<byte> ECDH_KA_Operation::agree(const byte w[], u32bit w_len)
+SecureVector<byte> ECDH_KA_Operation::agree(const byte w[], size_t w_len)
    {
    PointGFp point = OS2ECP(w, w_len, curve);
 

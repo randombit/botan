@@ -47,11 +47,11 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey
       * This is the bitlength of the order of the base point.
       * @result the maximum number of input bits
       */
-      u32bit max_input_bits() const { return domain().get_order().bits(); }
+      size_t max_input_bits() const { return domain().get_order().bits(); }
 
-      u32bit message_parts() const { return 2; }
+      size_t message_parts() const { return 2; }
 
-      u32bit message_part_size() const
+      size_t message_part_size() const
          { return domain().get_order().bytes(); }
 
    protected:
@@ -99,12 +99,12 @@ class BOTAN_DLL ECDSA_Signature_Operation : public PK_Ops::Signature
    public:
       ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa);
 
-      SecureVector<byte> sign(const byte msg[], u32bit msg_len,
+      SecureVector<byte> sign(const byte msg[], size_t msg_len,
                               RandomNumberGenerator& rng);
 
-      u32bit message_parts() const { return 2; }
-      u32bit message_part_size() const { return order.bytes(); }
-      u32bit max_input_bits() const { return order.bits(); }
+      size_t message_parts() const { return 2; }
+      size_t message_part_size() const { return order.bytes(); }
+      size_t max_input_bits() const { return order.bits(); }
 
    private:
       const PointGFp& base_point;
@@ -121,14 +121,14 @@ class BOTAN_DLL ECDSA_Verification_Operation : public PK_Ops::Verification
    public:
       ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa);
 
-      u32bit message_parts() const { return 2; }
-      u32bit message_part_size() const { return order.bytes(); }
-      u32bit max_input_bits() const { return order.bits(); }
+      size_t message_parts() const { return 2; }
+      size_t message_part_size() const { return order.bytes(); }
+      size_t max_input_bits() const { return order.bits(); }
 
       bool with_recovery() const { return false; }
 
-      bool verify(const byte msg[], u32bit msg_len,
-                  const byte sig[], u32bit sig_len);
+      bool verify(const byte msg[], size_t msg_len,
+                  const byte sig[], size_t sig_len);
    private:
       const PointGFp& base_point;
       const PointGFp& public_point;

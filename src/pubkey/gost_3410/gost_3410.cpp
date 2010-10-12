@@ -20,7 +20,7 @@ MemoryVector<byte> GOST_3410_PublicKey::x509_subject_public_key() const
    const BigInt& x = public_point().get_affine_x();
    const BigInt& y = public_point().get_affine_y();
 
-   u32bit part_size = std::max(x.bytes(), y.bytes());
+   size_t part_size = std::max(x.bytes(), y.bytes());
 
    MemoryVector<byte> bits(2*part_size);
 
@@ -28,7 +28,7 @@ MemoryVector<byte> GOST_3410_PublicKey::x509_subject_public_key() const
    y.binary_encode(&bits[2*part_size - y.bytes()]);
 
    // Keys are stored in little endian format (WTF)
-   for(u32bit i = 0; i != part_size / 2; ++i)
+   for(size_t i = 0; i != part_size / 2; ++i)
       {
       std::swap(bits[i], bits[part_size-1-i]);
       std::swap(bits[part_size+i], bits[2*part_size-1-i]);
@@ -61,10 +61,10 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
    SecureVector<byte> bits;
    BER_Decoder(key_bits).decode(bits, OCTET_STRING);
 
-   const u32bit part_size = bits.size() / 2;
+   const size_t part_size = bits.size() / 2;
 
    // Keys are stored in little endian format (WTF)
-   for(u32bit i = 0; i != part_size / 2; ++i)
+   for(size_t i = 0; i != part_size / 2; ++i)
       {
       std::swap(bits[i], bits[part_size-1-i]);
       std::swap(bits[part_size+i], bits[2*part_size-1-i]);
@@ -81,7 +81,7 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
 
 namespace {
 
-BigInt decode_le(const byte msg[], u32bit msg_len)
+BigInt decode_le(const byte msg[], size_t msg_len)
    {
    SecureVector<byte> msg_le(msg, msg_len);
 
@@ -103,7 +103,7 @@ GOST_3410_Signature_Operation::GOST_3410_Signature_Operation(
    }
 
 SecureVector<byte>
-GOST_3410_Signature_Operation::sign(const byte msg[], u32bit msg_len,
+GOST_3410_Signature_Operation::sign(const byte msg[], size_t msg_len,
                                     RandomNumberGenerator& rng)
    {
    BigInt k;
@@ -142,8 +142,8 @@ GOST_3410_Verification_Operation::GOST_3410_Verification_Operation(const GOST_34
    {
    }
 
-bool GOST_3410_Verification_Operation::verify(const byte msg[], u32bit msg_len,
-                                              const byte sig[], u32bit sig_len)
+bool GOST_3410_Verification_Operation::verify(const byte msg[], size_t msg_len,
+                                              const byte sig[], size_t sig_len)
    {
    if(sig_len != order.bytes()*2)
       return false;

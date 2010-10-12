@@ -31,7 +31,7 @@ void decode(BER_Decoder& source, Key_Constraints& key_usage)
    obj.value[obj.value.size()-1] &= mask;
 
    u16bit usage = 0;
-   for(u32bit j = 1; j != obj.value.size(); ++j)
+   for(size_t j = 1; j != obj.value.size(); ++j)
       usage = (obj.value[j] << 8) | usage;
 
    key_usage = Key_Constraints(usage);

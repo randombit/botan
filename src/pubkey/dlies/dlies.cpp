@@ -16,7 +16,7 @@ namespace Botan {
 DLIES_Encryptor::DLIES_Encryptor(const PK_Key_Agreement_Key& key,
                                  KDF* kdf_obj,
                                  MessageAuthenticationCode* mac_obj,
-                                 u32bit mac_kl) :
+                                 size_t mac_kl) :
    ka(key, "Raw"),
    kdf(kdf_obj),
    mac(mac_obj),
@@ -34,7 +34,7 @@ DLIES_Encryptor::~DLIES_Encryptor()
 /*
 * DLIES Encryption
 */
-SecureVector<byte> DLIES_Encryptor::enc(const byte in[], u32bit length,
+SecureVector<byte> DLIES_Encryptor::enc(const byte in[], size_t length,
                                         RandomNumberGenerator&) const
    {
    if(length > maximum_input_size())
@@ -49,7 +49,7 @@ SecureVector<byte> DLIES_Encryptor::enc(const byte in[], u32bit length,
    SecureVector<byte> vz = my_key;
    vz += ka.derive_key(0, other_key).bits_of();
 
-   const u32bit K_LENGTH = length + mac_keylen;
+   const size_t K_LENGTH = length + mac_keylen;
    OctetString K = kdf->derive_key(K_LENGTH, vz);
 
    if(K.length() != K_LENGTH)
@@ -60,7 +60,7 @@ SecureVector<byte> DLIES_Encryptor::enc(const byte in[], u32bit length,
    mac->set_key(K.begin(), mac_keylen);
 
    mac->update(C, length);
-   for(u32bit j = 0; j != 8; ++j)
+   for(size_t j = 0; j != 8; ++j)
       mac->update(0);
 
    mac->final(C + length);
@@ -79,7 +79,7 @@ void DLIES_Encryptor::set_other_key(const MemoryRegion<byte>& ok)
 /*
 * Return the max size, in bytes, of a message
 */
-u32bit DLIES_Encryptor::maximum_input_size() const
+size_t DLIES_Encryptor::maximum_input_size() const
    {
    return 32;
    }
@@ -90,7 +90,7 @@ u32bit DLIES_Encryptor::maximum_input_size() const
 DLIES_Decryptor::DLIES_Decryptor(const PK_Key_Agreement_Key& key,
                                  KDF* kdf_obj,
                                  MessageAuthenticationCode* mac_obj,
-                                 u32bit mac_kl) :
+                                 size_t mac_kl) :
    ka(key, "Raw"),
    kdf(kdf_obj),
    mac(mac_obj),
@@ -108,12 +108,12 @@ DLIES_Decryptor::~DLIES_Decryptor()
 /*
 * DLIES Decryption
 */
-SecureVector<byte> DLIES_Decryptor::dec(const byte msg[], u32bit length) const
+SecureVector<byte> DLIES_Decryptor::dec(const byte msg[], size_t length) const
    {
    if(length < my_key.size() + mac->OUTPUT_LENGTH)
       throw Decoding_Error("DLIES decryption: ciphertext is too short");
 
-   const u32bit CIPHER_LEN = length - my_key.size() - mac->OUTPUT_LENGTH;
+   const size_t CIPHER_LEN = length - my_key.size() - mac->OUTPUT_LENGTH;
 
    SecureVector<byte> v(msg, my_key.size());
    SecureVector<byte> C(msg + my_key.size(), CIPHER_LEN);
@@ -122,14 +122,14 @@ SecureVector<byte> DLIES_Decryptor::dec(const byte msg[], u32bit length) const
    SecureVector<byte> vz(msg, my_key.size());
    vz += ka.derive_key(0, v).bits_of();
 
-   const u32bit K_LENGTH = C.size() + mac_keylen;
+   const size_t K_LENGTH = C.size() + mac_keylen;
    OctetString K = kdf->derive_key(K_LENGTH, vz);
    if(K.length() != K_LENGTH)
       throw Encoding_Error("DLIES: KDF did not provide sufficient output");
 
    mac->set_key(K.begin(), mac_keylen);
    mac->update(C);
-   for(u32bit j = 0; j != 8; ++j)
+   for(size_t j = 0; j != 8; ++j)
       mac->update(0);
    SecureVector<byte> T2 = mac->final();
    if(T != T2)

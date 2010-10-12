@@ -54,7 +54,7 @@ class BOTAN_DLL RW_PrivateKey : public RW_PublicKey,
                     const BigInt& n = 0) :
          IF_Scheme_PrivateKey(rng, p, q, e, d, n) {}
 
-      RW_PrivateKey(RandomNumberGenerator& rng, u32bit bits, u32bit = 2);
+      RW_PrivateKey(RandomNumberGenerator& rng, size_t bits, size_t = 2);
 
       bool check_key(RandomNumberGenerator& rng, bool) const;
    };
@@ -67,9 +67,9 @@ class BOTAN_DLL RW_Signature_Operation : public PK_Ops::Signature
    public:
       RW_Signature_Operation(const RW_PrivateKey& rw);
 
-      u32bit max_input_bits() const { return (n.bits() - 1); }
+      size_t max_input_bits() const { return (n.bits() - 1); }
 
-      SecureVector<byte> sign(const byte msg[], u32bit msg_len,
+      SecureVector<byte> sign(const byte msg[], size_t msg_len,
                               RandomNumberGenerator& rng);
    private:
       const BigInt& n;
@@ -92,10 +92,10 @@ class BOTAN_DLL RW_Verification_Operation : public PK_Ops::Verification
          n(rw.get_n()), powermod_e_n(rw.get_e(), rw.get_n())
          {}
 
-      u32bit max_input_bits() const { return (n.bits() - 1); }
+      size_t max_input_bits() const { return (n.bits() - 1); }
       bool with_recovery() const { return true; }
 
-      SecureVector<byte> verify_mr(const byte msg[], u32bit msg_len);
+      SecureVector<byte> verify_mr(const byte msg[], size_t msg_len);
 
    private:
       const BigInt& n;

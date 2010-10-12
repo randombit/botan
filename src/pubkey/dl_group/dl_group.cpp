@@ -44,7 +44,7 @@ DL_Group::DL_Group(const std::string& type)
 * DL_Group Constructor
 */
 DL_Group::DL_Group(RandomNumberGenerator& rng,
-                   PrimeType type, u32bit pbits, u32bit qbits)
+                   PrimeType type, size_t pbits, size_t qbits)
    {
    if(pbits < 512)
       throw Invalid_Argument("DL_Group: prime size " + to_string(pbits) +
@@ -90,7 +90,7 @@ DL_Group::DL_Group(RandomNumberGenerator& rng,
 * DL_Group Constructor
 */
 DL_Group::DL_Group(RandomNumberGenerator& rng,
-                   const MemoryRegion<byte>& seed, u32bit pbits, u32bit qbits)
+                   const MemoryRegion<byte>& seed, size_t pbits, size_t qbits)
    {
    if(!generate_dsa_primes(rng,
                            global_state().algorithm_factory(),
@@ -321,7 +321,7 @@ BigInt DL_Group::make_dsa_generator(const BigInt& p, const BigInt& q)
 
    BOTAN_ASSERT(e > 0, "q does not divide p, invalid group");
 
-   for(u32bit i = 0; i != PRIME_TABLE_SIZE; ++i)
+   for(size_t i = 0; i != PRIME_TABLE_SIZE; ++i)
       {
       g = power_mod(PRIMES[i], e, p);
       if(g > 1)

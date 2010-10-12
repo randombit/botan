@@ -47,19 +47,19 @@ class BOTAN_DLL Public_Key
       * Find out the number of message parts supported by this scheme.
       * @return number of message parts
       */
-      virtual u32bit message_parts() const { return 1; }
+      virtual size_t message_parts() const { return 1; }
 
       /**
       * Find out the message part size supported by this scheme/key.
       * @return size of the message parts in bits
       */
-      virtual u32bit message_part_size() const { return 0; }
+      virtual size_t message_part_size() const { return 0; }
 
       /**
       * Get the maximum message size in bits supported by this public key.
       * @return maximum message size in bits
       */
-      virtual u32bit max_input_bits() const = 0;
+      virtual size_t max_input_bits() const = 0;
 
       /**
       * @return X.509 AlgorithmIdentifier for this key

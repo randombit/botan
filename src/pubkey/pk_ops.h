@@ -21,9 +21,9 @@ namespace PK_Ops {
 class BOTAN_DLL Encryption
    {
    public:
-      virtual u32bit max_input_bits() const = 0;
+      virtual size_t max_input_bits() const = 0;
 
-      virtual SecureVector<byte> encrypt(const byte msg[], u32bit msg_len,
+      virtual SecureVector<byte> encrypt(const byte msg[], size_t msg_len,
                                          RandomNumberGenerator& rng) = 0;
 
       virtual ~Encryption() {}
@@ -35,10 +35,10 @@ class BOTAN_DLL Encryption
 class BOTAN_DLL Decryption
    {
    public:
-      virtual u32bit max_input_bits() const = 0;
+      virtual size_t max_input_bits() const = 0;
 
       virtual SecureVector<byte> decrypt(const byte msg[],
-                                         u32bit msg_len) = 0;
+                                         size_t msg_len) = 0;
 
       virtual ~Decryption() {}
    };
@@ -53,19 +53,19 @@ class BOTAN_DLL Signature
       * Find out the number of message parts supported by this scheme.
       * @return number of message parts
       */
-      virtual u32bit message_parts() const { return 1; }
+      virtual size_t message_parts() const { return 1; }
 
       /**
       * Find out the message part size supported by this scheme/key.
       * @return size of the message parts
       */
-      virtual u32bit message_part_size() const { return 0; }
+      virtual size_t message_part_size() const { return 0; }
 
       /**
       * Get the maximum message size in bits supported by this public key.
       * @return maximum message in bits
       */
-      virtual u32bit max_input_bits() const = 0;
+      virtual size_t max_input_bits() const = 0;
 
       /*
       * Perform a signature operation
@@ -73,7 +73,7 @@ class BOTAN_DLL Signature
       * @param msg_len the length of msg in bytes
       * @param rng a random number generator
       */
-      virtual SecureVector<byte> sign(const byte msg[], u32bit msg_len,
+      virtual SecureVector<byte> sign(const byte msg[], size_t msg_len,
                                       RandomNumberGenerator& rng) = 0;
 
       virtual ~Signature() {}
@@ -89,19 +89,19 @@ class BOTAN_DLL Verification
       * Get the maximum message size in bits supported by this public key.
       * @return maximum message in bits
       */
-      virtual u32bit max_input_bits() const = 0;
+      virtual size_t max_input_bits() const = 0;
 
       /**
       * Find out the number of message parts supported by this scheme.
       * @return number of message parts
       */
-      virtual u32bit message_parts() const { return 1; }
+      virtual size_t message_parts() const { return 1; }
 
       /**
       * Find out the message part size supported by this scheme/key.
       * @return size of the message parts
       */
-      virtual u32bit message_part_size() const { return 0; }
+      virtual size_t message_part_size() const { return 0; }
 
       /**
       * @return boolean specifying if this key type supports message
@@ -117,8 +117,8 @@ class BOTAN_DLL Verification
       * @param sig_len the length of sig in bytes
       * @returns if signature is a valid one for message
       */
-      virtual bool verify(const byte[], u32bit,
-                          const byte[], u32bit)
+      virtual bool verify(const byte[], size_t,
+                          const byte[], size_t)
          {
          throw Invalid_State("Message recovery required");
          }
@@ -131,7 +131,7 @@ class BOTAN_DLL Verification
       * @returns recovered message
       */
       virtual SecureVector<byte> verify_mr(const byte[],
-                                           u32bit)
+                                           size_t)
          {
          throw Invalid_State("Message recovery not supported");
          }
@@ -151,7 +151,7 @@ class BOTAN_DLL Key_Agreement
       * @param w_len the length of w in bytes
       * @returns the agreed key
       */
-      virtual SecureVector<byte> agree(const byte w[], u32bit w_len) = 0;
+      virtual SecureVector<byte> agree(const byte w[], size_t w_len) = 0;
 
       virtual ~Key_Agreement() {}
    };

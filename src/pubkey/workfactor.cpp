@@ -14,7 +14,7 @@ namespace Botan {
 /*
 * Choose the exponent size for a DL group
 */
-u32bit dl_work_factor(u32bit bits)
+size_t dl_work_factor(size_t bits)
    {
 #if 0
    /*
@@ -34,16 +34,14 @@ u32bit dl_work_factor(u32bit bits)
       return 190;
    return 256;
 #else
-   const u32bit MIN_ESTIMATE = 64;
+   const size_t MIN_ESTIMATE = 64;
 
    const double log_x = bits / 1.44;
 
    const double strength =
       2.76 * std::pow(log_x, 1.0/3.0) * std::pow(std::log(log_x), 2.0/3.0);
 
-   if(strength > MIN_ESTIMATE)
-      return static_cast<u32bit>(strength);
-   return MIN_ESTIMATE;
+   return std::max<size_t>(strength, MIN_ESTIMATE);
 #endif
    }
 

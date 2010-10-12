@@ -17,7 +17,7 @@ namespace Botan {
 * Create a Rabin-Williams private key
 */
 RW_PrivateKey::RW_PrivateKey(RandomNumberGenerator& rng,
-                             u32bit bits, u32bit exp)
+                             size_t bits, size_t exp)
    {
    if(bits < 512)
       throw Invalid_Argument(algo_name() + ": Can't make a key that is only " +
@@ -71,7 +71,7 @@ RW_Signature_Operation::RW_Signature_Operation(const RW_PrivateKey& rw) :
    }
 
 SecureVector<byte>
-RW_Signature_Operation::sign(const byte msg[], u32bit msg_len,
+RW_Signature_Operation::sign(const byte msg[], size_t msg_len,
                              RandomNumberGenerator& rng)
    {
    if(!blinder.initialized())
@@ -102,7 +102,7 @@ RW_Signature_Operation::sign(const byte msg[], u32bit msg_len,
    }
 
 SecureVector<byte>
-RW_Verification_Operation::verify_mr(const byte msg[], u32bit msg_len)
+RW_Verification_Operation::verify_mr(const byte msg[], size_t msg_len)
    {
    BigInt m(msg, msg_len);
 

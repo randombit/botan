@@ -23,22 +23,22 @@ class BOTAN_DLL DLIES_Encryptor : public PK_Encryptor
       DLIES_Encryptor(const PK_Key_Agreement_Key&,
                       KDF* kdf,
                       MessageAuthenticationCode* mac,
-                      u32bit mac_key_len = 20);
+                      size_t mac_key_len = 20);
 
       ~DLIES_Encryptor();
 
       void set_other_key(const MemoryRegion<byte>&);
    private:
-      SecureVector<byte> enc(const byte[], u32bit,
+      SecureVector<byte> enc(const byte[], size_t,
                              RandomNumberGenerator&) const;
-      u32bit maximum_input_size() const;
+      size_t maximum_input_size() const;
 
       SecureVector<byte> other_key, my_key;
 
       PK_Key_Agreement ka;
       KDF* kdf;
       MessageAuthenticationCode* mac;
-      u32bit mac_keylen;
+      size_t mac_keylen;
    };
 
 /**
@@ -50,19 +50,19 @@ class BOTAN_DLL DLIES_Decryptor : public PK_Decryptor
       DLIES_Decryptor(const PK_Key_Agreement_Key&,
                       KDF* kdf,
                       MessageAuthenticationCode* mac,
-                      u32bit mac_key_len = 20);
+                      size_t mac_key_len = 20);
 
       ~DLIES_Decryptor();
 
    private:
-      SecureVector<byte> dec(const byte[], u32bit) const;
+      SecureVector<byte> dec(const byte[], size_t) const;
 
       SecureVector<byte> my_key;
 
       PK_Key_Agreement ka;
       KDF* kdf;
       MessageAuthenticationCode* mac;
-      u32bit mac_keylen;
+      size_t mac_keylen;
    };
 
 }

@@ -25,9 +25,9 @@ class BOTAN_DLL NR_PublicKey : public virtual DL_Scheme_PublicKey
 
       DL_Group::Format group_format() const { return DL_Group::ANSI_X9_57; }
 
-      u32bit message_parts() const { return 2; }
-      u32bit message_part_size() const { return group_q().bytes(); }
-      u32bit max_input_bits() const { return (group_q().bits() - 1); }
+      size_t message_parts() const { return 2; }
+      size_t message_part_size() const { return group_q().bytes(); }
+      size_t max_input_bits() const { return (group_q().bits() - 1); }
 
       NR_PublicKey(const AlgorithmIdentifier& alg_id,
                    const MemoryRegion<byte>& key_bits);
@@ -63,11 +63,11 @@ class BOTAN_DLL NR_Signature_Operation : public PK_Ops::Signature
    public:
       NR_Signature_Operation(const NR_PrivateKey& nr);
 
-      u32bit message_parts() const { return 2; }
-      u32bit message_part_size() const { return q.bytes(); }
-      u32bit max_input_bits() const { return (q.bits() - 1); }
+      size_t message_parts() const { return 2; }
+      size_t message_part_size() const { return q.bytes(); }
+      size_t max_input_bits() const { return (q.bits() - 1); }
 
-      SecureVector<byte> sign(const byte msg[], u32bit msg_len,
+      SecureVector<byte> sign(const byte msg[], size_t msg_len,
                               RandomNumberGenerator& rng);
    private:
       const BigInt& q;
@@ -84,13 +84,13 @@ class BOTAN_DLL NR_Verification_Operation : public PK_Ops::Verification
    public:
       NR_Verification_Operation(const NR_PublicKey& nr);
 
-      u32bit message_parts() const { return 2; }
-      u32bit message_part_size() const { return q.bytes(); }
-      u32bit max_input_bits() const { return (q.bits() - 1); }
+      size_t message_parts() const { return 2; }
+      size_t message_part_size() const { return q.bytes(); }
+      size_t max_input_bits() const { return (q.bits() - 1); }
 
       bool with_recovery() const { return true; }
 
-      SecureVector<byte> verify_mr(const byte msg[], u32bit msg_len);
+      SecureVector<byte> verify_mr(const byte msg[], size_t msg_len);
    private:
       const BigInt& q;
       const BigInt& y;

@@ -46,7 +46,7 @@ PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
 */
 SecureVector<byte>
 PK_Encryptor_EME::enc(const byte msg[],
-                      u32bit length,
+                      size_t length,
                       RandomNumberGenerator& rng) const
    {
    SecureVector<byte> message;
@@ -64,7 +64,7 @@ PK_Encryptor_EME::enc(const byte msg[],
 /*
 * Return the max size, in bytes, of a message
 */
-u32bit PK_Encryptor_EME::maximum_input_size() const
+size_t PK_Encryptor_EME::maximum_input_size() const
    {
    if(!eme)
       return (op->max_input_bits() / 8);
@@ -98,7 +98,7 @@ PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
 * Decrypt a message
 */
 SecureVector<byte> PK_Decryptor_EME::dec(const byte msg[],
-                                         u32bit length) const
+                                         size_t length) const
    {
    try {
       SecureVector<byte> decrypted = op->decrypt(msg, length);
@@ -149,7 +149,7 @@ PK_Signer::PK_Signer(const Private_Key& key,
 /*
 * Sign a message
 */
-SecureVector<byte> PK_Signer::sign_message(const byte msg[], u32bit length,
+SecureVector<byte> PK_Signer::sign_message(const byte msg[], size_t length,
                                            RandomNumberGenerator& rng)
    {
    update(msg, length);
@@ -159,7 +159,7 @@ SecureVector<byte> PK_Signer::sign_message(const byte msg[], u32bit length,
 /*
 * Add more to the message to be signed
 */
-void PK_Signer::update(const byte in[], u32bit length)
+void PK_Signer::update(const byte in[], size_t length)
    {
    emsa->update(in, length);
    }
@@ -180,7 +180,7 @@ bool PK_Signer::self_test_signature(const MemoryRegion<byte>& msg,
 
       if(msg.size() > recovered.size())
          {
-         u32bit extra_0s = msg.size() - recovered.size();
+         size_t extra_0s = msg.size() - recovered.size();
 
          for(size_t i = 0; i != extra_0s; ++i)
             if(msg[i] != 0)
@@ -217,10 +217,10 @@ SecureVector<byte> PK_Signer::signature(RandomNumberGenerator& rng)
       {
       if(plain_sig.size() % op->message_parts())
          throw Encoding_Error("PK_Signer: strange signature size found");
-      const u32bit SIZE_OF_PART = plain_sig.size() / op->message_parts();
+      const size_t SIZE_OF_PART = plain_sig.size() / op->message_parts();
 
       std::vector<BigInt> sig_parts(op->message_parts());
-      for(u32bit j = 0; j != sig_parts.size(); ++j)
+      for(size_t j = 0; j != sig_parts.size(); ++j)
          sig_parts[j].binary_decode(&plain_sig[SIZE_OF_PART*j], SIZE_OF_PART);
 
       return DER_Encoder()
@@ -271,8 +271,8 @@ void PK_Verifier::set_input_format(Signature_Format format)
 /*
 * Verify a message
 */
-bool PK_Verifier::verify_message(const byte msg[], u32bit msg_length,
-                                 const byte sig[], u32bit sig_length)
+bool PK_Verifier::verify_message(const byte msg[], size_t msg_length,
+                                 const byte sig[], size_t sig_length)
    {
    update(msg, msg_length);
    return check_signature(sig, sig_length);
@@ -281,7 +281,7 @@ bool PK_Verifier::verify_message(const byte msg[], u32bit msg_length,
 /*
 * Append to the message
 */
-void PK_Verifier::update(const byte in[], u32bit length)
+void PK_Verifier::update(const byte in[], size_t length)
    {
    emsa->update(in, length);
    }
@@ -289,7 +289,7 @@ void PK_Verifier::update(const byte in[], u32bit length)
 /*
 * Check a signature
 */
-bool PK_Verifier::check_signature(const byte sig[], u32bit length)
+bool PK_Verifier::check_signature(const byte sig[], size_t length)
    {
    try {
       if(sig_format == IEEE_1363)
@@ -299,7 +299,7 @@ bool PK_Verifier::check_signature(const byte sig[], u32bit length)
          BER_Decoder decoder(sig, length);
          BER_Decoder ber_sig = decoder.start_cons(SEQUENCE);
 
-         u32bit count = 0;
+         size_t count = 0;
          SecureVector<byte> real_sig;
          while(ber_sig.more_items())
             {
@@ -326,7 +326,7 @@ bool PK_Verifier::check_signature(const byte sig[], u32bit length)
 * Verify a signature
 */
 bool PK_Verifier::validate_signature(const MemoryRegion<byte>& msg,
-                                     const byte sig[], u32bit sig_len)
+                                     const byte sig[], size_t sig_len)
    {
    if(op->with_recovery())
       {
@@ -366,9 +366,9 @@ PK_Key_Agreement::PK_Key_Agreement(const PK_Key_Agreement_Key& key,
    kdf = (kdf_name == "Raw") ? 0 : get_kdf(kdf_name);
    }
 
-SymmetricKey PK_Key_Agreement::derive_key(u32bit key_len, const byte in[],
-                                          u32bit in_len, const byte params[],
-                                          u32bit params_len) const
+SymmetricKey PK_Key_Agreement::derive_key(size_t key_len, const byte in[],
+                                          size_t in_len, const byte params[],
+                                          size_t params_len) const
    {
    SecureVector<byte> z = op->agree(in, in_len);
 

@@ -36,7 +36,7 @@ class OSSL_DH_KA_Operation : public PK_Ops::Key_Agreement
       OSSL_DH_KA_Operation(const DH_PrivateKey& dh) :
          x(dh.get_x()), p(dh.group_p()) {}
 
-      SecureVector<byte> agree(const byte w[], u32bit w_len)
+      SecureVector<byte> agree(const byte w[], size_t w_len)
          {
          OSSL_BN i(w, w_len), r;
          BN_mod_exp(r.value, i.value, x.value, p.value, ctx.value);
@@ -61,23 +61,23 @@ class OSSL_DSA_Signature_Operation : public PK_Ops::Signature
          g(dsa.group_g()),
          q_bits(dsa.group_q().bits()) {}
 
-      u32bit message_parts() const { return 2; }
-      u32bit message_part_size() const { return (q_bits + 7) / 8; }
-      u32bit max_input_bits() const { return q_bits; }
+      size_t message_parts() const { return 2; }
+      size_t message_part_size() const { return (q_bits + 7) / 8; }
+      size_t max_input_bits() const { return q_bits; }
 
-      SecureVector<byte> sign(const byte msg[], u32bit msg_len,
+      SecureVector<byte> sign(const byte msg[], size_t msg_len,
                               RandomNumberGenerator& rng);
    private:
       const OSSL_BN x, p, q, g;
       const OSSL_BN_CTX ctx;
-      u32bit q_bits;
+      size_t q_bits;
    };
 
 SecureVector<byte>
-OSSL_DSA_Signature_Operation::sign(const byte msg[], u32bit msg_len,
+OSSL_DSA_Signature_Operation::sign(const byte msg[], size_t msg_len,
                                   RandomNumberGenerator& rng)
    {
-   const u32bit q_bytes = (q_bits + 7) / 8;
+   const size_t q_bytes = (q_bits + 7) / 8;
 
    rng.add_entropy(msg, msg_len);
 
@@ -119,24 +119,24 @@ class OSSL_DSA_Verification_Operation : public PK_Ops::Verification
          g(dsa.group_g()),
          q_bits(dsa.group_q().bits()) {}
 
-      u32bit message_parts() const { return 2; }
-      u32bit message_part_size() const { return (q_bits + 7) / 8; }
-      u32bit max_input_bits() const { return q_bits; }
+      size_t message_parts() const { return 2; }
+      size_t message_part_size() const { return (q_bits + 7) / 8; }
+      size_t max_input_bits() const { return q_bits; }
 
       bool with_recovery() const { return false; }
 
-      bool verify(const byte msg[], u32bit msg_len,
-                  const byte sig[], u32bit sig_len);
+      bool verify(const byte msg[], size_t msg_len,
+                  const byte sig[], size_t sig_len);
    private:
       const OSSL_BN y, p, q, g;
       const OSSL_BN_CTX ctx;
-      u32bit q_bits;
+      size_t q_bits;
    };
 
-bool OSSL_DSA_Verification_Operation::verify(const byte msg[], u32bit msg_len,
-                                            const byte sig[], u32bit sig_len)
+bool OSSL_DSA_Verification_Operation::verify(const byte msg[], size_t msg_len,
+                                            const byte sig[], size_t sig_len)
    {
-   const u32bit q_bytes = q.bytes();
+   const size_t q_bytes = q.bytes();
 
    if(sig_len != 2*q_bytes || msg_len > q_bytes)
       return false;
@@ -189,9 +189,9 @@ class OSSL_RSA_Private_Operation : public PK_Ops::Signature,
          n_bits(rsa.get_n().bits())
          {}
 
-      u32bit max_input_bits() const { return (n_bits - 1); }
+      size_t max_input_bits() const { return (n_bits - 1); }
 
-      SecureVector<byte> sign(const byte msg[], u32bit msg_len,
+      SecureVector<byte> sign(const byte msg[], size_t msg_len,
                               RandomNumberGenerator&)
          {
          BigInt m(msg, msg_len);
@@ -199,7 +199,7 @@ class OSSL_RSA_Private_Operation : public PK_Ops::Signature,
          return BigInt::encode_1363(x, (n_bits + 7) / 8);
          }
 
-      SecureVector<byte> decrypt(const byte msg[], u32bit msg_len)
+      SecureVector<byte> decrypt(const byte msg[], size_t msg_len)
          {
          BigInt m(msg, msg_len);
          return BigInt::encode(private_op(m));
@@ -210,7 +210,7 @@ class OSSL_RSA_Private_Operation : public PK_Ops::Signature,
 
       const OSSL_BN mod, p, q, d1, d2, c;
       const OSSL_BN_CTX ctx;
-      u32bit n_bits;
+      size_t n_bits;
    };
 
 BigInt OSSL_RSA_Private_Operation::private_op(const BigInt& m) const
@@ -234,17 +234,17 @@ class OSSL_RSA_Public_Operation : public PK_Ops::Verification,
          n(rsa.get_n()), e(rsa.get_e()), mod(rsa.get_n())
          {}
 
-      u32bit max_input_bits() const { return (n.bits() - 1); }
+      size_t max_input_bits() const { return (n.bits() - 1); }
       bool with_recovery() const { return true; }
 
-      SecureVector<byte> encrypt(const byte msg[], u32bit msg_len,
+      SecureVector<byte> encrypt(const byte msg[], size_t msg_len,
                                  RandomNumberGenerator&)
          {
          BigInt m(msg, msg_len);
          return BigInt::encode_1363(public_op(m), n.bytes());
          }
 
-      SecureVector<byte> verify_mr(const byte msg[], u32bit msg_len)
+      SecureVector<byte> verify_mr(const byte msg[], size_t msg_len)
          {
          BigInt m(msg, msg_len);
          return BigInt::encode(public_op(m));

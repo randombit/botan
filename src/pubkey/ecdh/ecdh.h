@@ -48,7 +48,7 @@ class BOTAN_DLL ECDH_PublicKey : public virtual EC_PublicKey
 
       * @return maximum number of input bits
       */
-      u32bit max_input_bits() const { return domain().get_order().bits(); }
+      size_t max_input_bits() const { return domain().get_order().bits(); }
 
       /**
       * @return public point value
@@ -94,7 +94,7 @@ class BOTAN_DLL ECDH_KA_Operation : public PK_Ops::Key_Agreement
    public:
       ECDH_KA_Operation(const ECDH_PrivateKey& key);
 
-      SecureVector<byte> agree(const byte w[], u32bit w_len);
+      SecureVector<byte> agree(const byte w[], size_t w_len);
    private:
       const CurveGFp& curve;
       const BigInt& cofactor;

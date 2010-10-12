@@ -45,7 +45,7 @@ class BOTAN_DLL PK_Encryptor
       * @param rng the random number source to use
       * @return encrypted message
       */
-      SecureVector<byte> encrypt(const byte in[], u32bit length,
+      SecureVector<byte> encrypt(const byte in[], size_t length,
                                  RandomNumberGenerator& rng) const
          {
          return enc(in, length, rng);
@@ -67,7 +67,7 @@ class BOTAN_DLL PK_Encryptor
       * Return the maximum allowed message size in bytes.
       * @return maximum message size in bytes
       */
-      virtual u32bit maximum_input_size() const = 0;
+      virtual size_t maximum_input_size() const = 0;
 
       PK_Encryptor() {}
       virtual ~PK_Encryptor() {}
@@ -75,7 +75,7 @@ class BOTAN_DLL PK_Encryptor
       PK_Encryptor(const PK_Encryptor&) {}
       PK_Encryptor& operator=(const PK_Encryptor&) { return *this; }
 
-      virtual SecureVector<byte> enc(const byte[], u32bit,
+      virtual SecureVector<byte> enc(const byte[], size_t,
                                      RandomNumberGenerator&) const = 0;
    };
 
@@ -91,7 +91,7 @@ class BOTAN_DLL PK_Decryptor
       * @param length the length of the above byte array
       * @return decrypted message
       */
-      SecureVector<byte> decrypt(const byte in[], u32bit length) const
+      SecureVector<byte> decrypt(const byte in[], size_t length) const
          {
          return dec(in, length);
          }
@@ -112,7 +112,7 @@ class BOTAN_DLL PK_Decryptor
       PK_Decryptor(const PK_Decryptor&) {}
       PK_Decryptor& operator=(const PK_Decryptor&) { return *this; }
 
-      virtual SecureVector<byte> dec(const byte[], u32bit) const = 0;
+      virtual SecureVector<byte> dec(const byte[], size_t) const = 0;
    };
 
 /**
@@ -130,7 +130,7 @@ class BOTAN_DLL PK_Signer
       * @param rng the rng to use
       * @return signature
       */
-      SecureVector<byte> sign_message(const byte in[], u32bit length,
+      SecureVector<byte> sign_message(const byte in[], size_t length,
                                       RandomNumberGenerator& rng);
 
       /**
@@ -154,7 +154,7 @@ class BOTAN_DLL PK_Signer
       * @param in the message part to add as a byte array
       * @param length the length of the above byte array
       */
-      void update(const byte in[], u32bit length);
+      void update(const byte in[], size_t length);
 
       /**
       * Add a message part.
@@ -219,8 +219,8 @@ class BOTAN_DLL PK_Verifier
       * @param sig_length the length of the above byte array sig
       * @return true if the signature is valid
       */
-      bool verify_message(const byte msg[], u32bit msg_length,
-                          const byte sig[], u32bit sig_length);
+      bool verify_message(const byte msg[], size_t msg_length,
+                          const byte sig[], size_t sig_length);
       /**
       * Verify a signature.
       * @param msg the message that the signature belongs to
@@ -247,7 +247,7 @@ class BOTAN_DLL PK_Verifier
       * @param msg_part the new message part as a byte array
       * @param length the length of the above byte array
       */
-      void update(const byte msg_part[], u32bit length);
+      void update(const byte msg_part[], size_t length);
 
       /**
       * Add a message part of the message corresponding to the
@@ -264,7 +264,7 @@ class BOTAN_DLL PK_Verifier
       * @param length the length of the above byte array
       * @return true if the signature is valid, false otherwise
       */
-      bool check_signature(const byte sig[], u32bit length);
+      bool check_signature(const byte sig[], size_t length);
 
       /**
       * Check the signature of the buffered message, i.e. the one build
@@ -299,7 +299,7 @@ class BOTAN_DLL PK_Verifier
       PK_Verifier& operator=(const PK_Verifier&) { return *this; }
 
       bool validate_signature(const MemoryRegion<byte>& msg,
-                              const byte sig[], u32bit sig_len);
+                              const byte sig[], size_t sig_len);
 
       PK_Ops::Verification* op;
       EMSA* emsa;
@@ -321,11 +321,11 @@ class BOTAN_DLL PK_Key_Agreement
       * @param params extra derivation params
       * @param params_len the length of params in bytes
       */
-      SymmetricKey derive_key(u32bit key_len,
+      SymmetricKey derive_key(size_t key_len,
                               const byte in[],
-                              u32bit in_len,
+                              size_t in_len,
                               const byte params[],
-                              u32bit params_len) const;
+                              size_t params_len) const;
 
       /*
       * Perform Key Agreement Operation
@@ -335,10 +335,10 @@ class BOTAN_DLL PK_Key_Agreement
       * @param params extra derivation params
       * @param params_len the length of params in bytes
       */
-      SymmetricKey derive_key(u32bit key_len,
+      SymmetricKey derive_key(size_t key_len,
                               const MemoryRegion<byte>& in,
                               const byte params[],
-                              u32bit params_len) const
+                              size_t params_len) const
          {
          return derive_key(key_len, &in[0], in.size(),
                            params, params_len);
@@ -351,8 +351,8 @@ class BOTAN_DLL PK_Key_Agreement
       * @param in_len the length of in in bytes
       * @param params extra derivation params
       */
-      SymmetricKey derive_key(u32bit key_len,
-                              const byte in[], u32bit in_len,
+      SymmetricKey derive_key(size_t key_len,
+                              const byte in[], size_t in_len,
                               const std::string& params = "") const
          {
          return derive_key(key_len, in, in_len,
@@ -366,7 +366,7 @@ class BOTAN_DLL PK_Key_Agreement
       * @param in the other parties key
       * @param params extra derivation params
       */
-      SymmetricKey derive_key(u32bit key_len,
+      SymmetricKey derive_key(size_t key_len,
                               const MemoryRegion<byte>& in,
                               const std::string& params = "") const
          {
@@ -398,7 +398,7 @@ class BOTAN_DLL PK_Key_Agreement
 class BOTAN_DLL PK_Encryptor_EME : public PK_Encryptor
    {
    public:
-      u32bit maximum_input_size() const;
+      size_t maximum_input_size() const;
 
       /**
       * Construct an instance.
@@ -410,7 +410,7 @@ class BOTAN_DLL PK_Encryptor_EME : public PK_Encryptor
 
       ~PK_Encryptor_EME() { delete op; delete eme; }
    private:
-      SecureVector<byte> enc(const byte[], u32bit,
+      SecureVector<byte> enc(const byte[], size_t,
                              RandomNumberGenerator& rng) const;
 
       PK_Ops::Encryption* op;
@@ -433,7 +433,7 @@ class BOTAN_DLL PK_Decryptor_EME : public PK_Decryptor
 
       ~PK_Decryptor_EME() { delete op; delete eme; }
    private:
-      SecureVector<byte> dec(const byte[], u32bit) const;
+      SecureVector<byte> dec(const byte[], size_t) const;
 
       PK_Ops::Decryption* op;
       const EME* eme;

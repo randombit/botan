@@ -122,7 +122,7 @@ class BOTAN_DLL DL_Group
       * the value determined according to pbits.
       */
       DL_Group(RandomNumberGenerator& rng, PrimeType type,
-               u32bit pbits, u32bit qbits = 0);
+               size_t pbits, size_t qbits = 0);
 
       /**
       * Create a DSA group with a given seed.
@@ -132,7 +132,7 @@ class BOTAN_DLL DL_Group
       * @param qbits the desired bit size of the prime q.
       */
       DL_Group(RandomNumberGenerator& rng, const MemoryRegion<byte>& seed,
-               u32bit pbits = 1024, u32bit qbits = 0);
+               size_t pbits = 1024, size_t qbits = 0);
 
       /**
       * Create a DL group. The prime q will be determined according to p.

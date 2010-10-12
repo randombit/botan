@@ -80,7 +80,7 @@ class BOTAN_DLL RSA_PrivateKey : public RSA_PublicKey,
       * @param exp the public exponent to be used
       */
       RSA_PrivateKey(RandomNumberGenerator& rng,
-                     u32bit bits, u32bit exp = 65537);
+                     size_t bits, size_t exp = 65537);
    };
 
 /**
@@ -92,12 +92,12 @@ class BOTAN_DLL RSA_Private_Operation : public PK_Ops::Signature,
    public:
       RSA_Private_Operation(const RSA_PrivateKey& rsa);
 
-      u32bit max_input_bits() const { return (n.bits() - 1); }
+      size_t max_input_bits() const { return (n.bits() - 1); }
 
-      SecureVector<byte> sign(const byte msg[], u32bit msg_len,
+      SecureVector<byte> sign(const byte msg[], size_t msg_len,
                               RandomNumberGenerator& rng);
 
-      SecureVector<byte> decrypt(const byte msg[], u32bit msg_len);
+      SecureVector<byte> decrypt(const byte msg[], size_t msg_len);
 
    private:
       BigInt private_op(const BigInt& m) const;
@@ -121,17 +121,17 @@ class BOTAN_DLL RSA_Public_Operation : public PK_Ops::Verification,
          n(rsa.get_n()), powermod_e_n(rsa.get_e(), rsa.get_n())
          {}
 
-      u32bit max_input_bits() const { return (n.bits() - 1); }
+      size_t max_input_bits() const { return (n.bits() - 1); }
       bool with_recovery() const { return true; }
 
-      SecureVector<byte> encrypt(const byte msg[], u32bit msg_len,
+      SecureVector<byte> encrypt(const byte msg[], size_t msg_len,
                                  RandomNumberGenerator&)
          {
          BigInt m(msg, msg_len);
          return BigInt::encode_1363(public_op(m), n.bytes());
          }
 
-      SecureVector<byte> verify_mr(const byte msg[], u32bit msg_len)
+      SecureVector<byte> verify_mr(const byte msg[], size_t msg_len)
          {
          BigInt m(msg, msg_len);
          return BigInt::encode(public_op(m));

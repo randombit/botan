@@ -77,7 +77,7 @@ ElGamal_Encryption_Operation::ElGamal_Encryption_Operation(const ElGamal_PublicK
    }
 
 SecureVector<byte>
-ElGamal_Encryption_Operation::encrypt(const byte msg[], u32bit msg_len,
+ElGamal_Encryption_Operation::encrypt(const byte msg[], size_t msg_len,
                                       RandomNumberGenerator& rng)
    {
    const BigInt& p = mod_p.get_modulus();
@@ -110,11 +110,11 @@ ElGamal_Decryption_Operation::ElGamal_Decryption_Operation(const ElGamal_Private
    }
 
 SecureVector<byte>
-ElGamal_Decryption_Operation::decrypt(const byte msg[], u32bit msg_len)
+ElGamal_Decryption_Operation::decrypt(const byte msg[], size_t msg_len)
    {
    const BigInt& p = mod_p.get_modulus();
 
-   const u32bit p_bytes = p.bytes();
+   const size_t p_bytes = p.bytes();
 
    if(msg_len != 2 * p_bytes)
       throw Invalid_Argument("ElGamal decryption: Invalid message");
