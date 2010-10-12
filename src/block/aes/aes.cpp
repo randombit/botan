@@ -412,14 +412,14 @@ const u32bit TD[1024] = {
 /*
 * AES Encryption
 */
-void AES::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void AES::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const u32bit* TE0 = TE;
    const u32bit* TE1 = TE + 256;
    const u32bit* TE2 = TE + 512;
    const u32bit* TE3 = TE + 768;
 
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u32bit T0 = load_be<u32bit>(in, 0) ^ EK[0];
       u32bit T1 = load_be<u32bit>(in, 1) ^ EK[1];
@@ -529,14 +529,14 @@ void AES::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * AES Decryption
 */
-void AES::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void AES::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const u32bit* TD0 = TD;
    const u32bit* TD1 = TD + 256;
    const u32bit* TD2 = TD + 512;
    const u32bit* TD3 = TD + 768;
 
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u32bit T0 = load_be<u32bit>(in, 0) ^ DK[0];
       u32bit T1 = load_be<u32bit>(in, 1) ^ DK[1];

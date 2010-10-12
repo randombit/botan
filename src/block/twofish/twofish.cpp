@@ -14,16 +14,16 @@ namespace Botan {
 /*
 * Twofish Encryption
 */
-void Twofish::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void Twofish::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u32bit A = load_le<u32bit>(in, 0) ^ RK[0];
       u32bit B = load_le<u32bit>(in, 1) ^ RK[1];
       u32bit C = load_le<u32bit>(in, 2) ^ RK[2];
       u32bit D = load_le<u32bit>(in, 3) ^ RK[3];
 
-      for(u32bit j = 0; j != 16; j += 2)
+      for(size_t j = 0; j != 16; j += 2)
          {
          u32bit X, Y;
 
@@ -65,16 +65,16 @@ void Twofish::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * Twofish Decryption
 */
-void Twofish::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void Twofish::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u32bit A = load_le<u32bit>(in, 0) ^ RK[4];
       u32bit B = load_le<u32bit>(in, 1) ^ RK[5];
       u32bit C = load_le<u32bit>(in, 2) ^ RK[6];
       u32bit D = load_le<u32bit>(in, 3) ^ RK[7];
 
-      for(u32bit j = 0; j != 16; j += 2)
+      for(size_t j = 0; j != 16; j += 2)
          {
          u32bit X, Y;
 
@@ -120,12 +120,12 @@ void Twofish::key_schedule(const byte key[], u32bit length)
    {
    SecureVector<byte> S(16);
 
-   for(u32bit i = 0; i != length; ++i)
+   for(size_t i = 0; i != length; ++i)
       rs_mul(&S[4*(i/8)], key[i], i);
 
    if(length == 16)
       {
-      for(u32bit i = 0; i != 256; ++i)
+      for(size_t i = 0; i != 256; ++i)
          {
          SB[    i] = MDS0[Q0[Q0[i]^S[ 0]]^S[ 4]];
          SB[256+i] = MDS1[Q0[Q1[i]^S[ 1]]^S[ 5]];
@@ -133,7 +133,7 @@ void Twofish::key_schedule(const byte key[], u32bit length)
          SB[768+i] = MDS3[Q1[Q1[i]^S[ 3]]^S[ 7]];
          }
 
-      for(u32bit i = 0; i != 40; i += 2)
+      for(size_t i = 0; i != 40; i += 2)
          {
          u32bit X = MDS0[Q0[Q0[i  ]^key[ 8]]^key[ 0]] ^
                     MDS1[Q0[Q1[i  ]^key[ 9]]^key[ 1]] ^
@@ -152,7 +152,7 @@ void Twofish::key_schedule(const byte key[], u32bit length)
       }
    else if(length == 24)
       {
-      for(u32bit i = 0; i != 256; ++i)
+      for(size_t i = 0; i != 256; ++i)
          {
          SB[    i] = MDS0[Q0[Q0[Q1[i]^S[ 0]]^S[ 4]]^S[ 8]];
          SB[256+i] = MDS1[Q0[Q1[Q1[i]^S[ 1]]^S[ 5]]^S[ 9]];
@@ -160,7 +160,7 @@ void Twofish::key_schedule(const byte key[], u32bit length)
          SB[768+i] = MDS3[Q1[Q1[Q0[i]^S[ 3]]^S[ 7]]^S[11]];
          }
 
-      for(u32bit i = 0; i != 40; i += 2)
+      for(size_t i = 0; i != 40; i += 2)
          {
          u32bit X = MDS0[Q0[Q0[Q1[i  ]^key[16]]^key[ 8]]^key[ 0]] ^
                     MDS1[Q0[Q1[Q1[i  ]^key[17]]^key[ 9]]^key[ 1]] ^
@@ -179,7 +179,7 @@ void Twofish::key_schedule(const byte key[], u32bit length)
       }
    else if(length == 32)
       {
-      for(u32bit i = 0; i != 256; ++i)
+      for(size_t i = 0; i != 256; ++i)
          {
          SB[    i] = MDS0[Q0[Q0[Q1[Q1[i]^S[ 0]]^S[ 4]]^S[ 8]]^S[12]];
          SB[256+i] = MDS1[Q0[Q1[Q1[Q0[i]^S[ 1]]^S[ 5]]^S[ 9]]^S[13]];
@@ -187,7 +187,7 @@ void Twofish::key_schedule(const byte key[], u32bit length)
          SB[768+i] = MDS3[Q1[Q1[Q0[Q1[i]^S[ 3]]^S[ 7]]^S[11]]^S[15]];
          }
 
-      for(u32bit i = 0; i != 40; i += 2)
+      for(size_t i = 0; i != 40; i += 2)
          {
          u32bit X = MDS0[Q0[Q0[Q1[Q1[i  ]^key[24]]^key[16]]^key[ 8]]^key[ 0]] ^
                     MDS1[Q0[Q1[Q1[Q0[i  ]^key[25]]^key[17]]^key[ 9]]^key[ 1]] ^
@@ -209,7 +209,7 @@ void Twofish::key_schedule(const byte key[], u32bit length)
 /*
 * Do one column of the RS matrix multiplcation
 */
-void Twofish::rs_mul(byte S[4], byte key, u32bit offset)
+void Twofish::rs_mul(byte S[4], byte key, size_t offset)
    {
    if(key)
       {

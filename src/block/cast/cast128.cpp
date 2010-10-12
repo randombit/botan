@@ -48,9 +48,9 @@ inline void R3(u32bit& L, u32bit R, u32bit MK, u32bit RK)
 /*
 * CAST-128 Encryption
 */
-void CAST_128::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void CAST_128::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u32bit L = load_be<u32bit>(in, 0);
       u32bit R = load_be<u32bit>(in, 1);
@@ -82,9 +82,9 @@ void CAST_128::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * CAST-128 Decryption
 */
-void CAST_128::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void CAST_128::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u32bit L = load_be<u32bit>(in, 0);
       u32bit R = load_be<u32bit>(in, 1);
@@ -120,13 +120,13 @@ void CAST_128::key_schedule(const byte key[], u32bit length)
    {
    clear();
    SecureVector<u32bit> X(4);
-   for(u32bit j = 0; j != length; ++j)
+   for(size_t j = 0; j != length; ++j)
       X[j/4] = (X[j/4] << 8) + key[j];
 
    cast_ks(MK, X);
    cast_ks(RK, X);
 
-   for(u32bit j = 0; j != 16; ++j)
+   for(size_t j = 0; j != 16; ++j)
       RK[j] %= 32;
    }
 
@@ -139,7 +139,7 @@ void CAST_128::cast_ks(MemoryRegion<u32bit>& K,
    class ByteReader
       {
       public:
-         byte operator()(u32bit i) { return (X[i/4] >> (8*(3 - (i%4)))); }
+         byte operator()(size_t i) { return (X[i/4] >> (8*(3 - (i%4)))); }
          ByteReader(const u32bit* x) : X(x) {}
       private:
          const u32bit* X;

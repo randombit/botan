@@ -87,7 +87,7 @@ void ECB_Encryption::buffered_block(const byte input[], u32bit input_length)
 
    while(blocks)
       {
-      u32bit to_proc = std::min<u32bit>(blocks, blocks_in_temp);
+      u32bit to_proc = std::min(blocks, blocks_in_temp);
 
       cipher->encrypt_n(input, &temp[0], to_proc);
 
@@ -178,7 +178,7 @@ void ECB_Decryption::buffered_block(const byte input[], u32bit length)
 
    while(blocks)
       {
-      u32bit to_proc = std::min<u32bit>(blocks, blocks_in_temp);
+      u32bit to_proc = std::min(blocks, blocks_in_temp);
 
       cipher->decrypt_n(input, &temp[0], to_proc);
 

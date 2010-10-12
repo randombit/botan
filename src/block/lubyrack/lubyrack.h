@@ -19,8 +19,8 @@ namespace Botan {
 class BOTAN_DLL LubyRackoff : public BlockCipher
    {
    public:
-      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
-      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void encrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
       void clear();
       std::string name() const;

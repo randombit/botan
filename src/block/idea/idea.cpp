@@ -46,7 +46,7 @@ u16bit mul_inv(u16bit x)
    {
    u16bit y = x;
 
-   for(u32bit i = 0; i != 15; ++i)
+   for(size_t i = 0; i != 15; ++i)
       {
       y = mul(y, y); // square
       y = mul(y, x);
@@ -58,18 +58,18 @@ u16bit mul_inv(u16bit x)
 /**
 * IDEA is involutional, depending only on the key schedule
 */
-void idea_op(const byte in[], byte out[], u32bit blocks, const u16bit K[52])
+void idea_op(const byte in[], byte out[], size_t blocks, const u16bit K[52])
    {
    const u32bit BLOCK_SIZE = 8;
 
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u16bit X1 = load_be<u16bit>(in, 0);
       u16bit X2 = load_be<u16bit>(in, 1);
       u16bit X3 = load_be<u16bit>(in, 2);
       u16bit X4 = load_be<u16bit>(in, 3);
 
-      for(u32bit j = 0; j != 8; ++j)
+      for(size_t j = 0; j != 8; ++j)
          {
          X1 = mul(X1, K[6*j+0]);
          X2 += K[6*j+1];
@@ -106,7 +106,7 @@ void idea_op(const byte in[], byte out[], u32bit blocks, const u16bit K[52])
 /*
 * IDEA Encryption
 */
-void IDEA::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void IDEA::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    idea_op(in, out, blocks, &EK[0]);
    }
@@ -114,7 +114,7 @@ void IDEA::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * IDEA Decryption
 */
-void IDEA::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void IDEA::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    idea_op(in, out, blocks, &DK[0]);
    }
@@ -124,10 +124,10 @@ void IDEA::decrypt_n(const byte in[], byte out[], u32bit blocks) const
 */
 void IDEA::key_schedule(const byte key[], u32bit)
    {
-   for(u32bit j = 0; j != 8; ++j)
+   for(size_t j = 0; j != 8; ++j)
       EK[j] = load_be<u16bit>(key, j);
 
-   for(u32bit j = 1, k = 8, offset = 0; k != 52; j %= 8, ++j, ++k)
+   for(size_t j = 1, k = 8, offset = 0; k != 52; j %= 8, ++j, ++k)
       {
       EK[j+7+offset] = static_cast<u16bit>((EK[(j     % 8) + offset] << 9) |
                                            (EK[((j+1) % 8) + offset] >> 7));
@@ -139,7 +139,7 @@ void IDEA::key_schedule(const byte key[], u32bit)
    DK[49] = -EK[1];
    DK[48] = mul_inv(EK[0]);
 
-   for(u32bit j = 1, k = 4, counter = 47; j != 8; ++j, k += 6)
+   for(size_t j = 1, k = 4, counter = 47; j != 8; ++j, k += 6)
       {
       DK[counter--] = EK[k+1];
       DK[counter--] = EK[k];

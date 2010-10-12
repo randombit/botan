@@ -15,14 +15,14 @@ namespace Botan {
 /*
 * SAFER-SK Encryption
 */
-void SAFER_SK::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void SAFER_SK::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       byte A = in[0], B = in[1], C = in[2], D = in[3],
            E = in[4], F = in[5], G = in[6], H = in[7], X, Y;
 
-      for(u32bit j = 0; j != 16*ROUNDS; j += 16)
+      for(size_t j = 0; j != 16*ROUNDS; j += 16)
          {
          A = EXP[A ^ EK[j  ]]; B = LOG[B + EK[j+1]];
          C = LOG[C + EK[j+2]]; D = EXP[D ^ EK[j+3]];
@@ -51,9 +51,9 @@ void SAFER_SK::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * SAFER-SK Decryption
 */
-void SAFER_SK::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void SAFER_SK::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       byte A = in[0], B = in[1], C = in[2], D = in[3],
            E = in[4], F = in[5], G = in[6], H = in[7];
@@ -93,17 +93,18 @@ void SAFER_SK::key_schedule(const byte key[], u32bit)
    {
    SecureVector<byte> KB(18);
 
-   for(u32bit j = 0; j != 8; ++j)
+   for(size_t i = 0; i != 8; ++i)
       {
-      KB[ 8] ^= KB[j] = rotate_left(key[j], 5);
-      KB[17] ^= KB[j+9] = EK[j] = key[j+8];
+      KB[ 8] ^= KB[i] = rotate_left(key[i], 5);
+      KB[17] ^= KB[i+9] = EK[i] = key[i+8];
       }
-   for(u32bit j = 0; j != ROUNDS; ++j)
+
+   for(size_t i = 0; i != ROUNDS; ++i)
       {
-      for(u32bit k = 0; k != 18; ++k)
-         KB[k] = rotate_left(KB[k], 6);
-      for(u32bit k = 0; k != 16; ++k)
-         EK[16*j+k+8] = KB[KEY_INDEX[16*j+k]] + BIAS[16*j+k];
+      for(size_t j = 0; j != 18; ++j)
+         KB[j] = rotate_left(KB[j], 6);
+      for(size_t j = 0; j != 16; ++j)
+         EK[16*i+j+8] = KB[KEY_INDEX[16*i+j]] + BIAS[16*i+j];
       }
    }
 
@@ -126,7 +127,7 @@ BlockCipher* SAFER_SK::clone() const
 /*
 * SAFER-SK Constructor
 */
-SAFER_SK::SAFER_SK(u32bit rounds) : BlockCipher(8, 16),
+SAFER_SK::SAFER_SK(size_t rounds) : BlockCipher(8, 16),
                                     EK(16 * rounds + 8), ROUNDS(rounds)
    {
    if(ROUNDS > 13 || ROUNDS == 0)

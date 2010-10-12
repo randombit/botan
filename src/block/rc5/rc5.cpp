@@ -16,14 +16,15 @@ namespace Botan {
 /*
 * RC5 Encryption
 */
-void RC5::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void RC5::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
-      u32bit A = load_le<u32bit>(in, 0), B = load_le<u32bit>(in, 1);
+      u32bit A = load_le<u32bit>(in, 0);
+      u32bit B = load_le<u32bit>(in, 1);
 
       A += S[0]; B += S[1];
-      for(u32bit j = 0; j != ROUNDS; j += 4)
+      for(size_t j = 0; j != ROUNDS; j += 4)
          {
          A = rotate_left(A ^ B, B % 32) + S[2*j+2];
          B = rotate_left(B ^ A, A % 32) + S[2*j+3];
@@ -45,13 +46,14 @@ void RC5::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * RC5 Decryption
 */
-void RC5::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void RC5::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
-      u32bit A = load_le<u32bit>(in, 0), B = load_le<u32bit>(in, 1);
+      u32bit A = load_le<u32bit>(in, 0);
+      u32bit B = load_le<u32bit>(in, 1);
 
-      for(u32bit j = ROUNDS; j != 0; j -= 4)
+      for(size_t j = ROUNDS; j != 0; j -= 4)
          {
          B = rotate_right(B - S[2*j+1], A % 32) ^ A;
          A = rotate_right(A - S[2*j  ], B % 32) ^ B;
@@ -76,24 +78,26 @@ void RC5::decrypt_n(const byte in[], byte out[], u32bit blocks) const
 */
 void RC5::key_schedule(const byte key[], u32bit length)
    {
-   const u32bit WORD_KEYLENGTH = (((length - 1) / 4) + 1),
-                MIX_ROUNDS     = 3*std::max<u32bit>(WORD_KEYLENGTH, S.size());
+   const size_t WORD_KEYLENGTH = (((length - 1) / 4) + 1);
+   const size_t MIX_ROUNDS     = 3 * std::max(WORD_KEYLENGTH, S.size());
 
    S[0] = 0xB7E15163;
-   for(u32bit j = 1; j != S.size(); ++j)
-      S[j] = S[j-1] + 0x9E3779B9;
+   for(size_t i = 1; i != S.size(); ++i)
+      S[i] = S[i-1] + 0x9E3779B9;
 
    SecureVector<u32bit> K(8);
 
-   for(s32bit j = length-1; j >= 0; --j)
-      K[j/4] = (K[j/4] << 8) + key[j];
+   for(s32bit i = length-1; i >= 0; --i)
+      K[i/4] = (K[i/4] << 8) + key[i];
 
-   for(u32bit j = 0, A = 0, B = 0; j != MIX_ROUNDS; ++j)
+   u32bit A = 0, B = 0;
+
+   for(size_t i = 0; i != MIX_ROUNDS; ++i)
       {
-      A = rotate_left(S[j % S.size()] + A + B, 3);
-      B = rotate_left(K[j % WORD_KEYLENGTH] + A + B, (A + B) % 32);
-      S[j % S.size()] = A;
-      K[j % WORD_KEYLENGTH] = B;
+      A = rotate_left(S[i % S.size()] + A + B, 3);
+      B = rotate_left(K[i % WORD_KEYLENGTH] + A + B, (A + B) % 32);
+      S[i % S.size()] = A;
+      K[i % WORD_KEYLENGTH] = B;
       }
    }
 
@@ -108,7 +112,7 @@ std::string RC5::name() const
 /*
 * RC5 Constructor
 */
-RC5::RC5(u32bit r) : BlockCipher(8, 1, 32), ROUNDS(r)
+RC5::RC5(size_t r) : BlockCipher(8, 1, 32), ROUNDS(r)
    {
    if(ROUNDS < 8 || ROUNDS > 32 || (ROUNDS % 4 != 0))
       throw Invalid_Argument(name() + ": Invalid number of rounds");

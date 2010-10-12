@@ -25,8 +25,8 @@ namespace Botan {
 class BOTAN_DLL Lion : public BlockCipher
    {
    public:
-      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
-      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void encrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
       void clear();
       std::string name() const;
@@ -39,13 +39,13 @@ class BOTAN_DLL Lion : public BlockCipher
       */
       Lion(HashFunction* hash,
            StreamCipher* cipher,
-           u32bit block_size);
+           size_t block_size);
 
       ~Lion() { delete hash; delete cipher; }
    private:
       void key_schedule(const byte[], u32bit);
 
-      const u32bit LEFT_SIZE, RIGHT_SIZE;
+      const size_t LEFT_SIZE, RIGHT_SIZE;
 
       HashFunction* hash;
       StreamCipher* cipher;

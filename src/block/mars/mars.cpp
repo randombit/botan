@@ -232,9 +232,9 @@ u32bit gen_mask(u32bit input)
 /*
 * MARS Encryption
 */
-void MARS::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void MARS::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u32bit A = load_le<u32bit>(in, 0) + EK[0];
       u32bit B = load_le<u32bit>(in, 1) + EK[1];
@@ -275,9 +275,9 @@ void MARS::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * MARS Decryption
 */
-void MARS::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void MARS::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u32bit A = load_le<u32bit>(in, 3) + EK[39];
       u32bit B = load_le<u32bit>(in, 2) + EK[38];
@@ -321,30 +321,30 @@ void MARS::decrypt_n(const byte in[], byte out[], u32bit blocks) const
 void MARS::key_schedule(const byte key[], u32bit length)
    {
    SecureVector<u32bit> T(15);
-   for(u32bit j = 0; j != length / 4; ++j)
+   for(size_t j = 0; j != length / 4; ++j)
       T[j] = load_le<u32bit>(key, j);
 
    T[length / 4] = length / 4;
 
-   for(u32bit j = 0; j != 4; ++j)
+   for(u32bit i = 0; i != 4; ++i)
       {
-      T[ 0] ^= rotate_left(T[ 8] ^ T[13], 3) ^ (j     );
-      T[ 1] ^= rotate_left(T[ 9] ^ T[14], 3) ^ (j +  4);
-      T[ 2] ^= rotate_left(T[10] ^ T[ 0], 3) ^ (j +  8);
-      T[ 3] ^= rotate_left(T[11] ^ T[ 1], 3) ^ (j + 12);
-      T[ 4] ^= rotate_left(T[12] ^ T[ 2], 3) ^ (j + 16);
-      T[ 5] ^= rotate_left(T[13] ^ T[ 3], 3) ^ (j + 20);
-      T[ 6] ^= rotate_left(T[14] ^ T[ 4], 3) ^ (j + 24);
-      T[ 7] ^= rotate_left(T[ 0] ^ T[ 5], 3) ^ (j + 28);
-      T[ 8] ^= rotate_left(T[ 1] ^ T[ 6], 3) ^ (j + 32);
-      T[ 9] ^= rotate_left(T[ 2] ^ T[ 7], 3) ^ (j + 36);
-      T[10] ^= rotate_left(T[ 3] ^ T[ 8], 3) ^ (j + 40);
-      T[11] ^= rotate_left(T[ 4] ^ T[ 9], 3) ^ (j + 44);
-      T[12] ^= rotate_left(T[ 5] ^ T[10], 3) ^ (j + 48);
-      T[13] ^= rotate_left(T[ 6] ^ T[11], 3) ^ (j + 52);
-      T[14] ^= rotate_left(T[ 7] ^ T[12], 3) ^ (j + 56);
+      T[ 0] ^= rotate_left(T[ 8] ^ T[13], 3) ^ (i     );
+      T[ 1] ^= rotate_left(T[ 9] ^ T[14], 3) ^ (i +  4);
+      T[ 2] ^= rotate_left(T[10] ^ T[ 0], 3) ^ (i +  8);
+      T[ 3] ^= rotate_left(T[11] ^ T[ 1], 3) ^ (i + 12);
+      T[ 4] ^= rotate_left(T[12] ^ T[ 2], 3) ^ (i + 16);
+      T[ 5] ^= rotate_left(T[13] ^ T[ 3], 3) ^ (i + 20);
+      T[ 6] ^= rotate_left(T[14] ^ T[ 4], 3) ^ (i + 24);
+      T[ 7] ^= rotate_left(T[ 0] ^ T[ 5], 3) ^ (i + 28);
+      T[ 8] ^= rotate_left(T[ 1] ^ T[ 6], 3) ^ (i + 32);
+      T[ 9] ^= rotate_left(T[ 2] ^ T[ 7], 3) ^ (i + 36);
+      T[10] ^= rotate_left(T[ 3] ^ T[ 8], 3) ^ (i + 40);
+      T[11] ^= rotate_left(T[ 4] ^ T[ 9], 3) ^ (i + 44);
+      T[12] ^= rotate_left(T[ 5] ^ T[10], 3) ^ (i + 48);
+      T[13] ^= rotate_left(T[ 6] ^ T[11], 3) ^ (i + 52);
+      T[14] ^= rotate_left(T[ 7] ^ T[12], 3) ^ (i + 56);
 
-      for(u32bit k = 0; k != 4; ++k)
+      for(size_t j = 0; j != 4; ++j)
          {
          T[ 0] = rotate_left(T[ 0] + SBOX[T[14] % 512], 9);
          T[ 1] = rotate_left(T[ 1] + SBOX[T[ 0] % 512], 9);
@@ -363,17 +363,23 @@ void MARS::key_schedule(const byte key[], u32bit length)
          T[14] = rotate_left(T[14] + SBOX[T[13] % 512], 9);
          }
 
-      EK[10*j + 0] = T[ 0]; EK[10*j + 1] = T[ 4]; EK[10*j + 2] = T[ 8];
-      EK[10*j + 3] = T[12]; EK[10*j + 4] = T[ 1]; EK[10*j + 5] = T[ 5];
-      EK[10*j + 6] = T[ 9]; EK[10*j + 7] = T[13]; EK[10*j + 8] = T[ 2];
-      EK[10*j + 9] = T[ 6];
+      EK[10*i + 0] = T[ 0];
+      EK[10*i + 1] = T[ 4];
+      EK[10*i + 2] = T[ 8];
+      EK[10*i + 3] = T[12];
+      EK[10*i + 4] = T[ 1];
+      EK[10*i + 5] = T[ 5];
+      EK[10*i + 6] = T[ 9];
+      EK[10*i + 7] = T[13];
+      EK[10*i + 8] = T[ 2];
+      EK[10*i + 9] = T[ 6];
       }
 
-   for(u32bit j = 5; j != 37; j += 2)
+   for(size_t i = 5; i != 37; i += 2)
       {
-      u32bit key3 = EK[j] & 3;
-      EK[j] |= 3;
-      EK[j] ^= rotate_left(SBOX[265 + key3], EK[j-1] % 32) & gen_mask(EK[j]);
+      u32bit key3 = EK[i] & 3;
+      EK[i] |= 3;
+      EK[i] ^= rotate_left(SBOX[265 + key3], EK[i-1] % 32) & gen_mask(EK[i]);
       }
    }
 

@@ -18,8 +18,8 @@ namespace Botan {
 class BOTAN_DLL AES_128_SSSE3 : public BlockCipher
    {
    public:
-      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
-      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void encrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
       void clear() { zeroise(EK); zeroise(DK); }
       std::string name() const { return "AES-128"; }
@@ -38,8 +38,8 @@ class BOTAN_DLL AES_128_SSSE3 : public BlockCipher
 class BOTAN_DLL AES_192_SSSE3 : public BlockCipher
    {
    public:
-      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
-      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void encrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
       void clear() { zeroise(EK); zeroise(DK); }
       std::string name() const { return "AES-192"; }
@@ -58,8 +58,8 @@ class BOTAN_DLL AES_192_SSSE3 : public BlockCipher
 class BOTAN_DLL AES_256_SSSE3 : public BlockCipher
    {
    public:
-      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
-      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void encrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
       void clear() { zeroise(EK); zeroise(DK); }
       std::string name() const { return "AES-256"; }

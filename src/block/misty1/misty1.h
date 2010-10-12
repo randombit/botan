@@ -18,8 +18,8 @@ namespace Botan {
 class BOTAN_DLL MISTY1 : public BlockCipher
    {
    public:
-      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
-      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void encrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
       void clear() { zeroise(EK); zeroise(DK); }
       std::string name() const { return "MISTY1"; }
@@ -29,7 +29,7 @@ class BOTAN_DLL MISTY1 : public BlockCipher
       * @param rounds the number of rounds. Must be 8 with the current
       * implementation
       */
-      MISTY1(u32bit rounds = 8);
+      MISTY1(size_t rounds = 8);
    private:
       void key_schedule(const byte[], u32bit);
 

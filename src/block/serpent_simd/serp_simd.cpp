@@ -178,7 +178,7 @@ void serpent_decrypt_4(const byte in[64],
 /*
 * Serpent Encryption
 */
-void Serpent_SIMD::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void Serpent_SIMD::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const u32bit* KS = &(this->get_round_keys()[0]);
 
@@ -197,7 +197,7 @@ void Serpent_SIMD::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * Serpent Decryption
 */
-void Serpent_SIMD::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void Serpent_SIMD::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const u32bit* KS = &(this->get_round_keys()[0]);
 

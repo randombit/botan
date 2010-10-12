@@ -22,9 +22,9 @@ u32bit SEED::G_FUNC::operator()(u32bit X) const
 /*
 * SEED Encryption
 */
-void SEED::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void SEED::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u32bit B0 = load_be<u32bit>(in, 0);
       u32bit B1 = load_be<u32bit>(in, 1);
@@ -33,7 +33,7 @@ void SEED::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 
       G_FUNC G;
 
-      for(u32bit j = 0; j != 16; j += 2)
+      for(size_t j = 0; j != 16; j += 2)
          {
          u32bit T0, T1;
 
@@ -62,9 +62,9 @@ void SEED::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * SEED Decryption
 */
-void SEED::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void SEED::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u32bit B0 = load_be<u32bit>(in, 0);
       u32bit B1 = load_be<u32bit>(in, 1);
@@ -73,7 +73,7 @@ void SEED::decrypt_n(const byte in[], byte out[], u32bit blocks) const
 
       G_FUNC G;
 
-      for(u32bit j = 0; j != 16; j += 2)
+      for(size_t j = 0; j != 16; j += 2)
          {
          u32bit T0, T1;
 
@@ -113,22 +113,22 @@ void SEED::key_schedule(const byte key[], u32bit)
 
    SecureVector<u32bit> WK(4);
 
-   for(u32bit j = 0; j != 4; ++j)
-      WK[j] = load_be<u32bit>(key, j);
+   for(size_t i = 0; i != 4; ++i)
+      WK[i] = load_be<u32bit>(key, i);
 
    G_FUNC G;
 
-   for(u32bit j = 0; j != 16; j += 2)
+   for(size_t i = 0; i != 16; i += 2)
       {
-      K[2*j  ] = G(WK[0] + WK[2] - RC[j]);
-      K[2*j+1] = G(WK[1] - WK[3] + RC[j]) ^ K[2*j];
+      K[2*i  ] = G(WK[0] + WK[2] - RC[i]);
+      K[2*i+1] = G(WK[1] - WK[3] + RC[i]) ^ K[2*i];
 
       byte T = get_byte(3, WK[0]);
       WK[0] = (WK[0] >> 8) | (get_byte(3, WK[1]) << 24);
       WK[1] = (WK[1] >> 8) | (T << 24);
 
-      K[2*j+2] = G(WK[0] + WK[2] - RC[j+1]);
-      K[2*j+3] = G(WK[1] - WK[3] + RC[j+1]) ^ K[2*j+2];
+      K[2*i+2] = G(WK[0] + WK[2] - RC[i+1]);
+      K[2*i+3] = G(WK[1] - WK[3] + RC[i+1]) ^ K[2*i+2];
 
       T = get_byte(0, WK[3]);
       WK[3] = (WK[3] << 8) | get_byte(0, WK[2]);

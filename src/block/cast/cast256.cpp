@@ -48,9 +48,9 @@ void round3(u32bit& out, u32bit in, u32bit mask, u32bit rot)
 /*
 * CAST-256 Encryption
 */
-void CAST_256::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void CAST_256::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u32bit A = load_be<u32bit>(in, 0);
       u32bit B = load_be<u32bit>(in, 1);
@@ -92,9 +92,9 @@ void CAST_256::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * CAST-256 Decryption
 */
-void CAST_256::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void CAST_256::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u32bit A = load_be<u32bit>(in, 0);
       u32bit B = load_be<u32bit>(in, 1);
@@ -139,13 +139,13 @@ void CAST_256::decrypt_n(const byte in[], byte out[], u32bit blocks) const
 void CAST_256::key_schedule(const byte key[], u32bit length)
    {
    SecureVector<u32bit> K(8);
-   for(u32bit j = 0; j != length; ++j)
+   for(size_t j = 0; j != length; ++j)
       K[j/4] = (K[j/4] << 8) + key[j];
 
    u32bit A = K[0], B = K[1], C = K[2], D = K[3],
           E = K[4], F = K[5], G = K[6], H = K[7];
 
-   for(u32bit j = 0; j != 48; j += 4)
+   for(size_t j = 0; j != 48; j += 4)
       {
       round1(G, H, KEY_MASK[4*j+ 0], KEY_ROT[(4*j+ 0) % 32]);
       round2(F, G, KEY_MASK[4*j+ 1], KEY_ROT[(4*j+ 1) % 32]);

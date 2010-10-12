@@ -26,7 +26,7 @@ class BOTAN_DLL GOST_28147_89_Params
       * @param col the column
       * @return sbox entry at this row/column
       */
-      byte sbox_entry(u32bit row, u32bit col) const;
+      byte sbox_entry(size_t row, size_t col) const;
 
       /**
       * @return name of this parameter set
@@ -52,8 +52,8 @@ class BOTAN_DLL GOST_28147_89_Params
 class BOTAN_DLL GOST_28147_89 : public BlockCipher
    {
    public:
-      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
-      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void encrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
       void clear() { zeroise(EK); }
 

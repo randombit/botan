@@ -243,9 +243,9 @@ inline void i_transform(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
 /*
 * Serpent Encryption
 */
-void Serpent::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void Serpent::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u32bit B0 = load_le<u32bit>(in, 0);
       u32bit B1 = load_le<u32bit>(in, 1);
@@ -295,9 +295,9 @@ void Serpent::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * Serpent Decryption
 */
-void Serpent::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void Serpent::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u32bit B0 = load_le<u32bit>(in, 0);
       u32bit B1 = load_le<u32bit>(in, 1);
@@ -356,12 +356,17 @@ void Serpent::key_schedule(const byte key[], u32bit length)
    const u32bit PHI = 0x9E3779B9;
 
    SecureVector<u32bit> W(140);
-   for(u32bit j = 0; j != length / 4; ++j)
-      W[j] = load_le<u32bit>(key, j);
+   for(size_t i = 0; i != length / 4; ++i)
+      W[i] = load_le<u32bit>(key, i);
 
    W[length / 4] |= u32bit(1) << ((length%4)*8);
-   for(u32bit j = 8; j != 140; ++j)
-      W[j] = rotate_left(W[j-8] ^ W[j-5] ^ W[j-3] ^ W[j-1] ^ PHI ^ (j-8), 11);
+
+   for(size_t i = 8; i != 140; ++i)
+      {
+      u32bit wi = W[i-8] ^ W[i-5] ^ W[i-3] ^ W[i-1] ^ PHI ^ u32bit(i-8);
+      W[i] = rotate_left(wi, 11);
+      }
+
    SBoxE4(W[  8],W[  9],W[ 10],W[ 11]); SBoxE3(W[ 12],W[ 13],W[ 14],W[ 15]);
    SBoxE2(W[ 16],W[ 17],W[ 18],W[ 19]); SBoxE1(W[ 20],W[ 21],W[ 22],W[ 23]);
    SBoxE8(W[ 24],W[ 25],W[ 26],W[ 27]); SBoxE7(W[ 28],W[ 29],W[ 30],W[ 31]);

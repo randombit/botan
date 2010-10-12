@@ -18,8 +18,8 @@ namespace Botan {
 class BOTAN_DLL DES : public BlockCipher
    {
    public:
-      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
-      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void encrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
       void clear() { zeroise(round_key); }
       std::string name() const { return "DES"; }
@@ -38,8 +38,8 @@ class BOTAN_DLL DES : public BlockCipher
 class BOTAN_DLL TripleDES : public BlockCipher
    {
    public:
-      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
-      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void encrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
       void clear() { zeroise(round_key); }
       std::string name() const { return "TripleDES"; }

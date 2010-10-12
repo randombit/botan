@@ -14,12 +14,12 @@ namespace Botan {
 /*
 * Lion Encryption
 */
-void Lion::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void Lion::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    SecureVector<byte> buffer_vec(LEFT_SIZE);
    byte* buffer = &buffer_vec[0];
 
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       xor_buf(buffer, in, &key1[0], LEFT_SIZE);
       cipher->set_key(buffer, LEFT_SIZE);
@@ -41,12 +41,12 @@ void Lion::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * Lion Decryption
 */
-void Lion::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void Lion::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    SecureVector<byte> buffer_vec(LEFT_SIZE);
    byte* buffer = &buffer_vec[0];
 
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       xor_buf(buffer, in, &key2[0], LEFT_SIZE);
       cipher->set_key(buffer, LEFT_SIZE);
@@ -108,8 +108,8 @@ void Lion::clear()
 /*
 * Lion Constructor
 */
-Lion::Lion(HashFunction* hash_in, StreamCipher* sc_in, u32bit block_len) :
-   BlockCipher(std::max<u32bit>(2*hash_in->OUTPUT_LENGTH + 1, block_len),
+Lion::Lion(HashFunction* hash_in, StreamCipher* sc_in, size_t block_len) :
+   BlockCipher(std::max<size_t>(2*hash_in->OUTPUT_LENGTH + 1, block_len),
                2, 2*hash_in->OUTPUT_LENGTH, 2),
    LEFT_SIZE(hash_in->OUTPUT_LENGTH),
    RIGHT_SIZE(BLOCK_SIZE - LEFT_SIZE),

@@ -109,16 +109,16 @@ u16bit FI(u16bit I, u16bit K)
 /*
 * KASUMI Encryption
 */
-void KASUMI::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void KASUMI::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u16bit B0 = load_be<u16bit>(in, 0);
       u16bit B1 = load_be<u16bit>(in, 1);
       u16bit B2 = load_be<u16bit>(in, 2);
       u16bit B3 = load_be<u16bit>(in, 3);
 
-      for(u32bit j = 0; j != 8; j += 2)
+      for(size_t j = 0; j != 8; j += 2)
          {
          const u16bit* K = &EK[8*j];
 
@@ -153,16 +153,16 @@ void KASUMI::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * KASUMI Decryption
 */
-void KASUMI::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void KASUMI::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u16bit B0 = load_be<u16bit>(in, 0);
       u16bit B1 = load_be<u16bit>(in, 1);
       u16bit B2 = load_be<u16bit>(in, 2);
       u16bit B3 = load_be<u16bit>(in, 3);
 
-      for(u32bit j = 0; j != 8; j += 2)
+      for(size_t j = 0; j != 8; j += 2)
          {
          const u16bit* K = &EK[8*(6-j)];
 
@@ -205,22 +205,22 @@ void KASUMI::key_schedule(const byte key[], u32bit)
                                 0xFEDC, 0xBA98, 0x7654, 0x3210 };
 
    SecureVector<u16bit> K(16);
-   for(u32bit j = 0; j != 8; ++j)
+   for(size_t i = 0; i != 8; ++i)
       {
-      K[j] = load_be<u16bit>(key, j);
-      K[j+8] = K[j] ^ RC[j];
+      K[i] = load_be<u16bit>(key, i);
+      K[i+8] = K[i] ^ RC[i];
       }
 
-   for(u32bit j = 0; j != 8; ++j)
+   for(size_t i = 0; i != 8; ++i)
       {
-      EK[8*j  ] = rotate_left(K[(j+0) % 8    ], 2);
-      EK[8*j+1] = rotate_left(K[(j+2) % 8 + 8], 1);
-      EK[8*j+2] = rotate_left(K[(j+1) % 8    ], 5);
-      EK[8*j+3] = K[(j+4) % 8 + 8];
-      EK[8*j+4] = rotate_left(K[(j+5) % 8    ], 8);
-      EK[8*j+5] = K[(j+3) % 8 + 8];
-      EK[8*j+6] = rotate_left(K[(j+6) % 8    ], 13);
-      EK[8*j+7] = K[(j+7) % 8 + 8];
+      EK[8*i  ] = rotate_left(K[(i+0) % 8    ], 2);
+      EK[8*i+1] = rotate_left(K[(i+2) % 8 + 8], 1);
+      EK[8*i+2] = rotate_left(K[(i+1) % 8    ], 5);
+      EK[8*i+3] = K[(i+4) % 8 + 8];
+      EK[8*i+4] = rotate_left(K[(i+5) % 8    ], 8);
+      EK[8*i+5] = K[(i+3) % 8 + 8];
+      EK[8*i+6] = rotate_left(K[(i+6) % 8    ], 13);
+      EK[8*i+7] = K[(i+7) % 8 + 8];
       }
    }
 

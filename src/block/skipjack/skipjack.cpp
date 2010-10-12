@@ -15,7 +15,7 @@ namespace {
 /*
 * Skipjack Stepping Rule 'A'
 */
-void step_A(u16bit& W1, u16bit& W4, u32bit round, const byte FTAB[])
+void step_A(u16bit& W1, u16bit& W4, size_t round, const byte FTAB[])
    {
    byte G1 = get_byte(0, W1), G2 = get_byte(1, W1), G3;
 
@@ -31,7 +31,7 @@ void step_A(u16bit& W1, u16bit& W4, u32bit round, const byte FTAB[])
 /*
 * Skipjack Stepping Rule 'B'
 */
-void step_B(u16bit& W1, u16bit& W2, u32bit round, const byte FTAB[])
+void step_B(u16bit& W1, u16bit& W2, size_t round, const byte FTAB[])
    {
    W2 ^= W1 ^ round;
    byte G1 = get_byte(0, W1), G2 = get_byte(1, W1), G3;
@@ -45,7 +45,7 @@ void step_B(u16bit& W1, u16bit& W2, u32bit round, const byte FTAB[])
 /*
 * Skipjack Invserse Stepping Rule 'A'
 */
-void step_Ai(u16bit& W1, u16bit& W2, u32bit round, const byte FTAB[])
+void step_Ai(u16bit& W1, u16bit& W2, size_t round, const byte FTAB[])
    {
    W1 ^= W2 ^ round;
    byte G1 = get_byte(1, W2), G2 = get_byte(0, W2), G3;
@@ -59,7 +59,7 @@ void step_Ai(u16bit& W1, u16bit& W2, u32bit round, const byte FTAB[])
 /*
 * Skipjack Invserse Stepping Rule 'B'
 */
-void step_Bi(u16bit& W2, u16bit& W3, u32bit round, const byte FTAB[])
+void step_Bi(u16bit& W2, u16bit& W3, size_t round, const byte FTAB[])
    {
    byte G1 = get_byte(1, W2), G2 = get_byte(0, W2), G3;
    G3 = FTAB[((4 * round - 1) % 10)*256 + G2] ^ G1;
@@ -75,11 +75,11 @@ void step_Bi(u16bit& W2, u16bit& W3, u32bit round, const byte FTAB[])
 /*
 * Skipjack Encryption
 */
-void Skipjack::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void Skipjack::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const byte* ftab = &FTAB[0];
 
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u16bit W1 = load_le<u16bit>(in, 3);
       u16bit W2 = load_le<u16bit>(in, 2);
@@ -116,11 +116,11 @@ void Skipjack::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * Skipjack Decryption
 */
-void Skipjack::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void Skipjack::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const byte* ftab = &FTAB[0];
 
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u16bit W1 = load_le<u16bit>(in, 3);
       u16bit W2 = load_le<u16bit>(in, 2);
@@ -183,8 +183,8 @@ void Skipjack::key_schedule(const byte key[], u32bit)
       0x5E, 0x6C, 0xA9, 0x13, 0x57, 0x25, 0xB5, 0xE3, 0xBD, 0xA8, 0x3A, 0x01,
       0x05, 0x59, 0x2A, 0x46 };
 
-   for(u32bit i = 0; i != 10; ++i)
-      for(u32bit j = 0; j != 256; ++j)
+   for(size_t i = 0; i != 10; ++i)
+      for(size_t j = 0; j != 256; ++j)
          FTAB[256*i+j] = F[j ^ key[9-i]];
    }
 

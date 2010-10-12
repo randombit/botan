@@ -14,16 +14,16 @@ namespace Botan {
 /*
 * RC2 Encryption
 */
-void RC2::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void RC2::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u16bit R0 = load_le<u16bit>(in, 0);
       u16bit R1 = load_le<u16bit>(in, 1);
       u16bit R2 = load_le<u16bit>(in, 2);
       u16bit R3 = load_le<u16bit>(in, 3);
 
-      for(u32bit j = 0; j != 16; ++j)
+      for(size_t j = 0; j != 16; ++j)
          {
          R0 += (R1 & ~R3) + (R2 & R3) + K[4*j];
          R0 = rotate_left(R0, 1);
@@ -56,16 +56,16 @@ void RC2::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * RC2 Decryption
 */
-void RC2::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void RC2::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u16bit R0 = load_le<u16bit>(in, 0);
       u16bit R1 = load_le<u16bit>(in, 1);
       u16bit R2 = load_le<u16bit>(in, 2);
       u16bit R3 = load_le<u16bit>(in, 3);
 
-      for(u32bit j = 0; j != 16; ++j)
+      for(size_t j = 0; j != 16; ++j)
          {
          R3 = rotate_right(R3, 5);
          R3 -= (R0 & ~R2) + (R1 & R2) + K[63 - (4*j + 0)];
@@ -127,11 +127,13 @@ void RC2::key_schedule(const byte key[], u32bit length)
    SecureVector<byte> L(128);
    L.copy(key, length);
 
-   for(u32bit j = length; j != 128; ++j)
-      L[j] = TABLE[(L[j-1] + L[j-length]) % 256];
+   for(size_t i = length; i != 128; ++i)
+      L[i] = TABLE[(L[i-1] + L[i-length]) % 256];
+
    L[128-length] = TABLE[L[128-length]];
-   for(s32bit j = 127-length; j >= 0; --j)
-      L[j] = TABLE[L[j+1] ^ L[j+length]];
+
+   for(s32bit i = 127-length; i >= 0; --i)
+      L[i] = TABLE[L[i+1] ^ L[i+length]];
 
    load_le<u16bit>(&K[0], &L[0], 64);
    }
@@ -139,7 +141,7 @@ void RC2::key_schedule(const byte key[], u32bit length)
 /*
 * Return the code of the effective key bits
 */
-byte RC2::EKB_code(u32bit ekb)
+byte RC2::EKB_code(size_t ekb)
    {
    const byte EKB[256] = {
       0xBD, 0x56, 0xEA, 0xF2, 0xA2, 0xF1, 0xAC, 0x2A, 0xB0, 0x93, 0xD1, 0x9C,

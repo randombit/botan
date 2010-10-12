@@ -11,7 +11,7 @@
 
 namespace Botan {
 
-byte GOST_28147_89_Params::sbox_entry(u32bit row, u32bit col) const
+byte GOST_28147_89_Params::sbox_entry(size_t row, size_t col) const
    {
    byte x = sboxes[4 * col + (row / 2)];
 
@@ -85,11 +85,12 @@ GOST_28147_89::GOST_28147_89(const GOST_28147_89_Params& param) :
 /*
 * GOST Encryption
 */
-void GOST_28147_89::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void GOST_28147_89::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
-      u32bit N1 = load_le<u32bit>(in, 0), N2 = load_le<u32bit>(in, 1);
+      u32bit N1 = load_le<u32bit>(in, 0);
+      u32bit N2 = load_le<u32bit>(in, 1);
 
       for(size_t j = 0; j != 3; ++j)
          {
@@ -114,11 +115,12 @@ void GOST_28147_89::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * GOST Decryption
 */
-void GOST_28147_89::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void GOST_28147_89::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
-      u32bit N1 = load_le<u32bit>(in, 0), N2 = load_le<u32bit>(in, 1);
+      u32bit N1 = load_le<u32bit>(in, 0);
+      u32bit N2 = load_le<u32bit>(in, 1);
 
       GOST_2ROUND(N1, N2, 0, 1);
       GOST_2ROUND(N1, N2, 2, 3);
@@ -144,8 +146,8 @@ void GOST_28147_89::decrypt_n(const byte in[], byte out[], u32bit blocks) const
 */
 void GOST_28147_89::key_schedule(const byte key[], u32bit)
    {
-   for(u32bit j = 0; j != 8; ++j)
-      EK[j] = load_le<u32bit>(key, j);
+   for(size_t i = 0; i != 8; ++i)
+      EK[i] = load_le<u32bit>(key, i);
    }
 
 }

@@ -53,7 +53,7 @@ namespace Botan {
 /*
 * Noekeon Encryption
 */
-void Noekeon_SIMD::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void Noekeon_SIMD::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const SecureVector<u32bit>& EK = this->get_EK();
 
@@ -71,7 +71,7 @@ void Noekeon_SIMD::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 
       SIMD_32::transpose(A0, A1, A2, A3);
 
-      for(u32bit i = 0; i != 16; ++i)
+      for(size_t i = 0; i != 16; ++i)
          {
          A0 ^= SIMD_32(RC[i]);
 
@@ -110,7 +110,7 @@ void Noekeon_SIMD::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * Noekeon Encryption
 */
-void Noekeon_SIMD::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void Noekeon_SIMD::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const SecureVector<u32bit>& DK = this->get_DK();
 
@@ -128,7 +128,7 @@ void Noekeon_SIMD::decrypt_n(const byte in[], byte out[], u32bit blocks) const
 
       SIMD_32::transpose(A0, A1, A2, A3);
 
-      for(u32bit i = 0; i != 16; ++i)
+      for(size_t i = 0; i != 16; ++i)
          {
          NOK_SIMD_THETA(A0, A1, A2, A3, K0, K1, K2, K3);
 

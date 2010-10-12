@@ -13,9 +13,9 @@ namespace Botan {
 /*
 * DESX Encryption
 */
-void DESX::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void DESX::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       xor_buf(out, in, &K1[0], BLOCK_SIZE);
       des.encrypt(out);
@@ -29,9 +29,9 @@ void DESX::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * DESX Decryption
 */
-void DESX::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void DESX::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       xor_buf(out, in, &K2[0], BLOCK_SIZE);
       des.decrypt(out);

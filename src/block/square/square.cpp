@@ -14,9 +14,9 @@ namespace Botan {
 /*
 * Square Encryption
 */
-void Square::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void Square::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u32bit B0, B1, B2, B3;
 
@@ -29,7 +29,7 @@ void Square::encrypt_n(const byte in[], byte out[], u32bit blocks) const
       B3 = TE0[in[ 3] ^ ME[ 3]] ^ TE1[in[ 7] ^ ME[ 7]] ^
            TE2[in[11] ^ ME[11]] ^ TE3[in[15] ^ ME[15]] ^ EK[3];
 
-      for(u32bit j = 1; j != 7; j += 2)
+      for(size_t j = 1; j != 7; j += 2)
          {
          u32bit T0, T1, T2, T3;
          T0 = TE0[get_byte(0, B0)] ^ TE1[get_byte(0, B1)] ^
@@ -76,9 +76,9 @@ void Square::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * Square Decryption
 */
-void Square::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void Square::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u32bit B0, B1, B2, B3;
 
@@ -91,7 +91,7 @@ void Square::decrypt_n(const byte in[], byte out[], u32bit blocks) const
       B3 = TD0[in[ 3] ^ MD[ 3]] ^ TD1[in[ 7] ^ MD[ 7]] ^
            TD2[in[11] ^ MD[11]] ^ TD3[in[15] ^ MD[15]] ^ DK[3];
 
-      for(u32bit j = 1; j != 7; j += 2)
+      for(size_t j = 1; j != 7; j += 2)
          {
          u32bit T0, T1, T2, T3;
          T0 = TD0[get_byte(0, B0)] ^ TD1[get_byte(0, B1)] ^
@@ -142,24 +142,24 @@ void Square::key_schedule(const byte key[], u32bit)
    {
    SecureVector<u32bit> XEK(36), XDK(36);
 
-   for(u32bit i = 0; i != 4; ++i)
+   for(size_t i = 0; i != 4; ++i)
       XEK[i] = load_be<u32bit>(key, i);
 
-   for(u32bit i = 0; i != 8; ++i)
+   for(size_t i = 0; i != 8; ++i)
       {
       XEK[4*i+4] = XEK[4*i  ] ^ rotate_left(XEK[4*i+3], 8) ^ (0x01000000 << i);
       XEK[4*i+5] = XEK[4*i+1] ^ XEK[4*i+4];
       XEK[4*i+6] = XEK[4*i+2] ^ XEK[4*i+5];
       XEK[4*i+7] = XEK[4*i+3] ^ XEK[4*i+6];
 
-      for(u32bit j = 0; j != 4; ++j)
+      for(size_t j = 0; j != 4; ++j)
          XDK[28 - 4*i + j] = XEK[4*(i+1)+j];
 
       transform(&XEK[4*i]);
       }
 
-   for(u32bit i = 0; i != 4; ++i)
-      for(u32bit j = 0; j != 4; ++j)
+   for(size_t i = 0; i != 4; ++i)
+      for(size_t j = 0; j != 4; ++j)
          {
          ME[4*i+j   ] = get_byte(j, XEK[i   ]);
          ME[4*i+j+16] = get_byte(j, XEK[i+32]);
@@ -182,14 +182,14 @@ void Square::transform(u32bit round_key[4])
       { 1, 3, 2, 1 },
       { 1, 1, 3, 2 } };
 
-   for(u32bit i = 0; i != 4; ++i)
+   for(size_t i = 0; i != 4; ++i)
       {
       byte A[4] = { 0 }, B[4] = { 0 };
 
       store_be(round_key[i], A);
 
-      for(u32bit j = 0; j != 4; ++j)
-         for(u32bit k = 0; k != 4; ++k)
+      for(size_t j = 0; j != 4; ++j)
+         for(size_t k = 0; k != 4; ++k)
             {
             const byte a = A[k];
             const byte b = G[k][j];

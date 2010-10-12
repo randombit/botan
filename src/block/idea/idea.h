@@ -18,8 +18,8 @@ namespace Botan {
 class BOTAN_DLL IDEA : public BlockCipher
    {
    public:
-      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
-      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void encrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
       void clear() { zeroise(EK); zeroise(DK); }
       std::string name() const { return "IDEA"; }

@@ -18,8 +18,8 @@ namespace Botan {
 class BOTAN_DLL Twofish : public BlockCipher
    {
    public:
-      void encrypt_n(const byte in[], byte out[], u32bit blocks) const;
-      void decrypt_n(const byte in[], byte out[], u32bit blocks) const;
+      void encrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
       void clear();
       std::string name() const { return "Twofish"; }
@@ -29,7 +29,7 @@ class BOTAN_DLL Twofish : public BlockCipher
    private:
       void key_schedule(const byte[], u32bit);
 
-      static void rs_mul(byte[4], byte, u32bit);
+      static void rs_mul(byte[4], byte, size_t);
 
       static const u32bit MDS0[256];
       static const u32bit MDS1[256];

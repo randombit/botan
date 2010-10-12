@@ -84,16 +84,16 @@ const byte Noekeon::RC[] = {
 /*
 * Noekeon Encryption
 */
-void Noekeon::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void Noekeon::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u32bit A0 = load_be<u32bit>(in, 0);
       u32bit A1 = load_be<u32bit>(in, 1);
       u32bit A2 = load_be<u32bit>(in, 2);
       u32bit A3 = load_be<u32bit>(in, 3);
 
-      for(u32bit j = 0; j != 16; ++j)
+      for(size_t j = 0; j != 16; ++j)
          {
          A0 ^= RC[j];
          theta(A0, A1, A2, A3, &EK[0]);
@@ -122,16 +122,16 @@ void Noekeon::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * Noekeon Encryption
 */
-void Noekeon::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void Noekeon::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u32bit A0 = load_be<u32bit>(in, 0);
       u32bit A1 = load_be<u32bit>(in, 1);
       u32bit A2 = load_be<u32bit>(in, 2);
       u32bit A3 = load_be<u32bit>(in, 3);
 
-      for(u32bit j = 16; j != 0; --j)
+      for(size_t j = 16; j != 0; --j)
          {
          theta(A0, A1, A2, A3, &DK[0]);
          A0 ^= RC[j];
@@ -167,7 +167,7 @@ void Noekeon::key_schedule(const byte key[], u32bit)
    u32bit A2 = load_be<u32bit>(key, 2);
    u32bit A3 = load_be<u32bit>(key, 3);
 
-   for(u32bit j = 0; j != 16; ++j)
+   for(size_t j = 0; j != 16; ++j)
       {
       A0 ^= RC[j];
       theta(A0, A1, A2, A3);

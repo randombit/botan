@@ -140,9 +140,9 @@ void des_decrypt(u32bit& L, u32bit& R,
 /*
 * DES Encryption
 */
-void DES::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void DES::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u64bit T = (DES_IPTAB1[in[0]]     ) | (DES_IPTAB1[in[1]] << 1) |
                  (DES_IPTAB1[in[2]] << 2) | (DES_IPTAB1[in[3]] << 3) |
@@ -170,9 +170,9 @@ void DES::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * DES Decryption
 */
-void DES::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void DES::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u64bit T = (DES_IPTAB1[in[0]]     ) | (DES_IPTAB1[in[1]] << 1) |
                  (DES_IPTAB1[in[2]] << 2) | (DES_IPTAB1[in[3]] << 3) |
@@ -209,9 +209,9 @@ void DES::key_schedule(const byte key[], u32bit)
 /*
 * TripleDES Encryption
 */
-void TripleDES::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void TripleDES::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u64bit T = (DES_IPTAB1[in[0]]     ) | (DES_IPTAB1[in[1]] << 1) |
                  (DES_IPTAB1[in[2]] << 2) | (DES_IPTAB1[in[3]] << 3) |
@@ -242,9 +242,9 @@ void TripleDES::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * TripleDES Decryption
 */
-void TripleDES::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void TripleDES::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u64bit T = (DES_IPTAB1[in[0]]     ) | (DES_IPTAB1[in[1]] << 1) |
                  (DES_IPTAB1[in[2]] << 2) | (DES_IPTAB1[in[3]] << 3) |

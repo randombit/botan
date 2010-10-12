@@ -102,16 +102,16 @@ u16bit FI(u16bit input, u16bit key7, u16bit key9)
 /*
 * MISTY1 Encryption
 */
-void MISTY1::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void MISTY1::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u16bit B0 = load_be<u16bit>(in, 0);
       u16bit B1 = load_be<u16bit>(in, 1);
       u16bit B2 = load_be<u16bit>(in, 2);
       u16bit B3 = load_be<u16bit>(in, 3);
 
-      for(u32bit j = 0; j != 12; j += 3)
+      for(size_t j = 0; j != 12; j += 3)
          {
          const u16bit* RK = &EK[8 * j];
 
@@ -152,16 +152,16 @@ void MISTY1::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * MISTY1 Decryption
 */
-void MISTY1::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void MISTY1::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u16bit B0 = load_be<u16bit>(in, 2);
       u16bit B1 = load_be<u16bit>(in, 3);
       u16bit B2 = load_be<u16bit>(in, 0);
       u16bit B3 = load_be<u16bit>(in, 1);
 
-      for(u32bit j = 0; j != 12; j += 3)
+      for(size_t j = 0; j != 12; j += 3)
          {
          const u16bit* RK = &DK[8 * j];
 
@@ -205,14 +205,14 @@ void MISTY1::decrypt_n(const byte in[], byte out[], u32bit blocks) const
 void MISTY1::key_schedule(const byte key[], u32bit length)
    {
    SecureVector<u16bit> KS(32);
-   for(u32bit j = 0; j != length / 2; ++j)
-      KS[j] = load_be<u16bit>(key, j);
+   for(size_t i = 0; i != length / 2; ++i)
+      KS[i] = load_be<u16bit>(key, i);
 
-   for(u32bit j = 0; j != 8; ++j)
+   for(size_t i = 0; i != 8; ++i)
       {
-      KS[j+ 8] = FI(KS[j], KS[(j+1) % 8] >> 9, KS[(j+1) % 8] & 0x1FF);
-      KS[j+16] = KS[j+8] >> 9;
-      KS[j+24] = KS[j+8] & 0x1FF;
+      KS[i+ 8] = FI(KS[i], KS[(i+1) % 8] >> 9, KS[(i+1) % 8] & 0x1FF);
+      KS[i+16] = KS[i+8] >> 9;
+      KS[i+24] = KS[i+8] & 0x1FF;
       }
 
    /*
@@ -241,17 +241,17 @@ void MISTY1::key_schedule(const byte key[], u32bit length)
       0x1C, 0x05, 0x00, 0x15, 0x1D, 0x02, 0x11, 0x19, 0x07, 0x13, 0x1B, 0x04,
       0x04, 0x0A, 0x0E, 0x00 };
 
-   for(u32bit j = 0; j != 100; ++j)
+   for(size_t i = 0; i != 100; ++i)
       {
-      EK[j] = KS[EK_ORDER[j]];
-      DK[j] = KS[DK_ORDER[j]];
+      EK[i] = KS[EK_ORDER[i]];
+      DK[i] = KS[DK_ORDER[i]];
       }
    }
 
 /*
 * MISTY1 Constructor
 */
-MISTY1::MISTY1(u32bit rounds) : BlockCipher(8, 16), EK(100), DK(100)
+MISTY1::MISTY1(size_t rounds) : BlockCipher(8, 16), EK(100), DK(100)
    {
    if(rounds != 8)
       throw Invalid_Argument("MISTY1: Invalid number of rounds: "

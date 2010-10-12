@@ -92,7 +92,7 @@ void xtea_decrypt_8(const byte in[64], byte out[64], const u32bit EK[64])
 /*
 * XTEA Encryption
 */
-void XTEA_SIMD::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void XTEA_SIMD::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const u32bit* KS = &(this->get_EK()[0]);
 
@@ -111,7 +111,7 @@ void XTEA_SIMD::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * XTEA Decryption
 */
-void XTEA_SIMD::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void XTEA_SIMD::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const u32bit* KS = &(this->get_EK()[0]);
 

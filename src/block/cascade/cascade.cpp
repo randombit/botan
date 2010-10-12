@@ -10,20 +10,20 @@
 namespace Botan {
 
 void Cascade_Cipher::encrypt_n(const byte in[], byte out[],
-                               u32bit blocks) const
+                               size_t blocks) const
    {
-   u32bit c1_blocks = blocks * (BLOCK_SIZE / cipher1->BLOCK_SIZE);
-   u32bit c2_blocks = blocks * (BLOCK_SIZE / cipher2->BLOCK_SIZE);
+   size_t c1_blocks = blocks * (BLOCK_SIZE / cipher1->BLOCK_SIZE);
+   size_t c2_blocks = blocks * (BLOCK_SIZE / cipher2->BLOCK_SIZE);
 
    cipher1->encrypt_n(in, out, c1_blocks);
    cipher2->encrypt_n(out, out, c2_blocks);
    }
 
 void Cascade_Cipher::decrypt_n(const byte in[], byte out[],
-                               u32bit blocks) const
+                               size_t blocks) const
    {
-   u32bit c1_blocks = blocks * (BLOCK_SIZE / cipher1->BLOCK_SIZE);
-   u32bit c2_blocks = blocks * (BLOCK_SIZE / cipher2->BLOCK_SIZE);
+   size_t c1_blocks = blocks * (BLOCK_SIZE / cipher1->BLOCK_SIZE);
+   size_t c2_blocks = blocks * (BLOCK_SIZE / cipher2->BLOCK_SIZE);
 
    cipher2->decrypt_n(in, out, c2_blocks);
    cipher1->decrypt_n(out, out, c1_blocks);
@@ -56,11 +56,11 @@ BlockCipher* Cascade_Cipher::clone() const
 
 namespace {
 
-u32bit euclids_algorithm(u32bit a, u32bit b)
+size_t euclids_algorithm(size_t a, size_t b)
    {
    while(b != 0) // gcd
       {
-      u32bit t = b;
+      size_t t = b;
       b = a % b;
       a = t;
       }
@@ -68,12 +68,12 @@ u32bit euclids_algorithm(u32bit a, u32bit b)
    return a;
    }
 
-u32bit block_size_for_cascade(u32bit bs, u32bit bs2)
+size_t block_size_for_cascade(size_t bs, size_t bs2)
    {
    if(bs == bs2)
       return bs;
 
-   u32bit gcd = euclids_algorithm(bs, bs2);
+   size_t gcd = euclids_algorithm(bs, bs2);
 
    return (bs * bs2) / gcd;
    }

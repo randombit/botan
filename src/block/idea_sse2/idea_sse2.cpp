@@ -144,7 +144,7 @@ void idea_op_8(const byte in[64], byte out[64], const u16bit EK[52])
    B2 = _mm_or_si128(_mm_slli_epi16(B2, 8), _mm_srli_epi16(B2, 8));
    B3 = _mm_or_si128(_mm_slli_epi16(B3, 8), _mm_srli_epi16(B3, 8));
 
-   for(u32bit i = 0; i != 8; ++i)
+   for(size_t i = 0; i != 8; ++i)
       {
       B0 = mul(B0, EK[6*i+0]);
       B1 = _mm_add_epi16(B1, _mm_set1_epi16(EK[6*i+1]));
@@ -194,7 +194,7 @@ void idea_op_8(const byte in[64], byte out[64], const u16bit EK[52])
 /*
 * IDEA Encryption
 */
-void IDEA_SSE2::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void IDEA_SSE2::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const u16bit* KS = &this->get_EK()[0];
 
@@ -213,7 +213,7 @@ void IDEA_SSE2::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * IDEA Decryption
 */
-void IDEA_SSE2::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void IDEA_SSE2::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const u16bit* KS = &this->get_DK()[0];
 

@@ -13,19 +13,19 @@ namespace Botan {
 /*
 * Blowfish Encryption
 */
-void Blowfish::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void Blowfish::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const u32bit* S1 = &S[0];
    const u32bit* S2 = &S[256];
    const u32bit* S3 = &S[512];
    const u32bit* S4 = &S[768];
 
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u32bit L = load_be<u32bit>(in, 0);
       u32bit R = load_be<u32bit>(in, 1);
 
-      for(u32bit j = 0; j != 16; j += 2)
+      for(size_t j = 0; j != 16; j += 2)
          {
          L ^= P[j];
          R ^= ((S1[get_byte(0, L)]  + S2[get_byte(1, L)]) ^
@@ -48,19 +48,19 @@ void Blowfish::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * Blowfish Decryption
 */
-void Blowfish::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void Blowfish::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const u32bit* S1 = &S[0];
    const u32bit* S2 = &S[256];
    const u32bit* S3 = &S[512];
    const u32bit* S4 = &S[768];
 
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       u32bit L = load_be<u32bit>(in, 0);
       u32bit R = load_be<u32bit>(in, 1);
 
-      for(u32bit j = 17; j != 1; j -= 2)
+      for(size_t j = 17; j != 1; j -= 2)
          {
          L ^= P[j];
          R ^= ((S1[get_byte(0, L)]  + S2[get_byte(1, L)]) ^
@@ -87,7 +87,7 @@ void Blowfish::key_schedule(const byte key[], u32bit length)
    {
    clear();
 
-   for(u32bit j = 0, k = 0; j != 18; ++j, k += 4)
+   for(size_t j = 0, k = 0; j != 18; ++j, k += 4)
       P[j] ^= make_u32bit(key[(k  ) % length], key[(k+1) % length],
                           key[(k+2) % length], key[(k+3) % length]);
 
@@ -107,9 +107,9 @@ void Blowfish::generate_sbox(MemoryRegion<u32bit>& box,
    const u32bit* S3 = &S[512];
    const u32bit* S4 = &S[768];
 
-   for(u32bit j = 0; j != box.size(); j += 2)
+   for(size_t j = 0; j != box.size(); j += 2)
       {
-      for(u32bit k = 0; k != 16; k += 2)
+      for(size_t k = 0; k != 16; k += 2)
          {
          L ^= P[k];
          R ^= ((S1[get_byte(0, L)]  + S2[get_byte(1, L)]) ^

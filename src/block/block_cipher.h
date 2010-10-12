@@ -95,7 +95,7 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * @param blocks the number of blocks to process
       */
       virtual void encrypt_n(const byte in[], byte out[],
-                             u32bit blocks) const = 0;
+                             size_t blocks) const = 0;
 
       /**
       * Decrypt one or more blocks
@@ -104,7 +104,7 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * @param blocks the number of blocks to process
       */
       virtual void decrypt_n(const byte in[], byte out[],
-                             u32bit blocks) const = 0;
+                             size_t blocks) const = 0;
 
       /**
       * Get a new object representing the same algorithm as *this
