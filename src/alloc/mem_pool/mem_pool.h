@@ -22,8 +22,8 @@ namespace Botan {
 class Pooling_Allocator : public Allocator
    {
    public:
-      void* allocate(u32bit);
-      void deallocate(void*, u32bit);
+      void* allocate(size_t);
+      void deallocate(void*, size_t);
 
       void destroy();
 
@@ -33,23 +33,23 @@ class Pooling_Allocator : public Allocator
       Pooling_Allocator(Mutex* mutex);
       ~Pooling_Allocator();
    private:
-      void get_more_core(u32bit);
-      byte* allocate_blocks(u32bit);
+      void get_more_core(size_t);
+      byte* allocate_blocks(size_t);
 
-      virtual void* alloc_block(u32bit) = 0;
-      virtual void dealloc_block(void*, u32bit) = 0;
+      virtual void* alloc_block(size_t) = 0;
+      virtual void dealloc_block(void*, size_t) = 0;
 
       class Memory_Block
          {
          public:
             Memory_Block(void*);
 
-            static u32bit bitmap_size() { return BITMAP_SIZE; }
-            static u32bit block_size() { return BLOCK_SIZE; }
+            static size_t bitmap_size() { return BITMAP_SIZE; }
+            static size_t block_size() { return BLOCK_SIZE; }
 
-            bool contains(void*, u32bit) const;
-            byte* alloc(u32bit);
-            void free(void*, u32bit);
+            bool contains(void*, size_t) const;
+            byte* alloc(size_t);
+            void free(void*, size_t);
 
             bool operator<(const Memory_Block& other) const
                {
@@ -59,8 +59,8 @@ class Pooling_Allocator : public Allocator
                }
          private:
             typedef u64bit bitmap_type;
-            static const u32bit BITMAP_SIZE = 8 * sizeof(bitmap_type);
-            static const u32bit BLOCK_SIZE = 64;
+            static const size_t BITMAP_SIZE = 8 * sizeof(bitmap_type);
+            static const size_t BLOCK_SIZE = 64;
 
             bitmap_type bitmap;
             byte* buffer, *buffer_end;
@@ -68,7 +68,7 @@ class Pooling_Allocator : public Allocator
 
       std::vector<Memory_Block> blocks;
       std::vector<Memory_Block>::iterator last_used;
-      std::vector<std::pair<void*, u32bit> > allocated;
+      std::vector<std::pair<void*, size_t> > allocated;
       Mutex* mutex;
    };
 

@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <errno.h>
 
 #ifndef MAP_FAILED
    #define MAP_FAILED -1
@@ -39,7 +40,7 @@ class BOTAN_DLL MemoryMapping_Failed : public Exception
 /*
 * Memory Map a File into Memory
 */
-void* MemoryMapping_Allocator::alloc_block(u32bit n)
+void* MemoryMapping_Allocator::alloc_block(size_t n)
    {
    class TemporaryFile
       {
@@ -86,8 +87,19 @@ void* MemoryMapping_Allocator::alloc_block(u32bit n)
 
    std::vector<byte> zeros(n);
 
-   if(::write(file.get_fd(), &zeros[0], zeros.size()) != zeros.size())
-      throw MemoryMapping_Failed("Could not write to file");
+   ssize_t remaining = n;
+
+   while(remaining)
+      {
+      ssize_t wrote_here = ::write(file.get_fd(),
+                                   &zeros[0],
+                                   remaining);
+
+      if(wrote_here == -1 && errno != EINTR)
+         throw MemoryMapping_Failed("Could not write to file");
+
+      remaining -= wrote_here;
+      }
 
 #ifndef MAP_NOSYNC
    #define MAP_NOSYNC 0
@@ -107,7 +119,7 @@ void* MemoryMapping_Allocator::alloc_block(u32bit n)
 /*
 * Remove a Memory Mapping
 */
-void MemoryMapping_Allocator::dealloc_block(void* ptr, u32bit n)
+void MemoryMapping_Allocator::dealloc_block(void* ptr, size_t n)
    {
    if(ptr == 0)
       return;

@@ -26,7 +26,7 @@ class MemoryRegion
       * contains.
       * @return size of the buffer
       */
-      u32bit size() const { return used; }
+      size_t size() const { return used; }
 
       /**
       * Find out whether this buffer is empty.
@@ -48,8 +48,8 @@ class MemoryRegion
       operator const T* () const { return buf; }
 #else
 
-      T&       operator[](u32bit n) { return buf[n]; }
-      const T& operator[](u32bit n) const { return buf[n]; }
+      T&       operator[](size_t n) { return buf[n]; }
+      const T& operator[](size_t n) const { return buf[n]; }
 
 #endif
 
@@ -121,7 +121,7 @@ class MemoryRegion
       * @param in the array to copy the contents from
       * @param n the length of in
       */
-      void copy(const T in[], u32bit n)
+      void copy(const T in[], size_t n)
          {
          copy_mem(buf, in, std::min(n, size()));
          }
@@ -135,7 +135,7 @@ class MemoryRegion
       * @param in the array to copy the contents from
       * @param n the length of in
       */
-      void copy(u32bit off, const T in[], u32bit n)
+      void copy(size_t off, const T in[], size_t n)
          {
          copy_mem(buf + off, in, std::min(n, size() - off));
          }
@@ -146,7 +146,7 @@ class MemoryRegion
       * @param in the array of objects of type T to copy the contents from
       * @param n the size of array in
       */
-      void set(const T in[], u32bit n)    { resize(n); copy(in, n); }
+      void set(const T in[], size_t n)    { resize(n); copy(in, n); }
 
       /**
       * Append a single element.
@@ -169,7 +169,7 @@ class MemoryRegion
       * set or otherwise zero-initialized
       * @param n length of the new buffer
       */
-      void resize(u32bit n);
+      void resize(size_t n);
 
       /**
       * Swap this buffer with another object.
@@ -196,21 +196,21 @@ class MemoryRegion
       * @param locking should we use a locking allocator
       * @param length the initial length to use
       */
-      void init(bool locking, u32bit length = 0)
+      void init(bool locking, size_t length = 0)
          { alloc = Allocator::get(locking); resize(length); }
 
    private:
-      T* allocate(u32bit n)
+      T* allocate(size_t n)
          {
          return static_cast<T*>(alloc->allocate(sizeof(T)*n));
          }
 
-      void deallocate(T* p, u32bit n)
+      void deallocate(T* p, size_t n)
          { if(alloc && p && n) alloc->deallocate(p, sizeof(T)*n); }
 
       T* buf;
-      u32bit used;
-      u32bit allocated;
+      size_t used;
+      size_t allocated;
       Allocator* alloc;
    };
 
@@ -218,11 +218,11 @@ class MemoryRegion
 * Change the size of the buffer
 */
 template<typename T>
-void MemoryRegion<T>::resize(u32bit n)
+void MemoryRegion<T>::resize(size_t n)
    {
    if(n <= allocated)
       {
-      u32bit zap = std::min(used, n);
+      size_t zap = std::min(used, n);
       clear_mem(buf + zap, allocated - zap);
       used = n;
       }
@@ -242,10 +242,10 @@ void MemoryRegion<T>::resize(u32bit n)
 template<typename T>
 bool MemoryRegion<T>::operator<(const MemoryRegion<T>& other) const
    {
-   const u32bit min_size = std::min(size(), other.size());
+   const size_t min_size = std::min(size(), other.size());
 
    // This should probably be rewritten to run in constant time
-   for(u32bit i = 0; i != min_size; ++i)
+   for(size_t i = 0; i != min_size; ++i)
       {
       if(buf[i] < other[i])
          return true;
@@ -293,7 +293,7 @@ class MemoryVector : public MemoryRegion<T>
       * Create a buffer of the specified length.
       * @param n the length of the buffer to create.
       */
-      MemoryVector(u32bit n = 0) { this->init(false, n); }
+      MemoryVector(size_t n = 0) { this->init(false, n); }
 
       /**
       * Create a buffer with the specified contents.
@@ -301,7 +301,7 @@ class MemoryVector : public MemoryRegion<T>
       * into the newly created buffer
       * @param n the size of the arry in
       */
-      MemoryVector(const T in[], u32bit n)
+      MemoryVector(const T in[], size_t n)
          { this->init(false); this->set(in, n); }
 
       /**
@@ -333,7 +333,7 @@ class SecureVector : public MemoryRegion<T>
       * Create a buffer of the specified length.
       * @param n the length of the buffer to create.
       */
-      SecureVector(u32bit n = 0) { this->init(true, n); }
+      SecureVector(size_t n = 0) { this->init(true, n); }
 
       /**
       * Create a buffer with the specified contents.
@@ -341,7 +341,7 @@ class SecureVector : public MemoryRegion<T>
       * into the newly created buffer
       * @param n the size of the array in
       */
-      SecureVector(const T in[], u32bit n)
+      SecureVector(const T in[], size_t n)
          {
          this->init(true);
          this->set(&in[0], n);
@@ -363,7 +363,7 @@ template<typename T>
 MemoryRegion<T>& operator+=(MemoryRegion<T>& out,
                             const MemoryRegion<T>& in)
    {
-   const u32bit copy_offset = out.size();
+   const size_t copy_offset = out.size();
    out.resize(out.size() + in.size());
    copy_mem(&out[copy_offset], &in[0], in.size());
    return out;
@@ -381,7 +381,7 @@ template<typename T, typename L>
 MemoryRegion<T>& operator+=(MemoryRegion<T>& out,
                             const std::pair<const T*, L>& in)
    {
-   const u32bit copy_offset = out.size();
+   const size_t copy_offset = out.size();
    out.resize(out.size() + in.second);
    copy_mem(&out[copy_offset], in.first, in.second);
    return out;
@@ -391,7 +391,7 @@ template<typename T, typename L>
 MemoryRegion<T>& operator+=(MemoryRegion<T>& out,
                             const std::pair<T*, L>& in)
    {
-   const u32bit copy_offset = out.size();
+   const size_t copy_offset = out.size();
    out.resize(out.size() + in.second);
    copy_mem(&out[copy_offset], in.first, in.second);
    return out;

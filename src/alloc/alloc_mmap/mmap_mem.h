@@ -27,8 +27,8 @@ class MemoryMapping_Allocator : public Pooling_Allocator
       MemoryMapping_Allocator(Mutex* mutex) : Pooling_Allocator(mutex) {}
       std::string type() const { return "mmap"; }
    private:
-      void* alloc_block(u32bit);
-      void dealloc_block(void*, u32bit);
+      void* alloc_block(size_t);
+      void dealloc_block(void*, size_t);
    };
 
 }

@@ -33,14 +33,14 @@ class BOTAN_DLL Allocator
       * @param n how many bytes to allocate
       * @return pointer to n bytes of memory
       */
-      virtual void* allocate(u32bit n) = 0;
+      virtual void* allocate(size_t n) = 0;
 
       /**
       * Deallocate memory allocated with allocate()
       * @param ptr the pointer returned by allocate()
       * @param n the size of the block pointed to by ptr
       */
-      virtual void deallocate(void* ptr, u32bit n) = 0;
+      virtual void deallocate(void* ptr, size_t n) = 0;
 
       /**
       * @return name of this allocator type
