@@ -23,13 +23,6 @@ namespace Botan {
    z1 = a * b;                                           \
 } while(0);
 
-#elif defined(BOTAN_TARGET_ARCH_IS_AMD64)
-
-#define BOTAN_WORD_MUL(a,b,z1,z0) do {       \
-   asm("mulq %3" : "=d" (z0), "=a" (z1) :    \
-       "a" (a), "rm" (b) : "cc");            \
-} while(0);
-
 #elif defined(BOTAN_TARGET_ARCH_IS_IA64)
 
 #define BOTAN_WORD_MUL(a,b,z1,z0) do {                     \
@@ -75,7 +68,8 @@ inline void bigint_2word_mul(word a, word b, word* z1, word* z0)
 
    x2 += x3 >> (MP_HWORD_BITS);
    x2 += x1;
-   if(x2 < x1)
+
+   if(x2 < x1) // timing channel
       x0 += ((word)1 << MP_HWORD_BITS);
 
    *z0 = x0 + (x2 >> MP_HWORD_BITS);
@@ -95,7 +89,8 @@ inline word word_madd2(word a, word b, word* c)
 
    BOTAN_WORD_MUL(a, b, z1, z0);
 
-   z1 += *c; if(z1 < *c) z0++;
+   z1 += *c;
+   z0 += (z1 < *c);
 
    *c = z0;
    return z1;
@@ -110,8 +105,11 @@ inline word word_madd3(word a, word b, word c, word* d)
 
    BOTAN_WORD_MUL(a, b, z1, z0);
 
-   z1 += c; if(z1 < c) z0++;
-   z1 += *d; if(z1 < *d) z0++;
+   z1 += c;
+   z0 += (z1 < c);
+
+   z1 += *d;
+   z0 += (z1 < *d);
 
    *d = z0;
    return z1;
