@@ -10,12 +10,14 @@
 
 namespace Botan {
 
-/*
-* Adler32 Checksum
-*/
-void Adler32::hash(const byte input[], u32bit length)
+namespace {
+
+void adler32_update(const byte input[], size_t length,
+                    u16bit& S1, u16bit& S2)
    {
-   u32bit S1x = S1, S2x = S2;
+   u32bit S1x = S1;
+   u32bit S2x = S2;
+
    while(length >= 16)
       {
       S1x += input[ 0]; S2x += S1x;
@@ -37,15 +39,18 @@ void Adler32::hash(const byte input[], u32bit length)
       input += 16;
       length -= 16;
       }
-   for(u32bit j = 0; j != length; ++j)
+
+   for(size_t j = 0; j != length; ++j)
       {
-      S1x += input[j]; S2x += S1x;
+      S1x += input[j];
+      S2x += S1x;
       }
-   S1x %= 65521;
-   S2x %= 65521;
-   S1 = S1x;
-   S2 = S2x;
+
+   S1 = S1x % 65521;
+   S2 = S2x % 65521;
    }
+
+}
 
 /*
 * Update an Adler32 Checksum
@@ -53,13 +58,15 @@ void Adler32::hash(const byte input[], u32bit length)
 void Adler32::add_data(const byte input[], u32bit length)
    {
    const u32bit PROCESS_AMOUNT = 5552;
+
    while(length >= PROCESS_AMOUNT)
       {
-      hash(input, PROCESS_AMOUNT);
+      adler32_update(input, PROCESS_AMOUNT, S1, S2);
       input += PROCESS_AMOUNT;
       length -= PROCESS_AMOUNT;
       }
-   hash(input, length);
+
+   adler32_update(input, length, S1, S2);
    }
 
 /*
