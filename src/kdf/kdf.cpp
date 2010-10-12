@@ -12,7 +12,7 @@ namespace Botan {
 /*
 * Derive a key
 */
-SecureVector<byte> KDF::derive_key(u32bit key_len,
+SecureVector<byte> KDF::derive_key(size_t key_len,
                                    const MemoryRegion<byte>& secret,
                                    const std::string& salt) const
    {
@@ -24,9 +24,9 @@ SecureVector<byte> KDF::derive_key(u32bit key_len,
 /*
 * Derive a key
 */
-SecureVector<byte> KDF::derive_key(u32bit key_len,
+SecureVector<byte> KDF::derive_key(size_t key_len,
                                    const MemoryRegion<byte>& secret,
-                                   const byte salt[], u32bit salt_len) const
+                                   const byte salt[], size_t salt_len) const
    {
    return derive_key(key_len, &secret[0], secret.size(),
                      salt, salt_len);
@@ -35,7 +35,7 @@ SecureVector<byte> KDF::derive_key(u32bit key_len,
 /*
 * Derive a key
 */
-SecureVector<byte> KDF::derive_key(u32bit key_len,
+SecureVector<byte> KDF::derive_key(size_t key_len,
                                    const MemoryRegion<byte>& secret,
                                    const MemoryRegion<byte>& salt) const
    {
@@ -46,8 +46,8 @@ SecureVector<byte> KDF::derive_key(u32bit key_len,
 /*
 * Derive a key
 */
-SecureVector<byte> KDF::derive_key(u32bit key_len,
-                                   const byte secret[], u32bit secret_len,
+SecureVector<byte> KDF::derive_key(size_t key_len,
+                                   const byte secret[], size_t secret_len,
                                    const std::string& salt) const
    {
    return derive_key(key_len, secret, secret_len,
@@ -58,9 +58,9 @@ SecureVector<byte> KDF::derive_key(u32bit key_len,
 /*
 * Derive a key
 */
-SecureVector<byte> KDF::derive_key(u32bit key_len,
-                                   const byte secret[], u32bit secret_len,
-                                   const byte salt[], u32bit salt_len) const
+SecureVector<byte> KDF::derive_key(size_t key_len,
+                                   const byte secret[], size_t secret_len,
+                                   const byte salt[], size_t salt_len) const
    {
    return derive(key_len, secret, secret_len, salt, salt_len);
    }

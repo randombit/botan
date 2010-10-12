@@ -32,9 +32,9 @@ MemoryVector<byte> encode_x942_int(u32bit n)
 /*
 * X9.42 PRF
 */
-SecureVector<byte> X942_PRF::derive(u32bit key_len,
-                                    const byte secret[], u32bit secret_len,
-                                    const byte salt[], u32bit salt_len) const
+SecureVector<byte> X942_PRF::derive(size_t key_len,
+                                    const byte secret[], size_t secret_len,
+                                    const byte salt[], size_t salt_len) const
    {
    SHA_160 hash;
    const OID kek_algo(key_wrap_oid);
@@ -69,7 +69,7 @@ SecureVector<byte> X942_PRF::derive(u32bit key_len,
          );
 
       SecureVector<byte> digest = hash.final();
-      const u32bit needed = std::min(digest.size(), key_len - key.size());
+      const size_t needed = std::min(digest.size(), key_len - key.size());
       key += std::make_pair(&digest[0], needed);
 
       ++counter;

@@ -25,7 +25,7 @@ class BOTAN_DLL KDF
       * @param secret the secret input
       * @param salt a diversifier
       */
-      SecureVector<byte> derive_key(u32bit key_len,
+      SecureVector<byte> derive_key(size_t key_len,
                                     const MemoryRegion<byte>& secret,
                                     const std::string& salt = "") const;
 
@@ -35,7 +35,7 @@ class BOTAN_DLL KDF
       * @param secret the secret input
       * @param salt a diversifier
       */
-      SecureVector<byte> derive_key(u32bit key_len,
+      SecureVector<byte> derive_key(size_t key_len,
                                     const MemoryRegion<byte>& secret,
                                     const MemoryRegion<byte>& salt) const;
 
@@ -46,10 +46,10 @@ class BOTAN_DLL KDF
       * @param salt a diversifier
       * @param salt_len size of salt in bytes
       */
-      SecureVector<byte> derive_key(u32bit key_len,
+      SecureVector<byte> derive_key(size_t key_len,
                                     const MemoryRegion<byte>& secret,
                                     const byte salt[],
-                                    u32bit salt_len) const;
+                                    size_t salt_len) const;
 
       /**
       * Derive a key
@@ -58,9 +58,9 @@ class BOTAN_DLL KDF
       * @param secret_len size of secret in bytes
       * @param salt a diversifier
       */
-      SecureVector<byte> derive_key(u32bit key_len,
+      SecureVector<byte> derive_key(size_t key_len,
                                     const byte secret[],
-                                    u32bit secret_len,
+                                    size_t secret_len,
                                     const std::string& salt = "") const;
 
       /**
@@ -71,18 +71,18 @@ class BOTAN_DLL KDF
       * @param salt a diversifier
       * @param salt_len size of salt in bytes
       */
-      SecureVector<byte> derive_key(u32bit key_len,
+      SecureVector<byte> derive_key(size_t key_len,
                                     const byte secret[],
-                                    u32bit secret_len,
+                                    size_t secret_len,
                                     const byte salt[],
-                                    u32bit salt_len) const;
+                                    size_t salt_len) const;
 
       virtual ~KDF() {}
    private:
       virtual SecureVector<byte>
-         derive(u32bit key_len,
-                const byte secret[], u32bit secret_len,
-                const byte salt[], u32bit salt_len) const = 0;
+         derive(size_t key_len,
+                const byte secret[], size_t secret_len,
+                const byte salt[], size_t salt_len) const = 0;
    };
 
 /**
@@ -91,8 +91,8 @@ class BOTAN_DLL KDF
 class BOTAN_DLL MGF
    {
    public:
-      virtual void mask(const byte in[], u32bit in_len,
-                              byte out[], u32bit out_len) const = 0;
+      virtual void mask(const byte in[], size_t in_len,
+                              byte out[], size_t out_len) const = 0;
 
       virtual ~MGF() {}
    };

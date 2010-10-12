@@ -20,16 +20,16 @@ namespace {
 /*
 * Return the next inner hash
 */
-OctetString next_hash(u32bit where, u32bit want,
+OctetString next_hash(size_t where, size_t want,
                       HashFunction& md5, HashFunction& sha1,
-                      const byte secret[], u32bit secret_len,
-                      const byte seed[], u32bit seed_len)
+                      const byte secret[], size_t secret_len,
+                      const byte seed[], size_t seed_len)
    {
    BOTAN_ASSERT(want <= md5.OUTPUT_LENGTH, "Desired output too large");
 
    const byte ASCII_A_CHAR = 0x41;
 
-   for(u32bit j = 0; j != where + 1; j++)
+   for(size_t j = 0; j != where + 1; j++)
       sha1.update(ASCII_A_CHAR + where);
    sha1.update(secret, secret_len);
    sha1.update(seed, seed_len);
@@ -47,9 +47,9 @@ OctetString next_hash(u32bit where, u32bit want,
 /*
 * SSL3 PRF
 */
-SecureVector<byte> SSL3_PRF::derive(u32bit key_len,
-                                    const byte secret[], u32bit secret_len,
-                                    const byte seed[], u32bit seed_len) const
+SecureVector<byte> SSL3_PRF::derive(size_t key_len,
+                                    const byte secret[], size_t secret_len,
+                                    const byte seed[], size_t seed_len) const
    {
    if(key_len > 416)
       throw Invalid_Argument("SSL3_PRF: Requested key length is too large");
@@ -62,7 +62,7 @@ SecureVector<byte> SSL3_PRF::derive(u32bit key_len,
    int counter = 0;
    while(key_len)
       {
-      const u32bit produce = std::min(key_len, md5.OUTPUT_LENGTH);
+      const size_t produce = std::min<size_t>(key_len, md5.OUTPUT_LENGTH);
 
       output = output + next_hash(counter++, produce, md5, sha1,
                                   secret, secret_len, seed, seed_len);

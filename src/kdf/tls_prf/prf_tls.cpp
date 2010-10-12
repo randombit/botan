@@ -20,19 +20,19 @@ namespace {
 */
 void P_hash(MemoryRegion<byte>& output,
             MessageAuthenticationCode* mac,
-            const byte secret[], u32bit secret_len,
-            const byte seed[], u32bit seed_len)
+            const byte secret[], size_t secret_len,
+            const byte seed[], size_t seed_len)
    {
    mac->set_key(secret, secret_len);
 
    SecureVector<byte> A(seed, seed_len);
 
-   u32bit offset = 0;
+   size_t offset = 0;
 
    while(offset != output.size())
       {
-      const u32bit this_block_len =
-         std::min<u32bit>(mac->OUTPUT_LENGTH, output.size() - offset);
+      const size_t this_block_len =
+         std::min<size_t>(mac->OUTPUT_LENGTH, output.size() - offset);
 
       A = mac->process(A);
 
@@ -65,13 +65,13 @@ TLS_PRF::~TLS_PRF()
 /*
 * TLS PRF
 */
-SecureVector<byte> TLS_PRF::derive(u32bit key_len,
-                                   const byte secret[], u32bit secret_len,
-                                   const byte seed[], u32bit seed_len) const
+SecureVector<byte> TLS_PRF::derive(size_t key_len,
+                                   const byte secret[], size_t secret_len,
+                                   const byte seed[], size_t seed_len) const
    {
    SecureVector<byte> output(key_len);
 
-   u32bit S1_len = (secret_len + 1) / 2,
+   size_t S1_len = (secret_len + 1) / 2,
           S2_len = (secret_len + 1) / 2;
    const byte* S1 = secret;
    const byte* S2 = secret + (secret_len - S2_len);
@@ -95,9 +95,9 @@ TLS_12_PRF::~TLS_12_PRF()
    delete hmac;
    }
 
-SecureVector<byte> TLS_12_PRF::derive(u32bit key_len,
-                                      const byte secret[], u32bit secret_len,
-                                      const byte seed[], u32bit seed_len) const
+SecureVector<byte> TLS_12_PRF::derive(size_t key_len,
+                                      const byte secret[], size_t secret_len,
+                                      const byte seed[], size_t seed_len) const
    {
    SecureVector<byte> output(key_len);
 

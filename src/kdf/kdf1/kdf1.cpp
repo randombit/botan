@@ -12,9 +12,9 @@ namespace Botan {
 /*
 * KDF1 Key Derivation Mechanism
 */
-SecureVector<byte> KDF1::derive(u32bit,
-                                const byte secret[], u32bit secret_len,
-                                const byte P[], u32bit P_len) const
+SecureVector<byte> KDF1::derive(size_t,
+                                const byte secret[], size_t secret_len,
+                                const byte P[], size_t P_len) const
    {
    hash->update(secret, secret_len);
    hash->update(P, P_len);

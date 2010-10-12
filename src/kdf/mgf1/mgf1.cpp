@@ -17,19 +17,19 @@ namespace Botan {
 /*
 * MGF1 Mask Generation Function
 */
-void MGF1::mask(const byte in[], u32bit in_len, byte out[],
-                u32bit out_len) const
+void MGF1::mask(const byte in[], size_t in_len, byte out[],
+                size_t out_len) const
    {
    u32bit counter = 0;
 
    while(out_len)
       {
       hash->update(in, in_len);
-      for(u32bit j = 0; j != 4; ++j)
-         hash->update(get_byte(j, counter));
+      for(size_t i = 0; i != 4; ++i)
+         hash->update(get_byte(i, counter));
       SecureVector<byte> buffer = hash->final();
 
-      u32bit xored = std::min<u32bit>(buffer.size(), out_len);
+      size_t xored = std::min<size_t>(buffer.size(), out_len);
       xor_buf(out, &buffer[0], xored);
       out += xored;
       out_len -= xored;
