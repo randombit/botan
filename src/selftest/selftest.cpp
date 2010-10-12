@@ -53,7 +53,7 @@ algorithm_kat(const SCAN_Name& algo_name,
    SymmetricKey key(search_map(vars, std::string("key")));
    InitializationVector iv(search_map(vars, std::string("iv")));
 
-   for(u32bit i = 0; i != providers.size(); ++i)
+   for(size_t i = 0; i != providers.size(); ++i)
       {
       const std::string provider = providers[i];
 
