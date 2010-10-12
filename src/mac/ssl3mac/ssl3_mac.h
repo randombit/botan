@@ -29,7 +29,7 @@ class BOTAN_DLL SSL3_MAC : public MessageAuthenticationCode
       SSL3_MAC(HashFunction* hash);
       ~SSL3_MAC() { delete hash; }
    private:
-      void add_data(const byte[], u32bit);
+      void add_data(const byte[], size_t);
       void final_result(byte[]);
       void key_schedule(const byte[], u32bit);
 

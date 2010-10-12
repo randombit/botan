@@ -55,9 +55,9 @@ void adler32_update(const byte input[], size_t length,
 /*
 * Update an Adler32 Checksum
 */
-void Adler32::add_data(const byte input[], u32bit length)
+void Adler32::add_data(const byte input[], size_t length)
    {
-   const u32bit PROCESS_AMOUNT = 5552;
+   const size_t PROCESS_AMOUNT = 5552;
 
    while(length >= PROCESS_AMOUNT)
       {

@@ -25,12 +25,12 @@ class BOTAN_DLL MD2 : public HashFunction
       MD2() : HashFunction(16, 16), X(48), checksum(16), buffer(16)
          { clear(); }
    private:
-      void add_data(const byte[], u32bit);
+      void add_data(const byte[], size_t);
       void hash(const byte[]);
       void final_result(byte[]);
 
       SecureVector<byte> X, checksum, buffer;
-      u32bit position;
+      size_t position;
    };
 
 }

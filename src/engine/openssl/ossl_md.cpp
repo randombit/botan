@@ -24,7 +24,7 @@ class EVP_HashFunction : public HashFunction
       EVP_HashFunction(const EVP_MD*, const std::string&);
       ~EVP_HashFunction();
    private:
-      void add_data(const byte[], u32bit);
+      void add_data(const byte[], size_t);
       void final_result(byte[]);
 
       std::string algo_name;
@@ -34,7 +34,7 @@ class EVP_HashFunction : public HashFunction
 /*
 * Update an EVP Hash Calculation
 */
-void EVP_HashFunction::add_data(const byte input[], u32bit length)
+void EVP_HashFunction::add_data(const byte input[], size_t length)
    {
    EVP_DigestUpdate(&md, input, length);
    }

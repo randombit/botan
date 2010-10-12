@@ -29,13 +29,13 @@ class BOTAN_DLL CBC_MAC : public MessageAuthenticationCode
       CBC_MAC(BlockCipher* cipher);
       ~CBC_MAC();
    private:
-      void add_data(const byte[], u32bit);
+      void add_data(const byte[], size_t);
       void final_result(byte[]);
       void key_schedule(const byte[], u32bit);
 
       BlockCipher* e;
       SecureVector<byte> state;
-      u32bit position;
+      size_t position;
    };
 
 }

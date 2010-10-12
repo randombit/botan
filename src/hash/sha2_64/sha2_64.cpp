@@ -47,17 +47,17 @@ inline u64bit sigma(u64bit X, u32bit rot1, u32bit rot2, u32bit shift)
 */
 void sha2_64_compress(MemoryRegion<u64bit>& W,
                       MemoryRegion<u64bit>& digest,
-                      const byte input[], u32bit blocks)
+                      const byte input[], size_t blocks)
    {
    u64bit A = digest[0], B = digest[1], C = digest[2],
           D = digest[3], E = digest[4], F = digest[5],
           G = digest[6], H = digest[7];
 
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       load_be(&W[0], input, 16);
 
-      for(u32bit j = 16; j != 80; j += 8)
+      for(size_t j = 16; j != 80; j += 8)
          {
          W[j  ] = sigma(W[j-2], 19, 61, 6) + W[j-7] + sigma(W[j-15], 1, 8, 7) + W[j-16];
          W[j+1] = sigma(W[j-1], 19, 61, 6) + W[j-6] + sigma(W[j-14], 1, 8, 7) + W[j-15];
@@ -168,7 +168,7 @@ void sha2_64_compress(MemoryRegion<u64bit>& W,
 /*
 * SHA-384 compression function
 */
-void SHA_384::compress_n(const byte input[], u32bit blocks)
+void SHA_384::compress_n(const byte input[], size_t blocks)
    {
    sha2_64_compress(W, digest, input, blocks);
    }
@@ -178,8 +178,8 @@ void SHA_384::compress_n(const byte input[], u32bit blocks)
 */
 void SHA_384::copy_out(byte output[])
    {
-   for(u32bit j = 0; j != OUTPUT_LENGTH; j += 8)
-      store_be(digest[j/8], output + j);
+   for(size_t i = 0; i != OUTPUT_LENGTH; i += 8)
+      store_be(digest[i/8], output + i);
    }
 
 /*
@@ -202,7 +202,7 @@ void SHA_384::clear()
 /*
 * SHA-512 compression function
 */
-void SHA_512::compress_n(const byte input[], u32bit blocks)
+void SHA_512::compress_n(const byte input[], size_t blocks)
    {
    sha2_64_compress(W, digest, input, blocks);
    }
@@ -212,8 +212,8 @@ void SHA_512::compress_n(const byte input[], u32bit blocks)
 */
 void SHA_512::copy_out(byte output[])
    {
-   for(u32bit j = 0; j != OUTPUT_LENGTH; j += 8)
-      store_be(digest[j/8], output + j);
+   for(size_t i = 0; i != OUTPUT_LENGTH; i += 8)
+      store_be(digest[i/8], output + i);
    }
 
 /*

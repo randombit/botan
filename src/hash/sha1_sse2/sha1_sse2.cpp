@@ -149,7 +149,7 @@ inline void F4(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
 /*
 * SHA-160 Compression Function using SSE for message expansion
 */
-void SHA_160_SSE2::compress_n(const byte input_bytes[], u32bit blocks)
+void SHA_160_SSE2::compress_n(const byte input_bytes[], size_t blocks)
    {
    const __m128i K00_19 = _mm_set1_epi32(0x5A827999);
    const __m128i K20_39 = _mm_set1_epi32(0x6ED9EBA1);
@@ -164,7 +164,7 @@ void SHA_160_SSE2::compress_n(const byte input_bytes[], u32bit blocks)
 
    const __m128i* input = reinterpret_cast<const __m128i*>(input_bytes);
 
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       union v4si {
          u32bit u32[4];

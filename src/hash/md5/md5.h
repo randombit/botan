@@ -25,7 +25,7 @@ class BOTAN_DLL MD5 : public MDx_HashFunction
       MD5() : MDx_HashFunction(16, 64, false, true), M(16), digest(4)
          { clear(); }
    protected:
-      void compress_n(const byte[], u32bit blocks);
+      void compress_n(const byte[], size_t blocks);
       void copy_out(byte[]);
 
       SecureVector<u32bit> M, digest;

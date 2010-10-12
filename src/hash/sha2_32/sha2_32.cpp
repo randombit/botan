@@ -48,17 +48,17 @@ inline void F1(u32bit A, u32bit B, u32bit C, u32bit& D,
 */
 void sha2_32_compress(MemoryRegion<u32bit>& W,
                       MemoryRegion<u32bit>& digest,
-                      const byte input[], u32bit blocks)
+                      const byte input[], size_t blocks)
    {
    u32bit A = digest[0], B = digest[1], C = digest[2],
           D = digest[3], E = digest[4], F = digest[5],
           G = digest[6], H = digest[7];
 
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       load_be(&W[0], input, 16);
 
-      for(u32bit j = 16; j != 64; j += 8)
+      for(size_t j = 16; j != 64; j += 8)
          {
          W[j  ] = sigma(W[j- 2], 17, 19, 10) + W[j-7] +
                   sigma(W[j-15],  7, 18,  3) + W[j-16];
@@ -161,7 +161,7 @@ void sha2_32_compress(MemoryRegion<u32bit>& W,
 /*
 * SHA-224 compression function
 */
-void SHA_224::compress_n(const byte input[], u32bit blocks)
+void SHA_224::compress_n(const byte input[], size_t blocks)
    {
    sha2_32_compress(W, digest, input, blocks);
    }
@@ -171,8 +171,8 @@ void SHA_224::compress_n(const byte input[], u32bit blocks)
 */
 void SHA_224::copy_out(byte output[])
    {
-   for(u32bit j = 0; j != OUTPUT_LENGTH; j += 4)
-      store_be(digest[j/4], output + j);
+   for(size_t i = 0; i != OUTPUT_LENGTH; i += 4)
+      store_be(digest[i/4], output + i);
    }
 
 /*
@@ -195,7 +195,7 @@ void SHA_224::clear()
 /*
 * SHA-256 compression function
 */
-void SHA_256::compress_n(const byte input[], u32bit blocks)
+void SHA_256::compress_n(const byte input[], size_t blocks)
    {
    sha2_32_compress(W, digest, input, blocks);
    }
@@ -205,8 +205,8 @@ void SHA_256::compress_n(const byte input[], u32bit blocks)
 */
 void SHA_256::copy_out(byte output[])
    {
-   for(u32bit j = 0; j != OUTPUT_LENGTH; j += 4)
-      store_be(digest[j/4], output + j);
+   for(size_t i = 0; i != OUTPUT_LENGTH; i += 4)
+      store_be(digest[i/4], output + i);
    }
 
 /*

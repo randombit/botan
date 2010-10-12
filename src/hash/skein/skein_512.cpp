@@ -29,11 +29,11 @@ enum type_code {
 
 void ubi_512(MemoryRegion<u64bit>& H,
              MemoryRegion<u64bit>& T,
-             const byte msg[], u32bit msg_len)
+             const byte msg[], size_t msg_len)
    {
    do
       {
-      const u32bit to_proc = std::min<u32bit>(msg_len, 64);
+      const size_t to_proc = std::min<size_t>(msg_len, 64);
       T[0] += to_proc;
 
       u64bit M[8] = { 0 };
@@ -42,7 +42,7 @@ void ubi_512(MemoryRegion<u64bit>& H,
 
       if(to_proc % 8)
          {
-         for(u32bit j = 0; j != to_proc % 8; ++j)
+         for(size_t j = 0; j != to_proc % 8; ++j)
             M[to_proc/8] |= ((u64bit)msg[8*(to_proc/8)+j] << (8*j));
          }
 
@@ -197,7 +197,7 @@ void Skein_512::clear()
    buf_pos = 0;
    }
 
-void Skein_512::add_data(const byte input[], u32bit length)
+void Skein_512::add_data(const byte input[], size_t length)
    {
    if(length == 0)
       return;
@@ -215,7 +215,7 @@ void Skein_512::add_data(const byte input[], u32bit length)
          }
       }
 
-   const u32bit full_blocks = (length - 1) / 64;
+   const size_t full_blocks = (length - 1) / 64;
 
    if(full_blocks)
       ubi_512(H, T, input, 64*full_blocks);
@@ -230,33 +230,33 @@ void Skein_512::final_result(byte out[])
    {
    T[1] |= ((u64bit)1 << 63); // final block flag
 
-   for(u32bit i = buf_pos; i != buffer.size(); ++i)
+   for(size_t i = buf_pos; i != buffer.size(); ++i)
       buffer[i] = 0;
 
    ubi_512(H, T, &buffer[0], buf_pos);
 
    byte counter[8] = { 0 };
 
-   u32bit out_bytes = output_bits / 8;
+   size_t out_bytes = output_bits / 8;
 
    SecureVector<u64bit> H_out(9);
 
    while(out_bytes)
       {
-      const u32bit to_proc = std::min<u32bit>(out_bytes, 64);
+      const size_t to_proc = std::min<size_t>(out_bytes, 64);
 
       H_out.copy(&H[0], 8);
 
       reset_tweak(T, SKEIN_OUTPUT, true);
       ubi_512(H_out, T, counter, sizeof(counter));
 
-      for(u32bit i = 0; i != to_proc; ++i)
+      for(size_t i = 0; i != to_proc; ++i)
          out[i] = get_byte(7-i%8, H_out[i/8]);
 
       out_bytes -= to_proc;
       out += to_proc;
 
-      for(u32bit i = 0; i != sizeof(counter); ++i)
+      for(size_t i = 0; i != sizeof(counter); ++i)
          if(++counter[i])
             break;
       }

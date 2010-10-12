@@ -25,9 +25,9 @@ class BOTAN_DLL GOST_34_11 : public HashFunction
 
       GOST_34_11();
    private:
-      void compress_n(const byte input[], u32bit blocks);
+      void compress_n(const byte input[], size_t blocks);
 
-      void add_data(const byte[], u32bit);
+      void add_data(const byte[], size_t);
       void final_result(byte[]);
 
       GOST_28147_89 cipher;

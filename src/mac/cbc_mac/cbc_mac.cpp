@@ -14,9 +14,9 @@ namespace Botan {
 /*
 * Update an CBC-MAC Calculation
 */
-void CBC_MAC::add_data(const byte input[], u32bit length)
+void CBC_MAC::add_data(const byte input[], size_t length)
    {
-   u32bit xored = std::min(OUTPUT_LENGTH - position, length);
+   size_t xored = std::min(OUTPUT_LENGTH - position, length);
    xor_buf(&state[position], input, xored);
    position += xored;
 

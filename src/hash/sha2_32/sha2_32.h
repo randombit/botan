@@ -26,7 +26,7 @@ class BOTAN_DLL SHA_224 : public MDx_HashFunction
       SHA_224() : MDx_HashFunction(28, 64, true, true), W(64), digest(8)
          { clear(); }
    private:
-      void compress_n(const byte[], u32bit blocks);
+      void compress_n(const byte[], size_t blocks);
       void copy_out(byte[]);
 
       SecureVector<u32bit> W, digest;
@@ -45,7 +45,7 @@ class BOTAN_DLL SHA_256 : public MDx_HashFunction
       SHA_256() : MDx_HashFunction(32, 64, true, true), W(64), digest(8)
          { clear(); }
    private:
-      void compress_n(const byte[], u32bit blocks);
+      void compress_n(const byte[], size_t blocks);
       void copy_out(byte[]);
 
       SecureVector<u32bit> W, digest;

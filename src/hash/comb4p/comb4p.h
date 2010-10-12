@@ -39,7 +39,7 @@ class BOTAN_DLL Comb4P : public HashFunction
 
       void clear();
    private:
-      void add_data(const byte input[], u32bit length);
+      void add_data(const byte input[], size_t length);
       void final_result(byte out[]);
 
       HashFunction* hash1;

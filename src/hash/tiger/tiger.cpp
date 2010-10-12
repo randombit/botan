@@ -43,11 +43,11 @@ inline void mix(MemoryRegion<u64bit>& X)
 /*
 * Tiger Compression Function
 */
-void Tiger::compress_n(const byte input[], u32bit blocks)
+void Tiger::compress_n(const byte input[], size_t blocks)
    {
    u64bit A = digest[0], B = digest[1], C = digest[2];
 
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       load_le(&X[0], input, X.size());
 
@@ -55,7 +55,7 @@ void Tiger::compress_n(const byte input[], u32bit blocks)
       pass(C, A, B, X, 7); mix(X);
       pass(B, C, A, X, 9);
 
-      for(u32bit j = 3; j != PASS; ++j)
+      for(size_t j = 3; j != PASS; ++j)
          {
          mix(X);
          pass(A, B, C, X, 9);
@@ -75,8 +75,8 @@ void Tiger::compress_n(const byte input[], u32bit blocks)
 */
 void Tiger::copy_out(byte output[])
    {
-   for(u32bit j = 0; j != OUTPUT_LENGTH; ++j)
-      output[j] = get_byte(7 - (j % 8), digest[j/8]);
+   for(size_t i = 0; i != OUTPUT_LENGTH; ++i)
+      output[i] = get_byte(7 - (i % 8), digest[i/8]);
    }
 
 /*
@@ -166,7 +166,7 @@ std::string Tiger::name() const
 /*
 * Tiger Constructor
 */
-Tiger::Tiger(u32bit hashlen, u32bit pass) :
+Tiger::Tiger(size_t hashlen, size_t pass) :
    MDx_HashFunction(hashlen, 64, false, false),
    X(8),
    digest(3),

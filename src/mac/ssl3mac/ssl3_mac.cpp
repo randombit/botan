@@ -12,7 +12,7 @@ namespace Botan {
 /*
 * Update a SSL3-MAC Calculation
 */
-void SSL3_MAC::add_data(const byte input[], u32bit length)
+void SSL3_MAC::add_data(const byte input[], size_t length)
    {
    hash->update(input, length);
    }
@@ -80,7 +80,7 @@ SSL3_MAC::SSL3_MAC(HashFunction* hash_in) :
    if(hash->HASH_BLOCK_SIZE == 0)
       throw Invalid_Argument("SSL3-MAC cannot be used with " + hash->name());
 
-   u32bit INNER_HASH_LENGTH =
+   size_t INNER_HASH_LENGTH =
       (hash->name() == "SHA-160") ? 60 : hash->HASH_BLOCK_SIZE;
 
    i_key.resize(INNER_HASH_LENGTH);

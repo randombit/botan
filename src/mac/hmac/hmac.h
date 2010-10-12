@@ -29,7 +29,7 @@ class BOTAN_DLL HMAC : public MessageAuthenticationCode
       HMAC(HashFunction* hash);
       ~HMAC() { delete hash; }
    private:
-      void add_data(const byte[], u32bit);
+      void add_data(const byte[], size_t);
       void final_result(byte[]);
       void key_schedule(const byte[], u32bit);
       HashFunction* hash;

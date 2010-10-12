@@ -43,9 +43,9 @@ inline u64bit S4(u64bit X)
 */
 void BMW_512_compress(u64bit H[16], const u64bit M[16], u64bit Q[32])
    {
-   const u32bit EXPAND_1_ROUNDS = 2;
+   const size_t EXPAND_1_ROUNDS = 2;
 
-   for(u32bit i = 0; i != 16; ++i)
+   for(size_t i = 0; i != 16; ++i)
       Q[i] = H[i] ^ M[i];
 
    Q[16] = Q[ 5] - Q[ 7] + Q[10] + Q[13] + Q[14];
@@ -82,7 +82,7 @@ void BMW_512_compress(u64bit H[16], const u64bit M[16], u64bit Q[32])
    Q[14] = S4(Q[30]) + H[15];
    Q[15] = S0(Q[31]) + H[ 0];
 
-   for(u32bit i = 16; i != 16 + EXPAND_1_ROUNDS; ++i)
+   for(size_t i = 16; i != 16 + EXPAND_1_ROUNDS; ++i)
       {
       Q[i] = S1(Q[i-16]) + S2(Q[i-15]) + S3(Q[i-14]) + S0(Q[i-13]) +
              S1(Q[i-12]) + S2(Q[i-11]) + S3(Q[i-10]) + S0(Q[i- 9]) +
@@ -94,7 +94,7 @@ void BMW_512_compress(u64bit H[16], const u64bit M[16], u64bit Q[32])
                (0x0555555555555555 * i)) ^ H[(i-16+7)%16]);
       }
 
-   for(u32bit i = 16 + EXPAND_1_ROUNDS; i != 32; ++i)
+   for(size_t i = 16 + EXPAND_1_ROUNDS; i != 32; ++i)
       {
       Q[i] = Q[i-16] + rotate_left(Q[i-15],  5) +
              Q[i-14] + rotate_left(Q[i-13], 11) +
@@ -139,9 +139,9 @@ void BMW_512_compress(u64bit H[16], const u64bit M[16], u64bit Q[32])
 
 }
 
-void BMW_512::compress_n(const byte input[], u32bit blocks)
+void BMW_512::compress_n(const byte input[], size_t blocks)
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       load_le(&M[0], input, M.size());
 
@@ -168,7 +168,7 @@ void BMW_512::copy_out(byte output[])
 
    BMW_512_compress(final, &H[0], &Q[0]);
 
-   for(u32bit i = 0; i != OUTPUT_LENGTH; i += 8)
+   for(size_t i = 0; i != OUTPUT_LENGTH; i += 8)
       store_le(final[8 + i/8], output + i);
    }
 

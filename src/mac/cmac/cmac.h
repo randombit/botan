@@ -37,13 +37,13 @@ class BOTAN_DLL CMAC : public MessageAuthenticationCode
       CMAC(BlockCipher* cipher);
       ~CMAC();
    private:
-      void add_data(const byte[], u32bit);
+      void add_data(const byte[], size_t);
       void final_result(byte[]);
       void key_schedule(const byte[], u32bit);
 
       BlockCipher* e;
       SecureVector<byte> buffer, state, B, P;
-      u32bit position;
+      size_t position;
       byte polynomial;
    };
 

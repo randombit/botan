@@ -73,14 +73,14 @@ inline void F5(u32bit& A, u32bit B, u32bit& C, u32bit D, u32bit E,
 /*
 * RIPEMD-160 Compression Function
 */
-void RIPEMD_160::compress_n(const byte input[], u32bit blocks)
+void RIPEMD_160::compress_n(const byte input[], size_t blocks)
    {
    const u32bit MAGIC2 = 0x5A827999, MAGIC3 = 0x6ED9EBA1,
                 MAGIC4 = 0x8F1BBCDC, MAGIC5 = 0xA953FD4E,
                 MAGIC6 = 0x50A28BE6, MAGIC7 = 0x5C4DD124,
                 MAGIC8 = 0x6D703EF3, MAGIC9 = 0x7A6D76E9;
 
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       load_le(&M[0], input, M.size());
 
@@ -189,8 +189,8 @@ void RIPEMD_160::compress_n(const byte input[], u32bit blocks)
 */
 void RIPEMD_160::copy_out(byte output[])
    {
-   for(u32bit j = 0; j != OUTPUT_LENGTH; j += 4)
-      store_le(digest[j/4], output + j);
+   for(size_t i = 0; i != OUTPUT_LENGTH; i += 4)
+      store_le(digest[i/4], output + i);
    }
 
 /*

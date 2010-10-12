@@ -13,7 +13,7 @@ namespace Botan {
 
 namespace {
 
-u32bit comb4p_block_size(const HashFunction* h1,
+size_t comb4p_block_size(const HashFunction* h1,
                          const HashFunction* h2)
    {
    if(h1->HASH_BLOCK_SIZE == h2->HASH_BLOCK_SIZE)
@@ -73,7 +73,7 @@ void Comb4P::clear()
    hash2->update(0);
    }
 
-void Comb4P::add_data(const byte input[], u32bit length)
+void Comb4P::add_data(const byte input[], size_t length)
    {
    hash1->update(input, length);
    hash2->update(input, length);

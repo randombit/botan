@@ -30,9 +30,9 @@ class BOTAN_DLL Tiger : public MDx_HashFunction
       * @param out_size specifies the output length; can be 16, 20, or 24
       * @param passes to make in the algorithm
       */
-      Tiger(u32bit out_size = 24, u32bit passes = 3);
+      Tiger(size_t out_size = 24, size_t passes = 3);
    private:
-      void compress_n(const byte[], u32bit block);
+      void compress_n(const byte[], size_t block);
       void copy_out(byte[]);
 
       static void pass(u64bit& A, u64bit& B, u64bit& C,
@@ -45,7 +45,7 @@ class BOTAN_DLL Tiger : public MDx_HashFunction
       static const u64bit SBOX4[256];
 
       SecureVector<u64bit> X, digest;
-      const u32bit PASS;
+      const size_t PASS;
    };
 
 }

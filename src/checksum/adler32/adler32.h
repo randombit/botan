@@ -24,7 +24,7 @@ class BOTAN_DLL Adler32 : public HashFunction
       Adler32() : HashFunction(4) { clear(); }
       ~Adler32() { clear(); }
    private:
-      void add_data(const byte[], u32bit);
+      void add_data(const byte[], size_t);
       void final_result(byte[]);
       u16bit S1, S2;
    };

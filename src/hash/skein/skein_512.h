@@ -32,16 +32,16 @@ class BOTAN_DLL Skein_512 : public HashFunction
       std::string name() const;
       void clear();
    private:
-      void add_data(const byte input[], u32bit length);
+      void add_data(const byte input[], size_t length);
       void final_result(byte out[]);
 
       std::string personalization;
-      u32bit output_bits;
+      size_t output_bits;
 
       SecureVector<u64bit> H;
       SecureVector<u64bit> T;
       SecureVector<byte> buffer;
-      u32bit buf_pos;
+      size_t buf_pos;
    };
 
 }

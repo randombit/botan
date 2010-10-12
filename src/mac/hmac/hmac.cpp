@@ -14,7 +14,7 @@ namespace Botan {
 /*
 * Update a HMAC Calculation
 */
-void HMAC::add_data(const byte input[], u32bit length)
+void HMAC::add_data(const byte input[], size_t length)
    {
    hash->update(input, length);
    }

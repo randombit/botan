@@ -14,12 +14,12 @@ namespace {
 /*
 * Return the sum of the hash sizes
 */
-u32bit sum_of_hash_lengths(const std::vector<HashFunction*>& hashes)
+size_t sum_of_hash_lengths(const std::vector<HashFunction*>& hashes)
    {
-   u32bit sum = 0;
+   size_t sum = 0;
 
-   for(u32bit j = 0; j != hashes.size(); ++j)
-      sum += hashes[j]->OUTPUT_LENGTH;
+   for(size_t i = 0; i != hashes.size(); ++i)
+      sum += hashes[i]->OUTPUT_LENGTH;
 
    return sum;
    }
@@ -29,10 +29,10 @@ u32bit sum_of_hash_lengths(const std::vector<HashFunction*>& hashes)
 /*
 * Update the hash
 */
-void Parallel::add_data(const byte input[], u32bit length)
+void Parallel::add_data(const byte input[], size_t length)
    {
-   for(u32bit j = 0; j != hashes.size(); ++j)
-      hashes[j]->update(input, length);
+   for(size_t i = 0; i != hashes.size(); ++i)
+      hashes[i]->update(input, length);
    }
 
 /*
@@ -40,11 +40,11 @@ void Parallel::add_data(const byte input[], u32bit length)
 */
 void Parallel::final_result(byte hash[])
    {
-   u32bit offset = 0;
-   for(u32bit j = 0; j != hashes.size(); ++j)
+   size_t offset = 0;
+   for(size_t i = 0; i != hashes.size(); ++i)
       {
-      hashes[j]->final(hash + offset);
-      offset += hashes[j]->OUTPUT_LENGTH;
+      hashes[i]->final(hash + offset);
+      offset += hashes[i]->OUTPUT_LENGTH;
       }
    }
 
@@ -54,11 +54,11 @@ void Parallel::final_result(byte hash[])
 std::string Parallel::name() const
    {
    std::string hash_names;
-   for(u32bit j = 0; j != hashes.size(); ++j)
+   for(size_t i = 0; i != hashes.size(); ++i)
       {
-      if(j)
+      if(i)
          hash_names += ',';
-      hash_names += hashes[j]->name();
+      hash_names += hashes[i]->name();
       }
    return "Parallel(" + hash_names + ")";
    }
@@ -69,8 +69,8 @@ std::string Parallel::name() const
 HashFunction* Parallel::clone() const
    {
    std::vector<HashFunction*> hash_copies;
-   for(u32bit j = 0; j != hashes.size(); ++j)
-      hash_copies.push_back(hashes[j]->clone());
+   for(size_t i = 0; i != hashes.size(); ++i)
+      hash_copies.push_back(hashes[i]->clone());
    return new Parallel(hash_copies);
    }
 
@@ -79,8 +79,8 @@ HashFunction* Parallel::clone() const
 */
 void Parallel::clear()
    {
-   for(u32bit j = 0; j != hashes.size(); ++j)
-      hashes[j]->clear();
+   for(size_t i = 0; i != hashes.size(); ++i)
+      hashes[i]->clear();
    }
 
 /*
@@ -96,8 +96,8 @@ Parallel::Parallel(const std::vector<HashFunction*>& hash_in) :
 */
 Parallel::~Parallel()
    {
-   for(u32bit j = 0; j != hashes.size(); ++j)
-      delete hashes[j];
+   for(size_t i = 0; i != hashes.size(); ++i)
+      delete hashes[i];
    }
 
 }

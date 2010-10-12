@@ -18,7 +18,7 @@ namespace Botan {
 * @param in the read-only input buffer
 * @param length the length of the buffers
 */
-inline void xor_buf(byte out[], const byte in[], u32bit length)
+inline void xor_buf(byte out[], const byte in[], size_t length)
    {
    while(length >= 8)
       {
@@ -33,8 +33,9 @@ inline void xor_buf(byte out[], const byte in[], u32bit length)
 
       out += 8; in += 8; length -= 8;
       }
-   for(u32bit j = 0; j != length; ++j)
-      out[j] ^= in[j];
+
+   for(size_t i = 0; i != length; ++i)
+      out[i] ^= in[i];
    }
 
 /**
@@ -47,7 +48,7 @@ inline void xor_buf(byte out[], const byte in[], u32bit length)
 inline void xor_buf(byte out[],
                     const byte in[],
                     const byte in2[],
-                    u32bit length)
+                    size_t length)
    {
    while(length >= 8)
       {
@@ -65,8 +66,8 @@ inline void xor_buf(byte out[],
       in += 8; in2 += 8; out += 8; length -= 8;
       }
 
-   for(u32bit j = 0; j != length; ++j)
-      out[j] = in[j] ^ in2[j];
+   for(size_t i = 0; i != length; ++i)
+      out[i] = in[i] ^ in2[i];
    }
 
 }

@@ -38,7 +38,7 @@ void GOST_34_11::clear()
 /**
 * Hash additional inputs
 */
-void GOST_34_11::add_data(const byte input[], u32bit length)
+void GOST_34_11::add_data(const byte input[], size_t length)
    {
    count += length;
 
@@ -55,8 +55,8 @@ void GOST_34_11::add_data(const byte input[], u32bit length)
          }
       }
 
-   const u32bit full_blocks = length / HASH_BLOCK_SIZE;
-   const u32bit remaining   = length % HASH_BLOCK_SIZE;
+   const size_t full_blocks = length / HASH_BLOCK_SIZE;
+   const size_t remaining   = length % HASH_BLOCK_SIZE;
 
    if(full_blocks)
       compress_n(input, full_blocks);
@@ -68,11 +68,11 @@ void GOST_34_11::add_data(const byte input[], u32bit length)
 /**
 * The GOST 34.11 compression function
 */
-void GOST_34_11::compress_n(const byte input[], u32bit blocks)
+void GOST_34_11::compress_n(const byte input[], size_t blocks)
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
-      for(u32bit j = 0, carry = 0; j != 32; ++j)
+      for(size_t j = 0, carry = 0; j != 32; ++j)
          {
          u16bit s = sum[j] + input[32*i+j] + carry;
          carry = get_byte(0, s);
@@ -85,7 +85,7 @@ void GOST_34_11::compress_n(const byte input[], u32bit blocks)
       load_be(U, &hash[0], 4);
       load_be(V, input + 32*i, 4);
 
-      for(u32bit j = 0; j != 4; ++j)
+      for(size_t j = 0; j != 4; ++j)
          {
          byte key[32] = { 0 };
 

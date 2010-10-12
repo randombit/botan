@@ -25,14 +25,14 @@ class BOTAN_DLL BufferedComputation
       /**
       * The length of the output of this function in bytes.
       */
-      const u32bit OUTPUT_LENGTH;
+      const size_t OUTPUT_LENGTH;
 
       /**
       * Add new input to process.
       * @param in the input to process as a byte array
       * @param length of param in in bytes
       */
-      void update(const byte in[], u32bit length) { add_data(in, length); }
+      void update(const byte in[], size_t length) { add_data(in, length); }
 
       /**
       * Add new input to process.
@@ -96,7 +96,7 @@ class BOTAN_DLL BufferedComputation
       * @param length the length of the byte array
       * @result the result of the call to final()
       */
-      SecureVector<byte> process(const byte in[], u32bit length)
+      SecureVector<byte> process(const byte in[], size_t length)
          {
          add_data(in, length);
          return final();
@@ -129,7 +129,7 @@ class BOTAN_DLL BufferedComputation
       /**
       * @param out_len the output length of this computation
       */
-      BufferedComputation(u32bit out_len) : OUTPUT_LENGTH(out_len) {}
+      BufferedComputation(size_t out_len) : OUTPUT_LENGTH(out_len) {}
 
       virtual ~BufferedComputation() {}
    private:
@@ -140,7 +140,7 @@ class BOTAN_DLL BufferedComputation
       * @param input is an input buffer
       * @param length is the length of input in bytes
       */
-      virtual void add_data(const byte input[], u32bit length) = 0;
+      virtual void add_data(const byte input[], size_t length) = 0;
 
       /**
       * Write the final output to out

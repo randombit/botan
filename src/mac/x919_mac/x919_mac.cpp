@@ -14,9 +14,9 @@ namespace Botan {
 /*
 * Update an ANSI X9.19 MAC Calculation
 */
-void ANSI_X919_MAC::add_data(const byte input[], u32bit length)
+void ANSI_X919_MAC::add_data(const byte input[], size_t length)
    {
-   u32bit xored = std::min(8 - position, length);
+   size_t xored = std::min(8 - position, length);
    xor_buf(&state[position], input, xored);
    position += xored;
 

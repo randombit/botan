@@ -58,14 +58,14 @@ inline void F4(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E,
 /*
 * HAS-160 Compression Function
 */
-void HAS_160::compress_n(const byte input[], u32bit blocks)
+void HAS_160::compress_n(const byte input[], size_t blocks)
    {
    using namespace HAS_160_F;
 
    u32bit A = digest[0], B = digest[1], C = digest[2],
           D = digest[3], E = digest[4];
 
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       load_le(&X[0], input, 16);
 
@@ -144,8 +144,8 @@ void HAS_160::compress_n(const byte input[], u32bit blocks)
 */
 void HAS_160::copy_out(byte output[])
    {
-   for(u32bit j = 0; j != OUTPUT_LENGTH; j += 4)
-      store_le(digest[j/4], output + j);
+   for(size_t i = 0; i != OUTPUT_LENGTH; i += 4)
+      store_le(digest[i/4], output + i);
    }
 
 /*

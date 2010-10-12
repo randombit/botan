@@ -25,15 +25,15 @@ class BOTAN_DLL MDx_HashFunction : public HashFunction
       * @param big_bit_endian specifies if the hash uses big-endian bits
       * @param counter_size specifies the size of the counter var in bytes
       */
-      MDx_HashFunction(u32bit hash_length,
-                       u32bit block_length,
+      MDx_HashFunction(size_t hash_length,
+                       size_t block_length,
                        bool big_byte_endian,
                        bool big_bit_endian,
-                       u32bit counter_size = 8);
+                       size_t counter_size = 8);
 
       virtual ~MDx_HashFunction() {}
    protected:
-      void add_data(const byte input[], u32bit length);
+      void add_data(const byte input[], size_t length);
       void final_result(byte output[]);
 
       /**
@@ -41,7 +41,7 @@ class BOTAN_DLL MDx_HashFunction : public HashFunction
       * @param blocks the input
       * @param block_n the number of blocks
       */
-      virtual void compress_n(const byte blocks[], u32bit block_n) = 0;
+      virtual void compress_n(const byte blocks[], size_t block_n) = 0;
 
       void clear();
 
@@ -59,7 +59,7 @@ class BOTAN_DLL MDx_HashFunction : public HashFunction
    private:
       SecureVector<byte> buffer;
       u64bit count;
-      u32bit position;
+      size_t position;
 
       const bool BIG_BYTE_ENDIAN, BIG_BIT_ENDIAN;
       const u32bit COUNT_SIZE;

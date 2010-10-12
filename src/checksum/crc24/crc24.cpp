@@ -13,7 +13,7 @@ namespace Botan {
 /*
 * Update a CRC24 Checksum
 */
-void CRC24::add_data(const byte input[], u32bit length)
+void CRC24::add_data(const byte input[], size_t length)
    {
    const u32bit TABLE[256] = {
       0x00000000, 0x00864CFB, 0x008AD50D, 0x000C99F6, 0x0093E6E1, 0x0015AA1A,
@@ -82,8 +82,10 @@ void CRC24::add_data(const byte input[], u32bit length)
       input += 16;
       length -= 16;
       }
-   for(u32bit j = 0; j != length; ++j)
-      tmp = TABLE[((tmp >> 16) ^ input[j]) & 0xFF] ^ (tmp << 8);
+
+   for(size_t i = 0; i != length; ++i)
+      tmp = TABLE[((tmp >> 16) ^ input[i]) & 0xFF] ^ (tmp << 8);
+
    crc = tmp;
    }
 
@@ -92,8 +94,8 @@ void CRC24::add_data(const byte input[], u32bit length)
 */
 void CRC24::final_result(byte output[])
    {
-   for(u32bit j = 0; j != 3; ++j)
-      output[j] = get_byte(j+1, crc);
+   for(size_t i = 0; i != 3; ++i)
+      output[i] = get_byte(i+1, crc);
    clear();
    }
 

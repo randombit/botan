@@ -54,16 +54,16 @@ inline void F4(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
 /*
 * SHA-160 Compression Function
 */
-void SHA_160::compress_n(const byte input[], u32bit blocks)
+void SHA_160::compress_n(const byte input[], size_t blocks)
    {
    u32bit A = digest[0], B = digest[1], C = digest[2],
           D = digest[3], E = digest[4];
 
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       load_be(&W[0], input, 16);
 
-      for(u32bit j = 16; j != 80; j += 8)
+      for(size_t j = 16; j != 80; j += 8)
          {
          W[j  ] = rotate_left((W[j-3] ^ W[j-8] ^ W[j-14] ^ W[j-16]), 1);
          W[j+1] = rotate_left((W[j-2] ^ W[j-7] ^ W[j-13] ^ W[j-15]), 1);
@@ -134,7 +134,7 @@ void SHA_160::compress_n(const byte input[], u32bit blocks)
 */
 void SHA_160::copy_out(byte output[])
    {
-   for(u32bit i = 0; i != OUTPUT_LENGTH; i += 4)
+   for(size_t i = 0; i != OUTPUT_LENGTH; i += 4)
       store_be(digest[i/4], output + i);
    }
 
@@ -164,7 +164,7 @@ SHA_160::SHA_160() :
 /*
 * SHA_160 Constructor
 */
-SHA_160::SHA_160(u32bit W_size) :
+SHA_160::SHA_160(size_t W_size) :
    MDx_HashFunction(20, 64, true, true), digest(5), W(W_size)
    {
    clear();

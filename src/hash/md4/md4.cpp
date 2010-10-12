@@ -45,11 +45,11 @@ inline void HH(u32bit& A, u32bit B, u32bit C, u32bit D, u32bit M, byte S)
 /*
 * MD4 Compression Function
 */
-void MD4::compress_n(const byte input[], u32bit blocks)
+void MD4::compress_n(const byte input[], size_t blocks)
    {
    u32bit A = digest[0], B = digest[1], C = digest[2], D = digest[3];
 
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       load_le(&M[0], input, M.size());
 
@@ -94,8 +94,8 @@ void MD4::compress_n(const byte input[], u32bit blocks)
 */
 void MD4::copy_out(byte output[])
    {
-   for(u32bit j = 0; j != OUTPUT_LENGTH; j += 4)
-      store_le(digest[j/4], output + j);
+   for(size_t i = 0; i != OUTPUT_LENGTH; i += 4)
+      store_le(digest[i/4], output + i);
    }
 
 /*

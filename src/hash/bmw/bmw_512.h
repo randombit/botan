@@ -25,7 +25,7 @@ class BOTAN_DLL BMW_512 : public MDx_HashFunction
       BMW_512() : MDx_HashFunction(64, 128, false, true), H(16), M(16), Q(32)
          { clear(); }
    private:
-      void compress_n(const byte input[], u32bit blocks);
+      void compress_n(const byte input[], size_t blocks);
       void copy_out(byte output[]);
 
       SecureVector<u64bit> H, M, Q;

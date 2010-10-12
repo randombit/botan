@@ -42,7 +42,7 @@ OctetString PKCS5_PBKDF2::derive_key(u32bit key_len,
    u32bit counter = 1;
    while(key_len)
       {
-      u32bit T_size = std::min(mac->OUTPUT_LENGTH, key_len);
+      u32bit T_size = std::min<u32bit>(mac->OUTPUT_LENGTH, key_len);
 
       mac->update(salt, salt_size);
       for(u32bit j = 0; j != 4; ++j)

@@ -14,9 +14,9 @@ namespace Botan {
 /*
 * MDx_HashFunction Constructor
 */
-MDx_HashFunction::MDx_HashFunction(u32bit hash_len, u32bit block_len,
+MDx_HashFunction::MDx_HashFunction(size_t hash_len, size_t block_len,
                                    bool byte_end, bool bit_end,
-                                   u32bit cnt_size) :
+                                   size_t cnt_size) :
    HashFunction(hash_len, block_len), buffer(block_len),
    BIG_BYTE_ENDIAN(byte_end), BIG_BIT_ENDIAN(bit_end), COUNT_SIZE(cnt_size)
    {
@@ -37,7 +37,7 @@ void MDx_HashFunction::clear()
 /*
 * Update the hash
 */
-void MDx_HashFunction::add_data(const byte input[], u32bit length)
+void MDx_HashFunction::add_data(const byte input[], size_t length)
    {
    count += length;
 
@@ -54,8 +54,8 @@ void MDx_HashFunction::add_data(const byte input[], u32bit length)
          }
       }
 
-   const u32bit full_blocks = length / HASH_BLOCK_SIZE;
-   const u32bit remaining   = length % HASH_BLOCK_SIZE;
+   const size_t full_blocks = length / HASH_BLOCK_SIZE;
+   const size_t remaining   = length % HASH_BLOCK_SIZE;
 
    if(full_blocks)
       compress_n(input, full_blocks);
@@ -70,8 +70,8 @@ void MDx_HashFunction::add_data(const byte input[], u32bit length)
 void MDx_HashFunction::final_result(byte output[])
    {
    buffer[position] = (BIG_BIT_ENDIAN ? 0x80 : 0x01);
-   for(u32bit j = position+1; j != HASH_BLOCK_SIZE; ++j)
-      buffer[j] = 0;
+   for(size_t i = position+1; i != HASH_BLOCK_SIZE; ++i)
+      buffer[i] = 0;
 
    if(position >= HASH_BLOCK_SIZE - COUNT_SIZE)
       {

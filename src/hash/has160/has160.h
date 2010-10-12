@@ -26,7 +26,7 @@ class BOTAN_DLL HAS_160 : public MDx_HashFunction
       HAS_160() : MDx_HashFunction(20, 64, false, true), X(20), digest(5)
          { clear(); }
    private:
-      void compress_n(const byte[], u32bit blocks);
+      void compress_n(const byte[], size_t blocks);
       void copy_out(byte[]);
 
       SecureVector<u32bit> X, digest;

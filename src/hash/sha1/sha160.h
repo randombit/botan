@@ -30,9 +30,9 @@ class BOTAN_DLL SHA_160 : public MDx_HashFunction
       * constraints
       * @param W_size how big to make W
       */
-      SHA_160(u32bit W_size);
+      SHA_160(size_t W_size);
 
-      void compress_n(const byte[], u32bit blocks);
+      void compress_n(const byte[], size_t blocks);
       void copy_out(byte[]);
 
       SecureVector<u32bit> digest;
