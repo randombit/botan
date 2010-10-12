@@ -42,12 +42,12 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       /**
       * @return native parallelism of this cipher in blocks
       */
-      virtual u32bit parallelism() const { return 1; }
+      virtual size_t parallelism() const { return 1; }
 
       /**
       * @return prefererred parallelism of this cipher in bytes
       */
-      u32bit parallel_bytes() const
+      size_t parallel_bytes() const
          {
          return parallelism() * BLOCK_SIZE * BOTAN_BLOCK_CIPHER_PAR_MULT;
          }
