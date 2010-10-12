@@ -13,7 +13,7 @@ namespace Botan {
 
 void hex_encode(char output[],
                 const byte input[],
-                u32bit input_length,
+                size_t input_length,
                 bool uppercase)
    {
    static const byte BIN_TO_HEX_UPPER[16] = {
@@ -26,7 +26,7 @@ void hex_encode(char output[],
 
    const byte* tbl = uppercase ? BIN_TO_HEX_UPPER : BIN_TO_HEX_LOWER;
 
-   for(u32bit i = 0; i != input_length; ++i)
+   for(size_t i = 0; i != input_length; ++i)
       {
       byte x = input[i];
       output[2*i  ] = tbl[(x >> 4) & 0x0F];
@@ -43,7 +43,7 @@ std::string hex_encode(const MemoryRegion<byte>& input,
    }
 
 std::string hex_encode(const byte input[],
-                       u32bit input_length,
+                       size_t input_length,
                        bool uppercase)
    {
    std::string output(2 * input_length, 0);
@@ -51,10 +51,10 @@ std::string hex_encode(const byte input[],
    return output;
    }
 
-u32bit hex_decode(byte output[],
+size_t hex_decode(byte output[],
                   const char input[],
-                  u32bit input_length,
-                  u32bit& input_consumed,
+                  size_t input_length,
+                  size_t& input_consumed,
                   bool ignore_ws)
    {
    /*
@@ -99,7 +99,7 @@ u32bit hex_decode(byte output[],
 
    clear_mem(output, input_length / 2);
 
-   for(u32bit i = 0; i != input_length; ++i)
+   for(size_t i = 0; i != input_length; ++i)
       {
       const byte bin = HEX_TO_BIN[(byte)input[i]];
 
@@ -127,7 +127,7 @@ u32bit hex_decode(byte output[],
       }
 
    input_consumed = input_length;
-   u32bit written = (out_ptr - output);
+   size_t written = (out_ptr - output);
 
    /*
    * We only got half of a byte at the end; zap the half-written
@@ -142,13 +142,13 @@ u32bit hex_decode(byte output[],
    return written;
    }
 
-u32bit hex_decode(byte output[],
+size_t hex_decode(byte output[],
                   const char input[],
-                  u32bit input_length,
+                  size_t input_length,
                   bool ignore_ws)
    {
-   u32bit consumed = 0;
-   u32bit written = hex_decode(output, input, input_length,
+   size_t consumed = 0;
+   size_t written = hex_decode(output, input, input_length,
                                consumed, ignore_ws);
 
    if(consumed != input_length)
@@ -157,7 +157,7 @@ u32bit hex_decode(byte output[],
    return written;
    }
 
-u32bit hex_decode(byte output[],
+size_t hex_decode(byte output[],
                   const std::string& input,
                   bool ignore_ws)
    {
@@ -165,12 +165,12 @@ u32bit hex_decode(byte output[],
    }
 
 SecureVector<byte> hex_decode(const char input[],
-                              u32bit input_length,
+                              size_t input_length,
                               bool ignore_ws)
    {
    SecureVector<byte> bin(1 + input_length / 2);
 
-   u32bit written = hex_decode(&bin[0],
+   size_t written = hex_decode(&bin[0],
                                input,
                                input_length,
                                ignore_ws);

@@ -17,16 +17,16 @@ namespace PEM_Code {
 /*
 * PEM Encoding/Decoding
 */
-BOTAN_DLL std::string encode(const byte[], u32bit,
-                             const std::string&, u32bit = 64);
+BOTAN_DLL std::string encode(const byte[], size_t,
+                             const std::string&, size_t = 64);
 BOTAN_DLL std::string encode(const MemoryRegion<byte>&,
-                             const std::string&, u32bit = 64);
+                             const std::string&, size_t = 64);
 
 BOTAN_DLL SecureVector<byte> decode(DataSource&, std::string&);
 BOTAN_DLL SecureVector<byte> decode_check_label(DataSource&,
                                                 const std::string&);
 BOTAN_DLL bool matches(DataSource&, const std::string& = "",
-                       u32bit search_range = 4096);
+                       size_t search_range = 4096);
 
 }
 

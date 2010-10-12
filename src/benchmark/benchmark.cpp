@@ -23,7 +23,7 @@ namespace {
 */
 std::pair<u64bit, u64bit> bench_buf_comp(BufferedComputation* buf_comp,
                                          u64bit nanoseconds_max,
-                                         const byte buf[], u32bit buf_len)
+                                         const byte buf[], size_t buf_len)
    {
    u64bit reps = 0;
    u64bit nanoseconds_used = 0;
@@ -46,9 +46,9 @@ std::pair<u64bit, u64bit> bench_buf_comp(BufferedComputation* buf_comp,
 std::pair<u64bit, u64bit>
 bench_block_cipher(BlockCipher* block_cipher,
                    u64bit nanoseconds_max,
-                   byte buf[], u32bit buf_len)
+                   byte buf[], size_t buf_len)
    {
-   const u32bit in_blocks = buf_len / block_cipher->BLOCK_SIZE;
+   const size_t in_blocks = buf_len / block_cipher->BLOCK_SIZE;
 
    u64bit reps = 0;
    u64bit nanoseconds_used = 0;
@@ -74,7 +74,7 @@ bench_block_cipher(BlockCipher* block_cipher,
 std::pair<u64bit, u64bit>
 bench_stream_cipher(StreamCipher* stream_cipher,
                     u64bit nanoseconds_max,
-                    byte buf[], u32bit buf_len)
+                    byte buf[], size_t buf_len)
    {
    u64bit reps = 0;
    u64bit nanoseconds_used = 0;
@@ -99,7 +99,7 @@ bench_stream_cipher(StreamCipher* stream_cipher,
 std::pair<u64bit, u64bit>
 bench_hash(HashFunction* hash,
            u64bit nanoseconds_max,
-           const byte buf[], u32bit buf_len)
+           const byte buf[], size_t buf_len)
    {
    return bench_buf_comp(hash, nanoseconds_max, buf, buf_len);
    }
@@ -110,7 +110,7 @@ bench_hash(HashFunction* hash,
 std::pair<u64bit, u64bit>
 bench_mac(MessageAuthenticationCode* mac,
           u64bit nanoseconds_max,
-          const byte buf[], u32bit buf_len)
+          const byte buf[], size_t buf_len)
    {
    mac->set_key(buf, mac->MAXIMUM_KEYLENGTH);
    return bench_buf_comp(mac, nanoseconds_max, buf, buf_len);
@@ -123,7 +123,7 @@ algorithm_benchmark(const std::string& name,
                     Algorithm_Factory& af,
                     RandomNumberGenerator& rng,
                     u32bit milliseconds,
-                    u32bit buf_size)
+                    size_t buf_size)
    {
    std::vector<std::string> providers = af.providers_of(name);
    std::map<std::string, double> all_results;
@@ -137,7 +137,7 @@ algorithm_benchmark(const std::string& name,
    std::vector<byte> buf(buf_size * 1024);
    rng.randomize(&buf[0], buf.size());
 
-   for(u32bit i = 0; i != providers.size(); ++i)
+   for(size_t i = 0; i != providers.size(); ++i)
       {
       const std::string provider = providers[i];
 

@@ -22,7 +22,7 @@ namespace Botan {
 */
 BOTAN_DLL std::string PGP_encode(
    const byte input[],
-   u32bit length,
+   size_t length,
    const std::string& label,
    const std::map<std::string, std::string>& headers);
 
@@ -33,7 +33,7 @@ BOTAN_DLL std::string PGP_encode(
 */
 BOTAN_DLL std::string PGP_encode(
    const byte input[],
-   u32bit length,
+   size_t length,
    const std::string& label);
 
 /**

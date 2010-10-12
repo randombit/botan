@@ -125,7 +125,7 @@ void Hex_Decoder::write(const byte input[], u32bit length)
       copy_mem(&in[position], input, to_copy);
       position += to_copy;
 
-      u32bit consumed = 0;
+      size_t consumed = 0;
       u32bit written = hex_decode(&out[0],
                                   reinterpret_cast<const char*>(&in[0]),
                                   position,
@@ -152,7 +152,7 @@ void Hex_Decoder::write(const byte input[], u32bit length)
 */
 void Hex_Decoder::end_msg()
    {
-   u32bit consumed = 0;
+   size_t consumed = 0;
    u32bit written = hex_decode(&out[0],
                                reinterpret_cast<const char*>(&in[0]),
                                position,

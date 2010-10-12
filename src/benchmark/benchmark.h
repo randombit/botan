@@ -29,7 +29,7 @@ BOTAN_DLL algorithm_benchmark(const std::string& name,
                               Algorithm_Factory& af,
                               RandomNumberGenerator& rng,
                               u32bit milliseconds,
-                              u32bit buf_size);
+                              size_t buf_size);
 
 }
 

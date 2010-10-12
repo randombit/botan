@@ -22,7 +22,7 @@ namespace Botan {
 */
 void BOTAN_DLL hex_encode(char output[],
                           const byte input[],
-                          u32bit input_length,
+                          size_t input_length,
                           bool uppercase = true);
 
 /**
@@ -33,7 +33,7 @@ void BOTAN_DLL hex_encode(char output[],
 * @return hexadecimal representation of input
 */
 std::string BOTAN_DLL hex_encode(const byte input[],
-                                 u32bit input_length,
+                                 size_t input_length,
                                  bool uppercase = true);
 
 /**
@@ -58,10 +58,10 @@ std::string BOTAN_DLL hex_encode(const MemoryRegion<byte>& input,
                    exception if whitespace is encountered
 * @return number of bytes written to output
 */
-u32bit BOTAN_DLL hex_decode(byte output[],
+size_t BOTAN_DLL hex_decode(byte output[],
                             const char input[],
-                            u32bit input_length,
-                            u32bit& input_consumed,
+                            size_t input_length,
+                            size_t& input_consumed,
                             bool ignore_ws = true);
 
 /**
@@ -73,9 +73,9 @@ u32bit BOTAN_DLL hex_decode(byte output[],
                    exception if whitespace is encountered
 * @return number of bytes written to output
 */
-u32bit BOTAN_DLL hex_decode(byte output[],
+size_t BOTAN_DLL hex_decode(byte output[],
                             const char input[],
-                            u32bit input_length,
+                            size_t input_length,
                             bool ignore_ws = true);
 
 /**
@@ -86,7 +86,7 @@ u32bit BOTAN_DLL hex_decode(byte output[],
                    exception if whitespace is encountered
 * @return number of bytes written to output
 */
-u32bit BOTAN_DLL hex_decode(byte output[],
+size_t BOTAN_DLL hex_decode(byte output[],
                             const std::string& input,
                             bool ignore_ws = true);
 
@@ -99,7 +99,7 @@ u32bit BOTAN_DLL hex_decode(byte output[],
 * @return decoded hex output
 */
 SecureVector<byte> BOTAN_DLL hex_decode(const char input[],
-                                        u32bit input_length,
+                                        size_t input_length,
                                         bool ignore_ws = true);
 
 /**
