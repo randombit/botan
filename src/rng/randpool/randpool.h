@@ -21,14 +21,14 @@ namespace Botan {
 class BOTAN_DLL Randpool : public RandomNumberGenerator
    {
    public:
-      void randomize(byte[], u32bit);
+      void randomize(byte[], size_t);
       bool is_seeded() const { return seeded; }
       void clear();
       std::string name() const;
 
-      void reseed(u32bit bits_to_collect);
+      void reseed(size_t bits_to_collect);
       void add_entropy_source(EntropySource* es);
-      void add_entropy(const byte input[], u32bit length);
+      void add_entropy(const byte input[], size_t length);
 
       /**
       * @param cipher a block cipher to use
@@ -39,15 +39,15 @@ class BOTAN_DLL Randpool : public RandomNumberGenerator
       */
       Randpool(BlockCipher* cipher,
                MessageAuthenticationCode* mac,
-               u32bit pool_blocks = 32,
-               u32bit iterations_before_reseed = 128);
+               size_t pool_blocks = 32,
+               size_t iterations_before_reseed = 128);
 
       ~Randpool();
    private:
       void update_buffer();
       void mix_pool();
 
-      u32bit ITERATIONS_BEFORE_RESEED, POOL_BLOCKS;
+      size_t ITERATIONS_BEFORE_RESEED, POOL_BLOCKS;
       BlockCipher* cipher;
       MessageAuthenticationCode* mac;
 

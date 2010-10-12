@@ -41,7 +41,7 @@ class Device_EntropySource : public EntropySource
 
             void close();
 
-            u32bit get(byte out[], u32bit length, u32bit ms_wait_time);
+            size_t get(byte out[], size_t length, size_t ms_wait_time);
 
             static fd_type open(const std::string& pathname);
          private:

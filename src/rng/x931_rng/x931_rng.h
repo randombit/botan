@@ -19,14 +19,14 @@ namespace Botan {
 class BOTAN_DLL ANSI_X931_RNG : public RandomNumberGenerator
    {
    public:
-      void randomize(byte[], u32bit);
+      void randomize(byte[], size_t);
       bool is_seeded() const;
       void clear();
       std::string name() const;
 
-      void reseed(u32bit poll_bits);
+      void reseed(size_t poll_bits);
       void add_entropy_source(EntropySource*);
-      void add_entropy(const byte[], u32bit);
+      void add_entropy(const byte[], size_t);
 
       /**
       * @param cipher the block cipher to use in this PRNG
@@ -43,7 +43,7 @@ class BOTAN_DLL ANSI_X931_RNG : public RandomNumberGenerator
       BlockCipher* cipher;
       RandomNumberGenerator* prng;
       SecureVector<byte> V, R;
-      u32bit position;
+      size_t position;
    };
 
 }

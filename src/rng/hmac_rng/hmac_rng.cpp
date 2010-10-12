@@ -22,8 +22,7 @@ void hmac_prf(MessageAuthenticationCode* prf,
    {
    prf->update(K);
    prf->update(label);
-   for(u32bit i = 0; i != 4; ++i)
-      prf->update(get_byte(i, counter));
+   prf->update_be(counter);
    prf->final(&K[0]);
 
    ++counter;
@@ -34,7 +33,7 @@ void hmac_prf(MessageAuthenticationCode* prf,
 /*
 * Generate a buffer of random bytes
 */
-void HMAC_RNG::randomize(byte out[], u32bit length)
+void HMAC_RNG::randomize(byte out[], size_t length)
    {
    if(!is_seeded())
       throw PRNG_Unseeded(name());
@@ -46,7 +45,7 @@ void HMAC_RNG::randomize(byte out[], u32bit length)
       {
       hmac_prf(prf, K, counter, "rng");
 
-      const u32bit copied = std::min<u32bit>(K.size(), length);
+      const size_t copied = std::min<size_t>(K.size(), length);
 
       copy_mem(out, &K[0], copied);
       out += copied;
@@ -57,7 +56,7 @@ void HMAC_RNG::randomize(byte out[], u32bit length)
 /*
 * Poll for entropy and reset the internal keys
 */
-void HMAC_RNG::reseed(u32bit poll_bits)
+void HMAC_RNG::reseed(size_t poll_bits)
    {
    /*
    Using the terminology of E-t-E, XTR is the MAC function (normally
@@ -72,7 +71,7 @@ void HMAC_RNG::reseed(u32bit poll_bits)
 
    if(!entropy_sources.empty())
       {
-      u32bit poll_attempt = 0;
+      size_t poll_attempt = 0;
 
       while(!accum.polling_goal_achieved() && poll_attempt < poll_bits)
          {
@@ -118,7 +117,7 @@ void HMAC_RNG::reseed(u32bit poll_bits)
 /*
 * Add user-supplied entropy to the extractor input
 */
-void HMAC_RNG::add_entropy(const byte input[], u32bit length)
+void HMAC_RNG::add_entropy(const byte input[], size_t length)
    {
    extractor->update(input, length);
    user_input_len += length;

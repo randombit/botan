@@ -33,7 +33,7 @@ class EGD_EntropySource : public EntropySource
             EGD_Socket(const std::string& path);
 
             void close();
-            u32bit read(byte outbuf[], u32bit length);
+            size_t read(byte outbuf[], size_t length);
          private:
             static int open_socket(const std::string& path);
 

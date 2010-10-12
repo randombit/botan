@@ -26,8 +26,8 @@ void Device_EntropySource::Device_Reader::close()
 /**
 Read bytes from a device file
 */
-u32bit Device_EntropySource::Device_Reader::get(byte out[], u32bit length,
-                                                u32bit ms_wait_time)
+size_t Device_EntropySource::Device_Reader::get(byte out[], size_t length,
+                                                size_t ms_wait_time)
    {
    if(fd < 0)
       return 0;
@@ -54,7 +54,7 @@ u32bit Device_EntropySource::Device_Reader::get(byte out[], u32bit length,
    if(got <= 0)
       return 0;
 
-   return static_cast<u32bit>(got);
+   return static_cast<size_t>(got);
    }
 
 /**
@@ -82,7 +82,7 @@ Open a file descriptor to each (available) device in fsnames
 Device_EntropySource::Device_EntropySource(
    const std::vector<std::string>& fsnames)
    {
-   for(u32bit i = 0; i != fsnames.size(); ++i)
+   for(size_t i = 0; i != fsnames.size(); ++i)
       {
       Device_Reader::fd_type fd = Device_Reader::open(fsnames[i]);
       if(fd > 0)
@@ -104,14 +104,14 @@ Device_EntropySource::~Device_EntropySource()
 */
 void Device_EntropySource::poll(Entropy_Accumulator& accum)
    {
-   u32bit go_get = std::min<u32bit>(accum.desired_remaining_bits() / 8, 48);
+   size_t go_get = std::min<size_t>(accum.desired_remaining_bits() / 8, 48);
 
-   u32bit read_wait_ms = std::max<u32bit>(go_get, 1000);
+   size_t read_wait_ms = std::max<size_t>(go_get, 1000);
    MemoryRegion<byte>& io_buffer = accum.get_io_buffer(go_get);
 
    for(size_t i = 0; i != devices.size(); ++i)
       {
-      u32bit got = devices[i].get(&io_buffer[0], io_buffer.size(),
+      size_t got = devices[i].get(&io_buffer[0], io_buffer.size(),
                                   read_wait_ms);
 
       if(got)

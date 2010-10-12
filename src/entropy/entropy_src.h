@@ -24,7 +24,7 @@ class BOTAN_DLL Entropy_Accumulator
       * Initialize an Entropy_Accumulator
       * @param goal is how many bits we would like to collect
       */
-      Entropy_Accumulator(u32bit goal) :
+      Entropy_Accumulator(size_t goal) :
          entropy_goal(goal), collected_bits(0) {}
 
       virtual ~Entropy_Accumulator() {}
@@ -36,14 +36,14 @@ class BOTAN_DLL Entropy_Accumulator
       * @param size requested size for the I/O buffer
       * @return cached I/O buffer for repeated polls
       */
-      MemoryRegion<byte>& get_io_buffer(u32bit size)
+      MemoryRegion<byte>& get_io_buffer(size_t size)
          { io_buffer.resize(size); return io_buffer; }
 
       /**
       * @return number of bits collected so far
       */
-      u32bit bits_collected() const
-         { return static_cast<u32bit>(collected_bits); }
+      size_t bits_collected() const
+         { return static_cast<size_t>(collected_bits); }
 
       /**
       * @return if our polling goal has been achieved
@@ -54,11 +54,11 @@ class BOTAN_DLL Entropy_Accumulator
       /**
       * @return how many bits we need to reach our polling goal
       */
-      u32bit desired_remaining_bits() const
+      size_t desired_remaining_bits() const
          {
          if(collected_bits >= entropy_goal)
             return 0;
-         return static_cast<u32bit>(entropy_goal - collected_bits);
+         return static_cast<size_t>(entropy_goal - collected_bits);
          }
 
       /**
@@ -68,7 +68,7 @@ class BOTAN_DLL Entropy_Accumulator
       * @param entropy_bits_per_byte is a best guess at how much
       * entropy per byte is in this input
       */
-      void add(const void* bytes, u32bit length, double entropy_bits_per_byte)
+      void add(const void* bytes, size_t length, double entropy_bits_per_byte)
          {
          add_bytes(reinterpret_cast<const byte*>(bytes), length);
          collected_bits += entropy_bits_per_byte * length;
@@ -86,10 +86,10 @@ class BOTAN_DLL Entropy_Accumulator
          add(&v, sizeof(T), entropy_bits_per_byte);
          }
    private:
-      virtual void add_bytes(const byte bytes[], u32bit length) = 0;
+      virtual void add_bytes(const byte bytes[], size_t length) = 0;
 
       SecureVector<byte> io_buffer;
-      u32bit entropy_goal;
+      size_t entropy_goal;
       double collected_bits;
    };
 
@@ -104,11 +104,11 @@ class BOTAN_DLL Entropy_Accumulator_BufferedComputation : public Entropy_Accumul
       * @param goal is how many bits we want to collect in this poll
       */
       Entropy_Accumulator_BufferedComputation(BufferedComputation& sink,
-                                              u32bit goal) :
+                                              size_t goal) :
          Entropy_Accumulator(goal), entropy_sink(sink) {}
 
    private:
-      virtual void add_bytes(const byte bytes[], u32bit length)
+      virtual void add_bytes(const byte bytes[], size_t length)
          {
          entropy_sink.update(bytes, length);
          }

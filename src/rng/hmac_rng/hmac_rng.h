@@ -27,14 +27,14 @@ and CMAC(AES-256) as the PRF.
 class BOTAN_DLL HMAC_RNG : public RandomNumberGenerator
    {
    public:
-      void randomize(byte buf[], u32bit len);
+      void randomize(byte buf[], size_t len);
       bool is_seeded() const { return seeded; }
       void clear();
       std::string name() const;
 
-      void reseed(u32bit poll_bits);
+      void reseed(size_t poll_bits);
       void add_entropy_source(EntropySource* es);
-      void add_entropy(const byte[], u32bit);
+      void add_entropy(const byte[], size_t);
 
       /**
       * @param extractor a MAC used for extracting the entropy
@@ -52,7 +52,8 @@ class BOTAN_DLL HMAC_RNG : public RandomNumberGenerator
       bool seeded;
 
       SecureVector<byte> K, io_buffer;
-      u32bit counter, user_input_len;
+      size_t user_input_len;
+      u32bit counter;
    };
 
 }

@@ -105,7 +105,7 @@ void add_entropy_sources(RandomNumberGenerator* rng)
 class Serialized_PRNG : public RandomNumberGenerator
    {
    public:
-      void randomize(byte out[], u32bit len)
+      void randomize(byte out[], size_t len)
          {
          Mutex_Holder lock(mutex);
          rng->randomize(out, len);
@@ -129,7 +129,7 @@ class Serialized_PRNG : public RandomNumberGenerator
          return rng->name();
          }
 
-      void reseed(u32bit poll_bits)
+      void reseed(size_t poll_bits)
          {
          Mutex_Holder lock(mutex);
          rng->reseed(poll_bits);
@@ -141,7 +141,7 @@ class Serialized_PRNG : public RandomNumberGenerator
          rng->add_entropy_source(es);
          }
 
-      void add_entropy(const byte in[], u32bit len)
+      void add_entropy(const byte in[], size_t len)
          {
          Mutex_Holder lock(mutex);
          rng->add_entropy(in, len);

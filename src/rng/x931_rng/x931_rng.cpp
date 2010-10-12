@@ -14,7 +14,7 @@ namespace Botan {
 /*
 * Generate a buffer of random bytes
 */
-void ANSI_X931_RNG::randomize(byte out[], u32bit length)
+void ANSI_X931_RNG::randomize(byte out[], size_t length)
    {
    if(!is_seeded())
       throw PRNG_Unseeded(name());
@@ -24,7 +24,7 @@ void ANSI_X931_RNG::randomize(byte out[], u32bit length)
       if(position == R.size())
          update_buffer();
 
-      const u32bit copied = std::min<u32bit>(length, R.size() - position);
+      const size_t copied = std::min<size_t>(length, R.size() - position);
 
       copy_mem(out, &R[position], copied);
       out += copied;
@@ -70,7 +70,7 @@ void ANSI_X931_RNG::rekey()
 /*
 * Reseed the internal state
 */
-void ANSI_X931_RNG::reseed(u32bit poll_bits)
+void ANSI_X931_RNG::reseed(size_t poll_bits)
    {
    prng->reseed(poll_bits);
    rekey();
@@ -87,7 +87,7 @@ void ANSI_X931_RNG::add_entropy_source(EntropySource* src)
 /*
 * Add some entropy to the underlying PRNG
 */
-void ANSI_X931_RNG::add_entropy(const byte input[], u32bit length)
+void ANSI_X931_RNG::add_entropy(const byte input[], size_t length)
    {
    prng->add_entropy(input, length);
    rekey();

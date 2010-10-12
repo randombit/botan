@@ -33,7 +33,7 @@ class CSP_Handle
             CryptReleaseContext(handle, 0);
          }
 
-      u32bit gen_random(byte out[], u32bit n) const
+      size_t gen_random(byte out[], size_t n) const
          {
          if(is_valid() && CryptGenRandom(handle, n, out))
             return n;
@@ -57,11 +57,11 @@ void Win32_CAPI_EntropySource::poll(Entropy_Accumulator& accum)
    {
    MemoryRegion<byte>& io_buffer = accum.get_io_buffer(32);
 
-   for(u32bit j = 0; j != prov_types.size(); ++j)
+   for(size_t i = 0; i != prov_types.size(); ++i)
       {
-      CSP_Handle csp(prov_types[j]);
+      CSP_Handle csp(prov_types[i]);
 
-      u32bit got = csp.gen_random(&io_buffer[0], io_buffer.size());
+      size_t got = csp.gen_random(&io_buffer[0], io_buffer.size());
 
       if(got)
          {
@@ -78,12 +78,12 @@ Win32_CAPI_EntropySource::Win32_CAPI_EntropySource(const std::string& provs)
    {
    std::vector<std::string> capi_provs = split_on(provs, ':');
 
-   for(u32bit j = 0; j != capi_provs.size(); ++j)
+   for(size_t i = 0; i != capi_provs.size(); ++i)
       {
-      if(capi_provs[j] == "RSA_FULL")  prov_types.push_back(PROV_RSA_FULL);
-      if(capi_provs[j] == "INTEL_SEC") prov_types.push_back(PROV_INTEL_SEC);
-      if(capi_provs[j] == "FORTEZZA")  prov_types.push_back(PROV_FORTEZZA);
-      if(capi_provs[j] == "RNG")       prov_types.push_back(PROV_RNG);
+      if(capi_provs[i] == "RSA_FULL")  prov_types.push_back(PROV_RSA_FULL);
+      if(capi_provs[i] == "INTEL_SEC") prov_types.push_back(PROV_INTEL_SEC);
+      if(capi_provs[i] == "FORTEZZA")  prov_types.push_back(PROV_FORTEZZA);
+      if(capi_provs[i] == "RNG")       prov_types.push_back(PROV_RNG);
       }
 
    if(prov_types.size() == 0)

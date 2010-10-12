@@ -20,7 +20,7 @@ namespace Botan {
 class BOTAN_DLL AutoSeeded_RNG : public RandomNumberGenerator
    {
    public:
-      void randomize(byte out[], u32bit len)
+      void randomize(byte out[], size_t len)
          { rng->randomize(out, len); }
 
       bool is_seeded() const { return rng->is_seeded(); }
@@ -29,12 +29,12 @@ class BOTAN_DLL AutoSeeded_RNG : public RandomNumberGenerator
 
       std::string name() const { return rng->name(); }
 
-      void reseed(u32bit poll_bits = 256) { rng->reseed(poll_bits); }
+      void reseed(size_t poll_bits = 256) { rng->reseed(poll_bits); }
 
       void add_entropy_source(EntropySource* es)
          { rng->add_entropy_source(es); }
 
-      void add_entropy(const byte in[], u32bit len)
+      void add_entropy(const byte in[], size_t len)
          { rng->add_entropy(in, len); }
 
       AutoSeeded_RNG() { rng = &global_state().global_rng(); }

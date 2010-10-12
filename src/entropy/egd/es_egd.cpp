@@ -63,7 +63,7 @@ int EGD_EntropySource::EGD_Socket::open_socket(const std::string& path)
 /**
 * Attempt to read entropy from EGD
 */
-u32bit EGD_EntropySource::EGD_Socket::read(byte outbuf[], u32bit length)
+size_t EGD_EntropySource::EGD_Socket::read(byte outbuf[], size_t length)
    {
    if(length == 0)
       return 0;
@@ -79,7 +79,7 @@ u32bit EGD_EntropySource::EGD_Socket::read(byte outbuf[], u32bit length)
       {
       // 1 == EGD command for non-blocking read
       byte egd_read_command[2] = {
-         1, static_cast<byte>(std::min<u32bit>(length, 255)) };
+         1, static_cast<byte>(std::min<size_t>(length, 255)) };
 
       if(::write(m_fd, egd_read_command, 2) != 2)
          throw std::runtime_error("Writing entropy read command to EGD failed");
@@ -96,7 +96,7 @@ u32bit EGD_EntropySource::EGD_Socket::read(byte outbuf[], u32bit length)
       if(count != out_len)
          throw std::runtime_error("Reading entropy result from EGD failed");
 
-      return static_cast<u32bit>(count);
+      return static_cast<size_t>(count);
       }
    catch(std::exception)
       {
@@ -137,13 +137,13 @@ EGD_EntropySource::~EGD_EntropySource()
 */
 void EGD_EntropySource::poll(Entropy_Accumulator& accum)
    {
-   u32bit go_get = std::min<u32bit>(accum.desired_remaining_bits() / 8, 32);
+   size_t go_get = std::min<size_t>(accum.desired_remaining_bits() / 8, 32);
 
    MemoryRegion<byte>& io_buffer = accum.get_io_buffer(go_get);
 
    for(size_t i = 0; i != sockets.size(); ++i)
       {
-      u32bit got = sockets[i].read(&io_buffer[0], io_buffer.size());
+      size_t got = sockets[i].read(&io_buffer[0], io_buffer.size());
 
       if(got)
          {

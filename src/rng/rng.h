@@ -30,9 +30,9 @@ class BOTAN_DLL RandomNumberGenerator
       * @param output the byte array to hold the random output.
       * @param length the length of the byte array output.
       */
-      virtual void randomize(byte output[], u32bit length) = 0;
+      virtual void randomize(byte output[], size_t length) = 0;
 
-      SecureVector<byte> random_vec(u32bit bytes)
+      SecureVector<byte> random_vec(size_t bytes)
          {
          SecureVector<byte> output(bytes);
          randomize(&output[0], output.size());
@@ -66,7 +66,7 @@ class BOTAN_DLL RandomNumberGenerator
       * @param bits_to_collect is the number of bits of entropy to
                attempt to gather from the entropy sources
       */
-      virtual void reseed(u32bit bits_to_collect) = 0;
+      virtual void reseed(size_t bits_to_collect) = 0;
 
       /**
       * Add this entropy source to the RNG object
@@ -79,7 +79,7 @@ class BOTAN_DLL RandomNumberGenerator
       * @param in a byte array containg the entropy to be added
       * @param length the length of the byte array in
       */
-      virtual void add_entropy(const byte in[], u32bit length) = 0;
+      virtual void add_entropy(const byte in[], size_t length) = 0;
 
       RandomNumberGenerator() {}
       virtual ~RandomNumberGenerator() {}
@@ -95,13 +95,13 @@ class BOTAN_DLL RandomNumberGenerator
 class BOTAN_DLL Null_RNG : public RandomNumberGenerator
    {
    public:
-      void randomize(byte[], u32bit) { throw PRNG_Unseeded("Null_RNG"); }
+      void randomize(byte[], size_t) { throw PRNG_Unseeded("Null_RNG"); }
       void clear() {}
       std::string name() const { return "Null_RNG"; }
 
-      void reseed(u32bit) {}
+      void reseed(size_t) {}
       bool is_seeded() const { return false; }
-      void add_entropy(const byte[], u32bit) {}
+      void add_entropy(const byte[], size_t) {}
       void add_entropy_source(EntropySource* es) { delete es; }
    };
 

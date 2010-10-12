@@ -24,7 +24,7 @@ struct Unix_Program
    * @param n is the name and arguments of what we are going run
    * @param p is the priority level (lower prio numbers get polled first)
    */
-   Unix_Program(const char* n, u32bit p)
+   Unix_Program(const char* n, size_t p)
       { name_and_args = n; priority = p; working = true; }
 
    /**
@@ -35,7 +35,7 @@ struct Unix_Program
    /**
    * Priority: we scan from low to high
    */
-   u32bit priority;
+   size_t priority;
 
    /**
    * Does this source seem to be working?
@@ -63,7 +63,7 @@ class DataSource_Command : public DataSource
       void create_pipe(const std::vector<std::string>&);
       void shutdown_pipe();
 
-      const u32bit MAX_BLOCK_USECS, KILL_WAIT;
+      const size_t MAX_BLOCK_USECS, KILL_WAIT;
 
       std::vector<std::string> arg_list;
       struct pipe_wrapper* pipe;

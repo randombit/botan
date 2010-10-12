@@ -45,7 +45,7 @@ Unix_EntropySource::Unix_EntropySource(const std::vector<std::string>& path) :
 /**
 * Add sources to the list
 */
-void Unix_EntropySource::add_sources(const Unix_Program srcs[], u32bit count)
+void Unix_EntropySource::add_sources(const Unix_Program srcs[], size_t count)
    {
    sources.insert(sources.end(), srcs, srcs + count);
    std::sort(sources.begin(), sources.end(), Unix_Program_Cmp);
@@ -70,11 +70,11 @@ void Unix_EntropySource::poll(Entropy_Accumulator& accum)
       "..",
       0 };
 
-   for(u32bit j = 0; stat_targets[j]; j++)
+   for(size_t i = 0; stat_targets[i]; i++)
       {
       struct stat statbuf;
       clear_mem(&statbuf, 1);
-      ::stat(stat_targets[j], &statbuf);
+      ::stat(stat_targets[i], &statbuf);
       accum.add(&statbuf, sizeof(statbuf), .005);
       }
 
@@ -91,25 +91,25 @@ void Unix_EntropySource::poll(Entropy_Accumulator& accum)
    ::getrusage(RUSAGE_CHILDREN, &usage);
    accum.add(usage, .005);
 
-   const u32bit MINIMAL_WORKING = 16;
+   const size_t MINIMAL_WORKING = 16;
 
    MemoryRegion<byte>& io_buffer = accum.get_io_buffer(DEFAULT_BUFFERSIZE);
 
-   for(u32bit j = 0; j != sources.size(); j++)
+   for(size_t i = 0; i != sources.size(); i++)
       {
-      DataSource_Command pipe(sources[j].name_and_args, PATH);
+      DataSource_Command pipe(sources[i].name_and_args, PATH);
 
-      u32bit got_from_src = 0;
+      size_t got_from_src = 0;
 
       while(!pipe.end_of_data())
          {
-         u32bit got_this_loop = pipe.read(&io_buffer[0], io_buffer.size());
+         size_t got_this_loop = pipe.read(&io_buffer[0], io_buffer.size());
          got_from_src += got_this_loop;
 
          accum.add(&io_buffer[0], got_this_loop, .005);
          }
 
-      sources[j].working = (got_from_src >= MINIMAL_WORKING) ? true : false;
+      sources[i].working = (got_from_src >= MINIMAL_WORKING) ? true : false;
 
       if(accum.polling_goal_achieved())
          break;

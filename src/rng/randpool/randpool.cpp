@@ -29,7 +29,7 @@ enum RANDPOOL_PRF_TAG {
 /*
 * Generate a buffer of random bytes
 */
-void Randpool::randomize(byte out[], u32bit length)
+void Randpool::randomize(byte out[], size_t length)
    {
    if(!is_seeded())
       throw PRNG_Unseeded(name());
@@ -37,7 +37,7 @@ void Randpool::randomize(byte out[], u32bit length)
    update_buffer();
    while(length)
       {
-      const u32bit copied = std::min<u32bit>(length, buffer.size());
+      const size_t copied = std::min<size_t>(length, buffer.size());
       copy_mem(out, &buffer[0], copied);
       out += copied;
       length -= copied;
@@ -50,7 +50,7 @@ void Randpool::randomize(byte out[], u32bit length)
 */
 void Randpool::update_buffer()
    {
-   for(u32bit i = 0; i != counter.size(); ++i)
+   for(size_t i = 0; i != counter.size(); ++i)
       if(++counter[i])
          break;
 
@@ -58,7 +58,7 @@ void Randpool::update_buffer()
    mac->update(counter);
    SecureVector<byte> mac_val = mac->final();
 
-   for(u32bit i = 0; i != mac_val.size(); ++i)
+   for(size_t i = 0; i != mac_val.size(); ++i)
       buffer[i % buffer.size()] ^= mac_val[i];
    cipher->encrypt(buffer);
 
@@ -71,7 +71,7 @@ void Randpool::update_buffer()
 */
 void Randpool::mix_pool()
    {
-   const u32bit BLOCK_SIZE = cipher->BLOCK_SIZE;
+   const size_t BLOCK_SIZE = cipher->BLOCK_SIZE;
 
    mac->update(static_cast<byte>(MAC_KEY));
    mac->update(pool);
@@ -83,7 +83,7 @@ void Randpool::mix_pool()
 
    xor_buf(pool, buffer, BLOCK_SIZE);
    cipher->encrypt(pool);
-   for(u32bit i = 1; i != POOL_BLOCKS; ++i)
+   for(size_t i = 1; i != POOL_BLOCKS; ++i)
       {
       const byte* previous_block = &pool[BLOCK_SIZE*(i-1)];
       byte* this_block = &pool[BLOCK_SIZE*i];
@@ -97,13 +97,13 @@ void Randpool::mix_pool()
 /*
 * Reseed the internal state
 */
-void Randpool::reseed(u32bit poll_bits)
+void Randpool::reseed(size_t poll_bits)
    {
    Entropy_Accumulator_BufferedComputation accum(*mac, poll_bits);
 
    if(!entropy_sources.empty())
       {
-      u32bit poll_attempt = 0;
+      size_t poll_attempt = 0;
 
       while(!accum.polling_goal_achieved() && poll_attempt < poll_bits)
          {
@@ -124,7 +124,7 @@ void Randpool::reseed(u32bit poll_bits)
 /*
 * Add user-supplied entropy
 */
-void Randpool::add_entropy(const byte input[], u32bit length)
+void Randpool::add_entropy(const byte input[], size_t length)
    {
    SecureVector<byte> mac_val = mac->process(input, length);
    xor_buf(pool, mac_val, mac_val.size());
@@ -168,15 +168,15 @@ std::string Randpool::name() const
 */
 Randpool::Randpool(BlockCipher* cipher_in,
                    MessageAuthenticationCode* mac_in,
-                   u32bit pool_blocks,
-                   u32bit iter_before_reseed) :
+                   size_t pool_blocks,
+                   size_t iter_before_reseed) :
    ITERATIONS_BEFORE_RESEED(iter_before_reseed),
    POOL_BLOCKS(pool_blocks),
    cipher(cipher_in),
    mac(mac_in)
    {
-   const u32bit BLOCK_SIZE = cipher->BLOCK_SIZE;
-   const u32bit OUTPUT_LENGTH = mac->OUTPUT_LENGTH;
+   const size_t BLOCK_SIZE = cipher->BLOCK_SIZE;
+   const size_t OUTPUT_LENGTH = mac->OUTPUT_LENGTH;
 
    if(OUTPUT_LENGTH < BLOCK_SIZE ||
       !cipher->valid_keylength(OUTPUT_LENGTH) ||

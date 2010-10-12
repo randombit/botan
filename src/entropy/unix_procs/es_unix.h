@@ -24,7 +24,7 @@ class Unix_EntropySource : public EntropySource
 
       void poll(Entropy_Accumulator& accum);
 
-      void add_sources(const Unix_Program[], u32bit);
+      void add_sources(const Unix_Program[], size_t);
       Unix_EntropySource(const std::vector<std::string>& path);
    private:
       static std::vector<Unix_Program> get_default_sources();

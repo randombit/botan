@@ -34,13 +34,13 @@ void High_Resolution_Timestamp::poll(Entropy_Accumulator& accum)
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
    if(CPUID::has_rdtsc()) // not availble on all x86 CPUs
       {
-      u32bit rtc_low = 0, rtc_high = 0;
+      size_t rtc_low = 0, rtc_high = 0;
       asm volatile("rdtsc" : "=d" (rtc_high), "=a" (rtc_low));
       rtc = (static_cast<u64bit>(rtc_high) << 32) | rtc_low;
       }
 
 #elif defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
-   u32bit rtc_low = 0, rtc_high = 0;
+   size_t rtc_low = 0, rtc_high = 0;
    asm volatile("mftbu %0; mftb %1" : "=r" (rtc_high), "=r" (rtc_low));
    rtc = (static_cast<u64bit>(rtc_high) << 32) | rtc_low;
 

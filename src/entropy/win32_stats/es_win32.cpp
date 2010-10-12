@@ -75,12 +75,12 @@ void Win32_EntropySource::poll(Entropy_Accumulator& accum)
 
    if(!accum.polling_goal_achieved())
       {
-      u32bit heap_lists_found = 0;
+      size_t heap_lists_found = 0;
       HEAPLIST32 heap_list;
       heap_list.dwSize = sizeof(HEAPLIST32);
 
-      const u32bit HEAP_LISTS_MAX = 32;
-      const u32bit HEAP_OBJS_PER_LIST = 128;
+      const size_t HEAP_LISTS_MAX = 32;
+      const size_t HEAP_OBJS_PER_LIST = 128;
 
       if(Heap32ListFirst(snapshot, &heap_list))
          {
@@ -91,7 +91,7 @@ void Win32_EntropySource::poll(Entropy_Accumulator& accum)
             if(++heap_lists_found > HEAP_LISTS_MAX)
                break;
 
-            u32bit heap_objs_found = 0;
+            size_t heap_objs_found = 0;
             HEAPENTRY32 heap_entry;
             heap_entry.dwSize = sizeof(HEAPENTRY32);
             if(Heap32First(&heap_entry, heap_list.th32ProcessID,
