@@ -1,6 +1,6 @@
 /*
 * Memory Mapping Allocator
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -70,7 +70,7 @@ void* MemoryMapping_Allocator::alloc_block(u32bit n)
             /*
             * We can safely close here, because post-mmap the file
             * will continue to exist until the mmap is unmapped from
-            * our address space upon deallocation.
+            * our address space upon deallocation (or process exit).
             */
             if(fd != -1 && ::close(fd) == -1)
                throw MemoryMapping_Failed("Could not close file");
@@ -84,10 +84,9 @@ void* MemoryMapping_Allocator::alloc_block(u32bit n)
    if(file.get_fd() == -1)
       throw MemoryMapping_Failed("Could not create file");
 
-   if(::lseek(file.get_fd(), n-1, SEEK_SET) < 0)
-      throw MemoryMapping_Failed("Could not seek file");
+   std::vector<byte> zeros(n);
 
-   if(::write(file.get_fd(), "\0", 1) != 1)
+   if(::write(file.get_fd(), &zeros[0], zeros.size()) != zeros.size())
       throw MemoryMapping_Failed("Could not write to file");
 
 #ifndef MAP_NOSYNC
@@ -113,12 +112,11 @@ void MemoryMapping_Allocator::dealloc_block(void* ptr, u32bit n)
    if(ptr == 0)
       return;
 
-   const byte PATTERNS[] = { 0x00, 0xFF, 0xAA, 0x55, 0x73, 0x8C, 0x5F, 0xA0,
-                             0x6E, 0x91, 0x30, 0xCF, 0xD3, 0x2C, 0xAC, 0x00 };
+   const byte PATTERNS[] = { 0x00, 0xF5, 0x5A, 0xAF, 0x00 };
 
-   for(u32bit j = 0; j != sizeof(PATTERNS); j++)
+   for(size_t i = 0; i != sizeof(PATTERNS); ++i)
       {
-      std::memset(ptr, PATTERNS[j], n);
+      std::memset(ptr, PATTERNS[i], n);
 
       if(::msync((char*)ptr, n, MS_SYNC))
          throw MemoryMapping_Failed("Sync operation failed");
