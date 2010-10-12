@@ -114,18 +114,18 @@ BigInt Power_Mod::execute() const
 /*
 * Try to choose a good window size
 */
-u32bit Power_Mod::window_bits(u32bit exp_bits, u32bit,
+size_t Power_Mod::window_bits(size_t exp_bits, size_t,
                               Power_Mod::Usage_Hints hints)
    {
-   static const u32bit wsize[][2] = {
+   static const size_t wsize[][2] = {
       { 2048, 7 }, { 1024, 6 }, { 256, 5 }, { 128, 4 }, { 64, 3 }, { 0, 0 }
    };
 
-   u32bit window_bits = 1;
+   size_t window_bits = 1;
 
    if(exp_bits)
       {
-      for(u32bit j = 0; wsize[j][0]; ++j)
+      for(size_t j = 0; wsize[j][0]; ++j)
          {
          if(exp_bits >= wsize[j][0])
             {
@@ -154,8 +154,8 @@ Power_Mod::Usage_Hints choose_base_hints(const BigInt& b, const BigInt& n)
       return Power_Mod::Usage_Hints(Power_Mod::BASE_IS_2 |
                                     Power_Mod::BASE_IS_SMALL);
 
-   const u32bit b_bits = b.bits();
-   const u32bit n_bits = n.bits();
+   const size_t b_bits = b.bits();
+   const size_t n_bits = n.bits();
 
    if(b_bits < n_bits / 32)
       return Power_Mod::BASE_IS_SMALL;
@@ -170,8 +170,8 @@ Power_Mod::Usage_Hints choose_base_hints(const BigInt& b, const BigInt& n)
 */
 Power_Mod::Usage_Hints choose_exp_hints(const BigInt& e, const BigInt& n)
    {
-   const u32bit e_bits = e.bits();
-   const u32bit n_bits = n.bits();
+   const size_t e_bits = e.bits();
+   const size_t n_bits = n.bits();
 
    if(e_bits < n_bits / 32)
       return Power_Mod::BASE_IS_SMALL;

@@ -15,8 +15,8 @@ namespace Botan {
 * Generate a random prime
 */
 BigInt random_prime(RandomNumberGenerator& rng,
-                    u32bit bits, const BigInt& coprime,
-                    u32bit equiv, u32bit modulo)
+                    size_t bits, const BigInt& coprime,
+                    size_t equiv, size_t modulo)
    {
    if(bits <= 1)
       throw Invalid_Argument("random_prime: Can't make a prime of " +
@@ -47,13 +47,13 @@ BigInt random_prime(RandomNumberGenerator& rng,
       if(p % modulo != equiv)
          p += (modulo - p % modulo) + equiv;
 
-      const u32bit sieve_size = std::min(bits / 2, PRIME_TABLE_SIZE);
-      SecureVector<u32bit> sieve(sieve_size);
+      const size_t sieve_size = std::min(bits / 2, PRIME_TABLE_SIZE);
+      SecureVector<size_t> sieve(sieve_size);
 
-      for(u32bit j = 0; j != sieve.size(); ++j)
+      for(size_t j = 0; j != sieve.size(); ++j)
          sieve[j] = p % PRIMES[j];
 
-      u32bit counter = 0;
+      size_t counter = 0;
       while(true)
          {
          if(counter == 4096 || p.bits() > bits)
@@ -66,7 +66,7 @@ BigInt random_prime(RandomNumberGenerator& rng,
          if(p.bits() > bits)
             break;
 
-         for(u32bit j = 0; j != sieve.size(); ++j)
+         for(size_t j = 0; j != sieve.size(); ++j)
             {
             sieve[j] = (sieve[j] + modulo) % PRIMES[j];
             if(sieve[j] == 0)
@@ -84,7 +84,7 @@ BigInt random_prime(RandomNumberGenerator& rng,
 /*
 * Generate a random safe prime
 */
-BigInt random_safe_prime(RandomNumberGenerator& rng, u32bit bits)
+BigInt random_safe_prime(RandomNumberGenerator& rng, size_t bits)
    {
    if(bits <= 64)
       throw Invalid_Argument("random_safe_prime: Can't make a prime of " +

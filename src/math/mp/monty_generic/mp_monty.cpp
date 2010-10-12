@@ -18,14 +18,14 @@ extern "C" {
 /*
 * Montgomery Reduction Algorithm
 */
-void bigint_monty_redc(word z[], u32bit z_size,
+void bigint_monty_redc(word z[], size_t z_size,
                        word ws[],
-                       const word x[], u32bit x_size,
+                       const word x[], size_t x_size,
                        word u)
    {
-   const u32bit blocks_of_8 = x_size - (x_size % 8);
+   const size_t blocks_of_8 = x_size - (x_size % 8);
 
-   for(u32bit i = 0; i != x_size; ++i)
+   for(size_t i = 0; i != x_size; ++i)
       {
       word* z_i = z + i;
 
@@ -37,10 +37,10 @@ void bigint_monty_redc(word z[], u32bit z_size,
       */
       word carry = 0;
 
-      for(u32bit j = 0; j != blocks_of_8; j += 8)
+      for(size_t j = 0; j != blocks_of_8; j += 8)
          carry = word8_madd3(z_i + j, x + j, y, carry);
 
-      for(u32bit j = blocks_of_8; j != x_size; ++j)
+      for(size_t j = blocks_of_8; j != x_size; ++j)
          z_i[j] = word_madd3(x[j], y, z_i[j], &carry);
 
       word z_sum = z_i[x_size] + carry;
@@ -48,7 +48,7 @@ void bigint_monty_redc(word z[], u32bit z_size,
       z_i[x_size] = z_sum;
 
       // Note: not constant time
-      for(u32bit j = x_size + 1; carry && j != z_size - i; ++j)
+      for(size_t j = x_size + 1; carry && j != z_size - i; ++j)
          {
          ++z_i[j];
          carry = !z_i[j];
@@ -56,7 +56,7 @@ void bigint_monty_redc(word z[], u32bit z_size,
       }
 
    word borrow = 0;
-   for(u32bit i = 0; i != x_size; ++i)
+   for(size_t i = 0; i != x_size; ++i)
       ws[i] = word_sub(z[x_size + i], x[i], &borrow);
 
    ws[x_size] = word_sub(z[x_size+x_size], 0, &borrow);

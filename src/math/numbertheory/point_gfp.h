@@ -156,7 +156,7 @@ class BOTAN_DLL PointGFp
       class Workspace
          {
          public:
-            Workspace(u32bit p_words) :
+            Workspace(size_t p_words) :
                ws_monty(2*(p_words+2)), ws_bn(12) {}
 
             SecureVector<word> ws_monty;
@@ -259,7 +259,7 @@ inline PointGFp operator*(const PointGFp& point, const BigInt& scalar)
 // encoding and decoding
 SecureVector<byte> BOTAN_DLL EC2OSP(const PointGFp& point, byte format);
 
-PointGFp BOTAN_DLL OS2ECP(const byte data[], u32bit data_len,
+PointGFp BOTAN_DLL OS2ECP(const byte data[], size_t data_len,
                           const CurveGFp& curve);
 
 inline PointGFp OS2ECP(const MemoryRegion<byte>& data, const CurveGFp& curve)

@@ -388,7 +388,14 @@ BER_Decoder& BER_Decoder::decode(u32bit& out,
    {
    BigInt integer;
    decode(integer, type_tag, class_tag);
-   out = integer.to_u32bit();
+
+   if(integer.bits() > 32)
+      throw BER_Decoding_Error("Decoded integer value larger than expected");
+
+   out = 0;
+   for(size_t i = 0; i != 4; ++i)
+      out = (out << 8) | integer.byte_at(3-i);
+
    return (*this);
    }
 

@@ -18,7 +18,7 @@ namespace Botan {
 */
 BigInt operator+(const BigInt& x, const BigInt& y)
    {
-   const u32bit x_sw = x.sig_words(), y_sw = y.sig_words();
+   const size_t x_sw = x.sig_words(), y_sw = y.sig_words();
 
    BigInt z(x.sign(), std::max(x_sw, y_sw) + 1);
 
@@ -47,7 +47,7 @@ BigInt operator+(const BigInt& x, const BigInt& y)
 */
 BigInt operator-(const BigInt& x, const BigInt& y)
    {
-   const u32bit x_sw = x.sig_words(), y_sw = y.sig_words();
+   const size_t x_sw = x.sig_words(), y_sw = y.sig_words();
 
    s32bit relative_size = bigint_cmp(x.data(), x_sw, y.data(), y_sw);
 
@@ -82,7 +82,7 @@ BigInt operator-(const BigInt& x, const BigInt& y)
 */
 BigInt operator*(const BigInt& x, const BigInt& y)
    {
-   const u32bit x_sw = x.sig_words(), y_sw = y.sig_words();
+   const size_t x_sw = x.sig_words(), y_sw = y.sig_words();
 
    BigInt z(BigInt::Positive, x.size() + y.size());
 
@@ -142,7 +142,7 @@ word operator%(const BigInt& n, word mod)
 
    word remainder = 0;
 
-   for(u32bit j = n.sig_words(); j > 0; --j)
+   for(size_t j = n.sig_words(); j > 0; --j)
       remainder = bigint_modop(remainder, n.word_at(j-1), mod);
 
    if(remainder && n.sign() == BigInt::Negative)
@@ -153,15 +153,15 @@ word operator%(const BigInt& n, word mod)
 /*
 * Left Shift Operator
 */
-BigInt operator<<(const BigInt& x, u32bit shift)
+BigInt operator<<(const BigInt& x, size_t shift)
    {
    if(shift == 0)
       return x;
 
-   const u32bit shift_words = shift / MP_WORD_BITS,
+   const size_t shift_words = shift / MP_WORD_BITS,
                 shift_bits  = shift % MP_WORD_BITS;
 
-   const u32bit x_sw = x.sig_words();
+   const size_t x_sw = x.sig_words();
 
    BigInt y(x.sign(), x_sw + shift_words + (shift_bits ? 1 : 0));
    bigint_shl2(y.get_reg(), x.data(), x_sw, shift_words, shift_bits);
@@ -171,14 +171,14 @@ BigInt operator<<(const BigInt& x, u32bit shift)
 /*
 * Right Shift Operator
 */
-BigInt operator>>(const BigInt& x, u32bit shift)
+BigInt operator>>(const BigInt& x, size_t shift)
    {
    if(shift == 0)
       return x;
    if(x.bits() <= shift)
       return 0;
 
-   const u32bit shift_words = shift / MP_WORD_BITS,
+   const size_t shift_words = shift / MP_WORD_BITS,
                 shift_bits  = shift % MP_WORD_BITS,
                 x_sw = x.sig_words();
 

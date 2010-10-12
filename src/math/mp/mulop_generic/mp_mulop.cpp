@@ -17,23 +17,23 @@ extern "C" {
 /*
 * Simple O(N^2) Multiplication
 */
-void bigint_simple_mul(word z[], const word x[], u32bit x_size,
-                                 const word y[], u32bit y_size)
+void bigint_simple_mul(word z[], const word x[], size_t x_size,
+                                 const word y[], size_t y_size)
    {
-   const u32bit x_size_8 = x_size - (x_size % 8);
+   const size_t x_size_8 = x_size - (x_size % 8);
 
    clear_mem(z, x_size + y_size);
 
-   for(u32bit i = 0; i != y_size; ++i)
+   for(size_t i = 0; i != y_size; ++i)
       {
       const word y_i = y[i];
 
       word carry = 0;
 
-      for(u32bit j = 0; j != x_size_8; j += 8)
+      for(size_t j = 0; j != x_size_8; j += 8)
          carry = word8_madd3(z + i + j, x + j, y_i, carry);
 
-      for(u32bit j = x_size_8; j != x_size; ++j)
+      for(size_t j = x_size_8; j != x_size; ++j)
          z[i+j] = word_madd3(x[j], y_i, z[i+j], &carry);
 
       z[x_size+i] = carry;
@@ -51,21 +51,21 @@ void bigint_simple_mul(word z[], const word x[], u32bit x_size,
 * Applied Cryptography, chapter 14
 *
 */
-void bigint_simple_sqr(word z[], const word x[], u32bit x_size)
+void bigint_simple_sqr(word z[], const word x[], size_t x_size)
    {
-   const u32bit x_size_8 = x_size - (x_size % 8);
+   const size_t x_size_8 = x_size - (x_size % 8);
 
    clear_mem(z, 2*x_size);
 
-   for(u32bit i = 0; i != x_size; ++i)
+   for(size_t i = 0; i != x_size; ++i)
       {
       const word x_i = x[i];
       word carry = 0;
 
-      for(u32bit j = 0; j != x_size_8; j += 8)
+      for(size_t j = 0; j != x_size_8; j += 8)
          carry = word8_madd3(z + i + j, x + j, x_i, carry);
 
-      for(u32bit j = x_size_8; j != x_size; ++j)
+      for(size_t j = x_size_8; j != x_size; ++j)
          z[i+j] = word_madd3(x[j], x_i, z[i+j], &carry);
 
       z[x_size+i] = carry;

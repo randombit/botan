@@ -37,7 +37,7 @@ void divide(const BigInt& x, const BigInt& y_arg, BigInt& q, BigInt& r)
       throw BigInt::DivideByZero();
 
    BigInt y = y_arg;
-   const u32bit y_words = y.sig_words();
+   const size_t y_words = y.sig_words();
 
    r = x;
    q = 0;
@@ -54,13 +54,13 @@ void divide(const BigInt& x, const BigInt& y_arg, BigInt& q, BigInt& r)
       }
    else if(compare > 0)
       {
-      u32bit shifts = 0;
+      size_t shifts = 0;
       word y_top = y[y.sig_words()-1];
       while(y_top < MP_WORD_TOP_BIT) { y_top <<= 1; ++shifts; }
       y <<= shifts;
       r <<= shifts;
 
-      const u32bit n = r.sig_words() - 1, t = y_words - 1;
+      const size_t n = r.sig_words() - 1, t = y_words - 1;
 
       if(n < t)
          throw Internal_Error("BigInt division word sizes");
@@ -78,7 +78,7 @@ void divide(const BigInt& x, const BigInt& y_arg, BigInt& q, BigInt& r)
 
       while(r >= temp) { r -= temp; ++q[n-t]; }
 
-      for(u32bit j = n; j != t; --j)
+      for(size_t j = n; j != t; --j)
          {
          const word x_j0  = r.word_at(j);
          const word x_j1 = r.word_at(j-1);

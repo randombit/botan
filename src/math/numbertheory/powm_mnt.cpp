@@ -44,12 +44,12 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
    g[0].get_reg().set(&z[0], mod_words + 1);
 
    const BigInt& x = g[0];
-   const u32bit x_sig = x.sig_words();
+   const size_t x_sig = x.sig_words();
 
-   for(u32bit i = 1; i != g.size(); ++i)
+   for(size_t i = 1; i != g.size(); ++i)
       {
       const BigInt& y = g[i-1];
-      const u32bit y_sig = y.sig_words();
+      const size_t y_sig = y.sig_words();
 
       zeroise(z);
       bigint_mul(&z[0], z.size(), &workspace[0],
@@ -69,15 +69,15 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
 */
 BigInt Montgomery_Exponentiator::execute() const
    {
-   const u32bit exp_nibbles = (exp_bits + window_bits - 1) / window_bits;
+   const size_t exp_nibbles = (exp_bits + window_bits - 1) / window_bits;
 
    BigInt x = R_mod;
    SecureVector<word> z(2 * (mod_words + 1));
    SecureVector<word> workspace(2 * (mod_words + 1));
 
-   for(u32bit i = exp_nibbles; i > 0; --i)
+   for(size_t i = exp_nibbles; i > 0; --i)
       {
-      for(u32bit k = 0; k != window_bits; ++k)
+      for(size_t k = 0; k != window_bits; ++k)
          {
          zeroise(z);
          bigint_sqr(&z[0], z.size(), &workspace[0],
@@ -90,7 +90,7 @@ BigInt Montgomery_Exponentiator::execute() const
          x.get_reg().set(&z[0], mod_words + 1);
          }
 
-      u32bit nibble = exp.get_substring(window_bits*(i-1), window_bits);
+      size_t nibble = exp.get_substring(window_bits*(i-1), window_bits);
       if(nibble)
          {
          const BigInt& y = g[nibble-1];

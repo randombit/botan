@@ -17,9 +17,9 @@ namespace Botan {
 */
 BigInt& BigInt::operator+=(const BigInt& y)
    {
-   const u32bit x_sw = sig_words(), y_sw = y.sig_words();
+   const size_t x_sw = sig_words(), y_sw = y.sig_words();
 
-   const u32bit reg_size = std::max(x_sw, y_sw) + 1;
+   const size_t reg_size = std::max(x_sw, y_sw) + 1;
    grow_to(reg_size);
 
    if(sign() == y.sign())
@@ -52,11 +52,11 @@ BigInt& BigInt::operator+=(const BigInt& y)
 */
 BigInt& BigInt::operator-=(const BigInt& y)
    {
-   const u32bit x_sw = sig_words(), y_sw = y.sig_words();
+   const size_t x_sw = sig_words(), y_sw = y.sig_words();
 
    s32bit relative_size = bigint_cmp(data(), x_sw, y.data(), y_sw);
 
-   const u32bit reg_size = std::max(x_sw, y_sw) + 1;
+   const size_t reg_size = std::max(x_sw, y_sw) + 1;
    grow_to(reg_size);
 
    if(relative_size < 0)
@@ -94,7 +94,7 @@ BigInt& BigInt::operator-=(const BigInt& y)
 */
 BigInt& BigInt::operator*=(const BigInt& y)
    {
-   const u32bit x_sw = sig_words(), y_sw = y.sig_words();
+   const size_t x_sw = sig_words(), y_sw = y.sig_words();
    set_sign((sign() == y.sign()) ? Positive : Negative);
 
    if(x_sw == 0 || y_sw == 0)
@@ -165,7 +165,7 @@ word BigInt::operator%=(word mod)
 
    word remainder = 0;
 
-   for(u32bit j = sig_words(); j > 0; --j)
+   for(size_t j = sig_words(); j > 0; --j)
       remainder = bigint_modop(remainder, word_at(j-1), mod);
    clear();
    grow_to(2);
@@ -183,11 +183,11 @@ word BigInt::operator%=(word mod)
 /*
 * Left Shift Operator
 */
-BigInt& BigInt::operator<<=(u32bit shift)
+BigInt& BigInt::operator<<=(size_t shift)
    {
    if(shift)
       {
-      const u32bit shift_words = shift / MP_WORD_BITS,
+      const size_t shift_words = shift / MP_WORD_BITS,
                    shift_bits  = shift % MP_WORD_BITS,
                    words = sig_words();
 
@@ -201,11 +201,11 @@ BigInt& BigInt::operator<<=(u32bit shift)
 /*
 * Right Shift Operator
 */
-BigInt& BigInt::operator>>=(u32bit shift)
+BigInt& BigInt::operator>>=(size_t shift)
    {
    if(shift)
       {
-      const u32bit shift_words = shift / MP_WORD_BITS,
+      const size_t shift_words = shift / MP_WORD_BITS,
                    shift_bits  = shift % MP_WORD_BITS;
 
       bigint_shr1(get_reg(), sig_words(), shift_words, shift_bits);

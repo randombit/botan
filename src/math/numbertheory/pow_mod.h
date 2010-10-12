@@ -48,7 +48,7 @@ class BOTAN_DLL Power_Mod
       /*
       * Try to choose a good window size
       */
-      static u32bit window_bits(u32bit exp_bits, u32bit base_bits,
+      static size_t window_bits(size_t exp_bits, size_t base_bits,
                                 Power_Mod::Usage_Hints hints);
 
       void set_modulus(const BigInt&, Usage_Hints = NO_HINTS) const;

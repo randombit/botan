@@ -112,7 +112,7 @@ BigInt BOTAN_DLL ressol(const BigInt& x, const BigInt& p);
 * @return count of the zero bits in x, or, equivalently, the largest
 * value of n such that 2^n divides x evently
 */
-u32bit BOTAN_DLL low_zero_bits(const BigInt& x);
+size_t BOTAN_DLL low_zero_bits(const BigInt& x);
 
 /**
 * Primality Testing
@@ -123,7 +123,7 @@ u32bit BOTAN_DLL low_zero_bits(const BigInt& x);
 */
 bool BOTAN_DLL primality_test(const BigInt& n,
                               RandomNumberGenerator& rng,
-                              u32bit level = 1);
+                              size_t level = 1);
 
 /**
 * Quickly check for primality
@@ -165,8 +165,8 @@ inline bool verify_prime(const BigInt& n, RandomNumberGenerator& rng)
 * @return random prime with the specified criteria
 */
 BigInt BOTAN_DLL random_prime(RandomNumberGenerator& rng,
-                              u32bit bits, const BigInt& coprime = 1,
-                              u32bit equiv = 1, u32bit equiv_mod = 2);
+                              size_t bits, const BigInt& coprime = 1,
+                              size_t equiv = 1, size_t equiv_mod = 2);
 
 /**
 * Return a 'safe' prime, of the form p=2*q+1 with q prime
@@ -175,7 +175,7 @@ BigInt BOTAN_DLL random_prime(RandomNumberGenerator& rng,
 * @return prime randomly chosen from safe primes of length bits
 */
 BigInt BOTAN_DLL random_safe_prime(RandomNumberGenerator& rng,
-                                   u32bit bits);
+                                   size_t bits);
 
 class Algorithm_Factory;
 
@@ -193,7 +193,7 @@ SecureVector<byte> BOTAN_DLL
 generate_dsa_primes(RandomNumberGenerator& rng,
                     Algorithm_Factory& af,
                     BigInt& p_out, BigInt& q_out,
-                    u32bit pbits, u32bit qbits);
+                    size_t pbits, size_t qbits);
 
 /**
 * Generate DSA parameters using the FIPS 186 kosherizer
@@ -211,13 +211,13 @@ bool BOTAN_DLL
 generate_dsa_primes(RandomNumberGenerator& rng,
                     Algorithm_Factory& af,
                     BigInt& p_out, BigInt& q_out,
-                    u32bit pbits, u32bit qbits,
+                    size_t pbits, size_t qbits,
                     const MemoryRegion<byte>& seed);
 
 /**
 * The size of the PRIMES[] array
 */
-const u32bit PRIME_TABLE_SIZE = 6541;
+const size_t PRIME_TABLE_SIZE = 6541;
 
 /**
 * A const array of all primes less than 65535

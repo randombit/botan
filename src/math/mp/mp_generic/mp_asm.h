@@ -14,7 +14,7 @@
 #if (BOTAN_MP_WORD_BITS == 8)
   typedef Botan::u16bit dword;
 #elif (BOTAN_MP_WORD_BITS == 16)
-  typedef Botan::u32bit dword;
+  typedef Botan::size_t dword;
 #elif (BOTAN_MP_WORD_BITS == 32)
   typedef Botan::u64bit dword;
 #elif (BOTAN_MP_WORD_BITS == 64)

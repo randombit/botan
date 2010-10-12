@@ -15,11 +15,11 @@ extern "C" {
 /*
 * Single Operand Left Shift
 */
-void bigint_shl1(word x[], u32bit x_size, u32bit word_shift, u32bit bit_shift)
+void bigint_shl1(word x[], size_t x_size, size_t word_shift, size_t bit_shift)
    {
    if(word_shift)
       {
-      for(u32bit j = 1; j != x_size + 1; ++j)
+      for(size_t j = 1; j != x_size + 1; ++j)
          x[(x_size - j) + word_shift] = x[x_size - j];
       clear_mem(x, word_shift);
       }
@@ -27,7 +27,7 @@ void bigint_shl1(word x[], u32bit x_size, u32bit word_shift, u32bit bit_shift)
    if(bit_shift)
       {
       word carry = 0;
-      for(u32bit j = word_shift; j != x_size + word_shift + 1; ++j)
+      for(size_t j = word_shift; j != x_size + word_shift + 1; ++j)
          {
          word temp = x[j];
          x[j] = (temp << bit_shift) | carry;
@@ -39,7 +39,7 @@ void bigint_shl1(word x[], u32bit x_size, u32bit word_shift, u32bit bit_shift)
 /*
 * Single Operand Right Shift
 */
-void bigint_shr1(word x[], u32bit x_size, u32bit word_shift, u32bit bit_shift)
+void bigint_shr1(word x[], size_t x_size, size_t word_shift, size_t bit_shift)
    {
    if(x_size < word_shift)
       {
@@ -57,7 +57,7 @@ void bigint_shr1(word x[], u32bit x_size, u32bit word_shift, u32bit bit_shift)
       {
       word carry = 0;
 
-      u32bit top = x_size - word_shift;
+      size_t top = x_size - word_shift;
 
       while(top >= 4)
          {
@@ -94,15 +94,15 @@ void bigint_shr1(word x[], u32bit x_size, u32bit word_shift, u32bit bit_shift)
 /*
 * Two Operand Left Shift
 */
-void bigint_shl2(word y[], const word x[], u32bit x_size,
-                 u32bit word_shift, u32bit bit_shift)
+void bigint_shl2(word y[], const word x[], size_t x_size,
+                 size_t word_shift, size_t bit_shift)
    {
-   for(u32bit j = 0; j != x_size; ++j)
+   for(size_t j = 0; j != x_size; ++j)
       y[j + word_shift] = x[j];
    if(bit_shift)
       {
       word carry = 0;
-      for(u32bit j = word_shift; j != x_size + word_shift + 1; ++j)
+      for(size_t j = word_shift; j != x_size + word_shift + 1; ++j)
          {
          word w = y[j];
          y[j] = (w << bit_shift) | carry;
@@ -114,17 +114,17 @@ void bigint_shl2(word y[], const word x[], u32bit x_size,
 /*
 * Two Operand Right Shift
 */
-void bigint_shr2(word y[], const word x[], u32bit x_size,
-                 u32bit word_shift, u32bit bit_shift)
+void bigint_shr2(word y[], const word x[], size_t x_size,
+                 size_t word_shift, size_t bit_shift)
    {
    if(x_size < word_shift) return;
 
-   for(u32bit j = 0; j != x_size - word_shift; ++j)
+   for(size_t j = 0; j != x_size - word_shift; ++j)
       y[j] = x[j + word_shift];
    if(bit_shift)
       {
       word carry = 0;
-      for(u32bit j = x_size - word_shift; j > 0; --j)
+      for(size_t j = x_size - word_shift; j > 0; --j)
          {
          word w = y[j-1];
          y[j-1] = (w >> bit_shift) | carry;

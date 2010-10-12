@@ -15,7 +15,7 @@ extern "C" {
 /*
 * Core Division Operation
 */
-u32bit bigint_divcore(word q, word y2, word y1,
+size_t bigint_divcore(word q, word y2, word y1,
                       word x3, word x2, word x1)
    {
    // Compute (y2,y1) * q
@@ -38,8 +38,8 @@ u32bit bigint_divcore(word q, word y2, word y1,
 /*
 * Compare two MP integers
 */
-s32bit bigint_cmp(const word x[], u32bit x_size,
-                  const word y[], u32bit y_size)
+s32bit bigint_cmp(const word x[], size_t x_size,
+                  const word y[], size_t y_size)
    {
    if(x_size < y_size) { return (-bigint_cmp(y, y_size, x, x_size)); }
 
@@ -50,7 +50,7 @@ s32bit bigint_cmp(const word x[], u32bit x_size,
       x_size--;
       }
 
-   for(u32bit j = x_size; j > 0; --j)
+   for(size_t j = x_size; j > 0; --j)
       {
       if(x[j-1] > y[j-1])
          return 1;
@@ -68,7 +68,7 @@ word bigint_divop(word n1, word n0, word d)
    {
    word high = n1 % d, quotient = 0;
 
-   for(u32bit j = 0; j != MP_WORD_BITS; ++j)
+   for(size_t j = 0; j != MP_WORD_BITS; ++j)
       {
       word high_top_bit = (high & MP_WORD_TOP_BIT);
 

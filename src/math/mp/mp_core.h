@@ -15,67 +15,67 @@ namespace Botan {
 /*
 * The size of the word type, in bits
 */
-const u32bit MP_WORD_BITS = BOTAN_MP_WORD_BITS;
+const size_t MP_WORD_BITS = BOTAN_MP_WORD_BITS;
 
 extern "C" {
 
 /*
 * Addition/Subtraction Operations
 */
-void bigint_add2(word x[], u32bit x_size,
-                 const word y[], u32bit y_size);
+void bigint_add2(word x[], size_t x_size,
+                 const word y[], size_t y_size);
 
 void bigint_add3(word z[],
-                 const word x[], u32bit x_size,
-                 const word y[], u32bit y_size);
+                 const word x[], size_t x_size,
+                 const word y[], size_t y_size);
 
-word bigint_add2_nc(word x[], u32bit x_size, const word y[], u32bit y_size);
+word bigint_add2_nc(word x[], size_t x_size, const word y[], size_t y_size);
 
 word bigint_add3_nc(word z[],
-                    const word x[], u32bit x_size,
-                    const word y[], u32bit y_size);
+                    const word x[], size_t x_size,
+                    const word y[], size_t y_size);
 
-word bigint_sub2(word x[], u32bit x_size,
-                 const word y[], u32bit y_size);
+word bigint_sub2(word x[], size_t x_size,
+                 const word y[], size_t y_size);
 
 /**
 * x = y - x; assumes y >= x
 */
-void bigint_sub2_rev(word x[], const word y[], u32bit y_size);
+void bigint_sub2_rev(word x[], const word y[], size_t y_size);
 
 word bigint_sub3(word z[],
-                 const word x[], u32bit x_size,
-                 const word y[], u32bit y_size);
+                 const word x[], size_t x_size,
+                 const word y[], size_t y_size);
 
 /*
 * Shift Operations
 */
-void bigint_shl1(word x[], u32bit x_size,
-                 u32bit word_shift, u32bit bit_shift);
+void bigint_shl1(word x[], size_t x_size,
+                 size_t word_shift, size_t bit_shift);
 
-void bigint_shr1(word x[], u32bit x_size,
-                 u32bit word_shift, u32bit bit_shift);
+void bigint_shr1(word x[], size_t x_size,
+                 size_t word_shift, size_t bit_shift);
 
-void bigint_shl2(word y[], const word x[], u32bit x_size,
-                 u32bit word_shift, u32bit bit_shift);
+void bigint_shl2(word y[], const word x[], size_t x_size,
+                 size_t word_shift, size_t bit_shift);
 
-void bigint_shr2(word y[], const word x[], u32bit x_size,
-                 u32bit word_shift, u32bit bit_shift);
+void bigint_shr2(word y[], const word x[], size_t x_size,
+                 size_t word_shift, size_t bit_shift);
 
 /*
 * Simple O(N^2) Multiplication and Squaring
 */
 void bigint_simple_mul(word z[],
-                       const word x[], u32bit x_size,
-                       const word y[], u32bit y_size);
+                       const word x[], size_t x_size,
+                       const word y[], size_t y_size);
 
-void bigint_simple_sqr(word z[], const word x[], u32bit x_size);
+void bigint_simple_sqr(word z[], const word x[], size_t x_size);
 
 /*
 * Linear Multiply
 */
-void bigint_linmul2(word x[], u32bit x_size, word y);
-void bigint_linmul3(word z[], const word x[], u32bit x_size, word y);
+void bigint_linmul2(word x[], size_t x_size, word y);
+void bigint_linmul3(word z[], const word x[], size_t x_size, word y);
 
 /*
 * Montgomery Reduction
@@ -86,22 +86,22 @@ void bigint_linmul3(word z[], const word x[], u32bit x_size, word y);
 * @param x_size size of x
 * @param u Montgomery value
 */
-void bigint_monty_redc(word z[], u32bit z_size,
+void bigint_monty_redc(word z[], size_t z_size,
                        word workspace[],
-                       const word x[], u32bit x_size,
+                       const word x[], size_t x_size,
                        word u);
 
 /*
 * Division operation
 */
-u32bit bigint_divcore(word q, word y2, word y1,
+size_t bigint_divcore(word q, word y2, word y1,
                       word x3, word x2, word x1);
 
 /**
 * Compare x and y
 */
-s32bit bigint_cmp(const word x[], u32bit x_size,
-                  const word y[], u32bit y_size);
+s32bit bigint_cmp(const word x[], size_t x_size,
+                  const word y[], size_t y_size);
 
 /**
 * Compute ((n1<<bits) + n0) / d
@@ -132,12 +132,12 @@ void bigint_comba_sqr16(word out[64], const word in[32]);
 /*
 * High Level Multiplication/Squaring Interfaces
 */
-void bigint_mul(word z[], u32bit z_size, word workspace[],
-                const word x[], u32bit x_size, u32bit x_sw,
-                const word y[], u32bit y_size, u32bit y_sw);
+void bigint_mul(word z[], size_t z_size, word workspace[],
+                const word x[], size_t x_size, size_t x_sw,
+                const word y[], size_t y_size, size_t y_sw);
 
-void bigint_sqr(word z[], u32bit z_size, word workspace[],
-                const word x[], u32bit x_size, u32bit x_sw);
+void bigint_sqr(word z[], size_t z_size, word workspace[],
+                const word x[], size_t x_size, size_t x_sw);
 
 }
 

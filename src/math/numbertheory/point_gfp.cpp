@@ -45,7 +45,7 @@ void PointGFp::monty_mult(BigInt& z,
       }
 
    const BigInt& p = curve.get_p();
-   const u32bit p_size = curve.get_p_words();
+   const size_t p_size = curve.get_p_words();
    const word p_dash = curve.get_p_dash();
 
    SecureVector<word>& z_reg = z.get_reg();
@@ -75,7 +75,7 @@ void PointGFp::monty_sqr(BigInt& z, const BigInt& x,
       }
 
    const BigInt& p = curve.get_p();
-   const u32bit p_size = curve.get_p_words();
+   const size_t p_size = curve.get_p_words();
    const word p_dash = curve.get_p_dash();
 
    SecureVector<word>& z_reg = z.get_reg();
@@ -289,7 +289,7 @@ PointGFp operator*(const BigInt& scalar, const PointGFp& point)
 
    if(scalar.abs() <= 2) // special cases for small values
       {
-      u32bit value = scalar.abs().to_u32bit();
+      byte value = scalar.abs().byte_at(0);
 
       PointGFp result = point;
 
@@ -302,14 +302,14 @@ PointGFp operator*(const BigInt& scalar, const PointGFp& point)
       return result;
       }
 
-   const u32bit scalar_bits = scalar.bits();
+   const size_t scalar_bits = scalar.bits();
 
-   const u32bit window_size = 4;
+   const size_t window_size = 4;
 
    std::vector<PointGFp> Ps((1 << window_size) - 1);
    Ps[0] = point;
 
-   for(u32bit i = 1; i != Ps.size(); ++i)
+   for(size_t i = 1; i != Ps.size(); ++i)
       {
       Ps[i] = Ps[i-1];
 
@@ -320,14 +320,14 @@ PointGFp operator*(const BigInt& scalar, const PointGFp& point)
       }
 
    PointGFp H(curve); // create as zero
-   u32bit bits_left = scalar_bits;
+   size_t bits_left = scalar_bits;
 
    while(bits_left >= window_size)
       {
-      u32bit nibble = scalar.get_substring(bits_left - window_size,
+      size_t nibble = scalar.get_substring(bits_left - window_size,
                                            window_size);
 
-      for(u32bit i = 0; i != window_size; ++i)
+      for(size_t i = 0; i != window_size; ++i)
          H.mult2(ws);
 
       if(nibble)
@@ -469,7 +469,7 @@ SecureVector<byte> EC2OSP(const PointGFp& point, byte format)
    if(point.is_zero())
       return SecureVector<byte>(1); // single 0 byte
 
-   const u32bit p_bytes = point.get_curve().get_p().bytes();
+   const size_t p_bytes = point.get_curve().get_p().bytes();
 
    BigInt x = point.get_affine_x();
    BigInt y = point.get_affine_y();
@@ -541,7 +541,7 @@ BigInt decompress_point(bool yMod2,
 
 }
 
-PointGFp OS2ECP(const byte data[], u32bit data_len,
+PointGFp OS2ECP(const byte data[], size_t data_len,
                 const CurveGFp& curve)
    {
    if(data_len <= 1)
@@ -561,7 +561,7 @@ PointGFp OS2ECP(const byte data[], u32bit data_len,
       }
    else if(pc == 4)
       {
-      const u32bit l = (data_len - 1) / 2;
+      const size_t l = (data_len - 1) / 2;
 
       // uncompressed form
       x = BigInt::decode(&data[1], l);
@@ -569,7 +569,7 @@ PointGFp OS2ECP(const byte data[], u32bit data_len,
       }
    else if(pc == 6 || pc == 7)
       {
-      const u32bit l = (data_len - 1) / 2;
+      const size_t l = (data_len - 1) / 2;
 
       // hybrid form
       x = BigInt::decode(&data[1], l);

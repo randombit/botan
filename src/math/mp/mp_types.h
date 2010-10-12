@@ -17,7 +17,7 @@ namespace Botan {
 #elif (BOTAN_MP_WORD_BITS == 16)
   typedef u16bit word;
 #elif (BOTAN_MP_WORD_BITS == 32)
-  typedef u32bit word;
+  typedef size_t word;
 #elif (BOTAN_MP_WORD_BITS == 64)
   typedef u64bit word;
 #else

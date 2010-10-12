@@ -91,7 +91,7 @@ class BOTAN_DLL CurveGFp
       /**
       * @return p.sig_words()
       */
-      u32bit get_p_words() const { return p_words; }
+      size_t get_p_words() const { return p_words; }
 
       /**
       * @return modular reducer for p
@@ -128,7 +128,7 @@ class BOTAN_DLL CurveGFp
       // Curve parameters
       BigInt p, a, b;
 
-      u32bit p_words; // cache of p.sig_words()
+      size_t p_words; // cache of p.sig_words()
 
       // Montgomery parameters
       BigInt r, r_inv, a_r;

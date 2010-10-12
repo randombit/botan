@@ -31,7 +31,7 @@ class Fixed_Window_Exponentiator : public Modular_Exponentiator
    private:
       Modular_Reducer reducer;
       BigInt exp;
-      u32bit window_bits;
+      size_t window_bits;
       std::vector<BigInt> g;
       Power_Mod::Usage_Hints hints;
    };
@@ -55,7 +55,7 @@ class Montgomery_Exponentiator : public Modular_Exponentiator
       BigInt R2, R_mod;
       std::vector<BigInt> g;
       word mod_prime;
-      u32bit mod_words, exp_bits, window_bits;
+      size_t mod_words, exp_bits, window_bits;
       Power_Mod::Usage_Hints hints;
    };
 

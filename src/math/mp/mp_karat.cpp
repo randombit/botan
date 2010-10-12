@@ -16,7 +16,7 @@ namespace {
 /*
 * Karatsuba Multiplication Operation
 */
-void karatsuba_mul(word z[], const word x[], const word y[], u32bit N,
+void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
                    word workspace[])
    {
    if(N < BOTAN_KARAT_MUL_THRESHOLD || N % 2)
@@ -31,7 +31,7 @@ void karatsuba_mul(word z[], const word x[], const word y[], u32bit N,
          return bigint_simple_mul(z, x, N, y, N);
       }
 
-   const u32bit N2 = N / 2;
+   const size_t N2 = N / 2;
 
    const word* x0 = x;
    const word* x1 = x + N2;
@@ -63,28 +63,28 @@ void karatsuba_mul(word z[], const word x[], const word y[], u32bit N,
    karatsuba_mul(z0, x0, y0, N2, workspace+N);
    karatsuba_mul(z1, x1, y1, N2, workspace+N);
 
-   const u32bit blocks_of_8 = N - (N % 8);
+   const size_t blocks_of_8 = N - (N % 8);
 
    word ws_carry = 0;
 
-   for(u32bit j = 0; j != blocks_of_8; j += 8)
+   for(size_t j = 0; j != blocks_of_8; j += 8)
       ws_carry = word8_add3(workspace + N + j, z0 + j, z1 + j, ws_carry);
 
-   for(u32bit j = blocks_of_8; j != N; ++j)
+   for(size_t j = blocks_of_8; j != N; ++j)
       workspace[N + j] = word_add(z0[j], z1[j], &ws_carry);
 
    word z_carry = 0;
 
-   for(u32bit j = 0; j != blocks_of_8; j += 8)
+   for(size_t j = 0; j != blocks_of_8; j += 8)
       z_carry = word8_add2(z + N2 + j, workspace + N + j, z_carry);
 
-   for(u32bit j = blocks_of_8; j != N; ++j)
+   for(size_t j = blocks_of_8; j != N; ++j)
       z[N2 + j] = word_add(z[N2 + j], workspace[N + j], &z_carry);
 
    z[N + N2] = word_add(z[N + N2], ws_carry, &z_carry);
 
    if(z_carry)
-      for(u32bit j = 1; j != N2; ++j)
+      for(size_t j = 1; j != N2; ++j)
          if(++z[N + N2 + j])
             break;
 
@@ -97,7 +97,7 @@ void karatsuba_mul(word z[], const word x[], const word y[], u32bit N,
 /*
 * Karatsuba Squaring Operation
 */
-void karatsuba_sqr(word z[], const word x[], u32bit N, word workspace[])
+void karatsuba_sqr(word z[], const word x[], size_t N, word workspace[])
    {
    if(N < BOTAN_KARAT_SQR_THRESHOLD || N % 2)
       {
@@ -111,7 +111,7 @@ void karatsuba_sqr(word z[], const word x[], u32bit N, word workspace[])
          return bigint_simple_sqr(z, x, N);
       }
 
-   const u32bit N2 = N / 2;
+   const size_t N2 = N / 2;
 
    const word* x0 = x;
    const word* x1 = x + N2;
@@ -135,28 +135,28 @@ void karatsuba_sqr(word z[], const word x[], u32bit N, word workspace[])
    karatsuba_sqr(z0, x0, N2, workspace+N);
    karatsuba_sqr(z1, x1, N2, workspace+N);
 
-   const u32bit blocks_of_8 = N - (N % 8);
+   const size_t blocks_of_8 = N - (N % 8);
 
    word ws_carry = 0;
 
-   for(u32bit j = 0; j != blocks_of_8; j += 8)
+   for(size_t j = 0; j != blocks_of_8; j += 8)
       ws_carry = word8_add3(workspace + N + j, z0 + j, z1 + j, ws_carry);
 
-   for(u32bit j = blocks_of_8; j != N; ++j)
+   for(size_t j = blocks_of_8; j != N; ++j)
       workspace[N + j] = word_add(z0[j], z1[j], &ws_carry);
 
    word z_carry = 0;
 
-   for(u32bit j = 0; j != blocks_of_8; j += 8)
+   for(size_t j = 0; j != blocks_of_8; j += 8)
       z_carry = word8_add2(z + N2 + j, workspace + N + j, z_carry);
 
-   for(u32bit j = blocks_of_8; j != N; ++j)
+   for(size_t j = blocks_of_8; j != N; ++j)
       z[N2 + j] = word_add(z[N2 + j], workspace[N + j], &z_carry);
 
    z[N + N2] = word_add(z[N + N2], ws_carry, &z_carry);
 
    if(z_carry)
-      for(u32bit j = 1; j != N2; ++j)
+      for(size_t j = 1; j != N2; ++j)
          if(++z[N + N2 + j])
             break;
 
@@ -171,9 +171,9 @@ void karatsuba_sqr(word z[], const word x[], u32bit N, word workspace[])
 /*
 * Pick a good size for the Karatsuba multiply
 */
-u32bit karatsuba_size(u32bit z_size,
-                      u32bit x_size, u32bit x_sw,
-                      u32bit y_size, u32bit y_sw)
+size_t karatsuba_size(size_t z_size,
+                      size_t x_size, size_t x_sw,
+                      size_t y_size, size_t y_sw)
    {
    if(x_sw > x_size || x_sw > y_size || y_sw > x_size || y_sw > y_size)
       return 0;
@@ -182,8 +182,8 @@ u32bit karatsuba_size(u32bit z_size,
       ((y_size == y_sw) && (y_size % 2)))
       return 0;
 
-   const u32bit start = (x_sw > y_sw) ? x_sw : y_sw;
-   const u32bit end = (x_size < y_size) ? x_size : y_size;
+   const size_t start = (x_sw > y_sw) ? x_sw : y_sw;
+   const size_t end = (x_size < y_size) ? x_size : y_size;
 
    if(start == end)
       {
@@ -192,7 +192,7 @@ u32bit karatsuba_size(u32bit z_size,
       return start;
       }
 
-   for(u32bit j = start; j <= end; ++j)
+   for(size_t j = start; j <= end; ++j)
       {
       if(j % 2)
          continue;
@@ -215,7 +215,7 @@ u32bit karatsuba_size(u32bit z_size,
 /*
 * Pick a good size for the Karatsuba squaring
 */
-u32bit karatsuba_size(u32bit z_size, u32bit x_size, u32bit x_sw)
+size_t karatsuba_size(size_t z_size, size_t x_size, size_t x_sw)
    {
    if(x_sw == x_size)
       {
@@ -224,7 +224,7 @@ u32bit karatsuba_size(u32bit z_size, u32bit x_size, u32bit x_sw)
       return x_sw;
       }
 
-   for(u32bit j = x_sw; j <= x_size; ++j)
+   for(size_t j = x_sw; j <= x_size; ++j)
       {
       if(j % 2)
          continue;
@@ -245,9 +245,9 @@ u32bit karatsuba_size(u32bit z_size, u32bit x_size, u32bit x_sw)
 /*
 * Multiplication Algorithm Dispatcher
 */
-void bigint_mul(word z[], u32bit z_size, word workspace[],
-                const word x[], u32bit x_size, u32bit x_sw,
-                const word y[], u32bit y_size, u32bit y_sw)
+void bigint_mul(word z[], size_t z_size, word workspace[],
+                const word x[], size_t x_size, size_t x_sw,
+                const word y[], size_t y_size, size_t y_sw)
    {
    if(x_sw == 1)
       {
@@ -285,7 +285,7 @@ void bigint_mul(word z[], u32bit z_size, word workspace[],
       }
    else
       {
-      const u32bit N = karatsuba_size(z_size, x_size, x_sw, y_size, y_sw);
+      const size_t N = karatsuba_size(z_size, x_size, x_sw, y_size, y_sw);
 
       if(N)
          {
@@ -300,8 +300,8 @@ void bigint_mul(word z[], u32bit z_size, word workspace[],
 /*
 * Squaring Algorithm Dispatcher
 */
-void bigint_sqr(word z[], u32bit z_size, word workspace[],
-                const word x[], u32bit x_size, u32bit x_sw)
+void bigint_sqr(word z[], size_t z_size, word workspace[],
+                const word x[], size_t x_size, size_t x_sw)
    {
    if(x_sw == 1)
       {
@@ -329,7 +329,7 @@ void bigint_sqr(word z[], u32bit z_size, word workspace[],
       }
    else
       {
-      const u32bit N = karatsuba_size(z_size, x_size, x_sw);
+      const size_t N = karatsuba_size(z_size, x_size, x_sw);
 
       if(N)
          {

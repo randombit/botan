@@ -24,7 +24,7 @@ class MillerRabin_Test
       MillerRabin_Test(const BigInt& num);
    private:
       BigInt n, r, n_minus_1;
-      u32bit s;
+      size_t s;
       Fixed_Exponent_Power_Mod pow_mod;
       Modular_Reducer reducer;
    };
@@ -41,7 +41,7 @@ bool MillerRabin_Test::passes_test(const BigInt& a)
    if(y == 1 || y == n_minus_1)
       return true;
 
-   for(u32bit i = 1; i != s; ++i)
+   for(size_t i = 1; i != s; ++i)
       {
       y = reducer.square(y);
 
@@ -73,9 +73,9 @@ MillerRabin_Test::MillerRabin_Test(const BigInt& num)
 /*
 * Miller-Rabin Iterations
 */
-u32bit miller_rabin_test_iterations(u32bit bits, u32bit level)
+size_t miller_rabin_test_iterations(size_t bits, size_t level)
    {
-   struct mapping { u32bit bits; u32bit verify_iter; u32bit check_iter; };
+   struct mapping { size_t bits; size_t verify_iter; size_t check_iter; };
 
    static const mapping tests[] = {
       {   50, 55, 25 },
@@ -113,7 +113,7 @@ u32bit miller_rabin_test_iterations(u32bit bits, u32bit level)
       {    0,  0,  0 }
    };
 
-   for(u32bit i = 0; tests[i].bits; ++i)
+   for(size_t i = 0; tests[i].bits; ++i)
       {
       if(bits <= tests[i].bits)
          {
@@ -122,7 +122,7 @@ u32bit miller_rabin_test_iterations(u32bit bits, u32bit level)
          else if(level == 1)
             return tests[i].check_iter;
          else if(level == 0)
-            return std::max<u32bit>(tests[i].check_iter / 4, 1);
+            return std::max<size_t>(tests[i].check_iter / 4, 1);
          }
       }
 
@@ -134,13 +134,13 @@ u32bit miller_rabin_test_iterations(u32bit bits, u32bit level)
 /*
 * Return the number of 0 bits at the end of n
 */
-u32bit low_zero_bits(const BigInt& n)
+size_t low_zero_bits(const BigInt& n)
    {
-   u32bit low_zero = 0;
+   size_t low_zero = 0;
 
    if(n.is_positive() && n.is_nonzero())
       {
-      for(u32bit i = 0; i != n.size(); ++i)
+      for(size_t i = 0; i != n.size(); ++i)
          {
          word x = n[i];
 
@@ -168,7 +168,7 @@ BigInt gcd(const BigInt& a, const BigInt& b)
    BigInt x = a, y = b;
    x.set_sign(BigInt::Positive);
    y.set_sign(BigInt::Positive);
-   u32bit shift = std::min(low_zero_bits(x), low_zero_bits(y));
+   size_t shift = std::min(low_zero_bits(x), low_zero_bits(y));
 
    x >>= shift;
    y >>= shift;
@@ -210,9 +210,9 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
 
    while(u.is_nonzero())
       {
-      u32bit zero_bits = low_zero_bits(u);
+      size_t zero_bits = low_zero_bits(u);
       u >>= zero_bits;
-      for(u32bit i = 0; i != zero_bits; ++i)
+      for(size_t i = 0; i != zero_bits; ++i)
          {
          if(A.is_odd() || B.is_odd())
             { A += y; B -= x; }
@@ -221,7 +221,7 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
 
       zero_bits = low_zero_bits(v);
       v >>= zero_bits;
-      for(u32bit i = 0; i != zero_bits; ++i)
+      for(size_t i = 0; i != zero_bits; ++i)
          {
          if(C.is_odd() || D.is_odd())
             { C += y; D -= x; }
@@ -257,9 +257,9 @@ BigInt power_mod(const BigInt& base, const BigInt& exp, const BigInt& mod)
 */
 bool primality_test(const BigInt& n,
                     RandomNumberGenerator& rng,
-                    u32bit level)
+                    size_t level)
    {
-   const u32bit PREF_NONCE_BITS = 64;
+   const size_t PREF_NONCE_BITS = 64;
 
    if(n == 2)
       return true;
@@ -271,7 +271,7 @@ bool primality_test(const BigInt& n,
       {
       const word num = n.word_at(0);
 
-      for(u32bit i = 0; PRIMES[i]; ++i)
+      for(size_t i = 0; PRIMES[i]; ++i)
          {
          if(num == PRIMES[i])
             return true;
@@ -285,14 +285,14 @@ bool primality_test(const BigInt& n,
    if(level > 2)
       level = 2;
 
-   const u32bit NONCE_BITS = std::min(n.bits() - 2, PREF_NONCE_BITS);
+   const size_t NONCE_BITS = std::min(n.bits() - 2, PREF_NONCE_BITS);
 
    MillerRabin_Test mr(n);
 
-   const u32bit tests = miller_rabin_test_iterations(n.bits(), level);
+   const size_t tests = miller_rabin_test_iterations(n.bits(), level);
 
    BigInt nonce;
-   for(u32bit i = 0; i != tests; ++i)
+   for(size_t i = 0; i != tests; ++i)
       {
       while(nonce < 2 || nonce >= (n-1))
          nonce.randomize(rng, NONCE_BITS);

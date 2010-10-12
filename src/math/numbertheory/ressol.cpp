@@ -32,7 +32,7 @@ BigInt ressol(const BigInt& a, const BigInt& p)
    if(p % 4 == 3)
       return power_mod(a, ((p+1) >> 2), p);
 
-   u32bit s = low_zero_bits(p - 1);
+   size_t s = low_zero_bits(p - 1);
    BigInt q = p >> s;
 
    q -= 1;
@@ -58,7 +58,7 @@ BigInt ressol(const BigInt& a, const BigInt& p)
       {
       q = n;
 
-      u32bit i = 0;
+      size_t i = 0;
       while(q != 1)
          {
          q = mod_p.square(q);

@@ -83,13 +83,13 @@ class BOTAN_DLL BigInt
      * Left shift operator
      * @param shift the number of bits to shift this left by
      */
-     BigInt& operator<<=(u32bit shift);
+     BigInt& operator<<=(size_t shift);
 
      /**
      * Right shift operator
      * @param shift the number of bits to shift this right by
      */
-     BigInt& operator>>=(u32bit shift);
+     BigInt& operator>>=(size_t shift);
 
      /**
      * Increment operator
@@ -128,14 +128,14 @@ class BOTAN_DLL BigInt
      * @param i a word index
      * @return the word at index i
      */
-     word& operator[](u32bit i) { return reg[i]; }
+     word& operator[](size_t i) { return reg[i]; }
 
      /**
      * [] operator (array access)
      * @param i a word index
      * @return the word at index i
      */
-     word operator[](u32bit i) const { return reg[i]; }
+     word operator[](size_t i) const { return reg[i]; }
 
      /**
      * Zeroize the BigInt
@@ -175,9 +175,9 @@ class BOTAN_DLL BigInt
      */
      bool is_zero() const
         {
-        const u32bit sw = sig_words();
+        const size_t sw = sig_words();
 
-        for(u32bit i = 0; i != sw; ++i)
+        for(size_t i = 0; i != sw; ++i)
            if(reg[i])
               return false;
         return true;
@@ -187,26 +187,26 @@ class BOTAN_DLL BigInt
      * Set bit at specified position
      * @param n bit position to set
      */
-     void set_bit(u32bit n);
+     void set_bit(size_t n);
 
      /**
      * Clear bit at specified position
      * @param n bit position to clear
      */
-     void clear_bit(u32bit n);
+     void clear_bit(size_t n);
 
      /**
      * Clear all but the lowest n bits
      * @param n amount of bits to keep
      */
-     void mask_bits(u32bit n);
+     void mask_bits(size_t n);
 
      /**
      * Return bit value at specified position
      * @param n the bit offset to test
      * @result true, if the bit at position n is set, false otherwise
      */
-     bool get_bit(u32bit n) const;
+     bool get_bit(size_t n) const;
 
      /**
      * Return (a maximum of) 32 bits of the complete value
@@ -215,30 +215,21 @@ class BOTAN_DLL BigInt
      * @result the integer extracted from the register starting at
      * offset with specified length
      */
-     u32bit get_substring(u32bit offset, u32bit length) const;
+     size_t get_substring(size_t offset, size_t length) const;
 
      /**
      * @param n the offset to get a byte from
      * @result byte at offset n
      */
-     byte byte_at(u32bit n) const;
+     byte byte_at(size_t n) const;
 
      /**
      * Return the word at a specified position of the internal register
      * @param n position in the register
      * @return value at position n
      */
-     word word_at(u32bit n) const
+     word word_at(size_t n) const
         { return ((n < size()) ? reg[n] : 0); }
-
-     /**
-     * Return the integer as an unsigned 32bit-integer-value. If the
-     * value is negative OR too big to be stored in a u32bit, this
-     * function will throw an exception.
-     *
-     * @result unsigned 32 bit representation of this
-     */
-     u32bit to_u32bit() const;
 
      /**
      * Tests if the sign of the integer is negative
@@ -283,16 +274,16 @@ class BOTAN_DLL BigInt
      * Give size of internal register
      * @result size of internal register in words
      */
-     u32bit size() const { return get_reg().size(); }
+     size_t size() const { return get_reg().size(); }
 
      /**
      * Return how many words we need to hold this value
      * @result significant words of the represented integer value
      */
-     u32bit sig_words() const
+     size_t sig_words() const
         {
         const word* x = &reg[0];
-        u32bit sig = reg.size();
+        size_t sig = reg.size();
 
         while(sig && (x[sig-1] == 0))
            sig--;
@@ -303,13 +294,13 @@ class BOTAN_DLL BigInt
      * Give byte length of the integer
      * @result byte length of the represented integer value
      */
-     u32bit bytes() const;
+     size_t bytes() const;
 
      /**
      * Get the bit length of the integer
      * @result bit length of the represented integer value
      */
-     u32bit bits() const;
+     size_t bits() const;
 
      /**
      * Return a pointer to the big integer word register
@@ -337,16 +328,16 @@ class BOTAN_DLL BigInt
      * Increase internal register buffer by n words
      * @param n increase by n words
      */
-     void grow_reg(u32bit n);
+     void grow_reg(size_t n);
 
-     void grow_to(u32bit n);
+     void grow_to(size_t n);
 
      /**
      * Fill BigInt with a random number with size of bitsize
      * @param rng the random number generator to use
      * @param bitsize number of bits the created random value should have
      */
-     void randomize(RandomNumberGenerator& rng, u32bit bitsize = 0);
+     void randomize(RandomNumberGenerator& rng, size_t bitsize = 0);
 
      /**
      * Store BigInt-value in a given byte array
@@ -359,7 +350,7 @@ class BOTAN_DLL BigInt
      * @param buf byte array buffer containing the integer
      * @param length size of buf
      */
-     void binary_decode(const byte buf[], u32bit length);
+     void binary_decode(const byte buf[], size_t length);
 
      /**
      * Read integer value from a byte array (MemoryRegion<byte>)
@@ -371,7 +362,7 @@ class BOTAN_DLL BigInt
      * @param base the base to measure the size for
      * @return size of this integer in base base
      */
-     u32bit encoded_size(Base base = Binary) const;
+     size_t encoded_size(Base base = Binary) const;
 
      /**
      * @param rng a random number generator
@@ -407,7 +398,7 @@ class BOTAN_DLL BigInt
      * @param base number-base of the integer in buf
      * @result BigInt representing the integer in the byte array
      */
-     static BigInt decode(const byte buf[], u32bit length,
+     static BigInt decode(const byte buf[], size_t length,
                           Base base = Binary);
 
      /**
@@ -425,7 +416,7 @@ class BOTAN_DLL BigInt
      * @param bytes the length of the resulting SecureVector<byte>
      * @result a SecureVector<byte> containing the encoded BigInt
      */
-     static SecureVector<byte> encode_1363(const BigInt& n, u32bit bytes);
+     static SecureVector<byte> encode_1363(const BigInt& n, size_t bytes);
 
      /**
      * Swap this value with another
@@ -468,21 +459,21 @@ class BOTAN_DLL BigInt
      * @param length size of buf
      * @param base is the number base of the integer in buf
      */
-     BigInt(const byte buf[], u32bit length, Base base = Binary);
+     BigInt(const byte buf[], size_t length, Base base = Binary);
 
      /**
      * Create a random BigInt of the specified size
      * @param rng random number generator
      * @param bits size in bits
      */
-     BigInt(RandomNumberGenerator& rng, u32bit bits);
+     BigInt(RandomNumberGenerator& rng, size_t bits);
 
      /**
      * Create BigInt of specified size, all zeros
      * @param sign the sign
      * @param n size of the internal register in words
      */
-     BigInt(Sign sign, u32bit n);
+     BigInt(Sign sign, size_t n);
 
      /**
      * Create a number of the specified type and size
@@ -491,7 +482,7 @@ class BOTAN_DLL BigInt
      * @param n a size/length parameter, interpretation depends upon
      * the value of type
      */
-     BigInt(NumberType type, u32bit n);
+     BigInt(NumberType type, size_t n);
 
    private:
       SecureVector<word> reg;
@@ -507,8 +498,8 @@ BigInt BOTAN_DLL operator*(const BigInt& x, const BigInt& y);
 BigInt BOTAN_DLL operator/(const BigInt& x, const BigInt& d);
 BigInt BOTAN_DLL operator%(const BigInt& x, const BigInt& m);
 word   BOTAN_DLL operator%(const BigInt& x, word m);
-BigInt BOTAN_DLL operator<<(const BigInt& x, u32bit n);
-BigInt BOTAN_DLL operator>>(const BigInt& x, u32bit n);
+BigInt BOTAN_DLL operator<<(const BigInt& x, size_t n);
+BigInt BOTAN_DLL operator>>(const BigInt& x, size_t n);
 
 /*
 * Comparison Operators

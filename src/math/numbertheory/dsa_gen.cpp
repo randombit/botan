@@ -19,7 +19,7 @@ namespace {
 /*
 * Check if this size is allowed by FIPS 186-3
 */
-bool fips186_3_valid_size(u32bit pbits, u32bit qbits)
+bool fips186_3_valid_size(size_t pbits, size_t qbits)
    {
    if(qbits == 160)
       return (pbits == 512 || pbits == 768 || pbits == 1024);
@@ -41,7 +41,7 @@ bool fips186_3_valid_size(u32bit pbits, u32bit qbits)
 bool generate_dsa_primes(RandomNumberGenerator& rng,
                          Algorithm_Factory& af,
                          BigInt& p, BigInt& q,
-                         u32bit pbits, u32bit qbits,
+                         size_t pbits, size_t qbits,
                          const MemoryRegion<byte>& seed_c)
    {
    if(!fips186_3_valid_size(pbits, qbits))
@@ -57,7 +57,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
    std::auto_ptr<HashFunction> hash(
       af.make_hash_function("SHA-" + to_string(qbits)));
 
-   const u32bit HASH_SIZE = hash->OUTPUT_LENGTH;
+   const size_t HASH_SIZE = hash->OUTPUT_LENGTH;
 
    class Seed
       {
@@ -68,7 +68,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
 
          Seed& operator++()
             {
-            for(u32bit j = seed.size(); j > 0; --j)
+            for(size_t j = seed.size(); j > 0; --j)
                if(++seed[j-1])
                   break;
             return (*this);
@@ -86,15 +86,15 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
    if(!check_prime(q, rng))
       return false;
 
-   const u32bit n = (pbits-1) / (HASH_SIZE * 8),
+   const size_t n = (pbits-1) / (HASH_SIZE * 8),
                 b = (pbits-1) % (HASH_SIZE * 8);
 
    BigInt X;
    SecureVector<byte> V(HASH_SIZE * (n+1));
 
-   for(u32bit j = 0; j != 4096; ++j)
+   for(size_t j = 0; j != 4096; ++j)
       {
-      for(u32bit k = 0; k <= n; ++k)
+      for(size_t k = 0; k <= n; ++k)
          {
          ++seed;
          hash->update(seed);
@@ -119,7 +119,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
 SecureVector<byte> generate_dsa_primes(RandomNumberGenerator& rng,
                                        Algorithm_Factory& af,
                                        BigInt& p, BigInt& q,
-                                       u32bit pbits, u32bit qbits)
+                                       size_t pbits, size_t qbits)
    {
    while(true)
       {

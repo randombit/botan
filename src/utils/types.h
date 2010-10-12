@@ -9,6 +9,7 @@
 #define BOTAN_TYPES_H__
 
 #include <botan/build.h>
+#include <stddef.h>
 
 /**
 * The primary namespace for the botan library

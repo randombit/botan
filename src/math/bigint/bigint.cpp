@@ -23,19 +23,19 @@ BigInt::BigInt(u64bit n)
    if(n == 0)
       return;
 
-   const u32bit limbs_needed = sizeof(u64bit) / sizeof(word);
+   const size_t limbs_needed = sizeof(u64bit) / sizeof(word);
 
    reg.resize(4*limbs_needed);
-   for(u32bit j = 0; j != limbs_needed; ++j)
+   for(size_t j = 0; j != limbs_needed; ++j)
       reg[j] = ((n >> (j*MP_WORD_BITS)) & MP_WORD_MASK);
    }
 
 /*
 * Construct a BigInt of the specified size
 */
-BigInt::BigInt(Sign s, u32bit size)
+BigInt::BigInt(Sign s, size_t size)
    {
-   reg.resize(round_up<u32bit>(size, 8));
+   reg.resize(round_up<size_t>(size, 8));
    signedness = s;
    }
 
@@ -44,11 +44,11 @@ BigInt::BigInt(Sign s, u32bit size)
 */
 BigInt::BigInt(const BigInt& b)
    {
-   const u32bit b_words = b.sig_words();
+   const size_t b_words = b.sig_words();
 
    if(b_words)
       {
-      reg.resize(round_up<u32bit>(b_words, 8));
+      reg.resize(round_up<size_t>(b_words, 8));
       reg.copy(b.data(), b_words);
       set_sign(b.sign());
       }
@@ -65,7 +65,7 @@ BigInt::BigInt(const BigInt& b)
 BigInt::BigInt(const std::string& str)
    {
    Base base = Decimal;
-   u32bit markers = 0;
+   size_t markers = 0;
    bool negative = false;
    if(str.length() > 0 && str[0] == '-') { markers += 1; negative = true; }
 
@@ -85,7 +85,7 @@ BigInt::BigInt(const std::string& str)
 /*
 * Construct a BigInt from an encoded BigInt
 */
-BigInt::BigInt(const byte input[], u32bit length, Base base)
+BigInt::BigInt(const byte input[], size_t length, Base base)
    {
    set_sign(Positive);
    *this = decode(input, length, base);
@@ -94,7 +94,7 @@ BigInt::BigInt(const byte input[], u32bit length, Base base)
 /*
 * Construct a BigInt from an encoded BigInt
 */
-BigInt::BigInt(RandomNumberGenerator& rng, u32bit bits)
+BigInt::BigInt(RandomNumberGenerator& rng, size_t bits)
    {
    set_sign(Positive);
    randomize(rng, bits);
@@ -112,18 +112,18 @@ void BigInt::swap(BigInt& other)
 /*
 * Grow the internal storage
 */
-void BigInt::grow_reg(u32bit n)
+void BigInt::grow_reg(size_t n)
    {
-   reg.resize(round_up<u32bit>(size() + n, 8));
+   reg.resize(round_up<size_t>(size() + n, 8));
    }
 
 /*
 * Grow the internal storage
 */
-void BigInt::grow_to(u32bit n)
+void BigInt::grow_to(size_t n)
    {
    if(n > size())
-      reg.resize(round_up<u32bit>(n, 8));
+      reg.resize(round_up<size_t>(n, 8));
    }
 
 /*
@@ -142,28 +142,12 @@ s32bit BigInt::cmp(const BigInt& n, bool check_signs) const
    }
 
 /*
-* Convert this number to a u32bit, if possible
-*/
-u32bit BigInt::to_u32bit() const
-   {
-   if(is_negative())
-      throw Encoding_Error("BigInt::to_u32bit: Number is negative");
-   if(bits() >= 32)
-      throw Encoding_Error("BigInt::to_u32bit: Number is too big to convert");
-
-   u32bit out = 0;
-   for(u32bit j = 0; j != 4; ++j)
-      out = (out << 8) | byte_at(3-j);
-   return out;
-   }
-
-/*
 * Return byte n of this number
 */
-byte BigInt::byte_at(u32bit n) const
+byte BigInt::byte_at(size_t n) const
    {
-   const u32bit WORD_BYTES = sizeof(word);
-   u32bit word_num = n / WORD_BYTES, byte_num = n % WORD_BYTES;
+   const size_t WORD_BYTES = sizeof(word);
+   size_t word_num = n / WORD_BYTES, byte_num = n % WORD_BYTES;
    if(word_num >= size())
       return 0;
    else
@@ -173,7 +157,7 @@ byte BigInt::byte_at(u32bit n) const
 /*
 * Return bit n of this number
 */
-bool BigInt::get_bit(u32bit n) const
+bool BigInt::get_bit(size_t n) const
    {
    return ((word_at(n / MP_WORD_BITS) >> (n % MP_WORD_BITS)) & 1);
    }
@@ -181,27 +165,27 @@ bool BigInt::get_bit(u32bit n) const
 /*
 * Return bits {offset...offset+length}
 */
-u32bit BigInt::get_substring(u32bit offset, u32bit length) const
+size_t BigInt::get_substring(size_t offset, size_t length) const
    {
    if(length > 32)
       throw Invalid_Argument("BigInt::get_substring: Substring size too big");
 
    u64bit piece = 0;
-   for(u32bit j = 0; j != 8; ++j)
+   for(size_t j = 0; j != 8; ++j)
       piece = (piece << 8) | byte_at((offset / 8) + (7-j));
 
    u64bit mask = (1 << length) - 1;
-   u32bit shift = (offset % 8);
+   size_t shift = (offset % 8);
 
-   return static_cast<u32bit>((piece >> shift) & mask);
+   return static_cast<size_t>((piece >> shift) & mask);
    }
 
 /*
 * Set bit number n
 */
-void BigInt::set_bit(u32bit n)
+void BigInt::set_bit(size_t n)
    {
-   const u32bit which = n / MP_WORD_BITS;
+   const size_t which = n / MP_WORD_BITS;
    const word mask = static_cast<word>(1) << (n % MP_WORD_BITS);
    if(which >= size()) grow_to(which + 1);
    reg[which] |= mask;
@@ -210,9 +194,9 @@ void BigInt::set_bit(u32bit n)
 /*
 * Clear bit number n
 */
-void BigInt::clear_bit(u32bit n)
+void BigInt::clear_bit(size_t n)
    {
-   const u32bit which = n / MP_WORD_BITS;
+   const size_t which = n / MP_WORD_BITS;
    const word mask = static_cast<word>(1) << (n % MP_WORD_BITS);
    if(which < size())
       reg[which] &= ~mask;
@@ -221,16 +205,16 @@ void BigInt::clear_bit(u32bit n)
 /*
 * Clear all but the lowest n bits
 */
-void BigInt::mask_bits(u32bit n)
+void BigInt::mask_bits(size_t n)
    {
    if(n == 0) { clear(); return; }
    if(n >= bits()) return;
 
-   const u32bit top_word = n / MP_WORD_BITS;
+   const size_t top_word = n / MP_WORD_BITS;
    const word mask = (static_cast<word>(1) << (n % MP_WORD_BITS)) - 1;
 
    if(top_word < size())
-      for(u32bit j = top_word + 1; j != size(); ++j)
+      for(size_t j = top_word + 1; j != size(); ++j)
          reg[j] = 0;
 
    reg[top_word] &= mask;
@@ -239,7 +223,7 @@ void BigInt::mask_bits(u32bit n)
 /*
 * Count how many bytes are being used
 */
-u32bit BigInt::bytes() const
+size_t BigInt::bytes() const
    {
    return (bits() + 7) / 8;
    }
@@ -247,14 +231,14 @@ u32bit BigInt::bytes() const
 /*
 * Count how many bits are being used
 */
-u32bit BigInt::bits() const
+size_t BigInt::bits() const
    {
-   const u32bit words = sig_words();
+   const size_t words = sig_words();
 
    if(words == 0)
       return 0;
 
-   u32bit full_words = words - 1, top_bits = MP_WORD_BITS;
+   size_t full_words = words - 1, top_bits = MP_WORD_BITS;
    word top_word = word_at(full_words), mask = MP_WORD_TOP_BIT;
 
    while(top_bits && ((top_word & mask) == 0))
@@ -266,7 +250,7 @@ u32bit BigInt::bits() const
 /*
 * Calcluate the size in a certain base
 */
-u32bit BigInt::encoded_size(Base base) const
+size_t BigInt::encoded_size(Base base) const
    {
    static const double LOG_2_BASE_10 = 0.30102999566;
 
@@ -277,7 +261,7 @@ u32bit BigInt::encoded_size(Base base) const
    else if(base == Octal)
       return ((bits() + 2) / 3);
    else if(base == Decimal)
-      return static_cast<u32bit>((bits() * LOG_2_BASE_10) + 1);
+      return static_cast<size_t>((bits() * LOG_2_BASE_10) + 1);
    else
       throw Invalid_Argument("Unknown base for BigInt encoding");
    }
@@ -336,28 +320,28 @@ BigInt BigInt::abs() const
 */
 void BigInt::binary_encode(byte output[]) const
    {
-   const u32bit sig_bytes = bytes();
-   for(u32bit j = 0; j != sig_bytes; ++j)
+   const size_t sig_bytes = bytes();
+   for(size_t j = 0; j != sig_bytes; ++j)
       output[sig_bytes-j-1] = byte_at(j);
    }
 
 /*
 * Set this number to the value in buf
 */
-void BigInt::binary_decode(const byte buf[], u32bit length)
+void BigInt::binary_decode(const byte buf[], size_t length)
    {
-   const u32bit WORD_BYTES = sizeof(word);
+   const size_t WORD_BYTES = sizeof(word);
 
    clear();
-   reg.resize(round_up<u32bit>((length / WORD_BYTES) + 1, 8));
+   reg.resize(round_up<size_t>((length / WORD_BYTES) + 1, 8));
 
-   for(u32bit j = 0; j != length / WORD_BYTES; ++j)
+   for(size_t j = 0; j != length / WORD_BYTES; ++j)
       {
-      u32bit top = length - WORD_BYTES*j;
-      for(u32bit k = WORD_BYTES; k > 0; --k)
+      size_t top = length - WORD_BYTES*j;
+      for(size_t k = WORD_BYTES; k > 0; --k)
          reg[j] = (reg[j] << 8) | buf[top - k];
       }
-   for(u32bit j = 0; j != length % WORD_BYTES; ++j)
+   for(size_t j = 0; j != length % WORD_BYTES; ++j)
       reg[length / WORD_BYTES] = (reg[length / WORD_BYTES] << 8) | buf[j];
    }
 

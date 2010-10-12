@@ -30,8 +30,8 @@ void BigInt::encode(byte output[], const BigInt& n, Base base)
    else if(base == Octal)
       {
       BigInt copy = n;
-      const u32bit output_size = n.encoded_size(Octal);
-      for(u32bit j = 0; j != output_size; ++j)
+      const size_t output_size = n.encoded_size(Octal);
+      for(size_t j = 0; j != output_size; ++j)
          {
          output[output_size - 1 - j] = Charset::digit2char(copy % 8);
          copy /= 8;
@@ -42,8 +42,8 @@ void BigInt::encode(byte output[], const BigInt& n, Base base)
       BigInt copy = n;
       BigInt remainder;
       copy.set_sign(Positive);
-      const u32bit output_size = n.encoded_size(Decimal);
-      for(u32bit j = 0; j != output_size; ++j)
+      const size_t output_size = n.encoded_size(Decimal);
+      for(size_t j = 0; j != output_size; ++j)
          {
          divide(copy, 10, copy, remainder);
          output[output_size - 1 - j] =
@@ -64,7 +64,7 @@ SecureVector<byte> BigInt::encode(const BigInt& n, Base base)
    SecureVector<byte> output(n.encoded_size(base));
    encode(&output[0], n, base);
    if(base != Binary)
-      for(u32bit j = 0; j != output.size(); ++j)
+      for(size_t j = 0; j != output.size(); ++j)
          if(output[j] == 0)
             output[j] = '0';
    return output;
@@ -73,13 +73,13 @@ SecureVector<byte> BigInt::encode(const BigInt& n, Base base)
 /*
 * Encode a BigInt, with leading 0s if needed
 */
-SecureVector<byte> BigInt::encode_1363(const BigInt& n, u32bit bytes)
+SecureVector<byte> BigInt::encode_1363(const BigInt& n, size_t bytes)
    {
-   const u32bit n_bytes = n.bytes();
+   const size_t n_bytes = n.bytes();
    if(n_bytes > bytes)
       throw Encoding_Error("encode_1363: n is too large to encode properly");
 
-   const u32bit leading_0s = bytes - n_bytes;
+   const size_t leading_0s = bytes - n_bytes;
 
    SecureVector<byte> output(bytes);
    encode(&output[leading_0s], n, Binary);
@@ -97,7 +97,7 @@ BigInt BigInt::decode(const MemoryRegion<byte>& buf, Base base)
 /*
 * Decode a BigInt
 */
-BigInt BigInt::decode(const byte buf[], u32bit length, Base base)
+BigInt BigInt::decode(const byte buf[], size_t length, Base base)
    {
    BigInt r;
    if(base == Binary)
@@ -124,8 +124,8 @@ BigInt BigInt::decode(const byte buf[], u32bit length, Base base)
       }
    else if(base == Decimal || base == Octal)
       {
-      const u32bit RADIX = ((base == Decimal) ? 10 : 8);
-      for(u32bit j = 0; j != length; ++j)
+      const size_t RADIX = ((base == Decimal) ? 10 : 8);
+      for(size_t j = 0; j != length; ++j)
          {
          if(Charset::is_space(buf[j]))
             continue;
