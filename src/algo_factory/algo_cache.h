@@ -20,7 +20,7 @@ namespace Botan {
 * @param prov_name a provider name
 * @return weight for this provider
 */
-u32bit static_provider_weight(const std::string& prov_name);
+size_t static_provider_weight(const std::string& prov_name);
 
 /**
 * Algorithm_Cache (used by Algorithm_Factory)
@@ -134,14 +134,14 @@ const T* Algorithm_Cache<T>::get(const std::string& algo_spec,
 
    const T* prototype = 0;
    std::string prototype_provider;
-   u32bit prototype_prov_weight = 0;
+   size_t prototype_prov_weight = 0;
 
    const std::string pref_provider = search_map(pref_providers, algo_spec);
 
    for(provider_iterator i = algo->second.begin(); i != algo->second.end(); ++i)
       {
       const std::string prov_name = i->first;
-      const u32bit prov_weight = static_provider_weight(prov_name);
+      const size_t prov_weight = static_provider_weight(prov_name);
 
       // preferred prov exists, return immediately
       if(prov_name == pref_provider)

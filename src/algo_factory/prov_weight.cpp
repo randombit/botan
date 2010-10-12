@@ -12,7 +12,7 @@ namespace Botan {
 /**
 * Return a static provider weighing
 */
-u32bit static_provider_weight(const std::string& prov_name)
+size_t static_provider_weight(const std::string& prov_name)
    {
    /*
    * Prefer asm over C++, but prefer anything over OpenSSL or GNU MP; to use

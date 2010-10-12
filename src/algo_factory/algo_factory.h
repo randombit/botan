@@ -70,7 +70,7 @@ class BOTAN_DLL Algorithm_Factory
       /**
       * @param algo_spec the algorithm we want
       * @param provider the provider we would like to use
-      * @returns pointer to const prototype object, readiny for clone(), or NULL
+      * @returns pointer to const prototype object, ready to clone(), or NULL
       */
       const BlockCipher*
          prototype_block_cipher(const std::string& algo_spec,
@@ -93,7 +93,7 @@ class BOTAN_DLL Algorithm_Factory
       /**
       * @param algo_spec the algorithm we want
       * @param provider the provider we would like to use
-      * @returns pointer to const prototype object, readiny for clone(), or NULL
+      * @returns pointer to const prototype object, ready to clone(), or NULL
       */
       const StreamCipher*
          prototype_stream_cipher(const std::string& algo_spec,
@@ -116,7 +116,7 @@ class BOTAN_DLL Algorithm_Factory
       /**
       * @param algo_spec the algorithm we want
       * @param provider the provider we would like to use
-      * @returns pointer to const prototype object, readiny for clone(), or NULL
+      * @returns pointer to const prototype object, ready to clone(), or NULL
       */
       const HashFunction*
          prototype_hash_function(const std::string& algo_spec,
@@ -139,7 +139,7 @@ class BOTAN_DLL Algorithm_Factory
       /**
       * @param algo_spec the algorithm we want
       * @param provider the provider we would like to use
-      * @returns pointer to const prototype object, readiny for clone(), or NULL
+      * @returns pointer to const prototype object, ready to clone(), or NULL
       */
       const MessageAuthenticationCode*
          prototype_mac(const std::string& algo_spec,
@@ -178,7 +178,7 @@ class BOTAN_DLL Algorithm_Factory
             Engine_Iterator(const Algorithm_Factory& a) : af(a) { n = 0; }
          private:
             const Algorithm_Factory& af;
-            u32bit n;
+            size_t n;
          };
       friend class Engine_Iterator;
 
@@ -187,7 +187,7 @@ class BOTAN_DLL Algorithm_Factory
       Algorithm_Factory& operator=(const Algorithm_Factory&)
          { return (*this); }
 
-      Engine* get_engine_n(u32bit) const;
+      Engine* get_engine_n(size_t n) const;
 
       std::vector<Engine*> engines;
 

@@ -70,7 +70,7 @@ const T* factory_prototype(const std::string& algo_spec,
    if(scan_name.cipher_mode() != "")
       return 0;
 
-   for(u32bit i = 0; i != engines.size(); ++i)
+   for(size_t i = 0; i != engines.size(); ++i)
       {
       if(provider == "" || engines[i]->provider_name() == provider)
          {
@@ -141,7 +141,7 @@ void Algorithm_Factory::set_preferred_provider(const std::string& algo_spec,
 /*
 * Get an engine out of the list
 */
-Engine* Algorithm_Factory::get_engine_n(u32bit n) const
+Engine* Algorithm_Factory::get_engine_n(size_t n) const
    {
    if(n >= engines.size())
       return 0;
