@@ -6,7 +6,6 @@
 */
 
 #include <botan/kdf2.h>
-#include <botan/get_byte.h>
 
 namespace Botan {
 
@@ -23,9 +22,9 @@ SecureVector<byte> KDF2::derive(size_t out_len,
    while(out_len && counter)
       {
       hash->update(secret, secret_len);
-      for(size_t i = 0; i != 4; ++i)
-         hash->update(get_byte(i, counter));
+      hash->update_be(counter);
       hash->update(P, P_len);
+
       SecureVector<byte> hash_result = hash->final();
 
       size_t added = std::min(hash_result.size(), out_len);

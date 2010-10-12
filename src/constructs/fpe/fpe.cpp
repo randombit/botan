@@ -12,7 +12,6 @@
 #include <botan/numthry.h>
 #include <botan/hmac.h>
 #include <botan/sha2_32.h>
-#include <botan/get_byte.h>
 #include <stdexcept>
 
 namespace Botan {
@@ -106,12 +105,10 @@ FPE_Encryptor::FPE_Encryptor(const SymmetricKey& key,
    if(n_bin.size() > MAX_N_BYTES)
       throw std::runtime_error("N is too large for FPE encryption");
 
-   for(u32bit i = 0; i != 4; ++i)
-      mac->update(get_byte(i, n_bin.size()));
+   mac->update_be(n_bin.size(), 4);
    mac->update(&n_bin[0], n_bin.size());
 
-   for(u32bit i = 0; i != 4; ++i)
-      mac->update(get_byte(i, tweak.size()));
+   mac->update_be(tweak.size(), 4);
    mac->update(&tweak[0], tweak.size());
 
    mac_n_t = mac->final();
@@ -119,15 +116,12 @@ FPE_Encryptor::FPE_Encryptor(const SymmetricKey& key,
 
 BigInt FPE_Encryptor::operator()(u32bit round_no, const BigInt& R)
    {
-   mac->update(mac_n_t);
-
-   for(u32bit i = 0; i != 4; ++i)
-      mac->update(get_byte(i, round_no));
-
    SecureVector<byte> r_bin = BigInt::encode(R);
 
-   for(u32bit i = 0; i != 4; ++i)
-      mac->update(get_byte(i, r_bin.size()));
+   mac->update(mac_n_t);
+   mac->update_be(round_no, 4);
+
+   mac->update_be(r_bin.size(), 4);
    mac->update(&r_bin[0], r_bin.size());
 
    SecureVector<byte> X = mac->final();

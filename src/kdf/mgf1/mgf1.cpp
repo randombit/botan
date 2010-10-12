@@ -6,7 +6,6 @@
 */
 
 #include <botan/mgf1.h>
-#include <botan/get_byte.h>
 #include <botan/exceptn.h>
 #include <botan/internal/xor_buf.h>
 #include <algorithm>
@@ -25,8 +24,7 @@ void MGF1::mask(const byte in[], size_t in_len, byte out[],
    while(out_len)
       {
       hash->update(in, in_len);
-      for(size_t i = 0; i != 4; ++i)
-         hash->update(get_byte(i, counter));
+      hash->update_be(counter);
       SecureVector<byte> buffer = hash->final();
 
       size_t xored = std::min<size_t>(buffer.size(), out_len);

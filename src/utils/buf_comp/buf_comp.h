@@ -9,6 +9,7 @@
 #define BOTAN_BUFFERED_COMPUTATION_H__
 
 #include <botan/secmem.h>
+#include <botan/get_byte.h>
 
 namespace Botan {
 
@@ -40,6 +41,15 @@ class BOTAN_DLL BufferedComputation
       void update(const MemoryRegion<byte>& in)
          {
          add_data(&in[0], in.size());
+         }
+
+      template<typename T> void update_be(const T in, size_t upto = sizeof(T))
+         {
+         for(size_t i = 0; i != std::min(upto, sizeof(T)); ++i)
+            {
+            byte b = get_byte(i, in);
+            add_data(&b, 1);
+            }
          }
 
       /**
