@@ -122,16 +122,16 @@ void IDEA::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * IDEA Key Schedule
 */
-void IDEA::key_schedule(const byte key[], u32bit)
+void IDEA::key_schedule(const byte key[], size_t)
    {
-   for(size_t j = 0; j != 8; ++j)
-      EK[j] = load_be<u16bit>(key, j);
+   for(size_t i = 0; i != 8; ++i)
+      EK[i] = load_be<u16bit>(key, i);
 
-   for(size_t j = 1, k = 8, offset = 0; k != 52; j %= 8, ++j, ++k)
+   for(size_t i = 1, j = 8, offset = 0; j != 52; i %= 8, ++i, ++j)
       {
-      EK[j+7+offset] = static_cast<u16bit>((EK[(j     % 8) + offset] << 9) |
-                                           (EK[((j+1) % 8) + offset] >> 7));
-      offset += (j == 8) ? 8 : 0;
+      EK[i+7+offset] = static_cast<u16bit>((EK[(i     % 8) + offset] << 9) |
+                                           (EK[((i+1) % 8) + offset] >> 7));
+      offset += (i == 8) ? 8 : 0;
       }
 
    DK[51] = mul_inv(EK[3]);
@@ -139,14 +139,14 @@ void IDEA::key_schedule(const byte key[], u32bit)
    DK[49] = -EK[1];
    DK[48] = mul_inv(EK[0]);
 
-   for(size_t j = 1, k = 4, counter = 47; j != 8; ++j, k += 6)
+   for(size_t i = 1, j = 4, counter = 47; i != 8; ++i, j += 6)
       {
-      DK[counter--] = EK[k+1];
-      DK[counter--] = EK[k];
-      DK[counter--] = mul_inv(EK[k+5]);
-      DK[counter--] = -EK[k+3];
-      DK[counter--] = -EK[k+4];
-      DK[counter--] = mul_inv(EK[k+2]);
+      DK[counter--] = EK[j+1];
+      DK[counter--] = EK[j];
+      DK[counter--] = mul_inv(EK[j+5]);
+      DK[counter--] = -EK[j+3];
+      DK[counter--] = -EK[j+4];
+      DK[counter--] = mul_inv(EK[j+2]);
       }
 
    DK[5] = EK[47];

@@ -27,7 +27,7 @@ class BOTAN_DLL RC6 : public BlockCipher
 
       RC6() : BlockCipher(16, 1, 32), S(44) {}
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
 
       SecureVector<u32bit> S;
    };

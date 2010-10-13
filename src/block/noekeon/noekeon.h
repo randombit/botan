@@ -43,7 +43,7 @@ class BOTAN_DLL Noekeon : public BlockCipher
       const SecureVector<u32bit>& get_DK() const { return DK; }
 
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
       SecureVector<u32bit> EK, DK;
    };
 

@@ -160,16 +160,16 @@ void Noekeon::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * Noekeon Key Schedule
 */
-void Noekeon::key_schedule(const byte key[], u32bit)
+void Noekeon::key_schedule(const byte key[], size_t)
    {
    u32bit A0 = load_be<u32bit>(key, 0);
    u32bit A1 = load_be<u32bit>(key, 1);
    u32bit A2 = load_be<u32bit>(key, 2);
    u32bit A3 = load_be<u32bit>(key, 3);
 
-   for(size_t j = 0; j != 16; ++j)
+   for(size_t i = 0; i != 16; ++i)
       {
-      A0 ^= RC[j];
+      A0 ^= RC[i];
       theta(A0, A1, A2, A3);
 
       A1 = rotate_left(A1, 1);

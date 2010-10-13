@@ -41,7 +41,7 @@ class BOTAN_DLL Serpent : public BlockCipher
          { round_key.set(ks, 132); }
 
    private:
-      void key_schedule(const byte key[], u32bit length);
+      void key_schedule(const byte key[], size_t length);
       SecureVector<u32bit> round_key;
    };
 

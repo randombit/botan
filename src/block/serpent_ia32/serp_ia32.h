@@ -23,7 +23,7 @@ class BOTAN_DLL Serpent_IA32 : public Serpent
 
       BlockCipher* clone() const { return new Serpent_IA32; }
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
    };
 
 }

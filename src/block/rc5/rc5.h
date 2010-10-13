@@ -31,7 +31,7 @@ class BOTAN_DLL RC5 : public BlockCipher
       */
       RC5(size_t rounds);
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
       SecureVector<u32bit> S;
       const size_t ROUNDS;
    };

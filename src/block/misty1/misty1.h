@@ -31,7 +31,7 @@ class BOTAN_DLL MISTY1 : public BlockCipher
       */
       MISTY1(size_t rounds = 8);
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
 
       SecureVector<u16bit> EK, DK;
    };

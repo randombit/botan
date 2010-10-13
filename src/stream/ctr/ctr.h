@@ -39,7 +39,7 @@ class BOTAN_DLL CTR_BE : public StreamCipher
       CTR_BE(BlockCipher* cipher);
       ~CTR_BE();
    private:
-      void key_schedule(const byte key[], u32bit key_len);
+      void key_schedule(const byte key[], size_t key_len);
       void increment_counter();
 
       BlockCipher* permutation;

@@ -116,7 +116,7 @@ void Twofish::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * Twofish Key Schedule
 */
-void Twofish::key_schedule(const byte key[], u32bit length)
+void Twofish::key_schedule(const byte key[], size_t length)
    {
    SecureVector<byte> S(16);
 

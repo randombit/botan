@@ -68,7 +68,7 @@ class BOTAN_DLL GOST_28147_89 : public BlockCipher
       GOST_28147_89(const SecureVector<u32bit>& other_SBOX) :
          BlockCipher(8, 32), SBOX(other_SBOX), EK(8) {}
 
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
 
       SecureVector<u32bit> SBOX;
       SecureVector<u32bit> EK;

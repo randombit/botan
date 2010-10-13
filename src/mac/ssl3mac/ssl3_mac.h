@@ -31,7 +31,7 @@ class BOTAN_DLL SSL3_MAC : public MessageAuthenticationCode
    private:
       void add_data(const byte[], size_t);
       void final_result(byte[]);
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
 
       HashFunction* hash;
       SecureVector<byte> i_key, o_key;

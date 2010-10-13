@@ -38,7 +38,7 @@ class BOTAN_DLL IDEA : public BlockCipher
       const SecureVector<u16bit>& get_DK() const { return DK; }
 
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
       SecureVector<u16bit> EK, DK;
    };
 

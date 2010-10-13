@@ -37,7 +37,7 @@ class BOTAN_DLL WiderWake_41_BE : public StreamCipher
          { }
 
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
 
       void generate(size_t);
 

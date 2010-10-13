@@ -27,7 +27,7 @@ class BOTAN_DLL CAST_256 : public BlockCipher
 
       CAST_256() : BlockCipher(16, 4, 32, 4), MK(48), RK(48) {}
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
 
       static const u32bit KEY_MASK[192];
       static const byte   KEY_ROT[32];

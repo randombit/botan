@@ -34,7 +34,7 @@ class BOTAN_DLL Turing : public StreamCipher
          { position = 0; }
 
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
       void generate();
 
       static u32bit fixedS(u32bit);

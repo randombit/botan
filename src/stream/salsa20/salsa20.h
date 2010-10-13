@@ -29,10 +29,12 @@ class BOTAN_DLL Salsa20 : public StreamCipher
       std::string name() const;
       StreamCipher* clone() const { return new Salsa20; }
 
-      Salsa20() : StreamCipher(16, 32, 16), state(16), buffer(64) { position = 0; }
+      Salsa20() : StreamCipher(16, 32, 16), state(16), buffer(64)
+         { position = 0; }
+
       ~Salsa20() { clear(); }
    private:
-      void key_schedule(const byte key[], u32bit key_len);
+      void key_schedule(const byte key[], size_t key_len);
 
       SecureVector<u32bit> state;
       SecureVector<byte> buffer;

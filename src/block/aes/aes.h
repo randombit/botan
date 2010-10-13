@@ -25,7 +25,8 @@ class BOTAN_DLL AES : public BlockCipher
       std::string name() const { return "AES"; }
       BlockCipher* clone() const { return new AES; }
 
-      AES() : BlockCipher(16, 16, 32, 8), EK(56), ME(16), DK(56), MD(16) { ROUNDS = 14; }
+      AES() : BlockCipher(16, 16, 32, 8), EK(56), ME(16), DK(56), MD(16)
+         { ROUNDS = 14; }
 
       /**
       * AES fixed to a particular key_size (16, 24, or 32 bytes)
@@ -33,7 +34,7 @@ class BOTAN_DLL AES : public BlockCipher
       */
       AES(u32bit key_size);
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
       static u32bit S(u32bit);
 
       u32bit ROUNDS;
@@ -41,7 +42,7 @@ class BOTAN_DLL AES : public BlockCipher
       SecureVector<u32bit> EK;
       SecureVector<byte> ME;
 
-      SecureVector<u32bit> DK;
+      SecureVector<u32bit > DK;
       SecureVector<byte> MD;
    };
 

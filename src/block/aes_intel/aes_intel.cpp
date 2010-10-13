@@ -255,7 +255,7 @@ void AES_128_Intel::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * AES-128 Key Schedule
 */
-void AES_128_Intel::key_schedule(const byte key[], u32bit)
+void AES_128_Intel::key_schedule(const byte key[], size_t)
    {
    #define AES_128_key_exp(K, RCON) \
       aes_128_key_expansion(K, _mm_aeskeygenassist_si128(K, RCON))
@@ -477,7 +477,7 @@ void AES_192_Intel::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * AES-192 Key Schedule
 */
-void AES_192_Intel::key_schedule(const byte key[], u32bit)
+void AES_192_Intel::key_schedule(const byte key[], size_t)
    {
    __m128i K0 = _mm_loadu_si128((const __m128i*)(key));
    __m128i K1 = _mm_loadu_si128((const __m128i*)(key + 8));
@@ -705,7 +705,7 @@ void AES_256_Intel::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * AES-256 Key Schedule
 */
-void AES_256_Intel::key_schedule(const byte key[], u32bit)
+void AES_256_Intel::key_schedule(const byte key[], size_t)
    {
    __m128i K0 = _mm_loadu_si128((const __m128i*)(key));
    __m128i K1 = _mm_loadu_si128((const __m128i*)(key + 16));

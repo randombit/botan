@@ -111,27 +111,27 @@ void RC6::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * RC6 Key Schedule
 */
-void RC6::key_schedule(const byte key[], u32bit length)
+void RC6::key_schedule(const byte key[], size_t length)
    {
    const size_t WORD_KEYLENGTH = (((length - 1) / 4) + 1);
    const size_t MIX_ROUNDS     = 3 * std::max(WORD_KEYLENGTH, S.size());
 
    S[0] = 0xB7E15163;
-   for(size_t j = 1; j != S.size(); ++j)
-      S[j] = S[j-1] + 0x9E3779B9;
+   for(size_t i = 1; i != S.size(); ++i)
+      S[i] = S[i-1] + 0x9E3779B9;
 
    SecureVector<u32bit> K(8);
 
-   for(s32bit j = length-1; j >= 0; --j)
-      K[j/4] = (K[j/4] << 8) + key[j];
+   for(s32bit i = length-1; i >= 0; --i)
+      K[i/4] = (K[i/4] << 8) + key[i];
 
    u32bit A = 0, B = 0;
-   for(u32bit j = 0; j != MIX_ROUNDS; ++j)
+   for(size_t i = 0; i != MIX_ROUNDS; ++i)
       {
-      A = rotate_left(S[j % S.size()] + A + B, 3);
-      B = rotate_left(K[j % WORD_KEYLENGTH] + A + B, (A + B) % 32);
-      S[j % S.size()] = A;
-      K[j % WORD_KEYLENGTH] = B;
+      A = rotate_left(S[i % S.size()] + A + B, 3);
+      B = rotate_left(K[i % WORD_KEYLENGTH] + A + B, (A + B) % 32);
+      S[i % S.size()] = A;
+      K[i % WORD_KEYLENGTH] = B;
       }
    }
 

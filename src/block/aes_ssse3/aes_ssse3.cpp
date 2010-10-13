@@ -371,7 +371,7 @@ void AES_128_SSSE3::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * AES-128 Key Schedule
 */
-void AES_128_SSSE3::key_schedule(const byte keyb[], u32bit)
+void AES_128_SSSE3::key_schedule(const byte keyb[], size_t)
    {
    __m128i rcon = _mm_set_epi32(0x702A9808, 0x4D7C7D81,
                                 0x1F8391B9, 0xAF9DEEB6);
@@ -440,7 +440,7 @@ void AES_192_SSSE3::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * AES-192 Key Schedule
 */
-void AES_192_SSSE3::key_schedule(const byte keyb[], u32bit)
+void AES_192_SSSE3::key_schedule(const byte keyb[], size_t)
    {
    __m128i rcon = _mm_set_epi32(0x702A9808, 0x4D7C7D81,
                                 0x1F8391B9, 0xAF9DEEB6);
@@ -539,7 +539,7 @@ void AES_256_SSSE3::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * AES-256 Key Schedule
 */
-void AES_256_SSSE3::key_schedule(const byte keyb[], u32bit)
+void AES_256_SSSE3::key_schedule(const byte keyb[], size_t)
    {
    __m128i rcon = _mm_set_epi32(0x702A9808, 0x4D7C7D81,
                                 0x1F8391B9, 0xAF9DEEB6);

@@ -201,7 +201,7 @@ void DES::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * DES Key Schedule
 */
-void DES::key_schedule(const byte key[], u32bit)
+void DES::key_schedule(const byte key[], size_t)
    {
    des_key_schedule(&round_key[0], key);
    }
@@ -275,7 +275,7 @@ void TripleDES::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * TripleDES Key Schedule
 */
-void TripleDES::key_schedule(const byte key[], u32bit length)
+void TripleDES::key_schedule(const byte key[], size_t length)
    {
    des_key_schedule(&round_key[0], key);
    des_key_schedule(&round_key[32], key + 8);

@@ -23,13 +23,13 @@ class ARC4_OpenSSL : public StreamCipher
       std::string name() const;
       StreamCipher* clone() const { return new ARC4_OpenSSL(SKIP); }
 
-      ARC4_OpenSSL(u32bit s = 0) : StreamCipher(1, 32), SKIP(s) { clear(); }
+      ARC4_OpenSSL(size_t s = 0) : StreamCipher(1, 32), SKIP(s) { clear(); }
       ~ARC4_OpenSSL() { clear(); }
    private:
-      void cipher(const byte[], byte[], u32bit);
-      void key_schedule(const byte[], u32bit);
+      void cipher(const byte[], byte[], size_t);
+      void key_schedule(const byte[], size_t);
 
-      const u32bit SKIP;
+      const size_t SKIP;
       RC4_KEY state;
    };
 
@@ -46,18 +46,18 @@ std::string ARC4_OpenSSL::name() const
 /*
 * ARC4 Key Schedule
 */
-void ARC4_OpenSSL::key_schedule(const byte key[], u32bit length)
+void ARC4_OpenSSL::key_schedule(const byte key[], size_t length)
    {
    RC4_set_key(&state, length, key);
    byte dummy = 0;
-   for(u32bit j = 0; j != SKIP; j++)
+   for(size_t i = 0; i != SKIP; ++i)
       RC4(&state, 1, &dummy, &dummy);
    }
 
 /*
 * ARC4 Encryption
 */
-void ARC4_OpenSSL::cipher(const byte in[], byte out[], u32bit length)
+void ARC4_OpenSSL::cipher(const byte in[], byte out[], size_t length)
    {
    RC4(&state, length, in, out);
    }

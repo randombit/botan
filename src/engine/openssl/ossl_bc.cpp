@@ -29,7 +29,7 @@ class EVP_BlockCipher : public BlockCipher
    private:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
       std::string cipher_name;
       mutable EVP_CIPHER_CTX encrypt, decrypt;
    };
@@ -110,7 +110,7 @@ void EVP_BlockCipher::decrypt_n(const byte in[], byte out[],
 /*
 * Set the key
 */
-void EVP_BlockCipher::key_schedule(const byte key[], u32bit length)
+void EVP_BlockCipher::key_schedule(const byte key[], size_t length)
    {
    SecureVector<byte> full_key(key, length);
 
@@ -211,14 +211,14 @@ OpenSSL_Engine::find_block_cipher(const SCAN_Name& request,
    HANDLE_EVP_CIPHER_KEYLEN("RC2", EVP_rc2_ecb(), 1, 32, 1);
 #endif
 
-#if !defined(OPENSSL_NO_RC5)
+#if !defined(OPENSSL_NO_RC5) && 0
    if(request.algo_name() == "RC5")
       if(request.arg_as_integer(0, 12) == 12)
          return new EVP_BlockCipher(EVP_rc5_32_12_16_ecb(),
                                     "RC5(12)", 1, 32, 1);
 #endif
 
-#if !defined(OPENSSL_NO_IDEA)
+#if !defined(OPENSSL_NO_IDEA) && 0
    HANDLE_EVP_CIPHER("IDEA", EVP_idea_ecb());
 #endif
 

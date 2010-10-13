@@ -32,7 +32,7 @@ void SSL3_MAC::final_result(byte mac[])
 /*
 * SSL3-MAC Key Schedule
 */
-void SSL3_MAC::key_schedule(const byte key[], u32bit length)
+void SSL3_MAC::key_schedule(const byte key[], size_t length)
    {
    hash->clear();
    std::fill(i_key.begin(), i_key.end(), 0x36);

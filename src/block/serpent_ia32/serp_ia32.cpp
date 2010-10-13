@@ -70,7 +70,7 @@ void Serpent_IA32::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * Serpent Key Schedule
 */
-void Serpent_IA32::key_schedule(const byte key[], u32bit length)
+void Serpent_IA32::key_schedule(const byte key[], size_t length)
    {
    SecureVector<u32bit> W(140);
    for(size_t i = 0; i != length / 4; ++i)

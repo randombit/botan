@@ -33,7 +33,7 @@ class BOTAN_DLL XTEA : public BlockCipher
       const SecureVector<u32bit>& get_EK() const { return EK; }
 
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
       SecureVector<u32bit> EK;
    };
 

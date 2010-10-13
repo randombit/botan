@@ -149,7 +149,7 @@ inline void decrypt_round(u32bit& A, u32bit& B, u32bit& C, u32bit& D,
 */
 void forward_mix(u32bit& A, u32bit& B, u32bit& C, u32bit& D)
    {
-   for(u32bit j = 0; j != 2; ++j)
+   for(size_t j = 0; j != 2; ++j)
       {
       B ^= SBOX[get_byte(3, A)]; B += SBOX[get_byte(2, A) + 256];
       C += SBOX[get_byte(1, A)]; D ^= SBOX[get_byte(0, A) + 256];
@@ -174,7 +174,7 @@ void forward_mix(u32bit& A, u32bit& B, u32bit& C, u32bit& D)
 */
 void reverse_mix(u32bit& A, u32bit& B, u32bit& C, u32bit& D)
    {
-   for(u32bit j = 0; j != 2; ++j)
+   for(size_t j = 0; j != 2; ++j)
       {
       B ^= SBOX[get_byte(3, A) + 256]; C -= SBOX[get_byte(0, A)];
       D -= SBOX[get_byte(1, A) + 256]; D ^= SBOX[get_byte(2, A)];
@@ -202,7 +202,7 @@ u32bit gen_mask(u32bit input)
    {
    u32bit mask = 0;
 
-   for(u32bit j = 2; j != 31; ++j)
+   for(size_t j = 2; j != 31; ++j)
       {
       u32bit region = (input >> (j-1)) & 0x07;
 
@@ -318,11 +318,11 @@ void MARS::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * MARS Key Schedule
 */
-void MARS::key_schedule(const byte key[], u32bit length)
+void MARS::key_schedule(const byte key[], size_t length)
    {
    SecureVector<u32bit> T(15);
-   for(size_t j = 0; j != length / 4; ++j)
-      T[j] = load_le<u32bit>(key, j);
+   for(size_t i = 0; i != length / 4; ++i)
+      T[i] = load_le<u32bit>(key, i);
 
    T[length / 4] = length / 4;
 

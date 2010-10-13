@@ -39,7 +39,7 @@ class BOTAN_DLL OFB : public StreamCipher
       OFB(BlockCipher* cipher);
       ~OFB();
    private:
-      void key_schedule(const byte key[], u32bit key_len);
+      void key_schedule(const byte key[], size_t key_len);
 
       BlockCipher* permutation;
       SecureVector<byte> buffer;

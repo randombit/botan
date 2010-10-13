@@ -27,7 +27,7 @@ class BOTAN_DLL Blowfish : public BlockCipher
 
       Blowfish() : BlockCipher(8, 1, 56), S(1024), P(18) {}
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
       void generate_sbox(MemoryRegion<u32bit>& box,
                          u32bit& L, u32bit& R) const;
 

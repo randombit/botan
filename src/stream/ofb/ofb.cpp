@@ -45,7 +45,7 @@ void OFB::clear()
 /*
 * Set the key
 */
-void OFB::key_schedule(const byte key[], u32bit key_len)
+void OFB::key_schedule(const byte key[], size_t key_len)
    {
    permutation->set_key(key, key_len);
 

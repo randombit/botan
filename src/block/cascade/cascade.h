@@ -34,7 +34,7 @@ class BOTAN_DLL Cascade_Cipher : public BlockCipher
 
       ~Cascade_Cipher();
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
 
       BlockCipher* cipher1;
       BlockCipher* cipher2;

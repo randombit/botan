@@ -27,7 +27,7 @@ class BOTAN_DLL AES_128_SSSE3 : public BlockCipher
 
       AES_128_SSSE3() : BlockCipher(16, 16), EK(44), DK(44) {}
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
 
       SecureVector<u32bit> EK, DK;
    };
@@ -47,7 +47,7 @@ class BOTAN_DLL AES_192_SSSE3 : public BlockCipher
 
       AES_192_SSSE3() : BlockCipher(16, 24), EK(52), DK(52) {}
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
 
       SecureVector<u32bit> EK, DK;
    };
@@ -67,7 +67,7 @@ class BOTAN_DLL AES_256_SSSE3 : public BlockCipher
 
       AES_256_SSSE3() : BlockCipher(16, 32), EK(60), DK(60) {}
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
 
       SecureVector<u32bit> EK, DK;
    };

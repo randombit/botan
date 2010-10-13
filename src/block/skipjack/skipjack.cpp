@@ -157,7 +157,7 @@ void Skipjack::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * Skipjack Key Schedule
 */
-void Skipjack::key_schedule(const byte key[], u32bit)
+void Skipjack::key_schedule(const byte key[], size_t)
    {
    static const byte F[256] = {
       0xA3, 0xD7, 0x09, 0x83, 0xF8, 0x48, 0xF6, 0xF4, 0xB3, 0x21, 0x15, 0x78,

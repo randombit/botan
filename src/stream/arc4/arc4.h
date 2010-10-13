@@ -33,7 +33,7 @@ class BOTAN_DLL ARC4 : public StreamCipher
 
       ~ARC4() { clear(); }
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
       void generate();
 
       const size_t SKIP;

@@ -18,7 +18,7 @@ namespace Botan {
 * Create an OctetString from RNG output
 */
 OctetString::OctetString(RandomNumberGenerator& rng,
-                         u32bit length)
+                         size_t length)
    {
    bits = rng.random_vec(length);
    }
@@ -30,7 +30,7 @@ void OctetString::change(const std::string& hex_string)
    {
    SecureVector<byte> decoded(1 + hex_string.length() / 2);
 
-   u32bit written = hex_decode(&decoded[0], hex_string);
+   size_t written = hex_decode(&decoded[0], hex_string);
 
    bits.set(&decoded[0], written);
    }
@@ -38,7 +38,7 @@ void OctetString::change(const std::string& hex_string)
 /*
 * Create an OctetString from a byte string
 */
-void OctetString::change(const byte in[], u32bit n)
+void OctetString::change(const byte in[], size_t n)
    {
    bits.resize(n);
    bits.copy(in, n);
@@ -73,7 +73,7 @@ void OctetString::set_odd_parity()
       0xF1, 0xF1, 0xF2, 0xF2, 0xF4, 0xF4, 0xF7, 0xF7, 0xF8, 0xF8, 0xFB, 0xFB,
       0xFD, 0xFD, 0xFE, 0xFE };
 
-   for(u32bit j = 0; j != bits.size(); ++j)
+   for(size_t j = 0; j != bits.size(); ++j)
       bits[j] = ODD_PARITY[bits[j]];
    }
 

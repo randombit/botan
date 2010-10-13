@@ -27,7 +27,7 @@ class BOTAN_DLL Twofish : public BlockCipher
 
       Twofish() : BlockCipher(16, 16, 32, 8), SB(1024), RK(40) {}
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
 
       static void rs_mul(byte[4], byte, size_t);
 

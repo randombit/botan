@@ -619,7 +619,7 @@ void AES::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * AES Key Schedule
 */
-void AES::key_schedule(const byte key[], u32bit length)
+void AES::key_schedule(const byte key[], size_t length)
    {
    static const u32bit RC[10] = {
       0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000, 0x20000000,
@@ -629,40 +629,40 @@ void AES::key_schedule(const byte key[], u32bit length)
 
    SecureVector<u32bit> XEK(64), XDK(64);
 
-   const u32bit X = length / 4;
-   for(u32bit j = 0; j != X; ++j)
-      XEK[j] = load_be<u32bit>(key, j);
+   const size_t X = length / 4;
+   for(size_t i = 0; i != X; ++i)
+      XEK[i] = load_be<u32bit>(key, i);
 
-   for(u32bit j = X; j < 4*(ROUNDS+1); j += X)
+   for(size_t i = X; i < 4*(ROUNDS+1); i += X)
       {
-      XEK[j] = XEK[j-X] ^ S(rotate_left(XEK[j-1], 8)) ^ RC[(j-X)/X];
-      for(u32bit k = 1; k != X; ++k)
+      XEK[i] = XEK[i-X] ^ S(rotate_left(XEK[i-1], 8)) ^ RC[(i-X)/X];
+      for(size_t j = 1; j != X; ++j)
          {
-         if(X == 8 && k == 4)
-            XEK[j+k] = XEK[j+k-X] ^ S(XEK[j+k-1]);
+         if(X == 8 && j == 4)
+            XEK[i+j] = XEK[i+j-X] ^ S(XEK[i+j-1]);
          else
-            XEK[j+k] = XEK[j+k-X] ^ XEK[j+k-1];
+            XEK[i+j] = XEK[i+j-X] ^ XEK[i+j-1];
          }
       }
 
-   for(u32bit j = 0; j != 4*(ROUNDS+1); j += 4)
+   for(size_t i = 0; i != 4*(ROUNDS+1); i += 4)
       {
-      XDK[j  ] = XEK[4*ROUNDS-j  ];
-      XDK[j+1] = XEK[4*ROUNDS-j+1];
-      XDK[j+2] = XEK[4*ROUNDS-j+2];
-      XDK[j+3] = XEK[4*ROUNDS-j+3];
+      XDK[i  ] = XEK[4*ROUNDS-i  ];
+      XDK[i+1] = XEK[4*ROUNDS-i+1];
+      XDK[i+2] = XEK[4*ROUNDS-i+2];
+      XDK[i+3] = XEK[4*ROUNDS-i+3];
       }
 
-   for(u32bit j = 4; j != length + 24; ++j)
-      XDK[j] = TD[SE[get_byte(0, XDK[j])] +   0] ^
-               TD[SE[get_byte(1, XDK[j])] + 256] ^
-               TD[SE[get_byte(2, XDK[j])] + 512] ^
-               TD[SE[get_byte(3, XDK[j])] + 768];
+   for(size_t i = 4; i != length + 24; ++i)
+      XDK[i] = TD[SE[get_byte(0, XDK[i])] +   0] ^
+               TD[SE[get_byte(1, XDK[i])] + 256] ^
+               TD[SE[get_byte(2, XDK[i])] + 512] ^
+               TD[SE[get_byte(3, XDK[i])] + 768];
 
-   for(u32bit j = 0; j != 4; ++j)
+   for(size_t i = 0; i != 4; ++i)
       {
-      store_be(XEK[j+4*ROUNDS], &ME[4*j]);
-      store_be(XEK[j], &MD[4*j]);
+      store_be(XEK[i+4*ROUNDS], &ME[4*i]);
+      store_be(XEK[i], &MD[4*i]);
       }
 
    EK.copy(&XEK[0], length + 24);

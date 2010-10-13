@@ -144,7 +144,7 @@ void GOST_28147_89::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * GOST Key Schedule
 */
-void GOST_28147_89::key_schedule(const byte key[], u32bit)
+void GOST_28147_89::key_schedule(const byte key[], size_t)
    {
    for(size_t i = 0; i != 8; ++i)
       EK[i] = load_le<u32bit>(key, i);

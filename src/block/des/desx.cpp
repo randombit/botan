@@ -45,7 +45,7 @@ void DESX::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * DESX Key Schedule
 */
-void DESX::key_schedule(const byte key[], u32bit)
+void DESX::key_schedule(const byte key[], size_t)
    {
    K1.copy(key, 8);
    des.set_key(key + 8, 8);

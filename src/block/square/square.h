@@ -27,7 +27,7 @@ class BOTAN_DLL Square : public BlockCipher
 
       Square() : BlockCipher(16, 16), EK(28), DK(28), ME(32), MD(32) {}
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
 
       static void transform(u32bit[4]);
 

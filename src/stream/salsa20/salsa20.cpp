@@ -126,7 +126,7 @@ void Salsa20::cipher(const byte in[], byte out[], size_t length)
 /*
 * Salsa20 Key Schedule
 */
-void Salsa20::key_schedule(const byte key[], u32bit length)
+void Salsa20::key_schedule(const byte key[], size_t length)
    {
    static const u32bit TAU[] =
       { 0x61707865, 0x3120646e, 0x79622d36, 0x6b206574 };

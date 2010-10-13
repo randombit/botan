@@ -29,7 +29,7 @@ class BOTAN_DLL AES_128_Intel : public BlockCipher
 
       AES_128_Intel() : BlockCipher(16, 16) { }
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
 
       SecureVector<u32bit, 44> EK, DK;
    };
@@ -51,7 +51,7 @@ class BOTAN_DLL AES_192_Intel : public BlockCipher
 
       AES_192_Intel() : BlockCipher(16, 24) { }
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
 
       SecureVector<u32bit, 52> EK, DK;
    };
@@ -73,7 +73,7 @@ class BOTAN_DLL AES_256_Intel : public BlockCipher
 
       AES_256_Intel() : BlockCipher(16, 32) { }
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
 
       SecureVector<u32bit, 60> EK, DK;
    };

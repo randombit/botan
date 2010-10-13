@@ -29,7 +29,7 @@ void Cascade_Cipher::decrypt_n(const byte in[], byte out[],
    cipher1->decrypt_n(out, out, c1_blocks);
    }
 
-void Cascade_Cipher::key_schedule(const byte key[], u32bit)
+void Cascade_Cipher::key_schedule(const byte key[], size_t)
    {
    const byte* key2 = key + cipher1->MAXIMUM_KEYLENGTH;
 

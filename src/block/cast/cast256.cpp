@@ -136,7 +136,7 @@ void CAST_256::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * CAST-256 Key Schedule
 */
-void CAST_256::key_schedule(const byte key[], u32bit length)
+void CAST_256::key_schedule(const byte key[], size_t length)
    {
    SecureVector<u32bit> K(8);
    for(size_t j = 0; j != length; ++j)

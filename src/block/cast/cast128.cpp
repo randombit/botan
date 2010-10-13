@@ -116,7 +116,7 @@ void CAST_128::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * CAST-128 Key Schedule
 */
-void CAST_128::key_schedule(const byte key[], u32bit length)
+void CAST_128::key_schedule(const byte key[], size_t length)
    {
    clear();
    SecureVector<u32bit> X(4);

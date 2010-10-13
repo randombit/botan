@@ -31,7 +31,7 @@ class BOTAN_DLL ANSI_X919_MAC : public MessageAuthenticationCode
    private:
       void add_data(const byte[], size_t);
       void final_result(byte[]);
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
 
       BlockCipher* e;
       BlockCipher* d;

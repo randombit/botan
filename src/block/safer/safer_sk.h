@@ -31,7 +31,7 @@ class BOTAN_DLL SAFER_SK : public BlockCipher
       */
       SAFER_SK(size_t rounds);
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
 
       static const byte EXP[256];
       static const byte LOG[512];

@@ -43,7 +43,7 @@ class BOTAN_DLL Lion : public BlockCipher
 
       ~Lion() { delete hash; delete cipher; }
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
 
       const size_t LEFT_SIZE, RIGHT_SIZE;
 

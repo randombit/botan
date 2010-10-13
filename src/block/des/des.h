@@ -27,7 +27,7 @@ class BOTAN_DLL DES : public BlockCipher
 
       DES() : BlockCipher(8, 8), round_key(32) {}
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
 
       SecureVector<u32bit> round_key;
    };
@@ -47,7 +47,7 @@ class BOTAN_DLL TripleDES : public BlockCipher
 
       TripleDES() : BlockCipher(8, 16, 24, 8), round_key(96) {}
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
 
       SecureVector<u32bit> round_key;
    };

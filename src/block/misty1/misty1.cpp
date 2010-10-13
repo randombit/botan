@@ -202,7 +202,7 @@ void MISTY1::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * MISTY1 Key Schedule
 */
-void MISTY1::key_schedule(const byte key[], u32bit length)
+void MISTY1::key_schedule(const byte key[], size_t length)
    {
    SecureVector<u16bit> KS(32);
    for(size_t i = 0; i != length / 2; ++i)

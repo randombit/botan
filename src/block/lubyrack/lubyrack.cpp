@@ -87,7 +87,7 @@ void LubyRackoff::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * Luby-Rackoff Key Schedule
 */
-void LubyRackoff::key_schedule(const byte key[], u32bit length)
+void LubyRackoff::key_schedule(const byte key[], size_t length)
    {
    K1.set(key, length / 2);
    K2.set(key + length / 2, length / 2);

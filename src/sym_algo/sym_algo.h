@@ -24,17 +24,17 @@ class BOTAN_DLL SymmetricAlgorithm
       /**
       * The maximum allowed key length.
       */
-      const u32bit MAXIMUM_KEYLENGTH;
+      const size_t MAXIMUM_KEYLENGTH;
 
       /**
       * The minimal allowed key length.
       */
-      const u32bit MINIMUM_KEYLENGTH;
+      const size_t MINIMUM_KEYLENGTH;
 
       /**
       * A valid keylength is a multiple of this value.
       */
-      const u32bit KEYLENGTH_MULTIPLE;
+      const size_t KEYLENGTH_MULTIPLE;
 
       /**
       * The name of the algorithm.
@@ -54,7 +54,7 @@ class BOTAN_DLL SymmetricAlgorithm
       * @param key the to be set as a byte array.
       * @param length in bytes of key param
       */
-      void set_key(const byte key[], u32bit length)
+      void set_key(const byte key[], size_t length)
          {
          if(!valid_keylength(length))
             throw Invalid_Key_Length(name(), length);
@@ -66,7 +66,7 @@ class BOTAN_DLL SymmetricAlgorithm
       * @param length the key length to be checked.
       * @return true if the key length is valid.
       */
-      bool valid_keylength(u32bit length) const
+      bool valid_keylength(size_t length) const
          {
          return ((length >= MINIMUM_KEYLENGTH) &&
                  (length <= MAXIMUM_KEYLENGTH) &&
@@ -79,7 +79,7 @@ class BOTAN_DLL SymmetricAlgorithm
       * @param key_max the maximum allowed key length
       * @param key_mod any valid key length must be a multiple of this value
       */
-      SymmetricAlgorithm(u32bit key_min, u32bit key_max, u32bit key_mod) :
+      SymmetricAlgorithm(size_t key_min, size_t key_max, size_t key_mod) :
          MAXIMUM_KEYLENGTH(key_max ? key_max : key_min),
          MINIMUM_KEYLENGTH(key_min),
          KEYLENGTH_MULTIPLE(key_mod)
@@ -92,7 +92,7 @@ class BOTAN_DLL SymmetricAlgorithm
       * @param key the key
       * @param length of key
       */
-      virtual void key_schedule(const byte key[], u32bit length) = 0;
+      virtual void key_schedule(const byte key[], size_t length) = 0;
    };
 
 /**

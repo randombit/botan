@@ -121,7 +121,7 @@ void XTEA::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * XTEA Key Schedule
 */
-void XTEA::key_schedule(const byte key[], u32bit)
+void XTEA::key_schedule(const byte key[], size_t)
    {
    SecureVector<u32bit> UK(4);
    for(size_t i = 0; i != 4; ++i)

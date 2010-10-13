@@ -102,7 +102,7 @@ void SEED::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * SEED Key Schedule
 */
-void SEED::key_schedule(const byte key[], u32bit)
+void SEED::key_schedule(const byte key[], size_t)
    {
    const u32bit RC[16] = {
       0x9E3779B9, 0x3C6EF373, 0x78DDE6E6, 0xF1BBCDCC,

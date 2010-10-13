@@ -27,7 +27,7 @@ class BOTAN_DLL SEED : public BlockCipher
 
       SEED() : BlockCipher(16, 16), K(32) {}
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
 
       class G_FUNC
          {

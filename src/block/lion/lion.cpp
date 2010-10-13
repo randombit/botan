@@ -68,7 +68,7 @@ void Lion::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * Lion Key Schedule
 */
-void Lion::key_schedule(const byte key[], u32bit length)
+void Lion::key_schedule(const byte key[], size_t length)
    {
    clear();
 

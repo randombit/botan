@@ -351,7 +351,7 @@ void Serpent::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * Serpent Key Schedule
 */
-void Serpent::key_schedule(const byte key[], u32bit length)
+void Serpent::key_schedule(const byte key[], size_t length)
    {
    const u32bit PHI = 0x9E3779B9;
 

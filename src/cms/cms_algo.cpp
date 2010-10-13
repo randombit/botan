@@ -134,7 +134,7 @@ SecureVector<byte> CMS_Encoder::encode_params(const std::string& cipher,
       {
       encoder.start_cons(SEQUENCE).
          encode(iv.bits_of(), OCTET_STRING).
-         encode(8*key.length()).
+         encode(u32bit(8*key.length())).
       end_cons();
       }
    else

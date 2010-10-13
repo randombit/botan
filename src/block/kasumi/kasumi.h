@@ -27,7 +27,7 @@ class BOTAN_DLL KASUMI : public BlockCipher
 
       KASUMI() : BlockCipher(8, 16), EK(64) {}
    private:
-      void key_schedule(const byte[], u32bit);
+      void key_schedule(const byte[], size_t);
 
       SecureVector<u16bit> EK;
    };

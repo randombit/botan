@@ -22,7 +22,7 @@ class BOTAN_DLL OctetString
       /**
       * @return size of this octet string in bytes
       */
-      u32bit length() const { return bits.size(); }
+      size_t length() const { return bits.size(); }
 
       /**
       * @return this object as a SecureVector<byte>
@@ -67,7 +67,7 @@ class BOTAN_DLL OctetString
       * @param in the input
       * @param length of in in bytes
       */
-      void change(const byte in[], u32bit length);
+      void change(const byte in[], size_t length);
 
       /**
       * Change the contents of this octet string
@@ -80,7 +80,7 @@ class BOTAN_DLL OctetString
       * @param rng is a random number generator
       * @param len is the desired length in bytes
       */
-      OctetString(class RandomNumberGenerator& rng, u32bit len);
+      OctetString(class RandomNumberGenerator& rng, size_t len);
 
       /**
       * Create a new OctetString
@@ -93,7 +93,7 @@ class BOTAN_DLL OctetString
       * @param in is an array
       * @param len is the length of in in bytes
       */
-      OctetString(const byte in[], u32bit len) { change(in, len); }
+      OctetString(const byte in[], size_t len) { change(in, len); }
 
       /**
       * Create a new OctetString

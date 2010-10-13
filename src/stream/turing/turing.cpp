@@ -223,7 +223,7 @@ u32bit Turing::fixedS(u32bit W)
 /*
 * Turing Key Schedule
 */
-void Turing::key_schedule(const byte key[], u32bit length)
+void Turing::key_schedule(const byte key[], size_t length)
    {
    K.resize(length / 4);
    for(size_t i = 0; i != length; ++i)
