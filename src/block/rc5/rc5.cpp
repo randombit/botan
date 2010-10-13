@@ -18,20 +18,25 @@ namespace Botan {
 */
 void RC5::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
+   const size_t rounds = (S.size() - 2) / 2;
+
    for(size_t i = 0; i != blocks; ++i)
       {
       u32bit A = load_le<u32bit>(in, 0);
       u32bit B = load_le<u32bit>(in, 1);
 
       A += S[0]; B += S[1];
-      for(size_t j = 0; j != ROUNDS; j += 4)
+      for(size_t j = 0; j != rounds; j += 4)
          {
          A = rotate_left(A ^ B, B % 32) + S[2*j+2];
          B = rotate_left(B ^ A, A % 32) + S[2*j+3];
+
          A = rotate_left(A ^ B, B % 32) + S[2*j+4];
          B = rotate_left(B ^ A, A % 32) + S[2*j+5];
+
          A = rotate_left(A ^ B, B % 32) + S[2*j+6];
          B = rotate_left(B ^ A, A % 32) + S[2*j+7];
+
          A = rotate_left(A ^ B, B % 32) + S[2*j+8];
          B = rotate_left(B ^ A, A % 32) + S[2*j+9];
          }
@@ -48,19 +53,24 @@ void RC5::encrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void RC5::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
+   const size_t rounds = (S.size() - 2) / 2;
+
    for(size_t i = 0; i != blocks; ++i)
       {
       u32bit A = load_le<u32bit>(in, 0);
       u32bit B = load_le<u32bit>(in, 1);
 
-      for(size_t j = ROUNDS; j != 0; j -= 4)
+      for(size_t j = rounds; j != 0; j -= 4)
          {
          B = rotate_right(B - S[2*j+1], A % 32) ^ A;
          A = rotate_right(A - S[2*j  ], B % 32) ^ B;
+
          B = rotate_right(B - S[2*j-1], A % 32) ^ A;
          A = rotate_right(A - S[2*j-2], B % 32) ^ B;
+
          B = rotate_right(B - S[2*j-3], A % 32) ^ A;
          A = rotate_right(A - S[2*j-4], B % 32) ^ B;
+
          B = rotate_right(B - S[2*j-5], A % 32) ^ A;
          A = rotate_right(A - S[2*j-6], B % 32) ^ B;
          }
@@ -106,19 +116,19 @@ void RC5::key_schedule(const byte key[], size_t length)
 */
 std::string RC5::name() const
    {
-   return "RC5(" + to_string(ROUNDS) + ")";
+   return "RC5(" + to_string(get_rounds()) + ")";
    }
 
 /*
 * RC5 Constructor
 */
-RC5::RC5(size_t r) :
-   BlockCipher_Fixed_Block_Size(1, 32),
-   ROUNDS(r)
+RC5::RC5(size_t rounds) : BlockCipher_Fixed_Block_Size(1, 32)
    {
-   if(ROUNDS < 8 || ROUNDS > 32 || (ROUNDS % 4 != 0))
-      throw Invalid_Argument(name() + ": Invalid number of rounds");
-   S.resize(2*ROUNDS + 2);
+   if(rounds < 8 || rounds > 32 || (rounds % 4 != 0))
+      throw Invalid_Argument("RC5: Invalid number of rounds " +
+                             to_string(rounds));
+
+   S.resize(2*rounds + 2);
    }
 
 }

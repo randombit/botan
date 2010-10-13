@@ -17,12 +17,14 @@ namespace Botan {
 */
 void SAFER_SK::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
+   const size_t rounds = get_rounds();
+
    for(size_t i = 0; i != blocks; ++i)
       {
       byte A = in[0], B = in[1], C = in[2], D = in[3],
            E = in[4], F = in[5], G = in[6], H = in[7], X, Y;
 
-      for(size_t j = 0; j != 16*ROUNDS; j += 16)
+      for(size_t j = 0; j != 16*rounds; j += 16)
          {
          A = EXP[A ^ EK[j  ]]; B = LOG[B + EK[j+1]];
          C = LOG[C + EK[j+2]]; D = EXP[D ^ EK[j+3]];
@@ -38,10 +40,10 @@ void SAFER_SK::encrypt_n(const byte in[], byte out[], size_t blocks) const
          A += B; F = C + G; E = C + F; C = X; G = Y;
          }
 
-      out[0] = A ^ EK[16*ROUNDS+0]; out[1] = B + EK[16*ROUNDS+1];
-      out[2] = C + EK[16*ROUNDS+2]; out[3] = D ^ EK[16*ROUNDS+3];
-      out[4] = E ^ EK[16*ROUNDS+4]; out[5] = F + EK[16*ROUNDS+5];
-      out[6] = G + EK[16*ROUNDS+6]; out[7] = H ^ EK[16*ROUNDS+7];
+      out[0] = A ^ EK[16*rounds+0]; out[1] = B + EK[16*rounds+1];
+      out[2] = C + EK[16*rounds+2]; out[3] = D ^ EK[16*rounds+3];
+      out[4] = E ^ EK[16*rounds+4]; out[5] = F + EK[16*rounds+5];
+      out[6] = G + EK[16*rounds+6]; out[7] = H ^ EK[16*rounds+7];
 
       in += BLOCK_SIZE;
       out += BLOCK_SIZE;
@@ -53,16 +55,18 @@ void SAFER_SK::encrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void SAFER_SK::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
+   const size_t rounds = get_rounds();
+
    for(size_t i = 0; i != blocks; ++i)
       {
       byte A = in[0], B = in[1], C = in[2], D = in[3],
            E = in[4], F = in[5], G = in[6], H = in[7];
 
-      A ^= EK[16*ROUNDS+0]; B -= EK[16*ROUNDS+1]; C -= EK[16*ROUNDS+2];
-      D ^= EK[16*ROUNDS+3]; E ^= EK[16*ROUNDS+4]; F -= EK[16*ROUNDS+5];
-      G -= EK[16*ROUNDS+6]; H ^= EK[16*ROUNDS+7];
+      A ^= EK[16*rounds+0]; B -= EK[16*rounds+1]; C -= EK[16*rounds+2];
+      D ^= EK[16*rounds+3]; E ^= EK[16*rounds+4]; F -= EK[16*rounds+5];
+      G -= EK[16*rounds+6]; H ^= EK[16*rounds+7];
 
-      for(s32bit j = 16*(ROUNDS-1); j >= 0; j -= 16)
+      for(s32bit j = 16*(rounds-1); j >= 0; j -= 16)
          {
          byte T = E; E = B; B = C; C = T; T = F; F = D; D = G; G = T;
          A -= E; B -= F; C -= G; D -= H; E -= A; F -= B; G -= C; H -= D;
@@ -99,7 +103,7 @@ void SAFER_SK::key_schedule(const byte key[], size_t)
       KB[17] ^= KB[i+9] = EK[i] = key[i+8];
       }
 
-   for(size_t i = 0; i != ROUNDS; ++i)
+   for(size_t i = 0; i != get_rounds(); ++i)
       {
       for(size_t j = 0; j != 18; ++j)
          KB[j] = rotate_left(KB[j], 6);
@@ -113,7 +117,7 @@ void SAFER_SK::key_schedule(const byte key[], size_t)
 */
 std::string SAFER_SK::name() const
    {
-   return "SAFER-SK(" + to_string(ROUNDS) + ")";
+   return "SAFER-SK(" + to_string(get_rounds()) + ")";
    }
 
 /*
@@ -121,18 +125,19 @@ std::string SAFER_SK::name() const
 */
 BlockCipher* SAFER_SK::clone() const
    {
-   return new SAFER_SK(ROUNDS);
+   return new SAFER_SK(get_rounds());
    }
 
 /*
 * SAFER-SK Constructor
 */
 SAFER_SK::SAFER_SK(size_t rounds) :
-   BlockCipher_Fixed_Block_Size(16),
-   EK(16 * rounds + 8), ROUNDS(rounds)
+   BlockCipher_Fixed_Block_Size(16)
    {
-   if(ROUNDS > 13 || ROUNDS == 0)
+   if(rounds > 13 || rounds == 0)
       throw Invalid_Argument(name() + ": Invalid number of rounds");
+
+   EK.resize(16 * rounds + 8);
    }
 
 }
