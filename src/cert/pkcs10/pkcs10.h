@@ -9,6 +9,7 @@
 #define BOTAN_PKCS10_H__
 
 #include <botan/x509_obj.h>
+#include <botan/x509_dn.h>
 #include <botan/pkcs8.h>
 #include <botan/datastor.h>
 #include <vector>

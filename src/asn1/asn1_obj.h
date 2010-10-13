@@ -11,6 +11,7 @@
 
 #include <botan/asn1_int.h>
 #include <botan/asn1_oid.h>
+#include <botan/asn1_str.h>
 #include <botan/alg_id.h>
 #include <vector>
 #include <map>
@@ -62,57 +63,6 @@ class BOTAN_DLL X509_Time : public ASN1_Object
    };
 
 /**
-* Simple String
-*/
-class BOTAN_DLL ASN1_String : public ASN1_Object
-   {
-   public:
-      void encode_into(class DER_Encoder&) const;
-      void decode_from(class BER_Decoder&);
-
-      std::string value() const;
-      std::string iso_8859() const;
-
-      ASN1_Tag tagging() const;
-
-      ASN1_String(const std::string& = "");
-      ASN1_String(const std::string&, ASN1_Tag);
-   private:
-      std::string iso_8859_str;
-      ASN1_Tag tag;
-   };
-
-/**
-* Distinguished Name
-*/
-class BOTAN_DLL X509_DN : public ASN1_Object
-   {
-   public:
-      void encode_into(class DER_Encoder&) const;
-      void decode_from(class BER_Decoder&);
-
-      std::multimap<OID, std::string> get_attributes() const;
-      std::vector<std::string> get_attribute(const std::string&) const;
-
-      std::multimap<std::string, std::string> contents() const;
-
-      void add_attribute(const std::string&, const std::string&);
-      void add_attribute(const OID&, const std::string&);
-
-      static std::string deref_info_field(const std::string&);
-
-      void do_decode(const MemoryRegion<byte>&);
-      MemoryVector<byte> get_bits() const;
-
-      X509_DN();
-      X509_DN(const std::multimap<OID, std::string>&);
-      X509_DN(const std::multimap<std::string, std::string>&);
-   private:
-      std::multimap<OID, ASN1_String> dn_info;
-      MemoryVector<byte> dn_bits;
-   };
-
-/**
 * Alternative Name
 */
 class BOTAN_DLL AlternativeName : public ASN1_Object
@@ -147,10 +97,6 @@ bool BOTAN_DLL operator<=(const X509_Time&, const X509_Time&);
 bool BOTAN_DLL operator>=(const X509_Time&, const X509_Time&);
 bool BOTAN_DLL operator<(const X509_Time&, const X509_Time&);
 bool BOTAN_DLL operator>(const X509_Time&, const X509_Time&);
-
-bool BOTAN_DLL operator==(const X509_DN&, const X509_DN&);
-bool BOTAN_DLL operator!=(const X509_DN&, const X509_DN&);
-bool BOTAN_DLL operator<(const X509_DN&, const X509_DN&);
 
 /*
 * Helper Functions

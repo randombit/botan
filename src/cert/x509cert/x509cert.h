@@ -9,6 +9,7 @@
 #define BOTAN_X509_CERTS_H__
 
 #include <botan/x509_obj.h>
+#include <botan/x509_dn.h>
 #include <botan/x509_key.h>
 #include <botan/datastor.h>
 #include <botan/pubkey_enums.h>
