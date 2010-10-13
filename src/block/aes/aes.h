@@ -34,7 +34,7 @@ class BOTAN_DLL AES : public BlockCipher_Fixed_Block_Size<16>
       * AES fixed to a particular key_size (16, 24, or 32 bytes)
       * @param key_size the chosen fixed key size
       */
-      AES(u32bit key_size);
+      AES(size_t key_size);
    private:
       void key_schedule(const byte[], size_t);
       static u32bit S(u32bit);

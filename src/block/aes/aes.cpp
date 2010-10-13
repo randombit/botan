@@ -681,7 +681,7 @@ u32bit AES::S(u32bit input)
 /*
 * AES Constructor
 */
-AES::AES(u32bit key_size) : BlockCipher_Fixed_Block_Size(key_size),
+AES::AES(size_t key_size) : BlockCipher_Fixed_Block_Size(key_size),
                             EK(56), ME(16), DK(56), MD(16)
    {
    if(key_size != 16 && key_size != 24 && key_size != 32)

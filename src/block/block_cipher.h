@@ -25,9 +25,9 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * @param key_max the maximum key size
       * @param key_mod the modulo restriction on the key size
       */
-      BlockCipher(u32bit key_min,
-                  u32bit key_max = 0,
-                  u32bit key_mod = 1) :
+      BlockCipher(size_t key_min,
+                  size_t key_max = 0,
+                  size_t key_mod = 1) :
          SymmetricAlgorithm(key_min, key_max, key_mod) {}
 
       virtual ~BlockCipher() {}
@@ -119,9 +119,9 @@ template<size_t N>
 class BlockCipher_Fixed_Block_Size : public BlockCipher
    {
    public:
-      BlockCipher_Fixed_Block_Size(u32bit kmin,
-                                   u32bit kmax = 0,
-                                   u32bit kmod = 1) :
+      BlockCipher_Fixed_Block_Size(size_t kmin,
+                                   size_t kmax = 0,
+                                   size_t kmod = 1) :
          BlockCipher(kmin, kmax, kmod) {}
 
       enum { BLOCK_SIZE = N };
