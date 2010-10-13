@@ -14,9 +14,8 @@
 namespace Botan {
 
 /**
-* This class represents any kind of computation which
-* uses an internal state,
-* such as hash functions.
+* This class represents any kind of computation which uses an internal
+* state, such as hash functions or MACs
 */
 class BOTAN_DLL BufferedComputation
    {
@@ -48,9 +47,13 @@ class BOTAN_DLL BufferedComputation
          add_data(&in[0], in.size());
          }
 
-      template<typename T> void update_be(const T in, size_t upto = sizeof(T))
+      /**
+      * Add an integer in big-endian order
+      * @param in the value
+      */
+      template<typename T> void update_be(const T in)
          {
-         for(size_t i = 0; i != std::min(upto, sizeof(T)); ++i)
+         for(size_t i = 0; i != sizeof(T); ++i)
             {
             byte b = get_byte(i, in);
             add_data(&b, 1);
