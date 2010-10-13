@@ -32,8 +32,8 @@ class BOTAN_DLL GOST_34_11 : public HashFunction
 
       GOST_28147_89 cipher;
       SecureVector<byte> buffer, sum, hash;
+      size_t position;
       u64bit count;
-      u32bit position;
    };
 
 }

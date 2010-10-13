@@ -288,10 +288,10 @@ Library_State::~Library_State()
 
    cached_default_allocator = 0;
 
-   for(u32bit j = 0; j != allocators.size(); ++j)
+   for(size_t i = 0; i != allocators.size(); ++i)
       {
-      allocators[j]->destroy();
-      delete allocators[j];
+      allocators[i]->destroy();
+      delete allocators[i];
       }
 
    delete global_rng_lock;

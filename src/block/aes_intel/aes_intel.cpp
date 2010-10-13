@@ -103,7 +103,7 @@ __m128i aes_256_key_expansion(__m128i key, __m128i key2)
 /*
 * AES-128 Encryption
 */
-void AES_128_Intel::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void AES_128_Intel::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const __m128i* in_mm = (const __m128i*)in;
    __m128i* out_mm = (__m128i*)out;
@@ -155,7 +155,7 @@ void AES_128_Intel::encrypt_n(const byte in[], byte out[], u32bit blocks) const
       out_mm += 4;
       }
 
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       __m128i B = _mm_loadu_si128(in_mm + i);
 
@@ -179,7 +179,7 @@ void AES_128_Intel::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * AES-128 Decryption
 */
-void AES_128_Intel::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void AES_128_Intel::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const __m128i* in_mm = (const __m128i*)in;
    __m128i* out_mm = (__m128i*)out;
@@ -231,7 +231,7 @@ void AES_128_Intel::decrypt_n(const byte in[], byte out[], u32bit blocks) const
       out_mm += 4;
       }
 
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       __m128i B = _mm_loadu_si128(in_mm + i);
 
@@ -313,7 +313,7 @@ void AES_128_Intel::clear()
 /*
 * AES-192 Encryption
 */
-void AES_192_Intel::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void AES_192_Intel::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const __m128i* in_mm = (const __m128i*)in;
    __m128i* out_mm = (__m128i*)out;
@@ -369,7 +369,7 @@ void AES_192_Intel::encrypt_n(const byte in[], byte out[], u32bit blocks) const
       out_mm += 4;
       }
 
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       __m128i B = _mm_loadu_si128(in_mm + i);
 
@@ -395,7 +395,7 @@ void AES_192_Intel::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * AES-192 Decryption
 */
-void AES_192_Intel::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void AES_192_Intel::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const __m128i* in_mm = (const __m128i*)in;
    __m128i* out_mm = (__m128i*)out;
@@ -451,7 +451,7 @@ void AES_192_Intel::decrypt_n(const byte in[], byte out[], u32bit blocks) const
       out_mm += 4;
       }
 
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       __m128i B = _mm_loadu_si128(in_mm + i);
 
@@ -529,7 +529,7 @@ void AES_192_Intel::clear()
 /*
 * AES-256 Encryption
 */
-void AES_256_Intel::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void AES_256_Intel::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const __m128i* in_mm = (const __m128i*)in;
    __m128i* out_mm = (__m128i*)out;
@@ -589,7 +589,7 @@ void AES_256_Intel::encrypt_n(const byte in[], byte out[], u32bit blocks) const
       out_mm += 4;
       }
 
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       __m128i B = _mm_loadu_si128(in_mm + i);
 
@@ -617,7 +617,7 @@ void AES_256_Intel::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * AES-256 Decryption
 */
-void AES_256_Intel::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void AES_256_Intel::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const __m128i* in_mm = (const __m128i*)in;
    __m128i* out_mm = (__m128i*)out;
@@ -677,7 +677,7 @@ void AES_256_Intel::decrypt_n(const byte in[], byte out[], u32bit blocks) const
       out_mm += 4;
       }
 
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       __m128i B = _mm_loadu_si128(in_mm + i);
 

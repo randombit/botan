@@ -20,21 +20,21 @@ void LibraryInitializer::initialize(const std::string& arg_string)
    bool thread_safe = false;
 
    const std::vector<std::string> arg_list = split_on(arg_string, ' ');
-   for(u32bit j = 0; j != arg_list.size(); ++j)
+   for(size_t i = 0; i != arg_list.size(); ++i)
       {
-      if(arg_list[j].size() == 0)
+      if(arg_list[i].size() == 0)
          continue;
 
       std::string name, value;
 
-      if(arg_list[j].find('=') == std::string::npos)
+      if(arg_list[i].find('=') == std::string::npos)
          {
-         name = arg_list[j];
+         name = arg_list[i];
          value = "true";
          }
       else
          {
-         std::vector<std::string> name_and_value = split_on(arg_list[j], '=');
+         std::vector<std::string> name_and_value = split_on(arg_list[i], '=');
          name = name_and_value[0];
          value = name_and_value[1];
          }

@@ -46,7 +46,7 @@ void botan_serpent_ia32_key_schedule(u32bit ks[140]);
 */
 void Serpent_IA32::encrypt_n(const byte in[], byte out[], u32bit blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       botan_serpent_ia32_encrypt(in, out, this->get_round_keys());
       in += BLOCK_SIZE;
@@ -57,9 +57,9 @@ void Serpent_IA32::encrypt_n(const byte in[], byte out[], u32bit blocks) const
 /*
 * Serpent Decryption
 */
-void Serpent_IA32::decrypt_n(const byte in[], byte out[], u32bit blocks) const
+void Serpent_IA32::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       botan_serpent_ia32_decrypt(in, out, this->get_round_keys());
       in += BLOCK_SIZE;
@@ -73,8 +73,8 @@ void Serpent_IA32::decrypt_n(const byte in[], byte out[], u32bit blocks) const
 void Serpent_IA32::key_schedule(const byte key[], u32bit length)
    {
    SecureVector<u32bit> W(140);
-   for(u32bit j = 0; j != length / 4; ++j)
-      W[j] = load_le<u32bit>(key, j);
+   for(size_t i = 0; i != length / 4; ++i)
+      W[i] = load_le<u32bit>(key, i);
    W[length / 4] |= u32bit(1) << ((length%4)*8);
 
    botan_serpent_ia32_key_schedule(W);
