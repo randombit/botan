@@ -42,7 +42,7 @@ SecureVector<byte> DLIES_Encryptor::enc(const byte in[], size_t length,
    if(other_key.empty())
       throw Invalid_State("DLIES: The other key was never set");
 
-   SecureVector<byte> out(my_key.size() + length + mac->OUTPUT_LENGTH);
+   SecureVector<byte> out(my_key.size() + length + mac->output_length());
    out.copy(&my_key[0], my_key.size());
    out.copy(my_key.size(), in, length);
 
@@ -110,14 +110,14 @@ DLIES_Decryptor::~DLIES_Decryptor()
 */
 SecureVector<byte> DLIES_Decryptor::dec(const byte msg[], size_t length) const
    {
-   if(length < my_key.size() + mac->OUTPUT_LENGTH)
+   if(length < my_key.size() + mac->output_length())
       throw Decoding_Error("DLIES decryption: ciphertext is too short");
 
-   const size_t CIPHER_LEN = length - my_key.size() - mac->OUTPUT_LENGTH;
+   const size_t CIPHER_LEN = length - my_key.size() - mac->output_length();
 
    SecureVector<byte> v(msg, my_key.size());
    SecureVector<byte> C(msg + my_key.size(), CIPHER_LEN);
-   SecureVector<byte> T(msg + my_key.size() + CIPHER_LEN, mac->OUTPUT_LENGTH);
+   SecureVector<byte> T(msg + my_key.size() + CIPHER_LEN, mac->output_length());
 
    SecureVector<byte> vz(msg, my_key.size());
    vz += ka.derive_key(0, v).bits_of();

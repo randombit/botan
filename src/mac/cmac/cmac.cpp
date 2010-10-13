@@ -40,18 +40,18 @@ SecureVector<byte> CMAC::poly_double(const MemoryRegion<byte>& in,
 void CMAC::add_data(const byte input[], size_t length)
    {
    buffer.copy(position, input, length);
-   if(position + length > OUTPUT_LENGTH)
+   if(position + length > output_length())
       {
-      xor_buf(state, buffer, OUTPUT_LENGTH);
+      xor_buf(state, buffer, output_length());
       e->encrypt(state);
-      input += (OUTPUT_LENGTH - position);
-      length -= (OUTPUT_LENGTH - position);
-      while(length > OUTPUT_LENGTH)
+      input += (output_length() - position);
+      length -= (output_length() - position);
+      while(length > output_length())
          {
-         xor_buf(state, input, OUTPUT_LENGTH);
+         xor_buf(state, input, output_length());
          e->encrypt(state);
-         input += OUTPUT_LENGTH;
-         length -= OUTPUT_LENGTH;
+         input += output_length();
+         length -= output_length();
          }
       buffer.copy(input, length);
       position = 0;
@@ -66,19 +66,19 @@ void CMAC::final_result(byte mac[])
    {
    xor_buf(state, buffer, position);
 
-   if(position == OUTPUT_LENGTH)
+   if(position == output_length())
       {
-      xor_buf(state, B, OUTPUT_LENGTH);
+      xor_buf(state, B, output_length());
       }
    else
       {
       state[position] ^= 0x80;
-      xor_buf(state, P, OUTPUT_LENGTH);
+      xor_buf(state, P, output_length());
       }
 
    e->encrypt(state);
 
-   for(size_t i = 0; i != OUTPUT_LENGTH; ++i)
+   for(size_t i = 0; i != output_length(); ++i)
       mac[i] = state[i];
 
    zeroise(state);
@@ -144,10 +144,10 @@ CMAC::CMAC(BlockCipher* e_in) :
    else
       throw Invalid_Argument("CMAC cannot use the cipher " + e->name());
 
-   state.resize(OUTPUT_LENGTH);
-   buffer.resize(OUTPUT_LENGTH);
-   B.resize(OUTPUT_LENGTH);
-   P.resize(OUTPUT_LENGTH);
+   state.resize(output_length());
+   buffer.resize(output_length());
+   B.resize(output_length());
+   P.resize(output_length());
    position = 0;
    }
 

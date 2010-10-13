@@ -16,22 +16,22 @@ namespace Botan {
 */
 void CBC_MAC::add_data(const byte input[], size_t length)
    {
-   size_t xored = std::min(OUTPUT_LENGTH - position, length);
+   size_t xored = std::min(output_length() - position, length);
    xor_buf(&state[position], input, xored);
    position += xored;
 
-   if(position < OUTPUT_LENGTH)
+   if(position < output_length())
       return;
 
    e->encrypt(state);
    input += xored;
    length -= xored;
-   while(length >= OUTPUT_LENGTH)
+   while(length >= output_length())
       {
-      xor_buf(state, input, OUTPUT_LENGTH);
+      xor_buf(state, input, output_length());
       e->encrypt(state);
-      input += OUTPUT_LENGTH;
-      length -= OUTPUT_LENGTH;
+      input += output_length();
+      length -= output_length();
       }
 
    xor_buf(state, input, length);

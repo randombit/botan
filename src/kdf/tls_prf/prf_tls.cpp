@@ -32,7 +32,7 @@ void P_hash(MemoryRegion<byte>& output,
    while(offset != output.size())
       {
       const size_t this_block_len =
-         std::min<size_t>(mac->OUTPUT_LENGTH, output.size() - offset);
+         std::min<size_t>(mac->output_length(), output.size() - offset);
 
       A = mac->process(A);
 

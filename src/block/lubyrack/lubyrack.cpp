@@ -15,7 +15,7 @@ namespace Botan {
 */
 void LubyRackoff::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   const size_t len = hash->OUTPUT_LENGTH;
+   const size_t len = hash->output_length();
 
    SecureVector<byte> buffer_vec(len);
    byte* buffer = &buffer_vec[0];
@@ -52,7 +52,7 @@ void LubyRackoff::encrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void LubyRackoff::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   const size_t len = hash->OUTPUT_LENGTH;
+   const size_t len = hash->output_length();
 
    SecureVector<byte> buffer_vec(len);
    byte* buffer = &buffer_vec[0];
@@ -123,7 +123,7 @@ std::string LubyRackoff::name() const
 * Luby-Rackoff Constructor
 */
 LubyRackoff::LubyRackoff(HashFunction* h) :
-   BlockCipher(2 * (h ? h->OUTPUT_LENGTH: 0),
+   BlockCipher(2 * (h ? h->output_length(): 0),
                2, 32, 2),
    hash(h)
    {

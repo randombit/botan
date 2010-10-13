@@ -17,7 +17,7 @@ SecureVector<byte> EMSA1_BSI::encoding_of(const MemoryRegion<byte>& msg,
                                           size_t output_bits,
                                           RandomNumberGenerator&)
    {
-   if(msg.size() != hash_ptr()->OUTPUT_LENGTH)
+   if(msg.size() != hash_ptr()->output_length())
       throw Encoding_Error("EMSA1_BSI::encoding_of: Invalid size for input");
 
    if(8*msg.size() <= output_bits)

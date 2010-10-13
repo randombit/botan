@@ -21,7 +21,7 @@ OctetString PKCS5_PBKDF1::derive_key(size_t key_len,
    if(iterations == 0)
       throw Invalid_Argument("PKCS5_PBKDF1: Invalid iteration count");
 
-   if(key_len > hash->OUTPUT_LENGTH)
+   if(key_len > hash->output_length())
       throw Invalid_Argument("PKCS5_PBKDF1: Requested output length too long");
 
    hash->update(passphrase);

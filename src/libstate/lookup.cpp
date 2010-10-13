@@ -46,17 +46,17 @@ u32bit block_size_of(const std::string& name)
    }
 
 /*
-* Query the OUTPUT_LENGTH of a hash or MAC
+* Query the output_length() of a hash or MAC
 */
 u32bit output_length_of(const std::string& name)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
 
    if(const HashFunction* hash = af.prototype_hash_function(name))
-      return hash->OUTPUT_LENGTH;
+      return hash->output_length();
 
    if(const MessageAuthenticationCode* mac = af.prototype_mac(name))
-      return mac->OUTPUT_LENGTH;
+      return mac->output_length();
 
    throw Algorithm_Not_Found(name);
    }

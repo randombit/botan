@@ -171,7 +171,7 @@ void SHA_224::compress_n(const byte input[], size_t blocks)
 */
 void SHA_224::copy_out(byte output[])
    {
-   for(size_t i = 0; i != OUTPUT_LENGTH; i += 4)
+   for(size_t i = 0; i != output_length(); i += 4)
       store_be(digest[i/4], output + i);
    }
 
@@ -205,7 +205,7 @@ void SHA_256::compress_n(const byte input[], size_t blocks)
 */
 void SHA_256::copy_out(byte output[])
    {
-   for(size_t i = 0; i != OUTPUT_LENGTH; i += 4)
+   for(size_t i = 0; i != output_length(); i += 4)
       store_be(digest[i/4], output + i);
    }
 

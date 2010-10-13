@@ -23,7 +23,7 @@ class BOTAN_DLL Tiger : public MDx_HashFunction
 
       HashFunction* clone() const
          {
-         return new Tiger(OUTPUT_LENGTH, PASS);
+         return new Tiger(output_length(), PASS);
          }
 
       /**

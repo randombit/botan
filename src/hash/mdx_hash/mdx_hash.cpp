@@ -20,7 +20,7 @@ MDx_HashFunction::MDx_HashFunction(size_t hash_len, size_t block_len,
    HashFunction(hash_len, block_len), buffer(block_len),
    BIG_BYTE_ENDIAN(byte_end), BIG_BIT_ENDIAN(bit_end), COUNT_SIZE(cnt_size)
    {
-   if(COUNT_SIZE >= OUTPUT_LENGTH || COUNT_SIZE >= HASH_BLOCK_SIZE)
+   if(COUNT_SIZE >= output_length() || COUNT_SIZE >= HASH_BLOCK_SIZE)
       throw Invalid_Argument("MDx_HashFunction: COUNT_SIZE is too big");
    count = position = 0;
    }

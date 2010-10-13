@@ -63,7 +63,7 @@ SecureVector<byte> EMSA1::encoding_of(const MemoryRegion<byte>& msg,
                                       size_t output_bits,
                                       RandomNumberGenerator&)
    {
-   if(msg.size() != hash->OUTPUT_LENGTH)
+   if(msg.size() != hash->output_length())
       throw Encoding_Error("EMSA1::encoding_of: Invalid size for input");
    return emsa1_encoding(msg, output_bits);
    }
@@ -75,7 +75,7 @@ bool EMSA1::verify(const MemoryRegion<byte>& coded,
                    const MemoryRegion<byte>& raw, size_t key_bits)
    {
    try {
-      if(raw.size() != hash->OUTPUT_LENGTH)
+      if(raw.size() != hash->output_length())
          throw Encoding_Error("EMSA1::encoding_of: Invalid size for input");
 
       SecureVector<byte> our_coding = emsa1_encoding(raw, key_bits);

@@ -94,7 +94,7 @@ void MD2::final_result(byte output[])
 
    hash(&buffer[0]);
    hash(&checksum[0]);
-   copy_mem(output, &X[0], OUTPUT_LENGTH);
+   copy_mem(output, &X[0], output_length());
    clear();
    }
 

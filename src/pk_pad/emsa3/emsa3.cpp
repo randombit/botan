@@ -60,7 +60,7 @@ SecureVector<byte> EMSA3::encoding_of(const MemoryRegion<byte>& msg,
                                       size_t output_bits,
                                       RandomNumberGenerator&)
    {
-   if(msg.size() != hash->OUTPUT_LENGTH)
+   if(msg.size() != hash->output_length())
       throw Encoding_Error("EMSA3::encoding_of: Bad input length");
 
    return emsa3_encoding(msg, output_bits,
@@ -74,7 +74,7 @@ bool EMSA3::verify(const MemoryRegion<byte>& coded,
                    const MemoryRegion<byte>& raw,
                    size_t key_bits)
    {
-   if(raw.size() != hash->OUTPUT_LENGTH)
+   if(raw.size() != hash->output_length())
       return false;
 
    try

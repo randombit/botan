@@ -129,7 +129,7 @@ void Whirlpool::compress_n(const byte in[], size_t blocks)
 */
 void Whirlpool::copy_out(byte output[])
    {
-   for(size_t i = 0; i != OUTPUT_LENGTH; i += 8)
+   for(size_t i = 0; i != output_length(); i += 8)
       store_be(digest[i/8], output + i);
    }
 

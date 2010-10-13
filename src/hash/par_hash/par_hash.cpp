@@ -19,7 +19,7 @@ size_t sum_of_hash_lengths(const std::vector<HashFunction*>& hashes)
    size_t sum = 0;
 
    for(size_t i = 0; i != hashes.size(); ++i)
-      sum += hashes[i]->OUTPUT_LENGTH;
+      sum += hashes[i]->output_length();
 
    return sum;
    }
@@ -44,7 +44,7 @@ void Parallel::final_result(byte hash[])
    for(size_t i = 0; i != hashes.size(); ++i)
       {
       hashes[i]->final(hash + offset);
-      offset += hashes[i]->OUTPUT_LENGTH;
+      offset += hashes[i]->output_length();
       }
    }
 

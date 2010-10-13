@@ -75,7 +75,7 @@ void Tiger::compress_n(const byte input[], size_t blocks)
 */
 void Tiger::copy_out(byte output[])
    {
-   for(size_t i = 0; i != OUTPUT_LENGTH; ++i)
+   for(size_t i = 0; i != output_length(); ++i)
       output[i] = get_byte(7 - (i % 8), digest[i/8]);
    }
 
@@ -160,7 +160,7 @@ void Tiger::clear()
 */
 std::string Tiger::name() const
    {
-   return "Tiger(" + to_string(OUTPUT_LENGTH) + "," + to_string(PASS) + ")";
+   return "Tiger(" + to_string(output_length()) + "," + to_string(PASS) + ")";
    }
 
 /*
@@ -172,9 +172,9 @@ Tiger::Tiger(size_t hashlen, size_t pass) :
    digest(3),
    PASS(pass)
    {
-   if(OUTPUT_LENGTH != 16 && OUTPUT_LENGTH != 20 && OUTPUT_LENGTH != 24)
+   if(output_length() != 16 && output_length() != 20 && output_length() != 24)
       throw Invalid_Argument("Tiger: Illegal hash output size: " +
-                             to_string(OUTPUT_LENGTH));
+                             to_string(output_length()));
    if(PASS < 3)
       throw Invalid_Argument("Tiger: Invalid number of passes: "
                              + to_string(PASS));

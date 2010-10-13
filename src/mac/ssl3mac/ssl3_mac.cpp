@@ -24,7 +24,7 @@ void SSL3_MAC::final_result(byte mac[])
    {
    hash->final(mac);
    hash->update(o_key);
-   hash->update(mac, OUTPUT_LENGTH);
+   hash->update(mac, output_length());
    hash->final(mac);
    hash->update(i_key);
    }
@@ -73,8 +73,8 @@ MessageAuthenticationCode* SSL3_MAC::clone() const
 * SSL3-MAC Constructor
 */
 SSL3_MAC::SSL3_MAC(HashFunction* hash_in) :
-   MessageAuthenticationCode(hash_in->OUTPUT_LENGTH,
-                             hash_in->OUTPUT_LENGTH),
+   MessageAuthenticationCode(hash_in->output_length(),
+                             hash_in->output_length()),
    hash(hash_in)
    {
    if(hash->HASH_BLOCK_SIZE == 0)

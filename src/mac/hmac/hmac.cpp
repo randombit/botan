@@ -26,7 +26,7 @@ void HMAC::final_result(byte mac[])
    {
    hash->final(mac);
    hash->update(o_key);
-   hash->update(mac, OUTPUT_LENGTH);
+   hash->update(mac, output_length());
    hash->final(mac);
    hash->update(i_key);
    }
@@ -85,7 +85,7 @@ MessageAuthenticationCode* HMAC::clone() const
 * HMAC Constructor
 */
 HMAC::HMAC(HashFunction* hash_in) :
-   MessageAuthenticationCode(hash_in->OUTPUT_LENGTH,
+   MessageAuthenticationCode(hash_in->output_length(),
                              0, 2*hash_in->HASH_BLOCK_SIZE),
    hash(hash_in)
    {

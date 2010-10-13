@@ -37,12 +37,12 @@ OctetString PKCS5_PBKDF2::derive_key(size_t key_len,
 
    byte* T = &key[0];
 
-   SecureVector<byte> U(mac->OUTPUT_LENGTH);
+   SecureVector<byte> U(mac->output_length());
 
    u32bit counter = 1;
    while(key_len)
       {
-      size_t T_size = std::min<size_t>(mac->OUTPUT_LENGTH, key_len);
+      size_t T_size = std::min<size_t>(mac->output_length(), key_len);
 
       mac->update(salt, salt_size);
       mac->update_be(counter);

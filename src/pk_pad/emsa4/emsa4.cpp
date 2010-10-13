@@ -34,7 +34,7 @@ SecureVector<byte> EMSA4::encoding_of(const MemoryRegion<byte>& msg,
                                       size_t output_bits,
                                       RandomNumberGenerator& rng)
    {
-   const size_t HASH_SIZE = hash->OUTPUT_LENGTH;
+   const size_t HASH_SIZE = hash->output_length();
 
    if(msg.size() != HASH_SIZE)
       throw Encoding_Error("EMSA4::encoding_of: Bad input length");
@@ -69,7 +69,7 @@ SecureVector<byte> EMSA4::encoding_of(const MemoryRegion<byte>& msg,
 bool EMSA4::verify(const MemoryRegion<byte>& const_coded,
                    const MemoryRegion<byte>& raw, size_t key_bits)
    {
-   const size_t HASH_SIZE = hash->OUTPUT_LENGTH;
+   const size_t HASH_SIZE = hash->output_length();
    const size_t KEY_BYTES = (key_bits + 7) / 8;
 
    if(key_bits < 8*HASH_SIZE + 9)
@@ -125,7 +125,7 @@ bool EMSA4::verify(const MemoryRegion<byte>& const_coded,
 * EMSA4 Constructor
 */
 EMSA4::EMSA4(HashFunction* h) :
-   SALT_SIZE(h->OUTPUT_LENGTH), hash(h)
+   SALT_SIZE(h->output_length()), hash(h)
    {
    mgf = new MGF1(hash->clone());
    }

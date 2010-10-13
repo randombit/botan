@@ -114,7 +114,7 @@ size_t EME1::maximum_input_size(size_t keybits) const
 * EME1 Constructor
 */
 EME1::EME1(HashFunction* hash, const std::string& P) :
-   HASH_LENGTH(hash->OUTPUT_LENGTH)
+   HASH_LENGTH(hash->output_length())
    {
    Phash = hash->process(P);
    mgf = new MGF1(hash);

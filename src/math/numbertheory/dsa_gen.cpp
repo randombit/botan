@@ -57,7 +57,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
    std::auto_ptr<HashFunction> hash(
       af.make_hash_function("SHA-" + to_string(qbits)));
 
-   const size_t HASH_SIZE = hash->OUTPUT_LENGTH;
+   const size_t HASH_SIZE = hash->output_length();
 
    class Seed
       {

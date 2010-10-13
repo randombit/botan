@@ -227,7 +227,7 @@ PK_Signer* choose_sig_format(const Private_Key& key,
    if(!proto_hash)
       throw Algorithm_Not_Found(hash_fn);
 
-   if(key.max_input_bits() < proto_hash->OUTPUT_LENGTH*8)
+   if(key.max_input_bits() < proto_hash->output_length()*8)
       throw Invalid_Argument("Key is too small for chosen hash function");
 
    if(algo_name == "RSA")

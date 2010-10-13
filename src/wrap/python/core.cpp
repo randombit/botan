@@ -102,7 +102,7 @@ class Py_HashFunction
 
       u32bit output_length() const
          {
-         return hash->OUTPUT_LENGTH;
+         return hash->output_length();
          }
 
    private:
@@ -123,7 +123,7 @@ class Py_MAC
 
       ~Py_MAC() { delete mac; }
 
-      u32bit output_length() const { return mac->OUTPUT_LENGTH; }
+      u32bit output_length() const { return mac->output_length(); }
 
       std::string name() const { return mac->name(); }
 

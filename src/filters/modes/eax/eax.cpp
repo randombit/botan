@@ -44,7 +44,7 @@ EAX_Base::EAX_Base(BlockCipher* cipher, size_t tag_size) :
    cmac = new CMAC(cipher->clone());
    ctr = new CTR_BE(cipher); // takes ownership
 
-   if(tag_size % 8 != 0 || TAG_SIZE == 0 || TAG_SIZE > cmac->OUTPUT_LENGTH)
+   if(tag_size % 8 != 0 || TAG_SIZE == 0 || TAG_SIZE > cmac->output_length())
       throw Invalid_Argument(name() + ": Bad tag size " + to_string(tag_size));
    }
 

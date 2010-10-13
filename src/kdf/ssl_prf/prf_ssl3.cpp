@@ -25,7 +25,7 @@ OctetString next_hash(size_t where, size_t want,
                       const byte secret[], size_t secret_len,
                       const byte seed[], size_t seed_len)
    {
-   BOTAN_ASSERT(want <= md5.OUTPUT_LENGTH, "Desired output too large");
+   BOTAN_ASSERT(want <= md5.output_length(), "Desired output too large");
 
    const byte ASCII_A_CHAR = 0x41;
 
@@ -62,7 +62,7 @@ SecureVector<byte> SSL3_PRF::derive(size_t key_len,
    int counter = 0;
    while(key_len)
       {
-      const size_t produce = std::min<size_t>(key_len, md5.OUTPUT_LENGTH);
+      const size_t produce = std::min<size_t>(key_len, md5.output_length());
 
       output = output + next_hash(counter++, produce, md5, sha1,
                                   secret, secret_len, seed, seed_len);

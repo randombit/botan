@@ -21,9 +21,9 @@ namespace Botan {
 class BOTAN_DLL BufferedComputation
    {
    public:
-
       /**
       * The length of the output of this function in bytes.
+      * @deprecated Use output_length()
       */
       const size_t OUTPUT_LENGTH;
 
@@ -78,7 +78,7 @@ class BOTAN_DLL BufferedComputation
       * Complete the computation and retrieve the
       * final result.
       * @param out The byte array to be filled with the result.
-      * Must be of length OUTPUT_LENGTH.
+      * Must be of length output_length()
       */
       void final(byte out[]) { final_result(out); }
 
@@ -89,7 +89,7 @@ class BOTAN_DLL BufferedComputation
       */
       SecureVector<byte> final()
          {
-         SecureVector<byte> output(OUTPUT_LENGTH);
+         SecureVector<byte> output(output_length());
          final_result(&output[0]);
          return output;
          }
@@ -149,7 +149,7 @@ class BOTAN_DLL BufferedComputation
 
       /**
       * Write the final output to out
-      * @param out is an output buffer of OUTPUT_LENGTH
+      * @param out is an output buffer of output_length()
       */
       virtual void final_result(byte out[]) = 0;
    };

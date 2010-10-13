@@ -46,8 +46,8 @@ OctetString OpenPGP_S2K::derive_key(size_t key_len,
          }
 
       hash_buf = hash->final();
-      key.copy(generated, &hash_buf[0], hash->OUTPUT_LENGTH);
-      generated += hash->OUTPUT_LENGTH;
+      key.copy(generated, &hash_buf[0], hash->output_length());
+      generated += hash->output_length();
       ++pass;
       }
 

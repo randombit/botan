@@ -176,7 +176,7 @@ Randpool::Randpool(BlockCipher* cipher_in,
    mac(mac_in)
    {
    const size_t BLOCK_SIZE = cipher->BLOCK_SIZE;
-   const size_t OUTPUT_LENGTH = mac->OUTPUT_LENGTH;
+   const size_t OUTPUT_LENGTH = mac->output_length();
 
    if(OUTPUT_LENGTH < BLOCK_SIZE ||
       !cipher->valid_keylength(OUTPUT_LENGTH) ||

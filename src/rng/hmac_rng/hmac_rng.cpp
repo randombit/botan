@@ -167,14 +167,14 @@ HMAC_RNG::HMAC_RNG(MessageAuthenticationCode* extractor_mac,
                    MessageAuthenticationCode* prf_mac) :
    extractor(extractor_mac), prf(prf_mac)
    {
-   if(!prf->valid_keylength(extractor->OUTPUT_LENGTH) ||
-      !extractor->valid_keylength(prf->OUTPUT_LENGTH))
+   if(!prf->valid_keylength(extractor->output_length()) ||
+      !extractor->valid_keylength(prf->output_length()))
       throw Invalid_Argument("HMAC_RNG: Bad algo combination " +
                              extractor->name() + " and " +
                              prf->name());
 
    // First PRF inputs are all zero, as specified in section 2
-   K.resize(prf->OUTPUT_LENGTH);
+   K.resize(prf->output_length());
 
    counter = 0;
    user_input_len = 0;
@@ -193,7 +193,7 @@ HMAC_RNG::HMAC_RNG(MessageAuthenticationCode* extractor_mac,
    the estimated entropy counter is high enough. That variable is only
    set when a reseeding is performed.
    */
-   MemoryVector<byte> prf_key(extractor->OUTPUT_LENGTH);
+   MemoryVector<byte> prf_key(extractor->output_length());
    prf->set_key(prf_key);
 
    /*

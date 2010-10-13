@@ -168,7 +168,7 @@ void BMW_512::copy_out(byte output[])
 
    BMW_512_compress(final, &H[0], &Q[0]);
 
-   for(size_t i = 0; i != OUTPUT_LENGTH; i += 8)
+   for(size_t i = 0; i != output_length(); i += 8)
       store_le(final[8 + i/8], output + i);
    }
 
