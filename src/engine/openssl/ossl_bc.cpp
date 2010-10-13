@@ -1,6 +1,6 @@
 /*
 * OpenSSL Block Cipher
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -21,7 +21,11 @@ class EVP_BlockCipher : public BlockCipher
       void clear();
       std::string name() const { return cipher_name; }
       BlockCipher* clone() const;
+
+      size_t block_size() const { return block_sz; }
+
       EVP_BlockCipher(const EVP_CIPHER*, const std::string&);
+
       EVP_BlockCipher(const EVP_CIPHER*, const std::string&,
                       u32bit, u32bit, u32bit);
 
@@ -30,6 +34,8 @@ class EVP_BlockCipher : public BlockCipher
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
       void key_schedule(const byte[], size_t);
+
+      size_t block_sz;
       std::string cipher_name;
       mutable EVP_CIPHER_CTX encrypt, decrypt;
    };
@@ -39,7 +45,8 @@ class EVP_BlockCipher : public BlockCipher
 */
 EVP_BlockCipher::EVP_BlockCipher(const EVP_CIPHER* algo,
                                  const std::string& algo_name) :
-   BlockCipher(EVP_CIPHER_block_size(algo), EVP_CIPHER_key_length(algo)),
+   BlockCipher(EVP_CIPHER_key_length(algo)),
+   block_sz(EVP_CIPHER_block_size(algo)),
    cipher_name(algo_name)
    {
    if(EVP_CIPHER_mode(algo) != EVP_CIPH_ECB_MODE)
@@ -62,7 +69,8 @@ EVP_BlockCipher::EVP_BlockCipher(const EVP_CIPHER* algo,
                                  const std::string& algo_name,
                                  u32bit key_min, u32bit key_max,
                                  u32bit key_mod) :
-   BlockCipher(EVP_CIPHER_block_size(algo), key_min, key_max, key_mod),
+   BlockCipher(key_min, key_max, key_mod),
+   block_sz(EVP_CIPHER_block_size(algo)),
    cipher_name(algo_name)
    {
    if(EVP_CIPHER_mode(algo) != EVP_CIPH_ECB_MODE)
@@ -94,7 +102,7 @@ void EVP_BlockCipher::encrypt_n(const byte in[], byte out[],
                                 size_t blocks) const
    {
    int out_len = 0;
-   EVP_EncryptUpdate(&encrypt, out, &out_len, in, blocks * BLOCK_SIZE);
+   EVP_EncryptUpdate(&encrypt, out, &out_len, in, blocks * block_sz);
    }
 
 /*
@@ -104,7 +112,7 @@ void EVP_BlockCipher::decrypt_n(const byte in[], byte out[],
                                 size_t blocks) const
    {
    int out_len = 0;
-   EVP_DecryptUpdate(&decrypt, out, &out_len, in, blocks * BLOCK_SIZE);
+   EVP_DecryptUpdate(&decrypt, out, &out_len, in, blocks * block_sz);
    }
 
 /*
