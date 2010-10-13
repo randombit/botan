@@ -44,7 +44,7 @@ void botan_serpent_ia32_key_schedule(u32bit ks[140]);
 /*
 * Serpent Encryption
 */
-void Serpent_IA32::encrypt_n(const byte in[], byte out[], u32bit blocks) const
+void Serpent_IA32::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    for(size_t i = 0; i != blocks; ++i)
       {
