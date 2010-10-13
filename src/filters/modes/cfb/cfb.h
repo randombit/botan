@@ -29,7 +29,7 @@ class BOTAN_DLL CFB_Encryption : public Keyed_Filter
          { return cipher->valid_keylength(key_len); }
 
       bool valid_iv_length(size_t iv_len) const
-         { return (iv_len == cipher->BLOCK_SIZE); }
+         { return (iv_len == cipher->block_size()); }
 
       CFB_Encryption(BlockCipher* cipher, size_t feedback = 0);
 
@@ -63,7 +63,7 @@ class BOTAN_DLL CFB_Decryption : public Keyed_Filter
          { return cipher->valid_keylength(key_len); }
 
       bool valid_iv_length(size_t iv_len) const
-         { return (iv_len == cipher->BLOCK_SIZE); }
+         { return (iv_len == cipher->block_size()); }
 
       CFB_Decryption(BlockCipher* cipher, size_t feedback = 0);
 

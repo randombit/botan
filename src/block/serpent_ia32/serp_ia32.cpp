@@ -49,8 +49,8 @@ void Serpent_IA32::encrypt_n(const byte in[], byte out[], size_t blocks) const
    for(size_t i = 0; i != blocks; ++i)
       {
       botan_serpent_ia32_encrypt(in, out, this->get_round_keys());
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in += block_size();
+      out += block_size();
       }
    }
 
@@ -62,8 +62,8 @@ void Serpent_IA32::decrypt_n(const byte in[], byte out[], size_t blocks) const
    for(size_t i = 0; i != blocks; ++i)
       {
       botan_serpent_ia32_decrypt(in, out, this->get_round_keys());
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in += block_size();
+      out += block_size();
       }
    }
 

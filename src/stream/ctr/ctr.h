@@ -24,7 +24,7 @@ class BOTAN_DLL CTR_BE : public StreamCipher
       void set_iv(const byte iv[], size_t iv_len);
 
       bool valid_iv_length(size_t iv_len) const
-         { return (iv_len <= permutation->BLOCK_SIZE); }
+         { return (iv_len <= permutation->block_size()); }
 
       std::string name() const;
 

@@ -36,7 +36,7 @@ void poly_double(byte tweak[], size_t size)
 size_t xts_parallelism(BlockCipher* cipher)
    {
    return std::max<size_t>(cipher->parallel_bytes(),
-                           2 * cipher->BLOCK_SIZE);
+                           2 * cipher->block_size());
    }
 
 }
@@ -45,10 +45,10 @@ size_t xts_parallelism(BlockCipher* cipher)
 * XTS_Encryption constructor
 */
 XTS_Encryption::XTS_Encryption(BlockCipher* ciph) :
-   Buffered_Filter(xts_parallelism(ciph), ciph->BLOCK_SIZE + 1),
+   Buffered_Filter(xts_parallelism(ciph), ciph->block_size() + 1),
    cipher(ciph)
    {
-   if(cipher->BLOCK_SIZE != 8 && cipher->BLOCK_SIZE != 16)
+   if(cipher->block_size() != 8 && cipher->block_size() != 16)
       throw std::invalid_argument("Bad cipher for XTS: " + cipher->name());
 
    cipher2 = cipher->clone();
@@ -61,10 +61,10 @@ XTS_Encryption::XTS_Encryption(BlockCipher* ciph) :
 XTS_Encryption::XTS_Encryption(BlockCipher* ciph,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
-   Buffered_Filter(xts_parallelism(ciph), ciph->BLOCK_SIZE + 1),
+   Buffered_Filter(xts_parallelism(ciph), ciph->block_size() + 1),
    cipher(ciph)
    {
-   if(cipher->BLOCK_SIZE != 8 && cipher->BLOCK_SIZE != 16)
+   if(cipher->block_size() != 8 && cipher->block_size() != 16)
        throw std::invalid_argument("Bad cipher for XTS: " + cipher->name());
 
    cipher2 = cipher->clone();
@@ -90,18 +90,18 @@ void XTS_Encryption::set_iv(const InitializationVector& iv)
    if(!valid_iv_length(iv.length()))
       throw Invalid_IV_Length(name(), iv.length());
 
-   const size_t blocks_in_tweak = tweak.size() / cipher->BLOCK_SIZE;
+   const size_t blocks_in_tweak = tweak.size() / cipher->block_size();
 
    tweak.copy(iv.begin(), iv.length());
    cipher2->encrypt(tweak);
 
    for(size_t i = 1; i < blocks_in_tweak; ++i)
       {
-      tweak.copy(i*cipher->BLOCK_SIZE,
-                 &tweak[(i-1)*cipher->BLOCK_SIZE],
-                 cipher->BLOCK_SIZE);
+      tweak.copy(i*cipher->block_size(),
+                 &tweak[(i-1)*cipher->block_size()],
+                 cipher->block_size());
 
-      poly_double(&tweak[i*cipher->BLOCK_SIZE], cipher->BLOCK_SIZE);
+      poly_double(&tweak[i*cipher->block_size()], cipher->block_size());
       }
    }
 
@@ -133,15 +133,15 @@ void XTS_Encryption::end_msg()
 
 void XTS_Encryption::buffered_block(const byte input[], size_t length)
    {
-   const size_t blocks_in_tweak = tweak.size() / cipher->BLOCK_SIZE;
-   size_t blocks = length / cipher->BLOCK_SIZE;
+   const size_t blocks_in_tweak = tweak.size() / cipher->block_size();
+   size_t blocks = length / cipher->block_size();
 
    SecureVector<byte> temp(tweak.size());
 
    while(blocks)
       {
       size_t to_proc = std::min(blocks, blocks_in_tweak);
-      size_t to_proc_bytes = to_proc * cipher->BLOCK_SIZE;
+      size_t to_proc_bytes = to_proc * cipher->block_size();
 
       xor_buf(temp, input, tweak, to_proc_bytes);
 
@@ -151,20 +151,20 @@ void XTS_Encryption::buffered_block(const byte input[], size_t length)
 
       send(temp, to_proc_bytes);
 
-      tweak.copy(&tweak[(to_proc-1)*cipher->BLOCK_SIZE],
-                 cipher->BLOCK_SIZE);
-      poly_double(&tweak[0], cipher->BLOCK_SIZE);
+      tweak.copy(&tweak[(to_proc-1)*cipher->block_size()],
+                 cipher->block_size());
+      poly_double(&tweak[0], cipher->block_size());
 
       for(size_t i = 1; i < blocks_in_tweak; ++i)
          {
-         tweak.copy(i*cipher->BLOCK_SIZE,
-                    &tweak[(i-1)*cipher->BLOCK_SIZE],
-                    cipher->BLOCK_SIZE);
+         tweak.copy(i*cipher->block_size(),
+                    &tweak[(i-1)*cipher->block_size()],
+                    cipher->block_size());
 
-         poly_double(&tweak[i*cipher->BLOCK_SIZE], cipher->BLOCK_SIZE);
+         poly_double(&tweak[i*cipher->block_size()], cipher->block_size());
          }
 
-      input += to_proc * cipher->BLOCK_SIZE;
+      input += to_proc * cipher->block_size();
       blocks -= to_proc;
       }
    }
@@ -174,10 +174,10 @@ void XTS_Encryption::buffered_block(const byte input[], size_t length)
 */
 void XTS_Encryption::buffered_final(const byte input[], size_t length)
    {
-   if(length <= cipher->BLOCK_SIZE)
+   if(length <= cipher->block_size())
       throw Encoding_Error("XTS_Encryption: insufficient data to encrypt");
 
-   if(length % cipher->BLOCK_SIZE == 0)
+   if(length % cipher->block_size() == 0)
       {
       buffered_block(input, length);
       }
@@ -185,7 +185,7 @@ void XTS_Encryption::buffered_final(const byte input[], size_t length)
       { // steal ciphertext
 
       size_t leftover_blocks =
-         ((length / cipher->BLOCK_SIZE) - 1) * cipher->BLOCK_SIZE;
+         ((length / cipher->block_size()) - 1) * cipher->block_size();
 
       buffered_block(input, leftover_blocks);
 
@@ -194,18 +194,18 @@ void XTS_Encryption::buffered_final(const byte input[], size_t length)
 
       SecureVector<byte> temp(input, length);
 
-      xor_buf(temp, tweak, cipher->BLOCK_SIZE);
+      xor_buf(temp, tweak, cipher->block_size());
       cipher->encrypt(temp);
-      xor_buf(temp, tweak, cipher->BLOCK_SIZE);
+      xor_buf(temp, tweak, cipher->block_size());
 
-      poly_double(&tweak[0], cipher->BLOCK_SIZE);
+      poly_double(&tweak[0], cipher->block_size());
 
-      for(size_t i = 0; i != length - cipher->BLOCK_SIZE; ++i)
-         std::swap(temp[i], temp[i + cipher->BLOCK_SIZE]);
+      for(size_t i = 0; i != length - cipher->block_size(); ++i)
+         std::swap(temp[i], temp[i + cipher->block_size()]);
 
-      xor_buf(temp, tweak, cipher->BLOCK_SIZE);
+      xor_buf(temp, tweak, cipher->block_size());
       cipher->encrypt(temp);
-      xor_buf(temp, tweak, cipher->BLOCK_SIZE);
+      xor_buf(temp, tweak, cipher->block_size());
 
       send(temp, temp.size());
       }
@@ -217,10 +217,10 @@ void XTS_Encryption::buffered_final(const byte input[], size_t length)
 * XTS_Decryption constructor
 */
 XTS_Decryption::XTS_Decryption(BlockCipher* ciph) :
-   Buffered_Filter(xts_parallelism(ciph), ciph->BLOCK_SIZE + 1),
+   Buffered_Filter(xts_parallelism(ciph), ciph->block_size() + 1),
    cipher(ciph)
    {
-   if(cipher->BLOCK_SIZE != 8 && cipher->BLOCK_SIZE != 16)
+   if(cipher->block_size() != 8 && cipher->block_size() != 16)
        throw std::invalid_argument("Bad cipher for XTS: " + cipher->name());
 
    cipher2 = ciph->clone();
@@ -233,10 +233,10 @@ XTS_Decryption::XTS_Decryption(BlockCipher* ciph) :
 XTS_Decryption::XTS_Decryption(BlockCipher* ciph,
                                const SymmetricKey& key,
                                const InitializationVector& iv) :
-   Buffered_Filter(xts_parallelism(ciph), ciph->BLOCK_SIZE + 1),
+   Buffered_Filter(xts_parallelism(ciph), ciph->block_size() + 1),
    cipher(ciph)
    {
-   if(cipher->BLOCK_SIZE != 8 && cipher->BLOCK_SIZE != 16)
+   if(cipher->block_size() != 8 && cipher->block_size() != 16)
        throw std::invalid_argument("Bad cipher for XTS: " + cipher->name());
 
    cipher2 = ciph->clone();
@@ -262,18 +262,18 @@ void XTS_Decryption::set_iv(const InitializationVector& iv)
    if(!valid_iv_length(iv.length()))
       throw Invalid_IV_Length(name(), iv.length());
 
-   const size_t blocks_in_tweak = tweak.size() / cipher->BLOCK_SIZE;
+   const size_t blocks_in_tweak = tweak.size() / cipher->block_size();
 
    tweak.copy(iv.begin(), iv.length());
    cipher2->encrypt(tweak);
 
    for(size_t i = 1; i < blocks_in_tweak; ++i)
       {
-      tweak.copy(i*cipher->BLOCK_SIZE,
-                 &tweak[(i-1)*cipher->BLOCK_SIZE],
-                 cipher->BLOCK_SIZE);
+      tweak.copy(i*cipher->block_size(),
+                 &tweak[(i-1)*cipher->block_size()],
+                 cipher->block_size());
 
-      poly_double(&tweak[i*cipher->BLOCK_SIZE], cipher->BLOCK_SIZE);
+      poly_double(&tweak[i*cipher->block_size()], cipher->block_size());
       }
    }
 
@@ -306,15 +306,15 @@ void XTS_Decryption::end_msg()
 
 void XTS_Decryption::buffered_block(const byte input[], size_t input_length)
    {
-   const size_t blocks_in_tweak = tweak.size() / cipher->BLOCK_SIZE;
-   size_t blocks = input_length / cipher->BLOCK_SIZE;
+   const size_t blocks_in_tweak = tweak.size() / cipher->block_size();
+   size_t blocks = input_length / cipher->block_size();
 
    SecureVector<byte> temp(tweak.size());
 
    while(blocks)
       {
       size_t to_proc = std::min(blocks, blocks_in_tweak);
-      size_t to_proc_bytes = to_proc * cipher->BLOCK_SIZE;
+      size_t to_proc_bytes = to_proc * cipher->block_size();
 
       xor_buf(temp, input, tweak, to_proc_bytes);
 
@@ -324,37 +324,37 @@ void XTS_Decryption::buffered_block(const byte input[], size_t input_length)
 
       send(temp, to_proc_bytes);
 
-      tweak.copy(&tweak[(to_proc-1)*cipher->BLOCK_SIZE],
-                 cipher->BLOCK_SIZE);
-      poly_double(&tweak[0], cipher->BLOCK_SIZE);
+      tweak.copy(&tweak[(to_proc-1)*cipher->block_size()],
+                 cipher->block_size());
+      poly_double(&tweak[0], cipher->block_size());
 
       for(size_t i = 1; i < blocks_in_tweak; ++i)
          {
-         tweak.copy(i*cipher->BLOCK_SIZE,
-                    &tweak[(i-1)*cipher->BLOCK_SIZE],
-                    cipher->BLOCK_SIZE);
+         tweak.copy(i*cipher->block_size(),
+                    &tweak[(i-1)*cipher->block_size()],
+                    cipher->block_size());
 
-         poly_double(&tweak[i*cipher->BLOCK_SIZE], cipher->BLOCK_SIZE);
+         poly_double(&tweak[i*cipher->block_size()], cipher->block_size());
          }
 
-      input += to_proc * cipher->BLOCK_SIZE;
+      input += to_proc * cipher->block_size();
       blocks -= to_proc;
       }
    }
 
 void XTS_Decryption::buffered_final(const byte input[], size_t length)
    {
-   if(length <= cipher->BLOCK_SIZE)
+   if(length <= cipher->block_size())
       throw Decoding_Error("XTS_Decryption: insufficient data to decrypt");
 
-   if(length % cipher->BLOCK_SIZE == 0)
+   if(length % cipher->block_size() == 0)
       {
       buffered_block(input, length);
       }
    else
       {
       size_t leftover_blocks =
-         ((length / cipher->BLOCK_SIZE) - 1) * cipher->BLOCK_SIZE;
+         ((length / cipher->block_size()) - 1) * cipher->block_size();
 
       buffered_block(input, leftover_blocks);
 
@@ -362,20 +362,20 @@ void XTS_Decryption::buffered_final(const byte input[], size_t length)
       length -= leftover_blocks;
 
       SecureVector<byte> temp(input, length);
-      SecureVector<byte> tweak_copy(&tweak[0], cipher->BLOCK_SIZE);
+      SecureVector<byte> tweak_copy(&tweak[0], cipher->block_size());
 
-      poly_double(&tweak_copy[0], cipher->BLOCK_SIZE);
+      poly_double(&tweak_copy[0], cipher->block_size());
 
-      xor_buf(temp, tweak_copy, cipher->BLOCK_SIZE);
+      xor_buf(temp, tweak_copy, cipher->block_size());
       cipher->decrypt(temp);
-      xor_buf(temp, tweak_copy, cipher->BLOCK_SIZE);
+      xor_buf(temp, tweak_copy, cipher->block_size());
 
-      for(size_t i = 0; i != length - cipher->BLOCK_SIZE; ++i)
-         std::swap(temp[i], temp[i + cipher->BLOCK_SIZE]);
+      for(size_t i = 0; i != length - cipher->block_size(); ++i)
+         std::swap(temp[i], temp[i + cipher->block_size()]);
 
-      xor_buf(temp, tweak, cipher->BLOCK_SIZE);
+      xor_buf(temp, tweak, cipher->block_size());
       cipher->decrypt(temp);
-      xor_buf(temp, tweak, cipher->BLOCK_SIZE);
+      xor_buf(temp, tweak, cipher->block_size());
 
       send(temp, length);
       }

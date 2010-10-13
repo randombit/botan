@@ -37,7 +37,7 @@ u32bit block_size_of(const std::string& name)
    Algorithm_Factory& af = global_state().algorithm_factory();
 
    if(const BlockCipher* cipher = af.prototype_block_cipher(name))
-      return cipher->BLOCK_SIZE;
+      return cipher->block_size();
 
    if(const HashFunction* hash = af.prototype_hash_function(name))
       return hash->HASH_BLOCK_SIZE;

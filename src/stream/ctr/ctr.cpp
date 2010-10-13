@@ -89,7 +89,7 @@ void CTR_BE::set_iv(const byte iv[], size_t iv_len)
    if(!valid_iv_length(iv_len))
       throw Invalid_IV_Length(name(), iv_len);
 
-   const size_t BLOCK_SIZE = permutation->BLOCK_SIZE;
+   const size_t BLOCK_SIZE = permutation->block_size();
 
    zeroise(counter);
 
@@ -117,21 +117,22 @@ void CTR_BE::set_iv(const byte iv[], size_t iv_len)
 */
 void CTR_BE::increment_counter()
    {
-   const size_t PARALLEL_BLOCKS = counter.size() / permutation->BLOCK_SIZE;
+   const size_t BLOCK_SIZE = permutation->block_size();
+   const size_t PARALLEL_BLOCKS = counter.size() / BLOCK_SIZE;
 
    for(size_t i = 0; i != PARALLEL_BLOCKS; ++i)
       {
-      byte* this_ctr = &counter[i * permutation->BLOCK_SIZE];
+      byte* this_ctr = &counter[i * BLOCK_SIZE];
 
-      byte last_byte = this_ctr[permutation->BLOCK_SIZE-1];
+      byte last_byte = this_ctr[BLOCK_SIZE-1];
       last_byte += PARALLEL_BLOCKS;
 
-      if(this_ctr[permutation->BLOCK_SIZE-1] > last_byte)
-         for(s32bit j = permutation->BLOCK_SIZE - 2; j >= 0; --j)
+      if(this_ctr[BLOCK_SIZE-1] > last_byte)
+         for(s32bit j = BLOCK_SIZE - 2; j >= 0; --j)
             if(++this_ctr[j])
                break;
 
-      this_ctr[permutation->BLOCK_SIZE-1] = last_byte;
+      this_ctr[BLOCK_SIZE-1] = last_byte;
       }
 
    permutation->encrypt_n(&counter[0], &buffer[0], PARALLEL_BLOCKS);

@@ -12,8 +12,8 @@ namespace Botan {
 void Cascade_Cipher::encrypt_n(const byte in[], byte out[],
                                size_t blocks) const
    {
-   size_t c1_blocks = blocks * (BLOCK_SIZE / cipher1->BLOCK_SIZE);
-   size_t c2_blocks = blocks * (BLOCK_SIZE / cipher2->BLOCK_SIZE);
+   size_t c1_blocks = blocks * (block_size() / cipher1->block_size());
+   size_t c2_blocks = blocks * (block_size() / cipher2->block_size());
 
    cipher1->encrypt_n(in, out, c1_blocks);
    cipher2->encrypt_n(out, out, c2_blocks);
@@ -22,8 +22,8 @@ void Cascade_Cipher::encrypt_n(const byte in[], byte out[],
 void Cascade_Cipher::decrypt_n(const byte in[], byte out[],
                                size_t blocks) const
    {
-   size_t c1_blocks = blocks * (BLOCK_SIZE / cipher1->BLOCK_SIZE);
-   size_t c2_blocks = blocks * (BLOCK_SIZE / cipher2->BLOCK_SIZE);
+   size_t c1_blocks = blocks * (block_size() / cipher1->block_size());
+   size_t c2_blocks = blocks * (block_size() / cipher2->block_size());
 
    cipher2->decrypt_n(in, out, c2_blocks);
    cipher1->decrypt_n(out, out, c1_blocks);
@@ -81,11 +81,11 @@ size_t block_size_for_cascade(size_t bs, size_t bs2)
 }
 
 Cascade_Cipher::Cascade_Cipher(BlockCipher* c1, BlockCipher* c2) :
-   BlockCipher(block_size_for_cascade(c1->BLOCK_SIZE, c2->BLOCK_SIZE),
+   BlockCipher(block_size_for_cascade(c1->block_size(), c2->block_size()),
                c1->MAXIMUM_KEYLENGTH + c2->MAXIMUM_KEYLENGTH),
    cipher1(c1), cipher2(c2)
    {
-   if(BLOCK_SIZE % c1->BLOCK_SIZE || BLOCK_SIZE % c2->BLOCK_SIZE)
+   if(block_size() % c1->block_size() || block_size() % c2->block_size())
       throw Internal_Error("Failure in " + name() + " constructor");
    }
 

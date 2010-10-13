@@ -54,15 +54,15 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       */
       size_t parallel_bytes() const
          {
-         return parallelism() * BLOCK_SIZE * BOTAN_BLOCK_CIPHER_PAR_MULT;
+         return parallelism() * block_size() * BOTAN_BLOCK_CIPHER_PAR_MULT;
          }
 
       /**
       * Encrypt a block.
       * @param in The plaintext block to be encrypted as a byte array.
-      * Must be of length BLOCK_SIZE.
+      * Must be of length block_size().
       * @param out The byte array designated to hold the encrypted block.
-      * Must be of length BLOCK_SIZE.
+      * Must be of length block_size().
       */
       void encrypt(const byte in[], byte out[]) const
          { encrypt_n(in, out, 1); }
@@ -70,9 +70,9 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       /**
       * Decrypt a block.
       * @param in The ciphertext block to be decypted as a byte array.
-      * Must be of length BLOCK_SIZE.
+      * Must be of length block_size().
       * @param out The byte array designated to hold the decrypted block.
-      * Must be of length BLOCK_SIZE.
+      * Must be of length block_size().
       */
       void decrypt(const byte in[], byte out[]) const
          { decrypt_n(in, out, 1); }
@@ -80,7 +80,7 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       /**
       * Encrypt a block.
       * @param block the plaintext block to be encrypted
-      * Must be of length BLOCK_SIZE. Will hold the result when the function
+      * Must be of length block_size(). Will hold the result when the function
       * has finished.
       */
       void encrypt(byte block[]) const { encrypt_n(block, block, 1); }
@@ -88,14 +88,14 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       /**
       * Decrypt a block.
       * @param block the ciphertext block to be decrypted
-      * Must be of length BLOCK_SIZE. Will hold the result when the function
+      * Must be of length block_size(). Will hold the result when the function
       * has finished.
       */
       void decrypt(byte block[]) const { decrypt_n(block, block, 1); }
 
       /**
       * Encrypt one or more blocks
-      * @param in the input buffer (multiple of BLOCK_SIZE)
+      * @param in the input buffer (multiple of block_size())
       * @param out the output buffer (same size as in)
       * @param blocks the number of blocks to process
       */
@@ -104,7 +104,7 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
 
       /**
       * Decrypt one or more blocks
-      * @param in the input buffer (multiple of BLOCK_SIZE)
+      * @param in the input buffer (multiple of block_size())
       * @param out the output buffer (same size as in)
       * @param blocks the number of blocks to process
       */

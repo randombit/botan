@@ -258,7 +258,7 @@ SecureVector<byte> CMS_Encoder::do_encrypt(RandomNumberGenerator& rng,
    if(!OIDS::have_oid(cipher->name() + "/CBC"))
       throw Encoding_Error("CMS: No OID assigned for " + cipher_name + "/CBC");
 
-   InitializationVector iv(rng, cipher->BLOCK_SIZE);
+   InitializationVector iv(rng, cipher->block_size());
 
    AlgorithmIdentifier content_cipher;
    content_cipher.oid = OIDS::lookup(cipher->name() + "/CBC");

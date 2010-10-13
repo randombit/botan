@@ -19,13 +19,15 @@ void aont_package(RandomNumberGenerator& rng,
                   const byte input[], u32bit input_len,
                   byte output[])
    {
-   if(!cipher->valid_keylength(cipher->BLOCK_SIZE))
+   const size_t BLOCK_SIZE = cipher->block_size();
+
+   if(!cipher->valid_keylength(BLOCK_SIZE))
       throw Invalid_Argument("AONT::package: Invalid cipher");
 
    // The all-zero string which is used both as the CTR IV and as K0
-   const std::string all_zeros(cipher->BLOCK_SIZE*2, '0');
+   const std::string all_zeros(BLOCK_SIZE*2, '0');
 
-   SymmetricKey package_key(rng, cipher->BLOCK_SIZE);
+   SymmetricKey package_key(rng, BLOCK_SIZE);
 
    Pipe pipe(new StreamCipher_Filter(new CTR_BE(cipher), package_key));
 
@@ -35,80 +37,82 @@ void aont_package(RandomNumberGenerator& rng,
    // Set K0 (the all zero key)
    cipher->set_key(SymmetricKey(all_zeros));
 
-   SecureVector<byte> buf(cipher->BLOCK_SIZE);
+   SecureVector<byte> buf(BLOCK_SIZE);
 
    const u32bit blocks =
-      (input_len + cipher->BLOCK_SIZE - 1) / cipher->BLOCK_SIZE;
+      (input_len + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
    byte* final_block = output + input_len;
-   clear_mem(final_block, cipher->BLOCK_SIZE);
+   clear_mem(final_block, BLOCK_SIZE);
 
    // XOR the hash blocks into the final block
    for(u32bit i = 0; i != blocks; ++i)
       {
-      u32bit left = std::min<u32bit>(cipher->BLOCK_SIZE,
-                                     input_len - cipher->BLOCK_SIZE * i);
+      u32bit left = std::min<u32bit>(BLOCK_SIZE,
+                                     input_len - BLOCK_SIZE * i);
 
       zeroise(buf);
-      copy_mem(&buf[0], output + cipher->BLOCK_SIZE * i, left);
+      copy_mem(&buf[0], output + BLOCK_SIZE * i, left);
 
       for(u32bit j = 0; j != 4; ++j)
-         buf[cipher->BLOCK_SIZE - 1 - j] ^= get_byte(3-j, i);
+         buf[BLOCK_SIZE - 1 - j] ^= get_byte(3-j, i);
 
       cipher->encrypt(buf);
 
-      xor_buf(final_block, buf, cipher->BLOCK_SIZE);
+      xor_buf(final_block, buf, BLOCK_SIZE);
       }
 
    // XOR the random package key into the final block
-   xor_buf(final_block, package_key.begin(), cipher->BLOCK_SIZE);
+   xor_buf(final_block, package_key.begin(), BLOCK_SIZE);
    }
 
 void aont_unpackage(BlockCipher* cipher,
                     const byte input[], u32bit input_len,
                     byte output[])
    {
-   if(!cipher->valid_keylength(cipher->BLOCK_SIZE))
+   const size_t BLOCK_SIZE = cipher->block_size();
+
+   if(!cipher->valid_keylength(BLOCK_SIZE))
       throw Invalid_Argument("AONT::unpackage: Invalid cipher");
 
-   if(input_len < cipher->BLOCK_SIZE)
+   if(input_len < BLOCK_SIZE)
       throw Invalid_Argument("AONT::unpackage: Input too short");
 
    // The all-zero string which is used both as the CTR IV and as K0
-   const std::string all_zeros(cipher->BLOCK_SIZE*2, '0');
+   const std::string all_zeros(BLOCK_SIZE*2, '0');
 
    cipher->set_key(SymmetricKey(all_zeros));
 
-   SecureVector<byte> package_key(cipher->BLOCK_SIZE);
-   SecureVector<byte> buf(cipher->BLOCK_SIZE);
+   SecureVector<byte> package_key(BLOCK_SIZE);
+   SecureVector<byte> buf(BLOCK_SIZE);
 
    // Copy the package key (masked with the block hashes)
    copy_mem(&package_key[0],
-            input + (input_len - cipher->BLOCK_SIZE),
-            cipher->BLOCK_SIZE);
+            input + (input_len - BLOCK_SIZE),
+            BLOCK_SIZE);
 
-   const u32bit blocks = ((input_len - 1) / cipher->BLOCK_SIZE);
+   const u32bit blocks = ((input_len - 1) / BLOCK_SIZE);
 
    // XOR the blocks into the package key bits
    for(u32bit i = 0; i != blocks; ++i)
       {
-      u32bit left = std::min<u32bit>(cipher->BLOCK_SIZE,
-                                     input_len - cipher->BLOCK_SIZE * (i+1));
+      u32bit left = std::min<u32bit>(BLOCK_SIZE,
+                                     input_len - BLOCK_SIZE * (i+1));
 
       zeroise(buf);
-      copy_mem(&buf[0], input + cipher->BLOCK_SIZE * i, left);
+      copy_mem(&buf[0], input + BLOCK_SIZE * i, left);
 
       for(u32bit j = 0; j != 4; ++j)
-         buf[cipher->BLOCK_SIZE - 1 - j] ^= get_byte(3-j, i);
+         buf[BLOCK_SIZE - 1 - j] ^= get_byte(3-j, i);
 
       cipher->encrypt(buf);
 
-      xor_buf(&package_key[0], buf, cipher->BLOCK_SIZE);
+      xor_buf(&package_key[0], buf, BLOCK_SIZE);
       }
 
    Pipe pipe(new StreamCipher_Filter(new CTR_BE(cipher), package_key));
 
-   pipe.process_msg(input, input_len - cipher->BLOCK_SIZE);
+   pipe.process_msg(input, input_len - BLOCK_SIZE);
 
    pipe.read(output, pipe.remaining());
    }

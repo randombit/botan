@@ -29,7 +29,7 @@ class BOTAN_DLL CTS_Encryption : public Keyed_Filter
          { return cipher->valid_keylength(key_len); }
 
       bool valid_iv_length(size_t iv_len) const
-         { return (iv_len == cipher->BLOCK_SIZE); }
+         { return (iv_len == cipher->block_size()); }
 
       CTS_Encryption(BlockCipher* cipher);
 
@@ -64,7 +64,7 @@ class BOTAN_DLL CTS_Decryption : public Keyed_Filter
          { return cipher->valid_keylength(key_len); }
 
       bool valid_iv_length(size_t iv_len) const
-         { return (iv_len == cipher->BLOCK_SIZE); }
+         { return (iv_len == cipher->block_size()); }
 
       CTS_Decryption(BlockCipher* cipher);
 

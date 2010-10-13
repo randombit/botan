@@ -71,7 +71,7 @@ void Randpool::update_buffer()
 */
 void Randpool::mix_pool()
    {
-   const size_t BLOCK_SIZE = cipher->BLOCK_SIZE;
+   const size_t BLOCK_SIZE = cipher->block_size();
 
    mac->update(static_cast<byte>(MAC_KEY));
    mac->update(pool);
@@ -175,7 +175,7 @@ Randpool::Randpool(BlockCipher* cipher_in,
    cipher(cipher_in),
    mac(mac_in)
    {
-   const size_t BLOCK_SIZE = cipher->BLOCK_SIZE;
+   const size_t BLOCK_SIZE = cipher->block_size();
    const size_t OUTPUT_LENGTH = mac->output_length();
 
    if(OUTPUT_LENGTH < BLOCK_SIZE ||

@@ -267,8 +267,8 @@ void MARS::encrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_le(out, A, B, C, D);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in += block_size();
+      out += block_size();
       }
    }
 
@@ -310,8 +310,8 @@ void MARS::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_le(out, D, C, B, A);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in += block_size();
+      out += block_size();
       }
    }
 

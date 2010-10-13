@@ -101,7 +101,7 @@ void PBE_PKCS5v20::new_params(RandomNumberGenerator& rng)
    key_length = block_cipher->MAXIMUM_KEYLENGTH;
 
    salt = rng.random_vec(12);
-   iv = rng.random_vec(block_cipher->BLOCK_SIZE);
+   iv = rng.random_vec(block_cipher->block_size());
    }
 
 /*

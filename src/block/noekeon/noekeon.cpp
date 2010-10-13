@@ -114,8 +114,8 @@ void Noekeon::encrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_be(out, A0, A1, A2, A3);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in += block_size();
+      out += block_size();
       }
    }
 
@@ -152,8 +152,8 @@ void Noekeon::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_be(out, A0, A1, A2, A3);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in += block_size();
+      out += block_size();
       }
    }
 

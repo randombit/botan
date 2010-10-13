@@ -145,7 +145,7 @@ Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
       std::vector<std::string> algo_info = parse_algorithm_name(mode);
       std::string mode_name = algo_info[0];
       if(algo_info.size() == 1)
-         bits = 8*block_cipher->BLOCK_SIZE;
+         bits = 8 * block_cipher->block_size();
       else if(algo_info.size() == 2)
          bits = to_u32bit(algo_info[1]);
       else

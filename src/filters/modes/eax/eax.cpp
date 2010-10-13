@@ -23,7 +23,7 @@ SecureVector<byte> eax_prf(byte tag, size_t BLOCK_SIZE,
                            MessageAuthenticationCode* mac,
                            const byte in[], size_t length)
    {
-   for(size_t j = 0; j != BLOCK_SIZE - 1; ++j)
+   for(size_t i = 0; i != BLOCK_SIZE - 1; ++i)
       mac->update(0);
    mac->update(tag);
    mac->update(in, length);
@@ -36,7 +36,7 @@ SecureVector<byte> eax_prf(byte tag, size_t BLOCK_SIZE,
 * EAX_Base Constructor
 */
 EAX_Base::EAX_Base(BlockCipher* cipher, size_t tag_size) :
-   BLOCK_SIZE(cipher->BLOCK_SIZE),
+   BLOCK_SIZE(cipher->block_size()),
    TAG_SIZE(tag_size ? tag_size / 8 : BLOCK_SIZE),
    cipher_name(cipher->name()),
    ctr_buf(DEFAULT_BUFFERSIZE)
@@ -78,7 +78,7 @@ void EAX_Base::set_key(const SymmetricKey& key)
 */
 void EAX_Base::start_msg()
    {
-   for(size_t j = 0; j != BLOCK_SIZE - 1; ++j)
+   for(size_t i = 0; i != BLOCK_SIZE - 1; ++i)
       cmac->update(0);
    cmac->update(2);
    }

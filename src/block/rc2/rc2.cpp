@@ -48,8 +48,8 @@ void RC2::encrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_le(out, R0, R1, R2, R3);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in += block_size();
+      out += block_size();
       }
    }
 
@@ -90,8 +90,8 @@ void RC2::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_le(out, R0, R1, R2, R3);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in += block_size();
+      out += block_size();
       }
    }
 

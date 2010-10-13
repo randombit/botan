@@ -194,7 +194,7 @@ bool bench_algo(const std::string& algo,
          }
 
       u32bit cipher_keylen = proto_cipher->MAXIMUM_KEYLENGTH;
-      u32bit cipher_ivlen = proto_cipher->BLOCK_SIZE;
+      u32bit cipher_ivlen = proto_cipher->block_size();
 
       if(algo_parts[1] == "XTS")
          cipher_keylen *= 2; // hack!

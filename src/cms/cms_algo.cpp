@@ -53,7 +53,7 @@ SecureVector<byte> do_rfc3217_wrap(RandomNumberGenerator& rng,
 
    const BlockCipher* cipher = af.prototype_block_cipher(cipher_name);
 
-   if(!cipher || cipher->BLOCK_SIZE != 8)
+   if(!cipher || cipher->block_size() != 8)
       throw Encoding_Error("do_rfc3217_wrap: Bad cipher: " + cipher_name);
 
    Pipe icv(new Hash_Filter(new SHA_160, 8));

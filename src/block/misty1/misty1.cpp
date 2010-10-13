@@ -144,8 +144,8 @@ void MISTY1::encrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_be(out, B2, B3, B0, B1);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in += block_size();
+      out += block_size();
       }
    }
 
@@ -194,8 +194,8 @@ void MISTY1::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_be(out, B0, B1, B2, B3);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in += block_size();
+      out += block_size();
       }
    }
 

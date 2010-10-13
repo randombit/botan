@@ -162,8 +162,8 @@ void DES::encrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_be(T, out);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in += block_size();
+      out += block_size();
       }
    }
 
@@ -193,8 +193,8 @@ void DES::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_be(T, out);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in += block_size();
+      out += block_size();
       }
    }
 
@@ -234,8 +234,8 @@ void TripleDES::encrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_be(T, out);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in += block_size();
+      out += block_size();
       }
    }
 
@@ -267,8 +267,8 @@ void TripleDES::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_be(T, out);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in += block_size();
+      out += block_size();
       }
    }
 

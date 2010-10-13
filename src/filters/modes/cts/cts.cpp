@@ -17,8 +17,8 @@ namespace Botan {
 CTS_Encryption::CTS_Encryption(BlockCipher* ciph) :
    cipher(ciph)
    {
-   buffer.resize(2 * cipher->BLOCK_SIZE);
-   state.resize(cipher->BLOCK_SIZE);
+   buffer.resize(2 * cipher->block_size());
+   state.resize(cipher->block_size());
    position = 0;
    }
 
@@ -30,8 +30,8 @@ CTS_Encryption::CTS_Encryption(BlockCipher* ciph,
                                const InitializationVector& iv) :
    cipher(ciph)
    {
-   buffer.resize(2 * cipher->BLOCK_SIZE);
-   state.resize(cipher->BLOCK_SIZE);
+   buffer.resize(2 * cipher->block_size());
+   state.resize(cipher->block_size());
    position = 0;
 
    set_key(key);
@@ -56,9 +56,9 @@ void CTS_Encryption::set_iv(const InitializationVector& iv)
 */
 void CTS_Encryption::encrypt(const byte block[])
    {
-   xor_buf(state, block, cipher->BLOCK_SIZE);
+   xor_buf(state, block, cipher->block_size());
    cipher->encrypt(state);
-   send(state, cipher->BLOCK_SIZE);
+   send(state, cipher->block_size());
    }
 
 /*
@@ -75,21 +75,21 @@ void CTS_Encryption::write(const byte input[], size_t length)
    if(length == 0) return;
 
    encrypt(&buffer[0]);
-   if(length > cipher->BLOCK_SIZE)
+   if(length > cipher->block_size())
       {
-      encrypt(&buffer[cipher->BLOCK_SIZE]);
-      while(length > 2*cipher->BLOCK_SIZE)
+      encrypt(&buffer[cipher->block_size()]);
+      while(length > 2*cipher->block_size())
          {
          encrypt(input);
-         length -= cipher->BLOCK_SIZE;
-         input += cipher->BLOCK_SIZE;
+         length -= cipher->block_size();
+         input += cipher->block_size();
          }
       position = 0;
       }
    else
       {
-      copy_mem(&buffer[0], &buffer[cipher->BLOCK_SIZE], cipher->BLOCK_SIZE);
-      position = cipher->BLOCK_SIZE;
+      copy_mem(&buffer[0], &buffer[cipher->block_size()], cipher->block_size());
+      position = cipher->block_size();
       }
    buffer.copy(position, input, length);
    position += length;
@@ -100,15 +100,15 @@ void CTS_Encryption::write(const byte input[], size_t length)
 */
 void CTS_Encryption::end_msg()
    {
-   if(position < cipher->BLOCK_SIZE + 1)
+   if(position < cipher->block_size() + 1)
       throw Encoding_Error(name() + ": insufficient data to encrypt");
 
-   xor_buf(state, buffer, cipher->BLOCK_SIZE);
+   xor_buf(state, buffer, cipher->block_size());
    cipher->encrypt(state);
    SecureVector<byte> cn = state;
    clear_mem(&buffer[position], buffer.size() - position);
-   encrypt(&buffer[cipher->BLOCK_SIZE]);
-   send(cn, position - cipher->BLOCK_SIZE);
+   encrypt(&buffer[cipher->block_size()]);
+   send(cn, position - cipher->block_size());
    }
 
 /*
@@ -117,9 +117,9 @@ void CTS_Encryption::end_msg()
 CTS_Decryption::CTS_Decryption(BlockCipher* ciph) :
    cipher(ciph)
    {
-   buffer.resize(2 * cipher->BLOCK_SIZE);
-   state.resize(cipher->BLOCK_SIZE);
-   temp.resize(cipher->BLOCK_SIZE);
+   buffer.resize(2 * cipher->block_size());
+   state.resize(cipher->block_size());
+   temp.resize(cipher->block_size());
    position = 0;
    }
 
@@ -131,9 +131,9 @@ CTS_Decryption::CTS_Decryption(BlockCipher* ciph,
                                const InitializationVector& iv) :
    cipher(ciph)
    {
-   buffer.resize(2 * cipher->BLOCK_SIZE);
-   state.resize(cipher->BLOCK_SIZE);
-   temp.resize(cipher->BLOCK_SIZE);
+   buffer.resize(2 * cipher->block_size());
+   state.resize(cipher->block_size());
+   temp.resize(cipher->block_size());
    position = 0;
 
    set_key(key);
@@ -159,9 +159,9 @@ void CTS_Decryption::set_iv(const InitializationVector& iv)
 void CTS_Decryption::decrypt(const byte block[])
    {
    cipher->decrypt(block, &temp[0]);
-   xor_buf(temp, state, cipher->BLOCK_SIZE);
-   send(temp, cipher->BLOCK_SIZE);
-   state.copy(block, cipher->BLOCK_SIZE);
+   xor_buf(temp, state, cipher->block_size());
+   send(temp, cipher->block_size());
+   state.copy(block, cipher->block_size());
    }
 
 /*
@@ -178,21 +178,21 @@ void CTS_Decryption::write(const byte input[], size_t length)
    if(length == 0) return;
 
    decrypt(buffer);
-   if(length > cipher->BLOCK_SIZE)
+   if(length > cipher->block_size())
       {
-      decrypt(&buffer[cipher->BLOCK_SIZE]);
-      while(length > 2*cipher->BLOCK_SIZE)
+      decrypt(&buffer[cipher->block_size()]);
+      while(length > 2*cipher->block_size())
          {
          decrypt(input);
-         length -= cipher->BLOCK_SIZE;
-         input += cipher->BLOCK_SIZE;
+         length -= cipher->block_size();
+         input += cipher->block_size();
          }
       position = 0;
       }
    else
       {
-      copy_mem(&buffer[0], &buffer[cipher->BLOCK_SIZE], cipher->BLOCK_SIZE);
-      position = cipher->BLOCK_SIZE;
+      copy_mem(&buffer[0], &buffer[cipher->block_size()], cipher->block_size());
+      position = cipher->block_size();
       }
    buffer.copy(position, input, length);
    position += length;
@@ -204,18 +204,18 @@ void CTS_Decryption::write(const byte input[], size_t length)
 void CTS_Decryption::end_msg()
    {
    cipher->decrypt(buffer, temp);
-   xor_buf(temp, &buffer[cipher->BLOCK_SIZE], position - cipher->BLOCK_SIZE);
+   xor_buf(temp, &buffer[cipher->block_size()], position - cipher->block_size());
 
    SecureVector<byte> xn = temp;
 
    copy_mem(&buffer[position],
-            &xn[position - cipher->BLOCK_SIZE],
+            &xn[position - cipher->block_size()],
             buffer.size() - position);
 
-   cipher->decrypt(&buffer[cipher->BLOCK_SIZE], temp);
-   xor_buf(temp, state, cipher->BLOCK_SIZE);
-   send(temp, cipher->BLOCK_SIZE);
-   send(xn, position - cipher->BLOCK_SIZE);
+   cipher->decrypt(&buffer[cipher->block_size()], temp);
+   xor_buf(temp, state, cipher->block_size());
+   send(temp, cipher->block_size());
+   send(xn, position - cipher->block_size());
    }
 
 }

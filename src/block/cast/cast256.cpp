@@ -84,8 +84,8 @@ void CAST_256::encrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_be(out, A, B, C, D);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in += block_size();
+      out += block_size();
       }
    }
 
@@ -128,8 +128,8 @@ void CAST_256::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_be(out, A, B, C, D);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in += block_size();
+      out += block_size();
       }
    }
 

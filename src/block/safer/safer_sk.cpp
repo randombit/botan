@@ -43,8 +43,8 @@ void SAFER_SK::encrypt_n(const byte in[], byte out[], size_t blocks) const
       out[4] = E ^ EK[16*ROUNDS+4]; out[5] = F + EK[16*ROUNDS+5];
       out[6] = G + EK[16*ROUNDS+6]; out[7] = H ^ EK[16*ROUNDS+7];
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in += block_size();
+      out += block_size();
       }
    }
 
@@ -81,8 +81,8 @@ void SAFER_SK::decrypt_n(const byte in[], byte out[], size_t blocks) const
       out[0] = A; out[1] = B; out[2] = C; out[3] = D;
       out[4] = E; out[5] = F; out[6] = G; out[7] = H;
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in += block_size();
+      out += block_size();
       }
    }
 

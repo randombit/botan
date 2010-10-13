@@ -32,7 +32,7 @@ class BOTAN_DLL CBC_Encryption : public Keyed_Filter,
          { return cipher->valid_keylength(key_len); }
 
       bool valid_iv_length(size_t iv_len) const
-         { return (iv_len == cipher->BLOCK_SIZE); }
+         { return (iv_len == cipher->block_size()); }
 
       CBC_Encryption(BlockCipher* cipher,
                      BlockCipherModePaddingMethod* padding);
@@ -72,7 +72,7 @@ class BOTAN_DLL CBC_Decryption : public Keyed_Filter,
          { return cipher->valid_keylength(key_len); }
 
       bool valid_iv_length(size_t iv_len) const
-         { return (iv_len == cipher->BLOCK_SIZE); }
+         { return (iv_len == cipher->block_size()); }
 
       CBC_Decryption(BlockCipher* cipher,
                      BlockCipherModePaddingMethod* padding);

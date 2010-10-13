@@ -18,13 +18,13 @@ namespace Botan {
 CFB_Encryption::CFB_Encryption(BlockCipher* ciph, size_t fback_bits)
    {
    cipher = ciph;
-   feedback = fback_bits ? fback_bits / 8: cipher->BLOCK_SIZE;
+   feedback = fback_bits ? fback_bits / 8: cipher->block_size();
 
-   buffer.resize(cipher->BLOCK_SIZE);
-   state.resize(cipher->BLOCK_SIZE);
+   buffer.resize(cipher->block_size());
+   state.resize(cipher->block_size());
    position = 0;
 
-   if(feedback == 0 || fback_bits % 8 != 0 || feedback > cipher->BLOCK_SIZE)
+   if(feedback == 0 || fback_bits % 8 != 0 || feedback > cipher->block_size())
       throw Invalid_Argument("CFB_Encryption: Invalid feedback size " +
                              to_string(fback_bits));
    }
@@ -38,13 +38,13 @@ CFB_Encryption::CFB_Encryption(BlockCipher* ciph,
                                size_t fback_bits)
    {
    cipher = ciph;
-   feedback = fback_bits ? fback_bits / 8: cipher->BLOCK_SIZE;
+   feedback = fback_bits ? fback_bits / 8: cipher->block_size();
 
-   buffer.resize(cipher->BLOCK_SIZE);
-   state.resize(cipher->BLOCK_SIZE);
+   buffer.resize(cipher->block_size());
+   state.resize(cipher->block_size());
    position = 0;
 
-   if(feedback == 0 || fback_bits % 8 != 0 || feedback > cipher->BLOCK_SIZE)
+   if(feedback == 0 || fback_bits % 8 != 0 || feedback > cipher->block_size())
       throw Invalid_Argument("CFB_Encryption: Invalid feedback size " +
                              to_string(fback_bits));
 
@@ -80,9 +80,9 @@ void CFB_Encryption::write(const byte input[], size_t length)
 
       if(position == feedback)
          {
-         for(size_t j = 0; j != cipher->BLOCK_SIZE - feedback; ++j)
+         for(size_t j = 0; j != cipher->block_size() - feedback; ++j)
             state[j] = state[j + feedback];
-         state.copy(cipher->BLOCK_SIZE - feedback, buffer, feedback);
+         state.copy(cipher->block_size() - feedback, buffer, feedback);
          cipher->encrypt(state, buffer);
          position = 0;
          }
@@ -95,13 +95,13 @@ void CFB_Encryption::write(const byte input[], size_t length)
 CFB_Decryption::CFB_Decryption(BlockCipher* ciph, size_t fback_bits)
    {
    cipher = ciph;
-   feedback = fback_bits ? fback_bits / 8: cipher->BLOCK_SIZE;
+   feedback = fback_bits ? fback_bits / 8: cipher->block_size();
 
-   buffer.resize(cipher->BLOCK_SIZE);
-   state.resize(cipher->BLOCK_SIZE);
+   buffer.resize(cipher->block_size());
+   state.resize(cipher->block_size());
    position = 0;
 
-   if(feedback == 0 || fback_bits % 8 != 0 || feedback > cipher->BLOCK_SIZE)
+   if(feedback == 0 || fback_bits % 8 != 0 || feedback > cipher->block_size())
       throw Invalid_Argument("CFB_Decryption: Invalid feedback size " +
                              to_string(fback_bits));
    }
@@ -115,13 +115,13 @@ CFB_Decryption::CFB_Decryption(BlockCipher* ciph,
                                size_t fback_bits)
    {
    cipher = ciph;
-   feedback = fback_bits ? fback_bits / 8: cipher->BLOCK_SIZE;
+   feedback = fback_bits ? fback_bits / 8: cipher->block_size();
 
-   buffer.resize(cipher->BLOCK_SIZE);
-   state.resize(cipher->BLOCK_SIZE);
+   buffer.resize(cipher->block_size());
+   state.resize(cipher->block_size());
    position = 0;
 
-   if(feedback == 0 || fback_bits % 8 != 0 || feedback > cipher->BLOCK_SIZE)
+   if(feedback == 0 || fback_bits % 8 != 0 || feedback > cipher->block_size())
       throw Invalid_Argument("CFB_Decryption: Invalid feedback size " +
                              to_string(fback_bits));
 
@@ -157,9 +157,9 @@ void CFB_Decryption::write(const byte input[], size_t length)
       position += xored;
       if(position == feedback)
          {
-         for(size_t j = 0; j != cipher->BLOCK_SIZE - feedback; ++j)
+         for(size_t j = 0; j != cipher->block_size() - feedback; ++j)
             state[j] = state[j + feedback];
-         state.copy(cipher->BLOCK_SIZE - feedback, buffer, feedback);
+         state.copy(cipher->block_size() - feedback, buffer, feedback);
          cipher->encrypt(state, buffer);
          position = 0;
          }

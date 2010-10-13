@@ -48,7 +48,7 @@ bench_block_cipher(BlockCipher* block_cipher,
                    u64bit nanoseconds_max,
                    byte buf[], size_t buf_len)
    {
-   const size_t in_blocks = buf_len / block_cipher->BLOCK_SIZE;
+   const size_t in_blocks = buf_len / block_cipher->block_size();
 
    u64bit reps = 0;
    u64bit nanoseconds_used = 0;
@@ -64,7 +64,7 @@ bench_block_cipher(BlockCipher* block_cipher,
       ++reps;
       }
 
-   return std::make_pair(reps * in_blocks * block_cipher->BLOCK_SIZE,
+   return std::make_pair(reps * in_blocks * block_cipher->block_size(),
                          nanoseconds_used);
    }
 

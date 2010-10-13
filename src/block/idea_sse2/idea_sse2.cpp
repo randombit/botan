@@ -201,8 +201,8 @@ void IDEA_SSE2::encrypt_n(const byte in[], byte out[], size_t blocks) const
    while(blocks >= 8)
       {
       idea_op_8(in, out, KS);
-      in += 8 * BLOCK_SIZE;
-      out += 8 * BLOCK_SIZE;
+      in += 8 * block_size();
+      out += 8 * block_size();
       blocks -= 8;
       }
 
@@ -220,8 +220,8 @@ void IDEA_SSE2::decrypt_n(const byte in[], byte out[], size_t blocks) const
    while(blocks >= 8)
       {
       idea_op_8(in, out, KS);
-      in += 8 * BLOCK_SIZE;
-      out += 8 * BLOCK_SIZE;
+      in += 8 * block_size();
+      out += 8 * block_size();
       blocks -= 8;
       }
 

@@ -42,8 +42,8 @@ void LubyRackoff::encrypt_n(const byte in[], byte out[], size_t blocks) const
       hash->final(buffer);
       xor_buf(out, buffer, len);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in += block_size();
+      out += block_size();
       }
    }
 
@@ -79,8 +79,8 @@ void LubyRackoff::decrypt_n(const byte in[], byte out[], size_t blocks) const
       hash->final(buffer);
       xor_buf(out + len, buffer, len);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in += block_size();
+      out += block_size();
       }
    }
 

@@ -131,15 +131,15 @@ MessageAuthenticationCode* CMAC::clone() const
 * CMAC Constructor
 */
 CMAC::CMAC(BlockCipher* e_in) :
-   MessageAuthenticationCode(e_in->BLOCK_SIZE,
+   MessageAuthenticationCode(e_in->block_size(),
                              e_in->MINIMUM_KEYLENGTH,
                              e_in->MAXIMUM_KEYLENGTH,
                              e_in->KEYLENGTH_MULTIPLE),
    e(e_in)
    {
-   if(e->BLOCK_SIZE == 16)
+   if(e->block_size() == 16)
       polynomial = 0x87;
-   else if(e->BLOCK_SIZE == 8)
+   else if(e->block_size() == 8)
       polynomial = 0x1B;
    else
       throw Invalid_Argument("CMAC cannot use the cipher " + e->name());

@@ -68,12 +68,12 @@ void ECB_Encryption::write(const byte input[], size_t length)
 */
 void ECB_Encryption::end_msg()
    {
-   size_t last_block = current_position() % cipher->BLOCK_SIZE;
+   size_t last_block = current_position() % cipher->block_size();
 
-   SecureVector<byte> padding(cipher->BLOCK_SIZE);
+   SecureVector<byte> padding(cipher->block_size());
    padder->pad(padding, padding.size(), last_block);
 
-   size_t pad_bytes = padder->pad_bytes(cipher->BLOCK_SIZE, last_block);
+   size_t pad_bytes = padder->pad_bytes(cipher->block_size(), last_block);
 
    if(pad_bytes)
       Buffered_Filter::write(padding, pad_bytes);
@@ -82,8 +82,8 @@ void ECB_Encryption::end_msg()
 
 void ECB_Encryption::buffered_block(const byte input[], size_t input_length)
    {
-   const size_t blocks_in_temp = temp.size() / cipher->BLOCK_SIZE;
-   size_t blocks = input_length / cipher->BLOCK_SIZE;
+   const size_t blocks_in_temp = temp.size() / cipher->block_size();
+   size_t blocks = input_length / cipher->block_size();
 
    while(blocks)
       {
@@ -91,16 +91,16 @@ void ECB_Encryption::buffered_block(const byte input[], size_t input_length)
 
       cipher->encrypt_n(input, &temp[0], to_proc);
 
-      send(temp, to_proc * cipher->BLOCK_SIZE);
+      send(temp, to_proc * cipher->block_size());
 
-      input += to_proc * cipher->BLOCK_SIZE;
+      input += to_proc * cipher->block_size();
       blocks -= to_proc;
       }
    }
 
 void ECB_Encryption::buffered_final(const byte input[], size_t input_length)
    {
-   if(input_length % cipher->BLOCK_SIZE == 0)
+   if(input_length % cipher->block_size() == 0)
       buffered_block(input, input_length);
    else if(input_length != 0)
       throw Encoding_Error(name() + ": Did not pad to full blocksize");
@@ -173,8 +173,8 @@ void ECB_Decryption::end_msg()
 */
 void ECB_Decryption::buffered_block(const byte input[], size_t length)
    {
-   const size_t blocks_in_temp = temp.size() / cipher->BLOCK_SIZE;
-   size_t blocks = length / cipher->BLOCK_SIZE;
+   const size_t blocks_in_temp = temp.size() / cipher->block_size();
+   size_t blocks = length / cipher->block_size();
 
    while(blocks)
       {
@@ -182,9 +182,9 @@ void ECB_Decryption::buffered_block(const byte input[], size_t length)
 
       cipher->decrypt_n(input, &temp[0], to_proc);
 
-      send(temp, to_proc * cipher->BLOCK_SIZE);
+      send(temp, to_proc * cipher->block_size());
 
-      input += to_proc * cipher->BLOCK_SIZE;
+      input += to_proc * cipher->block_size();
       blocks -= to_proc;
       }
    }
@@ -194,17 +194,17 @@ void ECB_Decryption::buffered_block(const byte input[], size_t length)
 */
 void ECB_Decryption::buffered_final(const byte input[], size_t length)
    {
-   if(length == 0 || length % cipher->BLOCK_SIZE != 0)
+   if(length == 0 || length % cipher->block_size() != 0)
       throw Decoding_Error(name() + ": Ciphertext not multiple of block size");
 
-   size_t extra_blocks = (length - 1) / cipher->BLOCK_SIZE;
+   size_t extra_blocks = (length - 1) / cipher->block_size();
 
-   buffered_block(input, extra_blocks * cipher->BLOCK_SIZE);
+   buffered_block(input, extra_blocks * cipher->block_size());
 
-   input += extra_blocks * cipher->BLOCK_SIZE;
+   input += extra_blocks * cipher->block_size();
 
    cipher->decrypt(input, temp);
-   send(temp, padder->unpad(temp, cipher->BLOCK_SIZE));
+   send(temp, padder->unpad(temp, cipher->block_size()));
    }
 
 }

@@ -68,8 +68,8 @@ void Square::encrypt_n(const byte in[], byte out[], size_t blocks) const
       out[14] = SE[get_byte(3, B2)] ^ ME[30];
       out[15] = SE[get_byte(3, B3)] ^ ME[31];
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in += block_size();
+      out += block_size();
       }
    }
 
@@ -130,8 +130,8 @@ void Square::decrypt_n(const byte in[], byte out[], size_t blocks) const
       out[14] = SD[get_byte(3, B2)] ^ MD[30];
       out[15] = SD[get_byte(3, B3)] ^ MD[31];
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in += block_size();
+      out += block_size();
       }
    }
 

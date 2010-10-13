@@ -99,8 +99,8 @@ void XTEA_SIMD::encrypt_n(const byte in[], byte out[], size_t blocks) const
    while(blocks >= 8)
       {
       xtea_encrypt_8(in, out, KS);
-      in += 8 * BLOCK_SIZE;
-      out += 8 * BLOCK_SIZE;
+      in += 8 * block_size();
+      out += 8 * block_size();
       blocks -= 8;
       }
 
@@ -118,8 +118,8 @@ void XTEA_SIMD::decrypt_n(const byte in[], byte out[], size_t blocks) const
    while(blocks >= 8)
       {
       xtea_decrypt_8(in, out, KS);
-      in += 8 * BLOCK_SIZE;
-      out += 8 * BLOCK_SIZE;
+      in += 8 * block_size();
+      out += 8 * block_size();
       blocks -= 8;
       }
 
