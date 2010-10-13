@@ -125,7 +125,7 @@ void SHA_160::compress_n(const byte input[], size_t blocks)
       D = (digest[3] += D);
       E = (digest[4] += E);
 
-      input += HASH_BLOCK_SIZE;
+      input += hash_block_size();
       }
    }
 

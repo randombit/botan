@@ -66,7 +66,7 @@ void Tiger::compress_n(const byte input[], size_t blocks)
       B = digest[1] = B - digest[1];
       C = (digest[2] += C);
 
-      input += HASH_BLOCK_SIZE;
+      input += hash_block_size();
       }
    }
 

@@ -46,22 +46,22 @@ void GOST_34_11::add_data(const byte input[], size_t length)
       {
       buffer.copy(position, input, length);
 
-      if(position + length >= HASH_BLOCK_SIZE)
+      if(position + length >= hash_block_size())
          {
          compress_n(&buffer[0], 1);
-         input += (HASH_BLOCK_SIZE - position);
-         length -= (HASH_BLOCK_SIZE - position);
+         input += (hash_block_size() - position);
+         length -= (hash_block_size() - position);
          position = 0;
          }
       }
 
-   const size_t full_blocks = length / HASH_BLOCK_SIZE;
-   const size_t remaining   = length % HASH_BLOCK_SIZE;
+   const size_t full_blocks = length / hash_block_size();
+   const size_t remaining   = length % hash_block_size();
 
    if(full_blocks)
       compress_n(input, full_blocks);
 
-   buffer.copy(position, input + full_blocks * HASH_BLOCK_SIZE, remaining);
+   buffer.copy(position, input + full_blocks * hash_block_size(), remaining);
    position += remaining;
    }
 

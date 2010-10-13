@@ -120,7 +120,7 @@ void Whirlpool::compress_n(const byte in[], size_t blocks)
       digest[6] ^= B6 ^ M[6];
       digest[7] ^= B7 ^ M[7];
 
-      in += HASH_BLOCK_SIZE;
+      in += hash_block_size();
       }
    }
 

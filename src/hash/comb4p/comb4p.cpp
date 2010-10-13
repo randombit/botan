@@ -16,8 +16,8 @@ namespace {
 size_t comb4p_block_size(const HashFunction* h1,
                          const HashFunction* h2)
    {
-   if(h1->HASH_BLOCK_SIZE == h2->HASH_BLOCK_SIZE)
-      return h1->HASH_BLOCK_SIZE;
+   if(h1->hash_block_size() == h2->hash_block_size())
+      return h1->hash_block_size();
 
    /*
    * Return LCM of the block sizes? This would probably be OK for

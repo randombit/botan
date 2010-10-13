@@ -24,7 +24,7 @@ void SHA_160_AMD64::compress_n(const byte input[], size_t blocks)
    for(size_t i = 0; i != blocks; ++i)
       {
       botan_sha160_amd64_compress(&digest[0], input, &W[0]);
-      input += HASH_BLOCK_SIZE;
+      input += hash_block_size();
       }
    }
 

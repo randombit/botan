@@ -40,7 +40,7 @@ void HMAC::key_schedule(const byte key[], size_t length)
    std::fill(i_key.begin(), i_key.end(), 0x36);
    std::fill(o_key.begin(), o_key.end(), 0x5C);
 
-   if(length > hash->HASH_BLOCK_SIZE)
+   if(length > hash->hash_block_size())
       {
       SecureVector<byte> hmac_key = hash->process(key, length);
       xor_buf(i_key, hmac_key, hmac_key.size());
@@ -86,14 +86,14 @@ MessageAuthenticationCode* HMAC::clone() const
 */
 HMAC::HMAC(HashFunction* hash_in) :
    MessageAuthenticationCode(hash_in->output_length(),
-                             0, 2*hash_in->HASH_BLOCK_SIZE),
+                             0, 2*hash_in->hash_block_size()),
    hash(hash_in)
    {
-   if(hash->HASH_BLOCK_SIZE == 0)
+   if(hash->hash_block_size() == 0)
       throw Invalid_Argument("HMAC cannot be used with " + hash->name());
 
-   i_key.resize(hash->HASH_BLOCK_SIZE);
-   o_key.resize(hash->HASH_BLOCK_SIZE);
+   i_key.resize(hash->hash_block_size());
+   o_key.resize(hash->hash_block_size());
    }
 
 }

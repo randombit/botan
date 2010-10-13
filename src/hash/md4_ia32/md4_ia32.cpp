@@ -19,7 +19,7 @@ void MD4_IA32::compress_n(const byte input[], size_t blocks)
    for(size_t i = 0; i != blocks; ++i)
       {
       botan_md4_ia32_compress(digest, input, M);
-      input += HASH_BLOCK_SIZE;
+      input += hash_block_size();
       }
    }
 

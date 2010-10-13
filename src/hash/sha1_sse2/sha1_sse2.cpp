@@ -317,7 +317,7 @@ void SHA_160_SSE2::compress_n(const byte input_bytes[], size_t blocks)
       D = (digest[3] += D);
       E = (digest[4] += E);
 
-      input += (HASH_BLOCK_SIZE / 16);
+      input += (hash_block_size() / 16);
       }
 
 #undef GET_P_32

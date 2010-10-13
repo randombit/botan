@@ -39,8 +39,8 @@ void MD2::hash(const byte input[])
       0x31, 0x44, 0x50, 0xB4, 0x8F, 0xED, 0x1F, 0x1A, 0xDB, 0x99, 0x8D, 0x33,
       0x9F, 0x11, 0x83, 0x14 };
 
-   X.copy(16, input, HASH_BLOCK_SIZE);
-   xor_buf(&X[32], &X[0], &X[16], HASH_BLOCK_SIZE);
+   X.copy(16, input, hash_block_size());
+   xor_buf(&X[32], &X[0], &X[16], hash_block_size());
    byte T = 0;
 
    for(size_t i = 0; i != 18; ++i)
@@ -56,7 +56,7 @@ void MD2::hash(const byte input[])
       }
 
    T = checksum[15];
-   for(size_t i = 0; i != HASH_BLOCK_SIZE; ++i)
+   for(size_t i = 0; i != hash_block_size(); ++i)
       T = checksum[i] ^= SBOX[input[i] ^ T];
    }
 
@@ -67,16 +67,16 @@ void MD2::add_data(const byte input[], size_t length)
    {
    buffer.copy(position, input, length);
 
-   if(position + length >= HASH_BLOCK_SIZE)
+   if(position + length >= hash_block_size())
       {
       hash(&buffer[0]);
-      input += (HASH_BLOCK_SIZE - position);
-      length -= (HASH_BLOCK_SIZE - position);
-      while(length >= HASH_BLOCK_SIZE)
+      input += (hash_block_size() - position);
+      length -= (hash_block_size() - position);
+      while(length >= hash_block_size())
          {
          hash(input);
-         input += HASH_BLOCK_SIZE;
-         length -= HASH_BLOCK_SIZE;
+         input += hash_block_size();
+         length -= hash_block_size();
          }
       buffer.copy(input, length);
       position = 0;
@@ -89,8 +89,8 @@ void MD2::add_data(const byte input[], size_t length)
 */
 void MD2::final_result(byte output[])
    {
-   for(size_t i = position; i != HASH_BLOCK_SIZE; ++i)
-      buffer[i] = static_cast<byte>(HASH_BLOCK_SIZE - position);
+   for(size_t i = position; i != hash_block_size(); ++i)
+      buffer[i] = static_cast<byte>(hash_block_size() - position);
 
    hash(&buffer[0]);
    hash(&checksum[0]);

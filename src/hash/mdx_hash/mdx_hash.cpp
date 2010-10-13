@@ -20,7 +20,7 @@ MDx_HashFunction::MDx_HashFunction(size_t hash_len, size_t block_len,
    HashFunction(hash_len, block_len), buffer(block_len),
    BIG_BYTE_ENDIAN(byte_end), BIG_BIT_ENDIAN(bit_end), COUNT_SIZE(cnt_size)
    {
-   if(COUNT_SIZE >= output_length() || COUNT_SIZE >= HASH_BLOCK_SIZE)
+   if(COUNT_SIZE >= output_length() || COUNT_SIZE >= hash_block_size())
       throw Invalid_Argument("MDx_HashFunction: COUNT_SIZE is too big");
    count = position = 0;
    }
@@ -45,22 +45,22 @@ void MDx_HashFunction::add_data(const byte input[], size_t length)
       {
       buffer.copy(position, input, length);
 
-      if(position + length >= HASH_BLOCK_SIZE)
+      if(position + length >= hash_block_size())
          {
          compress_n(&buffer[0], 1);
-         input += (HASH_BLOCK_SIZE - position);
-         length -= (HASH_BLOCK_SIZE - position);
+         input += (hash_block_size() - position);
+         length -= (hash_block_size() - position);
          position = 0;
          }
       }
 
-   const size_t full_blocks = length / HASH_BLOCK_SIZE;
-   const size_t remaining   = length % HASH_BLOCK_SIZE;
+   const size_t full_blocks = length / hash_block_size();
+   const size_t remaining   = length % hash_block_size();
 
    if(full_blocks)
       compress_n(input, full_blocks);
 
-   buffer.copy(position, input + full_blocks * HASH_BLOCK_SIZE, remaining);
+   buffer.copy(position, input + full_blocks * hash_block_size(), remaining);
    position += remaining;
    }
 
@@ -70,16 +70,16 @@ void MDx_HashFunction::add_data(const byte input[], size_t length)
 void MDx_HashFunction::final_result(byte output[])
    {
    buffer[position] = (BIG_BIT_ENDIAN ? 0x80 : 0x01);
-   for(size_t i = position+1; i != HASH_BLOCK_SIZE; ++i)
+   for(size_t i = position+1; i != hash_block_size(); ++i)
       buffer[i] = 0;
 
-   if(position >= HASH_BLOCK_SIZE - COUNT_SIZE)
+   if(position >= hash_block_size() - COUNT_SIZE)
       {
       compress_n(&buffer[0], 1);
       zeroise(buffer);
       }
 
-   write_count(&buffer[HASH_BLOCK_SIZE - COUNT_SIZE]);
+   write_count(&buffer[hash_block_size() - COUNT_SIZE]);
 
    compress_n(&buffer[0], 1);
    copy_out(output);

@@ -77,11 +77,11 @@ SSL3_MAC::SSL3_MAC(HashFunction* hash_in) :
                              hash_in->output_length()),
    hash(hash_in)
    {
-   if(hash->HASH_BLOCK_SIZE == 0)
+   if(hash->hash_block_size() == 0)
       throw Invalid_Argument("SSL3-MAC cannot be used with " + hash->name());
 
    size_t INNER_HASH_LENGTH =
-      (hash->name() == "SHA-160") ? 60 : hash->HASH_BLOCK_SIZE;
+      (hash->name() == "SHA-160") ? 60 : hash->hash_block_size();
 
    i_key.resize(INNER_HASH_LENGTH);
    o_key.resize(INNER_HASH_LENGTH);

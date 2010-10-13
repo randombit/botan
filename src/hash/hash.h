@@ -18,11 +18,16 @@ namespace Botan {
 */
 class BOTAN_DLL HashFunction : public BufferedComputation
    {
-   public:
       /**
       * The hash block size as defined for this algorithm.
       */
       const u32bit HASH_BLOCK_SIZE;
+
+   public:
+      /**
+      * The hash block size as defined for this algorithm
+      */
+      virtual size_t hash_block_size() const { return HASH_BLOCK_SIZE; }
 
       /**
       * Get a new object representing the same algorithm as *this

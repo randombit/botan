@@ -147,7 +147,7 @@ void BMW_512::compress_n(const byte input[], size_t blocks)
 
       BMW_512_compress(&H[0], &M[0], &Q[0]);
 
-      input += HASH_BLOCK_SIZE;
+      input += hash_block_size();
       }
    }
 

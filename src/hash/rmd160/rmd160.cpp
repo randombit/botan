@@ -180,7 +180,7 @@ void RIPEMD_160::compress_n(const byte input[], size_t blocks)
       digest[4] = digest[0] + B1 + C2;
       digest[0] = C1;
 
-      input += HASH_BLOCK_SIZE;
+      input += hash_block_size();
       }
    }
 

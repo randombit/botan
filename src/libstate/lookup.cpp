@@ -40,7 +40,7 @@ u32bit block_size_of(const std::string& name)
       return cipher->block_size();
 
    if(const HashFunction* hash = af.prototype_hash_function(name))
-      return hash->HASH_BLOCK_SIZE;
+      return hash->hash_block_size();
 
    throw Algorithm_Not_Found(name);
    }

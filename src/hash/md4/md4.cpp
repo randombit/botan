@@ -85,7 +85,7 @@ void MD4::compress_n(const byte input[], size_t blocks)
       C = (digest[2] += C);
       D = (digest[3] += D);
 
-      input += HASH_BLOCK_SIZE;
+      input += hash_block_size();
       }
    }
 
