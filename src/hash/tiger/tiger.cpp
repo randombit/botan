@@ -161,7 +161,7 @@ void Tiger::clear()
 std::string Tiger::name() const
    {
    return "Tiger(" + std::to_string(output_length()) + "," +
-                     to_string(PASS) + ")";
+                     std::to_string(PASS) + ")";
    }
 
 /*

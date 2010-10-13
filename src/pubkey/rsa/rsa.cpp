@@ -10,6 +10,7 @@
 #include <botan/parsing.h>
 #include <botan/numthry.h>
 #include <botan/keypair.h>
+#include <botan/internal/assert.h>
 #include <future>
 
 namespace Botan {
