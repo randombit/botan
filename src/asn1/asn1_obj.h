@@ -14,6 +14,7 @@
 #include <botan/alg_id.h>
 #include <vector>
 #include <map>
+#include <chrono>
 
 namespace Botan {
 
@@ -52,7 +53,7 @@ class BOTAN_DLL X509_Time : public ASN1_Object
       void set_to(const std::string&);
       void set_to(const std::string&, ASN1_Tag);
 
-      X509_Time(u64bit);
+      X509_Time(const std::chrono::system_clock::time_point& time);
       X509_Time(const std::string& = "");
       X509_Time(const std::string&, ASN1_Tag);
    private:

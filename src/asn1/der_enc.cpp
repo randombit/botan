@@ -24,7 +24,7 @@ SecureVector<byte> encode_tag(ASN1_Tag type_tag, ASN1_Tag class_tag)
    {
    if((class_tag | 0xE0) != 0xE0)
       throw Encoding_Error("DER_Encoder: Invalid class tag " +
-                           to_string(class_tag));
+                           std::to_string(class_tag));
 
    SecureVector<byte> encoded_tag;
    if(type_tag <= 30)

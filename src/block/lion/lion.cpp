@@ -83,7 +83,7 @@ std::string Lion::name() const
    {
    return "Lion(" + hash->name() + "," +
                     cipher->name() + "," +
-                    to_string(block_size()) + ")";
+                    std::to_string(block_size()) + ")";
    }
 
 /*

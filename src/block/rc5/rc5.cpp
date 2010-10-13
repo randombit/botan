@@ -106,7 +106,7 @@ void RC5::key_schedule(const byte key[], size_t length)
 */
 std::string RC5::name() const
    {
-   return "RC5(" + to_string(ROUNDS) + ")";
+   return "RC5(" + std::to_string(ROUNDS) + ")";
    }
 
 /*

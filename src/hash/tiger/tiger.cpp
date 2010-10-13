@@ -160,7 +160,8 @@ void Tiger::clear()
 */
 std::string Tiger::name() const
    {
-   return "Tiger(" + to_string(output_length()) + "," + to_string(PASS) + ")";
+   return "Tiger(" + std::to_string(output_length()) + "," +
+                     to_string(PASS) + ")";
    }
 
 /*
@@ -174,10 +175,10 @@ Tiger::Tiger(size_t hashlen, size_t pass) :
    {
    if(output_length() != 16 && output_length() != 20 && output_length() != 24)
       throw Invalid_Argument("Tiger: Illegal hash output size: " +
-                             to_string(output_length()));
+                             std::to_string(output_length()));
    if(PASS < 3)
       throw Invalid_Argument("Tiger: Invalid number of passes: "
-                             + to_string(PASS));
+                             + std::to_string(PASS));
    clear();
    }
 
