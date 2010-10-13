@@ -181,7 +181,7 @@ Skein_512::Skein_512(u32bit arg_output_bits,
 
 std::string Skein_512::name() const
    {
-   return "Skein-512(" + to_string(output_bits) + ")";
+   return "Skein-512(" + std::to_string(output_bits) + ")";
    }
 
 HashFunction* Skein_512::clone() const

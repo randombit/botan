@@ -1281,17 +1281,19 @@ decrypt, if necessary) a PKCS \#8 private key:
 
 \begin{verbatim}
 namespace PKCS8 {
-   Private_Key* load_key(DataSource& in,
-                         RandomNumberGenerator& rng,
-                         const User_Interface& ui);
+   Private_Key* load_key(
+      DataSource& in,
+      RandomNumberGenerator& rng,
+      std::function<std::pair<bool, std::string> ()> get_passphrase);
+
+   Private_Key* load_key(
+      const std::string& filename,
+      RandomNumberGenerator& rng,
+      std::function<std::pair<bool, std::string> ()> get_passphrase);
 
    Private_Key* load_key(DataSource& in,
                          RandomNumberGenerator& rng,
                          std::string passphrase = "");
-
-   Private_Key* load_key(const std::string& filename,
-                         RandomNumberGenerator& rng,
-                         const User_Interface& ui);
 
    Private_Key* load_key(const std::string& filename,
                          RandomNumberGenerator& rng,
@@ -1301,18 +1303,21 @@ namespace PKCS8 {
 
 The versions that take \type{std::string} \arg{passphrase}s are
 primarily for compatibility, but they are useful in limited
-circumstances. The \type{User\_Interface} versions are how
-\function{load\_key} is implemented, and provides for much more
-flexibility. If the passphrase passed in is not correct, then an
-exception is thrown and that is that. However, if you pass in an UI
-object, then the UI object can keep asking the user for the passphrase
-until they get it right (or until they cancel the action, though the
-UI interface). A \type{User\_Interface} has very little to do with
-talking to users; it's just a way to glue together Botan and whatever
-user interface you happen to be using. You can think of it as a user
-interface interface. The default \type{User\_Interface} is rather
-dumb, and acts rather like the versions taking the \type{std::string};
-it tries the passphrase passed in first, and then it cancels.
+circumstances. The versions using \type{std::function} callbacks are
+how \function{load\_key} is implemented, and provides for much more
+flexibility. If you use the versions that take just a single
+passphrase, then if the passphrase passed in is not correct, then an
+exception is thrown and that is that. However, if you pass in a
+callback, then you can keep querying to the user until they get it
+right (or they cancel the action). The first return value of the
+callback is if the action should continue - if false,
+\function{load_key} will bail out. Otherwise, it will use the second
+return value as the supposed passphrase that was used to decrypt the
+key.
+
+If you know (or want to assume) the key is not encrypted, just ignore
+the passphrase/callback entirely, letting the third parameter default
+to an empty string. The call will fail if the key was encrypted.
 
 All versions need access to a \type{RandomNumberGenerator} in order to
 perform probabilistic tests on the loaded key material.

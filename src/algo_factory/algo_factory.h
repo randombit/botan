@@ -25,7 +25,6 @@ class MessageAuthenticationCode;
 template<typename T> class Algorithm_Cache;
 
 class Engine;
-class Mutex_Factory;
 
 /**
 * Algorithm Factory
@@ -37,7 +36,7 @@ class BOTAN_DLL Algorithm_Factory
       * Constructor
       * @param mf a mutex factory
       */
-      Algorithm_Factory(Mutex_Factory& mf);
+      Algorithm_Factory();
 
       /**
       * Destructor
