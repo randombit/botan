@@ -64,7 +64,7 @@ class BOTAN_DLL MDx_HashFunction : public HashFunction
       size_t position;
 
       const bool BIG_BYTE_ENDIAN, BIG_BIT_ENDIAN;
-      const u32bit COUNT_SIZE;
+      const size_t COUNT_SIZE;
    };
 
 }

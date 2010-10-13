@@ -23,7 +23,7 @@ class BOTAN_DLL RC5 : public BlockCipher_Fixed_Block_Size<8>
 
       void clear() { zeroise(S); }
       std::string name() const;
-      BlockCipher* clone() const { return new RC5(ROUNDS); }
+      BlockCipher* clone() const { return new RC5(get_rounds()); }
 
       /**
       * @param rounds the number of RC5 rounds to run. Must be between
@@ -31,9 +31,11 @@ class BOTAN_DLL RC5 : public BlockCipher_Fixed_Block_Size<8>
       */
       RC5(size_t rounds);
    private:
+      size_t get_rounds() const { return (S.size() - 2) / 2; }
+
       void key_schedule(const byte[], size_t);
+
       SecureVector<u32bit> S;
-      const size_t ROUNDS;
    };
 
 }

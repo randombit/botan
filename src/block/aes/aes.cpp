@@ -9,6 +9,9 @@
 #include <botan/loadstor.h>
 #include <botan/rotate.h>
 
+#include <assert.h>
+#include <stdio.h>
+
 namespace Botan {
 
 namespace {
@@ -454,35 +457,25 @@ void AES::encrypt_n(const byte in[], byte out[], size_t blocks) const
                   rotate_right(TE[get_byte(2, T1)], 16) ^
                   rotate_right(TE[get_byte(3, T2)], 24) ^ EK[7];
 
-      for(u32bit j = 2; j != ROUNDS; j += 2)
+      for(u32bit r = 2*4; r < EK.size(); r += 2*4)
          {
-         const u32bit K0 = EK[4*j];
-         const u32bit K1 = EK[4*j+1];
-         const u32bit K2 = EK[4*j+2];
-         const u32bit K3 = EK[4*j+3];
-
          T0 = TE0[get_byte(0, B0)] ^ TE1[get_byte(1, B1)] ^
-              TE2[get_byte(2, B2)] ^ TE3[get_byte(3, B3)] ^ K0;
+              TE2[get_byte(2, B2)] ^ TE3[get_byte(3, B3)] ^ EK[r];
          T1 = TE0[get_byte(0, B1)] ^ TE1[get_byte(1, B2)] ^
-              TE2[get_byte(2, B3)] ^ TE3[get_byte(3, B0)] ^ K1;
+              TE2[get_byte(2, B3)] ^ TE3[get_byte(3, B0)] ^ EK[r+1];
          T2 = TE0[get_byte(0, B2)] ^ TE1[get_byte(1, B3)] ^
-              TE2[get_byte(2, B0)] ^ TE3[get_byte(3, B1)] ^ K2;
+              TE2[get_byte(2, B0)] ^ TE3[get_byte(3, B1)] ^ EK[r+2];
          T3 = TE0[get_byte(0, B3)] ^ TE1[get_byte(1, B0)] ^
-              TE2[get_byte(2, B1)] ^ TE3[get_byte(3, B2)] ^ K3;
-
-         const u32bit K4 = EK[4*(j+1)+0];
-         const u32bit K5 = EK[4*(j+1)+1];
-         const u32bit K6 = EK[4*(j+1)+2];
-         const u32bit K7 = EK[4*(j+1)+3];
+              TE2[get_byte(2, B1)] ^ TE3[get_byte(3, B2)] ^ EK[r+3];
 
          B0 = TE0[get_byte(0, T0)] ^ TE1[get_byte(1, T1)] ^
-              TE2[get_byte(2, T2)] ^ TE3[get_byte(3, T3)] ^ K4;
+              TE2[get_byte(2, T2)] ^ TE3[get_byte(3, T3)] ^ EK[r+4];
          B1 = TE0[get_byte(0, T1)] ^ TE1[get_byte(1, T2)] ^
-              TE2[get_byte(2, T3)] ^ TE3[get_byte(3, T0)] ^ K5;
+              TE2[get_byte(2, T3)] ^ TE3[get_byte(3, T0)] ^ EK[r+5];
          B2 = TE0[get_byte(0, T2)] ^ TE1[get_byte(1, T3)] ^
-              TE2[get_byte(2, T0)] ^ TE3[get_byte(3, T1)] ^ K6;
+              TE2[get_byte(2, T0)] ^ TE3[get_byte(3, T1)] ^ EK[r+6];
          B3 = TE0[get_byte(0, T3)] ^ TE1[get_byte(1, T0)] ^
-              TE2[get_byte(2, T1)] ^ TE3[get_byte(3, T2)] ^ K7;
+              TE2[get_byte(2, T1)] ^ TE3[get_byte(3, T2)] ^ EK[r+7];
          }
 
       /*
@@ -563,35 +556,25 @@ void AES::decrypt_n(const byte in[], byte out[], size_t blocks) const
                   rotate_right(TD[get_byte(2, T1)], 16) ^
                   rotate_right(TD[get_byte(3, T0)], 24) ^ DK[7];
 
-      for(u32bit j = 2; j != ROUNDS; j += 2)
+      for(u32bit r = 2*4; r < DK.size(); r += 2*4)
          {
-         const u32bit K0 = DK[4*j+0];
-         const u32bit K1 = DK[4*j+1];
-         const u32bit K2 = DK[4*j+2];
-         const u32bit K3 = DK[4*j+3];
-
          T0 = TD0[get_byte(0, B0)] ^ TD1[get_byte(1, B3)] ^
-              TD2[get_byte(2, B2)] ^ TD3[get_byte(3, B1)] ^ K0;
+              TD2[get_byte(2, B2)] ^ TD3[get_byte(3, B1)] ^ DK[r];
          T1 = TD0[get_byte(0, B1)] ^ TD1[get_byte(1, B0)] ^
-              TD2[get_byte(2, B3)] ^ TD3[get_byte(3, B2)] ^ K1;
+              TD2[get_byte(2, B3)] ^ TD3[get_byte(3, B2)] ^ DK[r+1];
          T2 = TD0[get_byte(0, B2)] ^ TD1[get_byte(1, B1)] ^
-              TD2[get_byte(2, B0)] ^ TD3[get_byte(3, B3)] ^ K2;
+              TD2[get_byte(2, B0)] ^ TD3[get_byte(3, B3)] ^ DK[r+2];
          T3 = TD0[get_byte(0, B3)] ^ TD1[get_byte(1, B2)] ^
-              TD2[get_byte(2, B1)] ^ TD3[get_byte(3, B0)] ^ K3;
-
-         const u32bit K4 = DK[4*(j+1)+0];
-         const u32bit K5 = DK[4*(j+1)+1];
-         const u32bit K6 = DK[4*(j+1)+2];
-         const u32bit K7 = DK[4*(j+1)+3];
+              TD2[get_byte(2, B1)] ^ TD3[get_byte(3, B0)] ^ DK[r+3];
 
          B0 = TD0[get_byte(0, T0)] ^ TD1[get_byte(1, T3)] ^
-              TD2[get_byte(2, T2)] ^ TD3[get_byte(3, T1)] ^ K4;
+              TD2[get_byte(2, T2)] ^ TD3[get_byte(3, T1)] ^ DK[r+4];
          B1 = TD0[get_byte(0, T1)] ^ TD1[get_byte(1, T0)] ^
-              TD2[get_byte(2, T3)] ^ TD3[get_byte(3, T2)] ^ K5;
+              TD2[get_byte(2, T3)] ^ TD3[get_byte(3, T2)] ^ DK[r+5];
          B2 = TD0[get_byte(0, T2)] ^ TD1[get_byte(1, T1)] ^
-              TD2[get_byte(2, T0)] ^ TD3[get_byte(3, T3)] ^ K6;
+              TD2[get_byte(2, T0)] ^ TD3[get_byte(3, T3)] ^ DK[r+6];
          B3 = TD0[get_byte(0, T3)] ^ TD1[get_byte(1, T2)] ^
-              TD2[get_byte(2, T1)] ^ TD3[get_byte(3, T0)] ^ K7;
+              TD2[get_byte(2, T1)] ^ TD3[get_byte(3, T0)] ^ DK[r+7];
          }
 
       out[ 0] = SD[get_byte(0, B0)] ^ MD[0];
@@ -625,7 +608,7 @@ void AES::key_schedule(const byte key[], size_t length)
       0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000, 0x20000000,
       0x40000000, 0x80000000, 0x1B000000, 0x36000000 };
 
-   ROUNDS = (length / 4) + 6;
+   const u32bit rounds = (length / 4) + 6;
 
    SecureVector<u32bit> XEK(64), XDK(64);
 
@@ -633,7 +616,7 @@ void AES::key_schedule(const byte key[], size_t length)
    for(size_t i = 0; i != X; ++i)
       XEK[i] = load_be<u32bit>(key, i);
 
-   for(size_t i = X; i < 4*(ROUNDS+1); i += X)
+   for(size_t i = X; i < 4*(rounds+1); i += X)
       {
       XEK[i] = XEK[i-X] ^ S(rotate_left(XEK[i-1], 8)) ^ RC[(i-X)/X];
       for(size_t j = 1; j != X; ++j)
@@ -645,12 +628,12 @@ void AES::key_schedule(const byte key[], size_t length)
          }
       }
 
-   for(size_t i = 0; i != 4*(ROUNDS+1); i += 4)
+   for(size_t i = 0; i != 4*(rounds+1); i += 4)
       {
-      XDK[i  ] = XEK[4*ROUNDS-i  ];
-      XDK[i+1] = XEK[4*ROUNDS-i+1];
-      XDK[i+2] = XEK[4*ROUNDS-i+2];
-      XDK[i+3] = XEK[4*ROUNDS-i+3];
+      XDK[i  ] = XEK[4*rounds-i  ];
+      XDK[i+1] = XEK[4*rounds-i+1];
+      XDK[i+2] = XEK[4*rounds-i+2];
+      XDK[i+3] = XEK[4*rounds-i+3];
       }
 
    for(size_t i = 4; i != length + 24; ++i)
@@ -661,12 +644,12 @@ void AES::key_schedule(const byte key[], size_t length)
 
    for(size_t i = 0; i != 4; ++i)
       {
-      store_be(XEK[i+4*ROUNDS], &ME[4*i]);
+      store_be(XEK[i+4*rounds], &ME[4*i]);
       store_be(XEK[i], &MD[4*i]);
       }
 
-   EK.copy(&XEK[0], length + 24);
-   DK.copy(&XDK[0], length + 24);
+   EK.set(&XEK[0], length + 24);
+   DK.set(&XDK[0], length + 24);
    }
 
 /*
@@ -681,12 +664,20 @@ u32bit AES::S(u32bit input)
 /*
 * AES Constructor
 */
-AES::AES(u32bit key_size) : BlockCipher_Fixed_Block_Size(key_size),
-                            EK(56), ME(16), DK(56), MD(16)
+AES::AES() : BlockCipher_Fixed_Block_Size(16, 32, 8),
+             EK(0), ME(16), DK(0), MD(16)
+   {
+   }
+
+/*
+* AES Constructor
+*/
+AES::AES(size_t key_size) : BlockCipher_Fixed_Block_Size(key_size),
+                            EK(key_size+24), ME(16),
+                            DK(key_size+24), MD(16)
    {
    if(key_size != 16 && key_size != 24 && key_size != 32)
       throw Invalid_Key_Length(name(), key_size);
-   ROUNDS = (key_size / 4) + 6;
    }
 
 /*

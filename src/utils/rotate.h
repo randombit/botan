@@ -15,12 +15,12 @@ namespace Botan {
 /*
 * Word Rotation Functions
 */
-template<typename T> inline T rotate_left(T input, u32bit rot)
+template<typename T> inline T rotate_left(T input, size_t rot)
    {
    return static_cast<T>((input << rot) | (input >> (8*sizeof(T)-rot)));;
    }
 
-template<typename T> inline T rotate_right(T input, u32bit rot)
+template<typename T> inline T rotate_right(T input, size_t rot)
    {
    return static_cast<T>((input >> rot) | (input << (8*sizeof(T)-rot)));
    }

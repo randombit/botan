@@ -51,10 +51,10 @@ class BOTAN_DLL MessageAuthenticationCode : public BufferedComputation,
       * @param key_max the maximum key size
       * @param key_mod the modulo restriction on the key size
       */
-      MessageAuthenticationCode(u32bit mac_len,
-                                u32bit key_min,
-                                u32bit key_max = 0,
-                                u32bit key_mod = 1) :
+      MessageAuthenticationCode(size_t mac_len,
+                                size_t key_min,
+                                size_t key_max = 0,
+                                size_t key_mod = 1) :
          BufferedComputation(mac_len),
          SymmetricAlgorithm(key_min, key_max, key_mod) {}
 

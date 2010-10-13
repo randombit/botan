@@ -23,16 +23,16 @@ class XOR_Cipher : public StreamCipher
 
       XOR_Cipher() : StreamCipher(1, 32) { mask_pos = 0; }
    private:
-      void cipher(const byte in[], byte out[], u32bit length)
+      void cipher(const byte in[], byte out[], size_t length)
          {
-         for(u32bit j = 0; j != length; j++)
+         for(size_t j = 0; j != length; j++)
             {
             out[j] = in[j] ^ mask[mask_pos];
             mask_pos = (mask_pos + 1) % mask.size();
             }
          }
 
-      void key_schedule(const byte key[], u32bit length)
+      void key_schedule(const byte key[], size_t length)
          {
          mask.set(key, length);
          }

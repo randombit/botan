@@ -37,7 +37,9 @@ int main(int argc, char* argv[])
       std::auto_ptr<Botan::RandomNumberGenerator> rng(
          Botan::RandomNumberGenerator::make_rng());
 
-      TLS_Client tls(*rng, sock);
+      TLS_Policy policy;
+
+      TLS_Client tls(policy, *rng, sock);
 
       printf("Handshake extablished...\n");
 

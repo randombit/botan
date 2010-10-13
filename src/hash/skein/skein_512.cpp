@@ -133,14 +133,14 @@ void reset_tweak(MemoryRegion<u64bit>& T,
 
 void initial_block(MemoryRegion<u64bit>& H,
                    MemoryRegion<u64bit>& T,
-                   u32bit output_bits,
+                   size_t output_bits,
                    const std::string& personalization)
    {
    zeroise(H);
 
    // ASCII("SHA3") followed by version (0x0001) code
    byte config_str[32] = { 0x53, 0x48, 0x41, 0x33, 0x01, 0x00, 0 };
-   store_le(output_bits, config_str + 8);
+   store_le(u32bit(output_bits), config_str + 8);
 
    reset_tweak(T, SKEIN_CONFIG, true);
    ubi_512(H, T, config_str, sizeof(config_str));
@@ -166,14 +166,14 @@ void initial_block(MemoryRegion<u64bit>& H,
 
 }
 
-Skein_512::Skein_512(u32bit arg_output_bits,
+Skein_512::Skein_512(size_t arg_output_bits,
                      const std::string& arg_personalization) :
    HashFunction(arg_output_bits / 8),
    personalization(arg_personalization),
    output_bits(arg_output_bits),
    H(9), T(3), buffer(64), buf_pos(0)
    {
-   if(output_bits == 0 || output_bits % 8 != 0)
+   if(output_bits == 0 || output_bits % 8 != 0 || output_bits > 64*1024)
       throw Invalid_Argument("Bad output bits size for Skein-512");
 
    initial_block(H, T, output_bits, personalization);

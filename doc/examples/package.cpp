@@ -51,13 +51,13 @@ int main(int argc, char* argv[])
    BlockCipher* cipher = new Serpent;
 
    std::vector<byte> input = slurp_file(argv[1]);
-   std::vector<byte> output(input.size() + cipher->BLOCK_SIZE);
+   std::vector<byte> output(input.size() + cipher->block_size());
 
    aont_package(rng, new Serpent,
                 &input[0], input.size(),
                 &output[0]);
 
-   std::vector<byte> unpackage_output(output.size() - cipher->BLOCK_SIZE);
+   std::vector<byte> unpackage_output(output.size() - cipher->block_size());
 
    aont_unpackage(new Serpent,
                   &output[0], output.size(),

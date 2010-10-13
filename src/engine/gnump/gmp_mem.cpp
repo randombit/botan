@@ -17,7 +17,7 @@ namespace {
 * Allocator used by GNU MP
 */
 Allocator* gmp_alloc = 0;
-u32bit gmp_alloc_refcnt = 0;
+size_t gmp_alloc_refcnt = 0;
 
 /*
 * Allocation Function for GNU MP

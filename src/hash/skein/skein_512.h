@@ -25,7 +25,7 @@ class BOTAN_DLL Skein_512 : public HashFunction
       * @param personalization is a string that will paramaterize the
       * hash output
       */
-      Skein_512(u32bit output_bits = 512,
+      Skein_512(size_t output_bits = 512,
                 const std::string& personalization = "");
 
       size_t hash_block_size() const { return 64; }

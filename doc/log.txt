@@ -6,10 +6,13 @@
  - Add hex encoding/decoding functions that can be used without a Pipe
  - Add support for dynamic engine loading on Windows
  - Allow using PBKDF2 with empty passphrases
+ - Switch default PKCS #8 encryption algorithm from AES-128 to AES-256
+ - Support use of HMAC(SHA-256) and CMAC(Blowfish) in passhash9
+ - Use size_t instead of u32bit for length fields
+ - Replace BlockCipher::BLOCK_SIZE attribute with function block_size()
+ - Replace HashFunction::HASH_BLOCK_SIZE attribute with hash_block_size()
  - Changed semantics of MemoryRegion::resize and clear to match STL
  - Removed MemoryRegion::append, replaced by push_back and operator+=
- - Support use of HMAC(SHA-256) and CMAC(Blowfish) in passhash9
- - Switch default PKCS #8 encryption algorithm from AES-128 to AES-256
  - Improve support for Intel Atom processors
  - Fix compilation under Sun Studio
 
