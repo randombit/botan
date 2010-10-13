@@ -44,6 +44,8 @@ int main(int argc, char* argv[])
 
       Unix_Server_Socket listener(port);
 
+      TLS_Policy policy;
+
       while(true)
          {
          try {
@@ -53,7 +55,7 @@ int main(int argc, char* argv[])
 
             printf("Got new connection\n");
 
-            TLS_Server tls(rng, *sock, cert, key);
+            TLS_Server tls(policy, rng, *sock, cert, key);
 
             std::string hostname = tls.requested_hostname();
 
