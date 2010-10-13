@@ -185,8 +185,8 @@ void Serpent_SIMD::encrypt_n(const byte in[], byte out[], size_t blocks) const
    while(blocks >= 4)
       {
       serpent_encrypt_4(in, out, KS);
-      in += 4 * block_size();
-      out += 4 * block_size();
+      in += 4 * BLOCK_SIZE;
+      out += 4 * BLOCK_SIZE;
       blocks -= 4;
       }
 
@@ -204,8 +204,8 @@ void Serpent_SIMD::decrypt_n(const byte in[], byte out[], size_t blocks) const
    while(blocks >= 4)
       {
       serpent_decrypt_4(in, out, KS);
-      in += 4 * block_size();
-      out += 4 * block_size();
+      in += 4 * BLOCK_SIZE;
+      out += 4 * BLOCK_SIZE;
       blocks -= 4;
       }
 

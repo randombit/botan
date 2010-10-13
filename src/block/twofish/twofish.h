@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * Twofish, an AES finalist
 */
-class BOTAN_DLL Twofish : public BlockCipher
+class BOTAN_DLL Twofish : public BlockCipher_Fixed_Block_Size<16>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
@@ -25,7 +25,9 @@ class BOTAN_DLL Twofish : public BlockCipher
       std::string name() const { return "Twofish"; }
       BlockCipher* clone() const { return new Twofish; }
 
-      Twofish() : BlockCipher(16, 16, 32, 8), SB(1024), RK(40) {}
+      Twofish() : BlockCipher_Fixed_Block_Size(16, 32, 8),
+                  SB(1024), RK(40) {}
+
    private:
       void key_schedule(const byte[], size_t);
 

@@ -22,6 +22,8 @@ class BOTAN_DLL LubyRackoff : public BlockCipher
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
+      size_t block_size() const { return 2 * hash->output_length(); }
+
       void clear();
       std::string name() const;
       BlockCipher* clone() const;

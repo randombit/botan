@@ -57,8 +57,8 @@ void Twofish::encrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_le(out, C, D, A, B);
 
-      in += block_size();
-      out += block_size();
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
    }
 
@@ -108,8 +108,8 @@ void Twofish::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_le(out, C, D, A, B);
 
-      in += block_size();
-      out += block_size();
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
    }
 

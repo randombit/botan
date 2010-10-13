@@ -42,8 +42,8 @@ void LubyRackoff::encrypt_n(const byte in[], byte out[], size_t blocks) const
       hash->final(buffer);
       xor_buf(out, buffer, len);
 
-      in += block_size();
-      out += block_size();
+      in += 2 * len;
+      out += 2 * len;
       }
    }
 
@@ -79,8 +79,8 @@ void LubyRackoff::decrypt_n(const byte in[], byte out[], size_t blocks) const
       hash->final(buffer);
       xor_buf(out + len, buffer, len);
 
-      in += block_size();
-      out += block_size();
+      in += 2 * len;
+      out += 2 * len;
       }
    }
 
@@ -123,8 +123,7 @@ std::string LubyRackoff::name() const
 * Luby-Rackoff Constructor
 */
 LubyRackoff::LubyRackoff(HashFunction* h) :
-   BlockCipher(2 * (h ? h->output_length(): 0),
-               2, 32, 2),
+   BlockCipher(2, 32, 2),
    hash(h)
    {
    }

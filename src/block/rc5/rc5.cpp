@@ -38,8 +38,8 @@ void RC5::encrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_le(out, A, B);
 
-      in += block_size();
-      out += block_size();
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
    }
 
@@ -68,8 +68,8 @@ void RC5::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_le(out, A, B);
 
-      in += block_size();
-      out += block_size();
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
    }
 
@@ -112,7 +112,9 @@ std::string RC5::name() const
 /*
 * RC5 Constructor
 */
-RC5::RC5(size_t r) : BlockCipher(8, 1, 32), ROUNDS(r)
+RC5::RC5(size_t r) :
+   BlockCipher_Fixed_Block_Size(1, 32),
+   ROUNDS(r)
    {
    if(ROUNDS < 8 || ROUNDS > 32 || (ROUNDS % 4 != 0))
       throw Invalid_Argument(name() + ": Invalid number of rounds");

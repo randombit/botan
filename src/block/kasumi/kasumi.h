@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * KASUMI, the block cipher used in 3G telephony
 */
-class BOTAN_DLL KASUMI : public BlockCipher
+class BOTAN_DLL KASUMI : public BlockCipher_Fixed_Block_Size<8>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
@@ -25,7 +25,7 @@ class BOTAN_DLL KASUMI : public BlockCipher
       std::string name() const { return "KASUMI"; }
       BlockCipher* clone() const { return new KASUMI; }
 
-      KASUMI() : BlockCipher(8, 16), EK(64) {}
+      KASUMI() : BlockCipher_Fixed_Block_Size(16), EK(64) {}
    private:
       void key_schedule(const byte[], size_t);
 

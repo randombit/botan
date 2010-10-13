@@ -145,8 +145,8 @@ void KASUMI::encrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_be(out, B0, B1, B2, B3);
 
-      in += block_size();
-      out += block_size();
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
    }
 
@@ -191,8 +191,8 @@ void KASUMI::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_be(out, B0, B1, B2, B3);
 
-      in += block_size();
-      out += block_size();
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
    }
 

@@ -521,8 +521,8 @@ void AES::encrypt_n(const byte in[], byte out[], size_t blocks) const
       out[14] = SE[get_byte(2, B1)] ^ ME[14];
       out[15] = SE[get_byte(3, B2)] ^ ME[15];
 
-      in += block_size();
-      out += block_size();
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
    }
 
@@ -611,8 +611,8 @@ void AES::decrypt_n(const byte in[], byte out[], size_t blocks) const
       out[14] = SD[get_byte(2, B1)] ^ MD[14];
       out[15] = SD[get_byte(3, B0)] ^ MD[15];
 
-      in += block_size();
-      out += block_size();
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
    }
 
@@ -681,7 +681,7 @@ u32bit AES::S(u32bit input)
 /*
 * AES Constructor
 */
-AES::AES(u32bit key_size) : BlockCipher(16, key_size),
+AES::AES(u32bit key_size) : BlockCipher_Fixed_Block_Size(key_size),
                             EK(56), ME(16), DK(56), MD(16)
    {
    if(key_size != 16 && key_size != 24 && key_size != 32)

@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * MARS, IBM's candidate for AES
 */
-class BOTAN_DLL MARS : public BlockCipher
+class BOTAN_DLL MARS : public BlockCipher_Fixed_Block_Size<16>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
@@ -25,7 +25,7 @@ class BOTAN_DLL MARS : public BlockCipher
       std::string name() const { return "MARS"; }
       BlockCipher* clone() const { return new MARS; }
 
-      MARS() : BlockCipher(16, 16, 32, 4), EK(40) {}
+      MARS() : BlockCipher_Fixed_Block_Size(16, 32, 4), EK(40) {}
    private:
       void key_schedule(const byte[], size_t);
 

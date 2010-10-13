@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * Blowfish
 */
-class BOTAN_DLL Blowfish : public BlockCipher
+class BOTAN_DLL Blowfish : public BlockCipher_Fixed_Block_Size<8>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
@@ -25,7 +25,7 @@ class BOTAN_DLL Blowfish : public BlockCipher
       std::string name() const { return "Blowfish"; }
       BlockCipher* clone() const { return new Blowfish; }
 
-      Blowfish() : BlockCipher(8, 1, 56), S(1024), P(18) {}
+      Blowfish() : BlockCipher_Fixed_Block_Size(1, 56), S(1024), P(18) {}
    private:
       void key_schedule(const byte[], size_t);
       void generate_sbox(MemoryRegion<u32bit>& box,

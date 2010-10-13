@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * RC2
 */
-class BOTAN_DLL RC2 : public BlockCipher
+class BOTAN_DLL RC2 : public BlockCipher_Fixed_Block_Size<8>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
@@ -32,7 +32,7 @@ class BOTAN_DLL RC2 : public BlockCipher
       std::string name() const { return "RC2"; }
       BlockCipher* clone() const { return new RC2; }
 
-      RC2() : BlockCipher(8, 1, 32), K(64) {}
+      RC2() : BlockCipher_Fixed_Block_Size(1, 32), K(64) {}
    private:
       void key_schedule(const byte[], size_t);
 

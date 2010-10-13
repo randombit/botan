@@ -30,8 +30,8 @@ void TEA::encrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_be(out, L, R);
 
-      in += block_size();
-      out += block_size();
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
    }
 
@@ -55,8 +55,8 @@ void TEA::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_be(out, L, R);
 
-      in += block_size();
-      out += block_size();
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
    }
 
