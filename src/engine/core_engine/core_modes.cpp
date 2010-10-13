@@ -140,7 +140,7 @@ Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
    if(mode.find("CFB") != std::string::npos ||
       mode.find("EAX") != std::string::npos)
       {
-      u32bit bits = 0;
+      size_t bits = 0;
 
       std::vector<std::string> algo_info = parse_algorithm_name(mode);
       std::string mode_name = algo_info[0];

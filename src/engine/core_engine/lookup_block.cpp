@@ -257,7 +257,7 @@ BlockCipher* Core_Engine::find_block_cipher(const SCAN_Name& request,
 #if defined(BOTAN_HAS_LION)
    if(request.algo_name() == "Lion" && request.arg_count_between(2, 3))
       {
-      const u32bit block_size = request.arg_as_integer(2, 1024);
+      const size_t block_size = request.arg_as_integer(2, 1024);
 
       const HashFunction* hash =
          af.prototype_hash_function(request.arg(0));

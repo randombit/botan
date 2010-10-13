@@ -22,8 +22,8 @@ class OSSL_BN
       BIGNUM* value;
 
       BigInt to_bigint() const;
-      void encode(byte[], u32bit) const;
-      u32bit bytes() const;
+      void encode(byte[], size_t) const;
+      size_t bytes() const;
 
       SecureVector<byte> to_bytes() const
          { return BigInt::encode(to_bigint()); }
@@ -32,7 +32,7 @@ class OSSL_BN
 
       OSSL_BN(const OSSL_BN&);
       OSSL_BN(const BigInt& = 0);
-      OSSL_BN(const byte[], u32bit);
+      OSSL_BN(const byte[], size_t);
       ~OSSL_BN();
    };
 

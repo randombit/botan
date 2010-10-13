@@ -19,7 +19,7 @@ namespace Botan {
 * @param in the source array
 * @param n the number of elements of in/out
 */
-template<typename T> inline void copy_mem(T* out, const T* in, u32bit n)
+template<typename T> inline void copy_mem(T* out, const T* in, size_t n)
    {
    std::memmove(out, in, sizeof(T)*n);
    }
@@ -29,7 +29,7 @@ template<typename T> inline void copy_mem(T* out, const T* in, u32bit n)
 * @param ptr a pointer to an array
 * @param n the number of Ts pointed to by ptr
 */
-template<typename T> inline void clear_mem(T* ptr, u32bit n)
+template<typename T> inline void clear_mem(T* ptr, size_t n)
    {
    if(n) // avoid glibc warning if n == 0
       std::memset(ptr, 0, sizeof(T)*n);
@@ -42,7 +42,7 @@ template<typename T> inline void clear_mem(T* ptr, u32bit n)
 * @param val the value to set each byte to
 */
 template<typename T>
-inline void set_mem(T* ptr, u32bit n, byte val)
+inline void set_mem(T* ptr, size_t n, byte val)
    {
    std::memset(ptr, val, sizeof(T)*n);
    }
@@ -54,11 +54,11 @@ inline void set_mem(T* ptr, u32bit n, byte val)
 * @param n the number of Ts in p1 and p2
 * @return true iff p1[i] == p2[i] forall i in [0...n)
 */
-template<typename T> inline bool same_mem(const T* p1, const T* p2, u32bit n)
+template<typename T> inline bool same_mem(const T* p1, const T* p2, size_t n)
    {
    bool is_same = true;
 
-   for(u32bit i = 0; i != n; ++i)
+   for(size_t i = 0; i != n; ++i)
       is_same &= (p1[i] == p2[i]);
 
    return is_same;

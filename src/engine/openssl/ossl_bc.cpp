@@ -27,7 +27,7 @@ class EVP_BlockCipher : public BlockCipher
       EVP_BlockCipher(const EVP_CIPHER*, const std::string&);
 
       EVP_BlockCipher(const EVP_CIPHER*, const std::string&,
-                      u32bit, u32bit, u32bit);
+                      size_t, size_t, size_t);
 
       ~EVP_BlockCipher();
    private:
@@ -67,8 +67,8 @@ EVP_BlockCipher::EVP_BlockCipher(const EVP_CIPHER* algo,
 */
 EVP_BlockCipher::EVP_BlockCipher(const EVP_CIPHER* algo,
                                  const std::string& algo_name,
-                                 u32bit key_min, u32bit key_max,
-                                 u32bit key_mod) :
+                                 size_t key_min, size_t key_max,
+                                 size_t key_mod) :
    BlockCipher(key_min, key_max, key_mod),
    block_sz(EVP_CIPHER_block_size(algo)),
    cipher_name(algo_name)
