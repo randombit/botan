@@ -14,7 +14,7 @@ namespace Botan {
 /*
 * Combine cipher stream with message
 */
-void WiderWake_41_BE::cipher(const byte in[], byte out[], u32bit length)
+void WiderWake_41_BE::cipher(const byte in[], byte out[], size_t length)
    {
    while(length >= buffer.size() - position)
       {
@@ -31,17 +31,17 @@ void WiderWake_41_BE::cipher(const byte in[], byte out[], u32bit length)
 /*
 * Generate cipher stream
 */
-void WiderWake_41_BE::generate(u32bit length)
+void WiderWake_41_BE::generate(size_t length)
    {
    u32bit R0 = state[0], R1 = state[1],
           R2 = state[2], R3 = state[3],
           R4 = state[4];
 
-   for(u32bit j = 0; j != length; j += 8)
+   for(size_t i = 0; i != length; i += 8)
       {
       u32bit R0a;
 
-      store_be(R3, &buffer[j]);
+      store_be(R3, &buffer[i]);
 
       R0a = R4 + R3; R3 += R2; R2 += R1; R1 += R0;
       R0a = (R0a >> 8) ^ T[(R0a & 0xFF)];
@@ -50,7 +50,7 @@ void WiderWake_41_BE::generate(u32bit length)
       R3  = (R3  >> 8) ^ T[(R3  & 0xFF)];
       R4 = R0; R0 = R0a;
 
-      store_be(R3, &buffer[j + 4]);
+      store_be(R3, &buffer[i + 4]);
 
       R0a = R4 + R3; R3 += R2; R2 += R1; R1 += R0;
       R0a = (R0a >> 8) ^ T[(R0a & 0xFF)];
@@ -74,38 +74,41 @@ void WiderWake_41_BE::generate(u32bit length)
 */
 void WiderWake_41_BE::key_schedule(const byte key[], u32bit)
    {
-   for(u32bit j = 0; j != 4; ++j)
-      t_key[j] = load_be<u32bit>(key, j);
+   for(size_t i = 0; i != 4; ++i)
+      t_key[i] = load_be<u32bit>(key, i);
 
    static const u32bit MAGIC[8] = {
       0x726A8F3B, 0xE69A3B5C, 0xD3C71FE5, 0xAB3C73D2,
       0x4D3A8EB3, 0x0396D6E8, 0x3D4C2F7A, 0x9EE27CF3 };
 
-   for(u32bit j = 0; j != 4; ++j)
-      T[j] = t_key[j];
-   for(u32bit j = 4; j != 256; ++j)
+   for(size_t i = 0; i != 4; ++i)
+      T[i] = t_key[i];
+
+   for(size_t i = 4; i != 256; ++i)
       {
-      u32bit X = T[j-1] + T[j-4];
-      T[j] = (X >> 3) ^ MAGIC[X % 8];
+      u32bit X = T[i-1] + T[i-4];
+      T[i] = (X >> 3) ^ MAGIC[X % 8];
       }
-   for(u32bit j = 0; j != 23; ++j)
-      T[j] += T[j+89];
+
+   for(size_t i = 0; i != 23; ++i)
+      T[i] += T[i+89];
 
    u32bit X = T[33];
    u32bit Z = (T[59] | 0x01000001) & 0xFF7FFFFF;
-   for(u32bit j = 0; j != 256; ++j)
+   for(size_t i = 0; i != 256; ++i)
       {
       X = (X & 0xFF7FFFFF) + Z;
-      T[j] = (T[j] & 0x00FFFFFF) ^ X;
+      T[i] = (T[i] & 0x00FFFFFF) ^ X;
       }
+
    X = (T[X & 0xFF] ^ X) & 0xFF;
    Z = T[0];
    T[0] = T[X];
-   for(u32bit j = 1; j != 256; ++j)
+   for(size_t i = 1; i != 256; ++i)
       {
-      T[X] = T[j];
-      X = (T[j ^ X] ^ X) & 0xFF;
-      T[j] = T[X];
+      T[X] = T[i];
+      X = (T[i ^ X] ^ X) & 0xFF;
+      T[i] = T[X];
       }
    T[X] = Z;
 
@@ -118,13 +121,14 @@ void WiderWake_41_BE::key_schedule(const byte key[], u32bit)
 /*
 * Resynchronization
 */
-void WiderWake_41_BE::set_iv(const byte iv[], u32bit length)
+void WiderWake_41_BE::set_iv(const byte iv[], size_t length)
    {
    if(!valid_iv_length(length))
       throw Invalid_IV_Length(name(), length);
 
-   for(u32bit j = 0; j != 4; ++j)
-      state[j] = t_key[j];
+   for(size_t i = 0; i != 4; ++i)
+      state[i] = t_key[i];
+
    state[4] = load_be<u32bit>(iv, 0);
    state[0] ^= state[4];
    state[2] ^= load_be<u32bit>(iv, 1);

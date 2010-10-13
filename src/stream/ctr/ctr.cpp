@@ -67,7 +67,7 @@ std::string CTR_BE::name() const
 /*
 * CTR-BE Encryption/Decryption
 */
-void CTR_BE::cipher(const byte in[], byte out[], u32bit length)
+void CTR_BE::cipher(const byte in[], byte out[], size_t length)
    {
    while(length >= buffer.size() - position)
       {
@@ -84,20 +84,20 @@ void CTR_BE::cipher(const byte in[], byte out[], u32bit length)
 /*
 * Set CTR-BE IV
 */
-void CTR_BE::set_iv(const byte iv[], u32bit iv_len)
+void CTR_BE::set_iv(const byte iv[], size_t iv_len)
    {
    if(!valid_iv_length(iv_len))
       throw Invalid_IV_Length(name(), iv_len);
 
-   const u32bit BLOCK_SIZE = permutation->BLOCK_SIZE;
+   const size_t BLOCK_SIZE = permutation->BLOCK_SIZE;
 
    zeroise(counter);
 
    counter.copy(0, iv, iv_len);
 
-   const u32bit PARALLEL_BLOCKS = counter.size() / BLOCK_SIZE;
+   const size_t PARALLEL_BLOCKS = counter.size() / BLOCK_SIZE;
 
-   for(u32bit i = 1; i != PARALLEL_BLOCKS; ++i)
+   for(size_t i = 1; i != PARALLEL_BLOCKS; ++i)
       {
       counter.copy(i*BLOCK_SIZE,
                    &counter[(i-1)*BLOCK_SIZE],
@@ -117,9 +117,9 @@ void CTR_BE::set_iv(const byte iv[], u32bit iv_len)
 */
 void CTR_BE::increment_counter()
    {
-   const u32bit PARALLEL_BLOCKS = counter.size() / permutation->BLOCK_SIZE;
+   const size_t PARALLEL_BLOCKS = counter.size() / permutation->BLOCK_SIZE;
 
-   for(u32bit i = 0; i != PARALLEL_BLOCKS; ++i)
+   for(size_t i = 0; i != PARALLEL_BLOCKS; ++i)
       {
       byte* this_ctr = &counter[i * permutation->BLOCK_SIZE];
 

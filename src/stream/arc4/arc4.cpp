@@ -14,7 +14,7 @@ namespace Botan {
 /*
 * Combine cipher stream with message
 */
-void ARC4::cipher(const byte in[], byte out[], u32bit length)
+void ARC4::cipher(const byte in[], byte out[], size_t length)
    {
    while(length >= buffer.size() - position)
       {
@@ -33,25 +33,25 @@ void ARC4::cipher(const byte in[], byte out[], u32bit length)
 */
 void ARC4::generate()
    {
-   u32bit SX, SY;
-   for(u32bit j = 0; j != buffer.size(); j += 4)
+   byte SX, SY;
+   for(size_t i = 0; i != buffer.size(); i += 4)
       {
       SX = state[X+1]; Y = (Y + SX) % 256; SY = state[Y];
       state[X+1] = SY; state[Y] = SX;
-      buffer[j] = state[(SX + SY) % 256];
+      buffer[i] = state[(SX + SY) % 256];
 
       SX = state[X+2]; Y = (Y + SX) % 256; SY = state[Y];
       state[X+2] = SY; state[Y] = SX;
-      buffer[j+1] = state[(SX + SY) % 256];
+      buffer[i+1] = state[(SX + SY) % 256];
 
       SX = state[X+3]; Y = (Y + SX) % 256; SY = state[Y];
       state[X+3] = SY; state[Y] = SX;
-      buffer[j+2] = state[(SX + SY) % 256];
+      buffer[i+2] = state[(SX + SY) % 256];
 
       X = (X + 4) % 256;
       SX = state[X]; Y = (Y + SX) % 256; SY = state[Y];
       state[X] = SY; state[Y] = SX;
-      buffer[j+3] = state[(SX + SY) % 256];
+      buffer[i+3] = state[(SX + SY) % 256];
       }
    position = 0;
    }
@@ -62,15 +62,19 @@ void ARC4::generate()
 void ARC4::key_schedule(const byte key[], u32bit length)
    {
    clear();
-   for(u32bit j = 0; j != 256; ++j)
-      state[j] = j;
-   for(u32bit j = 0, state_index = 0; j != 256; ++j)
+
+   for(size_t i = 0; i != 256; ++i)
+      state[i] = i;
+
+   for(size_t i = 0, state_index = 0; i != 256; ++i)
       {
-      state_index = (state_index + key[j % length] + state[j]) % 256;
-      std::swap(state[j], state[state_index]);
+      state_index = (state_index + key[i % length] + state[i]) % 256;
+      std::swap(state[i], state[state_index]);
       }
-   for(u32bit j = 0; j <= SKIP; j += buffer.size())
+
+   for(size_t i = 0; i <= SKIP; i += buffer.size())
       generate();
+
    position += (SKIP % buffer.size());
    }
 
@@ -97,7 +101,7 @@ void ARC4::clear()
 /*
 * ARC4 Constructor
 */
-ARC4::ARC4(u32bit s) : StreamCipher(1, 256), SKIP(s),
+ARC4::ARC4(size_t s) : StreamCipher(1, 256), SKIP(s),
                        state(256), buffer(DEFAULT_BUFFERSIZE)
    {
    clear();

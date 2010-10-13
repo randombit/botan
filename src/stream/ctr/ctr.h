@@ -19,11 +19,11 @@ namespace Botan {
 class BOTAN_DLL CTR_BE : public StreamCipher
    {
    public:
-      void cipher(const byte in[], byte out[], u32bit length);
+      void cipher(const byte in[], byte out[], size_t length);
 
-      void set_iv(const byte iv[], u32bit iv_len);
+      void set_iv(const byte iv[], size_t iv_len);
 
-      bool valid_iv_length(u32bit iv_len) const
+      bool valid_iv_length(size_t iv_len) const
          { return (iv_len <= permutation->BLOCK_SIZE); }
 
       std::string name() const;
@@ -44,7 +44,7 @@ class BOTAN_DLL CTR_BE : public StreamCipher
 
       BlockCipher* permutation;
       SecureVector<byte> counter, buffer;
-      u32bit position;
+      size_t position;
    };
 
 }

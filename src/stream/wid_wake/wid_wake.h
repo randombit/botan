@@ -21,10 +21,10 @@ namespace Botan {
 class BOTAN_DLL WiderWake_41_BE : public StreamCipher
    {
    public:
-      void cipher(const byte[], byte[], u32bit);
-      void set_iv(const byte[], u32bit);
+      void cipher(const byte[], byte[], size_t);
+      void set_iv(const byte[], size_t);
 
-      bool valid_iv_length(u32bit iv_len) const
+      bool valid_iv_length(size_t iv_len) const
          { return (iv_len == 8); }
 
       void clear();
@@ -39,13 +39,13 @@ class BOTAN_DLL WiderWake_41_BE : public StreamCipher
    private:
       void key_schedule(const byte[], u32bit);
 
-      void generate(u32bit);
+      void generate(size_t);
 
       SecureVector<u32bit> T;
       SecureVector<u32bit> state;
       SecureVector<u32bit> t_key;
       SecureVector<byte> buffer;
-      u32bit position;
+      size_t position;
    };
 
 }

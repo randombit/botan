@@ -19,7 +19,7 @@ namespace Botan {
 class BOTAN_DLL ARC4 : public StreamCipher
    {
    public:
-      void cipher(const byte in[], byte out[], u32bit length);
+      void cipher(const byte in[], byte out[], size_t length);
 
       void clear();
       std::string name() const;
@@ -29,18 +29,20 @@ class BOTAN_DLL ARC4 : public StreamCipher
       /**
       * @param skip skip this many initial bytes in the keystream
       */
-      ARC4(u32bit skip = 0);
+      ARC4(size_t skip = 0);
 
       ~ARC4() { clear(); }
    private:
       void key_schedule(const byte[], u32bit);
       void generate();
 
-      const u32bit SKIP;
+      const size_t SKIP;
 
-      SecureVector<u32bit> state;
+      byte X, Y;
+      SecureVector<byte> state;
+
       SecureVector<byte> buffer;
-      u32bit X, Y, position;
+      size_t position;
    };
 
 }

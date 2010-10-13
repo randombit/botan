@@ -32,7 +32,7 @@ void hsalsa20(u32bit output[8], const u32bit input[16])
           x08 = input[ 8], x09 = input[ 9], x10 = input[10], x11 = input[11],
           x12 = input[12], x13 = input[13], x14 = input[14], x15 = input[15];
 
-   for(u32bit i = 0; i != 10; ++i)
+   for(size_t i = 0; i != 10; ++i)
       {
       SALSA20_QUARTER_ROUND(x00, x04, x08, x12);
       SALSA20_QUARTER_ROUND(x05, x09, x13, x01);
@@ -65,7 +65,7 @@ void salsa20(byte output[64], const u32bit input[16])
           x08 = input[ 8], x09 = input[ 9], x10 = input[10], x11 = input[11],
           x12 = input[12], x13 = input[13], x14 = input[14], x15 = input[15];
 
-   for(u32bit i = 0; i != 10; ++i)
+   for(size_t i = 0; i != 10; ++i)
       {
       SALSA20_QUARTER_ROUND(x00, x04, x08, x12);
       SALSA20_QUARTER_ROUND(x05, x09, x13, x01);
@@ -101,7 +101,7 @@ void salsa20(byte output[64], const u32bit input[16])
 /*
 * Combine cipher stream with message
 */
-void Salsa20::cipher(const byte in[], byte out[], u32bit length)
+void Salsa20::cipher(const byte in[], byte out[], size_t length)
    {
    while(length >= buffer.size() - position)
       {
@@ -174,7 +174,7 @@ void Salsa20::key_schedule(const byte key[], u32bit length)
 /*
 * Return the name of this type
 */
-void Salsa20::set_iv(const byte iv[], u32bit length)
+void Salsa20::set_iv(const byte iv[], size_t length)
    {
    if(!valid_iv_length(length))
       throw Invalid_IV_Length(name(), length);

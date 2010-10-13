@@ -24,14 +24,14 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       * @param out the byte array to hold the output, i.e. the ciphertext
       * @param len the length of both in and out in bytes
       */
-      virtual void cipher(const byte in[], byte out[], u32bit len) = 0;
+      virtual void cipher(const byte in[], byte out[], size_t len) = 0;
 
       /**
       * Encrypt or decrypt a message
       * @param buf the plaintext / ciphertext
       * @param len the length of buf in bytes
       */
-      void cipher1(byte buf[], u32bit len)
+      void cipher1(byte buf[], size_t len)
          { cipher(buf, buf, len); }
 
       /**
@@ -39,13 +39,13 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       * @param iv the initialization vector
       * @param iv_len the length of the IV in bytes
       */
-      virtual void set_iv(const byte iv[], u32bit iv_len);
+      virtual void set_iv(const byte iv[], size_t iv_len);
 
       /**
       * @param iv_len the length of the IV in bytes
       * @return if the length is valid for this algorithm
       */
-      virtual bool valid_iv_length(u32bit iv_len) const;
+      virtual bool valid_iv_length(size_t iv_len) const;
 
       /**
       * Get a new object representing the same algorithm as *this

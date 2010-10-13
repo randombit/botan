@@ -18,10 +18,10 @@ namespace Botan {
 class BOTAN_DLL Turing : public StreamCipher
    {
    public:
-      void cipher(const byte in[], byte out[], u32bit length);
-      void set_iv(const byte iv[], u32bit iv_length);
+      void cipher(const byte in[], byte out[], size_t length);
+      void set_iv(const byte iv[], size_t iv_length);
 
-      bool valid_iv_length(u32bit iv_len) const
+      bool valid_iv_length(size_t iv_len) const
          { return (iv_len % 4 == 0 && iv_len <= 16); }
 
       void clear();
@@ -46,7 +46,7 @@ class BOTAN_DLL Turing : public StreamCipher
       SecureVector<u32bit> R;
       SecureVector<u32bit> K;
       SecureVector<byte> buffer;
-      u32bit position;
+      size_t position;
    };
 
 }

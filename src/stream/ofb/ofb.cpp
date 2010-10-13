@@ -64,7 +64,7 @@ std::string OFB::name() const
 /*
 * CTR-BE Encryption/Decryption
 */
-void OFB::cipher(const byte in[], byte out[], u32bit length)
+void OFB::cipher(const byte in[], byte out[], size_t length)
    {
    while(length >= buffer.size() - position)
       {
@@ -82,7 +82,7 @@ void OFB::cipher(const byte in[], byte out[], u32bit length)
 /*
 * Set CTR-BE IV
 */
-void OFB::set_iv(const byte iv[], u32bit iv_len)
+void OFB::set_iv(const byte iv[], size_t iv_len)
    {
    if(!valid_iv_length(iv_len))
       throw Invalid_IV_Length(name(), iv_len);
