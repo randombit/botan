@@ -60,7 +60,7 @@ u16bit mul_inv(u16bit x)
 */
 void idea_op(const byte in[], byte out[], size_t blocks, const u16bit K[52])
    {
-   const u32bit BLOCK_SIZE = 8;
+   const size_t BLOCK_SIZE = 8;
 
    for(size_t i = 0; i != blocks; ++i)
       {

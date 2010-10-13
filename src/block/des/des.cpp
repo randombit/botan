@@ -50,11 +50,11 @@ void des_key_schedule(u32bit round_key[32], const byte key[8])
               ((key[3] & 0x10) >>  1) | ((key[2] & 0x10) >>  2) |
               ((key[1] & 0x10) >>  3) | ((key[0] & 0x10) >>  4);
 
-   for(u32bit j = 0; j != 16; ++j)
+   for(size_t i = 0; i != 16; ++i)
       {
-      C = ((C << ROT[j]) | (C >> (28-ROT[j]))) & 0x0FFFFFFF;
-      D = ((D << ROT[j]) | (D >> (28-ROT[j]))) & 0x0FFFFFFF;
-      round_key[2*j  ] = ((C & 0x00000010) << 22) | ((C & 0x00000800) << 17) |
+      C = ((C << ROT[i]) | (C >> (28-ROT[i]))) & 0x0FFFFFFF;
+      D = ((D << ROT[i]) | (D >> (28-ROT[i]))) & 0x0FFFFFFF;
+      round_key[2*i  ] = ((C & 0x00000010) << 22) | ((C & 0x00000800) << 17) |
                          ((C & 0x00000020) << 16) | ((C & 0x00004004) << 15) |
                          ((C & 0x00000200) << 11) | ((C & 0x00020000) << 10) |
                          ((C & 0x01000000) >>  6) | ((C & 0x00100000) >>  4) |
@@ -65,7 +65,7 @@ void des_key_schedule(u32bit round_key[32], const byte key[8])
                          ((D & 0x00000088) >>  3) | ((D & 0x00001000) >>  7) |
                          ((D & 0x00080000) >>  9) | ((D & 0x02020000) >> 14) |
                          ((D & 0x00400000) >> 21);
-      round_key[2*j+1] = ((C & 0x00000001) << 28) | ((C & 0x00000082) << 18) |
+      round_key[2*i+1] = ((C & 0x00000001) << 28) | ((C & 0x00000082) << 18) |
                          ((C & 0x00002000) << 14) | ((C & 0x00000100) << 10) |
                          ((C & 0x00001000) <<  9) | ((C & 0x00040000) <<  6) |
                          ((C & 0x02400000) <<  4) | ((C & 0x00008000) <<  2) |
@@ -85,20 +85,20 @@ void des_key_schedule(u32bit round_key[32], const byte key[8])
 void des_encrypt(u32bit& L, u32bit& R,
                  const u32bit round_key[32])
    {
-   for(u32bit j = 0; j != 16; j += 2)
+   for(size_t i = 0; i != 16; i += 2)
       {
       u32bit T0, T1;
 
-      T0 = rotate_right(R, 4) ^ round_key[2*j];
-      T1 =              R     ^ round_key[2*j + 1];
+      T0 = rotate_right(R, 4) ^ round_key[2*i];
+      T1 =              R     ^ round_key[2*i + 1];
 
       L ^= DES_SPBOX1[get_byte(0, T0)] ^ DES_SPBOX2[get_byte(0, T1)] ^
            DES_SPBOX3[get_byte(1, T0)] ^ DES_SPBOX4[get_byte(1, T1)] ^
            DES_SPBOX5[get_byte(2, T0)] ^ DES_SPBOX6[get_byte(2, T1)] ^
            DES_SPBOX7[get_byte(3, T0)] ^ DES_SPBOX8[get_byte(3, T1)];
 
-      T0 = rotate_right(L, 4) ^ round_key[2*j + 2];
-      T1 =              L     ^ round_key[2*j + 3];
+      T0 = rotate_right(L, 4) ^ round_key[2*i + 2];
+      T1 =              L     ^ round_key[2*i + 3];
 
       R ^= DES_SPBOX1[get_byte(0, T0)] ^ DES_SPBOX2[get_byte(0, T1)] ^
            DES_SPBOX3[get_byte(1, T0)] ^ DES_SPBOX4[get_byte(1, T1)] ^
@@ -113,20 +113,20 @@ void des_encrypt(u32bit& L, u32bit& R,
 void des_decrypt(u32bit& L, u32bit& R,
                  const u32bit round_key[32])
    {
-   for(u32bit j = 16; j != 0; j -= 2)
+   for(size_t i = 16; i != 0; i -= 2)
       {
       u32bit T0, T1;
 
-      T0 = rotate_right(R, 4) ^ round_key[2*j - 2];
-      T1 =              R     ^ round_key[2*j - 1];
+      T0 = rotate_right(R, 4) ^ round_key[2*i - 2];
+      T1 =              R     ^ round_key[2*i - 1];
 
       L ^= DES_SPBOX1[get_byte(0, T0)] ^ DES_SPBOX2[get_byte(0, T1)] ^
            DES_SPBOX3[get_byte(1, T0)] ^ DES_SPBOX4[get_byte(1, T1)] ^
            DES_SPBOX5[get_byte(2, T0)] ^ DES_SPBOX6[get_byte(2, T1)] ^
            DES_SPBOX7[get_byte(3, T0)] ^ DES_SPBOX8[get_byte(3, T1)];
 
-      T0 = rotate_right(L, 4) ^ round_key[2*j - 4];
-      T1 =              L     ^ round_key[2*j - 3];
+      T0 = rotate_right(L, 4) ^ round_key[2*i - 4];
+      T1 =              L     ^ round_key[2*i - 3];
 
       R ^= DES_SPBOX1[get_byte(0, T0)] ^ DES_SPBOX2[get_byte(0, T1)] ^
            DES_SPBOX3[get_byte(1, T0)] ^ DES_SPBOX4[get_byte(1, T1)] ^
