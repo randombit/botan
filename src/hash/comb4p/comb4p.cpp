@@ -13,19 +13,6 @@ namespace Botan {
 
 namespace {
 
-size_t comb4p_block_size(const HashFunction* h1,
-                         const HashFunction* h2)
-   {
-   if(h1->hash_block_size() == h2->hash_block_size())
-      return h1->hash_block_size();
-
-   /*
-   * Return LCM of the block sizes? This would probably be OK for
-   * HMAC, which is the main thing relying on knowing the block size.
-   */
-   return 0;
-   }
-
 void comb4p_round(MemoryRegion<byte>& out,
                   const MemoryRegion<byte>& in,
                   byte round_no,
@@ -48,8 +35,7 @@ void comb4p_round(MemoryRegion<byte>& out,
 }
 
 Comb4P::Comb4P(HashFunction* h1, HashFunction* h2) :
-   HashFunction(h1->output_length() + h2->output_length(),
-                comb4p_block_size(h1, h2)),
+   HashFunction(h1->output_length() + h2->output_length()),
    hash1(h1), hash2(h2)
    {
    if(hash1->name() == hash2->name())
@@ -61,6 +47,18 @@ Comb4P::Comb4P(HashFunction* h1, HashFunction* h2) :
                                   hash2->name());
 
    clear();
+   }
+
+size_t Comb4P::hash_block_size() const
+   {
+   if(hash1->hash_block_size() == hash2->hash_block_size())
+      return hash1->hash_block_size();
+
+   /*
+   * Return LCM of the block sizes? This would probably be OK for
+   * HMAC, which is the main thing relying on knowing the block size.
+   */
+   return 0;
    }
 
 void Comb4P::clear()

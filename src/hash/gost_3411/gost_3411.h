@@ -23,6 +23,8 @@ class BOTAN_DLL GOST_34_11 : public HashFunction
       std::string name() const { return "GOST-R-34.11-94" ; }
       HashFunction* clone() const { return new GOST_34_11; }
 
+      size_t hash_block_size() const { return 32; }
+
       GOST_34_11();
    private:
       void compress_n(const byte input[], size_t blocks);

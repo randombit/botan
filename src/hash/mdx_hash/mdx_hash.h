@@ -31,6 +31,8 @@ class BOTAN_DLL MDx_HashFunction : public HashFunction
                        bool big_bit_endian,
                        size_t counter_size = 8);
 
+      size_t hash_block_size() const { return buffer.size(); }
+
       virtual ~MDx_HashFunction() {}
    protected:
       void add_data(const byte input[], size_t length);

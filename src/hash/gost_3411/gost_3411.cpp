@@ -16,7 +16,7 @@ namespace Botan {
 * GOST 34.11 Constructor
 */
 GOST_34_11::GOST_34_11() :
-   HashFunction(32, 32),
+   HashFunction(32),
    cipher(GOST_28147_89_Params("R3411_CryptoPro")),
    buffer(32),
    sum(32),

@@ -14,11 +14,16 @@ namespace Botan {
 /*
 * MDx_HashFunction Constructor
 */
-MDx_HashFunction::MDx_HashFunction(size_t hash_len, size_t block_len,
-                                   bool byte_end, bool bit_end,
+MDx_HashFunction::MDx_HashFunction(size_t hash_len,
+                                   size_t block_len,
+                                   bool byte_end,
+                                   bool bit_end,
                                    size_t cnt_size) :
-   HashFunction(hash_len, block_len), buffer(block_len),
-   BIG_BYTE_ENDIAN(byte_end), BIG_BIT_ENDIAN(bit_end), COUNT_SIZE(cnt_size)
+   HashFunction(hash_len),
+   buffer(block_len),
+   BIG_BYTE_ENDIAN(byte_end),
+   BIG_BIT_ENDIAN(bit_end),
+   COUNT_SIZE(cnt_size)
    {
    if(COUNT_SIZE >= output_length() || COUNT_SIZE >= hash_block_size())
       throw Invalid_Argument("MDx_HashFunction: COUNT_SIZE is too big");

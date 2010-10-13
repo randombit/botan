@@ -18,16 +18,14 @@ namespace Botan {
 */
 class BOTAN_DLL HashFunction : public BufferedComputation
    {
-      /**
-      * The hash block size as defined for this algorithm.
-      */
-      const u32bit HASH_BLOCK_SIZE;
-
    public:
       /**
-      * The hash block size as defined for this algorithm
+      * @param hash_len the output length
+      * @param block_len the internal block size (if applicable)
       */
-      virtual size_t hash_block_size() const { return HASH_BLOCK_SIZE; }
+      HashFunction(u32bit hash_len) : BufferedComputation(hash_len) {}
+
+      virtual ~HashFunction() {}
 
       /**
       * Get a new object representing the same algorithm as *this
@@ -41,18 +39,15 @@ class BOTAN_DLL HashFunction : public BufferedComputation
       virtual std::string name() const = 0;
 
       /**
+      * The hash block size as defined for this algorithm
+      */
+      virtual size_t hash_block_size() const { return 0; }
+
+      /**
       * Reset the internal state of this object.
       */
       virtual void clear() = 0;
 
-      /**
-      * @param hash_len the output length
-      * @param block_len the internal block size (if applicable)
-      */
-      HashFunction(u32bit hash_len, u32bit block_len = 0) :
-         BufferedComputation(hash_len), HASH_BLOCK_SIZE(block_len) {}
-
-      virtual ~HashFunction() {}
    private:
       HashFunction& operator=(const HashFunction&);
    };

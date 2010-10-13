@@ -22,7 +22,9 @@ class BOTAN_DLL MD2 : public HashFunction
       std::string name() const { return "MD2"; }
       HashFunction* clone() const { return new MD2; }
 
-      MD2() : HashFunction(16, 16), X(48), checksum(16), buffer(16)
+      size_t hash_block_size() const { return 16; }
+
+      MD2() : HashFunction(16), X(48), checksum(16), buffer(16)
          { clear(); }
    private:
       void add_data(const byte[], size_t);
