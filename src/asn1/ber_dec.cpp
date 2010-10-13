@@ -16,7 +16,7 @@ namespace {
 /*
 * BER decode an ASN.1 type tag
 */
-u32bit decode_tag(DataSource* ber, ASN1_Tag& type_tag, ASN1_Tag& class_tag)
+size_t decode_tag(DataSource* ber, ASN1_Tag& type_tag, ASN1_Tag& class_tag)
    {
    byte b;
    if(!ber->read_byte(b))
@@ -32,10 +32,10 @@ u32bit decode_tag(DataSource* ber, ASN1_Tag& type_tag, ASN1_Tag& class_tag)
       return 1;
       }
 
-   u32bit tag_bytes = 1;
+   size_t tag_bytes = 1;
    class_tag = ASN1_Tag(b & 0xE0);
 
-   u32bit tag_buf = 0;
+   size_t tag_buf = 0;
    while(true)
       {
       if(!ber->read_byte(b))
@@ -53,12 +53,12 @@ u32bit decode_tag(DataSource* ber, ASN1_Tag& type_tag, ASN1_Tag& class_tag)
 /*
 * Find the EOC marker
 */
-u32bit find_eoc(DataSource*);
+size_t find_eoc(DataSource*);
 
 /*
 * BER decode an ASN.1 length field
 */
-u32bit decode_length(DataSource* ber, u32bit& field_size)
+size_t decode_length(DataSource* ber, size_t& field_size)
    {
    byte b;
    if(!ber->read_byte(b))
@@ -72,9 +72,9 @@ u32bit decode_length(DataSource* ber, u32bit& field_size)
    if(field_size > 5)
       throw BER_Decoding_Error("Length field is too large");
 
-   u32bit length = 0;
+   size_t length = 0;
 
-   for(u32bit j = 0; j != field_size - 1; ++j)
+   for(size_t i = 0; i != field_size - 1; ++i)
       {
       if(get_byte(0, length) != 0)
          throw BER_Decoding_Error("Field length overflow");
@@ -88,22 +88,22 @@ u32bit decode_length(DataSource* ber, u32bit& field_size)
 /*
 * BER decode an ASN.1 length field
 */
-u32bit decode_length(DataSource* ber)
+size_t decode_length(DataSource* ber)
    {
-   u32bit dummy;
+   size_t dummy;
    return decode_length(ber, dummy);
    }
 
 /*
 * Find the EOC marker
 */
-u32bit find_eoc(DataSource* ber)
+size_t find_eoc(DataSource* ber)
    {
    SecureVector<byte> buffer(DEFAULT_BUFFERSIZE), data;
 
    while(true)
       {
-      const u32bit got = ber->peek(&buffer[0], buffer.size(), data.size());
+      const size_t got = ber->peek(&buffer[0], buffer.size(), data.size());
       if(got == 0)
          break;
 
@@ -113,16 +113,16 @@ u32bit find_eoc(DataSource* ber)
    DataSource_Memory source(data);
    data.clear();
 
-   u32bit length = 0;
+   size_t length = 0;
    while(true)
       {
       ASN1_Tag type_tag, class_tag;
-      u32bit tag_size = decode_tag(&source, type_tag, class_tag);
+      size_t tag_size = decode_tag(&source, type_tag, class_tag);
       if(type_tag == NO_OBJECT)
          break;
 
-      u32bit length_size = 0;
-      u32bit item_size = decode_length(&source, length_size);
+      size_t length_size = 0;
+      size_t item_size = decode_length(&source, length_size);
       source.discard_next(item_size);
 
       length += item_size + length_size + tag_size;
@@ -205,7 +205,7 @@ BER_Object BER_Decoder::get_next_object()
    if(next.type_tag == NO_OBJECT)
       return next;
 
-   u32bit length = decode_length(source);
+   size_t length = decode_length(source);
    next.value.resize(length);
    if(source->read(&next.value[0], length) != length)
       throw BER_Decoding_Error("Value truncated");
@@ -266,7 +266,7 @@ BER_Decoder::BER_Decoder(DataSource& src)
 /*
 * BER_Decoder Constructor
  */
-BER_Decoder::BER_Decoder(const byte data[], u32bit length)
+BER_Decoder::BER_Decoder(const byte data[], size_t length)
    {
    source = new DataSource_Memory(data, length);
    owns = true;
@@ -416,11 +416,11 @@ BER_Decoder& BER_Decoder::decode(BigInt& out,
 
       if(negative)
          {
-         for(u32bit j = obj.value.size(); j > 0; --j)
-            if(obj.value[j-1]--)
+         for(size_t i = obj.value.size(); i > 0; --i)
+            if(obj.value[i-1]--)
                break;
-         for(u32bit j = 0; j != obj.value.size(); ++j)
-            obj.value[j] = ~obj.value[j];
+         for(size_t i = 0; i != obj.value.size(); ++i)
+            obj.value[i] = ~obj.value[i];
          }
 
       out = BigInt(&obj.value[0], obj.value.size());

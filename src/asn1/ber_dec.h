@@ -75,7 +75,7 @@ class BOTAN_DLL BER_Decoder
                                           ASN1_Tag, u16bit);
 
       BER_Decoder(DataSource&);
-      BER_Decoder(const byte[], u32bit);
+      BER_Decoder(const byte[], size_t);
       BER_Decoder(const MemoryRegion<byte>&);
       BER_Decoder(const BER_Decoder&);
       ~BER_Decoder();

@@ -45,9 +45,9 @@ ASN1_Tag choose_encoding(const std::string& str,
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
       0x00, 0x00, 0x00, 0x00 };
 
-   for(u32bit j = 0; j != str.size(); ++j)
+   for(size_t i = 0; i != str.size(); ++i)
       {
-      if(!IS_PRINTABLE[static_cast<byte>(str[j])])
+      if(!IS_PRINTABLE[static_cast<byte>(str[i])])
          {
          if(type == "utf8")   return UTF8_STRING;
          if(type == "latin1") return T61_STRING;
