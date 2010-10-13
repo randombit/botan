@@ -28,6 +28,11 @@ class BOTAN_DLL BufferedComputation
       const size_t OUTPUT_LENGTH;
 
       /**
+      * @return length of the output of this function in bytes
+      */
+      size_t output_length() const { return OUTPUT_LENGTH; }
+
+      /**
       * Add new input to process.
       * @param in the input to process as a byte array
       * @param length of param in in bytes

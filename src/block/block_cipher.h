@@ -40,6 +40,11 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       const u32bit BLOCK_SIZE;
 
       /**
+      * @return block size of this algorithm
+      */
+      size_t block_size() const { return BLOCK_SIZE; }
+
+      /**
       * @return native parallelism of this cipher in blocks
       */
       virtual size_t parallelism() const { return 1; }
