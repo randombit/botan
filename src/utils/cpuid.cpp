@@ -48,7 +48,7 @@
 namespace Botan {
 
 u64bit CPUID::x86_processor_flags = 0;
-u32bit CPUID::cache_line = 32;
+size_t CPUID::cache_line = 32;
 bool CPUID::altivec_capable = false;
 
 namespace {

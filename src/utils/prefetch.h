@@ -13,23 +13,23 @@
 namespace Botan {
 
 template<typename T>
-inline void prefetch_readonly(const T* addr, u32bit length)
+inline void prefetch_readonly(const T* addr, size_t length)
    {
 #if defined(__GNUG__)
-   const u32bit Ts_per_cache_line = CPUID::cache_line_size() / sizeof(T);
+   const size_t Ts_per_cache_line = CPUID::cache_line_size() / sizeof(T);
 
-   for(u32bit i = 0; i <= length; i += Ts_per_cache_line)
+   for(size_t i = 0; i <= length; i += Ts_per_cache_line)
       __builtin_prefetch(addr + i, 0);
 #endif
    }
 
 template<typename T>
-inline void prefetch_readwrite(const T* addr, u32bit length)
+inline void prefetch_readwrite(const T* addr, size_t length)
    {
 #if defined(__GNUG__)
-   const u32bit Ts_per_cache_line = CPUID::cache_line_size() / sizeof(T);
+   const size_t Ts_per_cache_line = CPUID::cache_line_size() / sizeof(T);
 
-   for(u32bit i = 0; i <= length; i += Ts_per_cache_line)
+   for(size_t i = 0; i <= length; i += Ts_per_cache_line)
       __builtin_prefetch(addr + i, 1);
 #endif
    }

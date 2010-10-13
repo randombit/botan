@@ -23,14 +23,14 @@ bool has_mlock();
 * @param length the length of the memory block in bytes
 * @returns true if successful, false otherwise
 */
-bool lock_mem(void* addr, u32bit length);
+bool lock_mem(void* addr, size_t length);
 
 /**
 * Unlock memory locked with lock_mem()
 * @param addr the start of the memory block
 * @param length the length of the memory block in bytes
 */
-void unlock_mem(void* addr, u32bit length);
+void unlock_mem(void* addr, size_t length);
 
 }
 

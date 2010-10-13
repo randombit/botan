@@ -18,7 +18,7 @@ namespace Botan {
 * @param input the value to extract from
 * @return byte byte_num of input
 */
-template<typename T> inline byte get_byte(u32bit byte_num, T input)
+template<typename T> inline byte get_byte(size_t byte_num, T input)
    {
    return static_cast<byte>(
       input >> ((sizeof(T)-1-(byte_num&(sizeof(T)-1))) << 3)

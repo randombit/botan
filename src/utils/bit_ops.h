@@ -30,9 +30,9 @@ inline bool power_of_2(T arg)
 * @return index of the highest set bit in n
 */
 template<typename T>
-inline u32bit high_bit(T n)
+inline size_t high_bit(T n)
    {
-   for(u32bit i = 8*sizeof(T); i > 0; --i)
+   for(size_t i = 8*sizeof(T); i > 0; --i)
       if((n >> (i - 1)) & 0x01)
          return i;
    return 0;
@@ -45,9 +45,9 @@ inline u32bit high_bit(T n)
 * @return index of the lowest set bit in n
 */
 template<typename T>
-inline u32bit low_bit(T n)
+inline size_t low_bit(T n)
    {
-   for(u32bit i = 0; i != 8*sizeof(T); ++i)
+   for(size_t i = 0; i != 8*sizeof(T); ++i)
       if((n >> i) & 0x01)
          return (i + 1);
    return 0;
@@ -59,11 +59,11 @@ inline u32bit low_bit(T n)
 * @return number of significant bytes in n
 */
 template<typename T>
-inline u32bit significant_bytes(T n)
+inline size_t significant_bytes(T n)
    {
-   for(u32bit j = 0; j != sizeof(T); ++j)
-      if(get_byte(j, n))
-         return sizeof(T)-j;
+   for(size_t i = 0; i != sizeof(T); ++i)
+      if(get_byte(i, n))
+         return sizeof(T)-i;
    return 0;
    }
 
@@ -73,13 +73,13 @@ inline u32bit significant_bytes(T n)
 * @return number of bits in n set to 1
 */
 template<typename T>
-inline u32bit hamming_weight(T n)
+inline size_t hamming_weight(T n)
    {
    const byte NIBBLE_WEIGHTS[] = {
       0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4 };
 
-   u32bit weight = 0;
-   for(u32bit i = 0; i != 2*sizeof(T); ++i)
+   size_t weight = 0;
+   for(size_t i = 0; i != 2*sizeof(T); ++i)
       weight += NIBBLE_WEIGHTS[(n >> (4*i)) & 0x0F];
    return weight;
    }
@@ -90,9 +90,9 @@ inline u32bit hamming_weight(T n)
 * @return maximum x st 2^x divides n
 */
 template<typename T>
-inline u32bit ctz(T n)
+inline size_t ctz(T n)
    {
-   for(u32bit i = 0; i != 8*sizeof(T); ++i)
+   for(size_t i = 0; i != 8*sizeof(T); ++i)
       if((n >> i) & 0x01)
          return i;
    return 8*sizeof(T);

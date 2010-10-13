@@ -26,10 +26,10 @@ std::string ucs2_to_latin1(const std::string& ucs2)
 
    std::string latin1;
 
-   for(u32bit j = 0; j != ucs2.size(); j += 2)
+   for(size_t i = 0; i != ucs2.size(); i += 2)
       {
-      const byte c1 = ucs2[j];
-      const byte c2 = ucs2[j+1];
+      const byte c1 = ucs2[i];
+      const byte c2 = ucs2[i+1];
 
       if(c1 != 0)
          throw Decoding_Error("UCS-2 has non-Latin1 characters");
@@ -47,7 +47,7 @@ std::string utf8_to_latin1(const std::string& utf8)
    {
    std::string iso8859;
 
-   u32bit position = 0;
+   size_t position = 0;
    while(position != utf8.size())
       {
       const byte c1 = static_cast<byte>(utf8[position++]);
@@ -80,9 +80,9 @@ std::string utf8_to_latin1(const std::string& utf8)
 std::string latin1_to_utf8(const std::string& iso8859)
    {
    std::string utf8;
-   for(u32bit j = 0; j != iso8859.size(); ++j)
+   for(size_t i = 0; i != iso8859.size(); ++i)
       {
-      const byte c = static_cast<byte>(iso8859[j]);
+      const byte c = static_cast<byte>(iso8859[i]);
 
       if(c <= 0x7F)
          utf8 += static_cast<char>(c);

@@ -28,7 +28,7 @@ bool has_mlock()
 /*
 * Lock an area of memory into RAM
 */
-bool lock_mem(void* ptr, u32bit bytes)
+bool lock_mem(void* ptr, size_t bytes)
    {
 #if defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
    return (::mlock((char*)ptr, bytes) == 0);
@@ -42,7 +42,7 @@ bool lock_mem(void* ptr, u32bit bytes)
 /*
 * Unlock a previously locked region of memory
 */
-void unlock_mem(void* ptr, u32bit bytes)
+void unlock_mem(void* ptr, size_t bytes)
    {
 #if defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
    ::munlock((char*)ptr, bytes);

@@ -53,7 +53,7 @@ BOTAN_DLL bool x500_name_cmp(const std::string& name1,
 * @param min_len the min length of the output string
 * @return n convert to a string
 */
-BOTAN_DLL std::string to_string(u64bit n, u32bit min_len= 0);
+BOTAN_DLL std::string to_string(u64bit n, size_t min_len = 0);
 
 /**
 * Convert a string to a number

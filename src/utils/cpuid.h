@@ -26,7 +26,7 @@ class BOTAN_DLL CPUID
       /**
       * Return a best guess of the cache line size
       */
-      static u32bit cache_line_size() { return cache_line; }
+      static size_t cache_line_size() { return cache_line; }
 
       /**
       * Check if the processor supports RDTSC
@@ -105,7 +105,7 @@ class BOTAN_DLL CPUID
          }
 
       static u64bit x86_processor_flags;
-      static u32bit cache_line;
+      static size_t cache_line;
       static bool altivec_capable;
    };
 
