@@ -108,8 +108,8 @@ void Skipjack::encrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_le(out, W4, W3, W2, W1);
 
-      in += block_size();
-      out += block_size();
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
    }
 
@@ -149,8 +149,8 @@ void Skipjack::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_le(out, W4, W3, W2, W1);
 
-      in += block_size();
-      out += block_size();
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
    }
 

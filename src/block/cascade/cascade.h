@@ -21,6 +21,8 @@ class BOTAN_DLL Cascade_Cipher : public BlockCipher
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
+      size_t block_size() const { return block; }
+
       void clear();
       std::string name() const;
       BlockCipher* clone() const;
@@ -36,6 +38,7 @@ class BOTAN_DLL Cascade_Cipher : public BlockCipher
    private:
       void key_schedule(const byte[], size_t);
 
+      size_t block;
       BlockCipher* cipher1;
       BlockCipher* cipher2;
    };

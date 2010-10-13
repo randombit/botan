@@ -81,10 +81,11 @@ size_t block_size_for_cascade(size_t bs, size_t bs2)
 }
 
 Cascade_Cipher::Cascade_Cipher(BlockCipher* c1, BlockCipher* c2) :
-   BlockCipher(block_size_for_cascade(c1->block_size(), c2->block_size()),
-               c1->MAXIMUM_KEYLENGTH + c2->MAXIMUM_KEYLENGTH),
+   BlockCipher(c1->MAXIMUM_KEYLENGTH + c2->MAXIMUM_KEYLENGTH),
    cipher1(c1), cipher2(c2)
    {
+   block = block_size_for_cascade(c1->block_size(), c2->block_size());
+
    if(block_size() % c1->block_size() || block_size() % c2->block_size())
       throw Internal_Error("Failure in " + name() + " constructor");
    }

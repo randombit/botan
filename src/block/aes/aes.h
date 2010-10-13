@@ -15,17 +15,19 @@ namespace Botan {
 /**
 * Rijndael aka AES
 */
-class BOTAN_DLL AES : public BlockCipher
+class BOTAN_DLL AES : public BlockCipher_Fixed_Block_Size<16>
    {
    public:
+      std::string name() const { return "AES"; }
+
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
       void clear();
-      std::string name() const { return "AES"; }
       BlockCipher* clone() const { return new AES; }
 
-      AES() : BlockCipher(16, 16, 32, 8), EK(56), ME(16), DK(56), MD(16)
+      AES() : BlockCipher_Fixed_Block_Size(16, 32, 8),
+              EK(56), ME(16), DK(56), MD(16)
          { ROUNDS = 14; }
 
       /**

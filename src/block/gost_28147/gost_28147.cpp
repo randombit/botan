@@ -52,7 +52,7 @@ GOST_28147_89_Params::GOST_28147_89_Params(const std::string& n) : name(n)
 * GOST Constructor
 */
 GOST_28147_89::GOST_28147_89(const GOST_28147_89_Params& param) :
-   BlockCipher(8, 32), SBOX(1024), EK(8)
+   BlockCipher_Fixed_Block_Size(32), SBOX(1024), EK(8)
    {
    // Convert the parallel 4x4 sboxes into larger word-based sboxes
    for(size_t i = 0; i != 4; ++i)
@@ -107,8 +107,8 @@ void GOST_28147_89::encrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_le(out, N2, N1);
 
-      in += block_size();
-      out += block_size();
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
    }
 
@@ -136,8 +136,8 @@ void GOST_28147_89::decrypt_n(const byte in[], byte out[], size_t blocks) const
          }
 
       store_le(out, N2, N1);
-      in += block_size();
-      out += block_size();
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
    }
 

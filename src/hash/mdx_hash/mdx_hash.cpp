@@ -50,22 +50,22 @@ void MDx_HashFunction::add_data(const byte input[], size_t length)
       {
       buffer.copy(position, input, length);
 
-      if(position + length >= hash_block_size())
+      if(position + length >= buffer.size())
          {
          compress_n(&buffer[0], 1);
-         input += (hash_block_size() - position);
-         length -= (hash_block_size() - position);
+         input += (buffer.size() - position);
+         length -= (buffer.size() - position);
          position = 0;
          }
       }
 
-   const size_t full_blocks = length / hash_block_size();
-   const size_t remaining   = length % hash_block_size();
+   const size_t full_blocks = length / buffer.size();
+   const size_t remaining   = length % buffer.size();
 
    if(full_blocks)
       compress_n(input, full_blocks);
 
-   buffer.copy(position, input + full_blocks * hash_block_size(), remaining);
+   buffer.copy(position, input + full_blocks * buffer.size(), remaining);
    position += remaining;
    }
 
@@ -75,16 +75,16 @@ void MDx_HashFunction::add_data(const byte input[], size_t length)
 void MDx_HashFunction::final_result(byte output[])
    {
    buffer[position] = (BIG_BIT_ENDIAN ? 0x80 : 0x01);
-   for(size_t i = position+1; i != hash_block_size(); ++i)
+   for(size_t i = position+1; i != buffer.size(); ++i)
       buffer[i] = 0;
 
-   if(position >= hash_block_size() - COUNT_SIZE)
+   if(position >= buffer.size() - COUNT_SIZE)
       {
       compress_n(&buffer[0], 1);
       zeroise(buffer);
       }
 
-   write_count(&buffer[hash_block_size() - COUNT_SIZE]);
+   write_count(&buffer[buffer.size() - COUNT_SIZE]);
 
    compress_n(&buffer[0], 1);
    copy_out(output);

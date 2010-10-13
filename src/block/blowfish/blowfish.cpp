@@ -40,8 +40,8 @@ void Blowfish::encrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_be(out, R, L);
 
-      in += block_size();
-      out += block_size();
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
    }
 
@@ -75,8 +75,8 @@ void Blowfish::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_be(out, R, L);
 
-      in += block_size();
-      out += block_size();
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
    }
 

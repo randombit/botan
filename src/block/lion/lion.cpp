@@ -33,8 +33,8 @@ void Lion::encrypt_n(const byte in[], byte out[], size_t blocks) const
       cipher->set_key(buffer, LEFT_SIZE);
       cipher->cipher1(out + LEFT_SIZE, RIGHT_SIZE);
 
-      in += block_size();
-      out += block_size();
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
    }
 
@@ -60,8 +60,8 @@ void Lion::decrypt_n(const byte in[], byte out[], size_t blocks) const
       cipher->set_key(buffer, LEFT_SIZE);
       cipher->cipher1(out + LEFT_SIZE, RIGHT_SIZE);
 
-      in += block_size();
-      out += block_size();
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
    }
 
@@ -83,7 +83,7 @@ std::string Lion::name() const
    {
    return "Lion(" + hash->name() + "," +
                     cipher->name() + "," +
-                    std::to_string(block_size()) + ")";
+                    std::to_string(BLOCK_SIZE) + ")";
    }
 
 /*
@@ -91,7 +91,7 @@ std::string Lion::name() const
 */
 BlockCipher* Lion::clone() const
    {
-   return new Lion(hash->clone(), cipher->clone(), block_size());
+   return new Lion(hash->clone(), cipher->clone(), BLOCK_SIZE);
    }
 
 /*
@@ -109,14 +109,14 @@ void Lion::clear()
 * Lion Constructor
 */
 Lion::Lion(HashFunction* hash_in, StreamCipher* sc_in, size_t block_len) :
-   BlockCipher(std::max<size_t>(2*hash_in->output_length() + 1, block_len),
-               2, 2*hash_in->output_length(), 2),
+   BlockCipher(2, 2*hash_in->output_length(), 2),
+   BLOCK_SIZE(std::max<size_t>(2*hash_in->output_length() + 1, block_len)),
    LEFT_SIZE(hash_in->output_length()),
-   RIGHT_SIZE(block_size() - LEFT_SIZE),
+   RIGHT_SIZE(BLOCK_SIZE - LEFT_SIZE),
    hash(hash_in),
    cipher(sc_in)
    {
-   if(2*LEFT_SIZE + 1 > block_size())
+   if(2*LEFT_SIZE + 1 > BLOCK_SIZE)
       throw Invalid_Argument(name() + ": Chosen block size is too small");
 
    if(!cipher->valid_keylength(LEFT_SIZE))

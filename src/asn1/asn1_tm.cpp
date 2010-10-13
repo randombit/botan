@@ -62,7 +62,7 @@ void X509_Time::set_to(const std::string& time_str)
    std::vector<std::string> params;
    std::string current;
 
-   for(u32bit j = 0; j != time_str.size(); ++j)
+   for(size_t j = 0; j != time_str.size(); ++j)
       {
       if(Charset::is_digit(time_str[j]))
          current += time_str[j];
@@ -109,17 +109,17 @@ void X509_Time::set_to(const std::string& t_spec, ASN1_Tag spec_tag)
    if(t_spec[t_spec.size()-1] != 'Z')
       throw Invalid_Argument("Invalid time encoding: " + t_spec);
 
-   const u32bit YEAR_SIZE = (spec_tag == UTC_TIME) ? 2 : 4;
+   const size_t YEAR_SIZE = (spec_tag == UTC_TIME) ? 2 : 4;
 
    std::vector<std::string> params;
    std::string current;
 
-   for(u32bit j = 0; j != YEAR_SIZE; ++j)
+   for(size_t j = 0; j != YEAR_SIZE; ++j)
       current += t_spec[j];
    params.push_back(current);
    current.clear();
 
-   for(u32bit j = YEAR_SIZE; j != t_spec.size() - 1; ++j)
+   for(size_t j = YEAR_SIZE; j != t_spec.size() - 1; ++j)
       {
       current += t_spec[j];
       if(current.size() == 2)

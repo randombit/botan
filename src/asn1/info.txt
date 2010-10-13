@@ -6,13 +6,13 @@ load_on auto
 alg_id.cpp
 asn1_alt.cpp
 asn1_att.cpp
-asn1_dn.cpp
 asn1_int.cpp
 asn1_oid.cpp
 asn1_str.cpp
 asn1_tm.cpp
 ber_dec.cpp
 der_enc.cpp
+x509_dn.cpp
 </source>
 
 <header:public>
@@ -20,8 +20,10 @@ alg_id.h
 asn1_int.h
 asn1_obj.h
 asn1_oid.h
+asn1_str.h
 ber_dec.h
 der_enc.h
+x509_dn.h
 </header:public>
 
 <requires>

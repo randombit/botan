@@ -2028,8 +2028,8 @@ place the result in \arg{out}, or encrypts \arg{block} in place
 member of each class, which specifies how much data a block cipher can
 process at one time. Note that BLOCK\_SIZE is not a static class
 member, meaning you can (given a \type{BlockCipher*} named
-\arg{cipher}), call \verb|cipher->BLOCK_SIZE| to get the block size of
-that particular object. \type{BlockCipher}s have similar functions
+\arg{cipher}), call \verb|cipher->block_size()| to get the block size
+of that particular object. \type{BlockCipher}s have similar functions
 \function{decrypt}, which perform the inverse operation.
 
 \begin{verbatim}

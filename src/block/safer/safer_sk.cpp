@@ -43,8 +43,8 @@ void SAFER_SK::encrypt_n(const byte in[], byte out[], size_t blocks) const
       out[4] = E ^ EK[16*ROUNDS+4]; out[5] = F + EK[16*ROUNDS+5];
       out[6] = G + EK[16*ROUNDS+6]; out[7] = H ^ EK[16*ROUNDS+7];
 
-      in += block_size();
-      out += block_size();
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
    }
 
@@ -81,8 +81,8 @@ void SAFER_SK::decrypt_n(const byte in[], byte out[], size_t blocks) const
       out[0] = A; out[1] = B; out[2] = C; out[3] = D;
       out[4] = E; out[5] = F; out[6] = G; out[7] = H;
 
-      in += block_size();
-      out += block_size();
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
    }
 
@@ -127,8 +127,9 @@ BlockCipher* SAFER_SK::clone() const
 /*
 * SAFER-SK Constructor
 */
-SAFER_SK::SAFER_SK(size_t rounds) : BlockCipher(8, 16),
-                                    EK(16 * rounds + 8), ROUNDS(rounds)
+SAFER_SK::SAFER_SK(size_t rounds) :
+   BlockCipher_Fixed_Block_Size(16),
+   EK(16 * rounds + 8), ROUNDS(rounds)
    {
    if(ROUNDS > 13 || ROUNDS == 0)
       throw Invalid_Argument(name() + ": Invalid number of rounds");

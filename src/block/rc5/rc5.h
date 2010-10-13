@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * RC5
 */
-class BOTAN_DLL RC5 : public BlockCipher
+class BOTAN_DLL RC5 : public BlockCipher_Fixed_Block_Size<8>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;

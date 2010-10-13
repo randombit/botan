@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * TEA
 */
-class BOTAN_DLL TEA : public BlockCipher
+class BOTAN_DLL TEA : public BlockCipher_Fixed_Block_Size<8>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
@@ -25,7 +25,7 @@ class BOTAN_DLL TEA : public BlockCipher
       std::string name() const { return "TEA"; }
       BlockCipher* clone() const { return new TEA; }
 
-      TEA() : BlockCipher(8, 16), K(4) {}
+      TEA() : BlockCipher_Fixed_Block_Size(16), K(4) {}
    private:
       void key_schedule(const byte[], size_t);
       SecureVector<u32bit> K;

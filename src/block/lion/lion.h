@@ -28,6 +28,8 @@ class BOTAN_DLL Lion : public BlockCipher
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
+      size_t block_size() const { return BLOCK_SIZE; }
+
       void clear();
       std::string name() const;
       BlockCipher* clone() const;
@@ -45,7 +47,7 @@ class BOTAN_DLL Lion : public BlockCipher
    private:
       void key_schedule(const byte[], size_t);
 
-      const size_t LEFT_SIZE, RIGHT_SIZE;
+      const size_t BLOCK_SIZE, LEFT_SIZE, RIGHT_SIZE;
 
       HashFunction* hash;
       StreamCipher* cipher;

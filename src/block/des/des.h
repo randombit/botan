@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * DES
 */
-class BOTAN_DLL DES : public BlockCipher
+class BOTAN_DLL DES : public BlockCipher_Fixed_Block_Size<8>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
@@ -25,7 +25,7 @@ class BOTAN_DLL DES : public BlockCipher
       std::string name() const { return "DES"; }
       BlockCipher* clone() const { return new DES; }
 
-      DES() : BlockCipher(8, 8), round_key(32) {}
+      DES() : BlockCipher_Fixed_Block_Size(8), round_key(32) {}
    private:
       void key_schedule(const byte[], size_t);
 
@@ -35,7 +35,7 @@ class BOTAN_DLL DES : public BlockCipher
 /**
 * Triple DES
 */
-class BOTAN_DLL TripleDES : public BlockCipher
+class BOTAN_DLL TripleDES : public BlockCipher_Fixed_Block_Size<8>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
@@ -45,7 +45,7 @@ class BOTAN_DLL TripleDES : public BlockCipher
       std::string name() const { return "TripleDES"; }
       BlockCipher* clone() const { return new TripleDES; }
 
-      TripleDES() : BlockCipher(8, 16, 24, 8), round_key(96) {}
+      TripleDES() : BlockCipher_Fixed_Block_Size(16, 24, 8), round_key(96) {}
    private:
       void key_schedule(const byte[], size_t);
 

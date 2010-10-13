@@ -144,8 +144,8 @@ void MISTY1::encrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_be(out, B2, B3, B0, B1);
 
-      in += block_size();
-      out += block_size();
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
    }
 
@@ -194,8 +194,8 @@ void MISTY1::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
       store_be(out, B0, B1, B2, B3);
 
-      in += block_size();
-      out += block_size();
+      in += BLOCK_SIZE;
+      out += BLOCK_SIZE;
       }
    }
 
@@ -251,7 +251,9 @@ void MISTY1::key_schedule(const byte key[], size_t length)
 /*
 * MISTY1 Constructor
 */
-MISTY1::MISTY1(size_t rounds) : BlockCipher(8, 16), EK(100), DK(100)
+MISTY1::MISTY1(size_t rounds) :
+   BlockCipher_Fixed_Block_Size(16),
+   EK(100), DK(100)
    {
    if(rounds != 8)
       throw Invalid_Argument("MISTY1: Invalid number of rounds: "

@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * Noekeon
 */
-class BOTAN_DLL Noekeon : public BlockCipher
+class BOTAN_DLL Noekeon : public BlockCipher_Fixed_Block_Size<16>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
@@ -25,7 +25,7 @@ class BOTAN_DLL Noekeon : public BlockCipher
       std::string name() const { return "Noekeon"; }
       BlockCipher* clone() const { return new Noekeon; }
 
-      Noekeon() : BlockCipher(16, 16), EK(4), DK(4) {}
+      Noekeon() : BlockCipher_Fixed_Block_Size(16), EK(4), DK(4) {}
    protected:
       /**
       * The Noekeon round constants
