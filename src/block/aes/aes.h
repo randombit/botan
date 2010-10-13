@@ -26,9 +26,7 @@ class BOTAN_DLL AES : public BlockCipher_Fixed_Block_Size<16>
       void clear();
       BlockCipher* clone() const { return new AES; }
 
-      AES() : BlockCipher_Fixed_Block_Size(16, 32, 8),
-              EK(56), ME(16), DK(56), MD(16)
-         { ROUNDS = 14; }
+      AES();
 
       /**
       * AES fixed to a particular key_size (16, 24, or 32 bytes)
@@ -38,8 +36,6 @@ class BOTAN_DLL AES : public BlockCipher_Fixed_Block_Size<16>
    private:
       void key_schedule(const byte[], size_t);
       static u32bit S(u32bit);
-
-      u32bit ROUNDS;
 
       SecureVector<u32bit> EK;
       SecureVector<byte> ME;
