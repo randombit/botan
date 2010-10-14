@@ -1,6 +1,6 @@
 /*
 * AES
-* (C) 1999-2009 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -613,12 +613,12 @@ void aes_key_schedule(const byte key[], size_t length,
                       MemoryRegion<byte>& MD)
    {
    static const u32bit RC[10] = {
-      0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000, 0x20000000,
-      0x40000000, 0x80000000, 0x1B000000, 0x36000000 };
+      0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000,
+      0x20000000, 0x40000000, 0x80000000, 0x1B000000, 0x36000000 };
 
    const u32bit rounds = (length / 4) + 6;
 
-   SecureVector<u32bit> XEK(64), XDK(64);
+   SecureVector<u32bit> XEK(length + 32), XDK(length + 32);
 
    const size_t X = length / 4;
    for(size_t i = 0; i != X; ++i)
