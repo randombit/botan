@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * CAST-128
 */
-class BOTAN_DLL CAST_128 : public BlockCipher_Fixed_Block_Size<8>
+class BOTAN_DLL CAST_128 : public Block_Cipher_Fixed_Params<8, 11, 16>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
@@ -25,7 +25,7 @@ class BOTAN_DLL CAST_128 : public BlockCipher_Fixed_Block_Size<8>
       std::string name() const { return "CAST-128"; }
       BlockCipher* clone() const { return new CAST_128; }
 
-      CAST_128() : BlockCipher_Fixed_Block_Size(11, 16), MK(16), RK(16) {}
+      CAST_128() : MK(16), RK(16) {}
    private:
       void key_schedule(const byte[], size_t);
 

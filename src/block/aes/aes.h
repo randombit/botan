@@ -1,6 +1,6 @@
 /*
 * AES
-* (C) 1999-2009 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -13,68 +13,69 @@
 namespace Botan {
 
 /**
-* Rijndael aka AES
+* AES-128
 */
-class BOTAN_DLL AES : public BlockCipher_Fixed_Block_Size<16>
+class BOTAN_DLL AES_128 : public Block_Cipher_Fixed_Params<16, 16>
    {
    public:
-      std::string name() const { return "AES"; }
+      AES_128() : EK(40), DK(40), ME(16), MD(16) {}
 
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
       void clear();
-      BlockCipher* clone() const { return new AES; }
 
-      AES();
-
-      /**
-      * AES fixed to a particular key_size (16, 24, or 32 bytes)
-      * @param key_size the chosen fixed key size
-      */
-      AES(size_t key_size);
-   private:
-      void key_schedule(const byte[], size_t);
-      static u32bit S(u32bit);
-
-      SecureVector<u32bit> EK;
-      SecureVector<byte> ME;
-
-      SecureVector<u32bit > DK;
-      SecureVector<byte> MD;
-   };
-
-/**
-* AES-128
-*/
-class BOTAN_DLL AES_128 : public AES
-   {
-   public:
       std::string name() const { return "AES-128"; }
       BlockCipher* clone() const { return new AES_128; }
-      AES_128() : AES(16) {}
+   private:
+      void key_schedule(const byte key[], size_t length);
+
+      SecureVector<u32bit> EK, DK;
+      SecureVector<byte> ME, MD;
    };
 
 /**
 * AES-192
 */
-class BOTAN_DLL AES_192 : public AES
+class BOTAN_DLL AES_192 : public Block_Cipher_Fixed_Params<16, 24>
    {
    public:
+      AES_192() : EK(48), DK(48), ME(16), MD(16) {}
+
+      void encrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void decrypt_n(const byte in[], byte out[], size_t blocks) const;
+
+      void clear();
+
       std::string name() const { return "AES-192"; }
       BlockCipher* clone() const { return new AES_192; }
-      AES_192() : AES(24) {}
+   private:
+      void key_schedule(const byte key[], size_t length);
+
+      SecureVector<u32bit> EK, DK;
+      SecureVector<byte> ME, MD;
    };
 
 /**
 * AES-256
 */
-class BOTAN_DLL AES_256 : public AES
+class BOTAN_DLL AES_256 : public Block_Cipher_Fixed_Params<16, 32>
    {
    public:
+      AES_256() : EK(56), DK(56), ME(16), MD(16) {}
+
+      void encrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void decrypt_n(const byte in[], byte out[], size_t blocks) const;
+
+      void clear();
+
       std::string name() const { return "AES-256"; }
       BlockCipher* clone() const { return new AES_256; }
-      AES_256() : AES(32) {}
+   private:
+      void key_schedule(const byte key[], size_t length);
+
+      SecureVector<u32bit> EK, DK;
+      SecureVector<byte> ME, MD;
    };
 
 }

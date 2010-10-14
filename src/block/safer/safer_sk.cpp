@@ -131,8 +131,7 @@ BlockCipher* SAFER_SK::clone() const
 /*
 * SAFER-SK Constructor
 */
-SAFER_SK::SAFER_SK(size_t rounds) :
-   BlockCipher_Fixed_Block_Size(16)
+SAFER_SK::SAFER_SK(size_t rounds)
    {
    if(rounds > 13 || rounds == 0)
       throw Invalid_Argument(name() + ": Invalid number of rounds");

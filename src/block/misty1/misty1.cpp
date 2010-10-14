@@ -251,9 +251,7 @@ void MISTY1::key_schedule(const byte key[], size_t length)
 /*
 * MISTY1 Constructor
 */
-MISTY1::MISTY1(size_t rounds) :
-   BlockCipher_Fixed_Block_Size(16),
-   EK(100), DK(100)
+MISTY1::MISTY1(size_t rounds) : EK(100), DK(100)
    {
    if(rounds != 8)
       throw Invalid_Argument("MISTY1: Invalid number of rounds: "

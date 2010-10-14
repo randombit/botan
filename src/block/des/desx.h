@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * DESX
 */
-class BOTAN_DLL DESX : public BlockCipher_Fixed_Block_Size<8>
+class BOTAN_DLL DESX : public Block_Cipher_Fixed_Params<8, 24>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
@@ -25,7 +25,7 @@ class BOTAN_DLL DESX : public BlockCipher_Fixed_Block_Size<8>
       std::string name() const { return "DESX"; }
       BlockCipher* clone() const { return new DESX; }
 
-      DESX() : BlockCipher_Fixed_Block_Size(24), K1(8), K2(8) {}
+      DESX() : K1(8), K2(8) {}
    private:
       void key_schedule(const byte[], size_t);
       SecureVector<byte> K1, K2;

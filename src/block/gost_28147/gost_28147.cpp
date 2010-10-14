@@ -52,7 +52,7 @@ GOST_28147_89_Params::GOST_28147_89_Params(const std::string& n) : name(n)
 * GOST Constructor
 */
 GOST_28147_89::GOST_28147_89(const GOST_28147_89_Params& param) :
-   BlockCipher_Fixed_Block_Size(32), SBOX(1024), EK(8)
+   SBOX(1024), EK(8)
    {
    // Convert the parallel 4x4 sboxes into larger word-based sboxes
    for(size_t i = 0; i != 4; ++i)

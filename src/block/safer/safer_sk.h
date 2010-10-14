@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * SAFER-SK
 */
-class BOTAN_DLL SAFER_SK : public BlockCipher_Fixed_Block_Size<8>
+class BOTAN_DLL SAFER_SK : public Block_Cipher_Fixed_Params<8, 16>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;

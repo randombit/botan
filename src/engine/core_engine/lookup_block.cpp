@@ -117,8 +117,6 @@ BlockCipher* Core_Engine::find_block_cipher(const SCAN_Name& request,
    {
 
 #if defined(BOTAN_HAS_AES)
-   if(request.algo_name() == "AES")
-      return new AES;
    if(request.algo_name() == "AES-128")
       return new AES_128;
    if(request.algo_name() == "AES-192")

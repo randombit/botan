@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * SEED, a Korean block cipher
 */
-class BOTAN_DLL SEED : public BlockCipher_Fixed_Block_Size<16>
+class BOTAN_DLL SEED : public Block_Cipher_Fixed_Params<16, 16>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
@@ -25,7 +25,7 @@ class BOTAN_DLL SEED : public BlockCipher_Fixed_Block_Size<16>
       std::string name() const { return "SEED"; }
       BlockCipher* clone() const { return new SEED; }
 
-      SEED() : BlockCipher_Fixed_Block_Size(16), K(32) {}
+      SEED() : K(32) {}
    private:
       void key_schedule(const byte[], size_t);
 
