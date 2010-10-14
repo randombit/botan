@@ -606,15 +606,6 @@ void aes_decrypt_n(const byte in[], byte out[], size_t blocks,
       }
    }
 
-/*
-* AES Byte Substitution
-*/
-u32bit aes_S(u32bit input)
-   {
-   return make_u32bit(SE[get_byte(0, input)], SE[get_byte(1, input)],
-                      SE[get_byte(2, input)], SE[get_byte(3, input)]);
-   }
-
 void aes_key_schedule(const byte key[], size_t length,
                       MemoryRegion<u32bit>& EK,
                       MemoryRegion<u32bit>& DK,
@@ -635,13 +626,23 @@ void aes_key_schedule(const byte key[], size_t length,
 
    for(size_t i = X; i < 4*(rounds+1); i += X)
       {
-      XEK[i] = XEK[i-X] ^ aes_S(rotate_left(XEK[i-1], 8)) ^ RC[(i-X)/X];
+      XEK[i] = XEK[i-X] ^ RC[(i-X)/X] ^
+               make_u32bit(SE[get_byte(1, XEK[i-1])],
+                           SE[get_byte(2, XEK[i-1])],
+                           SE[get_byte(3, XEK[i-1])],
+                           SE[get_byte(0, XEK[i-1])]);
+
       for(size_t j = 1; j != X; ++j)
          {
+         XEK[i+j] = XEK[i+j-X];
+
          if(X == 8 && j == 4)
-            XEK[i+j] = XEK[i+j-X] ^ aes_S(XEK[i+j-1]);
+            XEK[i+j] ^= make_u32bit(SE[get_byte(0, XEK[i+j-1])],
+                                    SE[get_byte(1, XEK[i+j-1])],
+                                    SE[get_byte(2, XEK[i+j-1])],
+                                    SE[get_byte(3, XEK[i+j-1])]);
          else
-            XEK[i+j] = XEK[i+j-X] ^ XEK[i+j-1];
+            XEK[i+j] ^= XEK[i+j-1];
          }
       }
 
