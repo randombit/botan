@@ -16,7 +16,7 @@ namespace Botan {
 
 namespace {
 
-/**
+/*
 * Choose what version to respond with
 */
 Version_Code choose_version(Version_Code client, Version_Code minimum)
@@ -31,7 +31,7 @@ Version_Code choose_version(Version_Code client, Version_Code minimum)
    }
 
 // FIXME: checks are wrong for session reuse (add a flag for that)
-/**
+/*
 * Verify the state transition is allowed
 */
 void server_check_state(Handshake_Type new_msg, Handshake_State* state)
@@ -82,7 +82,7 @@ void server_check_state(Handshake_Type new_msg, Handshake_State* state)
 
 }
 
-/**
+/*
 * TLS Server Constructor
 */
 TLS_Server::TLS_Server(const TLS_Policy& pol,
@@ -120,7 +120,7 @@ TLS_Server::TLS_Server(const TLS_Policy& pol,
       }
    }
 
-/**
+/*
 * TLS Server Destructor
 */
 TLS_Server::~TLS_Server()
@@ -130,7 +130,7 @@ TLS_Server::~TLS_Server()
    delete state;
    }
 
-/**
+/*
 * Return the peer's certificate chain
 */
 std::vector<X509_Certificate> TLS_Server::peer_cert_chain() const
@@ -138,7 +138,7 @@ std::vector<X509_Certificate> TLS_Server::peer_cert_chain() const
    return peer_certs;
    }
 
-/**
+/*
 * Write to a TLS connection
 */
 void TLS_Server::write(const byte buf[], size_t length)
@@ -149,7 +149,7 @@ void TLS_Server::write(const byte buf[], size_t length)
    writer.send(APPLICATION_DATA, buf, length);
    }
 
-/**
+/*
 * Read from a TLS connection
 */
 size_t TLS_Server::read(byte out[], size_t length)
@@ -171,7 +171,7 @@ size_t TLS_Server::read(byte out[], size_t length)
    return got;
    }
 
-/**
+/*
 * Check connection status
 */
 bool TLS_Server::is_closed() const
@@ -181,7 +181,7 @@ bool TLS_Server::is_closed() const
    return false;
    }
 
-/**
+/*
 * Close a TLS connection
 */
 void TLS_Server::close()
@@ -189,7 +189,7 @@ void TLS_Server::close()
    close(WARNING, CLOSE_NOTIFY);
    }
 
-/**
+/*
 * Close a TLS connection
 */
 void TLS_Server::close(Alert_Level level, Alert_Type alert_code)
@@ -205,7 +205,7 @@ void TLS_Server::close(Alert_Level level, Alert_Type alert_code)
       }
    }
 
-/**
+/*
 * Iterate the TLS state machine
 */
 void TLS_Server::state_machine()
@@ -264,7 +264,7 @@ void TLS_Server::state_machine()
       throw Unexpected_Message("Unknown message type recieved");
    }
 
-/**
+/*
 * Split up and process handshake messages
 */
 void TLS_Server::read_handshake(byte rec_type,
@@ -320,7 +320,7 @@ void TLS_Server::read_handshake(byte rec_type,
       }
    }
 
-/**
+/*
 * Process a handshake message
 */
 void TLS_Server::process_handshake_msg(Handshake_Type type,
@@ -333,13 +333,13 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
    if(type != HANDSHAKE_CCS && type != FINISHED)
       {
-
       if(type != CLIENT_HELLO_SSLV2)
          {
          state->hash.update(static_cast<byte>(type));
-         u32bit record_length = contents.size();
+
+         const size_t record_length = contents.size();
          for(size_t i = 0; i != 3; i++)
-            state->hash.update(get_byte(i+1, record_length));
+            state->hash.update(get_byte<u32bit>(i+1, record_length));
          }
 
       state->hash.update(contents);
@@ -449,9 +449,11 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
                              "Finished message didn't verify");
 
       state->hash.update(static_cast<byte>(type));
-      u32bit record_length = contents.size();
+
+      const size_t record_length = contents.size();
       for(size_t i = 0; i != 3; i++)
-         state->hash.update(get_byte(i+1, record_length));
+         state->hash.update(get_byte<u32bit>(i+1, record_length));
+
       state->hash.update(contents);
 
       writer.send(CHANGE_CIPHER_SPEC, 1);
@@ -471,7 +473,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       throw Unexpected_Message("Unknown handshake message recieved");
    }
 
-/**
+/*
 * Perform a server-side TLS handshake
 */
 void TLS_Server::do_handshake()

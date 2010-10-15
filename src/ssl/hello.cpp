@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-/**
+/*
 * Encode and send a Handshake message
 */
 void HandshakeMessage::send(Record_Writer& writer, HandshakeHash& hash) const
@@ -18,12 +18,12 @@ void HandshakeMessage::send(Record_Writer& writer, HandshakeHash& hash) const
    SecureVector<byte> buf = serialize();
    SecureVector<byte> send_buf(4);
 
-   u32bit buf_size = buf.size();
+   const size_t buf_size = buf.size();
 
    send_buf[0] = type();
-   send_buf[1] = get_byte(1, buf_size);
-   send_buf[2] = get_byte(2, buf_size);
-   send_buf[3] = get_byte(3, buf_size);
+
+   for(size_t i = 1; i != 4; ++i)
+     send_buf[i] = get_byte<u32bit>(i, buf_size);
 
    send_buf += buf;
 
@@ -33,7 +33,7 @@ void HandshakeMessage::send(Record_Writer& writer, HandshakeHash& hash) const
    writer.flush();
    }
 
-/**
+/*
 * Create a new Hello Request message
 */
 Hello_Request::Hello_Request(Record_Writer& writer)
@@ -42,7 +42,7 @@ Hello_Request::Hello_Request(Record_Writer& writer)
    send(writer, dummy);
    }
 
-/**
+/*
 * Serialize a Hello Request message
 */
 SecureVector<byte> Hello_Request::serialize() const
@@ -50,7 +50,7 @@ SecureVector<byte> Hello_Request::serialize() const
    return SecureVector<byte>();
    }
 
-/**
+/*
 * Deserialize a Hello Request message
 */
 void Hello_Request::deserialize(const MemoryRegion<byte>& buf)
@@ -59,7 +59,7 @@ void Hello_Request::deserialize(const MemoryRegion<byte>& buf)
       throw Decoding_Error("Hello_Request: Must be empty, and is not");
    }
 
-/**
+/*
 * Create a new Client Hello message
 */
 Client_Hello::Client_Hello(RandomNumberGenerator& rng,
@@ -76,7 +76,7 @@ Client_Hello::Client_Hello(RandomNumberGenerator& rng,
    send(writer, hash);
    }
 
-/**
+/*
 * Serialize a Client Hello message
 */
 SecureVector<byte> Client_Hello::serialize() const
@@ -99,11 +99,11 @@ void Client_Hello::deserialize_sslv2(const MemoryRegion<byte>& buf)
    if(buf.size() < 12 || buf[0] != 1)
       throw Decoding_Error("Client_Hello: SSLv2 hello corrupted");
 
-   const u32bit cipher_spec_len = make_u16bit(buf[3], buf[4]);
-   const u32bit sess_id_len = make_u16bit(buf[5], buf[6]);
-   const u32bit challenge_len = make_u16bit(buf[7], buf[8]);
+   const size_t cipher_spec_len = make_u16bit(buf[3], buf[4]);
+   const size_t sess_id_len = make_u16bit(buf[5], buf[6]);
+   const size_t challenge_len = make_u16bit(buf[7], buf[8]);
 
-   const u32bit expected_size =
+   const size_t expected_size =
       (9 + sess_id_len + cipher_spec_len + challenge_len);
 
    if(buf.size() != expected_size)
@@ -115,7 +115,7 @@ void Client_Hello::deserialize_sslv2(const MemoryRegion<byte>& buf)
       throw Decoding_Error("Client_Hello: SSLv2 hello corrupted");
       }
 
-   for(u32bit i = 9; i != 9 + cipher_spec_len; i += 3)
+   for(size_t i = 9; i != 9 + cipher_spec_len; i += 3)
       {
       if(buf[i] != 0) // a SSLv2 cipherspec; ignore it
          continue;
@@ -128,7 +128,7 @@ void Client_Hello::deserialize_sslv2(const MemoryRegion<byte>& buf)
    c_random.set(&buf[9+cipher_spec_len+sess_id_len], challenge_len);
    }
 
-/**
+/*
 * Deserialize a Client Hello message
 */
 void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
@@ -196,18 +196,18 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
       }
    }
 
-/**
+/*
 * Check if we offered this ciphersuite
 */
 bool Client_Hello::offered_suite(u16bit ciphersuite) const
    {
-   for(u32bit i = 0; i != suites.size(); i++)
+   for(size_t i = 0; i != suites.size(); ++i)
       if(suites[i] == ciphersuite)
          return true;
    return false;
    }
 
-/**
+/*
 * Create a new Server Hello message
 */
 Server_Hello::Server_Hello(RandomNumberGenerator& rng,
@@ -220,7 +220,7 @@ Server_Hello::Server_Hello(RandomNumberGenerator& rng,
    {
    bool have_rsa = false, have_dsa = false;
 
-   for(u32bit i = 0; i != certs.size(); i++)
+   for(size_t i = 0; i != certs.size(); ++i)
       {
       Public_Key* key = certs[i].subject_public_key();
       if(key->algo_name() == "RSA")
@@ -244,7 +244,7 @@ Server_Hello::Server_Hello(RandomNumberGenerator& rng,
    send(writer, hash);
    }
 
-/**
+/*
 * Serialize a Server Hello message
 */
 SecureVector<byte> Server_Hello::serialize() const
@@ -265,7 +265,7 @@ SecureVector<byte> Server_Hello::serialize() const
    return buf;
    }
 
-/**
+/*
 * Deserialize a Server Hello message
 */
 void Server_Hello::deserialize(const MemoryRegion<byte>& buf)
@@ -292,7 +292,7 @@ void Server_Hello::deserialize(const MemoryRegion<byte>& buf)
    comp_algo = reader.get_byte();
    }
 
-/**
+/*
 * Create a new Server Hello Done message
 */
 Server_Hello_Done::Server_Hello_Done(Record_Writer& writer,
@@ -301,7 +301,7 @@ Server_Hello_Done::Server_Hello_Done(Record_Writer& writer,
    send(writer, hash);
    }
 
-/**
+/*
 * Serialize a Server Hello Done message
 */
 SecureVector<byte> Server_Hello_Done::serialize() const
@@ -309,7 +309,7 @@ SecureVector<byte> Server_Hello_Done::serialize() const
    return SecureVector<byte>();
    }
 
-/**
+/*
 * Deserialize a Server Hello Done message
 */
 void Server_Hello_Done::deserialize(const MemoryRegion<byte>& buf)

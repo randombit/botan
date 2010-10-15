@@ -21,7 +21,7 @@ Certificate_Req::Certificate_Req(Record_Writer& writer,
                                  HandshakeHash& hash,
                                  const std::vector<X509_Certificate>& certs)
    {
-   for(u32bit i = 0; i != certs.size(); i++)
+   for(size_t i = 0; i != certs.size(); ++i)
       names.push_back(certs[i].subject_dn());
 
    // FIXME: should be able to choose what to ask for
@@ -41,7 +41,7 @@ SecureVector<byte> Certificate_Req::serialize() const
    append_tls_length_value(buf, types, 1);
 
    DER_Encoder encoder;
-   for(u32bit i = 0; i != names.size(); i++)
+   for(size_t i = 0; i != names.size(); ++i)
       encoder.encode(names[i]);
 
    append_tls_length_value(buf, encoder.get_contents(), 2);
@@ -57,15 +57,15 @@ void Certificate_Req::deserialize(const MemoryRegion<byte>& buf)
    if(buf.size() < 4)
       throw Decoding_Error("Certificate_Req: Bad certificate request");
 
-   u32bit types_size = buf[0];
+   size_t types_size = buf[0];
 
    if(buf.size() < types_size + 3)
       throw Decoding_Error("Certificate_Req: Bad certificate request");
 
-   for(u32bit i = 0; i != types_size; i++)
+   for(size_t i = 0; i != types_size; ++i)
       types.push_back(static_cast<Certificate_Type>(buf[i+1]));
 
-   u32bit names_size = make_u16bit(buf[types_size+2], buf[types_size+3]);
+   size_t names_size = make_u16bit(buf[types_size+2], buf[types_size+3]);
 
    if(buf.size() != names_size + types_size + 3)
       throw Decoding_Error("Certificate_Req: Bad certificate request");
@@ -98,18 +98,18 @@ SecureVector<byte> Certificate::serialize() const
    {
    SecureVector<byte> buf(3);
 
-   for(u32bit i = 0; i != certs.size(); i++)
+   for(size_t i = 0; i != certs.size(); ++i)
       {
       SecureVector<byte> raw_cert = certs[i].BER_encode();
-      u32bit cert_size = raw_cert.size();
-      for(u32bit j = 0; j != 3; j++)
-         buf.push_back(get_byte(j+1, cert_size));
+      const size_t cert_size = raw_cert.size();
+      for(size_t i = 0; i != 3; ++i)
+         buf.push_back(get_byte<u32bit>(i+1, cert_size));
       buf += raw_cert;
       }
 
-   u32bit buf_size = buf.size() - 3;
-   for(u32bit i = 0; i != 3; i++)
-      buf[i] = get_byte(i+1, buf_size);
+   const size_t buf_size = buf.size() - 3;
+   for(size_t i = 0; i != 3; ++i)
+      buf[i] = get_byte<u32bit>(i+1, buf_size);
 
    return buf;
    }
@@ -122,7 +122,7 @@ void Certificate::deserialize(const MemoryRegion<byte>& buf)
    if(buf.size() < 3)
       throw Decoding_Error("Certificate: Message malformed");
 
-   u32bit total_size = make_u32bit(0, buf[0], buf[1], buf[2]);
+   const size_t total_size = make_u32bit(0, buf[0], buf[1], buf[2]);
 
    SecureQueue queue;
    queue.write(&buf[3], buf.size() - 3);
@@ -137,9 +137,10 @@ void Certificate::deserialize(const MemoryRegion<byte>& buf)
 
       byte len[3];
       queue.read(len, 3);
-      u32bit cert_size = make_u32bit(0, len[0], len[1], len[2]);
 
-      u32bit original_size = queue.size();
+      const size_t cert_size = make_u32bit(0, len[0], len[1], len[2]);
+      const size_t original_size = queue.size();
+
       X509_Certificate cert(queue);
       if(queue.size() + cert_size != original_size)
          throw Decoding_Error("Certificate: Message malformed");

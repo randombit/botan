@@ -190,8 +190,8 @@ void Record_Writer::send_record(byte type, const byte buf[], size_t length)
    else
       {
       mac.start_msg();
-      for(size_t j = 0; j != 8; j++)
-         mac.write(get_byte(j, seq_no));
+      for(size_t i = 0; i != 8; ++i)
+         mac.write(get_byte(i, seq_no));
       mac.write(type);
 
       if(major > 3 || (major == 3 && minor != 0))
@@ -230,7 +230,7 @@ void Record_Writer::send_record(byte type, const byte buf[], size_t length)
          size_t pad_val =
             (block_size - (1 + length + buf_mac.size())) % block_size;
 
-         for(size_t j = 0; j != pad_val + 1; j++)
+         for(size_t i = 0; i != pad_val + 1; ++i)
             cipher.write(pad_val);
          }
       cipher.end_msg();
@@ -254,8 +254,8 @@ void Record_Writer::send_record(byte type, byte major, byte minor,
                           "Record_Writer: Record is too big");
 
    byte header[5] = { type, major, minor, 0 };
-   for(size_t j = 0; j != 2; j++)
-      header[j+3] = get_byte<u16bit>(j, length);
+   for(size_t i = 0; i != 2; ++i)
+      header[i+3] = get_byte<u16bit>(i, length);
 
    socket.write(header, 5);
    socket.write(out, length);

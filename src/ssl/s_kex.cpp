@@ -86,8 +86,8 @@ SecureVector<byte> Server_Key_Exchange::serialize_params() const
    {
    SecureVector<byte> buf;
 
-   for(u32bit j = 0; j != params.size(); j++)
-      append_tls_length_value(buf, BigInt::encode(params[j]), 2);
+   for(size_t i = 0; i != params.size(); ++i)
+      append_tls_length_value(buf, BigInt::encode(params[i]), 2);
 
    return buf;
    }
@@ -101,20 +101,20 @@ void Server_Key_Exchange::deserialize(const MemoryRegion<byte>& buf)
       throw Decoding_Error("Server_Key_Exchange: Packet corrupted");
 
    SecureVector<byte> values[4];
-   u32bit so_far = 0;
+   size_t so_far = 0;
 
-   for(u32bit j = 0; j != 4; j++)
+   for(size_t i = 0; i != 4; ++i)
       {
-      u16bit len = make_u16bit(buf[so_far], buf[so_far+1]);
+      const u16bit len = make_u16bit(buf[so_far], buf[so_far+1]);
       so_far += 2;
 
       if(len + so_far > buf.size())
          throw Decoding_Error("Server_Key_Exchange: Packet corrupted");
 
-      values[j].set(&buf[so_far], len);
+      values[i].set(&buf[so_far], len);
       so_far += len;
 
-      if(j == 2 && so_far == buf.size())
+      if(i == 2 && so_far == buf.size())
          break;
       }
 

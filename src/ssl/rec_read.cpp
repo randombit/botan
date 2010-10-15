@@ -206,8 +206,8 @@ size_t Record_Reader::get_record(byte& msg_type,
          }
       else
          {
-         for(size_t j = 0; j != pad_size; j++)
-            if(plaintext[plaintext.size()-j-1] != pad_value)
+         for(size_t i = 0; i != pad_size; ++i)
+            if(plaintext[plaintext.size()-i-1] != pad_value)
                pad_size = 0;
          }
       }
@@ -222,16 +222,16 @@ size_t Record_Reader::get_record(byte& msg_type,
    const u16bit plain_length = plaintext.size() - (mac_size + pad_size + iv_size);
 
    mac.start_msg();
-   for(size_t j = 0; j != 8; j++)
-      mac.write(get_byte(j, seq_no));
+   for(size_t i = 0; i != 8; ++i)
+      mac.write(get_byte(i, seq_no));
    mac.write(header[0]); // msg_type
 
    if(version != SSL_V3)
-      for(size_t j = 0; j != 2; j++)
-         mac.write(get_byte(j, version));
+      for(size_t i = 0; i != 2; ++i)
+         mac.write(get_byte(i, version));
 
-   for(size_t j = 0; j != 2; j++)
-      mac.write(get_byte(j, plain_length));
+   for(size_t i = 0; i != 2; ++i)
+      mac.write(get_byte(i, plain_length));
    mac.write(&plaintext[iv_size], plain_length);
    mac.end_msg();
 
