@@ -23,7 +23,7 @@ namespace Botan {
 class BOTAN_DLL Record_Writer
    {
    public:
-      void send(byte, const byte[], u32bit);
+      void send(byte, const byte[], size_t);
       void send(byte, byte);
       void flush();
 
@@ -38,15 +38,15 @@ class BOTAN_DLL Record_Writer
       Record_Writer(Socket& socket);
 
    private:
-      void send_record(byte, const byte[], u32bit);
-      void send_record(byte, byte, byte, const byte[], u32bit);
+      void send_record(byte, const byte[], size_t);
+      void send_record(byte, byte, byte, const byte[], size_t);
 
       Socket& socket;
       Pipe cipher, mac;
       SecureVector<byte> buffer;
-      u32bit buf_pos;
+      size_t buf_pos;
 
-      u32bit block_size, mac_size, iv_size;
+      size_t block_size, mac_size, iv_size;
 
       u64bit seq_no;
       byte major, minor, buf_type;
@@ -58,14 +58,14 @@ class BOTAN_DLL Record_Writer
 class BOTAN_DLL Record_Reader
    {
    public:
-      void add_input(const byte input[], u32bit input_size);
+      void add_input(const byte input[], size_t input_size);
 
       /**
       * @param msg_type (output variable)
       * @param buffer (output variable)
       * @return Number of bytes still needed (minimum), or 0 if success
       */
-      u32bit get_record(byte& msg_type,
+      size_t get_record(byte& msg_type,
                         MemoryRegion<byte>& buffer);
 
       SecureVector<byte> get_record(byte& msg_type);
@@ -83,7 +83,7 @@ class BOTAN_DLL Record_Reader
       SecureQueue input_queue;
 
       Pipe cipher, mac;
-      u32bit block_size, mac_size, iv_size;
+      size_t block_size, mac_size, iv_size;
       u64bit seq_no;
       byte major, minor;
    };

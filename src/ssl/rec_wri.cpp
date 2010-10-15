@@ -127,12 +127,12 @@ void Record_Writer::send(byte type, byte input)
 /**
 * Send one or more records to the other side
 */
-void Record_Writer::send(byte type, const byte input[], u32bit length)
+void Record_Writer::send(byte type, const byte input[], size_t length)
    {
    if(type != buf_type)
       flush();
 
-   const u32bit BUFFER_SIZE = buffer.size();
+   const size_t BUFFER_SIZE = buffer.size();
    buf_type = type;
 
    // FIXME: compression right here
@@ -161,11 +161,11 @@ void Record_Writer::send(byte type, const byte input[], u32bit length)
 void Record_Writer::flush()
    {
    const byte* buf_ptr = &buffer[0];
-   u32bit offset = 0;
+   size_t offset = 0;
 
    while(offset != buf_pos)
       {
-      u32bit record_size = buf_pos - offset;
+      size_t record_size = buf_pos - offset;
       if(record_size > MAX_PLAINTEXT_SIZE)
          record_size = MAX_PLAINTEXT_SIZE;
 
@@ -179,7 +179,7 @@ void Record_Writer::flush()
 /**
 * Encrypt and send the record
 */
-void Record_Writer::send_record(byte type, const byte buf[], u32bit length)
+void Record_Writer::send_record(byte type, const byte buf[], size_t length)
    {
    if(length >= MAX_COMPRESSED_SIZE)
       throw TLS_Exception(INTERNAL_ERROR,
@@ -190,7 +190,7 @@ void Record_Writer::send_record(byte type, const byte buf[], u32bit length)
    else
       {
       mac.start_msg();
-      for(u32bit j = 0; j != 8; j++)
+      for(size_t j = 0; j != 8; j++)
          mac.write(get_byte(j, seq_no));
       mac.write(type);
 
@@ -200,8 +200,8 @@ void Record_Writer::send_record(byte type, const byte buf[], u32bit length)
          mac.write(minor);
          }
 
-      mac.write(get_byte(2, length));
-      mac.write(get_byte(3, length));
+      mac.write(get_byte<u16bit>(0, length));
+      mac.write(get_byte<u16bit>(1, length));
       mac.write(buf, length);
       mac.end_msg();
 
@@ -227,10 +227,10 @@ void Record_Writer::send_record(byte type, const byte buf[], u32bit length)
 
       if(block_size)
          {
-         u32bit pad_val =
+         size_t pad_val =
             (block_size - (1 + length + buf_mac.size())) % block_size;
 
-         for(u32bit j = 0; j != pad_val + 1; j++)
+         for(size_t j = 0; j != pad_val + 1; j++)
             cipher.write(pad_val);
          }
       cipher.end_msg();
@@ -247,14 +247,14 @@ void Record_Writer::send_record(byte type, const byte buf[], u32bit length)
 * Send a final record packet
 */
 void Record_Writer::send_record(byte type, byte major, byte minor,
-                                const byte out[], u32bit length)
+                                const byte out[], size_t length)
    {
    if(length >= MAX_CIPHERTEXT_SIZE)
       throw TLS_Exception(INTERNAL_ERROR,
                           "Record_Writer: Record is too big");
 
    byte header[5] = { type, major, minor, 0 };
-   for(u32bit j = 0; j != 2; j++)
+   for(size_t j = 0; j != 2; j++)
       header[j+3] = get_byte<u16bit>(j, length);
 
    socket.write(header, 5);
