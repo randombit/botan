@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
       std::string outfile(argv[2]);
       outfile = outfile.replace(outfile.find(SUFFIX), SUFFIX.length(), "");
 
-      std::ofstream plaintext(outfile.c_str());
+      std::ofstream plaintext(outfile.c_str(), std::ios::binary);
       if(!plaintext)
          {
          std::cout << "Couldn't write the plaintext to "

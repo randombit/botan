@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
 
    for(size_t i = 1; argv[i]; ++i)
       {
-      std::ifstream in(argv[i]);
+      std::ifstream in(argv[i], std::ios::binary);
       if(!in)
          continue;
 

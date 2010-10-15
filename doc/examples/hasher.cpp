@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
 
       Botan::Pipe pipe(new Botan::Fork(hash, COUNT));
 
-      std::ifstream file(argv[j]);
+      std::ifstream file(argv[j], std::ios::binary);
       if(!file)
          {
          std::cout << "ERROR: could not open " << argv[j] << std::endl;
