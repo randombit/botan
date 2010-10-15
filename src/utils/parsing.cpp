@@ -258,7 +258,7 @@ u32bit string_to_ipv4(const std::string& str)
 
    u32bit ip = 0;
 
-   for(size_t i = 0; i != parts.size(); i++)
+   for(size_t i = 0; i != parts.size(); ++i)
       {
       u32bit octet = to_u32bit(parts[i]);
 
@@ -278,7 +278,7 @@ std::string ipv4_to_string(u32bit ip)
    {
    std::string str;
 
-   for(size_t i = 0; i != sizeof(ip); i++)
+   for(size_t i = 0; i != sizeof(ip); ++i)
       {
       if(i)
          str += ".";

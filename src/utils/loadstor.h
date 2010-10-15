@@ -101,7 +101,7 @@ inline T load_be(const byte in[], size_t off)
    {
    in += off * sizeof(T);
    T out = 0;
-   for(size_t i = 0; i != sizeof(T); i++)
+   for(size_t i = 0; i != sizeof(T); ++i)
       out = (out << 8) | in[i];
    return out;
    }
@@ -117,7 +117,7 @@ inline T load_le(const byte in[], size_t off)
    {
    in += off * sizeof(T);
    T out = 0;
-   for(size_t i = 0; i != sizeof(T); i++)
+   for(size_t i = 0; i != sizeof(T); ++i)
       out = (out << 8) | in[sizeof(T)-1-i];
    return out;
    }
