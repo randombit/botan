@@ -71,7 +71,7 @@ SecureVector<byte> SessionKeys::master_secret() const
 /**
 * Generate SSLv3 session keys
 */
-SymmetricKey SessionKeys::ssl3_keygen(u32bit prf_gen,
+SymmetricKey SessionKeys::ssl3_keygen(size_t prf_gen,
                                       const MemoryRegion<byte>& pre_master,
                                       const MemoryRegion<byte>& client_random,
                                       const MemoryRegion<byte>& server_random)
@@ -94,7 +94,7 @@ SymmetricKey SessionKeys::ssl3_keygen(u32bit prf_gen,
 /**
 * Generate TLS 1.0 session keys
 */
-SymmetricKey SessionKeys::tls1_keygen(u32bit prf_gen,
+SymmetricKey SessionKeys::tls1_keygen(size_t prf_gen,
                                       const MemoryRegion<byte>& pre_master,
                                       const MemoryRegion<byte>& client_random,
                                       const MemoryRegion<byte>& server_random)
@@ -134,14 +134,14 @@ SessionKeys::SessionKeys(const CipherSuite& suite, Version_Code version,
    if(version != SSL_V3 && version != TLS_V10 && version != TLS_V11)
       throw Invalid_Argument("SessionKeys: Unknown version code");
 
-   const u32bit mac_keylen = output_length_of(suite.mac_algo());
-   u32bit cipher_keylen = suite.cipher_keylen();
+   const size_t mac_keylen = output_length_of(suite.mac_algo());
+   const size_t cipher_keylen = suite.cipher_keylen();
 
-   u32bit cipher_ivlen = 0;
+   size_t cipher_ivlen = 0;
    if(have_block_cipher(suite.cipher_algo()))
       cipher_ivlen = block_size_of(suite.cipher_algo());
 
-   const u32bit prf_gen = 2 * (mac_keylen + cipher_keylen + cipher_ivlen);
+   const size_t prf_gen = 2 * (mac_keylen + cipher_keylen + cipher_ivlen);
 
    SymmetricKey keyblock = (version == SSL_V3) ?
       ssl3_keygen(prf_gen, pre_master_secret, c_random, s_random) :

@@ -117,8 +117,8 @@ TLS_Client::TLS_Client(const TLS_Policy& pol,
 TLS_Client::~TLS_Client()
    {
    close();
-   for(u32bit j = 0; j != keys.size(); j++)
-      delete keys[j];
+   for(size_t i = 0; i != keys.size(); i++)
+      delete keys[i];
    delete state;
    }
 
@@ -179,7 +179,7 @@ std::vector<X509_Certificate> TLS_Client::peer_cert_chain() const
 /**
 * Write to a TLS connection
 */
-void TLS_Client::write(const byte buf[], u32bit length)
+void TLS_Client::write(const byte buf[], size_t length)
    {
    if(!active)
       throw TLS_Exception(INTERNAL_ERROR,
@@ -191,7 +191,7 @@ void TLS_Client::write(const byte buf[], u32bit length)
 /**
 * Read from a TLS connection
 */
-u32bit TLS_Client::read(byte out[], u32bit length)
+size_t TLS_Client::read(byte out[], size_t length)
    {
    if(!active)
       return 0;
@@ -205,7 +205,7 @@ u32bit TLS_Client::read(byte out[], u32bit length)
          break;
       }
 
-   u32bit got = std::min<size_t>(read_buf.size(), length);
+   size_t got = std::min<size_t>(read_buf.size(), length);
    read_buf.read(out, got);
    return got;
    }
@@ -253,12 +253,12 @@ void TLS_Client::state_machine()
    byte rec_type = CONNECTION_CLOSED;
    SecureVector<byte> record(1024);
 
-   u32bit bytes_needed = reader.get_record(rec_type, record);
+   size_t bytes_needed = reader.get_record(rec_type, record);
 
    while(bytes_needed)
       {
-      u32bit to_get = std::min<u32bit>(record.size(), bytes_needed);
-      u32bit got = peer.read(&record[0], to_get);
+      size_t to_get = std::min<size_t>(record.size(), bytes_needed);
+      size_t got = peer.read(&record[0], to_get);
 
       if(got == 0)
          {
@@ -330,7 +330,7 @@ void TLS_Client::read_handshake(byte rec_type,
             byte head[4] = { 0 };
             state->queue.peek(head, 4);
 
-            const u32bit length = make_u32bit(0, head[1], head[2], head[3]);
+            const size_t length = make_u32bit(0, head[1], head[2], head[3]);
 
             if(state->queue.size() >= length + 4)
                {
@@ -384,8 +384,8 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
       {
       state->hash.update(static_cast<byte>(type));
       const u32bit record_length = contents.size();
-      for(u32bit j = 0; j != 3; j++)
-         state->hash.update(get_byte(j+1, record_length));
+      for(size_t i = 0; i != 3; i++)
+         state->hash.update(get_byte(i+1, record_length));
       state->hash.update(contents);
       }
 

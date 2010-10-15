@@ -25,8 +25,8 @@ namespace Botan {
 class BOTAN_DLL TLS_Client : public TLS_Connection
    {
    public:
-      u32bit read(byte buf[], u32bit buf_len);
-      void write(const byte buf[], u32bit buf_len);
+      size_t read(byte buf[], size_t buf_len);
+      void write(const byte buf[], size_t buf_len);
 
       std::vector<X509_Certificate> peer_cert_chain() const;
 

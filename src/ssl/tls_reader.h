@@ -22,7 +22,7 @@ class TLS_Data_Reader
       TLS_Data_Reader(const MemoryRegion<byte>& buf_in) :
          buf(buf_in), offset(0) {}
 
-      u32bit remaining_bytes() const
+      size_t remaining_bytes() const
          {
          return buf.size() - offset;
          }
@@ -32,7 +32,7 @@ class TLS_Data_Reader
          return (remaining_bytes() > 0);
          }
 
-      void discard_next(u32bit bytes)
+      void discard_next(size_t bytes)
          {
          assert_at_least(bytes);
          offset += bytes;
@@ -55,13 +55,13 @@ class TLS_Data_Reader
          }
 
       template<typename T, typename Container>
-      Container get_elem(u32bit num_elems)
+      Container get_elem(size_t num_elems)
          {
          assert_at_least(num_elems * sizeof(T));
 
          Container result(num_elems);
 
-         for(u32bit i = 0; i != num_elems; ++i)
+         for(size_t i = 0; i != num_elems; ++i)
             result[i] = load_be<T>(&buf[offset], i);
 
          offset += num_elems * sizeof(T);
@@ -70,35 +70,35 @@ class TLS_Data_Reader
          }
 
       template<typename T>
-      SecureVector<T> get_range(u32bit len_bytes,
-                                u32bit min_elems,
-                                u32bit max_elems)
+      SecureVector<T> get_range(size_t len_bytes,
+                                size_t min_elems,
+                                size_t max_elems)
          {
-         const u32bit num_elems =
+         const size_t num_elems =
             get_num_elems(len_bytes, sizeof(T), min_elems, max_elems);
 
          return get_elem<T, SecureVector<T> >(num_elems);
          }
 
       template<typename T>
-      std::vector<T> get_range_vector(u32bit len_bytes,
-                                      u32bit min_elems,
-                                      u32bit max_elems)
+      std::vector<T> get_range_vector(size_t len_bytes,
+                                      size_t min_elems,
+                                      size_t max_elems)
          {
-         const u32bit num_elems =
+         const size_t num_elems =
             get_num_elems(len_bytes, sizeof(T), min_elems, max_elems);
 
          return get_elem<T, std::vector<T> >(num_elems);
          }
 
       template<typename T>
-      SecureVector<T> get_fixed(u32bit size)
+      SecureVector<T> get_fixed(size_t size)
          {
          return get_elem<T, SecureVector<T> >(size);
          }
 
    private:
-      u32bit get_length_field(u32bit len_bytes)
+      size_t get_length_field(size_t len_bytes)
          {
          assert_at_least(len_bytes);
 
@@ -110,17 +110,17 @@ class TLS_Data_Reader
          throw Decoding_Error("TLS_Data_Reader: Bad length size");
          }
 
-      u32bit get_num_elems(u32bit len_bytes,
-                           u32bit T_size,
-                           u32bit min_elems,
-                           u32bit max_elems)
+      size_t get_num_elems(size_t len_bytes,
+                           size_t T_size,
+                           size_t min_elems,
+                           size_t max_elems)
          {
-         const u32bit byte_length = get_length_field(len_bytes);
+         const size_t byte_length = get_length_field(len_bytes);
 
          if(byte_length % T_size != 0)
             throw Decoding_Error("TLS_Data_Reader: Size isn't multiple of T");
 
-         const u32bit num_elems = byte_length / T_size;
+         const size_t num_elems = byte_length / T_size;
 
          if(num_elems < min_elems || num_elems > max_elems)
             throw Decoding_Error("TLS_Data_Reader: Range outside paramaters");
@@ -128,14 +128,14 @@ class TLS_Data_Reader
          return num_elems;
          }
 
-      void assert_at_least(u32bit n) const
+      void assert_at_least(size_t n) const
          {
          if(buf.size() - offset < n)
             throw Decoding_Error("TLS_Data_Reader: Corrupt packet");
          }
 
       const MemoryRegion<byte>& buf;
-      u32bit offset;
+      size_t offset;
    };
 
 /**
@@ -144,11 +144,11 @@ class TLS_Data_Reader
 template<typename T>
 void append_tls_length_value(MemoryRegion<byte>& buf,
                              const T* vals,
-                             u32bit vals_size,
-                             u32bit tag_size)
+                             size_t vals_size,
+                             size_t tag_size)
    {
-   const u32bit T_size = sizeof(T);
-   const u32bit val_bytes = T_size * vals_size;
+   const size_t T_size = sizeof(T);
+   const size_t val_bytes = T_size * vals_size;
 
    if(tag_size != 1 && tag_size != 2)
       throw std::invalid_argument("append_tls_length_value: invalid tag size");
@@ -157,18 +157,18 @@ void append_tls_length_value(MemoryRegion<byte>& buf,
       (tag_size == 2 && val_bytes > 65535))
       throw std::invalid_argument("append_tls_length_value: value too large");
 
-   for(u32bit i = 0; i != tag_size; ++i)
-      buf.push_back(get_byte(4-tag_size+i, val_bytes));
+   for(size_t i = 0; i != tag_size; ++i)
+      buf.push_back(get_byte(sizeof(val_bytes)-tag_size+i, val_bytes));
 
-   for(u32bit i = 0; i != vals_size; ++i)
-      for(u32bit j = 0; j != T_size; ++j)
+   for(size_t i = 0; i != vals_size; ++i)
+      for(size_t j = 0; j != T_size; ++j)
          buf.push_back(get_byte(j, vals[i]));
    }
 
 template<typename T>
 void append_tls_length_value(MemoryRegion<byte>& buf,
                              const MemoryRegion<T>& vals,
-                             u32bit tag_size)
+                             size_t tag_size)
    {
    append_tls_length_value(buf, &vals[0], vals.size(), tag_size);
    }
@@ -176,7 +176,7 @@ void append_tls_length_value(MemoryRegion<byte>& buf,
 template<typename T>
 void append_tls_length_value(MemoryRegion<byte>& buf,
                              const std::vector<T>& vals,
-                             u32bit tag_size)
+                             size_t tag_size)
    {
    append_tls_length_value(buf, &vals[0], vals.size(), tag_size);
    }
