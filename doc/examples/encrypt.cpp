@@ -96,7 +96,7 @@ int main(int argc, char* argv[])
       return 1;
       }
 
-   std::ifstream in(filename.c_str());
+   std::ifstream in(filename.c_str(), std::ios::binary);
    if(!in)
       {
       std::cout << "ERROR: couldn't open " << filename << std::endl;

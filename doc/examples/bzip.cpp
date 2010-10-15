@@ -84,8 +84,8 @@ int main(int argc, char* argv[])
             outfile = outfile.replace(outfile.find(SUFFIX),
                                       SUFFIX.length(), "");
 
-         std::ifstream in(infile.c_str());
-         std::ofstream out(outfile.c_str());
+         std::ifstream in(infile.c_str(), std::ios::binary);
+         std::ofstream out(outfile.c_str(), std::ios::binary);
          if(!in)
             {
             std::cout << "ERROR: could not read " << infile << std::endl;

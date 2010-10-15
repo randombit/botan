@@ -18,7 +18,7 @@ namespace {
 
 std::vector<byte> slurp_file(const std::string& filename)
    {
-   std::ifstream in(filename.c_str());
+     std::ifstream in(filename.c_str(), std::ios::binary);
 
    std::vector<byte> out;
    byte buf[4096] = { 0 };

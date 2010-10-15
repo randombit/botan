@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
    std::string pass = argv[1];
    std::string filename = argv[2];
 
-   std::ifstream input(filename.c_str());
+   std::ifstream input(filename.c_str(), std::ios::binary);
 
    std::vector<byte> file_contents;
    while(input.good())

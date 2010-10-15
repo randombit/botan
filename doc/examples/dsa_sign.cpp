@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
    try {
       std::string passphrase(argv[3]);
 
-      std::ifstream message(argv[2]);
+      std::ifstream message(argv[2], std::ios::binary);
       if(!message)
          {
          std::cout << "Couldn't read the message file." << std::endl;

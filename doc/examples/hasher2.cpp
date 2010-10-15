@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
          new Botan::Hash_Filter(name[2]),
       };
 
-      std::ifstream file(argv[j]);
+      std::ifstream file(argv[j], std::ios::binary);
       if(!file)
          {
          std::cout << "ERROR: could not open " << argv[j] << std::endl;
