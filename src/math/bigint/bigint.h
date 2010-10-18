@@ -215,7 +215,7 @@ class BOTAN_DLL BigInt
      * @result the integer extracted from the register starting at
      * offset with specified length
      */
-     size_t get_substring(size_t offset, size_t length) const;
+     u32bit get_substring(size_t offset, size_t length) const;
 
      /**
      * @param n the offset to get a byte from
