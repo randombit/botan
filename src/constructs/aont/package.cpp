@@ -16,7 +16,7 @@ namespace Botan {
 
 void aont_package(RandomNumberGenerator& rng,
                   BlockCipher* cipher,
-                  const byte input[], u32bit input_len,
+                  const byte input[], size_t input_len,
                   byte output[])
    {
    const size_t BLOCK_SIZE = cipher->block_size();
@@ -39,7 +39,7 @@ void aont_package(RandomNumberGenerator& rng,
 
    SecureVector<byte> buf(BLOCK_SIZE);
 
-   const u32bit blocks =
+   const size_t blocks =
       (input_len + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
    byte* final_block = output + input_len;
@@ -48,14 +48,14 @@ void aont_package(RandomNumberGenerator& rng,
    // XOR the hash blocks into the final block
    for(u32bit i = 0; i != blocks; ++i)
       {
-      u32bit left = std::min<u32bit>(BLOCK_SIZE,
-                                     input_len - BLOCK_SIZE * i);
+      const size_t left = std::min<size_t>(BLOCK_SIZE,
+                                           input_len - BLOCK_SIZE * i);
 
       zeroise(buf);
       copy_mem(&buf[0], output + BLOCK_SIZE * i, left);
 
-      for(u32bit j = 0; j != 4; ++j)
-         buf[BLOCK_SIZE - 1 - j] ^= get_byte(3-j, i);
+      for(size_t j = 0; j != sizeof(i); ++j)
+         buf[BLOCK_SIZE - 1 - j] ^= get_byte(sizeof(i)-1-j, i);
 
       cipher->encrypt(buf);
 
@@ -67,7 +67,7 @@ void aont_package(RandomNumberGenerator& rng,
    }
 
 void aont_unpackage(BlockCipher* cipher,
-                    const byte input[], u32bit input_len,
+                    const byte input[], size_t input_len,
                     byte output[])
    {
    const size_t BLOCK_SIZE = cipher->block_size();
@@ -91,19 +91,19 @@ void aont_unpackage(BlockCipher* cipher,
             input + (input_len - BLOCK_SIZE),
             BLOCK_SIZE);
 
-   const u32bit blocks = ((input_len - 1) / BLOCK_SIZE);
+   const size_t blocks = ((input_len - 1) / BLOCK_SIZE);
 
    // XOR the blocks into the package key bits
    for(u32bit i = 0; i != blocks; ++i)
       {
-      u32bit left = std::min<u32bit>(BLOCK_SIZE,
-                                     input_len - BLOCK_SIZE * (i+1));
+      const size_t left = std::min<size_t>(BLOCK_SIZE,
+                                           input_len - BLOCK_SIZE * (i+1));
 
       zeroise(buf);
       copy_mem(&buf[0], input + BLOCK_SIZE * i, left);
 
-      for(u32bit j = 0; j != 4; ++j)
-         buf[BLOCK_SIZE - 1 - j] ^= get_byte(3-j, i);
+      for(size_t j = 0; j != sizeof(i); ++j)
+         buf[BLOCK_SIZE - 1 - j] ^= get_byte(sizeof(i)-1-j, i);
 
       cipher->encrypt(buf);
 

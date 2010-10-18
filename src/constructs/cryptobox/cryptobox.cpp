@@ -28,19 +28,19 @@ for later use as flags, etc if needed
 */
 const u32bit CRYPTOBOX_VERSION_CODE = 0xEFC22400;
 
-const u32bit VERSION_CODE_LEN = 4;
-const u32bit CIPHER_KEY_LEN = 32;
-const u32bit CIPHER_IV_LEN = 16;
-const u32bit MAC_KEY_LEN = 32;
-const u32bit MAC_OUTPUT_LEN = 20;
-const u32bit PBKDF_SALT_LEN = 10;
-const u32bit PBKDF_ITERATIONS = 8 * 1024;
+const size_t VERSION_CODE_LEN = 4;
+const size_t CIPHER_KEY_LEN = 32;
+const size_t CIPHER_IV_LEN = 16;
+const size_t MAC_KEY_LEN = 32;
+const size_t MAC_OUTPUT_LEN = 20;
+const size_t PBKDF_SALT_LEN = 10;
+const size_t PBKDF_ITERATIONS = 8 * 1024;
 
-const u32bit PBKDF_OUTPUT_LEN = CIPHER_KEY_LEN + CIPHER_IV_LEN + MAC_KEY_LEN;
+const size_t PBKDF_OUTPUT_LEN = CIPHER_KEY_LEN + CIPHER_IV_LEN + MAC_KEY_LEN;
 
 }
 
-std::string encrypt(const byte input[], u32bit input_len,
+std::string encrypt(const byte input[], size_t input_len,
                     const std::string& passphrase,
                     RandomNumberGenerator& rng)
    {
@@ -77,14 +77,14 @@ std::string encrypt(const byte input[], u32bit input_len,
       mac (20 bytes)
       ciphertext
    */
-   const u32bit ciphertext_len = pipe.remaining(0);
+   const size_t ciphertext_len = pipe.remaining(0);
 
    SecureVector<byte> out_buf(VERSION_CODE_LEN +
                               PBKDF_SALT_LEN +
                               MAC_OUTPUT_LEN +
                               ciphertext_len);
 
-   for(u32bit i = 0; i != VERSION_CODE_LEN; ++i)
+   for(size_t i = 0; i != VERSION_CODE_LEN; ++i)
      out_buf[i] = get_byte(i, CRYPTOBOX_VERSION_CODE);
 
    copy_mem(&out_buf[VERSION_CODE_LEN], &pbkdf_salt[0],  PBKDF_SALT_LEN);
@@ -96,7 +96,7 @@ std::string encrypt(const byte input[], u32bit input_len,
    return PEM_Code::encode(out_buf, "BOTAN CRYPTOBOX MESSAGE");
    }
 
-std::string decrypt(const byte input[], u32bit input_len,
+std::string decrypt(const byte input[], size_t input_len,
                     const std::string& passphrase)
    {
    DataSource_Memory input_src(input, input_len);
@@ -107,7 +107,7 @@ std::string decrypt(const byte input[], u32bit input_len,
    if(ciphertext.size() < (VERSION_CODE_LEN + PBKDF_SALT_LEN + MAC_OUTPUT_LEN))
       throw Decoding_Error("Invalid CryptoBox input");
 
-   for(u32bit i = 0; i != VERSION_CODE_LEN; ++i)
+   for(size_t i = 0; i != VERSION_CODE_LEN; ++i)
       if(ciphertext[i] != get_byte(i, CRYPTOBOX_VERSION_CODE))
          throw Decoding_Error("Bad CryptoBox version");
 
@@ -133,7 +133,7 @@ std::string decrypt(const byte input[], u32bit input_len,
                 new MAC_Filter(new HMAC(new SHA_512),
                                mac_key, MAC_OUTPUT_LEN)));
 
-   const u32bit ciphertext_offset =
+   const size_t ciphertext_offset =
       VERSION_CODE_LEN + PBKDF_SALT_LEN + MAC_OUTPUT_LEN;
 
    pipe.process_msg(&ciphertext[ciphertext_offset],

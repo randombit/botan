@@ -18,14 +18,14 @@ namespace {
 
 const std::string MAGIC_PREFIX = "$9$";
 
-const u32bit WORKFACTOR_BYTES = 2;
-const u32bit ALGID_BYTES = 1;
-const u32bit SALT_BYTES = 12; // 96 bits of salt
-const u32bit PASSHASH9_PBKDF_OUTPUT_LEN = 24; // 192 bits output
+const size_t WORKFACTOR_BYTES = 2;
+const size_t ALGID_BYTES = 1;
+const size_t SALT_BYTES = 12; // 96 bits of salt
+const size_t PASSHASH9_PBKDF_OUTPUT_LEN = 24; // 192 bits output
 
 const byte PASSHASH9_DEFAULT_ALGO = 0; // HMAC(SHA-1)
 
-const u32bit WORK_FACTOR_SCALE = 10000;
+const size_t WORK_FACTOR_SCALE = 10000;
 
 MessageAuthenticationCode* get_pbkdf_prf(byte alg_id)
    {
@@ -70,7 +70,7 @@ std::string generate_passhash9(const std::string& pass,
    SecureVector<byte> salt(SALT_BYTES);
    rng.randomize(&salt[0], salt.size());
 
-   u32bit kdf_iterations = WORK_FACTOR_SCALE * work_factor;
+   const size_t kdf_iterations = WORK_FACTOR_SCALE * work_factor;
 
    SecureVector<byte> pbkdf2_output =
       kdf.derive_key(PASSHASH9_PBKDF_OUTPUT_LEN,
@@ -92,13 +92,13 @@ std::string generate_passhash9(const std::string& pass,
 
 bool check_passhash9(const std::string& pass, const std::string& hash)
    {
-   const u32bit BINARY_LENGTH =
+   const size_t BINARY_LENGTH =
      ALGID_BYTES +
      WORKFACTOR_BYTES +
      PASSHASH9_PBKDF_OUTPUT_LEN +
      SALT_BYTES;
 
-   const u32bit BASE64_LENGTH =
+   const size_t BASE64_LENGTH =
       MAGIC_PREFIX.size() + (BINARY_LENGTH * 8) / 6;
 
    if(hash.size() != BASE64_LENGTH)
@@ -120,7 +120,7 @@ bool check_passhash9(const std::string& pass, const std::string& hash)
 
    byte alg_id = bin[0];
 
-   u32bit kdf_iterations =
+   const size_t kdf_iterations =
       WORK_FACTOR_SCALE * load_be<u16bit>(&bin[ALGID_BYTES], 0);
 
    if(kdf_iterations == 0)

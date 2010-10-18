@@ -24,7 +24,7 @@ namespace Botan {
 */
 void BOTAN_DLL aont_package(RandomNumberGenerator& rng,
                             BlockCipher* cipher,
-                            const byte input[], u32bit input_len,
+                            const byte input[], size_t input_len,
                             byte output[]);
 
 /**
@@ -36,7 +36,7 @@ void BOTAN_DLL aont_package(RandomNumberGenerator& rng,
 *        input_len - cipher->BLOCK_SIZE bytes long)
 */
 void BOTAN_DLL aont_unpackage(BlockCipher* cipher,
-                              const byte input[], u32bit input_len,
+                              const byte input[], size_t input_len,
                               byte output[]);
 
 }

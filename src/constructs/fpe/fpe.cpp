@@ -19,7 +19,7 @@ namespace Botan {
 namespace {
 
 // Normally FPE is for SSNs, CC#s, etc, nothing too big
-const u32bit MAX_N_BYTES = 128/8;
+const size_t MAX_N_BYTES = 128/8;
 
 /*
 * Factor n into a and b which are as close together as possible.
@@ -34,13 +34,13 @@ void factor(BigInt n, BigInt& a, BigInt& b)
    a = 1;
    b = 1;
 
-   u32bit n_low_zero = low_zero_bits(n);
+   size_t n_low_zero = low_zero_bits(n);
 
    a <<= (n_low_zero / 2);
    b <<= n_low_zero - (n_low_zero / 2);
    n >>= n_low_zero;
 
-   for(u32bit i = 0; i != PRIME_TABLE_SIZE; ++i)
+   for(size_t i = 0; i != PRIME_TABLE_SIZE; ++i)
       {
       while(n % PRIMES[i] == 0)
          {
@@ -67,7 +67,7 @@ void factor(BigInt n, BigInt& a, BigInt& b)
 * so 3 rounds is safe. The FPE factorization routine should always
 * return a >= b, so just confirm that and return 3.
 */
-u32bit rounds(const BigInt& a, const BigInt& b)
+size_t rounds(const BigInt& a, const BigInt& b)
    {
    if(a < b)
       throw std::logic_error("FPE rounds: a < b");
@@ -86,7 +86,7 @@ class FPE_Encryptor
 
       ~FPE_Encryptor() { delete mac; }
 
-      BigInt operator()(u32bit i, const BigInt& R);
+      BigInt operator()(size_t i, const BigInt& R);
 
    private:
       MessageAuthenticationCode* mac;
@@ -114,12 +114,12 @@ FPE_Encryptor::FPE_Encryptor(const SymmetricKey& key,
    mac_n_t = mac->final();
    }
 
-BigInt FPE_Encryptor::operator()(u32bit round_no, const BigInt& R)
+BigInt FPE_Encryptor::operator()(size_t round_no, const BigInt& R)
    {
    SecureVector<byte> r_bin = BigInt::encode(R);
 
    mac->update(mac_n_t);
-   mac->update_be(round_no);
+   mac->update_be((u32bit)round_no);
 
    mac->update_be((u32bit)r_bin.size());
    mac->update(&r_bin[0], r_bin.size());
@@ -142,11 +142,11 @@ BigInt fpe_encrypt(const BigInt& n, const BigInt& X0,
    BigInt a, b;
    factor(n, a, b);
 
-   const u32bit r = rounds(a, b);
+   const size_t r = rounds(a, b);
 
    BigInt X = X0;
 
-   for(u32bit i = 0; i != r; ++i)
+   for(size_t i = 0; i != r; ++i)
       {
       BigInt L = X / b;
       BigInt R = X % b;
@@ -170,11 +170,11 @@ BigInt fpe_decrypt(const BigInt& n, const BigInt& X0,
    BigInt a, b;
    factor(n, a, b);
 
-   const u32bit r = rounds(a, b);
+   const size_t r = rounds(a, b);
 
    BigInt X = X0;
 
-   for(u32bit i = 0; i != r; ++i)
+   for(size_t i = 0; i != r; ++i)
       {
       BigInt W = X % a;
       BigInt R = X / a;
