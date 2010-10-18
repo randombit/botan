@@ -135,7 +135,7 @@ class BOTAN_DLL BigInt
      * @param i a word index
      * @return the word at index i
      */
-     word operator[](size_t i) const { return reg[i]; }
+     const word& operator[](size_t i) const { return reg[i]; }
 
      /**
      * Zeroize the BigInt
