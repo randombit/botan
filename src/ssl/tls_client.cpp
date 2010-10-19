@@ -87,7 +87,7 @@ TLS_Client::TLS_Client(const TLS_Policy& pol,
    policy(pol),
    rng(r),
    peer(sock),
-   writer(sock)
+   writer(std::tr1::bind(&Socket::write, std::tr1::ref(peer), _1, _2))
    {
    initialize();
    }
@@ -103,7 +103,7 @@ TLS_Client::TLS_Client(const TLS_Policy& pol,
    policy(pol),
    rng(r),
    peer(sock),
-   writer(sock)
+   writer(std::tr1::bind(&Socket::write, std::tr1::ref(peer), _1, _2))
    {
    certs.push_back(cert);
    keys.push_back(PKCS8::copy_key(key, rng));

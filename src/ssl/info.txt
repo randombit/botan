@@ -1,5 +1,7 @@
 define SSL_TLS
 
+uses_tr1 yes
+
 <header:public>
 socket.h
 tls_client.h

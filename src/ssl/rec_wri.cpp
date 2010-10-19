@@ -16,8 +16,9 @@ namespace Botan {
 /**
 * Record_Writer Constructor
 */
-Record_Writer::Record_Writer(Socket& sock) :
-   socket(sock), buffer(DEFAULT_BUFFERSIZE)
+Record_Writer::Record_Writer(std::tr1::function<void (const byte[], size_t)> out) :
+   output_fn(out),
+   buffer(DEFAULT_BUFFERSIZE)
    {
    mac = 0;
    reset();
@@ -188,7 +189,6 @@ void Record_Writer::send_record(byte type, const byte buf[], size_t length)
       send_record(type, major, minor, buf, length);
    else
       {
-
       mac->update_be(seq_no);
       mac->update(type);
 
@@ -253,8 +253,8 @@ void Record_Writer::send_record(byte type, byte major, byte minor,
    for(size_t i = 0; i != 2; ++i)
       header[i+3] = get_byte<u16bit>(i, length);
 
-   socket.write(header, 5);
-   socket.write(out, length);
+   output_fn(header, 5);
+   output_fn(out, length);
    }
 
 /**
