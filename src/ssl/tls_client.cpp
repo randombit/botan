@@ -81,34 +81,22 @@ void client_check_state(Handshake_Type new_msg, Handshake_State* state)
 /**
 * TLS Client Constructor
 */
-TLS_Client::TLS_Client(const TLS_Policy& pol,
-                       RandomNumberGenerator& r,
-                       Socket& sock) :
-   policy(pol),
-   rng(r),
-   peer(sock),
-   writer(std::tr1::bind(&Socket::write, std::tr1::ref(peer), _1, _2))
+TLS_Client::TLS_Client(std::tr1::function<size_t (byte[], size_t)> input_fn,
+                       std::tr1::function<void (const byte[], size_t)> output_fn,
+                       const TLS_Policy& policy,
+                       RandomNumberGenerator& rng) :
+   input_fn(input_fn),
+   policy(policy),
+   rng(rng),
+   writer(output_fn)
    {
    initialize();
    }
 
-/**
-* TLS Client Constructor
-*/
-TLS_Client::TLS_Client(const TLS_Policy& pol,
-                       RandomNumberGenerator& r,
-                       Socket& sock,
-                       const X509_Certificate& cert,
-                       const Private_Key& key) :
-   policy(pol),
-   rng(r),
-   peer(sock),
-   writer(std::tr1::bind(&Socket::write, std::tr1::ref(peer), _1, _2))
+void TLS_Client::add_client_cert(const X509_Certificate& cert,
+                                 Private_Key* cert_key)
    {
-   certs.push_back(cert);
-   keys.push_back(PKCS8::copy_key(key, rng));
-
-   initialize();
+   certs.push_back(std::make_pair(cert, cert_key));
    }
 
 /**
@@ -117,8 +105,8 @@ TLS_Client::TLS_Client(const TLS_Policy& pol,
 TLS_Client::~TLS_Client()
    {
    close();
-   for(size_t i = 0; i != keys.size(); i++)
-      delete keys[i];
+   for(size_t i = 0; i != certs.size(); i++)
+      delete certs[i].second;
    delete state;
    }
 
@@ -258,7 +246,7 @@ void TLS_Client::state_machine()
    while(bytes_needed)
       {
       size_t to_get = std::min<size_t>(record.size(), bytes_needed);
-      size_t got = peer.read(&record[0], to_get);
+      size_t got = input_fn(&record[0], to_get);
 
       if(got == 0)
          {

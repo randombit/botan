@@ -11,7 +11,6 @@
 #include <botan/tls_connection.h>
 #include <botan/tls_policy.h>
 #include <botan/tls_record.h>
-#include <botan/socket.h>
 #include <vector>
 #include <string>
 
@@ -20,33 +19,30 @@ namespace Botan {
 /**
 * TLS Client
 */
-
-// FIXME: much of this can probably be moved up to TLS_Connection
 class BOTAN_DLL TLS_Client : public TLS_Connection
    {
    public:
       size_t read(byte buf[], size_t buf_len);
       void write(const byte buf[], size_t buf_len);
 
-      std::vector<X509_Certificate> peer_cert_chain() const;
-
       void close();
       bool is_closed() const;
 
-      TLS_Client(const TLS_Policy& policy,
-                 RandomNumberGenerator& rng,
-                 Socket& peer);
+      std::vector<X509_Certificate> peer_cert_chain() const;
 
-      // FIXME: support multiple/arbitrary # of cert/key pairs
-      TLS_Client(const TLS_Policy& policy,
-                 RandomNumberGenerator& rng,
-                 Socket& peer,
-                 const X509_Certificate& cert,
-                 const Private_Key& cert_key);
+      void add_client_cert(const X509_Certificate& cert,
+                           Private_Key* cert_key);
+
+      TLS_Client(std::tr1::function<size_t (byte[], size_t)> input_fn,
+                 std::tr1::function<void (const byte[], size_t)> output_fn,
+                 const TLS_Policy& policy,
+                 RandomNumberGenerator& rng);
 
       ~TLS_Client();
    private:
       void close(Alert_Level, Alert_Type);
+
+      size_t get_pending_socket_input(byte output[], size_t length);
 
       void initialize();
       void do_handshake();
@@ -55,15 +51,16 @@ class BOTAN_DLL TLS_Client : public TLS_Connection
       void read_handshake(byte, const MemoryRegion<byte>&);
       void process_handshake_msg(Handshake_Type, const MemoryRegion<byte>&);
 
+      std::tr1::function<size_t (byte[], size_t)> input_fn;
+
       const TLS_Policy& policy;
       RandomNumberGenerator& rng;
-      Socket& peer;
 
       Record_Writer writer;
       Record_Reader reader;
 
-      std::vector<X509_Certificate> certs, peer_certs;
-      std::vector<Private_Key*> keys;
+      std::vector<X509_Certificate> peer_certs;
+      std::vector<std::pair<X509_Certificate, Private_Key*> > certs;
 
       class Handshake_State* state;
       SecureVector<byte> session_id;

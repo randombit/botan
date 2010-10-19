@@ -39,7 +39,9 @@ int main(int argc, char* argv[])
 
       TLS_Policy policy;
 
-      TLS_Client tls(policy, *rng, sock);
+      TLS_Client tls(std::tr1::bind(&Socket::read, std::tr1::ref(sock), _1, _2),
+                     std::tr1::bind(&Socket::write, std::tr1::ref(sock), _1, _2),
+                     policy, *rng);
 
       printf("Handshake extablished...\n");
 
