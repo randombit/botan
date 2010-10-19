@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * AES-128 using AES-NI
 */
-class BOTAN_DLL AES_128_Intel : public BlockCipher
+class BOTAN_DLL AES_128_Intel : public Block_Cipher_Fixed_Params<16, 16>
    {
    public:
       size_t parallelism() const { return 4; }
@@ -27,17 +27,17 @@ class BOTAN_DLL AES_128_Intel : public BlockCipher
       std::string name() const { return "AES-128"; }
       BlockCipher* clone() const { return new AES_128_Intel; }
 
-      AES_128_Intel() : BlockCipher(16, 16) { }
+      AES_128_Intel() : EK(44), DK(44) { }
    private:
       void key_schedule(const byte[], size_t);
 
-      SecureVector<u32bit, 44> EK, DK;
+      SecureVector<u32bit> EK, DK;
    };
 
 /**
 * AES-192 using AES-NI
 */
-class BOTAN_DLL AES_192_Intel : public BlockCipher
+class BOTAN_DLL AES_192_Intel : public Block_Cipher_Fixed_Params<16, 24>
    {
    public:
       size_t parallelism() const { return 4; }
@@ -49,17 +49,17 @@ class BOTAN_DLL AES_192_Intel : public BlockCipher
       std::string name() const { return "AES-192"; }
       BlockCipher* clone() const { return new AES_192_Intel; }
 
-      AES_192_Intel() : BlockCipher(16, 24) { }
+      AES_192_Intel() : EK(52), DK(52) { }
    private:
       void key_schedule(const byte[], size_t);
 
-      SecureVector<u32bit, 52> EK, DK;
+      SecureVector<u32bit> EK, DK;
    };
 
 /**
 * AES-256 using AES-NI
 */
-class BOTAN_DLL AES_256_Intel : public BlockCipher
+class BOTAN_DLL AES_256_Intel : public Block_Cipher_Fixed_Params<16, 32>
    {
    public:
       size_t parallelism() const { return 4; }
@@ -71,11 +71,11 @@ class BOTAN_DLL AES_256_Intel : public BlockCipher
       std::string name() const { return "AES-256"; }
       BlockCipher* clone() const { return new AES_256_Intel; }
 
-      AES_256_Intel() : BlockCipher(16, 32) { }
+      AES_256_Intel() : EK(60), DK(60) { }
    private:
       void key_schedule(const byte[], size_t);
 
-      SecureVector<u32bit, 60> EK, DK;
+      SecureVector<u32bit> EK, DK;
    };
 
 }
