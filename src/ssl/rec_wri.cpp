@@ -19,6 +19,7 @@ namespace Botan {
 Record_Writer::Record_Writer(Socket& sock) :
    socket(sock), buffer(DEFAULT_BUFFERSIZE)
    {
+   mac = 0;
    reset();
    }
 
@@ -28,7 +29,9 @@ Record_Writer::Record_Writer(Socket& sock) :
 void Record_Writer::reset()
    {
    cipher.reset();
-   mac.reset();
+
+   delete mac;
+   mac = 0;
 
    zeroise(buffer);
    buf_pos = 0;
@@ -60,7 +63,8 @@ void Record_Writer::set_keys(const CipherSuite& suite, const SessionKeys& keys,
                              Connection_Side side)
    {
    cipher.reset();
-   mac.reset();
+   delete mac;
+   mac = 0;
 
    SymmetricKey mac_key, cipher_key;
    InitializationVector iv;
@@ -105,23 +109,18 @@ void Record_Writer::set_keys(const CipherSuite& suite, const SessionKeys& keys,
 
    if(have_hash(mac_algo))
       {
-      if(major == 3 && minor == 0)
-         mac.append(new MAC_Filter("SSL3-MAC(" + mac_algo + ")", mac_key));
-      else
-         mac.append(new MAC_Filter("HMAC(" + mac_algo + ")", mac_key));
+      Algorithm_Factory& af = global_state().algorithm_factory();
 
-      mac_size = output_length_of(mac_algo);
+      if(major == 3 && minor == 0)
+         mac = af.make_mac("SSL3-MAC(" + mac_algo + ")");
+      else
+         mac = af.make_mac("HMAC(" + mac_algo + ")");
+
+      mac->set_key(mac_key);
+      mac_size = mac->output_length();
       }
    else
       throw Invalid_Argument("Record_Writer: Unknown hash " + mac_algo);
-   }
-
-/**
-* Send one or more records to the other side
-*/
-void Record_Writer::send(byte type, byte input)
-   {
-   send(type, &input, 1);
    }
 
 /**
@@ -189,26 +188,23 @@ void Record_Writer::send_record(byte type, const byte buf[], size_t length)
       send_record(type, major, minor, buf, length);
    else
       {
-      mac.start_msg();
-      for(size_t i = 0; i != 8; ++i)
-         mac.write(get_byte(i, seq_no));
-      mac.write(type);
+
+      mac->update_be(seq_no);
+      mac->update(type);
 
       if(major > 3 || (major == 3 && minor != 0))
          {
-         mac.write(major);
-         mac.write(minor);
+         mac->update(major);
+         mac->update(minor);
          }
 
-      mac.write(get_byte<u16bit>(0, length));
-      mac.write(get_byte<u16bit>(1, length));
-      mac.write(buf, length);
-      mac.end_msg();
+      mac->update(get_byte<u16bit>(0, length));
+      mac->update(get_byte<u16bit>(1, length));
+      mac->update(buf, length);
+
+      SecureVector<byte> buf_mac = mac->final();
 
       // TODO: This could all use a single buffer
-
-      SecureVector<byte> buf_mac = mac.read_all(Pipe::LAST_MESSAGE);
-
       cipher.start_msg();
 
       if(iv_size)

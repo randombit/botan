@@ -12,6 +12,7 @@
 #include <botan/tls_suites.h>
 #include <botan/socket.h>
 #include <botan/pipe.h>
+#include <botan/mac.h>
 #include <botan/secqueue.h>
 #include <vector>
 
@@ -23,8 +24,9 @@ namespace Botan {
 class BOTAN_DLL Record_Writer
    {
    public:
-      void send(byte, const byte[], size_t);
-      void send(byte, byte);
+      void send(byte type, const byte input[], size_t length);
+      void send(byte type, byte val) { send(type, &val, 1); }
+
       void flush();
 
       void alert(Alert_Level, Alert_Type);
@@ -37,12 +39,16 @@ class BOTAN_DLL Record_Writer
 
       Record_Writer(Socket& socket);
 
+      ~Record_Writer() { delete mac; }
    private:
-      void send_record(byte, const byte[], size_t);
-      void send_record(byte, byte, byte, const byte[], size_t);
+      void send_record(byte type, const byte input[], size_t length);
+      void send_record(byte type, byte major, byte minor,
+                       const byte input[], size_t length);
 
       Socket& socket;
-      Pipe cipher, mac;
+      Pipe cipher;
+      MessageAuthenticationCode* mac;
+
       SecureVector<byte> buffer;
       size_t buf_pos;
 
@@ -78,11 +84,14 @@ class BOTAN_DLL Record_Reader
 
       void reset();
 
-      Record_Reader() { reset(); }
+      Record_Reader() { mac = 0; reset(); }
+
+      ~Record_Reader() { delete mac; }
    private:
       SecureQueue input_queue;
 
-      Pipe cipher, mac;
+      Pipe cipher;
+      MessageAuthenticationCode* mac;
       size_t block_size, mac_size, iv_size;
       u64bit seq_no;
       byte major, minor;

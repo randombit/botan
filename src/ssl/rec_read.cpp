@@ -17,7 +17,10 @@ namespace Botan {
 void Record_Reader::reset()
    {
    cipher.reset();
-   mac.reset();
+
+   delete mac;
+   mac = 0;
+
    mac_size = 0;
    block_size = 0;
    iv_size = 0;
@@ -44,7 +47,8 @@ void Record_Reader::set_keys(const CipherSuite& suite, const SessionKeys& keys,
                              Connection_Side side)
    {
    cipher.reset();
-   mac.reset();
+   delete mac;
+   mac = 0;
 
    SymmetricKey mac_key, cipher_key;
    InitializationVector iv;
@@ -89,12 +93,15 @@ void Record_Reader::set_keys(const CipherSuite& suite, const SessionKeys& keys,
 
    if(have_hash(mac_algo))
       {
-      if(major == 3 && minor == 0)
-         mac.append(new MAC_Filter("SSL3-MAC(" + mac_algo + ")", mac_key));
-      else
-         mac.append(new MAC_Filter("HMAC(" + mac_algo + ")", mac_key));
+      Algorithm_Factory& af = global_state().algorithm_factory();
 
-      mac_size = output_length_of(mac_algo);
+      if(major == 3 && minor == 0)
+         mac = af.make_mac("SSL3-MAC(" + mac_algo + ")");
+      else
+         mac = af.make_mac("HMAC(" + mac_algo + ")");
+
+      mac->set_key(mac_key);
+      mac_size = mac->output_length();
       }
    else
       throw Invalid_Argument("Record_Reader: Unknown hash " + mac_algo);
@@ -221,23 +228,19 @@ size_t Record_Reader::get_record(byte& msg_type,
 
    const u16bit plain_length = plaintext.size() - (mac_size + pad_size + iv_size);
 
-   mac.start_msg();
-   for(size_t i = 0; i != 8; ++i)
-      mac.write(get_byte(i, seq_no));
-   mac.write(header[0]); // msg_type
+   mac->update_be(seq_no);
+   mac->update(header[0]); // msg_type
 
    if(version != SSL_V3)
       for(size_t i = 0; i != 2; ++i)
-         mac.write(get_byte(i, version));
+         mac->update(get_byte(i, version));
 
-   for(size_t i = 0; i != 2; ++i)
-      mac.write(get_byte(i, plain_length));
-   mac.write(&plaintext[iv_size], plain_length);
-   mac.end_msg();
+   mac->update_be(plain_length);
+   mac->update(&plaintext[iv_size], plain_length);
 
    ++seq_no;
 
-   SecureVector<byte> computed_mac = mac.read_all(Pipe::LAST_MESSAGE);
+   SecureVector<byte> computed_mac = mac->final();
 
    if(recieved_mac != computed_mac)
       throw TLS_Exception(BAD_RECORD_MAC, "Record_Reader: MAC failure");
