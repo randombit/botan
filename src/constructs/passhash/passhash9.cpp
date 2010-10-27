@@ -9,7 +9,7 @@
 #include <botan/loadstor.h>
 #include <botan/libstate.h>
 #include <botan/pbkdf2.h>
-#include <botan/base64.h>
+#include <botan/b64_filt.h>
 #include <botan/pipe.h>
 
 namespace Botan {

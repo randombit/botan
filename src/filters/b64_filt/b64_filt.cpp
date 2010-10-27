@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/base64.h>
+#include <botan/b64_filt.h>
 #include <botan/charset.h>
 #include <botan/exceptn.h>
 #include <algorithm>

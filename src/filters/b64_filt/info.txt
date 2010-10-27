@@ -1,4 +1,4 @@
-define BASE64_CODEC
+define BASE64_FILTER
 
 <requires>
 filters

@@ -12,9 +12,7 @@ extern "C" {
 
 #include <botan/asn1_obj.h>
 #include <botan/asn1_oid.h>
-#include <botan/base64.h>
-#include <botan/basefilt.h>
-#include <botan/hex_filt.h>
+#include <botan/filters.h>
 #include <botan/init.h>
 #include <botan/oids.h>
 #include <botan/x509cert.h>
