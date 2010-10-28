@@ -21,22 +21,22 @@ SecureVector<byte> EME1::pad(const byte in[], size_t in_length,
    {
    key_length /= 8;
 
-   if(in_length > key_length - 2*HASH_LENGTH - 1)
+   if(in_length > key_length - 2*Phash.size() - 1)
       throw Invalid_Argument("EME1: Input is too large");
 
    SecureVector<byte> out(key_length);
 
-   rng.randomize(&out[0], HASH_LENGTH);
+   rng.randomize(&out[0], Phash.size());
 
-   out.copy(HASH_LENGTH, &Phash[0], Phash.size());
+   out.copy(Phash.size(), &Phash[0], Phash.size());
    out[out.size() - in_length - 1] = 0x01;
    out.copy(out.size() - in_length, in, in_length);
 
-   mgf->mask(&out[0], HASH_LENGTH,
-             &out[HASH_LENGTH], out.size() - HASH_LENGTH);
+   mgf->mask(&out[0], Phash.size(),
+             &out[Phash.size()], out.size() - Phash.size());
 
-   mgf->mask(&out[HASH_LENGTH], out.size() - HASH_LENGTH,
-             &out[0], HASH_LENGTH);
+   mgf->mask(&out[Phash.size()], out.size() - Phash.size(),
+             &out[0], Phash.size());
 
    return out;
    }
@@ -68,18 +68,18 @@ SecureVector<byte> EME1::unpad(const byte in[], size_t in_length,
    SecureVector<byte> tmp(key_length);
    tmp.copy(key_length - in_length, in, in_length);
 
-   mgf->mask(&tmp[HASH_LENGTH], tmp.size() - HASH_LENGTH,
-             &tmp[0], HASH_LENGTH);
-   mgf->mask(&tmp[0], HASH_LENGTH,
-             &tmp[HASH_LENGTH], tmp.size() - HASH_LENGTH);
+   mgf->mask(&tmp[Phash.size()], tmp.size() - Phash.size(),
+             &tmp[0], Phash.size());
+   mgf->mask(&tmp[0], Phash.size(),
+             &tmp[Phash.size()], tmp.size() - Phash.size());
 
-   const bool phash_ok = same_mem(&tmp[HASH_LENGTH], &Phash[0], Phash.size());
+   const bool phash_ok = same_mem(&tmp[Phash.size()], &Phash[0], Phash.size());
 
    bool delim_ok = true;
    size_t delim_idx = 0;
 
    // Is this vulnerable to timing attacks?
-   for(size_t i = HASH_LENGTH + Phash.size(); i != tmp.size(); ++i)
+   for(size_t i = Phash.size() + Phash.size(); i != tmp.size(); ++i)
       {
       if(tmp[i] && !delim_idx)
          {
@@ -104,8 +104,8 @@ SecureVector<byte> EME1::unpad(const byte in[], size_t in_length,
 */
 size_t EME1::maximum_input_size(size_t keybits) const
    {
-   if(keybits / 8 > 2*HASH_LENGTH + 1)
-      return ((keybits / 8) - 2*HASH_LENGTH - 1);
+   if(keybits / 8 > 2*Phash.size() + 1)
+      return ((keybits / 8) - 2*Phash.size() - 1);
    else
       return 0;
    }
@@ -113,8 +113,7 @@ size_t EME1::maximum_input_size(size_t keybits) const
 /*
 * EME1 Constructor
 */
-EME1::EME1(HashFunction* hash, const std::string& P) :
-   HASH_LENGTH(hash->output_length())
+EME1::EME1(HashFunction* hash, const std::string& P)
    {
    Phash = hash->process(P);
    mgf = new MGF1(hash);

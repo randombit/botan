@@ -34,7 +34,6 @@ class BOTAN_DLL EME1 : public EME
                              RandomNumberGenerator&) const;
       SecureVector<byte> unpad(const byte[], size_t, size_t) const;
 
-      const size_t HASH_LENGTH;
       SecureVector<byte> Phash;
       MGF* mgf;
    };
