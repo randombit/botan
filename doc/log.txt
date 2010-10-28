@@ -4,6 +4,7 @@
  - Fix a number of CRL encoding and decoding bugs
  - Use small tables in the first round of AES
  - Add hex encoding/decoding functions that can be used without a Pipe
+ - Add base64 encoding functions that can be used without a Pipe
  - Add support for dynamic engine loading on Windows
  - Allow using PBKDF2 with empty passphrases
  - Switch default PKCS #8 encryption algorithm from AES-128 to AES-256
