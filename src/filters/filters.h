@@ -20,11 +20,8 @@
 
 #include <botan/scan_name.h>
 
-#if defined(BOTAN_HAS_BASE64_FILTER)
+#if defined(BOTAN_HAS_CODEC_FILTERS)
   #include <botan/b64_filt.h>
-#endif
-
-#if defined(BOTAN_HAS_HEX_FILTER)
   #include <botan/hex_filt.h>
 #endif
 

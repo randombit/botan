@@ -1,5 +1,0 @@
-define BASE64_FILTER
-
-<requires>
-filters
-</requires>
