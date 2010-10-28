@@ -1,6 +1,6 @@
 /*
 * Base64 Encoder/Decoder
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -41,8 +41,9 @@ class BOTAN_DLL Base64_Encoder : public Filter
       Base64_Encoder(bool breaks = false, size_t length = 72,
                      bool t_n = false);
    private:
-      void encode_and_send(const byte[], size_t);
-      void do_output(const byte[], size_t);
+      void encode_and_send(const byte input[], size_t length,
+                           bool final_inputs = false);
+      void do_output(const byte output[], size_t length);
 
       const size_t line_length;
       const bool trailing_newline;

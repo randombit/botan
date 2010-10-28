@@ -1,6 +1,6 @@
 /*
 * Base64 Encoder/Decoder
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -55,7 +55,8 @@ Base64_Encoder::Base64_Encoder(bool breaks, size_t length, bool t_n) :
 /*
 * Encode and send a block
 */
-void Base64_Encoder::encode_and_send(const byte input[], size_t length)
+void Base64_Encoder::encode_and_send(const byte input[], size_t length,
+                                     bool final_inputs)
    {
    while(length)
       {
@@ -63,7 +64,7 @@ void Base64_Encoder::encode_and_send(const byte input[], size_t length)
 
       size_t consumed = 0;
       size_t produced = base64_encode(reinterpret_cast<char*>(&out[0]), input,
-                                      proc, consumed, false);
+                                      proc, consumed, final_inputs);
 
       do_output(&out[0], produced);
 
@@ -126,27 +127,7 @@ void Base64_Encoder::write(const byte input[], size_t length)
 */
 void Base64_Encoder::end_msg()
    {
-   size_t start_of_last_block = 3 * (position / 3),
-          left_over = position % 3;
-   encode_and_send(&in[0], start_of_last_block);
-
-   if(left_over)
-      {
-      SecureVector<byte> remainder(3);
-      copy_mem(&remainder[0], &in[start_of_last_block], left_over);
-
-      size_t consumed;
-      base64_encode(reinterpret_cast<char*>(&out[0]), &remainder[0], 3, consumed, false);
-
-      size_t empty_bits = 8 * (3 - left_over), index = 4 - 1;
-      while(empty_bits >= 8)
-         {
-         out[index--] = '=';
-         empty_bits -= 6;
-         }
-
-      do_output(&out[0], 4);
-      }
+   encode_and_send(&in[0], position, true);
 
    if(trailing_newline || (out_position && line_length))
       send('\n');
