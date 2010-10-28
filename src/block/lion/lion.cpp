@@ -109,7 +109,6 @@ void Lion::clear()
 * Lion Constructor
 */
 Lion::Lion(HashFunction* hash_in, StreamCipher* sc_in, size_t block_len) :
-   BlockCipher(2, 2*hash_in->output_length(), 2),
    BLOCK_SIZE(std::max<size_t>(2*hash_in->output_length() + 1, block_len)),
    LEFT_SIZE(hash_in->output_length()),
    RIGHT_SIZE(BLOCK_SIZE - LEFT_SIZE),

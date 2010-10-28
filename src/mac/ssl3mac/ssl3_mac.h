@@ -23,6 +23,11 @@ class BOTAN_DLL SSL3_MAC : public MessageAuthenticationCode
       std::string name() const;
       MessageAuthenticationCode* clone() const;
 
+      Key_Length_Specification key_spec() const
+         {
+         return Key_Length_Specification(hash->output_length());
+         }
+
       /**
       * @param hash the underlying hash to use
       */

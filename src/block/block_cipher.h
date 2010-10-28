@@ -18,19 +18,6 @@ namespace Botan {
 class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
    {
    public:
-      /**
-      * BlockCipher constructor
-      * @param block_size the size of blocks this cipher processes
-      * @param key_min the minimum key size
-      * @param key_max the maximum key size
-      * @param key_mod the modulo restriction on the key size
-      */
-      BlockCipher(size_t key_min,
-                  size_t key_max = 0,
-                  size_t key_mod = 1) :
-         SymmetricAlgorithm(key_min, key_max, key_mod) {}
-
-      virtual ~BlockCipher() {}
 
       /**
       * @return block size of this algorithm
@@ -108,11 +95,6 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * Get a new object representing the same algorithm as *this
       */
       virtual BlockCipher* clone() const = 0;
-
-      /**
-      * Zeroize internal state
-      */
-      virtual void clear() = 0;
    };
 
 /**
@@ -122,10 +104,13 @@ template<size_t BS, size_t KMIN, size_t KMAX = 0, size_t KMOD = 1>
 class Block_Cipher_Fixed_Params : public BlockCipher
    {
    public:
-      Block_Cipher_Fixed_Params() : BlockCipher(KMIN, KMAX, KMOD) {}
-
       enum { BLOCK_SIZE = BS };
       size_t block_size() const { return BS; }
+
+      Key_Length_Specification key_spec() const
+         {
+         return Key_Length_Specification(KMIN, KMAX, KMOD);
+         }
    };
 
 }

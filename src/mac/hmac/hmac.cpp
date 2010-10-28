@@ -85,8 +85,7 @@ MessageAuthenticationCode* HMAC::clone() const
 * HMAC Constructor
 */
 HMAC::HMAC(HashFunction* hash_in) :
-   MessageAuthenticationCode(hash_in->output_length(),
-                             0, 2*hash_in->hash_block_size()),
+   MessageAuthenticationCode(hash_in->output_length()),
    hash(hash_in)
    {
    if(hash->hash_block_size() == 0)

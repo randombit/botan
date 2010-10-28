@@ -25,12 +25,16 @@ class BOTAN_DLL Salsa20 : public StreamCipher
       bool valid_iv_length(size_t iv_len) const
          { return (iv_len == 8 || iv_len == 24); }
 
+      Key_Length_Specification key_spec() const
+         {
+         return Key_Length_Specification(16, 32, 16);
+         }
+
       void clear();
       std::string name() const;
       StreamCipher* clone() const { return new Salsa20; }
 
-      Salsa20() : StreamCipher(16, 32, 16), state(16), buffer(64)
-         { position = 0; }
+      Salsa20() : state(16), buffer(64), position(0) {}
 
       ~Salsa20() { clear(); }
    private:

@@ -31,10 +31,10 @@ void Cascade_Cipher::decrypt_n(const byte in[], byte out[],
 
 void Cascade_Cipher::key_schedule(const byte key[], size_t)
    {
-   const byte* key2 = key + cipher1->MAXIMUM_KEYLENGTH;
+   const byte* key2 = key + cipher1->maximum_keylength();
 
-   cipher1->set_key(key , cipher1->MAXIMUM_KEYLENGTH);
-   cipher2->set_key(key2, cipher2->MAXIMUM_KEYLENGTH);
+   cipher1->set_key(key , cipher1->maximum_keylength());
+   cipher2->set_key(key2, cipher2->maximum_keylength());
    }
 
 void Cascade_Cipher::clear()
@@ -81,7 +81,6 @@ size_t block_size_for_cascade(size_t bs, size_t bs2)
 }
 
 Cascade_Cipher::Cascade_Cipher(BlockCipher* c1, BlockCipher* c2) :
-   BlockCipher(c1->MAXIMUM_KEYLENGTH + c2->MAXIMUM_KEYLENGTH),
    cipher1(c1), cipher2(c2)
    {
    block = block_size_for_cascade(c1->block_size(), c2->block_size());

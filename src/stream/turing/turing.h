@@ -24,14 +24,17 @@ class BOTAN_DLL Turing : public StreamCipher
       bool valid_iv_length(size_t iv_len) const
          { return (iv_len % 4 == 0 && iv_len <= 16); }
 
+      Key_Length_Specification key_spec() const
+         {
+         return Key_Length_Specification(4, 32, 4);
+         }
+
       void clear();
       std::string name() const { return "Turing"; }
       StreamCipher* clone() const { return new Turing; }
 
-      Turing() : StreamCipher(4, 32, 4),
-                 S0(256), S1(256), S2(256), S3(256),
-                 R(17), buffer(340)
-         { position = 0; }
+      Turing() : S0(256), S1(256), S2(256), S3(256),
+                 R(17), buffer(340), position(0) {}
 
    private:
       void key_schedule(const byte[], size_t);

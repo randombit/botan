@@ -23,6 +23,11 @@ class BOTAN_DLL ANSI_X919_MAC : public MessageAuthenticationCode
       std::string name() const;
       MessageAuthenticationCode* clone() const;
 
+      Key_Length_Specification key_spec() const
+         {
+         return Key_Length_Specification(8, 16, 8);
+         }
+
       /**
       * @param cipher the underlying block cipher to use
       */

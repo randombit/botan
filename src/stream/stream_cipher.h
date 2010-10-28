@@ -51,24 +51,6 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       * Get a new object representing the same algorithm as *this
       */
       virtual StreamCipher* clone() const = 0;
-
-      /**
-      * Zeroize internal state
-      */
-      virtual void clear() = 0;
-
-      /**
-      * StreamCipher constructor
-      * @param key_min the minimum key size
-      * @param key_max the maximum key size
-      * @param key_mod the modulo restriction on the key size
-      */
-      StreamCipher(size_t key_min,
-                   size_t key_max = 0,
-                   size_t key_mod = 1) :
-         SymmetricAlgorithm(key_min, key_max, key_mod) {}
-
-      virtual ~StreamCipher() {}
    };
 
 }

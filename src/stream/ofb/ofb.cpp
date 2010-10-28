@@ -14,11 +14,7 @@ namespace Botan {
 /*
 * OFB Constructor
 */
-OFB::OFB(BlockCipher* ciph) :
-   StreamCipher(ciph->MINIMUM_KEYLENGTH,
-                ciph->MAXIMUM_KEYLENGTH,
-                ciph->KEYLENGTH_MULTIPLE),
-   permutation(ciph)
+OFB::OFB(BlockCipher* ciph) : permutation(ciph)
    {
    position = 0;
    buffer.resize(permutation->block_size());

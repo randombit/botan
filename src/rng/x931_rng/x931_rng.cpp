@@ -61,7 +61,7 @@ void ANSI_X931_RNG::rekey()
 
    if(prng->is_seeded())
       {
-      cipher->set_key(prng->random_vec(cipher->MAXIMUM_KEYLENGTH));
+      cipher->set_key(prng->random_vec(cipher->maximum_keylength()));
 
       if(V.size() != BLOCK_SIZE)
          V.resize(BLOCK_SIZE);

@@ -98,7 +98,7 @@ void PBE_PKCS5v20::set_key(const std::string& passphrase)
 void PBE_PKCS5v20::new_params(RandomNumberGenerator& rng)
    {
    iterations = 10000;
-   key_length = block_cipher->MAXIMUM_KEYLENGTH;
+   key_length = block_cipher->maximum_keylength();
 
    salt = rng.random_vec(12);
    iv = rng.random_vec(block_cipher->block_size());
@@ -178,7 +178,7 @@ void PBE_PKCS5v20::decode_params(DataSource& source)
    hash_function = af.make_hash_function("SHA-160");
 
    if(key_length == 0)
-      key_length = block_cipher->MAXIMUM_KEYLENGTH;
+      key_length = block_cipher->maximum_keylength();
 
    if(salt.size() < 8)
       throw Decoding_Error("PBE-PKCS5 v2.0: Encoded salt is too small");

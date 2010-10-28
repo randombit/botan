@@ -26,6 +26,11 @@ class BOTAN_DLL ARC4 : public StreamCipher
 
       StreamCipher* clone() const { return new ARC4(SKIP); }
 
+      Key_Length_Specification key_spec() const
+         {
+         return Key_Length_Specification(1, 256);
+         }
+
       /**
       * @param skip skip this many initial bytes in the keystream
       */

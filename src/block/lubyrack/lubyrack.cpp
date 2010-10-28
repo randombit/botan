@@ -122,9 +122,7 @@ std::string LubyRackoff::name() const
 /*
 * Luby-Rackoff Constructor
 */
-LubyRackoff::LubyRackoff(HashFunction* h) :
-   BlockCipher(2, 32, 2),
-   hash(h)
+LubyRackoff::LubyRackoff(HashFunction* h) : hash(h)
    {
    }
 

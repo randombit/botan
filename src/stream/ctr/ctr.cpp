@@ -14,11 +14,7 @@ namespace Botan {
 * CTR-BE Constructor
 */
 
-CTR_BE::CTR_BE(BlockCipher* ciph) :
-   StreamCipher(ciph->MINIMUM_KEYLENGTH,
-                ciph->MAXIMUM_KEYLENGTH,
-                ciph->KEYLENGTH_MULTIPLE),
-   permutation(ciph)
+CTR_BE::CTR_BE(BlockCipher* ciph) : permutation(ciph)
    {
    position = 0;
 

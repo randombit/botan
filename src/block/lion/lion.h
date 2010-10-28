@@ -30,6 +30,11 @@ class BOTAN_DLL Lion : public BlockCipher
 
       size_t block_size() const { return BLOCK_SIZE; }
 
+      Key_Length_Specification key_spec() const
+         {
+         return Key_Length_Specification(2, 2*hash->output_length(), 2);
+         }
+
       void clear();
       std::string name() const;
       BlockCipher* clone() const;

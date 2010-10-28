@@ -24,6 +24,11 @@ class BOTAN_DLL LubyRackoff : public BlockCipher
 
       size_t block_size() const { return 2 * hash->output_length(); }
 
+      Key_Length_Specification key_spec() const
+         {
+         return Key_Length_Specification(2, 32, 2);
+         }
+
       void clear();
       std::string name() const;
       BlockCipher* clone() const;

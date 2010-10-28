@@ -23,6 +23,11 @@ class BOTAN_DLL CMAC : public MessageAuthenticationCode
       std::string name() const;
       MessageAuthenticationCode* clone() const;
 
+      Key_Length_Specification key_spec() const
+         {
+         return e->key_spec();
+         }
+
       /**
       * CMAC's polynomial doubling operation
       * @param in the input

@@ -23,6 +23,11 @@ class BOTAN_DLL CBC_MAC : public MessageAuthenticationCode
       std::string name() const;
       MessageAuthenticationCode* clone() const;
 
+      Key_Length_Specification key_spec() const
+         {
+         return e->key_spec();
+         }
+
       /**
       * @param cipher the underlying block cipher to use
       */

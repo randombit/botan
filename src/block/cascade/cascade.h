@@ -23,6 +23,12 @@ class BOTAN_DLL Cascade_Cipher : public BlockCipher
 
       size_t block_size() const { return block; }
 
+      Key_Length_Specification key_spec() const
+         {
+         return Key_Length_Specification(cipher1->maximum_keylength() +
+                                         cipher2->maximum_keylength());
+         }
+
       void clear();
       std::string name() const;
       BlockCipher* clone() const;

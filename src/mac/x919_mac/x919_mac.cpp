@@ -85,10 +85,7 @@ MessageAuthenticationCode* ANSI_X919_MAC::clone() const
 * ANSI X9.19 MAC Constructor
 */
 ANSI_X919_MAC::ANSI_X919_MAC(BlockCipher* e_in) :
-   MessageAuthenticationCode(e_in->block_size(),
-                             e_in->MINIMUM_KEYLENGTH,
-                             2*e_in->MAXIMUM_KEYLENGTH,
-                             2*e_in->KEYLENGTH_MULTIPLE),
+   MessageAuthenticationCode(e_in->block_size()),
    e(e_in), d(e->clone()), state(e->block_size()), position(0)
    {
    if(e->name() != "DES")

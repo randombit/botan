@@ -9,6 +9,7 @@
 #define BOTAN_SYMMETRIC_ALGORITHM_H__
 
 #include <botan/types.h>
+#include <botan/key_spec.h>
 #include <botan/exceptn.h>
 #include <botan/symkey.h>
 
@@ -20,21 +21,43 @@ namespace Botan {
 class BOTAN_DLL SymmetricAlgorithm
    {
    public:
+      virtual ~SymmetricAlgorithm() {}
 
       /**
-      * The maximum allowed key length.
+      * Zeroize internal state
       */
-      const size_t MAXIMUM_KEYLENGTH;
+      virtual void clear() = 0;
 
       /**
-      * The minimal allowed key length.
+      * @return object describing limits on key size
       */
-      const size_t MINIMUM_KEYLENGTH;
+      virtual Key_Length_Specification key_spec() const = 0;
 
       /**
-      * A valid keylength is a multiple of this value.
+      * @return minimum allowed key length
       */
-      const size_t KEYLENGTH_MULTIPLE;
+      size_t maximum_keylength() const
+         {
+         return key_spec().maximum_keylength();
+         }
+
+      /**
+      * @return maxmium allowed key length
+      */
+      size_t minimum_keylength() const
+         {
+         return key_spec().minimum_keylength();
+         }
+
+      /**
+      * Check whether a given key length is valid for this algorithm.
+      * @param length the key length to be checked.
+      * @return true if the key length is valid.
+      */
+      bool valid_keylength(size_t length) const
+         {
+         return key_spec().valid_keylength(length);
+         }
 
       /**
       * The name of the algorithm.
@@ -60,32 +83,6 @@ class BOTAN_DLL SymmetricAlgorithm
             throw Invalid_Key_Length(name(), length);
          key_schedule(key, length);
          }
-
-      /**
-      * Check whether a given key length is valid for this algorithm.
-      * @param length the key length to be checked.
-      * @return true if the key length is valid.
-      */
-      bool valid_keylength(size_t length) const
-         {
-         return ((length >= MINIMUM_KEYLENGTH) &&
-                 (length <= MAXIMUM_KEYLENGTH) &&
-                 (length % KEYLENGTH_MULTIPLE == 0));
-         }
-
-      /**
-      * Construct a SymmetricAlgorithm.
-      * @param key_min the minimum allowed key length
-      * @param key_max the maximum allowed key length
-      * @param key_mod any valid key length must be a multiple of this value
-      */
-      SymmetricAlgorithm(size_t key_min, size_t key_max, size_t key_mod) :
-         MAXIMUM_KEYLENGTH(key_max ? key_max : key_min),
-         MINIMUM_KEYLENGTH(key_min),
-         KEYLENGTH_MULTIPLE(key_mod)
-            {}
-
-      virtual ~SymmetricAlgorithm() {}
    private:
       /**
       * Run the key schedule

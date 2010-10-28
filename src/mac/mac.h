@@ -41,24 +41,13 @@ class BOTAN_DLL MessageAuthenticationCode : public BufferedComputation,
       virtual std::string name() const = 0;
 
       /**
-      * Reset the internal state of this object.
-      */
-      virtual void clear() = 0;
-
-      /**
       * @param mac_len the output length of this MAC
       * @param key_min the minimum key size
       * @param key_max the maximum key size
       * @param key_mod the modulo restriction on the key size
       */
-      MessageAuthenticationCode(size_t mac_len,
-                                size_t key_min,
-                                size_t key_max = 0,
-                                size_t key_mod = 1) :
-         BufferedComputation(mac_len),
-         SymmetricAlgorithm(key_min, key_max, key_mod) {}
-
-      virtual ~MessageAuthenticationCode() {}
+      MessageAuthenticationCode(size_t mac_len) :
+        BufferedComputation(mac_len) {}
    };
 
 }

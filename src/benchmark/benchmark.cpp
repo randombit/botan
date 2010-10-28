@@ -53,7 +53,7 @@ bench_block_cipher(BlockCipher* block_cipher,
    u64bit reps = 0;
    u64bit nanoseconds_used = 0;
 
-   block_cipher->set_key(buf, block_cipher->MAXIMUM_KEYLENGTH);
+   block_cipher->set_key(buf, block_cipher->maximum_keylength());
 
    while(nanoseconds_used < nanoseconds_max)
       {
@@ -79,7 +79,7 @@ bench_stream_cipher(StreamCipher* stream_cipher,
    u64bit reps = 0;
    u64bit nanoseconds_used = 0;
 
-   stream_cipher->set_key(buf, stream_cipher->MAXIMUM_KEYLENGTH);
+   stream_cipher->set_key(buf, stream_cipher->maximum_keylength());
 
    while(nanoseconds_used < nanoseconds_max)
       {
@@ -112,7 +112,7 @@ bench_mac(MessageAuthenticationCode* mac,
           u64bit nanoseconds_max,
           const byte buf[], size_t buf_len)
    {
-   mac->set_key(buf, mac->MAXIMUM_KEYLENGTH);
+   mac->set_key(buf, mac->maximum_keylength());
    return bench_buf_comp(mac, nanoseconds_max, buf, buf_len);
    }
 
