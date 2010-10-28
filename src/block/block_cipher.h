@@ -39,6 +39,11 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       const u32bit BLOCK_SIZE;
 
       /**
+      * @return block size of this algorithm
+      */
+      size_t block_size() const { return BLOCK_SIZE; }
+
+      /**
       * Encrypt a block.
       * @param in The plaintext block to be encrypted as a byte array.
       * Must be of length BLOCK_SIZE.
