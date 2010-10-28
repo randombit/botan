@@ -67,19 +67,19 @@ class BOTAN_DLL Base64_Decoder : public Filter
       void write(const byte input[], size_t length);
 
       /**
-      * Inform the Encoder that the current message shall be closed.
+      * Finish up the current message
       */
       void end_msg();
 
       /**
-      * Create a base64 encoder.
+      * Create a base64 decoder.
       * @param checking the type of checking that shall be performed by
       * the decoder
       */
       Base64_Decoder(Decoder_Checking checking = NONE);
    private:
       static void decode(const byte input[4], byte output[3]);
-      static bool is_valid(byte);
+      static bool is_valid(byte c);
 
       void decode_and_send(const byte[], size_t);
       void handle_bad_char(byte);
