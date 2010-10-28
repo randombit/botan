@@ -37,6 +37,22 @@ class BOTAN_DLL SymmetricAlgorithm
       const u32bit KEYLENGTH_MULTIPLE;
 
       /**
+      * @return minimum allowed key length
+      */
+      size_t maximum_keylength() const
+         {
+         return MAXIMUM_KEYLENGTH;
+         }
+
+      /**
+      * @return maxmium allowed key length
+      */
+      size_t minimum_keylength() const
+         {
+         return MINIMUM_KEYLENGTH;
+         }
+
+      /**
       * The name of the algorithm.
       * @return the name of the algorithm
       */
