@@ -93,7 +93,7 @@ TLS_Server::TLS_Server(const TLS_Policy& pol,
    policy(pol),
    rng(r),
    peer(sock),
-   writer(std::tr1::bind(&Socket::write, std::tr1::ref(peer), _1, _2))
+   writer(std::bind(&Socket::write, std::ref(peer), _1, _2))
    {
    state = 0;
 

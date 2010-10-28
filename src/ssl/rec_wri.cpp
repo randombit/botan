@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * Record_Writer Constructor
 */
-Record_Writer::Record_Writer(std::tr1::function<void (const byte[], size_t)> out) :
+Record_Writer::Record_Writer(std::function<void (const byte[], size_t)> out) :
    output_fn(out),
    buffer(DEFAULT_BUFFERSIZE)
    {
