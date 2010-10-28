@@ -212,7 +212,7 @@ TLS_Ciphersuite_Algos CipherSuite::lookup_ciphersuite(u16bit suite)
 
 namespace {
 
-std::pair<std::string, u32bit> cipher_code_to_name(TLS_Ciphersuite_Algos algo)
+std::pair<std::string, size_t> cipher_code_to_name(TLS_Ciphersuite_Algos algo)
    {
    if((algo & TLS_ALGO_CIPHER_MASK) == TLS_ALGO_CIPHER_RC4_128)
       return std::make_pair("ARC4", 16);
@@ -273,7 +273,7 @@ CipherSuite::CipherSuite(u16bit suite_code)
 
    kex_algo = TLS_Ciphersuite_Algos(algos & TLS_ALGO_KEYEXCH_MASK);
 
-   std::pair<std::string, u32bit> cipher_info = cipher_code_to_name(algos);
+   std::pair<std::string, size_t> cipher_info = cipher_code_to_name(algos);
 
    cipher = cipher_info.first;
    cipher_key_length = cipher_info.second;

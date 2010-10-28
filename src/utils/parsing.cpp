@@ -231,7 +231,7 @@ std::string ipv4_to_string(u32bit ip)
    {
    std::string str;
 
-   for(size_t i = 0; i != sizeof(ip); i++)
+   for(size_t i = 0; i != sizeof(ip); ++i)
       {
       if(i)
          str += ".";

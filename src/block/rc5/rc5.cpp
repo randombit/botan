@@ -122,7 +122,7 @@ std::string RC5::name() const
 /*
 * RC5 Constructor
 */
-RC5::RC5(size_t rounds) : BlockCipher_Fixed_Block_Size(1, 32)
+RC5::RC5(size_t rounds)
    {
    if(rounds < 8 || rounds > 32 || (rounds % 4 != 0))
       throw Invalid_Argument("RC5: Invalid number of rounds " +

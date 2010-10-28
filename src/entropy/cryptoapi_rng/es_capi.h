@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * Win32 CAPI Entropy Source
 */
-class BOTAN_DLL Win32_CAPI_EntropySource : public EntropySource
+class Win32_CAPI_EntropySource : public EntropySource
    {
    public:
       std::string name() const { return "Win32 CryptoGenRandom"; }

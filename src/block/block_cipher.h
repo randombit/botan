@@ -115,17 +115,17 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       virtual void clear() = 0;
    };
 
-template<size_t N>
-class BlockCipher_Fixed_Block_Size : public BlockCipher
+/**
+* Represents a block cipher with a single fixed block size
+*/
+template<size_t BS, size_t KMIN, size_t KMAX = 0, size_t KMOD = 1>
+class Block_Cipher_Fixed_Params : public BlockCipher
    {
    public:
-      BlockCipher_Fixed_Block_Size(size_t kmin,
-                                   size_t kmax = 0,
-                                   size_t kmod = 1) :
-         BlockCipher(kmin, kmax, kmod) {}
+      Block_Cipher_Fixed_Params() : BlockCipher(KMIN, KMAX, KMOD) {}
 
-      enum { BLOCK_SIZE = N };
-      size_t block_size() const { return N; }
+      enum { BLOCK_SIZE = BS };
+      size_t block_size() const { return BS; }
    };
 
 }

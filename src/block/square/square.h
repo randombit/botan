@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * Square
 */
-class BOTAN_DLL Square : public BlockCipher_Fixed_Block_Size<16>
+class BOTAN_DLL Square : public Block_Cipher_Fixed_Params<16, 16>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
@@ -25,9 +25,7 @@ class BOTAN_DLL Square : public BlockCipher_Fixed_Block_Size<16>
       std::string name() const { return "Square"; }
       BlockCipher* clone() const { return new Square; }
 
-      Square() : BlockCipher_Fixed_Block_Size(16),
-                 EK(28), DK(28), ME(32), MD(32) {}
-
+      Square() : EK(28), DK(28), ME(32), MD(32) {}
    private:
       void key_schedule(const byte[], size_t);
 

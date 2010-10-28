@@ -49,7 +49,7 @@ class BOTAN_DLL GOST_28147_89_Params
 /**
 * GOST 28147-89
 */
-class BOTAN_DLL GOST_28147_89 : public BlockCipher_Fixed_Block_Size<8>
+class BOTAN_DLL GOST_28147_89 : public Block_Cipher_Fixed_Params<8, 32>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
@@ -66,7 +66,7 @@ class BOTAN_DLL GOST_28147_89 : public BlockCipher_Fixed_Block_Size<8>
       GOST_28147_89(const GOST_28147_89_Params& params);
    private:
       GOST_28147_89(const SecureVector<u32bit>& other_SBOX) :
-         BlockCipher_Fixed_Block_Size(32), SBOX(other_SBOX), EK(8) {}
+         SBOX(other_SBOX), EK(8) {}
 
       void key_schedule(const byte[], size_t);
 

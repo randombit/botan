@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-/**
+/*
 * Return allowed ciphersuites
 */
 std::vector<u16bit> TLS_Policy::ciphersuites() const
@@ -18,7 +18,7 @@ std::vector<u16bit> TLS_Policy::ciphersuites() const
    return suite_list(allow_static_rsa(), allow_edh_rsa(), allow_edh_dsa());
    }
 
-/**
+/*
 * Return allowed ciphersuites
 */
 std::vector<u16bit> TLS_Policy::suite_list(bool use_rsa,
@@ -60,7 +60,7 @@ std::vector<u16bit> TLS_Policy::suite_list(bool use_rsa,
    return suites;
    }
 
-/**
+/*
 * Return allowed compression algorithms
 */
 std::vector<byte> TLS_Policy::compression() const
@@ -70,7 +70,7 @@ std::vector<byte> TLS_Policy::compression() const
    return algs;
    }
 
-/**
+/*
 * Choose which ciphersuite to use
 */
 u16bit TLS_Policy::choose_suite(const std::vector<u16bit>& c_suites,
@@ -84,30 +84,30 @@ u16bit TLS_Policy::choose_suite(const std::vector<u16bit>& c_suites,
    std::vector<u16bit> s_suites = suite_list(use_static_rsa, use_edh_rsa,
                                              use_edh_dsa);
 
-   for(u32bit j = 0; j != s_suites.size(); j++)
-      for(u32bit k = 0; k != c_suites.size(); k++)
-         if(s_suites[j] == c_suites[k])
-            return s_suites[j];
+   for(size_t i = 0; i != s_suites.size(); ++i)
+      for(size_t j = 0; j != c_suites.size(); ++j)
+         if(s_suites[i] == c_suites[j])
+            return s_suites[i];
 
    return 0;
    }
 
-/**
+/*
 * Choose which compression algorithm to use
 */
 byte TLS_Policy::choose_compression(const std::vector<byte>& c_comp) const
    {
    std::vector<byte> s_comp = compression();
 
-   for(u32bit j = 0; j != s_comp.size(); j++)
-      for(u32bit k = 0; k != c_comp.size(); k++)
-         if(s_comp[j] == c_comp[k])
-            return s_comp[j];
+   for(size_t i = 0; i != s_comp.size(); ++i)
+      for(size_t j = 0; j != c_comp.size(); ++j)
+         if(s_comp[i] == c_comp[j])
+            return s_comp[i];
 
    return NO_COMPRESSION;
    }
 
-/**
+/*
 * Return the group to use for empheral DH
 */
 DL_Group TLS_Policy::dh_group() const
@@ -115,7 +115,7 @@ DL_Group TLS_Policy::dh_group() const
    return DL_Group("modp/ietf/1024");
    }
 
-/**
+/*
 * Default certificate check
 */
 bool TLS_Policy::check_cert(const std::vector<X509_Certificate>& certs) const

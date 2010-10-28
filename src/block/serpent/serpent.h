@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * Serpent, an AES finalist
 */
-class BOTAN_DLL Serpent : public BlockCipher_Fixed_Block_Size<16>
+class BOTAN_DLL Serpent : public Block_Cipher_Fixed_Params<16, 16, 32, 8>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
@@ -25,8 +25,7 @@ class BOTAN_DLL Serpent : public BlockCipher_Fixed_Block_Size<16>
       std::string name() const { return "Serpent"; }
       BlockCipher* clone() const { return new Serpent; }
 
-      Serpent() : BlockCipher_Fixed_Block_Size(16, 32, 8),
-                  round_key(132) {}
+      Serpent() : round_key(132) {}
    protected:
       /**
       * For use by subclasses using SIMD, asm, etc

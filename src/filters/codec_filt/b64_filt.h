@@ -1,12 +1,12 @@
 /*
 * Base64 Encoder/Decoder
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
-#ifndef BOTAN_BASE64_H__
-#define BOTAN_BASE64_H__
+#ifndef BOTAN_BASE64_FILTER_H__
+#define BOTAN_BASE64_FILTER_H__
 
 #include <botan/filter.h>
 
@@ -18,8 +18,6 @@ namespace Botan {
 class BOTAN_DLL Base64_Encoder : public Filter
    {
    public:
-      static void encode(const byte in[3], byte out[4]);
-
       std::string name() const { return "Base64_Encoder"; }
 
       /**
@@ -36,21 +34,21 @@ class BOTAN_DLL Base64_Encoder : public Filter
 
       /**
       * Create a base64 encoder.
-      * @param breaks whether to use line breaks in the Streamcipheroutput
+      * @param breaks whether to use line breaks in the output
       * @param length the length of the lines of the output
       * @param t_n whether to use a trailing newline
       */
       Base64_Encoder(bool breaks = false, size_t length = 72,
                      bool t_n = false);
    private:
-      void encode_and_send(const byte[], size_t);
-      void do_output(const byte[], size_t);
-      static const byte BIN_TO_BASE64[64];
+      void encode_and_send(const byte input[], size_t length,
+                           bool final_inputs = false);
+      void do_output(const byte output[], size_t length);
 
       const size_t line_length;
       const bool trailing_newline;
       SecureVector<byte> in, out;
-      size_t position, counter;
+      size_t position, out_position;
    };
 
 /**
@@ -59,10 +57,6 @@ class BOTAN_DLL Base64_Encoder : public Filter
 class BOTAN_DLL Base64_Decoder : public Filter
    {
    public:
-      static void decode(const byte input[4], byte output[3]);
-
-      static bool is_valid(byte);
-
       std::string name() const { return "Base64_Decoder"; }
 
       /**
@@ -84,9 +78,11 @@ class BOTAN_DLL Base64_Decoder : public Filter
       */
       Base64_Decoder(Decoder_Checking checking = NONE);
    private:
+      static void decode(const byte input[4], byte output[3]);
+      static bool is_valid(byte);
+
       void decode_and_send(const byte[], size_t);
       void handle_bad_char(byte);
-      static const byte BASE64_TO_BIN[256];
 
       const Decoder_Checking checking;
       SecureVector<byte> in, out;

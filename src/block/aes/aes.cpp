@@ -1,6 +1,6 @@
 /*
 * AES
-* (C) 1999-2009 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -410,13 +410,16 @@ const u32bit TD[1024] = {
    0x3C498B28, 0x0D9541FF, 0xA8017139, 0x0CB3DE08, 0xB4E49CD8, 0x56C19064,
    0xCB84617B, 0x32B670D5, 0x6C5C7448, 0xB85742D0 };
 
-}
-
 /*
 * AES Encryption
 */
-void AES::encrypt_n(const byte in[], byte out[], size_t blocks) const
+void aes_encrypt_n(const byte in[], byte out[],
+                   size_t blocks,
+                   const MemoryRegion<u32bit>& EK,
+                   const MemoryRegion<byte>& ME)
    {
+   const size_t BLOCK_SIZE = 16;
+
    const u32bit* TE0 = TE;
    const u32bit* TE1 = TE + 256;
    const u32bit* TE2 = TE + 512;
@@ -522,8 +525,12 @@ void AES::encrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * AES Decryption
 */
-void AES::decrypt_n(const byte in[], byte out[], size_t blocks) const
+void aes_decrypt_n(const byte in[], byte out[], size_t blocks,
+                   const MemoryRegion<u32bit>& DK,
+                   const MemoryRegion<byte>& MD)
    {
+   const size_t BLOCK_SIZE = 16;
+
    const u32bit* TD0 = TD;
    const u32bit* TD1 = TD + 256;
    const u32bit* TD2 = TD + 512;
@@ -599,18 +606,19 @@ void AES::decrypt_n(const byte in[], byte out[], size_t blocks) const
       }
    }
 
-/*
-* AES Key Schedule
-*/
-void AES::key_schedule(const byte key[], size_t length)
+void aes_key_schedule(const byte key[], size_t length,
+                      MemoryRegion<u32bit>& EK,
+                      MemoryRegion<u32bit>& DK,
+                      MemoryRegion<byte>& ME,
+                      MemoryRegion<byte>& MD)
    {
    static const u32bit RC[10] = {
-      0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000, 0x20000000,
-      0x40000000, 0x80000000, 0x1B000000, 0x36000000 };
+      0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000,
+      0x20000000, 0x40000000, 0x80000000, 0x1B000000, 0x36000000 };
 
    const u32bit rounds = (length / 4) + 6;
 
-   SecureVector<u32bit> XEK(64), XDK(64);
+   SecureVector<u32bit> XEK(length + 32), XDK(length + 32);
 
    const size_t X = length / 4;
    for(size_t i = 0; i != X; ++i)
@@ -618,13 +626,23 @@ void AES::key_schedule(const byte key[], size_t length)
 
    for(size_t i = X; i < 4*(rounds+1); i += X)
       {
-      XEK[i] = XEK[i-X] ^ S(rotate_left(XEK[i-1], 8)) ^ RC[(i-X)/X];
+      XEK[i] = XEK[i-X] ^ RC[(i-X)/X] ^
+               make_u32bit(SE[get_byte(1, XEK[i-1])],
+                           SE[get_byte(2, XEK[i-1])],
+                           SE[get_byte(3, XEK[i-1])],
+                           SE[get_byte(0, XEK[i-1])]);
+
       for(size_t j = 1; j != X; ++j)
          {
+         XEK[i+j] = XEK[i+j-X];
+
          if(X == 8 && j == 4)
-            XEK[i+j] = XEK[i+j-X] ^ S(XEK[i+j-1]);
+            XEK[i+j] ^= make_u32bit(SE[get_byte(0, XEK[i+j-1])],
+                                    SE[get_byte(1, XEK[i+j-1])],
+                                    SE[get_byte(2, XEK[i+j-1])],
+                                    SE[get_byte(3, XEK[i+j-1])]);
          else
-            XEK[i+j] = XEK[i+j-X] ^ XEK[i+j-1];
+            XEK[i+j] ^= XEK[i+j-1];
          }
       }
 
@@ -652,38 +670,70 @@ void AES::key_schedule(const byte key[], size_t length)
    DK.set(&XDK[0], length + 24);
    }
 
-/*
-* AES Byte Substitution
-*/
-u32bit AES::S(u32bit input)
+}
+
+void AES_128::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   return make_u32bit(SE[get_byte(0, input)], SE[get_byte(1, input)],
-                      SE[get_byte(2, input)], SE[get_byte(3, input)]);
+   aes_encrypt_n(in, out, blocks, EK, ME);
    }
 
-/*
-* AES Constructor
-*/
-AES::AES() : BlockCipher_Fixed_Block_Size(16, 32, 8),
-             EK(0), ME(16), DK(0), MD(16)
+void AES_128::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
+   aes_decrypt_n(in, out, blocks, DK, MD);
    }
 
-/*
-* AES Constructor
-*/
-AES::AES(size_t key_size) : BlockCipher_Fixed_Block_Size(key_size),
-                            EK(key_size+24), ME(16),
-                            DK(key_size+24), MD(16)
+void AES_128::key_schedule(const byte key[], size_t length)
    {
-   if(key_size != 16 && key_size != 24 && key_size != 32)
-      throw Invalid_Key_Length(name(), key_size);
+   aes_key_schedule(key, length, EK, DK, ME, MD);
    }
 
-/*
-* Clear memory of sensitive data
-*/
-void AES::clear()
+void AES_128::clear()
+   {
+   zeroise(EK);
+   zeroise(DK);
+   zeroise(ME);
+   zeroise(MD);
+   }
+
+void AES_192::encrypt_n(const byte in[], byte out[], size_t blocks) const
+   {
+   aes_encrypt_n(in, out, blocks, EK, ME);
+   }
+
+void AES_192::decrypt_n(const byte in[], byte out[], size_t blocks) const
+   {
+   aes_decrypt_n(in, out, blocks, DK, MD);
+   }
+
+void AES_192::key_schedule(const byte key[], size_t length)
+   {
+   aes_key_schedule(key, length, EK, DK, ME, MD);
+   }
+
+void AES_192::clear()
+   {
+   zeroise(EK);
+   zeroise(DK);
+   zeroise(ME);
+   zeroise(MD);
+   }
+
+void AES_256::encrypt_n(const byte in[], byte out[], size_t blocks) const
+   {
+   aes_encrypt_n(in, out, blocks, EK, ME);
+   }
+
+void AES_256::decrypt_n(const byte in[], byte out[], size_t blocks) const
+   {
+   aes_decrypt_n(in, out, blocks, DK, MD);
+   }
+
+void AES_256::key_schedule(const byte key[], size_t length)
+   {
+   aes_key_schedule(key, length, EK, DK, ME, MD);
+   }
+
+void AES_256::clear()
    {
    zeroise(EK);
    zeroise(DK);

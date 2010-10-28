@@ -37,7 +37,7 @@ class BOTAN_DLL TLS_Policy
       virtual bool require_client_auth() const { return false; }
 
       virtual DL_Group dh_group() const;
-      virtual u32bit rsa_export_keysize() const { return 512; }
+      virtual size_t rsa_export_keysize() const { return 512; }
 
       virtual Version_Code min_version() const { return SSL_V3; }
       virtual Version_Code pref_version() const { return TLS_V11; }

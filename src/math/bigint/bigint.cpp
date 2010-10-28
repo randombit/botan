@@ -184,7 +184,7 @@ bool BigInt::get_bit(size_t n) const
 /*
 * Return bits {offset...offset+length}
 */
-size_t BigInt::get_substring(size_t offset, size_t length) const
+u32bit BigInt::get_substring(size_t offset, size_t length) const
    {
    if(length > 32)
       throw Invalid_Argument("BigInt::get_substring: Substring size too big");
@@ -196,7 +196,7 @@ size_t BigInt::get_substring(size_t offset, size_t length) const
    u64bit mask = (1 << length) - 1;
    size_t shift = (offset % 8);
 
-   return static_cast<size_t>((piece >> shift) & mask);
+   return static_cast<u32bit>((piece >> shift) & mask);
    }
 
 /*

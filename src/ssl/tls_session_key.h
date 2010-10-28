@@ -35,10 +35,10 @@ class BOTAN_DLL SessionKeys
       SessionKeys(const CipherSuite&, Version_Code, const MemoryRegion<byte>&,
                   const MemoryRegion<byte>&, const MemoryRegion<byte>&);
    private:
-      SymmetricKey ssl3_keygen(u32bit, const MemoryRegion<byte>&,
+      SymmetricKey ssl3_keygen(size_t, const MemoryRegion<byte>&,
                                const MemoryRegion<byte>&,
                                const MemoryRegion<byte>&);
-      SymmetricKey tls1_keygen(u32bit, const MemoryRegion<byte>&,
+      SymmetricKey tls1_keygen(size_t, const MemoryRegion<byte>&,
                                const MemoryRegion<byte>&,
                                const MemoryRegion<byte>&);
 

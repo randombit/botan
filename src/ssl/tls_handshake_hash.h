@@ -20,7 +20,7 @@ using namespace Botan;
 class BOTAN_DLL HandshakeHash
    {
    public:
-      void update(const byte in[], u32bit length)
+      void update(const byte in[], size_t length)
          { data += std::make_pair(in, length); }
 
       void update(const MemoryRegion<byte>& in)

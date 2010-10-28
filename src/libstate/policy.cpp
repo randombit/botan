@@ -268,7 +268,6 @@ void set_default_aliases(Library_State& config)
    config.add_alias("PSS-MGF1",        "EMSA4");
    config.add_alias("EMSA-PSS",        "EMSA4");
 
-   config.add_alias("Rijndael", "AES");
    config.add_alias("3DES",     "TripleDES");
    config.add_alias("DES-EDE",  "TripleDES");
    config.add_alias("CAST5",    "CAST-128");

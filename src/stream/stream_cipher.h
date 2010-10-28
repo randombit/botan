@@ -63,9 +63,9 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       * @param key_max the maximum key size
       * @param key_mod the modulo restriction on the key size
       */
-      StreamCipher(u32bit key_min,
-                   u32bit key_max = 0,
-                   u32bit key_mod = 1) :
+      StreamCipher(size_t key_min,
+                   size_t key_max = 0,
+                   size_t key_mod = 1) :
          SymmetricAlgorithm(key_min, key_max, key_mod) {}
 
       virtual ~StreamCipher() {}

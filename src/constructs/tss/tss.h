@@ -61,7 +61,7 @@ class BOTAN_DLL RTSS_Share
       /**
       * @return size of this share in bytes
       */
-      u32bit size() const { return contents.size(); }
+      size_t size() const { return contents.size(); }
 
       /**
       * @return if this TSS share was initialized or not

@@ -135,7 +135,7 @@ class BOTAN_DLL BigInt
      * @param i a word index
      * @return the word at index i
      */
-     word operator[](size_t i) const { return reg[i]; }
+     const word& operator[](size_t i) const { return reg[i]; }
 
      /**
      * Zeroize the BigInt
@@ -215,7 +215,7 @@ class BOTAN_DLL BigInt
      * @result the integer extracted from the register starting at
      * offset with specified length
      */
-     size_t get_substring(size_t offset, size_t length) const;
+     u32bit get_substring(size_t offset, size_t length) const;
 
      /**
      * @param n the offset to get a byte from

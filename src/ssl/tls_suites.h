@@ -25,7 +25,7 @@ class BOTAN_DLL CipherSuite
       std::string cipher_algo() const { return cipher; }
       std::string mac_algo() const { return mac; }
 
-      u32bit cipher_keylen() const { return cipher_key_length; }
+      size_t cipher_keylen() const { return cipher_key_length; }
 
       TLS_Ciphersuite_Algos kex_type() const { return kex_algo; }
       TLS_Ciphersuite_Algos sig_type() const { return sig_algo; }
@@ -34,7 +34,7 @@ class BOTAN_DLL CipherSuite
    private:
       TLS_Ciphersuite_Algos kex_algo, sig_algo;
       std::string cipher, mac;
-      u32bit cipher_key_length;
+      size_t cipher_key_length;
    };
 
 }

@@ -12,8 +12,17 @@
 #include <botan/tls_suites.h>
 #include <botan/socket.h>
 #include <botan/pipe.h>
+#include <botan/mac.h>
 #include <botan/secqueue.h>
 #include <vector>
+
+#if defined(BOTAN_USE_STD_TR1)
+  #include <tr1/functional>
+#elif defined(BOTAN_USE_BOOST_TR1)
+  #include <boost/tr1/functional.hpp>
+#endif
+
+using namespace std::tr1::placeholders;
 
 namespace Botan {
 
@@ -23,8 +32,9 @@ namespace Botan {
 class BOTAN_DLL Record_Writer
    {
    public:
-      void send(byte, const byte[], u32bit);
-      void send(byte, byte);
+      void send(byte type, const byte input[], size_t length);
+      void send(byte type, byte val) { send(type, &val, 1); }
+
       void flush();
 
       void alert(Alert_Level, Alert_Type);
@@ -35,18 +45,22 @@ class BOTAN_DLL Record_Writer
 
       void reset();
 
-      Record_Writer(Socket& socket);
+      Record_Writer(std::tr1::function<void (const byte[], size_t)> output_fn);
 
+      ~Record_Writer() { delete mac; }
    private:
-      void send_record(byte, const byte[], u32bit);
-      void send_record(byte, byte, byte, const byte[], u32bit);
+      void send_record(byte type, const byte input[], size_t length);
+      void send_record(byte type, byte major, byte minor,
+                       const byte input[], size_t length);
 
-      Socket& socket;
-      Pipe cipher, mac;
+      std::tr1::function<void (const byte[], size_t)> output_fn;
+      Pipe cipher;
+      MessageAuthenticationCode* mac;
+
       SecureVector<byte> buffer;
-      u32bit buf_pos;
+      size_t buf_pos;
 
-      u32bit block_size, mac_size, iv_size;
+      size_t block_size, mac_size, iv_size;
 
       u64bit seq_no;
       byte major, minor, buf_type;
@@ -58,14 +72,14 @@ class BOTAN_DLL Record_Writer
 class BOTAN_DLL Record_Reader
    {
    public:
-      void add_input(const byte input[], u32bit input_size);
+      void add_input(const byte input[], size_t input_size);
 
       /**
       * @param msg_type (output variable)
       * @param buffer (output variable)
       * @return Number of bytes still needed (minimum), or 0 if success
       */
-      u32bit get_record(byte& msg_type,
+      size_t get_record(byte& msg_type,
                         MemoryRegion<byte>& buffer);
 
       SecureVector<byte> get_record(byte& msg_type);
@@ -78,12 +92,15 @@ class BOTAN_DLL Record_Reader
 
       void reset();
 
-      Record_Reader() { reset(); }
+      Record_Reader() { mac = 0; reset(); }
+
+      ~Record_Reader() { delete mac; }
    private:
       SecureQueue input_queue;
 
-      Pipe cipher, mac;
-      u32bit block_size, mac_size, iv_size;
+      Pipe cipher;
+      MessageAuthenticationCode* mac;
+      size_t block_size, mac_size, iv_size;
       u64bit seq_no;
       byte major, minor;
    };

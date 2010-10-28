@@ -181,7 +181,7 @@ RTSS_Share::split(byte M, byte N,
 SecureVector<byte>
 RTSS_Share::reconstruct(const std::vector<RTSS_Share>& shares)
    {
-   const u32bit RTSS_HEADER_SIZE = 20;
+   const size_t RTSS_HEADER_SIZE = 20;
 
    for(size_t i = 0; i != shares.size(); ++i)
       {

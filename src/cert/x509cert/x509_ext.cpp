@@ -52,11 +52,11 @@ Extensions::Extensions(const Extensions& extensions) : ASN1_Object()
 */
 Extensions& Extensions::operator=(const Extensions& other)
    {
-   for(u32bit i = 0; i != extensions.size(); ++i)
+   for(size_t i = 0; i != extensions.size(); ++i)
       delete extensions[i].first;
    extensions.clear();
 
-   for(u32bit i = 0; i != other.extensions.size(); ++i)
+   for(size_t i = 0; i != other.extensions.size(); ++i)
       extensions.push_back(
          std::make_pair(other.extensions[i].first->copy(),
                         other.extensions[i].second));
@@ -82,7 +82,7 @@ void Extensions::add(Certificate_Extension* extn, bool critical)
 */
 void Extensions::encode_into(DER_Encoder& to_object) const
    {
-   for(u32bit i = 0; i != extensions.size(); ++i)
+   for(size_t i = 0; i != extensions.size(); ++i)
       {
       const Certificate_Extension* ext = extensions[i].first;
       const bool is_critical = extensions[i].second;
@@ -105,7 +105,7 @@ void Extensions::encode_into(DER_Encoder& to_object) const
 */
 void Extensions::decode_from(BER_Decoder& from_source)
    {
-   for(u32bit i = 0; i != extensions.size(); ++i)
+   for(size_t i = 0; i != extensions.size(); ++i)
       delete extensions[i].first;
    extensions.clear();
 
@@ -148,7 +148,7 @@ void Extensions::decode_from(BER_Decoder& from_source)
 void Extensions::contents_to(Data_Store& subject_info,
                              Data_Store& issuer_info) const
    {
-   for(u32bit i = 0; i != extensions.size(); ++i)
+   for(size_t i = 0; i != extensions.size(); ++i)
       extensions[i].first->contents_to(subject_info, issuer_info);
    }
 
@@ -157,7 +157,7 @@ void Extensions::contents_to(Data_Store& subject_info,
 */
 Extensions::~Extensions()
    {
-   for(u32bit i = 0; i != extensions.size(); ++i)
+   for(size_t i = 0; i != extensions.size(); ++i)
       delete extensions[i].first;
    }
 
@@ -222,7 +222,7 @@ MemoryVector<byte> Key_Usage::encode_inner() const
    if(constraints == NO_CONSTRAINTS)
       throw Encoding_Error("Cannot encode zero usage constraints");
 
-   const u32bit unused_bits = low_bit(constraints) - 1;
+   const size_t unused_bits = low_bit(constraints) - 1;
 
    MemoryVector<byte> der;
    der.push_back(BIT_STRING);
@@ -257,7 +257,7 @@ void Key_Usage::decode_inner(const MemoryRegion<byte>& in)
    obj.value[obj.value.size()-1] &= (0xFF << obj.value[0]);
 
    u16bit usage = 0;
-   for(u32bit i = 1; i != obj.value.size(); ++i)
+   for(size_t i = 1; i != obj.value.size(); ++i)
       usage = (obj.value[i] << 8) | usage;
 
    constraints = Key_Constraints(usage);
@@ -429,7 +429,7 @@ void Extended_Key_Usage::decode_inner(const MemoryRegion<byte>& in)
 */
 void Extended_Key_Usage::contents_to(Data_Store& subject, Data_Store&) const
    {
-   for(u32bit i = 0; i != oids.size(); ++i)
+   for(size_t i = 0; i != oids.size(); ++i)
       subject.add("X509v3.ExtendedKeyUsage", oids[i].as_string());
    }
 
@@ -498,7 +498,7 @@ void Certificate_Policies::decode_inner(const MemoryRegion<byte>& in)
 */
 void Certificate_Policies::contents_to(Data_Store& info, Data_Store&) const
    {
-   for(u32bit i = 0; i != oids.size(); ++i)
+   for(size_t i = 0; i != oids.size(); ++i)
       info.add("X509v3.ExtendedKeyUsage", oids[i].as_string());
    }
 

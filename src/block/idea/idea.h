@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * IDEA
 */
-class BOTAN_DLL IDEA : public BlockCipher_Fixed_Block_Size<8>
+class BOTAN_DLL IDEA : public Block_Cipher_Fixed_Params<8, 16>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
@@ -25,7 +25,7 @@ class BOTAN_DLL IDEA : public BlockCipher_Fixed_Block_Size<8>
       std::string name() const { return "IDEA"; }
       BlockCipher* clone() const { return new IDEA; }
 
-      IDEA() : BlockCipher_Fixed_Block_Size(16), EK(52), DK(52) {}
+      IDEA() : EK(52), DK(52) {}
    protected:
       /**
       * @return const reference to encryption subkeys

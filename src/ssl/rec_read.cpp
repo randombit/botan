@@ -17,7 +17,10 @@ namespace Botan {
 void Record_Reader::reset()
    {
    cipher.reset();
-   mac.reset();
+
+   delete mac;
+   mac = 0;
+
    mac_size = 0;
    block_size = 0;
    iv_size = 0;
@@ -44,7 +47,8 @@ void Record_Reader::set_keys(const CipherSuite& suite, const SessionKeys& keys,
                              Connection_Side side)
    {
    cipher.reset();
-   mac.reset();
+   delete mac;
+   mac = 0;
 
    SymmetricKey mac_key, cipher_key;
    InitializationVector iv;
@@ -89,18 +93,21 @@ void Record_Reader::set_keys(const CipherSuite& suite, const SessionKeys& keys,
 
    if(have_hash(mac_algo))
       {
-      if(major == 3 && minor == 0)
-         mac.append(new MAC_Filter("SSL3-MAC(" + mac_algo + ")", mac_key));
-      else
-         mac.append(new MAC_Filter("HMAC(" + mac_algo + ")", mac_key));
+      Algorithm_Factory& af = global_state().algorithm_factory();
 
-      mac_size = output_length_of(mac_algo);
+      if(major == 3 && minor == 0)
+         mac = af.make_mac("SSL3-MAC(" + mac_algo + ")");
+      else
+         mac = af.make_mac("HMAC(" + mac_algo + ")");
+
+      mac->set_key(mac_key);
+      mac_size = mac->output_length();
       }
    else
       throw Invalid_Argument("Record_Reader: Unknown hash " + mac_algo);
    }
 
-void Record_Reader::add_input(const byte input[], u32bit input_size)
+void Record_Reader::add_input(const byte input[], size_t input_size)
    {
    input_queue.write(input, input_size);
    }
@@ -108,12 +115,12 @@ void Record_Reader::add_input(const byte input[], u32bit input_size)
 /*
 * Retrieve the next record
 */
-u32bit Record_Reader::get_record(byte& msg_type,
+size_t Record_Reader::get_record(byte& msg_type,
                                  MemoryRegion<byte>& output)
    {
    byte header[5] = { 0 };
 
-   const u32bit have_in_queue = input_queue.size();
+   const size_t have_in_queue = input_queue.size();
 
    if(have_in_queue < sizeof(header))
       return (sizeof(header) - have_in_queue);
@@ -126,7 +133,7 @@ u32bit Record_Reader::get_record(byte& msg_type,
    // SSLv2-format client hello?
    if(header[0] & 0x80 && header[2] == 1 && header[3] == 3)
       {
-      u32bit record_len = make_u16bit(header[0], header[1]) & 0x7FFF;
+      size_t record_len = make_u16bit(header[0], header[1]) & 0x7FFF;
 
       if(have_in_queue < record_len + 2)
          return (record_len + 2 - have_in_queue);
@@ -184,7 +191,7 @@ u32bit Record_Reader::get_record(byte& msg_type,
    cipher.process_msg(buffer);
    SecureVector<byte> plaintext = cipher.read_all(Pipe::LAST_MESSAGE);
 
-   u32bit pad_size = 0;
+   size_t pad_size = 0;
 
    if(block_size)
       {
@@ -206,8 +213,8 @@ u32bit Record_Reader::get_record(byte& msg_type,
          }
       else
          {
-         for(u32bit j = 0; j != pad_size; j++)
-            if(plaintext[plaintext.size()-j-1] != pad_value)
+         for(size_t i = 0; i != pad_size; ++i)
+            if(plaintext[plaintext.size()-i-1] != pad_value)
                pad_size = 0;
          }
       }
@@ -215,29 +222,25 @@ u32bit Record_Reader::get_record(byte& msg_type,
    if(plaintext.size() < mac_size + pad_size + iv_size)
       throw Decoding_Error("Record_Reader: Record truncated");
 
-   const u32bit mac_offset = plaintext.size() - (mac_size + pad_size);
+   const size_t mac_offset = plaintext.size() - (mac_size + pad_size);
    SecureVector<byte> recieved_mac(&plaintext[mac_offset],
                                    mac_size);
 
    const u16bit plain_length = plaintext.size() - (mac_size + pad_size + iv_size);
 
-   mac.start_msg();
-   for(u32bit j = 0; j != 8; j++)
-      mac.write(get_byte(j, seq_no));
-   mac.write(header[0]); // msg_type
+   mac->update_be(seq_no);
+   mac->update(header[0]); // msg_type
 
    if(version != SSL_V3)
-      for(u32bit j = 0; j != 2; j++)
-         mac.write(get_byte(j, version));
+      for(size_t i = 0; i != 2; ++i)
+         mac->update(get_byte(i, version));
 
-   for(u32bit j = 0; j != 2; j++)
-      mac.write(get_byte(j, plain_length));
-   mac.write(&plaintext[iv_size], plain_length);
-   mac.end_msg();
+   mac->update_be(plain_length);
+   mac->update(&plaintext[iv_size], plain_length);
 
    ++seq_no;
 
-   SecureVector<byte> computed_mac = mac.read_all(Pipe::LAST_MESSAGE);
+   SecureVector<byte> computed_mac = mac->final();
 
    if(recieved_mac != computed_mac)
       throw TLS_Exception(BAD_RECORD_MAC, "Record_Reader: MAC failure");

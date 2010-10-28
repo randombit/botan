@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * BeOS Entropy Source
 */
-class BOTAN_DLL BeOS_EntropySource : public EntropySource
+class BeOS_EntropySource : public EntropySource
    {
    private:
       std::string name() const { return "BeOS Statistics"; }

@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * Win32 Entropy Source
 */
-class BOTAN_DLL Win32_EntropySource : public EntropySource
+class Win32_EntropySource : public EntropySource
    {
    public:
       std::string name() const { return "Win32 Statistics"; }

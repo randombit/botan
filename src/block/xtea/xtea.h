@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * XTEA
 */
-class BOTAN_DLL XTEA : public BlockCipher_Fixed_Block_Size<8>
+class BOTAN_DLL XTEA : public Block_Cipher_Fixed_Params<8, 16>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
@@ -25,7 +25,7 @@ class BOTAN_DLL XTEA : public BlockCipher_Fixed_Block_Size<8>
       std::string name() const { return "XTEA"; }
       BlockCipher* clone() const { return new XTEA; }
 
-      XTEA() : BlockCipher_Fixed_Block_Size(16), EK(64) {}
+      XTEA() : EK(64) {}
    protected:
       /**
       * @return const reference to the key schedule

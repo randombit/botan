@@ -1,5 +1,0 @@
-define BASE64_CODEC
-
-<requires>
-filters
-</requires>

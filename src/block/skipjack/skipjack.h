@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * Skipjack, a NSA designed cipher used in Fortezza
 */
-class BOTAN_DLL Skipjack : public BlockCipher_Fixed_Block_Size<8>
+class BOTAN_DLL Skipjack : public Block_Cipher_Fixed_Params<8, 10>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
@@ -25,7 +25,7 @@ class BOTAN_DLL Skipjack : public BlockCipher_Fixed_Block_Size<8>
       std::string name() const { return "Skipjack"; }
       BlockCipher* clone() const { return new Skipjack; }
 
-      Skipjack() : BlockCipher_Fixed_Block_Size(10), FTAB(2560) {}
+      Skipjack() : FTAB(2560) {}
    private:
       void key_schedule(const byte[], size_t);
 

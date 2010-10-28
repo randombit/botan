@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * MISTY1
 */
-class BOTAN_DLL MISTY1 : public BlockCipher_Fixed_Block_Size<8>
+class BOTAN_DLL MISTY1 : public Block_Cipher_Fixed_Params<8, 16>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;

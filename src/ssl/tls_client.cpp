@@ -81,34 +81,22 @@ void client_check_state(Handshake_Type new_msg, Handshake_State* state)
 /**
 * TLS Client Constructor
 */
-TLS_Client::TLS_Client(const TLS_Policy& pol,
-                       RandomNumberGenerator& r,
-                       Socket& sock) :
-   policy(pol),
-   rng(r),
-   peer(sock),
-   writer(sock)
+TLS_Client::TLS_Client(std::tr1::function<size_t (byte[], size_t)> input_fn,
+                       std::tr1::function<void (const byte[], size_t)> output_fn,
+                       const TLS_Policy& policy,
+                       RandomNumberGenerator& rng) :
+   input_fn(input_fn),
+   policy(policy),
+   rng(rng),
+   writer(output_fn)
    {
    initialize();
    }
 
-/**
-* TLS Client Constructor
-*/
-TLS_Client::TLS_Client(const TLS_Policy& pol,
-                       RandomNumberGenerator& r,
-                       Socket& sock,
-                       const X509_Certificate& cert,
-                       const Private_Key& key) :
-   policy(pol),
-   rng(r),
-   peer(sock),
-   writer(sock)
+void TLS_Client::add_client_cert(const X509_Certificate& cert,
+                                 Private_Key* cert_key)
    {
-   certs.push_back(cert);
-   keys.push_back(PKCS8::copy_key(key, rng));
-
-   initialize();
+   certs.push_back(std::make_pair(cert, cert_key));
    }
 
 /**
@@ -117,8 +105,8 @@ TLS_Client::TLS_Client(const TLS_Policy& pol,
 TLS_Client::~TLS_Client()
    {
    close();
-   for(u32bit j = 0; j != keys.size(); j++)
-      delete keys[j];
+   for(size_t i = 0; i != certs.size(); i++)
+      delete certs[i].second;
    delete state;
    }
 
@@ -179,7 +167,7 @@ std::vector<X509_Certificate> TLS_Client::peer_cert_chain() const
 /**
 * Write to a TLS connection
 */
-void TLS_Client::write(const byte buf[], u32bit length)
+void TLS_Client::write(const byte buf[], size_t length)
    {
    if(!active)
       throw TLS_Exception(INTERNAL_ERROR,
@@ -191,7 +179,7 @@ void TLS_Client::write(const byte buf[], u32bit length)
 /**
 * Read from a TLS connection
 */
-u32bit TLS_Client::read(byte out[], u32bit length)
+size_t TLS_Client::read(byte out[], size_t length)
    {
    if(!active)
       return 0;
@@ -205,7 +193,7 @@ u32bit TLS_Client::read(byte out[], u32bit length)
          break;
       }
 
-   u32bit got = std::min<size_t>(read_buf.size(), length);
+   size_t got = std::min<size_t>(read_buf.size(), length);
    read_buf.read(out, got);
    return got;
    }
@@ -253,12 +241,12 @@ void TLS_Client::state_machine()
    byte rec_type = CONNECTION_CLOSED;
    SecureVector<byte> record(1024);
 
-   u32bit bytes_needed = reader.get_record(rec_type, record);
+   size_t bytes_needed = reader.get_record(rec_type, record);
 
    while(bytes_needed)
       {
-      u32bit to_get = std::min<u32bit>(record.size(), bytes_needed);
-      u32bit got = peer.read(&record[0], to_get);
+      size_t to_get = std::min<size_t>(record.size(), bytes_needed);
+      size_t got = input_fn(&record[0], to_get);
 
       if(got == 0)
          {
@@ -330,7 +318,7 @@ void TLS_Client::read_handshake(byte rec_type,
             byte head[4] = { 0 };
             state->queue.peek(head, 4);
 
-            const u32bit length = make_u32bit(0, head[1], head[2], head[3]);
+            const size_t length = make_u32bit(0, head[1], head[2], head[3]);
 
             if(state->queue.size() >= length + 4)
                {
@@ -383,9 +371,9 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
    if(type != HANDSHAKE_CCS && type != HELLO_REQUEST && type != FINISHED)
       {
       state->hash.update(static_cast<byte>(type));
-      const u32bit record_length = contents.size();
-      for(u32bit j = 0; j != 3; j++)
-         state->hash.update(get_byte(j+1, record_length));
+      const size_t record_length = contents.size();
+      for(size_t i = 0; i != 3; i++)
+         state->hash.update(get_byte<u32bit>(i+1, record_length));
       state->hash.update(contents);
       }
 
