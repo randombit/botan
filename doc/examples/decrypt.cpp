@@ -96,14 +96,16 @@ int main(int argc, char* argv[])
          return 1;
          }
 
-      if(!have_block_cipher(algo))
+      const BlockCipher* cipher_proto = global_state().algorithm_factory().prototype_block_cipher(algo);
+
+      if(!cipher_proto)
          {
          std::cout << "Don't know about the block cipher \"" << algo << "\"\n";
          return 1;
          }
 
-      const u32bit key_len = max_keylength_of(algo);
-      const u32bit iv_len = block_size_of(algo);
+      const u32bit key_len = cipher_proto->maximum_keylength();
+      const u32bit iv_len = cipher_proto->block_size();
 
       std::auto_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(SHA-1)"));
 

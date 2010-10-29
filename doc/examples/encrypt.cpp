@@ -113,14 +113,16 @@ int main(int argc, char* argv[])
 
    try
       {
-      if(!have_block_cipher(algo))
+      const BlockCipher* cipher_proto = global_state().algorithm_factory().prototype_block_cipher(algo);
+
+      if(!cipher_proto)
          {
          std::cout << "Don't know about the block cipher \"" << algo << "\"\n";
          return 1;
          }
 
-      const u32bit key_len = max_keylength_of(algo);
-      const u32bit iv_len = block_size_of(algo);
+      const u32bit key_len = cipher_proto->maximum_keylength();
+      const u32bit iv_len = cipher_proto->block_size();
 
       AutoSeeded_RNG rng;
 
