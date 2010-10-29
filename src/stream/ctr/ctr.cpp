@@ -115,8 +115,6 @@ void CTR_BE::increment_counter()
 
    for(size_t i = 0; i != 256; ++i)
       {
-      byte* this_ctr = &counter[i * BLOCK_SIZE];
-
       for(u32bit j = 1; j != BLOCK_SIZE; ++j)
          if(++counter[i*BLOCK_SIZE + (BLOCK_SIZE-1-j)])
             break;
