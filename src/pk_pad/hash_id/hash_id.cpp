@@ -59,35 +59,30 @@ const byte TIGER_PKCS_ID[] = {
 */
 MemoryVector<byte> pkcs_hash_id(const std::string& name)
    {
-   MemoryVector<byte> out;
-
    // Special case for SSL/TLS RSA signatures
    if(name == "Parallel(MD5,SHA-160)")
-      return out;
+      return MemoryVector<byte>();
 
    if(name == "MD2")
-      out.set(MD2_PKCS_ID, sizeof(MD2_PKCS_ID));
-   else if(name == "MD5")
-      out.set(MD5_PKCS_ID, sizeof(MD5_PKCS_ID));
-   else if(name == "RIPEMD-128")
-      out.set(RIPEMD_128_PKCS_ID, sizeof(RIPEMD_128_PKCS_ID));
-   else if(name == "RIPEMD-160")
-      out.set(RIPEMD_160_PKCS_ID, sizeof(RIPEMD_160_PKCS_ID));
-   else if(name == "SHA-160")
-      out.set(SHA_160_PKCS_ID, sizeof(SHA_160_PKCS_ID));
-   else if(name == "SHA-224")
-      out.set(SHA_224_PKCS_ID, sizeof(SHA_224_PKCS_ID));
-   else if(name == "SHA-256")
-      out.set(SHA_256_PKCS_ID, sizeof(SHA_256_PKCS_ID));
-   else if(name == "SHA-384")
-      out.set(SHA_384_PKCS_ID, sizeof(SHA_384_PKCS_ID));
-   else if(name == "SHA-512")
-      out.set(SHA_512_PKCS_ID, sizeof(SHA_512_PKCS_ID));
-   else if(name == "Tiger(24,3)")
-      out.set(TIGER_PKCS_ID, sizeof(TIGER_PKCS_ID));
-
-   if(out.size())
-      return out;
+      return MemoryVector<byte>(MD2_PKCS_ID, sizeof(MD2_PKCS_ID));
+   if(name == "MD5")
+      return MemoryVector<byte>(MD5_PKCS_ID, sizeof(MD5_PKCS_ID));
+   if(name == "RIPEMD-128")
+      return MemoryVector<byte>(RIPEMD_128_PKCS_ID, sizeof(RIPEMD_128_PKCS_ID));
+   if(name == "RIPEMD-160")
+      return MemoryVector<byte>(RIPEMD_160_PKCS_ID, sizeof(RIPEMD_160_PKCS_ID));
+   if(name == "SHA-160")
+      return MemoryVector<byte>(SHA_160_PKCS_ID, sizeof(SHA_160_PKCS_ID));
+   if(name == "SHA-224")
+      return MemoryVector<byte>(SHA_224_PKCS_ID, sizeof(SHA_224_PKCS_ID));
+   if(name == "SHA-256")
+      return MemoryVector<byte>(SHA_256_PKCS_ID, sizeof(SHA_256_PKCS_ID));
+   if(name == "SHA-384")
+      return MemoryVector<byte>(SHA_384_PKCS_ID, sizeof(SHA_384_PKCS_ID));
+   if(name == "SHA-512")
+      return MemoryVector<byte>(SHA_512_PKCS_ID, sizeof(SHA_512_PKCS_ID));
+   if(name == "Tiger(24,3)")
+      return MemoryVector<byte>(TIGER_PKCS_ID, sizeof(TIGER_PKCS_ID));
 
    throw Invalid_Argument("No PKCS #1 identifier for " + name);
    }

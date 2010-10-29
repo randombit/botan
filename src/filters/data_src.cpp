@@ -77,27 +77,27 @@ bool DataSource_Memory::end_of_data() const
 /*
 * DataSource_Memory Constructor
 */
-DataSource_Memory::DataSource_Memory(const byte in[], size_t length)
+DataSource_Memory::DataSource_Memory(const byte in[], size_t length) :
+   source(in, length)
    {
-   source.set(in, length);
    offset = 0;
    }
 
 /*
 * DataSource_Memory Constructor
 */
-DataSource_Memory::DataSource_Memory(const MemoryRegion<byte>& in)
+DataSource_Memory::DataSource_Memory(const MemoryRegion<byte>& in) :
+   source(in)
    {
-   source = in;
    offset = 0;
    }
 
 /*
 * DataSource_Memory Constructor
 */
-DataSource_Memory::DataSource_Memory(const std::string& in)
+DataSource_Memory::DataSource_Memory(const std::string& in) :
+   source(reinterpret_cast<const byte*>(in.data()), in.length())
    {
-   source.set(reinterpret_cast<const byte*>(in.data()), in.length());
    offset = 0;
    }
 

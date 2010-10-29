@@ -28,11 +28,8 @@ OctetString::OctetString(RandomNumberGenerator& rng,
 */
 void OctetString::change(const std::string& hex_string)
    {
-   SecureVector<byte> decoded(1 + hex_string.length() / 2);
-
-   size_t written = hex_decode(&decoded[0], hex_string);
-
-   bits.set(&decoded[0], written);
+   bits.resize(1 + hex_string.length() / 2);
+   bits.resize(hex_decode(&bits[0], hex_string));
    }
 
 /*

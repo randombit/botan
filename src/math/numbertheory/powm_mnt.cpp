@@ -41,7 +41,7 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
                      &workspace[0],
                      modulus.data(), mod_words, mod_prime);
 
-   g[0].get_reg().set(&z[0], mod_words + 1);
+   g[0].assign(&z[0], mod_words + 1);
 
    const BigInt& x = g[0];
    const size_t x_sig = x.sig_words();
@@ -60,7 +60,7 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
                         &workspace[0],
                         modulus.data(), mod_words, mod_prime);
 
-      g[i].get_reg().set(&z[0], mod_words + 1);
+      g[i].assign(&z[0], mod_words + 1);
       }
    }
 
@@ -87,7 +87,7 @@ BigInt Montgomery_Exponentiator::execute() const
                            &workspace[0],
                            modulus.data(), mod_words, mod_prime);
 
-         x.get_reg().set(&z[0], mod_words + 1);
+         x.assign(&z[0], mod_words + 1);
          }
 
       if(u32bit nibble = exp.get_substring(window_bits*(i-1), window_bits))
@@ -103,7 +103,7 @@ BigInt Montgomery_Exponentiator::execute() const
                            &workspace[0],
                            modulus.data(), mod_words, mod_prime);
 
-         x.get_reg().set(&z[0], mod_words + 1);
+         x.assign(&z[0], mod_words + 1);
          }
       }
 

@@ -125,7 +125,8 @@ void Client_Hello::deserialize_sslv2(const MemoryRegion<byte>& buf)
 
    c_version = static_cast<Version_Code>(make_u16bit(buf[1], buf[2]));
 
-   c_random.set(&buf[9+cipher_spec_len+sess_id_len], challenge_len);
+   c_random.resize(challenge_len);
+   copy_mem(&c_random[0], &buf[9+cipher_spec_len+sess_id_len], challenge_len);
    }
 
 /*

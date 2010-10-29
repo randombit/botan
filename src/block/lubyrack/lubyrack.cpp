@@ -89,8 +89,10 @@ void LubyRackoff::decrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void LubyRackoff::key_schedule(const byte key[], size_t length)
    {
-   K1.set(key, length / 2);
-   K2.set(key + length / 2, length / 2);
+   K1.resize(length / 2);
+   K2.resize(length / 2);
+   copy_mem(&K1[0], key             , length / 2);
+   copy_mem(&K2[0], key + length / 2, length / 2);
    }
 
 /*

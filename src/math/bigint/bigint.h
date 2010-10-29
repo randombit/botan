@@ -325,6 +325,15 @@ class BOTAN_DLL BigInt
      const SecureVector<word>& get_reg() const { return reg; }
 
      /**
+     * Assign using a plain word array
+     */
+     void assign(const word x[], size_t length)
+        {
+        reg.resize(length);
+        copy_mem(&reg[0], x, length);
+        }
+
+     /**
      * Increase internal register buffer by n words
      * @param n increase by n words
      */

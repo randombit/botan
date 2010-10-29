@@ -83,7 +83,8 @@ void PK_Verifier_Filter::end_msg()
 */
 void PK_Verifier_Filter::set_signature(const byte sig[], size_t length)
    {
-   signature.set(sig, length);
+   signature.resize(length);
+   copy_mem(&signature[0], sig, length);
    }
 
 /*

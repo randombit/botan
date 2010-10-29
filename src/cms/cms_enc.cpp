@@ -20,7 +20,8 @@ void CMS_Encoder::set_data(const byte buf[], size_t length)
    if(!data.empty())
       throw Invalid_State("Cannot call CMS_Encoder::set_data here");
 
-   data.set(buf, length);
+   data.resize(length);
+   copy_mem(&data[0], buf, length);
    type = "CMS.DataContent";
    }
 

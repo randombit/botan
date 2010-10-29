@@ -135,18 +135,12 @@ class MemoryRegion
       * @param in the array to copy the contents from
       * @param n the length of in
       */
+#if 1
       void copy(size_t off, const T in[], size_t n)
          {
          copy_mem(buf + off, in, std::min(n, size() - off));
          }
-
-      /**
-      * Set the contents of this according to the argument. The size of
-      * this is increased if necessary.
-      * @param in the array of objects of type T to copy the contents from
-      * @param n the size of array in
-      */
-      void set(const T in[], size_t n)    { resize(n); copy(in, n); }
+#endif
 
       /**
       * Append a single element.
@@ -191,6 +185,14 @@ class MemoryRegion
          alloc = other.alloc;
          set(other.buf, other.used);
          }
+
+      /**
+      * Set the contents of this according to the argument. The size of
+      * this is increased if necessary.
+      * @param in the array of objects of type T to copy the contents from
+      * @param n the size of array in
+      */
+      void set(const T in[], size_t n)    { resize(n); copy(in, n); }
 
       /**
       * @param locking should we use a locking allocator

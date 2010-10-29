@@ -177,7 +177,9 @@ void CBC_Decryption::buffered_block(const byte input[], size_t length)
                  input + (i-1) * cipher->block_size(),
                  cipher->block_size());
 
-      state.set(input + (to_proc - 1) * cipher->block_size(), cipher->block_size());
+      copy_mem(&state[0],
+               input + (to_proc - 1) * cipher->block_size(),
+               cipher->block_size());
 
       send(temp, to_proc * cipher->block_size());
 
@@ -204,7 +206,7 @@ void CBC_Decryption::buffered_final(const byte input[], size_t length)
    xor_buf(temp, state, cipher->block_size());
    send(temp, padder->unpad(temp, cipher->block_size()));
 
-   state.set(input, state.size());
+   copy_mem(&state[0], input, state.size()); // save for IV chaining
    }
 
 /*

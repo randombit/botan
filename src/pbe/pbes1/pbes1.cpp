@@ -80,12 +80,14 @@ void PBE_PKCS5v15::set_key(const std::string& passphrase)
    {
    PKCS5_PBKDF1 pbkdf(hash_function->clone());
 
-   SymmetricKey key_and_iv = pbkdf.derive_key(16, passphrase,
-                                              &salt[0], salt.size(),
-                                              iterations);
+   SecureVector<byte> key_and_iv = pbkdf.derive_key(16, passphrase,
+                                                    &salt[0], salt.size(),
+                                                    iterations).bits_of();
 
-   key.set(key_and_iv.begin(), 8);
-   iv.set(key_and_iv.begin() + 8, 8);
+   key.resize(8);
+   iv.resize(8);
+   copy_mem(&key[0], &key_and_iv[0], 8);
+   copy_mem(&iv[0], &key_and_iv[8], 8);
    }
 
 /*

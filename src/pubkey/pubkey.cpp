@@ -45,20 +45,27 @@ PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
 * Encrypt a message
 */
 SecureVector<byte>
-PK_Encryptor_EME::enc(const byte msg[],
+PK_Encryptor_EME::enc(const byte in[],
                       size_t length,
                       RandomNumberGenerator& rng) const
    {
-   SecureVector<byte> message;
    if(eme)
-      message = eme->encode(msg, length, op->max_input_bits(), rng);
+      {
+      SecureVector<byte> encoded =
+         eme->encode(in, length, op->max_input_bits(), rng);
+
+      if(8*(encoded.size() - 1) + high_bit(encoded[0]) > op->max_input_bits())
+         throw Invalid_Argument("PK_Encryptor_EME: Input is too large");
+
+      return op->encrypt(&encoded[0], encoded.size(), rng);
+      }
    else
-      message.set(msg, length);
+      {
+      if(8*(length - 1) + high_bit(in[0]) > op->max_input_bits())
+         throw Invalid_Argument("PK_Encryptor_EME: Input is too large");
 
-   if(8*(message.size() - 1) + high_bit(message[0]) > op->max_input_bits())
-      throw Invalid_Argument("PK_Encryptor_EME: Input is too large");
-
-   return op->encrypt(&message[0], message.size(), rng);
+      return op->encrypt(&in[0], length, rng);
+      }
    }
 
 /*
