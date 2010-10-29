@@ -316,7 +316,7 @@ void CMS_Encoder::sign(const X509_Certificate& cert,
    .raw_bytes(make_econtent(data, type));
 
    encoder.start_cons(ASN1_Tag(0), CONTEXT_SPECIFIC);
-   for(u32bit j = 0; j != chain.size(); j++)
+   for(size_t j = 0; j != chain.size(); j++)
       encoder.raw_bytes(chain[j].BER_encode());
    encoder.raw_bytes(cert.BER_encode()).end_cons();
 

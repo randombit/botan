@@ -15,7 +15,7 @@ namespace Botan {
 /*
 * Setup the intitial layer of CMS data
 */
-void CMS_Encoder::set_data(const byte buf[], u32bit length)
+void CMS_Encoder::set_data(const byte buf[], size_t length)
    {
    if(!data.empty())
       throw Invalid_State("Cannot call CMS_Encoder::set_data here");

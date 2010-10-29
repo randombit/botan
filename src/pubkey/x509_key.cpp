@@ -115,7 +115,7 @@ Key_Constraints find_constraints(const Public_Key& pub_key,
    {
    const std::string name = pub_key.algo_name();
 
-   u32bit constraints = 0;
+   size_t constraints = 0;
 
    if(name == "DH" || name == "ECDH")
       constraints |= KEY_AGREEMENT;

@@ -51,10 +51,10 @@ class BOTAN_DLL CMS_Encoder
       std::string PEM_contents();
 
       void set_data(const std::string&);
-      void set_data(const byte[], u32bit);
+      void set_data(const byte[], size_t);
 
       CMS_Encoder(const std::string& str) { set_data(str); }
-      CMS_Encoder(const byte buf[], u32bit length) { set_data(buf, length); }
+      CMS_Encoder(const byte buf[], size_t length) { set_data(buf, length); }
    private:
       void add_layer(const std::string&, DER_Encoder&);
 

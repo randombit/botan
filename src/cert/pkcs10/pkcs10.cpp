@@ -175,8 +175,8 @@ std::vector<OID> PKCS10_Request::ex_constraints() const
    std::vector<std::string> oids = info.get("X509v3.ExtendedKeyUsage");
 
    std::vector<OID> result;
-   for(u32bit j = 0; j != oids.size(); ++j)
-      result.push_back(OID(oids[j]));
+   for(size_t i = 0; i != oids.size(); ++i)
+      result.push_back(OID(oids[i]));
    return result;
    }
 

@@ -39,7 +39,7 @@ SecureVector<byte> do_rfc3217_wrap(RandomNumberGenerator& rng,
             }
          void end_msg()
             {
-            for(u32bit j = 0; j != buf.size(); j++)
+            for(size_t j = 0; j != buf.size(); j++)
                send(buf[buf.size()-j-1]);
             buf.clear();
             }
@@ -149,7 +149,7 @@ SecureVector<byte> CMS_Encoder::encode_params(const std::string& cipher,
 SymmetricKey CMS_Encoder::setup_key(RandomNumberGenerator& rng,
                                     const std::string& cipher)
    {
-   u32bit keysize = 0;
+   size_t keysize = 0;
 
    if(cipher == "TripleDES") keysize = 24;
    if(cipher == "RC2")       keysize = 16;
