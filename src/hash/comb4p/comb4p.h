@@ -29,6 +29,11 @@ class BOTAN_DLL Comb4P : public HashFunction
 
       size_t hash_block_size() const;
 
+      size_t output_length() const
+         {
+         return hash1->output_length() + hash2->output_length();
+         }
+
       HashFunction* clone() const
          {
          return new Comb4P(hash1->clone(), hash2->clone());

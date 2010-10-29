@@ -25,8 +25,7 @@ class BOTAN_DLL MDx_HashFunction : public HashFunction
       * @param big_bit_endian specifies if the hash uses big-endian bits
       * @param counter_size specifies the size of the counter var in bytes
       */
-      MDx_HashFunction(size_t hash_length,
-                       size_t block_length,
+      MDx_HashFunction(size_t block_length,
                        bool big_byte_endian,
                        bool big_bit_endian,
                        size_t counter_size = 8);

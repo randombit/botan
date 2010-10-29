@@ -14,19 +14,11 @@
 namespace Botan {
 
 /**
-* This class represents hash function (message digest) objects.
+* This class represents hash function (message digest) objects
 */
 class BOTAN_DLL HashFunction : public BufferedComputation
    {
    public:
-      /**
-      * @param hash_len the output length
-      * @param block_len the internal block size (if applicable)
-      */
-      HashFunction(size_t hash_len) : BufferedComputation(hash_len) {}
-
-      virtual ~HashFunction() {}
-
       /**
       * Get a new object representing the same algorithm as *this
       */

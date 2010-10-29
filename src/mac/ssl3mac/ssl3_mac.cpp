@@ -72,9 +72,7 @@ MessageAuthenticationCode* SSL3_MAC::clone() const
 /*
 * SSL3-MAC Constructor
 */
-SSL3_MAC::SSL3_MAC(HashFunction* hash_in) :
-   MessageAuthenticationCode(hash_in->output_length()),
-   hash(hash_in)
+SSL3_MAC::SSL3_MAC(HashFunction* hash_in) : hash(hash_in)
    {
    if(hash->hash_block_size() == 0)
       throw Invalid_Argument("SSL3-MAC cannot be used with " + hash->name());

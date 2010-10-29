@@ -19,9 +19,10 @@ namespace Botan {
 class BOTAN_DLL CBC_MAC : public MessageAuthenticationCode
    {
    public:
-      void clear();
       std::string name() const;
       MessageAuthenticationCode* clone() const;
+      size_t output_length() const { return e->block_size(); }
+      void clear();
 
       Key_Length_Specification key_spec() const
          {

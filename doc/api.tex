@@ -2011,21 +2011,22 @@ Block ciphers implement the interface \type{BlockCipher}, found in
 \filename{base.h}, as well as the \type{SymmetricAlgorithm} interface.
 
 \noindent
-\type{void} \function{encrypt}(\type{const byte} \arg{in}[BLOCK\_SIZE],
-                               \type{byte} \arg{out}[BLOCK\_SIZE]) const
+\type{void} \function{encrypt}(\type{const byte} \arg{in}[],
+                               \type{byte} \arg{out}[]) const
 
 \noindent
-\type{void} \function{encrypt}(\type{byte} \arg{block}[BLOCK\_SIZE]) const
+\type{void} \function{encrypt}(\type{byte} \arg{block}[]) const
 
 These functions apply the block cipher transformation to \arg{in} and
 place the result in \arg{out}, or encrypts \arg{block} in place
-(\arg{in} may be the same as \arg{out}). BLOCK\_SIZE is a constant
-member of each class, which specifies how much data a block cipher can
-process at one time. Note that BLOCK\_SIZE is not a static class
-member, meaning you can (given a \type{BlockCipher*} named
-\arg{cipher}), call \verb|cipher->block_size()| to get the block size
-of that particular object. \type{BlockCipher}s have similar functions
-\function{decrypt}, which perform the inverse operation.
+(\arg{in} may be the same as \arg{out}). Exactly one block will be
+encrypted; you can find out the block size of the cipher you are
+working with by calling the member function \function{block\_size}.
+\type{BlockCipher}s have similar functions \function{decrypt}, which
+perform the inverse operation.
+
+If you want to process multiple blocks in parallel, use
+\function{encrypt\_n} and \function{decrypt\_n}.
 
 \begin{verbatim}
 AES_128 cipher;
@@ -2072,6 +2073,10 @@ additionally keyed. Both of these are derived from the base class
 \type{BufferedComputation}, which has the following functions.
 
 \noindent
+\type{size_t} \function{output\_length}()
+
+Return the size of the output of this function.
+
 \type{void} \function{update}(\type{const byte} \arg{input}[], \type{u32bit}
 \arg{length})
 
@@ -2084,19 +2089,20 @@ additionally keyed. Both of these are derived from the base class
 Updates the hash/mac calculation with \arg{input}.
 
 \noindent
-\type{void} \function{final}(\type{byte} \arg{out}[OUTPUT\_LENGTH])
+\type{void} \function{final}(\type{byte} \arg{out}[])
 
 \noindent
 \type{SecureVector<byte>} \function{final}():
 
 Complete the hash/MAC calculation and place the result into \arg{out}.
-OUTPUT\_LENGTH is a public constant in each object that gives the length of the
-hash in bytes. After you call \function{final}, the hash function is reset to
-its initial state, so it may be reused immediately.
+For the argument taking an array, exactly \function{output\_length}()
+bytes will be written. After you call \function{final}, the hash
+function is reset to its initial state, so it may be reused
+immediately.
 
-The second method of using final is to call it with no arguments at all, as
-shown in the second prototype. It will return the hash/mac value in a memory
-buffer, which will have size OUTPUT\_LENGTH.
+The second method of using final is to call it with no arguments at
+all, as shown in the second prototype. It will return the hash/mac
+value in a memory buffer.
 
 There is also a pair of functions called \function{process}. They are
 a combination of a single \function{update}, and \function{final}.

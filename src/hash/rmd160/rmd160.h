@@ -18,11 +18,13 @@ namespace Botan {
 class BOTAN_DLL RIPEMD_160 : public MDx_HashFunction
    {
    public:
-      void clear();
       std::string name() const { return "RIPEMD-160"; }
+      size_t output_length() const { return 20; }
       HashFunction* clone() const { return new RIPEMD_160; }
 
-      RIPEMD_160() : MDx_HashFunction(20, 64, false, true), M(16), digest(5)
+      void clear();
+
+      RIPEMD_160() : MDx_HashFunction(64, false, true), M(16), digest(5)
          { clear(); }
    private:
       void compress_n(const byte[], size_t blocks);

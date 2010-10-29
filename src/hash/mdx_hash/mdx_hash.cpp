@@ -14,19 +14,15 @@ namespace Botan {
 /*
 * MDx_HashFunction Constructor
 */
-MDx_HashFunction::MDx_HashFunction(size_t hash_len,
-                                   size_t block_len,
+MDx_HashFunction::MDx_HashFunction(size_t block_len,
                                    bool byte_end,
                                    bool bit_end,
                                    size_t cnt_size) :
-   HashFunction(hash_len),
    buffer(block_len),
    BIG_BYTE_ENDIAN(byte_end),
    BIG_BIT_ENDIAN(bit_end),
    COUNT_SIZE(cnt_size)
    {
-   if(COUNT_SIZE >= output_length() || COUNT_SIZE >= hash_block_size())
-      throw Invalid_Argument("MDx_HashFunction: COUNT_SIZE is too big");
    count = position = 0;
    }
 
@@ -98,6 +94,8 @@ void MDx_HashFunction::write_count(byte out[])
    {
    if(COUNT_SIZE < 8)
       throw Invalid_State("MDx_HashFunction::write_count: COUNT_SIZE < 8");
+   if(COUNT_SIZE >= output_length() || COUNT_SIZE >= hash_block_size())
+      throw Invalid_Argument("MDx_HashFunction: COUNT_SIZE is too big");
 
    const u64bit bit_count = count * 8;
 

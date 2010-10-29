@@ -23,6 +23,8 @@ class BOTAN_DLL Parallel : public HashFunction
       std::string name() const;
       HashFunction* clone() const;
 
+      size_t output_length() const;
+
       /**
       * @param hashes a set of hashes to compute in parallel
       */

@@ -19,9 +19,11 @@ namespace Botan {
 class BOTAN_DLL SSL3_MAC : public MessageAuthenticationCode
    {
    public:
-      void clear();
       std::string name() const;
+      size_t output_length() const { return hash->output_length(); }
       MessageAuthenticationCode* clone() const;
+
+      void clear();
 
       Key_Length_Specification key_spec() const
          {

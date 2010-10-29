@@ -18,13 +18,15 @@ namespace Botan {
 class BOTAN_DLL Tiger : public MDx_HashFunction
    {
    public:
-      void clear();
       std::string name() const;
+      size_t output_length() const { return hash_len; }
 
       HashFunction* clone() const
          {
-         return new Tiger(output_length(), PASS);
+         return new Tiger(output_length(), passes);
          }
+
+      void clear();
 
       /**
       * @param out_size specifies the output length; can be 16, 20, or 24
@@ -45,7 +47,7 @@ class BOTAN_DLL Tiger : public MDx_HashFunction
       static const u64bit SBOX4[256];
 
       SecureVector<u64bit> X, digest;
-      const size_t PASS;
+      const size_t hash_len, passes;
    };
 
 }

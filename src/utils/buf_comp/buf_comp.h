@@ -20,16 +20,12 @@ namespace Botan {
 class BOTAN_DLL BufferedComputation
    {
    public:
-      /**
-      * The length of the output of this function in bytes.
-      * @deprecated Use output_length()
-      */
-      const size_t OUTPUT_LENGTH;
+      virtual ~BufferedComputation() {}
 
       /**
       * @return length of the output of this function in bytes
       */
-      size_t output_length() const { return OUTPUT_LENGTH; }
+      virtual size_t output_length() const = 0;
 
       /**
       * Add new input to process.
@@ -133,13 +129,6 @@ class BOTAN_DLL BufferedComputation
          update(in);
          return final();
          }
-
-      /**
-      * @param out_len the output length of this computation
-      */
-      BufferedComputation(size_t out_len) : OUTPUT_LENGTH(out_len) {}
-
-      virtual ~BufferedComputation() {}
    private:
       BufferedComputation& operator=(const BufferedComputation&);
 

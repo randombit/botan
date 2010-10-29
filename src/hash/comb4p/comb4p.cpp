@@ -35,7 +35,6 @@ void comb4p_round(MemoryRegion<byte>& out,
 }
 
 Comb4P::Comb4P(HashFunction* h1, HashFunction* h2) :
-   HashFunction(h1->output_length() + h2->output_length()),
    hash1(h1), hash2(h2)
    {
    if(hash1->name() == hash2->name())

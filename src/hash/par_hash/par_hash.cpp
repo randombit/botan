@@ -9,23 +9,6 @@
 
 namespace Botan {
 
-namespace {
-
-/*
-* Return the sum of the hash sizes
-*/
-size_t sum_of_hash_lengths(const std::vector<HashFunction*>& hashes)
-   {
-   size_t sum = 0;
-
-   for(size_t i = 0; i != hashes.size(); ++i)
-      sum += hashes[i]->output_length();
-
-   return sum;
-   }
-
-}
-
 /*
 * Update the hash
 */
@@ -46,6 +29,17 @@ void Parallel::final_result(byte hash[])
       hashes[i]->final(hash + offset);
       offset += hashes[i]->output_length();
       }
+   }
+
+/*
+* Return output size
+*/
+size_t Parallel::output_length() const
+   {
+   size_t sum = 0;
+   for(size_t i = 0; i != hashes.size(); ++i)
+      sum += hashes[i]->output_length();
+   return sum;
    }
 
 /*
@@ -87,7 +81,7 @@ void Parallel::clear()
 * Parallel Constructor
 */
 Parallel::Parallel(const std::vector<HashFunction*>& hash_in) :
-   HashFunction(sum_of_hash_lengths(hash_in)), hashes(hash_in)
+   hashes(hash_in)
    {
    }
 

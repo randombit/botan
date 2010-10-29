@@ -89,7 +89,6 @@ MessageAuthenticationCode* CBC_MAC::clone() const
 * CBC-MAC Constructor
 */
 CBC_MAC::CBC_MAC(BlockCipher* e_in) :
-   MessageAuthenticationCode(e_in->block_size()),
    e(e_in), state(e->block_size())
    {
    position = 0;

@@ -21,6 +21,7 @@ class BOTAN_DLL ANSI_X919_MAC : public MessageAuthenticationCode
    public:
       void clear();
       std::string name() const;
+      size_t output_length() const { return e->block_size(); }
       MessageAuthenticationCode* clone() const;
 
       Key_Length_Specification key_spec() const

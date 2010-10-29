@@ -19,11 +19,13 @@ namespace Botan {
 class BOTAN_DLL HAS_160 : public MDx_HashFunction
    {
    public:
-      void clear();
       std::string name() const { return "HAS-160"; }
+      size_t output_length() const { return 20; }
       HashFunction* clone() const { return new HAS_160; }
 
-      HAS_160() : MDx_HashFunction(20, 64, false, true), X(20), digest(5)
+      void clear();
+
+      HAS_160() : MDx_HashFunction(64, false, true), X(20), digest(5)
          { clear(); }
    private:
       void compress_n(const byte[], size_t blocks);

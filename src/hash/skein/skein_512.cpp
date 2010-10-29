@@ -168,7 +168,6 @@ void initial_block(MemoryRegion<u64bit>& H,
 
 Skein_512::Skein_512(size_t arg_output_bits,
                      const std::string& arg_personalization) :
-   HashFunction(arg_output_bits / 8),
    personalization(arg_personalization),
    output_bits(arg_output_bits),
    H(9), T(3), buffer(64), buf_pos(0)

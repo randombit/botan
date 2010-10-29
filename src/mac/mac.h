@@ -39,15 +39,6 @@ class BOTAN_DLL MessageAuthenticationCode : public BufferedComputation,
       * @return name of this algorithm
       */
       virtual std::string name() const = 0;
-
-      /**
-      * @param mac_len the output length of this MAC
-      * @param key_min the minimum key size
-      * @param key_max the maximum key size
-      * @param key_mod the modulo restriction on the key size
-      */
-      MessageAuthenticationCode(size_t mac_len) :
-        BufferedComputation(mac_len) {}
    };
 
 }

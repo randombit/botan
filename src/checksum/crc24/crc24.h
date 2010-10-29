@@ -18,10 +18,13 @@ namespace Botan {
 class BOTAN_DLL CRC24 : public HashFunction
    {
    public:
-      void clear() { crc = 0xB704CE; }
       std::string name() const { return "CRC24"; }
+      size_t output_length() const { return 3; }
       HashFunction* clone() const { return new CRC24; }
-      CRC24() : HashFunction(3) { clear(); }
+
+      void clear() { crc = 0xB704CE; }
+
+      CRC24() { clear(); }
       ~CRC24() { clear(); }
    private:
       void add_data(const byte[], size_t);

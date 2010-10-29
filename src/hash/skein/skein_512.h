@@ -29,6 +29,7 @@ class BOTAN_DLL Skein_512 : public HashFunction
                 const std::string& personalization = "");
 
       size_t hash_block_size() const { return 64; }
+      size_t output_length() const { return output_bits / 8; }
 
       HashFunction* clone() const;
       std::string name() const;

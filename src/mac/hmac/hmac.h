@@ -23,6 +23,8 @@ class BOTAN_DLL HMAC : public MessageAuthenticationCode
       std::string name() const;
       MessageAuthenticationCode* clone() const;
 
+      size_t output_length() const { return hash->output_length(); }
+
       Key_Length_Specification key_spec() const
          {
          return Key_Length_Specification(0, 2*hash->hash_block_size());

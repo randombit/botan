@@ -84,9 +84,7 @@ MessageAuthenticationCode* HMAC::clone() const
 /*
 * HMAC Constructor
 */
-HMAC::HMAC(HashFunction* hash_in) :
-   MessageAuthenticationCode(hash_in->output_length()),
-   hash(hash_in)
+HMAC::HMAC(HashFunction* hash_in) : hash(hash_in)
    {
    if(hash->hash_block_size() == 0)
       throw Invalid_Argument("HMAC cannot be used with " + hash->name());

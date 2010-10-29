@@ -130,9 +130,7 @@ MessageAuthenticationCode* CMAC::clone() const
 /*
 * CMAC Constructor
 */
-CMAC::CMAC(BlockCipher* e_in) :
-   MessageAuthenticationCode(e_in->block_size()),
-   e(e_in)
+CMAC::CMAC(BlockCipher* e_in) : e(e_in)
    {
    if(e->block_size() == 16)
       polynomial = 0x87;

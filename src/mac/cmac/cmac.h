@@ -19,9 +19,11 @@ namespace Botan {
 class BOTAN_DLL CMAC : public MessageAuthenticationCode
    {
    public:
-      void clear();
       std::string name() const;
+      size_t output_length() const { return e->block_size(); }
       MessageAuthenticationCode* clone() const;
+
+      void clear();
 
       Key_Length_Specification key_spec() const
          {

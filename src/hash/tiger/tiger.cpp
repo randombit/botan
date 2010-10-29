@@ -55,7 +55,7 @@ void Tiger::compress_n(const byte input[], size_t blocks)
       pass(C, A, B, X, 7); mix(X);
       pass(B, C, A, X, 9);
 
-      for(size_t j = 3; j != PASS; ++j)
+      for(size_t j = 3; j != passes; ++j)
          {
          mix(X);
          pass(A, B, C, X, 9);
@@ -160,24 +160,26 @@ void Tiger::clear()
 */
 std::string Tiger::name() const
    {
-   return "Tiger(" + to_string(output_length()) + "," + to_string(PASS) + ")";
+   return "Tiger(" + to_string(output_length()) + "," + to_string(passes) + ")";
    }
 
 /*
 * Tiger Constructor
 */
-Tiger::Tiger(size_t hashlen, size_t pass) :
-   MDx_HashFunction(hashlen, 64, false, false),
+Tiger::Tiger(size_t hash_len, size_t passes) :
+   MDx_HashFunction(64, false, false),
    X(8),
    digest(3),
-   PASS(pass)
+   hash_len(hash_len),
+   passes(passes)
    {
    if(output_length() != 16 && output_length() != 20 && output_length() != 24)
       throw Invalid_Argument("Tiger: Illegal hash output size: " +
                              to_string(output_length()));
-   if(PASS < 3)
+
+   if(passes < 3)
       throw Invalid_Argument("Tiger: Invalid number of passes: "
-                             + to_string(PASS));
+                             + to_string(passes));
    clear();
    }
 

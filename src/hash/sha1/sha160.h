@@ -18,11 +18,16 @@ namespace Botan {
 class BOTAN_DLL SHA_160 : public MDx_HashFunction
    {
    public:
-      void clear();
       std::string name() const { return "SHA-160"; }
+      size_t output_length() const { return 20; }
       HashFunction* clone() const { return new SHA_160; }
-      SHA_160();
 
+      void clear();
+
+      SHA_160() : MDx_HashFunction(64, true, true), digest(5), W(80)
+         {
+         clear();
+         }
    protected:
       /**
       * Set a custom size for the W array. Normally 80, but some
@@ -30,7 +35,11 @@ class BOTAN_DLL SHA_160 : public MDx_HashFunction
       * constraints
       * @param W_size how big to make W
       */
-      SHA_160(size_t W_size);
+      SHA_160(size_t W_size) :
+         MDx_HashFunction(64, true, true), digest(5), W(W_size)
+         {
+         clear();
+         }
 
       void compress_n(const byte[], size_t blocks);
       void copy_out(byte[]);

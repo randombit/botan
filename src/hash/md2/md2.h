@@ -18,13 +18,14 @@ namespace Botan {
 class BOTAN_DLL MD2 : public HashFunction
    {
    public:
-      void clear();
       std::string name() const { return "MD2"; }
+      size_t output_length() const { return 16; }
+      size_t hash_block_size() const { return 16; }
       HashFunction* clone() const { return new MD2; }
 
-      size_t hash_block_size() const { return 16; }
+      void clear();
 
-      MD2() : HashFunction(16), X(48), checksum(16), buffer(16)
+      MD2() : X(48), checksum(16), buffer(16)
          { clear(); }
    private:
       void add_data(const byte[], size_t);

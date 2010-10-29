@@ -18,11 +18,13 @@ namespace Botan {
 class BOTAN_DLL Whirlpool : public MDx_HashFunction
    {
    public:
-      void clear();
       std::string name() const { return "Whirlpool"; }
+      size_t output_length() const { return 64; }
       HashFunction* clone() const { return new Whirlpool; }
 
-      Whirlpool() : MDx_HashFunction(64, 64, true, true, 32), M(8), digest(8)
+      void clear();
+
+      Whirlpool() : MDx_HashFunction(64, true, true, 32), M(8), digest(8)
          { clear(); }
    private:
       void compress_n(const byte[], size_t blocks);
