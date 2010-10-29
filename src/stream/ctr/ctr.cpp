@@ -1,6 +1,6 @@
 /*
-* CTR-BE Mode Cipher
-* (C) 1999-2009 Jack Lloyd
+* Counter mode
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -14,12 +14,12 @@ namespace Botan {
 * CTR-BE Constructor
 */
 
-CTR_BE::CTR_BE(BlockCipher* ciph) : permutation(ciph)
+CTR_BE::CTR_BE(BlockCipher* ciph) :
+   permutation(ciph),
+   counter(256 * permutation->block_size()),
+   buffer(counter.size()),
+   position(0)
    {
-   position = 0;
-
-   counter.resize(permutation->parallel_bytes());
-   buffer.resize(counter.size());
    }
 
 /*
@@ -91,9 +91,7 @@ void CTR_BE::set_iv(const byte iv[], size_t iv_len)
 
    counter.copy(0, iv, iv_len);
 
-   const size_t PARALLEL_BLOCKS = counter.size() / BLOCK_SIZE;
-
-   for(size_t i = 1; i != PARALLEL_BLOCKS; ++i)
+   for(size_t i = 1; i != 256; ++i)
       {
       counter.copy(i*BLOCK_SIZE,
                    &counter[(i-1)*BLOCK_SIZE],
@@ -104,7 +102,7 @@ void CTR_BE::set_iv(const byte iv[], size_t iv_len)
             break;
       }
 
-   permutation->encrypt_n(&counter[0], &buffer[0], PARALLEL_BLOCKS);
+   permutation->encrypt_n(&counter[0], &buffer[0], 256);
    position = 0;
    }
 
@@ -114,24 +112,17 @@ void CTR_BE::set_iv(const byte iv[], size_t iv_len)
 void CTR_BE::increment_counter()
    {
    const size_t BLOCK_SIZE = permutation->block_size();
-   const size_t PARALLEL_BLOCKS = counter.size() / BLOCK_SIZE;
 
-   for(size_t i = 0; i != PARALLEL_BLOCKS; ++i)
+   for(size_t i = 0; i != 256; ++i)
       {
       byte* this_ctr = &counter[i * BLOCK_SIZE];
 
-      byte last_byte = this_ctr[BLOCK_SIZE-1];
-      last_byte += PARALLEL_BLOCKS;
-
-      if(this_ctr[BLOCK_SIZE-1] > last_byte)
-         for(u32bit j = 1; j != BLOCK_SIZE; ++j)
-            if(++counter[i*BLOCK_SIZE + (BLOCK_SIZE-1-j)])
-               break;
-
-      this_ctr[BLOCK_SIZE-1] = last_byte;
+      for(u32bit j = 1; j != BLOCK_SIZE; ++j)
+         if(++counter[i*BLOCK_SIZE + (BLOCK_SIZE-1-j)])
+            break;
       }
 
-   permutation->encrypt_n(&counter[0], &buffer[0], PARALLEL_BLOCKS);
+   permutation->encrypt_n(&counter[0], &buffer[0], 256);
 
    position = 0;
    }
