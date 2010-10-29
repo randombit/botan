@@ -10,7 +10,6 @@
 
 #include <botan/tls_session_key.h>
 #include <botan/tls_suites.h>
-#include <botan/socket.h>
 #include <botan/pipe.h>
 #include <botan/mac.h>
 #include <botan/secqueue.h>

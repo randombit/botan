@@ -11,7 +11,6 @@
 #include <botan/tls_connection.h>
 #include <botan/tls_record.h>
 #include <botan/tls_policy.h>
-#include <botan/socket.h>
 #include <vector>
 
 namespace Botan {
@@ -34,11 +33,14 @@ class BOTAN_DLL TLS_Server : public TLS_Connection
       void close();
       bool is_closed() const;
 
-      // FIXME: support cert chains (!)
-      // FIXME: support anonymous servers
-      TLS_Server(const TLS_Policy& policy,
+      /*
+      * FIXME: support cert chains (!)
+      * FIXME: support anonymous servers
+      */
+      TLS_Server(std::tr1::function<size_t (byte[], size_t)> input_fn,
+                 std::tr1::function<void (const byte[], size_t)> output_fn,
+                 const TLS_Policy& policy,
                  RandomNumberGenerator& rng,
-                 Socket& peer,
                  const X509_Certificate& cert,
                  const Private_Key& cert_key);
 
@@ -52,9 +54,10 @@ class BOTAN_DLL TLS_Server : public TLS_Connection
 
       void process_handshake_msg(Handshake_Type, const MemoryRegion<byte>&);
 
+      std::tr1::function<size_t (byte[], size_t)> input_fn;
+
       const TLS_Policy& policy;
       RandomNumberGenerator& rng;
-      Socket& peer;
 
       Record_Writer writer;
       Record_Reader reader;
