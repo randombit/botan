@@ -21,7 +21,12 @@ class XOR_Cipher : public StreamCipher
       // return a new object of this type
       StreamCipher* clone() const { return new XOR_Cipher; }
 
-      XOR_Cipher() : StreamCipher(1, 32) { mask_pos = 0; }
+      Key_Length_Specification key_spec() const
+         {
+         return Key_Length_Specification(1, 32);
+         }
+
+      XOR_Cipher() : mask_pos(0) {}
    private:
       void cipher(const byte in[], byte out[], size_t length)
          {
