@@ -18,7 +18,6 @@ namespace Botan {
 /**
 * TLS Server
 */
-
 class BOTAN_DLL TLS_Server : public TLS_Connection
    {
    public:

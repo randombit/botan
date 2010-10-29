@@ -17,9 +17,9 @@ namespace Botan {
 
 namespace {
 
-// FIXME: checks are wrong for session reuse (add a flag for that)
 /**
 * Verify the state transition is allowed
+* FIXME: checks are wrong for session reuse (add a flag for that)
 */
 void client_check_state(Handshake_Type new_msg, Handshake_State* state)
    {

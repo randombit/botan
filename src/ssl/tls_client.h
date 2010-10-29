@@ -17,7 +17,7 @@
 namespace Botan {
 
 /**
-* TLS Client
+* SSL/TLS Client
 */
 class BOTAN_DLL TLS_Client : public TLS_Connection
    {
