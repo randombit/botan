@@ -8,26 +8,20 @@
 #ifndef BOTAN_SYMMETRIC_ALGORITHM_H__
 #define BOTAN_SYMMETRIC_ALGORITHM_H__
 
-#include <botan/types.h>
+#include <botan/algo_base.h>
 #include <botan/key_spec.h>
 #include <botan/exceptn.h>
 #include <botan/symkey.h>
+#include <botan/types.h>
 
 namespace Botan {
 
 /**
 * This class represents a symmetric algorithm object.
 */
-class BOTAN_DLL SymmetricAlgorithm
+class BOTAN_DLL SymmetricAlgorithm : public Algorithm
    {
    public:
-      virtual ~SymmetricAlgorithm() {}
-
-      /**
-      * Zeroize internal state
-      */
-      virtual void clear() = 0;
-
       /**
       * @return object describing limits on key size
       */
@@ -58,12 +52,6 @@ class BOTAN_DLL SymmetricAlgorithm
          {
          return key_spec().valid_keylength(length);
          }
-
-      /**
-      * The name of the algorithm.
-      * @return name of the algorithm
-      */
-      virtual std::string name() const = 0;
 
       /**
       * Set the symmetric key of this object.

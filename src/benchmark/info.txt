@@ -3,7 +3,7 @@ define RUNTIME_BENCHMARKING
 <requires>
 algo_factory
 block
-buf_comp
+algo_base
 hash
 mac
 rng

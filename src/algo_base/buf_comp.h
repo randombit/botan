@@ -1,5 +1,5 @@
 /*
-* BufferedComputation
+* Buffered Computation
 * (C) 1999-2007 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
@@ -17,11 +17,9 @@ namespace Botan {
 * This class represents any kind of computation which uses an internal
 * state, such as hash functions or MACs
 */
-class BOTAN_DLL BufferedComputation
+class BOTAN_DLL Buffered_Computation
    {
    public:
-      virtual ~BufferedComputation() {}
-
       /**
       * @return length of the output of this function in bytes
       */
@@ -130,8 +128,6 @@ class BOTAN_DLL BufferedComputation
          return final();
          }
    private:
-      BufferedComputation& operator=(const BufferedComputation&);
-
       /**
       * Add more data to the computation
       * @param input is an input buffer

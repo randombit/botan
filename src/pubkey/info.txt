@@ -39,5 +39,5 @@ pbe
 pem
 pk_pad
 rng
-sym_algo
+algo_base
 </requires>

@@ -1,4 +1,3 @@
 <requires>
-buf_comp
-sym_algo
+algo_base
 </requires>

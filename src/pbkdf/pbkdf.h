@@ -8,6 +8,7 @@
 #ifndef BOTAN_PBKDF_H__
 #define BOTAN_PBKDF_H__
 
+#include <botan/algo_base.h>
 #include <botan/symkey.h>
 
 namespace Botan {
@@ -17,7 +18,7 @@ namespace Botan {
 * implementations. Converts a password into a key using a salt
 * and iterated hashing to make brute force attacks harder.
 */
-class BOTAN_DLL PBKDF
+class BOTAN_DLL PBKDF : public Algorithm
    {
    public:
 
@@ -26,16 +27,7 @@ class BOTAN_DLL PBKDF
       */
       virtual PBKDF* clone() const = 0;
 
-      /**
-      * Get the algorithm name.
-      * @return name of this PBKDF algorithm
-      */
-      virtual std::string name() const = 0;
-
-      /**
-      * Clear this objects internal values.
-      */
-      virtual void clear() {}
+      void clear() {}
 
       /**
       * Derive a key from a passphrase

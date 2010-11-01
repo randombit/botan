@@ -11,6 +11,6 @@ oid_lookup
 pem
 pubkey
 sha1
-sym_algo
+algo_base
 x509cert
 </requires>

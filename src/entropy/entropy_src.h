@@ -94,16 +94,17 @@ class BOTAN_DLL Entropy_Accumulator
    };
 
 /**
-* Entropy accumulator that puts the input into a BufferedComputation
+* Entropy accumulator that puts the input into a Buffered_Computation
 */
-class BOTAN_DLL Entropy_Accumulator_BufferedComputation : public Entropy_Accumulator
+class BOTAN_DLL Entropy_Accumulator_BufferedComputation :
+   public Entropy_Accumulator
    {
    public:
       /**
       * @param sink the hash or MAC we are feeding the poll data into
       * @param goal is how many bits we want to collect in this poll
       */
-      Entropy_Accumulator_BufferedComputation(BufferedComputation& sink,
+      Entropy_Accumulator_BufferedComputation(Buffered_Computation& sink,
                                               size_t goal) :
          Entropy_Accumulator(goal), entropy_sink(sink) {}
 
@@ -113,7 +114,7 @@ class BOTAN_DLL Entropy_Accumulator_BufferedComputation : public Entropy_Accumul
          entropy_sink.update(bytes, length);
          }
 
-      BufferedComputation& entropy_sink;
+      Buffered_Computation& entropy_sink;
    };
 
 /**

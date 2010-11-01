@@ -1,3 +1,3 @@
 <requires>
-buf_comp
+algo_base
 </requires>

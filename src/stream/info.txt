@@ -1,5 +1,5 @@
 define STREAM_CIPHER
 
 <requires>
-sym_algo
+algo_base
 </requires>

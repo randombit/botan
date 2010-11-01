@@ -3,5 +3,5 @@ define SSL_V3_PRF
 <requires>
 md5
 sha1
-sym_algo
+algo_base
 </requires>

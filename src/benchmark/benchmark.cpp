@@ -19,9 +19,9 @@ namespace Botan {
 namespace {
 
 /**
-* Benchmark BufferedComputation (hash or MAC)
+* Benchmark Buffered_Computation (hash or MAC)
 */
-std::pair<u64bit, u64bit> bench_buf_comp(BufferedComputation* buf_comp,
+std::pair<u64bit, u64bit> bench_buf_comp(Buffered_Computation* buf_comp,
                                          u64bit nanoseconds_max,
                                          const byte buf[], size_t buf_len)
    {

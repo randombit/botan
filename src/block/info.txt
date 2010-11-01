@@ -1,5 +1,5 @@
 define BLOCK_CIPHER
 
 <requires>
-sym_algo
+algo_base
 </requires>

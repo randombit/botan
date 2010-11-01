@@ -40,5 +40,5 @@ libstate
 mac
 rng
 stream
-sym_algo
+algo_base
 </requires>

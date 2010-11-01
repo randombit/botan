@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * This class represents Message Authentication Code (MAC) objects.
 */
-class BOTAN_DLL MessageAuthenticationCode : public BufferedComputation,
+class BOTAN_DLL MessageAuthenticationCode : public Buffered_Computation,
                                             public SymmetricAlgorithm
    {
    public:
