@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/x509stor.h>
+#include <botan/x509path.h>
 #include <botan/parsing.h>
 #include <botan/pubkey.h>
 #include <botan/oids.h>

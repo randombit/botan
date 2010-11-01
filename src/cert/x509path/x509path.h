@@ -1,12 +1,12 @@
 /*
-* X.509 Certificate Store
-* (C) 1999-2007 Jack Lloyd
+* X.509 Cert Path Validation
+* (C) 2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
-#ifndef BOTAN_X509_CERT_STORE_H__
-#define BOTAN_X509_CERT_STORE_H__
+#ifndef BOTAN_X509_CERT_PATH_VALIDATION_H__
+#define BOTAN_X509_CERT_PATH_VALIDATION_H__
 
 #include <botan/x509cert.h>
 #include <botan/x509_crl.h>
