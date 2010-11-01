@@ -21,7 +21,10 @@ class BOTAN_DLL X942_PRF : public KDF
       SecureVector<byte> derive(size_t, const byte[], size_t,
                                 const byte[], size_t) const;
 
-      X942_PRF(const std::string&);
+      std::string name() const { return "X942_PRF(" + key_wrap_oid + ")"; }
+      KDF* clone() const { return new X942_PRF(key_wrap_oid); }
+
+      X942_PRF(const std::string& oid);
    private:
       std::string key_wrap_oid;
    };

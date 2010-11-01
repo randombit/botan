@@ -85,9 +85,8 @@ SecureVector<byte> TLS_PRF::derive(size_t key_len,
 /*
 * TLS v1.2 PRF Constructor and Destructor
 */
-TLS_12_PRF::TLS_12_PRF(HashFunction* hash)
+TLS_12_PRF::TLS_12_PRF(MessageAuthenticationCode* mac) : hmac(mac)
    {
-   hmac = new HMAC(hash);
    }
 
 TLS_12_PRF::~TLS_12_PRF()

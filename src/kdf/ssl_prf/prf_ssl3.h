@@ -20,6 +20,9 @@ class BOTAN_DLL SSL3_PRF : public KDF
    public:
       SecureVector<byte> derive(size_t, const byte[], size_t,
                                 const byte[], size_t) const;
+
+      std::string name() const { return "SSL3-PRF"; }
+      KDF* clone() const { return new SSL3_PRF; }
    };
 
 }

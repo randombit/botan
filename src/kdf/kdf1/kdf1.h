@@ -23,6 +23,9 @@ class BOTAN_DLL KDF1 : public KDF
                                 const byte secret[], size_t secret_len,
                                 const byte P[], size_t P_len) const;
 
+      std::string name() const { return "KDF1(" + hash->name() + ")"; }
+      KDF* clone() const { return new KDF1(hash->clone()); }
+
       KDF1(HashFunction* h) : hash(h) {}
       KDF1(const KDF1& other) : KDF(), hash(other.hash->clone()) {}
 
