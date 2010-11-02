@@ -17,6 +17,14 @@
  - Improve support for Intel Atom processors
  - Fix compilation under Sun Studio
 
+* 1.8.11, 2010-11-02
+ - Fix a number of CRL encoding and decoding bugs
+ - When building a debug library under VC++, use the debug runtime
+ - Fix compilation under Sun Studio on Linux and Solaris
+ - Add several functions for compatability with 1.9
+ - In the examples, read most input files as binary
+ - The Perl build script has been removed in this release
+
 * 1.8.10, 2010-08-31
  - Switch default PKCS #8 encryption algorithm from 3DES to AES-256
  - Increase default hash iterations from 2048 to 10000 in PBES1 and PBES2
