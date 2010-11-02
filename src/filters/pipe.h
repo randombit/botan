@@ -25,7 +25,7 @@ namespace Botan {
 class BOTAN_DLL Pipe : public DataSource
    {
    public:
-      /*
+      /**
       * An opaque type that identifies a message in this Pipe
       */
       typedef size_t message_id;

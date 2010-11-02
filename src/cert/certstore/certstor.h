@@ -50,6 +50,9 @@ class BOTAN_DLL Certificate_Store
             const MemoryRegion<byte>& key_id) const = 0;
    };
 
+/**
+* In Memory Certificate Store
+*/
 class BOTAN_DLL Certificate_Store_Memory : public Certificate_Store
    {
    public:

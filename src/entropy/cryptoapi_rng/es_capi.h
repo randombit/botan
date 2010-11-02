@@ -25,7 +25,7 @@ class Win32_CAPI_EntropySource : public EntropySource
 
      /**
      * Win32_Capi_Entropysource Constructor
-     * @provs list of providers, seperated by ':'
+     * @param provs list of providers, separated by ':'
      */
       Win32_CAPI_EntropySource(const std::string& provs = "");
    private:
