@@ -162,7 +162,7 @@ class BOTAN_DLL Algorithm_Factory
 
       /**
       * An iterator for the engines in this factory
-      * @deprecated
+      * @deprecated Avoid in new code
       */
       class BOTAN_DLL Engine_Iterator
          {
@@ -175,7 +175,8 @@ class BOTAN_DLL Algorithm_Factory
             /**
             * @param a an algorithm factory
             */
-            Engine_Iterator(const Algorithm_Factory& a) : af(a) { n = 0; }
+            Engine_Iterator(const Algorithm_Factory& a) :
+               af(a) { n = 0; }
          private:
             const Algorithm_Factory& af;
             size_t n;

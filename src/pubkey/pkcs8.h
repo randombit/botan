@@ -81,6 +81,7 @@ BOTAN_DLL std::string PEM_encode(const Private_Key& key,
 * @param pipe the pipe to feed the encoded key into
 * @param encoding the encoding type to use
 */
+BOTAN_DEPRECATED("Use PEM_encode or BER_encode")
 inline void encode(const Private_Key& key,
                    Pipe& pipe,
                    X509_Encoding encoding = PEM)
@@ -104,6 +105,7 @@ inline void encode(const Private_Key& key,
          default will be chosen.
 * @param encoding the encoding type to use
 */
+BOTAN_DEPRECATED("Use PEM_encode or BER_encode")
 inline void encrypt_key(const Private_Key& key,
                         Pipe& pipe,
                         RandomNumberGenerator& rng,

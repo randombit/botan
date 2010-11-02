@@ -21,6 +21,7 @@ namespace Botan {
 * @param eme determines the algorithm and encoding
 * @return public key encryptor object
 */
+BOTAN_DEPRECATED("Instantiate object directly")
 inline PK_Encryptor* get_pk_encryptor(const Public_Key& key,
                                       const std::string& eme)
    {
@@ -35,6 +36,7 @@ inline PK_Encryptor* get_pk_encryptor(const Public_Key& key,
 * @param eme determines the algorithm and encoding
 * @return public key decryptor object
 */
+BOTAN_DEPRECATED("Instantiate object directly")
 inline PK_Decryptor* get_pk_decryptor(const Private_Key& key,
                                       const std::string& eme)
    {
@@ -50,6 +52,7 @@ inline PK_Decryptor* get_pk_decryptor(const Private_Key& key,
 * @param sig_format the signature format to be used
 * @return public key signer object
 */
+BOTAN_DEPRECATED("Instantiate object directly")
 inline PK_Signer* get_pk_signer(const Private_Key& key,
                                 const std::string& emsa,
                                 Signature_Format sig_format = IEEE_1363)
@@ -66,6 +69,7 @@ inline PK_Signer* get_pk_signer(const Private_Key& key,
 * @param sig_format the signature format to be used
 * @return public key verifier object
 */
+BOTAN_DEPRECATED("Instantiate object directly")
 inline PK_Verifier* get_pk_verifier(const Public_Key& key,
                                     const std::string& emsa,
                                     Signature_Format sig_format = IEEE_1363)
@@ -81,8 +85,9 @@ inline PK_Verifier* get_pk_verifier(const Public_Key& key,
 * @param kdf the kdf algorithm to use
 * @return key agreement algorithm
 */
+BOTAN_DEPRECATED("Instantiate object directly")
 inline PK_Key_Agreement* get_pk_kas(const PK_Key_Agreement_Key& key,
-                                       const std::string& kdf)
+                                    const std::string& kdf)
    {
    return new PK_Key_Agreement(key, kdf);
    }
