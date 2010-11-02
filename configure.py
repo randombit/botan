@@ -38,8 +38,8 @@ class BuildConfigurationInformation(object):
     version_major = 1
     version_minor = 8
     version_patch = 11
-    version_so_patch = 11
-    version_suffix = '-dev'
+    version_so_patch = 2
+    version_suffix = ''
 
     version_string = '%d.%d.%d%s' % (
         version_major, version_minor, version_patch, version_suffix)
