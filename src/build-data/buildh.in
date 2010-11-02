@@ -2,7 +2,15 @@
 #ifndef BOTAN_BUILD_CONFIG_H__
 #define BOTAN_BUILD_CONFIG_H__
 
-/* This file was automatically generated %{timestamp} UTC */
+/*
+* This file was automatically generated %{timestamp} UTC by
+* %{user}@%{hostname} running '%{command_line}'
+*
+* Target
+*  - Compiler: %{cc} %{lib_opt} %{mach_opt}
+*  - Arch: %{submodel}/%{arch}
+*  - OS: %{os}
+*/
 
 #define BOTAN_VERSION_MAJOR %{version_major}
 #define BOTAN_VERSION_MINOR %{version_minor}
@@ -66,32 +74,28 @@
 /*
 * Compile-time deprecatation warnings
 */
-#if defined(__GNUG__)
-  #define BOTAN_DEPRECATED(msg) __attribute__ ((deprecated, warning(why)))
-#elif defined(_MSC_VER)
-  #define BOTAN_DEPRECATED(msg) __declspec(deprecated(why))
-#else
+#if !defined(BOTAN_NO_DEPRECATED_WARNINGS)
+
+  #if defined(__GNUG__)
+    #define BOTAN_DEPRECATED(msg) __attribute__ ((deprecated, warning(why)))
+  #elif defined(_MSC_VER)
+    #define BOTAN_DEPRECATED(msg) __declspec(deprecated(why))
+  #endif
+
+#endif
+
+#if !defined(BOTAN_DEPRECATED)
   #define BOTAN_DEPRECATED(msg)
 #endif
 
-/* Module definitions */
+/*
+* Module availability definitions
+*/
 %{module_defines}
 
-/* Local configuration options */
-%{local_config}
-
 /*
-%{user}@%{hostname} ran '%{command_line}'
-
-Target
--------
-Compiler: %{cc} %{lib_opt} %{mach_opt}
-Arch: %{submodel}/%{arch}
-OS: %{os}
-
-Modules
--------
-%{mod_list}
+* Local configuration options (if any) follow
 */
+%{local_config}
 
 #endif
