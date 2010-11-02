@@ -23,16 +23,19 @@ class BOTAN_DLL SymmetricAlgorithm
 
       /**
       * The maximum allowed key length.
+      * @deprecated use maximum_keylength()
       */
       const u32bit MAXIMUM_KEYLENGTH;
 
       /**
       * The minimal allowed key length.
+      * @deprecated use minimum_keylength()
       */
       const u32bit MINIMUM_KEYLENGTH;
 
       /**
       * A valid keylength is a multiple of this value.
+      * @deprecated
       */
       const u32bit KEYLENGTH_MULTIPLE;
 

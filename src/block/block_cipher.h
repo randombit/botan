@@ -35,6 +35,7 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
    public:
       /**
       * The block size of this algorithm.
+      * @deprecated use block_size()
       */
       const u32bit BLOCK_SIZE;
 

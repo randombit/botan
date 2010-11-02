@@ -23,6 +23,7 @@ class BOTAN_DLL BufferedComputation
 
       /**
       * The length of the output of this function in bytes.
+      * @deprecated use output_length() function
       */
       const u32bit OUTPUT_LENGTH;
 
