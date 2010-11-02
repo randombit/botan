@@ -19,14 +19,46 @@ namespace Botan {
 class BOTAN_DLL Buffered_Filter
    {
    public:
-      void write(const byte[], size_t);
+      /**
+      * Write bytes into the buffered filter, which will them emit them
+      * in calls to buffered_block in the subclass
+      * @param in the input bytes
+      * @param length of in in bytes
+      */
+      void write(const byte in[], size_t length);
+
+      /**
+      * Finish a message, emitting to buffered_block and buffered_final
+      * Will throw an exception if less than final_minimum bytes were
+      * written into the filter.
+      */
       void end_msg();
 
+      /**
+      * Initialize a Buffered_Filter
+      * @param block_size the function buffered_block will be called
+      *        with inputs which are a multiple of this size
+      * @param final_minimum the function buffered_final will be called
+      *        with at least this many bytes.
+      */
       Buffered_Filter(size_t block_size, size_t final_minimum);
 
       virtual ~Buffered_Filter() {}
    protected:
+      /**
+      * The block processor, implemented by subclasses
+      * @param input some input bytes
+      * @param length the size of input, guaranteed to be a multiple
+      *        of block_size
+      */
       virtual void buffered_block(const byte input[], size_t length) = 0;
+
+      /**
+      * The final block, implemented by subclasses
+      * @param input some input bytes
+      * @param length the size of input, guaranteed to be at least
+      *        final_minimum bytes
+      */
       virtual void buffered_final(const byte input[], size_t length) = 0;
 
       /**

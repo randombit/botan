@@ -50,7 +50,7 @@ class CSP_Handle
 
 }
 
-/**
+/*
 * Gather Entropy from Win32 CAPI
 */
 void Win32_CAPI_EntropySource::poll(Entropy_Accumulator& accum)
@@ -71,7 +71,7 @@ void Win32_CAPI_EntropySource::poll(Entropy_Accumulator& accum)
       }
    }
 
-/**
+/*
 * Win32_Capi_Entropysource Constructor
 */
 Win32_CAPI_EntropySource::Win32_CAPI_EntropySource(const std::string& provs)

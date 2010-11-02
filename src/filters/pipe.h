@@ -286,11 +286,21 @@ class BOTAN_DLL Pipe : public DataSource
       bool inside_msg;
    };
 
-/*
-* I/O Operators for Pipe
+/**
+* Stream output operator; dumps the results from pipe's default
+* message to the output stream.
+* @param out an output stream
+* @param pipe the pipe
 */
-BOTAN_DLL std::ostream& operator<<(std::ostream&, Pipe&);
-BOTAN_DLL std::istream& operator>>(std::istream&, Pipe&);
+BOTAN_DLL std::ostream& operator<<(std::ostream& out, Pipe& pipe);
+
+/**
+* Stream input operator; dumps the remaining bytes of input
+* to the (assumed open) pipe message.
+* @param in the input stream
+* @param pipe the pipe
+*/
+BOTAN_DLL std::istream& operator>>(std::istream& in, Pipe& pipe);
 
 }
 

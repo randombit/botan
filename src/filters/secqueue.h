@@ -27,12 +27,31 @@ class BOTAN_DLL SecureQueue : public Fanout_Filter, public DataSource
       size_t peek(byte[], size_t, size_t = 0) const;
 
       bool end_of_data() const;
+
+      /**
+      * @return number of bytes available in the queue
+      */
       size_t size() const;
+
       bool attachable() { return false; }
 
-      SecureQueue& operator=(const SecureQueue&);
+      /**
+      * SecureQueue assignment
+      * @param other the queue to copy
+      */
+      SecureQueue& operator=(const SecureQueue& other);
+
+      /**
+      * SecureQueue default constructor (creates empty queue)
+      */
       SecureQueue();
-      SecureQueue(const SecureQueue&);
+
+      /**
+      * SecureQueue copy constructor
+      * @param other the queue to copy
+      */
+      SecureQueue(const SecureQueue& other);
+
       ~SecureQueue() { destroy(); }
    private:
       void destroy();
