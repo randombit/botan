@@ -9,7 +9,15 @@
 
 namespace Botan {
 
-extern "C" void botan_md4_ia32_compress(u32bit[4], const byte[64], u32bit[16]);
+/**
+* MD4 compression function in IA-32 asm
+* @param digest the current digest
+* @param input the input block
+* @param M the message buffer
+*/
+extern "C" void botan_md4_ia32_compress(u32bit digest[4],
+                                        const byte input[64],
+                                        u32bit M[16]);
 
 /*
 * MD4 Compression Function

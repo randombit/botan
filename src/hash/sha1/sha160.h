@@ -44,7 +44,14 @@ class BOTAN_DLL SHA_160 : public MDx_HashFunction
       void compress_n(const byte[], size_t blocks);
       void copy_out(byte[]);
 
+      /**
+      * The digest value, exposed for use by subclasses (asm, SSE2)
+      */
       SecureVector<u32bit> digest;
+
+      /**
+      * The message buffer, exposed for use by subclasses (asm, SSE2)
+      */
       SecureVector<u32bit> W;
    };
 

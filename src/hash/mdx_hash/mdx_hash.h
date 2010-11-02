@@ -19,7 +19,6 @@ class BOTAN_DLL MDx_HashFunction : public HashFunction
    {
    public:
       /**
-      * @param hash_length is the output length of this hash
       * @param block_length is the number of bytes per block
       * @param big_byte_endian specifies if the hash uses big-endian bytes
       * @param big_bit_endian specifies if the hash uses big-endian bits

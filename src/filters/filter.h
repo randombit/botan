@@ -69,6 +69,7 @@ class BOTAN_DLL Filter
 
       /**
       * @param in some input for the filter
+      * @param length the number of bytes of in to send
       */
       void send(const MemoryRegion<byte>& in, size_t length)
          {

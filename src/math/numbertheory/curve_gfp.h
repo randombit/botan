@@ -33,8 +33,7 @@ class BOTAN_DLL CurveGFp
       * @param a first coefficient
       * @param b second coefficient
       */
-      CurveGFp(const BigInt& p_in,
-               const BigInt& a_in, const BigInt& b_in) :
+      CurveGFp(const BigInt& p, const BigInt& a, const BigInt& b) :
          p(p_in), a(a_in), b(b_in), reducer_p(p)
          {
          r = 1;

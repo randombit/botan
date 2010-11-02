@@ -36,7 +36,6 @@ size_t BOTAN_DLL base64_encode(char output[],
 * Perform base64 encoding
 * @param input some input
 * @param input_length length of input in bytes
-* @param uppercase should output be upper or lower case?
 * @return base64adecimal representation of input
 */
 std::string BOTAN_DLL base64_encode(const byte input[],
@@ -45,7 +44,6 @@ std::string BOTAN_DLL base64_encode(const byte input[],
 /**
 * Perform base64 encoding
 * @param input some input
-* @param uppercase should output be upper or lower case?
 * @return base64adecimal representation of input
 */
 std::string BOTAN_DLL base64_encode(const MemoryRegion<byte>& input);
