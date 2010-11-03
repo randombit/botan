@@ -76,10 +76,20 @@
 */
 #if !defined(BOTAN_NO_DEPRECATED_WARNINGS)
 
-  #if defined(__GNUG__)
-    #define BOTAN_DEPRECATED(msg) __attribute__ ((deprecated, warning(why)))
+  #if defined(__clang__)
+    #define BOTAN_DEPRECATED(msg) __attribute__ ((deprecated(why)))
+
   #elif defined(_MSC_VER)
     #define BOTAN_DEPRECATED(msg) __declspec(deprecated(why))
+
+  #elif defined(__GNUG__)
+
+    #if BOTAN_GCC_VERSION >= 450
+      #define BOTAN_DEPRECATED(msg) __attribute__ ((deprecated(why)))
+    #else
+      #define BOTAN_DEPRECATED(msg) __attribute__ ((deprecated))
+    #endif
+
   #endif
 
 #endif
