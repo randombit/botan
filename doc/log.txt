@@ -1,5 +1,6 @@
 
 * 1.9.11-dev, ????-??-??
+ - Update Skein-512 to match the v1.3 specification
  - Fix SSL handshake failures when using RC4 ciphersuites
  - Fix a number of CRL encoding and decoding bugs
  - Use small tables in the first round of AES
