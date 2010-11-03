@@ -127,6 +127,8 @@ class BOTAN_DLL Buffered_Computation
          update(in);
          return final();
          }
+
+      virtual ~Buffered_Computation() {}
    private:
       /**
       * Add more data to the computation
