@@ -19,11 +19,13 @@
   #include <tr1/functional>
 #elif defined(BOTAN_USE_BOOST_TR1)
   #include <boost/tr1/functional.hpp>
+#else
+  #error "No TR1 library defined for use"
 #endif
 
-using namespace std::tr1::placeholders;
-
 namespace Botan {
+
+using namespace std::tr1::placeholders;
 
 /**
 * TLS Record Writer
