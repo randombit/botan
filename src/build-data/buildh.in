@@ -77,7 +77,7 @@
 #if !defined(BOTAN_NO_DEPRECATED_WARNINGS)
 
   #if defined(__clang__)
-    #define BOTAN_DEPRECATED(msg) __attribute__ ((deprecated(msg)))
+    #define BOTAN_DEPRECATED(msg) __attribute__ ((deprecated))
 
   #elif defined(_MSC_VER)
     #define BOTAN_DEPRECATED(msg) __declspec(deprecated(msg))
