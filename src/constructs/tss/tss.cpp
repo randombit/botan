@@ -205,7 +205,7 @@ RTSS_Share::reconstruct(const std::vector<RTSS_Share>& shares)
 
    byte hash_id = shares[0].contents[16];
 
-   std::auto_ptr<HashFunction> hash(get_rtss_hash_by_id(hash_id));
+   std::unique_ptr<HashFunction> hash(get_rtss_hash_by_id(hash_id));
 
    if(shares[0].size() != secret_len + hash->output_length() + RTSS_HEADER_SIZE + 1)
       throw Decoding_Error("Bad RTSS length field in header");

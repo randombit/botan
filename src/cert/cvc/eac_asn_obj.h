@@ -56,7 +56,6 @@ class BOTAN_DLL EAC_Time : public ASN1_Object
       * e.g. "2007 08 01"
       */
       void set_to(const std::string& str);
-      //void set_to(const std::string&, ASN1_Tag);
 
       /**
       * Add the specified number of years to this.
@@ -74,24 +73,28 @@ class BOTAN_DLL EAC_Time : public ASN1_Object
       * Get the year value of this objects.
       * @return year value
       */
-      u32bit get_year() const;
+      u32bit get_year() const { return year; }
 
       /**
       * Get the month value of this objects.
       * @return month value
       */
-      u32bit get_month() const;
+      u32bit get_month() const { return month; }
 
       /**
       * Get the day value of this objects.
       * @return day value
       */
-      u32bit get_day() const;
+      u32bit get_day() const { return day; }
 
-      EAC_Time(u64bit, ASN1_Tag t = ASN1_Tag(0));
-      //EAC_Time(const std::string& = "");
-      EAC_Time(const std::string&, ASN1_Tag = ASN1_Tag(0));
-      EAC_Time(u32bit year, u32bit month, u32bit day, ASN1_Tag = ASN1_Tag(0));
+      EAC_Time(const std::chrono::system_clock::time_point& time,
+               ASN1_Tag tag = ASN1_Tag(0));
+
+      EAC_Time(const std::string& yyyy_mm_dd,
+               ASN1_Tag tag = ASN1_Tag(0));
+
+      EAC_Time(u32bit year, u32bit month, u32bit day,
+               ASN1_Tag tag = ASN1_Tag(0));
 
       virtual ~EAC_Time() {}
    private:
@@ -113,24 +116,24 @@ class BOTAN_DLL ASN1_Ced : public EAC_Time
       * @param str a string in the format "yyyy mm dd",
       * e.g. "2007 08 01"
       */
-      ASN1_Ced(std::string const& str = "");
+      ASN1_Ced(std::string const& str = "") :
+         EAC_Time(str, ASN1_Tag(37)) {}
 
       /**
-      * Construct a CED from a timer value.
-      * @param time the number of seconds elapsed midnight, 1st
-      * January 1970 GMT (or 7pm, 31st December 1969 EST) up to the
-      * desired date
+      * Construct a CED from a time point
       */
-      ASN1_Ced(u64bit time);
+      ASN1_Ced(const std::chrono::system_clock::time_point& time) :
+         EAC_Time(time, ASN1_Tag(37)) {}
 
       /**
       * Copy constructor (for general EAC_Time objects).
       * @param other the object to copy from
       */
-      ASN1_Ced(EAC_Time const& other);
-      //ASN1_Ced(ASN1_Cex const& cex);
+      ASN1_Ced(EAC_Time const& other) :
+         EAC_Time(other.get_year(), other.get_month(), other.get_day(),
+                  ASN1_Tag(37))
+         {}
    };
-
 
 /**
 * This class represents CVC CEXs. Only limited sanity checks of
@@ -140,27 +143,20 @@ class BOTAN_DLL ASN1_Cex : public EAC_Time
    {
    public:
       /**
-      * Construct a CED from a string value.
+      * Construct a CEX from a string value.
       * @param str a string in the format "yyyy mm dd",
       * e.g. "2007 08 01"
       */
-      ASN1_Cex(std::string const& str="");
+      ASN1_Cex(std::string const& str = "") :
+         EAC_Time(str, ASN1_Tag(36)) {}
 
-      /**
-      * Construct a CED from a timer value.
-      * @param time the number of seconds elapsed
-      *  midnight, 1st
-      * January 1970 GMT (or 7pm, 31st December 1969 EST)
-      * up to the desired date
-      */
-      ASN1_Cex(u64bit time);
+      ASN1_Cex(const std::chrono::system_clock::time_point& time) :
+         EAC_Time(time, ASN1_Tag(36)) {}
 
-      /**
-      * Copy constructor (for general EAC_Time objects).
-      * @param other the object to copy from
-      */
-      ASN1_Cex(EAC_Time const& other);
-      //ASN1_Cex(ASN1_Ced const& ced);
+      ASN1_Cex(EAC_Time const& other) :
+         EAC_Time(other.get_year(), other.get_month(), other.get_day(),
+                  ASN1_Tag(36))
+         {}
    };
 
 /**

@@ -30,7 +30,7 @@ OctetString PKCS5_PBKDF2::derive_key(size_t key_len,
    catch(Invalid_Key_Length)
       {
       throw Exception(name() + " cannot accept passphrases of length " +
-                      to_string(passphrase.length()));
+                      std::to_string(passphrase.length()));
       }
 
    SecureVector<byte> key(key_len);

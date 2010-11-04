@@ -28,7 +28,7 @@ SecureVector<byte> hash_of(const SecureVector<byte>& content,
 
    Algorithm_Factory& af = global_state().algorithm_factory();
 
-   std::auto_ptr<HashFunction> hash_fn(af.make_hash_function(hash_name));
+   std::unique_ptr<HashFunction> hash_fn(af.make_hash_function(hash_name));
    return hash_fn->process(content);
    }
 
@@ -51,10 +51,11 @@ std::vector<X509_Certificate> get_cert(BER_Decoder& signer_info,
       iands.decode(issuer);
       iands.decode(serial);
 
-      found = store.get_certs(IandS_Match(issuer, BigInt::encode(serial)));
+      found = store.get_certs(
+         X509_Store_Search::by_issuer_and_serial(issuer, serial));
       }
    else if(id.type_tag == 0 && id.class_tag == CONSTRUCTED)
-      found = store.get_certs(SKID_Match(id.value));
+      found = store.get_certs(X509_Store_Search::by_skid(id.value));
    else
       throw Decoding_Error("CMS: Unknown tag for cert identifier");
 #endif

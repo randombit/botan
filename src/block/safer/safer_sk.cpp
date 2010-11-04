@@ -117,7 +117,7 @@ void SAFER_SK::key_schedule(const byte key[], size_t)
 */
 std::string SAFER_SK::name() const
    {
-   return "SAFER-SK(" + to_string(get_rounds()) + ")";
+   return "SAFER-SK(" + std::to_string(get_rounds()) + ")";
    }
 
 /*

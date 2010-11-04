@@ -30,11 +30,6 @@ class Malloc_Allocator : public Allocator
 class Locking_Allocator : public Pooling_Allocator
    {
    public:
-      /**
-      * @param mutex used for internal locking
-      */
-      Locking_Allocator(Mutex* mutex) : Pooling_Allocator(mutex) {}
-
       std::string type() const { return "locking"; }
    private:
       void* alloc_block(size_t);

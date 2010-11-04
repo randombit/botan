@@ -1,6 +1,6 @@
 /*
 * Parallel
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -14,20 +14,21 @@ namespace Botan {
 */
 void Parallel::add_data(const byte input[], size_t length)
    {
-   for(size_t i = 0; i != hashes.size(); ++i)
-      hashes[i]->update(input, length);
+   for(auto hash = hashes.begin(); hash != hashes.end(); ++hash)
+      (*hash)->update(input, length);
    }
 
 /*
 * Finalize the hash
 */
-void Parallel::final_result(byte hash[])
+void Parallel::final_result(byte out[])
    {
-   size_t offset = 0;
-   for(size_t i = 0; i != hashes.size(); ++i)
+   u32bit offset = 0;
+
+   for(auto hash = hashes.begin(); hash != hashes.end(); ++hash)
       {
-      hashes[i]->final(hash + offset);
-      offset += hashes[i]->output_length();
+      (*hash)->final(out + offset);
+      offset += (*hash)->OUTPUT_LENGTH;
       }
    }
 
@@ -48,12 +49,14 @@ size_t Parallel::output_length() const
 std::string Parallel::name() const
    {
    std::string hash_names;
-   for(size_t i = 0; i != hashes.size(); ++i)
+
+   for(auto hash = hashes.begin(); hash != hashes.end(); ++hash)
       {
-      if(i)
+      if(hash != hashes.begin())
          hash_names += ',';
-      hash_names += hashes[i]->name();
+      hash_names += (*hash)->name();
       }
+
    return "Parallel(" + hash_names + ")";
    }
 
@@ -63,8 +66,10 @@ std::string Parallel::name() const
 HashFunction* Parallel::clone() const
    {
    std::vector<HashFunction*> hash_copies;
-   for(size_t i = 0; i != hashes.size(); ++i)
-      hash_copies.push_back(hashes[i]->clone());
+
+   for(auto hash = hashes.begin(); hash != hashes.end(); ++hash)
+      hash_copies.push_back((*hash)->clone());
+
    return new Parallel(hash_copies);
    }
 
@@ -73,8 +78,8 @@ HashFunction* Parallel::clone() const
 */
 void Parallel::clear()
    {
-   for(size_t i = 0; i != hashes.size(); ++i)
-      hashes[i]->clear();
+   for(auto hash = hashes.begin(); hash != hashes.end(); ++hash)
+      (*hash)->clear();
    }
 
 /*
@@ -90,8 +95,8 @@ Parallel::Parallel(const std::vector<HashFunction*>& hash_in) :
 */
 Parallel::~Parallel()
    {
-   for(size_t i = 0; i != hashes.size(); ++i)
-      delete hashes[i];
+   for(auto hash = hashes.begin(); hash != hashes.end(); ++hash)
+      delete (*hash);
    }
 
 }
