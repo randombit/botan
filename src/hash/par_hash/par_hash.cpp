@@ -28,7 +28,7 @@ void Parallel::final_result(byte out[])
    for(auto hash = hashes.begin(); hash != hashes.end(); ++hash)
       {
       (*hash)->final(out + offset);
-      offset += (*hash)->OUTPUT_LENGTH;
+      offset += (*hash)->output_length();
       }
    }
 

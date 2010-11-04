@@ -16,6 +16,8 @@
 #include <vector>
 #include <functional>
 
+namespace Botan {
+
 using namespace std::placeholders;
 
 /**
