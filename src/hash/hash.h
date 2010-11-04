@@ -30,9 +30,6 @@ class BOTAN_DLL HashFunction : public Buffered_Computation,
       * The hash block size as defined for this algorithm
       */
       virtual size_t hash_block_size() const { return 0; }
-
-   private:
-      HashFunction& operator=(const HashFunction&);
    };
 
 }

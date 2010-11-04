@@ -35,7 +35,11 @@ class BOTAN_DLL Algorithm
       */
       virtual std::string name() const = 0;
 
+      Algorithm() {}
       virtual ~Algorithm() {}
+   private:
+      Algorithm(const Algorithm&) {}
+      Algorithm& operator=(const Algorithm&) { return (*this); }
    };
 
 }
