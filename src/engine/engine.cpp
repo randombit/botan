@@ -37,6 +37,13 @@ Engine::find_mac(const SCAN_Name&,
    return 0;
    }
 
+PBKDF*
+Engine::find_pbkdf(const SCAN_Name&,
+                   Algorithm_Factory&) const
+   {
+   return 0;
+   }
+
 Modular_Exponentiator*
 Engine::mod_exp(const BigInt&,
                 Power_Mod::Usage_Hints) const

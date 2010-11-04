@@ -32,7 +32,7 @@ Dynamically_Loaded_Engine::Dynamically_Loaded_Engine(
 
       const u32bit mod_version = get_version();
 
-      if(mod_version != 20100908)
+      if(mod_version != 20101003)
          throw std::runtime_error("Incompatible version in " +
                                   library_path + " of " +
                                   to_string(mod_version));

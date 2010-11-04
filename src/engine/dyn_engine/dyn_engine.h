@@ -49,6 +49,12 @@ class BOTAN_DLL Dynamically_Loaded_Engine : public Engine
          return engine->find_mac(algo_spec, af);
          }
 
+      PBKDF* find_pbkdf(const SCAN_Name& algo_spec,
+                        Algorithm_Factory& af) const
+         {
+         return engine->find_pbkdf(algo_spec, af);
+         }
+
       Modular_Exponentiator* mod_exp(const BigInt& n,
                                      Power_Mod::Usage_Hints hints) const
          {

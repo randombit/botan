@@ -9,18 +9,6 @@
 #include <botan/libstate.h>
 #include <botan/scan_name.h>
 
-#if defined(BOTAN_HAS_PBKDF1)
-  #include <botan/pbkdf1.h>
-#endif
-
-#if defined(BOTAN_HAS_PBKDF2)
-  #include <botan/pbkdf2.h>
-#endif
-
-#if defined(BOTAN_HAS_PGPS2K)
-  #include <botan/pgp_s2k.h>
-#endif
-
 #if defined(BOTAN_HAS_MGF1)
   #include <botan/mgf1.h>
 #endif
@@ -84,29 +72,10 @@ namespace Botan {
 */
 PBKDF* get_pbkdf(const std::string& algo_spec)
    {
-   SCAN_Name request(algo_spec);
-
    Algorithm_Factory& af = global_state().algorithm_factory();
 
-#if defined(BOTAN_HAS_PBKDF1)
-   if(request.algo_name() == "PBKDF1" && request.arg_count() == 1)
-      return new PKCS5_PBKDF1(af.make_hash_function(request.arg(0)));
-#endif
-
-#if defined(BOTAN_HAS_PBKDF2)
-   if(request.algo_name() == "PBKDF2" && request.arg_count() == 1)
-      {
-      if(const MessageAuthenticationCode* mac_proto = af.prototype_mac(request.arg(0)))
-         return new PKCS5_PBKDF2(mac_proto->clone());
-
-      return new PKCS5_PBKDF2(af.make_mac("HMAC(" + request.arg(0) + ")"));
-      }
-#endif
-
-#if defined(BOTAN_HAS_PGPS2K)
-   if(request.algo_name() == "OpenPGP-S2K" && request.arg_count() == 1)
-      return new OpenPGP_S2K(af.make_hash_function(request.arg(0)));
-#endif
+   if(PBKDF* pbkdf = af.make_pbkdf(algo_spec))
+      return pbkdf;
 
    throw Algorithm_Not_Found(algo_spec);
    }

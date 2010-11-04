@@ -14,6 +14,7 @@
 #include <botan/stream_cipher.h>
 #include <botan/hash.h>
 #include <botan/mac.h>
+#include <botan/pbkdf.h>
 #include <botan/pow_mod.h>
 #include <botan/pk_keys.h>
 #include <botan/pk_ops.h>
@@ -77,6 +78,14 @@ class BOTAN_DLL Engine
       virtual MessageAuthenticationCode*
          find_mac(const SCAN_Name& algo_spec,
                   Algorithm_Factory& af) const;
+
+      /**
+      * @param algo_spec the algorithm name/specification
+      * @param af an algorithm factory object
+      * @return newly allocated object, or NULL
+      */
+      virtual PBKDF* find_pbkdf(const SCAN_Name& algo_spec,
+                                Algorithm_Factory& af) const;
 
       /**
       * @param n the modulus
