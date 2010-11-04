@@ -9,7 +9,6 @@
 #define BOTAN_ENGINE_H__
 
 #include <botan/scan_name.h>
-
 #include <botan/block_cipher.h>
 #include <botan/stream_cipher.h>
 #include <botan/hash.h>
@@ -18,9 +17,6 @@
 #include <botan/pow_mod.h>
 #include <botan/pk_keys.h>
 #include <botan/pk_ops.h>
-
-#include <utility>
-#include <map>
 
 namespace Botan {
 
