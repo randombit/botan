@@ -1,6 +1,6 @@
 /*
-* Symmetric Algorithm Base Class
-* (C) 1999-2007 Jack Lloyd
+* Algorithm Base Class
+* (C) 2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -14,16 +14,11 @@
 namespace Botan {
 
 /**
-* This class represents a symmetric algorithm object.
+* This class represents an algorithm of some kind
 */
 class BOTAN_DLL Algorithm
    {
    public:
-
-      /**
-      * Make a new object representing the same algorithm as *this
-      */
-      virtual Algorithm* clone() const = 0;
 
       /**
       * Zeroize internal state
