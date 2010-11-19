@@ -34,7 +34,6 @@ class BOTAN_DLL X509_DN : public ASN1_Object
 
       static std::string deref_info_field(const std::string&);
 
-      void do_decode(const MemoryRegion<byte>&);
       MemoryVector<byte> get_bits() const;
 
       X509_DN();

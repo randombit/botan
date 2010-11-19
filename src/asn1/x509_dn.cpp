@@ -113,35 +113,6 @@ std::vector<std::string> X509_DN::get_attribute(const std::string& attr) const
    }
 
 /*
-* Handle the decoding operation of a DN
-*/
-void X509_DN::do_decode(const MemoryRegion<byte>& bits)
-   {
-   BER_Decoder sequence(bits);
-
-   while(sequence.more_items())
-      {
-      BER_Decoder rdn = sequence.start_cons(SET);
-
-      while(rdn.more_items())
-         {
-         OID oid;
-         ASN1_String str;
-
-         rdn.start_cons(SEQUENCE)
-            .decode(oid)
-            .decode(str)
-            .verify_end()
-        .end_cons();
-
-         add_attribute(oid, str.value());
-         }
-      }
-
-   dn_bits = bits;
-   }
-
-/*
 * Return the BER encoded data, if any
 */
 MemoryVector<byte> X509_DN::get_bits() const
@@ -275,12 +246,12 @@ void X509_DN::encode_into(DER_Encoder& der) const
       der.raw_bytes(dn_bits);
    else
       {
-      do_ava(der, dn_info, PRINTABLE_STRING, "X520.Country", true);
+      do_ava(der, dn_info, PRINTABLE_STRING, "X520.Country");
       do_ava(der, dn_info, DIRECTORY_STRING, "X520.State");
       do_ava(der, dn_info, DIRECTORY_STRING, "X520.Locality");
       do_ava(der, dn_info, DIRECTORY_STRING, "X520.Organization");
       do_ava(der, dn_info, DIRECTORY_STRING, "X520.OrganizationalUnit");
-      do_ava(der, dn_info, DIRECTORY_STRING, "X520.CommonName", true);
+      do_ava(der, dn_info, DIRECTORY_STRING, "X520.CommonName");
       do_ava(der, dn_info, PRINTABLE_STRING, "X520.SerialNumber");
       }
 
@@ -292,13 +263,34 @@ void X509_DN::encode_into(DER_Encoder& der) const
 */
 void X509_DN::decode_from(BER_Decoder& source)
    {
-   dn_info.clear();
+   MemoryVector<byte> bits;
 
    source.start_cons(SEQUENCE)
-      .raw_bytes(dn_bits)
+      .raw_bytes(bits)
    .end_cons();
 
-   do_decode(dn_bits);
+   BER_Decoder sequence(bits);
+
+   while(sequence.more_items())
+      {
+      BER_Decoder rdn = sequence.start_cons(SET);
+
+      while(rdn.more_items())
+         {
+         OID oid;
+         ASN1_String str;
+
+         rdn.start_cons(SEQUENCE)
+            .decode(oid)
+            .decode(str)
+            .verify_end()
+        .end_cons();
+
+         add_attribute(oid, str.value());
+         }
+      }
+
+   dn_info = bits;
    }
 
 }
