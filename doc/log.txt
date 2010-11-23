@@ -4,6 +4,7 @@
  - The SSL interface requires TR1 (uses std::tr1::function)
  - Fix SSL handshake failures when using RC4 ciphersuites
  - Fix a number of CRL encoding and decoding bugs
+ - Counter mode now always encrypts 256 blocks in parallel
  - Code where u32bit was used to represent a length now uses size_t
  - Use small tables in the first round of AES
  - Removed AES class: app must choose AES-128, AES-192, or AES-256
@@ -15,13 +16,15 @@
  - Changed semantics of MemoryRegion::resize and clear to match STL
  - Removed MemoryRegion::append, replaced by push_back and operator+=
  - Move PBKDF lookup to engine system
+ - The IDEA key schedule has been changed to run in constant time
+ - Avoid a possible timing vulnerability in Montgomery reduction
  - Add Algorithm and Key_Length_Specification classes
  - Switch default PKCS #8 encryption algorithm from AES-128 to AES-256
  - Update Skein-512 to match the v1.3 specification
  - Allow using PBKDF2 with empty passphrases
  - Support use of HMAC(SHA-256) and CMAC(Blowfish) in passhash9
  - Improve support for Intel Atom processors
- - Fix compilation under Sun Studio
+ - Fix compilation problems under Sun Studio and Clang
 
 * 1.8.11, 2010-11-02
  - Fix a number of CRL encoding and decoding bugs
