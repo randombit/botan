@@ -290,7 +290,7 @@ void X509_DN::decode_from(BER_Decoder& source)
          }
       }
 
-   dn_info = bits;
+   dn_bits = bits;
    }
 
 }
