@@ -2,22 +2,10 @@
 * (C) 2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
-*/
-
-
-/**
-Generate a 1024 bit DSA key and put it into a file. The public key
-format is that specified by X.509, while the private key format is
-PKCS #8.
-
-The domain parameters are the ones specified as the Java default DSA
-parameters. There is nothing special about these, it's just the only
-1024-bit DSA parameter set that's included in Botan at the time of
-this writing. The application always reads/writes all of the domain
-parameters to/from the file, so a new set could be used without any
-problems. We could generate a new set for each key, or read a set of
-DSA params from a file and use those, but they mostly seem like
-needless complications.
+*
+* Generate a 1024 bit DSA key and put it into a file. The public key
+* format is that specified by X.509, while the private key format is
+* PKCS #8.
 */
 
 #include <iostream>
