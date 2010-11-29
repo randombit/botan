@@ -1,5 +1,5 @@
 
-* 1.9.11-dev, ????-??-??
+* 1.9.11, 2010-11-29
  - Many SSL/TLS APIs have changed. This API is still unstable.
  - The SSL interface requires TR1 (uses std::tr1::function)
  - Fix SSL handshake failures when using RC4 ciphersuites
