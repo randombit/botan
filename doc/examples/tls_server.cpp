@@ -19,6 +19,21 @@ using namespace Botan;
 #include <iostream>
 #include <memory>
 
+class Server_TLS_Policy : public TLS_Policy
+   {
+   public:
+      bool check_cert(const std::vector<X509_Certificate>& certs) const
+         {
+         for(size_t i = 0; i != certs.size(); ++i)
+            {
+            std::cout << certs[i].to_string();
+            }
+
+         std::cout << "Warning: not checking cert signatures\n";
+
+         return true;
+         }
+   };
 int main(int argc, char* argv[])
    {
 
@@ -44,7 +59,7 @@ int main(int argc, char* argv[])
 
       Unix_Server_Socket listener(port);
 
-      TLS_Policy policy;
+      Server_TLS_Policy policy;
 
       while(true)
          {
