@@ -30,7 +30,7 @@ OctetString next_hash(size_t where, size_t want,
    const byte ASCII_A_CHAR = 0x41;
 
    for(size_t j = 0; j != where + 1; j++)
-      sha1.update(ASCII_A_CHAR + where);
+     sha1.update(static_cast<byte>(ASCII_A_CHAR + where));
    sha1.update(secret, secret_len);
    sha1.update(seed, seed_len);
    SecureVector<byte> sha1_hash = sha1.final();

@@ -39,10 +39,17 @@ class BOTAN_DLL TLS_Policy
       virtual DL_Group dh_group() const;
       virtual size_t rsa_export_keysize() const { return 512; }
 
+      /*
+      * @return the minimum version that we will negotiate
+      */
       virtual Version_Code min_version() const { return SSL_V3; }
+
+      /*
+      * @return the version we would prefer to negotiate
+      */
       virtual Version_Code pref_version() const { return TLS_V11; }
 
-      virtual bool check_cert(const std::vector<X509_Certificate>& cert_chain) const;
+      virtual bool check_cert(const std::vector<X509_Certificate>& cert_chain) const = 0;
 
       virtual ~TLS_Policy() {}
    private:

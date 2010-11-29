@@ -30,6 +30,7 @@ default -> "$(CXX) -shared -fPIC -Wl,-soname,$(SONAME)"
 
 <mach_opt>
 amd64     -> "-march=SUBMODEL"
+nehalem   -> "-march=core2 -mssse3 -msse4.1"
 </mach_opt>
 
 <mach_abi_linking>
