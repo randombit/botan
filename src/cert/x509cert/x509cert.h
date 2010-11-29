@@ -141,6 +141,11 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       std::vector<std::string> policies() const;
 
       /**
+      * @return a string describing the certificate
+      */
+      std::string to_string() const;
+
+      /**
       * Check to certificates for equality.
       * @return true both certificates are (binary) equal
       */

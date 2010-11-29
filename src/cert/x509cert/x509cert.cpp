@@ -1,6 +1,6 @@
 /*
 * X.509 Certificates
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -14,7 +14,10 @@
 #include <botan/bigint.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
+#include <botan/hex.h>
 #include <algorithm>
+#include <iterator>
+#include <sstream>
 
 namespace Botan {
 
@@ -84,7 +87,7 @@ void X509_Certificate::force_decode()
       .decode(dn_subject);
 
    if(version > 2)
-      throw Decoding_Error("Unknown X.509 cert version " + to_string(version));
+      throw Decoding_Error("Unknown X.509 cert version " + Botan::to_string(version));
    if(sig_algo != sig_algo_inner)
       throw Decoding_Error("Algorithm identifier mismatch");
 
@@ -297,6 +300,106 @@ bool X509_Certificate::operator==(const X509_Certificate& other) const
 bool operator!=(const X509_Certificate& cert1, const X509_Certificate& cert2)
    {
    return !(cert1 == cert2);
+   }
+
+std::string X509_Certificate::to_string() const
+   {
+   const char* dn_fields[] = { "Name",
+                               "Email",
+                               "Organization",
+                               "Organizational Unit",
+                               "Locality",
+                               "State",
+                               "Country",
+                               "IP",
+                               "DNS",
+                               "URI",
+                               "PKIX.XMPPAddr",
+                               0 };
+
+   std::ostringstream out;
+
+   for(size_t i = 0; dn_fields[i]; ++i)
+      {
+      const std::vector<std::string> vals = this->subject_info(dn_fields[i]);
+
+      if(vals.empty())
+         continue;
+
+      out << "Subject " << dn_fields[i] << ":";
+      for(size_t i = 0; i != vals.size(); ++i)
+         out << " " << vals[i];
+      out << "\n";
+      }
+
+   for(size_t i = 0; dn_fields[i]; ++i)
+      {
+      const std::vector<std::string> vals = this->issuer_info(dn_fields[i]);
+
+      if(vals.empty())
+         continue;
+
+      out << "Issuer " << dn_fields[i] << ":";
+      for(size_t i = 0; i != vals.size(); ++i)
+         out << " " << vals[i];
+      out << "\n";
+      }
+
+   out << "Version: " << this->x509_version() << "\n";
+
+   out << "Not valid before: " << this->start_time() << "\n";
+   out << "Not valid after: " << this->end_time() << "\n";
+
+   out << "Constraints:\n";
+   Key_Constraints constraints = this->constraints();
+   if(constraints == NO_CONSTRAINTS)
+      out << " None\n";
+   else
+      {
+      if(constraints & DIGITAL_SIGNATURE)
+         out << "   Digital Signature\n";
+      if(constraints & NON_REPUDIATION)
+         out << "   Non-Repuidation\n";
+      if(constraints & KEY_ENCIPHERMENT)
+         out << "   Key Encipherment\n";
+      if(constraints & DATA_ENCIPHERMENT)
+         out << "   Data Encipherment\n";
+      if(constraints & KEY_AGREEMENT)
+         out << "   Key Agreement\n";
+      if(constraints & KEY_CERT_SIGN)
+         out << "   Cert Sign\n";
+      if(constraints & CRL_SIGN)
+         out << "   CRL Sign\n";
+      }
+
+   std::vector<std::string> policies = this->policies();
+   if(policies.size())
+      {
+      out << "Policies: " << "\n";
+      for(u32bit j = 0; j != policies.size(); j++)
+         out << "   " << policies[j] << "\n";
+      }
+
+   std::vector<std::string> ex_constraints = this->ex_constraints();
+   if(ex_constraints.size())
+      {
+      out << "Extended Constraints:\n";
+      for(u32bit j = 0; j != ex_constraints.size(); j++)
+         out << "   " << ex_constraints[j] << "\n";
+      }
+
+   out << "Signature algorithm: " <<
+      OIDS::lookup(this->signature_algorithm().oid) << "\n";
+
+   out << "Serial number: " << hex_encode(this->serial_number()) << "\n";
+   out << "Authority keyid: " << hex_encode(this->authority_key_id()) << "\n";
+   out << "Subject keyid: " << hex_encode(this->subject_key_id()) << "\n";
+
+   X509_PublicKey* pubkey = this->subject_public_key();
+   out << "Public Key:\n" << X509::PEM_encode(*pubkey);
+   delete pubkey;
+
+   return out.str();
    }
 
 /*
