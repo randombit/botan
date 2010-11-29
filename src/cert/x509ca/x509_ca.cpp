@@ -98,7 +98,7 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
                                     const Extensions& extensions)
    {
    const u32bit X509_CERT_VERSION = 3;
-   const size_t SERIAL_BITS = 128;
+   const size_t SERIAL_BITS = 256;
 
    BigInt serial_no(rng, SERIAL_BITS);
 
