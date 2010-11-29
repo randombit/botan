@@ -32,7 +32,8 @@ MemoryVector<byte> ECDSA_Signature::DER_encode() const
 
 MemoryVector<byte> ECDSA_Signature::get_concatenation() const
    {
-   u32bit enc_len = m_r > m_s ? m_r.bytes() : m_s.bytes(); // use the larger
+   // use the larger
+   const size_t enc_len = m_r > m_s ? m_r.bytes() : m_s.bytes();
 
    SecureVector<byte> sv_r = BigInt::encode_1363(m_r, enc_len);
    SecureVector<byte> sv_s = BigInt::encode_1363(m_s, enc_len);
