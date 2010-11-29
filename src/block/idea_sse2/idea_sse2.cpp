@@ -16,7 +16,7 @@ inline __m128i mul(__m128i X, u16bit K_16)
    {
    const __m128i zeros = _mm_set1_epi16(0);
    const __m128i ones = _mm_set1_epi16(1);
-   const __m128i high_bit = _mm_set1_epi16(0x8000);
+   const __m128i high_bit = _mm_set1_epi16(-32767); // 0x8000
 
    const __m128i K = _mm_set1_epi16(K_16);
 
