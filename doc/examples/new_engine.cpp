@@ -39,7 +39,8 @@ class XOR_Cipher : public StreamCipher
 
       void key_schedule(const byte key[], size_t length)
          {
-         mask.set(key, length);
+         mask.resize(length);
+         copy_mem(&mask[0], key, length);
          }
 
       SecureVector<byte> mask;
