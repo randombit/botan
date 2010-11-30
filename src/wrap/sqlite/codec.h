@@ -12,32 +12,6 @@
 #include <botan/botan.h>
 #include <botan/loadstor.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#if defined(__BORLANDC__)
-#define __STDC__ 1
-#endif
-
-#include "./sqliteInt.h"
-
-#if defined(__BORLANDC__)
-#undef __STDC__
-#endif
-
-/* ATTENTION: Macro similar to that in pager.c
- * Needed because pager is forward declared when needed most
- * TODO: Check in case of new version of SQLite
- * ... but it's VERY unlikely to change (it'd break all past DBs)
- */
-#include "./os.h"
-#define CODEC_PAGER_MJ_PGNO(x) ((PENDING_BYTE/(x))+1)
-
-#ifdef __cplusplus
-}  /* End of the 'extern "C"' block */
-#endif
-
 using namespace std;
 using namespace Botan;
 
@@ -57,6 +31,9 @@ const string PBKDF_STR = "PBKDF2(SHA-160)";
 //SALT_STR: Hard coded salt used to derive the key from the passphrase.
 const string SALT_STR = "&g#nB'9]";
 
+//SALT_SIZE: Size of the salt in bytes (as given in SALT_STR)
+const int SALT_SIZE = 64/8; //64 bit, 8 byte salt
+
 //MAC_STR: CMAC used to derive the IV that is used for db page
 //encryption
 const string MAC_STR = "CMAC(Twofish)";
@@ -64,9 +41,6 @@ const string MAC_STR = "CMAC(Twofish)";
 //PBKDF_ITERATIONS: Number of hash iterations used in the key derivation
 //process.
 const int PBKDF_ITERATIONS = 10000;
-
-//SALT_SIZE: Size of the salt in bytes (as given in SALT_STR)
-const int SALT_SIZE = 64/8; //64 bit, 8 byte salt
 
 //KEY_SIZE: Size of the encryption key. Note that XTS splits the key
 //between two ciphers, so if you're using XTS, double the intended key
@@ -77,29 +51,33 @@ const int KEY_SIZE = 512/8; //512 bit, 64 byte key. (256 bit XTS key)
 //above.
 const int IV_DERIVATION_KEY_SIZE = 256/8; //256 bit, 32 byte key
 
+//This is definited in sqlite.h and very unlikely to change
+#define SQLITE_MAX_PAGE_SIZE 32768
+
 class Codec
 {
 public:
     Codec(void *db);
-    Codec(const Codec& other, void *db);
+    Codec(const Codec* other, void *db);
 
-    void GenerateWriteKey(const char* userPassword, int passwordLength);
+    void GenerateWriteKey(const char *userPassword, int passwordLength);
     void DropWriteKey();
     void SetWriteIsRead();
     void SetReadIsWrite();
 
-    unsigned char* Encrypt(int page, unsigned char* data, bool useWriteKey);
-    void Decrypt(int page, unsigned char* data);
+    unsigned char* Encrypt(int page, unsigned char *data, bool useWriteKey);
+    void Decrypt(int page, unsigned char *data);
 
     void SetPageSize(int pageSize) { m_pageSize = pageSize; }
 
     bool HasReadKey() { return m_hasReadKey; }
     bool HasWriteKey() { return m_hasWriteKey; }
     void* GetDB() { return m_db; }
+    const char* GetAndResetError();
 
 private:
-    bool          m_hasReadKey;
-    bool          m_hasWriteKey;
+    bool m_hasReadKey;
+    bool m_hasWriteKey;
 
     SymmetricKey
         m_readKey,
@@ -118,7 +96,8 @@ private:
 
     int m_pageSize;
     unsigned char m_page[SQLITE_MAX_PAGE_SIZE];
-    void* m_db;
+    void *m_db;
+    const char *m_botanErrorMsg;
 
     InitializationVector GetIVForPage(u32bit page, bool useWriteKey);
     void InitializeCodec(void *db);
