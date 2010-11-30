@@ -1,5 +1,5 @@
 /*
-* (C) 2008 Jack Lloyd
+* (C) 2008-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -70,7 +70,13 @@ int main(int argc, char* argv[])
 
             printf("Got new connection\n");
 
-            TLS_Server tls(policy, rng, *sock, cert, key);
+            TLS_Server tls(
+              std::tr1::bind(&Socket::read, std::tr1::ref(sock), _1, _2),
+              std::tr1::bind(&Socket::write, std::tr1::ref(sock), _1, _2),
+              policy,
+              rng,
+              cert,
+              key);
 
             std::string hostname = tls.requested_hostname();
 
