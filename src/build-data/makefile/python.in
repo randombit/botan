@@ -17,10 +17,11 @@ all: $(BOTAN_PYTHON_MODDIR)/_botan.so
 
 $(BOTAN_PYTHON_MODDIR)/_botan.so: $(PYTHON_OBJS)
 	cp src/wrap/python/*.py $(BOTAN_PYTHON_MODDIR)
-	$(CXX) -shared -o $@ $(PYTHON_OBJS) -L. -L$(PYTHON_ROOT) -lbotan -lboost_python -Wl,-rpath-link,. -Wl,-soname,$@
+	$(CXX) -shared -Wl,-soname,$@ $(PYTHON_OBJS) -L. -L$(PYTHON_ROOT) -lbotan -lboost_python -o $@
 
 clean:
-	rm -f $(PYTHON_OBJS) $(BOTAN_PYTHON_MODDIR)
+        rm -rf $(BOTAN_PYTHON_MODDIR)/*
+	rm -f $(PYTHON_OBJS)
 
 install:
 	mkdir -p $(PYTHON_SITE_PACKAGE_DIR)/botan
