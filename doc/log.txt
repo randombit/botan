@@ -1,6 +1,7 @@
 
 * 1.9.12-dev, ????-??-??
  - Fix compilation problems in Python wrappers
+ - Fix compilation problem in OpenSSL engine
 
 * 1.9.11, 2010-11-29
  - Many SSL/TLS APIs have changed. This API is still unstable.

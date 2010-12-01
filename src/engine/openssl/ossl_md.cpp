@@ -22,7 +22,15 @@ class EVP_HashFunction : public HashFunction
       std::string name() const { return algo_name; }
       HashFunction* clone() const;
 
-      size_t hash_block_size() const { return block_size; }
+      size_t output_length() const
+         {
+         return EVP_MD_size(EVP_MD_CTX_md(&md));
+         }
+
+      size_t hash_block_size() const
+         {
+         return EVP_MD_block_size(EVP_MD_CTX_md(&md));
+         }
 
       EVP_HashFunction(const EVP_MD*, const std::string&);
       ~EVP_HashFunction();
@@ -76,8 +84,6 @@ HashFunction* EVP_HashFunction::clone() const
 */
 EVP_HashFunction::EVP_HashFunction(const EVP_MD* algo,
                                    const std::string& name) :
-   HashFunction(EVP_MD_size(algo)),
-   block_size(EVP_MD_block_size(algo)),
    algo_name(name)
    {
    EVP_MD_CTX_init(&md);
