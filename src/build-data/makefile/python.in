@@ -1,4 +1,5 @@
 CXX           = %{cc}
+CFLAGS        = -Os
 LDFLAGS       =
 WARN_FLAGS    = %{warn_flags}
 
@@ -6,7 +7,7 @@ PYTHON_ROOT = /usr/lib/python%{python_version}/config
 PYTHON_INC = -I/usr/include/python%{python_version}
 PYTHON_SITE_PACKAGE_DIR = /usr/lib/python%{python_version}/site-packages/
 
-PYTHON_FLAGS = -Isrc/wrap/python -Os -fPIC -ftemplate-depth-255 $(WARN_FLAGS) $(PYTHON_INC)
+PYTHON_FLAGS = -Isrc/wrap/python -fPIC -ftemplate-depth-255 $(WARN_FLAGS) $(PYTHON_INC) $(CFLAGS)
 
 BOTAN_PYTHON_MODDIR = %{python_obj_dir}
 
