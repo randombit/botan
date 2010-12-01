@@ -1,5 +1,5 @@
 CXX           = %{cc}
-LDFLAGS       = 
+LDFLAGS       =
 WARN_FLAGS    = %{warn_flags}
 
 PYTHON_ROOT = /usr/lib/python%{python_version}/config
@@ -21,7 +21,7 @@ $(BOTAN_PYTHON_MODDIR)/_botan.so: $(PYTHON_OBJS)
 	$(CXX) -shared -Wl,-soname,$@ $(PYTHON_OBJS) -L. -L$(PYTHON_ROOT) $(LDFLAGS) -lbotan -lboost_python -o $@
 
 clean:
-        rm -rf $(BOTAN_PYTHON_MODDIR)/*
+	rm -rf $(BOTAN_PYTHON_MODDIR)/*
 	rm -f $(PYTHON_OBJS)
 
 install:
