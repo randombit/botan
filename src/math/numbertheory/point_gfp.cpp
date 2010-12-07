@@ -306,17 +306,14 @@ PointGFp operator*(const BigInt& scalar, const PointGFp& point)
 
    const size_t window_size = 4;
 
-   std::vector<PointGFp> Ps((1 << window_size) - 1);
-   Ps[0] = point;
+   std::vector<PointGFp> Ps(1 << window_size);
+   Ps[0] = PointGFp(curve);
+   Ps[1] = point;
 
-   for(size_t i = 1; i != Ps.size(); ++i)
+   for(size_t i = 2; i != Ps.size(); ++i)
       {
       Ps[i] = Ps[i-1];
-
-      if(i % 1 == 1)
-         Ps[i].mult2(ws);
-      else
-         Ps[i].add(Ps[0], ws);
+      Ps[i].add(point, ws);
       }
 
    PointGFp H(curve); // create as zero
@@ -330,8 +327,7 @@ PointGFp operator*(const BigInt& scalar, const PointGFp& point)
       const u32bit nibble = scalar.get_substring(bits_left - window_size,
                                                  window_size);
 
-      if(nibble)
-         H.add(Ps[nibble-1], ws);
+      H.add(Ps[nibble], ws);
 
       bits_left -= window_size;
       }
@@ -340,7 +336,7 @@ PointGFp operator*(const BigInt& scalar, const PointGFp& point)
       {
       H.mult2(ws);
       if(scalar.get_bit(bits_left-1))
-         H.add(Ps[0], ws);
+         H.add(point, ws);
 
       --bits_left;
       }
