@@ -479,35 +479,30 @@ SecureVector<byte> EC2OSP(const PointGFp& point, byte format)
 
    if(format == PointGFp::UNCOMPRESSED)
       {
-      SecureVector<byte> result(2*p_bytes+1);
-      result[0] = 4;
+      SecureVector<byte> result;
+      result.push_back(0x04);
 
-      result.copy(1, &bX[0], p_bytes);
-      result.copy(p_bytes+1, &bY[0], p_bytes);
+      result += bX;
+      result += bY;
+
       return result;
       }
    else if(format == PointGFp::COMPRESSED)
       {
-      SecureVector<byte> result(p_bytes+1);
-      result[0] = 2;
+      SecureVector<byte> result;
+      result.push_back(0x02 | y.get_bit(0));
 
-      result.copy(1, &bX[0], bX.size());
-
-      if(y.get_bit(0))
-         result[0] |= 1;
+      result += bX;
 
       return result;
       }
    else if(format == PointGFp::HYBRID)
       {
-      SecureVector<byte> result(2*p_bytes+1);
-      result[0] = 6;
+      SecureVector<byte> result;
+      result.push_back(0x06 | y.get_bit(0));
 
-      result.copy(1, &bX[0], bX.size());
-      result.copy(p_bytes+1, &bY[0], bY.size());
-
-      if(y.get_bit(0))
-         result[0] |= 1;
+      result += bX;
+      result += bY;
 
       return result;
       }
@@ -556,8 +551,8 @@ PointGFp OS2ECP(const byte data[], size_t data_len,
       //compressed form
       x = BigInt::decode(&data[1], data_len - 1);
 
-      bool yMod2 = ((pc & 0x01) == 1);
-      y = decompress_point(yMod2, x, curve);
+      const bool y_mod_2 = ((pc & 0x01) == 1);
+      y = decompress_point(y_mod_2, x, curve);
       }
    else if(pc == 4)
       {
@@ -575,9 +570,9 @@ PointGFp OS2ECP(const byte data[], size_t data_len,
       x = BigInt::decode(&data[1], l);
       y = BigInt::decode(&data[l+1], l);
 
-      bool yMod2 = ((pc & 0x01) == 1);
+      const bool y_mod_2 = ((pc & 0x01) == 1);
 
-      if(decompress_point(yMod2, x, curve) != y)
+      if(decompress_point(y_mod_2, x, curve) != y)
          throw Illegal_Point("OS2ECP: Decoding error in hybrid format");
       }
    else
