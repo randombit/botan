@@ -1,5 +1,6 @@
 
 * 1.9.12-dev, ????-??-??
+ - Add the Keccak hash function
  - Fix compilation problems in Python wrappers
  - Fix compilation problem in OpenSSL engine
 
