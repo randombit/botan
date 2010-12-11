@@ -161,10 +161,9 @@ void Keccak_1600::add_data(const byte input[], size_t length)
 
 void Keccak_1600::final_result(byte output[])
    {
-   update(0x01);
-   update(diversifier);
-   update(bitrate / 8);
-   update(0x01);
+   const byte padding[4] = { 0x01, diversifier, bitrate / 8, 0x01 };
+
+   add_data(padding, sizeof(padding));
 
    if(buf_pos)
       for(size_t i = buf_pos; i != buffer.size(); ++i)
