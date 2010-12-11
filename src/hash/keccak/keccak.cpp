@@ -163,10 +163,7 @@ void Keccak_1600::final_result(byte output[])
    add_data(padding, sizeof(padding));
 
    if(S_pos)
-      {
       keccak_f_1600(&S[0]);
-      S_pos = 0;
-      }
 
    /*
    * We never have to run the permutation again because we only support
@@ -174,6 +171,8 @@ void Keccak_1600::final_result(byte output[])
    */
    for(size_t i = 0; i != output_bits/8; ++i)
       output[i] = get_byte(7 - (i % 8), S[i/8]);
+
+   clear();
    }
 
 }
