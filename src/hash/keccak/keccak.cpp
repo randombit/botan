@@ -10,6 +10,7 @@
 #include <botan/parsing.h>
 #include <botan/exceptn.h>
 #include <botan/rotate.h>
+#include <botan/internal/xor_buf.h>
 
 namespace Botan {
 
@@ -105,8 +106,7 @@ Keccak_1600::Keccak_1600(size_t output_bits) :
    bitrate(1600 - 2*output_bits),
    diversifier(output_bits / 8),
    S(25),
-   buffer(bitrate / 8),
-   buf_pos(0)
+   S_pos(0)
    {
    // We only support the parameters for the SHA-3 proposal
 
@@ -129,8 +129,7 @@ HashFunction* Keccak_1600::clone() const
 void Keccak_1600::clear()
    {
    zeroise(S);
-   zeroise(buffer);
-   buf_pos = 0;
+   S_pos = 0;
    }
 
 void Keccak_1600::add_data(const byte input[], size_t length)
@@ -140,21 +139,19 @@ void Keccak_1600::add_data(const byte input[], size_t length)
 
    while(length)
       {
-      const size_t consumed = std::min(length, buffer.size() - buf_pos);
-      copy_mem(&buffer[buf_pos], input, consumed);
+      const size_t consumed = std::min(length, bitrate / 8 - S_pos);
+      xor_buf(reinterpret_cast<byte*>(&S[0]) + S_pos,
+              input,
+              consumed);
 
       input += consumed;
       length -= consumed;
-      buf_pos += consumed;
+      S_pos += consumed;
 
-      if(buf_pos == buffer.size())
+      if(S_pos == bitrate / 8)
          {
-         for(size_t i = 0; i != buffer.size() / 8; ++i)
-            S[i] ^= load_le<u64bit>(&buffer[0], i);
-
          keccak_f_1600(&S[0]);
-
-         buf_pos = 0;
+         S_pos = 0;
          }
       }
    }
@@ -165,15 +162,17 @@ void Keccak_1600::final_result(byte output[])
 
    add_data(padding, sizeof(padding));
 
-   if(buf_pos)
-      for(size_t i = buf_pos; i != buffer.size(); ++i)
-         update(0x00);
+   if(S_pos)
+      {
+      keccak_f_1600(&S[0]);
+      S_pos = 0;
+      }
 
    /*
    * We never have to run the permutation again because we only support
    * limited output lengths
    */
-   for(size_t i = 0; i != output_length(); ++i)
+   for(size_t i = 0; i != output_bits/8; ++i)
       output[i] = get_byte(7 - (i % 8), S[i/8]);
    }
 

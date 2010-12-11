@@ -20,6 +20,11 @@ namespace Botan {
 class BOTAN_DLL Keccak_1600 : public HashFunction
    {
    public:
+
+      /**
+      * @param output_bits the size of the hash output; must be one of
+      *                    224, 256, 384, or 512
+      */
       Keccak_1600(size_t output_bits = 512);
 
       size_t hash_block_size() const { return bitrate / 8; }
@@ -35,8 +40,7 @@ class BOTAN_DLL Keccak_1600 : public HashFunction
       size_t output_bits, bitrate;
       byte diversifier;
       SecureVector<u64bit> S;
-      SecureVector<byte> buffer;
-      size_t buf_pos;
+      size_t S_pos;
    };
 
 }
