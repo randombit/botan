@@ -964,6 +964,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'doc_src_dir': 'doc',
         'build_dir': build_config.build_dir,
 
+        'python_dir': build_config.python_dir,
+
         'os': options.os,
         'arch': options.arch,
         'submodel': options.cpu,
