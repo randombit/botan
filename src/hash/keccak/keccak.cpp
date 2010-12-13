@@ -143,6 +143,23 @@ void Keccak_1600::add_data(const byte input[], size_t length)
 
       length -= to_take;
 
+      while(to_take && S_pos % 8)
+         {
+         S[S_pos / 8] ^= static_cast<u64bit>(input[0]) << (8 * (S_pos % 8));
+
+         ++S_pos;
+         ++input;
+         --to_take;
+         }
+
+      while(to_take && to_take % 8 == 0)
+         {
+         S[S_pos / 8] ^= load_le<u64bit>(input, 0);
+         S_pos += 8;
+         input += 8;
+         to_take -= 8;
+         }
+
       while(to_take)
          {
          S[S_pos / 8] ^= static_cast<u64bit>(input[0]) << (8 * (S_pos % 8));
