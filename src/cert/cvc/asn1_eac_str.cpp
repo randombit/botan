@@ -103,14 +103,14 @@ void ASN1_EAC_String::decode_from(BER_Decoder& source)
 bool ASN1_EAC_String::sanity_check() const
    {
    const byte* rep = reinterpret_cast<const byte*>(iso_8859_str.data());
-   const u32bit rep_len = iso_8859_str.size();
-   for (u32bit i=0; i<rep_len; i++)
+   const size_t rep_len = iso_8859_str.size();
+
+   for(size_t i = 0; i != rep_len; ++i)
       {
-      if ((rep[i] < 0x20) || ((rep[i] >= 0x7F) && (rep[i] < 0xA0)))
-         {
+      if((rep[i] < 0x20) || ((rep[i] >= 0x7F) && (rep[i] < 0xA0)))
          return false;
-         }
       }
+
    return true;
    }
 

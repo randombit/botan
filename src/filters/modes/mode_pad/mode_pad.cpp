@@ -66,7 +66,7 @@ void ANSI_X923_Padding::pad(byte block[], size_t size, size_t position) const
    {
    for(size_t j = 0; j != size-position; ++j)
       block[j] = 0;
-   block[size-position-1] = (size-position);
+   block[size-position-1] = static_cast<byte>(size-position);
    }
 
 /*

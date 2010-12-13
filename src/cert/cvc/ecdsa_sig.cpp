@@ -48,7 +48,7 @@ ECDSA_Signature decode_concatenation(const MemoryRegion<byte>& concat)
    if(concat.size() % 2 != 0)
       throw Invalid_Argument("Erroneous length of signature");
 
-   const u32bit rs_len = concat.size() / 2;
+   const size_t rs_len = concat.size() / 2;
 
    BigInt r = BigInt::decode(&concat[0], rs_len);
    BigInt s = BigInt::decode(&concat[rs_len], rs_len);

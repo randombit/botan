@@ -35,7 +35,7 @@ class CSP_Handle
 
       size_t gen_random(byte out[], size_t n) const
          {
-         if(is_valid() && CryptGenRandom(handle, n, out))
+         if(is_valid() && CryptGenRandom(handle, n, static_cast<DWORD>(out)))
             return n;
          return 0;
          }
