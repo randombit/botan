@@ -104,7 +104,7 @@ void keccak_f_1600(u64bit A[25])
 Keccak_1600::Keccak_1600(size_t output_bits) :
    output_bits(output_bits),
    bitrate(1600 - 2*output_bits),
-   diversifier(output_bits / 8),
+   diversifier(static_cast<byte>(output_bits / 8)),
    S(25),
    S_pos(0)
    {
@@ -179,7 +179,10 @@ void Keccak_1600::add_data(const byte input[], size_t length)
 
 void Keccak_1600::final_result(byte output[])
    {
-   const byte padding[4] = { 0x01, diversifier, bitrate / 8, 0x01 };
+   const byte padding[4] = { 0x01,
+                             diversifier,
+                             static_cast<byte>(bitrate / 8),
+                             0x01 };
 
    add_data(padding, sizeof(padding));
 

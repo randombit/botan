@@ -54,10 +54,10 @@ class ECB_Encryption_ErrorCheck : public Filter
          }
 
    private:
-      const u32bit BLOCKSIZE;
+      const size_t BLOCKSIZE;
       BlockCipher* cipher;
       SecureVector<byte> buffer;
-      u32bit position;
+      size_t position;
       HashFunction* input_hash, *decrypt_hash;
    };
 

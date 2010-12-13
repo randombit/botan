@@ -486,7 +486,7 @@ SecureVector<byte> EC2OSP(const PointGFp& point, byte format)
    else if(format == PointGFp::COMPRESSED)
       {
       SecureVector<byte> result;
-      result.push_back(0x02 | y.get_bit(0));
+      result.push_back(0x02 | static_cast<byte>(y.get_bit(0)));
 
       result += bX;
 
@@ -495,7 +495,7 @@ SecureVector<byte> EC2OSP(const PointGFp& point, byte format)
    else if(format == PointGFp::HYBRID)
       {
       SecureVector<byte> result;
-      result.push_back(0x06 | y.get_bit(0));
+      result.push_back(0x06 | static_cast<byte>(y.get_bit(0)));
 
       result += bX;
       result += bY;
