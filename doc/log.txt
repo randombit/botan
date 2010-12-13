@@ -1,8 +1,9 @@
 
-* 1.9.12-dev, ????-??-??
+* 1.9.12, 2010-12-13
  - Add the Keccak hash function
  - Fix compilation problems in Python wrappers
  - Fix compilation problem in OpenSSL engine
+ - Update SQLite3 database encryption codec
 
 * 1.9.11, 2010-11-29
  - Many SSL/TLS APIs have changed. This API is still unstable.
