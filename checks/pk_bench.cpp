@@ -307,9 +307,9 @@ void benchmark_ecdsa(RandomNumberGenerator& rng,
       {
       EC_Domain_Params params(OIDS::lookup(ec_domains[j]));
 
-      u32bit pbits = params.get_curve().get_p().bits();
+      const size_t pbits = params.get_curve().get_p().bits();
 
-      u32bit hashbits = pbits;
+      size_t hashbits = pbits;
 
       if(hashbits <= 192)
          hashbits = 160;
@@ -356,9 +356,9 @@ void benchmark_gost_3410(RandomNumberGenerator& rng,
       {
       EC_Domain_Params params(OIDS::lookup(ec_domains[j]));
 
-      u32bit pbits = params.get_curve().get_p().bits();
+      size_t pbits = params.get_curve().get_p().bits();
 
-      u32bit hashbits = pbits;
+      size_t hashbits = pbits;
 
       if(hashbits <= 192)
          hashbits = 160;
@@ -405,7 +405,7 @@ void benchmark_ecdh(RandomNumberGenerator& rng,
       {
       EC_Domain_Params params(OIDS::lookup(ec_domains[j]));
 
-      u32bit pbits = params.get_curve().get_p().bits();
+      size_t pbits = params.get_curve().get_p().bits();
 
       Timer keygen_timer("keygen");
       Timer kex_timer("key exchange");
@@ -425,7 +425,7 @@ void benchmark_ecdh(RandomNumberGenerator& rng,
 
          SymmetricKey secret1, secret2;
 
-         for(u32bit i = 0; i != 1000; ++i)
+         for(size_t i = 0; i != 1000; ++i)
             {
             if(kex_timer.seconds() > seconds)
                break;
@@ -466,8 +466,8 @@ void benchmark_dsa_nr(RandomNumberGenerator& rng,
 
    for(size_t j = 0; domains[j]; j++)
       {
-      u32bit pbits = to_u32bit(split_on(domains[j], '/')[2]);
-      u32bit qbits = (pbits <= 1024) ? 160 : 256;
+      size_t pbits = to_u32bit(split_on(domains[j], '/')[2]);
+      size_t qbits = (pbits <= 1024) ? 160 : 256;
 
       const std::string padding = "EMSA1(SHA-" + to_string(qbits) + ")";
 
@@ -535,7 +535,7 @@ void benchmark_dh(RandomNumberGenerator& rng,
 
          SymmetricKey secret1, secret2;
 
-         for(u32bit i = 0; i != 1000; ++i)
+         for(size_t i = 0; i != 1000; ++i)
             {
             if(kex_timer.seconds() > seconds)
                break;
@@ -637,7 +637,7 @@ void benchmark_elg(RandomNumberGenerator& rng,
 
    for(size_t j = 0; domains[j]; j++)
       {
-      u32bit pbits = to_u32bit(split_on(domains[j], '/')[2]);
+      size_t pbits = to_u32bit(split_on(domains[j], '/')[2]);
 
       const std::string padding = "EME1(SHA-1)";
 

@@ -83,7 +83,7 @@ Library_State* swap_global_state(Library_State* new_state)
 */
 bool global_state_exists()
    {
-   return (global_lib_state);
+   return (global_lib_state != 0);
    }
 
 }

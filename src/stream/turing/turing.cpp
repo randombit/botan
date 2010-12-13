@@ -247,7 +247,7 @@ void Turing::key_schedule(const byte key[], size_t length)
 
    PHT(K);
 
-   for(size_t i = 0; i != 256; ++i)
+   for(u32bit i = 0; i != 256; ++i)
       {
       u32bit W0 = 0, C0 = i;
       u32bit W1 = 0, C1 = i;

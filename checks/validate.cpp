@@ -349,7 +349,7 @@ bool failed_test(const std::string& algo,
       const byte* data_ptr = &data[0];
 
       // this can help catch errors with buffering, etc
-      u32bit len = data.size();
+      size_t len = data.size();
       pipe.start_msg();
       while(len)
          {
@@ -390,8 +390,8 @@ bool failed_test(const std::string& algo,
    if(pipe.remaining())
       {
       /* Test peeking at an offset in Pipe/SecureQueue */
-      u32bit offset = random_word(rng, pipe.remaining() - 1);
-      u32bit length = random_word(rng, pipe.remaining() - offset);
+      size_t offset = random_word(rng, pipe.remaining() - 1);
+      size_t length = random_word(rng, pipe.remaining() - offset);
 
       Botan::SecureVector<byte> peekbuf(length);
       pipe.peek(&peekbuf[0], peekbuf.size(), offset);
@@ -400,7 +400,7 @@ bool failed_test(const std::string& algo,
 
       bool OK = true;
 
-      for(u32bit j = offset; j != offset+length; j++)
+      for(size_t j = offset; j != offset+length; j++)
          if(static_cast<byte>(output[j]) != peekbuf[j-offset])
             OK = false;
 
