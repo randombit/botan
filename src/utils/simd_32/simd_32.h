@@ -10,7 +10,7 @@
 
 #include <botan/types.h>
 
-#if defined(BOTAN_TARGET_CPU_HAS_SSE2)
+#if defined(BOTAN_TARGET_CPU_HAS_SSE2) && !defined(BOTAN_NO_SSE_INTRINSICS)
 
   #include <botan/internal/simd_sse.h>
   namespace Botan { typedef SIMD_SSE2 SIMD_32; }

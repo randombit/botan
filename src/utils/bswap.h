@@ -12,7 +12,7 @@
 #include <botan/types.h>
 #include <botan/rotate.h>
 
-#if defined(BOTAN_TARGET_CPU_HAS_SSE2)
+#if defined(BOTAN_TARGET_CPU_HAS_SSE2) && !defined(BOTAN_NO_SSE_INTRINSICS)
   #include <emmintrin.h>
 #endif
 
@@ -100,7 +100,7 @@ inline void bswap_4(T x[4])
    x[3] = reverse_bytes(x[3]);
    }
 
-#if defined(BOTAN_TARGET_CPU_HAS_SSE2)
+#if defined(BOTAN_TARGET_CPU_HAS_SSE2) && !defined(BOTAN_NO_SSE_INTRINSICS)
 
 /**
 * Swap 4 u32bits in an array using SSE2 shuffle instructions
