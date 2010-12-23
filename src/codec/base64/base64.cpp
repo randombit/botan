@@ -10,9 +10,6 @@
 #include <botan/internal/rounding.h>
 #include <stdexcept>
 
-#include <stdio.h>
-#include <assert.h>
-
 namespace Botan {
 
 namespace {

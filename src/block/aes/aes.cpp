@@ -9,9 +9,6 @@
 #include <botan/loadstor.h>
 #include <botan/rotate.h>
 
-#include <assert.h>
-#include <stdio.h>
-
 namespace Botan {
 
 namespace {
