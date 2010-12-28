@@ -20,7 +20,7 @@ namespace {
 /**
 Table for GF(2^8) arithmetic (exponentials)
 */
-const byte EXP[256] = {
+const byte RTSS_EXP[256] = {
 0x01, 0x03, 0x05, 0x0F, 0x11, 0x33, 0x55, 0xFF, 0x1A, 0x2E, 0x72,
 0x96, 0xA1, 0xF8, 0x13, 0x35, 0x5F, 0xE1, 0x38, 0x48, 0xD8, 0x73,
 0x95, 0xA4, 0xF7, 0x02, 0x06, 0x0A, 0x1E, 0x22, 0x66, 0xAA, 0xE5,
@@ -49,7 +49,7 @@ const byte EXP[256] = {
 /**
 Table for GF(2^8) arithmetic (logarithms)
 */
-const byte LOG[] = {
+const byte RTSS_LOG[] = {
 0x90, 0x00, 0x19, 0x01, 0x32, 0x02, 0x1A, 0xC6, 0x4B, 0xC7, 0x1B,
 0x68, 0x33, 0xEE, 0xDF, 0x03, 0x64, 0x04, 0xE0, 0x0E, 0x34, 0x8D,
 0x81, 0xEF, 0x4C, 0x71, 0x08, 0xC8, 0xF8, 0x69, 0x1C, 0xC1, 0x7D,
@@ -79,7 +79,7 @@ byte gfp_mul(byte x, byte y)
    {
    if(x == 0 || y == 0)
       return 0;
-   return EXP[(LOG[x] + LOG[y]) % 255];
+   return RTSS_EXP[(RTSS_LOG[x] + RTSS_LOG[y]) % 255];
    }
 
 byte rtss_hash_id(const std::string& hash_name)
@@ -234,7 +234,9 @@ RTSS_Share::reconstruct(const std::vector<RTSS_Share>& shares)
             if(share_k == share_l)
                throw Decoding_Error("Duplicate shares found in RTSS recovery");
 
-            byte div = EXP[(255 + LOG[share_l] - LOG[share_k ^ share_l]) % 255];
+            byte div = RTSS_EXP[(255 +
+                                 RTSS_LOG[share_l] -
+                                 RTSS_LOG[share_k ^ share_l]) % 255];
 
             r2 = gfp_mul(r2, div);
             }
