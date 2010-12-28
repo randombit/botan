@@ -1321,7 +1321,7 @@ def generate_amalgamation(build_config):
             return val.endswith(suffix)
         return predicate
 
-    def strip_header_goop(contents):
+    def strip_header_goop(header_name, contents):
         header_guard = re.compile('^#define BOTAN_.*_H__$')
 
         while len(contents) > 0:
@@ -1330,6 +1330,9 @@ def generate_amalgamation(build_config):
                 break
 
             contents = contents[1:]
+
+        if len(contents) == 0:
+            raise Exception("No header guard found in " + header_name)
 
         while contents[0] == '\n':
             contents = contents[1:]
@@ -1352,7 +1355,7 @@ def generate_amalgamation(build_config):
 
             self.file_contents = {}
             for f in sorted(input_list):
-                contents = strip_header_goop(open(f).readlines())
+                contents = strip_header_goop(f, open(f).readlines())
                 self.file_contents[os.path.basename(f)] = contents
 
             self.contents = ''
