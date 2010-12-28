@@ -5,6 +5,9 @@
 * Distributed under the terms of the Botan license
 */
 
+#ifndef BOTAN_DYN_LOADED_ENGINE_H__
+#define BOTAN_DYN_LOADED_ENGINE_H__
+
 #include <botan/engine.h>
 
 namespace Botan {
@@ -104,3 +107,5 @@ class BOTAN_DLL Dynamically_Loaded_Engine : public Engine
    };
 
 }
+
+#endif
