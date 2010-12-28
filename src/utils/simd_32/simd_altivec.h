@@ -97,7 +97,7 @@ class SIMD_Altivec
          Botan::store_be(out, vec.R[0], vec.R[1], vec.R[2], vec.R[3]);
          }
 
-      void rotate_left(u32bit rot)
+      void rotate_left(size_t rot)
          {
          __vector unsigned int rot_vec =
             (__vector unsigned int){rot, rot, rot, rot};
@@ -105,7 +105,7 @@ class SIMD_Altivec
          reg = vec_rl(reg, rot_vec);
          }
 
-      void rotate_right(u32bit rot)
+      void rotate_right(size_t rot)
          {
          rotate_left(32 - rot);
          }
@@ -155,7 +155,7 @@ class SIMD_Altivec
          reg = vec_and(reg, other.reg);
          }
 
-      SIMD_Altivec operator<<(u32bit shift) const
+      SIMD_Altivec operator<<(size_t shift) const
          {
          __vector unsigned int shift_vec =
             (__vector unsigned int){shift, shift, shift, shift};
@@ -163,7 +163,7 @@ class SIMD_Altivec
          return vec_sl(reg, shift_vec);
          }
 
-      SIMD_Altivec operator>>(u32bit shift) const
+      SIMD_Altivec operator>>(size_t shift) const
          {
          __vector unsigned int shift_vec =
             (__vector unsigned int){shift, shift, shift, shift};
