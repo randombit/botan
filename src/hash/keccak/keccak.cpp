@@ -104,7 +104,6 @@ void keccak_f_1600(u64bit A[25])
 Keccak_1600::Keccak_1600(size_t output_bits) :
    output_bits(output_bits),
    bitrate(1600 - 2*output_bits),
-   diversifier(static_cast<byte>(output_bits / 8)),
    S(25),
    S_pos(0)
    {
@@ -179,15 +178,12 @@ void Keccak_1600::add_data(const byte input[], size_t length)
 
 void Keccak_1600::final_result(byte output[])
    {
-   const byte padding[4] = { 0x01,
-                             diversifier,
-                             static_cast<byte>(bitrate / 8),
-                             0x01 };
+   MemoryVector<byte> padding(bitrate / 8 - S_pos);
 
-   add_data(padding, sizeof(padding));
+   padding[0] = 0x01;
+   padding[padding.size()-1] |= 0x80;
 
-   if(S_pos)
-      keccak_f_1600(&S[0]);
+   add_data(padding, padding.size());
 
    /*
    * We never have to run the permutation again because we only support

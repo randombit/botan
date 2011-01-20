@@ -1,5 +1,6 @@
 
 * 1.9.13-dev, ????-??-??
+ - Update Keccak to the round 3 variant
 
 * 1.9.12, 2010-12-13
  - Add the Keccak hash function

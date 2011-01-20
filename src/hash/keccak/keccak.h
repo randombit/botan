@@ -38,7 +38,6 @@ class BOTAN_DLL Keccak_1600 : public HashFunction
       void final_result(byte out[]);
 
       size_t output_bits, bitrate;
-      byte diversifier;
       SecureVector<u64bit> S;
       size_t S_pos;
    };
