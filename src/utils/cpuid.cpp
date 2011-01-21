@@ -26,7 +26,7 @@
   #include <ia32intrin.h>
   #define CALL_CPUID(type, out) do { __cpuid(out, type); } while(0);
 
-#elif (BOTAN_GCC_VERSION >= 430) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+#elif (BOTAN_GCC_VERSION >= 430)
 
   // Only available starting in GCC 4.3
   #include <cpuid.h>
