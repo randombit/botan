@@ -141,7 +141,7 @@ void encode_entries(DER_Encoder& encoder,
          }
       else if(type == "IP")
          {
-         u32bit ip = string_to_ipv4(j->second);
+         const u32bit ip = string_to_ipv4(j->second);
          byte ip_buf[4] = { 0 };
          store_be(ip, ip_buf);
          encoder.add_object(tagging, CONTEXT_SPECIFIC, ip_buf, 4);
@@ -191,7 +191,7 @@ void AlternativeName::decode_from(BER_Decoder& source)
          (obj.class_tag != (CONTEXT_SPECIFIC | CONSTRUCTED)))
          continue;
 
-      ASN1_Tag tag = obj.type_tag;
+      const ASN1_Tag tag = obj.type_tag;
 
       if(tag == 0)
          {
@@ -215,7 +215,7 @@ void AlternativeName::decode_from(BER_Decoder& source)
             BER_Object value = othername_value_inner.get_next_object();
             othername_value_inner.verify_end();
 
-            ASN1_Tag value_type = value.type_tag;
+            const ASN1_Tag value_type = value.type_tag;
 
             if(is_string_type(value_type) && value.class_tag == UNIVERSAL)
                add_othername(oid, ASN1::to_string(value), value_type);
@@ -235,7 +235,7 @@ void AlternativeName::decode_from(BER_Decoder& source)
          {
          if(obj.value.size() == 4)
             {
-            u32bit ip = load_be<u32bit>(&obj.value[0], 0);
+            const u32bit ip = load_be<u32bit>(&obj.value[0], 0);
             add_attribute("IP", ipv4_to_string(ip));
             }
          }
