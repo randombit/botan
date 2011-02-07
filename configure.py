@@ -1213,7 +1213,7 @@ def setup_build(build_config, options, template_vars):
 
         if 'symlink' in os.__dict__:
             def count_dirs(dir, accum = 0):
-                if dir == '' or dir == os.path.curdir:
+                if dir in ['', '/', os.path.curdir]:
                     return accum
                 (dir,basename) = os.path.split(dir)
                 return accum + 1 + count_dirs(dir)
