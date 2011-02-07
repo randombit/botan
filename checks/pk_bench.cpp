@@ -154,7 +154,7 @@ void benchmark_sig_ver(PK_Verifier& ver, PK_Signer& sig,
       if(verify_timer.seconds() < seconds)
          {
          verify_timer.start();
-         bool verified = ver.verify_message(message, signature);
+         const bool verified = ver.verify_message(message, signature);
          verify_timer.stop();
 
          if(!verified)
@@ -165,10 +165,10 @@ void benchmark_sig_ver(PK_Verifier& ver, PK_Signer& sig,
             sig_random = rng.random_vec(signature.size());
 
             verify_timer.start();
-            bool verified2 = ver.verify_message(message, sig_random);
+            const bool verified_bad = ver.verify_message(message, sig_random);
             verify_timer.stop();
 
-            if(verified2)
+            if(verified_bad)
                std::cerr << "Signature verification failure (bad sig OK)\n";
             }
          }
@@ -356,16 +356,9 @@ void benchmark_gost_3410(RandomNumberGenerator& rng,
       {
       EC_Domain_Params params(OIDS::lookup(ec_domains[j]));
 
-      size_t pbits = params.get_curve().get_p().bits();
+      const size_t pbits = params.get_curve().get_p().bits();
 
-      size_t hashbits = pbits;
-
-      if(hashbits <= 192)
-         hashbits = 160;
-      if(hashbits == 521)
-         hashbits = 512;
-
-      const std::string padding = "EMSA1(SHA-" + to_string(hashbits) + ")";
+      const std::string padding = "EMSA1(GOST-34.11)";
 
       Timer keygen_timer("keygen");
       Timer verify_timer(padding + " verify");

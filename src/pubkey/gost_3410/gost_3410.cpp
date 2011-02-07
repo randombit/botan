@@ -130,8 +130,8 @@ GOST_3410_Signature_Operation::sign(const byte msg[], size_t msg_len,
       throw Invalid_State("GOST 34.10: r == 0 || s == 0");
 
    SecureVector<byte> output(2*order.bytes());
-   r.binary_encode(&output[output.size() / 2 - r.bytes()]);
-   s.binary_encode(&output[output.size() - s.bytes()]);
+   s.binary_encode(&output[output.size() / 2 - s.bytes()]);
+   r.binary_encode(&output[output.size() - r.bytes()]);
    return output;
    }
 
@@ -150,8 +150,8 @@ bool GOST_3410_Verification_Operation::verify(const byte msg[], size_t msg_len,
 
    BigInt e = decode_le(msg, msg_len);
 
-   BigInt r(sig, sig_len / 2);
-   BigInt s(sig + sig_len / 2, sig_len / 2);
+   BigInt s(sig, sig_len / 2);
+   BigInt r(sig + sig_len / 2, sig_len / 2);
 
    if(r < 0 || r >= order || s < 0 || s >= order)
       return false;
