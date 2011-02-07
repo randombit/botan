@@ -47,7 +47,7 @@ class BuildConfigurationInformation(object):
     version_so_patch = 13
     version_suffix = '-dev'
 
-    version_datestamp = None
+    version_datestamp = 0
 
     version_string = '%d.%d.%d%s' % (
         version_major, version_minor, version_patch, version_suffix)
@@ -58,10 +58,6 @@ class BuildConfigurationInformation(object):
     Constructor
     """
     def __init__(self, options, modules):
-
-        # If not preset, use today
-        if self.version_datestamp is None:
-            self.version_datestamp = time.strftime("%Y%m%d", time.gmtime())
 
         self.build_dir = os.path.join(options.with_build_dir, 'build')
 
@@ -229,6 +225,10 @@ def process_command_line(args):
                            action='store_false', default=True,
                            help=SUPPRESS_HELP)
 
+    build_group.add_option('--distribution-info', metavar='STRING',
+                           help='set distribution specific versioning',
+                           default='unspecified')
+
     wrapper_group = OptionGroup(parser, 'Wrapper options')
 
     wrapper_group.add_option('--with-boost-python', dest='boost_python',
@@ -243,7 +243,7 @@ def process_command_line(args):
     wrapper_group.add_option('--use-python-version', dest='python_version',
                              metavar='N.M',
                              default='.'.join(map(str, sys.version_info[0:2])),
-                             help='specify version of Python to build against (eg %default)')
+                             help='specify Python to build against (eg %default)')
 
     mods_group = OptionGroup(parser, 'Module selection')
 
@@ -942,6 +942,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'version_minor': build_config.version_minor,
         'version_patch': build_config.version_patch,
         'version':       build_config.version_string,
+
+        'distribution_info': options.distribution_info,
 
         'version_datestamp': build_config.version_datestamp,
 

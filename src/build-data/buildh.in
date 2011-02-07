@@ -15,8 +15,9 @@
 #define BOTAN_VERSION_MAJOR %{version_major}
 #define BOTAN_VERSION_MINOR %{version_minor}
 #define BOTAN_VERSION_PATCH %{version_patch}
-
 #define BOTAN_VERSION_DATESTAMP %{version_datestamp}
+
+#define BOTAN_DISTRIBUTION_INFO "%{distribution_info}"
 
 #ifndef BOTAN_DLL
   #define BOTAN_DLL %{dll_import_flags}

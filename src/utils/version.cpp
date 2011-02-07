@@ -1,12 +1,13 @@
 /*
 * Version Information
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2011 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
 #include <botan/version.h>
 #include <botan/parsing.h>
+#include <sstream>
 
 namespace Botan {
 
@@ -21,9 +22,20 @@ namespace Botan {
 */
 std::string version_string()
    {
-   return to_string(version_major()) + "." +
-          to_string(version_minor()) + "." +
-          to_string(version_patch());
+   std::ostringstream out;
+
+   out << "Botan " << version_major() << "."
+       << version_minor() << "."
+       << version_patch() << " (";
+
+   if(BOTAN_VERSION_DATESTAMP == 0)
+      out << "unreleased version";
+   else
+      out << "released " << version_datestamp();
+
+   out << ", distribution " << BOTAN_DISTRIBUTION_INFO << ")";
+
+   return out.str();
    }
 
 u32bit version_datestamp() { return BOTAN_VERSION_DATESTAMP; }
