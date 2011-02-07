@@ -123,8 +123,6 @@ class BOTAN_DLL EC_Domain_Params
          }
 
    private:
-      friend EC_Domain_Params get_EC_Dom_Pars_by_oid(std::string oid);
-
       CurveGFp curve;
       PointGFp base_point;
       BigInt order, cofactor;
