@@ -97,7 +97,7 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
                                     const X509_DN& subject_dn,
                                     const Extensions& extensions)
    {
-   const u32bit X509_CERT_VERSION = 3;
+   const size_t X509_CERT_VERSION = 3;
    const size_t SERIAL_BITS = 256;
 
    BigInt serial_no(rng, SERIAL_BITS);
@@ -166,7 +166,7 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
                            u32bit crl_number, u32bit next_update,
                            RandomNumberGenerator& rng) const
    {
-   const u32bit X509_CRL_VERSION = 2;
+   const size_t X509_CRL_VERSION = 2;
 
    if(next_update == 0)
       next_update = timespec_to_u32bit("7d");

@@ -123,7 +123,7 @@ SecureVector<byte> CMS_Encoder::encode_params(const std::string& cipher,
    if(cipher == "RC2")
       {
       encoder.start_cons(SEQUENCE).
-         encode((u32bit)RC2::EKB_code(8*key.length())).
+         encode(static_cast<size_t>(RC2::EKB_code(8*key.length()))).
          encode(iv.bits_of(), OCTET_STRING).
       end_cons();
       return encoder.get_contents();
@@ -134,7 +134,7 @@ SecureVector<byte> CMS_Encoder::encode_params(const std::string& cipher,
       {
       encoder.start_cons(SEQUENCE).
          encode(iv.bits_of(), OCTET_STRING).
-         encode(u32bit(8*key.length())).
+         encode(8*key.length()).
       end_cons();
       }
    else

@@ -39,7 +39,7 @@ void X509_CRL::force_decode()
    {
    BER_Decoder tbs_crl(tbs_bits);
 
-   u32bit version;
+   size_t version;
    tbs_crl.decode_optional(version, INTEGER, UNIVERSAL);
 
    if(version != 0 && version != 1)

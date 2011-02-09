@@ -107,7 +107,7 @@ SecureVector<byte> PKCS8_decode(DataSource& source, const User_Interface& ui,
 
          BER_Decoder(key)
             .start_cons(SEQUENCE)
-               .decode_and_check<u32bit>(0, "Unknown PKCS #8 version number")
+               .decode_and_check<size_t>(0, "Unknown PKCS #8 version number")
                .decode(pk_alg_id)
                .decode(key, OCTET_STRING)
                .discard_remaining()
@@ -133,7 +133,7 @@ SecureVector<byte> PKCS8_decode(DataSource& source, const User_Interface& ui,
 */
 SecureVector<byte> BER_encode(const Private_Key& key)
    {
-   const u32bit PKCS8_VERSION = 0;
+   const size_t PKCS8_VERSION = 0;
 
    return DER_Encoder()
          .start_cons(SEQUENCE)

@@ -51,7 +51,7 @@ class BOTAN_DLL PBE_PKCS5v15 : public PBE
       HashFunction* hash_function;
 
       SecureVector<byte> salt, key, iv;
-      u32bit iterations;
+      size_t iterations;
       Pipe pipe;
    };
 

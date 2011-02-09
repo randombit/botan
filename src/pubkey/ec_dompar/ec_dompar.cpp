@@ -68,7 +68,7 @@ EC_Domain_Params::EC_Domain_Params(const MemoryRegion<byte>& ber_data)
 
       BER_Decoder(ber_data)
          .start_cons(SEQUENCE)
-           .decode_and_check<u32bit>(1, "Unknown ECC param version code")
+           .decode_and_check<size_t>(1, "Unknown ECC param version code")
            .start_cons(SEQUENCE)
             .decode_and_check(OID("1.2.840.10045.1.1"),
                               "Only prime ECC fields supported")
@@ -96,7 +96,7 @@ EC_Domain_Params::DER_encode(EC_Domain_Params_Encoding form) const
    {
    if(form == EC_DOMPAR_ENC_EXPLICIT)
       {
-      const u32bit ecpVers1 = 1;
+      const size_t ecpVers1 = 1;
       OID curve_type("1.2.840.10045.1.1");
 
       const size_t p_bytes = curve.get_p().bytes();

@@ -140,10 +140,10 @@ void CMS_Encoder::encrypt_ktri(RandomNumberGenerator& rng,
    DER_Encoder encoder;
 
    encoder.start_cons(SEQUENCE)
-      .encode((u32bit)0)
+      .encode(static_cast<size_t>(0))
       .start_cons(SET)
          .start_cons(SEQUENCE)
-            .encode((u32bit)0);
+            .encode(static_cast<size_t>(0));
             encode_si(encoder, to)
             .encode(alg_id)
             .encode(encryptor.encrypt(cek.bits_of(), rng), OCTET_STRING)
@@ -203,9 +203,9 @@ void CMS_Encoder::encrypt(RandomNumberGenerator& rng,
    DER_Encoder encoder;
 
    encoder.start_cons(SEQUENCE)
-      .encode((u32bit)2)
+      .encode(static_cast<size_t>(2))
       .start_explicit(ASN1_Tag(2))
-         .encode((u32bit)4)
+      .encode(static_cast<size_t>(4))
          .start_cons(SEQUENCE)
             .encode(kek_id, OCTET_STRING)
          .end_cons()
@@ -302,8 +302,8 @@ void CMS_Encoder::sign(const X509_Certificate& cert,
    SecureVector<byte> signature = signer.signature(rng);
    signed_attr[0] = 0xA0;
 
-   const u32bit SI_VERSION = cert.subject_key_id().size() ? 3 : 1;
-   const u32bit CMS_VERSION = (type != "CMS.DataContent") ? 3 : SI_VERSION;
+   const size_t SI_VERSION = cert.subject_key_id().size() ? 3 : 1;
+   const size_t CMS_VERSION = (type != "CMS.DataContent") ? 3 : SI_VERSION;
 
    DER_Encoder encoder;
 
@@ -347,7 +347,7 @@ void CMS_Encoder::digest(const std::string& user_hash)
    if(!OIDS::have_oid(hash))
       throw Encoding_Error("CMS: No OID assigned for " + hash);
 
-   const u32bit VERSION = (type != "CMS.DataContent") ? 2 : 0;
+   const size_t VERSION = (type != "CMS.DataContent") ? 2 : 0;
 
    DER_Encoder encoder;
    encoder.start_cons(SEQUENCE)

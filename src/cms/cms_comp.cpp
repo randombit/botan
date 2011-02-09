@@ -41,7 +41,7 @@ void CMS_Encoder::compress(const std::string& algo)
 
    DER_Encoder encoder;
    encoder.start_cons(SEQUENCE).
-      encode((u32bit)0).
+      encode(static_cast<size_t>(0)).
       encode(AlgorithmIdentifier("Compression." + algo,
                                  MemoryVector<byte>())).
       raw_bytes(make_econtent(compressed, type)).
@@ -71,7 +71,7 @@ bool CMS_Encoder::can_compress_with(const std::string& algo)
 */
 void CMS_Decoder::decompress(BER_Decoder& decoder)
    {
-   u32bit version;
+   size_t version;
    AlgorithmIdentifier comp_algo;
 
    BER_Decoder comp_info = decoder.start_cons(SEQUENCE);

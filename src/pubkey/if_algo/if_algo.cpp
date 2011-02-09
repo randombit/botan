@@ -53,7 +53,7 @@ MemoryVector<byte> IF_Scheme_PrivateKey::pkcs8_private_key() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
-         .encode(static_cast<u32bit>(0))
+         .encode(static_cast<size_t>(0))
          .encode(n)
          .encode(e)
          .encode(d)
@@ -72,7 +72,7 @@ IF_Scheme_PrivateKey::IF_Scheme_PrivateKey(RandomNumberGenerator& rng,
    {
    BER_Decoder(key_bits)
       .start_cons(SEQUENCE)
-         .decode_and_check<u32bit>(0, "Unknown PKCS #1 key format version")
+         .decode_and_check<size_t>(0, "Unknown PKCS #1 key format version")
          .decode(n)
          .decode(e)
          .decode(d)

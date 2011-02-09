@@ -66,7 +66,7 @@ X509_Certificate::X509_Certificate(const std::string& in) :
 */
 void X509_Certificate::force_decode()
    {
-   u32bit version;
+   size_t version;
    BigInt serial_bn;
    AlgorithmIdentifier sig_algo_inner;
    X509_DN dn_issuer, dn_subject;
@@ -141,7 +141,9 @@ void X509_Certificate::force_decode()
    if(is_CA_cert() &&
       !subject.has_value("X509v3.BasicConstraints.path_constraint"))
       {
-      u32bit limit = (x509_version() < 3) ? NO_CERT_PATH_LIMIT : 0;
+      const size_t limit = (x509_version() < 3) ?
+        Cert_Extension::Basic_Constraints::NO_CERT_PATH_LIMIT : 0;
+
       subject.add("X509v3.BasicConstraints.path_constraint", limit);
       }
    }

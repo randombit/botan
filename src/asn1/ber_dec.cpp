@@ -343,7 +343,7 @@ BER_Decoder& BER_Decoder::decode(bool& out)
 /*
 * Decode a small BER encoded INTEGER
 */
-BER_Decoder& BER_Decoder::decode(u32bit& out)
+BER_Decoder& BER_Decoder::decode(size_t& out)
    {
    return decode(out, INTEGER, UNIVERSAL);
    }
@@ -383,7 +383,7 @@ BER_Decoder& BER_Decoder::decode(bool& out,
 /*
 * Decode a small BER encoded INTEGER
 */
-BER_Decoder& BER_Decoder::decode(u32bit& out,
+BER_Decoder& BER_Decoder::decode(size_t& out,
                                  ASN1_Tag type_tag, ASN1_Tag class_tag)
    {
    BigInt integer;

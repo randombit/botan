@@ -21,7 +21,7 @@ void EAC1_1_Req::force_decode()
    {
    SecureVector<byte> enc_pk;
    BER_Decoder tbs_cert(tbs_bits);
-   u32bit cpi;
+   size_t cpi;
    tbs_cert.decode(cpi, ASN1_Tag(41), APPLICATION)
       .start_cons(ASN1_Tag(73))
       .raw_bytes(enc_pk)
