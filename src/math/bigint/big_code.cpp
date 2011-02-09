@@ -33,7 +33,9 @@ void BigInt::encode(byte output[], const BigInt& n, Base base)
       const size_t output_size = n.encoded_size(Octal);
       for(size_t j = 0; j != output_size; ++j)
          {
-         output[output_size - 1 - j] = Charset::digit2char(copy % 8);
+         output[output_size - 1 - j] =
+            Charset::digit2char(static_cast<byte>(copy % 8));
+
          copy /= 8;
          }
       }
@@ -47,7 +49,7 @@ void BigInt::encode(byte output[], const BigInt& n, Base base)
          {
          divide(copy, 10, copy, remainder);
          output[output_size - 1 - j] =
-            Charset::digit2char(remainder.word_at(0));
+            Charset::digit2char(static_cast<byte>(remainder.word_at(0)));
          if(copy.is_zero())
             break;
          }
