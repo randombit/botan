@@ -57,8 +57,8 @@ class SIMD_SSE2
 
       void rotate_left(size_t rot)
          {
-         reg = _mm_or_si128(_mm_slli_epi32(reg, rot),
-                            _mm_srli_epi32(reg, 32-rot));
+         reg = _mm_or_si128(_mm_slli_epi32(reg, static_cast<int>(rot)),
+                            _mm_srli_epi32(reg, static_cast<int>(32-rot)));
          }
 
       void rotate_right(size_t rot)
@@ -113,7 +113,7 @@ class SIMD_SSE2
 
       SIMD_SSE2 operator<<(size_t shift) const
          {
-         return _mm_slli_epi32(reg, shift);
+         return _mm_slli_epi32(reg, static_cast<int>(shift));
          }
 
       SIMD_SSE2 operator>>(size_t shift) const

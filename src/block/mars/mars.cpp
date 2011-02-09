@@ -202,14 +202,14 @@ u32bit gen_mask(u32bit input)
    {
    u32bit mask = 0;
 
-   for(size_t j = 2; j != 31; ++j)
+   for(u32bit j = 2; j != 31; ++j)
       {
       u32bit region = (input >> (j-1)) & 0x07;
 
       if(region == 0x00 || region == 0x07)
          {
-         u32bit low = (j < 9) ? 0 : (j - 9);
-         u32bit high = (j < 23) ? j : 23;
+         const u32bit low = (j < 9) ? 0 : (j - 9);
+         const u32bit high = (j < 23) ? j : 23;
 
          for(u32bit k = low; k != high; ++k)
             {
@@ -324,7 +324,7 @@ void MARS::key_schedule(const byte key[], size_t length)
    for(size_t i = 0; i != length / 4; ++i)
       T[i] = load_le<u32bit>(key, i);
 
-   T[length / 4] = length / 4;
+   T[length / 4] = static_cast<u32bit>(length) / 4;
 
    for(u32bit i = 0; i != 4; ++i)
       {
