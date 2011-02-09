@@ -12,6 +12,7 @@
 #include <botan/charset.h>
 #include <botan/parsing.h>
 #include <sstream>
+#include <ios>
 
 namespace Botan {
 

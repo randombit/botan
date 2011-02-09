@@ -13,6 +13,7 @@
 #include <botan/parsing.h>
 #include <ctime>
 #include <sstream>
+#include <ios>
 
 namespace Botan {
 
