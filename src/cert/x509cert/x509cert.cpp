@@ -142,7 +142,7 @@ void X509_Certificate::force_decode()
       !subject.has_value("X509v3.BasicConstraints.path_constraint"))
       {
       const size_t limit = (x509_version() < 3) ?
-        Cert_Extension::Basic_Constraints::NO_CERT_PATH_LIMIT : 0;
+        Cert_Extension::NO_CERT_PATH_LIMIT : 0;
 
       subject.add("X509v3.BasicConstraints.path_constraint", limit);
       }

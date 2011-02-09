@@ -87,14 +87,14 @@ class BOTAN_DLL Extensions : public ASN1_Object
 
 namespace Cert_Extension {
 
+static const size_t NO_CERT_PATH_LIMIT = 0xFFFFFFF0;
+
 /**
 * Basic Constraints Extension
 */
 class BOTAN_DLL Basic_Constraints : public Certificate_Extension
    {
    public:
-      static const size_t NO_CERT_PATH_LIMIT = 0xFFFFFFF0;
-
       Basic_Constraints* copy() const
          { return new Basic_Constraints(is_ca, path_limit); }
 
