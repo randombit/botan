@@ -1,7 +1,11 @@
 
-* 1.9.13-dev, ????-??-??
+* 1.9.13, 2011-02-19
  - Update Keccak to the round 3 variant
  - Fix ordering in GOST 34.10 signatures to match DNSSEC specifications
+ - Use size_t instead of u32bit for small integers in DER/BER codecs
+ - Add new build option --distribution-info
+ - Fix problems in the amalgamation build
+ - Fix building under Clang 2.9 and Sun Studio 12
 
 * 1.9.12, 2010-12-13
  - Add the Keccak hash function
