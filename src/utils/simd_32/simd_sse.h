@@ -118,7 +118,7 @@ class SIMD_SSE2
 
       SIMD_SSE2 operator>>(size_t shift) const
          {
-         return _mm_srli_epi32(reg, shift);
+         return _mm_srli_epi32(reg, static_cast<int>(shift));
          }
 
       SIMD_SSE2 operator~() const
