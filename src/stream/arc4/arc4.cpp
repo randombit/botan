@@ -64,7 +64,7 @@ void ARC4::key_schedule(const byte key[], size_t length)
    clear();
 
    for(size_t i = 0; i != 256; ++i)
-      state[i] = i;
+      state[i] = static_cast<byte>(i);
 
    for(size_t i = 0, state_index = 0; i != 256; ++i)
       {

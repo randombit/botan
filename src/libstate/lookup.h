@@ -288,7 +288,7 @@ inline bool have_mac(const std::string& algo_spec)
 * @param algo_spec the name of the algorithm
 * @return block size of the specified algorithm
 */
-BOTAN_DLL u32bit block_size_of(const std::string& algo_spec);
+BOTAN_DLL size_t block_size_of(const std::string& algo_spec);
 
 /**
 * Find out the output length of a certain symmetric algorithm.
@@ -297,7 +297,7 @@ BOTAN_DLL u32bit block_size_of(const std::string& algo_spec);
 * @param algo_spec the name of the algorithm
 * @return output length of the specified algorithm
 */
-BOTAN_DLL u32bit output_length_of(const std::string& algo_spec);
+BOTAN_DLL size_t output_length_of(const std::string& algo_spec);
 
 }
 

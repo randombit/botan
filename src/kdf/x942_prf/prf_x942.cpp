@@ -62,7 +62,7 @@ SecureVector<byte> X942_PRF::derive(size_t key_len,
                )
 
             .start_explicit(2)
-               .raw_bytes(encode_x942_int(8 * key_len))
+               .raw_bytes(encode_x942_int(static_cast<u32bit>(8 * key_len)))
             .end_explicit()
 
          .end_cons().get_contents()
