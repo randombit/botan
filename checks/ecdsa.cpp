@@ -19,6 +19,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <memory>
 
 #include "common.h"
 
