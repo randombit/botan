@@ -2,5 +2,5 @@ define PEM_CODEC
 
 <requires>
 base64
-filters
+codec_filt
 </requires>

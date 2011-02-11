@@ -48,6 +48,8 @@ asn1
 des
 dh
 dsa
+eme_pkcs
+emsa3
 filters
 hmac
 md5

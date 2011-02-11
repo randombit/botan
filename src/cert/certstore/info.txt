@@ -1,5 +1,6 @@
 define CERTIFICATE_STORE
 
 <requires>
-asn1
+x509cert
+x509crl
 </requires>
