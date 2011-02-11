@@ -78,9 +78,6 @@ class BOTAN_DLL Filter
 
       Filter();
    private:
-      Filter(const Filter&) {}
-      Filter& operator=(const Filter&) { return (*this); }
-
       /**
       * Start a new message in *this and all following filters. Only for
       * internal use, not intended for use in client applications.
@@ -95,6 +92,9 @@ class BOTAN_DLL Filter
 
       friend class Pipe;
       friend class Fanout_Filter;
+
+      Filter(const Filter&) = delete;
+      Filter& operator=(const Filter&) = delete;
 
       size_t total_ports() const;
       size_t current_port() const { return port_num; }

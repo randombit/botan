@@ -14,18 +14,11 @@
 #include <botan/mac.h>
 #include <botan/secqueue.h>
 #include <vector>
-
-#if defined(BOTAN_USE_STD_TR1)
-  #include <tr1/functional>
-#elif defined(BOTAN_USE_BOOST_TR1)
-  #include <boost/tr1/functional.hpp>
-#else
-  #error "No TR1 library defined for use"
-#endif
+#include <functional>
 
 namespace Botan {
 
-using namespace std::tr1::placeholders;
+using namespace std::placeholders;
 
 /**
 * TLS Record Writer
@@ -46,7 +39,7 @@ class BOTAN_DLL Record_Writer
 
       void reset();
 
-      Record_Writer(std::tr1::function<void (const byte[], size_t)> output_fn);
+      Record_Writer(std::function<void (const byte[], size_t)> output_fn);
 
       ~Record_Writer() { delete mac; }
    private:
@@ -54,7 +47,7 @@ class BOTAN_DLL Record_Writer
       void send_record(byte type, byte major, byte minor,
                        const byte input[], size_t length);
 
-      std::tr1::function<void (const byte[], size_t)> output_fn;
+      std::function<void (const byte[], size_t)> output_fn;
       Pipe cipher;
       MessageAuthenticationCode* mac;
 
