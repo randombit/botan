@@ -278,21 +278,6 @@ void EAC_Time::decode_from(BER_Decoder& source)
 
    }
 
-u32bit EAC_Time::get_year() const
-   {
-   return year;
-   }
-
-u32bit EAC_Time::get_month() const
-   {
-   return month;
-   }
-
-u32bit EAC_Time::get_day() const
-   {
-   return day;
-   }
-
 /*
 * make the value an octet string for encoding
 */
@@ -305,62 +290,4 @@ SecureVector<byte> EAC_Time::encoded_eac_time() const
    return result;
    }
 
-<<<<<<< variant A
-ASN1_Ced::ASN1_Ced(std::string const& str) :
-   EAC_Time(str, ASN1_Tag(37))
-   {}
-
-ASN1_Ced::ASN1_Ced(u64bit val) :
-   EAC_Time(val, ASN1_Tag(37))
-   {}
-
-ASN1_Ced::ASN1_Ced(EAC_Time const& other) :
-   EAC_Time(other.get_year(),
-            other.get_month(),
-            other.get_day(),
-            ASN1_Tag(37))
-   {}
-
-ASN1_Cex::ASN1_Cex(std::string const& str) :
-   EAC_Time(str, ASN1_Tag(36))
-   {}
-
-ASN1_Cex::ASN1_Cex(u64bit val) :
-   EAC_Time(val, ASN1_Tag(36))
-   {}
-
-ASN1_Cex::ASN1_Cex(EAC_Time const& other) :
-   EAC_Time(other.get_year(),
-            other.get_month(),
-            other.get_day(),
-            ASN1_Tag(36))
-   {}
-
->>>>>>> variant B
-####### Ancestor
-ASN1_Ced::ASN1_Ced(std::string const& str)
-   : EAC_Time(str, ASN1_Tag(37))
-   {}
-
-ASN1_Ced::ASN1_Ced(u64bit val)
-   : EAC_Time(val, ASN1_Tag(37))
-   {}
-
-ASN1_Ced::ASN1_Ced(EAC_Time const& other)
-   : EAC_Time(other.get_year(), other.get_month(), other.get_day(), ASN1_Tag(37))
-   {}
-
-ASN1_Cex::ASN1_Cex(std::string const& str)
-   : EAC_Time(str, ASN1_Tag(36))
-   {}
-
-ASN1_Cex::ASN1_Cex(u64bit val)
-   : EAC_Time(val, ASN1_Tag(36))
-   {}
-
-ASN1_Cex::ASN1_Cex(EAC_Time const& other)
-   : EAC_Time(other.get_year(), other.get_month(), other.get_day(), ASN1_Tag(36))
-   {}
-
-======= end
 }

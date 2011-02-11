@@ -116,7 +116,7 @@ class BOTAN_DLL ASN1_Ced : public EAC_Time
       * @param str a string in the format "yyyy mm dd",
       * e.g. "2007 08 01"
       */
-      ASN1_Ced(std::string const& str = "") :
+      ASN1_Ced(const std::string& str = "") :
          EAC_Time(str, ASN1_Tag(37)) {}
 
       /**
@@ -129,7 +129,7 @@ class BOTAN_DLL ASN1_Ced : public EAC_Time
       * Copy constructor (for general EAC_Time objects).
       * @param other the object to copy from
       */
-      ASN1_Ced(EAC_Time const& other) :
+      ASN1_Ced(const EAC_Time& other) :
          EAC_Time(other.get_year(), other.get_month(), other.get_day(),
                   ASN1_Tag(37))
          {}
@@ -147,13 +147,13 @@ class BOTAN_DLL ASN1_Cex : public EAC_Time
       * @param str a string in the format "yyyy mm dd",
       * e.g. "2007 08 01"
       */
-      ASN1_Cex(std::string const& str = "") :
+      ASN1_Cex(const std::string& str = "") :
          EAC_Time(str, ASN1_Tag(36)) {}
 
       ASN1_Cex(const std::chrono::system_clock::time_point& time) :
          EAC_Time(time, ASN1_Tag(36)) {}
 
-      ASN1_Cex(EAC_Time const& other) :
+      ASN1_Cex(const EAC_Time& other) :
          EAC_Time(other.get_year(), other.get_month(), other.get_day(),
                   ASN1_Tag(36))
          {}
