@@ -1069,6 +1069,14 @@ def choose_modules_to_use(modules, archinfo, options):
     def cannot_use_because(mod, reason):
         not_using_because.setdefault(reason, []).append(mod)
 
+    for modname in options.enabled_modules:
+        if modname not in modules:
+            logging.warning("Unknown enabled module %s" % (modname))
+
+    for modname in options.disabled_modules:
+        if modname not in modules:
+            logging.warning("Unknown disabled module %s" % (modname))
+
     for (modname, module) in modules.items():
         if modname in options.disabled_modules:
             cannot_use_because(modname, 'disabled by user')
