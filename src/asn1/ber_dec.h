@@ -33,12 +33,12 @@ class BOTAN_DLL BER_Decoder
 
       BER_Decoder& decode_null();
       BER_Decoder& decode(bool&);
-      BER_Decoder& decode(u32bit&);
+      BER_Decoder& decode(size_t&);
       BER_Decoder& decode(class BigInt&);
       BER_Decoder& decode(MemoryRegion<byte>&, ASN1_Tag);
 
       BER_Decoder& decode(bool&, ASN1_Tag, ASN1_Tag = CONTEXT_SPECIFIC);
-      BER_Decoder& decode(u32bit&, ASN1_Tag, ASN1_Tag = CONTEXT_SPECIFIC);
+      BER_Decoder& decode(size_t&, ASN1_Tag, ASN1_Tag = CONTEXT_SPECIFIC);
       BER_Decoder& decode(class BigInt&,
                           ASN1_Tag, ASN1_Tag = CONTEXT_SPECIFIC);
       BER_Decoder& decode(MemoryRegion<byte>&, ASN1_Tag,

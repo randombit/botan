@@ -110,7 +110,10 @@ class MemoryRegion
       MemoryRegion<T>& operator=(const MemoryRegion<T>& other)
          {
          if(this != &other)
-            set(&other[0], other.size());
+            {
+            this->resize(other.size());
+            this->copy(&other[0], other.size());
+            }
          return (*this);
          }
 
@@ -135,12 +138,10 @@ class MemoryRegion
       * @param in the array to copy the contents from
       * @param n the length of in
       */
-#if 1
       void copy(size_t off, const T in[], size_t n)
          {
          copy_mem(buf + off, in, std::min(n, size() - off));
          }
-#endif
 
       /**
       * Append a single element.
@@ -183,16 +184,9 @@ class MemoryRegion
          buf = 0;
          used = allocated = 0;
          alloc = other.alloc;
-         set(other.buf, other.used);
+         resize(other.size());
+         copy(&other[0], other.size());
          }
-
-      /**
-      * Set the contents of this according to the argument. The size of
-      * this is increased if necessary.
-      * @param in the array of objects of type T to copy the contents from
-      * @param n the size of array in
-      */
-      void set(const T in[], size_t n)    { resize(n); copy(in, n); }
 
       /**
       * @param locking should we use a locking allocator
@@ -287,7 +281,10 @@ class MemoryVector : public MemoryRegion<T>
       MemoryVector<T>& operator=(const MemoryRegion<T>& in)
          {
          if(this != &in)
-            this->set(&in[0], in.size());
+            {
+            this->resize(in.size());
+            this->copy(&in[0], in.size());
+            }
          return (*this);
          }
 
@@ -304,13 +301,21 @@ class MemoryVector : public MemoryRegion<T>
       * @param n the size of the arry in
       */
       MemoryVector(const T in[], size_t n)
-         { this->init(false); this->set(in, n); }
+         {
+         this->init(false);
+         this->resize(n);
+         this->copy(in, n);
+         }
 
       /**
       * Copy constructor.
       */
       MemoryVector(const MemoryRegion<T>& in)
-         { this->init(false); this->set(&in[0], in.size()); }
+         {
+         this->init(false);
+         this->resize(in.size());
+         this->copy(&in[0], in.size());
+         }
    };
 
 /**
@@ -325,11 +330,18 @@ class SecureVector : public MemoryRegion<T>
    public:
       /**
       * Copy the contents of another buffer into this buffer.
-      * @param in the buffer to copy the contents from
+      * @param other the buffer to copy the contents from
       * @return reference to *this
       */
-      SecureVector<T>& operator=(const MemoryRegion<T>& in)
-         { if(this != &in) this->set(&in[0], in.size()); return (*this); }
+      SecureVector<T>& operator=(const MemoryRegion<T>& other)
+         {
+         if(this != &other)
+            {
+            this->resize(other.size());
+            this->copy(&other[0], other.size());
+            }
+         return (*this);
+         }
 
       /**
       * Create a buffer of the specified length.
@@ -346,7 +358,8 @@ class SecureVector : public MemoryRegion<T>
       SecureVector(const T in[], size_t n)
          {
          this->init(true);
-         this->set(&in[0], n);
+         this->resize(n);
+         this->copy(&in[0], n);
          }
 
       /**
@@ -357,7 +370,8 @@ class SecureVector : public MemoryRegion<T>
       SecureVector(const MemoryRegion<T>& in)
          {
          this->init(true);
-         this->set(&in[0], in.size());
+         this->resize(in.size());
+         this->copy(&in[0], in.size());
          }
    };
 

@@ -9,8 +9,9 @@
 #define BOTAN_SIMD_32_H__
 
 #include <botan/types.h>
+#include <botan/rotate.h>
 
-#if defined(BOTAN_TARGET_CPU_HAS_SSE2)
+#if defined(BOTAN_TARGET_CPU_HAS_SSE2) && !defined(BOTAN_NO_SSE_INTRINSICS)
 
   #include <botan/internal/simd_sse.h>
   namespace Botan { typedef SIMD_SSE2 SIMD_32; }
@@ -29,16 +30,18 @@
 
 namespace Botan {
 
-inline SIMD_32 rotate_left(const SIMD_32& x, u32bit rot)
+template<>
+inline SIMD_32 rotate_left(SIMD_32 x, size_t rot)
    {
-   SIMD_32 y = x;
-   y.rotate_left(rot);
-   return y;
+   x.rotate_left(rot);
+   return x;
    }
 
-inline SIMD_32 rotate_right(const SIMD_32& x, u32bit rot)
+template<>
+inline SIMD_32 rotate_right(SIMD_32 x, size_t rot)
    {
-   return rotate_left(x, 32 - rot);
+   x.rotate_right(rot);
+   return x;
    }
 
 }

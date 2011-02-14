@@ -32,7 +32,7 @@ bool have_algorithm(const std::string& name)
 /*
 * Query the block size of a cipher or hash
 */
-u32bit block_size_of(const std::string& name)
+size_t block_size_of(const std::string& name)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
 
@@ -48,7 +48,7 @@ u32bit block_size_of(const std::string& name)
 /*
 * Query the output_length() of a hash or MAC
 */
-u32bit output_length_of(const std::string& name)
+size_t output_length_of(const std::string& name)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
 

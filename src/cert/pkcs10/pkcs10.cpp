@@ -41,7 +41,7 @@ void PKCS10_Request::force_decode()
    {
    BER_Decoder cert_req_info(tbs_bits);
 
-   u32bit version;
+   size_t version;
    cert_req_info.decode(version);
    if(version != 0)
       throw Decoding_Error("Unknown version code in PKCS #10 request: " +

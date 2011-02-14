@@ -130,7 +130,7 @@ bool Library_State::is_set(const std::string& section,
    {
    Mutex_Holder lock(config_lock);
 
-   return search_map(config, section + "/" + key, false, true);
+   return config.count(section + "/" + key) != 0;
    }
 
 /*

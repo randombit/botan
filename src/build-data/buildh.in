@@ -2,13 +2,22 @@
 #ifndef BOTAN_BUILD_CONFIG_H__
 #define BOTAN_BUILD_CONFIG_H__
 
-/* This file was automatically generated %{timestamp} UTC */
+/*
+* This file was automatically generated %{timestamp} UTC by
+* %{user}@%{hostname} running '%{command_line}'
+*
+* Target
+*  - Compiler: %{cc} %{lib_opt} %{mach_opt}
+*  - Arch: %{submodel}/%{arch}
+*  - OS: %{os}
+*/
 
 #define BOTAN_VERSION_MAJOR %{version_major}
 #define BOTAN_VERSION_MINOR %{version_minor}
 #define BOTAN_VERSION_PATCH %{version_patch}
-
 #define BOTAN_VERSION_DATESTAMP %{version_datestamp}
+
+#define BOTAN_DISTRIBUTION_INFO "%{distribution_info}"
 
 #ifndef BOTAN_DLL
   #define BOTAN_DLL %{dll_import_flags}
@@ -57,30 +66,47 @@
 
 %{target_compiler_defines}
 
-#if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+#if defined(_MSC_VER)
   // 4250: inherits via dominance (diamond inheritence issue)
   // 4251: needs DLL interface (STL DLL exports)
   #pragma warning(disable: 4250 4251)
 #endif
 
-/* Module definitions */
-%{module_defines}
+/*
+* Compile-time deprecatation warnings
+*/
+#if !defined(BOTAN_NO_DEPRECATED_WARNINGS)
 
-/* Local configuration options */
-%{local_config}
+  #if defined(__clang__)
+    #define BOTAN_DEPRECATED(msg) __attribute__ ((deprecated))
+
+  #elif defined(_MSC_VER)
+    #define BOTAN_DEPRECATED(msg) __declspec(deprecated(msg))
+
+  #elif defined(__GNUG__)
+
+    #if BOTAN_GCC_VERSION >= 450
+      #define BOTAN_DEPRECATED(msg) __attribute__ ((deprecated(msg)))
+    #else
+      #define BOTAN_DEPRECATED(msg) __attribute__ ((deprecated))
+    #endif
+
+  #endif
+
+#endif
+
+#if !defined(BOTAN_DEPRECATED)
+  #define BOTAN_DEPRECATED(msg)
+#endif
 
 /*
-%{user}@%{hostname} ran '%{command_line}'
-
-Target
--------
-Compiler: %{cc} %{lib_opt} %{mach_opt}
-Arch: %{submodel}/%{arch}
-OS: %{os}
-
-Modules
--------
-%{mod_list}
+* Module availability definitions
 */
+%{module_defines}
+
+/*
+* Local configuration options (if any) follow
+*/
+%{local_config}
 
 #endif

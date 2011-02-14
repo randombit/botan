@@ -1,36 +1,31 @@
 Build instructions for Botan SQLite3 codec
 ---
 
-1. Requires Botan 1.8.8 or later (earlier versions OK if you switch to
-   CBC mode from XTS)
+1. Requires Botan 1.9.0 or later
 
-2. Download SQLite3 version 3.6.17 or later, get the version "as
-   extracted from the source control system", NOT the amalgamation.
+2. Download and extract SQLite3 version 3.7.0.1 or later (previous
+   versions may work, untested)
 
-3. Apply the patch "sqlite.diff" [*]:
+3. From the extracted sqlite folder, apply the patch "sqlite3.diff":
        $ patch -p0 < ../sqlite.diff
        patching file Makefile.in
-       patching file src/pager.c
+       patching file sqlite3.c
 
-   If the patch to pager.c fails for some reason (ie, changes in
-   SQLite3), all that need be done is remove the "static" keyword from
-   the functions sqlite3PagerSetCodec and sqlite3PagerGetCodec.
+   If the patch to fails for some reason (ie, changes in SQLite3), it
+   should be trivial to do it manually.
 
-5. Create a folder called "botan" in the SQLite3 src dir and copy
-   "codec.cpp", "codec.h", and "codecext.cpp" into it.
+4. Copy all files inside the "src" directory into the Sqlite3 directory
+   (codec.cpp, codec.h, codec_c_interface.h, codecext.c)
 
-6. As desired, edit the constants in codec.h to tweak the encryption
+5. As desired, edit the constants in codec.h to tweak the encryption
    type to your needs. (Currently, Twofish/XTS with 256 bit key)
 
-7. Run ./configure in the SQLite3 root directory with the
-   "--disable-amalgamation" and (if desired) "--disable-shared"
-   arguments, and then run make.
+6. "./configure" and "make" Sqlite3
 
 And to make sure it all worked...
 
-8. Make the test_sqlite.cpp file:
+7. Make the test_sqlite.cpp file:
       $ g++ test_sqlite.cpp -o test_sqlite -lbotan /path/to/libsqlite3.a
-9. Run it
+8. Run it
       $ ./test_sqlite
-10. Look for "All seems good"
-
+9. Look for "All seems good"

@@ -127,8 +127,7 @@ int main(int argc, char* argv[])
       if(opts.is_set("help") || argc <= 1)
          {
          std::cerr << "Test driver for "
-                   << Botan::version_string()
-                   << " (released " << Botan::version_datestamp() << ")\n"
+                   << Botan::version_string() << "\n"
                    << "Options:\n"
                    << "  --test || --validate: Run tests (do this at least once)\n"
                    << "  --benchmark: Benchmark everything\n"
@@ -165,7 +164,7 @@ int main(int argc, char* argv[])
          if(opts.is_set("buf-size"))
             {
             buf_size = std::atoi(opts.value("buf-size").c_str());
-            if(buf_size == 0 || buf_size > 8192)
+            if(buf_size == 0 || buf_size > 64*1024)
                {
                std::cout << "Invalid argument to --buf-size\n";
                return 2;

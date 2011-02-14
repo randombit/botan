@@ -1,20 +1,17 @@
-  This is the credits file of people that have contributed to Botan. It uses
-  the same format as the Linux credits file. Please keep it sorted by last
-  name.
+This is at least a partial credits-file of people that have
+contributed to the Botan project. It is sorted by name and formatted
+to allow easy grepping and beautification by scripts. The fields are:
+name (N), email (E), web-address (W), PGP key ID and fingerprint (P),
+description (D), and snail-mail address (S).
 
-  The fields are:
-     N - name
-     E - email
-     W - web URL
-     P - PGP fingerprint
-     D - description
-     S - meatspace location
+Thanks,
+  Jack Lloyd
 ----------
 
-N - Charles Brockman
-W - http://www.securitygenetics.com/
-D - documentation editing
-S - Oregon, USA
+N: Charles Brockman
+W: http://www.securitygenetics.com/
+D: documentation editing
+S: Oregon, USA
 
 N: Martin Doering
 E: doering@cdc.informatik.tu-darmstadt.de

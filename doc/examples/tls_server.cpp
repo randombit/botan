@@ -1,5 +1,5 @@
 /*
-* (C) 2008 Jack Lloyd
+* (C) 2008-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -19,6 +19,21 @@ using namespace Botan;
 #include <iostream>
 #include <memory>
 
+class Server_TLS_Policy : public TLS_Policy
+   {
+   public:
+      bool check_cert(const std::vector<X509_Certificate>& certs) const
+         {
+         for(size_t i = 0; i != certs.size(); ++i)
+            {
+            std::cout << certs[i].to_string();
+            }
+
+         std::cout << "Warning: not checking cert signatures\n";
+
+         return true;
+         }
+   };
 int main(int argc, char* argv[])
    {
 
@@ -44,7 +59,7 @@ int main(int argc, char* argv[])
 
       Unix_Server_Socket listener(port);
 
-      TLS_Policy policy;
+      Server_TLS_Policy policy;
 
       while(true)
          {
@@ -55,7 +70,13 @@ int main(int argc, char* argv[])
 
             printf("Got new connection\n");
 
-            TLS_Server tls(policy, rng, *sock, cert, key);
+            TLS_Server tls(
+              std::tr1::bind(&Socket::read, std::tr1::ref(sock), _1, _2),
+              std::tr1::bind(&Socket::write, std::tr1::ref(sock), _1, _2),
+              policy,
+              rng,
+              cert,
+              key);
 
             std::string hostname = tls.requested_hostname();
 

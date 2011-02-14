@@ -71,7 +71,7 @@ void GOST_34_11::compress_n(const byte input[], size_t blocks)
    {
    for(size_t i = 0; i != blocks; ++i)
       {
-      for(size_t j = 0, carry = 0; j != 32; ++j)
+      for(u16bit j = 0, carry = 0; j != 32; ++j)
          {
          u16bit s = sum[j] + input[32*i+j] + carry;
          carry = get_byte(0, s);

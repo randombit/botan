@@ -214,7 +214,7 @@ DER_Encoder& DER_Encoder::encode(bool is_true)
 /*
 * DER encode a small INTEGER
 */
-DER_Encoder& DER_Encoder::encode(u32bit n)
+DER_Encoder& DER_Encoder::encode(size_t n)
    {
    return encode(BigInt(n), INTEGER, UNIVERSAL);
    }
@@ -259,7 +259,7 @@ DER_Encoder& DER_Encoder::encode(bool is_true,
 /*
 * DER encode a small INTEGER
 */
-DER_Encoder& DER_Encoder::encode(u32bit n,
+DER_Encoder& DER_Encoder::encode(size_t n,
                                  ASN1_Tag type_tag, ASN1_Tag class_tag)
    {
    return encode(BigInt(n), type_tag, class_tag);

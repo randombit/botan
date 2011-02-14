@@ -22,7 +22,6 @@ data_src.h
 filter.h
 filters.h
 key_filt.h
-pbe.h
 pipe.h
 secqueue.h
 </header:public>

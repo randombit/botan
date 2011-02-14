@@ -16,7 +16,7 @@
 using namespace Botan;
 
 #include <iostream>
-#include <assert.h>
+#include <memory>
 
 #include "getopt.h"
 #include "validate.h"

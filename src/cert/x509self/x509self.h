@@ -102,7 +102,7 @@ class BOTAN_DLL X509_Cert_Options
       /**
       * Indicates the BasicConstraints path limit
       */
-      u32bit path_limit;
+      size_t path_limit;
 
       /**
       * The key constraints for the subject public key
@@ -123,7 +123,7 @@ class BOTAN_DLL X509_Cert_Options
       * Mark the certificate as a CA certificate and set the path limit.
       * @param limit the path limit to be set in the BasicConstraints extension.
       */
-      void CA_key(u32bit limit = 1);
+      void CA_key(size_t limit = 1);
 
       /**
       * Set the notBefore of the certificate.

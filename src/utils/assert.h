@@ -16,14 +16,24 @@ void assertion_failure(const char* expr_str,
                        const char* file,
                        int line);
 
-#define BOTAN_ASSERT(expr, msg)                          \
-   do {                                                  \
-      if(!(expr))                                        \
-         Botan::assertion_failure(#expr,                 \
-                                  msg,                   \
-                                  BOTAN_ASSERT_FUNCTION, \
-                                  __FILE__,              \
-                                  __LINE__);             \
+#define BOTAN_ASSERT(expr, msg)                           \
+   do {                                                   \
+      if(!(expr))                                         \
+         Botan::assertion_failure(#expr,                  \
+                                  msg,                    \
+                                  BOTAN_ASSERT_FUNCTION,  \
+                                  __FILE__,               \
+                                  __LINE__);              \
+   } while(0)
+
+#define BOTAN_ASSERT_EQUAL(value1, value2, msg)           \
+   do {                                                   \
+     if(value1 != value2)                                 \
+         Botan::assertion_failure(#value1 " == " #value2, \
+                                  msg,                    \
+                                  BOTAN_ASSERT_FUNCTION,  \
+                                  __FILE__,               \
+                                  __LINE__);              \
    } while(0)
 
 /*

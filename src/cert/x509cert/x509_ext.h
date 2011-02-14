@@ -87,6 +87,8 @@ class BOTAN_DLL Extensions : public ASN1_Object
 
 namespace Cert_Extension {
 
+static const size_t NO_CERT_PATH_LIMIT = 0xFFFFFFF0;
+
 /**
 * Basic Constraints Extension
 */
@@ -96,11 +98,11 @@ class BOTAN_DLL Basic_Constraints : public Certificate_Extension
       Basic_Constraints* copy() const
          { return new Basic_Constraints(is_ca, path_limit); }
 
-      Basic_Constraints(bool ca = false, u32bit limit = 0) :
+      Basic_Constraints(bool ca = false, size_t limit = 0) :
          is_ca(ca), path_limit(limit) {}
 
       bool get_is_ca() const { return is_ca; }
-      u32bit get_path_limit() const;
+      size_t get_path_limit() const;
    private:
       std::string config_id() const { return "basic_constraints"; }
       std::string oid_name() const { return "X509v3.BasicConstraints"; }
@@ -110,7 +112,7 @@ class BOTAN_DLL Basic_Constraints : public Certificate_Extension
       void contents_to(Data_Store&, Data_Store&) const;
 
       bool is_ca;
-      u32bit path_limit;
+      size_t path_limit;
    };
 
 /**
@@ -292,9 +294,9 @@ class BOTAN_DLL CRL_Number : public Certificate_Extension
       CRL_Number* copy() const;
 
       CRL_Number() : has_value(false), crl_number(0) {}
-      CRL_Number(u32bit n) : has_value(true), crl_number(n) {}
+      CRL_Number(size_t n) : has_value(true), crl_number(n) {}
 
-      u32bit get_crl_number() const;
+      size_t get_crl_number() const;
    private:
       std::string config_id() const { return "crl_number"; }
       std::string oid_name() const { return "X509v3.CRLNumber"; }
@@ -305,7 +307,7 @@ class BOTAN_DLL CRL_Number : public Certificate_Extension
       void contents_to(Data_Store&, Data_Store&) const;
 
       bool has_value;
-      u32bit crl_number;
+      size_t crl_number;
    };
 
 /**

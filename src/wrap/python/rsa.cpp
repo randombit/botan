@@ -63,21 +63,21 @@ class Py_RSA_PrivateKey
 std::string Py_RSA_PrivateKey::decrypt(const std::string& in,
                                        const std::string& padding)
    {
-   std::auto_ptr<PK_Decryptor> enc(get_pk_decryptor(*rsa_key, padding));
+   PK_Decryptor_EME dec(*rsa_key, padding);
 
    const byte* in_bytes = reinterpret_cast<const byte*>(in.data());
 
-   return make_string(enc->decrypt(in_bytes, in.size()));
+   return make_string(dec.decrypt(in_bytes, in.size()));
    }
 
 std::string Py_RSA_PrivateKey::sign(const std::string& in,
                                     const std::string& padding,
                                     Python_RandomNumberGenerator& rng)
    {
-   std::auto_ptr<PK_Signer> sign(get_pk_signer(*rsa_key, padding));
+   PK_Signer sign(*rsa_key, padding);
    const byte* in_bytes = reinterpret_cast<const byte*>(in.data());
-   sign->update(in_bytes, in.size());
-   return make_string(sign->signature(rng.get_underlying_rng()));
+   sign.update(in_bytes, in.size());
+   return make_string(sign.signature(rng.get_underlying_rng()));
    }
 
 Py_RSA_PrivateKey::Py_RSA_PrivateKey(u32bit bits,
@@ -160,11 +160,11 @@ std::string Py_RSA_PublicKey::encrypt(const std::string& in,
                                       const std::string& padding,
                                       Python_RandomNumberGenerator& rng)
    {
-   std::auto_ptr<PK_Encryptor> enc(get_pk_encryptor(*rsa_key, padding));
+   PK_Encryptor_EME enc(*rsa_key, padding);
 
    const byte* in_bytes = reinterpret_cast<const byte*>(in.data());
 
-   return make_string(enc->encrypt(in_bytes, in.size(),
+   return make_string(enc.encrypt(in_bytes, in.size(),
                                   rng.get_underlying_rng()));
    }
 
@@ -172,13 +172,13 @@ bool Py_RSA_PublicKey::verify(const std::string& in,
                               const std::string& signature,
                               const std::string& padding)
    {
-   std::auto_ptr<PK_Verifier> ver(get_pk_verifier(*rsa_key, padding));
+   PK_Verifier ver(*rsa_key, padding);
 
    const byte* in_bytes = reinterpret_cast<const byte*>(in.data());
    const byte* sig_bytes = reinterpret_cast<const byte*>(signature.data());
 
-   ver->update(in_bytes, in.size());
-   return ver->check_signature(sig_bytes, signature.size());
+   ver.update(in_bytes, in.size());
+   return ver.check_signature(sig_bytes, signature.size());
    }
 
 void export_rsa()

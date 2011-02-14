@@ -35,13 +35,13 @@ class BOTAN_DLL DER_Encoder
 
       DER_Encoder& encode_null();
       DER_Encoder& encode(bool);
-      DER_Encoder& encode(u32bit);
+      DER_Encoder& encode(size_t);
       DER_Encoder& encode(const BigInt&);
       DER_Encoder& encode(const MemoryRegion<byte>&, ASN1_Tag);
       DER_Encoder& encode(const byte[], size_t, ASN1_Tag);
 
       DER_Encoder& encode(bool, ASN1_Tag, ASN1_Tag = CONTEXT_SPECIFIC);
-      DER_Encoder& encode(u32bit, ASN1_Tag, ASN1_Tag = CONTEXT_SPECIFIC);
+      DER_Encoder& encode(size_t, ASN1_Tag, ASN1_Tag = CONTEXT_SPECIFIC);
       DER_Encoder& encode(const BigInt&, ASN1_Tag,
                           ASN1_Tag = CONTEXT_SPECIFIC);
       DER_Encoder& encode(const MemoryRegion<byte>&, ASN1_Tag,

@@ -210,13 +210,26 @@ void Turing::generate()
 */
 u32bit Turing::fixedS(u32bit W)
    {
-   for(size_t i = 0; i != 4; ++i)
-      {
-      byte B = SBOX[get_byte(i, W)];
-      W ^= rotate_left(Q_BOX[B], i*8);
-      W &= rotate_right(0x00FFFFFF, i*8);
-      W |= B << (24-i*8);
-      }
+   byte B = SBOX[get_byte(0, W)];
+   W ^= Q_BOX[B];
+   W &= 0x00FFFFFF;
+   W |= B << 24;
+
+   B = SBOX[get_byte(1, W)];
+   W ^= rotate_left(Q_BOX[B], 8);
+   W &= 0xFF00FFFF;
+   W |= B << 16;
+
+   B = SBOX[get_byte(2, W)];
+   W ^= rotate_left(Q_BOX[B], 16);
+   W &= 0xFFFF00FF;
+   W |= B << 8;
+
+   B = SBOX[get_byte(3, W)];
+   W ^= rotate_left(Q_BOX[B], 24);
+   W &= 0xFFFFFF00;
+   W |= B;
+
    return W;
    }
 
@@ -234,7 +247,7 @@ void Turing::key_schedule(const byte key[], size_t length)
 
    PHT(K);
 
-   for(size_t i = 0; i != 256; ++i)
+   for(u32bit i = 0; i != 256; ++i)
       {
       u32bit W0 = 0, C0 = i;
       u32bit W1 = 0, C1 = i;

@@ -12,9 +12,16 @@
 
 namespace Botan {
 
+/**
+* Represents the length requirements on an algorithm key
+*/
 class BOTAN_DLL Key_Length_Specification
    {
    public:
+      /**
+      * Constructor for fixed length keys
+      * @param keylen the supported key length
+      */
       Key_Length_Specification(size_t keylen) :
          min_keylen(keylen),
          max_keylen(keylen),
@@ -22,6 +29,12 @@ class BOTAN_DLL Key_Length_Specification
          {
          }
 
+      /**
+      * Constructor for variable length keys
+      * @param min_k the smallest supported key length
+      * @param max_k the largest supported key length
+      * @param k_mod the number of bytes the key must be a multiple of
+      */
       Key_Length_Specification(size_t min_k,
                                size_t max_k,
                                size_t k_mod = 1) :
@@ -31,6 +44,10 @@ class BOTAN_DLL Key_Length_Specification
          {
          }
 
+      /**
+      * @param length is a key length in bytes
+      * @return true iff this length is a valid length for this algo
+      */
       bool valid_keylength(size_t length) const
          {
          return ((length >= min_keylen) &&
@@ -38,16 +55,25 @@ class BOTAN_DLL Key_Length_Specification
                  (length % keylen_mod == 0));
          }
 
+      /**
+      * @return minimum key length in bytes
+      */
       size_t minimum_keylength() const
          {
          return min_keylen;
          }
 
+      /**
+      * @return maximum key length in bytes
+      */
       size_t maximum_keylength() const
          {
          return max_keylen;
          }
 
+      /**
+      * @return key length multiple in bytes
+      */
       size_t keylength_multiple() const
          {
          return keylen_mod;

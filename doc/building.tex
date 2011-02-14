@@ -149,6 +149,19 @@ order for new shared libraries to be picked up by the linker. An
 alternative is to set your \texttt{LD\_LIBRARY\_PATH} shell variable
 to include the directory that the Botan libraries were installed into.
 
+\subsection{Mac OS X}
+
+In general the Unix instructions above should apply, however OS X does
+not support \texttt{LD\_LIBRARY\_PATH}. Thomas Keller suggests instead
+running \verb|install_name_tool| between building and running the
+self-test program:
+
+\begin{verbatim}
+  $ VERSION=1.9.10
+  $ install_name_tool -change $(otool -X -D libbotan-$VERSION.dylib) \
+       $PWD/libbotan-$VERSION.dylib check
+\end{verbatim}
+
 \subsection{MS Windows}
 
 If you don't want to deal with building botan on Windows, check the

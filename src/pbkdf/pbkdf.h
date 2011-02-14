@@ -41,12 +41,6 @@ class BOTAN_DLL PBKDF : public Algorithm
                                      const std::string& passphrase,
                                      const byte salt[], size_t salt_len,
                                      size_t iterations) const = 0;
-
-      PBKDF() {}
-      virtual ~PBKDF() {}
-   private:
-      PBKDF(const PBKDF&) {}
-      PBKDF& operator=(const PBKDF&) { return (*this); }
    };
 
 /**

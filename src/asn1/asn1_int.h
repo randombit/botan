@@ -114,8 +114,8 @@ struct BOTAN_DLL BER_Decoding_Error : public Decoding_Error
 */
 struct BOTAN_DLL BER_Bad_Tag : public BER_Decoding_Error
    {
-   BER_Bad_Tag(const std::string&, ASN1_Tag);
-   BER_Bad_Tag(const std::string&, ASN1_Tag, ASN1_Tag);
+   BER_Bad_Tag(const std::string& msg, ASN1_Tag tag);
+   BER_Bad_Tag(const std::string& msg, ASN1_Tag tag1, ASN1_Tag tag2);
    };
 
 }

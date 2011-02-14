@@ -9,7 +9,6 @@
 #define BOTAN_TIME_H__
 
 #include <botan/types.h>
-#include <ctime>
 
 namespace Botan {
 

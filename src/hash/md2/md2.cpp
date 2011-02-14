@@ -52,7 +52,8 @@ void MD2::hash(const byte input[])
          T = X[k+4] ^= SBOX[T]; T = X[k+5] ^= SBOX[T];
          T = X[k+6] ^= SBOX[T]; T = X[k+7] ^= SBOX[T];
          }
-      T += i;
+
+      T += static_cast<byte>(i);
       }
 
    T = checksum[15];

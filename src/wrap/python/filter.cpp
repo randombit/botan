@@ -19,7 +19,7 @@ class Py_Filter : public Filter
 
       std::string name() const { return "Py_Filter_FIXME"; }
 
-      void write(const byte data[], u32bit length)
+      void write(const byte data[], size_t length)
          {
          write_str(std::string((const char*)data, length));
          }

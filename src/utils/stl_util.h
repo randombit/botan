@@ -12,8 +12,12 @@
 
 namespace Botan {
 
-/*
+/**
 * Copy-on-Predicate Algorithm
+* @param current the first iterator value
+* @param end the final iterator value
+* @param dest an output iterator
+* @param copy_p the predicate
 */
 template<typename InputIterator, typename OutputIterator, typename Predicate>
 OutputIterator copy_if(InputIterator current, InputIterator end,
@@ -28,8 +32,12 @@ OutputIterator copy_if(InputIterator current, InputIterator end,
    return dest;
    }
 
-/*
+/**
 * Searching through a std::map
+* @param mapping the map to search
+* @param key is what to look for
+* @param null_result is the value to return if key is not in mapping
+* @return mapping[key] or null_result
 */
 template<typename K, typename V>
 inline V search_map(const std::map<K, V>& mapping,
@@ -40,16 +48,6 @@ inline V search_map(const std::map<K, V>& mapping,
    if(i == mapping.end())
       return null_result;
    return i->second;
-   }
-
-template<typename K, typename V, typename R>
-inline R search_map(const std::map<K, V>& mapping, const K& key,
-                    const R& null_result, const R& found_result)
-   {
-   typename std::map<K, V>::const_iterator i = mapping.find(key);
-   if(i == mapping.end())
-      return null_result;
-   return found_result;
    }
 
 /**

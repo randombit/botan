@@ -45,6 +45,7 @@ u32bit dec_two_digit(byte b1, byte b2)
 
    return upper*10 + lower;
    }
+
 }
 
 /*
@@ -62,19 +63,15 @@ EAC_Time::EAC_Time(u64bit timer, ASN1_Tag t) : tag(t)
 /*
 * Create an EAC_Time
 */
-EAC_Time::EAC_Time(const std::string& t_spec, ASN1_Tag t)
-   :tag(t)
+EAC_Time::EAC_Time(const std::string& t_spec, ASN1_Tag t) : tag(t)
    {
    set_to(t_spec);
    }
 /*
 * Create an EAC_Time
 */
-EAC_Time::EAC_Time(u32bit y, u32bit m, u32bit d, ASN1_Tag t)
-   : year(y),
-     month(m),
-     day(d),
-     tag(t)
+EAC_Time::EAC_Time(u32bit y, u32bit m, u32bit d, ASN1_Tag t) :
+   year(y), month(m), day(d), tag(t)
    {
    }
 
@@ -229,22 +226,27 @@ bool operator==(const EAC_Time& t1, const EAC_Time& t2)
    {
    return (t1.cmp(t2) == 0);
    }
+
 bool operator!=(const EAC_Time& t1, const EAC_Time& t2)
    {
    return (t1.cmp(t2) != 0);
    }
+
 bool operator<=(const EAC_Time& t1, const EAC_Time& t2)
    {
    return (t1.cmp(t2) <= 0);
    }
+
 bool operator>=(const EAC_Time& t1, const EAC_Time& t2)
    {
    return (t1.cmp(t2) >= 0);
    }
+
 bool operator>(const EAC_Time& t1, const EAC_Time& t2)
    {
    return (t1.cmp(t2) > 0);
    }
+
 bool operator<(const EAC_Time& t1, const EAC_Time& t2)
    {
    return (t1.cmp(t2) < 0);
@@ -285,10 +287,12 @@ u32bit EAC_Time::get_year() const
    {
    return year;
    }
+
 u32bit EAC_Time::get_month() const
    {
    return month;
    }
+
 u32bit EAC_Time::get_day() const
    {
    return day;
@@ -306,28 +310,34 @@ SecureVector<byte> EAC_Time::encoded_eac_time() const
    return result;
    }
 
-ASN1_Ced::ASN1_Ced(std::string const& str)
-   : EAC_Time(str, ASN1_Tag(37))
+ASN1_Ced::ASN1_Ced(std::string const& str) :
+   EAC_Time(str, ASN1_Tag(37))
    {}
 
-ASN1_Ced::ASN1_Ced(u64bit val)
-   : EAC_Time(val, ASN1_Tag(37))
+ASN1_Ced::ASN1_Ced(u64bit val) :
+   EAC_Time(val, ASN1_Tag(37))
    {}
 
-ASN1_Ced::ASN1_Ced(EAC_Time const& other)
-   : EAC_Time(other.get_year(), other.get_month(), other.get_day(), ASN1_Tag(37))
+ASN1_Ced::ASN1_Ced(EAC_Time const& other) :
+   EAC_Time(other.get_year(),
+            other.get_month(),
+            other.get_day(),
+            ASN1_Tag(37))
    {}
 
-ASN1_Cex::ASN1_Cex(std::string const& str)
-   : EAC_Time(str, ASN1_Tag(36))
+ASN1_Cex::ASN1_Cex(std::string const& str) :
+   EAC_Time(str, ASN1_Tag(36))
    {}
 
-ASN1_Cex::ASN1_Cex(u64bit val)
-   : EAC_Time(val, ASN1_Tag(36))
+ASN1_Cex::ASN1_Cex(u64bit val) :
+   EAC_Time(val, ASN1_Tag(36))
    {}
 
-ASN1_Cex::ASN1_Cex(EAC_Time const& other)
-   : EAC_Time(other.get_year(), other.get_month(), other.get_day(), ASN1_Tag(36))
+ASN1_Cex::ASN1_Cex(EAC_Time const& other) :
+   EAC_Time(other.get_year(),
+            other.get_month(),
+            other.get_day(),
+            ASN1_Tag(36))
    {}
 
 }

@@ -5,6 +5,9 @@
 * Distributed under the terms of the Botan license
 */
 
+#ifndef BOTAN_DYN_LOADED_ENGINE_H__
+#define BOTAN_DYN_LOADED_ENGINE_H__
+
 #include <botan/engine.h>
 
 namespace Botan {
@@ -47,6 +50,12 @@ class BOTAN_DLL Dynamically_Loaded_Engine : public Engine
                                           Algorithm_Factory& af) const
          {
          return engine->find_mac(algo_spec, af);
+         }
+
+      PBKDF* find_pbkdf(const SCAN_Name& algo_spec,
+                        Algorithm_Factory& af) const
+         {
+         return engine->find_pbkdf(algo_spec, af);
          }
 
       Modular_Exponentiator* mod_exp(const BigInt& n,
@@ -98,3 +107,5 @@ class BOTAN_DLL Dynamically_Loaded_Engine : public Engine
    };
 
 }
+
+#endif

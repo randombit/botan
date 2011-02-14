@@ -29,6 +29,8 @@ class EVP_BlockCipher : public BlockCipher
       EVP_BlockCipher(const EVP_CIPHER*, const std::string&,
                       size_t, size_t, size_t);
 
+      Key_Length_Specification key_spec() const { return cipher_key_spec; }
+
       ~EVP_BlockCipher();
    private:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
@@ -36,6 +38,7 @@ class EVP_BlockCipher : public BlockCipher
       void key_schedule(const byte[], size_t);
 
       size_t block_sz;
+      Key_Length_Specification cipher_key_spec;
       std::string cipher_name;
       mutable EVP_CIPHER_CTX encrypt, decrypt;
    };
@@ -45,8 +48,8 @@ class EVP_BlockCipher : public BlockCipher
 */
 EVP_BlockCipher::EVP_BlockCipher(const EVP_CIPHER* algo,
                                  const std::string& algo_name) :
-   BlockCipher(EVP_CIPHER_key_length(algo)),
    block_sz(EVP_CIPHER_block_size(algo)),
+   cipher_key_spec(EVP_CIPHER_key_length(algo)),
    cipher_name(algo_name)
    {
    if(EVP_CIPHER_mode(algo) != EVP_CIPH_ECB_MODE)
@@ -69,8 +72,8 @@ EVP_BlockCipher::EVP_BlockCipher(const EVP_CIPHER* algo,
                                  const std::string& algo_name,
                                  size_t key_min, size_t key_max,
                                  size_t key_mod) :
-   BlockCipher(key_min, key_max, key_mod),
    block_sz(EVP_CIPHER_block_size(algo)),
+   cipher_key_spec(key_min, key_max, key_mod),
    cipher_name(algo_name)
    {
    if(EVP_CIPHER_mode(algo) != EVP_CIPH_ECB_MODE)
@@ -148,8 +151,10 @@ void EVP_BlockCipher::key_schedule(const byte key[], size_t length)
 BlockCipher* EVP_BlockCipher::clone() const
    {
    return new EVP_BlockCipher(EVP_CIPHER_CTX_cipher(&encrypt),
-                              cipher_name, MINIMUM_KEYLENGTH,
-                              MAXIMUM_KEYLENGTH, KEYLENGTH_MULTIPLE);
+                              cipher_name,
+                              cipher_key_spec.minimum_keylength(),
+                              cipher_key_spec.maximum_keylength(),
+                              cipher_key_spec.keylength_multiple());
    }
 
 /*

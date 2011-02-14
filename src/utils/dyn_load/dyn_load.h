@@ -1,4 +1,4 @@
-/**
+/*
 * Dynamically Loaded Object
 * (C) 2010 Jack Lloyd
 *
@@ -12,6 +12,9 @@
 
 namespace Botan {
 
+/**
+* Represents a DLL or shared object
+*/
 class Dynamically_Loaded_Library
    {
    public:

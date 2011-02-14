@@ -175,7 +175,7 @@ void CMS_Decoder::decode_layer()
          decompress(decoder);
       else if(type == OIDS::lookup("CMS.DigestedData"))
          {
-         u32bit version;
+         size_t version;
          AlgorithmIdentifier hash_algo;
          SecureVector<byte> digest;
 
@@ -198,7 +198,7 @@ void CMS_Decoder::decode_layer()
 #if 1
          throw Internal_Error("FIXME: not implemented");
 #else
-         u32bit version;
+         size_t version;
 
          BER_Decoder sig_info = BER::get_subsequence(decoder);
          BER::decode(sig_info, version);
@@ -213,7 +213,7 @@ void CMS_Decoder::decode_layer()
             {
             AlgorithmIdentifier sig_algo, hash_algo;
             SecureVector<byte> signature, digest;
-            u32bit version;
+            size_t version;
 
             BER_Decoder signer_info = BER::get_subsequence(signer_infos);
             BER::decode(signer_info, version);

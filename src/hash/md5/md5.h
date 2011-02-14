@@ -30,7 +30,15 @@ class BOTAN_DLL MD5 : public MDx_HashFunction
       void compress_n(const byte[], size_t blocks);
       void copy_out(byte[]);
 
-      SecureVector<u32bit> M, digest;
+      /**
+      * The message buffer, exposed for use by subclasses (x86 asm)
+      */
+      SecureVector<u32bit> M;
+
+      /**
+      * The digest value, exposed for use by subclasses (x86 asm)
+      */
+      SecureVector<u32bit> digest;
    };
 
 }

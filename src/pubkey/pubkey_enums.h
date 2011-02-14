@@ -66,12 +66,6 @@ enum CRL_Code {
 */
 enum X509_Encoding { RAW_BER, PEM };
 
-/**
-* Value to encode in case of no path limit in the X509
-* BasicConstraints extension.
-*/
-static const u32bit NO_CERT_PATH_LIMIT = 0xFFFFFFF0;
-
 }
 
 #endif

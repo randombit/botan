@@ -43,11 +43,11 @@ class BuildConfigurationInformation(object):
     """
     version_major = 1
     version_minor = 9
-    version_patch = 11
-    version_so_patch = 11
+    version_patch = 14
+    version_so_patch = 14
     version_suffix = '-dev'
 
-    version_datestamp = None
+    version_datestamp = 0
 
     version_string = '%d.%d.%d%s' % (
         version_major, version_minor, version_patch, version_suffix)
@@ -58,10 +58,6 @@ class BuildConfigurationInformation(object):
     Constructor
     """
     def __init__(self, options, modules):
-
-        # If not preset, use today
-        if self.version_datestamp is None:
-            self.version_datestamp = time.strftime("%Y%m%d", time.gmtime())
 
         self.build_dir = os.path.join(options.with_build_dir, 'build')
 
@@ -229,6 +225,10 @@ def process_command_line(args):
                            action='store_false', default=True,
                            help=SUPPRESS_HELP)
 
+    build_group.add_option('--distribution-info', metavar='STRING',
+                           help='set distribution specific versioning',
+                           default='unspecified')
+
     wrapper_group = OptionGroup(parser, 'Wrapper options')
 
     wrapper_group.add_option('--with-boost-python', dest='boost_python',
@@ -243,7 +243,7 @@ def process_command_line(args):
     wrapper_group.add_option('--use-python-version', dest='python_version',
                              metavar='N.M',
                              default='.'.join(map(str, sys.version_info[0:2])),
-                             help='specify version of Python to build against (eg %default)')
+                             help='specify Python to build against (eg %default)')
 
     mods_group = OptionGroup(parser, 'Module selection')
 
@@ -943,6 +943,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'version_patch': build_config.version_patch,
         'version':       build_config.version_string,
 
+        'distribution_info': options.distribution_info,
+
         'version_datestamp': build_config.version_datestamp,
 
         'so_version': build_config.soversion_string,
@@ -963,6 +965,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'doc_src_dir': 'doc',
         'build_dir': build_config.build_dir,
+
+        'python_dir': build_config.python_dir,
 
         'os': options.os,
         'arch': options.arch,
@@ -1064,6 +1068,14 @@ def choose_modules_to_use(modules, archinfo, options):
 
     def cannot_use_because(mod, reason):
         not_using_because.setdefault(reason, []).append(mod)
+
+    for modname in options.enabled_modules:
+        if modname not in modules:
+            logging.warning("Unknown enabled module %s" % (modname))
+
+    for modname in options.disabled_modules:
+        if modname not in modules:
+            logging.warning("Unknown disabled module %s" % (modname))
 
     for (modname, module) in modules.items():
         if modname in options.disabled_modules:
@@ -1211,7 +1223,7 @@ def setup_build(build_config, options, template_vars):
 
         if 'symlink' in os.__dict__:
             def count_dirs(dir, accum = 0):
-                if dir == '' or dir == os.path.curdir:
+                if dir in ['', '/', os.path.curdir]:
                     return accum
                 (dir,basename) = os.path.split(dir)
                 return accum + 1 + count_dirs(dir)
@@ -1319,7 +1331,7 @@ def generate_amalgamation(build_config):
             return val.endswith(suffix)
         return predicate
 
-    def strip_header_goop(contents):
+    def strip_header_goop(header_name, contents):
         header_guard = re.compile('^#define BOTAN_.*_H__$')
 
         while len(contents) > 0:
@@ -1328,6 +1340,9 @@ def generate_amalgamation(build_config):
                 break
 
             contents = contents[1:]
+
+        if len(contents) == 0:
+            raise Exception("No header guard found in " + header_name)
 
         while contents[0] == '\n':
             contents = contents[1:]
@@ -1350,7 +1365,7 @@ def generate_amalgamation(build_config):
 
             self.file_contents = {}
             for f in sorted(input_list):
-                contents = strip_header_goop(open(f).readlines())
+                contents = strip_header_goop(f, open(f).readlines())
                 self.file_contents[os.path.basename(f)] = contents
 
             self.contents = ''

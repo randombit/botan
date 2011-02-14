@@ -217,8 +217,7 @@ Keyed_Filter* Core_Engine::get_cipher(const std::string& algo_spec,
    if(filt)
       return filt;
 
-   throw Algorithm_Not_Found("get_mode: " + cipher_name + "/" +
-                             mode + "/" + padding);
+   throw Algorithm_Not_Found(cipher_name + "/" + mode + "/" + padding);
    }
 
 }

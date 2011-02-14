@@ -19,6 +19,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <memory>
 
 #include "common.h"
 
@@ -47,55 +48,37 @@ void test_hash_larger_than_n(RandomNumberGenerator& rng)
    {
    std::cout << "." << std::flush;
 
-   EC_Domain_Params dom_pars(OID("1.3.132.0.8"));
-   // n:
-   // 0x0100000000000000000001f4c8f927aed3ca752257 // 21 bytes
-   // -> shouldn't work with SHA224 which outputs 23 bytes
+   EC_Domain_Params dom_pars(OID("1.3.132.0.8")); // secp160r1
+   // n = 0x0100000000000000000001f4c8f927aed3ca752257 (21 bytes)
+   // -> shouldn't work with SHA224 which outputs 28 bytes
+
    ECDSA_PrivateKey priv_key(rng, dom_pars);
+
    SecureVector<byte> message(20);
-   for (unsigned i = 0; i != 20; ++i)
+   for(size_t i = 0; i != message.size(); ++i)
       message[i] = i;
 
-   for (int i = 0; i<3; i++)
+   PK_Signer pk_signer_160(priv_key, "EMSA1_BSI(SHA-1)");
+   PK_Verifier pk_verifier_160(priv_key, "EMSA1_BSI(SHA-1)");
+
+   PK_Signer pk_signer_224(priv_key, "EMSA1_BSI(SHA-224)");
+
+   // Verify we can sign and verify with SHA-160
+   SecureVector<byte> signature_160 = pk_signer_160.sign_message(message, rng);
+
+   CHECK(pk_verifier_160.verify_message(message, signature_160));
+
+   bool signature_failed = false;
+   try
       {
-      //cout << "i = " << i << endl;
-      std::string format;
-      if(i==1)
-         {
-         format = "EMSA1_BSI(SHA-224)";
-         }
-      else
-         {
-         format = "EMSA1_BSI(SHA-1)";
-         }
-      PK_Signer pk_signer(priv_key, format);
-      SecureVector<byte> signature;
-      bool sig_exc = false;
-      try
-         {
-         signature = pk_signer.sign_message(message, rng);
-         }
-      catch(Encoding_Error e)
-         {
-         sig_exc = true;
-         }
-      if(i==1)
-         {
-         CHECK(sig_exc);
-         }
-      if(i==0)
-         {
-         CHECK(!sig_exc);
-         }
+      SecureVector<byte> signature_224 = pk_signer_224.sign_message(message, rng);
+      }
+   catch(Encoding_Error)
+      {
+      signature_failed = true;
+      }
 
-      if(i==0) // makes no sense to check for sha224
-         {
-         PK_Verifier pk_verifier(priv_key, format);
-         bool ver = pk_verifier.verify_message(message, signature);
-         CHECK(ver);
-         }
-
-      } // for
+   CHECK(signature_failed);
 
    // now check that verification alone fails
 
@@ -106,9 +89,6 @@ void test_hash_larger_than_n(RandomNumberGenerator& rng)
    PK_Verifier pk_verifier(priv_key, "EMSA1_BSI(SHA-224)");
 
    // verify against EMSA1_BSI
-   // we make sure it doesn't fail because of the invalid signature,
-   // but because of the Encoding_Error
-
    if(pk_verifier.verify_message(message, signature))
       std::cout << "Corrupt ECDSA signature verified, should not have\n";
    }

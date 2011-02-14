@@ -9,9 +9,6 @@
 #include <botan/loadstor.h>
 #include <botan/rotate.h>
 
-#include <assert.h>
-#include <stdio.h>
-
 namespace Botan {
 
 namespace {
@@ -616,7 +613,7 @@ void aes_key_schedule(const byte key[], size_t length,
       0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000,
       0x20000000, 0x40000000, 0x80000000, 0x1B000000, 0x36000000 };
 
-   const u32bit rounds = (length / 4) + 6;
+   const size_t rounds = (length / 4) + 6;
 
    SecureVector<u32bit> XEK(length + 32), XDK(length + 32);
 

@@ -88,6 +88,7 @@ class BOTAN_DLL X509_Object
       * @param out the pipe to write to
       * @param encoding the encoding to use
       */
+      BOTAN_DEPRECATED("Use BER_encode or PEM_encode")
       void encode(Pipe& out, X509_Encoding encoding = PEM) const;
 
       virtual ~X509_Object() {}

@@ -74,7 +74,7 @@ class SIMD_Scalar
          Botan::store_be(out, R0, R1, R2, R3);
          }
 
-      void rotate_left(u32bit rot)
+      void rotate_left(size_t rot)
          {
          R0 = Botan::rotate_left(R0, rot);
          R1 = Botan::rotate_left(R1, rot);
@@ -82,7 +82,7 @@ class SIMD_Scalar
          R3 = Botan::rotate_left(R3, rot);
          }
 
-      void rotate_right(u32bit rot)
+      void rotate_right(size_t rot)
          {
          R0 = Botan::rotate_right(R0, rot);
          R1 = Botan::rotate_right(R1, rot);
@@ -162,7 +162,7 @@ class SIMD_Scalar
          R3 &= other.R3;
          }
 
-      SIMD_Scalar operator<<(u32bit shift) const
+      SIMD_Scalar operator<<(size_t shift) const
          {
          return SIMD_Scalar(R0 << shift,
                             R1 << shift,
@@ -170,7 +170,7 @@ class SIMD_Scalar
                             R3 << shift);
          }
 
-      SIMD_Scalar operator>>(u32bit shift) const
+      SIMD_Scalar operator>>(size_t shift) const
          {
          return SIMD_Scalar(R0 >> shift,
                             R1 >> shift,

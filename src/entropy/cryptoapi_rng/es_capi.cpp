@@ -35,7 +35,7 @@ class CSP_Handle
 
       size_t gen_random(byte out[], size_t n) const
          {
-         if(is_valid() && CryptGenRandom(handle, n, out))
+         if(is_valid() && CryptGenRandom(handle, static_cast<DWORD>(n), out))
             return n;
          return 0;
          }
@@ -50,7 +50,7 @@ class CSP_Handle
 
 }
 
-/**
+/*
 * Gather Entropy from Win32 CAPI
 */
 void Win32_CAPI_EntropySource::poll(Entropy_Accumulator& accum)
@@ -71,7 +71,7 @@ void Win32_CAPI_EntropySource::poll(Entropy_Accumulator& accum)
       }
    }
 
-/**
+/*
 * Win32_Capi_Entropysource Constructor
 */
 Win32_CAPI_EntropySource::Win32_CAPI_EntropySource(const std::string& provs)

@@ -1,7 +1,7 @@
 /*
 * Simple ASN.1 String Types
 * (C) 2007 FlexSecure GmbH
-*     2008 Jack Lloyd
+*     2008-2011 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -12,6 +12,7 @@
 #include <botan/charset.h>
 #include <botan/parsing.h>
 #include <sstream>
+#include <ios>
 
 namespace Botan {
 
@@ -21,10 +22,9 @@ namespace Botan {
 ASN1_EAC_String::ASN1_EAC_String(const std::string& str, ASN1_Tag t) : tag(t)
    {
    iso_8859_str = Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET);
-   if (!sanity_check())
-      {
-      throw Invalid_Argument("attempted to construct ASN1_EAC_String with illegal characters");
-      }
+
+   if(!sanity_check())
+      throw Invalid_Argument("ASN1_EAC_String contains illegal characters");
    }
 
 /*
@@ -66,23 +66,19 @@ void ASN1_EAC_String::encode_into(DER_Encoder& encoder) const
 void ASN1_EAC_String::decode_from(BER_Decoder& source)
    {
    BER_Object obj = source.get_next_object();
-   if (obj.type_tag != this->tag)
-      {
 
-      std::string message("decoding type mismatch for ASN1_EAC_String, tag is ");
+   if(obj.type_tag != this->tag)
+      {
       std::stringstream ss;
-      std::string str_is;
-      ss << std::hex << obj.type_tag;
-      ss >> str_is;
-      message.append(str_is);
-      message.append(", while it should be ");
-      std::stringstream ss2;
-      std::string str_should;
-      ss2 << std::hex << this->tag;
-      ss2 >> str_should;
-      message.append(str_should);
-      throw Decoding_Error(message);
+
+      ss << "ASN1_EAC_String tag mismatch, tag was "
+         << std::hex << obj.type_tag
+         << " expected "
+         << std::hex << this->tag;
+
+      throw Decoding_Error(ss.str());
       }
+
    Character_Set charset_is;
    charset_is = LATIN1_CHARSET;
 
@@ -92,9 +88,10 @@ void ASN1_EAC_String::decode_from(BER_Decoder& source)
          Charset::transcode(ASN1::to_string(obj), charset_is, LOCAL_CHARSET),
          obj.type_tag);
       }
-   catch (Invalid_Argument inv_arg)
+   catch(Invalid_Argument inv_arg)
       {
-      throw Decoding_Error(std::string("error while decoding ASN1_EAC_String: ") + std::string(inv_arg.what()));
+      throw Decoding_Error(std::string("ASN1_EAC_String decoding failed: ") +
+                           inv_arg.what());
       }
    }
 
@@ -103,14 +100,14 @@ void ASN1_EAC_String::decode_from(BER_Decoder& source)
 bool ASN1_EAC_String::sanity_check() const
    {
    const byte* rep = reinterpret_cast<const byte*>(iso_8859_str.data());
-   const u32bit rep_len = iso_8859_str.size();
-   for (u32bit i=0; i<rep_len; i++)
+   const size_t rep_len = iso_8859_str.size();
+
+   for(size_t i = 0; i != rep_len; ++i)
       {
-      if ((rep[i] < 0x20) || ((rep[i] >= 0x7F) && (rep[i] < 0xA0)))
-         {
+      if((rep[i] < 0x20) || ((rep[i] >= 0x7F) && (rep[i] < 0xA0)))
          return false;
-         }
       }
+
    return true;
    }
 

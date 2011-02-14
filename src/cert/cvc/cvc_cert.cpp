@@ -35,7 +35,7 @@ void EAC1_1_CVC::force_decode()
    {
    SecureVector<byte> enc_pk;
    SecureVector<byte> enc_chat_val;
-   u32bit cpi;
+   size_t cpi;
    BER_Decoder tbs_cert(tbs_bits);
    tbs_cert.decode(cpi, ASN1_Tag(41), APPLICATION)
       .decode(m_car)

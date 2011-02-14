@@ -8,10 +8,8 @@
 #include <botan/base64.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/rounding.h>
+#include <botan/internal/assert.h>
 #include <stdexcept>
-
-#include <stdio.h>
-#include <assert.h>
 
 namespace Botan {
 
@@ -88,8 +86,8 @@ std::string base64_encode(const byte input[],
                                    input, input_length,
                                    consumed, true);
 
-   assert(consumed == input_length);
-   assert(produced == output.size());
+   BOTAN_ASSERT_EQUAL(consumed, input_length, "Did not consume all input");
+   BOTAN_ASSERT_EQUAL(produced, output.size(), "Did not produce right amount");
 
    return output;
    }

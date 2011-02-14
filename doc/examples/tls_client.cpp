@@ -15,6 +15,22 @@ using namespace Botan;
 #include <iostream>
 #include <memory>
 
+class Client_TLS_Policy : public TLS_Policy
+   {
+   public:
+      bool check_cert(const std::vector<X509_Certificate>& certs) const
+         {
+         for(size_t i = 0; i != certs.size(); ++i)
+            {
+            std::cout << certs[i].to_string();
+            }
+
+         std::cout << "Warning: not checking cert signatures\n";
+
+         return true;
+         }
+   };
+
 int main(int argc, char* argv[])
    {
    if(argc != 2 && argc != 3)
@@ -37,7 +53,7 @@ int main(int argc, char* argv[])
       std::auto_ptr<Botan::RandomNumberGenerator> rng(
          Botan::RandomNumberGenerator::make_rng());
 
-      TLS_Policy policy;
+      Client_TLS_Policy policy;
 
       TLS_Client tls(std::tr1::bind(&Socket::read, std::tr1::ref(sock), _1, _2),
                      std::tr1::bind(&Socket::write, std::tr1::ref(sock), _1, _2),

@@ -21,6 +21,7 @@ class BlockCipher;
 class StreamCipher;
 class HashFunction;
 class MessageAuthenticationCode;
+class PBKDF;
 
 template<typename T> class Algorithm_Cache;
 
@@ -161,8 +162,30 @@ class BOTAN_DLL Algorithm_Factory
                    const std::string& provider);
 
       /**
+      * @param algo_spec the algorithm we want
+      * @param provider the provider we would like to use
+      * @returns pointer to const prototype object, ready to clone(), or NULL
+      */
+      const PBKDF* prototype_pbkdf(const std::string& algo_spec,
+                                   const std::string& provider = "");
+
+      /**
+      * @param algo_spec the algorithm we want
+      * @param provider the provider we would like to use
+      * @returns pointer to freshly created instance of the request algorithm
+      */
+      PBKDF* make_pbkdf(const std::string& algo_spec,
+                        const std::string& provider = "");
+
+      /**
+      * @param algo the algorithm to add
+      * @param provider the provider of this algorithm
+      */
+      void add_pbkdf(PBKDF* algo, const std::string& provider);
+
+      /**
       * An iterator for the engines in this factory
-      * @deprecated
+      * @deprecated Avoid in new code
       */
       class BOTAN_DLL Engine_Iterator
          {
@@ -175,7 +198,8 @@ class BOTAN_DLL Algorithm_Factory
             /**
             * @param a an algorithm factory
             */
-            Engine_Iterator(const Algorithm_Factory& a) : af(a) { n = 0; }
+            Engine_Iterator(const Algorithm_Factory& a) :
+               af(a) { n = 0; }
          private:
             const Algorithm_Factory& af;
             size_t n;
@@ -195,6 +219,7 @@ class BOTAN_DLL Algorithm_Factory
       Algorithm_Cache<StreamCipher>* stream_cipher_cache;
       Algorithm_Cache<HashFunction>* hash_cache;
       Algorithm_Cache<MessageAuthenticationCode>* mac_cache;
+      Algorithm_Cache<PBKDF>* pbkdf_cache;
    };
 
 }

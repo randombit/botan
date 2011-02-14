@@ -55,7 +55,7 @@ void X509_Cert_Options::add_ex_constraint(const std::string& oid_str)
 /*
 * Mark this certificate for CA usage
 */
-void X509_Cert_Options::CA_key(u32bit limit)
+void X509_Cert_Options::CA_key(size_t limit)
    {
    is_CA = true;
    path_limit = limit;

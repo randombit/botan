@@ -55,13 +55,13 @@ class SIMD_SSE2
          bswap().store_le(out);
          }
 
-      void rotate_left(u32bit rot)
+      void rotate_left(size_t rot)
          {
-         reg = _mm_or_si128(_mm_slli_epi32(reg, rot),
-                            _mm_srli_epi32(reg, 32-rot));
+         reg = _mm_or_si128(_mm_slli_epi32(reg, static_cast<int>(rot)),
+                            _mm_srli_epi32(reg, static_cast<int>(32-rot)));
          }
 
-      void rotate_right(u32bit rot)
+      void rotate_right(size_t rot)
          {
          rotate_left(32 - rot);
          }
@@ -111,14 +111,14 @@ class SIMD_SSE2
          reg = _mm_and_si128(reg, other.reg);
          }
 
-      SIMD_SSE2 operator<<(u32bit shift) const
+      SIMD_SSE2 operator<<(size_t shift) const
          {
-         return _mm_slli_epi32(reg, shift);
+         return _mm_slli_epi32(reg, static_cast<int>(shift));
          }
 
-      SIMD_SSE2 operator>>(u32bit shift) const
+      SIMD_SSE2 operator>>(size_t shift) const
          {
-         return _mm_srli_epi32(reg, shift);
+         return _mm_srli_epi32(reg, static_cast<int>(shift));
          }
 
       SIMD_SSE2 operator~() const

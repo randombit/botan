@@ -11,7 +11,6 @@
 #include <botan/types.h>
 #include <string>
 #include <vector>
-#include <set>
 
 namespace Botan {
 

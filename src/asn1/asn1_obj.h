@@ -98,11 +98,6 @@ bool BOTAN_DLL operator>=(const X509_Time&, const X509_Time&);
 bool BOTAN_DLL operator<(const X509_Time&, const X509_Time&);
 bool BOTAN_DLL operator>(const X509_Time&, const X509_Time&);
 
-/*
-* Helper Functions
-*/
-bool BOTAN_DLL is_string_type(ASN1_Tag);
-
 }
 
 #endif

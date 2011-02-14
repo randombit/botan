@@ -34,14 +34,14 @@ size_t dl_work_factor(size_t bits)
       return 190;
    return 256;
 #else
-   const size_t MIN_ESTIMATE = 64;
+   const double MIN_ESTIMATE = 64;
 
    const double log_x = bits / 1.44;
 
    const double strength =
       2.76 * std::pow(log_x, 1.0/3.0) * std::pow(std::log(log_x), 2.0/3.0);
 
-   return std::max<size_t>(strength, MIN_ESTIMATE);
+   return static_cast<size_t>(std::max(strength, MIN_ESTIMATE));
 #endif
    }
 

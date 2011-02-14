@@ -53,13 +53,44 @@ class BOTAN_DLL EAX_Base : public Keyed_Filter
       EAX_Base(BlockCipher* cipher, size_t tag_size);
       void start_msg();
 
-      const size_t BLOCK_SIZE, TAG_SIZE;
+      /**
+      * The block size of the underlying cipher
+      */
+      const size_t BLOCK_SIZE;
+
+      /**
+      * The requested tag name
+      */
+      const size_t TAG_SIZE;
+
+      /**
+      * The name of the cipher
+      */
       std::string cipher_name;
 
+      /**
+      * The stream cipher (CTR mode)
+      */
       StreamCipher* ctr;
+
+      /**
+      * The MAC (CMAC)
+      */
       MessageAuthenticationCode* cmac;
 
-      SecureVector<byte> nonce_mac, header_mac;
+      /**
+      * The MAC of the nonce
+      */
+      SecureVector<byte> nonce_mac;
+
+      /**
+      * The MAC of the header
+      */
+      SecureVector<byte> header_mac;
+
+      /**
+      * A buffer for CTR mode encryption
+      */
       SecureVector<byte> ctr_buf;
    };
 

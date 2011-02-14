@@ -49,6 +49,9 @@ class Core_Engine : public Engine
 
       MessageAuthenticationCode* find_mac(const SCAN_Name& reqeust,
                                           Algorithm_Factory&) const;
+
+      PBKDF* find_pbkdf(const SCAN_Name& algo_spec,
+                        Algorithm_Factory& af) const;
    };
 
 /**

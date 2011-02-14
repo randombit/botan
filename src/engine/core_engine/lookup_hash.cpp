@@ -34,6 +34,10 @@
   #include <botan/has160.h>
 #endif
 
+#if defined(BOTAN_HAS_KECCAK)
+  #include <botan/keccak.h>
+#endif
+
 #if defined(BOTAN_HAS_MD2)
   #include <botan/md2.h>
 #endif
@@ -122,6 +126,11 @@ HashFunction* Core_Engine::find_hash(const SCAN_Name& request,
 #if defined(BOTAN_HAS_HAS_160)
    if(request.algo_name() == "HAS-160")
       return new HAS_160;
+#endif
+
+#if defined(BOTAN_HAS_KECCAK)
+   if(request.algo_name() == "Keccak-1600")
+      return new Keccak_1600(request.arg_as_integer(0, 512));
 #endif
 
 #if defined(BOTAN_HAS_MD2)

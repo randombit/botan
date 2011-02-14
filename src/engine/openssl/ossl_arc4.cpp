@@ -23,7 +23,13 @@ class ARC4_OpenSSL : public StreamCipher
       std::string name() const;
       StreamCipher* clone() const { return new ARC4_OpenSSL(SKIP); }
 
-      ARC4_OpenSSL(size_t s = 0) : StreamCipher(1, 32), SKIP(s) { clear(); }
+      Key_Length_Specification key_spec() const
+         {
+         return Key_Length_Specification(1, 32);
+         }
+
+
+      ARC4_OpenSSL(size_t s = 0) : SKIP(s) { clear(); }
       ~ARC4_OpenSSL() { clear(); }
    private:
       void cipher(const byte[], byte[], size_t);

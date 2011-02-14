@@ -103,7 +103,7 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
    std::auto_ptr<PK_Signer> signer(choose_sig_format(key, hash_fn, sig_algo));
    load_info(opts, subject_dn, subject_alt);
 
-   const u32bit PKCS10_VERSION = 0;
+   const size_t PKCS10_VERSION = 0;
 
    Extensions extensions;
 

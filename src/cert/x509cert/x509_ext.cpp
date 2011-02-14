@@ -166,7 +166,7 @@ namespace Cert_Extension {
 /*
 * Checked accessor for the path_limit member
 */
-u32bit Basic_Constraints::get_path_limit() const
+size_t Basic_Constraints::get_path_limit() const
    {
    if(!is_ca)
       throw Invalid_State("Basic_Constraints::get_path_limit: Not a CA");
@@ -505,7 +505,7 @@ void Certificate_Policies::contents_to(Data_Store& info, Data_Store&) const
 /*
 * Checked accessor for the crl_number member
 */
-u32bit CRL_Number::get_crl_number() const
+size_t CRL_Number::get_crl_number() const
    {
    if(!has_value)
       throw Invalid_State("CRL_Number::get_crl_number: Not set");
@@ -552,7 +552,7 @@ void CRL_Number::contents_to(Data_Store& info, Data_Store&) const
 MemoryVector<byte> CRL_ReasonCode::encode_inner() const
    {
    return DER_Encoder()
-      .encode(static_cast<u32bit>(reason), ENUMERATED, UNIVERSAL)
+      .encode(static_cast<size_t>(reason), ENUMERATED, UNIVERSAL)
    .get_contents();
    }
 
@@ -561,7 +561,7 @@ MemoryVector<byte> CRL_ReasonCode::encode_inner() const
 */
 void CRL_ReasonCode::decode_inner(const MemoryRegion<byte>& in)
    {
-   u32bit reason_code = 0;
+   size_t reason_code = 0;
    BER_Decoder(in).decode(reason_code, ENUMERATED, UNIVERSAL);
    reason = static_cast<CRL_Code>(reason_code);
    }

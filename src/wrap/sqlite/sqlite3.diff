@@ -1,0 +1,46 @@
+--- Makefile.in.orig	2010-08-05 00:15:13.000000000 +0800
++++ Makefile.in	2010-08-16 15:09:58.000000000 +0800
+@@ -65,7 +65,7 @@
+ libLTLIBRARIES_INSTALL = $(INSTALL)
+ LTLIBRARIES = $(lib_LTLIBRARIES)
+ libsqlite3_la_LIBADD =
+-am_libsqlite3_la_OBJECTS = sqlite3.lo
++am_libsqlite3_la_OBJECTS = sqlite3.lo codec.lo
+ libsqlite3_la_OBJECTS = $(am_libsqlite3_la_OBJECTS)
+ binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
+ PROGRAMS = $(bin_PROGRAMS)
+@@ -209,10 +209,10 @@
+ sharedstatedir = @sharedstatedir@
+ sysconfdir = @sysconfdir@
+ target_alias = @target_alias@
+-AM_CFLAGS = @THREADSAFE_FLAGS@ @DYNAMIC_EXTENSION_FLAGS@ -DSQLITE_ENABLE_FTS3 -DSQLITE_ENABLE_RTREE
++AM_CFLAGS = @THREADSAFE_FLAGS@ @DYNAMIC_EXTENSION_FLAGS@ -DSQLITE_ENABLE_FTS3 -DSQLITE_ENABLE_RTREE -DSQLITE_HAS_CODEC
+ lib_LTLIBRARIES = libsqlite3.la
+ libsqlite3_la_SOURCES = sqlite3.c
+-libsqlite3_la_LDFLAGS = -no-undefined -version-info 8:6:8
++libsqlite3_la_LDFLAGS = -no-undefined -version-info 8:6:8 -lstdc++ -lbotan
+ sqlite3_SOURCES = shell.c sqlite3.h
+ sqlite3_LDADD = $(top_builddir)/libsqlite3.la @READLINE_LIBS@
+ sqlite3_DEPENDENCIES = $(top_builddir)/libsqlite3.la
+@@ -349,6 +349,13 @@
+ @am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Plo"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
+ @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+ @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
++
++codec.lo:
++@am__fastdepCC_TRUE@	if $(LTCOMPILE) codec.cpp -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
++@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Plo"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+ @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+ 
+ mostlyclean-libtool:
+--- sqlite3.c.orig	2010-08-05 00:14:22.000000000 +0800
++++ sqlite3.c	2010-08-16 15:35:55.000000000 +0800
+@@ -118684,3 +118684,5 @@
+ #endif /* !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS3) */
+ 
+ /************** End of fts3_icu.c ********************************************/
++
++#include "codecext.c"

@@ -56,16 +56,6 @@ class memvec_to_hexstr
          }
    };
 
-class X509_Store_Search_Wrap : public X509_Store::Search_Func,
-                               public python::wrapper<X509_Store::Search_Func>
-   {
-   public:
-      bool match(const X509_Certificate& cert) const
-         {
-         return this->get_override("match")(cert);
-         }
-   };
-
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(add_cert_ols, add_cert, 1, 2)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(validate_cert_ols, validate_cert, 1, 2)
 
@@ -132,11 +122,6 @@ void export_x509()
          python::class_<X509_Store>("X509_Store")
          .def("add_cert", &X509_Store::add_cert, add_cert_ols())
          .def("validate", &X509_Store::validate_cert, validate_cert_ols())
-         .def("get_certs", &X509_Store::get_certs)
          .def("add_crl", &X509_Store::add_crl);
-
-      python::class_<X509_Store_Search_Wrap, boost::noncopyable>
-              ("Search_Func")
-         .def("match", python::pure_virtual(&X509_Store::Search_Func::match));
       }
    }

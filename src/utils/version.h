@@ -1,6 +1,6 @@
 /*
 * Version Information
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2011 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -18,16 +18,19 @@ namespace Botan {
 */
 
 /**
-* Get the version string identifying the version of Botan.
+* Get a human-readable string identifying the version of Botan.
+* No particular format should be assumed.
 * @return version string
 */
 BOTAN_DLL std::string version_string();
 
 /**
-* Return the date this version of botan was released, in an
-* integer of the form YYYYMMDD. For instance a version released
-* on May 21, 2013 would return the integer 20130521
-* @return release date
+* Return the date this version of botan was released, in an integer of
+* the form YYYYMMDD. For instance a version released on May 21, 2013
+* would return the integer 20130521. If the currently running version
+* is not an official release, this function will return 0 instead.
+*
+* @return release date, or zero if unreleased
 */
 BOTAN_DLL u32bit version_datestamp();
 

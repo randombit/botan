@@ -7,6 +7,7 @@
 
 #include <botan/mode_pad.h>
 #include <botan/exceptn.h>
+#include <botan/internal/assert.h>
 
 namespace Botan {
 
@@ -23,8 +24,14 @@ size_t BlockCipherModePaddingMethod::pad_bytes(size_t bs, size_t pos) const
 */
 void PKCS7_Padding::pad(byte block[], size_t size, size_t position) const
    {
+   const size_t bytes_remaining = size - position;
+   const byte pad_value = static_cast<byte>(bytes_remaining);
+
+   BOTAN_ASSERT_EQUAL(pad_value, bytes_remaining,
+                      "Overflow in PKCS7_Padding");
+
    for(size_t j = 0; j != size; ++j)
-      block[j] = (size-position);
+      block[j] = pad_value;
    }
 
 /*
@@ -59,7 +66,7 @@ void ANSI_X923_Padding::pad(byte block[], size_t size, size_t position) const
    {
    for(size_t j = 0; j != size-position; ++j)
       block[j] = 0;
-   block[size-position-1] = (size-position);
+   block[size-position-1] = static_cast<byte>(size-position);
    }
 
 /*

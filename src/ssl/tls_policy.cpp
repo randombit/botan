@@ -115,12 +115,4 @@ DL_Group TLS_Policy::dh_group() const
    return DL_Group("modp/ietf/1024");
    }
 
-/*
-* Default certificate check
-*/
-bool TLS_Policy::check_cert(const std::vector<X509_Certificate>& certs) const
-   {
-   return true;
-   }
-
 }

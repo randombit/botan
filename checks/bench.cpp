@@ -108,6 +108,10 @@ const std::string algos[] = {
    "BMW-512",
    "GOST-34.11",
    "HAS-160",
+   "Keccak-1600(224)",
+   "Keccak-1600(256)",
+   "Keccak-1600(384)",
+   "Keccak-1600(512)",
    "MD2",
    "MD4",
    "MD5",
@@ -145,6 +149,18 @@ void report_results(const std::string& algo,
       }
 
    std::cout << algo;
+
+#if defined(__SUNPRO_CC)
+  #define REVERSE_ITERATOR_BUG 1
+#elif defined(__GNUC__) && __GNUC__ <= 3
+  #define REVERSE_ITERATOR_BUG 1
+#elif defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 0)
+  #define REVERSE_ITERATOR_BUG 1
+#endif
+
+#ifndef REVERSE_ITERATOR_BUG
+  #define REVERSE_ITERATOR_BUG 0
+#endif
 
 #if (defined(__GNUC__) && __GNUC__ <= 3) || defined(__SUNPRO_CC)
    // Work around GCC 3.x bug, reverse iterators don't work
@@ -193,8 +209,8 @@ bool bench_algo(const std::string& algo,
          return false;
          }
 
-      u32bit cipher_keylen = proto_cipher->maximum_keylength();
-      u32bit cipher_ivlen = proto_cipher->block_size();
+      size_t cipher_keylen = proto_cipher->maximum_keylength();
+      const size_t cipher_ivlen = proto_cipher->block_size();
 
       if(algo_parts[1] == "XTS")
          cipher_keylen *= 2; // hack!

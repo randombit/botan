@@ -83,6 +83,7 @@ BOTAN_DLL Key_Constraints find_constraints(const Public_Key& pub_key,
 * @param pipe the pipe to feed the encoded key into
 * @param encoding the encoding type to use
 */
+BOTAN_DEPRECATED("Use PEM_encode or BER_encode")
 inline void encode(const Public_Key& key,
                    Pipe& pipe,
                    X509_Encoding encoding = PEM)

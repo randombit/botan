@@ -12,6 +12,7 @@ lookup_block.cpp
 lookup_hash.cpp
 lookup_mac.cpp
 lookup_stream.cpp
+lookup_pbkdf.cpp
 </source>
 
 <requires>

@@ -59,7 +59,7 @@ class BOTAN_DLL PBE_PKCS5v20 : public PBE
       BlockCipher* block_cipher;
       HashFunction* hash_function;
       SecureVector<byte> salt, key, iv;
-      u32bit iterations, key_length;
+      size_t iterations, key_length;
       Pipe pipe;
    };
 

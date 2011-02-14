@@ -11,6 +11,7 @@
 #include <botan/time.h>
 #include <botan/oids.h>
 #include <sstream>
+#include <memory>
 
 namespace Botan {
 
@@ -231,7 +232,7 @@ EAC1_1_CVC link_cvca(EAC1_1_CVC const& signer,
    AlgorithmIdentifier sig_algo = signer.signature_algorithm();
    std::string padding_and_hash = padding_and_hash_from_oid(sig_algo.oid);
    PK_Signer pk_signer(*priv_key, padding_and_hash);
-   std::auto_ptr<Public_Key> pk = signee.subject_public_key();
+   std::auto_ptr<Public_Key> pk(signee.subject_public_key());
    ECDSA_PublicKey* subj_pk = dynamic_cast<ECDSA_PublicKey*>(pk.get());
    subj_pk->set_parameter_encoding(EC_DOMPAR_ENC_EXPLICIT);
 
@@ -265,9 +266,9 @@ EAC1_1_CVC sign_request(EAC1_1_CVC const& signer_cert,
    ASN1_Chr chr(chr_str);
    std::string padding_and_hash = padding_and_hash_from_oid(signee.signature_algorithm().oid);
    PK_Signer pk_signer(*priv_key, padding_and_hash);
-   std::auto_ptr<Public_Key> pk = signee.subject_public_key();
+   std::auto_ptr<Public_Key> pk(signee.subject_public_key());
    ECDSA_PublicKey*  subj_pk = dynamic_cast<ECDSA_PublicKey*>(pk.get());
-   std::auto_ptr<Public_Key> signer_pk = signer_cert.subject_public_key();
+   std::auto_ptr<Public_Key> signer_pk(signer_cert.subject_public_key());
 
    // for the case that the domain parameters are not set...
    // (we use those from the signer because they must fit)
