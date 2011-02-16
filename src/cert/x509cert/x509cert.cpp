@@ -378,16 +378,16 @@ std::string X509_Certificate::to_string() const
    if(policies.size())
       {
       out << "Policies: " << "\n";
-      for(u32bit j = 0; j != policies.size(); j++)
-         out << "   " << policies[j] << "\n";
+      for(size_t i = 0; i != policies.size(); i++)
+         out << "   " << policies[i] << "\n";
       }
 
    std::vector<std::string> ex_constraints = this->ex_constraints();
    if(ex_constraints.size())
       {
       out << "Extended Constraints:\n";
-      for(u32bit j = 0; j != ex_constraints.size(); j++)
-         out << "   " << ex_constraints[j] << "\n";
+      for(size_t i = 0; i != ex_constraints.size(); i++)
+         out << "   " << ex_constraints[i] << "\n";
       }
 
    out << "Signature algorithm: " <<
@@ -425,9 +425,9 @@ X509_DN create_dn(const Data_Store& info)
 
    X509_DN dn;
 
-   std::multimap<std::string, std::string>::iterator j;
-   for(j = names.begin(); j != names.end(); ++j)
-      dn.add_attribute(j->first, j->second);
+   std::multimap<std::string, std::string>::iterator i;
+   for(i = names.begin(); i != names.end(); ++i)
+      dn.add_attribute(i->first, i->second);
 
    return dn;
    }
@@ -442,8 +442,8 @@ AlternativeName create_alt_name(const Data_Store& info)
       public:
          bool operator()(const std::string& key, const std::string&) const
             {
-            for(u32bit j = 0; j != matches.size(); ++j)
-               if(key.compare(matches[j]) == 0)
+            for(size_t i = 0; i != matches.size(); ++i)
+               if(key.compare(matches[i]) == 0)
                   return true;
             return false;
             }
@@ -461,9 +461,9 @@ AlternativeName create_alt_name(const Data_Store& info)
 
    AlternativeName alt_name;
 
-   std::multimap<std::string, std::string>::iterator j;
-   for(j = names.begin(); j != names.end(); ++j)
-      alt_name.add_attribute(j->first, j->second);
+   std::multimap<std::string, std::string>::iterator i;
+   for(i = names.begin(); i != names.end(); ++i)
+      alt_name.add_attribute(i->first, i->second);
 
    return alt_name;
    }
