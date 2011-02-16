@@ -1,6 +1,6 @@
 /*
 * Blowfish
-* (C) 1999-2009 Jack Lloyd
+* (C) 1999-2011 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -87,20 +87,61 @@ void Blowfish::key_schedule(const byte key[], size_t length)
    {
    clear();
 
+   const byte null_salt[16] = { 0 };
+
+   key_expansion(key, length, null_salt);
+   }
+
+void Blowfish::key_expansion(const byte key[],
+                             size_t length,
+                             const byte salt[16])
+   {
    for(size_t i = 0, j = 0; i != 18; ++i, j += 4)
       P[i] ^= make_u32bit(key[(j  ) % length], key[(j+1) % length],
                           key[(j+2) % length], key[(j+3) % length]);
 
    u32bit L = 0, R = 0;
-   generate_sbox(P, L, R);
-   generate_sbox(S, L, R);
+   generate_sbox(P, L, R, salt, 0);
+   generate_sbox(S, L, R, salt, 2);
+   }
+
+/*
+* Modified key schedule used for bcrypt password hashing
+*/
+void Blowfish::eks_key_schedule(const byte key[], size_t length,
+                                const byte salt[16], size_t workfactor)
+   {
+   if(length == 0 || length >= 56)
+      throw Invalid_Key_Length("EKSBlowfish", length);
+
+   if(workfactor == 0)
+      throw std::invalid_argument("Bcrypt work factor must be at least 1");
+
+   if(workfactor > 24) // ok?
+      throw std::invalid_argument("Requested Bcrypt work factor too large");
+
+   clear();
+
+   const byte null_salt[16] = { 0 };
+
+   key_expansion(key, length, salt);
+
+   const size_t rounds = 1 << workfactor;
+
+   for(size_t r = 0; r != rounds; ++r)
+      {
+      key_expansion(key, length, null_salt);
+      key_expansion(salt, 16, null_salt);
+      }
    }
 
 /*
 * Generate one of the Sboxes
 */
 void Blowfish::generate_sbox(MemoryRegion<u32bit>& box,
-                             u32bit& L, u32bit& R) const
+                             u32bit& L, u32bit& R,
+                             const byte salt[16],
+                             size_t salt_off) const
    {
    const u32bit* S1 = &S[0];
    const u32bit* S2 = &S[256];
@@ -109,6 +150,9 @@ void Blowfish::generate_sbox(MemoryRegion<u32bit>& box,
 
    for(size_t i = 0; i != box.size(); i += 2)
       {
+      L ^= load_be<u32bit>(salt, (i + salt_off) % 4);
+      R ^= load_be<u32bit>(salt, (i + salt_off + 1) % 4);
+
       for(size_t j = 0; j != 16; j += 2)
          {
          L ^= P[j];
