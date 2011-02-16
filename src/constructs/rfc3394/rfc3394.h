@@ -9,9 +9,10 @@
 #define BOTAN_AES_KEY_WRAP_H__
 
 #include <botan/symkey.h>
-#include <botan/algo_factory.h>
 
 namespace Botan {
+
+class Algorithm_Factory;
 
 /**
 * Encrypt a key under a key encryption key using the algorithm
