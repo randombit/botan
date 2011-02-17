@@ -142,7 +142,7 @@ bool check_bcrypt(const std::string& pass, const std::string& hash)
       return false;
       }
 
-   const size_t workfactor = to_u32bit(hash.substr(4, 2));
+   const u16bit workfactor = to_u32bit(hash.substr(4, 2));
 
    MemoryVector<byte> salt = bcrypt_base64_decode(hash.substr(7, 22));
 

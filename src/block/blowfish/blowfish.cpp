@@ -117,7 +117,12 @@ void Blowfish::eks_key_schedule(const byte key[], size_t length,
    if(workfactor == 0)
       throw std::invalid_argument("Bcrypt work factor must be at least 1");
 
-   if(workfactor > 24) // ok?
+   /*
+   * On a 2.8 GHz Core-i7, workfactor == 18 takes about 25 seconds to
+   * hash a password. This seems like a reasonable upper bound for the
+   * time being.
+   */
+   if(workfactor > 18)
       throw std::invalid_argument("Requested Bcrypt work factor too large");
 
    clear();
