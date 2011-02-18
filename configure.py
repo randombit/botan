@@ -2,7 +2,7 @@
 
 """
 Configuration program for botan (http://botan.randombit.net/)
-  (C) 2009-2010 Jack Lloyd
+  (C) 2009-2011 Jack Lloyd
   Distributed under the terms of the Botan license
 
 Tested with
@@ -1514,7 +1514,7 @@ def main(argv = None):
             logging.debug("Converting '%s' to 'cygwin'", options.os)
             options.os = 'cygwin'
 
-        logging.info('Guessing taget OS is %s (--os to set)' % (options.os))
+        logging.info('Guessing target OS is %s (--os to set)' % (options.os))
 
     if options.compiler is None:
         if options.os == 'windows':
