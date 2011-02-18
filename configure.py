@@ -1059,6 +1059,10 @@ def main(argv = None):
     if options.os == "java":
         raise Exception("Jython detected: need --os and --cpu to set target")
 
+    if re.match('^cygwin_.*', options.os):
+        logging.debug("Converting '%s' to 'cygwin'", options.os)
+        options.os = 'cygwin'
+
     options.base_dir = os.path.dirname(argv[0])
     options.src_dir = os.path.join(options.base_dir, 'src')
 
