@@ -1509,6 +1509,11 @@ def main(argv = None):
 
     if options.os is None:
         options.os = platform.system().lower()
+
+        if re.match('^cygwin_.*', options.os):
+            logging.debug("Converting '%s' to 'cygwin'", options.os)
+            options.os = 'cygwin'
+
         logging.info('Guessing taget OS is %s (--os to set)' % (options.os))
 
     if options.compiler is None:
