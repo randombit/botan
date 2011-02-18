@@ -168,10 +168,14 @@ void Bzip_Compression::flush()
 */
 void Bzip_Compression::clear()
    {
-   if(!bz) return;
-   BZ2_bzCompressEnd(&(bz->stream));
-   delete bz;
-   bz = 0;
+   zeroise(buffer);
+
+   if(bz)
+      {
+      BZ2_bzCompressEnd(&(bz->stream));
+      delete bz;
+      bz = 0;
+      }
    }
 
 /*
@@ -278,10 +282,14 @@ void Bzip_Decompression::end_msg()
 */
 void Bzip_Decompression::clear()
    {
-   if(!bz) return;
-   BZ2_bzDecompressEnd(&(bz->stream));
-   delete bz;
-   bz = 0;
+   zeroise(buffer);
+
+   if(bz)
+      {
+      BZ2_bzDecompressEnd(&(bz->stream));
+      delete bz;
+      bz = 0;
+      }
    }
 
 }
