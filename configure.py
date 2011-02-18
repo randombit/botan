@@ -161,6 +161,10 @@ def process_command_line(args):
                            action='store_true', default=False,
                            help=SUPPRESS_HELP)
 
+    build_group.add_option('--link-method',
+                           default=None,
+                           help=SUPPRESS_HELP)
+
     mods_group = OptionGroup(parser, 'Module selection')
 
     mods_group.add_option('--enable-modules', dest='enabled_modules',
@@ -937,15 +941,34 @@ Perform the filesystem operations needed to setup the build
 def setup_build(build_config, options, template_vars):
 
     """
+    Choose the link method based on system availablity and user request
+    """
+    def choose_link_method(req_method):
+
+        def useable_methods():
+            if 'symlink' in os.__dict__:
+                yield 'symlink'
+            if 'link' in os.__dict__:
+                yield 'hardlink'
+            yield 'copy'
+
+        for method in useable_methods():
+            if req_method is None or req_method == method:
+                return method
+
+        logging.info('Could not use requested link method %s' % (req_method))
+        return 'copy'
+
+    """
     Copy or link the file, depending on what the platform offers
     """
-    def portable_symlink(filename, target_dir):
+    def portable_symlink(filename, target_dir, method):
 
         if not os.access(filename, os.R_OK):
             logging.warning('Missing file %s' % (filename))
             return
 
-        if 'symlink' in os.__dict__:
+        if method == 'symlink':
             def count_dirs(dir, accum = 0):
                 if dir == '' or dir == os.path.curdir:
                     return accum
@@ -961,12 +984,15 @@ def setup_build(build_config, options, template_vars):
 
             os.symlink(source, target)
 
-        elif 'link' in os.__dict__:
+        elif method == 'hardlink':
             os.link(filename,
                     os.path.join(target_dir, os.path.basename(filename)))
 
-        else:
+        elif method == 'copy':
             shutil.copy(filename, target_dir)
+
+        else:
+            raise Exception('Unknown link method %s' % (method))
 
     def choose_makefile_template(style):
         if style == 'nmake':
@@ -1027,8 +1053,13 @@ def setup_build(build_config, options, template_vars):
     logging.debug('Linking %d header files in %s' % (
         len(build_config.headers), build_config.full_include_dir))
 
+    link_method = choose_link_method(options.link_method)
+    logging.info('Using %s to link files into build directory' % (link_method))
+
     for header_file in build_config.headers:
-        portable_symlink(header_file, build_config.full_include_dir)
+        portable_symlink(header_file,
+                         build_config.full_include_dir,
+                         link_method)
 
 """
 Main driver
