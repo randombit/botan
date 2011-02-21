@@ -1,4 +1,8 @@
 
+* 1.8.12-dev, ????-??-??
+ - Improve OS detection on Cygwin
+ - Fix compilation under Sun Studio 12 on Solaris
+
 * 1.8.11, 2010-11-02
  - Fix a number of CRL encoding and decoding bugs
  - When building a debug library under VC++, use the debug runtime
