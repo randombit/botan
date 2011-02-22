@@ -138,9 +138,11 @@ void Zlib_Compression::end_msg()
       {
       zlib->stream.next_out = reinterpret_cast<Bytef*>(buffer.begin());
       zlib->stream.avail_out = buffer.size();
+
       rc = deflate(&(zlib->stream), Z_FINISH);
       send(buffer.begin(), buffer.size() - zlib->stream.avail_out);
       }
+
    clear();
    }
 
@@ -155,13 +157,13 @@ void Zlib_Compression::flush()
    while(true)
       {
       zlib->stream.avail_out = buffer.size();
-
       zlib->stream.next_out = reinterpret_cast<Bytef*>(buffer.begin());
-
 
       deflate(&(zlib->stream), Z_FULL_FLUSH);
       send(buffer.begin(), buffer.size() - zlib->stream.avail_out);
-      if(zlib->stream.avail_out == buffer.size()) break;
+
+      if(zlib->stream.avail_out == buffer.size())
+        break;
       }
    }
 
@@ -170,14 +172,14 @@ void Zlib_Compression::flush()
 */
 void Zlib_Compression::clear()
    {
+   zeroise(buffer);
+
    if(zlib)
       {
       deflateEnd(&(zlib->stream));
       delete zlib;
       zlib = 0;
       }
-
-   buffer.clear();
    }
 
 /*
@@ -283,6 +285,8 @@ void Zlib_Decompression::end_msg()
 */
 void Zlib_Decompression::clear()
    {
+   zeroise(buffer);
+
    no_writes = true;
 
    if(zlib)
@@ -291,8 +295,6 @@ void Zlib_Decompression::clear()
       delete zlib;
       zlib = 0;
       }
-
-   buffer.clear();
    }
 
 }

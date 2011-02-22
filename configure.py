@@ -2,7 +2,7 @@
 
 """
 Configuration program for botan (http://botan.randombit.net/)
-  (C) 2009-2010 Jack Lloyd
+  (C) 2009-2011 Jack Lloyd
   Distributed under the terms of the Botan license
 
 Tested with
@@ -223,6 +223,10 @@ def process_command_line(args):
 
     build_group.add_option('--dirty-tree', dest='clean_build_tree',
                            action='store_false', default=True,
+                           help=SUPPRESS_HELP)
+
+    build_group.add_option('--link-method',
+                           default=None,
                            help=SUPPRESS_HELP)
 
     build_group.add_option('--distribution-info', metavar='STRING',
@@ -1213,15 +1217,34 @@ Perform the filesystem operations needed to setup the build
 def setup_build(build_config, options, template_vars):
 
     """
+    Choose the link method based on system availablity and user request
+    """
+    def choose_link_method(req_method):
+
+        def useable_methods():
+            if 'symlink' in os.__dict__:
+                yield 'symlink'
+            if 'link' in os.__dict__:
+                yield 'hardlink'
+            yield 'copy'
+
+        for method in useable_methods():
+            if req_method is None or req_method == method:
+                return method
+
+        logging.info('Could not use requested link method %s' % (req_method))
+        return 'copy'
+
+    """
     Copy or link the file, depending on what the platform offers
     """
-    def portable_symlink(filename, target_dir):
+    def portable_symlink(filename, target_dir, method):
 
         if not os.access(filename, os.R_OK):
             logging.warning('Missing file %s' % (filename))
             return
 
-        if 'symlink' in os.__dict__:
+        if method == 'symlink':
             def count_dirs(dir, accum = 0):
                 if dir in ['', '/', os.path.curdir]:
                     return accum
@@ -1237,12 +1260,15 @@ def setup_build(build_config, options, template_vars):
 
             os.symlink(source, target)
 
-        elif 'link' in os.__dict__:
+        elif method == 'hardlink':
             os.link(filename,
                     os.path.join(target_dir, os.path.basename(filename)))
 
-        else:
+        elif method == 'copy':
             shutil.copy(filename, target_dir)
+
+        else:
+            raise Exception('Unknown link method %s' % (method))
 
     def choose_makefile_template(style):
         if style == 'nmake':
@@ -1304,13 +1330,16 @@ def setup_build(build_config, options, template_vars):
         finally:
             f.close()
 
+    link_method = choose_link_method(options.link_method)
+    logging.info('Using %s to link files into build directory' % (link_method))
+
     def link_headers(header_list, type, dir):
         logging.debug('Linking %d %s header files in %s' % (
             len(header_list), type, dir))
 
         for header_file in header_list:
             try:
-                portable_symlink(header_file, dir)
+                portable_symlink(header_file, dir, link_method)
             except OSError, e:
                 if e.errno != errno.EEXIST:
                     logging.error('Error linking %s into %s: %s' % (
@@ -1509,7 +1538,12 @@ def main(argv = None):
 
     if options.os is None:
         options.os = platform.system().lower()
-        logging.info('Guessing taget OS is %s (--os to set)' % (options.os))
+
+        if re.match('^cygwin_.*', options.os):
+            logging.debug("Converting '%s' to 'cygwin'", options.os)
+            options.os = 'cygwin'
+
+        logging.info('Guessing target OS is %s (--os to set)' % (options.os))
 
     if options.compiler is None:
         if options.os == 'windows':
