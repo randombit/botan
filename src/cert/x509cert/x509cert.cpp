@@ -329,8 +329,8 @@ std::string X509_Certificate::to_string() const
          continue;
 
       out << "Subject " << dn_fields[i] << ":";
-      for(size_t i = 0; i != vals.size(); ++i)
-         out << " " << vals[i];
+      for(size_t j = 0; j != vals.size(); ++j)
+         out << " " << vals[j];
       out << "\n";
       }
 
@@ -342,8 +342,8 @@ std::string X509_Certificate::to_string() const
          continue;
 
       out << "Issuer " << dn_fields[i] << ":";
-      for(size_t i = 0; i != vals.size(); ++i)
-         out << " " << vals[i];
+      for(size_t j = 0; j != vals.size(); ++j)
+         out << " " << vals[j];
       out << "\n";
       }
 
