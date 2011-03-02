@@ -1436,7 +1436,7 @@ def generate_amalgamation(build_config):
 
     amalg_header = """/*
 * Botan %s Amalgamation
-* (C) 1999-2009 Jack Lloyd and others
+* (C) 1999-2011 Jack Lloyd and others
 *
 * Distributed under the terms of the Botan license
 */
