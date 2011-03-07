@@ -47,7 +47,7 @@ void High_Resolution_Timestamp::poll(Entropy_Accumulator& accum)
 #elif defined(BOTAN_TARGET_ARCH_IS_ALPHA)
    asm volatile("rpcc %0" : "=r" (rtc));
 
-#elif defined(BOTAN_TARGET_ARCH_IS_SPARC64)
+#elif defined(BOTAN_TARGET_ARCH_IS_SPARC64) && !defined(BOTAN_TARGET_OS_IS_OPENBSD)
    asm volatile("rd %%tick, %0" : "=r" (rtc));
 
 #elif defined(BOTAN_TARGET_ARCH_IS_IA64)
