@@ -1,6 +1,6 @@
 /*
 * Pipe Output Buffer
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2011 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -65,16 +65,17 @@ void Output_Buffers::add(SecureQueue* queue)
 */
 void Output_Buffers::retire()
    {
-   while(buffers.size())
-      {
-      if(buffers[0] == 0 || buffers[0]->size() == 0)
+   for(size_t i = 0; i != buffers.size(); ++i)
+      if(buffers[i] && buffers[i]->size() == 0)
          {
-         delete buffers[0];
-         buffers.pop_front();
-         offset = offset + Pipe::message_id(1);
+         delete buffers[i];
+         buffers[i] = 0;
          }
-      else
-         break;
+
+   while(buffers.size() && !buffers[0])
+      {
+      buffers.pop_front();
+      offset = offset + Pipe::message_id(1);
       }
    }
 

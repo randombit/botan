@@ -97,7 +97,7 @@ void CTR_BE::set_iv(const byte iv[], size_t iv_len)
                    &counter[(i-1)*BLOCK_SIZE],
                    BLOCK_SIZE);
 
-      for(u32bit j = 0; j != BLOCK_SIZE; ++j)
+      for(size_t j = 0; j != BLOCK_SIZE; ++j)
          if(++counter[i*BLOCK_SIZE + (BLOCK_SIZE-1-j)])
             break;
       }
@@ -115,7 +115,7 @@ void CTR_BE::increment_counter()
 
    for(size_t i = 0; i != 256; ++i)
       {
-      for(u32bit j = 1; j != BLOCK_SIZE; ++j)
+      for(size_t j = 1; j != BLOCK_SIZE; ++j)
          if(++counter[i*BLOCK_SIZE + (BLOCK_SIZE-1-j)])
             break;
       }

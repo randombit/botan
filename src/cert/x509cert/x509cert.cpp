@@ -325,8 +325,8 @@ std::string X509_Certificate::to_string() const
          continue;
 
       out << "Subject " << dn_fields[i] << ":";
-      for(size_t i = 0; i != vals.size(); ++i)
-         out << " " << vals[i];
+      for(size_t j = 0; j != vals.size(); ++j)
+         out << " " << vals[j];
       out << "\n";
       }
 
@@ -338,8 +338,8 @@ std::string X509_Certificate::to_string() const
          continue;
 
       out << "Issuer " << dn_fields[i] << ":";
-      for(size_t i = 0; i != vals.size(); ++i)
-         out << " " << vals[i];
+      for(size_t j = 0; j != vals.size(); ++j)
+         out << " " << vals[j];
       out << "\n";
       }
 
@@ -374,16 +374,16 @@ std::string X509_Certificate::to_string() const
    if(policies.size())
       {
       out << "Policies: " << "\n";
-      for(u32bit j = 0; j != policies.size(); j++)
-         out << "   " << policies[j] << "\n";
+      for(size_t i = 0; i != policies.size(); i++)
+         out << "   " << policies[i] << "\n";
       }
 
    std::vector<std::string> ex_constraints = this->ex_constraints();
    if(ex_constraints.size())
       {
       out << "Extended Constraints:\n";
-      for(u32bit j = 0; j != ex_constraints.size(); j++)
-         out << "   " << ex_constraints[j] << "\n";
+      for(size_t i = 0; i != ex_constraints.size(); i++)
+         out << "   " << ex_constraints[i] << "\n";
       }
 
    out << "Signature algorithm: " <<

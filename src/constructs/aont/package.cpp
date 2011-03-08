@@ -46,13 +46,13 @@ void aont_package(RandomNumberGenerator& rng,
    clear_mem(final_block, BLOCK_SIZE);
 
    // XOR the hash blocks into the final block
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       const size_t left = std::min<size_t>(BLOCK_SIZE,
                                            input_len - BLOCK_SIZE * i);
 
       zeroise(buf);
-      copy_mem(&buf[0], output + BLOCK_SIZE * i, left);
+      copy_mem(&buf[0], output + (BLOCK_SIZE * i), left);
 
       for(size_t j = 0; j != sizeof(i); ++j)
          buf[BLOCK_SIZE - 1 - j] ^= get_byte(sizeof(i)-1-j, i);
@@ -94,13 +94,13 @@ void aont_unpackage(BlockCipher* cipher,
    const size_t blocks = ((input_len - 1) / BLOCK_SIZE);
 
    // XOR the blocks into the package key bits
-   for(u32bit i = 0; i != blocks; ++i)
+   for(size_t i = 0; i != blocks; ++i)
       {
       const size_t left = std::min<size_t>(BLOCK_SIZE,
                                            input_len - BLOCK_SIZE * (i+1));
 
       zeroise(buf);
-      copy_mem(&buf[0], input + BLOCK_SIZE * i, left);
+      copy_mem(&buf[0], input + (BLOCK_SIZE * i), left);
 
       for(size_t j = 0; j != sizeof(i); ++j)
          buf[BLOCK_SIZE - 1 - j] ^= get_byte(sizeof(i)-1-j, i);

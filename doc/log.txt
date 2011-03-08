@@ -1,5 +1,12 @@
 
-* 1.9.14-dev, ????-??-??
+* 1.9.15-dev, ????-??-??
+ - Pipe will delete empty output queues as soon as they are no longer
+   needed, even if earlier messages still have data unread.
+
+* 1.9.14, 2011-03-01
+ - Add support for bcrypt, OpenBSD's password hashing scheme
+ - Add support for NIST's AES key wrapping algorithm
+ - Fix an infinite loop in zlib filters introduced in 1.9.11 (PR 142)
 
 * 1.9.13, 2011-02-19
  - Update Keccak to the round 3 variant
