@@ -57,7 +57,7 @@ alpha-ev7      -> "-mcpu=ev6"
 # before it's put into SUBMODEL.
 alpha     -> "-mcpu=SUBMODEL" alpha-
 amd64     -> "-march=SUBMODEL -momit-leaf-frame-pointer"
-arm       -> "-mcpu=SUBMODEL"
+arm       -> "-march=SUBMODEL"
 ia32      -> "-march=SUBMODEL -momit-leaf-frame-pointer"
 ia64      -> "-mtune=SUBMODEL"
 hppa      -> "-march=SUBMODEL" hppa

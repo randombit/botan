@@ -1,25 +1,34 @@
 <submodels>
-arm2
-arm3
-arm6
-arm7
-arm8
-arm9
-strongarm
-strongarm110
-strongarm1100
-xscale
-cortex-a8
-cortex-a9
+armv2
+armv2a
+armv3
+armv3m
+armv4
+armv5
+armv5e
+armv5te
+armv6
+armv6j
+armv6t2
+armv6z
+armv6zk
+armv6-m
+armv7
+armv7-a
+armv7-r
+armv7-m
+iwmmxt
+iwmmxt2
+ep9312
 </submodels>
 
 <submodel_aliases>
-sa110 -> strongarm110
-sa1100 -> strongarm1100
-strongarm1110 -> strongarm1100
-armv5tel -> xscale
+strongarm -> armv4
+xscale -> armv5te
+cortex-a8 -> armv7-a
+cortex-a9 -> armv7-a
 </submodel_aliases>
 
 <isa_extn>
-neon:cortex-a8,cortex-a9
+neon:armv7-a
 </isa_extn>
