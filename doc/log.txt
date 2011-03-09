@@ -2,6 +2,10 @@
 * 1.9.15-dev, ????-??-??
  - Pipe will delete empty output queues as soon as they are no longer
    needed, even if earlier messages still have data unread.
+ - Avoid reading the SPARC %tick register on OpenBSD as unlike Linux
+   the kernel will not trap and emulate it for us, causing a illegal
+   instruction crash.
+ - Improve detection and autoconfiguration for ARM processors
 
 * 1.9.14, 2011-03-01
  - Add support for bcrypt, OpenBSD's password hashing scheme
