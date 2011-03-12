@@ -1,7 +1,11 @@
 
 * 1.9.15-dev, ????-??-??
+ - Modify how message expansion is done in SHA-256, leading to a 10%
+   speedup on x86-64.
  - Pipe will delete empty output queues as soon as they are no longer
    needed, even if earlier messages still have data unread.
+ - Avoid reading the SPARC %tick register on OpenBSD, as unlike Linux
+   and Solaris the kernel will not trap and emulate it for userspace.
 
 * 1.9.14, 2011-03-01
  - Add support for bcrypt, OpenBSD's password hashing scheme

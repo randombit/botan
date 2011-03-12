@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-namespace {
+namespace SHA2_32 {
 
 /*
 * SHA-256 Rho Function
@@ -33,22 +33,23 @@ inline u32bit sigma(u32bit X, u32bit rot1, u32bit rot2, u32bit shift)
 
 /*
 * SHA-256 F1 Function
+*
+* Use a macro as many compilers won't inline a function this big,
+* even though it is much faster if inlined.
 */
-inline void F1(u32bit A, u32bit B, u32bit C, u32bit& D,
-               u32bit E, u32bit F, u32bit G, u32bit& H,
-               u32bit msg, u32bit magic)
-   {
-   H += magic + rho(E, 6, 11, 25) + ((E & F) ^ (~E & G)) + msg;
-   D += H;
-   H += rho(A, 2, 13, 22) + ((A & B) | ((A | B) & C));
-   }
+#define SHA2_32_F(A, B, C, D, E, F, G, H, M1, M2, M3, M4, magic)   \
+   do {                                                            \
+      H += magic + rho(E, 6, 11, 25) + ((E & F) ^ (~E & G)) + M1;  \
+      D += H;                                                      \
+      H += rho(A, 2, 13, 22) + ((A & B) | ((A | B) & C));          \
+      M1 += sigma(M2, 17, 19, 10) + M3 + sigma(M4, 7, 18, 3);      \
+   } while(0);
 
 /*
 * SHA-224 / SHA-256 compression function
 */
-void sha2_32_compress(MemoryRegion<u32bit>& W,
-                      MemoryRegion<u32bit>& digest,
-                      const byte input[], size_t blocks)
+void compress(MemoryRegion<u32bit>& digest,
+              const byte input[], size_t blocks)
    {
    u32bit A = digest[0], B = digest[1], C = digest[2],
           D = digest[3], E = digest[4], F = digest[5],
@@ -56,92 +57,87 @@ void sha2_32_compress(MemoryRegion<u32bit>& W,
 
    for(size_t i = 0; i != blocks; ++i)
       {
-      load_be(&W[0], input, 16);
+      u32bit W00 = load_be<u32bit>(input,  0);
+      u32bit W01 = load_be<u32bit>(input,  1);
+      u32bit W02 = load_be<u32bit>(input,  2);
+      u32bit W03 = load_be<u32bit>(input,  3);
+      u32bit W04 = load_be<u32bit>(input,  4);
+      u32bit W05 = load_be<u32bit>(input,  5);
+      u32bit W06 = load_be<u32bit>(input,  6);
+      u32bit W07 = load_be<u32bit>(input,  7);
+      u32bit W08 = load_be<u32bit>(input,  8);
+      u32bit W09 = load_be<u32bit>(input,  9);
+      u32bit W10 = load_be<u32bit>(input, 10);
+      u32bit W11 = load_be<u32bit>(input, 11);
+      u32bit W12 = load_be<u32bit>(input, 12);
+      u32bit W13 = load_be<u32bit>(input, 13);
+      u32bit W14 = load_be<u32bit>(input, 14);
+      u32bit W15 = load_be<u32bit>(input, 15);
 
-      for(size_t j = 16; j != 64; j += 8)
-         {
-         W[j  ] = sigma(W[j- 2], 17, 19, 10) + W[j-7] +
-                  sigma(W[j-15],  7, 18,  3) + W[j-16];
-         W[j+1] = sigma(W[j- 1], 17, 19, 10) + W[j-6] +
-                  sigma(W[j-14],  7, 18,  3) + W[j-15];
-         W[j+2] = sigma(W[j   ], 17, 19, 10) + W[j-5] +
-                  sigma(W[j-13],  7, 18,  3) + W[j-14];
-         W[j+3] = sigma(W[j+ 1], 17, 19, 10) + W[j-4] +
-                  sigma(W[j-12],  7, 18,  3) + W[j-13];
-         W[j+4] = sigma(W[j+ 2], 17, 19, 10) + W[j-3] +
-                  sigma(W[j-11],  7, 18,  3) + W[j-12];
-         W[j+5] = sigma(W[j+ 3], 17, 19, 10) + W[j-2] +
-                  sigma(W[j-10],  7, 18,  3) + W[j-11];
-         W[j+6] = sigma(W[j+ 4], 17, 19, 10) + W[j-1] +
-                  sigma(W[j- 9],  7, 18,  3) + W[j-10];
-         W[j+7] = sigma(W[j+ 5], 17, 19, 10) + W[j  ] +
-                  sigma(W[j- 8],  7, 18,  3) + W[j- 9];
-         }
-
-      F1(A, B, C, D, E, F, G, H, W[ 0], 0x428A2F98);
-      F1(H, A, B, C, D, E, F, G, W[ 1], 0x71374491);
-      F1(G, H, A, B, C, D, E, F, W[ 2], 0xB5C0FBCF);
-      F1(F, G, H, A, B, C, D, E, W[ 3], 0xE9B5DBA5);
-      F1(E, F, G, H, A, B, C, D, W[ 4], 0x3956C25B);
-      F1(D, E, F, G, H, A, B, C, W[ 5], 0x59F111F1);
-      F1(C, D, E, F, G, H, A, B, W[ 6], 0x923F82A4);
-      F1(B, C, D, E, F, G, H, A, W[ 7], 0xAB1C5ED5);
-      F1(A, B, C, D, E, F, G, H, W[ 8], 0xD807AA98);
-      F1(H, A, B, C, D, E, F, G, W[ 9], 0x12835B01);
-      F1(G, H, A, B, C, D, E, F, W[10], 0x243185BE);
-      F1(F, G, H, A, B, C, D, E, W[11], 0x550C7DC3);
-      F1(E, F, G, H, A, B, C, D, W[12], 0x72BE5D74);
-      F1(D, E, F, G, H, A, B, C, W[13], 0x80DEB1FE);
-      F1(C, D, E, F, G, H, A, B, W[14], 0x9BDC06A7);
-      F1(B, C, D, E, F, G, H, A, W[15], 0xC19BF174);
-      F1(A, B, C, D, E, F, G, H, W[16], 0xE49B69C1);
-      F1(H, A, B, C, D, E, F, G, W[17], 0xEFBE4786);
-      F1(G, H, A, B, C, D, E, F, W[18], 0x0FC19DC6);
-      F1(F, G, H, A, B, C, D, E, W[19], 0x240CA1CC);
-      F1(E, F, G, H, A, B, C, D, W[20], 0x2DE92C6F);
-      F1(D, E, F, G, H, A, B, C, W[21], 0x4A7484AA);
-      F1(C, D, E, F, G, H, A, B, W[22], 0x5CB0A9DC);
-      F1(B, C, D, E, F, G, H, A, W[23], 0x76F988DA);
-      F1(A, B, C, D, E, F, G, H, W[24], 0x983E5152);
-      F1(H, A, B, C, D, E, F, G, W[25], 0xA831C66D);
-      F1(G, H, A, B, C, D, E, F, W[26], 0xB00327C8);
-      F1(F, G, H, A, B, C, D, E, W[27], 0xBF597FC7);
-      F1(E, F, G, H, A, B, C, D, W[28], 0xC6E00BF3);
-      F1(D, E, F, G, H, A, B, C, W[29], 0xD5A79147);
-      F1(C, D, E, F, G, H, A, B, W[30], 0x06CA6351);
-      F1(B, C, D, E, F, G, H, A, W[31], 0x14292967);
-      F1(A, B, C, D, E, F, G, H, W[32], 0x27B70A85);
-      F1(H, A, B, C, D, E, F, G, W[33], 0x2E1B2138);
-      F1(G, H, A, B, C, D, E, F, W[34], 0x4D2C6DFC);
-      F1(F, G, H, A, B, C, D, E, W[35], 0x53380D13);
-      F1(E, F, G, H, A, B, C, D, W[36], 0x650A7354);
-      F1(D, E, F, G, H, A, B, C, W[37], 0x766A0ABB);
-      F1(C, D, E, F, G, H, A, B, W[38], 0x81C2C92E);
-      F1(B, C, D, E, F, G, H, A, W[39], 0x92722C85);
-      F1(A, B, C, D, E, F, G, H, W[40], 0xA2BFE8A1);
-      F1(H, A, B, C, D, E, F, G, W[41], 0xA81A664B);
-      F1(G, H, A, B, C, D, E, F, W[42], 0xC24B8B70);
-      F1(F, G, H, A, B, C, D, E, W[43], 0xC76C51A3);
-      F1(E, F, G, H, A, B, C, D, W[44], 0xD192E819);
-      F1(D, E, F, G, H, A, B, C, W[45], 0xD6990624);
-      F1(C, D, E, F, G, H, A, B, W[46], 0xF40E3585);
-      F1(B, C, D, E, F, G, H, A, W[47], 0x106AA070);
-      F1(A, B, C, D, E, F, G, H, W[48], 0x19A4C116);
-      F1(H, A, B, C, D, E, F, G, W[49], 0x1E376C08);
-      F1(G, H, A, B, C, D, E, F, W[50], 0x2748774C);
-      F1(F, G, H, A, B, C, D, E, W[51], 0x34B0BCB5);
-      F1(E, F, G, H, A, B, C, D, W[52], 0x391C0CB3);
-      F1(D, E, F, G, H, A, B, C, W[53], 0x4ED8AA4A);
-      F1(C, D, E, F, G, H, A, B, W[54], 0x5B9CCA4F);
-      F1(B, C, D, E, F, G, H, A, W[55], 0x682E6FF3);
-      F1(A, B, C, D, E, F, G, H, W[56], 0x748F82EE);
-      F1(H, A, B, C, D, E, F, G, W[57], 0x78A5636F);
-      F1(G, H, A, B, C, D, E, F, W[58], 0x84C87814);
-      F1(F, G, H, A, B, C, D, E, W[59], 0x8CC70208);
-      F1(E, F, G, H, A, B, C, D, W[60], 0x90BEFFFA);
-      F1(D, E, F, G, H, A, B, C, W[61], 0xA4506CEB);
-      F1(C, D, E, F, G, H, A, B, W[62], 0xBEF9A3F7);
-      F1(B, C, D, E, F, G, H, A, W[63], 0xC67178F2);
+      SHA2_32_F(A, B, C, D, E, F, G, H, W00, W14, W09, W01, 0x428A2F98);
+      SHA2_32_F(H, A, B, C, D, E, F, G, W01, W15, W10, W02, 0x71374491);
+      SHA2_32_F(G, H, A, B, C, D, E, F, W02, W00, W11, W03, 0xB5C0FBCF);
+      SHA2_32_F(F, G, H, A, B, C, D, E, W03, W01, W12, W04, 0xE9B5DBA5);
+      SHA2_32_F(E, F, G, H, A, B, C, D, W04, W02, W13, W05, 0x3956C25B);
+      SHA2_32_F(D, E, F, G, H, A, B, C, W05, W03, W14, W06, 0x59F111F1);
+      SHA2_32_F(C, D, E, F, G, H, A, B, W06, W04, W15, W07, 0x923F82A4);
+      SHA2_32_F(B, C, D, E, F, G, H, A, W07, W05, W00, W08, 0xAB1C5ED5);
+      SHA2_32_F(A, B, C, D, E, F, G, H, W08, W06, W01, W09, 0xD807AA98);
+      SHA2_32_F(H, A, B, C, D, E, F, G, W09, W07, W02, W10, 0x12835B01);
+      SHA2_32_F(G, H, A, B, C, D, E, F, W10, W08, W03, W11, 0x243185BE);
+      SHA2_32_F(F, G, H, A, B, C, D, E, W11, W09, W04, W12, 0x550C7DC3);
+      SHA2_32_F(E, F, G, H, A, B, C, D, W12, W10, W05, W13, 0x72BE5D74);
+      SHA2_32_F(D, E, F, G, H, A, B, C, W13, W11, W06, W14, 0x80DEB1FE);
+      SHA2_32_F(C, D, E, F, G, H, A, B, W14, W12, W07, W15, 0x9BDC06A7);
+      SHA2_32_F(B, C, D, E, F, G, H, A, W15, W13, W08, W00, 0xC19BF174);
+      SHA2_32_F(A, B, C, D, E, F, G, H, W00, W14, W09, W01, 0xE49B69C1);
+      SHA2_32_F(H, A, B, C, D, E, F, G, W01, W15, W10, W02, 0xEFBE4786);
+      SHA2_32_F(G, H, A, B, C, D, E, F, W02, W00, W11, W03, 0x0FC19DC6);
+      SHA2_32_F(F, G, H, A, B, C, D, E, W03, W01, W12, W04, 0x240CA1CC);
+      SHA2_32_F(E, F, G, H, A, B, C, D, W04, W02, W13, W05, 0x2DE92C6F);
+      SHA2_32_F(D, E, F, G, H, A, B, C, W05, W03, W14, W06, 0x4A7484AA);
+      SHA2_32_F(C, D, E, F, G, H, A, B, W06, W04, W15, W07, 0x5CB0A9DC);
+      SHA2_32_F(B, C, D, E, F, G, H, A, W07, W05, W00, W08, 0x76F988DA);
+      SHA2_32_F(A, B, C, D, E, F, G, H, W08, W06, W01, W09, 0x983E5152);
+      SHA2_32_F(H, A, B, C, D, E, F, G, W09, W07, W02, W10, 0xA831C66D);
+      SHA2_32_F(G, H, A, B, C, D, E, F, W10, W08, W03, W11, 0xB00327C8);
+      SHA2_32_F(F, G, H, A, B, C, D, E, W11, W09, W04, W12, 0xBF597FC7);
+      SHA2_32_F(E, F, G, H, A, B, C, D, W12, W10, W05, W13, 0xC6E00BF3);
+      SHA2_32_F(D, E, F, G, H, A, B, C, W13, W11, W06, W14, 0xD5A79147);
+      SHA2_32_F(C, D, E, F, G, H, A, B, W14, W12, W07, W15, 0x06CA6351);
+      SHA2_32_F(B, C, D, E, F, G, H, A, W15, W13, W08, W00, 0x14292967);
+      SHA2_32_F(A, B, C, D, E, F, G, H, W00, W14, W09, W01, 0x27B70A85);
+      SHA2_32_F(H, A, B, C, D, E, F, G, W01, W15, W10, W02, 0x2E1B2138);
+      SHA2_32_F(G, H, A, B, C, D, E, F, W02, W00, W11, W03, 0x4D2C6DFC);
+      SHA2_32_F(F, G, H, A, B, C, D, E, W03, W01, W12, W04, 0x53380D13);
+      SHA2_32_F(E, F, G, H, A, B, C, D, W04, W02, W13, W05, 0x650A7354);
+      SHA2_32_F(D, E, F, G, H, A, B, C, W05, W03, W14, W06, 0x766A0ABB);
+      SHA2_32_F(C, D, E, F, G, H, A, B, W06, W04, W15, W07, 0x81C2C92E);
+      SHA2_32_F(B, C, D, E, F, G, H, A, W07, W05, W00, W08, 0x92722C85);
+      SHA2_32_F(A, B, C, D, E, F, G, H, W08, W06, W01, W09, 0xA2BFE8A1);
+      SHA2_32_F(H, A, B, C, D, E, F, G, W09, W07, W02, W10, 0xA81A664B);
+      SHA2_32_F(G, H, A, B, C, D, E, F, W10, W08, W03, W11, 0xC24B8B70);
+      SHA2_32_F(F, G, H, A, B, C, D, E, W11, W09, W04, W12, 0xC76C51A3);
+      SHA2_32_F(E, F, G, H, A, B, C, D, W12, W10, W05, W13, 0xD192E819);
+      SHA2_32_F(D, E, F, G, H, A, B, C, W13, W11, W06, W14, 0xD6990624);
+      SHA2_32_F(C, D, E, F, G, H, A, B, W14, W12, W07, W15, 0xF40E3585);
+      SHA2_32_F(B, C, D, E, F, G, H, A, W15, W13, W08, W00, 0x106AA070);
+      SHA2_32_F(A, B, C, D, E, F, G, H, W00, W14, W09, W01, 0x19A4C116);
+      SHA2_32_F(H, A, B, C, D, E, F, G, W01, W15, W10, W02, 0x1E376C08);
+      SHA2_32_F(G, H, A, B, C, D, E, F, W02, W00, W11, W03, 0x2748774C);
+      SHA2_32_F(F, G, H, A, B, C, D, E, W03, W01, W12, W04, 0x34B0BCB5);
+      SHA2_32_F(E, F, G, H, A, B, C, D, W04, W02, W13, W05, 0x391C0CB3);
+      SHA2_32_F(D, E, F, G, H, A, B, C, W05, W03, W14, W06, 0x4ED8AA4A);
+      SHA2_32_F(C, D, E, F, G, H, A, B, W06, W04, W15, W07, 0x5B9CCA4F);
+      SHA2_32_F(B, C, D, E, F, G, H, A, W07, W05, W00, W08, 0x682E6FF3);
+      SHA2_32_F(A, B, C, D, E, F, G, H, W08, W06, W01, W09, 0x748F82EE);
+      SHA2_32_F(H, A, B, C, D, E, F, G, W09, W07, W02, W10, 0x78A5636F);
+      SHA2_32_F(G, H, A, B, C, D, E, F, W10, W08, W03, W11, 0x84C87814);
+      SHA2_32_F(F, G, H, A, B, C, D, E, W11, W09, W04, W12, 0x8CC70208);
+      SHA2_32_F(E, F, G, H, A, B, C, D, W12, W10, W05, W13, 0x90BEFFFA);
+      SHA2_32_F(D, E, F, G, H, A, B, C, W13, W11, W06, W14, 0xA4506CEB);
+      SHA2_32_F(C, D, E, F, G, H, A, B, W14, W12, W07, W15, 0xBEF9A3F7);
+      SHA2_32_F(B, C, D, E, F, G, H, A, W15, W13, W08, W00, 0xC67178F2);
 
       A = (digest[0] += A);
       B = (digest[1] += B);
@@ -163,7 +159,7 @@ void sha2_32_compress(MemoryRegion<u32bit>& W,
 */
 void SHA_224::compress_n(const byte input[], size_t blocks)
    {
-   sha2_32_compress(W, digest, input, blocks);
+   SHA2_32::compress(digest, input, blocks);
    }
 
 /*
@@ -181,7 +177,6 @@ void SHA_224::copy_out(byte output[])
 void SHA_224::clear()
    {
    MDx_HashFunction::clear();
-   zeroise(W);
    digest[0] = 0xC1059ED8;
    digest[1] = 0x367CD507;
    digest[2] = 0x3070DD17;
@@ -197,7 +192,7 @@ void SHA_224::clear()
 */
 void SHA_256::compress_n(const byte input[], size_t blocks)
    {
-   sha2_32_compress(W, digest, input, blocks);
+   SHA2_32::compress(digest, input, blocks);
    }
 
 /*
@@ -215,7 +210,6 @@ void SHA_256::copy_out(byte output[])
 void SHA_256::clear()
    {
    MDx_HashFunction::clear();
-   zeroise(W);
    digest[0] = 0x6A09E667;
    digest[1] = 0xBB67AE85;
    digest[2] = 0x3C6EF372;

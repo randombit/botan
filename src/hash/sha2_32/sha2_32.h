@@ -1,6 +1,6 @@
 /*
 * SHA-{224,256}
-* (C) 1999-2010 Jack Lloyd
+* (C) 1999-2011 Jack Lloyd
 *     2007 FlexSecure GmbH
 *
 * Distributed under the terms of the Botan license
@@ -25,13 +25,13 @@ class BOTAN_DLL SHA_224 : public MDx_HashFunction
 
       void clear();
 
-      SHA_224() : MDx_HashFunction(64, true, true), W(64), digest(8)
+      SHA_224() : MDx_HashFunction(64, true, true), digest(8)
          { clear(); }
    private:
       void compress_n(const byte[], size_t blocks);
       void copy_out(byte[]);
 
-      SecureVector<u32bit> W, digest;
+      SecureVector<u32bit> digest;
    };
 
 /**
@@ -46,13 +46,13 @@ class BOTAN_DLL SHA_256 : public MDx_HashFunction
 
       void clear();
 
-      SHA_256() : MDx_HashFunction(64, true, true), W(64), digest(8)
+      SHA_256() : MDx_HashFunction(64, true, true), digest(8)
          { clear(); }
    private:
       void compress_n(const byte[], size_t blocks);
       void copy_out(byte[]);
 
-      SecureVector<u32bit> W, digest;
+      SecureVector<u32bit> digest;
    };
 
 }
