@@ -1,7 +1,8 @@
 
 * 1.9.15-dev, ????-??-??
- - Modify how message expansion is done in SHA-256, leading to a 10%
-   speedup on x86-64.
+ - Modify how message expansion is done in SHA-256 and SHA-512,
+   leading (on x86-64) to a 10% speedup in SHA-256 and a 30% speedup
+   in SHA-512.
  - Pipe will delete empty output queues as soon as they are no longer
    needed, even if earlier messages still have data unread.
  - Avoid reading the SPARC %tick register on OpenBSD, as unlike Linux
