@@ -31,7 +31,17 @@ inline u16bit reverse_bytes(u16bit val)
 */
 inline u32bit reverse_bytes(u32bit val)
    {
-#if BOTAN_USE_GCC_INLINE_ASM && defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+#if BOTAN_GCC_VERSION >= 430 && !defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
+   /*
+   GCC intrinsic added in 4.3, works for a number of CPUs
+
+   However avoid under ARM, as it branches to a function in libgcc
+   instead of generating inline asm, so slower even than the generic
+   rotate version below.
+   */
+   return __builtin_bswap32(val);
+
+#elif BOTAN_USE_GCC_INLINE_ASM && defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
    // GCC-style inline assembly for x86 or x86-64
    asm("bswapl %0" : "=r" (val) : "0" (val));
@@ -48,11 +58,6 @@ inline u32bit reverse_bytes(u32bit val)
         : "r3", "cc");
 
    return val;
-
-#elif BOTAN_GCC_VERSION >= 430
-
-   // GCC intrinsic added in 4.3, works for a number of CPUs
-   return __builtin_bswap32(val);
 
 #elif defined(_MSC_VER) && defined(BOTAN_TARGET_ARCH_IS_IA32)
 
