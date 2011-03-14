@@ -45,7 +45,7 @@ class BuildConfigurationInformation(object):
     version_minor = 9
     version_patch = 15
     version_so_patch = 15
-    version_suffix = ''
+    version_suffix = '-dev'
 
     version_datestamp = 0
 
