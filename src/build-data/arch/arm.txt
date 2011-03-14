@@ -1,3 +1,7 @@
+
+endian little
+family arm
+
 <submodels>
 armv2
 armv2a

@@ -1,6 +1,6 @@
 /*
 * Byte Swapping Operations
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2011 Jack Lloyd
 * (C) 2007 Yves Jerschow
 *
 * Distributed under the terms of the Botan license
@@ -21,38 +21,50 @@ namespace Botan {
 /**
 * Swap a 16 bit integer
 */
-inline u16bit reverse_bytes(u16bit input)
+inline u16bit reverse_bytes(u16bit val)
    {
-   return rotate_left(input, 8);
+   return rotate_left(val, 8);
    }
 
 /**
 * Swap a 32 bit integer
 */
-inline u32bit reverse_bytes(u32bit input)
+inline u32bit reverse_bytes(u32bit val)
    {
-#if BOTAN_GCC_VERSION >= 430
-
-   // GCC intrinsic added in 4.3, works for a number of CPUs
-   return __builtin_bswap32(input);
-
-#elif BOTAN_USE_GCC_INLINE_ASM && defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+#if BOTAN_USE_GCC_INLINE_ASM && defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
    // GCC-style inline assembly for x86 or x86-64
-   asm("bswapl %0" : "=r" (input) : "0" (input));
-   return input;
+   asm("bswapl %0" : "=r" (val) : "0" (val));
+   return val;
+
+#elif BOTAN_USE_GCC_INLINE_ASM && defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
+
+   asm ("eor r3, %1, %1, ror #16\n\t"
+        "bic r3, r3, #0x00FF0000\n\t"
+        "mov %0, %1, ror #8\n\t"
+        "eor %0, %0, r3, lsr #8"
+        : "=r" (val)
+        : "0" (val)
+        : "r3", "cc");
+
+   return val;
+
+#elif BOTAN_GCC_VERSION >= 430
+
+   // GCC intrinsic added in 4.3, works for a number of CPUs
+   return __builtin_bswap32(val);
 
 #elif defined(_MSC_VER) && defined(BOTAN_TARGET_ARCH_IS_IA32)
 
    // Visual C++ inline asm for 32-bit x86, by Yves Jerschow
-   __asm mov eax, input;
+   __asm mov eax, val;
    __asm bswap eax;
 
 #else
 
    // Generic implementation
-   return (rotate_right(input, 8) & 0xFF00FF00) |
-          (rotate_left (input, 8) & 0x00FF00FF);
+   return (rotate_right(val, 8) & 0xFF00FF00) |
+          (rotate_left (val, 8) & 0x00FF00FF);
 
 #endif
    }
@@ -60,17 +72,17 @@ inline u32bit reverse_bytes(u32bit input)
 /**
 * Swap a 64 bit integer
 */
-inline u64bit reverse_bytes(u64bit input)
+inline u64bit reverse_bytes(u64bit val)
    {
 #if BOTAN_GCC_VERSION >= 430
 
    // GCC intrinsic added in 4.3, works for a number of CPUs
-   return __builtin_bswap64(input);
+   return __builtin_bswap64(val);
 
 #elif BOTAN_USE_GCC_INLINE_ASM && defined(BOTAN_TARGET_ARCH_IS_AMD64)
    // GCC-style inline assembly for x86-64
-   asm("bswapq %0" : "=r" (input) : "0" (input));
-   return input;
+   asm("bswapq %0" : "=r" (val) : "0" (val));
+   return val;
 
 #else
    /* Generic implementation. Defined in terms of 32-bit bswap so any
@@ -78,8 +90,8 @@ inline u64bit reverse_bytes(u64bit input)
     * useful for 32-bit x86).
     */
 
-   u32bit hi = static_cast<u32bit>(input >> 32);
-   u32bit lo = static_cast<u32bit>(input);
+   u32bit hi = static_cast<u32bit>(val >> 32);
+   u32bit lo = static_cast<u32bit>(val);
 
    hi = reverse_bytes(hi);
    lo = reverse_bytes(lo);
