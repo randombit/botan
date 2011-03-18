@@ -56,7 +56,7 @@ D: Original designer/author, maintainer 2001-current
 S: Vermont, USA
 
 N: Joel Low
-D: DLL symbol visibility
+D: DLL symbol visibility and Windows DLL support in general
 
 N: Christoph Ludwig
 E: ludwig@fh-worms.de
