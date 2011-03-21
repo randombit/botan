@@ -41,7 +41,8 @@ do
   rm -f $doc.aux $doc.log $doc.dvi $doc.toc
 done
 
-botan_log_to_html log.txt > ../../log.html
+#botan_log_to_html log.txt > ../../log.html
+cp log.txt ../../log.txt
 
 cd .. # topdir
 cd .. # now in DIST_DIR
