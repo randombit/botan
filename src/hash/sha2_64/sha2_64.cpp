@@ -36,12 +36,12 @@ inline u64bit sigma(u64bit X, u32bit rot1, u32bit rot2, u32bit shift)
 * Use a macro as many compilers won't inline a function this big,
 * even though it is much faster if inlined.
 */
-#define SHA2_64_F(A, B, C, D, E, F, G, H, M1, M2, M3, M4, magic)  \
-   do {                                                           \
-   H += magic + rho(E, 14, 18, 41) + ((E & F) ^ (~E & G)) + M1;   \
-   D += H;                                                        \
-   H += rho(A, 28, 34, 39) + ((A & B) | ((A | B) & C));           \
-   M1 += sigma(M2, 19, 61, 6) + M3 + sigma(M4, 1, 8, 7);          \
+#define SHA2_64_F(A, B, C, D, E, F, G, H, M1, M2, M3, M4, magic)   \
+   do {                                                            \
+      H += magic + rho(E, 14, 18, 41) + ((E & F) ^ (~E & G)) + M1; \
+      D += H;                                                      \
+      H += rho(A, 28, 34, 39) + ((A & B) | ((A | B) & C));         \
+      M1 += sigma(M2, 19, 61, 6) + M3 + sigma(M4, 1, 8, 7);        \
    } while(0);
 
 /*
