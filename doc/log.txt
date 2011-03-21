@@ -1,14 +1,20 @@
 
-* 1.9.15-dev, ????-??-??
- - Modify how message expansion is done in SHA-256 and SHA-512,
-   leading (on x86-64) to a 10% speedup in SHA-256 and a 30% speedup
-   in SHA-512.
+* 1.9.15, 2011-03-21
+ - First release candidate for 1.10.0
+
+ - Modify how message expansion is done in SHA-256 and SHA-512.
+   Instead of expanding the entire message at the start, compute them
+   in the minimum number of registers. Values are computed 15 rounds
+   before they are needed. On a Core i7-860, GCC 4.5.2, went from
+   143 to 157 MiB/s in SHA-256, and 211 to 256 MiB/s in SHA-512.
  - Pipe will delete empty output queues as soon as they are no longer
-   needed, even if earlier messages still have data unread.
+   needed, even if earlier messages still have data unread. However an
+   (empty) entry in a deque of pointers will remain until all prior
+   messages are completely emptied.
  - Avoid reading the SPARC %tick register on OpenBSD as unlike Linux
    the kernel will not trap and emulate it for us, causing a illegal
    instruction crash.
- - Improve detection and autoconfiguration for ARM processors
+ - Improve detection and autoconfiguration for ARM processors.
 
 * 1.9.14, 2011-03-01
  - Add support for bcrypt, OpenBSD's password hashing scheme
