@@ -1,6 +1,9 @@
 
 * 1.9.16-dev, ????-??-??
  - Second release candidate for 1.10.0
+ - Disable the by-default 'strong' checking of private keys that are
+   loaded from storage. You can always request key material sanity
+   checking using check_key.
 
 * 1.9.15, 2011-03-21
  - First release candidate for 1.10.0
