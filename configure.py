@@ -43,11 +43,11 @@ class BuildConfigurationInformation(object):
     """
     version_major = 1
     version_minor = 9
-    version_patch = 15
-    version_so_patch = 15
-    version_suffix = ''
+    version_patch = 16
+    version_so_patch = 16
+    version_suffix = '-dev'
 
-    version_datestamp = 20110321
+    version_datestamp = 0
 
     version_string = '%d.%d.%d%s' % (
         version_major, version_minor, version_patch, version_suffix)

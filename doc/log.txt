@@ -1,7 +1,9 @@
 
+* 1.9.16-dev, ????-??-??
+ - Second release candidate for 1.10.0
+
 * 1.9.15, 2011-03-21
  - First release candidate for 1.10.0
-
  - Modify how message expansion is done in SHA-256 and SHA-512.
    Instead of expanding the entire message at the start, compute them
    in the minimum number of registers. Values are computed 15 rounds

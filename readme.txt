@@ -1,7 +1,5 @@
-Botan 1.9.15, 2011-03-21
+Botan 1.9.16-dev, ????-??-??
 http://botan.randombit.net/
-
-This is the first release candidate for a new stable tree 1.10
 
 Botan is a C++ class library for performing a wide variety of
 cryptographic operations.
