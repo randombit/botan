@@ -299,6 +299,36 @@ BOTAN_DLL size_t block_size_of(const std::string& algo_spec);
 */
 BOTAN_DLL size_t output_length_of(const std::string& algo_spec);
 
+/**
+* Find out the minimum key size of a certain symmetric algorithm.
+* @deprecated Call algorithm_factory() directly
+*
+* @param algo_spec the name of the algorithm
+* @return minimum key length of the specified algorithm
+*/
+BOTAN_DEPRECATED("Retrieve object you want and then call key_spec")
+BOTAN_DLL size_t min_keylength_of(const std::string& algo_spec);
+
+/**
+* Find out the maximum key size of a certain symmetric algorithm.
+* @deprecated Call algorithm_factory() directly
+*
+* @param algo_spec the name of the algorithm
+* @return maximum key length of the specified algorithm
+*/
+BOTAN_DEPRECATED("Retrieve object you want and then call key_spec")
+BOTAN_DLL size_t max_keylength_of(const std::string& algo_spec);
+
+/**
+* Find out the size any valid key is a multiple of for a certain algorithm.
+* @deprecated Call algorithm_factory() directly
+*
+* @param algo_spec the name of the algorithm
+* @return size any valid key is a multiple of
+*/
+BOTAN_DEPRECATED("Retrieve object you want and then call key_spec")
+BOTAN_DLL size_t keylength_multiple_of(const std::string& algo_spec);
+
 }
 
 #endif
