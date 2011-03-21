@@ -447,8 +447,10 @@ class ModuleInfo(object):
 
         lex_me_harder(infofile, self,
                       ['source', 'header:internal', 'header:public',
-                       'requires', 'os', 'arch', 'cc', 'libs'],
-                      { 'load_on': 'auto',
+                       'requires', 'os', 'arch', 'cc', 'libs',
+                       'comment'],
+                      {
+                        'load_on': 'auto',
                         'define': None,
                         'uses_tr1': 'false',
                         'need_isa': None,
@@ -499,6 +501,10 @@ class ModuleInfo(object):
         self.mp_bits = int(self.mp_bits)
 
         self.uses_tr1 = (True if self.uses_tr1 == 'yes' else False)
+
+        if self.comment != []:
+            logging.info('Module comment for ' + self.basename + ' - ' +
+                         ' '.join(self.comment))
 
     def sources(self):
         return self.source
