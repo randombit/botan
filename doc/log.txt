@@ -4,6 +4,8 @@
  - Disable the by-default 'strong' checking of private keys that are
    loaded from storage. You can always request key material sanity
    checking using check_key.
+ - Bring back removed functions min_keylength_of, max_keylength_of,
+   keylength_multiple_of in lookup.h to avoid breaking applications.
 
 * 1.9.15, 2011-03-21
  - First release candidate for 1.10.0
