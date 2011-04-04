@@ -46,7 +46,11 @@ DataSink_Stream::DataSink_Stream(const std::string& path,
       sink = new std::ofstream(path.c_str());
 
    if(!sink->good())
+      {
+      delete sink;
+      sink = 0;
       throw Stream_IO_Error("DataSink_Stream: Failure opening " + path);
+      }
    }
 
 /*

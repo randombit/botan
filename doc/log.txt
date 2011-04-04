@@ -2,6 +2,8 @@
 * 1.8.12-dev, ????-??-??
  - Improve OS detection on Cygwin
  - Fix compilation under Sun Studio 12 on Solaris
+ - Fix a memory leak in the constructors of DataSource_Stream and
+   DataSink_Stream which would occur if opening the file failed. PR 144
 
 * 1.8.11, 2010-11-02
  - Fix a number of CRL encoding and decoding bugs

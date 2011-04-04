@@ -179,7 +179,11 @@ DataSource_Stream::DataSource_Stream(const std::string& path,
       source = new std::ifstream(path.c_str());
 
    if(!source->good())
+      {
+      delete source;
+      source = 0;
       throw Stream_IO_Error("DataSource: Failure opening file " + path);
+      }
 
    total_read = 0;
    }
