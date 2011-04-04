@@ -2,19 +2,14 @@
 ; get everything perfectly correct, but it's pretty close. Copy this code into
 ; your .emacs file, or use M-x eval-buffer. Make sure to also set
 ; indent-tabs-mode to nil so spaces are inserted instead.
-
+;
 ; This style is basically Whitesmiths style with 3 space indents (the Emacs
 ; "whitesmith" style seems more like a weird Whitesmiths/Allman mutant style).
-
+;
 ; To activate using this style, open the file you want to edit and run this:
-; M-x c-set-style <RET> and then enter "botan". Alternately, put something
-; like this in your .emacs file to make it the default style:
+; M-x c-set-style <RET> and then enter "botan".
 
-; (add-hook 'c++-mode-common-hook
-;   (function (lambda()
-;     (c-add-style "botan" botan t))))
-
-(setq botan '(
+(setq botan-style '(
    (c-basic-offset . 3)
    (c-comment-only-line-offset . 0)
    (c-offsets-alist
@@ -55,3 +50,6 @@
       (label . 0)
       )
 ))
+
+(add-hook 'c++-mode-common-hook
+  (function (lambda () (c-add-style "botan" botan-style nil))))

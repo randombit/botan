@@ -2,6 +2,8 @@
 * Square
 * (C) 1999-2007 Jack Lloyd
 *
+* Based on the public domain reference implemenation
+*
 * Distributed under the terms of the Botan license
 */
 

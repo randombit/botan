@@ -2,6 +2,9 @@
 * Serpent
 * (C) 1999-2007 Jack Lloyd
 *
+* The sbox expressions used here were discovered by Dag Arne Osvik and
+* are described in his paper "Speeding Up Serpent".
+*
 * Distributed under the terms of the Botan license
 */
 

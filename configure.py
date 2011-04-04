@@ -30,6 +30,12 @@ import getpass
 import time
 import errno
 
+# Avoid useless botan_version.pyc (Python 2.6 or higher)
+if 'dont_write_bytecode' in sys.__dict__:
+    sys.dont_write_bytecode = True
+
+import botan_version
+
 from optparse import (OptionParser, OptionGroup,
                       IndentedHelpFormatter, SUPPRESS_HELP)
 
@@ -41,13 +47,13 @@ class BuildConfigurationInformation(object):
     """
     Version information
     """
-    version_major = 1
-    version_minor = 9
-    version_patch = 16
-    version_so_patch = 16
-    version_suffix = '-dev'
+    version_major = botan_version.major
+    version_minor = botan_version.minor
+    version_patch = botan_version.patch
+    version_so_patch = botan_version.so_patch
+    version_suffix = botan_version.release_suffix
 
-    version_datestamp = 0
+    version_datestamp = botan_version.datestamp
 
     version_string = '%d.%d.%d%s' % (
         version_major, version_minor, version_patch, version_suffix)

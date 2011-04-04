@@ -2,6 +2,9 @@
 * DES
 * (C) 1999-2008 Jack Lloyd
 *
+* Based on a public domain implemenation by Phil Karn (who in turn
+* credited Richard Outerbridge and Jim Gillogly)
+*
 * Distributed under the terms of the Botan license
 */
 

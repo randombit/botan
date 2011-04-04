@@ -2,6 +2,9 @@
 * Twofish
 * (C) 1999-2007 Jack Lloyd
 *
+* The key schedule implemenation is based on a public domain
+* implementation by Matthew Skala
+*
 * Distributed under the terms of the Botan license
 */
 

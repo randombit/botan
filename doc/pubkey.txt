@@ -1,0 +1,398 @@
+
+.. _public_key_crypto:
+
+Public Key Cryptography
+=================================
+
+Quick Start
+---------------------------------
+
+Let's create a 2048-bit RSA private key, serialize the public key as a
+PKCS #1 file with PEM encoding (which can be understood by many other
+cryptographic programs), and then load it on another machine::
+
+  // everyone does:
+  AutoSeeded_RNG rng;
+
+  // Alice
+  RSA_PrivateKey priv_rsa(rng, 2048 /* bits */);
+
+  std::string alice_pem = X509::PEM_encode(priv_rsa);
+
+  // send alice_pem to Bob, who does
+
+  // Bob
+  std::auto_ptr<Public_Key> alice(load_key(alice_pem));
+
+  RSA_PublicKey* alice_rsa = dynamic_cast<RSA_PublicKey>(alice);
+  if(alice_rsa)
+     {
+     /* ... */
+     }
+
+Creating New Public Key Pairs
+---------------------------------
+
+The library has interfaces for public key encryption, signatures, and
+key agreement that do not require knowing the exact algorithm in
+use. One place where we *do* need to know exactly what kind of
+algorithm is in use is when we are creating a key.
+
+There are currently three kinds of public key algorithms in Botan:
+ones based on integer factorization (RSA and Rabin-Williams), ones
+based on the discrete logarithm problem in the integers modulo a prime
+(DSA, Diffie-Hellman, Nyberg-Rueppel, and ElGamal), and ones based on
+the discrete logarithm problem in an elliptic curve (ECDSA, ECDH, and
+GOST 34.10). The systems based on discrete logarithms (in either
+regular integers or elliptic curves) use a group (a mathematical
+term), which can be shared among many keys. An elliptic curve group is
+represented by the class ``EC_Domain_Params``, while a modulo-prime
+group is represented by a ``DL_Group``.
+
+There are two ways to create a DL private key (such as
+``DSA_PrivateKey``). One is to pass in just a ``DL_Group`` object -- a
+new key will automatically be generated. The other involves passing in
+a group to use, along with both the public and private values (private
+value first).
+
+Since in integer factorization algorithms, the modulus used isn't
+shared by other keys, we don't use this notion. You can create a new
+key by passing in a ``size_t`` telling how long (in bits) the key
+should be, or you can copy an pre-existing key by passing in the
+appropriate parameters (primes, exponents, etc). For RSA and
+Rabin-Williams (the two IF schemes in Botan), the parameters are all
+``BigInt``: prime 1, prime 2, encryption exponent, decryption
+exponent, modulus. The last two are optional, since they can easily be
+derived from the first three.
+
+Creating a DL_Group
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+There are quite a few ways to get a ``DL_Group`` object. The best is
+to use the function ``get_dl_group``, which takes a string naming a
+group; it will either return that group, if it knows about it, or
+throw an exception. Names it knows about include "modp/ietf/N" where N
+is 768, 1024, 1536, 2048, 3072, 4096, 6144, and 8192 for
+Diffie-Hellman and ElGamal. DSA-style groups are named "dsa/jce/N" for
+N 512, 768, 1024, and "dsa/botan/N" for 2048 and 3072.
+
+You can also generate a new random group. This is not recommend,
+because it is quite slow, especially for safe primes.
+
+Key Checking
+---------------------------------
+
+Most public key algorithms have limitations or restrictions on their
+parameters. For example RSA requires an odd exponent, and algorithms
+based on the discrete logarithm problem need a generator $> 1$.
+
+Each low-level public key type has a function named ``check_key`` that
+takes a ``bool``. This function returns a Boolean value that declares
+whether or not the key is valid (from an algorithmic standpoint). For
+example, it will check to make sure that the prime parameters of a DSA
+key are, in fact, prime. It does not have anything to do with the
+validity of the key for any particular use, nor does it have anything
+to do with certificates that link a key (which, after all, is just
+some numbers) with a user or other entity. If ``check_key``'s argument
+is ``true``, then it does "strong" checking, which includes expensive
+operations like primality checking.
+
+Keys are always checked when they are loaded or generated, so typically there
+is no reason to use this function directly. However, you can disable or reduce
+the checks for particular cases (public keys, loaded private keys, generated
+private keys) by setting the right config toggle (see the section on the
+configuration subsystem for details).
+
+Getting a PK algorithm object
+---------------------------------
+
+The key types, like ``RSA_PrivateKey``, do not implement any kind of
+padding or encoding (which is necessary for security). To get an
+object that knows how to do padding, use the wrapper classes included
+in ``pubkey.h``. These take a key, along with a string that specifies
+what hashing and encoding method(s) to use. Examples of such strings
+are "EME1(SHA-256)" for OAEP encryption and "EMSA4(SHA-256)" for PSS
+signatures (where the message is hashed using SHA-256).
+
+Here are some basic examples (using an RSA key) to give you a feel for
+the possibilities. These examples assume ``rsakey`` is an
+``RSA_PrivateKey``, since otherwise we would not be able to create
+a decryption or signature object with it (you can create encryption or
+signature verification objects with public keys, naturally)::
+
+   // PKCS #1 v2.0 / IEEE 1363 compatible encryption
+   PK_Encryptor_EME rsa_enc_pkcs1_v2(rsakey, "EME1(SHA-1)");
+   // PKCS #1 v1.5 compatible encryption
+   PK_Encryptor_EME rsa_enc_pkcs1_v15(rsakey, "PKCS1v15")
+
+   // This object can decrypt things encrypted by rsa_
+   PK_Decryptor_EME rsa_dec_pkcs1_v2(rsakey, "EME1(SHA-1)");
+
+   // PKCS #1 v1.5 compatible signatures
+   PK_Signer rsa_sign_pkcs1_v15(rsakey, "EMSA3(MD5)");
+   PK_Verifier rsa_verify_pkcs1_v15(rsakey, "EMSA3(MD5)");
+
+   // PKCS #1 v2.1 compatible signatures
+   PK_Signer rsa_sign_pkcs1_v2(rsakey, "EMSA4(SHA-1)");
+   PK_Verifier rsa_verify_pkcs1_v2(rsakey, "EMSA4(SHA-1)");
+
+Encryption
+---------------------------------
+
+The ``PK_Encryptor`` and ``PK_Decryptor`` classes are the
+interface for encryption and decryption, respectively.
+
+Calling ``encrypt`` with a ``byte`` array, a length
+parameter, and an RNG object will return the input encrypted with
+whatever scheme is being used. Calling the similar ``decrypt``
+will perform the inverse operation. You can also do these operations
+with ``SecureVector<byte>``s. In all cases, the output is returned
+via a ``SecureVector<byte>``.
+
+If you attempt an operation with a larger size than the key can
+support (this limit varies based on the algorithm, the key size, and
+the padding method used (if any)), an exception will be thrown. You
+can call ``maximum_input_size`` to find out the maximum size
+input (in bytes) that you can safely use with any particular key.
+
+Available public key encryption algorithms in Botan are RSA and
+ElGamal. The encoding methods are EME1, denoted by "EME1(HASHNAME)",
+PKCS #1 v1.5, called "PKCS1v15" or "EME-PKCS1-v1_5", and raw encoding
+("Raw").
+
+For compatibility reasons, PKCS #1 v1.5 is recommend for use with
+ElGamal (most other implementations of ElGamal do not support any
+other encoding format). RSA can also be used with PKCS # 1 encoding,
+but because of various possible attacks, EME1 is the preferred
+encoding. EME1 requires the use of a hash function: unless a competent
+applied cryptographer tells you otherwise, you should use SHA-256 or
+SHA-512.
+
+Don't use "Raw" encoding unless you need it for backward
+compatibility with old protocols. There are many possible attacks
+against both ElGamal and RSA when they are used in this way.
+
+Signatures
+---------------------------------
+
+The signature algorithms look quite a bit like the hash functions. You
+can repeatedly call ``update``, giving more and more of a
+message you wish to sign, and then call ``signature``, which
+will return a signature for that message. If you want to do it all in
+one shot, call ``sign_message``, which will just call
+``update`` with its argument and then return whatever
+``signature`` returns. Generating a signature requires random
+numbers with some schemes, so ``signature`` and
+``sign_message`` both take a ``RandomNumberGenerator&``.
+
+You can validate a signature by updating the verifier class, and finally seeing
+the if the value returned from ``check_signature`` is true (you pass
+the supposed signature to the ``check_signature`` function as a byte
+array and a length or as a ``MemoryRegion<byte>``). There is another
+function, ``verify_message``, which takes a pair of byte array/length
+pairs (or a pair of ``MemoryRegion<byte>`` objects), the first of which is
+the message, the second being the (supposed) signature. It returns true if the
+signature is valid and false otherwise.
+
+Available public key signature algorithms in Botan are RSA, DSA,
+ECDSA, GOST-34.11, Nyberg-Rueppel, and Rabin-Williams. Signature
+encoding methods include EMSA1, EMSA2, EMSA3, EMSA4, and Raw. All of
+them, except Raw, take a parameter naming a message digest function to
+hash the message with. The Raw encoding signs the input directly; if
+the message is too big, the signing operation will fail. Raw is not
+useful except in very specialized applications.
+
+There are various interactions that make certain encoding schemes and
+signing algorithms more or less useful.
+
+EMSA2 is the usual method for encoding Rabin-William signatures, so
+for compatibility with other implementations you may have to use
+that. EMSA4 (also called PSS), also works with Rabin-Williams. EMSA1
+and EMSA3 do *not* work with Rabin-Williams.
+
+RSA can be used with any of the available encoding methods. EMSA4 is
+by far the most secure, but is not (as of now) widely
+implemented. EMSA3 (also called "EMSA-PKCS1-v1_5") is commonly used
+with RSA (for example in SSL). EMSA1 signs the message digest
+directly, without any extra padding or encoding. This may be useful,
+but is not as secure as either EMSA3 or EMSA4. EMSA2 may be used but
+is not recommended.
+
+For DSA, ECDSA, GOST-34.11, and Nyberg-Rueppel, you should use
+EMSA1. None of the other encoding methods are particularly useful for
+these algorithms.
+
+Key Agreement
+---------------------------------
+
+You can get a hold of a ``PK_Key_Agreement_Scheme`` object by calling
+``get_pk_kas`` with a key that is of a type that supports key
+agreement (such as a Diffie-Hellman key stored in a ``DH_PrivateKey``
+object), and the name of a key derivation function. This can be "Raw",
+meaning the output of the primitive itself is returned as the key, or
+"KDF1(hash)" or "KDF2(hash)" where "hash" is any string you happen to
+like (hopefully you like strings like "SHA-256" or "RIPEMD-160"), or
+"X9.42-PRF(keywrap)", which uses the PRF specified in ANSI X9.42. It
+takes the name or OID of the key wrap algorithm that will be used to
+encrypt a content encryption key.
+
+How key agreement works is that you trade public values with some
+other party, and then each of you runs a computation with the other's
+value and your key (this should return the same result to both
+parties). This computation can be called by using
+``derive_key`` with either a byte array/length pair, or a
+``SecureVector<byte>`` than holds the public value of the other
+party. The last argument to either call is a number that specifies how
+long a key you want.
+
+Depending on the KDF you're using, you *might not* get back a key
+of the size you requested. In particular "Raw" will return a number
+about the size of the Diffie-Hellman modulus, and KDF1 can only return
+a key that is the same size as the output of the hash. KDF2, on the
+other hand, will always give you a key exactly as long as you request,
+regardless of the underlying hash used with it. The key returned is a
+``SymmetricKey``, ready to pass to a block cipher, MAC, or other
+symmetric algorithm.
+
+The public value that should be used can be obtained by calling
+``public_data``, which exists for any key that is associated with a
+key agreement algorithm. It returns a ``SecureVector<byte>``.
+
+"KDF2(SHA-256)" is by far the preferred algorithm for key derivation
+in new applications. The X9.42 algorithm may be useful in some
+circumstances, but unless you need X9.42 compatibility, KDF2 is easier
+to use.
+
+There is a Diffie-Hellman example included in the distribution, which you may
+want to examine.
+
+.. _pk_import_export:
+
+Importing and Exporting Keys
+---------------------------------
+
+There are many, many different (often conflicting) standards
+surrounding public key cryptography. There is, thankfully, only two
+major standards surrounding the representation of a public or private
+key: the X.509 subject public key info format (for public keys), and
+PKCS #8 (for private keys). Other crypto libraries, such as Crypto++
+and OpenSSL, also support these formats, so you can easily exchange
+keys with software that doesn't use Botan.
+
+In addition to "plain" public keys, Botan also supports X.509
+certificates.  These are documented in :ref:`x509_certificates`.
+
+.. _import_export_public_keys:
+
+Importing/Exporting Public Keys
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To import and export public keys, use:
+
+.. cpp:function:: MemoryVector<byte> X509::BER_encode(const Public_Key& key)
+
+  Takes any public key object, and returns a standard binary structure
+  representing the key which can be read by many other crypto
+  libraries.
+
+.. cpp:function:: std::string X509::PEM_encode(const Public_Key& key)
+
+  This formats the key the same as ``BER_encode``, but additionally
+  encodes it into a text format with identifying headers. Using PEM
+  encoding is *highly* recommended for many reasons, including
+  compatibility with other software, for transmission over 8-bit
+  unclean channels, because it can be identified by a human without
+  special tools, and because it sometimes allows more sane behavior of
+  tools that process the data.
+
+.. cpp:function:: Public_Key* X509::load_key(DataSource& in)
+
+.. cpp:function:: Public_Key* X509::load_key(const SecureVector<byte>& buffer)
+
+.. cpp:function:: Public_Key* X509::load_key(const std::string& filename)
+
+  For loading a public key, use one of the variants of ``load_key``.
+  This function will return a newly allocated key based on the data
+  from whatever source it is using (assuming, of course, the source is
+  in fact storing a representation of a public key). The encoding used
+  (PEM or BER) need not be specified; the format will be detected
+  automatically. The key is allocated with ``new``, and should be
+  released with ``delete`` when you are done with it. The first takes
+  a generic ``DataSource`` that you have to create - the other is a
+  simple wrapper functions that take either a filename or a memory
+  buffer and create the appropriate ``DataSource``.
+
+Importing/Exporting Private Keys
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+There are two different options for private key import/export. The
+first is a plaintext version of the private key. This is supported by
+the following functions:
+
+.. cpp:function:: SecureVector<byte> PKCS8::BER_encode(const Private_Key& key)
+
+.. cpp:function:: std::string PKCS8::PEM_encode(const Private_Key& key)
+
+These functions are similiar to the X.509 functions described in
+:ref:`import_export_public_keys`. The only difference is that they take
+a ``Private_Key`` object instead. In most situations, using these
+versions is a bad idea, because anyone can come along and grab the
+private key without having to know any passwords or other
+secrets. Unless you have very particular security requirements, always
+use the versions that encrypt the key based on a passphrase described
+below. For importing, the same functions can be used for encrypted and
+unencrypted keys.
+
+The other way to export a PKCS #8 key is to first encode it in the
+same manner as done above, then encrypt it using a passphrase, and
+store the whole thing into another structure. This method is
+definitely preferred, since otherwise the private key is
+unprotected. The algorithms and structures used here are standardized
+by PKCS #5 and PKCS #8, and can be read by many other crypto
+libraries:
+
+.. cpp:function:: SecureVector<byte> PKCS8::BER_encode(const Private_Key& key, RandomNumberGenerator& rng, const std::string& pass, const std::string& pbe_algo = "")
+
+.. cpp:function:: std::string PKCS8::PEM_encode(const Private_Key& key, RandomNumberGenerator& rng, const std::string& pass, const std::string& pbe_algo = "")
+
+
+There are three new arguments needed here to support the encryption
+process. The first is a ``RandomNumberGenerator``, which is used to
+generate salts to randomize the encryption. The ``pass`` argument is
+the passphrase that will be used to encrypt the key. Both of these are
+required. The final (optional) argument, ``pbe_algo``, specifies a
+particular password based encryption (or PBE) algorithm. If you don't
+specify a PBE, a sensible default will be used.
+
+Last but not least, there are some functions that will load (and
+decrypt, if necessary) a PKCS #8 private key:
+
+.. cpp:function:: Private_Key* PKCS8::load_key(DataSource& in, RandomNumberGenerator& rng, const User_Interface& ui)
+
+.. cpp:function:: Private_Key* PKCS8::load_key(DataSource& in, RandomNumberGenerator& rng, std::string passphrase = "")
+
+.. cpp:function:: Private_Key* PKCS8::load_key(const std::string& filename, RandomNumberGenerator& rng, const User_Interface& ui)
+
+.. cpp:function:: Private_Key* PKCS8::load_key(const std::string& filename, RandomNumberGenerator& rng, const std::string& passphrase = "")
+
+The versions that pass the passphrase as a ``std::string`` are
+primarily for compatibility, but they are useful in limited
+circumstances. The ``User_Interface`` versions are how ``load_key`` is
+implemented, and provides for much more flexibility. If the passphrase
+passed in is not correct, then an exception is thrown and that is
+that. However, if you pass in an UI object, then the UI object can
+keep asking the user for the passphrase until they get it right (or
+until they cancel the action, though the UI interface). A
+``User_Interface`` has very little to do with talking to users; it's
+just a way to glue together Botan and whatever user interface you
+happen to be using. You can think of it as a user interface
+interface. The default ``User_Interface`` is rather dumb, and acts
+rather like the versions taking the ``std::string``; it tries the
+passphrase passed in first, and then it cancels.
+
+All versions need access to a ``RandomNumberGenerator`` in order to
+perform probabilistic tests on the loaded key material.
+
+After loading a key, you can use ``dynamic_cast`` to find out what
+operations it supports, and use it appropriately. Remember to
+``delete`` the object once you are done with it.

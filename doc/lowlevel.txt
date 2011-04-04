@@ -1,0 +1,641 @@
+
+The Low-Level Interface
+=================================
+
+Botan has two different interfaces. The one documented in this section is meant
+more for implementing higher-level types (see the section on filters, earlier in
+this manual) than for use by applications. Using it safely requires a solid
+knowledge of encryption techniques and best practices, so unless you know, for
+example, what CBC mode and nonces are, and why PKCS #1 padding is important,
+you should avoid this interface in favor of something working at a higher level
+(such as the CMS interface).
+
+Basic Algorithm Abilities
+---------------------------------
+
+There are a small handful of functions implemented by most of Botan's
+algorithm objects. Among these are:
+
+.. cpp:function:: std::string name()
+
+Returns a human-readable string of the name of this
+algorithm. Examples of names returned are "AES-128" and
+"HMAC(SHA-512)". You can turn names back into algorithm objects using
+the functions in ``lookup.h``.
+
+.. cpp:function:: void clear()
+
+Clear out the algorithm's internal state. A block cipher object will
+"forget" its key, a hash function will "forget" any data put into it,
+etc. The object will look and behave as it did when you initially
+allocated it.
+
+.. cpp:function:: T* clone()
+
+This function is central to Botan's name-based interface. The
+``clone`` has many different return types, such as ``BlockCipher``\*
+and ``HashFunction``\*, depending on what kind of object it is called
+on. Note that unlike Java's clone, this returns a new object in a
+"pristine" state; that is, operations done on the initial object
+before calling ``clone`` do not affect the initial state of the new
+clone.
+
+Cloned objects can (and should) be deallocated with the C++ ``delete``
+operator.
+
+Keys and IVs
+---------------------------------
+
+Both symmetric keys and initialization values can be considered byte
+(or octet) strings. These are represented by the classes
+``SymmetricKey`` and ``InitializationVector``, which are
+subclasses of ``OctetString``.
+
+Since often it's hard to distinguish between a key and IV, many things
+(such as key derivation mechanisms) return ``OctetString`` instead of
+``SymmetricKey`` to allow its use as a key or an IV.
+
+.. cpp:function:: OctetString::OctetString(RandomNumberGenerator& rng, size_t length)
+
+  This constructor creates a new random key ``length`` bytes long
+  using the random number generator.
+
+.. cpp:function:: OctetString::OctetString(std::string str)
+
+  The argument ``str`` is assumed to be a hex string; it is converted
+  to binary and stored. Whitespace is ignored.
+
+.. cpp:function:: OctetString::OctetString(const byte* input, size_t length)
+
+  This constructor copies its input.
+
+Symmetrically Keyed Algorithms
+---------------------------------
+
+Block ciphers, stream ciphers, and MACs are all keyed operations; to
+be useful, they have to be set to use a particular key, which is a
+randomly chosen string of bits of a specified length.  The length
+required by any particular algorithm may vary, depending on both the
+algorithm specification and the implementation. You can query any
+botan object to find out what key length(s) it supports.
+
+To make this similarity in terms of keying explicit, all algorithms of
+those types are derived from the ``SymmetricAlgorithm`` base
+class. This type provides functions for setting the key, and querying
+restrictions on the size of the key:
+
+.. cpp:function:: void set_key(const byte* key, size_t length)
+
+  This sets the key to the value specified. Most algorithms only
+  accept keys of certain lengths. If you attempt to call ``set_key``
+  with a key length that is not supported, the exception
+  ``Invalid_Key_Length`` will be thrown. There is also another version
+  of ``set_key`` that takes a ``SymmetricKey`` as an argument.
+
+  In all cases, ``set_key`` must be called on an object before any
+  data processing (encryption, decryption, etc) is done by that
+  object. If this is not done, the results are undefined, but probably
+  will not be good.
+
+.. cpp:function:: bool valid_keylength(size_t length) const
+
+  This function returns true if and only if ``length`` is a valid keylength
+  for the algorithm.
+
+.. cpp:function:: size_t minimum_keylength() const
+
+  Return the smallest key length (in bytes) that is acceptible for the
+  algorithm.
+
+.. cpp:function:: size_t maximum_keylength() const
+
+  Return the largest key length (in bytes) that is acceptible for the
+  algorithm
+
+Block Ciphers
+---------------------------------
+
+Block ciphers implement the interface ``BlockCipher``, found in
+``block_cipher.h``, as well as the ``SymmetricAlgorithm`` interface.
+
+.. cpp:function:: size_t block_size() const
+
+  Returns the block size of the cipher in bytes
+
+.. cpp:function:: void encrypt_n(const byte* in, byte* out, size_t blocks) const
+
+  Encrypt ``blocks`` blocks of data, taking the input from ``in`` and
+  placing the ciphertext in ``out``. The two pointers may be
+  identical, but should not overlap ranges.
+
+.. cpp:function:: void encrypt(const byte* in, byte* out) const
+
+  Encrypt a single block, taking the input from ``in`` and placing it
+  in ``out``.
+
+.. cpp:function:: void encrypt(byte* block) const
+
+  Identical to ``encrypt(block, block)``.
+
+.. cpp:function:: void decrypt_n(const byte* in, byte* out, size_t blocks) const
+
+  Decrypt ``blocks`` blocks of data, taking the input from ``in`` and
+  placing the plaintext in ``out``. The two pointers may be identical,
+  but should not overlap ranges.
+
+.. cpp:function:: void decrypt(const byte* in, byte* out) const
+
+  Decrypt a single block, taking the input from ``in`` and placing it
+  in ``out``.
+
+.. cpp:function:: void decrypt(byte* block) const
+
+  Identical to ``decrypt(block, block)``.
+
+
+Stream Ciphers
+---------------------------------
+
+Stream ciphers are somewhat different from block ciphers, in that
+encrypting data results in changing the internal state of the
+cipher. Also, you may encrypt any length of data in one go (in byte
+amounts).
+
+.. cpp:function:: void encrypt(const byte* in, byte* out, size_t length)
+
+.. cpp:function:: void encrypt(byte* data, size_t length)
+
+Stream ciphers implement the ``SymmetricAlgorithm`` interface.
+
+Hash Functions / Message Authentication Codes
+----------------------------------------------
+
+Hash functions take their input without producing any output, only producing
+anything when all input has already taken place. MACs are very similar, but are
+additionally keyed. Both of these are derived from the base class
+``BufferedComputation``, which has the following functions.
+
+.. cpp:function:: size_t output_length()
+
+Return the size of the output of this function.
+
+.. cpp:function:: void update(const byte* input, size_t length)
+
+.. cpp:function:: void update(byte input)
+
+.. cpp:function:: void update(const std::string& input)
+
+Updates the hash/mac calculation with ``input``.
+
+.. cpp:function:: void final(byte* out)
+
+.. cpp:function:: SecureVector<byte> final()
+
+Complete the hash/MAC calculation and place the result into ``out``.
+For the argument taking an array, exactly ``output_length`` bytes will
+be written. After you call ``final``, the hash function is reset to
+its initial state, so it may be reused immediately.
+
+The second method of using final is to call it with no arguments at
+all, as shown in the second prototype. It will return the hash/mac
+value in a memory buffer.
+
+There is also a pair of functions called ``process``. They are
+a combination of a single ``update``, and ``final``.
+Both versions return the final value, rather than placing it an
+array. Calling ``process`` with a single byte value isn't
+available, mostly because it would rarely be useful.
+
+A MAC can be viewed (in most cases) as a keyed hash function, so
+classes that are derived from ``MessageAuthenticationCode`` have
+``update`` and ``final`` classes just like a
+``HashFunction`` (and like a ``HashFunction``, after
+``final`` is called, it can be used to make a new MAC right
+away; the key is kept around).
+
+A MAC has the ``SymmetricAlgorithm`` interface in addition to the
+``BufferedComputation`` interface.
+
+Random Number Generators
+---------------------------------
+
+The random number generators provided in Botan are meant for creating
+keys, IVs, padding, nonces, and anything else that requires 'random'
+data. It is important to remember that the output of these classes
+will vary, even if they are supplied with ethe same seed (ie, two
+``Randpool`` objects with similar initial states will not produce
+the same output, because the value of high resolution timers is added
+to the state at various points).
+
+To ensure good quality output, a PRNG needs to be seeded with truly
+random data (such as that produced by a hardware RNG). Typically, you
+will use an ``EntropySource`` (see below). To add some (typically
+application specific) entropy to a PRNG, you can use
+
+.. cpp:function:: void add_entropy(const byte* data, size_t length)
+
+Once a PRNG has been initialized, you can get a single byte of random
+data by
+
+.. cpp:function:: byte random()
+
+or get a large block by calling
+
+.. cpp:function:: void randomize(byte* data, size_t length)
+
+Randpool
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``Randpool`` is the primary PRNG within Botan. In recent versions all
+uses of it have been wrapped by an implementation of the X9.31 PRNG
+(see below). If for some reason you should have cause to create a PRNG
+instead of using the "global" one owned by the library, it would be
+wise to consider the same on the grounds of general caution; while
+``Randpool`` is designed with known attacks and PRNG weaknesses in
+mind, it is not an standard/official PRNG. The remainder of this
+section is a (fairly technical, though high-level) description of the
+algorithms used in this PRNG. Unless you have a specific interest in
+this subject, the rest of this section might prove somewhat
+uninteresting.
+
+``Randpool`` has an internal state called pool, which is 512 bytes
+long. This is where entropy is mixed into and extracted from. There is also a
+small output buffer (called buffer), which holds the data which has already
+been generated but has just not been output yet.
+
+It is based around a MAC and a block cipher (which are currently
+HMAC(SHA-256) and AES-256). Where a specific size is mentioned, it
+should be taken as a multiple of the cipher's block size. For example,
+if a 256-bit block cipher were used instead of AES, all the sizes
+internally would double. Every time some new output is needed, we
+compute the MAC of a counter and a high resolution timer. The
+resulting MAC is XORed into the output buffer (wrapping as needed),
+and the output buffer is then encrypted with AES, producing 16 bytes
+of output.
+
+After 8 blocks (or 128 bytes) have been produced, we mix the pool. To
+do this, we first rekey both the MAC and the cipher; the new MAC key
+is the MAC of the current pool under the old MAC key, while the new
+cipher key is the MAC of the current pool under the just-chosen MAC
+key. We then encrypt the entire pool in CBC mode, using the current
+(unused) output buffer as the IV. We then generate a new output
+buffer, using the mechanism described in the previous paragraph.
+
+To add randomness to the PRNG, we compute the MAC of the input and XOR
+the output into the start of the pool. Then we remix the pool and
+produce a new output buffer. The initial MAC operation should make it
+very hard for chosen inputs to harm the security of ``Randpool``, and
+as HMAC should be able to hold roughly 256 bits of state, it is
+unlikely that we are wasting much input entropy (or, if we are, it
+doesn't matter, because we have a very abundant supply).
+
+ANSI X9.31
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``ANSI_X931_PRNG`` is the standard issue X9.31 Appendix A.2.4 PRNG,
+though using AES-256 instead of 3DES as the block cipher. This PRNG
+implementation has been checked against official X9.31 test vectors.
+
+Internally, the PRNG holds a pointer to another PRNG (typically
+Randpool). This internal PRNG generates the key and seed used by the
+X9.31 algorithm, as well as the date/time vectors. Each time an X9.31
+PRNG object receives entropy, it passes it along to the PRNG it is
+holding, and then pulls out some random bits to generate a new key and
+seed. This PRNG considers itself seeded as soon as the internal PRNG
+is seeded.
+
+
+Entropy Sources
+---------------------------------
+
+An ``EntropySource`` is an abstract representation of some method of
+gather "real" entropy. This tends to be very system dependent. The
+*only* way you should use an ``EntropySource`` is to pass it to a PRNG
+that will extract entropy from it -- never use the output directly for
+any kind of key or nonce generation!
+
+``EntropySource`` has a pair of functions for getting entropy from
+some external source, called ``fast_poll`` and ``slow_poll``. These
+pass a buffer of bytes to be written; the functions then return how
+many bytes of entropy were gathered.
+
+Note for writers of ``EntropySource`` subclasses: it isn't necessary
+to use any kind of cryptographic hash on your output. The data
+produced by an EntropySource is only used by an application after it
+has been hashed by the ``RandomNumberGenerator`` that asked for the
+entropy, thus any hashing you do will be wasteful of both CPU cycles
+and entropy.
+
+User Interfaces
+---------------------------------
+
+Botan has recently changed some infrastructure to better accommodate
+more complex user interfaces, in particular ones that are based on
+event loops. Primary among these was the fact that when doing
+something like loading a PKCS #8 encoded private key, a passphrase
+might be needed, but then again it might not (a PKCS #8 key doesn't
+have to be encrypted). Asking for a passphrase to decrypt an
+unencrypted key is rather pointless. Not only that, but the way to
+handle the user typing the wrong passphrase was complicated,
+undocumented, and inefficient.
+
+So now Botan has an object called ``User_Interface``, which provides a
+simple interface for the aspects of user interaction the library has
+to be concerned with. Currently, this means getting a passphrase from
+the user, and that's it (``User_Interface`` will probably be extended
+in the future to support other operations as they are needed). The
+base ``User_Interface`` class is very stupid, because the library
+can't directly assume anything about the environment that it's running
+under (for example, if there will be someone sitting at the terminal,
+if the application is even *attached* to a terminal, and so on). But
+since you can subclass ``User_Interface`` to use whatever method
+happens to be appropriate for your application, this isn't a big deal:
+
+.. cpp:function:: std::string User_Interface::get_passphrase(const std::string& what, const std::string& source, UI_Result& result) const
+
+  The ``what`` argument specifies what the passphrase is needed for
+  (for example, PKCS #8 key loading passes ``what`` as "PKCS #8
+  private key"). This lets you provide the user with some indication
+  of *why* your application is asking for a passphrase; feel free to
+  pass the string through ``gettext(3)`` or moral equivalent for i18n
+  purposes. Similarly, ``source`` specifies where the data in question
+  came from, if available (for example, a file name). If the source is
+  not available for whatever reason, then ``source`` will be an empty
+  string; be sure to account for this possibility when writing a
+  ``User_Interface`` subclass.
+
+  The function returns the passphrase as the return value, and a
+  status code in ``result`` (either ``OK`` or ``CANCEL_ACTION``). If
+  ``CANCEL_ACTION`` is returned in ``result``, then the return value
+  will be ignored, and the caller will take whatever action is
+  necessary (typically, throwing an exception stating that the
+  passphrase couldn't be determined). In the specific case of PKCS #8
+  key decryption, a ``Decoding_Error`` exception will be thrown; your
+  UI should assume this can happen, and provide appropriate error
+  handling (such as putting up a dialog box informing the user of the
+  situation, and canceling the operation in progress).
+
+There is an example ``User_Interface`` that uses GTK+ available on the
+web site. The ``GTK_UI`` code is cleanly separated from the rest of
+the example, so if you happen to be using GTK+, you can copy (and/or
+adapt) that code for your application. If you write a
+``User_Interface`` object for another windowing system (Win32, Qt,
+wxWidgets, FOX, etc), and would like to make it available to users in
+general (ideally under a permissive license such as public domain or
+MIT/BSD), feel free to send in a copy.
+
+PBKDF Algorithms
+---------------------------------
+
+There are various procedures (usually ad-hoc) for turning a
+passphrase into a (mostly) arbitrary length key for a symmetric
+cipher. A general interface for such algorithms is presented in
+``pbkdf.h``. The main function is ``derive_key``, which
+takes a passphrase, a salt, an iteration count, and the desired length
+of the output key, and returns a key of that length, deterministically
+produced from the passphrase and salt. If an algorithm can't produce a
+key of that size, it will throw an exception (most notably, PKCS #5's
+PBKDF1 can only produce strings between 1 and $n$ bytes, where $n$ is
+the output size of the underlying hash function).
+
+The purpose of the iteration count is to make the algorithm take
+longer to compute the final key (reducing the speed of brute-force
+attacks of various kinds). Most standards recommend an iteration count
+of at least 10000. Currently defined PBKDF algorithms are
+"PBKDF1(digest)", "PBKDF2(digest)", and "OpenPGP-S2K(digest)"; you can
+retrieve any of these using the ``get_pbkdf``, found in
+``lookup.h``. As of this writing, "PBKDF2(SHA-256)" with 10000
+iterations and a 16 byte salt is recommend for new applications.
+
+OpenPGP S2K
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+There are some oddities about OpenPGP's S2K algorithms that are
+documented here. For one thing, it uses the iteration count in a
+strange manner; instead of specifying how many times to iterate the
+hash, it tells how many *bytes* should be hashed in total
+(including the salt). So the exact iteration count will depend on the
+size of the salt (which is fixed at 8 bytes by the OpenPGP standard,
+though the implementation will allow any salt size) and the size of
+the passphrase.
+
+To get what OpenPGP calls "Simple S2K", set iterations to 0, and do
+not specify a salt. To get "Salted S2K", again leave the iteration
+count at 0, but give an 8-byte salt. "Salted and Iterated S2K"
+requires an 8-byte salt and some iteration count (this should be
+significantly larger than the size of the longest passphrase that
+might reasonably be used; somewhere from 1024 to 65536 would probably
+be about right). Using both a reasonably sized salt and a large
+iteration count is highly recommended to prevent password guessing
+attempts.
+
+Password Hashing
+---------------------------------
+
+Storing passwords for user authentication purposes in plaintext is the
+simplest but least secure method; when an attacker compromises the
+database in which the passwords are stored, they immediately gain
+access to all of them. Often passwords are reused among multiple
+services or machines, meaning once a password to a single service is
+known an attacker has a substantial head start on attacking other
+machines.
+
+The general approach is to store, instead of the password, the output
+of a one way function of the password. Upon receiving an
+authentication request, the authenticator can recompute the one way
+function and compare the value just computed with the one that was
+stored. If they match, then the authentication request succeeds. But
+when an attacker gains access to the database, they only have the
+output of the one way function, not the original password.
+
+Common hash functions such as SHA-256 are one way, but used alone they
+have problems for this purpose. What an attacker can do, upon gaining
+access to such a stored password database, is hash common dictionary
+words and other possible passwords, storing them in a list. Then he
+can search through his list; if a stored hash and an entry in his list
+match, then he has found the password. Even worse, this can happen
+*offline*: an attacker can begin hashing common passwords days,
+months, or years before ever gaining access to the database. In
+addition, if two users choose the same password, the one way function
+output will be the same for both of them, which will be visible upon
+inspection of the database.
+
+There are two solutions to these problems: salting and
+iteration. Salting refers to including, along with the password, a
+randomly chosen value which perturbs the one way function. Salting can
+reduce the effectivness of offline dictionary generation (because for
+each potential password, an attacker would have to compute the one way
+function output for all possible salts - with a large enough salt,
+this can make the problem quite difficult). It also prevents the same
+password from producing the same output, as long as the salts do not
+collide. With a large salt (say 80 to 128 bits) this will be quite
+unlikely. Iteration refers to the general technique of forcing
+multiple one way function evaluations when computing the output, to
+slow down the operation. For instance if hashing a single password
+requires running SHA-256 100,000 times instead of just once, that will
+slow down user authentication by a factor of 100,000, but user
+authentication happens quite rarely, and usually there are more
+expensive operations that need to occur anyway (network and database
+I/O, etc). On the other hand, an attacker who is attempting to break a
+database full of stolen password hashes will be seriously
+inconvenienced by a factor of 100,000 slowdown; they will be able to
+only test at a rate of .0001% of what they would without iterations
+(or, equivalently, will require 100,000 times as many zombie botnet
+hosts).
+
+There are many different ways of doing this password hashing
+operation, with common ones including Unix's crypt (which is based on
+DES) and OpenBSD's bcrypt (based on Blowfish). Other variants using
+MD5 or SHA-256 are also in use on various systems.
+
+Botan provides two techniques, passhash9 and bcrypt
+
+Passhash9
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Botan provides a password hashing technique called passhash9, in
+``passhash9.h``, which is based on PBKDF2. A usage example can be
+found in ``doc/examples/passhash.cpp``. Three functions are provided
+in this header:
+
+.. cpp:function:: std::string generate_passhash9(const std::string& password, RandomNumberGenerator& rng, u16bit work_factor = 10)
+
+   Takes the password to hash, a rng, and a work factor, which tells
+   how many iterations to compute. The default work factor is 10
+   (which means 100,000 iterations), but any non-zero value is
+   accepted.
+
+.. cpp:function:: std::string generate_passhash9(const std::string& password, byte alg_id, RandomNumberGenerator& rng, u16bit work_factor = 10)
+
+   Like the other ``generate_passhash9``, but taking a parameter that
+   specifies which PRF to use. Currently defined values are 0
+   ("HMAC(SHA-1)"), 1 ("HMAC(SHA-256)"), and 2 ("CMAC(Blowfish)").
+
+.. cpp:function:: bool check_passhash9(const std::string& password, const std::string& hash)
+
+   Takes a password and a passhash9 output and checks if the password
+   is the same as the one that was used to generate the passhash9
+   output, returning a boolean true (same) or false (not same).
+
+Bcrypt
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Bcrypt is a password hashing scheme originally designed for use in
+OpenBSD, but numerous other implementations exist. It is made
+available by including ``bcrypt.h``, and provides the functions
+
+.. cpp:function:: std::string generate_bcrypt(const std::string& password, RandomNumberGenerator& rng, u16bit work_factor = 10)
+
+and
+
+.. cpp:function:: bool check_bcrypt(const std::string& password, const std::string& hash)
+
+These work in exactly the same way as the passhash9 password hashing
+functions.
+
+Checksums
+---------------------------------
+
+Checksums are very similar to hash functions, and in fact share the same
+interface. But there are some significant differences, the major ones being
+that the output size is very small (usually in the range of 2 to 4 bytes), and
+is not cryptographically secure. But for their intended purpose (error
+checking), they perform very well. Some examples of checksums included in Botan
+are the Adler32 and CRC32 checksums.
+
+Threads and Mutexes
+---------------------------------
+
+Botan includes a mutex system, which is used internally to lock some shared
+data structures that must be kept shared for efficiency reasons (mostly, these
+are in the allocation systems~--~handing out 1000 separate allocators hurts
+performance and makes caching memory blocks useless). This system is supported
+by the ``mux_pthr`` module, implementing the ``Mutex`` interface for
+systems that have POSIX threads.
+
+If your application is using threads, you *must* add the option
+"thread_safe" to the options string when you create the
+``LibraryInitializer`` object. If you specify this option and no mutex
+type is available, an exception is thrown, since otherwise you would
+probably be facing a nasty crash.
+
+Secure Memory
+---------------------------------
+
+A major concern with mixing modern multiuser OSes and cryptographic
+code is that at any time the code (including secret keys) could be
+swapped to disk, where it can later be read by an attacker. Botan
+stores almost everything (and especially anything sensitive) in memory
+buffers that a) clear out their contents when their destructors are
+called, and b) have easy plugins for various memory locking functions,
+such as the ``mlock`` call on many Unix systems.
+
+Two of the allocation method used ("malloc" and "mmap") don't
+require any extra privileges on Unix, but locking memory does. At
+startup, each allocator type will attempt to allocate a few blocks
+(typically totaling 128k), so if you want, you can run your
+application ``setuid`` ``root``, and then drop privileges
+immediately after creating your ``LibraryInitializer``. If you end
+up using more than what's been allocated, some of your sensitive data
+might end up being swappable, but that beats running as ``root``
+all the time.
+
+These classes should also be used within your own code for storing
+sensitive data. They are only meant for primitive data types (int,
+long, etc): if you want a container of higher level Botan objects, you
+can just use a ``std::vector``, since these objects know how to clear
+themselves when they are destroyed. You cannot, however, have a
+``std::vector`` (or any other container) of ``Pipe`` objects or
+filters, because these types have pointers to other filters, and
+implementing copy constructors for these types would be both hard and
+quite expensive (vectors of pointers to such objects is fine, though).
+
+These types are not described in any great detail: for more information,
+consult the definitive sources~--~the header files ``secmem.h`` and
+``allocate.h``.
+
+``SecureBuffer`` is a simple array type, whose size is specified at compile
+time. It will automatically convert to a pointer of the appropriate type, and
+has a number of useful functions, including ``clear()``, and
+``size_t`` ``size()``, which returns the length of the array. It is a
+template that takes as parameters a type, and a constant integer which is how
+long the array is (for example: ``SecureBuffer<byte, 8> key;``).
+
+``SecureVector`` is a variable length array. Its size can be increased or
+decreased as need be, and it has a wide variety of functions useful for copying
+data into its buffer. Like ``SecureBuffer``, it implements ``clear``
+and ``size``.
+
+Allocators
+---------------------------------
+
+The containers described above get their memory from allocators. As a
+user of the library, you can add new allocator methods at run time for
+containers, including the ones used internally by the library, to
+use. The interface to this is in ``allocate.h``. Code needing
+to allocate or deallocate memory calls ``get_allocator``,
+which returns a pointer to an allocator object. This pointer should
+not be freed: the caller does not own the allocator (it is shared
+among multiple allocatore users, and uses a mutex to serialize access
+internally if necessary). It is possible to call
+``get_allocator`` with a specific name to request a particular
+type of allocator, otherwise, a default allocator type is returned.
+
+At start time, the only allocator known is a ``Default_Allocator``,
+which just allocates memory using ``malloc``, and zeroizes it when the
+memory is released. It is known by the name "malloc". If you ask for
+another type of allocator ("locking" and "mmap" are currently used),
+and it is not available, some other allocator will be returned.
+
+You can add in a new allocator type using ``add_allocator_type``. This
+function takes a string and a pointer to an allocator. The string gives this
+allocator type a name to which it can be referred when one is requesting it
+with ``get_allocator``. If an error occurs (such as the name being
+already registered), this function returns false. It will return true if the
+allocator was successfully registered. If you ask it to,
+``LibraryInitializer`` will do this for you.
+
+Finally, you can set the default allocator type that will be returned
+using the policy setting "default_alloc" to the name of any previously
+registered allocator.
+

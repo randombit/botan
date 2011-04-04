@@ -1,0 +1,78 @@
+Algorithms
+=================================
+
+Recommended Algorithms
+---------------------------------
+
+This section is by no means the last word on selecting which
+algorithms to use.  However, Botan includes a sometimes bewildering
+array of possible algorithms, and unless you're familiar with the
+latest developments in the field, it can be hard to know what is
+secure and what is not. The following attributes of the algorithms
+were evaluated when making this list: security, standardization,
+patent status, support by other implementations, and efficiency (in
+roughly that order).
+
+It is intended as a set of simple guidelines for developers, and
+nothing more.  It's entirely possible that there are algorithms in
+Botan that will turn out to be more secure than the ones listed, but
+the algorithms listed here are (currently) thought to be safe.
+
+ - Block ciphers: AES or Serpent in CBC, CTR, or XTS mode
+
+ - Hash functions: SHA-256, SHA-512
+
+ - MACs: HMAC with any recommended hash function
+
+ - Public Key Encryption: RSA with "EME1(SHA-256)"
+
+ - Public Key Signatures: RSA with EMSA4 and any recommended
+    hash, or DSA or ECDSA with "EMSA1(SHA-256)"
+
+ - Key Agreement: Diffie-Hellman or ECDH, with "KDF2(SHA-256)"
+
+Algorithms Listing
+---------------------------------
+
+Botan includes a very sizable number of cryptographic algorithms. In
+nearly all cases, you never need to know the header file or type name
+to use them. However, you do need to know what string (or strings) are
+used to identify that algorithm. These names conform to those set out
+by SCAN (Standard Cryptographic Algorithm Naming), which is a document
+that specifies how strings are mapped onto algorithm objects, which is
+useful for a wide variety of crypto APIs (SCAN is oriented towards
+Java, but Botan and several other non-Java libraries also make at
+least some use of it). For full details, read the SCAN document, which
+can be found at
+http://www.users.zetnet.co.uk/hopwood/crypto/scan/
+
+Many of these algorithms can take options (such as the number of
+rounds in a block cipher, the output size of a hash function,
+etc). These are shown in the following list; all of them default to
+reasonable values. There are algorithm-specific limits on most of
+them. When you see something like "HASH" or "BLOCK", that means
+you should insert the name of some algorithm of that type. There are
+no defaults for those options.
+
+A few very obscure algorithms are skipped; if you need one of them,
+you'll know it, and you can look in the appropriate header to see what
+that classes' ``name`` function returns (the names tend to
+match that in SCAN, if it's defined there).
+
+ - ROUNDS: The number of rounds in a block cipher.
+ - OUTSZ: The output size of a hash function or MAC
+
+**Block Ciphers:** "AES-128", "AES-192", "AES-256", "Blowfish",
+"CAST-128", "CAST-256", "DES", "DESX", "TripleDES", "GOST-28147-89",
+"IDEA", "KASUMI", "MARS", "MISTY1(ROUNDS)", "Noekeon", "RC2",
+"RC5(ROUNDS)", "RC6", "SAFER-SK(ROUNDS)", "SEED", "Serpent",
+"Skipjack", "Square", "TEA", "Twofish", "XTEA"
+
+**Stream Ciphers:** "ARC4", "MARK4", "Salsa20", "Turing",
+"WiderWake4+1-BE"
+
+**Hash Functions:** "HAS-160", "GOST-34.11", "MD2", "MD4", "MD5",
+"RIPEMD-128", "RIPEMD-160", "SHA-160", "SHA-256", "SHA-384",
+"SHA-512", "Skein-512", "Tiger(OUTSZ)", "Whirlpool"
+
+**MACs:** "HMAC(HASH)", "CMAC(BLOCK)", "X9.19-MAC"
