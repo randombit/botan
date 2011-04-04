@@ -5,7 +5,7 @@ Release Notes
 2011
 ----------------------------------------
 
-1.9.16-dev, ????-??-??
+Release 1.9.16-dev, ????-??-??
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Second release candidate for 1.10.0
@@ -18,7 +18,7 @@ Release Notes
   * Bring back removed functions min_keylength_of, max_keylength_of,
     keylength_multiple_of in lookup.h to avoid breaking applications.
 
-1.9.15, 2011-03-21
+Release 1.9.15, 2011-03-21
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * First release candidate for 1.10.0
@@ -36,14 +36,14 @@ Release Notes
     instruction crash.
   * Improve detection and autoconfiguration for ARM processors.
 
-1.9.14, 2011-03-01
+Release 1.9.14, 2011-03-01
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    * Add support for bcrypt, OpenBSD's password hashing scheme
    * Add support for NIST's AES key wrapping algorithm
    * Fix an infinite loop in zlib filters introduced in 1.9.11 (PR 142)
 
-1.9.13, 2011-02-19
+Release 1.9.13, 2011-02-19
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Update Keccak to the round 3 variant
@@ -56,7 +56,7 @@ Release Notes
 2010
 ----------------------------------------
 
-1.9.12, 2010-12-13
+Release 1.9.12, 2010-12-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Add the Keccak hash function
@@ -64,7 +64,7 @@ Release Notes
   * Fix compilation problem in OpenSSL engine
   * Update SQLite3 database encryption codec
 
-1.9.11, 2010-11-29
+Release 1.9.11, 2010-11-29
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Many SSL/TLS APIs have changed. This API is still unstable.
@@ -95,7 +95,7 @@ Release Notes
   * Improve support for Intel Atom processors
   * Fix compilation problems under Sun Studio and Clang
 
-1.8.11, 2010-11-02
+Release 1.8.11, 2010-11-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fix a number of CRL encoding and decoding bugs
@@ -105,7 +105,7 @@ Release Notes
   * In the examples, read most input files as binary
   * The Perl build script has been removed in this release
 
-1.8.10, 2010-08-31
+Release 1.8.10, 2010-08-31
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Switch default PKCS #8 encryption algorithm from 3DES to AES-256
@@ -116,7 +116,7 @@ Release Notes
   * Enable the /proc-walking entropy source on NetBSD
   * Fix the doxygen makefile target
 
-1.9.10, 2010-08-12
+Release 1.9.10, 2010-08-12
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Add a constant time AES implementation using SSSE3
@@ -127,7 +127,7 @@ Release Notes
   * Consolidate the two x86 assembly engines
   * Rename S2K to PBKDF
 
-1.9.9, 2010-06-28
+Release 1.9.9, 2010-06-28
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Add new X509::BER_encode and PKCS8::BER_encode
@@ -138,7 +138,7 @@ Release Notes
   * Fix compilation under Apple's GCC 4.2
   * Expand and update the Doxygen documentation
 
-1.8.9, 2010-06-16
+Release 1.8.9, 2010-06-16
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Use constant time multiplication in IDEA
@@ -153,7 +153,7 @@ Release Notes
   * Work around problem with recent binutils in x86-64 SHA-1
   * The Perl build script is no longer supported and refuses to run by default
 
-1.9.8, 2010-06-14
+Release 1.9.8, 2010-06-14
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Add support for wide multiplications on 64-bit Windows
@@ -166,7 +166,7 @@ Release Notes
   * Fix compilation on GCC versions before 4.3 (missing cpuid.h)
   * Fix compilation under the Clang compiler
 
-1.9.7, 2010-04-27
+Release 1.9.7, 2010-04-27
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * TLS: Support reading SSLv2 client hellos
@@ -174,7 +174,7 @@ Release Notes
   * Add Comb4P hash combiner function
   * Fix checking of EMSA_Raw signatures with leading 0 bytes
 
-1.9.6, 2010-04-09
+Release 1.9.6, 2010-04-09
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * TLS: Add support for TLS v1.1
@@ -183,7 +183,7 @@ Release Notes
   * TLS: Fix server using DSA certificates
   * TLS: Avoid timing channel between CBC padding check and MAC verification
 
-1.9.5, 2010-03-29
+Release 1.9.5, 2010-03-29
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Numerous ECC optimizations
@@ -197,7 +197,7 @@ Release Notes
   * Fix crash in MemoryRegion if Allocator::get failed
   * Fix small compilation problem on FreeBSD
 
-1.9.4, 2010-03-09
+Release 1.9.4, 2010-03-09
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Add the Ajisai SSLv3/TLSv1.0 implementation
@@ -229,7 +229,7 @@ Release Notes
 2009
 ----------------------------------------
 
-1.9.3, 2009-11-19
+Release 1.9.3, 2009-11-19
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Add new AES implementation using Intel's AES instruction intrinsics
@@ -240,7 +240,7 @@ Release Notes
   * Add support for using InnoSetup to package Windows builds
   * By default build a DLL on Windows
 
-1.9.2, 2009-11-03
+Release 1.9.2, 2009-11-03
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Add SIMD version of XTEA
@@ -249,7 +249,7 @@ Release Notes
   * Add AltiVec runtime detection
   * Fix x86 CPU identification with Intel C++ and Visual C++
 
-1.8.8, 2009-11-03
+Release 1.8.8, 2009-11-03
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Alter Skein-512 to match the tweaked 1.2 specification
@@ -257,7 +257,7 @@ Release Notes
   * Allow building the library without AES enabled
   * Add 'powerpc64' alias to ppc64 arch for Gentoo ebuild
 
-1.9.1, 2009-10-23
+Release 1.9.1, 2009-10-23
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Better support for Python and Perl wrappers
@@ -273,7 +273,7 @@ Release Notes
   * Remove all use of C++ exception specifications
   * Add support for GNU/Hurd and Clang/LLVM
 
-1.9.0, 2009-09-09
+Release 1.9.0, 2009-09-09
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Add support for parallel invocation of block ciphers where possible
@@ -284,13 +284,13 @@ Release Notes
   * Add --no-autoload option to configure.py, for minimized builds
   * The previously used configure.pl script is no longer supported
 
-1.8.7, 2009-09-09
+Release 1.8.7, 2009-09-09
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fix processing multiple messages in XTS mode
   * Add --no-autoload option to configure.py, for minimized builds
 
-1.8.6, 2009-08-13
+Release 1.8.6, 2009-08-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Add Cryptobox, a set of simple password-based encryption routines
@@ -303,7 +303,7 @@ Release Notes
   * Build fixes for MIPS systems running Linux
   * Minor changes to license, now equivalent to the FreeBSD/NetBSD license
 
-1.8.5, 2009-07-23
+Release 1.8.5, 2009-07-23
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Change configure.py to work on stock Python 2.4
@@ -311,12 +311,12 @@ Release Notes
   * Small build fixes for SPARC, ARM, and HP-PA processors
   * The test suite now returns an error code from main() if any tests failed
 
-1.8.4, 2009-07-12
+Release 1.8.4, 2009-07-12
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fix a bug in nonce generation in the Miller-Rabin test
 
-1.8.3, 2009-07-11
+Release 1.8.3, 2009-07-11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Add a new Python configuration script
@@ -330,7 +330,7 @@ Release Notes
   * Provide a default value for AutoSeeded_RNG::reseed
   * Fix Gentoo bug 272242
 
-1.8.2, 2009-04-07
+Release 1.8.2, 2009-04-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Make entropy polling more flexible and in most cases faster
@@ -338,7 +338,7 @@ Release Notes
   * Added the GOST 34.11 hash function
   * Fix botan-config problems on MacOS X
 
-1.8.1, 2009-01-20
+Release 1.8.1, 2009-01-20
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Avoid a valgrind warning in es_unix.cpp on 32-bit Linux
@@ -349,12 +349,12 @@ Release Notes
 2008
 ----------------------------------------
 
-1.8.0, 2008-12-08
+Release 1.8.0, 2008-12-08
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fix compilation on Solaris with GCC
 
-1.7.24, 2008-12-01
+Release 1.7.24, 2008-12-01
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fix a compatibility problem with SHA-512/EMSA3 signature padding
@@ -369,7 +369,7 @@ Release Notes
   * Fix warning in /proc walking entropy poller
   * Fix compilation with IBM XLC for Cell 0.9-200709
 
-1.7.23, 2008-11-23
+Release 1.7.23, 2008-11-23
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Change to use TR1 (thus enabling ECDSA) with GCC and ICC
@@ -384,7 +384,7 @@ Release Notes
   * Add ECC tests from InSiTo
   * Minor documentation updates
 
-1.7.22, 2008-11-17
+Release 1.7.22, 2008-11-17
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Add provider preferences to Algorithm_Factory
@@ -394,7 +394,7 @@ Release Notes
   * Fix nanoseconds overflow in benchmark code
   * Remove Engine::add_engine
 
-1.7.21, 2008-11-11
+Release 1.7.21, 2008-11-11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Make algorithm lookup much more configuable
@@ -403,7 +403,7 @@ Release Notes
   * Increase intervals between HMAC_RNG automatic reseeding
   * Drop InitializerOptions class, all options but thread safety
 
-1.7.20, 2008-11-09
+Release 1.7.20, 2008-11-09
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Namespace pkg-config file by major and minor versions
@@ -411,7 +411,7 @@ Release Notes
   * Split base.h into {block_cipher,stream_cipher,mac,hash}.h
   * Removed get_mgf function from lookup.h
 
-1.7.19, 2008-11-06
+Release 1.7.19, 2008-11-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Add HMAC_RNG, based on a design by Hugo Krawczyk
@@ -421,7 +421,7 @@ Release Notes
   * OpenPGP_S2K changed to take hash object instead of name
   * Add automatic identification for Intel's Prescott processors
 
-1.7.18, 2008-10-22
+Release 1.7.18, 2008-10-22
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Add Doxygen comments from InSiTo
@@ -432,7 +432,7 @@ Release Notes
   * Optimize byteswap with x86 inline asm for Visual C++ by Yves Jerschow
   * Use const references to avoid copying overhead in CurveGFp, GFpModulus
 
-1.7.17, 2008-10-12
+Release 1.7.17, 2008-10-12
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Add missing ECDSA object identifiers
@@ -442,7 +442,7 @@ Release Notes
   * Add BOTAN_DLL macro to over 30 classes missing it
   * Rename the two SHA-2 base classes for consistency
 
-1.7.16, 2008-10-09
+Release 1.7.16, 2008-10-09
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Add several missing pieces needed for ECDSA and ECKAEG
@@ -454,7 +454,7 @@ Release Notes
   * Allow OpenSSL and GNU MP engines to be built with public key algos disabled
   * Rename sha256.h to sha2_32.h and sha_64.h to sha2_64.h
 
-1.7.15, 2008-10-07
+Release 1.7.15, 2008-10-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Add GF(p) arithmetic from InSiTo
@@ -465,7 +465,7 @@ Release Notes
   * Update build instructions for recent changes to configure.pl
   * Fix CPU detection using /proc/cpuinfo
 
-1.7.14, 2008-09-30
+Release 1.7.14, 2008-09-30
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Split library into parts allowing modular builds
@@ -476,7 +476,7 @@ Release Notes
   * Build support for MinGW/MSYS, from Zbigniew Zagorski
   * Use inline assembly for bswap on 32-bit x86
 
-1.7.13, 2008-09-27
+Release 1.7.13, 2008-09-27
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Add SSLv3 MAC, SSLv3 PRF, and TLS v1.0 PRF from Ajisai
@@ -485,7 +485,7 @@ Release Notes
   * Use the -m64 flag when compiling with Sun Forte on x86-64
   * Clean up and slightly optimize CMAC::final_result
 
-1.7.12, 2008-09-18
+Release 1.7.12, 2008-09-18
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Add x86 assembly for Visual Studio C++, by Luca Piccarreta
@@ -504,7 +504,7 @@ Release Notes
   * Add support for IBM's XLC compiler
   * Add IETF 8192 bit MODP group
 
-1.7.11, 2008-09-11
+Release 1.7.11, 2008-09-11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Added the Salsa20 stream cipher
@@ -517,7 +517,7 @@ Release Notes
   * Rename alg_{ia32,amd64} modules to asm_{ia32,amd64}
   * Fix the Windows build
 
-1.7.10, 2008-09-05
+Release 1.7.10, 2008-09-05
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Public key benchmarks run using a selection of random keys
@@ -529,7 +529,7 @@ Release Notes
   * Add aliases in DL_Group::Format enum
   * BigInt now caches the significant word count
 
-1.7.9, 2008-08-27
+Release 1.7.9, 2008-08-27
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Make clear() in most algorithm base classes a pure virtual
@@ -538,13 +538,13 @@ Release Notes
   * Compilation fixes for MinGW and Visual Studio C++ 2008
   * Some autoconfiguration fixes for Windows
 
-1.6.5, 2008-08-27
+Release 1.6.5, 2008-08-27
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Add noexec stack marker for GNU linker in assembly code
   * Fix autoconfiguration problem on x86 with GCC 4.2 and 4.3
 
-1.7.8, 2008-07-15
+Release 1.7.8, 2008-07-15
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Added the block cipher Noekeon
@@ -556,7 +556,7 @@ Release Notes
   * Allow adding new entropy via base RNG interface
   * Reseeding a X9.31 PRNG also reseeds the underlying PRNG
 
-1.7.7, 2008-06-28
+Release 1.7.7, 2008-06-28
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Remove the global PRNG object
@@ -570,7 +570,7 @@ Release Notes
   * RSA_PrivateKey will not generate keys smaller than 1024 bits
   * Fix an error decoding BER UNIVERSAL types with special taggings
 
-1.7.6, 2008-05-05
+Release 1.7.6, 2008-05-05
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Initial support for Windows DLLs, from Joel Low
@@ -582,7 +582,7 @@ Release Notes
   * Removed system_clock
   * Removed Library_State::UI and the pulse callback logic
 
-1.7.5, 2008-04-12
+Release 1.7.5, 2008-04-12
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * The API of X509_CA::sign_request was altered to avoid race conditions
@@ -596,7 +596,7 @@ Release Notes
   * The size of random blinding factors is now a compile time setting
   * The install target no longer tries to set a particular owner/group
 
-1.7.4, 2008-03-10
+Release 1.7.4, 2008-03-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Use unaligned memory read/writes on systems that allow it, for performance
@@ -607,12 +607,12 @@ Release Notes
   * Build fix for NetBSD systems
   * Prevent es_dev from being built except on Unix systems
 
-1.6.4, 2008-03-08
+Release 1.6.4, 2008-03-08
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fix a compilation problem with Visual Studio C++ 2003
 
-1.7.3, 2008-01-23
+Release 1.7.3, 2008-01-23
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * New invocation syntax for configure.pl with several new options
@@ -627,7 +627,7 @@ Release Notes
 2007
 ----------------------------------------
 
-1.7.2, 2007-10-13
+Release 1.7.2, 2007-10-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Initialize the global library state lazily
@@ -638,7 +638,7 @@ Release Notes
   * Add newly assigned OIDs for SHA-2 and DSA with SHA-224/256
   * Fix a Visual Studio compilation problem in x509stat.cpp
 
-1.7.1, 2007-07-23
+Release 1.7.1, 2007-07-23
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fix a race condition in the algorithm object cache
@@ -648,13 +648,13 @@ Release Notes
   * Modify most of the library to avoid use the C-style casts
   * Use higher resolution timers in symmetric benchmarks
 
-1.6.3, 2007-07-23
+Release 1.6.3, 2007-07-23
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fix a race condition in the algorithm lookup cache
   * Fix problems building the memory pool on some versions of Visual C++
 
-1.7.0, 2007-05-19
+Release 1.7.0, 2007-05-19
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * DSA parameter generation now follows FIPS 186-3
@@ -664,14 +664,14 @@ Release Notes
   * Documentation updates
   * Update the todo list
 
-1.6.2, 2007-03-24
+Release 1.6.2, 2007-03-24
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fix autodection on Athlon64s running Linux
   * Fix builds on QNX and compilers using STLport
   * Remove a call to abort() that crept into production
 
-1.6.1, 2007-01-20
+Release 1.6.1, 2007-01-20
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fix some base64 decoder bugs
@@ -682,18 +682,18 @@ Release Notes
 2006
 ----------------------------------------
 
-1.6.0, 2006-12-17
+Release 1.6.0, 2006-12-17
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Minor cleanups versus 1.5.13
 
-1.5.13, 2006-12-10
+Release 1.5.13, 2006-12-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Compilation fixes for the bzip2, zlib, and GNU MP modules
   * Better support for Intel C++ and EKOpath C++ on x86-64
 
-1.5.12, 2006-10-27
+Release 1.5.12, 2006-10-27
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Cleanups in the initialization routines
@@ -703,7 +703,7 @@ Release Notes
   * Bring some of the documentation up to date
   * More improvements to the Python bindings
 
-1.5.11, 2006-09-10
+Release 1.5.11, 2006-09-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Removed the Algorithm base class
@@ -714,7 +714,7 @@ Release Notes
   * Various improvements to the Python wrappers
   * Work around a Visual Studio compiler bug
 
-1.5.10, 2006-08-13
+Release 1.5.10, 2006-08-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Add x86 assembler versions of MD4, MD5, and SHA-1
@@ -728,7 +728,7 @@ Release Notes
   * Expand the xor_ciph example to support longer keys
   * Some updates to the documentation
 
-1.5.9, 2006-07-12
+Release 1.5.9, 2006-07-12
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fixed bitrot in the AEP engine
@@ -741,7 +741,7 @@ Release Notes
   * Add some STL wrappers for the delete operator
   * Change how certificates are created to be more flexible and general
 
-1.5.8, 2006-06-23
+Release 1.5.8, 2006-06-23
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Many internal cleanups to the X.509 cert/CRL code
@@ -754,7 +754,7 @@ Release Notes
   * Disable es_unix module on FreeBSD due to build problem on FreeBSD 6.1
   * Support for GCC 2.95.x has been dropped in this release
 
-1.5.7, 2006-05-28
+Release 1.5.7, 2006-05-28
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Further, major changes to the BER/DER coding system
@@ -762,7 +762,7 @@ Release Notes
   * Moved the library global state object into an anonymous namespace
   * Drop the Visual C++ x86 assembly module due to bugs
 
-1.5.6, 2006-03-01
+Release 1.5.6, 2006-03-01
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * The low-level DER/BER coding system was redesigned and rewritten
@@ -772,7 +772,7 @@ Release Notes
   * Avoid a couple of spurious warnings under Visual C++
   * Some slight cleanups in X509_PublicKey::key_id
 
-1.5.5, 2006-02-04
+Release 1.5.5, 2006-02-04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fixed a potential infinite loop in the memory pool code (Matt Johnston)
@@ -785,7 +785,7 @@ Release Notes
   * Fixed some annoying bugs in the benchmark code
   * Added a real credits file
 
-1.5.4, 2006-01-29
+Release 1.5.4, 2006-01-29
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Integrated x86 and amd64 assembly code, contributed by Luca Piccarreta
@@ -804,7 +804,7 @@ Release Notes
   * Removed some dead code from bigint_modop
   * Fix the definition of same_mem
 
-1.5.3, 2006-01-24
+Release 1.5.3, 2006-01-24
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Many optimizations in the low-level multiple precision integer code
@@ -818,7 +818,7 @@ Release Notes
   * Fixed the mp_asm64 module, which was entirely broken in 1.5.2
   * Fixed some module build problems on FreeBSD and Tru64
 
-1.5.2, 2006-01-15
+Release 1.5.2, 2006-01-15
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fixed an off-by-one memory read in MISTY1::key()
@@ -836,7 +836,7 @@ Release Notes
   * Enabled the symmetric algorithm tests, which were accidentally off in 1.5.1
   * Removed the Default_Mutex's unused clone() member function
 
-1.4.12, 2006-01-15
+Release 1.4.12, 2006-01-15
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fixed an off-by-one memory read in MISTY1::key()
@@ -844,7 +844,7 @@ Release Notes
   * Changed maximum HMAC keylength to 1024 bits
   * Fixed a build problem in the hardware timer module on 64-bit PowerPC
 
-1.5.1, 2006-01-08
+Release 1.5.1, 2006-01-08
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Implemented Montgomery exponentiation
@@ -859,7 +859,7 @@ Release Notes
   * Replaced BigInt's get_nibble with the more general get_substring
   * Some documentation updates
 
-1.5.0, 2006-01-01
+Release 1.5.0, 2006-01-01
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Moved all global/shared library state into a single object
@@ -874,7 +874,7 @@ Release Notes
 2005
 ----------------------------------------
 
-1.4.11, 2005-12-31
+Release 1.4.11, 2005-12-31
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Changed Whirlpool diffusion matrix to match updated algorithm spec
@@ -886,7 +886,7 @@ Release Notes
   * Merged doc/rngs.txt into the main API document
   * Thanks to Joel Low for several bug reports on early tarballs of 1.4.11
 
-1.4.10, 2005-12-18
+Release 1.4.10, 2005-12-18
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Added an implementation of KASUMI, the block cipher used in 3G phones
@@ -906,7 +906,7 @@ Release Notes
   * The header util.h was split into bit_ops.h, parsing.h, and util.h
   * Cleaned up some redundant include directives
 
-1.4.9, 2005-11-06
+Release 1.4.9, 2005-11-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Added the IBM-created AES candidate algorithm MARS
@@ -923,7 +923,7 @@ Release Notes
   * Added more test vectors for some algorithms, including all the AES finalists
   * Various cosmetic source code cleanups
 
-1.4.8, 2005-10-16
+Release 1.4.8, 2005-10-16
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Resolved a bad performance problem in the allocators; fix by Matt Johnston
@@ -932,7 +932,7 @@ Release Notes
   * Added single byte versions of update() to PK_Signer and PK_Verifier
   * Removed the unused reverse_bits and reverse_bytes functions
 
-1.4.7, 2005-09-25
+Release 1.4.7, 2005-09-25
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fixed major performance problems with recent versions of GNU C++
@@ -949,7 +949,7 @@ Release Notes
   * Fix some build problems with Visual C++ 2005 beta
   * Fix some build problems with Visual C++ 2003 Workshop
 
-1.4.6, 2005-03-13
+Release 1.4.6, 2005-03-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fix an error in the shutdown code introduced in 1.4.5
@@ -959,7 +959,7 @@ Release Notes
   * More fixes for Borland C++, from Friedemann Kleint
   * Add a workaround for buggy iostreams
 
-1.4.5, 2005-02-26
+Release 1.4.5, 2005-02-26
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Add support for AES encryption of private keys
@@ -977,7 +977,7 @@ Release Notes
 2004
 ----------------------------------------
 
-1.4.4, 2004-12-02
+Release 1.4.4, 2004-12-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Further tweaks to the pooling allocator
@@ -986,7 +986,7 @@ Release Notes
   * Moved mux_qt module code into mod_qt
   * Fixes for HP-UX from Mike Desjardins
 
-1.4.3, 2004-11-06
+Release 1.4.3, 2004-11-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Split up SecureAllocator into Allocator and Pooling_Allocator
@@ -996,7 +996,7 @@ Release Notes
   * Fixes in configure script to support alternate install programs
   * Modules can specify the minimum version they support
 
-1.4.2, 2004-10-31
+Release 1.4.2, 2004-10-31
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fixed a major CRL handling bug
@@ -1010,7 +1010,7 @@ Release Notes
   * Lots of fixes and cleanups in the configure script
   * Updated the Gentoo ebuild file
 
-1.4.1, 2004-10-10
+Release 1.4.1, 2004-10-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fixed major errors in the X.509 and PKCS #8 copy_key functions
@@ -1021,7 +1021,7 @@ Release Notes
   * Disabled tm_posix on BSD due to header issues
   * Fixed a build problem on PowerPC with GNU C++ pre-3.4
 
-1.4.0, 2004-06-26
+Release 1.4.0, 2004-06-26
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Added the FIPS 186 RNG back
@@ -1032,7 +1032,7 @@ Release Notes
   * Fixed some build problems on Tru64, HP-UX
   * Fixed compile problems with Intel C++, Compaq C++
 
-1.3.14, 2004-06-12
+Release 1.3.14, 2004-06-12
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Added support for AEP's AEP1000/AEP2000 crypto cards
@@ -1058,7 +1058,7 @@ Release Notes
   * Changed MP_WORD_BITS macro to BOTAN_MP_WORD_BITS to clean up namespace
   * Documentation updates
 
-1.3.13, 2004-05-15
+Release 1.3.13, 2004-05-15
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Major fixes for Cygwin builds
@@ -1067,7 +1067,7 @@ Release Notes
   * Removed ml_unix from the 'unix' module set for Cygwin compatibility
   * Fixed a stupid compile problem in pkcs10.h
 
-1.3.12, 2004-05-02
+Release 1.3.12, 2004-05-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Added ability to remove old entries from CRLs
@@ -1082,7 +1082,7 @@ Release Notes
   * Corrected errors in the API doc, fixes from Ken Perano
   * More documentation about the Pipe/Filter code
 
-1.3.11, 2004-04-01
+Release 1.3.11, 2004-04-01
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fixed two show-stopping bugs in PKCS10_Request
@@ -1094,7 +1094,7 @@ Release Notes
   * Fixed some problems in the tutorial pointed out by Dominik Vogt
   * Documentation updates
 
-1.3.10, 2004-03-27
+Release 1.3.10, 2004-03-27
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Added support for OpenPGP's ASCII armor format
@@ -1104,7 +1104,7 @@ Release Notes
   * Updated the example configuration file
   * Documentation updates
 
-1.3.9, 2004-03-07
+Release 1.3.9, 2004-03-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Added an engine using OpenSSL (requires 0.9.7 or later)
@@ -1117,7 +1117,7 @@ Release Notes
 2003
 ----------------------------------------
 
-1.3.8, 2003-12-30
+Release 1.3.8, 2003-12-30
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Internal changes to PK algorithms to divide data and algorithms
@@ -1140,7 +1140,7 @@ Release Notes
   * Moved more shared code into MDx_HashFunction
   * Added a policy hook for specifying the encoding of X.509 strings
 
-1.3.7, 2003-12-12
+Release 1.3.7, 2003-12-12
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fixed a big security problem in es_unix
@@ -1153,7 +1153,7 @@ Release Notes
   * Removed the (never tested) VAX support
   * Added support for S/390 Linux
 
-1.3.6, 2003-12-07
+Release 1.3.6, 2003-12-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Added a new module 'minimal', which disables most algorithms
@@ -1161,7 +1161,7 @@ Release Notes
   * A few minor MPI cleanups
   * RPM spec file cleanups and fixes
 
-1.3.5, 2003-11-30
+Release 1.3.5, 2003-11-30
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Major improvements in ASN.1 string handling
@@ -1182,12 +1182,12 @@ Release Notes
   * RPM changed to install into /usr instead of /usr/local
   * Added support for QNX
 
-1.2.8, 2003-11-21
+Release 1.2.8, 2003-11-21
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Merged several important bug fixes from 1.3.x
 
-1.3.4, 2003-11-21
+Release 1.3.4, 2003-11-21
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Added a module that does certain MPI operations using GNU MP
@@ -1198,7 +1198,7 @@ Release Notes
   * Some cleanups in the low-level MPI code
   * Created separate AES-{128,192,256} objects
 
-1.3.3, 2003-11-17
+Release 1.3.3, 2003-11-17
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * The library can now be repeatedly initialized and shutdown without crashing
@@ -1216,7 +1216,7 @@ Release Notes
   * Updated the example config file with new OIDSs
   * Moved the build instructions into a separate document, building.tex
 
-1.3.2, 2003-11-13
+Release 1.3.2, 2003-11-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fixed a bug preventing DSA signatures from verifying on X.509 objects
@@ -1237,14 +1237,14 @@ Release Notes
   * Various new hacks in the configure script
   * Removed the already nominal support for SunOS
 
-1.3.1, 2003-11-04
+Release 1.3.1, 2003-11-04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Generalized a few pieces of the DER encoder
   * PKCS8::load_key would fail if handed an unencrypted key
   * Added a failsafe so PKCS #8 key decoding can't go into an infinite loop
 
-1.3.0, 2003-11-02
+Release 1.3.0, 2003-11-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Major redesign of the PKCS #8 private key import/export system
@@ -1254,7 +1254,7 @@ Release Notes
   * Removed certain deprecated constructors of RSA, DSA, DH, RW, NR
   * Made PEM decoding more forgiving of extra text before the header
 
-1.2.7, 2003-10-31
+Release 1.2.7, 2003-10-31
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Added support for reading configuration files
@@ -1269,7 +1269,7 @@ Release Notes
   * Updated the RPM spec file
   * Added to the tutorial
 
-1.2.6, 2003-07-04
+Release 1.2.6, 2003-07-04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Major performance increase for PK algorithms on most 64-bit systems
@@ -1279,7 +1279,7 @@ Release Notes
   * Removed support for the patch_file directive in module files
   * Removed several deprecated functions
 
-1.2.5, 2003-06-22
+Release 1.2.5, 2003-06-22
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fixed a tricky and long-standing memory leak in Pipe
@@ -1302,7 +1302,7 @@ Release Notes
   * Removed the (empty) desx.h header
   * Documentation updates
 
-1.2.4, 2003-05-29
+Release 1.2.4, 2003-05-29
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fixed a bug in EMSA1 affecting NR signature verification
@@ -1310,7 +1310,7 @@ Release Notes
   * Removed an unused function, mp_add2_nc, from the MPI implementation
   * Reorganized the core MPI files
 
-1.2.3, 2003-05-20
+Release 1.2.3, 2003-05-20
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fixed a bug that prevented DSA/NR key generation
@@ -1324,7 +1324,7 @@ Release Notes
   * Added a simplistic X.509 CA example
   * Cleaned up some of the examples
 
-1.2.2, 2003-05-13
+Release 1.2.2, 2003-05-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Add checks to prevent any BigInt bugs from revealing an RSA or RW key
@@ -1337,7 +1337,7 @@ Release Notes
   * Fixed a file descriptor leak in the EGD module
   * Fixed a few locking bugs
 
-1.2.1, 2003-05-06
+Release 1.2.1, 2003-05-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Added ANSI X9.23 compatible CBC padding
@@ -1347,7 +1347,7 @@ Release Notes
   * Integrated several fixes for VC++ 7 (from Hany Greiss)
   * Fixed the configure.pl script for Windows builds
 
-1.2.0, 2003-04-28
+Release 1.2.0, 2003-04-28
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Tweaked the Karatsuba cut-off points
@@ -1355,7 +1355,7 @@ Release Notes
   * Removed the 'mpi_ia32' module, pending rewrite
   * Workaround a GCC 2.95.x bug in eme1.cpp
 
-1.1.13, 2003-04-22
+Release 1.1.13, 2003-04-22
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Added OMAC
@@ -1371,7 +1371,7 @@ Release Notes
   * Removed 'es_pthr' module, pending further testing
   * Cleaned up get_ciph.cpp
 
-1.1.12, 2003-04-15
+Release 1.1.12, 2003-04-15
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fixed a ASN.1 string encoding bug
@@ -1383,7 +1383,7 @@ Release Notes
   * Updated the RPM .spec file
   * Major documentation updates
 
-1.1.11, 2003-04-07
+Release 1.1.11, 2003-04-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Added PKCS #10 certificate requests
@@ -1394,7 +1394,7 @@ Release Notes
   * New examples for PKCS #10 and self-signed certificates
   * Some documentation updates
 
-1.1.10, 2003-04-03
+Release 1.1.10, 2003-04-03
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * X509_CA can now generate new X.509 CRLs
@@ -1407,7 +1407,7 @@ Release Notes
   * Added a (slow) pthreads based EntropySource
   * Fixed some threading bugs
 
-1.1.9, 2003-02-25
+Release 1.1.9, 2003-02-25
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Added support for using X.509v2 CRLs
@@ -1417,7 +1417,7 @@ Release Notes
   * Cleaned up the code for the es_beos, es_ftw, es_unix modules
   * Documentation updates
 
-1.1.8, 2003-01-29
+Release 1.1.8, 2003-01-29
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fixes for the certificate path validation algorithm in X509_Store
@@ -1430,7 +1430,7 @@ Release Notes
   * Fixed problems compiling with GCC 2.95.3 and GCC 2.96
   * Fixed a configure bug (reported by Jon Wilson) affecting MinGW
 
-1.1.7, 2003-01-12
+Release 1.1.7, 2003-01-12
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fixed an obscure but dangerous bug in SecureVector::swap
@@ -1438,7 +1438,7 @@ Release Notes
   * Added SSL3-MAC and SSL3-PRF
   * Documentation updates, including a new tutorial
 
-1.0.2, 2003-01-12
+Release 1.0.2, 2003-01-12
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fixed an obscure SEGFAULT causing bug in Pipe
@@ -1447,7 +1447,7 @@ Release Notes
 2002
 ----------------------------------------
 
-1.1.6, 2002-12-10
+Release 1.1.6, 2002-12-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Initial support for X.509v3 certificates and CAs
@@ -1457,7 +1457,7 @@ Release Notes
   * Added an (untested) entropy source for BeOS
   * Various cleanups and bug fixes
 
-1.1.5, 2002-11-17
+Release 1.1.5, 2002-11-17
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Added the discrete logarithm integrated encryption system (DLIES)
@@ -1465,7 +1465,7 @@ Release Notes
   * Added support for assembler optimizations in modules
   * Added BigInt x86 optimizations module (mpi_ia32)
 
-1.1.4, 2002-11-10
+Release 1.1.4, 2002-11-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Speedup of 15-30% for PK algorithms
@@ -1479,7 +1479,7 @@ Release Notes
   * A botan-config script is generated at configure time
   * Documentation updates
 
-1.1.3, 2002-11-03
+Release 1.1.3, 2002-11-03
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Added a generic public/private key loading interface
@@ -1494,7 +1494,7 @@ Release Notes
   * Added tests for PKCS #8 encoding/decoding
   * Added more tests for ECB and CBC
 
-1.1.2, 2002-10-21
+Release 1.1.2, 2002-10-21
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Support for PKCS #8 encoded RSA, DSA, and DH private keys
@@ -1511,7 +1511,7 @@ Release Notes
   * Renamed CTR class to CTR_BE
   * Updated the RSA and DSA examples to use X.509 and PKCS #8 key formats
 
-1.1.1, 2002-10-15
+Release 1.1.1, 2002-10-15
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Added the Korean hash function HAS-160
@@ -1526,7 +1526,7 @@ Release Notes
   * Discrete logarithm groups are checked for safety more closely now
   * For compatibility with GnuPG, ElGamal now supports DSA-style groups
 
-1.1.0, 2002-09-14
+Release 1.1.0, 2002-09-14
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Added entropy estimation to the RNGs
@@ -1545,7 +1545,7 @@ Release Notes
   * Added support for variable-pass Tiger
   * Major speedup for Rabin-Williams key generation
 
-1.0.1, 2002-09-14
+Release 1.0.1, 2002-09-14
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fixed a minor bug in Randpool::random()
@@ -1553,7 +1553,7 @@ Release Notes
   * The 4096-bit RSA benchmark key was decimal instead of hex
   * EMAC was returning an incorrect name
 
-1.0.0, 2002-08-26
+Release 1.0.0, 2002-08-26
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Octal I/O of BigInt is now supported
@@ -1562,7 +1562,7 @@ Release Notes
   * Added Karatsuba multiplication and k-ary exponentiation
   * Fixed a problem in the multiplication routines
 
-0.9.2, 2002-08-18
+Release 0.9.2, 2002-08-18
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * DH_PrivateKey::public_value() was returning the wrong value
@@ -1572,7 +1572,7 @@ Release Notes
   * Fixed a couple minor problems with VC++ 7
   * Fixed problems with the RPM spec file
 
-0.9.1, 2002-08-10
+Release 0.9.1, 2002-08-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Grand rename from OpenCL to Botan
@@ -1589,14 +1589,14 @@ Release Notes
   * Removed some old examples that weren't that interesting
   * Documented the compression modules
 
-0.9.0, 2002-08-03
+Release 0.9.0, 2002-08-03
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * EMSA4 supports variable salt size
   * PK_* can take a string naming the encoding method to use
   * Started writing some internals documentation
 
-0.8.7, 2002-07-30
+Release 0.8.7, 2002-07-30
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fixed bugs in EME1 and EMSA4
@@ -1607,7 +1607,7 @@ Release Notes
   * Minor additions to the documentation
   * First stab at a Visual C++ makefile (doc/Makefile.vc7)
 
-0.8.6, 2002-07-25
+Release 0.8.6, 2002-07-25
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Added EMSA4 (aka PSS)
@@ -1630,7 +1630,7 @@ Release Notes
   * Made validation tests more verbose
   * Updated the check and example applications
 
-0.8.5, 2002-07-21
+Release 0.8.5, 2002-07-21
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Major changes to constructors for DL-based cryptosystems (DSA, NR, DH)
@@ -1649,7 +1649,7 @@ Release Notes
   * Fixes for HP's aCC compiler
   * Cleanups in BigInt
 
-0.8.4, 2002-07-14
+Release 0.8.4, 2002-07-14
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Added Nyberg-Rueppel signatures
@@ -1666,7 +1666,7 @@ Release Notes
   * FTW_EntropySource was not closing the files it read
   * Fixed line breaking problem in Hex_Encoder
 
-0.8.3, 2002-06-09
+Release 0.8.3, 2002-06-09
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Added DSA and Rabin-Williams signature schemes
@@ -1685,7 +1685,7 @@ Release Notes
   * Numerous bugfixes and cleanups
   * Documentation updates
 
-0.8.2, 2002-05-18
+Release 0.8.2, 2002-05-18
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Added an (experimental) algorithm lookup interface
@@ -1701,7 +1701,7 @@ Release Notes
   * Better support for PowerPC, ARM, and Alpha
   * Some more cleanups
 
-0.8.1, 2002-05-06
+Release 0.8.1, 2002-05-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Major code cleanup (check doc/deprecated.txt)
@@ -1712,7 +1712,7 @@ Release Notes
   * Added ANSI X9.19 compatible CBC-MAC
   * TripleDES now supports 128 bit keys
 
-0.8.0, 2002-04-24
+Release 0.8.0, 2002-04-24
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Merged BigInt: many bugfixes and optimizations since alpha2
@@ -1732,7 +1732,7 @@ Release Notes
   * Documentation updates for the new stuff (still incomplete)
   * Many new deprecated things: check doc/deprecated.txt
 
-0.7.10, 2002-04-07
+Release 0.7.10, 2002-04-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Added EGD_EntropySource module (es_egd)
@@ -1749,7 +1749,7 @@ Release Notes
   * Removed some Pipe functions deprecated since 0.7.8
   * Some fixes for the configure program
 
-0.7.9, 2002-03-19
+Release 0.7.9, 2002-03-19
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Memory allocation substantially revamped
@@ -1765,7 +1765,7 @@ Release Notes
   * Made X917 safer (and about 1/3 as fast)
   * Documentation updates
 
-0.7.8, 2002-02-28
+Release 0.7.8, 2002-02-28
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * More capabilities for Pipe, inspired by SysV STREAMS, including peeking,
@@ -1784,7 +1784,7 @@ Release Notes
 2001
 ----------------------------------------
 
-0.7.7, 2001-11-24
+Release 0.7.7, 2001-11-24
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Filter::send now works in the constructor of a Filter subclass
@@ -1799,7 +1799,7 @@ Release Notes
   * Added portions of the BigInt code into the main library
   * Support for VAX, SH, POWER, PowerPC-64, Intel C++
 
-0.7.6, 2001-10-14
+Release 0.7.6, 2001-10-14
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fixed several serious bugs in SecureVector created in 0.7.5
@@ -1810,7 +1810,7 @@ Release Notes
   * Added a table of prime numbers < 2**16 (primes.h)
   * Some minor documentation updates
 
-0.7.5, 2001-08-19
+Release 0.7.5, 2001-08-19
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Split checksum.h into adler32.h, crc24.h, and crc32.h
@@ -1829,7 +1829,7 @@ Release Notes
   * Various non-user-visible cleanups
   * Shared library soname is now set to the full version number
 
-0.7.4, 2001-07-15
+Release 0.7.4, 2001-07-15
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * New modules: Zlib, gettimeofday and x86 RTC timers, Unix I/O for Pipe
@@ -1843,7 +1843,7 @@ Release Notes
   * filtbase.h now includes <iosfwd>, not <iostream>
   * Minor documentation updates
 
-0.7.3, 2001-06-08
+Release 0.7.3, 2001-06-08
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Fix build problems on Solaris/SPARC
@@ -1852,7 +1852,7 @@ Release Notes
   * Added string handling functions to Pipe
   * MISTY1 optimizations
 
-0.7.2, 2001-06-03
+Release 0.7.2, 2001-06-03
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Build system supports modules
@@ -1863,7 +1863,7 @@ Release Notes
   * Various other minor fixes and changes
   * Updates to the documentation
 
-0.7.1, 2001-05-16
+Release 0.7.1, 2001-05-16
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Rewrote configure script: more consistent and complete
@@ -1877,7 +1877,7 @@ Release Notes
   * Many more entries in the test vector file
   * Fixed minor and idiotic bug in check.cpp
 
-0.7.0, 2001-03-01
+Release 0.7.0, 2001-03-01
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * First public release
