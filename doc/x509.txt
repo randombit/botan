@@ -32,29 +32,27 @@ So what's in an X.509 certificate?
 -----------------------------------
 
 Obviously, you want to be able to get the public key. This is achieved
-by calling the member function ``subject_public_key``, which
-will return a ``Public_Key*``. As to what to do with this, read
-about ``load_key`` in the section ``Importing and Exporting PK
-Keys''. In the general case, this could be any kind of public key,
-though 99% of the time it will be an RSA key. However, Diffie-Hellman
-and DSA keys are also supported, so be careful about how you treat
-this. It is also a wise idea to examine the value returned by
-``constraints``, to see what uses the public key is approved
-for.
+by calling the member function ``subject_public_key``, which will
+return a ``Public_Key``\*. As to what to do with this, read about
+``load_key`` in :ref:`pk_import_export`. In the general case, this
+could be any kind of public key, though 99% of the time it will be an
+RSA key. However, Diffie-Hellman, DSA, and ECDSA keys are also
+supported, so be careful about how you treat this. It is also a wise
+idea to examine the value returned by ``constraints``, to see what
+uses the public key is approved for.
 
 The second major piece of information you'll want is the
 name/email/etc of the person to whom this certificate is
 assigned. Here is where things get a little nasty. X.509v3 has two
-(well, mostly just two $...$) different places where you can stick
-information about the user: the *subject* field, and in an
-extension called *subjectAlternativeName*. The *subject*
-field is supposed to only included the following information: country,
-organization, an organizational sub-unit name, and a so-called common
-name. The common name is usually the name of the person, or it could
-be a title associated with a position of some sort in the
-organization. It may also include fields for state/province and
-locality. What a locality is, nobody knows, but it's usually given as
-a city name.
+(well, mostly just two...) different places where you can stick
+information about the user: the *subject* field, and in an extension
+called *subjectAlternativeName*. The *subject* field is supposed to
+only included the following information: country, organization, an
+organizational sub-unit name, and a so-called common name. The common
+name is usually the name of the person, or it could be a title
+associated with a position of some sort in the organization. It may
+also include fields for state/province and locality. What a locality
+is, nobody knows, but it's usually given as a city name.
 
 Botan doesn't currently support any of the Unicode variants used in
 ASN.1 (UTF-8, UCS-2, and UCS-4), any of which could be used for the
@@ -77,15 +75,14 @@ of information that this extension might hold: an email address
 (mailbox@example.com), a DNS name (somehost.example.com), or a URI
 (http://www.example.com).
 
-So, how to get the information? Call ``subject_info`` with the
-name of the piece of information you want, and it will return a
-``std::string`` that is either empty (signifying that the
-certificate doesn't have this information), or has the information
+So, how to get the information? Call ``subject_info`` with the name of
+the piece of information you want, and it will return a
+``std::string`` that is either empty (signifying that the certificate
+doesn't have this information), or has the information
 requested. There are several names for each possible item, but the
-most easily readable ones are: "Name", "Country",
-"Organization", ``Organizational Unit'', "Locality", "State",
-"RFC822", "URI", and "DNS". These values are returned as a
-``std::string``.
+most easily readable ones are: "Name", "Country", "Organization",
+"Organizational Unit", "Locality", "State", "RFC822", "URI", and
+"DNS". These values are returned as a ``std::string``.
 
 You can also get information about the issuer of the certificate in the same
 way, using ``issuer_info``.
@@ -148,19 +145,25 @@ which format without any extra information. For example::
    X509_CRL crl2(in);
 
 After that, pass the ``X509_CRL`` object to a ``X509_Store`` object
-with ``X509_Code`` ``add_crl``(``X509_CRL``), and all future
-verifications will take into account the certificates listed, assuming
-``add_crl`` returns ``VERIFIED``. If it doesn't return
-``VERIFIED``, then the return value is an error code signifying that the CRL
-could not be processed due to some problem (which could range from the issuing
-certificate not being found, to the CRL having some format problem). For more
-about the ``X509_Store`` API, read the section later in this chapter.
+with
+
+.. cpp:function:: X509_Code X509_Store::add_crl(const X509_CRL& crl)
+
+and all future verifications will take into account the certificates
+listed, assuming ``add_crl`` returns ``VERIFIED``. If it doesn't
+return ``VERIFIED``, then the return value is an error code signifying
+that the CRL could not be processed due to some problem (which could
+be something like the issuing certificate could not being found, an
+invalid signature, or the CRL having some format problem). For more
+about the ``X509_Store`` API, read :ref:`x509_store`.
 
 Reading Certificates
 ---------------------------------
 
 ``X509_Certificate`` has two constructors, each of which takes a source of
 data; a filename to read, and a ``DataSource&``.
+
+.. _x509_store:
 
 Storing and Using Certificates
 ---------------------------------
@@ -184,113 +187,89 @@ Adding Certificates
 You can add new certificates to a certificate store using any of these
 functions:
 
-``add_cert``(``const X509_Certificate&`` ``cert``,
-                     ``bool`` ``trusted`` ``= false``)
+.. cpp:function:: void add_cert(const X509_Certificate& cert, bool trusted = false)
 
-``add_certs``(``DataSource&`` ``source``)
+.. cpp:function:: void add_cert(DataSource& source)
 
-``add_trusted_certs``(``DataSource&`` ``source``)
+.. cpp:function:: void add_trusted_certs(DataSource& source)
 
 The versions that take a ``DataSource&`` will add all the certificates
 that it can find in that source.
 
-All of them add the cert(s) to the store. The 'trusted' certificates are the
-ones that you have some reason to trust are genuine. For example, say your
-application is working with certificates that are owned by employees of some
-company, and all of their certificates are signed by the company CA, whose
-certificate is in turned signed by a commercial root CA. What you would then do
-is include the certificate of the commercial CA with your application, and read
-it in as a trusted certificate. From there, you could verify the company CA's
-certificate, and then use that to verify the end user's certificates. Only
-self-signed certificates may be considered trusted.
+All of them add the cert(s) to the store. The "trusted" certificates
+are the ones that you are willing to trust for certification
+purposes. For example, say your application is working with
+certificates that are owned by employees of some company, and all of
+their certificates are signed by the company CA, whose certificate is
+in turned signed by a commercial root CA. What you would then do is
+include the certificate of the commercial CA with your application,
+and read it in as a trusted certificate. From there, you could verify
+the company CA's certificate, and then use that to verify the end
+user's certificates. Only self-signed certificates may be considered
+trusted.
 
 Adding CRLs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-``X509_Code`` ``add_crl``(``const X509_CRL&`` ``crl``);
+.. cpp:function:: X509_Code add_crl(const X509_CRL& crl)
 
-This will process the CRL and mark the revoked certificates. This will also
-work if a revoked certificate is added to the store sometime after the CRL is
-processed. The function can return an error code (listed later), or will return
-``VERIFIED`` if everything completed successfully.
+This will process the CRL and mark the revoked certificates. This will
+also work if a revoked certificate is added to the store sometime
+after the CRL is processed. The function can return an error code
+(listed later), or will return ``VERIFIED`` if everything completed
+successfully.
 
 Storing Certificates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can output a set of certificates by calling ``PEM_encode``, which
-will return a ``std::string`` containing each of the certificates in the
-store, PEM encoded and concatenated. This simple format can easily be read by
-both Botan and other libraries/applications.
-
-Searching for Certificates
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-You can find certificates in the store with a series of functions contained
-in the ``X509_Store_Search`` namespace::
-
-  std::vector<X509_Certificate> by_email(const X509_Store& store,
-                                         const std::string& email_addr);
-  std::vector<X509_Certificate> by_name(const X509_Store& store,
-                                        const std::string& name);
-  std::vector<X509_Certificate> by_dns(const X509_Store&,
-                                       const std::string& dns_name);
-
-These functions will return a (possibly empty) vector of certificates from
-``store`` matching your search criteria. The email address and DNS name
-searches are case-insensitive but are sensitive to extra whitespace and so
-on. The name search will do case-insensitive substring matching, so, for
-example, calling ``X509_Store_Search::by_name``(``your_store``,
-"dob") will return certificates for ``J.R. 'Bob' Dobbs'' and
-``H. Dobbertin'', assuming both of those certificates are in ``your_store``.
-
-You could then display the results to a user, and allow them to select the
-appropriate one. Searching using an email address as the key is usually more
-effective than the name, since email addresses are rarely shared.
+will return a ``std::string`` containing each of the certificates in
+the store, PEM encoded and concatenated. This simple format can easily
+be read by both Botan and other libraries/applications.
 
 Certificate Stores
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-An object of type ``Certificate_Store`` is a generalized interface
-to an external source for certificates (and CRLs). Examples of such a
+An object of type ``Certificate_Store`` is a generalized interface to
+an external source for certificates (and CRLs). Examples of such a
 store would be one that looked up the certificates in a SQL database,
 or by contacting a CGI script running on a HTTP server. There are
 currently three mechanisms for looking up a certificate, and one for
 retrieving CRLs. By default, most of these mechanisms will return an
-empty ``std::vector`` of ``X509_Certificate``. This storage
-mechanism is *only* queried when doing certificate validation: it
-allows you to distribute only the root key with an application, and
-let some online method handle getting all the other certificates that
-are needed to validate an end entity certificate. In particular, the
-search routines will not attempt to access the external database.
+empty ``std::vector`` of ``X509_Certificate``. This storage mechanism
+is *only* queried when doing certificate validation: it allows you to
+distribute only the root key with an application, and let some online
+method handle getting all the other certificates that are needed to
+validate an end entity certificate. In particular, the search routines
+will not attempt to access the external database.
 
 The three certificate lookup methods are ``by_SKID`` (Subject Key
-Identifier), ``by_name`` (the CommonName DN entry), and
-``by_email`` (stored in either the distinguished name, or in a
+Identifier), ``by_name`` (the CommonName DN entry), and ``by_email``
+(stored in either the distinguished name, or in a
 subjectAlternativeName extension). The name and email versions take a
 ``std::string``, while the SKID version takes a ``SecureVector<byte>``
-containing the subject key identifier in raw binary. You can choose not to
-implement ``by_name`` or ``by_email``, but ``by_SKID``
-is mandatory to implement, and, currently, is the only version that is used by
-``X509_Store``.
+containing the subject key identifier in raw binary. You can choose
+not to implement ``by_name`` or ``by_email``, but ``by_SKID`` is
+mandatory to implement, and, currently, is the only version that is
+used by ``X509_Store``.
 
-Finally, there is a method for finding CRLs, called
-``get_crls_for``, that takes an ``X509_Certificate``
-object, and returns a ``std::vector`` of ``X509_CRL``. While
-normally there will be only one CRL, the use of the vector makes it
-easy to return no CRLs (eg, if the certificate store doesn't support
-retrieving them), or return multiple ones (for example, if the
-certificate store can't determine precisely which key was used to sign
-the certificate). Implementing the function is optional, and by
-default will return no CRLs. If it is available, it will be used by
-``X509_CRL``.
+Finally, there is a method for finding CRLs, called ``get_crls_for``,
+that takes an ``X509_Certificate`` object, and returns a
+``std::vector`` of ``X509_CRL``. While normally there will be only one
+CRL, the use of the vector makes it easy to return no CRLs (eg, if the
+certificate store doesn't support retrieving them), or return multiple
+ones (for example, if the certificate store can't determine precisely
+which key was used to sign the certificate). Implementing the function
+is optional, and by default will return no CRLs. If it is available,
+it will be used by ``X509_CRL``.
 
 As for using such a store, you have to tell ``X509_Store`` about
 it, by calling the ``X509_Store`` member function
 
-``add_new_certstore``(``Certificate_Store``* ``new_store``)
+.. cpp:function:: void add_new_certstore(Certificate_Store* new_store)
 
-The argument, ``new_store``, will be deleted by ``X509_Store``'s
-destructor, so make sure to allocate it with ``new``.
+  The store object will be owned by (and deleted by) ``X509_Store``,
+  so make sure to allocate it with ``new``.
 
 Verifying Certificates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -411,33 +390,35 @@ available at all times.
 
 Of course, you might be wondering what to do if no certificates have
 been revoked. Never fear; empty CRLs, which revoke nothing at all, can
-be issued. To generate a new, empty CRL, just call ``X509_CRL``
-``X509_CA::new_crl``(``size_t``~``seconds``~=~0)~--~it
-will create a new, empty, CRL. If ``seconds`` is the default 0, then
-the normal default CRL next update time (the value of the
-``x509/crl/next_update'') will be used. If not, then ``seconds``
-specifies how long (in seconds) it will be until the CRL's next update
-time (after this time, most clients will reject the CRL as too old).
+be issued. To generate a new, empty CRL, just call 
+
+.. cpp:function:: X509_CRL X509_CA::new_crl(u32bit seconds_to_expiration = 0)
+
+  This function will return a new, empty CRL. The
+  ``seconds_to_expiration`` parameter is the number of seconds before
+  the CRL expires. If it is set to the (default) value of zero, then a
+  reasonable default (currently 7 days) will be used.
 
 On the other hand, you may have issued a CRL before. In that case, you will
 want to issue a new CRL that contains all previously revoked
-certificates, along with any new ones. This is done by calling the
-``X509_CA`` member function
-``update_crl``(``X509_CRL``~``old_crl``,
-``std::vector<CRL_Entry>``~``new_revoked``,
-``size_t``~``seconds``~=~0), where ``X509_CRL`` is the last CRL this
-CA issued, and ``new_revoked`` is a list of any newly revoked certificates.
-The function returns a new ``X509_CRL`` to make available for clients. The
-semantics for the ``seconds`` argument is the same as ``new_crl``.
+certificates, along with any new ones. This is done by calling
+
+.. cpp:function:: X509_CRL X509_CA::update_crl(const X509_CRL& old_crl, std::vector<CRL_Entry> new_revoked, size_t seconds_to_expiration = 0)
+
+  Where ``X509_CRL`` is the last CRL this CA issued, and
+  ``new_revoked`` is a list of any newly revoked certificates. The
+  function returns a new ``X509_CRL`` to make available for
+  clients.
 
 The ``CRL_Entry`` type is a structure that contains, at a minimum, the
-serial number of the revoked certificate. As serial numbers are never repeated,
-the pairing of an issuer and a serial number (should) distinctly identify any
-certificate. In this case, we represent the serial number as a
-``SecureVector<byte>`` called ``serial``. There are two additional
-(optional) values, an enumeration called ``CRL_Code`` that specifies the
-reason for revocation (``reason``), and an object that represents the time
-that the certificate became invalid (if this information is known).
+serial number of the revoked certificate. As serial numbers are never
+repeated, the pairing of an issuer and a serial number (should)
+distinctly identify any certificate. In this case, we represent the
+serial number as a ``SecureVector<byte>`` called ``serial``. There are
+two additional (optional) values, an enumeration called ``CRL_Code``
+that specifies the reason for revocation (``reason``), and an object
+that represents the time that the certificate became invalid (if this
+information is known).
 
 If you wish to remove an old entry from the CRL, insert a new entry for the
 same cert, with a ``reason`` code of ``DELETE_CRL_ENTRY``. For example,
@@ -465,32 +446,33 @@ Creating PKCS #10 Requests
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Also in ``x509self.h``, there is a function for generating new PKCS #10
-certificate requests::
+certificate requests:
 
-.. cpp:function:: PKCS10_Request create_cert_req(const X509_Cert_Options&, const Private_Key&)
+.. cpp:function:: PKCS10_Request create_cert_req(const X509_Cert_Options& opts, const Private_Key& key)
 
 This function acts quite similarly to ``create_self_signed_cert``,
-except it instead returns a PKCS #10 certificate request. After creating it,
-one would typically transmit it to a CA, who signs it and returns a freshly
-minted X.509 certificate. There is an example of using this function in the
-``pkcs10`` example.
+except it instead returns a PKCS #10 certificate request. After
+creating it, one would typically transmit it to a CA, who signs it and
+returns a freshly minted X.509 certificate. There is an example of
+using this function in the ``pkcs10`` example.
 
 Certificate Options
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-What is this ``X509_Cert_Options`` thing we've been passing
-around? It's a class representing a bunch of information that will end
-up being stored into the certificate. This information comes in 3
-major flavors: information about the subject (CA or end-user), the
-validity period of the certificate, and restrictions on the usage of
-the certificate.
+What is this ``X509_Cert_Options`` thing we've been passing around?
+It's a class representing a bunch of information that will end up
+being stored into the certificate. This information comes in 3 major
+flavors: information about the subject (CA or end-user), the validity
+period of the certificate, and restrictions on the usage of the
+certificate.
 
-First and foremost is a number of ``std::string`` members, which contains
-various bits of information about the user: ``common_name``,
+First and foremost is a number of ``std::string`` members, which
+contains various bits of information about the user: ``common_name``,
 ``serial_number``, ``country``, ``organization``, ``org_unit``,
-``locality``, ``state``, ``email``, ``dns_name``, and ``uri``. As
-many of these as possible should be filled it (especially an email address),
-though the only required ones are ``common_name`` and ``country``.
+``locality``, ``state``, ``email``, ``dns_name``, and ``uri``. As many
+of these as possible should be filled it (especially an email
+address), though the only required ones are ``common_name`` and
+``country``.
 
 There is another value that is only useful when creating a PKCS #10 request,
 which is called ``challenge``. This is a challenge password, which you can
@@ -539,5 +521,5 @@ are named "PKIX.ServerAuth" (for TLS server authentication),
 "PKIX.EmailProtection" (most likely for use with S/MIME),
 "PKIX.IPsecUser", "PKIX.IPsecTunnel", "PKIX.IPsecEndSystem", and
 "PKIX.TimeStamping". You can call "add_ex_constraints" any number of
-times~--~each new OID will be added to the list to include in the
+times - each new OID will be added to the list to include in the
 certificate.

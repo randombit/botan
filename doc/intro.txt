@@ -64,6 +64,9 @@ and anything else having to do with Botan are also welcome.
 If you find what you believe to be a bug, please file a ticket in
 `Bugzilla <http://bugs.randombit.net/>`_.
 
+A useful reference while reading this manual is the `Doxygen
+documentation <http://botan.randombit.net/doxygen>`_.
+
 Getting Started
 ---------------------------------
 
