@@ -2,14 +2,24 @@ BigInt
 ========================================
 
 ``BigInt`` is Botan's implementation of a multiple-precision
-integer. Thanks to C++'s operator overloading features, using ``BigInt`` is
-often quite similar to using a native integer type. The number of functions
-related to ``BigInt`` is quite large. You can find most of them in
-``botan/bigint.h`` and ``botan/numthry.h``.
+integer. Thanks to C++'s operator overloading features, using
+``BigInt`` is often quite similar to using a native integer type. The
+number of functions related to ``BigInt`` is quite large. You can find
+most of them in ``botan/bigint.h`` and ``botan/numthry.h``.
 
-Probably the most important are the encoding/decoding functions, which
-transform the normal representation of a ``BigInt`` into some other
-form, such as a decimal string.
+.. note::
+
+  If you can, always use expressions of the form ``a += b`` over ``a =
+  a + b``. The difference can be *very* substantial, because the first
+  form prevents at least one needless memory allocation, and possibly
+  as many as three. This will be less of an issue once the library
+  adopts use of C++0x's rvalue references.
+
+Encoding Functions
+----------------------------------------
+
+These transform the normal representation of a ``BigInt`` into some
+other form, such as a decimal string:
 
 .. cpp:function:: SecureVector<byte> BigInt::encode(const BigInt& n, Encoding enc = Binary)
 
@@ -42,23 +52,52 @@ you want such things, you'll have to do them yourself.
 unsigned integer or a string. You can also decode an array (a ``byte``
 pointer plus a length) into a ``BigInt`` using a constructor.
 
-Efficiency Hints
+Number Theory
 ----------------------------------------
 
-If you can, always use expressions of the form ``a += b`` over
-``a = a + b``. The difference can be *very* substantial,
-because the first form prevents at least one needless memory
-allocation, and possibly as many as three.
+Number theoretic functions available include:
 
-If you're doing repeated modular exponentiations with the same modulus, create
-a ``BarrettReducer`` ahead of time. If the exponent or base is a constant,
-use the classes in ``mod_exp.h``. This stuff is all handled for you by
-the normal high-level interfaces, of course.
+.. cpp:function:: BigInt gcd(BigInt x, BigInt y)
 
-Never use the low-level MPI functions (those that begin with
-``bigint_``). These are completely internal to the library, and
-may make arbitrarily strange and undocumented assumptions about their
-inputs, and don't check to see if they are true, on the assumption
-that only the library itself calls them, and that the library knows
-what the assumptions are. The interfaces for these functions can
-change completely without notice.
+  Returns the greatest common divisor of x and y
+
+.. cpp:function:: BigInt lcm(BigInt x, BigInt y)
+
+  Returns an integer z which is the smallest integer such that z % x
+  == 0 and z % y == 0
+
+.. cpp:function:: BigInt inverse_mod(BigInt x, BigInt m)
+
+  Returns the modular inverse of x modulo m, that is, an integer
+  y such that (x*y) % m == 1. If no such y exists, returns zero.
+
+.. cpp:function:: BigInt power_mod(BigInt b, BigInt x, BigInt m)
+
+  Returns b to the xth power modulo m. If you are doing many
+  exponentiations with a single fixed modulus, it is faster to use a
+  ``Power_Mod`` implementation.
+
+.. cpp:function:: BigInt ressol(BigInt x, BigInt p)
+
+  Returns the square root modulo a prime, that is, returns a number y
+  such that (y*y) % p == x. Returns -1 if no such integer exists.
+
+.. cpp:function:: bool quick_check_prime(BigInt n, RandomNumberGenerator& rng)
+
+.. cpp:function:: bool check_prime(BigInt n, RandomNumberGenerator& rng)
+
+.. cpp:function:: bool verify_prime(BigInt n, RandomNumberGenerator& rng)
+
+  Three variations on primality testing. All take an integer to test along with
+  a random number generator, and return true if the integer seems like it might
+  be prime; there is a chance that this function will return true even with
+  a composite number. The probability decreases with the amount of work performed,
+  so it is much less likely that ``verify_prime`` will return a false positive
+  than ``check_prime`` will.
+
+.. cpp:function BigInt random_prime(RandomNumberGenerator& rng, size_t bits, BigInt coprime = 1, size_t equiv = 1, size_t equiv_mod = 2)
+
+  Return a random prime number of ``bits`` bits long that is
+  relatively prime to ``coprime``, and equivalent to ``equiv`` modulo
+  ``equiv_mod``.
+
