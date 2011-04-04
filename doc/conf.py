@@ -15,6 +15,10 @@ import sys, os
 
 sys.path.insert(0, os.pardir)
 
+# Avoid useless botan_version.pyc (Python 2.6 or higher)
+if 'dont_write_bytecode' in sys.__dict__:
+    sys.dont_write_bytecode = True
+
 import botan_version
 
 # If extensions (or modules to document with autodoc) are in another directory,
