@@ -1,6 +1,6 @@
 /*
 * Counter mode
-* (C) 1999-2010 Jack Lloyd
+* (C) 1999-2011 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -85,20 +85,21 @@ void CTR_BE::set_iv(const byte iv[], size_t iv_len)
    if(!valid_iv_length(iv_len))
       throw Invalid_IV_Length(name(), iv_len);
 
-   const size_t BLOCK_SIZE = permutation->block_size();
+   const size_t bs = permutation->block_size();
 
    zeroise(counter);
 
    counter.copy(0, iv, iv_len);
 
+   /*
+   * Set counter blocks to IV, IV + 1, ... IV + 255
+   */
    for(size_t i = 1; i != 256; ++i)
       {
-      counter.copy(i*BLOCK_SIZE,
-                   &counter[(i-1)*BLOCK_SIZE],
-                   BLOCK_SIZE);
+      counter.copy(i*bs, &counter[(i-1)*bs], bs);
 
-      for(size_t j = 0; j != BLOCK_SIZE; ++j)
-         if(++counter[i*BLOCK_SIZE + (BLOCK_SIZE-1-j)])
+      for(size_t j = 0; j != bs; ++j)
+         if(++counter[i*bs + (bs - 1 - j)])
             break;
       }
 
@@ -111,12 +112,17 @@ void CTR_BE::set_iv(const byte iv[], size_t iv_len)
 */
 void CTR_BE::increment_counter()
    {
-   const size_t BLOCK_SIZE = permutation->block_size();
+   const size_t bs = permutation->block_size();
 
+   /*
+   * Each counter value always needs to be incremented by 256,
+   * so we don't touch the lowest byte and instead treat it as
+   * an increment of one starting with the next byte.
+   */
    for(size_t i = 0; i != 256; ++i)
       {
-      for(size_t j = 1; j != BLOCK_SIZE; ++j)
-         if(++counter[i*BLOCK_SIZE + (BLOCK_SIZE-1-j)])
+      for(size_t j = 1; j != bs; ++j)
+         if(++counter[i*bs + (bs - 1 - j)])
             break;
       }
 
