@@ -6,7 +6,7 @@
 
 #include <botan/init.h>
 #include <botan/tls_client.h>
-#include <botan/unx_sock.h>
+#include "socket.h"
 
 using namespace Botan;
 
@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
 
       printf("Connecting to %s:%d...\n", host.c_str(), port);
 
-      Unix_Socket sock(argv[1], port);
+      Socket sock(argv[1], port);
 
       std::auto_ptr<Botan::RandomNumberGenerator> rng(
          Botan::RandomNumberGenerator::make_rng());

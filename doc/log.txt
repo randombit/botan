@@ -12,11 +12,17 @@ Release 1.9.16-dev, ????-??-??
   * The documenation, previously written in LaTeX, is now in
     reStructuredText suitable for processing by Sphinx, which can
     generate HTML, PDFs, or man pages.
+  * Remove the socket wrapper code; it was not actually used by
+    anything in the library, only in the examples, and you can use
+    whatever kind of (blocking) socket interface you like with the
+    SSL/TLS code. It's available as socket.h in the examples directory
+    if you want to use it.
   * Disable the by-default 'strong' checking of private keys that are
     loaded from storage. You can always request key material sanity
-    checking using check_key.
+    checking using Private_Key::check_key.
   * Bring back removed functions min_keylength_of, max_keylength_of,
-    keylength_multiple_of in lookup.h to avoid breaking applications.
+    keylength_multiple_of in lookup.h to avoid breaking applications
+    written against 1.8
 
 Release 1.9.15, 2011-03-21
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

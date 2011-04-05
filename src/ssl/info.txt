@@ -8,7 +8,6 @@ serious bugs or security issues.
 uses_tr1 yes
 
 <header:public>
-socket.h
 tls_client.h
 tls_connection.h
 tls_exceptn.h

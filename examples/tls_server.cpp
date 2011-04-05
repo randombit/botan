@@ -6,11 +6,12 @@
 
 #include <botan/botan.h>
 #include <botan/tls_server.h>
-#include <botan/unx_sock.h>
 
 #include <botan/rsa.h>
 #include <botan/dsa.h>
 #include <botan/x509self.h>
+
+#include "socket.h"
 
 using namespace Botan;
 
@@ -34,9 +35,9 @@ class Server_TLS_Policy : public TLS_Policy
          return true;
          }
    };
+
 int main(int argc, char* argv[])
    {
-
    int port = 4433;
 
    if(argc == 2)
@@ -57,7 +58,7 @@ int main(int argc, char* argv[])
       X509_Certificate cert =
          X509::create_self_signed_cert(options, key, "SHA-1", rng);
 
-      Unix_Server_Socket listener(port);
+      Server_Socket listener(port);
 
       Server_TLS_Policy policy;
 
