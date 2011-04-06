@@ -180,10 +180,10 @@ a case where that is useful::
    // have std::string ciphertext, auth_code, key, iv, mac_key;
 
    Pipe pipe(new Base64_Decoder,
-             get_cipher(``AES-128'', key, iv, DECRYPTION),
+             get_cipher("AES-128", key, iv, DECRYPTION),
              new Fork(
                 0
-                new MAC_Filter(``HMAC(SHA-1)'', mac_key)
+                new MAC_Filter("HMAC(SHA-1)", mac_key)
              )
       );
 
@@ -274,7 +274,7 @@ no explicit output operation; the writing of ``out.txt`` is
 implicit::
 
    DataSource_Stream in("in.txt");
-   Pipe pipe(new CBC_Encryption("AES-128", "PKCS7", key, iv),
+   Pipe pipe(get_cipher("AES-128/CTR-BE", key, iv),
              new DataSink_Stream("out.txt"));
    pipe.process_msg(in);
 
@@ -513,10 +513,10 @@ must call ``set_key`` *before* calling ``set_iv``.
 
 Here's a example::
 
-   Keyed_Filter *cast, *hmac;
+   Keyed_Filter *aes, *hmac;
    Pipe pipe(new Base64_Decoder,
              // Note the assignments to the cast and hmac variables
-             cast = new CBC_Decryption("CAST-128", "PKCS7", cast_key, iv),
+             aes = get_cipher("AES-128/CBC", aes_key, iv),
              new Fork(
                 0, // Read the section 'Fork' to understand this
                 new Chain(
@@ -529,8 +529,8 @@ Here's a example::
    // use pipe for a while, decrypt some stuff, derive new keys and IVs
    pipe.end_msg();
 
-   cast->set_key(cast_key2);
-   cast->set_iv(iv2);
+   aes->set_key(aes_key2);
+   aes->set_iv(iv2);
    hmac->set_key(mac_key2);
 
    pipe.start_msg();

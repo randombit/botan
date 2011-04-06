@@ -362,9 +362,9 @@ which can be found in ``x509_ca.h``. A CA always needs its own
 certificate, which can either be a self-signed certificate (see below
 on how to create one) or one issued by another CA (see the section on
 PKCS #10 requests). Creating a CA object is done by the following
-constructor::
+constructor:
 
-   X509_CA(const X509_Certificate& cert, const Private_Key& key);
+.. cpp:function:: X509_CA(const X509_Certificate& cert, const Private_Key& key)
 
 The private key is the private key corresponding to the public key in the
 CA's certificate.
@@ -375,9 +375,9 @@ Botan). These are decoded in a similar manner to
 certificates/CRLs/etc. A request is vetted by humans (who somehow
 verify that the name in the request corresponds to the name of the
 entity who requested it), and then signed by a CA key, generating a
-new certificate::
+new certificate:
 
-   X509_Certificate sign_request(const PKCS10_Request&) const;
+.. cpp:function:: X509_Certificate sign_request(const PKCS10_Request& req) const
 
 Generating CRLs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -390,7 +390,7 @@ available at all times.
 
 Of course, you might be wondering what to do if no certificates have
 been revoked. Never fear; empty CRLs, which revoke nothing at all, can
-be issued. To generate a new, empty CRL, just call 
+be issued. To generate a new, empty CRL, just call
 
 .. cpp:function:: X509_CRL X509_CA::new_crl(u32bit seconds_to_expiration = 0)
 
@@ -431,7 +431,7 @@ Self-Signed Certificates
 
 Generating a new self-signed certificate can often be useful, for
 example when setting up a new root CA, or for use in email
-applications. The library provides a utility function for this::
+applications. The library provides a utility function for this:
 
 .. cpp:function:: X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts, const Private_Key& key)
 
