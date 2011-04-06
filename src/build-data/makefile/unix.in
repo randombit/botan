@@ -63,7 +63,7 @@ all: $(LIBRARIES)
 
 # Link Commands
 $(CHECK): $(LIBRARIES) $(CHECKOBJS)
-	$(CXX) $(CHECKOBJS) -L. libbotan.a $(LINK_TO) -o $(CHECK)
+	$(CXX) $(CHECKOBJS) $(STATIC_LIB) $(LINK_TO) -o $(CHECK)
 
 $(STATIC_LIB): $(LIBOBJS)
 	$(RM) $(STATIC_LIB)

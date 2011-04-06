@@ -57,8 +57,8 @@ LIBRARIES     = $(STATIC_LIB) $(SHARED_LIB)
 LIBNAME       = %{lib_prefix}libbotan
 STATIC_LIB    = $(LIBNAME).a
 
-SHARED_LIB    = $(LIBNAME)-$(SO_VERSION).%{so_suffix}
-SONAME        = $(LIBNAME)-$(SO_VERSION).%{so_suffix}
+SHARED_LIB    = $(LIBNAME).%{so_suffix}.$(VERSION)
+SONAME        = $(LIBNAME).%{so_suffix}.$(SO_VERSION)
 
 SYMLINK       = libbotan.%{so_suffix}
 
@@ -71,7 +71,7 @@ all: $(LIBRARIES)
 
 # Link Commands
 $(CHECK): $(LIBRARIES) $(CHECKOBJS)
-	$(CXX) $(LDFLAGS) $(CHECKOBJS) -o $(CHECK) -L. -lbotan-%{so_version} $(LINK_TO)
+	$(CXX) $(LDFLAGS) $(CHECKOBJS) $(SHARED_LIB) $(LINK_TO) -o $(CHECK)
 
 $(STATIC_LIB): $(LIBOBJS)
 	$(RM) $(STATIC_LIB)
@@ -80,6 +80,7 @@ $(STATIC_LIB): $(LIBOBJS)
 
 $(SHARED_LIB): $(LIBOBJS)
 	$(SO_LINK_CMD) $(LDFLAGS) $(LIBOBJS) -o $(SHARED_LIB) $(LINK_TO)
+	$(LN) $(SHARED_LIB) $(SONAME)
 	$(LN) $(SHARED_LIB) $(SYMLINK)
 
 # Fake Targets

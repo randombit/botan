@@ -57,8 +57,8 @@ class BuildConfigurationInformation(object):
 
     version_string = '%d.%d.%d%s' % (
         version_major, version_minor, version_patch, version_suffix)
-    soversion_string = '%d.%d.%d%s' % (
-        version_major, version_minor, version_so_patch, version_suffix)
+    soversion_string = '%d.%d.%d' % (
+        version_major, version_minor, version_so_patch)
 
     """
     Constructor
