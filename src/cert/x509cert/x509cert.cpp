@@ -394,8 +394,12 @@ std::string X509_Certificate::to_string() const
       OIDS::lookup(this->signature_algorithm().oid) << "\n";
 
    out << "Serial number: " << hex_encode(this->serial_number()) << "\n";
-   out << "Authority keyid: " << hex_encode(this->authority_key_id()) << "\n";
-   out << "Subject keyid: " << hex_encode(this->subject_key_id()) << "\n";
+
+   if(this->authority_key_id().size())
+     out << "Authority keyid: " << hex_encode(this->authority_key_id()) << "\n";
+
+   if(this->subject_key_id().size())
+     out << "Subject keyid: " << hex_encode(this->subject_key_id()) << "\n";
 
    X509_PublicKey* pubkey = this->subject_public_key();
    out << "Public Key:\n" << X509::PEM_encode(*pubkey);
