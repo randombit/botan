@@ -7,7 +7,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/ec_dompar.h>
+#include <botan/ec_group.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 #include <botan/libstate.h>
@@ -16,7 +16,7 @@
 
 namespace Botan {
 
-EC_Domain_Params::EC_Domain_Params(const OID& domain_oid)
+EC_Group::EC_Group(const OID& domain_oid)
    {
    std::string pem =
       global_state().get("ec", OIDS::lookup(domain_oid));
@@ -24,31 +24,31 @@ EC_Domain_Params::EC_Domain_Params(const OID& domain_oid)
    if(pem == "")
       throw Lookup_Error("No ECC domain data for " + domain_oid.as_string());
 
-   *this = EC_Domain_Params(pem);
+   *this = EC_Group(pem);
    oid = domain_oid.as_string();
    }
 
-EC_Domain_Params::EC_Domain_Params(const std::string& pem)
+EC_Group::EC_Group(const std::string& str)
    {
-   if(pem == "")
+   if(str == "")
       return; // no initialization / uninitialized
 
    try
       {
-      DataSource_Memory input(pem);
+      DataSource_Memory input(str);
 
       SecureVector<byte> ber =
          PEM_Code::decode_check_label(input, "EC PARAMETERS");
 
-      *this = EC_Domain_Params(ber);
+      *this = EC_Group(ber);
       }
    catch(Decoding_Error) // hmm, not PEM?
       {
-      *this = EC_Domain_Params(OID(pem));
+      *this = EC_Group(OIDS::lookup(str));
       }
    }
 
-EC_Domain_Params::EC_Domain_Params(const MemoryRegion<byte>& ber_data)
+EC_Group::EC_Group(const MemoryRegion<byte>& ber_data)
    {
    BER_Decoder ber(ber_data);
    BER_Object obj = ber.get_next_object();
@@ -59,7 +59,7 @@ EC_Domain_Params::EC_Domain_Params(const MemoryRegion<byte>& ber_data)
       {
       OID dom_par_oid;
       BER_Decoder(ber_data).decode(dom_par_oid);
-      *this = EC_Domain_Params(dom_par_oid);
+      *this = EC_Group(dom_par_oid);
       }
    else if(obj.type_tag == SEQUENCE)
       {
@@ -92,7 +92,7 @@ EC_Domain_Params::EC_Domain_Params(const MemoryRegion<byte>& ber_data)
    }
 
 SecureVector<byte>
-EC_Domain_Params::DER_encode(EC_Domain_Params_Encoding form) const
+EC_Group::DER_encode(EC_Group_Encoding form) const
    {
    if(form == EC_DOMPAR_ENC_EXPLICIT)
       {
@@ -125,10 +125,10 @@ EC_Domain_Params::DER_encode(EC_Domain_Params_Encoding form) const
    else if(form == EC_DOMPAR_ENC_IMPLICITCA)
       return DER_Encoder().encode_null().get_contents();
    else
-      throw Internal_Error("EC_Domain_Params::DER_encode: Unknown encoding");
+      throw Internal_Error("EC_Group::DER_encode: Unknown encoding");
    }
 
-std::string EC_Domain_Params::PEM_encode() const
+std::string EC_Group::PEM_encode() const
    {
    SecureVector<byte> der = DER_encode(EC_DOMPAR_ENC_EXPLICIT);
    return PEM_Code::encode(der, "EC PARAMETERS");

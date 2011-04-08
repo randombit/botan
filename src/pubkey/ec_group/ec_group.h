@@ -19,7 +19,7 @@ namespace Botan {
 /**
 * This class represents elliptic curce domain parameters
 */
-enum EC_Domain_Params_Encoding {
+enum EC_Group_Encoding {
    EC_DOMPAR_ENC_EXPLICIT = 0,
    EC_DOMPAR_ENC_IMPLICITCA = 1,
    EC_DOMPAR_ENC_OID = 2
@@ -28,7 +28,7 @@ enum EC_Domain_Params_Encoding {
 /**
 * Class representing an elliptic curve
 */
-class BOTAN_DLL EC_Domain_Params
+class BOTAN_DLL EC_Group
    {
    public:
 
@@ -39,7 +39,7 @@ class BOTAN_DLL EC_Domain_Params
       * @param order the order of the base point
       * @param cofactor the cofactor
       */
-      EC_Domain_Params(const CurveGFp& curve,
+      EC_Group(const CurveGFp& curve,
                        const PointGFp& base_point,
                        const BigInt& order,
                        const BigInt& cofactor) :
@@ -54,27 +54,27 @@ class BOTAN_DLL EC_Domain_Params
       * Decode a BER encoded ECC domain parameter set
       * @param ber_encoding the bytes of the BER encoding
       */
-      EC_Domain_Params(const MemoryRegion<byte>& ber_encoding);
+      EC_Group(const MemoryRegion<byte>& ber_encoding);
 
       /**
       * Create an EC domain by OID (or throw if unknown)
       * @param oid the OID of the EC domain to create
       */
-      EC_Domain_Params(const OID& oid);
+      EC_Group(const OID& oid);
 
       /**
       * Create an EC domain from PEM encoding (as from PEM_encode),
       * or from an OID name (eg "secp16r1", or "1.3.132.0.8")
       * @param pem_or_oid PEM-encoded data, or an OID
       */
-      EC_Domain_Params(const std::string& pem_or_oid = "");
+      EC_Group(const std::string& pem_or_oid = "");
 
       /**
       * Create the DER encoding of this domain
       * @param form of encoding to use
       * @returns bytes encododed as DER
       */
-      SecureVector<byte> DER_encode(EC_Domain_Params_Encoding form) const;
+      SecureVector<byte> DER_encode(EC_Group_Encoding form) const;
 
       /**
       * Return the PEM encoding (always in explicit form)
@@ -114,7 +114,7 @@ class BOTAN_DLL EC_Domain_Params
       */
       std::string get_oid() const { return oid; }
 
-      bool operator==(const EC_Domain_Params& other) const
+      bool operator==(const EC_Group& other) const
          {
          return ((get_curve() == other.get_curve()) &&
                  (get_base_point() == other.get_base_point()) &&
@@ -129,11 +129,14 @@ class BOTAN_DLL EC_Domain_Params
       std::string oid;
    };
 
-inline bool operator!=(const EC_Domain_Params& lhs,
-                       const EC_Domain_Params& rhs)
+inline bool operator!=(const EC_Group& lhs,
+                       const EC_Group& rhs)
    {
    return !(lhs == rhs);
    }
+
+// For compatability with 1.8
+typedef EC_Group EC_Domain_Params;
 
 }
 

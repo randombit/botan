@@ -28,7 +28,7 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey
       * @param dom_par the domain parameters associated with this key
       * @param public_point the public point defining this key
       */
-      ECDSA_PublicKey(const EC_Domain_Params& dom_par,
+      ECDSA_PublicKey(const EC_Group& dom_par,
                       const PointGFp& public_point) :
          EC_PublicKey(dom_par, public_point) {}
 
@@ -66,6 +66,11 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
    {
    public:
 
+      /**
+      * Load a private key
+      * @param alg_id the X.509 algorithm identifier
+      * @param key_bits PKCS #8 structure
+      */
       ECDSA_PrivateKey(const AlgorithmIdentifier& alg_id,
                        const MemoryRegion<byte>& key_bits) :
          EC_PrivateKey(alg_id, key_bits) {}
@@ -74,19 +79,12 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
       * Generate a new private key
       * @param rng a random number generator
       * @param domain parameters to used for this key
+      * @param x the private key (if zero, generate a ney random key)
       */
       ECDSA_PrivateKey(RandomNumberGenerator& rng,
-                       const EC_Domain_Params& domain) :
-         EC_PrivateKey(rng, domain) {}
-
-      /**
-      * Load a private key
-      * @param domain parameters
-      * @param x the private key
-      */
-      ECDSA_PrivateKey(const EC_Domain_Params& domain,
-                       const BigInt& x) :
-         EC_PrivateKey(domain, x) {}
+                       const EC_Group& domain,
+                       const BigInt& x = 0) :
+         EC_PrivateKey(rng, domain, x) {}
 
       bool check_key(RandomNumberGenerator& rng, bool) const;
    };

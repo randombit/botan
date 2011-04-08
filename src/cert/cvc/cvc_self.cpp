@@ -41,7 +41,7 @@ MemoryVector<byte> eac_1_1_encoding(const EC_PublicKey* key,
    if(key->domain_format() == EC_DOMPAR_ENC_OID)
       throw Encoding_Error("CVC encoder: cannot encode parameters by OID");
 
-   const EC_Domain_Params& domain = key->domain();
+   const EC_Group& domain = key->domain();
 
    // This is why we can't have nice things
 

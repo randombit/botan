@@ -1,18 +1,3 @@
-/*
-* (C) 2009 Jack Lloyd
-*
-* Distributed under the terms of the Botan license
-*/
-
-/*
-Grab an DSA public key from the file given as an argument, grab a
-signature from another file, and verify the message (which, suprise,
-is also in a file).
-
-The signature format isn't particularly standard: take the IEEE 1363
-signature format, encoded into base64 with a trailing newline.
-*/
-
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -45,28 +30,30 @@ int main(int argc, char* argv[])
       return 1;
       }
 
-   Botan::LibraryInitializer init;
-
-   std::ifstream message(argv[2], std::ios::binary);
-   if(!message)
-      {
-      std::cout << "Couldn't read the message file." << std::endl;
-      return 1;
-      }
-
-   std::ifstream sigfile(argv[3]);
-   if(!sigfile)
-      {
-      std::cout << "Couldn't read the signature file." << std::endl;
-      return 1;
-      }
 
    try {
+      Botan::LibraryInitializer init;
+
+      std::ifstream message(argv[2], std::ios::binary);
+      if(!message)
+         {
+         std::cout << "Couldn't read the message file." << std::endl;
+         return 1;
+         }
+
+      std::ifstream sigfile(argv[3]);
+      if(!sigfile)
+         {
+         std::cout << "Couldn't read the signature file." << std::endl;
+         return 1;
+         }
+
       std::string sigstr;
       getline(sigfile, sigstr);
 
       std::auto_ptr<X509_PublicKey> key(X509::load_key(argv[1]));
       DSA_PublicKey* dsakey = dynamic_cast<DSA_PublicKey*>(key.get());
+
       if(!dsakey)
          {
          std::cout << "The loaded key is not a DSA key!\n";
@@ -79,10 +66,10 @@ int main(int argc, char* argv[])
 
       DataSource_Stream in(message);
       byte buf[4096] = { 0 };
-      while(u32bit got = in.read(buf, sizeof(buf)))
+      while(size_t got = in.read(buf, sizeof(buf)))
          ver.update(buf, got);
 
-      bool ok = ver.check_signature(sig);
+      const bool ok = ver.check_signature(sig);
 
       if(ok)
          std::cout << "Signature verified\n";

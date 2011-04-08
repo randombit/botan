@@ -1,10 +1,3 @@
-/*
-* DSA signature generation example
-* (C) 2009 Jack Lloyd
-*
-* Distributed under the terms of the Botan license
-*/
-
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -66,12 +59,10 @@ int main(int argc, char* argv[])
 
       DataSource_Stream in(message);
       byte buf[4096] = { 0 };
-      while(u32bit got = in.read(buf, sizeof(buf)))
+      while(size_t got = in.read(buf, sizeof(buf)))
          signer.update(buf, got);
 
-      Pipe pipe(new Base64_Encoder);
-      pipe.process_msg(signer.signature(rng));
-      sigfile << pipe.read_all_as_string() << std::endl;
+      sigfile << base64_encode(signer.signature(rng)) << "\n";
    }
    catch(std::exception& e)
       {

@@ -1,9 +1,3 @@
-/*
-* (C) 2003 Jack Lloyd
-*
-* Distributed under the terms of the Botan license
-*/
-
 #include <botan/init.h>
 #include <botan/auto_rng.h>
 #include <botan/x509self.h>
@@ -31,9 +25,6 @@ int main(int argc, char* argv[])
       AutoSeeded_RNG rng;
 
       RSA_PrivateKey priv_key(rng, 1024);
-      // If you want a DSA key instead of RSA, comment out the above line and
-      // uncomment this one:
-      //DSA_PrivateKey priv_key(DL_Group("dsa/jce/1024"));
 
       std::ofstream key_file("private.pem");
       key_file << PKCS8::PEM_encode(priv_key, rng, argv[1]);
@@ -45,18 +36,8 @@ int main(int argc, char* argv[])
       opts.organization = argv[4];
       opts.email = argv[5];
 
-      /* Some hard-coded options, just to give you an idea of what's there */
-      opts.challenge = "a fixed challenge passphrase";
-      opts.locality = "Baltimore";
-      opts.state = "MD";
-      opts.org_unit = "Testing";
-      opts.add_ex_constraint("PKIX.ClientAuth");
-      opts.add_ex_constraint("PKIX.IPsecUser");
-      opts.add_ex_constraint("PKIX.EmailProtection");
-
-      opts.xmpp = "someid@xmpp.org";
-
-      PKCS10_Request req = X509::create_cert_req(opts, priv_key, "SHA-1", rng);
+      PKCS10_Request req = X509::create_cert_req(opts, priv_key,
+                                                 "SHA-256", rng);
 
       std::ofstream req_file("req.pem");
       req_file << req.PEM_encode();

@@ -10,7 +10,7 @@
 #ifndef BOTAN_ECC_PUBLIC_KEY_BASE_H__
 #define BOTAN_ECC_PUBLIC_KEY_BASE_H__
 
-#include <botan/ec_dompar.h>
+#include <botan/ec_group.h>
 #include <botan/pk_keys.h>
 #include <botan/x509_key.h>
 #include <botan/pkcs8.h>
@@ -18,7 +18,7 @@
 namespace Botan {
 
 /**
-* This class represents abstract EC Public Keys. When encoding a key
+* This class represents abstract ECC public keys. When encoding a key
 * via an encoder that can be accessed via the corresponding member
 * functions, the key will decide upon its internally stored encoding
 * information whether to encode itself with or without domain
@@ -30,7 +30,7 @@ namespace Botan {
 class BOTAN_DLL EC_PublicKey : public virtual Public_Key
    {
    public:
-      EC_PublicKey(const EC_Domain_Params& dom_par,
+      EC_PublicKey(const EC_Group& dom_par,
                    const PointGFp& pub_point);
 
       EC_PublicKey(const AlgorithmIdentifier& alg_id,
@@ -57,13 +57,13 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       * domain parameters of this point are not set
       * @result the domain parameters of this key
       */
-      const EC_Domain_Params& domain() const { return domain_params; }
+      const EC_Group& domain() const { return domain_params; }
 
       /**
       * Set the domain parameter encoding to be used when encoding this key.
       * @param enc the encoding to use
       */
-      void set_parameter_encoding(EC_Domain_Params_Encoding enc);
+      void set_parameter_encoding(EC_Group_Encoding enc);
 
       /**
       * Return the DER encoding of this keys domain in whatever format
@@ -76,28 +76,26 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       * Get the domain parameter encoding to be used when encoding this key.
       * @result the encoding to use
       */
-      EC_Domain_Params_Encoding domain_format() const
+      EC_Group_Encoding domain_format() const
          { return domain_encoding; }
    protected:
       EC_PublicKey() : domain_encoding(EC_DOMPAR_ENC_EXPLICIT) {}
 
-      EC_Domain_Params domain_params;
+      EC_Group domain_params;
       PointGFp public_key;
-      EC_Domain_Params_Encoding domain_encoding;
+      EC_Group_Encoding domain_encoding;
    };
 
 /**
-* This abstract class represents general EC Private Keys
+* This abstract class represents ECC private keys
 */
 class BOTAN_DLL EC_PrivateKey : public virtual EC_PublicKey,
                                 public virtual Private_Key
    {
    public:
-      EC_PrivateKey(const EC_Domain_Params& domain,
-                    const BigInt& private_key);
-
-      EC_PrivateKey(RandomNumberGenerator& rng,
-                    const EC_Domain_Params& domain);
+     EC_PrivateKey(RandomNumberGenerator& rng,
+                   const EC_Group& domain,
+                   const BigInt& private_key);
 
       EC_PrivateKey(const AlgorithmIdentifier& alg_id,
                     const MemoryRegion<byte>& key_bits);

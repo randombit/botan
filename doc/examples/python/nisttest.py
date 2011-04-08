@@ -47,7 +47,7 @@ def main():
                 results[test] = result
         return results
 
-    results = load_results('results.txt')
+    results = load_results('results.vec')
 
     for root, dirs, files in os.walk('../../checks/nist_tests/tests'):
         if files:

@@ -21,7 +21,7 @@ int main()
       {
       AutoSeeded_RNG rng;
 
-      EC_Domain_Params params("1.3.132.0.8");
+      EC_Domain_Params params("secp160r1");
 
       ECDSA_PrivateKey ecdsa(rng, params);
 

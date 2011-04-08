@@ -498,15 +498,16 @@ u32bit validate_dsa_sig(const std::string& algo,
    }
 
 u32bit validate_ecdsa_sig(const std::string& algo,
-                          const std::vector<std::string>& str)
+                          const std::vector<std::string>& str,
+                          RandomNumberGenerator& rng)
    {
    if(str.size() != 5)
       throw std::runtime_error("Invalid input from pk_valid.dat");
 
 #if defined(BOTAN_HAS_ECDSA)
 
-   EC_Domain_Params group(OIDS::lookup(str[0]));
-   ECDSA_PrivateKey ecdsa(group, to_bigint(str[1]));
+   EC_Group group(OIDS::lookup(str[0]));
+   ECDSA_PrivateKey ecdsa(rng, group, to_bigint(str[1]));
 
    std::string emsa = algo.substr(6, std::string::npos);
 
@@ -529,7 +530,7 @@ u32bit validate_gost_ver(const std::string& algo,
 
 #if defined(BOTAN_HAS_GOST_34_10_2001)
 
-   EC_Domain_Params group(OIDS::lookup(str[0]));
+   EC_Group group(OIDS::lookup(str[0]));
 
    PointGFp public_point = OS2ECP(hex_decode(str[1]), group.get_curve());
 
@@ -696,7 +697,7 @@ void do_pk_keygen_tests(RandomNumberGenerator& rng)
 
 #define EC_KEY(TYPE, GROUP)                 \
    {                                        \
-   TYPE key(rng, EC_Domain_Params(OIDS::lookup(GROUP)));        \
+   TYPE key(rng, EC_Group(OIDS::lookup(GROUP)));        \
    key.check_key(rng, true);                \
    validate_save_and_load(&key, rng);       \
    std::cout << '.' << std::flush;          \
@@ -855,7 +856,7 @@ u32bit do_pk_validation_tests(const std::string& filename,
             new_errors = validate_dsa_ver(algorithm, substr);
 
          else if(algorithm.find("ECDSA/") == 0)
-            new_errors = validate_ecdsa_sig(algorithm, substr);
+            new_errors = validate_ecdsa_sig(algorithm, substr, rng);
 
          else if(algorithm.find("GOST_3410_VA/") == 0)
             new_errors = validate_gost_ver(algorithm, substr);

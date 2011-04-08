@@ -4,6 +4,6 @@ define ECC_PUBLIC_KEY_CRYPTO
 alloc
 asn1
 bigint
-ec_dompar
+ec_group
 numbertheory
 </requires>

@@ -27,7 +27,7 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey
       * @param dom_par the domain parameters associated with this key
       * @param public_point the public point defining this key
       */
-      GOST_3410_PublicKey(const EC_Domain_Params& dom_par,
+      GOST_3410_PublicKey(const EC_Group& dom_par,
                           const PointGFp& public_point) :
          EC_PublicKey(dom_par, public_point) {}
 
@@ -80,18 +80,12 @@ class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
       * Generate a new private key
       * @param rng a random number generator
       * @param domain parameters to used for this key
+      * @param x the private key; if zero, a new random key is generated
       */
       GOST_3410_PrivateKey(RandomNumberGenerator& rng,
-                           const EC_Domain_Params& domain) :
-         EC_PrivateKey(rng, domain) {}
-
-      /**
-      * Load a private key
-      * @param domain parameters
-      * @param x the private key
-      */
-      GOST_3410_PrivateKey(const EC_Domain_Params& domain, const BigInt& x) :
-         EC_PrivateKey(domain, x) {}
+                           const EC_Group& domain,
+                           const BigInt& x = 0) :
+         EC_PrivateKey(rng, domain, x) {}
 
       AlgorithmIdentifier pkcs8_algorithm_identifier() const
          { return EC_PublicKey::algorithm_identifier(); }

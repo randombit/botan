@@ -305,7 +305,7 @@ void benchmark_ecdsa(RandomNumberGenerator& rng,
    {
    for(size_t j = 0; ec_domains[j]; j++)
       {
-      EC_Domain_Params params(OIDS::lookup(ec_domains[j]));
+      EC_Group params(ec_domains[j]);
 
       const size_t pbits = params.get_curve().get_p().bits();
 
@@ -354,7 +354,7 @@ void benchmark_gost_3410(RandomNumberGenerator& rng,
    {
    for(size_t j = 0; ec_domains[j]; j++)
       {
-      EC_Domain_Params params(OIDS::lookup(ec_domains[j]));
+      EC_Group params(ec_domains[j]);
 
       const size_t pbits = params.get_curve().get_p().bits();
 
@@ -396,7 +396,7 @@ void benchmark_ecdh(RandomNumberGenerator& rng,
    {
    for(size_t j = 0; ec_domains[j]; j++)
       {
-      EC_Domain_Params params(OIDS::lookup(ec_domains[j]));
+      EC_Group params(ec_domains[j]);
 
       size_t pbits = params.get_curve().get_p().bits();
 

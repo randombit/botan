@@ -1,37 +1,3 @@
-/*
-* (C) 2009 Jack Lloyd
-*
-* Distributed under the terms of the Botan license
-*/
-
-/*
-  A simple ASN.1 parser, similiar to 'dumpasn1' or 'openssl asn1parse', though
-  without some of the bells and whistles of those. Primarily used for testing
-  the BER decoder. The output format is modeled loosely on 'asn1parse -i'
-
-  The output is actually less precise than the other decoders named, because
-  the underlying BER_Decoder hides quite a bit from userspace, such as the use
-  of indefinite length encodings (and the EOC markers). At some point it will
-  also hide the constructed string types from the user, but right now you'll
-  seem them as-is.
-
-  Written by Jack Lloyd, November 9-10, 2003
-    - Nov 22: Updated to new BER_Object format (tag -> class_tag/type_tag)
-    - Nov 25: Much improved BIT STRING output
-              Can deal with non-constructed taggings
-              Can produce UTF-8 output
-*/
-
-// Set this if your terminal understands UTF-8; otherwise output is in Latin-1
-#define UTF8_TERMINAL 1
-
-/*
-   What level the outermost layer of stuff is at. Probably 0 or 1; asn1parse
-   uses 0 as the outermost, while 1 makes more sense to me. 2+ doesn't make
-   much sense at all.
-*/
-#define INITIAL_LEVEL 0
-
 #include <botan/botan.h>
 #include <botan/bigint.h>
 #include <botan/der_enc.h>
@@ -45,6 +11,16 @@ using namespace Botan;
 #include <stdio.h>
 #include <ctype.h>
 
+// Set this if your terminal understands UTF-8; otherwise output is in Latin-1
+#define UTF8_TERMINAL 1
+
+/*
+   What level the outermost layer of stuff is at. Probably 0 or 1; asn1parse
+   uses 0 as the outermost, while 1 makes more sense to me. 2+ doesn't make
+   much sense at all.
+*/
+#define INITIAL_LEVEL 0
+
 void decode(BER_Decoder&, u32bit);
 void emit(const std::string&, u32bit, u32bit, const std::string& = "");
 std::string type_name(ASN1_Tag);
@@ -57,7 +33,7 @@ int main(int argc, char* argv[])
       return 1;
       }
 
-   Botan::LibraryInitializer init;
+   LibraryInitializer init;
 
    try {
       DataSource_Stream in(argv[1]);
@@ -83,7 +59,7 @@ int main(int argc, char* argv[])
    return 0;
    }
 
-void decode(BER_Decoder& decoder, u32bit level)
+void decode(BER_Decoder& decoder, size_t level)
    {
    BER_Object obj = decoder.get_next_object();
 
@@ -91,7 +67,7 @@ void decode(BER_Decoder& decoder, u32bit level)
       {
       const ASN1_Tag type_tag = obj.type_tag;
       const ASN1_Tag class_tag = obj.class_tag;
-      const u32bit length = obj.value.size();
+      const size_t length = obj.value.size();
 
       /* hack to insert the tag+length back in front of the stuff now
          that we've gotten the type info */
@@ -142,8 +118,8 @@ void decode(BER_Decoder& decoder, u32bit level)
          {
          bool not_text = false;
 
-         for(u32bit j = 0; j != bits.size(); j++)
-            if(!isgraph(bits[j]) && !isspace(bits[j]))
+         for(size_t i = 0; i != bits.size(); ++i)
+            if(!isgraph(bits[i]) && !isspace(bits[i]))
                not_text = true;
 
          Pipe pipe(((not_text) ? new Hex_Encoder : 0));
@@ -176,8 +152,8 @@ void decode(BER_Decoder& decoder, u32bit level)
             rep = BigInt::encode(number, BigInt::Hexadecimal);
 
          std::string str;
-         for(u32bit j = 0; j != rep.size(); j++)
-            str += (char)rep[j];
+         for(size_t i = 0; i != rep.size(); ++i)
+            str += (char)rep[i];
 
          emit(type_name(type_tag), level, length, str);
          }
@@ -198,8 +174,8 @@ void decode(BER_Decoder& decoder, u32bit level)
          data.decode(bits, type_tag);
          bool not_text = false;
 
-         for(u32bit j = 0; j != bits.size(); j++)
-            if(!isgraph(bits[j]) && !isspace(bits[j]))
+         for(size_t i = 0; i != bits.size(); ++i)
+            if(!isgraph(bits[i]) && !isspace(bits[i]))
                not_text = true;
 
          Pipe pipe(((not_text) ? new Hex_Encoder : 0));
@@ -213,14 +189,14 @@ void decode(BER_Decoder& decoder, u32bit level)
 
          std::vector<bool> bit_set;
 
-         for(u32bit j = 0; j != bits.size(); j++)
-            for(u32bit k = 0; k != 8; k++)
-               bit_set.push_back((bool)((bits[bits.size()-j-1] >> (7-k)) & 1));
+         for(size_t i = 0; i != bits.size(); ++i)
+            for(size_t j = 0; j != 8; ++j)
+               bit_set.push_back((bool)((bits[bits.size()-i-1] >> (7-j)) & 1));
 
          std::string bit_str;
-         for(u32bit j = 0; j != bit_set.size(); j++)
+         for(size_t i = 0; i != bit_set.size(); ++i)
             {
-            bool the_bit = bit_set[bit_set.size()-j-1];
+            bool the_bit = bit_set[bit_set.size()-i-1];
 
             if(!the_bit && bit_str.size() == 0)
                continue;
@@ -260,15 +236,15 @@ void decode(BER_Decoder& decoder, u32bit level)
       }
    }
 
-void emit(const std::string& type, u32bit level, u32bit length,
+void emit(const std::string& type, size_t level, size_t length,
           const std::string& value)
    {
-   const u32bit LIMIT = 128;
-   const u32bit BIN_LIMIT = 64;
+   const size_t LIMIT = 128;
+   const size_t BIN_LIMIT = 64;
 
    int written = 0;
    written += printf("  d=%2d, l=%4d: ", level, length);
-   for(u32bit j = INITIAL_LEVEL; j != level; j++)
+   for(size_t i = INITIAL_LEVEL; i != level; ++i)
       written += printf(" ");
    written += printf("%s   ", type.c_str());
 

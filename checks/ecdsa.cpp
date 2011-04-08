@@ -48,7 +48,7 @@ void test_hash_larger_than_n(RandomNumberGenerator& rng)
    {
    std::cout << "." << std::flush;
 
-   EC_Domain_Params dom_pars(OID("1.3.132.0.8")); // secp160r1
+   EC_Group dom_pars(OID("1.3.132.0.8")); // secp160r1
    // n = 0x0100000000000000000001f4c8f927aed3ca752257 (21 bytes)
    // -> shouldn't work with SHA224 which outputs 28 bytes
 
@@ -137,7 +137,7 @@ void test_sign_then_ver(RandomNumberGenerator& rng)
    {
    std::cout << '.' << std::flush;
 
-   EC_Domain_Params dom_pars(OID("1.3.132.0.8"));
+   EC_Group dom_pars(OID("1.3.132.0.8"));
    ECDSA_PrivateKey ecdsa(rng, dom_pars);
 
    PK_Signer signer(ecdsa, "EMSA1(SHA-1)");
@@ -165,7 +165,7 @@ bool test_ec_sign(RandomNumberGenerator& rng)
 
    try
       {
-      EC_Domain_Params dom_pars(OID("1.3.132.0.8"));
+      EC_Group dom_pars(OID("1.3.132.0.8"));
       ECDSA_PrivateKey priv_key(rng, dom_pars);
       std::string pem_encoded_key = PKCS8::PEM_encode(priv_key);
 
@@ -229,7 +229,7 @@ void test_create_pkcs8(RandomNumberGenerator& rng)
       std::ofstream rsa_priv_key(TEST_DATA_DIR "/rsa_private.pkcs8.pem");
       rsa_priv_key << PKCS8::PEM_encode(rsa_key);
 
-      EC_Domain_Params dom_pars(OID("1.3.132.0.8"));
+      EC_Group dom_pars(OID("1.3.132.0.8"));
       ECDSA_PrivateKey key(rng, dom_pars);
 
       // later used by other tests :(
@@ -246,7 +246,7 @@ void test_create_and_verify(RandomNumberGenerator& rng)
    {
    std::cout << "." << std::flush;
 
-   EC_Domain_Params dom_pars(OID("1.3.132.0.8"));
+   EC_Group dom_pars(OID("1.3.132.0.8"));
    ECDSA_PrivateKey key(rng, dom_pars);
    std::ofstream priv_key(TEST_DATA_DIR "/dompar_private.pkcs8.pem");
    priv_key << PKCS8::PEM_encode(key);
@@ -281,7 +281,7 @@ void test_create_and_verify(RandomNumberGenerator& rng)
    CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
    PointGFp p_G = OS2ECP ( sv_G_secp_comp, curve );
 
-   EC_Domain_Params dom_params(curve, p_G, bi_order_g, BigInt(1));
+   EC_Group dom_params(curve, p_G, bi_order_g, BigInt(1));
    if(!p_G.on_the_curve())
       throw Internal_Error("Point not on the curve");
 
@@ -337,7 +337,7 @@ void test_curve_registry(RandomNumberGenerator& rng)
       try
          {
          OID oid(oids[i]);
-         EC_Domain_Params dom_pars(oid);
+         EC_Group dom_pars(oid);
          ECDSA_PrivateKey ecdsa(rng, dom_pars);
 
          PK_Signer signer(ecdsa, "EMSA1(SHA-1)");

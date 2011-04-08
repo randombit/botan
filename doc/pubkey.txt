@@ -52,7 +52,7 @@ operations, like key agreement, the two keys *must* use the same
 group.  There are currently two kinds of discrete logarithm groups
 supported in botan: the integers modulo a prime, represented by
 :ref:`dl_group`, and elliptic curves in GF(p), represented by
-:ref:`ec_dompar`. A rough generalization is that the larger the group
+:ref:`ec_group`. A rough generalization is that the larger the group
 is, the more secure the algorithm is, but coorespondingly the slower
 the operations will be.
 
@@ -74,30 +74,14 @@ Nyberg-Rueppel key pairs with
   value. Normally, you would leave the value as zero, letting the
   class generate a new random key.
 
-Finally, given an ``EC_Domain_Params`` object, you can create a new
+Finally, given an ``EC_Group`` object, you can create a new
 ECDSA, ECDH, or GOST 34.10 private key with
 
-.. cpp:function:: ECDSA_PrivateKey::ECDSA_PrivateKey(RandomNumberGenerator& rng, const EC_Domain_Params& domain)
+.. cpp:function:: ECDSA_PrivateKey::ECDSA_PrivateKey(RandomNumberGenerator& rng, const EC_Group& domain, const BigInt& x = 0)
 
-.. cpp:function:: ECDH_PrivateKey::ECDH_PrivateKey(RandomNumberGenerator& rng, const EC_Domain_Params& domain)
+.. cpp:function:: ECDH_PrivateKey::ECDH_PrivateKey(RandomNumberGenerator& rng, const EC_Group& domain, const BigInt& x = 0)
 
-.. cpp:function:: GOST_3410_PrivateKey::GOST_3410_PrivateKey(RandomNumberGenerator& rng, const EC_Domain_Params& domain)
-
-Unlike the integer modulo a prime key types, the constructor that takes a
-predefined ``BigInt`` private key value is different:
-
-.. cpp:function:: ECDSA_PrivateKey::ECDSA_PrivateKey(const EC_Domain_Params& domain, const BigInt& x)
-
-.. cpp:function:: ECDH_PrivateKey::ECDH_PrivateKey(const EC_Domain_Params& domain, const BigInt& x)
-
-.. cpp:function:: GOST_3410_PrivateKey::GOST_3410_PrivateKey(const EC_Domain_Params& domain, const BigInt& x)
-
-.. note::
-
-  It is likely that these constructors will be removed in a future
-  release, and a third optional parameter will be added to the
-  constructors described above, to match the integer modulo prime
-  versions. Only use them if you really need them.
+.. cpp:function:: GOST_3410_PrivateKey::GOST_3410_PrivateKey(RandomNumberGenerator& rng, const EC_Group& domain, const BigInt& x = 0)
 
 .. _serializing_private_keys:
 
@@ -274,12 +258,12 @@ You can reload a serialized group using
 
 .. cpp:function:: void DL_Group::PEM_decode(DataSource& source)
 
-.. _ec_dompar:
+.. _ec_group:
 
-EC_Domain_Params
+EC_Group
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-An ``EC_Domain_Params`` is initialized by passing the name of the
+An ``EC_Group`` is initialized by passing the name of the
 group to be used to the constructor. These groups have
 semi-standardized names like "secp256r1" and "brainpool512r1".
 
@@ -305,96 +289,82 @@ Each public key type has a function
   checking, which includes expensive operations like primality
   checking.
 
-Getting a PK algorithm object
----------------------------------
-
-The key types, like ``RSA_PrivateKey``, do not implement any kind of
-padding or encoding (which is necessary for security). To get an
-object that knows how to do padding, use the wrapper classes included
-in ``pubkey.h``. These take a key, along with a string that specifies
-what hashing and encoding method(s) to use. Examples of such strings
-are "EME1(SHA-256)" for OAEP encryption and "EMSA4(SHA-256)" for PSS
-signatures (where the message is hashed using SHA-256).
-
-Here are some basic examples (using an RSA key) to give you a feel for
-the possibilities. These examples assume ``rsakey`` is an
-``RSA_PrivateKey``, since otherwise we would not be able to create
-a decryption or signature object with it (you can create encryption or
-signature verification objects with public keys, naturally)::
-
-   // PKCS #1 v2.0 / IEEE 1363 compatible encryption
-   PK_Encryptor_EME rsa_enc_pkcs1_v2(rsakey, "EME1(SHA-1)");
-   // PKCS #1 v1.5 compatible encryption
-   PK_Encryptor_EME rsa_enc_pkcs1_v15(rsakey, "PKCS1v15")
-
-   // This object can decrypt things encrypted by rsa_
-   PK_Decryptor_EME rsa_dec_pkcs1_v2(rsakey, "EME1(SHA-1)");
-
-   // PKCS #1 v1.5 compatible signatures
-   PK_Signer rsa_sign_pkcs1_v15(rsakey, "EMSA3(MD5)");
-   PK_Verifier rsa_verify_pkcs1_v15(rsakey, "EMSA3(MD5)");
-
-   // PKCS #1 v2.1 compatible signatures
-   PK_Signer rsa_sign_pkcs1_v2(rsakey, "EMSA4(SHA-1)");
-   PK_Verifier rsa_verify_pkcs1_v2(rsakey, "EMSA4(SHA-1)");
-
 Encryption
 ---------------------------------
 
-The ``PK_Encryptor`` and ``PK_Decryptor`` classes are the
-interface for encryption and decryption, respectively.
+Safe public key encryption requires the use of a padding scheme which
+hides the underlying mathematical properties of the algorithm.
+Additionally, they will add randomness, so encrypting the same
+plaintext twice produces two different ciphertexts.
 
-Calling ``encrypt`` with a ``byte`` array, a length
-parameter, and an RNG object will return the input encrypted with
-whatever scheme is being used. Calling the similar ``decrypt``
-will perform the inverse operation. You can also do these operations
-with ``SecureVector<byte>``s. In all cases, the output is returned
-via a ``SecureVector<byte>``.
+The primary interface for encryption is ``PK_Encryptor``, which
+provides the following interface:
 
-If you attempt an operation with a larger size than the key can
-support (this limit varies based on the algorithm, the key size, and
-the padding method used (if any)), an exception will be thrown. You
-can call ``maximum_input_size`` to find out the maximum size
-input (in bytes) that you can safely use with any particular key.
+.. cpp:function:: SecureVector<byte> PK_Encryptor::encrypt(const byte in[], size_t length, RandomNumberGenerator& rng) const
 
-Available public key encryption algorithms in Botan are RSA and
-ElGamal. The encoding methods are EME1, denoted by "EME1(HASHNAME)",
-PKCS #1 v1.5, called "PKCS1v15" or "EME-PKCS1-v1_5", and raw encoding
-("Raw").
+.. cpp:function:: SecureVector<byte> PK_Encryptor::encrypt(const MemoryRegion<byte>& in, RandomNumberGenerator& rng) const
 
-For compatibility reasons, PKCS #1 v1.5 is recommend for use with
-ElGamal (most other implementations of ElGamal do not support any
-other encoding format). RSA can also be used with PKCS # 1 encoding,
-but because of various possible attacks, EME1 is the preferred
-encoding. EME1 requires the use of a hash function: unless a competent
-applied cryptographer tells you otherwise, you should use SHA-256 or
-SHA-512.
 
-Don't use "Raw" encoding unless you need it for backward
-compatibility with old protocols. There are many possible attacks
-against both ElGamal and RSA when they are used in this way.
+.. cpp:function::  size_t PK_Encryptor::maximum_input_size() const
+
+   This function returns the maximum size of the message that can
+   be processed, in bytes. If you call ``encrypt`` with a value
+   larger than this the operation will fail with an exception.
+
+``PK_Encryptor`` is only an interface; to use one you have to create
+an implementation; there are currently two availabie in the library,
+``PK_Encryptor_EME`` and ``DLIES_Encryptor``. DLIES is a standard
+method (from IEEE 1363) that uses a key agreement technique such as DH
+or ECDH to perform message encryption. Normally, public key encryption
+is done using algorithms which support it directly, such as RSA or
+ElGamal; these use ``PK_Encryptor_EME``. The construction method is
+simple; call
+
+.. cpp:function:: PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key, std::string eme)
+
+  With *key* being the key you want to encrypt messages to. The
+  padding method to use is specified in *eme*.
+
+  The recommended values for *eme* is "EME1(SHA-1)" or
+  "EME1(SHA-256)". If you need compatability with protocols using the
+  PKCS #1 v1.5 standard, you can also use "EME-PKCS1-v1_5".
+
+The DLIES encryptor is defined in the header ``dlies.h``, and
+is created by the constructor:
+
+.. cpp:function:: DLIES_Encryptor::DLIES_Encryptor(const PK_Key_Agreement_Key&, KDF* kdf, MessageAuthenticationCode* mac, size_t mac_key_len = 20)
+
+  Where *kdf* is a :ref:`key_derivation_function` and *mac* is a
+  :ref:`message_auth_code`.
+
+The decryption classes are named ``PK_Decryptor``,
+``PK_Decryptor_EME``, and ``DLIES_Decryptor``. They are created in the
+exact same way, except they take the private key, and the processing
+function is named ``decrypt``.
+
 
 Signatures
 ---------------------------------
 
+
 The signature algorithms look quite a bit like the hash functions. You
-can repeatedly call ``update``, giving more and more of a
-message you wish to sign, and then call ``signature``, which
-will return a signature for that message. If you want to do it all in
-one shot, call ``sign_message``, which will just call
-``update`` with its argument and then return whatever
-``signature`` returns. Generating a signature requires random
-numbers with some schemes, so ``signature`` and
+can repeatedly call ``update``, giving more and more of a message you
+wish to sign, and then call ``signature``, which will return a
+signature for that message. If you want to do it all in one shot, call
+``sign_message``, which will just call ``update`` with its argument
+and then return whatever ``signature`` returns. Generating a signature
+requires random numbers with some schemes, so ``signature`` and
 ``sign_message`` both take a ``RandomNumberGenerator&``.
 
-You can validate a signature by updating the verifier class, and finally seeing
-the if the value returned from ``check_signature`` is true (you pass
-the supposed signature to the ``check_signature`` function as a byte
-array and a length or as a ``MemoryRegion<byte>``). There is another
-function, ``verify_message``, which takes a pair of byte array/length
-pairs (or a pair of ``MemoryRegion<byte>`` objects), the first of which is
-the message, the second being the (supposed) signature. It returns true if the
-signature is valid and false otherwise.
+You can validate a signature by updating the verifier class, and
+finally seeing the if the value returned from ``check_signature`` is
+true (you pass the supposed signature to the ``check_signature``
+function as a byte array and a length or as a
+``MemoryRegion<byte>``). There is another function,
+``verify_message``, which takes a pair of byte array/length pairs (or
+a pair of ``MemoryRegion<byte>`` objects), the first of which is the
+message, the second being the (supposed) signature. It returns true if
+the signature is valid and false otherwise.
 
 Available public key signature algorithms in Botan are RSA, DSA,
 ECDSA, GOST-34.11, Nyberg-Rueppel, and Rabin-Williams. Signature

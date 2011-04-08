@@ -1,17 +1,3 @@
-/*
-* (C) 2003 Jack Lloyd
-*
-* Distributed under the terms of the Botan license
-*/
-
-/*
-Generate a 1024 bit RSA key, and then create a self-signed X.509v3
-certificate with that key. If the do_CA variable is set to true, then
-it will be marked for CA use, otherwise it will get extensions
-appropriate for use with a client certificate. The private key is
-stored as an encrypted PKCS #8 object in another file.
-*/
-
 #include <botan/botan.h>
 #include <botan/x509self.h>
 #include <botan/rsa.h>
@@ -49,7 +35,7 @@ int main(int argc, char* argv[])
       {
       AutoSeeded_RNG rng;
 
-      RSA_PrivateKey key(rng, 1024);
+      RSA_PrivateKey key(rng, 2048);
 
       std::ofstream priv_key("private.pem");
       priv_key << PKCS8::PEM_encode(key, rng, argv[1]);

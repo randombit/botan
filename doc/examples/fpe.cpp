@@ -1,17 +1,6 @@
-/*
-* (C) 2009 Jack Lloyd
-*
-* Distributed under the terms of the Botan license
-*/
-
-/*
-* Encrypt credit cards numbers with valid checksums into other credit
-* card numbers with valid checksums using format preserving encryption.
-*/
-
+#include <botan/botan.h>
 #include <botan/fpe.h>
 #include <botan/sha160.h>
-#include <botan/init.h>
 
 using namespace Botan;
 
@@ -130,7 +119,7 @@ int main(int argc, char* argv[])
    std::cout << "Input was: " << cc_number << ' '
              << luhn_check(cc_number) << '\n';
 
-   /**
+   /*
    * In practice something like PBKDF2 with a salt and high iteration
    * count would be a good idea.
    */

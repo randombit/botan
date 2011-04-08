@@ -3,7 +3,7 @@ define ECDH
 <requires>
 alloc
 asn1
-ec_dompar
+ec_group
 ecc_key
 libstate
 numbertheory

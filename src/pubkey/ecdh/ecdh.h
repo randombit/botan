@@ -32,7 +32,7 @@ class BOTAN_DLL ECDH_PublicKey : public virtual EC_PublicKey
       * @param dom_par the domain parameters associated with this key
       * @param public_point the public point defining this key
       */
-      ECDH_PublicKey(const EC_Domain_Params& dom_par,
+      ECDH_PublicKey(const EC_Group& dom_par,
                      const PointGFp& public_point) :
          EC_PublicKey(dom_par, public_point) {}
 
@@ -77,10 +77,12 @@ class BOTAN_DLL ECDH_PrivateKey : public ECDH_PublicKey,
       * Generate a new private key
       * @param rng a random number generator
       * @param domain parameters to used for this key
+      * @param x the private key; if zero, a new random key is generated
       */
       ECDH_PrivateKey(RandomNumberGenerator& rng,
-                      const EC_Domain_Params& domain) :
-         EC_PrivateKey(rng, domain) {}
+                      const EC_Group& domain,
+                      const BigInt& x = 0) :
+         EC_PrivateKey(rng, domain, x) {}
 
       MemoryVector<byte> public_value() const
          { return ECDH_PublicKey::public_value(); }

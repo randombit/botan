@@ -56,7 +56,7 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
    // Also includes hash and cipher OIDs... brilliant design guys
    BER_Decoder(alg_id.parameters).start_cons(SEQUENCE).decode(ecc_param_id);
 
-   domain_params = EC_Domain_Params(ecc_param_id);
+   domain_params = EC_Group(ecc_param_id);
 
    SecureVector<byte> bits;
    BER_Decoder(key_bits).decode(bits, OCTET_STRING);

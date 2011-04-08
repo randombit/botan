@@ -172,7 +172,7 @@ void test_point_transformation ()
    std::cout << "." << std::flush;
 
    // get a vailid point
-   EC_Domain_Params dom_pars(OID("1.3.132.0.8"));
+   EC_Group dom_pars(OID("1.3.132.0.8"));
    PointGFp p = dom_pars.get_base_point();
 
    // get a copy
@@ -186,7 +186,7 @@ void test_point_mult ()
    {
    std::cout << "." << std::flush;
 
-   EC_Domain_Params secp160r1(OIDS::lookup("secp160r1"));
+   EC_Group secp160r1(OIDS::lookup("secp160r1"));
 
    const CurveGFp& curve = secp160r1.get_curve();
 
@@ -637,9 +637,9 @@ void test_gfp_store_restore()
    std::cout << "." << std::flush;
 
    // generate point
-   //EC_Domain_Params dom_pars = global_config().get_ec_dompar("1.3.132.0.8");
-   //EC_Domain_Params dom_pars("1.3.132.0.8");
-   EC_Domain_Params dom_pars(OID("1.3.132.0.8"));
+   //EC_Group dom_pars = global_config().get_ec_dompar("1.3.132.0.8");
+   //EC_Group dom_pars("1.3.132.0.8");
+   EC_Group dom_pars(OID("1.3.132.0.8"));
    PointGFp p = dom_pars.get_base_point();
 
    //store point (to std::string)
@@ -724,7 +724,7 @@ void test_mult_by_order()
    std::cout << "." << std::flush;
 
    // generate point
-   EC_Domain_Params dom_pars(OID("1.3.132.0.8"));
+   EC_Group dom_pars(OID("1.3.132.0.8"));
    PointGFp p = dom_pars.get_base_point();
    PointGFp shouldBeZero = p * dom_pars.get_order();
 
@@ -735,7 +735,7 @@ void test_point_swap(RandomNumberGenerator& rng)
    {
    std::cout << "." << std::flush;
 
-   EC_Domain_Params dom_pars(OID("1.3.132.0.8"));
+   EC_Group dom_pars(OID("1.3.132.0.8"));
 
    PointGFp a(create_random_point(rng, dom_pars.get_curve()));
    PointGFp b(create_random_point(rng, dom_pars.get_curve()));
@@ -756,7 +756,7 @@ void test_point_swap(RandomNumberGenerator& rng)
 void test_mult_sec_mass(RandomNumberGenerator& rng)
    {
 
-   EC_Domain_Params dom_pars(OID("1.3.132.0.8"));
+   EC_Group dom_pars(OID("1.3.132.0.8"));
    for(int i = 0; i<50; i++)
       {
       std::cout << "." << std::flush;
@@ -775,7 +775,7 @@ void test_curve_cp_ctor()
    {
    std::cout << "." << std::flush;
 
-   EC_Domain_Params dom_pars(OID("1.3.132.0.8"));
+   EC_Group dom_pars(OID("1.3.132.0.8"));
    CurveGFp curve(dom_pars.get_curve());
    }
 

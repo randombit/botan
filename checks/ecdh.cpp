@@ -33,7 +33,7 @@ void test_ecdh_normal_derivation(RandomNumberGenerator& rng)
    {
    std::cout << "." << std::flush;
 
-   EC_Domain_Params dom_pars(OID("1.3.132.0.8"));
+   EC_Group dom_pars(OID("1.3.132.0.8"));
 
    ECDH_PrivateKey private_a(rng, dom_pars);
 
@@ -65,7 +65,7 @@ void test_ecdh_some_dp(RandomNumberGenerator& rng)
       std::cout << "." << std::flush;
 
       OID oid(oids[i]);
-      EC_Domain_Params dom_pars(oid);
+      EC_Group dom_pars(oid);
 
       ECDH_PrivateKey private_a(rng, dom_pars);
       ECDH_PrivateKey private_b(rng, dom_pars);
@@ -91,7 +91,7 @@ void test_ecdh_der_derivation(RandomNumberGenerator& rng)
    for(u32bit i = 0; i< oids.size(); i++)
       {
       OID oid(oids[i]);
-      EC_Domain_Params dom_pars(oid);
+      EC_Group dom_pars(oid);
 
       ECDH_PrivateKey private_a(rng, dom_pars);
       ECDH_PrivateKey private_b(rng, dom_pars);

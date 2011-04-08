@@ -18,7 +18,7 @@
 
 namespace Botan {
 
-EC_PublicKey::EC_PublicKey(const EC_Domain_Params& dom_par,
+EC_PublicKey::EC_PublicKey(const EC_Group& dom_par,
                            const PointGFp& pub_point) :
    domain_params(dom_par), public_key(pub_point),
    domain_encoding(EC_DOMPAR_ENC_EXPLICIT)
@@ -30,7 +30,7 @@ EC_PublicKey::EC_PublicKey(const EC_Domain_Params& dom_par,
 EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id,
                            const MemoryRegion<byte>& key_bits)
    {
-   domain_params = EC_Domain_Params(alg_id.parameters);
+   domain_params = EC_Group(alg_id.parameters);
    domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
 
    public_key = OS2ECP(key_bits, domain().get_curve());
@@ -52,7 +52,7 @@ MemoryVector<byte> EC_PublicKey::x509_subject_public_key() const
    return EC2OSP(public_point(), PointGFp::COMPRESSED);
    }
 
-void EC_PublicKey::set_parameter_encoding(EC_Domain_Params_Encoding form)
+void EC_PublicKey::set_parameter_encoding(EC_Group_Encoding form)
    {
    if(form != EC_DOMPAR_ENC_EXPLICIT &&
       form != EC_DOMPAR_ENC_IMPLICITCA &&
@@ -76,32 +76,24 @@ const BigInt& EC_PrivateKey::private_value() const
    }
 
 /**
-* EC_PrivateKey generator
-*/
-EC_PrivateKey::EC_PrivateKey(const EC_Domain_Params& dom_par,
-                             const BigInt& priv_key)
-   {
-   domain_params = dom_par;
-   domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
-
-   public_key = domain().get_base_point() * priv_key;
-   private_key = priv_key;
-   }
-
-/**
-* EC_PrivateKey generator
+* EC_PrivateKey constructor
 */
 EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
-                             const EC_Domain_Params& dom_par)
+                             const EC_Group& ec_group,
+                             const BigInt& x)
    {
-   domain_params = dom_par;
+   domain_params = ec_group;
    domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
 
-   private_key = BigInt::random_integer(rng, 1, domain().get_order());
+   if(x == 0)
+      private_key = BigInt::random_integer(rng, 1, domain().get_order());
+   else
+      private_key = x;
+
    public_key = domain().get_base_point() * private_key;
 
    BOTAN_ASSERT(public_key.on_the_curve(),
-                "generated ECC private key was not on the curve");
+                "ECC private key was not on the curve");
    }
 
 MemoryVector<byte> EC_PrivateKey::pkcs8_private_key() const
@@ -118,7 +110,7 @@ MemoryVector<byte> EC_PrivateKey::pkcs8_private_key() const
 EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
                              const MemoryRegion<byte>& key_bits)
    {
-   domain_params = EC_Domain_Params(alg_id.parameters);
+   domain_params = EC_Group(alg_id.parameters);
    domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
 
    BER_Decoder(key_bits)

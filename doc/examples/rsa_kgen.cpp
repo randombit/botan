@@ -1,15 +1,3 @@
-/*
-* (C) 2002 Jack Lloyd
-*
-* Distributed under the terms of the Botan license
-*/
-
-/*
-Generate an RSA key of a specified bitlength, and put it into a pair of key
-files. One is the public key in X.509 format (PEM encoded), the private key is
-in PKCS #8 format (also PEM encoded).
-*/
-
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -29,25 +17,25 @@ int main(int argc, char* argv[])
       return 1;
       }
 
-   u32bit bits = std::atoi(argv[1]);
+   const size_t bits = std::atoi(argv[1]);
    if(bits < 1024 || bits > 16384)
       {
       std::cout << "Invalid argument for bitsize" << std::endl;
       return 1;
       }
 
-   Botan::LibraryInitializer init;
-
-   std::ofstream pub("rsapub.pem");
-   std::ofstream priv("rsapriv.pem");
-   if(!priv || !pub)
-      {
-      std::cout << "Couldn't write output files" << std::endl;
-      return 1;
-      }
-
    try
       {
+      Botan::LibraryInitializer init;
+
+      std::ofstream pub("rsapub.pem");
+      std::ofstream priv("rsapriv.pem");
+      if(!priv || !pub)
+         {
+         std::cout << "Couldn't write output files" << std::endl;
+         return 1;
+         }
+
       AutoSeeded_RNG rng;
 
       RSA_PrivateKey key(rng, bits);

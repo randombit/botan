@@ -14,6 +14,12 @@ Version 1.9.16, Not Yet Released
     reStructuredText suitable for processing by Sphinx, which can
     generate nicely formatted HTML and PDFs.
 
+  * The class EC_Domain_Params has been renamed EC_Group, with a
+    typedef for backwards compatability.
+
+  * EC_Group's string constructor didn't understand the standard
+    names like "secp160r1", forcing use of the OIDs.
+
   * Change shared library versioning to match the normal Unix
     conventions. Instead of libbotan-X.Y.Z.so, the shared lib is named
     libbotan.so.X.Y.Z; this allows the runtime linker to do its
