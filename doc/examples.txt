@@ -1,0 +1,109 @@
+
+Examples
+========================================
+
+RSA Examples
+----------------------------------------
+
+RSA Key Generation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Generate an RSA key of a specified bitlength, and put it into a pair
+of key files. One is the public key in X.509 format (PEM encoded), the
+private key is in PKCS #8 format (also PEM encoded), either encrypted
+or unencrypted depending on if a password was given.
+
+.. literalinclude:: examples/rsa_kgen.cpp
+
+DSA Examples
+----------------------------------------
+
+DSA Key Generation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Generate a 2048 bit DSA key
+
+.. literalinclude:: examples/dsa_kgen.cpp
+
+DSA Signature Generation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Reads a DSA private key and signs the specified file using SHA-1
+
+.. literalinclude:: examples/dsa_sign.cpp
+
+DSA Signature Verification
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Reads a DSA public key and a signature, and checks if the signature
+is valid for the specified file
+
+..literalinclude:: examples/dsa_ver.cpp
+
+X.509 Certificate Examples
+----------------------------------------
+
+PKCS #10 Certificate Requests
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. literalinclude:: examples/pkcs10.cpp
+
+Self Signed Certificate
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Generate a 2048 bit RSA key, and then create a self-signed X.509v3
+certificate with that key. If the do_CA variable is set to true, then
+it will be marked for CA use, otherwise it will get extensions
+appropriate for use with a client certificate. The private key is
+stored as an encrypted PKCS #8 object in another file.
+
+.. literalinclude:: examples/self_sig.cpp
+
+Certificate Authority
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Implement the functionality of a simple CA: read in a CA certificate,
+the associated private key, and a PKCS #10 certificate request. Sign
+the request and print the new certificate to stdout.
+
+File names are hardcoded for simplicity. The CA certificate is
+expected in "cacert.pem", the private key is expected in
+"caprivate.pem", and "req.pem" is a PKCS #10 certificate request.
+
+.. literalinclude:: examples/ca.cpp
+
+
+Format Preserving Encryption
+----------------------------------------
+
+Format preserving encryption is a way of mapping data with an
+arbitrarly specified format such that the ciphertext has the same
+formatting. This example encrypts a credit card number with a valid
+`Luhn checksum <http://en.wikipedia.org/wiki/Luhn_algorithm>`_ to
+another number with the same format, including a correct checksum.
+
+.. literalinclude:: examples/fpe.cpp
+
+ASN.1 Parsing
+----------------------------------------
+
+This example is a simple ASN.1 parser
+
+.. literalinclude:: examples/asn1.cpp
+
+SSL/TLS
+----------------------------------------
+
+SSL Client
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A simple SSL/TLS client
+
+.. literalinclude:: examples/tls_client.cpp
+
+SSL Server
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A simple SSL/TLS server
+
+.. literalinclude:: examples/tls_server.cpp

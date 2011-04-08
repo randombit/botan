@@ -12,12 +12,17 @@ Contents:
    filters
    pubkey
    x509
+   ssl
    lowlevel
+   passhash
+   rng
    bigint
+   examples
    algos
    pgpkeys
    license
    credits
+   support
    log
 
 Indices and tables

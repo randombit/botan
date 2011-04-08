@@ -187,11 +187,11 @@ Adding Certificates
 You can add new certificates to a certificate store using any of these
 functions:
 
-.. cpp:function:: void add_cert(const X509_Certificate& cert, bool trusted = false)
+.. cpp:function:: void X509_Store::add_cert(const X509_Certificate& cert, bool trusted = false)
 
-.. cpp:function:: void add_cert(DataSource& source)
+.. cpp:function:: void X509_Store::add_cert(DataSource& source)
 
-.. cpp:function:: void add_trusted_certs(DataSource& source)
+.. cpp:function:: void X509_Store::add_trusted_certs(DataSource& source)
 
 The versions that take a ``DataSource&`` will add all the certificates
 that it can find in that source.
@@ -211,7 +211,7 @@ trusted.
 Adding CRLs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. cpp:function:: X509_Code add_crl(const X509_CRL& crl)
+.. cpp:function:: X509_Code X509_Store::add_crl(const X509_CRL& crl)
 
 This will process the CRL and mark the revoked certificates. This will
 also work if a revoked certificate is added to the store sometime
@@ -277,7 +277,7 @@ Verifying Certificates
 There is a single function in ``X509_Store`` related to verifying a
 certificate:
 
-.. .cpp:function:: X509_Code validate_cert(const X509_Certificate& cert, Cert_Usage usage = ANY)
+.. .cpp:function:: X509_Code X509_Store::validate_cert(const X509_Certificate& cert, Cert_Usage usage = ANY)
 
 This function will return ``VERIFIED`` if the certificate can
 safely be considered valid for the usage(s) described by ``usage``,
