@@ -99,8 +99,9 @@ predefined ``BigInt`` private key value is different:
   constructors described above, to match the integer modulo prime
   versions. Only use them if you really need them.
 
+.. _serializing_private_keys:
 
-Serializing Private Keys
+Serializing Private Keys Using PKCS #8
 ----------------------------------------
 
 The standard format for serializing a private key is PKCS #8, the
@@ -157,7 +158,16 @@ decrypt, if necessary) a PKCS #8 private key:
 
 .. cpp:function:: Private_Key* PKCS8::load_key(const std::string& filename, RandomNumberGenerator& rng, const std::string& passphrase = "")
 
-The result is an object allocated using ``new``.
+These functions will return an object allocated key object based on
+the data from whatever source it is using (assuming, of course, the
+source is in fact storing a representation of a private key, and the
+decryption was sucessful). The encoding used (PEM or BER) need not be
+specified; the format will be detected automatically. The key is
+allocated with ``new``, and should be released with ``delete`` when
+you are done with it. The first takes a generic ``DataSource`` that
+you have to create - the other is a simple wrapper functions that take
+either a filename or a memory buffer and create the appropriate
+``DataSource``.
 
 The versions that pass the passphrase as a ``std::string`` are
 primarily for compatibility, but they are useful in limited
@@ -178,6 +188,25 @@ passphrase passed in first, and then it cancels.
 
   In a future version, it is likely that ``User_Interface`` will be
   replaced by a simple callback using ``std::function``.
+
+Serializing Public Keys
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To import and export public keys, use:
+
+.. cpp:function:: MemoryVector<byte> X509::BER_encode(const Public_Key& key)
+
+.. cpp:function:: std::string X509::PEM_encode(const Public_Key& key)
+
+.. cpp:function:: Public_Key* X509::load_key(DataSource& in)
+
+.. cpp:function:: Public_Key* X509::load_key(const SecureVector<byte>& buffer)
+
+.. cpp:function:: Public_Key* X509::load_key(const std::string& filename)
+
+  These functions operate in the same way as the ones described in
+  :ref:`serializing_private_keys`, except that no encryption option is
+  availabe.
 
 .. _dl_group:
 
@@ -224,7 +253,7 @@ You can generate a new random group using
   bits. If the *type* is ``Prime_Subgroup`` or ``DSA_Kosherizer``,
   then *qbits* specifies the size of the subgroup.
 
-You can export a ``DL_Group`` using
+You can serialize a ``DL_Group`` using
 
 .. cpp:function:: SecureVector<byte> DL_Group::DER_Encode(Format format)
 
@@ -232,12 +261,27 @@ or
 
 .. cpp:function:: std::string DL_Group::PEM_encode(Format format)
 
-where *format* is any of 
+where *format* is any of
+
+* ``ANSI_X9_42`` (or ``DH_PARAMETERS``) for modp groups
+* ``ANSI_X9_57`` (or ``DSA_PARAMETERS``) for DSA-style groups
+* ``PKCS_3`` is an older format for modp groups; it should only
+  be used for backwards compatability.
+
+You can reload a serialized group using
+
+.. cpp:function:: void DL_Group::BER_decode(DataSource& source, Format format)
+
+.. cpp:function:: void DL_Group::PEM_decode(DataSource& source)
 
 .. _ec_dompar:
 
 EC_Domain_Params
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+An ``EC_Domain_Params`` is initialized by passing the name of the
+group to be used to the constructor. These groups have
+semi-standardized names like "secp256r1" and "brainpool512r1".
 
 Key Checking
 ---------------------------------
@@ -246,22 +290,20 @@ Most public key algorithms have limitations or restrictions on their
 parameters. For example RSA requires an odd exponent, and algorithms
 based on the discrete logarithm problem need a generator $> 1$.
 
-Each low-level public key type has a function named ``check_key`` that
-takes a ``bool``. This function returns a Boolean value that declares
-whether or not the key is valid (from an algorithmic standpoint). For
-example, it will check to make sure that the prime parameters of a DSA
-key are, in fact, prime. It does not have anything to do with the
-validity of the key for any particular use, nor does it have anything
-to do with certificates that link a key (which, after all, is just
-some numbers) with a user or other entity. If ``check_key``'s argument
-is ``true``, then it does "strong" checking, which includes expensive
-operations like primality checking.
+Each public key type has a function
 
-Keys are always checked when they are loaded or generated, so typically there
-is no reason to use this function directly. However, you can disable or reduce
-the checks for particular cases (public keys, loaded private keys, generated
-private keys) by setting the right config toggle (see the section on the
-configuration subsystem for details).
+.. cpp:function:: bool Public_Key::check_key(RandomNumberGenerator& rng, bool strong)
+
+  This function performs a number of algorithm-specific tests that the
+  key seems to be mathematically valid and consistent, and returns
+  true if all of the tests pass.
+
+  It does not have anything to do with the validity of the key for any
+  particular use, nor does it have anything to do with certificates
+  that link a key (which, after all, is just some numbers) with a user
+  or other entity. If *strong* is ``true``, then it does "strong"
+  checking, which includes expensive operations like primality
+  checking.
 
 Getting a PK algorithm object
 ---------------------------------
@@ -423,55 +465,6 @@ in new applications. The X9.42 algorithm may be useful in some
 circumstances, but unless you need X9.42 compatibility, KDF2 is easier
 to use.
 
-There is a Diffie-Hellman example included in the distribution, which you may
-want to examine.
+An example of using Diffie-Hellman:
 
-.. _pk_import_export:
-
-Importing and Exporting Keys
----------------------------------
-
-There are many, many different (often conflicting) standards
-surrounding public key cryptography. There is, thankfully, only two
-major standards surrounding the representation of a public or private
-key: the X.509 subject public key info format (for public keys), and
-PKCS #8 (for private keys). Other crypto libraries, such as Crypto++
-and OpenSSL, also support these formats, so you can easily exchange
-keys with software that doesn't use Botan.
-
-In addition to "plain" public keys, Botan also supports X.509
-certificates.  These are documented in :ref:`x509_certificates`.
-
-.. _import_export_public_keys:
-
-Importing/Exporting Public Keys
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-To import and export public keys, use:
-
-.. cpp:function:: MemoryVector<byte> X509::BER_encode(const Public_Key& key)
-
-
-.. cpp:function:: std::string X509::PEM_encode(const Public_Key& key)
-
-
-.. cpp:function:: Public_Key* X509::load_key(DataSource& in)
-
-.. cpp:function:: Public_Key* X509::load_key(const SecureVector<byte>& buffer)
-
-.. cpp:function:: Public_Key* X509::load_key(const std::string& filename)
-
-  For loading a public key, use one of the variants of ``load_key``.
-  This function will return a newly allocated key based on the data
-  from whatever source it is using (assuming, of course, the source is
-  in fact storing a representation of a public key). The encoding used
-  (PEM or BER) need not be specified; the format will be detected
-  automatically. The key is allocated with ``new``, and should be
-  released with ``delete`` when you are done with it. The first takes
-  a generic ``DataSource`` that you have to create - the other is a
-  simple wrapper functions that take either a filename or a memory
-  buffer and create the appropriate ``DataSource``.
-
-Importing/Exporting Private Keys
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
+.. literalinclude:: examples/dh.cpp
