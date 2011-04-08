@@ -34,9 +34,9 @@ So what's in an X.509 certificate?
 Obviously, you want to be able to get the public key. This is achieved
 by calling the member function ``subject_public_key``, which will
 return a ``Public_Key``\*. As to what to do with this, read about
-``load_key`` in :ref:`pk_import_export`. In the general case, this
-could be any kind of public key, though 99% of the time it will be an
-RSA key. However, Diffie-Hellman, DSA, and ECDSA keys are also
+``load_key`` in :ref:`serializing_public_keys`. In the general case,
+this could be any kind of public key, though 99% of the time it will
+be an RSA key. However, Diffie-Hellman, DSA, and ECDSA keys are also
 supported, so be careful about how you treat this. It is also a wise
 idea to examine the value returned by ``constraints``, to see what
 uses the public key is approved for.

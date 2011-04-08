@@ -173,6 +173,8 @@ passphrase passed in first, and then it cancels.
   In a future version, it is likely that ``User_Interface`` will be
   replaced by a simple callback using ``std::function``.
 
+.. _serializing_public_keys:
+
 Serializing Public Keys
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -334,8 +336,9 @@ is created by the constructor:
 
 .. cpp:function:: DLIES_Encryptor::DLIES_Encryptor(const PK_Key_Agreement_Key&, KDF* kdf, MessageAuthenticationCode* mac, size_t mac_key_len = 20)
 
-  Where *kdf* is a :ref:`key_derivation_function` and *mac* is a
-  :ref:`message_auth_code`.
+  Where *kdf* is a key derivation function (see
+  :ref:`key_derivation_function`) and *mac* is a
+  MessageAuthenticationCode.
 
 The decryption classes are named ``PK_Decryptor``,
 ``PK_Decryptor_EME``, and ``DLIES_Decryptor``. They are created in the

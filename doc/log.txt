@@ -12,7 +12,8 @@ Version 1.9.16, Not Yet Released
 
   * The documentation, previously written in LaTeX, is now in
     reStructuredText suitable for processing by Sphinx, which can
-    generate nicely formatted HTML and PDFs.
+    generate nicely formatted HTML and PDFs. The documentation has
+    also been greatly updated and expanded.
 
   * The class EC_Domain_Params has been renamed EC_Group, with a
     typedef for backwards compatability.

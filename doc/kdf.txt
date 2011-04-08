@@ -1,5 +1,5 @@
 
-.. _key_derivation_functions:
+.. _key_derivation_function:
 
 Key Derivation Functions
 ========================================

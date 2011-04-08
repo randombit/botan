@@ -23,7 +23,9 @@ Contents:
    pgpkeys
    license
    credits
+   contrib
    support
+   users
    log
 
 Indices and tables
