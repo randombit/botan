@@ -1,10 +1,26 @@
 
-SSL/TLS
+SSL and TLS
 ========================================
 
-SSL/TLS Clients
+Botan supports both client and server implementations of the SSL/TLS
+protocols, including SSL v3, TLS v1.0, and TLS v1.1. The insecure and
+obsolete SSL v2 is not supported.
+
+The implementation uses ``std::tr1::function``, so it may not have
+been compiled into the version you are using; you can test for the
+feature macro ``BOTAN_HAS_SSL_TLS`` to check.
+
+TLS Clients
 ----------------------------------------
 
+A simple TLS client:
 
-SSL/TLS Servers
+.. literalinclude:: examples/tls_client.cpp
+
+
+TLS Servers
 ----------------------------------------
+
+A simple TLS server
+
+.. literalinclude:: examples/tls_server.cpp

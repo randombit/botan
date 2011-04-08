@@ -1,9 +1,3 @@
-/*
-* (C) 2008 Jack Lloyd
-*
-* Distributed under the terms of the Botan license
-*/
-
 #include <botan/init.h>
 #include <botan/tls_client.h>
 #include "socket.h"
@@ -50,35 +44,30 @@ int main(int argc, char* argv[])
 
       Socket sock(argv[1], port);
 
-      std::auto_ptr<Botan::RandomNumberGenerator> rng(
-         Botan::RandomNumberGenerator::make_rng());
+      AutoSeeded_RNG rng;
 
       Client_TLS_Policy policy;
 
       TLS_Client tls(std::tr1::bind(&Socket::read, std::tr1::ref(sock), _1, _2),
                      std::tr1::bind(&Socket::write, std::tr1::ref(sock), _1, _2),
-                     policy, *rng);
+                     policy, rng);
 
       printf("Handshake extablished...\n");
 
-#if 0
       std::string http_command = "GET / HTTP/1.1\r\n"
                                  "Server: " + host + ':' + to_string(port) + "\r\n\r\n";
-#else
-      std::string http_command = "GET / HTTP/1.0\r\n\r\n";
-#endif
 
       tls.write((const byte*)http_command.c_str(), http_command.length());
 
-      u32bit total_got = 0;
+      size_t total_got = 0;
 
       while(true)
          {
          if(tls.is_closed())
             break;
 
-         byte buf[16+1] = { 0 };
-         u32bit got = tls.read(buf, sizeof(buf)-1);
+         byte buf[128+1] = { 0 };
+         size_t got = tls.read(buf, sizeof(buf)-1);
          printf("%s", buf);
          fflush(0);
 

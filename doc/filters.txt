@@ -202,15 +202,17 @@ Any filters that are attached to the pipe after the fork are
 implicitly attached onto the first branch created by the fork. For
 example, let's say you created this pipe::
 
-  Pipe pipe(new Fork(new Hash_Filter("MD5"), new Hash_Filter("SHA-1")),
+  Pipe pipe(new Fork(new Hash_Filter("SHA-256"),
+                     new Hash_Filter("SHA-512")),
             new Hex_Encoder);
 
 And then called ``start_msg``, inserted some data, then
-``end_msg``. Then ``pipe`` would contain two messages. The
-first one (message number 0) would contain the MD5 sum of the input in
-hex encoded form, and the other would contain the SHA-1 sum of the
-input in raw binary. However, it's much better to use a ``Chain``
-instead.
+``end_msg``. Then ``pipe`` would contain two messages. The first one
+(message number 0) would contain the SHA-256 sum of the input in hex
+encoded form, and the other would contain the SHA-512 sum of the input
+in raw binary. In many situations you'll want to perform a sequence of
+operations on multiple branches of the fork; in which case, use
+``Chain``.
 
 Chain
 ---------------------------------
@@ -228,8 +230,8 @@ from the last section, using chain instead of relying on the implicit
 passthrough the other version used::
 
   Pipe pipe(new Fork(
-                new Chain(new Hash_Filter("MD5"), new Hex_Encoder),
-                new Hash_Filter("SHA-1")
+                new Chain(new Hash_Filter("SHA-256"), new Hex_Encoder),
+                new Hash_Filter("SHA-512")
                 )
            );
 
@@ -446,40 +448,6 @@ access it's usually easier to just use C++'s file streams.
 If ``BOTAN_EXT_PIPE_UNIXFD_IO`` is defined, then you can use the
 overloaded I/O operators with Unix file descriptors. For an example of this,
 check out the ``hash_fd`` example, included in the Botan distribution.
-
-A Filter Example
----------------------------------
-
-Here is some code that takes one or more filenames in ``argv`` and
-calculates the result of several hash functions for each file. The complete
-program can be found as ``hasher.cpp`` in the Botan distribution. For
-brevity, error checking has been removed::
-
-   string name[3] = { "MD5", "SHA-1", "RIPEMD-160" };
-   Filter* hash[3] = {
-      new Chain(new Hash_Filter(name[0]),
-                        new Hex_Encoder),
-      new Chain(new Hash_Filter(name[1]),
-                        new Hex_Encoder),
-      new Chain(new Hash_Filter(name[2]),
-                        new Hex_Encoder) };
-
-   Pipe pipe(new Fork(hash, COUNT));
-
-   for(size_t j = 1; argv[j] != 0; j++)
-      {
-      ifstream file(argv[j]);
-      pipe.start_msg();
-      file >> pipe;
-      pipe.end_msg();
-      file.close();
-      for(size_t k = 0; k != 3; k++)
-         {
-         pipe.set_default_msg(3*(j-1)+k);
-         cout << name[k] << "(" << argv[j] << ") = " << pipe << endl;
-         }
-      }
-
 
 Filter Catalog
 ---------------------------------

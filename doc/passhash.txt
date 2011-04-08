@@ -2,7 +2,7 @@
 .. _pbkdf:
 
 PBKDF Algorithms
----------------------------------
+========================================
 
 There are various procedures (usually ad-hoc) for turning a
 passphrase into a (mostly) arbitrary length key for a symmetric
@@ -25,7 +25,7 @@ retrieve any of these using the ``get_pbkdf``, found in
 iterations and a 16 byte salt is recommend for new applications.
 
 OpenPGP S2K
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------------
 
 There are some oddities about OpenPGP's S2K algorithms that are
 documented here. For one thing, it uses the iteration count in a
@@ -47,7 +47,7 @@ iteration count is highly recommended to prevent password guessing
 attempts.
 
 Password Hashing
----------------------------------
+========================================
 
 Storing passwords for user authentication purposes in plaintext is the
 simplest but least secure method; when an attacker compromises the
@@ -100,27 +100,44 @@ only test at a rate of .0001% of what they would without iterations
 (or, equivalently, will require 100,000 times as many zombie botnet
 hosts).
 
-There are many different ways of doing this password hashing
-operation, with common ones including Unix's crypt (which is based on
-DES) and OpenBSD's bcrypt (based on Blowfish). Other variants using
-MD5 or SHA-256 are also in use on various systems.
+Botan provides two techniques for password hashing, bcrypt and
+passhash9.
 
-Botan provides two techniques, passhash9 and bcrypt
+Bcrypt
+----------------------------------------
+
+Bcrypt is a password hashing scheme originally designed for use in
+OpenBSD, but numerous other implementations exist. It is made
+available by including ``bcrypt.h``. Bcrypt provides outputs that
+look like this::
+
+  "$2a$12$7KIYdyv8Bp32WAvc.7YvI.wvRlyVn0HP/EhPmmOyMQA4YKxINO0p2"
+
+.. cpp:function:: std::string generate_bcrypt(const std::string& password, RandomNumberGenerator& rng, u16bit work_factor = 10)
+
+   Takes the password to hash, a rng, and a work factor. Higher values
+   increase the amount of time the algorithm runs, increasing the cost
+   of cracking attempts. The resulting hash is returned as a string.
+
+.. cpp:function:: bool check_bcrypt(const std::string& password, const std::string& hash)
+
+   Takes a password and a bcrypt output and returns true if the
+   password is the same as the one that was used to generate the
+   bcrypt hash.
+
+Here is an example of using bcrypt:
+
+.. literalinclude: examples/bcrypt.cpp
 
 Passhash9
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------------
 
-Botan provides a password hashing technique called passhash9, in
-``passhash9.h``, which is based on PBKDF2. A usage example can be
-found in ``doc/examples/passhash.cpp``. Three functions are provided
-in this header:
+Botan also provides a password hashing technique called passhash9, in
+``passhash9.h``, which is based on PBKDF2.
 
 .. cpp:function:: std::string generate_passhash9(const std::string& password, RandomNumberGenerator& rng, u16bit work_factor = 10)
 
-   Takes the password to hash, a rng, and a work factor, which tells
-   how many iterations to compute. The default work factor is 10
-   (which means 100,000 iterations), but any non-zero value is
-   accepted.
+   Functions much like ``generate_bcrypt``
 
 .. cpp:function:: std::string generate_passhash9(const std::string& password, byte alg_id, RandomNumberGenerator& rng, u16bit work_factor = 10)
 
@@ -130,23 +147,4 @@ in this header:
 
 .. cpp:function:: bool check_passhash9(const std::string& password, const std::string& hash)
 
-   Takes a password and a passhash9 output and checks if the password
-   is the same as the one that was used to generate the passhash9
-   output, returning a boolean true (same) or false (not same).
-
-Bcrypt
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Bcrypt is a password hashing scheme originally designed for use in
-OpenBSD, but numerous other implementations exist. It is made
-available by including ``bcrypt.h``, and provides the functions
-
-.. cpp:function:: std::string generate_bcrypt(const std::string& password, RandomNumberGenerator& rng, u16bit work_factor = 10)
-
-and
-
-.. cpp:function:: bool check_bcrypt(const std::string& password, const std::string& hash)
-
-These work in exactly the same way as the passhash9 password hashing
-functions.
-
+   Functions much like ``check_bcrypt``

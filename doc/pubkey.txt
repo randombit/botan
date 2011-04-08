@@ -300,7 +300,7 @@ plaintext twice produces two different ciphertexts.
 The primary interface for encryption is ``PK_Encryptor``, which
 provides the following interface:
 
-.. cpp:function:: SecureVector<byte> PK_Encryptor::encrypt(const byte in[], size_t length, RandomNumberGenerator& rng) const
+.. cpp:function:: SecureVector<byte> PK_Encryptor::encrypt(const byte* in, size_t length, RandomNumberGenerator& rng) const
 
 .. cpp:function:: SecureVector<byte> PK_Encryptor::encrypt(const MemoryRegion<byte>& in, RandomNumberGenerator& rng) const
 

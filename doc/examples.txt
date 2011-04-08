@@ -90,20 +90,3 @@ ASN.1 Parsing
 This example is a simple ASN.1 parser
 
 .. literalinclude:: examples/asn1.cpp
-
-SSL/TLS
-----------------------------------------
-
-SSL Client
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-A simple SSL/TLS client
-
-.. literalinclude:: examples/tls_client.cpp
-
-SSL Server
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-A simple SSL/TLS server
-
-.. literalinclude:: examples/tls_server.cpp

@@ -16,6 +16,7 @@ Contents:
    lowlevel
    passhash
    rng
+   kdf
    bigint
    examples
    algos

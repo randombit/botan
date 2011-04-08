@@ -122,33 +122,33 @@ Block ciphers implement the interface ``BlockCipher``, found in
 
   Returns the block size of the cipher in bytes
 
-.. cpp:function:: void encrypt_n(const byte* in, byte* out, size_t blocks) const
+.. c:function:: void encrypt_n(const byte in[], byte out[], size_t blocks) const
 
   Encrypt ``blocks`` blocks of data, taking the input from ``in`` and
   placing the ciphertext in ``out``. The two pointers may be
   identical, but should not overlap ranges.
 
-.. cpp:function:: void encrypt(const byte* in, byte* out) const
+.. c:function:: void encrypt(const byte in[], byte out[]) const
 
   Encrypt a single block, taking the input from ``in`` and placing it
   in ``out``.
 
-.. cpp:function:: void encrypt(byte* block) const
+.. c:function:: void encrypt(byte block[]) const
 
   Identical to ``encrypt(block, block)``.
 
-.. cpp:function:: void decrypt_n(const byte* in, byte* out, size_t blocks) const
+.. c:function:: void decrypt_n(const byte in[], byte out[], size_t blocks) const
 
   Decrypt ``blocks`` blocks of data, taking the input from ``in`` and
   placing the plaintext in ``out``. The two pointers may be identical,
   but should not overlap ranges.
 
-.. cpp:function:: void decrypt(const byte* in, byte* out) const
+.. c:function:: void decrypt(const byte in[], byte out[]) const
 
   Decrypt a single block, taking the input from ``in`` and placing it
   in ``out``.
 
-.. cpp:function:: void decrypt(byte* block) const
+.. c:function:: void decrypt(byte block[]) const
 
   Identical to ``decrypt(block, block)``.
 

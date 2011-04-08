@@ -1,10 +1,3 @@
-/*
-* Bcrypt example
-* (C) 2011 Jack Lloyd
-*
-* Distributed under the terms of the Botan license
-*/
-
 #include <botan/botan.h>
 #include <botan/bcrypt.h>
 #include <iostream>
