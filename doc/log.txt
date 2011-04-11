@@ -5,7 +5,7 @@ Release Notes
 2011
 ----------------------------------------
 
-Version 1.9.16, Not Yet Released
+Version 1.9.16, 2011-04-11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Second release candidate for 1.10.0

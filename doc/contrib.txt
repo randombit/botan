@@ -1,6 +1,10 @@
 
-Contributing To Botan
+Contributing
 ========================================
+
+Contributions to the library are most certainly welcome. To increase
+the chances your patch will actually make it into releases in a timely
+fashion, here are some guidelines for patch submission.
 
 Getting The Latest Sources
 ----------------------------------------
@@ -58,3 +62,10 @@ After you finish your changes, you can review them using ``mtn diff``
 to diff against the latest official head; send the output to the
 mailing list for review and inclusion.
 
+Don't forget to update the file ``credits.txt`` with your information,
+if you want to be listed as a contributor. Also, if your patch is
+substantial enough to be considered copyrightable, add yourself to
+``license.txt``.
+
+Patches are best directed to the `botan-devel
+<http://lists.randombit.net/mailman/listinfo/botan-devel>`_.

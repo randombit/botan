@@ -96,7 +96,7 @@ Commercial Software
 * `E.V.E. Paradox <http://www.eveparadox.com>`_, a suite of games for
   Windows, uses botan.
 
-Books, Dissertations, Journal Papers
+Research Projects
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * `A Unified Approach to Intra-Domain Security
@@ -114,17 +114,12 @@ Books, Dissertations, Journal Papers
   Protected IPv6 Networks Through Secret-key Sharing
   <http://www.stormingmedia.us/01/0151/A015134.pdf>`_
 
-  * `An experimental tamper detection system
-    <http://www.cis.udel.edu/~hiper/passages/papers/jochenMILCOM03.pdf>`_
-    designed by researchers from the University of Delaware and the US
-    Army Research Laboratory.
+* `An experimental tamper detection system
+  <http://www.cis.udel.edu/~hiper/passages/papers/jochenMILCOM03.pdf>`_
+  designed by researchers from the University of Delaware and the US
+  Army Research Laboratory.
 
-  * A prototype implementation of a telephony signal security system,
-    described in `Prototyping and evaluation of TCAPsec
-    <http://www.cs.kau.se/cs/education/courses/davddiss/Uppsatser_2007/D2007-04.pdf>`_
-    by Kang Chung and Mathilda Gustafsson.
-
-  * `Code Reading: An Open Source Perspective
-    <http://www.spinellis.gr/codereading/>`_, by Diomidis Spinnellis,
-    includes code from an early version of botan (then called OpenCL).
-
+* A prototype implementation of a telephony signal security system,
+  described in `Prototyping and evaluation of TCAPsec
+  <http://www.cs.kau.se/cs/education/courses/davddiss/Uppsatser_2007/D2007-04.pdf>`_
+  by Kang Chung and Mathilda Gustafsson.
