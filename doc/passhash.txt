@@ -127,7 +127,7 @@ look like this::
 
 Here is an example of using bcrypt:
 
-.. literalinclude: examples/bcrypt.cpp
+.. literalinclude:: examples/bcrypt.cpp
 
 Passhash9
 ----------------------------------------

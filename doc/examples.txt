@@ -2,28 +2,8 @@
 Examples
 ========================================
 
-RSA Examples
-----------------------------------------
-
-RSA Key Generation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Generate an RSA key of a specified bitlength, and put it into a pair
-of key files. One is the public key in X.509 format (PEM encoded), the
-private key is in PKCS #8 format (also PEM encoded), either encrypted
-or unencrypted depending on if a password was given.
-
-.. literalinclude:: examples/rsa_kgen.cpp
-
 DSA Examples
 ----------------------------------------
-
-DSA Key Generation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Generate a 2048 bit DSA key
-
-.. literalinclude:: examples/dsa_kgen.cpp
 
 DSA Signature Generation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

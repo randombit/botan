@@ -83,6 +83,27 @@ ECDSA, ECDH, or GOST 34.10 private key with
 
 .. cpp:function:: GOST_3410_PrivateKey::GOST_3410_PrivateKey(RandomNumberGenerator& rng, const EC_Group& domain, const BigInt& x = 0)
 
+
+Generating RSA keys
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This example will generate an RSA key of a specified bitlength, and
+put it into a pair of key files. One is the public key in X.509 format
+(PEM encoded), the private key is in PKCS #8 format (also PEM
+encoded), either encrypted or unencrypted depending on if a password
+was given.
+
+.. literalinclude:: examples/rsa_kgen.cpp
+
+Generate DSA keys
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This example generates a 2048 bit DSA key
+
+.. literalinclude:: examples/dsa_kgen.cpp
+
+
+
 .. _serializing_private_keys:
 
 Serializing Private Keys Using PKCS #8
