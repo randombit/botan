@@ -11,7 +11,6 @@ LINK_TO       = %{link_to}
 
 # Version Numbers
 VERSION       = %{version}
-SO_VERSION    = %{so_version}
 
 # Installation Settings
 DESTDIR       = %{prefix}
@@ -57,8 +56,8 @@ LIBRARIES     = $(STATIC_LIB) $(SHARED_LIB)
 LIBNAME       = %{lib_prefix}libbotan
 STATIC_LIB    = $(LIBNAME).a
 
-SHARED_LIB    = $(LIBNAME).%{so_suffix}.$(VERSION)
-SONAME        = $(LIBNAME).%{so_suffix}.$(SO_VERSION)
+SONAME        = $(LIBNAME)-%{version_major}.%{version_minor}.%{so_suffix}
+SHARED_LIB    = $(SONAME).%{version_patch}
 
 SYMLINK       = libbotan.%{so_suffix}
 

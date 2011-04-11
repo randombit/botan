@@ -47,18 +47,13 @@ class BuildConfigurationInformation(object):
     """
     Version information
     """
-    version_major = botan_version.major
-    version_minor = botan_version.minor
-    version_patch = botan_version.patch
-    version_so_patch = botan_version.so_patch
-    version_suffix = botan_version.release_suffix
+    version_major = botan_version.release_major
+    version_minor = botan_version.release_minor
+    version_patch = botan_version.release_patch
 
-    version_datestamp = botan_version.datestamp
+    version_datestamp = botan_version.release_datestamp
 
-    version_string = '%d.%d.%d%s' % (
-        version_major, version_minor, version_patch, version_suffix)
-    soversion_string = '%d.%d.%d' % (
-        version_major, version_minor, version_so_patch)
+    version_string = '%d.%d.%d' % (version_major, version_minor, version_patch)
 
     """
     Constructor
@@ -962,8 +957,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'distribution_info': options.distribution_info,
 
         'version_datestamp': build_config.version_datestamp,
-
-        'so_version': build_config.soversion_string,
 
         'timestamp': build_config.timestamp(),
         'user':      build_config.username(),
