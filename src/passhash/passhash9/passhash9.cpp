@@ -23,8 +23,6 @@ const size_t ALGID_BYTES = 1;
 const size_t SALT_BYTES = 12; // 96 bits of salt
 const size_t PASSHASH9_PBKDF_OUTPUT_LEN = 24; // 192 bits output
 
-const byte PASSHASH9_DEFAULT_ALGO = 0; // HMAC(SHA-1)
-
 const size_t WORK_FACTOR_SCALE = 10000;
 
 MessageAuthenticationCode* get_pbkdf_prf(byte alg_id)
@@ -49,15 +47,8 @@ MessageAuthenticationCode* get_pbkdf_prf(byte alg_id)
 
 std::string generate_passhash9(const std::string& pass,
                                RandomNumberGenerator& rng,
-                               u16bit work_factor)
-   {
-   return generate_passhash9(pass, PASSHASH9_DEFAULT_ALGO, rng, work_factor);
-   }
-
-std::string generate_passhash9(const std::string& pass,
-                               byte alg_id,
-                               RandomNumberGenerator& rng,
-                               u16bit work_factor)
+                               u16bit work_factor,
+                               byte alg_id)
    {
    MessageAuthenticationCode* prf = get_pbkdf_prf(alg_id);
 

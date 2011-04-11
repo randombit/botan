@@ -17,26 +17,16 @@ namespace Botan {
 * @param password the password
 * @param rng a random number generator
 * @param work_factor how much work to do to slow down guessing attacks
-*/
-std::string BOTAN_DLL generate_passhash9(const std::string& password,
-                                         RandomNumberGenerator& rng,
-                                         u16bit work_factor = 10);
-
-/**
-* Create a password hash using PBKDF2
-* @param password the password
 * @param alg_id specifies which PRF to use with PBKDF2
 *        0 is HMAC(SHA-1)
 *        1 is HMAC(SHA-256)
 *        2 is CMAC(Blowfish)
 *        all other values are currently undefined
-* @param rng a random number generator
-* @param work_factor how much work to do to slow down guessing attacks
 */
 std::string BOTAN_DLL generate_passhash9(const std::string& password,
-                                         byte alg_id,
                                          RandomNumberGenerator& rng,
-                                         u16bit work_factor = 10);
+                                         u16bit work_factor = 10,
+                                         byte alg_id = 0);
 
 /**
 * Check a previously created password hash

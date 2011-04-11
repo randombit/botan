@@ -239,7 +239,7 @@ bool test_passhash(RandomNumberGenerator& rng)
 
    for(byte alg_id = 0; alg_id <= 2; ++alg_id)
       {
-      std::string gen_hash = generate_passhash9(input, alg_id, rng, 1);
+      std::string gen_hash = generate_passhash9(input, rng, 2, alg_id);
 
       if(!check_passhash9(input, gen_hash))
          return false;
