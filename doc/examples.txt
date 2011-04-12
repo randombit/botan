@@ -57,7 +57,7 @@ Format Preserving Encryption
 ----------------------------------------
 
 Format preserving encryption is a way of mapping data with an
-arbitrarly specified format such that the ciphertext has the same
+arbitrarily specified format such that the ciphertext has the same
 formatting. This example encrypts a credit card number with a valid
 `Luhn checksum <http://en.wikipedia.org/wiki/Luhn_algorithm>`_ to
 another number with the same format, including a correct checksum.

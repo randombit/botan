@@ -1,5 +1,5 @@
 
-Frequantly Asked Questions
+Frequently Asked Questions
 ========================================
 
 What is this thing?
@@ -131,7 +131,7 @@ Public key algorithms implemented using the Chinese Remainder Theorem
 (RSA and Rabin-Williams) are subject to a catastrophic failure: if a
 computational error (either induced by an attacker or merely
 accidental) occurs during the private key operation, the private key
-can be revealed. Other, more suble, fault attacks are possible against
+can be revealed. Other, more subtle, fault attacks are possible against
 other schemes.  For this reason, private key operations are checked
 for consistency with the public key - if the results are not
 consistent, then an exception is thrown indicating an error has
@@ -170,8 +170,8 @@ releases (1.9.x). Currently SSLv3 and TLS 1.0 and 1.1 are supported.
 source SSHv2 implementation that uses botan.
 
 A preliminary and very incomplete implementation of CMS (the crypto
-layer underlying S/MIME) is included in <tt>src/cms</tt>, but it needs
-a lot of love and attention before being truly useful.
+layer underlying S/MIME) is included in ``src/cms``, but it needs a
+lot of love and attention before being truly useful.
 
 There is currently no support for OpenPGP.
 

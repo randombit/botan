@@ -72,8 +72,8 @@ Modules not listed on the command line will simply be loaded if needed
 or if configured to load by default. If you use ``--no-autoload``,
 only the most core modules will be included; you can then explicitly
 enable things that you want to use with ``--enable-modules``. This is
-useful for creating a minimal build targetted to a specific
-application, especially in conjuction with the amalgamation option;
+useful for creating a minimal build targeting to a specific
+application, especially in conjunction with the amalgamation option;
 see :ref:`amalgamation`.
 
 The script tries to guess what kind of makefile to generate, and it
@@ -221,7 +221,7 @@ environment in a different directory.
 Configuring the Build With Python 3.1
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The versions of Python begininning with 3 are (intentionally)
+The versions of Python beginning with 3 are (intentionally)
 incompatible with the (currently more common) 2.x series. If you want
 to use Python 3.1 to set up the build, you'll have to use the
 ``2to3`` program (included in the Python distribution) on the
