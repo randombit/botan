@@ -16,21 +16,21 @@ Basic Algorithm Abilities
 There are a small handful of functions implemented by most of Botan's
 algorithm objects. Among these are:
 
-.. cpp:function:: std::string name()
+.. cpp:function:: std::string Algorithm::name()
 
 Returns a human-readable string of the name of this
 algorithm. Examples of names returned are "AES-128" and
 "HMAC(SHA-512)". You can turn names back into algorithm objects using
 the functions in ``lookup.h``.
 
-.. cpp:function:: void clear()
+.. cpp:function:: void Algorithm::clear()
 
 Clear out the algorithm's internal state. A block cipher object will
 "forget" its key, a hash function will "forget" any data put into it,
 etc. The object will look and behave as it did when you initially
 allocated it.
 
-.. cpp:function:: T* clone()
+.. cpp:function:: T* Algorithm::clone()
 
 This function is central to Botan's name-based interface. The
 ``clone`` has many different return types, such as ``BlockCipher``\*
@@ -84,7 +84,7 @@ those types are derived from the ``SymmetricAlgorithm`` base
 class. This type provides functions for setting the key, and querying
 restrictions on the size of the key:
 
-.. cpp:function:: void set_key(const byte* key, size_t length)
+.. cpp:function:: void SymmetricAlgorithm::set_key(const byte* key, size_t length)
 
   This sets the key to the value specified. Most algorithms only
   accept keys of certain lengths. If you attempt to call ``set_key``
@@ -97,17 +97,17 @@ restrictions on the size of the key:
   object. If this is not done, the results are undefined, but probably
   will not be good.
 
-.. cpp:function:: bool valid_keylength(size_t length) const
+.. cpp:function:: bool SymmetricAlgorithm::valid_keylength(size_t length) const
 
   This function returns true if and only if ``length`` is a valid keylength
   for the algorithm.
 
-.. cpp:function:: size_t minimum_keylength() const
+.. cpp:function:: size_t SymmetricAlgorithm::minimum_keylength() const
 
   Return the smallest key length (in bytes) that is acceptible for the
   algorithm.
 
-.. cpp:function:: size_t maximum_keylength() const
+.. cpp:function:: size_t SymmetricAlgorithm::maximum_keylength() const
 
   Return the largest key length (in bytes) that is acceptible for the
   algorithm
@@ -118,37 +118,37 @@ Block Ciphers
 Block ciphers implement the interface ``BlockCipher``, found in
 ``block_cipher.h``, as well as the ``SymmetricAlgorithm`` interface.
 
-.. cpp:function:: size_t block_size() const
+.. cpp:function:: size_t BlockCipher::block_size() const
 
   Returns the block size of the cipher in bytes
 
-.. c:function:: void encrypt_n(const byte in[], byte out[], size_t blocks) const
+.. cpp:function:: void BlockCipher::encrypt_n(const byte* in, byte* out, size_t blocks) const
 
   Encrypt ``blocks`` blocks of data, taking the input from ``in`` and
   placing the ciphertext in ``out``. The two pointers may be
   identical, but should not overlap ranges.
 
-.. c:function:: void encrypt(const byte in[], byte out[]) const
+.. cpp:function:: void BlockCipher::encrypt(const byte* in, byte* out) const
 
   Encrypt a single block, taking the input from ``in`` and placing it
   in ``out``.
 
-.. c:function:: void encrypt(byte block[]) const
+.. cpp:function:: void BlockCipher::encrypt(byte* block) const
 
   Identical to ``encrypt(block, block)``.
 
-.. c:function:: void decrypt_n(const byte in[], byte out[], size_t blocks) const
+.. cpp:function:: void BlockCipher::decrypt_n(const byte* in, byte out, size_t blocks) const
 
   Decrypt ``blocks`` blocks of data, taking the input from ``in`` and
   placing the plaintext in ``out``. The two pointers may be identical,
   but should not overlap ranges.
 
-.. c:function:: void decrypt(const byte in[], byte out[]) const
+.. cpp:function:: void BlockCipher::decrypt(const byte* in, byte* out) const
 
   Decrypt a single block, taking the input from ``in`` and placing it
   in ``out``.
 
-.. c:function:: void decrypt(byte block[]) const
+.. cpp:function:: void BlockCipher::decrypt(byte* block) const
 
   Identical to ``decrypt(block, block)``.
 
@@ -161,35 +161,36 @@ encrypting data results in changing the internal state of the
 cipher. Also, you may encrypt any length of data in one go (in byte
 amounts).
 
-.. cpp:function:: void encrypt(const byte* in, byte* out, size_t length)
+.. cpp:function:: void StreamCipher::encrypt(const byte* in, byte* out, size_t length)
 
-.. cpp:function:: void encrypt(byte* data, size_t length)
+.. cpp:function:: void StreamCipher::encrypt(byte* data, size_t length)
 
 Stream ciphers implement the ``SymmetricAlgorithm`` interface.
 
 Hash Functions / Message Authentication Codes
 ----------------------------------------------
 
-Hash functions take their input without producing any output, only producing
-anything when all input has already taken place. MACs are very similar, but are
-additionally keyed. Both of these are derived from the base class
-``BufferedComputation``, which has the following functions.
+Hash functions take their input without producing any output, only
+producing anything when all input has already taken place. MACs are
+very similar, but are additionally keyed. Both of these are derived
+from the base class ``BufferedComputation``, which has the following
+functions.
 
-.. cpp:function:: size_t output_length()
+.. cpp:function:: size_t BufferedComputation::output_length()
 
 Return the size of the output of this function.
 
-.. cpp:function:: void update(const byte* input, size_t length)
+.. cpp:function:: void BufferedComputation::update(const byte* input, size_t length)
 
-.. cpp:function:: void update(byte input)
+.. cpp:function:: void BufferedComputation::update(byte input)
 
-.. cpp:function:: void update(const std::string& input)
+.. cpp:function:: void BufferedComputation::update(const std::string& input)
 
 Updates the hash/mac calculation with ``input``.
 
-.. cpp:function:: void final(byte* out)
+.. cpp:function:: void BufferedComputation::final(byte* out)
 
-.. cpp:function:: SecureVector<byte> final()
+.. cpp:function:: SecureVector<byte> BufferedComputation::final()
 
 Complete the hash/MAC calculation and place the result into ``out``.
 For the argument taking an array, exactly ``output_length`` bytes will
@@ -216,74 +217,16 @@ away; the key is kept around).
 A MAC has the ``SymmetricAlgorithm`` interface in addition to the
 ``BufferedComputation`` interface.
 
-User Interfaces
----------------------------------
-
-Botan has recently changed some infrastructure to better accommodate
-more complex user interfaces, in particular ones that are based on
-event loops. Primary among these was the fact that when doing
-something like loading a PKCS #8 encoded private key, a passphrase
-might be needed, but then again it might not (a PKCS #8 key doesn't
-have to be encrypted). Asking for a passphrase to decrypt an
-unencrypted key is rather pointless. Not only that, but the way to
-handle the user typing the wrong passphrase was complicated,
-undocumented, and inefficient.
-
-So now Botan has an object called ``User_Interface``, which provides a
-simple interface for the aspects of user interaction the library has
-to be concerned with. Currently, this means getting a passphrase from
-the user, and that's it (``User_Interface`` will probably be extended
-in the future to support other operations as they are needed). The
-base ``User_Interface`` class is very stupid, because the library
-can't directly assume anything about the environment that it's running
-under (for example, if there will be someone sitting at the terminal,
-if the application is even *attached* to a terminal, and so on). But
-since you can subclass ``User_Interface`` to use whatever method
-happens to be appropriate for your application, this isn't a big deal:
-
-.. cpp:function:: std::string User_Interface::get_passphrase(const std::string& what, const std::string& source, UI_Result& result) const
-
-  The ``what`` argument specifies what the passphrase is needed for
-  (for example, PKCS #8 key loading passes ``what`` as "PKCS #8
-  private key"). This lets you provide the user with some indication
-  of *why* your application is asking for a passphrase; feel free to
-  pass the string through ``gettext(3)`` or moral equivalent for i18n
-  purposes. Similarly, ``source`` specifies where the data in question
-  came from, if available (for example, a file name). If the source is
-  not available for whatever reason, then ``source`` will be an empty
-  string; be sure to account for this possibility when writing a
-  ``User_Interface`` subclass.
-
-  The function returns the passphrase as the return value, and a
-  status code in ``result`` (either ``OK`` or ``CANCEL_ACTION``). If
-  ``CANCEL_ACTION`` is returned in ``result``, then the return value
-  will be ignored, and the caller will take whatever action is
-  necessary (typically, throwing an exception stating that the
-  passphrase couldn't be determined). In the specific case of PKCS #8
-  key decryption, a ``Decoding_Error`` exception will be thrown; your
-  UI should assume this can happen, and provide appropriate error
-  handling (such as putting up a dialog box informing the user of the
-  situation, and canceling the operation in progress).
-
-There is an example ``User_Interface`` that uses GTK+ available on the
-web site. The ``GTK_UI`` code is cleanly separated from the rest of
-the example, so if you happen to be using GTK+, you can copy (and/or
-adapt) that code for your application. If you write a
-``User_Interface`` object for another windowing system (Win32, Qt,
-wxWidgets, FOX, etc), and would like to make it available to users in
-general (ideally under a permissive license such as public domain or
-MIT/BSD), feel free to send in a copy.
-
-
 Checksums
----------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Checksums are very similar to hash functions, and in fact share the same
-interface. But there are some significant differences, the major ones being
-that the output size is very small (usually in the range of 2 to 4 bytes), and
-is not cryptographically secure. But for their intended purpose (error
-checking), they perform very well. Some examples of checksums included in Botan
-are the Adler32 and CRC32 checksums.
+Checksums are very similar to hash functions, and in fact share the
+same interface. But there are some significant differences, the major
+ones being that the output size is very small (usually in the range of
+2 to 4 bytes), and is not cryptographically secure. But for their
+intended purpose (error checking), they perform very well. Some
+examples of checksums included in Botan are the Adler32 and CRC32
+checksums.
 
 Threads and Mutexes
 ---------------------------------
@@ -349,7 +292,7 @@ data into its buffer. Like ``SecureBuffer``, it implements ``clear``
 and ``size``.
 
 Allocators
----------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The containers described above get their memory from allocators. As a
 user of the library, you can add new allocator methods at run time for

@@ -20,4 +20,4 @@ callgrind.out.*
 ^src/wrap/perl-xs/.*blib$
 ^[a-z]+\.(exe|dll)(\.manifest)?$
 ^[a-z]+\.(exp|lib)$
-^libbotan\.so\..*
+^libbotan.*\.so\..*

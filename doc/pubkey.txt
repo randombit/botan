@@ -174,25 +174,47 @@ you have to create - the other is a simple wrapper functions that take
 either a filename or a memory buffer and create the appropriate
 ``DataSource``.
 
-The versions that pass the passphrase as a ``std::string`` are
-primarily for compatibility, but they are useful in limited
-circumstances. The ``User_Interface`` versions are how ``load_key`` is
-implemented, and provides for much more flexibility. If the passphrase
-passed in is not correct, then an exception is thrown and that is
-that. However, if you pass in an UI object, then the UI object can
-keep asking the user for the passphrase until they get it right (or
-until they cancel the action, though the UI interface). A
-``User_Interface`` has very little to do with talking to users; it's
-just a way to glue together Botan and whatever user interface you
-happen to be using. You can think of it as a user interface
-interface. The default ``User_Interface`` is rather dumb, and acts
-rather like the versions taking the ``std::string``; it tries the
-passphrase passed in first, and then it cancels.
+The versions taking a ``std::string`` attempt to decrypt using the
+password given (if the key is encrypted; if it is not, the passphase
+value will be ignored). If the passphrase does not decrypt the key, an
+exception will be thrown.
+
+The ones taking a ``User_Interface`` provide a simple callback
+interface which makes handling incorrect passphrases and such a bit
+simpler. A ``User_Interface`` has very little to do with talking to
+users; it's just a way to glue together Botan and whatever user
+interface you happen to be using.
 
 .. note::
 
   In a future version, it is likely that ``User_Interface`` will be
   replaced by a simple callback using ``std::function``.
+
+To use ``User_Interface``, derive a subclass and implement:
+
+.. cpp:function:: std::string User_Interface::get_passphrase(const std::string& what, const std::string& source, UI_Result& result) const
+
+  The ``what`` argument specifies what the passphrase is needed for
+  (for example, PKCS #8 key loading passes ``what`` as "PKCS #8
+  private key"). This lets you provide the user with some indication
+  of *why* your application is asking for a passphrase; feel free to
+  pass the string through ``gettext(3)`` or moral equivalent for i18n
+  purposes. Similarly, ``source`` specifies where the data in question
+  came from, if available (for example, a file name). If the source is
+  not available for whatever reason, then ``source`` will be an empty
+  string; be sure to account for this possibility.
+
+  The function returns the passphrase as the return value, and a
+  status code in ``result`` (either ``OK`` or ``CANCEL_ACTION``). If
+  ``CANCEL_ACTION`` is returned in ``result``, then the return value
+  will be ignored, and the caller will take whatever action is
+  necessary (typically, throwing an exception stating that the
+  passphrase couldn't be determined). In the specific case of PKCS #8
+  key decryption, a ``Decoding_Error`` exception will be thrown; your
+  UI should assume this can happen, and provide appropriate error
+  handling (such as putting up a dialog box informing the user of the
+  situation, and canceling the operation in progress).
+
 
 .. _serializing_public_keys:
 

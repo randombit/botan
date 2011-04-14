@@ -1,5 +1,6 @@
 
 .. _license:
+.. highlight:: none
 
 License
 ========================================

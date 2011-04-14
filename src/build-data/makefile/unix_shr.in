@@ -94,7 +94,7 @@ doxygen:
 
 clean:
 	$(RM_R) %{build_dir}/lib/* %{build_dir}/checks/*
-	$(RM) $(LIBRARIES) $(SYMLINK) $(CHECK)
+	$(RM) $(LIBRARIES) $(SYMLINK) $(SONAME) $(CHECK)
 
 distclean: clean
 	$(RM_R) %{build_dir}

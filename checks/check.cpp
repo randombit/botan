@@ -100,6 +100,20 @@ void test_types()
 
 int main(int argc, char* argv[])
    {
+   if(BOTAN_VERSION_MAJOR != version_major() ||
+      BOTAN_VERSION_MINOR != version_minor() ||
+      BOTAN_VERSION_PATCH != version_patch())
+      {
+      std::cout << "Warning: linked version ("
+                << version_major() << '.'
+                << version_minor() << '.'
+                << version_patch()
+                << ") does not match version built against ("
+                << BOTAN_VERSION_MAJOR << '.'
+                << BOTAN_VERSION_MINOR << '.'
+                << BOTAN_VERSION_PATCH << ")\n";
+      }
+
    try
       {
       OptionParser opts("help|test|validate|dyn-load=|"
