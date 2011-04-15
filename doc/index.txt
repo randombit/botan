@@ -27,6 +27,7 @@ Contents:
    contrib
    support
    users
+   build_log
    log
 
 Indices and tables

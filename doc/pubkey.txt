@@ -59,13 +59,17 @@ the operations will be.
 Given a ``DL_Group``, you can create new DSA, Diffie-Hellman, and
 Nyberg-Rueppel key pairs with
 
-.. cpp:function:: DSA_PrivateKey::DSA_PrivateKey(RandomNumberGenerator& rng, const DL_Group& group, const BigInt& x = 0)
+.. cpp:function:: DSA_PrivateKey::DSA_PrivateKey(RandomNumberGenerator& rng, \
+   const DL_Group& group, const BigInt& x = 0)
 
-.. cpp:function:: DH_PrivateKey::DH_PrivateKey(RandomNumberGenerator& rng, const DL_Group& group, const BigInt& x = 0)
+.. cpp:function:: DH_PrivateKey::DH_PrivateKey(RandomNumberGenerator& rng, \
+   const DL_Group& group, const BigInt& x = 0)
 
-.. cpp:function:: NR_PrivateKey::NR_PrivateKey(RandomNumberGenerator& rng, const DL_Group& group, const BigInt& x = 0)
+.. cpp:function:: NR_PrivateKey::NR_PrivateKey(RandomNumberGenerator& rng, \
+   const DL_Group& group, const BigInt& x = 0)
 
-.. cpp:function:: ElGamal_PrivateKey::ElGamal_PrivateKey(RandomNumberGenerator& rng, const DL_Group& group, const BigInt& x = 0)
+.. cpp:function:: ElGamal_PrivateKey::ElGamal_PrivateKey(RandomNumberGenerator& rng, \
+   const DL_Group& group, const BigInt& x = 0)
 
   The optional *x* parameter to each of these contructors is a private
   key value. This allows you to create keys where the private key is
@@ -77,11 +81,14 @@ Nyberg-Rueppel key pairs with
 Finally, given an ``EC_Group`` object, you can create a new
 ECDSA, ECDH, or GOST 34.10 private key with
 
-.. cpp:function:: ECDSA_PrivateKey::ECDSA_PrivateKey(RandomNumberGenerator& rng, const EC_Group& domain, const BigInt& x = 0)
+.. cpp:function:: ECDSA_PrivateKey::ECDSA_PrivateKey(RandomNumberGenerator& rng, \
+   const EC_Group& domain, const BigInt& x = 0)
 
-.. cpp:function:: ECDH_PrivateKey::ECDH_PrivateKey(RandomNumberGenerator& rng, const EC_Group& domain, const BigInt& x = 0)
+.. cpp:function:: ECDH_PrivateKey::ECDH_PrivateKey(RandomNumberGenerator& rng, \
+   const EC_Group& domain, const BigInt& x = 0)
 
-.. cpp:function:: GOST_3410_PrivateKey::GOST_3410_PrivateKey(RandomNumberGenerator& rng, const EC_Group& domain, const BigInt& x = 0)
+.. cpp:function:: GOST_3410_PrivateKey::GOST_3410_PrivateKey(RandomNumberGenerator& rng, \
+   const EC_Group& domain, const BigInt& x = 0)
 
 
 Generating RSA keys
@@ -113,7 +120,8 @@ The standard format for serializing a private key is PKCS #8, the
 operations for which are defined in ``pkcs8.h``. It supports both
 unencrypted and encrypted storage.
 
-.. cpp:function:: SecureVector<byte> PKCS8::BER_encode(const Private_Key& key, RandomNumberGenerator& rng, const std::string& password, const std::string& pbe_algo = "")
+.. cpp:function:: SecureVector<byte> PKCS8::BER_encode(const Private_Key& key, \
+   RandomNumberGenerator& rng, const std::string& password, const std::string& pbe_algo = "")
 
   Takes any private key object, serializes it, encrypts it using
   *password*, and returns a binary structure representing the private
@@ -123,7 +131,8 @@ unencrypted and encrypted storage.
   password based encryption (or PBE) algorithm. If you don't specify a
   PBE, a sensible default will be used.
 
-.. cpp:function:: std::string PKCS8::PEM_encode(const Private_Key& key, RandomNumberGenerator& rng, const std::string& pass, const std::string& pbe_algo = "")
+.. cpp:function:: std::string PKCS8::PEM_encode(const Private_Key& key, \
+   RandomNumberGenerator& rng, const std::string& pass, const std::string& pbe_algo = "")
 
   This formats the key in the same manner as ``BER_encode``, but
   additionally encodes it into a text format with identifying
@@ -155,13 +164,17 @@ Unencrypted serialization is also supported.
 Last but not least, there are some functions that will load (and
 decrypt, if necessary) a PKCS #8 private key:
 
-.. cpp:function:: Private_Key* PKCS8::load_key(DataSource& in, RandomNumberGenerator& rng, const User_Interface& ui)
+.. cpp:function:: Private_Key* PKCS8::load_key(DataSource& in, \
+   RandomNumberGenerator& rng, const User_Interface& ui)
 
-.. cpp:function:: Private_Key* PKCS8::load_key(DataSource& in, RandomNumberGenerator& rng, std::string passphrase = "")
+.. cpp:function:: Private_Key* PKCS8::load_key(DataSource& in, \
+   RandomNumberGenerator& rng, std::string passphrase = "")
 
-.. cpp:function:: Private_Key* PKCS8::load_key(const std::string& filename, RandomNumberGenerator& rng, const User_Interface& ui)
+.. cpp:function:: Private_Key* PKCS8::load_key(const std::string& filename, \
+   RandomNumberGenerator& rng, const User_Interface& ui)
 
-.. cpp:function:: Private_Key* PKCS8::load_key(const std::string& filename, RandomNumberGenerator& rng, const std::string& passphrase = "")
+.. cpp:function:: Private_Key* PKCS8::load_key(const std::string& filename, \
+   RandomNumberGenerator& rng, const std::string& passphrase = "")
 
 These functions will return an object allocated key object based on
 the data from whatever source it is using (assuming, of course, the
@@ -192,7 +205,8 @@ interface you happen to be using.
 
 To use ``User_Interface``, derive a subclass and implement:
 
-.. cpp:function:: std::string User_Interface::get_passphrase(const std::string& what, const std::string& source, UI_Result& result) const
+.. cpp:function:: std::string User_Interface::get_passphrase(const std::string& what, \
+   const std::string& source, UI_Result& result) const
 
   The ``what`` argument specifies what the passphrase is needed for
   (for example, PKCS #8 key loading passes ``what`` as "PKCS #8
@@ -275,7 +289,8 @@ Instantiating a ``DL_Group`` simply requires calling
 
 You can generate a new random group using
 
-.. cpp:function:: DL_Group::DL_Group(RandomNumberGenerator& rng, PrimeType type, size_t pbits, size_t qbits = 0)
+.. cpp:function:: DL_Group::DL_Group(RandomNumberGenerator& rng, \
+   PrimeType type, size_t pbits, size_t qbits = 0)
 
   The *type* can be either ``Strong``, ``Prime_Subgroup``, or
   ``DSA_Kosherizer``. *pbits* specifies the size of the prime in
@@ -345,9 +360,11 @@ plaintext twice produces two different ciphertexts.
 The primary interface for encryption is ``PK_Encryptor``, which
 provides the following interface:
 
-.. cpp:function:: SecureVector<byte> PK_Encryptor::encrypt(const byte* in, size_t length, RandomNumberGenerator& rng) const
+.. cpp:function:: SecureVector<byte> PK_Encryptor::encrypt(const byte* in, \
+   size_t length, RandomNumberGenerator& rng) const
 
-.. cpp:function:: SecureVector<byte> PK_Encryptor::encrypt(const MemoryRegion<byte>& in, RandomNumberGenerator& rng) const
+.. cpp:function:: SecureVector<byte> PK_Encryptor::encrypt(const MemoryRegion<byte>& in, \
+   RandomNumberGenerator& rng) const
 
 
 .. cpp:function::  size_t PK_Encryptor::maximum_input_size() const
@@ -377,7 +394,8 @@ simple; call
 The DLIES encryptor is defined in the header ``dlies.h``, and
 is created by the constructor:
 
-.. cpp:function:: DLIES_Encryptor::DLIES_Encryptor(const PK_Key_Agreement_Key&, KDF* kdf, MessageAuthenticationCode* mac, size_t mac_key_len = 20)
+.. cpp:function:: DLIES_Encryptor::DLIES_Encryptor(const PK_Key_Agreement_Key&, \
+   KDF* kdf, MessageAuthenticationCode* mac, size_t mac_key_len = 20)
 
   Where *kdf* is a key derivation function (see
   :ref:`key_derivation_function`) and *mac* is a

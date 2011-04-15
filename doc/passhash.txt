@@ -113,13 +113,15 @@ look like this::
 
   "$2a$12$7KIYdyv8Bp32WAvc.7YvI.wvRlyVn0HP/EhPmmOyMQA4YKxINO0p2"
 
-.. cpp:function:: std::string generate_bcrypt(const std::string& password, RandomNumberGenerator& rng, u16bit work_factor = 10)
+.. cpp:function:: std::string generate_bcrypt(const std::string& password, \
+   RandomNumberGenerator& rng, u16bit work_factor = 10)
 
    Takes the password to hash, a rng, and a work factor. Higher values
    increase the amount of time the algorithm runs, increasing the cost
    of cracking attempts. The resulting hash is returned as a string.
 
-.. cpp:function:: bool check_bcrypt(const std::string& password, const std::string& hash)
+.. cpp:function:: bool check_bcrypt(const std::string& password, \
+   const std::string& hash)
 
    Takes a password and a bcrypt output and returns true if the
    password is the same as the one that was used to generate the
@@ -135,16 +137,19 @@ Passhash9
 Botan also provides a password hashing technique called passhash9, in
 ``passhash9.h``, which is based on PBKDF2.
 
-.. cpp:function:: std::string generate_passhash9(const std::string& password, RandomNumberGenerator& rng, u16bit work_factor = 10)
+.. cpp:function:: std::string generate_passhash9(const std::string& password, \
+   RandomNumberGenerator& rng, u16bit work_factor = 10)
 
    Functions much like ``generate_bcrypt``
 
-.. cpp:function:: std::string generate_passhash9(const std::string& password, byte alg_id, RandomNumberGenerator& rng, u16bit work_factor = 10)
+.. cpp:function:: std::string generate_passhash9(const std::string& password, \
+   byte alg_id, RandomNumberGenerator& rng, u16bit work_factor = 10)
 
    Like the other ``generate_passhash9``, but taking a parameter that
    specifies which PRF to use. Currently defined values are 0
    ("HMAC(SHA-1)"), 1 ("HMAC(SHA-256)"), and 2 ("CMAC(Blowfish)").
 
-.. cpp:function:: bool check_passhash9(const std::string& password, const std::string& hash)
+.. cpp:function:: bool check_passhash9(const std::string& password, \
+   const std::string& hash)
 
    Functions much like ``check_bcrypt``
