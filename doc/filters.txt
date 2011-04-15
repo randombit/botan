@@ -506,13 +506,13 @@ Here's a example::
    pipe.end_msg();
 
 There are some requirements to using ``Keyed_Filter`` that you must
-follow. If you call ``set_key`` or ``set_iv`` on a filter that
-is owned by a ``Pipe``, you must do so while the ``Pipe`` is
-"unlocked". This refers to the times when no messages are being processed by
-``Pipe`` -- either before ``Pipe``'s ``start_msg`` is called, or
-after ``end_msg`` is called (and no new call to ``start_msg``
-has happened yet). Doing otherwise will result in undefined behavior, probably
-silently getting invalid output.
+follow. If you call ``set_key`` or ``set_iv`` on a filter that is
+owned by a ``Pipe``, you must do so while the ``Pipe`` is
+"unlocked". This refers to the times when no messages are being
+processed by ``Pipe`` -- either before ``Pipe``'s ``start_msg`` is
+called, or after ``end_msg`` is called (and no new call to
+``start_msg`` has happened yet). Doing otherwise will result in
+undefined behavior, probably silently getting invalid output.
 
 And remember: if you're resetting both values, reset the key *first*.
 
@@ -525,9 +525,11 @@ then call ``get_cipher``. You will pass the return value
 directly into a ``Pipe``. There are a couple different functions
 which do varying levels of initialization:
 
-.. cpp:function:: Keyed_Filter* get_cipher(std::string cipher_spec, SymmetricKey key, InitializationVector iv, Cipher_Dir dir)
+.. cpp:function:: Keyed_Filter* get_cipher(std::string cipher_spec, \
+   SymmetricKey key, InitializationVector iv, Cipher_Dir dir)
 
-.. cpp:function:: Keyed_Filter* get_cipher(std::string cipher_spec, SymmetricKey key, Cipher_Dir dir)
+.. cpp:function:: Keyed_Filter* get_cipher(std::string cipher_spec, \
+   SymmetricKey key, Cipher_Dir dir)
 
 The version that doesn't take an IV is useful for things that don't
 use them, like block ciphers in ECB mode, or most stream ciphers. If

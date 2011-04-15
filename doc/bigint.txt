@@ -95,7 +95,8 @@ Number theoretic functions available include:
   so it is much less likely that ``verify_prime`` will return a false positive
   than ``check_prime`` will.
 
-.. cpp:function BigInt random_prime(RandomNumberGenerator& rng, size_t bits, BigInt coprime = 1, size_t equiv = 1, size_t equiv_mod = 2)
+.. cpp:function BigInt random_prime(RandomNumberGenerator& rng, \
+   size_t bits, BigInt coprime = 1, size_t equiv = 1, size_t equiv_mod = 2)
 
   Return a random prime number of ``bits`` bits long that is
   relatively prime to ``coprime``, and equivalent to ``equiv`` modulo

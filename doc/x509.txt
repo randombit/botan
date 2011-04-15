@@ -187,7 +187,8 @@ Adding Certificates
 You can add new certificates to a certificate store using any of these
 functions:
 
-.. cpp:function:: void X509_Store::add_cert(const X509_Certificate& cert, bool trusted = false)
+.. cpp:function:: void X509_Store::add_cert(const X509_Certificate& cert, \
+   bool trusted = false)
 
 .. cpp:function:: void X509_Store::add_cert(DataSource& source)
 
@@ -403,7 +404,8 @@ On the other hand, you may have issued a CRL before. In that case, you will
 want to issue a new CRL that contains all previously revoked
 certificates, along with any new ones. This is done by calling
 
-.. cpp:function:: X509_CRL X509_CA::update_crl(const X509_CRL& old_crl, std::vector<CRL_Entry> new_revoked, size_t seconds_to_expiration = 0)
+.. cpp:function:: X509_CRL X509_CA::update_crl(const X509_CRL& old_crl, \
+   std::vector<CRL_Entry> new_revoked, size_t seconds_to_expiration = 0)
 
   Where ``X509_CRL`` is the last CRL this CA issued, and
   ``new_revoked`` is a list of any newly revoked certificates. The
@@ -433,7 +435,8 @@ Generating a new self-signed certificate can often be useful, for
 example when setting up a new root CA, or for use in email
 applications. The library provides a utility function for this:
 
-.. cpp:function:: X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts, const Private_Key& key)
+.. cpp:function:: X509_Certificate create_self_signed_cert( \
+   const X509_Cert_Options& opts, const Private_Key& key)
 
 Where ``key`` is obviously the private key you wish to use (the public key,
 used in the certificate itself, is extracted from the private key), and
@@ -448,7 +451,8 @@ Creating PKCS #10 Requests
 Also in ``x509self.h``, there is a function for generating new PKCS #10
 certificate requests:
 
-.. cpp:function:: PKCS10_Request create_cert_req(const X509_Cert_Options& opts, const Private_Key& key)
+.. cpp:function:: PKCS10_Request create_cert_req( \
+   const X509_Cert_Options& opts, const Private_Key& key)
 
 This function acts quite similarly to ``create_self_signed_cert``,
 except it instead returns a PKCS #10 certificate request. After
@@ -492,9 +496,10 @@ year/month/day. The date must be specified, but you can omit the time
 or trailing parts of it, for example "2002/11/27 1:50" or
 "2002/11/27".
 
-Lastly, you can set constraints on a key. The one you're mostly likely to want
-to use is to create (or request) a CA certificate, which can be done by calling
-the member function ``CA_key``. This should only be used when needed.
+Lastly, you can set constraints on a key. The one you're mostly likely
+to want to use is to create (or request) a CA certificate, which can
+be done by calling the member function ``CA_key``. This should only be
+used when needed.
 
 Other constraints can be set by calling the member functions
 ``add_constraints`` and ``add_ex_constraints``. The
