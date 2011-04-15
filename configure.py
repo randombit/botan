@@ -91,16 +91,9 @@ class BuildConfigurationInformation(object):
              if file.endswith('.cpp')])
 
     def doc_files(self):
-        docs = ['readme.txt']
-
-        for docfile in ['api.pdf', 'tutorial.pdf', 'fips140.pdf',
-                        'api.tex', 'tutorial.tex', 'fips140.tex',
-                        'credits.txt', 'license.txt', 'log.txt',
-                        'thanks.txt', 'todo.txt', 'pgpkeys.asc']:
-            filename = os.path.join('doc', docfile)
-            if os.access(filename, os.R_OK):
-                docs.append(filename)
-        return docs
+        return [os.path.join('doc', s)
+                for s in os.listdir('doc') if s.endswith('.txt')] + \
+                ['readme.txt']
 
     def pkg_config_file(self):
         return 'botan-%d.%d.pc' % (self.version_major,
