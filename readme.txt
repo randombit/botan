@@ -8,7 +8,7 @@ Bugzilla (http://bugs.randombit.net/) or by sending a report to the
 botan-devel mailing list. More information about the mailing list is
 at http://lists.randombit.net/mailman/listinfo/botan-devel/
 
-You can find documentation online at http://botan.randombit.net/manual
+You can find documentation online at http://botan.randombit.net/docs
 and http://botan.randombit.net/doxygen. A set of example programs can
 be found in the examples directory.
 

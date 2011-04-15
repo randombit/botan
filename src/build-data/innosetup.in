@@ -41,19 +41,19 @@ name: "docs"; Description: "Developer Documentation"; Types: devel
 ; DLL and license file is always included
 Source: "..\doc\license.txt"; DestDir: "{app}"; Components: dll; AfterInstall: ConvertLineEndings
 Source: "..\botan.dll"; DestDir: "{app}"; Components: dll
-Source: "..\botan.dll.manifest"; DestDir: "{app}"; Components: dll
+Source: "..\botan.dll.manifest"; DestDir: "{app}"; Components: dll; Flags: skipifsourcedoesntexist
 
 Source: "include\botan\*"; DestDir: "{app}\include\botan"; Components: includes; AfterInstall: ConvertLineEndings
 
 Source: "..\readme.txt"; DestDir: "{app}\doc"; Components: docs; AfterInstall: ConvertLineEndings
-Source: "..\doc\log.txt"; DestDir: "{app}\doc"; Components: docs; AfterInstall: ConvertLineEndings
+Source: "..\doc\*.txt"; DestDir: "{app}\doc"; Excludes: "license.txt"; Components: docs; AfterInstall: ConvertLineEndings
 
 Source: "..\doc\examples\*.cpp"; DestDir: "{app}\doc\examples"; Components: docs; AfterInstall: ConvertLineEndings
 
 Source: "..\botan.exp"; DestDir: "{app}"; Components: implib
 Source: "..\botan.lib"; DestDir: "{app}"; Components: implib
 
-Source: "..\doc\api.pdf"; DestDir: "{app}\doc"; Components: docs; Flags: skipifsourcedoesntexist
+Source: "..\doc\manual.pdf"; DestDir: "{app}\doc"; Components: docs; Flags: skipifsourcedoesntexist
 Source: "..\doc\tutorial.pdf"; DestDir: "{app}\doc"; Components: docs; Flags: skipifsourcedoesntexist
 
 [Code]

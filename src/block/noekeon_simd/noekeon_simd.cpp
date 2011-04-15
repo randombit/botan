@@ -16,7 +16,12 @@ namespace Botan {
 #define NOK_SIMD_THETA(A0, A1, A2, A3, K0, K1, K2, K3)  \
    do {                                                 \
       SIMD_32 T = A0 ^ A2;                              \
-      T ^= rotate_left(T, 8) ^ rotate_right(T, 8);      \
+      SIMD_32 T_l8 = T;                                 \
+      SIMD_32 T_r8 = T;                                 \
+      T_l8.rotate_left(8);                              \
+      T_r8.rotate_right(8);                             \
+      T ^= T_l8;                                        \
+      T ^= T_r8;                                        \
       A1 ^= T;                                          \
       A3 ^= T;                                          \
                                                         \
@@ -26,7 +31,12 @@ namespace Botan {
       A3 ^= K3;                                         \
                                                         \
       T = A1 ^ A3;                                      \
-      T ^= rotate_left(T, 8) ^ rotate_right(T, 8);      \
+      T_l8 = T;                                         \
+      T_r8 = T;                                         \
+      T_l8.rotate_left(8);                              \
+      T_r8.rotate_right(8);                             \
+      T ^= T_l8;                                        \
+      T ^= T_r8;                                        \
       A0 ^= T;                                          \
       A2 ^= T;                                          \
       } while(0)
