@@ -1,10 +1,11 @@
 define DYNAMIC_LOADER
 
 <os>
-linux
 freebsd
-openbsd
+linux
 netbsd
+openbsd
+qnx
 solaris
 windows
 </os>
