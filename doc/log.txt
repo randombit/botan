@@ -12,6 +12,9 @@ Version 1.10.0, Not Yet Released
 
 * Further updates to the documentation
 
+* A bug in 1.9.16 effectively disabled support for runtime CPU feature
+  detection on x86 under GCC in that release.
+
 * New options to ``configure.py`` control what tools are used for
   documentation generation. The ``--with-sphinx`` option enables using
   Sphinx to convert ReST into HTML; otherwise the ReST sources are

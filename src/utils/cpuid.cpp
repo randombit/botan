@@ -31,14 +31,20 @@
   // Only available starting in GCC 4.3
   #include <cpuid.h>
 
+namespace {
+
   /*
   * Prevent inlining to work around GCC bug 44174
   */
-  void __attribute__((__noinline__)) CALL_CPUID(Botan::u32bit type,
-                                                Botan::u32bit out[4])
+  void __attribute__((__noinline__)) call_gcc_cpuid(Botan::u32bit type,
+                                                    Botan::u32bit out[4])
      {
      __get_cpuid(type, out, out+1, out+2, out+3);
      }
+
+  #define CALL_CPUID call_gcc_cpuid
+
+}
 
 #else
   #warning "No method of calling CPUID for this compiler"
