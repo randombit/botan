@@ -67,7 +67,7 @@ class BuildConfigurationInformation(object):
 
         self.python_dir = os.path.join(options.src_dir, 'wrap', 'python')
 
-        self.use_boost_python = options.boost_python
+        self.boost_python = options.boost_python
 
         self.doc_output_dir = os.path.join(self.build_dir, 'docs')
 
@@ -97,12 +97,12 @@ class BuildConfigurationInformation(object):
         def build_doc_commands():
             yield '$(COPY) readme.txt %s' % (self.doc_output_dir)
 
-            if options.use_sphinx:
+            if options.with_sphinx:
                 yield 'sphinx-build -b html doc %s' % (self.manual_dir)
             else:
                 yield '$(COPY) doc/*.txt %s' % (self.manual_dir)
 
-            if options.use_doxygen:
+            if options.with_doxygen:
                 yield 'doxygen %s/botan.doxy' % (self.build_dir)
 
         self.build_doc_commands = '\n'.join(['\t' + s for s in build_doc_commands()])
@@ -113,10 +113,10 @@ class BuildConfigurationInformation(object):
             yield self.botan_include_dir
             yield self.internal_include_dir
             yield os.path.join(self.doc_output_dir, 'manual')
-            if options.use_doxygen:
+            if options.with_doxygen:
                 yield os.path.join(self.doc_output_dir, 'doxygen')
 
-            if self.use_boost_python:
+            if self.boost_python:
                 yield self.pyobject_dir
 
         self.build_dirs = list(build_dirs())
@@ -228,11 +228,17 @@ def process_command_line(args):
                            help='set distribution specific versioning',
                            default='unspecified')
 
-    build_group.add_option('--use-sphinx', default=False, action='store_true',
+    build_group.add_option('--with-sphinx', default=False, action='store_true',
                            help='Use Sphinx to generate HTML manual')
 
-    build_group.add_option('--use-doxygen', default=False, action='store_true',
+    build_group.add_option('--without-sphinx', action='store_false',
+                           help=SUPPRESS_HELP)
+
+    build_group.add_option('--with-doxygen', default=False, action='store_true',
                            help='Use Doxygen to generate HTML API docs')
+
+    build_group.add_option('--without-doxygen', action='store_false',
+                           help=SUPPRESS_HELP)
 
     build_group.add_option('--dumb-gcc', dest='dumb_gcc',
                            action='store_true', default=False,
@@ -261,7 +267,7 @@ def process_command_line(args):
                              action='store_false',
                              help=SUPPRESS_HELP)
 
-    wrapper_group.add_option('--use-python-version', dest='python_version',
+    wrapper_group.add_option('--with-python-version', dest='python_version',
                              metavar='N.M',
                              default='.'.join(map(str, sys.version_info[0:2])),
                              help='specify Python to build against (eg %default)')
