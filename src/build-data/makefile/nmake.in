@@ -17,6 +17,7 @@ DESTDIR       = %{prefix}
 
 ### Aliases for Common Programs
 AR            = %{ar_command}
+COPY          = copy
 CD            = @cd
 ECHO          = @echo
 INSTALL       = %{install_cmd_exec}
@@ -29,8 +30,6 @@ RMDIR         = @rmdir
 
 ### File Lists
 CHECK         = check
-
-DOCS          = %{doc_files}
 
 HEADERS       = %{include_files}
 
@@ -67,6 +66,9 @@ $(BOTAN_LIB): $(LIBOBJS)
 !Endif
 
 ### Fake Targets
+docs:
+%{build_doc_commands}
+
 clean:
 	$(RM) %{build_dir}\lib\* %{build_dir}\checks\*
 	$(RM) *.manifest *.exp *.dll

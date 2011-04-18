@@ -69,6 +69,8 @@ class BuildConfigurationInformation(object):
 
         self.use_boost_python = options.boost_python
 
+        self.doc_output_dir = os.path.join(self.build_dir, 'docs')
+
         self.pyobject_dir = os.path.join(self.build_dir, 'python')
 
         self.include_dir = os.path.join(self.build_dir, 'include')
@@ -90,23 +92,38 @@ class BuildConfigurationInformation(object):
              for file in os.listdir(self.python_dir)
              if file.endswith('.cpp')])
 
-    def doc_files(self):
-        return [os.path.join('doc', s)
-                for s in os.listdir('doc') if s.endswith('.txt')] + \
-                ['readme.txt']
+        self.manual_dir = os.path.join(self. doc_output_dir, 'manual')
+
+        def build_doc_commands():
+            yield '$(COPY) readme.txt %s' % (self.doc_output_dir)
+
+            if options.use_sphinx:
+                yield 'sphinx-build -b html doc %s' % (self.manual_dir)
+            else:
+                yield '$(COPY) doc/*.txt %s' % (self.manual_dir)
+
+            if options.use_doxygen:
+                yield 'doxygen %s/botan.doxy' % (self.build_dir)
+
+        self.build_doc_commands = '\n'.join(['\t' + s for s in build_doc_commands()])
+
+        def build_dirs():
+            yield self.checkobj_dir
+            yield self.libobj_dir
+            yield self.botan_include_dir
+            yield self.internal_include_dir
+            yield os.path.join(self.doc_output_dir, 'manual')
+            if options.use_doxygen:
+                yield os.path.join(self.doc_output_dir, 'doxygen')
+
+            if self.use_boost_python:
+                yield self.pyobject_dir
+
+        self.build_dirs = list(build_dirs())
 
     def pkg_config_file(self):
         return 'botan-%d.%d.pc' % (self.version_major,
                                    self.version_minor)
-
-    def build_dirs(self):
-        dirs = [self.checkobj_dir,
-                self.libobj_dir,
-                self.botan_include_dir,
-                self.internal_include_dir]
-        if self.use_boost_python:
-            dirs.append(self.pyobject_dir)
-        return dirs
 
     def username(self):
         return getpass.getuser()
@@ -207,6 +224,16 @@ def process_command_line(args):
                            dest='local_config', metavar='FILE',
                            help='include the contents of FILE into build.h')
 
+    build_group.add_option('--distribution-info', metavar='STRING',
+                           help='set distribution specific versioning',
+                           default='unspecified')
+
+    build_group.add_option('--use-sphinx', default=False, action='store_true',
+                           help='Use Sphinx to generate HTML manual')
+
+    build_group.add_option('--use-doxygen', default=False, action='store_true',
+                           help='Use Doxygen to generate HTML API docs')
+
     build_group.add_option('--dumb-gcc', dest='dumb_gcc',
                            action='store_true', default=False,
                            help=SUPPRESS_HELP)
@@ -222,10 +249,6 @@ def process_command_line(args):
     build_group.add_option('--link-method',
                            default=None,
                            help=SUPPRESS_HELP)
-
-    build_group.add_option('--distribution-info', metavar='STRING',
-                           help='set distribution specific versioning',
-                           default='unspecified')
 
     wrapper_group = OptionGroup(parser, 'Wrapper options')
 
@@ -965,8 +988,10 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'includedir': options.includedir or osinfo.header_dir,
         'docdir': options.docdir or osinfo.doc_dir,
 
-        'doc_src_dir': 'doc',
         'build_dir': build_config.build_dir,
+        'doc_output_dir': build_config.doc_output_dir,
+
+        'build_doc_commands': build_config.build_doc_commands,
 
         'python_dir': build_config.python_dir,
 
@@ -1048,8 +1073,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'botan_pkgconfig': prefix_with_build_dir(
             os.path.join(build_config.build_dir,
                          build_config.pkg_config_file())),
-
-        'doc_files': makefile_list(build_config.doc_files()),
 
         'mod_list': '\n'.join(sorted([m.basename for m in modules])),
 
@@ -1284,7 +1307,7 @@ def setup_build(build_config, options, template_vars):
         if e.errno != errno.ENOENT:
             logging.error('Problem while removing build dir: %s' % (e))
 
-    for dir in build_config.build_dirs():
+    for dir in build_config.build_dirs:
         try:
             os.makedirs(dir)
         except OSError, e:

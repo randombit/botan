@@ -10,7 +10,15 @@ Release Notes
 Version 1.10.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-  * More updates to the documentation
+  * Further updates to the documentation
+
+  * New options to ``configure.py`` control what tools are used for
+    documentation generation. The ``--use-sphinx`` option enables
+    using Sphinx to convert ReST into HTML; otherwise the ReST sources
+    are installed directly. If ``--use-doxygen`` is used, Doxygen will
+    run as well. Documentation generation can be triggered via the
+    ``docs`` target in the makefile; it will also be installed by
+    the install target on Unix.
 
 Version 1.9.16, 2011-04-11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

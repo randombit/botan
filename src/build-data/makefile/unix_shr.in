@@ -26,6 +26,8 @@ PKGCONFIG     = %{botan_pkgconfig}
 
 # Aliases for Common Programs
 AR               = %{ar_command}
+COPY             = cp
+COPY_R           = cp -r
 CD               = @cd
 ECHO             = @echo
 INSTALL_CMD_EXEC = %{install_cmd_exec}
@@ -39,8 +41,6 @@ RM_R             = @rm -rf
 
 # File Lists
 CHECK         = %{check_prefix}check
-
-DOCS          = %{doc_files}
 
 HEADERS       = %{include_files}
 
@@ -83,14 +83,14 @@ $(SHARED_LIB): $(LIBOBJS)
 	$(LN) $(SHARED_LIB) $(SYMLINK)
 
 # Fake Targets
-.PHONY = doxygen clean distclean install static shared
+.PHONY = docs clean distclean install static shared
 
 static: $(STATIC_LIB)
 
 shared: $(SHARED_LIB)
 
-doxygen:
-	doxygen %{build_dir}/botan.doxy
+docs:
+%{build_doc_commands}
 
 clean:
 	$(RM_R) %{build_dir}/lib/* %{build_dir}/checks/*
@@ -98,24 +98,26 @@ clean:
 
 distclean: clean
 	$(RM_R) %{build_dir}
-	$(RM_R) %{doc_src_dir}/doxygen %{doc_src_dir}/botan.doxy
 	$(RM) Makefile* $(CONFIG_SCRIPT) $(PKGCONFIG)
 
-install: $(LIBRARIES)
+install: $(LIBRARIES) docs
 	$(ECHO) "Installing Botan into $(DESTDIR)... "
 	$(MKDIR_INSTALL) $(DOCDIR)
+	$(COPY_R) %{doc_output_dir}/* $(DOCDIR)
+
 	$(MKDIR_INSTALL) $(HEADERDIR)
-	$(MKDIR_INSTALL) $(LIBDIR)
-	$(MKDIR_INSTALL) $(BINDIR)
-	$(MKDIR_INSTALL) $(PKGCONF_DIR)
-	for i in $(DOCS); do \
-	   $(INSTALL_CMD_DATA) $$i $(DOCDIR); \
-	 done
 	for i in $(HEADERS); do \
 	   $(INSTALL_CMD_DATA) $$i $(HEADERDIR); \
 	 done
+
+	$(MKDIR_INSTALL) $(LIBDIR)
 	$(INSTALL_CMD_DATA) $(STATIC_LIB) $(LIBDIR)
-	$(INSTALL_CMD_EXEC) $(CONFIG_SCRIPT) $(BINDIR)
 	$(INSTALL_CMD_EXEC) $(SHARED_LIB) $(LIBDIR)
-	$(INSTALL_CMD_DATA) $(PKGCONFIG) $(PKGCONF_DIR)
 	$(CD) $(LIBDIR); $(LN) $(SHARED_LIB) $(SYMLINK)
+	$(CD) $(LIBDIR); $(LN) $(SHARED_LIB) $(SONAME)
+
+	$(MKDIR_INSTALL) $(BINDIR)
+	$(INSTALL_CMD_EXEC) $(CONFIG_SCRIPT) $(BINDIR)
+
+	$(MKDIR_INSTALL) $(PKGCONF_DIR)
+	$(INSTALL_CMD_DATA) $(PKGCONFIG) $(PKGCONF_DIR)
