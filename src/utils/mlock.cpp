@@ -31,7 +31,7 @@ bool has_mlock()
 bool lock_mem(void* ptr, size_t bytes)
    {
 #if defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
-   return (::mlock((char*)ptr, bytes) == 0);
+   return (::mlock(static_cast<char*>(ptr), bytes) == 0);
 #elif defined(BOTAN_TARGET_OS_HAS_WIN32_VIRTUAL_LOCK)
    return (::VirtualLock(ptr, bytes) != 0);
 #else
@@ -45,7 +45,7 @@ bool lock_mem(void* ptr, size_t bytes)
 void unlock_mem(void* ptr, size_t bytes)
    {
 #if defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
-   ::munlock((char*)ptr, bytes);
+   ::munlock(static_cast<char*>(ptr), bytes);
 #elif defined(BOTAN_TARGET_OS_HAS_WIN32_VIRTUAL_LOCK)
    ::VirtualUnlock(ptr, bytes);
 #endif

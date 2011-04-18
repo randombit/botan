@@ -177,8 +177,9 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
                   std::vector<byte> name =
                      reader.get_range_vector<byte>(2, 1, 65535);
 
-                  requested_hostname.assign((const char*)&name[0],
-                                            name.size());
+                  requested_hostname.assign(
+                    reinterpret_cast<const char*>(&name[0]),
+                    name.size());
 
                   name_bytes -= (2 + name.size());
                   }

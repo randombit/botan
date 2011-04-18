@@ -162,7 +162,7 @@ void CPUID::initialize()
    u32bit cpuid[4] = { 0 };
    CALL_CPUID(1, cpuid);
 
-   x86_processor_flags = ((u64bit)cpuid[2] << 32) | cpuid[3];
+   x86_processor_flags = (static_cast<u64bit>(cpuid[2]) << 32) | cpuid[3];
 
 #if defined(BOTAN_TARGET_ARCH_IS_AMD64)
    /*

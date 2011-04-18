@@ -43,7 +43,7 @@ void ubi_512(MemoryRegion<u64bit>& H,
       if(to_proc % 8)
          {
          for(size_t j = 0; j != to_proc % 8; ++j)
-            M[to_proc/8] |= ((u64bit)msg[8*(to_proc/8)+j] << (8*j));
+           M[to_proc/8] |= static_cast<u64bit>(msg[8*(to_proc/8)+j]) << (8*j);
          }
 
       H[8] = H[0] ^ H[1] ^ H[2] ^ H[3] ^
@@ -117,7 +117,8 @@ void ubi_512(MemoryRegion<u64bit>& H,
       H[6] = X6 ^ M[6];
       H[7] = X7 ^ M[7];
 
-      T[1] &= ~((u64bit)1 << 62); // clear first flag if set
+      // clear first flag if set
+      T[1] &= ~(static_cast<u64bit>(1) << 62);
 
       msg_len -= to_proc;
       msg += to_proc;
@@ -128,7 +129,10 @@ void reset_tweak(MemoryRegion<u64bit>& T,
                  type_code type, bool final)
    {
    T[0] = 0;
-   T[1] = ((u64bit)type << 56) | ((u64bit)1 << 62) | ((u64bit)final << 63);
+
+   T[1] = (static_cast<u64bit>(type) << 56) |
+          (static_cast<u64bit>(1) << 62) |
+          (static_cast<u64bit>(final) << 63);
    }
 
 void initial_block(MemoryRegion<u64bit>& H,
@@ -227,7 +231,7 @@ void Skein_512::add_data(const byte input[], size_t length)
 
 void Skein_512::final_result(byte out[])
    {
-   T[1] |= ((u64bit)1 << 63); // final block flag
+   T[1] |= (static_cast<u64bit>(1) << 63); // final block flag
 
    for(size_t i = buf_pos; i != buffer.size(); ++i)
       buffer[i] = 0;

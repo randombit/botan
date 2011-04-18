@@ -99,7 +99,7 @@ SecureVector<byte> CMS_Encoder::wrap_key(RandomNumberGenerator& rng,
          throw Encoding_Error("CMS: 128-bit KEKs must be used with " + cipher);
 
       SecureVector<byte> lcekpad;
-      lcekpad.push_back((byte)cek.length());
+      lcekpad.push_back(static_cast<byte>(cek.length()));
       lcekpad += cek.bits_of();
       while(lcekpad.size() % 8)
          lcekpad.push_back(rng.next_byte());

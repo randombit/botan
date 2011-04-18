@@ -131,10 +131,12 @@ void transpose_out(__m128i& B0, __m128i& B1, __m128i& B2, __m128i& B3)
 */
 void idea_op_8(const byte in[64], byte out[64], const u16bit EK[52])
    {
-   __m128i B0 = _mm_loadu_si128((const __m128i*)in);
-   __m128i B1 = _mm_loadu_si128((const __m128i*)in + 1);
-   __m128i B2 = _mm_loadu_si128((const __m128i*)in + 2);
-   __m128i B3 = _mm_loadu_si128((const __m128i*)in + 3);
+   const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
+
+   __m128i B0 = _mm_loadu_si128(in_mm + 0);
+   __m128i B1 = _mm_loadu_si128(in_mm + 1);
+   __m128i B2 = _mm_loadu_si128(in_mm + 2);
+   __m128i B3 = _mm_loadu_si128(in_mm + 3);
 
    transpose_in(B0, B1, B2, B3);
 
@@ -183,10 +185,12 @@ void idea_op_8(const byte in[64], byte out[64], const u16bit EK[52])
 
    transpose_out(B0, B2, B1, B3);
 
-   _mm_storeu_si128((__m128i*)out, B0);
-   _mm_storeu_si128((__m128i*)out + 1, B2);
-   _mm_storeu_si128((__m128i*)out + 2, B1);
-   _mm_storeu_si128((__m128i*)out + 3, B3);
+   __m128i* out_mm = reinterpret_cast<__m128i*>(out);
+
+   _mm_storeu_si128(out_mm + 0, B0);
+   _mm_storeu_si128(out_mm + 1, B2);
+   _mm_storeu_si128(out_mm + 2, B1);
+   _mm_storeu_si128(out_mm + 3, B3);
    }
 
 }

@@ -11,6 +11,8 @@
 
 namespace Botan {
 
+namespace {
+
 namespace SHA2_64 {
 
 /*
@@ -166,6 +168,8 @@ void compress(MemoryRegion<u64bit>& digest,
       input += 128;
       }
    }
+
+}
 
 }
 

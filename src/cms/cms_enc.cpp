@@ -30,7 +30,7 @@ void CMS_Encoder::set_data(const byte buf[], size_t length)
 */
 void CMS_Encoder::set_data(const std::string& str)
    {
-   set_data((const byte*)str.c_str(), str.length());
+   set_data(reinterpret_cast<const byte*>(str.c_str()), str.length());
    }
 
 /*

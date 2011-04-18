@@ -22,7 +22,7 @@ class SIMD_SSE2
 
       SIMD_SSE2(const u32bit B[4])
          {
-         reg = _mm_loadu_si128((const __m128i*)B);
+         reg = _mm_loadu_si128(reinterpret_cast<const __m128i*>(B));
          }
 
       SIMD_SSE2(u32bit B0, u32bit B1, u32bit B2, u32bit B3)
@@ -37,7 +37,7 @@ class SIMD_SSE2
 
       static SIMD_SSE2 load_le(const void* in)
          {
-         return _mm_loadu_si128((const __m128i*)in);
+         return _mm_loadu_si128(reinterpret_cast<const __m128i*>(in));
          }
 
       static SIMD_SSE2 load_be(const void* in)
@@ -47,7 +47,7 @@ class SIMD_SSE2
 
       void store_le(byte out[]) const
          {
-         _mm_storeu_si128((__m128i*)out, reg);
+         _mm_storeu_si128(reinterpret_cast<__m128i*>(out), reg);
          }
 
       void store_be(byte out[]) const

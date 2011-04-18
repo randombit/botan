@@ -101,7 +101,7 @@ size_t hex_decode(byte output[],
 
    for(size_t i = 0; i != input_length; ++i)
       {
-      const byte bin = HEX_TO_BIN[(byte)input[i]];
+      const byte bin = HEX_TO_BIN[static_cast<byte>(input[i])];
 
       if(bin >= 0x10)
          {
