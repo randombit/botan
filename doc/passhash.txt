@@ -103,7 +103,9 @@ hosts).
 Botan provides two techniques for password hashing, bcrypt and
 passhash9.
 
-Bcrypt
+.. _bcrypt:
+
+Bcrypt Password Hashing
 ----------------------------------------
 
 Bcrypt is a password hashing scheme originally designed for use in

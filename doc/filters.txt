@@ -182,7 +182,7 @@ a case where that is useful::
    Pipe pipe(new Base64_Decoder,
              get_cipher("AES-128", key, iv, DECRYPTION),
              new Fork(
-                0
+                0, // this message gets ciphertext
                 new MAC_Filter("HMAC(SHA-1)", mac_key)
              )
       );
@@ -212,7 +212,9 @@ And then called ``start_msg``, inserted some data, then
 encoded form, and the other would contain the SHA-512 sum of the input
 in raw binary. In many situations you'll want to perform a sequence of
 operations on multiple branches of the fork; in which case, use
-``Chain``.
+the filter described in :ref:`chain`.
+
+.. _chain:
 
 Chain
 ---------------------------------
