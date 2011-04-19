@@ -76,6 +76,15 @@ useful for creating a minimal build targeting to a specific
 application, especially in conjunction with the amalgamation option;
 see :ref:`amalgamation`.
 
+For instance::
+
+ $ ./configure.py --no-autoload --enable-modules=rsa,ecdsa,eme1,emsa1,emsa4
+
+will set up a build that only includes RSA, ECDSA, and some padding
+modes, along with their dependencies. A small subset of core features,
+including AES, SHA-2, HMAC, and the multiple precision integer
+library, are always loaded.
+
 The script tries to guess what kind of makefile to generate, and it
 almost always guesses correctly (basically, Visual C++ uses NMAKE with
 Windows commands, and everything else uses Unix make with POSIX

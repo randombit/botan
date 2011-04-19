@@ -9,3 +9,7 @@ simd_engine.cpp
 <header:internal>
 simd_engine.h
 </header:internal>
+
+<requires>
+simd_32
+</requires>
