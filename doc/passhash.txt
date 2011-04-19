@@ -133,23 +133,30 @@ Here is an example of using bcrypt:
 
 .. literalinclude:: examples/bcrypt.cpp
 
+.. _passhash9:
+
 Passhash9
 ----------------------------------------
 
 Botan also provides a password hashing technique called passhash9, in
-``passhash9.h``, which is based on PBKDF2.
+``passhash9.h``, which is based on PBKDF2. Its outputs look like::
+
+  "$9$AAAKxwMGNPSdPkOKJS07Xutm3+1Cr3ytmbnkjO6LjHzCMcMQXvcT"
 
 .. cpp:function:: std::string generate_passhash9(const std::string& password, \
-   RandomNumberGenerator& rng, u16bit work_factor = 10)
+   RandomNumberGenerator& rng, u16bit work_factor = 10, byte alg_id = 0)
 
-   Functions much like ``generate_bcrypt``
+   Functions much like ``generate_bcrypt``. The last parameter,
+   ``alg_id``, specifies which PRF to use. Currently defined values
+   are
 
-.. cpp:function:: std::string generate_passhash9(const std::string& password, \
-   byte alg_id, RandomNumberGenerator& rng, u16bit work_factor = 10)
-
-   Like the other ``generate_passhash9``, but taking a parameter that
-   specifies which PRF to use. Currently defined values are 0
-   ("HMAC(SHA-1)"), 1 ("HMAC(SHA-256)"), and 2 ("CMAC(Blowfish)").
+   ======= ==============
+   Value   PRF algorithm
+   ======= ==============
+   0       HMAC(SHA-1)
+   1       HMAC(SHA-256)
+   2       CMAC(Blowfish)
+   ======= ==============
 
 .. cpp:function:: bool check_passhash9(const std::string& password, \
    const std::string& hash)
