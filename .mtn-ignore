@@ -1,4 +1,7 @@
 ^Makefile.*$
+^libbotan.*\.so\..*
+^[a-z]+\.(exp|lib)$
+^[a-z]+\.(exe|dll)(\.manifest)?$
 ^botan-config$
 ^botan_all\.(cpp|h)$
 ^botan.pc$
@@ -9,15 +12,9 @@ callgrind.out.*
 ^checks/ecc_testdata/rsa_private.pkcs8.pem$
 ^checks/ecc_testdata/wo_dompar_private.pkcs8.pem$
 ^checks/nist_tests/x509test$
-^doc/_build$
 ^doc/_static$
-^doc/botan.doxy$
-^doc/doxygen$
 ^doc/examples/.*\.pem$
 ^doc/examples/[a-z0-9_]+$
 ^src/wrap/perl-xs/Botan.(bs|c)$
 ^src/wrap/perl-xs/Makefile(\.old)?$
 ^src/wrap/perl-xs/.*blib$
-^[a-z]+\.(exe|dll)(\.manifest)?$
-^[a-z]+\.(exp|lib)$
-^libbotan.*\.so\..*
