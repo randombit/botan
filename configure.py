@@ -228,17 +228,17 @@ def process_command_line(args):
                            help='set distribution specific versioning',
                            default='unspecified')
 
-    build_group.add_option('--with-sphinx', default=False, action='store_true',
+    build_group.add_option('--with-sphinx', default=None, action='store_true',
                            help='Use Sphinx to generate HTML manual')
 
     build_group.add_option('--without-sphinx', action='store_false',
-                           help=SUPPRESS_HELP)
+                           dest='with_sphinx', help=SUPPRESS_HELP)
 
     build_group.add_option('--with-doxygen', default=False, action='store_true',
                            help='Use Doxygen to generate HTML API docs')
 
     build_group.add_option('--without-doxygen', action='store_false',
-                           help=SUPPRESS_HELP)
+                           dest='with_doxygen', help=SUPPRESS_HELP)
 
     build_group.add_option('--dumb-gcc', dest='dumb_gcc',
                            action='store_true', default=False,
@@ -1507,24 +1507,27 @@ def generate_amalgamation(build_config):
                 botan_all_cpp.write(line)
 
 """
-Finding a program by name
-code from http://stackoverflow.com/questions/377017/#377028
+Test for the existence of a program
 """
-def which(program):
-    def have_exe(fpath):
-        return os.path.exists(fpath) and os.access(fpath, os.X_OK)
+def have_program(program):
 
-    fpath, fname = os.path.split(program)
-    if fpath:
-        if have_exe(program):
-            return program
-    else:
-        for path in os.environ['PATH'].split(os.pathsep):
-            exe_file = os.path.join(path, program)
-            if have_exe(exe_file):
-                return exe_file
+    def exe_test(path, program):
+        exe_file = os.path.join(path, program)
 
-    return None
+        if os.path.exists(exe_file) and os.access(exe_file, os.X_OK):
+            logging.debug('Found program %s in %s' % (program, path))
+            return True
+        else:
+            return False
+
+    exe_suffixes = ['', '.exe']
+
+    for path in os.environ['PATH'].split(os.pathsep):
+        for suffix in exe_suffixes:
+            if exe_test(path, program + suffix):
+                return True
+
+    return False
 
 """
 Main driver
@@ -1574,9 +1577,9 @@ def main(argv = None):
 
     if options.compiler is None:
         if options.os == 'windows':
-            if which('cl.exe') is not None:
+            if have_program('cl'):
                 options.compiler = 'msvc'
-            elif which('g++.exe') is not None:
+            elif have_program('g++'):
                 options.compiler = 'gcc'
             else:
                 options.compiler = 'msvc'
@@ -1612,6 +1615,12 @@ def main(argv = None):
         (options.arch, options.cpu) = canon_processor(archinfo, options.cpu)
         logging.info('Canonicalizized --cpu=%s to %s/%s' % (
             cpu_from_user, options.arch, options.cpu))
+
+    if options.with_sphinx is None:
+        if have_program('sphinx-build'):
+            logging.info('Found sphinx-build, will enable; ' +
+                         'use --without-sphinx to disable')
+            options.with_sphinx = True
 
     logging.info('Target is %s-%s-%s-%s' % (
         options.compiler, options.os, options.arch, options.cpu))

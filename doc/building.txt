@@ -249,6 +249,21 @@ script; this will convert the script to the Python 3.x dialect::
   $ python ./configure.py
   [...]
 
+Setting Distribution Info
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The build allows you to set some information about what distribution
+this build of the library comes from.  It is particularly relevant to
+people packaging the library for wider distribution, to signify what
+distribution this build is from. Applications can test this value by
+checking the string value of the macro ``BOTAN_DISTRIBUTION_INFO``. It
+can be set using the ``--distribution-info`` flag to ``configure.py``,
+and otherwise defaults to "unspecified". For instance, a `Gentoo
+<http://www.gentoo.org>`_ ebuild might set it with
+``--distribution-info="Gentoo ${PVR}"`` where ``${PVR}`` is an ebuild
+variable automatically set to a combination of the library and ebuild
+versions.
+
 Local Configuration Settings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
