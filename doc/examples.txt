@@ -2,24 +2,6 @@
 Examples
 ========================================
 
-DSA Examples
-----------------------------------------
-
-DSA Signature Generation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Reads a DSA private key and signs the specified file using SHA-1
-
-.. literalinclude:: examples/dsa_sign.cpp
-
-DSA Signature Verification
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Reads a DSA public key and a signature, and checks if the signature
-is valid for the specified file
-
-..literalinclude:: examples/dsa_ver.cpp
-
 X.509 Certificate Examples
 ----------------------------------------
 
@@ -51,18 +33,6 @@ expected in "cacert.pem", the private key is expected in
 "caprivate.pem", and "req.pem" is a PKCS #10 certificate request.
 
 .. literalinclude:: examples/ca.cpp
-
-
-Format Preserving Encryption
-----------------------------------------
-
-Format preserving encryption is a way of mapping data with an
-arbitrarily specified format such that the ciphertext has the same
-formatting. This example encrypts a credit card number with a valid
-`Luhn checksum <http://en.wikipedia.org/wiki/Luhn_algorithm>`_ to
-another number with the same format, including a correct checksum.
-
-.. literalinclude:: examples/fpe.cpp
 
 ASN.1 Parsing
 ----------------------------------------

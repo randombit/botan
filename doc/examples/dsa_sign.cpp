@@ -7,6 +7,7 @@
 #include <botan/botan.h>
 #include <botan/pubkey.h>
 #include <botan/dsa.h>
+#include <botan/base64.h>
 using namespace Botan;
 
 const std::string SUFFIX = ".sig";

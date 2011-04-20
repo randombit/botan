@@ -458,6 +458,14 @@ For DSA, ECDSA, GOST-34.11, and Nyberg-Rueppel, you should use
 EMSA1. None of the other encoding methods are particularly useful for
 these algorithms.
 
+Here is an example of DSA signature generation
+
+.. literalinclude:: examples/dsa_sign.cpp
+
+Here is an example that verifies DSA signatures
+
+.. literalinclude:: examples/dsa_ver.cpp
+
 Key Agreement
 ---------------------------------
 

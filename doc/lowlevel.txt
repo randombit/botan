@@ -57,13 +57,13 @@ Since often it's hard to distinguish between a key and IV, many things
 
 .. cpp:function:: OctetString::OctetString(RandomNumberGenerator& rng, size_t length)
 
-  This constructor creates a new random key ``length`` bytes long
-  using the random number generator.
+  This constructor creates a new random key *length* bytes long using
+  the random number generator.
 
 .. cpp:function:: OctetString::OctetString(std::string str)
 
-  The argument ``str`` is assumed to be a hex string; it is converted
-  to binary and stored. Whitespace is ignored.
+  The argument *str* is assumed to be a hex string; it is converted to
+  binary and stored. Whitespace is ignored.
 
 .. cpp:function:: OctetString::OctetString(const byte* input, size_t length)
 
@@ -99,8 +99,8 @@ restrictions on the size of the key:
 
 .. cpp:function:: bool SymmetricAlgorithm::valid_keylength(size_t length) const
 
-  This function returns true if and only if ``length`` is a valid keylength
-  for the algorithm.
+  This function returns true if and only if *length* is a valid
+  keylength for the algorithm.
 
 .. cpp:function:: size_t SymmetricAlgorithm::minimum_keylength() const
 
@@ -122,35 +122,35 @@ Block ciphers implement the interface ``BlockCipher``, found in
 
   Returns the block size of the cipher in bytes
 
-.. cpp:function:: void BlockCipher::encrypt_n(const byte* in, byte* out, size_t blocks) const
+.. cpp:function:: void BlockCipher::encrypt_n(const byte* in, byte* out, size_t n) const
 
-  Encrypt ``blocks`` blocks of data, taking the input from ``in`` and
-  placing the ciphertext in ``out``. The two pointers may be
+  Encrypt *n* blocks of data, taking the input from the array *in* and
+  placing the ciphertext into *out*. The two pointers may be
   identical, but should not overlap ranges.
 
 .. cpp:function:: void BlockCipher::encrypt(const byte* in, byte* out) const
 
-  Encrypt a single block, taking the input from ``in`` and placing it
-  in ``out``.
+  Encrypt a single block, taking the input from *in* and placing it
+  in *out*. Acts like :cpp:func:`encrypt_n`\ (in, out, 1).
 
 .. cpp:function:: void BlockCipher::encrypt(byte* block) const
 
-  Identical to ``encrypt(block, block)``.
+  Identical to :cpp:func:`encrypt`\ (block, block)
 
-.. cpp:function:: void BlockCipher::decrypt_n(const byte* in, byte out, size_t blocks) const
+.. cpp:function:: void BlockCipher::decrypt_n(const byte* in, byte out, size_t n) const
 
-  Decrypt ``blocks`` blocks of data, taking the input from ``in`` and
-  placing the plaintext in ``out``. The two pointers may be identical,
-  but should not overlap ranges.
+  Decrypt *n* blocks of data, taking the input from *in* and placing
+  the plaintext in *out*. The two pointers may be identical, but
+  should not overlap ranges.
 
 .. cpp:function:: void BlockCipher::decrypt(const byte* in, byte* out) const
 
-  Decrypt a single block, taking the input from ``in`` and placing it
-  in ``out``.
+  Decrypt a single block, taking the input from *in* and placing it
+  in *out*. Acts like :cpp:func:`decrypt_n`\ (in, out, 1).
 
 .. cpp:function:: void BlockCipher::decrypt(byte* block) const
 
-  Identical to ``decrypt(block, block)``.
+  Identical to :cpp:func:`decrypt`\ (block, block)
 
 
 Stream Ciphers
@@ -186,7 +186,7 @@ Return the size of the output of this function.
 
 .. cpp:function:: void BufferedComputation::update(const std::string& input)
 
-Updates the hash/mac calculation with ``input``.
+Updates the hash/mac calculation with *input*.
 
 .. cpp:function:: void BufferedComputation::final(byte* out)
 
@@ -228,22 +228,6 @@ intended purpose (error checking), they perform very well. Some
 examples of checksums included in Botan are the Adler32 and CRC32
 checksums.
 
-Threads and Mutexes
----------------------------------
-
-Botan includes a mutex system, which is used internally to lock some shared
-data structures that must be kept shared for efficiency reasons (mostly, these
-are in the allocation systems~--~handing out 1000 separate allocators hurts
-performance and makes caching memory blocks useless). This system is supported
-by the ``mux_pthr`` module, implementing the ``Mutex`` interface for
-systems that have POSIX threads.
-
-If your application is using threads, you *must* add the option
-"thread_safe" to the options string when you create the
-``LibraryInitializer`` object. If you specify this option and no mutex
-type is available, an exception is thrown, since otherwise you would
-probably be facing a nasty crash.
-
 Secure Memory
 ---------------------------------
 
@@ -279,17 +263,18 @@ These types are not described in any great detail: for more information,
 consult the definitive sources~--~the header files ``secmem.h`` and
 ``allocate.h``.
 
-``SecureBuffer`` is a simple array type, whose size is specified at compile
-time. It will automatically convert to a pointer of the appropriate type, and
-has a number of useful functions, including ``clear()``, and
-``size_t`` ``size()``, which returns the length of the array. It is a
-template that takes as parameters a type, and a constant integer which is how
-long the array is (for example: ``SecureBuffer<byte, 8> key;``).
+``SecureBuffer`` is a simple array type, whose size is specified at
+compile time. It will automatically convert to a pointer of the
+appropriate type, and has a number of useful functions, including
+``clear()``, and ``size_t`` ``size()``, which returns the length of
+the array. It is a template that takes as parameters a type, and a
+constant integer which is how long the array is (for example:
+``SecureBuffer<byte, 8> key;``).
 
-``SecureVector`` is a variable length array. Its size can be increased or
-decreased as need be, and it has a wide variety of functions useful for copying
-data into its buffer. Like ``SecureBuffer``, it implements ``clear``
-and ``size``.
+``SecureVector`` is a variable length array. Its size can be increased
+or decreased as need be, and it has a wide variety of functions useful
+for copying data into its buffer. Like ``SecureBuffer``, it implements
+``clear`` and ``size``.
 
 Allocators
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -297,14 +282,14 @@ Allocators
 The containers described above get their memory from allocators. As a
 user of the library, you can add new allocator methods at run time for
 containers, including the ones used internally by the library, to
-use. The interface to this is in ``allocate.h``. Code needing
-to allocate or deallocate memory calls ``get_allocator``,
-which returns a pointer to an allocator object. This pointer should
-not be freed: the caller does not own the allocator (it is shared
-among multiple allocatore users, and uses a mutex to serialize access
-internally if necessary). It is possible to call
-``get_allocator`` with a specific name to request a particular
-type of allocator, otherwise, a default allocator type is returned.
+use. The interface to this is in ``allocate.h``. Code needing to
+allocate or deallocate memory calls ``get_allocator``, which returns a
+pointer to an allocator object. This pointer should not be freed: the
+caller does not own the allocator (it is shared among multiple
+allocatore users, and uses a mutex to serialize access internally if
+necessary). It is possible to call ``get_allocator`` with a specific
+name to request a particular type of allocator, otherwise, a default
+allocator type is returned.
 
 At start time, the only allocator known is a ``Default_Allocator``,
 which just allocates memory using ``malloc``, and zeroizes it when the
@@ -323,4 +308,3 @@ allocator was successfully registered. If you ask it to,
 Finally, you can set the default allocator type that will be returned
 using the policy setting "default_alloc" to the name of any previously
 registered allocator.
-

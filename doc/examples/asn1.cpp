@@ -21,8 +21,8 @@ using namespace Botan;
 */
 #define INITIAL_LEVEL 0
 
-void decode(BER_Decoder&, u32bit);
-void emit(const std::string&, u32bit, u32bit, const std::string& = "");
+void decode(BER_Decoder&, size_t);
+void emit(const std::string&, size_t, size_t, const std::string& = "");
 std::string type_name(ASN1_Tag);
 
 int main(int argc, char* argv[])
@@ -243,7 +243,7 @@ void emit(const std::string& type, size_t level, size_t length,
    const size_t BIN_LIMIT = 64;
 
    int written = 0;
-   written += printf("  d=%2d, l=%4d: ", level, length);
+   written += printf("  d=%2d, l=%4d: ", (int)level, (int)length);
    for(size_t i = INITIAL_LEVEL; i != level; ++i)
       written += printf(" ");
    written += printf("%s   ", type.c_str());

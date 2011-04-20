@@ -80,7 +80,7 @@ exclude_patterns = ['_build']
 #default_role = None
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
-#add_function_parentheses = True
+add_function_parentheses = False
 
 # If true, the current module name will be prepended to all description
 # unit titles (such as .. function::).
@@ -190,7 +190,7 @@ htmlhelp_basename = 'botandoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'botan.tex', u'botan Documentation',
+  ('index', 'botan.tex', u'botan Reference Manual',
    u'Jack Lloyd', 'manual'),
 ]
 
@@ -203,10 +203,10 @@ latex_documents = [
 #latex_use_parts = False
 
 # If true, show page references after internal links.
-#latex_show_pagerefs = False
+latex_show_pagerefs = True
 
 # If true, show URL addresses after external links.
-#latex_show_urls = False
+latex_show_urls = True
 
 # Additional stuff for the LaTeX preamble.
 #latex_preamble = ''

@@ -1,4 +1,4 @@
-#include <botan/init.h>
+#include <botan/botan.h>
 #include <botan/tls_client.h>
 #include "socket.h"
 

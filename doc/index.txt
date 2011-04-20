@@ -18,6 +18,7 @@ Contents:
    passhash
    rng
    kdf
+   fpe
    bigint
    examples
    algos

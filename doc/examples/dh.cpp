@@ -33,11 +33,11 @@ int main()
 
       // Now Alice performs the key agreement operation
       PK_Key_Agreement ka_alice(private_a, "KDF2(SHA-256)");
-      SymmetricKey alice_key = ka1.derive_key(32, public_b, session_param);
+      SymmetricKey alice_key = ka_alice.derive_key(32, public_b, session_param);
 
       // Bob does the same:
       PK_Key_Agreement ka_bob(private_b, "KDF2(SHA-256)");
-      SymmetricKey bob_key = ka2.derive_key(32, public_a, session_param);
+      SymmetricKey bob_key = ka_bob.derive_key(32, public_a, session_param);
 
       if(alice_key == bob_key)
          {

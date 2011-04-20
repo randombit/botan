@@ -73,7 +73,6 @@ primitives, including:
 
     * PRFs from ANSI X9.42, SSL v3.0, TLS v1.0
 
-
 Recommended Algorithms
 ---------------------------------
 
@@ -143,8 +142,8 @@ match that in SCAN, if it's defined there).
 **Stream Ciphers:** "ARC4", "MARK4", "Salsa20", "Turing",
 "WiderWake4+1-BE"
 
-**Hash Functions:** "HAS-160", "GOST-34.11", "MD2", "MD4", "MD5",
-"RIPEMD-128", "RIPEMD-160", "SHA-160", "SHA-256", "SHA-384",
-"SHA-512", "Skein-512", "Tiger(OUTSZ)", "Whirlpool"
+**Hash Functions:** "HAS-160", "GOST-34.11", "Keccak-1600(OUTSZ)",
+"MD2", "MD4", "MD5", "RIPEMD-128", "RIPEMD-160", "SHA-160", "SHA-256",
+"SHA-384", "SHA-512", "Skein-512", "Tiger(OUTSZ)", "Whirlpool"
 
 **MACs:** "HMAC(HASH)", "CMAC(BLOCK)", "X9.19-MAC"
