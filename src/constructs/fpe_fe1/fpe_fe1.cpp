@@ -8,13 +8,15 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/fpe.h>
+#include <botan/fpe_fe1.h>
 #include <botan/numthry.h>
 #include <botan/hmac.h>
 #include <botan/sha2_32.h>
 #include <stdexcept>
 
 namespace Botan {
+
+namespace FPE {
 
 namespace {
 
@@ -133,7 +135,7 @@ BigInt FPE_Encryptor::operator()(size_t round_no, const BigInt& R)
 /*
 * Generic Z_n FPE encryption, FE1 scheme
 */
-BigInt fpe_encrypt(const BigInt& n, const BigInt& X0,
+BigInt fe1_encrypt(const BigInt& n, const BigInt& X0,
                    const SymmetricKey& key,
                    const MemoryRegion<byte>& tweak)
    {
@@ -161,7 +163,7 @@ BigInt fpe_encrypt(const BigInt& n, const BigInt& X0,
 /*
 * Generic Z_n FPE decryption, FD1 scheme
 */
-BigInt fpe_decrypt(const BigInt& n, const BigInt& X0,
+BigInt fe1_decrypt(const BigInt& n, const BigInt& X0,
                    const SymmetricKey& key,
                    const MemoryRegion<byte>& tweak)
    {
@@ -185,5 +187,7 @@ BigInt fpe_decrypt(const BigInt& n, const BigInt& X0,
 
    return X;
    }
+
+}
 
 }

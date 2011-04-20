@@ -1,5 +1,5 @@
 #include <botan/botan.h>
-#include <botan/fpe.h>
+#include <botan/fpe_fe1.h>
 #include <botan/sha160.h>
 
 using namespace Botan;
@@ -70,7 +70,7 @@ u64bit encrypt_cc_number(u64bit cc_number,
 
    u64bit cc_ranked = cc_rank(cc_number);
 
-   BigInt c = fpe_encrypt(n, cc_ranked, key, sha1(acct_name));
+   BigInt c = FPE::fe1_encrypt(n, cc_ranked, key, sha1(acct_name));
 
    if(c.bits() > 50)
       throw std::runtime_error("FPE produced a number too large");
@@ -89,7 +89,7 @@ u64bit decrypt_cc_number(u64bit enc_cc,
 
    u64bit cc_ranked = cc_rank(enc_cc);
 
-   BigInt c = fpe_decrypt(n, cc_ranked, key, sha1(acct_name));
+   BigInt c = FPE::fe1_decrypt(n, cc_ranked, key, sha1(acct_name));
 
    if(c.bits() > 50)
       throw std::runtime_error("FPE produced a number too large");

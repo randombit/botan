@@ -1,4 +1,4 @@
-define FORMAT_PRESERVING_ENCRYPTION
+define FPE_FE1
 
 <requires>
 hmac

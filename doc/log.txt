@@ -12,6 +12,13 @@ Version 1.10.0, Not Yet Released
 
 * Further updates to the documentation
 
+* The format preserving encryption method currently available was
+  presented in the header ``fpe.h`` and the functions ``fpe_encrypt``
+  and ``fpe_decrypt``. These were renamed as it is likely that other
+  FPE schemes will be included in the future. The header is now
+  ``fpe_fe1.h``, and the functions are named ``fe1_encrypt`` and
+  ``fe1_decrypt``. See :ref:`fpe` for more information.
+
 * A bug in 1.9.16 effectively disabled support for runtime CPU feature
   detection on x86 under GCC in that release.
 
