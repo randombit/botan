@@ -9,6 +9,7 @@ ix86
 80x86
 i86pc # for Solaris
 x86pc # for QNX
+bepc  # for Haiku
 </aliases>
 
 <submodels>

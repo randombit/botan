@@ -19,6 +19,9 @@ Version 1.10.0, Not Yet Released
   ``fpe_fe1.h``, and the functions are named ``fe1_encrypt`` and
   ``fe1_decrypt``. See :ref:`fpe` for more information.
 
+* Some minor fixes for compiling botan under the BeOS
+  clone/continuation `Haiku <http://haiku-os.org>`_.
+
 * A bug in 1.9.16 effectively disabled support for runtime CPU feature
   detection on x86 under GCC in that release.
 

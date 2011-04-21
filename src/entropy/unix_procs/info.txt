@@ -13,10 +13,10 @@ unix_cmd.h
 
 <os>
 aix
-beos
 cygwin
 darwin
-#freebsd
+freebsd
+haiku
 hpux
 irix
 linux

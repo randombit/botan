@@ -47,27 +47,30 @@ Keys and IVs
 ---------------------------------
 
 Both symmetric keys and initialization values can be considered byte
-(or octet) strings. These are represented by the classes
-``SymmetricKey`` and ``InitializationVector``, which are
-subclasses of ``OctetString``.
+(or octet) strings. These are represented by
 
-Since often it's hard to distinguish between a key and IV, many things
-(such as key derivation mechanisms) return ``OctetString`` instead of
-``SymmetricKey`` to allow its use as a key or an IV.
+.. cpp:class:: OctetString
 
-.. cpp:function:: OctetString::OctetString(RandomNumberGenerator& rng, size_t length)
+   Also known as ``SymmetricKey`` and ``InitializationVector``, when
+   you want to express intent.
 
-  This constructor creates a new random key *length* bytes long using
-  the random number generator.
+   .. cpp:function:: OctetString(RandomNumberGenerator& rng, size_t length)
 
-.. cpp:function:: OctetString::OctetString(std::string str)
+      This constructor creates a new random key *length* bytes long
+      using the random number generator.
 
-  The argument *str* is assumed to be a hex string; it is converted to
-  binary and stored. Whitespace is ignored.
+   .. cpp:function:: OctetString(std::string str)
 
-.. cpp:function:: OctetString::OctetString(const byte* input, size_t length)
+      The argument *str* is assumed to be a hex string; it is
+      converted to binary and stored. Whitespace is ignored.
 
-  This constructor copies its input.
+   .. cpp:function:: OctetString(const byte* input, size_t length)
+
+      This constructor copies its input.
+
+   .. cpp:function:: as_string() const
+
+      Returns the hex representation of the key or IV
 
 Symmetrically Keyed Algorithms
 ---------------------------------
@@ -80,78 +83,83 @@ algorithm specification and the implementation. You can query any
 botan object to find out what key length(s) it supports.
 
 To make this similarity in terms of keying explicit, all algorithms of
-those types are derived from the ``SymmetricAlgorithm`` base
-class. This type provides functions for setting the key, and querying
-restrictions on the size of the key:
+those types are derived from the :cpp:class`SymmetricAlgorithm` base.
+This type provides functions for setting the key, and querying
+restrictions on the size of the key.
 
-.. cpp:function:: void SymmetricAlgorithm::set_key(const byte* key, size_t length)
+.. cpp:class:: SymmetricAlgorithm
 
-  This sets the key to the value specified. Most algorithms only
-  accept keys of certain lengths. If you attempt to call ``set_key``
-  with a key length that is not supported, the exception
-  ``Invalid_Key_Length`` will be thrown. There is also another version
-  of ``set_key`` that takes a ``SymmetricKey`` as an argument.
+   .. cpp:function:: void set_key(const byte* key, size_t length)
 
-  In all cases, ``set_key`` must be called on an object before any
-  data processing (encryption, decryption, etc) is done by that
-  object. If this is not done, the results are undefined, but probably
-  will not be good.
+   .. cpp:function:: void set_key(const SymmetricKey& key)
 
-.. cpp:function:: bool SymmetricAlgorithm::valid_keylength(size_t length) const
+     This sets the key to the value specified. Most algorithms only
+     accept keys of certain lengths. If you attempt to call
+     ``set_key`` with a key length that is not supported, the
+     exception ``Invalid_Key_Length`` will be thrown.
 
-  This function returns true if and only if *length* is a valid
-  keylength for the algorithm.
+     In all cases, ``set_key`` must be called on an object before any
+     data processing (encryption, decryption, etc) is done by that
+     object. If this is not done, the results are undefined.
 
-.. cpp:function:: size_t SymmetricAlgorithm::minimum_keylength() const
+   .. cpp:function:: bool valid_keylength(size_t length) const
 
-  Return the smallest key length (in bytes) that is acceptible for the
-  algorithm.
+     This function returns true if and only if *length* is a valid
+     keylength for the algorithm.
 
-.. cpp:function:: size_t SymmetricAlgorithm::maximum_keylength() const
+   .. cpp:function:: size_t minimum_keylength() const
 
-  Return the largest key length (in bytes) that is acceptible for the
-  algorithm
+     Return the smallest key length (in bytes) that is acceptible for the
+     algorithm.
+
+   .. cpp:function:: size_t maximum_keylength() const
+
+     Return the largest key length (in bytes) that is acceptible for the
+     algorithm
 
 Block Ciphers
 ---------------------------------
 
-Block ciphers implement the interface ``BlockCipher``, found in
-``block_cipher.h``, as well as the ``SymmetricAlgorithm`` interface.
+All block ciphers classes in botan are subclasses of
 
-.. cpp:function:: size_t BlockCipher::block_size() const
+.. cpp:class:: BlockCipher
 
-  Returns the block size of the cipher in bytes
+   Which subclasses the :cpp:class:`SymmetricAlgorithm` interface.
 
-.. cpp:function:: void BlockCipher::encrypt_n(const byte* in, byte* out, size_t n) const
+   .. cpp:function:: size_t block_size() const
 
-  Encrypt *n* blocks of data, taking the input from the array *in* and
-  placing the ciphertext into *out*. The two pointers may be
-  identical, but should not overlap ranges.
+      Returns the block size of the cipher in bytes
 
-.. cpp:function:: void BlockCipher::encrypt(const byte* in, byte* out) const
+   .. cpp:function:: void encrypt_n(const byte* in, \
+         byte* out, size_t n) const
 
-  Encrypt a single block, taking the input from *in* and placing it
-  in *out*. Acts like :cpp:func:`encrypt_n`\ (in, out, 1).
+      Encrypt *n* blocks of data, taking the input from the array *in*
+      and placing the ciphertext into *out*. The two pointers may be
+      identical, but should not overlap ranges.
 
-.. cpp:function:: void BlockCipher::encrypt(byte* block) const
+   .. cpp:function:: void encrypt(const byte* in, byte* out) const
 
-  Identical to :cpp:func:`encrypt`\ (block, block)
+      Encrypt a single block, taking the input from *in* and placing
+      it in *out*. Acts like :cpp:func:`encrypt_n`\ (in, out, 1).
 
-.. cpp:function:: void BlockCipher::decrypt_n(const byte* in, byte out, size_t n) const
+   .. cpp:function:: void encrypt(byte* block) const
 
-  Decrypt *n* blocks of data, taking the input from *in* and placing
-  the plaintext in *out*. The two pointers may be identical, but
-  should not overlap ranges.
+      Identical to :cpp:func:`encrypt`\ (block, block)
 
-.. cpp:function:: void BlockCipher::decrypt(const byte* in, byte* out) const
+   .. cpp:function:: void decrypt_n(const byte* in, byte out, size_t n) const
 
-  Decrypt a single block, taking the input from *in* and placing it
-  in *out*. Acts like :cpp:func:`decrypt_n`\ (in, out, 1).
+      Decrypt *n* blocks of data, taking the input from *in* and
+      placing the plaintext in *out*. The two pointers may be
+      identical, but should not overlap ranges.
 
-.. cpp:function:: void BlockCipher::decrypt(byte* block) const
+   .. cpp:function:: void decrypt(const byte* in, byte* out) const
 
-  Identical to :cpp:func:`decrypt`\ (block, block)
+      Decrypt a single block, taking the input from *in* and placing it
+      in *out*. Acts like :cpp:func:`decrypt_n`\ (in, out, 1).
 
+   .. cpp:function:: void decrypt(byte* block) const
+
+      Identical to :cpp:func:`decrypt`\ (block, block)
 
 Stream Ciphers
 ---------------------------------

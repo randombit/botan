@@ -9,9 +9,9 @@ es_beos.h
 </header:internal>
 
 <os>
-beos
+haiku
 </os>
 
 <libs>
-beos -> root,be
+haiku -> root,be
 </libs>

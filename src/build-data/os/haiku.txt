@@ -1,0 +1,15 @@
+os_type unix
+
+install_root /boot
+header_dir develop/headers
+lib_dir system/lib
+doc_dir system/documentation
+
+<target_features>
+gettimeofday
+gmtime_r
+</target_features>
+
+<aliases>
+beos
+</aliases>

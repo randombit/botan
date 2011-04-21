@@ -4,11 +4,11 @@ load_on auto
 
 <os>
 aix
-beos
 cygwin
 darwin
-freebsd
 dragonfly
+freebsd
+haiku
 hpux
 irix
 linux

@@ -26,8 +26,6 @@ void BeOS_EntropySource::poll(Entropy_Accumulator& accum)
    get_key_info(&info_key);
    accum.add(info_key, 0);
 
-   accum.add(idle_time(), 0);
-
    team_info info_team;
    int32 cookie_team = 0;
 

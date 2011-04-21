@@ -35,8 +35,6 @@ aix     -> "$(CXX) -shared -fPIC"
 darwin  -> "$(CXX) -dynamiclib -fPIC -install_name $(LIBDIR)/$(SONAME)"
 hpux    -> "$(CXX) -shared -fPIC -Wl,+h,$(SONAME)"
 solaris -> "$(CXX) -shared -fPIC -Wl,-h,$(SONAME)"
-# Gotta use ld directly on BeOS, their GCC is busted
-beos    -> "ld -shared -h $(SONAME)"
 </so_link_flags>
 
 <mach_opt>

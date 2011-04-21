@@ -10,11 +10,11 @@ dev_random.h
 
 <os>
 aix
-beos
 cygwin
 darwin
-freebsd
 dragonfly
+freebsd
+haiku
 hpux
 hurd
 irix

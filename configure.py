@@ -845,6 +845,12 @@ def canon_processor(archinfo, proc):
                 if re.search(match, proc) != None:
                     return (ainfo.basename, submodel)
 
+    logging.debug('Known CPU names: ' + ' '.join(
+        sorted(sum([[ainfo.basename] + \
+                    ainfo.aliases + \
+                    [x for (x,_) in ainfo.all_submodels()]
+                    for ainfo in archinfo.values()], []))))
+
     raise Exception('Unknown or unidentifiable processor "%s"' % (proc))
 
 def guess_processor(archinfo):
