@@ -14,12 +14,14 @@ Contents:
    pubkey
    x509
    ssl
+   bigint
    lowlevel
+   secmem
+   kdf
+   pbkdf
    passhash
    rng
-   kdf
    fpe
-   bigint
    examples
    algos
    faq

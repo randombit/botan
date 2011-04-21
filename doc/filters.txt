@@ -109,9 +109,12 @@ filter in a pipe. The output of the compressor is sent to the
 ``DataSink_Stream``. Anything written to a ``DataSink_Stream`` is
 written to a file; the filter produces no output. As soon as the
 compression algorithm finishes up a block of data, it will send it
-along, at which point it will immediately be written to disk; if you
-were to call ``pipe.read_all()`` after ``pipe.end_msg()``, you'd get
-an empty vector out.
+along to the sink filter, which will immediately write it to the
+stream; if you were to call ``pipe.read_all()`` after
+``pipe.end_msg()``, you'd get an empty vector out. This is
+particularly useful for cases where you are processing a large amount
+of data, as it means you don't have to store everything in memory at
+once.
 
 Here's an example using two computational filters::
 
@@ -126,6 +129,30 @@ Here's an example using two computational filters::
    file >> encryptor;
    encryptor.end_msg(); // flush buffers, complete computations
    std::cout << encryptor;
+
+You can read from a pipe while you are still writing to it, which
+allows you to bound the amount of memory that is in use at any one
+time. A common idiom for this is::
+
+   pipe.start_msg();
+   SecureBuffer<byte, 4096> buffer;
+   while(infile.good())
+      {
+      infile.read((char*)&buffer[0], buffer.size());
+      const size_t got_from_infile = infile.gcount();
+      pipe.write(buffer, got_from_infile);
+
+      if(infile.eof())
+         pipe.end_msg();
+
+      while(pipe.remaining() > 0)
+         {
+         const size_t buffered = pipe.read(buffer, buffer.size());
+         outfile.write((const char*)&buffer[0], buffered);
+         }
+      }
+   if(infile.bad() || (infile.fail() && !infile.eof()))
+      throw Some_Exception();
 
 Fork
 ---------------------------------
@@ -243,34 +270,34 @@ Sources and Sinks
 Data Sources
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A ``DataSource`` is a simple abstraction for a thing that stores bytes. This
-type is used heavily in the areas of the API related to ASN.1
-encoding/decoding. The following types are ``DataSource``s: ``Pipe``,
-``SecureQueue``, and a couple of special purpose ones:
+A ``DataSource`` is a simple abstraction for a thing that stores
+bytes. This type is used heavily in the areas of the API related to
+ASN.1 encoding/decoding. The following types are ``DataSource``s:
+``Pipe``, ``SecureQueue``, and a couple of special purpose ones:
 ``DataSource_Memory`` and ``DataSource_Stream``.
 
-You can create a ``DataSource_Memory`` with an array of bytes and a length
-field. The object will make a copy of the data, so you don't have to worry
-about keeping that memory allocated. This is mostly for internal use, but if it
-comes in handy, feel free to use it.
+You can create a ``DataSource_Memory`` with an array of bytes and a
+length field. The object will make a copy of the data, so you don't
+have to worry about keeping that memory allocated. This is mostly for
+internal use, but if it comes in handy, feel free to use it.
 
 A ``DataSource_Stream`` is probably more useful than the memory based
 one. Its constructors take either a ``std::istream`` or a
 ``std::string``. If it's a stream, the data source will use the
-``istream`` to satisfy read requests (this is particularly useful to use
-with ``std::cin``). If the string version is used, it will attempt to open
-up a file with that name and read from it.
+``istream`` to satisfy read requests (this is particularly useful to
+use with ``std::cin``). If the string version is used, it will attempt
+to open up a file with that name and read from it.
 
 Data Sinks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A ``DataSink`` (in ``data_snk.h``) is a ``Filter`` that
-takes arbitrary amounts of input, and produces no output. This means
-it's doing something with the data outside the realm of what
-``Filter``/``Pipe`` can handle, for example, writing it to a
-file (which is what the ``DataSink_Stream`` does). There is no
-need for ``DataSink``s that write to a ``std::string`` or memory
-buffer, because ``Pipe`` can handle that by itself.
+A ``DataSink`` (in ``data_snk.h``) is a ``Filter`` that takes
+arbitrary amounts of input, and produces no output. This means it's
+doing something with the data outside the realm of what
+``Filter``/``Pipe`` can handle, for example, writing it to a file
+(which is what the ``DataSink_Stream`` does). There is no need for
+``DataSink``s that write to a ``std::string`` or memory buffer,
+because ``Pipe`` can handle that by itself.
 
 Here's a quick example of using a ``DataSink``, which encrypts
 ``in.txt`` and sends the output to ``out.txt``. There is
@@ -416,7 +443,7 @@ Functions in ``Pipe`` related to reading include:
 
   Returns how many bytes are left in the message
 
-.. cpp:function:: Pipe::message_id default_msg()
+.. cpp:function:: Pipe::message_id Pipe::default_msg()
 
   Returns the current default message number
 

@@ -264,10 +264,10 @@ which key was used to sign the certificate). Implementing the function
 is optional, and by default will return no CRLs. If it is available,
 it will be used by ``X509_CRL``.
 
-As for using such a store, you have to tell ``X509_Store`` about
-it, by calling the ``X509_Store`` member function
+As for using such a store, you have to tell ``X509_Store`` about it
+with
 
-.. cpp:function:: void add_new_certstore(Certificate_Store* new_store)
+.. cpp:function:: void X509_Store::add_new_certstore(Certificate_Store* new_store)
 
   The store object will be owned by (and deleted by) ``X509_Store``,
   so make sure to allocate it with ``new``.
@@ -365,7 +365,8 @@ on how to create one) or one issued by another CA (see the section on
 PKCS #10 requests). Creating a CA object is done by the following
 constructor:
 
-.. cpp:function:: X509_CA(const X509_Certificate& cert, const Private_Key& key)
+.. cpp:function:: X509_CA::X509_CA(const X509_Certificate& cert, \
+   const Private_Key& key)
 
 The private key is the private key corresponding to the public key in the
 CA's certificate.
@@ -378,7 +379,12 @@ verify that the name in the request corresponds to the name of the
 entity who requested it), and then signed by a CA key, generating a
 new certificate:
 
-.. cpp:function:: X509_Certificate sign_request(const PKCS10_Request& req) const
+.. cpp:function:: X509_Certificate \
+   X509_CA::sign_request(const PKCS10_Request& req) const
+
+Here's an example:
+
+.. literalinclude examples/ca.cpp
 
 Generating CRLs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

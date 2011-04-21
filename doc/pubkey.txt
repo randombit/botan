@@ -78,8 +78,8 @@ Nyberg-Rueppel key pairs with
   value. Normally, you would leave the value as zero, letting the
   class generate a new random key.
 
-Finally, given an ``EC_Group`` object, you can create a new
-ECDSA, ECDH, or GOST 34.10 private key with
+Finally, given an ``EC_Group`` object, you can create a new ECDSA,
+ECDH, or GOST 34.10-2001 private key with
 
 .. cpp:function:: ECDSA_PrivateKey::ECDSA_PrivateKey(RandomNumberGenerator& rng, \
    const EC_Group& domain, const BigInt& x = 0)
@@ -357,49 +357,55 @@ hides the underlying mathematical properties of the algorithm.
 Additionally, they will add randomness, so encrypting the same
 plaintext twice produces two different ciphertexts.
 
-The primary interface for encryption is ``PK_Encryptor``, which
-provides the following interface:
+The primary interface for encryption is 
 
-.. cpp:function:: SecureVector<byte> PK_Encryptor::encrypt(const byte* in, \
-   size_t length, RandomNumberGenerator& rng) const
+.. cpp:class:: PK_Encryptor
 
-.. cpp:function:: SecureVector<byte> PK_Encryptor::encrypt(const MemoryRegion<byte>& in, \
-   RandomNumberGenerator& rng) const
+   .. cpp:function:: SecureVector<byte> encrypt( \
+         const byte* in, size_t length, RandomNumberGenerator& rng) const
 
+   .. cpp:function:: SecureVector<byte> encrypt( \
+      const MemoryRegion<byte>& in, RandomNumberGenerator& rng) const
 
-.. cpp:function::  size_t PK_Encryptor::maximum_input_size() const
+      These encrypt a message, returning the ciphertext.
 
-   This function returns the maximum size of the message that can
-   be processed, in bytes. If you call ``encrypt`` with a value
-   larger than this the operation will fail with an exception.
+   .. cpp:function::  size_t maximum_input_size() const
 
-``PK_Encryptor`` is only an interface; to use one you have to create
-an implementation; there are currently two availabie in the library,
-``PK_Encryptor_EME`` and ``DLIES_Encryptor``. DLIES is a standard
-method (from IEEE 1363) that uses a key agreement technique such as DH
-or ECDH to perform message encryption. Normally, public key encryption
-is done using algorithms which support it directly, such as RSA or
-ElGamal; these use ``PK_Encryptor_EME``. The construction method is
-simple; call
+      Returns the maximum size of the message that can be processed,
+      in bytes. If you call :cpp:func:`PK_Encryptor::encrypt` with a
+      value larger than this the operation will fail with an
+      exception.
 
-.. cpp:function:: PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key, std::string eme)
+:cpp:class:`PK_Encryptor` is only an interface - to actually encrypt
+you have to create an implementation, of which there are currently two
+available in the library, :cpp:class:`PK_Encryptor_EME` and
+:cpp:class:`DLIES_Encryptor`. DLIES is a standard method (from IEEE
+1363) that uses a key agreement technique such as DH or ECDH to
+perform message encryption. Normally, public key encryption is done
+using algorithms which support it directly, such as RSA or ElGamal;
+these use the EME class:
 
-  With *key* being the key you want to encrypt messages to. The
-  padding method to use is specified in *eme*.
+.. cpp:class:: PK_Encryptor_EME
 
-  The recommended values for *eme* is "EME1(SHA-1)" or
-  "EME1(SHA-256)". If you need compatability with protocols using the
-  PKCS #1 v1.5 standard, you can also use "EME-PKCS1-v1_5".
+   .. cpp:function:: PK_Encryptor_EME(const Public_Key& key, std::string eme)
 
-The DLIES encryptor is defined in the header ``dlies.h``, and
-is created by the constructor:
+     With *key* being the key you want to encrypt messages to. The
+     padding method to use is specified in *eme*.
 
-.. cpp:function:: DLIES_Encryptor::DLIES_Encryptor(const PK_Key_Agreement_Key&, \
-   KDF* kdf, MessageAuthenticationCode* mac, size_t mac_key_len = 20)
+     The recommended values for *eme* is "EME1(SHA-1)" or
+     "EME1(SHA-256)". If you need compatability with protocols using
+     the PKCS #1 v1.5 standard, you can also use "EME-PKCS1-v1_5".
 
-  Where *kdf* is a key derivation function (see
-  :ref:`key_derivation_function`) and *mac* is a
-  MessageAuthenticationCode.
+.. cpp:class:: DLIES_Encryptor
+
+   Available in the header ``dlies.h``
+
+   .. cpp:function:: DLIES_Encryptor(const PK_Key_Agreement_Key& key, \
+         KDF* kdf, MessageAuthenticationCode* mac, size_t mac_key_len = 20)
+
+      Where *kdf* is a key derivation function (see
+      :ref:`key_derivation_function`) and *mac* is a
+      MessageAuthenticationCode.
 
 The decryption classes are named ``PK_Decryptor``,
 ``PK_Decryptor_EME``, and ``DLIES_Decryptor``. They are created in the
@@ -410,53 +416,96 @@ function is named ``decrypt``.
 Signatures
 ---------------------------------
 
+Signature generation is performed using
 
-The signature algorithms look quite a bit like the hash functions. You
-can repeatedly call ``update``, giving more and more of a message you
-wish to sign, and then call ``signature``, which will return a
-signature for that message. If you want to do it all in one shot, call
-``sign_message``, which will just call ``update`` with its argument
-and then return whatever ``signature`` returns. Generating a signature
-requires random numbers with some schemes, so ``signature`` and
-``sign_message`` both take a ``RandomNumberGenerator&``.
+.. cpp:class:: PK_Signer
 
-You can validate a signature by updating the verifier class, and
-finally seeing the if the value returned from ``check_signature`` is
-true (you pass the supposed signature to the ``check_signature``
-function as a byte array and a length or as a
-``MemoryRegion<byte>``). There is another function,
-``verify_message``, which takes a pair of byte array/length pairs (or
-a pair of ``MemoryRegion<byte>`` objects), the first of which is the
-message, the second being the (supposed) signature. It returns true if
-the signature is valid and false otherwise.
+   .. cpp:function:: PK_Signer(const Private_Key& key, \
+      const std::string& emsa, \
+      Signature_Format format = IEEE_1363)
 
-Available public key signature algorithms in Botan are RSA, DSA,
-ECDSA, GOST-34.11, Nyberg-Rueppel, and Rabin-Williams. Signature
-encoding methods include EMSA1, EMSA2, EMSA3, EMSA4, and Raw. All of
-them, except Raw, take a parameter naming a message digest function to
-hash the message with. The Raw encoding signs the input directly; if
-the message is too big, the signing operation will fail. Raw is not
-useful except in very specialized applications.
+     Constructs a new signer object for the private key *key* using the
+     signature format *emsa*. The key must support signature operations.
+     In the current version of the library, this includes RSA, DSA,
+     ECDSA, GOST 34.10-2001, Nyberg-Rueppel, and Rabin-Williams. Other
+     signature schemes may be supported in the future.
 
-There are various interactions that make certain encoding schemes and
-signing algorithms more or less useful.
+     Currently available values for *emsa* include EMSA1, EMSA2, EMSA3,
+     EMSA4, and Raw. All of them, except Raw, take a parameter naming a
+     message digest function to hash the message with. The Raw encoding
+     signs the input directly; if the message is too big, the signing
+     operation will fail. Raw is not useful except in very specialized
+     applications. Examples are "EMSA1(SHA-1)" and "EMSA4(SHA-256)".
 
-EMSA2 is the usual method for encoding Rabin-William signatures, so
-for compatibility with other implementations you may have to use
-that. EMSA4 (also called PSS), also works with Rabin-Williams. EMSA1
-and EMSA3 do *not* work with Rabin-Williams.
+     For RSA, use EMSA4 (also called PSS) unless you need compatability
+     with software that uses the older PKCS #1 v1.5 standard, in which
+     case use EMSA3 (also called "EMSA-PKCS1-v1_5"). For DSA, ECDSA,
+     GOST 34.10-2001, and Nyberg-Rueppel, you should use EMSA1.
 
-RSA can be used with any of the available encoding methods. EMSA4 is
-by far the most secure, but is not (as of now) widely
-implemented. EMSA3 (also called "EMSA-PKCS1-v1_5") is commonly used
-with RSA (for example in SSL). EMSA1 signs the message digest
-directly, without any extra padding or encoding. This may be useful,
-but is not as secure as either EMSA3 or EMSA4. EMSA2 may be used but
-is not recommended.
+     The *format* defaults to ``IEEE_1363`` which is the only available
+     format for RSA. For DSA and ECDSA, you can also use
+     ``DER_SEQUENCE``, which will format the signature as an ASN.1
+     SEQUENCE value.
 
-For DSA, ECDSA, GOST-34.11, and Nyberg-Rueppel, you should use
-EMSA1. None of the other encoding methods are particularly useful for
-these algorithms.
+   .. cpp:function:: void update(const byte* in, size_t length)
+   .. cpp:function:: void update(const MemoryRegion<byte>& in)
+   .. cpp:function:: void update(byte in)
+
+      These add more data to be included in the signature
+      computation. Typically, the input will be provided directly to a
+      hash function.
+
+   .. cpp:function:: SecureVector<byte> signature(RandomNumberGenerator& rng)
+
+      Creates the signature and returns it
+
+   .. cpp:function:: SecureVector<byte> sign_message( \
+      const byte* in, size_t length, RandomNumberGenerator& rng)
+
+   .. cpp:function:: SecureVector<byte> sign_message( \
+      const MemoryRegion<byte>& in, RandomNumberGenerator& rng)
+
+      These functions are equivalent to calling
+      :cpp:func:`PK_Signer::update` and then
+      :cpp:func:`PK_Signer::signature`. Any data previously provided
+      using ``update`` will be included.
+
+Signatures are verified using
+
+.. cpp:class:: PK_Verifier
+
+   .. cpp:function:: PK_Verifier(const Public_Key& pub_key, \
+          const std::string& emsa, Signature_Format format = IEEE_1363)
+
+      Construct a new verifier for signatures assicated with public
+      key *pub_key*. The *emsa* and *format* should be the same as
+      that used by the signer.
+
+   .. cpp:function:: void update(const byte* in, size_t length)
+   .. cpp:function:: void update(const MemoryRegion<byte>& in)
+   .. cpp:function:: void update(byte in)
+
+      Add further message data that is purportedly assocated with the
+      signature that will be checked.
+
+   .. cpp:function:: bool check_signature(const byte* sig, size_t length)
+   .. cpp:function:: bool check_signature(const MemoryRegion<byte>& sig)
+
+      Check to see if *sig* is a valid signature for the message data
+      that was written in. Return true if so. This function clears the
+      internal message state, so after this call you can call
+      :cpp:func:`PK_Verifier::update` to start verifying another
+      message.
+
+   .. cpp:function:: bool verify_message(const byte* msg, size_t msg_length, \
+                                         const byte* sig, size_t sig_length)
+
+   .. cpp:function:: bool verify_message(const MemoryRegion<byte>& msg, \
+                                         const MemoryRegion<byte>& sig)
+
+      These are equivalent to calling :cpp:func:`PK_Verifier::update`
+      on *msg* and then calling :cpp:func:`PK_Verifier::check_signature`
+      on *sig*.
 
 Here is an example of DSA signature generation
 

@@ -1,31 +1,48 @@
 .. _random_number_generators:
 
 Random Number Generators
----------------------------------
+========================================
 
 The random number generators provided in Botan are meant for creating
 keys, IVs, padding, nonces, and anything else that requires 'random'
 data. It is important to remember that the output of these classes
-will vary, even if they are supplied with ethe same seed (ie, two
-``Randpool`` objects with similar initial states will not produce
-the same output, because the value of high resolution timers is added
-to the state at various points).
+will vary, even if they are supplied with the same seed (ie, two
+``Randpool`` objects with similar initial states will not produce the
+same output, because the value of high resolution timers is added to
+the state at various points).
+
+To create a random number generator, instantiate a ``AutoSeeded_RNG``
+object. This object will handle choosing the right algorithms from the
+set of enabled ones and doing seeding using OS specific
+routines. The main service a RandomNumberGenerator provides is, of
+course, random numbers:
+
+.. cpp:function:: byte RandomNumberGenerator::random()
+
+  Generates a single random byte and returns it
+
+.. cpp:function:: void RandomNumberGenerator::randomize(byte* data, size_t length)
+
+  Places *length* bytes into the array pointed to by *data*
 
 To ensure good quality output, a PRNG needs to be seeded with truly
-random data (such as that produced by a hardware RNG). Typically, you
-will use an ``EntropySource`` (see below). To add some (typically
-application specific) entropy to a PRNG, you can use
+random data. Normally this is done for you. However it may happen that
+your application has access to data that is potentially unpredictable
+to an attacker. If so, use
 
-.. cpp:function:: void add_entropy(const byte* data, size_t length)
+.. cpp:function:: void RandomNumberGenerator::add_entropy(const byte* data, \
+                                                          size_t length)
 
-Once a PRNG has been initialized, you can get a single byte of random
-data by
+which incorporates the data into the current randomness state. Don't
+worry about filtering the data or doing any kind of cryptographic
+preprocessing (such as hashing); the RNG objects in botan are designed
+such that you can feed them any arbitrary non-random or even
+maliciously chosen data - as long as at some point some of the seed
+data was good the output will be secure.
 
-.. cpp:function:: byte random()
 
-or get a large block by calling
-
-.. cpp:function:: void randomize(byte* data, size_t length)
+Implementation Notes
+----------------------------------------
 
 Randpool
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
