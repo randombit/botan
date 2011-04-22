@@ -1,15 +1,14 @@
+mp_bits 32
+
 load_on dep
 
-mp_bits 64
-
 <header:internal>
-mp_asm.h
-mp_generic:mp_asmi.h
+mp_generic:mp_asm.h
+mp_asmi.h
 </header:internal>
 
 <arch>
-x86_64
-ia64
+x86_32
 </arch>
 
 <cc>

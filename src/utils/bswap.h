@@ -59,7 +59,7 @@ inline u32bit reverse_bytes(u32bit val)
 
    return val;
 
-#elif defined(_MSC_VER) && defined(BOTAN_TARGET_ARCH_IS_IA32)
+#elif defined(_MSC_VER) && defined(BOTAN_TARGET_ARCH_IS_X86_32)
 
    // Visual C++ inline asm for 32-bit x86, by Yves Jerschow
    __asm mov eax, val;
@@ -84,7 +84,7 @@ inline u64bit reverse_bytes(u64bit val)
    // GCC intrinsic added in 4.3, works for a number of CPUs
    return __builtin_bswap64(val);
 
-#elif BOTAN_USE_GCC_INLINE_ASM && defined(BOTAN_TARGET_ARCH_IS_AMD64)
+#elif BOTAN_USE_GCC_INLINE_ASM && defined(BOTAN_TARGET_ARCH_IS_X86_64)
    // GCC-style inline assembly for x86-64
    asm("bswapq %0" : "=r" (val) : "0" (val));
    return val;

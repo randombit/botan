@@ -17,7 +17,7 @@ mp_core.h
 </header:internal>
 
 <requires>
-mp_amd64|mp_msvc64|mp_asm64|mp_ia32|mp_ia32_msvc|mp_generic
+mp_x86_64|mp_msvc64|mp_asm64|mp_x86_32|mp_x86_32_msvc|mp_generic
 monty_generic
 mulop_generic
 </requires>

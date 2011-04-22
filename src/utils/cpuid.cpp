@@ -164,7 +164,7 @@ void CPUID::initialize()
 
    x86_processor_flags = (static_cast<u64bit>(cpuid[2]) << 32) | cpuid[3];
 
-#if defined(BOTAN_TARGET_ARCH_IS_AMD64)
+#if defined(BOTAN_TARGET_ARCH_IS_X86_64)
    /*
    * If we don't have access to CPUID, we can still safely assume that
    * any x86-64 processor has SSE2.

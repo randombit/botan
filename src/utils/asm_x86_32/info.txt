@@ -1,0 +1,29 @@
+load_on dep
+
+<header:internal>
+asm_x86_32.h
+</header:internal>
+
+<arch>
+x86_32
+</arch>
+
+# ELF systems
+<os>
+linux
+freebsd
+dragonfly
+netbsd
+openbsd
+solaris
+</os>
+
+<cc>
+clang
+gcc
+icc
+</cc>
+
+<requires>
+asm_engine
+</requires>

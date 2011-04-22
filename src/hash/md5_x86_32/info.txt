@@ -1,0 +1,12 @@
+define MD5_X86_32
+
+load_on asm_ok
+
+<arch>
+x86_32
+</arch>
+
+<requires>
+asm_x86_32
+md5
+</requires>

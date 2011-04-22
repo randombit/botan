@@ -54,24 +54,24 @@ alpha-ev7      -> "-mcpu=ev6"
 # Anything after the quotes is what should be *removed* from the submodel name
 # before it's put into SUBMODEL.
 alpha     -> "-mcpu=SUBMODEL" alpha-
-amd64     -> "-march=SUBMODEL -momit-leaf-frame-pointer"
 arm       -> "-march=SUBMODEL"
-ia32      -> "-march=SUBMODEL -momit-leaf-frame-pointer"
-ia64      -> "-mtune=SUBMODEL"
-hppa      -> "-march=SUBMODEL" hppa
-m68k      -> "-mSUBMODEL"
 hitachi-sh -> "-mSUBMODEL" hitachi-sh
-sparc32   -> "-mcpu=SUBMODEL -Wa,-xarch=v8plus" sparc32-
-sparc64   -> "-mcpu=v9 -mtune=SUBMODEL"
+hppa      -> "-march=SUBMODEL" hppa
+ia64      -> "-mtune=SUBMODEL"
+m68k      -> "-mSUBMODEL"
 mips32    -> "-mips1 -mcpu=SUBMODEL" mips32-
 mips64    -> "-mips3 -mcpu=SUBMODEL" mips64-
 ppc       -> "-mcpu=SUBMODEL" ppc
 ppc64     -> "-mcpu=SUBMODEL" ppc
+sparc32   -> "-mcpu=SUBMODEL -Wa,-xarch=v8plus" sparc32-
+sparc64   -> "-mcpu=v9 -mtune=SUBMODEL"
+x86_32    -> "-march=SUBMODEL -momit-leaf-frame-pointer"
+x86_64    -> "-march=SUBMODEL -momit-leaf-frame-pointer"
 </mach_opt>
 
-# Note that the 'linking' bit means "use this for both compiling *and* linking"
+# The 'linking' bit means "use this for both compiling *and* linking"
 <mach_abi_linking>
-amd64   -> "-m64"
+x86_64  -> "-m64"
 mips64  -> "-mabi=64"
 s390    -> "-m31"
 s390x   -> "-m64"
@@ -79,10 +79,10 @@ sparc32 -> "-m32 -mno-app-regs"
 sparc64 -> "-m64 -mno-app-regs"
 ppc64   -> "-m64"
 
-# This should probably be used on most/all targets, but the docs are incomplete
-openbsd -> "-pthread"
-freebsd -> "-pthread"
+# This should probably be used on most/all targets, but the docs are unclear
+openbsd   -> "-pthread"
+freebsd   -> "-pthread"
 dragonfly -> "-pthread"
-netbsd  -> "-pthread -D_NETBSD_SOURCE"
-qnx     -> "-fexceptions -D_QNX_SOURCE"
+netbsd    -> "-pthread -D_NETBSD_SOURCE"
+qnx       -> "-fexceptions -D_QNX_SOURCE"
 </mach_abi_linking>

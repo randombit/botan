@@ -8,7 +8,6 @@ mp_generic:mp_asmi.h
 </header:internal>
 
 <arch>
-#amd64
 alpha
 ia64
 mips64

@@ -1,0 +1,13 @@
+define SHA1_X86_64
+
+load_on asm_ok
+
+<arch>
+x86_64
+</arch>
+
+<requires>
+asm_engine
+asm_x86_64
+sha1
+</requires>

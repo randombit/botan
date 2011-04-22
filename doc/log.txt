@@ -7,10 +7,8 @@ Release Notes
 2011
 ----------------------------------------
 
-Version 1.10.0, Not Yet Released
+Version 1.9.17, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Further updates to the documentation
 
 * The format preserving encryption method currently available was
   presented in the header ``fpe.h`` and the functions ``fpe_encrypt``
@@ -19,12 +17,6 @@ Version 1.10.0, Not Yet Released
   ``fpe_fe1.h``, and the functions are named ``fe1_encrypt`` and
   ``fe1_decrypt``. See :ref:`fpe` for more information.
 
-* Some minor fixes for compiling botan under the BeOS
-  clone/continuation `Haiku <http://haiku-os.org>`_.
-
-* A bug in 1.9.16 effectively disabled support for runtime CPU feature
-  detection on x86 under GCC in that release.
-
 * New options to ``configure.py`` control what tools are used for
   documentation generation. The ``--with-sphinx`` option enables using
   Sphinx to convert ReST into HTML; otherwise the ReST sources are
@@ -32,6 +24,22 @@ Version 1.10.0, Not Yet Released
   as well. Documentation generation can be triggered via the ``docs``
   target in the makefile; it will also be installed by the install
   target on Unix.
+
+* A bug in 1.9.16 effectively disabled support for runtime CPU feature
+  detection on x86 under GCC in that release.
+
+* A mostly internal change, all references to "ia32" and "amd64" have
+  been changed to the vendor neutral and probably easier to understand
+  "x86-32" and "x86-64". For instance, the "mp_amd64" module has been
+  renamed "mp_x86_64", and the macro indicating x86-32 has changed
+  from ``BOTAN_TARGET_ARCH_IS_IA32`` to
+  ``BOTAN_TARGET_ARCH_IS_X86_32``. The classes calling assembly have
+  also been renamed.
+
+* Some minor fixes for compiling botan under the BeOS
+  clone/continuation `Haiku <http://haiku-os.org>`_.
+
+* Further updates to the documentation
 
 Version 1.9.16, 2011-04-11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

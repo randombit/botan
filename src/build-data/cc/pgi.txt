@@ -24,5 +24,5 @@ i586     -> "-tp p5"
 i686     -> "-tp p6"
 athlon   -> "-tp k7"
 pentium4 -> "-tp p6"
-ia32     -> "-tp px"
+x86_32   -> "-tp px"
 </mach_opt>

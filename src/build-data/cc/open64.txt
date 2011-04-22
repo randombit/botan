@@ -23,5 +23,5 @@ default -> "$(CXX) -shared -Wl,-soname,$(SONAME)"
 </so_link_flags>
 
 <mach_abi_linking>
-amd64   -> "-m64"
+x86_64  -> "-m64"
 </mach_abi_linking>

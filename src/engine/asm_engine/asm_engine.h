@@ -5,8 +5,8 @@
 * Distributed under the terms of the Botan license
 */
 
-#ifndef BOTAN_IA32_ASM_ENGINE_H__
-#define BOTAN_IA32_ASM_ENGINE_H__
+#ifndef BOTAN_X86_32_ASM_ENGINE_H__
+#define BOTAN_X86_32_ASM_ENGINE_H__
 
 #include <botan/engine.h>
 
