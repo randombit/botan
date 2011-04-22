@@ -1,5 +1,5 @@
 
-Building Botan
+Building The Library
 =================================
 
 This document describes how to build Botan on Unix/POSIX and MS

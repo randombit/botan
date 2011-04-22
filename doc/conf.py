@@ -45,7 +45,7 @@ source_suffix = '.txt'
 #source_encoding = 'utf-8-sig'
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = 'contents'
 
 # General information about the project.
 project = u'botan'
@@ -190,7 +190,7 @@ htmlhelp_basename = 'botandoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'botan.tex', u'botan Reference Manual',
+  ('contents', 'botan.tex', u'botan Reference Manual',
    u'Jack Lloyd', 'manual'),
 ]
 
@@ -203,10 +203,10 @@ latex_documents = [
 #latex_use_parts = False
 
 # If true, show page references after internal links.
-latex_show_pagerefs = True
+latex_show_pagerefs = False
 
 # If true, show URL addresses after external links.
-latex_show_urls = True
+latex_show_urls = False
 
 # Additional stuff for the LaTeX preamble.
 #latex_preamble = ''

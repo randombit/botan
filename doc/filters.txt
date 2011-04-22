@@ -71,7 +71,7 @@ generators and entropy sources you want to, however for 99% of cases
 ``AutoSeeded_RNG`` is preferable.
 
 ``Pipe`` also has convenience methods for dealing with
-``std::iostream``s. Here is an example of those, using the
+``std::iostream``. Here is an example of those, using the
 ``Bzip_Compression`` filter (included as a module; if you have bzlib
 available, check the build instructions for how to enable it) to
 compress a file::
@@ -272,7 +272,7 @@ Data Sources
 
 A ``DataSource`` is a simple abstraction for a thing that stores
 bytes. This type is used heavily in the areas of the API related to
-ASN.1 encoding/decoding. The following types are ``DataSource``s:
+ASN.1 encoding/decoding. The following types are ``DataSource``:
 ``Pipe``, ``SecureQueue``, and a couple of special purpose ones:
 ``DataSource_Memory`` and ``DataSource_Stream``.
 

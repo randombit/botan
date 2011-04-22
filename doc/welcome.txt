@@ -1,7 +1,5 @@
 
-.. _contents:
-
-A friendly C++ crypto library
+Welcome
 ========================================
 
 Botan is a :doc:`BSD-licensed <license>` crypto library for C++. It
@@ -11,7 +9,10 @@ provides applications with most any :doc:`cryptographic algorithm
 message processing system <filters>`, and a wide variety of other
 features. A third party open source implementation of `SSHv2
 <http://www.netsieben.com/products/ssh/>`_ that uses botan is also
-available.
+available. In addition to C++ you can use botan from Python or Perl,
+though the current bindings only wrap portions of the library.
+
+See the :doc:`faq` for a list of common questions and answers.
 
 .. only:: html and website
 
@@ -46,28 +47,21 @@ already included in most major package distributions, including
 more than a few :doc:`known users <users>`.
 
 It was started as a personal project by `Jack Lloyd
-<http:://www.randombit.net>`_, who continues to be the maintainer and
-release manager. Since the first release in 2001, many individuals and
-organizations have contributed bug fixes and new features.  There have
-been over 150 releases in the decade since the first publicly released
-version; the :doc:`release notes <log>` and `news archive
-<http://botan.randombit.net/news>`_ have more information about the
-release history.
-
-In addition to C++ you can use botan from Python or Perl, though the
-current bindings only wrap portions of the library.
-
-See the :doc:`faq` for a list of common questions and answers.
+<http:://www.randombit.net>`_,who continues to be the maintainer and
+release manager. Since the first release in 2001, a number of
+:doc:`individuals and organizations <credits>` have contributed bug
+fixes and new features. Check out the :doc:`release notes <log>` and
+`news archive <http://botan.randombit.net/news>`_ for more project
+history.
 
 If you need help or have questions, send a mail to the `development
 mailing list
 <http://lists.randombit.net/mailman/listinfo/botan-devel/>`_.
 "Philosophical" bug reports, announcements of programs using the
 library, and related topics are also welcome. :doc:`Commercial support
-options <support>` are also available.
-
-If you find what you believe to be a bug, please file a ticket in
-`Bugzilla <http://bugs.randombit.net/>`_.
+options <support>` are also available. If you find what you believe to
+be a bug, please file a ticket in `Bugzilla
+<http://bugs.randombit.net/>`_.
 
 A useful reference while reading this manual is the `Doxygen
 documentation <http://botan.randombit.net/doxygen>`_.
@@ -94,44 +88,3 @@ Especially recommended are:
 - *Handbook of Applied Cryptography*
   Alfred J. Menezes, Paul C. Van Oorschot, and Scott A. Vanstone
   (`available online <http://www.cacr.math.uwaterloo.ca/hac/>`_)
-
-Documentation Contents
-=================================
-
-.. toctree::
-   :hidden:
-
-   algos
-   build_log
-   download
-   faq
-   license
-   log
-   pgpkey
-   support
-   users
-
-.. toctree::
-   :maxdepth: 2
-
-   building
-   firststep
-   filters
-   pubkey
-   x509
-   ssl
-   bigint
-   lowlevel
-   secmem
-   kdf
-   pbkdf
-   passhash
-   rng
-   fpe
-   credits
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`search`

@@ -96,7 +96,8 @@ class BuildConfigurationInformation(object):
             yield '$(COPY) readme.txt %s' % (self.doc_output_dir)
 
             if options.with_sphinx:
-                yield 'sphinx-build -b html doc %s' % (self.manual_dir)
+                yield 'sphinx-build $(SPHINX_OPTS) -b html doc %s' % (
+                    self.manual_dir)
             else:
                 yield '$(COPY) doc/*.txt %s' % (self.manual_dir)
 

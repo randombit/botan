@@ -2,9 +2,6 @@
 Getting The Latest Sources
 ========================================
 
-Latest Releases
-----------------------------------------
-
 All releases are signed with a :doc:`PGP key <pgpkey>`.
 
 Unsure which release you want? Check the :ref:`FAQ <devel_vs_stable>`.
@@ -14,10 +11,10 @@ Unsure which release you want? Check the :ref:`FAQ <devel_vs_stable>`.
    .. note::
 
       If you are viewing this documentation offline, a more recent
-      version may be available at http://botan.randombit.net/download.html
+      release `may be available <http://botan.randombit.net/download.html>`_
 
 Current Stable Release
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------------
 
 The current stable release is `1.8.11
 <http://botan.randombit.net/news/releases/1_8_11.html>`_ which was
@@ -40,7 +37,7 @@ Windows binary installer for use with Visual C++ 2008:
 <http://botan.randombit.net/files/win32/botan-1.8.11_win64.exe>`_
 
 Current Development Release
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------------
 
 The current development release is `1.9.16
 <http://botan.randombit.net/news/releases/1_9_16.html>`_ which was

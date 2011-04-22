@@ -4,7 +4,7 @@
 Release Notes
 ========================================
 
-2011
+Series 1.9
 ----------------------------------------
 
 Version 1.9.17, Not Yet Released
@@ -15,7 +15,7 @@ Version 1.9.17, Not Yet Released
   and ``fpe_decrypt``. These were renamed as it is likely that other
   FPE schemes will be included in the future. The header is now
   ``fpe_fe1.h``, and the functions are named ``fe1_encrypt`` and
-  ``fe1_decrypt``. See :ref:`fpe` for more information.
+  ``fe1_decrypt``. See :doc:`fpe` for more information.
 
 * New options to ``configure.py`` control what tools are used for
   documentation generation. The ``--with-sphinx`` option enables using
@@ -75,8 +75,9 @@ Version 1.9.16, 2011-04-11
 
 * Change shared library versioning to match the normal Unix
   conventions. Instead of ``libbotan-X.Y.Z.so``, the shared lib is
-  named ``libbotan.so.X.Y.Z``; this allows the runtime linker to do
-  its runtime linky magic.
+  named ``libbotan-X.Y.so.Z``; this allows the runtime linker to do
+  its runtime linky magic. It can be safely presumed that any change
+  in the major or minor version indicates ABI incompatability.
 
 * Remove the socket wrapper code; it was not actually used by anything
   in the library, only in the examples, and you can use whatever kind
@@ -135,9 +136,6 @@ Version 1.9.13, 2011-02-19
 * Fix problems in the amalgamation build
 * Fix building under Clang 2.9 and Sun Studio 12
 
-2010
-----------------------------------------
-
 Version 1.9.12, 2010-12-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -177,27 +175,6 @@ Version 1.9.11, 2010-11-29
 * Improve support for Intel Atom processors
 * Fix compilation problems under Sun Studio and Clang
 
-Version 1.8.11, 2010-11-02
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Fix a number of CRL encoding and decoding bugs
-* When building a debug library under VC++, use the debug runtime
-* Fix compilation under Sun Studio on Linux and Solaris
-* Add several functions for compatability with 1.9
-* In the examples, read most input files as binary
-* The Perl build script has been removed in this release
-
-Version 1.8.10, 2010-08-31
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Switch default PKCS #8 encryption algorithm from 3DES to AES-256
-* Increase default hash iterations from 2048 to 10000 in PBES1 and PBES2
-* Use small tables in the first round of AES
-* Add PBKDF typedef and get_pbkdf for better compatability with 1.9
-* Add version of S2K::derive_key taking salt and iteration count
-* Enable the /proc-walking entropy source on NetBSD
-* Fix the doxygen makefile target
-
 Version 1.9.10, 2010-08-12
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -219,21 +196,6 @@ Version 1.9.9, 2010-06-28
 * Fix compilation of mp_asm64 on 64-bit MIPS with GCC 4.4 and later
 * Fix compilation under Apple's GCC 4.2
 * Expand and update the Doxygen documentation
-
-Version 1.8.9, 2010-06-16
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Use constant time multiplication in IDEA
-* Avoid possible timing attack against OAEP decoding
-* Add new X509::BER_encode and PKCS8::BER_encode
-* Enable DLL builds under Windows
-* Add Win32 installer support
-* Add support for the Clang compiler
-* Fix problem in semcem.h preventing build under Clang or GCC 3.4
-* Fix bug that prevented creation of DSA groups under 1024 bits
-* Fix crash in GMP_Engine if library is shutdown and reinitialized
-* Work around problem with recent binutils in x86-64 SHA-1
-* The Perl build script is no longer supported and refuses to run by default
 
 Version 1.9.8, 2010-06-14
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -308,9 +270,6 @@ Version 1.9.4, 2010-03-09
 * Greatly improve the Win32 installer
 * Several fixes for Visual C++ debug builds
 
-2009
-----------------------------------------
-
 Version 1.9.3, 2009-11-19
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -330,14 +289,6 @@ Version 1.9.2, 2009-11-03
 * Optimizations for SHA-1 and SHA-2
 * Add AltiVec runtime detection
 * Fix x86 CPU identification with Intel C++ and Visual C++
-
-Version 1.8.8, 2009-11-03
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Alter Skein-512 to match the tweaked 1.2 specification
-* Fix use of inline asm for access to x86 bswap function
-* Allow building the library without AES enabled
-* Add 'powerpc64' alias to ppc64 arch for Gentoo ebuild
 
 Version 1.9.1, 2009-10-23
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -365,6 +316,53 @@ Version 1.9.0, 2009-09-09
 * Fix processing multiple messages in XTS mode
 * Add --no-autoload option to configure.py, for minimized builds
 * The previously used configure.pl script is no longer supported
+
+Series 1.8
+----------------------------------------
+
+Version 1.8.11, 2010-11-02
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fix a number of CRL encoding and decoding bugs
+* When building a debug library under VC++, use the debug runtime
+* Fix compilation under Sun Studio on Linux and Solaris
+* Add several functions for compatability with 1.9
+* In the examples, read most input files as binary
+* The Perl build script has been removed in this release
+
+Version 1.8.10, 2010-08-31
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Switch default PKCS #8 encryption algorithm from 3DES to AES-256
+* Increase default hash iterations from 2048 to 10000 in PBES1 and PBES2
+* Use small tables in the first round of AES
+* Add PBKDF typedef and get_pbkdf for better compatability with 1.9
+* Add version of S2K::derive_key taking salt and iteration count
+* Enable the /proc-walking entropy source on NetBSD
+* Fix the doxygen makefile target
+
+Version 1.8.9, 2010-06-16
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Use constant time multiplication in IDEA
+* Avoid possible timing attack against OAEP decoding
+* Add new X509::BER_encode and PKCS8::BER_encode
+* Enable DLL builds under Windows
+* Add Win32 installer support
+* Add support for the Clang compiler
+* Fix problem in semcem.h preventing build under Clang or GCC 3.4
+* Fix bug that prevented creation of DSA groups under 1024 bits
+* Fix crash in GMP_Engine if library is shutdown and reinitialized
+* Work around problem with recent binutils in x86-64 SHA-1
+* The Perl build script is no longer supported and refuses to run by default
+
+Version 1.8.8, 2009-11-03
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Alter Skein-512 to match the tweaked 1.2 specification
+* Fix use of inline asm for access to x86 bswap function
+* Allow building the library without AES enabled
+* Add 'powerpc64' alias to ppc64 arch for Gentoo ebuild
 
 Version 1.8.7, 2009-09-09
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -428,13 +426,13 @@ Version 1.8.1, 2009-01-20
 * Relicense api.tex from CC-By-SA 2.5 to BSD
 * Fix botan-config on MacOS X, Solaris
 
-2008
-----------------------------------------
-
 Version 1.8.0, 2008-12-08
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Fix compilation on Solaris with GCC
+
+Series 1.7
+----------------------------------------
 
 Version 1.7.24, 2008-12-01
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -620,12 +618,6 @@ Version 1.7.9, 2008-08-27
 * Compilation fixes for MinGW and Visual Studio C++ 2008
 * Some autoconfiguration fixes for Windows
 
-Version 1.6.5, 2008-08-27
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Add noexec stack marker for GNU linker in assembly code
-* Fix autoconfiguration problem on x86 with GCC 4.2 and 4.3
-
 Version 1.7.8, 2008-07-15
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -689,11 +681,6 @@ Version 1.7.4, 2008-03-10
 * Build fix for NetBSD systems
 * Prevent es_dev from being built except on Unix systems
 
-Version 1.6.4, 2008-03-08
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Fix a compilation problem with Visual Studio C++ 2003
-
 Version 1.7.3, 2008-01-23
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -705,9 +692,6 @@ Version 1.7.3, 2008-01-23
 * The path that es_unix will search in are now fully user-configurable
 * Truncate X9.42 PRF output rather than allow counter overflow
 * PowerPC is now assumed to be big-endian
-
-2007
-----------------------------------------
 
 Version 1.7.2, 2007-10-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -730,12 +714,6 @@ Version 1.7.1, 2007-07-23
 * Modify most of the library to avoid use the C-style casts
 * Use higher resolution timers in symmetric benchmarks
 
-Version 1.6.3, 2007-07-23
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Fix a race condition in the algorithm lookup cache
-* Fix problems building the memory pool on some versions of Visual C++
-
 Version 1.7.0, 2007-05-19
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -745,6 +723,26 @@ Version 1.7.0, 2007-05-19
 * Minor optimizations for RC2 and Tiger
 * Documentation updates
 * Update the todo list
+
+Series 1.6
+----------------------------------------
+
+Version 1.6.5, 2008-08-27
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Add noexec stack marker for GNU linker in assembly code
+* Fix autoconfiguration problem on x86 with GCC 4.2 and 4.3
+
+Version 1.6.4, 2008-03-08
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fix a compilation problem with Visual Studio C++ 2003
+
+Version 1.6.3, 2007-07-23
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fix a race condition in the algorithm lookup cache
+* Fix problems building the memory pool on some versions of Visual C++
 
 Version 1.6.2, 2007-03-24
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -761,13 +759,13 @@ Version 1.6.1, 2007-01-20
 * Fix some build problems under Visual Studio with debug enabled
 * Fix a bug in BER_Decoder that was triggered under some compilers
 
-2006
-----------------------------------------
-
 Version 1.6.0, 2006-12-17
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Minor cleanups versus 1.5.13
+
+Series 1.5
+----------------------------------------
 
 Version 1.5.13, 2006-12-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -918,14 +916,6 @@ Version 1.5.2, 2006-01-15
 * Enabled the symmetric algorithm tests, which were accidentally off in 1.5.1
 * Removed the Default_Mutex's unused clone() member function
 
-Version 1.4.12, 2006-01-15
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Fixed an off-by-one memory read in MISTY1::key()
-* Fixed a nasty memory leak in Output_Buffers::retire()
-* Changed maximum HMAC keylength to 1024 bits
-* Fixed a build problem in the hardware timer module on 64-bit PowerPC
-
 Version 1.5.1, 2006-01-08
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -953,8 +943,16 @@ Version 1.5.0, 2006-01-01
 * Removed the deprecated algorithms SEAL, ISAAC, and HAVAL
 * Change es_ftw to use unbuffered I/O
 
-2005
+Series 1.4
 ----------------------------------------
+
+Version 1.4.12, 2006-01-15
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fixed an off-by-one memory read in MISTY1::key()
+* Fixed a nasty memory leak in Output_Buffers::retire()
+* Changed maximum HMAC keylength to 1024 bits
+* Fixed a build problem in the hardware timer module on 64-bit PowerPC
 
 Version 1.4.11, 2005-12-31
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1056,9 +1054,6 @@ Version 1.4.5, 2005-02-26
 * Removed some left-over debugging code
 * Removed SSL3_MAC, SSL3_PRF, and TLS_PRF
 
-2004
-----------------------------------------
-
 Version 1.4.4, 2004-12-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1113,6 +1108,9 @@ Version 1.4.0, 2004-06-26
 * Fixed a bug in botan-config affecting OpenBSD
 * Fixed some build problems on Tru64, HP-UX
 * Fixed compile problems with Intel C++, Compaq C++
+
+Series 1.3
+----------------------------------------
 
 Version 1.3.14, 2004-06-12
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1196,9 +1194,6 @@ Version 1.3.9, 2004-03-07
 * Fixed some BeOS build problems
 * Fixed the WiderWake benchmark
 
-2003
-----------------------------------------
-
 Version 1.3.8, 2003-12-30
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1263,11 +1258,6 @@ Version 1.3.5, 2003-11-30
 * Workarounds for a GCC 2.95.x bug in x509find.cpp
 * RPM changed to install into /usr instead of /usr/local
 * Added support for QNX
-
-Version 1.2.8, 2003-11-21
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Merged several important bug fixes from 1.3.x
 
 Version 1.3.4, 2003-11-21
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1335,6 +1325,14 @@ Version 1.3.0, 2003-11-02
 * Removed CS-Cipher, SHARK, ThreeWay, MD5-MAC, and EMAC
 * Removed certain deprecated constructors of RSA, DSA, DH, RW, NR
 * Made PEM decoding more forgiving of extra text before the header
+
+Series 1.2
+----------------------------------------
+
+Version 1.2.8, 2003-11-21
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Merged several important bug fixes from 1.3.x
 
 Version 1.2.7, 2003-10-31
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1437,6 +1435,9 @@ Version 1.2.0, 2003-04-28
 * Removed the 'mpi_ia32' module, pending rewrite
 * Workaround a GCC 2.95.x bug in eme1.cpp
 
+Series 1.1
+----------------------------------------
+
 Version 1.1.13, 2003-04-22
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1519,15 +1520,6 @@ Version 1.1.7, 2003-01-12
 * Consolidated SHA-384 and SHA-512 to save code space
 * Added SSL3-MAC and SSL3-PRF
 * Documentation updates, including a new tutorial
-
-Version 1.0.2, 2003-01-12
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Fixed an obscure SEGFAULT causing bug in Pipe
-* Fixed an obscure but dangerous bug in SecureVector::swap
-
-2002
-----------------------------------------
 
 Version 1.1.6, 2002-12-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1627,6 +1619,15 @@ Version 1.1.0, 2002-09-14
 * Added support for variable-pass Tiger
 * Major speedup for Rabin-Williams key generation
 
+Series 1.0
+----------------------------------------
+
+Version 1.0.2, 2003-01-12
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fixed an obscure SEGFAULT causing bug in Pipe
+* Fixed an obscure but dangerous bug in SecureVector::swap
+
 Version 1.0.1, 2002-09-14
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1643,6 +1644,9 @@ Version 1.0.0, 2002-08-26
 * Generalized IV handling in the block cipher modes
 * Added Karatsuba multiplication and k-ary exponentiation
 * Fixed a problem in the multiplication routines
+
+Series 0.9
+----------------------------------------
 
 Version 0.9.2, 2002-08-18
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1677,6 +1681,9 @@ Version 0.9.0, 2002-08-03
 * EMSA4 supports variable salt size
 * PK_* can take a string naming the encoding method to use
 * Started writing some internals documentation
+
+Series 0.8
+----------------------------------------
 
 Version 0.8.7, 2002-07-30
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1814,6 +1821,9 @@ Version 0.8.0, 2002-04-24
 * Documentation updates for the new stuff (still incomplete)
 * Many new deprecated things: check doc/deprecated.txt
 
+Series 0.7
+----------------------------------------
+
 Version 0.7.10, 2002-04-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1862,9 +1872,6 @@ Version 0.7.8, 2002-02-28
 * Documentation updates for the new Pipe interface
 * Fixed various minor bugs
 * Added a couple of new example programs (stack and hasher2)
-
-2001
-----------------------------------------
 
 Version 0.7.7, 2001-11-24
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
