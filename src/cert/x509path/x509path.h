@@ -1,6 +1,6 @@
 /*
 * X.509 Cert Path Validation
-* (C) 2010 Jack Lloyd
+* (C) 2010-2011 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -9,15 +9,15 @@
 #define BOTAN_X509_CERT_PATH_VALIDATION_H__
 
 #include <botan/x509cert.h>
-#include <botan/x509_crl.h>
 #include <botan/certstor.h>
+#include <set>
 
 namespace Botan {
 
 /**
 * X.509 Certificate Validation Result
 */
-enum X509_Code {
+enum X509_Path_Validation_Code {
    VERIFIED,
    UNKNOWN_X509_ERROR,
    CANNOT_ESTABLISH_TRUST,
@@ -25,6 +25,8 @@ enum X509_Code {
    SIGNATURE_ERROR,
    POLICY_ERROR,
    INVALID_USAGE,
+
+   CERT_MULTIPLE_ISSUERS_FOUND,
 
    CERT_FORMAT_ERROR,
    CERT_ISSUER_NOT_FOUND,
@@ -42,89 +44,38 @@ enum X509_Code {
    CA_CERT_NOT_FOR_CRL_ISSUER
 };
 
-/**
-* X.509 Certificate Store
-*/
-class BOTAN_DLL X509_Store
+enum X509_Cert_Usage {
+   NO_RESTRICTIONS  = 0x00,
+   TLS_SERVER       = 0x01,
+   TLS_CLIENT       = 0x02,
+   CODE_SIGNING     = 0x04,
+   EMAIL_PROTECTION = 0x08,
+   TIME_STAMPING    = 0x10,
+   CRL_SIGNING      = 0x20
+};
+
+class Path_Validation_Result
    {
    public:
-      enum Cert_Usage {
-         ANY              = 0x00,
-         TLS_SERVER       = 0x01,
-         TLS_CLIENT       = 0x02,
-         CODE_SIGNING     = 0x04,
-         EMAIL_PROTECTION = 0x08,
-         TIME_STAMPING    = 0x10,
-         CRL_SIGNING      = 0x20
-      };
+      X509_Path_Validation_Code validation_result;
+      X509_Cert_Usage allowed_usages;
+      std::vector<X509_Certificate> cert_path;
 
-      X509_Code validate_cert(const X509_Certificate&, Cert_Usage = ANY);
-
-      std::vector<X509_Certificate> get_cert_chain(const X509_Certificate&);
-      std::string PEM_encode() const;
-
-      X509_Code add_crl(const X509_CRL&);
-      void add_cert(const X509_Certificate&, bool = false);
-      void add_certs(DataSource&);
-      void add_trusted_certs(DataSource&);
-
-      void add_new_certstore(Certificate_Store*);
-
-      X509_Store(u32bit time_slack = 24*60*60,
-                 u32bit cache_results = 30*60);
-
-      X509_Store(const X509_Store&);
-      ~X509_Store();
-   private:
-      X509_Store& operator=(const X509_Store&) { return (*this); }
-
-      class BOTAN_DLL CRL_Data
-         {
-         public:
-            X509_DN issuer;
-            MemoryVector<byte> serial, auth_key_id;
-            bool operator==(const CRL_Data&) const;
-            bool operator!=(const CRL_Data&) const;
-            bool operator<(const CRL_Data&) const;
-         };
-
-      class BOTAN_DLL Cert_Info
-         {
-         public:
-            bool is_verified(u32bit timeout) const;
-            bool is_trusted() const;
-            X509_Code verify_result() const;
-            void set_result(X509_Code) const;
-            Cert_Info(const X509_Certificate&, bool = false);
-
-            X509_Certificate cert;
-            bool trusted;
-         private:
-            mutable bool checked;
-            mutable X509_Code result;
-            mutable u64bit last_checked;
-         };
-
-      static X509_Code check_sig(const X509_Object&, Public_Key*);
-
-      size_t find_cert(const X509_DN&, const MemoryRegion<byte>&) const;
-      X509_Code check_sig(const Cert_Info&, const Cert_Info&) const;
-      void recompute_revoked_info() const;
-
-      void do_add_certs(DataSource&, bool);
-      X509_Code construct_cert_chain(const X509_Certificate&,
-                                     std::vector<size_t>&, bool = false);
-
-      size_t find_parent_of(const X509_Certificate&);
-      bool is_revoked(const X509_Certificate&) const;
-
-      static const size_t NO_CERT_FOUND = 0xFFFFFFFF;
-      std::vector<Cert_Info> certs;
-      std::vector<CRL_Data> revoked;
-      std::vector<Certificate_Store*> stores;
-      u32bit time_slack, validation_cache_timeout;
-      mutable bool revoked_info_valid;
+      std::set<std::string> trusted_hashes() const;
    };
+
+Path_Validation_Result BOTAN_DLL x509_path_validate(
+   const X509_Certificate& end_cert,
+   const std::vector<Certificate_Store*>& certstores);
+
+inline Path_Validation_Result x509_path_validate(
+   const X509_Certificate& end_cert,
+   Certificate_Store& store)
+   {
+   std::vector<Certificate_Store*> store_vec;
+   store_vec.push_back(&store);
+   return x509_path_validate(end_cert, store_vec);
+   }
 
 }
 
