@@ -4,7 +4,7 @@
   on NIST's web site.
 */
 
-#include <botan/x509stor.h>
+#include <botan/x509path.h>
 #include <botan/init.h>
 using namespace Botan;
 
@@ -110,9 +110,9 @@ void run_one_test(u32bit test_no, X509_Code expected,
 
    X509_Code result = VERIFIED;
 
-   X509_Store store;
+   Certificate_Store_Memory store;
 
-   store.add_cert(X509_Certificate(root_cert), true);
+   store.add_cert(X509_Certificate(root_cert));
 
    X509_Certificate end_user(to_verify);
 
@@ -134,9 +134,7 @@ void run_one_test(u32bit test_no, X509_Code expected,
          std::cout << std::endl;
          }
       */
-      result = store.add_crl(crl);
-      if(result != VERIFIED)
-         break;
+      store.add_crl(crl);
       }
 
    /* if everything has gone well up until now */
