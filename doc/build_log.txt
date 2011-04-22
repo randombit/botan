@@ -15,6 +15,7 @@ Debian reports the build results for 1.8 on `a number of platforms
 ===========   =======   ===================   ========================   ============================   ========
 Date          Version   OS                    CPU                        Compiler                       Results
 ===========   =======   ===================   ========================   ============================   ========
+2011-04-22    1.9.16    Gentoo 10.0           Intel Core i7-860          Intel C++ 11.1                 OK
 2011-04-15    1.9.16    Haiku R1-alpha2       x86                        GCC 4.3.3                      OK
 2011-04-15    1.9.16    Haiku R1-alpha2       x86                        GCC 2.95.3                     Can't compile
 2011-04-15    1.9.16    Windows 7             x86-64                     Visual C++ 16.00.30319.01      OK

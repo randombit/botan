@@ -6,7 +6,7 @@ Configuration program for botan (http://botan.randombit.net/)
   Distributed under the terms of the Botan license
 
 Tested with
-   CPython 2.5, 2.6 - OK
+   CPython 2.5, 2.6, 2.7 - OK
    Jython 2.5 - Target detection does not work (use --os and --cpu)
 
    CPython 2.4 and earlier are not supported
