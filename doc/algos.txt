@@ -1,3 +1,6 @@
+
+.. _algo_list:
+
 Algorithms
 ========================================
 
@@ -9,46 +12,39 @@ primitives, including:
 
 * Public key cryptography
 
-  * Encryption algorithms RSA, ElGamal, DLIES (padding schemes OAEP,
-    PKCS #1 v1.5)
-
-  * Signature algorithms RSA, DSA, ECDSA, GOST 34.10-2001,
-    Nyberg-Rueppel, Rabin-Williams (padding schemes PSS, PKCS #1 v1.5,
-    X9.31)
-
-  * Key agreement techniques Diffie-Hellman and ECDH
+ * Encryption algorithms RSA, ElGamal, DLIES (padding schemes OAEP,
+   PKCS #1 v1.5)
+ * Signature algorithms RSA, DSA, ECDSA, GOST 34.10-2001,
+   Nyberg-Rueppel, Rabin-Williams (padding schemes PSS, PKCS #1 v1.5,
+   X9.31)
+ * Key agreement techniques Diffie-Hellman and ECDH
 
 * Hash functions
 
-  * NIST hashes: SHA-1, SHA-224, SHA-256, SHA-384, and SHA-512
+ * NIST hashes: SHA-1, SHA-224, SHA-256, SHA-384, and SHA-512
 
-  * RIPE hashes: RIPEMD-160 and RIPEMD-128
+ * RIPE hashes: RIPEMD-160 and RIPEMD-128
 
-  * SHA-3 candidates Skein-512, Keccak, and Blue Midnight Wish-512
+ * SHA-3 candidates Skein-512, Keccak, and Blue Midnight Wish-512
 
-  * Other common hash functions Whirlpool and Tiger
+ * Other common hash functions Whirlpool and Tiger
 
-  * National standard hashes HAS-160 and GOST 34.11
+ * National standard hashes HAS-160 and GOST 34.11
 
-  * Obsolete or insecure hashes MD5, MD4, MD2
+ * Obsolete or insecure hashes MD5, MD4, MD2
 
-  * Non-cryptographic checksums Adler32, CRC24, CRC32
+ * Non-cryptographic checksums Adler32, CRC24, CRC32
 
 * Block ciphers
 
-    * AES (Rijndael) and AES candidates Serpent, Twofish, MARS, CAST-256, RC6
-
-    * DES, and variants 3DES and DESX
-
-    * National/telecom block ciphers SEED, KASUMI, MISTY1, GOST 28147, Skipjack
-
-    * Other block ciphers including Blowfish, CAST-128, IDEA, Noekeon,
-      TEA, XTEA, RC2, RC5, SAFER-SK, and Square
-
-    * Block cipher constructions Luby-Rackoff and Lion
-
-    * Block cipher modes ECB, CBC, CBC/CTS, CFB, OFB, CTR, XTS and
-      authenticated cipher mode EAX
+ * AES (Rijndael) and AES candidates Serpent, Twofish, MARS, CAST-256, RC6
+ * DES, and variants 3DES and DESX
+ * National/telecom block ciphers SEED, KASUMI, MISTY1, GOST 28147, Skipjack
+ * Other block ciphers including Blowfish, CAST-128, IDEA, Noekeon,
+   TEA, XTEA, RC2, RC5, SAFER-SK, and Square
+ * Block cipher constructions Luby-Rackoff and Lion
+ * Block cipher modes ECB, CBC, CBC/CTS, CFB, OFB, CTR, XTS and
+   authenticated cipher mode EAX
 
 * Stream ciphers ARC4, Salsa20/XSalsa20, Turing, and WiderWake4+1
 
@@ -57,21 +53,17 @@ primitives, including:
 
 * Public Key Infrastructure
 
-    * X.509 certificates (including generating new self-signed and CA
-      certs) and CRLs
-
-    * Certificate path validation
-
-    * PKCS #10 certificate requests (creation and certificate issue)
+ * X.509 certificates (including generating new self-signed and CA
+   certs) and CRLs
+ * Certificate path validation
+ * PKCS #10 certificate requests (creation and certificate issue)
 
 * Other cryptographic utility functions including
 
-    * Key derivation functions for passwords: PBKDF1 (PKCS #5 v1.5),
-      PBKDF2 (PKCS #5 v2.0), OpenPGP S2K (RFC 2440)
-
-    * General key derivation functions KDF1 and KDF2 from IEEE 1363
-
-    * PRFs from ANSI X9.42, SSL v3.0, TLS v1.0
+ * Key derivation functions for passwords: PBKDF1 (PKCS #5 v1.5),
+   PBKDF2 (PKCS #5 v2.0), OpenPGP S2K (RFC 2440)
+ * General key derivation functions KDF1 and KDF2 from IEEE 1363
+ * PRFs from ANSI X9.42, SSL v3.0, TLS v1.0
 
 Recommended Algorithms
 ---------------------------------

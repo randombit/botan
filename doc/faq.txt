@@ -1,6 +1,4 @@
 
-.. _faq:
-
 Frequently Asked Questions
 ========================================
 
@@ -13,6 +11,8 @@ addition to the bare algorithms there is also support for number of
 standards and de-facto standards like X.509v3 certificates, and
 various useful constructs like format-preserving encryption, all or
 nothing transforms, and secret splitting.
+
+.. _devel_vs_stable:
 
 Which release should I use?
 ----------------------------------------

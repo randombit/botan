@@ -16,19 +16,22 @@ Initializing the Library
 
 There is a set of core services that the library needs access to while
 it is performing requests. To ensure these are set up, you must create
-a ``LibraryInitializer`` object (usually called 'init' in Botan
-example code; 'botan\_library' or 'botan\_init' may make more sense in
-real applications) prior to making any calls to Botan. This object's
-lifetime must exceed that of all other Botan objects your application
-creates; for this reason the best place to create the
-``LibraryInitializer`` is at the start of your ``main``
-function, since this guarantees that it will be created first and
-destroyed last (via standard C++ RAII rules). The initializer does
-things like setting up the memory allocation system and algorithm
-lookup tables, finding out if there is a high resolution timer
-available to use, and similar such matters. With no arguments, the
-library is initialized with various default settings. So (unless you
-are writing threaded code; see below), all you need is::
+an object of type
+
+.. cpp:class:: LibraryInitializer
+
+prior to making any other library calls. Typically this will be named
+something like ``init`` or ``botan_init``. The object lifetime must
+exceed that of all other Botan objects your application creates; for
+this reason the best place to create the ``LibraryInitializer`` is at
+the start of your ``main`` function, since this guarantees that it
+will be created first and destroyed last (via standard C++ RAII
+rules). The initializer does things like setting up the memory
+allocation system and algorithm lookup tables, finding out if there is
+a high resolution timer available to use, and similar such
+matters. With no arguments, the library is initialized with various
+default settings. So (unless you are writing threaded code; see
+below), all you need is::
 
    Botan::LibraryInitializer init;
 

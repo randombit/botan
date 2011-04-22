@@ -1,13 +1,12 @@
 
-.. _build_log:
-
 Build Log
 ========================================
 
-To report build results (successful or not), email Jack
-(lloyd+botan@randombit.net) your results and relevant system
-information (OS versions, compiler name and version, CPU architecture
-and other hardware information, configuration settings).
+To report build results (successful or not), email the `development
+list <http://lists.randombit.net/mailman/listinfo/botan-devel/>`_ your
+results and relevant system information (OS versions, compiler name
+and version, CPU architecture and other hardware information,
+configuration settings).
 
 Debian reports the build results for 1.8 on `a number of platforms
 <http://buildd.debian.org/pkg.cgi?pkg=botan1.8>`_.

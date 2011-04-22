@@ -55,10 +55,10 @@ system, and use that. It will print a display at the end showing which
 algorithms have and have not been enabled. For instance on one system
 we might see lines like::
 
- INFO: Skipping mod because CPU incompatible - asm_amd64 mp_amd64 mp_asm64 sha1_amd64
- INFO: Skipping mod because OS incompatible - cryptoapi_rng win32_stats
- INFO: Skipping mod because compiler incompatible - mp_ia32_msvc
- INFO: Skipping mod because loaded on request only - bzip2 gnump openssl qt_mutex zlib
+   INFO: Skipping, by request only - bzip2 gnump openssl qt_mutex zlib
+   INFO: Skipping, incompatible CPU - aes_intel aes_ssse3 asm_x86_64 mp_asm64 mp_x86_64 sha1_x86_64
+   INFO: Skipping, incompatible OS - beos_stats cryptoapi_rng win32_crit_section win32_stats
+   INFO: Skipping, incompatible compiler - mp_msvc64 mp_x86_32_msvc
 
 The ones that are 'loaded on request only' have to be explicitly asked
 for, because they rely on third party libraries which your system
@@ -168,8 +168,26 @@ compiler to look for both include files and library files in
 place where they will be in the default compiler search paths (consult
 your documentation and/or local expert for details).
 
-Trickier Things
+.. _amalgamation:
+
+The Amalgamation Build
 ----------------------------------------
+
+You can also configure Botan to be built using only a single source
+file; this is quite convenient if you plan to embed the library into
+another application. To do so, run ``configure.py`` with
+whatever arguments you would ordinarily use, along with the option
+``--gen-amalgamation``. This will create two (rather large)
+files, ``botan_all.h`` and ``botan_all.cpp``.
+
+Whenever you would have included a botan header, you can then include
+``botan_all.h``, and include ``botan_all.cpp`` along
+with the rest of the source files in your build. If you want to be
+able to easily switch between amalgamated and non-amalgamated versions
+(for instance to take advantage of prepackaged versions of botan on
+operating systems that support it), you can instead ignore
+``botan_all.h`` and use the headers from
+``build/include`` as normal.
 
 Modules Relying on Third Party Libraries
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -195,27 +213,6 @@ enabled at build time; these include:
    key operations and ciphers/hashes. OpenSSL 0.9.7 or later is
    required. Note that (unlike GNU MP) OpenSSL's versions are not
    always faster than the versions built into botan.
-
-.. _amalgamation:
-
-Amalgamation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-You can also configure Botan to be built using only a single source
-file; this is quite convenient if you plan to embed the library into
-another application. To do so, run ``configure.py`` with
-whatever arguments you would ordinarily use, along with the option
-``--gen-amalgamation``. This will create two (rather large)
-files, ``botan_all.h`` and ``botan_all.cpp``.
-
-Whenever you would have included a botan header, you can then include
-``botan_all.h``, and include ``botan_all.cpp`` along
-with the rest of the source files in your build. If you want to be
-able to easily switch between amalgamated and non-amalgamated versions
-(for instance to take advantage of prepackaged versions of botan on
-operating systems that support it), you can instead ignore
-``botan_all.h`` and use the headers from
-``build/include`` as normal.
 
 Multiple Builds
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -658,8 +658,7 @@ byte onto the next filter -- a 1 or a 0, which specifies whether the
 signature verified or not (respectively).
 
 For more information about PK algorithms (including creating the
-appropriate objects to pass to the constructors), see
-:ref:`public_key_crypto`.
+appropriate objects to pass to the constructors), see :doc:`pubkey`.
 
 Encoders
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
