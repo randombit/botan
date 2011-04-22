@@ -29,15 +29,13 @@ import logging
 import getpass
 import time
 import errno
+import optparse
 
 # Avoid useless botan_version.pyc (Python 2.6 or higher)
 if 'dont_write_bytecode' in sys.__dict__:
     sys.dont_write_bytecode = True
 
 import botan_version
-
-from optparse import (OptionParser, OptionGroup,
-                      IndentedHelpFormatter, SUPPRESS_HELP)
 
 def flatten(l):
     return sum(l, [])
@@ -139,8 +137,8 @@ Handle command line options
 """
 def process_command_line(args):
 
-    parser = OptionParser(
-        formatter = IndentedHelpFormatter(max_help_position = 50),
+    parser = optparse.OptionParser(
+        formatter = optparse.IndentedHelpFormatter(max_help_position = 50),
         version = BuildConfigurationInformation.version_string)
 
     parser.add_option('--verbose', action='store_true', default=False,
@@ -148,7 +146,7 @@ def process_command_line(args):
     parser.add_option('--quiet', action='store_true', default=False,
                       help='Show only warnings and errors')
 
-    target_group = OptionGroup(parser, 'Target options')
+    target_group = optparse.OptionGroup(parser, 'Target options')
 
     target_group.add_option('--cc', dest='compiler',
                             help='set the desired build compiler')
@@ -166,7 +164,7 @@ def process_command_line(args):
 
     target_group.add_option('--without-unaligned-mem',
                             dest='unaligned_mem', action='store_false',
-                            help=SUPPRESS_HELP)
+                            help=optparse.SUPPRESS_HELP)
 
     for isa_extn_name in ['SSE2', 'SSSE3', 'AltiVec', 'AES-NI', 'movbe']:
         isa_extn = isa_extn_name.lower()
@@ -178,23 +176,23 @@ def process_command_line(args):
                                 dest='enable_isa_extns')
 
         target_group.add_option('--disable-%s' % (isa_extn),
-                                help=SUPPRESS_HELP,
+                                help=optparse.SUPPRESS_HELP,
                                 action='append_const',
                                 const=isa_extn,
                                 dest='disable_isa_extns')
 
-    build_group = OptionGroup(parser, 'Build options')
+    build_group = optparse.OptionGroup(parser, 'Build options')
 
     build_group.add_option('--enable-shared', dest='build_shared_lib',
                            action='store_true', default=True,
-                            help=SUPPRESS_HELP)
+                            help=optparse.SUPPRESS_HELP)
     build_group.add_option('--disable-shared', dest='build_shared_lib',
                            action='store_false',
                            help='disable building a shared library')
 
     build_group.add_option('--enable-asm', dest='asm_ok',
                            action='store_true', default=True,
-                           help=SUPPRESS_HELP)
+                           help=optparse.SUPPRESS_HELP)
     build_group.add_option('--disable-asm', dest='asm_ok',
                            action='store_false',
                            help='disallow use of assembler')
@@ -203,7 +201,7 @@ def process_command_line(args):
                            action='store_true', default=False,
                            help='enable debug build')
     build_group.add_option('--disable-debug', dest='debug_build',
-                           action='store_false', help=SUPPRESS_HELP)
+                           action='store_false', help=optparse.SUPPRESS_HELP)
 
     build_group.add_option('--gen-amalgamation', dest='gen_amalgamation',
                            default=False, action='store_true',
@@ -228,35 +226,37 @@ def process_command_line(args):
                            help='set distribution specific versioning',
                            default='unspecified')
 
-    build_group.add_option('--with-sphinx', default=None, action='store_true',
+    build_group.add_option('--with-sphinx', action='store_true',
+                           default=None,
                            help='Use Sphinx to generate HTML manual')
 
     build_group.add_option('--without-sphinx', action='store_false',
-                           dest='with_sphinx', help=SUPPRESS_HELP)
+                           dest='with_sphinx', help=optparse.SUPPRESS_HELP)
 
-    build_group.add_option('--with-doxygen', default=False, action='store_true',
+    build_group.add_option('--with-doxygen', action='store_true',
+                           default=False,
                            help='Use Doxygen to generate HTML API docs')
 
     build_group.add_option('--without-doxygen', action='store_false',
-                           dest='with_doxygen', help=SUPPRESS_HELP)
+                           dest='with_doxygen', help=optparse.SUPPRESS_HELP)
 
     build_group.add_option('--dumb-gcc', dest='dumb_gcc',
                            action='store_true', default=False,
-                           help=SUPPRESS_HELP)
+                           help=optparse.SUPPRESS_HELP)
 
     build_group.add_option('--maintainer-mode', dest='maintainer_mode',
                            action='store_true', default=False,
-                           help=SUPPRESS_HELP)
+                           help=optparse.SUPPRESS_HELP)
 
     build_group.add_option('--dirty-tree', dest='clean_build_tree',
                            action='store_false', default=True,
-                           help=SUPPRESS_HELP)
+                           help=optparse.SUPPRESS_HELP)
 
     build_group.add_option('--link-method',
                            default=None,
-                           help=SUPPRESS_HELP)
+                           help=optparse.SUPPRESS_HELP)
 
-    wrapper_group = OptionGroup(parser, 'Wrapper options')
+    wrapper_group = optparse.OptionGroup(parser, 'Wrapper options')
 
     wrapper_group.add_option('--with-boost-python', dest='boost_python',
                              default=False, action='store_true',
@@ -265,14 +265,14 @@ def process_command_line(args):
     wrapper_group.add_option('--without-boost-python',
                              dest='boost_python',
                              action='store_false',
-                             help=SUPPRESS_HELP)
+                             help=optparse.SUPPRESS_HELP)
 
     wrapper_group.add_option('--with-python-version', dest='python_version',
                              metavar='N.M',
                              default='.'.join(map(str, sys.version_info[0:2])),
                              help='specify Python to build against (eg %default)')
 
-    mods_group = OptionGroup(parser, 'Module selection')
+    mods_group = optparse.OptionGroup(parser, 'Module selection')
 
     mods_group.add_option('--enable-modules', dest='enabled_modules',
                           metavar='MODS', action='append',
@@ -294,12 +294,12 @@ def process_command_line(args):
                               dest='enabled_modules')
 
         mods_group.add_option('--without-%s' % (mod),
-                              help=SUPPRESS_HELP,
+                              help=optparse.SUPPRESS_HELP,
                               action='append_const',
                               const=mod,
                               dest='disabled_modules')
 
-    install_group = OptionGroup(parser, 'Installation options')
+    install_group = optparse.OptionGroup(parser, 'Installation options')
 
     install_group.add_option('--prefix', metavar='DIR',
                              help='set the base install directory')
@@ -338,7 +338,7 @@ def process_command_line(args):
         ]
 
     for opt in compat_with_autoconf_options:
-        parser.add_option('--' + opt, help=SUPPRESS_HELP)
+        parser.add_option('--' + opt, help=optparse.SUPPRESS_HELP)
 
     (options, args) = parser.parse_args(args)
 
@@ -1622,12 +1622,6 @@ def main(argv = None):
         logging.info('Canonicalizized --cpu=%s to %s/%s' % (
             cpu_from_user, options.arch, options.cpu))
 
-    if options.with_sphinx is None:
-        if have_program('sphinx-build'):
-            logging.info('Found sphinx-build, will enable; ' +
-                         'use --without-sphinx to disable')
-            options.with_sphinx = True
-
     logging.info('Target is %s-%s-%s-%s' % (
         options.compiler, options.os, options.arch, options.cpu))
 
@@ -1662,6 +1656,12 @@ def main(argv = None):
 
     if options.with_tr1 == None:
         options.with_tr1 = ('system' if ccinfo[options.compiler].has_tr1 else 'none')
+
+    if options.with_sphinx is None:
+        if have_program('sphinx-build'):
+            logging.info('Found sphinx-build, will enable; ' +
+                         'use --without-sphinx to disable')
+            options.with_sphinx = True
 
     if options.gen_amalgamation:
         if options.asm_ok:
