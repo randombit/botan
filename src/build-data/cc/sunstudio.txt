@@ -46,7 +46,7 @@ sparc64    -> "-xchip=SUBMODEL" sparc64-
 
 <mach_abi_linking>
 # Needed on some Linux distros
-#linux      -> "-library=stlport4"
+linux      -> "-library=stlport4"
 
 sparc64    -> "-xarch=v9"
 x86_64     -> "-m64"
