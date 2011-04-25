@@ -36,6 +36,10 @@ Version 1.9.17, Not Yet Released
   ``BOTAN_TARGET_ARCH_IS_X86_32``. The classes calling assembly have
   also been renamed.
 
+* Similiarly to the above change, the AES implemenations using the
+  AES-NI instruction set have been renamed from AES_XXX_Intel to
+  AES_XXX_NI.
+
 * Some minor fixes for compiling botan under the BeOS
   clone/continuation `Haiku <http://haiku-os.org>`_.
 

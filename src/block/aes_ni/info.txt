@@ -1,4 +1,4 @@
-define AES_INTEL
+define AES_NI
 
 load_on auto
 
