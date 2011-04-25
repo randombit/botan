@@ -1,5 +1,0 @@
-load_on dep
-
-<source>
-mp_mulop.cpp
-</source>

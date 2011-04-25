@@ -20,5 +20,5 @@ sparc64
 # win, so it's probably worth using elsewhere.
 <cc>
 gcc
-sunwspro
+sunstudio
 </cc>

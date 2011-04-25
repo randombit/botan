@@ -4,6 +4,8 @@ define BIGINT_MP
 mp_asm.cpp
 mp_comba.cpp
 mp_karat.cpp
+mp_monty.cpp
+mp_mulop.cpp
 mp_misc.cpp
 mp_shift.cpp
 </source>
@@ -18,6 +20,4 @@ mp_core.h
 
 <requires>
 mp_x86_64|mp_msvc64|mp_asm64|mp_x86_32|mp_x86_32_msvc|mp_generic
-monty_generic
-mulop_generic
 </requires>
