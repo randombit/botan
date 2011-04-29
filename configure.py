@@ -1580,7 +1580,7 @@ def main(argv = None):
             logging.debug("Converting '%s' to 'cygwin'", options.os)
             options.os = 'cygwin'
 
-        logging.info('Guessing target OS is %s (--os to set)' % (options.os))
+        logging.info('Guessing target OS is %s (use --os to set)' % (options.os))
 
     if options.compiler is None:
         if options.os == 'windows':
@@ -1592,7 +1592,7 @@ def main(argv = None):
                 options.compiler = 'msvc'
         else:
             options.compiler = 'gcc'
-        logging.info('Guessing to use compiler %s (--cc to set)' % (
+        logging.info('Guessing to use compiler %s (use --cc to set)' % (
             options.compiler))
 
     if options.compiler not in ccinfo:
@@ -1615,7 +1615,7 @@ def main(argv = None):
 
     if options.cpu is None:
         (options.arch, options.cpu) = guess_processor(archinfo)
-        logging.info('Guessing target processor is a %s/%s (--cpu to set)' % (
+        logging.info('Guessing target processor is a %s/%s (use --cpu to set)' % (
             options.arch, options.cpu))
     else:
         cpu_from_user = options.cpu
@@ -1656,12 +1656,17 @@ def main(argv = None):
             options.extra_flags = ' -fpermissive'
 
     if options.with_tr1 == None:
-        options.with_tr1 = ('system' if ccinfo[options.compiler].has_tr1 else 'none')
+        if ccinfo[options.compiler].has_tr1:
+            logging.info('Assuming %s has TR1 (use --with-tr1=none to disable)' % (
+                options.compiler))
+            options.with_tr1 = 'system'
+        else:
+            options.with_tr1 = 'none'
 
     if options.with_sphinx is None:
         if have_program('sphinx-build'):
-            logging.info('Found sphinx-build, will enable; ' +
-                         'use --without-sphinx to disable')
+            logging.info('Found sphinx-build, will enable ' +
+                         '(use --without-sphinx to disable)')
             options.with_sphinx = True
 
     if options.gen_amalgamation:
