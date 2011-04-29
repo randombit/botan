@@ -40,6 +40,11 @@ Version 1.9.17, Not Yet Released
   AES-NI instruction set have been renamed from AES_XXX_Intel to
   AES_XXX_NI.
 
+* Systems that are identified as `sun4u` will default to compiling for
+  32-bit SPARCv9 code rather than 64-bit. This matches the still
+  common convention for 32-bit SPARC userspaces. If you want 64-bit
+  code on such as system, use ``--cpu=sparc64``.
+
 * Some minor fixes for compiling botan under the BeOS
   clone/continuation `Haiku <http://haiku-os.org>`_.
 

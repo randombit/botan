@@ -1,10 +1,6 @@
 
 family sparc
 
-<aliases>
-sun4u
-</aliases>
-
 <submodels>
 ultrasparc
 ultrasparc3
