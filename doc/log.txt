@@ -7,8 +7,10 @@ Release Notes
 Series 1.9
 ----------------------------------------
 
-Version 1.9.17, Not Yet Released
+Version 1.9.17, 2011-04-29
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Third release candidate for 1.10.0
 
 * The format preserving encryption method currently available was
   presented in the header ``fpe.h`` and the functions ``fpe_encrypt``
