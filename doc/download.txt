@@ -39,17 +39,17 @@ Windows binary installer for use with Visual C++ 2008:
 Current Development Release
 ----------------------------------------
 
-The current development release is `1.9.16
-<http://botan.randombit.net/news/releases/1_9_16.html>`_ which was
-released on 2011-04-11.
+The current development release is `1.9.17
+<http://botan.randombit.net/news/releases/1_9_17.html>`_ which was
+released on 2011-04-29.
 
 Sources:
 
-`1.9.16 tar/gz <http://botan.randombit.net/files/Botan-1.9.16.tgz>`_
-(`1.9.16 tar/gz sig <http://botan.randombit.net/files/Botan-1.9.16.tgz.asc>`_),
+`1.9.17 tar/gz <http://botan.randombit.net/files/Botan-1.9.17.tgz>`_
+(`1.9.17 tar/gz sig <http://botan.randombit.net/files/Botan-1.9.17.tgz.asc>`_),
 
-`1.9.16 tar/bzip <http://botan.randombit.net/files/Botan-1.9.16.tbz>`_
-(`1.9.16 tar/bzip sig <http://botan.randombit.net/files/Botan-1.9.16.tbz.asc>`_)
+`1.9.17 tar/bzip <http://botan.randombit.net/files/Botan-1.9.17.tbz>`_
+(`1.9.17 tar/bzip sig <http://botan.randombit.net/files/Botan-1.9.17.tbz.asc>`_)
 
 Windows binary installer for use with Visual C++ 2010:
 

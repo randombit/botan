@@ -28,24 +28,21 @@ Open Source Software
   crypto provider
   <http://websvn.kde.org/trunk/kdesupport/qca/src/botantools/botan/>`_.
 
+* `Octopod <http://code.google.com/p/octopod/>`_ is a
+  file sharing system.
+
 * `Silverlock <http://www.petroules.com/products/silverlock/>`_
   is a GPL password management tool for Windows, OS X, and Linux.</p>
-
-* `eVersys <http://code.google.com/p/eversys/>`_ is a GPL
-  alternative to Rational ClearCase.
 
 * `Monotone <http://monotone.ca/>`_, a free distributed
   version control system, uses botan for RSA authentication,
   content hashing, and message authentication.
 
-* `Publimark <http://perso.wanadoo.fr/gleguelv/soft/>`_, a
-  tool for hiding messages in an audio file.
+* `Publimark <http://www.gleguelv.org/soft/publimark/index.html>`_
+  is a tool for hiding messages in an audio file.
 
-* `KeySafe <http://www.gnomefiles.org/app.php/KeySafe>`_,
+* `KeySafe <http://therning.org/magnus/computer/keysafe>`_,
   a password application for GNOME
-
-* `Octopod <http://code.google.com/p/octopod/>`_ is a
-  file sharing system.
 
 * `SuSE <http://gcc.opensuse.org>`_ uses botan as part
   of a test suite for the GCC optimizer.
@@ -55,10 +52,6 @@ Open Source Software
 
 * `VNCcrack <http://www.randombit.net/code/vnccrack/>`_
   is a password cracker for the VNC authentication/response protocol.
-
-* `Cutlass <http://www.synacklabs.net/projects/cutlass/>`_, an
-  encrypted P2P system providing IM, file transfer, and VoIP, used
-  botan.
 
 Commercial Software
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -79,9 +72,6 @@ Commercial Software
 
 * `TextEgg <http://www.textegg.com/>`_ is an encrypted document editor.
 
-* `Trillian Astra <http://www.trillianastra.com>`_, Cerulean Studios
-  IM client, uses botan
-
 * `Seagate <http://www.seagate.com/www/en-us/support/downloads/>`_
   uses botan for the drive encryption in the Maxtor OneTouch III Mini
   Edition hard drive.
@@ -89,12 +79,8 @@ Commercial Software
 * `Aegeus Technology Ltd <http://www.aegeus-technology.com>`_ used
   botan in a research implementation of SPKI.
 
-* `Portalsphere <http://www.portalsphere.com>`_, a CORBA based
-  application server, provides access to botan (though a Tcl wrapper)
-  to application developers.
-
-* `E.V.E. Paradox <http://www.eveparadox.com>`_, a suite of games for
-  Windows, uses botan.
+* `E.V.E. Paradox <http://www.entropicsoftware.com/eve/eve.html>`_, a
+  suite of games for Windows.
 
 Research Projects
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
