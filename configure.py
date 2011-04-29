@@ -149,12 +149,19 @@ def process_command_line(args):
 
     target_group = optparse.OptionGroup(parser, 'Target options')
 
-    target_group.add_option('--cc', dest='compiler',
-                            help='set the desired build compiler')
-    target_group.add_option('--os',
-                            help='set the target operating system')
     target_group.add_option('--cpu',
                             help='set the target processor type/model')
+
+    target_group.add_option('--os',
+                            help='set the target operating system')
+
+    target_group.add_option('--cc', dest='compiler',
+                            help='set the desired build compiler')
+
+    target_group.add_option('--cc-bin', dest='compiler_binary',
+                            metavar='BINARY',
+                            help='set the name of the compiler binary')
+
     target_group.add_option('--with-endian', metavar='ORDER', default=None,
                             help='override guess of CPU byte order')
 
@@ -1014,8 +1021,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'mp_bits': choose_mp_bits(),
 
-        'cc': cc.binary_name + cc.mach_abi_link_flags(
-            options.os, options.arch, options.cpu, options.debug_build),
+        'cc': (options.compiler_binary or cc.binary_name) +
+              cc.mach_abi_link_flags(options.os, options.arch,
+                                     options.cpu, options.debug_build),
 
         'lib_opt': cc.library_opt_flags(options.debug_build),
         'mach_opt': cc.mach_opts(options.arch, options.cpu),
