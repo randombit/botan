@@ -1204,6 +1204,9 @@ def choose_modules_to_use(modules, archinfo, options):
             logging.info('Skipping, %s - %s' % (
                 reason, ' '.join(disabled_mods)))
 
+    logging.info('Using MP module ' +
+                 ' '.join(filter(lambda m: m.startswith('mp_'), to_load)))
+
     logging.debug('Loading modules %s', ' '.join(sorted(to_load)))
 
     return [modules[mod] for mod in to_load]
