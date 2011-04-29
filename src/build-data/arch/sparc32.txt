@@ -30,5 +30,7 @@ sparcv9 -> sparc32-v9
 sparc-v7 -> sparc32-v7
 sparc-v8 -> sparc32-v8
 sparc-v9 -> sparc32-v9
+
+sun4u    -> sparc32-v9
 </submodel_aliases>
 
