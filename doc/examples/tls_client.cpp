@@ -63,7 +63,8 @@ int main(int argc, char* argv[])
       std::string http_command = "GET / HTTP/1.0\r\n\r\n";
 #endif
 
-      tls.write((const byte*)http_command.c_str(), http_command.length());
+      tls.write((const Botan::byte*)http_command.c_str(),
+                http_command.length());
 
       size_t total_got = 0;
 
@@ -72,7 +73,7 @@ int main(int argc, char* argv[])
          if(tls.is_closed())
             break;
 
-         byte buf[128+1] = { 0 };
+         Botan::byte buf[128+1] = { 0 };
          size_t got = tls.read(buf, sizeof(buf)-1);
          printf("%s", buf);
          fflush(0);

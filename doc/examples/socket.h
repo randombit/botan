@@ -24,6 +24,7 @@
   typedef SOCKET socket_t;
   const socket_t invalid_socket = INVALID_SOCKET;
   #define socket_error_code WSAGetLastError()
+  typedef int ssize_t;
 
   class SocketInitializer
      {
@@ -51,6 +52,7 @@
   typedef int socket_t;
   const socket_t invalid_socket = -1;
   #define socket_error_code errno
+  #define closesocket close
 
   class SocketInitializer {};
 #endif
@@ -73,7 +75,7 @@ class Socket
          {
          if(sockfd != invalid_socket)
             {
-            if(::close(sockfd) != 0)
+            if(::closesocket(sockfd) != 0)
                throw std::runtime_error("Socket::close failed");
             sockfd = invalid_socket;
             }
@@ -109,7 +111,7 @@ class Server_Socket
          {
          if(sockfd != invalid_socket)
             {
-            if(::close(sockfd) != 0)
+            if(::closesocket(sockfd) != 0)
                throw std::runtime_error("Server_Socket::close failed");
             sockfd = invalid_socket;
             }
@@ -152,7 +154,7 @@ Socket::Socket(const std::string& host, unsigned short port) : peer(host)
 
    if(::connect(fd, (sockaddr*)&socket_info, sizeof(struct sockaddr)) != 0)
       {
-      ::close(fd);
+      ::closesocket(fd);
       throw std::runtime_error("Socket: connect failed");
       }
 
@@ -239,13 +241,13 @@ Server_Socket::Server_Socket(unsigned short port)
 
    if(::bind(fd, (sockaddr*)&socket_info, sizeof(struct sockaddr)) != 0)
       {
-      ::close(fd);
+      ::closesocket(fd);
       throw std::runtime_error("Server_Socket: bind failed");
       }
 
    if(::listen(fd, 100) != 0) // FIXME: totally arbitrary
       {
-      ::close(fd);
+      ::closesocket(fd);
       throw std::runtime_error("Server_Socket: listen failed");
       }
 

@@ -82,12 +82,12 @@ int main(int argc, char* argv[])
             printf("Writing some text\n");
 
             char msg[] = "Foo\nBar\nBaz\nQuux\n";
-            tls.write((const byte*)msg, strlen(msg));
+            tls.write((const Botan::byte*)msg, strlen(msg));
 
             printf("Now trying a read...\n");
 
             char buf[1024] = { 0 };
-            u32bit got = tls.read((byte*)buf, sizeof(buf)-1);
+            u32bit got = tls.read((Botan::byte*)buf, sizeof(buf)-1);
             printf("%d: '%s'\n", got, buf);
 
             tls.close();
