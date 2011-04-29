@@ -16,7 +16,13 @@
 #include <vector>
 
 #if defined(BOTAN_USE_STD_TR1)
-  #include <tr1/functional>
+
+#if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+    #include <functional>
+#else
+    #include <tr1/functional>
+#endif
+
 #elif defined(BOTAN_USE_BOOST_TR1)
   #include <boost/tr1/functional.hpp>
 #else

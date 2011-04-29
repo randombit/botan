@@ -35,12 +35,14 @@ int main(int argc, char* argv[])
 
    try
       {
-      LibraryInitializer init;
+      LibraryInitializer botan_init;
 
       std::string host = argv[1];
       u32bit port = argc == 3 ? Botan::to_u32bit(argv[2]) : 443;
 
       printf("Connecting to %s:%d...\n", host.c_str(), port);
+
+      SocketInitializer socket_init;
 
       Socket sock(argv[1], port);
 
@@ -54,8 +56,12 @@ int main(int argc, char* argv[])
 
       printf("Handshake extablished...\n");
 
+#if 0
       std::string http_command = "GET / HTTP/1.1\r\n"
                                  "Server: " + host + ':' + to_string(port) + "\r\n\r\n";
+#else
+      std::string http_command = "GET / HTTP/1.0\r\n\r\n";
+#endif
 
       tls.write((const byte*)http_command.c_str(), http_command.length());
 

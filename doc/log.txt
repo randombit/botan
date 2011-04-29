@@ -4,6 +4,18 @@
 Release Notes
 ========================================
 
+Series 1.10
+----------------------------------------
+
+Version 1.10.0, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Add support for compiling SSL using Visual C++ 2010's TR1
+  implementation.
+
+* Fix a bug under Visual C++ 2010 which would cause ``hex_encode`` to
+  crash if given a zero-sized input to encode.
+
 Series 1.9
 ----------------------------------------
 

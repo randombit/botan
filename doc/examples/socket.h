@@ -10,13 +10,55 @@
 
 #include <stdexcept>
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <errno.h>
+#if defined(_MSC_VER)
+  #define SOCKET_IS_WINSOCK 1
+#endif
+
+#if !defined(SOCKET_IS_WINSOCK)
+  #define SOCKET_IS_WINSOCK 0
+#endif
+
+#if SOCKET_IS_WINSOCK
+  #include <winsock.h>
+
+  typedef SOCKET socket_t;
+  const socket_t invalid_socket = INVALID_SOCKET;
+  #define socket_error_code WSAGetLastError()
+
+  class SocketInitializer
+     {
+     public:
+        SocketInitializer()
+           {
+           WSADATA wsadata;
+           WSAStartup(MAKEWORD(2, 2), &wsadata);
+           }
+
+        ~SocketInitializer()
+           {
+           WSACleanup();
+           }
+     };
+#else
+  #include <sys/types.h>
+  #include <sys/socket.h>
+  #include <sys/time.h>
+  #include <netinet/in.h>
+  #include <netdb.h>
+  #include <unistd.h>
+  #include <errno.h>
+
+  typedef int socket_t;
+  const socket_t invalid_socket = -1;
+  #define socket_error_code errno
+
+  class SocketInitializer {};
+#endif
+
+#if !defined(MSG_NOSIGNAL)
+  #define MSG_NOSIGNAL 0
+#endif
+
 #include <string.h>
 
 class Socket
@@ -29,15 +71,15 @@ class Socket
 
       void close()
          {
-         if(sockfd != -1)
+         if(sockfd != invalid_socket)
             {
             if(::close(sockfd) != 0)
                throw std::runtime_error("Socket::close failed");
-            sockfd = -1;
+            sockfd = invalid_socket;
             }
          }
 
-      Socket(int fd, const std::string& peer_id = "") :
+      Socket(socket_t fd, const std::string& peer_id = "") :
          peer(peer_id), sockfd(fd)
          {
          }
@@ -46,7 +88,7 @@ class Socket
       ~Socket() { close(); }
    private:
       std::string peer;
-      int sockfd;
+      socket_t sockfd;
    };
 
 class Server_Socket
@@ -57,26 +99,26 @@ class Server_Socket
       */
       Socket* accept()
          {
-         int retval = ::accept(sockfd, 0, 0);
-         if(retval == -1)
+         socket_t retval = ::accept(sockfd, 0, 0);
+         if(retval == invalid_socket)
             throw std::runtime_error("Server_Socket: accept failed");
          return new Socket(retval);
          }
 
       void close()
          {
-         if(sockfd != -1)
+         if(sockfd != invalid_socket)
             {
             if(::close(sockfd) != 0)
                throw std::runtime_error("Server_Socket::close failed");
-            sockfd = -1;
+            sockfd = invalid_socket;
             }
          }
 
       Server_Socket(unsigned short);
       ~Server_Socket() { close(); }
    private:
-      int sockfd;
+      socket_t sockfd;
    };
 
 /**
@@ -84,7 +126,7 @@ class Server_Socket
 */
 Socket::Socket(const std::string& host, unsigned short port) : peer(host)
    {
-   sockfd = -1;
+   sockfd = invalid_socket;
 
    hostent* host_addr = ::gethostbyname(host.c_str());
 
@@ -93,8 +135,8 @@ Socket::Socket(const std::string& host, unsigned short port) : peer(host)
    if(host_addr->h_addrtype != AF_INET) // FIXME
       throw std::runtime_error("Socket: " + host + " has IPv6 address");
 
-   int fd = ::socket(PF_INET, SOCK_STREAM, 0);
-   if(fd == -1)
+   socket_t fd = ::socket(PF_INET, SOCK_STREAM, 0);
+   if(fd == invalid_socket)
       throw std::runtime_error("Socket: Unable to acquire socket");
 
    sockaddr_in socket_info;
@@ -122,21 +164,22 @@ Socket::Socket(const std::string& host, unsigned short port) : peer(host)
 */
 size_t Socket::read(unsigned char buf[], size_t length)
    {
-   if(sockfd == -1)
+   if(sockfd == invalid_socket)
       throw std::runtime_error("Socket::read: Socket not connected");
 
    size_t got = 0;
 
    while(length)
       {
-      ssize_t this_time = ::recv(sockfd, buf + got, length, MSG_NOSIGNAL);
+      ssize_t this_time = ::recv(sockfd, (char*)buf + got,
+                                 length, MSG_NOSIGNAL);
 
       if(this_time == 0)
          break;
 
       if(this_time == -1)
          {
-         if(errno == EINTR)
+         if(socket_error_code == EINTR)
             this_time = 0;
          else
             throw std::runtime_error("Socket::read: Socket read failed");
@@ -153,17 +196,18 @@ size_t Socket::read(unsigned char buf[], size_t length)
 */
 void Socket::write(const unsigned char buf[], size_t length)
    {
-   if(sockfd == -1)
+   if(sockfd == invalid_socket)
       throw std::runtime_error("Socket::write: Socket not connected");
 
    size_t offset = 0;
    while(length)
       {
-      ssize_t sent = ::send(sockfd, buf + offset, length, MSG_NOSIGNAL);
+      ssize_t sent = ::send(sockfd, (const char*)buf + offset,
+                            length, MSG_NOSIGNAL);
 
       if(sent == -1)
          {
-         if(errno == EINTR)
+         if(socket_error_code == EINTR)
             sent = 0;
          else
             throw std::runtime_error("Socket::write: Socket write failed");
@@ -179,10 +223,10 @@ void Socket::write(const unsigned char buf[], size_t length)
 */
 Server_Socket::Server_Socket(unsigned short port)
    {
-   sockfd = -1;
+   sockfd = invalid_socket;
 
-   int fd = ::socket(PF_INET, SOCK_STREAM, 0);
-   if(fd == -1)
+   socket_t fd = ::socket(PF_INET, SOCK_STREAM, 0);
+   if(fd == invalid_socket)
       throw std::runtime_error("Server_Socket: Unable to acquire socket");
 
    sockaddr_in socket_info;
@@ -199,7 +243,7 @@ Server_Socket::Server_Socket(unsigned short port)
       throw std::runtime_error("Server_Socket: bind failed");
       }
 
-   if(listen(fd, 100) != 0) // FIXME: totally arbitrary
+   if(::listen(fd, 100) != 0) // FIXME: totally arbitrary
       {
       ::close(fd);
       throw std::runtime_error("Server_Socket: listen failed");

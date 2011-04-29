@@ -37,9 +37,7 @@ void hex_encode(char output[],
 std::string hex_encode(const MemoryRegion<byte>& input,
                        bool uppercase)
    {
-   return hex_encode(&input[0],
-                     input.size(),
-                     uppercase);
+   return hex_encode(&input[0], input.size(), uppercase);
    }
 
 std::string hex_encode(const byte input[],
@@ -47,7 +45,10 @@ std::string hex_encode(const byte input[],
                        bool uppercase)
    {
    std::string output(2 * input_length, 0);
-   hex_encode(&output[0], input, input_length, uppercase);
+
+   if(input_length)
+      hex_encode(&output[0], input, input_length, uppercase);
+
    return output;
    }
 

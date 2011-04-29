@@ -39,7 +39,8 @@ int main(int argc, char* argv[])
 
    try
       {
-      LibraryInitializer init;
+      LibraryInitializer botan_init;
+      SocketInitializer socket_init;
 
       AutoSeeded_RNG rng;
 

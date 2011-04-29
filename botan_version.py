@@ -1,6 +1,6 @@
 
 release_major = 1
-release_minor = 9
-release_patch = 17
+release_minor = 10
+release_patch = 0
 
-release_datestamp = 20110429
+release_datestamp = 0
