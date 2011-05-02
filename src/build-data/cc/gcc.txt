@@ -42,6 +42,9 @@ solaris -> "$(CXX) -shared -fPIC -Wl,-h,$(SONAME)"
 i386           -> "-mtune=i686 -momit-leaf-frame-pointer"
 ppc601         -> "-mpowerpc -mcpu=601"
 
+# The patch from Debian bug 594159 has this, don't know why though...
+sh4            -> "-m4 -mieee"
+
 # Until GCC gets -march support for these models
 nehalem        -> "-march=core2 -msse4.1 -msse4.2"
 westmere       -> "-march=core2 -maes -msse4.1 -msse4.2"
@@ -55,7 +58,7 @@ alpha-ev7      -> "-mcpu=ev6"
 # before it's put into SUBMODEL.
 alpha     -> "-mcpu=SUBMODEL" alpha-
 arm       -> "-march=SUBMODEL"
-hitachi-sh -> "-mSUBMODEL" hitachi-sh
+superh    -> "-mSUBMODEL" sh
 hppa      -> "-march=SUBMODEL" hppa
 ia64      -> "-mtune=SUBMODEL"
 m68k      -> "-mSUBMODEL"
