@@ -31,6 +31,24 @@ import botan_version
 # If your documentation needs a minimal Sphinx version, state it here.
 needs_sphinx = '1.0'
 
+"""
+Assert that we are running under Sphinx 1.0.7 or later. Earlier
+versions have bugs in the C++ domain that cause crashes. And
+needs_sphinx only allows us to assert needing a particular major/minor
+version.
+"""
+def check_sphinx_version():
+    import sphinx
+
+    version = map(int, sphinx.__version__.split('.'))
+    if version[0] == 1 and version[1] == 0 and version[2] < 7:
+        # Exit rather than throwing to avoid a confusing backtrace
+        print "This Sphinx is too old - upgrade to at least 1.0.7"
+        import sys
+        sys.exit(1)
+
+check_sphinx_version()
+
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = []
@@ -103,12 +121,17 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'default'
+html_theme = 'agogo'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
+html_theme_options = {
+    'linkcolor': 'blue',
+    'headerlinkcolor': 'blue',
+    'headercolor1': 'darkblue',
+    'headercolor2': 'darkblue',
+    }
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []

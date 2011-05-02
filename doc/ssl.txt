@@ -4,6 +4,8 @@
 SSL and TLS
 ========================================
 
+.. versionadded:: 1.9.4
+
 Botan supports both client and server implementations of the SSL/TLS
 protocols, including SSL v3, TLS v1.0, and TLS v1.1. The insecure and
 obsolete SSL v2 is not supported.

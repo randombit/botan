@@ -2,6 +2,8 @@
 Format Preserving Encryption
 ========================================
 
+.. versionadded:: 1.9.17
+
 Format preserving encryption (FPE) refers to a set of techniques for
 encrypting data such that the ciphertext has the same format as the
 plaintext. For instance, you can use FPE to encrypt credit card

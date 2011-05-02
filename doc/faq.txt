@@ -28,16 +28,20 @@ stability between releases on the development branch, and API changes
 may be made without notice. Feel free to send comments on API changes,
 or API problems, to the list.
 
-If you want to ship a binary that is usable out of the box on a Linux
-distro that ships botan (most do), or you want to ensure you're not
-having to track a moving target, you'll probably prefer using the
+If you don't want to have to worry about tracking a moving target, and
+just want something that works, you'll probably prefer using the
 stable releases. If you want to get the latest features, the
-development releases are the obvious choice. If you're building an
-application that will embed botan into it (without relying on a shared
-library), you want to use an amalgamation build, which basically turns
-botan into a single header and a single source file which you can
-easily include in your existing application build; this feature is
-currently only available in the development trees.
+development releases are the obvious choice.
+
+If you want to ship a binary that is usable out of the box on a Linux
+distro that ships botan, you'll probably want to match versions with
+that distro; as of this writing most ship with 1.8.
+
+If you're building an application that will embed botan into it
+(without relying on a shared library), you want to use an amalgamation
+build, which basically turns botan into a single header and a single
+source file which you can easily include in your existing application
+build. In this case you can pick which ever tree you prefer.
 
 The self-test program can't locate the library
 -----------------------------------------------
@@ -165,8 +169,8 @@ You can do any combination of:
 Does botan support SSL/TLS, SSH, S/MIME, OpenPGP...
 ------------------------------------------------------------
 
-Support for SSL/TLS is included in the most recent development
-releases (1.9.x). Currently SSLv3 and TLS 1.0 and 1.1 are supported.
+Support for SSL/TLS is included in version 1.9.4 and later. Currently
+SSLv3 and TLS 1.0 and 1.1 are supported.
 
 `NetSieben SSH <http://netsieben.com/products/ssh/>`_ is an open
 source SSHv2 implementation that uses botan.

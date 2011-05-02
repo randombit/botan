@@ -2,6 +2,8 @@
 PGP Code Signing Key
 ========================================
 
+.. highlight:: none
+
 The following PGP key is used to sign all releases::
 
   pub   2048R/EFBADFBC 2004-10-30
