@@ -540,8 +540,9 @@ class ModuleInfo(object):
         self.uses_tr1 = (True if self.uses_tr1 == 'yes' else False)
 
         if self.comment != []:
-            logging.info('Module comment for ' + self.basename + ' - ' +
-                         ' '.join(self.comment))
+            self.comment = ' '.join(self.comment)
+        else:
+            self.comment = None
 
     def sources(self):
         return self.source
@@ -1227,6 +1228,10 @@ def choose_modules_to_use(modules, archinfo, options):
                  ' '.join(filter(lambda m: m.startswith('mp_'), to_load)))
 
     logging.debug('Loading modules %s', ' '.join(sorted(to_load)))
+
+    for mod in to_load:
+        if modules[mod].comment:
+            logging.info('%s: %s' % (mod, modules[mod].comment))
 
     return [modules[mod] for mod in to_load]
 
