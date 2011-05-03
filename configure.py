@@ -241,6 +241,12 @@ def process_command_line(args):
     build_group.add_option('--without-sphinx', action='store_false',
                            dest='with_sphinx', help=optparse.SUPPRESS_HELP)
 
+    build_group.add_option('--with-visibility', action='store_true',
+                           default=None, help=optparse.SUPPRESS_HELP)
+
+    build_group.add_option('--without-visibility', action='store_false',
+                           dest='with_visibility', help=optparse.SUPPRESS_HELP)
+
     build_group.add_option('--with-doxygen', action='store_true',
                            default=False,
                            help='Use Doxygen to generate HTML API docs')
@@ -703,7 +709,8 @@ class CompilerInfo(object):
                         'lang_flags': '',
                         'warning_flags': '',
                         'maintainer_warning_flags': '',
-                        'dll_import_flags': '',
+                        'visibility_build_flags': '',
+                        'visibility_attribute': '',
                         'ar_command': None,
                         'makefile_style': '',
                         'has_tr1': False,
@@ -729,6 +736,23 @@ class CompilerInfo(object):
             self.mach_opt_flags[proc] = (flags,regex)
 
         del self.mach_opt
+
+    """
+    Return the shared library build flags, if any
+    """
+    def gen_shared_flags(self, options):
+        def flag_builder():
+            if options.build_shared_lib:
+                yield self.shared_flags
+                if options.with_visibility:
+                    yield self.visibility_build_flags
+
+        return ' '.join(list(flag_builder()))
+
+    def gen_visibility_attribute(self, options):
+        if options.build_shared_lib and options.with_visibility:
+            return self.visibility_attribute
+        return ''
 
     """
     Return the machine specific ABI flags
@@ -972,11 +996,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
             return os.path.join(options.with_build_dir, path)
         return path
 
-    def only_if_shared(option):
-        if options.build_shared_lib:
-            return option
-        return ''
-
     def warning_flags(normal_flags,
                       maintainer_flags,
                       maintainer_mode):
@@ -1033,8 +1052,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
                                     cc.maintainer_warning_flags,
                                     options.maintainer_mode),
 
-        'shared_flags': only_if_shared(cc.shared_flags),
-        'dll_import_flags': only_if_shared(cc.dll_import_flags),
+        'shared_flags': cc.gen_shared_flags(options),
+        'visibility_attribute': cc.gen_visibility_attribute(options),
 
         'so_link': cc.so_link_command_for(osinfo.basename),
 
@@ -1637,37 +1656,58 @@ def main(argv = None):
     logging.info('Target is %s-%s-%s-%s' % (
         options.compiler, options.os, options.arch, options.cpu))
 
+    cc = ccinfo[options.compiler]
+
     # Kind of a hack...
     options.extra_flags = ''
     if options.compiler == 'gcc':
+
+        def get_gcc_version(gcc_bin):
+            try:
+                gcc_version = ''.join(subprocess.Popen(
+                    gcc_bin.split(' ') + ['-dumpversion'],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE).communicate()).strip()
+                logging.info('Detected gcc version %s' % (gcc_version))
+                return gcc_version
+            except OSError:
+                logging.warning('Could not execute %s for version check' % (gcc_bin))
+                return None
 
         def is_64bit_arch(arch):
             if arch.endswith('64') or arch in ['alpha', 's390x']:
                 return True
             return False
 
-        if not is_64bit_arch(options.arch) and not options.dumb_gcc:
-            try:
+        gcc_version = get_gcc_version(options.compiler_binary or cc.binary_name)
+
+        if gcc_version:
+
+            if not is_64bit_arch(options.arch) and not options.dumb_gcc:
                 matching_version = '(4\.[01234]\.)|(3\.[34]\.)|(2\.95\.[0-4])'
-
-                gcc_version = ''.join(subprocess.Popen(
-                    ['g++', '-dumpversion'],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE).communicate()).strip()
-
-                logging.info('Detected GCC version %s' % (gcc_version))
 
                 if re.search(matching_version, gcc_version):
                     options.dumb_gcc = True
-            except OSError:
-                logging.warning('Could not execute GCC for version check')
+
+            versions_without_tr1 = '(4\.0\.)|(3\.[0-4]\.)|(2\.95\.[0-4])'
+
+            if options.with_tr1 == None and \
+               re.search(versions_without_tr1, gcc_version):
+                logging.info('Disabling TR1 support for this gcc, too old')
+                options.with_tr1 = 'none'
+
+            versions_without_visibility = '(3\.[0-4]\.)|(2\.95\.[0-4])'
+            if options.with_visibility == None and \
+               re.search(versions_without_visibility, gcc_version):
+                logging.info('Disabling DSO visibility support for this gcc, too old')
+                options.with_visibility = False
 
         if options.dumb_gcc is True:
             logging.info('Setting -fpermissive to work around gcc bug')
             options.extra_flags = ' -fpermissive'
 
     if options.with_tr1 == None:
-        if ccinfo[options.compiler].has_tr1:
+        if cc.has_tr1:
             logging.info('Assuming %s has TR1 (use --with-tr1=none to disable)' % (
                 options.compiler))
             options.with_tr1 = 'system'
@@ -1705,7 +1745,7 @@ def main(argv = None):
 
     template_vars = create_template_vars(build_config, options,
                                          modules_to_use,
-                                         ccinfo[options.compiler],
+                                         cc,
                                          archinfo[options.arch],
                                          osinfo[options.os])
 

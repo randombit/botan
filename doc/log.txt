@@ -16,6 +16,9 @@ Version 1.10.0, Not Yet Released
 * Fix a bug under Visual C++ 2010 which would cause ``hex_encode`` to
   crash if given a zero-sized input to encode.
 
+* TR1 support is not longer automatically assumed under older versions
+  of GCC
+
 Series 1.9
 ----------------------------------------
 

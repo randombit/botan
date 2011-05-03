@@ -17,11 +17,12 @@ maintainer_warning_flags "-Werror -Wall -Wextra -Wstrict-aliasing -Wstrict-overf
 
 lib_opt_flags "-O3"
 check_opt_flags "-O2"
-shared_flags "-fPIC -fvisibility=hidden"
+shared_flags "-fPIC"
 debug_flags -g
 no_debug_flags "-finline-functions"
 
-dll_import_flags '__attribute__((visibility("default")))'
+visibility_build_flags "-fvisibility=hidden"
+visibility_attribute '__attribute__((visibility("default")))'
 
 makefile_style unix
 

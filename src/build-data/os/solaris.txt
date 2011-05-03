@@ -1,5 +1,8 @@
 os_type unix
 
+install_cmd_data 'cp'
+install_cmd_exec 'cp'
+
 <target_features>
 posix_mlock
 gettimeofday

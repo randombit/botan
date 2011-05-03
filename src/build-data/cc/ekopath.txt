@@ -28,10 +28,9 @@ default -> "$(CXX) -shared -fPIC -Wl,-soname,$(SONAME)"
 athlon   -> "-mcpu=athlon"
 pentium4 -> "-mcpu=pentium4"
 
-opteron  -> "-mcpu=opteron"
-em64t    -> "-mcpu=em64t"
+k8       -> "-mcpu=opteron"
 core2    -> "-mcpu=core"
 
-x86      -> "-mcpu=anyx86"
+x86_32   -> "-mcpu=anyx86"
 x86_64   -> "-mcpu=athlon64"
 </mach_opt>

@@ -20,7 +20,7 @@
 #define BOTAN_DISTRIBUTION_INFO "%{distribution_info}"
 
 #ifndef BOTAN_DLL
-  #define BOTAN_DLL %{dll_import_flags}
+  #define BOTAN_DLL %{visibility_attribute}
 #endif
 
 /* Chunk sizes */

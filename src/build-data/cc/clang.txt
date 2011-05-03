@@ -17,11 +17,12 @@ makefile_style unix
 
 lib_opt_flags "-O2"
 check_opt_flags "-O2"
-shared_flags "-fPIC -fvisibility=hidden"
+shared_flags "-fPIC"
 debug_flags -g
 no_debug_flags "-finline-functions"
 
-dll_import_flags '__attribute__((visibility("default")))'
+visibility_build_flags "-fvisibility=hidden"
+visibility_attribute '__attribute__((visibility("default")))'
 
 <so_link_flags>
 # The default works for GNU ld and several other Unix linkers
