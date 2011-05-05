@@ -92,7 +92,7 @@ to use.
 
 For unencrypted keys, you can also manually decode the parameters
 using the existing PEM and BER support; see `this post
-<http://lists.randombit.net/pipermail/botan-devel/2010-June/001157.html>`_
+<http://lists.randombit.net/pipermail/botan-devel/2010-June/001156.html>`_
 to the dev list for an example.
 
 Is botan FIPS 140 certified?
