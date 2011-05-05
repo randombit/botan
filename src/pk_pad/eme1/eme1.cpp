@@ -65,38 +65,47 @@ SecureVector<byte> EME1::unpad(const byte in[], size_t in_length,
    if(in_length > key_length)
       in_length = 0;
 
-   SecureVector<byte> tmp(key_length);
-   tmp.copy(key_length - in_length, in, in_length);
+   SecureVector<byte> input(key_length);
+   input.copy(key_length - in_length, in, in_length);
 
-   mgf->mask(&tmp[Phash.size()], tmp.size() - Phash.size(),
-             &tmp[0], Phash.size());
-   mgf->mask(&tmp[0], Phash.size(),
-             &tmp[Phash.size()], tmp.size() - Phash.size());
+   mgf->mask(&input[Phash.size()], input.size() - Phash.size(),
+             &input[0], Phash.size());
+   mgf->mask(&input[0], Phash.size(),
+             &input[Phash.size()], input.size() - Phash.size());
 
-   const bool phash_ok = same_mem(&tmp[Phash.size()], &Phash[0], Phash.size());
+   bool waiting_for_delim = true;
+   bool bad_input = false;
+   size_t delim_idx = 2 * Phash.size();
 
-   bool delim_ok = true;
-   size_t delim_idx = 0;
-
-   // Is this vulnerable to timing attacks?
-   for(size_t i = Phash.size() + Phash.size(); i != tmp.size(); ++i)
+   /*
+   * GCC 4.5 on x86-64 compiles this in a way that is still vunerable
+   * to timing analysis. Other compilers, or GCC on other platforms,
+   * may or may not.
+   */
+   for(size_t i = delim_idx; i != input.size(); ++i)
       {
-      if(tmp[i] && !delim_idx)
-         {
-         if(tmp[i] == 0x01)
-            delim_idx = i;
-         else
-            delim_ok = false;
-         }
+      const bool zero_p = !input[i];
+      const bool one_p = input[i] == 0x01;
+
+      const bool add_1 = waiting_for_delim && zero_p;
+
+      bad_input |= waiting_for_delim && !(zero_p || one_p);
+
+      delim_idx += add_1;
+
+      waiting_for_delim &= zero_p;
       }
 
-   if(delim_idx && delim_ok && phash_ok)
-      {
-      return SecureVector<byte>(&tmp[delim_idx + 1],
-                                tmp.size() - delim_idx - 1);
-      }
+   // If we never saw any non-zero byte, then it's not valid input
+   bad_input |= waiting_for_delim;
 
-   throw Decoding_Error("Invalid EME1 encoding");
+   bad_input |= !same_mem(&input[Phash.size()], &Phash[0], Phash.size());
+
+   if(bad_input)
+      throw Decoding_Error("Invalid EME1 encoding");
+
+   return SecureVector<byte>(input + delim_idx + 1,
+                             input.size() - delim_idx - 1);
    }
 
 /*

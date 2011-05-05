@@ -16,6 +16,11 @@ Version 1.10.0, Not Yet Released
 * Fix a bug under Visual C++ 2010 which would cause ``hex_encode`` to
   crash if given a zero-sized input to encode.
 
+* In OAEP decoding, scan for the delimiter bytes using a loop that is
+  written without conditionals so as to help avoid timing analysis.
+  Unfortunately GCC at least is 'smart' enough to compile it to
+  jumps anyway.
+
 * TR1 support is not longer automatically assumed under older versions
   of GCC
 
