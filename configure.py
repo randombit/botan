@@ -952,13 +952,21 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
     def objectfile_list(sources, obj_dir):
         for src in sources:
-            basename = os.path.basename(src)
+            (dir,file) = os.path.split(os.path.normpath(src))
+
+            if dir.startswith('src'):
+                parts = dir.split(os.sep)[1:]
+                if file == parts[-1] + '.cpp':
+                    name = '_'.join(dir.split(os.sep)[1:]) + '.cpp'
+                else:
+                    name = '_'.join(dir.split(os.sep)[1:]) + '_' + file
+            else:
+                name = file
 
             for src_suffix in ['.cpp', '.S']:
-                basename = basename.replace(src_suffix,
-                                            '.' + osinfo.obj_suffix)
+                name = name.replace(src_suffix, '.' + osinfo.obj_suffix)
 
-            yield os.path.join(obj_dir, basename)
+            yield os.path.join(obj_dir, name)
 
 
     def choose_mp_bits():

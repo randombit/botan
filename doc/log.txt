@@ -24,6 +24,9 @@ Version 1.10.0, Not Yet Released
 * TR1 support is not longer automatically assumed under older versions
   of GCC
 
+* The (incomplete) CMS support is disabled by default; add
+  ``--enable-modules=cms`` during configuration to turn it back on.
+
 Series 1.9
 ----------------------------------------
 

@@ -1,5 +1,7 @@
 define CMS
 
+load_on request
+
 <requires>
 asn1
 bigint
