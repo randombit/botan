@@ -24,6 +24,11 @@ Version 1.10.0, Not Yet Released
 * TR1 support is not longer automatically assumed under older versions
   of GCC
 
+* Add two different configuration targets for Atom, since some are
+  32-bit and some are 64-bit. The 'atom' target now refers to the
+  64-bit implementations, use 'atom32' to target the 32-bit
+  processors.
+
 * The (incomplete) CMS support is disabled by default; add
   ``--enable-modules=cms`` during configuration to turn it back on.
 

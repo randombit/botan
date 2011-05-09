@@ -25,7 +25,7 @@ pentium-m
 prescott
 k6
 athlon
-atom
+atom32
 </submodels>
 
 <submodel_aliases>
@@ -62,7 +62,7 @@ intelcput2700 -> prescott
 </submodel_aliases>
 
 <isa_extn>
-sse2:pentium4,prescott,pentium-m,atom
-ssse3:atom
-movbe:atom
+sse2:pentium4,prescott,pentium-m,atom32
+ssse3:atom32
+movbe:atom32
 </isa_extn>

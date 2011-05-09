@@ -17,6 +17,7 @@ nocona
 core2
 nehalem
 westmere
+atom
 </submodels>
 
 <submodel_aliases>
@@ -36,6 +37,6 @@ corei7cpu860 -> nehalem
 
 <isa_extn>
 sse2:all
-ssse3:core2,nehalem,westmere
+ssse3:core2,nehalem,westmere,atom
 aes-ni:westmere
 </isa_extn>
