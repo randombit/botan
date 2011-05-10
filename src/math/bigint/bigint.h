@@ -218,6 +218,13 @@ class BOTAN_DLL BigInt
      u32bit get_substring(size_t offset, size_t length) const;
 
      /**
+     * Convert this value into a u32bit, if it is in the range
+     * [0 ... 2**32-1], or otherwise throw an exception.
+     * @result the value as a u32bit if conversion is possible
+     */
+     u32bit to_u32bit() const;
+
+     /**
      * @param n the offset to get a byte from
      * @result byte at offset n
      */

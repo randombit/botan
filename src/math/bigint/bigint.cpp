@@ -1,6 +1,6 @@
 /*
 * BigInt Base
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2011 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -10,6 +10,7 @@
 #include <botan/get_byte.h>
 #include <botan/parsing.h>
 #include <botan/internal/rounding.h>
+#include <stdio.h>
 
 namespace Botan {
 
@@ -26,8 +27,8 @@ BigInt::BigInt(u64bit n)
    const size_t limbs_needed = sizeof(u64bit) / sizeof(word);
 
    reg.resize(4*limbs_needed);
-   for(size_t j = 0; j != limbs_needed; ++j)
-      reg[j] = ((n >> (j*MP_WORD_BITS)) & MP_WORD_MASK);
+   for(size_t i = 0; i != limbs_needed; ++i)
+      reg[i] = ((n >> (i*MP_WORD_BITS)) & MP_WORD_MASK);
    }
 
 /*
@@ -171,13 +172,32 @@ u32bit BigInt::get_substring(size_t offset, size_t length) const
       throw Invalid_Argument("BigInt::get_substring: Substring size too big");
 
    u64bit piece = 0;
-   for(size_t j = 0; j != 8; ++j)
-      piece = (piece << 8) | byte_at((offset / 8) + (7-j));
+   for(size_t i = 0; i != 8; ++i)
+      {
+      const byte part = byte_at((offset / 8) + (7-i));
+      piece = (piece << 8) | part;
+      }
 
-   u64bit mask = (1 << length) - 1;
-   size_t shift = (offset % 8);
+   const u64bit mask = (static_cast<u64bit>(1) << length) - 1;
+   const size_t shift = (offset % 8);
 
    return static_cast<u32bit>((piece >> shift) & mask);
+   }
+
+/*
+* Convert this number to a u32bit, if possible
+*/
+u32bit BigInt::to_u32bit() const
+   {
+   if(is_negative())
+      throw Encoding_Error("BigInt::to_u32bit: Number is negative");
+   if(bits() >= 32)
+      throw Encoding_Error("BigInt::to_u32bit: Number is too big to convert");
+
+   u32bit out = 0;
+   for(u32bit j = 0; j != 4; ++j)
+      out = (out << 8) | byte_at(3-j);
+   return out;
    }
 
 /*
@@ -214,8 +234,8 @@ void BigInt::mask_bits(size_t n)
    const word mask = (static_cast<word>(1) << (n % MP_WORD_BITS)) - 1;
 
    if(top_word < size())
-      for(size_t j = top_word + 1; j != size(); ++j)
-         reg[j] = 0;
+      for(size_t i = top_word + 1; i != size(); ++i)
+         reg[i] = 0;
 
    reg[top_word] &= mask;
    }
@@ -321,8 +341,8 @@ BigInt BigInt::abs() const
 void BigInt::binary_encode(byte output[]) const
    {
    const size_t sig_bytes = bytes();
-   for(size_t j = 0; j != sig_bytes; ++j)
-      output[sig_bytes-j-1] = byte_at(j);
+   for(size_t i = 0; i != sig_bytes; ++i)
+      output[sig_bytes-i-1] = byte_at(i);
    }
 
 /*
@@ -335,14 +355,15 @@ void BigInt::binary_decode(const byte buf[], size_t length)
    clear();
    reg.resize(round_up<size_t>((length / WORD_BYTES) + 1, 8));
 
-   for(size_t j = 0; j != length / WORD_BYTES; ++j)
+   for(size_t i = 0; i != length / WORD_BYTES; ++i)
       {
-      size_t top = length - WORD_BYTES*j;
-      for(size_t k = WORD_BYTES; k > 0; --k)
-         reg[j] = (reg[j] << 8) | buf[top - k];
+      const size_t top = length - WORD_BYTES*i;
+      for(size_t j = WORD_BYTES; j > 0; --j)
+         reg[i] = (reg[i] << 8) | buf[top - j];
       }
-   for(size_t j = 0; j != length % WORD_BYTES; ++j)
-      reg[length / WORD_BYTES] = (reg[length / WORD_BYTES] << 8) | buf[j];
+
+   for(size_t i = 0; i != length % WORD_BYTES; ++i)
+      reg[length / WORD_BYTES] = (reg[length / WORD_BYTES] << 8) | buf[i];
    }
 
 /*

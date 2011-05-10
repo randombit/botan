@@ -24,13 +24,20 @@ Version 1.10.0, Not Yet Released
 * TR1 support is not longer automatically assumed under older versions
   of GCC
 
+* The function ``BigInt::to_u32bit`` was inadvertently removed in 1.9.11
+  and has been added back.
+
+* The function ``BigInt::get_substring`` did not work correctly with
+  length equal to 32.
+
 * Add two different configuration targets for Atom, since some are
   32-bit and some are 64-bit. The 'atom' target now refers to the
   64-bit implementations, use 'atom32' to target the 32-bit
   processors.
 
-* The (incomplete) CMS support is disabled by default; add
-  ``--enable-modules=cms`` during configuration to turn it back on.
+* The (incomplete) support for CMS and card verifiable certificates
+  are disabled by default; add ``--enable-modules=cms`` or
+  ``--enable-modules=cvc`` during configuration to turn them back on.
 
 Series 1.9
 ----------------------------------------

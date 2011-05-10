@@ -1,6 +1,6 @@
 define CARD_VERIFIABLE_CERTIFICATES
 
-load_on auto
+load_on request
 
 <header:public>
 cvc_ado.h
