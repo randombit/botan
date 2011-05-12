@@ -68,7 +68,7 @@ ia64      -> "-mtune=SUBMODEL"
 m68k      -> "-mSUBMODEL"
 mips32    -> "-mips1 -mcpu=SUBMODEL" mips32-
 mips64    -> "-mips3 -mcpu=SUBMODEL" mips64-
-ppc       -> "-mcpu=SUBMODEL" ppc
+ppc32     -> "-mcpu=SUBMODEL" ppc
 ppc64     -> "-mcpu=SUBMODEL" ppc
 sparc32   -> "-mcpu=SUBMODEL -Wa,-xarch=v8plus" sparc32-
 sparc64   -> "-mcpu=v9 -mtune=SUBMODEL"

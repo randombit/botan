@@ -40,8 +40,12 @@ nehalem    -> "-xtarget=nehalem"
 
 sparc32-v9 -> "-xchip=ultra -xarch=v8"
 
+ultrasparc3 -> "-xchip=ultra3"
+niagra1    -> "-xchip=ultraT1"
+niagra2    -> "-xchip=ultraT2"
+
 sparc32    -> "-xchip=ultra -xarch=SUBMODEL" sparc32-
-sparc64    -> "-xchip=SUBMODEL" sparc64-
+sparc64    -> "-xchip=generic"
 </mach_opt>
 
 <mach_abi_linking>

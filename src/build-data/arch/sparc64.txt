@@ -4,6 +4,8 @@ family sparc
 <submodels>
 ultrasparc
 ultrasparc3
+niagra
+niagra2
 </submodels>
 
 <submodel_aliases>
