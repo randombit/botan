@@ -2,7 +2,7 @@
 
 # For normal builds:
 guess_prefix=`dirname \`dirname $0\``
-includedir=%{includedir}
+includedir=%{includedir}/botan-%{version_major}.%{version_minor}
 libdir=%{libdir}
 
 #  For workspace builds:
@@ -54,9 +54,9 @@ while test $# -gt 0; do
     --libs)
         if [ $prefix != "/usr" -a $prefix != "/usr/local" ]
         then
-           echo -L$prefix/$libdir -lbotan %{link_to}
+           echo -L$prefix/$libdir -lbotan-%{version_major}.%{version_minor} %{link_to}
         else
-           echo -lbotan %{link_to}
+           echo -lbotan-%{version_major}.%{version_minor} %{link_to}
         fi
         ;;
     *)

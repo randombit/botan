@@ -48,6 +48,7 @@ class BuildConfigurationInformation(object):
     version_major = botan_version.release_major
     version_minor = botan_version.release_minor
     version_patch = botan_version.release_patch
+    version_so_rev = botan_version.release_so_abi_rev
 
     version_datestamp = botan_version.release_datestamp
 
@@ -123,6 +124,10 @@ class BuildConfigurationInformation(object):
     def pkg_config_file(self):
         return 'botan-%d.%d.pc' % (self.version_major,
                                    self.version_minor)
+
+    def config_shell_script(self):
+        return 'botan-config-%d.%d' % (self.version_major,
+                                       self.version_minor)
 
     def username(self):
         return getpass.getuser()
@@ -1016,6 +1021,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'version_major': build_config.version_major,
         'version_minor': build_config.version_minor,
         'version_patch': build_config.version_patch,
+        'so_abi_rev':    build_config.version_so_rev,
         'version':       build_config.version_string,
 
         'distribution_info': options.distribution_info,
@@ -1118,7 +1124,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'so_suffix': osinfo.so_suffix,
 
         'botan_config': prefix_with_build_dir(
-            os.path.join(build_config.build_dir, 'botan-config')),
+            os.path.join(build_config.build_dir,
+                         build_config.config_shell_script())),
+
         'botan_pkgconfig': prefix_with_build_dir(
             os.path.join(build_config.build_dir,
                          build_config.pkg_config_file())),
@@ -1386,7 +1394,7 @@ def setup_build(build_config, options, template_vars):
 
         if options.os != 'windows':
             yield (options.build_data, 'botan.pc.in', build_config.pkg_config_file())
-            yield (options.build_data, 'botan-config.in', 'botan-config')
+            yield (options.build_data, 'botan-config.in', build_config.config_shell_script())
 
         if options.os == 'windows':
             yield (options.build_data, 'innosetup.in', 'botan.iss')

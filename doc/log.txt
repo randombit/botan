@@ -4,17 +4,33 @@
 Release Notes
 ========================================
 
-Series 1.10
+Series 1.9
 ----------------------------------------
 
-Version 1.10.0, Not Yet Released
+Version 1.9.18, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fourth release candidate for 1.10.0
 
 * Add support for compiling SSL using Visual C++ 2010's TR1
   implementation.
 
 * Fix a bug under Visual C++ 2010 which would cause ``hex_encode`` to
   crash if given a zero-sized input to encode.
+
+* On Unix, the library and header paths have been changed to allow
+  parallel installation of different versions of the library. Headers
+  are installed into ``<prefix>/include/botan-1.9/botan``, libraries
+  are named ``libbotan-1.9``, and ``botan-config`` is now namespaced
+  (so in this release ``botan-config-1.9``). All of these embedded
+  versions will be 1.10 in the upcoming stable release.
+
+* The soname system has also modified at the suggestion of the Debian
+  maintainer to match the conventional Unix ABI soname scheme. For
+  instance in this release the library soname is
+  ``libbotan-1.9.so.0``, with the full library being named
+  ``libbotan-1.9.so.0.18``. The ``0`` is the ABI version, and will be
+  incremented whenever a breaking ABI change is made.
 
 * In OAEP decoding, scan for the delimiter bytes using a loop that is
   written without conditionals so as to help avoid timing analysis.
@@ -27,8 +43,8 @@ Version 1.10.0, Not Yet Released
 * The function ``BigInt::to_u32bit`` was inadvertently removed in 1.9.11
   and has been added back.
 
-* The function ``BigInt::get_substring`` did not work correctly with
-  length equal to 32.
+* The function ``BigInt::get_substring`` did not work correctly with a
+  *length* argument of 32.
 
 * Add two different configuration targets for Atom, since some are
   32-bit and some are 64-bit. The 'atom' target now refers to the
@@ -38,9 +54,6 @@ Version 1.10.0, Not Yet Released
 * The (incomplete) support for CMS and card verifiable certificates
   are disabled by default; add ``--enable-modules=cms`` or
   ``--enable-modules=cvc`` during configuration to turn them back on.
-
-Series 1.9
-----------------------------------------
 
 Version 1.9.17, 2011-04-29
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

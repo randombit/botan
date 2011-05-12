@@ -11,13 +11,14 @@ LINK_TO       = %{link_to}
 
 # Version Numbers
 VERSION       = %{version}
+SERIES        = %{version_major}.%{version_minor}
 
 # Installation Settings
 DESTDIR       = %{prefix}
 
 BINDIR        = $(DESTDIR)/bin
 LIBDIR        = $(DESTDIR)/%{libdir}
-HEADERDIR     = $(DESTDIR)/%{includedir}/botan
+HEADERDIR     = $(DESTDIR)/%{includedir}/botan-$(SERIES)/botan
 DOCDIR        = $(DESTDIR)/%{docdir}/botan-$(VERSION)
 PKGCONF_DIR   = $(LIBDIR)/pkgconfig
 
@@ -54,12 +55,12 @@ CHECK_FLAGS   = $(CHECK_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
 LIBRARIES     = $(STATIC_LIB) $(SHARED_LIB)
 
 LIBNAME       = %{lib_prefix}libbotan
-STATIC_LIB    = $(LIBNAME).a
+STATIC_LIB    = $(LIBNAME)-$(SERIES).a
 
-SONAME        = $(LIBNAME)-%{version_major}.%{version_minor}.%{so_suffix}
+SONAME        = $(LIBNAME)-$(SERIES).%{so_suffix}.%{so_abi_rev}
 SHARED_LIB    = $(SONAME).%{version_patch}
 
-SYMLINK       = libbotan.%{so_suffix}
+SYMLINK       = $(LIBNAME)-$(SERIES).%{so_suffix}
 
 all: $(LIBRARIES)
 
