@@ -2,6 +2,11 @@
 endian little
 family arm
 
+<aliases>
+armel # For Debian
+armhf # For Debian
+</aliases>
+
 <submodels>
 armv2
 armv2a

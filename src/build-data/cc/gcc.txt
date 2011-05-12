@@ -46,6 +46,9 @@ ppc601         -> "-mpowerpc -mcpu=601"
 # The patch from Debian bug 594159 has this, don't know why though...
 sh4            -> "-m4 -mieee"
 
+# From http://wiki.debian.org/PowerPCSPEPort
+e500v2         -> "-mcpu=8548"
+
 # Until GCC gets -march support for these models
 nehalem        -> "-march=core2 -msse4.1 -msse4.2"
 westmere       -> "-march=core2 -maes -msse4.1 -msse4.2"
