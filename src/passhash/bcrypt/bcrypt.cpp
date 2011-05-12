@@ -11,11 +11,6 @@
 #include <botan/blowfish.h>
 #include <botan/base64.h>
 
-#include <botan/pipe.h>
-#include <botan/b64_filt.h>
-#include <iostream>
-#include <stdio.h>
-
 namespace Botan {
 
 namespace {
@@ -89,10 +84,7 @@ MemoryVector<byte> bcrypt_base64_decode(std::string input)
    for(size_t i = 0; i != input.size(); ++i)
       input[i] = OPENBSD_BASE64_SUB[static_cast<byte>(input[i])];
 
-   //return base64_decode(input);
-   Pipe pipe(new Base64_Decoder);
-   pipe.process_msg(input);
-   return pipe.read_all();
+   return base64_decode(input);
    }
 
 std::string make_bcrypt(const std::string& pass,

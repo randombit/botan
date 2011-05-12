@@ -48,6 +48,76 @@ std::string BOTAN_DLL base64_encode(const byte input[],
 */
 std::string BOTAN_DLL base64_encode(const MemoryRegion<byte>& input);
 
+/**
+* Perform base64 decoding
+* @param output an array of at least input_length*3/4 bytes
+* @param input some base64 input
+* @param input_length length of input in bytes
+* @param input_consumed is an output parameter which says how many
+*        bytes of input were actually consumed. If less than
+*        input_length, then the range input[consumed:length]
+*        should be passed in later along with more input.
+* @param final_inputs true iff this is the last input, in which case
+         padding is allowed
+* @param ignore_ws ignore whitespace on input; if false, throw an
+                   exception if whitespace is encountered
+* @return number of bytes written to output
+*/
+size_t BOTAN_DLL base64_decode(byte output[],
+                               const char input[],
+                               size_t input_length,
+                               size_t& input_consumed,
+                               bool final_inputs,
+                               bool ignore_ws = true);
+
+/**
+* Perform base64 decoding
+* @param output an array of at least input_length*3/4 bytes
+* @param input some base64 input
+* @param input_length length of input in bytes
+* @param ignore_ws ignore whitespace on input; if false, throw an
+                   exception if whitespace is encountered
+* @return number of bytes written to output
+*/
+size_t BOTAN_DLL base64_decode(byte output[],
+                               const char input[],
+                               size_t input_length,
+                               bool ignore_ws = true);
+
+/**
+* Perform base64 decoding
+* @param output an array of at least input_length/3*4 bytes
+* @param input some base64 input
+* @param ignore_ws ignore whitespace on input; if false, throw an
+                   exception if whitespace is encountered
+* @return number of bytes written to output
+*/
+size_t BOTAN_DLL base64_decode(byte output[],
+                               const std::string& input,
+                               bool ignore_ws = true);
+
+/**
+* Perform base64 decoding
+* @param input some base64 input
+* @param input_length the length of input in bytes
+* @param ignore_ws ignore whitespace on input; if false, throw an
+                   exception if whitespace is encountered
+* @return decoded base64 output
+*/
+SecureVector<byte> BOTAN_DLL base64_decode(const char input[],
+                                           size_t input_length,
+                                           bool ignore_ws = true);
+
+/**
+* Perform base64 decoding
+* @param input some base64 input
+* @param ignore_ws ignore whitespace on input; if false, throw an
+                   exception if whitespace is encountered
+* @return decoded base64 output
+*/
+SecureVector<byte> BOTAN_DLL base64_decode(const std::string& input,
+                                           bool ignore_ws = true);
+
 }
 
 #endif

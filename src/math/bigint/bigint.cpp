@@ -10,7 +10,6 @@
 #include <botan/get_byte.h>
 #include <botan/parsing.h>
 #include <botan/internal/rounding.h>
-#include <stdio.h>
 
 namespace Botan {
 

@@ -97,5 +97,156 @@ std::string base64_encode(const MemoryRegion<byte>& input)
    return base64_encode(&input[0], input.size());
    }
 
+size_t base64_decode(byte output[],
+                     const char input[],
+                     size_t input_length,
+                     size_t& input_consumed,
+                     bool final_inputs,
+                     bool ignore_ws)
+   {
+   /*
+   * Base64 Decoder Lookup Table
+   * Warning: assumes ASCII encodings
+   */
+   static const byte BASE64_TO_BIN[256] = {
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x80,
+      0x80, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0x80, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0x3E, 0xFF, 0xFF, 0xFF, 0x3F, 0x34, 0x35,
+      0x36, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0xFF, 0xFF,
+      0xFF, 0x81, 0xFF, 0xFF, 0xFF, 0x00, 0x01, 0x02, 0x03, 0x04,
+      0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E,
+      0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
+      0x19, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x1A, 0x1B, 0x1C,
+      0x1D, 0x1E, 0x1F, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26,
+      0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F, 0x30,
+      0x31, 0x32, 0x33, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+   byte* out_ptr = output;
+   byte decode_buf[4];
+   size_t decode_buf_pos = 0;
+   size_t final_truncate = 0;
+   bool seen_pad = false;
+
+   clear_mem(output, input_length * 3 / 4);
+
+   for(size_t i = 0; i != input_length; ++i)
+      {
+      const byte bin = BASE64_TO_BIN[static_cast<byte>(input[i])];
+
+      if(seen_pad && bin != 0x81)
+         throw std::invalid_argument("base64_decode: invalid padding");
+
+      if(bin <= 0x3F)
+         {
+         decode_buf[decode_buf_pos] = bin;
+         decode_buf_pos += 1;
+         }
+      else if(!(final_inputs && bin == 0x81))
+         {
+         if(bin == 0x80 && ignore_ws)
+            continue;
+
+         std::string bad_char(1, input[i]);
+         if(bad_char == "\t")
+           bad_char = "\\t";
+         else if(bad_char == "\n")
+           bad_char = "\\n";
+
+         throw std::invalid_argument(
+           std::string("base64_decode: invalid base64 character '") +
+           bad_char + "'");
+         }
+
+      /*
+      * If we either see a pad character, or we are the the end
+      * of the input
+      */
+      if(final_inputs && (bin == 0x81 || i == input_length - 1))
+         {
+         seen_pad = true;
+         if(decode_buf_pos)
+            {
+            for(size_t i = decode_buf_pos; i != 4; ++i)
+               decode_buf[i] = 0;
+            final_truncate = (4 - decode_buf_pos);
+            decode_buf_pos = 4;
+            }
+         }
+
+      if(decode_buf_pos == 4)
+         {
+         out_ptr[0] = (decode_buf[0] << 2) | (decode_buf[1] >> 4);
+         out_ptr[1] = (decode_buf[1] << 4) | (decode_buf[2] >> 2);
+         out_ptr[2] = (decode_buf[2] << 6) | decode_buf[3];
+
+         out_ptr += 3;
+         decode_buf_pos = 0;
+         }
+      }
+
+   input_consumed = input_length - decode_buf_pos;
+   size_t written = (out_ptr - output) - final_truncate;
+
+   return written;
+   }
+
+size_t base64_decode(byte output[],
+                     const char input[],
+                     size_t input_length,
+                     bool ignore_ws)
+   {
+   size_t consumed = 0;
+   size_t written = base64_decode(output, input, input_length,
+                                  consumed, true, ignore_ws);
+
+   if(consumed != input_length)
+      throw std::invalid_argument("base64_decode: input did not have full bytes");
+
+   return written;
+   }
+
+size_t base64_decode(byte output[],
+                     const std::string& input,
+                     bool ignore_ws)
+   {
+   return base64_decode(output, &input[0], input.length(), ignore_ws);
+   }
+
+SecureVector<byte> base64_decode(const char input[],
+                                 size_t input_length,
+                                 bool ignore_ws)
+   {
+   SecureVector<byte> bin(1 + (input_length * 3) / 4);
+
+   size_t written = base64_decode(&bin[0],
+                                  input,
+                                  input_length,
+                                  ignore_ws);
+
+   bin.resize(written);
+   return bin;
+   }
+
+SecureVector<byte> base64_decode(const std::string& input,
+                                 bool ignore_ws)
+   {
+   return base64_decode(&input[0], input.size(), ignore_ws);
+   }
+
 
 }

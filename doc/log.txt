@@ -40,6 +40,9 @@ Version 1.9.18, Not Yet Released
 * TR1 support is not longer automatically assumed under older versions
   of GCC
 
+* Functions for base64 decoding that work standalone (without needing
+  to use a pipe) have been added to ``base64.h``
+
 * The function ``BigInt::to_u32bit`` was inadvertently removed in 1.9.11
   and has been added back.
 
