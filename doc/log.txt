@@ -15,6 +15,12 @@ Version 1.9.18, Not Yet Released
 * Add support for compiling SSL using Visual C++ 2010's TR1
   implementation.
 
+* The SSE2 implementation of IDEA did not work correctly when compiled
+  by Clang, because the trick it used to emulate a 16 bit unsigned
+  compare in SSE (which doesn't contain one natively) relied on signed
+  overflow working in the 'usual' way. A different method that doesn't
+  rely on signed overflow is now used.
+
 * Fix a bug under Visual C++ 2010 which would cause ``hex_encode`` to
   crash if given a zero-sized input to encode.
 

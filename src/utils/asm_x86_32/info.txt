@@ -19,7 +19,6 @@ solaris
 </os>
 
 <cc>
-clang
 gcc
 icc
 </cc>
