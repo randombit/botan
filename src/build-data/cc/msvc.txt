@@ -8,10 +8,9 @@ add_include_dir_option "/I"
 add_lib_dir_option "-L"
 add_lib_option ""
 
-lib_opt_flags "/O2"
+no_debug_flags "/O2"
+debug_flags "/Od /Zi /DDEBUG"
 check_opt_flags "/O2"
-debug_flags "/Zi"
-no_debug_flags ""
 lang_flags "/EHsc /GR /D_CONSOLE"
 warning_flags ""
 

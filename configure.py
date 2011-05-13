@@ -513,6 +513,18 @@ class CompilerInfo(object):
 
         return ''
 
+    def library_opt_flags(self, options):
+        def gen_flags():
+            yield self.lib_opt_flags
+
+            if options.debug_build:
+                yield self.debug_flags
+
+            if not options.debug_build:
+                yield self.no_debug_flags
+
+        return (' '.join(gen_flags())).strip()
+
     def so_link_command_for(self, osname):
         if osname in self.so_link_flags:
             return self.so_link_flags[osname]
@@ -726,7 +738,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'cc': cc.binary_name + cc.mach_abi_link_flags(
             options.os, options.arch, options.cpu, options.debug_build),
 
-        'lib_opt': cc.lib_opt_flags,
+        'lib_opt': cc.library_opt_flags(options),
         'mach_opt': cc.mach_opts(options.arch, options.cpu),
         'check_opt': cc.check_opt_flags,
         'lang_flags': cc.lang_flags + options.extra_flags,

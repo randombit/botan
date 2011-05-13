@@ -14,10 +14,11 @@ lang_flags "-D_REENTRANT -Wno-long-long"
 warning_flags "-W -Wall"
 #warning_flags "-Wextra -Wall -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wno-unused-parameter"
 
-lib_opt_flags "-O2 -finline-functions"
+lib_opt_flags "-O2"
 check_opt_flags "-O2"
 shared_flags "-fPIC"
 debug_flags "-g"
+no_debug_flags "-finline-functions"
 
 dll_import_flags ""
 dll_export_flags ""
