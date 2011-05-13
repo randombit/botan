@@ -216,6 +216,10 @@ def process_command_line(args):
     build_group.add_option('--disable-debug', dest='debug_build',
                            action='store_false', help=optparse.SUPPRESS_HELP)
 
+    build_group.add_option('--no-optimizations', dest='no_optimizations',
+                           action='store_true', default=False,
+                           help=optparse.SUPPRESS_HELP)
+
     build_group.add_option('--gen-amalgamation', dest='gen_amalgamation',
                            default=False, action='store_true',
                            help='generate amalgamation files')
@@ -800,13 +804,18 @@ class CompilerInfo(object):
     """
     Return the flags for LIB_OPT
     """
-    def library_opt_flags(self, debug_build):
-        flags = self.lib_opt_flags
-        if debug_build and self.debug_flags != '':
-            flags += ' ' + self.debug_flags
-        if not debug_build and self.no_debug_flags != '':
-            flags += ' ' + self.no_debug_flags
-        return flags
+    def library_opt_flags(self, options):
+        def gen_flags():
+            if options.debug_build:
+                yield self.debug_flags
+
+            if not options.no_optimizations:
+                yield self.lib_opt_flags
+
+                if not options.debug_build:
+                    yield self.no_debug_flags
+
+        return (' '.join(gen_flags())).strip()
 
     """
     Return the command needed to link a shared object
@@ -1059,9 +1068,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
               cc.mach_abi_link_flags(options.os, options.arch,
                                      options.cpu, options.debug_build),
 
-        'lib_opt': cc.library_opt_flags(options.debug_build),
+        'lib_opt': cc.library_opt_flags(options),
         'mach_opt': cc.mach_opts(options.arch, options.cpu),
-        'check_opt': cc.check_opt_flags,
+        'check_opt': '' if options.no_optimizations else cc.check_opt_flags,
         'lang_flags': cc.lang_flags + options.extra_flags,
         'warn_flags': warning_flags(cc.warning_flags,
                                     cc.maintainer_warning_flags,
