@@ -262,7 +262,7 @@ void TLS_Server::state_machine()
          }
       }
    else
-      throw Unexpected_Message("Unknown message type recieved");
+      throw Unexpected_Message("Unknown message type received");
    }
 
 /*
@@ -471,7 +471,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       active = true;
       }
    else
-      throw Unexpected_Message("Unknown handshake message recieved");
+      throw Unexpected_Message("Unknown handshake message received");
    }
 
 /*

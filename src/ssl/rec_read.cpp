@@ -223,7 +223,7 @@ size_t Record_Reader::get_record(byte& msg_type,
       throw Decoding_Error("Record_Reader: Record truncated");
 
    const size_t mac_offset = plaintext.size() - (mac_size + pad_size);
-   SecureVector<byte> recieved_mac(&plaintext[mac_offset],
+   SecureVector<byte> received_mac(&plaintext[mac_offset],
                                    mac_size);
 
    const u16bit plain_length = plaintext.size() - (mac_size + pad_size + iv_size);
@@ -242,7 +242,7 @@ size_t Record_Reader::get_record(byte& msg_type,
 
    SecureVector<byte> computed_mac = mac->final();
 
-   if(recieved_mac != computed_mac)
+   if(received_mac != computed_mac)
       throw TLS_Exception(BAD_RECORD_MAC, "Record_Reader: MAC failure");
 
    msg_type = header[0];

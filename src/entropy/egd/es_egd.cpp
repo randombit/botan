@@ -89,7 +89,7 @@ size_t EGD_EntropySource::EGD_Socket::read(byte outbuf[], size_t length)
          throw std::runtime_error("Reading response length from EGD failed");
 
       if(out_len > egd_read_command[1])
-         throw std::runtime_error("Bogus length field recieved from EGD");
+         throw std::runtime_error("Bogus length field received from EGD");
 
       ssize_t count = ::read(m_fd, outbuf, out_len);
 

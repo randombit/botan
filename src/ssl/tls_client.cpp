@@ -294,7 +294,7 @@ void TLS_Client::state_machine()
          }
       }
    else
-      throw Unexpected_Message("Unknown message type recieved");
+      throw Unexpected_Message("Unknown message type received");
    }
 
 /**
@@ -440,7 +440,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
          is_rsa = true;
       else
          throw TLS_Exception(UNSUPPORTED_CERTIFICATE,
-                             "Unknown key type recieved in server kex");
+                             "Unknown key type received in server kex");
 
       if((is_dsa && state->suite.sig_type() != TLS_ALGO_SIGNER_DSA) ||
          (is_rsa && state->suite.sig_type() != TLS_ALGO_SIGNER_RSA))
@@ -469,7 +469,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
          is_rsa = true;
       else
          throw TLS_Exception(HANDSHAKE_FAILURE,
-                             "Unknown key type recieved in server kex");
+                             "Unknown key type received in server kex");
 
       if((is_dh && state->suite.kex_type() != TLS_ALGO_KEYEXCH_DH) ||
          (is_rsa && state->suite.kex_type() != TLS_ALGO_KEYEXCH_RSA))
@@ -560,7 +560,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
       active = true;
       }
    else
-      throw Unexpected_Message("Unknown handshake message recieved");
+      throw Unexpected_Message("Unknown handshake message received");
    }
 
 /**
