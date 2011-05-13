@@ -39,23 +39,23 @@ solaris -> "$(CXX) -shared -fPIC -Wl,-h,$(SONAME)"
 </so_link_flags>
 
 <mach_opt>
-# Specializations first (they don't need to be, just clearer)
-i386           -> "-mtune=i686 -momit-leaf-frame-pointer"
-ppc601         -> "-mpowerpc -mcpu=601"
+ppc601      -> "-mpowerpc -mcpu=601"
+cellppu     -> "-mcpu=cell"
+e500v2      -> "-mcpu=8548"
+atom32      -> "-march=atom -momit-leaf-frame-pointer"
+
+alpha-ev68  -> "-mcpu=ev67"
+alpha-ev7   -> "-mcpu=ev67"
 
 # The patch from Debian bug 594159 has this, don't know why though...
-sh4            -> "-m4 -mieee"
+sh4         -> "-m4 -mieee"
 
-# From http://wiki.debian.org/PowerPCSPEPort
-e500v2         -> "-mcpu=8548"
+# This is mostly for Debian's benefit
+i486        -> "-mtune=generic -momit-leaf-frame-pointer"
 
 # Until GCC gets -march support for these models
-nehalem        -> "-march=core2 -msse4.1 -msse4.2"
-westmere       -> "-march=core2 -maes -msse4.1 -msse4.2"
-atom32         -> "-march=i686 -msse2 -mssse3"
-cellppu        -> ""
-alpha-ev68     -> "-mcpu=ev6"
-alpha-ev7      -> "-mcpu=ev6"
+nehalem     -> "-march=core2 -msse4.1 -msse4.2 -momit-leaf-frame-pointer"
+westmere    -> "-march=core2 -maes -msse4.1 -msse4.2 -momit-leaf-frame-pointer"
 
 # Default family options (SUBMODEL is substitued with the real submodel)
 # Anything after the quotes is what should be *removed* from the submodel name
