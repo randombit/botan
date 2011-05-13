@@ -28,7 +28,9 @@ inline __m128i mul(__m128i X, u16bit K_16)
    __m128i T = _mm_sub_epi16(mul_lo, mul_hi);
 
    // Unsigned compare; cmp = 1 if mul_lo < mul_hi else 0
-   const __m128i cmp = _mm_min_epu8(ones, _mm_subs_epu16(mul_hi, mul_lo));
+   const __m128i subs = _mm_subs_epu16(mul_hi, mul_lo);
+   const __m128i cmp = _mm_min_epu8(
+     _mm_or_si128(subs, _mm_srli_epi16(subs, 8)), ones);
 
    T = _mm_add_epi16(T, cmp);
 
