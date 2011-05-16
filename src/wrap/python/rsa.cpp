@@ -27,6 +27,8 @@ class Py_RSA_PrivateKey
       Py_RSA_PrivateKey(std::string pem_str,
                         Python_RandomNumberGenerator& rng,
                         std::string pass);
+      Py_RSA_PrivateKey(std::string pem_str,
+                        Python_RandomNumberGenerator& rng);
 
       Py_RSA_PrivateKey(u32bit bits, Python_RandomNumberGenerator& rng);
       ~Py_RSA_PrivateKey() { delete rsa_key; }
@@ -84,6 +86,21 @@ Py_RSA_PrivateKey::Py_RSA_PrivateKey(u32bit bits,
                                      Python_RandomNumberGenerator& rng)
    {
    rsa_key = new RSA_PrivateKey(rng.get_underlying_rng(), bits);
+   }
+
+Py_RSA_PrivateKey::Py_RSA_PrivateKey(std::string pem_str,
+                                     Python_RandomNumberGenerator& rng)
+   {
+   DataSource_Memory in(pem_str);
+
+   Private_Key* pkcs8_key =
+      PKCS8::load_key(in,
+                      rng.get_underlying_rng());
+
+   rsa_key = dynamic_cast<RSA_PrivateKey*>(pkcs8_key);
+
+   if(!rsa_key)
+      throw std::invalid_argument("Key is not an RSA key");
    }
 
 Py_RSA_PrivateKey::Py_RSA_PrivateKey(std::string pem_str,
@@ -195,6 +212,7 @@ void export_rsa()
 
    python::class_<Py_RSA_PrivateKey>
       ("RSA_PrivateKey", python::init<std::string, Python_RandomNumberGenerator&, std::string>())
+       .def(python::init<std::string, Python_RandomNumberGenerator&>())
        .def(python::init<u32bit, Python_RandomNumberGenerator&>())
        .def("to_string", &Py_RSA_PrivateKey::to_string)
        .def("to_ber", &Py_RSA_PrivateKey::to_ber)
