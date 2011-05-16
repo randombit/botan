@@ -47,7 +47,7 @@ class BOTAN_DLL Base64_Encoder : public Filter
 
       const size_t line_length;
       const bool trailing_newline;
-      SecureVector<byte> in, out;
+      MemoryVector<byte> in, out;
       size_t position, out_position;
    };
 
@@ -78,14 +78,8 @@ class BOTAN_DLL Base64_Decoder : public Filter
       */
       Base64_Decoder(Decoder_Checking checking = NONE);
    private:
-      static void decode(const byte input[4], byte output[3]);
-      static bool is_valid(byte c);
-
-      void decode_and_send(const byte[], size_t);
-      void handle_bad_char(byte);
-
       const Decoder_Checking checking;
-      SecureVector<byte> in, out;
+      MemoryVector<byte> in, out;
       size_t position;
    };
 

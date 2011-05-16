@@ -140,7 +140,6 @@ size_t base64_decode(byte output[],
    byte decode_buf[4];
    size_t decode_buf_pos = 0;
    size_t final_truncate = 0;
-   bool seen_pad = false;
 
    clear_mem(output, input_length * 3 / 4);
 
@@ -148,19 +147,13 @@ size_t base64_decode(byte output[],
       {
       const byte bin = BASE64_TO_BIN[static_cast<byte>(input[i])];
 
-      if(seen_pad && bin != 0x81)
-         throw std::invalid_argument("base64_decode: invalid padding");
-
       if(bin <= 0x3F)
          {
          decode_buf[decode_buf_pos] = bin;
          decode_buf_pos += 1;
          }
-      else if(!(final_inputs && bin == 0x81))
+      else if(!(bin == 0x81 || (bin == 0x80 && ignore_ws)))
          {
-         if(bin == 0x80 && ignore_ws)
-            continue;
-
          std::string bad_char(1, input[i]);
          if(bad_char == "\t")
            bad_char = "\\t";
@@ -173,12 +166,10 @@ size_t base64_decode(byte output[],
          }
 
       /*
-      * If we either see a pad character, or we are the the end
-      * of the input
+      * If we're at the end of the input, pad with 0s and truncate
       */
-      if(final_inputs && (bin == 0x81 || i == input_length - 1))
+      if(final_inputs && (i == input_length - 1))
          {
-         seen_pad = true;
          if(decode_buf_pos)
             {
             for(size_t i = decode_buf_pos; i != 4; ++i)
@@ -196,10 +187,16 @@ size_t base64_decode(byte output[],
 
          out_ptr += 3;
          decode_buf_pos = 0;
+         input_consumed = i+1;
          }
       }
 
-   input_consumed = input_length - decode_buf_pos;
+   while(input_consumed < input_length &&
+         BASE64_TO_BIN[static_cast<byte>(input[input_consumed])] == 0x80)
+      {
+      ++input_consumed;
+      }
+
    size_t written = (out_ptr - output) - final_truncate;
 
    return written;
@@ -231,7 +228,7 @@ SecureVector<byte> base64_decode(const char input[],
                                  size_t input_length,
                                  bool ignore_ws)
    {
-   SecureVector<byte> bin(1 + (input_length * 3) / 4);
+   SecureVector<byte> bin((round_up<size_t>(input_length, 4) * 3) / 4);
 
    size_t written = base64_decode(&bin[0],
                                   input,
