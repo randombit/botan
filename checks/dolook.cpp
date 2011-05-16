@@ -55,6 +55,8 @@ using namespace Botan;
 
 #include "common.h"
 
+namespace {
+
 /* A weird little hack to fit PBKDF algorithms into the validation
 * suite You probably wouldn't ever want to actually use the PBKDF
 * algorithms like this, the raw PBKDF interface is more convenient
@@ -278,6 +280,8 @@ Filter* lookup_encoder(const std::string& algname)
 
    return 0;
    }
+
+}
 
 Filter* lookup(const std::string& algname,
                const std::vector<std::string>& params)

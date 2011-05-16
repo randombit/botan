@@ -172,12 +172,12 @@ bool test_ec_sign(RandomNumberGenerator& rng)
       PK_Signer signer(priv_key, "EMSA1(SHA-224)");
       PK_Verifier verifier(priv_key, "EMSA1(SHA-224)");
 
-      for(u32bit i = 0; i != 256; ++i)
-         signer.update((byte)i);
+      for(size_t i = 0; i != 256; ++i)
+         signer.update(static_cast<byte>(i));
       SecureVector<byte> sig = signer.signature(rng);
 
       for(u32bit i = 0; i != 256; ++i)
-         verifier.update((byte)i);
+         verifier.update(static_cast<byte>(i));
       if(!verifier.check_signature(sig))
          {
          std::cout << "ECDSA self-test failed!";
@@ -186,7 +186,7 @@ bool test_ec_sign(RandomNumberGenerator& rng)
 
       // now check valid signature, different input
       for(u32bit i = 1; i != 256; ++i) //starting from 1
-         verifier.update((byte)i);
+         verifier.update(static_cast<byte>(i));
 
       if(verifier.check_signature(sig))
          {
@@ -198,7 +198,7 @@ bool test_ec_sign(RandomNumberGenerator& rng)
 
       sig[sig.size()/2]++;
       for(u32bit i = 0; i != 256; ++i)
-         verifier.update((byte)i);
+         verifier.update(static_cast<byte>(i));
 
       if(verifier.check_signature(sig))
          {
