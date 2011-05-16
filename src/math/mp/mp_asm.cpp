@@ -67,7 +67,8 @@ word bigint_add3_nc(word z[], const word x[], size_t x_size,
 */
 void bigint_add2(word x[], size_t x_size, const word y[], size_t y_size)
    {
-   x[x_size] += bigint_add2_nc(x, x_size, y, y_size);
+   if(bigint_add2_nc(x, x_size, y, y_size))
+      x[x_size] += 1;
    }
 
 /*
