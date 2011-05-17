@@ -5,12 +5,15 @@
 */
 
 
-#include <botan/build.h>
+#include <botan/rng.h>
+
+#if defined(BOTAN_HAS_ECC_GROUP)
+
 #include <botan/bigint.h>
 #include <botan/numthry.h>
 #include <botan/curve_gfp.h>
 #include <botan/point_gfp.h>
-#include <botan/ecdsa.h>
+#include <botan/ec_group.h>
 #include <botan/oids.h>
 
 using namespace Botan;
@@ -21,6 +24,7 @@ using namespace Botan;
 #include "getopt.h"
 #include "validate.h"
 #include "common.h"
+
 
 #define CHECK_MESSAGE(expr, print) try { if(!(expr)) std::cout << print << "\n"; } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
 #define CHECK(expr) try { if(!(expr)) std::cout << #expr << "\n"; } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
@@ -813,3 +817,10 @@ void do_ec_tests(RandomNumberGenerator& rng)
    std::cout << std::endl;
    }
 
+#else
+
+void do_ec_tests(Botan::RandomNumberGenerator& rng)
+   {
+   }
+
+#endif
