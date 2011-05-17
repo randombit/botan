@@ -34,7 +34,6 @@ class MemoryRegion
       */
       bool empty() const { return (used == 0); }
 
-#if 1
       /**
       * Get a pointer to the first element in the buffer.
       * @return pointer to the first element in the buffer
@@ -46,12 +45,6 @@ class MemoryRegion
       * @return constant pointer to the first element in the buffer
       */
       operator const T* () const { return buf; }
-#else
-
-      T&       operator[](size_t n) { return buf[n]; }
-      const T& operator[](size_t n) const { return buf[n]; }
-
-#endif
 
       /**
       * Get a pointer to the first element in the buffer.

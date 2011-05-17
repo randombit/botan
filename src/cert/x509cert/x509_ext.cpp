@@ -443,6 +443,9 @@ class Policy_Information : public ASN1_Object
    public:
       OID oid;
 
+      Policy_Information() {}
+      Policy_Information(const OID& oid) : oid(oid) {}
+
       void encode_into(DER_Encoder& codec) const
          {
          codec.start_cons(SEQUENCE)
@@ -466,18 +469,16 @@ class Policy_Information : public ASN1_Object
 */
 MemoryVector<byte> Certificate_Policies::encode_inner() const
    {
-   // FIXME
-#if 1
-   throw Internal_Error("Certificate_Policies::encode_inner: Bugged");
-#else
    std::vector<Policy_Information> policies;
+
+   for(size_t i = 0; i != oids.size(); ++i)
+      policies.push_back(oids[i]);
 
    return DER_Encoder()
       .start_cons(SEQUENCE)
          .encode_list(policies)
       .end_cons()
    .get_contents();
-#endif
    }
 
 /*
@@ -491,6 +492,10 @@ void Certificate_Policies::decode_inner(const MemoryRegion<byte>& in)
       .start_cons(SEQUENCE)
          .decode_list(policies)
       .end_cons();
+
+   oids.clear();
+   for(size_t i = 0; i != policies.size(); ++i)
+      oids.push_back(policies[i].oid);
    }
 
 /*

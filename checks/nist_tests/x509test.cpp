@@ -1,7 +1,7 @@
 /*
-  Code to run the X.509v3 processing tests described in "Conformance Testing of
-  Relying Party Client Certificate Path Proccessing Logic", which is available
-  on NIST's web site.
+  Code to run the X.509v3 processing tests described in "Conformance
+  Testing of Relying Party Client Certificate Path Proccessing Logic",
+  which is available on NIST's web site.
 */
 
 #include <botan/x509stor.h>
@@ -17,10 +17,6 @@ using namespace Botan;
 #include <cstdlib>
 
 #include <dirent.h>
-
-#define POLICY_TEST1 1000
-#define POLICY_TEST2 2000
-#define POLICY_TEST3 3000
 
 std::vector<std::string> dir_listing(const std::string&);
 
@@ -265,13 +261,14 @@ void populate_expected_results()
    expected_results[33] = VERIFIED;
 
    /*
-    Policy tests: a little trickier because there are other inputs which
-    affect the result.
+    Policy tests: a little trickier because there are other inputs
+    which affect the result.
 
-    In the case of the tests currently in the suite, the default method (with
-    acceptable policy being "any-policy" and with no explict policy required),
-    will almost always result in a verified status. This is not particularly
-    helpful. So, we do several different tests for each test set:
+    In the case of the tests currently in the suite, the default
+    method (with acceptable policy being "any-policy" and with no
+    explict policy required), will almost always result in a verified
+    status. This is not particularly helpful. So, we should do several
+    different tests for each test set:
 
        1) With the user policy as any-policy and no explicit policy
        2) With the user policy as any-policy and an explicit policy required
@@ -283,88 +280,28 @@ void populate_expected_results()
      This provides reasonably good coverage of the possible outcomes.
    */
 
-   /*
    expected_results[34] = VERIFIED;
-   expected_results[34+POLICY_TEST1] = ;
-   expected_results[34+POLICY_TEST2] = ;
-   expected_results[34+POLICY_TEST3] = ;
    expected_results[35] = VERIFIED;
-   expected_results[35+POLICY_TEST1] = ;
-   expected_results[35+POLICY_TEST2] = ;
-   expected_results[35+POLICY_TEST3] = ;
    expected_results[36] = VERIFIED;
-   expected_results[36+POLICY_TEST1] = ;
-   expected_results[36+POLICY_TEST2] = ;
-   expected_results[36+POLICY_TEST3] = ;
    expected_results[37] = VERIFIED;
-   expected_results[37+POLICY_TEST1] = ;
-   expected_results[37+POLICY_TEST2] = ;
-   expected_results[37+POLICY_TEST3] = ;
    expected_results[38] = VERIFIED;
-   expected_results[38+POLICY_TEST1] = ;
-   expected_results[38+POLICY_TEST2] = ;
-   expected_results[38+POLICY_TEST3] = ;
    expected_results[39] = VERIFIED;
-   expected_results[39+POLICY_TEST1] = ;
-   expected_results[39+POLICY_TEST2] = ;
-   expected_results[39+POLICY_TEST3] = ;
    expected_results[40] = VERIFIED;
-   expected_results[40+POLICY_TEST1] = ;
-   expected_results[40+POLICY_TEST2] = ;
-   expected_results[40+POLICY_TEST3] = ;
    expected_results[41] = VERIFIED;
-   expected_results[41+POLICY_TEST1] = ;
-   expected_results[41+POLICY_TEST2] = ;
-   expected_results[41+POLICY_TEST3] = ;
    expected_results[42] = VERIFIED;
-   expected_results[42+POLICY_TEST1] = ;
-   expected_results[42+POLICY_TEST2] = ;
-   expected_results[42+POLICY_TEST3] = ;
    expected_results[43] = VERIFIED;
-   expected_results[43+POLICY_TEST1] = ;
-   expected_results[43+POLICY_TEST2] = ;
-   expected_results[43+POLICY_TEST3] = ;
    expected_results[44] = VERIFIED;
-   expected_results[44+POLICY_TEST1] = ;
-   expected_results[44+POLICY_TEST2] = ;
-   expected_results[44+POLICY_TEST3] = ;
-   expected_results[45] = EXPLICT_POLICY_REQUIRED;
-   expected_results[45+POLICY_TEST1] = ;
-   expected_results[45+POLICY_TEST2] = ;
-   expected_results[45+POLICY_TEST3] = ;
-   expected_results[46] = ACCEPT;
-   expected_results[46+POLICY_TEST1] = ;
-   expected_results[46+POLICY_TEST2] = ;
-   expected_results[46+POLICY_TEST3] = ;
-   expected_results[47] = EXPLICT_POLICY_REQUIRED;
-   expected_results[47+POLICY_TEST1] = ;
-   expected_results[47+POLICY_TEST2] = ;
-   expected_results[47+POLICY_TEST3] = ;
+
+   //expected_results[45] = EXPLICT_POLICY_REQUIRED;
+   //expected_results[46] = ACCEPT;
+   //expected_results[47] = EXPLICT_POLICY_REQUIRED;
+
    expected_results[48] = VERIFIED;
-   expected_results[48+POLICY_TEST1] = ;
-   expected_results[48+POLICY_TEST2] = ;
-   expected_results[48+POLICY_TEST3] = ;
    expected_results[49] = VERIFIED;
-   expected_results[49+POLICY_TEST1] = ;
-   expected_results[49+POLICY_TEST2] = ;
-   expected_results[49+POLICY_TEST3] = ;
    expected_results[50] = VERIFIED;
-   expected_results[50+POLICY_TEST1] = ;
-   expected_results[50+POLICY_TEST2] = ;
-   expected_results[50+POLICY_TEST3] = ;
    expected_results[51] = VERIFIED;
-   expected_results[51+POLICY_TEST1] = ;
-   expected_results[51+POLICY_TEST2] = ;
-   expected_results[51+POLICY_TEST3] = ;
    expected_results[52] = VERIFIED;
-   expected_results[52+POLICY_TEST1] = ;
-   expected_results[52+POLICY_TEST2] = ;
-   expected_results[52+POLICY_TEST3] = ;
    expected_results[53] = VERIFIED;
-   expected_results[53+POLICY_TEST1] = ;
-   expected_results[53+POLICY_TEST2] = ;
-   expected_results[53+POLICY_TEST3] = ;
-   */
 
    expected_results[54] = CERT_CHAIN_TOO_LONG;
    expected_results[55] = CERT_CHAIN_TOO_LONG;
