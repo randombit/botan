@@ -2,7 +2,7 @@
 * Elliptic curves over GF(p)
 *
 * (C) 2007 Martin Doering, Christoph Ludwig, Falko Strenzke
-*     2010 Jack Lloyd
+*     2010-2011 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -11,7 +11,6 @@
 #define BOTAN_GFP_CURVE_H__
 
 #include <botan/numthry.h>
-#include <botan/reducer.h>
 
 namespace Botan {
 
@@ -34,16 +33,15 @@ class BOTAN_DLL CurveGFp
       * @param b second coefficient
       */
       CurveGFp(const BigInt& p, const BigInt& a, const BigInt& b) :
-         p(p), a(a), b(b), reducer_p(p)
+         p(p), a(a), b(b)
          {
-         r = 1;
-         r <<= p.sig_words() * BOTAN_MP_WORD_BITS;
+         BigInt r(BigInt::Power2, p.sig_words() * BOTAN_MP_WORD_BITS);
 
-         r_inv = inverse_mod(r, p);
+         p_dash = (((r * inverse_mod(r, p)) - 1) / p).word_at(0);
 
-         p_dash = (((r * r_inv) - 1) / p).word_at(0);
-
-         a_r = reducer_p.multiply(a, r);
+         r2  = (r * r) % p;
+         a_r = (a * r) % p;
+         b_r = (b * r) % p;
 
          p_words = p.sig_words();
          }
@@ -68,19 +66,19 @@ class BOTAN_DLL CurveGFp
       const BigInt& get_p() const { return p; }
 
       /**
-      * @return Montgomery parameter r
+      * @return Montgomery parameter r^2 % p
       */
-      const BigInt& get_r() const { return r; }
-
-      /**
-      * @return Montgomery parameter r^-1
-      */
-      const BigInt& get_r_inv() const { return r_inv; }
+      const BigInt& get_r2() const { return r2; }
 
       /**
       * @return a * r mod p
       */
       const BigInt& get_a_r() const { return a_r; }
+
+      /**
+      * @return b * r mod p
+      */
+      const BigInt& get_b_r() const { return b_r; }
 
       /**
       * @return Montgomery parameter p-dash
@@ -93,23 +91,22 @@ class BOTAN_DLL CurveGFp
       size_t get_p_words() const { return p_words; }
 
       /**
-      * @return modular reducer for p
-      */
-      const Modular_Reducer& mod_p() const { return reducer_p; }
-
-      /**
       * swaps the states of *this and other, does not throw
       * @param other curve to swap values with
       */
       void swap(CurveGFp& other)
          {
+         std::swap(p, other.p);
+
          std::swap(a, other.a);
          std::swap(b, other.b);
-         std::swap(p, other.p);
-         std::swap(reducer_p, other.reducer_p);
 
-         std::swap(r, other.r);
-         std::swap(r_inv, other.r_inv);
+         std::swap(a_r, other.a_r);
+         std::swap(b_r, other.b_r);
+
+         std::swap(p_words, other.p_words);
+
+         std::swap(r2, other.r2);
          std::swap(p_dash, other.p_dash);
          }
 
@@ -120,7 +117,11 @@ class BOTAN_DLL CurveGFp
       */
       bool operator==(const CurveGFp& other) const
          {
-         return (p == other.p && a == other.a && b == other.b);
+         /*
+         Relies on choice of R, but that is fixed by constructor based
+         on size of p
+         */
+         return (p == other.p && a_r == other.a_r && b_r == other.b_r);
          }
 
    private:
@@ -130,10 +131,8 @@ class BOTAN_DLL CurveGFp
       size_t p_words; // cache of p.sig_words()
 
       // Montgomery parameters
-      BigInt r, r_inv, a_r;
+      BigInt r2, a_r, b_r;
       word p_dash;
-
-      Modular_Reducer reducer_p;
    };
 
 /**

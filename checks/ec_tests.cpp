@@ -14,6 +14,7 @@
 #include <botan/curve_gfp.h>
 #include <botan/point_gfp.h>
 #include <botan/ec_group.h>
+#include <botan/reducer.h>
 #include <botan/oids.h>
 
 using namespace Botan;
@@ -42,7 +43,7 @@ PointGFp create_random_point(RandomNumberGenerator& rng,
    {
    const BigInt& p = curve.get_p();
 
-   const Modular_Reducer& mod_p = curve.mod_p();
+   Modular_Reducer mod_p(p);
 
    while(true)
       {

@@ -21,6 +21,11 @@ Version 1.9.18, Not Yet Released
   overflow working in the 'usual' way. A different method that doesn't
   rely on signed overflow is now used.
 
+* The internal representation of elliptic curve points has been
+  modified to use Montgomery representation exclusively, resulting in
+  reduced memory usage and a 10 to 20% performance improvement for
+  ECDSA and ECDH.
+
 * Fix a bug under Visual C++ 2010 which would cause ``hex_encode`` to
   crash if given a zero-sized input to encode.
 
@@ -31,10 +36,8 @@ Version 1.9.18, Not Yet Released
   (so in this release ``botan-config-1.9``). All of these embedded
   versions will be 1.10 in the upcoming stable release.
 
-* The soname system has also modified at the suggestion of the Debian
-  maintainer to match the conventional Unix ABI soname scheme. For
-  instance in this release the library soname is
-  ``libbotan-1.9.so.0``, with the full library being named
+* The soname system has been modified. In this release the library
+  soname is ``libbotan-1.9.so.0``, with the full library being named
   ``libbotan-1.9.so.0.18``. The ``0`` is the ABI version, and will be
   incremented whenever a breaking ABI change is made.
 

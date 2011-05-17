@@ -118,7 +118,12 @@ size_t Power_Mod::window_bits(size_t exp_bits, size_t,
                               Power_Mod::Usage_Hints hints)
    {
    static const size_t wsize[][2] = {
-      { 2048, 7 }, { 1024, 6 }, { 256, 5 }, { 128, 4 }, { 64, 3 }, { 0, 0 }
+      { 1434, 7 },
+      {  539, 6 },
+      {  197, 4 },
+      {   70, 3 },
+      {   25, 2 },
+      {    0, 0 }
    };
 
    size_t window_bits = 1;

@@ -1,8 +1,8 @@
 /*
-* Arithmetic for point groups of elliptic curves over GF(p)
+* Point arithmetic on elliptic curves over GF(p)
 *
 * (C) 2007 Martin Doering, Christoph Ludwig, Falko Strenzke
-*     2008-2010 Jack Lloyd
+*     2008-2011 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -153,27 +153,16 @@ class BOTAN_DLL PointGFp
       bool operator==(const PointGFp& other) const;
    private:
 
-      class Workspace
-         {
-         public:
-            Workspace(size_t p_words) :
-               ws_monty(2*(p_words+2)), ws_bn(12) {}
-
-            SecureVector<word> ws_monty;
-            std::vector<BigInt> ws_bn;
-         };
-
       /**
       * Montgomery multiplication/reduction
       * @param x first multiplicand
       * @param y second multiplicand
       * @param workspace temp space
       */
-      BigInt monty_mult(const BigInt& x, const BigInt& y,
-                        MemoryRegion<word>& workspace) const
+      BigInt monty_mult(const BigInt& x, const BigInt& y) const
          {
          BigInt result;
-         monty_mult(result, x, y, workspace);
+         monty_mult(result, x, y);
          return result;
          }
 
@@ -183,22 +172,17 @@ class BOTAN_DLL PointGFp
       * @param z output
       * @param x first multiplicand
       * @param y second multiplicand
-      * @param workspace temp space
       */
-      void monty_mult(BigInt& z,
-                      const BigInt& x, const BigInt& y,
-                      MemoryRegion<word>& workspace) const;
+      void monty_mult(BigInt& z, const BigInt& x, const BigInt& y) const;
 
       /**
       * Montgomery squaring/reduction
       * @param x multiplicand
-      * @param workspace temp space
       */
-      BigInt monty_sqr(const BigInt& x,
-                       MemoryRegion<word>& workspace) const
+      BigInt monty_sqr(const BigInt& x) const
          {
          BigInt result;
-         monty_sqr(result, x, workspace);
+         monty_sqr(result, x);
          return result;
          }
 
@@ -207,24 +191,24 @@ class BOTAN_DLL PointGFp
       * @warning z cannot alias x
       * @param z output
       * @param x multiplicand
-      * @param workspace temp space
       */
-      void monty_sqr(BigInt& z, const BigInt& x,
-                     MemoryRegion<word>& workspace) const;
+      void monty_sqr(BigInt& z, const BigInt& x) const;
 
       /**
       * Point addition
+      * @param workspace temp space, at least 11 elements
       */
-      void add(const PointGFp& other, Workspace& workspace);
+      void add(const PointGFp& other, std::vector<BigInt>& workspace);
 
       /**
       * Point doubling
-      * @param workspace temp space
+      * @param workspace temp space, at least 9 elements
       */
-      void mult2(Workspace& workspace);
+      void mult2(std::vector<BigInt>& workspace);
 
       CurveGFp curve;
       BigInt coord_x, coord_y, coord_z;
+      mutable SecureVector<word> ws; // workspace for Montgomery
    };
 
 // relational operators
