@@ -13,7 +13,7 @@
 namespace Botan {
 
 /**
-* Modular Reducer
+* Modular Reducer (using Barrett's technique)
 */
 class BOTAN_DLL Modular_Reducer
    {
@@ -53,7 +53,7 @@ class BOTAN_DLL Modular_Reducer
       Modular_Reducer(const BigInt& mod);
    private:
       BigInt modulus, modulus_2, mu;
-      size_t mod_words, mod2_words, mu_words;
+      size_t mod_words;
    };
 
 }
