@@ -12,8 +12,21 @@ Version 1.9.18, Not Yet Released
 
 * Fourth release candidate for 1.10.0
 
-* Add support for compiling SSL using Visual C++ 2010's TR1
-  implementation.
+* The GOST 34.10 verification operation was not ensuring that s and r
+  were both greater than zero. This could potentially have meant it
+  would have accepted an invalid all-zero signature as valid for any
+  message. Due to how ECC points are internally represented it instead
+  resulted in an exception being thrown.
+
+* The internal representation of elliptic curve points has been
+  modified to use Montgomery representation exclusively, resulting in
+  reduced memory usage and a 10 to 20% performance improvement for
+  ECDSA and ECDH.
+
+* In OAEP decoding, scan for the delimiter bytes using a loop that is
+  written without conditionals so as to help avoid timing analysis.
+  Unfortunately GCC at least is 'smart' enough to compile it to
+  jumps anyway.
 
 * The SSE2 implementation of IDEA did not work correctly when compiled
   by Clang, because the trick it used to emulate a 16 bit unsigned
@@ -21,10 +34,8 @@ Version 1.9.18, Not Yet Released
   overflow working in the 'usual' way. A different method that doesn't
   rely on signed overflow is now used.
 
-* The internal representation of elliptic curve points has been
-  modified to use Montgomery representation exclusively, resulting in
-  reduced memory usage and a 10 to 20% performance improvement for
-  ECDSA and ECDH.
+* Add support for compiling SSL using Visual C++ 2010's TR1
+  implementation.
 
 * Fix a bug under Visual C++ 2010 which would cause ``hex_encode`` to
   crash if given a zero-sized input to encode.
@@ -40,11 +51,6 @@ Version 1.9.18, Not Yet Released
   soname is ``libbotan-1.9.so.0``, with the full library being named
   ``libbotan-1.9.so.0.18``. The ``0`` is the ABI version, and will be
   incremented whenever a breaking ABI change is made.
-
-* In OAEP decoding, scan for the delimiter bytes using a loop that is
-  written without conditionals so as to help avoid timing analysis.
-  Unfortunately GCC at least is 'smart' enough to compile it to
-  jumps anyway.
 
 * TR1 support is not longer automatically assumed under older versions
   of GCC

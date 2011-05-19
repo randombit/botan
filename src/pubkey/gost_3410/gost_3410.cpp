@@ -153,7 +153,7 @@ bool GOST_3410_Verification_Operation::verify(const byte msg[], size_t msg_len,
    BigInt s(sig, sig_len / 2);
    BigInt r(sig + sig_len / 2, sig_len / 2);
 
-   if(r < 0 || r >= order || s < 0 || s >= order)
+   if(r <= 0 || r >= order || s <= 0 || s >= order)
       return false;
 
    e %= order;
@@ -166,6 +166,9 @@ bool GOST_3410_Verification_Operation::verify(const byte msg[], size_t msg_len,
    BigInt z2 = (-r*v) % order;
 
    PointGFp R = (z1 * base_point + z2 * public_point);
+
+   if(R.is_zero())
+     return false;
 
    return (R.get_affine_x() == r);
    }

@@ -80,7 +80,7 @@ bool ECDSA_Verification_Operation::verify(const byte msg[], size_t msg_len,
    BigInt r(sig, sig_len / 2);
    BigInt s(sig + sig_len / 2, sig_len / 2);
 
-   if(r < 0 || r >= order || s < 0 || s >= order)
+   if(r <= 0 || r >= order || s <= 0 || s >= order)
       return false;
 
    BigInt w = inverse_mod(s, order);
