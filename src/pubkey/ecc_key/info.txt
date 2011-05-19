@@ -4,6 +4,7 @@ define ECC_PUBLIC_KEY_CRYPTO
 alloc
 asn1
 bigint
+ec_gfp
 ec_group
 numbertheory
 </requires>

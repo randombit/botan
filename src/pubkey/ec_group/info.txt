@@ -2,8 +2,9 @@ define ECC_GROUP
 
 <requires>
 asn1
-numbertheory
-pem
+ec_gfp
 libstate
+numbertheory
 oid_lookup
+pem
 </requires>

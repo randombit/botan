@@ -1,0 +1,16 @@
+define EC_CURVE_GFP
+
+load_on auto
+
+<header:public>
+curve_gfp.h
+point_gfp.h
+</header:public>
+
+<source>
+point_gfp.cpp
+</source>
+
+<requires>
+numbertheory
+</requires>
