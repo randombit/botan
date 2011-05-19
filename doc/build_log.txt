@@ -14,7 +14,7 @@ Debian reports the build results for 1.8 on `a number of platforms
 ===========   =======   ===================   ========================   ============================   ========
 Date          Version   OS                    CPU                        Compiler                       Results
 ===========   =======   ===================   ========================   ============================   ========
-2011-03-18    1.9.14    Debian 6.0            Intel Atom D510            GCC 4.4.5                      OK
+2011-05-09    1.9.17    Debian 6.0            Intel Atom D510            GCC 4.4.5                      OK
 2010-05-09    1.9.17    Gentoo 10.0           PowerPC G5                 GCC 4.4.5                      OK
 2011-05-02    1.9.17    FreeBSD 8.2           x86-64                     GCC 4.2.1                      OK
 2011-04-25    1.9.16    Gentoo 10.0           Intel Core i7-860          Clang 2.9                      Miscompiles SSE2 IDEA

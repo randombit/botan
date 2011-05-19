@@ -33,17 +33,15 @@ class BOTAN_DLL CurveGFp
       * @param b second coefficient
       */
       CurveGFp(const BigInt& p, const BigInt& a, const BigInt& b) :
-         p(p), a(a), b(b)
+         p(p), a(a), b(b), p_words(p.sig_words())
          {
-         BigInt r(BigInt::Power2, p.sig_words() * BOTAN_MP_WORD_BITS);
+         BigInt r(BigInt::Power2, p_words * BOTAN_MP_WORD_BITS);
 
          p_dash = (((r * inverse_mod(r, p)) - 1) / p).word_at(0);
 
          r2  = (r * r) % p;
          a_r = (a * r) % p;
          b_r = (b * r) % p;
-
-         p_words = p.sig_words();
          }
 
       // CurveGFp(const CurveGFp& other) = default;
