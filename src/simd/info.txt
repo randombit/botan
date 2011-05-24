@@ -1,0 +1,9 @@
+define SIMD_32
+
+<header:internal>
+simd_32.h
+</header:internal>
+
+<requires>
+simd_sse2|simd_altivec|simd_scalar
+</requires>

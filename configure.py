@@ -1249,14 +1249,15 @@ def choose_modules_to_use(modules, archinfo, options):
             logging.info('Skipping, %s - %s' % (
                 reason, ' '.join(disabled_mods)))
 
-    logging.info('Using MP module ' +
-                 ' '.join(filter(lambda m: m.startswith('mp_'), to_load)))
-
-    logging.debug('Loading modules %s', ' '.join(sorted(to_load)))
-
-    for mod in to_load:
+    for mod in sorted(to_load):
+        if mod.startswith('mp_'):
+            logging.info('Using MP module ' + mod)
+        if mod.startswith('simd_') and mod != 'simd_engine':
+            logging.info('Using SIMD module ' + mod)
         if modules[mod].comment:
             logging.info('%s: %s' % (mod, modules[mod].comment))
+
+    logging.debug('Loading modules %s', ' '.join(sorted(to_load)))
 
     return [modules[mod] for mod in to_load]
 
@@ -1644,9 +1645,7 @@ def main(argv = None):
 
     if options.compiler is None:
         if options.os == 'windows':
-            if have_program('cl'):
-                options.compiler = 'msvc'
-            elif have_program('g++'):
+            if have_program('g++') and not have_program('cl'):
                 options.compiler = 'gcc'
             else:
                 options.compiler = 'msvc'

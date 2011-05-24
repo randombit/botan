@@ -2,6 +2,6 @@ define XTEA_SIMD
 
 <requires>
 xtea
-simd_32
+simd
 simd_engine
 </requires>

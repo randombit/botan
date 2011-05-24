@@ -2,7 +2,7 @@ define SERPENT_SIMD
 
 <requires>
 serpent
-simd_32
+simd
 simd_engine
 </requires>
 

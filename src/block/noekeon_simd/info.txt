@@ -2,6 +2,6 @@ define NOEKEON_SIMD
 
 <requires>
 noekeon
-simd_32
+simd
 simd_engine
 </requires>

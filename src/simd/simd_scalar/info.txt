@@ -1,8 +1,7 @@
-define SIMD_32
+define SIMD_SCALAR
+
+load_on dep
 
 <header:internal>
-simd_32.h
-simd_sse.h
 simd_scalar.h
-simd_altivec.h
 </header:internal>
