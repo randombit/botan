@@ -64,6 +64,11 @@ Version 1.9.18, Not Yet Released
 * The function ``BigInt::get_substring`` did not work correctly with a
   *length* argument of 32.
 
+* The implementation of ``FD_ZERO`` on Solaris uses ``memset`` and
+  assumes the caller included ``string.h`` on its behalf. Do so to
+  fix compilation in the ``dev_random`` and ``unix_procs`` entropy
+  sources. Patch from Jeremy C. Reed.
+
 * Add two different configuration targets for Atom, since some are
   32-bit and some are 64-bit. The 'atom' target now refers to the
   64-bit implementations, use 'atom32' to target the 32-bit
