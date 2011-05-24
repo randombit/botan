@@ -41,8 +41,12 @@ AlgorithmIdentifier::AlgorithmIdentifier(const OID& alg_id,
    const byte DER_NULL[] = { 0x05, 0x00 };
 
    oid = alg_id;
+
    if(option == USE_NULL_PARAM)
-      parameters += std::make_pair(DER_NULL, sizeof(DER_NULL));
+      {
+      parameters += std::make_pair<const byte*, size_t>(
+         DER_NULL, sizeof(DER_NULL));
+      }
    }
 
 /*
@@ -54,8 +58,12 @@ AlgorithmIdentifier::AlgorithmIdentifier(const std::string& alg_id,
    const byte DER_NULL[] = { 0x05, 0x00 };
 
    oid = OIDS::lookup(alg_id);
+
    if(option == USE_NULL_PARAM)
-      parameters += std::make_pair(DER_NULL, sizeof(DER_NULL));
+      {
+      parameters += std::make_pair<const byte*, size_t>(
+         DER_NULL, sizeof(DER_NULL));
+      }
    }
 
 /*
