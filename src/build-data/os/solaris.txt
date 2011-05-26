@@ -1,7 +1,7 @@
 os_type unix
 
-install_cmd_data 'cp'
-install_cmd_exec 'cp'
+install_cmd_data '/usr/ucb/install -m 644'
+install_cmd_exec '/usr/ucb/install -m 755'
 
 <target_features>
 posix_mlock
