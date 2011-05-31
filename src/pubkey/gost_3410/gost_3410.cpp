@@ -17,8 +17,8 @@ namespace Botan {
 MemoryVector<byte> GOST_3410_PublicKey::x509_subject_public_key() const
    {
    // Trust CryptoPro to come up with something obnoxious
-   const BigInt& x = public_point().get_affine_x();
-   const BigInt& y = public_point().get_affine_y();
+   const BigInt x = public_point().get_affine_x();
+   const BigInt y = public_point().get_affine_y();
 
    size_t part_size = std::max(x.bytes(), y.bytes());
 
