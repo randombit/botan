@@ -1735,6 +1735,9 @@ def main(argv = None):
             logging.info('Setting -fpermissive to work around gcc bug')
             options.extra_flags = ' -fpermissive'
 
+    if options.with_visibility is None:
+        options.with_visibility = True
+
     if options.with_tr1 == None:
         if cc.has_tr1:
             logging.info('Assuming %s has TR1 (use --with-tr1=none to disable)' % (
