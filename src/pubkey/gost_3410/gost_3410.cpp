@@ -165,7 +165,8 @@ bool GOST_3410_Verification_Operation::verify(const byte msg[], size_t msg_len,
    BigInt z1 = (s*v) % order;
    BigInt z2 = (-r*v) % order;
 
-   PointGFp R = (z1 * base_point + z2 * public_point);
+   PointGFp R = multi_exponentiate(base_point, z1,
+                                   public_point, z2);
 
    if(R.is_zero())
      return false;

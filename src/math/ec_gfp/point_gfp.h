@@ -99,6 +99,18 @@ class BOTAN_DLL PointGFp
       friend BOTAN_DLL PointGFp operator*(const BigInt& scalar, const PointGFp& point);
 
       /**
+      * Multiexponentiation
+      * @param p1 a point
+      * @param z1 a scalar
+      * @param p2 a point
+      * @param z2 a scalar
+      * @result (p1 * z1 + p2 * z2)
+      */
+      friend BOTAN_DLL PointGFp multi_exponentiate(
+        const PointGFp& p1, const BigInt& z1,
+        const PointGFp& p2, const BigInt& z2);
+
+      /**
       * Negate this point
       * @return *this
       */

@@ -18,6 +18,11 @@ Version 1.9.18, Not Yet Released
   message. Due to how ECC points are internally represented it instead
   resulted in an exception being thrown.
 
+* A simple multiexponentation algorithm is now used in ECDSA and
+  GOST-34.10 signature verification, leading to 20 to 25% improvements
+  in ECDSA and 25% to 40% improvements in GOST-34.10 verification
+  performance.
+
 * The internal representation of elliptic curve points has been
   modified to use Montgomery representation exclusively, resulting in
   reduced memory usage and a 10 to 20% performance improvement for

@@ -268,6 +268,39 @@ PointGFp& PointGFp::operator*=(const BigInt& scalar)
    return *this;
    }
 
+PointGFp multi_exponentiate(const PointGFp& p1, const BigInt& z1,
+                            const PointGFp& p2, const BigInt& z2)
+   {
+   const PointGFp p3 = p1 + p2;
+
+   PointGFp H(p1.curve); // create as zero
+   size_t bits_left = std::max(z1.bits(), z2.bits());
+
+   std::vector<BigInt> ws(11);
+
+   while(bits_left)
+      {
+      H.mult2(ws);
+
+      const bool z1_b = z1.get_bit(bits_left - 1);
+      const bool z2_b = z2.get_bit(bits_left - 1);
+
+      if(z1_b == true && z2_b == true)
+         H.add(p3, ws);
+      else if(z1_b)
+         H.add(p1, ws);
+      else if(z2_b)
+         H.add(p2, ws);
+
+      --bits_left;
+      }
+
+   if(z1.is_negative() != z2.is_negative())
+      H.negate();
+
+   return H;
+   }
+
 PointGFp operator*(const BigInt& scalar, const PointGFp& point)
    {
    const CurveGFp& curve = point.get_curve();

@@ -85,7 +85,8 @@ bool ECDSA_Verification_Operation::verify(const byte msg[], size_t msg_len,
 
    BigInt w = inverse_mod(s, order);
 
-   PointGFp R = w * (e * base_point + r * public_point);
+   PointGFp R = w * multi_exponentiate(base_point, e,
+                                       public_point, r);
 
    if(R.is_zero())
       return false;
