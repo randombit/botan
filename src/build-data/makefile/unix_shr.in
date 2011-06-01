@@ -100,6 +100,7 @@ clean:
 distclean: clean
 	$(RM_R) %{build_dir}
 	$(RM) Makefile* $(CONFIG_SCRIPT) $(PKGCONFIG)
+	$(RM) botan_all.cpp botan_all.h
 
 install: $(LIBRARIES) docs
 	$(ECHO) "Installing Botan into $(DESTDIR)... "
