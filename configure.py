@@ -76,9 +76,14 @@ class BuildConfigurationInformation(object):
         self.botan_include_dir = os.path.join(self.include_dir, 'botan')
         self.internal_include_dir = os.path.join(self.botan_include_dir, 'internal')
 
-        self.sources = sorted(flatten([mod.sources() for mod in modules]))
+        if options.via_amalgamation:
+            self.sources = ['botan_all.cpp']
+            self.internal_headers = []
+        else:
+            self.sources = sorted(flatten([mod.sources() for mod in modules]))
+            self.internal_headers = sorted(flatten([m.internal_headers() for m in modules]))
+
         self.public_headers = sorted(flatten([m.public_headers() for m in modules]))
-        self.internal_headers = sorted(flatten([m.internal_headers() for m in modules]))
 
         checks_dir = os.path.join(options.base_dir, 'checks')
 
@@ -223,6 +228,10 @@ def process_command_line(args):
     build_group.add_option('--gen-amalgamation', dest='gen_amalgamation',
                            default=False, action='store_true',
                            help='generate amalgamation files')
+
+    build_group.add_option('--via-amalgamation', dest='via_amalgamation',
+                           default=False, action='store_true',
+                           help='build via amalgamation')
 
     build_group.add_option('--with-tr1-implementation', metavar='WHICH',
                            dest='with_tr1', default=None,
@@ -1520,12 +1529,16 @@ def generate_amalgamation(build_config):
                 else:
                     match = std_include.search(line)
 
-                    if match:
+                    if match and match.group(1) != 'functional':
                         self.all_std_includes.add(match.group(1))
                     else:
                         yield line
 
-    botan_all_h = open('botan_all.h', 'w')
+    amalg_basename = 'botan_all'
+
+    header_name = '%s.h' % (amalg_basename)
+
+    botan_h = open(header_name, 'w')
 
     pub_header_amalag = Amalgamation_Generator(build_config.public_headers)
 
@@ -1537,31 +1550,30 @@ def generate_amalgamation(build_config):
 */
 """ % (build_config.version_string)
 
-    botan_all_h.write(amalg_header)
+    botan_h.write(amalg_header)
 
-    botan_all_h.write("""
+    botan_h.write("""
 #ifndef BOTAN_AMALGAMATION_H__
 #define BOTAN_AMALGAMATION_H__
 
 """)
 
-    botan_all_h.write(pub_header_amalag.header_includes)
-    botan_all_h.write(pub_header_amalag.contents)
-    botan_all_h.write("\n#endif\n")
+    botan_h.write(pub_header_amalag.header_includes)
+    botan_h.write(pub_header_amalag.contents)
+    botan_h.write("\n#endif\n")
 
     internal_header_amalag = Amalgamation_Generator(
         [s for s in build_config.internal_headers
          if s.find('asm_macr_') == -1])
 
-    botan_all_cpp = open('botan_all.cpp', 'w')
+    botan_cpp = open('%s.cpp' % (amalg_basename), 'w')
 
-    botan_all_cpp.write(amalg_header)
+    botan_cpp.write(amalg_header)
 
-    botan_all_cpp.write('#include "botan_all.h"\n')
+    botan_cpp.write('\n#include "%s"\n' % (header_name))
 
-    botan_all_cpp.write(internal_header_amalag.header_includes)
-    botan_all_cpp.write(internal_header_amalag.contents)
-
+    botan_cpp.write(internal_header_amalag.header_includes)
+    botan_cpp.write(internal_header_amalag.contents)
 
     for src in build_config.sources:
         if src.endswith('.S'):
@@ -1572,7 +1584,7 @@ def generate_amalgamation(build_config):
             if botan_include.search(line):
                 continue
             else:
-                botan_all_cpp.write(line)
+                botan_cpp.write(line)
 
 """
 Test for the existence of a program
@@ -1751,6 +1763,9 @@ def main(argv = None):
             logging.info('Found sphinx-build, will enable ' +
                          '(use --without-sphinx to disable)')
             options.with_sphinx = True
+
+    if options.via_amalgamation:
+        options.generate_amalgamation = True
 
     if options.gen_amalgamation:
         if options.asm_ok:
