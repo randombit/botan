@@ -113,10 +113,6 @@ void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
    BigInt& H = ws_bn[6];
    BigInt& r = ws_bn[7];
 
-   BigInt& x = ws_bn[8];
-   BigInt& y = ws_bn[9];
-   BigInt& z = ws_bn[10];
-
    monty_sqr(rhs_z2, rhs.coord_z);
    monty_mult(U1, coord_x, rhs_z2);
    monty_mult(S1, coord_y, monty_mult(rhs.coord_z, rhs_z2));
@@ -153,26 +149,22 @@ void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
 
    U2 = monty_mult(U1, U2);
 
-   monty_sqr(x, r);
-   x -= S2;
-   x -= (U2 << 1);
-   while(x.is_negative())
-      x += p;
+   monty_sqr(coord_x, r);
+   coord_x -= S2;
+   coord_x -= (U2 << 1);
+   while(coord_x.is_negative())
+      coord_x += p;
 
-   U2 -= x;
+   U2 -= coord_x;
    if(U2.is_negative())
       U2 += p;
 
-   monty_mult(y, r, U2);
-   y -= monty_mult(S1, S2);
-   if(y.is_negative())
-      y += p;
+   monty_mult(coord_y, r, U2);
+   coord_y -= monty_mult(S1, S2);
+   if(coord_y.is_negative())
+      coord_y += p;
 
-   monty_mult(z, monty_mult(coord_z, rhs.coord_z), H);
-
-   coord_x = x;
-   coord_y = y;
-   coord_z = z;
+   monty_mult(coord_z, monty_mult(coord_z, rhs.coord_z), H);
    }
 
 // *this *= 2
@@ -245,7 +237,7 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
 // arithmetic operators
 PointGFp& PointGFp::operator+=(const PointGFp& rhs)
    {
-   std::vector<BigInt> ws(11);
+   std::vector<BigInt> ws(9);
    add(rhs, ws);
    return *this;
    }
@@ -276,7 +268,7 @@ PointGFp multi_exponentiate(const PointGFp& p1, const BigInt& z1,
    PointGFp H(p1.curve); // create as zero
    size_t bits_left = std::max(z1.bits(), z2.bits());
 
-   std::vector<BigInt> ws(11);
+   std::vector<BigInt> ws(9);
 
    while(bits_left)
       {
@@ -308,7 +300,7 @@ PointGFp operator*(const BigInt& scalar, const PointGFp& point)
    if(scalar.is_zero())
       return PointGFp(curve); // zero point
 
-   std::vector<BigInt> ws(11);
+   std::vector<BigInt> ws(9);
 
    if(scalar.abs() <= 2) // special cases for small values
       {
