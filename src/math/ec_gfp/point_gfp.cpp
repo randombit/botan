@@ -49,14 +49,11 @@ void PointGFp::monty_mult(BigInt& z, const BigInt& x, const BigInt& y) const
    z_reg.resize(2*p_size+1);
    zeroise(z_reg);
 
-   bigint_mul(&z_reg[0], z_reg.size(),
-              &ws[0],
-              x.data(), x.size(), x.sig_words(),
-              y.data(), y.size(), y.sig_words());
-
-   bigint_monty_redc(&z[0], z.size(),
-                     &ws[0],
-                     p.data(), p_size, p_dash);
+   bigint_monty_mul(&z_reg[0], z_reg.size(),
+                    x.data(), x.size(), x.sig_words(),
+                    y.data(), y.size(), y.sig_words(),
+                    p.data(), p_size, p_dash,
+                    &ws[0]);
    }
 
 // Montgomery squaring
@@ -78,13 +75,10 @@ void PointGFp::monty_sqr(BigInt& z, const BigInt& x) const
    z_reg.resize(2*p_size+1);
    zeroise(z_reg);
 
-   bigint_sqr(&z[0], z.size(),
-              &ws[0],
-              x.data(), x.size(), x.sig_words());
-
-   bigint_monty_redc(&z[0], z.size(),
-                     &ws[0],
-                     p.data(), p_size, p_dash);
+   bigint_monty_sqr(&z_reg[0], z_reg.size(),
+                    x.data(), x.size(), x.sig_words(),
+                    p.data(), p_size, p_dash,
+                    &ws[0]);
    }
 
 // Point addition

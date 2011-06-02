@@ -31,10 +31,10 @@ void bigint_monty_redc(word z[], size_t z_size,
 
       const word y = z_i[0] * u;
 
-      /*
+#if 1
       bigint_linmul3(ws, x, x_size, y);
       bigint_add2(z_i, z_size - i, ws, x_size+1);
-      */
+#else
       word carry = 0;
 
       for(size_t j = 0; j != blocks_of_8; j += 8)
@@ -53,6 +53,7 @@ void bigint_monty_redc(word z[], size_t z_size,
          ++z_i[j];
          carry = !z_i[j];
          }
+#endif
       }
 
    word borrow = 0;
@@ -65,6 +66,34 @@ void bigint_monty_redc(word z[], size_t z_size,
 
    copy_mem(z, ws + borrow*(x_size+1), x_size + 1);
    clear_mem(z + x_size + 1, z_size - x_size - 1);
+   }
+
+void bigint_monty_mul(word z[], size_t z_size,
+                      const word x[], size_t x_size, size_t x_sw,
+                      const word y[], size_t y_size, size_t y_sw,
+                      const word p[], size_t p_size, word p_dash,
+                      word workspace[])
+   {
+   bigint_mul(&z[0], z_size, &workspace[0],
+              &x[0], x_size, x_sw,
+              &y[0], y_size, y_sw);
+
+   bigint_monty_redc(&z[0], z_size,
+                     &workspace[0],
+                     &p[0], p_size, p_dash);
+
+   }
+
+void bigint_monty_sqr(word z[], size_t z_size,
+                      const word x[], size_t x_size, size_t x_sw,
+                      const word p[], size_t p_size, word p_dash,
+                      word workspace[])
+   {
+   bigint_sqr(&z[0], z_size, &workspace[0],
+              &x[0], x_size, x_sw);
+
+   bigint_monty_redc(&z[0], z_size, &workspace[0],
+                     &p[0], p_size, p_dash);
    }
 
 }

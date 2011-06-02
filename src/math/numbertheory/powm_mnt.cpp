@@ -33,13 +33,12 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
    SecureVector<word> workspace(z.size());
 
    g[0] = (base >= modulus) ? (base % modulus) : base;
-   bigint_mul(&z[0], z.size(), &workspace[0],
-              g[0].data(), g[0].size(), g[0].sig_words(),
-              R2.data(), R2.size(), R2.sig_words());
 
-   bigint_monty_redc(&z[0], z.size(),
-                     &workspace[0],
-                     modulus.data(), mod_words, mod_prime);
+   bigint_monty_mul(&z[0], z.size(),
+                    g[0].data(), g[0].size(), g[0].sig_words(),
+                    R2.data(), R2.size(), R2.sig_words(),
+                    modulus.data(), mod_words, mod_prime,
+                    &workspace[0]);
 
    g[0].assign(&z[0], mod_words + 1);
 
@@ -52,13 +51,11 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
       const size_t y_sig = y.sig_words();
 
       zeroise(z);
-      bigint_mul(&z[0], z.size(), &workspace[0],
-                 x.data(), x.size(), x_sig,
-                 y.data(), y.size(), y_sig);
-
-      bigint_monty_redc(&z[0], z.size(),
-                        &workspace[0],
-                        modulus.data(), mod_words, mod_prime);
+      bigint_monty_mul(&z[0], z.size(),
+                       x.data(), x.size(), x_sig,
+                       y.data(), y.size(), y_sig,
+                       modulus.data(), mod_words, mod_prime,
+                       &workspace[0]);
 
       g[i].assign(&z[0], mod_words + 1);
       }
@@ -80,12 +77,11 @@ BigInt Montgomery_Exponentiator::execute() const
       for(size_t k = 0; k != window_bits; ++k)
          {
          zeroise(z);
-         bigint_sqr(&z[0], z.size(), &workspace[0],
-                    x.data(), x.size(), x.sig_words());
 
-         bigint_monty_redc(&z[0], z.size(),
-                           &workspace[0],
-                           modulus.data(), mod_words, mod_prime);
+         bigint_monty_sqr(&z[0], z.size(),
+                          x.data(), x.size(), x.sig_words(),
+                          modulus.data(), mod_words, mod_prime,
+                          &workspace[0]);
 
          x.assign(&z[0], mod_words + 1);
          }
@@ -95,13 +91,11 @@ BigInt Montgomery_Exponentiator::execute() const
          const BigInt& y = g[nibble-1];
 
          zeroise(z);
-         bigint_mul(&z[0], z.size(), &workspace[0],
-                    x.data(), x.size(), x.sig_words(),
-                    y.data(), y.size(), y.sig_words());
-
-         bigint_monty_redc(&z[0], z.size(),
-                           &workspace[0],
-                           modulus.data(), mod_words, mod_prime);
+         bigint_monty_mul(&z[0], z.size(),
+                          x.data(), x.size(), x.sig_words(),
+                          y.data(), y.size(), y.sig_words(),
+                          modulus.data(), mod_words, mod_prime,
+                          &workspace[0]);
 
          x.assign(&z[0], mod_words + 1);
          }

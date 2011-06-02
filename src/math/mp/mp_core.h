@@ -77,7 +77,7 @@ void bigint_simple_sqr(word z[], const word x[], size_t x_size);
 void bigint_linmul2(word x[], size_t x_size, word y);
 void bigint_linmul3(word z[], const word x[], size_t x_size, word y);
 
-/*
+/**
 * Montgomery Reduction
 * @param z integer to reduce (also output in first x_size+1 words)
 * @param z_size size of z (should be >= 2*x_size+1)
@@ -90,6 +90,23 @@ void bigint_monty_redc(word z[], size_t z_size,
                        word workspace[],
                        const word x[], size_t x_size,
                        word u);
+
+/*
+* Montgomery Multiplication
+*/
+void bigint_monty_mul(word z[], size_t z_size,
+                      const word x[], size_t x_size, size_t x_sw,
+                      const word y[], size_t y_size, size_t y_sw,
+                      const word p[], size_t p_size, word p_dash,
+                      word workspace[]);
+
+/*
+* Montgomery Squaring
+*/
+void bigint_monty_sqr(word z[], size_t z_size,
+                      const word x[], size_t x_size, size_t x_sw,
+                      const word p[], size_t p_size, word p_dash,
+                      word workspace[]);
 
 /*
 * Division operation
