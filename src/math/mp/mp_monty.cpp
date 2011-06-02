@@ -1,6 +1,6 @@
 /*
 * Montgomery Reduction
-* (C) 1999-2010 Jack Lloyd
+* (C) 1999-2011 Jack Lloyd
 *     2006 Luca Piccarreta
 *
 * Distributed under the terms of the Botan license
@@ -19,81 +19,79 @@ extern "C" {
 * Montgomery Reduction Algorithm
 */
 void bigint_monty_redc(word z[], size_t z_size,
-                       word ws[],
-                       const word x[], size_t x_size,
-                       word u)
+                       const word p[], size_t p_size,
+                       word p_dash, word ws[])
    {
-   const size_t blocks_of_8 = x_size - (x_size % 8);
+   const size_t blocks_of_8 = p_size - (p_size % 8);
 
-   for(size_t i = 0; i != x_size; ++i)
+   for(size_t i = 0; i != p_size; ++i)
       {
       word* z_i = z + i;
 
-      const word y = z_i[0] * u;
+      const word y = z_i[0] * p_dash;
 
-#if 1
-      bigint_linmul3(ws, x, x_size, y);
-      bigint_add2(z_i, z_size - i, ws, x_size+1);
-#else
+      /*
+      bigint_linmul3(ws, p, p_size, y);
+      bigint_add2(z_i, z_size - i, ws, p_size+1);
+      */
+
       word carry = 0;
 
       for(size_t j = 0; j != blocks_of_8; j += 8)
-         carry = word8_madd3(z_i + j, x + j, y, carry);
+         carry = word8_madd3(z_i + j, p + j, y, carry);
 
-      for(size_t j = blocks_of_8; j != x_size; ++j)
-         z_i[j] = word_madd3(x[j], y, z_i[j], &carry);
+      for(size_t j = blocks_of_8; j != p_size; ++j)
+         z_i[j] = word_madd3(p[j], y, z_i[j], &carry);
 
-      word z_sum = z_i[x_size] + carry;
-      carry = (z_sum < z_i[x_size]);
-      z_i[x_size] = z_sum;
+      word z_sum = z_i[p_size] + carry;
+      carry = (z_sum < z_i[p_size]);
+      z_i[p_size] = z_sum;
 
-      // Note: not constant time
-      for(size_t j = x_size + 1; carry && j != z_size - i; ++j)
+      for(size_t j = p_size + 1; carry && j != z_size - i; ++j)
          {
          ++z_i[j];
          carry = !z_i[j];
          }
-#endif
       }
 
    word borrow = 0;
-   for(size_t i = 0; i != x_size; ++i)
-      ws[i] = word_sub(z[x_size + i], x[i], &borrow);
+   for(size_t i = 0; i != p_size; ++i)
+      ws[i] = word_sub(z[p_size + i], p[i], &borrow);
 
-   ws[x_size] = word_sub(z[x_size+x_size], 0, &borrow);
+   ws[p_size] = word_sub(z[p_size+p_size], 0, &borrow);
 
-   copy_mem(ws + x_size + 1, z + x_size, x_size + 1);
+   copy_mem(ws + p_size + 1, z + p_size, p_size + 1);
 
-   copy_mem(z, ws + borrow*(x_size+1), x_size + 1);
-   clear_mem(z + x_size + 1, z_size - x_size - 1);
+   copy_mem(z, ws + borrow*(p_size+1), p_size + 1);
+   clear_mem(z + p_size + 1, z_size - p_size - 1);
    }
 
 void bigint_monty_mul(word z[], size_t z_size,
                       const word x[], size_t x_size, size_t x_sw,
                       const word y[], size_t y_size, size_t y_sw,
                       const word p[], size_t p_size, word p_dash,
-                      word workspace[])
+                      word ws[])
    {
-   bigint_mul(&z[0], z_size, &workspace[0],
+   bigint_mul(&z[0], z_size, &ws[0],
               &x[0], x_size, x_sw,
               &y[0], y_size, y_sw);
 
    bigint_monty_redc(&z[0], z_size,
-                     &workspace[0],
-                     &p[0], p_size, p_dash);
-
+                     &p[0], p_size, p_dash,
+                     &ws[0]);
    }
 
 void bigint_monty_sqr(word z[], size_t z_size,
                       const word x[], size_t x_size, size_t x_sw,
                       const word p[], size_t p_size, word p_dash,
-                      word workspace[])
+                      word ws[])
    {
-   bigint_sqr(&z[0], z_size, &workspace[0],
+   bigint_sqr(&z[0], z_size, &ws[0],
               &x[0], x_size, x_sw);
 
-   bigint_monty_redc(&z[0], z_size, &workspace[0],
-                     &p[0], p_size, p_dash);
+   bigint_monty_redc(&z[0], z_size,
+                     &p[0], p_size, p_dash,
+                     &ws[0]);
    }
 
 }

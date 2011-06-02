@@ -104,8 +104,8 @@ BigInt Montgomery_Exponentiator::execute() const
    x.get_reg().resize(2*mod_words+1);
 
    bigint_monty_redc(&x[0], x.size(),
-                     &workspace[0],
-                     modulus.data(), mod_words, mod_prime);
+                     modulus.data(), mod_words, mod_prime,
+                     &workspace[0]);
 
    x.get_reg().resize(mod_words+1);
 
