@@ -17,7 +17,7 @@ using namespace Botan;
 /**
 * TLS Handshake Hash
 */
-class BOTAN_DLL HandshakeHash
+class HandshakeHash
    {
    public:
       void update(const byte in[], size_t length)

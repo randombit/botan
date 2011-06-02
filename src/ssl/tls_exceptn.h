@@ -32,7 +32,7 @@ class BOTAN_DLL TLS_Exception : public Exception
 /**
 * Unexpected_Message Exception
 */
-struct Unexpected_Message : public TLS_Exception
+struct BOTAN_DLL Unexpected_Message : public TLS_Exception
    {
    Unexpected_Message(const std::string& err) :
       TLS_Exception(UNEXPECTED_MESSAGE, err) {}

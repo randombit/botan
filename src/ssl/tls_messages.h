@@ -21,7 +21,7 @@ namespace Botan {
 /**
 * TLS Handshake Message Base Class
 */
-class BOTAN_DLL HandshakeMessage
+class HandshakeMessage
    {
    public:
       void send(Record_Writer&, HandshakeHash&) const;
@@ -38,7 +38,7 @@ class BOTAN_DLL HandshakeMessage
 /**
 * Client Hello Message
 */
-class BOTAN_DLL Client_Hello : public HandshakeMessage
+class Client_Hello : public HandshakeMessage
    {
    public:
       Handshake_Type type() const { return CLIENT_HELLO; }
@@ -80,7 +80,7 @@ class BOTAN_DLL Client_Hello : public HandshakeMessage
 /**
 * Client Key Exchange Message
 */
-class BOTAN_DLL Client_Key_Exchange : public HandshakeMessage
+class Client_Key_Exchange : public HandshakeMessage
    {
    public:
       Handshake_Type type() const { return CLIENT_KEX; }
@@ -112,7 +112,7 @@ class BOTAN_DLL Client_Key_Exchange : public HandshakeMessage
 /**
 * Certificate Message
 */
-class BOTAN_DLL Certificate : public HandshakeMessage
+class Certificate : public HandshakeMessage
    {
    public:
       Handshake_Type type() const { return CERTIFICATE; }
@@ -130,7 +130,7 @@ class BOTAN_DLL Certificate : public HandshakeMessage
 /**
 * Certificate Request Message
 */
-class BOTAN_DLL Certificate_Req : public HandshakeMessage
+class Certificate_Req : public HandshakeMessage
    {
    public:
       Handshake_Type type() const { return CERTIFICATE_REQUEST; }
@@ -157,7 +157,7 @@ class BOTAN_DLL Certificate_Req : public HandshakeMessage
 /**
 * Certificate Verify Message
 */
-class BOTAN_DLL Certificate_Verify : public HandshakeMessage
+class Certificate_Verify : public HandshakeMessage
    {
    public:
       Handshake_Type type() const { return CERTIFICATE_VERIFY; }
@@ -179,7 +179,7 @@ class BOTAN_DLL Certificate_Verify : public HandshakeMessage
 /**
 * Finished Message
 */
-class BOTAN_DLL Finished : public HandshakeMessage
+class Finished : public HandshakeMessage
    {
    public:
       Handshake_Type type() const { return FINISHED; }
@@ -205,7 +205,7 @@ class BOTAN_DLL Finished : public HandshakeMessage
 /**
 * Hello Request Message
 */
-class BOTAN_DLL Hello_Request : public HandshakeMessage
+class Hello_Request : public HandshakeMessage
    {
    public:
       Handshake_Type type() const { return HELLO_REQUEST; }
@@ -220,7 +220,7 @@ class BOTAN_DLL Hello_Request : public HandshakeMessage
 /**
 * Server Hello Message
 */
-class BOTAN_DLL Server_Hello : public HandshakeMessage
+class Server_Hello : public HandshakeMessage
    {
    public:
       Handshake_Type type() const { return SERVER_HELLO; }
@@ -250,7 +250,7 @@ class BOTAN_DLL Server_Hello : public HandshakeMessage
 /**
 * Server Key Exchange Message
 */
-class BOTAN_DLL Server_Key_Exchange : public HandshakeMessage
+class Server_Key_Exchange : public HandshakeMessage
    {
    public:
       Handshake_Type type() const { return SERVER_KEX; }
@@ -277,7 +277,7 @@ class BOTAN_DLL Server_Key_Exchange : public HandshakeMessage
 /**
 * Server Hello Done Message
 */
-class BOTAN_DLL Server_Hello_Done : public HandshakeMessage
+class Server_Hello_Done : public HandshakeMessage
    {
    public:
       Handshake_Type type() const { return SERVER_HELLO_DONE; }

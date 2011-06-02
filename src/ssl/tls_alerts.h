@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * SSL/TLS Alert Message
 */
-class BOTAN_DLL Alert
+class Alert
    {
    public:
       /**
