@@ -13,7 +13,3 @@ serp_simd.cpp
 <header:public>
 serp_simd.h
 </header:public>
-
-<header:internal>
-serp_simd_sbox.h
-</header:internal>

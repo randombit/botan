@@ -1,6 +1,6 @@
 /*
 * SHA-1 using SSE2
-* (C) 2009-2010 Jack Lloyd
+* (C) 2009-2011 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 *
@@ -13,6 +13,8 @@
 #include <emmintrin.h>
 
 namespace Botan {
+
+namespace SHA1_SSE2_F {
 
 namespace {
 
@@ -146,11 +148,15 @@ inline void F4(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
 
 }
 
+}
+
 /*
 * SHA-160 Compression Function using SSE for message expansion
 */
 void SHA_160_SSE2::compress_n(const byte input_bytes[], size_t blocks)
    {
+   using namespace SHA1_SSE2_F;
+
    const __m128i K00_19 = _mm_set1_epi32(0x5A827999);
    const __m128i K20_39 = _mm_set1_epi32(0x6ED9EBA1);
    const __m128i K40_59 = _mm_set1_epi32(0x8F1BBCDC);
@@ -322,5 +328,8 @@ void SHA_160_SSE2::compress_n(const byte input_bytes[], size_t blocks)
 
 #undef GET_P_32
    }
+
+#undef prep00_15
+#undef prep
 
 }

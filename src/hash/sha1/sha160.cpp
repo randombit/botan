@@ -1,6 +1,6 @@
 /*
 * SHA-160
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2008,2011 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -10,6 +10,8 @@
 #include <botan/rotate.h>
 
 namespace Botan {
+
+namespace SHA1_F {
 
 namespace {
 
@@ -51,11 +53,15 @@ inline void F4(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
 
 }
 
+}
+
 /*
 * SHA-160 Compression Function
 */
 void SHA_160::compress_n(const byte input[], size_t blocks)
    {
+   using namespace SHA1_F;
+
    u32bit A = digest[0], B = digest[1], C = digest[2],
           D = digest[3], E = digest[4];
 

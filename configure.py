@@ -76,12 +76,15 @@ class BuildConfigurationInformation(object):
         self.botan_include_dir = os.path.join(self.include_dir, 'botan')
         self.internal_include_dir = os.path.join(self.botan_include_dir, 'internal')
 
+        self.sources = sorted(flatten([mod.sources() for mod in modules]))
+        self.internal_headers = sorted(flatten([m.internal_headers() for m in modules]))
+
         if options.via_amalgamation:
-            self.sources = ['botan_all.cpp']
-            self.internal_headers = []
+            self.build_sources = ['botan_all.cpp']
+            self.build_internal_headers = []
         else:
-            self.sources = sorted(flatten([mod.sources() for mod in modules]))
-            self.internal_headers = sorted(flatten([m.internal_headers() for m in modules]))
+            self.build_sources = self.sources
+            self.build_internal_headers = self.internal_headers
 
         self.public_headers = sorted(flatten([m.public_headers() for m in modules]))
 
@@ -1105,7 +1108,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'include_files': makefile_list(build_config.public_headers),
 
         'lib_objs': makefile_list(
-            objectfile_list(build_config.sources,
+            objectfile_list(build_config.build_sources,
                             build_config.libobj_dir)),
 
         'check_objs': makefile_list(
@@ -1113,7 +1116,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
                             build_config.checkobj_dir)),
 
         'lib_build_cmds': '\n'.join(
-            build_commands(build_config.sources,
+            build_commands(build_config.build_sources,
                            build_config.libobj_dir, 'LIB')),
 
         'check_build_cmds': '\n'.join(
@@ -1452,7 +1455,7 @@ def setup_build(build_config, options, template_vars):
     link_headers(build_config.public_headers, 'public',
                  build_config.botan_include_dir)
 
-    link_headers(build_config.internal_headers, 'internal',
+    link_headers(build_config.build_internal_headers, 'internal',
                  build_config.internal_include_dir)
 
 """
@@ -1760,22 +1763,17 @@ def main(argv = None):
 
     if options.with_sphinx is None:
         if have_program('sphinx-build'):
-            logging.info('Found sphinx-build, will enable ' +
+            logging.info('Found sphinx-build, will use it ' +
                          '(use --without-sphinx to disable)')
             options.with_sphinx = True
 
     if options.via_amalgamation:
-        options.generate_amalgamation = True
+        options.gen_amalgamation = True
 
     if options.gen_amalgamation:
         if options.asm_ok:
             logging.info('Disabling assembly code, cannot use in amalgamation')
             options.asm_ok = False
-
-        for mod in ['sha1_sse2', 'serpent_simd']:
-            if mod not in options.disabled_modules:
-                logging.info('Disabling %s, cannot use in amalgamation' % (mod))
-                options.disabled_modules.append(mod)
 
     modules_to_use = choose_modules_to_use(modules,
                                            archinfo[options.arch],
