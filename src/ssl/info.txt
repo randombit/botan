@@ -57,11 +57,11 @@ emsa3
 filters
 hmac
 md5
+prf_ssl3
+prf_tls
 rng
 rsa
 sha1
 ssl3mac
-ssl_prf
-tls_prf
 x509cert
 </requires>
