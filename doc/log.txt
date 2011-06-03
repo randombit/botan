@@ -4,6 +4,15 @@
 Release Notes
 ========================================
 
+Series 1.10
+----------------------------------------
+
+Version 1.10.0, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* The base64 decoder in 1.9.18 would not accept carriage returns (\r)
+  as whitespace, causing some tests to fail on Windows.
+
 Series 1.9
 ----------------------------------------
 
