@@ -39,25 +39,25 @@ Windows binary installer for use with Visual C++ 2008:
 Current Development Release
 ----------------------------------------
 
-The current development release is `1.9.17
-<http://botan.randombit.net/news/releases/1_9_17.html>`_ which was
-released on 2011-04-29.
+The current development release is `1.9.18
+<http://botan.randombit.net/news/releases/1_9_18.html>`_ which was
+released on 2011-06-03.
 
 Sources:
 
-`1.9.17 tar/gz <http://botan.randombit.net/files/Botan-1.9.17.tgz>`_
-(`1.9.17 tar/gz sig <http://botan.randombit.net/files/Botan-1.9.17.tgz.asc>`_),
+`1.9.18 tar/gz <http://botan.randombit.net/files/Botan-1.9.18.tgz>`_
+(`1.9.18 tar/gz sig <http://botan.randombit.net/files/Botan-1.9.18.tgz.asc>`_),
 
-`1.9.17 tar/bzip <http://botan.randombit.net/files/Botan-1.9.17.tbz>`_
-(`1.9.17 tar/bzip sig <http://botan.randombit.net/files/Botan-1.9.17.tbz.asc>`_)
+`1.9.18 tar/bzip <http://botan.randombit.net/files/Botan-1.9.18.tbz>`_
+(`1.9.18 tar/bzip sig <http://botan.randombit.net/files/Botan-1.9.18.tbz.asc>`_)
 
 Windows binary installer for use with Visual C++ 2010:
 
-`1.9.17-pre x86-32 installer
-<http://botan.randombit.net/files/win32/botan-1.9.17_win32.exe>`_
+`1.9.18 x86-32 installer
+<http://botan.randombit.net/files/win32/botan-1.9.18_win32.exe>`_
 
-`1.9.17-pre x86-64 installer
-<http://botan.randombit.net/files/win32/botan-1.9.17_win64.exe>`_
+`1.9.18 x86-64 installer
+<http://botan.randombit.net/files/win32/botan-1.9.18_win64.exe>`_
 
 Accessing Version Control
 ----------------------------------------
