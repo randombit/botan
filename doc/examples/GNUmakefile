@@ -3,7 +3,7 @@ BOTAN_CONFIG = botan-config
 
 CXX       = g++
 CFLAGS    = -O2 -ansi -W -Wall -I../../build/include
-LIBS      = -L../.. -lbotan-1.9
+LIBS      = -L../.. -lbotan-1.10
 
 SRCS=$(wildcard *.cpp)
 
