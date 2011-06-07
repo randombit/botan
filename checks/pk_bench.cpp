@@ -65,6 +65,9 @@ using namespace Botan;
 #include <memory>
 #include <set>
 
+#define BENCH_FAULT_PROT DISABLE_FAULT_PROTECTION
+//#define BENCH_FAULT_PROT ENABLE_FAULT_PROTECTION
+
 namespace {
 
 const char* ec_domains[] = {
@@ -329,7 +332,7 @@ void benchmark_ecdsa(RandomNumberGenerator& rng,
          ECDSA_PrivateKey key(rng, params);
          keygen_timer.stop();
 
-         PK_Signer sig(key, padding, IEEE_1363, DISABLE_FAULT_PROTECTION);
+         PK_Signer sig(key, padding, IEEE_1363, BENCH_FAULT_PROT);
          PK_Verifier ver(key, padding);
 
          benchmark_sig_ver(ver, sig, verify_timer,
@@ -371,7 +374,7 @@ void benchmark_gost_3410(RandomNumberGenerator& rng,
          GOST_3410_PrivateKey key(rng, params);
          keygen_timer.stop();
 
-         PK_Signer sig(key, padding, IEEE_1363, DISABLE_FAULT_PROTECTION);
+         PK_Signer sig(key, padding, IEEE_1363, BENCH_FAULT_PROT);
          PK_Verifier ver(key, padding);
 
          benchmark_sig_ver(ver, sig, verify_timer,
@@ -478,7 +481,7 @@ void benchmark_dsa_nr(RandomNumberGenerator& rng,
          algo_name = key.algo_name();
          keygen_timer.stop();
 
-         PK_Signer sig(key, padding, IEEE_1363, DISABLE_FAULT_PROTECTION);
+         PK_Signer sig(key, padding, IEEE_1363, BENCH_FAULT_PROT);
          PK_Verifier ver(key, padding);
 
          benchmark_sig_ver(ver, sig, verify_timer,
