@@ -168,26 +168,34 @@ compiler to look for both include files and library files in
 place where they will be in the default compiler search paths (consult
 your documentation and/or local expert for details).
 
+Other Build-Related Tasks
+----------------------------------------
+
 .. _amalgamation:
 
 The Amalgamation Build
-----------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can also configure Botan to be built using only a single source
 file; this is quite convenient if you plan to embed the library into
-another application. To do so, run ``configure.py`` with
-whatever arguments you would ordinarily use, along with the option
-``--gen-amalgamation``. This will create two (rather large)
-files, ``botan_all.h`` and ``botan_all.cpp``.
+another application. To do so, run ``configure.py`` with whatever
+arguments you would ordinarily use, along with the option
+``--gen-amalgamation``. This will create two (rather large) files,
+``botan_all.h`` and ``botan_all.cpp``.
 
 Whenever you would have included a botan header, you can then include
-``botan_all.h``, and include ``botan_all.cpp`` along
-with the rest of the source files in your build. If you want to be
-able to easily switch between amalgamated and non-amalgamated versions
-(for instance to take advantage of prepackaged versions of botan on
-operating systems that support it), you can instead ignore
-``botan_all.h`` and use the headers from
-``build/include`` as normal.
+``botan_all.h``, and include ``botan_all.cpp`` along with the rest of
+the source files in your build. If you want to be able to easily
+switch between amalgamated and non-amalgamated versions (for instance
+to take advantage of prepackaged versions of botan on operating
+systems that support it), you can instead ignore ``botan_all.h`` and
+use the headers from ``build/include`` as normal.
+
+You can also build the library as normal but using the amalgamation
+instead of the individual source files using ``--via-amalgamation``.
+This is essentially a very simple form of link time optimization;
+because the entire library source is visible to the compiler, it has
+more opportunities for interprocedural optimizations.
 
 Modules Relying on Third Party Libraries
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -206,13 +214,14 @@ enabled at build time; these include:
    and decompression. Requires the zlib development libraries to be
    installed.
 
- - ``--with-gnump`` adds an alternative engine for public key cryptography
-   that uses the GNU MP library. GNU MP 4.1 or later is required.
+ - ``--with-gnump`` adds an alternative engine for public key
+   cryptography that uses the GNU MP library. GNU MP 4.1 or later is
+   required.
 
  - ``--with-openssl`` adds an engine that uses OpenSSL for some public
    key operations and ciphers/hashes. OpenSSL 0.9.7 or later is
-   required. Note that (unlike GNU MP) OpenSSL's versions are not
-   always faster than the versions built into botan.
+   required. Note that OpenSSL's versions are not always faster than
+   the versions built into botan.
 
 Multiple Builds
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
