@@ -128,14 +128,12 @@ Montgomery_Exponentiator::Montgomery_Exponentiator(const BigInt& mod,
 
    mod_words = modulus.sig_words();
 
-   BigInt mod_prime_bn(BigInt::Power2, MP_WORD_BITS);
-   mod_prime = (mod_prime_bn - inverse_mod(modulus, mod_prime_bn)).word_at(0);
+   BigInt r(BigInt::Power2, mod_words * BOTAN_MP_WORD_BITS);
+   mod_prime = (((r * inverse_mod(r, mod)) - 1) / mod).word_at(0);
 
-   R_mod = BigInt(BigInt::Power2, MP_WORD_BITS * mod_words);
-   R_mod %= modulus;
+   R_mod = r % modulus;
 
-   R2 = BigInt(BigInt::Power2, 2 * MP_WORD_BITS * mod_words);
-   R2 %= modulus;
+   R2 = (R_mod * R_mod) % modulus;
    }
 
 }
