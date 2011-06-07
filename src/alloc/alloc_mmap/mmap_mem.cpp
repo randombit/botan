@@ -85,20 +85,22 @@ void* MemoryMapping_Allocator::alloc_block(size_t n)
    if(file.get_fd() == -1)
       throw MemoryMapping_Failed("Could not create file");
 
-   std::vector<byte> zeros(n);
+   std::vector<byte> zeros(4096);
 
-   ssize_t remaining = n;
+   size_t remaining = n;
 
    while(remaining)
       {
-      ssize_t wrote_here = ::write(file.get_fd(),
-                                   &zeros[0],
-                                   remaining);
+      const size_t write_try = std::min(zeros.size(), remaining);
 
-      if(wrote_here == -1 && errno != EINTR)
+      ssize_t wrote_got = ::write(file.get_fd(),
+                                  &zeros[0],
+                                  write_try);
+
+      if(wrote_got == -1 && errno != EINTR)
          throw MemoryMapping_Failed("Could not write to file");
 
-      remaining -= wrote_here;
+      remaining -= wrote_got;
       }
 
 #ifndef MAP_NOSYNC
