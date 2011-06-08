@@ -1,5 +1,7 @@
 
 * 1.8.12-dev, ????-??-??
+ - If EMSA3(Raw) was used for more than one signature, it would produce
+   incorrect output.
  - Fix the --enable-debug option to configure.py
  - Improve OS detection on Cygwin
  - Fix compilation under Sun Studio 12 on Solaris

@@ -117,8 +117,8 @@ void EMSA3_Raw::update(const byte input[], u32bit length)
 */
 SecureVector<byte> EMSA3_Raw::raw_data()
    {
-   SecureVector<byte> ret = message;
-   message.clear();
+   SecureVector<byte> ret;
+   std::swap(message, ret);
    return ret;
    }
 
