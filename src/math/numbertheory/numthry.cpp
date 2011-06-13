@@ -77,7 +77,7 @@ size_t miller_rabin_test_iterations(size_t bits, size_t level)
    {
    struct mapping { size_t bits; size_t verify_iter; size_t check_iter; };
 
-   static const mapping tests[] = {
+   const mapping tests[] = {
       {   50, 55, 25 },
       {  100, 38, 22 },
       {  160, 32, 18 },

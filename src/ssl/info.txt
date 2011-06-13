@@ -5,8 +5,6 @@ The SSL/TLS code is complex, new, and not yet reviewed, there may be
 serious bugs or security issues.
 </comment>
 
-uses_tr1 yes
-
 <header:public>
 tls_client.h
 tls_connection.h

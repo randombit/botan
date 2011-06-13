@@ -500,6 +500,15 @@ class BOTAN_DLL BigInt
      */
      BigInt(NumberType type, size_t n);
 
+     /**
+     * Move constructor
+     */
+     BigInt(BigInt&& other);
+
+     /**
+     * Move assignment
+     */
+     BigInt& operator=(BigInt&& other);
    private:
       SecureVector<word> reg;
       Sign signedness;
