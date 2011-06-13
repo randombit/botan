@@ -100,34 +100,6 @@ BigInt::BigInt(RandomNumberGenerator& rng, size_t bits)
    randomize(rng, bits);
    }
 
-/**
-* Move constructor
-*/
-BigInt::BigInt(BigInt&& other)
-   {
-   std::swap(*this, other);
-   }
-
-/**
-* Move assignment
-*/
-BigInt& BigInt::operator=(BigInt&& other)
-   {
-   if(this != &other)
-      std::swap(*this, other);
-
-   return (*this);
-   }
-
-/*
-* Swap this BigInt with another
-*/
-void BigInt::swap(BigInt& other)
-   {
-   reg.swap(other.reg);
-   std::swap(signedness, other.signedness);
-   }
-
 /*
 * Grow the internal storage
 */
