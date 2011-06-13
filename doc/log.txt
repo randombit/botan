@@ -10,6 +10,8 @@ Series 1.10
 Version 1.10.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* A template specialization of std::swap was added for the memory
+  container types.
 
 Series 1.9
 ----------------------------------------

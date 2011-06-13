@@ -418,4 +418,14 @@ void zeroise(MemoryRegion<T>& vec)
 
 }
 
+namespace std {
+
+template<typename T>
+inline void swap(Botan::MemoryRegion<T>& x, Botan::MemoryRegion<T>& y)
+   {
+   x.swap(y);
+   }
+
+}
+
 #endif
