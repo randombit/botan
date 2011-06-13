@@ -271,10 +271,6 @@ def process_command_line(args):
     build_group.add_option('--without-doxygen', action='store_false',
                            dest='with_doxygen', help=optparse.SUPPRESS_HELP)
 
-    build_group.add_option('--dumb-gcc', dest='dumb_gcc',
-                           action='store_true', default=False,
-                           help=optparse.SUPPRESS_HELP)
-
     build_group.add_option('--maintainer-mode', dest='maintainer_mode',
                            action='store_true', default=False,
                            help=optparse.SUPPRESS_HELP)
@@ -1058,7 +1054,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'lib_opt': cc.library_opt_flags(options),
         'mach_opt': cc.mach_opts(options.arch, options.cpu),
         'check_opt': '' if options.no_optimizations else cc.check_opt_flags,
-        'lang_flags': cc.lang_flags + options.extra_flags,
+        'lang_flags': cc.lang_flags,
         'warn_flags': warning_flags(cc.warning_flags,
                                     cc.maintainer_warning_flags,
                                     options.maintainer_mode),
@@ -1675,7 +1671,6 @@ def main(argv = None):
     cc = ccinfo[options.compiler]
 
     # Kind of a hack...
-    options.extra_flags = ''
     if options.compiler == 'gcc':
 
         def get_gcc_version(gcc_bin):
@@ -1690,37 +1685,13 @@ def main(argv = None):
                 logging.warning('Could not execute %s for version check' % (gcc_bin))
                 return None
 
-        def is_64bit_arch(arch):
-            if arch.endswith('64') or arch in ['alpha', 's390x']:
-                return True
-            return False
-
         gcc_version = get_gcc_version(options.compiler_binary or cc.binary_name)
 
         if gcc_version:
+            versions_without_cpp0x = '(4\.[01234]\.)|(3\.[0-4]\.)|(2\.95\.[0-4])'
 
-            if not is_64bit_arch(options.arch) and not options.dumb_gcc:
-                matching_version = '(4\.[01234]\.)|(3\.[34]\.)|(2\.95\.[0-4])'
-
-                if re.search(matching_version, gcc_version):
-                    options.dumb_gcc = True
-
-            versions_without_tr1 = '(4\.0\.)|(3\.[0-4]\.)|(2\.95\.[0-4])'
-
-            if options.with_tr1 == None and \
-               re.search(versions_without_tr1, gcc_version):
-                logging.info('Disabling TR1 support for this gcc, too old')
-                options.with_tr1 = 'none'
-
-            versions_without_visibility = '(3\.[0-4]\.)|(2\.95\.[0-4])'
-            if options.with_visibility == None and \
-               re.search(versions_without_visibility, gcc_version):
-                logging.info('Disabling DSO visibility support for this gcc, too old')
-                options.with_visibility = False
-
-        if options.dumb_gcc is True:
-            logging.info('Setting -fpermissive to work around gcc bug')
-            options.extra_flags = ' -fpermissive'
+            if re.search(versions_without_cpp0x, gcc_version):
+                logging.info('This GCC is too old to compile C++0x')
 
     if options.with_visibility is None:
         options.with_visibility = True
