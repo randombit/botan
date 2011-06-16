@@ -42,5 +42,6 @@ int main()
    print_if_feature("RDTSC", CPUID::has_rdtsc());
    print_if_feature("PCMUL", CPUID::has_pcmuludq());
    print_if_feature("AES-NI", CPUID::has_aes_ni());
+   print_if_feature("RDRND", CPUID::has_rdrand());
    print_if_feature("MOVBE", CPUID::has_movbe());
    }

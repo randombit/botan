@@ -83,6 +83,12 @@ class BOTAN_DLL CPUID
          { return x86_processor_flags_has(CPUID_MOVBE_BIT); }
 
       /**
+      * Check if the processor supports RDRAND
+      */
+      static bool has_rdrand()
+         { return x86_processor_flags_has(CPUID_RDRAND_BIT); }
+
+      /**
       * Check if the processor supports AltiVec/VMX
       */
       static bool has_altivec() { return altivec_capable; }
@@ -96,7 +102,8 @@ class BOTAN_DLL CPUID
          CPUID_SSE42_BIT = 52,
          CPUID_MOVBE_BIT = 54,
          CPUID_AESNI_BIT = 57,
-         CPUID_AVX_BIT = 60
+         CPUID_AVX_BIT = 60,
+         CPUID_RDRAND_BIT = 61
       };
 
       static bool x86_processor_flags_has(u64bit bit)
