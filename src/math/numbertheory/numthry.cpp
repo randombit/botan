@@ -1,6 +1,6 @@
 /*
 * Number Theory Functions
-* (C) 1999-2010 Jack Lloyd
+* (C) 1999-2011 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -9,6 +9,8 @@
 #include <botan/reducer.h>
 #include <botan/internal/bit_ops.h>
 #include <algorithm>
+
+#include <stdio.h>
 
 namespace Botan {
 
@@ -20,7 +22,7 @@ namespace {
 class MillerRabin_Test
    {
    public:
-      bool passes_test(const BigInt& nonce);
+      bool is_witness(const BigInt& nonce);
       MillerRabin_Test(const BigInt& num);
    private:
       BigInt n, r, n_minus_1;
@@ -30,26 +32,32 @@ class MillerRabin_Test
    };
 
 /*
-* Miller-Rabin Test
+* Miller-Rabin Test, as described in Handbook of Applied Cryptography
+* section 4.24
 */
-bool MillerRabin_Test::passes_test(const BigInt& a)
+bool MillerRabin_Test::is_witness(const BigInt& a)
    {
    if(a < 2 || a >= n_minus_1)
       throw Invalid_Argument("Bad size for nonce in Miller-Rabin test");
 
    BigInt y = pow_mod(a);
    if(y == 1 || y == n_minus_1)
-      return true;
+      return false;
 
    for(size_t i = 1; i != s; ++i)
       {
       y = reducer.square(y);
 
-      if(y == 1)
-         return false;
-      if(y == n_minus_1)
+      if(y == 1) // found a non-trivial square root
          return true;
+
+      if(y == n_minus_1) // -1, trivial square root, so give up
+         return false;
       }
+
+   if(y != n_minus_1) // fails Fermat test
+      return true;
+
    return false;
    }
 
@@ -297,7 +305,7 @@ bool primality_test(const BigInt& n,
       while(nonce < 2 || nonce >= (n-1))
          nonce.randomize(rng, NONCE_BITS);
 
-      if(!mr.passes_test(nonce))
+      if(mr.is_witness(nonce))
          return false;
       }
    return true;
