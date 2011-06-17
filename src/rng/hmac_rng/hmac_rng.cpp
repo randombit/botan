@@ -215,8 +215,8 @@ HMAC_RNG::~HMAC_RNG()
    delete extractor;
    delete prf;
 
-   for(auto i = entropy_sources.begin(); i != entropy_sources.end(); ++i)
-      delete *i;
+   for(auto src : entropy_sources)
+     delete src;
 
    counter = 0;
    }

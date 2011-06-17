@@ -128,6 +128,23 @@ std::vector<std::string> split_on(const std::string& str, char delim)
    }
 
 /*
+* Join a string
+*/
+std::string string_join(const std::vector<std::string>& strs, char delim)
+   {
+   std::string out = "";
+
+   for(size_t i = 0; i != strs.size(); ++i)
+      {
+      if(i != 0)
+         out += delim;
+      out += strs[i];
+      }
+
+   return out;
+   }
+
+/*
 * Parse an ASN.1 OID string
 */
 std::vector<u32bit> parse_asn1_oid(const std::string& oid)

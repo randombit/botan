@@ -32,6 +32,15 @@ BOTAN_DLL std::vector<std::string> split_on(
    const std::string& str, char delim);
 
 /**
+* Join a string
+* @param strs strings to join
+* @param delim the delimitor
+* @return string joined by delim
+*/
+BOTAN_DLL std::string string_join(const std::vector<std::string>& strs,
+                                  char delim);
+
+/**
 * Parse an ASN.1 OID
 * @param oid the OID in string form
 * @return OID components

@@ -24,7 +24,7 @@ inline V search_map(const std::map<K, V>& mapping,
                     const K& key,
                     const V& null_result = V())
    {
-   typename std::map<K, V>::const_iterator i = mapping.find(key);
+   auto i = mapping.find(key);
    if(i == mapping.end())
       return null_result;
    return i->second;
@@ -34,7 +34,7 @@ template<typename K, typename V, typename R>
 inline R search_map(const std::map<K, V>& mapping, const K& key,
                     const R& null_result, const R& found_result)
    {
-   typename std::map<K, V>::const_iterator i = mapping.find(key);
+   auto i = mapping.find(key);
    if(i == mapping.end())
       return null_result;
    return found_result;
