@@ -438,7 +438,11 @@ class BOTAN_DLL BigInt
      * Swap this value with another
      * @param other BigInt to swap values with
      */
-     void swap(BigInt& other);
+     void swap(BigInt& other)
+        {
+        reg.swap(other.reg);
+        std::swap(signedness, other.signedness);
+        }
 
      /**
      * Create empty BigInt
@@ -500,6 +504,29 @@ class BOTAN_DLL BigInt
      */
      BigInt(NumberType type, size_t n);
 
+     /**
+     * Move constructor
+     */
+     BigInt(BigInt&& other)
+        {
+        this->swap(other);
+        }
+
+     /**
+     * Move assignment
+     */
+     BigInt& operator=(BigInt&& other)
+        {
+        if(this != &other)
+           this->swap(other);
+
+        return (*this);
+        }
+
+     /**
+     * Copy assignment
+     */
+     BigInt& operator=(const BigInt&) = default;
    private:
       SecureVector<word> reg;
       Sign signedness;

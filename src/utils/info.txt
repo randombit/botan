@@ -9,7 +9,6 @@ cpuid.cpp
 mlock.cpp
 parsing.cpp
 time.cpp
-ui.cpp
 version.cpp
 </source>
 
@@ -34,7 +33,6 @@ parsing.h
 rotate.h
 time.h
 types.h
-ui.h
 version.h
 get_byte.h
 </header:public>
