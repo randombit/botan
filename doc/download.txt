@@ -18,7 +18,7 @@ Current Stable Release (1.10)
 
 The current stable release is `1.10.0
 <http://botan.randombit.net/news/releases/1_10_0.html>`_ which was
-released on ?.
+released on 2011-06-20.
 
 Sources:
 
