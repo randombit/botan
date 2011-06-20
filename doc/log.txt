@@ -1,5 +1,5 @@
 
-* 1.8.12-dev, ????-??-??
+* 1.8.12-dev, 2011-06-20
  - If EMSA3(Raw) was used for more than one signature, it would produce
    incorrect output.
  - Fix the --enable-debug option to configure.py
