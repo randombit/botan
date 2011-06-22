@@ -146,8 +146,8 @@ struct BOTAN_DLL Decoding_Error : public Invalid_Argument
 */
 struct BOTAN_DLL Integrity_Failure : public Exception
    {
-   Integrity_Failure(const std::string& what) :
-      Exception("Integrity failure: " + what) {}
+   Integrity_Failure(const std::string& msg) :
+      Exception("Integrity failure: " + msg) {}
    };
 
 /**
