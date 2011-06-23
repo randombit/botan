@@ -16,7 +16,7 @@ namespace Botan {
 SecureVector<byte> CMAC::poly_double(const MemoryRegion<byte>& in,
                                      byte polynomial)
    {
-   const bool do_xor = (in[0] & 0x80) ? true : false;
+   const byte poly_xor = (in[0] & 0x80) ? polynomial : 0;
 
    SecureVector<byte> out = in;
 
@@ -28,8 +28,7 @@ SecureVector<byte> CMAC::poly_double(const MemoryRegion<byte>& in,
       carry = (temp >> 7);
       }
 
-   if(do_xor)
-      out[out.size()-1] ^= polynomial;
+   out[out.size()-1] ^= poly_xor;
 
    return out;
    }
