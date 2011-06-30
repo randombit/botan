@@ -40,6 +40,19 @@ import botan_version
 def flatten(l):
     return sum(l, [])
 
+def get_vc_revision():
+    mtn = subprocess.Popen(['mtn', 'automate', 'heads'],
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.PIPE)
+
+    (stdout, stderr) = mtn.communicate()
+
+    if(stderr != ''):
+        #logging.debug('Error getting rev from monotone - %s' % (stderr))
+        return 'unknown'
+
+    return 'mtn:' + stdout.strip()
+
 class BuildConfigurationInformation(object):
 
     """
@@ -52,6 +65,7 @@ class BuildConfigurationInformation(object):
 
     version_datestamp = botan_version.release_datestamp
 
+    version_vc_rev = get_vc_revision()
     version_string = '%d.%d.%d' % (version_major, version_minor, version_patch)
 
     """
@@ -1039,11 +1053,12 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         return normal_flags
 
     return {
-        'version_major': build_config.version_major,
-        'version_minor': build_config.version_minor,
-        'version_patch': build_config.version_patch,
-        'so_abi_rev':    build_config.version_so_rev,
-        'version':       build_config.version_string,
+        'version_major':  build_config.version_major,
+        'version_minor':  build_config.version_minor,
+        'version_patch':  build_config.version_patch,
+        'version_vc_rev': build_config.version_vc_rev,
+        'so_abi_rev':     build_config.version_so_rev,
+        'version':        build_config.version_string,
 
         'distribution_info': options.distribution_info,
 

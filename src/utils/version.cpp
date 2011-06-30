@@ -33,6 +33,7 @@ std::string version_string()
    else
       out << "released " << version_datestamp();
 
+   out << ", revision " << BOTAN_VERSION_VC_REVISION;
    out << ", distribution " << BOTAN_DISTRIBUTION_INFO << ")";
 
    return out.str();
