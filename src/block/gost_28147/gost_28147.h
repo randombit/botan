@@ -57,7 +57,7 @@ class BOTAN_DLL GOST_28147_89 : public Block_Cipher_Fixed_Params<8, 32>
 
       void clear() { zeroise(EK); }
 
-      std::string name() const { return "GOST-28147-89"; }
+      std::string name() const;
       BlockCipher* clone() const { return new GOST_28147_89(SBOX); }
 
       /**

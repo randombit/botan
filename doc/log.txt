@@ -10,6 +10,11 @@ Series 1.10
 Version 1.10.1, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* A race condition in `Algorithm_Factory` could cause crashes in
+  multithreaded code. See `this thread on botan-devel
+  <http://lists.randombit.net/pipermail/botan-devel/2011-July/001455.html>`_
+  for details and workarounds.
+
 Version 1.10.0, 2011-06-20
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
