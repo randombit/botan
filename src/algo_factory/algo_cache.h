@@ -1,5 +1,8 @@
 /**
 * An algorithm cache (used by Algorithm_Factory)
+* (C) 2008,2011 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
 */
 
 #ifndef BOTAN_ALGORITHM_CACHE_TEMPLATE_H__
@@ -147,14 +150,16 @@ void Algorithm_Cache<T>::add(T* algo,
 
    Mutex_Holder lock(mutex);
 
-   delete algorithms[algo->name()][provider];
-   algorithms[algo->name()][provider] = algo;
-
    if(algo->name() != requested_name &&
       aliases.find(requested_name) == aliases.end())
       {
       aliases[requested_name] = algo->name();
       }
+
+   if(!algorithms[algo->name()][provider])
+      algorithms[algo->name()][provider] = algo;
+   else
+      delete algo;
    }
 
 /**

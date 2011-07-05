@@ -1,5 +1,9 @@
 
-* 1.8.12-dev, 2011-06-20
+* 1.8.13-dev, Not Yet Released
+ - A race in Algorithm_Factory that could cause crashes in multithreaded
+   code has been fixed.
+
+* 1.8.12, 2011-06-20
  - If EMSA3(Raw) was used for more than one signature, it would produce
    incorrect output.
  - Fix the --enable-debug option to configure.py

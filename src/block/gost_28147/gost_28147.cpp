@@ -50,15 +50,15 @@ GOST_28147_89_Params::GOST_28147_89_Params(const std::string& n) : name(n)
 /*
 * GOST Constructor
 */
-GOST_28147_89::GOST_28147_89(const GOST_28147_89_Params& param) :
+GOST_28147_89::GOST_28147_89(const GOST_28147_89_Params& gost_sbox) :
    BlockCipher(8, 32)
    {
    // Convert the parallel 4x4 sboxes into larger word-based sboxes
    for(size_t i = 0; i != 4; ++i)
       for(size_t j = 0; j != 256; ++j)
          {
-         u32bit T = (param.sbox_entry(2*i  , j % 16)) |
-                    (param.sbox_entry(2*i+1, j / 16) << 4);
+         u32bit T = (gost_sbox.sbox_entry(2*i  , j % 16)) |
+                    (gost_sbox.sbox_entry(2*i+1, j / 16) << 4);
          SBOX[256*i+j] = rotate_left(T, (11+8*i) % 32);
          }
    }
@@ -125,6 +125,25 @@ void GOST_28147_89::dec(const byte in[], byte out[]) const
       }
 
    store_le(out, N2, N1);
+   }
+
+std::string GOST_28147_89::name() const
+   {
+   /*
+   'Guess' the right name for the sbox on the basis of the values.
+   This would need to be updated if support for other sbox parameters
+   is added. Preferably, we would just store the string value in the
+   constructor, but can't break binary compat.
+   */
+   std::string sbox_name = "";
+   if(SBOX[0] == 0x00072000)
+      sbox_name = "R3411_94_TestParam";
+   else if(SBOX[0] == 0x0002D000)
+      sbox_name = "R3411_CryptoPro";
+   else
+      throw Internal_Error("GOST-28147 unrecognized sbox value");
+
+   return "GOST-28147-89(" + sbox_name + ")";
    }
 
 /*

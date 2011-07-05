@@ -46,7 +46,7 @@ class BOTAN_DLL GOST_28147_89 : public BlockCipher
    public:
       void clear() throw() { EK.clear(); }
 
-      std::string name() const { return "GOST-28147-89"; }
+      std::string name() const;
       BlockCipher* clone() const { return new GOST_28147_89(SBOX); }
 
       GOST_28147_89(const GOST_28147_89_Params& params);
