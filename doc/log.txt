@@ -7,13 +7,26 @@ Release Notes
 Series 1.10
 ----------------------------------------
 
-Version 1.10.1, Not Yet Released
+Version 1.10.1, 2011-07-11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * A race condition in `Algorithm_Factory` could cause crashes in
   multithreaded code. See `this thread on botan-devel
   <http://lists.randombit.net/pipermail/botan-devel/2011-July/001455.html>`_
   for details and workarounds.
+
+* The return value of ``name`` has changed for GOST 28147-89 and
+  Skein-512.  GOST's ``name`` now includes the name of the sbox, and
+  Skein's includes the personalization string (if nonempty). This
+  allows an object to be properly roundtripped, which is necessary to
+  fix the race condition described above.
+
+* A new distribution script is now included, as
+  ``src/build-data/scripts/dist.py``
+
+* The ``build.h`` header now includes, if available, an identifier of
+  the source revision that was used. This identifier is also included
+  in the result of ``version_string``.
 
 Version 1.10.0, 2011-06-20
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -431,6 +444,14 @@ Version 1.9.0, 2009-09-09
 
 Series 1.8
 ----------------------------------------
+
+Version 1.8.13, 2011-07-02
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* A race condition in `Algorithm_Factory` could cause crashes in
+  multithreaded code. See `this thread on botan-devel
+  <http://lists.randombit.net/pipermail/botan-devel/2011-July/001455.html>`_
+  for details and workarounds.
 
 Version 1.8.12, 2011-06-20
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
