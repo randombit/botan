@@ -65,7 +65,7 @@ class BuildConfigurationInformation(object):
 
     version_datestamp = botan_version.release_datestamp
 
-    version_vc_rev = get_vc_revision()
+    version_vc_rev = botan_version.release_vc_rev or get_vc_revision()
     version_string = '%d.%d.%d' % (version_major, version_minor, version_patch)
 
     """
