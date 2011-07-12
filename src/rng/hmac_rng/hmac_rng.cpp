@@ -8,7 +8,6 @@
 #include <botan/hmac_rng.h>
 #include <botan/get_byte.h>
 #include <botan/internal/xor_buf.h>
-#include <botan/internal/stl_util.h>
 #include <algorithm>
 
 namespace Botan {
@@ -216,8 +215,8 @@ HMAC_RNG::~HMAC_RNG()
    delete extractor;
    delete prf;
 
-   std::for_each(entropy_sources.begin(), entropy_sources.end(),
-                 del_fun<EntropySource>());
+   for(auto src : entropy_sources)
+     delete src;
 
    counter = 0;
    }

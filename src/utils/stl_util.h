@@ -12,27 +12,7 @@
 
 namespace Botan {
 
-/**
-* Copy-on-Predicate Algorithm
-* @param current the first iterator value
-* @param end the final iterator value
-* @param dest an output iterator
-* @param copy_p the predicate
-*/
-template<typename InputIterator, typename OutputIterator, typename Predicate>
-OutputIterator copy_if(InputIterator current, InputIterator end,
-                       OutputIterator dest, Predicate copy_p)
-   {
-   while(current != end)
-      {
-      if(copy_p(*current))
-         *dest++ = *current;
-      ++current;
-      }
-   return dest;
-   }
-
-/**
+/*
 * Searching through a std::map
 * @param mapping the map to search
 * @param key is what to look for
@@ -44,32 +24,23 @@ inline V search_map(const std::map<K, V>& mapping,
                     const K& key,
                     const V& null_result = V())
    {
-   typename std::map<K, V>::const_iterator i = mapping.find(key);
+   auto i = mapping.find(key);
    if(i == mapping.end())
       return null_result;
    return i->second;
    }
 
-/**
-* Function adaptor for delete operation
-*/
-template<class T>
-class del_fun : public std::unary_function<T, void>
+template<typename K, typename V, typename R>
+inline R search_map(const std::map<K, V>& mapping, const K& key,
+                    const R& null_result, const R& found_result)
    {
-   public:
-      void operator()(T* ptr) { delete ptr; }
-   };
-
-/**
-* Delete the second half of a pair of objects
-*/
-template<typename Pair>
-void delete2nd(Pair& pair)
-   {
-   delete pair.second;
+   auto i = mapping.find(key);
+   if(i == mapping.end())
+      return null_result;
+   return found_result;
    }
 
-/**
+/*
 * Insert a key/value pair into a multimap
 */
 template<typename K, typename V>

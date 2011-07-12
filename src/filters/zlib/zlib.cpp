@@ -47,7 +47,7 @@ void* zlib_malloc(void* info_ptr, unsigned int n, unsigned int size)
 void zlib_free(void* info_ptr, void* ptr)
    {
    Zlib_Alloc_Info* info = static_cast<Zlib_Alloc_Info*>(info_ptr);
-   std::map<void*, size_t>::const_iterator i = info->current_allocs.find(ptr);
+   auto i = info->current_allocs.find(ptr);
    if(i == info->current_allocs.end())
       throw Invalid_Argument("zlib_free: Got pointer not allocated by us");
    info->alloc->deallocate(ptr, i->second);

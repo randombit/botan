@@ -116,7 +116,7 @@ void RC5::key_schedule(const byte key[], size_t length)
 */
 std::string RC5::name() const
    {
-   return "RC5(" + to_string(get_rounds()) + ")";
+   return "RC5(" + std::to_string(get_rounds()) + ")";
    }
 
 /*
@@ -126,7 +126,7 @@ RC5::RC5(size_t rounds)
    {
    if(rounds < 8 || rounds > 32 || (rounds % 4 != 0))
       throw Invalid_Argument("RC5: Invalid number of rounds " +
-                             to_string(rounds));
+                             std::to_string(rounds));
 
    S.resize(2*rounds + 2);
    }

@@ -230,7 +230,8 @@ std::pair<std::string, size_t> cipher_code_to_name(TLS_Ciphersuite_Algos algo)
       return std::make_pair("SEED", 16);
 
    throw TLS_Exception(INTERNAL_ERROR,
-                       "CipherSuite: Unknown cipher type " + to_string(algo));
+                       "CipherSuite: Unknown cipher type " +
+                       std::to_string(algo));
    }
 
 std::string mac_code_to_name(TLS_Ciphersuite_Algos algo)
@@ -248,7 +249,8 @@ std::string mac_code_to_name(TLS_Ciphersuite_Algos algo)
       return "SHA-384";
 
    throw TLS_Exception(INTERNAL_ERROR,
-                       "CipherSuite: Unknown MAC type " + to_string(algo));
+                       "CipherSuite: Unknown MAC type " +
+                       std::to_string(algo));
    }
 
 }
@@ -264,7 +266,8 @@ CipherSuite::CipherSuite(u16bit suite_code)
    TLS_Ciphersuite_Algos algos = lookup_ciphersuite(suite_code);
 
    if(algos == 0)
-      throw Invalid_Argument("Unknown ciphersuite: " + to_string(suite_code));
+      throw Invalid_Argument("Unknown ciphersuite: " +
+                             std::to_string(suite_code));
 
    sig_algo = TLS_Ciphersuite_Algos(algos & TLS_ALGO_SIGNER_MASK);
 

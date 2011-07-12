@@ -40,7 +40,7 @@ BigInt::BigInt(Sign s, size_t size)
    }
 
 /*
-* Construct a BigInt from a "raw" BigInt
+* Copy constructor
 */
 BigInt::BigInt(const BigInt& b)
    {
@@ -98,15 +98,6 @@ BigInt::BigInt(RandomNumberGenerator& rng, size_t bits)
    {
    set_sign(Positive);
    randomize(rng, bits);
-   }
-
-/*
-* Swap this BigInt with another
-*/
-void BigInt::swap(BigInt& other)
-   {
-   reg.swap(other.reg);
-   std::swap(signedness, other.signedness);
    }
 
 /*

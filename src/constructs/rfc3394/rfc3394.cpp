@@ -39,7 +39,7 @@ SecureVector<byte> rfc3394_keywrap(const MemoryRegion<byte>& key,
    if(key.size() % 8 != 0)
       throw std::invalid_argument("Bad input key size for NIST key wrap");
 
-   std::auto_ptr<BlockCipher> aes(make_aes(kek.length(), af));
+   std::unique_ptr<BlockCipher> aes(make_aes(kek.length(), af));
    aes->set_key(kek);
 
    const size_t n = key.size() / 8;
@@ -81,7 +81,7 @@ SecureVector<byte> rfc3394_keyunwrap(const MemoryRegion<byte>& key,
    if(key.size() < 16 || key.size() % 8 != 0)
       throw std::invalid_argument("Bad input key size for NIST key unwrap");
 
-   std::auto_ptr<BlockCipher> aes(make_aes(kek.length(), af));
+   std::unique_ptr<BlockCipher> aes(make_aes(kek.length(), af));
    aes->set_key(kek);
 
    const size_t n = (key.size() - 8) / 8;

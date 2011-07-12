@@ -250,10 +250,6 @@ def process_command_line(args):
                            default=False, action='store_true',
                            help='build via amalgamation')
 
-    build_group.add_option('--with-tr1-implementation', metavar='WHICH',
-                           dest='with_tr1', default=None,
-                           help='enable TR1 (choices: none, system, boost)')
-
     build_group.add_option('--with-build-dir',
                            metavar='DIR', default='',
                            help='setup the build in DIR')
@@ -288,10 +284,6 @@ def process_command_line(args):
 
     build_group.add_option('--without-doxygen', action='store_false',
                            dest='with_doxygen', help=optparse.SUPPRESS_HELP)
-
-    build_group.add_option('--dumb-gcc', dest='dumb_gcc',
-                           action='store_true', default=False,
-                           help=optparse.SUPPRESS_HELP)
 
     build_group.add_option('--maintainer-mode', dest='maintainer_mode',
                            action='store_true', default=False,
@@ -524,7 +516,6 @@ class ModuleInfo(object):
                       {
                         'load_on': 'auto',
                         'define': None,
-                        'uses_tr1': 'false',
                         'need_isa': None,
                         'mp_bits': 0 })
 
@@ -572,8 +563,6 @@ class ModuleInfo(object):
 
         self.mp_bits = int(self.mp_bits)
 
-        self.uses_tr1 = (True if self.uses_tr1 == 'yes' else False)
-
         if self.comment != []:
             self.comment = ' '.join(self.comment)
         else:
@@ -614,12 +603,6 @@ class ModuleInfo(object):
 
     def compatible_compiler(self, cc):
         return self.cc == [] or cc in self.cc
-
-    def tr1_ok(self, with_tr1):
-        if self.uses_tr1:
-            return with_tr1 in ['boost', 'system']
-        else:
-            return True
 
     def dependencies(self):
         # utils is an implicit dep (contains types, etc)
@@ -748,8 +731,7 @@ class CompilerInfo(object):
                         'visibility_build_flags': '',
                         'visibility_attribute': '',
                         'ar_command': None,
-                        'makefile_style': '',
-                        'has_tr1': False,
+                        'makefile_style': ''
                         })
 
         self.so_link_flags = force_to_dict(self.so_link_flags)
@@ -856,19 +838,8 @@ class CompilerInfo(object):
     """
     Return defines for build.h
     """
-    def defines(self, with_tr1):
-
-        def tr1_macro():
-            if with_tr1:
-                if with_tr1 == 'boost':
-                    return ['USE_BOOST_TR1']
-                elif with_tr1 == 'system':
-                    return ['USE_STD_TR1']
-            elif self.has_tr1:
-                return ['USE_STD_TR1']
-            return []
-
-        return ['BUILD_COMPILER_IS_' + self.macro_name] + tr1_macro()
+    def defines(self):
+        return ['BUILD_COMPILER_IS_' + self.macro_name]
 
 class OsInfo(object):
     def __init__(self, infofile):
@@ -1098,7 +1069,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'lib_opt': cc.library_opt_flags(options),
         'mach_opt': cc.mach_opts(options.arch, options.cpu),
         'check_opt': '' if options.no_optimizations else cc.check_opt_flags,
-        'lang_flags': cc.lang_flags + options.extra_flags,
+        'lang_flags': cc.lang_flags,
         'warn_flags': warning_flags(cc.warning_flags,
                                     cc.maintainer_warning_flags,
                                     options.maintainer_mode),
@@ -1115,8 +1086,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'target_os_defines': make_cpp_macros(osinfo.defines()),
 
-        'target_compiler_defines': make_cpp_macros(
-            cc.defines(options.with_tr1)),
+        'target_compiler_defines': make_cpp_macros(cc.defines()),
 
         'target_cpu_defines': make_cpp_macros(arch.defines(options)),
 
@@ -1207,8 +1177,6 @@ def choose_modules_to_use(modules, archinfo, options):
             cannot_use_because(modname, 'incompatible compiler')
         elif not module.compatible_cpu(archinfo, options):
             cannot_use_because(modname, 'incompatible CPU')
-        elif not module.tr1_ok(options.with_tr1):
-            cannot_use_because(modname, 'missing TR1')
 
         else:
             if module.load_on == 'never':
@@ -1718,7 +1686,6 @@ def main(argv = None):
     cc = ccinfo[options.compiler]
 
     # Kind of a hack...
-    options.extra_flags = ''
     if options.compiler == 'gcc':
 
         def get_gcc_version(gcc_bin):
@@ -1733,48 +1700,16 @@ def main(argv = None):
                 logging.warning('Could not execute %s for version check' % (gcc_bin))
                 return None
 
-        def is_64bit_arch(arch):
-            if arch.endswith('64') or arch in ['alpha', 's390x']:
-                return True
-            return False
-
         gcc_version = get_gcc_version(options.compiler_binary or cc.binary_name)
 
         if gcc_version:
+            versions_without_cpp0x = '(4\.[01234]\.)|(3\.[0-4]\.)|(2\.95\.[0-4])'
 
-            if not is_64bit_arch(options.arch) and not options.dumb_gcc:
-                matching_version = '(4\.[01234]\.)|(3\.[34]\.)|(2\.95\.[0-4])'
-
-                if re.search(matching_version, gcc_version):
-                    options.dumb_gcc = True
-
-            versions_without_tr1 = '(4\.0\.)|(3\.[0-4]\.)|(2\.95\.[0-4])'
-
-            if options.with_tr1 == None and \
-               re.search(versions_without_tr1, gcc_version):
-                logging.info('Disabling TR1 support for this gcc, too old')
-                options.with_tr1 = 'none'
-
-            versions_without_visibility = '(3\.[0-4]\.)|(2\.95\.[0-4])'
-            if options.with_visibility == None and \
-               re.search(versions_without_visibility, gcc_version):
-                logging.info('Disabling DSO visibility support for this gcc, too old')
-                options.with_visibility = False
-
-        if options.dumb_gcc is True:
-            logging.info('Setting -fpermissive to work around gcc bug')
-            options.extra_flags = ' -fpermissive'
+            if re.search(versions_without_cpp0x, gcc_version):
+                logging.info('This GCC is too old to compile C++0x')
 
     if options.with_visibility is None:
         options.with_visibility = True
-
-    if options.with_tr1 == None:
-        if cc.has_tr1:
-            logging.info('Assuming %s has TR1 (use --with-tr1=none to disable)' % (
-                options.compiler))
-            options.with_tr1 = 'system'
-        else:
-            options.with_tr1 = 'none'
 
     if options.with_sphinx is None:
         if have_program('sphinx-build'):
