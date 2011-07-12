@@ -138,7 +138,7 @@ const T* Algorithm_Cache<T>::get(const std::string& algo_spec,
       if(prov_name == pref_provider)
          return i->second;
 
-      if(prototype == 0 || prov_weight > prototype_prov_weight)
+      if(prototype == nullptr || prov_weight > prototype_prov_weight)
          {
          prototype = i->second;
          prototype_provider = i->first;

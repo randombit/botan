@@ -46,7 +46,7 @@ byte* Pooling_Allocator::Memory_Block::alloc(size_t n)
    if(n == BITMAP_SIZE)
       {
       if(bitmap)
-         return 0;
+         return nullptr;
       else
          {
          bitmap = ~bitmap;
@@ -69,7 +69,7 @@ byte* Pooling_Allocator::Memory_Block::alloc(size_t n)
       }
 
    if(bitmap & mask)
-      return 0;
+      return nullptr;
 
    bitmap |= mask;
    return buffer + offset * BLOCK_SIZE;
@@ -166,7 +166,7 @@ void Pooling_Allocator::deallocate(void* ptr, size_t n)
    const size_t BITMAP_SIZE = Memory_Block::bitmap_size();
    const size_t BLOCK_SIZE = Memory_Block::block_size();
 
-   if(ptr == 0 && n == 0)
+   if(ptr == nullptr && n == 0)
       return;
 
    std::lock_guard<std::mutex> lock(mutex);
@@ -193,7 +193,7 @@ void Pooling_Allocator::deallocate(void* ptr, size_t n)
 byte* Pooling_Allocator::allocate_blocks(size_t n)
    {
    if(blocks.empty())
-      return 0;
+      return nullptr;
 
    auto i = last_used;
 
@@ -212,7 +212,7 @@ byte* Pooling_Allocator::allocate_blocks(size_t n)
       }
    while(i != last_used);
 
-   return 0;
+   return nullptr;
    }
 
 /*
@@ -232,7 +232,7 @@ void Pooling_Allocator::get_more_core(size_t in_bytes)
    const size_t to_allocate = in_blocks * TOTAL_BLOCK_SIZE;
 
    void* ptr = alloc_block(to_allocate);
-   if(ptr == 0)
+   if(ptr == nullptr)
       throw Memory_Exhaustion();
 
    allocated.push_back(std::make_pair(ptr, to_allocate));
