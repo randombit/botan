@@ -1602,6 +1602,9 @@ def main(argv = None):
     if argv is None:
         argv = sys.argv
 
+    logging.basicConfig(stream = sys.stdout,
+                        format = '%(levelname) 7s: %(message)s')
+
     options = process_command_line(argv[1:])
 
     def log_level():
@@ -1611,9 +1614,7 @@ def main(argv = None):
             return logging.WARNING
         return logging.INFO
 
-    logging.basicConfig(stream = sys.stdout,
-                        format = '%(levelname) 7s: %(message)s',
-                        level = log_level())
+    logging.getLogger().setLevel(log_level())
 
     logging.debug('%s invoked with options "%s"' % (
         argv[0], ' '.join(argv[1:])))

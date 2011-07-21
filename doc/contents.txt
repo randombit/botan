@@ -6,6 +6,7 @@ Contents
    :maxdepth: 2
 
    index
+   reading
    building
    firststep
    filters
@@ -24,6 +25,7 @@ Contents
 .. toctree::
    :hidden:
 
+   log
    license
    credits
    faq
@@ -32,7 +34,6 @@ Contents
    download
    pgpkey
    algos
-   log
    build_log
 
 Indices and tables
