@@ -20,8 +20,8 @@ TLS Clients
 .. cpp:class:: TLS_Client
 
    .. cpp:function:: TLS_Client( \
-        std::tr1::function<size_t (byte*, size_t)> input_fn, \
-        std::tr1::function<void (const byte*, size_t)> output_fn, \
+        std::tr1::function<size_t, byte*, size_t> input_fn, \
+        std::tr1::function<void, const byte*, size_t> output_fn, \
         const TLS_Policy& policy, RandomNumberGenerator& rng)
 
    Creates a TLS client. It will call *input_fn* to read bytes from

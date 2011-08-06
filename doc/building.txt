@@ -136,6 +136,26 @@ self-test program::
   $ install_name_tool -change $(otool -X -D libbotan-$VERSION.dylib) \
        $PWD/libbotan-$VERSION.dylib check
 
+Building Universal Binaries
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+To build a universal binary for OS X, some simple modifications are
+required. First, create a CPU type for the target universalbinary,
+one that doesn't specify any special handlers. This is done by
+creating an empty file in src/build-data/arch::
+
+  $ touch src/build-data/arch/universalbinary.txt
+
+and then adding a special target for it in gcc, by adding the line::
+
+  universalbinary -> "-force_cpusubtype_ALL -mmacosx-version-min=10.4 -arch i386 -arch ppc"
+
+in the section marked `<mach_abi_linking>` in
+`src/build-data/cc/gcc.txt`. Then configure with::
+
+  $ ./configure.py --cpu=universalbinary [other options here]
+
+
 On MS Windows
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -391,8 +411,8 @@ against is the same one you used to run ``configure.py``.
 
 To install the module, use the ``install`` target.
 
-Examples of using the Python module can be seen in
-``doc/examples/python``
+See :doc:`Python Bindings <python>` for more information about the
+binding.
 
 Building the Perl XS wrappers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

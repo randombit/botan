@@ -9,8 +9,9 @@ provides applications with most any :doc:`cryptographic algorithm
 message processing system <filters>`, and a wide variety of other
 features. A third party open source implementation of `SSHv2
 <http://www.netsieben.com/products/ssh/>`_ that uses botan is also
-available. In addition to C++ you can use botan from Python or Perl,
-though the current bindings only wrap portions of the library.
+available. In addition to C++ you can use botan from :doc:`Python
+<python>` or Perl, though the current bindings only wrap portions of
+the library.
 
 See the :doc:`faq` for a list of common questions and answers.
 

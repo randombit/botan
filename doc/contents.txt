@@ -21,6 +21,7 @@ Contents
    passhash
    rng
    fpe
+   python
 
 .. toctree::
    :hidden:
