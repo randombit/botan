@@ -910,13 +910,24 @@ def fixup_proc_name(proc):
 def canon_processor(archinfo, proc):
     proc = fixup_proc_name(proc)
 
+    # First, try to search for an exact match
     for ainfo in archinfo.values():
         if ainfo.basename == proc or proc in ainfo.aliases:
             return (ainfo.basename, ainfo.basename)
-        else:
-            for (match,submodel) in ainfo.all_submodels():
-                if re.search(match, proc) != None:
-                    return (ainfo.basename, submodel)
+
+        for (match,submodel) in ainfo.all_submodels():
+            if proc == submodel or proc == match:
+                return (ainfo.basename, submodel)
+
+    logging.debug('Could not find an exact match for CPU "%s"' % (proc))
+
+    # Now, try searching via regex match
+    for ainfo in archinfo.values():
+        for (match,submodel) in ainfo.all_submodels():
+            if re.search(match, proc) != None:
+                logging.debug('Possible match "%s" with "%s" (%s)' % (
+                    proc, match, submodel))
+                return (ainfo.basename, submodel)
 
     logging.debug('Known CPU names: ' + ' '.join(
         sorted(sum([[ainfo.basename] + \
