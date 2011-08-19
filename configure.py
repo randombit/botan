@@ -37,9 +37,9 @@ class BuildConfigurationInformation(object):
     """
     version_major = 1
     version_minor = 8
-    version_patch = 13
-    version_so_patch = 13
-    version_suffix = ''
+    version_patch = 14
+    version_so_patch = 14
+    version_suffix = '-dev'
 
     version_string = '%d.%d.%d%s' % (
         version_major, version_minor, version_patch, version_suffix)
@@ -574,13 +574,26 @@ class OsInfo(object):
                 for feat in self.target_features]
 
 def canon_processor(archinfo, proc):
+    # First, try to search for an exact match
     for ainfo in archinfo.values():
         if ainfo.basename == proc or proc in ainfo.aliases:
             return (ainfo.basename, ainfo.basename)
-        else:
-            for (match,submodel) in ainfo.all_submodels():
-                if re.search(match, proc) != None:
-                    return (ainfo.basename, submodel)
+
+        for (match,submodel) in ainfo.all_submodels():
+            if proc == submodel:
+                return (ainfo.basename, submodel)
+
+    # Now, try searching via regex match
+    for ainfo in archinfo.values():
+        for (match,submodel) in ainfo.all_submodels():
+            if re.search(match, proc) != None:
+                return (ainfo.basename, submodel)
+
+    logging.debug('Known CPU names: ' + ' '.join(
+        sorted(sum([[ainfo.basename] + \
+                    ainfo.aliases + \
+                    [x for (x,_) in ainfo.all_submodels()]
+                    for ainfo in archinfo.values()], []))))
 
     raise Exception('Unknown or unidentifiable processor "%s"' % (proc))
 
