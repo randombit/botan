@@ -7,6 +7,14 @@ Release Notes
 Series 1.10
 ----------------------------------------
 
+Version 1.10.2, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* A bug in configure.py would cause it to interpret `--cpu=s390x` as
+  `s390`. This may have affected other CPUs as well. Now configure.py
+  searches for an exact match, and only if no exact match is found
+  will it search for substring matches.
+
 Version 1.10.1, 2011-07-11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
