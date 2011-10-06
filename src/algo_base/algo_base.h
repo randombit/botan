@@ -19,7 +19,6 @@ namespace Botan {
 class BOTAN_DLL Algorithm
    {
    public:
-
       /**
       * Zeroize internal state
       */
@@ -31,10 +30,10 @@ class BOTAN_DLL Algorithm
       virtual std::string name() const = 0;
 
       Algorithm() {}
+      Algorithm(const Algorithm&) = delete;
+      Algorithm& operator=(const Algorithm&) = delete;
+
       virtual ~Algorithm() {}
-   private:
-      Algorithm(const Algorithm&) {}
-      Algorithm& operator=(const Algorithm&) { return (*this); }
    };
 
 }

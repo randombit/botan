@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * Record_Writer Constructor
 */
-Record_Writer::Record_Writer(std::tr1::function<void (const byte[], size_t)> out) :
+Record_Writer::Record_Writer(std::function<void (const byte[], size_t)> out) :
    output_fn(out),
    buffer(DEFAULT_BUFFERSIZE)
    {
@@ -262,7 +262,7 @@ void Record_Writer::send_record(byte type, byte major, byte minor,
 */
 void Record_Writer::alert(Alert_Level level, Alert_Type type)
    {
-   byte alert[2] = { level, type };
+   byte alert[2] = { (byte)level, (byte)type };
    send(ALERT, alert, sizeof(alert));
    flush();
    }

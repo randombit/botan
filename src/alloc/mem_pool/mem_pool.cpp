@@ -46,7 +46,7 @@ byte* Pooling_Allocator::Memory_Block::alloc(size_t n)
    if(n == BITMAP_SIZE)
       {
       if(bitmap)
-         return 0;
+         return nullptr;
       else
          {
          bitmap = ~bitmap;
@@ -69,7 +69,7 @@ byte* Pooling_Allocator::Memory_Block::alloc(size_t n)
       }
 
    if(bitmap & mask)
-      return 0;
+      return nullptr;
 
    bitmap |= mask;
    return buffer + offset * BLOCK_SIZE;
@@ -96,7 +96,7 @@ void Pooling_Allocator::Memory_Block::free(void* ptr, size_t blocks)
 /*
 * Pooling_Allocator Constructor
 */
-Pooling_Allocator::Pooling_Allocator(Mutex* m) : mutex(m)
+Pooling_Allocator::Pooling_Allocator()
    {
    last_used = blocks.begin();
    }
@@ -106,7 +106,6 @@ Pooling_Allocator::Pooling_Allocator(Mutex* m) : mutex(m)
 */
 Pooling_Allocator::~Pooling_Allocator()
    {
-   delete mutex;
    if(blocks.size())
       throw Invalid_State("Pooling_Allocator: Never released memory");
    }
@@ -116,7 +115,7 @@ Pooling_Allocator::~Pooling_Allocator()
 */
 void Pooling_Allocator::destroy()
    {
-   Mutex_Holder lock(mutex);
+   std::lock_guard<std::mutex> lock(mutex);
 
    blocks.clear();
 
@@ -133,7 +132,7 @@ void* Pooling_Allocator::allocate(size_t n)
    const size_t BITMAP_SIZE = Memory_Block::bitmap_size();
    const size_t BLOCK_SIZE = Memory_Block::block_size();
 
-   Mutex_Holder lock(mutex);
+   std::lock_guard<std::mutex> lock(mutex);
 
    if(n <= BITMAP_SIZE * BLOCK_SIZE)
       {
@@ -167,10 +166,10 @@ void Pooling_Allocator::deallocate(void* ptr, size_t n)
    const size_t BITMAP_SIZE = Memory_Block::bitmap_size();
    const size_t BLOCK_SIZE = Memory_Block::block_size();
 
-   if(ptr == 0 && n == 0)
+   if(ptr == nullptr && n == 0)
       return;
 
-   Mutex_Holder lock(mutex);
+   std::lock_guard<std::mutex> lock(mutex);
 
    if(n > BITMAP_SIZE * BLOCK_SIZE)
       dealloc_block(ptr, n);
@@ -178,8 +177,8 @@ void Pooling_Allocator::deallocate(void* ptr, size_t n)
       {
       const size_t block_no = round_up(n, BLOCK_SIZE) / BLOCK_SIZE;
 
-      std::vector<Memory_Block>::iterator i =
-         std::lower_bound(blocks.begin(), blocks.end(), Memory_Block(ptr));
+      auto i = std::lower_bound(blocks.begin(), blocks.end(),
+                                Memory_Block(ptr));
 
       if(i == blocks.end() || !i->contains(ptr, block_no))
          throw Invalid_State("Pointer released to the wrong allocator");
@@ -194,9 +193,9 @@ void Pooling_Allocator::deallocate(void* ptr, size_t n)
 byte* Pooling_Allocator::allocate_blocks(size_t n)
    {
    if(blocks.empty())
-      return 0;
+      return nullptr;
 
-   std::vector<Memory_Block>::iterator i = last_used;
+   auto i = last_used;
 
    do
       {
@@ -213,7 +212,7 @@ byte* Pooling_Allocator::allocate_blocks(size_t n)
       }
    while(i != last_used);
 
-   return 0;
+   return nullptr;
    }
 
 /*
@@ -233,7 +232,7 @@ void Pooling_Allocator::get_more_core(size_t in_bytes)
    const size_t to_allocate = in_blocks * TOTAL_BLOCK_SIZE;
 
    void* ptr = alloc_block(to_allocate);
-   if(ptr == 0)
+   if(ptr == nullptr)
       throw Memory_Exhaustion();
 
    allocated.push_back(std::make_pair(ptr, to_allocate));

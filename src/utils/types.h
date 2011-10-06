@@ -39,15 +39,7 @@ typedef signed int s32bit;
 /**
 * Typedef representing an unsigned 64-bit quantity
 */
-#if defined(_MSC_VER) || defined(__BORLANDC__)
-   typedef unsigned __int64 u64bit;
-#elif defined(__KCC)
-   typedef unsigned __long_long u64bit;
-#elif defined(__GNUG__)
-   __extension__ typedef unsigned long long u64bit;
-#else
-   typedef unsigned long long u64bit;
-#endif
+typedef unsigned long long u64bit;
 
 /**
 * A default buffer size; typically a memory page

@@ -53,7 +53,8 @@ std::string generate_passhash9(const std::string& pass,
    MessageAuthenticationCode* prf = get_pbkdf_prf(alg_id);
 
    if(!prf)
-      throw Invalid_Argument("Passhash9: Algorithm id " + to_string(alg_id) +
+      throw Invalid_Argument("Passhash9: Algorithm id " +
+                             std::to_string(alg_id) +
                              " is not defined");
 
    PKCS5_PBKDF2 kdf(prf); // takes ownership of pointer

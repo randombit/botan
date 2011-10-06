@@ -2,8 +2,6 @@ macro_name INTEL
 
 binary_name icpc
 
-has_tr1 yes
-
 compile_option "-c "
 output_to_option "-o "
 add_include_dir_option -I
@@ -14,7 +12,7 @@ lib_opt_flags "-O2 -ip -unroll"
 check_opt_flags "-O2"
 debug_flags -g
 no_debug_flags "-fomit-frame-pointer"
-lang_flags ""
+lang_flags "-std=c++0x"
 warning_flags "-w1"
 shared_flags "-fPIC"
 

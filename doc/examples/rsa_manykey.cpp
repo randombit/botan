@@ -31,7 +31,7 @@ int main()
 
       RSA_PrivateKey key(rng, j);
 
-      std::ofstream priv(("rsa/" + to_string(j) + ".pem").c_str());
+      std::ofstream priv(("rsa/" + std::to_string(j) + ".pem").c_str());
       priv << PKCS8::PEM_encode(key);
       priv.close();
 
