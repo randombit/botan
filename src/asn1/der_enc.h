@@ -24,30 +24,44 @@ class BOTAN_DLL DER_Encoder
    public:
       SecureVector<byte> get_contents();
 
-      DER_Encoder& start_cons(ASN1_Tag, ASN1_Tag = UNIVERSAL);
+      DER_Encoder& start_cons(ASN1_Tag type_tag,
+                              ASN1_Tag class_tag = UNIVERSAL);
       DER_Encoder& end_cons();
 
-      DER_Encoder& start_explicit(u16bit);
+      DER_Encoder& start_explicit(u16bit type_tag);
       DER_Encoder& end_explicit();
 
-      DER_Encoder& raw_bytes(const byte[], size_t);
-      DER_Encoder& raw_bytes(const MemoryRegion<byte>&);
+      DER_Encoder& raw_bytes(const byte val[], size_t len);
+      DER_Encoder& raw_bytes(const MemoryRegion<byte>& val);
 
       DER_Encoder& encode_null();
-      DER_Encoder& encode(bool);
-      DER_Encoder& encode(size_t);
-      DER_Encoder& encode(const BigInt&);
-      DER_Encoder& encode(const MemoryRegion<byte>&, ASN1_Tag);
-      DER_Encoder& encode(const byte[], size_t, ASN1_Tag);
+      DER_Encoder& encode(bool b);
+      DER_Encoder& encode(size_t s);
+      DER_Encoder& encode(const BigInt& n);
+      DER_Encoder& encode(const MemoryRegion<byte>& v, ASN1_Tag real_type);
+      DER_Encoder& encode(const byte val[], size_t len, ASN1_Tag real_type);
 
-      DER_Encoder& encode(bool, ASN1_Tag, ASN1_Tag = CONTEXT_SPECIFIC);
-      DER_Encoder& encode(size_t, ASN1_Tag, ASN1_Tag = CONTEXT_SPECIFIC);
-      DER_Encoder& encode(const BigInt&, ASN1_Tag,
-                          ASN1_Tag = CONTEXT_SPECIFIC);
-      DER_Encoder& encode(const MemoryRegion<byte>&, ASN1_Tag,
-                          ASN1_Tag, ASN1_Tag = CONTEXT_SPECIFIC);
-      DER_Encoder& encode(const byte[], size_t, ASN1_Tag,
-                          ASN1_Tag, ASN1_Tag = CONTEXT_SPECIFIC);
+      DER_Encoder& encode(bool b,
+                          ASN1_Tag type_tag,
+                          ASN1_Tag class_tag = CONTEXT_SPECIFIC);
+
+      DER_Encoder& encode(size_t s,
+                          ASN1_Tag type_tag,
+                          ASN1_Tag class_tag = CONTEXT_SPECIFIC);
+
+      DER_Encoder& encode(const BigInt& n,
+                          ASN1_Tag type_tag,
+                          ASN1_Tag class_tag = CONTEXT_SPECIFIC);
+
+      DER_Encoder& encode(const MemoryRegion<byte>& v,
+                          ASN1_Tag real_type,
+                          ASN1_Tag type_tag,
+                          ASN1_Tag class_tag = CONTEXT_SPECIFIC);
+
+      DER_Encoder& encode(const byte v[], size_t len,
+                          ASN1_Tag real_type,
+                          ASN1_Tag type_tag,
+                          ASN1_Tag class_tag = CONTEXT_SPECIFIC);
 
       template<typename T>
       DER_Encoder& encode_optional(const T& value, const T& default_value)
@@ -65,13 +79,21 @@ class BOTAN_DLL DER_Encoder
          return (*this);
          }
 
-      DER_Encoder& encode(const ASN1_Object&);
-      DER_Encoder& encode_if(bool, DER_Encoder&);
+      DER_Encoder& encode(const ASN1_Object& obj);
+      DER_Encoder& encode_if(bool pred, DER_Encoder& enc);
 
-      DER_Encoder& add_object(ASN1_Tag, ASN1_Tag, const byte[], size_t);
-      DER_Encoder& add_object(ASN1_Tag, ASN1_Tag, const MemoryRegion<byte>&);
-      DER_Encoder& add_object(ASN1_Tag, ASN1_Tag, const std::string&);
-      DER_Encoder& add_object(ASN1_Tag, ASN1_Tag, byte);
+      DER_Encoder& add_object(ASN1_Tag type_tag, ASN1_Tag class_tag,
+                              const byte rep[], size_t length);
+
+      DER_Encoder& add_object(ASN1_Tag type_tag, ASN1_Tag class_tag,
+                              const MemoryRegion<byte>& rep);
+
+      DER_Encoder& add_object(ASN1_Tag type_tag, ASN1_Tag class_tag,
+                              const std::string& str);
+
+      DER_Encoder& add_object(ASN1_Tag type_tag, ASN1_Tag class_tag,
+                              byte val);
+
    private:
       class DER_Sequence
          {
@@ -85,6 +107,7 @@ class BOTAN_DLL DER_Encoder
             SecureVector<byte> contents;
             std::vector< SecureVector<byte> > set_contents;
          };
+
       SecureVector<byte> contents;
       std::vector<DER_Sequence> subsequences;
    };
