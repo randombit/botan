@@ -1735,10 +1735,13 @@ def main(argv = None):
 
         def get_gcc_version(gcc_bin):
             try:
-                gcc_version = ''.join(subprocess.Popen(
+                subproc_result = subprocess.Popen(
                     gcc_bin.split(' ') + ['-dumpversion'],
                     stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE).communicate()).strip()
+                    stderr=subprocess.PIPE).communicate()
+
+                gcc_version = ''.join(map(str, subproc_result)).strip()
+
                 logging.info('Detected gcc version %s' % (gcc_version))
                 return gcc_version
             except OSError:
