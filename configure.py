@@ -1178,9 +1178,9 @@ def main(argv = None):
                 matching_version = '(4\.[01234]\.)|(3\.[34]\.)|(2\.95\.[0-4])'
 
                 gcc_version = ''.join(
-                    subprocess.Popen(['g++', '-v'],
+                    str(subprocess.Popen(['g++', '-v'],
                                      stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE).communicate())
+                                     stderr=subprocess.PIPE).communicate()))
 
                 if re.search(matching_version, gcc_version):
                     options.dumb_gcc = True
