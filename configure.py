@@ -6,12 +6,14 @@ Configuration program for botan (http://botan.randombit.net/)
   Distributed under the terms of the Botan license
 
 Tested with
-   CPython 2.5, 2.6, 2.7 - OK
-   Jython 2.5 - Target detection does not work (use --os and --cpu)
+   CPython 2.6, 2.7, 3.1 - OK
+
+   Python 2.5 works if you change the exception catching syntax:
+      perl -pi -e 's/except (.*) as (.*):/except $1, $2:/g' configure.py
+
+   Jython - Target detection does not work (use --os and --cpu)
 
    CPython 2.4 and earlier are not supported
-
-   Use the 2to3 script to use with Python 3
 
    Has not been tested with IronPython or PyPy
 """
@@ -53,7 +55,7 @@ def get_vc_revision():
             return 'unknown'
 
         return 'mtn:' + stdout.strip()
-    except OSError, e:
+    except OSError as e:
         logging.debug('Error getting rev from monotone - %s' % (e[1]))
         return 'unknown'
 
@@ -981,7 +983,7 @@ def process_template(template_file, variables):
     try:
         template = PercentSignTemplate(slurp_file(template_file))
         return template.substitute(variables)
-    except KeyError, e:
+    except KeyError as e:
         raise Exception('Unbound var %s in template %s' % (e, template_file))
 
 """
@@ -1422,14 +1424,14 @@ def setup_build(build_config, options, template_vars):
     try:
         if options.clean_build_tree:
             shutil.rmtree(build_config.build_dir)
-    except OSError, e:
+    except OSError as e:
         if e.errno != errno.ENOENT:
             logging.error('Problem while removing build dir: %s' % (e))
 
     for dir in build_config.build_dirs:
         try:
             os.makedirs(dir)
-        except OSError, e:
+        except OSError as e:
             if e.errno != errno.EEXIST:
                 logging.error('Error while creating "%s": %s' % (dir, e))
 
@@ -1480,7 +1482,7 @@ def setup_build(build_config, options, template_vars):
         for header_file in header_list:
             try:
                 portable_symlink(header_file, dir, link_method)
-            except OSError, e:
+            except OSError as e:
                 if e.errno != errno.EEXIST:
                     logging.error('Error linking %s into %s: %s' % (
                         header_file, dir, e))
@@ -1843,7 +1845,7 @@ def main(argv = None):
 if __name__ == '__main__':
     try:
         main()
-    except Exception, e:
+    except Exception as e:
         logging.error(str(e))
         #import traceback
         #traceback.print_exc(file=sys.stderr)

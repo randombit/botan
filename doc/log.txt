@@ -10,6 +10,11 @@ Series 1.10
 Version 1.10.2, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* The exception catching syntax of configure.py has been changed to
+  the Python 3.x syntax. This syntax also works with Python 2.6 and
+  2.7, but not with any earlier Python 2 release. A simple search and
+  replace will allow using Python 2.5, though.
+
 * Don't set a soname on OpenBSD, as it doesn't support it (PR 158)
 
 * Fix a configure.py incompatability with the subprocess module
