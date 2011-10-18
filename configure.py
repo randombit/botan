@@ -58,7 +58,7 @@ class BuildConfigurationInformation(object):
         self.include_dir = os.path.join(self.build_dir, 'include')
         self.full_include_dir = os.path.join(self.include_dir, 'botan')
 
-        all_files = sum([mod.add for mod in modules], [])
+        all_files = sum([list(mod.add) for mod in modules], [])
 
         self.headers = sorted(
             [file for file in all_files if file.endswith('.h')])
@@ -290,7 +290,7 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
 
     for group in allowed_groups:
         to_obj.__dict__[group] = []
-    for (key,val) in name_val_pairs.iteritems():
+    for (key,val) in name_val_pairs.items():
         to_obj.__dict__[key] = val
 
     def lexed_tokens(): # Convert to an interator
@@ -413,8 +413,8 @@ class ArchInfo(object):
             self.unaligned_ok = 0
 
     def all_submodels(self):
-        return sorted(zip(self.submodels, self.submodels) +
-                          self.submodel_aliases.items(),
+        return sorted([(k,k) for k in self.submodels] +
+                      [k for k in self.submodel_aliases.items()],
                       key = lambda k: len(k[0]), reverse = True)
 
     def defines(self, target_submodel, with_endian):
@@ -639,7 +639,7 @@ def process_template(template_file, variables):
     try:
         template = PercentSignTemplate(slurp_file(template_file))
         return template.substitute(variables)
-    except KeyError, e:
+    except KeyError as e:
         raise Exception('Unbound var %s in template %s' % (e, template_file))
 
 """
@@ -655,7 +655,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     def link_to():
         libs = set()
         for module in modules:
-            for (osname,link_to) in module.libs.iteritems():
+            for (osname,link_to) in module.libs.items():
                 if osname == 'all' or osname == osinfo.basename:
                     libs.add(link_to)
                 else:
@@ -811,8 +811,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'doc_files': makefile_list(build_config.doc_files()),
 
-        'mod_list': '\n'.join(['%s (%s)' % (m.basename, m.realname)
-                               for m in sorted(modules)]),
+        'mod_list': '\n'.join(sorted([m.basename for m in modules])),
         }
 
 """
@@ -827,7 +826,7 @@ def choose_modules_to_use(options, modules):
     def cannot_use_because(mod, reason):
         not_using_because.setdefault(reason, []).append(mod)
 
-    for (modname, module) in modules.iteritems():
+    for (modname, module) in modules.items():
         if modname in options.disabled_modules:
             cannot_use_because(modname, 'disabled by user')
         elif modname in options.enabled_modules:
@@ -1033,7 +1032,7 @@ def setup_build(build_config, options, template_vars):
     # First delete the build tree, if existing
     try:
         shutil.rmtree(build_config.build_dir)
-    except OSError, e:
+    except OSError as e:
         logging.debug('Error while removing build dir: %s' % (e))
 
     for dirs in [build_config.checkobj_dir,
@@ -1185,7 +1184,7 @@ def main(argv = None):
 
                 if re.search(matching_version, gcc_version):
                     options.dumb_gcc = True
-            except OSError, e:
+            except OSError as e:
                 logging.info('Could not execute GCC for version check')
 
         if options.dumb_gcc is True:
@@ -1219,8 +1218,8 @@ def main(argv = None):
 if __name__ == '__main__':
     try:
         main()
-    except Exception, e:
-        print >>sys.stderr, e
+    except Exception as e:
+        logging.error(str(e))
         #import traceback
         #traceback.print_exc(file=sys.stderr)
         sys.exit(1)
