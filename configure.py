@@ -639,7 +639,7 @@ def process_template(template_file, variables):
     try:
         template = PercentSignTemplate(slurp_file(template_file))
         return template.substitute(variables)
-    except KeyError as e:
+    except KeyError, e:
         raise Exception('Unbound var %s in template %s' % (e, template_file))
 
 """
@@ -1032,7 +1032,7 @@ def setup_build(build_config, options, template_vars):
     # First delete the build tree, if existing
     try:
         shutil.rmtree(build_config.build_dir)
-    except OSError as e:
+    except OSError, e:
         logging.debug('Error while removing build dir: %s' % (e))
 
     for dirs in [build_config.checkobj_dir,
@@ -1184,7 +1184,7 @@ def main(argv = None):
 
                 if re.search(matching_version, gcc_version):
                     options.dumb_gcc = True
-            except OSError as e:
+            except OSError, e:
                 logging.info('Could not execute GCC for version check')
 
         if options.dumb_gcc is True:
@@ -1218,7 +1218,7 @@ def main(argv = None):
 if __name__ == '__main__':
     try:
         main()
-    except Exception as e:
+    except Exception, e:
         logging.error(str(e))
         #import traceback
         #traceback.print_exc(file=sys.stderr)
