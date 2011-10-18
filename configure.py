@@ -41,17 +41,21 @@ def flatten(l):
     return sum(l, [])
 
 def get_vc_revision():
-    mtn = subprocess.Popen(['mtn', 'automate', 'heads'],
-                           stdout=subprocess.PIPE,
-                           stderr=subprocess.PIPE)
+    try:
+        mtn = subprocess.Popen(['mtn', 'automate', 'heads'],
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
 
-    (stdout, stderr) = mtn.communicate()
+        (stdout, stderr) = mtn.communicate()
 
-    if(stderr != ''):
-        #logging.debug('Error getting rev from monotone - %s' % (stderr))
+        if(stderr != ''):
+            logging.debug('Error getting rev from monotone - %s' % (stderr))
+            return 'unknown'
+
+        return 'mtn:' + stdout.strip()
+    except OSError, e:
+        logging.debug('Error getting rev from monotone - %s' % (e[1]))
         return 'unknown'
-
-    return 'mtn:' + stdout.strip()
 
 class BuildConfigurationInformation(object):
 
@@ -65,13 +69,16 @@ class BuildConfigurationInformation(object):
 
     version_datestamp = botan_version.release_datestamp
 
-    version_vc_rev = botan_version.release_vc_rev or get_vc_revision()
+    version_vc_rev = botan_version.release_vc_rev
     version_string = '%d.%d.%d' % (version_major, version_minor, version_patch)
 
     """
     Constructor
     """
     def __init__(self, options, modules):
+
+        if self.version_vc_rev is None:
+            self.version_vc_rev = get_vc_revision()
 
         self.build_dir = os.path.join(options.with_build_dir, 'build')
 
