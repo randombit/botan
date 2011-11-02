@@ -16,6 +16,8 @@ Version 1.10.2, Not Yet Released
   replace will allow running it under Python 2.5::
      perl -pi -e 's/except (.*) as (.*):/except $1, $2:/g' configure.py
 
+* Add AltiVec detection for IBM POWER7 processors.
+
 * Don't set a soname on OpenBSD, as it doesn't support it (PR 158)
 
 * Fix a configure.py incompatability with the subprocess module
