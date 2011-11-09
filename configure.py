@@ -5,17 +5,16 @@ Configuration program for botan (http://botan.randombit.net/)
   (C) 2009-2011 Jack Lloyd
   Distributed under the terms of the Botan license
 
-Tested with
-   CPython 2.6, 2.7, 3.1 - OK
+Tested with CPython 2.6, 2.7, 3.1 and PyPy 1.5
 
-   Python 2.5 works if you change the exception catching syntax:
-      perl -pi -e 's/except (.*) as (.*):/except $1, $2:/g' configure.py
+Python 2.5 works if you change the exception catching syntax:
+   perl -pi -e 's/except (.*) as (.*):/except $1, $2:/g' configure.py
 
-   Jython - Target detection does not work (use --os and --cpu)
+Jython - Target detection does not work (use --os and --cpu)
 
-   CPython 2.4 and earlier are not supported
+CPython 2.4 and earlier are not supported
 
-   Has not been tested with IronPython or PyPy
+Has not been tested with IronPython
 """
 
 import sys
