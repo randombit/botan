@@ -10,6 +10,19 @@ Series 1.10
 Version 1.10.2, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* The exception catching syntax of configure.py has been changed to
+  the Python 3.x syntax. This syntax also works with Python 2.6 and
+  2.7, but not with any earlier Python 2 release. A simple search and
+  replace will allow running it under Python 2.5::
+     perl -pi -e 's/except (.*) as (.*):/except $1, $2:/g' configure.py
+
+* Add AltiVec detection for IBM POWER7 processors.
+
+* Don't set a soname on OpenBSD, as it doesn't support it (PR 158)
+
+* Fix a configure.py incompatability with the subprocess module
+  included in Python 3.1 (PR 157)
+
 * A bug in configure.py would cause it to interpret `--cpu=s390x` as
   `s390`. This may have affected other CPUs as well. Now configure.py
   searches for an exact match, and only if no exact match is found

@@ -68,8 +68,9 @@ Botan's development occurs using a distributed version control system
 called `Monotone <http://www.monotone.ca>`_.
 
 The main branch of development occurs on the branch named
-``net.randombit.botan``; this is probably the branch you want. To
-download that branch and set up a new workspace, run::
+``net.randombit.botan``; this is probably the branch you want (for
+1.8, use ``net.randombit.botan.1_8`` instead). To download that branch
+and set up a new workspace, run::
 
    $ mtn db init --db=botan.mtn
    $ mtn pull --db=botan.mtn randombit.net 'net.randombit.botan'
