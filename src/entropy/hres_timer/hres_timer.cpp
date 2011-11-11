@@ -1,6 +1,6 @@
 /*
 * High Resolution Timestamp Entropy Source
-* (C) 1999-2009 Jack Lloyd
+* (C) 1999-2009,2011 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -22,9 +22,44 @@ void High_Resolution_Timestamp::poll(Entropy_Accumulator& accum)
    {
    // If Windows, grab the Performance Counter (usually TSC or PIT)
 #if defined(BOTAN_TARGET_OS_IS_WINDOWS)
+   {
    LARGE_INTEGER tv;
    ::QueryPerformanceCounter(&tv);
    accum.add(tv.QuadPart, 0);
+   }
+#endif
+
+#if defined(BOTAN_TARGET_OS_HAS_CLOCK_GETTIME)
+
+#define CLOCK_POLL(src)                     \
+   do {                                     \
+     struct timespec ts;                    \
+     clock_gettime(src, &ts);               \
+     accum.add(&ts, sizeof(ts), 0);         \
+   } while(0)
+
+#if defined(CLOCK_REALTIME)
+   CLOCK_POLL(CLOCK_REALTIME);
+#endif
+
+#if defined(CLOCK_MONOTONIC)
+   CLOCK_POLL(CLOCK_MONOTONIC);
+#endif
+
+#if defined(CLOCK_MONOTONIC_RAW)
+   CLOCK_POLL(CLOCK_MONOTONIC_RAW);
+#endif
+
+#if defined(CLOCK_PROCESS_CPUTIME_ID)
+   CLOCK_POLL(CLOCK_PROCESS_CPUTIME_ID);
+#endif
+
+#if defined(CLOCK_THREAD_CPUTIME_ID)
+   CLOCK_POLL(CLOCK_THREAD_CPUTIME_ID);
+#endif
+
+#undef CLOCK_POLL
+
 #endif
 
 #if BOTAN_USE_GCC_INLINE_ASM

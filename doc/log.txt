@@ -16,6 +16,9 @@ Version 1.10.2, Not Yet Released
   replace will allow running it under Python 2.5::
      perl -pi -e 's/except (.*) as (.*):/except $1, $2:/g' configure.py
 
+* If clock_gettime is available on the system, poll all available
+  clock types in the hres_timer poll.
+
 * Add AltiVec detection for IBM POWER7 processors.
 
 * Don't set a soname on OpenBSD, as it doesn't support it (PR 158)
