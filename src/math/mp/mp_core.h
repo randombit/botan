@@ -140,8 +140,7 @@ void bigint_comba_mul16(word z[32], const word x[16], const word y[16]);
 void bigint_comba_sqr4(word out[8], const word in[4]);
 void bigint_comba_sqr6(word out[12], const word in[6]);
 void bigint_comba_sqr8(word out[16], const word in[8]);
-void bigint_comba_sqr8(word out[32], const word in[16]);
-void bigint_comba_sqr16(word out[64], const word in[32]);
+void bigint_comba_sqr16(word out[32], const word in[16]);
 
 }
 
