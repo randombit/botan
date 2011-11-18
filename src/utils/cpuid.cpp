@@ -24,9 +24,9 @@
 #elif defined(BOTAN_BUILD_COMPILER_IS_INTEL)
 
   #include <ia32intrin.h>
-  #define CALL_CPUID(type, out) do { __cpuid(out, type); } while(0);
+  #define CALL_CPUID(type, out) do { __cpuid(out, type); } while(0)
 
-#elif (BOTAN_GCC_VERSION >= 430)
+#elif defined(BOTAN_BUILD_COMPILER_IS_GCC) && (BOTAN_GCC_VERSION >= 430)
 
   // Only available starting in GCC 4.3
   #include <cpuid.h>
@@ -45,6 +45,20 @@ namespace {
   #define CALL_CPUID call_gcc_cpuid
 
 }
+
+#elif defined(BOTAN_TARGET_ARCH_IS_X86_64) && \
+   (defined(BOTAN_BUILD_COMPILER_IS_CLANG) || defined(BOTAN_BUILD_COMPILER_IS_GCC))
+
+  /*
+  * We can't safely use this on x86-32 as some 32-bit ABIs use ebx as
+  * a PIC register, and in theory there are some x86-32s still out
+  * there that don't support cpuid at all; it requires strange
+  * contortions to detect them.
+  */
+
+  #define CALL_CPUID(type, out) \
+    asm("cpuid\n\t" : "=a" (out[0]), "=b" (out[1]), "=c" (out[2]), "=d" (out[3]) \
+        : "0" (type))
 
 #else
   #warning "No method of calling CPUID for this compiler"
