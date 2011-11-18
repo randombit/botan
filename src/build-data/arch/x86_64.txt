@@ -13,11 +13,12 @@ x64
 <submodels>
 k8
 k10
+atom
 nocona
 core2
 nehalem
 westmere
-atom
+sandybridge
 </submodels>
 
 <submodel_aliases>
@@ -37,6 +38,6 @@ corei7cpu860 -> nehalem
 
 <isa_extn>
 sse2:all
-ssse3:core2,nehalem,westmere,atom
-aes-ni:westmere
+ssse3:core2,nehalem,westmere,atom,sandybridge
+aes-ni:westmere,sandybridge
 </isa_extn>
