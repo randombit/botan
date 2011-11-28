@@ -159,7 +159,7 @@ You can do any combination of:
 
 * Contact the current lead maintainer personally; currently
   `Jack Lloyd <http://www.randombit.net>`_
-  (`personal PGP key` <http://www.randombit.net/pgpgkey.html`_)
+  (`personal PGP key <http://www.randombit.net/pgpgkey.html>`_)
 
 * Email the `development list
   <http://lists.randombit.net/mailman/listinfo/botan-devel>`_
