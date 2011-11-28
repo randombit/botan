@@ -10,8 +10,18 @@
 #include <botan/get_byte.h>
 #include <botan/mem_ops.h>
 
+#if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
+
 #if defined(BOTAN_TARGET_OS_IS_DARWIN)
   #include <sys/sysctl.h>
+#endif
+
+#if defined(BOTAN_TARGET_OS_IS_OPENBSD)
+  #include <sys/param.h>
+  #include <sys/sysctl.h>
+  #include <machine/cpu.h>
+#endif
+
 #endif
 
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
@@ -106,10 +116,14 @@ u32bit get_x86_cache_line_size()
 
 bool altivec_check_sysctl()
    {
-#if defined(BOTAN_TARGET_OS_IS_DARWIN)
+#if defined(BOTAN_TARGET_OS_IS_DARWIN) || defined(BOTAN_TARGET_OS_IS_OPENBSD)
 
+#if defined(BOTAN_TARGET_OS_IS_OPENBSD)
+   int sels[2] = { CTL_MACHDEP, CPU_ALTIVEC };
+#else
    // From Apple's docs
    int sels[2] = { CTL_HW, HW_VECTORUNIT };
+#endif
    int vector_type = 0;
    size_t length = sizeof(vector_type);
    int error = sysctl(sels, 2, &vector_type, &length, NULL, 0);
