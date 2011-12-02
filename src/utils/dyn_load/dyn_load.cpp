@@ -65,7 +65,8 @@ void* Dynamically_Loaded_Library::resolve_symbol(const std::string& symbol)
 #if defined(BOTAN_TARGET_OS_HAS_DLOPEN)
    addr = ::dlsym(lib, symbol.c_str());
 #elif defined(BOTAN_TARGET_OS_HAS_LOADLIBRARY)
-   addr = ::GetProcAddress((HMODULE)lib, symbol.c_str());
+   addr = reinterpret_cast<void*>(::GetProcAddress((HMODULE)lib,
+                                                   symbol.c_str()));
 #endif
 
    if(!addr)

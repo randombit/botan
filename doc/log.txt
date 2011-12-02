@@ -23,6 +23,8 @@ Version 1.10.2, Not Yet Released
 
 * Add AltiVec detection for OpenBSD, contributed by Brad Smith (PR 162)
 
+* Fixed a compilation problem of the dynamic loader hooks under MinGW GCC
+
 * Don't set a soname on OpenBSD, as it doesn't support it (PR 158)
 
 * Fix a configure.py incompatability with the subprocess module
