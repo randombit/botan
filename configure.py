@@ -1686,15 +1686,6 @@ def main(argv = None):
 
     (modules, archinfo, ccinfo, osinfo) = load_info_files(options)
 
-    if options.os is None:
-        options.os = platform.system().lower()
-
-        if re.match('^cygwin_.*', options.os):
-            logging.debug("Converting '%s' to 'cygwin'", options.os)
-            options.os = 'cygwin'
-
-        logging.info('Guessing target OS is %s (use --os to set)' % (options.os))
-
     if options.compiler is None:
         if options.os == 'windows':
             if have_program('g++') and not have_program('cl'):
@@ -1705,6 +1696,18 @@ def main(argv = None):
             options.compiler = 'gcc'
         logging.info('Guessing to use compiler %s (use --cc to set)' % (
             options.compiler))
+
+    if options.os is None:
+        options.os = platform.system().lower()
+
+        if re.match('^cygwin_.*', options.os):
+            logging.debug("Converting '%s' to 'cygwin'", options.os)
+            options.os = 'cygwin'
+
+        if options.os == 'windows' and options.compiler == 'gcc':
+            logging.warning('Detected GCC on Windows; use --os=cygwin or --os=mingw?')
+
+        logging.info('Guessing target OS is %s (use --os to set)' % (options.os))
 
     if options.compiler not in ccinfo:
         raise Exception('Unknown compiler "%s"; available options: %s' % (
