@@ -1,6 +1,6 @@
 /*
 * Core Engine
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2011 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -179,8 +179,8 @@ Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
 * Get a cipher object
 */
 Keyed_Filter* Core_Engine::get_cipher(const std::string& algo_spec,
-                                         Cipher_Dir direction,
-                                         Algorithm_Factory& af)
+                                      Cipher_Dir direction,
+                                      Algorithm_Factory& af)
    {
    std::vector<std::string> algo_parts = split_on(algo_spec, '/');
    if(algo_parts.empty())
@@ -197,8 +197,12 @@ Keyed_Filter* Core_Engine::get_cipher(const std::string& algo_spec,
    if(!block_cipher)
       return 0;
 
-   if(algo_parts.size() != 2 && algo_parts.size() != 3)
-      return 0;
+   if(algo_parts.size() >= 4)
+      return 0; // 4 part mode, not something we know about
+
+   if(algo_parts.size() < 2)
+      throw Lookup_Error("Cipher specification '" + algo_spec +
+                         "' is missing mode identifier");
 
    std::string mode = algo_parts[1];
 
