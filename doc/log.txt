@@ -23,6 +23,8 @@ Version 1.10.2, Not Yet Released
 
 * Add AltiVec detection for OpenBSD, contributed by Brad Smith (PR 162)
 
+* Add Google's Native Client as an compile target
+
 * If targetting GCC on a Windows system, configure.py will warn that
   likely you wanted to configure for either MinGW or Cygwin, not the
   generic Windows target which is oriented to Win32 plus the Visual
