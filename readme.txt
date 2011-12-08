@@ -1,4 +1,4 @@
-Botan 1.10.1, 2011-07-11
+Botan 1.10.2, ????-??-??
 http://botan.randombit.net/
 
 Botan is a C++ class library for performing a wide variety of
@@ -8,8 +8,8 @@ Bugzilla (http://bugs.randombit.net/) or by sending a report to the
 botan-devel mailing list. More information about the mailing list is
 at http://lists.randombit.net/mailman/listinfo/botan-devel/
 
-You can find documentation online at http://botan.randombit.net/docs
-and http://botan.randombit.net/doxygen. A set of example programs can
-be found in the directory doc/examples.
+You can find documentation online at http://botan.randombit.net/ as
+well as in the doc directory in the distribution. Several examples can
+be found in doc/examples as well.
 
 Jack Lloyd (lloyd@randombit.net)
