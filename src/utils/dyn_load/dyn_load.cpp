@@ -39,7 +39,7 @@ Dynamically_Loaded_Library::Dynamically_Loaded_Library(
       raise_runtime_loader_exception(lib_name, dlerror());
 
 #elif defined(BOTAN_TARGET_OS_HAS_LOADLIBRARY)
-   lib = ::LoadLibrary(lib_name.c_str());
+   lib = ::LoadLibraryA(lib_name.c_str());
 
    if(!lib)
       raise_runtime_loader_exception(lib_name, "LoadLibrary failed");
