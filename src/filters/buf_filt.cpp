@@ -82,7 +82,7 @@ void Buffered_Filter::write(const byte input[], size_t input_size)
 void Buffered_Filter::end_msg()
    {
    if(buffer_pos < final_minimum)
-      throw std::runtime_error("Buffered_Operation::final - not enough input");
+      throw std::runtime_error("Buffered filter end_msg without enough input");
 
    size_t spare_blocks = (buffer_pos - final_minimum) / main_block_mod;
 
