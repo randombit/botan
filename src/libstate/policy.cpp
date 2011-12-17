@@ -302,6 +302,16 @@ void set_default_dl_groups(Library_State& config)
          "Nf2tRM/S10+SCL4lj/MklDMo9nMpwP//////////"
          "-----END X942 DH PARAMETERS-----");
 
+   config.set("dl", "modp/srp/1024",
+         "-----BEGIN X942 DH PARAMETERS-----"
+         "MIIBCgKBgQDurwq5rbON1pwz+Ar6j8XoYHJhh3X/PAueojFMnCVldtZ033SW6oHT"
+         "ODtIE9aSxuDg1djiULmL5I5JXB1gidrRXcfXtGFU1rbOjvStabFdSYJVmyl7zxiF"
+         "xSn1ZmYOV+xo7bw8BXJswC/Uy/SXbqqa/VE4/oN2Q1ufxh0vwOsG4wIBAgKBgHdX"
+         "hVzW2cbrThn8BX1H4vQwOTDDuv+eBc9RGKZOErK7azpvukt1QOmcHaQJ60ljcHBq"
+         "7HEoXMXyRySuDrBE7Wiu4+vaMKprW2dHela02K6kwSrNlL3njELilPqzMwcr9jR2"
+         "3h4CuTZgF+pl+ku3VU1+qJx/Qbshrc/jDpfgdYNx"
+         "-----END X942 DH PARAMETERS-----");
+
    config.set("dl", "modp/ietf/1536",
          "-----BEGIN X942 DH PARAMETERS-----"
          "MIIBigKBwQD//////////8kP2qIhaMI0xMZii4DcHNEpAk4IimfMdAILvqY7E5si"

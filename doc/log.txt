@@ -10,6 +10,9 @@ Series 1.10
 Version 1.10.2, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* An implementation of SRP-6a compatible with the specification in
+  RFC 5054 is now available in srp6.h
+
 * The exception catching syntax of configure.py has been changed to
   the Python 3.x syntax. This syntax also works with Python 2.6 and
   2.7, but not with any earlier Python 2 release. A simple search and
