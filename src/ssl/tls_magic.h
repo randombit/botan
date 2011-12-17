@@ -181,6 +181,8 @@ enum TLS_Handshake_Extension_Type {
    TLSEXT_USABLE_ELLIPTIC_CURVES = 10,
    TLSEXT_EC_POINT_FORMATS       = 11,
 
+   TLSEXT_SRP_IDENTIFIER         = 12,
+
    TLSEXT_CERTIFICATE_TYPES      = 9,
    TLSEXT_SESSION_TICKET         = 35
 };
