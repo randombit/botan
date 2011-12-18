@@ -159,7 +159,7 @@ You can do any combination of:
 
 * Contact the current lead maintainer personally; currently
   `Jack Lloyd <http://www.randombit.net>`_
-  (`personal PGP key` <http://www.randombit.net/pgpgkey.html`_)
+  (`personal PGP key <http://www.randombit.net/pgpgkey.html>`_)
 
 * Email the `development list
   <http://lists.randombit.net/mailman/listinfo/botan-devel>`_
@@ -185,9 +185,8 @@ Will it work on my platform XYZ??
 ----------------------------------------
 
 The most common stumbling block is a compiler that is buggy or can't
-handle modern C++ (specifically, C++98). Check out the `build list
-<http://botan.randombit.net/builds.html>`_ for a sense of which
-platforms are actively being tested.
+handle modern C++ (specifically, C++98). Check out the :doc:`build log
+<build_log>` for a sense of which platforms are actively being tested.
 
 I'm not feeling this, what can I use instead?
 ------------------------------------------------------------

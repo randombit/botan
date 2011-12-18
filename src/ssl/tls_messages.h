@@ -51,6 +51,8 @@ class Client_Hello : public HandshakeMessage
 
       std::string hostname() const { return requested_hostname; }
 
+      std::string srp_identifier() const { return requested_srp_id; }
+
       bool offered_suite(u16bit) const;
 
       Client_Hello(RandomNumberGenerator& rng,
@@ -75,6 +77,7 @@ class Client_Hello : public HandshakeMessage
       std::vector<u16bit> suites;
       std::vector<byte> comp_algos;
       std::string requested_hostname;
+      std::string requested_srp_id;
    };
 
 /**

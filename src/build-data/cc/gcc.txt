@@ -45,25 +45,27 @@ i386        -> "-mtune=generic -momit-leaf-frame-pointer"
 i486        -> "-mtune=generic -momit-leaf-frame-pointer"
 i586        -> "-mtune=generic -momit-leaf-frame-pointer"
 
+# Translate to GCC-speak
+nehalem     -> "-march=corei7 -momit-leaf-frame-pointer"
+westmere    -> "-march=corei7 -maes -momit-leaf-frame-pointer"
+sandybridge -> "-march=corei7-avx -momit-leaf-frame-pointer"
+atom32      -> "-march=atom -momit-leaf-frame-pointer"
+
 ppc601      -> "-mpowerpc -mcpu=601"
 cellppu     -> "-mcpu=cell"
 e500v2      -> "-mcpu=8548"
-atom32      -> "-march=atom -momit-leaf-frame-pointer"
 
+# No scheduler in GCC for anything after EV67
 alpha-ev68  -> "-mcpu=ev67"
 alpha-ev7   -> "-mcpu=ev67"
 
 # The patch from Debian bug 594159 has this, don't know why though...
 sh4         -> "-m4 -mieee"
 
+# Default family options (SUBMODEL is substitued with the actual
+# submodel name). Anything after the quotes is what should be
+# *removed* from the submodel name before it's put into SUBMODEL.
 
-# Until GCC gets -march support for these models
-nehalem     -> "-march=core2 -msse4.1 -msse4.2 -momit-leaf-frame-pointer"
-westmere    -> "-march=core2 -maes -msse4.1 -msse4.2 -momit-leaf-frame-pointer"
-
-# Default family options (SUBMODEL is substitued with the real submodel)
-# Anything after the quotes is what should be *removed* from the submodel name
-# before it's put into SUBMODEL.
 alpha     -> "-mcpu=SUBMODEL" alpha-
 arm       -> "-march=SUBMODEL"
 superh    -> "-mSUBMODEL" sh

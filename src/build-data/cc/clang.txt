@@ -31,7 +31,8 @@ default -> "$(CXX) -shared -fPIC -Wl,-soname,$(SONAME)"
 
 <mach_opt>
 x86_64    -> "-march=SUBMODEL"
-nehalem   -> "-march=core2 -mssse3 -msse4.1"
+nehalem   -> "-march=corei7"
+westmere  -> "-march=corei7 -maes"
 </mach_opt>
 
 <mach_abi_linking>

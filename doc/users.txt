@@ -28,6 +28,9 @@ Open Source Software
   crypto provider
   <http://websvn.kde.org/trunk/kdesupport/qca/src/botantools/botan/>`_.
 
+* `TCHead <http://16s.us/TCHead/>`_ is a utility for analyzing
+  TrueCrypt volume headers.
+
 * `Octopod <http://code.google.com/p/octopod/>`_ is a
   file sharing system.
 

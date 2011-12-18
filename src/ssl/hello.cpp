@@ -190,6 +190,14 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
                   }
                }
             }
+         else if(extension_code == TLSEXT_SRP_IDENTIFIER)
+            {
+            std::vector<byte> name = reader.get_range_vector<byte>(1, 1, 255);
+
+            requested_srp_id.assign(
+               reinterpret_cast<char*>(&name[0]),
+               name.size());
+            }
          else
             {
             reader.discard_next(extension_size);

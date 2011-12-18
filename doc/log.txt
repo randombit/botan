@@ -10,13 +10,30 @@ Series 1.10
 Version 1.10.2, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* An implementation of SRP-6a compatible with the specification in
+  RFC 5054 is now available in srp6.h
+
 * The exception catching syntax of configure.py has been changed to
   the Python 3.x syntax. This syntax also works with Python 2.6 and
   2.7, but not with any earlier Python 2 release. A simple search and
   replace will allow running it under Python 2.5::
      perl -pi -e 's/except (.*) as (.*):/except $1, $2:/g' configure.py
 
+* If clock_gettime is available on the system, poll all available
+  clock types in the hres_timer poll.
+
 * Add AltiVec detection for IBM POWER7 processors.
+
+* Add AltiVec detection for OpenBSD, contributed by Brad Smith (PR 162)
+
+* Add Google's Native Client as an compile target
+
+* If targetting GCC on a Windows system, configure.py will warn that
+  likely you wanted to configure for either MinGW or Cygwin, not the
+  generic Windows target which is oriented to Win32 plus the Visual
+  C++ runtime.
+
+* Fixed a compilation problem of the dynamic loader hooks under MinGW GCC
 
 * Don't set a soname on OpenBSD, as it doesn't support it (PR 158)
 

@@ -39,7 +39,7 @@ Dynamically_Loaded_Library::Dynamically_Loaded_Library(
       raise_runtime_loader_exception(lib_name, dlerror());
 
 #elif defined(BOTAN_TARGET_OS_HAS_LOADLIBRARY)
-   lib = ::LoadLibrary(lib_name.c_str());
+   lib = ::LoadLibraryA(lib_name.c_str());
 
    if(!lib)
       raise_runtime_loader_exception(lib_name, "LoadLibrary failed");
@@ -65,7 +65,8 @@ void* Dynamically_Loaded_Library::resolve_symbol(const std::string& symbol)
 #if defined(BOTAN_TARGET_OS_HAS_DLOPEN)
    addr = ::dlsym(lib, symbol.c_str());
 #elif defined(BOTAN_TARGET_OS_HAS_LOADLIBRARY)
-   addr = ::GetProcAddress((HMODULE)lib, symbol.c_str());
+   addr = reinterpret_cast<void*>(::GetProcAddress((HMODULE)lib,
+                                                   symbol.c_str()));
 #endif
 
    if(!addr)
