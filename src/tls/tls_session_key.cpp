@@ -13,62 +13,6 @@
 namespace Botan {
 
 /**
-* Return the client cipher key
-*/
-SymmetricKey SessionKeys::client_cipher_key() const
-   {
-   return c_cipher;
-   }
-
-/**
-* Return the server cipher key
-*/
-SymmetricKey SessionKeys::server_cipher_key() const
-   {
-   return s_cipher;
-   }
-
-/**
-* Return the client MAC key
-*/
-SymmetricKey SessionKeys::client_mac_key() const
-   {
-   return c_mac;
-   }
-
-/**
-* Return the server MAC key
-*/
-SymmetricKey SessionKeys::server_mac_key() const
-   {
-   return s_mac;
-   }
-
-/**
-* Return the client cipher IV
-*/
-InitializationVector SessionKeys::client_iv() const
-   {
-   return c_iv;
-   }
-
-/**
-* Return the server cipher IV
-*/
-InitializationVector SessionKeys::server_iv() const
-   {
-   return s_iv;
-   }
-
-/**
-* Return the TLS master secret
-*/
-SecureVector<byte> SessionKeys::master_secret() const
-   {
-   return master_sec;
-   }
-
-/**
 * Generate SSLv3 session keys
 */
 SymmetricKey SessionKeys::ssl3_keygen(size_t prf_gen,
@@ -126,7 +70,8 @@ SymmetricKey SessionKeys::tls1_keygen(size_t prf_gen,
 /**
 * SessionKeys Constructor
 */
-SessionKeys::SessionKeys(const CipherSuite& suite, Version_Code version,
+SessionKeys::SessionKeys(const CipherSuite& suite,
+                         Version_Code version,
                          const MemoryRegion<byte>& pre_master_secret,
                          const MemoryRegion<byte>& c_random,
                          const MemoryRegion<byte>& s_random)

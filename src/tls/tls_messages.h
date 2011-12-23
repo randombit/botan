@@ -31,7 +31,7 @@ class HandshakeMessage
       virtual ~HandshakeMessage() {}
    private:
       HandshakeMessage& operator=(const HandshakeMessage&) { return (*this); }
-      virtual SecureVector<byte> serialize() const = 0;
+      virtual MemoryVector<byte> serialize() const = 0;
       virtual void deserialize(const MemoryRegion<byte>&) = 0;
    };
 
@@ -43,11 +43,19 @@ class Client_Hello : public HandshakeMessage
    public:
       Handshake_Type type() const { return CLIENT_HELLO; }
       Version_Code version() const { return c_version; }
-      const SecureVector<byte>& session_id() const { return sess_id; }
+      const MemoryVector<byte>& session_id() const { return sess_id; }
+
+      std::vector<byte> session_id_vector() const
+         {
+         std::vector<byte> v;
+         v.insert(v.begin(), &sess_id[0], &sess_id[sess_id.size()]);
+         return v;
+         }
+
       std::vector<u16bit> ciphersuites() const { return suites; }
       std::vector<byte> compression_algos() const { return comp_algos; }
 
-      const SecureVector<byte>& random() const { return c_random; }
+      const MemoryVector<byte>& random() const { return c_random; }
 
       std::string hostname() const { return requested_hostname; }
 
@@ -68,12 +76,12 @@ class Client_Hello : public HandshakeMessage
          }
 
    private:
-      SecureVector<byte> serialize() const;
+      MemoryVector<byte> serialize() const;
       void deserialize(const MemoryRegion<byte>&);
       void deserialize_sslv2(const MemoryRegion<byte>&);
 
       Version_Code c_version;
-      SecureVector<byte> sess_id, c_random;
+      MemoryVector<byte> sess_id, c_random;
       std::vector<u16bit> suites;
       std::vector<byte> comp_algos;
       std::string requested_hostname;
@@ -105,7 +113,7 @@ class Client_Key_Exchange : public HandshakeMessage
                           const CipherSuite& suite,
                           Version_Code using_version);
    private:
-      SecureVector<byte> serialize() const;
+      MemoryVector<byte> serialize() const;
       void deserialize(const MemoryRegion<byte>&);
 
       SecureVector<byte> key_material, pre_master;
@@ -125,7 +133,7 @@ class Certificate : public HandshakeMessage
                   HandshakeHash&);
       Certificate(const MemoryRegion<byte>& buf) { deserialize(buf); }
    private:
-      SecureVector<byte> serialize() const;
+      MemoryVector<byte> serialize() const;
       void deserialize(const MemoryRegion<byte>&);
       std::vector<X509_Certificate> certs;
    };
@@ -150,7 +158,7 @@ class Certificate_Req : public HandshakeMessage
 
       Certificate_Req(const MemoryRegion<byte>& buf) { deserialize(buf); }
    private:
-      SecureVector<byte> serialize() const;
+      MemoryVector<byte> serialize() const;
       void deserialize(const MemoryRegion<byte>&);
 
       std::vector<X509_DN> names;
@@ -173,10 +181,10 @@ class Certificate_Verify : public HandshakeMessage
 
       Certificate_Verify(const MemoryRegion<byte>& buf) { deserialize(buf); }
    private:
-      SecureVector<byte> serialize() const;
+      MemoryVector<byte> serialize() const;
       void deserialize(const MemoryRegion<byte>&);
 
-      SecureVector<byte> signature;
+      MemoryVector<byte> signature;
    };
 
 /**
@@ -194,15 +202,15 @@ class Finished : public HandshakeMessage
                const MemoryRegion<byte>&, HandshakeHash&);
       Finished(const MemoryRegion<byte>& buf) { deserialize(buf); }
    private:
-      SecureVector<byte> serialize() const;
+      MemoryVector<byte> serialize() const;
       void deserialize(const MemoryRegion<byte>&);
 
-      SecureVector<byte> compute_verify(const MemoryRegion<byte>&,
+      MemoryVector<byte> compute_verify(const MemoryRegion<byte>&,
                                         HandshakeHash, Connection_Side,
                                         Version_Code);
 
       Connection_Side side;
-      SecureVector<byte> verification_data;
+      MemoryVector<byte> verification_data;
    };
 
 /**
@@ -216,7 +224,7 @@ class Hello_Request : public HandshakeMessage
       Hello_Request(Record_Writer&);
       Hello_Request(const MemoryRegion<byte>& buf) { deserialize(buf); }
    private:
-      SecureVector<byte> serialize() const;
+      MemoryVector<byte> serialize() const;
       void deserialize(const MemoryRegion<byte>&);
    };
 
@@ -228,24 +236,28 @@ class Server_Hello : public HandshakeMessage
    public:
       Handshake_Type type() const { return SERVER_HELLO; }
       Version_Code version() { return s_version; }
-      const SecureVector<byte>& session_id() const { return sess_id; }
+      const MemoryVector<byte>& session_id() const { return sess_id; }
       u16bit ciphersuite() const { return suite; }
       byte compression_algo() const { return comp_algo; }
 
-      const SecureVector<byte>& random() const { return s_random; }
+      const MemoryVector<byte>& random() const { return s_random; }
 
       Server_Hello(RandomNumberGenerator& rng,
-                   Record_Writer&, const TLS_Policy&,
-                   const std::vector<X509_Certificate>&,
-                   const Client_Hello&, Version_Code, HandshakeHash&);
+                   Record_Writer& writer,
+                   const TLS_Policy& policies,
+                   const std::vector<X509_Certificate>& certs,
+                   const Client_Hello& other,
+                   const MemoryRegion<byte>& session_id,
+                   Version_Code version,
+                   HandshakeHash& hash);
 
       Server_Hello(const MemoryRegion<byte>& buf) { deserialize(buf); }
    private:
-      SecureVector<byte> serialize() const;
+      MemoryVector<byte> serialize() const;
       void deserialize(const MemoryRegion<byte>&);
 
       Version_Code s_version;
-      SecureVector<byte> sess_id, s_random;
+      MemoryVector<byte> sess_id, s_random;
       u16bit suite;
       byte comp_algo;
    };
@@ -269,12 +281,12 @@ class Server_Key_Exchange : public HandshakeMessage
 
       Server_Key_Exchange(const MemoryRegion<byte>& buf) { deserialize(buf); }
    private:
-      SecureVector<byte> serialize() const;
-      SecureVector<byte> serialize_params() const;
+      MemoryVector<byte> serialize() const;
+      MemoryVector<byte> serialize_params() const;
       void deserialize(const MemoryRegion<byte>&);
 
       std::vector<BigInt> params;
-      SecureVector<byte> signature;
+      MemoryVector<byte> signature;
    };
 
 /**
@@ -288,7 +300,7 @@ class Server_Hello_Done : public HandshakeMessage
       Server_Hello_Done(Record_Writer&, HandshakeHash&);
       Server_Hello_Done(const MemoryRegion<byte>& buf) { deserialize(buf); }
    private:
-      SecureVector<byte> serialize() const;
+      MemoryVector<byte> serialize() const;
       void deserialize(const MemoryRegion<byte>&);
    };
 

@@ -20,20 +20,25 @@ namespace Botan {
 class BOTAN_DLL SessionKeys
    {
    public:
-      SymmetricKey client_cipher_key() const;
-      SymmetricKey server_cipher_key() const;
+      SymmetricKey client_cipher_key() const { return c_cipher; }
+      SymmetricKey server_cipher_key() const { return s_cipher; }
 
-      SymmetricKey client_mac_key() const;
-      SymmetricKey server_mac_key() const;
+      SymmetricKey client_mac_key() const { return c_mac; }
+      SymmetricKey server_mac_key() const { return s_mac; }
 
-      InitializationVector client_iv() const;
-      InitializationVector server_iv() const;
+      InitializationVector client_iv() const { return c_iv; }
+      InitializationVector server_iv() const { return s_iv; }
 
-      SecureVector<byte> master_secret() const;
+      SecureVector<byte> master_secret() const { return master_sec; }
 
       SessionKeys() {}
-      SessionKeys(const CipherSuite&, Version_Code, const MemoryRegion<byte>&,
-                  const MemoryRegion<byte>&, const MemoryRegion<byte>&);
+
+      SessionKeys(const CipherSuite& suite,
+                  Version_Code version,
+                  const MemoryRegion<byte>& pre_master,
+                  const MemoryRegion<byte>& client_random,
+                  const MemoryRegion<byte>& server_random);
+
    private:
       SymmetricKey ssl3_keygen(size_t, const MemoryRegion<byte>&,
                                const MemoryRegion<byte>&,

@@ -25,7 +25,7 @@ Finished::Finished(Record_Writer& writer,
 /**
 * Serialize a Finished message
 */
-SecureVector<byte> Finished::serialize() const
+MemoryVector<byte> Finished::serialize() const
    {
    return verification_data;
    }
@@ -44,7 +44,7 @@ void Finished::deserialize(const MemoryRegion<byte>& buf)
 bool Finished::verify(const MemoryRegion<byte>& secret, Version_Code version,
                       const HandshakeHash& hash, Connection_Side side)
    {
-   SecureVector<byte> computed = compute_verify(secret, hash, side, version);
+   MemoryVector<byte> computed = compute_verify(secret, hash, side, version);
    if(computed == verification_data)
       return true;
    return false;
@@ -53,7 +53,7 @@ bool Finished::verify(const MemoryRegion<byte>& secret, Version_Code version,
 /**
 * Compute the verify_data
 */
-SecureVector<byte> Finished::compute_verify(const MemoryRegion<byte>& secret,
+MemoryVector<byte> Finished::compute_verify(const MemoryRegion<byte>& secret,
                                             HandshakeHash hash,
                                             Connection_Side side,
                                             Version_Code version)
@@ -63,7 +63,7 @@ SecureVector<byte> Finished::compute_verify(const MemoryRegion<byte>& secret,
       const byte SSL_CLIENT_LABEL[] = { 0x43, 0x4C, 0x4E, 0x54 };
       const byte SSL_SERVER_LABEL[] = { 0x53, 0x52, 0x56, 0x52 };
 
-      SecureVector<byte> ssl3_finished;
+      MemoryVector<byte> ssl3_finished;
 
       if(side == CLIENT)
          hash.update(SSL_CLIENT_LABEL, sizeof(SSL_CLIENT_LABEL));
@@ -84,7 +84,7 @@ SecureVector<byte> Finished::compute_verify(const MemoryRegion<byte>& secret,
 
       TLS_PRF prf;
 
-      SecureVector<byte> input;
+      MemoryVector<byte> input;
       if(side == CLIENT)
          input += std::make_pair(TLS_CLIENT_LABEL, sizeof(TLS_CLIENT_LABEL));
       else

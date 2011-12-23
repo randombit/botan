@@ -46,9 +46,9 @@ Certificate_Verify::Certificate_Verify(RandomNumberGenerator& rng,
 /**
 * Serialize a Certificate Verify message
 */
-SecureVector<byte> Certificate_Verify::serialize() const
+MemoryVector<byte> Certificate_Verify::serialize() const
    {
-   SecureVector<byte> buf;
+   MemoryVector<byte> buf;
 
    const u16bit sig_len = signature.size();
    buf.push_back(get_byte(0, sig_len));

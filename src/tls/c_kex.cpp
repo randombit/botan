@@ -75,11 +75,11 @@ Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
 /**
 * Serialize a Client Key Exchange message
 */
-SecureVector<byte> Client_Key_Exchange::serialize() const
+MemoryVector<byte> Client_Key_Exchange::serialize() const
    {
    if(include_length)
       {
-      SecureVector<byte> buf;
+      MemoryVector<byte> buf;
       append_tls_length_value(buf, key_material, 2);
       return buf;
       }

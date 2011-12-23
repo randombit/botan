@@ -64,6 +64,8 @@ int main(int argc, char* argv[])
 
       Server_TLS_Policy policy;
 
+      TLS_Session_Manager_In_Memory sessions;
+
       while(true)
          {
          try {
@@ -76,6 +78,7 @@ int main(int argc, char* argv[])
             TLS_Server tls(
                std::tr1::bind(&Socket::write, std::tr1::ref(sock), _1, _2),
                proc_data,
+               sessions,
                policy,
                rng,
                cert,

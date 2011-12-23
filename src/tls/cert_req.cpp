@@ -34,9 +34,9 @@ Certificate_Req::Certificate_Req(Record_Writer& writer,
 /**
 * Serialize a Certificate Request message
 */
-SecureVector<byte> Certificate_Req::serialize() const
+MemoryVector<byte> Certificate_Req::serialize() const
    {
-   SecureVector<byte> buf;
+   MemoryVector<byte> buf;
 
    append_tls_length_value(buf, types, 1);
 
@@ -94,13 +94,13 @@ Certificate::Certificate(Record_Writer& writer,
 /**
 * Serialize a Certificate message
 */
-SecureVector<byte> Certificate::serialize() const
+MemoryVector<byte> Certificate::serialize() const
    {
-   SecureVector<byte> buf(3);
+   MemoryVector<byte> buf(3);
 
    for(size_t i = 0; i != certs.size(); ++i)
       {
-      SecureVector<byte> raw_cert = certs[i].BER_encode();
+      MemoryVector<byte> raw_cert = certs[i].BER_encode();
       const size_t cert_size = raw_cert.size();
       for(size_t i = 0; i != 3; ++i)
          buf.push_back(get_byte<u32bit>(i+1, cert_size));

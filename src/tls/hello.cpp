@@ -15,8 +15,8 @@ namespace Botan {
 */
 void HandshakeMessage::send(Record_Writer& writer, HandshakeHash& hash) const
    {
-   SecureVector<byte> buf = serialize();
-   SecureVector<byte> send_buf(4);
+   MemoryVector<byte> buf = serialize();
+   MemoryVector<byte> send_buf(4);
 
    const size_t buf_size = buf.size();
 
@@ -45,9 +45,9 @@ Hello_Request::Hello_Request(Record_Writer& writer)
 /*
 * Serialize a Hello Request message
 */
-SecureVector<byte> Hello_Request::serialize() const
+MemoryVector<byte> Hello_Request::serialize() const
    {
-   return SecureVector<byte>();
+   return MemoryVector<byte>();
    }
 
 /*
@@ -79,9 +79,9 @@ Client_Hello::Client_Hello(RandomNumberGenerator& rng,
 /*
 * Serialize a Client Hello message
 */
-SecureVector<byte> Client_Hello::serialize() const
+MemoryVector<byte> Client_Hello::serialize() const
    {
-   SecureVector<byte> buf;
+   MemoryVector<byte> buf;
 
    buf.push_back(static_cast<byte>(c_version >> 8));
    buf.push_back(static_cast<byte>(c_version     ));
@@ -225,6 +225,7 @@ Server_Hello::Server_Hello(RandomNumberGenerator& rng,
                            const TLS_Policy& policy,
                            const std::vector<X509_Certificate>& certs,
                            const Client_Hello& c_hello,
+                           const MemoryRegion<byte>& session_id,
                            Version_Code ver,
                            HandshakeHash& hash)
    {
@@ -250,6 +251,7 @@ Server_Hello::Server_Hello(RandomNumberGenerator& rng,
 
    s_version = ver;
    s_random = rng.random_vec(32);
+   sess_id = session_id;
 
    send(writer, hash);
    }
@@ -257,9 +259,9 @@ Server_Hello::Server_Hello(RandomNumberGenerator& rng,
 /*
 * Serialize a Server Hello message
 */
-SecureVector<byte> Server_Hello::serialize() const
+MemoryVector<byte> Server_Hello::serialize() const
    {
-   SecureVector<byte> buf;
+   MemoryVector<byte> buf;
 
    buf.push_back(static_cast<byte>(s_version >> 8));
    buf.push_back(static_cast<byte>(s_version     ));
@@ -314,9 +316,9 @@ Server_Hello_Done::Server_Hello_Done(Record_Writer& writer,
 /*
 * Serialize a Server Hello Done message
 */
-SecureVector<byte> Server_Hello_Done::serialize() const
+MemoryVector<byte> Server_Hello_Done::serialize() const
    {
-   return SecureVector<byte>();
+   return MemoryVector<byte>();
    }
 
 /*

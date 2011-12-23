@@ -68,11 +68,9 @@ size_t TLS_Channel::received_data(const byte buf[], size_t buf_size)
             if(alert_msg.is_fatal() || alert_msg.type() == CLOSE_NOTIFY)
                {
                if(alert_msg.type() == CLOSE_NOTIFY)
-                  {
-                  writer.alert(WARNING, CLOSE_NOTIFY);
-                  }
-
-               alert(FATAL, NO_ALERT_TYPE);
+                  alert(FATAL, CLOSE_NOTIFY);
+               else
+                  alert(FATAL, NO_ALERT_TYPE);
                }
             }
          else

@@ -16,6 +16,7 @@ tls_policy.h
 tls_record.h
 tls_server.h
 tls_session_key.h
+tls_session_state.h
 tls_suites.h
 </header:public>
 

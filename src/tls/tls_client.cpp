@@ -312,7 +312,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
       if(!state->server_finished->verify(state->keys.master_secret(),
                                          state->version, state->hash, SERVER))
          throw TLS_Exception(DECRYPT_ERROR,
-                                 "Finished message didn't verify");
+                             "Finished message didn't verify");
 
       delete state;
       state = 0;

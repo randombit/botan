@@ -72,9 +72,9 @@ Server_Key_Exchange::Server_Key_Exchange(RandomNumberGenerator& rng,
 /**
 * Serialize a Server Key Exchange message
 */
-SecureVector<byte> Server_Key_Exchange::serialize() const
+MemoryVector<byte> Server_Key_Exchange::serialize() const
    {
-   SecureVector<byte> buf = serialize_params();
+   MemoryVector<byte> buf = serialize_params();
    append_tls_length_value(buf, signature, 2);
    return buf;
    }
@@ -82,9 +82,9 @@ SecureVector<byte> Server_Key_Exchange::serialize() const
 /**
 * Serialize the ServerParams structure
 */
-SecureVector<byte> Server_Key_Exchange::serialize_params() const
+MemoryVector<byte> Server_Key_Exchange::serialize_params() const
    {
-   SecureVector<byte> buf;
+   MemoryVector<byte> buf;
 
    for(size_t i = 0; i != params.size(); ++i)
       append_tls_length_value(buf, BigInt::encode(params[i]), 2);
@@ -100,7 +100,7 @@ void Server_Key_Exchange::deserialize(const MemoryRegion<byte>& buf)
    if(buf.size() < 6)
       throw Decoding_Error("Server_Key_Exchange: Packet corrupted");
 
-   SecureVector<byte> values[4];
+   MemoryVector<byte> values[4];
    size_t so_far = 0;
 
    for(size_t i = 0; i != 4; ++i)
@@ -169,7 +169,7 @@ bool Server_Key_Exchange::verify(const X509_Certificate& cert,
 
    PK_Verifier verifier(*key, padding, format);
 
-   SecureVector<byte> params_got = serialize_params();
+   MemoryVector<byte> params_got = serialize_params();
    verifier.update(c_random);
    verifier.update(s_random);
    verifier.update(params_got);

@@ -6,11 +6,11 @@
 */
 
 #include <botan/tls_server.h>
-#include <botan/internal/tls_alerts.h>
 #include <botan/internal/tls_state.h>
-#include <botan/loadstor.h>
 #include <botan/rsa.h>
 #include <botan/dh.h>
+
+#include <stdio.h>
 
 namespace Botan {
 
@@ -87,13 +87,15 @@ void server_check_state(Handshake_Type new_msg, Handshake_State* state)
 */
 TLS_Server::TLS_Server(std::tr1::function<void (const byte[], size_t)> output_fn,
                        std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
+                       TLS_Session_Manager& session_manager,
                        const TLS_Policy& policy,
                        RandomNumberGenerator& rng,
                        const X509_Certificate& cert,
                        const Private_Key& cert_key) :
    TLS_Channel(output_fn, proc_fn),
    policy(policy),
-   rng(rng)
+   rng(rng),
+   session_manager(session_manager)
    {
    writer.set_version(TLS_V10);
 
@@ -160,48 +162,66 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       writer.set_version(state->version);
       reader.set_version(state->version);
 
-      state->server_hello = new Server_Hello(rng, writer,
-                                             policy, cert_chain,
-                                             *(state->client_hello),
-                                             state->version, state->hash);
+      TLS_Session_Params params;
+      const bool found = session_manager.find(
+         state->client_hello->session_id_vector(),
+         params);
 
-      state->suite = CipherSuite(state->server_hello->ciphersuite());
-
-      if(state->suite.sig_type() != TLS_ALGO_SIGNER_ANON)
+      if(found && params.connection_side == SERVER)
          {
-         // FIXME: should choose certs based on sig type
-         state->server_certs = new Certificate(writer, cert_chain,
-                                               state->hash);
+
+
+
+
          }
-
-      state->kex_priv = PKCS8::copy_key(*private_key, rng);
-      if(state->suite.kex_type() != TLS_ALGO_KEYEXCH_NOKEX)
+      else // new session
          {
-         if(state->suite.kex_type() == TLS_ALGO_KEYEXCH_RSA)
-            {
-            state->kex_priv = new RSA_PrivateKey(rng,
-                                                 policy.rsa_export_keysize());
-            }
-         else if(state->suite.kex_type() == TLS_ALGO_KEYEXCH_DH)
-            {
-            state->kex_priv = new DH_PrivateKey(rng, policy.dh_group());
-            }
-         else
-            throw Internal_Error("TLS_Server: Unknown ciphersuite kex type");
+         MemoryVector<byte> sess_id = rng.random_vec(32);
 
-         state->server_kex =
-            new Server_Key_Exchange(rng, writer,
-                                    state->kex_priv, private_key,
-                                    state->client_hello->random(),
-                                    state->server_hello->random(),
-                                    state->hash);
-         }
+         state->server_hello = new Server_Hello(rng, writer,
+                                                policy, cert_chain,
+                                                *(state->client_hello),
+                                                sess_id,
+                                                state->version, state->hash);
 
-      if(policy.require_client_auth())
-         {
-         state->do_client_auth = true;
-         throw Internal_Error("Client auth not implemented");
-         // FIXME: send client auth request here
+         state->suite = CipherSuite(state->server_hello->ciphersuite());
+
+         if(state->suite.sig_type() != TLS_ALGO_SIGNER_ANON)
+            {
+            // FIXME: should choose certs based on sig type
+            state->server_certs = new Certificate(writer, cert_chain,
+                                                  state->hash);
+            }
+
+         state->kex_priv = PKCS8::copy_key(*private_key, rng);
+         if(state->suite.kex_type() != TLS_ALGO_KEYEXCH_NOKEX)
+            {
+            if(state->suite.kex_type() == TLS_ALGO_KEYEXCH_RSA)
+               {
+               state->kex_priv = new RSA_PrivateKey(rng,
+                                                    policy.rsa_export_keysize());
+               }
+            else if(state->suite.kex_type() == TLS_ALGO_KEYEXCH_DH)
+               {
+               state->kex_priv = new DH_PrivateKey(rng, policy.dh_group());
+               }
+            else
+               throw Internal_Error("TLS_Server: Unknown ciphersuite kex type");
+
+            state->server_kex =
+               new Server_Key_Exchange(rng, writer,
+                                       state->kex_priv, private_key,
+                                       state->client_hello->random(),
+                                       state->server_hello->random(),
+                                       state->hash);
+            }
+
+         if(policy.require_client_auth())
+            {
+            state->do_client_auth = true;
+            throw Internal_Error("Client auth not implemented");
+            // FIXME: send client auth request here
+            }
          }
 
       state->server_hello_done = new Server_Hello_Done(writer, state->hash);
