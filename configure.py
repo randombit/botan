@@ -511,7 +511,13 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
                                      lexer.lineno)
 
         elif token in name_val_pairs.keys():
-            to_obj.__dict__[token] = lexer.get_token()
+            next_val = lexer.get_token()
+
+            if type(to_obj.__dict__[token]) is list:
+                to_obj.__dict__[token].append(next_val)
+            else:
+                to_obj.__dict__[token] = next_val
+
         else: # No match -> error
             raise LexerError('Bad token "%s"' % (token), lexer.lineno)
 
@@ -533,7 +539,7 @@ class ModuleInfo(object):
                        'comment'],
                       {
                         'load_on': 'auto',
-                        'define': None,
+                        'define': [],
                         'uses_tr1': 'false',
                         'need_isa': None,
                         'mp_bits': 0 })
@@ -597,6 +603,9 @@ class ModuleInfo(object):
 
     def internal_headers(self):
         return self.header_internal
+
+    def defines(self):
+        return ['HAS_' + d for d in self.define]
 
     def compatible_cpu(self, archinfo, options):
 
@@ -940,10 +949,10 @@ def canon_processor(archinfo, proc):
                 return (ainfo.basename, submodel)
 
     logging.debug('Known CPU names: ' + ' '.join(
-        sorted(sum([[ainfo.basename] + \
-                    ainfo.aliases + \
-                    [x for (x,_) in ainfo.all_submodels()]
-                    for ainfo in archinfo.values()], []))))
+        sorted(flatten([[ainfo.basename] + \
+                        ainfo.aliases + \
+                        [x for (x,_) in ainfo.all_submodels()]
+                        for ainfo in archinfo.values()]))))
 
     raise Exception('Unknown or unidentifiable processor "%s"' % (proc))
 
@@ -1131,8 +1140,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'link_to': ' '.join([cc.add_lib_option + lib for lib in link_to()]),
 
-        'module_defines': make_cpp_macros(
-            sorted(['HAS_' + m.define for m in modules if m.define])),
+        'module_defines': make_cpp_macros(sorted(flatten([m.defines() for m in modules]))),
 
         'target_os_defines': make_cpp_macros(osinfo.defines()),
 
