@@ -9,7 +9,6 @@ uses_tr1 yes
 
 <header:public>
 tls_client.h
-tls_connection.h
 tls_exceptn.h
 tls_magic.h
 tls_policy.h
