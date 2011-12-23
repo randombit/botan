@@ -24,6 +24,7 @@ struct BOTAN_DLL TLS_Session_Params
    std::vector<byte> server_random;
 
    bool resumable;
+   Version_Code version;
    Connection_Side connection_side;
    Ciphersuite_Code ciphersuite;
    Compression_Algo compression_method;
@@ -99,7 +100,7 @@ class BOTAN_DLL TLS_Session_Manager_In_Memory : public TLS_Session_Manager
 
       void prohibit_resumption(const std::vector<byte>& session_id)
          {
-         std::map<std::vector<byte>, TLS_Session_Params>::const_iterator i =
+         std::map<std::vector<byte>, TLS_Session_Params>::iterator i =
             sessions.find(session_id);
 
          if(i != sessions.end())
