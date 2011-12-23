@@ -48,6 +48,7 @@
   #include <netdb.h>
   #include <unistd.h>
   #include <errno.h>
+  #include <fcntl.h>
 
   typedef int socket_t;
   const socket_t invalid_socket = -1;
@@ -66,7 +67,7 @@
 class Socket
    {
    public:
-      size_t read(unsigned char[], size_t);
+      size_t read(unsigned char[], size_t, bool dont_block = false);
       void write(const unsigned char[], size_t);
 
       std::string peer_id() const { return peer; }
@@ -158,23 +159,28 @@ Socket::Socket(const std::string& host, unsigned short port) : peer(host)
       throw std::runtime_error("Socket: connect failed");
       }
 
+   //fcntl(fd, F_SETFL, O_NONBLOCK);
+
    sockfd = fd;
    }
 
 /**
 * Read from a Unix socket
 */
-size_t Socket::read(unsigned char buf[], size_t length)
+size_t Socket::read(unsigned char buf[], size_t length, bool partial)
    {
    if(sockfd == invalid_socket)
       throw std::runtime_error("Socket::read: Socket not connected");
 
    size_t got = 0;
 
+   int flags = MSG_NOSIGNAL;
+
    while(length)
       {
-      ssize_t this_time = ::recv(sockfd, (char*)buf + got,
-                                 length, MSG_NOSIGNAL);
+      ssize_t this_time = ::recv(sockfd, (char*)buf + got, length, flags);
+
+      const bool full_ret = (this_time == length);
 
       if(this_time == 0)
          break;
@@ -183,13 +189,19 @@ size_t Socket::read(unsigned char buf[], size_t length)
          {
          if(socket_error_code == EINTR)
             this_time = 0;
+         else if(socket_error_code == EAGAIN)
+            break;
          else
             throw std::runtime_error("Socket::read: Socket read failed");
          }
 
       got += this_time;
       length -= this_time;
+
+      if(partial && !full_ret)
+         break;
       }
+
    return got;
    }
 

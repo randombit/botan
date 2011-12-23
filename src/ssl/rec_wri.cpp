@@ -223,7 +223,7 @@ void Record_Writer::send_record(byte type, const byte buf[], size_t length)
 
       if(block_size)
          {
-         size_t pad_val =
+         const size_t pad_val =
             (block_size - (1 + length + buf_mac.size())) % block_size;
 
          for(size_t i = 0; i != pad_val + 1; ++i)

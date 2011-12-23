@@ -99,6 +99,8 @@ class BOTAN_DLL Record_Reader
 
       void reset();
 
+      bool currently_empty() const { return input_queue.size() == 0; }
+
       Record_Reader() { mac = 0; reset(); }
 
       ~Record_Reader() { delete mac; }

@@ -25,6 +25,76 @@ class Client_TLS_Policy : public TLS_Policy
          }
    };
 
+class HTTPS_Client
+   {
+   public:
+      HTTPS_Client(const std::string& host, u16bit port, RandomNumberGenerator& r) :
+         rng(r),
+         socket(host, port),
+         client(std::tr1::bind(&HTTPS_Client::socket_write, std::tr1::ref(*this), _1, _2),
+                std::tr1::bind(&HTTPS_Client::proc_data, std::tr1::ref(*this), _1, _2, _3),
+                policy,
+                rng)
+         {
+         SecureVector<byte> socket_buf(1024);
+         size_t desired = 0;
+
+         quit_reading = false;
+
+         while(!client.handshake_complete() || desired)
+            {
+            const size_t socket_got = socket.read(&socket_buf[0], socket_buf.size());
+            //printf("Got %d bytes from socket\n", socket_got);
+            desired = client.received_data(&socket_buf[0], socket_got);
+            socket_buf.resize(desired || 1);
+            //printf("Going around for another read?\n");
+            }
+         }
+
+      void socket_write(const byte buf[], size_t buf_size)
+         {
+         std::cout << "socket_write " << buf_size << "\n";
+         socket.write(buf, buf_size);
+         }
+
+      void proc_data(const byte data[], size_t data_len, u16bit alert_info)
+         {
+         printf("Block of data %d bytes alert %04X\n", (int)data_len, alert_info);
+         for(size_t i = 0; i != data_len; ++i)
+            printf("%c", data[i]);
+
+         if(data_len == 0 && alert_info == 0)
+            quit_reading = true;
+         }
+
+      void write(const std::string& s)
+         {
+         client.queue_for_sending((const byte*)s.c_str(), s.length());
+         }
+
+      void read_response()
+         {
+         while(true)
+            {
+            SecureVector<byte> buf(4096);
+
+            size_t got = socket.read(&buf[0], buf.size(), true);
+
+            if(got == 0)
+               break;
+
+            client.received_data(&buf[0], got);
+            }
+         }
+
+   private:
+      bool quit_reading;
+      RandomNumberGenerator& rng;
+      Socket socket;
+      Client_TLS_Policy policy;
+      TLS_Client client;
+   };
+
 int main(int argc, char* argv[])
    {
    if(argc != 2 && argc != 3)
@@ -40,48 +110,21 @@ int main(int argc, char* argv[])
       std::string host = argv[1];
       u32bit port = argc == 3 ? Botan::to_u32bit(argv[2]) : 443;
 
-      printf("Connecting to %s:%d...\n", host.c_str(), port);
-
-      SocketInitializer socket_init;
-
-      Socket sock(argv[1], port);
+      //SocketInitializer socket_init;
 
       AutoSeeded_RNG rng;
 
-      Client_TLS_Policy policy;
+      printf("Connecting to %s:%d...\n", host.c_str(), port);
 
-      TLS_Client tls(std::tr1::bind(&Socket::read, std::tr1::ref(sock), _1, _2),
-                     std::tr1::bind(&Socket::write, std::tr1::ref(sock), _1, _2),
-                     policy, rng);
+      HTTPS_Client https(host, port, rng);
 
-      printf("Handshake extablished...\n");
-
-#if 0
-      std::string http_command = "GET / HTTP/1.1\r\n"
-                                 "Server: " + host + ':' + to_string(port) + "\r\n\r\n";
-#else
       std::string http_command = "GET / HTTP/1.0\r\n\r\n";
-#endif
 
-      tls.write((const Botan::byte*)http_command.c_str(),
-                http_command.length());
+      printf("Sending request\n");
+      https.write(http_command);
 
-      size_t total_got = 0;
+      https.read_response();
 
-      while(true)
-         {
-         if(tls.is_closed())
-            break;
-
-         Botan::byte buf[128+1] = { 0 };
-         size_t got = tls.read(buf, sizeof(buf)-1);
-         printf("%s", buf);
-         fflush(0);
-
-         total_got += got;
-         }
-
-      printf("\nRetrieved %d bytes total\n", total_got);
    }
    catch(std::exception& e)
       {

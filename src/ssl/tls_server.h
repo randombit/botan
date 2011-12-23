@@ -1,6 +1,6 @@
 /*
 * TLS Server
-* (C) 2004-2010 Jack Lloyd
+* (C) 2004-2011 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -8,7 +8,6 @@
 #ifndef BOTAN_TLS_SERVER_H__
 #define BOTAN_TLS_SERVER_H__
 
-#include <botan/tls_connection.h>
 #include <botan/tls_record.h>
 #include <botan/tls_policy.h>
 #include <vector>
@@ -18,7 +17,7 @@ namespace Botan {
 /**
 * TLS Server
 */
-class BOTAN_DLL TLS_Server : public TLS_Connection
+class BOTAN_DLL TLS_Server
    {
    public:
       size_t read(byte buf[], size_t buf_len);
