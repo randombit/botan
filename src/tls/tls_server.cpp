@@ -1,6 +1,6 @@
 /*
 * TLS Server
-* (C) 2004-2010 Jack Lloyd
+* (C) 2004-2011 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -85,40 +85,20 @@ void server_check_state(Handshake_Type new_msg, Handshake_State* state)
 /*
 * TLS Server Constructor
 */
-TLS_Server::TLS_Server(std::tr1::function<size_t (byte[], size_t)> input_fn,
-                       std::tr1::function<void (const byte[], size_t)> output_fn,
+TLS_Server::TLS_Server(std::tr1::function<void (const byte[], size_t)> output_fn,
+                       std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
                        const TLS_Policy& policy,
                        RandomNumberGenerator& rng,
                        const X509_Certificate& cert,
                        const Private_Key& cert_key) :
-   input_fn(input_fn),
+   TLS_Channel(output_fn, proc_fn),
    policy(policy),
-   rng(rng),
-   writer(output_fn)
+   rng(rng)
    {
-   state = 0;
+   writer.set_version(TLS_V10);
 
    cert_chain.push_back(cert);
    private_key = PKCS8::copy_key(cert_key, rng);
-
-   try {
-      active = false;
-      writer.set_version(TLS_V10);
-      do_handshake();
-      active = true;
-   }
-   catch(std::exception& e)
-      {
-      if(state)
-         {
-         delete state;
-         state = 0;
-         }
-
-      writer.alert(FATAL, HANDSHAKE_FAILURE);
-      throw Stream_IO_Error(std::string("TLS_Server: Handshake failed: ") +
-                            e.what());
-      }
    }
 
 /*
@@ -126,143 +106,7 @@ TLS_Server::TLS_Server(std::tr1::function<size_t (byte[], size_t)> input_fn,
 */
 TLS_Server::~TLS_Server()
    {
-   close();
    delete private_key;
-   delete state;
-   }
-
-/*
-* Return the peer's certificate chain
-*/
-std::vector<X509_Certificate> TLS_Server::peer_cert_chain() const
-   {
-   return peer_certs;
-   }
-
-/*
-* Write to a TLS connection
-*/
-void TLS_Server::write(const byte buf[], size_t length)
-   {
-   if(!active)
-      throw Internal_Error("TLS_Server::write called while closed");
-
-   writer.send(APPLICATION_DATA, buf, length);
-   }
-
-/*
-* Read from a TLS connection
-*/
-size_t TLS_Server::read(byte out[], size_t length)
-   {
-   if(!active)
-      throw Internal_Error("TLS_Server::read called while closed");
-
-   writer.flush();
-
-   while(read_buf.size() == 0)
-      {
-      state_machine();
-      if(active == false)
-         break;
-      }
-
-   size_t got = std::min<size_t>(read_buf.size(), length);
-   read_buf.read(out, got);
-   return got;
-   }
-
-/*
-* Check connection status
-*/
-bool TLS_Server::is_closed() const
-   {
-   if(!active)
-      return true;
-   return false;
-   }
-
-/*
-* Close a TLS connection
-*/
-void TLS_Server::close()
-   {
-   close(WARNING, CLOSE_NOTIFY);
-   }
-
-/*
-* Close a TLS connection
-*/
-void TLS_Server::close(Alert_Level level, Alert_Type alert_code)
-   {
-   if(active)
-      {
-      try {
-         active = false;
-         writer.alert(level, alert_code);
-         writer.flush();
-      }
-      catch(...) {}
-      }
-   }
-
-/*
-* Iterate the TLS state machine
-*/
-void TLS_Server::state_machine()
-   {
-   byte rec_type = CONNECTION_CLOSED;
-   SecureVector<byte> record(1024);
-
-   size_t bytes_needed = reader.get_record(rec_type, record);
-
-   while(bytes_needed)
-      {
-      size_t to_get = std::min<size_t>(record.size(), bytes_needed);
-      size_t got = input_fn(&record[0], to_get);
-
-      if(got == 0)
-         {
-         rec_type = CONNECTION_CLOSED;
-         break;
-         }
-
-      reader.add_input(&record[0], got);
-
-      bytes_needed = reader.get_record(rec_type, record);
-      }
-
-   if(rec_type == CONNECTION_CLOSED)
-      {
-      active = false;
-      reader.reset();
-      writer.reset();
-      }
-   else if(rec_type == APPLICATION_DATA)
-      {
-      if(active)
-         read_buf.write(&record[0], record.size());
-      else
-         throw Unexpected_Message("Application data before handshake done");
-      }
-   else if(rec_type == HANDSHAKE || rec_type == CHANGE_CIPHER_SPEC)
-      read_handshake(rec_type, record);
-   else if(rec_type == ALERT)
-      {
-      Alert alert(record);
-
-      if(alert.is_fatal() || alert.type() == CLOSE_NOTIFY)
-         {
-         if(alert.type() == CLOSE_NOTIFY)
-            writer.alert(WARNING, CLOSE_NOTIFY);
-
-         reader.reset();
-         writer.reset();
-         active = false;
-         }
-      }
-   else
-      throw Unexpected_Message("Unknown message type received");
    }
 
 /*
@@ -271,54 +115,10 @@ void TLS_Server::state_machine()
 void TLS_Server::read_handshake(byte rec_type,
                                 const MemoryRegion<byte>& rec_buf)
    {
-   if(rec_type == HANDSHAKE)
-      {
-      if(!state)
-         state = new Handshake_State;
-      state->queue.write(&rec_buf[0], rec_buf.size());
-      }
+   if(rec_type == HANDSHAKE && !state)
+      state = new Handshake_State;
 
-   while(true)
-      {
-      Handshake_Type type = HANDSHAKE_NONE;
-      SecureVector<byte> contents;
-
-      if(rec_type == HANDSHAKE)
-         {
-         if(state->queue.size() >= 4)
-            {
-            byte head[4] = { 0 };
-            state->queue.peek(head, 4);
-
-            const size_t length = make_u32bit(0, head[1], head[2], head[3]);
-
-            if(state->queue.size() >= length + 4)
-               {
-               type = static_cast<Handshake_Type>(head[0]);
-               contents.resize(length);
-               state->queue.read(head, 4);
-               state->queue.read(&contents[0], contents.size());
-               }
-            }
-         }
-      else if(rec_type == CHANGE_CIPHER_SPEC)
-         {
-         if(state->queue.size() == 0 && rec_buf.size() == 1 && rec_buf[0] == 1)
-            type = HANDSHAKE_CCS;
-         else
-            throw Decoding_Error("Malformed ChangeCipherSpec message");
-         }
-      else
-         throw Decoding_Error("Unknown message type in handshake processing");
-
-      if(type == HANDSHAKE_NONE)
-         break;
-
-      process_handshake_msg(type, contents);
-
-      if(type == HANDSHAKE_CCS || !state)
-         break;
-      }
+   TLS_Channel::read_handshake(rec_type, rec_buf);
    }
 
 /*
@@ -472,23 +272,6 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       }
    else
       throw Unexpected_Message("Unknown handshake message received");
-   }
-
-/*
-* Perform a server-side TLS handshake
-*/
-void TLS_Server::do_handshake()
-   {
-   while(true)
-      {
-      if(active && !state)
-         break;
-
-      state_machine();
-
-      if(!active && !state)
-         throw TLS_Exception(HANDSHAKE_FAILURE, "TLS_Server: Handshake failed");
-      }
    }
 
 }

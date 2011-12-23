@@ -180,7 +180,7 @@ size_t Socket::read(unsigned char buf[], size_t length, bool partial)
       {
       ssize_t this_time = ::recv(sockfd, (char*)buf + got, length, flags);
 
-      const bool full_ret = (this_time == length);
+      const bool full_ret = (this_time == (ssize_t)length);
 
       if(this_time == 0)
          break;

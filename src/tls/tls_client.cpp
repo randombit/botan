@@ -6,9 +6,7 @@
 */
 
 #include <botan/tls_client.h>
-#include <botan/internal/tls_alerts.h>
 #include <botan/internal/tls_state.h>
-#include <botan/loadstor.h>
 #include <botan/rsa.h>
 #include <botan/dsa.h>
 #include <botan/dh.h>
@@ -17,7 +15,7 @@ namespace Botan {
 
 namespace {
 
-/**
+/*
 * Verify the state transition is allowed
 * FIXME: checks are wrong for session reuse (add a flag for that)
 */
@@ -78,19 +76,16 @@ void client_check_state(Handshake_Type new_msg, Handshake_State* state)
 
 }
 
-/**
+/*
 * TLS Client Constructor
 */
-TLS_Client::TLS_Client(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
-                       std::tr1::function<void (const byte[], size_t, u16bit)> process_fn,
+TLS_Client::TLS_Client(std::tr1::function<void (const byte[], size_t)> output_fn,
+                       std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
                        const TLS_Policy& policy,
                        RandomNumberGenerator& rng) :
+   TLS_Channel(output_fn, proc_fn),
    policy(policy),
-   rng(rng),
-   proc_fn(process_fn),
-   writer(socket_output_fn),
-   state(0),
-   active(false)
+   rng(rng)
    {
    writer.set_version(policy.pref_version());
 
@@ -104,185 +99,16 @@ void TLS_Client::add_client_cert(const X509_Certificate& cert,
    certs.push_back(std::make_pair(cert, cert_key));
    }
 
-/**
+/*
 * TLS Client Destructor
 */
 TLS_Client::~TLS_Client()
    {
-   close();
    for(size_t i = 0; i != certs.size(); i++)
       delete certs[i].second;
-   delete state;
    }
 
-size_t TLS_Client::received_data(const byte buf[], size_t buf_size)
-   {
-   try
-      {
-      reader.add_input(buf, buf_size);
-
-      byte rec_type = CONNECTION_CLOSED;
-      SecureVector<byte> record;
-
-      while(!reader.currently_empty())
-         {
-         const size_t bytes_needed = reader.get_record(rec_type, record);
-
-         if(bytes_needed > 0)
-            return bytes_needed;
-
-         if(rec_type == APPLICATION_DATA)
-            {
-            if(active)
-               {
-               proc_fn(&record[0], record.size(), NO_ALERT_TYPE);
-               }
-            else
-               {
-               throw Unexpected_Message("Application data before handshake done");
-               }
-            }
-         else if(rec_type == HANDSHAKE || rec_type == CHANGE_CIPHER_SPEC)
-            {
-            read_handshake(rec_type, record);
-            }
-         else if(rec_type == ALERT)
-            {
-            Alert alert(record);
-
-            proc_fn(0, 0, alert.type());
-
-            if(alert.is_fatal() || alert.type() == CLOSE_NOTIFY)
-               {
-               if(alert.type() == CLOSE_NOTIFY)
-                  {
-                  writer.alert(WARNING, CLOSE_NOTIFY);
-                  }
-
-               close(FATAL, NO_ALERT_TYPE);
-               }
-            }
-         else
-            throw Unexpected_Message("Unknown message type received");
-         }
-
-      return 0; // on a record boundary
-      }
-   catch(TLS_Exception& e)
-      {
-      close(FATAL, e.type());
-      throw;
-      }
-   catch(std::exception& e)
-      {
-      close(FATAL, INTERNAL_ERROR);
-      throw;
-      }
-   }
-
-void TLS_Client::queue_for_sending(const byte buf[], size_t buf_size)
-   {
-   if(active)
-      {
-      while(!pre_handshake_write_queue.end_of_data())
-         {
-         SecureVector<byte> q_buf(1024);
-         const size_t got = pre_handshake_write_queue.read(&q_buf[0], q_buf.size());
-         writer.send(APPLICATION_DATA, &q_buf[0], got);
-         }
-
-      writer.send(APPLICATION_DATA, buf, buf_size);
-      writer.flush();
-      }
-   else
-      pre_handshake_write_queue.write(buf, buf_size);
-   }
-
-/**
-* Close a TLS connection
-*/
-void TLS_Client::close()
-   {
-   close(WARNING, CLOSE_NOTIFY);
-   }
-
-/**
-* Close a TLS connection
-*/
-void TLS_Client::close(Alert_Level level, Alert_Type alert_code)
-   {
-   if(active)
-      {
-      active = false;
-
-      if(alert_code != NO_ALERT_TYPE)
-         {
-         try
-            {
-            writer.alert(level, alert_code);
-            writer.flush();
-            }
-         catch(...) { /* swallow it */ }
-         }
-
-      reader.reset();
-      writer.reset();
-      }
-   }
-
-/**
-* Split up and process handshake messages
-*/
-void TLS_Client::read_handshake(byte rec_type,
-                                const MemoryRegion<byte>& rec_buf)
-   {
-   if(rec_type == HANDSHAKE)
-      state->queue.write(&rec_buf[0], rec_buf.size());
-
-   while(true)
-      {
-      Handshake_Type type = HANDSHAKE_NONE;
-      SecureVector<byte> contents;
-
-      if(rec_type == HANDSHAKE)
-         {
-         if(state->queue.size() >= 4)
-            {
-            byte head[4] = { 0 };
-            state->queue.peek(head, 4);
-
-            const size_t length = make_u32bit(0, head[1], head[2], head[3]);
-
-            if(state->queue.size() >= length + 4)
-               {
-               type = static_cast<Handshake_Type>(head[0]);
-               contents.resize(length);
-               state->queue.read(head, 4);
-               state->queue.read(&contents[0], contents.size());
-               }
-            }
-         }
-      else if(rec_type == CHANGE_CIPHER_SPEC)
-         {
-         if(state->queue.size() == 0 && rec_buf.size() == 1 && rec_buf[0] == 1)
-            type = HANDSHAKE_CCS;
-         else
-            throw Decoding_Error("Malformed ChangeCipherSpec message");
-         }
-      else
-         throw Decoding_Error("Unknown message type in handshake processing");
-
-      if(type == HANDSHAKE_NONE)
-         break;
-
-      process_handshake_msg(type, contents);
-
-      if(type == HANDSHAKE_CCS || !state)
-         break;
-      }
-   }
-
-/**
+/*
 * Process a handshake message
 */
 void TLS_Client::process_handshake_msg(Handshake_Type type,

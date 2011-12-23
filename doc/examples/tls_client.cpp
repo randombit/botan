@@ -41,7 +41,7 @@ class HTTPS_Client
 
          quit_reading = false;
 
-         while(!client.handshake_complete() || desired)
+         while(!client.is_active() || desired)
             {
             const size_t socket_got = socket.read(&socket_buf[0], socket_buf.size());
             //printf("Got %d bytes from socket\n", socket_got);

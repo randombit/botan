@@ -30,6 +30,13 @@ class Server_TLS_Policy : public TLS_Policy
          }
    };
 
+void proc_data(const byte data[], size_t data_len, u16bit alert_info)
+   {
+   printf("Block of data %d bytes alert %04X\n", (int)data_len, alert_info);
+   for(size_t i = 0; i != data_len; ++i)
+      printf("%c", data[i]);
+   }
+
 int main(int argc, char* argv[])
    {
    int port = 4433;
@@ -40,7 +47,7 @@ int main(int argc, char* argv[])
    try
       {
       LibraryInitializer botan_init;
-      SocketInitializer socket_init;
+      //SocketInitializer socket_init;
 
       AutoSeeded_RNG rng;
 
@@ -67,28 +74,40 @@ int main(int argc, char* argv[])
             printf("Got new connection\n");
 
             TLS_Server tls(
-              std::tr1::bind(&Socket::read, std::tr1::ref(sock), _1, _2),
-              std::tr1::bind(&Socket::write, std::tr1::ref(sock), _1, _2),
-              policy,
-              rng,
-              cert,
-              key);
+               std::tr1::bind(&Socket::write, std::tr1::ref(sock), _1, _2),
+               proc_data,
+               policy,
+               rng,
+               cert,
+               key);
 
-            std::string hostname = tls.requested_hostname();
+            SecureVector<byte> buf(1024);
+            size_t desired = 0;
+            while(!tls.is_active() || desired)
+               {
+               const size_t socket_got = sock->read(&buf[0], desired || 1);
+               desired = tls.received_data(&buf[0], socket_got);
+               }
+
+            const std::string hostname = tls.server_name_indicator();
 
             if(hostname != "")
                printf("Client requested host '%s'\n", hostname.c_str());
 
             printf("Writing some text\n");
 
-            char msg[] = "Foo\nBar\nBaz\nQuux\n";
-            tls.write((const Botan::byte*)msg, strlen(msg));
+            char msg[] = "Welcome to the best echo server evar\n";
+            tls.queue_for_sending((const Botan::byte*)msg, strlen(msg));
 
-            printf("Now trying a read...\n");
+            while(true)
+               {
+               size_t got = sock->read(&buf[0], buf.size(), true);
 
-            char buf[1024] = { 0 };
-            u32bit got = tls.read((Botan::byte*)buf, sizeof(buf)-1);
-            printf("%d: '%s'\n", got, buf);
+               if(got == 0)
+                  break;
+
+               tls.received_data(&buf[0], got);
+               }
 
             tls.close();
             }
