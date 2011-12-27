@@ -4,6 +4,7 @@
 #include <botan/rsa.h>
 #include <botan/dsa.h>
 #include <botan/x509self.h>
+#include <botan/secqueue.h>
 
 #include "socket.h"
 
@@ -13,6 +14,102 @@ using namespace Botan;
 #include <string>
 #include <iostream>
 #include <memory>
+
+class Blocking_TLS_Server
+   {
+   public:
+      Blocking_TLS_Server(std::tr1::function<void (const byte[], size_t)> output_fn,
+                          std::tr1::function<size_t (byte[], size_t)> input_fn,
+                          TLS_Session_Manager& sessions,
+                          TLS_Policy& policy,
+                          RandomNumberGenerator& rng,
+                          const X509_Certificate& cert,
+                          const Private_Key& key) :
+         input_fn(input_fn),
+         server(
+            output_fn,
+            std::tr1::bind(&Blocking_TLS_Server::reader_fn, std::tr1::ref(*this), _1, _2, _3),
+            sessions,
+            policy,
+            rng,
+            cert,
+            key),
+         exit(false)
+         {
+         read_loop();
+         }
+
+      size_t read(byte buf[], size_t buf_len)
+         {
+         size_t got = read_queue.read(buf, buf_len);
+
+         while(!exit && !got)
+            {
+            read_loop(5); // header size
+            got = read_queue.read(buf, buf_len);
+            }
+
+         return got;
+         }
+
+      void write(const byte buf[], size_t buf_len)
+         {
+         server.queue_for_sending(buf, buf_len);
+         }
+
+      void close() { server.close(); }
+
+      bool is_active() const { return server.is_active(); }
+
+      TLS_Server& underlying() { return server; }
+   private:
+      void read_loop(size_t init_desired = 0)
+         {
+         size_t desired = init_desired;
+
+         byte buf[4096];
+         while(!exit && (!server.is_active() || desired))
+            {
+            const size_t asking = std::max(sizeof(buf), std::min(desired, static_cast<size_t>(1)));
+
+            const size_t socket_got = input_fn(&buf[0], asking);
+
+            if(socket_got == 0) // eof?
+               {
+               close();
+               exit = true;
+               }
+
+            desired = server.received_data(&buf[0], socket_got);
+            }
+         }
+
+      void reader_fn(const byte buf[], size_t buf_len, u16bit alert_code)
+         {
+         if(buf_len == 0 && alert_code != NO_ALERT_TYPE)
+            {
+            printf("Alert: %d, quitting\n", alert_code);
+            exit = true;
+            }
+
+         printf("Got %d bytes: ", buf_len);
+         for(size_t i = 0; i != buf_len; ++i)
+            {
+            if(isprint(buf[i]))
+               printf("%c", buf[i]);
+            else
+               printf("0x%02X", buf[i]);
+            }
+         printf("\n");
+
+         read_queue.write(buf, buf_len);
+         }
+
+      std::tr1::function<size_t (byte[], size_t)> input_fn;
+      TLS_Server server;
+      SecureQueue read_queue;
+      bool exit;
+   };
 
 class Server_TLS_Policy : public TLS_Policy
    {
@@ -29,13 +126,6 @@ class Server_TLS_Policy : public TLS_Policy
          return true;
          }
    };
-
-void proc_data(const byte data[], size_t data_len, u16bit alert_info)
-   {
-   printf("Block of data %d bytes alert %04X\n", (int)data_len, alert_info);
-   for(size_t i = 0; i != data_len; ++i)
-      printf("%c", data[i]);
-   }
 
 int main(int argc, char* argv[])
    {
@@ -75,44 +165,42 @@ int main(int argc, char* argv[])
 
             printf("Got new connection\n");
 
-            TLS_Server tls(
+            Blocking_TLS_Server tls(
                std::tr1::bind(&Socket::write, std::tr1::ref(sock), _1, _2),
-               proc_data,
+               std::tr1::bind(&Socket::read, std::tr1::ref(sock), _1, _2, true),
                sessions,
                policy,
                rng,
                cert,
                key);
 
-            SecureVector<byte> buf(1024);
-            size_t desired = 0;
-            while(!tls.is_active() || desired)
+            const char* msg = "Welcome to the best echo server evar\n";
+            tls.write((const Botan::byte*)msg, strlen(msg));
+
+            std::string line;
+
+            while(tls.is_active())
                {
-               const size_t socket_got = sock->read(&buf[0], desired || 1);
-               desired = tls.received_data(&buf[0], socket_got);
-               }
-
-            const std::string hostname = tls.server_name_indicator();
-
-            if(hostname != "")
-               printf("Client requested host '%s'\n", hostname.c_str());
-
-            printf("Writing some text\n");
-
-            char msg[] = "Welcome to the best echo server evar\n";
-            tls.queue_for_sending((const Botan::byte*)msg, strlen(msg));
-
-            while(true)
-               {
-               size_t got = sock->read(&buf[0], buf.size(), true);
+               byte b;
+               size_t got = tls.read(&b, 1);
 
                if(got == 0)
                   break;
 
-               tls.received_data(&buf[0], got);
-               }
+               line += (char)b;
+               if(b == '\n')
+                  {
+                  tls.write(reinterpret_cast<const byte*>(line.data()), line.size());
 
-            tls.close();
+                  if(line == "quit\n")
+                     {
+                     tls.close();
+                     break;
+                     }
+
+                  line.clear();
+                  }
+               }
             }
          catch(std::exception& e) { printf("%s\n", e.what()); }
          }
