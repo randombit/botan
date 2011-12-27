@@ -40,7 +40,7 @@ enum Record_Type {
 enum Handshake_Type {
    HELLO_REQUEST       = 0,
    CLIENT_HELLO        = 1,
-   CLIENT_HELLO_SSLV2  = 255, // not a wire value
+   CLIENT_HELLO_SSLV2  = 200, // Not a wire value
    SERVER_HELLO        = 2,
    CERTIFICATE         = 11,
    SERVER_KEX          = 12,
@@ -50,8 +50,8 @@ enum Handshake_Type {
    CLIENT_KEX          = 16,
    FINISHED            = 20,
 
-   HANDSHAKE_CCS       = 100,
-   HANDSHAKE_NONE      = 101
+   HANDSHAKE_CCS       = 100, // Not a wire value
+   HANDSHAKE_NONE      = 255  // Null value
 };
 
 enum Alert_Level {

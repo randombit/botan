@@ -19,6 +19,14 @@ namespace Botan {
 class Handshake_State
    {
    public:
+      Handshake_State();
+      ~Handshake_State();
+
+      bool received_handshake_msg(Handshake_Type handshake_msg) const;
+
+      void confirm_transition_to(Handshake_Type handshake_msg);
+      void set_expected_next(Handshake_Type handshake_msg);
+
       Client_Hello* client_hello;
       Server_Hello* server_hello;
       Certificate* server_certs;
@@ -42,10 +50,9 @@ class Handshake_State
       SecureQueue queue;
 
       Version_Code version;
-      bool got_client_ccs, got_server_ccs, do_client_auth;
-
-      Handshake_State();
-      ~Handshake_State();
+      //bool got_client_ccs, got_server_ccs, do_client_auth;
+   private:
+      u32bit hand_expecting_mask, hand_received_mask;
    };
 
 }

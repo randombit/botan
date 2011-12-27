@@ -30,56 +30,6 @@ Version_Code choose_version(Version_Code client, Version_Code minimum)
    return TLS_V11;
    }
 
-// FIXME: checks are wrong for session reuse (add a flag for that)
-/*
-* Verify the state transition is allowed
-*/
-void server_check_state(Handshake_Type new_msg, Handshake_State* state)
-   {
-   class State_Transition_Error : public Unexpected_Message
-      {
-      public:
-         State_Transition_Error(const std::string& err) :
-            Unexpected_Message("State transition error from " + err) {}
-      };
-
-   if(new_msg == CLIENT_HELLO || new_msg == CLIENT_HELLO_SSLV2)
-      {
-      if(state->server_hello)
-         throw State_Transition_Error("ClientHello");
-      }
-   else if(new_msg == CERTIFICATE)
-      {
-      if(!state->do_client_auth || !state->cert_req ||
-         !state->server_hello_done || state->client_kex)
-         throw State_Transition_Error("ClientCertificate");
-      }
-   else if(new_msg == CLIENT_KEX)
-      {
-      if(!state->server_hello_done || state->client_verify ||
-         state->got_client_ccs)
-         throw State_Transition_Error("ClientKeyExchange");
-      }
-   else if(new_msg == CERTIFICATE_VERIFY)
-      {
-      if(!state->cert_req || !state->client_certs || !state->client_kex ||
-         state->got_client_ccs)
-         throw State_Transition_Error("CertificateVerify");
-      }
-   else if(new_msg == HANDSHAKE_CCS)
-      {
-      if(!state->client_kex || state->client_finished)
-         throw State_Transition_Error("ClientChangeCipherSpec");
-      }
-   else if(new_msg == FINISHED)
-      {
-      if(!state->got_client_ccs)
-         throw State_Transition_Error("ClientFinished");
-      }
-   else
-      throw Unexpected_Message("Unexpected message in handshake");
-   }
-
 }
 
 /*
@@ -118,7 +68,10 @@ void TLS_Server::read_handshake(byte rec_type,
                                 const MemoryRegion<byte>& rec_buf)
    {
    if(rec_type == HANDSHAKE && !state)
+      {
       state = new Handshake_State;
+      state->set_expected_next(CLIENT_HELLO);
+      }
 
    TLS_Channel::read_handshake(rec_type, rec_buf);
    }
@@ -133,6 +86,8 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
    if(state == 0)
       throw Unexpected_Message("Unexpected handshake message");
+
+   state->confirm_transition_to(type);
 
    if(type != HANDSHAKE_CCS && type != FINISHED)
       {
@@ -150,8 +105,6 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
    if(type == CLIENT_HELLO || type == CLIENT_HELLO_SSLV2)
       {
-      server_check_state(type, state);
-
       state->client_hello = new Client_Hello(contents, type);
 
       client_requested_hostname = state->client_hello->hostname();
@@ -169,13 +122,13 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
       if(found && params.connection_side == SERVER)
          {
+         // resume session
 
-
-
-
+         state->set_expected_next(HANDSHAKE_CCS);
          }
-      else // new session
+      else
          {
+         // new session
          MemoryVector<byte> sess_id = rng.random_vec(32);
 
          state->server_hello = new Server_Hello(rng, writer,
@@ -218,22 +171,27 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
          if(policy.require_client_auth())
             {
-            state->do_client_auth = true;
             throw Internal_Error("Client auth not implemented");
             // FIXME: send client auth request here
+            state->set_expected_next(CERTIFICATE);
             }
+         else
+            state->set_expected_next(CLIENT_KEX);
          }
 
       state->server_hello_done = new Server_Hello_Done(writer, state->hash);
       }
    else if(type == CERTIFICATE)
       {
-      server_check_state(type, state);
+      state->set_expected_next(CLIENT_KEX);
       // FIXME: process this
       }
    else if(type == CLIENT_KEX)
       {
-      server_check_state(type, state);
+      if(state->received_handshake_msg(CERTIFICATE))
+         state->set_expected_next(CERTIFICATE_VERIFY);
+      else
+         state->set_expected_next(HANDSHAKE_CCS);
 
       state->client_kex = new Client_Key_Exchange(contents, state->suite,
                                                   state->version);
@@ -245,22 +203,23 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       state->keys = SessionKeys(state->suite, state->version, pre_master,
                                 state->client_hello->random(),
                                 state->server_hello->random());
+
      }
    else if(type == CERTIFICATE_VERIFY)
       {
-      server_check_state(type, state);
       // FIXME: process this
+
+      state->set_expected_next(HANDSHAKE_CCS);
       }
    else if(type == HANDSHAKE_CCS)
       {
-      server_check_state(type, state);
+      state->set_expected_next(FINISHED);
 
       reader.set_keys(state->suite, state->keys, SERVER);
-      state->got_client_ccs = true;
       }
    else if(type == FINISHED)
       {
-      server_check_state(type, state);
+      state->set_expected_next(HANDSHAKE_NONE);
 
       state->client_finished = new Finished(contents);
 
