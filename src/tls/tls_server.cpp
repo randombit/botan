@@ -149,16 +149,13 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
          {
          // resume session
 
-         // FIXME: should only send the resumed ciphersuite
-         // (eg even if policy object changed)
          state->server_hello = new Server_Hello(
             rng,
             writer,
-            policy,
-            cert_chain,
-            *(state->client_hello),
-            state->client_hello->session_id(),
-            state->version,
+            session_info.session_id,
+            session_info.ciphersuite,
+            session_info.compression_method,
+            Version_Code(session_info.version),
             state->hash);
 
          state->suite = CipherSuite(state->server_hello->ciphersuite());
