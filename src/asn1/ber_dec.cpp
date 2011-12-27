@@ -400,6 +400,28 @@ BER_Decoder& BER_Decoder::decode(size_t& out,
    }
 
 /*
+* Decode a small BER encoded INTEGER
+*/
+u64bit BER_Decoder::decode_constrained_integer(ASN1_Tag type_tag,
+                                               ASN1_Tag class_tag,
+                                               size_t T_bytes)
+   {
+   if(T_bytes > 8)
+      throw BER_Decoding_Error("Can't decode small integer over 8 bytes");
+
+   BigInt integer;
+   decode(integer, type_tag, class_tag);
+
+   if(integer.bits() > 8*T_bytes)
+      throw BER_Decoding_Error("Decoded integer value larger than expected");
+
+   u64bit out = 0;
+   for(size_t i = 0; i != 8; ++i)
+      out = (out << 8) | integer.byte_at(8-i);
+   return out;
+   }
+
+/*
 * Decode a BER encoded INTEGER
 */
 BER_Decoder& BER_Decoder::decode(BigInt& out,
