@@ -6,8 +6,6 @@
 */
 
 #include <botan/tls_session_key.h>
-#include <botan/prf_ssl3.h>
-#include <botan/prf_tls.h>
 #include <botan/lookup.h>
 #include <memory>
 

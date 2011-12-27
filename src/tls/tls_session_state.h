@@ -8,29 +8,71 @@
 #ifndef TLS_SESSION_STATE_H_
 #define TLS_SESSION_STATE_H_
 
+#include <botan/x509cert.h>
 #include <botan/tls_magic.h>
 #include <botan/secmem.h>
 #include <botan/hex.h>
-#include <vector>
 #include <map>
-
-#include <iostream>
+#include <ctime>
 
 namespace Botan {
 
 /**
 * Class representing a TLS session state
-*
-* @todo Support serialization to make it easier for session managers
 */
 struct BOTAN_DLL TLS_Session_Params
    {
+   enum { TLS_SESSION_PARAM_STRUCT_VERSION = 1 };
+
+   /**
+   * Uninitialized session
+   */
+   TLS_Session_Params() :
+      session_start_time(0),
+      version(0),
+      ciphersuite(0),
+      compression_method(0),
+      connection_side(static_cast<Connection_Side>(0))
+         {}
+
+   /**
+   * New session (sets session start time)
+   */
+   TLS_Session_Params(const MemoryRegion<byte>& session_id,
+                      const MemoryRegion<byte>& master_secret,
+                      Version_Code version,
+                      u16bit ciphersuite,
+                      byte compression_method,
+                      Connection_Side side,
+                      const X509_Certificate* cert = 0,
+                      const std::string& sni_hostname = "",
+                      const std::string& srp_identity = "");
+
+   /**
+   * Load a session from BER (created by BER_encode)
+   */
+   TLS_Session_Params(const byte ber[], size_t ber_len);
+
+   /**
+   * Encode this session data for storage
+   * @warning if the master secret is compromised so is the
+   * session traffic
+   */
+   SecureVector<byte> BER_encode() const;
+
+   time_t session_start_time;
+
+   MemoryVector<byte> session_id;
+   SecureVector<byte> master_secret;
+
    u16bit version;
    u16bit ciphersuite;
    byte compression_method;
    Connection_Side connection_side;
 
-   SecureVector<byte> master_secret;
+   MemoryVector<byte> peer_certificate; // optional
+   std::string sni_hostname; // optional
+   std::string srp_identity; // optional
    };
 
 /**
@@ -50,14 +92,14 @@ class BOTAN_DLL TLS_Session_Manager
       * @param which side of the connection we are
       * @return true if params was modified
       */
-      virtual bool find(const std::vector<byte>& session_id,
+      virtual bool find(const MemoryVector<byte>& session_id,
                         TLS_Session_Params& params,
                         Connection_Side side) = 0;
 
       /**
       * Prohibit resumption of this session. Effectively an erase.
       */
-      virtual void prohibit_resumption(const std::vector<byte>& session_id) = 0;
+      virtual void prohibit_resumption(const MemoryVector<byte>& session_id) = 0;
 
       /**
       * Save a session on a best effort basis; the manager may not in
@@ -68,8 +110,7 @@ class BOTAN_DLL TLS_Session_Manager
       * @param session_id the session identifier
       * @param params to save
       */
-      virtual void save(const std::vector<byte>& session_id,
-                        const TLS_Session_Params& params) = 0;
+      virtual void save(const TLS_Session_Params& params) = 0;
 
       virtual ~TLS_Session_Manager() {}
    };
@@ -89,65 +130,19 @@ class BOTAN_DLL TLS_Session_Manager_In_Memory : public TLS_Session_Manager
       * @param session_lifetime sesions are expired after this many
       *         seconds have elapsed.
       */
-      TLS_Session_Manager_In_Memory(size_t max_sessions = 10000,
-                                    size_t session_lifetime = 86400) :
+      TLS_Session_Manager_In_Memory(size_t max_sessions = 1000,
+                                    size_t session_lifetime = 300) :
          max_sessions(max_sessions),
          session_lifetime(session_lifetime)
             {}
 
-      bool find(const std::vector<byte>& session_id,
+      bool find(const MemoryVector<byte>& session_id,
                 TLS_Session_Params& params,
-                Connection_Side side)
-         {
-         const std::string session_id_str =
-            hex_encode(&session_id[0], session_id.size());
+                Connection_Side side);
 
-         std::map<std::string, TLS_Session_Params>::const_iterator i =
-            sessions.find(session_id_str);
+      void prohibit_resumption(const MemoryVector<byte>& session_id);
 
-         std::cout << "Client asked about " << session_id_str << "\n";
-
-         std::cout << "Know about " << sessions.size() << " sessions\n";
-
-         for(std::map<std::string, TLS_Session_Params>::const_iterator j =
-                sessions.begin(); j != sessions.end(); ++j)
-            std::cout << "Session " << j->first << "\n";
-
-         if(i != sessions.end() && i->second.connection_side == side)
-            {
-            params = i->second;
-            return true;
-            }
-
-         return false;
-         }
-
-      void prohibit_resumption(const std::vector<byte>& session_id)
-         {
-         const std::string session_id_str =
-            hex_encode(&session_id[0], session_id.size());
-
-         std::map<std::string, TLS_Session_Params>::iterator i =
-            sessions.find(session_id_str);
-
-         if(i != sessions.end())
-            sessions.erase(i);
-         }
-
-      void save(const std::vector<byte>& session_id,
-                const TLS_Session_Params& session_data)
-         {
-         if(max_sessions != 0)
-            {
-            while(sessions.size() >= max_sessions)
-               sessions.erase(sessions.begin());
-            }
-
-         const std::string session_id_str =
-            hex_encode(&session_id[0], session_id.size());
-
-         sessions[session_id_str] = session_data;
-         }
+      void save(const TLS_Session_Params& session_data);
 
    private:
       size_t max_sessions, session_lifetime;

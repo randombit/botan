@@ -11,6 +11,7 @@
 #include <botan/dh.h>
 
 #include <stdio.h>
+#include <fstream>
 
 namespace Botan {
 
@@ -115,11 +116,12 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       writer.set_version(state->version);
       reader.set_version(state->version);
 
+      MemoryVector<byte> client_session_id = state->client_hello->session_id();
+
       TLS_Session_Params session_info;
       const bool resuming =
-         state->client_hello->session_id_vector().size() &&
-         session_manager.find(state->client_hello->session_id_vector(),
-                              session_info, SERVER);
+         (!client_session_id.empty()) &&
+         session_manager.find(client_session_id, session_info, SERVER);
 
       printf("Resuming ? %d\n", resuming);
 
@@ -283,16 +285,24 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
                                                state->keys.master_secret(),
                                                state->hash);
 
-         TLS_Session_Params session_info;
+         TLS_Session_Params session_info(
+            state->server_hello->session_id(),
+            state->keys.master_secret(),
+            state->server_hello->version(),
+            state->server_hello->ciphersuite(),
+            state->server_hello->compression_algo(),
+            SERVER,
+            0,
+            client_requested_hostname,
+            ""
+            );
 
-         session_info.version = state->server_hello->version();
-         session_info.connection_side = SERVER;
-         session_info.ciphersuite = state->server_hello->ciphersuite();
-         session_info.compression_method = state->server_hello->compression_algo();
-         session_info.master_secret = state->keys.master_secret();
+         session_manager.save(session_info);
 
-         session_manager.save(state->server_hello->session_id_vector(),
-                              session_info);
+         std::ofstream tmp("/tmp/session.data");
+         SecureVector<byte> b = session_info.BER_encode();
+         tmp.write((char*)&b[0], b.size());
+         tmp.close();
          }
 
       delete state;
