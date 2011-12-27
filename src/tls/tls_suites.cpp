@@ -81,6 +81,12 @@ TLS_Ciphersuite_Algos CipherSuite::lookup_ciphersuite(u16bit suite)
                                    TLS_ALGO_MAC_SHA1 |
                                    TLS_ALGO_CIPHER_SEED_CBC);
 
+   if(suite == TLS_DHE_DSS_WITH_RC4_SHA)
+      return TLS_Ciphersuite_Algos(TLS_ALGO_SIGNER_DSA |
+                                   TLS_ALGO_KEYEXCH_DH |
+                                   TLS_ALGO_MAC_SHA1 |
+                                   TLS_ALGO_CIPHER_RC4_128);
+
    if(suite == TLS_DHE_DSS_WITH_AES_256_CBC_SHA)
       return TLS_Ciphersuite_Algos(TLS_ALGO_SIGNER_DSA |
                                    TLS_ALGO_KEYEXCH_DH |
