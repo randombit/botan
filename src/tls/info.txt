@@ -15,7 +15,6 @@ tls_magic.h
 tls_policy.h
 tls_record.h
 tls_server.h
-tls_session_key.h
 tls_session_state.h
 tls_suites.h
 </header:public>
@@ -25,6 +24,7 @@ tls_alerts.h
 tls_handshake_hash.h
 tls_messages.h
 tls_reader.h
+tls_session_key.h
 tls_state.h
 </header:internal>
 

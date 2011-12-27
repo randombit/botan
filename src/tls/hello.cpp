@@ -7,6 +7,7 @@
 
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_reader.h>
+#include <botan/internal/tls_session_key.h>
 
 namespace Botan {
 

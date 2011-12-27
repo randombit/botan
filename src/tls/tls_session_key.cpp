@@ -5,7 +5,7 @@
 * Released under the terms of the Botan license
 */
 
-#include <botan/tls_session_key.h>
+#include <botan/internal/tls_session_key.h>
 #include <botan/lookup.h>
 #include <memory>
 

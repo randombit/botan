@@ -8,6 +8,7 @@
 #include <botan/tls_record.h>
 #include <botan/lookup.h>
 #include <botan/loadstor.h>
+#include <botan/internal/tls_session_key.h>
 
 namespace Botan {
 

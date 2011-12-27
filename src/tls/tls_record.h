@@ -8,7 +8,6 @@
 #ifndef BOTAN_TLS_RECORDS_H__
 #define BOTAN_TLS_RECORDS_H__
 
-#include <botan/tls_session_key.h>
 #include <botan/tls_suites.h>
 #include <botan/pipe.h>
 #include <botan/mac.h>
@@ -33,6 +32,8 @@ namespace Botan {
 
 using namespace std::tr1::placeholders;
 
+class SessionKeys;
+
 /**
 * TLS Record Writer
 */
@@ -44,11 +45,13 @@ class BOTAN_DLL Record_Writer
 
       void flush();
 
-      void alert(Alert_Level, Alert_Type);
+      void alert(Alert_Level level, Alert_Type type);
 
-      void set_keys(const CipherSuite&, const SessionKeys&, Connection_Side);
+      void set_keys(const CipherSuite& suite,
+                    const SessionKeys& keys,
+                    Connection_Side side);
 
-      void set_version(Version_Code);
+      void set_version(Version_Code version);
 
       void reset();
 

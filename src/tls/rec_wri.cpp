@@ -1,11 +1,12 @@
 /*
 * TLS Record Writing
-* (C) 2004-2010 Jack Lloyd
+* (C) 2004-2011 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
 
 #include <botan/tls_record.h>
+#include <botan/internal/tls_session_key.h>
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/lookup.h>
 #include <botan/loadstor.h>
@@ -60,7 +61,8 @@ void Record_Writer::set_version(Version_Code version)
 /**
 * Set the keys for writing
 */
-void Record_Writer::set_keys(const CipherSuite& suite, const SessionKeys& keys,
+void Record_Writer::set_keys(const CipherSuite& suite,
+                             const SessionKeys& keys,
                              Connection_Side side)
    {
    cipher.reset();

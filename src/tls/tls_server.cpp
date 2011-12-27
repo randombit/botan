@@ -6,6 +6,7 @@
 */
 
 #include <botan/tls_server.h>
+#include <botan/internal/tls_session_key.h>
 #include <botan/internal/tls_state.h>
 #include <botan/internal/stl_util.h>
 #include <botan/rsa.h>

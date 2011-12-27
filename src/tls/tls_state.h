@@ -9,6 +9,7 @@
 #define BOTAN_TLS_HANDSHAKE_STATE_H__
 
 #include <botan/internal/tls_messages.h>
+#include <botan/internal/tls_session_key.h>
 #include <botan/secqueue.h>
 
 namespace Botan {
