@@ -48,7 +48,13 @@ size_t TLS_Channel::received_data(const byte buf[], size_t buf_size)
             {
             if(active)
                {
-               proc_fn(&record[0], record.size(), NO_ALERT_TYPE);
+               /*
+               * OpenSSL among others sends empty records in versions
+               * before TLS v1.1 in order to randomize the IV of the
+               * following record. Avoid spurious callbacks.
+               */
+               if(record.size() > 0)
+                  proc_fn(&record[0], record.size(), NO_ALERT_TYPE);
                }
             else
                {

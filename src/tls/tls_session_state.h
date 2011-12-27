@@ -10,6 +10,7 @@
 
 #include <botan/tls_magic.h>
 #include <botan/secmem.h>
+#include <botan/hex.h>
 #include <vector>
 #include <map>
 
@@ -17,22 +18,26 @@
 
 namespace Botan {
 
+/**
+* Class representing a TLS session state
+*
+* @todo Support serialization to make it easier for session managers
+*/
 struct BOTAN_DLL TLS_Session_Params
    {
-   SecureVector<byte> master_secret;
-   std::vector<byte> client_random;
-   std::vector<byte> server_random;
-
-   bool resumable;
-   Version_Code version;
+   u16bit version;
+   u16bit ciphersuite;
+   byte compression_method;
    Connection_Side connection_side;
-   Ciphersuite_Code ciphersuite;
-   Compression_Algo compression_method;
+
+   SecureVector<byte> master_secret;
    };
 
 /**
 * TLS_Session_Manager is an interface to systems which can save
 * session parameters for support session resumption.
+*
+* Implementations should strive to be thread safe
 */
 class BOTAN_DLL TLS_Session_Manager
    {
@@ -42,10 +47,12 @@ class BOTAN_DLL TLS_Session_Manager
       * @param session_id the session identifier we are trying to resume
       * @param params will be set to the saved session data (if found),
                or not modified if not found
+      * @param which side of the connection we are
       * @return true if params was modified
       */
       virtual bool find(const std::vector<byte>& session_id,
-                        TLS_Session_Params& params) = 0;
+                        TLS_Session_Params& params,
+                        Connection_Side side) = 0;
 
       /**
       * Prohibit resumption of this session. Effectively an erase.
@@ -70,26 +77,43 @@ class BOTAN_DLL TLS_Session_Manager
 /**
 * A simple implementation of TLS_Session_Manager that just saves
 * values in memory, with no persistance abilities
+*
+* @todo add locking
 */
 class BOTAN_DLL TLS_Session_Manager_In_Memory : public TLS_Session_Manager
    {
    public:
       /**
       * @param max_sessions a hint on the maximum number of sessions
-      * to save at any one time.
+      *        to save at any one time. (If zero, don't cap at all)
+      * @param session_lifetime sesions are expired after this many
+      *         seconds have elapsed.
       */
-      TLS_Session_Manager_In_Memory(size_t max_sessions = 0) :
-         max_sessions(max_sessions) {}
+      TLS_Session_Manager_In_Memory(size_t max_sessions = 10000,
+                                    size_t session_lifetime = 86400) :
+         max_sessions(max_sessions),
+         session_lifetime(session_lifetime)
+            {}
 
       bool find(const std::vector<byte>& session_id,
-                TLS_Session_Params& params)
+                TLS_Session_Params& params,
+                Connection_Side side)
          {
-         std::map<std::vector<byte>, TLS_Session_Params>::const_iterator i =
-            sessions.find(session_id);
+         const std::string session_id_str =
+            hex_encode(&session_id[0], session_id.size());
+
+         std::map<std::string, TLS_Session_Params>::const_iterator i =
+            sessions.find(session_id_str);
+
+         std::cout << "Client asked about " << session_id_str << "\n";
 
          std::cout << "Know about " << sessions.size() << " sessions\n";
 
-         if(i != sessions.end())
+         for(std::map<std::string, TLS_Session_Params>::const_iterator j =
+                sessions.begin(); j != sessions.end(); ++j)
+            std::cout << "Session " << j->first << "\n";
+
+         if(i != sessions.end() && i->second.connection_side == side)
             {
             params = i->second;
             return true;
@@ -100,8 +124,11 @@ class BOTAN_DLL TLS_Session_Manager_In_Memory : public TLS_Session_Manager
 
       void prohibit_resumption(const std::vector<byte>& session_id)
          {
-         std::map<std::vector<byte>, TLS_Session_Params>::iterator i =
-            sessions.find(session_id);
+         const std::string session_id_str =
+            hex_encode(&session_id[0], session_id.size());
+
+         std::map<std::string, TLS_Session_Params>::iterator i =
+            sessions.find(session_id_str);
 
          if(i != sessions.end())
             sessions.erase(i);
@@ -116,12 +143,15 @@ class BOTAN_DLL TLS_Session_Manager_In_Memory : public TLS_Session_Manager
                sessions.erase(sessions.begin());
             }
 
-         sessions[session_id] = session_data;
+         const std::string session_id_str =
+            hex_encode(&session_id[0], session_id.size());
+
+         sessions[session_id_str] = session_data;
          }
 
    private:
-      size_t max_sessions;
-      std::map<std::vector<byte>, TLS_Session_Params> sessions;
+      size_t max_sessions, session_lifetime;
+      std::map<std::string, TLS_Session_Params> sessions;
    };
 
 }

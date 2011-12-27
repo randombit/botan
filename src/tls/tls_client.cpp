@@ -107,6 +107,8 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
 
       state->suite = CipherSuite(state->server_hello->ciphersuite());
 
+      // if resuming, next is HANDSHAKE_CCS
+
       if(state->suite.sig_type() != TLS_ALGO_SIGNER_ANON)
          {
          state->set_expected_next(CERTIFICATE);

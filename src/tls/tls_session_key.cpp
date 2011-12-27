@@ -1,6 +1,6 @@
 /*
 * TLS Session Key
-* (C) 2004-2006 Jack Lloyd
+* (C) 2004-2006,2011 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -9,6 +9,7 @@
 #include <botan/prf_ssl3.h>
 #include <botan/prf_tls.h>
 #include <botan/lookup.h>
+#include <memory>
 
 namespace Botan {
 
@@ -74,7 +75,8 @@ SessionKeys::SessionKeys(const CipherSuite& suite,
                          Version_Code version,
                          const MemoryRegion<byte>& pre_master_secret,
                          const MemoryRegion<byte>& c_random,
-                         const MemoryRegion<byte>& s_random)
+                         const MemoryRegion<byte>& s_random,
+                         bool resuming)
    {
    if(version != SSL_V3 && version != TLS_V10 && version != TLS_V11)
       throw Invalid_Argument("SessionKeys: Unknown version code");
@@ -88,28 +90,67 @@ SessionKeys::SessionKeys(const CipherSuite& suite,
 
    const size_t prf_gen = 2 * (mac_keylen + cipher_keylen + cipher_ivlen);
 
-   SymmetricKey keyblock = (version == SSL_V3) ?
-      ssl3_keygen(prf_gen, pre_master_secret, c_random, s_random) :
-      tls1_keygen(prf_gen, pre_master_secret, c_random, s_random);
+   if(resuming)
+      {
+      master_sec = pre_master_secret;
 
-   const byte* key_data = keyblock.begin();
+      const byte KEY_GEN_MAGIC[] = {
+         0x6B, 0x65, 0x79, 0x20, 0x65, 0x78, 0x70, 0x61, 0x6E, 0x73, 0x69, 0x6F, 0x6E };
 
-   c_mac = SymmetricKey(key_data, mac_keylen);
-   key_data += mac_keylen;
+      TLS_PRF prf;
 
-   s_mac = SymmetricKey(key_data, mac_keylen);
-   key_data += mac_keylen;
+      SecureVector<byte> salt;
+      salt += std::make_pair(KEY_GEN_MAGIC, sizeof(KEY_GEN_MAGIC));
+      salt += s_random;
+      salt += c_random;
 
-   c_cipher = SymmetricKey(key_data, cipher_keylen);
-   key_data += cipher_keylen;
+      SymmetricKey keyblock = prf.derive_key(prf_gen, master_sec, salt);
 
-   s_cipher = SymmetricKey(key_data, cipher_keylen);
-   key_data += cipher_keylen;
+      const byte* key_data = keyblock.begin();
 
-   c_iv = InitializationVector(key_data, cipher_ivlen);
-   key_data += cipher_ivlen;
+      c_mac = SymmetricKey(key_data, mac_keylen);
+      key_data += mac_keylen;
 
-   s_iv = InitializationVector(key_data, cipher_ivlen);
+      s_mac = SymmetricKey(key_data, mac_keylen);
+      key_data += mac_keylen;
+
+      c_cipher = SymmetricKey(key_data, cipher_keylen);
+      key_data += cipher_keylen;
+
+      s_cipher = SymmetricKey(key_data, cipher_keylen);
+      key_data += cipher_keylen;
+
+      c_iv = InitializationVector(key_data, cipher_ivlen);
+      key_data += cipher_ivlen;
+
+      s_iv = InitializationVector(key_data, cipher_ivlen);
+      }
+   else
+      {
+      SymmetricKey keyblock = (version == SSL_V3) ?
+         ssl3_keygen(prf_gen, pre_master_secret, c_random, s_random) :
+         tls1_keygen(prf_gen, pre_master_secret, c_random, s_random);
+
+      const byte* key_data = keyblock.begin();
+
+      c_mac = SymmetricKey(key_data, mac_keylen);
+      key_data += mac_keylen;
+
+      s_mac = SymmetricKey(key_data, mac_keylen);
+      key_data += mac_keylen;
+
+      c_cipher = SymmetricKey(key_data, cipher_keylen);
+      key_data += cipher_keylen;
+
+      s_cipher = SymmetricKey(key_data, cipher_keylen);
+      key_data += cipher_keylen;
+
+      c_iv = InitializationVector(key_data, cipher_ivlen);
+      key_data += cipher_ivlen;
+
+      s_iv = InitializationVector(key_data, cipher_ivlen);
+      }
+
    }
 
 }

@@ -37,7 +37,8 @@ class BOTAN_DLL SessionKeys
                   Version_Code version,
                   const MemoryRegion<byte>& pre_master,
                   const MemoryRegion<byte>& client_random,
-                  const MemoryRegion<byte>& server_random);
+                  const MemoryRegion<byte>& server_random,
+                  bool resuming = false);
 
    private:
       SymmetricKey ssl3_keygen(size_t, const MemoryRegion<byte>&,

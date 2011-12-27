@@ -115,26 +115,62 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       writer.set_version(state->version);
       reader.set_version(state->version);
 
-      TLS_Session_Params params;
-      const bool found = session_manager.find(
-         state->client_hello->session_id_vector(),
-         params);
+      TLS_Session_Params session_info;
+      const bool resuming =
+         state->client_hello->session_id_vector().size() &&
+         session_manager.find(state->client_hello->session_id_vector(),
+                              session_info, SERVER);
 
-      if(found && params.connection_side == SERVER)
+      printf("Resuming ? %d\n", resuming);
+
+      if(resuming)
          {
          // resume session
 
+         // Check version matches the client requested version (???)
+
+         // Check that resumed ciphersuite is in the client hello
+
+         // Check that the resumed compression is in the client hello
+
+
+         // FIXME: should only send the resumed ciphersuite
+         // (eg even if policy object changed)
+         state->server_hello = new Server_Hello(
+            rng,
+            writer,
+            policy,
+            cert_chain,
+            *(state->client_hello),
+            state->client_hello->session_id(),
+            state->version,
+            state->hash);
+
+         state->suite = CipherSuite(state->server_hello->ciphersuite());
+
+         state->keys = SessionKeys(state->suite, state->version,
+                                   session_info.master_secret,
+                                   state->client_hello->random(),
+                                   state->server_hello->random(),
+                                   true);
+
+         writer.send(CHANGE_CIPHER_SPEC, 1);
+         writer.flush();
+
+         writer.set_keys(state->suite, state->keys, SERVER);
+
+         state->server_finished = new Finished(writer, state->version, SERVER,
+                                               state->keys.master_secret(),
+                                               state->hash);
+
          state->set_expected_next(HANDSHAKE_CCS);
          }
-      else
+      else // new session
          {
-         // new session
-         MemoryVector<byte> sess_id = rng.random_vec(32);
-
          state->server_hello = new Server_Hello(rng, writer,
                                                 policy, cert_chain,
                                                 *(state->client_hello),
-                                                sess_id,
+                                                rng.random_vec(32),
                                                 state->version, state->hash);
 
          state->suite = CipherSuite(state->server_hello->ciphersuite());
@@ -169,6 +205,8 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
                                     state->server_hello->random(),
                                     state->hash);
 
+         state->server_hello_done = new Server_Hello_Done(writer, state->hash);
+
          if(policy.require_client_auth())
             {
             throw Internal_Error("Client auth not implemented");
@@ -178,8 +216,6 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
          else
             state->set_expected_next(CLIENT_KEX);
          }
-
-      state->server_hello_done = new Server_Hello_Done(writer, state->hash);
       }
    else if(type == CERTIFICATE)
       {
@@ -203,8 +239,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       state->keys = SessionKeys(state->suite, state->version, pre_master,
                                 state->client_hello->random(),
                                 state->server_hello->random());
-
-     }
+      }
    else if(type == CERTIFICATE_VERIFY)
       {
       // FIXME: process this
@@ -228,22 +263,37 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
          throw TLS_Exception(DECRYPT_ERROR,
                              "Finished message didn't verify");
 
-      state->hash.update(static_cast<byte>(type));
+      // already sent it if resuming
+      if(!state->server_finished)
+         {
+         state->hash.update(static_cast<byte>(type));
 
-      const size_t record_length = contents.size();
-      for(size_t i = 0; i != 3; i++)
-         state->hash.update(get_byte<u32bit>(i+1, record_length));
+         const size_t record_length = contents.size();
+         for(size_t i = 0; i != 3; i++)
+            state->hash.update(get_byte<u32bit>(i+1, record_length));
 
-      state->hash.update(contents);
+         state->hash.update(contents);
 
-      writer.send(CHANGE_CIPHER_SPEC, 1);
-      writer.flush();
+         writer.send(CHANGE_CIPHER_SPEC, 1);
+         writer.flush();
 
-      writer.set_keys(state->suite, state->keys, SERVER);
+         writer.set_keys(state->suite, state->keys, SERVER);
 
-      state->server_finished = new Finished(writer, state->version, SERVER,
-                                            state->keys.master_secret(),
-                                            state->hash);
+         state->server_finished = new Finished(writer, state->version, SERVER,
+                                               state->keys.master_secret(),
+                                               state->hash);
+
+         TLS_Session_Params session_info;
+
+         session_info.version = state->server_hello->version();
+         session_info.connection_side = SERVER;
+         session_info.ciphersuite = state->server_hello->ciphersuite();
+         session_info.compression_method = state->server_hello->compression_algo();
+         session_info.master_secret = state->keys.master_secret();
+
+         session_manager.save(state->server_hello->session_id_vector(),
+                              session_info);
+         }
 
       delete state;
       state = 0;

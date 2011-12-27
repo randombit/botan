@@ -240,6 +240,13 @@ class Server_Hello : public HandshakeMessage
       u16bit ciphersuite() const { return suite; }
       byte compression_algo() const { return comp_algo; }
 
+      std::vector<byte> session_id_vector() const
+         {
+         std::vector<byte> v;
+         v.insert(v.begin(), &sess_id[0], &sess_id[sess_id.size()]);
+         return v;
+         }
+
       const MemoryVector<byte>& random() const { return s_random; }
 
       Server_Hello(RandomNumberGenerator& rng,
