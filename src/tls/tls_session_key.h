@@ -1,6 +1,6 @@
 /*
 * TLS Session Key
-* (C) 2004-2006 Jack Lloyd
+* (C) 2004-2006,2011 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -41,13 +41,6 @@ class BOTAN_DLL SessionKeys
                   bool resuming = false);
 
    private:
-      SymmetricKey ssl3_keygen(size_t, const MemoryRegion<byte>&,
-                               const MemoryRegion<byte>&,
-                               const MemoryRegion<byte>&);
-      SymmetricKey tls1_keygen(size_t, const MemoryRegion<byte>&,
-                               const MemoryRegion<byte>&,
-                               const MemoryRegion<byte>&);
-
       SecureVector<byte> master_sec;
       SymmetricKey c_cipher, s_cipher, c_mac, s_mac;
       InitializationVector c_iv, s_iv;

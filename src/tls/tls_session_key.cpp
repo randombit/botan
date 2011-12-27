@@ -13,60 +13,19 @@
 
 namespace Botan {
 
-/**
-* Generate SSLv3 session keys
-*/
-SymmetricKey SessionKeys::ssl3_keygen(size_t prf_gen,
-                                      const MemoryRegion<byte>& pre_master,
-                                      const MemoryRegion<byte>& client_random,
-                                      const MemoryRegion<byte>& server_random)
+namespace {
+
+std::string lookup_prf_name(Version_Code version)
    {
-   SSL3_PRF prf;
-
-   SecureVector<byte> salt;
-   salt += client_random;
-   salt += server_random;
-
-   master_sec = prf.derive_key(48, pre_master, salt);
-
-   salt.clear();
-   salt += server_random;
-   salt += client_random;
-
-   return prf.derive_key(prf_gen, master_sec, salt);
+   if(version == SSL_V3)
+      return "SSL3-PRF";
+   else if(version == TLS_V10 || version == TLS_V11)
+      return "TLS-PRF";
+   else
+      throw Invalid_Argument("SessionKeys: Unknown version code");
    }
 
-/**
-* Generate TLS 1.0 session keys
-*/
-SymmetricKey SessionKeys::tls1_keygen(size_t prf_gen,
-                                      const MemoryRegion<byte>& pre_master,
-                                      const MemoryRegion<byte>& client_random,
-                                      const MemoryRegion<byte>& server_random)
-   {
-   const byte MASTER_SECRET_MAGIC[] = {
-      0x6D, 0x61, 0x73, 0x74, 0x65, 0x72, 0x20, 0x73, 0x65, 0x63, 0x72, 0x65,
-      0x74 };
-   const byte KEY_GEN_MAGIC[] = {
-      0x6B, 0x65, 0x79, 0x20, 0x65, 0x78, 0x70, 0x61, 0x6E, 0x73, 0x69, 0x6F,
-      0x6E };
-
-   TLS_PRF prf;
-
-   SecureVector<byte> salt;
-   salt += std::make_pair(MASTER_SECRET_MAGIC, sizeof(MASTER_SECRET_MAGIC));
-   salt += client_random;
-   salt += server_random;
-
-   master_sec = prf.derive_key(48, pre_master, salt);
-
-   salt.clear();
-   salt += std::make_pair(KEY_GEN_MAGIC, sizeof(KEY_GEN_MAGIC));
-   salt += server_random;
-   salt += client_random;
-
-   return prf.derive_key(prf_gen, master_sec, salt);
-   }
+}
 
 /**
 * SessionKeys Constructor
@@ -74,12 +33,11 @@ SymmetricKey SessionKeys::tls1_keygen(size_t prf_gen,
 SessionKeys::SessionKeys(const CipherSuite& suite,
                          Version_Code version,
                          const MemoryRegion<byte>& pre_master_secret,
-                         const MemoryRegion<byte>& c_random,
-                         const MemoryRegion<byte>& s_random,
+                         const MemoryRegion<byte>& client_random,
+                         const MemoryRegion<byte>& server_random,
                          bool resuming)
    {
-   if(version != SSL_V3 && version != TLS_V10 && version != TLS_V11)
-      throw Invalid_Argument("SessionKeys: Unknown version code");
+   const std::string prf_name = lookup_prf_name(version);
 
    const size_t mac_keylen = output_length_of(suite.mac_algo());
    const size_t cipher_keylen = suite.cipher_keylen();
@@ -90,67 +48,57 @@ SessionKeys::SessionKeys(const CipherSuite& suite,
 
    const size_t prf_gen = 2 * (mac_keylen + cipher_keylen + cipher_ivlen);
 
+   const byte MASTER_SECRET_MAGIC[] = {
+      0x6D, 0x61, 0x73, 0x74, 0x65, 0x72, 0x20, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74 };
+
+   const byte KEY_GEN_MAGIC[] = {
+      0x6B, 0x65, 0x79, 0x20, 0x65, 0x78, 0x70, 0x61, 0x6E, 0x73, 0x69, 0x6F, 0x6E };
+
+   std::auto_ptr<KDF> prf(get_kdf(prf_name));
+
    if(resuming)
       {
       master_sec = pre_master_secret;
-
-      const byte KEY_GEN_MAGIC[] = {
-         0x6B, 0x65, 0x79, 0x20, 0x65, 0x78, 0x70, 0x61, 0x6E, 0x73, 0x69, 0x6F, 0x6E };
-
-      TLS_PRF prf;
-
-      SecureVector<byte> salt;
-      salt += std::make_pair(KEY_GEN_MAGIC, sizeof(KEY_GEN_MAGIC));
-      salt += s_random;
-      salt += c_random;
-
-      SymmetricKey keyblock = prf.derive_key(prf_gen, master_sec, salt);
-
-      const byte* key_data = keyblock.begin();
-
-      c_mac = SymmetricKey(key_data, mac_keylen);
-      key_data += mac_keylen;
-
-      s_mac = SymmetricKey(key_data, mac_keylen);
-      key_data += mac_keylen;
-
-      c_cipher = SymmetricKey(key_data, cipher_keylen);
-      key_data += cipher_keylen;
-
-      s_cipher = SymmetricKey(key_data, cipher_keylen);
-      key_data += cipher_keylen;
-
-      c_iv = InitializationVector(key_data, cipher_ivlen);
-      key_data += cipher_ivlen;
-
-      s_iv = InitializationVector(key_data, cipher_ivlen);
       }
    else
       {
-      SymmetricKey keyblock = (version == SSL_V3) ?
-         ssl3_keygen(prf_gen, pre_master_secret, c_random, s_random) :
-         tls1_keygen(prf_gen, pre_master_secret, c_random, s_random);
+      SecureVector<byte> salt;
 
-      const byte* key_data = keyblock.begin();
+      if(version != SSL_V3)
+         salt += std::make_pair(MASTER_SECRET_MAGIC, sizeof(MASTER_SECRET_MAGIC));
 
-      c_mac = SymmetricKey(key_data, mac_keylen);
-      key_data += mac_keylen;
+      salt += client_random;
+      salt += server_random;
 
-      s_mac = SymmetricKey(key_data, mac_keylen);
-      key_data += mac_keylen;
-
-      c_cipher = SymmetricKey(key_data, cipher_keylen);
-      key_data += cipher_keylen;
-
-      s_cipher = SymmetricKey(key_data, cipher_keylen);
-      key_data += cipher_keylen;
-
-      c_iv = InitializationVector(key_data, cipher_ivlen);
-      key_data += cipher_ivlen;
-
-      s_iv = InitializationVector(key_data, cipher_ivlen);
+      master_sec = prf->derive_key(48, pre_master_secret, salt);
       }
 
+   SecureVector<byte> salt;
+   if(version != SSL_V3)
+      salt += std::make_pair(KEY_GEN_MAGIC, sizeof(KEY_GEN_MAGIC));
+   salt += server_random;
+   salt += client_random;
+
+   SymmetricKey keyblock = prf->derive_key(prf_gen, master_sec, salt);
+
+   const byte* key_data = keyblock.begin();
+
+   c_mac = SymmetricKey(key_data, mac_keylen);
+   key_data += mac_keylen;
+
+   s_mac = SymmetricKey(key_data, mac_keylen);
+   key_data += mac_keylen;
+
+   c_cipher = SymmetricKey(key_data, cipher_keylen);
+   key_data += cipher_keylen;
+
+   s_cipher = SymmetricKey(key_data, cipher_keylen);
+   key_data += cipher_keylen;
+
+   c_iv = InitializationVector(key_data, cipher_ivlen);
+   key_data += cipher_ivlen;
+
+   s_iv = InitializationVector(key_data, cipher_ivlen);
    }
 
 }
