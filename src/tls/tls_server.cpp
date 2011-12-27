@@ -146,28 +146,28 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
                                                   state->hash);
             }
 
-         state->kex_priv = PKCS8::copy_key(*private_key, rng);
-         if(state->suite.kex_type() != TLS_ALGO_KEYEXCH_NOKEX)
+         if(state->suite.kex_type() == TLS_ALGO_KEYEXCH_NOKEX)
             {
-            if(state->suite.kex_type() == TLS_ALGO_KEYEXCH_RSA)
-               {
-               state->kex_priv = new RSA_PrivateKey(rng,
-                                                    policy.rsa_export_keysize());
-               }
-            else if(state->suite.kex_type() == TLS_ALGO_KEYEXCH_DH)
-               {
-               state->kex_priv = new DH_PrivateKey(rng, policy.dh_group());
-               }
-            else
-               throw Internal_Error("TLS_Server: Unknown ciphersuite kex type");
-
-            state->server_kex =
-               new Server_Key_Exchange(rng, writer,
-                                       state->kex_priv, private_key,
-                                       state->client_hello->random(),
-                                       state->server_hello->random(),
-                                       state->hash);
+            state->kex_priv = PKCS8::copy_key(*private_key, rng);
             }
+         else if(state->suite.kex_type() == TLS_ALGO_KEYEXCH_RSA)
+            {
+            // this seems, er, non-optimal...
+            state->kex_priv = new RSA_PrivateKey(rng, policy.rsa_export_keysize());
+            }
+         else if(state->suite.kex_type() == TLS_ALGO_KEYEXCH_DH)
+            {
+            state->kex_priv = new DH_PrivateKey(rng, policy.dh_group());
+            }
+         else
+            throw Internal_Error("TLS_Server: Unknown ciphersuite kex type");
+
+         state->server_kex =
+            new Server_Key_Exchange(rng, writer,
+                                    state->kex_priv, private_key,
+                                    state->client_hello->random(),
+                                    state->server_hello->random(),
+                                    state->hash);
 
          if(policy.require_client_auth())
             {

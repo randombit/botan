@@ -5,8 +5,8 @@
 * Released under the terms of the Botan license
 */
 
-#ifndef BOTAN_TLS_HANDSHAKE_H__
-#define BOTAN_TLS_HANDSHAKE_H__
+#ifndef BOTAN_TLS_HANDSHAKE_STATE_H__
+#define BOTAN_TLS_HANDSHAKE_STATE_H__
 
 #include <botan/internal/tls_messages.h>
 #include <botan/secqueue.h>
@@ -50,7 +50,6 @@ class Handshake_State
       SecureQueue queue;
 
       Version_Code version;
-      //bool got_client_ccs, got_server_ccs, do_client_auth;
    private:
       u32bit hand_expecting_mask, hand_received_mask;
    };
