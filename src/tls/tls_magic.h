@@ -26,7 +26,7 @@ enum Version_Code {
    TLS_V11            = 0x0302
 };
 
-enum Connection_Side { CLIENT, SERVER };
+enum Connection_Side { CLIENT = 1, SERVER = 2 };
 
 enum Record_Type {
    CONNECTION_CLOSED  = 0,

@@ -60,7 +60,7 @@ struct BOTAN_DLL TLS_Session_Params
    */
    SecureVector<byte> BER_encode() const;
 
-   time_t session_start_time;
+   u64bit session_start_time;
 
    MemoryVector<byte> session_id;
    SecureVector<byte> master_secret;

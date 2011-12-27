@@ -9,7 +9,6 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/asn1_str.h>
-#include <botan/bigint.h>
 #include <ctime>
 
 namespace Botan {
@@ -39,7 +38,29 @@ TLS_Session_Params::TLS_Session_Params(const MemoryRegion<byte>& session_id,
 
 TLS_Session_Params::TLS_Session_Params(const byte ber[], size_t ber_len)
    {
-   // todo
+   BER_Decoder decoder(ber, ber_len);
+
+   byte side_code = 0;
+   ASN1_String sni_hostname_str;
+   ASN1_String srp_identity_str;
+
+   BER_Decoder(ber, ber_len)
+      .decode_and_check(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION),
+                        "Unknown version in session structure")
+      .decode(session_id, OCTET_STRING)
+      .decode_integer_type(session_start_time)
+      .decode_integer_type(version)
+      .decode_integer_type(ciphersuite)
+      .decode_integer_type(compression_method)
+      .decode_integer_type(side_code)
+      .decode(master_secret, OCTET_STRING)
+      .decode(peer_certificate, OCTET_STRING)
+      .decode(sni_hostname_str)
+      .decode(srp_identity_str);
+
+   sni_hostname = sni_hostname_str.value();
+   srp_identity = srp_identity_str.value();
+   connection_side = static_cast<Connection_Side>(side_code);
    }
 
 SecureVector<byte> TLS_Session_Params::BER_encode() const
@@ -48,11 +69,11 @@ SecureVector<byte> TLS_Session_Params::BER_encode() const
       .start_cons(SEQUENCE)
          .encode(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION))
          .encode(session_id, OCTET_STRING)
-         .encode(BigInt(session_start_time))
+         .encode(static_cast<size_t>(session_start_time))
          .encode(static_cast<size_t>(version))
          .encode(static_cast<size_t>(ciphersuite))
          .encode(static_cast<size_t>(compression_method))
-         .encode(static_cast<size_t>((connection_side == SERVER) ? 1 : 2))
+         .encode(static_cast<size_t>(connection_side))
          .encode(master_secret, OCTET_STRING)
          .encode(peer_certificate, OCTET_STRING)
          .encode(ASN1_String(sni_hostname, UTF8_STRING))
