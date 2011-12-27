@@ -227,7 +227,10 @@ Server_Hello::Server_Hello(RandomNumberGenerator& rng,
                            const Client_Hello& c_hello,
                            const MemoryRegion<byte>& session_id,
                            Version_Code ver,
-                           HandshakeHash& hash)
+                           HandshakeHash& hash) :
+   s_version(ver),
+   sess_id(session_id),
+   s_random(rng.random_vec(32))
    {
    bool have_rsa = false, have_dsa = false;
 
@@ -249,10 +252,25 @@ Server_Hello::Server_Hello(RandomNumberGenerator& rng,
 
    comp_algo = policy.choose_compression(c_hello.compression_algos());
 
-   s_version = ver;
-   s_random = rng.random_vec(32);
-   sess_id = session_id;
+   send(writer, hash);
+   }
 
+/*
+* Create a new Server Hello message
+*/
+Server_Hello::Server_Hello(RandomNumberGenerator& rng,
+                           Record_Writer& writer,
+                           const MemoryRegion<byte>& session_id,
+                           u16bit ciphersuite,
+                           byte compression,
+                           Version_Code ver,
+                           HandshakeHash& hash) :
+   s_version(ver),
+   sess_id(session_id),
+   s_random(rng.random_vec(32)),
+   suite(ciphersuite),
+   comp_algo(compression)
+   {
    send(writer, hash);
    }
 

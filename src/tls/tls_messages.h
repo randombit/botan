@@ -258,6 +258,14 @@ class Server_Hello : public HandshakeMessage
                    Version_Code version,
                    HandshakeHash& hash);
 
+      Server_Hello(RandomNumberGenerator& rng,
+                   Record_Writer& writer,
+                   const MemoryRegion<byte>& session_id,
+                   u16bit ciphersuite,
+                   byte compression,
+                   Version_Code ver,
+                   HandshakeHash& hash);
+
       Server_Hello(const MemoryRegion<byte>& buf) { deserialize(buf); }
    private:
       MemoryVector<byte> serialize() const;

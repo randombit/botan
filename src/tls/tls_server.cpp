@@ -7,11 +7,9 @@
 
 #include <botan/tls_server.h>
 #include <botan/internal/tls_state.h>
+#include <botan/internal/stl_util.h>
 #include <botan/rsa.h>
 #include <botan/dh.h>
-
-#include <stdio.h>
-#include <fstream>
 
 namespace Botan {
 
@@ -29,6 +27,32 @@ Version_Code choose_version(Version_Code client, Version_Code minimum)
    if(client == SSL_V3 || client == TLS_V10 || client == TLS_V11)
       return client;
    return TLS_V11;
+   }
+
+bool check_for_resume(TLS_Session_Params& session_info,
+                      TLS_Session_Manager& session_manager,
+                      Client_Hello* client_hello)
+   {
+   MemoryVector<byte> client_session_id = client_hello->session_id();
+
+   if(client_session_id.empty())
+      return false;
+
+   if(!session_manager.find(client_session_id, session_info, SERVER))
+      return false;
+
+   if(client_hello->version() != session_info.version)
+      return false;
+
+   if(!value_exists(client_hello->ciphersuites(),
+                    session_info.ciphersuite))
+      return false;
+
+   if(!value_exists(client_hello->compression_algos(),
+                    session_info.compression_method))
+      return false;
+
+   return true;
    }
 
 }
@@ -116,25 +140,14 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       writer.set_version(state->version);
       reader.set_version(state->version);
 
-      MemoryVector<byte> client_session_id = state->client_hello->session_id();
-
       TLS_Session_Params session_info;
-      const bool resuming =
-         (!client_session_id.empty()) &&
-         session_manager.find(client_session_id, session_info, SERVER);
-
-      printf("Resuming ? %d\n", resuming);
+      const bool resuming = check_for_resume(session_info,
+                                             session_manager,
+                                             state->client_hello);
 
       if(resuming)
          {
          // resume session
-
-         // Check version matches the client requested version (???)
-
-         // Check that resumed ciphersuite is in the client hello
-
-         // Check that the resumed compression is in the client hello
-
 
          // FIXME: should only send the resumed ciphersuite
          // (eg even if policy object changed)
@@ -298,11 +311,6 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             );
 
          session_manager.save(session_info);
-
-         std::ofstream tmp("/tmp/session.data");
-         SecureVector<byte> b = session_info.BER_encode();
-         tmp.write((char*)&b[0], b.size());
-         tmp.close();
          }
 
       delete state;
