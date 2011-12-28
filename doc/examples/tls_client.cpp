@@ -49,6 +49,9 @@ class HTTPS_Client
             desired = client.received_data(&socket_buf[0], socket_got);
             socket_buf.resize(desired || 1);
             //printf("Going around for another read?\n");
+
+            if(quit_reading)
+               break;
             }
          }
 
@@ -60,11 +63,11 @@ class HTTPS_Client
 
       void proc_data(const byte data[], size_t data_len, u16bit alert_info)
          {
-         printf("Block of data %d bytes alert %04X\n", (int)data_len, alert_info);
+         printf("Block of data %d bytes alert %d\n", (int)data_len, alert_info);
          for(size_t i = 0; i != data_len; ++i)
             printf("%c", data[i]);
 
-         if(data_len == 0 && alert_info == 0)
+         if(alert_info != 255)
             quit_reading = true;
          }
 
@@ -75,7 +78,7 @@ class HTTPS_Client
 
       void read_response()
          {
-         while(true)
+         while(!quit_reading)
             {
             SecureVector<byte> buf(4096);
 
