@@ -249,7 +249,7 @@ Server_Hello::Server_Hello(RandomNumberGenerator& rng,
    suite = policy.choose_suite(c_hello.ciphersuites(), have_rsa, have_dsa);
 
    if(suite == 0)
-      throw TLS_Exception(PROTOCOL_VERSION,
+      throw TLS_Exception(HANDSHAKE_FAILURE,
                           "Can't agree on a ciphersuite with client");
 
    comp_method = policy.choose_compression(c_hello.compression_methods());
