@@ -7,6 +7,7 @@
 
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_reader.h>
+#include <botan/internal/assert.h>
 #include <botan/tls_exceptn.h>
 #include <botan/pubkey.h>
 #include <botan/rsa.h>
@@ -16,7 +17,7 @@
 
 namespace Botan {
 
-/**
+/*
 * Create a new Certificate Verify message
 */
 Certificate_Verify::Certificate_Verify(RandomNumberGenerator& rng,
@@ -24,6 +25,8 @@ Certificate_Verify::Certificate_Verify(RandomNumberGenerator& rng,
                                        TLS_Handshake_Hash& hash,
                                        const Private_Key* priv_key)
    {
+   BOTAN_ASSERT_NONNULL(priv_key, "");
+
    std::string padding = "";
    Signature_Format format = IEEE_1363;
 
@@ -31,7 +34,7 @@ Certificate_Verify::Certificate_Verify(RandomNumberGenerator& rng,
       padding = "EMSA3(TLS.Digest.0)";
    else if(priv_key->algo_name() == "DSA")
       {
-      padding == "EMSA1(SHA-1)";
+      padding = "EMSA1(SHA-1)";
       format = DER_SEQUENCE;
       }
    else
@@ -44,7 +47,7 @@ Certificate_Verify::Certificate_Verify(RandomNumberGenerator& rng,
    send(writer, hash);
    }
 
-/**
+/*
 * Serialize a Certificate Verify message
 */
 MemoryVector<byte> Certificate_Verify::serialize() const
@@ -59,7 +62,7 @@ MemoryVector<byte> Certificate_Verify::serialize() const
    return buf;
    }
 
-/**
+/*
 * Deserialize a Certificate Verify message
 */
 void Certificate_Verify::deserialize(const MemoryRegion<byte>& buf)
@@ -68,7 +71,7 @@ void Certificate_Verify::deserialize(const MemoryRegion<byte>& buf)
    signature = reader.get_range<byte>(2, 0, 65535);
    }
 
-/**
+/*
 * Verify a Certificate Verify message
 */
 bool Certificate_Verify::verify(const X509_Certificate& cert,
@@ -76,15 +79,15 @@ bool Certificate_Verify::verify(const X509_Certificate& cert,
                                 Version_Code version,
                                 const SecureVector<byte>& master_secret)
    {
-   // FIXME: duplicate of Server_Key_Exchange::verify
-
    std::auto_ptr<Public_Key> key(cert.subject_public_key());
 
    std::string padding = "";
    Signature_Format format = IEEE_1363;
 
    if(key->algo_name() == "RSA")
+      {
       padding = "EMSA3(TLS.Digest.0)";
+      }
    else if(key->algo_name() == "DSA")
       {
       if(version == SSL_V3)

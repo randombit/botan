@@ -161,7 +161,7 @@ bool Server_Key_Exchange::verify(const X509_Certificate& cert,
       padding = "EMSA3(TLS.Digest.0)";
    else if(key->algo_name() == "DSA")
       {
-      padding == "EMSA1(SHA-1)";
+      padding = "EMSA1(SHA-1)";
       format = DER_SEQUENCE;
       }
    else
