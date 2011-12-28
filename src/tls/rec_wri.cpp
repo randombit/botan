@@ -223,7 +223,8 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
       mac->update(input, length);
 
       const size_t buf_size = round_up(iv_size + length +
-                                       mac->output_length() + 1,
+                                       mac->output_length() +
+                                       (block_size ? 1 : 0),
                                        block_size);
 
       if(buf_size >= MAX_CIPHERTEXT_SIZE)
