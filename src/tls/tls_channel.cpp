@@ -169,15 +169,12 @@ void TLS_Channel::queue_for_sending(const byte buf[], size_t buf_size)
 
 void TLS_Channel::alert(Alert_Level level, Alert_Type alert_code)
    {
-   if(active && alert_code != NO_ALERT_TYPE)
+   try
       {
-      try
-         {
-         writer.alert(level, alert_code);
-         writer.flush();
-         }
-      catch(...) { /* swallow it */ }
+      writer.alert(level, alert_code);
+      writer.flush();
       }
+   catch(...) { /* swallow it */ }
 
    if(active && level == FATAL)
       {
