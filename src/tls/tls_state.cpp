@@ -7,8 +7,6 @@
 
 #include <botan/internal/tls_state.h>
 
-#include <stdio.h>
-
 namespace Botan {
 
 namespace {
@@ -88,7 +86,6 @@ Handshake_State::Handshake_State()
    kex_pub = 0;
    kex_priv = 0;
 
-   //do_client_auth = got_client_ccs = got_server_ccs = false;
    version = SSL_V3;
 
    hand_expecting_mask = 0;
@@ -104,17 +101,15 @@ void Handshake_State::confirm_transition_to(Handshake_Type handshake_msg)
    const bool ok = (hand_expecting_mask & mask); // overlap?
 
    if(!ok)
-      printf("Bad handshake transition, got %d expected %08X\n",
-             handshake_msg, hand_expecting_mask);
+      throw Unexpected_Message("Unexpected state transition in handshake, got " +
+                               to_string(handshake_msg) + " mask is " +
+                               to_string(hand_expecting_mask));
 
    /* We don't know what to expect next, so force a call to
       set_expected_next; if it doesn't happen, the next transition
       check will always fail which is what we want.
    */
    hand_expecting_mask = 0;
-
-   if(!ok)
-      throw Unexpected_Message("Unexpected state transition in handshake");
    }
 
 void Handshake_State::set_expected_next(Handshake_Type handshake_msg)
