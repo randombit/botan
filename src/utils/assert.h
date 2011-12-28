@@ -40,6 +40,7 @@ void assertion_failure(const char* expr_str,
    do {                                                   \
       if(static_cast<bool>(ptr) == false)                 \
          Botan::assertion_failure(#ptr " is not null",    \
+                                  "",                     \
                                   BOTAN_ASSERT_FUNCTION,  \
                                   __FILE__,               \
                                   __LINE__);              \
