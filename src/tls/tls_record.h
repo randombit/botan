@@ -43,8 +43,6 @@ class BOTAN_DLL Record_Writer
       void send(byte type, const byte input[], size_t length);
       void send(byte type, byte val) { send(type, &val, 1); }
 
-      void flush();
-
       void alert(Alert_Level level, Alert_Type type);
 
       void set_keys(const CipherSuite& suite,
@@ -56,23 +54,21 @@ class BOTAN_DLL Record_Writer
       void reset();
 
       Record_Writer(std::tr1::function<void (const byte[], size_t)> output_fn,
-                    size_t max_fragment = 0);
+                    size_t max_fragment = MAX_PLAINTEXT_SIZE);
 
       ~Record_Writer() { delete mac; }
    private:
       void send_record(byte type, const byte input[], size_t length);
 
       std::tr1::function<void (const byte[], size_t)> output_fn;
+
       Pipe cipher;
       MessageAuthenticationCode* mac;
 
-      SecureVector<byte> buffer;
-      size_t buf_pos;
-
-      size_t block_size, mac_size, iv_size;
+      size_t block_size, mac_size, iv_size, max_fragment;
 
       u64bit seq_no;
-      byte major, minor, buf_type;
+      byte major, minor;
    };
 
 /**

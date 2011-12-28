@@ -44,6 +44,18 @@ inline T round_down(T n, T align_to)
    return (n - (n % align_to));
    }
 
+/**
+* Clamp
+*/
+inline size_t clamp(size_t n, size_t lower_bound, size_t upper_bound)
+   {
+   if(n < lower_bound)
+      return lower_bound;
+   if(n > upper_bound)
+      return upper_bound;
+   return n;
+   }
+
 }
 
 #endif

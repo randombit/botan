@@ -236,7 +236,6 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
                                 state->server_hello->random());
 
       writer.send(CHANGE_CIPHER_SPEC, 1);
-      writer.flush();
 
       writer.set_keys(state->suite, state->keys, CLIENT);
 

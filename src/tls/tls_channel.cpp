@@ -166,7 +166,6 @@ void TLS_Channel::queue_for_sending(const byte buf[], size_t buf_size)
          }
 
       writer.send(APPLICATION_DATA, buf, buf_size);
-      writer.flush();
       }
    else
       pre_handshake_write_queue.write(buf, buf_size);
@@ -179,7 +178,6 @@ void TLS_Channel::alert(Alert_Level alert_level, Alert_Type alert_code)
       try
          {
          writer.alert(alert_level, alert_code);
-         writer.flush();
          }
       catch(...) { /* swallow it */ }
       }

@@ -32,7 +32,6 @@ void HandshakeMessage::send(Record_Writer& writer, TLS_Handshake_Hash& hash) con
    hash.update(send_buf);
 
    writer.send(HANDSHAKE, &send_buf[0], send_buf.size());
-   writer.flush();
    }
 
 /*

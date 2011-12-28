@@ -22,7 +22,7 @@ namespace Botan {
 Record_Writer::Record_Writer(std::tr1::function<void (const byte[], size_t)> out,
                              size_t max_fragment) :
    output_fn(out),
-   buffer(max_fragment ? max_fragment : static_cast<size_t>(MAX_PLAINTEXT_SIZE))
+   max_fragment(clamp(max_fragment, 128, MAX_PLAINTEXT_SIZE))
    {
    mac = 0;
    reset();
@@ -38,10 +38,7 @@ void Record_Writer::reset()
    delete mac;
    mac = 0;
 
-   zeroise(buffer);
-   buf_pos = 0;
-
-   major = minor = buf_type = 0;
+   major = minor = 0;
    block_size = 0;
    mac_size = 0;
    iv_size = 0;
@@ -134,51 +131,35 @@ void Record_Writer::set_keys(const CipherSuite& suite,
 */
 void Record_Writer::send(byte type, const byte input[], size_t length)
    {
-   if(type != buf_type)
-      flush();
+   if(length == 0)
+      return;
 
-   const size_t BUFFER_SIZE = buffer.size();
-   buf_type = type;
-
-   // FIXME: compression right here
-
-   buffer.copy(buf_pos, input, length);
-   if(buf_pos + length >= BUFFER_SIZE)
+   /*
+   * If using CBC mode in SSLv3/TLS1.0, send a single byte of
+   * plaintext to randomize the (implicit) IV of the following main
+   * block. If using a stream cipher, or TLS v1.1, this isn't
+   * necessary.
+   *
+   * An empty record also works but apparently some implementations do
+   * not like this.
+   *
+   * See http://www.openssl.org/~bodo/tls-cbc.txt for background.
+   */
+   if((block_size > 0) && (iv_size == 0))
       {
-      send_record(buf_type, &buffer[0], length);
-      input += (BUFFER_SIZE - buf_pos);
-      length -= (BUFFER_SIZE - buf_pos);
-      while(length >= BUFFER_SIZE)
-         {
-         send_record(buf_type, input, BUFFER_SIZE);
-         input += BUFFER_SIZE;
-         length -= BUFFER_SIZE;
-         }
-      buffer.copy(input, length);
-      buf_pos = 0;
+      send_record(type, &input[0], 1);
+      input += 1;
+      length -= 1;
       }
-   buf_pos += length;
-   }
 
-/*
-* Split buffer into records, and send them all
-*/
-void Record_Writer::flush()
-   {
-   const byte* buf_ptr = &buffer[0];
-   size_t offset = 0;
-
-   while(offset != buf_pos)
+   while(length)
       {
-      size_t record_size = buf_pos - offset;
-      if(record_size > MAX_PLAINTEXT_SIZE)
-         record_size = MAX_PLAINTEXT_SIZE;
+      const size_t sending = std::min(length, max_fragment);
+      send_record(type, &input[0], sending);
 
-      send_record(buf_type, buf_ptr + offset, record_size);
-      offset += record_size;
+      input += sending;
+      length -= sending;
       }
-   buf_type = 0;
-   buf_pos = 0;
    }
 
 /*
@@ -186,16 +167,12 @@ void Record_Writer::flush()
 */
 void Record_Writer::send_record(byte type, const byte input[], size_t length)
    {
-   if(length >= MAX_COMPRESSED_SIZE)
+   if(length >= MAX_PLAINTEXT_SIZE)
       throw TLS_Exception(INTERNAL_ERROR,
                           "Record_Writer: Compressed packet is too big");
 
    if(mac_size == 0)
       {
-      if(length >= MAX_CIPHERTEXT_SIZE)
-         throw TLS_Exception(INTERNAL_ERROR,
-                             "Record_Writer: Record is too big");
-
       const byte header[5] = {
          type,
          major,
@@ -285,7 +262,6 @@ void Record_Writer::alert(Alert_Level level, Alert_Type type)
    {
    byte alert[2] = { level, type };
    send(ALERT, alert, sizeof(alert));
-   flush();
    }
 
 }

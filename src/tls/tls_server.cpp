@@ -184,7 +184,6 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
                                    true);
 
          writer.send(CHANGE_CIPHER_SPEC, 1);
-         writer.flush();
 
          writer.set_keys(state->suite, state->keys, SERVER);
 
@@ -337,7 +336,6 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
          state->hash.update(type, contents);
 
          writer.send(CHANGE_CIPHER_SPEC, 1);
-         writer.flush();
 
          writer.set_keys(state->suite, state->keys, SERVER);
 
