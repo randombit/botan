@@ -9,23 +9,26 @@
 #include <botan/internal/tls_session_key.h>
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/lookup.h>
+#include <botan/internal/rounding.h>
+#include <botan/internal/assert.h>
 #include <botan/loadstor.h>
 #include <botan/libstate.h>
 
 namespace Botan {
 
-/**
+/*
 * Record_Writer Constructor
 */
-Record_Writer::Record_Writer(std::tr1::function<void (const byte[], size_t)> out) :
+Record_Writer::Record_Writer(std::tr1::function<void (const byte[], size_t)> out,
+                             size_t max_fragment) :
    output_fn(out),
-   buffer(DEFAULT_BUFFERSIZE)
+   buffer(max_fragment ? max_fragment : static_cast<size_t>(MAX_PLAINTEXT_SIZE))
    {
    mac = 0;
    reset();
    }
 
-/**
+/*
 * Reset the state
 */
 void Record_Writer::reset()
@@ -46,7 +49,7 @@ void Record_Writer::reset()
    seq_no = 0;
    }
 
-/**
+/*
 * Set the version to use
 */
 void Record_Writer::set_version(Version_Code version)
@@ -58,7 +61,7 @@ void Record_Writer::set_version(Version_Code version)
    minor = (version & 0xFF);
    }
 
-/**
+/*
 * Set the keys for writing
 */
 void Record_Writer::set_keys(const CipherSuite& suite,
@@ -126,7 +129,7 @@ void Record_Writer::set_keys(const CipherSuite& suite,
       throw Invalid_Argument("Record_Writer: Unknown hash " + mac_algo);
    }
 
-/**
+/*
 * Send one or more records to the other side
 */
 void Record_Writer::send(byte type, const byte input[], size_t length)
@@ -157,7 +160,7 @@ void Record_Writer::send(byte type, const byte input[], size_t length)
    buf_pos += length;
    }
 
-/**
+/*
 * Split buffer into records, and send them all
 */
 void Record_Writer::flush()
@@ -178,17 +181,32 @@ void Record_Writer::flush()
    buf_pos = 0;
    }
 
-/**
+/*
 * Encrypt and send the record
 */
-void Record_Writer::send_record(byte type, const byte buf[], size_t length)
+void Record_Writer::send_record(byte type, const byte input[], size_t length)
    {
    if(length >= MAX_COMPRESSED_SIZE)
       throw TLS_Exception(INTERNAL_ERROR,
                           "Record_Writer: Compressed packet is too big");
 
    if(mac_size == 0)
-      send_record(type, major, minor, buf, length);
+      {
+      if(length >= MAX_CIPHERTEXT_SIZE)
+         throw TLS_Exception(INTERNAL_ERROR,
+                             "Record_Writer: Record is too big");
+
+      const byte header[5] = {
+         type,
+         major,
+         minor,
+         get_byte<u16bit>(0, length),
+         get_byte<u16bit>(1, length)
+      };
+
+      output_fn(header, 5);
+      output_fn(input, length);
+      }
    else
       {
       mac->update_be(seq_no);
@@ -202,64 +220,64 @@ void Record_Writer::send_record(byte type, const byte buf[], size_t length)
 
       mac->update(get_byte<u16bit>(0, length));
       mac->update(get_byte<u16bit>(1, length));
-      mac->update(buf, length);
+      mac->update(input, length);
 
-      SecureVector<byte> buf_mac = mac->final();
+      const size_t buf_size = round_up(iv_size + length +
+                                       mac->output_length() + 1,
+                                       block_size);
 
-      // FIXME: this could be done in place in a single buffer
-      cipher.start_msg();
+      if(buf_size >= MAX_CIPHERTEXT_SIZE)
+         throw TLS_Exception(INTERNAL_ERROR,
+                             "Record_Writer: Record is too big");
+
+      MemoryVector<byte> buf(5 + buf_size);
+
+      // TLS record header
+      buf[0] = type;
+      buf[1] = major;
+      buf[2] = minor;
+      buf[3] = get_byte<u16bit>(0, buf_size);
+      buf[4] = get_byte<u16bit>(1, buf_size);
+
+      byte* buf_write_ptr = &buf[5];
 
       if(iv_size)
          {
          RandomNumberGenerator& rng = global_state().global_rng();
-
-         SecureVector<byte> random_iv(iv_size);
-
-         rng.randomize(&random_iv[0], random_iv.size());
-
-         cipher.write(random_iv);
+         rng.randomize(buf_write_ptr, iv_size);
+         buf_write_ptr += iv_size;
          }
 
-      cipher.write(buf, length);
-      cipher.write(buf_mac);
+      copy_mem(buf_write_ptr, input, length);
+      buf_write_ptr += length;
+
+      mac->final(buf_write_ptr);
+      buf_write_ptr += mac->output_length();
 
       if(block_size)
          {
          const size_t pad_val =
-            (block_size - (1 + length + buf_mac.size())) % block_size;
+            buf_size - (iv_size + length + mac->output_length() + 1);
 
          for(size_t i = 0; i != pad_val + 1; ++i)
-            cipher.write(pad_val);
+            {
+            *buf_write_ptr = pad_val;
+            buf_write_ptr += 1;
+            }
          }
-      cipher.end_msg();
 
-      SecureVector<byte> output = cipher.read_all(Pipe::LAST_MESSAGE);
+      // FIXME: this could be done in-place without copying
+      cipher.process_msg(&buf[5], buf.size() - 5);
+      size_t got_back = cipher.read(&buf[5], buf.size() - 5, Pipe::LAST_MESSAGE);
+      BOTAN_ASSERT_EQUAL(got_back, buf.size()-5, "CBC didn't encrypt full blocks");
 
-      send_record(type, major, minor, &output[0], output.size());
+      output_fn(&buf[0], buf.size());
 
       seq_no++;
       }
    }
 
-/**
-* Send a final record packet
-*/
-void Record_Writer::send_record(byte type, byte major, byte minor,
-                                const byte out[], size_t length)
-   {
-   if(length >= MAX_CIPHERTEXT_SIZE)
-      throw TLS_Exception(INTERNAL_ERROR,
-                          "Record_Writer: Record is too big");
-
-   byte header[5] = { type, major, minor, 0 };
-   for(size_t i = 0; i != 2; ++i)
-      header[i+3] = get_byte<u16bit>(i, length);
-
-   output_fn(header, 5);
-   output_fn(out, length);
-   }
-
-/**
+/*
 * Send an alert
 */
 void Record_Writer::alert(Alert_Level level, Alert_Type type)

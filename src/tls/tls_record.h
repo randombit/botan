@@ -55,13 +55,12 @@ class BOTAN_DLL Record_Writer
 
       void reset();
 
-      Record_Writer(std::tr1::function<void (const byte[], size_t)> output_fn);
+      Record_Writer(std::tr1::function<void (const byte[], size_t)> output_fn,
+                    size_t max_fragment = 0);
 
       ~Record_Writer() { delete mac; }
    private:
       void send_record(byte type, const byte input[], size_t length);
-      void send_record(byte type, byte major, byte minor,
-                       const byte input[], size_t length);
 
       std::tr1::function<void (const byte[], size_t)> output_fn;
       Pipe cipher;
