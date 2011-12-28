@@ -8,15 +8,19 @@
 #ifndef BOTAN_TLS_MESSAGES_H__
 #define BOTAN_TLS_MESSAGES_H__
 
-#include <botan/tls_record.h>
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/tls_policy.h>
+#include <botan/tls_magic.h>
+#include <botan/tls_suites.h>
 #include <botan/bigint.h>
 #include <botan/pkcs8.h>
 #include <botan/x509cert.h>
 #include <vector>
 
 namespace Botan {
+
+class Record_Writer;
+class Record_Reader;
 
 /**
 * TLS Handshake Message Base Class
@@ -53,11 +57,11 @@ class Client_Hello : public HandshakeMessage
          }
 
       std::vector<u16bit> ciphersuites() const { return suites; }
-      std::vector<byte> compression_algos() const { return comp_algos; }
+      std::vector<byte> compression_methods() const { return comp_methods; }
 
       const MemoryVector<byte>& random() const { return c_random; }
 
-      std::string hostname() const { return requested_hostname; }
+      std::string sni_hostname() const { return requested_hostname; }
 
       std::string srp_identifier() const { return requested_srp_id; }
 
@@ -83,7 +87,7 @@ class Client_Hello : public HandshakeMessage
       Version_Code c_version;
       MemoryVector<byte> sess_id, c_random;
       std::vector<u16bit> suites;
-      std::vector<byte> comp_algos;
+      std::vector<byte> comp_methods;
       std::string requested_hostname;
       std::string requested_srp_id;
    };
@@ -242,7 +246,7 @@ class Server_Hello : public HandshakeMessage
       Version_Code version() { return s_version; }
       const MemoryVector<byte>& session_id() const { return sess_id; }
       u16bit ciphersuite() const { return suite; }
-      byte compression_algo() const { return comp_algo; }
+      byte compression_method() const { return comp_method; }
 
       std::vector<byte> session_id_vector() const
          {
@@ -278,7 +282,7 @@ class Server_Hello : public HandshakeMessage
       Version_Code s_version;
       MemoryVector<byte> sess_id, s_random;
       u16bit suite;
-      byte comp_algo;
+      byte comp_method;
    };
 
 /**

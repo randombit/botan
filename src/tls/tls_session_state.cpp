@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-TLS_Session_Params::TLS_Session_Params(const MemoryRegion<byte>& session_id,
+TLS_Session_Params::TLS_Session_Params(const MemoryRegion<byte>& session_identifier,
                                        const MemoryRegion<byte>& master_secret,
                                        Version_Code version,
                                        u16bit ciphersuite,
@@ -21,19 +21,19 @@ TLS_Session_Params::TLS_Session_Params(const MemoryRegion<byte>& session_id,
                                        Connection_Side side,
                                        const X509_Certificate* cert,
                                        const std::string& sni_hostname,
-                                       const std::string& srp_identity) :
+                                       const std::string& srp_identifier) :
    session_start_time(system_time()),
-   session_id(session_id),
-   master_secret(master_secret),
-   version(version),
-   ciphersuite(ciphersuite),
-   compression_method(compression_method),
-   connection_side(side),
-   sni_hostname(sni_hostname),
-   srp_identity(srp_identity)
+   session_identifier(session_identifier),
+   session_master_secret(master_secret),
+   session_version(version),
+   session_ciphersuite(ciphersuite),
+   session_compression_method(compression_method),
+   session_connection_side(side),
+   session_sni_hostname(sni_hostname),
+   session_srp_identifier(srp_identifier)
    {
    if(cert)
-      peer_certificate = cert->BER_encode();
+      session_peer_certificate = cert->BER_encode();
    }
 
 TLS_Session_Params::TLS_Session_Params(const byte ber[], size_t ber_len)
@@ -42,25 +42,25 @@ TLS_Session_Params::TLS_Session_Params(const byte ber[], size_t ber_len)
 
    byte side_code = 0;
    ASN1_String sni_hostname_str;
-   ASN1_String srp_identity_str;
+   ASN1_String srp_identifier_str;
 
    BER_Decoder(ber, ber_len)
       .decode_and_check(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION),
                         "Unknown version in session structure")
-      .decode(session_id, OCTET_STRING)
+      .decode(session_identifier, OCTET_STRING)
       .decode_integer_type(session_start_time)
-      .decode_integer_type(version)
-      .decode_integer_type(ciphersuite)
-      .decode_integer_type(compression_method)
+      .decode_integer_type(session_version)
+      .decode_integer_type(session_ciphersuite)
+      .decode_integer_type(session_compression_method)
       .decode_integer_type(side_code)
-      .decode(master_secret, OCTET_STRING)
-      .decode(peer_certificate, OCTET_STRING)
+      .decode(session_master_secret, OCTET_STRING)
+      .decode(session_peer_certificate, OCTET_STRING)
       .decode(sni_hostname_str)
-      .decode(srp_identity_str);
+      .decode(srp_identifier_str);
 
-   sni_hostname = sni_hostname_str.value();
-   srp_identity = srp_identity_str.value();
-   connection_side = static_cast<Connection_Side>(side_code);
+   session_sni_hostname = sni_hostname_str.value();
+   session_srp_identifier = srp_identifier_str.value();
+   session_connection_side = static_cast<Connection_Side>(side_code);
    }
 
 SecureVector<byte> TLS_Session_Params::BER_encode() const
@@ -68,23 +68,22 @@ SecureVector<byte> TLS_Session_Params::BER_encode() const
    return DER_Encoder()
       .start_cons(SEQUENCE)
          .encode(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION))
-         .encode(session_id, OCTET_STRING)
+         .encode(session_identifier, OCTET_STRING)
          .encode(static_cast<size_t>(session_start_time))
-         .encode(static_cast<size_t>(version))
-         .encode(static_cast<size_t>(ciphersuite))
-         .encode(static_cast<size_t>(compression_method))
-         .encode(static_cast<size_t>(connection_side))
-         .encode(master_secret, OCTET_STRING)
-         .encode(peer_certificate, OCTET_STRING)
-         .encode(ASN1_String(sni_hostname, UTF8_STRING))
-         .encode(ASN1_String(srp_identity, UTF8_STRING))
+         .encode(static_cast<size_t>(session_version))
+         .encode(static_cast<size_t>(session_ciphersuite))
+         .encode(static_cast<size_t>(session_compression_method))
+         .encode(static_cast<size_t>(session_connection_side))
+         .encode(session_master_secret, OCTET_STRING)
+         .encode(session_peer_certificate, OCTET_STRING)
+         .encode(ASN1_String(session_sni_hostname, UTF8_STRING))
+         .encode(ASN1_String(session_srp_identifier, UTF8_STRING))
       .end_cons()
    .get_contents();
    }
 
 bool TLS_Session_Manager_In_Memory::find(const MemoryVector<byte>& session_id,
-                                         TLS_Session_Params& params,
-                                         Connection_Side side)
+                                         TLS_Session_Params& params)
    {
    std::map<std::string, TLS_Session_Params>::iterator i =
       sessions.find(hex_encode(session_id));
@@ -94,14 +93,11 @@ bool TLS_Session_Manager_In_Memory::find(const MemoryVector<byte>& session_id,
 
    // session has expired, remove it
    const u64bit now = system_time();
-   if(i->second.session_start_time + session_lifetime >= now)
+   if(i->second.start_time() + session_lifetime >= now)
       {
       sessions.erase(i);
       return false;
       }
-
-   if(i->second.connection_side != side)
-      return false;
 
    params = i->second;
    return true;
@@ -128,7 +124,7 @@ void TLS_Session_Manager_In_Memory::save(const TLS_Session_Params& session_data)
          sessions.erase(sessions.begin());
       }
 
-   sessions[hex_encode(session_data.session_id)] = session_data;
+   sessions[hex_encode(session_data.session_id())] = session_data;
    }
 
 }

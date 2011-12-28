@@ -168,8 +168,9 @@ enum TLS_Ciphersuite_Algos {
    TLS_ALGO_CIPHER_SEED_CBC   = 0x00000005
 };
 
-enum Compression_Algo {
-   NO_COMPRESSION      = 0x00
+enum Compression_Method {
+   NO_COMPRESSION       = 0x00,
+   DEFLATE_COMPRESSION  = 0x01
 };
 
 enum TLS_Handshake_Extension_Type {

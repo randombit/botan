@@ -20,59 +20,111 @@ namespace Botan {
 /**
 * Class representing a TLS session state
 */
-struct BOTAN_DLL TLS_Session_Params
+class BOTAN_DLL TLS_Session_Params
    {
-   enum { TLS_SESSION_PARAM_STRUCT_VERSION = 1 };
+   public:
 
-   /**
-   * Uninitialized session
-   */
-   TLS_Session_Params() :
-      session_start_time(0),
-      version(0),
-      ciphersuite(0),
-      compression_method(0),
-      connection_side(static_cast<Connection_Side>(0))
-         {}
+      /**
+      * Uninitialized session
+      */
+      TLS_Session_Params() :
+         session_start_time(0),
+         session_version(0),
+         session_ciphersuite(0),
+         session_compression_method(0),
+         session_connection_side(static_cast<Connection_Side>(0))
+            {}
 
-   /**
-   * New session (sets session start time)
-   */
-   TLS_Session_Params(const MemoryRegion<byte>& session_id,
-                      const MemoryRegion<byte>& master_secret,
-                      Version_Code version,
-                      u16bit ciphersuite,
-                      byte compression_method,
-                      Connection_Side side,
-                      const X509_Certificate* cert = 0,
-                      const std::string& sni_hostname = "",
-                      const std::string& srp_identity = "");
+      /**
+      * New session (sets session start time)
+      */
+      TLS_Session_Params(const MemoryRegion<byte>& session_id,
+                         const MemoryRegion<byte>& master_secret,
+                         Version_Code version,
+                         u16bit ciphersuite,
+                         byte compression_method,
+                         Connection_Side side,
+                         const X509_Certificate* cert = 0,
+                         const std::string& sni_hostname = "",
+                         const std::string& srp_identifier = "");
 
-   /**
-   * Load a session from BER (created by BER_encode)
-   */
-   TLS_Session_Params(const byte ber[], size_t ber_len);
+      /**
+      * Load a session from BER (created by BER_encode)
+      */
+      TLS_Session_Params(const byte ber[], size_t ber_len);
 
-   /**
-   * Encode this session data for storage
-   * @warning if the master secret is compromised so is the
-   * session traffic
-   */
-   SecureVector<byte> BER_encode() const;
+      /**
+      * Encode this session data for storage
+      * @warning if the master secret is compromised so is the
+      * session traffic
+      */
+      SecureVector<byte> BER_encode() const;
 
-   u64bit session_start_time;
+      /**
+      * Get the version of the saved session
+      */
+      Version_Code version() const
+         { return static_cast<Version_Code>(session_version); }
 
-   MemoryVector<byte> session_id;
-   SecureVector<byte> master_secret;
+      /**
+      * Get the ciphersuite of the saved session
+      */
+      u16bit ciphersuite() const { return session_ciphersuite; }
 
-   u16bit version;
-   u16bit ciphersuite;
-   byte compression_method;
-   Connection_Side connection_side;
+      /**
+      * Get the compression method used in the saved session
+      */
+      byte compression_method() const { return session_compression_method; }
 
-   MemoryVector<byte> peer_certificate; // optional
-   std::string sni_hostname; // optional
-   std::string srp_identity; // optional
+      /**
+      * Get which side of the connection the resumed session we are/were
+      * acting as.
+      */
+      Connection_Side side() const { return session_connection_side; }
+
+      /**
+      * Get the SNI hostname (if sent by the client in the initial handshake)
+      */
+      std::string sni_hostname() const { return session_sni_hostname; }
+
+      /**
+      * Get the SRP identity (if sent by the client in the initial handshake)
+      */
+      std::string srp_identifier() const { return session_srp_identifier; }
+
+      /**
+      * Get the saved master secret
+      */
+      const SecureVector<byte>& master_secret() const
+         { return session_master_secret; }
+
+      /**
+      * Get the session identifier
+      */
+      const MemoryVector<byte>& session_id() const
+         { return session_identifier; }
+
+      /**
+      * Get the time this session began (seconds since Epoch)
+      */
+      u64bit start_time() const { return session_start_time; }
+
+   private:
+      enum { TLS_SESSION_PARAM_STRUCT_VERSION = 1 };
+
+      u64bit session_start_time;
+
+      MemoryVector<byte> session_identifier;
+      SecureVector<byte> session_master_secret;
+
+      u16bit session_version;
+      u16bit session_ciphersuite;
+      byte session_compression_method;
+      Connection_Side session_connection_side;
+
+      MemoryVector<byte> session_peer_certificate; // optional
+      std::string session_sni_hostname; // optional
+      std::string session_srp_identifier; // optional
    };
 
 /**
@@ -89,12 +141,10 @@ class BOTAN_DLL TLS_Session_Manager
       * @param session_id the session identifier we are trying to resume
       * @param params will be set to the saved session data (if found),
                or not modified if not found
-      * @param which side of the connection we are
       * @return true if params was modified
       */
       virtual bool find(const MemoryVector<byte>& session_id,
-                        TLS_Session_Params& params,
-                        Connection_Side side) = 0;
+                        TLS_Session_Params& params) = 0;
 
       /**
       * Prohibit resumption of this session. Effectively an erase.
@@ -137,8 +187,7 @@ class BOTAN_DLL TLS_Session_Manager_In_Memory : public TLS_Session_Manager
             {}
 
       bool find(const MemoryVector<byte>& session_id,
-                TLS_Session_Params& params,
-                Connection_Side side);
+                TLS_Session_Params& params);
 
       void prohibit_resumption(const MemoryVector<byte>& session_id);
 

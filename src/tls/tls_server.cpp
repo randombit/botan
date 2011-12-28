@@ -36,22 +36,40 @@ bool check_for_resume(TLS_Session_Params& session_info,
    {
    MemoryVector<byte> client_session_id = client_hello->session_id();
 
-   if(client_session_id.empty())
+   if(client_session_id.empty()) // not resuming
       return false;
 
-   if(!session_manager.find(client_session_id, session_info, SERVER))
+   // wrong side
+   if(!session_manager.find(client_session_id, session_info))
       return false;
 
-   if(client_hello->version() != session_info.version)
+   // wrong version
+   if(client_hello->version() != session_info.version())
       return false;
 
+   // client didn't send original ciphersuite
    if(!value_exists(client_hello->ciphersuites(),
-                    session_info.ciphersuite))
+                    session_info.ciphersuite()))
       return false;
 
-   if(!value_exists(client_hello->compression_algos(),
-                    session_info.compression_method))
+   // client didn't send original compression method
+   if(!value_exists(client_hello->compression_methods(),
+                    session_info.compression_method()))
       return false;
+
+   // client send a different SRP identity (!!!)
+   if(client_hello->srp_identifier() != "")
+      {
+      if(client_hello->srp_identifier() != session_info.srp_identifier())
+         return false;
+      }
+
+   // client send a different SNI hostname (!!!)
+   if(client_hello->sni_hostname() != "")
+      {
+      if(client_hello->sni_hostname() != session_info.sni_hostname())
+         return false;
+      }
 
    return true;
    }
@@ -133,7 +151,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       {
       state->client_hello = new Client_Hello(contents, type);
 
-      client_requested_hostname = state->client_hello->hostname();
+      client_requested_hostname = state->client_hello->sni_hostname();
 
       state->version = choose_version(state->client_hello->version(),
                                       policy.min_version());
@@ -152,16 +170,16 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
          state->server_hello = new Server_Hello(
             rng,
             writer,
-            session_info.session_id,
-            session_info.ciphersuite,
-            session_info.compression_method,
-            Version_Code(session_info.version),
+            session_info.session_id(),
+            session_info.ciphersuite(),
+            session_info.compression_method(),
+            Version_Code(session_info.version()),
             state->hash);
 
          state->suite = CipherSuite(state->server_hello->ciphersuite());
 
          state->keys = SessionKeys(state->suite, state->version,
-                                   session_info.master_secret,
+                                   session_info.master_secret(),
                                    state->client_hello->random(),
                                    state->server_hello->random(),
                                    true);
@@ -275,7 +293,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
       std::vector<X509_Certificate> client_certs = state->client_certs->cert_chain();
 
-      const bool ok = state->client_verify->verify(client_certs[0]
+      //const bool ok = state->client_verify->verify(client_certs[0]);
 
       state->set_expected_next(HANDSHAKE_CCS);
       }
@@ -321,7 +339,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             state->keys.master_secret(),
             state->server_hello->version(),
             state->server_hello->ciphersuite(),
-            state->server_hello->compression_algo(),
+            state->server_hello->compression_method(),
             SERVER,
             0,
             client_requested_hostname,

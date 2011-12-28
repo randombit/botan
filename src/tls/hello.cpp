@@ -8,6 +8,7 @@
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_session_key.h>
+#include <botan/tls_record.h>
 
 namespace Botan {
 
@@ -71,7 +72,7 @@ Client_Hello::Client_Hello(RandomNumberGenerator& rng,
    c_random = rng.random_vec(32);
 
    suites = policy.ciphersuites();
-   comp_algos = policy.compression();
+   comp_methods = policy.compression();
    c_version = policy.pref_version();
 
    send(writer, hash);
@@ -90,7 +91,7 @@ MemoryVector<byte> Client_Hello::serialize() const
 
    append_tls_length_value(buf, sess_id, 1);
    append_tls_length_value(buf, suites, 2);
-   append_tls_length_value(buf, comp_algos, 1);
+   append_tls_length_value(buf, comp_methods, 1);
 
    return buf;
    }
@@ -150,7 +151,7 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
 
    suites = reader.get_range_vector<u16bit>(2, 1, 32767);
 
-   comp_algos = reader.get_range_vector<byte>(1, 1, 255);
+   comp_methods = reader.get_range_vector<byte>(1, 1, 255);
 
    if(reader.has_remaining())
       {
@@ -251,7 +252,7 @@ Server_Hello::Server_Hello(RandomNumberGenerator& rng,
       throw TLS_Exception(PROTOCOL_VERSION,
                           "Can't agree on a ciphersuite with client");
 
-   comp_algo = policy.choose_compression(c_hello.compression_algos());
+   comp_method = policy.choose_compression(c_hello.compression_methods());
 
    send(writer, hash);
    }
@@ -270,7 +271,7 @@ Server_Hello::Server_Hello(RandomNumberGenerator& rng,
    sess_id(session_id),
    s_random(rng.random_vec(32)),
    suite(ciphersuite),
-   comp_algo(compression)
+   comp_method(compression)
    {
    send(writer, hash);
    }
@@ -291,7 +292,7 @@ MemoryVector<byte> Server_Hello::serialize() const
    buf.push_back(get_byte(0, suite));
    buf.push_back(get_byte(1, suite));
 
-   buf.push_back(comp_algo);
+   buf.push_back(comp_method);
 
    return buf;
    }
@@ -320,7 +321,7 @@ void Server_Hello::deserialize(const MemoryRegion<byte>& buf)
 
    suite = reader.get_u16bit();
 
-   comp_algo = reader.get_byte();
+   comp_method = reader.get_byte();
    }
 
 /*
