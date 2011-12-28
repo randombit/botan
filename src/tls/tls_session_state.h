@@ -44,7 +44,7 @@ class BOTAN_DLL TLS_Session_Params
                          u16bit ciphersuite,
                          byte compression_method,
                          Connection_Side side,
-                         const X509_Certificate* cert = 0,
+                         const std::vector<X509_Certificate>& peer_certs,
                          const std::string& sni_hostname = "",
                          const std::string& srp_identifier = "");
 

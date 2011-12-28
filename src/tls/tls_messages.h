@@ -131,7 +131,7 @@ class Certificate : public HandshakeMessage
    {
    public:
       Handshake_Type type() const { return CERTIFICATE; }
-      std::vector<X509_Certificate> cert_chain() const { return certs; }
+      const std::vector<X509_Certificate>& cert_chain() const { return certs; }
 
       size_t count() const { return certs.size(); }
       bool empty() const { return certs.empty(); }

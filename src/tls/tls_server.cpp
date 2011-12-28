@@ -133,18 +133,19 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
    state->confirm_transition_to(type);
 
+   /*
+   * The change cipher spec message isn't technically a handshake
+   * message so it's not included in the hash. The finished and
+   * certificate verify messages are verified based on the current
+   * state of the hash *before* this message so we delay adding them
+   * to the hash computation until we've processed them below.
+   */
    if(type != HANDSHAKE_CCS && type != FINISHED && type != CERTIFICATE_VERIFY)
       {
-      if(type != CLIENT_HELLO_SSLV2)
-         {
-         state->hash.update(static_cast<byte>(type));
-
-         const size_t record_length = contents.size();
-         for(size_t i = 0; i != 3; i++)
-            state->hash.update(get_byte<u32bit>(i+1, record_length));
-         }
-
-      state->hash.update(contents);
+      if(type == CLIENT_HELLO_SSLV2)
+         state->hash.update(contents);
+      else
+         state->hash.update(type, contents);
       }
 
    if(type == CLIENT_HELLO || type == CLIENT_HELLO_SSLV2)
@@ -292,30 +293,23 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       {
       state->client_verify = new Certificate_Verify(contents);
 
-      std::vector<X509_Certificate> client_certs = state->client_certs->cert_chain();
+      const std::vector<X509_Certificate>& client_certs =
+         state->client_certs->cert_chain();
 
       const bool sig_valid = state->client_verify->verify(client_certs[0],
                                                           state->hash);
 
-      state->hash.update(static_cast<byte>(type));
-
-      const size_t record_length = contents.size();
-      for(size_t i = 0; i != 3; i++)
-         state->hash.update(get_byte<u32bit>(i+1, record_length));
-
-      state->hash.update(contents);
+      state->hash.update(type, contents);
 
       /*
       * Using DECRYPT_ERROR looks weird here, but per RFC 4346 is for
       * "A handshake cryptographic operation failed, including being
       * unable to correctly verify a signature, ..."
       */
-      if(!sig_valid && false)
+      if(!sig_valid)
          throw TLS_Exception(DECRYPT_ERROR, "Client cert verify failed");
 
-      printf("Sig valid? %d\n", sig_valid);
-
-      // Check cert was issued by a CA we requested, signatures, etc.
+      // FIXME: check cert was issued by a CA we requested, signatures, etc.
 
       state->set_expected_next(HANDSHAKE_CCS);
       }
@@ -339,13 +333,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       // already sent it if resuming
       if(!state->server_finished)
          {
-         state->hash.update(static_cast<byte>(type));
-
-         const size_t record_length = contents.size();
-         for(size_t i = 0; i != 3; i++)
-            state->hash.update(get_byte<u32bit>(i+1, record_length));
-
-         state->hash.update(contents);
+         state->hash.update(type, contents);
 
          writer.send(CHANGE_CIPHER_SPEC, 1);
          writer.flush();
@@ -356,6 +344,11 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
                                                state->keys.master_secret(),
                                                state->hash);
 
+         std::vector<X509_Certificate> peer_certs;
+
+         if(state->client_certs && state->client_verify)
+            peer_certs = state->client_certs->cert_chain();
+
          TLS_Session_Params session_info(
             state->server_hello->session_id(),
             state->keys.master_secret(),
@@ -363,7 +356,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             state->server_hello->ciphersuite(),
             state->server_hello->compression_method(),
             SERVER,
-            0,
+            peer_certs,
             client_requested_hostname,
             ""
             );

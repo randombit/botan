@@ -69,13 +69,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
    state->confirm_transition_to(type);
 
    if(type != HANDSHAKE_CCS && type != HELLO_REQUEST && type != FINISHED)
-      {
-      state->hash.update(static_cast<byte>(type));
-      const size_t record_length = contents.size();
-      for(size_t i = 0; i != 3; i++)
-         state->hash.update(get_byte<u32bit>(i+1, record_length));
-      state->hash.update(contents);
-      }
+      state->hash.update(type, contents);
 
    if(type == HELLO_REQUEST)
       {

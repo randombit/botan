@@ -19,7 +19,7 @@ TLS_Session_Params::TLS_Session_Params(const MemoryRegion<byte>& session_identif
                                        u16bit ciphersuite,
                                        byte compression_method,
                                        Connection_Side side,
-                                       const X509_Certificate* cert,
+                                       const std::vector<X509_Certificate>& certs,
                                        const std::string& sni_hostname,
                                        const std::string& srp_identifier) :
    session_start_time(system_time()),
@@ -32,8 +32,9 @@ TLS_Session_Params::TLS_Session_Params(const MemoryRegion<byte>& session_identif
    session_sni_hostname(sni_hostname),
    session_srp_identifier(srp_identifier)
    {
-   if(cert)
-      session_peer_certificate = cert->BER_encode();
+   // FIXME: encode all of them?
+   if(certs.size())
+      session_peer_certificate = certs[0].BER_encode();
    }
 
 TLS_Session_Params::TLS_Session_Params(const byte ber[], size_t ber_len)
