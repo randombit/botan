@@ -36,6 +36,16 @@ void assertion_failure(const char* expr_str,
                                   __LINE__);              \
    } while(0)
 
+#define BOTAN_ASSERT_NONNULL(ptr, msg)                    \
+   do {                                                   \
+      if(static_cast<bool>(ptr) == false)                 \
+         Botan::assertion_failure(#ptr " is not null",    \
+                                  msg,                    \
+                                  BOTAN_ASSERT_FUNCTION,  \
+                                  __FILE__,               \
+                                  __LINE__);              \
+   } while(0)
+
 /*
 * Unfortunately getting the function name from the preprocessor
 * isn't standard in C++98 (C++0x uses C99's __func__)
