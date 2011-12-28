@@ -57,14 +57,14 @@ bool check_for_resume(TLS_Session_Params& session_info,
                     session_info.compression_method()))
       return false;
 
-   // client send a different SRP identity (!!!)
+   // client sent a different SRP identity (!!!)
    if(client_hello->srp_identifier() != "")
       {
       if(client_hello->srp_identifier() != session_info.srp_identifier())
          return false;
       }
 
-   // client send a different SNI hostname (!!!)
+   // client sent a different SNI hostname (!!!)
    if(client_hello->sni_hostname() != "")
       {
       if(client_hello->sni_hostname() != session_info.sni_hostname())
