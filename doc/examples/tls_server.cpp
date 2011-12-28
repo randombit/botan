@@ -97,8 +97,6 @@ class Blocking_TLS_Server
             {
             if(isprint(buf[i]))
                printf("%c", buf[i]);
-            else
-               printf("0x%02X", buf[i]);
             }
          printf("\n");
 
