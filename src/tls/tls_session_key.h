@@ -29,7 +29,7 @@ class BOTAN_DLL SessionKeys
       InitializationVector client_iv() const { return c_iv; }
       InitializationVector server_iv() const { return s_iv; }
 
-      SecureVector<byte> master_secret() const { return master_sec; }
+      const SecureVector<byte>& master_secret() const { return master_sec; }
 
       SessionKeys() {}
 

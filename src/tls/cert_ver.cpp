@@ -7,6 +7,7 @@
 
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_reader.h>
+#include <botan/tls_exceptn.h>
 #include <botan/pubkey.h>
 #include <botan/rsa.h>
 #include <botan/dsa.h>
@@ -71,7 +72,9 @@ void Certificate_Verify::deserialize(const MemoryRegion<byte>& buf)
 * Verify a Certificate Verify message
 */
 bool Certificate_Verify::verify(const X509_Certificate& cert,
-                                TLS_Handshake_Hash& hash)
+                                TLS_Handshake_Hash& hash,
+                                Version_Code version,
+                                const SecureVector<byte>& master_secret)
    {
    // FIXME: duplicate of Server_Key_Exchange::verify
 
@@ -84,7 +87,10 @@ bool Certificate_Verify::verify(const X509_Certificate& cert,
       padding = "EMSA3(TLS.Digest.0)";
    else if(key->algo_name() == "DSA")
       {
-      padding == "EMSA1(SHA-1)";
+      if(version == SSL_V3)
+         padding = "Raw";
+      else
+         padding = "EMSA1(SHA-1)";
       format = DER_SEQUENCE;
       }
    else
@@ -92,7 +98,19 @@ bool Certificate_Verify::verify(const X509_Certificate& cert,
                              " is invalid/unknown for TLS signatures");
 
    PK_Verifier verifier(*key, padding, format);
-   return verifier.verify_message(hash.get_contents(), signature);
+
+   if(version == SSL_V3)
+      {
+      SecureVector<byte> md5_sha = hash.final_ssl3(master_secret);
+
+      return verifier.verify_message(&md5_sha[16], md5_sha.size()-16,
+                                     &signature[0], signature.size());
+      }
+   else if(version == TLS_V10 || version == TLS_V11)
+      return verifier.verify_message(hash.get_contents(), signature);
+   else
+      throw TLS_Exception(PROTOCOL_VERSION,
+                          "Unknown TLS version in certificate verification");
    }
 
 }

@@ -179,8 +179,17 @@ class Certificate_Verify : public HandshakeMessage
    public:
       Handshake_Type type() const { return CERTIFICATE_VERIFY; }
 
+      /**
+      * Check the signature on a certificate verify message
+      * @param cert the purported certificate
+      * @param hash the running handshake message hash
+      * @param version the version number we negotiated
+      * @param master_secret the session key (only used if version is SSL_V3)
+      */
       bool verify(const X509_Certificate& cert,
-                  TLS_Handshake_Hash& hash);
+                  TLS_Handshake_Hash& hash,
+                  Version_Code version,
+                  const SecureVector<byte>& master_secret);
 
       Certificate_Verify(RandomNumberGenerator& rng,
                          Record_Writer& writer,

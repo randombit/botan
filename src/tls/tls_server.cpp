@@ -12,8 +12,6 @@
 #include <botan/rsa.h>
 #include <botan/dh.h>
 
-#include <stdio.h>
-
 namespace Botan {
 
 namespace {
@@ -296,8 +294,11 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       const std::vector<X509_Certificate>& client_certs =
          state->client_certs->cert_chain();
 
-      const bool sig_valid = state->client_verify->verify(client_certs[0],
-                                                          state->hash);
+      const bool sig_valid =
+         state->client_verify->verify(client_certs[0],
+                                      state->hash,
+                                      state->server_hello->version(),
+                                      state->keys.master_secret());
 
       state->hash.update(type, contents);
 
