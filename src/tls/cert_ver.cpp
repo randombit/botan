@@ -25,7 +25,7 @@ Certificate_Verify::Certificate_Verify(RandomNumberGenerator& rng,
                                        TLS_Handshake_Hash& hash,
                                        const Private_Key* priv_key)
    {
-   BOTAN_ASSERT_NONNULL(priv_key, "");
+   BOTAN_ASSERT_NONNULL(priv_key);
 
    std::string padding = "";
    Signature_Format format = IEEE_1363;

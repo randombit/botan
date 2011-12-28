@@ -36,11 +36,10 @@ void assertion_failure(const char* expr_str,
                                   __LINE__);              \
    } while(0)
 
-#define BOTAN_ASSERT_NONNULL(ptr, msg)                    \
+#define BOTAN_ASSERT_NONNULL(ptr)                         \
    do {                                                   \
       if(static_cast<bool>(ptr) == false)                 \
          Botan::assertion_failure(#ptr " is not null",    \
-                                  msg,                    \
                                   BOTAN_ASSERT_FUNCTION,  \
                                   __FILE__,               \
                                   __LINE__);              \
