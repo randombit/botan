@@ -25,7 +25,7 @@ Server_Key_Exchange::Server_Key_Exchange(RandomNumberGenerator& rng,
                                          const Private_Key* priv_key,
                                          const MemoryRegion<byte>& c_random,
                                          const MemoryRegion<byte>& s_random,
-                                         HandshakeHash& hash)
+                                         TLS_Handshake_Hash& hash)
    {
    const DH_PublicKey* dh_pub = dynamic_cast<const DH_PublicKey*>(kex_key);
    const RSA_PublicKey* rsa_pub = dynamic_cast<const RSA_PublicKey*>(kex_key);
@@ -44,7 +44,7 @@ Server_Key_Exchange::Server_Key_Exchange(RandomNumberGenerator& rng,
    else
       throw Invalid_Argument("Bad key for TLS key exchange: not DH or RSA");
 
-
+   // FIXME: cut and paste
    std::string padding = "";
    Signature_Format format = IEEE_1363;
 
@@ -153,6 +153,7 @@ bool Server_Key_Exchange::verify(const X509_Certificate& cert,
 
    std::auto_ptr<Public_Key> key(cert.subject_public_key());
 
+   // FIXME: cut and paste
    std::string padding = "";
    Signature_Format format = IEEE_1363;
 

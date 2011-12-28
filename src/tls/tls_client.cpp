@@ -55,8 +55,6 @@ TLS_Client::~TLS_Client()
 void TLS_Client::process_handshake_msg(Handshake_Type type,
                                        const MemoryRegion<byte>& contents)
    {
-   rng.add_entropy(&contents[0], contents.size());
-
    if(type == HELLO_REQUEST)
       {
       if(state == 0)

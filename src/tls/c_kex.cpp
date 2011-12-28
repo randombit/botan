@@ -21,7 +21,7 @@ namespace Botan {
 */
 Client_Key_Exchange::Client_Key_Exchange(RandomNumberGenerator& rng,
                                          Record_Writer& writer,
-                                         HandshakeHash& hash,
+                                         TLS_Handshake_Hash& hash,
                                          const Public_Key* pub_key,
                                          Version_Code using_version,
                                          Version_Code pref_version)

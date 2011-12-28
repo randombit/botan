@@ -54,7 +54,7 @@ size_t TLS_Channel::received_data(const byte buf[], size_t buf_size)
                * following record. Avoid spurious callbacks.
                */
                if(record.size() > 0)
-                  proc_fn(&record[0], record.size(), NO_ALERT_TYPE);
+                  proc_fn(&record[0], record.size(), NULL_ALERT);
                }
             else
                {
@@ -76,7 +76,7 @@ size_t TLS_Channel::received_data(const byte buf[], size_t buf_size)
                if(alert_msg.type() == CLOSE_NOTIFY)
                   alert(FATAL, CLOSE_NOTIFY);
                else
-                  alert(FATAL, NO_ALERT_TYPE);
+                  alert(FATAL, NULL_ALERT);
                }
             }
          else
@@ -88,6 +88,11 @@ size_t TLS_Channel::received_data(const byte buf[], size_t buf_size)
    catch(TLS_Exception& e)
       {
       alert(FATAL, e.type());
+      throw;
+      }
+   catch(Decoding_Error& e)
+      {
+      alert(FATAL, DECODE_ERROR);
       throw;
       }
    catch(std::exception& e)
@@ -167,16 +172,19 @@ void TLS_Channel::queue_for_sending(const byte buf[], size_t buf_size)
       pre_handshake_write_queue.write(buf, buf_size);
    }
 
-void TLS_Channel::alert(Alert_Level level, Alert_Type alert_code)
+void TLS_Channel::alert(Alert_Level alert_level, Alert_Type alert_code)
    {
-   try
+   if(alert_code != NULL_ALERT)
       {
-      writer.alert(level, alert_code);
-      writer.flush();
+      try
+         {
+         writer.alert(alert_level, alert_code);
+         writer.flush();
+         }
+      catch(...) { /* swallow it */ }
       }
-   catch(...) { /* swallow it */ }
 
-   if(active && level == FATAL)
+   if(active && alert_level == FATAL)
       {
       reader.reset();
       writer.reset();

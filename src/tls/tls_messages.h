@@ -28,7 +28,7 @@ class Record_Reader;
 class HandshakeMessage
    {
    public:
-      void send(Record_Writer&, HandshakeHash&) const;
+      void send(Record_Writer&, TLS_Handshake_Hash&) const;
 
       virtual Handshake_Type type() const = 0;
 
@@ -68,7 +68,7 @@ class Client_Hello : public HandshakeMessage
       bool offered_suite(u16bit) const;
 
       Client_Hello(RandomNumberGenerator& rng,
-                   Record_Writer&, const TLS_Policy&, HandshakeHash&);
+                   Record_Writer&, const TLS_Policy&, TLS_Handshake_Hash&);
 
       Client_Hello(const MemoryRegion<byte>& buf,
                    Handshake_Type type)
@@ -108,7 +108,7 @@ class Client_Key_Exchange : public HandshakeMessage
 
       Client_Key_Exchange(RandomNumberGenerator& rng,
                           Record_Writer& output,
-                          HandshakeHash& hash,
+                          TLS_Handshake_Hash& hash,
                           const Public_Key* my_key,
                           Version_Code using_version,
                           Version_Code pref_version);
@@ -137,7 +137,7 @@ class Certificate : public HandshakeMessage
       bool empty() const { return certs.empty(); }
 
       Certificate(Record_Writer&, const std::vector<X509_Certificate>&,
-                  HandshakeHash&);
+                  TLS_Handshake_Hash&);
       Certificate(const MemoryRegion<byte>& buf) { deserialize(buf); }
    private:
       MemoryVector<byte> serialize() const;
@@ -157,7 +157,7 @@ class Certificate_Req : public HandshakeMessage
       std::vector<X509_DN> acceptable_CAs() const { return names; }
 
       Certificate_Req(Record_Writer& writer,
-                      HandshakeHash& hash,
+                      TLS_Handshake_Hash& hash,
                       const std::vector<X509_Certificate>& allowed_cas,
                       const std::vector<Certificate_Type>& types =
                          std::vector<Certificate_Type>());
@@ -180,11 +180,11 @@ class Certificate_Verify : public HandshakeMessage
       Handshake_Type type() const { return CERTIFICATE_VERIFY; }
 
       bool verify(const X509_Certificate& cert,
-                  HandshakeHash& hash);
+                  TLS_Handshake_Hash& hash);
 
       Certificate_Verify(RandomNumberGenerator& rng,
                          Record_Writer& writer,
-                         HandshakeHash& hash,
+                         TLS_Handshake_Hash& hash,
                          const Private_Key* key);
 
       Certificate_Verify(const MemoryRegion<byte>& buf) { deserialize(buf); }
@@ -204,17 +204,17 @@ class Finished : public HandshakeMessage
       Handshake_Type type() const { return FINISHED; }
 
       bool verify(const MemoryRegion<byte>&, Version_Code,
-                  const HandshakeHash&, Connection_Side);
+                  const TLS_Handshake_Hash&, Connection_Side);
 
       Finished(Record_Writer&, Version_Code, Connection_Side,
-               const MemoryRegion<byte>&, HandshakeHash&);
+               const MemoryRegion<byte>&, TLS_Handshake_Hash&);
       Finished(const MemoryRegion<byte>& buf) { deserialize(buf); }
    private:
       MemoryVector<byte> serialize() const;
       void deserialize(const MemoryRegion<byte>&);
 
       MemoryVector<byte> compute_verify(const MemoryRegion<byte>&,
-                                        HandshakeHash, Connection_Side,
+                                        TLS_Handshake_Hash, Connection_Side,
                                         Version_Code);
 
       Connection_Side side;
@@ -264,7 +264,7 @@ class Server_Hello : public HandshakeMessage
                    const Client_Hello& other,
                    const MemoryRegion<byte>& session_id,
                    Version_Code version,
-                   HandshakeHash& hash);
+                   TLS_Handshake_Hash& hash);
 
       Server_Hello(RandomNumberGenerator& rng,
                    Record_Writer& writer,
@@ -272,7 +272,7 @@ class Server_Hello : public HandshakeMessage
                    u16bit ciphersuite,
                    byte compression,
                    Version_Code ver,
-                   HandshakeHash& hash);
+                   TLS_Handshake_Hash& hash);
 
       Server_Hello(const MemoryRegion<byte>& buf) { deserialize(buf); }
    private:
@@ -300,7 +300,7 @@ class Server_Key_Exchange : public HandshakeMessage
       Server_Key_Exchange(RandomNumberGenerator& rng,
                           Record_Writer&, const Public_Key*,
                           const Private_Key*, const MemoryRegion<byte>&,
-                          const MemoryRegion<byte>&, HandshakeHash&);
+                          const MemoryRegion<byte>&, TLS_Handshake_Hash&);
 
       Server_Key_Exchange(const MemoryRegion<byte>& buf) { deserialize(buf); }
    private:
@@ -320,7 +320,7 @@ class Server_Hello_Done : public HandshakeMessage
    public:
       Handshake_Type type() const { return SERVER_HELLO_DONE; }
 
-      Server_Hello_Done(Record_Writer&, HandshakeHash&);
+      Server_Hello_Done(Record_Writer&, TLS_Handshake_Hash&);
       Server_Hello_Done(const MemoryRegion<byte>& buf) { deserialize(buf); }
    private:
       MemoryVector<byte> serialize() const;

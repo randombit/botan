@@ -15,7 +15,7 @@ namespace Botan {
 /*
 * Encode and send a Handshake message
 */
-void HandshakeMessage::send(Record_Writer& writer, HandshakeHash& hash) const
+void HandshakeMessage::send(Record_Writer& writer, TLS_Handshake_Hash& hash) const
    {
    MemoryVector<byte> buf = serialize();
    MemoryVector<byte> send_buf(4);
@@ -40,7 +40,7 @@ void HandshakeMessage::send(Record_Writer& writer, HandshakeHash& hash) const
 */
 Hello_Request::Hello_Request(Record_Writer& writer)
    {
-   HandshakeHash dummy; // FIXME: *UGLY*
+   TLS_Handshake_Hash dummy; // FIXME: *UGLY*
    send(writer, dummy);
    }
 
@@ -67,7 +67,7 @@ void Hello_Request::deserialize(const MemoryRegion<byte>& buf)
 Client_Hello::Client_Hello(RandomNumberGenerator& rng,
                            Record_Writer& writer,
                            const TLS_Policy& policy,
-                           HandshakeHash& hash)
+                           TLS_Handshake_Hash& hash)
    {
    c_random = rng.random_vec(32);
 
@@ -229,7 +229,7 @@ Server_Hello::Server_Hello(RandomNumberGenerator& rng,
                            const Client_Hello& c_hello,
                            const MemoryRegion<byte>& session_id,
                            Version_Code ver,
-                           HandshakeHash& hash) :
+                           TLS_Handshake_Hash& hash) :
    s_version(ver),
    sess_id(session_id),
    s_random(rng.random_vec(32))
@@ -266,7 +266,7 @@ Server_Hello::Server_Hello(RandomNumberGenerator& rng,
                            u16bit ciphersuite,
                            byte compression,
                            Version_Code ver,
-                           HandshakeHash& hash) :
+                           TLS_Handshake_Hash& hash) :
    s_version(ver),
    sess_id(session_id),
    s_random(rng.random_vec(32)),
@@ -328,7 +328,7 @@ void Server_Hello::deserialize(const MemoryRegion<byte>& buf)
 * Create a new Server Hello Done message
 */
 Server_Hello_Done::Server_Hello_Done(Record_Writer& writer,
-                                     HandshakeHash& hash)
+                                     TLS_Handshake_Hash& hash)
    {
    send(writer, hash);
    }

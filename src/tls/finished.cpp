@@ -16,7 +16,7 @@ namespace Botan {
 Finished::Finished(Record_Writer& writer,
                    Version_Code version, Connection_Side side,
                    const MemoryRegion<byte>& master_secret,
-                   HandshakeHash& hash)
+                   TLS_Handshake_Hash& hash)
    {
    verification_data = compute_verify(master_secret, hash, side, version);
    send(writer, hash);
@@ -42,7 +42,7 @@ void Finished::deserialize(const MemoryRegion<byte>& buf)
 * Verify a Finished message
 */
 bool Finished::verify(const MemoryRegion<byte>& secret, Version_Code version,
-                      const HandshakeHash& hash, Connection_Side side)
+                      const TLS_Handshake_Hash& hash, Connection_Side side)
    {
    MemoryVector<byte> computed = compute_verify(secret, hash, side, version);
    if(computed == verification_data)
@@ -54,7 +54,7 @@ bool Finished::verify(const MemoryRegion<byte>& secret, Version_Code version,
 * Compute the verify_data
 */
 MemoryVector<byte> Finished::compute_verify(const MemoryRegion<byte>& secret,
-                                            HandshakeHash hash,
+                                            TLS_Handshake_Hash hash,
                                             Connection_Side side,
                                             Version_Code version)
    {

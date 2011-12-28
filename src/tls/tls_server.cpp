@@ -12,6 +12,8 @@
 #include <botan/rsa.h>
 #include <botan/dh.h>
 
+#include <stdio.h>
+
 namespace Botan {
 
 namespace {
@@ -126,14 +128,12 @@ void TLS_Server::read_handshake(byte rec_type,
 void TLS_Server::process_handshake_msg(Handshake_Type type,
                                        const MemoryRegion<byte>& contents)
    {
-   rng.add_entropy(&contents[0], contents.size());
-
    if(state == 0)
       throw Unexpected_Message("Unexpected handshake message");
 
    state->confirm_transition_to(type);
 
-   if(type != HANDSHAKE_CCS && type != FINISHED)
+   if(type != HANDSHAKE_CCS && type != FINISHED && type != CERTIFICATE_VERIFY)
       {
       if(type != CLIENT_HELLO_SSLV2)
          {
@@ -252,7 +252,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
          /*
          * If the client doesn't have a cert they want to use they are
          * allowed to send either an empty cert message or proceed
-         * directly to the client key exchange.
+         * directly to the client key exchange, so allow either case.
          */
          state->set_expected_next(CLIENT_KEX);
 
@@ -263,6 +263,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       {
       state->client_certs = new Certificate(contents);
 
+      // Is this allowed by the protocol?
       if(state->client_certs->count() > 1)
          throw TLS_Exception(CERTIFICATE_UNKNOWN,
                              "Client sent more than one certificate");
@@ -293,7 +294,28 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
       std::vector<X509_Certificate> client_certs = state->client_certs->cert_chain();
 
-      //const bool ok = state->client_verify->verify(client_certs[0]);
+      const bool sig_valid = state->client_verify->verify(client_certs[0],
+                                                          state->hash);
+
+      state->hash.update(static_cast<byte>(type));
+
+      const size_t record_length = contents.size();
+      for(size_t i = 0; i != 3; i++)
+         state->hash.update(get_byte<u32bit>(i+1, record_length));
+
+      state->hash.update(contents);
+
+      /*
+      * Using DECRYPT_ERROR looks weird here, but per RFC 4346 is for
+      * "A handshake cryptographic operation failed, including being
+      * unable to correctly verify a signature, ..."
+      */
+      if(!sig_valid && false)
+         throw TLS_Exception(DECRYPT_ERROR, "Client cert verify failed");
+
+      printf("Sig valid? %d\n", sig_valid);
+
+      // Check cert was issued by a CA we requested, signatures, etc.
 
       state->set_expected_next(HANDSHAKE_CCS);
       }

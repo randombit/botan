@@ -1,6 +1,6 @@
 /*
 * Certificate Verify Message
-* (C) 2004-2010 Jack Lloyd
+* (C) 2004-2011 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -20,7 +20,7 @@ namespace Botan {
 */
 Certificate_Verify::Certificate_Verify(RandomNumberGenerator& rng,
                                        Record_Writer& writer,
-                                       HandshakeHash& hash,
+                                       TLS_Handshake_Hash& hash,
                                        const Private_Key* priv_key)
    {
    std::string padding = "";
@@ -71,7 +71,7 @@ void Certificate_Verify::deserialize(const MemoryRegion<byte>& buf)
 * Verify a Certificate Verify message
 */
 bool Certificate_Verify::verify(const X509_Certificate& cert,
-                                HandshakeHash& hash)
+                                TLS_Handshake_Hash& hash)
    {
    // FIXME: duplicate of Server_Key_Exchange::verify
 
@@ -92,7 +92,7 @@ bool Certificate_Verify::verify(const X509_Certificate& cert,
                              " is invalid/unknown for TLS signatures");
 
    PK_Verifier verifier(*key, padding, format);
-   return verifier.verify_message(hash.final(), signature);
+   return verifier.verify_message(hash.get_contents(), signature);
    }
 
 }

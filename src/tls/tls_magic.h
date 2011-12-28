@@ -84,9 +84,12 @@ enum Alert_Type {
    USER_CANCELED           = 90,
    NO_RENEGOTIATION        = 100,
 
+   UNSUPPORTED_EXTENSION   = 110,
+   UNRECOGNIZED_NAME       = 112,
+
    UNKNOWN_PSK_IDENTITY    = 115,
 
-   NO_ALERT_TYPE           = 0xFFFF
+   NULL_ALERT              = 255
 };
 
 enum Certificate_Type {

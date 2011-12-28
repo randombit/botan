@@ -18,7 +18,7 @@ namespace Botan {
 * Create a new Certificate Request message
 */
 Certificate_Req::Certificate_Req(Record_Writer& writer,
-                                 HandshakeHash& hash,
+                                 TLS_Handshake_Hash& hash,
                                  const std::vector<X509_Certificate>& ca_certs,
                                  const std::vector<Certificate_Type>& cert_types)
    {
@@ -90,7 +90,7 @@ void Certificate_Req::deserialize(const MemoryRegion<byte>& buf)
 */
 Certificate::Certificate(Record_Writer& writer,
                          const std::vector<X509_Certificate>& cert_list,
-                         HandshakeHash& hash)
+                         TLS_Handshake_Hash& hash)
    {
    certs = cert_list;
    send(writer, hash);

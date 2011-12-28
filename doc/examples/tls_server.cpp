@@ -86,13 +86,13 @@ class Blocking_TLS_Server
 
       void reader_fn(const byte buf[], size_t buf_len, u16bit alert_code)
          {
-         if(buf_len == 0 && alert_code != NO_ALERT_TYPE)
+         if(buf_len == 0 && alert_code != NULL_ALERT)
             {
             printf("Alert: %d, quitting\n", alert_code);
             exit = true;
             }
 
-         printf("Got %d bytes: ", buf_len);
+         printf("Got %d bytes: ", (int)buf_len);
          for(size_t i = 0; i != buf_len; ++i)
             {
             if(isprint(buf[i]))
@@ -114,6 +114,8 @@ class Blocking_TLS_Server
 class Server_TLS_Policy : public TLS_Policy
    {
    public:
+      bool require_client_auth() const { return true; }
+
       bool check_cert(const std::vector<X509_Certificate>& certs) const
          {
          for(size_t i = 0; i != certs.size(); ++i)
@@ -202,7 +204,7 @@ int main(int argc, char* argv[])
                   }
                }
             }
-         catch(std::exception& e) { printf("%s\n", e.what()); }
+         catch(std::exception& e) { printf("Connection problem: %s\n", e.what()); }
          }
    }
    catch(std::exception& e)

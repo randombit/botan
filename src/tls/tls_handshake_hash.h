@@ -1,6 +1,6 @@
 /*
 * TLS Handshake Hash
-* (C) 2004-2006 Jack Lloyd
+* (C) 2004-2006,2011 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -9,6 +9,7 @@
 #define BOTAN_TLS_HANDSHAKE_HASH_H__
 
 #include <botan/secmem.h>
+#include <botan/tls_magic.h>
 
 namespace Botan {
 
@@ -17,7 +18,7 @@ using namespace Botan;
 /**
 * TLS Handshake Hash
 */
-class HandshakeHash
+class TLS_Handshake_Hash
    {
    public:
       void update(const byte in[], size_t length)
@@ -29,8 +30,15 @@ class HandshakeHash
       void update(byte in)
          { data.push_back(in); }
 
+      void update(Handshake_Type handshake_type,
+                  const MemoryRegion<byte>& handshake_msg);
+
       SecureVector<byte> final();
       SecureVector<byte> final_ssl3(const MemoryRegion<byte>&);
+
+      const SecureVector<byte>& get_contents() const
+         { return data; }
+
    private:
       SecureVector<byte> data;
    };

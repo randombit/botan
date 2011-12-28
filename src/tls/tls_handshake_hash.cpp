@@ -1,6 +1,6 @@
 /*
 * TLS Handshake Hash
-* (C) 2004-2006 Jack Lloyd
+* (C) 2004-2006,2011 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -12,10 +12,22 @@
 
 namespace Botan {
 
+void TLS_Handshake_Hash::update(Handshake_Type handshake_type,
+                                const MemoryRegion<byte>& handshake_msg)
+   {
+   update(static_cast<byte>(handshake_type));
+
+   const size_t record_length = handshake_msg.size();
+   for(size_t i = 0; i != 3; i++)
+      update(get_byte<u32bit>(i+1, record_length));
+
+   update(handshake_msg);
+   }
+
 /**
 * Return a TLS Handshake Hash
 */
-SecureVector<byte> HandshakeHash::final()
+SecureVector<byte> TLS_Handshake_Hash::final()
    {
    MD5 md5;
    SHA_160 sha1;
@@ -32,7 +44,7 @@ SecureVector<byte> HandshakeHash::final()
 /**
 * Return a SSLv3 Handshake Hash
 */
-SecureVector<byte> HandshakeHash::final_ssl3(const MemoryRegion<byte>& secret)
+SecureVector<byte> TLS_Handshake_Hash::final_ssl3(const MemoryRegion<byte>& secret)
    {
    const byte PAD_INNER = 0x36, PAD_OUTER = 0x5C;
 

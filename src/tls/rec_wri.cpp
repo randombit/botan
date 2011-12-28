@@ -206,7 +206,7 @@ void Record_Writer::send_record(byte type, const byte buf[], size_t length)
 
       SecureVector<byte> buf_mac = mac->final();
 
-      // TODO: This could all use a single buffer
+      // FIXME: this could be done in place in a single buffer
       cipher.start_msg();
 
       if(iv_size)

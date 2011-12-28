@@ -1,6 +1,6 @@
 /*
 * Alert Message
-* (C) 2004-2006 Jack Lloyd
+* (C) 2004-2006,2011 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -40,9 +40,14 @@ class Alert
          if(buf[0] == 1)      fatal = false;
          else if(buf[0] == 2) fatal = true;
          else
-            throw Decoding_Error("Alert: Bad type code for alert level");
+            throw Decoding_Error("Alert: Bad code for alert level");
 
-         type_code = static_cast<Alert_Type>(buf[1]);
+         const byte dc = buf[1];
+
+         if(dc == 255)
+            throw Decoding_Error("Alert: description code 255, rejecting");
+
+         type_code = static_cast<Alert_Type>(dc);
          }
    private:
       bool fatal;

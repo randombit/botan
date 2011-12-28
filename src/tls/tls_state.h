@@ -46,7 +46,7 @@ class Handshake_State
 
       CipherSuite suite;
       SessionKeys keys;
-      HandshakeHash hash;
+      TLS_Handshake_Hash hash;
 
       SecureQueue queue;
 

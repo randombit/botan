@@ -176,12 +176,16 @@ size_t Record_Reader::get_record(byte& msg_type,
    input_queue.read(header, sizeof(header)); // pull off the header
    input_queue.read(&buffer[0], buffer.size());
 
-   /*
-   * We are handshaking, no crypto to do so return as-is
-   * TODO: Check msg_type to confirm a handshake?
-   */
+   // We are handshaking, no crypto to do so return as-is
    if(mac_size == 0)
       {
+      if(header[0] != CHANGE_CIPHER_SPEC &&
+         header[0] != ALERT &&
+         header[0] != HANDSHAKE)
+         {
+         throw TLS_Exception(DECODE_ERROR, "Invalid msg type received during handshake");
+         }
+
       msg_type = header[0];
       output = buffer;
       return 0; // got a full record

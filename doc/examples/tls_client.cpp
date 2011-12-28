@@ -33,6 +33,7 @@ class HTTPS_Client
          socket(host, port),
          client(std::tr1::bind(&HTTPS_Client::socket_write, std::tr1::ref(*this), _1, _2),
                 std::tr1::bind(&HTTPS_Client::proc_data, std::tr1::ref(*this), _1, _2, _3),
+                sessions,
                 policy,
                 rng)
          {
@@ -92,6 +93,8 @@ class HTTPS_Client
       RandomNumberGenerator& rng;
       Socket socket;
       Client_TLS_Policy policy;
+      TLS_Session_Manager_In_Memory sessions;
+
       TLS_Client client;
    };
 
