@@ -129,6 +129,9 @@ class Certificate : public HandshakeMessage
       Handshake_Type type() const { return CERTIFICATE; }
       std::vector<X509_Certificate> cert_chain() const { return certs; }
 
+      size_t count() const { return certs.size(); }
+      bool empty() const { return certs.empty(); }
+
       Certificate(Record_Writer&, const std::vector<X509_Certificate>&,
                   HandshakeHash&);
       Certificate(const MemoryRegion<byte>& buf) { deserialize(buf); }
@@ -149,12 +152,11 @@ class Certificate_Req : public HandshakeMessage
       std::vector<Certificate_Type> acceptable_types() const { return types; }
       std::vector<X509_DN> acceptable_CAs() const { return names; }
 
-      /* TODO
-      Certificate_Req(Record_Writer&, HandshakeHash&,
-                      const X509_Certificate&);
-      */
-      Certificate_Req(Record_Writer&, HandshakeHash&,
-                      const std::vector<X509_Certificate>&);
+      Certificate_Req(Record_Writer& writer,
+                      HandshakeHash& hash,
+                      const std::vector<X509_Certificate>& allowed_cas,
+                      const std::vector<Certificate_Type>& types =
+                         std::vector<Certificate_Type>());
 
       Certificate_Req(const MemoryRegion<byte>& buf) { deserialize(buf); }
    private:
@@ -173,11 +175,13 @@ class Certificate_Verify : public HandshakeMessage
    public:
       Handshake_Type type() const { return CERTIFICATE_VERIFY; }
 
-      bool verify(const X509_Certificate&, HandshakeHash&);
+      bool verify(const X509_Certificate& cert,
+                  HandshakeHash& hash);
 
       Certificate_Verify(RandomNumberGenerator& rng,
-                         Record_Writer&, HandshakeHash&,
-                         const Private_Key*);
+                         Record_Writer& writer,
+                         HandshakeHash& hash,
+                         const Private_Key* key);
 
       Certificate_Verify(const MemoryRegion<byte>& buf) { deserialize(buf); }
    private:

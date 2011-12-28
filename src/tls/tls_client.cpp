@@ -19,11 +19,13 @@ namespace Botan {
 */
 TLS_Client::TLS_Client(std::tr1::function<void (const byte[], size_t)> output_fn,
                        std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
+                       TLS_Session_Manager& session_manager,
                        const TLS_Policy& policy,
                        RandomNumberGenerator& rng) :
    TLS_Channel(output_fn, proc_fn),
    policy(policy),
-   rng(rng)
+   rng(rng),
+   session_manager(session_manager)
    {
    writer.set_version(policy.pref_version());
 

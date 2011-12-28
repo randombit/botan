@@ -9,7 +9,7 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/asn1_str.h>
-#include <ctime>
+#include <botan/time.h>
 
 namespace Botan {
 
@@ -22,7 +22,7 @@ TLS_Session_Params::TLS_Session_Params(const MemoryRegion<byte>& session_id,
                                        const X509_Certificate* cert,
                                        const std::string& sni_hostname,
                                        const std::string& srp_identity) :
-   session_start_time(time(0)),
+   session_start_time(system_time()),
    session_id(session_id),
    master_secret(master_secret),
    version(version),
@@ -86,16 +86,25 @@ bool TLS_Session_Manager_In_Memory::find(const MemoryVector<byte>& session_id,
                                          TLS_Session_Params& params,
                                          Connection_Side side)
    {
-   std::map<std::string, TLS_Session_Params>::const_iterator i =
+   std::map<std::string, TLS_Session_Params>::iterator i =
       sessions.find(hex_encode(session_id));
 
-   if(i != sessions.end() && i->second.connection_side == side)
+   if(i == sessions.end())
+      return false;
+
+   // session has expired, remove it
+   const u64bit now = system_time();
+   if(i->second.session_start_time + session_lifetime >= now)
       {
-      params = i->second;
-      return true;
+      sessions.erase(i);
+      return false;
       }
 
-   return false;
+   if(i->second.connection_side != side)
+      return false;
+
+   params = i->second;
+   return true;
    }
 
 void TLS_Session_Manager_In_Memory::prohibit_resumption(const MemoryVector<byte>& session_id)
@@ -111,6 +120,10 @@ void TLS_Session_Manager_In_Memory::save(const TLS_Session_Params& session_data)
    {
    if(max_sessions != 0)
       {
+      /*
+      This removes randomly based on ordering of session ids.
+      Instead, remove oldest first?
+      */
       while(sessions.size() >= max_sessions)
          sessions.erase(sessions.begin());
       }

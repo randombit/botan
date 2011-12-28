@@ -149,7 +149,6 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       if(resuming)
          {
          // resume session
-
          state->server_hello = new Server_Hello(
             rng,
             writer,
@@ -180,11 +179,15 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
          }
       else // new session
          {
-         state->server_hello = new Server_Hello(rng, writer,
-                                                policy, cert_chain,
-                                                *(state->client_hello),
-                                                rng.random_vec(32),
-                                                state->version, state->hash);
+         state->server_hello = new Server_Hello(
+            rng,
+            writer,
+            policy,
+            cert_chain,
+            *(state->client_hello),
+            rng.random_vec(32),
+            state->version,
+            state->hash);
 
          state->suite = CipherSuite(state->server_hello->ciphersuite());
 
@@ -218,26 +221,39 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
                                     state->server_hello->random(),
                                     state->hash);
 
-         state->server_hello_done = new Server_Hello_Done(writer, state->hash);
-
          if(policy.require_client_auth())
             {
-            throw Internal_Error("Client auth not implemented");
-            // FIXME: send client auth request here
+            // FIXME: figure out the allowed CAs/cert types
+
+            state->cert_req = new Certificate_Req(writer, state->hash,
+                                                  std::vector<X509_Certificate>());
+
             state->set_expected_next(CERTIFICATE);
             }
-         else
-            state->set_expected_next(CLIENT_KEX);
+
+         /*
+         * If the client doesn't have a cert they want to use they are
+         * allowed to send either an empty cert message or proceed
+         * directly to the client key exchange.
+         */
+         state->set_expected_next(CLIENT_KEX);
+
+         state->server_hello_done = new Server_Hello_Done(writer, state->hash);
          }
       }
    else if(type == CERTIFICATE)
       {
+      state->client_certs = new Certificate(contents);
+
+      if(state->client_certs->count() > 1)
+         throw TLS_Exception(CERTIFICATE_UNKNOWN,
+                             "Client sent more than one certificate");
+
       state->set_expected_next(CLIENT_KEX);
-      // FIXME: process this
       }
    else if(type == CLIENT_KEX)
       {
-      if(state->received_handshake_msg(CERTIFICATE))
+      if(state->received_handshake_msg(CERTIFICATE) && !state->client_certs->empty())
          state->set_expected_next(CERTIFICATE_VERIFY);
       else
          state->set_expected_next(HANDSHAKE_CCS);
@@ -255,7 +271,11 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       }
    else if(type == CERTIFICATE_VERIFY)
       {
-      // FIXME: process this
+      state->client_verify = new Certificate_Verify(contents);
+
+      std::vector<X509_Certificate> client_certs = state->client_certs->cert_chain();
+
+      const bool ok = state->client_verify->verify(client_certs[0]
 
       state->set_expected_next(HANDSHAKE_CCS);
       }

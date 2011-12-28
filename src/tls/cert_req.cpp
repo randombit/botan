@@ -19,14 +19,19 @@ namespace Botan {
 */
 Certificate_Req::Certificate_Req(Record_Writer& writer,
                                  HandshakeHash& hash,
-                                 const std::vector<X509_Certificate>& certs)
+                                 const std::vector<X509_Certificate>& ca_certs,
+                                 const std::vector<Certificate_Type>& cert_types)
    {
-   for(size_t i = 0; i != certs.size(); ++i)
-      names.push_back(certs[i].subject_dn());
+   for(size_t i = 0; i != ca_certs.size(); ++i)
+      names.push_back(ca_certs[i].subject_dn());
 
-   // FIXME: should be able to choose what to ask for
-   types.push_back(RSA_CERT);
-   types.push_back(DSS_CERT);
+   if(cert_types.empty()) // default is RSA/DSA is OK
+      {
+      types.push_back(RSA_CERT);
+      types.push_back(DSS_CERT);
+      }
+   else
+      types = cert_types;
 
    send(writer, hash);
    }
