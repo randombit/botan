@@ -31,7 +31,7 @@ TLS_Client::TLS_Client(std::tr1::function<void (const byte[], size_t)> output_fn
 
    state = new Handshake_State;
    state->set_expected_next(SERVER_HELLO);
-   state->client_hello = new Client_Hello(rng, writer, policy, state->hash);
+   state->client_hello = new Client_Hello(writer, state->hash, policy, rng);
    }
 
 void TLS_Client::add_client_cert(const X509_Certificate& cert,
@@ -74,7 +74,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
    if(type == HELLO_REQUEST)
       {
       Hello_Request hello_request(contents);
-      state->client_hello = new Client_Hello(rng, writer, policy, state->hash);
+      state->client_hello = new Client_Hello( writer, state->hash, policy, rng);
       }
    else if(type == SERVER_HELLO)
       {
@@ -213,21 +213,21 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
             state->cert_req->acceptable_types();
 
          // FIXME: Fill in useful certs here, if any
-         state->client_certs = new Certificate(writer, send_certs,
-                                               state->hash);
+         state->client_certs = new Certificate(writer,
+                                               state->hash,
+                                               send_certs);
          }
 
       state->client_kex =
-         new Client_Key_Exchange(rng, writer, state->hash,
+         new Client_Key_Exchange(writer, state->hash, rng,
                                  state->kex_pub, state->version,
                                  state->client_hello->version());
 
       if(state->received_handshake_msg(CERTIFICATE_REQUEST))
          {
          Private_Key* key_matching_cert = 0; // FIXME
-         state->client_verify = new Certificate_Verify(rng,
-                                                       writer, state->hash,
-                                                       key_matching_cert);
+         state->client_verify = new Certificate_Verify(writer, state->hash,
+                                                       rng, key_matching_cert);
          }
 
       state->keys = SessionKeys(state->suite, state->version,
@@ -239,9 +239,9 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
 
       writer.set_keys(state->suite, state->keys, CLIENT);
 
-      state->client_finished = new Finished(writer, state->version, CLIENT,
-                                            state->keys.master_secret(),
-                                            state->hash);
+      state->client_finished = new Finished(writer, state->hash,
+                                            state->version, CLIENT,
+                                            state->keys.master_secret());
       }
    else if(type == HANDSHAKE_CCS)
       {

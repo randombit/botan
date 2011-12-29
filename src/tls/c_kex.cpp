@@ -16,12 +16,12 @@
 
 namespace Botan {
 
-/**
+/*
 * Create a new Client Key Exchange message
 */
-Client_Key_Exchange::Client_Key_Exchange(RandomNumberGenerator& rng,
-                                         Record_Writer& writer,
+Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
                                          TLS_Handshake_Hash& hash,
+                                         RandomNumberGenerator& rng,
                                          const Public_Key* pub_key,
                                          Version_Code using_version,
                                          Version_Code pref_version)
@@ -57,7 +57,7 @@ Client_Key_Exchange::Client_Key_Exchange(RandomNumberGenerator& rng,
    send(writer, hash);
    }
 
-/**
+/*
 * Read a Client Key Exchange message
 */
 Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
@@ -72,7 +72,7 @@ Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
    deserialize(contents);
    }
 
-/**
+/*
 * Serialize a Client Key Exchange message
 */
 MemoryVector<byte> Client_Key_Exchange::serialize() const
@@ -87,7 +87,7 @@ MemoryVector<byte> Client_Key_Exchange::serialize() const
       return key_material;
    }
 
-/**
+/*
 * Deserialize a Client Key Exchange message
 */
 void Client_Key_Exchange::deserialize(const MemoryRegion<byte>& buf)
@@ -101,7 +101,7 @@ void Client_Key_Exchange::deserialize(const MemoryRegion<byte>& buf)
       key_material = buf;
    }
 
-/**
+/*
 * Return the pre_master_secret
 */
 SecureVector<byte>
@@ -152,14 +152,6 @@ Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
       }
    else
       throw Invalid_Argument("Client_Key_Exchange: Bad key for decrypt");
-   }
-
-/**
-* Return the pre_master_secret
-*/
-SecureVector<byte> Client_Key_Exchange::pre_master_secret() const
-   {
-   return pre_master;
    }
 
 }

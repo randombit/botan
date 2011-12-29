@@ -63,10 +63,10 @@ void Hello_Request::deserialize(const MemoryRegion<byte>& buf)
 /*
 * Create a new Client Hello message
 */
-Client_Hello::Client_Hello(RandomNumberGenerator& rng,
-                           Record_Writer& writer,
+Client_Hello::Client_Hello(Record_Writer& writer,
+                           TLS_Handshake_Hash& hash,
                            const TLS_Policy& policy,
-                           TLS_Handshake_Hash& hash)
+                           RandomNumberGenerator& rng)
    {
    c_random = rng.random_vec(32);
 
@@ -221,14 +221,14 @@ bool Client_Hello::offered_suite(u16bit ciphersuite) const
 /*
 * Create a new Server Hello message
 */
-Server_Hello::Server_Hello(RandomNumberGenerator& rng,
-                           Record_Writer& writer,
+Server_Hello::Server_Hello(Record_Writer& writer,
+                           TLS_Handshake_Hash& hash,
                            const TLS_Policy& policy,
+                           RandomNumberGenerator& rng,
                            const std::vector<X509_Certificate>& certs,
                            const Client_Hello& c_hello,
                            const MemoryRegion<byte>& session_id,
-                           Version_Code ver,
-                           TLS_Handshake_Hash& hash) :
+                           Version_Code ver) :
    s_version(ver),
    sess_id(session_id),
    s_random(rng.random_vec(32))
@@ -259,13 +259,13 @@ Server_Hello::Server_Hello(RandomNumberGenerator& rng,
 /*
 * Create a new Server Hello message
 */
-Server_Hello::Server_Hello(RandomNumberGenerator& rng,
-                           Record_Writer& writer,
+Server_Hello::Server_Hello(Record_Writer& writer,
+                           TLS_Handshake_Hash& hash,
+                           RandomNumberGenerator& rng,
                            const MemoryRegion<byte>& session_id,
                            u16bit ciphersuite,
                            byte compression,
-                           Version_Code ver,
-                           TLS_Handshake_Hash& hash) :
+                           Version_Code ver) :
    s_version(ver),
    sess_id(session_id),
    s_random(rng.random_vec(32)),

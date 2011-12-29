@@ -20,9 +20,9 @@ namespace Botan {
 /*
 * Create a new Certificate Verify message
 */
-Certificate_Verify::Certificate_Verify(RandomNumberGenerator& rng,
-                                       Record_Writer& writer,
+Certificate_Verify::Certificate_Verify(Record_Writer& writer,
                                        TLS_Handshake_Hash& hash,
+                                       RandomNumberGenerator& rng,
                                        const Private_Key* priv_key)
    {
    BOTAN_ASSERT_NONNULL(priv_key);

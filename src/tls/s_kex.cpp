@@ -19,13 +19,13 @@ namespace Botan {
 /**
 * Create a new Server Key Exchange message
 */
-Server_Key_Exchange::Server_Key_Exchange(RandomNumberGenerator& rng,
-                                         Record_Writer& writer,
+Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
+                                         TLS_Handshake_Hash& hash,
+                                         RandomNumberGenerator& rng,
                                          const Public_Key* kex_key,
                                          const Private_Key* priv_key,
                                          const MemoryRegion<byte>& c_random,
-                                         const MemoryRegion<byte>& s_random,
-                                         TLS_Handshake_Hash& hash)
+                                         const MemoryRegion<byte>& s_random)
    {
    const DH_PublicKey* dh_pub = dynamic_cast<const DH_PublicKey*>(kex_key);
    const RSA_PublicKey* rsa_pub = dynamic_cast<const RSA_PublicKey*>(kex_key);

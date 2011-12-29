@@ -14,9 +14,10 @@ namespace Botan {
 * Create a new Finished message
 */
 Finished::Finished(Record_Writer& writer,
-                   Version_Code version, Connection_Side side,
-                   const MemoryRegion<byte>& master_secret,
-                   TLS_Handshake_Hash& hash)
+                   TLS_Handshake_Hash& hash,
+                   Version_Code version,
+                   Connection_Side side,
+                   const MemoryRegion<byte>& master_secret)
    {
    verification_data = compute_verify(master_secret, hash, side, version);
    send(writer, hash);

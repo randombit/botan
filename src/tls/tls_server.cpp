@@ -167,13 +167,13 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
          {
          // resume session
          state->server_hello = new Server_Hello(
-            rng,
             writer,
+            state->hash,
+            rng,
             session_info.session_id(),
             session_info.ciphersuite(),
             session_info.compression_method(),
-            Version_Code(session_info.version()),
-            state->hash);
+            Version_Code(session_info.version()));
 
          state->suite = CipherSuite(state->server_hello->ciphersuite());
 
@@ -187,31 +187,32 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
          writer.set_keys(state->suite, state->keys, SERVER);
 
-         state->server_finished = new Finished(writer, state->version, SERVER,
-                                               state->keys.master_secret(),
-                                               state->hash);
+         state->server_finished = new Finished(writer, state->hash,
+                                               state->version, SERVER,
+                                               state->keys.master_secret());
 
          state->set_expected_next(HANDSHAKE_CCS);
          }
       else // new session
          {
          state->server_hello = new Server_Hello(
-            rng,
             writer,
+            state->hash,
             policy,
+            rng,
             cert_chain,
             *(state->client_hello),
             rng.random_vec(32),
-            state->version,
-            state->hash);
+            state->version);
 
          state->suite = CipherSuite(state->server_hello->ciphersuite());
 
          if(state->suite.sig_type() != TLS_ALGO_SIGNER_ANON)
             {
             // FIXME: should choose certs based on sig type
-            state->server_certs = new Certificate(writer, cert_chain,
-                                                  state->hash);
+            state->server_certs = new Certificate(writer,
+                                                  state->hash,
+                                                  cert_chain);
             }
 
          if(state->suite.kex_type() == TLS_ALGO_KEYEXCH_NOKEX)
@@ -231,11 +232,10 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             throw Internal_Error("TLS_Server: Unknown ciphersuite kex type");
 
          state->server_kex =
-            new Server_Key_Exchange(rng, writer,
+            new Server_Key_Exchange(writer, state->hash, rng,
                                     state->kex_priv, private_key,
                                     state->client_hello->random(),
-                                    state->server_hello->random(),
-                                    state->hash);
+                                    state->server_hello->random());
 
          if(policy.require_client_auth())
             {
@@ -339,9 +339,9 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
          writer.set_keys(state->suite, state->keys, SERVER);
 
-         state->server_finished = new Finished(writer, state->version, SERVER,
-                                               state->keys.master_secret(),
-                                               state->hash);
+         state->server_finished = new Finished(writer, state->hash,
+                                               state->version, SERVER,
+                                               state->keys.master_secret());
 
          std::vector<X509_Certificate> peer_certs;
 

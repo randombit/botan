@@ -89,8 +89,8 @@ void Certificate_Req::deserialize(const MemoryRegion<byte>& buf)
 * Create a new Certificate message
 */
 Certificate::Certificate(Record_Writer& writer,
-                         const std::vector<X509_Certificate>& cert_list,
-                         TLS_Handshake_Hash& hash)
+                         TLS_Handshake_Hash& hash,
+                         const std::vector<X509_Certificate>& cert_list)
    {
    certs = cert_list;
    send(writer, hash);
