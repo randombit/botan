@@ -145,7 +145,7 @@ void Record_Writer::send(byte type, const byte input[], size_t length)
    *
    * See http://www.openssl.org/~bodo/tls-cbc.txt for background.
    */
-   if((block_size > 0) && (iv_size == 0))
+   if((type == APPLICATION) && (block_size > 0) && (iv_size == 0))
       {
       send_record(type, &input[0], 1);
       input += 1;
