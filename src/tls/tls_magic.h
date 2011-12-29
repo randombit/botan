@@ -67,6 +67,7 @@ enum Alert_Type {
    RECORD_OVERFLOW         = 22,
    DECOMPRESSION_FAILURE   = 30,
    HANDSHAKE_FAILURE       = 40,
+   NO_CERTIFICATE          = 41, // SSLv3 only
    BAD_CERTIFICATE         = 42,
    UNSUPPORTED_CERTIFICATE = 43,
    CERTIFICATE_REVOKED     = 44,
