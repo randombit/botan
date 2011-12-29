@@ -65,7 +65,12 @@ class Client_Hello : public HandshakeMessage
 
       std::string srp_identifier() const { return requested_srp_id; }
 
-      bool offered_suite(u16bit) const;
+      bool secure_renegotiation() const { return has_secure_renegotiation; }
+
+      const MemoryVector<byte>& renegotiation_info()
+         { return renegotiation_info_bits; }
+
+      bool offered_suite(u16bit ciphersuite) const;
 
       Client_Hello(Record_Writer& writer,
                    TLS_Handshake_Hash& hash,
@@ -94,6 +99,66 @@ class Client_Hello : public HandshakeMessage
       std::vector<byte> comp_methods;
       std::string requested_hostname;
       std::string requested_srp_id;
+
+      bool has_secure_renegotiation;
+      MemoryVector<byte> renegotiation_info_bits;
+   };
+
+/**
+* Server Hello Message
+*/
+class Server_Hello : public HandshakeMessage
+   {
+   public:
+      Handshake_Type type() const { return SERVER_HELLO; }
+      Version_Code version() { return s_version; }
+      const MemoryVector<byte>& session_id() const { return sess_id; }
+      u16bit ciphersuite() const { return suite; }
+      byte compression_method() const { return comp_method; }
+
+      std::vector<byte> session_id_vector() const
+         {
+         std::vector<byte> v;
+         v.insert(v.begin(), &sess_id[0], &sess_id[sess_id.size()]);
+         return v;
+         }
+
+      bool secure_renegotiation() const { return has_secure_renegotiation; }
+
+      const MemoryVector<byte>& renegotiation_info()
+         { return renegotiation_info_bits; }
+
+      const MemoryVector<byte>& random() const { return s_random; }
+
+      Server_Hello(Record_Writer& writer,
+                   TLS_Handshake_Hash& hash,
+                   const TLS_Policy& policies,
+                   RandomNumberGenerator& rng,
+                   const std::vector<X509_Certificate>& certs,
+                   const Client_Hello& other,
+                   const MemoryRegion<byte>& session_id,
+                   Version_Code version);
+
+      Server_Hello(Record_Writer& writer,
+                   TLS_Handshake_Hash& hash,
+                   RandomNumberGenerator& rng,
+                   const MemoryRegion<byte>& session_id,
+                   u16bit ciphersuite,
+                   byte compression,
+                   Version_Code ver);
+
+      Server_Hello(const MemoryRegion<byte>& buf) { deserialize(buf); }
+   private:
+      MemoryVector<byte> serialize() const;
+      void deserialize(const MemoryRegion<byte>&);
+
+      Version_Code s_version;
+      MemoryVector<byte> sess_id, s_random;
+      u16bit suite;
+      byte comp_method;
+
+      bool has_secure_renegotiation;
+      MemoryVector<byte> renegotiation_info_bits;
    };
 
 /**
@@ -257,55 +322,6 @@ class Hello_Request : public HandshakeMessage
    private:
       MemoryVector<byte> serialize() const;
       void deserialize(const MemoryRegion<byte>&);
-   };
-
-/**
-* Server Hello Message
-*/
-class Server_Hello : public HandshakeMessage
-   {
-   public:
-      Handshake_Type type() const { return SERVER_HELLO; }
-      Version_Code version() { return s_version; }
-      const MemoryVector<byte>& session_id() const { return sess_id; }
-      u16bit ciphersuite() const { return suite; }
-      byte compression_method() const { return comp_method; }
-
-      std::vector<byte> session_id_vector() const
-         {
-         std::vector<byte> v;
-         v.insert(v.begin(), &sess_id[0], &sess_id[sess_id.size()]);
-         return v;
-         }
-
-      const MemoryVector<byte>& random() const { return s_random; }
-
-      Server_Hello(Record_Writer& writer,
-                   TLS_Handshake_Hash& hash,
-                   const TLS_Policy& policies,
-                   RandomNumberGenerator& rng,
-                   const std::vector<X509_Certificate>& certs,
-                   const Client_Hello& other,
-                   const MemoryRegion<byte>& session_id,
-                   Version_Code version);
-
-      Server_Hello(Record_Writer& writer,
-                   TLS_Handshake_Hash& hash,
-                   RandomNumberGenerator& rng,
-                   const MemoryRegion<byte>& session_id,
-                   u16bit ciphersuite,
-                   byte compression,
-                   Version_Code ver);
-
-      Server_Hello(const MemoryRegion<byte>& buf) { deserialize(buf); }
-   private:
-      MemoryVector<byte> serialize() const;
-      void deserialize(const MemoryRegion<byte>&);
-
-      Version_Code s_version;
-      MemoryVector<byte> sess_id, s_random;
-      u16bit suite;
-      byte comp_method;
    };
 
 /**

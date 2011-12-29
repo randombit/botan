@@ -78,6 +78,32 @@ class SRP_Identifier : public TLS_Extension
    };
 
 /**
+* Renegotiation Indication Extension (RFC 5746)
+*/
+class Renegotation_Extension : public TLS_Extension
+   {
+   public:
+      TLS_Handshake_Extension_Type type() const
+         { return TLSEXT_SAFE_RENEGOTIATION; }
+
+      Renegotation_Extension() {}
+
+      Renegotation_Extension(const MemoryRegion<byte>& bits) :
+         reneg_data(bits) {}
+
+      Renegotation_Extension(TLS_Data_Reader& reader);
+
+      const MemoryVector<byte>& renegotiation_info() const
+         { return reneg_data; }
+
+      MemoryVector<byte> serialize() const;
+
+      bool empty() const { return false; } // always send this
+   private:
+      MemoryVector<byte> reneg_data;
+   };
+
+/**
 * Represents a block of extensions in a hello message
 */
 class TLS_Extensions

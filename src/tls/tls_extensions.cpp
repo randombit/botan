@@ -41,7 +41,7 @@ TLS_Extensions::TLS_Extensions(class TLS_Data_Reader& reader)
 
 MemoryVector<byte> TLS_Extensions::serialize() const
    {
-   MemoryVector<byte> buf(2); // allocate length
+   MemoryVector<byte> buf(2); // 2 bytes for length field
 
    for(size_t i = 0; i != extensions.size(); ++i)
       {
@@ -51,8 +51,6 @@ MemoryVector<byte> TLS_Extensions::serialize() const
       const u16bit extn_code = extensions[i]->type();
 
       MemoryVector<byte> extn_val = extensions[i]->serialize();
-
-      printf("serializing extn %d of %d bytes\n", extn_code, extn_val.size());
 
       buf.push_back(get_byte(0, extn_code));
       buf.push_back(get_byte(1, extn_code));
@@ -68,9 +66,7 @@ MemoryVector<byte> TLS_Extensions::serialize() const
    buf[0] = get_byte(0, extn_size);
    buf[1] = get_byte(1, extn_size);
 
-   printf("%d bytes of extensions\n", buf.size());
-
-   // avoid sending an empty extensions block
+   // avoid sending a completely empty extensions block
    if(buf.size() == 2)
       return MemoryVector<byte>();
 
@@ -119,13 +115,10 @@ MemoryVector<byte> Server_Name_Indicator::serialize() const
    buf.push_back(get_byte<u16bit>(0, name_len));
    buf.push_back(get_byte<u16bit>(1, name_len));
 
-
    buf += std::make_pair(
       reinterpret_cast<const byte*>(sni_host_name.data()),
       sni_host_name.size());
 
-   printf("serializing %d bytes %s\n", buf.size(),
-          sni_host_name.c_str());
    return buf;
    }
 
@@ -146,5 +139,16 @@ MemoryVector<byte> SRP_Identifier::serialize() const
    return buf;
    }
 
+Renegotation_Extension::Renegotation_Extension(TLS_Data_Reader& reader)
+   {
+   reneg_data = reader.get_range<byte>(1, 0, 255);
+   }
+
+MemoryVector<byte> Renegotation_Extension::serialize() const
+   {
+   MemoryVector<byte> buf;
+   append_tls_length_value(buf, reneg_data, 1);
+   return buf;
+   }
 
 }

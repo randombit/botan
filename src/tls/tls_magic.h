@@ -201,7 +201,9 @@ enum TLS_Handshake_Extension_Type {
    TLSEXT_SRP_IDENTIFIER         = 12,
 
    TLSEXT_CERTIFICATE_TYPES      = 9,
-   TLSEXT_SESSION_TICKET         = 35
+   TLSEXT_SESSION_TICKET         = 35,
+
+   TLSEXT_SAFE_RENEGOTIATION     = 65281,
 };
 
 }

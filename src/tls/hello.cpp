@@ -99,7 +99,13 @@ MemoryVector<byte> Client_Hello::serialize() const
 
    printf("Requesting hostname '%s'\n", requested_hostname.c_str());
 
+   /*
+   * May not want to send extensions at all in some cases.
+   * If so, should include SCSV value
+   */
+
    TLS_Extensions extensions;
+   extensions.push_back(new Renegotation_Extension());
    extensions.push_back(new Server_Name_Indicator(requested_hostname));
    extensions.push_back(new SRP_Identifier(requested_srp_id));
    buf += extensions.serialize();
@@ -147,6 +153,8 @@ void Client_Hello::deserialize_sslv2(const MemoryRegion<byte>& buf)
 */
 void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
    {
+   has_secure_renegotiation = false;
+
    if(buf.size() == 0)
       throw Decoding_Error("Client_Hello: Packet corrupted");
 
@@ -174,10 +182,13 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
          requested_hostname = sni->host_name();
       else if(SRP_Identifier* srp = dynamic_cast<SRP_Identifier*>(extn))
          requested_srp_id = srp->identifier();
+      else if(Renegotation_Extension* reneg = dynamic_cast<Renegotation_Extension*>(extn))
+         {
+         // checked by TLS_Client / TLS_Server as they know the handshake state
+         has_secure_renegotiation = true;
+         renegotiation_info_bits = reneg->renegotiation_info();
+         }
       }
-
-   printf("hostname %s srp id %s\n", requested_hostname.c_str(),
-          requested_srp_id.c_str());
    }
 
 /*
@@ -294,6 +305,20 @@ void Server_Hello::deserialize(const MemoryRegion<byte>& buf)
    suite = reader.get_u16bit();
 
    comp_method = reader.get_byte();
+
+   TLS_Extensions extensions(reader);
+
+   for(size_t i = 0; i != extensions.count(); ++i)
+      {
+      TLS_Extension* extn = extensions.at(i);
+
+      if(Renegotation_Extension* reneg = dynamic_cast<Renegotation_Extension*>(extn))
+         {
+         // checked by TLS_Client / TLS_Server as they know the handshake state
+         has_secure_renegotiation = true;
+         renegotiation_info_bits = reneg->renegotiation_info();
+         }
+      }
    }
 
 /*

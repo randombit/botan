@@ -29,7 +29,10 @@ class TLS_Data_Reader
       ~TLS_Data_Reader()
          {
          if(has_remaining())
+            {
+            abort();
             throw Decoding_Error("Extra bytes at end of message");
+            }
          }
 
       size_t remaining_bytes() const

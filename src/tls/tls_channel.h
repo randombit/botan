@@ -77,6 +77,9 @@ class BOTAN_DLL TLS_Channel
 
       class Handshake_State* state;
 
+      bool secure_renegotiation;
+      MemoryVector<byte> client_verify_data, server_verify_data;
+
       bool active;
    };
 

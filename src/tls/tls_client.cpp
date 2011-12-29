@@ -87,22 +87,25 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
       {
       state->server_hello = new Server_Hello(contents);
 
-      if(!state->client_hello->offered_suite(
-            state->server_hello->ciphersuite()
-            )
-         )
+      if(!state->client_hello->offered_suite(state->server_hello->ciphersuite()))
+         {
          throw TLS_Exception(HANDSHAKE_FAILURE,
                              "TLS_Client: Server replied with bad ciphersuite");
+         }
 
       state->version = state->server_hello->version();
 
       if(state->version > state->client_hello->version())
+         {
          throw TLS_Exception(HANDSHAKE_FAILURE,
                              "TLS_Client: Server replied with bad version");
+         }
 
       if(state->version < policy.min_version())
+         {
          throw TLS_Exception(PROTOCOL_VERSION,
                              "TLS_Client: Server is too old for specified policy");
+         }
 
       writer.set_version(state->version);
       reader.set_version(state->version);

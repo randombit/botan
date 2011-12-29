@@ -17,7 +17,8 @@ TLS_Channel::TLS_Channel(std::tr1::function<void (const byte[], size_t)> socket_
    proc_fn(proc_fn),
    writer(socket_output_fn),
    state(0),
-   active(false)
+   active(false),
+   secure_renegotiation(false)
    {
    }
 

@@ -22,6 +22,13 @@ class BOTAN_DLL TLS_Client : public TLS_Channel
    public:
       /**
       * Set up a new TLS client session
+      * @param socket_output_fn is called with data for the outbound socket
+      * @param proc_fn is called when new data (application or alerts) is received
+      * @param session_manager manages session resumption
+      * @param policy specifies other connection policy information
+      * @param rng a random number generator
+      * @param servername the server's DNS name, if known
+      * @param srp_username an identifier to use for SRP key exchange
       */
       TLS_Client(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
                  std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
