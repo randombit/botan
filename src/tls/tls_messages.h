@@ -1,6 +1,6 @@
 /*
 * TLS Messages
-* (C) 2004-2010 Jack Lloyd
+* (C) 2004-2011 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -70,7 +70,9 @@ class Client_Hello : public HandshakeMessage
       Client_Hello(Record_Writer& writer,
                    TLS_Handshake_Hash& hash,
                    const TLS_Policy& policy,
-                   RandomNumberGenerator& rng);
+                   RandomNumberGenerator& rng,
+                   const std::string& hostname = "",
+                   const std::string& srp_identifier = "");
 
       Client_Hello(const MemoryRegion<byte>& buf,
                    Handshake_Type type)

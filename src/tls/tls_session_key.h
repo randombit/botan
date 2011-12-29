@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * TLS Session Keys
 */
-class BOTAN_DLL SessionKeys
+class SessionKeys
    {
    public:
       SymmetricKey client_cipher_key() const { return c_cipher; }

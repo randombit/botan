@@ -22,6 +22,7 @@ tls_suites.h
 <header:internal>
 tls_alerts.h
 tls_handshake_hash.h
+tls_extensions.h
 tls_messages.h
 tls_reader.h
 tls_session_key.h
@@ -34,6 +35,7 @@ cert_req.cpp
 cert_ver.cpp
 finished.cpp
 tls_handshake_hash.cpp
+tls_extensions.cpp
 hello.cpp
 rec_read.cpp
 rec_wri.cpp

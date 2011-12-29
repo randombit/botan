@@ -35,7 +35,9 @@ class HTTPS_Client
                 std::tr1::bind(&HTTPS_Client::proc_data, std::tr1::ref(*this), _1, _2, _3),
                 sessions,
                 policy,
-                rng)
+                rng,
+                host,
+                host + "_username")
          {
          SecureVector<byte> socket_buf(1024);
          size_t desired = 0;

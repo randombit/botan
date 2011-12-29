@@ -1,6 +1,6 @@
 /*
 * TLS Data Reader
-* (C) 2010 Jack Lloyd
+* (C) 2010-2011 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -8,8 +8,12 @@
 #ifndef BOTAN_TLS_READER_H__
 #define BOTAN_TLS_READER_H__
 
+#include <botan/exceptn.h>
 #include <botan/secmem.h>
 #include <botan/loadstor.h>
+#include <string>
+#include <vector>
+#include <stdexcept>
 
 namespace Botan {
 
@@ -95,6 +99,16 @@ class TLS_Data_Reader
             get_num_elems(len_bytes, sizeof(T), min_elems, max_elems);
 
          return get_elem<T, std::vector<T> >(num_elems);
+         }
+
+      std::string get_string(size_t len_bytes,
+                             size_t min_bytes,
+                             size_t max_bytes)
+         {
+         std::vector<byte> v =
+            get_range_vector<byte>(len_bytes, min_bytes, max_bytes);
+
+         return std::string(reinterpret_cast<char*>(&v[0]), v.size());
          }
 
       template<typename T>

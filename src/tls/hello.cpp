@@ -1,6 +1,6 @@
 /*
 * TLS Hello Messages
-* (C) 2004-2010 Jack Lloyd
+* (C) 2004-2011 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -8,7 +8,10 @@
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_session_key.h>
+#include <botan/internal/tls_extensions.h>
 #include <botan/tls_record.h>
+
+#include <stdio.h>
 
 namespace Botan {
 
@@ -66,14 +69,16 @@ void Hello_Request::deserialize(const MemoryRegion<byte>& buf)
 Client_Hello::Client_Hello(Record_Writer& writer,
                            TLS_Handshake_Hash& hash,
                            const TLS_Policy& policy,
-                           RandomNumberGenerator& rng)
+                           RandomNumberGenerator& rng,
+                           const std::string& hostname,
+                           const std::string& srp_identifier) :
+   c_version(policy.pref_version()),
+   c_random(rng.random_vec(32)),
+   suites(policy.ciphersuites()),
+   comp_methods(policy.compression()),
+   requested_hostname(hostname),
+   requested_srp_id(srp_identifier)
    {
-   c_random = rng.random_vec(32);
-
-   suites = policy.ciphersuites();
-   comp_methods = policy.compression();
-   c_version = policy.pref_version();
-
    send(writer, hash);
    }
 
@@ -91,6 +96,13 @@ MemoryVector<byte> Client_Hello::serialize() const
    append_tls_length_value(buf, sess_id, 1);
    append_tls_length_value(buf, suites, 2);
    append_tls_length_value(buf, comp_methods, 1);
+
+   printf("Requesting hostname '%s'\n", requested_hostname.c_str());
+
+   TLS_Extensions extensions;
+   extensions.push_back(new Server_Name_Indicator(requested_hostname));
+   extensions.push_back(new SRP_Identifier(requested_srp_id));
+   buf += extensions.serialize();
 
    return buf;
    }
@@ -152,59 +164,20 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
 
    comp_methods = reader.get_range_vector<byte>(1, 1, 255);
 
-   if(reader.has_remaining())
+   TLS_Extensions extensions(reader);
+
+   for(size_t i = 0; i != extensions.count(); ++i)
       {
-      const u16bit all_extn_size = reader.get_u16bit();
+      TLS_Extension* extn = extensions.at(i);
 
-      if(reader.remaining_bytes() != all_extn_size)
-         throw Decoding_Error("Client_Hello: Bad extension size");
-
-      while(reader.has_remaining())
-         {
-         const u16bit extension_code = reader.get_u16bit();
-         const u16bit extension_size = reader.get_u16bit();
-
-         if(extension_code == TLSEXT_SERVER_NAME_INDICATION)
-            {
-            u16bit name_bytes = reader.get_u16bit();
-
-            while(name_bytes)
-               {
-               byte name_type = reader.get_byte();
-               name_bytes--;
-
-               if(name_type == 0) // DNS
-                  {
-                  std::vector<byte> name =
-                     reader.get_range_vector<byte>(2, 1, 65535);
-
-                  requested_hostname.assign(
-                    reinterpret_cast<const char*>(&name[0]),
-                    name.size());
-
-                  name_bytes -= (2 + name.size());
-                  }
-               else
-                  {
-                  reader.discard_next(name_bytes);
-                  name_bytes = 0;
-                  }
-               }
-            }
-         else if(extension_code == TLSEXT_SRP_IDENTIFIER)
-            {
-            std::vector<byte> name = reader.get_range_vector<byte>(1, 1, 255);
-
-            requested_srp_id.assign(
-               reinterpret_cast<char*>(&name[0]),
-               name.size());
-            }
-         else
-            {
-            reader.discard_next(extension_size);
-            }
-         }
+      if(Server_Name_Indicator* sni = dynamic_cast<Server_Name_Indicator*>(extn))
+         requested_hostname = sni->host_name();
+      else if(SRP_Identifier* srp = dynamic_cast<SRP_Identifier*>(extn))
+         requested_srp_id = srp->identifier();
       }
+
+   printf("hostname %s srp id %s\n", requested_hostname.c_str(),
+          requested_srp_id.c_str());
    }
 
 /*

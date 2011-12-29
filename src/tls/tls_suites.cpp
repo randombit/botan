@@ -141,6 +141,44 @@ TLS_Ciphersuite_Algos CipherSuite::lookup_ciphersuite(u16bit suite)
                                    TLS_ALGO_MAC_SHA256 |
                                    TLS_ALGO_CIPHER_AES256_CBC);
 
+   // SRP ciphersuites
+   if(suite == TLS_SRP_SHA_RSA_WITH_3DES_EDE_SHA)
+      return TLS_Ciphersuite_Algos(TLS_ALGO_SIGNER_RSA |
+                                   TLS_ALGO_KEYEXCH_SRP |
+                                   TLS_ALGO_MAC_SHA1 |
+                                   TLS_ALGO_CIPHER_3DES_CBC);
+
+   if(suite == TLS_SRP_SHA_DSS_WITH_3DES_EDE_SHA)
+      return TLS_Ciphersuite_Algos(TLS_ALGO_SIGNER_DSA |
+                                   TLS_ALGO_KEYEXCH_SRP |
+                                   TLS_ALGO_MAC_SHA1 |
+                                   TLS_ALGO_CIPHER_3DES_CBC);
+
+   if(suite == TLS_SRP_SHA_RSA_WITH_AES_128_SHA)
+      return TLS_Ciphersuite_Algos(TLS_ALGO_SIGNER_RSA |
+                                   TLS_ALGO_KEYEXCH_SRP |
+                                   TLS_ALGO_MAC_SHA1 |
+                                   TLS_ALGO_CIPHER_AES128_CBC);
+
+   if(suite == TLS_SRP_SHA_DSS_WITH_AES_128_SHA)
+      return TLS_Ciphersuite_Algos(TLS_ALGO_SIGNER_DSA |
+                                   TLS_ALGO_KEYEXCH_SRP |
+                                   TLS_ALGO_MAC_SHA1 |
+                                   TLS_ALGO_CIPHER_AES128_CBC);
+
+   if(suite == TLS_SRP_SHA_RSA_WITH_AES_256_SHA)
+      return TLS_Ciphersuite_Algos(TLS_ALGO_SIGNER_RSA |
+                                   TLS_ALGO_KEYEXCH_SRP |
+                                   TLS_ALGO_MAC_SHA1 |
+                                   TLS_ALGO_CIPHER_AES256_CBC);
+
+   if(suite == TLS_SRP_SHA_DSS_WITH_AES_256_SHA)
+      return TLS_Ciphersuite_Algos(TLS_ALGO_SIGNER_DSA |
+                                   TLS_ALGO_KEYEXCH_SRP |
+                                   TLS_ALGO_MAC_SHA1 |
+                                   TLS_ALGO_CIPHER_AES256_CBC);
+
+   // ECC ciphersuites
    if(suite == TLS_ECDHE_ECDSA_WITH_RC4_128_SHA)
       return TLS_Ciphersuite_Algos(TLS_ALGO_SIGNER_ECDSA |
                                    TLS_ALGO_KEYEXCH_ECDH |

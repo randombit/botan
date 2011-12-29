@@ -77,6 +77,7 @@ class Blocking_TLS_Server
             if(socket_got == 0) // eof?
                {
                close();
+               printf("got eof on socket\n");
                exit = true;
                }
 
@@ -88,8 +89,8 @@ class Blocking_TLS_Server
          {
          if(buf_len == 0 && alert_code != NULL_ALERT)
             {
-            printf("Alert: %d, quitting\n", alert_code);
-            exit = true;
+            printf("Alert: %d\n", alert_code);
+            //exit = true;
             }
 
          printf("Got %d bytes: ", (int)buf_len);
@@ -141,8 +142,8 @@ int main(int argc, char* argv[])
 
       AutoSeeded_RNG rng;
 
-      //RSA_PrivateKey key(rng, 1024);
-      DSA_PrivateKey key(rng, DL_Group("dsa/jce/1024"));
+      RSA_PrivateKey key(rng, 1024);
+      //DSA_PrivateKey key(rng, DL_Group("dsa/jce/1024"));
 
       X509_Cert_Options options(
          "localhost/US/Syn Ack Labs/Mathematical Munitions Dept");

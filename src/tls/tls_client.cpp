@@ -21,7 +21,9 @@ TLS_Client::TLS_Client(std::tr1::function<void (const byte[], size_t)> output_fn
                        std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
                        TLS_Session_Manager& session_manager,
                        const TLS_Policy& policy,
-                       RandomNumberGenerator& rng) :
+                       RandomNumberGenerator& rng,
+                       const std::string& hostname,
+                       const std::string& srp_username) :
    TLS_Channel(output_fn, proc_fn),
    policy(policy),
    rng(rng),
@@ -31,7 +33,12 @@ TLS_Client::TLS_Client(std::tr1::function<void (const byte[], size_t)> output_fn
 
    state = new Handshake_State;
    state->set_expected_next(SERVER_HELLO);
-   state->client_hello = new Client_Hello(writer, state->hash, policy, rng);
+   state->client_hello = new Client_Hello(writer,
+                                          state->hash,
+                                          policy,
+                                          rng,
+                                          hostname,
+                                          srp_username);
    }
 
 void TLS_Client::add_client_cert(const X509_Certificate& cert,
@@ -74,7 +81,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
    if(type == HELLO_REQUEST)
       {
       Hello_Request hello_request(contents);
-      state->client_hello = new Client_Hello( writer, state->hash, policy, rng);
+      state->client_hello = new Client_Hello(writer, state->hash, policy, rng);
       }
    else if(type == SERVER_HELLO)
       {
@@ -205,10 +212,10 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
 
       state->server_hello_done = new Server_Hello_Done(contents);
 
+      std::vector<X509_Certificate> send_certs;
+
       if(state->received_handshake_msg(CERTIFICATE_REQUEST))
          {
-         std::vector<X509_Certificate> send_certs;
-
          std::vector<Certificate_Type> types =
             state->cert_req->acceptable_types();
 
@@ -223,7 +230,8 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
                                  state->kex_pub, state->version,
                                  state->client_hello->version());
 
-      if(state->received_handshake_msg(CERTIFICATE_REQUEST))
+      if(state->received_handshake_msg(CERTIFICATE_REQUEST) &&
+         !send_certs.empty())
          {
          Private_Key* key_matching_cert = 0; // FIXME
          state->client_verify = new Certificate_Verify(writer, state->hash,

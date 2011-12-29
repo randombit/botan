@@ -27,7 +27,9 @@ class BOTAN_DLL TLS_Client : public TLS_Channel
                  std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
                  TLS_Session_Manager& session_manager,
                  const TLS_Policy& policy,
-                 RandomNumberGenerator& rng);
+                 RandomNumberGenerator& rng,
+                 const std::string& servername = "",
+                 const std::string& srp_username = "");
 
       void add_client_cert(const X509_Certificate& cert,
                            Private_Key* cert_key);
