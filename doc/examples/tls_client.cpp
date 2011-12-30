@@ -1,13 +1,20 @@
 #include <botan/botan.h>
 #include <botan/tls_client.h>
-#include "socket.h"
-
-using namespace Botan;
-
 #include <stdio.h>
 #include <string>
 #include <iostream>
 #include <memory>
+
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <errno.h>
+#include <fcntl.h>
+
+using namespace Botan;
 
 class Client_TLS_Policy : public TLS_Policy
    {
@@ -25,83 +32,74 @@ class Client_TLS_Policy : public TLS_Policy
          }
    };
 
-class HTTPS_Client
+int connect_to_host(const std::string& host, u16bit port)
    {
-   public:
-      HTTPS_Client(const std::string& host, u16bit port, RandomNumberGenerator& r) :
-         rng(r),
-         socket(host, port),
-         client(std::tr1::bind(&HTTPS_Client::socket_write, std::tr1::ref(*this), _1, _2),
-                std::tr1::bind(&HTTPS_Client::proc_data, std::tr1::ref(*this), _1, _2, _3),
-                sessions,
-                policy,
-                rng,
-                host,
-                host + "_username")
+   hostent* host_addr = ::gethostbyname(host.c_str());
+
+   if(host_addr == 0)
+      throw std::runtime_error("gethostbyname failed for " + host);
+
+   if(host_addr->h_addrtype != AF_INET) // FIXME
+      throw std::runtime_error(host + " has IPv6 address");
+
+   int fd = ::socket(PF_INET, SOCK_STREAM, 0);
+   if(fd == -1)
+      throw std::runtime_error("Unable to acquire socket");
+
+   sockaddr_in socket_info;
+   ::memset(&socket_info, 0, sizeof(socket_info));
+   socket_info.sin_family = AF_INET;
+   socket_info.sin_port = htons(port);
+
+   ::memcpy(&socket_info.sin_addr,
+            host_addr->h_addr,
+            host_addr->h_length);
+
+   socket_info.sin_addr = *(struct in_addr*)host_addr->h_addr; // FIXME
+
+   if(::connect(fd, (sockaddr*)&socket_info, sizeof(struct sockaddr)) != 0)
+      {
+      ::close(fd);
+      throw std::runtime_error("connect failed");
+      }
+
+   return fd;
+   }
+
+void socket_write(int sockfd, const byte buf[], size_t length)
+   {
+   size_t offset = 0;
+
+   while(length)
+      {
+      ssize_t sent = ::send(sockfd, (const char*)buf + offset,
+                            length, MSG_NOSIGNAL);
+
+      if(sent == -1)
          {
-         SecureVector<byte> socket_buf(1024);
-         size_t desired = 0;
-
-         quit_reading = false;
-
-         while(!client.is_active() || desired)
-            {
-            const size_t socket_got = socket.read(&socket_buf[0], socket_buf.size());
-            //printf("Got %d bytes from socket\n", socket_got);
-            desired = client.received_data(&socket_buf[0], socket_got);
-            socket_buf.resize(desired || 1);
-            //printf("Going around for another read?\n");
-
-            if(quit_reading)
-               break;
-            }
+         if(errno == EINTR)
+            sent = 0;
+         else
+            throw std::runtime_error("Socket::write: Socket write failed");
          }
 
-      void socket_write(const byte buf[], size_t buf_size)
-         {
-         std::cout << "socket_write " << buf_size << "\n";
-         socket.write(buf, buf_size);
-         }
+      offset += sent;
+      length -= sent;
+      }
 
-      void proc_data(const byte data[], size_t data_len, u16bit alert_info)
-         {
-         printf("Block of data %d bytes alert %d\n", (int)data_len, alert_info);
-         for(size_t i = 0; i != data_len; ++i)
-            printf("%c", data[i]);
+   //printf("socket write %d\n", offset);
+   }
 
-         if(alert_info != 255)
-            quit_reading = true;
-         }
+void process_data(const byte buf[], size_t buf_size, u16bit alert_info)
+   {
+   if(alert_info != NULL_ALERT)
+      {
+      printf("Alert: %d\n", alert_info);
+      }
 
-      void write(const std::string& s)
-         {
-         client.queue_for_sending((const byte*)s.c_str(), s.length());
-         }
-
-      void read_response()
-         {
-         while(!quit_reading)
-            {
-            SecureVector<byte> buf(4096);
-
-            size_t got = socket.read(&buf[0], buf.size(), true);
-
-            if(got == 0)
-               break;
-
-            client.received_data(&buf[0], got);
-            }
-         }
-
-   private:
-      bool quit_reading;
-      RandomNumberGenerator& rng;
-      Socket socket;
-      Client_TLS_Policy policy;
-      TLS_Session_Manager_In_Memory sessions;
-
-      TLS_Client client;
-   };
+   for(size_t i = 0; i != buf_size; ++i)
+      printf("%c", buf[i]);
+   }
 
 int main(int argc, char* argv[])
    {
@@ -114,25 +112,75 @@ int main(int argc, char* argv[])
    try
       {
       LibraryInitializer botan_init;
+      AutoSeeded_RNG rng;
+      Client_TLS_Policy policy;
+      TLS_Session_Manager_In_Memory session_manager;
 
       std::string host = argv[1];
       u32bit port = argc == 3 ? Botan::to_u32bit(argv[2]) : 443;
 
-      //SocketInitializer socket_init;
+      int sockfd = connect_to_host(host, port);
 
-      AutoSeeded_RNG rng;
+      TLS_Client client(std::tr1::bind(socket_write, sockfd, _1, _2),
+                        process_data,
+                        session_manager,
+                        policy,
+                        rng,
+                        host);
 
-      printf("Connecting to %s:%d...\n", host.c_str(), port);
+      fd_set readfds;
 
-      HTTPS_Client https(host, port, rng);
+      while(true)
+         {
+         FD_ZERO(&readfds);
+         FD_SET(sockfd, &readfds);
+         FD_SET(STDIN_FILENO, &readfds);
 
-      std::string http_command = "GET / HTTP/1.0\r\n\r\n";
+         ::select(sockfd + 1, &readfds, NULL, NULL, NULL);
 
-      printf("Sending request\n");
-      https.write(http_command);
+         if(client.is_closed())
+            break;
 
-      https.read_response();
+         if(FD_ISSET(sockfd, &readfds))
+            {
+            byte buf[1024] = { 0 };
+            ssize_t got = read(sockfd, buf, sizeof(buf));
 
+            if(got == 0)
+               {
+               printf("EOF on socket\n");
+               break;
+               }
+            else if(got == -1)
+               {
+               printf("Socket error %d (%s)\n", errno, strerror(errno));
+               continue;
+               }
+
+            //printf("socket read %d\n", got);
+
+            client.received_data(buf, got);
+            }
+         else if(FD_ISSET(STDIN_FILENO, &readfds))
+            {
+            byte buf[1024] = { 0 };
+            ssize_t got = read(STDIN_FILENO, buf, sizeof(buf));
+
+            if(got == 0)
+               {
+               printf("EOF on stdin\n");
+               client.close();
+               break;
+               }
+            else if(got == -1)
+               {
+               printf("Error reading stdin %d (%s)\n", errno, strerror(errno));
+               continue;
+               }
+
+            client.queue_for_sending(buf, got);
+            }
+         }
    }
    catch(std::exception& e)
       {
