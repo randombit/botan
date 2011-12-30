@@ -1,11 +1,11 @@
 /*
-* TLS Session Management
+* TLS Session State
 * (C) 2011 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
 
-#include <botan/tls_session_state.h>
+#include <botan/tls_session.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/asn1_str.h>
@@ -13,17 +13,17 @@
 
 namespace Botan {
 
-TLS_Session_Params::TLS_Session_Params(const MemoryRegion<byte>& session_identifier,
-                                       const MemoryRegion<byte>& master_secret,
-                                       Version_Code version,
-                                       u16bit ciphersuite,
-                                       byte compression_method,
-                                       Connection_Side side,
-                                       bool secure_renegotiation_supported,
-                                       size_t fragment_size,
-                                       const std::vector<X509_Certificate>& certs,
-                                       const std::string& sni_hostname,
-                                       const std::string& srp_identifier) :
+TLS_Session::TLS_Session(const MemoryRegion<byte>& session_identifier,
+                         const MemoryRegion<byte>& master_secret,
+                         Version_Code version,
+                         u16bit ciphersuite,
+                         byte compression_method,
+                         Connection_Side side,
+                         bool secure_renegotiation_supported,
+                         size_t fragment_size,
+                         const std::vector<X509_Certificate>& certs,
+                         const std::string& sni_hostname,
+                         const std::string& srp_identifier) :
    m_start_time(system_time()),
    m_identifier(session_identifier),
    m_master_secret(master_secret),
@@ -41,7 +41,7 @@ TLS_Session_Params::TLS_Session_Params(const MemoryRegion<byte>& session_identif
       m_peer_certificate = certs[0].BER_encode();
    }
 
-TLS_Session_Params::TLS_Session_Params(const byte ber[], size_t ber_len)
+TLS_Session::TLS_Session(const byte ber[], size_t ber_len)
    {
    BER_Decoder decoder(ber, ber_len);
 
@@ -70,7 +70,7 @@ TLS_Session_Params::TLS_Session_Params(const byte ber[], size_t ber_len)
    m_connection_side = static_cast<Connection_Side>(side_code);
    }
 
-SecureVector<byte> TLS_Session_Params::BER_encode() const
+SecureVector<byte> TLS_Session::BER_encode() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
@@ -89,52 +89,6 @@ SecureVector<byte> TLS_Session_Params::BER_encode() const
          .encode(ASN1_String(m_srp_identifier, UTF8_STRING))
       .end_cons()
    .get_contents();
-   }
-
-bool TLS_Session_Manager_In_Memory::find(const MemoryVector<byte>& session_id,
-                                         TLS_Session_Params& params)
-   {
-   std::map<std::string, TLS_Session_Params>::iterator i =
-      sessions.find(hex_encode(session_id));
-
-   if(i == sessions.end())
-      return false;
-
-   // session has expired, remove it
-   const u64bit now = system_time();
-   if(i->second.start_time() + session_lifetime >= now)
-      {
-      sessions.erase(i);
-      return false;
-      }
-
-   params = i->second;
-   return true;
-   }
-
-void TLS_Session_Manager_In_Memory::prohibit_resumption(
-   const MemoryVector<byte>& session_id)
-   {
-   std::map<std::string, TLS_Session_Params>::iterator i =
-      sessions.find(hex_encode(session_id));
-
-   if(i != sessions.end())
-      sessions.erase(i);
-   }
-
-void TLS_Session_Manager_In_Memory::save(const TLS_Session_Params& session_data)
-   {
-   if(max_sessions != 0)
-      {
-      /*
-      This removes randomly based on ordering of session ids.
-      Instead, remove oldest first?
-      */
-      while(sessions.size() >= max_sessions)
-         sessions.erase(sessions.begin());
-      }
-
-   sessions[hex_encode(session_data.session_id())] = session_data;
    }
 
 }

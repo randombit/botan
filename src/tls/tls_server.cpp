@@ -7,7 +7,7 @@
 
 #include <botan/tls_server.h>
 #include <botan/internal/tls_session_key.h>
-#include <botan/internal/tls_state.h>
+#include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/stl_util.h>
 #include <botan/rsa.h>
 #include <botan/dh.h>
@@ -30,7 +30,7 @@ Version_Code choose_version(Version_Code client, Version_Code minimum)
    return TLS_V11;
    }
 
-bool check_for_resume(TLS_Session_Params& session_info,
+bool check_for_resume(TLS_Session& session_info,
                       TLS_Session_Manager& session_manager,
                       Client_Hello* client_hello)
    {
@@ -81,7 +81,7 @@ bool check_for_resume(TLS_Session_Params& session_info,
 */
 TLS_Server::TLS_Server(std::tr1::function<void (const byte[], size_t)> output_fn,
                        std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
-                       std::tr1::function<void (const TLS_Session_Params&)> handshake_fn,
+                       std::tr1::function<void (const TLS_Session&)> handshake_fn,
                        TLS_Session_Manager& session_manager,
                        const TLS_Policy& policy,
                        RandomNumberGenerator& rng,
@@ -172,7 +172,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       writer.set_version(state->version);
       reader.set_version(state->version);
 
-      TLS_Session_Params session_info;
+      TLS_Session session_info;
       const bool resuming = check_for_resume(session_info,
                                              session_manager,
                                              state->client_hello);
@@ -378,7 +378,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
          if(state->client_certs && state->client_verify)
             peer_certs = state->client_certs->cert_chain();
 
-         TLS_Session_Params session_info(
+         TLS_Session session_info(
             state->server_hello->session_id(),
             state->keys.master_secret(),
             state->server_hello->version(),

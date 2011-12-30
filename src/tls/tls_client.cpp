@@ -7,7 +7,7 @@
 
 #include <botan/tls_client.h>
 #include <botan/internal/tls_session_key.h>
-#include <botan/internal/tls_state.h>
+#include <botan/internal/tls_handshake_state.h>
 #include <botan/rsa.h>
 #include <botan/dsa.h>
 #include <botan/dh.h>
@@ -19,7 +19,7 @@ namespace Botan {
 */
 TLS_Client::TLS_Client(std::tr1::function<void (const byte[], size_t)> output_fn,
                        std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
-                       std::tr1::function<void (const TLS_Session_Params&)> handshake_fn,
+                       std::tr1::function<void (const TLS_Session&)> handshake_fn,
                        TLS_Session_Manager& session_manager,
                        const TLS_Policy& policy,
                        RandomNumberGenerator& rng,

@@ -15,7 +15,8 @@ tls_magic.h
 tls_policy.h
 tls_record.h
 tls_server.h
-tls_session_state.h
+tls_session.h
+tls_session_manager.h
 tls_suites.h
 </header:public>
 
@@ -26,7 +27,7 @@ tls_extensions.h
 tls_messages.h
 tls_reader.h
 tls_session_key.h
-tls_state.h
+tls_handshake_state.h
 </header:internal>
 
 <source>
@@ -45,8 +46,9 @@ tls_client.cpp
 tls_policy.cpp
 tls_server.cpp
 tls_session_key.cpp
-tls_session_state.cpp
-tls_state.cpp
+tls_session.cpp
+tls_session_manager.cpp
+tls_handshake_state.cpp
 tls_suites.cpp
 </source>
 

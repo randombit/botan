@@ -5,7 +5,7 @@
 * Released under the terms of the Botan license
 */
 
-#include <botan/internal/tls_state.h>
+#include <botan/internal/tls_handshake_state.h>
 
 namespace Botan {
 

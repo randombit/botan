@@ -9,7 +9,7 @@
 #define BOTAN_TLS_SERVER_H__
 
 #include <botan/tls_channel.h>
-#include <botan/tls_session_state.h>
+#include <botan/tls_session_manager.h>
 #include <vector>
 
 namespace Botan {
@@ -29,7 +29,7 @@ class BOTAN_DLL TLS_Server : public TLS_Channel
       */
       TLS_Server(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
                  std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
-                 std::tr1::function<void (const TLS_Session_Params&)> handshake_complete,
+                 std::tr1::function<void (const TLS_Session&)> handshake_complete,
                  TLS_Session_Manager& session_manager,
                  const TLS_Policy& policy,
                  RandomNumberGenerator& rng,

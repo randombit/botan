@@ -1,5 +1,6 @@
 #include <botan/botan.h>
 #include <botan/tls_server.h>
+#include <botan/hex.h>
 
 #include <botan/rsa.h>
 #include <botan/dsa.h>
@@ -15,7 +16,7 @@ using namespace Botan;
 #include <iostream>
 #include <memory>
 
-void handshake_complete(const TLS_Session_Params& session)
+void handshake_complete(const TLS_Session& session)
    {
    printf("Handshake complete, protocol=%04X ciphersuite=%04X compression=%d\n",
           session.version(), session.ciphersuite(),

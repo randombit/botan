@@ -7,14 +7,14 @@
 
 #include <botan/tls_channel.h>
 #include <botan/internal/tls_alerts.h>
-#include <botan/internal/tls_state.h>
+#include <botan/internal/tls_handshake_state.h>
 #include <botan/loadstor.h>
 
 namespace Botan {
 
 TLS_Channel::TLS_Channel(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
                          std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
-                         std::tr1::function<void (const TLS_Session_Params&)> handshake_complete) :
+                         std::tr1::function<void (const TLS_Session&)> handshake_complete) :
    proc_fn(proc_fn),
    handshake_fn(handshake_complete),
    writer(socket_output_fn),

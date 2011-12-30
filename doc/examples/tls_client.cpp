@@ -1,5 +1,6 @@
 #include <botan/botan.h>
 #include <botan/tls_client.h>
+#include <botan/hex.h>
 #include <stdio.h>
 #include <string>
 #include <iostream>
@@ -66,7 +67,7 @@ int connect_to_host(const std::string& host, u16bit port)
    return fd;
    }
 
-void handshake_complete(const TLS_Session_Params& session)
+void handshake_complete(const TLS_Session& session)
    {
    printf("Handshake complete, protocol=%04X ciphersuite=%04X compression=%d\n",
           session.version(), session.ciphersuite(),

@@ -44,7 +44,7 @@ class Handshake_State
       Public_Key* kex_pub;
       Private_Key* kex_priv;
 
-      CipherSuite suite;
+      TLS_Cipher_Suite suite;
       SessionKeys keys;
       TLS_Handshake_Hash hash;
 
