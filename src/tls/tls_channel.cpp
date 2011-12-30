@@ -10,6 +10,8 @@
 #include <botan/internal/tls_state.h>
 #include <botan/loadstor.h>
 
+#include <stdio.h>
+
 namespace Botan {
 
 TLS_Channel::TLS_Channel(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
@@ -17,8 +19,7 @@ TLS_Channel::TLS_Channel(std::tr1::function<void (const byte[], size_t)> socket_
    proc_fn(proc_fn),
    writer(socket_output_fn),
    state(0),
-   active(false),
-   secure_renegotiation(false)
+   active(false)
    {
    }
 
@@ -110,7 +111,11 @@ void TLS_Channel::read_handshake(byte rec_type,
                                  const MemoryRegion<byte>& rec_buf)
    {
    if(rec_type == HANDSHAKE)
+      {
+      if(!state)
+         state = new Handshake_State;
       state->queue.write(&rec_buf[0], rec_buf.size());
+      }
 
    while(true)
       {
@@ -191,6 +196,45 @@ void TLS_Channel::alert(Alert_Level alert_level, Alert_Type alert_code)
       state = 0;
       active = false;
       }
+   }
+
+void TLS_Channel::Secure_Renegotiation_State::update(Client_Hello* client_hello)
+   {
+
+   }
+
+void TLS_Channel::Secure_Renegotiation_State::update(Server_Hello* server_hello)
+   {
+   secure_renegotiation = server_hello->secure_renegotiation();
+
+   printf("server hello says sec reneg: %d\n", secure_renegotiation);
+
+   if(secure_renegotiation)
+      {
+      const MemoryVector<byte>& data = server_hello->renegotiation_info();
+
+      if(initial_handshake)
+         {
+         if(!data.empty())
+            throw TLS_Exception(HANDSHAKE_FAILURE,
+                                "Server sent renegotiation data on initial handshake");
+         }
+      else
+         {
+         if(data != for_server_hello())
+            throw TLS_Exception(HANDSHAKE_FAILURE,
+                                "Server sent bad renegotiation data");
+         }
+      }
+
+   initial_handshake = false;
+   }
+
+void TLS_Channel::Secure_Renegotiation_State::update(Finished* client_finished,
+                                                     Finished* server_finished)
+   {
+   client_verify = client_finished->verify_data();
+   server_verify = server_finished->verify_data();
    }
 
 }

@@ -70,6 +70,7 @@ Client_Hello::Client_Hello(Record_Writer& writer,
                            TLS_Handshake_Hash& hash,
                            const TLS_Policy& policy,
                            RandomNumberGenerator& rng,
+                           const MemoryRegion<byte>& reneg_info,
                            const std::string& hostname,
                            const std::string& srp_identifier) :
    c_version(policy.pref_version()),
@@ -77,7 +78,9 @@ Client_Hello::Client_Hello(Record_Writer& writer,
    suites(policy.ciphersuites()),
    comp_methods(policy.compression()),
    requested_hostname(hostname),
-   requested_srp_id(srp_identifier)
+   requested_srp_id(srp_identifier),
+   has_secure_renegotiation(false),
+   renegotiation_info_bits(reneg_info)
    {
    send(writer, hash);
    }
@@ -97,17 +100,28 @@ MemoryVector<byte> Client_Hello::serialize() const
    append_tls_length_value(buf, suites, 2);
    append_tls_length_value(buf, comp_methods, 1);
 
-   printf("Requesting hostname '%s'\n", requested_hostname.c_str());
-
    /*
    * May not want to send extensions at all in some cases.
-   * If so, should include SCSV value
+   * If so, should include SCSV value (if reneg info is empty, if
+   * not we are renegotiating with a modern server and should only
+   * send that extension.
    */
 
    TLS_Extensions extensions;
-   extensions.push_back(new Renegotation_Extension());
-   extensions.push_back(new Server_Name_Indicator(requested_hostname));
-   extensions.push_back(new SRP_Identifier(requested_srp_id));
+
+   // Initial handshake
+   if(renegotiation_info_bits.empty())
+      {
+      extensions.push_back(new Renegotation_Extension(renegotiation_info_bits));
+      extensions.push_back(new Server_Name_Indicator(requested_hostname));
+      extensions.push_back(new SRP_Identifier(requested_srp_id));
+      }
+   else
+      {
+      // renegotiation
+      extensions.push_back(new Renegotation_Extension(renegotiation_info_bits));
+      }
+
    buf += extensions.serialize();
 
    return buf;
@@ -285,6 +299,8 @@ MemoryVector<byte> Server_Hello::serialize() const
 */
 void Server_Hello::deserialize(const MemoryRegion<byte>& buf)
    {
+   has_secure_renegotiation = false;
+
    if(buf.size() < 38)
       throw Decoding_Error("Server_Hello: Packet corrupted");
 
@@ -311,6 +327,8 @@ void Server_Hello::deserialize(const MemoryRegion<byte>& buf)
    for(size_t i = 0; i != extensions.count(); ++i)
       {
       TLS_Extension* extn = extensions.at(i);
+
+      printf("Extension from server %d\n", extn->type());
 
       if(Renegotation_Extension* reneg = dynamic_cast<Renegotation_Extension*>(extn))
          {

@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-/**
+/*
 * Create a new Finished message
 */
 Finished::Finished(Record_Writer& writer,
@@ -23,7 +23,7 @@ Finished::Finished(Record_Writer& writer,
    send(writer, hash);
    }
 
-/**
+/*
 * Serialize a Finished message
 */
 MemoryVector<byte> Finished::serialize() const
@@ -31,7 +31,7 @@ MemoryVector<byte> Finished::serialize() const
    return verification_data;
    }
 
-/**
+/*
 * Deserialize a Finished message
 */
 void Finished::deserialize(const MemoryRegion<byte>& buf)
@@ -39,11 +39,13 @@ void Finished::deserialize(const MemoryRegion<byte>& buf)
    verification_data = buf;
    }
 
-/**
+/*
 * Verify a Finished message
 */
-bool Finished::verify(const MemoryRegion<byte>& secret, Version_Code version,
-                      const TLS_Handshake_Hash& hash, Connection_Side side)
+bool Finished::verify(const MemoryRegion<byte>& secret,
+                      Version_Code version,
+                      const TLS_Handshake_Hash& hash,
+                      Connection_Side side)
    {
    MemoryVector<byte> computed = compute_verify(secret, hash, side, version);
    if(computed == verification_data)
@@ -51,7 +53,7 @@ bool Finished::verify(const MemoryRegion<byte>& secret, Version_Code version,
    return false;
    }
 
-/**
+/*
 * Compute the verify_data
 */
 MemoryVector<byte> Finished::compute_verify(const MemoryRegion<byte>& secret,

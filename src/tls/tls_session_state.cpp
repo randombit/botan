@@ -104,7 +104,8 @@ bool TLS_Session_Manager_In_Memory::find(const MemoryVector<byte>& session_id,
    return true;
    }
 
-void TLS_Session_Manager_In_Memory::prohibit_resumption(const MemoryVector<byte>& session_id)
+void TLS_Session_Manager_In_Memory::prohibit_resumption(
+   const MemoryVector<byte>& session_id)
    {
    std::map<std::string, TLS_Session_Params>::iterator i =
       sessions.find(hex_encode(session_id));

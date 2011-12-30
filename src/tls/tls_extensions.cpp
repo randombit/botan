@@ -30,6 +30,8 @@ TLS_Extensions::TLS_Extensions(class TLS_Data_Reader& reader)
             extensions.push_back(new Server_Name_Indicator(reader));
          else if(extension_code == TLSEXT_SRP_IDENTIFIER)
             extensions.push_back(new SRP_Identifier(reader));
+         else if(extension_code == TLSEXT_SAFE_RENEGOTIATION)
+            extensions.push_back(new Renegotation_Extension(reader));
          else // unknown/unhandled extension
             {
             printf("Unknown extension code %d\n", extension_code);

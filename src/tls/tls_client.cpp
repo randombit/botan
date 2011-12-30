@@ -12,6 +12,8 @@
 #include <botan/dsa.h>
 #include <botan/dh.h>
 
+#include <stdio.h>
+
 namespace Botan {
 
 /*
@@ -37,8 +39,11 @@ TLS_Client::TLS_Client(std::tr1::function<void (const byte[], size_t)> output_fn
                                           state->hash,
                                           policy,
                                           rng,
+                                          secure_renegotiation.for_client_hello(),
                                           hostname,
                                           srp_username);
+
+   secure_renegotiation.update(state->client_hello);
    }
 
 void TLS_Client::add_client_cert(const X509_Certificate& cert,
@@ -57,33 +62,66 @@ TLS_Client::~TLS_Client()
    }
 
 /*
+* Send a new client hello to renegotiate
+*/
+void TLS_Client::renegotiate()
+   {
+   if(state)
+      return; // currently in handshake
+
+   state = new Handshake_State;
+   state->set_expected_next(SERVER_HELLO);
+
+   state->client_hello = new Client_Hello(writer, state->hash, policy, rng,
+                                          secure_renegotiation.for_client_hello());
+
+   secure_renegotiation.update(state->client_hello);
+   }
+
+/*
 * Process a handshake message
 */
 void TLS_Client::process_handshake_msg(Handshake_Type type,
                                        const MemoryRegion<byte>& contents)
    {
+   if(state == 0)
+      throw Unexpected_Message("Unexpected handshake message from server");
+
    if(type == HELLO_REQUEST)
       {
-      if(state == 0)
-         state = new Handshake_State();
-      else
-         return; // hello request in middle of handshake?
-      }
+      printf("got a hello request\n");
 
-   if(state == 0)
-      throw Unexpected_Message("Unexpected handshake message");
+      Hello_Request hello_request(contents);
+
+      // Ignore request entirely if we are currently negotiating a handshake
+      if(state->client_hello)
+         return;
+
+      if(!secure_renegotiation.supported() && policy.require_secure_renegotiation())
+         {
+         delete state;
+         state = 0;
+
+         // RFC 5746 section 4.2
+         alert(WARNING, NO_RENEGOTIATION);
+         return;
+         }
+
+      state->set_expected_next(SERVER_HELLO);
+      state->client_hello = new Client_Hello(writer, state->hash, policy, rng,
+                                             secure_renegotiation.for_client_hello());
+
+      secure_renegotiation.update(state->client_hello);
+
+      return;
+      }
 
    state->confirm_transition_to(type);
 
-   if(type != HANDSHAKE_CCS && type != HELLO_REQUEST && type != FINISHED)
+   if(type != HANDSHAKE_CCS && type != FINISHED)
       state->hash.update(type, contents);
 
-   if(type == HELLO_REQUEST)
-      {
-      Hello_Request hello_request(contents);
-      state->client_hello = new Client_Hello(writer, state->hash, policy, rng);
-      }
-   else if(type == SERVER_HELLO)
+   if(type == SERVER_HELLO)
       {
       state->server_hello = new Server_Hello(contents);
 
@@ -109,6 +147,8 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
 
       writer.set_version(state->version);
       reader.set_version(state->version);
+
+      secure_renegotiation.update(state->server_hello);
 
       state->suite = CipherSuite(state->server_hello->ciphersuite());
 
@@ -270,6 +310,8 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
                                          state->version, state->hash, SERVER))
          throw TLS_Exception(DECRYPT_ERROR,
                              "Finished message didn't verify");
+
+      secure_renegotiation.update(state->client_finished, state->server_finished);
 
       delete state;
       state = 0;

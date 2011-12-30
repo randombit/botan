@@ -51,6 +51,11 @@ class BOTAN_DLL TLS_Channel
       bool is_active() const { return active; }
 
       /**
+      * Attempt to renegotiate the session
+      */
+      virtual void renegotiate() = 0;
+
+      /**
       * Return the certificates of the peer
       */
       std::vector<X509_Certificate> peer_cert_chain() const { return peer_certs; }
@@ -77,8 +82,38 @@ class BOTAN_DLL TLS_Channel
 
       class Handshake_State* state;
 
-      bool secure_renegotiation;
-      MemoryVector<byte> client_verify_data, server_verify_data;
+      class Secure_Renegotiation_State
+         {
+         public:
+            Secure_Renegotiation_State() : initial_handshake(true),
+                                           secure_renegotiation(false)
+               {}
+
+            void update(class Client_Hello* client_hello);
+            void update(class Server_Hello* server_hello);
+
+            void update(class Finished* client_finished,
+                        class Finished* server_finished);
+
+            const MemoryVector<byte>& for_client_hello() const
+               { return client_verify; }
+
+            MemoryVector<byte> for_server_hello() const
+               {
+               MemoryVector<byte> buf = client_verify;
+               buf += server_verify;
+               return buf;
+               }
+
+            bool supported() const { return secure_renegotiation; }
+            bool renegotiation() const { return !initial_handshake; }
+         private:
+            bool initial_handshake;
+            bool secure_renegotiation;
+            MemoryVector<byte> client_verify, server_verify;
+         };
+
+      Secure_Renegotiation_State secure_renegotiation;
 
       bool active;
    };

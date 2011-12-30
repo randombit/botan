@@ -41,6 +41,8 @@ class BOTAN_DLL TLS_Client : public TLS_Channel
       void add_client_cert(const X509_Certificate& cert,
                            Private_Key* cert_key);
 
+      void renegotiate();
+
       ~TLS_Client();
    private:
       void process_handshake_msg(Handshake_Type type,

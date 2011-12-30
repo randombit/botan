@@ -12,6 +12,8 @@
 #include <botan/rsa.h>
 #include <botan/dh.h>
 
+#include <stdio.h>
+
 namespace Botan {
 
 namespace {
@@ -106,6 +108,20 @@ TLS_Server::~TLS_Server()
    }
 
 /*
+* Send a hello request to the client
+*/
+void TLS_Server::renegotiate()
+   {
+   if(state)
+      return; // currently in handshake
+
+   state = new Handshake_State;
+   state->set_expected_next(CLIENT_HELLO);
+   Hello_Request hello_req(writer);
+   printf("sent new hello request\n");
+   }
+
+/*
 * Split up and process handshake messages
 */
 void TLS_Server::read_handshake(byte rec_type,
@@ -127,7 +143,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
                                        const MemoryRegion<byte>& contents)
    {
    if(state == 0)
-      throw Unexpected_Message("Unexpected handshake message");
+      throw Unexpected_Message("Unexpected handshake message from client");
 
    state->confirm_transition_to(type);
 

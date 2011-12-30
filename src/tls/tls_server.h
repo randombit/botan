@@ -37,6 +37,8 @@ class BOTAN_DLL TLS_Server : public TLS_Channel
 
       ~TLS_Server();
 
+      void renegotiate();
+
       /**
       * Return the server name indicator, if set by the client
       */

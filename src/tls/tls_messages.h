@@ -76,6 +76,7 @@ class Client_Hello : public HandshakeMessage
                    TLS_Handshake_Hash& hash,
                    const TLS_Policy& policy,
                    RandomNumberGenerator& rng,
+                   const MemoryRegion<byte>& reneg_info,
                    const std::string& hostname = "",
                    const std::string& srp_identifier = "");
 
@@ -284,6 +285,9 @@ class Finished : public HandshakeMessage
    public:
       Handshake_Type type() const { return FINISHED; }
 
+      MemoryVector<byte> verify_data() const
+         { return verification_data; }
+
       bool verify(const MemoryRegion<byte>& buf,
                   Version_Code version,
                   const TLS_Handshake_Hash& hash,
@@ -317,7 +321,7 @@ class Hello_Request : public HandshakeMessage
    public:
       Handshake_Type type() const { return HELLO_REQUEST; }
 
-      Hello_Request(Record_Writer&);
+      Hello_Request(Record_Writer& writer);
       Hello_Request(const MemoryRegion<byte>& buf) { deserialize(buf); }
    private:
       MemoryVector<byte> serialize() const;

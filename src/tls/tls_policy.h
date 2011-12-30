@@ -36,6 +36,8 @@ class BOTAN_DLL TLS_Policy
       virtual bool allow_edh_dsa() const { return true; }
       virtual bool require_client_auth() const { return false; }
 
+      virtual bool require_secure_renegotiation() const { return true; }
+
       virtual DL_Group dh_group() const;
       virtual size_t rsa_export_keysize() const { return 512; }
 
