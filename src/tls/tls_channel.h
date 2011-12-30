@@ -46,9 +46,14 @@ class BOTAN_DLL TLS_Channel
       void alert(Alert_Level level, Alert_Type type);
 
       /**
-      * Is the connection active?
+      * Is the connection active for sending application data?
       */
-      bool is_active() const { return active; }
+      bool is_active() const { return handshake_completed && !is_closed(); }
+
+      /**
+      * Has the connection been definitely closed
+      */
+      bool is_closed() const { return connection_closed; }
 
       /**
       * Attempt to renegotiate the session
@@ -115,7 +120,8 @@ class BOTAN_DLL TLS_Channel
 
       Secure_Renegotiation_State secure_renegotiation;
 
-      bool active;
+      bool handshake_completed;
+      bool connection_closed;
    };
 
 }

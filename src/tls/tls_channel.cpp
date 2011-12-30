@@ -17,7 +17,8 @@ TLS_Channel::TLS_Channel(std::tr1::function<void (const byte[], size_t)> socket_
    proc_fn(proc_fn),
    writer(socket_output_fn),
    state(0),
-   active(false)
+   handshake_completed(false),
+   connection_closed(false)
    {
    }
 
@@ -46,7 +47,7 @@ size_t TLS_Channel::received_data(const byte buf[], size_t buf_size)
 
          if(rec_type == APPLICATION_DATA)
             {
-            if(active)
+            if(handshake_completed)
                {
                /*
                * OpenSSL among others sends empty records in versions
@@ -71,12 +72,15 @@ size_t TLS_Channel::received_data(const byte buf[], size_t buf_size)
 
             proc_fn(0, 0, alert_msg.type());
 
-            if(alert_msg.is_fatal() || alert_msg.type() == CLOSE_NOTIFY)
+            if(!connection_closed)
                {
-               if(alert_msg.type() == CLOSE_NOTIFY)
-                  alert(FATAL, CLOSE_NOTIFY);
-               else
-                  alert(FATAL, NULL_ALERT);
+               if(alert_msg.is_fatal() || alert_msg.type() == CLOSE_NOTIFY)
+                  {
+                  if(alert_msg.type() == CLOSE_NOTIFY)
+                     alert(FATAL, CLOSE_NOTIFY);
+                  else
+                     alert(FATAL, NULL_ALERT);
+                  }
                }
             }
          else
@@ -160,7 +164,7 @@ void TLS_Channel::read_handshake(byte rec_type,
 
 void TLS_Channel::queue_for_sending(const byte buf[], size_t buf_size)
    {
-   if(active)
+   if(handshake_completed)
       {
       while(!pre_handshake_write_queue.end_of_data())
          {
@@ -177,7 +181,7 @@ void TLS_Channel::queue_for_sending(const byte buf[], size_t buf_size)
 
 void TLS_Channel::alert(Alert_Level alert_level, Alert_Type alert_code)
    {
-   if(alert_code != NULL_ALERT)
+   if(alert_code != NULL_ALERT && !connection_closed)
       {
       try
          {
@@ -186,13 +190,16 @@ void TLS_Channel::alert(Alert_Level alert_level, Alert_Type alert_code)
       catch(...) { /* swallow it */ }
       }
 
-   if(active && alert_level == FATAL)
+   if(!connection_closed &&
+      (alert_code == CLOSE_NOTIFY || alert_level == FATAL))
       {
-      reader.reset();
-      writer.reset();
+      connection_closed = true;
+
       delete state;
       state = 0;
-      active = false;
+
+      reader.reset();
+      writer.reset();
       }
    }
 

@@ -389,7 +389,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
       delete state;
       state = 0;
-      active = true;
+      handshake_completed = true;
       }
    else
       throw Unexpected_Message("Unknown handshake message received");
