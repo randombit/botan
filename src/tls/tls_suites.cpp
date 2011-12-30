@@ -13,7 +13,7 @@ namespace Botan {
 /**
 * Convert an SSL/TLS ciphersuite to algorithm fields
 */
-TLS_Ciphersuite_Algos CipherSuite::lookup_ciphersuite(u16bit suite)
+TLS_Ciphersuite_Algos TLS_Cipher_Suite::lookup_ciphersuite(u16bit suite)
    {
    if(suite == TLS_RSA_WITH_RC4_128_MD5)
       return TLS_Ciphersuite_Algos(TLS_ALGO_SIGNER_RSA |
@@ -274,7 +274,7 @@ std::pair<std::string, size_t> cipher_code_to_name(TLS_Ciphersuite_Algos algo)
       return std::make_pair("SEED", 16);
 
    throw TLS_Exception(INTERNAL_ERROR,
-                       "CipherSuite: Unknown cipher type " + to_string(algo));
+                       "TLS_Cipher_Suite: Unknown cipher type " + to_string(algo));
    }
 
 std::string mac_code_to_name(TLS_Ciphersuite_Algos algo)
@@ -292,15 +292,15 @@ std::string mac_code_to_name(TLS_Ciphersuite_Algos algo)
       return "SHA-384";
 
    throw TLS_Exception(INTERNAL_ERROR,
-                       "CipherSuite: Unknown MAC type " + to_string(algo));
+                       "TLS_Cipher_Suite: Unknown MAC type " + to_string(algo));
    }
 
 }
 
 /**
-* CipherSuite Constructor
+* TLS_Cipher_Suite Constructor
 */
-CipherSuite::CipherSuite(u16bit suite_code)
+TLS_Cipher_Suite::TLS_Cipher_Suite(u16bit suite_code)
    {
    if(suite_code == 0)
       return;

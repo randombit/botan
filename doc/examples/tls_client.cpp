@@ -66,6 +66,16 @@ int connect_to_host(const std::string& host, u16bit port)
    return fd;
    }
 
+void handshake_complete(const TLS_Session_Params& session)
+   {
+   printf("Handshake complete, protocol=%04X ciphersuite=%04X compression=%d\n",
+          session.version(), session.ciphersuite(),
+          session.compression_method());
+
+   printf("Session id = %s\n", hex_encode(session.session_id()).c_str());
+   printf("Master secret = %s\n", hex_encode(session.master_secret()).c_str());
+   }
+
 void socket_write(int sockfd, const byte buf[], size_t length)
    {
    size_t offset = 0;
@@ -123,12 +133,15 @@ int main(int argc, char* argv[])
 
       TLS_Client client(std::tr1::bind(socket_write, sockfd, _1, _2),
                         process_data,
+                        handshake_complete,
                         session_manager,
                         policy,
                         rng,
                         host);
 
       fd_set readfds;
+
+      bool version_reported = false;
 
       while(true)
          {
@@ -140,6 +153,9 @@ int main(int argc, char* argv[])
 
          if(client.is_closed())
             break;
+
+         if(client.is_active() && !version_reported)
+            printf("Negotiated version %04X\n", client.protocol_version());
 
          if(FD_ISSET(sockfd, &readfds))
             {

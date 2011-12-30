@@ -196,7 +196,7 @@ class Client_Key_Exchange : public HandshakeMessage
                           Version_Code pref_version);
 
       Client_Key_Exchange(const MemoryRegion<byte>& buf,
-                          const CipherSuite& suite,
+                          const TLS_Cipher_Suite& suite,
                           Version_Code using_version);
    private:
       MemoryVector<byte> serialize() const;

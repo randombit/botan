@@ -19,17 +19,18 @@ namespace Botan {
 */
 TLS_Client::TLS_Client(std::tr1::function<void (const byte[], size_t)> output_fn,
                        std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
+                       std::tr1::function<void (const TLS_Session_Params&)> handshake_fn,
                        TLS_Session_Manager& session_manager,
                        const TLS_Policy& policy,
                        RandomNumberGenerator& rng,
                        const std::string& hostname,
                        const std::string& srp_username) :
-   TLS_Channel(output_fn, proc_fn),
+   TLS_Channel(output_fn, proc_fn, handshake_fn),
    policy(policy),
    rng(rng),
    session_manager(session_manager)
    {
-   writer.set_version(policy.pref_version());
+   writer.set_version(SSL_V3);
 
    state = new Handshake_State;
    state->set_expected_next(SERVER_HELLO);
@@ -146,7 +147,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
 
       secure_renegotiation.update(state->server_hello);
 
-      state->suite = CipherSuite(state->server_hello->ciphersuite());
+      state->suite = TLS_Cipher_Suite(state->server_hello->ciphersuite());
 
       // if resuming, next is HANDSHAKE_CCS
 
@@ -284,7 +285,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
 
       writer.send(CHANGE_CIPHER_SPEC, 1);
 
-      writer.set_keys(state->suite, state->keys, CLIENT);
+      writer.activate(state->suite, state->keys, CLIENT);
 
       state->client_finished = new Finished(writer, state->hash,
                                             state->version, CLIENT,
@@ -294,7 +295,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
       {
       state->set_expected_next(FINISHED);
 
-      reader.set_keys(state->suite, state->keys, CLIENT);
+      reader.activate(state->suite, state->keys, CLIENT);
       }
    else if(type == FINISHED)
       {

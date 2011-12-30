@@ -15,6 +15,16 @@ using namespace Botan;
 #include <iostream>
 #include <memory>
 
+void handshake_complete(const TLS_Session_Params& session)
+   {
+   printf("Handshake complete, protocol=%04X ciphersuite=%04X compression=%d\n",
+          session.version(), session.ciphersuite(),
+          session.compression_method());
+
+   printf("Session id = %s\n", hex_encode(session.session_id()).c_str());
+   printf("Master secret = %s\n", hex_encode(session.master_secret()).c_str());
+   }
+
 class Blocking_TLS_Server
    {
    public:
@@ -29,6 +39,7 @@ class Blocking_TLS_Server
          server(
             output_fn,
             std::tr1::bind(&Blocking_TLS_Server::reader_fn, std::tr1::ref(*this), _1, _2, _3),
+            handshake_complete,
             sessions,
             policy,
             rng,
@@ -146,7 +157,7 @@ int main(int argc, char* argv[])
       //DSA_PrivateKey key(rng, DL_Group("dsa/jce/1024"));
 
       X509_Cert_Options options(
-         "localhost/US/Syn Ack Labs/Mathematical Munitions Dept");
+         "localhost/US/Botan Library/Test Server");
 
       X509_Certificate cert =
          X509::create_self_signed_cert(options, key, "SHA-1", rng);
@@ -199,9 +210,14 @@ int main(int argc, char* argv[])
                      break;
                      }
 
+                  if(line == "reneg\n")
+                     tls.underlying().renegotiate();
+
                   line.clear();
                   }
                }
+
+            delete sock;
             }
          catch(std::exception& e) { printf("Connection problem: %s\n", e.what()); }
          }

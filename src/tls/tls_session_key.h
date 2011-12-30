@@ -33,7 +33,7 @@ class SessionKeys
 
       SessionKeys() {}
 
-      SessionKeys(const CipherSuite& suite,
+      SessionKeys(const TLS_Cipher_Suite& suite,
                   Version_Code version,
                   const MemoryRegion<byte>& pre_master,
                   const MemoryRegion<byte>& client_random,

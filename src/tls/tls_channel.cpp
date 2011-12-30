@@ -13,8 +13,10 @@
 namespace Botan {
 
 TLS_Channel::TLS_Channel(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
-                         std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn) :
+                         std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
+                         std::tr1::function<void (const TLS_Session_Params&)> handshake_complete) :
    proc_fn(proc_fn),
+   handshake_fn(handshake_complete),
    writer(socket_output_fn),
    state(0),
    handshake_completed(false),
@@ -27,6 +29,13 @@ TLS_Channel::~TLS_Channel()
    close();
    delete state;
    state = 0;
+   }
+
+Version_Code TLS_Channel::protocol_version() const
+   {
+   if(!handshake_completed)
+      throw std::logic_error("Version not known until handshake complete");
+   return writer.get_version();
    }
 
 size_t TLS_Channel::received_data(const byte buf[], size_t buf_size)

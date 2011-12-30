@@ -28,7 +28,7 @@ std::string lookup_prf_name(Version_Code version)
 /**
 * SessionKeys Constructor
 */
-SessionKeys::SessionKeys(const CipherSuite& suite,
+SessionKeys::SessionKeys(const TLS_Cipher_Suite& suite,
                          Version_Code version,
                          const MemoryRegion<byte>& pre_master_secret,
                          const MemoryRegion<byte>& client_random,

@@ -45,11 +45,13 @@ class BOTAN_DLL Record_Writer
 
       void alert(Alert_Level level, Alert_Type type);
 
-      void set_keys(const CipherSuite& suite,
+      void activate(const TLS_Cipher_Suite& suite,
                     const SessionKeys& keys,
                     Connection_Side side);
 
       void set_version(Version_Code version);
+
+      Version_Code get_version() const;
 
       void reset();
 
@@ -90,11 +92,13 @@ class BOTAN_DLL Record_Reader
 
       SecureVector<byte> get_record(byte& msg_type);
 
-      void set_keys(const CipherSuite& suite,
+      void activate(const TLS_Cipher_Suite& suite,
                     const SessionKeys& keys,
                     Connection_Side side);
 
       void set_version(Version_Code version);
+
+      Version_Code get_version() const;
 
       void reset();
 

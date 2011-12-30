@@ -39,7 +39,7 @@ bool check_for_resume(TLS_Session_Params& session_info,
    if(client_session_id.empty()) // not resuming
       return false;
 
-   // wrong side
+   // not found
    if(!session_manager.find(client_session_id, session_info))
       return false;
 
@@ -81,18 +81,17 @@ bool check_for_resume(TLS_Session_Params& session_info,
 */
 TLS_Server::TLS_Server(std::tr1::function<void (const byte[], size_t)> output_fn,
                        std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
+                       std::tr1::function<void (const TLS_Session_Params&)> handshake_fn,
                        TLS_Session_Manager& session_manager,
                        const TLS_Policy& policy,
                        RandomNumberGenerator& rng,
                        const X509_Certificate& cert,
                        const Private_Key& cert_key) :
-   TLS_Channel(output_fn, proc_fn),
+   TLS_Channel(output_fn, proc_fn, handshake_fn),
    policy(policy),
    rng(rng),
    session_manager(session_manager)
    {
-   writer.set_version(TLS_V10);
-
    cert_chain.push_back(cert);
    private_key = PKCS8::copy_key(cert_key, rng);
    }
@@ -196,7 +195,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
          if(session_info.fragment_size())
             writer.set_maximum_fragment_size(session_info.fragment_size());
 
-         state->suite = CipherSuite(state->server_hello->ciphersuite());
+         state->suite = TLS_Cipher_Suite(state->server_hello->ciphersuite());
 
          state->keys = SessionKeys(state->suite, state->version,
                                    session_info.master_secret(),
@@ -206,11 +205,14 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
          writer.send(CHANGE_CIPHER_SPEC, 1);
 
-         writer.set_keys(state->suite, state->keys, SERVER);
+         writer.activate(state->suite, state->keys, SERVER);
 
          state->server_finished = new Finished(writer, state->hash,
                                                state->version, SERVER,
                                                state->keys.master_secret());
+
+         if(handshake_fn)
+            handshake_fn(session_info);
 
          state->set_expected_next(HANDSHAKE_CCS);
          }
@@ -231,7 +233,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
          if(state->client_hello->fragment_size())
             writer.set_maximum_fragment_size(state->client_hello->fragment_size());
 
-         state->suite = CipherSuite(state->server_hello->ciphersuite());
+         state->suite = TLS_Cipher_Suite(state->server_hello->ciphersuite());
 
          if(state->suite.sig_type() != TLS_ALGO_SIGNER_ANON)
             {
@@ -345,7 +347,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       {
       state->set_expected_next(FINISHED);
 
-      reader.set_keys(state->suite, state->keys, SERVER);
+      reader.activate(state->suite, state->keys, SERVER);
       }
    else if(type == FINISHED)
       {
@@ -365,7 +367,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
          writer.send(CHANGE_CIPHER_SPEC, 1);
 
-         writer.set_keys(state->suite, state->keys, SERVER);
+         writer.activate(state->suite, state->keys, SERVER);
 
          state->server_finished = new Finished(writer, state->hash,
                                                state->version, SERVER,
@@ -391,6 +393,9 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             );
 
          session_manager.save(session_info);
+
+         if(handshake_fn)
+            handshake_fn(session_info);
          }
 
       secure_renegotiation.update(state->client_finished,

@@ -14,8 +14,6 @@
 #include <botan/loadstor.h>
 #include <botan/libstate.h>
 
-#include <stdio.h>
-
 namespace Botan {
 
 /*
@@ -34,8 +32,6 @@ void Record_Writer::set_maximum_fragment_size(size_t max_fragment)
       m_max_fragment = MAX_PLAINTEXT_SIZE;
    else
       m_max_fragment = clamp(max_fragment, 128, MAX_PLAINTEXT_SIZE);
-
-   printf("Setting max fragment size to %d\n", m_max_fragment);
    }
 
 /*
@@ -70,9 +66,18 @@ void Record_Writer::set_version(Version_Code version)
    }
 
 /*
+* Get the version in use
+*/
+Version_Code Record_Writer::get_version() const
+   {
+   return static_cast<Version_Code>(
+      (static_cast<u16bit>(m_major) << 8) | m_minor);
+   }
+
+/*
 * Set the keys for writing
 */
-void Record_Writer::set_keys(const CipherSuite& suite,
+void Record_Writer::activate(const TLS_Cipher_Suite& suite,
                              const SessionKeys& keys,
                              Connection_Side side)
    {

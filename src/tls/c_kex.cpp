@@ -61,7 +61,7 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 * Read a Client Key Exchange message
 */
 Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
-                                         const CipherSuite& suite,
+                                         const TLS_Cipher_Suite& suite,
                                          Version_Code using_version)
    {
    include_length = true;

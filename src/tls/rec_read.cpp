@@ -42,9 +42,19 @@ void Record_Reader::set_version(Version_Code version)
    }
 
 /*
+* Get the version in use
+*/
+Version_Code Record_Reader::get_version() const
+   {
+   return static_cast<Version_Code>(
+      (static_cast<u16bit>(major) << 8) | minor);
+   }
+
+/*
 * Set the keys for reading
 */
-void Record_Reader::set_keys(const CipherSuite& suite, const SessionKeys& keys,
+void Record_Reader::activate(const TLS_Cipher_Suite& suite,
+                             const SessionKeys& keys,
                              Connection_Side side)
    {
    cipher.reset();

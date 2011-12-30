@@ -24,6 +24,7 @@ class BOTAN_DLL TLS_Client : public TLS_Channel
       * Set up a new TLS client session
       * @param socket_output_fn is called with data for the outbound socket
       * @param proc_fn is called when new data (application or alerts) is received
+      * @param handshake_complete is called when a handshake is completed
       * @param session_manager manages session resumption
       * @param policy specifies other connection policy information
       * @param rng a random number generator
@@ -32,6 +33,7 @@ class BOTAN_DLL TLS_Client : public TLS_Channel
       */
       TLS_Client(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
                  std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
+                 std::tr1::function<void (const TLS_Session_Params&)> handshake_complete,
                  TLS_Session_Manager& session_manager,
                  const TLS_Policy& policy,
                  RandomNumberGenerator& rng,

@@ -10,6 +10,7 @@
 
 #include <botan/tls_policy.h>
 #include <botan/tls_record.h>
+#include <botan/tls_session_state.h>
 #include <botan/x509cert.h>
 #include <vector>
 
@@ -56,6 +57,11 @@ class BOTAN_DLL TLS_Channel
       bool is_closed() const { return connection_closed; }
 
       /**
+      * Return the negotiated version (if session is currently active)
+      */
+      Version_Code protocol_version() const;
+
+      /**
       * Attempt to renegotiate the session
       */
       virtual void renegotiate() = 0;
@@ -66,7 +72,8 @@ class BOTAN_DLL TLS_Channel
       std::vector<X509_Certificate> peer_cert_chain() const { return peer_certs; }
 
       TLS_Channel(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
-                  std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn);
+                  std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
+                  std::tr1::function<void (const TLS_Session_Params&)> handshake_complete);
 
       virtual ~TLS_Channel();
    protected:
@@ -77,6 +84,7 @@ class BOTAN_DLL TLS_Channel
                                          const MemoryRegion<byte>& contents) = 0;
 
       std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn;
+      std::tr1::function<void (const TLS_Session_Params&)> handshake_fn;
 
       Record_Writer writer;
       Record_Reader reader;

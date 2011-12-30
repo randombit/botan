@@ -1,12 +1,12 @@
 /*
-* Cipher Suites
-* (C) 2004-2010 Jack Lloyd
+* TLS Cipher Suites
+* (C) 2004-2011 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
 
-#ifndef BOTAN_TLS_CIPHERSUITES_H__
-#define BOTAN_TLS_CIPHERSUITES_H__
+#ifndef BOTAN_TLS_CIPHER_SUITES_H__
+#define BOTAN_TLS_CIPHER_SUITES_H__
 
 #include <botan/types.h>
 #include <botan/tls_magic.h>
@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * Ciphersuite Information
 */
-class BOTAN_DLL CipherSuite
+class BOTAN_DLL TLS_Cipher_Suite
    {
    public:
       static TLS_Ciphersuite_Algos lookup_ciphersuite(u16bit suite);
@@ -30,7 +30,7 @@ class BOTAN_DLL CipherSuite
       TLS_Ciphersuite_Algos kex_type() const { return kex_algo; }
       TLS_Ciphersuite_Algos sig_type() const { return sig_algo; }
 
-      CipherSuite(u16bit = 0);
+      TLS_Cipher_Suite(u16bit ciphersuite_code = 0);
    private:
       TLS_Ciphersuite_Algos kex_algo, sig_algo;
       std::string cipher, mac;
