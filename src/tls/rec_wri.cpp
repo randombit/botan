@@ -69,6 +69,14 @@ void Record_Writer::set_keys(const CipherSuite& suite,
    delete mac;
    mac = 0;
 
+   /*
+   RFC 4346:
+     A sequence number is incremented after each record: specifically,
+     the first record transmitted under a particular connection state
+     MUST use sequence number 0
+   */
+   seq_no = 0;
+
    SymmetricKey mac_key, cipher_key;
    InitializationVector iv;
 
