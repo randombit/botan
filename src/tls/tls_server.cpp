@@ -171,6 +171,8 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       state->version = choose_version(state->client_hello->version(),
                                       policy.min_version());
 
+      secure_renegotiation.update(state->client_hello);
+
       writer.set_version(state->version);
       reader.set_version(state->version);
 
@@ -186,6 +188,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             writer,
             state->hash,
             rng,
+            secure_renegotiation.for_server_hello(),
             session_info.session_id(),
             session_info.ciphersuite(),
             session_info.compression_method(),
@@ -216,6 +219,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             state->hash,
             policy,
             rng,
+            secure_renegotiation.for_server_hello(),
             cert_chain,
             *(state->client_hello),
             rng.random_vec(32),
@@ -262,6 +266,8 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
             state->set_expected_next(CERTIFICATE);
             }
+
+         secure_renegotiation.update(state->server_hello);
 
          /*
          * If the client doesn't have a cert they want to use they are
@@ -378,6 +384,9 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
          session_manager.save(session_info);
          }
+
+      secure_renegotiation.update(state->client_finished,
+                                  state->server_finished);
 
       delete state;
       state = 0;

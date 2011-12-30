@@ -160,6 +160,9 @@ void Client_Hello::deserialize_sslv2(const MemoryRegion<byte>& buf)
 
    c_random.resize(challenge_len);
    copy_mem(&c_random[0], &buf[9+cipher_spec_len+sess_id_len], challenge_len);
+
+   // FIXME: might be a ciphersuite value
+   has_secure_renegotiation = false;
    }
 
 /*
@@ -223,13 +226,16 @@ Server_Hello::Server_Hello(Record_Writer& writer,
                            TLS_Handshake_Hash& hash,
                            const TLS_Policy& policy,
                            RandomNumberGenerator& rng,
+                           const MemoryRegion<byte>& reneg_info,
                            const std::vector<X509_Certificate>& certs,
                            const Client_Hello& c_hello,
                            const MemoryRegion<byte>& session_id,
                            Version_Code ver) :
    s_version(ver),
    sess_id(session_id),
-   s_random(rng.random_vec(32))
+   s_random(rng.random_vec(32)),
+   has_secure_renegotiation(false),
+   renegotiation_info_bits(reneg_info)
    {
    bool have_rsa = false, have_dsa = false;
 
@@ -260,6 +266,7 @@ Server_Hello::Server_Hello(Record_Writer& writer,
 Server_Hello::Server_Hello(Record_Writer& writer,
                            TLS_Handshake_Hash& hash,
                            RandomNumberGenerator& rng,
+                           const MemoryRegion<byte>& reneg_info,
                            const MemoryRegion<byte>& session_id,
                            u16bit ciphersuite,
                            byte compression,
@@ -268,7 +275,9 @@ Server_Hello::Server_Hello(Record_Writer& writer,
    sess_id(session_id),
    s_random(rng.random_vec(32)),
    suite(ciphersuite),
-   comp_method(compression)
+   comp_method(compression),
+   has_secure_renegotiation(false),
+   renegotiation_info_bits(reneg_info)
    {
    send(writer, hash);
    }
@@ -290,6 +299,10 @@ MemoryVector<byte> Server_Hello::serialize() const
    buf.push_back(get_byte(1, suite));
 
    buf.push_back(comp_method);
+
+   TLS_Extensions extensions;
+
+   extensions.push_back(new Renegotation_Extension(renegotiation_info_bits));
 
    return buf;
    }
