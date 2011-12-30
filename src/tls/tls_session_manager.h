@@ -17,6 +17,9 @@ namespace Botan {
 * TLS_Session_Manager is an interface to systems which can save
 * session parameters for supporting session resumption.
 *
+* Saving sessions is done on a best-effort basis; an implementation is
+* allowed to drop sessions due to space constraints.
+*
 * Implementations should strive to be thread safe
 */
 class BOTAN_DLL TLS_Session_Manager
@@ -29,8 +32,8 @@ class BOTAN_DLL TLS_Session_Manager
                or not modified if not found
       * @return true if params was modified
       */
-      virtual bool find(const MemoryVector<byte>& session_id,
-                        TLS_Session& params) = 0;
+      virtual bool load_from_session_id(const MemoryVector<byte>& session_id,
+                                        TLS_Session& params) = 0;
 
       /**
       * Try to load a saved session (client side)
@@ -40,13 +43,13 @@ class BOTAN_DLL TLS_Session_Manager
                or not modified if not found
       * @return true if params was modified
       */
-      virtual bool find(const std::string& hostname, u16bit port,
-                        TLS_Session& params) = 0;
+      virtual bool load_from_host_info(const std::string& hostname, u16bit port,
+                                       TLS_Session& params) = 0;
 
       /**
-      * Prohibit resumption of this session. Effectively an erase.
+      * Remove this session id from the cache
       */
-      virtual void prohibit_resumption(const MemoryVector<byte>& session_id) = 0;
+      virtual void remove_entry(const MemoryVector<byte>& session_id) = 0;
 
       /**
       * Save a session on a best effort basis; the manager may not in
@@ -83,19 +86,24 @@ class BOTAN_DLL TLS_Session_Manager_In_Memory : public TLS_Session_Manager
          session_lifetime(session_lifetime)
             {}
 
-      bool find(const MemoryVector<byte>& session_id,
-                TLS_Session& params);
+      bool load_from_session_id(const MemoryVector<byte>& session_id,
+                                TLS_Session& params);
 
-      bool find(const std::string& hostname, u16bit port,
-                TLS_Session& params);
+      bool load_from_host_info(const std::string& hostname, u16bit port,
+                               TLS_Session& params);
 
-      void prohibit_resumption(const MemoryVector<byte>& session_id);
+      void remove_entry(const MemoryVector<byte>& session_id);
 
       void save(const TLS_Session& session_data);
 
    private:
+      bool load_from_session_str(const std::string& session_str,
+                                 TLS_Session& params);
+
       size_t max_sessions, session_lifetime;
-      std::map<std::string, TLS_Session> sessions;
+
+      std::map<std::string, TLS_Session> sessions; // hex(session_id) -> session
+      std::map<std::string, std::string> host_sessions;
    };
 
 }

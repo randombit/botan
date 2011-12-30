@@ -40,7 +40,7 @@ bool check_for_resume(TLS_Session& session_info,
       return false;
 
    // not found
-   if(!session_manager.find(client_session_id, session_info))
+   if(!session_manager.load_from_session_id(client_session_id, session_info))
       return false;
 
    // wrong version

@@ -11,11 +11,10 @@
 
 namespace Botan {
 
-bool TLS_Session_Manager_In_Memory::find(const MemoryVector<byte>& session_id,
-                                         TLS_Session& params)
+bool TLS_Session_Manager_In_Memory::load_from_session_str(
+   const std::string& session_str, TLS_Session& session)
    {
-   std::map<std::string, TLS_Session>::iterator i =
-      sessions.find(hex_encode(session_id));
+   std::map<std::string, TLS_Session>::iterator i = sessions.find(session_str);
 
    if(i == sessions.end())
       return false;
@@ -28,17 +27,39 @@ bool TLS_Session_Manager_In_Memory::find(const MemoryVector<byte>& session_id,
       return false;
       }
 
-   params = i->second;
+   session = i->second;
    return true;
    }
 
-bool TLS_Session_Manager_In_Memory::find(const std::string& hostname, u16bit port,
-                                         TLS_Session& params)
+bool TLS_Session_Manager_In_Memory::load_from_session_id(
+   const MemoryVector<byte>& session_id, TLS_Session& session)
    {
+   return load_from_session_str(hex_encode(session_id), session);
+   }
+
+bool TLS_Session_Manager_In_Memory::load_from_host_info(
+   const std::string& hostname, u16bit port, TLS_Session& session)
+   {
+   std::map<std::string, std::string>::iterator i;
+
+   if(port > 0)
+      i = host_sessions.find(hostname + ":" + to_string(port));
+   else
+      i = host_sessions.find(hostname);
+
+   if(i == host_sessions.end())
+      return false;
+
+   if(load_from_session_str(i->second, session))
+      return true;
+
+   // was removed from sessions map, remove host_sessions entry
+   host_sessions.erase(i);
+
    return false;
    }
 
-void TLS_Session_Manager_In_Memory::prohibit_resumption(
+void TLS_Session_Manager_In_Memory::remove_entry(
    const MemoryVector<byte>& session_id)
    {
    std::map<std::string, TLS_Session>::iterator i =
@@ -48,7 +69,7 @@ void TLS_Session_Manager_In_Memory::prohibit_resumption(
       sessions.erase(i);
    }
 
-void TLS_Session_Manager_In_Memory::save(const TLS_Session& session_data)
+void TLS_Session_Manager_In_Memory::save(const TLS_Session& session)
    {
    if(max_sessions != 0)
       {
@@ -60,7 +81,12 @@ void TLS_Session_Manager_In_Memory::save(const TLS_Session& session_data)
          sessions.erase(sessions.begin());
       }
 
-   sessions[hex_encode(session_data.session_id())] = session_data;
+   const std::string session_id_str = hex_encode(session.session_id());
+
+   sessions[session_id_str] = session;
+
+   if(session.side() == CLIENT && session.sni_hostname() != "")
+      host_sessions[session.sni_hostname()] = session_id_str;
    }
 
 }
