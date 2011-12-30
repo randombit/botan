@@ -72,6 +72,8 @@ class Client_Hello : public HandshakeMessage
 
       bool offered_suite(u16bit ciphersuite) const;
 
+      size_t fragment_size() const { return m_fragment_size; }
+
       Client_Hello(Record_Writer& writer,
                    TLS_Handshake_Hash& hash,
                    const TLS_Policy& policy,
@@ -101,6 +103,7 @@ class Client_Hello : public HandshakeMessage
       std::string requested_hostname;
       std::string requested_srp_id;
 
+      size_t m_fragment_size;
       bool has_secure_renegotiation;
       MemoryVector<byte> renegotiation_info_bits;
    };
@@ -126,6 +129,8 @@ class Server_Hello : public HandshakeMessage
 
       bool secure_renegotiation() const { return has_secure_renegotiation; }
 
+      size_t fragment_size() const { return m_fragment_size; }
+
       const MemoryVector<byte>& renegotiation_info()
          { return renegotiation_info_bits; }
 
@@ -148,6 +153,7 @@ class Server_Hello : public HandshakeMessage
                    bool client_has_secure_renegotiation,
                    const MemoryRegion<byte>& reneg_info,
                    const MemoryRegion<byte>& session_id,
+                   size_t max_fragment_size,
                    u16bit ciphersuite,
                    byte compression,
                    Version_Code ver);
@@ -162,6 +168,7 @@ class Server_Hello : public HandshakeMessage
       u16bit suite;
       byte comp_method;
 
+      size_t m_fragment_size;
       bool has_secure_renegotiation;
       MemoryVector<byte> renegotiation_info_bits;
    };

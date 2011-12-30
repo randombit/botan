@@ -53,22 +53,23 @@ class BOTAN_DLL Record_Writer
 
       void reset();
 
-      Record_Writer(std::tr1::function<void (const byte[], size_t)> output_fn,
-                    size_t max_fragment = MAX_PLAINTEXT_SIZE);
+      void set_maximum_fragment_size(size_t max_fragment);
 
-      ~Record_Writer() { delete mac; }
+      Record_Writer(std::tr1::function<void (const byte[], size_t)> output_fn);
+
+      ~Record_Writer() { delete m_mac; }
    private:
       void send_record(byte type, const byte input[], size_t length);
 
-      std::tr1::function<void (const byte[], size_t)> output_fn;
+      std::tr1::function<void (const byte[], size_t)> m_output_fn;
 
-      Pipe cipher;
-      MessageAuthenticationCode* mac;
+      Pipe m_cipher;
+      MessageAuthenticationCode* m_mac;
 
-      size_t block_size, mac_size, iv_size, max_fragment;
+      size_t m_block_size, m_mac_size, m_iv_size, m_max_fragment;
 
-      u64bit seq_no;
-      byte major, minor;
+      u64bit m_seq_no;
+      byte m_major, m_minor;
    };
 
 /**

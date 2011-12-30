@@ -78,6 +78,7 @@ Client_Hello::Client_Hello(Record_Writer& writer,
    comp_methods(policy.compression()),
    requested_hostname(hostname),
    requested_srp_id(srp_identifier),
+   m_fragment_size(0),
    has_secure_renegotiation(true),
    renegotiation_info_bits(reneg_info)
    {
@@ -162,6 +163,8 @@ void Client_Hello::deserialize_sslv2(const MemoryRegion<byte>& buf)
 
    has_secure_renegotiation =
       value_exists(suites, static_cast<u16bit>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV));
+
+   m_fragment_size = 0;
    }
 
 /*
@@ -169,8 +172,6 @@ void Client_Hello::deserialize_sslv2(const MemoryRegion<byte>& buf)
 */
 void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
    {
-   has_secure_renegotiation = false;
-
    if(buf.size() == 0)
       throw Decoding_Error("Client_Hello: Packet corrupted");
 
@@ -188,6 +189,9 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
 
    comp_methods = reader.get_range_vector<byte>(1, 1, 255);
 
+   has_secure_renegotiation = false;
+   m_fragment_size = 0;
+
    TLS_Extensions extensions(reader);
 
    for(size_t i = 0; i != extensions.count(); ++i)
@@ -195,9 +199,17 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
       TLS_Extension* extn = extensions.at(i);
 
       if(Server_Name_Indicator* sni = dynamic_cast<Server_Name_Indicator*>(extn))
+         {
          requested_hostname = sni->host_name();
+         }
       else if(SRP_Identifier* srp = dynamic_cast<SRP_Identifier*>(extn))
+         {
          requested_srp_id = srp->identifier();
+         }
+      else if(Maximum_Fragment_Length* frag = dynamic_cast<Maximum_Fragment_Length*>(extn))
+         {
+         m_fragment_size = frag->fragment_size();
+         }
       else if(Renegotation_Extension* reneg = dynamic_cast<Renegotation_Extension*>(extn))
          {
          // checked by TLS_Client / TLS_Server as they know the handshake state
@@ -254,6 +266,7 @@ Server_Hello::Server_Hello(Record_Writer& writer,
    s_version(ver),
    sess_id(session_id),
    s_random(rng.random_vec(32)),
+   m_fragment_size(c_hello.fragment_size()),
    has_secure_renegotiation(client_has_secure_renegotiation),
    renegotiation_info_bits(reneg_info)
    {
@@ -289,6 +302,7 @@ Server_Hello::Server_Hello(Record_Writer& writer,
                            bool client_has_secure_renegotiation,
                            const MemoryRegion<byte>& reneg_info,
                            const MemoryRegion<byte>& session_id,
+                           size_t fragment_size,
                            u16bit ciphersuite,
                            byte compression,
                            Version_Code ver) :
@@ -297,6 +311,7 @@ Server_Hello::Server_Hello(Record_Writer& writer,
    s_random(rng.random_vec(32)),
    suite(ciphersuite),
    comp_method(compression),
+   m_fragment_size(fragment_size),
    has_secure_renegotiation(client_has_secure_renegotiation),
    renegotiation_info_bits(reneg_info)
    {
@@ -321,12 +336,15 @@ MemoryVector<byte> Server_Hello::serialize() const
 
    buf.push_back(comp_method);
 
+   TLS_Extensions extensions;
+
    if(has_secure_renegotiation)
-      {
-      TLS_Extensions extensions;
       extensions.push_back(new Renegotation_Extension(renegotiation_info_bits));
-      buf += extensions.serialize();
-      }
+
+   if(m_fragment_size != 0)
+      extensions.push_back(new Maximum_Fragment_Length(m_fragment_size));
+
+   buf += extensions.serialize();
 
    return buf;
    }

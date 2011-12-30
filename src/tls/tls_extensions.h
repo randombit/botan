@@ -107,6 +107,38 @@ class Renegotation_Extension : public TLS_Extension
    };
 
 /**
+* Maximum Fragment Length Negotiation Extension (RFC 4366 sec 3.2)
+*/
+class Maximum_Fragment_Length : public TLS_Extension
+   {
+   public:
+      TLS_Handshake_Extension_Type type() const
+         { return TLSEXT_MAX_FRAGMENT_LENGTH; }
+
+      bool empty() const { return val != 0; }
+
+      size_t fragment_size() const;
+
+      MemoryVector<byte> serialize() const
+         {
+         return MemoryVector<byte>(&val, 1);
+         }
+
+      /**
+      * @param max_fragment specifies what maximum fragment size to
+      *        advertise. Currently must be one of 512, 1024, 2048, or
+      *        4096.
+      */
+      Maximum_Fragment_Length(size_t max_fragment);
+
+      Maximum_Fragment_Length(TLS_Data_Reader& reader,
+                              u16bit extension_size);
+
+   private:
+      byte val;
+   };
+
+/**
 * Represents a block of extensions in a hello message
 */
 class TLS_Extensions

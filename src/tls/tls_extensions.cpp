@@ -13,15 +13,17 @@ namespace Botan {
 namespace {
 
 TLS_Extension* make_extension(TLS_Data_Reader& reader,
-                              u16bit extension_code,
-                              u16bit extension_size)
+                              u16bit code,
+                              u16bit size)
    {
-   if(extension_code == TLSEXT_SERVER_NAME_INDICATION)
-      return new Server_Name_Indicator(reader, extension_size);
-   else if(extension_code == TLSEXT_SRP_IDENTIFIER)
-      return new SRP_Identifier(reader, extension_size);
-   else if(extension_code == TLSEXT_SAFE_RENEGOTIATION)
-      return new Renegotation_Extension(reader, extension_size);
+   if(code == TLSEXT_SERVER_NAME_INDICATION)
+      return new Server_Name_Indicator(reader, size);
+   else if(code == TLSEXT_MAX_FRAGMENT_LENGTH)
+      return new Maximum_Fragment_Length(reader, size);
+   else if(code == TLSEXT_SRP_IDENTIFIER)
+      return new SRP_Identifier(reader, size);
+   else if(code == TLSEXT_SAFE_RENEGOTIATION)
+      return new Renegotation_Extension(reader, size);
    else
       return 0; // not known
    }
@@ -182,6 +184,47 @@ MemoryVector<byte> Renegotation_Extension::serialize() const
    MemoryVector<byte> buf;
    append_tls_length_value(buf, reneg_data, 1);
    return buf;
+   }
+
+size_t Maximum_Fragment_Length::fragment_size() const
+   {
+   switch(val)
+      {
+      case 1:
+         return 512;
+      case 2:
+         return 1024;
+      case 3:
+         return 2048;
+      case 4:
+         return 4096;
+      default:
+         throw TLS_Exception(ILLEGAL_PARAMETER,
+                             "Bad value in maximum fragment extension");
+      }
+   }
+
+Maximum_Fragment_Length::Maximum_Fragment_Length(size_t max_fragment)
+   {
+   if(max_fragment == 512)
+      val = 1;
+   else if(max_fragment == 1024)
+      val = 2;
+   else if(max_fragment == 2048)
+      val = 3;
+   else if(max_fragment == 4096)
+      val = 4;
+   else
+      throw std::invalid_argument("Bad setting " + to_string(max_fragment) +
+                                  " for maximum fragment size");
+   }
+
+Maximum_Fragment_Length::Maximum_Fragment_Length(TLS_Data_Reader& reader,
+                                                 u16bit extension_size)
+   {
+   if(extension_size != 1)
+      throw Decoding_Error("Bad size for maximum fragment extension");
+   val = reader.get_byte();
    }
 
 }

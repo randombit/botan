@@ -14,18 +14,28 @@
 #include <botan/loadstor.h>
 #include <botan/libstate.h>
 
+#include <stdio.h>
+
 namespace Botan {
 
 /*
 * Record_Writer Constructor
 */
-Record_Writer::Record_Writer(std::tr1::function<void (const byte[], size_t)> out,
-                             size_t max_fragment) :
-   output_fn(out),
-   max_fragment(clamp(max_fragment, 128, MAX_PLAINTEXT_SIZE))
+Record_Writer::Record_Writer(std::tr1::function<void (const byte[], size_t)> out) :
+   m_output_fn(out), m_max_fragment(MAX_PLAINTEXT_SIZE)
    {
-   mac = 0;
+   m_mac = 0;
    reset();
+   }
+
+void Record_Writer::set_maximum_fragment_size(size_t max_fragment)
+   {
+   if(max_fragment == 0)
+      m_max_fragment = MAX_PLAINTEXT_SIZE;
+   else
+      m_max_fragment = clamp(max_fragment, 128, MAX_PLAINTEXT_SIZE);
+
+   printf("Setting max fragment size to %d\n", m_max_fragment);
    }
 
 /*
@@ -33,17 +43,18 @@ Record_Writer::Record_Writer(std::tr1::function<void (const byte[], size_t)> out
 */
 void Record_Writer::reset()
    {
-   cipher.reset();
+   m_cipher.reset();
 
-   delete mac;
-   mac = 0;
+   delete m_mac;
+   m_mac = 0;
 
-   major = minor = 0;
-   block_size = 0;
-   mac_size = 0;
-   iv_size = 0;
+   m_major = 0;
+   m_minor = 0;
+   m_block_size = 0;
+   m_mac_size = 0;
+   m_iv_size = 0;
 
-   seq_no = 0;
+   m_seq_no = 0;
    }
 
 /*
@@ -54,8 +65,8 @@ void Record_Writer::set_version(Version_Code version)
    if(version != SSL_V3 && version != TLS_V10 && version != TLS_V11)
       throw Invalid_Argument("Record_Writer: Invalid protocol version");
 
-   major = (version >> 8) & 0xFF;
-   minor = (version & 0xFF);
+   m_major = (version >> 8) & 0xFF;
+   m_minor = (version & 0xFF);
    }
 
 /*
@@ -65,9 +76,9 @@ void Record_Writer::set_keys(const CipherSuite& suite,
                              const SessionKeys& keys,
                              Connection_Side side)
    {
-   cipher.reset();
-   delete mac;
-   mac = 0;
+   m_cipher.reset();
+   delete m_mac;
+   m_mac = 0;
 
    /*
    RFC 4346:
@@ -75,7 +86,7 @@ void Record_Writer::set_keys(const CipherSuite& suite,
      the first record transmitted under a particular connection state
      MUST use sequence number 0
    */
-   seq_no = 0;
+   m_seq_no = 0;
 
    SymmetricKey mac_key, cipher_key;
    InitializationVector iv;
@@ -98,22 +109,22 @@ void Record_Writer::set_keys(const CipherSuite& suite,
 
    if(have_block_cipher(cipher_algo))
       {
-      cipher.append(get_cipher(
+      m_cipher.append(get_cipher(
                        cipher_algo + "/CBC/NoPadding",
                        cipher_key, iv, ENCRYPTION)
          );
-      block_size = block_size_of(cipher_algo);
+      m_block_size = block_size_of(cipher_algo);
 
-      if(major > 3 || (major == 3 && minor >= 2))
-         iv_size = block_size;
+      if(m_major > 3 || (m_major == 3 && m_minor >= 2))
+         m_iv_size = m_block_size;
       else
-         iv_size = 0;
+         m_iv_size = 0;
       }
    else if(have_stream_cipher(cipher_algo))
       {
-      cipher.append(get_cipher(cipher_algo, cipher_key, ENCRYPTION));
-      block_size = 0;
-      iv_size = 0;
+      m_cipher.append(get_cipher(cipher_algo, cipher_key, ENCRYPTION));
+      m_block_size = 0;
+      m_iv_size = 0;
       }
    else
       throw Invalid_Argument("Record_Writer: Unknown cipher " + cipher_algo);
@@ -122,13 +133,13 @@ void Record_Writer::set_keys(const CipherSuite& suite,
       {
       Algorithm_Factory& af = global_state().algorithm_factory();
 
-      if(major == 3 && minor == 0)
-         mac = af.make_mac("SSL3-MAC(" + mac_algo + ")");
+      if(m_major == 3 && m_minor == 0)
+         m_mac = af.make_mac("SSL3-MAC(" + mac_algo + ")");
       else
-         mac = af.make_mac("HMAC(" + mac_algo + ")");
+         m_mac = af.make_mac("HMAC(" + mac_algo + ")");
 
-      mac->set_key(mac_key);
-      mac_size = mac->output_length();
+      m_mac->set_key(mac_key);
+      m_mac_size = m_mac->output_length();
       }
    else
       throw Invalid_Argument("Record_Writer: Unknown hash " + mac_algo);
@@ -153,7 +164,7 @@ void Record_Writer::send(byte type, const byte input[], size_t length)
    *
    * See http://www.openssl.org/~bodo/tls-cbc.txt for background.
    */
-   if((type == APPLICATION) && (block_size > 0) && (iv_size == 0))
+   if((type == APPLICATION) && (m_block_size > 0) && (m_iv_size == 0))
       {
       send_record(type, &input[0], 1);
       input += 1;
@@ -162,7 +173,7 @@ void Record_Writer::send(byte type, const byte input[], size_t length)
 
    while(length)
       {
-      const size_t sending = std::min(length, max_fragment);
+      const size_t sending = std::min(length, m_max_fragment);
       send_record(type, &input[0], sending);
 
       input += sending;
@@ -179,38 +190,38 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
       throw TLS_Exception(INTERNAL_ERROR,
                           "Record_Writer: Compressed packet is too big");
 
-   if(mac_size == 0)
+   if(m_mac_size == 0)
       {
       const byte header[5] = {
          type,
-         major,
-         minor,
+         m_major,
+         m_minor,
          get_byte<u16bit>(0, length),
          get_byte<u16bit>(1, length)
       };
 
-      output_fn(header, 5);
-      output_fn(input, length);
+      m_output_fn(header, 5);
+      m_output_fn(input, length);
       }
    else
       {
-      mac->update_be(seq_no);
-      mac->update(type);
+      m_mac->update_be(m_seq_no);
+      m_mac->update(type);
 
-      if(major > 3 || (major == 3 && minor != 0))
+      if(m_major > 3 || (m_major == 3 && m_minor != 0))
          {
-         mac->update(major);
-         mac->update(minor);
+         m_mac->update(m_major);
+         m_mac->update(m_minor);
          }
 
-      mac->update(get_byte<u16bit>(0, length));
-      mac->update(get_byte<u16bit>(1, length));
-      mac->update(input, length);
+      m_mac->update(get_byte<u16bit>(0, length));
+      m_mac->update(get_byte<u16bit>(1, length));
+      m_mac->update(input, length);
 
-      const size_t buf_size = round_up(iv_size + length +
-                                       mac->output_length() +
-                                       (block_size ? 1 : 0),
-                                       block_size);
+      const size_t buf_size = round_up(m_iv_size + length +
+                                       m_mac->output_length() +
+                                       (m_block_size ? 1 : 0),
+                                       m_block_size);
 
       if(buf_size >= MAX_CIPHERTEXT_SIZE)
          throw TLS_Exception(INTERNAL_ERROR,
@@ -220,30 +231,30 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
 
       // TLS record header
       buf[0] = type;
-      buf[1] = major;
-      buf[2] = minor;
+      buf[1] = m_major;
+      buf[2] = m_minor;
       buf[3] = get_byte<u16bit>(0, buf_size);
       buf[4] = get_byte<u16bit>(1, buf_size);
 
       byte* buf_write_ptr = &buf[5];
 
-      if(iv_size)
+      if(m_iv_size)
          {
          RandomNumberGenerator& rng = global_state().global_rng();
-         rng.randomize(buf_write_ptr, iv_size);
-         buf_write_ptr += iv_size;
+         rng.randomize(buf_write_ptr, m_iv_size);
+         buf_write_ptr += m_iv_size;
          }
 
       copy_mem(buf_write_ptr, input, length);
       buf_write_ptr += length;
 
-      mac->final(buf_write_ptr);
-      buf_write_ptr += mac->output_length();
+      m_mac->final(buf_write_ptr);
+      buf_write_ptr += m_mac->output_length();
 
-      if(block_size)
+      if(m_block_size)
          {
          const size_t pad_val =
-            buf_size - (iv_size + length + mac->output_length() + 1);
+            buf_size - (m_iv_size + length + m_mac->output_length() + 1);
 
          for(size_t i = 0; i != pad_val + 1; ++i)
             {
@@ -253,13 +264,13 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
          }
 
       // FIXME: this could be done in-place without copying
-      cipher.process_msg(&buf[5], buf.size() - 5);
-      size_t got_back = cipher.read(&buf[5], buf.size() - 5, Pipe::LAST_MESSAGE);
+      m_cipher.process_msg(&buf[5], buf.size() - 5);
+      size_t got_back = m_cipher.read(&buf[5], buf.size() - 5, Pipe::LAST_MESSAGE);
       BOTAN_ASSERT_EQUAL(got_back, buf.size()-5, "CBC didn't encrypt full blocks");
 
-      output_fn(&buf[0], buf.size());
+      m_output_fn(&buf[0], buf.size());
 
-      seq_no++;
+      m_seq_no++;
       }
    }
 

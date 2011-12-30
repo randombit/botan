@@ -190,7 +190,11 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             session_info.session_id(),
             session_info.ciphersuite(),
             session_info.compression_method(),
+            session_info.fragment_size(),
             Version_Code(session_info.version()));
+
+         if(session_info.fragment_size())
+            writer.set_maximum_fragment_size(session_info.fragment_size());
 
          state->suite = CipherSuite(state->server_hello->ciphersuite());
 
@@ -223,6 +227,9 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             *(state->client_hello),
             rng.random_vec(32),
             state->version);
+
+         if(state->client_hello->fragment_size())
+            writer.set_maximum_fragment_size(state->client_hello->fragment_size());
 
          state->suite = CipherSuite(state->server_hello->ciphersuite());
 
@@ -376,6 +383,8 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             state->server_hello->ciphersuite(),
             state->server_hello->compression_method(),
             SERVER,
+            secure_renegotiation.supported(),
+            state->server_hello->fragment_size(),
             peer_certs,
             client_requested_hostname,
             ""

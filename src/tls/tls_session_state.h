@@ -28,11 +28,13 @@ class BOTAN_DLL TLS_Session_Params
       * Uninitialized session
       */
       TLS_Session_Params() :
-         session_start_time(0),
-         session_version(0),
-         session_ciphersuite(0),
-         session_compression_method(0),
-         session_connection_side(static_cast<Connection_Side>(0))
+         m_start_time(0),
+         m_version(0),
+         m_ciphersuite(0),
+         m_compression_method(0),
+         m_connection_side(static_cast<Connection_Side>(0)),
+         m_secure_renegotiation_supported(false),
+         m_fragment_size(0)
             {}
 
       /**
@@ -44,6 +46,8 @@ class BOTAN_DLL TLS_Session_Params
                          u16bit ciphersuite,
                          byte compression_method,
                          Connection_Side side,
+                         bool secure_renegotiation_supported,
+                         size_t fragment_size,
                          const std::vector<X509_Certificate>& peer_certs,
                          const std::string& sni_hostname = "",
                          const std::string& srp_identifier = "");
@@ -64,67 +68,81 @@ class BOTAN_DLL TLS_Session_Params
       * Get the version of the saved session
       */
       Version_Code version() const
-         { return static_cast<Version_Code>(session_version); }
+         { return static_cast<Version_Code>(m_version); }
 
       /**
       * Get the ciphersuite of the saved session
       */
-      u16bit ciphersuite() const { return session_ciphersuite; }
+      u16bit ciphersuite() const { return m_ciphersuite; }
 
       /**
       * Get the compression method used in the saved session
       */
-      byte compression_method() const { return session_compression_method; }
+      byte compression_method() const { return m_compression_method; }
 
       /**
       * Get which side of the connection the resumed session we are/were
       * acting as.
       */
-      Connection_Side side() const { return session_connection_side; }
+      Connection_Side side() const { return m_connection_side; }
 
       /**
       * Get the SNI hostname (if sent by the client in the initial handshake)
       */
-      std::string sni_hostname() const { return session_sni_hostname; }
+      std::string sni_hostname() const { return m_sni_hostname; }
 
       /**
       * Get the SRP identity (if sent by the client in the initial handshake)
       */
-      std::string srp_identifier() const { return session_srp_identifier; }
+      std::string srp_identifier() const { return m_srp_identifier; }
 
       /**
       * Get the saved master secret
       */
       const SecureVector<byte>& master_secret() const
-         { return session_master_secret; }
+         { return m_master_secret; }
 
       /**
       * Get the session identifier
       */
       const MemoryVector<byte>& session_id() const
-         { return session_identifier; }
+         { return m_identifier; }
+
+      /**
+      * Get the negotiated maximum fragment size (or 0 if default)
+      */
+      size_t fragment_size() const { return m_fragment_size; }
+
+      /**
+      * Is secure negotiation supported?
+      */
+      bool secure_negotiation() const
+         { return m_secure_renegotiation_supported; }
 
       /**
       * Get the time this session began (seconds since Epoch)
       */
-      u64bit start_time() const { return session_start_time; }
+      u64bit start_time() const { return m_start_time; }
 
    private:
       enum { TLS_SESSION_PARAM_STRUCT_VERSION = 1 };
 
-      u64bit session_start_time;
+      u64bit m_start_time;
 
-      MemoryVector<byte> session_identifier;
-      SecureVector<byte> session_master_secret;
+      MemoryVector<byte> m_identifier;
+      SecureVector<byte> m_master_secret;
 
-      u16bit session_version;
-      u16bit session_ciphersuite;
-      byte session_compression_method;
-      Connection_Side session_connection_side;
+      u16bit m_version;
+      u16bit m_ciphersuite;
+      byte m_compression_method;
+      Connection_Side m_connection_side;
 
-      MemoryVector<byte> session_peer_certificate; // optional
-      std::string session_sni_hostname; // optional
-      std::string session_srp_identifier; // optional
+      bool m_secure_renegotiation_supported;
+      size_t m_fragment_size;
+
+      MemoryVector<byte> m_peer_certificate; // optional
+      std::string m_sni_hostname; // optional
+      std::string m_srp_identifier; // optional
    };
 
 /**
