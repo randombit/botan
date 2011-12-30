@@ -10,8 +10,7 @@
 #include <botan/internal/tls_session_key.h>
 #include <botan/internal/tls_extensions.h>
 #include <botan/tls_record.h>
-
-#include <stdio.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -79,7 +78,7 @@ Client_Hello::Client_Hello(Record_Writer& writer,
    comp_methods(policy.compression()),
    requested_hostname(hostname),
    requested_srp_id(srp_identifier),
-   has_secure_renegotiation(false),
+   has_secure_renegotiation(true),
    renegotiation_info_bits(reneg_info)
    {
    send(writer, hash);
@@ -161,8 +160,8 @@ void Client_Hello::deserialize_sslv2(const MemoryRegion<byte>& buf)
    c_random.resize(challenge_len);
    copy_mem(&c_random[0], &buf[9+cipher_spec_len+sess_id_len], challenge_len);
 
-   // FIXME: might be a ciphersuite value
-   has_secure_renegotiation = false;
+   has_secure_renegotiation =
+      value_exists(suites, static_cast<u16bit>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV));
    }
 
 /*
@@ -206,6 +205,26 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
          renegotiation_info_bits = reneg->renegotiation_info();
          }
       }
+
+   if(value_exists(suites, static_cast<u16bit>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV)))
+      {
+      /*
+      * Clients are allowed to send both the extension and the SCSV
+      * though it is not recommended. If it did, require that the
+      * extension value be empty.
+      */
+      if(has_secure_renegotiation)
+         {
+         if(!renegotiation_info_bits.empty())
+            {
+            throw TLS_Exception(HANDSHAKE_FAILURE,
+                                "Client send SCSV and non-empty extension");
+            }
+         }
+
+      has_secure_renegotiation = true;
+      renegotiation_info_bits.clear();
+      }
    }
 
 /*
@@ -226,6 +245,7 @@ Server_Hello::Server_Hello(Record_Writer& writer,
                            TLS_Handshake_Hash& hash,
                            const TLS_Policy& policy,
                            RandomNumberGenerator& rng,
+                           bool client_has_secure_renegotiation,
                            const MemoryRegion<byte>& reneg_info,
                            const std::vector<X509_Certificate>& certs,
                            const Client_Hello& c_hello,
@@ -234,7 +254,7 @@ Server_Hello::Server_Hello(Record_Writer& writer,
    s_version(ver),
    sess_id(session_id),
    s_random(rng.random_vec(32)),
-   has_secure_renegotiation(false),
+   has_secure_renegotiation(client_has_secure_renegotiation),
    renegotiation_info_bits(reneg_info)
    {
    bool have_rsa = false, have_dsa = false;
@@ -266,6 +286,7 @@ Server_Hello::Server_Hello(Record_Writer& writer,
 Server_Hello::Server_Hello(Record_Writer& writer,
                            TLS_Handshake_Hash& hash,
                            RandomNumberGenerator& rng,
+                           bool client_has_secure_renegotiation,
                            const MemoryRegion<byte>& reneg_info,
                            const MemoryRegion<byte>& session_id,
                            u16bit ciphersuite,
@@ -276,7 +297,7 @@ Server_Hello::Server_Hello(Record_Writer& writer,
    s_random(rng.random_vec(32)),
    suite(ciphersuite),
    comp_method(compression),
-   has_secure_renegotiation(false),
+   has_secure_renegotiation(client_has_secure_renegotiation),
    renegotiation_info_bits(reneg_info)
    {
    send(writer, hash);
@@ -300,9 +321,12 @@ MemoryVector<byte> Server_Hello::serialize() const
 
    buf.push_back(comp_method);
 
-   TLS_Extensions extensions;
-
-   extensions.push_back(new Renegotation_Extension(renegotiation_info_bits));
+   if(has_secure_renegotiation)
+      {
+      TLS_Extensions extensions;
+      extensions.push_back(new Renegotation_Extension(renegotiation_info_bits));
+      buf += extensions.serialize();
+      }
 
    return buf;
    }
@@ -340,8 +364,6 @@ void Server_Hello::deserialize(const MemoryRegion<byte>& buf)
    for(size_t i = 0; i != extensions.count(); ++i)
       {
       TLS_Extension* extn = extensions.at(i);
-
-      printf("Extension from server %d\n", extn->type());
 
       if(Renegotation_Extension* reneg = dynamic_cast<Renegotation_Extension*>(extn))
          {

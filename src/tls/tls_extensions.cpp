@@ -8,11 +8,27 @@
 #include <botan/internal/tls_extensions.h>
 #include <botan/internal/tls_reader.h>
 
-#include <stdio.h>
-
 namespace Botan {
 
-TLS_Extensions::TLS_Extensions(class TLS_Data_Reader& reader)
+namespace {
+
+TLS_Extension* make_extension(TLS_Data_Reader& reader,
+                              u16bit extension_code,
+                              u16bit extension_size)
+   {
+   if(extension_code == TLSEXT_SERVER_NAME_INDICATION)
+      return new Server_Name_Indicator(reader, extension_size);
+   else if(extension_code == TLSEXT_SRP_IDENTIFIER)
+      return new SRP_Identifier(reader, extension_size);
+   else if(extension_code == TLSEXT_SAFE_RENEGOTIATION)
+      return new Renegotation_Extension(reader, extension_size);
+   else
+      return 0; // not known
+   }
+
+}
+
+TLS_Extensions::TLS_Extensions(TLS_Data_Reader& reader)
    {
    if(reader.has_remaining())
       {
@@ -26,17 +42,14 @@ TLS_Extensions::TLS_Extensions(class TLS_Data_Reader& reader)
          const u16bit extension_code = reader.get_u16bit();
          const u16bit extension_size = reader.get_u16bit();
 
-         if(extension_code == TLSEXT_SERVER_NAME_INDICATION)
-            extensions.push_back(new Server_Name_Indicator(reader));
-         else if(extension_code == TLSEXT_SRP_IDENTIFIER)
-            extensions.push_back(new SRP_Identifier(reader));
-         else if(extension_code == TLSEXT_SAFE_RENEGOTIATION)
-            extensions.push_back(new Renegotation_Extension(reader));
+         TLS_Extension* extn = make_extension(reader,
+                                              extension_code,
+                                              extension_size);
+
+         if(extn)
+            extensions.push_back(extn);
          else // unknown/unhandled extension
-            {
-            printf("Unknown extension code %d\n", extension_code);
             reader.discard_next(extension_size);
-            }
          }
       }
    }
@@ -82,9 +95,19 @@ TLS_Extensions::~TLS_Extensions()
    extensions.clear();
    }
 
-Server_Name_Indicator::Server_Name_Indicator(TLS_Data_Reader& reader)
+Server_Name_Indicator::Server_Name_Indicator(TLS_Data_Reader& reader,
+                                             u16bit extension_size)
    {
+   /*
+   * This is used by the server to confirm that it knew the name
+   */
+   if(extension_size == 0)
+      return;
+
    u16bit name_bytes = reader.get_u16bit();
+
+   if(name_bytes + 2 != extension_size)
+      throw Decoding_Error("Bad encoding of SNI extension");
 
    while(name_bytes)
       {
@@ -124,9 +147,13 @@ MemoryVector<byte> Server_Name_Indicator::serialize() const
    return buf;
    }
 
-SRP_Identifier::SRP_Identifier(TLS_Data_Reader& reader)
+SRP_Identifier::SRP_Identifier(TLS_Data_Reader& reader,
+                               u16bit extension_size)
    {
    srp_identifier = reader.get_string(1, 1, 255);
+
+   if(srp_identifier.size() + 1 != extension_size)
+      throw Decoding_Error("Bad encoding for SRP identifier extension");
    }
 
 MemoryVector<byte> SRP_Identifier::serialize() const
@@ -141,9 +168,13 @@ MemoryVector<byte> SRP_Identifier::serialize() const
    return buf;
    }
 
-Renegotation_Extension::Renegotation_Extension(TLS_Data_Reader& reader)
+Renegotation_Extension::Renegotation_Extension(TLS_Data_Reader& reader,
+                                               u16bit extension_size)
    {
    reneg_data = reader.get_range<byte>(1, 0, 255);
+
+   if(reneg_data.size() + 1 != extension_size)
+      throw Decoding_Error("Bad encoding for secure renegotiation extn");
    }
 
 MemoryVector<byte> Renegotation_Extension::serialize() const

@@ -43,7 +43,8 @@ class Server_Name_Indicator : public TLS_Extension
       Server_Name_Indicator(const std::string& host_name) :
          sni_host_name(host_name) {}
 
-      Server_Name_Indicator(TLS_Data_Reader& reader);
+      Server_Name_Indicator(TLS_Data_Reader& reader,
+                            u16bit extension_size);
 
       std::string host_name() const { return sni_host_name; }
 
@@ -66,7 +67,8 @@ class SRP_Identifier : public TLS_Extension
       SRP_Identifier(const std::string& identifier) :
          srp_identifier(identifier) {}
 
-      SRP_Identifier(TLS_Data_Reader& reader);
+      SRP_Identifier(TLS_Data_Reader& reader,
+                     u16bit extension_size);
 
       std::string identifier() const { return srp_identifier; }
 
@@ -91,7 +93,8 @@ class Renegotation_Extension : public TLS_Extension
       Renegotation_Extension(const MemoryRegion<byte>& bits) :
          reneg_data(bits) {}
 
-      Renegotation_Extension(TLS_Data_Reader& reader);
+      Renegotation_Extension(TLS_Data_Reader& reader,
+                             u16bit extension_size);
 
       const MemoryVector<byte>& renegotiation_info() const
          { return reneg_data; }

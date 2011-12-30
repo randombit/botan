@@ -12,8 +12,6 @@
 #include <botan/rsa.h>
 #include <botan/dh.h>
 
-#include <stdio.h>
-
 namespace Botan {
 
 namespace {
@@ -118,7 +116,6 @@ void TLS_Server::renegotiate()
    state = new Handshake_State;
    state->set_expected_next(CLIENT_HELLO);
    Hello_Request hello_req(writer);
-   printf("sent new hello request\n");
    }
 
 /*
@@ -188,6 +185,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             writer,
             state->hash,
             rng,
+            secure_renegotiation.supported(),
             secure_renegotiation.for_server_hello(),
             session_info.session_id(),
             session_info.ciphersuite(),
@@ -219,6 +217,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             state->hash,
             policy,
             rng,
+            secure_renegotiation.supported(),
             secure_renegotiation.for_server_hello(),
             cert_chain,
             *(state->client_hello),

@@ -12,8 +12,6 @@
 #include <botan/dsa.h>
 #include <botan/dh.h>
 
-#include <stdio.h>
-
 namespace Botan {
 
 /*
@@ -89,8 +87,6 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
 
    if(type == HELLO_REQUEST)
       {
-      printf("got a hello request\n");
-
       Hello_Request hello_request(contents);
 
       // Ignore request entirely if we are currently negotiating a handshake

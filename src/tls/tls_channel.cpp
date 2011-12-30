@@ -10,8 +10,6 @@
 #include <botan/internal/tls_state.h>
 #include <botan/loadstor.h>
 
-#include <stdio.h>
-
 namespace Botan {
 
 TLS_Channel::TLS_Channel(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
@@ -200,14 +198,51 @@ void TLS_Channel::alert(Alert_Level alert_level, Alert_Type alert_code)
 
 void TLS_Channel::Secure_Renegotiation_State::update(Client_Hello* client_hello)
    {
+   if(initial_handshake)
+      {
+      secure_renegotiation = client_hello->secure_renegotiation();
+      }
+   else
+      {
+      if(secure_renegotiation != client_hello->secure_renegotiation())
+         throw TLS_Exception(HANDSHAKE_FAILURE,
+                             "Client changed its mind about secure negotiation");
+      }
 
+   if(client_hello->secure_renegotiation())
+      {
+      const MemoryVector<byte>& data = client_hello->renegotiation_info();
+
+      if(initial_handshake)
+         {
+         if(!data.empty())
+            throw TLS_Exception(HANDSHAKE_FAILURE,
+                                "Client sent renegotiation data on initial handshake");
+         }
+      else
+         {
+         if(data != for_client_hello())
+            throw TLS_Exception(HANDSHAKE_FAILURE,
+                                "Client sent bad renegotiation data");
+         }
+      }
    }
 
 void TLS_Channel::Secure_Renegotiation_State::update(Server_Hello* server_hello)
    {
-   secure_renegotiation = server_hello->secure_renegotiation();
-
-   printf("server hello says sec reneg: %d\n", secure_renegotiation);
+   if(initial_handshake)
+      {
+      /* If the client offered but server rejected, then this toggles
+      *  secure_renegotiation to off
+      */
+      secure_renegotiation = server_hello->secure_renegotiation();
+      }
+   else
+      {
+      if(secure_renegotiation != server_hello->secure_renegotiation())
+         throw TLS_Exception(HANDSHAKE_FAILURE,
+                             "Server changed its mind about secure negotiation");
+      }
 
    if(secure_renegotiation)
       {
