@@ -74,7 +74,7 @@ Client_Hello::Client_Hello(Record_Writer& writer,
                            const std::string& srp_identifier) :
    c_version(policy.pref_version()),
    c_random(rng.random_vec(32)),
-   suites(policy.ciphersuites()),
+   suites(policy.ciphersuites(srp_identifier != "")),
    comp_methods(policy.compression()),
    requested_hostname(hostname),
    requested_srp_id(srp_identifier),
@@ -303,7 +303,7 @@ Server_Hello::Server_Hello(Record_Writer& writer,
          have_dsa = true;
       }
 
-   suite = policy.choose_suite(c_hello.ciphersuites(), have_rsa, have_dsa);
+   suite = policy.choose_suite(c_hello.ciphersuites(), have_rsa, have_dsa, false);
 
    if(suite == 0)
       throw TLS_Exception(HANDSHAKE_FAILURE,

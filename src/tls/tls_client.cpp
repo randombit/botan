@@ -13,8 +13,6 @@
 #include <botan/dsa.h>
 #include <botan/dh.h>
 
-#include <stdio.h>
-
 namespace Botan {
 
 /*
@@ -27,7 +25,8 @@ TLS_Client::TLS_Client(std::tr1::function<void (const byte[], size_t)> output_fn
                        const TLS_Policy& policy,
                        RandomNumberGenerator& rng,
                        const std::string& hostname,
-                       const std::string& srp_identifier) :
+                       const std::string& srp_identifier,
+                       const std::string& srp_password) :
    TLS_Channel(output_fn, proc_fn, handshake_fn),
    policy(policy),
    rng(rng),
@@ -176,8 +175,8 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
          // successful resumption
 
          /*
-         In this case, we offered the original session and the server
-         must resume with it
+         * In this case, we offered the original session and the server
+         * must resume with it
          */
          if(state->server_hello->version() != state->client_hello->version())
             throw TLS_Exception(HANDSHAKE_FAILURE,

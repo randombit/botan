@@ -22,18 +22,21 @@ namespace Botan {
 class BOTAN_DLL TLS_Policy
    {
    public:
-      std::vector<u16bit> ciphersuites() const;
+      std::vector<u16bit> ciphersuites(bool have_srp) const;
       virtual std::vector<byte> compression() const;
 
       virtual u16bit choose_suite(const std::vector<u16bit>& client_suites,
                                   bool rsa_ok,
-                                  bool dsa_ok) const;
+                                  bool dsa_ok,
+                                  bool srp_ok) const;
 
       virtual byte choose_compression(const std::vector<byte>& client) const;
 
       virtual bool allow_static_rsa() const { return true; }
       virtual bool allow_edh_rsa() const { return true; }
       virtual bool allow_edh_dsa() const { return true; }
+      virtual bool allow_srp() const { return true; }
+
       virtual bool require_client_auth() const { return false; }
 
       virtual bool require_secure_renegotiation() const { return true; }
@@ -57,7 +60,8 @@ class BOTAN_DLL TLS_Policy
    private:
       virtual std::vector<u16bit> suite_list(bool use_rsa,
                                              bool use_edh_rsa,
-                                             bool use_edh_dsa) const;
+                                             bool use_edh_dsa,
+                                             bool use_srp) const;
    };
 
 }

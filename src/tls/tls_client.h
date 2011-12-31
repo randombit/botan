@@ -29,7 +29,8 @@ class BOTAN_DLL TLS_Client : public TLS_Channel
       * @param policy specifies other connection policy information
       * @param rng a random number generator
       * @param servername the server's DNS name, if known
-      * @param srp_username an identifier to use for SRP key exchange
+      * @param srp_username a SRP identifier to use for SRP key exchange
+      * @param srp_password a SRP password to use for SRP key exchange
       */
       TLS_Client(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
                  std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
@@ -38,7 +39,8 @@ class BOTAN_DLL TLS_Client : public TLS_Channel
                  const TLS_Policy& policy,
                  RandomNumberGenerator& rng,
                  const std::string& servername = "",
-                 const std::string& srp_username = "");
+                 const std::string& srp_username = "",
+                 const std::string& srp_password = "");
 
       void add_client_cert(const X509_Certificate& cert,
                            Private_Key* cert_key);

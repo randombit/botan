@@ -13,9 +13,10 @@ namespace Botan {
 /*
 * Return allowed ciphersuites
 */
-std::vector<u16bit> TLS_Policy::ciphersuites() const
+std::vector<u16bit> TLS_Policy::ciphersuites(bool have_srp) const
    {
-   return suite_list(allow_static_rsa(), allow_edh_rsa(), allow_edh_dsa());
+   return suite_list(allow_static_rsa(), allow_edh_rsa(), allow_edh_dsa(),
+                     allow_srp() && have_srp);
    }
 
 /*
@@ -23,9 +24,27 @@ std::vector<u16bit> TLS_Policy::ciphersuites() const
 */
 std::vector<u16bit> TLS_Policy::suite_list(bool use_rsa,
                                            bool use_edh_rsa,
-                                           bool use_edh_dsa) const
+                                           bool use_edh_dsa,
+                                           bool use_srp) const
    {
    std::vector<u16bit> suites;
+
+   if(use_srp)
+      {
+      if(use_edh_rsa)
+         {
+         suites.push_back(TLS_SRP_SHA_DSS_WITH_AES_256_SHA);
+         suites.push_back(TLS_SRP_SHA_DSS_WITH_AES_128_SHA);
+         suites.push_back(TLS_SRP_SHA_DSS_WITH_3DES_EDE_SHA);
+         }
+
+      if(use_edh_dsa)
+         {
+         suites.push_back(TLS_SRP_SHA_RSA_WITH_AES_256_SHA);
+         suites.push_back(TLS_SRP_SHA_RSA_WITH_AES_128_SHA);
+         suites.push_back(TLS_SRP_SHA_RSA_WITH_3DES_EDE_SHA);
+         }
+      }
 
    if(use_edh_dsa)
       {
@@ -75,14 +94,16 @@ std::vector<byte> TLS_Policy::compression() const
 */
 u16bit TLS_Policy::choose_suite(const std::vector<u16bit>& c_suites,
                                 bool have_rsa,
-                                bool have_dsa) const
+                                bool have_dsa,
+                                bool have_srp) const
    {
-   bool use_static_rsa = allow_static_rsa() && have_rsa;
-   bool use_edh_rsa = allow_edh_rsa() && have_rsa;
-   bool use_edh_dsa = allow_edh_dsa() && have_dsa;
+   const bool use_static_rsa = allow_static_rsa() && have_rsa;
+   const bool use_edh_rsa = allow_edh_rsa() && have_rsa;
+   const bool use_edh_dsa = allow_edh_dsa() && have_dsa;
+   const bool use_srp = allow_srp() && have_srp;
 
    std::vector<u16bit> s_suites = suite_list(use_static_rsa, use_edh_rsa,
-                                             use_edh_dsa);
+                                             use_edh_dsa, use_srp);
 
    for(size_t i = 0; i != s_suites.size(); ++i)
       for(size_t j = 0; j != c_suites.size(); ++j)
