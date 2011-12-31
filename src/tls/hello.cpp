@@ -17,7 +17,7 @@ namespace Botan {
 /*
 * Encode and send a Handshake message
 */
-void HandshakeMessage::send(Record_Writer& writer, TLS_Handshake_Hash& hash) const
+void Handshake_Message::send(Record_Writer& writer, TLS_Handshake_Hash& hash) const
    {
    MemoryVector<byte> buf = serialize();
    MemoryVector<byte> send_buf(4);
@@ -82,6 +82,27 @@ Client_Hello::Client_Hello(Record_Writer& writer,
    has_secure_renegotiation(true),
    renegotiation_info_bits(reneg_info)
    {
+   send(writer, hash);
+   }
+
+/*
+* Create a new Client Hello message
+*/
+Client_Hello::Client_Hello(Record_Writer& writer,
+                           TLS_Handshake_Hash& hash,
+                           RandomNumberGenerator& rng,
+                           const TLS_Session& session) :
+   c_version(session.version()),
+   sess_id(session.session_id()),
+   c_random(rng.random_vec(32)),
+   requested_hostname(session.sni_hostname()),
+   requested_srp_id(session.srp_identifier()),
+   m_fragment_size(session.fragment_size()),
+   has_secure_renegotiation(session.secure_renegotiation())
+   {
+   suites.push_back(session.ciphersuite());
+   comp_methods.push_back(session.compression_method());
+
    send(writer, hash);
    }
 

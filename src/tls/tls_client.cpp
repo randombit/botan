@@ -8,9 +8,12 @@
 #include <botan/tls_client.h>
 #include <botan/internal/tls_session_key.h>
 #include <botan/internal/tls_handshake_state.h>
+#include <botan/internal/stl_util.h>
 #include <botan/rsa.h>
 #include <botan/dsa.h>
 #include <botan/dh.h>
+
+#include <stdio.h>
 
 namespace Botan {
 
@@ -24,7 +27,7 @@ TLS_Client::TLS_Client(std::tr1::function<void (const byte[], size_t)> output_fn
                        const TLS_Policy& policy,
                        RandomNumberGenerator& rng,
                        const std::string& hostname,
-                       const std::string& srp_username) :
+                       const std::string& srp_identifier) :
    TLS_Channel(output_fn, proc_fn, handshake_fn),
    policy(policy),
    rng(rng),
@@ -34,13 +37,36 @@ TLS_Client::TLS_Client(std::tr1::function<void (const byte[], size_t)> output_fn
 
    state = new Handshake_State;
    state->set_expected_next(SERVER_HELLO);
-   state->client_hello = new Client_Hello(writer,
-                                          state->hash,
-                                          policy,
-                                          rng,
-                                          secure_renegotiation.for_client_hello(),
-                                          hostname,
-                                          srp_username);
+
+   if(hostname != "")
+      {
+      TLS_Session session_info;
+      if(session_manager.load_from_host_info(hostname, 0, session_info))
+         {
+         if(session_info.srp_identifier() == srp_identifier)
+            {
+            state->client_hello = new Client_Hello(
+               writer,
+               state->hash,
+               rng,
+               session_info);
+
+            state->resume_master_secret = session_info.master_secret();
+            }
+         }
+      }
+
+   if(!state->client_hello) // not resuming
+      {
+      state->client_hello = new Client_Hello(
+         writer,
+         state->hash,
+         policy,
+         rng,
+         secure_renegotiation.for_client_hello(),
+         hostname,
+         srp_identifier);
+      }
 
    secure_renegotiation.update(state->client_hello);
    }
@@ -128,19 +154,14 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
                              "TLS_Client: Server replied with bad ciphersuite");
          }
 
-      state->version = state->server_hello->version();
-
-      if(state->version > state->client_hello->version())
+      if(!value_exists(state->client_hello->compression_methods(),
+                       state->server_hello->compression_method()))
          {
          throw TLS_Exception(HANDSHAKE_FAILURE,
-                             "TLS_Client: Server replied with bad version");
+                             "TLS_Client: Server replied with bad compression method");
          }
 
-      if(state->version < policy.min_version())
-         {
-         throw TLS_Exception(PROTOCOL_VERSION,
-                             "TLS_Client: Server is too old for specified policy");
-         }
+      state->version = state->server_hello->version();
 
       writer.set_version(state->version);
       reader.set_version(state->version);
@@ -149,20 +170,56 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
 
       state->suite = TLS_Cipher_Suite(state->server_hello->ciphersuite());
 
-      // if resuming, next is HANDSHAKE_CCS
+      if(!state->server_hello->session_id().empty() &&
+         (state->server_hello->session_id() == state->client_hello->session_id()))
+         {
+         // successful resumption
 
-      if(state->suite.sig_type() != TLS_ALGO_SIGNER_ANON)
-         {
-         state->set_expected_next(CERTIFICATE);
-         }
-      else if(state->suite.kex_type() != TLS_ALGO_KEYEXCH_NOKEX)
-         {
-         state->set_expected_next(SERVER_KEX);
+         /*
+         In this case, we offered the original session and the server
+         must resume with it
+         */
+         if(state->server_hello->version() != state->client_hello->version())
+            throw TLS_Exception(HANDSHAKE_FAILURE,
+                                "Server resumed session but with wrong version");
+
+         state->keys = SessionKeys(state->suite, state->version,
+                                   state->resume_master_secret,
+                                   state->client_hello->random(),
+                                   state->server_hello->random(),
+                                   true);
+
+         state->set_expected_next(HANDSHAKE_CCS);
          }
       else
          {
-         state->set_expected_next(CERTIFICATE_REQUEST); // optional
-         state->set_expected_next(SERVER_HELLO_DONE);
+         // new session
+
+         if(state->version > state->client_hello->version())
+            {
+            throw TLS_Exception(HANDSHAKE_FAILURE,
+                                "TLS_Client: Server replied with bad version");
+            }
+
+         if(state->version < policy.min_version())
+            {
+            throw TLS_Exception(PROTOCOL_VERSION,
+                                "TLS_Client: Server is too old for specified policy");
+            }
+
+         if(state->suite.sig_type() != TLS_ALGO_SIGNER_ANON)
+            {
+            state->set_expected_next(CERTIFICATE);
+            }
+         else if(state->suite.kex_type() != TLS_ALGO_KEYEXCH_NOKEX)
+            {
+            state->set_expected_next(SERVER_KEX);
+            }
+         else
+            {
+            state->set_expected_next(CERTIFICATE_REQUEST); // optional
+            state->set_expected_next(SERVER_HELLO_DONE);
+            }
          }
       }
    else if(type == CERTIFICATE)
@@ -307,6 +364,38 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
                                          state->version, state->hash, SERVER))
          throw TLS_Exception(DECRYPT_ERROR,
                              "Finished message didn't verify");
+
+      state->hash.update(type, contents);
+
+      if(!state->client_finished) // session resume case
+         {
+         writer.send(CHANGE_CIPHER_SPEC, 1);
+
+         writer.activate(state->suite, state->keys, CLIENT);
+
+         state->client_finished = new Finished(writer, state->hash,
+                                               state->version, CLIENT,
+                                               state->keys.master_secret());
+         }
+
+      TLS_Session session_info(
+         state->server_hello->session_id(),
+         state->keys.master_secret(),
+         state->server_hello->version(),
+         state->server_hello->ciphersuite(),
+         state->server_hello->compression_method(),
+         CLIENT,
+         secure_renegotiation.supported(),
+         state->server_hello->fragment_size(),
+         peer_certs,
+         state->client_hello->sni_hostname(),
+         ""
+         );
+
+      session_manager.save(session_info);
+
+      if(handshake_fn)
+         handshake_fn(session_info);
 
       secure_renegotiation.update(state->client_finished, state->server_finished);
 

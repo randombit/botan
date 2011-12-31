@@ -112,6 +112,82 @@ void process_data(const byte buf[], size_t buf_size, u16bit alert_info)
       printf("%c", buf[i]);
    }
 
+void doit(RandomNumberGenerator& rng,
+          TLS_Policy& policy,
+          TLS_Session_Manager& session_manager,
+          const std::string& host,
+          u16bit port)
+   {
+   int sockfd = connect_to_host(host, port);
+
+   TLS_Client client(std::tr1::bind(socket_write, sockfd, _1, _2),
+                     process_data,
+                     handshake_complete,
+                     session_manager,
+                     policy,
+                     rng,
+                     host);
+
+   fd_set readfds;
+
+   bool version_reported = false;
+
+   while(true)
+      {
+      FD_ZERO(&readfds);
+      FD_SET(sockfd, &readfds);
+      FD_SET(STDIN_FILENO, &readfds);
+
+      ::select(sockfd + 1, &readfds, NULL, NULL, NULL);
+
+      if(client.is_closed())
+         break;
+
+      if(client.is_active() && !version_reported)
+         printf("Negotiated version %04X\n", client.protocol_version());
+
+      if(FD_ISSET(sockfd, &readfds))
+         {
+         byte buf[1024] = { 0 };
+         ssize_t got = read(sockfd, buf, sizeof(buf));
+
+         if(got == 0)
+            {
+            printf("EOF on socket\n");
+            break;
+            }
+         else if(got == -1)
+            {
+            printf("Socket error %d (%s)\n", errno, strerror(errno));
+            continue;
+            }
+
+         //printf("socket read %d\n", got);
+
+         client.received_data(buf, got);
+         }
+      else if(FD_ISSET(STDIN_FILENO, &readfds))
+         {
+         byte buf[1024] = { 0 };
+         ssize_t got = read(STDIN_FILENO, buf, sizeof(buf));
+
+         if(got == 0)
+            {
+            printf("EOF on stdin\n");
+            client.close();
+            break;
+            }
+         else if(got == -1)
+            {
+            printf("Error reading stdin %d (%s)\n", errno, strerror(errno));
+            continue;
+            }
+
+         client.queue_for_sending(buf, got);
+         }
+      }
+   }
+
 int main(int argc, char* argv[])
    {
    if(argc != 2 && argc != 3)
@@ -130,74 +206,9 @@ int main(int argc, char* argv[])
       std::string host = argv[1];
       u32bit port = argc == 3 ? Botan::to_u32bit(argv[2]) : 443;
 
-      int sockfd = connect_to_host(host, port);
-
-      TLS_Client client(std::tr1::bind(socket_write, sockfd, _1, _2),
-                        process_data,
-                        handshake_complete,
-                        session_manager,
-                        policy,
-                        rng,
-                        host);
-
-      fd_set readfds;
-
-      bool version_reported = false;
-
       while(true)
-         {
-         FD_ZERO(&readfds);
-         FD_SET(sockfd, &readfds);
-         FD_SET(STDIN_FILENO, &readfds);
+         doit(rng, policy, session_manager, host, port);
 
-         ::select(sockfd + 1, &readfds, NULL, NULL, NULL);
-
-         if(client.is_closed())
-            break;
-
-         if(client.is_active() && !version_reported)
-            printf("Negotiated version %04X\n", client.protocol_version());
-
-         if(FD_ISSET(sockfd, &readfds))
-            {
-            byte buf[1024] = { 0 };
-            ssize_t got = read(sockfd, buf, sizeof(buf));
-
-            if(got == 0)
-               {
-               printf("EOF on socket\n");
-               break;
-               }
-            else if(got == -1)
-               {
-               printf("Socket error %d (%s)\n", errno, strerror(errno));
-               continue;
-               }
-
-            //printf("socket read %d\n", got);
-
-            client.received_data(buf, got);
-            }
-         else if(FD_ISSET(STDIN_FILENO, &readfds))
-            {
-            byte buf[1024] = { 0 };
-            ssize_t got = read(STDIN_FILENO, buf, sizeof(buf));
-
-            if(got == 0)
-               {
-               printf("EOF on stdin\n");
-               client.close();
-               break;
-               }
-            else if(got == -1)
-               {
-               printf("Error reading stdin %d (%s)\n", errno, strerror(errno));
-               continue;
-               }
-
-            client.queue_for_sending(buf, got);
-            }
-         }
    }
    catch(std::exception& e)
       {

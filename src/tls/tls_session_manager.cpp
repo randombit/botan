@@ -9,6 +9,8 @@
 #include <botan/hex.h>
 #include <botan/time.h>
 
+#include <stdio.h>
+
 namespace Botan {
 
 bool TLS_Session_Manager_In_Memory::load_from_session_str(
@@ -21,7 +23,7 @@ bool TLS_Session_Manager_In_Memory::load_from_session_str(
 
    // session has expired, remove it
    const u64bit now = system_time();
-   if(i->second.start_time() + session_lifetime >= now)
+   if(i->second.start_time() + session_lifetime < now)
       {
       sessions.erase(i);
       return false;
@@ -32,7 +34,7 @@ bool TLS_Session_Manager_In_Memory::load_from_session_str(
    }
 
 bool TLS_Session_Manager_In_Memory::load_from_session_id(
-   const MemoryVector<byte>& session_id, TLS_Session& session)
+   const MemoryRegion<byte>& session_id, TLS_Session& session)
    {
    return load_from_session_str(hex_encode(session_id), session);
    }
@@ -60,7 +62,7 @@ bool TLS_Session_Manager_In_Memory::load_from_host_info(
    }
 
 void TLS_Session_Manager_In_Memory::remove_entry(
-   const MemoryVector<byte>& session_id)
+   const MemoryRegion<byte>& session_id)
    {
    std::map<std::string, TLS_Session>::iterator i =
       sessions.find(hex_encode(session_id));

@@ -24,9 +24,8 @@ class BOTAN_DLL TLS_Channel
    public:
       /**
       * Inject TLS traffic received from counterparty
-
       * @return a hint as the how many more bytes we need to process the
-                current record (this may be 0 if on a record boundary)
+      *         current record (this may be 0 if on a record boundary)
       */
       virtual size_t received_data(const byte buf[], size_t buf_size);
 
@@ -43,21 +42,23 @@ class BOTAN_DLL TLS_Channel
       /**
       * Send a TLS alert message. If the alert is fatal, the
       * internal state (keys, etc) will be reset
+      * @param level is warning or fatal
+      * @param type is the type of alert
       */
       void alert(Alert_Level level, Alert_Type type);
 
       /**
-      * Is the connection active for sending application data?
+      * @return true iff the connection is active for sending application data
       */
       bool is_active() const { return handshake_completed && !is_closed(); }
 
       /**
-      * Has the connection been definitely closed
+      * @return true iff the connection has been definitely closed
       */
       bool is_closed() const { return connection_closed; }
 
       /**
-      * Return the negotiated version (if session is currently active)
+      * @return negotiated version (if session is currently active)
       */
       Version_Code protocol_version() const;
 
@@ -67,7 +68,7 @@ class BOTAN_DLL TLS_Channel
       virtual void renegotiate() = 0;
 
       /**
-      * Return the certificates of the peer
+      * @return certificate chain of the peer (may be empty)
       */
       std::vector<X509_Certificate> peer_cert_chain() const { return peer_certs; }
 

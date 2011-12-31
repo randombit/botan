@@ -12,6 +12,8 @@
 #include <botan/rsa.h>
 #include <botan/dh.h>
 
+#include <stdio.h>
+
 namespace Botan {
 
 namespace {
@@ -180,6 +182,8 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       if(resuming)
          {
          // resume session
+
+         printf("Resuming a session\n");
          state->server_hello = new Server_Hello(
             writer,
             state->hash,
@@ -377,26 +381,26 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
          if(state->client_certs && state->client_verify)
             peer_certs = state->client_certs->cert_chain();
-
-         TLS_Session session_info(
-            state->server_hello->session_id(),
-            state->keys.master_secret(),
-            state->server_hello->version(),
-            state->server_hello->ciphersuite(),
-            state->server_hello->compression_method(),
-            SERVER,
-            secure_renegotiation.supported(),
-            state->server_hello->fragment_size(),
-            peer_certs,
-            client_requested_hostname,
-            ""
-            );
-
-         session_manager.save(session_info);
-
-         if(handshake_fn)
-            handshake_fn(session_info);
          }
+
+      TLS_Session session_info(
+         state->server_hello->session_id(),
+         state->keys.master_secret(),
+         state->server_hello->version(),
+         state->server_hello->ciphersuite(),
+         state->server_hello->compression_method(),
+         SERVER,
+         secure_renegotiation.supported(),
+         state->server_hello->fragment_size(),
+         peer_certs,
+         client_requested_hostname,
+         ""
+         );
+
+      session_manager.save(session_info);
+
+      if(handshake_fn)
+         handshake_fn(session_info);
 
       secure_renegotiation.update(state->client_finished,
                                   state->server_finished);

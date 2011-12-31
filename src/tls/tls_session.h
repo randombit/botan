@@ -38,16 +38,16 @@ class BOTAN_DLL TLS_Session
       * New session (sets session start time)
       */
       TLS_Session(const MemoryRegion<byte>& session_id,
-                         const MemoryRegion<byte>& master_secret,
-                         Version_Code version,
-                         u16bit ciphersuite,
-                         byte compression_method,
-                         Connection_Side side,
-                         bool secure_renegotiation_supported,
-                         size_t fragment_size,
-                         const std::vector<X509_Certificate>& peer_certs,
-                         const std::string& sni_hostname = "",
-                         const std::string& srp_identifier = "");
+                  const MemoryRegion<byte>& master_secret,
+                  Version_Code version,
+                  u16bit ciphersuite,
+                  byte compression_method,
+                  Connection_Side side,
+                  bool secure_renegotiation_supported,
+                  size_t fragment_size,
+                  const std::vector<X509_Certificate>& peer_certs,
+                  const std::string& sni_hostname = "",
+                  const std::string& srp_identifier = "");
 
       /**
       * Load a session from BER (created by BER_encode)
@@ -111,9 +111,9 @@ class BOTAN_DLL TLS_Session
       size_t fragment_size() const { return m_fragment_size; }
 
       /**
-      * Is secure negotiation supported?
+      * Is secure renegotiation supported?
       */
-      bool secure_negotiation() const
+      bool secure_renegotiation() const
          { return m_secure_renegotiation_supported; }
 
       /**

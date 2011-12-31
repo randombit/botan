@@ -28,39 +28,38 @@ class BOTAN_DLL TLS_Session_Manager
       /**
       * Try to load a saved session (server side)
       * @param session_id the session identifier we are trying to resume
-      * @param params will be set to the saved session data (if found),
+      * @param session will be set to the saved session data (if found),
                or not modified if not found
-      * @return true if params was modified
+      * @return true if session was modified
       */
-      virtual bool load_from_session_id(const MemoryVector<byte>& session_id,
-                                        TLS_Session& params) = 0;
+      virtual bool load_from_session_id(const MemoryRegion<byte>& session_id,
+                                        TLS_Session& session) = 0;
 
       /**
       * Try to load a saved session (client side)
       * @param hostname of the host we are connecting to
       * @param port the port number if we know it, or 0 if unknown
-      * @param params will be set to the saved session data (if found),
+      * @param session will be set to the saved session data (if found),
                or not modified if not found
-      * @return true if params was modified
+      * @return true if session was modified
       */
       virtual bool load_from_host_info(const std::string& hostname, u16bit port,
-                                       TLS_Session& params) = 0;
+                                       TLS_Session& session) = 0;
 
       /**
-      * Remove this session id from the cache
+      * Remove this session id from the cache, if it exists
       */
-      virtual void remove_entry(const MemoryVector<byte>& session_id) = 0;
+      virtual void remove_entry(const MemoryRegion<byte>& session_id) = 0;
 
       /**
       * Save a session on a best effort basis; the manager may not in
-      * fact be able to save the session for whatever reason, this is
+      * fact be able to save the session for whatever reason; this is
       * not an error. Caller cannot assume that calling save followed
-      * immediately by find will result in a successful lookup.
+      * immediately by load_from_* will result in a successful lookup.
       *
-      * @param session_id the session identifier
-      * @param params to save
+      * @param session to save
       */
-      virtual void save(const TLS_Session& params) = 0;
+      virtual void save(const TLS_Session& session) = 0;
 
       virtual ~TLS_Session_Manager() {}
    };
@@ -86,19 +85,19 @@ class BOTAN_DLL TLS_Session_Manager_In_Memory : public TLS_Session_Manager
          session_lifetime(session_lifetime)
             {}
 
-      bool load_from_session_id(const MemoryVector<byte>& session_id,
-                                TLS_Session& params);
+      bool load_from_session_id(const MemoryRegion<byte>& session_id,
+                                TLS_Session& session);
 
       bool load_from_host_info(const std::string& hostname, u16bit port,
-                               TLS_Session& params);
+                               TLS_Session& session);
 
-      void remove_entry(const MemoryVector<byte>& session_id);
+      void remove_entry(const MemoryRegion<byte>& session_id);
 
       void save(const TLS_Session& session_data);
 
    private:
       bool load_from_session_str(const std::string& session_str,
-                                 TLS_Session& params);
+                                 TLS_Session& session);
 
       size_t max_sessions, session_lifetime;
 

@@ -25,7 +25,7 @@ class BOTAN_DLL TLS_Client : public TLS_Channel
       * @param socket_output_fn is called with data for the outbound socket
       * @param proc_fn is called when new data (application or alerts) is received
       * @param handshake_complete is called when a handshake is completed
-      * @param session_manager manages session resumption
+      * @param session_manager manages session state
       * @param policy specifies other connection policy information
       * @param rng a random number generator
       * @param servername the server's DNS name, if known

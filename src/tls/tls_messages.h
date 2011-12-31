@@ -9,6 +9,7 @@
 #define BOTAN_TLS_MESSAGES_H__
 
 #include <botan/internal/tls_handshake_hash.h>
+#include <botan/tls_session.h>
 #include <botan/tls_policy.h>
 #include <botan/tls_magic.h>
 #include <botan/tls_suites.h>
@@ -25,16 +26,16 @@ class Record_Reader;
 /**
 * TLS Handshake Message Base Class
 */
-class HandshakeMessage
+class Handshake_Message
    {
    public:
       void send(Record_Writer& writer, TLS_Handshake_Hash& hash) const;
 
       virtual Handshake_Type type() const = 0;
 
-      virtual ~HandshakeMessage() {}
+      virtual ~Handshake_Message() {}
    private:
-      HandshakeMessage& operator=(const HandshakeMessage&) { return (*this); }
+      Handshake_Message& operator=(const Handshake_Message&) { return (*this); }
       virtual MemoryVector<byte> serialize() const = 0;
       virtual void deserialize(const MemoryRegion<byte>&) = 0;
    };
@@ -42,7 +43,7 @@ class HandshakeMessage
 /**
 * Client Hello Message
 */
-class Client_Hello : public HandshakeMessage
+class Client_Hello : public Handshake_Message
    {
    public:
       Handshake_Type type() const { return CLIENT_HELLO; }
@@ -82,6 +83,11 @@ class Client_Hello : public HandshakeMessage
                    const std::string& hostname = "",
                    const std::string& srp_identifier = "");
 
+      Client_Hello(Record_Writer& writer,
+                   TLS_Handshake_Hash& hash,
+                   RandomNumberGenerator& rng,
+                   const TLS_Session& resumed_session);
+
       Client_Hello(const MemoryRegion<byte>& buf,
                    Handshake_Type type)
          {
@@ -111,7 +117,7 @@ class Client_Hello : public HandshakeMessage
 /**
 * Server Hello Message
 */
-class Server_Hello : public HandshakeMessage
+class Server_Hello : public Handshake_Message
    {
    public:
       Handshake_Type type() const { return SERVER_HELLO; }
@@ -176,7 +182,7 @@ class Server_Hello : public HandshakeMessage
 /**
 * Client Key Exchange Message
 */
-class Client_Key_Exchange : public HandshakeMessage
+class Client_Key_Exchange : public Handshake_Message
    {
    public:
       Handshake_Type type() const { return CLIENT_KEX; }
@@ -209,7 +215,7 @@ class Client_Key_Exchange : public HandshakeMessage
 /**
 * Certificate Message
 */
-class Certificate : public HandshakeMessage
+class Certificate : public Handshake_Message
    {
    public:
       Handshake_Type type() const { return CERTIFICATE; }
@@ -232,7 +238,7 @@ class Certificate : public HandshakeMessage
 /**
 * Certificate Request Message
 */
-class Certificate_Req : public HandshakeMessage
+class Certificate_Req : public Handshake_Message
    {
    public:
       Handshake_Type type() const { return CERTIFICATE_REQUEST; }
@@ -258,7 +264,7 @@ class Certificate_Req : public HandshakeMessage
 /**
 * Certificate Verify Message
 */
-class Certificate_Verify : public HandshakeMessage
+class Certificate_Verify : public Handshake_Message
    {
    public:
       Handshake_Type type() const { return CERTIFICATE_VERIFY; }
@@ -291,7 +297,7 @@ class Certificate_Verify : public HandshakeMessage
 /**
 * Finished Message
 */
-class Finished : public HandshakeMessage
+class Finished : public Handshake_Message
    {
    public:
       Handshake_Type type() const { return FINISHED; }
@@ -327,7 +333,7 @@ class Finished : public HandshakeMessage
 /**
 * Hello Request Message
 */
-class Hello_Request : public HandshakeMessage
+class Hello_Request : public Handshake_Message
    {
    public:
       Handshake_Type type() const { return HELLO_REQUEST; }
@@ -342,7 +348,7 @@ class Hello_Request : public HandshakeMessage
 /**
 * Server Key Exchange Message
 */
-class Server_Key_Exchange : public HandshakeMessage
+class Server_Key_Exchange : public Handshake_Message
    {
    public:
       Handshake_Type type() const { return SERVER_KEX; }
@@ -373,7 +379,7 @@ class Server_Key_Exchange : public HandshakeMessage
 /**
 * Server Hello Done Message
 */
-class Server_Hello_Done : public HandshakeMessage
+class Server_Hello_Done : public Handshake_Message
    {
    public:
       Handshake_Type type() const { return SERVER_HELLO_DONE; }

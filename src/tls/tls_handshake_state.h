@@ -50,6 +50,11 @@ class Handshake_State
 
       SecureQueue queue;
 
+      /*
+      * Only used by clients for session resumption
+      */
+      SecureVector<byte> resume_master_secret;
+
       Version_Code version;
    private:
       u32bit hand_expecting_mask, hand_received_mask;
