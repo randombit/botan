@@ -213,9 +213,14 @@ size_t Record_Reader::get_record(byte& msg_type,
          }
       else
          {
+         bool padding_good = true;
+
          for(size_t i = 0; i != pad_size; ++i)
             if(plaintext[plaintext.size()-i-1] != pad_value)
-               pad_size = 0;
+               padding_good = false;
+
+         if(!padding_good)
+            pad_size = 0;
          }
       }
 
