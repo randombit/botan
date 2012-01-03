@@ -42,6 +42,7 @@ enum Handshake_Type {
    CLIENT_HELLO        = 1,
    CLIENT_HELLO_SSLV2  = 200, // Not a wire value
    SERVER_HELLO        = 2,
+   NEW_SESSION_TICKET  = 4, // RFC 5077
    CERTIFICATE         = 11,
    SERVER_KEX          = 12,
    CERTIFICATE_REQUEST = 13,
