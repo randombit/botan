@@ -74,7 +74,7 @@ class BOTAN_DLL TLS_Channel
 
       TLS_Channel(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
                   std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
-                  std::tr1::function<void (const TLS_Session&)> handshake_complete);
+                  std::tr1::function<bool (const TLS_Session&)> handshake_complete);
 
       virtual ~TLS_Channel();
    protected:
@@ -85,7 +85,7 @@ class BOTAN_DLL TLS_Channel
                                          const MemoryRegion<byte>& contents) = 0;
 
       std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn;
-      std::tr1::function<void (const TLS_Session&)> handshake_fn;
+      std::tr1::function<bool (const TLS_Session&)> handshake_fn;
 
       Record_Writer writer;
       Record_Reader reader;

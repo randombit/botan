@@ -26,7 +26,7 @@ class BOTAN_DLL TLS_Server : public TLS_Channel
       */
       TLS_Server(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
                  std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
-                 std::tr1::function<void (const TLS_Session&)> handshake_complete,
+                 std::tr1::function<bool (const TLS_Session&)> handshake_complete,
                  TLS_Session_Manager& session_manager,
                  Credentials_Manager& creds,
                  const TLS_Policy& policy,

@@ -83,7 +83,7 @@ bool check_for_resume(TLS_Session& session_info,
 */
 TLS_Server::TLS_Server(std::tr1::function<void (const byte[], size_t)> output_fn,
                        std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
-                       std::tr1::function<void (const TLS_Session&)> handshake_fn,
+                       std::tr1::function<bool (const TLS_Session&)> handshake_fn,
                        TLS_Session_Manager& session_manager,
                        Credentials_Manager& creds,
                        const TLS_Policy& policy,
@@ -204,8 +204,8 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
                                                state->version, SERVER,
                                                state->keys.master_secret());
 
-         if(handshake_fn)
-            handshake_fn(session_info);
+         if(!handshake_fn(session_info))
+            session_manager.remove_entry(session_info.session_id());
 
          state->set_expected_next(HANDSHAKE_CCS);
          }
@@ -375,8 +375,6 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
                                                state->version, SERVER,
                                                state->keys.master_secret());
 
-         std::vector<X509_Certificate> peer_certs;
-
          if(state->client_certs && state->client_verify)
             peer_certs = state->client_certs->cert_chain();
          }
@@ -395,10 +393,8 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
          ""
          );
 
-      session_manager.save(session_info);
-
-      if(handshake_fn)
-         handshake_fn(session_info);
+      if(handshake_fn(session_info))
+         session_manager.save(session_info);
 
       secure_renegotiation.update(state->client_finished,
                                   state->server_finished);

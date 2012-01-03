@@ -20,7 +20,7 @@ namespace Botan {
 */
 TLS_Client::TLS_Client(std::tr1::function<void (const byte[], size_t)> output_fn,
                        std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
-                       std::tr1::function<void (const TLS_Session&)> handshake_fn,
+                       std::tr1::function<bool (const TLS_Session&)> handshake_fn,
                        TLS_Session_Manager& session_manager,
                        Credentials_Manager& creds,
                        const TLS_Policy& policy,
@@ -384,10 +384,13 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
          ""
          );
 
-      session_manager.save(session_info);
+      bool save_session = true;
 
       if(handshake_fn)
-         handshake_fn(session_info);
+         save_session = handshake_fn(session_info);
+
+      if(save_session)
+         session_manager.save(session_info);
 
       secure_renegotiation.update(state->client_finished, state->server_finished);
 
