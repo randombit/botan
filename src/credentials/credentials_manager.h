@@ -20,9 +20,10 @@ class BigInt;
 * Interface for a credentials manager.
 *
 * A type is a fairly static value that represents the general nature
-* of the transaction occuring. Currently defined are "tls-client" and
-* "tls-server". Context represents a hostname, email address,
+* of the transaction occuring. Currently used values are "tls-client"
+* and "tls-server". Context represents a hostname, email address,
 * username, or other identifier.
+
 */
 class BOTAN_DLL Credentials_Manager
    {
@@ -31,21 +32,25 @@ class BOTAN_DLL Credentials_Manager
 
       /**
       * @return identifier for client-side SRP auth, if available
-                for this type/context
+                for this type/context. Should return empty string
+                if password auth not desired/available.
       */
       virtual std::string srp_identifier(const std::string& type,
                                          const std::string& context);
 
       /**
+      * @param identifier specifies what identifier we want the
+      *        password for. This will be a value previously returned
+      *        by srp_identifier.
       * @return password for client-side SRP auth, if available
-                for this identifier/type/context
+                for this identifier/type/context.
       */
       virtual std::string srp_password(const std::string& identifier,
                                        const std::string& type,
                                        const std::string& context);
 
       /**
-      * @todo add option for faking verifier if identifier is unknown
+      * Retrieve SRP verifier parameters
       */
       virtual bool srp_verifier(const std::string& identifier,
                                 const std::string& type,
@@ -53,11 +58,12 @@ class BOTAN_DLL Credentials_Manager
                                 BigInt& group_prime,
                                 BigInt& group_generator,
                                 BigInt& verifier,
-                                MemoryRegion<byte>& salt);
+                                MemoryRegion<byte>& salt,
+                                bool generate_fake_on_unknown);
 
       /**
       * @param cert_key_type is a string representing the key type
-      * ("RSA", "DSA", "ECDSA") or empty if no preference.
+      * ("rsa", "dsa", "ecdsa", etc) or empty if no preference.
       */
       virtual std::vector<X509_Certificate> cert_chain(
          const std::string& cert_key_type,
