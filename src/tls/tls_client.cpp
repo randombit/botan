@@ -384,12 +384,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
          ""
          );
 
-      bool save_session = true;
-
-      if(handshake_fn)
-         save_session = handshake_fn(session_info);
-
-      if(save_session)
+      if(handshake_fn(session_info))
          session_manager.save(session_info);
 
       secure_renegotiation.update(state->client_finished, state->server_finished);
