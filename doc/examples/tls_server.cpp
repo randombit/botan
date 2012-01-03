@@ -56,7 +56,7 @@ class Credentials_Manager_Simple : public Credentials_Manager
       std::map<X509_Certificate, Private_Key*> certs_and_keys;
    };
 
-void handshake_complete(const TLS_Session& session)
+bool handshake_complete(const TLS_Session& session)
    {
    printf("Handshake complete, protocol=%04X ciphersuite=%04X compression=%d\n",
           session.version(), session.ciphersuite(),
@@ -64,6 +64,7 @@ void handshake_complete(const TLS_Session& session)
 
    printf("Session id = %s\n", hex_encode(session.session_id()).c_str());
    printf("Master secret = %s\n", hex_encode(session.master_secret()).c_str());
+   return true;
    }
 
 class Blocking_TLS_Server

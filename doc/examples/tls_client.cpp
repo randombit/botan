@@ -67,7 +67,7 @@ int connect_to_host(const std::string& host, u16bit port)
    return fd;
    }
 
-void handshake_complete(const TLS_Session& session)
+bool handshake_complete(const TLS_Session& session)
    {
    printf("Handshake complete, protocol=%04X ciphersuite=%04X compression=%d\n",
           session.version(), session.ciphersuite(),
@@ -75,6 +75,7 @@ void handshake_complete(const TLS_Session& session)
 
    printf("Session id = %s\n", hex_encode(session.session_id()).c_str());
    printf("Master secret = %s\n", hex_encode(session.master_secret()).c_str());
+   return true;
    }
 
 void socket_write(int sockfd, const byte buf[], size_t length)
@@ -115,6 +116,7 @@ void process_data(const byte buf[], size_t buf_size, u16bit alert_info)
 void doit(RandomNumberGenerator& rng,
           TLS_Policy& policy,
           TLS_Session_Manager& session_manager,
+          Credentials_Manager& creds,
           const std::string& host,
           u16bit port)
    {
@@ -124,6 +126,7 @@ void doit(RandomNumberGenerator& rng,
                      process_data,
                      handshake_complete,
                      session_manager,
+                     creds,
                      policy,
                      rng,
                      host);
@@ -203,11 +206,13 @@ int main(int argc, char* argv[])
       Client_TLS_Policy policy;
       TLS_Session_Manager_In_Memory session_manager;
 
+      Credentials_Manager creds;
+
       std::string host = argv[1];
       u32bit port = argc == 3 ? Botan::to_u32bit(argv[2]) : 443;
 
       while(true)
-         doit(rng, policy, session_manager, host, port);
+         doit(rng, policy, session_manager, creds, host, port);
 
    }
    catch(std::exception& e)
