@@ -386,6 +386,8 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
 
       if(handshake_fn(session_info))
          session_manager.save(session_info);
+      else
+         session_manager.remove_entry(session_info.session_id());
 
       secure_renegotiation.update(state->client_finished, state->server_finished);
 
