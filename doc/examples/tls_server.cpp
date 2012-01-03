@@ -16,6 +16,46 @@ using namespace Botan;
 #include <iostream>
 #include <memory>
 
+class Credentials_Manager_Simple : public Credentials_Manager
+   {
+   public:
+      Credentials_Manager_Simple(RandomNumberGenerator& rng) : rng(rng) {}
+
+      std::vector<X509_Certificate> cert_chain(
+         const std::string& cert_key_type,
+         const std::string& type,
+         const std::string& context)
+         {
+         const std::string hostname = (context == "" ? "localhost" : context);
+
+         //RSA_PrivateKey key(rng, 1024);
+         DSA_PrivateKey key(rng, DL_Group("dsa/jce/1024"));
+
+         X509_Cert_Options options(
+            hostname + "/US/Botan Library/Test Server");
+
+         X509_Certificate cert =
+            X509::create_self_signed_cert(options, key, "SHA-1", rng);
+
+         certs_and_keys[cert] = PKCS8::copy_key(key, rng);
+
+         std::vector<X509_Certificate> certs;
+         certs.push_back(cert);
+         return certs;
+         }
+
+      Private_Key* private_key_for(const X509_Certificate& cert,
+                                   const std::string& type,
+                                   const std::string& context)
+         {
+         return certs_and_keys[cert];
+         }
+
+   private:
+      RandomNumberGenerator& rng;
+      std::map<X509_Certificate, Private_Key*> certs_and_keys;
+   };
+
 void handshake_complete(const TLS_Session& session)
    {
    printf("Handshake complete, protocol=%04X ciphersuite=%04X compression=%d\n",
@@ -32,20 +72,18 @@ class Blocking_TLS_Server
       Blocking_TLS_Server(std::tr1::function<void (const byte[], size_t)> output_fn,
                           std::tr1::function<size_t (byte[], size_t)> input_fn,
                           TLS_Session_Manager& sessions,
+                          Credentials_Manager& creds,
                           TLS_Policy& policy,
-                          RandomNumberGenerator& rng,
-                          const X509_Certificate& cert,
-                          const Private_Key& key) :
+                          RandomNumberGenerator& rng) :
          input_fn(input_fn),
          server(
             output_fn,
             std::tr1::bind(&Blocking_TLS_Server::reader_fn, std::tr1::ref(*this), _1, _2, _3),
             handshake_complete,
             sessions,
+            creds,
             policy,
-            rng,
-            cert,
-            key),
+            rng),
          exit(false)
          {
          read_loop();
@@ -154,20 +192,13 @@ int main(int argc, char* argv[])
 
       AutoSeeded_RNG rng;
 
-      RSA_PrivateKey key(rng, 1024);
-      //DSA_PrivateKey key(rng, DL_Group("dsa/jce/1024"));
-
-      X509_Cert_Options options(
-         "localhost/US/Botan Library/Test Server");
-
-      X509_Certificate cert =
-         X509::create_self_signed_cert(options, key, "SHA-1", rng);
-
       Server_Socket listener(port);
 
       Server_TLS_Policy policy;
 
       TLS_Session_Manager_In_Memory sessions;
+
+      Credentials_Manager_Simple creds(rng);
 
       while(true)
          {
@@ -182,10 +213,9 @@ int main(int argc, char* argv[])
                std::tr1::bind(&Socket::write, std::tr1::ref(sock), _1, _2),
                std::tr1::bind(&Socket::read, std::tr1::ref(sock), _1, _2, true),
                sessions,
+               creds,
                policy,
-               rng,
-               cert,
-               key);
+               rng);
 
             const char* msg = "Welcome to the best echo server evar\n";
             tls.write((const Botan::byte*)msg, strlen(msg));

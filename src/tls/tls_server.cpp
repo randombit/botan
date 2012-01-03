@@ -85,25 +85,15 @@ TLS_Server::TLS_Server(std::tr1::function<void (const byte[], size_t)> output_fn
                        std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
                        std::tr1::function<void (const TLS_Session&)> handshake_fn,
                        TLS_Session_Manager& session_manager,
+                       Credentials_Manager& creds,
                        const TLS_Policy& policy,
-                       RandomNumberGenerator& rng,
-                       const X509_Certificate& cert,
-                       const Private_Key& cert_key) :
+                       RandomNumberGenerator& rng) :
    TLS_Channel(output_fn, proc_fn, handshake_fn),
    policy(policy),
    rng(rng),
-   session_manager(session_manager)
+   session_manager(session_manager),
+   creds(creds)
    {
-   cert_chain.push_back(cert);
-   private_key = PKCS8::copy_key(cert_key, rng);
-   }
-
-/*
-* TLS Server Destructor
-*/
-TLS_Server::~TLS_Server()
-   {
-   delete private_key;
    }
 
 /*
@@ -183,7 +173,6 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
          {
          // resume session
 
-         printf("Resuming a session\n");
          state->server_hello = new Server_Hello(
             writer,
             state->hash,
@@ -222,6 +211,17 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
          }
       else // new session
          {
+         std::vector<X509_Certificate> server_certs =
+            creds.cert_chain("",
+                             "tls-server",
+                             client_requested_hostname);
+
+         Private_Key* private_key =
+            server_certs.empty() ? 0 :
+            (creds.private_key_for(server_certs[0],
+                                  "tls-server",
+                                   client_requested_hostname));
+
          state->server_hello = new Server_Hello(
             writer,
             state->hash,
@@ -229,9 +229,8 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             rng,
             secure_renegotiation.supported(),
             secure_renegotiation.for_server_hello(),
-            cert_chain,
+            server_certs,
             *(state->client_hello),
-            rng.random_vec(32),
             state->version);
 
          if(state->client_hello->fragment_size())
@@ -241,10 +240,9 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
          if(state->suite.sig_type() != TLS_ALGO_SIGNER_ANON)
             {
-            // FIXME: should choose certs based on sig type
             state->server_certs = new Certificate(writer,
                                                   state->hash,
-                                                  cert_chain);
+                                                  server_certs);
             }
 
          if(state->suite.kex_type() == TLS_ALGO_KEYEXCH_NOKEX)

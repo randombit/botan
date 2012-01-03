@@ -150,7 +150,6 @@ class Server_Hello : public Handshake_Message
                    const MemoryRegion<byte>& reneg_info,
                    const std::vector<X509_Certificate>& certs,
                    const Client_Hello& other,
-                   const MemoryRegion<byte>& session_id,
                    Version_Code version);
 
       Server_Hello(Record_Writer& writer,

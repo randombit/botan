@@ -10,6 +10,7 @@
 
 #include <botan/tls_channel.h>
 #include <botan/tls_session_manager.h>
+#include <botan/credentials_manager.h>
 #include <vector>
 
 namespace Botan {
@@ -26,28 +27,21 @@ class BOTAN_DLL TLS_Client : public TLS_Channel
       * @param proc_fn is called when new data (application or alerts) is received
       * @param handshake_complete is called when a handshake is completed
       * @param session_manager manages session state
+      * @param creds manages application/user credentials
       * @param policy specifies other connection policy information
       * @param rng a random number generator
       * @param servername the server's DNS name, if known
-      * @param srp_username a SRP identifier to use for SRP key exchange
-      * @param srp_password a SRP password to use for SRP key exchange
       */
       TLS_Client(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
                  std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
                  std::tr1::function<void (const TLS_Session&)> handshake_complete,
                  TLS_Session_Manager& session_manager,
+                 Credentials_Manager& creds,
                  const TLS_Policy& policy,
                  RandomNumberGenerator& rng,
-                 const std::string& servername = "",
-                 const std::string& srp_username = "",
-                 const std::string& srp_password = "");
-
-      void add_client_cert(const X509_Certificate& cert,
-                           Private_Key* cert_key);
+                 const std::string& servername = "");
 
       void renegotiate();
-
-      ~TLS_Client();
    private:
       void process_handshake_msg(Handshake_Type type,
                                  const MemoryRegion<byte>& contents);
@@ -55,8 +49,7 @@ class BOTAN_DLL TLS_Client : public TLS_Channel
       const TLS_Policy& policy;
       RandomNumberGenerator& rng;
       TLS_Session_Manager& session_manager;
-
-      std::vector<std::pair<X509_Certificate, Private_Key*> > certs;
+      Credentials_Manager& creds;
    };
 
 }

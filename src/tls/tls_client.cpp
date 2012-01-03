@@ -22,20 +22,22 @@ TLS_Client::TLS_Client(std::tr1::function<void (const byte[], size_t)> output_fn
                        std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
                        std::tr1::function<void (const TLS_Session&)> handshake_fn,
                        TLS_Session_Manager& session_manager,
+                       Credentials_Manager& creds,
                        const TLS_Policy& policy,
                        RandomNumberGenerator& rng,
-                       const std::string& hostname,
-                       const std::string& srp_identifier,
-                       const std::string& srp_password) :
+                       const std::string& hostname) :
    TLS_Channel(output_fn, proc_fn, handshake_fn),
    policy(policy),
    rng(rng),
-   session_manager(session_manager)
+   session_manager(session_manager),
+   creds(creds)
    {
    writer.set_version(SSL_V3);
 
    state = new Handshake_State;
    state->set_expected_next(SERVER_HELLO);
+
+   const std::string srp_identifier = creds.srp_identifier("tls-client", hostname);
 
    if(hostname != "")
       {
@@ -68,21 +70,6 @@ TLS_Client::TLS_Client(std::tr1::function<void (const byte[], size_t)> output_fn
       }
 
    secure_renegotiation.update(state->client_hello);
-   }
-
-void TLS_Client::add_client_cert(const X509_Certificate& cert,
-                                 Private_Key* cert_key)
-   {
-   certs.push_back(std::make_pair(cert, cert_key));
-   }
-
-/*
-* TLS Client Destructor
-*/
-TLS_Client::~TLS_Client()
-   {
-   for(size_t i = 0; i != certs.size(); i++)
-      delete certs[i].second;
    }
 
 /*
@@ -308,17 +295,19 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
 
       state->server_hello_done = new Server_Hello_Done(contents);
 
-      std::vector<X509_Certificate> send_certs;
-
       if(state->received_handshake_msg(CERTIFICATE_REQUEST))
          {
          std::vector<Certificate_Type> types =
             state->cert_req->acceptable_types();
 
-         // FIXME: Fill in useful certs here, if any
+         std::vector<X509_Certificate> client_certs =
+            creds.cert_chain("", // use types here
+                             "tls-client",
+                             state->client_hello->sni_hostname());
+
          state->client_certs = new Certificate(writer,
                                                state->hash,
-                                               send_certs);
+                                               client_certs);
          }
 
       state->client_kex =
@@ -327,11 +316,15 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
                                  state->client_hello->version());
 
       if(state->received_handshake_msg(CERTIFICATE_REQUEST) &&
-         !send_certs.empty())
+         !state->client_certs->empty())
          {
-         Private_Key* key_matching_cert = 0; // FIXME
+         Private_Key* private_key =
+            creds.private_key_for(state->client_certs->cert_chain()[0],
+                                  "tls-client",
+                                  state->client_hello->sni_hostname());
+
          state->client_verify = new Certificate_Verify(writer, state->hash,
-                                                       rng, key_matching_cert);
+                                                       rng, private_key);
          }
 
       state->keys = SessionKeys(state->suite, state->version,

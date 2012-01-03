@@ -10,6 +10,7 @@
 
 #include <botan/tls_channel.h>
 #include <botan/tls_session_manager.h>
+#include <botan/credentials_manager.h>
 #include <vector>
 
 namespace Botan {
@@ -20,23 +21,16 @@ namespace Botan {
 class BOTAN_DLL TLS_Server : public TLS_Channel
    {
    public:
-
       /**
       * TLS_Server initialization
-      *
-      * FIXME: support cert chains (!)
-      * FIXME: support anonymous servers
       */
       TLS_Server(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
                  std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
                  std::tr1::function<void (const TLS_Session&)> handshake_complete,
                  TLS_Session_Manager& session_manager,
+                 Credentials_Manager& creds,
                  const TLS_Policy& policy,
-                 RandomNumberGenerator& rng,
-                 const X509_Certificate& cert,
-                 const Private_Key& cert_key);
-
-      ~TLS_Server();
+                 RandomNumberGenerator& rng);
 
       void renegotiate();
 
@@ -53,9 +47,7 @@ class BOTAN_DLL TLS_Server : public TLS_Channel
       const TLS_Policy& policy;
       RandomNumberGenerator& rng;
       TLS_Session_Manager& session_manager;
-
-      std::vector<X509_Certificate> cert_chain;
-      Private_Key* private_key;
+      Credentials_Manager& creds;
 
       std::string client_requested_hostname;
    };
