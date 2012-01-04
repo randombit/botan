@@ -174,7 +174,7 @@ void TLS_Channel::read_handshake(byte rec_type,
 void TLS_Channel::queue_for_sending(const byte buf[], size_t buf_size)
    {
    if(!handshake_completed)
-      throw std::invalid_state("Application data cannot be queued before handshake");
+      throw std::runtime_error("Application data cannot be queued before handshake");
 
    writer.send(APPLICATION_DATA, buf, buf_size);
    }
