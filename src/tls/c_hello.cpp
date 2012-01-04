@@ -11,8 +11,18 @@
 #include <botan/internal/tls_extensions.h>
 #include <botan/tls_record.h>
 #include <botan/internal/stl_util.h>
+#include <botan/time.h>
 
 namespace Botan {
+
+MemoryVector<byte> make_hello_random(RandomNumberGenerator& rng)
+   {
+   MemoryVector<byte> buf(32);
+   const u32bit time32 = system_time();
+   store_be(time32, buf);
+   rng.randomize(&buf[4], buf.size() - 4);
+   return buf;
+   }
 
 /*
 * Encode and send a Handshake message
@@ -74,7 +84,7 @@ Client_Hello::Client_Hello(Record_Writer& writer,
                            const std::string& hostname,
                            const std::string& srp_identifier) :
    m_version(policy.pref_version()),
-   m_random(rng.random_vec(32)),
+   m_random(make_hello_random(rng)),
    m_suites(policy.ciphersuites(srp_identifier != "")),
    m_comp_methods(policy.compression()),
    m_hostname(hostname),
@@ -97,7 +107,7 @@ Client_Hello::Client_Hello(Record_Writer& writer,
                            bool next_protocol) :
    m_version(session.version()),
    m_session_id(session.session_id()),
-   m_random(rng.random_vec(32)),
+   m_random(make_hello_random(rng)),
    m_hostname(session.sni_hostname()),
    m_srp_identifier(session.srp_identifier()),
    m_next_protocol(next_protocol),

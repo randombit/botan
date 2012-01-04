@@ -40,6 +40,8 @@ class Handshake_Message
       virtual void deserialize(const MemoryRegion<byte>&) = 0;
    };
 
+MemoryVector<byte> make_hello_random(RandomNumberGenerator& rng);
+
 /**
 * Client Hello Message
 */
