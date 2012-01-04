@@ -1,6 +1,6 @@
 /*
 * TLS Record Handling
-* (C) 2004-2010 Jack Lloyd
+* (C) 2004-2012 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -62,6 +62,8 @@ class BOTAN_DLL Record_Writer
       void send_record(byte type, const byte input[], size_t length);
 
       std::tr1::function<void (const byte[], size_t)> m_output_fn;
+
+      MemoryVector<byte> m_writebuf;
 
       Pipe m_cipher;
       MessageAuthenticationCode* m_mac;

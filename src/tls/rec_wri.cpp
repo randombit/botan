@@ -1,6 +1,6 @@
 /*
 * TLS Record Writing
-* (C) 2004-2011 Jack Lloyd
+* (C) 2004-2012 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -232,16 +232,16 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
          throw TLS_Exception(INTERNAL_ERROR,
                              "Record_Writer: Record is too big");
 
-      MemoryVector<byte> buf(5 + buf_size);
+      m_writebuf.resize(5 + buf_size);
 
       // TLS record header
-      buf[0] = type;
-      buf[1] = m_major;
-      buf[2] = m_minor;
-      buf[3] = get_byte<u16bit>(0, buf_size);
-      buf[4] = get_byte<u16bit>(1, buf_size);
+      m_writebuf[0] = type;
+      m_writebuf[1] = m_major;
+      m_writebuf[2] = m_minor;
+      m_writebuf[3] = get_byte<u16bit>(0, buf_size);
+      m_writebuf[4] = get_byte<u16bit>(1, buf_size);
 
-      byte* buf_write_ptr = &buf[5];
+      byte* buf_write_ptr = &m_writebuf[5];
 
       if(m_iv_size)
          {
@@ -269,11 +269,11 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
          }
 
       // FIXME: this could be done in-place without copying
-      m_cipher.process_msg(&buf[5], buf.size() - 5);
-      size_t got_back = m_cipher.read(&buf[5], buf.size() - 5, Pipe::LAST_MESSAGE);
-      BOTAN_ASSERT_EQUAL(got_back, buf.size()-5, "CBC didn't encrypt full blocks");
+      m_cipher.process_msg(&m_writebuf[5], buf_size);
+      size_t got_back = m_cipher.read(&m_writebuf[5], buf_size, Pipe::LAST_MESSAGE);
+      BOTAN_ASSERT_EQUAL(got_back, buf_size, "CBC didn't encrypt full blocks");
 
-      m_output_fn(&buf[0], buf.size());
+      m_output_fn(&m_writebuf[0], m_writebuf.size());
 
       m_seq_no++;
       }
