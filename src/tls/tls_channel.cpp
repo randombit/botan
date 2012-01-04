@@ -45,7 +45,7 @@ size_t TLS_Channel::received_data(const byte buf[], size_t buf_size)
       reader.add_input(buf, buf_size);
 
       byte rec_type = CONNECTION_CLOSED;
-      SecureVector<byte> record;
+      MemoryVector<byte> record;
 
       while(!reader.currently_empty())
          {
@@ -78,6 +78,8 @@ size_t TLS_Channel::received_data(const byte buf[], size_t buf_size)
          else if(rec_type == ALERT)
             {
             Alert alert_msg(record);
+
+            alert_notify(alert_msg.is_fatal(), alert_msg.type());
 
             proc_fn(0, 0, alert_msg.type());
 
@@ -131,7 +133,7 @@ void TLS_Channel::read_handshake(byte rec_type,
    while(true)
       {
       Handshake_Type type = HANDSHAKE_NONE;
-      SecureVector<byte> contents;
+      MemoryVector<byte> contents;
 
       if(rec_type == HANDSHAKE)
          {

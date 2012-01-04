@@ -109,6 +109,18 @@ void TLS_Server::renegotiate()
    Hello_Request hello_req(writer);
    }
 
+void TLS_Server::alert_notify(bool, Alert_Type type)
+   {
+   if(type == NO_RENEGOTIATION)
+      {
+      if(handshake_completed && state)
+         {
+         delete state;
+         state = 0;
+         }
+      }
+   }
+
 /*
 * Split up and process handshake messages
 */

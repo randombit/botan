@@ -56,6 +56,8 @@ class BOTAN_DLL TLS_Client : public TLS_Channel
       void process_handshake_msg(Handshake_Type type,
                                  const MemoryRegion<byte>& contents);
 
+      void alert_notify(bool is_fatal, Alert_Type type);
+
       const TLS_Policy& policy;
       RandomNumberGenerator& rng;
       TLS_Session_Manager& session_manager;

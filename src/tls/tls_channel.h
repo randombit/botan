@@ -84,6 +84,8 @@ class BOTAN_DLL TLS_Channel
       virtual void process_handshake_msg(Handshake_Type type,
                                          const MemoryRegion<byte>& contents) = 0;
 
+      virtual void alert_notify(bool fatal_alert, Alert_Type type) = 0;
+
       std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn;
       std::tr1::function<bool (const TLS_Session&)> handshake_fn;
 

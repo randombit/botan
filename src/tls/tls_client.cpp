@@ -96,6 +96,18 @@ void TLS_Client::renegotiate()
    secure_renegotiation.update(state->client_hello);
    }
 
+void TLS_Client::alert_notify(bool, Alert_Type type)
+   {
+   if(type == NO_RENEGOTIATION)
+      {
+      if(handshake_completed && state)
+         {
+         delete state;
+         state = 0;
+         }
+      }
+   }
+
 /*
 * Process a handshake message
 */
