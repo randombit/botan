@@ -271,7 +271,7 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
       // FIXME: this could be done in-place without copying
       m_cipher.process_msg(&m_writebuf[5], buf_size);
       size_t got_back = m_cipher.read(&m_writebuf[5], buf_size, Pipe::LAST_MESSAGE);
-      BOTAN_ASSERT_EQUAL(got_back, buf_size, "CBC didn't encrypt full blocks");
+      BOTAN_ASSERT_EQUAL(got_back, buf_size, "Cipher didn't encrypt full amount");
 
       m_output_fn(&m_writebuf[0], m_writebuf.size());
 

@@ -88,7 +88,7 @@ class BOTAN_DLL Record_Reader
       * @return Number of bytes still needed (minimum), or 0 if success
       */
       size_t get_record(byte& msg_type,
-                        MemoryRegion<byte>& buffer);
+                        MemoryVector<byte>& buffer);
 
       SecureVector<byte> get_record(byte& msg_type);
 
@@ -102,19 +102,20 @@ class BOTAN_DLL Record_Reader
 
       void reset();
 
-      bool currently_empty() const { return input_queue.size() == 0; }
+      bool currently_empty() const { return m_input_queue.size() == 0; }
 
-      Record_Reader() { mac = 0; reset(); }
+      Record_Reader() { m_mac = 0; reset(); }
 
-      ~Record_Reader() { delete mac; }
+      ~Record_Reader() { delete m_mac; }
    private:
-      SecureQueue input_queue;
+      MemoryVector<byte> m_readbuf;
+      SecureQueue m_input_queue;
 
-      Pipe cipher;
-      MessageAuthenticationCode* mac;
-      size_t block_size, mac_size, iv_size;
-      u64bit seq_no;
-      byte major, minor;
+      Pipe m_cipher;
+      MessageAuthenticationCode* m_mac;
+      size_t m_block_size, m_mac_size, m_iv_size, m_max_fragment;
+      u64bit m_seq_no;
+      byte m_major, m_minor;
    };
 
 }
