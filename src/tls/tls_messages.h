@@ -154,24 +154,28 @@ class Server_Hello : public Handshake_Message
 
       Server_Hello(Record_Writer& writer,
                    TLS_Handshake_Hash& hash,
+                   Version_Code version,
+                   const Client_Hello& other,
+                   const std::vector<X509_Certificate>& certs,
                    const TLS_Policy& policies,
-                   RandomNumberGenerator& rng,
                    bool client_has_secure_renegotiation,
                    const MemoryRegion<byte>& reneg_info,
-                   const std::vector<X509_Certificate>& certs,
-                   const Client_Hello& other,
-                   Version_Code version);
+                   bool client_has_npn,
+                   const std::vector<std::string>& next_protocols,
+                   RandomNumberGenerator& rng);
 
       Server_Hello(Record_Writer& writer,
                    TLS_Handshake_Hash& hash,
-                   RandomNumberGenerator& rng,
-                   bool client_has_secure_renegotiation,
-                   const MemoryRegion<byte>& reneg_info,
                    const MemoryRegion<byte>& session_id,
-                   size_t max_fragment_size,
+                   Version_Code ver,
                    u16bit ciphersuite,
                    byte compression,
-                   Version_Code ver);
+                   size_t max_fragment_size,
+                   bool client_has_secure_renegotiation,
+                   const MemoryRegion<byte>& reneg_info,
+                   bool client_has_npn,
+                   const std::vector<std::string>& next_protocols,
+                   RandomNumberGenerator& rng);
 
       Server_Hello(const MemoryRegion<byte>& buf) { deserialize(buf); }
    private:

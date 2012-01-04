@@ -30,15 +30,24 @@ class BOTAN_DLL TLS_Server : public TLS_Channel
                  TLS_Session_Manager& session_manager,
                  Credentials_Manager& creds,
                  const TLS_Policy& policy,
-                 RandomNumberGenerator& rng);
+                 RandomNumberGenerator& rng,
+                 const std::vector<std::string>& protocols =
+                    std::vector<std::string>());
 
       void renegotiate();
 
       /**
-      * Return the server name indicator, if set by the client
+      * Return the server name indicator, if sent by the client
       */
       std::string server_name_indicator() const
-         { return client_requested_hostname; }
+         { return m_hostname; }
+
+      /**
+      * Return the protocol negotiated with NPN extension
+      */
+      std::string next_protocol() const
+         { return m_next_protocol; }
+
    private:
       void read_handshake(byte, const MemoryRegion<byte>&);
 
@@ -49,7 +58,9 @@ class BOTAN_DLL TLS_Server : public TLS_Channel
       TLS_Session_Manager& session_manager;
       Credentials_Manager& creds;
 
-      std::string client_requested_hostname;
+      std::vector<std::string> m_possible_protocols;
+      std::string m_hostname;
+      std::string m_next_protocol;
    };
 
 }

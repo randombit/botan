@@ -9,8 +9,6 @@
 #include <botan/internal/tls_reader.h>
 #include <botan/tls_exceptn.h>
 
-#include <stdio.h>
-
 namespace Botan {
 
 namespace {
@@ -243,8 +241,6 @@ Next_Protocol_Negotiation::Next_Protocol_Negotiation(TLS_Data_Reader& reader,
    while(bytes_remaining)
       {
       const std::string p = reader.get_string(1, 0, 255);
-
-      printf("Protocol option %s\n", p.c_str());
 
       if(bytes_remaining < p.size() + 1)
          throw Decoding_Error("Bad encoding for next protocol extension");

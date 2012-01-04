@@ -12,8 +12,6 @@
 #include <botan/rsa.h>
 #include <botan/dh.h>
 
-#include <stdio.h>
-
 namespace Botan {
 
 namespace {
@@ -87,12 +85,14 @@ TLS_Server::TLS_Server(std::tr1::function<void (const byte[], size_t)> output_fn
                        TLS_Session_Manager& session_manager,
                        Credentials_Manager& creds,
                        const TLS_Policy& policy,
-                       RandomNumberGenerator& rng) :
+                       RandomNumberGenerator& rng,
+                       const std::vector<std::string>& next_protocols) :
    TLS_Channel(output_fn, proc_fn, handshake_fn),
    policy(policy),
    rng(rng),
    session_manager(session_manager),
-   creds(creds)
+   creds(creds),
+   m_possible_protocols(next_protocols)
    {
    }
 
@@ -154,7 +154,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       {
       state->client_hello = new Client_Hello(contents, type);
 
-      client_requested_hostname = state->client_hello->sni_hostname();
+      m_hostname = state->client_hello->sni_hostname();
 
       state->version = choose_version(state->client_hello->version(),
                                       policy.min_version());
@@ -176,14 +176,16 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
          state->server_hello = new Server_Hello(
             writer,
             state->hash,
-            rng,
-            secure_renegotiation.supported(),
-            secure_renegotiation.for_server_hello(),
             session_info.session_id(),
+            Version_Code(session_info.version()),
             session_info.ciphersuite(),
             session_info.compression_method(),
             session_info.fragment_size(),
-            Version_Code(session_info.version()));
+            secure_renegotiation.supported(),
+            secure_renegotiation.for_server_hello(),
+            state->client_hello->next_protocol_negotiation(),
+            m_possible_protocols,
+            rng);
 
          if(session_info.fragment_size())
             writer.set_maximum_fragment_size(session_info.fragment_size());
@@ -214,24 +216,26 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
          std::vector<X509_Certificate> server_certs =
             creds.cert_chain("",
                              "tls-server",
-                             client_requested_hostname);
+                             m_hostname);
 
          Private_Key* private_key =
             server_certs.empty() ? 0 :
             (creds.private_key_for(server_certs[0],
                                   "tls-server",
-                                   client_requested_hostname));
+                                   m_hostname));
 
          state->server_hello = new Server_Hello(
             writer,
             state->hash,
+            state->version,
+            *(state->client_hello),
+            server_certs,
             policy,
-            rng,
             secure_renegotiation.supported(),
             secure_renegotiation.for_server_hello(),
-            server_certs,
-            *(state->client_hello),
-            state->version);
+            state->client_hello->next_protocol_negotiation(),
+            m_possible_protocols,
+            rng);
 
          if(state->client_hello->fragment_size())
             writer.set_maximum_fragment_size(state->client_hello->fragment_size());
@@ -347,9 +351,20 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       }
    else if(type == HANDSHAKE_CCS)
       {
-      state->set_expected_next(FINISHED);
+      if(state->server_hello->next_protocol_negotiation())
+         state->set_expected_next(NEXT_PROTOCOL);
+      else
+         state->set_expected_next(FINISHED);
 
       reader.activate(state->suite, state->keys, SERVER);
+      }
+   else if(type == NEXT_PROTOCOL)
+      {
+      state->set_expected_next(FINISHED);
+
+      state->next_protocol = new Next_Protocol(contents);
+
+      m_next_protocol = state->next_protocol->protocol();
       }
    else if(type == FINISHED)
       {
@@ -389,7 +404,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
          secure_renegotiation.supported(),
          state->server_hello->fragment_size(),
          peer_certs,
-         client_requested_hostname,
+         m_hostname,
          ""
          );
 

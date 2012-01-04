@@ -9,8 +9,6 @@
 #include <botan/hex.h>
 #include <botan/time.h>
 
-#include <stdio.h>
-
 namespace Botan {
 
 bool TLS_Session_Manager_In_Memory::load_from_session_str(
