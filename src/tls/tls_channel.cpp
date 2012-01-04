@@ -173,19 +173,10 @@ void TLS_Channel::read_handshake(byte rec_type,
 
 void TLS_Channel::queue_for_sending(const byte buf[], size_t buf_size)
    {
-   if(handshake_completed)
-      {
-      while(!pre_handshake_write_queue.end_of_data())
-         {
-         SecureVector<byte> q_buf(1024);
-         const size_t got = pre_handshake_write_queue.read(&q_buf[0], q_buf.size());
-         writer.send(APPLICATION_DATA, &q_buf[0], got);
-         }
+   if(!handshake_completed)
+      throw std::invalid_state("Application data cannot be queued before handshake");
 
-      writer.send(APPLICATION_DATA, buf, buf_size);
-      }
-   else
-      pre_handshake_write_queue.write(buf, buf_size);
+   writer.send(APPLICATION_DATA, buf, buf_size);
    }
 
 void TLS_Channel::alert(Alert_Level alert_level, Alert_Type alert_code)

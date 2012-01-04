@@ -90,8 +90,6 @@ class BOTAN_DLL TLS_Channel
       Record_Writer writer;
       Record_Reader reader;
 
-      SecureQueue pre_handshake_write_queue;
-
       std::vector<X509_Certificate> peer_certs;
 
       class Handshake_State* state;
