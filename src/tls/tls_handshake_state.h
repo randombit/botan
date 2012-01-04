@@ -12,6 +12,20 @@
 #include <botan/internal/tls_session_key.h>
 #include <botan/secqueue.h>
 
+#if defined(BOTAN_USE_STD_TR1)
+
+#if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+    #include <functional>
+#else
+    #include <tr1/functional>
+#endif
+
+#elif defined(BOTAN_USE_BOOST_TR1)
+  #include <boost/tr1/functional.hpp>
+#else
+  #error "No TR1 library defined for use"
+#endif
+
 namespace Botan {
 
 /**
@@ -28,6 +42,8 @@ class Handshake_State
       void confirm_transition_to(Handshake_Type handshake_msg);
       void set_expected_next(Handshake_Type handshake_msg);
 
+      Version_Code version;
+
       Client_Hello* client_hello;
       Server_Hello* server_hello;
       Certificate* server_certs;
@@ -38,6 +54,9 @@ class Handshake_State
       Certificate* client_certs;
       Client_Key_Exchange* client_kex;
       Certificate_Verify* client_verify;
+
+      Next_Protocol* next_protocol;
+
       Finished* client_finished;
       Finished* server_finished;
 
@@ -55,7 +74,11 @@ class Handshake_State
       */
       SecureVector<byte> resume_master_secret;
 
-      Version_Code version;
+      /**
+      * Used by client using NPN
+      */
+      std::tr1::function<std::string (std::vector<std::string>)> client_npn_cb;
+
    private:
       u32bit hand_expecting_mask, hand_received_mask;
    };

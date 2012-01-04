@@ -51,6 +51,8 @@ enum Handshake_Type {
    CLIENT_KEX          = 16,
    FINISHED            = 20,
 
+   NEXT_PROTOCOL       = 67,
+
    HANDSHAKE_CCS       = 100, // Not a wire value
    HANDSHAKE_NONE      = 255  // Null value
 };
@@ -204,6 +206,8 @@ enum TLS_Handshake_Extension_Type {
 
    TLSEXT_CERTIFICATE_TYPES      = 9,
    TLSEXT_SESSION_TICKET         = 35,
+
+   TLSEXT_NEXT_PROTOCOL          = 13172,
 
    TLSEXT_SAFE_RENEGOTIATION     = 65281,
 };

@@ -30,8 +30,6 @@
 
 namespace Botan {
 
-using namespace std::tr1::placeholders;
-
 class SessionKeys;
 
 /**

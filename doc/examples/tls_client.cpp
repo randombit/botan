@@ -17,6 +17,8 @@
 
 using namespace Botan;
 
+using namespace std::tr1::placeholders;
+
 class Client_TLS_Policy : public TLS_Policy
    {
    public:
@@ -102,15 +104,25 @@ void socket_write(int sockfd, const byte buf[], size_t length)
    //printf("socket write %d\n", offset);
    }
 
+bool got_alert = false;
+
 void process_data(const byte buf[], size_t buf_size, u16bit alert_info)
    {
    if(alert_info != NULL_ALERT)
       {
       printf("Alert: %d\n", alert_info);
+      got_alert = true;
       }
 
    for(size_t i = 0; i != buf_size; ++i)
       printf("%c", buf[i]);
+   }
+
+std::string protocol_chooser(const std::vector<std::string>& protocols)
+   {
+   for(size_t i = 0; i != protocols.size(); ++i)
+      printf("Protocol %d - %s\n", i, protocols[i].c_str());
+   return "http/1.1";
    }
 
 void doit(RandomNumberGenerator& rng,
@@ -129,7 +141,8 @@ void doit(RandomNumberGenerator& rng,
                      creds,
                      policy,
                      rng,
-                     host);
+                     host,
+                     protocol_chooser);
 
    fd_set readfds;
 
@@ -211,7 +224,7 @@ int main(int argc, char* argv[])
       std::string host = argv[1];
       u32bit port = argc == 3 ? Botan::to_u32bit(argv[2]) : 443;
 
-      while(true)
+      //while(true)
          doit(rng, policy, session_manager, creds, host, port);
 
    }

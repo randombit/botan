@@ -1,6 +1,6 @@
 /*
 * TLS Extensions
-* (C) 2011 Jack Lloyd
+* (C) 2011,2012 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -8,6 +8,8 @@
 #include <botan/internal/tls_extensions.h>
 #include <botan/internal/tls_reader.h>
 #include <botan/tls_exceptn.h>
+
+#include <stdio.h>
 
 namespace Botan {
 
@@ -25,6 +27,8 @@ TLS_Extension* make_extension(TLS_Data_Reader& reader,
       return new SRP_Identifier(reader, size);
    else if(code == TLSEXT_SAFE_RENEGOTIATION)
       return new Renegotation_Extension(reader, size);
+   else if(code == TLSEXT_NEXT_PROTOCOL)
+      return new Next_Protocol_Negotiation(reader, size);
    else
       return 0; // not known
    }
@@ -226,6 +230,47 @@ Maximum_Fragment_Length::Maximum_Fragment_Length(TLS_Data_Reader& reader,
    if(extension_size != 1)
       throw Decoding_Error("Bad size for maximum fragment extension");
    val = reader.get_byte();
+   }
+
+Next_Protocol_Negotiation::Next_Protocol_Negotiation(TLS_Data_Reader& reader,
+                                                     u16bit extension_size)
+   {
+   if(extension_size == 0)
+      return; // empty extension
+
+   size_t bytes_remaining = extension_size;
+
+   while(bytes_remaining)
+      {
+      const std::string p = reader.get_string(1, 0, 255);
+
+      printf("Protocol option %s\n", p.c_str());
+
+      if(bytes_remaining < p.size() + 1)
+         throw Decoding_Error("Bad encoding for next protocol extension");
+
+      bytes_remaining -= (p.size() + 1);
+
+      m_protocols.push_back(p);
+      }
+   }
+
+MemoryVector<byte> Next_Protocol_Negotiation::serialize() const
+   {
+   MemoryVector<byte> buf;
+
+   for(size_t i = 0; i != m_protocols.size(); ++i)
+      {
+      const std::string p = m_protocols[i];
+
+      if(p != "")
+         append_tls_length_value(buf,
+                                 reinterpret_cast<const byte*>(p.data()),
+                                 p.size(),
+                                 1);
+      }
+
+   return buf;
    }
 
 }

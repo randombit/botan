@@ -25,7 +25,8 @@ TLS_Client::TLS_Client(std::tr1::function<void (const byte[], size_t)> output_fn
                        Credentials_Manager& creds,
                        const TLS_Policy& policy,
                        RandomNumberGenerator& rng,
-                       const std::string& hostname) :
+                       const std::string& hostname,
+                       std::tr1::function<std::string (std::vector<std::string>)> next_protocol) :
    TLS_Channel(output_fn, proc_fn, handshake_fn),
    policy(policy),
    rng(rng),
@@ -37,7 +38,11 @@ TLS_Client::TLS_Client(std::tr1::function<void (const byte[], size_t)> output_fn
    state = new Handshake_State;
    state->set_expected_next(SERVER_HELLO);
 
+   state->client_npn_cb = next_protocol;
+
    const std::string srp_identifier = creds.srp_identifier("tls-client", hostname);
+
+   const bool send_npn_request = static_cast<bool>(next_protocol);
 
    if(hostname != "")
       {
@@ -50,7 +55,8 @@ TLS_Client::TLS_Client(std::tr1::function<void (const byte[], size_t)> output_fn
                writer,
                state->hash,
                rng,
-               session_info);
+               session_info,
+               send_npn_request);
 
             state->resume_master_secret = session_info.master_secret();
             }
@@ -65,6 +71,7 @@ TLS_Client::TLS_Client(std::tr1::function<void (const byte[], size_t)> output_fn
          policy,
          rng,
          secure_renegotiation.for_client_hello(),
+         send_npn_request,
          hostname,
          srp_identifier);
       }
@@ -137,14 +144,21 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
       if(!state->client_hello->offered_suite(state->server_hello->ciphersuite()))
          {
          throw TLS_Exception(HANDSHAKE_FAILURE,
-                             "TLS_Client: Server replied with bad ciphersuite");
+                             "Server replied with ciphersuite we didn't send");
          }
 
       if(!value_exists(state->client_hello->compression_methods(),
                        state->server_hello->compression_method()))
          {
          throw TLS_Exception(HANDSHAKE_FAILURE,
-                             "TLS_Client: Server replied with bad compression method");
+                             "Server replied with compression method we didn't send");
+         }
+
+      if(!state->client_hello->next_protocol_negotiation() &&
+         state->server_hello->next_protocol_negotiation())
+         {
+         throw TLS_Exception(HANDSHAKE_FAILURE,
+                             "Server sent next protocol but we didn't request it");
          }
 
       state->version = state->server_hello->version();
@@ -335,6 +349,14 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
       writer.send(CHANGE_CIPHER_SPEC, 1);
 
       writer.activate(state->suite, state->keys, CLIENT);
+
+      if(state->server_hello->next_protocol_negotiation())
+         {
+         const std::string protocol =
+            state->client_npn_cb(state->server_hello->next_protocols());
+
+         state->next_protocol = new Next_Protocol(writer, state->hash, protocol);
+         }
 
       state->client_finished = new Finished(writer, state->hash,
                                             state->version, CLIENT,

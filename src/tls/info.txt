@@ -41,6 +41,7 @@ hello.cpp
 rec_read.cpp
 rec_wri.cpp
 s_kex.cpp
+next_protocol.cpp
 tls_channel.cpp
 tls_client.cpp
 tls_policy.cpp

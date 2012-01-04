@@ -31,6 +31,14 @@ class BOTAN_DLL TLS_Client : public TLS_Channel
       * @param policy specifies other connection policy information
       * @param rng a random number generator
       * @param servername the server's DNS name, if known
+      * @param next_protocol allows the client to specify what the next
+      *        protocol will be. For more information read
+      *        http://technotes.googlecode.com/git/nextprotoneg.html.
+      *
+      *        If the function is not empty, NPN will be negotiated
+      *        and if the server supports NPN the function will be
+      *        called with the list of protocols the server advertised;
+      *        the client should return the protocol it would like to use.
       */
       TLS_Client(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
                  std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
@@ -39,7 +47,9 @@ class BOTAN_DLL TLS_Client : public TLS_Channel
                  Credentials_Manager& creds,
                  const TLS_Policy& policy,
                  RandomNumberGenerator& rng,
-                 const std::string& servername = "");
+                 const std::string& servername = "",
+                 std::tr1::function<std::string (std::vector<std::string>)> next_protocol =
+                    std::tr1::function<std::string (std::vector<std::string>)>());
 
       void renegotiate();
    private:

@@ -139,6 +139,44 @@ class Maximum_Fragment_Length : public TLS_Extension
    };
 
 /**
+* Next Protocol Negotiation
+* http://technotes.googlecode.com/git/nextprotoneg.html
+*
+* This implementation requires the semantics defined in the Google
+* spec (implemented in Chromium); the internet draft leaves the format
+* unspecified.
+*/
+class Next_Protocol_Negotiation : public TLS_Extension
+   {
+   public:
+      TLS_Handshake_Extension_Type type() const
+         { return TLSEXT_NEXT_PROTOCOL; }
+
+      const std::vector<std::string>& protocols() const
+         { return m_protocols; }
+
+      /**
+      * Empty extension, used by client
+      */
+      Next_Protocol_Negotiation() {}
+
+      /**
+      * List of protocols, used by server
+      */
+      Next_Protocol_Negotiation(const std::vector<std::string>& protocols) :
+         m_protocols(protocols) {}
+
+      Next_Protocol_Negotiation(TLS_Data_Reader& reader,
+                                u16bit extension_size);
+
+      MemoryVector<byte> serialize() const;
+
+      bool empty() const { return false; }
+   private:
+      std::vector<std::string> m_protocols;
+   };
+
+/**
 * Represents a block of extensions in a hello message
 */
 class TLS_Extensions

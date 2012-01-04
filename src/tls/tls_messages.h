@@ -47,31 +47,33 @@ class Client_Hello : public Handshake_Message
    {
    public:
       Handshake_Type type() const { return CLIENT_HELLO; }
-      Version_Code version() const { return c_version; }
-      const MemoryVector<byte>& session_id() const { return sess_id; }
+      Version_Code version() const { return m_version; }
+      const MemoryVector<byte>& session_id() const { return m_session_id; }
 
       std::vector<byte> session_id_vector() const
          {
          std::vector<byte> v;
-         v.insert(v.begin(), &sess_id[0], &sess_id[sess_id.size()]);
+         v.insert(v.begin(), &m_session_id[0], &m_session_id[m_session_id.size()]);
          return v;
          }
 
-      std::vector<u16bit> ciphersuites() const { return suites; }
-      std::vector<byte> compression_methods() const { return comp_methods; }
+      std::vector<u16bit> ciphersuites() const { return m_suites; }
+      std::vector<byte> compression_methods() const { return m_comp_methods; }
 
-      const MemoryVector<byte>& random() const { return c_random; }
+      const MemoryVector<byte>& random() const { return m_random; }
 
-      std::string sni_hostname() const { return requested_hostname; }
+      std::string sni_hostname() const { return m_hostname; }
 
-      std::string srp_identifier() const { return requested_srp_id; }
+      std::string srp_identifier() const { return m_srp_identifier; }
 
-      bool secure_renegotiation() const { return has_secure_renegotiation; }
+      bool secure_renegotiation() const { return m_secure_renegotiation; }
 
       const MemoryVector<byte>& renegotiation_info()
-         { return renegotiation_info_bits; }
+         { return m_renegotiation_info; }
 
       bool offered_suite(u16bit ciphersuite) const;
+
+      bool next_protocol_negotiation() const { return m_next_protocol; }
 
       size_t fragment_size() const { return m_fragment_size; }
 
@@ -80,13 +82,15 @@ class Client_Hello : public Handshake_Message
                    const TLS_Policy& policy,
                    RandomNumberGenerator& rng,
                    const MemoryRegion<byte>& reneg_info,
+                   bool next_protocol = false,
                    const std::string& hostname = "",
                    const std::string& srp_identifier = "");
 
       Client_Hello(Record_Writer& writer,
                    TLS_Handshake_Hash& hash,
                    RandomNumberGenerator& rng,
-                   const TLS_Session& resumed_session);
+                   const TLS_Session& resumed_session,
+                   bool next_protocol = false);
 
       Client_Hello(const MemoryRegion<byte>& buf,
                    Handshake_Type type)
@@ -102,16 +106,17 @@ class Client_Hello : public Handshake_Message
       void deserialize(const MemoryRegion<byte>& buf);
       void deserialize_sslv2(const MemoryRegion<byte>& buf);
 
-      Version_Code c_version;
-      MemoryVector<byte> sess_id, c_random;
-      std::vector<u16bit> suites;
-      std::vector<byte> comp_methods;
-      std::string requested_hostname;
-      std::string requested_srp_id;
+      Version_Code m_version;
+      MemoryVector<byte> m_session_id, m_random;
+      std::vector<u16bit> m_suites;
+      std::vector<byte> m_comp_methods;
+      std::string m_hostname;
+      std::string m_srp_identifier;
+      bool m_next_protocol;
 
       size_t m_fragment_size;
-      bool has_secure_renegotiation;
-      MemoryVector<byte> renegotiation_info_bits;
+      bool m_secure_renegotiation;
+      MemoryVector<byte> m_renegotiation_info;
    };
 
 /**
@@ -122,23 +127,28 @@ class Server_Hello : public Handshake_Message
    public:
       Handshake_Type type() const { return SERVER_HELLO; }
       Version_Code version() { return s_version; }
-      const MemoryVector<byte>& session_id() const { return sess_id; }
+      const MemoryVector<byte>& session_id() const { return m_session_id; }
       u16bit ciphersuite() const { return suite; }
       byte compression_method() const { return comp_method; }
 
       std::vector<byte> session_id_vector() const
          {
          std::vector<byte> v;
-         v.insert(v.begin(), &sess_id[0], &sess_id[sess_id.size()]);
+         v.insert(v.begin(), &m_session_id[0], &m_session_id[m_session_id.size()]);
          return v;
          }
 
-      bool secure_renegotiation() const { return has_secure_renegotiation; }
+      bool secure_renegotiation() const { return m_secure_renegotiation; }
+
+      bool next_protocol_negotiation() const { return m_next_protocol; }
+
+      const std::vector<std::string>& next_protocols() const
+         { return m_next_protocols; }
 
       size_t fragment_size() const { return m_fragment_size; }
 
       const MemoryVector<byte>& renegotiation_info()
-         { return renegotiation_info_bits; }
+         { return m_renegotiation_info; }
 
       const MemoryVector<byte>& random() const { return s_random; }
 
@@ -169,13 +179,16 @@ class Server_Hello : public Handshake_Message
       void deserialize(const MemoryRegion<byte>&);
 
       Version_Code s_version;
-      MemoryVector<byte> sess_id, s_random;
+      MemoryVector<byte> m_session_id, s_random;
       u16bit suite;
       byte comp_method;
 
       size_t m_fragment_size;
-      bool has_secure_renegotiation;
-      MemoryVector<byte> renegotiation_info_bits;
+      bool m_secure_renegotiation;
+      MemoryVector<byte> m_renegotiation_info;
+
+      bool m_next_protocol;
+      std::vector<std::string> m_next_protocols;
    };
 
 /**
@@ -388,6 +401,28 @@ class Server_Hello_Done : public Handshake_Message
    private:
       MemoryVector<byte> serialize() const;
       void deserialize(const MemoryRegion<byte>&);
+   };
+
+/**
+* Next Protocol Message
+*/
+class Next_Protocol : public Handshake_Message
+   {
+   public:
+      Handshake_Type type() const { return NEXT_PROTOCOL; }
+
+      std::string protocol() const { return m_protocol; }
+
+      Next_Protocol(Record_Writer& writer,
+                    TLS_Handshake_Hash& hash,
+                    const std::string& protocol);
+
+      Next_Protocol(const MemoryRegion<byte>& buf) { deserialize(buf); }
+   private:
+      MemoryVector<byte> serialize() const;
+      void deserialize(const MemoryRegion<byte>&);
+
+      std::string m_protocol;
    };
 
 }
