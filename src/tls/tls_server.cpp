@@ -183,7 +183,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             session_info.fragment_size(),
             secure_renegotiation.supported(),
             secure_renegotiation.for_server_hello(),
-            state->client_hello->next_protocol_negotiation(),
+            state->client_hello->next_protocol_notification(),
             m_possible_protocols,
             rng);
 
@@ -233,7 +233,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             policy,
             secure_renegotiation.supported(),
             secure_renegotiation.for_server_hello(),
-            state->client_hello->next_protocol_negotiation(),
+            state->client_hello->next_protocol_notification(),
             m_possible_protocols,
             rng);
 
@@ -351,7 +351,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       }
    else if(type == HANDSHAKE_CCS)
       {
-      if(state->server_hello->next_protocol_negotiation())
+      if(state->server_hello->next_protocol_notification())
          state->set_expected_next(NEXT_PROTOCOL);
       else
          state->set_expected_next(FINISHED);

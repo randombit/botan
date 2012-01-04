@@ -116,7 +116,7 @@ MemoryVector<byte> Server_Hello::serialize() const
       extensions.push_back(new Maximum_Fragment_Length(m_fragment_size));
 
    if(m_next_protocol)
-      extensions.push_back(new Next_Protocol_Negotiation(m_next_protocols));
+      extensions.push_back(new Next_Protocol_Notification(m_next_protocols));
 
    buf += extensions.serialize();
 
@@ -164,7 +164,7 @@ void Server_Hello::deserialize(const MemoryRegion<byte>& buf)
          m_secure_renegotiation = true;
          m_renegotiation_info = reneg->renegotiation_info();
          }
-      else if(Next_Protocol_Negotiation* npn = dynamic_cast<Next_Protocol_Negotiation*>(extn))
+      else if(Next_Protocol_Notification* npn = dynamic_cast<Next_Protocol_Notification*>(extn))
          {
          m_next_protocols = npn->protocols();
          m_next_protocol = true;

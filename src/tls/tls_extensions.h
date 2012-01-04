@@ -146,7 +146,7 @@ class Maximum_Fragment_Length : public TLS_Extension
 * spec (implemented in Chromium); the internet draft leaves the format
 * unspecified.
 */
-class Next_Protocol_Negotiation : public TLS_Extension
+class Next_Protocol_Notification : public TLS_Extension
    {
    public:
       TLS_Handshake_Extension_Type type() const
@@ -158,16 +158,16 @@ class Next_Protocol_Negotiation : public TLS_Extension
       /**
       * Empty extension, used by client
       */
-      Next_Protocol_Negotiation() {}
+      Next_Protocol_Notification() {}
 
       /**
       * List of protocols, used by server
       */
-      Next_Protocol_Negotiation(const std::vector<std::string>& protocols) :
+      Next_Protocol_Notification(const std::vector<std::string>& protocols) :
          m_protocols(protocols) {}
 
-      Next_Protocol_Negotiation(TLS_Data_Reader& reader,
-                                u16bit extension_size);
+      Next_Protocol_Notification(TLS_Data_Reader& reader,
+                                 u16bit extension_size);
 
       MemoryVector<byte> serialize() const;
 

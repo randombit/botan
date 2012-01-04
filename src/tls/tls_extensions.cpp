@@ -26,7 +26,7 @@ TLS_Extension* make_extension(TLS_Data_Reader& reader,
    else if(code == TLSEXT_SAFE_RENEGOTIATION)
       return new Renegotation_Extension(reader, size);
    else if(code == TLSEXT_NEXT_PROTOCOL)
-      return new Next_Protocol_Negotiation(reader, size);
+      return new Next_Protocol_Notification(reader, size);
    else
       return 0; // not known
    }
@@ -230,8 +230,8 @@ Maximum_Fragment_Length::Maximum_Fragment_Length(TLS_Data_Reader& reader,
    val = reader.get_byte();
    }
 
-Next_Protocol_Negotiation::Next_Protocol_Negotiation(TLS_Data_Reader& reader,
-                                                     u16bit extension_size)
+Next_Protocol_Notification::Next_Protocol_Notification(TLS_Data_Reader& reader,
+                                                       u16bit extension_size)
    {
    if(extension_size == 0)
       return; // empty extension
@@ -251,7 +251,7 @@ Next_Protocol_Negotiation::Next_Protocol_Negotiation(TLS_Data_Reader& reader,
       }
    }
 
-MemoryVector<byte> Next_Protocol_Negotiation::serialize() const
+MemoryVector<byte> Next_Protocol_Notification::serialize() const
    {
    MemoryVector<byte> buf;
 

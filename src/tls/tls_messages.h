@@ -75,7 +75,7 @@ class Client_Hello : public Handshake_Message
 
       bool offered_suite(u16bit ciphersuite) const;
 
-      bool next_protocol_negotiation() const { return m_next_protocol; }
+      bool next_protocol_notification() const { return m_next_protocol; }
 
       size_t fragment_size() const { return m_fragment_size; }
 
@@ -142,7 +142,7 @@ class Server_Hello : public Handshake_Message
 
       bool secure_renegotiation() const { return m_secure_renegotiation; }
 
-      bool next_protocol_negotiation() const { return m_next_protocol; }
+      bool next_protocol_notification() const { return m_next_protocol; }
 
       const std::vector<std::string>& next_protocols() const
          { return m_next_protocols; }

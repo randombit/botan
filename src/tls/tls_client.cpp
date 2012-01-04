@@ -154,8 +154,8 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
                              "Server replied with compression method we didn't send");
          }
 
-      if(!state->client_hello->next_protocol_negotiation() &&
-         state->server_hello->next_protocol_negotiation())
+      if(!state->client_hello->next_protocol_notification() &&
+         state->server_hello->next_protocol_notification())
          {
          throw TLS_Exception(HANDSHAKE_FAILURE,
                              "Server sent next protocol but we didn't request it");
@@ -350,7 +350,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
 
       writer.activate(state->suite, state->keys, CLIENT);
 
-      if(state->server_hello->next_protocol_negotiation())
+      if(state->server_hello->next_protocol_notification())
          {
          const std::string protocol =
             state->client_npn_cb(state->server_hello->next_protocols());

@@ -222,7 +222,7 @@ void TLS_Channel::Secure_Renegotiation_State::update(Client_Hello* client_hello)
       {
       if(secure_renegotiation != client_hello->secure_renegotiation())
          throw TLS_Exception(HANDSHAKE_FAILURE,
-                             "Client changed its mind about secure negotiation");
+                             "Client changed its mind about secure renegotiation");
       }
 
    if(client_hello->secure_renegotiation())
@@ -257,7 +257,7 @@ void TLS_Channel::Secure_Renegotiation_State::update(Server_Hello* server_hello)
       {
       if(secure_renegotiation != server_hello->secure_renegotiation())
          throw TLS_Exception(HANDSHAKE_FAILURE,
-                             "Server changed its mind about secure negotiation");
+                             "Server changed its mind about secure renegotiation");
       }
 
    if(secure_renegotiation)

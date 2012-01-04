@@ -152,7 +152,7 @@ MemoryVector<byte> Client_Hello::serialize() const
       extensions.push_back(new SRP_Identifier(m_srp_identifier));
 
       if(m_next_protocol)
-         extensions.push_back(new Next_Protocol_Negotiation());
+         extensions.push_back(new Next_Protocol_Notification());
       }
    else
       {
@@ -246,7 +246,7 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
          {
          m_srp_identifier = srp->identifier();
          }
-      else if(Next_Protocol_Negotiation* npn = dynamic_cast<Next_Protocol_Negotiation*>(extn))
+      else if(Next_Protocol_Notification* npn = dynamic_cast<Next_Protocol_Notification*>(extn))
          {
          if(!npn->protocols().empty())
             throw Decoding_Error("Client sent non-empty NPN extension");
