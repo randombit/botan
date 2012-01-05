@@ -20,10 +20,11 @@ namespace Botan {
 * Record_Writer Constructor
 */
 Record_Writer::Record_Writer(std::tr1::function<void (const byte[], size_t)> out) :
-   m_output_fn(out), m_max_fragment(MAX_PLAINTEXT_SIZE)
+   m_output_fn(out)
    {
    m_mac = 0;
    reset();
+   set_maximum_fragment_size(0);
    }
 
 void Record_Writer::set_maximum_fragment_size(size_t max_fragment)
@@ -39,6 +40,7 @@ void Record_Writer::set_maximum_fragment_size(size_t max_fragment)
 */
 void Record_Writer::reset()
    {
+   set_maximum_fragment_size(0);
    m_cipher.reset();
 
    delete m_mac;

@@ -200,7 +200,10 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             rng);
 
          if(session_info.fragment_size())
+            {
+            reader.set_maximum_fragment_size(session_info.fragment_size());
             writer.set_maximum_fragment_size(session_info.fragment_size());
+            }
 
          state->suite = TLS_Cipher_Suite(state->server_hello->ciphersuite());
 
@@ -250,7 +253,10 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             rng);
 
          if(state->client_hello->fragment_size())
+            {
+            reader.set_maximum_fragment_size(state->client_hello->fragment_size());
             writer.set_maximum_fragment_size(state->client_hello->fragment_size());
+            }
 
          state->suite = TLS_Cipher_Suite(state->server_hello->ciphersuite());
 

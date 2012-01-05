@@ -9,9 +9,17 @@
 #include <botan/lookup.h>
 #include <botan/loadstor.h>
 #include <botan/internal/tls_session_key.h>
+#include <botan/internal/rounding.h>
 #include <botan/internal/assert.h>
 
 namespace Botan {
+
+Record_Reader::Record_Reader()
+   {
+   m_mac = 0;
+   reset();
+   set_maximum_fragment_size(0);
+   }
 
 /*
 * Reset the state
@@ -28,6 +36,15 @@ void Record_Reader::reset()
    m_iv_size = 0;
    m_major = m_minor = 0;
    m_seq_no = 0;
+   set_maximum_fragment_size(0);
+   }
+
+void Record_Reader::set_maximum_fragment_size(size_t max_fragment)
+   {
+   if(max_fragment == 0)
+      m_max_fragment = MAX_PLAINTEXT_SIZE;
+   else
+      m_max_fragment = clamp(max_fragment, 128, MAX_PLAINTEXT_SIZE);
    }
 
 /*
@@ -251,6 +268,9 @@ size_t Record_Reader::get_record(byte& msg_type,
       throw Decoding_Error("Record_Reader: Record truncated");
 
    const u16bit plain_length = m_readbuf.size() - (m_mac_size + pad_size + m_iv_size);
+
+   if(plain_length > m_max_fragment)
+      throw TLS_Exception(RECORD_OVERFLOW, "Plaintext record is too large");
 
    m_mac->update_be(m_seq_no);
    m_mac->update(header[0]); // msg_type

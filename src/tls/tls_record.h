@@ -104,7 +104,9 @@ class BOTAN_DLL Record_Reader
 
       bool currently_empty() const { return m_input_queue.size() == 0; }
 
-      Record_Reader() { m_mac = 0; reset(); }
+      void set_maximum_fragment_size(size_t max_fragment);
+
+      Record_Reader();
 
       ~Record_Reader() { delete m_mac; }
    private:
