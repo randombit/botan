@@ -69,7 +69,7 @@ BigInt compute_x(const std::string& hash_id,
 
 }
 
-std::pair<BigInt, BigInt>
+std::pair<BigInt, SymmetricKey>
 SRP6_Client_Session:: step1(const std::string& identifier,
                             const std::string& password,
                             const std::string& group_id,
@@ -82,7 +82,7 @@ SRP6_Client_Session:: step1(const std::string& identifier,
    const BigInt& g = group.get_g();
    const BigInt& p = group.get_p();
 
-   p_bytes = group.get_p().bytes();
+   const size_t p_bytes = group.get_p().bytes();
 
    if(B % p == 0)
       throw std::runtime_error("Invalid SRP parameter from server");
@@ -91,29 +91,17 @@ SRP6_Client_Session:: step1(const std::string& identifier,
 
    BigInt a(rng, p.bits() - 1);
 
-   A = power_mod(g, a, p);
+   BigInt A = power_mod(g, a, p);
 
    BigInt u = hash_seq(hash_id, p_bytes, A, B);
 
    const BigInt x = compute_x(hash_id, identifier, password, salt);
 
-   S = power_mod((B - (k * power_mod(g, x, p))) % p, (a + (u * x)), p);
+   BigInt S = power_mod((B - (k * power_mod(g, x, p))) % p, (a + (u * x)), p);
 
-   this->hash_id = hash_id;
+   SymmetricKey Sk(BigInt::encode_1363(S, p_bytes));
 
-   M1 = hash_seq(hash_id, p_bytes, A, B, S);
-
-   return std::make_pair<BigInt, BigInt>(A, M1);
-   }
-
-SymmetricKey SRP6_Client_Session::step2(const BigInt& M2)
-   {
-   BigInt M2x = hash_seq(hash_id, p_bytes, A, M1, S);
-
-   if(M2 != M2x)
-      throw std::runtime_error("Bad verification value from server");
-
-   return SymmetricKey(BigInt::encode_1363(S, p_bytes));
+   return std::make_pair(A, Sk);
    }
 
 BigInt SRP6_Client_Session::generate_verifier(const std::string& identifier,
@@ -153,7 +141,7 @@ BigInt SRP6_Server_Session::step1(const BigInt& v,
    return B;
    }
 
-std::pair<SymmetricKey, BigInt> SRP6_Server_Session::step2(const BigInt& A, const BigInt& M1)
+SymmetricKey SRP6_Server_Session::step2(const BigInt& A)
    {
    if(A % p == 0)
       throw std::runtime_error("Invalid SRP parameter from client");
@@ -162,16 +150,7 @@ std::pair<SymmetricKey, BigInt> SRP6_Server_Session::step2(const BigInt& A, cons
 
    BigInt S = power_mod(A * power_mod(v, u, p), b, p);
 
-   BigInt M1x = hash_seq(hash_id, p_bytes, A, B, S);
-
-   if(M1 != M1x)
-      throw std::runtime_error("Bad verification value from client");
-
-   BigInt M2 = hash_seq(hash_id, p_bytes, A, M1, S);
-
-   SymmetricKey Sk = BigInt::encode_1363(S, p_bytes);
-
-   return std::make_pair<SymmetricKey, BigInt>(Sk, M2);
+   return BigInt::encode_1363(S, p_bytes);
    }
 
 }

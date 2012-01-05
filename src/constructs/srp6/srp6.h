@@ -17,7 +17,7 @@
 namespace Botan {
 
 /**
-
+* Represents a SRP-6a client session
 */
 class BOTAN_DLL SRP6_Client_Session
    {
@@ -33,23 +33,15 @@ class BOTAN_DLL SRP6_Client_Session
       * @param B is the server's public value
       * @param rng is a random number generator
       *
-      * @return (A,M1) the client public key and verification values,
-                which are sent to the server
+      * @return (A,K) the client public key and the shared secret key
       */
-      std::pair<BigInt, BigInt> step1(const std::string& username,
-                                      const std::string& password,
-                                      const std::string& group_id,
-                                      const std::string& hash_id,
-                                      const MemoryRegion<byte>& salt,
-                                      const BigInt& B,
-                                      RandomNumberGenerator& rng);
-
-      /**
-      * Client side step 2
-      * @param M2 the server verification value
-      * @return shared secret key
-      */
-      SymmetricKey step2(const BigInt& M2);
+      std::pair<BigInt,SymmetricKey> step1(const std::string& username,
+                                           const std::string& password,
+                                           const std::string& group_id,
+                                           const std::string& hash_id,
+                                           const MemoryRegion<byte>& salt,
+                                           const BigInt& B,
+                                           RandomNumberGenerator& rng);
 
       /**
       * Generate a new SRP-6 verifier
@@ -62,13 +54,11 @@ class BOTAN_DLL SRP6_Client_Session
                                       const MemoryRegion<byte>& salt,
                                       const std::string& group_id,
                                       const std::string& hash_id);
-
-   private:
-      std::string hash_id;
-      BigInt A, M1, S;
-      size_t p_bytes;
    };
 
+/**
+* Represents a SRP-6a server session
+*/
 class BOTAN_DLL SRP6_Server_Session
    {
    public:
@@ -81,7 +71,7 @@ class BOTAN_DLL SRP6_Server_Session
                    const std::string& hash_id,
                    RandomNumberGenerator& rng);
 
-      std::pair<SymmetricKey, BigInt> step2(const BigInt& A, const BigInt& M1);
+      SymmetricKey step2(const BigInt& A);
 
    private:
       std::string hash_id;
