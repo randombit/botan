@@ -59,6 +59,9 @@ class BOTAN_DLL Record_Writer
 
       ~Record_Writer() { delete m_mac; }
    private:
+      Record_Writer(const Record_Writer&) {}
+      Record_Writer& operator=(const Record_Writer&) { return (*this); }
+
       void send_record(byte type, const byte input[], size_t length);
 
       std::tr1::function<void (const byte[], size_t)> m_output_fn;
@@ -80,17 +83,21 @@ class BOTAN_DLL Record_Writer
 class BOTAN_DLL Record_Reader
    {
    public:
-      void add_input(const byte input[], size_t input_size);
 
       /**
-      * @param msg_type (output variable)
-      * @param buffer (output variable)
-      * @return Number of bytes still needed (minimum), or 0 if success
+      * @param input new input data (may be NULL if input_size == 0)
+      * @param input_size size of input in bytes
+      * @param input_consumed is set to the number of bytes of input
+      *        that were consumed
+      * @param msg_type is set to the type of the message just read if
+      *        this function returns 0
+      * @param msg is set to the contents of the record
+      * @return number of bytes still needed (minimum), or 0 if success
       */
-      size_t get_record(byte& msg_type,
-                        MemoryVector<byte>& buffer);
-
-      SecureVector<byte> get_record(byte& msg_type);
+      size_t add_input(const byte input[], size_t input_size,
+                       size_t& input_consumed,
+                       byte& msg_type,
+                       MemoryVector<byte>& msg);
 
       void activate(const TLS_Cipher_Suite& suite,
                     const SessionKeys& keys,
@@ -102,16 +109,22 @@ class BOTAN_DLL Record_Reader
 
       void reset();
 
-      bool currently_empty() const { return m_input_queue.size() == 0; }
-
       void set_maximum_fragment_size(size_t max_fragment);
 
       Record_Reader();
 
       ~Record_Reader() { delete m_mac; }
    private:
+      Record_Reader(const Record_Reader&) {}
+      Record_Reader& operator=(const Record_Reader&) { return (*this); }
+
+      void consume_input(const byte*& input,
+                         size_t& input_size,
+                         size_t& input_consumed,
+                         size_t desired);
+
       MemoryVector<byte> m_readbuf;
-      SecureQueue m_input_queue;
+      size_t m_readbuf_pos;
 
       Pipe m_cipher;
       MessageAuthenticationCode* m_mac;

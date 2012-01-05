@@ -1,6 +1,6 @@
 /*
 * TLS Channels
-* (C) 2011 Jack Lloyd
+* (C) 2011-2012 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -8,6 +8,7 @@
 #include <botan/tls_channel.h>
 #include <botan/internal/tls_alerts.h>
 #include <botan/internal/tls_handshake_state.h>
+#include <botan/internal/assert.h>
 #include <botan/loadstor.h>
 
 namespace Botan {
@@ -42,17 +43,21 @@ size_t TLS_Channel::received_data(const byte buf[], size_t buf_size)
    {
    try
       {
-      reader.add_input(buf, buf_size);
-
-      byte rec_type = CONNECTION_CLOSED;
-      MemoryVector<byte> record;
-
-      while(!reader.currently_empty())
+      while(buf_size)
          {
-         const size_t bytes_needed = reader.get_record(rec_type, record);
+         byte rec_type = CONNECTION_CLOSED;
+         MemoryVector<byte> record;
+         size_t consumed = 0;
 
-         if(bytes_needed > 0)
-            return bytes_needed;
+         const size_t needed = reader.add_input(buf, buf_size,
+                                                consumed,
+                                                rec_type, record);
+
+         buf += consumed;
+         buf_size -= consumed;
+
+         if(buf_size == 0 && needed != 0)
+            return needed; // need more data to complete record
 
          if(rec_type == APPLICATION_DATA)
             {
@@ -95,7 +100,8 @@ size_t TLS_Channel::received_data(const byte buf[], size_t buf_size)
                }
             }
          else
-            throw Unexpected_Message("Unknown message type received");
+            throw Unexpected_Message("Unknown TLS message type " +
+                                     to_string(rec_type) + " received");
          }
 
       return 0; // on a record boundary
