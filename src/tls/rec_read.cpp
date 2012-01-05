@@ -244,13 +244,6 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_size,
    BOTAN_ASSERT_EQUAL(HEADER_SIZE + record_len, m_readbuf_pos,
                       "Bad buffer handling in record body");
 
-   /*
-   m_readbuf.resize(record_len);
-
-   m_input_queue.read(header, sizeof(header)); // pull off the header
-   m_input_queue.read(&m_readbuf[0], record_len);
-   */
-
    // Null mac means no encryption either, only valid during handshake
    if(m_mac_size == 0)
       {
@@ -263,7 +256,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_size,
 
       msg_type = m_readbuf[0];
       msg.resize(record_len);
-      copy_mem(&msg[0], &m_readbuf[5], record_len);
+      copy_mem(&msg[0], &m_readbuf[HEADER_SIZE], record_len);
 
       m_readbuf_pos = 0;
       return 0; // got a full record
@@ -272,15 +265,15 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_size,
    // Otherwise, decrypt, check MAC, return plaintext
 
    // FIXME: process in-place
-   m_cipher.process_msg(&m_readbuf[5], record_len);
-   size_t got_back = m_cipher.read(&m_readbuf[5], record_len, Pipe::LAST_MESSAGE);
+   m_cipher.process_msg(&m_readbuf[HEADER_SIZE], record_len);
+   size_t got_back = m_cipher.read(&m_readbuf[HEADER_SIZE], record_len, Pipe::LAST_MESSAGE);
    BOTAN_ASSERT_EQUAL(got_back, record_len, "Cipher didn't decrypt full amount");
 
    size_t pad_size = 0;
 
    if(m_block_size)
       {
-      byte pad_value = m_readbuf[5 + (record_len-1)];
+      byte pad_value = m_readbuf[HEADER_SIZE + (record_len-1)];
       pad_size = pad_value + 1;
 
       /*
@@ -301,7 +294,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_size,
          bool padding_good = true;
 
          for(size_t i = 0; i != pad_size; ++i)
-            if(m_readbuf[5 + (record_len-i-1)] != pad_value)
+            if(m_readbuf[HEADER_SIZE + (record_len-i-1)] != pad_value)
                padding_good = false;
 
          if(!padding_good)
@@ -325,25 +318,25 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_size,
          m_mac->update(get_byte(i, version));
 
    m_mac->update_be(plain_length);
-   m_mac->update(&m_readbuf[5 + m_iv_size], plain_length);
+   m_mac->update(&m_readbuf[HEADER_SIZE + m_iv_size], plain_length);
 
    ++m_seq_no;
 
    MemoryVector<byte> computed_mac = m_mac->final();
 
-   const size_t mac_offset = record_len - (m_mac_size + pad_size);
-
    if(computed_mac.size() != m_mac_size)
       throw TLS_Exception(INTERNAL_ERROR,
                           "MAC produced value of unexpected size");
 
-   if(!same_mem(&m_readbuf[5 + mac_offset], &computed_mac[0], m_mac_size))
+   const size_t mac_offset = record_len - (m_mac_size + pad_size);
+
+   if(!same_mem(&m_readbuf[HEADER_SIZE + mac_offset], &computed_mac[0], m_mac_size))
       throw TLS_Exception(BAD_RECORD_MAC, "Record_Reader: MAC failure");
 
    msg_type = m_readbuf[0];
 
    msg.resize(plain_length);
-   copy_mem(&msg[0], &m_readbuf[5 + m_iv_size], plain_length);
+   copy_mem(&msg[0], &m_readbuf[HEADER_SIZE + m_iv_size], plain_length);
    m_readbuf_pos = 0;
    return 0;
    }
