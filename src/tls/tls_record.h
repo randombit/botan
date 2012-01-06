@@ -49,8 +49,6 @@ class BOTAN_DLL Record_Writer
 
       void set_version(Version_Code version);
 
-      Version_Code get_version() const;
-
       void reset();
 
       void set_maximum_fragment_size(size_t max_fragment);
@@ -105,8 +103,6 @@ class BOTAN_DLL Record_Reader
 
       void set_version(Version_Code version);
 
-      Version_Code get_version() const;
-
       void reset();
 
       void set_maximum_fragment_size(size_t max_fragment);
@@ -118,10 +114,10 @@ class BOTAN_DLL Record_Reader
       Record_Reader(const Record_Reader&) {}
       Record_Reader& operator=(const Record_Reader&) { return (*this); }
 
-      void consume_input(const byte*& input,
-                         size_t& input_size,
-                         size_t& input_consumed,
-                         size_t desired);
+      size_t fill_buffer_to(const byte*& input,
+                            size_t& input_size,
+                            size_t& input_consumed,
+                            size_t desired);
 
       MemoryVector<byte> m_readbuf;
       size_t m_readbuf_pos;

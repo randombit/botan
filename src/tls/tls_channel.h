@@ -58,11 +58,6 @@ class BOTAN_DLL TLS_Channel
       bool is_closed() const { return connection_closed; }
 
       /**
-      * @return negotiated version (if session is currently active)
-      */
-      Version_Code protocol_version() const;
-
-      /**
       * Attempt to renegotiate the session
       */
       virtual void renegotiate() = 0;

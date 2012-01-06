@@ -32,13 +32,6 @@ TLS_Channel::~TLS_Channel()
    state = 0;
    }
 
-Version_Code TLS_Channel::protocol_version() const
-   {
-   if(!handshake_completed)
-      throw std::logic_error("Version not known until handshake complete");
-   return writer.get_version();
-   }
-
 size_t TLS_Channel::received_data(const byte buf[], size_t buf_size)
    {
    try
@@ -55,6 +48,8 @@ size_t TLS_Channel::received_data(const byte buf[], size_t buf_size)
 
          buf += consumed;
          buf_size -= consumed;
+
+         BOTAN_ASSERT_IMPLICATAION(needed, buf_size == 0);
 
          if(buf_size == 0 && needed != 0)
             return needed; // need more data to complete record

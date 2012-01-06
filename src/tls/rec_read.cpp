@@ -66,15 +66,6 @@ void Record_Reader::set_version(Version_Code version)
    }
 
 /*
-* Get the version in use
-*/
-Version_Code Record_Reader::get_version() const
-   {
-   return static_cast<Version_Code>(
-      (static_cast<u16bit>(m_major) << 8) | m_minor);
-   }
-
-/*
 * Set the keys for reading
 */
 void Record_Reader::activate(const TLS_Cipher_Suite& suite,
@@ -143,13 +134,16 @@ void Record_Reader::activate(const TLS_Cipher_Suite& suite,
       throw Invalid_Argument("Record_Reader: Unknown hash " + mac_algo);
    }
 
-void Record_Reader::consume_input(const byte*& input,
-                                  size_t& input_size,
-                                  size_t& input_consumed,
-                                  size_t desired)
+size_t Record_Reader::fill_buffer_to(const byte*& input,
+                                     size_t& input_size,
+                                     size_t& input_consumed,
+                                     size_t desired)
    {
+   if(desired <= m_readbuf_pos)
+      return 0; // already have it
+
    const size_t space_available = (m_readbuf.size() - m_readbuf_pos);
-   const size_t taken = std::min(input_size, desired);
+   const size_t taken = std::min(input_size, desired - m_readbuf_pos);
 
    if(taken > space_available)
       throw TLS_Exception(RECORD_OVERFLOW,
@@ -160,28 +154,28 @@ void Record_Reader::consume_input(const byte*& input,
    input_consumed += taken;
    input_size -= taken;
    input += taken;
+
+   return (desired - m_readbuf_pos); // how many bytes do we still need?
    }
 
 /*
 * Retrieve the next record
 */
-size_t Record_Reader::add_input(const byte input_array[], size_t input_size,
-                                size_t& input_consumed,
+size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
+                                size_t& consumed,
                                 byte& msg_type,
                                 MemoryVector<byte>& msg)
    {
    const byte* input = &input_array[0];
 
-   input_consumed = 0;
+   consumed = 0;
 
    const size_t HEADER_SIZE = 5;
 
    if(m_readbuf_pos < HEADER_SIZE) // header incomplete?
       {
-      consume_input(input, input_size, input_consumed, HEADER_SIZE - m_readbuf_pos);
-
-      if(m_readbuf_pos < HEADER_SIZE)
-         return (HEADER_SIZE - m_readbuf_pos); // header still incomplete
+      if(size_t needed = fill_buffer_to(input, input_sz, consumed, HEADER_SIZE))
+         return needed;
 
       BOTAN_ASSERT_EQUAL(m_readbuf_pos, HEADER_SIZE,
                          "Buffer error in SSL header");
@@ -192,10 +186,8 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_size,
       {
       size_t record_len = make_u16bit(m_readbuf[0], m_readbuf[1]) & 0x7FFF;
 
-      consume_input(input, input_size, input_consumed, (record_len + 2) - m_readbuf_pos);
-
-      if(m_readbuf_pos < (record_len + 2))
-         return ((record_len + 2) - m_readbuf_pos);
+      if(size_t needed = fill_buffer_to(input, input_sz, consumed, record_len + 2))
+         return needed;
 
       BOTAN_ASSERT_EQUAL(m_readbuf_pos, (record_len + 2),
                          "Buffer error in SSLv2 hello");
@@ -235,11 +227,9 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_size,
       throw TLS_Exception(RECORD_OVERFLOW,
                           "Got message that exceeds maximum size");
 
-   consume_input(input, input_size, input_consumed,
-                 (HEADER_SIZE + record_len) - m_readbuf_pos);
-
-   if(m_readbuf_pos < (HEADER_SIZE + record_len))
-      return ((HEADER_SIZE + record_len) - m_readbuf_pos);
+   if(size_t needed = fill_buffer_to(input, input_sz, consumed,
+                                     HEADER_SIZE + record_len))
+      return needed;
 
    BOTAN_ASSERT_EQUAL(HEADER_SIZE + record_len, m_readbuf_pos,
                       "Bad buffer handling in record body");
@@ -264,10 +254,13 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_size,
 
    // Otherwise, decrypt, check MAC, return plaintext
 
-   // FIXME: process in-place
+   // FIXME: avoid memory allocation by processing in place
    m_cipher.process_msg(&m_readbuf[HEADER_SIZE], record_len);
    size_t got_back = m_cipher.read(&m_readbuf[HEADER_SIZE], record_len, Pipe::LAST_MESSAGE);
    BOTAN_ASSERT_EQUAL(got_back, record_len, "Cipher didn't decrypt full amount");
+
+   BOTAN_ASSERT_EQUAL(m_cipher.remaining(Pipe::LAST_MESSAGE), 0,
+                      "Cipher produced extra output");
 
    size_t pad_size = 0;
 
@@ -279,7 +272,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_size,
       /*
       * Check the padding; if it is wrong, then say we have 0 bytes of
       * padding, which should ensure that the MAC check below does not
-      * suceed. This hides a timing channel.
+      * succeed. This hides a timing channel.
       *
       * This particular countermeasure is recommended in the TLS 1.2
       * spec (RFC 5246) in section 6.2.3.2
