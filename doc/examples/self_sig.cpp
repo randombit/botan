@@ -35,10 +35,10 @@ int main(int argc, char* argv[])
       {
       AutoSeeded_RNG rng;
 
-      //RSA_PrivateKey key(rng, 2048);
-      DL_Group group(rng, DL_Group::DSA_Kosherizer, 2048, 256);
+      RSA_PrivateKey key(rng, 2048);
+      //DL_Group group(rng, DL_Group::DSA_Kosherizer, 2048, 256);
 
-      DSA_PrivateKey key(rng, group);
+      //DSA_PrivateKey key(rng, group);
 
       std::ofstream priv_key("private.pem");
       priv_key << PKCS8::PEM_encode(key, rng, argv[1]);

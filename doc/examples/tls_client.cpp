@@ -115,7 +115,9 @@ void process_data(const byte buf[], size_t buf_size, u16bit alert_info)
       }
 
    for(size_t i = 0; i != buf_size; ++i)
+      {
       printf("%c", buf[i]);
+      }
    }
 
 std::string protocol_chooser(const std::vector<std::string>& protocols)
@@ -141,12 +143,9 @@ void doit(RandomNumberGenerator& rng,
                      creds,
                      policy,
                      rng,
-                     host,
-                     protocol_chooser);
+                     host);
 
    fd_set readfds;
-
-   bool version_reported = false;
 
    while(true)
       {
@@ -159,13 +158,15 @@ void doit(RandomNumberGenerator& rng,
       if(client.is_closed())
          break;
 
-      if(client.is_active() && !version_reported)
-         printf("Negotiated version %04X\n", client.protocol_version());
-
       if(FD_ISSET(sockfd, &readfds))
          {
-         byte buf[1024] = { 0 };
-         ssize_t got = read(sockfd, buf, sizeof(buf));
+         byte buf[64] = { 0 };
+
+         size_t to_read = rand() % sizeof(buf);
+         if(to_read == 0)
+            to_read = 1;
+
+         ssize_t got = read(sockfd, buf, to_read);
 
          if(got == 0)
             {
@@ -180,7 +181,8 @@ void doit(RandomNumberGenerator& rng,
 
          //printf("socket read %d\n", got);
 
-         client.received_data(buf, got);
+         const size_t needed = client.received_data(buf, got);
+         printf("socket - got %d bytes, need %d\n", got, needed);
          }
       else if(FD_ISSET(STDIN_FILENO, &readfds))
          {

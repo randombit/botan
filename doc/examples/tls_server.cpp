@@ -11,6 +11,8 @@
 
 using namespace Botan;
 
+using namespace std::tr1::placeholders;
+
 #include <stdio.h>
 #include <string>
 #include <iostream>
@@ -28,16 +30,10 @@ class Credentials_Manager_Simple : public Credentials_Manager
          {
          const std::string hostname = (context == "" ? "localhost" : context);
 
-         //RSA_PrivateKey key(rng, 1024);
-         DSA_PrivateKey key(rng, DL_Group("dsa/jce/1024"));
+         X509_Certificate cert(hostname + ".crt");
+         Private_Key* key = PKCS8::load_key(hostname + ".key", rng);
 
-         X509_Cert_Options options(
-            hostname + "/US/Botan Library/Test Server");
-
-         X509_Certificate cert =
-            X509::create_self_signed_cert(options, key, "SHA-1", rng);
-
-         certs_and_keys[cert] = PKCS8::copy_key(key, rng);
+         certs_and_keys[cert] = key;
 
          std::vector<X509_Certificate> certs;
          certs.push_back(cert);
@@ -72,6 +68,7 @@ class Blocking_TLS_Server
    public:
       Blocking_TLS_Server(std::tr1::function<void (const byte[], size_t)> output_fn,
                           std::tr1::function<size_t (byte[], size_t)> input_fn,
+                          std::vector<std::string>& protocols,
                           TLS_Session_Manager& sessions,
                           Credentials_Manager& creds,
                           TLS_Policy& policy,
@@ -164,7 +161,7 @@ class Blocking_TLS_Server
 class Server_TLS_Policy : public TLS_Policy
    {
    public:
-      bool require_client_auth() const { return true; }
+      //bool require_client_auth() const { return true; }
 
       bool check_cert(const std::vector<X509_Certificate>& certs) const
          {
@@ -201,18 +198,23 @@ int main(int argc, char* argv[])
 
       Credentials_Manager_Simple creds(rng);
 
+      std::vector<std::string> protocols;
+      protocols.push_back("spdy/2");
+      protocols.push_back("http/1.0");
+
       while(true)
          {
          try {
             printf("Listening for new connection on port %d\n", port);
 
-            Socket* sock = listener.accept();
+            std::auto_ptr<Socket> sock(listener.accept());
 
             printf("Got new connection\n");
 
             Blocking_TLS_Server tls(
                std::tr1::bind(&Socket::write, std::tr1::ref(sock), _1, _2),
                std::tr1::bind(&Socket::read, std::tr1::ref(sock), _1, _2, true),
+               protocols,
                sessions,
                creds,
                policy,
@@ -234,6 +236,8 @@ int main(int argc, char* argv[])
                line += (char)b;
                if(b == '\n')
                   {
+                  //std::cout << line;
+
                   tls.write(reinterpret_cast<const byte*>(line.data()), line.size());
 
                   if(line == "quit\n")
@@ -248,8 +252,6 @@ int main(int argc, char* argv[])
                   line.clear();
                   }
                }
-
-            delete sock;
             }
          catch(std::exception& e) { printf("Connection problem: %s\n", e.what()); }
          }
