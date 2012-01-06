@@ -120,11 +120,12 @@ class BOTAN_DLL Record_Reader
                             size_t desired);
 
       MemoryVector<byte> m_readbuf;
+      MemoryVector<byte> m_macbuf;
       size_t m_readbuf_pos;
 
       Pipe m_cipher;
       MessageAuthenticationCode* m_mac;
-      size_t m_block_size, m_mac_size, m_iv_size, m_max_fragment;
+      size_t m_block_size, m_iv_size, m_max_fragment;
       u64bit m_seq_no;
       byte m_major, m_minor;
    };

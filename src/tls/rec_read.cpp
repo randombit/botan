@@ -27,15 +27,16 @@ Record_Reader::Record_Reader() :
 */
 void Record_Reader::reset()
    {
+   m_macbuf.clear();
+
+   zeroise(m_readbuf);
+   m_readbuf_pos = 0;
+
    m_cipher.reset();
 
    delete m_mac;
    m_mac = 0;
 
-   zeroise(m_readbuf);
-   m_readbuf_pos = 0;
-
-   m_mac_size = 0;
    m_block_size = 0;
    m_iv_size = 0;
    m_major = m_minor = 0;
@@ -126,7 +127,7 @@ void Record_Reader::activate(const TLS_Cipher_Suite& suite,
          m_mac = af.make_mac("HMAC(" + mac_algo + ")");
 
       m_mac->set_key(mac_key);
-      m_mac_size = m_mac->output_length();
+      m_macbuf.resize(m_mac->output_length());
       }
    else
       throw Invalid_Argument("Record_Reader: Unknown hash " + mac_algo);
@@ -178,7 +179,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
       }
 
    // Possible SSLv2 format client hello
-   if(m_mac_size == 0 && (m_readbuf[0] & 0x80) && (m_readbuf[2] == 1))
+   if((!m_mac) && (m_readbuf[0] & 0x80) && (m_readbuf[2] == 1))
       {
       if(m_readbuf[3] == 0 && m_readbuf[4] == 2)
          throw TLS_Exception(PROTOCOL_VERSION,
@@ -216,7 +217,8 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
       m_readbuf[0] != APPLICATION_DATA)
       {
       throw TLS_Exception(UNEXPECTED_MESSAGE,
-                          "Record_Reader: Unknown record type");
+                          "Unknown record type " + to_string(m_readbuf[0]) +
+                          " from counterparty");
       }
 
    const u16bit version    = make_u16bit(m_readbuf[1], m_readbuf[2]);
@@ -224,7 +226,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
 
    if(m_major && (m_readbuf[1] != m_major || m_readbuf[2] != m_minor))
       throw TLS_Exception(PROTOCOL_VERSION,
-                          "Record_Reader: Got unexpected version");
+                          "Got unexpected version from counterparty");
 
    if(record_len > MAX_CIPHERTEXT_SIZE)
       throw TLS_Exception(RECORD_OVERFLOW,
@@ -239,7 +241,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
                       "Have the full record");
 
    // Null mac means no encryption either, only valid during handshake
-   if(m_mac_size == 0)
+   if(!m_mac)
       {
       if(m_readbuf[0] != CHANGE_CIPHER_SPEC &&
          m_readbuf[0] != ALERT &&
@@ -299,10 +301,12 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
          }
       }
 
-   if(record_len < m_mac_size + pad_size + m_iv_size)
-      throw Decoding_Error("Record_Reader: Record truncated");
+   const size_t mac_pad_iv_size = m_macbuf.size() + pad_size + m_iv_size;
 
-   const u16bit plain_length = record_len - (m_mac_size + pad_size + m_iv_size);
+   if(record_len < mac_pad_iv_size)
+      throw Decoding_Error("Record sent with invalid length");
+
+   const u16bit plain_length = record_len - mac_pad_iv_size;
 
    if(plain_length > m_max_fragment)
       throw TLS_Exception(RECORD_OVERFLOW, "Plaintext record is too large");
@@ -319,16 +323,12 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
 
    ++m_seq_no;
 
-   MemoryVector<byte> computed_mac = m_mac->final();
+   m_mac->final(m_macbuf);
 
-   if(computed_mac.size() != m_mac_size)
-      throw TLS_Exception(INTERNAL_ERROR,
-                          "MAC produced value of unexpected size");
+   const size_t mac_offset = record_len - (m_macbuf.size() + pad_size);
 
-   const size_t mac_offset = record_len - (m_mac_size + pad_size);
-
-   if(!same_mem(&m_readbuf[TLS_HEADER_SIZE + mac_offset], &computed_mac[0], m_mac_size))
-      throw TLS_Exception(BAD_RECORD_MAC, "Record_Reader: MAC failure");
+   if(!same_mem(&m_readbuf[TLS_HEADER_SIZE + mac_offset], &m_macbuf[0], m_macbuf.size()))
+      throw TLS_Exception(BAD_RECORD_MAC, "Message authentication failure");
 
    msg_type = m_readbuf[0];
 
