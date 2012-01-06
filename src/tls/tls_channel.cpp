@@ -49,7 +49,8 @@ size_t TLS_Channel::received_data(const byte buf[], size_t buf_size)
          buf += consumed;
          buf_size -= consumed;
 
-         BOTAN_ASSERT_IMPLICATAION(needed, buf_size == 0);
+         BOTAN_ASSERT(buf_size == 0 || needed == 0,
+                      "Got a full record or consumed all input");
 
          if(buf_size == 0 && needed != 0)
             return needed; // need more data to complete record

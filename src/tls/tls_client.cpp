@@ -286,20 +286,12 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
 
       state->kex_pub = state->server_kex->key();
 
-      bool is_dh = false, is_rsa = false;
-
-      if(dynamic_cast<DH_PublicKey*>(state->kex_pub))
-         is_dh = true;
-      else if(dynamic_cast<RSA_PublicKey*>(state->kex_pub))
-         is_rsa = true;
-      else
+      if(dynamic_cast<DH_PublicKey*>(state->kex_pub) &&
+         state->suite.kex_type() != TLS_ALGO_KEYEXCH_DH)
+         {
          throw TLS_Exception(HANDSHAKE_FAILURE,
-                             "Unknown key type received in server kex");
-
-      if((is_dh && state->suite.kex_type() != TLS_ALGO_KEYEXCH_DH) ||
-         (is_rsa && state->suite.kex_type() != TLS_ALGO_KEYEXCH_RSA))
-         throw TLS_Exception(ILLEGAL_PARAMETER,
-                             "Certificate key type did not match ciphersuite");
+                             "Server sent DH key but negotiated something else");
+         }
 
       if(state->suite.sig_type() != TLS_ALGO_SIGNER_ANON)
          {

@@ -14,14 +14,12 @@
 
 namespace Botan {
 
-Record_Reader::Record_Reader()
+Record_Reader::Record_Reader() :
+   m_readbuf(TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE),
+   m_mac(0)
    {
-   m_mac = 0;
    reset();
    set_maximum_fragment_size(0);
-
-   // A single record is never larger than this
-   m_readbuf.resize(MAX_CIPHERTEXT_SIZE);
    }
 
 /*
@@ -170,41 +168,46 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
 
    consumed = 0;
 
-   const size_t HEADER_SIZE = 5;
-
-   if(m_readbuf_pos < HEADER_SIZE) // header incomplete?
+   if(m_readbuf_pos < TLS_HEADER_SIZE) // header incomplete?
       {
-      if(size_t needed = fill_buffer_to(input, input_sz, consumed, HEADER_SIZE))
+      if(size_t needed = fill_buffer_to(input, input_sz, consumed, TLS_HEADER_SIZE))
          return needed;
 
-      BOTAN_ASSERT_EQUAL(m_readbuf_pos, HEADER_SIZE,
-                         "Buffer error in SSL header");
+      BOTAN_ASSERT_EQUAL(m_readbuf_pos, TLS_HEADER_SIZE,
+                         "Have an entire header");
       }
 
-   // SSLv2-format client hello?
-   if(m_readbuf[0] & 0x80 && m_readbuf[2] == 1 && m_readbuf[3] >= 3)
+   // Possible SSLv2 format client hello
+   if(m_mac_size == 0 && (m_readbuf[0] & 0x80) && (m_readbuf[2] == 1))
       {
-      size_t record_len = make_u16bit(m_readbuf[0], m_readbuf[1]) & 0x7FFF;
+      if(m_readbuf[3] == 0 && m_readbuf[4] == 2)
+         throw TLS_Exception(PROTOCOL_VERSION,
+                             "Client claims to only support SSLv2, rejecting");
 
-      if(size_t needed = fill_buffer_to(input, input_sz, consumed, record_len + 2))
-         return needed;
+      if(m_readbuf[3] >= 3) // SSLv2 mapped TLS hello, then?
+         {
+         size_t record_len = make_u16bit(m_readbuf[0], m_readbuf[1]) & 0x7FFF;
 
-      BOTAN_ASSERT_EQUAL(m_readbuf_pos, (record_len + 2),
-                         "Buffer error in SSLv2 hello");
+         if(size_t needed = fill_buffer_to(input, input_sz, consumed, record_len + 2))
+            return needed;
 
-      msg_type = HANDSHAKE;
+         BOTAN_ASSERT_EQUAL(m_readbuf_pos, (record_len + 2),
+                            "Have the entire SSLv2 hello");
 
-      msg.resize(record_len + 4);
+         msg_type = HANDSHAKE;
 
-      // Fake v3-style handshake message wrapper
-      msg[0] = CLIENT_HELLO_SSLV2;
-      msg[1] = 0;
-      msg[2] = m_readbuf[0] & 0x7F;
-      msg[3] = m_readbuf[1];
+         msg.resize(record_len + 4);
 
-      copy_mem(&msg[4], &m_readbuf[2], m_readbuf_pos - 2);
-      m_readbuf_pos = 0;
-      return 0;
+         // Fake v3-style handshake message wrapper
+         msg[0] = CLIENT_HELLO_SSLV2;
+         msg[1] = 0;
+         msg[2] = m_readbuf[0] & 0x7F;
+         msg[3] = m_readbuf[1];
+
+         copy_mem(&msg[4], &m_readbuf[2], m_readbuf_pos - 2);
+         m_readbuf_pos = 0;
+         return 0;
+         }
       }
 
    if(m_readbuf[0] != CHANGE_CIPHER_SPEC &&
@@ -217,7 +220,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
       }
 
    const u16bit version    = make_u16bit(m_readbuf[1], m_readbuf[2]);
-   const u16bit record_len = make_u16bit(m_readbuf[3], m_readbuf[4]);
+   const size_t record_len = make_u16bit(m_readbuf[3], m_readbuf[4]);
 
    if(m_major && (m_readbuf[1] != m_major || m_readbuf[2] != m_minor))
       throw TLS_Exception(PROTOCOL_VERSION,
@@ -228,11 +231,12 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
                           "Got message that exceeds maximum size");
 
    if(size_t needed = fill_buffer_to(input, input_sz, consumed,
-                                     HEADER_SIZE + record_len))
+                                     TLS_HEADER_SIZE + record_len))
       return needed;
 
-   BOTAN_ASSERT_EQUAL(HEADER_SIZE + record_len, m_readbuf_pos,
-                      "Bad buffer handling in record body");
+   BOTAN_ASSERT_EQUAL(static_cast<size_t>(TLS_HEADER_SIZE) + record_len,
+                      m_readbuf_pos,
+                      "Have the full record");
 
    // Null mac means no encryption either, only valid during handshake
    if(m_mac_size == 0)
@@ -246,7 +250,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
 
       msg_type = m_readbuf[0];
       msg.resize(record_len);
-      copy_mem(&msg[0], &m_readbuf[HEADER_SIZE], record_len);
+      copy_mem(&msg[0], &m_readbuf[TLS_HEADER_SIZE], record_len);
 
       m_readbuf_pos = 0;
       return 0; // got a full record
@@ -255,18 +259,18 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
    // Otherwise, decrypt, check MAC, return plaintext
 
    // FIXME: avoid memory allocation by processing in place
-   m_cipher.process_msg(&m_readbuf[HEADER_SIZE], record_len);
-   size_t got_back = m_cipher.read(&m_readbuf[HEADER_SIZE], record_len, Pipe::LAST_MESSAGE);
-   BOTAN_ASSERT_EQUAL(got_back, record_len, "Cipher didn't decrypt full amount");
+   m_cipher.process_msg(&m_readbuf[TLS_HEADER_SIZE], record_len);
+   size_t got_back = m_cipher.read(&m_readbuf[TLS_HEADER_SIZE], record_len, Pipe::LAST_MESSAGE);
+   BOTAN_ASSERT_EQUAL(got_back, record_len, "Cipher encrypted full amount");
 
    BOTAN_ASSERT_EQUAL(m_cipher.remaining(Pipe::LAST_MESSAGE), 0,
-                      "Cipher produced extra output");
+                      "Cipher had no remaining inputs");
 
    size_t pad_size = 0;
 
    if(m_block_size)
       {
-      byte pad_value = m_readbuf[HEADER_SIZE + (record_len-1)];
+      byte pad_value = m_readbuf[TLS_HEADER_SIZE + (record_len-1)];
       pad_size = pad_value + 1;
 
       /*
@@ -287,7 +291,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
          bool padding_good = true;
 
          for(size_t i = 0; i != pad_size; ++i)
-            if(m_readbuf[HEADER_SIZE + (record_len-i-1)] != pad_value)
+            if(m_readbuf[TLS_HEADER_SIZE + (record_len-i-1)] != pad_value)
                padding_good = false;
 
          if(!padding_good)
@@ -311,7 +315,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
          m_mac->update(get_byte(i, version));
 
    m_mac->update_be(plain_length);
-   m_mac->update(&m_readbuf[HEADER_SIZE + m_iv_size], plain_length);
+   m_mac->update(&m_readbuf[TLS_HEADER_SIZE + m_iv_size], plain_length);
 
    ++m_seq_no;
 
@@ -323,13 +327,13 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
 
    const size_t mac_offset = record_len - (m_mac_size + pad_size);
 
-   if(!same_mem(&m_readbuf[HEADER_SIZE + mac_offset], &computed_mac[0], m_mac_size))
+   if(!same_mem(&m_readbuf[TLS_HEADER_SIZE + mac_offset], &computed_mac[0], m_mac_size))
       throw TLS_Exception(BAD_RECORD_MAC, "Record_Reader: MAC failure");
 
    msg_type = m_readbuf[0];
 
    msg.resize(plain_length);
-   copy_mem(&msg[0], &m_readbuf[HEADER_SIZE + m_iv_size], plain_length);
+   copy_mem(&msg[0], &m_readbuf[TLS_HEADER_SIZE + m_iv_size], plain_length);
    m_readbuf_pos = 0;
    return 0;
    }

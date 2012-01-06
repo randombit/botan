@@ -66,7 +66,7 @@ Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
    {
    include_length = true;
 
-   if(using_version == SSL_V3 && (suite.kex_type() == TLS_ALGO_KEYEXCH_RSA))
+   if(using_version == SSL_V3 && (suite.kex_type() == TLS_ALGO_KEYEXCH_NOKEX))
       include_length = false;
 
    deserialize(contents);

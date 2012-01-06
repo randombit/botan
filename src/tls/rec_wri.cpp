@@ -20,7 +20,7 @@ namespace Botan {
 * Record_Writer Constructor
 */
 Record_Writer::Record_Writer(std::tr1::function<void (const byte[], size_t)> out) :
-   m_output_fn(out)
+   m_output_fn(out), m_writebuf(TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE)
    {
    m_mac = 0;
    reset();
@@ -190,7 +190,7 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
 
    if(m_mac_size == 0)
       {
-      const byte header[5] = {
+      const byte header[TLS_HEADER_SIZE] = {
          type,
          m_major,
          m_minor,
@@ -198,7 +198,7 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
          get_byte<u16bit>(1, length)
       };
 
-      m_output_fn(header, 5);
+      m_output_fn(header, TLS_HEADER_SIZE);
       m_output_fn(input, length);
       }
    else
@@ -225,7 +225,8 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
          throw TLS_Exception(INTERNAL_ERROR,
                              "Record_Writer: Record is too big");
 
-      m_writebuf.resize(5 + buf_size);
+      BOTAN_ASSERT(m_writebuf.size() >= TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE,
+                   "Write buffer is big enough");
 
       // TLS record header
       m_writebuf[0] = type;
@@ -234,7 +235,7 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
       m_writebuf[3] = get_byte<u16bit>(0, buf_size);
       m_writebuf[4] = get_byte<u16bit>(1, buf_size);
 
-      byte* buf_write_ptr = &m_writebuf[5];
+      byte* buf_write_ptr = &m_writebuf[TLS_HEADER_SIZE];
 
       if(m_iv_size)
          {
@@ -262,11 +263,15 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
          }
 
       // FIXME: this could be done in-place without copying
-      m_cipher.process_msg(&m_writebuf[5], buf_size);
-      size_t got_back = m_cipher.read(&m_writebuf[5], buf_size, Pipe::LAST_MESSAGE);
-      BOTAN_ASSERT_EQUAL(got_back, buf_size, "Cipher didn't encrypt full amount");
+      m_cipher.process_msg(&m_writebuf[TLS_HEADER_SIZE], buf_size);
+      const size_t got_back = m_cipher.read(&m_writebuf[TLS_HEADER_SIZE], buf_size, Pipe::LAST_MESSAGE);
 
-      m_output_fn(&m_writebuf[0], m_writebuf.size());
+      BOTAN_ASSERT_EQUAL(got_back, buf_size, "Cipher encrypted full amount");
+
+      BOTAN_ASSERT_EQUAL(m_cipher.remaining(Pipe::LAST_MESSAGE), 0,
+                         "No data remains in pipe");
+
+      m_output_fn(&m_writebuf[0], TLS_HEADER_SIZE + buf_size);
 
       m_seq_no++;
       }
