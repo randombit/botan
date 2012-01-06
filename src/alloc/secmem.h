@@ -164,9 +164,9 @@ class MemoryRegion
       */
       void swap(MemoryRegion<T>& other);
 
-      ~MemoryRegion() { deallocate(buf, allocated); }
+      virtual ~MemoryRegion() { deallocate(buf, allocated); }
    protected:
-      MemoryRegion() { buf = 0; alloc = 0; used = allocated = 0; }
+      MemoryRegion() : buf(0), alloc(0), used(0), allocated(0) {}
 
       /**
       * Copy constructor
