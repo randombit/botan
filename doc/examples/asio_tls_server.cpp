@@ -1,8 +1,11 @@
 #include <iostream>
 #include <string>
+#include <vector>
+
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
+
 #include <asio.hpp>
 
 #include <botan/tls_server.h>
@@ -49,6 +52,11 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
                         asio::placeholders::bytes_transferred));
          }
 
+      void stop()
+         {
+         m_socket.close();
+         }
+
    private:
       tls_server_session(asio::io_service& io_service,
                          Botan::TLS_Session_Manager& session_manager,
@@ -71,7 +79,16 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
          {
          if(!error)
             {
-            m_tls.received_data(m_read_buf, bytes_transferred);
+            try
+               {
+               m_tls.received_data(m_read_buf, bytes_transferred);
+               }
+            catch(std::exception& e)
+               {
+               printf("Failed - %s\n", e.what());
+               stop();
+               return;
+               }
 
             m_socket.async_read_some(
                asio::buffer(m_read_buf, sizeof(m_read_buf)),
@@ -80,56 +97,99 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
                            asio::placeholders::bytes_transferred));
             }
          else
-            printf("Error in read: %s\n", error.message().c_str());
+            {
+            stop();
+            //printf("Error in read: %s\n", error.message().c_str());
+            }
          }
 
-      void handle_write(const asio::error_code& error)
+      void handle_write(const asio::error_code& error,
+                        size_t bytes_transferred)
          {
          if(!error)
             {
+            m_write_buf.clear();
 
+            // initiate another write if needed
+            tls_output_wanted(NULL, 0);
             }
          else
-            printf("Error in write: %s\n", error.message().c_str());
+            {
+            //printf("Error in write: %s\n", error.message().c_str());
+            stop();
+            }
          }
 
       void tls_output_wanted(const byte buf[], size_t buf_len)
          {
-         memcpy(&m_write_buf[0], buf, buf_len);
+         if(buf_len > 0)
+            m_outbox.insert(m_outbox.end(), buf, buf + buf_len);
 
-         asio::async_write(m_socket,
-                           asio::buffer(m_write_buf, buf_len),
-                           boost::bind(&tls_server_session::handle_write, this,
-                                       asio::placeholders::error));
+         // no write pending and have output pending
+         if(m_write_buf.empty() && !m_outbox.empty())
+            {
+            std::swap(m_outbox, m_write_buf);
 
+            asio::async_write(m_socket,
+                              asio::buffer(&m_write_buf[0], m_write_buf.size()),
+                              boost::bind(&tls_server_session::handle_write,
+                                          shared_from_this(),
+                                          asio::placeholders::error,
+                                          asio::placeholders::bytes_transferred));
+            }
          }
 
       void tls_data_recv(const byte buf[], size_t buf_len, Botan::u16bit alert_info)
          {
          if(buf_len == 0 && alert_info != Botan::NULL_ALERT)
-            printf("Alert: %d\n", alert_info);
-
-         printf("Got %d bytes: ", (int)buf_len);
-         for(size_t i = 0; i != buf_len; ++i)
             {
-            if(isprint(buf[i]))
-               printf("%c", buf[i]);
+            //printf("Alert: %d\n", alert_info);
+            if(alert_info == 0)
+               {
+               m_tls.close();
+               return;
+               }
             }
-         printf("\n");
+
+
+
+         //printf("Got %d bytes: ", (int)buf_len);
+
+         if(buf_len > 4)
+            {
+            std::string out;
+            out += "\r\n";
+            out += "HTTP/1.0 200 OK\r\n";
+            out += "Server: Botan ASIO test server\r\n";
+            out += "Host: 192.168.10.5\r\n";
+            out += "Content-Type: text/html\r\n";
+            out += "\r\n";
+            out += "<html><body>Greets. You said: ";
+            out += std::string((const char*)buf, buf_len);
+            out += "</body></html>\r\n\r\n";
+
+            m_tls.queue_for_sending(reinterpret_cast<const byte*>(&out[0]),
+                                    out.size());
+            m_tls.close();
+            }
          }
 
       bool tls_handshake_complete(const Botan::TLS_Session& session)
          {
-         printf("handshake complete\n");
+         //printf("handshake complete\n");
          return true;
          }
 
       tcp::socket m_socket;
-
       Botan::TLS_Server m_tls;
 
       unsigned char m_read_buf[Botan::MAX_TLS_RECORD_SIZE];
-      unsigned char m_write_buf[Botan::MAX_TLS_RECORD_SIZE];
+
+      // used to hold the data currently being written by the system
+      std::vector<byte> m_write_buf;
+
+      // used to hold data queued for writing
+      std::vector<byte> m_outbox;
    };
 
 class Credentials_Manager_Simple : public Botan::Credentials_Manager
