@@ -27,7 +27,6 @@ TLS_Channel::TLS_Channel(std::tr1::function<void (const byte[], size_t)> socket_
 
 TLS_Channel::~TLS_Channel()
    {
-   close();
    delete state;
    state = 0;
    }
@@ -84,15 +83,23 @@ size_t TLS_Channel::received_data(const byte buf[], size_t buf_size)
 
             proc_fn(0, 0, alert_msg.type());
 
-            if(!connection_closed)
+            if(alert_msg.type() == CLOSE_NOTIFY)
                {
-               if(alert_msg.is_fatal() || alert_msg.type() == CLOSE_NOTIFY)
-                  {
-                  if(alert_msg.type() == CLOSE_NOTIFY)
-                     alert(FATAL, CLOSE_NOTIFY);
-                  else
-                     alert(FATAL, NULL_ALERT);
-                  }
+               if(connection_closed)
+                  reader.reset();
+               else
+                  alert(WARNING, CLOSE_NOTIFY); // reply in kind
+               }
+            else if(alert_msg.is_fatal())
+               {
+               // delete state immediately
+               connection_closed = true;
+
+               delete state;
+               state = 0;
+
+               writer.reset();
+               reader.reset();
                }
             }
          else
@@ -202,7 +209,6 @@ void TLS_Channel::alert(Alert_Level alert_level, Alert_Type alert_code)
       delete state;
       state = 0;
 
-      reader.reset();
       writer.reset();
       }
    }

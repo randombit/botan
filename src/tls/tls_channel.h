@@ -40,14 +40,6 @@ class BOTAN_DLL TLS_Channel
       void close() { alert(WARNING, CLOSE_NOTIFY); }
 
       /**
-      * Send a TLS alert message. If the alert is fatal, the
-      * internal state (keys, etc) will be reset
-      * @param level is warning or fatal
-      * @param type is the type of alert
-      */
-      void alert(Alert_Level level, Alert_Type type);
-
-      /**
       * @return true iff the connection is active for sending application data
       */
       bool is_active() const { return handshake_completed && !is_closed(); }
@@ -73,6 +65,15 @@ class BOTAN_DLL TLS_Channel
 
       virtual ~TLS_Channel();
    protected:
+
+      /**
+      * Send a TLS alert message. If the alert is fatal, the
+      * internal state (keys, etc) will be reset
+      * @param level is warning or fatal
+      * @param type is the type of alert
+      */
+      void alert(Alert_Level level, Alert_Type type);
+
       virtual void read_handshake(byte rec_type,
                                   const MemoryRegion<byte>& rec_buf);
 
