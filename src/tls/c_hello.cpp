@@ -1,4 +1,4 @@
-;/*
+/*
 * TLS Hello Request and Client Hello Messages
 * (C) 2004-2011 Jack Lloyd
 *
