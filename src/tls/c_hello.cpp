@@ -204,6 +204,7 @@ void Client_Hello::deserialize_sslv2(const MemoryRegion<byte>& buf)
 
    m_fragment_size = 0;
    m_next_protocol = false;
+   m_supports_session_ticket = false;
    }
 
 /*
@@ -256,6 +257,11 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
       else if(Maximum_Fragment_Length* frag = dynamic_cast<Maximum_Fragment_Length*>(extn))
          {
          m_fragment_size = frag->fragment_size();
+         }
+      else if(Session_Ticket* ticket = dynamic_cast<Session_Ticket*>(extn))
+         {
+         m_supports_session_ticket = true;
+         m_session_ticket = ticket->contents();
          }
       else if(Renegotation_Extension* reneg = dynamic_cast<Renegotation_Extension*>(extn))
          {

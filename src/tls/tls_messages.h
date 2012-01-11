@@ -79,9 +79,10 @@ class Client_Hello : public Handshake_Message
 
       size_t fragment_size() const { return m_fragment_size; }
 
-      bool supports_session_ticket() const { returnm m_supports_session_ticket; }
+      bool supports_session_ticket() const { return m_supports_session_ticket; }
 
-      const MemoryRegion<byte> session_ticket() const { return m_session_ticket; }
+      const MemoryRegion<byte>& session_ticket() const
+         { return m_session_ticket; }
 
       Client_Hello(Record_Writer& writer,
                    TLS_Handshake_Hash& hash,
@@ -123,6 +124,9 @@ class Client_Hello : public Handshake_Message
       size_t m_fragment_size;
       bool m_secure_renegotiation;
       MemoryVector<byte> m_renegotiation_info;
+
+      bool m_supports_session_ticket;
+      MemoryVector<byte> m_session_ticket;
    };
 
 /**

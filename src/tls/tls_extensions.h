@@ -183,12 +183,7 @@ class Session_Ticket : public TLS_Extension
       TLS_Handshake_Extension_Type type() const
          { return TLSEXT_SESSION_TICKET; }
 
-      /*
-      * Decrypt the session ticket and return the session info;
-      * used by server.
-      */
-      TLS_Session decrypt(const SymmetricKey& key,
-                          const MemoryRegion<byte>& key_name);
+      const MemoryVector<byte>& contents() const { return m_contents; }
 
       /**
       * Create empty extension, used by both client and server
@@ -199,14 +194,16 @@ class Session_Ticket : public TLS_Extension
       * Extension with ticket, used by client
       */
       Session_Ticket(const MemoryRegion<byte>& session_ticket) :
-         m_contents(session_ticket);
+         m_contents(session_ticket) {}
 
       /**
       * Deserialize a session ticket
       */
-      Session_Ticket(const TLS_Data_Reader& reader, u16ibt extension_size);
+      Session_Ticket(const TLS_Data_Reader& reader, u16bit extension_size);
 
       MemoryVector<byte> serialize() const { return m_contents; }
+
+      bool empty() const { return false; }
    private:
       MemoryVector<byte> m_contents;
    };
