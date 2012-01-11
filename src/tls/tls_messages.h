@@ -79,6 +79,10 @@ class Client_Hello : public Handshake_Message
 
       size_t fragment_size() const { return m_fragment_size; }
 
+      bool supports_session_ticket() const { returnm m_supports_session_ticket; }
+
+      const MemoryRegion<byte> session_ticket() const { return m_session_ticket; }
+
       Client_Hello(Record_Writer& writer,
                    TLS_Handshake_Hash& hash,
                    const TLS_Policy& policy,
@@ -429,6 +433,30 @@ class Next_Protocol : public Handshake_Message
       void deserialize(const MemoryRegion<byte>&);
 
       std::string m_protocol;
+   };
+
+class New_Session_Ticket : public Handshake_Message
+   {
+   public:
+      Handshake_Type type() const { return NEW_SESSION_TICKET; }
+
+      static TLS_Session decrypt(const MemoryRegion<byte>& ctext,
+                                 const SymmetricKey& key,
+                                 const MemoryRegion<byte>& key_name);
+
+      const MemoryVector<byte>& contents() const { return m_contents; }
+
+      New_Session_Ticket(const TLS_Session& session_info,
+                         const SymmetricKey& key,
+                         const MemoryRegion<byte>& key_name,
+                         RandomNumberGenerator& rng);
+
+      New_Session_Ticket(const MemoryRegion<byte>& buf) { deserialize(buf); }
+   private:
+      MemoryVector<byte> serialize() const;
+      void deserialize(const MemoryRegion<byte>&);
+
+      MemoryVector<byte> m_contents;
    };
 
 }

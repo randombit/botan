@@ -25,6 +25,8 @@ TLS_Extension* make_extension(TLS_Data_Reader& reader,
       return new SRP_Identifier(reader, size);
    else if(code == TLSEXT_SAFE_RENEGOTIATION)
       return new Renegotation_Extension(reader, size);
+   else if(code == TLSEXT_SESSION_TICKET)
+      return new Session_Ticket(reader, size);
    else if(code == TLSEXT_NEXT_PROTOCOL)
       return new Next_Protocol_Notification(reader, size);
    else
