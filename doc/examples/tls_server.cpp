@@ -102,7 +102,7 @@ class Blocking_TLS_Server
 
       void write(const byte buf[], size_t buf_len)
          {
-         server.queue_for_sending(buf, buf_len);
+         server.send(buf, buf_len);
          }
 
       void close() { server.close(); }

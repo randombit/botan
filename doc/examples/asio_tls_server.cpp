@@ -38,10 +38,7 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
             );
          }
 
-      tcp::socket& socket()
-         {
-         return m_socket;
-         }
+      tcp::socket& socket() { return m_socket; }
 
       void start()
          {
@@ -52,10 +49,7 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
                         asio::placeholders::bytes_transferred));
          }
 
-      void stop()
-         {
-         m_socket.close();
-         }
+      void stop() { m_socket.close(); }
 
    private:
       tls_server_session(asio::io_service& io_service,
@@ -151,11 +145,7 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
                }
             }
 
-
-
-         //printf("Got %d bytes: ", (int)buf_len);
-
-         if(buf_len > 4)
+         if(buf_len > 4) // FIXME: ghetto
             {
             std::string out;
             out += "\r\n";
@@ -176,7 +166,6 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
 
       bool tls_handshake_complete(const Botan::TLS_Session& session)
          {
-         //printf("handshake complete\n");
          return true;
          }
 
