@@ -1,7 +1,7 @@
-define SSL_TLS
+define TLS
 
 <comment>
-The SSL/TLS code is complex, new, and not yet reviewed, there may be
+The TLS code is complex, new, and not yet reviewed, there may be
 serious bugs or security issues.
 </comment>
 
