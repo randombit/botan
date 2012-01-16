@@ -32,7 +32,7 @@ class BOTAN_DLL TLS_Channel
       /**
       * Inject plaintext intended for counterparty
       */
-      virtual void queue_for_sending(const byte buf[], size_t buf_size);
+      virtual void send(const byte buf[], size_t buf_size);
 
       /**
       * Send a close notification alert

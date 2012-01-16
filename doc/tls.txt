@@ -34,11 +34,11 @@ these methods available:
    or more callback functions that were provided to the constructor being
    called.
 
-   .. cpp:function void queue_for_sending(const byte buf[], size_t buf_size)
+   .. cpp:function void send(const byte buf[], size_t buf_size)
 
-   If the connection has completed the initial handshake process, he
-   data provided is sent to the counterparty. Otherwise, an exception
-   is thrown.
+   If the connection has completed the initial handshake process, the
+   data provided is sent to the counterparty as TLS
+   traffic. Otherwise, an exception is thrown.
 
    .. cpp:function:: void close()
 
