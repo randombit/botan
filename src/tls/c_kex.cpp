@@ -16,6 +16,26 @@
 
 namespace Botan {
 
+namespace {
+
+SecureVector<byte> strip_leading_zeros(const MemoryRegion<byte>& input)
+   {
+   size_t leading_zeros = 0;
+
+   for(size_t i = 0; i != input.size(); ++i)
+      {
+      if(input[i] != 0)
+         break;
+      ++leading_zeros;
+      }
+
+   SecureVector<byte> output(&input[leading_zeros],
+                             input.size() - leading_zeros);
+   return output;
+   }
+
+}
+
 /*
 * Create a new Client Key Exchange message
 */
@@ -34,7 +54,8 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 
       PK_Key_Agreement ka(priv_key, "Raw");
 
-      pre_master = ka.derive_key(0, dh_pub->public_value()).bits_of();
+      pre_master = strip_leading_zeros(
+         ka.derive_key(0, dh_pub->public_value()).bits_of());
 
       key_material = priv_key.public_value();
       }
@@ -115,7 +136,7 @@ Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
       try {
          PK_Key_Agreement ka(*dh_priv, "Raw");
 
-         pre_master = ka.derive_key(0, key_material).bits_of();
+         pre_master = strip_leading_zeros(ka.derive_key(0, key_material).bits_of());
       }
       catch(...)
          {
