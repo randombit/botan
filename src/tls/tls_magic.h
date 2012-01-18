@@ -26,7 +26,8 @@ enum Version_Code {
    NO_VERSION_SET     = 0x0000,
    SSL_V3             = 0x0300,
    TLS_V10            = 0x0301,
-   TLS_V11            = 0x0302
+   TLS_V11            = 0x0302,
+   TLS_V12            = 0x0303
 };
 
 enum Connection_Side { CLIENT = 1, SERVER = 2 };
@@ -162,6 +163,8 @@ enum Ciphersuite_Code {
 * being randomly assigned codepoints.
 */
 enum TLS_Ciphersuite_Algos {
+   TLS_ALGO_UNKNOWN           = 0x00000000,
+
    TLS_ALGO_SIGNER_MASK       = 0xFF000000,
    TLS_ALGO_SIGNER_ANON       = 0x01000000,
    TLS_ALGO_SIGNER_RSA        = 0x02000000,
@@ -169,16 +172,18 @@ enum TLS_Ciphersuite_Algos {
    TLS_ALGO_SIGNER_ECDSA      = 0x04000000,
 
    TLS_ALGO_KEYEXCH_MASK      = 0x00FF0000,
-   TLS_ALGO_KEYEXCH_NOKEX     = 0x00010000, // exchange via key in server cert
-   TLS_ALGO_KEYEXCH_DH        = 0x00020000,
-   TLS_ALGO_KEYEXCH_ECDH      = 0x00030000,
+   TLS_ALGO_KEYEXCH_NOKEX     = 0x00010000, // RSA using server cert key
+   TLS_ALGO_KEYEXCH_DH        = 0x00020000, // Ephemeral DH
+   TLS_ALGO_KEYEXCH_ECDH      = 0x00030000, // Ephemeral ECDH
    TLS_ALGO_KEYEXCH_SRP       = 0x00040000,
 
-   TLS_ALGO_MAC_MASK          = 0x0000FF00,
-   TLS_ALGO_MAC_MD5           = 0x00000100,
-   TLS_ALGO_MAC_SHA1          = 0x00000200,
-   TLS_ALGO_MAC_SHA256        = 0x00000300,
-   TLS_ALGO_MAC_SHA384        = 0x00000400,
+   TLS_ALGO_HASH_MASK         = 0x0000FF00,
+   TLS_ALGO_HASH_MD5          = 0x00000100,
+   TLS_ALGO_HASH_SHA1         = 0x00000200,
+   TLS_ALGO_HASH_SHA224       = 0x00000300,
+   TLS_ALGO_HASH_SHA256       = 0x00000400,
+   TLS_ALGO_HASH_SHA384       = 0x00000500,
+   TLS_ALGO_HASH_SHA512       = 0x00000600,
 
    TLS_ALGO_CIPHER_MASK       = 0x000000FF,
    TLS_ALGO_CIPHER_RC4_128    = 0x00000001,
@@ -200,12 +205,12 @@ enum TLS_Handshake_Extension_Type {
    TLSEXT_TRUSTED_CA_KEYS        = 3,
    TLSEXT_TRUNCATED_HMAC         = 4,
 
+   TLSEXT_CERTIFICATE_TYPES      = 9,
    TLSEXT_USABLE_ELLIPTIC_CURVES = 10,
    TLSEXT_EC_POINT_FORMATS       = 11,
-
    TLSEXT_SRP_IDENTIFIER         = 12,
+   TLSEXT_SIGNATURE_ALGORITHMS   = 13,
 
-   TLSEXT_CERTIFICATE_TYPES      = 9,
    TLSEXT_SESSION_TICKET         = 35,
 
    TLSEXT_NEXT_PROTOCOL          = 13172,

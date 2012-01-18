@@ -70,7 +70,9 @@ prf_ssl3
 prf_tls
 rng
 rsa
+seed
 sha1
+sha2_32
 ssl3mac
 x509cert
 </requires>

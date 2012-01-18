@@ -25,6 +25,8 @@ TLS_Extension* make_extension(TLS_Data_Reader& reader,
       return new SRP_Identifier(reader, size);
    else if(code == TLSEXT_SAFE_RENEGOTIATION)
       return new Renegotation_Extension(reader, size);
+   else if(code == TLSEXT_SIGNATURE_ALGORITHMS)
+      return new Signature_Algorithms(reader, size);
    else if(code == TLSEXT_NEXT_PROTOCOL)
       return new Next_Protocol_Notification(reader, size);
    else
@@ -267,6 +269,143 @@ MemoryVector<byte> Next_Protocol_Notification::serialize() const
       }
 
    return buf;
+   }
+
+TLS_Ciphersuite_Algos Signature_Algorithms::hash_algo_code(byte code)
+   {
+   switch(code)
+      {
+      case 1:
+         return TLS_ALGO_HASH_MD5;
+      case 2:
+         return TLS_ALGO_HASH_SHA1;
+      case 3:
+         return TLS_ALGO_HASH_SHA224;
+      case 4:
+         return TLS_ALGO_HASH_SHA256;
+      case 5:
+         return TLS_ALGO_HASH_SHA384;
+      case 6:
+         return TLS_ALGO_HASH_SHA512;
+      default:
+         return TLS_ALGO_UNKNOWN;
+      }
+   }
+
+byte Signature_Algorithms::hash_algo_code(TLS_Ciphersuite_Algos code)
+   {
+   switch(code)
+      {
+      case TLS_ALGO_HASH_MD5:
+         return 1;
+      case TLS_ALGO_HASH_SHA1:
+         return 2;
+      case TLS_ALGO_HASH_SHA224:
+         return 3;
+      case TLS_ALGO_HASH_SHA256:
+         return 4;
+      case TLS_ALGO_HASH_SHA384:
+         return 5;
+      case TLS_ALGO_HASH_SHA512:
+         return 6;
+      default:
+         throw Algorithm_Not_Found("Unknown hash ID for signature_algorithms");
+      }
+   }
+
+TLS_Ciphersuite_Algos Signature_Algorithms::sig_algo_code(byte code)
+   {
+   switch(code)
+      {
+      case 1:
+         return TLS_ALGO_SIGNER_RSA;
+      case 2:
+         return TLS_ALGO_SIGNER_DSA;
+      case 3:
+         return TLS_ALGO_SIGNER_ECDSA;
+      default:
+         return TLS_ALGO_UNKNOWN;
+      }
+   }
+
+byte Signature_Algorithms::sig_algo_code(TLS_Ciphersuite_Algos code)
+   {
+   switch(code)
+      {
+      case TLS_ALGO_SIGNER_RSA:
+         return 1;
+      case TLS_ALGO_SIGNER_DSA:
+         return 2;
+      case TLS_ALGO_SIGNER_ECDSA:
+         return 3;
+      default:
+         throw Algorithm_Not_Found("Unknown sig ID for signature_algorithms");
+      }
+   }
+
+MemoryVector<byte> Signature_Algorithms::serialize() const
+   {
+   MemoryVector<byte> buf(2);
+
+   for(size_t i = 0; i != m_supported_algos.size(); ++i)
+      {
+      buf.push_back(hash_algo_code(m_supported_algos[i].first));
+      buf.push_back(sig_algo_code(m_supported_algos[i].second));
+      }
+
+   buf[0] = get_byte<u16bit>(0, buf.size()-2);
+   buf[1] = get_byte<u16bit>(1, buf.size()-2);
+
+   return buf;
+   }
+
+Signature_Algorithms::Signature_Algorithms()
+   {
+   /*
+   Declare we support everything except MD5 for RSA, and SHA-1 with DSA.
+   We prefer hashes strongest (SHA-512) to weakest (SHA-1).
+   */
+
+   m_supported_algos.push_back(std::make_pair(TLS_ALGO_HASH_SHA512,
+                                              TLS_ALGO_SIGNER_RSA));
+
+   m_supported_algos.push_back(std::make_pair(TLS_ALGO_HASH_SHA384,
+                                              TLS_ALGO_SIGNER_RSA));
+
+   m_supported_algos.push_back(std::make_pair(TLS_ALGO_HASH_SHA256,
+                                              TLS_ALGO_SIGNER_RSA));
+
+   m_supported_algos.push_back(std::make_pair(TLS_ALGO_HASH_SHA224,
+                                              TLS_ALGO_SIGNER_RSA));
+
+   m_supported_algos.push_back(std::make_pair(TLS_ALGO_HASH_SHA1,
+                                              TLS_ALGO_SIGNER_RSA));
+
+   m_supported_algos.push_back(std::make_pair(TLS_ALGO_HASH_SHA1,
+                                              TLS_ALGO_SIGNER_DSA));
+   }
+
+Signature_Algorithms::Signature_Algorithms(TLS_Data_Reader& reader,
+                                           u16bit extension_size)
+   {
+   u16bit len = reader.get_u16bit();
+
+   if(len + 2 != extension_size)
+      throw Decoding_Error("Bad encoding on signature algorithms extension");
+
+   while(len)
+      {
+      TLS_Ciphersuite_Algos hash_code = hash_algo_code(reader.get_byte());
+      TLS_Ciphersuite_Algos sig_code = sig_algo_code(reader.get_byte());
+
+      // If not something we know, ignore completely
+      if(hash_code == TLS_ALGO_UNKNOWN || sig_code == TLS_ALGO_UNKNOWN)
+         continue;
+
+      m_supported_algos.push_back(std::make_pair(hash_code, sig_code));
+
+      len -= 2;
+      }
    }
 
 }

@@ -177,6 +177,39 @@ class Next_Protocol_Notification : public TLS_Extension
    };
 
 /**
+* Signature Algorithms Extension for TLS 1.2 (RFC 5246)
+*/
+class Signature_Algorithms : public TLS_Extension
+   {
+   public:
+      TLS_Handshake_Extension_Type type() const
+         { return TLSEXT_NEXT_PROTOCOL; }
+
+      std::vector<std::pair<TLS_Ciphersuite_Algos, TLS_Ciphersuite_Algos> >
+         supported_signature_algorthms() const
+         {
+         return m_supported_algos;
+         }
+
+      MemoryVector<byte> serialize() const;
+
+      bool empty() const { return false; }
+
+      Signature_Algorithms();
+
+      Signature_Algorithms(TLS_Data_Reader& reader,
+                           u16bit extension_size);
+   private:
+      static TLS_Ciphersuite_Algos hash_algo_code(byte code);
+      static byte hash_algo_code(TLS_Ciphersuite_Algos code);
+
+      static TLS_Ciphersuite_Algos sig_algo_code(byte code);
+      static byte sig_algo_code(TLS_Ciphersuite_Algos code);
+
+      std::vector<std::pair<TLS_Ciphersuite_Algos, TLS_Ciphersuite_Algos> > m_supported_algos;
+   };
+
+/**
 * Represents a block of extensions in a hello message
 */
 class TLS_Extensions
