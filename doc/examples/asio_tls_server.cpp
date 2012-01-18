@@ -158,8 +158,8 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
             out += std::string((const char*)buf, buf_len);
             out += "</body></html>\r\n\r\n";
 
-            m_tls.queue_for_sending(reinterpret_cast<const byte*>(&out[0]),
-                                    out.size());
+            m_tls.send(reinterpret_cast<const byte*>(&out[0]),
+                       out.size());
             m_tls.close();
             }
          }
