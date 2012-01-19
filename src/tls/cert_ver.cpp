@@ -33,7 +33,12 @@ Certificate_Verify::Certificate_Verify(Record_Writer& writer,
    Signature_Format format = IEEE_1363;
 
    if(priv_key->algo_name() == "RSA")
-      padding = "EMSA3(TLS.Digest.0)";
+      {
+      if(version == SSL_V3)
+         padding = "EMSA3(Raw)";
+      else
+         padding = "EMSA3(TLS.Digest.0)";
+      }
    else if(priv_key->algo_name() == "DSA")
       {
       if(version == SSL_V3)
@@ -52,7 +57,10 @@ Certificate_Verify::Certificate_Verify(Record_Writer& writer,
       {
       SecureVector<byte> md5_sha = hash.final_ssl3(master_secret);
 
-      signature = signer.sign_message(&md5_sha[16], md5_sha.size()-16, rng);
+      if(priv_key->algo_name() == "DSA")
+         signature = signer.sign_message(&md5_sha[16], md5_sha.size()-16, rng);
+      else
+         signature = signer.sign_message(md5_sha, rng);
       }
    else if(version == TLS_V10 || version == TLS_V11)
       {
@@ -104,7 +112,10 @@ bool Certificate_Verify::verify(const X509_Certificate& cert,
 
    if(key->algo_name() == "RSA")
       {
-      padding = "EMSA3(TLS.Digest.0)";
+      if(version == SSL_V3)
+         padding = "EMSA3(Raw)";
+      else
+         padding = "EMSA3(TLS.Digest.0)";
       }
    else if(key->algo_name() == "DSA")
       {
