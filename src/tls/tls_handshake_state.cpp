@@ -130,7 +130,9 @@ bool TLS_Handshake_State::received_handshake_msg(Handshake_Type handshake_msg) c
    }
 
 std::pair<std::string, Signature_Format>
-TLS_Handshake_State::choose_sig_format(const Public_Key* key, bool for_client_auth)
+TLS_Handshake_State::choose_sig_format(const Public_Key* key,
+                                       TLS_Ciphersuite_Algos hash_algo,
+                                       bool for_client_auth)
    {
    const std::string algo_name = key->algo_name();
 
@@ -140,8 +142,13 @@ TLS_Handshake_State::choose_sig_format(const Public_Key* key, bool for_client_au
 
       if(for_client_auth && this->version == SSL_V3)
          padding = "EMSA3(Raw)";
-      else
+      else if(hash_algo == TLS_ALGO_NONE)
          padding = "EMSA3(TLS.Digest.0)";
+      else
+         {
+         std::string hash = TLS_Cipher_Suite::hash_code_to_name(hash_algo);
+         padding = "EMSA3(" + hash + ")";
+         }
 
       return std::make_pair(padding, IEEE_1363);
       }
@@ -151,8 +158,13 @@ TLS_Handshake_State::choose_sig_format(const Public_Key* key, bool for_client_au
 
       if(for_client_auth && this->version == SSL_V3)
          padding = "Raw";
-      else
+      else if(hash_algo == TLS_ALGO_NONE)
          padding = "EMSA1(SHA-1)";
+      else
+         {
+         std::string hash = TLS_Cipher_Suite::hash_code_to_name(hash_algo);
+         padding = "EMSA1(" + hash + ")";
+         }
 
       return std::make_pair(padding, DER_SEQUENCE);
       }

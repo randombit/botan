@@ -57,9 +57,6 @@ void Record_Reader::set_maximum_fragment_size(size_t max_fragment)
 */
 void Record_Reader::set_version(Version_Code version)
    {
-   if(version != SSL_V3 && version != TLS_V10 && version != TLS_V11)
-      throw Invalid_Argument("Record_Reader: Invalid protocol version");
-
    m_major = (version >> 8) & 0xFF;
    m_minor = (version & 0xFF);
    }

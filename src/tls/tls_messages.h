@@ -300,6 +300,7 @@ class Certificate_Verify : public Handshake_Message
    private:
       MemoryVector<byte> serialize() const;
 
+      TLS_Ciphersuite_Algos hash_algo; // hash used to create signature
       MemoryVector<byte> signature;
    };
 
@@ -360,12 +361,17 @@ class Server_Key_Exchange : public Handshake_Message
                           RandomNumberGenerator& rng,
                           const Private_Key* priv_key);
 
-      Server_Key_Exchange(const MemoryRegion<byte>& buf);
+      Server_Key_Exchange(const MemoryRegion<byte>& buf,
+                          TLS_Ciphersuite_Algos kex_alg,
+                          TLS_Ciphersuite_Algos sig_alg,
+                          Version_Code version);
    private:
       MemoryVector<byte> serialize() const;
       MemoryVector<byte> serialize_params() const;
 
       std::vector<BigInt> params;
+
+      TLS_Ciphersuite_Algos hash_algo; // hash used to create signature
       MemoryVector<byte> signature;
    };
 

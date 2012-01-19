@@ -60,9 +60,6 @@ void Record_Writer::reset()
 */
 void Record_Writer::set_version(Version_Code version)
    {
-   if(version != SSL_V3 && version != TLS_V10 && version != TLS_V11)
-      throw Invalid_Argument("Record_Writer: Invalid protocol version");
-
    m_major = (version >> 8) & 0xFF;
    m_minor = (version & 0xFF);
    }

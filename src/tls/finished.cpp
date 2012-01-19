@@ -7,10 +7,26 @@
 
 #include <botan/internal/tls_messages.h>
 #include <botan/prf_tls.h>
+#include <botan/hmac.h>
+#include <botan/sha2_32.h>
+#include <memory>
+
+#include <stdio.h>
 
 namespace Botan {
 
 namespace {
+
+KDF* choose_tls_prf(Version_Code version)
+   {
+   if(version == TLS_V10 || version == TLS_V11)
+      return new TLS_PRF;
+   else if(version == TLS_V12)
+      return new TLS_12_PRF(new HMAC(new SHA_256)); // might depend on ciphersuite
+   else
+      throw TLS_Exception(PROTOCOL_VERSION,
+                          "Unknown version for PRF");
+   }
 
 /*
 * Compute the verify_data
@@ -32,7 +48,7 @@ MemoryVector<byte> finished_compute_verify(TLS_Handshake_State* state,
 
       return state->hash.final_ssl3(state->keys.master_secret());
       }
-   else if(state->version == TLS_V10 || state->version == TLS_V11)
+   else
       {
       const byte TLS_CLIENT_LABEL[] = {
          0x63, 0x6C, 0x69, 0x65, 0x6E, 0x74, 0x20, 0x66, 0x69, 0x6E, 0x69,
@@ -42,19 +58,18 @@ MemoryVector<byte> finished_compute_verify(TLS_Handshake_State* state,
          0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x20, 0x66, 0x69, 0x6E, 0x69,
          0x73, 0x68, 0x65, 0x64 };
 
-      TLS_PRF prf;
+      std::auto_ptr<KDF> prf(choose_tls_prf(state->version));
 
       MemoryVector<byte> input;
       if(side == CLIENT)
          input += std::make_pair(TLS_CLIENT_LABEL, sizeof(TLS_CLIENT_LABEL));
       else
          input += std::make_pair(TLS_SERVER_LABEL, sizeof(TLS_SERVER_LABEL));
-      input += state->hash.final();
 
-      return prf.derive_key(12, state->keys.master_secret(), input);
+      input += state->hash.final(state->version);
+
+      return prf->derive_key(12, state->keys.master_secret(), input);
       }
-   else
-      throw Invalid_Argument("Finished message: Unknown protocol version");
    }
 
 }

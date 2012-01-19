@@ -1,4 +1,5 @@
 define TLS_V10_PRF
+define TLS_V12_PRF
 
 <requires>
 hmac

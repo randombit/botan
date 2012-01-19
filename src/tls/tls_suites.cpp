@@ -254,9 +254,8 @@ TLS_Ciphersuite_Algos TLS_Cipher_Suite::lookup_ciphersuite(u16bit suite)
    return TLS_Ciphersuite_Algos(0);
    }
 
-namespace {
-
-std::pair<std::string, size_t> cipher_code_to_name(TLS_Ciphersuite_Algos algo)
+std::pair<std::string, size_t>
+TLS_Cipher_Suite::cipher_code_to_name(TLS_Ciphersuite_Algos algo)
    {
    if((algo & TLS_ALGO_CIPHER_MASK) == TLS_ALGO_CIPHER_RC4_128)
       return std::make_pair("ARC4", 16);
@@ -277,7 +276,7 @@ std::pair<std::string, size_t> cipher_code_to_name(TLS_Ciphersuite_Algos algo)
                        "TLS_Cipher_Suite: Unknown cipher type " + to_string(algo));
    }
 
-std::string mac_code_to_name(TLS_Ciphersuite_Algos algo)
+std::string TLS_Cipher_Suite::hash_code_to_name(TLS_Ciphersuite_Algos algo)
    {
    if((algo & TLS_ALGO_HASH_MASK) == TLS_ALGO_HASH_MD5)
       return "MD5";
@@ -301,8 +300,6 @@ std::string mac_code_to_name(TLS_Ciphersuite_Algos algo)
                        "TLS_Cipher_Suite: Unknown MAC type " + to_string(algo));
    }
 
-}
-
 /**
 * TLS_Cipher_Suite Constructor
 */
@@ -325,7 +322,7 @@ TLS_Cipher_Suite::TLS_Cipher_Suite(u16bit suite_code)
    cipher = cipher_info.first;
    cipher_key_length = cipher_info.second;
 
-   mac = mac_code_to_name(algos);
+   mac = hash_code_to_name(algos);
    }
 
 }

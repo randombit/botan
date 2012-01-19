@@ -151,10 +151,9 @@ class TLS_Data_Reader
       void assert_at_least(size_t n) const
          {
          if(buf.size() - offset < n)
-            {
-            abort();
-            throw Decoding_Error("TLS_Data_Reader: Corrupt packet");
-            }
+            throw Decoding_Error("TLS_Data_Reader: Expected " + to_string(n) +
+                                 "bytes remaining, only " + to_string(buf.size()-offset) +
+                                 " left");
          }
 
       const MemoryRegion<byte>& buf;

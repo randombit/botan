@@ -104,7 +104,10 @@ Server_Hello::Server_Hello(const MemoryRegion<byte>& buf)
 
    s_version = static_cast<Version_Code>(reader.get_u16bit());
 
-   if(s_version != SSL_V3 && s_version != TLS_V10 && s_version != TLS_V11)
+   if(s_version != SSL_V3 &&
+      s_version != TLS_V10 &&
+      s_version != TLS_V11 &&
+      s_version != TLS_V12)
       {
       throw TLS_Exception(PROTOCOL_VERSION,
                           "Server_Hello: Unsupported server version");
@@ -134,6 +137,10 @@ Server_Hello::Server_Hello(const MemoryRegion<byte>& buf)
          {
          m_next_protocols = npn->protocols();
          m_next_protocol = true;
+         }
+      else if(Signature_Algorithms* sigs = dynamic_cast<Signature_Algorithms*>(extn))
+         {
+         // save in handshake state
          }
       }
    }
@@ -166,6 +173,9 @@ MemoryVector<byte> Server_Hello::serialize() const
 
    if(m_next_protocol)
       extensions.push_back(new Next_Protocol_Notification(m_next_protocols));
+
+   if(s_version == TLS_V12)
+      extensions.push_back(new Signature_Algorithms());
 
    buf += extensions.serialize();
 

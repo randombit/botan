@@ -182,6 +182,12 @@ class Next_Protocol_Notification : public TLS_Extension
 class Signature_Algorithms : public TLS_Extension
    {
    public:
+      static TLS_Ciphersuite_Algos hash_algo_code(byte code);
+      static byte hash_algo_code(TLS_Ciphersuite_Algos code);
+
+      static TLS_Ciphersuite_Algos sig_algo_code(byte code);
+      static byte sig_algo_code(TLS_Ciphersuite_Algos code);
+
       TLS_Handshake_Extension_Type type() const
          { return TLSEXT_NEXT_PROTOCOL; }
 
@@ -200,12 +206,6 @@ class Signature_Algorithms : public TLS_Extension
       Signature_Algorithms(TLS_Data_Reader& reader,
                            u16bit extension_size);
    private:
-      static TLS_Ciphersuite_Algos hash_algo_code(byte code);
-      static byte hash_algo_code(TLS_Ciphersuite_Algos code);
-
-      static TLS_Ciphersuite_Algos sig_algo_code(byte code);
-      static byte sig_algo_code(TLS_Ciphersuite_Algos code);
-
       std::vector<std::pair<TLS_Ciphersuite_Algos, TLS_Ciphersuite_Algos> > m_supported_algos;
    };
 

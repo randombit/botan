@@ -23,7 +23,7 @@ using namespace std::tr1::placeholders;
 class Client_TLS_Policy : public TLS_Policy
    {
    public:
-      Version_Code pref_version() const { return SSL_V3; }
+      Version_Code pref_version() const { return TLS_V12; }
 
       bool check_cert(const std::vector<X509_Certificate>& certs) const
          {

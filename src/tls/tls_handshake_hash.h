@@ -33,8 +33,8 @@ class TLS_Handshake_Hash
       void update(Handshake_Type handshake_type,
                   const MemoryRegion<byte>& handshake_msg);
 
-      SecureVector<byte> final();
-      SecureVector<byte> final_ssl3(const MemoryRegion<byte>&);
+      SecureVector<byte> final(Version_Code version);
+      SecureVector<byte> final_ssl3(const MemoryRegion<byte>& master_secret);
 
       const SecureVector<byte>& get_contents() const
          { return data; }

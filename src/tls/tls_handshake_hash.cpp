@@ -6,8 +6,10 @@
 */
 
 #include <botan/internal/tls_handshake_hash.h>
+#include <botan/tls_exceptn.h>
 #include <botan/md5.h>
 #include <botan/sha160.h>
+#include <botan/sha2_32.h>
 #include <memory>
 
 namespace Botan {
@@ -27,17 +29,32 @@ void TLS_Handshake_Hash::update(Handshake_Type handshake_type,
 /**
 * Return a TLS Handshake Hash
 */
-SecureVector<byte> TLS_Handshake_Hash::final()
+SecureVector<byte> TLS_Handshake_Hash::final(Version_Code version)
    {
-   MD5 md5;
-   SHA_160 sha1;
-
-   md5.update(data);
-   sha1.update(data);
-
    SecureVector<byte> output;
-   output += md5.final();
-   output += sha1.final();
+
+   if(version == TLS_V10 || version == TLS_V11)
+      {
+      MD5 md5;
+      SHA_160 sha1;
+
+      md5.update(data);
+      sha1.update(data);
+
+      output += md5.final();
+      output += sha1.final();
+      }
+   else if(version == TLS_V12)
+      {
+      // This might depend on the ciphersuite
+      SHA_256 sha256;
+      sha256.update(data);
+      output += sha256.final();
+      }
+   else
+      throw TLS_Exception(PROTOCOL_VERSION,
+                          "Unknown version for handshake hashes");
+
    return output;
    }
 

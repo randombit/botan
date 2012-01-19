@@ -27,8 +27,14 @@ Certificate_Verify::Certificate_Verify(Record_Writer& writer,
    {
    BOTAN_ASSERT_NONNULL(priv_key);
 
+   // FIXME: this should respect server's hash preferences
+   if(state->version >= TLS_V12)
+      hash_algo = TLS_ALGO_HASH_SHA256;
+   else
+      hash_algo = TLS_ALGO_NONE;
+
    std::pair<std::string, Signature_Format> format =
-      state->choose_sig_format(priv_key, true);
+      state->choose_sig_format(priv_key, hash_algo, true);
 
    PK_Signer signer(*priv_key, format.first, format.second);
 
@@ -86,7 +92,7 @@ bool Certificate_Verify::verify(const X509_Certificate& cert,
    std::auto_ptr<Public_Key> key(cert.subject_public_key());
 
    std::pair<std::string, Signature_Format> format =
-      state->choose_sig_format(key.get(), true);
+      state->choose_sig_format(key.get(), hash_algo, true);
 
    PK_Verifier verifier(*key, format.first, format.second);
 

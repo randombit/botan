@@ -277,7 +277,19 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
       state->set_expected_next(CERTIFICATE_REQUEST); // optional
       state->set_expected_next(SERVER_HELLO_DONE);
 
-      state->server_kex = new Server_Key_Exchange(contents);
+      state->server_kex = new Server_Key_Exchange(contents,
+                                                  state->suite.kex_type(),
+                                                  state->suite.sig_type(),
+                                                  state->version);
+
+      if(state->suite.sig_type() != TLS_ALGO_SIGNER_ANON)
+         {
+         if(!state->server_kex->verify(peer_certs[0], state))
+            {
+            throw TLS_Exception(DECRYPT_ERROR,
+                            "Bad signature on server key exchange");
+            }
+         }
 
       if(state->kex_pub)
          delete state->kex_pub;
@@ -289,15 +301,6 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
          {
          throw TLS_Exception(HANDSHAKE_FAILURE,
                              "Server sent DH key but negotiated something else");
-         }
-
-      if(state->suite.sig_type() != TLS_ALGO_SIGNER_ANON)
-         {
-         if(!state->server_kex->verify(peer_certs[0], state))
-            {
-            throw TLS_Exception(DECRYPT_ERROR,
-                            "Bad signature on server key exchange");
-            }
          }
       }
    else if(type == CERTIFICATE_REQUEST)

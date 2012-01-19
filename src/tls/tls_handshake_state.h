@@ -47,7 +47,9 @@ class TLS_Handshake_State
       void set_expected_next(Handshake_Type handshake_msg);
 
       std::pair<std::string, Signature_Format>
-         choose_sig_format(const Public_Key* key, bool for_client_auth);
+         choose_sig_format(const Public_Key* key,
+                           TLS_Ciphersuite_Algos hash_algo,
+                           bool for_client_auth);
 
       Version_Code version;
 

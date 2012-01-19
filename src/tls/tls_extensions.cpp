@@ -288,7 +288,7 @@ TLS_Ciphersuite_Algos Signature_Algorithms::hash_algo_code(byte code)
       case 6:
          return TLS_ALGO_HASH_SHA512;
       default:
-         return TLS_ALGO_UNKNOWN;
+         return TLS_ALGO_NONE;
       }
    }
 
@@ -324,7 +324,7 @@ TLS_Ciphersuite_Algos Signature_Algorithms::sig_algo_code(byte code)
       case 3:
          return TLS_ALGO_SIGNER_ECDSA;
       default:
-         return TLS_ALGO_UNKNOWN;
+         return TLS_ALGO_NONE;
       }
    }
 
@@ -399,7 +399,7 @@ Signature_Algorithms::Signature_Algorithms(TLS_Data_Reader& reader,
       TLS_Ciphersuite_Algos sig_code = sig_algo_code(reader.get_byte());
 
       // If not something we know, ignore completely
-      if(hash_code == TLS_ALGO_UNKNOWN || sig_code == TLS_ALGO_UNKNOWN)
+      if(hash_code == TLS_ALGO_NONE || sig_code == TLS_ALGO_NONE)
          continue;
 
       m_supported_algos.push_back(std::make_pair(hash_code, sig_code));

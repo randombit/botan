@@ -7,6 +7,7 @@
 
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_reader.h>
+#include <botan/internal/tls_extensions.h>
 #include <botan/pubkey.h>
 #include <botan/dh.h>
 #include <botan/loadstor.h>
@@ -34,8 +35,14 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
       throw Invalid_Argument("Unknown key type " + state->kex_priv->algo_name() +
                              " for TLS key exchange");
 
+   // FIXME: this should respect client's hash preferences
+   if(state->version >= TLS_V12)
+      hash_algo = TLS_ALGO_HASH_SHA256;
+   else
+      hash_algo = TLS_ALGO_NONE;
+
    std::pair<std::string, Signature_Format> format =
-      state->choose_sig_format(private_key, false);
+      state->choose_sig_format(private_key, hash_algo, false);
 
    PK_Signer signer(*private_key, format.first, format.second);
 
@@ -53,6 +60,10 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
 MemoryVector<byte> Server_Key_Exchange::serialize() const
    {
    MemoryVector<byte> buf = serialize_params();
+
+   if(hash_algo != TLS_ALGO_NONE)
+      {}
+
    append_tls_length_value(buf, signature, 2);
    return buf;
    }
@@ -73,39 +84,38 @@ MemoryVector<byte> Server_Key_Exchange::serialize_params() const
 /**
 * Deserialize a Server Key Exchange message
 */
-Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf)
+Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
+                                         TLS_Ciphersuite_Algos kex_alg,
+                                         TLS_Ciphersuite_Algos sig_alg,
+                                         Version_Code version)
    {
    if(buf.size() < 6)
       throw Decoding_Error("Server_Key_Exchange: Packet corrupted");
 
-   MemoryVector<byte> values[4];
-   size_t so_far = 0;
+   TLS_Data_Reader reader(buf);
 
-   for(size_t i = 0; i != 4; ++i)
+   if(kex_alg == TLS_ALGO_KEYEXCH_DH)
       {
-      const u16bit len = make_u16bit(buf[so_far], buf[so_far+1]);
-      so_far += 2;
+      // 3 bigints, DH p, g, Y
 
-      if(len + so_far > buf.size())
-         throw Decoding_Error("Server_Key_Exchange: Packet corrupted");
-
-      values[i].resize(len);
-      copy_mem(&values[i][0], &buf[so_far], len);
-      so_far += len;
-
-      if(i == 2 && so_far == buf.size())
-         break;
-      }
-
-   params.push_back(BigInt::decode(values[0]));
-   params.push_back(BigInt::decode(values[1]));
-   if(values[3].size())
-      {
-      params.push_back(BigInt::decode(values[2]));
-      signature = values[3];
+      for(size_t i = 0; i != 3; ++i)
+         {
+         BigInt v = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
+         params.push_back(v);
+         }
       }
    else
-      signature = values[2];
+      throw Decoding_Error("Unsupported server key exchange type");
+
+   if(sig_alg != TLS_ALGO_SIGNER_ANON)
+      {
+      if(version < TLS_V12)
+         hash_algo = TLS_ALGO_NONE; // use old defaults
+      else
+         hash_algo = Signature_Algorithms::hash_algo_code(reader.get_byte());
+
+      signature = reader.get_range<byte>(2, 0, 65535);
+      }
    }
 
 /**
@@ -128,7 +138,7 @@ bool Server_Key_Exchange::verify(const X509_Certificate& cert,
    std::auto_ptr<Public_Key> key(cert.subject_public_key());
 
    std::pair<std::string, Signature_Format> format =
-      state->choose_sig_format(key.get(), false);
+      state->choose_sig_format(key.get(), hash_algo, false);
 
    PK_Verifier verifier(*key, format.first, format.second);
 

@@ -200,9 +200,14 @@ KDF* get_kdf(const std::string& algo_spec)
       return new TLS_PRF;
 #endif
 
-#if defined(BOTAN_HAS_SSL_V3_PRF)
-   if(request.algo_name() == "SSL3-PRF" && request.arg_count() == 0)
-      return new SSL3_PRF;
+#if defined(BOTAN_HAS_TLS_V10_PRF)
+   if(request.algo_name() == "TLS-PRF" && request.arg_count() == 0)
+      return new TLS_PRF;
+#endif
+
+#if defined(BOTAN_HAS_TLS_V12_PRF)
+   if(request.algo_name() == "TLS-12-PRF" && request.arg_count() == 1)
+      return new TLS_12_PRF(af.make_mac("HMAC(" + request.arg(0) + ")"));
 #endif
 
    throw Algorithm_Not_Found(algo_spec);

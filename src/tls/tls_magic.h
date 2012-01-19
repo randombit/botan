@@ -167,7 +167,7 @@ enum Ciphersuite_Code {
 * being randomly assigned codepoints.
 */
 enum TLS_Ciphersuite_Algos {
-   TLS_ALGO_UNKNOWN           = 0x00000000,
+   TLS_ALGO_NONE              = 0x00000000,
 
    TLS_ALGO_SIGNER_MASK       = 0xFF000000,
    TLS_ALGO_SIGNER_ANON       = 0x01000000,

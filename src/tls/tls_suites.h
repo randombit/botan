@@ -22,6 +22,11 @@ class BOTAN_DLL TLS_Cipher_Suite
    public:
       static TLS_Ciphersuite_Algos lookup_ciphersuite(u16bit suite);
 
+      static std::pair<std::string, size_t>
+         cipher_code_to_name(TLS_Ciphersuite_Algos algo);
+
+      static std::string hash_code_to_name(TLS_Ciphersuite_Algos algo);
+
       std::string cipher_algo() const { return cipher; }
       std::string mac_algo() const { return mac; }
 

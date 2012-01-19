@@ -21,6 +21,8 @@ std::string lookup_prf_name(Version_Code version)
       return "SSL3-PRF";
    else if(version == TLS_V10 || version == TLS_V11)
       return "TLS-PRF";
+   else if(version == TLS_V12)
+      return "TLS-12-PRF(SHA-256)";
    else
       throw Invalid_Argument("Session_Keys: Unknown version code");
    }
