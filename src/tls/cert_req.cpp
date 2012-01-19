@@ -1,6 +1,6 @@
 /*
 * Certificate Request Message
-* (C) 2004-2006 Jack Lloyd
+* (C) 2004-2006,2012 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -49,6 +49,7 @@ MemoryVector<byte> Certificate_Req::serialize() const
    for(size_t i = 0; i != names.size(); ++i)
       encoder.encode(names[i]);
 
+   // is this correct?
    append_tls_length_value(buf, encoder.get_contents(), 2);
 
    return buf;
@@ -62,7 +63,7 @@ void Certificate_Req::deserialize(const MemoryRegion<byte>& buf)
    if(buf.size() < 4)
       throw Decoding_Error("Certificate_Req: Bad certificate request");
 
-   size_t types_size = buf[0];
+   const size_t types_size = buf[0];
 
    if(buf.size() < types_size + 3)
       throw Decoding_Error("Certificate_Req: Bad certificate request");
@@ -70,18 +71,26 @@ void Certificate_Req::deserialize(const MemoryRegion<byte>& buf)
    for(size_t i = 0; i != types_size; ++i)
       types.push_back(static_cast<Certificate_Type>(buf[i+1]));
 
-   size_t names_size = make_u16bit(buf[types_size+2], buf[types_size+3]);
+   const size_t names_size = make_u16bit(buf[types_size+1], buf[types_size+2]);
 
    if(buf.size() != names_size + types_size + 3)
       throw Decoding_Error("Certificate_Req: Bad certificate request");
 
-   BER_Decoder decoder(&buf[types_size + 3], names_size);
+   size_t offset = types_size + 3;
 
-   while(decoder.more_items())
+   while(offset < buf.size())
       {
+      const size_t name_size = make_u16bit(buf[offset], buf[offset+1]);
+
+      if(offset + 2 + name_size > buf.size())
+         throw Decoding_Error("Certificate_Req: Bad certificate request");
+
+      BER_Decoder decoder(&buf[offset + 2], name_size);
       X509_DN name;
       decoder.decode(name);
       names.push_back(name);
+
+      offset += (2 + name_size);
       }
    }
 
