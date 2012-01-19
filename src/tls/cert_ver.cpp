@@ -21,56 +21,36 @@ namespace Botan {
 * Create a new Certificate Verify message
 */
 Certificate_Verify::Certificate_Verify(Record_Writer& writer,
-                                       TLS_Handshake_Hash& hash,
+                                       TLS_Handshake_State* state,
                                        RandomNumberGenerator& rng,
-                                       Version_Code version,
-                                       const SecureVector<byte>& master_secret,
                                        const Private_Key* priv_key)
    {
    BOTAN_ASSERT_NONNULL(priv_key);
 
-   std::string padding = "";
-   Signature_Format format = IEEE_1363;
+   std::pair<std::string, Signature_Format> format =
+      state->choose_sig_format(priv_key, true);
 
-   if(priv_key->algo_name() == "RSA")
-      {
-      if(version == SSL_V3)
-         padding = "EMSA3(Raw)";
-      else
-         padding = "EMSA3(TLS.Digest.0)";
-      }
-   else if(priv_key->algo_name() == "DSA")
-      {
-      if(version == SSL_V3)
-         padding = "Raw";
-      else
-         padding = "EMSA1(SHA-1)";
-      format = DER_SEQUENCE;
-      }
-   else
-      throw Invalid_Argument(priv_key->algo_name() +
-                             " is invalid/unknown for TLS signatures");
+   PK_Signer signer(*priv_key, format.first, format.second);
 
-   PK_Signer signer(*priv_key, padding, format);
-
-   if(version == SSL_V3)
+   if(state->version == SSL_V3)
       {
-      SecureVector<byte> md5_sha = hash.final_ssl3(master_secret);
+      SecureVector<byte> md5_sha = state->hash.final_ssl3(
+         state->keys.master_secret());
 
       if(priv_key->algo_name() == "DSA")
          signature = signer.sign_message(&md5_sha[16], md5_sha.size()-16, rng);
       else
          signature = signer.sign_message(md5_sha, rng);
       }
-   else if(version == TLS_V10 || version == TLS_V11)
+   else if(state->version == TLS_V10 || state->version == TLS_V11)
       {
-      signature = signer.sign_message(hash.get_contents(), rng);
+      signature = signer.sign_message(state->hash.get_contents(), rng);
       }
    else
       throw TLS_Exception(PROTOCOL_VERSION,
                           "Unknown TLS version in certificate verification");
 
-   send(writer, hash);
+   send(writer, state->hash);
    }
 
 /*
@@ -101,45 +81,27 @@ void Certificate_Verify::deserialize(const MemoryRegion<byte>& buf)
 * Verify a Certificate Verify message
 */
 bool Certificate_Verify::verify(const X509_Certificate& cert,
-                                TLS_Handshake_Hash& hash,
-                                Version_Code version,
-                                const SecureVector<byte>& master_secret)
+                                TLS_Handshake_State* state)
    {
    std::auto_ptr<Public_Key> key(cert.subject_public_key());
 
-   std::string padding = "";
-   Signature_Format format = IEEE_1363;
+   std::pair<std::string, Signature_Format> format =
+      state->choose_sig_format(key.get(), true);
 
-   if(key->algo_name() == "RSA")
-      {
-      if(version == SSL_V3)
-         padding = "EMSA3(Raw)";
-      else
-         padding = "EMSA3(TLS.Digest.0)";
-      }
-   else if(key->algo_name() == "DSA")
-      {
-      if(version == SSL_V3)
-         padding = "Raw";
-      else
-         padding = "EMSA1(SHA-1)";
-      format = DER_SEQUENCE;
-      }
-   else
-      throw Invalid_Argument(key->algo_name() +
-                             " is invalid/unknown for TLS signatures");
+   PK_Verifier verifier(*key, format.first, format.second);
 
-   PK_Verifier verifier(*key, padding, format);
-
-   if(version == SSL_V3)
+   if(state->version == SSL_V3)
       {
-      SecureVector<byte> md5_sha = hash.final_ssl3(master_secret);
+      SecureVector<byte> md5_sha = state->hash.final_ssl3(
+         state->keys.master_secret());
 
       return verifier.verify_message(&md5_sha[16], md5_sha.size()-16,
                                      &signature[0], signature.size());
       }
-   else if(version == TLS_V10 || version == TLS_V11)
-      return verifier.verify_message(hash.get_contents(), signature);
+   else if(state->version == TLS_V10 || state->version == TLS_V11)
+      {
+      return verifier.verify_message(state->hash.get_contents(), signature);
+      }
    else
       throw TLS_Exception(PROTOCOL_VERSION,
                           "Unknown TLS version in certificate verification");

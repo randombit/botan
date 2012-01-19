@@ -6,8 +6,8 @@
 */
 
 #include <botan/tls_server.h>
-#include <botan/internal/tls_session_key.h>
 #include <botan/internal/tls_handshake_state.h>
+#include <botan/internal/tls_messages.h>
 #include <botan/internal/stl_util.h>
 #include <botan/rsa.h>
 #include <botan/dh.h>
@@ -104,7 +104,7 @@ void TLS_Server::renegotiate()
    if(state)
       return; // currently in handshake
 
-   state = new Handshake_State;
+   state = new TLS_Handshake_State;
    state->set_expected_next(CLIENT_HELLO);
    Hello_Request hello_req(writer);
    }
@@ -129,7 +129,7 @@ void TLS_Server::read_handshake(byte rec_type,
    {
    if(rec_type == HANDSHAKE && !state)
       {
-      state = new Handshake_State;
+      state = new TLS_Handshake_State;
       state->set_expected_next(CLIENT_HELLO);
       }
 
@@ -207,19 +207,13 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
          state->suite = TLS_Cipher_Suite(state->server_hello->ciphersuite());
 
-         state->keys = SessionKeys(state->suite, state->version,
-                                   session_info.master_secret(),
-                                   state->client_hello->random(),
-                                   state->server_hello->random(),
-                                   true);
+         state->keys = Session_Keys(state, session_info.master_secret(), true);
 
          writer.send(CHANGE_CIPHER_SPEC, 1);
 
          writer.activate(state->suite, state->keys, SERVER);
 
-         state->server_finished = new Finished(writer, state->hash,
-                                               state->version, SERVER,
-                                               state->keys.master_secret());
+         state->server_finished = new Finished(writer, state, SERVER);
 
          if(!handshake_fn(session_info))
             session_manager.remove_entry(session_info.session_id());
@@ -275,10 +269,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
                throw Internal_Error("TLS_Server: Unknown ciphersuite kex type");
 
             state->server_kex =
-               new Server_Key_Exchange(writer, state->hash, rng,
-                                       state->kex_priv, private_key,
-                                       state->client_hello->random(),
-                                       state->server_hello->random());
+               new Server_Key_Exchange(writer, state, rng, private_key);
             }
          else
             state->kex_priv = PKCS8::copy_key(*private_key, rng);
@@ -330,9 +321,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
          state->client_kex->pre_master_secret(rng, state->kex_priv,
                                               state->client_hello->version());
 
-      state->keys = SessionKeys(state->suite, state->version, pre_master,
-                                state->client_hello->random(),
-                                state->server_hello->random());
+      state->keys = Session_Keys(state, pre_master, false);
       }
    else if(type == CERTIFICATE_VERIFY)
       {
@@ -342,10 +331,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
          state->client_certs->cert_chain();
 
       const bool sig_valid =
-         state->client_verify->verify(client_certs[0],
-                                      state->hash,
-                                      state->server_hello->version(),
-                                      state->keys.master_secret());
+         state->client_verify->verify(client_certs[0], state);
 
       state->hash.update(type, contents);
 
@@ -384,8 +370,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
       state->client_finished = new Finished(contents);
 
-      if(!state->client_finished->verify(state->keys.master_secret(),
-                                         state->version, state->hash, CLIENT))
+      if(!state->client_finished->verify(state, CLIENT))
          throw TLS_Exception(DECRYPT_ERROR,
                              "Finished message didn't verify");
 
@@ -398,9 +383,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
          writer.activate(state->suite, state->keys, SERVER);
 
-         state->server_finished = new Finished(writer, state->hash,
-                                               state->version, SERVER,
-                                               state->keys.master_secret());
+         state->server_finished = new Finished(writer, state, SERVER);
 
          if(state->client_certs && state->client_verify)
             peer_certs = state->client_certs->cert_chain();

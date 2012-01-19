@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/tls_handshake_state.h>
+#include <botan/internal/tls_messages.h>
 
 namespace Botan {
 
@@ -71,7 +72,7 @@ u32bit bitmask_for_handshake_type(Handshake_Type type)
 /*
 * Initialize the SSL/TLS Handshake State
 */
-Handshake_State::Handshake_State()
+TLS_Handshake_State::TLS_Handshake_State()
    {
    client_hello = 0;
    server_hello = 0;
@@ -96,7 +97,7 @@ Handshake_State::Handshake_State()
    hand_received_mask = 0;
    }
 
-void Handshake_State::confirm_transition_to(Handshake_Type handshake_msg)
+void TLS_Handshake_State::confirm_transition_to(Handshake_Type handshake_msg)
    {
    const u32bit mask = bitmask_for_handshake_type(handshake_msg);
 
@@ -116,22 +117,53 @@ void Handshake_State::confirm_transition_to(Handshake_Type handshake_msg)
    hand_expecting_mask = 0;
    }
 
-void Handshake_State::set_expected_next(Handshake_Type handshake_msg)
+void TLS_Handshake_State::set_expected_next(Handshake_Type handshake_msg)
    {
    hand_expecting_mask |= bitmask_for_handshake_type(handshake_msg);
    }
 
-bool Handshake_State::received_handshake_msg(Handshake_Type handshake_msg) const
+bool TLS_Handshake_State::received_handshake_msg(Handshake_Type handshake_msg) const
    {
    const u32bit mask = bitmask_for_handshake_type(handshake_msg);
 
    return (hand_received_mask & mask);
    }
 
+std::pair<std::string, Signature_Format>
+TLS_Handshake_State::choose_sig_format(const Public_Key* key, bool for_client_auth)
+   {
+   const std::string algo_name = key->algo_name();
+
+   if(algo_name == "RSA")
+      {
+      std::string padding = "";
+
+      if(for_client_auth && this->version == SSL_V3)
+         padding = "EMSA3(Raw)";
+      else
+         padding = "EMSA3(TLS.Digest.0)";
+
+      return std::make_pair(padding, IEEE_1363);
+      }
+   else if(algo_name == "DSA")
+      {
+      std::string padding = "";
+
+      if(for_client_auth && this->version == SSL_V3)
+         padding = "Raw";
+      else
+         padding = "EMSA1(SHA-1)";
+
+      return std::make_pair(padding, DER_SEQUENCE);
+      }
+
+   throw Invalid_Argument(algo_name + " is invalid/unknown for TLS signatures");
+   }
+
 /*
 * Destroy the SSL/TLS Handshake State
 */
-Handshake_State::~Handshake_State()
+TLS_Handshake_State::~TLS_Handshake_State()
    {
    delete client_hello;
    delete server_hello;

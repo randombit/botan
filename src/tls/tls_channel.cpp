@@ -8,6 +8,7 @@
 #include <botan/tls_channel.h>
 #include <botan/internal/tls_alerts.h>
 #include <botan/internal/tls_handshake_state.h>
+#include <botan/internal/tls_messages.h>
 #include <botan/internal/assert.h>
 #include <botan/loadstor.h>
 
@@ -135,7 +136,7 @@ void TLS_Channel::read_handshake(byte rec_type,
    if(rec_type == HANDSHAKE)
       {
       if(!state)
-         state = new Handshake_State;
+         state = new TLS_Handshake_State;
       state->queue.write(&rec_buf[0], rec_buf.size());
       }
 

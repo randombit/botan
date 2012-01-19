@@ -90,7 +90,7 @@ class BOTAN_DLL TLS_Channel
 
       std::vector<X509_Certificate> peer_certs;
 
-      class Handshake_State* state;
+      class TLS_Handshake_State* state;
 
       class Secure_Renegotiation_State
          {

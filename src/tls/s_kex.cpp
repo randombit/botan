@@ -9,8 +9,6 @@
 #include <botan/internal/tls_reader.h>
 #include <botan/pubkey.h>
 #include <botan/dh.h>
-#include <botan/rsa.h>
-#include <botan/dsa.h>
 #include <botan/loadstor.h>
 #include <memory>
 
@@ -20,15 +18,11 @@ namespace Botan {
 * Create a new Server Key Exchange message
 */
 Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
-                                         TLS_Handshake_Hash& hash,
+                                         TLS_Handshake_State* state,
                                          RandomNumberGenerator& rng,
-                                         const Public_Key* kex_key,
-                                         const Private_Key* priv_key,
-                                         const MemoryRegion<byte>& c_random,
-                                         const MemoryRegion<byte>& s_random)
+                                         const Private_Key* private_key)
    {
-   const DH_PublicKey* dh_pub = dynamic_cast<const DH_PublicKey*>(kex_key);
-   const RSA_PublicKey* rsa_pub = dynamic_cast<const RSA_PublicKey*>(kex_key);
+   const DH_PublicKey* dh_pub = dynamic_cast<const DH_PublicKey*>(state->kex_priv);
 
    if(dh_pub)
       {
@@ -36,37 +30,21 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
       params.push_back(dh_pub->get_domain().get_g());
       params.push_back(BigInt::decode(dh_pub->public_value()));
       }
-   else if(rsa_pub)
-      {
-      params.push_back(rsa_pub->get_n());
-      params.push_back(rsa_pub->get_e());
-      }
    else
-      throw Invalid_Argument("Bad key for TLS key exchange: not DH or RSA");
+      throw Invalid_Argument("Unknown key type " + state->kex_priv->algo_name() +
+                             " for TLS key exchange");
 
-   // FIXME: cut and paste
-   std::string padding = "";
-   Signature_Format format = IEEE_1363;
+   std::pair<std::string, Signature_Format> format =
+      state->choose_sig_format(private_key, false);
 
-   if(priv_key->algo_name() == "RSA")
-      padding = "EMSA3(TLS.Digest.0)";
-   else if(priv_key->algo_name() == "DSA")
-      {
-      padding = "EMSA1(SHA-1)";
-      format = DER_SEQUENCE;
-      }
-   else
-      throw Invalid_Argument(priv_key->algo_name() +
-                             " is invalid/unknown for TLS signatures");
+   PK_Signer signer(*private_key, format.first, format.second);
 
-   PK_Signer signer(*priv_key, padding, format);
-
-   signer.update(c_random);
-   signer.update(s_random);
+   signer.update(state->client_hello->random());
+   signer.update(state->server_hello->random());
    signer.update(serialize_params());
    signature = signer.signature(rng);
 
-   send(writer, hash);
+   send(writer, state->hash);
    }
 
 /**
@@ -135,9 +113,7 @@ void Server_Key_Exchange::deserialize(const MemoryRegion<byte>& buf)
 */
 Public_Key* Server_Key_Exchange::key() const
    {
-   if(params.size() == 2)
-      return new RSA_PublicKey(params[0], params[1]);
-   else if(params.size() == 3)
+   if(params.size() == 3)
       return new DH_PublicKey(DL_Group(params[0], params[1]), params[2]);
    else
       throw Internal_Error("Server_Key_Exchange::key: No key set");
@@ -147,33 +123,18 @@ Public_Key* Server_Key_Exchange::key() const
 * Verify a Server Key Exchange message
 */
 bool Server_Key_Exchange::verify(const X509_Certificate& cert,
-                                 const MemoryRegion<byte>& c_random,
-                                 const MemoryRegion<byte>& s_random) const
+                                 TLS_Handshake_State* state) const
    {
-
    std::auto_ptr<Public_Key> key(cert.subject_public_key());
 
-   // FIXME: cut and paste
-   std::string padding = "";
-   Signature_Format format = IEEE_1363;
+   std::pair<std::string, Signature_Format> format =
+      state->choose_sig_format(key.get(), false);
 
-   if(key->algo_name() == "RSA")
-      padding = "EMSA3(TLS.Digest.0)";
-   else if(key->algo_name() == "DSA")
-      {
-      padding = "EMSA1(SHA-1)";
-      format = DER_SEQUENCE;
-      }
-   else
-      throw Invalid_Argument(key->algo_name() +
-                             " is invalid/unknown for TLS signatures");
+   PK_Verifier verifier(*key, format.first, format.second);
 
-   PK_Verifier verifier(*key, padding, format);
-
-   MemoryVector<byte> params_got = serialize_params();
-   verifier.update(c_random);
-   verifier.update(s_random);
-   verifier.update(params_got);
+   verifier.update(state->client_hello->random());
+   verifier.update(state->server_hello->random());
+   verifier.update(serialize_params());
 
    return verifier.check_signature(signature);
    }

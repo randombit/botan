@@ -6,6 +6,8 @@
 */
 
 #include <botan/internal/tls_session_key.h>
+#include <botan/internal/tls_handshake_state.h>
+#include <botan/internal/tls_messages.h>
 #include <botan/lookup.h>
 #include <memory>
 
@@ -20,29 +22,26 @@ std::string lookup_prf_name(Version_Code version)
    else if(version == TLS_V10 || version == TLS_V11)
       return "TLS-PRF";
    else
-      throw Invalid_Argument("SessionKeys: Unknown version code");
+      throw Invalid_Argument("Session_Keys: Unknown version code");
    }
 
 }
 
 /**
-* SessionKeys Constructor
+* Session_Keys Constructor
 */
-SessionKeys::SessionKeys(const TLS_Cipher_Suite& suite,
-                         Version_Code version,
-                         const MemoryRegion<byte>& pre_master_secret,
-                         const MemoryRegion<byte>& client_random,
-                         const MemoryRegion<byte>& server_random,
-                         bool resuming)
+Session_Keys::Session_Keys(TLS_Handshake_State* state,
+                           const MemoryRegion<byte>& pre_master_secret,
+                           bool resuming)
    {
-   const std::string prf_name = lookup_prf_name(version);
+   const std::string prf_name = lookup_prf_name(state->version);
 
-   const size_t mac_keylen = output_length_of(suite.mac_algo());
-   const size_t cipher_keylen = suite.cipher_keylen();
+   const size_t mac_keylen = output_length_of(state->suite.mac_algo());
+   const size_t cipher_keylen = state->suite.cipher_keylen();
 
    size_t cipher_ivlen = 0;
-   if(have_block_cipher(suite.cipher_algo()))
-      cipher_ivlen = block_size_of(suite.cipher_algo());
+   if(have_block_cipher(state->suite.cipher_algo()))
+      cipher_ivlen = block_size_of(state->suite.cipher_algo());
 
    const size_t prf_gen = 2 * (mac_keylen + cipher_keylen + cipher_ivlen);
 
@@ -62,20 +61,20 @@ SessionKeys::SessionKeys(const TLS_Cipher_Suite& suite,
       {
       SecureVector<byte> salt;
 
-      if(version != SSL_V3)
+      if(state->version != SSL_V3)
          salt += std::make_pair(MASTER_SECRET_MAGIC, sizeof(MASTER_SECRET_MAGIC));
 
-      salt += client_random;
-      salt += server_random;
+      salt += state->client_hello->random();
+      salt += state->server_hello->random();
 
       master_sec = prf->derive_key(48, pre_master_secret, salt);
       }
 
    SecureVector<byte> salt;
-   if(version != SSL_V3)
+   if(state->version != SSL_V3)
       salt += std::make_pair(KEY_GEN_MAGIC, sizeof(KEY_GEN_MAGIC));
-   salt += server_random;
-   salt += client_random;
+   salt += state->server_hello->random();
+   salt += state->client_hello->random();
 
    SymmetricKey keyblock = prf->derive_key(prf_gen, master_sec, salt);
 

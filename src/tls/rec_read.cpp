@@ -68,7 +68,7 @@ void Record_Reader::set_version(Version_Code version)
 * Set the keys for reading
 */
 void Record_Reader::activate(const TLS_Cipher_Suite& suite,
-                             const SessionKeys& keys,
+                             const Session_Keys& keys,
                              Connection_Side side)
    {
    m_cipher.reset();

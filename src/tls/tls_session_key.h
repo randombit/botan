@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * TLS Session Keys
 */
-class SessionKeys
+class Session_Keys
    {
    public:
       SymmetricKey client_cipher_key() const { return c_cipher; }
@@ -31,14 +31,11 @@ class SessionKeys
 
       const SecureVector<byte>& master_secret() const { return master_sec; }
 
-      SessionKeys() {}
+      Session_Keys() {}
 
-      SessionKeys(const TLS_Cipher_Suite& suite,
-                  Version_Code version,
-                  const MemoryRegion<byte>& pre_master,
-                  const MemoryRegion<byte>& client_random,
-                  const MemoryRegion<byte>& server_random,
-                  bool resuming = false);
+      Session_Keys(class TLS_Handshake_State* state,
+                   const MemoryRegion<byte>& pre_master,
+                   bool resuming);
 
    private:
       SecureVector<byte> master_sec;

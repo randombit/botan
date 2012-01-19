@@ -8,7 +8,7 @@
 #ifndef BOTAN_TLS_MESSAGES_H__
 #define BOTAN_TLS_MESSAGES_H__
 
-#include <botan/internal/tls_handshake_hash.h>
+#include <botan/internal/tls_handshake_state.h>
 #include <botan/tls_session.h>
 #include <botan/tls_policy.h>
 #include <botan/tls_magic.h>
@@ -290,20 +290,14 @@ class Certificate_Verify : public Handshake_Message
       /**
       * Check the signature on a certificate verify message
       * @param cert the purported certificate
-      * @param hash the running handshake message hash
-      * @param version the version number we negotiated
-      * @param master_secret the session key (only used if version is SSL_V3)
+      * @param state the handshake state
       */
       bool verify(const X509_Certificate& cert,
-                  TLS_Handshake_Hash& hash,
-                  Version_Code version,
-                  const SecureVector<byte>& master_secret);
+                  TLS_Handshake_State* state);
 
       Certificate_Verify(Record_Writer& writer,
-                         TLS_Handshake_Hash& hash,
+                         TLS_Handshake_State* state,
                          RandomNumberGenerator& rng,
-                         Version_Code version,
-                         const SecureVector<byte>& master_secret,
                          const Private_Key* key);
 
       Certificate_Verify(const MemoryRegion<byte>& buf) { deserialize(buf); }
@@ -325,26 +319,17 @@ class Finished : public Handshake_Message
       MemoryVector<byte> verify_data() const
          { return verification_data; }
 
-      bool verify(const MemoryRegion<byte>& buf,
-                  Version_Code version,
-                  const TLS_Handshake_Hash& hash,
+      bool verify(TLS_Handshake_State* state,
                   Connection_Side side);
 
       Finished(Record_Writer& writer,
-               TLS_Handshake_Hash& hash,
-               Version_Code version,
-               Connection_Side side,
-               const MemoryRegion<byte>& master_secret);
+               TLS_Handshake_State* state,
+               Connection_Side side);
 
       Finished(const MemoryRegion<byte>& buf) { deserialize(buf); }
    private:
       MemoryVector<byte> serialize() const;
       void deserialize(const MemoryRegion<byte>&);
-
-      MemoryVector<byte> compute_verify(const MemoryRegion<byte>& master_secret,
-                                        TLS_Handshake_Hash hash,
-                                        Connection_Side side,
-                                        Version_Code version);
 
       Connection_Side side;
       MemoryVector<byte> verification_data;
@@ -375,16 +360,12 @@ class Server_Key_Exchange : public Handshake_Message
       Public_Key* key() const;
 
       bool verify(const X509_Certificate& cert,
-                  const MemoryRegion<byte>& c_random,
-                  const MemoryRegion<byte>& s_random) const;
+                  TLS_Handshake_State* state) const;
 
       Server_Key_Exchange(Record_Writer& writer,
-                          TLS_Handshake_Hash& hash,
+                          TLS_Handshake_State* state,
                           RandomNumberGenerator& rng,
-                          const Public_Key* kex_key,
-                          const Private_Key* priv_key,
-                          const MemoryRegion<byte>& c_random,
-                          const MemoryRegion<byte>& s_random);
+                          const Private_Key* priv_key);
 
       Server_Key_Exchange(const MemoryRegion<byte>& buf) { deserialize(buf); }
    private:
