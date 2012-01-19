@@ -81,7 +81,7 @@ MemoryVector<byte> Finished::serialize() const
 /*
 * Deserialize a Finished message
 */
-void Finished::deserialize(const MemoryRegion<byte>& buf)
+Finished::Finished(const MemoryRegion<byte>& buf)
    {
    verification_data = buf;
    }

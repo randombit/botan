@@ -54,6 +54,15 @@ Certificate_Verify::Certificate_Verify(Record_Writer& writer,
    }
 
 /*
+* Deserialize a Certificate Verify message
+*/
+Certificate_Verify::Certificate_Verify(const MemoryRegion<byte>& buf)
+   {
+   TLS_Data_Reader reader(buf);
+   signature = reader.get_range<byte>(2, 0, 65535);
+   }
+
+/*
 * Serialize a Certificate Verify message
 */
 MemoryVector<byte> Certificate_Verify::serialize() const
@@ -66,15 +75,6 @@ MemoryVector<byte> Certificate_Verify::serialize() const
    buf += signature;
 
    return buf;
-   }
-
-/*
-* Deserialize a Certificate Verify message
-*/
-void Certificate_Verify::deserialize(const MemoryRegion<byte>& buf)
-   {
-   TLS_Data_Reader reader(buf);
-   signature = reader.get_range<byte>(2, 0, 65535);
    }
 
 /*

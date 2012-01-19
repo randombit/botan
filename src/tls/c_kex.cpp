@@ -90,7 +90,13 @@ Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
    if(using_version == SSL_V3 && (suite.kex_type() == TLS_ALGO_KEYEXCH_NOKEX))
       include_length = false;
 
-   deserialize(contents);
+   if(include_length)
+      {
+      TLS_Data_Reader reader(contents);
+      key_material = reader.get_range<byte>(2, 0, 65535);
+      }
+   else
+      key_material = contents;
    }
 
 /*
@@ -106,20 +112,6 @@ MemoryVector<byte> Client_Key_Exchange::serialize() const
       }
    else
       return key_material;
-   }
-
-/*
-* Deserialize a Client Key Exchange message
-*/
-void Client_Key_Exchange::deserialize(const MemoryRegion<byte>& buf)
-   {
-   if(include_length)
-      {
-      TLS_Data_Reader reader(buf);
-      key_material = reader.get_range<byte>(2, 0, 65535);
-      }
-   else
-      key_material = buf;
    }
 
 /*

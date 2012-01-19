@@ -37,29 +37,9 @@ Certificate_Req::Certificate_Req(Record_Writer& writer,
    }
 
 /**
-* Serialize a Certificate Request message
-*/
-MemoryVector<byte> Certificate_Req::serialize() const
-   {
-   MemoryVector<byte> buf;
-
-   append_tls_length_value(buf, types, 1);
-
-   for(size_t i = 0; i != names.size(); ++i)
-      {
-      DER_Encoder encoder;
-      encoder.encode(names[i]);
-
-      append_tls_length_value(buf, encoder.get_contents(), 2);
-      }
-
-   return buf;
-   }
-
-/**
 * Deserialize a Certificate Request message
 */
-void Certificate_Req::deserialize(const MemoryRegion<byte>& buf)
+Certificate_Req::Certificate_Req(const MemoryRegion<byte>& buf)
    {
    if(buf.size() < 4)
       throw Decoding_Error("Certificate_Req: Bad certificate request");
@@ -96,6 +76,26 @@ void Certificate_Req::deserialize(const MemoryRegion<byte>& buf)
    }
 
 /**
+* Serialize a Certificate Request message
+*/
+MemoryVector<byte> Certificate_Req::serialize() const
+   {
+   MemoryVector<byte> buf;
+
+   append_tls_length_value(buf, types, 1);
+
+   for(size_t i = 0; i != names.size(); ++i)
+      {
+      DER_Encoder encoder;
+      encoder.encode(names[i]);
+
+      append_tls_length_value(buf, encoder.get_contents(), 2);
+      }
+
+   return buf;
+   }
+
+/**
 * Create a new Certificate message
 */
 Certificate::Certificate(Record_Writer& writer,
@@ -107,32 +107,9 @@ Certificate::Certificate(Record_Writer& writer,
    }
 
 /**
-* Serialize a Certificate message
-*/
-MemoryVector<byte> Certificate::serialize() const
-   {
-   MemoryVector<byte> buf(3);
-
-   for(size_t i = 0; i != certs.size(); ++i)
-      {
-      MemoryVector<byte> raw_cert = certs[i].BER_encode();
-      const size_t cert_size = raw_cert.size();
-      for(size_t i = 0; i != 3; ++i)
-         buf.push_back(get_byte<u32bit>(i+1, cert_size));
-      buf += raw_cert;
-      }
-
-   const size_t buf_size = buf.size() - 3;
-   for(size_t i = 0; i != 3; ++i)
-      buf[i] = get_byte<u32bit>(i+1, buf_size);
-
-   return buf;
-   }
-
-/**
 * Deserialize a Certificate message
 */
-void Certificate::deserialize(const MemoryRegion<byte>& buf)
+Certificate::Certificate(const MemoryRegion<byte>& buf)
    {
    if(buf.size() < 3)
       throw Decoding_Error("Certificate: Message malformed");
@@ -161,6 +138,29 @@ void Certificate::deserialize(const MemoryRegion<byte>& buf)
          throw Decoding_Error("Certificate: Message malformed");
       certs.push_back(cert);
       }
+   }
+
+/**
+* Serialize a Certificate message
+*/
+MemoryVector<byte> Certificate::serialize() const
+   {
+   MemoryVector<byte> buf(3);
+
+   for(size_t i = 0; i != certs.size(); ++i)
+      {
+      MemoryVector<byte> raw_cert = certs[i].BER_encode();
+      const size_t cert_size = raw_cert.size();
+      for(size_t i = 0; i != 3; ++i)
+         buf.push_back(get_byte<u32bit>(i+1, cert_size));
+      buf += raw_cert;
+      }
+
+   const size_t buf_size = buf.size() - 3;
+   for(size_t i = 0; i != 3; ++i)
+      buf[i] = get_byte<u32bit>(i+1, buf_size);
+
+   return buf;
    }
 
 }

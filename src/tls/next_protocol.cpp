@@ -19,6 +19,15 @@ Next_Protocol::Next_Protocol(Record_Writer& writer,
    send(writer, hash);
    }
 
+Next_Protocol::Next_Protocol(const MemoryRegion<byte>& buf)
+   {
+   TLS_Data_Reader reader(buf);
+
+   m_protocol = reader.get_string(1, 0, 255);
+
+   reader.get_range_vector<byte>(1, 0, 255); // padding, ignored
+   }
+
 MemoryVector<byte> Next_Protocol::serialize() const
    {
    MemoryVector<byte> buf;
@@ -36,15 +45,6 @@ MemoryVector<byte> Next_Protocol::serialize() const
       buf.push_back(0);
 
    return buf;
-   }
-
-void Next_Protocol::deserialize(const MemoryRegion<byte>& buf)
-   {
-   TLS_Data_Reader reader(buf);
-
-   m_protocol = reader.get_string(1, 0, 255);
-
-   reader.get_range_vector<byte>(1, 0, 255); // padding, ignored
    }
 
 }

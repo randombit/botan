@@ -73,7 +73,7 @@ MemoryVector<byte> Server_Key_Exchange::serialize_params() const
 /**
 * Deserialize a Server Key Exchange message
 */
-void Server_Key_Exchange::deserialize(const MemoryRegion<byte>& buf)
+Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf)
    {
    if(buf.size() < 6)
       throw Decoding_Error("Server_Key_Exchange: Packet corrupted");

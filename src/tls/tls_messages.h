@@ -37,7 +37,6 @@ class Handshake_Message
    private:
       Handshake_Message& operator=(const Handshake_Message&) { return (*this); }
       virtual MemoryVector<byte> serialize() const = 0;
-      virtual void deserialize(const MemoryRegion<byte>&) = 0;
    };
 
 MemoryVector<byte> make_hello_random(RandomNumberGenerator& rng);
@@ -179,10 +178,9 @@ class Server_Hello : public Handshake_Message
                    const std::vector<std::string>& next_protocols,
                    RandomNumberGenerator& rng);
 
-      Server_Hello(const MemoryRegion<byte>& buf) { deserialize(buf); }
+      Server_Hello(const MemoryRegion<byte>& buf);
    private:
       MemoryVector<byte> serialize() const;
-      void deserialize(const MemoryRegion<byte>&);
 
       Version_Code s_version;
       MemoryVector<byte> m_session_id, s_random;
@@ -224,7 +222,6 @@ class Client_Key_Exchange : public Handshake_Message
                           Version_Code using_version);
    private:
       MemoryVector<byte> serialize() const;
-      void deserialize(const MemoryRegion<byte>&);
 
       SecureVector<byte> key_material, pre_master;
       bool include_length;
@@ -246,10 +243,10 @@ class Certificate : public Handshake_Message
                   TLS_Handshake_Hash& hash,
                   const std::vector<X509_Certificate>& certs);
 
-      Certificate(const MemoryRegion<byte>& buf) { deserialize(buf); }
+      Certificate(const MemoryRegion<byte>& buf);
    private:
       MemoryVector<byte> serialize() const;
-      void deserialize(const MemoryRegion<byte>&);
+
       std::vector<X509_Certificate> certs;
    };
 
@@ -270,10 +267,9 @@ class Certificate_Req : public Handshake_Message
                       const std::vector<Certificate_Type>& types =
                          std::vector<Certificate_Type>());
 
-      Certificate_Req(const MemoryRegion<byte>& buf) { deserialize(buf); }
+      Certificate_Req(const MemoryRegion<byte>& buf);
    private:
       MemoryVector<byte> serialize() const;
-      void deserialize(const MemoryRegion<byte>&);
 
       std::vector<X509_DN> names;
       std::vector<Certificate_Type> types;
@@ -300,10 +296,9 @@ class Certificate_Verify : public Handshake_Message
                          RandomNumberGenerator& rng,
                          const Private_Key* key);
 
-      Certificate_Verify(const MemoryRegion<byte>& buf) { deserialize(buf); }
+      Certificate_Verify(const MemoryRegion<byte>& buf);
    private:
       MemoryVector<byte> serialize() const;
-      void deserialize(const MemoryRegion<byte>&);
 
       MemoryVector<byte> signature;
    };
@@ -326,10 +321,9 @@ class Finished : public Handshake_Message
                TLS_Handshake_State* state,
                Connection_Side side);
 
-      Finished(const MemoryRegion<byte>& buf) { deserialize(buf); }
+      Finished(const MemoryRegion<byte>& buf);
    private:
       MemoryVector<byte> serialize() const;
-      void deserialize(const MemoryRegion<byte>&);
 
       Connection_Side side;
       MemoryVector<byte> verification_data;
@@ -344,10 +338,9 @@ class Hello_Request : public Handshake_Message
       Handshake_Type type() const { return HELLO_REQUEST; }
 
       Hello_Request(Record_Writer& writer);
-      Hello_Request(const MemoryRegion<byte>& buf) { deserialize(buf); }
+      Hello_Request(const MemoryRegion<byte>& buf);
    private:
       MemoryVector<byte> serialize() const;
-      void deserialize(const MemoryRegion<byte>&);
    };
 
 /**
@@ -367,11 +360,10 @@ class Server_Key_Exchange : public Handshake_Message
                           RandomNumberGenerator& rng,
                           const Private_Key* priv_key);
 
-      Server_Key_Exchange(const MemoryRegion<byte>& buf) { deserialize(buf); }
+      Server_Key_Exchange(const MemoryRegion<byte>& buf);
    private:
       MemoryVector<byte> serialize() const;
       MemoryVector<byte> serialize_params() const;
-      void deserialize(const MemoryRegion<byte>&);
 
       std::vector<BigInt> params;
       MemoryVector<byte> signature;
@@ -386,10 +378,9 @@ class Server_Hello_Done : public Handshake_Message
       Handshake_Type type() const { return SERVER_HELLO_DONE; }
 
       Server_Hello_Done(Record_Writer& writer, TLS_Handshake_Hash& hash);
-      Server_Hello_Done(const MemoryRegion<byte>& buf) { deserialize(buf); }
+      Server_Hello_Done(const MemoryRegion<byte>& buf);
    private:
       MemoryVector<byte> serialize() const;
-      void deserialize(const MemoryRegion<byte>&);
    };
 
 /**
@@ -406,10 +397,9 @@ class Next_Protocol : public Handshake_Message
                     TLS_Handshake_Hash& hash,
                     const std::string& protocol);
 
-      Next_Protocol(const MemoryRegion<byte>& buf) { deserialize(buf); }
+      Next_Protocol(const MemoryRegion<byte>& buf);
    private:
       MemoryVector<byte> serialize() const;
-      void deserialize(const MemoryRegion<byte>&);
 
       std::string m_protocol;
    };

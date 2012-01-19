@@ -56,20 +56,20 @@ Hello_Request::Hello_Request(Record_Writer& writer)
    }
 
 /*
+* Deserialize a Hello Request message
+*/
+Hello_Request::Hello_Request(const MemoryRegion<byte>& buf)
+   {
+   if(buf.size())
+      throw Decoding_Error("Hello_Request: Must be empty, and is not");
+   }
+
+/*
 * Serialize a Hello Request message
 */
 MemoryVector<byte> Hello_Request::serialize() const
    {
    return MemoryVector<byte>();
-   }
-
-/*
-* Deserialize a Hello Request message
-*/
-void Hello_Request::deserialize(const MemoryRegion<byte>& buf)
-   {
-   if(buf.size())
-      throw Decoding_Error("Hello_Request: Must be empty, and is not");
    }
 
 /*

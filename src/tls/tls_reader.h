@@ -26,13 +26,10 @@ class TLS_Data_Reader
       TLS_Data_Reader(const MemoryRegion<byte>& buf_in) :
          buf(buf_in), offset(0) {}
 
-      ~TLS_Data_Reader()
+      void assert_done() const
          {
          if(has_remaining())
-            {
-            abort();
             throw Decoding_Error("Extra bytes at end of message");
-            }
          }
 
       size_t remaining_bytes() const

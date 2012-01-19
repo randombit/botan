@@ -90,43 +90,9 @@ Server_Hello::Server_Hello(Record_Writer& writer,
    }
 
 /*
-* Serialize a Server Hello message
-*/
-MemoryVector<byte> Server_Hello::serialize() const
-   {
-   MemoryVector<byte> buf;
-
-   buf.push_back(static_cast<byte>(s_version >> 8));
-   buf.push_back(static_cast<byte>(s_version     ));
-   buf += s_random;
-
-   append_tls_length_value(buf, m_session_id, 1);
-
-   buf.push_back(get_byte(0, suite));
-   buf.push_back(get_byte(1, suite));
-
-   buf.push_back(comp_method);
-
-   TLS_Extensions extensions;
-
-   if(m_secure_renegotiation)
-      extensions.push_back(new Renegotation_Extension(m_renegotiation_info));
-
-   if(m_fragment_size != 0)
-      extensions.push_back(new Maximum_Fragment_Length(m_fragment_size));
-
-   if(m_next_protocol)
-      extensions.push_back(new Next_Protocol_Notification(m_next_protocols));
-
-   buf += extensions.serialize();
-
-   return buf;
-   }
-
-/*
 * Deserialize a Server Hello message
 */
-void Server_Hello::deserialize(const MemoryRegion<byte>& buf)
+Server_Hello::Server_Hello(const MemoryRegion<byte>& buf)
    {
    m_secure_renegotiation = false;
    m_next_protocol = false;
@@ -173,6 +139,40 @@ void Server_Hello::deserialize(const MemoryRegion<byte>& buf)
    }
 
 /*
+* Serialize a Server Hello message
+*/
+MemoryVector<byte> Server_Hello::serialize() const
+   {
+   MemoryVector<byte> buf;
+
+   buf.push_back(static_cast<byte>(s_version >> 8));
+   buf.push_back(static_cast<byte>(s_version     ));
+   buf += s_random;
+
+   append_tls_length_value(buf, m_session_id, 1);
+
+   buf.push_back(get_byte(0, suite));
+   buf.push_back(get_byte(1, suite));
+
+   buf.push_back(comp_method);
+
+   TLS_Extensions extensions;
+
+   if(m_secure_renegotiation)
+      extensions.push_back(new Renegotation_Extension(m_renegotiation_info));
+
+   if(m_fragment_size != 0)
+      extensions.push_back(new Maximum_Fragment_Length(m_fragment_size));
+
+   if(m_next_protocol)
+      extensions.push_back(new Next_Protocol_Notification(m_next_protocols));
+
+   buf += extensions.serialize();
+
+   return buf;
+   }
+
+/*
 * Create a new Server Hello Done message
 */
 Server_Hello_Done::Server_Hello_Done(Record_Writer& writer,
@@ -182,20 +182,20 @@ Server_Hello_Done::Server_Hello_Done(Record_Writer& writer,
    }
 
 /*
+* Deserialize a Server Hello Done message
+*/
+Server_Hello_Done::Server_Hello_Done(const MemoryRegion<byte>& buf)
+   {
+   if(buf.size())
+      throw Decoding_Error("Server_Hello_Done: Must be empty, and is not");
+   }
+
+/*
 * Serialize a Server Hello Done message
 */
 MemoryVector<byte> Server_Hello_Done::serialize() const
    {
    return MemoryVector<byte>();
-   }
-
-/*
-* Deserialize a Server Hello Done message
-*/
-void Server_Hello_Done::deserialize(const MemoryRegion<byte>& buf)
-   {
-   if(buf.size())
-      throw Decoding_Error("Server_Hello_Done: Must be empty, and is not");
    }
 
 }
