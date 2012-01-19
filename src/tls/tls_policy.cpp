@@ -72,8 +72,8 @@ std::vector<u16bit> TLS_Policy::suite_list(bool use_rsa,
 
    if(use_rsa)
       {
-      suites.push_back(TLS_RSA_WITH_AES_256_CBC_SHA_256);
-      suites.push_back(TLS_RSA_WITH_AES_128_CBC_SHA_256);
+      suites.push_back(TLS_RSA_WITH_AES_256_CBC_SHA256);
+      suites.push_back(TLS_RSA_WITH_AES_128_CBC_SHA256);
 
       suites.push_back(TLS_RSA_WITH_AES_256_CBC_SHA);
       suites.push_back(TLS_RSA_WITH_AES_128_CBC_SHA);

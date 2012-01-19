@@ -37,9 +37,15 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
 
    // FIXME: this should respect client's hash preferences
    if(state->version >= TLS_V12)
+      {
       hash_algo = TLS_ALGO_HASH_SHA256;
+      sig_algo = TLS_ALGO_SIGNER_RSA;
+      }
    else
+      {
       hash_algo = TLS_ALGO_NONE;
+      sig_algo = TLS_ALGO_NONE;
+      }
 
    std::pair<std::string, Signature_Format> format =
       state->choose_sig_format(private_key, hash_algo, false);
@@ -62,7 +68,10 @@ MemoryVector<byte> Server_Key_Exchange::serialize() const
    MemoryVector<byte> buf = serialize_params();
 
    if(hash_algo != TLS_ALGO_NONE)
-      {}
+      {
+      buf.push_back(Signature_Algorithms::hash_algo_code(hash_algo));
+      buf.push_back(Signature_Algorithms::sig_algo_code(sig_algo));
+      }
 
    append_tls_length_value(buf, signature, 2);
    return buf;
@@ -110,9 +119,16 @@ Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
    if(sig_alg != TLS_ALGO_SIGNER_ANON)
       {
       if(version < TLS_V12)
-         hash_algo = TLS_ALGO_NONE; // use old defaults
+         {
+         // use old defaults
+         hash_algo = TLS_ALGO_NONE;
+         sig_algo = TLS_ALGO_NONE;
+         }
       else
+         {
          hash_algo = Signature_Algorithms::hash_algo_code(reader.get_byte());
+         sig_algo = Signature_Algorithms::sig_algo_code(reader.get_byte());
+         }
 
       signature = reader.get_range<byte>(2, 0, 65535);
       }
@@ -136,6 +152,8 @@ bool Server_Key_Exchange::verify(const X509_Certificate& cert,
                                  TLS_Handshake_State* state) const
    {
    std::auto_ptr<Public_Key> key(cert.subject_public_key());
+
+   printf("Checking %s vs code %d\n", key->algo_name().c_str(), sig_algo);
 
    std::pair<std::string, Signature_Format> format =
       state->choose_sig_format(key.get(), hash_algo, false);

@@ -25,7 +25,7 @@ Version_Code choose_version(Version_Code client, Version_Code minimum)
       throw TLS_Exception(PROTOCOL_VERSION,
                           "Client version is unacceptable by policy");
 
-   if(client == SSL_V3 || client == TLS_V10 || client == TLS_V11)
+   if(client == SSL_V3 || client == TLS_V10 || client == TLS_V11 || client == TLS_V12)
       return client;
    return TLS_V11;
    }

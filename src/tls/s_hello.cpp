@@ -174,9 +174,6 @@ MemoryVector<byte> Server_Hello::serialize() const
    if(m_next_protocol)
       extensions.push_back(new Next_Protocol_Notification(m_next_protocols));
 
-   if(s_version == TLS_V12)
-      extensions.push_back(new Signature_Algorithms());
-
    buf += extensions.serialize();
 
    return buf;

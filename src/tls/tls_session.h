@@ -75,7 +75,7 @@ class BOTAN_DLL TLS_Session
       /**
       * Get the minor version of the saved session
       */
-      byte minor_version() const { return get_byte(0, m_version); }
+      byte minor_version() const { return get_byte(1, m_version); }
 
       /**
       * Get the ciphersuite of the saved session

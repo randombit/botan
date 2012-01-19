@@ -189,7 +189,7 @@ class Signature_Algorithms : public TLS_Extension
       static byte sig_algo_code(TLS_Ciphersuite_Algos code);
 
       TLS_Handshake_Extension_Type type() const
-         { return TLSEXT_NEXT_PROTOCOL; }
+         { return TLSEXT_SIGNATURE_ALGORITHMS; }
 
       std::vector<std::pair<TLS_Ciphersuite_Algos, TLS_Ciphersuite_Algos> >
          supported_signature_algorthms() const
