@@ -302,6 +302,8 @@ class Certificate_Verify : public Handshake_Message
       Certificate_Verify(Record_Writer& writer,
                          TLS_Handshake_Hash& hash,
                          RandomNumberGenerator& rng,
+                         Version_Code version,
+                         const SecureVector<byte>& master_secret,
                          const Private_Key* key);
 
       Certificate_Verify(const MemoryRegion<byte>& buf) { deserialize(buf); }

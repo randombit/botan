@@ -1,6 +1,6 @@
 /*
 * Certificate Verify Message
-* (C) 2004-2011 Jack Lloyd
+* (C) 2004,2006,2011,2012 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -23,6 +23,8 @@ namespace Botan {
 Certificate_Verify::Certificate_Verify(Record_Writer& writer,
                                        TLS_Handshake_Hash& hash,
                                        RandomNumberGenerator& rng,
+                                       Version_Code version,
+                                       const SecureVector<byte>& master_secret,
                                        const Private_Key* priv_key)
    {
    BOTAN_ASSERT_NONNULL(priv_key);
@@ -34,7 +36,10 @@ Certificate_Verify::Certificate_Verify(Record_Writer& writer,
       padding = "EMSA3(TLS.Digest.0)";
    else if(priv_key->algo_name() == "DSA")
       {
-      padding = "EMSA1(SHA-1)";
+      if(version == SSL_V3)
+         padding = "Raw";
+      else
+         padding = "EMSA1(SHA-1)";
       format = DER_SEQUENCE;
       }
    else
@@ -43,7 +48,20 @@ Certificate_Verify::Certificate_Verify(Record_Writer& writer,
 
    PK_Signer signer(*priv_key, padding, format);
 
-   signature = signer.sign_message(hash.final(), rng);
+   if(version == SSL_V3)
+      {
+      SecureVector<byte> md5_sha = hash.final_ssl3(master_secret);
+
+      signature = signer.sign_message(&md5_sha[16], md5_sha.size()-16, rng);
+      }
+   else if(version == TLS_V10 || version == TLS_V11)
+      {
+      signature = signer.sign_message(hash.get_contents(), rng);
+      }
+   else
+      throw TLS_Exception(PROTOCOL_VERSION,
+                          "Unknown TLS version in certificate verification");
+
    send(writer, hash);
    }
 

@@ -68,6 +68,16 @@ class BOTAN_DLL TLS_Session
          { return static_cast<Version_Code>(m_version); }
 
       /**
+      * Get the major version of the saved session
+      */
+      byte major_version() const { return get_byte(0, m_version); }
+
+      /**
+      * Get the minor version of the saved session
+      */
+      byte minor_version() const { return get_byte(0, m_version); }
+
+      /**
       * Get the ciphersuite of the saved session
       */
       u16bit ciphersuite() const { return m_ciphersuite; }

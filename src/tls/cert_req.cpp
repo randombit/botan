@@ -45,7 +45,7 @@ MemoryVector<byte> Certificate_Req::serialize() const
 
    append_tls_length_value(buf, types, 1);
 
-   for(size_t i = 0; i 1= names.size(); ++i)
+   for(size_t i = 0; i != names.size(); ++i)
       {
       DER_Encoder encoder;
       encoder.encode(names[i]);

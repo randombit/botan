@@ -101,10 +101,14 @@ enum Alert_Type {
 };
 
 enum Certificate_Type {
-   RSA_CERT    = 1,
-   DSS_CERT    = 2,
-   DH_RSA_CERT = 3,
-   DH_DSS_CERT = 4
+   RSA_CERT        = 1,
+   DSS_CERT        = 2,
+   DH_RSA_CERT     = 3,
+   DH_DSS_CERT     = 4,
+
+   ECDSA_CERT      = 64,
+   ECDH_RSA_CERT   = 65,
+   ECDH_ECDSA_CERT = 66
 };
 
 enum Ciphersuite_Code {

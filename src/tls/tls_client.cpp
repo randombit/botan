@@ -333,6 +333,11 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
                                  state->kex_pub, state->version,
                                  state->client_hello->version());
 
+      state->keys = SessionKeys(state->suite, state->version,
+                                state->client_kex->pre_master_secret(),
+                                state->client_hello->random(),
+                                state->server_hello->random());
+
       if(state->received_handshake_msg(CERTIFICATE_REQUEST) &&
          !state->client_certs->empty())
          {
@@ -341,14 +346,13 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
                                   "tls-client",
                                   state->client_hello->sni_hostname());
 
-         state->client_verify = new Certificate_Verify(writer, state->hash,
-                                                       rng, private_key);
+         state->client_verify = new Certificate_Verify(writer,
+                                                       state->hash,
+                                                       rng,
+                                                       state->version,
+                                                       state->keys.master_secret(),
+                                                       private_key);
          }
-
-      state->keys = SessionKeys(state->suite, state->version,
-                                state->client_kex->pre_master_secret(),
-                                state->client_hello->random(),
-                                state->server_hello->random());
 
       writer.send(CHANGE_CIPHER_SPEC, 1);
 
