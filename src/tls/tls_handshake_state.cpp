@@ -131,11 +131,11 @@ bool TLS_Handshake_State::received_handshake_msg(Handshake_Type handshake_msg) c
 
 std::pair<std::string, Signature_Format>
 TLS_Handshake_State::choose_sig_format(const Private_Key* key,
-                                       std::string& hash_algo,
-                                       std::string& sig_algo,
+                                       std::string& hash_algo_out,
+                                       std::string& sig_algo_out,
                                        bool for_client_auth)
    {
-   sig_algo = key->algo_name();
+   const std::string sig_algo = key->algo_name();
 
    /*
    FIXME: This should respect the algo preferences in the client hello
@@ -144,6 +144,8 @@ TLS_Handshake_State::choose_sig_format(const Private_Key* key,
 
    if(sig_algo == "RSA")
       {
+      std::string hash_algo;
+
       if(for_client_auth && this->version == SSL_V3)
          {
          hash_algo = "Raw";
@@ -155,6 +157,9 @@ TLS_Handshake_State::choose_sig_format(const Private_Key* key,
       else
          {
          hash_algo = "SHA-256"; // should be policy
+
+         sig_algo_out = sig_algo;
+         hash_algo_out = hash_algo;
          }
 
       const std::string padding = "EMSA3(" + hash_algo + ")";
@@ -163,6 +168,8 @@ TLS_Handshake_State::choose_sig_format(const Private_Key* key,
       }
    else if(sig_algo == "DSA")
       {
+      std::string hash_algo;
+
       if(for_client_auth && this->version == SSL_V3)
          {
          hash_algo = "Raw";
@@ -174,6 +181,9 @@ TLS_Handshake_State::choose_sig_format(const Private_Key* key,
       else
          {
          hash_algo = "SHA-1"; // should be policy
+
+         sig_algo_out = sig_algo;
+         hash_algo_out = hash_algo;
          }
 
       const std::string padding = "EMSA1(" + hash_algo + ")";
@@ -185,21 +195,32 @@ TLS_Handshake_State::choose_sig_format(const Private_Key* key,
    }
 
 std::pair<std::string, Signature_Format>
-TLS_Handshake_State::choose_sig_format(const Public_Key* key,
-                                       std::string hash_algo,
-                                       std::string sig_algo,
-                                       bool for_client_auth)
+TLS_Handshake_State::understand_sig_format(const Public_Key* key,
+                                           std::string hash_algo,
+                                           std::string sig_algo,
+                                           bool for_client_auth)
    {
    const std::string algo_name = key->algo_name();
 
+   /*
+   FIXME: This should check what was sent against the client hello
+   preferences, or the certificate request, to ensure it was allowed
+   by those restrictions.
+   */
+
    if(this->version < TLS_V12)
       {
-      if(hash_algo != "")
+      if(hash_algo != "" || sig_algo != "")
          throw Decoding_Error("Counterparty sent hash/sig IDs with old version");
       }
+   else
+      {
+      if(hash_algo == "")
+         throw Decoding_Error("Counterparty did not send hash/sig IDS");
 
-   if(sig_algo != "" && sig_algo != algo_name)
-      throw Decoding_Error("Counterparty sent inconsistent key and sig types");
+      if(sig_algo != algo_name)
+         throw Decoding_Error("Counterparty sent inconsistent key and sig types");
+      }
 
    if(algo_name == "RSA")
       {

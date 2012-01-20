@@ -93,7 +93,7 @@ bool Certificate_Verify::verify(const X509_Certificate& cert,
    std::auto_ptr<Public_Key> key(cert.subject_public_key());
 
    std::pair<std::string, Signature_Format> format =
-      state->choose_sig_format(key.get(), hash_algo, sig_algo, true);
+      state->understand_sig_format(key.get(), hash_algo, sig_algo, true);
 
    PK_Verifier verifier(*key, format.first, format.second);
 

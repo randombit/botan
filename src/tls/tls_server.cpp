@@ -263,10 +263,11 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
          if(state->suite.kex_algo() != "")
             {
-            if(state->suite.kex_algo() == "")
+            if(state->suite.kex_algo() == "DH")
                state->kex_priv = new DH_PrivateKey(rng, policy.dh_group());
             else
-               throw Internal_Error("TLS_Server: Unknown ciphersuite kex type");
+               throw Internal_Error("TLS_Server: Unknown ciphersuite kex type " +
+                                    state->suite.kex_algo());
 
             state->server_kex =
                new Server_Key_Exchange(writer, state, rng, private_key);
