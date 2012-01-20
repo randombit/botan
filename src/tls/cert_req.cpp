@@ -60,9 +60,24 @@ Certificate_Req::Certificate_Req(const MemoryRegion<byte>& buf,
 
    if(version >= TLS_V12)
       {
-      std::vector<u16bit> sig_hash_algs = reader.get_range_vector<u16bit>(2, 2, 65534);
+      std::vector<byte> sig_hash_algs = reader.get_range_vector<byte>(2, 2, 65534);
 
-      // FIXME, do something with this
+      if(sig_hash_algs.size() % 2 != 0)
+         throw Decoding_Error("Bad length for signature IDs in certificate request");
+
+      for(size_t i = 0; i != sig_hash_algs.size(); i += 2)
+         {
+         std::string hash = Signature_Algorithms::hash_algo_name(sig_hash_algs[i]);
+         std::string sig = Signature_Algorithms::sig_algo_name(sig_hash_algs[i+1]);
+         m_supported_algos.push_back(std::make_pair(hash, sig));
+         }
+      }
+   else
+      {
+      // The hardcoded settings from previous protocol versions
+      m_supported_algos.push_back(std::make_pair("TLS.Digest.0", "RSA"));
+      m_supported_algos.push_back(std::make_pair("SHA-1", "DSA"));
+      m_supported_algos.push_back(std::make_pair("SHA-1", "ECDSA"));
       }
 
    u16bit purported_size = reader.get_u16bit();

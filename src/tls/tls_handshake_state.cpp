@@ -7,6 +7,7 @@
 
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_messages.h>
+#include <botan/internal/assert.h>
 
 namespace Botan {
 
@@ -137,55 +138,42 @@ TLS_Handshake_State::choose_sig_format(const Private_Key* key,
    {
    const std::string sig_algo = key->algo_name();
 
-   /*
-   FIXME: This should respect the algo preferences in the client hello
-   (or certificate request, depending on value of for_client_auth).
-   */
+   const std::vector<std::pair<std::string, std::string> > supported_algos =
+      (for_client_auth) ? cert_req->supported_algos() : client_hello->supported_algos();
+
+   std::string hash_algo;
+
+   for(size_t i = 0; i != supported_algos.size(); ++i)
+      {
+      if(supported_algos[i].second == sig_algo)
+         {
+         hash_algo = supported_algos[i].first;
+         break;
+         }
+      }
+
+   if(for_client_auth && this->version == SSL_V3)
+      hash_algo = "Raw";
+
+   if(hash_algo == "" && this->version == TLS_V12)
+      hash_algo = "SHA-1"; // TLS 1.2 but no compatible hashes set (?)
+
+   BOTAN_ASSERT(hash_algo != "", "Couldn't figure out hash to use");
+
+   if(this->version >= TLS_V12)
+      {
+      hash_algo_out = hash_algo;
+      sig_algo_out = sig_algo;
+      }
 
    if(sig_algo == "RSA")
       {
-      std::string hash_algo;
-
-      if(for_client_auth && this->version == SSL_V3)
-         {
-         hash_algo = "Raw";
-         }
-      else if(this->version < TLS_V12)
-         {
-         hash_algo = "TLS.Digest.0";
-         }
-      else
-         {
-         hash_algo = "SHA-256"; // should be policy
-
-         sig_algo_out = sig_algo;
-         hash_algo_out = hash_algo;
-         }
-
       const std::string padding = "EMSA3(" + hash_algo + ")";
 
       return std::make_pair(padding, IEEE_1363);
       }
    else if(sig_algo == "DSA")
       {
-      std::string hash_algo;
-
-      if(for_client_auth && this->version == SSL_V3)
-         {
-         hash_algo = "Raw";
-         }
-      else if(this->version < TLS_V12)
-         {
-         hash_algo = "SHA-1";
-         }
-      else
-         {
-         hash_algo = "SHA-1"; // should be policy
-
-         sig_algo_out = sig_algo;
-         hash_algo_out = hash_algo;
-         }
-
       const std::string padding = "EMSA1(" + hash_algo + ")";
 
       return std::make_pair(padding, DER_SEQUENCE);
@@ -206,6 +194,8 @@ TLS_Handshake_State::understand_sig_format(const Public_Key* key,
    FIXME: This should check what was sent against the client hello
    preferences, or the certificate request, to ensure it was allowed
    by those restrictions.
+
+   Or not?
    */
 
    if(this->version < TLS_V12)

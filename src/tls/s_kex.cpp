@@ -55,7 +55,7 @@ MemoryVector<byte> Server_Key_Exchange::serialize() const
    {
    MemoryVector<byte> buf = serialize_params();
 
-   // NEEDS VERSION CHECK
+   // This should be an explicit version check
    if(m_hash_algo != "" && m_sig_algo != "")
       {
       buf.push_back(Signature_Algorithms::hash_algo_code(m_hash_algo));

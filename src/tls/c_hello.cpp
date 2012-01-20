@@ -301,6 +301,7 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
          */
          m_supported_algos.push_back(std::make_pair("SHA-1", "RSA"));
          m_supported_algos.push_back(std::make_pair("SHA-1", "DSA"));
+         m_supported_algos.push_back(std::make_pair("SHA-1", "ECDSA"));
          }
       else
          {
@@ -308,8 +309,8 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
 
          m_supported_algos.push_back(std::make_pair("TLS.Digest.0", "RSA"));
          m_supported_algos.push_back(std::make_pair("SHA-1", "DSA"));
+         m_supported_algos.push_back(std::make_pair("SHA-1", "ECDSA"));
          }
-
       }
 
    if(value_exists(m_suites, static_cast<u16bit>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV)))

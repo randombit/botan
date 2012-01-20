@@ -58,6 +58,9 @@ class Client_Hello : public Handshake_Message
          return v;
          }
 
+      std::vector<std::pair<std::string, std::string> > supported_algos() const
+         { return m_supported_algos; }
+
       std::vector<u16bit> ciphersuites() const { return m_suites; }
       std::vector<byte> compression_methods() const { return m_comp_methods; }
 
@@ -256,6 +259,9 @@ class Certificate_Req : public Handshake_Message
 
       std::vector<byte> acceptable_types() const { return cert_types; }
       std::vector<X509_DN> acceptable_CAs() const { return names; }
+
+      std::vector<std::pair<std::string, std::string> > supported_algos() const
+         { return m_supported_algos; }
 
       Certificate_Req(Record_Writer& writer,
                       TLS_Handshake_Hash& hash,

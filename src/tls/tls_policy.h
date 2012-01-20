@@ -75,7 +75,7 @@ class BOTAN_DLL TLS_Policy
       /*
       * @return the version we would prefer to negotiate
       */
-      virtual Version_Code pref_version() const { return TLS_V11; }
+      virtual Version_Code pref_version() const { return TLS_V12; }
 
       virtual ~TLS_Policy() {}
    };
