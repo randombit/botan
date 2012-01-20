@@ -23,7 +23,7 @@ using namespace std::tr1::placeholders;
 class Client_TLS_Policy : public TLS_Policy
    {
    public:
-      Version_Code pref_version() const { return TLS_V12; }
+      //Version_Code pref_version() const { return TLS_V12; }
 
       bool check_cert(const std::vector<X509_Certificate>& certs) const
          {
@@ -75,8 +75,8 @@ int connect_to_host(const std::string& host, u16bit port)
 bool handshake_complete(const TLS_Session& session)
    {
    std::cout << "Handshake complete!\n";
-   std::cout << "Protocol version " << session.major_version()
-             << "." << session.minor_version() << "\n";
+   std::cout << "Protocol version " << (int)session.major_version()
+             << "." << (int)session.minor_version() << "\n";
    std::cout << "Session ID " << hex_encode(session.session_id()) << "\n";
 
    return true;
