@@ -16,20 +16,6 @@ namespace Botan {
 
 namespace {
 
-/*
-* Choose what version to respond with
-*/
-Version_Code choose_version(Version_Code client, Version_Code minimum)
-   {
-   if(client < minimum)
-      throw TLS_Exception(PROTOCOL_VERSION,
-                          "Client version is unacceptable by policy");
-
-   if(client == SSL_V3 || client == TLS_V10 || client == TLS_V11 || client == TLS_V12)
-      return client;
-   return TLS_V11;
-   }
-
 bool check_for_resume(TLS_Session& session_info,
                       TLS_Session_Manager& session_manager,
                       Client_Hello* client_hello)
@@ -168,8 +154,16 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
       m_hostname = state->client_hello->sni_hostname();
 
-      state->version = choose_version(state->client_hello->version(),
-                                      policy.min_version());
+      Version_Code client_version = state->client_hello->version();
+
+      if(client_version < policy.min_version())
+         throw TLS_Exception(PROTOCOL_VERSION,
+                             "Client version is unacceptable by policy");
+
+      if(client_version <= policy.pref_version())
+         state->version = client_version;
+      else
+         state->version = policy.pref_version();
 
       secure_renegotiation.update(state->client_hello);
 
