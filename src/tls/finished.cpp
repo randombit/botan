@@ -39,14 +39,16 @@ MemoryVector<byte> finished_compute_verify(TLS_Handshake_State* state,
       const byte SSL_CLIENT_LABEL[] = { 0x43, 0x4C, 0x4E, 0x54 };
       const byte SSL_SERVER_LABEL[] = { 0x53, 0x52, 0x56, 0x52 };
 
+      TLS_Handshake_Hash hash = state->hash; // don't modify state
+
       MemoryVector<byte> ssl3_finished;
 
       if(side == CLIENT)
-         state->hash.update(SSL_CLIENT_LABEL, sizeof(SSL_CLIENT_LABEL));
+         hash.update(SSL_CLIENT_LABEL, sizeof(SSL_CLIENT_LABEL));
       else
-         state->hash.update(SSL_SERVER_LABEL, sizeof(SSL_SERVER_LABEL));
+         hash.update(SSL_SERVER_LABEL, sizeof(SSL_SERVER_LABEL));
 
-      return state->hash.final_ssl3(state->keys.master_secret());
+      return hash.final_ssl3(state->keys.master_secret());
       }
    else
       {
