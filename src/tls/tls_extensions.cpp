@@ -314,7 +314,7 @@ byte Signature_Algorithms::hash_algo_code(const std::string& name)
    if(name == "SHA-512")
       return 6;
 
-   throw Algorithm_Not_Found("Unknown hash ID for signature_algorithms");
+   throw Internal_Error("Unknown hash ID " + name + " for signature_algorithms");
    }
 
 std::string Signature_Algorithms::sig_algo_name(byte code)
@@ -343,7 +343,7 @@ byte Signature_Algorithms::sig_algo_code(const std::string& name)
    if(name == "ECDSA")
       return 3;
 
-   throw Algorithm_Not_Found("Unknown sig ID for signature_algorithms");
+   throw Internal_Error("Unknown sig ID " + name + " for signature_algorithms");
    }
 
 MemoryVector<byte> Signature_Algorithms::serialize() const
@@ -375,13 +375,13 @@ Signature_Algorithms::Signature_Algorithms(TLS_Data_Reader& reader,
       const std::string hash_code = hash_algo_name(reader.get_byte());
       const std::string sig_code = sig_algo_name(reader.get_byte());
 
+      len -= 2;
+
       // If not something we know, ignore it completely
       if(hash_code == "" || sig_code == "")
          continue;
 
       m_supported_algos.push_back(std::make_pair(hash_code, sig_code));
-
-      len -= 2;
       }
    }
 
