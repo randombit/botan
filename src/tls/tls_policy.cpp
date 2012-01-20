@@ -194,6 +194,9 @@ u16bit TLS_Policy::choose_suite(const std::vector<u16bit>& client_suites,
       if(!have_srp && suite.kex_algo() == "SRP")
          continue;
 
+      if(suite.kex_algo() == "ECDH")
+         continue; // not currently supported
+
       if(suite.sig_algo() == "RSA" && have_rsa)
          return suite_id;
       else if(suite.sig_algo() == "DSA" && have_dsa)
