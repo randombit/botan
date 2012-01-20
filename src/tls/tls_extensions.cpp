@@ -365,21 +365,6 @@ MemoryVector<byte> Signature_Algorithms::serialize() const
    return buf;
    }
 
-Signature_Algorithms::Signature_Algorithms()
-   {
-   /*
-   Declare we support everything except MD5 for RSA, and SHA-1 with DSA.
-   We prefer hashes strongest (SHA-512) to weakest (SHA-1).
-   */
-
-   m_supported_algos.push_back(std::make_pair("SHA-512", "RSA"));
-   m_supported_algos.push_back(std::make_pair("SHA-384", "RSA"));
-   m_supported_algos.push_back(std::make_pair("SHA-256", "RSA"));
-   m_supported_algos.push_back(std::make_pair("SHA-224", "RSA"));
-   m_supported_algos.push_back(std::make_pair("SHA-1", "RSA"));
-   m_supported_algos.push_back(std::make_pair("SHA-1", "DSA"));
-   }
-
 Signature_Algorithms::Signature_Algorithms(TLS_Data_Reader& reader,
                                            u16bit extension_size)
    {

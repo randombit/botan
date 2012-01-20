@@ -26,7 +26,10 @@ std::vector<std::string> TLS_Policy::allowed_ciphers() const
 std::vector<std::string> TLS_Policy::allowed_hashes() const
    {
    std::vector<std::string> allowed;
+   allowed.push_back("SHA-512");
+   allowed.push_back("SHA-384");
    allowed.push_back("SHA-256");
+   allowed.push_back("SHA-224");
    allowed.push_back("SHA-1");
    // Note that MD5 is not included by default
    return allowed;

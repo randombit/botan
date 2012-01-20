@@ -274,6 +274,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             {
             state->cert_req = new Certificate_Req(writer,
                                                   state->hash,
+                                                  policy,
                                                   client_auth_CAs,
                                                   state->version);
 

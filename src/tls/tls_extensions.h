@@ -215,7 +215,8 @@ class Signature_Algorithms : public TLS_Extension
 
       bool empty() const { return false; }
 
-      Signature_Algorithms();
+      Signature_Algorithms(const std::vector<std::pair<std::string, std::string> >& algos) :
+         m_supported_algos(algos) {}
 
       Signature_Algorithms(TLS_Data_Reader& reader,
                            u16bit extension_size);

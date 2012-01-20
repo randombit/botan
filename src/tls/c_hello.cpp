@@ -94,6 +94,13 @@ Client_Hello::Client_Hello(Record_Writer& writer,
    m_secure_renegotiation(true),
    m_renegotiation_info(reneg_info)
    {
+   std::vector<std::string> hashes = policy.allowed_hashes();
+   std::vector<std::string> sigs = policy.allowed_signature_methods();
+
+   for(size_t i = 0; i != hashes.size(); ++i)
+      for(size_t j = 0; j != sigs.size(); ++j)
+         m_supported_algos.push_back(std::make_pair(hashes[i], sigs[j]));
+
    send(writer, hash);
    }
 
@@ -116,6 +123,8 @@ Client_Hello::Client_Hello(Record_Writer& writer,
    {
    m_suites.push_back(session.ciphersuite());
    m_comp_methods.push_back(session.compression_method());
+
+   // set m_supported_algos here?
 
    send(writer, hash);
    }
@@ -164,7 +173,7 @@ MemoryVector<byte> Client_Hello::serialize() const
       extensions.add(new SRP_Identifier(m_srp_identifier));
 
       if(m_version >= TLS_V12)
-         extensions.add(new Signature_Algorithms());
+         extensions.add(new Signature_Algorithms(m_supported_algos));
 
       if(m_next_protocol)
          extensions.add(new Next_Protocol_Notification());

@@ -259,6 +259,7 @@ class Certificate_Req : public Handshake_Message
 
       Certificate_Req(Record_Writer& writer,
                       TLS_Handshake_Hash& hash,
+                      const TLS_Policy& policy,
                       const std::vector<X509_Certificate>& allowed_cas,
                       Version_Code version);
 
@@ -269,7 +270,8 @@ class Certificate_Req : public Handshake_Message
 
       std::vector<X509_DN> names;
       std::vector<byte> cert_types;
-      MemoryVector<byte> sig_and_hash_algos; // for TLS 1.2
+
+      std::vector<std::pair<std::string, std::string> > m_supported_algos;
    };
 
 /**

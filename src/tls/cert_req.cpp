@@ -22,6 +22,7 @@ namespace Botan {
 */
 Certificate_Req::Certificate_Req(Record_Writer& writer,
                                  TLS_Handshake_Hash& hash,
+                                 const TLS_Policy& policy,
                                  const std::vector<X509_Certificate>& ca_certs,
                                  Version_Code version)
    {
@@ -32,7 +33,14 @@ Certificate_Req::Certificate_Req(Record_Writer& writer,
    cert_types.push_back(DSS_CERT);
 
    if(version >= TLS_V12)
-      sig_and_hash_algos = Signature_Algorithms().serialize();
+      {
+      std::vector<std::string> hashes = policy.allowed_hashes();
+      std::vector<std::string> sigs = policy.allowed_signature_methods();
+
+      for(size_t i = 0; i != hashes.size(); ++i)
+         for(size_t j = 0; j != sigs.size(); ++j)
+            m_supported_algos.push_back(std::make_pair(hashes[i], sigs[j]));
+      }
 
    send(writer, hash);
    }
@@ -82,7 +90,10 @@ MemoryVector<byte> Certificate_Req::serialize() const
 
    append_tls_length_value(buf, cert_types, 1);
 
-   buf += sig_and_hash_algos;
+   if(!m_supported_algos.empty())
+      {
+      buf += Signature_Algorithms(m_supported_algos).serialize();
+      }
 
    for(size_t i = 0; i != names.size(); ++i)
       {
