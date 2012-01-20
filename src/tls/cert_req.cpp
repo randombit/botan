@@ -7,10 +7,13 @@
 
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_reader.h>
+#include <botan/internal/tls_extensions.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/loadstor.h>
 #include <botan/secqueue.h>
+
+#include <stdio.h>
 
 namespace Botan {
 
@@ -20,18 +23,16 @@ namespace Botan {
 Certificate_Req::Certificate_Req(Record_Writer& writer,
                                  TLS_Handshake_Hash& hash,
                                  const std::vector<X509_Certificate>& ca_certs,
-                                 const std::vector<Certificate_Type>& cert_types)
+                                 Version_Code version)
    {
    for(size_t i = 0; i != ca_certs.size(); ++i)
       names.push_back(ca_certs[i].subject_dn());
 
-   if(cert_types.empty()) // default is RSA/DSA is OK
-      {
-      types.push_back(RSA_CERT);
-      types.push_back(DSS_CERT);
-      }
-   else
-      types = cert_types;
+   cert_types.push_back(RSA_CERT);
+   cert_types.push_back(DSS_CERT);
+
+   if(version >= TLS_V12)
+      sig_and_hash_algos = Signature_Algorithms().serialize();
 
    send(writer, hash);
    }
@@ -39,39 +40,36 @@ Certificate_Req::Certificate_Req(Record_Writer& writer,
 /**
 * Deserialize a Certificate Request message
 */
-Certificate_Req::Certificate_Req(const MemoryRegion<byte>& buf)
+Certificate_Req::Certificate_Req(const MemoryRegion<byte>& buf,
+                                 Version_Code version)
    {
    if(buf.size() < 4)
       throw Decoding_Error("Certificate_Req: Bad certificate request");
 
-   const size_t types_size = buf[0];
+   TLS_Data_Reader reader(buf);
 
-   if(buf.size() < types_size + 3)
-      throw Decoding_Error("Certificate_Req: Bad certificate request");
+   cert_types = reader.get_range_vector<byte>(1, 1, 255);
 
-   for(size_t i = 0; i != types_size; ++i)
-      types.push_back(static_cast<Certificate_Type>(buf[i+1]));
-
-   const size_t names_size = make_u16bit(buf[types_size+1], buf[types_size+2]);
-
-   if(buf.size() != names_size + types_size + 3)
-      throw Decoding_Error("Certificate_Req: Bad certificate request");
-
-   size_t offset = types_size + 3;
-
-   while(offset < buf.size())
+   if(version >= TLS_V12)
       {
-      const size_t name_size = make_u16bit(buf[offset], buf[offset+1]);
+      std::vector<u16bit> sig_hash_algs = reader.get_range_vector<u16bit>(2, 2, 65534);
 
-      if(offset + 2 + name_size > buf.size())
-         throw Decoding_Error("Certificate_Req: Bad certificate request");
+      // FIXME, do something with this
+      }
 
-      BER_Decoder decoder(&buf[offset + 2], name_size);
+   u16bit purported_size = reader.get_u16bit();
+
+   if(reader.remaining_bytes() != purported_size)
+      throw Decoding_Error("Inconsistent length in certificate request");
+
+   while(reader.has_remaining())
+      {
+      std::vector<byte> name_bits = reader.get_range_vector<byte>(2, 0, 65535);
+
+      BER_Decoder decoder(&name_bits[0], name_bits.size());
       X509_DN name;
       decoder.decode(name);
       names.push_back(name);
-
-      offset += (2 + name_size);
       }
    }
 
@@ -82,7 +80,9 @@ MemoryVector<byte> Certificate_Req::serialize() const
    {
    MemoryVector<byte> buf;
 
-   append_tls_length_value(buf, types, 1);
+   append_tls_length_value(buf, cert_types, 1);
+
+   buf += sig_and_hash_algos;
 
    for(size_t i = 0; i != names.size(); ++i)
       {

@@ -1,6 +1,6 @@
 /*
 * Server Key Exchange Message
-* (C) 2004-2010 Jack Lloyd
+* (C) 2004-2010,2012 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -35,20 +35,8 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
       throw Invalid_Argument("Unknown key type " + state->kex_priv->algo_name() +
                              " for TLS key exchange");
 
-   // FIXME: this should respect client's hash preferences
-   if(state->version >= TLS_V12)
-      {
-      hash_algo = TLS_ALGO_HASH_SHA256;
-      sig_algo = TLS_ALGO_SIGNER_RSA;
-      }
-   else
-      {
-      hash_algo = TLS_ALGO_NONE;
-      sig_algo = TLS_ALGO_NONE;
-      }
-
    std::pair<std::string, Signature_Format> format =
-      state->choose_sig_format(private_key, hash_algo, false);
+      state->choose_sig_format(private_key, hash_algo, sig_algo, false);
 
    PK_Signer signer(*private_key, format.first, format.second);
 
@@ -153,10 +141,8 @@ bool Server_Key_Exchange::verify(const X509_Certificate& cert,
    {
    std::auto_ptr<Public_Key> key(cert.subject_public_key());
 
-   printf("Checking %s vs code %d\n", key->algo_name().c_str(), sig_algo);
-
    std::pair<std::string, Signature_Format> format =
-      state->choose_sig_format(key.get(), hash_algo, false);
+      state->choose_sig_format(key.get(), hash_algo, sig_algo, false);
 
    PK_Verifier verifier(*key, format.first, format.second);
 

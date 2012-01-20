@@ -278,8 +278,12 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             {
             // FIXME: figure out the allowed CAs/cert types
 
-            state->cert_req = new Certificate_Req(writer, state->hash,
-                                                  std::vector<X509_Certificate>());
+            std::vector<X509_Certificate> allowed_cas;
+
+            state->cert_req = new Certificate_Req(writer,
+                                                  state->hash,
+                                                  allowed_cas,
+                                                  state->version);
 
             state->set_expected_next(CERTIFICATE);
             }
@@ -325,7 +329,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       }
    else if(type == CERTIFICATE_VERIFY)
       {
-      state->client_verify = new Certificate_Verify(contents);
+      state->client_verify = new Certificate_Verify(contents, state->version);
 
       const std::vector<X509_Certificate>& client_certs =
          state->client_certs->cert_chain();

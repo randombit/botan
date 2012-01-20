@@ -147,20 +147,20 @@ MemoryVector<byte> Client_Hello::serialize() const
    // Initial handshake
    if(m_renegotiation_info.empty())
       {
-      extensions.push_back(new Renegotation_Extension(m_renegotiation_info));
-      extensions.push_back(new Server_Name_Indicator(m_hostname));
-      extensions.push_back(new SRP_Identifier(m_srp_identifier));
+      extensions.add(new Renegotation_Extension(m_renegotiation_info));
+      extensions.add(new Server_Name_Indicator(m_hostname));
+      extensions.add(new SRP_Identifier(m_srp_identifier));
 
       if(m_version >= TLS_V12)
-         extensions.push_back(new Signature_Algorithms());
+         extensions.add(new Signature_Algorithms());
 
       if(m_next_protocol)
-         extensions.push_back(new Next_Protocol_Notification());
+         extensions.add(new Next_Protocol_Notification());
       }
    else
       {
       // renegotiation
-      extensions.push_back(new Renegotation_Extension(m_renegotiation_info));
+      extensions.add(new Renegotation_Extension(m_renegotiation_info));
       }
 
    buf += extensions.serialize();
@@ -237,35 +237,39 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
 
    TLS_Extensions extensions(reader);
 
-   for(size_t i = 0; i != extensions.count(); ++i)
+   if(Server_Name_Indicator* sni = extensions.get<Server_Name_Indicator>())
       {
-      TLS_Extension* extn = extensions.at(i);
+      m_hostname = sni->host_name();
+      }
 
-      if(Server_Name_Indicator* sni = dynamic_cast<Server_Name_Indicator*>(extn))
-         {
-         m_hostname = sni->host_name();
-         }
-      else if(SRP_Identifier* srp = dynamic_cast<SRP_Identifier*>(extn))
-         {
-         m_srp_identifier = srp->identifier();
-         }
-      else if(Next_Protocol_Notification* npn = dynamic_cast<Next_Protocol_Notification*>(extn))
-         {
-         if(!npn->protocols().empty())
-            throw Decoding_Error("Client sent non-empty NPN extension");
+   if(SRP_Identifier* srp = extensions.get<SRP_Identifier>())
+      {
+      m_srp_identifier = srp->identifier();
+      }
 
-         m_next_protocol = true;
-         }
-      else if(Maximum_Fragment_Length* frag = dynamic_cast<Maximum_Fragment_Length*>(extn))
-         {
-         m_fragment_size = frag->fragment_size();
-         }
-      else if(Renegotation_Extension* reneg = dynamic_cast<Renegotation_Extension*>(extn))
-         {
-         // checked by TLS_Client / TLS_Server as they know the handshake state
-         m_secure_renegotiation = true;
-         m_renegotiation_info = reneg->renegotiation_info();
-         }
+   if(Next_Protocol_Notification* npn = extensions.get<Next_Protocol_Notification>())
+      {
+      if(!npn->protocols().empty())
+         throw Decoding_Error("Client sent non-empty NPN extension");
+
+      m_next_protocol = true;
+      }
+
+   if(Maximum_Fragment_Length* frag = extensions.get<Maximum_Fragment_Length>())
+      {
+      m_fragment_size = frag->fragment_size();
+      }
+
+   if(Renegotation_Extension* reneg = extensions.get<Renegotation_Extension>())
+      {
+      // checked by TLS_Client / TLS_Server as they know the handshake state
+      m_secure_renegotiation = true;
+      m_renegotiation_info = reneg->renegotiation_info();
+      }
+
+   if(Signature_Algorithms* sigs = extensions.get<Signature_Algorithms>())
+      {
+      // save in handshake state
       }
 
    if(value_exists(m_suites, static_cast<u16bit>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV)))

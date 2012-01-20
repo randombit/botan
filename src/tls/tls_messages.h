@@ -258,21 +258,22 @@ class Certificate_Req : public Handshake_Message
    public:
       Handshake_Type type() const { return CERTIFICATE_REQUEST; }
 
-      std::vector<Certificate_Type> acceptable_types() const { return types; }
+      std::vector<byte> acceptable_types() const { return cert_types; }
       std::vector<X509_DN> acceptable_CAs() const { return names; }
 
       Certificate_Req(Record_Writer& writer,
                       TLS_Handshake_Hash& hash,
                       const std::vector<X509_Certificate>& allowed_cas,
-                      const std::vector<Certificate_Type>& types =
-                         std::vector<Certificate_Type>());
+                      Version_Code version);
 
-      Certificate_Req(const MemoryRegion<byte>& buf);
+      Certificate_Req(const MemoryRegion<byte>& buf,
+                      Version_Code version);
    private:
       MemoryVector<byte> serialize() const;
 
       std::vector<X509_DN> names;
-      std::vector<Certificate_Type> types;
+      std::vector<byte> cert_types;
+      MemoryVector<byte> sig_and_hash_algos; // for TLS 1.2
    };
 
 /**
@@ -296,7 +297,8 @@ class Certificate_Verify : public Handshake_Message
                          RandomNumberGenerator& rng,
                          const Private_Key* key);
 
-      Certificate_Verify(const MemoryRegion<byte>& buf);
+      Certificate_Verify(const MemoryRegion<byte>& buf,
+                         Version_Code version);
    private:
       MemoryVector<byte> serialize() const;
 

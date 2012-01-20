@@ -12,6 +12,7 @@
 #include <botan/tls_magic.h>
 #include <vector>
 #include <string>
+#include <map>
 
 namespace Botan {
 
@@ -24,6 +25,7 @@ class TLS_Extension
    {
    public:
       virtual TLS_Handshake_Extension_Type type() const = 0;
+
       virtual MemoryVector<byte> serialize() const = 0;
 
       virtual bool empty() const = 0;
@@ -37,8 +39,10 @@ class TLS_Extension
 class Server_Name_Indicator : public TLS_Extension
    {
    public:
-      TLS_Handshake_Extension_Type type() const
+      static TLS_Handshake_Extension_Type static_type()
          { return TLSEXT_SERVER_NAME_INDICATION; }
+
+      TLS_Handshake_Extension_Type type() const { return static_type(); }
 
       Server_Name_Indicator(const std::string& host_name) :
          sni_host_name(host_name) {}
@@ -61,8 +65,10 @@ class Server_Name_Indicator : public TLS_Extension
 class SRP_Identifier : public TLS_Extension
    {
    public:
-      TLS_Handshake_Extension_Type type() const
+      static TLS_Handshake_Extension_Type static_type()
          { return TLSEXT_SRP_IDENTIFIER; }
+
+      TLS_Handshake_Extension_Type type() const { return static_type(); }
 
       SRP_Identifier(const std::string& identifier) :
          srp_identifier(identifier) {}
@@ -85,8 +91,10 @@ class SRP_Identifier : public TLS_Extension
 class Renegotation_Extension : public TLS_Extension
    {
    public:
-      TLS_Handshake_Extension_Type type() const
+      static TLS_Handshake_Extension_Type static_type()
          { return TLSEXT_SAFE_RENEGOTIATION; }
+
+      TLS_Handshake_Extension_Type type() const { return static_type(); }
 
       Renegotation_Extension() {}
 
@@ -112,8 +120,10 @@ class Renegotation_Extension : public TLS_Extension
 class Maximum_Fragment_Length : public TLS_Extension
    {
    public:
-      TLS_Handshake_Extension_Type type() const
+      static TLS_Handshake_Extension_Type static_type()
          { return TLSEXT_MAX_FRAGMENT_LENGTH; }
+
+      TLS_Handshake_Extension_Type type() const { return static_type(); }
 
       bool empty() const { return val != 0; }
 
@@ -149,8 +159,10 @@ class Maximum_Fragment_Length : public TLS_Extension
 class Next_Protocol_Notification : public TLS_Extension
    {
    public:
-      TLS_Handshake_Extension_Type type() const
+      static TLS_Handshake_Extension_Type static_type()
          { return TLSEXT_NEXT_PROTOCOL; }
+
+      TLS_Handshake_Extension_Type type() const { return static_type(); }
 
       const std::vector<std::string>& protocols() const
          { return m_protocols; }
@@ -182,14 +194,16 @@ class Next_Protocol_Notification : public TLS_Extension
 class Signature_Algorithms : public TLS_Extension
    {
    public:
+      static TLS_Handshake_Extension_Type static_type()
+         { return TLSEXT_SIGNATURE_ALGORITHMS; }
+
+      TLS_Handshake_Extension_Type type() const { return static_type(); }
+
       static TLS_Ciphersuite_Algos hash_algo_code(byte code);
       static byte hash_algo_code(TLS_Ciphersuite_Algos code);
 
       static TLS_Ciphersuite_Algos sig_algo_code(byte code);
       static byte sig_algo_code(TLS_Ciphersuite_Algos code);
-
-      TLS_Handshake_Extension_Type type() const
-         { return TLSEXT_SIGNATURE_ALGORITHMS; }
 
       std::vector<std::pair<TLS_Ciphersuite_Algos, TLS_Ciphersuite_Algos> >
          supported_signature_algorthms() const
@@ -215,12 +229,24 @@ class Signature_Algorithms : public TLS_Extension
 class TLS_Extensions
    {
    public:
-      size_t count() const { return extensions.size(); }
+      template<typename T>
+      T* get() const
+         {
+         TLS_Handshake_Extension_Type type = T::static_type();
 
-      TLS_Extension* at(size_t idx) { return extensions.at(idx); }
+         std::map<TLS_Handshake_Extension_Type, TLS_Extension*>::const_iterator i =
+            extensions.find(type);
 
-      void push_back(TLS_Extension* extn)
-         { extensions.push_back(extn); }
+         if(i != extensions.end())
+            return dynamic_cast<T*>(i->second);
+         return 0;
+         }
+
+      void add(TLS_Extension* extn)
+         {
+         delete extensions[extn->type()]; // or hard error if already exists?
+         extensions[extn->type()] = extn;
+         }
 
       MemoryVector<byte> serialize() const;
 
@@ -233,7 +259,7 @@ class TLS_Extensions
       TLS_Extensions(const TLS_Extensions&) {}
       TLS_Extensions& operator=(const TLS_Extensions&) { return (*this); }
 
-      std::vector<TLS_Extension*> extensions;
+      std::map<TLS_Handshake_Extension_Type, TLS_Extension*> extensions;
    };
 
 }

@@ -54,7 +54,7 @@ TLS_Extensions::TLS_Extensions(TLS_Data_Reader& reader)
                                               extension_size);
 
          if(extn)
-            extensions.push_back(extn);
+            this->add(extn);
          else // unknown/unhandled extension
             reader.discard_next(extension_size);
          }
@@ -65,14 +65,15 @@ MemoryVector<byte> TLS_Extensions::serialize() const
    {
    MemoryVector<byte> buf(2); // 2 bytes for length field
 
-   for(size_t i = 0; i != extensions.size(); ++i)
+   for(std::map<TLS_Handshake_Extension_Type, TLS_Extension*>::const_iterator i = extensions.begin();
+       i != extensions.end(); ++i)
       {
-      if(extensions[i]->empty())
+      if(i->second->empty())
          continue;
 
-      const u16bit extn_code = extensions[i]->type();
+      const u16bit extn_code = i->second->type();
 
-      MemoryVector<byte> extn_val = extensions[i]->serialize();
+      MemoryVector<byte> extn_val = i->second->serialize();
 
       buf.push_back(get_byte(0, extn_code));
       buf.push_back(get_byte(1, extn_code));
@@ -97,8 +98,12 @@ MemoryVector<byte> TLS_Extensions::serialize() const
 
 TLS_Extensions::~TLS_Extensions()
    {
-   for(size_t i = 0; i != extensions.size(); ++i)
-      delete extensions[i];
+   for(std::map<TLS_Handshake_Extension_Type, TLS_Extension*>::const_iterator i = extensions.begin();
+       i != extensions.end(); ++i)
+      {
+      delete i->second;
+      }
+
    extensions.clear();
    }
 

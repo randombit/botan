@@ -49,6 +49,13 @@ class TLS_Handshake_State
       std::pair<std::string, Signature_Format>
          choose_sig_format(const Public_Key* key,
                            TLS_Ciphersuite_Algos hash_algo,
+                           TLS_Ciphersuite_Algos sig_algo,
+                           bool for_client_auth);
+
+      std::pair<std::string, Signature_Format>
+         choose_sig_format(const Private_Key* key,
+                           TLS_Ciphersuite_Algos& hash_algo,
+                           TLS_Ciphersuite_Algos& sig_algo,
                            bool for_client_auth);
 
       Version_Code version;

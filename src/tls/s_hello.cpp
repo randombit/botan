@@ -123,25 +123,17 @@ Server_Hello::Server_Hello(const MemoryRegion<byte>& buf)
 
    TLS_Extensions extensions(reader);
 
-   for(size_t i = 0; i != extensions.count(); ++i)
+   if(Renegotation_Extension* reneg = extensions.get<Renegotation_Extension>())
       {
-      TLS_Extension* extn = extensions.at(i);
+      // checked by TLS_Client / TLS_Server as they know the handshake state
+      m_secure_renegotiation = true;
+      m_renegotiation_info = reneg->renegotiation_info();
+      }
 
-      if(Renegotation_Extension* reneg = dynamic_cast<Renegotation_Extension*>(extn))
-         {
-         // checked by TLS_Client / TLS_Server as they know the handshake state
-         m_secure_renegotiation = true;
-         m_renegotiation_info = reneg->renegotiation_info();
-         }
-      else if(Next_Protocol_Notification* npn = dynamic_cast<Next_Protocol_Notification*>(extn))
-         {
-         m_next_protocols = npn->protocols();
-         m_next_protocol = true;
-         }
-      else if(Signature_Algorithms* sigs = dynamic_cast<Signature_Algorithms*>(extn))
-         {
-         // save in handshake state
-         }
+   if(Next_Protocol_Notification* npn = extensions.get<Next_Protocol_Notification>())
+      {
+      m_next_protocols = npn->protocols();
+      m_next_protocol = true;
       }
    }
 
@@ -166,13 +158,13 @@ MemoryVector<byte> Server_Hello::serialize() const
    TLS_Extensions extensions;
 
    if(m_secure_renegotiation)
-      extensions.push_back(new Renegotation_Extension(m_renegotiation_info));
+      extensions.add(new Renegotation_Extension(m_renegotiation_info));
 
    if(m_fragment_size != 0)
-      extensions.push_back(new Maximum_Fragment_Length(m_fragment_size));
+      extensions.add(new Maximum_Fragment_Length(m_fragment_size));
 
    if(m_next_protocol)
-      extensions.push_back(new Next_Protocol_Notification(m_next_protocols));
+      extensions.add(new Next_Protocol_Notification(m_next_protocols));
 
    buf += extensions.serialize();
 

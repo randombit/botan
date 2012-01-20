@@ -306,7 +306,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
    else if(type == CERTIFICATE_REQUEST)
       {
       state->set_expected_next(SERVER_HELLO_DONE);
-      state->cert_req = new Certificate_Req(contents);
+      state->cert_req = new Certificate_Req(contents, state->version);
       }
    else if(type == SERVER_HELLO_DONE)
       {
@@ -316,8 +316,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
 
       if(state->received_handshake_msg(CERTIFICATE_REQUEST))
          {
-         std::vector<Certificate_Type> types =
-            state->cert_req->acceptable_types();
+         std::vector<byte> types = state->cert_req->acceptable_types();
 
          std::vector<X509_Certificate> client_certs =
             creds.cert_chain("", // use types here

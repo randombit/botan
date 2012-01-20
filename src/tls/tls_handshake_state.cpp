@@ -130,14 +130,79 @@ bool TLS_Handshake_State::received_handshake_msg(Handshake_Type handshake_msg) c
    }
 
 std::pair<std::string, Signature_Format>
+TLS_Handshake_State::choose_sig_format(const Private_Key* key,
+                                       TLS_Ciphersuite_Algos& hash_algo,
+                                       TLS_Ciphersuite_Algos& sig_algo,
+                                       bool for_client_auth)
+   {
+   const std::string algo_name = key->algo_name();
+
+   hash_algo = TLS_ALGO_NONE;
+   sig_algo = TLS_ALGO_NONE;
+
+   /*
+   FIXME: This should respect the algo preferences in the client hello.
+   Either we are the client, and shouldn't confuse the server by claiming
+   one thing and doing another, or we're the server and the client might
+   be unhappy if we send it something it doesn't understand.
+   */
+
+   if(algo_name == "RSA")
+      {
+      std::string padding = "";
+
+      if(for_client_auth && this->version == SSL_V3)
+         padding = "EMSA3(Raw)";
+      else if(this->version == TLS_V10 || this->version == TLS_V11)
+         padding = "EMSA3(TLS.Digest.0)";
+      else
+         {
+         hash_algo = TLS_ALGO_HASH_SHA256; // should be policy
+         sig_algo = TLS_ALGO_SIGNER_RSA;
+
+         std::string hash = TLS_Cipher_Suite::hash_code_to_name(hash_algo);
+         padding = "EMSA3(" + hash + ")";
+         }
+
+      return std::make_pair(padding, IEEE_1363);
+      }
+   else if(algo_name == "DSA")
+      {
+      std::string padding = "";
+
+      if(for_client_auth && this->version == SSL_V3)
+         padding = "Raw";
+      else if(this->version == TLS_V10 || this->version == TLS_V11)
+         padding = "EMSA1(SHA-1)";
+      else
+         {
+         hash_algo = TLS_ALGO_HASH_SHA1; // should be policy
+         sig_algo = TLS_ALGO_SIGNER_DSA;
+
+         std::string hash = TLS_Cipher_Suite::hash_code_to_name(hash_algo);
+         padding = "EMSA1(" + hash + ")";
+         }
+
+      return std::make_pair(padding, DER_SEQUENCE);
+      }
+
+   throw Invalid_Argument(algo_name + " is invalid/unknown for TLS signatures");
+   }
+
+std::pair<std::string, Signature_Format>
 TLS_Handshake_State::choose_sig_format(const Public_Key* key,
                                        TLS_Ciphersuite_Algos hash_algo,
+                                       TLS_Ciphersuite_Algos sig_algo,
                                        bool for_client_auth)
    {
    const std::string algo_name = key->algo_name();
 
    if(algo_name == "RSA")
       {
+      if(sig_algo != TLS_ALGO_NONE && sig_algo != TLS_ALGO_SIGNER_RSA)
+         throw TLS_Exception(DECODE_ERROR,
+                             "Counterparty sent RSA key and non-RSA signature");
+
       std::string padding = "";
 
       if(for_client_auth && this->version == SSL_V3)
@@ -154,6 +219,10 @@ TLS_Handshake_State::choose_sig_format(const Public_Key* key,
       }
    else if(algo_name == "DSA")
       {
+      if(sig_algo != TLS_ALGO_NONE && sig_algo != TLS_ALGO_SIGNER_DSA)
+         throw TLS_Exception(DECODE_ERROR,
+                             "Counterparty sent RSA key and non-RSA signature");
+
       std::string padding = "";
 
       if(for_client_auth && this->version == SSL_V3)

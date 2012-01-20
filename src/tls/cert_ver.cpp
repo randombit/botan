@@ -7,6 +7,7 @@
 
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_reader.h>
+#include <botan/internal/tls_extensions.h>
 #include <botan/internal/assert.h>
 #include <botan/tls_exceptn.h>
 #include <botan/pubkey.h>
@@ -27,14 +28,8 @@ Certificate_Verify::Certificate_Verify(Record_Writer& writer,
    {
    BOTAN_ASSERT_NONNULL(priv_key);
 
-   // FIXME: this should respect server's hash preferences
-   if(state->version >= TLS_V12)
-      hash_algo = TLS_ALGO_HASH_SHA256;
-   else
-      hash_algo = TLS_ALGO_NONE;
-
    std::pair<std::string, Signature_Format> format =
-      state->choose_sig_format(priv_key, hash_algo, true);
+      state->choose_sig_format(priv_key, hash_algo, sig_algo, true);
 
    PK_Signer signer(*priv_key, format.first, format.second);
 
@@ -48,13 +43,10 @@ Certificate_Verify::Certificate_Verify(Record_Writer& writer,
       else
          signature = signer.sign_message(md5_sha, rng);
       }
-   else if(state->version == TLS_V10 || state->version == TLS_V11)
+   else
       {
       signature = signer.sign_message(state->hash.get_contents(), rng);
       }
-   else
-      throw TLS_Exception(PROTOCOL_VERSION,
-                          "Unknown TLS version in certificate verification");
 
    send(writer, state->hash);
    }
@@ -62,9 +54,23 @@ Certificate_Verify::Certificate_Verify(Record_Writer& writer,
 /*
 * Deserialize a Certificate Verify message
 */
-Certificate_Verify::Certificate_Verify(const MemoryRegion<byte>& buf)
+Certificate_Verify::Certificate_Verify(const MemoryRegion<byte>& buf,
+                                       Version_Code version)
    {
    TLS_Data_Reader reader(buf);
+
+   if(version < TLS_V12)
+      {
+      // use old defaults
+      hash_algo = TLS_ALGO_NONE;
+      sig_algo = TLS_ALGO_NONE;
+      }
+   else
+      {
+      hash_algo = Signature_Algorithms::hash_algo_code(reader.get_byte());
+      sig_algo = Signature_Algorithms::sig_algo_code(reader.get_byte());
+      }
+
    signature = reader.get_range<byte>(2, 0, 65535);
    }
 
@@ -74,6 +80,12 @@ Certificate_Verify::Certificate_Verify(const MemoryRegion<byte>& buf)
 MemoryVector<byte> Certificate_Verify::serialize() const
    {
    MemoryVector<byte> buf;
+
+   if(hash_algo != TLS_ALGO_NONE)
+      {
+      buf.push_back(Signature_Algorithms::hash_algo_code(hash_algo));
+      buf.push_back(Signature_Algorithms::sig_algo_code(sig_algo));
+      }
 
    const u16bit sig_len = signature.size();
    buf.push_back(get_byte(0, sig_len));
@@ -92,7 +104,7 @@ bool Certificate_Verify::verify(const X509_Certificate& cert,
    std::auto_ptr<Public_Key> key(cert.subject_public_key());
 
    std::pair<std::string, Signature_Format> format =
-      state->choose_sig_format(key.get(), hash_algo, true);
+      state->choose_sig_format(key.get(), hash_algo, sig_algo, true);
 
    PK_Verifier verifier(*key, format.first, format.second);
 
@@ -104,13 +116,8 @@ bool Certificate_Verify::verify(const X509_Certificate& cert,
       return verifier.verify_message(&md5_sha[16], md5_sha.size()-16,
                                      &signature[0], signature.size());
       }
-   else if(state->version == TLS_V10 || state->version == TLS_V11)
-      {
-      return verifier.verify_message(state->hash.get_contents(), signature);
-      }
-   else
-      throw TLS_Exception(PROTOCOL_VERSION,
-                          "Unknown TLS version in certificate verification");
+
+   return verifier.verify_message(state->hash.get_contents(), signature);
    }
 
 }
