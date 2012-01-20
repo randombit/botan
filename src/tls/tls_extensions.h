@@ -199,13 +199,13 @@ class Signature_Algorithms : public TLS_Extension
 
       TLS_Handshake_Extension_Type type() const { return static_type(); }
 
-      static TLS_Ciphersuite_Algos hash_algo_code(byte code);
-      static byte hash_algo_code(TLS_Ciphersuite_Algos code);
+      static std::string hash_algo_name(byte code);
+      static byte hash_algo_code(const std::string& name);
 
-      static TLS_Ciphersuite_Algos sig_algo_code(byte code);
-      static byte sig_algo_code(TLS_Ciphersuite_Algos code);
+      static std::string sig_algo_name(byte code);
+      static byte sig_algo_code(const std::string& name);
 
-      std::vector<std::pair<TLS_Ciphersuite_Algos, TLS_Ciphersuite_Algos> >
+      std::vector<std::pair<std::string, std::string> >
          supported_signature_algorthms() const
          {
          return m_supported_algos;
@@ -220,7 +220,7 @@ class Signature_Algorithms : public TLS_Extension
       Signature_Algorithms(TLS_Data_Reader& reader,
                            u16bit extension_size);
    private:
-      std::vector<std::pair<TLS_Ciphersuite_Algos, TLS_Ciphersuite_Algos> > m_supported_algos;
+      std::vector<std::pair<std::string, std::string> > m_supported_algos;
    };
 
 /**

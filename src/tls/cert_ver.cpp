@@ -9,11 +9,6 @@
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_extensions.h>
 #include <botan/internal/assert.h>
-#include <botan/tls_exceptn.h>
-#include <botan/pubkey.h>
-#include <botan/rsa.h>
-#include <botan/dsa.h>
-#include <botan/loadstor.h>
 #include <memory>
 
 namespace Botan {
@@ -59,16 +54,10 @@ Certificate_Verify::Certificate_Verify(const MemoryRegion<byte>& buf,
    {
    TLS_Data_Reader reader(buf);
 
-   if(version < TLS_V12)
+   if(version >= TLS_V12)
       {
-      // use old defaults
-      hash_algo = TLS_ALGO_NONE;
-      sig_algo = TLS_ALGO_NONE;
-      }
-   else
-      {
-      hash_algo = Signature_Algorithms::hash_algo_code(reader.get_byte());
-      sig_algo = Signature_Algorithms::sig_algo_code(reader.get_byte());
+      hash_algo = Signature_Algorithms::hash_algo_name(reader.get_byte());
+      sig_algo = Signature_Algorithms::sig_algo_name(reader.get_byte());
       }
 
    signature = reader.get_range<byte>(2, 0, 65535);
@@ -81,7 +70,7 @@ MemoryVector<byte> Certificate_Verify::serialize() const
    {
    MemoryVector<byte> buf;
 
-   if(hash_algo != TLS_ALGO_NONE)
+   if(hash_algo != "" && sig_algo != "")
       {
       buf.push_back(Signature_Algorithms::hash_algo_code(hash_algo));
       buf.push_back(Signature_Algorithms::sig_algo_code(sig_algo));

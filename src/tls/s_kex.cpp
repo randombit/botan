@@ -27,23 +27,23 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
 
    if(dh_pub)
       {
-      params.push_back(dh_pub->get_domain().get_p());
-      params.push_back(dh_pub->get_domain().get_g());
-      params.push_back(BigInt::decode(dh_pub->public_value()));
+      m_params.push_back(dh_pub->get_domain().get_p());
+      m_params.push_back(dh_pub->get_domain().get_g());
+      m_params.push_back(BigInt::decode(dh_pub->public_value()));
       }
    else
       throw Invalid_Argument("Unknown key type " + state->kex_priv->algo_name() +
                              " for TLS key exchange");
 
    std::pair<std::string, Signature_Format> format =
-      state->choose_sig_format(private_key, hash_algo, sig_algo, false);
+      state->choose_sig_format(private_key, m_hash_algo, m_sig_algo, false);
 
    PK_Signer signer(*private_key, format.first, format.second);
 
    signer.update(state->client_hello->random());
    signer.update(state->server_hello->random());
    signer.update(serialize_params());
-   signature = signer.signature(rng);
+   m_signature = signer.signature(rng);
 
    send(writer, state->hash);
    }
@@ -55,13 +55,14 @@ MemoryVector<byte> Server_Key_Exchange::serialize() const
    {
    MemoryVector<byte> buf = serialize_params();
 
-   if(hash_algo != TLS_ALGO_NONE)
+   // NEEDS VERSION CHECK
+   if(m_hash_algo != "" && m_sig_algo != "")
       {
-      buf.push_back(Signature_Algorithms::hash_algo_code(hash_algo));
-      buf.push_back(Signature_Algorithms::sig_algo_code(sig_algo));
+      buf.push_back(Signature_Algorithms::hash_algo_code(m_hash_algo));
+      buf.push_back(Signature_Algorithms::sig_algo_code(m_sig_algo));
       }
 
-   append_tls_length_value(buf, signature, 2);
+   append_tls_length_value(buf, m_signature, 2);
    return buf;
    }
 
@@ -72,8 +73,8 @@ MemoryVector<byte> Server_Key_Exchange::serialize_params() const
    {
    MemoryVector<byte> buf;
 
-   for(size_t i = 0; i != params.size(); ++i)
-      append_tls_length_value(buf, BigInt::encode(params[i]), 2);
+   for(size_t i = 0; i != m_params.size(); ++i)
+      append_tls_length_value(buf, BigInt::encode(m_params[i]), 2);
 
    return buf;
    }
@@ -82,8 +83,8 @@ MemoryVector<byte> Server_Key_Exchange::serialize_params() const
 * Deserialize a Server Key Exchange message
 */
 Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
-                                         TLS_Ciphersuite_Algos kex_alg,
-                                         TLS_Ciphersuite_Algos sig_alg,
+                                         const std::string& kex_algo,
+                                         const std::string& sig_algo,
                                          Version_Code version)
    {
    if(buf.size() < 6)
@@ -91,34 +92,28 @@ Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
 
    TLS_Data_Reader reader(buf);
 
-   if(kex_alg == TLS_ALGO_KEYEXCH_DH)
+   if(kex_algo == "DH")
       {
       // 3 bigints, DH p, g, Y
 
       for(size_t i = 0; i != 3; ++i)
          {
          BigInt v = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
-         params.push_back(v);
+         m_params.push_back(v);
          }
       }
    else
-      throw Decoding_Error("Unsupported server key exchange type");
+      throw Decoding_Error("Unsupported server key exchange type " + kex_algo);
 
-   if(sig_alg != TLS_ALGO_SIGNER_ANON)
+   if(sig_algo != "")
       {
-      if(version < TLS_V12)
+      if(version >= TLS_V12)
          {
-         // use old defaults
-         hash_algo = TLS_ALGO_NONE;
-         sig_algo = TLS_ALGO_NONE;
-         }
-      else
-         {
-         hash_algo = Signature_Algorithms::hash_algo_code(reader.get_byte());
-         sig_algo = Signature_Algorithms::sig_algo_code(reader.get_byte());
+         m_hash_algo = Signature_Algorithms::hash_algo_name(reader.get_byte());
+         m_sig_algo = Signature_Algorithms::sig_algo_name(reader.get_byte());
          }
 
-      signature = reader.get_range<byte>(2, 0, 65535);
+      m_signature = reader.get_range<byte>(2, 0, 65535);
       }
    }
 
@@ -127,8 +122,8 @@ Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
 */
 Public_Key* Server_Key_Exchange::key() const
    {
-   if(params.size() == 3)
-      return new DH_PublicKey(DL_Group(params[0], params[1]), params[2]);
+   if(m_params.size() == 3)
+      return new DH_PublicKey(DL_Group(m_params[0], m_params[1]), m_params[2]);
    else
       throw Internal_Error("Server_Key_Exchange::key: No key set");
    }
@@ -142,7 +137,7 @@ bool Server_Key_Exchange::verify(const X509_Certificate& cert,
    std::auto_ptr<Public_Key> key(cert.subject_public_key());
 
    std::pair<std::string, Signature_Format> format =
-      state->choose_sig_format(key.get(), hash_algo, sig_algo, false);
+      state->choose_sig_format(key.get(), m_hash_algo, m_sig_algo, false);
 
    PK_Verifier verifier(*key, format.first, format.second);
 
@@ -150,7 +145,7 @@ bool Server_Key_Exchange::verify(const X509_Certificate& cert,
    verifier.update(state->server_hello->random());
    verifier.update(serialize_params());
 
-   return verifier.check_signature(signature);
+   return verifier.check_signature(m_signature);
    }
 
 }

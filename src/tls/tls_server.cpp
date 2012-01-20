@@ -205,7 +205,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             writer.set_maximum_fragment_size(session_info.fragment_size());
             }
 
-         state->suite = TLS_Cipher_Suite(state->server_hello->ciphersuite());
+         state->suite = TLS_Ciphersuite::lookup_ciphersuite(state->server_hello->ciphersuite());
 
          state->keys = Session_Keys(state, session_info.master_secret(), true);
 
@@ -252,18 +252,18 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             writer.set_maximum_fragment_size(state->client_hello->fragment_size());
             }
 
-         state->suite = TLS_Cipher_Suite(state->server_hello->ciphersuite());
+         state->suite = TLS_Ciphersuite::lookup_ciphersuite(state->server_hello->ciphersuite());
 
-         if(state->suite.sig_type() != TLS_ALGO_SIGNER_ANON)
+         if(state->suite.sig_algo() != "")
             {
             state->server_certs = new Certificate(writer,
                                                   state->hash,
                                                   server_certs);
             }
 
-         if(state->suite.kex_type() != TLS_ALGO_KEYEXCH_NOKEX)
+         if(state->suite.kex_algo() != "")
             {
-            if(state->suite.kex_type() == TLS_ALGO_KEYEXCH_DH)
+            if(state->suite.kex_algo() == "")
                state->kex_priv = new DH_PrivateKey(rng, policy.dh_group());
             else
                throw Internal_Error("TLS_Server: Unknown ciphersuite kex type");

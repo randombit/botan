@@ -180,7 +180,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
 
       secure_renegotiation.update(state->server_hello);
 
-      state->suite = TLS_Cipher_Suite(state->server_hello->ciphersuite());
+      state->suite = TLS_Ciphersuite::lookup_ciphersuite(state->server_hello->ciphersuite());
 
       if(!state->server_hello->session_id().empty() &&
          (state->server_hello->session_id() == state->client_hello->session_id()))
@@ -217,11 +217,11 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
                                 "TLS_Client: Server is too old for specified policy");
             }
 
-         if(state->suite.sig_type() != TLS_ALGO_SIGNER_ANON)
+         if(state->suite.sig_algo() != "")
             {
             state->set_expected_next(CERTIFICATE);
             }
-         else if(state->suite.kex_type() != TLS_ALGO_KEYEXCH_NOKEX)
+         else if(state->suite.kex_algo() != "")
             {
             state->set_expected_next(SERVER_KEX);
             }
@@ -234,7 +234,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
       }
    else if(type == CERTIFICATE)
       {
-      if(state->suite.kex_type() != TLS_ALGO_KEYEXCH_NOKEX)
+      if(state->suite.kex_algo() != "")
          {
          state->set_expected_next(SERVER_KEX);
          }
@@ -257,18 +257,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
 
       state->kex_pub = peer_certs[0].subject_public_key();
 
-      bool is_dsa = false, is_rsa = false;
-
-      if(dynamic_cast<DSA_PublicKey*>(state->kex_pub))
-         is_dsa = true;
-      else if(dynamic_cast<RSA_PublicKey*>(state->kex_pub))
-         is_rsa = true;
-      else
-         throw TLS_Exception(UNSUPPORTED_CERTIFICATE,
-                             "Unknown key type received in server kex");
-
-      if((is_dsa && state->suite.sig_type() != TLS_ALGO_SIGNER_DSA) ||
-         (is_rsa && state->suite.sig_type() != TLS_ALGO_SIGNER_RSA))
+      if(state->kex_pub->algo_name() != state->suite.sig_algo())
          throw TLS_Exception(ILLEGAL_PARAMETER,
                              "Certificate key type did not match ciphersuite");
       }
@@ -278,11 +267,11 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
       state->set_expected_next(SERVER_HELLO_DONE);
 
       state->server_kex = new Server_Key_Exchange(contents,
-                                                  state->suite.kex_type(),
-                                                  state->suite.sig_type(),
+                                                  state->suite.kex_algo(),
+                                                  state->suite.sig_algo(),
                                                   state->version);
 
-      if(state->suite.sig_type() != TLS_ALGO_SIGNER_ANON)
+      if(state->suite.sig_algo() != "")
          {
          if(!state->server_kex->verify(peer_certs[0], state))
             {
@@ -296,8 +285,9 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
 
       state->kex_pub = state->server_kex->key();
 
+      // this should be in client_key_exchange
       if(dynamic_cast<DH_PublicKey*>(state->kex_pub) &&
-         state->suite.kex_type() != TLS_ALGO_KEYEXCH_DH)
+         state->suite.kex_algo() != "DH")
          {
          throw TLS_Exception(HANDSHAKE_FAILURE,
                              "Server sent DH key but negotiated something else");

@@ -113,7 +113,7 @@ class Client_Hello : public Handshake_Message
       bool m_secure_renegotiation;
       MemoryVector<byte> m_renegotiation_info;
 
-      std::vector<std::pair<TLS_Ciphersuite_Algos, TLS_Ciphersuite_Algos> > m_supported_algos;
+      std::vector<std::pair<std::string, std::string> > m_supported_algos;
    };
 
 /**
@@ -214,7 +214,7 @@ class Client_Key_Exchange : public Handshake_Message
                           Version_Code pref_version);
 
       Client_Key_Exchange(const MemoryRegion<byte>& buf,
-                          const TLS_Cipher_Suite& suite,
+                          const TLS_Ciphersuite& suite,
                           Version_Code using_version);
    private:
       MemoryVector<byte> serialize() const;
@@ -298,8 +298,8 @@ class Certificate_Verify : public Handshake_Message
    private:
       MemoryVector<byte> serialize() const;
 
-      TLS_Ciphersuite_Algos sig_algo; // sig algo used to create signature
-      TLS_Ciphersuite_Algos hash_algo; // hash used to create signature
+      std::string sig_algo; // sig algo used to create signature
+      std::string hash_algo; // hash used to create signature
       MemoryVector<byte> signature;
    };
 
@@ -361,18 +361,18 @@ class Server_Key_Exchange : public Handshake_Message
                           const Private_Key* priv_key);
 
       Server_Key_Exchange(const MemoryRegion<byte>& buf,
-                          TLS_Ciphersuite_Algos kex_alg,
-                          TLS_Ciphersuite_Algos sig_alg,
+                          const std::string& kex_alg,
+                          const std::string& sig_alg,
                           Version_Code version);
    private:
       MemoryVector<byte> serialize() const;
       MemoryVector<byte> serialize_params() const;
 
-      std::vector<BigInt> params;
+      std::vector<BigInt> m_params;
 
-      TLS_Ciphersuite_Algos sig_algo; // sig algo used to create signature
-      TLS_Ciphersuite_Algos hash_algo; // hash used to create signature
-      MemoryVector<byte> signature;
+      std::string m_sig_algo; // sig algo used to create signature
+      std::string m_hash_algo; // hash used to create signature
+      MemoryVector<byte> m_signature;
    };
 
 /**

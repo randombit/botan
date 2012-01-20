@@ -82,12 +82,12 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 * Read a Client Key Exchange message
 */
 Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
-                                         const TLS_Cipher_Suite& suite,
+                                         const TLS_Ciphersuite& suite,
                                          Version_Code using_version)
    {
    include_length = true;
 
-   if(using_version == SSL_V3 && (suite.kex_type() == TLS_ALGO_KEYEXCH_NOKEX))
+   if(using_version == SSL_V3 && (suite.kex_algo() == ""))
       include_length = false;
 
    if(include_length)

@@ -17,29 +17,29 @@ namespace Botan {
 /**
 * Ciphersuite Information
 */
-class BOTAN_DLL TLS_Cipher_Suite
+class BOTAN_DLL TLS_Ciphersuite
    {
    public:
-      static TLS_Ciphersuite_Algos lookup_ciphersuite(u16bit suite);
+      static TLS_Ciphersuite lookup_ciphersuite(u16bit suite);
 
-      static std::pair<std::string, size_t>
-         cipher_code_to_name(TLS_Ciphersuite_Algos algo);
+      const std::string kex_algo() const { return m_kex_algo; }
+      const std::string sig_algo() const { return m_sig_algo; }
 
-      static std::string hash_code_to_name(TLS_Ciphersuite_Algos algo);
+      std::string cipher_algo() const { return m_cipher_algo; }
+      std::string mac_algo() const { return m_mac_algo; }
 
-      std::string cipher_algo() const { return cipher; }
-      std::string mac_algo() const { return mac; }
+      size_t cipher_keylen() const { return m_cipher_keylen; }
 
-      size_t cipher_keylen() const { return cipher_key_length; }
+      TLS_Ciphersuite() : m_cipher_keylen(0) {}
 
-      TLS_Ciphersuite_Algos kex_type() const { return kex_algo; }
-      TLS_Ciphersuite_Algos sig_type() const { return sig_algo; }
-
-      TLS_Cipher_Suite(u16bit ciphersuite_code = 0);
+      TLS_Ciphersuite(const std::string& sig_algo,
+                      const std::string& kex_algo,
+                      const std::string& mac_algo,
+                      const std::string& cipher_algo,
+                      size_t cipher_algo_keylen);
    private:
-      TLS_Ciphersuite_Algos kex_algo, sig_algo;
-      std::string cipher, mac;
-      size_t cipher_key_length;
+      std::string m_sig_algo, m_kex_algo, m_mac_algo, m_cipher_algo;
+      size_t m_cipher_keylen;
    };
 
 }

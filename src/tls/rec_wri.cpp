@@ -67,7 +67,7 @@ void Record_Writer::set_version(Version_Code version)
 /*
 * Set the keys for writing
 */
-void Record_Writer::activate(const TLS_Cipher_Suite& suite,
+void Record_Writer::activate(const TLS_Ciphersuite& suite,
                              const Session_Keys& keys,
                              Connection_Side side)
    {

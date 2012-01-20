@@ -162,41 +162,6 @@ enum Ciphersuite_Code {
    TLS_EMPTY_RENEGOTIATION_INFO_SCSV        = 0x00FF
 };
 
-/*
-* Form of the ciphersuites broken down by field instead of
-* being randomly assigned codepoints.
-*/
-enum TLS_Ciphersuite_Algos {
-   TLS_ALGO_NONE              = 0x00000000,
-
-   TLS_ALGO_SIGNER_MASK       = 0xFF000000,
-   TLS_ALGO_SIGNER_ANON       = 0x01000000,
-   TLS_ALGO_SIGNER_RSA        = 0x02000000,
-   TLS_ALGO_SIGNER_DSA        = 0x03000000,
-   TLS_ALGO_SIGNER_ECDSA      = 0x04000000,
-
-   TLS_ALGO_KEYEXCH_MASK      = 0x00FF0000,
-   TLS_ALGO_KEYEXCH_NOKEX     = 0x00010000, // RSA using server cert key
-   TLS_ALGO_KEYEXCH_DH        = 0x00020000, // Ephemeral DH
-   TLS_ALGO_KEYEXCH_ECDH      = 0x00030000, // Ephemeral ECDH
-   TLS_ALGO_KEYEXCH_SRP       = 0x00040000,
-
-   TLS_ALGO_HASH_MASK         = 0x0000FF00,
-   TLS_ALGO_HASH_MD5          = 0x00000100,
-   TLS_ALGO_HASH_SHA1         = 0x00000200,
-   TLS_ALGO_HASH_SHA224       = 0x00000300,
-   TLS_ALGO_HASH_SHA256       = 0x00000400,
-   TLS_ALGO_HASH_SHA384       = 0x00000500,
-   TLS_ALGO_HASH_SHA512       = 0x00000600,
-
-   TLS_ALGO_CIPHER_MASK       = 0x000000FF,
-   TLS_ALGO_CIPHER_RC4_128    = 0x00000001,
-   TLS_ALGO_CIPHER_3DES_CBC   = 0x00000002,
-   TLS_ALGO_CIPHER_AES128_CBC = 0x00000003,
-   TLS_ALGO_CIPHER_AES256_CBC = 0x00000004,
-   TLS_ALGO_CIPHER_SEED_CBC   = 0x00000005
-};
-
 enum Compression_Method {
    NO_COMPRESSION       = 0x00,
    DEFLATE_COMPRESSION  = 0x01

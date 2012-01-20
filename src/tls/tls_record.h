@@ -43,7 +43,7 @@ class BOTAN_DLL Record_Writer
 
       void alert(Alert_Level level, Alert_Type type);
 
-      void activate(const TLS_Cipher_Suite& suite,
+      void activate(const TLS_Ciphersuite& suite,
                     const Session_Keys& keys,
                     Connection_Side side);
 
@@ -97,7 +97,7 @@ class BOTAN_DLL Record_Reader
                        byte& msg_type,
                        MemoryVector<byte>& msg);
 
-      void activate(const TLS_Cipher_Suite& suite,
+      void activate(const TLS_Ciphersuite& suite,
                     const Session_Keys& keys,
                     Connection_Side side);
 

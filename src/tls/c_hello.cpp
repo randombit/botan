@@ -290,21 +290,15 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
          we can safely say it supports everything here and know that
          we'll filter it out later.
          */
-         m_supported_algos.push_back(std::make_pair(TLS_ALGO_HASH_SHA1,
-                                                    TLS_ALGO_SIGNER_RSA));
-
-         m_supported_algos.push_back(std::make_pair(TLS_ALGO_HASH_SHA1,
-                                                    TLS_ALGO_SIGNER_DSA));
+         m_supported_algos.push_back(std::make_pair("SHA-1", "RSA"));
+         m_supported_algos.push_back(std::make_pair("SHA-1", "DSA"));
          }
       else
          {
          // For versions before TLS 1.2, insert fake values for the old defaults
 
-         m_supported_algos.push_back(std::make_pair(TLS_ALGO_HASH_SHA1,
-                                                    TLS_ALGO_SIGNER_RSA));
-
-         m_supported_algos.push_back(std::make_pair(TLS_ALGO_HASH_SHA1,
-                                                    TLS_ALGO_SIGNER_DSA));
+         m_supported_algos.push_back(std::make_pair("TLS.Digest.0", "RSA"));
+         m_supported_algos.push_back(std::make_pair("SHA-1", "DSA"));
          }
 
       }
