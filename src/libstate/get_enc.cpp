@@ -201,7 +201,7 @@ KDF* get_kdf(const std::string& algo_spec)
 
 #if defined(BOTAN_HAS_SSL_V3_PRF)
    if(request.algo_name() == "SSL3-PRF" && request.arg_count() == 0)
-      return new TLS_PRF;
+      return new SSL3_PRF;
 #endif
 
 #if defined(BOTAN_HAS_TLS_V10_PRF)
