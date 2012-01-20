@@ -112,6 +112,8 @@ class Client_Hello : public Handshake_Message
       size_t m_fragment_size;
       bool m_secure_renegotiation;
       MemoryVector<byte> m_renegotiation_info;
+
+      std::vector<std::pair<TLS_Ciphersuite_Algos, TLS_Ciphersuite_Algos> > m_supported_algos;
    };
 
 /**

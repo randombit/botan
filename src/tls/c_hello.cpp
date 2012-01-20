@@ -274,7 +274,39 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
 
    if(Signature_Algorithms* sigs = extensions.get<Signature_Algorithms>())
       {
-      // save in handshake state
+      m_supported_algos = sigs->supported_signature_algorthms();
+      }
+   else
+      {
+      if(m_version >= TLS_V12)
+         {
+         /*
+         The rule for when a TLS 1.2 client not sending the extension
+         is strange; in theory, the server is supposed to act as if
+         the client had sent only SHA-1 using whatever signature
+         algorithm we end up negotiating. Right here, we don't know
+         what we'll end up negotiating (depends on policy), but we do
+         know that we'll only negotiate something the client sent, so
+         we can safely say it supports everything here and know that
+         we'll filter it out later.
+         */
+         m_supported_algos.push_back(std::make_pair(TLS_ALGO_HASH_SHA1,
+                                                    TLS_ALGO_SIGNER_RSA));
+
+         m_supported_algos.push_back(std::make_pair(TLS_ALGO_HASH_SHA1,
+                                                    TLS_ALGO_SIGNER_DSA));
+         }
+      else
+         {
+         // For versions before TLS 1.2, insert fake values for the old defaults
+
+         m_supported_algos.push_back(std::make_pair(TLS_ALGO_HASH_SHA1,
+                                                    TLS_ALGO_SIGNER_RSA));
+
+         m_supported_algos.push_back(std::make_pair(TLS_ALGO_HASH_SHA1,
+                                                    TLS_ALGO_SIGNER_DSA));
+         }
+
       }
 
    if(value_exists(m_suites, static_cast<u16bit>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV)))
