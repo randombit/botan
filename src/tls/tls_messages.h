@@ -94,13 +94,7 @@ class Client_Hello : public Handshake_Message
                    bool next_protocol = false);
 
       Client_Hello(const MemoryRegion<byte>& buf,
-                   Handshake_Type type)
-         {
-         if(type == CLIENT_HELLO)
-            deserialize(buf);
-         else
-            deserialize_sslv2(buf);
-         }
+                   Handshake_Type type);
 
    private:
       MemoryVector<byte> serialize() const;

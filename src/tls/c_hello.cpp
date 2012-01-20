@@ -120,6 +120,18 @@ Client_Hello::Client_Hello(Record_Writer& writer,
    send(writer, hash);
    }
 
+Client_Hello::Client_Hello(const MemoryRegion<byte>& buf, Handshake_Type type)
+   {
+   m_next_protocol = false;
+   m_secure_renegotiation = false;
+   m_fragment_size = 0;
+
+   if(type == CLIENT_HELLO)
+      deserialize(buf);
+   else
+      deserialize_sslv2(buf);
+   }
+
 /*
 * Serialize a Client Hello message
 */
@@ -204,9 +216,6 @@ void Client_Hello::deserialize_sslv2(const MemoryRegion<byte>& buf)
 
    m_secure_renegotiation =
       value_exists(m_suites, static_cast<u16bit>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV));
-
-   m_fragment_size = 0;
-   m_next_protocol = false;
    }
 
 /*
@@ -230,10 +239,6 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
    m_suites = reader.get_range_vector<u16bit>(2, 1, 32767);
 
    m_comp_methods = reader.get_range_vector<byte>(1, 1, 255);
-
-   m_next_protocol = false;
-   m_secure_renegotiation = false;
-   m_fragment_size = 0;
 
    TLS_Extensions extensions(reader);
 
