@@ -1,95 +1,166 @@
 /*
 * Policies for TLS
-* (C) 2004-2010 Jack Lloyd
+* (C) 2004-2010,2012 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
 
 #include <botan/tls_policy.h>
+#include <botan/tls_suites.h>
 #include <botan/tls_exceptn.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
-/*
-* Return allowed ciphersuites
-*/
-std::vector<u16bit> TLS_Policy::ciphersuites(bool have_srp) const
+std::vector<std::string> TLS_Policy::allowed_ciphers() const
    {
-   return suite_list(allow_static_rsa(), allow_edh_rsa(), allow_edh_dsa(),
-                     allow_srp() && have_srp);
+   std::vector<std::string> allowed;
+   allowed.push_back("AES-256");
+   allowed.push_back("AES-128");
+   allowed.push_back("TripleDES");
+   allowed.push_back("ARC4");
+   // Note that SEED is not included by default
+   return allowed;
    }
 
-/*
-* Return allowed ciphersuites
-*/
-std::vector<u16bit> TLS_Policy::suite_list(bool use_rsa,
-                                           bool use_edh_rsa,
-                                           bool use_edh_dsa,
-                                           bool use_srp) const
+std::vector<std::string> TLS_Policy::allowed_hashes() const
    {
-   std::vector<u16bit> suites;
+   std::vector<std::string> allowed;
+   allowed.push_back("SHA-256");
+   allowed.push_back("SHA-1");
+   // Note that MD5 is not included by default
+   return allowed;
+   }
 
-   if(use_srp)
-      {
-      if(use_edh_rsa)
+std::vector<std::string> TLS_Policy::allowed_key_exchange_methods() const
+   {
+   std::vector<std::string> allowed;
+   //allowed.push_back("ECDH");
+   //allowed.push_back("SRP");
+   allowed.push_back("DH");
+   allowed.push_back(""); // means RSA via server cert
+   return allowed;
+   }
+
+std::vector<std::string> TLS_Policy::allowed_signature_methods() const
+   {
+   std::vector<std::string> allowed;
+   //allowed.push_back("ECDSA");
+   allowed.push_back("RSA");
+   allowed.push_back("DSA");
+   return allowed;
+   }
+
+namespace {
+
+class Ciphersuite_Preference_Ordering
+   {
+   public:
+      Ciphersuite_Preference_Ordering(const std::vector<std::string>& ciphers,
+                                      const std::vector<std::string>& hashes,
+                                      const std::vector<std::string>& kex,
+                                      const std::vector<std::string>& sigs) :
+         m_ciphers(ciphers), m_hashes(hashes), m_kex(kex), m_sigs(sigs) {}
+
+      bool operator()(const TLS_Ciphersuite& a, const TLS_Ciphersuite& b) const
          {
-         suites.push_back(TLS_SRP_SHA_DSS_WITH_AES_256_SHA);
-         suites.push_back(TLS_SRP_SHA_DSS_WITH_AES_128_SHA);
-         suites.push_back(TLS_SRP_SHA_DSS_WITH_3DES_EDE_SHA);
-         }
+         if(a.kex_algo() != b.kex_algo())
+            {
+            for(size_t i = 0; i != m_kex.size(); ++i)
+               {
+               if(a.kex_algo() == m_kex[i])
+                  return true;
+               if(b.kex_algo() == m_kex[i])
+                  return false;
+               }
+            }
 
-      if(use_edh_dsa)
+         if(a.cipher_algo() != b.cipher_algo())
+            {
+            for(size_t i = 0; i != m_ciphers.size(); ++i)
+               {
+               if(a.cipher_algo() == m_ciphers[i])
+                  return true;
+               if(b.cipher_algo() == m_ciphers[i])
+                  return false;
+               }
+            }
+
+         if(a.sig_algo() != b.sig_algo())
+            {
+            for(size_t i = 0; i != m_sigs.size(); ++i)
+               {
+               if(a.sig_algo() == m_sigs[i])
+                  return true;
+               if(b.sig_algo() == m_sigs[i])
+                  return false;
+               }
+            }
+
+         if(a.mac_algo() != b.mac_algo())
+            {
+            for(size_t i = 0; i != m_hashes.size(); ++i)
+               {
+               if(a.mac_algo() == m_hashes[i])
+                  return true;
+               if(b.mac_algo() == m_hashes[i])
+                  return false;
+               }
+            }
+
+         return false; // equal (?!?)
+         }
+   private:
+      std::vector<std::string> m_ciphers, m_hashes, m_kex, m_sigs;
+
+   };
+
+}
+
+std::vector<u16bit> TLS_Policy::ciphersuite_list(bool have_srp) const
+   {
+   std::vector<std::string> ciphers = allowed_ciphers();
+   std::vector<std::string> hashes = allowed_hashes();
+   std::vector<std::string> kex = allowed_key_exchange_methods();
+   std::vector<std::string> sigs = allowed_signature_methods();
+
+   if(!have_srp)
+      {
+      std::vector<std::string>::iterator i = std::find(kex.begin(), kex.end(), "SRP");
+
+      if(i != kex.end())
+         kex.erase(i);
+      }
+
+   Ciphersuite_Preference_Ordering order(ciphers, hashes, kex, sigs);
+
+   std::map<TLS_Ciphersuite, u16bit, Ciphersuite_Preference_Ordering> ciphersuites(order);
+
+   // When in doubt use brute force :)
+   for(u32bit i = 0; i != 65536; ++i)
+      {
+      TLS_Ciphersuite suite = TLS_Ciphersuite::lookup_ciphersuite(i);
+      if(suite.cipher_keylen() == 0)
+         continue; // not a ciphersuite we know
+
+      if(value_exists(ciphers, suite.cipher_algo()) &&
+         value_exists(hashes, suite.mac_algo()) &&
+         value_exists(kex, suite.kex_algo()) &&
+         value_exists(sigs, suite.sig_algo()))
          {
-         suites.push_back(TLS_SRP_SHA_RSA_WITH_AES_256_SHA);
-         suites.push_back(TLS_SRP_SHA_RSA_WITH_AES_128_SHA);
-         suites.push_back(TLS_SRP_SHA_RSA_WITH_3DES_EDE_SHA);
+         ciphersuites[suite] = i;
          }
       }
 
-   if(use_edh_dsa)
+   std::vector<u16bit> ciphersuite_codes;
+
+   for(std::map<TLS_Ciphersuite, u16bit, Ciphersuite_Preference_Ordering>::iterator i = ciphersuites.begin();
+       i != ciphersuites.end(); ++i)
       {
-      suites.push_back(TLS_DHE_DSS_WITH_AES_256_CBC_SHA256);
-      suites.push_back(TLS_DHE_DSS_WITH_AES_128_CBC_SHA256);
-
-      suites.push_back(TLS_DHE_DSS_WITH_AES_256_CBC_SHA);
-      suites.push_back(TLS_DHE_DSS_WITH_AES_128_CBC_SHA);
-
-      suites.push_back(TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA);
-      suites.push_back(TLS_DHE_DSS_WITH_SEED_CBC_SHA);
+      ciphersuite_codes.push_back(i->second);
       }
 
-   if(use_edh_rsa)
-      {
-      suites.push_back(TLS_DHE_RSA_WITH_AES_256_CBC_SHA256);
-      suites.push_back(TLS_DHE_RSA_WITH_AES_128_CBC_SHA256);
-
-      suites.push_back(TLS_DHE_RSA_WITH_AES_256_CBC_SHA);
-      suites.push_back(TLS_DHE_RSA_WITH_AES_128_CBC_SHA);
-
-      suites.push_back(TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA);
-      suites.push_back(TLS_DHE_RSA_WITH_SEED_CBC_SHA);
-      }
-
-   if(use_rsa)
-      {
-      suites.push_back(TLS_RSA_WITH_AES_256_CBC_SHA256);
-      suites.push_back(TLS_RSA_WITH_AES_128_CBC_SHA256);
-
-      suites.push_back(TLS_RSA_WITH_AES_256_CBC_SHA);
-      suites.push_back(TLS_RSA_WITH_AES_128_CBC_SHA);
-
-      suites.push_back(TLS_RSA_WITH_3DES_EDE_CBC_SHA);
-      suites.push_back(TLS_RSA_WITH_SEED_CBC_SHA);
-
-      suites.push_back(TLS_RSA_WITH_RC4_128_SHA);
-      suites.push_back(TLS_RSA_WITH_RC4_128_MD5);
-      }
-
-   if(suites.size() == 0)
-      throw TLS_Exception(INTERNAL_ERROR,
-                          "TLS_Policy error: All ciphersuites disabled");
-
-   return suites;
+   return ciphersuite_codes;
    }
 
 /*
@@ -105,23 +176,30 @@ std::vector<byte> TLS_Policy::compression() const
 /*
 * Choose which ciphersuite to use
 */
-u16bit TLS_Policy::choose_suite(const std::vector<u16bit>& c_suites,
+u16bit TLS_Policy::choose_suite(const std::vector<u16bit>& client_suites,
                                 bool have_rsa,
                                 bool have_dsa,
                                 bool have_srp) const
    {
-   const bool use_static_rsa = allow_static_rsa() && have_rsa;
-   const bool use_edh_rsa = allow_edh_rsa() && have_rsa;
-   const bool use_edh_dsa = allow_edh_dsa() && have_dsa;
-   const bool use_srp = allow_srp() && have_srp;
+   for(size_t i = 0; i != client_suites.size(); ++i)
+      {
+      u16bit suite_id = client_suites[i];
+      TLS_Ciphersuite suite = TLS_Ciphersuite::lookup_ciphersuite(suite_id);
+      if(suite.cipher_keylen() == 0)
+         continue; // not a ciphersuite we know
 
-   std::vector<u16bit> s_suites = suite_list(use_static_rsa, use_edh_rsa,
-                                             use_edh_dsa, use_srp);
+      if(!have_srp && suite.kex_algo() == "SRP")
+         continue;
 
-   for(size_t i = 0; i != s_suites.size(); ++i)
-      for(size_t j = 0; j != c_suites.size(); ++j)
-         if(s_suites[i] == c_suites[j])
-            return s_suites[i];
+      if(suite.sig_algo() == "RSA" && have_rsa)
+         return suite_id;
+      else if(suite.sig_algo() == "DSA" && have_dsa)
+         return suite_id;
+#if 0
+      else if(suite.sig_algo() == "") // anonymous server
+         return suite_id;
+#endif
+      }
 
    return 0;
    }
@@ -139,14 +217,6 @@ byte TLS_Policy::choose_compression(const std::vector<byte>& c_comp) const
             return s_comp[i];
 
    return NO_COMPRESSION;
-   }
-
-/*
-* Return the group to use for empheral DH
-*/
-DL_Group TLS_Policy::dh_group() const
-   {
-   return DL_Group("modp/ietf/1024");
    }
 
 }

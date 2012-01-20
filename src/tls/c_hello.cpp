@@ -85,7 +85,7 @@ Client_Hello::Client_Hello(Record_Writer& writer,
                            const std::string& srp_identifier) :
    m_version(policy.pref_version()),
    m_random(make_hello_random(rng)),
-   m_suites(policy.ciphersuites(srp_identifier != "")),
+   m_suites(policy.ciphersuite_list((srp_identifier != ""))),
    m_comp_methods(policy.compression()),
    m_hostname(hostname),
    m_srp_identifier(srp_identifier),

@@ -22,27 +22,50 @@ namespace Botan {
 class BOTAN_DLL TLS_Policy
    {
    public:
-      std::vector<u16bit> ciphersuites(bool have_srp) const;
+      /*
+      * Return allowed ciphersuites, in order of preference
+      */
+      std::vector<u16bit> ciphersuite_list(bool have_srp) const;
+
+      u16bit choose_suite(const std::vector<u16bit>& client_suites,
+                          bool have_rsa,
+                          bool have_dsa,
+                          bool have_srp) const;
+
+      byte choose_compression(const std::vector<byte>& client_algos) const;
+
+      std::vector<std::string> allowed_ciphers() const;
+
+      std::vector<std::string> allowed_hashes() const;
+
+      std::vector<std::string> allowed_key_exchange_methods() const;
+
+      std::vector<std::string> allowed_signature_methods() const;
+
       virtual std::vector<byte> compression() const;
 
-      virtual u16bit choose_suite(const std::vector<u16bit>& client_suites,
-                                  bool rsa_ok,
-                                  bool dsa_ok,
-                                  bool srp_ok) const;
+      virtual bool check_cert(const std::vector<X509_Certificate>& cert_chain) const = 0;
 
-      virtual byte choose_compression(const std::vector<byte>& client) const;
+      /**
+      * If client authentication is desired, returns a list of allowable
+      * CAs for same. If not desired, returns empty list.
+      */
+      virtual std::vector<X509_Certificate> client_auth_CAs() const
+         { return std::vector<X509_Certificate>(); }
 
-      virtual bool allow_static_rsa() const { return true; }
-      virtual bool allow_edh_rsa() const { return true; }
-      virtual bool allow_edh_dsa() const { return true; }
-      virtual bool allow_srp() const { return true; }
-
-      virtual bool require_client_auth() const { return false; }
-
+      /**
+      * Require support for RFC 5746 extensions to enable
+      * renegotiation.
+      *
+      * @warning Changing this to false exposes you to injected
+      * plaintext attacks.
+      */
       virtual bool require_secure_renegotiation() const { return true; }
 
-      virtual DL_Group dh_group() const;
-      virtual size_t rsa_export_keysize() const { return 512; }
+      /**
+      * Return the group to use for ephemeral Diffie-Hellman key agreement
+      */
+      virtual DL_Group dh_group() const { return DL_Group("modp/ietf/1536"); }
 
       /*
       * @return the minimum version that we will negotiate
@@ -54,14 +77,7 @@ class BOTAN_DLL TLS_Policy
       */
       virtual Version_Code pref_version() const { return TLS_V11; }
 
-      virtual bool check_cert(const std::vector<X509_Certificate>& cert_chain) const = 0;
-
       virtual ~TLS_Policy() {}
-   private:
-      virtual std::vector<u16bit> suite_list(bool use_rsa,
-                                             bool use_edh_rsa,
-                                             bool use_edh_dsa,
-                                             bool use_srp) const;
    };
 
 }

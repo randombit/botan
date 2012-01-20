@@ -9,7 +9,6 @@
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/stl_util.h>
-#include <botan/rsa.h>
 #include <botan/dh.h>
 
 namespace Botan {
@@ -269,15 +268,13 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
          else
             state->kex_priv = PKCS8::copy_key(*private_key, rng);
 
-         if(policy.require_client_auth())
+         std::vector<X509_Certificate> client_auth_CAs = policy.client_auth_CAs();
+
+         if(!client_auth_CAs.empty() && state->suite.sig_algo() != "")
             {
-            // FIXME: figure out the allowed CAs/cert types
-
-            std::vector<X509_Certificate> allowed_cas;
-
             state->cert_req = new Certificate_Req(writer,
                                                   state->hash,
-                                                  allowed_cas,
+                                                  client_auth_CAs,
                                                   state->version);
 
             state->set_expected_next(CERTIFICATE);
