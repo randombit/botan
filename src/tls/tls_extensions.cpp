@@ -17,20 +17,32 @@ TLS_Extension* make_extension(TLS_Data_Reader& reader,
                               u16bit code,
                               u16bit size)
    {
-   if(code == TLSEXT_SERVER_NAME_INDICATION)
-      return new Server_Name_Indicator(reader, size);
-   else if(code == TLSEXT_MAX_FRAGMENT_LENGTH)
-      return new Maximum_Fragment_Length(reader, size);
-   else if(code == TLSEXT_SRP_IDENTIFIER)
-      return new SRP_Identifier(reader, size);
-   else if(code == TLSEXT_SAFE_RENEGOTIATION)
-      return new Renegotation_Extension(reader, size);
-   else if(code == TLSEXT_SIGNATURE_ALGORITHMS)
-      return new Signature_Algorithms(reader, size);
-   else if(code == TLSEXT_NEXT_PROTOCOL)
-      return new Next_Protocol_Notification(reader, size);
-   else
-      return 0; // not known
+   switch(code)
+      {
+      case TLSEXT_SERVER_NAME_INDICATION:
+         return new Server_Name_Indicator(reader, size);
+
+      case TLSEXT_MAX_FRAGMENT_LENGTH:
+         return new Maximum_Fragment_Length(reader, size);
+
+      case TLSEXT_SRP_IDENTIFIER:
+         return new SRP_Identifier(reader, size);
+
+      case TLSEXT_USABLE_ELLIPTIC_CURVES:
+         return new Supported_Elliptic_Curves(reader, size);
+
+      case TLSEXT_SAFE_RENEGOTIATION:
+         return new Renegotation_Extension(reader, size);
+
+      case TLSEXT_SIGNATURE_ALGORITHMS:
+         return new Signature_Algorithms(reader, size);
+
+      case TLSEXT_NEXT_PROTOCOL:
+         return new Next_Protocol_Notification(reader, size);
+
+      default:
+         return 0; // not known
+      }
    }
 
 }
@@ -274,6 +286,122 @@ MemoryVector<byte> Next_Protocol_Notification::serialize() const
       }
 
    return buf;
+   }
+
+namespace {
+
+std::string tls_curve_id_to_name(u16bit id)
+   {
+   switch(id)
+      {
+      case 15:
+         return "secp160k1";
+      case 16:
+         return "secp160r1";
+      case 17:
+         return "secp160r2";
+      case 18:
+         return "secp192k1";
+      case 19:
+         return "secp192r1";
+      case 20:
+         return "secp224k1";
+      case 21:
+         return "secp224r1";
+      case 22:
+         return "secp256k1";
+      case 23:
+         return "secp256r1";
+      case 24:
+         return "secp384r1";
+      case 25:
+         return "secp521r1";
+      default:
+         return ""; // something we don't know or support
+      }
+   }
+
+u16bit tls_name_to_curve_id(const std::string& name)
+   {
+   if(name == "secp160k1")
+      return 15;
+   if(name == "secp160r1")
+      return 16;
+   if(name == "secp160r2")
+      return 17;
+   if(name == "secp192k1")
+      return 18;
+   if(name == "secp192r1")
+      return 19;
+   if(name == "secp224k1")
+      return 20;
+   if(name == "secp224r1")
+      return 21;
+   if(name == "secp256k1")
+      return 22;
+   if(name == "secp256r1")
+      return 23;
+   if(name == "secp384r1")
+      return 24;
+   if(name == "secp521r1")
+      return 25;
+
+   throw Invalid_Argument("tls_name_to_curve_id unknown name " + name);
+   }
+
+}
+
+MemoryVector<byte> Supported_Elliptic_Curves::serialize() const
+   {
+   MemoryVector<byte> buf(2);
+
+   for(size_t i = 0; i != m_curves.size(); ++i)
+      {
+      const u16bit id = tls_name_to_curve_id(m_curves[i]);
+      buf.push_back(get_byte(0, id));
+      buf.push_back(get_byte(1, id));
+      }
+
+   buf[0] = get_byte<u16bit>(0, buf.size()-2);
+   buf[1] = get_byte<u16bit>(1, buf.size()-2);
+   }
+
+Supported_Elliptic_Curves::Supported_Elliptic_Curves()
+   {
+   m_curves.push_back("secp521r1");
+   m_curves.push_back("secp384r1");
+   m_curves.push_back("secp256r1");
+   m_curves.push_back("secp256k1");
+   m_curves.push_back("secp224r1");
+   m_curves.push_back("secp224k1");
+   m_curves.push_back("secp192r1");
+   m_curves.push_back("secp192k1");
+   m_curves.push_back("secp160r2");
+   m_curves.push_back("secp160r1");
+   m_curves.push_back("secp160k1");
+   }
+
+Supported_Elliptic_Curves::Supported_Elliptic_Curves(TLS_Data_Reader& reader,
+                                                     u16bit extension_size)
+   {
+   u16bit len = reader.get_u16bit();
+
+   if(len + 2 != extension_size)
+      throw Decoding_Error("Inconsistent length field in elliptic curve list");
+
+   if(len % 2 == 1)
+      throw Decoding_Error("Elliptic curve list of strange size");
+
+   len /= 2;
+
+   for(size_t i = 0; i != len; ++i)
+      {
+      const u16bit id = reader.get_u16bit();
+      const std::string name = tls_curve_id_to_name(id);
+
+      if(name != "")
+         m_curves.push_back(name);
+      }
    }
 
 std::string Signature_Algorithms::hash_algo_name(byte code)

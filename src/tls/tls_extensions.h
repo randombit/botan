@@ -189,6 +189,31 @@ class Next_Protocol_Notification : public TLS_Extension
    };
 
 /**
+* Supported Elliptic Curves Extension (RFC 4492)
+*/
+class Supported_Elliptic_Curves : public TLS_Extension
+   {
+   public:
+      static TLS_Handshake_Extension_Type static_type()
+         { return TLSEXT_USABLE_ELLIPTIC_CURVES; }
+
+      TLS_Handshake_Extension_Type type() const { return static_type(); }
+
+      const std::vector<std::string>& curves() const { return m_curves; }
+
+      MemoryVector<byte> serialize() const;
+
+      Supported_Elliptic_Curves(); // default values, for client
+
+      Supported_Elliptic_Curves(TLS_Data_Reader& reader,
+                                u16bit extension_size);
+
+      bool empty() const { return m_curves.empty(); }
+   private:
+      std::vector<std::string> m_curves;
+   };
+
+/**
 * Signature Algorithms Extension for TLS 1.2 (RFC 5246)
 */
 class Signature_Algorithms : public TLS_Extension
