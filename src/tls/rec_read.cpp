@@ -41,7 +41,7 @@ void Record_Reader::reset()
 
    m_block_size = 0;
    m_iv_size = 0;
-   m_major = m_minor = 0;
+   m_version = Protocol_Version();
    m_seq_no = 0;
    set_maximum_fragment_size(0);
    }
@@ -57,10 +57,9 @@ void Record_Reader::set_maximum_fragment_size(size_t max_fragment)
 /*
 * Set the version to use
 */
-void Record_Reader::set_version(Version_Code version)
+void Record_Reader::set_version(Protocol_Version version)
    {
-   m_major = (version >> 8) & 0xFF;
-   m_minor = (version & 0xFF);
+   m_version = version;
    }
 
 /*
@@ -102,7 +101,7 @@ void Record_Reader::activate(const Ciphersuite& suite,
          );
       m_block_size = block_size_of(cipher_algo);
 
-      if(m_major > 3 || (m_major == 3 && m_minor >= 2))
+      if(m_version >= Protocol_Version::TLS_V11)
          m_iv_size = m_block_size;
       else
          m_iv_size = 0;
@@ -120,7 +119,7 @@ void Record_Reader::activate(const Ciphersuite& suite,
       {
       Algorithm_Factory& af = global_state().algorithm_factory();
 
-      if(m_major == 3 && m_minor == 0)
+      if(m_version == Protocol_Version::SSL_V3)
          m_mac = af.make_mac("SSL3-MAC(" + mac_algo + ")");
       else
          m_mac = af.make_mac("HMAC(" + mac_algo + ")");
@@ -220,12 +219,17 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
                           " from counterparty");
       }
 
-   const u16bit version    = make_u16bit(m_readbuf[1], m_readbuf[2]);
    const size_t record_len = make_u16bit(m_readbuf[3], m_readbuf[4]);
 
-   if(m_major && (m_readbuf[1] != m_major || m_readbuf[2] != m_minor))
-      throw TLS_Exception(PROTOCOL_VERSION,
-                          "Got unexpected version from counterparty");
+   if(m_version.major_version())
+      {
+      if(m_readbuf[1] != m_version.major_version() ||
+         m_readbuf[2] != m_version.minor_version())
+         {
+         throw TLS_Exception(PROTOCOL_VERSION,
+                             "Got unexpected version from counterparty");
+         }
+      }
 
    if(record_len > MAX_CIPHERTEXT_SIZE)
       throw TLS_Exception(RECORD_OVERFLOW,
@@ -282,7 +286,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
       * This particular countermeasure is recommended in the TLS 1.2
       * spec (RFC 5246) in section 6.2.3.2
       */
-      if(version == SSL_V3)
+      if(m_version == Protocol_Version::SSL_V3)
          {
          if(pad_value > m_block_size)
             pad_size = 0;
@@ -313,9 +317,11 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
    m_mac->update_be(m_seq_no);
    m_mac->update(m_readbuf[0]); // msg_type
 
-   if(version != SSL_V3)
-      for(size_t i = 0; i != 2; ++i)
-         m_mac->update(get_byte(i, version));
+   if(m_version != Protocol_Version::SSL_V3)
+      {
+      m_mac->update(m_version.major_version());
+      m_mac->update(m_version.minor_version());
+      }
 
    m_mac->update_be(plain_length);
    m_mac->update(&m_readbuf[TLS_HEADER_SIZE + m_iv_size], plain_length);

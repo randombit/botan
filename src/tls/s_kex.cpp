@@ -87,7 +87,7 @@ MemoryVector<byte> Server_Key_Exchange::serialize_params() const
 Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
                                          const std::string& kex_algo,
                                          const std::string& sig_algo,
-                                         Version_Code version)
+                                         Protocol_Version version)
    {
    if(buf.size() < 6)
       throw Decoding_Error("Server_Key_Exchange: Packet corrupted");
@@ -109,7 +109,7 @@ Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
 
    if(sig_algo != "")
       {
-      if(version >= TLS_V12)
+      if(version >= Protocol_Version::TLS_V12)
          {
          m_hash_algo = Signature_Algorithms::hash_algo_name(reader.get_byte());
          m_sig_algo = Signature_Algorithms::sig_algo_name(reader.get_byte());

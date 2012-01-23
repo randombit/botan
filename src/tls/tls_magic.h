@@ -24,14 +24,6 @@ enum Size_Limits {
    MAX_TLS_RECORD_SIZE = MAX_CIPHERTEXT_SIZE + TLS_HEADER_SIZE,
 };
 
-enum Version_Code {
-   NO_VERSION_SET     = 0x0000,
-   SSL_V3             = 0x0300,
-   TLS_V10            = 0x0301,
-   TLS_V11            = 0x0302,
-   TLS_V12            = 0x0303
-};
-
 enum Connection_Side { CLIENT = 1, SERVER = 2 };
 
 enum Record_Type {

@@ -21,7 +21,7 @@ namespace TLS {
 */
 Server_Hello::Server_Hello(Record_Writer& writer,
                            Handshake_Hash& hash,
-                           Version_Code version,
+                           Protocol_Version version,
                            const Client_Hello& c_hello,
                            const std::vector<X509_Certificate>& certs,
                            const Policy& policy,
@@ -68,7 +68,7 @@ Server_Hello::Server_Hello(Record_Writer& writer,
 Server_Hello::Server_Hello(Record_Writer& writer,
                            Handshake_Hash& hash,
                            const MemoryRegion<byte>& session_id,
-                           Version_Code ver,
+                           Protocol_Version ver,
                            u16bit ciphersuite,
                            byte compression,
                            size_t max_fragment_size,
@@ -104,12 +104,15 @@ Server_Hello::Server_Hello(const MemoryRegion<byte>& buf)
 
    TLS_Data_Reader reader(buf);
 
-   s_version = static_cast<Version_Code>(reader.get_u16bit());
+   const byte major_version = reader.get_byte();
+   const byte minor_version = reader.get_byte();
 
-   if(s_version != SSL_V3 &&
-      s_version != TLS_V10 &&
-      s_version != TLS_V11 &&
-      s_version != TLS_V12)
+   s_version = Protocol_Version(major_version, minor_version);
+
+   if(s_version != Protocol_Version::SSL_V3 &&
+      s_version != Protocol_Version::TLS_V10 &&
+      s_version != Protocol_Version::TLS_V11 &&
+      s_version != Protocol_Version::TLS_V12)
       {
       throw TLS_Exception(PROTOCOL_VERSION,
                           "Server_Hello: Unsupported server version");
@@ -146,8 +149,8 @@ MemoryVector<byte> Server_Hello::serialize() const
    {
    MemoryVector<byte> buf;
 
-   buf.push_back(static_cast<byte>(s_version >> 8));
-   buf.push_back(static_cast<byte>(s_version     ));
+   buf.push_back(s_version.major_version());
+   buf.push_back(s_version.minor_version());
    buf += s_random;
 
    append_tls_length_value(buf, m_session_id, 1);

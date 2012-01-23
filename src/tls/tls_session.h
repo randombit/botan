@@ -9,6 +9,7 @@
 #define TLS_SESSION_STATE_H__
 
 #include <botan/x509cert.h>
+#include <botan/tls_version.h>
 #include <botan/tls_magic.h>
 #include <botan/secmem.h>
 
@@ -28,7 +29,7 @@ class BOTAN_DLL Session
       */
       Session() :
          m_start_time(0),
-         m_version(0),
+         m_version(),
          m_ciphersuite(0),
          m_compression_method(0),
          m_connection_side(static_cast<Connection_Side>(0)),
@@ -40,16 +41,16 @@ class BOTAN_DLL Session
       * New session (sets session start time)
       */
       Session(const MemoryRegion<byte>& session_id,
-                  const MemoryRegion<byte>& master_secret,
-                  Version_Code version,
-                  u16bit ciphersuite,
-                  byte compression_method,
-                  Connection_Side side,
-                  bool secure_renegotiation_supported,
-                  size_t fragment_size,
-                  const std::vector<X509_Certificate>& peer_certs,
-                  const std::string& sni_hostname = "",
-                  const std::string& srp_identifier = "");
+              const MemoryRegion<byte>& master_secret,
+              Protocol_Version version,
+              u16bit ciphersuite,
+              byte compression_method,
+              Connection_Side side,
+              bool secure_renegotiation_supported,
+              size_t fragment_size,
+              const std::vector<X509_Certificate>& peer_certs,
+              const std::string& sni_hostname = "",
+              const std::string& srp_identifier = "");
 
       /**
       * Load a session from BER (created by BER_encode)
@@ -66,18 +67,7 @@ class BOTAN_DLL Session
       /**
       * Get the version of the saved session
       */
-      Version_Code version() const
-         { return static_cast<Version_Code>(m_version); }
-
-      /**
-      * Get the major version of the saved session
-      */
-      byte major_version() const { return get_byte(0, m_version); }
-
-      /**
-      * Get the minor version of the saved session
-      */
-      byte minor_version() const { return get_byte(1, m_version); }
+      Protocol_Version version() const { return m_version; }
 
       /**
       * Get the ciphersuite of the saved session
@@ -141,7 +131,7 @@ class BOTAN_DLL Session
       MemoryVector<byte> m_identifier;
       SecureVector<byte> m_master_secret;
 
-      u16bit m_version;
+      Protocol_Version m_version;
       u16bit m_ciphersuite;
       byte m_compression_method;
       Connection_Side m_connection_side;

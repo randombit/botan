@@ -60,7 +60,7 @@ class Handshake_State
                            std::string& sig_algo,
                            bool for_client_auth);
 
-      Version_Code version;
+      Protocol_Version version;
 
       class Client_Hello* client_hello;
       class Server_Hello* server_hello;

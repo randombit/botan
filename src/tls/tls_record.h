@@ -9,6 +9,7 @@
 #define BOTAN_TLS_RECORDS_H__
 
 #include <botan/tls_suites.h>
+#include <botan/tls_version.h>
 #include <botan/pipe.h>
 #include <botan/mac.h>
 #include <botan/secqueue.h>
@@ -49,7 +50,7 @@ class BOTAN_DLL Record_Writer
                     const Session_Keys& keys,
                     Connection_Side side);
 
-      void set_version(Version_Code version);
+      void set_version(Protocol_Version version);
 
       void reset();
 
@@ -74,7 +75,7 @@ class BOTAN_DLL Record_Writer
       size_t m_block_size, m_mac_size, m_iv_size, m_max_fragment;
 
       u64bit m_seq_no;
-      byte m_major, m_minor;
+      Protocol_Version m_version;
    };
 
 /**
@@ -103,7 +104,7 @@ class BOTAN_DLL Record_Reader
                     const Session_Keys& keys,
                     Connection_Side side);
 
-      void set_version(Version_Code version);
+      void set_version(Protocol_Version version);
 
       void reset();
 
@@ -129,7 +130,7 @@ class BOTAN_DLL Record_Reader
       MessageAuthenticationCode* m_mac;
       size_t m_block_size, m_iv_size, m_max_fragment;
       u64bit m_seq_no;
-      byte m_major, m_minor;
+      Protocol_Version m_version;
    };
 
 }

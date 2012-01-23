@@ -17,13 +17,13 @@ namespace TLS {
 
 namespace {
 
-std::string lookup_prf_name(Version_Code version)
+std::string lookup_prf_name(Protocol_Version version)
    {
-   if(version == SSL_V3)
+   if(version == Protocol_Version::SSL_V3)
       return "SSL3-PRF";
-   else if(version == TLS_V10 || version == TLS_V11)
+   else if(version == Protocol_Version::TLS_V10 || version == Protocol_Version::TLS_V11)
       return "TLS-PRF";
-   else if(version == TLS_V12)
+   else if(version == Protocol_Version::TLS_V12)
       return "TLS-12-PRF(SHA-256)";
    else
       throw Invalid_Argument("Session_Keys: Unknown version code");
@@ -65,7 +65,7 @@ Session_Keys::Session_Keys(Handshake_State* state,
       {
       SecureVector<byte> salt;
 
-      if(state->version != SSL_V3)
+      if(state->version != Protocol_Version::SSL_V3)
          salt += std::make_pair(MASTER_SECRET_MAGIC, sizeof(MASTER_SECRET_MAGIC));
 
       salt += state->client_hello->random();
@@ -75,7 +75,7 @@ Session_Keys::Session_Keys(Handshake_State* state,
       }
 
    SecureVector<byte> salt;
-   if(state->version != SSL_V3)
+   if(state->version != Protocol_Version::SSL_V3)
       salt += std::make_pair(KEY_GEN_MAGIC, sizeof(KEY_GEN_MAGIC));
    salt += state->server_hello->random();
    salt += state->client_hello->random();

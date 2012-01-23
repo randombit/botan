@@ -31,11 +31,11 @@ void Handshake_Hash::update(Handshake_Type handshake_type,
 /**
 * Return a TLS Handshake Hash
 */
-SecureVector<byte> Handshake_Hash::final(Version_Code version)
+SecureVector<byte> Handshake_Hash::final(Protocol_Version version)
    {
    SecureVector<byte> output;
 
-   if(version == TLS_V10 || version == TLS_V11)
+   if(version == Protocol_Version::TLS_V10 || version == Protocol_Version::TLS_V11)
       {
       MD5 md5;
       SHA_160 sha1;
@@ -46,7 +46,7 @@ SecureVector<byte> Handshake_Hash::final(Version_Code version)
       output += md5.final();
       output += sha1.final();
       }
-   else if(version == TLS_V12)
+   else if(version == Protocol_Version::TLS_V12)
       {
       // This might depend on the ciphersuite
       SHA_256 sha256;

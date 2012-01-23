@@ -150,8 +150,8 @@ MemoryVector<byte> Client_Hello::serialize() const
    {
    MemoryVector<byte> buf;
 
-   buf.push_back(static_cast<byte>(m_version >> 8));
-   buf.push_back(static_cast<byte>(m_version     ));
+   buf.push_back(m_version.major_version());
+   buf.push_back(m_version.minor_version());
    buf += m_random;
 
    append_tls_length_value(buf, m_session_id, 1);
@@ -174,7 +174,7 @@ MemoryVector<byte> Client_Hello::serialize() const
       extensions.add(new Server_Name_Indicator(m_hostname));
       extensions.add(new SRP_Identifier(m_srp_identifier));
 
-      if(m_version >= TLS_V12)
+      if(m_version >= Protocol_Version::TLS_V12)
          extensions.add(new Signature_Algorithms(m_supported_algos));
 
       if(m_next_protocol)
@@ -220,7 +220,7 @@ void Client_Hello::deserialize_sslv2(const MemoryRegion<byte>& buf)
       m_suites.push_back(make_u16bit(buf[i+1], buf[i+2]));
       }
 
-   m_version = static_cast<Version_Code>(make_u16bit(buf[1], buf[2]));
+   m_version = Protocol_Version(buf[1], buf[2]);
 
    m_random.resize(challenge_len);
    copy_mem(&m_random[0], &buf[9+cipher_spec_len+m_session_id_len], challenge_len);
@@ -242,7 +242,11 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
 
    TLS_Data_Reader reader(buf);
 
-   m_version = static_cast<Version_Code>(reader.get_u16bit());
+   const byte major_version = reader.get_byte();
+   const byte minor_version = reader.get_byte();
+
+   m_version = Protocol_Version(major_version, minor_version);
+
    m_random = reader.get_fixed<byte>(32);
 
    m_session_id = reader.get_range<byte>(1, 0, 32);
@@ -289,7 +293,7 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
       }
    else
       {
-      if(m_version >= TLS_V12)
+      if(m_version >= Protocol_Version::TLS_V12)
          {
          /*
          The rule for when a TLS 1.2 client not sending the extension

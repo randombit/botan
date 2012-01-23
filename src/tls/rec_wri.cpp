@@ -48,8 +48,7 @@ void Record_Writer::reset()
    delete m_mac;
    m_mac = 0;
 
-   m_major = 0;
-   m_minor = 0;
+   m_version = Protocol_Version();
    m_block_size = 0;
    m_mac_size = 0;
    m_iv_size = 0;
@@ -60,10 +59,9 @@ void Record_Writer::reset()
 /*
 * Set the version to use
 */
-void Record_Writer::set_version(Version_Code version)
+void Record_Writer::set_version(Protocol_Version version)
    {
-   m_major = (version >> 8) & 0xFF;
-   m_minor = (version & 0xFF);
+   m_version = version;
    }
 
 /*
@@ -112,7 +110,7 @@ void Record_Writer::activate(const Ciphersuite& suite,
          );
       m_block_size = block_size_of(cipher_algo);
 
-      if(m_major > 3 || (m_major == 3 && m_minor >= 2))
+      if(m_version >= Protocol_Version::TLS_V11)
          m_iv_size = m_block_size;
       else
          m_iv_size = 0;
@@ -130,7 +128,7 @@ void Record_Writer::activate(const Ciphersuite& suite,
       {
       Algorithm_Factory& af = global_state().algorithm_factory();
 
-      if(m_major == 3 && m_minor == 0)
+      if(m_version == Protocol_Version::SSL_V3)
          m_mac = af.make_mac("SSL3-MAC(" + mac_algo + ")");
       else
          m_mac = af.make_mac("HMAC(" + mac_algo + ")");
@@ -191,8 +189,8 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
       {
       const byte header[TLS_HEADER_SIZE] = {
          type,
-         m_major,
-         m_minor,
+         m_version.major_version(),
+         m_version.minor_version(),
          get_byte<u16bit>(0, length),
          get_byte<u16bit>(1, length)
       };
@@ -205,10 +203,10 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
       m_mac->update_be(m_seq_no);
       m_mac->update(type);
 
-      if(m_major > 3 || (m_major == 3 && m_minor != 0))
+      if(m_version != Protocol_Version::SSL_V3)
          {
-         m_mac->update(m_major);
-         m_mac->update(m_minor);
+         m_mac->update(m_version.major_version());
+         m_mac->update(m_version.minor_version());
          }
 
       m_mac->update(get_byte<u16bit>(0, length));
@@ -229,8 +227,8 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
 
       // TLS record header
       m_writebuf[0] = type;
-      m_writebuf[1] = m_major;
-      m_writebuf[2] = m_minor;
+      m_writebuf[1] = m_version.major_version();
+      m_writebuf[2] = m_version.minor_version();
       m_writebuf[3] = get_byte<u16bit>(0, buf_size);
       m_writebuf[4] = get_byte<u16bit>(1, buf_size);
 

@@ -9,6 +9,7 @@
 #define BOTAN_TLS_HANDSHAKE_HASH_H__
 
 #include <botan/secmem.h>
+#include <botan/tls_version.h>
 #include <botan/tls_magic.h>
 
 namespace Botan {
@@ -35,7 +36,7 @@ class Handshake_Hash
       void update(Handshake_Type handshake_type,
                   const MemoryRegion<byte>& handshake_msg);
 
-      SecureVector<byte> final(Version_Code version);
+      SecureVector<byte> final(Protocol_Version version);
       SecureVector<byte> final_ssl3(const MemoryRegion<byte>& master_secret);
 
       const SecureVector<byte>& get_contents() const

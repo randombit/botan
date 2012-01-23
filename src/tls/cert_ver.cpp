@@ -30,7 +30,7 @@ Certificate_Verify::Certificate_Verify(Record_Writer& writer,
 
    PK_Signer signer(*priv_key, format.first, format.second);
 
-   if(state->version == SSL_V3)
+   if(state->version == Protocol_Version::SSL_V3)
       {
       SecureVector<byte> md5_sha = state->hash.final_ssl3(
          state->keys.master_secret());
@@ -52,11 +52,11 @@ Certificate_Verify::Certificate_Verify(Record_Writer& writer,
 * Deserialize a Certificate Verify message
 */
 Certificate_Verify::Certificate_Verify(const MemoryRegion<byte>& buf,
-                                       Version_Code version)
+                                       Protocol_Version version)
    {
    TLS_Data_Reader reader(buf);
 
-   if(version >= TLS_V12)
+   if(version >= Protocol_Version::TLS_V12)
       {
       hash_algo = Signature_Algorithms::hash_algo_name(reader.get_byte());
       sig_algo = Signature_Algorithms::sig_algo_name(reader.get_byte());
@@ -99,7 +99,7 @@ bool Certificate_Verify::verify(const X509_Certificate& cert,
 
    PK_Verifier verifier(*key, format.first, format.second);
 
-   if(state->version == SSL_V3)
+   if(state->version == Protocol_Version::SSL_V3)
       {
       SecureVector<byte> md5_sha = state->hash.final_ssl3(
          state->keys.master_secret());

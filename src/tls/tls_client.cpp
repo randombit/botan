@@ -33,7 +33,7 @@ Client::Client(std::tr1::function<void (const byte[], size_t)> output_fn,
    session_manager(session_manager),
    creds(creds)
    {
-   writer.set_version(SSL_V3);
+   writer.set_version(Protocol_Version::SSL_V3);
 
    state = new Handshake_State;
    state->set_expected_next(SERVER_HELLO);
@@ -296,7 +296,7 @@ void Client::process_handshake_msg(Handshake_Type type,
          std::vector<byte> types = state->cert_req->acceptable_types();
 
          std::vector<X509_Certificate> client_certs =
-            creds.cert_chain("", // use types here
+            creds.cert_chain("", // FIXME use types here
                              "tls-client",
                              state->client_hello->sni_hostname());
 

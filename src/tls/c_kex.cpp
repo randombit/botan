@@ -89,17 +89,17 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 
       if(const RSA_PublicKey* rsa_pub = dynamic_cast<const RSA_PublicKey*>(pub_key.get()))
          {
-         const Version_Code pref_version = state->client_hello->version();
+         const Protocol_Version pref_version = state->client_hello->version();
 
          pre_master = rng.random_vec(48);
-         pre_master[0] = (pref_version >> 8) & 0xFF;
-         pre_master[1] = (pref_version     ) & 0xFF;
+         pre_master[0] = pref_version.major_version();
+         pre_master[1] = pref_version.minor_version();
 
          PK_Encryptor_EME encryptor(*rsa_pub, "PKCS1v15");
 
          key_material = encryptor.encrypt(pre_master, rng);
 
-         if(state->version == SSL_V3)
+         if(state->version == Protocol_Version::SSL_V3)
             include_length = false;
          }
       else
@@ -116,11 +116,11 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 */
 Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
                                          const Ciphersuite& suite,
-                                         Version_Code using_version)
+                                         Protocol_Version using_version)
    {
    include_length = true;
 
-   if(using_version == SSL_V3 && (suite.kex_algo() == ""))
+   if(using_version == Protocol_Version::SSL_V3 && (suite.kex_algo() == ""))
       include_length = false;
 
    if(include_length)
@@ -153,7 +153,7 @@ MemoryVector<byte> Client_Key_Exchange::serialize() const
 SecureVector<byte>
 Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
                                        const Private_Key* priv_key,
-                                       Version_Code version)
+                                       Protocol_Version client_version)
    {
 
    if(const DH_PrivateKey* dh_priv = dynamic_cast<const DH_PrivateKey*>(priv_key))
@@ -184,14 +184,17 @@ Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
          pre_master = decryptor.decrypt(key_material);
 
          if(pre_master.size() != 48 ||
-            make_u16bit(pre_master[0], pre_master[1]) != version)
+            client_version.major_version() != pre_master[0] ||
+            client_version.minor_version() != pre_master[1])
+            {
             throw Decoding_Error("Client_Key_Exchange: Secret corrupted");
+            }
       }
       catch(...)
          {
          pre_master = rng.random_vec(48);
-         pre_master[0] = (version >> 8) & 0xFF;
-         pre_master[1] = (version     ) & 0xFF;
+         pre_master[0] = client_version.major_version();
+         pre_master[1] = client_version.minor_version();
          }
 
       return pre_master;

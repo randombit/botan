@@ -13,8 +13,6 @@
 #include <botan/loadstor.h>
 #include <botan/secqueue.h>
 
-#include <stdio.h>
-
 namespace Botan {
 
 namespace TLS {
@@ -26,7 +24,7 @@ Certificate_Req::Certificate_Req(Record_Writer& writer,
                                  Handshake_Hash& hash,
                                  const Policy& policy,
                                  const std::vector<X509_Certificate>& ca_certs,
-                                 Version_Code version)
+                                 Protocol_Version version)
    {
    for(size_t i = 0; i != ca_certs.size(); ++i)
       names.push_back(ca_certs[i].subject_dn());
@@ -34,7 +32,7 @@ Certificate_Req::Certificate_Req(Record_Writer& writer,
    cert_types.push_back(RSA_CERT);
    cert_types.push_back(DSS_CERT);
 
-   if(version >= TLS_V12)
+   if(version >= Protocol_Version::TLS_V12)
       {
       std::vector<std::string> hashes = policy.allowed_hashes();
       std::vector<std::string> sigs = policy.allowed_signature_methods();
@@ -51,7 +49,7 @@ Certificate_Req::Certificate_Req(Record_Writer& writer,
 * Deserialize a Certificate Request message
 */
 Certificate_Req::Certificate_Req(const MemoryRegion<byte>& buf,
-                                 Version_Code version)
+                                 Protocol_Version version)
    {
    if(buf.size() < 4)
       throw Decoding_Error("Certificate_Req: Bad certificate request");
@@ -60,7 +58,7 @@ Certificate_Req::Certificate_Req(const MemoryRegion<byte>& buf,
 
    cert_types = reader.get_range_vector<byte>(1, 1, 255);
 
-   if(version >= TLS_V12)
+   if(version >= Protocol_Version::TLS_V12)
       {
       std::vector<byte> sig_hash_algs = reader.get_range_vector<byte>(2, 2, 65534);
 

@@ -17,7 +17,7 @@ namespace TLS {
 
 Session::Session(const MemoryRegion<byte>& session_identifier,
                          const MemoryRegion<byte>& master_secret,
-                         Version_Code version,
+                         Protocol_Version version,
                          u16bit ciphersuite,
                          byte compression_method,
                          Connection_Side side,
@@ -51,12 +51,15 @@ Session::Session(const byte ber[], size_t ber_len)
    ASN1_String sni_hostname_str;
    ASN1_String srp_identifier_str;
 
+   byte major_version = 0, minor_version = 0;
+
    BER_Decoder(ber, ber_len)
       .decode_and_check(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION),
                         "Unknown version in session structure")
       .decode(m_identifier, OCTET_STRING)
       .decode_integer_type(m_start_time)
-      .decode_integer_type(m_version)
+      .decode_integer_type(major_version)
+      .decode_integer_type(minor_version)
       .decode_integer_type(m_ciphersuite)
       .decode_integer_type(m_compression_method)
       .decode_integer_type(side_code)
@@ -67,6 +70,7 @@ Session::Session(const byte ber[], size_t ber_len)
       .decode(sni_hostname_str)
       .decode(srp_identifier_str);
 
+   m_version = Protocol_Version(major_version, minor_version);
    m_sni_hostname = sni_hostname_str.value();
    m_srp_identifier = srp_identifier_str.value();
    m_connection_side = static_cast<Connection_Side>(side_code);
@@ -79,7 +83,8 @@ SecureVector<byte> Session::BER_encode() const
          .encode(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION))
          .encode(m_identifier, OCTET_STRING)
          .encode(static_cast<size_t>(m_start_time))
-         .encode(static_cast<size_t>(m_version))
+         .encode(static_cast<size_t>(m_version.major_version()))
+         .encode(static_cast<size_t>(m_version.minor_version()))
          .encode(static_cast<size_t>(m_ciphersuite))
          .encode(static_cast<size_t>(m_compression_method))
          .encode(static_cast<size_t>(m_connection_side))

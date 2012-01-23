@@ -50,7 +50,7 @@ class Client_Hello : public Handshake_Message
    {
    public:
       Handshake_Type type() const { return CLIENT_HELLO; }
-      Version_Code version() const { return m_version; }
+      Protocol_Version version() const { return m_version; }
       const MemoryVector<byte>& session_id() const { return m_session_id; }
 
       std::vector<byte> session_id_vector() const
@@ -106,7 +106,7 @@ class Client_Hello : public Handshake_Message
       void deserialize(const MemoryRegion<byte>& buf);
       void deserialize_sslv2(const MemoryRegion<byte>& buf);
 
-      Version_Code m_version;
+      Protocol_Version m_version;
       MemoryVector<byte> m_session_id, m_random;
       std::vector<u16bit> m_suites;
       std::vector<byte> m_comp_methods;
@@ -128,7 +128,7 @@ class Server_Hello : public Handshake_Message
    {
    public:
       Handshake_Type type() const { return SERVER_HELLO; }
-      Version_Code version() { return s_version; }
+      Protocol_Version version() { return s_version; }
       const MemoryVector<byte>& session_id() const { return m_session_id; }
       u16bit ciphersuite() const { return suite; }
       byte compression_method() const { return comp_method; }
@@ -156,7 +156,7 @@ class Server_Hello : public Handshake_Message
 
       Server_Hello(Record_Writer& writer,
                    Handshake_Hash& hash,
-                   Version_Code version,
+                   Protocol_Version version,
                    const Client_Hello& other,
                    const std::vector<X509_Certificate>& certs,
                    const Policy& policies,
@@ -169,7 +169,7 @@ class Server_Hello : public Handshake_Message
       Server_Hello(Record_Writer& writer,
                    Handshake_Hash& hash,
                    const MemoryRegion<byte>& session_id,
-                   Version_Code ver,
+                   Protocol_Version ver,
                    u16bit ciphersuite,
                    byte compression,
                    size_t max_fragment_size,
@@ -183,7 +183,7 @@ class Server_Hello : public Handshake_Message
    private:
       MemoryVector<byte> serialize() const;
 
-      Version_Code s_version;
+      Protocol_Version s_version;
       MemoryVector<byte> m_session_id, s_random;
       u16bit suite;
       byte comp_method;
@@ -209,7 +209,7 @@ class Client_Key_Exchange : public Handshake_Message
 
       SecureVector<byte> pre_master_secret(RandomNumberGenerator& rng,
                                            const Private_Key* key,
-                                           Version_Code version);
+                                           Protocol_Version version);
 
       Client_Key_Exchange(Record_Writer& output,
                           Handshake_State* state,
@@ -218,7 +218,7 @@ class Client_Key_Exchange : public Handshake_Message
 
       Client_Key_Exchange(const MemoryRegion<byte>& buf,
                           const Ciphersuite& suite,
-                          Version_Code using_version);
+                          Protocol_Version using_version);
    private:
       MemoryVector<byte> serialize() const;
 
@@ -267,10 +267,10 @@ class Certificate_Req : public Handshake_Message
                       Handshake_Hash& hash,
                       const Policy& policy,
                       const std::vector<X509_Certificate>& allowed_cas,
-                      Version_Code version);
+                      Protocol_Version version);
 
       Certificate_Req(const MemoryRegion<byte>& buf,
-                      Version_Code version);
+                      Protocol_Version version);
    private:
       MemoryVector<byte> serialize() const;
 
@@ -302,7 +302,7 @@ class Certificate_Verify : public Handshake_Message
                          const Private_Key* key);
 
       Certificate_Verify(const MemoryRegion<byte>& buf,
-                         Version_Code version);
+                         Protocol_Version version);
    private:
       MemoryVector<byte> serialize() const;
 
@@ -372,7 +372,7 @@ class Server_Key_Exchange : public Handshake_Message
       Server_Key_Exchange(const MemoryRegion<byte>& buf,
                           const std::string& kex_alg,
                           const std::string& sig_alg,
-                          Version_Code version);
+                          Protocol_Version version);
    private:
       MemoryVector<byte> serialize() const;
       MemoryVector<byte> serialize_params() const;

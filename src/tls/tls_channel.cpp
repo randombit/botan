@@ -17,8 +17,8 @@ namespace Botan {
 namespace TLS {
 
 Channel::Channel(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
-                         std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
-                         std::tr1::function<bool (const Session&)> handshake_complete) :
+                 std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
+                 std::tr1::function<bool (const Session&)> handshake_complete) :
    proc_fn(proc_fn),
    handshake_fn(handshake_complete),
    writer(socket_output_fn),
@@ -133,7 +133,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
 * Split up and process handshake messages
 */
 void Channel::read_handshake(byte rec_type,
-                                 const MemoryRegion<byte>& rec_buf)
+                             const MemoryRegion<byte>& rec_buf)
    {
    if(rec_type == HANDSHAKE)
       {

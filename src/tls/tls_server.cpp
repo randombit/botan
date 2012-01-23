@@ -67,13 +67,13 @@ bool check_for_resume(Session& session_info,
 * TLS Server Constructor
 */
 Server::Server(std::tr1::function<void (const byte[], size_t)> output_fn,
-                       std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
-                       std::tr1::function<bool (const Session&)> handshake_fn,
-                       Session_Manager& session_manager,
-                       Credentials_Manager& creds,
-                       const Policy& policy,
-                       RandomNumberGenerator& rng,
-                       const std::vector<std::string>& next_protocols) :
+               std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
+               std::tr1::function<bool (const Session&)> handshake_fn,
+               Session_Manager& session_manager,
+               Credentials_Manager& creds,
+               const Policy& policy,
+               RandomNumberGenerator& rng,
+               const std::vector<std::string>& next_protocols) :
    Channel(output_fn, proc_fn, handshake_fn),
    policy(policy),
    rng(rng),
@@ -112,7 +112,7 @@ void Server::alert_notify(bool, Alert_Type type)
 * Split up and process handshake messages
 */
 void Server::read_handshake(byte rec_type,
-                                const MemoryRegion<byte>& rec_buf)
+                            const MemoryRegion<byte>& rec_buf)
    {
    if(rec_type == HANDSHAKE && !state)
       {
@@ -127,7 +127,7 @@ void Server::read_handshake(byte rec_type,
 * Process a handshake message
 */
 void Server::process_handshake_msg(Handshake_Type type,
-                                       const MemoryRegion<byte>& contents)
+                                   const MemoryRegion<byte>& contents)
    {
    if(state == 0)
       throw Unexpected_Message("Unexpected handshake message from client");
@@ -155,7 +155,7 @@ void Server::process_handshake_msg(Handshake_Type type,
 
       m_hostname = state->client_hello->sni_hostname();
 
-      Version_Code client_version = state->client_hello->version();
+      Protocol_Version client_version = state->client_hello->version();
 
       if(client_version < policy.min_version())
          throw TLS_Exception(PROTOCOL_VERSION,
@@ -184,7 +184,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             writer,
             state->hash,
             session_info.session_id(),
-            Version_Code(session_info.version()),
+            Protocol_Version(session_info.version()),
             session_info.ciphersuite(),
             session_info.compression_method(),
             session_info.fragment_size(),

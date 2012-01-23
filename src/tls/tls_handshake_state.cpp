@@ -93,7 +93,7 @@ Handshake_State::Handshake_State()
 
    kex_priv = 0;
 
-   version = SSL_V3;
+   version = Protocol_Version::SSL_V3;
 
    hand_expecting_mask = 0;
    hand_received_mask = 0;
@@ -133,9 +133,9 @@ bool Handshake_State::received_handshake_msg(Handshake_Type handshake_msg) const
 
 std::pair<std::string, Signature_Format>
 Handshake_State::choose_sig_format(const Private_Key* key,
-                                       std::string& hash_algo_out,
-                                       std::string& sig_algo_out,
-                                       bool for_client_auth)
+                                   std::string& hash_algo_out,
+                                   std::string& sig_algo_out,
+                                   bool for_client_auth)
    {
    const std::string sig_algo = key->algo_name();
 
@@ -153,15 +153,15 @@ Handshake_State::choose_sig_format(const Private_Key* key,
          }
       }
 
-   if(for_client_auth && this->version == SSL_V3)
+   if(for_client_auth && this->version == Protocol_Version::SSL_V3)
       hash_algo = "Raw";
 
-   if(hash_algo == "" && this->version == TLS_V12)
+   if(hash_algo == "" && this->version == Protocol_Version::TLS_V12)
       hash_algo = "SHA-1"; // TLS 1.2 but no compatible hashes set (?)
 
    BOTAN_ASSERT(hash_algo != "", "Couldn't figure out hash to use");
 
-   if(this->version >= TLS_V12)
+   if(this->version >= Protocol_Version::TLS_V12)
       {
       hash_algo_out = hash_algo;
       sig_algo_out = sig_algo;
@@ -185,9 +185,9 @@ Handshake_State::choose_sig_format(const Private_Key* key,
 
 std::pair<std::string, Signature_Format>
 Handshake_State::understand_sig_format(const Public_Key* key,
-                                           std::string hash_algo,
-                                           std::string sig_algo,
-                                           bool for_client_auth)
+                                       std::string hash_algo,
+                                       std::string sig_algo,
+                                       bool for_client_auth)
    {
    const std::string algo_name = key->algo_name();
 
@@ -199,7 +199,7 @@ Handshake_State::understand_sig_format(const Public_Key* key,
    Or not?
    */
 
-   if(this->version < TLS_V12)
+   if(this->version < Protocol_Version::TLS_V12)
       {
       if(hash_algo != "" || sig_algo != "")
          throw Decoding_Error("Counterparty sent hash/sig IDs with old version");
@@ -215,11 +215,11 @@ Handshake_State::understand_sig_format(const Public_Key* key,
 
    if(algo_name == "RSA")
       {
-      if(for_client_auth && this->version == SSL_V3)
+      if(for_client_auth && this->version == Protocol_Version::SSL_V3)
          {
          hash_algo = "Raw";
          }
-      else if(this->version < TLS_V12)
+      else if(this->version < Protocol_Version::TLS_V12)
          {
          hash_algo = "TLS.Digest.0";
          }
@@ -229,11 +229,11 @@ Handshake_State::understand_sig_format(const Public_Key* key,
       }
    else if(algo_name == "DSA")
       {
-      if(for_client_auth && this->version == SSL_V3)
+      if(for_client_auth && this->version == Protocol_Version::SSL_V3)
          {
          hash_algo = "Raw";
          }
-      else if(this->version < TLS_V12)
+      else if(this->version < Protocol_Version::TLS_V12)
          {
          hash_algo = "SHA-1";
          }

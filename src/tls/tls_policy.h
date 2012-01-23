@@ -8,7 +8,7 @@
 #ifndef BOTAN_TLS_POLICY_H__
 #define BOTAN_TLS_POLICY_H__
 
-#include <botan/tls_magic.h>
+#include <botan/tls_version.h>
 #include <botan/x509cert.h>
 #include <botan/dl_group.h>
 #include <vector>
@@ -60,7 +60,7 @@ class BOTAN_DLL Policy
       * renegotiation.
       *
       * @warning Changing this to false exposes you to injected
-      * plaintext attacks.
+      * plaintext attacks. Read the RFC for background.
       */
       virtual bool require_secure_renegotiation() const { return true; }
 
@@ -72,12 +72,14 @@ class BOTAN_DLL Policy
       /*
       * @return the minimum version that we will negotiate
       */
-      virtual Version_Code min_version() const { return SSL_V3; }
+      virtual Protocol_Version min_version() const
+         { return Protocol_Version::SSL_V3; }
 
       /*
       * @return the version we would prefer to negotiate
       */
-      virtual Version_Code pref_version() const { return TLS_V12; }
+      virtual Protocol_Version pref_version() const
+         { return Protocol_Version::TLS_V12; }
 
       virtual ~Policy() {}
    };

@@ -11,19 +11,17 @@
 #include <botan/sha2_32.h>
 #include <memory>
 
-#include <stdio.h>
-
 namespace Botan {
 
 namespace TLS {
 
 namespace {
 
-KDF* choose_tls_prf(Version_Code version)
+KDF* choose_tls_prf(Protocol_Version version)
    {
-   if(version == TLS_V10 || version == TLS_V11)
+   if(version == Protocol_Version::TLS_V10 || version == Protocol_Version::TLS_V11)
       return new TLS_PRF;
-   else if(version == TLS_V12)
+   else if(version == Protocol_Version::TLS_V12)
       return new TLS_12_PRF(new HMAC(new SHA_256)); // might depend on ciphersuite
    else
       throw TLS_Exception(PROTOCOL_VERSION,
@@ -36,7 +34,7 @@ KDF* choose_tls_prf(Version_Code version)
 MemoryVector<byte> finished_compute_verify(Handshake_State* state,
                                            Connection_Side side)
    {
-   if(state->version == SSL_V3)
+   if(state->version == Protocol_Version::SSL_V3)
       {
       const byte SSL_CLIENT_LABEL[] = { 0x43, 0x4C, 0x4E, 0x54 };
       const byte SSL_SERVER_LABEL[] = { 0x53, 0x52, 0x56, 0x52 };
