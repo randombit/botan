@@ -356,7 +356,8 @@ class Server_Key_Exchange : public Handshake_Message
    {
    public:
       Handshake_Type type() const { return SERVER_KEX; }
-      Public_Key* key() const;
+
+      const std::vector<BigInt>& params() const { return m_params; }
 
       bool verify(const X509_Certificate& cert,
                   TLS_Handshake_State* state) const;

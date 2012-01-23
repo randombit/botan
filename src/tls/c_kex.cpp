@@ -48,21 +48,28 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 
    if(state->server_kex)
       {
-      std::auto_ptr<Public_Key> pub_key(state->server_kex->key());
+      const std::vector<BigInt>& params = state->server_kex->params();
 
-      if(pub_key->algo_name() != state->suite.kex_algo())
-         throw TLS_Exception(HANDSHAKE_FAILURE,
-                             "Server sent a " + pub_key->algo_name() +
-                             " key but we expected " + state->suite.kex_algo());
-
-      if(const DH_PublicKey* dh_pub = dynamic_cast<const DH_PublicKey*>(pub_key.get()))
+      if(state->suite.kex_algo() == "DH")
          {
-         DH_PrivateKey priv_key(rng, dh_pub->get_domain());
+         if(params.size() != 3)
+            throw Decoding_Error("Bad params size for DH key exchange");
+
+         DL_Group group(params[0], params[1]);
+
+         if(!group.verify_group(rng, true))
+            throw Internal_Error("DH group failed validation, possible attack");
+
+         DH_PublicKey counterparty_key(group, params[2]);
+
+         // FIXME Check that public key is residue?
+
+         DH_PrivateKey priv_key(rng, group);
 
          PK_Key_Agreement ka(priv_key, "Raw");
 
          pre_master = strip_leading_zeros(
-            ka.derive_key(0, dh_pub->public_value()).bits_of());
+            ka.derive_key(0, counterparty_key.public_value()).bits_of());
 
          key_material = priv_key.public_value();
          }

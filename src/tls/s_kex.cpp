@@ -118,17 +118,6 @@ Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
    }
 
 /**
-* Return the public key
-*/
-Public_Key* Server_Key_Exchange::key() const
-   {
-   if(m_params.size() == 3)
-      return new DH_PublicKey(DL_Group(m_params[0], m_params[1]), m_params[2]);
-   else
-      throw Internal_Error("Server_Key_Exchange::key: No key set");
-   }
-
-/**
 * Verify a Server Key Exchange message
 */
 bool Server_Key_Exchange::verify(const X509_Certificate& cert,
