@@ -210,11 +210,9 @@ class Client_Key_Exchange : public Handshake_Message
                                            Version_Code version);
 
       Client_Key_Exchange(Record_Writer& output,
-                          TLS_Handshake_Hash& hash,
-                          RandomNumberGenerator& rng,
-                          const Public_Key* my_key,
-                          Version_Code using_version,
-                          Version_Code pref_version);
+                          TLS_Handshake_State* state,
+                          const std::vector<X509_Certificate>& peer_certs,
+                          RandomNumberGenerator& rng);
 
       Client_Key_Exchange(const MemoryRegion<byte>& buf,
                           const TLS_Ciphersuite& suite,

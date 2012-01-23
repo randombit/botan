@@ -9,9 +9,7 @@
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/stl_util.h>
-#include <botan/rsa.h>
-#include <botan/dsa.h>
-#include <botan/dh.h>
+#include <memory>
 
 namespace Botan {
 
@@ -255,9 +253,9 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
          throw TLS_Exception(BAD_CERTIFICATE,
                              "TLS_Client: Server certificate is not valid");
 
-      state->kex_pub = peer_certs[0].subject_public_key();
+      std::auto_ptr<Public_Key> peer_key(peer_certs[0].subject_public_key());
 
-      if(state->kex_pub->algo_name() != state->suite.sig_algo())
+      if(peer_key->algo_name() != state->suite.sig_algo())
          throw TLS_Exception(ILLEGAL_PARAMETER,
                              "Certificate key type did not match ciphersuite");
       }
@@ -276,21 +274,8 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
          if(!state->server_kex->verify(peer_certs[0], state))
             {
             throw TLS_Exception(DECRYPT_ERROR,
-                            "Bad signature on server key exchange");
+                                "Bad signature on server key exchange");
             }
-         }
-
-      if(state->kex_pub)
-         delete state->kex_pub;
-
-      state->kex_pub = state->server_kex->key();
-
-      // this should be in client_key_exchange
-      if(dynamic_cast<DH_PublicKey*>(state->kex_pub) &&
-         state->suite.kex_algo() != "DH")
-         {
-         throw TLS_Exception(HANDSHAKE_FAILURE,
-                             "Server sent DH key but negotiated something else");
          }
       }
    else if(type == CERTIFICATE_REQUEST)
@@ -319,9 +304,10 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
          }
 
       state->client_kex =
-         new Client_Key_Exchange(writer, state->hash, rng,
-                                 state->kex_pub, state->version,
-                                 state->client_hello->version());
+         new Client_Key_Exchange(writer,
+                                 state,
+                                 peer_certs,
+                                 rng);
 
       state->keys = Session_Keys(state,
                                  state->client_kex->pre_master_secret(),

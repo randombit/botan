@@ -40,42 +40,66 @@ SecureVector<byte> strip_leading_zeros(const MemoryRegion<byte>& input)
 * Create a new Client Key Exchange message
 */
 Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
-                                         TLS_Handshake_Hash& hash,
-                                         RandomNumberGenerator& rng,
-                                         const Public_Key* pub_key,
-                                         Version_Code using_version,
-                                         Version_Code pref_version)
+                                         TLS_Handshake_State* state,
+                                         const std::vector<X509_Certificate>& peer_certs,
+                                         RandomNumberGenerator& rng)
    {
    include_length = true;
 
-   if(const DH_PublicKey* dh_pub = dynamic_cast<const DH_PublicKey*>(pub_key))
+   if(state->server_kex)
       {
-      DH_PrivateKey priv_key(rng, dh_pub->get_domain());
+      std::auto_ptr<Public_Key> pub_key(state->server_kex->key());
 
-      PK_Key_Agreement ka(priv_key, "Raw");
+      if(pub_key->algo_name() != state->suite.kex_algo())
+         throw TLS_Exception(HANDSHAKE_FAILURE,
+                             "Server sent a " + pub_key->algo_name() +
+                             " key but we expected " + state->suite.kex_algo());
 
-      pre_master = strip_leading_zeros(
-         ka.derive_key(0, dh_pub->public_value()).bits_of());
+      if(const DH_PublicKey* dh_pub = dynamic_cast<const DH_PublicKey*>(pub_key.get()))
+         {
+         DH_PrivateKey priv_key(rng, dh_pub->get_domain());
 
-      key_material = priv_key.public_value();
-      }
-   else if(const RSA_PublicKey* rsa_pub = dynamic_cast<const RSA_PublicKey*>(pub_key))
-      {
-      pre_master = rng.random_vec(48);
-      pre_master[0] = (pref_version >> 8) & 0xFF;
-      pre_master[1] = (pref_version     ) & 0xFF;
+         PK_Key_Agreement ka(priv_key, "Raw");
 
-      PK_Encryptor_EME encryptor(*rsa_pub, "PKCS1v15");
+         pre_master = strip_leading_zeros(
+            ka.derive_key(0, dh_pub->public_value()).bits_of());
 
-      key_material = encryptor.encrypt(pre_master, rng);
-
-      if(using_version == SSL_V3)
-         include_length = false;
+         key_material = priv_key.public_value();
+         }
+      else
+         throw Internal_Error("Server key exchange not a known key type");
       }
    else
-      throw Invalid_Argument("Client_Key_Exchange: Key not RSA or DH");
+      {
+      // No server key exchange msg better mean a RSA key in the cert
 
-   send(writer, hash);
+      std::auto_ptr<Public_Key> pub_key(peer_certs[0].subject_public_key());
+
+      if(peer_certs.empty())
+         throw Internal_Error("No certificate and no server key exchange");
+
+      if(const RSA_PublicKey* rsa_pub = dynamic_cast<const RSA_PublicKey*>(pub_key.get()))
+         {
+         const Version_Code pref_version = state->client_hello->version();
+
+         pre_master = rng.random_vec(48);
+         pre_master[0] = (pref_version >> 8) & 0xFF;
+         pre_master[1] = (pref_version     ) & 0xFF;
+
+         PK_Encryptor_EME encryptor(*rsa_pub, "PKCS1v15");
+
+         key_material = encryptor.encrypt(pre_master, rng);
+
+         if(state->version == SSL_V3)
+            include_length = false;
+         }
+      else
+         throw TLS_Exception(HANDSHAKE_FAILURE,
+                             "Expected a RSA key in server cert but got " +
+                             pub_key->algo_name());
+      }
+
+   send(writer, state->hash);
    }
 
 /*

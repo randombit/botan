@@ -89,7 +89,6 @@ TLS_Handshake_State::TLS_Handshake_State()
    client_finished = 0;
    server_finished = 0;
 
-   kex_pub = 0;
    kex_priv = 0;
 
    version = SSL_V3;
@@ -264,7 +263,6 @@ TLS_Handshake_State::~TLS_Handshake_State()
    delete client_finished;
    delete server_finished;
 
-   delete kex_pub;
    delete kex_priv;
    }
 

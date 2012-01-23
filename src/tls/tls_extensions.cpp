@@ -364,6 +364,8 @@ MemoryVector<byte> Supported_Elliptic_Curves::serialize() const
 
    buf[0] = get_byte<u16bit>(0, buf.size()-2);
    buf[1] = get_byte<u16bit>(1, buf.size()-2);
+
+   return buf;
    }
 
 Supported_Elliptic_Curves::Supported_Elliptic_Curves()

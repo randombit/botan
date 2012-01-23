@@ -76,7 +76,6 @@ class TLS_Handshake_State
       class Finished* client_finished;
       class Finished* server_finished;
 
-      Public_Key* kex_pub;
       Private_Key* kex_priv;
 
       TLS_Ciphersuite suite;
