@@ -46,15 +46,6 @@ class BOTAN_DLL Policy
 
       virtual std::vector<byte> compression() const;
 
-      virtual bool check_cert(const std::vector<X509_Certificate>& cert_chain) const = 0;
-
-      /**
-      * If client authentication is desired, returns a list of allowable
-      * CAs for same. If not desired, returns empty list.
-      */
-      virtual std::vector<X509_Certificate> client_auth_CAs() const
-         { return std::vector<X509_Certificate>(); }
-
       /**
       * Require support for RFC 5746 extensions to enable
       * renegotiation.
@@ -70,7 +61,7 @@ class BOTAN_DLL Policy
       virtual DL_Group dh_group() const { return DL_Group("modp/ietf/1536"); }
 
       /*
-      * @return the minimum version that we will negotiate
+      * @return the minimum version that we are willing to negotiate
       */
       virtual Protocol_Version min_version() const
          { return Protocol_Version::SSL_V3; }

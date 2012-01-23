@@ -14,6 +14,8 @@
 #include <botan/auto_rng.h>
 #include <botan/init.h>
 
+#include "credentials.h"
+
 using Botan::byte;
 using asio::ip::tcp;
 
@@ -181,58 +183,6 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
       std::vector<byte> m_outbox;
    };
 
-class Credentials_Manager_Simple : public Botan::Credentials_Manager
-   {
-   public:
-      Credentials_Manager_Simple(Botan::RandomNumberGenerator& rng) : rng(rng) {}
-
-      std::vector<Botan::X509_Certificate> cert_chain(
-         const std::string& cert_key_type,
-         const std::string& type,
-         const std::string& context)
-         {
-         const std::string hostname = (context == "" ? "localhost" : context);
-
-         Botan::X509_Certificate cert(hostname + ".crt");
-         Botan::Private_Key* key = Botan::PKCS8::load_key(hostname + ".key", rng);
-
-         certs_and_keys[cert] = key;
-
-         std::vector<Botan::X509_Certificate> certs;
-         certs.push_back(cert);
-         return certs;
-         }
-
-      Botan::Private_Key* private_key_for(const Botan::X509_Certificate& cert,
-                                          const std::string& type,
-                                          const std::string& context)
-         {
-         return certs_and_keys[cert];
-         }
-
-   private:
-      Botan::RandomNumberGenerator& rng;
-      std::map<Botan::X509_Certificate, Botan::Private_Key*> certs_and_keys;
-   };
-
-class Server_TLS_Policy : public Botan::TLS::Policy
-   {
-   public:
-      //bool require_client_auth() const { return true; }
-
-      bool check_cert(const std::vector<Botan::X509_Certificate>& certs) const
-         {
-         for(size_t i = 0; i != certs.size(); ++i)
-            {
-            std::cout << certs[i].to_string();
-            }
-
-         std::cout << "Warning: not checking cert signatures\n";
-
-         return true;
-         }
-   };
-
 class tls_server
    {
    public:
@@ -290,7 +240,7 @@ class tls_server
 
       Botan::AutoSeeded_RNG m_rng;
       Botan::TLS::Session_Manager_In_Memory m_session_manager;
-      Server_TLS_Policy m_policy;
+      Botan::TLS::Policy m_policy;
       Credentials_Manager_Simple m_creds;
    };
 

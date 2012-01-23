@@ -62,6 +62,10 @@ class BOTAN_DLL Credentials_Manager
                                 bool generate_fake_on_unknown);
 
       /**
+      * Return a cert chain we can use, ordered from leaf to root.
+      * Assumed that we can get the private key of the leaf with
+      * private_key_for
+      *
       * @param cert_key_type is a string representing the key type
       * ("rsa", "dsa", "ecdsa", etc) or empty if no preference.
       */
@@ -71,8 +75,29 @@ class BOTAN_DLL Credentials_Manager
          const std::string& context);
 
       /**
+      * Return a list of the certificates of CAs that we trust in this
+      * type/context.
+      */
+      virtual std::vector<X509_Certificate> trusted_certificate_authorities(
+         const std::string& type,
+         const std::string& context);
+
+      /**
+      * Check the certificate chain is valid up to a trusted root, and
+      * optionally (if hostname != "") that the hostname given is
+      * consistent with the leaf certificate.
+      *
+      * This function should throw an exception derived from
+      * std::exception with an informative what() result if the
+      * certificate chain cannot be verified.
+      */
+      virtual void verify_certificate_chain(
+         const std::vector<X509_Certificate>& cert_chain,
+         const std::string& hostname = "");
+
+      /**
       * @return private key associated with this certificate if we should
-      *         use it with this context
+      *         use it with this context. cert was returned by cert_chain
       */
       virtual Private_Key* private_key_for(const X509_Certificate& cert,
                                            const std::string& type,

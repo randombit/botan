@@ -251,9 +251,15 @@ void Client::process_handshake_msg(Handshake_Type type,
          throw TLS_Exception(HANDSHAKE_FAILURE,
                              "Client: No certificates sent by server");
 
-      if(!policy.check_cert(peer_certs))
-         throw TLS_Exception(BAD_CERTIFICATE,
-                             "Client: Server certificate is not valid");
+      try
+         {
+         creds.verify_certificate_chain(peer_certs,
+                                        state->client_hello->sni_hostname());
+         }
+      catch(std::exception& e)
+         {
+         throw TLS_Exception(BAD_CERTIFICATE, e.what());
+         }
 
       std::auto_ptr<Public_Key> peer_key(peer_certs[0].subject_public_key());
 

@@ -270,7 +270,8 @@ void Server::process_handshake_msg(Handshake_Type type,
          else
             state->kex_priv = PKCS8::copy_key(*private_key, rng);
 
-         std::vector<X509_Certificate> client_auth_CAs = policy.client_auth_CAs();
+         std::vector<X509_Certificate> client_auth_CAs =
+            creds.trusted_certificate_authorities("tls-server", m_hostname);
 
          if(!client_auth_CAs.empty() && state->suite.sig_algo() != "")
             {
@@ -342,7 +343,14 @@ void Server::process_handshake_msg(Handshake_Type type,
       if(!sig_valid)
          throw TLS_Exception(DECRYPT_ERROR, "Client cert verify failed");
 
-      // FIXME: check cert was issued by a CA we requested, signatures, etc.
+      try
+         {
+         creds.verify_certificate_chain(client_certs);
+         }
+      catch(std::exception& e)
+         {
+         throw TLS_Exception(BAD_CERTIFICATE, e.what());
+         }
 
       state->set_expected_next(HANDSHAKE_CCS);
       }

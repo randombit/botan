@@ -8,6 +8,7 @@
 #include <botan/secqueue.h>
 
 #include "socket.h"
+#include "credentials.h"
 
 using namespace Botan;
 
@@ -17,40 +18,6 @@ using namespace std::tr1::placeholders;
 #include <string>
 #include <iostream>
 #include <memory>
-
-class Credentials_Manager_Simple : public Credentials_Manager
-   {
-   public:
-      Credentials_Manager_Simple(RandomNumberGenerator& rng) : rng(rng) {}
-
-      std::vector<X509_Certificate> cert_chain(
-         const std::string& cert_key_type,
-         const std::string& type,
-         const std::string& context)
-         {
-         const std::string hostname = (context == "" ? "localhost" : context);
-
-         X509_Certificate cert(hostname + ".crt");
-         Private_Key* key = PKCS8::load_key(hostname + ".key", rng);
-
-         certs_and_keys[cert] = key;
-
-         std::vector<X509_Certificate> certs;
-         certs.push_back(cert);
-         return certs;
-         }
-
-      Private_Key* private_key_for(const X509_Certificate& cert,
-                                   const std::string& type,
-                                   const std::string& context)
-         {
-         return certs_and_keys[cert];
-         }
-
-   private:
-      RandomNumberGenerator& rng;
-      std::map<X509_Certificate, Private_Key*> certs_and_keys;
-   };
 
 bool handshake_complete(const TLS::Session& session)
    {
@@ -158,24 +125,6 @@ class Blocking_TLS_Server
       bool exit;
    };
 
-class Server_TLS_Policy : public TLS::Policy
-   {
-   public:
-      //bool require_client_auth() const { return true; }
-
-      bool check_cert(const std::vector<X509_Certificate>& certs) const
-         {
-         for(size_t i = 0; i != certs.size(); ++i)
-            {
-            std::cout << certs[i].to_string();
-            }
-
-         std::cout << "Warning: not checking cert signatures\n";
-
-         return true;
-         }
-   };
-
 int main(int argc, char* argv[])
    {
    int port = 4433;
@@ -192,7 +141,7 @@ int main(int argc, char* argv[])
 
       Server_Socket listener(port);
 
-      Server_TLS_Policy policy;
+      TLS::Policy policy;
 
       TLS::Session_Manager_In_Memory sessions;
 

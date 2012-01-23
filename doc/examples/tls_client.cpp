@@ -16,27 +16,11 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#include "credentials.h"
+
 using namespace Botan;
 
 using namespace std::tr1::placeholders;
-
-class Client_TLS_Policy : public TLS::Policy
-   {
-   public:
-      //Version_Code pref_version() const { return TLS_V12; }
-
-      bool check_cert(const std::vector<X509_Certificate>& certs) const
-         {
-         for(size_t i = 0; i != certs.size(); ++i)
-            {
-            std::cout << certs[i].to_string();
-            }
-
-         std::cout << "Warning: not checking cert signatures\n";
-
-         return true;
-         }
-   };
 
 int connect_to_host(const std::string& host, u16bit port)
    {
@@ -206,38 +190,6 @@ void doit(RandomNumberGenerator& rng,
    ::close(sockfd);
    }
 
-class Credentials_Manager_Simple : public Credentials_Manager
-   {
-   public:
-      Credentials_Manager_Simple(RandomNumberGenerator& rng) : rng(rng) {}
-
-      std::vector<X509_Certificate> cert_chain(
-         const std::string& cert_key_type,
-         const std::string& type,
-         const std::string& context)
-         {
-         X509_Certificate cert("user-rsa.crt");
-         Private_Key* key = PKCS8::load_key("user-rsa.key", rng);
-
-         certs_and_keys[cert] = key;
-
-         std::vector<X509_Certificate> certs;
-         certs.push_back(cert);
-         return certs;
-         }
-
-      Private_Key* private_key_for(const X509_Certificate& cert,
-                                   const std::string& type,
-                                   const std::string& context)
-         {
-         return certs_and_keys[cert];
-         }
-
-   private:
-      RandomNumberGenerator& rng;
-      std::map<X509_Certificate, Private_Key*> certs_and_keys;
-   };
-
 int main(int argc, char* argv[])
    {
    if(argc != 2 && argc != 3)
@@ -250,7 +202,7 @@ int main(int argc, char* argv[])
       {
       LibraryInitializer botan_init;
       AutoSeeded_RNG rng;
-      Client_TLS_Policy policy;
+      TLS::Policy policy;
       TLS::Session_Manager_In_Memory session_manager;
 
       Credentials_Manager_Simple creds(rng);
