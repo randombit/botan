@@ -16,6 +16,8 @@
 
 namespace Botan {
 
+namespace TLS {
+
 /*
 * Record_Writer Constructor
 */
@@ -67,7 +69,7 @@ void Record_Writer::set_version(Version_Code version)
 /*
 * Set the keys for writing
 */
-void Record_Writer::activate(const TLS_Ciphersuite& suite,
+void Record_Writer::activate(const Ciphersuite& suite,
                              const Session_Keys& keys,
                              Connection_Side side)
    {
@@ -282,5 +284,7 @@ void Record_Writer::alert(Alert_Level level, Alert_Type type)
    byte alert[2] = { level, type };
    send(ALERT, alert, sizeof(alert));
    }
+
+}
 
 }

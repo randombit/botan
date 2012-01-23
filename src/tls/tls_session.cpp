@@ -13,7 +13,9 @@
 
 namespace Botan {
 
-TLS_Session::TLS_Session(const MemoryRegion<byte>& session_identifier,
+namespace TLS {
+
+Session::Session(const MemoryRegion<byte>& session_identifier,
                          const MemoryRegion<byte>& master_secret,
                          Version_Code version,
                          u16bit ciphersuite,
@@ -41,7 +43,7 @@ TLS_Session::TLS_Session(const MemoryRegion<byte>& session_identifier,
       m_peer_certificate = certs[0].BER_encode();
    }
 
-TLS_Session::TLS_Session(const byte ber[], size_t ber_len)
+Session::Session(const byte ber[], size_t ber_len)
    {
    BER_Decoder decoder(ber, ber_len);
 
@@ -70,7 +72,7 @@ TLS_Session::TLS_Session(const byte ber[], size_t ber_len)
    m_connection_side = static_cast<Connection_Side>(side_code);
    }
 
-SecureVector<byte> TLS_Session::BER_encode() const
+SecureVector<byte> Session::BER_encode() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
@@ -90,5 +92,7 @@ SecureVector<byte> TLS_Session::BER_encode() const
       .end_cons()
    .get_contents();
    }
+
+}
 
 }

@@ -15,11 +15,13 @@
 
 namespace Botan {
 
+namespace TLS {
+
 /**
 * TLS Policy Base Class
 * Inherit and overload as desired to suite local policy concerns
 */
-class BOTAN_DLL TLS_Policy
+class BOTAN_DLL Policy
    {
    public:
       /*
@@ -77,8 +79,10 @@ class BOTAN_DLL TLS_Policy
       */
       virtual Version_Code pref_version() const { return TLS_V12; }
 
-      virtual ~TLS_Policy() {}
+      virtual ~Policy() {}
    };
+
+}
 
 }
 

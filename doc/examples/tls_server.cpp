@@ -52,7 +52,7 @@ class Credentials_Manager_Simple : public Credentials_Manager
       std::map<X509_Certificate, Private_Key*> certs_and_keys;
    };
 
-bool handshake_complete(const TLS_Session& session)
+bool handshake_complete(const TLS::Session& session)
    {
    printf("Handshake complete, protocol=%04X ciphersuite=%04X compression=%d\n",
           session.version(), session.ciphersuite(),
@@ -69,9 +69,9 @@ class Blocking_TLS_Server
       Blocking_TLS_Server(std::tr1::function<void (const byte[], size_t)> output_fn,
                           std::tr1::function<size_t (byte[], size_t)> input_fn,
                           std::vector<std::string>& protocols,
-                          TLS_Session_Manager& sessions,
+                          TLS::Session_Manager& sessions,
                           Credentials_Manager& creds,
-                          TLS_Policy& policy,
+                          TLS::Policy& policy,
                           RandomNumberGenerator& rng) :
          input_fn(input_fn),
          server(
@@ -109,7 +109,7 @@ class Blocking_TLS_Server
 
       bool is_active() const { return server.is_active(); }
 
-      TLS_Server& underlying() { return server; }
+      TLS::Server& underlying() { return server; }
    private:
       void read_loop(size_t init_desired = 0)
          {
@@ -135,7 +135,7 @@ class Blocking_TLS_Server
 
       void reader_fn(const byte buf[], size_t buf_len, u16bit alert_code)
          {
-         if(buf_len == 0 && alert_code != NULL_ALERT)
+         if(buf_len == 0 && alert_code != TLS::NULL_ALERT)
             {
             printf("Alert: %d\n", alert_code);
             //exit = true;
@@ -153,12 +153,12 @@ class Blocking_TLS_Server
          }
 
       std::tr1::function<size_t (byte[], size_t)> input_fn;
-      TLS_Server server;
+      TLS::Server server;
       SecureQueue read_queue;
       bool exit;
    };
 
-class Server_TLS_Policy : public TLS_Policy
+class Server_TLS_Policy : public TLS::Policy
    {
    public:
       //bool require_client_auth() const { return true; }
@@ -194,7 +194,7 @@ int main(int argc, char* argv[])
 
       Server_TLS_Policy policy;
 
-      TLS_Session_Manager_In_Memory sessions;
+      TLS::Session_Manager_In_Memory sessions;
 
       Credentials_Manager_Simple creds(rng);
 

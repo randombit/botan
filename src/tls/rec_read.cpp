@@ -14,6 +14,8 @@
 
 namespace Botan {
 
+namespace TLS {
+
 Record_Reader::Record_Reader() :
    m_readbuf(TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE),
    m_mac(0)
@@ -64,7 +66,7 @@ void Record_Reader::set_version(Version_Code version)
 /*
 * Set the keys for reading
 */
-void Record_Reader::activate(const TLS_Ciphersuite& suite,
+void Record_Reader::activate(const Ciphersuite& suite,
                              const Session_Keys& keys,
                              Connection_Side side)
    {
@@ -334,5 +336,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
    m_readbuf_pos = 0;
    return 0;
    }
+
+}
 
 }

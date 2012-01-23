@@ -13,12 +13,14 @@
 
 namespace Botan {
 
+namespace TLS {
+
 using namespace Botan;
 
 /**
 * TLS Handshake Hash
 */
-class TLS_Handshake_Hash
+class Handshake_Hash
    {
    public:
       void update(const byte in[], size_t length)
@@ -42,6 +44,8 @@ class TLS_Handshake_Hash
    private:
       SecureVector<byte> data;
    };
+
+}
 
 }
 

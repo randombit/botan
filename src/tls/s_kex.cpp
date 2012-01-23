@@ -15,11 +15,13 @@
 
 namespace Botan {
 
+namespace TLS {
+
 /**
 * Create a new Server Key Exchange message
 */
 Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
-                                         TLS_Handshake_State* state,
+                                         Handshake_State* state,
                                          RandomNumberGenerator& rng,
                                          const Private_Key* private_key)
    {
@@ -121,7 +123,7 @@ Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
 * Verify a Server Key Exchange message
 */
 bool Server_Key_Exchange::verify(const X509_Certificate& cert,
-                                 TLS_Handshake_State* state) const
+                                 Handshake_State* state) const
    {
    std::auto_ptr<Public_Key> key(cert.subject_public_key());
 
@@ -136,5 +138,7 @@ bool Server_Key_Exchange::verify(const X509_Certificate& cert,
 
    return verifier.check_signature(m_signature);
    }
+
+}
 
 }

@@ -32,14 +32,16 @@
 
 namespace Botan {
 
+namespace TLS {
+
 /**
 * SSL/TLS Handshake State
 */
-class TLS_Handshake_State
+class Handshake_State
    {
    public:
-      TLS_Handshake_State();
-      ~TLS_Handshake_State();
+      Handshake_State();
+      ~Handshake_State();
 
       bool received_handshake_msg(Handshake_Type handshake_msg) const;
 
@@ -78,9 +80,9 @@ class TLS_Handshake_State
 
       Private_Key* kex_priv;
 
-      TLS_Ciphersuite suite;
+      Ciphersuite suite;
       Session_Keys keys;
-      TLS_Handshake_Hash hash;
+      Handshake_Hash hash;
 
       SecureQueue queue;
 
@@ -97,6 +99,8 @@ class TLS_Handshake_State
    private:
       u32bit hand_expecting_mask, hand_received_mask;
    };
+
+}
 
 }
 

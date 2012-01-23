@@ -14,15 +14,17 @@
 
 namespace Botan {
 
+namespace TLS {
+
 /*
 * Create a new Server Hello message
 */
 Server_Hello::Server_Hello(Record_Writer& writer,
-                           TLS_Handshake_Hash& hash,
+                           Handshake_Hash& hash,
                            Version_Code version,
                            const Client_Hello& c_hello,
                            const std::vector<X509_Certificate>& certs,
-                           const TLS_Policy& policy,
+                           const Policy& policy,
                            bool client_has_secure_renegotiation,
                            const MemoryRegion<byte>& reneg_info,
                            bool client_has_npn,
@@ -64,7 +66,7 @@ Server_Hello::Server_Hello(Record_Writer& writer,
 * Create a new Server Hello message
 */
 Server_Hello::Server_Hello(Record_Writer& writer,
-                           TLS_Handshake_Hash& hash,
+                           Handshake_Hash& hash,
                            const MemoryRegion<byte>& session_id,
                            Version_Code ver,
                            u16bit ciphersuite,
@@ -121,11 +123,11 @@ Server_Hello::Server_Hello(const MemoryRegion<byte>& buf)
 
    comp_method = reader.get_byte();
 
-   TLS_Extensions extensions(reader);
+   Extensions extensions(reader);
 
    if(Renegotation_Extension* reneg = extensions.get<Renegotation_Extension>())
       {
-      // checked by TLS_Client / TLS_Server as they know the handshake state
+      // checked by Client / Server as they know the handshake state
       m_secure_renegotiation = true;
       m_renegotiation_info = reneg->renegotiation_info();
       }
@@ -155,7 +157,7 @@ MemoryVector<byte> Server_Hello::serialize() const
 
    buf.push_back(comp_method);
 
-   TLS_Extensions extensions;
+   Extensions extensions;
 
    if(m_secure_renegotiation)
       extensions.add(new Renegotation_Extension(m_renegotiation_info));
@@ -175,7 +177,7 @@ MemoryVector<byte> Server_Hello::serialize() const
 * Create a new Server Hello Done message
 */
 Server_Hello_Done::Server_Hello_Done(Record_Writer& writer,
-                                     TLS_Handshake_Hash& hash)
+                                     Handshake_Hash& hash)
    {
    send(writer, hash);
    }
@@ -196,5 +198,7 @@ MemoryVector<byte> Server_Hello_Done::serialize() const
    {
    return MemoryVector<byte>();
    }
+
+}
 
 }

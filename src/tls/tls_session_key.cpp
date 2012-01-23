@@ -13,6 +13,8 @@
 
 namespace Botan {
 
+namespace TLS {
+
 namespace {
 
 std::string lookup_prf_name(Version_Code version)
@@ -32,7 +34,7 @@ std::string lookup_prf_name(Version_Code version)
 /**
 * Session_Keys Constructor
 */
-Session_Keys::Session_Keys(TLS_Handshake_State* state,
+Session_Keys::Session_Keys(Handshake_State* state,
                            const MemoryRegion<byte>& pre_master_secret,
                            bool resuming)
    {
@@ -99,5 +101,7 @@ Session_Keys::Session_Keys(TLS_Handshake_State* state,
 
    s_iv = InitializationVector(key_data, cipher_ivlen);
    }
+
+}
 
 }

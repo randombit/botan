@@ -13,6 +13,8 @@
 
 namespace Botan {
 
+namespace TLS {
+
 /**
 * Exception Base Class
 */
@@ -37,6 +39,8 @@ struct BOTAN_DLL Unexpected_Message : public TLS_Exception
    Unexpected_Message(const std::string& err) :
       TLS_Exception(UNEXPECTED_MESSAGE, err) {}
    };
+
+}
 
 }
 

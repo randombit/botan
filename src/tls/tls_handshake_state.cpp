@@ -11,6 +11,8 @@
 
 namespace Botan {
 
+namespace TLS {
+
 namespace {
 
 u32bit bitmask_for_handshake_type(Handshake_Type type)
@@ -73,7 +75,7 @@ u32bit bitmask_for_handshake_type(Handshake_Type type)
 /*
 * Initialize the SSL/TLS Handshake State
 */
-TLS_Handshake_State::TLS_Handshake_State()
+Handshake_State::Handshake_State()
    {
    client_hello = 0;
    server_hello = 0;
@@ -97,7 +99,7 @@ TLS_Handshake_State::TLS_Handshake_State()
    hand_received_mask = 0;
    }
 
-void TLS_Handshake_State::confirm_transition_to(Handshake_Type handshake_msg)
+void Handshake_State::confirm_transition_to(Handshake_Type handshake_msg)
    {
    const u32bit mask = bitmask_for_handshake_type(handshake_msg);
 
@@ -117,12 +119,12 @@ void TLS_Handshake_State::confirm_transition_to(Handshake_Type handshake_msg)
    hand_expecting_mask = 0;
    }
 
-void TLS_Handshake_State::set_expected_next(Handshake_Type handshake_msg)
+void Handshake_State::set_expected_next(Handshake_Type handshake_msg)
    {
    hand_expecting_mask |= bitmask_for_handshake_type(handshake_msg);
    }
 
-bool TLS_Handshake_State::received_handshake_msg(Handshake_Type handshake_msg) const
+bool Handshake_State::received_handshake_msg(Handshake_Type handshake_msg) const
    {
    const u32bit mask = bitmask_for_handshake_type(handshake_msg);
 
@@ -130,7 +132,7 @@ bool TLS_Handshake_State::received_handshake_msg(Handshake_Type handshake_msg) c
    }
 
 std::pair<std::string, Signature_Format>
-TLS_Handshake_State::choose_sig_format(const Private_Key* key,
+Handshake_State::choose_sig_format(const Private_Key* key,
                                        std::string& hash_algo_out,
                                        std::string& sig_algo_out,
                                        bool for_client_auth)
@@ -182,7 +184,7 @@ TLS_Handshake_State::choose_sig_format(const Private_Key* key,
    }
 
 std::pair<std::string, Signature_Format>
-TLS_Handshake_State::understand_sig_format(const Public_Key* key,
+Handshake_State::understand_sig_format(const Public_Key* key,
                                            std::string hash_algo,
                                            std::string sig_algo,
                                            bool for_client_auth)
@@ -247,7 +249,7 @@ TLS_Handshake_State::understand_sig_format(const Public_Key* key,
 /*
 * Destroy the SSL/TLS Handshake State
 */
-TLS_Handshake_State::~TLS_Handshake_State()
+Handshake_State::~Handshake_State()
    {
    delete client_hello;
    delete server_hello;
@@ -265,5 +267,7 @@ TLS_Handshake_State::~TLS_Handshake_State()
 
    delete kex_priv;
    }
+
+}
 
 }

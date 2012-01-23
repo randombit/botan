@@ -12,6 +12,8 @@
 
 namespace Botan {
 
+namespace TLS {
+
 /**
 * SSL/TLS Alert Message
 */
@@ -54,6 +56,8 @@ class Alert
       bool fatal;
       Alert_Type type_code;
    };
+
+}
 
 }
 

@@ -14,13 +14,15 @@
 
 namespace Botan {
 
+namespace TLS {
+
 /**
 * Ciphersuite Information
 */
-class BOTAN_DLL TLS_Ciphersuite
+class BOTAN_DLL Ciphersuite
    {
    public:
-      static TLS_Ciphersuite lookup_ciphersuite(u16bit suite);
+      static Ciphersuite lookup_ciphersuite(u16bit suite);
 
       const std::string kex_algo() const { return m_kex_algo; }
       const std::string sig_algo() const { return m_sig_algo; }
@@ -30,9 +32,9 @@ class BOTAN_DLL TLS_Ciphersuite
 
       size_t cipher_keylen() const { return m_cipher_keylen; }
 
-      TLS_Ciphersuite() : m_cipher_keylen(0) {}
+      Ciphersuite() : m_cipher_keylen(0) {}
 
-      TLS_Ciphersuite(const std::string& sig_algo,
+      Ciphersuite(const std::string& sig_algo,
                       const std::string& kex_algo,
                       const std::string& mac_algo,
                       const std::string& cipher_algo,
@@ -41,6 +43,8 @@ class BOTAN_DLL TLS_Ciphersuite
       std::string m_sig_algo, m_kex_algo, m_mac_algo, m_cipher_algo;
       size_t m_cipher_keylen;
    };
+
+}
 
 }
 

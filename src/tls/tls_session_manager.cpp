@@ -11,10 +11,12 @@
 
 namespace Botan {
 
-bool TLS_Session_Manager_In_Memory::load_from_session_str(
-   const std::string& session_str, TLS_Session& session)
+namespace TLS {
+
+bool Session_Manager_In_Memory::load_from_session_str(
+   const std::string& session_str, Session& session)
    {
-   std::map<std::string, TLS_Session>::iterator i = sessions.find(session_str);
+   std::map<std::string, Session>::iterator i = sessions.find(session_str);
 
    if(i == sessions.end())
       return false;
@@ -31,14 +33,14 @@ bool TLS_Session_Manager_In_Memory::load_from_session_str(
    return true;
    }
 
-bool TLS_Session_Manager_In_Memory::load_from_session_id(
-   const MemoryRegion<byte>& session_id, TLS_Session& session)
+bool Session_Manager_In_Memory::load_from_session_id(
+   const MemoryRegion<byte>& session_id, Session& session)
    {
    return load_from_session_str(hex_encode(session_id), session);
    }
 
-bool TLS_Session_Manager_In_Memory::load_from_host_info(
-   const std::string& hostname, u16bit port, TLS_Session& session)
+bool Session_Manager_In_Memory::load_from_host_info(
+   const std::string& hostname, u16bit port, Session& session)
    {
    std::map<std::string, std::string>::iterator i;
 
@@ -59,17 +61,17 @@ bool TLS_Session_Manager_In_Memory::load_from_host_info(
    return false;
    }
 
-void TLS_Session_Manager_In_Memory::remove_entry(
+void Session_Manager_In_Memory::remove_entry(
    const MemoryRegion<byte>& session_id)
    {
-   std::map<std::string, TLS_Session>::iterator i =
+   std::map<std::string, Session>::iterator i =
       sessions.find(hex_encode(session_id));
 
    if(i != sessions.end())
       sessions.erase(i);
    }
 
-void TLS_Session_Manager_In_Memory::save(const TLS_Session& session)
+void Session_Manager_In_Memory::save(const Session& session)
    {
    if(max_sessions != 0)
       {
@@ -88,5 +90,7 @@ void TLS_Session_Manager_In_Memory::save(const TLS_Session& session)
    if(session.side() == CLIENT && session.sni_hostname() != "")
       host_sessions[session.sni_hostname()] = session_id_str;
    }
+
+}
 
 }

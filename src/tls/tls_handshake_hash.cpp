@@ -14,7 +14,9 @@
 
 namespace Botan {
 
-void TLS_Handshake_Hash::update(Handshake_Type handshake_type,
+namespace TLS {
+
+void Handshake_Hash::update(Handshake_Type handshake_type,
                                 const MemoryRegion<byte>& handshake_msg)
    {
    update(static_cast<byte>(handshake_type));
@@ -29,7 +31,7 @@ void TLS_Handshake_Hash::update(Handshake_Type handshake_type,
 /**
 * Return a TLS Handshake Hash
 */
-SecureVector<byte> TLS_Handshake_Hash::final(Version_Code version)
+SecureVector<byte> Handshake_Hash::final(Version_Code version)
    {
    SecureVector<byte> output;
 
@@ -61,7 +63,7 @@ SecureVector<byte> TLS_Handshake_Hash::final(Version_Code version)
 /**
 * Return a SSLv3 Handshake Hash
 */
-SecureVector<byte> TLS_Handshake_Hash::final_ssl3(const MemoryRegion<byte>& secret)
+SecureVector<byte> Handshake_Hash::final_ssl3(const MemoryRegion<byte>& secret)
    {
    const byte PAD_INNER = 0x36, PAD_OUTER = 0x5C;
 
@@ -95,5 +97,7 @@ SecureVector<byte> TLS_Handshake_Hash::final_ssl3(const MemoryRegion<byte>& secr
    output += sha1.final();
    return output;
    }
+
+}
 
 }

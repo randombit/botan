@@ -17,12 +17,14 @@
 
 namespace Botan {
 
+namespace TLS {
+
 /**
 * Create a new Certificate Request message
 */
 Certificate_Req::Certificate_Req(Record_Writer& writer,
-                                 TLS_Handshake_Hash& hash,
-                                 const TLS_Policy& policy,
+                                 Handshake_Hash& hash,
+                                 const Policy& policy,
                                  const std::vector<X509_Certificate>& ca_certs,
                                  Version_Code version)
    {
@@ -125,7 +127,7 @@ MemoryVector<byte> Certificate_Req::serialize() const
 * Create a new Certificate message
 */
 Certificate::Certificate(Record_Writer& writer,
-                         TLS_Handshake_Hash& hash,
+                         Handshake_Hash& hash,
                          const std::vector<X509_Certificate>& cert_list)
    {
    certs = cert_list;
@@ -188,5 +190,7 @@ MemoryVector<byte> Certificate::serialize() const
 
    return buf;
    }
+
+}
 
 }

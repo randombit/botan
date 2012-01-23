@@ -16,33 +16,35 @@
 
 namespace Botan {
 
+namespace TLS {
+
 class TLS_Data_Reader;
 
 /**
 * Base class representing a TLS extension of some kind
 */
-class TLS_Extension
+class Extension
    {
    public:
-      virtual TLS_Handshake_Extension_Type type() const = 0;
+      virtual Handshake_Extension_Type type() const = 0;
 
       virtual MemoryVector<byte> serialize() const = 0;
 
       virtual bool empty() const = 0;
 
-      virtual ~TLS_Extension() {}
+      virtual ~Extension() {}
    };
 
 /**
 * Server Name Indicator extension (RFC 3546)
 */
-class Server_Name_Indicator : public TLS_Extension
+class Server_Name_Indicator : public Extension
    {
    public:
-      static TLS_Handshake_Extension_Type static_type()
+      static Handshake_Extension_Type static_type()
          { return TLSEXT_SERVER_NAME_INDICATION; }
 
-      TLS_Handshake_Extension_Type type() const { return static_type(); }
+      Handshake_Extension_Type type() const { return static_type(); }
 
       Server_Name_Indicator(const std::string& host_name) :
          sni_host_name(host_name) {}
@@ -62,13 +64,13 @@ class Server_Name_Indicator : public TLS_Extension
 /**
 * SRP identifier extension (RFC 5054)
 */
-class SRP_Identifier : public TLS_Extension
+class SRP_Identifier : public Extension
    {
    public:
-      static TLS_Handshake_Extension_Type static_type()
+      static Handshake_Extension_Type static_type()
          { return TLSEXT_SRP_IDENTIFIER; }
 
-      TLS_Handshake_Extension_Type type() const { return static_type(); }
+      Handshake_Extension_Type type() const { return static_type(); }
 
       SRP_Identifier(const std::string& identifier) :
          srp_identifier(identifier) {}
@@ -88,13 +90,13 @@ class SRP_Identifier : public TLS_Extension
 /**
 * Renegotiation Indication Extension (RFC 5746)
 */
-class Renegotation_Extension : public TLS_Extension
+class Renegotation_Extension : public Extension
    {
    public:
-      static TLS_Handshake_Extension_Type static_type()
+      static Handshake_Extension_Type static_type()
          { return TLSEXT_SAFE_RENEGOTIATION; }
 
-      TLS_Handshake_Extension_Type type() const { return static_type(); }
+      Handshake_Extension_Type type() const { return static_type(); }
 
       Renegotation_Extension() {}
 
@@ -117,13 +119,13 @@ class Renegotation_Extension : public TLS_Extension
 /**
 * Maximum Fragment Length Negotiation Extension (RFC 4366 sec 3.2)
 */
-class Maximum_Fragment_Length : public TLS_Extension
+class Maximum_Fragment_Length : public Extension
    {
    public:
-      static TLS_Handshake_Extension_Type static_type()
+      static Handshake_Extension_Type static_type()
          { return TLSEXT_MAX_FRAGMENT_LENGTH; }
 
-      TLS_Handshake_Extension_Type type() const { return static_type(); }
+      Handshake_Extension_Type type() const { return static_type(); }
 
       bool empty() const { return val != 0; }
 
@@ -156,13 +158,13 @@ class Maximum_Fragment_Length : public TLS_Extension
 * spec (implemented in Chromium); the internet draft leaves the format
 * unspecified.
 */
-class Next_Protocol_Notification : public TLS_Extension
+class Next_Protocol_Notification : public Extension
    {
    public:
-      static TLS_Handshake_Extension_Type static_type()
+      static Handshake_Extension_Type static_type()
          { return TLSEXT_NEXT_PROTOCOL; }
 
-      TLS_Handshake_Extension_Type type() const { return static_type(); }
+      Handshake_Extension_Type type() const { return static_type(); }
 
       const std::vector<std::string>& protocols() const
          { return m_protocols; }
@@ -191,13 +193,13 @@ class Next_Protocol_Notification : public TLS_Extension
 /**
 * Supported Elliptic Curves Extension (RFC 4492)
 */
-class Supported_Elliptic_Curves : public TLS_Extension
+class Supported_Elliptic_Curves : public Extension
    {
    public:
-      static TLS_Handshake_Extension_Type static_type()
+      static Handshake_Extension_Type static_type()
          { return TLSEXT_USABLE_ELLIPTIC_CURVES; }
 
-      TLS_Handshake_Extension_Type type() const { return static_type(); }
+      Handshake_Extension_Type type() const { return static_type(); }
 
       const std::vector<std::string>& curves() const { return m_curves; }
 
@@ -216,13 +218,13 @@ class Supported_Elliptic_Curves : public TLS_Extension
 /**
 * Signature Algorithms Extension for TLS 1.2 (RFC 5246)
 */
-class Signature_Algorithms : public TLS_Extension
+class Signature_Algorithms : public Extension
    {
    public:
-      static TLS_Handshake_Extension_Type static_type()
+      static Handshake_Extension_Type static_type()
          { return TLSEXT_SIGNATURE_ALGORITHMS; }
 
-      TLS_Handshake_Extension_Type type() const { return static_type(); }
+      Handshake_Extension_Type type() const { return static_type(); }
 
       static std::string hash_algo_name(byte code);
       static byte hash_algo_code(const std::string& name);
@@ -252,15 +254,15 @@ class Signature_Algorithms : public TLS_Extension
 /**
 * Represents a block of extensions in a hello message
 */
-class TLS_Extensions
+class Extensions
    {
    public:
       template<typename T>
       T* get() const
          {
-         TLS_Handshake_Extension_Type type = T::static_type();
+         Handshake_Extension_Type type = T::static_type();
 
-         std::map<TLS_Handshake_Extension_Type, TLS_Extension*>::const_iterator i =
+         std::map<Handshake_Extension_Type, Extension*>::const_iterator i =
             extensions.find(type);
 
          if(i != extensions.end())
@@ -268,7 +270,7 @@ class TLS_Extensions
          return 0;
          }
 
-      void add(TLS_Extension* extn)
+      void add(Extension* extn)
          {
          delete extensions[extn->type()]; // or hard error if already exists?
          extensions[extn->type()] = extn;
@@ -276,17 +278,19 @@ class TLS_Extensions
 
       MemoryVector<byte> serialize() const;
 
-      TLS_Extensions() {}
+      Extensions() {}
 
-      TLS_Extensions(TLS_Data_Reader& reader); // deserialize
+      Extensions(TLS_Data_Reader& reader); // deserialize
 
-      ~TLS_Extensions();
+      ~Extensions();
    private:
-      TLS_Extensions(const TLS_Extensions&) {}
-      TLS_Extensions& operator=(const TLS_Extensions&) { return (*this); }
+      Extensions(const Extensions&) {}
+      Extensions& operator=(const Extensions&) { return (*this); }
 
-      std::map<TLS_Handshake_Extension_Type, TLS_Extension*> extensions;
+      std::map<Handshake_Extension_Type, Extension*> extensions;
    };
+
+}
 
 }
 

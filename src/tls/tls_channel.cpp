@@ -14,9 +14,11 @@
 
 namespace Botan {
 
-TLS_Channel::TLS_Channel(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
+namespace TLS {
+
+Channel::Channel(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
                          std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
-                         std::tr1::function<bool (const TLS_Session&)> handshake_complete) :
+                         std::tr1::function<bool (const Session&)> handshake_complete) :
    proc_fn(proc_fn),
    handshake_fn(handshake_complete),
    writer(socket_output_fn),
@@ -26,13 +28,13 @@ TLS_Channel::TLS_Channel(std::tr1::function<void (const byte[], size_t)> socket_
    {
    }
 
-TLS_Channel::~TLS_Channel()
+Channel::~Channel()
    {
    delete state;
    state = 0;
    }
 
-size_t TLS_Channel::received_data(const byte buf[], size_t buf_size)
+size_t Channel::received_data(const byte buf[], size_t buf_size)
    {
    try
       {
@@ -130,13 +132,13 @@ size_t TLS_Channel::received_data(const byte buf[], size_t buf_size)
 /*
 * Split up and process handshake messages
 */
-void TLS_Channel::read_handshake(byte rec_type,
+void Channel::read_handshake(byte rec_type,
                                  const MemoryRegion<byte>& rec_buf)
    {
    if(rec_type == HANDSHAKE)
       {
       if(!state)
-         state = new TLS_Handshake_State;
+         state = new Handshake_State;
       state->queue.write(&rec_buf[0], rec_buf.size());
       }
 
@@ -183,7 +185,7 @@ void TLS_Channel::read_handshake(byte rec_type,
       }
    }
 
-void TLS_Channel::send(const byte buf[], size_t buf_size)
+void Channel::send(const byte buf[], size_t buf_size)
    {
    if(!is_active())
       throw std::runtime_error("Data cannot be sent on inactive TLS connection");
@@ -191,7 +193,7 @@ void TLS_Channel::send(const byte buf[], size_t buf_size)
    writer.send(APPLICATION_DATA, buf, buf_size);
    }
 
-void TLS_Channel::alert(Alert_Level alert_level, Alert_Type alert_code)
+void Channel::alert(Alert_Level alert_level, Alert_Type alert_code)
    {
    if(alert_code != NULL_ALERT && !connection_closed)
       {
@@ -214,7 +216,7 @@ void TLS_Channel::alert(Alert_Level alert_level, Alert_Type alert_code)
       }
    }
 
-void TLS_Channel::Secure_Renegotiation_State::update(Client_Hello* client_hello)
+void Channel::Secure_Renegotiation_State::update(Client_Hello* client_hello)
    {
    if(initial_handshake)
       {
@@ -246,7 +248,7 @@ void TLS_Channel::Secure_Renegotiation_State::update(Client_Hello* client_hello)
       }
    }
 
-void TLS_Channel::Secure_Renegotiation_State::update(Server_Hello* server_hello)
+void Channel::Secure_Renegotiation_State::update(Server_Hello* server_hello)
    {
    if(initial_handshake)
       {
@@ -283,11 +285,13 @@ void TLS_Channel::Secure_Renegotiation_State::update(Server_Hello* server_hello)
    initial_handshake = false;
    }
 
-void TLS_Channel::Secure_Renegotiation_State::update(Finished* client_finished,
+void Channel::Secure_Renegotiation_State::update(Finished* client_finished,
                                                      Finished* server_finished)
    {
    client_verify = client_finished->verify_data();
    server_verify = server_finished->verify_data();
    }
+
+}
 
 }

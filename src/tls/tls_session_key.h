@@ -14,6 +14,8 @@
 
 namespace Botan {
 
+namespace TLS {
+
 /**
 * TLS Session Keys
 */
@@ -33,7 +35,7 @@ class Session_Keys
 
       Session_Keys() {}
 
-      Session_Keys(class TLS_Handshake_State* state,
+      Session_Keys(class Handshake_State* state,
                    const MemoryRegion<byte>& pre_master,
                    bool resuming);
 
@@ -42,6 +44,8 @@ class Session_Keys
       SymmetricKey c_cipher, s_cipher, c_mac, s_mac;
       InitializationVector c_iv, s_iv;
    };
+
+}
 
 }
 

@@ -15,6 +15,8 @@
 
 namespace Botan {
 
+namespace TLS {
+
 namespace {
 
 KDF* choose_tls_prf(Version_Code version)
@@ -31,7 +33,7 @@ KDF* choose_tls_prf(Version_Code version)
 /*
 * Compute the verify_data
 */
-MemoryVector<byte> finished_compute_verify(TLS_Handshake_State* state,
+MemoryVector<byte> finished_compute_verify(Handshake_State* state,
                                            Connection_Side side)
    {
    if(state->version == SSL_V3)
@@ -39,7 +41,7 @@ MemoryVector<byte> finished_compute_verify(TLS_Handshake_State* state,
       const byte SSL_CLIENT_LABEL[] = { 0x43, 0x4C, 0x4E, 0x54 };
       const byte SSL_SERVER_LABEL[] = { 0x53, 0x52, 0x56, 0x52 };
 
-      TLS_Handshake_Hash hash = state->hash; // don't modify state
+      Handshake_Hash hash = state->hash; // don't modify state
 
       MemoryVector<byte> ssl3_finished;
 
@@ -80,7 +82,7 @@ MemoryVector<byte> finished_compute_verify(TLS_Handshake_State* state,
 * Create a new Finished message
 */
 Finished::Finished(Record_Writer& writer,
-                   TLS_Handshake_State* state,
+                   Handshake_State* state,
                    Connection_Side side)
    {
    verification_data = finished_compute_verify(state, side);
@@ -106,10 +108,12 @@ Finished::Finished(const MemoryRegion<byte>& buf)
 /*
 * Verify a Finished message
 */
-bool Finished::verify(TLS_Handshake_State* state,
+bool Finished::verify(Handshake_State* state,
                       Connection_Side side)
    {
    return (verification_data == finished_compute_verify(state, side));
    }
+
+}
 
 }

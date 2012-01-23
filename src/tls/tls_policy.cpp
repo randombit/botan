@@ -12,7 +12,9 @@
 
 namespace Botan {
 
-std::vector<std::string> TLS_Policy::allowed_ciphers() const
+namespace TLS {
+
+std::vector<std::string> Policy::allowed_ciphers() const
    {
    std::vector<std::string> allowed;
    allowed.push_back("AES-256");
@@ -23,7 +25,7 @@ std::vector<std::string> TLS_Policy::allowed_ciphers() const
    return allowed;
    }
 
-std::vector<std::string> TLS_Policy::allowed_hashes() const
+std::vector<std::string> Policy::allowed_hashes() const
    {
    std::vector<std::string> allowed;
    allowed.push_back("SHA-512");
@@ -35,7 +37,7 @@ std::vector<std::string> TLS_Policy::allowed_hashes() const
    return allowed;
    }
 
-std::vector<std::string> TLS_Policy::allowed_key_exchange_methods() const
+std::vector<std::string> Policy::allowed_key_exchange_methods() const
    {
    std::vector<std::string> allowed;
    //allowed.push_back("ECDH");
@@ -45,7 +47,7 @@ std::vector<std::string> TLS_Policy::allowed_key_exchange_methods() const
    return allowed;
    }
 
-std::vector<std::string> TLS_Policy::allowed_signature_methods() const
+std::vector<std::string> Policy::allowed_signature_methods() const
    {
    std::vector<std::string> allowed;
    //allowed.push_back("ECDSA");
@@ -65,7 +67,7 @@ class Ciphersuite_Preference_Ordering
                                       const std::vector<std::string>& sigs) :
          m_ciphers(ciphers), m_hashes(hashes), m_kex(kex), m_sigs(sigs) {}
 
-      bool operator()(const TLS_Ciphersuite& a, const TLS_Ciphersuite& b) const
+      bool operator()(const Ciphersuite& a, const Ciphersuite& b) const
          {
          if(a.kex_algo() != b.kex_algo())
             {
@@ -120,7 +122,7 @@ class Ciphersuite_Preference_Ordering
 
 }
 
-std::vector<u16bit> TLS_Policy::ciphersuite_list(bool have_srp) const
+std::vector<u16bit> Policy::ciphersuite_list(bool have_srp) const
    {
    std::vector<std::string> ciphers = allowed_ciphers();
    std::vector<std::string> hashes = allowed_hashes();
@@ -137,12 +139,12 @@ std::vector<u16bit> TLS_Policy::ciphersuite_list(bool have_srp) const
 
    Ciphersuite_Preference_Ordering order(ciphers, hashes, kex, sigs);
 
-   std::map<TLS_Ciphersuite, u16bit, Ciphersuite_Preference_Ordering> ciphersuites(order);
+   std::map<Ciphersuite, u16bit, Ciphersuite_Preference_Ordering> ciphersuites(order);
 
    // When in doubt use brute force :)
    for(u32bit i = 0; i != 65536; ++i)
       {
-      TLS_Ciphersuite suite = TLS_Ciphersuite::lookup_ciphersuite(i);
+      Ciphersuite suite = Ciphersuite::lookup_ciphersuite(i);
       if(suite.cipher_keylen() == 0)
          continue; // not a ciphersuite we know
 
@@ -157,7 +159,7 @@ std::vector<u16bit> TLS_Policy::ciphersuite_list(bool have_srp) const
 
    std::vector<u16bit> ciphersuite_codes;
 
-   for(std::map<TLS_Ciphersuite, u16bit, Ciphersuite_Preference_Ordering>::iterator i = ciphersuites.begin();
+   for(std::map<Ciphersuite, u16bit, Ciphersuite_Preference_Ordering>::iterator i = ciphersuites.begin();
        i != ciphersuites.end(); ++i)
       {
       ciphersuite_codes.push_back(i->second);
@@ -169,7 +171,7 @@ std::vector<u16bit> TLS_Policy::ciphersuite_list(bool have_srp) const
 /*
 * Return allowed compression algorithms
 */
-std::vector<byte> TLS_Policy::compression() const
+std::vector<byte> Policy::compression() const
    {
    std::vector<byte> algs;
    algs.push_back(NO_COMPRESSION);
@@ -179,7 +181,7 @@ std::vector<byte> TLS_Policy::compression() const
 /*
 * Choose which ciphersuite to use
 */
-u16bit TLS_Policy::choose_suite(const std::vector<u16bit>& client_suites,
+u16bit Policy::choose_suite(const std::vector<u16bit>& client_suites,
                                 bool have_rsa,
                                 bool have_dsa,
                                 bool have_srp) const
@@ -187,7 +189,7 @@ u16bit TLS_Policy::choose_suite(const std::vector<u16bit>& client_suites,
    for(size_t i = 0; i != client_suites.size(); ++i)
       {
       u16bit suite_id = client_suites[i];
-      TLS_Ciphersuite suite = TLS_Ciphersuite::lookup_ciphersuite(suite_id);
+      Ciphersuite suite = Ciphersuite::lookup_ciphersuite(suite_id);
       if(suite.cipher_keylen() == 0)
          continue; // not a ciphersuite we know
 
@@ -216,7 +218,7 @@ u16bit TLS_Policy::choose_suite(const std::vector<u16bit>& client_suites,
 /*
 * Choose which compression algorithm to use
 */
-byte TLS_Policy::choose_compression(const std::vector<byte>& c_comp) const
+byte Policy::choose_compression(const std::vector<byte>& c_comp) const
    {
    std::vector<byte> s_comp = compression();
 
@@ -227,5 +229,7 @@ byte TLS_Policy::choose_compression(const std::vector<byte>& c_comp) const
 
    return NO_COMPRESSION;
    }
+
+}
 
 }

@@ -30,6 +30,8 @@
 
 namespace Botan {
 
+namespace TLS {
+
 class Session_Keys;
 
 /**
@@ -43,7 +45,7 @@ class BOTAN_DLL Record_Writer
 
       void alert(Alert_Level level, Alert_Type type);
 
-      void activate(const TLS_Ciphersuite& suite,
+      void activate(const Ciphersuite& suite,
                     const Session_Keys& keys,
                     Connection_Side side);
 
@@ -97,7 +99,7 @@ class BOTAN_DLL Record_Reader
                        byte& msg_type,
                        MemoryVector<byte>& msg);
 
-      void activate(const TLS_Ciphersuite& suite,
+      void activate(const Ciphersuite& suite,
                     const Session_Keys& keys,
                     Connection_Side side);
 
@@ -129,6 +131,8 @@ class BOTAN_DLL Record_Reader
       u64bit m_seq_no;
       byte m_major, m_minor;
    };
+
+}
 
 }
 

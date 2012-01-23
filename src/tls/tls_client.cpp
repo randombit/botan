@@ -13,19 +13,21 @@
 
 namespace Botan {
 
+namespace TLS {
+
 /*
 * TLS Client Constructor
 */
-TLS_Client::TLS_Client(std::tr1::function<void (const byte[], size_t)> output_fn,
+Client::Client(std::tr1::function<void (const byte[], size_t)> output_fn,
                        std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
-                       std::tr1::function<bool (const TLS_Session&)> handshake_fn,
-                       TLS_Session_Manager& session_manager,
+                       std::tr1::function<bool (const Session&)> handshake_fn,
+                       Session_Manager& session_manager,
                        Credentials_Manager& creds,
-                       const TLS_Policy& policy,
+                       const Policy& policy,
                        RandomNumberGenerator& rng,
                        const std::string& hostname,
                        std::tr1::function<std::string (std::vector<std::string>)> next_protocol) :
-   TLS_Channel(output_fn, proc_fn, handshake_fn),
+   Channel(output_fn, proc_fn, handshake_fn),
    policy(policy),
    rng(rng),
    session_manager(session_manager),
@@ -33,7 +35,7 @@ TLS_Client::TLS_Client(std::tr1::function<void (const byte[], size_t)> output_fn
    {
    writer.set_version(SSL_V3);
 
-   state = new TLS_Handshake_State;
+   state = new Handshake_State;
    state->set_expected_next(SERVER_HELLO);
 
    state->client_npn_cb = next_protocol;
@@ -44,7 +46,7 @@ TLS_Client::TLS_Client(std::tr1::function<void (const byte[], size_t)> output_fn
 
    if(hostname != "")
       {
-      TLS_Session session_info;
+      Session session_info;
       if(session_manager.load_from_host_info(hostname, 0, session_info))
          {
          if(session_info.srp_identifier() == srp_identifier)
@@ -80,12 +82,12 @@ TLS_Client::TLS_Client(std::tr1::function<void (const byte[], size_t)> output_fn
 /*
 * Send a new client hello to renegotiate
 */
-void TLS_Client::renegotiate()
+void Client::renegotiate()
    {
    if(state)
       return; // currently in handshake
 
-   state = new TLS_Handshake_State;
+   state = new Handshake_State;
    state->set_expected_next(SERVER_HELLO);
 
    state->client_hello = new Client_Hello(writer, state->hash, policy, rng,
@@ -94,7 +96,7 @@ void TLS_Client::renegotiate()
    secure_renegotiation.update(state->client_hello);
    }
 
-void TLS_Client::alert_notify(bool, Alert_Type type)
+void Client::alert_notify(bool, Alert_Type type)
    {
    if(type == NO_RENEGOTIATION)
       {
@@ -109,7 +111,7 @@ void TLS_Client::alert_notify(bool, Alert_Type type)
 /*
 * Process a handshake message
 */
-void TLS_Client::process_handshake_msg(Handshake_Type type,
+void Client::process_handshake_msg(Handshake_Type type,
                                        const MemoryRegion<byte>& contents)
    {
    if(state == 0)
@@ -178,7 +180,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
 
       secure_renegotiation.update(state->server_hello);
 
-      state->suite = TLS_Ciphersuite::lookup_ciphersuite(state->server_hello->ciphersuite());
+      state->suite = Ciphersuite::lookup_ciphersuite(state->server_hello->ciphersuite());
 
       if(!state->server_hello->session_id().empty() &&
          (state->server_hello->session_id() == state->client_hello->session_id()))
@@ -206,13 +208,13 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
          if(state->version > state->client_hello->version())
             {
             throw TLS_Exception(HANDSHAKE_FAILURE,
-                                "TLS_Client: Server replied with bad version");
+                                "Client: Server replied with bad version");
             }
 
          if(state->version < policy.min_version())
             {
             throw TLS_Exception(PROTOCOL_VERSION,
-                                "TLS_Client: Server is too old for specified policy");
+                                "Client: Server is too old for specified policy");
             }
 
          if(state->suite.sig_algo() != "")
@@ -247,11 +249,11 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
       peer_certs = state->server_certs->cert_chain();
       if(peer_certs.size() == 0)
          throw TLS_Exception(HANDSHAKE_FAILURE,
-                             "TLS_Client: No certificates sent by server");
+                             "Client: No certificates sent by server");
 
       if(!policy.check_cert(peer_certs))
          throw TLS_Exception(BAD_CERTIFICATE,
-                             "TLS_Client: Server certificate is not valid");
+                             "Client: Server certificate is not valid");
 
       std::auto_ptr<Public_Key> peer_key(peer_certs[0].subject_public_key());
 
@@ -368,7 +370,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
          state->client_finished = new Finished(writer, state, CLIENT);
          }
 
-      TLS_Session session_info(
+      Session session_info(
          state->server_hello->session_id(),
          state->keys.master_secret(),
          state->server_hello->version(),
@@ -396,5 +398,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
    else
       throw Unexpected_Message("Unknown handshake message received");
    }
+
+}
 
 }

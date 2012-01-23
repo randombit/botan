@@ -10,6 +10,8 @@
 
 namespace Botan {
 
+namespace TLS {
+
 /**
 * Protocol Constants for SSL/TLS
 */
@@ -167,7 +169,7 @@ enum Compression_Method {
    DEFLATE_COMPRESSION  = 0x01
 };
 
-enum TLS_Handshake_Extension_Type {
+enum Handshake_Extension_Type {
    TLSEXT_SERVER_NAME_INDICATION = 0,
    TLSEXT_MAX_FRAGMENT_LENGTH    = 1,
    TLSEXT_CLIENT_CERT_URL        = 2,
@@ -186,6 +188,8 @@ enum TLS_Handshake_Extension_Type {
 
    TLSEXT_SAFE_RENEGOTIATION     = 65281,
 };
+
+}
 
 }
 

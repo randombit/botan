@@ -11,8 +11,10 @@
 
 namespace Botan {
 
+namespace TLS {
+
 Next_Protocol::Next_Protocol(Record_Writer& writer,
-                             TLS_Handshake_Hash& hash,
+                             Handshake_Hash& hash,
                              const std::string& protocol) :
    m_protocol(protocol)
    {
@@ -46,5 +48,7 @@ MemoryVector<byte> Next_Protocol::serialize() const
 
    return buf;
    }
+
+}
 
 }

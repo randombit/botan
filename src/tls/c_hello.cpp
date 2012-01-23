@@ -15,6 +15,8 @@
 
 namespace Botan {
 
+namespace TLS {
+
 MemoryVector<byte> make_hello_random(RandomNumberGenerator& rng)
    {
    MemoryVector<byte> buf(32);
@@ -27,7 +29,7 @@ MemoryVector<byte> make_hello_random(RandomNumberGenerator& rng)
 /*
 * Encode and send a Handshake message
 */
-void Handshake_Message::send(Record_Writer& writer, TLS_Handshake_Hash& hash) const
+void Handshake_Message::send(Record_Writer& writer, Handshake_Hash& hash) const
    {
    MemoryVector<byte> buf = serialize();
    MemoryVector<byte> send_buf(4);
@@ -51,7 +53,7 @@ void Handshake_Message::send(Record_Writer& writer, TLS_Handshake_Hash& hash) co
 */
 Hello_Request::Hello_Request(Record_Writer& writer)
    {
-   TLS_Handshake_Hash dummy; // FIXME: *UGLY*
+   Handshake_Hash dummy; // FIXME: *UGLY*
    send(writer, dummy);
    }
 
@@ -76,8 +78,8 @@ MemoryVector<byte> Hello_Request::serialize() const
 * Create a new Client Hello message
 */
 Client_Hello::Client_Hello(Record_Writer& writer,
-                           TLS_Handshake_Hash& hash,
-                           const TLS_Policy& policy,
+                           Handshake_Hash& hash,
+                           const Policy& policy,
                            RandomNumberGenerator& rng,
                            const MemoryRegion<byte>& reneg_info,
                            bool next_protocol,
@@ -108,9 +110,9 @@ Client_Hello::Client_Hello(Record_Writer& writer,
 * Create a new Client Hello message
 */
 Client_Hello::Client_Hello(Record_Writer& writer,
-                           TLS_Handshake_Hash& hash,
+                           Handshake_Hash& hash,
                            RandomNumberGenerator& rng,
-                           const TLS_Session& session,
+                           const Session& session,
                            bool next_protocol) :
    m_version(session.version()),
    m_session_id(session.session_id()),
@@ -163,7 +165,7 @@ MemoryVector<byte> Client_Hello::serialize() const
    * send that extension.
    */
 
-   TLS_Extensions extensions;
+   Extensions extensions;
 
    // Initial handshake
    if(m_renegotiation_info.empty())
@@ -249,7 +251,7 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
 
    m_comp_methods = reader.get_range_vector<byte>(1, 1, 255);
 
-   TLS_Extensions extensions(reader);
+   Extensions extensions(reader);
 
    if(Server_Name_Indicator* sni = extensions.get<Server_Name_Indicator>())
       {
@@ -276,7 +278,7 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
 
    if(Renegotation_Extension* reneg = extensions.get<Renegotation_Extension>())
       {
-      // checked by TLS_Client / TLS_Server as they know the handshake state
+      // checked by Client / Server as they know the handshake state
       m_secure_renegotiation = true;
       m_renegotiation_info = reneg->renegotiation_info();
       }
@@ -344,5 +346,7 @@ bool Client_Hello::offered_suite(u16bit ciphersuite) const
          return true;
    return false;
    }
+
+}
 
 }

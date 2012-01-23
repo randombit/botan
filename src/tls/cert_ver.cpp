@@ -13,11 +13,13 @@
 
 namespace Botan {
 
+namespace TLS {
+
 /*
 * Create a new Certificate Verify message
 */
 Certificate_Verify::Certificate_Verify(Record_Writer& writer,
-                                       TLS_Handshake_State* state,
+                                       Handshake_State* state,
                                        RandomNumberGenerator& rng,
                                        const Private_Key* priv_key)
    {
@@ -88,7 +90,7 @@ MemoryVector<byte> Certificate_Verify::serialize() const
 * Verify a Certificate Verify message
 */
 bool Certificate_Verify::verify(const X509_Certificate& cert,
-                                TLS_Handshake_State* state)
+                                Handshake_State* state)
    {
    std::auto_ptr<Public_Key> key(cert.subject_public_key());
 
@@ -108,5 +110,7 @@ bool Certificate_Verify::verify(const X509_Certificate& cert,
 
    return verifier.verify_message(state->hash.get_contents(), signature);
    }
+
+}
 
 }

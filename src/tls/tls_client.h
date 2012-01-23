@@ -15,10 +15,12 @@
 
 namespace Botan {
 
+namespace TLS {
+
 /**
 * SSL/TLS Client
 */
-class BOTAN_DLL TLS_Client : public TLS_Channel
+class BOTAN_DLL Client : public Channel
    {
    public:
       /**
@@ -40,12 +42,12 @@ class BOTAN_DLL TLS_Client : public TLS_Channel
       *        called with the list of protocols the server advertised;
       *        the client should return the protocol it would like to use.
       */
-      TLS_Client(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
+      Client(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
                  std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
-                 std::tr1::function<bool (const TLS_Session&)> handshake_complete,
-                 TLS_Session_Manager& session_manager,
+                 std::tr1::function<bool (const Session&)> handshake_complete,
+                 Session_Manager& session_manager,
                  Credentials_Manager& creds,
-                 const TLS_Policy& policy,
+                 const Policy& policy,
                  RandomNumberGenerator& rng,
                  const std::string& servername = "",
                  std::tr1::function<std::string (std::vector<std::string>)> next_protocol =
@@ -58,11 +60,13 @@ class BOTAN_DLL TLS_Client : public TLS_Channel
 
       void alert_notify(bool is_fatal, Alert_Type type);
 
-      const TLS_Policy& policy;
+      const Policy& policy;
       RandomNumberGenerator& rng;
-      TLS_Session_Manager& session_manager;
+      Session_Manager& session_manager;
       Credentials_Manager& creds;
    };
+
+}
 
 }
 

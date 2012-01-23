@@ -17,6 +17,8 @@
 
 namespace Botan {
 
+namespace TLS {
+
 /**
 * Helper class for decoding TLS protocol messages
 */
@@ -202,6 +204,8 @@ void append_tls_length_value(MemoryRegion<byte>& buf,
    {
    append_tls_length_value(buf, &vals[0], vals.size(), tag_size);
    }
+
+}
 
 }
 

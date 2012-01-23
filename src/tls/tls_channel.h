@@ -16,10 +16,12 @@
 
 namespace Botan {
 
+namespace TLS {
+
 /**
 * Generic interface for TLS endpoint
 */
-class BOTAN_DLL TLS_Channel
+class BOTAN_DLL Channel
    {
    public:
       /**
@@ -59,11 +61,11 @@ class BOTAN_DLL TLS_Channel
       */
       std::vector<X509_Certificate> peer_cert_chain() const { return peer_certs; }
 
-      TLS_Channel(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
+      Channel(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
                   std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
-                  std::tr1::function<bool (const TLS_Session&)> handshake_complete);
+                  std::tr1::function<bool (const Session&)> handshake_complete);
 
-      virtual ~TLS_Channel();
+      virtual ~Channel();
    protected:
 
       /**
@@ -83,14 +85,14 @@ class BOTAN_DLL TLS_Channel
       virtual void alert_notify(bool fatal_alert, Alert_Type type) = 0;
 
       std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn;
-      std::tr1::function<bool (const TLS_Session&)> handshake_fn;
+      std::tr1::function<bool (const Session&)> handshake_fn;
 
       Record_Writer writer;
       Record_Reader reader;
 
       std::vector<X509_Certificate> peer_certs;
 
-      class TLS_Handshake_State* state;
+      class Handshake_State* state;
 
       class Secure_Renegotiation_State
          {
@@ -128,6 +130,8 @@ class BOTAN_DLL TLS_Channel
       bool handshake_completed;
       bool connection_closed;
    };
+
+}
 
 }
 

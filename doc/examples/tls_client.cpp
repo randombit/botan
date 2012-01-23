@@ -20,7 +20,7 @@ using namespace Botan;
 
 using namespace std::tr1::placeholders;
 
-class Client_TLS_Policy : public TLS_Policy
+class Client_TLS_Policy : public TLS::Policy
    {
    public:
       //Version_Code pref_version() const { return TLS_V12; }
@@ -72,11 +72,12 @@ int connect_to_host(const std::string& host, u16bit port)
    return fd;
    }
 
-bool handshake_complete(const TLS_Session& session)
+bool handshake_complete(const TLS::Session& session)
    {
    std::cout << "Handshake complete!\n";
    std::cout << "Protocol version " << (int)session.major_version()
              << "." << (int)session.minor_version() << "\n";
+   std::cout << "Ciphersuite " << std::hex << session.ciphersuite() << "\n";
    std::cout << "Session ID " << hex_encode(session.session_id()) << "\n";
 
    return true;
@@ -108,7 +109,7 @@ bool got_alert = false;
 
 void process_data(const byte buf[], size_t buf_size, u16bit alert_info)
    {
-   if(alert_info != NULL_ALERT)
+   if(alert_info != TLS::NULL_ALERT)
       {
       std::cout << "Alert: " << alert_info << "\n";
       got_alert = true;
@@ -128,15 +129,15 @@ std::string protocol_chooser(const std::vector<std::string>& protocols)
    }
 
 void doit(RandomNumberGenerator& rng,
-          TLS_Policy& policy,
-          TLS_Session_Manager& session_manager,
+          TLS::Policy& policy,
+          TLS::Session_Manager& session_manager,
           Credentials_Manager& creds,
           const std::string& host,
           u16bit port)
    {
    int sockfd = connect_to_host(host, port);
 
-   TLS_Client client(std::tr1::bind(socket_write, sockfd, _1, _2),
+   TLS::Client client(std::tr1::bind(socket_write, sockfd, _1, _2),
                      process_data,
                      handshake_complete,
                      session_manager,
@@ -180,7 +181,7 @@ void doit(RandomNumberGenerator& rng,
             }
 
          const size_t needed = client.received_data(buf, got);
-         std::cout << "Socket - got " << got << " bytes, need " << needed << "\n";
+         //std::cout << "Socket - got " << got << " bytes, need " << needed << "\n";
          }
       else if(FD_ISSET(STDIN_FILENO, &readfds))
          {
@@ -251,7 +252,7 @@ int main(int argc, char* argv[])
       LibraryInitializer botan_init;
       AutoSeeded_RNG rng;
       Client_TLS_Policy policy;
-      TLS_Session_Manager_In_Memory session_manager;
+      TLS::Session_Manager_In_Memory session_manager;
 
       Credentials_Manager_Simple creds(rng);
 

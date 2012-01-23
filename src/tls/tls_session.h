@@ -14,17 +14,19 @@
 
 namespace Botan {
 
+namespace TLS {
+
 /**
 * Class representing a TLS session state
 */
-class BOTAN_DLL TLS_Session
+class BOTAN_DLL Session
    {
    public:
 
       /**
       * Uninitialized session
       */
-      TLS_Session() :
+      Session() :
          m_start_time(0),
          m_version(0),
          m_ciphersuite(0),
@@ -37,7 +39,7 @@ class BOTAN_DLL TLS_Session
       /**
       * New session (sets session start time)
       */
-      TLS_Session(const MemoryRegion<byte>& session_id,
+      Session(const MemoryRegion<byte>& session_id,
                   const MemoryRegion<byte>& master_secret,
                   Version_Code version,
                   u16bit ciphersuite,
@@ -52,7 +54,7 @@ class BOTAN_DLL TLS_Session
       /**
       * Load a session from BER (created by BER_encode)
       */
-      TLS_Session(const byte ber[], size_t ber_len);
+      Session(const byte ber[], size_t ber_len);
 
       /**
       * Encode this session data for storage
@@ -151,6 +153,8 @@ class BOTAN_DLL TLS_Session
       std::string m_sni_hostname; // optional
       std::string m_srp_identifier; // optional
    };
+
+}
 
 }
 

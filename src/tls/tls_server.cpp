@@ -13,10 +13,12 @@
 
 namespace Botan {
 
+namespace TLS {
+
 namespace {
 
-bool check_for_resume(TLS_Session& session_info,
-                      TLS_Session_Manager& session_manager,
+bool check_for_resume(Session& session_info,
+                      Session_Manager& session_manager,
                       Client_Hello* client_hello)
    {
    MemoryVector<byte> client_session_id = client_hello->session_id();
@@ -64,15 +66,15 @@ bool check_for_resume(TLS_Session& session_info,
 /*
 * TLS Server Constructor
 */
-TLS_Server::TLS_Server(std::tr1::function<void (const byte[], size_t)> output_fn,
+Server::Server(std::tr1::function<void (const byte[], size_t)> output_fn,
                        std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
-                       std::tr1::function<bool (const TLS_Session&)> handshake_fn,
-                       TLS_Session_Manager& session_manager,
+                       std::tr1::function<bool (const Session&)> handshake_fn,
+                       Session_Manager& session_manager,
                        Credentials_Manager& creds,
-                       const TLS_Policy& policy,
+                       const Policy& policy,
                        RandomNumberGenerator& rng,
                        const std::vector<std::string>& next_protocols) :
-   TLS_Channel(output_fn, proc_fn, handshake_fn),
+   Channel(output_fn, proc_fn, handshake_fn),
    policy(policy),
    rng(rng),
    session_manager(session_manager),
@@ -84,17 +86,17 @@ TLS_Server::TLS_Server(std::tr1::function<void (const byte[], size_t)> output_fn
 /*
 * Send a hello request to the client
 */
-void TLS_Server::renegotiate()
+void Server::renegotiate()
    {
    if(state)
       return; // currently in handshake
 
-   state = new TLS_Handshake_State;
+   state = new Handshake_State;
    state->set_expected_next(CLIENT_HELLO);
    Hello_Request hello_req(writer);
    }
 
-void TLS_Server::alert_notify(bool, Alert_Type type)
+void Server::alert_notify(bool, Alert_Type type)
    {
    if(type == NO_RENEGOTIATION)
       {
@@ -109,22 +111,22 @@ void TLS_Server::alert_notify(bool, Alert_Type type)
 /*
 * Split up and process handshake messages
 */
-void TLS_Server::read_handshake(byte rec_type,
+void Server::read_handshake(byte rec_type,
                                 const MemoryRegion<byte>& rec_buf)
    {
    if(rec_type == HANDSHAKE && !state)
       {
-      state = new TLS_Handshake_State;
+      state = new Handshake_State;
       state->set_expected_next(CLIENT_HELLO);
       }
 
-   TLS_Channel::read_handshake(rec_type, rec_buf);
+   Channel::read_handshake(rec_type, rec_buf);
    }
 
 /*
 * Process a handshake message
 */
-void TLS_Server::process_handshake_msg(Handshake_Type type,
+void Server::process_handshake_msg(Handshake_Type type,
                                        const MemoryRegion<byte>& contents)
    {
    if(state == 0)
@@ -169,7 +171,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       writer.set_version(state->version);
       reader.set_version(state->version);
 
-      TLS_Session session_info;
+      Session session_info;
       const bool resuming = check_for_resume(session_info,
                                              session_manager,
                                              state->client_hello);
@@ -198,7 +200,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             writer.set_maximum_fragment_size(session_info.fragment_size());
             }
 
-         state->suite = TLS_Ciphersuite::lookup_ciphersuite(state->server_hello->ciphersuite());
+         state->suite = Ciphersuite::lookup_ciphersuite(state->server_hello->ciphersuite());
 
          state->keys = Session_Keys(state, session_info.master_secret(), true);
 
@@ -245,7 +247,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             writer.set_maximum_fragment_size(state->client_hello->fragment_size());
             }
 
-         state->suite = TLS_Ciphersuite::lookup_ciphersuite(state->server_hello->ciphersuite());
+         state->suite = Ciphersuite::lookup_ciphersuite(state->server_hello->ciphersuite());
 
          if(state->suite.sig_algo() != "")
             {
@@ -259,7 +261,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             if(state->suite.kex_algo() == "DH")
                state->kex_priv = new DH_PrivateKey(rng, policy.dh_group());
             else
-               throw Internal_Error("TLS_Server: Unknown ciphersuite kex type " +
+               throw Internal_Error("Server: Unknown ciphersuite kex type " +
                                     state->suite.kex_algo());
 
             state->server_kex =
@@ -386,7 +388,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             peer_certs = state->client_certs->cert_chain();
          }
 
-      TLS_Session session_info(
+      Session session_info(
          state->server_hello->session_id(),
          state->keys.master_secret(),
          state->server_hello->version(),
@@ -415,5 +417,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
    else
       throw Unexpected_Message("Unknown handshake message received");
    }
+
+}
 
 }

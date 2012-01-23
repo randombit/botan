@@ -23,9 +23,9 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
       typedef boost::shared_ptr<tls_server_session> pointer;
 
       static pointer create(asio::io_service& io_service,
-                            Botan::TLS_Session_Manager& session_manager,
+                            Botan::TLS::Session_Manager& session_manager,
                             Botan::Credentials_Manager& credentials,
-                            Botan::TLS_Policy& policy,
+                            Botan::TLS::Policy& policy,
                             Botan::RandomNumberGenerator& rng)
          {
          return pointer(
@@ -53,9 +53,9 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
 
    private:
       tls_server_session(asio::io_service& io_service,
-                         Botan::TLS_Session_Manager& session_manager,
+                         Botan::TLS::Session_Manager& session_manager,
                          Botan::Credentials_Manager& credentials,
-                         Botan::TLS_Policy& policy,
+                         Botan::TLS::Policy& policy,
                          Botan::RandomNumberGenerator& rng) :
          m_socket(io_service),
          m_tls(boost::bind(&tls_server_session::tls_output_wanted, this, _1, _2),
@@ -135,7 +135,7 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
 
       void tls_data_recv(const byte buf[], size_t buf_len, Botan::u16bit alert_info)
          {
-         if(buf_len == 0 && alert_info != Botan::NULL_ALERT)
+         if(buf_len == 0 && alert_info != Botan::TLS::NULL_ALERT)
             {
             //printf("Alert: %d\n", alert_info);
             if(alert_info == 0)
@@ -164,15 +164,15 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
             }
          }
 
-      bool tls_handshake_complete(const Botan::TLS_Session& session)
+      bool tls_handshake_complete(const Botan::TLS::Session& session)
          {
          return true;
          }
 
       tcp::socket m_socket;
-      Botan::TLS_Server m_tls;
+      Botan::TLS::Server m_tls;
 
-      unsigned char m_read_buf[Botan::MAX_TLS_RECORD_SIZE];
+      unsigned char m_read_buf[Botan::TLS::MAX_TLS_RECORD_SIZE];
 
       // used to hold the data currently being written by the system
       std::vector<byte> m_write_buf;
@@ -215,7 +215,7 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
       std::map<Botan::X509_Certificate, Botan::Private_Key*> certs_and_keys;
    };
 
-class Server_TLS_Policy : public Botan::TLS_Policy
+class Server_TLS_Policy : public Botan::TLS::Policy
    {
    public:
       //bool require_client_auth() const { return true; }
@@ -289,7 +289,7 @@ class tls_server
       tcp::acceptor m_acceptor;
 
       Botan::AutoSeeded_RNG m_rng;
-      Botan::TLS_Session_Manager_In_Memory m_session_manager;
+      Botan::TLS::Session_Manager_In_Memory m_session_manager;
       Server_TLS_Policy m_policy;
       Credentials_Manager_Simple m_creds;
    };

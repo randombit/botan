@@ -13,8 +13,10 @@
 
 namespace Botan {
 
+namespace TLS {
+
 /**
-* TLS_Session_Manager is an interface to systems which can save
+* Session_Manager is an interface to systems which can save
 * session parameters for supporting session resumption.
 *
 * Saving sessions is done on a best-effort basis; an implementation is
@@ -22,7 +24,7 @@ namespace Botan {
 *
 * Implementations should strive to be thread safe
 */
-class BOTAN_DLL TLS_Session_Manager
+class BOTAN_DLL Session_Manager
    {
    public:
       /**
@@ -33,7 +35,7 @@ class BOTAN_DLL TLS_Session_Manager
       * @return true if session was modified
       */
       virtual bool load_from_session_id(const MemoryRegion<byte>& session_id,
-                                        TLS_Session& session) = 0;
+                                        Session& session) = 0;
 
       /**
       * Try to load a saved session (client side)
@@ -44,7 +46,7 @@ class BOTAN_DLL TLS_Session_Manager
       * @return true if session was modified
       */
       virtual bool load_from_host_info(const std::string& hostname, u16bit port,
-                                       TLS_Session& session) = 0;
+                                       Session& session) = 0;
 
       /**
       * Remove this session id from the cache, if it exists
@@ -59,18 +61,18 @@ class BOTAN_DLL TLS_Session_Manager
       *
       * @param session to save
       */
-      virtual void save(const TLS_Session& session) = 0;
+      virtual void save(const Session& session) = 0;
 
-      virtual ~TLS_Session_Manager() {}
+      virtual ~Session_Manager() {}
    };
 
 /**
-* A simple implementation of TLS_Session_Manager that just saves
+* A simple implementation of Session_Manager that just saves
 * values in memory, with no persistance abilities
 *
 * @todo add locking
 */
-class BOTAN_DLL TLS_Session_Manager_In_Memory : public TLS_Session_Manager
+class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
    {
    public:
       /**
@@ -79,31 +81,33 @@ class BOTAN_DLL TLS_Session_Manager_In_Memory : public TLS_Session_Manager
       * @param session_lifetime sessions are expired after this many
       *        seconds have elapsed from initial handshake.
       */
-      TLS_Session_Manager_In_Memory(size_t max_sessions = 1000,
+      Session_Manager_In_Memory(size_t max_sessions = 1000,
                                     size_t session_lifetime = 7200) :
          max_sessions(max_sessions),
          session_lifetime(session_lifetime)
             {}
 
       bool load_from_session_id(const MemoryRegion<byte>& session_id,
-                                TLS_Session& session);
+                                Session& session);
 
       bool load_from_host_info(const std::string& hostname, u16bit port,
-                               TLS_Session& session);
+                               Session& session);
 
       void remove_entry(const MemoryRegion<byte>& session_id);
 
-      void save(const TLS_Session& session_data);
+      void save(const Session& session_data);
 
    private:
       bool load_from_session_str(const std::string& session_str,
-                                 TLS_Session& session);
+                                 Session& session);
 
       size_t max_sessions, session_lifetime;
 
-      std::map<std::string, TLS_Session> sessions; // hex(session_id) -> session
+      std::map<std::string, Session> sessions; // hex(session_id) -> session
       std::map<std::string, std::string> host_sessions;
    };
+
+}
 
 }
 

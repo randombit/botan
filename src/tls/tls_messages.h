@@ -20,6 +20,8 @@
 
 namespace Botan {
 
+namespace TLS {
+
 class Record_Writer;
 class Record_Reader;
 
@@ -29,7 +31,7 @@ class Record_Reader;
 class Handshake_Message
    {
    public:
-      void send(Record_Writer& writer, TLS_Handshake_Hash& hash) const;
+      void send(Record_Writer& writer, Handshake_Hash& hash) const;
 
       virtual Handshake_Type type() const = 0;
 
@@ -82,8 +84,8 @@ class Client_Hello : public Handshake_Message
       size_t fragment_size() const { return m_fragment_size; }
 
       Client_Hello(Record_Writer& writer,
-                   TLS_Handshake_Hash& hash,
-                   const TLS_Policy& policy,
+                   Handshake_Hash& hash,
+                   const Policy& policy,
                    RandomNumberGenerator& rng,
                    const MemoryRegion<byte>& reneg_info,
                    bool next_protocol = false,
@@ -91,9 +93,9 @@ class Client_Hello : public Handshake_Message
                    const std::string& srp_identifier = "");
 
       Client_Hello(Record_Writer& writer,
-                   TLS_Handshake_Hash& hash,
+                   Handshake_Hash& hash,
                    RandomNumberGenerator& rng,
-                   const TLS_Session& resumed_session,
+                   const Session& resumed_session,
                    bool next_protocol = false);
 
       Client_Hello(const MemoryRegion<byte>& buf,
@@ -153,11 +155,11 @@ class Server_Hello : public Handshake_Message
       const MemoryVector<byte>& random() const { return s_random; }
 
       Server_Hello(Record_Writer& writer,
-                   TLS_Handshake_Hash& hash,
+                   Handshake_Hash& hash,
                    Version_Code version,
                    const Client_Hello& other,
                    const std::vector<X509_Certificate>& certs,
-                   const TLS_Policy& policies,
+                   const Policy& policies,
                    bool client_has_secure_renegotiation,
                    const MemoryRegion<byte>& reneg_info,
                    bool client_has_npn,
@@ -165,7 +167,7 @@ class Server_Hello : public Handshake_Message
                    RandomNumberGenerator& rng);
 
       Server_Hello(Record_Writer& writer,
-                   TLS_Handshake_Hash& hash,
+                   Handshake_Hash& hash,
                    const MemoryRegion<byte>& session_id,
                    Version_Code ver,
                    u16bit ciphersuite,
@@ -210,12 +212,12 @@ class Client_Key_Exchange : public Handshake_Message
                                            Version_Code version);
 
       Client_Key_Exchange(Record_Writer& output,
-                          TLS_Handshake_State* state,
+                          Handshake_State* state,
                           const std::vector<X509_Certificate>& peer_certs,
                           RandomNumberGenerator& rng);
 
       Client_Key_Exchange(const MemoryRegion<byte>& buf,
-                          const TLS_Ciphersuite& suite,
+                          const Ciphersuite& suite,
                           Version_Code using_version);
    private:
       MemoryVector<byte> serialize() const;
@@ -237,7 +239,7 @@ class Certificate : public Handshake_Message
       bool empty() const { return certs.empty(); }
 
       Certificate(Record_Writer& writer,
-                  TLS_Handshake_Hash& hash,
+                  Handshake_Hash& hash,
                   const std::vector<X509_Certificate>& certs);
 
       Certificate(const MemoryRegion<byte>& buf);
@@ -262,8 +264,8 @@ class Certificate_Req : public Handshake_Message
          { return m_supported_algos; }
 
       Certificate_Req(Record_Writer& writer,
-                      TLS_Handshake_Hash& hash,
-                      const TLS_Policy& policy,
+                      Handshake_Hash& hash,
+                      const Policy& policy,
                       const std::vector<X509_Certificate>& allowed_cas,
                       Version_Code version);
 
@@ -292,10 +294,10 @@ class Certificate_Verify : public Handshake_Message
       * @param state the handshake state
       */
       bool verify(const X509_Certificate& cert,
-                  TLS_Handshake_State* state);
+                  Handshake_State* state);
 
       Certificate_Verify(Record_Writer& writer,
-                         TLS_Handshake_State* state,
+                         Handshake_State* state,
                          RandomNumberGenerator& rng,
                          const Private_Key* key);
 
@@ -320,11 +322,11 @@ class Finished : public Handshake_Message
       MemoryVector<byte> verify_data() const
          { return verification_data; }
 
-      bool verify(TLS_Handshake_State* state,
+      bool verify(Handshake_State* state,
                   Connection_Side side);
 
       Finished(Record_Writer& writer,
-               TLS_Handshake_State* state,
+               Handshake_State* state,
                Connection_Side side);
 
       Finished(const MemoryRegion<byte>& buf);
@@ -360,10 +362,10 @@ class Server_Key_Exchange : public Handshake_Message
       const std::vector<BigInt>& params() const { return m_params; }
 
       bool verify(const X509_Certificate& cert,
-                  TLS_Handshake_State* state) const;
+                  Handshake_State* state) const;
 
       Server_Key_Exchange(Record_Writer& writer,
-                          TLS_Handshake_State* state,
+                          Handshake_State* state,
                           RandomNumberGenerator& rng,
                           const Private_Key* priv_key);
 
@@ -390,7 +392,7 @@ class Server_Hello_Done : public Handshake_Message
    public:
       Handshake_Type type() const { return SERVER_HELLO_DONE; }
 
-      Server_Hello_Done(Record_Writer& writer, TLS_Handshake_Hash& hash);
+      Server_Hello_Done(Record_Writer& writer, Handshake_Hash& hash);
       Server_Hello_Done(const MemoryRegion<byte>& buf);
    private:
       MemoryVector<byte> serialize() const;
@@ -407,7 +409,7 @@ class Next_Protocol : public Handshake_Message
       std::string protocol() const { return m_protocol; }
 
       Next_Protocol(Record_Writer& writer,
-                    TLS_Handshake_Hash& hash,
+                    Handshake_Hash& hash,
                     const std::string& protocol);
 
       Next_Protocol(const MemoryRegion<byte>& buf);
@@ -416,6 +418,8 @@ class Next_Protocol : public Handshake_Message
 
       std::string m_protocol;
    };
+
+}
 
 }
 

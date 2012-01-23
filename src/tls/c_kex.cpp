@@ -16,6 +16,8 @@
 
 namespace Botan {
 
+namespace TLS {
+
 namespace {
 
 SecureVector<byte> strip_leading_zeros(const MemoryRegion<byte>& input)
@@ -40,7 +42,7 @@ SecureVector<byte> strip_leading_zeros(const MemoryRegion<byte>& input)
 * Create a new Client Key Exchange message
 */
 Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
-                                         TLS_Handshake_State* state,
+                                         Handshake_State* state,
                                          const std::vector<X509_Certificate>& peer_certs,
                                          RandomNumberGenerator& rng)
    {
@@ -113,7 +115,7 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 * Read a Client Key Exchange message
 */
 Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
-                                         const TLS_Ciphersuite& suite,
+                                         const Ciphersuite& suite,
                                          Version_Code using_version)
    {
    include_length = true;
@@ -197,5 +199,7 @@ Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
    else
       throw Invalid_Argument("Client_Key_Exchange: Bad key for decrypt");
    }
+
+}
 
 }

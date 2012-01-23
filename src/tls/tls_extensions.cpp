@@ -11,11 +11,13 @@
 
 namespace Botan {
 
+namespace TLS {
+
 namespace {
 
-TLS_Extension* make_extension(TLS_Data_Reader& reader,
-                              u16bit code,
-                              u16bit size)
+Extension* make_extension(TLS_Data_Reader& reader,
+                          u16bit code,
+                          u16bit size)
    {
    switch(code)
       {
@@ -47,7 +49,7 @@ TLS_Extension* make_extension(TLS_Data_Reader& reader,
 
 }
 
-TLS_Extensions::TLS_Extensions(TLS_Data_Reader& reader)
+Extensions::Extensions(TLS_Data_Reader& reader)
    {
    if(reader.has_remaining())
       {
@@ -61,7 +63,7 @@ TLS_Extensions::TLS_Extensions(TLS_Data_Reader& reader)
          const u16bit extension_code = reader.get_u16bit();
          const u16bit extension_size = reader.get_u16bit();
 
-         TLS_Extension* extn = make_extension(reader,
+         Extension* extn = make_extension(reader,
                                               extension_code,
                                               extension_size);
 
@@ -73,11 +75,11 @@ TLS_Extensions::TLS_Extensions(TLS_Data_Reader& reader)
       }
    }
 
-MemoryVector<byte> TLS_Extensions::serialize() const
+MemoryVector<byte> Extensions::serialize() const
    {
    MemoryVector<byte> buf(2); // 2 bytes for length field
 
-   for(std::map<TLS_Handshake_Extension_Type, TLS_Extension*>::const_iterator i = extensions.begin();
+   for(std::map<Handshake_Extension_Type, Extension*>::const_iterator i = extensions.begin();
        i != extensions.end(); ++i)
       {
       if(i->second->empty())
@@ -108,9 +110,9 @@ MemoryVector<byte> TLS_Extensions::serialize() const
    return buf;
    }
 
-TLS_Extensions::~TLS_Extensions()
+Extensions::~Extensions()
    {
-   for(std::map<TLS_Handshake_Extension_Type, TLS_Extension*>::const_iterator i = extensions.begin();
+   for(std::map<Handshake_Extension_Type, Extension*>::const_iterator i = extensions.begin();
        i != extensions.end(); ++i)
       {
       delete i->second;
@@ -514,5 +516,7 @@ Signature_Algorithms::Signature_Algorithms(TLS_Data_Reader& reader,
       m_supported_algos.push_back(std::make_pair(hash_code, sig_code));
       }
    }
+
+}
 
 }
