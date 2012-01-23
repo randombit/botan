@@ -36,7 +36,7 @@ bool check_for_resume(Session& session_info,
 
    // client didn't send original ciphersuite
    if(!value_exists(client_hello->ciphersuites(),
-                    session_info.ciphersuite()))
+                    session_info.ciphersuite_code()))
       return false;
 
    // client didn't send original compression method
@@ -185,7 +185,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             state->hash,
             session_info.session_id(),
             Protocol_Version(session_info.version()),
-            session_info.ciphersuite(),
+            session_info.ciphersuite_code(),
             session_info.compression_method(),
             session_info.fragment_size(),
             secure_renegotiation.supported(),

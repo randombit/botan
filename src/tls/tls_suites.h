@@ -24,8 +24,13 @@ class BOTAN_DLL Ciphersuite
    public:
       static Ciphersuite lookup_ciphersuite(u16bit suite);
 
-      const std::string kex_algo() const { return m_kex_algo; }
-      const std::string sig_algo() const { return m_sig_algo; }
+      /**
+      * Formats the ciphersuite back to an RFC-style ciphersuite string
+      */
+      std::string to_string() const;
+
+      std::string kex_algo() const { return m_kex_algo; }
+      std::string sig_algo() const { return m_sig_algo; }
 
       std::string cipher_algo() const { return m_cipher_algo; }
       std::string mac_algo() const { return m_mac_algo; }

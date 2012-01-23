@@ -10,6 +10,7 @@
 
 #include <botan/x509cert.h>
 #include <botan/tls_version.h>
+#include <botan/tls_suites.h>
 #include <botan/tls_magic.h>
 #include <botan/secmem.h>
 
@@ -70,9 +71,14 @@ class BOTAN_DLL Session
       Protocol_Version version() const { return m_version; }
 
       /**
-      * Get the ciphersuite of the saved session
+      * Get the ciphersuite code of the saved session
       */
-      u16bit ciphersuite() const { return m_ciphersuite; }
+      u16bit ciphersuite_code() const { return m_ciphersuite; }
+
+      /**
+      * Get the ciphersuite info of the saved session
+      */
+      Ciphersuite ciphersuite() const { return Ciphersuite::lookup_ciphersuite(m_ciphersuite); }
 
       /**
       * Get the compression method used in the saved session

@@ -123,7 +123,7 @@ Client_Hello::Client_Hello(Record_Writer& writer,
    m_fragment_size(session.fragment_size()),
    m_secure_renegotiation(session.secure_renegotiation())
    {
-   m_suites.push_back(session.ciphersuite());
+   m_suites.push_back(session.ciphersuite_code());
    m_comp_methods.push_back(session.compression_method());
 
    // set m_supported_algos here?

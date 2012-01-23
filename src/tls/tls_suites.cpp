@@ -1,12 +1,14 @@
 /*
 * TLS Cipher Suites
-* (C) 2004-2010 Jack Lloyd
+* (C) 2004-2010,2012 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
 
 #include <botan/tls_suites.h>
-#include <botan/tls_exceptn.h>
+#include <botan/parsing.h>
+#include <sstream>
+#include <stdexcept>
 
 namespace Botan {
 
@@ -34,7 +36,7 @@ Ciphersuite Ciphersuite::lookup_ciphersuite(u16bit suite)
          return Ciphersuite("RSA", "", "SHA-256", "AES-256", 32);
 
       case TLS_RSA_WITH_3DES_EDE_CBC_SHA:
-         return Ciphersuite("RSA", "", "SHA-1", "TripleDES", 24);
+         return Ciphersuite("RSA", "", "SHA-1", "3DES", 24);
 
       case TLS_RSA_WITH_RC4_128_SHA:
          return Ciphersuite("RSA", "", "SHA-1", "ARC4", 16);
@@ -60,7 +62,7 @@ Ciphersuite Ciphersuite::lookup_ciphersuite(u16bit suite)
          return Ciphersuite("DSA", "DH", "SHA-256", "AES-256", 32);
 
       case TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA:
-         return Ciphersuite("DSA", "DH", "SHA-1", "TripleDES", 24);
+         return Ciphersuite("DSA", "DH", "SHA-1", "3DES", 24);
 
       case TLS_DHE_DSS_WITH_RC4_128_SHA:
          return Ciphersuite("DSA", "DH", "SHA-1", "ARC4", 16);
@@ -83,7 +85,7 @@ Ciphersuite Ciphersuite::lookup_ciphersuite(u16bit suite)
          return Ciphersuite("RSA", "DH", "SHA-256", "AES-256", 32);
 
       case TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA:
-         return Ciphersuite("RSA", "DH", "SHA-1", "TripleDES", 24);
+         return Ciphersuite("RSA", "DH", "SHA-1", "3DES", 24);
 
       case TLS_DHE_RSA_WITH_SEED_CBC_SHA:
          return Ciphersuite("RSA", "DH", "SHA-1", "SEED", 16);
@@ -96,7 +98,7 @@ Ciphersuite Ciphersuite::lookup_ciphersuite(u16bit suite)
          return Ciphersuite("RSA", "ECDH", "SHA-1", "AES-256", 32);
 
       case TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA:
-         return Ciphersuite("RSA", "ECDH", "SHA-1", "TripleDES", 24);
+         return Ciphersuite("RSA", "ECDH", "SHA-1", "3DES", 24);
 
       case TLS_ECDHE_RSA_WITH_RC4_128_SHA:
          return Ciphersuite("RSA", "ECDH", "SHA-1", "ARC4", 16);
@@ -104,24 +106,24 @@ Ciphersuite Ciphersuite::lookup_ciphersuite(u16bit suite)
       // SRP/RSA ciphersuites
 
       case TLS_SRP_SHA_RSA_WITH_AES_128_SHA:
-         return Ciphersuite("RSA", "SRP", "SHA-1", "AES-128", 16);
+         return Ciphersuite("RSA", "SRP/SHA-1", "SHA-1", "AES-128", 16);
 
       case TLS_SRP_SHA_RSA_WITH_AES_256_SHA:
-         return Ciphersuite("RSA", "SRP", "SHA-1", "AES-256", 32);
+         return Ciphersuite("RSA", "SRP/SHA-1", "SHA-1", "AES-256", 32);
 
       case TLS_SRP_SHA_RSA_WITH_3DES_EDE_SHA:
-         return Ciphersuite("RSA", "SRP", "SHA-1", "TripleDES", 24);
+         return Ciphersuite("RSA", "SRP/SHA-1", "SHA-1", "3DES", 24);
 
       // SRP/DSA ciphersuites
 
       case TLS_SRP_SHA_DSS_WITH_AES_128_SHA:
-         return Ciphersuite("DSA", "SRP", "SHA-1", "AES-128", 16);
+         return Ciphersuite("DSA", "SRP/SHA-1", "SHA-1", "AES-128", 16);
 
       case TLS_SRP_SHA_DSS_WITH_AES_256_SHA:
-         return Ciphersuite("DSA", "SRP", "SHA-1", "AES-256", 32);
+         return Ciphersuite("DSA", "SRP/SHA-1", "SHA-1", "AES-256", 32);
 
       case TLS_SRP_SHA_DSS_WITH_3DES_EDE_SHA:
-         return Ciphersuite("DSA", "SRP", "SHA-1", "TripleDES", 24);
+         return Ciphersuite("DSA", "SRP/SHA-1", "SHA-1", "3DES", 24);
 
       // ECDH/ECDSA ciphersuites
 
@@ -147,11 +149,65 @@ Ciphersuite Ciphersuite::lookup_ciphersuite(u16bit suite)
          return Ciphersuite("ECDSA", "ECDH", "SHA-1", "ARC4", 16);
 
       case TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA:
-         return Ciphersuite("ECDSA", "ECDH", "SHA-1", "TripleDES", 24);
+         return Ciphersuite("ECDSA", "ECDH", "SHA-1", "3DES", 24);
 
       default:
          return Ciphersuite(); // some unknown ciphersuite
       }
+   }
+
+std::string Ciphersuite::to_string() const
+   {
+   if(m_cipher_keylen == 0)
+      throw std::runtime_error("Ciphersuite::to_string - no value set");
+
+   std::ostringstream out;
+
+   out << "TLS_";
+
+   if(kex_algo() == "DH")
+      out << "DHE";
+   else if(kex_algo() == "ECDH")
+      out << "ECDHE";
+   else if(kex_algo() == "SRP/SHA-1")
+      out << "SRP_SHA";
+   else if(kex_algo() != "")
+      out << kex_algo();
+
+   if(kex_algo() != "")
+      out << '_';
+
+   if(sig_algo() == "DSA")
+      out << "DSS";
+   else
+      out << sig_algo();
+
+   out << "_WITH_";
+
+   if(cipher_algo() == "ARC4")
+      {
+      out << "RC4_128_";
+      }
+   else
+      {
+      if(cipher_algo() == "3DES")
+         out << "3DES_EDE";
+      else
+         out << replace_char(cipher_algo(), '-', '_');
+
+      out << "_CBC_";
+      }
+
+   if(mac_algo() == "SHA-1")
+      out << "SHA";
+   else if(mac_algo() == "SHA-256")
+      out << "SHA256";
+   else if(mac_algo() == "SHA-384")
+      out << "SHA384";
+   else
+      out << mac_algo();
+
+   return out.str();
    }
 
 Ciphersuite::Ciphersuite(const std::string& sig_algo,
