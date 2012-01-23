@@ -54,8 +54,8 @@ class Credentials_Manager_Simple : public Credentials_Manager
 
 bool handshake_complete(const TLS::Session& session)
    {
-   printf("Handshake complete, protocol=%04X ciphersuite=%04X compression=%d\n",
-          session.version(), session.ciphersuite(),
+   printf("Handshake complete, protocol=%04X ciphersuite=%s compression=%d\n",
+          session.version(), session.ciphersuite().to_string().c_str(),
           session.compression_method());
 
    printf("Session id = %s\n", hex_encode(session.session_id()).c_str());

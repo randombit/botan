@@ -75,9 +75,8 @@ int connect_to_host(const std::string& host, u16bit port)
 bool handshake_complete(const TLS::Session& session)
    {
    std::cout << "Handshake complete!\n";
-   std::cout << "Protocol version " << (int)session.major_version()
-             << "." << (int)session.minor_version() << "\n";
-   std::cout << "Ciphersuite " << std::hex << session.ciphersuite() << "\n";
+   std::cout << "Protocol version " << session.version().to_string() << "\n";
+   std::cout << "Ciphersuite " << std::hex << session.ciphersuite().to_string() << "\n";
    std::cout << "Session ID " << hex_encode(session.session_id()) << "\n";
 
    return true;
