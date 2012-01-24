@@ -19,31 +19,45 @@ namespace TLS {
 
 /**
 * TLS Policy Base Class
-* Inherit and overload as desired to suite local policy concerns
+* Inherit and overload as desired to suit local policy concerns
 */
 class BOTAN_DLL Policy
    {
    public:
-      /*
-      * Return allowed ciphersuites, in order of preference
+
+      /**
+      * Returns a list of ciphers we are willing to negotiate, in
+      * order of preference. Allowed values: any block cipher name, or
+      * ARC4.
       */
-      std::vector<u16bit> ciphersuite_list(bool have_srp) const;
+      virtual std::vector<std::string> allowed_ciphers() const;
 
-      u16bit choose_suite(const std::vector<u16bit>& client_suites,
-                          bool have_rsa,
-                          bool have_dsa,
-                          bool have_srp) const;
+      /**
+      * Returns a list of hash algorithms we are willing to use, in
+      * order of preference. This is used for both MACs and signatures.
+      * Allowed values: any hash name, though currently only MD5,
+      * SHA-1, and the SHA-2 variants are used.
+      */
+      virtual std::vector<std::string> allowed_hashes() const;
 
-      byte choose_compression(const std::vector<byte>& client_algos) const;
+      /**
+      * Returns a list of key exchange algorithms we are willing to
+      * use, in order of preference. Allowed values: DH, empty string
+      * (representing RSA using server certificate key)
+      */
+      virtual std::vector<std::string> allowed_key_exchange_methods() const;
 
-      std::vector<std::string> allowed_ciphers() const;
+      /**
+      * Returns a list of signature algorithms we are willing to
+      * use, in order of preference. Allowed values RSA and DSA.
+      */
+      virtual std::vector<std::string> allowed_signature_methods() const;
 
-      std::vector<std::string> allowed_hashes() const;
-
-      std::vector<std::string> allowed_key_exchange_methods() const;
-
-      std::vector<std::string> allowed_signature_methods() const;
-
+      /**
+      * Returns a list of signature algorithms we are willing to use,
+      * in order of preference. Allowed values any value of
+      * Compression_Method.
+      */
       virtual std::vector<byte> compression() const;
 
       /**
@@ -71,6 +85,18 @@ class BOTAN_DLL Policy
       */
       virtual Protocol_Version pref_version() const
          { return Protocol_Version::TLS_V12; }
+
+      /**
+      * Return allowed ciphersuites, in order of preference
+      */
+      std::vector<u16bit> ciphersuite_list(bool have_srp) const;
+
+      u16bit choose_suite(const std::vector<u16bit>& client_suites,
+                          bool have_rsa,
+                          bool have_dsa,
+                          bool have_srp) const;
+
+      byte choose_compression(const std::vector<byte>& client_algos) const;
 
       virtual ~Policy() {}
    };
