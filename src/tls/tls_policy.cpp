@@ -41,7 +41,7 @@ std::vector<std::string> Policy::allowed_key_exchange_methods() const
    {
    std::vector<std::string> allowed;
    //allowed.push_back("SRP");
-   //allowed.push_back("ECDH");
+   allowed.push_back("ECDH");
    allowed.push_back("DH");
    allowed.push_back(""); // means RSA via server cert
    return allowed;
@@ -193,9 +193,6 @@ u16bit Policy::choose_suite(const std::vector<u16bit>& client_suites,
 
       if(suite.cipher_keylen() == 0)
          continue; // not a ciphersuite we know
-
-      if(suite.kex_algo() == "ECDH")
-         continue; // not currently supported
 
       if(suite.sig_algo() == "RSA" && have_rsa)
          return suite_id;
