@@ -182,8 +182,7 @@ void Record_Writer::send(byte type, const byte input[], size_t length)
 void Record_Writer::send_record(byte type, const byte input[], size_t length)
    {
    if(length >= MAX_PLAINTEXT_SIZE)
-      throw TLS_Exception(INTERNAL_ERROR,
-                          "Record_Writer: Compressed packet is too big");
+      throw Internal_Error("Record_Writer: Compressed packet is too big");
 
    if(m_mac_size == 0)
       {
@@ -219,8 +218,7 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
                                        m_block_size);
 
       if(buf_size >= MAX_CIPHERTEXT_SIZE)
-         throw TLS_Exception(INTERNAL_ERROR,
-                             "Record_Writer: Record is too big");
+         throw Internal_Error("Record_Writer: Record is too big");
 
       BOTAN_ASSERT(m_writebuf.size() >= TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE,
                    "Write buffer is big enough");

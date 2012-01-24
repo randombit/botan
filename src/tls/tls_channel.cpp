@@ -122,6 +122,11 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
       alert(FATAL, DECODE_ERROR);
       throw;
       }
+   catch(Internal_Error& e)
+      {
+      alert(FATAL, INTERNAL_ERROR);
+      throw;
+      }
    catch(std::exception& e)
       {
       alert(FATAL, INTERNAL_ERROR);
