@@ -63,6 +63,8 @@ class Client_Hello : public Handshake_Message
       std::vector<std::pair<std::string, std::string> > supported_algos() const
          { return m_supported_algos; }
 
+      const std::vector<std::string> supported_ecc_curves() const { return m_supported_curves; }
+
       std::vector<u16bit> ciphersuites() const { return m_suites; }
       std::vector<byte> compression_methods() const { return m_comp_methods; }
 
@@ -119,6 +121,7 @@ class Client_Hello : public Handshake_Message
       MemoryVector<byte> m_renegotiation_info;
 
       std::vector<std::pair<std::string, std::string> > m_supported_algos;
+      std::vector<std::string> m_supported_curves;
    };
 
 /**

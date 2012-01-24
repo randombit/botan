@@ -51,7 +51,9 @@ Server_Hello::Server_Hello(Record_Writer& writer,
          have_dsa = true;
       }
 
-   suite = policy.choose_suite(c_hello.ciphersuites(), have_rsa, have_dsa, false);
+   suite = policy.choose_suite(c_hello.ciphersuites(),
+                               !c_hello.supported_ecc_curves().empty(),
+                               have_rsa, have_dsa, false);
 
    if(suite == 0)
       throw TLS_Exception(HANDSHAKE_FAILURE,

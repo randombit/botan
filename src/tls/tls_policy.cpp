@@ -182,9 +182,10 @@ std::vector<byte> Policy::compression() const
 * Choose which ciphersuite to use
 */
 u16bit Policy::choose_suite(const std::vector<u16bit>& client_suites,
-                                bool have_rsa,
-                                bool have_dsa,
-                                bool have_srp) const
+                            bool have_shared_ecc_curve,
+                            bool have_rsa,
+                            bool have_dsa,
+                            bool have_srp) const
    {
    for(size_t i = 0; i != client_suites.size(); ++i)
       {
@@ -193,6 +194,9 @@ u16bit Policy::choose_suite(const std::vector<u16bit>& client_suites,
 
       if(suite.cipher_keylen() == 0)
          continue; // not a ciphersuite we know
+
+      if(suite.kex_algo() == "ECDH" && !have_shared_ecc_curve)
+         continue;
 
       if(suite.sig_algo() == "RSA" && have_rsa)
          return suite_id;

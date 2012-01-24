@@ -92,6 +92,7 @@ class BOTAN_DLL Policy
       std::vector<u16bit> ciphersuite_list(bool have_srp) const;
 
       u16bit choose_suite(const std::vector<u16bit>& client_suites,
+                          bool have_shared_ecc_curve,
                           bool have_rsa,
                           bool have_dsa,
                           bool have_srp) const;

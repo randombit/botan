@@ -287,6 +287,9 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
       m_renegotiation_info = reneg->renegotiation_info();
       }
 
+   if(Supported_Elliptic_Curves* ecc = extensions.get<Supported_Elliptic_Curves>())
+      m_supported_curves = ecc->curves();
+
    if(Signature_Algorithms* sigs = extensions.get<Signature_Algorithms>())
       {
       m_supported_algos = sigs->supported_signature_algorthms();
