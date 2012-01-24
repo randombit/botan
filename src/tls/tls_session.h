@@ -54,16 +54,28 @@ class BOTAN_DLL Session
               const std::string& srp_identifier = "");
 
       /**
-      * Load a session from BER (created by BER_encode)
+      * Load a session from DER representation (created by DER_encode)
       */
       Session(const byte ber[], size_t ber_len);
+
+      /**
+      * Load a session from PEM representation (created by PEM_encode)
+      */
+      Session(const std::string& pem);
 
       /**
       * Encode this session data for storage
       * @warning if the master secret is compromised so is the
       * session traffic
       */
-      SecureVector<byte> BER_encode() const;
+      SecureVector<byte> DER_encode() const;
+
+      /**
+      * Encode this session data for storage
+      * @warning if the master secret is compromised so is the
+      * session traffic
+      */
+      std::string PEM_encode() const;
 
       /**
       * Get the version of the saved session
@@ -125,6 +137,11 @@ class BOTAN_DLL Session
          { return m_secure_renegotiation_supported; }
 
       /**
+      * Return the certificate chain of the peer (possibly empty)
+      */
+      std::vector<X509_Certificate> peer_certs() const { return m_peer_certs; }
+
+      /**
       * Get the time this session began (seconds since Epoch)
       */
       u64bit start_time() const { return m_start_time; }
@@ -145,7 +162,7 @@ class BOTAN_DLL Session
       bool m_secure_renegotiation_supported;
       size_t m_fragment_size;
 
-      MemoryVector<byte> m_peer_certificate; // optional
+      std::vector<X509_Certificate> m_peer_certs;
       std::string m_sni_hostname; // optional
       std::string m_srp_identifier; // optional
    };
