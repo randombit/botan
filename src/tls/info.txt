@@ -63,6 +63,8 @@ asn1
 des
 dh
 dsa
+ecdh
+ecdsa
 eme_pkcs
 emsa3
 filters
