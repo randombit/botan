@@ -38,10 +38,25 @@ BOTAN_DLL SecureVector<byte> decode(DataSource& pem,
 
 /**
 * Decode PEM data
+* @param label is set to the PEM label found for later inspection
+*/
+BOTAN_DLL SecureVector<byte> decode(const std::string& pem,
+                                    std::string& label);
+
+/**
+* Decode PEM data
 * @param label is what we expect the label to be
 */
 BOTAN_DLL SecureVector<byte> decode_check_label(
    DataSource& pem,
+   const std::string& label);
+
+/**
+* Decode PEM data
+* @param label is what we expect the label to be
+*/
+BOTAN_DLL SecureVector<byte> decode_check_label(
+   const std::string& pem,
    const std::string& label);
 
 /**
