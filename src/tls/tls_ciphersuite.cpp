@@ -5,7 +5,8 @@
 * Released under the terms of the Botan license
 */
 
-#include <botan/tls_suites.h>
+#include <botan/tls_ciphersuite.h>
+#include <botan/tls_magic.h>
 #include <botan/parsing.h>
 #include <sstream>
 #include <stdexcept>

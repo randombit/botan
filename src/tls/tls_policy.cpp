@@ -6,7 +6,7 @@
 */
 
 #include <botan/tls_policy.h>
-#include <botan/tls_suites.h>
+#include <botan/tls_ciphersuite.h>
 #include <botan/tls_exceptn.h>
 #include <botan/internal/stl_util.h>
 

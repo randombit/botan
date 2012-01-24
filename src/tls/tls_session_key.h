@@ -8,7 +8,7 @@
 #ifndef BOTAN_TLS_SESSION_KEYS_H__
 #define BOTAN_TLS_SESSION_KEYS_H__
 
-#include <botan/tls_suites.h>
+#include <botan/tls_ciphersuite.h>
 #include <botan/tls_exceptn.h>
 #include <botan/symkey.h>
 

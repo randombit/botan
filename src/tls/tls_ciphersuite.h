@@ -9,7 +9,6 @@
 #define BOTAN_TLS_CIPHER_SUITES_H__
 
 #include <botan/types.h>
-#include <botan/tls_magic.h>
 #include <string>
 
 namespace Botan {
@@ -40,10 +39,10 @@ class BOTAN_DLL Ciphersuite
       Ciphersuite() : m_cipher_keylen(0) {}
 
       Ciphersuite(const std::string& sig_algo,
-                      const std::string& kex_algo,
-                      const std::string& mac_algo,
-                      const std::string& cipher_algo,
-                      size_t cipher_algo_keylen);
+                  const std::string& kex_algo,
+                  const std::string& mac_algo,
+                  const std::string& cipher_algo,
+                  size_t cipher_algo_keylen);
    private:
       std::string m_sig_algo, m_kex_algo, m_mac_algo, m_cipher_algo;
       size_t m_cipher_keylen;

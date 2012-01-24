@@ -17,7 +17,7 @@ tls_record.h
 tls_server.h
 tls_session.h
 tls_session_manager.h
-tls_suites.h
+tls_ciphersuite.h
 tls_version.h
 </header:public>
 
@@ -52,7 +52,7 @@ tls_server.cpp
 tls_session.cpp
 tls_session_key.cpp
 tls_session_manager.cpp
-tls_suites.cpp
+tls_ciphersuite.cpp
 tls_version.cpp
 </source>
 

@@ -8,7 +8,8 @@
 #ifndef BOTAN_TLS_RECORDS_H__
 #define BOTAN_TLS_RECORDS_H__
 
-#include <botan/tls_suites.h>
+#include <botan/tls_ciphersuite.h>
+#include <botan/tls_magic.h>
 #include <botan/tls_version.h>
 #include <botan/pipe.h>
 #include <botan/mac.h>

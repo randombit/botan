@@ -10,7 +10,7 @@
 
 #include <botan/x509cert.h>
 #include <botan/tls_version.h>
-#include <botan/tls_suites.h>
+#include <botan/tls_ciphersuite.h>
 #include <botan/tls_magic.h>
 #include <botan/secmem.h>
 

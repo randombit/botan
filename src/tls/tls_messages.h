@@ -12,7 +12,7 @@
 #include <botan/tls_session.h>
 #include <botan/tls_policy.h>
 #include <botan/tls_magic.h>
-#include <botan/tls_suites.h>
+#include <botan/tls_ciphersuite.h>
 #include <botan/bigint.h>
 #include <botan/pkcs8.h>
 #include <botan/x509cert.h>
