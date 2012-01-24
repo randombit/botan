@@ -40,8 +40,8 @@ std::vector<std::string> Policy::allowed_hashes() const
 std::vector<std::string> Policy::allowed_key_exchange_methods() const
    {
    std::vector<std::string> allowed;
-   //allowed.push_back("ECDH");
    //allowed.push_back("SRP");
+   //allowed.push_back("ECDH");
    allowed.push_back("DH");
    allowed.push_back(""); // means RSA via server cert
    return allowed;
@@ -188,26 +188,26 @@ u16bit Policy::choose_suite(const std::vector<u16bit>& client_suites,
    {
    for(size_t i = 0; i != client_suites.size(); ++i)
       {
-      u16bit suite_id = client_suites[i];
+      const u16bit suite_id = client_suites[i];
       Ciphersuite suite = Ciphersuite::lookup_ciphersuite(suite_id);
+
       if(suite.cipher_keylen() == 0)
          continue; // not a ciphersuite we know
-
-      if(!have_srp && suite.kex_algo() == "SRP")
-         continue;
 
       if(suite.kex_algo() == "ECDH")
          continue; // not currently supported
 
-      if(suite.kex_algo() == "ECDH")
-         continue; // not yet supported
-
       if(suite.sig_algo() == "RSA" && have_rsa)
          return suite_id;
-      else if(suite.sig_algo() == "DSA" && have_dsa)
+
+      if(suite.sig_algo() == "DSA" && have_dsa)
          return suite_id;
+
+      if(suite.kex_algo() == "SRP" && have_srp)
+         return suite_id;
+
 #if 0
-      else if(suite.sig_algo() == "") // anonymous server
+      if(suite.sig_algo() == "") // anonymous server
          return suite_id;
 #endif
       }
