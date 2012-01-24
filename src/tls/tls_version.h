@@ -9,7 +9,7 @@
 #define BOTAN_TLS_PROTOCOL_VERSION_H__
 
 #include <botan/get_byte.h>
-#include <botan/parsing.h>
+#include <string>
 
 namespace Botan {
 
@@ -25,71 +25,58 @@ class BOTAN_DLL Protocol_Version
          TLS_V12            = 0x0303
       };
 
-      Protocol_Version() : m_major(0), m_minor(0) {}
+      Protocol_Version() : m_version(0) {}
 
       Protocol_Version(Version_Code named_version) :
-         m_major(get_byte<u16bit>(0, named_version)),
-         m_minor(get_byte<u16bit>(1, named_version)) {}
+         m_version(static_cast<u16bit>(named_version)) {}
 
-      Protocol_Version(byte major, byte minor) : m_major(major), m_minor(minor) {}
+      Protocol_Version(byte major, byte minor) :
+         m_version((static_cast<u16bit>(major) << 8) | minor) {}
 
       /**
       * Get the major version of the protocol version
       */
-      byte major_version() const { return m_major; }
+      byte major_version() const { return get_byte(0, m_version); }
 
       /**
       * Get the minor version of the protocol version
       */
-      byte minor_version() const { return m_minor; }
+      byte minor_version() const { return get_byte(1, m_version); }
 
       bool operator==(const Protocol_Version& other) const
          {
-         return (cmp(other) == 0);
+         return (m_version == other.m_version);
          }
 
       bool operator!=(const Protocol_Version& other) const
          {
-         return (cmp(other) != 0);
+         return (m_version != other.m_version);
          }
 
       bool operator>=(const Protocol_Version& other) const
          {
-         return (cmp(other) >= 0);
+         return (m_version >= other.m_version);
          }
 
       bool operator>(const Protocol_Version& other) const
          {
-         return (cmp(other) > 0);
+         return (m_version > other.m_version);
          }
 
       bool operator<=(const Protocol_Version& other) const
          {
-         return (cmp(other) <= 0);
+         return (m_version <= other.m_version);
          }
 
       bool operator<(const Protocol_Version& other) const
          {
-         return (cmp(other) < 0);
+         return (m_version < other.m_version);
          }
 
       std::string to_string() const;
 
    private:
-      s32bit cmp(const Protocol_Version& other) const
-         {
-         if(major_version() < other.major_version())
-            return -1;
-         if(major_version() > other.major_version())
-            return 1;
-         if(minor_version() < other.minor_version())
-            return -1;
-         if(minor_version() > other.minor_version())
-            return 1;
-         return 0;
-         }
-
-      byte m_major, m_minor;
+      u16bit m_version;
    };
 
 }
