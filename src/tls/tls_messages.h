@@ -260,7 +260,7 @@ class Certificate_Req : public Handshake_Message
    public:
       Handshake_Type type() const { return CERTIFICATE_REQUEST; }
 
-      std::vector<byte> acceptable_types() const { return cert_types; }
+      std::vector<std::string> acceptable_keys() const { return cert_key_types; }
       std::vector<X509_DN> acceptable_CAs() const { return names; }
 
       std::vector<std::pair<std::string, std::string> > supported_algos() const
@@ -278,7 +278,7 @@ class Certificate_Req : public Handshake_Message
       MemoryVector<byte> serialize() const;
 
       std::vector<X509_DN> names;
-      std::vector<byte> cert_types;
+      std::vector<std::string> cert_key_types;
 
       std::vector<std::pair<std::string, std::string> > m_supported_algos;
    };

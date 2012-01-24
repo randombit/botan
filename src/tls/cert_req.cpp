@@ -17,6 +17,37 @@ namespace Botan {
 
 namespace TLS {
 
+namespace {
+
+std::string cert_type_code_to_name(byte code)
+   {
+   switch(code)
+      {
+      case 1:
+         return "RSA";
+      case 2:
+         return "DSA";
+      case 64:
+         return "ECDSA";
+      default:
+         return ""; // DH or something else
+      }
+   }
+
+byte cert_type_name_to_code(const std::string& name)
+   {
+   if(name == "RSA")
+      return 1;
+   if(name == "DSA")
+      return 2;
+   if(name == "ECDSA")
+      return 64;
+
+   throw Invalid_Argument("Unknown cert type " + name);
+   }
+
+}
+
 /**
 * Create a new Certificate Request message
 */
@@ -29,8 +60,9 @@ Certificate_Req::Certificate_Req(Record_Writer& writer,
    for(size_t i = 0; i != ca_certs.size(); ++i)
       names.push_back(ca_certs[i].subject_dn());
 
-   cert_types.push_back(RSA_CERT);
-   cert_types.push_back(DSS_CERT);
+   cert_key_types.push_back("RSA");
+   cert_key_types.push_back("DSA");
+   cert_key_types.push_back("ECDSA");
 
    if(version >= Protocol_Version::TLS_V12)
       {
@@ -56,7 +88,17 @@ Certificate_Req::Certificate_Req(const MemoryRegion<byte>& buf,
 
    TLS_Data_Reader reader(buf);
 
-   cert_types = reader.get_range_vector<byte>(1, 1, 255);
+   std::vector<byte> cert_type_codes = reader.get_range_vector<byte>(1, 1, 255);
+
+   for(size_t i = 0; i != cert_type_codes.size(); ++i)
+      {
+      const std::string cert_type_name = cert_type_code_to_name(cert_type_codes[i]);
+
+      if(cert_type_name == "") // something we don't know
+         continue;
+
+      cert_key_types.push_back(cert_type_name);
+      }
 
    if(version >= Protocol_Version::TLS_V12)
       {
@@ -102,6 +144,11 @@ Certificate_Req::Certificate_Req(const MemoryRegion<byte>& buf,
 MemoryVector<byte> Certificate_Req::serialize() const
    {
    MemoryVector<byte> buf;
+
+   std::vector<byte> cert_types;
+
+   for(size_t i = 0; i != cert_key_types.size(); ++i)
+      cert_types.push_back(cert_type_name_to_code(cert_key_types[i]));
 
    append_tls_length_value(buf, cert_types, 1);
 
