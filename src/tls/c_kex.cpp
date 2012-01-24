@@ -103,8 +103,7 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 
          PK_Key_Agreement ka(priv_key, "Raw");
 
-         pre_master = strip_leading_zeros(
-            ka.derive_key(0, counterparty_key.public_value()).bits_of());
+         pre_master = ka.derive_key(0, counterparty_key.public_value()).bits_of();
 
          append_tls_length_value(key_material, priv_key.public_value(), 1);
          }
@@ -207,7 +206,10 @@ Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
       try {
          PK_Key_Agreement ka(*dh, "Raw");
 
-         pre_master = strip_leading_zeros(ka.derive_key(0, key_material).bits_of());
+         if(dh->algo_name() == "DH")
+            pre_master = strip_leading_zeros(ka.derive_key(0, key_material).bits_of());
+         else
+            pre_master = ka.derive_key(0, key_material).bits_of();
       }
       catch(...)
          {
