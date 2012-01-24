@@ -359,7 +359,7 @@ class Server_Key_Exchange : public Handshake_Message
    public:
       Handshake_Type type() const { return SERVER_KEX; }
 
-      const std::vector<BigInt>& params() const { return m_params; }
+      const MemoryVector<byte>& params() const { return m_params; }
 
       bool verify(const X509_Certificate& cert,
                   Handshake_State* state) const;
@@ -375,9 +375,8 @@ class Server_Key_Exchange : public Handshake_Message
                           Protocol_Version version);
    private:
       MemoryVector<byte> serialize() const;
-      MemoryVector<byte> serialize_params() const;
 
-      std::vector<BigInt> m_params;
+      MemoryVector<byte> m_params;
 
       std::string m_sig_algo; // sig algo used to create signature
       std::string m_hash_algo; // hash used to create signature

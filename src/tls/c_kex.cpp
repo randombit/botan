@@ -50,19 +50,23 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 
    if(state->server_kex)
       {
-      const std::vector<BigInt>& params = state->server_kex->params();
+      TLS_Data_Reader reader(state->server_kex->params());
 
       if(state->suite.kex_algo() == "DH")
          {
-         if(params.size() != 3)
+         BigInt p = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
+         BigInt g = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
+         BigInt Y = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
+
+         if(reader.remaining_bytes())
             throw Decoding_Error("Bad params size for DH key exchange");
 
-         DL_Group group(params[0], params[1]);
+         DL_Group group(p, g);
 
          if(!group.verify_group(rng, true))
             throw Internal_Error("DH group failed validation, possible attack");
 
-         DH_PublicKey counterparty_key(group, params[2]);
+         DH_PublicKey counterparty_key(group, Y);
 
          // FIXME Check that public key is residue?
 

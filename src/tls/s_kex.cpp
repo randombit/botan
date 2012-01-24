@@ -8,9 +8,9 @@
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_extensions.h>
+#include <botan/loadstor.h>
 #include <botan/pubkey.h>
 #include <botan/dh.h>
-#include <botan/loadstor.h>
 #include <memory>
 
 namespace Botan {
@@ -25,13 +25,11 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
                                          RandomNumberGenerator& rng,
                                          const Private_Key* private_key)
    {
-   const DH_PublicKey* dh_pub = dynamic_cast<const DH_PublicKey*>(state->kex_priv);
-
-   if(dh_pub)
+   if(const DH_PublicKey* dh_pub = dynamic_cast<const DH_PublicKey*>(state->kex_priv))
       {
-      m_params.push_back(dh_pub->get_domain().get_p());
-      m_params.push_back(dh_pub->get_domain().get_g());
-      m_params.push_back(BigInt::decode(dh_pub->public_value()));
+      append_tls_length_value(m_params, BigInt::encode(dh_pub->get_domain().get_p()), 2);
+      append_tls_length_value(m_params, BigInt::encode(dh_pub->get_domain().get_g()), 2);
+      append_tls_length_value(m_params, dh_pub->public_value(), 2);
       }
    else
       throw Invalid_Argument("Unknown key type " + state->kex_priv->algo_name() +
@@ -44,7 +42,7 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
 
    signer.update(state->client_hello->random());
    signer.update(state->server_hello->random());
-   signer.update(serialize_params());
+   signer.update(params());
    m_signature = signer.signature(rng);
 
    send(writer, state->hash);
@@ -55,7 +53,7 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
 */
 MemoryVector<byte> Server_Key_Exchange::serialize() const
    {
-   MemoryVector<byte> buf = serialize_params();
+   MemoryVector<byte> buf = params();
 
    // This should be an explicit version check
    if(m_hash_algo != "" && m_sig_algo != "")
@@ -65,19 +63,6 @@ MemoryVector<byte> Server_Key_Exchange::serialize() const
       }
 
    append_tls_length_value(buf, m_signature, 2);
-   return buf;
-   }
-
-/**
-* Serialize the ServerParams structure
-*/
-MemoryVector<byte> Server_Key_Exchange::serialize_params() const
-   {
-   MemoryVector<byte> buf;
-
-   for(size_t i = 0; i != m_params.size(); ++i)
-      append_tls_length_value(buf, BigInt::encode(m_params[i]), 2);
-
    return buf;
    }
 
@@ -94,6 +79,12 @@ Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
 
    TLS_Data_Reader reader(buf);
 
+   /*
+   * We really are just serializing things back to what they were
+   * before, but unfortunately to know where the signature is we need
+   * to be able to parse the whole thing anyway.
+   */
+
    if(kex_algo == "DH")
       {
       // 3 bigints, DH p, g, Y
@@ -101,7 +92,7 @@ Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
       for(size_t i = 0; i != 3; ++i)
          {
          BigInt v = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
-         m_params.push_back(v);
+         append_tls_length_value(m_params, BigInt::encode(v), 2);
          }
       }
    else
@@ -134,7 +125,7 @@ bool Server_Key_Exchange::verify(const X509_Certificate& cert,
 
    verifier.update(state->client_hello->random());
    verifier.update(state->server_hello->random());
-   verifier.update(serialize_params());
+   verifier.update(params());
 
    return verifier.check_signature(m_signature);
    }
