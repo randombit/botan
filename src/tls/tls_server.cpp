@@ -10,6 +10,7 @@
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/stl_util.h>
 #include <botan/dh.h>
+#include <botan/ecdh.h>
 
 namespace Botan {
 
@@ -256,13 +257,20 @@ void Server::process_handshake_msg(Handshake_Type type,
                                                   server_certs);
             }
 
-         if(state->suite.kex_algo() != "")
+         const std::string kex_algo = state->suite.kex_algo();
+
+         if(kex_algo != "")
             {
-            if(state->suite.kex_algo() == "DH")
+            if(kex_algo == "DH")
                state->kex_priv = new DH_PrivateKey(rng, policy.dh_group());
+            else if(kex_algo == "ECDH")
+               {
+               EC_Group ec_group("secp256r1"); // FIXME, use client known groups
+               state->kex_priv = new ECDH_PrivateKey(rng, ec_group);
+               }
             else
                throw Internal_Error("Server: Unknown ciphersuite kex type " +
-                                    state->suite.kex_algo());
+                                    kex_algo);
 
             state->server_kex =
                new Server_Key_Exchange(writer, state, rng, private_key);
