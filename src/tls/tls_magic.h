@@ -104,6 +104,7 @@ enum Ciphersuite_Code {
    TLS_RSA_WITH_AES_128_CBC_SHA256          = 0x003C,
    TLS_RSA_WITH_AES_256_CBC_SHA256          = 0x003D,
    TLS_RSA_WITH_SEED_CBC_SHA                = 0x0096,
+   TLS_RSA_WITH_IDEA_CBC_SHA                = 0x0007,
 
    TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA        = 0x0013,
    TLS_DHE_DSS_WITH_AES_128_CBC_SHA         = 0x0032,

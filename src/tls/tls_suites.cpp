@@ -47,6 +47,11 @@ Ciphersuite Ciphersuite::lookup_ciphersuite(u16bit suite)
       case TLS_RSA_WITH_SEED_CBC_SHA:
          return Ciphersuite("RSA", "", "SHA-1", "SEED", 16);
 
+#if defined(BOTAN_HAS_IDEA)
+      case TLS_RSA_WITH_IDEA_CBC_SHA:
+         return Ciphersuite("RSA", "", "SHA-1", "IDEA", 16);
+#endif
+
       // DH/DSS ciphersuites
 
       case TLS_DHE_DSS_WITH_AES_128_CBC_SHA:

@@ -17,29 +17,35 @@ namespace TLS {
 std::vector<std::string> Policy::allowed_ciphers() const
    {
    std::vector<std::string> allowed;
+
    allowed.push_back("AES-256");
    allowed.push_back("AES-128");
    allowed.push_back("TripleDES");
    allowed.push_back("ARC4");
-   // Note that SEED is not included by default
+
+   // Note that SEED and IDEA are not included by default
+
    return allowed;
    }
 
 std::vector<std::string> Policy::allowed_hashes() const
    {
    std::vector<std::string> allowed;
+
    allowed.push_back("SHA-512");
    allowed.push_back("SHA-384");
    allowed.push_back("SHA-256");
    allowed.push_back("SHA-224");
    allowed.push_back("SHA-1");
    // Note that MD5 is not included by default
+
    return allowed;
    }
 
 std::vector<std::string> Policy::allowed_key_exchange_methods() const
    {
    std::vector<std::string> allowed;
+
    //allowed.push_back("SRP");
    allowed.push_back("ECDH");
    allowed.push_back("DH");
