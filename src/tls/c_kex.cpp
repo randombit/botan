@@ -177,30 +177,9 @@ Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
                                        const Private_Key* priv_key,
                                        Protocol_Version client_version)
    {
-
-   if(const DH_PrivateKey* dh_priv = dynamic_cast<const DH_PrivateKey*>(priv_key))
+   if(const RSA_PrivateKey* rsa = dynamic_cast<const RSA_PrivateKey*>(priv_key))
       {
-      try {
-         PK_Key_Agreement ka(*dh_priv, "Raw");
-
-         pre_master = strip_leading_zeros(ka.derive_key(0, key_material).bits_of());
-      }
-      catch(...)
-         {
-         /*
-         * Something failed in the DH computation. To avoid possible
-         * timing attacks, randomize the pre-master output and carry
-         * on, allowing the protocol to fail later in the finished
-         * checks.
-         */
-         pre_master = rng.random_vec(dh_priv->public_value().size());
-         }
-
-      return pre_master;
-      }
-   else if(const RSA_PrivateKey* rsa_priv = dynamic_cast<const RSA_PrivateKey*>(priv_key))
-      {
-      PK_Decryptor_EME decryptor(*rsa_priv, "PKCS1v15");
+      PK_Decryptor_EME decryptor(*rsa, "PKCS1v15");
 
       try {
          pre_master = decryptor.decrypt(key_material);
@@ -221,8 +200,30 @@ Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
 
       return pre_master;
       }
-   else
-      throw Invalid_Argument("Client_Key_Exchange: Bad key for decrypt");
+
+   // DH or ECDH
+   if(const PK_Key_Agreement_Key* dh = dynamic_cast<const PK_Key_Agreement_Key*>(priv_key))
+      {
+      try {
+         PK_Key_Agreement ka(*dh, "Raw");
+
+         pre_master = strip_leading_zeros(ka.derive_key(0, key_material).bits_of());
+      }
+      catch(...)
+         {
+         /*
+         * Something failed in the DH computation. To avoid possible
+         * timing attacks, randomize the pre-master output and carry
+         * on, allowing the protocol to fail later in the finished
+         * checks.
+         */
+         pre_master = rng.random_vec(dh->public_value().size());
+         }
+
+      return pre_master;
+      }
+
+   throw Invalid_Argument("Client_Key_Exchange: Unknown key type " + priv_key->algo_name());
    }
 
 }
