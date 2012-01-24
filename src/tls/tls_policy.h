@@ -54,11 +54,21 @@ class BOTAN_DLL Policy
       virtual std::vector<std::string> allowed_signature_methods() const;
 
       /**
+      * Return list of ECC curves we are willing to use in order of preference
+      */
+      virtual std::vector<std::string> allowed_ecc_curves() const;
+
+      /**
       * Returns a list of signature algorithms we are willing to use,
       * in order of preference. Allowed values any value of
       * Compression_Method.
       */
       virtual std::vector<byte> compression() const;
+
+      /**
+      * Choose an elliptic curve to use
+      */
+      virtual std::string choose_curve(const std::vector<std::string>& curve_names) const;
 
       /**
       * Require support for RFC 5746 extensions to enable

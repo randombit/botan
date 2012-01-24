@@ -265,7 +265,18 @@ void Server::process_handshake_msg(Handshake_Type type,
                state->kex_priv = new DH_PrivateKey(rng, policy.dh_group());
             else if(kex_algo == "ECDH")
                {
-               EC_Group ec_group("secp256r1"); // FIXME, use client known groups
+               const std::vector<std::string>& curves =
+                  state->client_hello->supported_ecc_curves();
+
+               if(curves.empty())
+                  throw Internal_Error("Client sent no ECC extension but we negotiated ECDH");
+
+               const std::string curve_name = policy.choose_curve(curves);
+
+               if(curve_name == "") // shouldn't happen
+                  throw Internal_Error("Could not agree on an ECC curve with the client");
+
+               EC_Group ec_group(curve_name);
                state->kex_priv = new ECDH_PrivateKey(rng, ec_group);
                }
             else

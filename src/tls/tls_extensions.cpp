@@ -366,21 +366,6 @@ MemoryVector<byte> Supported_Elliptic_Curves::serialize() const
    return buf;
    }
 
-Supported_Elliptic_Curves::Supported_Elliptic_Curves()
-   {
-   m_curves.push_back("secp521r1");
-   m_curves.push_back("secp384r1");
-   m_curves.push_back("secp256r1");
-   m_curves.push_back("secp256k1");
-   m_curves.push_back("secp224r1");
-   m_curves.push_back("secp224k1");
-   m_curves.push_back("secp192r1");
-   m_curves.push_back("secp192k1");
-   m_curves.push_back("secp160r2");
-   m_curves.push_back("secp160r1");
-   m_curves.push_back("secp160k1");
-   }
-
 Supported_Elliptic_Curves::Supported_Elliptic_Curves(TLS_Data_Reader& reader,
                                                      u16bit extension_size)
    {

@@ -56,6 +56,23 @@ std::vector<std::string> Policy::allowed_signature_methods() const
    return allowed;
    }
 
+std::vector<std::string> Policy::allowed_ecc_curves() const
+   {
+   std::vector<std::string> curves;
+   curves.push_back("secp521r1");
+   curves.push_back("secp384r1");
+   curves.push_back("secp256r1");
+   curves.push_back("secp256k1");
+   curves.push_back("secp224r1");
+   curves.push_back("secp224k1");
+   curves.push_back("secp192r1");
+   curves.push_back("secp192k1");
+   curves.push_back("secp160r2");
+   curves.push_back("secp160r1");
+   curves.push_back("secp160k1");
+   return curves;
+   }
+
 namespace {
 
 class Ciphersuite_Preference_Ordering
@@ -176,6 +193,20 @@ std::vector<byte> Policy::compression() const
    std::vector<byte> algs;
    algs.push_back(NO_COMPRESSION);
    return algs;
+   }
+
+/*
+* Choose an ECC curve to use
+*/
+std::string Policy::choose_curve(const std::vector<std::string>& curve_names) const
+   {
+   std::vector<std::string> our_curves;
+
+   for(size_t i = 0; i != our_curves.size(); ++i)
+      if(value_exists(curve_names, our_curves[i]))
+         return our_curves[i];
+
+   return ""; // no shared curve
    }
 
 /*

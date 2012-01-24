@@ -99,6 +99,8 @@ Client_Hello::Client_Hello(Record_Writer& writer,
    std::vector<std::string> hashes = policy.allowed_hashes();
    std::vector<std::string> sigs = policy.allowed_signature_methods();
 
+   m_supported_curves = policy.allowed_ecc_curves();
+
    for(size_t i = 0; i != hashes.size(); ++i)
       for(size_t j = 0; j != sigs.size(); ++j)
          m_supported_algos.push_back(std::make_pair(hashes[i], sigs[j]));
@@ -126,7 +128,7 @@ Client_Hello::Client_Hello(Record_Writer& writer,
    m_suites.push_back(session.ciphersuite_code());
    m_comp_methods.push_back(session.compression_method());
 
-   // set m_supported_algos here?
+   // set m_supported_algos + m_supported_curves here?
 
    send(writer, hash);
    }
@@ -173,6 +175,7 @@ MemoryVector<byte> Client_Hello::serialize() const
       extensions.add(new Renegotation_Extension(m_renegotiation_info));
       extensions.add(new Server_Name_Indicator(m_hostname));
       extensions.add(new SRP_Identifier(m_srp_identifier));
+      extensions.add(new Supported_Elliptic_Curves(m_supported_curves));
 
       if(m_version >= Protocol_Version::TLS_V12)
          extensions.add(new Signature_Algorithms(m_supported_algos));

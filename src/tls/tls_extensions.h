@@ -208,7 +208,8 @@ class Supported_Elliptic_Curves : public Extension
 
       MemoryVector<byte> serialize() const;
 
-      Supported_Elliptic_Curves(); // default values, for client
+      Supported_Elliptic_Curves(const std::vector<std::string>& curves) :
+         m_curves(curves) {}
 
       Supported_Elliptic_Curves(TLS_Data_Reader& reader,
                                 u16bit extension_size);

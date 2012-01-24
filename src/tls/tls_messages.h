@@ -60,10 +60,11 @@ class Client_Hello : public Handshake_Message
          return v;
          }
 
-      std::vector<std::pair<std::string, std::string> > supported_algos() const
+      const std::vector<std::pair<std::string, std::string> >& supported_algos() const
          { return m_supported_algos; }
 
-      const std::vector<std::string> supported_ecc_curves() const { return m_supported_curves; }
+      const std::vector<std::string>& supported_ecc_curves() const
+         { return m_supported_curves; }
 
       std::vector<u16bit> ciphersuites() const { return m_suites; }
       std::vector<byte> compression_methods() const { return m_comp_methods; }
