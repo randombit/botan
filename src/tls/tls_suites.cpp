@@ -97,33 +97,14 @@ Ciphersuite Ciphersuite::lookup_ciphersuite(u16bit suite)
       case TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA:
          return Ciphersuite("RSA", "ECDH", "SHA-1", "AES-256", 32);
 
+      case TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256:
+         return Ciphersuite("RSA", "ECDH", "SHA-256", "AES-128", 16);
+
       case TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA:
          return Ciphersuite("RSA", "ECDH", "SHA-1", "3DES", 24);
 
       case TLS_ECDHE_RSA_WITH_RC4_128_SHA:
          return Ciphersuite("RSA", "ECDH", "SHA-1", "ARC4", 16);
-
-      // SRP/RSA ciphersuites
-
-      case TLS_SRP_SHA_RSA_WITH_AES_128_SHA:
-         return Ciphersuite("RSA", "SRP/SHA-1", "SHA-1", "AES-128", 16);
-
-      case TLS_SRP_SHA_RSA_WITH_AES_256_SHA:
-         return Ciphersuite("RSA", "SRP/SHA-1", "SHA-1", "AES-256", 32);
-
-      case TLS_SRP_SHA_RSA_WITH_3DES_EDE_SHA:
-         return Ciphersuite("RSA", "SRP/SHA-1", "SHA-1", "3DES", 24);
-
-      // SRP/DSA ciphersuites
-
-      case TLS_SRP_SHA_DSS_WITH_AES_128_SHA:
-         return Ciphersuite("DSA", "SRP/SHA-1", "SHA-1", "AES-128", 16);
-
-      case TLS_SRP_SHA_DSS_WITH_AES_256_SHA:
-         return Ciphersuite("DSA", "SRP/SHA-1", "SHA-1", "AES-256", 32);
-
-      case TLS_SRP_SHA_DSS_WITH_3DES_EDE_SHA:
-         return Ciphersuite("DSA", "SRP/SHA-1", "SHA-1", "3DES", 24);
 
       // ECDH/ECDSA ciphersuites
 
@@ -136,20 +117,33 @@ Ciphersuite Ciphersuite::lookup_ciphersuite(u16bit suite)
       case TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:
          return Ciphersuite("ECDSA", "ECDH", "SHA-256", "AES-128", 16);
 
-      case TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384:
-         return Ciphersuite("ECDSA", "ECDH", "SHA-384", "AES-256", 32);
-
-      case TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256:
-         return Ciphersuite("ECDSA", "ECDH", "SHA-256", "AES-128", 16);
-
-      case TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384:
-         return Ciphersuite("ECDSA", "ECDH", "SHA-384", "AES-256", 32);
-
       case TLS_ECDHE_ECDSA_WITH_RC4_128_SHA:
          return Ciphersuite("ECDSA", "ECDH", "SHA-1", "ARC4", 16);
 
       case TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA:
          return Ciphersuite("ECDSA", "ECDH", "SHA-1", "3DES", 24);
+
+      // SRP/RSA ciphersuites
+
+      case TLS_SRP_SHA_RSA_WITH_AES_128_SHA:
+         return Ciphersuite("RSA", "SRP", "SHA-1", "AES-128", 16);
+
+      case TLS_SRP_SHA_RSA_WITH_AES_256_SHA:
+         return Ciphersuite("RSA", "SRP", "SHA-1", "AES-256", 32);
+
+      case TLS_SRP_SHA_RSA_WITH_3DES_EDE_SHA:
+         return Ciphersuite("RSA", "SRP", "SHA-1", "3DES", 24);
+
+      // SRP/DSA ciphersuites
+
+      case TLS_SRP_SHA_DSS_WITH_AES_128_SHA:
+         return Ciphersuite("DSA", "SRP", "SHA-1", "AES-128", 16);
+
+      case TLS_SRP_SHA_DSS_WITH_AES_256_SHA:
+         return Ciphersuite("DSA", "SRP", "SHA-1", "AES-256", 32);
+
+      case TLS_SRP_SHA_DSS_WITH_3DES_EDE_SHA:
+         return Ciphersuite("DSA", "SRP", "SHA-1", "3DES", 24);
 
       default:
          return Ciphersuite(); // some unknown ciphersuite
@@ -169,7 +163,7 @@ std::string Ciphersuite::to_string() const
       out << "DHE";
    else if(kex_algo() == "ECDH")
       out << "ECDHE";
-   else if(kex_algo() == "SRP/SHA-1")
+   else if(kex_algo() == "SRP")
       out << "SRP_SHA";
    else if(kex_algo() != "")
       out << kex_algo();

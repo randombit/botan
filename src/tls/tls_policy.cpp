@@ -200,7 +200,7 @@ std::vector<byte> Policy::compression() const
 */
 std::string Policy::choose_curve(const std::vector<std::string>& curve_names) const
    {
-   std::vector<std::string> our_curves;
+   std::vector<std::string> our_curves = allowed_ecc_curves();
 
    for(size_t i = 0; i != our_curves.size(); ++i)
       if(value_exists(curve_names, our_curves[i]))
@@ -231,8 +231,13 @@ u16bit Policy::choose_suite(const std::vector<u16bit>& client_suites,
             continue;
          }
 
-      if(suite.kex_algo() == "SRP" && have_srp)
-         return suite_id;
+      if(suite.kex_algo() == "SRP")
+         {
+         if(have_srp)
+            return suite_id;
+         else
+            continue;
+         }
 
       if(value_exists(available_cert_types, suite.sig_algo()))
          return suite_id;
