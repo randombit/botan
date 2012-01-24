@@ -290,9 +290,7 @@ MemoryVector<byte> Next_Protocol_Notification::serialize() const
    return buf;
    }
 
-namespace {
-
-std::string tls_curve_id_to_name(u16bit id)
+std::string Supported_Elliptic_Curves::curve_id_to_name(u16bit id)
    {
    switch(id)
       {
@@ -323,7 +321,7 @@ std::string tls_curve_id_to_name(u16bit id)
       }
    }
 
-u16bit tls_name_to_curve_id(const std::string& name)
+u16bit Supported_Elliptic_Curves::name_to_curve_id(const std::string& name)
    {
    if(name == "secp160k1")
       return 15;
@@ -348,10 +346,8 @@ u16bit tls_name_to_curve_id(const std::string& name)
    if(name == "secp521r1")
       return 25;
 
-   throw Invalid_Argument("tls_name_to_curve_id unknown name " + name);
+   throw Invalid_Argument("name_to_curve_id unknown name " + name);
    }
-
-}
 
 MemoryVector<byte> Supported_Elliptic_Curves::serialize() const
    {
@@ -359,7 +355,7 @@ MemoryVector<byte> Supported_Elliptic_Curves::serialize() const
 
    for(size_t i = 0; i != m_curves.size(); ++i)
       {
-      const u16bit id = tls_name_to_curve_id(m_curves[i]);
+      const u16bit id = name_to_curve_id(m_curves[i]);
       buf.push_back(get_byte(0, id));
       buf.push_back(get_byte(1, id));
       }
@@ -401,7 +397,7 @@ Supported_Elliptic_Curves::Supported_Elliptic_Curves(TLS_Data_Reader& reader,
    for(size_t i = 0; i != len; ++i)
       {
       const u16bit id = reader.get_u16bit();
-      const std::string name = tls_curve_id_to_name(id);
+      const std::string name = curve_id_to_name(id);
 
       if(name != "")
          m_curves.push_back(name);

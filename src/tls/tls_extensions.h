@@ -201,6 +201,9 @@ class Supported_Elliptic_Curves : public Extension
 
       Handshake_Extension_Type type() const { return static_type(); }
 
+      static std::string curve_id_to_name(u16bit id);
+      static u16bit name_to_curve_id(const std::string& name);
+
       const std::vector<std::string>& curves() const { return m_curves; }
 
       MemoryVector<byte> serialize() const;
