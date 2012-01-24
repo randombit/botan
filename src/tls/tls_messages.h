@@ -162,7 +162,7 @@ class Server_Hello : public Handshake_Message
                    Handshake_Hash& hash,
                    Protocol_Version version,
                    const Client_Hello& other,
-                   const std::vector<X509_Certificate>& certs,
+                   const std::vector<std::string>& available_cert_types,
                    const Policy& policies,
                    bool client_has_secure_renegotiation,
                    const MemoryRegion<byte>& reneg_info,
@@ -260,7 +260,9 @@ class Certificate_Req : public Handshake_Message
    public:
       Handshake_Type type() const { return CERTIFICATE_REQUEST; }
 
-      std::vector<std::string> acceptable_keys() const { return cert_key_types; }
+      const std::vector<std::string>& acceptable_cert_types() const
+         { return cert_key_types; }
+
       std::vector<X509_DN> acceptable_CAs() const { return names; }
 
       std::vector<std::pair<std::string, std::string> > supported_algos() const

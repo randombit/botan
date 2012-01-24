@@ -4,13 +4,22 @@
 
 #include <botan/credentials_manager.h>
 
+bool value_exists(const std::vector<std::string>& vec,
+                  const std::string& val)
+   {
+   for(size_t i = 0; i != vec.size(); ++i)
+      if(vec[i] == val)
+         return true;
+   return false;
+   }
+
 class Credentials_Manager_Simple : public Botan::Credentials_Manager
    {
    public:
       Credentials_Manager_Simple(Botan::RandomNumberGenerator& rng) : rng(rng) {}
 
       std::vector<Botan::X509_Certificate> cert_chain(
-         const std::string& cert_key_type,
+         const std::vector<std::string>& cert_key_types,
          const std::string& type,
          const std::string& context)
          {
@@ -20,11 +29,22 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
             {
             const std::string hostname = (context == "" ? "localhost" : context);
 
-            Botan::X509_Certificate cert(hostname + ".crt");
-            Botan::Private_Key* key = Botan::PKCS8::load_key(hostname + ".key", rng);
+            if(value_exists(cert_key_types, "RSA"))
+               {
+               Botan::X509_Certificate cert(hostname + ".crt");
+               Botan::Private_Key* key = Botan::PKCS8::load_key(hostname + ".key", rng);
 
-            certs_and_keys[cert] = key;
-            certs.push_back(cert);
+               certs_and_keys[cert] = key;
+               certs.push_back(cert);
+               }
+            else if(value_exists(cert_key_types, "DSA"))
+               {
+               Botan::X509_Certificate cert(hostname + ".dsa.crt");
+               Botan::Private_Key* key = Botan::PKCS8::load_key(hostname + ".dsa.key", rng);
+
+               certs_and_keys[cert] = key;
+               certs.push_back(cert);
+               }
             }
          else if(type == "tls-client")
             {

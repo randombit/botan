@@ -35,11 +35,21 @@ bool Credentials_Manager::srp_verifier(const std::string&,
    }
 
 std::vector<X509_Certificate> Credentials_Manager::cert_chain(
-   const std::string&,
+   const std::vector<std::string>&,
    const std::string&,
    const std::string&)
    {
    return std::vector<X509_Certificate>();
+   }
+
+std::vector<X509_Certificate> Credentials_Manager::cert_chain_single_type(
+   const std::string& cert_key_type,
+   const std::string& type,
+   const std::string& context)
+   {
+   std::vector<std::string> cert_types;
+   cert_types.push_back(cert_key_type);
+   return cert_chain(cert_types, type, context);
    }
 
 Private_Key* Credentials_Manager::private_key_for(const X509_Certificate&,
@@ -65,9 +75,6 @@ void Credentials_Manager::verify_certificate_chain(
       throw std::invalid_argument("Certificate chain was empty");
 
 #if 0
-   if(!cert_chain[0].matches_dns_name(purported_hostname))
-      return false;
-
    X509_Store store;
 
    std::vector<X509_Certificate> CAs = trusted_certificate_authorities();
@@ -76,6 +83,15 @@ void Credentials_Manager::verify_certificate_chain(
       store.add_cert(CAs[i], true);
    for(size_t i = 1; i != cert_chain.size(); ++i)
       store.add_cert(cert_chain[i]);
+
+   X509_Code result = store.validate_cert(cert_chain[0], TLS_SERVER);
+
+   if(result != VERIFIED)
+      throw std::runtime_error("Certificate did not validate");
+
+   if(!cert_chain[0].matches_dns_name(purported_hostname))
+      throw std::runtime_error("Certificate did not match hostname");
+
 #endif
    }
 

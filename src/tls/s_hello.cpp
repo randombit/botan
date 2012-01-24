@@ -23,7 +23,7 @@ Server_Hello::Server_Hello(Record_Writer& writer,
                            Handshake_Hash& hash,
                            Protocol_Version version,
                            const Client_Hello& c_hello,
-                           const std::vector<X509_Certificate>& certs,
+                           const std::vector<std::string>& available_cert_types,
                            const Policy& policy,
                            bool client_has_secure_renegotiation,
                            const MemoryRegion<byte>& reneg_info,
@@ -39,22 +39,11 @@ Server_Hello::Server_Hello(Record_Writer& writer,
    m_next_protocol(client_has_npn),
    m_next_protocols(next_protocols)
    {
-   bool have_rsa = false, have_dsa = false;
-
-   for(size_t i = 0; i != certs.size(); ++i)
-      {
-      Public_Key* key = certs[i].subject_public_key();
-      if(key->algo_name() == "RSA")
-         have_rsa = true;
-
-      if(key->algo_name() == "DSA")
-         have_dsa = true;
-      }
-
    suite = policy.choose_suite(
       c_hello.ciphersuites(),
+      available_cert_types,
       policy.choose_curve(c_hello.supported_ecc_curves()) != "",
-      have_rsa, have_dsa, false);
+      false);
 
    if(suite == 0)
       throw TLS_Exception(HANDSHAKE_FAILURE,

@@ -1,6 +1,6 @@
 /*
 * TLS Server
-* (C) 2004-2011 Jack Lloyd
+* (C) 2004-2011,2012 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -11,6 +11,7 @@
 #include <botan/internal/stl_util.h>
 #include <botan/dh.h>
 #include <botan/ecdh.h>
+#include <memory>
 
 namespace Botan {
 
@@ -218,23 +219,27 @@ void Server::process_handshake_msg(Handshake_Type type,
          }
       else // new session
          {
-         std::vector<X509_Certificate> server_certs =
-            creds.cert_chain("",
-                             "tls-server",
-                             m_hostname);
+         std::map<std::string, std::vector<X509_Certificate> > cert_chains;
 
-         Private_Key* private_key =
-            server_certs.empty() ? 0 :
-            (creds.private_key_for(server_certs[0],
-                                  "tls-server",
-                                   m_hostname));
+         cert_chains["RSA"] = creds.cert_chain_single_type("RSA", "tls-server", m_hostname);
+         cert_chains["DSA"] = creds.cert_chain_single_type("DSA", "tls-server", m_hostname);
+         cert_chains["ECDSA"] = creds.cert_chain_single_type("ECDSA", "tls-server", m_hostname);
+
+         std::vector<std::string> available_cert_types;
+
+         for(std::map<std::string, std::vector<X509_Certificate> >::const_iterator i = cert_chains.begin();
+             i != cert_chains.end(); ++i)
+            {
+            if(!i->second.empty())
+               available_cert_types.push_back(i->first);
+            }
 
          state->server_hello = new Server_Hello(
             writer,
             state->hash,
             state->version,
             *(state->client_hello),
-            server_certs,
+            available_cert_types,
             policy,
             secure_renegotiation.supported(),
             secure_renegotiation.for_server_hello(),
@@ -250,19 +255,28 @@ void Server::process_handshake_msg(Handshake_Type type,
 
          state->suite = Ciphersuite::lookup_ciphersuite(state->server_hello->ciphersuite());
 
-         if(state->suite.sig_algo() != "")
+         const std::string sig_algo = state->suite.sig_algo();
+         const std::string kex_algo = state->suite.kex_algo();
+
+         std::auto_ptr<Private_Key> private_key(0);
+
+         if(sig_algo != "")
             {
             state->server_certs = new Certificate(writer,
                                                   state->hash,
-                                                  server_certs);
-            }
+                                                  cert_chains[sig_algo]);
 
-         const std::string kex_algo = state->suite.kex_algo();
+            private_key.reset(creds.private_key_for(state->server_certs->cert_chain()[0],
+                                                    "tls-server",
+                                                    m_hostname));
+            }
 
          if(kex_algo != "")
             {
             if(kex_algo == "DH")
+               {
                state->kex_priv = new DH_PrivateKey(rng, policy.dh_group());
+               }
             else if(kex_algo == "ECDH")
                {
                const std::vector<std::string>& curves =
@@ -284,10 +298,10 @@ void Server::process_handshake_msg(Handshake_Type type,
                                     kex_algo);
 
             state->server_kex =
-               new Server_Key_Exchange(writer, state, rng, private_key);
+               new Server_Key_Exchange(writer, state, rng, private_key.get());
             }
          else
-            state->kex_priv = PKCS8::copy_key(*private_key, rng);
+            state->kex_priv = private_key.release();
 
          std::vector<X509_Certificate> client_auth_CAs =
             creds.trusted_certificate_authorities("tls-server", m_hostname);

@@ -213,9 +213,8 @@ std::string Policy::choose_curve(const std::vector<std::string>& curve_names) co
 * Choose which ciphersuite to use
 */
 u16bit Policy::choose_suite(const std::vector<u16bit>& client_suites,
+                            const std::vector<std::string>& available_cert_types,
                             bool have_shared_ecc_curve,
-                            bool have_rsa,
-                            bool have_dsa,
                             bool have_srp) const
    {
    for(size_t i = 0; i != client_suites.size(); ++i)
@@ -226,25 +225,20 @@ u16bit Policy::choose_suite(const std::vector<u16bit>& client_suites,
       if(suite.cipher_keylen() == 0)
          continue; // not a ciphersuite we know
 
-      if(suite.kex_algo() == "ECDH" && !have_shared_ecc_curve)
-         continue;
-
-      if(suite.sig_algo() == "RSA" && have_rsa)
-         return suite_id;
-
-      if(suite.sig_algo() == "DSA" && have_dsa)
-         return suite_id;
+      if(!have_shared_ecc_curve)
+         {
+         if(suite.kex_algo() == "ECDH" || suite.sig_algo() == "ECDSA")
+            continue;
+         }
 
       if(suite.kex_algo() == "SRP" && have_srp)
          return suite_id;
 
-#if 0
-      if(suite.sig_algo() == "") // anonymous server
+      if(value_exists(available_cert_types, suite.sig_algo()))
          return suite_id;
-#endif
       }
 
-   return 0;
+   return 0; // no shared cipersuite
    }
 
 /*

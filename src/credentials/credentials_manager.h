@@ -66,10 +66,25 @@ class BOTAN_DLL Credentials_Manager
       * Assumed that we can get the private key of the leaf with
       * private_key_for
       *
-      * @param cert_key_type is a string representing the key type
-      * ("rsa", "dsa", "ecdsa", etc) or empty if no preference.
+      * @param cert_key_type is a set string representing the allowed
+      * key type ("RSA", "DSA", "ECDSA", etc) or empty if no
+      * preference.
       */
       virtual std::vector<X509_Certificate> cert_chain(
+         const std::vector<std::string>& cert_key_types,
+         const std::string& type,
+         const std::string& context);
+
+      /**
+      * Return a cert chain we can use, ordered from leaf to root.
+      * Assumed that we can get the private key of the leaf with
+      * private_key_for
+      *
+      * @param cert_key_type is a set string representing the allowed
+      * key type ("RSA", "DSA", "ECDSA", etc) or empty if no
+      * preference.
+      */
+      std::vector<X509_Certificate> cert_chain_single_type(
          const std::string& cert_key_type,
          const std::string& type,
          const std::string& context);

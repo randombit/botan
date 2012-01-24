@@ -299,10 +299,11 @@ void Client::process_handshake_msg(Handshake_Type type,
 
       if(state->received_handshake_msg(CERTIFICATE_REQUEST))
          {
-         std::vector<byte> types = state->cert_req->acceptable_types();
+         const std::vector<std::string>& types =
+            state->cert_req->acceptable_cert_types();
 
          std::vector<X509_Certificate> client_certs =
-            creds.cert_chain("", // FIXME use types here
+            creds.cert_chain(types,
                              "tls-client",
                              state->client_hello->sni_hostname());
 
