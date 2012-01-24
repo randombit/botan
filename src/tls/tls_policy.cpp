@@ -50,7 +50,7 @@ std::vector<std::string> Policy::allowed_key_exchange_methods() const
 std::vector<std::string> Policy::allowed_signature_methods() const
    {
    std::vector<std::string> allowed;
-   //allowed.push_back("ECDSA");
+   allowed.push_back("ECDSA");
    allowed.push_back("RSA");
    allowed.push_back("DSA");
    return allowed;

@@ -173,7 +173,7 @@ Handshake_State::choose_sig_format(const Private_Key* key,
 
       return std::make_pair(padding, IEEE_1363);
       }
-   else if(sig_algo == "DSA")
+   else if(sig_algo == "DSA" || sig_algo == "ECDSA")
       {
       const std::string padding = "EMSA1(" + hash_algo + ")";
 
@@ -227,9 +227,9 @@ Handshake_State::understand_sig_format(const Public_Key* key,
       const std::string padding = "EMSA3(" + hash_algo + ")";
       return std::make_pair(padding, IEEE_1363);
       }
-   else if(algo_name == "DSA")
+   else if(algo_name == "DSA" || algo_name == "ECDSA")
       {
-      if(for_client_auth && this->version == Protocol_Version::SSL_V3)
+      if(algo_name == "DSA" && for_client_auth && this->version == Protocol_Version::SSL_V3)
          {
          hash_algo = "Raw";
          }
