@@ -11,7 +11,11 @@
 #include <botan/loadstor.h>
 #include <botan/pubkey.h>
 #include <botan/dh.h>
+#include <botan/ecdh.h>
+#include <botan/oids.h>
 #include <memory>
+
+#include <stdio.h>
 
 namespace Botan {
 
@@ -25,15 +29,31 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
                                          RandomNumberGenerator& rng,
                                          const Private_Key* private_key)
    {
-   if(const DH_PublicKey* dh_pub = dynamic_cast<const DH_PublicKey*>(state->kex_priv))
+   if(const DH_PublicKey* dh = dynamic_cast<const DH_PublicKey*>(state->kex_priv))
       {
-      append_tls_length_value(m_params, BigInt::encode(dh_pub->get_domain().get_p()), 2);
-      append_tls_length_value(m_params, BigInt::encode(dh_pub->get_domain().get_g()), 2);
-      append_tls_length_value(m_params, dh_pub->public_value(), 2);
+      append_tls_length_value(m_params, BigInt::encode(dh->get_domain().get_p()), 2);
+      append_tls_length_value(m_params, BigInt::encode(dh->get_domain().get_g()), 2);
+      append_tls_length_value(m_params, dh->public_value(), 2);
+      }
+   else if(const ECDH_PublicKey* ecdh = dynamic_cast<const ECDH_PublicKey*>(state->kex_priv))
+      {
+      const std::string ecdh_domain_oid = ecdh->domain().get_oid();
+      const std::string domain = OIDS::lookup(OID(ecdh_domain_oid));
+
+      if(domain == "")
+         throw Internal_Error("Could not find name of ECDH domain " + ecdh_domain_oid);
+
+      const u16bit named_curve_id = Supported_Elliptic_Curves::name_to_curve_id(domain);
+
+      m_params.push_back(3); // named curve
+      m_params.push_back(get_byte(0, named_curve_id));
+      m_params.push_back(get_byte(1, named_curve_id));
+
+      append_tls_length_value(m_params, ecdh->public_value(), 1);
       }
    else
-      throw Invalid_Argument("Unknown key type " + state->kex_priv->algo_name() +
-                             " for TLS key exchange");
+      throw Decoding_Error("Unsupported server key exchange type " +
+                           state->kex_priv->algo_name());
 
    std::pair<std::string, Signature_Format> format =
       state->choose_sig_format(private_key, m_hash_algo, m_sig_algo, false);
@@ -94,6 +114,27 @@ Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
          BigInt v = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
          append_tls_length_value(m_params, BigInt::encode(v), 2);
          }
+      }
+   else if(kex_algo == "ECDH")
+      {
+      const byte curve_type = reader.get_byte();
+
+      if(curve_type != 3)
+         throw Decoding_Error("Server sent non-named ECC curve");
+
+      const u16bit curve_id = reader.get_u16bit();
+
+      const std::string name = Supported_Elliptic_Curves::curve_id_to_name(curve_id);
+
+      MemoryVector<byte> ecdh_key = reader.get_range<byte>(1, 1, 255);
+
+      if(name == "")
+         throw Decoding_Error("Server sent unknown named curve " + to_string(curve_id));
+
+      m_params.push_back(curve_type);
+      m_params.push_back(get_byte(0, curve_id));
+      m_params.push_back(get_byte(1, curve_id));
+      append_tls_length_value(m_params, ecdh_key, 1);
       }
    else
       throw Decoding_Error("Unsupported server key exchange type " + kex_algo);

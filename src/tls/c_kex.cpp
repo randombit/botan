@@ -7,8 +7,10 @@
 
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_reader.h>
+#include <botan/internal/tls_extensions.h>
 #include <botan/pubkey.h>
 #include <botan/dh.h>
+#include <botan/ecdh.h>
 #include <botan/rsa.h>
 #include <botan/rng.h>
 #include <botan/loadstor.h>
@@ -46,8 +48,6 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
                                          const std::vector<X509_Certificate>& peer_certs,
                                          RandomNumberGenerator& rng)
    {
-   include_length = true;
-
    if(state->server_kex)
       {
       TLS_Data_Reader reader(state->server_kex->params());
@@ -77,10 +77,40 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
          pre_master = strip_leading_zeros(
             ka.derive_key(0, counterparty_key.public_value()).bits_of());
 
-         key_material = priv_key.public_value();
+         append_tls_length_value(key_material, priv_key.public_value(), 2);
+         }
+      else if(state->suite.kex_algo() == "ECDH")
+         {
+         const byte curve_type = reader.get_byte();
+
+         if(curve_type != 3)
+            throw Decoding_Error("Server sent non-named ECC curve");
+
+         const u16bit curve_id = reader.get_u16bit();
+
+         const std::string name = Supported_Elliptic_Curves::curve_id_to_name(curve_id);
+
+         if(name == "")
+            throw Decoding_Error("Server sent unknown named curve " + to_string(curve_id));
+
+         EC_Group group(name);
+
+         MemoryVector<byte> ecdh_key = reader.get_range<byte>(1, 1, 255);
+
+         ECDH_PublicKey counterparty_key(group, OS2ECP(ecdh_key, group.get_curve()));
+
+         ECDH_PrivateKey priv_key(rng, group);
+
+         PK_Key_Agreement ka(priv_key, "Raw");
+
+         pre_master = strip_leading_zeros(
+            ka.derive_key(0, counterparty_key.public_value()).bits_of());
+
+         append_tls_length_value(key_material, priv_key.public_value(), 1);
          }
       else
-         throw Internal_Error("Server key exchange not a known key type");
+         throw Internal_Error("Server key exchange type " + state->suite.kex_algo() +
+                              " not known");
       }
    else
       {
@@ -101,10 +131,12 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 
          PK_Encryptor_EME encryptor(*rsa_pub, "PKCS1v15");
 
-         key_material = encryptor.encrypt(pre_master, rng);
+         MemoryVector<byte> encrypted_key = encryptor.encrypt(pre_master, rng);
 
          if(state->version == Protocol_Version::SSL_V3)
-            include_length = false;
+            key_material = encrypted_key; // no length field
+         else
+            append_tls_length_value(key_material, encrypted_key, 2);
          }
       else
          throw TLS_Exception(HANDSHAKE_FAILURE,
@@ -122,33 +154,19 @@ Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
                                          const Ciphersuite& suite,
                                          Protocol_Version using_version)
    {
-   include_length = true;
-
-   if(using_version == Protocol_Version::SSL_V3 && (suite.kex_algo() == ""))
-      include_length = false;
-
-   if(include_length)
+   if(suite.kex_algo() == "" && using_version == Protocol_Version::SSL_V3)
+      key_material = contents;
+   else
       {
       TLS_Data_Reader reader(contents);
-      key_material = reader.get_range<byte>(2, 0, 65535);
-      }
-   else
-      key_material = contents;
-   }
 
-/*
-* Serialize a Client Key Exchange message
-*/
-MemoryVector<byte> Client_Key_Exchange::serialize() const
-   {
-   if(include_length)
-      {
-      MemoryVector<byte> buf;
-      append_tls_length_value(buf, key_material, 2);
-      return buf;
+      if(suite.kex_algo() == "" || suite.kex_algo() == "DH")
+         key_material = reader.get_range<byte>(2, 0, 65535);
+      else if(suite.kex_algo() == "ECDH")
+         key_material = reader.get_range<byte>(1, 1, 255);
+      else
+         throw Internal_Error("Unknown client key exch type " + suite.kex_algo());
       }
-   else
-      return key_material;
    }
 
 /*

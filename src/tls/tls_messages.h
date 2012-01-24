@@ -220,10 +220,9 @@ class Client_Key_Exchange : public Handshake_Message
                           const Ciphersuite& suite,
                           Protocol_Version using_version);
    private:
-      MemoryVector<byte> serialize() const;
+      MemoryVector<byte> serialize() const { return key_material; }
 
       SecureVector<byte> key_material, pre_master;
-      bool include_length;
    };
 
 /**
