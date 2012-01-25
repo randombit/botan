@@ -166,7 +166,7 @@ class MemoryRegion
 
       virtual ~MemoryRegion() { deallocate(buf, allocated); }
    protected:
-      MemoryRegion() : buf(0), alloc(0), used(0), allocated(0) {}
+      MemoryRegion() : buf(0), used(0), allocated(0), alloc(0) {}
 
       /**
       * Copy constructor
