@@ -153,13 +153,13 @@ Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
                                          const Ciphersuite& suite,
                                          Protocol_Version using_version)
    {
-   if(suite.kex_algo() == "" && using_version == Protocol_Version::SSL_V3)
+   if(suite.kex_algo() == "RSA" && using_version == Protocol_Version::SSL_V3)
       key_material = contents;
    else
       {
       TLS_Data_Reader reader(contents);
 
-      if(suite.kex_algo() == "" || suite.kex_algo() == "DH")
+      if(suite.kex_algo() == "RSA" || suite.kex_algo() == "DH")
          key_material = reader.get_range<byte>(2, 0, 65535);
       else if(suite.kex_algo() == "ECDH")
          key_material = reader.get_range<byte>(1, 1, 255);
@@ -177,7 +177,7 @@ Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
    {
    const std::string kex_algo = state->suite.kex_algo();
 
-   if(kex_algo == "")
+   if(kex_algo == "RSA")
       {
       BOTAN_ASSERT(state->server_certs && !state->server_certs->cert_chain().empty(),
                    "No server certificate to use for RSA");

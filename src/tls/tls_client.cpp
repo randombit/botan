@@ -221,7 +221,7 @@ void Client::process_handshake_msg(Handshake_Type type,
             {
             state->set_expected_next(CERTIFICATE);
             }
-         else if(state->suite.kex_algo() != "")
+         else if(state->suite.kex_algo() != "RSA")
             {
             state->set_expected_next(SERVER_KEX);
             }
@@ -234,7 +234,7 @@ void Client::process_handshake_msg(Handshake_Type type,
       }
    else if(type == CERTIFICATE)
       {
-      if(state->suite.kex_algo() != "")
+      if(state->suite.kex_algo() != "RSA")
          {
          state->set_expected_next(SERVER_KEX);
          }

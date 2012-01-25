@@ -269,7 +269,7 @@ void Server::process_handshake_msg(Handshake_Type type,
 
          std::auto_ptr<Private_Key> private_key(0);
 
-         if(kex_algo == "" || sig_algo != "")
+         if(kex_algo == "RSA" || sig_algo != "")
             {
             private_key.reset(
                creds.private_key_for(state->server_certs->cert_chain()[0],
@@ -277,7 +277,7 @@ void Server::process_handshake_msg(Handshake_Type type,
                                      m_hostname));
             }
 
-         if(kex_algo == "")
+         if(kex_algo == "RSA")
             {
             state->server_rsa_kex_key = private_key.release();
             }

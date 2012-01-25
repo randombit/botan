@@ -20,9 +20,8 @@ std::vector<std::string> Policy::allowed_ciphers() const
 
    allowed.push_back("AES-256");
    allowed.push_back("AES-128");
-   allowed.push_back("TripleDES");
+   allowed.push_back("3DES");
    allowed.push_back("ARC4");
-
    // Note that SEED and IDEA are not included by default
 
    return allowed;
@@ -51,16 +50,19 @@ std::vector<std::string> Policy::allowed_key_exchange_methods() const
    //allowed.push_back("PSK");
    allowed.push_back("ECDH");
    allowed.push_back("DH");
-   allowed.push_back(""); // means RSA via server cert
+   allowed.push_back("RSA"); // RSA via server cert
+
    return allowed;
    }
 
 std::vector<std::string> Policy::allowed_signature_methods() const
    {
    std::vector<std::string> allowed;
+
    allowed.push_back("ECDSA");
    allowed.push_back("RSA");
    allowed.push_back("DSA");
+
    return allowed;
    }
 

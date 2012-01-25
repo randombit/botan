@@ -25,32 +25,32 @@ Ciphersuite Ciphersuite::lookup_ciphersuite(u16bit suite)
       // RSA ciphersuites
 
       case TLS_RSA_WITH_AES_128_CBC_SHA:
-         return Ciphersuite("RSA", "", "SHA-1", "AES-128", 16);
+         return Ciphersuite("RSA", "RSA", "SHA-1", "AES-128", 16);
 
       case TLS_RSA_WITH_AES_256_CBC_SHA:
-         return Ciphersuite("RSA", "", "SHA-1", "AES-256", 32);
+         return Ciphersuite("RSA", "RSA", "SHA-1", "AES-256", 32);
 
       case TLS_RSA_WITH_AES_128_CBC_SHA256:
-         return Ciphersuite("RSA", "", "SHA-256", "AES-128", 16);
+         return Ciphersuite("RSA", "RSA", "SHA-256", "AES-128", 16);
 
       case TLS_RSA_WITH_AES_256_CBC_SHA256:
-         return Ciphersuite("RSA", "", "SHA-256", "AES-256", 32);
+         return Ciphersuite("RSA", "RSA", "SHA-256", "AES-256", 32);
 
       case TLS_RSA_WITH_3DES_EDE_CBC_SHA:
-         return Ciphersuite("RSA", "", "SHA-1", "3DES", 24);
+         return Ciphersuite("RSA", "RSA", "SHA-1", "3DES", 24);
 
       case TLS_RSA_WITH_RC4_128_SHA:
-         return Ciphersuite("RSA", "", "SHA-1", "ARC4", 16);
+         return Ciphersuite("RSA", "RSA", "SHA-1", "ARC4", 16);
 
       case TLS_RSA_WITH_RC4_128_MD5:
-         return Ciphersuite("RSA", "", "MD5", "ARC4", 16);
+         return Ciphersuite("RSA", "RSA", "MD5", "ARC4", 16);
 
       case TLS_RSA_WITH_SEED_CBC_SHA:
-         return Ciphersuite("RSA", "", "SHA-1", "SEED", 16);
+         return Ciphersuite("RSA", "RSA", "SHA-1", "SEED", 16);
 
 #if defined(BOTAN_HAS_IDEA)
       case TLS_RSA_WITH_IDEA_CBC_SHA:
-         return Ciphersuite("RSA", "", "SHA-1", "IDEA", 16);
+         return Ciphersuite("RSA", "RSA", "SHA-1", "IDEA", 16);
 #endif
 
       // DH/DSS ciphersuites
@@ -185,7 +185,7 @@ std::string Ciphersuite::to_string() const
 
    out << "TLS_";
 
-   if(kex_algo() != "")
+   if(kex_algo() != "RSA")
       {
       if(kex_algo() == "DH")
          out << "DHE";
