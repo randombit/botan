@@ -338,7 +338,8 @@ void Client::process_handshake_msg(Handshake_Type type,
 
       writer.send(CHANGE_CIPHER_SPEC, 1);
 
-      writer.activate(state->suite, state->keys, CLIENT);
+      writer.activate(CLIENT, state->suite, state->keys,
+                      state->server_hello->compression_method());
 
       if(state->server_hello->next_protocol_notification())
          {
@@ -354,7 +355,8 @@ void Client::process_handshake_msg(Handshake_Type type,
       {
       state->set_expected_next(FINISHED);
 
-      reader.activate(state->suite, state->keys, CLIENT);
+      reader.activate(CLIENT, state->suite, state->keys,
+                      state->server_hello->compression_method());
       }
    else if(type == FINISHED)
       {
@@ -372,7 +374,8 @@ void Client::process_handshake_msg(Handshake_Type type,
          {
          writer.send(CHANGE_CIPHER_SPEC, 1);
 
-         writer.activate(state->suite, state->keys, CLIENT);
+         writer.activate(CLIENT, state->suite, state->keys,
+                         state->server_hello->compression_method());
 
          state->client_finished = new Finished(writer, state, CLIENT);
          }

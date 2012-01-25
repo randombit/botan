@@ -47,9 +47,10 @@ class BOTAN_DLL Record_Writer
 
       void alert(Alert_Level level, Alert_Type type);
 
-      void activate(const Ciphersuite& suite,
+      void activate(Connection_Side side,
+                    const Ciphersuite& suite,
                     const Session_Keys& keys,
-                    Connection_Side side);
+                    byte compression_method);
 
       void set_version(Protocol_Version version);
 
@@ -101,9 +102,10 @@ class BOTAN_DLL Record_Reader
                        byte& msg_type,
                        MemoryVector<byte>& msg);
 
-      void activate(const Ciphersuite& suite,
+      void activate(Connection_Side side,
+                    const Ciphersuite& suite,
                     const Session_Keys& keys,
-                    Connection_Side side);
+                    byte compression_method);
 
       void set_version(Protocol_Version version);
 

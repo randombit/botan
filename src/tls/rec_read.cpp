@@ -65,14 +65,18 @@ void Record_Reader::set_version(Protocol_Version version)
 /*
 * Set the keys for reading
 */
-void Record_Reader::activate(const Ciphersuite& suite,
+void Record_Reader::activate(Connection_Side side,
+                             const Ciphersuite& suite,
                              const Session_Keys& keys,
-                             Connection_Side side)
+                             byte compression_method)
    {
    m_cipher.reset();
    delete m_mac;
    m_mac = 0;
    m_seq_no = 0;
+
+   if(compression_method != NO_COMPRESSION)
+      throw Internal_Error("Negotiated unknown compression algorithm");
 
    SymmetricKey mac_key, cipher_key;
    InitializationVector iv;
