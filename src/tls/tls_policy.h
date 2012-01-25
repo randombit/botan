@@ -84,13 +84,21 @@ class BOTAN_DLL Policy
       */
       virtual DL_Group dh_group() const { return DL_Group("modp/ietf/1536"); }
 
-      /*
+      /**
+      * If this function returns false, unknown SRP identifiers will be rejected
+      * with an unknown_psk_identifier alert. Otherwise, a false identifier value
+      * will be used, causing the login to fail without revealing that the username
+      * does not exist on this system.
+      */
+      virtual bool hide_unknown_srp_users() const { return false; }
+
+      /**
       * @return the minimum version that we are willing to negotiate
       */
       virtual Protocol_Version min_version() const
          { return Protocol_Version::SSL_V3; }
 
-      /*
+      /**
       * @return the version we would prefer to negotiate
       */
       virtual Protocol_Version pref_version() const
