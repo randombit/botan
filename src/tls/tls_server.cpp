@@ -9,6 +9,7 @@
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/assert.h>
 #include <botan/dh.h>
 #include <botan/ecdh.h>
 #include <memory>
@@ -262,6 +263,8 @@ void Server::process_handshake_msg(Handshake_Type type,
 
          if(sig_algo != "")
             {
+            BOTAN_ASSERT(!cert_chains[sig_algo].empty(), "Chose the wrong cert type");
+
             state->server_certs = new Certificate(writer,
                                                   state->hash,
                                                   cert_chains[sig_algo]);

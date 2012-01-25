@@ -47,6 +47,8 @@ std::vector<std::string> Policy::allowed_key_exchange_methods() const
    std::vector<std::string> allowed;
 
    //allowed.push_back("SRP");
+   //allowed.push_back("DH_PSK");
+   //allowed.push_back("PSK");
    allowed.push_back("ECDH");
    allowed.push_back("DH");
    allowed.push_back(""); // means RSA via server cert
@@ -223,13 +225,12 @@ u16bit Policy::choose_suite(const std::vector<u16bit>& client_suites,
                             bool have_shared_ecc_curve,
                             bool have_srp) const
    {
-   for(size_t i = 0; i != client_suites.size(); ++i)
-      {
-      const u16bit suite_id = client_suites[i];
-      Ciphersuite suite = Ciphersuite::lookup_ciphersuite(suite_id);
+   std::vector<u16bit> ciphersuites = ciphersuite_list(have_srp);
 
-      if(suite.cipher_keylen() == 0)
-         continue; // not a ciphersuite we know
+   for(size_t i = 0; i != ciphersuites.size(); ++i)
+      {
+      const u16bit suite_id = ciphersuites[i];
+      Ciphersuite suite = Ciphersuite::lookup_ciphersuite(suite_id);
 
       if(!have_shared_ecc_curve)
          {
@@ -237,15 +238,10 @@ u16bit Policy::choose_suite(const std::vector<u16bit>& client_suites,
             continue;
          }
 
-      if(suite.kex_algo() == "SRP")
-         {
-         if(have_srp)
-            return suite_id;
-         else
-            continue;
-         }
+      if(!value_exists(available_cert_types, suite.sig_algo()))
+         continue;
 
-      if(value_exists(available_cert_types, suite.sig_algo()))
+      if(value_exists(client_suites, suite_id))
          return suite_id;
       }
 
