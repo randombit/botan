@@ -185,24 +185,26 @@ std::string Ciphersuite::to_string() const
 
    out << "TLS_";
 
-   if(kex_algo() == "DH")
-      out << "DHE";
-   else if(kex_algo() == "ECDH")
-      out << "ECDHE";
-   else if(kex_algo() == "SRP")
-      out << "SRP_SHA";
-   else if(kex_algo() != "")
-      out << kex_algo();
-
    if(kex_algo() != "")
+      {
+      if(kex_algo() == "DH")
+         out << "DHE";
+      else if(kex_algo() == "ECDH")
+         out << "ECDHE";
+      else if(kex_algo() == "SRP")
+         out << "SRP_SHA";
+      else
+         out << kex_algo();
+
       out << '_';
+      }
 
    if(sig_algo() == "DSA")
-      out << "DSS";
-   else
-      out << sig_algo();
+      out << "DSS_";
+   else if(sig_algo() != "")
+      out << sig_algo() << '_';
 
-   out << "_WITH_";
+   out << "WITH_";
 
    if(cipher_algo() == "ARC4")
       {

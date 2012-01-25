@@ -263,7 +263,8 @@ void Server::process_handshake_msg(Handshake_Type type,
 
          if(sig_algo != "")
             {
-            BOTAN_ASSERT(!cert_chains[sig_algo].empty(), "Chose the wrong cert type");
+            BOTAN_ASSERT(!cert_chains[sig_algo].empty(),
+                         "Attempting to send empty certificate chain");
 
             state->server_certs = new Certificate(writer,
                                                   state->hash,
