@@ -188,7 +188,7 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
    if(length >= MAX_PLAINTEXT_SIZE)
       throw Internal_Error("Record_Writer: Compressed packet is too big");
 
-   if(m_mac_size == 0)
+   if(m_mac_size == 0) // initial unencrypted handshake records
       {
       const byte header[TLS_HEADER_SIZE] = {
          type,
@@ -200,80 +200,85 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
 
       m_output_fn(header, TLS_HEADER_SIZE);
       m_output_fn(input, length);
+      return;
       }
-   else
+
+   m_mac->update_be(m_seq_no);
+   m_mac->update(type);
+
+   if(m_version != Protocol_Version::SSL_V3)
       {
-      m_mac->update_be(m_seq_no);
-      m_mac->update(type);
-
-      if(m_version != Protocol_Version::SSL_V3)
-         {
-         m_mac->update(m_version.major_version());
-         m_mac->update(m_version.minor_version());
-         }
-
-      m_mac->update(get_byte<u16bit>(0, length));
-      m_mac->update(get_byte<u16bit>(1, length));
-      m_mac->update(input, length);
-
-      const size_t buf_size = round_up(m_iv_size + length +
-                                       m_mac->output_length() +
-                                       (m_block_size ? 1 : 0),
-                                       m_block_size);
-
-      if(buf_size >= MAX_CIPHERTEXT_SIZE)
-         throw Internal_Error("Record_Writer: Record is too big");
-
-      BOTAN_ASSERT(m_writebuf.size() >= TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE,
-                   "Write buffer is big enough");
-
-      // TLS record header
-      m_writebuf[0] = type;
-      m_writebuf[1] = m_version.major_version();
-      m_writebuf[2] = m_version.minor_version();
-      m_writebuf[3] = get_byte<u16bit>(0, buf_size);
-      m_writebuf[4] = get_byte<u16bit>(1, buf_size);
-
-      byte* buf_write_ptr = &m_writebuf[TLS_HEADER_SIZE];
-
-      if(m_iv_size)
-         {
-         RandomNumberGenerator& rng = global_state().global_rng();
-         rng.randomize(buf_write_ptr, m_iv_size);
-         buf_write_ptr += m_iv_size;
-         }
-
-      copy_mem(buf_write_ptr, input, length);
-      buf_write_ptr += length;
-
-      m_mac->final(buf_write_ptr);
-      buf_write_ptr += m_mac->output_length();
-
-      if(m_block_size)
-         {
-         const size_t pad_val =
-            buf_size - (m_iv_size + length + m_mac->output_length() + 1);
-
-         for(size_t i = 0; i != pad_val + 1; ++i)
-            {
-            *buf_write_ptr = pad_val;
-            buf_write_ptr += 1;
-            }
-         }
-
-      // FIXME: this could be done in-place without copying
-      m_cipher.process_msg(&m_writebuf[TLS_HEADER_SIZE], buf_size);
-      const size_t got_back = m_cipher.read(&m_writebuf[TLS_HEADER_SIZE], buf_size, Pipe::LAST_MESSAGE);
-
-      BOTAN_ASSERT_EQUAL(got_back, buf_size, "Cipher encrypted full amount");
-
-      BOTAN_ASSERT_EQUAL(m_cipher.remaining(Pipe::LAST_MESSAGE), 0,
-                         "No data remains in pipe");
-
-      m_output_fn(&m_writebuf[0], TLS_HEADER_SIZE + buf_size);
-
-      m_seq_no++;
+      m_mac->update(m_version.major_version());
+      m_mac->update(m_version.minor_version());
       }
+
+   m_mac->update(get_byte<u16bit>(0, length));
+   m_mac->update(get_byte<u16bit>(1, length));
+   m_mac->update(input, length);
+
+   const size_t buf_size = round_up(m_iv_size + length +
+                                    m_mac->output_length() +
+                                    (m_block_size ? 1 : 0),
+                                    m_block_size);
+
+   if(buf_size >= MAX_CIPHERTEXT_SIZE)
+      throw Internal_Error("Record_Writer: Record is too big");
+
+   BOTAN_ASSERT(m_writebuf.size() >= TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE,
+                "Write buffer is big enough");
+
+   // TLS record header
+   m_writebuf[0] = type;
+   m_writebuf[1] = m_version.major_version();
+   m_writebuf[2] = m_version.minor_version();
+   m_writebuf[3] = get_byte<u16bit>(0, buf_size);
+   m_writebuf[4] = get_byte<u16bit>(1, buf_size);
+
+   byte* buf_write_ptr = &m_writebuf[TLS_HEADER_SIZE];
+
+   if(m_iv_size)
+      {
+      RandomNumberGenerator& rng = global_state().global_rng();
+      rng.randomize(buf_write_ptr, m_iv_size);
+      buf_write_ptr += m_iv_size;
+      }
+
+   copy_mem(buf_write_ptr, input, length);
+   buf_write_ptr += length;
+
+   m_mac->final(buf_write_ptr);
+   buf_write_ptr += m_mac->output_length();
+
+   if(m_block_size)
+      {
+      const size_t pad_val =
+         buf_size - (m_iv_size + length + m_mac->output_length() + 1);
+
+      for(size_t i = 0; i != pad_val + 1; ++i)
+         {
+         *buf_write_ptr = pad_val;
+         buf_write_ptr += 1;
+         }
+      }
+
+   // FIXME: this could be done in-place without copying
+   m_cipher.process_msg(&m_writebuf[TLS_HEADER_SIZE], buf_size);
+
+   const size_t ctext_size = m_cipher.remaining(Pipe::LAST_MESSAGE);
+
+   BOTAN_ASSERT_EQUAL(ctext_size, buf_size, "Cipher encrypted full amount");
+
+   if(ctext_size > MAX_CIPHERTEXT_SIZE)
+      throw Internal_Error("Produced ciphertext larger than protocol allows");
+
+   m_cipher.read(&m_writebuf[TLS_HEADER_SIZE], ctext_size, Pipe::LAST_MESSAGE);
+
+   BOTAN_ASSERT_EQUAL(m_cipher.remaining(Pipe::LAST_MESSAGE), 0,
+                      "No data remains in pipe");
+
+   m_output_fn(&m_writebuf[0], TLS_HEADER_SIZE + buf_size);
+
+   m_seq_no++;
    }
 
 /*
