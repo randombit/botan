@@ -36,6 +36,8 @@ class BOTAN_DLL Ciphersuite
 
       size_t cipher_keylen() const { return m_cipher_keylen; }
 
+      bool valid() const { return (m_cipher_keylen > 0); }
+
       Ciphersuite() : m_cipher_keylen(0) {}
 
       Ciphersuite(const std::string& sig_algo,
