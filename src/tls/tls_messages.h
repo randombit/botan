@@ -212,8 +212,7 @@ class Client_Key_Exchange : public Handshake_Message
          { return pre_master; }
 
       SecureVector<byte> pre_master_secret(RandomNumberGenerator& rng,
-                                           const Private_Key* key,
-                                           Protocol_Version version);
+                                           const Handshake_State* state);
 
       Client_Key_Exchange(Record_Writer& output,
                           Handshake_State* state,
@@ -369,17 +368,24 @@ class Server_Key_Exchange : public Handshake_Message
       bool verify(const X509_Certificate& cert,
                   Handshake_State* state) const;
 
+      const Private_Key& server_kex_key() const;
+
       Server_Key_Exchange(Record_Writer& writer,
                           Handshake_State* state,
+                          const Policy& policy,
                           RandomNumberGenerator& rng,
-                          const Private_Key* priv_key);
+                          const Private_Key* signing_key = 0);
 
       Server_Key_Exchange(const MemoryRegion<byte>& buf,
                           const std::string& kex_alg,
                           const std::string& sig_alg,
                           Protocol_Version version);
+
+      ~Server_Key_Exchange() { delete m_kex_key; }
    private:
       MemoryVector<byte> serialize() const;
+
+      Private_Key* m_kex_key;
 
       MemoryVector<byte> m_params;
 

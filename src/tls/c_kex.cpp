@@ -8,6 +8,7 @@
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_extensions.h>
+#include <botan/internal/assert.h>
 #include <botan/pubkey.h>
 #include <botan/dh.h>
 #include <botan/ecdh.h>
@@ -108,8 +109,7 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
          append_tls_length_value(key_material, priv_key.public_value(), 1);
          }
       else
-         throw Internal_Error("Server key exchange type " + state->suite.kex_algo() +
-                              " not known");
+         throw Internal_Error("Unknown key exchange type " + state->suite.kex_algo());
       }
    else
       {
@@ -169,18 +169,33 @@ Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
    }
 
 /*
-* Return the pre_master_secret
+* Return the pre_master_secret (server side implementation)
 */
 SecureVector<byte>
 Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
-                                       const Private_Key* priv_key,
-                                       Protocol_Version client_version)
+                                       const Handshake_State* state)
    {
-   if(const RSA_PrivateKey* rsa = dynamic_cast<const RSA_PrivateKey*>(priv_key))
-      {
-      PK_Decryptor_EME decryptor(*rsa, "PKCS1v15");
+   const std::string kex_algo = state->suite.kex_algo();
 
-      try {
+   if(kex_algo == "")
+      {
+      BOTAN_ASSERT(state->server_certs && !state->server_certs->cert_chain().empty(),
+                   "No server certificate to use for RSA");
+
+      const Private_Key* private_key = state->server_rsa_kex_key;
+
+      if(!private_key)
+         throw Internal_Error("Expected RSA kex but no server kex key set");
+
+      if(!dynamic_cast<const RSA_PrivateKey*>(private_key))
+         throw Internal_Error("Expected RSA key but got " + private_key->algo_name());
+
+      PK_Decryptor_EME decryptor(*private_key, "PKCS1v15");
+
+      Protocol_Version client_version = state->client_hello->version();
+
+      try
+         {
          pre_master = decryptor.decrypt(key_material);
 
          if(pre_master.size() != 48 ||
@@ -189,7 +204,7 @@ Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
             {
             throw Decoding_Error("Client_Key_Exchange: Secret corrupted");
             }
-      }
+         }
       catch(...)
          {
          pre_master = rng.random_vec(48);
@@ -199,18 +214,26 @@ Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
 
       return pre_master;
       }
-
-   // DH or ECDH
-   if(const PK_Key_Agreement_Key* dh = dynamic_cast<const PK_Key_Agreement_Key*>(priv_key))
+   else if(kex_algo == "DH" || kex_algo == "ECDH")
       {
-      try {
-         PK_Key_Agreement ka(*dh, "Raw");
+      const Private_Key& private_key = state->server_kex->server_kex_key();
 
-         if(dh->algo_name() == "DH")
+      const PK_Key_Agreement_Key* ka_key =
+         dynamic_cast<const PK_Key_Agreement_Key*>(&private_key);
+
+      if(!ka_key)
+         throw Internal_Error("Expected key agreement key type but got " +
+                              private_key.algo_name());
+
+      try
+         {
+         PK_Key_Agreement ka(*ka_key, "Raw");
+
+         if(ka_key->algo_name() == "DH")
             pre_master = strip_leading_zeros(ka.derive_key(0, key_material).bits_of());
          else
             pre_master = ka.derive_key(0, key_material).bits_of();
-      }
+         }
       catch(...)
          {
          /*
@@ -219,13 +242,13 @@ Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
          * on, allowing the protocol to fail later in the finished
          * checks.
          */
-         pre_master = rng.random_vec(dh->public_value().size());
+         pre_master = rng.random_vec(ka_key->public_value().size());
          }
 
       return pre_master;
       }
-
-   throw Invalid_Argument("Client_Key_Exchange: Unknown key type " + priv_key->algo_name());
+   else
+      throw Internal_Error("Client_Key_Exchange: Unknown kex type " + kex_algo);
    }
 
 }

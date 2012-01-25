@@ -91,7 +91,7 @@ Handshake_State::Handshake_State()
    client_finished = 0;
    server_finished = 0;
 
-   kex_priv = 0;
+   server_rsa_kex_key = 0;
 
    version = Protocol_Version::SSL_V3;
 
@@ -265,7 +265,7 @@ Handshake_State::~Handshake_State()
    delete client_finished;
    delete server_finished;
 
-   delete kex_priv;
+   delete server_rsa_kex_key;
    }
 
 }

@@ -78,7 +78,8 @@ class Handshake_State
       class Finished* client_finished;
       class Finished* server_finished;
 
-      Private_Key* kex_priv;
+      // Used by the server only, in case of RSA key exchange
+      Private_Key* server_rsa_kex_key;
 
       Ciphersuite suite;
       Session_Keys keys;

@@ -10,8 +10,6 @@
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/assert.h>
-#include <botan/dh.h>
-#include <botan/ecdh.h>
 #include <memory>
 
 namespace Botan {
@@ -259,8 +257,6 @@ void Server::process_handshake_msg(Handshake_Type type,
          const std::string sig_algo = state->suite.sig_algo();
          const std::string kex_algo = state->suite.kex_algo();
 
-         std::auto_ptr<Private_Key> private_key(0);
-
          if(sig_algo != "")
             {
             BOTAN_ASSERT(!cert_chains[sig_algo].empty(),
@@ -269,43 +265,27 @@ void Server::process_handshake_msg(Handshake_Type type,
             state->server_certs = new Certificate(writer,
                                                   state->hash,
                                                   cert_chains[sig_algo]);
-
-            private_key.reset(creds.private_key_for(state->server_certs->cert_chain()[0],
-                                                    "tls-server",
-                                                    m_hostname));
             }
 
-         if(kex_algo != "")
+         std::auto_ptr<Private_Key> private_key(0);
+
+         if(kex_algo == "" || sig_algo != "")
             {
-            if(kex_algo == "DH")
-               {
-               state->kex_priv = new DH_PrivateKey(rng, policy.dh_group());
-               }
-            else if(kex_algo == "ECDH")
-               {
-               const std::vector<std::string>& curves =
-                  state->client_hello->supported_ecc_curves();
+            private_key.reset(
+               creds.private_key_for(state->server_certs->cert_chain()[0],
+                                     "tls-server",
+                                     m_hostname));
+            }
 
-               if(curves.empty())
-                  throw Internal_Error("Client sent no ECC extension but we negotiated ECDH");
-
-               const std::string curve_name = policy.choose_curve(curves);
-
-               if(curve_name == "") // shouldn't happen
-                  throw Internal_Error("Could not agree on an ECC curve with the client");
-
-               EC_Group ec_group(curve_name);
-               state->kex_priv = new ECDH_PrivateKey(rng, ec_group);
-               }
-            else
-               throw Internal_Error("Server: Unknown ciphersuite kex type " +
-                                    kex_algo);
-
-            state->server_kex =
-               new Server_Key_Exchange(writer, state, rng, private_key.get());
+         if(kex_algo == "")
+            {
+            state->server_rsa_kex_key = private_key.release();
             }
          else
-            state->kex_priv = private_key.release();
+            {
+            state->server_kex =
+               new Server_Key_Exchange(writer, state, policy, rng, private_key.get());
+            }
 
          std::vector<X509_Certificate> client_auth_CAs =
             creds.trusted_certificate_authorities("tls-server", m_hostname);
@@ -355,8 +335,7 @@ void Server::process_handshake_msg(Handshake_Type type,
                                                   state->version);
 
       SecureVector<byte> pre_master =
-         state->client_kex->pre_master_secret(rng, state->kex_priv,
-                                              state->client_hello->version());
+         state->client_kex->pre_master_secret(rng, state);
 
       state->keys = Session_Keys(state, pre_master, false);
       }
