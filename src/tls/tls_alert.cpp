@@ -30,7 +30,7 @@ Alert::Alert(const MemoryRegion<byte>& buf)
    * using it internally as a special 'no alert' type.
    */
    if(dc == 255)
-      throw Decoding_Error("Alert: description code 255, rejecting");
+      throw Internal_Error("Alert: description code 255, rejecting");
 
    type_code = static_cast<Type>(dc);
    }

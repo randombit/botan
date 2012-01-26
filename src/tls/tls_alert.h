@@ -21,11 +21,6 @@ namespace TLS {
 class BOTAN_DLL Alert
    {
    public:
-      enum Level {
-         WARNING                 = 1,
-         FATAL                   = 2
-      };
-
       enum Type {
          CLOSE_NOTIFY            = 0,
          UNEXPECTED_MESSAGE      = 10,
@@ -86,7 +81,8 @@ class BOTAN_DLL Alert
       */
       Alert(const MemoryRegion<byte>& buf);
 
-      Alert(Level level, Type code) : fatal(level == FATAL), type_code(code) {}
+      Alert(Type alert_type, bool is_fatal = false) :
+         fatal(is_fatal), type_code(alert_type) {}
 
       Alert() : fatal(false), type_code(NULL_ALERT) {}
    private:

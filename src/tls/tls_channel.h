@@ -40,7 +40,7 @@ class BOTAN_DLL Channel
       /**
       * Send a close notification alert
       */
-      void close() { send_alert(Alert(Alert::WARNING, Alert::CLOSE_NOTIFY)); }
+      void close() { send_alert(Alert(Alert::CLOSE_NOTIFY)); }
 
       /**
       * @return true iff the connection is active for sending application data

@@ -131,7 +131,7 @@ void Client::process_handshake_msg(Handshake_Type type,
          state = 0;
 
          // RFC 5746 section 4.2
-         send_alert(Alert(Alert::WARNING, Alert::NO_RENEGOTIATION));
+         send_alert(Alert(Alert::NO_RENEGOTIATION));
          return;
          }
 
