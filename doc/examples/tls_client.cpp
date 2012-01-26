@@ -90,11 +90,11 @@ void socket_write(int sockfd, const byte buf[], size_t length)
 
 bool got_alert = false;
 
-void process_data(const byte buf[], size_t buf_size, u16bit alert_info)
+void process_data(const byte buf[], size_t buf_size, TLS::Alert alert)
    {
-   if(alert_info != TLS::NULL_ALERT)
+   if(alert.is_valid())
       {
-      std::cout << "Alert: " << alert_info << "\n";
+      std::cout << "Alert: " << alert.type_string() << "\n";
       got_alert = true;
       }
 

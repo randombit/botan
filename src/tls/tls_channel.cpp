@@ -16,7 +16,7 @@ namespace Botan {
 namespace TLS {
 
 Channel::Channel(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
-                 std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
+                 std::tr1::function<void (const byte[], size_t, Alert)> proc_fn,
                  std::tr1::function<bool (const Session&)> handshake_complete) :
    proc_fn(proc_fn),
    handshake_fn(handshake_complete),
@@ -66,7 +66,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
                * following record. Avoid spurious callbacks.
                */
                if(record.size() > 0)
-                  proc_fn(&record[0], record.size(), Alert::NULL_ALERT);
+                  proc_fn(&record[0], record.size(), Alert());
                }
             else
                {
@@ -83,7 +83,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
 
             alert_notify(alert_msg);
 
-            proc_fn(0, 0, alert_msg.type());
+            proc_fn(0, 0, alert_msg);
 
             if(alert_msg.type() == Alert::CLOSE_NOTIFY)
                {

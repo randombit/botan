@@ -100,11 +100,11 @@ class Blocking_TLS_Server
             }
          }
 
-      void reader_fn(const byte buf[], size_t buf_len, u16bit alert_code)
+      void reader_fn(const byte buf[], size_t buf_len, TLS::Alert alert)
          {
-         if(buf_len == 0 && alert_code != TLS::NULL_ALERT)
+         if(alert.is_valid())
             {
-            printf("Alert: %d\n", alert_code);
+            printf("Alert %s\n", alert.type_string().c_str());
             //exit = true;
             }
 

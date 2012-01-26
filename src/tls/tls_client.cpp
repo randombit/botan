@@ -19,7 +19,7 @@ namespace TLS {
 * TLS Client Constructor
 */
 Client::Client(std::tr1::function<void (const byte[], size_t)> output_fn,
-                       std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
+                       std::tr1::function<void (const byte[], size_t, Alert)> proc_fn,
                        std::tr1::function<bool (const Session&)> handshake_fn,
                        Session_Manager& session_manager,
                        Credentials_Manager& creds,
@@ -96,9 +96,9 @@ void Client::renegotiate()
    secure_renegotiation.update(state->client_hello);
    }
 
-void Client::alert_notify(bool, Alert::Type type)
+void Client::alert_notify(const Alert& alert)
    {
-   if(type == Alert::NO_RENEGOTIATION)
+   if(alert.type() == Alert::NO_RENEGOTIATION)
       {
       if(handshake_completed && state)
          {

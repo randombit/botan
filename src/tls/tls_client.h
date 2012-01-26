@@ -43,7 +43,7 @@ class BOTAN_DLL Client : public Channel
       *        the client should return the protocol it would like to use.
       */
       Client(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
-                 std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
+                 std::tr1::function<void (const byte[], size_t, Alert)> proc_fn,
                  std::tr1::function<bool (const Session&)> handshake_complete,
                  Session_Manager& session_manager,
                  Credentials_Manager& creds,
@@ -58,7 +58,7 @@ class BOTAN_DLL Client : public Channel
       void process_handshake_msg(Handshake_Type type,
                                  const MemoryRegion<byte>& contents);
 
-      void alert_notify(bool is_fatal, Alert::Type type);
+      void alert_notify(const Alert& alert);
 
       const Policy& policy;
       RandomNumberGenerator& rng;

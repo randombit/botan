@@ -27,7 +27,7 @@ class BOTAN_DLL Server : public Channel
       * Server initialization
       */
       Server(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
-                 std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
+                 std::tr1::function<void (const byte[], size_t, Alert)> proc_fn,
                  std::tr1::function<bool (const Session&)> handshake_complete,
                  Session_Manager& session_manager,
                  Credentials_Manager& creds,
@@ -55,7 +55,7 @@ class BOTAN_DLL Server : public Channel
 
       void process_handshake_msg(Handshake_Type, const MemoryRegion<byte>&);
 
-      void alert_notify(bool is_fatal, Alert::Type type);
+      void alert_notify(const Alert& alert);
 
       const Policy& policy;
       RandomNumberGenerator& rng;

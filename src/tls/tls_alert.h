@@ -18,7 +18,7 @@ namespace TLS {
 /**
 * SSL/TLS Alert Message
 */
-class Alert
+class BOTAN_DLL Alert
    {
    public:
       enum Level {

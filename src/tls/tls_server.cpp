@@ -68,7 +68,7 @@ bool check_for_resume(Session& session_info,
 * TLS Server Constructor
 */
 Server::Server(std::tr1::function<void (const byte[], size_t)> output_fn,
-               std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
+               std::tr1::function<void (const byte[], size_t, Alert)> proc_fn,
                std::tr1::function<bool (const Session&)> handshake_fn,
                Session_Manager& session_manager,
                Credentials_Manager& creds,
@@ -97,9 +97,9 @@ void Server::renegotiate()
    Hello_Request hello_req(writer);
    }
 
-void Server::alert_notify(bool, Alert::Type type)
+void Server::alert_notify(const Alert& alert)
    {
-   if(type == Alert::NO_RENEGOTIATION)
+   if(alert.type() == Alert::NO_RENEGOTIATION)
       {
       if(handshake_completed && state)
          {

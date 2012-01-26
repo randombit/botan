@@ -84,7 +84,7 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
                }
             catch(std::exception& e)
                {
-               printf("Failed - %s\n", e.what());
+               std::cout << "Read failed " << e.what() << "\n";
                stop();
                return;
                }
@@ -98,7 +98,6 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
          else
             {
             stop();
-            //printf("Error in read: %s\n", error.message().c_str());
             }
          }
 
@@ -114,7 +113,6 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
             }
          else
             {
-            //printf("Error in write: %s\n", error.message().c_str());
             stop();
             }
          }
@@ -139,12 +137,11 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
             }
          }
 
-      void tls_data_recv(const byte buf[], size_t buf_len, Botan::u16bit alert_info)
+      void tls_data_recv(const byte buf[], size_t buf_len, Botan::TLS::Alert alert)
          {
-         if(buf_len == 0 && alert_info != Botan::TLS::NULL_ALERT)
+         if(alert.is_valid())
             {
-            //printf("Alert: %d\n", alert_info);
-            if(alert_info == 0)
+            if(alert.type() == Botan::TLS::Alert::CLOSE_NOTIFY)
                {
                m_tls.close();
                return;
@@ -157,7 +154,8 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
             out += "\r\n";
             out += "HTTP/1.0 200 OK\r\n";
             out += "Server: Botan ASIO test server\r\n";
-            out += "Host: 192.168.10.5\r\n";
+            if(m_hostname != "")
+               out += "Host: " + m_hostname + "\r\n";
             out += "Content-Type: text/html\r\n";
             out += "\r\n";
             out += "<html><body>Greets. You said: ";
@@ -172,6 +170,7 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
 
       bool tls_handshake_complete(const Botan::TLS::Session& session)
          {
+         m_hostname = session.sni_hostname();
          return true;
          }
 
@@ -179,6 +178,7 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
 
       tcp::socket m_socket;
       Botan::TLS::Server m_tls;
+      std::string m_hostname;
 
       unsigned char m_read_buf[Botan::TLS::MAX_TLS_RECORD_SIZE];
 
