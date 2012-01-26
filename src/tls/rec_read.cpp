@@ -147,7 +147,7 @@ size_t Record_Reader::fill_buffer_to(const byte*& input,
    const size_t taken = std::min(input_size, desired - m_readbuf_pos);
 
    if(taken > space_available)
-      throw TLS_Exception(RECORD_OVERFLOW,
+      throw TLS_Exception(Alert::RECORD_OVERFLOW,
                           "Record is larger than allowed maximum size");
 
    copy_mem(&m_readbuf[m_readbuf_pos], input, taken);
@@ -184,7 +184,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
    if((!m_mac) && (m_readbuf[0] & 0x80) && (m_readbuf[2] == 1))
       {
       if(m_readbuf[3] == 0 && m_readbuf[4] == 2)
-         throw TLS_Exception(PROTOCOL_VERSION,
+         throw TLS_Exception(Alert::PROTOCOL_VERSION,
                              "Client claims to only support SSLv2, rejecting");
 
       if(m_readbuf[3] >= 3) // SSLv2 mapped TLS hello, then?
@@ -218,9 +218,8 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
       m_readbuf[0] != HANDSHAKE &&
       m_readbuf[0] != APPLICATION_DATA)
       {
-      throw TLS_Exception(UNEXPECTED_MESSAGE,
-                          "Unknown record type " + to_string(m_readbuf[0]) +
-                          " from counterparty");
+      throw Unexpected_Message(
+         "Unknown record type " + to_string(m_readbuf[0]) + " from counterparty");
       }
 
    const size_t record_len = make_u16bit(m_readbuf[3], m_readbuf[4]);
@@ -230,13 +229,13 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
       if(m_readbuf[1] != m_version.major_version() ||
          m_readbuf[2] != m_version.minor_version())
          {
-         throw TLS_Exception(PROTOCOL_VERSION,
+         throw TLS_Exception(Alert::PROTOCOL_VERSION,
                              "Got unexpected version from counterparty");
          }
       }
 
    if(record_len > MAX_CIPHERTEXT_SIZE)
-      throw TLS_Exception(RECORD_OVERFLOW,
+      throw TLS_Exception(Alert::RECORD_OVERFLOW,
                           "Got message that exceeds maximum size");
 
    if(size_t needed = fill_buffer_to(input, input_sz, consumed,
@@ -254,7 +253,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
          m_readbuf[0] != ALERT &&
          m_readbuf[0] != HANDSHAKE)
          {
-         throw TLS_Exception(DECODE_ERROR, "Invalid msg type received during handshake");
+         throw Decoding_Error("Invalid msg type received during handshake");
          }
 
       msg_type = m_readbuf[0];
@@ -316,7 +315,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
    const u16bit plain_length = record_len - mac_pad_iv_size;
 
    if(plain_length > m_max_fragment)
-      throw TLS_Exception(RECORD_OVERFLOW, "Plaintext record is too large");
+      throw TLS_Exception(Alert::RECORD_OVERFLOW, "Plaintext record is too large");
 
    m_mac->update_be(m_seq_no);
    m_mac->update(m_readbuf[0]); // msg_type
@@ -337,7 +336,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
    const size_t mac_offset = record_len - (m_macbuf.size() + pad_size);
 
    if(!same_mem(&m_readbuf[TLS_HEADER_SIZE + mac_offset], &m_macbuf[0], m_macbuf.size()))
-      throw TLS_Exception(BAD_RECORD_MAC, "Message authentication failure");
+      throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure");
 
    msg_type = m_readbuf[0];
 

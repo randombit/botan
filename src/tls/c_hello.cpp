@@ -336,7 +336,7 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
          {
          if(!m_renegotiation_info.empty())
             {
-            throw TLS_Exception(HANDSHAKE_FAILURE,
+            throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                                 "Client send SCSV and non-empty extension");
             }
          }

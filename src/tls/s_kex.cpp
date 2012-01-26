@@ -52,7 +52,7 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
       const std::string curve_name = policy.choose_curve(curves);
 
       if(curve_name == "")
-         throw TLS_Exception(HANDSHAKE_FAILURE,
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                              "Could not agree on an ECC curve with the client");
 
       EC_Group ec_group(curve_name);

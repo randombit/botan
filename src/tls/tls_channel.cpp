@@ -6,7 +6,6 @@
 */
 
 #include <botan/tls_channel.h>
-#include <botan/internal/tls_alerts.h>
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/assert.h>
@@ -67,7 +66,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
                * following record. Avoid spurious callbacks.
                */
                if(record.size() > 0)
-                  proc_fn(&record[0], record.size(), NULL_ALERT);
+                  proc_fn(&record[0], record.size(), Alert::NULL_ALERT);
                }
             else
                {
@@ -82,16 +81,16 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
             {
             Alert alert_msg(record);
 
-            alert_notify(alert_msg.is_fatal(), alert_msg.type());
+            alert_notify(alert_msg);
 
             proc_fn(0, 0, alert_msg.type());
 
-            if(alert_msg.type() == CLOSE_NOTIFY)
+            if(alert_msg.type() == Alert::CLOSE_NOTIFY)
                {
                if(connection_closed)
                   reader.reset();
                else
-                  alert(WARNING, CLOSE_NOTIFY); // reply in kind
+                  send_alert(Alert(Alert::WARNING, Alert::CLOSE_NOTIFY)); // reply in kind
                }
             else if(alert_msg.is_fatal())
                {
@@ -114,22 +113,22 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
       }
    catch(TLS_Exception& e)
       {
-      alert(FATAL, e.type());
+      send_alert(Alert(Alert::FATAL, e.type()));
       throw;
       }
    catch(Decoding_Error& e)
       {
-      alert(FATAL, DECODE_ERROR);
+      send_alert(Alert(Alert::FATAL, Alert::DECODE_ERROR));
       throw;
       }
    catch(Internal_Error& e)
       {
-      alert(FATAL, INTERNAL_ERROR);
+      send_alert(Alert(Alert::FATAL, Alert::INTERNAL_ERROR));
       throw;
       }
    catch(std::exception& e)
       {
-      alert(FATAL, INTERNAL_ERROR);
+      send_alert(Alert(Alert::FATAL, Alert::INTERNAL_ERROR));
       throw;
       }
    }
@@ -198,19 +197,18 @@ void Channel::send(const byte buf[], size_t buf_size)
    writer.send(APPLICATION_DATA, buf, buf_size);
    }
 
-void Channel::alert(Alert_Level alert_level, Alert_Type alert_code)
+void Channel::send_alert(const Alert& alert)
    {
-   if(alert_code != NULL_ALERT && !connection_closed)
+   if(alert.is_valid() && !connection_closed)
       {
       try
          {
-         writer.alert(alert_level, alert_code);
+         writer.send_alert(alert);
          }
       catch(...) { /* swallow it */ }
       }
 
-   if(!connection_closed &&
-      (alert_code == CLOSE_NOTIFY || alert_level == FATAL))
+   if(!connection_closed && (alert.type() == Alert::CLOSE_NOTIFY || alert.is_fatal()))
       {
       connection_closed = true;
 
@@ -230,7 +228,7 @@ void Channel::Secure_Renegotiation_State::update(Client_Hello* client_hello)
    else
       {
       if(secure_renegotiation != client_hello->secure_renegotiation())
-         throw TLS_Exception(HANDSHAKE_FAILURE,
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                              "Client changed its mind about secure renegotiation");
       }
 
@@ -241,13 +239,13 @@ void Channel::Secure_Renegotiation_State::update(Client_Hello* client_hello)
       if(initial_handshake)
          {
          if(!data.empty())
-            throw TLS_Exception(HANDSHAKE_FAILURE,
+            throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                                 "Client sent renegotiation data on initial handshake");
          }
       else
          {
          if(data != for_client_hello())
-            throw TLS_Exception(HANDSHAKE_FAILURE,
+            throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                                 "Client sent bad renegotiation data");
          }
       }
@@ -265,7 +263,7 @@ void Channel::Secure_Renegotiation_State::update(Server_Hello* server_hello)
    else
       {
       if(secure_renegotiation != server_hello->secure_renegotiation())
-         throw TLS_Exception(HANDSHAKE_FAILURE,
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                              "Server changed its mind about secure renegotiation");
       }
 
@@ -276,13 +274,13 @@ void Channel::Secure_Renegotiation_State::update(Server_Hello* server_hello)
       if(initial_handshake)
          {
          if(!data.empty())
-            throw TLS_Exception(HANDSHAKE_FAILURE,
+            throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                                 "Server sent renegotiation data on initial handshake");
          }
       else
          {
          if(data != for_server_hello())
-            throw TLS_Exception(HANDSHAKE_FAILURE,
+            throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                                 "Server sent bad renegotiation data");
          }
       }

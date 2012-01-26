@@ -24,7 +24,7 @@ KDF* choose_tls_prf(Protocol_Version version)
    else if(version == Protocol_Version::TLS_V12)
       return new TLS_12_PRF(new HMAC(new SHA_256)); // might depend on ciphersuite
    else
-      throw TLS_Exception(PROTOCOL_VERSION,
+      throw TLS_Exception(Alert::PROTOCOL_VERSION,
                           "Unknown version for PRF");
    }
 

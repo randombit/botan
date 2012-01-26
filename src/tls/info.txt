@@ -8,6 +8,7 @@ serious bugs or security issues.
 uses_tr1 yes
 
 <header:public>
+tls_alert.h
 tls_channel.h
 tls_client.h
 tls_exceptn.h
@@ -22,7 +23,6 @@ tls_version.h
 </header:public>
 
 <header:internal>
-tls_alerts.h
 tls_extensions.h
 tls_handshake_hash.h
 tls_handshake_state.h
@@ -32,6 +32,7 @@ tls_session_key.h
 </header:internal>
 
 <source>
+tls_alert.cpp
 c_hello.cpp
 c_kex.cpp
 cert_req.cpp

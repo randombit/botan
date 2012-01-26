@@ -54,7 +54,7 @@ SecureVector<byte> Handshake_Hash::final(Protocol_Version version)
       output += sha256.final();
       }
    else
-      throw TLS_Exception(PROTOCOL_VERSION,
+      throw TLS_Exception(Alert::PROTOCOL_VERSION,
                           "Unknown version for handshake hashes");
 
    return output;

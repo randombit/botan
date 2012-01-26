@@ -284,10 +284,12 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
 /*
 * Send an alert
 */
-void Record_Writer::alert(Alert_Level level, Alert_Type type)
+void Record_Writer::send_alert(const Alert& alert)
    {
-   byte alert[2] = { level, type };
-   send(ALERT, alert, sizeof(alert));
+   const byte alert_bits[2] = { alert.is_fatal() ? 2 : 1,
+                                alert.type() };
+
+   send(ALERT, alert_bits, sizeof(alert_bits));
    }
 
 }

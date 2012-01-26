@@ -223,7 +223,7 @@ size_t Maximum_Fragment_Length::fragment_size() const
       case 4:
          return 4096;
       default:
-         throw TLS_Exception(ILLEGAL_PARAMETER,
+         throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
                              "Bad value in maximum fragment extension");
       }
    }

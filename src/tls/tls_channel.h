@@ -11,6 +11,7 @@
 #include <botan/tls_policy.h>
 #include <botan/tls_record.h>
 #include <botan/tls_session.h>
+#include <botan/tls_alert.h>
 #include <botan/x509cert.h>
 #include <vector>
 
@@ -39,7 +40,7 @@ class BOTAN_DLL Channel
       /**
       * Send a close notification alert
       */
-      void close() { alert(WARNING, CLOSE_NOTIFY); }
+      void close() { send_alert(Alert(Alert::WARNING, Alert::CLOSE_NOTIFY)); }
 
       /**
       * @return true iff the connection is active for sending application data
@@ -74,7 +75,7 @@ class BOTAN_DLL Channel
       * @param level is warning or fatal
       * @param type is the type of alert
       */
-      void alert(Alert_Level level, Alert_Type type);
+      void send_alert(const Alert& alert);
 
       virtual void read_handshake(byte rec_type,
                                   const MemoryRegion<byte>& rec_buf);
@@ -82,7 +83,7 @@ class BOTAN_DLL Channel
       virtual void process_handshake_msg(Handshake_Type type,
                                          const MemoryRegion<byte>& contents) = 0;
 
-      virtual void alert_notify(bool fatal_alert, Alert_Type type) = 0;
+      virtual void alert_notify(const Alert& alert) = 0;
 
       std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn;
       std::tr1::function<bool (const Session&)> handshake_fn;

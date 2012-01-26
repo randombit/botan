@@ -97,9 +97,9 @@ void Server::renegotiate()
    Hello_Request hello_req(writer);
    }
 
-void Server::alert_notify(bool, Alert_Type type)
+void Server::alert_notify(bool, Alert::Type type)
    {
-   if(type == NO_RENEGOTIATION)
+   if(type == Alert::NO_RENEGOTIATION)
       {
       if(handshake_completed && state)
          {
@@ -159,7 +159,7 @@ void Server::process_handshake_msg(Handshake_Type type,
       Protocol_Version client_version = state->client_hello->version();
 
       if(client_version < policy.min_version())
-         throw TLS_Exception(PROTOCOL_VERSION,
+         throw TLS_Exception(Alert::PROTOCOL_VERSION,
                              "Client version is unacceptable by policy");
 
       if(client_version <= policy.pref_version())
@@ -322,7 +322,7 @@ void Server::process_handshake_msg(Handshake_Type type,
 
       // Is this allowed by the protocol?
       if(state->client_certs->count() > 1)
-         throw TLS_Exception(CERTIFICATE_UNKNOWN,
+         throw TLS_Exception(Alert::CERTIFICATE_UNKNOWN,
                              "Client sent more than one certificate");
 
       state->set_expected_next(CLIENT_KEX);
@@ -360,7 +360,7 @@ void Server::process_handshake_msg(Handshake_Type type,
       * unable to correctly verify a signature, ..."
       */
       if(!sig_valid)
-         throw TLS_Exception(DECRYPT_ERROR, "Client cert verify failed");
+         throw TLS_Exception(Alert::DECRYPT_ERROR, "Client cert verify failed");
 
       try
          {
@@ -368,7 +368,7 @@ void Server::process_handshake_msg(Handshake_Type type,
          }
       catch(std::exception& e)
          {
-         throw TLS_Exception(BAD_CERTIFICATE, e.what());
+         throw TLS_Exception(Alert::BAD_CERTIFICATE, e.what());
          }
 
       state->set_expected_next(HANDSHAKE_CCS);
@@ -398,7 +398,7 @@ void Server::process_handshake_msg(Handshake_Type type,
       state->client_finished = new Finished(contents);
 
       if(!state->client_finished->verify(state, CLIENT))
-         throw TLS_Exception(DECRYPT_ERROR,
+         throw TLS_Exception(Alert::DECRYPT_ERROR,
                              "Finished message didn't verify");
 
       // already sent it if resuming

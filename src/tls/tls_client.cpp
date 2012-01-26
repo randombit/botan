@@ -96,9 +96,9 @@ void Client::renegotiate()
    secure_renegotiation.update(state->client_hello);
    }
 
-void Client::alert_notify(bool, Alert_Type type)
+void Client::alert_notify(bool, Alert::Type type)
    {
-   if(type == NO_RENEGOTIATION)
+   if(type == Alert::NO_RENEGOTIATION)
       {
       if(handshake_completed && state)
          {
@@ -131,7 +131,7 @@ void Client::process_handshake_msg(Handshake_Type type,
          state = 0;
 
          // RFC 5746 section 4.2
-         alert(WARNING, NO_RENEGOTIATION);
+         send_alert(Alert(Alert::WARNING, Alert::NO_RENEGOTIATION));
          return;
          }
 
@@ -155,21 +155,21 @@ void Client::process_handshake_msg(Handshake_Type type,
 
       if(!state->client_hello->offered_suite(state->server_hello->ciphersuite()))
          {
-         throw TLS_Exception(HANDSHAKE_FAILURE,
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                              "Server replied with ciphersuite we didn't send");
          }
 
       if(!value_exists(state->client_hello->compression_methods(),
                        state->server_hello->compression_method()))
          {
-         throw TLS_Exception(HANDSHAKE_FAILURE,
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                              "Server replied with compression method we didn't send");
          }
 
       if(!state->client_hello->next_protocol_notification() &&
          state->server_hello->next_protocol_notification())
          {
-         throw TLS_Exception(HANDSHAKE_FAILURE,
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                              "Server sent next protocol but we didn't request it");
          }
 
@@ -192,7 +192,7 @@ void Client::process_handshake_msg(Handshake_Type type,
          * session, and the server must resume with the same version.
          */
          if(state->server_hello->version() != state->client_hello->version())
-            throw TLS_Exception(HANDSHAKE_FAILURE,
+            throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                                 "Server resumed session but with wrong version");
 
          state->keys = Session_Keys(state,
@@ -207,13 +207,13 @@ void Client::process_handshake_msg(Handshake_Type type,
 
          if(state->version > state->client_hello->version())
             {
-            throw TLS_Exception(HANDSHAKE_FAILURE,
+            throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                                 "Client: Server replied with bad version");
             }
 
          if(state->version < policy.min_version())
             {
-            throw TLS_Exception(PROTOCOL_VERSION,
+            throw TLS_Exception(Alert::PROTOCOL_VERSION,
                                 "Client: Server is too old for specified policy");
             }
 
@@ -248,7 +248,7 @@ void Client::process_handshake_msg(Handshake_Type type,
 
       peer_certs = state->server_certs->cert_chain();
       if(peer_certs.size() == 0)
-         throw TLS_Exception(HANDSHAKE_FAILURE,
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                              "Client: No certificates sent by server");
 
       try
@@ -258,13 +258,13 @@ void Client::process_handshake_msg(Handshake_Type type,
          }
       catch(std::exception& e)
          {
-         throw TLS_Exception(BAD_CERTIFICATE, e.what());
+         throw TLS_Exception(Alert::BAD_CERTIFICATE, e.what());
          }
 
       std::auto_ptr<Public_Key> peer_key(peer_certs[0].subject_public_key());
 
       if(peer_key->algo_name() != state->suite.sig_algo())
-         throw TLS_Exception(ILLEGAL_PARAMETER,
+         throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
                              "Certificate key type did not match ciphersuite");
       }
    else if(type == SERVER_KEX)
@@ -281,7 +281,7 @@ void Client::process_handshake_msg(Handshake_Type type,
          {
          if(!state->server_kex->verify(peer_certs[0], state))
             {
-            throw TLS_Exception(DECRYPT_ERROR,
+            throw TLS_Exception(Alert::DECRYPT_ERROR,
                                 "Bad signature on server key exchange");
             }
          }
@@ -365,7 +365,7 @@ void Client::process_handshake_msg(Handshake_Type type,
       state->server_finished = new Finished(contents);
 
       if(!state->server_finished->verify(state, SERVER))
-         throw TLS_Exception(DECRYPT_ERROR,
+         throw TLS_Exception(Alert::DECRYPT_ERROR,
                              "Finished message didn't verify");
 
       state->hash.update(type, contents);

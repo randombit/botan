@@ -138,7 +138,7 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
             append_tls_length_value(key_material, encrypted_key, 2);
          }
       else
-         throw TLS_Exception(HANDSHAKE_FAILURE,
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                              "Expected a RSA key in server cert but got " +
                              pub_key->algo_name());
       }

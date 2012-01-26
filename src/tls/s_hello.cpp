@@ -46,7 +46,7 @@ Server_Hello::Server_Hello(Record_Writer& writer,
       false);
 
    if(suite == 0)
-      throw TLS_Exception(HANDSHAKE_FAILURE,
+      throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                           "Can't agree on a ciphersuite with client");
 
    comp_method = policy.choose_compression(c_hello.compression_methods());
@@ -106,7 +106,7 @@ Server_Hello::Server_Hello(const MemoryRegion<byte>& buf)
       s_version != Protocol_Version::TLS_V11 &&
       s_version != Protocol_Version::TLS_V12)
       {
-      throw TLS_Exception(PROTOCOL_VERSION,
+      throw TLS_Exception(Alert::PROTOCOL_VERSION,
                           "Server_Hello: Unsupported server version");
       }
 

@@ -55,7 +55,7 @@ class BOTAN_DLL Server : public Channel
 
       void process_handshake_msg(Handshake_Type, const MemoryRegion<byte>&);
 
-      void alert_notify(bool is_fatal, Alert_Type type);
+      void alert_notify(bool is_fatal, Alert::Type type);
 
       const Policy& policy;
       RandomNumberGenerator& rng;

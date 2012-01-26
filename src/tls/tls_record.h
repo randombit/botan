@@ -9,6 +9,7 @@
 #define BOTAN_TLS_RECORDS_H__
 
 #include <botan/tls_ciphersuite.h>
+#include <botan/tls_alert.h>
 #include <botan/tls_magic.h>
 #include <botan/tls_version.h>
 #include <botan/pipe.h>
@@ -45,7 +46,7 @@ class BOTAN_DLL Record_Writer
       void send(byte type, const byte input[], size_t length);
       void send(byte type, byte val) { send(type, &val, 1); }
 
-      void alert(Alert_Level level, Alert_Type type);
+      void send_alert(const Alert& alert);
 
       void activate(Connection_Side side,
                     const Ciphersuite& suite,
