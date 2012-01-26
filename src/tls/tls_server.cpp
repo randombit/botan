@@ -268,24 +268,26 @@ void Server::process_handshake_msg(Handshake_Type type,
                                                   cert_chains[sig_algo]);
             }
 
-         std::auto_ptr<Private_Key> private_key(0);
+         Private_Key* private_key = 0;
 
          if(kex_algo == "RSA" || sig_algo != "")
             {
-            private_key.reset(
-               creds.private_key_for(state->server_certs->cert_chain()[0],
-                                     "tls-server",
-                                     m_hostname));
+            private_key = creds.private_key_for(state->server_certs->cert_chain()[0],
+                                                "tls-server",
+                                                m_hostname);
+
+            if(!private_key)
+               throw Internal_Error("No private key located for associated server cert");
             }
 
          if(kex_algo == "RSA")
             {
-            state->server_rsa_kex_key = private_key.release();
+            state->server_rsa_kex_key = private_key;
             }
          else
             {
             state->server_kex =
-               new Server_Key_Exchange(writer, state, policy, rng, private_key.get());
+               new Server_Key_Exchange(writer, state, policy, rng, private_key);
             }
 
          std::vector<X509_Certificate> client_auth_CAs =

@@ -17,8 +17,6 @@
 #include <botan/oids.h>
 #include <memory>
 
-#include <stdio.h>
-
 namespace Botan {
 
 namespace TLS {

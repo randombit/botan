@@ -264,8 +264,6 @@ Handshake_State::~Handshake_State()
    delete client_verify;
    delete client_finished;
    delete server_finished;
-
-   delete server_rsa_kex_key;
    }
 
 }

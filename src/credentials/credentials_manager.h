@@ -113,6 +113,8 @@ class BOTAN_DLL Credentials_Manager
       /**
       * @return private key associated with this certificate if we should
       *         use it with this context. cert was returned by cert_chain
+      * @note this object should retain ownership of the returned key;
+      *       it should not be deleted by the caller.
       */
       virtual Private_Key* private_key_for(const X509_Certificate& cert,
                                            const std::string& type,
