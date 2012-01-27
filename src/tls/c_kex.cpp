@@ -286,10 +286,10 @@ Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
          if(psk.length() == 0)
             {
             if(policy.hide_unknown_users())
+               psk = SymmetricKey(rng, 16);
+            else
                throw TLS_Exception(Alert::UNKNOWN_PSK_IDENTITY,
                                    "No PSK for identifier " + psk_identity);
-            else
-               psk = SymmetricKey(rng, 16);
             }
 
          }
