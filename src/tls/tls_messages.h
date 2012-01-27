@@ -223,8 +223,9 @@ class Client_Key_Exchange : public Handshake_Message
                           RandomNumberGenerator& rng);
 
       Client_Key_Exchange(const MemoryRegion<byte>& buf,
-                          const Ciphersuite& suite,
-                          Protocol_Version using_version);
+                          const Handshake_State* state,
+                          Credentials_Manager& creds);
+
    private:
       MemoryVector<byte> serialize() const { return key_material; }
 

@@ -308,7 +308,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             {
             state->server_rsa_kex_key = private_key;
             }
-         else
+         else if(kex_algo != "PSK") // FIXME: means we never send identity hint
             {
             state->server_kex =
                new Server_Key_Exchange(writer, state, policy, rng, private_key);
@@ -358,8 +358,7 @@ void Server::process_handshake_msg(Handshake_Type type,
       else
          state->set_expected_next(HANDSHAKE_CCS);
 
-      state->client_kex = new Client_Key_Exchange(contents, state->suite,
-                                                  state->version);
+      state->client_kex = new Client_Key_Exchange(contents, state, creds);
 
       SecureVector<byte> pre_master =
          state->client_kex->pre_master_secret(rng, state);

@@ -245,8 +245,11 @@ u16bit Policy::choose_suite(const std::vector<u16bit>& client_suites,
             continue;
          }
 
-      if(!value_exists(available_cert_types, suite.sig_algo()))
+      if(suite.sig_algo() != "" &&
+         !value_exists(available_cert_types, suite.sig_algo()))
+         {
          continue;
+         }
 
       if(value_exists(client_suites, suite_id))
          return suite_id;

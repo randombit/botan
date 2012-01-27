@@ -185,21 +185,38 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 * Read a Client Key Exchange message
 */
 Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
-                                         const Ciphersuite& suite,
-                                         Protocol_Version using_version)
+                                         const Handshake_State* state,
+                                         Credentials_Manager& creds)
    {
-   if(suite.kex_algo() == "RSA" && using_version == Protocol_Version::SSL_V3)
+   const std::string kex_algo = state->suite.kex_algo();
+
+   if(kex_algo == "RSA" && state->version == Protocol_Version::SSL_V3)
       key_material = contents;
    else
       {
       TLS_Data_Reader reader(contents);
 
-      if(suite.kex_algo() == "RSA" || suite.kex_algo() == "DH")
+      if(kex_algo == "RSA" || kex_algo == "DH")
          key_material = reader.get_range<byte>(2, 0, 65535);
-      else if(suite.kex_algo() == "ECDH")
+      else if(kex_algo == "ECDH")
          key_material = reader.get_range<byte>(1, 1, 255);
+      else if(kex_algo == "PSK")
+         {
+         const std::string psk_identity = reader.get_string(2, 0, 65535);
+
+         SymmetricKey psk = creds.psk("tls-server",
+                                      state->client_hello->sni_hostname(),
+                                      psk_identity);
+
+         MemoryVector<byte> zeros(psk.length());
+
+         append_tls_length_value(key_material, zeros, 2);
+         append_tls_length_value(key_material, psk.bits_of(), 2);
+
+         pre_master = key_material;
+         }
       else
-         throw Internal_Error("Unknown client key exch type " + suite.kex_algo());
+         throw Internal_Error("Client_Key_Exchange received unknown kex type " + kex_algo);
       }
    }
 
@@ -212,7 +229,11 @@ Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
    {
    const std::string kex_algo = state->suite.kex_algo();
 
-   if(kex_algo == "RSA")
+   if(kex_algo == "PSK")
+      {
+      return key_material;
+      }
+   else if(kex_algo == "RSA")
       {
       BOTAN_ASSERT(state->server_certs && !state->server_certs->cert_chain().empty(),
                    "No server certificate to use for RSA");
