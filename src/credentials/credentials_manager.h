@@ -9,7 +9,7 @@
 #define BOTAN_CREDENTIALS_MANAGER_H__
 
 #include <botan/x509cert.h>
-#include <botan/secmem.h>
+#include <botan/symkey.h>
 #include <string>
 
 namespace Botan {
@@ -23,12 +23,23 @@ class BigInt;
 * of the transaction occuring. Currently used values are "tls-client"
 * and "tls-server". Context represents a hostname, email address,
 * username, or other identifier.
-
 */
 class BOTAN_DLL Credentials_Manager
    {
    public:
       virtual ~Credentials_Manager() {}
+
+      virtual std::string psk_identity_hint(const std::string& type,
+                                            const std::string& context);
+
+      /**
+      * @param identity_hint was passed by the server (but may be empty)
+      * @return pair of PSK identity and the PSK itself.
+      */
+      virtual std::pair<std::string, SymmetricKey>
+         psk(const std::string& type,
+             const std::string& context,
+             const std::string& identity_hint);
 
       /**
       * @return identifier for client-side SRP auth, if available

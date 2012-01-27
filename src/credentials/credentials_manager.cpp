@@ -9,6 +9,20 @@
 
 namespace Botan {
 
+std::string Credentials_Manager::psk_identity_hint(const std::string&,
+                                                   const std::string&)
+   {
+   return "";
+   }
+
+std::pair<std::string, SymmetricKey>
+Credentials_Manager::psk(const std::string&,
+                         const std::string&,
+                         const std::string& identity_hint)
+   {
+   throw Internal_Error("No PSK set for " + identity_hint);
+   }
+
 std::string Credentials_Manager::srp_identifier(const std::string&,
                                                 const std::string&)
    {
