@@ -18,9 +18,6 @@
 #include <botan/loadstor.h>
 #include <memory>
 
-#include <iostream>
-#include <botan/hex.h>
-
 namespace Botan {
 
 namespace TLS {
@@ -321,15 +318,10 @@ Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
 
             MemoryVector<byte> client_pubkey;
 
-            std::cout << hex_encode(contents) << "\n";
-
             if(ka_key->algo_name() == "DH")
                client_pubkey = reader.get_range<byte>(2, 0, 65535);
             else
                client_pubkey = reader.get_range<byte>(1, 0, 255);
-
-            std::cout << hex_encode(client_pubkey) << "\n";
-            std::cout << reader.remaining_bytes() << "\n";
 
             SecureVector<byte> shared_secret = ka.derive_key(0, client_pubkey).bits_of();
 
@@ -352,14 +344,11 @@ Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
             * on, allowing the protocol to fail later in the finished
             * checks.
             */
-            std::cout << "Shared secret failed << " << e.what() << "\n";
             pre_master = rng.random_vec(ka_key->public_value().size());
             }
          }
       else
          throw Internal_Error("Client_Key_Exchange: Unknown kex type " + kex_algo);
-
-      std::cout << hex_encode(pre_master) << "\n";
       }
    }
 
