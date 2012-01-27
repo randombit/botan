@@ -20,7 +20,7 @@ namespace TLS {
 */
 Ciphersuite Ciphersuite::lookup_ciphersuite(u16bit suite)
    {
-   switch(suite)
+   switch(static_cast<Ciphersuite_Code>(suite))
       {
       // RSA ciphersuites
 
@@ -140,24 +140,45 @@ Ciphersuite Ciphersuite::lookup_ciphersuite(u16bit suite)
       case TLS_PSK_WITH_AES_128_CBC_SHA:
          return Ciphersuite("", "PSK", "SHA-1", "AES-128", 16);
 
+      case TLS_PSK_WITH_AES_128_CBC_SHA256:
+         return Ciphersuite("", "PSK", "SHA-1", "AES-256", 16);
+
       case TLS_PSK_WITH_AES_256_CBC_SHA:
          return Ciphersuite("", "PSK", "SHA-1", "AES-256", 32);
 
-#if 0
       // PSK+DH ciphersuites
 
       case TLS_DHE_PSK_WITH_RC4_128_SHA:
-         return Ciphersuite("", "DHE_PSK", "SHA-1", "ARC4", 16);
+         return Ciphersuite("", "PSK_DHE", "SHA-1", "ARC4", 16);
 
       case TLS_DHE_PSK_WITH_3DES_EDE_CBC_SHA:
-         return Ciphersuite("", "DHE_PSK", "SHA-1", "3DES", 24);
+         return Ciphersuite("", "PSK_DHE", "SHA-1", "3DES", 24);
 
       case TLS_DHE_PSK_WITH_AES_128_CBC_SHA:
-         return Ciphersuite("", "DHE_PSK", "SHA-1", "AES-128", 16);
+         return Ciphersuite("", "PSK_DHE", "SHA-1", "AES-128", 16);
+
+      case TLS_DHE_PSK_WITH_AES_128_CBC_SHA256:
+         return Ciphersuite("", "PSK_DHE", "SHA-256", "AES-128", 16);
 
       case TLS_DHE_PSK_WITH_AES_256_CBC_SHA:
-         return Ciphersuite("", "DHE_PSK", "SHA-1", "AES-256", 32);
-#endif
+         return Ciphersuite("", "PSK_DHE", "SHA-1", "AES-256", 32);
+
+      // PSK+ECDH ciphersuites
+
+      case TLS_ECDHE_PSK_WITH_RC4_128_SHA:
+         return Ciphersuite("", "PSK_ECDHE", "SHA-1", "ARC4", 16);
+
+      case TLS_ECDHE_PSK_WITH_3DES_EDE_CBC_SHA:
+         return Ciphersuite("", "PSK_ECDHE", "SHA-1", "3DES", 24);
+
+      case TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA:
+         return Ciphersuite("", "PSK_ECDHE", "SHA-1", "AES-128", 16);
+
+      case TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256:
+         return Ciphersuite("", "PSK_ECDHE", "SHA-256", "AES-128", 16);
+
+      case TLS_ECDHE_PSK_WITH_AES_256_CBC_SHA:
+         return Ciphersuite("", "PSK_ECDHE", "SHA-1", "AES-256", 32);
 
       // SRP/RSA ciphersuites
 
@@ -181,9 +202,13 @@ Ciphersuite Ciphersuite::lookup_ciphersuite(u16bit suite)
       case TLS_SRP_SHA_DSS_WITH_3DES_EDE_SHA:
          return Ciphersuite("DSA", "SRP", "SHA-1", "3DES", 24);
 
-      default:
-         return Ciphersuite(); // some unknown ciphersuite
+      // Signaling ciphersuite values
+
+      case TLS_EMPTY_RENEGOTIATION_INFO_SCSV:
+         return Ciphersuite();
       }
+
+   return Ciphersuite(); // some unknown ciphersuite
    }
 
 std::string Ciphersuite::to_string() const
@@ -203,6 +228,10 @@ std::string Ciphersuite::to_string() const
          out << "ECDHE";
       else if(kex_algo() == "SRP")
          out << "SRP_SHA";
+      else if(kex_algo() == "PSK_DHE")
+         out << "DHE_PSK";
+      else if(kex_algo() == "PSK_ECDHE")
+         out << "ECDHE_PSK";
       else
          out << kex_algo();
 

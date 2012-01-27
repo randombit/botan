@@ -32,7 +32,13 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
    {
    const std::string kex_algo = state->suite.kex_algo();
 
-   if(kex_algo == "DH")
+   if(kex_algo == "PSK" || kex_algo == "PSK_DHE" || kex_algo == "PSK_ECDHE")
+      {
+      std::string identity_hint = "botan";
+      append_tls_length_value(m_params, identity_hint, 2);
+      }
+
+   if(kex_algo == "DH" || kex_algo == "PSK_DHE")
       {
       std::auto_ptr<DH_PrivateKey> dh(new DH_PrivateKey(rng, policy.dh_group()));
 
@@ -41,7 +47,7 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
       append_tls_length_value(m_params, dh->public_value(), 2);
       m_kex_key = dh.release();
       }
-   else if(kex_algo == "ECDH")
+   else if(kex_algo == "ECDH" || kex_algo == "PSK_ECDHE")
       {
       const std::vector<std::string>& curves =
          state->client_hello->supported_ecc_curves();
@@ -75,7 +81,7 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
 
       m_kex_key = ecdh.release();
       }
-   else
+   else if(kex_algo != "PSK")
       throw Internal_Error("Server_Key_Exchange: Unknown kex type " + kex_algo);
 
    if(state->suite.sig_algo() != "")
@@ -116,12 +122,13 @@ Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
    * to be able to parse the whole thing anyway.
    */
 
-   if(kex_algo == "PSK")
+   if(kex_algo == "PSK" || kex_algo == "PSK_DHE" || kex_algo == "PSK_ECDHE")
       {
-      std::string identity_hint = reader.get_string(2, 1, 65535);
+      const std::string identity_hint = reader.get_string(2, 0, 65535);
       append_tls_length_value(m_params, identity_hint, 2);
       }
-   else if(kex_algo == "DH")
+
+   if(kex_algo == "DH" || kex_algo == "PSK_DHE")
       {
       // 3 bigints, DH p, g, Y
 
@@ -131,7 +138,7 @@ Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
          append_tls_length_value(m_params, BigInt::encode(v), 2);
          }
       }
-   else if(kex_algo == "ECDH")
+   else if(kex_algo == "ECDH" || kex_algo == "PSK_ECDHE")
       {
       const byte curve_type = reader.get_byte();
 
@@ -153,7 +160,7 @@ Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
       m_params.push_back(get_byte(1, curve_id));
       append_tls_length_value(m_params, ecdh_key, 1);
       }
-   else
+   else if(kex_algo != "PSK")
       throw Decoding_Error("Server_Key_Exchange: Unsupported kex type " + kex_algo);
 
    if(sig_algo != "")

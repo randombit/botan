@@ -82,7 +82,24 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
       {
       TLS_Data_Reader reader(state->server_kex->params());
 
-      if(kex_algo == "DH")
+      SymmetricKey psk;
+
+      if(kex_algo == "PSK_DHE" || kex_algo == "PSK_ECDHE")
+         {
+         std::string identity_hint = reader.get_string(2, 0, 65535);
+
+         const std::string hostname = state->client_hello->sni_hostname();
+
+         const std::string psk_identity = creds.psk_identity("tls-client",
+                                                             hostname,
+                                                             identity_hint);
+
+         append_tls_length_value(key_material, psk_identity, 2);
+
+         psk = creds.psk("tls-client", hostname, psk_identity);
+         }
+
+      if(kex_algo == "DH" || kex_algo == "PSK_DHE")
          {
          BigInt p = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
          BigInt g = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
@@ -104,12 +121,20 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 
          PK_Key_Agreement ka(priv_key, "Raw");
 
-         pre_master = strip_leading_zeros(
+         SecureVector<byte> dh_secret = strip_leading_zeros(
             ka.derive_key(0, counterparty_key.public_value()).bits_of());
+
+         if(kex_algo == "DH")
+            pre_master = dh_secret;
+         else
+            {
+            append_tls_length_value(pre_master, dh_secret, 2);
+            append_tls_length_value(pre_master, psk.bits_of(), 2);
+            }
 
          append_tls_length_value(key_material, priv_key.public_value(), 2);
          }
-      else if(kex_algo == "ECDH")
+      else if(kex_algo == "ECDH" || kex_algo == "PSK_ECDHE")
          {
          const byte curve_type = reader.get_byte();
 
@@ -133,7 +158,15 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 
          PK_Key_Agreement ka(priv_key, "Raw");
 
-         pre_master = ka.derive_key(0, counterparty_key.public_value()).bits_of();
+         SecureVector<byte> ecdh_secret = ka.derive_key(0, counterparty_key.public_value()).bits_of();
+
+         if(kex_algo == "ECDH")
+            pre_master = ecdh_secret;
+         else
+            {
+            append_tls_length_value(pre_master, ecdh_secret, 2);
+            append_tls_length_value(pre_master, psk.bits_of(), 2);
+            }
 
          append_tls_length_value(key_material, priv_key.public_value(), 1);
          }
