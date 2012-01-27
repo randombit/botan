@@ -35,7 +35,7 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
    {
    const std::string kex_algo = state->suite.kex_algo();
 
-   if(kex_algo == "PSK" || kex_algo == "PSK_DHE" || kex_algo == "PSK_ECDHE")
+   if(kex_algo == "PSK" || kex_algo == "DHE_PSK" || kex_algo == "ECDHE_PSK")
       {
       std::string identity_hint =
          creds.psk_identity_hint("tls-server",
@@ -44,7 +44,7 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
       append_tls_length_value(m_params, identity_hint, 2);
       }
 
-   if(kex_algo == "DH" || kex_algo == "PSK_DHE")
+   if(kex_algo == "DH" || kex_algo == "DHE_PSK")
       {
       std::auto_ptr<DH_PrivateKey> dh(new DH_PrivateKey(rng, policy.dh_group()));
 
@@ -53,7 +53,7 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
       append_tls_length_value(m_params, dh->public_value(), 2);
       m_kex_key = dh.release();
       }
-   else if(kex_algo == "ECDH" || kex_algo == "PSK_ECDHE")
+   else if(kex_algo == "ECDH" || kex_algo == "ECDHE_PSK")
       {
       const std::vector<std::string>& curves =
          state->client_hello->supported_ecc_curves();
@@ -128,13 +128,13 @@ Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
    * to be able to parse the whole thing anyway.
    */
 
-   if(kex_algo == "PSK" || kex_algo == "PSK_DHE" || kex_algo == "PSK_ECDHE")
+   if(kex_algo == "PSK" || kex_algo == "DHE_PSK" || kex_algo == "ECDHE_PSK")
       {
       const std::string identity_hint = reader.get_string(2, 0, 65535);
       append_tls_length_value(m_params, identity_hint, 2);
       }
 
-   if(kex_algo == "DH" || kex_algo == "PSK_DHE")
+   if(kex_algo == "DH" || kex_algo == "DHE_PSK")
       {
       // 3 bigints, DH p, g, Y
 
@@ -144,7 +144,7 @@ Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
          append_tls_length_value(m_params, BigInt::encode(v), 2);
          }
       }
-   else if(kex_algo == "ECDH" || kex_algo == "PSK_ECDHE")
+   else if(kex_algo == "ECDH" || kex_algo == "ECDHE_PSK")
       {
       const byte curve_type = reader.get_byte();
 

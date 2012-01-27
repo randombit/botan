@@ -47,8 +47,8 @@ std::vector<std::string> Policy::allowed_key_exchange_methods() const
    std::vector<std::string> allowed;
 
    //allowed.push_back("SRP");
-   //allowed.push_back("PSK_ECDHE");
-   //allowed.push_back("PSK_DHE");
+   //allowed.push_back("ECDHE_PSK");
+   //allowed.push_back("DHE_PSK");
    //allowed.push_back("PSK");
    allowed.push_back("ECDH");
    allowed.push_back("DH");

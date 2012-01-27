@@ -84,7 +84,7 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 
       SymmetricKey psk;
 
-      if(kex_algo == "PSK_DHE" || kex_algo == "PSK_ECDHE")
+      if(kex_algo == "DHE_PSK" || kex_algo == "ECDHE_PSK")
          {
          std::string identity_hint = reader.get_string(2, 0, 65535);
 
@@ -99,7 +99,7 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
          psk = creds.psk("tls-client", hostname, psk_identity);
          }
 
-      if(kex_algo == "DH" || kex_algo == "PSK_DHE")
+      if(kex_algo == "DH" || kex_algo == "DHE_PSK")
          {
          BigInt p = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
          BigInt g = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
@@ -134,7 +134,7 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 
          append_tls_length_value(key_material, priv_key.public_value(), 2);
          }
-      else if(kex_algo == "ECDH" || kex_algo == "PSK_ECDHE")
+      else if(kex_algo == "ECDH" || kex_algo == "ECDHE_PSK")
          {
          const byte curve_type = reader.get_byte();
 
@@ -275,7 +275,7 @@ Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
 
       SymmetricKey psk;
 
-      if(kex_algo == "PSK" || kex_algo == "PSK_DHE" || kex_algo == "PSK_ECDHE")
+      if(kex_algo == "PSK" || kex_algo == "DHE_PSK" || kex_algo == "ECDHE_PSK")
          {
          const std::string psk_identity = reader.get_string(2, 0, 65535);
 
@@ -300,8 +300,8 @@ Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
          append_tls_length_value(pre_master, zeros, 2);
          append_tls_length_value(pre_master, psk.bits_of(), 2);
          }
-      else if(kex_algo == "DH" || kex_algo == "PSK_DHE" ||
-              kex_algo == "ECDH" || kex_algo == "PSK_ECDHE")
+      else if(kex_algo == "DH" || kex_algo == "DHE_PSK" ||
+              kex_algo == "ECDH" || kex_algo == "ECDHE_PSK")
          {
          const Private_Key& private_key = state->server_kex->server_kex_key();
 
@@ -328,7 +328,7 @@ Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
             if(ka_key->algo_name() == "DH")
                shared_secret = strip_leading_zeros(shared_secret);
 
-            if(kex_algo == "PSK_DHE" || kex_algo == "PSK_ECDHE")
+            if(kex_algo == "DHE_PSK" || kex_algo == "ECDHE_PSK")
                {
                append_tls_length_value(pre_master, shared_secret, 2);
                append_tls_length_value(pre_master, psk.bits_of(), 2);
