@@ -465,6 +465,9 @@ MemoryVector<byte> Signature_Algorithms::serialize() const
 
    for(size_t i = 0; i != m_supported_algos.size(); ++i)
       {
+      if(m_supported_algos[i].second == "")
+         continue;
+
       buf.push_back(hash_algo_code(m_supported_algos[i].first));
       buf.push_back(sig_algo_code(m_supported_algos[i].second));
       }

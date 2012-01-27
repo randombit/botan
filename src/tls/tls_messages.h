@@ -20,6 +20,8 @@
 
 namespace Botan {
 
+class Credentials_Manager;
+
 namespace TLS {
 
 class Record_Writer;
@@ -216,6 +218,7 @@ class Client_Key_Exchange : public Handshake_Message
 
       Client_Key_Exchange(Record_Writer& output,
                           Handshake_State* state,
+                          Credentials_Manager& creds,
                           const std::vector<X509_Certificate>& peer_certs,
                           RandomNumberGenerator& rng);
 
@@ -368,6 +371,7 @@ class Server_Key_Exchange : public Handshake_Message
       bool verify(const X509_Certificate& cert,
                   Handshake_State* state) const;
 
+      // Only valid for certain kex types
       const Private_Key& server_kex_key() const;
 
       Server_Key_Exchange(Record_Writer& writer,

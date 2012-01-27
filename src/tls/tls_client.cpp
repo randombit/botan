@@ -221,6 +221,19 @@ void Client::process_handshake_msg(Handshake_Type type,
             {
             state->set_expected_next(CERTIFICATE);
             }
+         else if(state->suite.kex_algo() == "PSK")
+            {
+            /* PSK is anonymous so no certificate/cert req message is
+               ever sent. The server may or may not send a server kex,
+               depending on if it has an identity hint for us.
+
+               PSK_DHE always sends a server key exchange for the DH
+               exchange portion.
+            */
+
+            state->set_expected_next(SERVER_KEX);
+            state->set_expected_next(SERVER_HELLO_DONE);
+            }
          else if(state->suite.kex_algo() != "RSA")
             {
             state->set_expected_next(SERVER_KEX);
@@ -315,6 +328,7 @@ void Client::process_handshake_msg(Handshake_Type type,
       state->client_kex =
          new Client_Key_Exchange(writer,
                                  state,
+                                 creds,
                                  peer_certs,
                                  rng);
 

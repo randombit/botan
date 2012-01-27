@@ -9,6 +9,7 @@
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_extensions.h>
 #include <botan/internal/assert.h>
+#include <botan/credentials_manager.h>
 #include <botan/pubkey.h>
 #include <botan/dh.h>
 #include <botan/ecdh.h>
@@ -46,14 +47,39 @@ SecureVector<byte> strip_leading_zeros(const MemoryRegion<byte>& input)
 */
 Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
                                          Handshake_State* state,
+                                         Credentials_Manager& creds,
                                          const std::vector<X509_Certificate>& peer_certs,
                                          RandomNumberGenerator& rng)
    {
-   if(state->server_kex)
+   const std::string kex_algo = state->suite.kex_algo();
+
+   if(kex_algo == "PSK")
+      {
+      std::string identity_hint = "";
+
+      if(state->server_kex)
+         {
+         TLS_Data_Reader reader(state->server_kex->params());
+         identity_hint = reader.get_string(2, 0, 65535);
+         }
+
+      std::pair<std::string, SymmetricKey> psk =
+         creds.psk("tls-client",
+                   state->client_hello->sni_hostname(),
+                   identity_hint);
+
+      append_tls_length_value(key_material, psk.first, 2);
+
+      MemoryVector<byte> zeros(psk.second.length());
+
+      append_tls_length_value(pre_master, zeros, 2);
+      append_tls_length_value(pre_master, psk.second.bits_of(), 2);
+      }
+   else if(state->server_kex)
       {
       TLS_Data_Reader reader(state->server_kex->params());
 
-      if(state->suite.kex_algo() == "DH")
+      if(kex_algo == "DH")
          {
          BigInt p = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
          BigInt g = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
@@ -80,7 +106,7 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 
          append_tls_length_value(key_material, priv_key.public_value(), 2);
          }
-      else if(state->suite.kex_algo() == "ECDH")
+      else if(kex_algo == "ECDH")
          {
          const byte curve_type = reader.get_byte();
 
@@ -109,16 +135,22 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
          append_tls_length_value(key_material, priv_key.public_value(), 1);
          }
       else
-         throw Internal_Error("Unknown key exchange type " + state->suite.kex_algo());
+         {
+         throw Internal_Error("Client_Key_Exchange: Unknown kex " +
+                              kex_algo);
+         }
       }
    else
       {
-      // No server key exchange msg better mean a RSA key in the cert
+      // No server key exchange msg better mean RSA kex + RSA key in cert
 
-      std::auto_ptr<Public_Key> pub_key(peer_certs[0].subject_public_key());
+      if(kex_algo != "RSA")
+         throw Unexpected_Message("No server kex but negotiated kex " + kex_algo);
 
       if(peer_certs.empty())
          throw Internal_Error("No certificate and no server key exchange");
+
+      std::auto_ptr<Public_Key> pub_key(peer_certs[0].subject_public_key());
 
       if(const RSA_PublicKey* rsa_pub = dynamic_cast<const RSA_PublicKey*>(pub_key.get()))
          {

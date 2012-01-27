@@ -63,6 +63,7 @@ std::vector<std::string> Policy::allowed_signature_methods() const
    allowed.push_back("ECDSA");
    allowed.push_back("RSA");
    allowed.push_back("DSA");
+   allowed.push_back("");
 
    return allowed;
    }
@@ -159,7 +160,8 @@ std::vector<u16bit> Policy::ciphersuite_list(bool have_srp) const
 
    if(!have_srp)
       {
-      std::vector<std::string>::iterator i = std::find(kex.begin(), kex.end(), "SRP");
+      std::vector<std::string>::iterator i =
+         std::find(kex.begin(), kex.end(), "SRP");
 
       if(i != kex.end())
          kex.erase(i);
@@ -167,14 +169,16 @@ std::vector<u16bit> Policy::ciphersuite_list(bool have_srp) const
 
    Ciphersuite_Preference_Ordering order(ciphers, hashes, kex, sigs);
 
-   std::map<Ciphersuite, u16bit, Ciphersuite_Preference_Ordering> ciphersuites(order);
+   std::map<Ciphersuite, u16bit, Ciphersuite_Preference_Ordering>
+      ciphersuites(order);
 
    // When in doubt use brute force :)
    for(u32bit i = 0; i != 65536; ++i)
       {
       Ciphersuite suite = Ciphersuite::lookup_ciphersuite(i);
-      if(suite.cipher_keylen() == 0)
-         continue; // not a ciphersuite we know
+
+      if(!suite.valid())
+         continue; // not a ciphersuite we know, skip
 
       if(value_exists(ciphers, suite.cipher_algo()) &&
          value_exists(hashes, suite.mac_algo()) &&

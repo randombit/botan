@@ -129,22 +129,32 @@ Ciphersuite Ciphersuite::lookup_ciphersuite(u16bit suite)
       case TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA:
          return Ciphersuite("ECDSA", "ECDH", "SHA-1", "3DES", 24);
 
-#if 0
+      // PSK ciphersuites
+
       case TLS_PSK_WITH_RC4_128_SHA:
          return Ciphersuite("", "PSK", "SHA-1", "ARC4", 16);
+
       case TLS_PSK_WITH_3DES_EDE_CBC_SHA:
          return Ciphersuite("", "PSK", "SHA-1", "3DES", 24);
+
       case TLS_PSK_WITH_AES_128_CBC_SHA:
          return Ciphersuite("", "PSK", "SHA-1", "AES-128", 16);
+
       case TLS_PSK_WITH_AES_256_CBC_SHA:
          return Ciphersuite("", "PSK", "SHA-1", "AES-256", 32);
 
+#if 0
+      // PSK+DH ciphersuites
+
       case TLS_DHE_PSK_WITH_RC4_128_SHA:
          return Ciphersuite("", "DHE_PSK", "SHA-1", "ARC4", 16);
+
       case TLS_DHE_PSK_WITH_3DES_EDE_CBC_SHA:
          return Ciphersuite("", "DHE_PSK", "SHA-1", "3DES", 24);
+
       case TLS_DHE_PSK_WITH_AES_128_CBC_SHA:
          return Ciphersuite("", "DHE_PSK", "SHA-1", "AES-128", 16);
+
       case TLS_DHE_PSK_WITH_AES_256_CBC_SHA:
          return Ciphersuite("", "DHE_PSK", "SHA-1", "AES-256", 32);
 #endif

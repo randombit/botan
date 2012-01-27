@@ -116,7 +116,12 @@ Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
    * to be able to parse the whole thing anyway.
    */
 
-   if(kex_algo == "DH")
+   if(kex_algo == "PSK")
+      {
+      std::string identity_hint = reader.get_string(2, 1, 65535);
+      append_tls_length_value(m_params, identity_hint, 2);
+      }
+   else if(kex_algo == "DH")
       {
       // 3 bigints, DH p, g, Y
 
@@ -149,8 +154,7 @@ Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
       append_tls_length_value(m_params, ecdh_key, 1);
       }
    else
-      throw Decoding_Error("Server_Key_Exchange: Unsupported server key exchange type " +
-                           kex_algo);
+      throw Decoding_Error("Server_Key_Exchange: Unsupported kex type " + kex_algo);
 
    if(sig_algo != "")
       {

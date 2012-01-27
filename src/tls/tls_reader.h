@@ -153,9 +153,11 @@ class TLS_Data_Reader
       void assert_at_least(size_t n) const
          {
          if(buf.size() - offset < n)
+            {
             throw Decoding_Error("TLS_Data_Reader: Expected " + to_string(n) +
                                  " bytes remaining, only " + to_string(buf.size()-offset) +
                                  " left");
+            }
          }
 
       const MemoryRegion<byte>& buf;
@@ -203,6 +205,16 @@ void append_tls_length_value(MemoryRegion<byte>& buf,
                              size_t tag_size)
    {
    append_tls_length_value(buf, &vals[0], vals.size(), tag_size);
+   }
+
+inline void append_tls_length_value(MemoryRegion<byte>& buf,
+                                    const std::string& str,
+                                    size_t tag_size)
+   {
+   append_tls_length_value(buf,
+                           reinterpret_cast<const byte*>(&str[0]),
+                           str.size(),
+                           tag_size);
    }
 
 }
