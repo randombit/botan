@@ -15,12 +15,18 @@ std::string Credentials_Manager::psk_identity_hint(const std::string&,
    return "";
    }
 
-std::pair<std::string, SymmetricKey>
-Credentials_Manager::psk(const std::string&,
-                         const std::string&,
-                         const std::string& identity_hint)
+std::string Credentials_Manager::psk_identity(const std::string&,
+                                              const std::string&,
+                                              const std::string&)
    {
-   throw Internal_Error("No PSK set for " + identity_hint);
+   return "";
+   }
+
+SymmetricKey Credentials_Manager::psk(const std::string&,
+                                      const std::string&,
+                                      const std::string& identity)
+   {
+   throw Internal_Error("No PSK set for identity " + identity);
    }
 
 std::string Credentials_Manager::srp_identifier(const std::string&,

@@ -34,12 +34,18 @@ class BOTAN_DLL Credentials_Manager
 
       /**
       * @param identity_hint was passed by the server (but may be empty)
-      * @return pair of PSK identity and the PSK itself.
+      * @return the PSK identity we want to use
       */
-      virtual std::pair<std::string, SymmetricKey>
-         psk(const std::string& type,
-             const std::string& context,
-             const std::string& identity_hint);
+      virtual std::string psk_identity(const std::string& type,
+                                       const std::string& context,
+                                       const std::string& identity_hint);
+
+      /**
+      * @return the PSK used for identity
+      */
+      virtual SymmetricKey psk(const std::string& type,
+                               const std::string& context,
+                               const std::string& identity);
 
       /**
       * @return identifier for client-side SRP auth, if available
@@ -56,16 +62,16 @@ class BOTAN_DLL Credentials_Manager
       * @return password for client-side SRP auth, if available
                 for this identifier/type/context.
       */
-      virtual std::string srp_password(const std::string& identifier,
-                                       const std::string& type,
-                                       const std::string& context);
+      virtual std::string srp_password(const std::string& type,
+                                       const std::string& context,
+                                       const std::string& identifier);
 
       /**
       * Retrieve SRP verifier parameters
       */
-      virtual bool srp_verifier(const std::string& identifier,
-                                const std::string& type,
+      virtual bool srp_verifier(const std::string& type,
                                 const std::string& context,
+                                const std::string& identifier,
                                 BigInt& group_prime,
                                 BigInt& group_generator,
                                 BigInt& verifier,

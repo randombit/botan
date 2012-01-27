@@ -63,17 +63,20 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
          identity_hint = reader.get_string(2, 0, 65535);
          }
 
-      std::pair<std::string, SymmetricKey> psk =
-         creds.psk("tls-client",
-                   state->client_hello->sni_hostname(),
-                   identity_hint);
+      const std::string hostname = state->client_hello->sni_hostname();
 
-      append_tls_length_value(key_material, psk.first, 2);
+      const std::string psk_identity = creds.psk_identity("tls-client",
+                                                          hostname,
+                                                          identity_hint);
 
-      MemoryVector<byte> zeros(psk.second.length());
+      append_tls_length_value(key_material, psk_identity, 2);
+
+      SymmetricKey psk = creds.psk("tls-client", hostname, psk_identity);
+
+      MemoryVector<byte> zeros(psk.length());
 
       append_tls_length_value(pre_master, zeros, 2);
-      append_tls_length_value(pre_master, psk.second.bits_of(), 2);
+      append_tls_length_value(pre_master, psk.bits_of(), 2);
       }
    else if(state->server_kex)
       {

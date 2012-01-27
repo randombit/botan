@@ -19,6 +19,20 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
    public:
       Credentials_Manager_Simple(Botan::RandomNumberGenerator& rng) : rng(rng) {}
 
+      std::string psk_identity(const std::string&, const std::string&,
+                               const std::string& identity_hint)
+         {
+         return "Client_identity";
+         }
+
+      Botan::SymmetricKey psk(const std::string&, const std::string&,
+                              const std::string& identity)
+         {
+         if(identity == "Client_identity")
+            return Botan::SymmetricKey("AABBCC");
+         throw Botan::Internal_Error("No PSK set for " + identity);
+         }
+
       std::vector<Botan::X509_Certificate> cert_chain(
          const std::vector<std::string>& cert_key_types,
          const std::string& type,
