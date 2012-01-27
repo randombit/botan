@@ -9,6 +9,7 @@
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_extensions.h>
 #include <botan/internal/assert.h>
+#include <botan/credentials_manager.h>
 #include <botan/loadstor.h>
 #include <botan/pubkey.h>
 #include <botan/dh.h>
@@ -27,14 +28,19 @@ namespace TLS {
 Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
                                          Handshake_State* state,
                                          const Policy& policy,
+                                         Credentials_Manager& creds,
                                          RandomNumberGenerator& rng,
-                                         const Private_Key* signing_key)
+                                         const Private_Key* signing_key) :
+   m_kex_key(0)
    {
    const std::string kex_algo = state->suite.kex_algo();
 
    if(kex_algo == "PSK" || kex_algo == "PSK_DHE" || kex_algo == "PSK_ECDHE")
       {
-      std::string identity_hint = "botan";
+      std::string identity_hint =
+         creds.psk_identity_hint("tls-server",
+                                 state->client_hello->sni_hostname());
+
       append_tls_length_value(m_params, identity_hint, 2);
       }
 
@@ -183,14 +189,18 @@ MemoryVector<byte> Server_Key_Exchange::serialize() const
    {
    MemoryVector<byte> buf = params();
 
-   // This should be an explicit version check
-   if(m_hash_algo != "" && m_sig_algo != "")
+   if(m_signature.size())
       {
-      buf.push_back(Signature_Algorithms::hash_algo_code(m_hash_algo));
-      buf.push_back(Signature_Algorithms::sig_algo_code(m_sig_algo));
+      // This should be an explicit version check
+      if(m_hash_algo != "" && m_sig_algo != "")
+         {
+         buf.push_back(Signature_Algorithms::hash_algo_code(m_hash_algo));
+         buf.push_back(Signature_Algorithms::sig_algo_code(m_sig_algo));
+         }
+
+      append_tls_length_value(buf, m_signature, 2);
       }
 
-   append_tls_length_value(buf, m_signature, 2);
    return buf;
    }
 

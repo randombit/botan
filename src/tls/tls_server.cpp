@@ -308,10 +308,10 @@ void Server::process_handshake_msg(Handshake_Type type,
             {
             state->server_rsa_kex_key = private_key;
             }
-         else if(kex_algo != "PSK") // FIXME: means we never send identity hint
+         else
             {
             state->server_kex =
-               new Server_Key_Exchange(writer, state, policy, rng, private_key);
+               new Server_Key_Exchange(writer, state, policy, creds, rng, private_key);
             }
 
          std::vector<X509_Certificate> client_auth_CAs =
@@ -358,12 +358,9 @@ void Server::process_handshake_msg(Handshake_Type type,
       else
          state->set_expected_next(HANDSHAKE_CCS);
 
-      state->client_kex = new Client_Key_Exchange(contents, state);
+      state->client_kex = new Client_Key_Exchange(contents, state, creds, policy, rng);
 
-      SecureVector<byte> pre_master =
-         state->client_kex->pre_master_secret(rng, state, creds, policy);
-
-      state->keys = Session_Keys(state, pre_master, false);
+      state->keys = Session_Keys(state, state->client_kex->pre_master_secret(), false);
       }
    else if(type == CERTIFICATE_VERIFY)
       {

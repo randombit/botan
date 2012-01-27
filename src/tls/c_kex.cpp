@@ -18,6 +18,9 @@
 #include <botan/loadstor.h>
 #include <memory>
 
+#include <iostream>
+#include <botan/hex.h>
+
 namespace Botan {
 
 namespace TLS {
@@ -218,63 +221,14 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 * Read a Client Key Exchange message
 */
 Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
-                                         const Handshake_State* state)
+                                         const Handshake_State* state,
+                                         Credentials_Manager& creds,
+                                         const Policy& policy,
+                                         RandomNumberGenerator& rng)
    {
    const std::string kex_algo = state->suite.kex_algo();
 
-   if(kex_algo == "RSA" && state->version == Protocol_Version::SSL_V3)
-      key_material = contents;
-   else
-      {
-      TLS_Data_Reader reader(contents);
-
-      if(kex_algo == "RSA" || kex_algo == "DH")
-         key_material = reader.get_range<byte>(2, 0, 65535);
-      else if(kex_algo == "ECDH")
-         key_material = reader.get_range<byte>(1, 1, 255);
-      else if(kex_algo == "PSK")
-         key_material = reader.get_range<byte>(2, 0, 65535);
-      else
-         throw Internal_Error("Client_Key_Exchange received unknown kex type " + kex_algo);
-      }
-   }
-
-/*
-* Return the pre_master_secret (server side implementation)
-*/
-SecureVector<byte>
-Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
-                                       const Handshake_State* state,
-                                       Credentials_Manager& creds,
-                                       const Policy& policy)
-   {
-   const std::string kex_algo = state->suite.kex_algo();
-
-   if(kex_algo == "PSK")
-      {
-      const std::string psk_identity(
-         reinterpret_cast<const char*>(&key_material[0]),
-         key_material.size());
-
-      SymmetricKey psk = creds.psk("tls-server",
-                                   state->client_hello->sni_hostname(),
-                                   psk_identity);
-
-      if(psk.length() == 0)
-         {
-         if(policy.hide_unknown_users())
-            throw TLS_Exception(Alert::UNKNOWN_PSK_IDENTITY,
-                                "No PKS for identifier " + psk_identity);
-         else
-            psk = SymmetricKey(rng, 16);
-         }
-
-      MemoryVector<byte> zeros(psk.length());
-
-      append_tls_length_value(pre_master, zeros, 2);
-      append_tls_length_value(pre_master, psk.bits_of(), 2);
-      }
-   else if(kex_algo == "RSA")
+   if(kex_algo == "RSA")
       {
       BOTAN_ASSERT(state->server_certs && !state->server_certs->cert_chain().empty(),
                    "No server certificate to use for RSA");
@@ -293,7 +247,15 @@ Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
 
       try
          {
-         pre_master = decryptor.decrypt(key_material);
+         if(state->version == Protocol_Version::SSL_V3)
+            {
+            pre_master = decryptor.decrypt(contents);
+            }
+         else
+            {
+            TLS_Data_Reader reader(contents);
+            pre_master = decryptor.decrypt(reader.get_range<byte>(2, 0, 65535));
+            }
 
          if(pre_master.size() != 48 ||
             client_version.major_version() != pre_master[0] ||
@@ -304,46 +266,101 @@ Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
          }
       catch(...)
          {
+         // Randomize the hide timing channel
          pre_master = rng.random_vec(48);
          pre_master[0] = client_version.major_version();
          pre_master[1] = client_version.minor_version();
          }
       }
-   else if(kex_algo == "DH" || kex_algo == "ECDH")
-      {
-      const Private_Key& private_key = state->server_kex->server_kex_key();
-
-      const PK_Key_Agreement_Key* ka_key =
-         dynamic_cast<const PK_Key_Agreement_Key*>(&private_key);
-
-      if(!ka_key)
-         throw Internal_Error("Expected key agreement key type but got " +
-                              private_key.algo_name());
-
-      try
-         {
-         PK_Key_Agreement ka(*ka_key, "Raw");
-
-         if(ka_key->algo_name() == "DH")
-            pre_master = strip_leading_zeros(ka.derive_key(0, key_material).bits_of());
-         else
-            pre_master = ka.derive_key(0, key_material).bits_of();
-         }
-      catch(...)
-         {
-         /*
-         * Something failed in the DH computation. To avoid possible
-         * timing attacks, randomize the pre-master output and carry
-         * on, allowing the protocol to fail later in the finished
-         * checks.
-         */
-         pre_master = rng.random_vec(ka_key->public_value().size());
-         }
-      }
    else
-      throw Internal_Error("Client_Key_Exchange: Unknown kex type " + kex_algo);
+      {
+      TLS_Data_Reader reader(contents);
 
-   return pre_master;
+      SymmetricKey psk;
+
+      if(kex_algo == "PSK" || kex_algo == "PSK_DHE" || kex_algo == "PSK_ECDHE")
+         {
+         const std::string psk_identity = reader.get_string(2, 0, 65535);
+
+         psk = creds.psk("tls-server",
+                         state->client_hello->sni_hostname(),
+                         psk_identity);
+
+         if(psk.length() == 0)
+            {
+            if(policy.hide_unknown_users())
+               throw TLS_Exception(Alert::UNKNOWN_PSK_IDENTITY,
+                                   "No PSK for identifier " + psk_identity);
+            else
+               psk = SymmetricKey(rng, 16);
+            }
+
+         }
+
+      if(kex_algo == "PSK")
+         {
+         MemoryVector<byte> zeros(psk.length());
+         append_tls_length_value(pre_master, zeros, 2);
+         append_tls_length_value(pre_master, psk.bits_of(), 2);
+         }
+      else if(kex_algo == "DH" || kex_algo == "PSK_DHE" ||
+              kex_algo == "ECDH" || kex_algo == "PSK_ECDHE")
+         {
+         const Private_Key& private_key = state->server_kex->server_kex_key();
+
+         const PK_Key_Agreement_Key* ka_key =
+            dynamic_cast<const PK_Key_Agreement_Key*>(&private_key);
+
+         if(!ka_key)
+            throw Internal_Error("Expected key agreement key type but got " +
+                                 private_key.algo_name());
+
+         try
+            {
+            PK_Key_Agreement ka(*ka_key, "Raw");
+
+            MemoryVector<byte> client_pubkey;
+
+            std::cout << hex_encode(contents) << "\n";
+
+            if(ka_key->algo_name() == "DH")
+               client_pubkey = reader.get_range<byte>(2, 0, 65535);
+            else
+               client_pubkey = reader.get_range<byte>(1, 0, 255);
+
+            std::cout << hex_encode(client_pubkey) << "\n";
+            std::cout << reader.remaining_bytes() << "\n";
+
+            SecureVector<byte> shared_secret = ka.derive_key(0, client_pubkey).bits_of();
+
+            if(ka_key->algo_name() == "DH")
+               shared_secret = strip_leading_zeros(shared_secret);
+
+            if(kex_algo == "PSK_DHE" || kex_algo == "PSK_ECDHE")
+               {
+               append_tls_length_value(pre_master, shared_secret, 2);
+               append_tls_length_value(pre_master, psk.bits_of(), 2);
+               }
+            else
+               pre_master = shared_secret;
+            }
+         catch(std::exception &e)
+            {
+            /*
+            * Something failed in the DH computation. To avoid possible
+            * timing attacks, randomize the pre-master output and carry
+            * on, allowing the protocol to fail later in the finished
+            * checks.
+            */
+            std::cout << "Shared secret failed << " << e.what() << "\n";
+            pre_master = rng.random_vec(ka_key->public_value().size());
+            }
+         }
+      else
+         throw Internal_Error("Client_Key_Exchange: Unknown kex type " + kex_algo);
+
+      std::cout << hex_encode(pre_master) << "\n";
+      }
    }
 
 }
