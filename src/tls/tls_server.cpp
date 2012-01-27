@@ -62,6 +62,26 @@ bool check_for_resume(Session& session_info,
    return true;
    }
 
+std::map<std::string, std::vector<X509_Certificate> >
+get_server_certs(const std::string& hostname,
+                 Credentials_Manager& creds)
+   {
+   const char* cert_types[] = { "RSA", "DSA", "ECDSA", 0 };
+
+   std::map<std::string, std::vector<X509_Certificate> > cert_chains;
+
+   for(size_t i = 0; cert_types[i]; ++i)
+      {
+      std::vector<X509_Certificate> certs =
+         creds.cert_chain_single_type(cert_types[i], "tls-server", hostname);
+
+      if(!certs.empty())
+         cert_chains[cert_types[i]] = certs;
+      }
+
+   return cert_chains;
+   }
+
 }
 
 /*
@@ -221,9 +241,13 @@ void Server::process_handshake_msg(Handshake_Type type,
          {
          std::map<std::string, std::vector<X509_Certificate> > cert_chains;
 
-         cert_chains["RSA"] = creds.cert_chain_single_type("RSA", "tls-server", m_hostname);
-         cert_chains["DSA"] = creds.cert_chain_single_type("DSA", "tls-server", m_hostname);
-         cert_chains["ECDSA"] = creds.cert_chain_single_type("ECDSA", "tls-server", m_hostname);
+         cert_chains = get_server_certs(m_hostname, creds);
+
+         if(m_hostname != "" && cert_chains.empty())
+            {
+            send_alert(Alert(Alert::UNRECOGNIZED_NAME));
+            cert_chains = get_server_certs("", creds);
+            }
 
          std::vector<std::string> available_cert_types;
 
