@@ -3,6 +3,7 @@
 #define EXAMPLE_CREDENTIALS_MANAGER_H__
 
 #include <botan/credentials_manager.h>
+#include <iostream>
 
 bool value_exists(const std::vector<std::string>& vec,
                   const std::string& val)
@@ -25,34 +26,41 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
          {
          std::vector<Botan::X509_Certificate> certs;
 
-         if(type == "tls-server")
+         try
             {
-            const std::string hostname = (context == "" ? "localhost" : context);
-
-            if(value_exists(cert_key_types, "RSA"))
+            if(type == "tls-server")
                {
-               Botan::X509_Certificate cert(hostname + ".crt");
-               Botan::Private_Key* key = Botan::PKCS8::load_key(hostname + ".key", rng);
+               const std::string hostname = (context == "" ? "localhost" : context);
 
-               certs_and_keys[cert] = key;
-               certs.push_back(cert);
+               if(value_exists(cert_key_types, "RSA"))
+                  {
+                  Botan::X509_Certificate cert(hostname + ".crt");
+                  Botan::Private_Key* key = Botan::PKCS8::load_key(hostname + ".key", rng);
+
+                  certs_and_keys[cert] = key;
+                  certs.push_back(cert);
+                  }
+               else if(value_exists(cert_key_types, "DSA"))
+                  {
+                  Botan::X509_Certificate cert(hostname + ".dsa.crt");
+                  Botan::Private_Key* key = Botan::PKCS8::load_key(hostname + ".dsa.key", rng);
+
+                  certs_and_keys[cert] = key;
+                  certs.push_back(cert);
+                  }
                }
-            else if(value_exists(cert_key_types, "DSA"))
+            else if(type == "tls-client")
                {
-               Botan::X509_Certificate cert(hostname + ".dsa.crt");
-               Botan::Private_Key* key = Botan::PKCS8::load_key(hostname + ".dsa.key", rng);
+               Botan::X509_Certificate cert("user-rsa.crt");
+               Botan::Private_Key* key = Botan::PKCS8::load_key("user-rsa.key", rng);
 
                certs_and_keys[cert] = key;
                certs.push_back(cert);
                }
             }
-         else if(type == "tls-client")
+         catch(std::exception& e)
             {
-            Botan::X509_Certificate cert("user-rsa.crt");
-            Botan::Private_Key* key = Botan::PKCS8::load_key("user-rsa.key", rng);
-
-            certs_and_keys[cert] = key;
-            certs.push_back(cert);
+            std::cout << e.what() << "\n";
             }
 
          return certs;

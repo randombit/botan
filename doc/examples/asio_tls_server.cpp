@@ -2,12 +2,11 @@
 #include <string>
 #include <vector>
 
+#include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
-
-#include <asio.hpp>
 
 #include <botan/tls_server.h>
 #include <botan/x509cert.h>
@@ -18,14 +17,14 @@
 #include "credentials.h"
 
 using Botan::byte;
-using asio::ip::tcp;
+using boost::asio::ip::tcp;
 
 class tls_server_session : public boost::enable_shared_from_this<tls_server_session>
    {
    public:
       typedef boost::shared_ptr<tls_server_session> pointer;
 
-      static pointer create(asio::io_service& io_service,
+      static pointer create(boost::asio::io_service& io_service,
                             Botan::TLS::Session_Manager& session_manager,
                             Botan::Credentials_Manager& credentials,
                             Botan::TLS::Policy& policy,
@@ -46,17 +45,17 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
       void start()
          {
          m_socket.async_read_some(
-            asio::buffer(m_read_buf, sizeof(m_read_buf)),
+            boost::asio::buffer(m_read_buf, sizeof(m_read_buf)),
             m_strand.wrap(
                boost::bind(&tls_server_session::handle_read, shared_from_this(),
-                           asio::placeholders::error,
-                           asio::placeholders::bytes_transferred)));
+                           boost::asio::placeholders::error,
+                           boost::asio::placeholders::bytes_transferred)));
          }
 
       void stop() { m_socket.close(); }
 
    private:
-      tls_server_session(asio::io_service& io_service,
+      tls_server_session(boost::asio::io_service& io_service,
                          Botan::TLS::Session_Manager& session_manager,
                          Botan::Credentials_Manager& credentials,
                          Botan::TLS::Policy& policy,
@@ -73,7 +72,7 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
          {
          }
 
-      void handle_read(const asio::error_code& error,
+      void handle_read(const boost::system::error_code& error,
                        size_t bytes_transferred)
          {
          if(!error)
@@ -90,10 +89,10 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
                }
 
             m_socket.async_read_some(
-               asio::buffer(m_read_buf, sizeof(m_read_buf)),
+               boost::asio::buffer(m_read_buf, sizeof(m_read_buf)),
                m_strand.wrap(boost::bind(&tls_server_session::handle_read, shared_from_this(),
-                                         asio::placeholders::error,
-                                         asio::placeholders::bytes_transferred)));
+                                         boost::asio::placeholders::error,
+                                         boost::asio::placeholders::bytes_transferred)));
             }
          else
             {
@@ -101,8 +100,7 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
             }
          }
 
-      void handle_write(const asio::error_code& error,
-                        size_t bytes_transferred)
+      void handle_write(const boost::system::error_code& error)
          {
          if(!error)
             {
@@ -127,13 +125,12 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
             {
             std::swap(m_outbox, m_write_buf);
 
-            asio::async_write(m_socket,
-                              asio::buffer(&m_write_buf[0], m_write_buf.size()),
+            boost::asio::async_write(m_socket,
+                              boost::asio::buffer(&m_write_buf[0], m_write_buf.size()),
                               m_strand.wrap(
                                  boost::bind(&tls_server_session::handle_write,
                                              shared_from_this(),
-                                             asio::placeholders::error,
-                                             asio::placeholders::bytes_transferred)));
+                                             boost::asio::placeholders::error)));
             }
          }
 
@@ -174,7 +171,7 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
          return true;
          }
 
-      asio::io_service::strand m_strand; // serialization
+      boost::asio::io_service::strand m_strand; // serialization
 
       tcp::socket m_socket;
       Botan::TLS::Server m_tls;
@@ -229,7 +226,7 @@ class tls_server
    public:
       typedef tls_server_session session;
 
-      tls_server(asio::io_service& io_service, unsigned short port) :
+      tls_server(boost::asio::io_service& io_service, unsigned short port) :
          m_acceptor(io_service, tcp::endpoint(tcp::v4(), port)),
          m_creds(m_rng)
          {
@@ -241,7 +238,7 @@ class tls_server
                &tls_server::handle_accept,
                this,
                new_session,
-               asio::placeholders::error)
+               boost::asio::placeholders::error)
             );
          }
 
@@ -249,7 +246,7 @@ class tls_server
       session::pointer make_session()
          {
          return session::create(
-            m_acceptor.io_service(),
+            m_acceptor.get_io_service(),
             m_session_manager,
             m_creds,
             m_policy,
@@ -258,7 +255,7 @@ class tls_server
          }
 
       void handle_accept(session::pointer new_session,
-                         const asio::error_code& error)
+                         const boost::system::error_code& error)
          {
          if (!error)
             {
@@ -272,7 +269,7 @@ class tls_server
                   &tls_server::handle_accept,
                   this,
                   new_session,
-                  asio::placeholders::error)
+                  boost::asio::placeholders::error)
                );
             }
          }
@@ -290,7 +287,7 @@ int main()
    try
       {
       Botan::LibraryInitializer init("thread_safe=true");
-      asio::io_service io_service;
+      boost::asio::io_service io_service;
 
       unsigned short port = 4433;
       tls_server server(io_service, port);
@@ -308,7 +305,7 @@ int main()
          {
          boost::shared_ptr<boost::thread> thread(
             new boost::thread(
-               boost::bind(&asio::io_service::run, &io_service)));
+               boost::bind(&boost::asio::io_service::run, &io_service)));
          threads.push_back(thread);
          }
 
