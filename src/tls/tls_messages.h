@@ -214,7 +214,9 @@ class Client_Key_Exchange : public Handshake_Message
          { return pre_master; }
 
       SecureVector<byte> pre_master_secret(RandomNumberGenerator& rng,
-                                           const Handshake_State* state);
+                                           const Handshake_State* state,
+                                           Credentials_Manager& creds,
+                                           const Policy& policy);
 
       Client_Key_Exchange(Record_Writer& output,
                           Handshake_State* state,
@@ -223,8 +225,7 @@ class Client_Key_Exchange : public Handshake_Message
                           RandomNumberGenerator& rng);
 
       Client_Key_Exchange(const MemoryRegion<byte>& buf,
-                          const Handshake_State* state,
-                          Credentials_Manager& creds);
+                          const Handshake_State* state);
 
    private:
       MemoryVector<byte> serialize() const { return key_material; }

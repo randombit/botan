@@ -358,10 +358,10 @@ void Server::process_handshake_msg(Handshake_Type type,
       else
          state->set_expected_next(HANDSHAKE_CCS);
 
-      state->client_kex = new Client_Key_Exchange(contents, state, creds);
+      state->client_kex = new Client_Key_Exchange(contents, state);
 
       SecureVector<byte> pre_master =
-         state->client_kex->pre_master_secret(rng, state);
+         state->client_kex->pre_master_secret(rng, state, creds, policy);
 
       state->keys = Session_Keys(state, pre_master, false);
       }

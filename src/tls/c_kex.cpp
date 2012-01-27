@@ -185,8 +185,7 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 * Read a Client Key Exchange message
 */
 Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
-                                         const Handshake_State* state,
-                                         Credentials_Manager& creds)
+                                         const Handshake_State* state)
    {
    const std::string kex_algo = state->suite.kex_algo();
 
@@ -201,20 +200,7 @@ Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
       else if(kex_algo == "ECDH")
          key_material = reader.get_range<byte>(1, 1, 255);
       else if(kex_algo == "PSK")
-         {
-         const std::string psk_identity = reader.get_string(2, 0, 65535);
-
-         SymmetricKey psk = creds.psk("tls-server",
-                                      state->client_hello->sni_hostname(),
-                                      psk_identity);
-
-         MemoryVector<byte> zeros(psk.length());
-
-         append_tls_length_value(key_material, zeros, 2);
-         append_tls_length_value(key_material, psk.bits_of(), 2);
-
-         pre_master = key_material;
-         }
+         key_material = reader.get_range<byte>(2, 0, 65535);
       else
          throw Internal_Error("Client_Key_Exchange received unknown kex type " + kex_algo);
       }
@@ -225,13 +211,35 @@ Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
 */
 SecureVector<byte>
 Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
-                                       const Handshake_State* state)
+                                       const Handshake_State* state,
+                                       Credentials_Manager& creds,
+                                       const Policy& policy)
    {
    const std::string kex_algo = state->suite.kex_algo();
 
    if(kex_algo == "PSK")
       {
-      return key_material;
+      const std::string psk_identity(
+         reinterpret_cast<const char*>(&key_material[0]),
+         key_material.size());
+
+      SymmetricKey psk = creds.psk("tls-server",
+                                   state->client_hello->sni_hostname(),
+                                   psk_identity);
+
+      if(psk.length() == 0)
+         {
+         if(policy.hide_unknown_users())
+            throw TLS_Exception(Alert::UNKNOWN_PSK_IDENTITY,
+                                "No PKS for identifier " + psk_identity);
+         else
+            psk = SymmetricKey(rng, 16);
+         }
+
+      MemoryVector<byte> zeros(psk.length());
+
+      append_tls_length_value(pre_master, zeros, 2);
+      append_tls_length_value(pre_master, psk.bits_of(), 2);
       }
    else if(kex_algo == "RSA")
       {
@@ -267,8 +275,6 @@ Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
          pre_master[0] = client_version.major_version();
          pre_master[1] = client_version.minor_version();
          }
-
-      return pre_master;
       }
    else if(kex_algo == "DH" || kex_algo == "ECDH")
       {
@@ -300,11 +306,11 @@ Client_Key_Exchange::pre_master_secret(RandomNumberGenerator& rng,
          */
          pre_master = rng.random_vec(ka_key->public_value().size());
          }
-
-      return pre_master;
       }
    else
       throw Internal_Error("Client_Key_Exchange: Unknown kex type " + kex_algo);
+
+   return pre_master;
    }
 
 }
