@@ -23,7 +23,8 @@ std::vector<std::string> Policy::allowed_ciphers() const
    allowed.push_back("AES-128");
    allowed.push_back("3DES");
    allowed.push_back("ARC4");
-   // Note that SEED and IDEA are not included by default
+
+   // Note that Camellia, SEED and IDEA are not included by default
 
    return allowed;
    }
@@ -119,6 +120,14 @@ class Ciphersuite_Preference_Ordering
                if(b.cipher_algo() == m_ciphers[i])
                   return false;
                }
+            }
+
+         if(a.cipher_keylen() != b.cipher_keylen())
+            {
+            if(a.cipher_keylen() < b.cipher_keylen())
+               return false;
+            if(a.cipher_keylen() > b.cipher_keylen())
+               return true;
             }
 
          if(a.sig_algo() != b.sig_algo())

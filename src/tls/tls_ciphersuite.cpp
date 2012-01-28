@@ -45,6 +45,12 @@ Ciphersuite Ciphersuite::lookup_ciphersuite(u16bit suite)
       case TLS_RSA_WITH_RC4_128_MD5:
          return Ciphersuite("RSA", "RSA", "MD5", "ARC4", 16);
 
+      case TLS_RSA_WITH_CAMELLIA_128_CBC_SHA:
+         return Ciphersuite("RSA", "RSA", "SHA-1", "Camellia", 16);
+
+      case TLS_RSA_WITH_CAMELLIA_256_CBC_SHA:
+         return Ciphersuite("RSA", "RSA", "SHA-1", "Camellia", 32);
+
       case TLS_RSA_WITH_SEED_CBC_SHA:
          return Ciphersuite("RSA", "RSA", "SHA-1", "SEED", 16);
 
@@ -73,6 +79,12 @@ Ciphersuite Ciphersuite::lookup_ciphersuite(u16bit suite)
       case TLS_DHE_DSS_WITH_RC4_128_SHA:
          return Ciphersuite("DSA", "DH", "SHA-1", "ARC4", 16);
 
+      case TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA:
+         return Ciphersuite("DSA", "DH", "SHA-1", "Camellia", 16);
+
+      case TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA:
+         return Ciphersuite("DSA", "DH", "SHA-1", "Camellia", 32);
+
       case TLS_DHE_DSS_WITH_SEED_CBC_SHA:
          return Ciphersuite("DSA", "DH", "SHA-1", "SEED", 16);
 
@@ -92,6 +104,12 @@ Ciphersuite Ciphersuite::lookup_ciphersuite(u16bit suite)
 
       case TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA:
          return Ciphersuite("RSA", "DH", "SHA-1", "3DES", 24);
+
+      case TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA:
+         return Ciphersuite("RSA", "DH", "SHA-1", "Camellia", 16);
+
+      case TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA:
+         return Ciphersuite("RSA", "DH", "SHA-1", "Camellia", 32);
 
       case TLS_DHE_RSA_WITH_SEED_CBC_SHA:
          return Ciphersuite("RSA", "DH", "SHA-1", "SEED", 16);
@@ -275,6 +293,8 @@ std::string Ciphersuite::to_string() const
       {
       if(cipher_algo() == "3DES")
          out << "3DES_EDE";
+      if(cipher_algo() == "Camellia")
+         out << "CAMELLIA_" << Botan::to_string(8*cipher_keylen());
       else
          out << replace_char(cipher_algo(), '-', '_');
 
@@ -294,10 +314,10 @@ std::string Ciphersuite::to_string() const
    }
 
 Ciphersuite::Ciphersuite(const std::string& sig_algo,
-                                 const std::string& kex_algo,
-                                 const std::string& mac_algo,
-                                 const std::string& cipher_algo,
-                                 size_t cipher_algo_keylen) :
+                         const std::string& kex_algo,
+                         const std::string& mac_algo,
+                         const std::string& cipher_algo,
+                         size_t cipher_algo_keylen) :
    m_sig_algo(sig_algo),
    m_kex_algo(kex_algo),
    m_mac_algo(mac_algo),
