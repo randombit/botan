@@ -17,6 +17,10 @@
   #include <botan/blowfish.h>
 #endif
 
+#if defined(BOTAN_HAS_CAMELLIA)
+  #include <botan/camellia.h>
+#endif
+
 #if defined(BOTAN_HAS_CAST)
   #include <botan/cast128.h>
   #include <botan/cast256.h>
@@ -128,6 +132,11 @@ BlockCipher* Core_Engine::find_block_cipher(const SCAN_Name& request,
 #if defined(BOTAN_HAS_BLOWFISH)
    if(request.algo_name() == "Blowfish")
       return new Blowfish;
+#endif
+
+#if defined(BOTAN_HAS_CAMELLIA)
+   if(request.algo_name() == "Camellia")
+      return new Camellia;
 #endif
 
 #if defined(BOTAN_HAS_CAST)
