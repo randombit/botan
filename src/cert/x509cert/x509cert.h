@@ -152,6 +152,12 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       bool operator==(const X509_Certificate& other) const;
 
       /**
+      * Impose an arbitrary (but consistent) ordering
+      * @return true if this is less than other by some unspecified criteria
+      */
+      bool operator<(const X509_Certificate& other) const;
+
+      /**
       * Create a certificate from a data source providing the DER or
       * PEM encoded certificate.
       * @param source the data source

@@ -21,6 +21,9 @@ namespace Botan {
 template<typename T>
 inline T round_up(T n, T align_to)
    {
+   if(align_to == 0)
+      return n;
+
    if(n % align_to || n == 0)
       n += align_to - (n % align_to);
    return n;
@@ -35,7 +38,22 @@ inline T round_up(T n, T align_to)
 template<typename T>
 inline T round_down(T n, T align_to)
    {
+   if(align_to == 0)
+      return n;
+
    return (n - (n % align_to));
+   }
+
+/**
+* Clamp
+*/
+inline size_t clamp(size_t n, size_t lower_bound, size_t upper_bound)
+   {
+   if(n < lower_bound)
+      return lower_bound;
+   if(n > upper_bound)
+      return upper_bound;
+   return n;
    }
 
 }

@@ -1,0 +1,148 @@
+
+.. _tls_api:
+
+SSL and TLS
+========================================
+
+.. versionadded:: 1.10.2
+
+Botan supports both client and server implementations of the SSL/TLS
+protocols, including SSL v3, TLS v1.0, and TLS v1.1 (the insecure and
+obsolete SSL v2 protocol is not supported, beyond processing SSL v2
+client hellos which some implementations send for backwards
+compatability).
+
+The implementation uses ``std::tr1::function``, so it may not have
+been compiled into the version you are using; you can test for the
+feature macro ``BOTAN_HAS_TLS`` to check.
+
+General TLS Interface
+----------------------------------------
+
+TLS servers and clients share most of an interface, called
+`TLS_Channel`.  The primary difference is in terms of how the objects
+are constructed. A TLS channel (either client or server object) has
+these methods available:
+
+.. cpp:class:: TLS_Channel
+
+   .. cpp:function size_t received_data(const byte buf[], size_t buf_size)
+
+   This function is used to provide data sent by the counterparty (eg
+   data that you read off the socket layer). Depending on the current
+   protocol state and the amount of data provided this may result in one
+   or more callback functions that were provided to the constructor being
+   called.
+
+   .. cpp:function void send(const byte buf[], size_t buf_size)
+
+   If the connection has completed the initial handshake process, the
+   data provided is sent to the counterparty as TLS
+   traffic. Otherwise, an exception is thrown.
+
+   .. cpp:function:: void close()
+
+   A close notification is sent to the counterparty, and the internal
+   state is cleared.
+
+   .. cpp:function:: bool is_active()
+
+   Returns true if and only if a handshake has been completed on this
+   connection.
+
+   .. cpp:function:: bool is_closed()
+
+   Returns true if and only if a close notification has been sent or
+   received, or if a fatal alert of any kind was received from the
+   counterparty.
+
+   .. cpp:function:: void renegotiate()
+
+   Initiates a renegotiation. The counterparty is allowed by the
+   protocol to ignore this request. If a successful renegotiation
+   occurs, the *handshake_complete* callback will be called again.
+
+   .. cpp:function:: std::vector<X509_Certificate> peer_cert_chain()
+
+   Returns the certificate chain of the server
+
+
+
+TLS Clients
+----------------------------------------
+
+.. cpp:class:: TLS_Client
+
+   .. cpp:function:: TLS_Client( \
+         std::tr1::function<void, const byte*, size_t> socket_output_fn, \
+         std::tr1::function<void, const byte*, size_t, u16bit> proc_fn, \
+         std::tr1::function<bool, const TLS_Session&> handshake_complete, \
+         TLS_Session_Manager& session_manager, \
+         Credentials_Manager& credendials_manager, \
+         const TLS_Policy& policy, \
+         RandomNumberGenerator& rng, \
+         const std::string& servername = "", \
+         std::tr1::function<std::string, std::vector<std::string> > next_protocol)
+
+   Initialize a new TLS client. The constructor will immediately
+   initiate a new session. The *socket_output_fn* callback will be
+   called with output that should be sent to the counterparty.
+
+   The *proc_fn* will be called with data sent by the counterparty
+   after it has been processed. The byte array and size_t represent
+   the plaintext; the u16bit value provides notification if the
+   counterparty sent an alert via the TLS alert system. Possible values
+   of alert data are included in the Alert_Type enum. Particularly
+   relevant is the CLOSE_NOTIFY value.
+
+   The *handshake_complete* function is called when a handshake
+   (either initial or renegotiation) is completed. The return value of
+   the callback specifies if the session should be cached for later
+   resumption.
+
+   The *session_manager* is an interface for storing TLS sessions,
+   which allows for session resumption upon reconnecting to a server.
+   In the absence of a need for persistent sessions, use
+   `TLS_Session_Manager_In_Memory` which caches connections for the
+   lifetime of a single process.
+
+   The *credentials_manager* is an interface that will be called to
+   retrieve any certificates, secret keys, pre-shared keys, or SRP
+   intformation; see :doc:`credentials <credentials_manager>` for more
+   information.
+
+   Use *servername* to specify the DNS name of the server you are
+   attempting to connect to, if you know it.
+
+   The optional *next_protocol* callback is called if the server
+   indicates it supports the next protocol notification extension.
+   The callback wlil be called with a list of protocol names that the
+   server advertises, and the client can select from them or return an
+   unadvertised protocol.
+
+A simple TLS client example:
+
+.. literalinclude:: examples/tls_client.cpp
+
+
+TLS Servers
+----------------------------------------
+
+.. cpp:class:: TLS_Server
+
+   .. cpp:function:: TLS_Server(std::tr1::function<void, const byte*, size_t> socket_output_fn, \
+          std::tr1::function<void, const byte*, size_t, u16bit> proc_fn, \
+          std::tr1::function<bool, const TLS_Session&> handshake_complete, \
+          TLS_Session_Manager& session_manager, \
+          Credentials_Manager& creds, \
+          const TLS_Policy& policy, \
+          RandomNumberGenerator& rng, \
+          const std::vector<std::string>& protocols)
+
+The first 7 arguments are treated similiarly to `TLS_Client`. The
+final (optional) argument, protocols, specifies the protocols the
+server is willing to advertise it supports.
+
+A TLS server that can handle concurrent connections using asio:
+
+.. literalinclude:: examples/asio_tls_server.cpp

@@ -2,7 +2,7 @@
 
 """
 Configuration program for botan (http://botan.randombit.net/)
-  (C) 2009-2011 Jack Lloyd
+  (C) 2009,2010,2011,2012 Jack Lloyd
   Distributed under the terms of the Botan license
 
 Tested with CPython 2.6, 2.7, 3.1 and PyPy 1.5
@@ -1026,10 +1026,15 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
             if dir.startswith('src'):
                 parts = dir.split(os.sep)[1:]
+
+                # Handle src/X/X.cpp -> X.o
                 if file == parts[-1] + '.cpp':
                     name = '_'.join(dir.split(os.sep)[1:]) + '.cpp'
                 else:
                     name = '_'.join(dir.split(os.sep)[1:]) + '_' + file
+
+                # Special case hack cause I'm lazy
+                name = name.replace('tls_tls_', 'tls_')
             else:
                 name = file
 

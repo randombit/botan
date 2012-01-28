@@ -296,6 +296,24 @@ bool X509_Certificate::operator==(const X509_Certificate& other) const
            subject == other.subject);
    }
 
+bool X509_Certificate::operator<(const X509_Certificate& other) const
+   {
+   /* If signature values are not equal, sort by lexicographic ordering of that */
+   if(sig != other.sig)
+      {
+      if(sig < other.sig)
+         return true;
+      return false;
+      }
+
+   /*
+   * same signatures, highly unlikely case, revert to compare
+   * of entire contents
+   */
+
+   return to_string() < other.to_string();
+   }
+
 /*
 * X.509 Certificate Comparison
 */

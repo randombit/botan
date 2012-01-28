@@ -4,7 +4,7 @@ Welcome
 
 Botan is a :doc:`BSD-licensed <license>` crypto library for C++. It
 provides applications with most any :doc:`cryptographic algorithm
-<algos>` you might be looking for, along with :doc:`SSL/TLS <ssl>`,
+<algos>` you might be looking for, along with :doc:`SSL/TLS <tls>`,
 :doc:`X.509 certificates and CRLs <x509>`, a :doc:`pipeline-style
 message processing system <filters>`, and a wide variety of other
 features. A third party open source implementation of `SSHv2

@@ -21,7 +21,7 @@ void assertion_failure(const char* expr_str,
 
    format << "Assertion " << expr_str << " failed ";
 
-   if(msg)
+   if(msg && msg[0] != 0)
       format << "(" << msg << ") ";
 
    if(func)
