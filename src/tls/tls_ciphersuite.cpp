@@ -195,26 +195,37 @@ Ciphersuite Ciphersuite::lookup_ciphersuite(u16bit suite)
       case TLS_ECDHE_PSK_WITH_AES_256_CBC_SHA384:
          return Ciphersuite("", "ECDHE_PSK", "SHA-384", "AES-256", 32);
 
+      // SRP ciphersuites
+
+      case TLS_SRP_SHA_WITH_AES_128_CBC_SHA:
+         return Ciphersuite("", "SRP", "SHA-1", "AES-128", 16);
+
+      case TLS_SRP_SHA_WITH_AES_256_CBC_SHA:
+         return Ciphersuite("", "SRP", "SHA-1", "AES-256", 32);
+
+      case TLS_SRP_SHA_WITH_3DES_EDE_CBC_SHA:
+         return Ciphersuite("", "SRP", "SHA-1", "3DES", 24);
+
       // SRP/RSA ciphersuites
 
-      case TLS_SRP_SHA_RSA_WITH_AES_128_SHA:
+      case TLS_SRP_SHA_RSA_WITH_AES_128_CBC_SHA:
          return Ciphersuite("RSA", "SRP", "SHA-1", "AES-128", 16);
 
-      case TLS_SRP_SHA_RSA_WITH_AES_256_SHA:
+      case TLS_SRP_SHA_RSA_WITH_AES_256_CBC_SHA:
          return Ciphersuite("RSA", "SRP", "SHA-1", "AES-256", 32);
 
-      case TLS_SRP_SHA_RSA_WITH_3DES_EDE_SHA:
+      case TLS_SRP_SHA_RSA_WITH_3DES_EDE_CBC_SHA:
          return Ciphersuite("RSA", "SRP", "SHA-1", "3DES", 24);
 
       // SRP/DSA ciphersuites
 
-      case TLS_SRP_SHA_DSS_WITH_AES_128_SHA:
+      case TLS_SRP_SHA_DSS_WITH_AES_128_CBC_SHA:
          return Ciphersuite("DSA", "SRP", "SHA-1", "AES-128", 16);
 
-      case TLS_SRP_SHA_DSS_WITH_AES_256_SHA:
+      case TLS_SRP_SHA_DSS_WITH_AES_256_CBC_SHA:
          return Ciphersuite("DSA", "SRP", "SHA-1", "AES-256", 32);
 
-      case TLS_SRP_SHA_DSS_WITH_3DES_EDE_SHA:
+      case TLS_SRP_SHA_DSS_WITH_3DES_EDE_CBC_SHA:
          return Ciphersuite("DSA", "SRP", "SHA-1", "3DES", 24);
 
       // Signaling ciphersuite values
