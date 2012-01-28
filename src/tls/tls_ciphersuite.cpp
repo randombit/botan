@@ -18,7 +18,7 @@ namespace TLS {
 /**
 * Convert an SSL/TLS ciphersuite to algorithm fields
 */
-Ciphersuite Ciphersuite::lookup_ciphersuite(u16bit suite)
+Ciphersuite Ciphersuite::by_id(u16bit suite)
    {
    switch(static_cast<Ciphersuite_Code>(suite))
       {
@@ -250,6 +250,22 @@ Ciphersuite Ciphersuite::lookup_ciphersuite(u16bit suite)
 
       case TLS_EMPTY_RENEGOTIATION_INFO_SCSV:
          return Ciphersuite();
+      }
+
+   return Ciphersuite(); // some unknown ciphersuite
+   }
+
+Ciphersuite Ciphersuite::by_name(const std::string& name)
+   {
+   for(size_t i = 0; i != 65536; ++i)
+      {
+      Ciphersuite suite = Ciphersuite::by_id(i);
+
+      if(!suite.valid())
+         continue; // not a ciphersuite we know, skip
+
+      if(suite.to_string() == name)
+         return suite;
       }
 
    return Ciphersuite(); // some unknown ciphersuite

@@ -180,7 +180,7 @@ void Client::process_handshake_msg(Handshake_Type type,
 
       secure_renegotiation.update(state->server_hello);
 
-      state->suite = Ciphersuite::lookup_ciphersuite(state->server_hello->ciphersuite());
+      state->suite = Ciphersuite::by_id(state->server_hello->ciphersuite());
 
       if(!state->server_hello->session_id().empty() &&
          (state->server_hello->session_id() == state->client_hello->session_id()))

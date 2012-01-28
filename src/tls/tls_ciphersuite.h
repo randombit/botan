@@ -21,7 +21,9 @@ namespace TLS {
 class BOTAN_DLL Ciphersuite
    {
    public:
-      static Ciphersuite lookup_ciphersuite(u16bit suite);
+      static Ciphersuite by_id(u16bit suite);
+
+      static Ciphersuite by_name(const std::string& name);
 
       /**
       * Formats the ciphersuite back to an RFC-style ciphersuite string

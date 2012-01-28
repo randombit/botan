@@ -221,7 +221,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             writer.set_maximum_fragment_size(session_info.fragment_size());
             }
 
-         state->suite = Ciphersuite::lookup_ciphersuite(state->server_hello->ciphersuite());
+         state->suite = Ciphersuite::by_id(state->server_hello->ciphersuite());
 
          state->keys = Session_Keys(state, session_info.master_secret(), true);
 
@@ -277,7 +277,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             writer.set_maximum_fragment_size(state->client_hello->fragment_size());
             }
 
-         state->suite = Ciphersuite::lookup_ciphersuite(state->server_hello->ciphersuite());
+         state->suite = Ciphersuite::by_id(state->server_hello->ciphersuite());
 
          const std::string sig_algo = state->suite.sig_algo();
          const std::string kex_algo = state->suite.kex_algo();

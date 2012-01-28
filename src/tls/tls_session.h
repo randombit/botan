@@ -90,7 +90,7 @@ class BOTAN_DLL Session
       /**
       * Get the ciphersuite info of the saved session
       */
-      Ciphersuite ciphersuite() const { return Ciphersuite::lookup_ciphersuite(m_ciphersuite); }
+      Ciphersuite ciphersuite() const { return Ciphersuite::by_id(m_ciphersuite); }
 
       /**
       * Get the compression method used in the saved session

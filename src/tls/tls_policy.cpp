@@ -11,6 +11,8 @@
 #include <botan/tls_exceptn.h>
 #include <botan/internal/stl_util.h>
 
+#include <assert.h>
+
 namespace Botan {
 
 namespace TLS {
@@ -182,10 +184,9 @@ std::vector<u16bit> Policy::ciphersuite_list(bool have_srp) const
    std::map<Ciphersuite, u16bit, Ciphersuite_Preference_Ordering>
       ciphersuites(order);
 
-   // When in doubt use brute force :)
-   for(u32bit i = 0; i != 65536; ++i)
+   for(size_t i = 0; i != 65536; ++i)
       {
-      Ciphersuite suite = Ciphersuite::lookup_ciphersuite(i);
+      Ciphersuite suite = Ciphersuite::by_id(i);
 
       if(!suite.valid())
          continue; // not a ciphersuite we know, skip
@@ -247,7 +248,7 @@ u16bit Policy::choose_suite(const std::vector<u16bit>& client_suites,
    for(size_t i = 0; i != ciphersuites.size(); ++i)
       {
       const u16bit suite_id = ciphersuites[i];
-      Ciphersuite suite = Ciphersuite::lookup_ciphersuite(suite_id);
+      Ciphersuite suite = Ciphersuite::by_id(suite_id);
 
       if(!have_shared_ecc_curve)
          {
