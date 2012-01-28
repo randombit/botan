@@ -15,22 +15,6 @@ namespace Botan {
 
 namespace TLS {
 
-namespace {
-
-std::string lookup_prf_name(Protocol_Version version)
-   {
-   if(version == Protocol_Version::SSL_V3)
-      return "SSL3-PRF";
-   else if(version == Protocol_Version::TLS_V10 || version == Protocol_Version::TLS_V11)
-      return "TLS-PRF";
-   else if(version == Protocol_Version::TLS_V12)
-      return "TLS-12-PRF(SHA-256)";
-   else
-      throw Invalid_Argument("Session_Keys: Unknown version code");
-   }
-
-}
-
 /**
 * Session_Keys Constructor
 */
@@ -38,8 +22,6 @@ Session_Keys::Session_Keys(Handshake_State* state,
                            const MemoryRegion<byte>& pre_master_secret,
                            bool resuming)
    {
-   const std::string prf_name = lookup_prf_name(state->version);
-
    const size_t mac_keylen = output_length_of(state->suite.mac_algo());
    const size_t cipher_keylen = state->suite.cipher_keylen();
 
@@ -55,7 +37,7 @@ Session_Keys::Session_Keys(Handshake_State* state,
    const byte KEY_GEN_MAGIC[] = {
       0x6B, 0x65, 0x79, 0x20, 0x65, 0x78, 0x70, 0x61, 0x6E, 0x73, 0x69, 0x6F, 0x6E };
 
-   std::auto_ptr<KDF> prf(get_kdf(prf_name));
+   std::auto_ptr<KDF> prf(state->protocol_specific_prf());
 
    if(resuming)
       {

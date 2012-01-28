@@ -32,6 +32,8 @@
 
 namespace Botan {
 
+class KDF;
+
 namespace TLS {
 
 /**
@@ -59,6 +61,8 @@ class Handshake_State
                            std::string& hash_algo,
                            std::string& sig_algo,
                            bool for_client_auth);
+
+      KDF* protocol_specific_prf();
 
       Protocol_Version version;
 

@@ -8,6 +8,7 @@
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/assert.h>
+#include <botan/lookup.h>
 
 namespace Botan {
 
@@ -129,6 +130,27 @@ bool Handshake_State::received_handshake_msg(Handshake_Type handshake_msg) const
    const u32bit mask = bitmask_for_handshake_type(handshake_msg);
 
    return (hand_received_mask & mask);
+   }
+
+KDF* Handshake_State::protocol_specific_prf()
+   {
+   if(version == Protocol_Version::SSL_V3)
+      {
+      return get_kdf("SSL3-PRF");
+      }
+   else if(version == Protocol_Version::TLS_V10 || version == Protocol_Version::TLS_V11)
+      {
+      return get_kdf("TLS-PRF");
+      }
+   else if(version == Protocol_Version::TLS_V12)
+      {
+      if(suite.mac_algo() == "SHA-1" || suite.mac_algo() == "SHA-256")
+         return get_kdf("TLS-12-PRF(SHA-256)");
+
+      return get_kdf("TLS-12-PRF(" + suite.mac_algo() + ")");
+      }
+
+   throw Internal_Error("Unknown version code " + version.to_string());
    }
 
 std::pair<std::string, Signature_Format>

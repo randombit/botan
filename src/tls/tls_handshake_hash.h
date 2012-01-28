@@ -36,7 +36,9 @@ class Handshake_Hash
       void update(Handshake_Type handshake_type,
                   const MemoryRegion<byte>& handshake_msg);
 
-      SecureVector<byte> final(Protocol_Version version);
+      SecureVector<byte> final(Protocol_Version version,
+                               const std::string& mac_algo);
+
       SecureVector<byte> final_ssl3(const MemoryRegion<byte>& master_secret);
 
       const SecureVector<byte>& get_contents() const

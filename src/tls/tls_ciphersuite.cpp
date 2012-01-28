@@ -106,6 +106,9 @@ Ciphersuite Ciphersuite::lookup_ciphersuite(u16bit suite)
       case TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256:
          return Ciphersuite("RSA", "ECDH", "SHA-256", "AES-128", 16);
 
+      case TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384:
+         return Ciphersuite("RSA", "ECDH", "SHA-384", "AES-256", 32);
+
       case TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA:
          return Ciphersuite("RSA", "ECDH", "SHA-1", "3DES", 24);
 
@@ -122,6 +125,9 @@ Ciphersuite Ciphersuite::lookup_ciphersuite(u16bit suite)
 
       case TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:
          return Ciphersuite("ECDSA", "ECDH", "SHA-256", "AES-128", 16);
+
+      case TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384:
+         return Ciphersuite("ECDSA", "ECDH", "SHA-384", "AES-256", 32);
 
       case TLS_ECDHE_ECDSA_WITH_RC4_128_SHA:
          return Ciphersuite("ECDSA", "ECDH", "SHA-1", "ARC4", 16);
@@ -141,10 +147,13 @@ Ciphersuite Ciphersuite::lookup_ciphersuite(u16bit suite)
          return Ciphersuite("", "PSK", "SHA-1", "AES-128", 16);
 
       case TLS_PSK_WITH_AES_128_CBC_SHA256:
-         return Ciphersuite("", "PSK", "SHA-1", "AES-256", 16);
+         return Ciphersuite("", "PSK", "SHA-256", "AES-128", 16);
 
       case TLS_PSK_WITH_AES_256_CBC_SHA:
          return Ciphersuite("", "PSK", "SHA-1", "AES-256", 32);
+
+      case TLS_PSK_WITH_AES_256_CBC_SHA384:
+         return Ciphersuite("", "PSK", "SHA-384", "AES-256", 32);
 
       // PSK+DH ciphersuites
 
@@ -163,6 +172,9 @@ Ciphersuite Ciphersuite::lookup_ciphersuite(u16bit suite)
       case TLS_DHE_PSK_WITH_AES_256_CBC_SHA:
          return Ciphersuite("", "DHE_PSK", "SHA-1", "AES-256", 32);
 
+      case TLS_DHE_PSK_WITH_AES_256_CBC_SHA384:
+         return Ciphersuite("", "DHE_PSK", "SHA-384", "AES-256", 32);
+
       // PSK+ECDH ciphersuites
 
       case TLS_ECDHE_PSK_WITH_RC4_128_SHA:
@@ -179,6 +191,9 @@ Ciphersuite Ciphersuite::lookup_ciphersuite(u16bit suite)
 
       case TLS_ECDHE_PSK_WITH_AES_256_CBC_SHA:
          return Ciphersuite("", "ECDHE_PSK", "SHA-1", "AES-256", 32);
+
+      case TLS_ECDHE_PSK_WITH_AES_256_CBC_SHA384:
+         return Ciphersuite("", "ECDHE_PSK", "SHA-384", "AES-256", 32);
 
       // SRP/RSA ciphersuites
 

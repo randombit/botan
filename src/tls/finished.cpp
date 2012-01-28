@@ -6,9 +6,6 @@
 */
 
 #include <botan/internal/tls_messages.h>
-#include <botan/prf_tls.h>
-#include <botan/hmac.h>
-#include <botan/sha2_32.h>
 #include <memory>
 
 namespace Botan {
@@ -16,17 +13,6 @@ namespace Botan {
 namespace TLS {
 
 namespace {
-
-KDF* choose_tls_prf(Protocol_Version version)
-   {
-   if(version == Protocol_Version::TLS_V10 || version == Protocol_Version::TLS_V11)
-      return new TLS_PRF;
-   else if(version == Protocol_Version::TLS_V12)
-      return new TLS_12_PRF(new HMAC(new SHA_256)); // might depend on ciphersuite
-   else
-      throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                          "Unknown version for PRF");
-   }
 
 /*
 * Compute the verify_data
@@ -60,7 +46,7 @@ MemoryVector<byte> finished_compute_verify(Handshake_State* state,
          0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x20, 0x66, 0x69, 0x6E, 0x69,
          0x73, 0x68, 0x65, 0x64 };
 
-      std::auto_ptr<KDF> prf(choose_tls_prf(state->version));
+      std::auto_ptr<KDF> prf(state->protocol_specific_prf());
 
       MemoryVector<byte> input;
       if(side == CLIENT)
@@ -68,7 +54,7 @@ MemoryVector<byte> finished_compute_verify(Handshake_State* state,
       else
          input += std::make_pair(TLS_SERVER_LABEL, sizeof(TLS_SERVER_LABEL));
 
-      input += state->hash.final(state->version);
+      input += state->hash.final(state->version, state->suite.mac_algo());
 
       return prf->derive_key(12, state->keys.master_secret(), input);
       }
