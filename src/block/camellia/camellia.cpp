@@ -115,51 +115,29 @@ void Camellia::encrypt_n(const byte in[], byte out[], size_t blocks) const
       u64bit D1 = load_be<u64bit>(in, 0);
       u64bit D2 = load_be<u64bit>(in, 1);
 
-      D1 ^= K[0];
-      D2 ^= K[1];
-      D2 ^= F(D1, K[2]);
-      D1 ^= F(D2, K[3]);
-      D2 ^= F(D1, K[4]);
-      D1 ^= F(D2, K[5]);
-      D2 ^= F(D1, K[6]);
-      D1 ^= F(D2, K[7]);
-      D1 = FL   (D1, K[8]);
-      D2 = FLINV(D2, K[9]);
+      size_t koff = 0;
 
-      D2 ^= F(D1, K[10]);
-      D1 ^= F(D2, K[11]);
-      D2 ^= F(D1, K[12]);
-      D1 ^= F(D2, K[13]);
-      D2 ^= F(D1, K[14]);
-      D1 ^= F(D2, K[15]);
-      D1 = FL   (D1, K[16]);
-      D2 = FLINV(D2, K[17]);
+      D1 ^= K[koff++];
+      D2 ^= K[koff++];
 
-      D2 ^= F(D1, K[18]);
-      D1 ^= F(D2, K[19]);
-      D2 ^= F(D1, K[20]);
-      D1 ^= F(D2, K[21]);
-      D2 ^= F(D1, K[22]);
-      D1 ^= F(D2, K[23]);
-
-      if(K.size() == 34)
+      while(true)
          {
-         D1 = FL   (D1, K[24]);
-         D2 = FLINV(D2, K[25]);
-         D2 ^= F(D1, K[26]);
-         D1 ^= F(D2, K[27]);
-         D2 ^= F(D1, K[28]);
-         D1 ^= F(D2, K[29]);
-         D2 ^= F(D1, K[30]);
-         D1 ^= F(D2, K[31]);
-         D2 ^= K[32];
-         D1 ^= K[33];
+         D2 ^= F(D1, K[koff++]);
+         D1 ^= F(D2, K[koff++]);
+         D2 ^= F(D1, K[koff++]);
+         D1 ^= F(D2, K[koff++]);
+         D2 ^= F(D1, K[koff++]);
+         D1 ^= F(D2, K[koff++]);
+
+         if(koff == K.size() - 2)
+            break;
+
+         D1 = FL   (D1, K[koff++]);
+         D2 = FLINV(D2, K[koff++]);
          }
-      else
-         {
-         D2 ^= K[24];
-         D1 ^= K[25];
-         }
+
+      D2 ^= K[koff++];
+      D1 ^= K[koff++];
 
       store_be(out, D2, D1);
 
@@ -180,52 +158,29 @@ void Camellia::decrypt_n(const byte in[], byte out[], size_t blocks) const
       u64bit D1 = load_be<u64bit>(in, 0);
       u64bit D2 = load_be<u64bit>(in, 1);
 
-      if(K.size() == 34)
+      size_t koff = K.size()-1;
+
+      D2 ^= K[koff--];
+      D1 ^= K[koff--];
+
+      while(true)
          {
-         D1 ^= K[32];
-         D2 ^= K[33];
+         D2 ^= F(D1, K[koff--]);
+         D1 ^= F(D2, K[koff--]);
+         D2 ^= F(D1, K[koff--]);
+         D1 ^= F(D2, K[koff--]);
+         D2 ^= F(D1, K[koff--]);
+         D1 ^= F(D2, K[koff--]);
 
-         D2 ^= F(D1, K[31]);
-         D1 ^= F(D2, K[30]);
-         D2 ^= F(D1, K[29]);
-         D1 ^= F(D2, K[28]);
-         D2 ^= F(D1, K[27]);
-         D1 ^= F(D2, K[26]);
-         D1 = FL   (D1, K[25]);
-         D2 = FLINV(D2, K[24]);
-         }
-      else
-         {
-         D1 ^= K[24];
-         D2 ^= K[25];
+         if(koff == 1)
+            break;
+
+         D1 = FL   (D1, K[koff--]);
+         D2 = FLINV(D2, K[koff--]);
          }
 
-      D2 ^= F(D1, K[23]);
-      D1 ^= F(D2, K[22]);
-      D2 ^= F(D1, K[21]);
-      D1 ^= F(D2, K[20]);
-      D2 ^= F(D1, K[19]);
-      D1 ^= F(D2, K[18]);
-      D1 = FL   (D1, K[17]);
-      D2 = FLINV(D2, K[16]);
-
-      D2 ^= F(D1, K[15]);
-      D1 ^= F(D2, K[14]);
-      D2 ^= F(D1, K[13]);
-      D1 ^= F(D2, K[12]);
-      D2 ^= F(D1, K[11]);
-      D1 ^= F(D2, K[10]);
-      D1 = FL   (D1, K[ 9]);
-      D2 = FLINV(D2, K[ 8]);
-
-      D2 ^= F(D1, K[ 7]);
-      D1 ^= F(D2, K[ 6]);
-      D2 ^= F(D1, K[ 5]);
-      D1 ^= F(D2, K[ 4]);
-      D2 ^= F(D1, K[ 3]);
-      D1 ^= F(D2, K[ 2]);
-      D2 ^= K[0];
-      D1 ^= K[1];
+      D1 ^= K[koff--];
+      D2 ^= K[koff];
 
       store_be(out, D2, D1);
 
