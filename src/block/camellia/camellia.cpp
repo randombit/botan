@@ -115,29 +115,29 @@ void Camellia::encrypt_n(const byte in[], byte out[], size_t blocks) const
       u64bit D1 = load_be<u64bit>(in, 0);
       u64bit D2 = load_be<u64bit>(in, 1);
 
-      size_t koff = 0;
+      const u64bit* K = &SK[0];
 
-      D1 ^= K[koff++];
-      D2 ^= K[koff++];
+      D1 ^= *K++;
+      D2 ^= *K++;
 
       while(true)
          {
-         D2 ^= F(D1, K[koff++]);
-         D1 ^= F(D2, K[koff++]);
-         D2 ^= F(D1, K[koff++]);
-         D1 ^= F(D2, K[koff++]);
-         D2 ^= F(D1, K[koff++]);
-         D1 ^= F(D2, K[koff++]);
+         D2 ^= F(D1, *K++);
+         D1 ^= F(D2, *K++);
+         D2 ^= F(D1, *K++);
+         D1 ^= F(D2, *K++);
+         D2 ^= F(D1, *K++);
+         D1 ^= F(D2, *K++);
 
-         if(koff == K.size() - 2)
+         if(K == &SK[SK.size()-2])
             break;
 
-         D1 = FL   (D1, K[koff++]);
-         D2 = FLINV(D2, K[koff++]);
+         D1 = FL   (D1, *K++);
+         D2 = FLINV(D2, *K++);
          }
 
-      D2 ^= K[koff++];
-      D1 ^= K[koff++];
+      D2 ^= *K++;
+      D1 ^= *K++;
 
       store_be(out, D2, D1);
 
@@ -158,29 +158,29 @@ void Camellia::decrypt_n(const byte in[], byte out[], size_t blocks) const
       u64bit D1 = load_be<u64bit>(in, 0);
       u64bit D2 = load_be<u64bit>(in, 1);
 
-      size_t koff = K.size()-1;
+      const u64bit* K = &SK[SK.size()-1];
 
-      D2 ^= K[koff--];
-      D1 ^= K[koff--];
+      D2 ^= *K--;
+      D1 ^= *K--;
 
       while(true)
          {
-         D2 ^= F(D1, K[koff--]);
-         D1 ^= F(D2, K[koff--]);
-         D2 ^= F(D1, K[koff--]);
-         D1 ^= F(D2, K[koff--]);
-         D2 ^= F(D1, K[koff--]);
-         D1 ^= F(D2, K[koff--]);
+         D2 ^= F(D1, *K--);
+         D1 ^= F(D2, *K--);
+         D2 ^= F(D1, *K--);
+         D1 ^= F(D2, *K--);
+         D2 ^= F(D1, *K--);
+         D1 ^= F(D2, *K--);
 
-         if(koff == 1)
+         if(K == &SK[1])
             break;
 
-         D1 = FL   (D1, K[koff--]);
-         D2 = FLINV(D2, K[koff--]);
+         D1 = FL   (D1, *K--);
+         D2 = FLINV(D2, *K--);
          }
 
-      D1 ^= K[koff--];
-      D2 ^= K[koff];
+      D1 ^= *K--;
+      D2 ^= *K;
 
       store_be(out, D2, D1);
 
@@ -232,79 +232,79 @@ void Camellia::key_schedule(const byte key[], size_t length)
 
    if(length == 16)
       {
-      K.resize(26);
+      SK.resize(26);
 
-      K[ 0] = KL_H;
-      K[ 1] = KL_L;
-      K[ 2] = KA_H;
-      K[ 3] = KA_L;
-      K[ 4] = left_rot_hi(KL_H, KL_L, 15);
-      K[ 5] = left_rot_lo(KL_H, KL_L, 15);
-      K[ 6] = left_rot_hi(KA_H, KA_L, 15);
-      K[ 7] = left_rot_lo(KA_H, KA_L, 15);
-      K[ 8] = left_rot_hi(KA_H, KA_L, 30);
-      K[ 9] = left_rot_lo(KA_H, KA_L, 30);
-      K[10] = left_rot_hi(KL_H, KL_L, 45);
-      K[11] = left_rot_lo(KL_H, KL_L, 45);
-      K[12] = left_rot_hi(KA_H, KA_L,  45);
-      K[13] = left_rot_lo(KL_H, KL_L,  60);
-      K[14] = left_rot_hi(KA_H, KA_L,  60);
-      K[15] = left_rot_lo(KA_H, KA_L,  60);
-      K[16] = left_rot_lo(KL_H, KL_L,  77-64);
-      K[17] = left_rot_hi(KL_H, KL_L,  77-64);
-      K[18] = left_rot_lo(KL_H, KL_L,  94-64);
-      K[19] = left_rot_hi(KL_H, KL_L,  94-64);
-      K[20] = left_rot_lo(KA_H, KA_L,  94-64);
-      K[21] = left_rot_hi(KA_H, KA_L,  94-64);
-      K[22] = left_rot_lo(KL_H, KL_L, 111-64);
-      K[23] = left_rot_hi(KL_H, KL_L, 111-64);
-      K[24] = left_rot_lo(KA_H, KA_L, 111-64);
-      K[25] = left_rot_hi(KA_H, KA_L, 111-64);
+      SK[ 0] = KL_H;
+      SK[ 1] = KL_L;
+      SK[ 2] = KA_H;
+      SK[ 3] = KA_L;
+      SK[ 4] = left_rot_hi(KL_H, KL_L, 15);
+      SK[ 5] = left_rot_lo(KL_H, KL_L, 15);
+      SK[ 6] = left_rot_hi(KA_H, KA_L, 15);
+      SK[ 7] = left_rot_lo(KA_H, KA_L, 15);
+      SK[ 8] = left_rot_hi(KA_H, KA_L, 30);
+      SK[ 9] = left_rot_lo(KA_H, KA_L, 30);
+      SK[10] = left_rot_hi(KL_H, KL_L, 45);
+      SK[11] = left_rot_lo(KL_H, KL_L, 45);
+      SK[12] = left_rot_hi(KA_H, KA_L,  45);
+      SK[13] = left_rot_lo(KL_H, KL_L,  60);
+      SK[14] = left_rot_hi(KA_H, KA_L,  60);
+      SK[15] = left_rot_lo(KA_H, KA_L,  60);
+      SK[16] = left_rot_lo(KL_H, KL_L,  77-64);
+      SK[17] = left_rot_hi(KL_H, KL_L,  77-64);
+      SK[18] = left_rot_lo(KL_H, KL_L,  94-64);
+      SK[19] = left_rot_hi(KL_H, KL_L,  94-64);
+      SK[20] = left_rot_lo(KA_H, KA_L,  94-64);
+      SK[21] = left_rot_hi(KA_H, KA_L,  94-64);
+      SK[22] = left_rot_lo(KL_H, KL_L, 111-64);
+      SK[23] = left_rot_hi(KL_H, KL_L, 111-64);
+      SK[24] = left_rot_lo(KA_H, KA_L, 111-64);
+      SK[25] = left_rot_hi(KA_H, KA_L, 111-64);
       }
    else
       {
-      K.resize(34);
+      SK.resize(34);
 
-      K[ 0] = KL_H;
-      K[ 1] = KL_L;
-      K[ 2] = KB_H;
-      K[ 3] = KB_L;
+      SK[ 0] = KL_H;
+      SK[ 1] = KL_L;
+      SK[ 2] = KB_H;
+      SK[ 3] = KB_L;
 
-      K[ 4] = left_rot_hi(KR_H, KR_L, 15);
-      K[ 5] = left_rot_lo(KR_H, KR_L, 15);
-      K[ 6] = left_rot_hi(KA_H, KA_L, 15);
-      K[ 7] = left_rot_lo(KA_H, KA_L, 15);
+      SK[ 4] = left_rot_hi(KR_H, KR_L, 15);
+      SK[ 5] = left_rot_lo(KR_H, KR_L, 15);
+      SK[ 6] = left_rot_hi(KA_H, KA_L, 15);
+      SK[ 7] = left_rot_lo(KA_H, KA_L, 15);
 
-      K[ 8] = left_rot_hi(KR_H, KR_L, 30);
-      K[ 9] = left_rot_lo(KR_H, KR_L, 30);
-      K[10] = left_rot_hi(KB_H, KB_L, 30);
-      K[11] = left_rot_lo(KB_H, KB_L, 30);
+      SK[ 8] = left_rot_hi(KR_H, KR_L, 30);
+      SK[ 9] = left_rot_lo(KR_H, KR_L, 30);
+      SK[10] = left_rot_hi(KB_H, KB_L, 30);
+      SK[11] = left_rot_lo(KB_H, KB_L, 30);
 
-      K[12] = left_rot_hi(KL_H, KL_L, 45);
-      K[13] = left_rot_lo(KL_H, KL_L, 45);
-      K[14] = left_rot_hi(KA_H, KA_L, 45);
-      K[15] = left_rot_lo(KA_H, KA_L, 45);
+      SK[12] = left_rot_hi(KL_H, KL_L, 45);
+      SK[13] = left_rot_lo(KL_H, KL_L, 45);
+      SK[14] = left_rot_hi(KA_H, KA_L, 45);
+      SK[15] = left_rot_lo(KA_H, KA_L, 45);
 
-      K[16] = left_rot_hi(KL_H, KL_L, 60);
-      K[17] = left_rot_lo(KL_H, KL_L, 60);
-      K[18] = left_rot_hi(KR_H, KR_L, 60);
-      K[19] = left_rot_lo(KR_H, KR_L, 60);
-      K[20] = left_rot_hi(KB_H, KB_L, 60);
-      K[21] = left_rot_lo(KB_H, KB_L, 60);
+      SK[16] = left_rot_hi(KL_H, KL_L, 60);
+      SK[17] = left_rot_lo(KL_H, KL_L, 60);
+      SK[18] = left_rot_hi(KR_H, KR_L, 60);
+      SK[19] = left_rot_lo(KR_H, KR_L, 60);
+      SK[20] = left_rot_hi(KB_H, KB_L, 60);
+      SK[21] = left_rot_lo(KB_H, KB_L, 60);
 
-      K[22] = left_rot_lo(KL_H, KL_L,  77-64);
-      K[23] = left_rot_hi(KL_H, KL_L,  77-64);
-      K[24] = left_rot_lo(KA_H, KA_L,  77-64);
-      K[25] = left_rot_hi(KA_H, KA_L,  77-64);
+      SK[22] = left_rot_lo(KL_H, KL_L,  77-64);
+      SK[23] = left_rot_hi(KL_H, KL_L,  77-64);
+      SK[24] = left_rot_lo(KA_H, KA_L,  77-64);
+      SK[25] = left_rot_hi(KA_H, KA_L,  77-64);
 
-      K[26] = left_rot_lo(KR_H, KR_L,  94-64);
-      K[27] = left_rot_hi(KR_H, KR_L,  94-64);
-      K[28] = left_rot_lo(KA_H, KA_L,  94-64);
-      K[29] = left_rot_hi(KA_H, KA_L,  94-64);
-      K[30] = left_rot_lo(KL_H, KL_L, 111-64);
-      K[31] = left_rot_hi(KL_H, KL_L, 111-64);
-      K[32] = left_rot_lo(KB_H, KB_L, 111-64);
-      K[33] = left_rot_hi(KB_H, KB_L, 111-64);
+      SK[26] = left_rot_lo(KR_H, KR_L,  94-64);
+      SK[27] = left_rot_hi(KR_H, KR_L,  94-64);
+      SK[28] = left_rot_lo(KA_H, KA_L,  94-64);
+      SK[29] = left_rot_hi(KA_H, KA_L,  94-64);
+      SK[30] = left_rot_lo(KL_H, KL_L, 111-64);
+      SK[31] = left_rot_hi(KL_H, KL_L, 111-64);
+      SK[32] = left_rot_lo(KB_H, KB_L, 111-64);
+      SK[33] = left_rot_hi(KB_H, KB_L, 111-64);
       }
    }
 
