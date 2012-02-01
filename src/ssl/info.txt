@@ -1,8 +1,12 @@
 define SSL_TLS
 
+load_on request
+
 <comment>
-The SSL/TLS code is complex, new, and not yet reviewed, there may be
-serious bugs or security issues.
+A new TLS API is being developed. This version has numerous
+performance and usability issues and will not be supported in the
+future. Only use it if you need it for compatability with code written
+against previous versions.
 </comment>
 
 uses_tr1 yes

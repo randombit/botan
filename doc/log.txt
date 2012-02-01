@@ -10,6 +10,10 @@ Series 1.10
 Version 1.10.2, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* The SSL/TLS code is disabled by default in this release. A new
+  version is being developed and the current iteration should not be
+  used unless needed for existing code.
+
 * Add the Camellia block cipher
 
 * An implementation of SRP-6a compatible with the specification in
