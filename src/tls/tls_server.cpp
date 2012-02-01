@@ -384,7 +384,7 @@ void Server::process_handshake_msg(Handshake_Type type,
 
       try
          {
-         creds.verify_certificate_chain(client_certs);
+         creds.verify_certificate_chain("tls-server", "", client_certs);
          }
       catch(std::exception& e)
          {

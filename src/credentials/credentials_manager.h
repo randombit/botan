@@ -124,8 +124,9 @@ class BOTAN_DLL Credentials_Manager
       * certificate chain cannot be verified.
       */
       virtual void verify_certificate_chain(
-         const std::vector<X509_Certificate>& cert_chain,
-         const std::string& hostname = "");
+         const std::string& type,
+         const std::string& hostname,
+         const std::vector<X509_Certificate>& cert_chain);
 
       /**
       * @return private key associated with this certificate if we should

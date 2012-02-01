@@ -6,6 +6,7 @@
 */
 
 #include <botan/credentials_manager.h>
+#include <botan/x509stor.h>
 
 namespace Botan {
 
@@ -88,31 +89,32 @@ Credentials_Manager::trusted_certificate_authorities(
    }
 
 void Credentials_Manager::verify_certificate_chain(
-   const std::vector<X509_Certificate>& cert_chain,
-   const std::string& purported_hostname)
+   const std::string& type,
+   const std::string& purported_hostname,
+   const std::vector<X509_Certificate>& cert_chain)
    {
    if(cert_chain.empty())
       throw std::invalid_argument("Certificate chain was empty");
 
-#if 0
-   X509_Store store;
-
-   std::vector<X509_Certificate> CAs = trusted_certificate_authorities();
-
-   for(size_t i = 1; i != CAs.size(); ++i)
-      store.add_cert(CAs[i], true);
-   for(size_t i = 1; i != cert_chain.size(); ++i)
-      store.add_cert(cert_chain[i]);
-
-   X509_Code result = store.validate_cert(cert_chain[0], TLS_SERVER);
-
-   if(result != VERIFIED)
-      throw std::runtime_error("Certificate did not validate");
-
    if(!cert_chain[0].matches_dns_name(purported_hostname))
       throw std::runtime_error("Certificate did not match hostname");
 
-#endif
+   std::vector<X509_Certificate> CAs = trusted_certificate_authorities(type, purported_hostname);
+
+   X509_Store store;
+
+   for(size_t i = 0; i != CAs.size(); ++i)
+      store.add_cert(CAs[i], true);
+   for(size_t i = 0; i != cert_chain.size(); ++i)
+      store.add_cert(cert_chain[i]);
+
+   X509_Code result = store.validate_cert(cert_chain[0], X509_Store::TLS_SERVER);
+
+   if(CAs.empty() && result == CERT_ISSUER_NOT_FOUND)
+      return;
+
+   if(result != VERIFIED)
+      throw std::runtime_error("Certificate did not validate");
    }
 
 }

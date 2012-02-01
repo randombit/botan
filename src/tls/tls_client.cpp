@@ -266,8 +266,8 @@ void Client::process_handshake_msg(Handshake_Type type,
 
       try
          {
-         creds.verify_certificate_chain(peer_certs,
-                                        state->client_hello->sni_hostname());
+         const std::string hostname = state->client_hello->sni_hostname();
+         creds.verify_certificate_chain("tls-client", hostname, peer_certs);
          }
       catch(std::exception& e)
          {
