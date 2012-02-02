@@ -40,9 +40,9 @@ class BOTAN_DLL EC_Group
       * @param cofactor the cofactor
       */
       EC_Group(const CurveGFp& curve,
-                       const PointGFp& base_point,
-                       const BigInt& order,
-                       const BigInt& cofactor) :
+               const PointGFp& base_point,
+               const BigInt& order,
+               const BigInt& cofactor) :
          curve(curve),
          base_point(base_point),
          order(order),
