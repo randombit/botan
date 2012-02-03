@@ -1,6 +1,6 @@
 define CMS
 
-load_on request
+load_on never
 
 <requires>
 asn1
