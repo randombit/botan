@@ -9,6 +9,15 @@
 
 namespace Botan {
 
+bool Certificate_Store::certificate_known(const X509_Certificate& cert) const
+   {
+   std::vector<X509_Certificate> found =
+      find_cert_by_subject_and_key_id(cert.subject_dn(),
+                                      cert.subject_key_id());
+
+   return (found.size() > 0);
+   }
+
 void Certificate_Store_In_Memory::add_certificate(const X509_Certificate& cert)
    {
    for(size_t i = 0; i != certs.size(); ++i)

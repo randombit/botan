@@ -1,6 +1,0 @@
-define CERTIFICATE_STORE
-
-<requires>
-x509cert
-x509crl
-</requires>

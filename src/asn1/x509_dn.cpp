@@ -177,7 +177,7 @@ bool operator!=(const X509_DN& dn1, const X509_DN& dn2)
    }
 
 /*
-* Compare two X509_DNs
+* Induce an arbitrary ordering on DNs
 */
 bool operator<(const X509_DN& dn1, const X509_DN& dn2)
    {

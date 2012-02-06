@@ -1,6 +1,0 @@
-define PKCS10_REQUESTS
-
-<requires>
-asn1
-x509cert
-</requires>

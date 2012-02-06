@@ -45,34 +45,48 @@ enum X509_Path_Validation_Code {
    CA_CERT_NOT_FOR_CRL_ISSUER
 };
 
-      enum Usage_Restrictions {
-         NO_RESTRICTIONS  = 0x00,
-         TLS_SERVER       = 0x01,
-         TLS_CLIENT       = 0x02,
-         CODE_SIGNING     = 0x04,
-         EMAIL_PROTECTION = 0x08,
-         TIME_STAMPING    = 0x10,
-         CRL_SIGNING      = 0x20
-      };
+enum Usage_Restrictions {
+   NO_RESTRICTIONS  = 0x00,
+   TLS_SERVER       = 0x01,
+   TLS_CLIENT       = 0x02,
+   CODE_SIGNING     = 0x04,
+   EMAIL_PROTECTION = 0x08,
+   TIME_STAMPING    = 0x10,
+   CRL_SIGNING      = 0x20
+};
 
-class Path_Validation_Result
+class BOTAN_DLL Path_Validation_Result
    {
    public:
       Path_Validation_Result() :
-         validation_result(UNKNOWN_X509_ERROR),
-         allowed_usages(NO_RESTRICTIONS)
+         m_result(UNKNOWN_X509_ERROR),
+         m_usages(NO_RESTRICTIONS)
          {}
-
-      X509_Path_Validation_Code validation_result;
-      Usage_Restrictions allowed_usages;
-
-      std::vector<X509_Certificate> cert_path;
 
       /**
       * Returns the set of hash functions you are implicitly
       * trusting by trusting this result.
       */
       std::set<std::string> trusted_hashes() const;
+
+      const X509_Certificate& trust_root() const;
+
+      const std::vector<X509_Certificate>& cert_path() const { return m_cert_path; }
+
+      bool successful_validation() const { return result() == VERIFIED; }
+
+      X509_Path_Validation_Code result() const { return m_result; }
+   private:
+      friend Path_Validation_Result x509_path_validate(
+         const std::vector<X509_Certificate>& end_certs,
+         const std::vector<Certificate_Store*>& certstores);
+
+      void set_result(X509_Path_Validation_Code result) { m_result = result; }
+
+      X509_Path_Validation_Code m_result;
+      Usage_Restrictions m_usages;
+
+      std::vector<X509_Certificate> m_cert_path;
    };
 
 Path_Validation_Result BOTAN_DLL x509_path_validate(

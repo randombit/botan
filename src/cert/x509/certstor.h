@@ -31,6 +31,8 @@ class BOTAN_DLL Certificate_Store
       */
       virtual void add_crl(const X509_CRL& crl) = 0;
 
+      bool certificate_known(const X509_Certificate& cert) const;
+
       /**
       * Subject DN and (optionally) key identifier
       */

@@ -1,6 +1,0 @@
-define X509_CRL
-
-<requires>
-x509cert
-</requires>
-

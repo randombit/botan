@@ -71,11 +71,16 @@ std::vector<X509_CRL> find_crls_from(const X509_Certificate& cert,
 
 }
 
+const X509_Certificate& Path_Validation_Result::trust_root() const
+   {
+   return m_cert_path[m_cert_path.size()-1];
+   }
+
 std::set<std::string> Path_Validation_Result::trusted_hashes() const
    {
    std::set<std::string> hashes;
-   for(size_t i = 0; i != cert_path.size(); ++i)
-      hashes.insert(cert_path[i].hash_used_for_signature());
+   for(size_t i = 0; i != m_cert_path.size(); ++i)
+      hashes.insert(m_cert_path[i].hash_used_for_signature());
    return hashes;
    }
 
@@ -117,30 +122,27 @@ x509_path_validate(const std::vector<X509_Certificate>& end_certs,
    {
    Path_Validation_Result r;
 
-   r.cert_path = end_certs;
+   r.m_cert_path = end_certs;
+
+   std::vector<X509_Certificate>& cert_path = r.m_cert_path;
 
    try
       {
       // iterate until we reach a root or cannot find the issuer
-
-      while(!r.cert_path.back().is_self_signed())
+      while(!cert_path.back().is_self_signed())
          {
-         X509_Certificate cert = find_issuing_cert(r.cert_path.back(),
-                                                   certstores);
-
-         r.cert_path.push_back(cert);
+         cert_path.push_back(
+            find_issuing_cert(cert_path.back(), certstores)
+            );
          }
 
-      /*
-      for(size_t i = 0; i != r.cert_path.size(); ++i)
-         std::cout << "Cert " << i << " = " << r.cert_path[i].subject_dn() << "\n";
-      */
+      const bool self_signed_ee_cert = (cert_path.size() == 1);
 
       X509_Time current_time(system_time());
 
-      for(size_t i = 0; i != r.cert_path.size(); ++i)
+      for(size_t i = 0; i != cert_path.size(); ++i)
          {
-         const X509_Certificate& subject = r.cert_path[i];
+         const X509_Certificate& subject = cert_path[i];
 
          // Check all certs for valid time range
          if(current_time < X509_Time(subject.start_time()))
@@ -149,13 +151,15 @@ x509_path_validate(const std::vector<X509_Certificate>& end_certs,
          if(current_time > X509_Time(subject.end_time()))
             throw PKIX_Validation_Failure(CERT_HAS_EXPIRED);
 
-         const bool at_self_signed_root = (i == r.cert_path.size() - 1);
+         const bool at_self_signed_root = (i == cert_path.size() - 1);
 
          const X509_Certificate& issuer =
-            r.cert_path[at_self_signed_root ? (i) : (i + 1)];
+            cert_path[at_self_signed_root ? (i) : (i + 1)];
 
          // Check issuer constraints
-         if(!issuer.is_CA_cert()) // require this for self-signed end-entity?
+
+         // Don't require CA bit set on self-signed end entity cert
+         if(!issuer.is_CA_cert() && !self_signed_ee_cert)
             throw PKIX_Validation_Failure(CA_CERT_NOT_FOR_CERT_ISSUER);
 
          if(issuer.path_limit() < i)
@@ -165,17 +169,16 @@ x509_path_validate(const std::vector<X509_Certificate>& end_certs,
             throw PKIX_Validation_Failure(SIGNATURE_ERROR);
          }
 
-      r.validation_result = VERIFIED;
-
-      for(size_t i = 1; i != r.cert_path.size(); ++i)
+      for(size_t i = 1; i != cert_path.size(); ++i)
          {
-         const X509_Certificate& subject = r.cert_path[i-1];
-         const X509_Certificate& ca = r.cert_path[i];
+         const X509_Certificate& subject = cert_path[i-1];
+         const X509_Certificate& ca = cert_path[i];
 
          std::vector<X509_CRL> crls = find_crls_from(ca, certstores);
 
          if(crls.empty())
-            throw PKIX_Validation_Failure(CRL_NOT_FOUND);
+            //throw PKIX_Validation_Failure(CRL_NOT_FOUND);
+            continue;
 
          const X509_CRL& crl = crls[0];
 
@@ -195,10 +198,11 @@ x509_path_validate(const std::vector<X509_Certificate>& end_certs,
             throw PKIX_Validation_Failure(CERT_IS_REVOKED);
          }
 
+      r.set_result(self_signed_ee_cert ? CANNOT_ESTABLISH_TRUST : VERIFIED);
       }
    catch(PKIX_Validation_Failure& e)
       {
-      r.validation_result = e.code();
+      r.set_result(e.code());
       }
 
    return r;

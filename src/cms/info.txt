@@ -14,5 +14,5 @@ pem
 pubkey
 sha1
 algo_base
-x509cert
+x509
 </requires>
