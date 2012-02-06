@@ -21,8 +21,6 @@ class BOTAN_DLL Certificate_Store
    public:
       virtual ~Certificate_Store() {}
 
-      virtual Certificate_Store* clone() const = 0;
-
       /**
       * Add a certificate; this may fail if the store is write-only
       */
@@ -45,7 +43,7 @@ class BOTAN_DLL Certificate_Store
       * Find CRLs by the DN and key id of the issuer
       */
       virtual std::vector<X509_CRL>
-         find_crl_by_subject_and_key_id(
+         find_crl_by_issuer_and_key_id(
             const X509_DN& issuer_dn,
             const MemoryRegion<byte>& key_id) const = 0;
    };
@@ -53,11 +51,9 @@ class BOTAN_DLL Certificate_Store
 /**
 * In Memory Certificate Store
 */
-class BOTAN_DLL Certificate_Store_Memory : public Certificate_Store
+class BOTAN_DLL Certificate_Store_In_Memory : public Certificate_Store
    {
    public:
-      Certificate_Store* clone() const;
-
       void add_certificate(const X509_Certificate& cert);
 
       void add_crl(const X509_CRL& crl);
@@ -66,13 +62,13 @@ class BOTAN_DLL Certificate_Store_Memory : public Certificate_Store
          const X509_DN& subject_dn,
          const MemoryRegion<byte>& key_id) const;
 
-      std::vector<X509_CRL> find_crl_by_subject_and_key_id(
+      std::vector<X509_CRL> find_crl_by_issuer_and_key_id(
          const X509_DN& issuer_dn,
          const MemoryRegion<byte>& key_id) const;
 
-      Certificate_Store_Memory() {}
+      Certificate_Store_In_Memory() {}
    private:
-      // TODO: Add indexing on the DN and key id to avoid linear search?
+      // TODO: Add indexing on the DN and key id to avoid linear search
       std::vector<X509_Certificate> certs;
       std::vector<X509_CRL> crls;
    };

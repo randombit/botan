@@ -1,9 +1,9 @@
 
-BOTAN_CONFIG=botan-config
+BOTAN_CONFIG=../../build/botan-config-1.10
 
 CC=g++
 FLAGS=-g -Os -W -Wall -ansi
-LDFLAGS=$(shell $(BOTAN_CONFIG) --libs)
+LDFLAGS=$(shell $(BOTAN_CONFIG) --libs) -L../.. -lbotan-1.10
 CFLAGS=$(shell $(BOTAN_CONFIG) --cflags) -I../../build/include
 
 x509test: x509test.cpp

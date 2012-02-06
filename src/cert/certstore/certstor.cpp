@@ -9,12 +9,7 @@
 
 namespace Botan {
 
-Certificate_Store* Certificate_Store_Memory::clone() const
-   {
-   return new Certificate_Store_Memory(*this);
-   }
-
-void Certificate_Store_Memory::add_certificate(const X509_Certificate& cert)
+void Certificate_Store_In_Memory::add_certificate(const X509_Certificate& cert)
    {
    for(size_t i = 0; i != certs.size(); ++i)
       {
@@ -26,7 +21,7 @@ void Certificate_Store_Memory::add_certificate(const X509_Certificate& cert)
    }
 
 std::vector<X509_Certificate>
-Certificate_Store_Memory::find_cert_by_subject_and_key_id(
+Certificate_Store_In_Memory::find_cert_by_subject_and_key_id(
    const X509_DN& subject_dn,
    const MemoryRegion<byte>& key_id) const
    {
@@ -50,7 +45,7 @@ Certificate_Store_Memory::find_cert_by_subject_and_key_id(
    return result;
    }
 
-void Certificate_Store_Memory::add_crl(const X509_CRL& crl)
+void Certificate_Store_In_Memory::add_crl(const X509_CRL& crl)
    {
    X509_DN crl_issuer = crl.issuer_dn();
 
@@ -59,11 +54,9 @@ void Certificate_Store_Memory::add_crl(const X509_CRL& crl)
       // Found an update of a previously existing one; replace it
       if(crls[i].issuer_dn() == crl_issuer)
          {
-         if(crls[i].this_update() < crl.this_update())
-            {
+         if(crls[i].this_update() <= crl.this_update())
             crls[i] = crl;
-            return;
-            }
+         return;
          }
       }
 
@@ -72,7 +65,7 @@ void Certificate_Store_Memory::add_crl(const X509_CRL& crl)
    }
 
 std::vector<X509_CRL>
-Certificate_Store_Memory::find_crl_by_subject_and_key_id(
+Certificate_Store_In_Memory::find_crl_by_issuer_and_key_id(
    const X509_DN& issuer_dn,
    const MemoryRegion<byte>& key_id) const
    {

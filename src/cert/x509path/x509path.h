@@ -34,6 +34,7 @@ enum X509_Path_Validation_Code {
    CERT_HAS_EXPIRED,
    CERT_IS_REVOKED,
 
+   CRL_NOT_FOUND,
    CRL_FORMAT_ERROR,
    CRL_ISSUER_NOT_FOUND,
    CRL_NOT_YET_VALID,
@@ -44,38 +45,51 @@ enum X509_Path_Validation_Code {
    CA_CERT_NOT_FOR_CRL_ISSUER
 };
 
-enum X509_Cert_Usage {
-   NO_RESTRICTIONS  = 0x00,
-   TLS_SERVER       = 0x01,
-   TLS_CLIENT       = 0x02,
-   CODE_SIGNING     = 0x04,
-   EMAIL_PROTECTION = 0x08,
-   TIME_STAMPING    = 0x10,
-   CRL_SIGNING      = 0x20
-};
+      enum Usage_Restrictions {
+         NO_RESTRICTIONS  = 0x00,
+         TLS_SERVER       = 0x01,
+         TLS_CLIENT       = 0x02,
+         CODE_SIGNING     = 0x04,
+         EMAIL_PROTECTION = 0x08,
+         TIME_STAMPING    = 0x10,
+         CRL_SIGNING      = 0x20
+      };
 
 class Path_Validation_Result
    {
    public:
+      Path_Validation_Result() :
+         validation_result(UNKNOWN_X509_ERROR),
+         allowed_usages(NO_RESTRICTIONS)
+         {}
+
       X509_Path_Validation_Code validation_result;
-      X509_Cert_Usage allowed_usages;
+      Usage_Restrictions allowed_usages;
+
       std::vector<X509_Certificate> cert_path;
 
+      /**
+      * Returns the set of hash functions you are implicitly
+      * trusting by trusting this result.
+      */
       std::set<std::string> trusted_hashes() const;
    };
+
+Path_Validation_Result BOTAN_DLL x509_path_validate(
+   const std::vector<X509_Certificate>& end_certs,
+   const std::vector<Certificate_Store*>& certstores);
 
 Path_Validation_Result BOTAN_DLL x509_path_validate(
    const X509_Certificate& end_cert,
    const std::vector<Certificate_Store*>& certstores);
 
-inline Path_Validation_Result x509_path_validate(
+Path_Validation_Result BOTAN_DLL x509_path_validate(
    const X509_Certificate& end_cert,
-   Certificate_Store& store)
-   {
-   std::vector<Certificate_Store*> store_vec;
-   store_vec.push_back(&store);
-   return x509_path_validate(end_cert, store_vec);
-   }
+   Certificate_Store& store);
+
+Path_Validation_Result BOTAN_DLL x509_path_validate(
+   const std::vector<X509_Certificate>& end_certs,
+   Certificate_Store& store);
 
 }
 

@@ -11,6 +11,7 @@
 #include <botan/parsing.h>
 #include <botan/internal/stl_util.h>
 #include <botan/oids.h>
+#include <iostream>
 
 namespace Botan {
 
@@ -291,6 +292,36 @@ void X509_DN::decode_from(BER_Decoder& source)
       }
 
    dn_bits = bits;
+   }
+
+namespace {
+
+std::string to_short_form(const std::string& long_id)
+   {
+   if(long_id == "X520.CommonName")
+      return "CN";
+
+   if(long_id == "X520.Organization")
+      return "O";
+
+   if(long_id == "X520.OrganizationalUnit")
+      return "OU";
+
+   return long_id;
+   }
+
+}
+
+std::ostream& operator<<(std::ostream& out, const X509_DN& dn)
+   {
+   std::multimap<std::string, std::string> contents = dn.contents();
+
+   for(std::multimap<std::string, std::string>::const_iterator i = contents.begin();
+       i != contents.end(); ++i)
+      {
+      out << to_short_form(i->first) << "=" << i->second << ' ';
+      }
+   return out;
    }
 
 }

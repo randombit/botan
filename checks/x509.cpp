@@ -191,7 +191,7 @@ void do_x509_tests(RandomNumberGenerator& rng)
    X509_CRL crl1 = ca.new_crl(rng);
 
    /* Verify the certs */
-   Certificate_Store_Memory store;
+   Certificate_Store_In_Memory store;
 
    store.add_certificate(ca_cert);
 
@@ -199,11 +199,11 @@ void do_x509_tests(RandomNumberGenerator& rng)
 
    Path_Validation_Result result_u1 = x509_path_validate(user1_cert, store);
    if(result_u1.validation_result != VERIFIED)
-      std::cout << "\nFAILED: User cert #1 did not validate" << std::endl;
+      std::cout << "\nFAILED: User cert #1 did not validate - " << result_u1.validation_result << std::endl;
 
    Path_Validation_Result result_u2 = x509_path_validate(user2_cert, store);
    if(result_u2.validation_result != VERIFIED)
-      std::cout << "\nFAILED: User cert #2 did not validate" << std::endl;
+      std::cout << "\nFAILED: User cert #2 did not validate - " << result_u2.validation_result << std::endl;
 
    store.add_crl(crl1);
 

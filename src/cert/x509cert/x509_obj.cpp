@@ -16,6 +16,8 @@
 #include <algorithm>
 #include <memory>
 
+#include <stdio.h>
+
 namespace Botan {
 
 /*
@@ -192,8 +194,9 @@ bool X509_Object::check_signature(Public_Key& pub_key) const
 
       return verifier.verify_message(tbs_data(), signature());
       }
-   catch(...)
+   catch(std::exception& e)
       {
+      printf("Failure during validation %s\n", e.what());
       return false;
       }
    }

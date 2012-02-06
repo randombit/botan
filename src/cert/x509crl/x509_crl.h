@@ -14,6 +14,8 @@
 
 namespace Botan {
 
+class X509_Certificate;
+
 /**
 * This class represents X.509 Certificate Revocation Lists (CRLs).
 */
@@ -28,6 +30,11 @@ class BOTAN_DLL X509_CRL : public X509_Object
          X509_CRL_Error(const std::string& error) :
             Exception("X509_CRL: " + error) {}
          };
+
+      /**
+      * Check if this particular certificate is listed in the CRL
+      */
+      bool is_revoked(const X509_Certificate& cert) const;
 
       /**
       * Get the entries of this CRL in the form of a vector.
