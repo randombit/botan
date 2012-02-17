@@ -127,12 +127,12 @@ FTW_EntropySource::~FTW_EntropySource()
 
 void FTW_EntropySource::poll(Entropy_Accumulator& accum)
    {
-   const size_t MAX_FILES_READ_PER_POLL = 1024;
+   const size_t MAX_FILES_READ_PER_POLL = 2048;
 
    if(!dir)
       dir = new Directory_Walker(path);
 
-   MemoryRegion<byte>& io_buffer = accum.get_io_buffer(128);
+   MemoryRegion<byte>& io_buffer = accum.get_io_buffer(4096);
 
    for(size_t i = 0; i != MAX_FILES_READ_PER_POLL; ++i)
       {
@@ -150,7 +150,7 @@ void FTW_EntropySource::poll(Entropy_Accumulator& accum)
       ::close(fd);
 
       if(got > 0)
-         accum.add(&io_buffer[0], got, .01);
+         accum.add(&io_buffer[0], got, .001);
 
       if(accum.polling_goal_achieved())
          break;

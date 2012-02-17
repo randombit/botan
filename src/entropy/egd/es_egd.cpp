@@ -147,7 +147,7 @@ void EGD_EntropySource::poll(Entropy_Accumulator& accum)
 
       if(got)
          {
-         accum.add(&io_buffer[0], got, 8);
+         accum.add(&io_buffer[0], got, 6);
          break;
          }
       }
