@@ -18,15 +18,15 @@ namespace TLS {
 /*
 * TLS Client Constructor
 */
-Client::Client(std::tr1::function<void (const byte[], size_t)> output_fn,
-                       std::tr1::function<void (const byte[], size_t, Alert)> proc_fn,
-                       std::tr1::function<bool (const Session&)> handshake_fn,
+Client::Client(std::function<void (const byte[], size_t)> output_fn,
+                       std::function<void (const byte[], size_t, Alert)> proc_fn,
+                       std::function<bool (const Session&)> handshake_fn,
                        Session_Manager& session_manager,
                        Credentials_Manager& creds,
                        const Policy& policy,
                        RandomNumberGenerator& rng,
                        const std::string& hostname,
-                       std::tr1::function<std::string (std::vector<std::string>)> next_protocol) :
+                       std::function<std::string (std::vector<std::string>)> next_protocol) :
    Channel(output_fn, proc_fn, handshake_fn),
    policy(policy),
    rng(rng),
@@ -274,7 +274,7 @@ void Client::process_handshake_msg(Handshake_Type type,
          throw TLS_Exception(Alert::BAD_CERTIFICATE, e.what());
          }
 
-      std::auto_ptr<Public_Key> peer_key(peer_certs[0].subject_public_key());
+      std::unique_ptr<Public_Key> peer_key(peer_certs[0].subject_public_key());
 
       if(peer_key->algo_name() != state->suite.sig_algo())
          throw TLS_Exception(Alert::ILLEGAL_PARAMETER,

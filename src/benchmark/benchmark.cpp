@@ -139,7 +139,7 @@ std::map<std::string, double>
 algorithm_benchmark(const std::string& name,
                     Algorithm_Factory& af,
                     RandomNumberGenerator& rng,
-                    u32bit milliseconds,
+                    std::chrono::milliseconds milliseconds,
                     size_t buf_size)
    {
    std::vector<std::string> providers = af.providers_of(name);

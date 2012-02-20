@@ -27,7 +27,7 @@ Session::Session(const MemoryRegion<byte>& session_identifier,
                          const std::vector<X509_Certificate>& certs,
                          const std::string& sni_hostname,
                          const std::string& srp_identifier) :
-   m_start_time(system_time()),
+   m_start_time(std::chrono::system_clock::now()),
    m_identifier(session_identifier),
    m_master_secret(master_secret),
    m_version(version),
@@ -54,12 +54,14 @@ Session::Session(const byte ber[], size_t ber_len)
 
    MemoryVector<byte> peer_cert_bits;
 
+   size_t start_time = 0;
+
    BER_Decoder(ber, ber_len)
       .start_cons(SEQUENCE)
         .decode_and_check(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION),
                           "Unknown version in session structure")
         .decode(m_identifier, OCTET_STRING)
-        .decode_integer_type(m_start_time)
+        .decode_integer_type(start_time)
         .decode_integer_type(major_version)
         .decode_integer_type(minor_version)
         .decode_integer_type(m_ciphersuite)
@@ -75,6 +77,7 @@ Session::Session(const byte ber[], size_t ber_len)
       .verify_end();
 
    m_version = Protocol_Version(major_version, minor_version);
+   m_start_time = std::chrono::system_clock::from_time_t(start_time);
    m_sni_hostname = sni_hostname_str.value();
    m_srp_identifier = srp_identifier_str.value();
    m_connection_side = static_cast<Connection_Side>(side_code);
@@ -105,7 +108,7 @@ SecureVector<byte> Session::DER_encode() const
       .start_cons(SEQUENCE)
          .encode(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION))
          .encode(m_identifier, OCTET_STRING)
-         .encode(static_cast<size_t>(m_start_time))
+         .encode(static_cast<size_t>(std::chrono::system_clock::to_time_t(m_start_time)))
          .encode(static_cast<size_t>(m_version.major_version()))
          .encode(static_cast<size_t>(m_version.minor_version()))
          .encode(static_cast<size_t>(m_ciphersuite))

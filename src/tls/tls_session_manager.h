@@ -9,6 +9,8 @@
 #define TLS_SESSION_MANAGER_H__
 
 #include <botan/tls_session.h>
+#include <mutex>
+#include <chrono>
 #include <map>
 
 namespace Botan {
@@ -69,8 +71,6 @@ class BOTAN_DLL Session_Manager
 /**
 * A simple implementation of Session_Manager that just saves
 * values in memory, with no persistance abilities
-*
-* @todo add locking
 */
 class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
    {
@@ -82,7 +82,7 @@ class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
       *        seconds have elapsed from initial handshake.
       */
       Session_Manager_In_Memory(size_t max_sessions = 1000,
-                                    size_t session_lifetime = 7200) :
+                                std::chrono::seconds session_lifetime = std::chrono::seconds(7200)) :
          max_sessions(max_sessions),
          session_lifetime(session_lifetime)
             {}
@@ -101,7 +101,10 @@ class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
       bool load_from_session_str(const std::string& session_str,
                                  Session& session);
 
-      size_t max_sessions, session_lifetime;
+      std::mutex mutex;
+
+      size_t max_sessions;
+      std::chrono::seconds session_lifetime;
 
       std::map<std::string, Session> sessions; // hex(session_id) -> session
       std::map<std::string, std::string> host_sessions;

@@ -146,7 +146,8 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
          const std::string name = Supported_Elliptic_Curves::curve_id_to_name(curve_id);
 
          if(name == "")
-            throw Decoding_Error("Server sent unknown named curve " + to_string(curve_id));
+            throw Decoding_Error("Server sent unknown named curve " +
+                                 std::to_string(curve_id));
 
          EC_Group group(name);
 
@@ -186,7 +187,7 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
       if(peer_certs.empty())
          throw Internal_Error("No certificate and no server key exchange");
 
-      std::auto_ptr<Public_Key> pub_key(peer_certs[0].subject_public_key());
+      std::unique_ptr<Public_Key> pub_key(peer_certs[0].subject_public_key());
 
       if(const RSA_PublicKey* rsa_pub = dynamic_cast<const RSA_PublicKey*>(pub_key.get()))
          {

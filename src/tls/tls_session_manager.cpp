@@ -7,7 +7,7 @@
 
 #include <botan/tls_session_manager.h>
 #include <botan/hex.h>
-#include <botan/time.h>
+#include <chrono>
 
 namespace Botan {
 
@@ -16,13 +16,16 @@ namespace TLS {
 bool Session_Manager_In_Memory::load_from_session_str(
    const std::string& session_str, Session& session)
    {
-   std::map<std::string, Session>::iterator i = sessions.find(session_str);
+   // assert(lock is held)
+
+   auto i = sessions.find(session_str);
 
    if(i == sessions.end())
       return false;
 
-   // session has expired, remove it
-   const u64bit now = system_time();
+   // if session has expired, remove it
+   const auto now = std::chrono::system_clock::now();
+
    if(i->second.start_time() + session_lifetime < now)
       {
       sessions.erase(i);
@@ -36,16 +39,20 @@ bool Session_Manager_In_Memory::load_from_session_str(
 bool Session_Manager_In_Memory::load_from_session_id(
    const MemoryRegion<byte>& session_id, Session& session)
    {
+   std::lock_guard<std::mutex> lock(mutex);
+
    return load_from_session_str(hex_encode(session_id), session);
    }
 
 bool Session_Manager_In_Memory::load_from_host_info(
    const std::string& hostname, u16bit port, Session& session)
    {
+   std::lock_guard<std::mutex> lock(mutex);
+
    std::map<std::string, std::string>::iterator i;
 
    if(port > 0)
-      i = host_sessions.find(hostname + ":" + to_string(port));
+      i = host_sessions.find(hostname + ":" + std::to_string(port));
    else
       i = host_sessions.find(hostname);
 
@@ -64,8 +71,9 @@ bool Session_Manager_In_Memory::load_from_host_info(
 void Session_Manager_In_Memory::remove_entry(
    const MemoryRegion<byte>& session_id)
    {
-   std::map<std::string, Session>::iterator i =
-      sessions.find(hex_encode(session_id));
+   std::lock_guard<std::mutex> lock(mutex);
+
+   auto i = sessions.find(hex_encode(session_id));
 
    if(i != sessions.end())
       sessions.erase(i);
@@ -73,6 +81,8 @@ void Session_Manager_In_Memory::remove_entry(
 
 void Session_Manager_In_Memory::save(const Session& session)
    {
+   std::lock_guard<std::mutex> lock(mutex);
+
    if(max_sessions != 0)
       {
       /*

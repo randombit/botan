@@ -55,7 +55,7 @@ class BOTAN_DLL Record_Writer
 
       void send_record(byte type, const byte input[], size_t length);
 
-      std::tr1::function<void (const byte[], size_t)> m_output_fn;
+      std::function<void (const byte[], size_t)> m_output_fn;
 
       MemoryVector<byte> m_writebuf;
 

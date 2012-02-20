@@ -46,7 +46,7 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
 
    if(kex_algo == "DH" || kex_algo == "DHE_PSK")
       {
-      std::auto_ptr<DH_PrivateKey> dh(new DH_PrivateKey(rng, policy.dh_group()));
+      std::unique_ptr<DH_PrivateKey> dh(new DH_PrivateKey(rng, policy.dh_group()));
 
       append_tls_length_value(m_params, BigInt::encode(dh->get_domain().get_p()), 2);
       append_tls_length_value(m_params, BigInt::encode(dh->get_domain().get_g()), 2);
@@ -69,7 +69,7 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
 
       EC_Group ec_group(curve_name);
 
-      std::auto_ptr<ECDH_PrivateKey> ecdh(new ECDH_PrivateKey(rng, ec_group));
+      std::unique_ptr<ECDH_PrivateKey> ecdh(new ECDH_PrivateKey(rng, ec_group));
 
       const std::string ecdh_domain_oid = ecdh->domain().get_oid();
       const std::string domain = OIDS::lookup(OID(ecdh_domain_oid));
@@ -159,7 +159,7 @@ Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
 
       if(name == "")
          throw Decoding_Error("Server_Key_Exchange: Server sent unknown named curve " +
-                              to_string(curve_id));
+                              std::to_string(curve_id));
 
       m_params.push_back(curve_type);
       m_params.push_back(get_byte(0, curve_id));

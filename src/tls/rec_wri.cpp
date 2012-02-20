@@ -21,7 +21,7 @@ namespace TLS {
 /*
 * Record_Writer Constructor
 */
-Record_Writer::Record_Writer(std::tr1::function<void (const byte[], size_t)> out) :
+Record_Writer::Record_Writer(std::function<void (const byte[], size_t)> out) :
    m_output_fn(out), m_writebuf(TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE)
    {
    m_mac = 0;
@@ -286,8 +286,8 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
 */
 void Record_Writer::send_alert(const Alert& alert)
    {
-   const byte alert_bits[2] = { alert.is_fatal() ? 2 : 1,
-                                alert.type() };
+   const byte alert_bits[2] = { static_cast<byte>(alert.is_fatal() ? 2 : 1),
+                                static_cast<byte>(alert.type()) };
 
    send(ALERT, alert_bits, sizeof(alert_bits));
    }

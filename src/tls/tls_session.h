@@ -13,6 +13,7 @@
 #include <botan/tls_ciphersuite.h>
 #include <botan/tls_magic.h>
 #include <botan/secmem.h>
+#include <chrono>
 
 namespace Botan {
 
@@ -29,7 +30,7 @@ class BOTAN_DLL Session
       * Uninitialized session
       */
       Session() :
-         m_start_time(0),
+         m_start_time(std::chrono::system_clock::time_point::min()),
          m_version(),
          m_ciphersuite(0),
          m_compression_method(0),
@@ -144,12 +145,13 @@ class BOTAN_DLL Session
       /**
       * Get the time this session began (seconds since Epoch)
       */
-      u64bit start_time() const { return m_start_time; }
+      std::chrono::system_clock::time_point start_time() const
+         { return m_start_time; }
 
    private:
       enum { TLS_SESSION_PARAM_STRUCT_VERSION = 1 };
 
-      u64bit m_start_time;
+      std::chrono::system_clock::time_point m_start_time;
 
       MemoryVector<byte> m_identifier;
       SecureVector<byte> m_master_secret;

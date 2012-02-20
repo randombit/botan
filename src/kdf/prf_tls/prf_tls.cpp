@@ -29,7 +29,8 @@ void P_hash(MemoryRegion<byte>& output,
       }
    catch(Invalid_Key_Length)
       {
-      throw Internal_Error("The premaster secret of " + to_string(secret_len) +
+      throw Internal_Error("The premaster secret of " +
+                           std::to_string(secret_len) +
                            " bytes is too long for the PRF");
       }
 

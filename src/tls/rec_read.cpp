@@ -219,7 +219,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
       m_readbuf[0] != APPLICATION_DATA)
       {
       throw Unexpected_Message(
-         "Unknown record type " + to_string(m_readbuf[0]) + " from counterparty");
+         "Unknown record type " + std::to_string(m_readbuf[0]) + " from counterparty");
       }
 
    const size_t record_len = make_u16bit(m_readbuf[3], m_readbuf[4]);

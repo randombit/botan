@@ -12,6 +12,8 @@
 #include <botan/rng.h>
 #include <map>
 #include <string>
+#include <chrono>
+
 namespace Botan {
 
 /**
@@ -27,7 +29,7 @@ std::map<std::string, double>
 BOTAN_DLL algorithm_benchmark(const std::string& name,
                               Algorithm_Factory& af,
                               RandomNumberGenerator& rng,
-                              u32bit milliseconds,
+                              std::chrono::milliseconds milliseconds,
                               size_t buf_size);
 
 }

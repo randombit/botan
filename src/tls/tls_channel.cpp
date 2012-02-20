@@ -15,9 +15,9 @@ namespace Botan {
 
 namespace TLS {
 
-Channel::Channel(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
-                 std::tr1::function<void (const byte[], size_t, Alert)> proc_fn,
-                 std::tr1::function<bool (const Session&)> handshake_complete) :
+Channel::Channel(std::function<void (const byte[], size_t)> socket_output_fn,
+                 std::function<void (const byte[], size_t, Alert)> proc_fn,
+                 std::function<bool (const Session&)> handshake_complete) :
    proc_fn(proc_fn),
    handshake_fn(handshake_complete),
    writer(socket_output_fn),
@@ -106,7 +106,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
             }
          else
             throw Unexpected_Message("Unknown TLS message type " +
-                                     to_string(rec_type) + " received");
+                                     std::to_string(rec_type) + " received");
          }
 
       return 0; // on a record boundary

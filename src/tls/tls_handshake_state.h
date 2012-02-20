@@ -15,20 +15,7 @@
 #include <botan/pubkey.h>
 
 #include <utility>
-
-#if defined(BOTAN_USE_STD_TR1)
-
-#if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
-    #include <functional>
-#else
-    #include <tr1/functional>
-#endif
-
-#elif defined(BOTAN_USE_BOOST_TR1)
-  #include <boost/tr1/functional.hpp>
-#else
-  #error "No TR1 library defined for use"
-#endif
+#include <functional>
 
 namespace Botan {
 
@@ -99,7 +86,7 @@ class Handshake_State
       /**
       * Used by client using NPN
       */
-      std::tr1::function<std::string (std::vector<std::string>)> client_npn_cb;
+      std::function<std::string (std::vector<std::string>)> client_npn_cb;
 
    private:
       u32bit hand_expecting_mask, hand_received_mask;

@@ -46,7 +46,7 @@ MemoryVector<byte> finished_compute_verify(Handshake_State* state,
          0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x20, 0x66, 0x69, 0x6E, 0x69,
          0x73, 0x68, 0x65, 0x64 };
 
-      std::auto_ptr<KDF> prf(state->protocol_specific_prf());
+      std::unique_ptr<KDF> prf(state->protocol_specific_prf());
 
       MemoryVector<byte> input;
       if(side == CLIENT)

@@ -8,6 +8,7 @@
 #ifndef BOTAN_STL_UTIL_H__
 #define BOTAN_STL_UTIL_H__
 
+#include <vector>
 #include <map>
 
 namespace Botan {

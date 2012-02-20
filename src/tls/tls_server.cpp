@@ -87,9 +87,9 @@ get_server_certs(const std::string& hostname,
 /*
 * TLS Server Constructor
 */
-Server::Server(std::tr1::function<void (const byte[], size_t)> output_fn,
-               std::tr1::function<void (const byte[], size_t, Alert)> proc_fn,
-               std::tr1::function<bool (const Session&)> handshake_fn,
+Server::Server(std::function<void (const byte[], size_t)> output_fn,
+               std::function<void (const byte[], size_t, Alert)> proc_fn,
+               std::function<bool (const Session&)> handshake_fn,
                Session_Manager& session_manager,
                Credentials_Manager& creds,
                const Policy& policy,
