@@ -18,10 +18,10 @@ clean:
 	$(CXX) $(CFLAGS) $? $(LIBS) -o $@
 
 eax_test: eax_test.cpp
-	$(CXX) $(CFLAGS) $? $(LIBS) -lboost_regex -o $@
+	echo $(CXX) $(CFLAGS) $? $(LIBS) -lboost_regex -o $@
 
 asio_tls_server.o: asio_tls_server.cpp
-	g++-4.6.0 -c $(CFLAGS) -I/usr/local/asio-1.5.3/include $? -o $@
+	g++-4.6.0 -c $(CFLAGS) -pthread $? -o $@
 
 asio_tls_server: asio_tls_server.o
 	$(CXX) $? $(LIBS) -lboost_thread -lboost_system -lpthread -o $@

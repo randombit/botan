@@ -29,7 +29,7 @@ namespace {
 
 void set_fastest_implementation(const std::string& algo,
                                 Botan::RandomNumberGenerator& rng,
-                                double ms = 30)
+                                std::chrono::milliseconds ms = std::chrono::milliseconds(30))
    {
    Botan::Algorithm_Factory& af = Botan::global_state().algorithm_factory();
 
