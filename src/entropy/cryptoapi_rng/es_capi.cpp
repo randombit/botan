@@ -65,7 +65,7 @@ void Win32_CAPI_EntropySource::poll(Entropy_Accumulator& accum)
 
       if(got)
          {
-         accum.add(&io_buffer[0], io_buffer.size(), 8);
+         accum.add(&io_buffer[0], io_buffer.size(), 6);
          break;
          }
       }

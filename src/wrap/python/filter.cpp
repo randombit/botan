@@ -26,7 +26,6 @@ class Py_Filter : public Filter
 
       void send_str(const std::string& str)
          {
-         printf("Py_Filter::send_str\n");
          send((const byte*)str.data(), str.length());
          }
    };
@@ -36,14 +35,12 @@ class FilterWrapper : public Py_Filter, public wrapper<Py_Filter>
    public:
       void start_msg()
          {
-         printf("wrapper start_msg\n");
          if(override start_msg = this->get_override("start_msg"))
             start_msg();
          }
 
       void end_msg()
          {
-         printf("wrapper end_msg\n");
          if(override end_msg = this->get_override("end_msg"))
             end_msg();
          }
@@ -53,7 +50,6 @@ class FilterWrapper : public Py_Filter, public wrapper<Py_Filter>
 
       virtual void write_str(const std::string& str)
          {
-         printf("wrapper write\n");
          this->get_override("write")(str);
          }
    };
@@ -125,7 +121,6 @@ void prepend_filter(Pipe& pipe, std::unique_ptr<Filter> filter)
 
 void do_send(std::unique_ptr<FilterWrapper> filter, const std::string& data)
    {
-   printf("Sending %s to %p\n", data.c_str(), filter.get());
    filter->send_str(data);
    }
 

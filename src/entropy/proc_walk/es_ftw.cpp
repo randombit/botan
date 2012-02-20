@@ -1,6 +1,6 @@
 /*
 * FTW EntropySource
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2008,2012 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -41,60 +41,81 @@ namespace {
 class Directory_Walker : public File_Descriptor_Source
    {
    public:
-      Directory_Walker(const std::string& root) { add_directory(root); }
-      ~Directory_Walker();
+      Directory_Walker(const std::string& root) :
+         m_cur_dir(std::make_pair<DIR*, std::string>(0, ""))
+         {
+         if(DIR* root_dir = ::opendir(root.c_str()))
+            m_cur_dir = std::make_pair(root_dir, root);
+         }
+
+      ~Directory_Walker()
+         {
+         if(m_cur_dir.first)
+            ::closedir(m_cur_dir.first);
+         }
 
       int next_fd();
    private:
-      void add_directory(const std::string&);
+      void add_directory(const std::string& dirname)
+         {
+         m_dirlist.push_back(dirname);
+         }
 
-      std::deque<std::pair<DIR*, std::string> > dirs;
+      std::pair<struct dirent*, std::string> get_next_dirent();
+
+      std::pair<DIR*, std::string> m_cur_dir;
+      std::deque<std::string> m_dirlist;
    };
 
-void Directory_Walker::add_directory(const std::string& dirname)
+std::pair<struct dirent*, std::string> Directory_Walker::get_next_dirent()
    {
-   DIR* dir = ::opendir(dirname.c_str());
-   if(dir)
-      dirs.push_back(std::make_pair(dir, dirname));
-   }
-
-Directory_Walker::~Directory_Walker()
-   {
-   while(dirs.size())
+   while(m_cur_dir.first)
       {
-      ::closedir(dirs[0].first);
-      dirs.pop_front();
+      struct dirent* dir = ::readdir(m_cur_dir.first);
+
+      if(dir)
+         return std::make_pair<struct dirent*, std::string>(dir, m_cur_dir.second);
+
+      ::closedir(m_cur_dir.first);
+      m_cur_dir = std::make_pair<DIR*, std::string>(0, "");
+
+      while(!m_dirlist.empty() && m_cur_dir.first == 0)
+         {
+         const std::string next_dir_name = m_dirlist[0];
+         m_dirlist.pop_front();
+
+         if(DIR* next_dir = ::opendir(next_dir_name.c_str()))
+            m_cur_dir = std::make_pair(next_dir, next_dir_name);
+         }
       }
+
+   return std::make_pair<struct dirent*, std::string>(0, ""); // nothing left
    }
 
 int Directory_Walker::next_fd()
    {
-   while(dirs.size())
+   while(true)
       {
-      std::pair<DIR*, std::string> dirinfo = dirs[0];
+      std::pair<struct dirent*, std::string> entry = get_next_dirent();
 
-      struct dirent* entry = ::readdir(dirinfo.first);
+      if(!entry.first)
+         break; // no more dirs
 
-      if(!entry)
-         {
-         ::closedir(dirinfo.first);
-         dirs.pop_front();
-         continue;
-         }
-
-      const std::string filename = entry->d_name;
+      const std::string filename = entry.first->d_name;
 
       if(filename == "." || filename == "..")
          continue;
 
-      const std::string full_path = dirinfo.second + '/' + filename;
+      const std::string full_path = entry.second + '/' + filename;
 
       struct stat stat_buf;
       if(::lstat(full_path.c_str(), &stat_buf) == -1)
          continue;
 
       if(S_ISDIR(stat_buf.st_mode))
+         {
          add_directory(full_path);
+         }
       else if(S_ISREG(stat_buf.st_mode) && (stat_buf.st_mode & S_IROTH))
          {
          int fd = ::open(full_path.c_str(), O_RDONLY | O_NOCTTY);
@@ -127,12 +148,12 @@ FTW_EntropySource::~FTW_EntropySource()
 
 void FTW_EntropySource::poll(Entropy_Accumulator& accum)
    {
-   const size_t MAX_FILES_READ_PER_POLL = 1024;
+   const size_t MAX_FILES_READ_PER_POLL = 2048;
 
    if(!dir)
       dir = new Directory_Walker(path);
 
-   MemoryRegion<byte>& io_buffer = accum.get_io_buffer(128);
+   MemoryRegion<byte>& io_buffer = accum.get_io_buffer(4096);
 
    for(size_t i = 0; i != MAX_FILES_READ_PER_POLL; ++i)
       {
@@ -150,7 +171,7 @@ void FTW_EntropySource::poll(Entropy_Accumulator& accum)
       ::close(fd);
 
       if(got > 0)
-         accum.add(&io_buffer[0], got, .01);
+         accum.add(&io_buffer[0], got, .001);
 
       if(accum.polling_goal_achieved())
          break;

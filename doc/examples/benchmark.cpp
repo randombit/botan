@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
       std::string algo = argv[i];
 
       std::map<std::string, double> results =
-         algorithm_benchmark(algo, af, rng, ms, 16*1024);
+         algorithm_benchmark(algo, af, rng, ms, 16);
 
       std::cout << algo << ":\n";
       for(std::map<std::string, double>::iterator r = results.begin();

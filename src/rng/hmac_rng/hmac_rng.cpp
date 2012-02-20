@@ -74,7 +74,8 @@ void HMAC_RNG::reseed(size_t poll_bits)
 
       while(!accum.polling_goal_achieved() && poll_attempt < poll_bits)
          {
-         entropy_sources[poll_attempt % entropy_sources.size()]->poll(accum);
+         const size_t src_idx = poll_attempt % entropy_sources.size();
+         entropy_sources[src_idx]->poll(accum);
          ++poll_attempt;
          }
       }
@@ -109,7 +110,11 @@ void HMAC_RNG::reseed(size_t poll_bits)
    counter = 0;
    user_input_len = 0;
 
-   if(accum.bits_collected() >= 128)
+   /*
+   Consider ourselves seeded once we've collected an estimated 128 bits of
+   entropy in a single poll.
+   */
+   if(seeded == false && accum.bits_collected() >= 128)
       seeded = true;
    }
 
@@ -118,15 +123,18 @@ void HMAC_RNG::reseed(size_t poll_bits)
 */
 void HMAC_RNG::add_entropy(const byte input[], size_t length)
    {
+   const size_t USER_ENTROPY_WATERSHED = 20;
+
    extractor->update(input, length);
    user_input_len += length;
 
    /*
-   * After we've accumulated >= 1024 bytes of user input, reseed.
-   * This input will automatically have been included if reseed was
-   * called already, as it's just included in the extractor input.
+   * After we've accumulated at least USER_ENTROPY_WATERSHED bytes of
+   * user input, reseed.  This input will automatically have been
+   * included if reseed was called already, as it's just included in
+   * the extractor input.
    */
-   if(user_input_len >= 1024)
+   if(user_input_len >= USER_ENTROPY_WATERSHED)
       reseed(128);
    }
 
