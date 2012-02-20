@@ -10,7 +10,7 @@
 #include <botan/ber_dec.h>
 #include <botan/charset.h>
 #include <botan/parsing.h>
-#include <botan/time.h>
+#include <botan/calendar.h>
 
 namespace Botan {
 

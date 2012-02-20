@@ -12,7 +12,7 @@
 #include <botan/charset.h>
 #include <botan/parsing.h>
 #include <botan/internal/rounding.h>
-#include <botan/time.h>
+#include <botan/calendar.h>
 
 namespace Botan {
 

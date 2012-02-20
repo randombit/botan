@@ -10,7 +10,6 @@
 #include <botan/ber_dec.h>
 #include <botan/asn1_str.h>
 #include <botan/pem.h>
-#include <botan/time.h>
 
 namespace Botan {
 

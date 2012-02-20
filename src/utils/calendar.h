@@ -1,12 +1,12 @@
 /*
-* Time Functions
+* Calendar Functions
 * (C) 1999-2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
-#ifndef BOTAN_TIME_H__
-#define BOTAN_TIME_H__
+#ifndef BOTAN_CALENDAR_H__
+#define BOTAN_CALENDAR_H__
 
 #include <botan/types.h>
 #include <chrono>
@@ -57,11 +57,6 @@ struct BOTAN_DLL calendar_point
 */
 BOTAN_DLL calendar_point calendar_value(
    const std::chrono::system_clock::time_point& time_point);
-
-/**
-* @return nanoseconds resolution timestamp, unknown epoch
-*/
-BOTAN_DLL u64bit get_nanoseconds_clock();
 
 }
 

@@ -14,6 +14,7 @@
 #include <memory>
 #include <vector>
 #include <chrono>
+
 namespace Botan {
 
 namespace {
@@ -24,19 +25,18 @@ typedef std::chrono::high_resolution_clock benchmark_clock;
 * Benchmark Buffered_Computation (hash or MAC)
 */
 std::pair<u64bit, u64bit> bench_buf_comp(Buffered_Computation* buf_comp,
-                                         u64bit nanoseconds_max,
+                                         std::chrono::nanoseconds max_time,
                                          const byte buf[], size_t buf_len)
    {
    u64bit reps = 0;
 
-   std::chrono::nanoseconds max_time(nanoseconds_max);
    std::chrono::nanoseconds time_used(0);
 
    while(time_used < max_time)
       {
       auto start = benchmark_clock::now();
       buf_comp->update(buf, buf_len);
-      time_used += benchmark_clock::now() - start;
+      time_used += std::chrono::duration_cast<std::chrono::nanoseconds>(benchmark_clock::now() - start);
 
       ++reps;
       }
@@ -52,14 +52,13 @@ std::pair<u64bit, u64bit> bench_buf_comp(Buffered_Computation* buf_comp,
 */
 std::pair<u64bit, u64bit>
 bench_block_cipher(BlockCipher* block_cipher,
-                   u64bit nanoseconds_max,
+                   std::chrono::nanoseconds max_time,
                    byte buf[], size_t buf_len)
    {
    const size_t in_blocks = buf_len / block_cipher->block_size();
 
    u64bit reps = 0;
 
-   std::chrono::nanoseconds max_time(nanoseconds_max);
    std::chrono::nanoseconds time_used(0);
 
    block_cipher->set_key(buf, block_cipher->maximum_keylength());
@@ -68,7 +67,8 @@ bench_block_cipher(BlockCipher* block_cipher,
       {
       auto start = benchmark_clock::now();
       block_cipher->encrypt_n(buf, buf, in_blocks);
-      time_used += benchmark_clock::now() - start;
+      time_used += std::chrono::duration_cast<std::chrono::nanoseconds>(benchmark_clock::now() - start);
+      //time_used += benchmark_clock::now() - start;
 
       ++reps;
       }
@@ -85,14 +85,13 @@ bench_block_cipher(BlockCipher* block_cipher,
 */
 std::pair<u64bit, u64bit>
 bench_stream_cipher(StreamCipher* stream_cipher,
-                    u64bit nanoseconds_max,
+                    std::chrono::nanoseconds max_time,
                     byte buf[], size_t buf_len)
    {
    u64bit reps = 0;
 
    stream_cipher->set_key(buf, stream_cipher->maximum_keylength());
 
-   std::chrono::nanoseconds max_time(nanoseconds_max);
    std::chrono::nanoseconds time_used(0);
 
    while(time_used < max_time)
@@ -115,10 +114,10 @@ bench_stream_cipher(StreamCipher* stream_cipher,
 */
 std::pair<u64bit, u64bit>
 bench_hash(HashFunction* hash,
-           u64bit nanoseconds_max,
+           std::chrono::nanoseconds max_time,
            const byte buf[], size_t buf_len)
    {
-   return bench_buf_comp(hash, nanoseconds_max, buf, buf_len);
+   return bench_buf_comp(hash, max_time, buf, buf_len);
    }
 
 /**
@@ -126,11 +125,11 @@ bench_hash(HashFunction* hash,
 */
 std::pair<u64bit, u64bit>
 bench_mac(MessageAuthenticationCode* mac,
-          u64bit nanoseconds_max,
+          std::chrono::nanoseconds max_time,
           const byte buf[], size_t buf_len)
    {
    mac->set_key(buf, mac->maximum_keylength());
-   return bench_buf_comp(mac, nanoseconds_max, buf, buf_len);
+   return bench_buf_comp(mac, max_time, buf, buf_len);
    }
 
 }
@@ -148,8 +147,7 @@ algorithm_benchmark(const std::string& name,
    if(providers.empty()) // no providers, nothing to do
       return all_results;
 
-   const u64bit ns_per_provider =
-      (static_cast<u64bit>(milliseconds) * 1000 * 1000) / providers.size();
+   std::chrono::nanoseconds ns_per_provider = milliseconds / providers.size();
 
    std::vector<byte> buf(buf_size * 1024);
    rng.randomize(&buf[0], buf.size());

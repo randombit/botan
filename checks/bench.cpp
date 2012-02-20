@@ -187,10 +187,11 @@ bool bench_algo(const std::string& algo,
    {
    Botan::Algorithm_Factory& af = Botan::global_state().algorithm_factory();
 
-   u32bit milliseconds = static_cast<u32bit>(seconds * 1000);
+   std::chrono::milliseconds ms(
+      static_cast<std::chrono::milliseconds::rep>(seconds * 1000));
 
    std::map<std::string, double> speeds =
-      algorithm_benchmark(algo, af, rng, milliseconds, buf_size);
+      algorithm_benchmark(algo, af, rng, ms, buf_size);
 
    if(speeds.empty()) // maybe a cipher mode, then?
       {

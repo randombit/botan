@@ -8,7 +8,6 @@
 #include <botan/cvc_self.h>
 #include <botan/ecc_key.h>
 #include <botan/point_gfp.h>
-#include <botan/time.h>
 #include <botan/oids.h>
 #include <sstream>
 #include <memory>

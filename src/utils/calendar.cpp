@@ -1,35 +1,13 @@
 /*
-* Time Functions
+* Calendar Functions
 * (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/time.h>
+#include <botan/calendar.h>
 #include <botan/exceptn.h>
 #include <ctime>
-
-#if defined(BOTAN_TARGET_OS_HAS_WIN32_GET_SYSTEMTIME)
-  #include <windows.h>
-#endif
-
-#if defined(BOTAN_TARGET_OS_HAS_GETTIMEOFDAY)
-  #include <sys/time.h>
-#endif
-
-#if defined(BOTAN_TARGET_OS_HAS_CLOCK_GETTIME)
-
-  #ifndef _POSIX_C_SOURCE
-    #define _POSIX_C_SOURCE 199309
-  #endif
-
-  #include <time.h>
-
-  #ifndef CLOCK_REALTIME
-    #define CLOCK_REALTIME 0
-  #endif
-
-#endif
 
 namespace Botan {
 
@@ -81,38 +59,6 @@ calendar_point calendar_value(
                          tm.tm_hour,
                          tm.tm_min,
                          tm.tm_sec);
-   }
-
-u64bit get_nanoseconds_clock()
-   {
-#if defined(BOTAN_TARGET_OS_HAS_CLOCK_GETTIME)
-
-   struct ::timespec tv;
-   ::clock_gettime(CLOCK_REALTIME, &tv);
-   return combine_timers(tv.tv_sec, tv.tv_nsec, 1000000000);
-
-#elif defined(BOTAN_TARGET_OS_HAS_GETTIMEOFDAY)
-
-   struct ::timeval tv;
-   ::gettimeofday(&tv, 0);
-   return combine_timers(tv.tv_sec, tv.tv_usec, 1000000);
-
-#elif defined(BOTAN_TARGET_OS_HAS_WIN32_GET_SYSTEMTIME)
-
-   // Returns time since January 1, 1601 in 100-ns increments
-   ::FILETIME tv;
-   ::GetSystemTimeAsFileTime(&tv);
-   u64bit tstamp = (static_cast<u64bit>(tv.dwHighDateTime) << 32) |
-                   tv.dwLowDateTime;
-
-   return (tstamp * 100); // Scale to 1 nanosecond units
-
-#else
-
-   return combine_timers(static_cast<u32bit>(std::time(0)),
-                         std::clock(), CLOCKS_PER_SEC);
-
-#endif
    }
 
 }

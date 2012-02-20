@@ -27,7 +27,6 @@
 #include <botan/cvc_self.h>
 #include <botan/cvc_cert.h>
 #include <botan/cvc_ado.h>
-#include <botan/time.h>
 
 #define TEST_DATA_DIR "checks/ecc_testdata"
 
