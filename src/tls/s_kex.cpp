@@ -210,7 +210,7 @@ MemoryVector<byte> Server_Key_Exchange::serialize() const
 bool Server_Key_Exchange::verify(const X509_Certificate& cert,
                                  Handshake_State* state) const
    {
-   std::auto_ptr<Public_Key> key(cert.subject_public_key());
+   std::unique_ptr<Public_Key> key(cert.subject_public_key());
 
    std::pair<std::string, Signature_Format> format =
       state->understand_sig_format(key.get(), m_hash_algo, m_sig_algo, false);

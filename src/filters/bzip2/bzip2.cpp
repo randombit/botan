@@ -48,7 +48,7 @@ void* bzip_malloc(void* info_ptr, int n, int size)
 void bzip_free(void* info_ptr, void* ptr)
    {
    Bzip_Alloc_Info* info = static_cast<Bzip_Alloc_Info*>(info_ptr);
-   std::map<void*, size_t>::const_iterator i = info->current_allocs.find(ptr);
+   auto i = info->current_allocs.find(ptr);
    if(i == info->current_allocs.end())
       throw Invalid_Argument("bzip_free: Got pointer not allocated by us");
    info->alloc->deallocate(ptr, i->second);

@@ -129,8 +129,7 @@ namespace {
 void verify_results(const std::string& algo,
                     const std::map<std::string, bool>& results)
    {
-   for(std::map<std::string, bool>::const_iterator i = results.begin();
-       i != results.end(); ++i)
+   for(auto i = results.begin(); i != results.end(); ++i)
       {
       if(!i->second)
          throw Self_Test_Failure(algo + " self-test failed, provider "+

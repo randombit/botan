@@ -1,8 +1,6 @@
 macro_name GCC
 
-binary_name g++
-
-has_tr1 yes
+binary_name g++-4.7.0
 
 compile_option "-c "
 output_to_option "-o "
@@ -10,7 +8,7 @@ add_include_dir_option -I
 add_lib_dir_option -L
 add_lib_option -l
 
-lang_flags "-D_REENTRANT -Wno-long-long"
+lang_flags "-D_REENTRANT -std=c++0x"
 warning_flags "-W -Wall"
 
 maintainer_warning_flags "-Werror -Weffc++ -Wall -Wextra -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wold-style-cast"
@@ -90,18 +88,16 @@ x86_64    -> "-march=SUBMODEL -momit-leaf-frame-pointer"
 
 # The 'linking' bit means "use this for both compiling *and* linking"
 <mach_abi_linking>
-x86_64  -> "-m64"
+all     -> "-pthread"
+
 mips64  -> "-mabi=64"
 s390    -> "-m31"
 s390x   -> "-m64"
 sparc32 -> "-m32 -mno-app-regs"
 sparc64 -> "-m64 -mno-app-regs"
 ppc64   -> "-m64"
+x86_64  -> "-m64"
 
-# This should probably be used on most/all targets, but the docs are unclear
-openbsd   -> "-pthread"
-freebsd   -> "-pthread"
-dragonfly -> "-pthread"
-netbsd    -> "-pthread -D_NETBSD_SOURCE"
-qnx       -> "-fexceptions -D_QNX_SOURCE"
+netbsd  -> "-D_NETBSD_SOURCE"
+qnx     -> "-fexceptions -D_QNX_SOURCE"
 </mach_abi_linking>

@@ -10,7 +10,7 @@ add_include_dir_option -I
 add_lib_dir_option -L
 add_lib_option -l
 
-lang_flags "-D_REENTRANT -ansi -Wno-long-long"
+lang_flags "-D_REENTRANT -std=c++0x"
 warning_flags "-W -Wall"
 
 makefile_style unix

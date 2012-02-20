@@ -30,12 +30,8 @@ std::vector<std::string> lookup_oids(const std::vector<std::string>& in)
    {
    std::vector<std::string> out;
 
-   std::vector<std::string>::const_iterator i = in.begin();
-   while(i != in.end())
-      {
+   for(auto i = in.begin(); i != in.end(); ++i)
       out.push_back(OIDS::lookup(OID(*i)));
-      ++i;
-      }
    return out;
    }
 
@@ -87,7 +83,7 @@ void X509_Certificate::force_decode()
       .decode(dn_subject);
 
    if(version > 2)
-      throw Decoding_Error("Unknown X.509 cert version " + Botan::to_string(version));
+      throw Decoding_Error("Unknown X.509 cert version " + std::to_string(version));
    if(sig_algo != sig_algo_inner)
       throw Decoding_Error("Algorithm identifier mismatch");
 
@@ -459,24 +455,15 @@ std::string X509_Certificate::to_string() const
 */
 X509_DN create_dn(const Data_Store& info)
    {
-   class DN_Matcher : public Data_Store::Matcher
+   auto names = info.search_for(
+      [](const std::string& key, const std::string&)
       {
-      public:
-         bool operator()(const std::string& key, const std::string&) const
-            {
-            if(key.find("X520.") != std::string::npos)
-               return true;
-            return false;
-            }
-      };
-
-   std::multimap<std::string, std::string> names =
-      info.search_with(DN_Matcher());
+         return (key.find("X520.") != std::string::npos);
+      });
 
    X509_DN dn;
 
-   std::multimap<std::string, std::string>::iterator i;
-   for(i = names.begin(); i != names.end(); ++i)
+   for(auto i = names.begin(); i != names.end(); ++i)
       dn.add_attribute(i->first, i->second);
 
    return dn;
@@ -487,32 +474,18 @@ X509_DN create_dn(const Data_Store& info)
 */
 AlternativeName create_alt_name(const Data_Store& info)
    {
-   class AltName_Matcher : public Data_Store::Matcher
+   auto names = info.search_for(
+      [](const std::string& key, const std::string&)
       {
-      public:
-         bool operator()(const std::string& key, const std::string&) const
-            {
-            for(size_t i = 0; i != matches.size(); ++i)
-               if(key.compare(matches[i]) == 0)
-                  return true;
-            return false;
-            }
-
-         AltName_Matcher(const std::string& match_any_of)
-            {
-            matches = split_on(match_any_of, '/');
-            }
-      private:
-         std::vector<std::string> matches;
-      };
-
-   std::multimap<std::string, std::string> names =
-      info.search_with(AltName_Matcher("RFC822/DNS/URI/IP"));
+         return (key == "RFC822" ||
+                 key == "DNS" ||
+                 key == "URI" ||
+                 key == "IP");
+      });
 
    AlternativeName alt_name;
 
-   std::multimap<std::string, std::string>::iterator i;
-   for(i = names.begin(); i != names.end(); ++i)
+   for(auto i = names.begin(); i != names.end(); ++i)
       alt_name.add_attribute(i->first, i->second);
 
    return alt_name;

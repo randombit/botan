@@ -42,6 +42,15 @@ BOTAN_DLL std::string replace_char(const std::string& str,
                                    char to_char);
 
 /**
+* Join a string
+* @param strs strings to join
+* @param delim the delimitor
+* @return string joined by delim
+*/
+BOTAN_DLL std::string string_join(const std::vector<std::string>& strs,
+                                  char delim);
+
+/**
 * Parse an ASN.1 OID
 * @param oid the OID in string form
 * @return OID components
@@ -58,19 +67,12 @@ BOTAN_DLL bool x500_name_cmp(const std::string& name1,
                              const std::string& name2);
 
 /**
-* Convert a number to a string
-* @param n the integer to convert to a string
-* @param min_len the min length of the output string
-* @return n convert to a string
-*/
-BOTAN_DLL std::string to_string(u64bit n, size_t min_len = 0);
-
-/**
 * Convert a string to a number
 * @param str the string to convert
 * @return number value of the string
 */
-BOTAN_DLL u32bit to_u32bit(const std::string& str);
+inline u32bit to_u32bit(const std::string& str)
+   { return std::stoul(str); }
 
 /**
 * Convert a time specification to a number

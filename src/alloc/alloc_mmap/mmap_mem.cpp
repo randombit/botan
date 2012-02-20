@@ -123,7 +123,7 @@ void* MemoryMapping_Allocator::alloc_block(size_t n)
 */
 void MemoryMapping_Allocator::dealloc_block(void* ptr, size_t n)
    {
-   if(ptr == 0)
+   if(ptr == nullptr)
       return;
 
    const byte PATTERNS[] = { 0x00, 0xF5, 0x5A, 0xAF, 0x00 };

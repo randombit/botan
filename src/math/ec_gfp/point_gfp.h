@@ -59,15 +59,40 @@ class BOTAN_DLL PointGFp
       PointGFp(const CurveGFp& curve);
 
       /**
+      * Copy constructor
+      */
+      PointGFp(const PointGFp&) = default;
+
+      /**
+      * Move Constructor
+      */
+      PointGFp(PointGFp&& other)
+         {
+         this->swap(other);
+         }
+
+      /**
+      * Standard Assignment
+      */
+      PointGFp& operator=(const PointGFp&) = default;
+
+      /**
+      * Move Assignment
+      */
+      PointGFp& operator=(PointGFp&& other)
+         {
+         if(this != &other)
+            this->swap(other);
+         return (*this);
+         }
+
+      /**
       * Construct a point from its affine coordinates
       * @param curve the base curve
       * @param x affine x coordinate
       * @param y affine y coordinate
       */
       PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y);
-
-      //PointGFp(const PointGFp& other) = default;
-      //PointGFp& operator=(const PointGFp& other) = default;
 
       /**
       * += Operator

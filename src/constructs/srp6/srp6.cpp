@@ -20,7 +20,7 @@ BigInt hash_seq(const std::string& hash_id,
                 const BigInt& in1,
                 const BigInt& in2)
    {
-   std::auto_ptr<HashFunction> hash_fn(
+   std::unique_ptr<HashFunction> hash_fn(
       global_state().algorithm_factory().make_hash_function(hash_id));
 
    hash_fn->update(BigInt::encode_1363(in1, pad_to));
@@ -35,7 +35,7 @@ BigInt hash_seq(const std::string& hash_id,
                 const BigInt& in2,
                 const BigInt& in3)
    {
-   std::auto_ptr<HashFunction> hash_fn(
+   std::unique_ptr<HashFunction> hash_fn(
       global_state().algorithm_factory().make_hash_function(hash_id));
 
    hash_fn->update(BigInt::encode_1363(in1, pad_to));
@@ -50,7 +50,7 @@ BigInt compute_x(const std::string& hash_id,
                  const std::string& password,
                  const MemoryRegion<byte>& salt)
    {
-   std::auto_ptr<HashFunction> hash_fn(
+   std::unique_ptr<HashFunction> hash_fn(
       global_state().algorithm_factory().make_hash_function(hash_id));
 
    hash_fn->update(identifier);

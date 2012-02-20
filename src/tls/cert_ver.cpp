@@ -92,7 +92,7 @@ MemoryVector<byte> Certificate_Verify::serialize() const
 bool Certificate_Verify::verify(const X509_Certificate& cert,
                                 Handshake_State* state)
    {
-   std::auto_ptr<Public_Key> key(cert.subject_public_key());
+   std::unique_ptr<Public_Key> key(cert.subject_public_key());
 
    std::pair<std::string, Signature_Format> format =
       state->understand_sig_format(key.get(), hash_algo, sig_algo, true);

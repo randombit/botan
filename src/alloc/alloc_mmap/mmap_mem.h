@@ -21,10 +21,6 @@ namespace Botan {
 class MemoryMapping_Allocator : public Pooling_Allocator
    {
    public:
-      /**
-      * @param mutex used for internal locking
-      */
-      MemoryMapping_Allocator(Mutex* mutex) : Pooling_Allocator(mutex) {}
       std::string type() const { return "mmap"; }
    private:
       void* alloc_block(size_t);

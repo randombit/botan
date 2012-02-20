@@ -164,6 +164,7 @@ EAC1_1_ADO create_ado_req(Private_Key const& key,
       {
       throw Invalid_Argument("CVC_EAC::create_self_signed_cert(): unsupported key type");
       }
+
    std::string padding_and_hash = padding_and_hash_from_oid(req.signature_algorithm().oid);
    PK_Signer signer(*priv_key, padding_and_hash);
    SecureVector<byte> tbs_bits = req.BER_encode();
@@ -193,9 +194,8 @@ EAC1_1_CVC create_cvca(Private_Key const& key,
       }
    EAC1_1_CVC_Options opts;
    opts.car = car;
-   const u64bit current_time = system_time();
 
-   opts.ced = ASN1_Ced(current_time);
+   opts.ced = ASN1_Ced(std::chrono::system_clock::now());
    opts.cex = ASN1_Cex(opts.ced);
    opts.cex.add_months(cvca_validity_months);
    opts.holder_auth_templ = (CVCA | (iris * IRIS) | (fingerpr * FINGERPRINT));
@@ -210,12 +210,12 @@ EAC1_1_CVC link_cvca(EAC1_1_CVC const& signer,
                      EAC1_1_CVC const& signee,
                      RandomNumberGenerator& rng)
    {
-   ECDSA_PrivateKey const* priv_key = dynamic_cast<ECDSA_PrivateKey const*>(&key);
+   const ECDSA_PrivateKey* priv_key = dynamic_cast<ECDSA_PrivateKey const*>(&key);
+
    if (priv_key == 0)
-      {
-      throw Invalid_Argument("CVC_EAC::create_self_signed_cert(): unsupported key type");
-      }
-   ASN1_Ced ced(system_time());
+      throw Invalid_Argument("link_cvca(): unsupported key type");
+
+   ASN1_Ced ced(std::chrono::system_clock::now());
    ASN1_Cex cex(signee.get_cex());
    if (*static_cast<EAC_Time*>(&ced) > *static_cast<EAC_Time*>(&cex))
       {
@@ -232,7 +232,7 @@ EAC1_1_CVC link_cvca(EAC1_1_CVC const& signer,
    AlgorithmIdentifier sig_algo = signer.signature_algorithm();
    std::string padding_and_hash = padding_and_hash_from_oid(sig_algo.oid);
    PK_Signer pk_signer(*priv_key, padding_and_hash);
-   std::auto_ptr<Public_Key> pk(signee.subject_public_key());
+   std::unique_ptr<Public_Key> pk(signee.subject_public_key());
    ECDSA_PublicKey* subj_pk = dynamic_cast<ECDSA_PublicKey*>(pk.get());
    subj_pk->set_parameter_encoding(EC_DOMPAR_ENC_EXPLICIT);
 
@@ -262,13 +262,19 @@ EAC1_1_CVC sign_request(EAC1_1_CVC const& signer_cert,
       throw Invalid_Argument("CVC_EAC::create_self_signed_cert(): unsupported key type");
       }
    std::string chr_str = signee.get_chr().value();
-   chr_str += to_string(seqnr, seqnr_len);
+
+   std::string seqnr_string = std::to_string(seqnr);
+
+   while(seqnr_string.size() < seqnr_len)
+      seqnr_string = '0' + seqnr_string;
+
+   chr_str += seqnr_string;
    ASN1_Chr chr(chr_str);
    std::string padding_and_hash = padding_and_hash_from_oid(signee.signature_algorithm().oid);
    PK_Signer pk_signer(*priv_key, padding_and_hash);
-   std::auto_ptr<Public_Key> pk(signee.subject_public_key());
+   std::unique_ptr<Public_Key> pk(signee.subject_public_key());
    ECDSA_PublicKey*  subj_pk = dynamic_cast<ECDSA_PublicKey*>(pk.get());
-   std::auto_ptr<Public_Key> signer_pk(signer_cert.subject_public_key());
+   std::unique_ptr<Public_Key> signer_pk(signer_cert.subject_public_key());
 
    // for the case that the domain parameters are not set...
    // (we use those from the signer because they must fit)
@@ -277,8 +283,9 @@ EAC1_1_CVC sign_request(EAC1_1_CVC const& signer_cert,
    subj_pk->set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
 
    AlgorithmIdentifier sig_algo(signer_cert.signature_algorithm());
-   const u64bit current_time = system_time();
-   ASN1_Ced ced(current_time);
+
+   ASN1_Ced ced(std::chrono::system_clock::now());
+
    u32bit chat_val;
    u32bit chat_low = signer_cert.get_chat_value() & 0x3; // take the chat rights from signer
    ASN1_Cex cex(ced);
