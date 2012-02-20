@@ -75,7 +75,8 @@ void HMAC_RNG::reseed(size_t poll_bits)
 
       while(!accum.polling_goal_achieved() && poll_attempt < poll_bits)
          {
-         entropy_sources[poll_attempt % entropy_sources.size()]->poll(accum);
+         const size_t src_idx = poll_attempt % entropy_sources.size();
+         entropy_sources[src_idx]->poll(accum);
          ++poll_attempt;
          }
       }
