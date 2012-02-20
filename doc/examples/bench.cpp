@@ -67,29 +67,42 @@ const std::string algos[] = {
    "",
 };
 
-int main()
+
+void benchmark_algo(const std::string& algo,
+                    RandomNumberGenerator& rng)
    {
-   LibraryInitializer init;
+   const u32bit milliseconds = 1000;
+   Algorithm_Factory& af = global_state().algorithm_factory();
 
    std::map<std::string, double> speeds =
       algorithm_benchmark(algo, af, rng, milliseconds, 16*1024);
 
-   Algorithm_Factory& af = global_state().algorithm_factory();
+   std::cout << algo << ":";
 
-   for(u32bit i = 0; algos[i] != ""; ++i)
+   for(std::map<std::string, double>::const_iterator i = speeds.begin();
+       i != speeds.end(); ++i)
       {
-      std::string algo = algos[i];
+      std::cout << " " << i->second << " [" << i->first << "]";
+      }
+   std::cout << "\n";
+   }
 
-      std::map<std::string, double> speeds =
-         algorithm_benchmark(algos[i], milliseconds, rng, af);
+}
 
-      std::cout << algo << ":";
+int main(int argc, char* argv[])
+   {
+   LibraryInitializer init;
 
-      for(std::map<std::string, double>::const_iterator i = speeds.begin();
-          i != speeds.end(); ++i)
-         {
-         std::cout << " " << i->second << " [" << i->first << "]";
-         }
-      std::cout << "\n";
+   AutoSeeded_RNG rng;
+
+   if(argc == 1) // no args, benchmark everything
+      {
+      for(size_t i = 0; algos[i] != ""; ++i)
+         benchmark_algo(algos[i], rng);
+      }
+   else
+      {
+      for(size_t i = 1; argv[i]; ++i)
+         benchmark_algo(argv[i], rng);
       }
    }

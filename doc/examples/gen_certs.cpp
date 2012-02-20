@@ -79,6 +79,8 @@ void save_pair(const std::string& name,
    key_out.close();
    }
 
+}
+
 typedef std::chrono::duration<int, std::ratio<31556926>> years;
 
 int main()

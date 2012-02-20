@@ -9,6 +9,7 @@
 #include <botan/ecdsa.h>
 #include <iostream>
 #include <fstream>
+#include <memory>
 
 bool value_exists(const std::vector<std::string>& vec,
                   const std::string& val)
@@ -60,7 +61,7 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
             X509_Certificate cert(cert_file_name);
             Private_Key* key = PKCS8::load_key(key_file_name, rng);
 
-            std::cout << "Loaded existing key/cert from " << cert_file_name << " and " << key_file_name << "\n";
+            //std::cout << "Loaded existing key/cert from " << cert_file_name << " and " << key_file_name << "\n";
 
             return std::make_pair(cert, key);
             }
@@ -77,7 +78,7 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
          opts.email = "root@" + hostname;
          opts.dns = hostname;
 
-         std::auto_ptr<Private_Key> key;
+         std::unique_ptr<Private_Key> key;
          if(key_type == "rsa")
             key.reset(new RSA_PrivateKey(rng, 2048));
          else if(key_type == "dsa")

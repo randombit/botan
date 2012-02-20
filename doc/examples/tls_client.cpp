@@ -20,7 +20,7 @@
 
 using namespace Botan;
 
-using namespace std::tr1::placeholders;
+using namespace std::placeholders;
 
 int connect_to_host(const std::string& host, u16bit port)
    {
@@ -120,7 +120,7 @@ void doit(RandomNumberGenerator& rng,
    {
    int sockfd = connect_to_host(host, port);
 
-   TLS::Client client(std::tr1::bind(socket_write, sockfd, _1, _2),
+   TLS::Client client(std::bind(socket_write, sockfd, _1, _2),
                      process_data,
                      handshake_complete,
                      session_manager,

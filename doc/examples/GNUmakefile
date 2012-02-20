@@ -1,9 +1,9 @@
 
 BOTAN_CONFIG = botan-config
 
-CXX       = g++-4.5-20091112
+CXX       = g++-4.7.0
 CFLAGS    = -O2 -ansi -std=c++0x -W -Wall -I../../build/include
-LIBS      = -L../.. -lbotan-1.10
+LIBS      = -L../.. -lbotan-1.99
 
 SRCS=$(wildcard *.cpp)
 
@@ -20,5 +20,8 @@ clean:
 eax_test: eax_test.cpp
 	$(CXX) $(CFLAGS) $? $(LIBS) -lboost_regex -o $@
 
-asio_tls_server: asio_tls_server.cpp
-	$(CXX) $(CFLAGS) $? $(LIBS) -lboost_thread -lboost_system -o $@
+asio_tls_server.o: asio_tls_server.cpp
+	g++-4.6.0 -c $(CFLAGS) -I/usr/local/asio-1.5.3/include $? -o $@
+
+asio_tls_server: asio_tls_server.o
+	$(CXX) $? $(LIBS) -lboost_thread -lboost_system -lpthread -o $@
