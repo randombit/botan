@@ -13,18 +13,6 @@ namespace Botan {
 
 namespace {
 
-/*
-* Combine a two time values into a single one
-*/
-u64bit combine_timers(u32bit seconds, u32bit parts, u32bit parts_hz)
-   {
-   static const u64bit NANOSECONDS_UNITS = 1000000000;
-
-   u64bit res = seconds * NANOSECONDS_UNITS;
-   res += parts * (NANOSECONDS_UNITS / parts_hz);
-   return res;
-   }
-
 std::tm do_gmtime(std::time_t time_val)
    {
    std::tm tm;
