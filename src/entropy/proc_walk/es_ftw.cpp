@@ -71,10 +71,8 @@ std::pair<struct dirent*, std::string> Directory_Walker::get_next_dirent()
    {
    while(m_cur_dir.first)
       {
-      struct dirent* dir = ::readdir(m_cur_dir.first);
-
-      if(dir)
-         return std::make_pair<struct dirent*, std::string>(dir, m_cur_dir.second);
+      if(struct dirent* dir = ::readdir(m_cur_dir.first))
+         return std::make_pair(dir, m_cur_dir.second);
 
       ::closedir(m_cur_dir.first);
       m_cur_dir = std::make_pair<DIR*, std::string>(0, "");
