@@ -37,7 +37,19 @@ void set_default_oids(Library_State& config)
    add_oid(config, "1.3.6.1.4.1.3029.1.2.1", "ElGamal");
    add_oid(config, "1.3.6.1.4.1.25258.1.1", "RW");
    add_oid(config, "1.3.6.1.4.1.25258.1.2", "NR");
-   add_oid(config, "1.2.840.10045.2.1", "ECDSA"); // X9.62
+
+   // X9.62 ecPublicKey, valid for ECDSA and ECDH (RFC 3279 sec 2.3.5)
+   add_oid(config, "1.2.840.10045.2.1", "ECDSA");
+
+   /*
+   * This is an OID defined for ECDH keys though rarely used for such.
+   * In this configuration it is accepted on decoding, but not used for
+   * encoding. You can enable it for encoding by calling
+   *    global_state().set("str2oid", "ECDH", "1.3.132.1.12")
+   * from your application code.
+   */
+   config.set("oid2str", "1.3.132.1.12", "ECDH");
+
    add_oid(config, "1.2.643.2.2.19", "GOST-34.10"); // RFC 4491
 
    /* Ciphers */
