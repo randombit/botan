@@ -19,14 +19,14 @@ namespace TLS {
 * TLS Client Constructor
 */
 Client::Client(std::tr1::function<void (const byte[], size_t)> output_fn,
-                       std::tr1::function<void (const byte[], size_t, Alert)> proc_fn,
-                       std::tr1::function<bool (const Session&)> handshake_fn,
-                       Session_Manager& session_manager,
-                       Credentials_Manager& creds,
-                       const Policy& policy,
-                       RandomNumberGenerator& rng,
-                       const std::string& hostname,
-                       std::tr1::function<std::string (std::vector<std::string>)> next_protocol) :
+               std::tr1::function<void (const byte[], size_t, Alert)> proc_fn,
+               std::tr1::function<bool (const Session&)> handshake_fn,
+               Session_Manager& session_manager,
+               Credentials_Manager& creds,
+               const Policy& policy,
+               RandomNumberGenerator& rng,
+               const std::string& hostname,
+               std::tr1::function<std::string (std::vector<std::string>)> next_protocol) :
    Channel(output_fn, proc_fn, handshake_fn),
    policy(policy),
    rng(rng),

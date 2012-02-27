@@ -17,16 +17,16 @@ namespace Botan {
 namespace TLS {
 
 Session::Session(const MemoryRegion<byte>& session_identifier,
-                         const MemoryRegion<byte>& master_secret,
-                         Protocol_Version version,
-                         u16bit ciphersuite,
-                         byte compression_method,
-                         Connection_Side side,
-                         bool secure_renegotiation_supported,
-                         size_t fragment_size,
-                         const std::vector<X509_Certificate>& certs,
-                         const std::string& sni_hostname,
-                         const std::string& srp_identifier) :
+                 const MemoryRegion<byte>& master_secret,
+                 Protocol_Version version,
+                 u16bit ciphersuite,
+                 byte compression_method,
+                 Connection_Side side,
+                 bool secure_renegotiation_supported,
+                 size_t fragment_size,
+                 const std::vector<X509_Certificate>& certs,
+                 const std::string& sni_hostname,
+                 const std::string& srp_identifier) :
    m_start_time(system_time()),
    m_identifier(session_identifier),
    m_master_secret(master_secret),

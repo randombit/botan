@@ -82,7 +82,7 @@ class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
       *        seconds have elapsed from initial handshake.
       */
       Session_Manager_In_Memory(size_t max_sessions = 1000,
-                                    size_t session_lifetime = 7200) :
+                                size_t session_lifetime = 7200) :
          max_sessions(max_sessions),
          session_lifetime(session_lifetime)
             {}

@@ -27,14 +27,14 @@ class BOTAN_DLL Server : public Channel
       * Server initialization
       */
       Server(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
-                 std::tr1::function<void (const byte[], size_t, Alert)> proc_fn,
-                 std::tr1::function<bool (const Session&)> handshake_complete,
-                 Session_Manager& session_manager,
-                 Credentials_Manager& creds,
-                 const Policy& policy,
-                 RandomNumberGenerator& rng,
-                 const std::vector<std::string>& protocols =
-                    std::vector<std::string>());
+             std::tr1::function<void (const byte[], size_t, Alert)> proc_fn,
+             std::tr1::function<bool (const Session&)> handshake_complete,
+             Session_Manager& session_manager,
+             Credentials_Manager& creds,
+             const Policy& policy,
+             RandomNumberGenerator& rng,
+             const std::vector<std::string>& protocols =
+                std::vector<std::string>());
 
       void renegotiate();
 

@@ -43,15 +43,15 @@ class BOTAN_DLL Client : public Channel
       *        the client should return the protocol it would like to use.
       */
       Client(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
-                 std::tr1::function<void (const byte[], size_t, Alert)> proc_fn,
-                 std::tr1::function<bool (const Session&)> handshake_complete,
-                 Session_Manager& session_manager,
-                 Credentials_Manager& creds,
-                 const Policy& policy,
-                 RandomNumberGenerator& rng,
-                 const std::string& servername = "",
-                 std::tr1::function<std::string (std::vector<std::string>)> next_protocol =
-                    std::tr1::function<std::string (std::vector<std::string>)>());
+             std::tr1::function<void (const byte[], size_t, Alert)> proc_fn,
+             std::tr1::function<bool (const Session&)> handshake_complete,
+             Session_Manager& session_manager,
+             Credentials_Manager& creds,
+             const Policy& policy,
+             RandomNumberGenerator& rng,
+             const std::string& servername = "",
+             std::tr1::function<std::string (std::vector<std::string>)> next_protocol =
+                std::tr1::function<std::string (std::vector<std::string>)>());
 
       void renegotiate();
    private:
