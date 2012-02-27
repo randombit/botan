@@ -282,6 +282,16 @@ class tls_server
       Credentials_Manager_Simple m_creds;
    };
 
+size_t choose_thread_count()
+   {
+   size_t result = boost::thread::hardware_concurrency();
+
+   if(result)
+      return result;
+
+   return 2;
+   }
+
 int main()
    {
    try
@@ -289,13 +299,10 @@ int main()
       Botan::LibraryInitializer init("thread_safe=true");
       boost::asio::io_service io_service;
 
-      unsigned short port = 4433;
+      unsigned short port = 4434;
       tls_server server(io_service, port);
 
-      size_t num_threads = boost::thread::hardware_concurrency();
-
-      if(num_threads == 0)
-         return num_threads = 2;
+      const size_t num_threads = choose_thread_count();
 
       std::cout << "Using " << num_threads << " threads\n";
 

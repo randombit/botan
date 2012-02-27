@@ -9,6 +9,7 @@
 #include <botan/ecdsa.h>
 #include <iostream>
 #include <fstream>
+#include <memory>
 
 bool value_exists(const std::vector<std::string>& vec,
                   const std::string& val)
@@ -60,7 +61,7 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
             X509_Certificate cert(cert_file_name);
             Private_Key* key = PKCS8::load_key(key_file_name, rng);
 
-            std::cout << "Loaded existing key/cert from " << cert_file_name << " and " << key_file_name << "\n";
+            //std::cout << "Loaded existing key/cert from " << cert_file_name << " and " << key_file_name << "\n";
 
             return std::make_pair(cert, key);
             }
@@ -79,16 +80,16 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
 
          std::auto_ptr<Private_Key> key;
          if(key_type == "rsa")
-            key.reset(new RSA_PrivateKey(rng, 2048));
+            key.reset(new RSA_PrivateKey(rng, 1024));
          else if(key_type == "dsa")
-            key.reset(new DSA_PrivateKey(rng, DL_Group("dsa/botan/2048")));
+            key.reset(new DSA_PrivateKey(rng, DL_Group("dsa/jce/1024")));
          else if(key_type == "ecdsa")
             key.reset(new ECDSA_PrivateKey(rng, EC_Group("secp256r1")));
          else
             throw std::runtime_error("Don't know what to do about key type '" + key_type + "'");
 
          X509_Certificate cert =
-            X509::create_self_signed_cert(opts, *key, "SHA-256", rng);
+            X509::create_self_signed_cert(opts, *key, "SHA-1", rng);
 
          // Now save both
 
