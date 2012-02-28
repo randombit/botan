@@ -421,7 +421,6 @@ void Server::process_handshake_msg(Handshake_Type type,
          throw TLS_Exception(Alert::DECRYPT_ERROR,
                              "Finished message didn't verify");
 
-      // already sent it if resuming
       if(!state->server_finished)
          {
          state->hash.update(type, contents);
@@ -435,26 +434,26 @@ void Server::process_handshake_msg(Handshake_Type type,
 
          if(state->client_certs && state->client_verify)
             peer_certs = state->client_certs->cert_chain();
+
+         // already sent finished if resuming, so this is a new session
+
+         Session session_info(
+            state->server_hello->session_id(),
+            state->keys.master_secret(),
+            state->server_hello->version(),
+            state->server_hello->ciphersuite(),
+            state->server_hello->compression_method(),
+            SERVER,
+            secure_renegotiation.supported(),
+            state->server_hello->fragment_size(),
+            peer_certs,
+            m_hostname,
+            ""
+            );
+
+         if(handshake_fn(session_info))
+            session_manager.save(session_info);
          }
-
-      Session session_info(
-         state->server_hello->session_id(),
-         state->keys.master_secret(),
-         state->server_hello->version(),
-         state->server_hello->ciphersuite(),
-         state->server_hello->compression_method(),
-         SERVER,
-         secure_renegotiation.supported(),
-         state->server_hello->fragment_size(),
-         peer_certs,
-         m_hostname,
-         ""
-         );
-
-      if(handshake_fn(session_info))
-         session_manager.save(session_info);
-      else
-         session_manager.remove_entry(session_info.session_id());
 
       secure_renegotiation.update(state->client_finished,
                                   state->server_finished);
