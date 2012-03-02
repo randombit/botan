@@ -97,14 +97,12 @@ class BOTAN_DLL Policy
       /**
       * @return the minimum version that we are willing to negotiate
       */
-      virtual Protocol_Version min_version() const
-         { return Protocol_Version::SSL_V3; }
+      virtual Protocol_Version min_version() const;
 
       /**
       * @return the version we would prefer to negotiate
       */
-      virtual Protocol_Version pref_version() const
-         { return Protocol_Version::TLS_V12; }
+      virtual Protocol_Version pref_version() const;
 
       /**
       * Return allowed ciphersuites, in order of preference
