@@ -27,34 +27,11 @@ MemoryVector<byte> make_hello_random(RandomNumberGenerator& rng)
    }
 
 /*
-* Encode and send a Handshake message
-*/
-void Handshake_Message::send(Record_Writer& writer, Handshake_Hash& hash) const
-   {
-   MemoryVector<byte> buf = serialize();
-   MemoryVector<byte> send_buf(4);
-
-   const size_t buf_size = buf.size();
-
-   send_buf[0] = type();
-
-   for(size_t i = 1; i != 4; ++i)
-     send_buf[i] = get_byte<u32bit>(i, buf_size);
-
-   send_buf += buf;
-
-   hash.update(send_buf);
-
-   writer.send(HANDSHAKE, &send_buf[0], send_buf.size());
-   }
-
-/*
 * Create a new Hello Request message
 */
 Hello_Request::Hello_Request(Record_Writer& writer)
    {
-   Handshake_Hash dummy; // FIXME: *UGLY*
-   send(writer, dummy);
+   writer.send(*this);
    }
 
 /*
@@ -105,7 +82,7 @@ Client_Hello::Client_Hello(Record_Writer& writer,
       for(size_t j = 0; j != sigs.size(); ++j)
          m_supported_algos.push_back(std::make_pair(hashes[i], sigs[j]));
 
-   send(writer, hash);
+   hash.update(writer.send(*this));
    }
 
 /*
@@ -130,7 +107,7 @@ Client_Hello::Client_Hello(Record_Writer& writer,
 
    // set m_supported_algos + m_supported_curves here?
 
-   send(writer, hash);
+   hash.update(writer.send(*this));
    }
 
 Client_Hello::Client_Hello(const MemoryRegion<byte>& buf, Handshake_Type type)

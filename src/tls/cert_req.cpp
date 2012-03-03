@@ -8,6 +8,7 @@
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_extensions.h>
+#include <botan/tls_record.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/loadstor.h>
@@ -74,7 +75,7 @@ Certificate_Req::Certificate_Req(Record_Writer& writer,
             m_supported_algos.push_back(std::make_pair(hashes[i], sigs[j]));
       }
 
-   send(writer, hash);
+   hash.update(writer.send(*this));
    }
 
 /**
@@ -176,7 +177,7 @@ Certificate::Certificate(Record_Writer& writer,
                          const std::vector<X509_Certificate>& cert_list)
    {
    certs = cert_list;
-   send(writer, hash);
+   hash.update(writer.send(*this));
    }
 
 /**

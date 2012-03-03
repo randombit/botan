@@ -6,6 +6,7 @@
 */
 
 #include <botan/tls_record.h>
+#include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_session_key.h>
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/lookup.h>
@@ -142,6 +143,25 @@ void Record_Writer::activate(Connection_Side side,
       }
    else
       throw Invalid_Argument("Record_Writer: Unknown hash " + mac_algo);
+   }
+
+MemoryVector<byte> Record_Writer::send(Handshake_Message& msg)
+   {
+   const MemoryVector<byte> buf = msg.serialize();
+   MemoryVector<byte> send_buf(4);
+
+   const size_t buf_size = buf.size();
+
+   send_buf[0] = msg.type();
+
+   for(size_t i = 1; i != 4; ++i)
+     send_buf[i] = get_byte<u32bit>(i, buf_size);
+
+   send_buf += buf;
+
+   send(HANDSHAKE, &send_buf[0], send_buf.size());
+
+   return send_buf;
    }
 
 /*

@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/tls_messages.h>
+#include <botan/tls_record.h>
 #include <memory>
 
 namespace Botan {
@@ -70,7 +71,7 @@ Finished::Finished(Record_Writer& writer,
                    Connection_Side side)
    {
    verification_data = finished_compute_verify(state, side);
-   send(writer, state->hash);
+   state->hash.update(writer.send(*this));
    }
 
 /*

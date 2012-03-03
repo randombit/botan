@@ -8,6 +8,7 @@
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_extensions.h>
 #include <botan/internal/tls_reader.h>
+#include <botan/tls_record.h>
 
 namespace Botan {
 
@@ -18,7 +19,7 @@ Next_Protocol::Next_Protocol(Record_Writer& writer,
                              const std::string& protocol) :
    m_protocol(protocol)
    {
-   send(writer, hash);
+   hash.update(writer.send(*this));
    }
 
 Next_Protocol::Next_Protocol(const MemoryRegion<byte>& buf)

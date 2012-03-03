@@ -33,14 +33,14 @@ class Record_Reader;
 class Handshake_Message
    {
    public:
-      void send(Record_Writer& writer, Handshake_Hash& hash) const;
-
+      virtual MemoryVector<byte> serialize() const = 0;
       virtual Handshake_Type type() const = 0;
 
+      Handshake_Message() {}
       virtual ~Handshake_Message() {}
    private:
+      Handshake_Message(const Handshake_Message&) {}
       Handshake_Message& operator=(const Handshake_Message&) { return (*this); }
-      virtual MemoryVector<byte> serialize() const = 0;
    };
 
 MemoryVector<byte> make_hello_random(RandomNumberGenerator& rng);

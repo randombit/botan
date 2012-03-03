@@ -51,7 +51,7 @@ Server_Hello::Server_Hello(Record_Writer& writer,
 
    comp_method = policy.choose_compression(c_hello.compression_methods());
 
-   send(writer, hash);
+   hash.update(writer.send(*this));
    }
 
 /*
@@ -80,7 +80,7 @@ Server_Hello::Server_Hello(Record_Writer& writer,
    m_next_protocol(client_has_npn),
    m_next_protocols(next_protocols)
    {
-   send(writer, hash);
+   hash.update(writer.send(*this));
    }
 
 /*
@@ -174,7 +174,7 @@ MemoryVector<byte> Server_Hello::serialize() const
 Server_Hello_Done::Server_Hello_Done(Record_Writer& writer,
                                      Handshake_Hash& hash)
    {
-   send(writer, hash);
+   hash.update(writer.send(*this));
    }
 
 /*
