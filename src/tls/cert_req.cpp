@@ -12,7 +12,6 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/loadstor.h>
-#include <botan/secqueue.h>
 
 namespace Botan {
 
@@ -174,9 +173,9 @@ MemoryVector<byte> Certificate_Req::serialize() const
 */
 Certificate::Certificate(Record_Writer& writer,
                          Handshake_Hash& hash,
-                         const std::vector<X509_Certificate>& cert_list)
+                         const std::vector<X509_Certificate>& cert_list) :
+   m_certs(cert_list)
    {
-   certs = cert_list;
    hash.update(writer.send(*this));
    }
 
@@ -190,27 +189,25 @@ Certificate::Certificate(const MemoryRegion<byte>& buf)
 
    const size_t total_size = make_u32bit(0, buf[0], buf[1], buf[2]);
 
-   SecureQueue queue;
-   queue.write(&buf[3], buf.size() - 3);
-
-   if(queue.size() != total_size)
+   if(total_size != buf.size() - 3)
       throw Decoding_Error("Certificate: Message malformed");
 
-   while(queue.size())
+   const byte* certs = &buf[3];
+
+   while(certs != buf.end())
       {
-      if(queue.size() < 3)
+      if(buf.end() - certs < 3)
          throw Decoding_Error("Certificate: Message malformed");
 
-      byte len[3];
-      queue.read(len, 3);
+      const size_t cert_size = make_u32bit(0, certs[0], certs[1], certs[2]);
 
-      const size_t cert_size = make_u32bit(0, len[0], len[1], len[2]);
-      const size_t original_size = queue.size();
-
-      X509_Certificate cert(queue);
-      if(queue.size() + cert_size != original_size)
+      if(buf.end() - certs < (3 + cert_size))
          throw Decoding_Error("Certificate: Message malformed");
-      certs.push_back(cert);
+
+      DataSource_Memory cert_buf(&certs[3], cert_size);
+      m_certs.push_back(X509_Certificate(cert_buf));
+
+      certs += cert_size + 3;
       }
    }
 
@@ -221,9 +218,9 @@ MemoryVector<byte> Certificate::serialize() const
    {
    MemoryVector<byte> buf(3);
 
-   for(size_t i = 0; i != certs.size(); ++i)
+   for(size_t i = 0; i != m_certs.size(); ++i)
       {
-      MemoryVector<byte> raw_cert = certs[i].BER_encode();
+      MemoryVector<byte> raw_cert = m_certs[i].BER_encode();
       const size_t cert_size = raw_cert.size();
       for(size_t i = 0; i != 3; ++i)
          buf.push_back(get_byte<u32bit>(i+1, cert_size));

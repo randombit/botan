@@ -31,7 +31,7 @@ Certificate_Verify::Certificate_Verify(Record_Writer& writer,
 
    PK_Signer signer(*priv_key, format.first, format.second);
 
-   if(state->version == Protocol_Version::SSL_V3)
+   if(state->version() == Protocol_Version::SSL_V3)
       {
       SecureVector<byte> md5_sha = state->hash.final_ssl3(
          state->keys.master_secret());
@@ -100,7 +100,7 @@ bool Certificate_Verify::verify(const X509_Certificate& cert,
 
    PK_Verifier verifier(*key, format.first, format.second);
 
-   if(state->version == Protocol_Version::SSL_V3)
+   if(state->version() == Protocol_Version::SSL_V3)
       {
       SecureVector<byte> md5_sha = state->hash.final_ssl3(
          state->keys.master_secret());

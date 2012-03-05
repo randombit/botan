@@ -112,7 +112,7 @@ void Server::renegotiate()
    if(state)
       return; // currently in handshake
 
-   state = new Handshake_State;
+   state = new Handshake_State(new Stream_Handshake_Reader);
    state->set_expected_next(CLIENT_HELLO);
    Hello_Request hello_req(writer);
    }
@@ -137,7 +137,7 @@ void Server::read_handshake(byte rec_type,
    {
    if(rec_type == HANDSHAKE && !state)
       {
-      state = new Handshake_State;
+      state = new Handshake_State(new Stream_Handshake_Reader);
       state->set_expected_next(CLIENT_HELLO);
       }
 
@@ -183,14 +183,14 @@ void Server::process_handshake_msg(Handshake_Type type,
                              "Client version is unacceptable by policy");
 
       if(client_version <= policy.pref_version())
-         state->version = client_version;
+         state->set_version(client_version);
       else
-         state->version = policy.pref_version();
+         state->set_version(policy.pref_version());
 
       secure_renegotiation.update(state->client_hello);
 
-      writer.set_version(state->version);
-      reader.set_version(state->version);
+      writer.set_version(state->version());
+      reader.set_version(state->version());
 
       Session session_info;
       const bool resuming = check_for_resume(session_info,
@@ -261,7 +261,7 @@ void Server::process_handshake_msg(Handshake_Type type,
          state->server_hello = new Server_Hello(
             writer,
             state->hash,
-            state->version,
+            state->version(),
             *(state->client_hello),
             available_cert_types,
             policy,
@@ -323,7 +323,7 @@ void Server::process_handshake_msg(Handshake_Type type,
                                                   state->hash,
                                                   policy,
                                                   client_auth_CAs,
-                                                  state->version);
+                                                  state->version());
 
             state->set_expected_next(CERTIFICATE);
             }
@@ -364,7 +364,7 @@ void Server::process_handshake_msg(Handshake_Type type,
       }
    else if(type == CERTIFICATE_VERIFY)
       {
-      state->client_verify = new Certificate_Verify(contents, state->version);
+      state->client_verify = new Certificate_Verify(contents, state->version());
 
       const std::vector<X509_Certificate>& client_certs =
          state->client_certs->cert_chain();

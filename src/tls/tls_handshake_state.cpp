@@ -76,7 +76,7 @@ u32bit bitmask_for_handshake_type(Handshake_Type type)
 /*
 * Initialize the SSL/TLS Handshake State
 */
-Handshake_State::Handshake_State()
+Handshake_State::Handshake_State(Handshake_Reader* reader)
    {
    client_hello = 0;
    server_hello = 0;
@@ -92,12 +92,19 @@ Handshake_State::Handshake_State()
    client_finished = 0;
    server_finished = 0;
 
+   handshake_reader = reader;
+
    server_rsa_kex_key = 0;
 
-   version = Protocol_Version::SSL_V3;
+   m_version = Protocol_Version::SSL_V3;
 
    hand_expecting_mask = 0;
    hand_received_mask = 0;
+   }
+
+void Handshake_State::set_version(const Protocol_Version& version)
+   {
+   m_version = version;
    }
 
 void Handshake_State::confirm_transition_to(Handshake_Type handshake_msg)
@@ -134,15 +141,15 @@ bool Handshake_State::received_handshake_msg(Handshake_Type handshake_msg) const
 
 KDF* Handshake_State::protocol_specific_prf()
    {
-   if(version == Protocol_Version::SSL_V3)
+   if(version() == Protocol_Version::SSL_V3)
       {
       return get_kdf("SSL3-PRF");
       }
-   else if(version == Protocol_Version::TLS_V10 || version == Protocol_Version::TLS_V11)
+   else if(version() == Protocol_Version::TLS_V10 || version() == Protocol_Version::TLS_V11)
       {
       return get_kdf("TLS-PRF");
       }
-   else if(version == Protocol_Version::TLS_V12)
+   else if(version() == Protocol_Version::TLS_V12)
       {
       if(suite.mac_algo() == "SHA-1" || suite.mac_algo() == "SHA-256")
          return get_kdf("TLS-12-PRF(SHA-256)");
@@ -150,7 +157,7 @@ KDF* Handshake_State::protocol_specific_prf()
       return get_kdf("TLS-12-PRF(" + suite.mac_algo() + ")");
       }
 
-   throw Internal_Error("Unknown version code " + version.to_string());
+   throw Internal_Error("Unknown version code " + version().to_string());
    }
 
 std::pair<std::string, Signature_Format>
@@ -175,15 +182,15 @@ Handshake_State::choose_sig_format(const Private_Key* key,
          }
       }
 
-   if(for_client_auth && this->version == Protocol_Version::SSL_V3)
+   if(for_client_auth && this->version() == Protocol_Version::SSL_V3)
       hash_algo = "Raw";
 
-   if(hash_algo == "" && this->version == Protocol_Version::TLS_V12)
+   if(hash_algo == "" && this->version() == Protocol_Version::TLS_V12)
       hash_algo = "SHA-1"; // TLS 1.2 but no compatible hashes set (?)
 
    BOTAN_ASSERT(hash_algo != "", "Couldn't figure out hash to use");
 
-   if(this->version >= Protocol_Version::TLS_V12)
+   if(this->version() >= Protocol_Version::TLS_V12)
       {
       hash_algo_out = hash_algo;
       sig_algo_out = sig_algo;
@@ -221,7 +228,7 @@ Handshake_State::understand_sig_format(const Public_Key* key,
    Or not?
    */
 
-   if(this->version < Protocol_Version::TLS_V12)
+   if(this->version() < Protocol_Version::TLS_V12)
       {
       if(hash_algo != "" || sig_algo != "")
          throw Decoding_Error("Counterparty sent hash/sig IDs with old version");
@@ -237,11 +244,11 @@ Handshake_State::understand_sig_format(const Public_Key* key,
 
    if(algo_name == "RSA")
       {
-      if(for_client_auth && this->version == Protocol_Version::SSL_V3)
+      if(for_client_auth && this->version() == Protocol_Version::SSL_V3)
          {
          hash_algo = "Raw";
          }
-      else if(this->version < Protocol_Version::TLS_V12)
+      else if(this->version() < Protocol_Version::TLS_V12)
          {
          hash_algo = "TLS.Digest.0";
          }
@@ -251,11 +258,11 @@ Handshake_State::understand_sig_format(const Public_Key* key,
       }
    else if(algo_name == "DSA" || algo_name == "ECDSA")
       {
-      if(algo_name == "DSA" && for_client_auth && this->version == Protocol_Version::SSL_V3)
+      if(algo_name == "DSA" && for_client_auth && this->version() == Protocol_Version::SSL_V3)
          {
          hash_algo = "Raw";
          }
-      else if(this->version < Protocol_Version::TLS_V12)
+      else if(this->version() < Protocol_Version::TLS_V12)
          {
          hash_algo = "SHA-1";
          }
@@ -286,6 +293,8 @@ Handshake_State::~Handshake_State()
    delete client_verify;
    delete client_finished;
    delete server_finished;
+
+   delete handshake_reader;
    }
 
 }

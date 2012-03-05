@@ -238,10 +238,10 @@ class Certificate : public Handshake_Message
    {
    public:
       Handshake_Type type() const { return CERTIFICATE; }
-      const std::vector<X509_Certificate>& cert_chain() const { return certs; }
+      const std::vector<X509_Certificate>& cert_chain() const { return m_certs; }
 
-      size_t count() const { return certs.size(); }
-      bool empty() const { return certs.empty(); }
+      size_t count() const { return m_certs.size(); }
+      bool empty() const { return m_certs.empty(); }
 
       Certificate(Record_Writer& writer,
                   Handshake_Hash& hash,
@@ -251,7 +251,7 @@ class Certificate : public Handshake_Message
    private:
       MemoryVector<byte> serialize() const;
 
-      std::vector<X509_Certificate> certs;
+      std::vector<X509_Certificate> m_certs;
    };
 
 /**

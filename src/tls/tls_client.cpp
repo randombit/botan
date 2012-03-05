@@ -35,7 +35,7 @@ Client::Client(std::tr1::function<void (const byte[], size_t)> output_fn,
    {
    writer.set_version(Protocol_Version::SSL_V3);
 
-   state = new Handshake_State;
+   state = new Handshake_State(new Stream_Handshake_Reader);
    state->set_expected_next(SERVER_HELLO);
 
    state->client_npn_cb = next_protocol;
@@ -87,7 +87,7 @@ void Client::renegotiate()
    if(state)
       return; // currently in handshake
 
-   state = new Handshake_State;
+   state = new Handshake_State(new Stream_Handshake_Reader);
    state->set_expected_next(SERVER_HELLO);
 
    state->client_hello = new Client_Hello(writer, state->hash, policy, rng,
@@ -173,10 +173,10 @@ void Client::process_handshake_msg(Handshake_Type type,
                              "Server sent next protocol but we didn't request it");
          }
 
-      state->version = state->server_hello->version();
+      state->set_version(state->server_hello->version());
 
-      writer.set_version(state->version);
-      reader.set_version(state->version);
+      writer.set_version(state->version());
+      reader.set_version(state->version());
 
       secure_renegotiation.update(state->server_hello);
 
@@ -205,13 +205,13 @@ void Client::process_handshake_msg(Handshake_Type type,
          {
          // new session
 
-         if(state->version > state->client_hello->version())
+         if(state->version() > state->client_hello->version())
             {
             throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                                 "Client: Server replied with bad version");
             }
 
-         if(state->version < policy.min_version())
+         if(state->version() < policy.min_version())
             {
             throw TLS_Exception(Alert::PROTOCOL_VERSION,
                                 "Client: Server is too old for specified policy");
@@ -288,7 +288,7 @@ void Client::process_handshake_msg(Handshake_Type type,
       state->server_kex = new Server_Key_Exchange(contents,
                                                   state->suite.kex_algo(),
                                                   state->suite.sig_algo(),
-                                                  state->version);
+                                                  state->version());
 
       if(state->suite.sig_algo() != "")
          {
@@ -302,7 +302,7 @@ void Client::process_handshake_msg(Handshake_Type type,
    else if(type == CERTIFICATE_REQUEST)
       {
       state->set_expected_next(SERVER_HELLO_DONE);
-      state->cert_req = new Certificate_Req(contents, state->version);
+      state->cert_req = new Certificate_Req(contents, state->version());
       }
    else if(type == SERVER_HELLO_DONE)
       {

@@ -25,6 +25,7 @@ tls_version.h
 <header:internal>
 tls_extensions.h
 tls_handshake_hash.h
+tls_handshake_reader.h
 tls_handshake_state.h
 tls_messages.h
 tls_reader.h
@@ -47,6 +48,7 @@ tls_channel.cpp
 tls_client.cpp
 tls_extensions.cpp
 tls_handshake_hash.cpp
+tls_handshake_reader.cpp
 tls_handshake_state.cpp
 tls_policy.cpp
 tls_server.cpp

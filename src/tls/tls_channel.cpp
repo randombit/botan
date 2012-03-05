@@ -142,49 +142,38 @@ void Channel::read_handshake(byte rec_type,
    if(rec_type == HANDSHAKE)
       {
       if(!state)
-         state = new Handshake_State;
-      state->queue.write(&rec_buf[0], rec_buf.size());
+         state = new Handshake_State(new Stream_Handshake_Reader);
+      state->handshake_reader->add_input(&rec_buf[0], rec_buf.size());
       }
+
+   BOTAN_ASSERT(state, "Handshake message recieved without state in place");
 
    while(true)
       {
       Handshake_Type type = HANDSHAKE_NONE;
-      MemoryVector<byte> contents;
 
       if(rec_type == HANDSHAKE)
          {
-         if(state->queue.size() >= 4)
+         if(state->handshake_reader->have_full_record())
             {
-            byte head[4] = { 0 };
-            state->queue.peek(head, 4);
-
-            const size_t length = make_u32bit(0, head[1], head[2], head[3]);
-
-            if(state->queue.size() >= length + 4)
-               {
-               type = static_cast<Handshake_Type>(head[0]);
-               contents.resize(length);
-               state->queue.read(head, 4);
-               state->queue.read(&contents[0], contents.size());
-               }
+            std::pair<Handshake_Type, MemoryVector<byte> > msg =
+               state->handshake_reader->get_next_record();
+            process_handshake_msg(msg.first, msg.second);
             }
+         else
+            break;
          }
       else if(rec_type == CHANGE_CIPHER_SPEC)
          {
-         if(state->queue.size() == 0 && rec_buf.size() == 1 && rec_buf[0] == 1)
-            type = HANDSHAKE_CCS;
+         if(state->handshake_reader->empty() && rec_buf.size() == 1 && rec_buf[0] == 1)
+            process_handshake_msg(HANDSHAKE_CCS, MemoryVector<byte>());
          else
             throw Decoding_Error("Malformed ChangeCipherSpec message");
          }
       else
          throw Decoding_Error("Unknown message type in handshake processing");
 
-      if(type == HANDSHAKE_NONE)
-         break;
-
-      process_handshake_msg(type, contents);
-
-      if(type == HANDSHAKE_CCS || !state)
+      if(type == HANDSHAKE_CCS || !state || !state->handshake_reader->have_full_record())
          break;
       }
    }

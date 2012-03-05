@@ -9,8 +9,8 @@
 #define BOTAN_TLS_HANDSHAKE_STATE_H__
 
 #include <botan/internal/tls_handshake_hash.h>
+#include <botan/internal/tls_handshake_reader.h>
 #include <botan/internal/tls_session_key.h>
-#include <botan/secqueue.h>
 #include <botan/pk_keys.h>
 #include <botan/pubkey.h>
 
@@ -42,7 +42,7 @@ namespace TLS {
 class Handshake_State
    {
    public:
-      Handshake_State();
+      Handshake_State(Handshake_Reader* reader);
       ~Handshake_State();
 
       bool received_handshake_msg(Handshake_Type handshake_msg) const;
@@ -64,7 +64,9 @@ class Handshake_State
 
       KDF* protocol_specific_prf();
 
-      Protocol_Version version;
+      Protocol_Version version() const { return m_version; }
+
+      void set_version(const Protocol_Version& version);
 
       class Client_Hello* client_hello;
       class Server_Hello* server_hello;
@@ -89,7 +91,7 @@ class Handshake_State
       Session_Keys keys;
       Handshake_Hash hash;
 
-      SecureQueue queue;
+      Handshake_Reader* handshake_reader;
 
       /*
       * Only used by clients for session resumption
@@ -103,6 +105,7 @@ class Handshake_State
 
    private:
       u32bit hand_expecting_mask, hand_received_mask;
+      Protocol_Version m_version;
    };
 
 }

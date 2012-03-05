@@ -201,7 +201,7 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 
          MemoryVector<byte> encrypted_key = encryptor.encrypt(pre_master, rng);
 
-         if(state->version == Protocol_Version::SSL_V3)
+         if(state->version() == Protocol_Version::SSL_V3)
             key_material = encrypted_key; // no length field
          else
             append_tls_length_value(key_material, encrypted_key, 2);
@@ -245,7 +245,7 @@ Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
 
       try
          {
-         if(state->version == Protocol_Version::SSL_V3)
+         if(state->version() == Protocol_Version::SSL_V3)
             {
             pre_master = decryptor.decrypt(contents);
             }
