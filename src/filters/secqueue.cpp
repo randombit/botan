@@ -208,4 +208,9 @@ bool SecureQueue::end_of_data() const
    return (size() == 0);
    }
 
+bool SecureQueue::empty() const
+   {
+   return (size() == 0);
+   }
+
 }

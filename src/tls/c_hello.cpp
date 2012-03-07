@@ -40,7 +40,7 @@ Hello_Request::Hello_Request(Record_Writer& writer)
 Hello_Request::Hello_Request(const MemoryRegion<byte>& buf)
    {
    if(buf.size())
-      throw Decoding_Error("Hello_Request: Must be empty, and is not");
+      throw Decoding_Error("Bad Hello_Request, has non-zero size");
    }
 
 /*

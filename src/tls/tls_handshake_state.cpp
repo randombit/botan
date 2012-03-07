@@ -92,7 +92,7 @@ Handshake_State::Handshake_State(Handshake_Reader* reader)
    client_finished = 0;
    server_finished = 0;
 
-   handshake_reader = reader;
+   m_handshake_reader = reader;
 
    server_rsa_kex_key = 0;
 
@@ -294,7 +294,7 @@ Handshake_State::~Handshake_State()
    delete client_finished;
    delete server_finished;
 
-   delete handshake_reader;
+   delete m_handshake_reader;
    }
 
 }

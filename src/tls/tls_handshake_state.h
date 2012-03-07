@@ -91,8 +91,6 @@ class Handshake_State
       Session_Keys keys;
       Handshake_Hash hash;
 
-      Handshake_Reader* handshake_reader;
-
       /*
       * Only used by clients for session resumption
       */
@@ -103,7 +101,9 @@ class Handshake_State
       */
       std::tr1::function<std::string (std::vector<std::string>)> client_npn_cb;
 
+      Handshake_Reader* handshake_reader() { return m_handshake_reader; }
    private:
+      Handshake_Reader* m_handshake_reader;
       u32bit hand_expecting_mask, hand_received_mask;
       Protocol_Version m_version;
    };

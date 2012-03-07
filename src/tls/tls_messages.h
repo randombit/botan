@@ -46,6 +46,26 @@ class Handshake_Message
 MemoryVector<byte> make_hello_random(RandomNumberGenerator& rng);
 
 /**
+* DTLS Hello Verify Request
+*/
+class Hello_Verify_Request : public Handshake_Message
+   {
+   public:
+      MemoryVector<byte> serialize() const;
+      Handshake_Type type() const { return HELLO_VERIFY_REQUEST; }
+
+      MemoryVector<byte> cookie() const { return m_cookie; }
+
+      Hello_Verify_Request(const MemoryRegion<byte>& buf);
+
+      Hello_Verify_Request(const MemoryVector<byte>& client_hello_bits,
+                           const std::string& client_identity,
+                           const SymmetricKey& secret_key);
+   private:
+      MemoryVector<byte> m_cookie;
+   };
+
+/**
 * Client Hello Message
 */
 class Client_Hello : public Handshake_Message

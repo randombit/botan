@@ -39,6 +39,7 @@ c_kex.cpp
 cert_req.cpp
 cert_ver.cpp
 finished.cpp
+hello_verify.cpp
 next_protocol.cpp
 rec_read.cpp
 rec_wri.cpp
