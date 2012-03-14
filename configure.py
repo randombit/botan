@@ -45,20 +45,27 @@ def get_vc_revision():
     try:
         mtn = subprocess.Popen(['mtn', 'automate', 'heads'],
                                stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE)
+                               stderr=subprocess.PIPE,
+                               universal_newlines=True)
 
         (stdout, stderr) = mtn.communicate()
 
-        if(stderr != ''):
-            logging.debug('Error getting rev from monotone - %s' % (stderr))
+        if mtn.returncode != 0:
+            logging.debug('Error getting rev from monotone - %d (%s)'
+                          % (mtn.returncode, stderr))
             return 'unknown'
 
-        logging.debug('Monotone reported revision ' + stdout.strip())
+        rev = str(stdout).strip()
+        logging.debug('Monotone reported revision %s' % (rev))
 
-        return 'mtn:' + stdout.strip()
+        return 'mtn:' + rev
     except OSError as e:
         logging.debug('Error getting rev from monotone - %s' % (e[1]))
         return 'unknown'
+    except Exception as e:
+        logging.debug('Error getting rev from monotone - %s' % (e))
+        return 'unknown'
+
 
 class BuildConfigurationInformation(object):
 
@@ -1756,12 +1763,19 @@ def main(argv = None):
 
         def get_gcc_version(gcc_bin):
             try:
-                subproc_result = subprocess.Popen(
+                gcc_proc = subprocess.Popen(
                     gcc_bin.split(' ') + ['-dumpversion'],
                     stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE).communicate()
+                    stderr=subprocess.PIPE,
+                    universal_newlines=True)
 
-                gcc_version = ''.join(map(str, subproc_result)).strip()
+                (stdout, stderr) = gcc_proc.communicate()
+
+                if gcc_proc.returncode != 0:
+                    logging.warning("GCC returned non-zero result %s" % (stderr))
+                    return None
+
+                gcc_version = stdout.strip()
 
                 logging.info('Detected gcc version %s' % (gcc_version))
                 return gcc_version
