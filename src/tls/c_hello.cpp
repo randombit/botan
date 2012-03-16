@@ -207,6 +207,10 @@ void Client_Hello::deserialize_sslv2(const MemoryRegion<byte>& buf)
 
    m_secure_renegotiation =
       value_exists(m_suites, static_cast<u16bit>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV));
+
+   m_fragment_size = 0;
+   m_next_protocol = false;
+   m_supports_session_ticket = false;
    }
 
 /*
@@ -299,6 +303,21 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
          m_supported_algos.push_back(std::make_pair("TLS.Digest.0", "RSA"));
          m_supported_algos.push_back(std::make_pair("SHA-1", "DSA"));
          m_supported_algos.push_back(std::make_pair("SHA-1", "ECDSA"));
+         }
+      else if(Maximum_Fragment_Length* frag = dynamic_cast<Maximum_Fragment_Length*>(extn))
+         {
+         m_fragment_size = frag->fragment_size();
+         }
+      else if(Session_Ticket* ticket = dynamic_cast<Session_Ticket*>(extn))
+         {
+         m_supports_session_ticket = true;
+         m_session_ticket = ticket->contents();
+         }
+      else if(Renegotation_Extension* reneg = dynamic_cast<Renegotation_Extension*>(extn))
+         {
+         // checked by TLS_Client / TLS_Server as they know the handshake state
+         m_secure_renegotiation = true;
+         m_renegotiation_info = reneg->renegotiation_info();
          }
       }
 

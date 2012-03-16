@@ -1,6 +1,6 @@
 /*
 * TLS Session
-* (C) 2011 Jack Lloyd
+* (C) 2011-2012 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -13,6 +13,7 @@
 #include <botan/tls_ciphersuite.h>
 #include <botan/tls_magic.h>
 #include <botan/secmem.h>
+#include <botan/symkey.h>
 
 namespace Botan {
 
@@ -69,6 +70,17 @@ class BOTAN_DLL Session
       * session traffic
       */
       SecureVector<byte> DER_encode() const;
+
+      /**
+      * Encrypt a session (useful for serialization or session tickets)
+      */
+      MemoryVector<byte> encrypt(const SymmetricKey& key,
+                                 const MemoryRegion<byte>& key_name,
+                                 RandomNumberGenerator& rng);
+
+      static TLS_Session decrypt(const MemoryRegion<byte>& ctext,
+                                 const SymmetricKey& key,
+                                 const MemoryRegion<byte>& key_name);
 
       /**
       * Encode this session data for storage

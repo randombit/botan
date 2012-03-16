@@ -42,6 +42,9 @@ Extension* make_extension(TLS_Data_Reader& reader,
       case TLSEXT_NEXT_PROTOCOL:
          return new Next_Protocol_Notification(reader, size);
 
+      case TLSEXT_SESSION_TICKET:
+         return new Session_Ticket(reader, size);
+
       default:
          return 0; // not known
       }
