@@ -538,6 +538,7 @@ def force_to_dict(l):
 Represents the information about a particular module
 """
 class ModuleInfo(object):
+
     def __init__(self, infofile):
 
         lex_me_harder(infofile, self,
@@ -551,21 +552,22 @@ class ModuleInfo(object):
                         'need_isa': None,
                         'mp_bits': 0 })
 
-        if self.source == [] and \
-            self.header_internal == [] and \
-            self.header_public == []:
-
-            for (dirpath, dirnames, filenames) in os.walk(self.lives_in):
-                if dirpath == self.lives_in:
+        def extract_files_matching(basedir, suffixes):
+            for (dirpath, dirnames, filenames) in os.walk(basedir):
+                if dirpath == basedir:
                     for filename in filenames:
                         if filename.startswith('.'):
                             continue
 
-                        if filename.endswith('.cpp') or \
-                           filename.endswith('.S'):
-                            self.source.append(filename)
-                        elif filename.endswith('.h'):
-                            self.header_public.append(filename)
+                        for suffix in suffixes:
+                            if filename.endswith(suffix):
+                                yield filename
+
+        if self.source == []:
+            self.source = list(extract_files_matching(self.lives_in, ['.cpp', '.S']))
+
+        if self.header_internal == [] and self.header_public == []:
+            self.header_public = list(extract_files_matching(self.lives_in, ['.h']))
 
         # Coerce to more useful types
         def convert_lib_list(l):
