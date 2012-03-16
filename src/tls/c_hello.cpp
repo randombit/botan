@@ -71,6 +71,7 @@ Client_Hello::Client_Hello(Record_Writer& writer,
    m_next_protocol(next_protocol),
    m_fragment_size(0),
    m_secure_renegotiation(true),
+   m_supports_session_ticket(true),
    m_renegotiation_info(reneg_info)
    {
    std::vector<std::string> hashes = policy.allowed_hashes();
@@ -86,7 +87,7 @@ Client_Hello::Client_Hello(Record_Writer& writer,
    }
 
 /*
-* Create a new Client Hello message
+* Create a new Client Hello message (session resumption case)
 */
 Client_Hello::Client_Hello(Record_Writer& writer,
                            Handshake_Hash& hash,
@@ -100,7 +101,8 @@ Client_Hello::Client_Hello(Record_Writer& writer,
    m_srp_identifier(session.srp_identifier()),
    m_next_protocol(next_protocol),
    m_fragment_size(session.fragment_size()),
-   m_secure_renegotiation(session.secure_renegotiation())
+   m_secure_renegotiation(session.secure_renegotiation()),
+   m_supports_session_ticket(true)
    {
    m_suites.push_back(session.ciphersuite_code());
    m_comp_methods.push_back(session.compression_method());
@@ -110,10 +112,14 @@ Client_Hello::Client_Hello(Record_Writer& writer,
    hash.update(writer.send(*this));
    }
 
+/*
+* Read a counterparty client hello
+*/
 Client_Hello::Client_Hello(const MemoryRegion<byte>& buf, Handshake_Type type)
    {
    m_next_protocol = false;
    m_secure_renegotiation = false;
+   m_supports_session_ticket = false;
    m_fragment_size = 0;
 
    if(type == CLIENT_HELLO)
@@ -207,10 +213,6 @@ void Client_Hello::deserialize_sslv2(const MemoryRegion<byte>& buf)
 
    m_secure_renegotiation =
       value_exists(m_suites, static_cast<u16bit>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV));
-
-   m_fragment_size = 0;
-   m_next_protocol = false;
-   m_supports_session_ticket = false;
    }
 
 /*
@@ -304,21 +306,24 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
          m_supported_algos.push_back(std::make_pair("SHA-1", "DSA"));
          m_supported_algos.push_back(std::make_pair("SHA-1", "ECDSA"));
          }
-      else if(Maximum_Fragment_Length* frag = dynamic_cast<Maximum_Fragment_Length*>(extn))
-         {
-         m_fragment_size = frag->fragment_size();
-         }
-      else if(Session_Ticket* ticket = dynamic_cast<Session_Ticket*>(extn))
-         {
-         m_supports_session_ticket = true;
-         m_session_ticket = ticket->contents();
-         }
-      else if(Renegotation_Extension* reneg = dynamic_cast<Renegotation_Extension*>(extn))
-         {
-         // checked by TLS_Client / TLS_Server as they know the handshake state
-         m_secure_renegotiation = true;
-         m_renegotiation_info = reneg->renegotiation_info();
-         }
+      }
+
+   if(Maximum_Fragment_Length* frag = extensions.get<Maximum_Fragment_Length>())
+      {
+      m_fragment_size = frag->fragment_size();
+      }
+
+   if(Session_Ticket* ticket = extensions.get<Session_Ticket>())
+      {
+      m_supports_session_ticket = true;
+      m_session_ticket = ticket->contents();
+      }
+
+   if(Renegotation_Extension* reneg = extensions.get<Renegotation_Extension>())
+      {
+      // checked by TLS_Client / TLS_Server as they know the handshake state
+      m_secure_renegotiation = true;
+      m_renegotiation_info = reneg->renegotiation_info();
       }
 
    if(value_exists(m_suites, static_cast<u16bit>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV)))

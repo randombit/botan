@@ -128,23 +128,21 @@ std::string Session::PEM_encode() const
    return PEM_Code::encode(this->DER_encode(), "SSL SESSION");
    }
 
-}
-
 MemoryVector<byte>
-TLS_Session::encrypt(const SymmetricKey& master_key,
-                     const MemoryRegion<byte>& key_name,
-                     RandomNumberGenerator& rng)
+Session::encrypt(const SymmetricKey& master_key,
+                 const MemoryRegion<byte>& key_name,
+                 RandomNumberGenerator& rng)
    {
    if(key_name.size() != 16)
       throw Encoding_Error("Bad length " + to_string(key_name.size()) +
                            " for key_name in TLS_Session::encrypt");
 
    if(master_key.length() == 0)
-      throw Decoding_Error("TLS_Session master_key not set");
+      throw Decoding_Error("Session master_key not set");
 
    std::auto_ptr<KDF> kdf(get_kdf("KDF2(SHA-256)"));
 
-   SymmetricKey aes_key = kdf->derive_key(16, master_key.bits_of(),
+   SymmetricKey aes_key = kdf->derive_key(32, master_key.bits_of(),
                                           "session-ticket.cipher-key");
 
    SymmetricKey hmac_key = kdf->derive_key(32, master_key.bits_of(),
@@ -155,8 +153,8 @@ TLS_Session::encrypt(const SymmetricKey& master_key,
    std::auto_ptr<MessageAuthenticationCode> mac(get_mac("HMAC(SHA-256)"));
    mac->set_key(hmac_key);
 
-   Pipe pipe(get_cipher("AES-128/CBC", aes_key, aes_iv, ENCRYPTION));
-   pipe.process_msg(BER_encode());
+   Pipe pipe(get_cipher("AES-256/CBC", aes_key, aes_iv, ENCRYPTION));
+   pipe.process_msg(this->DER_encode());
    MemoryVector<byte> ctext = pipe.read_all(0);
 
    MemoryVector<byte> out;
@@ -170,9 +168,9 @@ TLS_Session::encrypt(const SymmetricKey& master_key,
    return out;
    }
 
-TLS_Session TLS_Session::decrypt(const MemoryRegion<byte>& buf,
-                                 const SymmetricKey& master_key,
-                                 const MemoryRegion<byte>& key_name)
+Session Session::decrypt(const MemoryRegion<byte>& buf,
+                         const SymmetricKey& master_key,
+                         const MemoryRegion<byte>& key_name)
    {
    try
       {
@@ -180,7 +178,7 @@ TLS_Session TLS_Session::decrypt(const MemoryRegion<byte>& buf,
          throw Decoding_Error("Encrypted TLS_Session too short to be real");
 
       if(master_key.length() == 0)
-         throw Decoding_Error("TLS_Session master_key not set");
+         throw Decoding_Error("Session master_key not set");
 
       if(key_name.size() != 16)
          throw Decoding_Error("Bad length " + to_string(key_name.size()) +
@@ -200,16 +198,16 @@ TLS_Session TLS_Session::decrypt(const MemoryRegion<byte>& buf,
       if(!same_mem(&buf[buf.size() - 32], &computed_mac[0], computed_mac.size()))
          throw Decoding_Error("MAC verification failed");
 
-      SymmetricKey aes_key = kdf->derive_key(16, master_key.bits_of(),
+      SymmetricKey aes_key = kdf->derive_key(32, master_key.bits_of(),
                                              "session-ticket.cipher-key");
 
       InitializationVector aes_iv(&buf[16], 16);
 
-      Pipe pipe(get_cipher("AES-128/CBC", aes_key, aes_iv, DECRYPTION));
+      Pipe pipe(get_cipher("AES-256/CBC", aes_key, aes_iv, DECRYPTION));
       pipe.process_msg(&buf[16], buf.size() - (16 + 32));
       MemoryVector<byte> ber = pipe.read_all();
 
-      return TLS_Session(&ber[0], ber.size());
+      return Session(&ber[0], ber.size());
       }
    catch(...)
       {
@@ -218,3 +216,6 @@ TLS_Session TLS_Session::decrypt(const MemoryRegion<byte>& buf,
    }
 
 }
+
+}
+

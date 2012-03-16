@@ -210,11 +210,13 @@ class Next_Protocol_Notification : public Extension
       std::vector<std::string> m_protocols;
    };
 
-class Session_Ticket : public TLS_Extension
+class Session_Ticket : public Extension
    {
    public:
-      TLS_Handshake_Extension_Type type() const
+      static Handshake_Extension_Type static_type()
          { return TLSEXT_SESSION_TICKET; }
+
+      Handshake_Extension_Type type() const { return static_type(); }
 
       const MemoryVector<byte>& contents() const { return m_contents; }
 
@@ -232,7 +234,10 @@ class Session_Ticket : public TLS_Extension
       /**
       * Deserialize a session ticket
       */
-      Session_Ticket(const TLS_Data_Reader& reader, u16bit extension_size);
+      Session_Ticket(const TLS_Data_Reader& reader, u16bit extension_size)
+         {
+         // FIXME
+         }
 
       MemoryVector<byte> serialize() const { return m_contents; }
 

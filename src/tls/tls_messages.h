@@ -467,13 +467,13 @@ class New_Session_Ticket : public Handshake_Message
    public:
       Handshake_Type type() const { return NEW_SESSION_TICKET; }
 
-      static TLS_Session decrypt(const MemoryRegion<byte>& ctext,
-                                 const SymmetricKey& key,
-                                 const MemoryRegion<byte>& key_name);
+      static Session decrypt(const MemoryRegion<byte>& ctext,
+                             const SymmetricKey& key,
+                             const MemoryRegion<byte>& key_name);
 
       const MemoryVector<byte>& contents() const { return m_contents; }
 
-      New_Session_Ticket(const TLS_Session& session_info,
+      New_Session_Ticket(const Session& session_info,
                          const SymmetricKey& key,
                          const MemoryRegion<byte>& key_name,
                          RandomNumberGenerator& rng);

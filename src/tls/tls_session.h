@@ -78,9 +78,9 @@ class BOTAN_DLL Session
                                  const MemoryRegion<byte>& key_name,
                                  RandomNumberGenerator& rng);
 
-      static TLS_Session decrypt(const MemoryRegion<byte>& ctext,
-                                 const SymmetricKey& key,
-                                 const MemoryRegion<byte>& key_name);
+      static Session decrypt(const MemoryRegion<byte>& ctext,
+                             const SymmetricKey& key,
+                             const MemoryRegion<byte>& key_name);
 
       /**
       * Encode this session data for storage
