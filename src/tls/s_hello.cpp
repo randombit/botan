@@ -14,15 +14,17 @@
 
 namespace Botan {
 
+namespace TLS {
+
 /*
 * Create a new Server Hello message
 */
 Server_Hello::Server_Hello(Record_Writer& writer,
-                           TLS_Handshake_Hash& hash,
-                           Version_Code version,
+                           Handshake_Hash& hash,
+                           Protocol_Version version,
                            const Client_Hello& c_hello,
-                           const std::vector<X509_Certificate>& certs,
-                           const TLS_Policy& policy,
+                           const std::vector<std::string>& available_cert_types,
+                           const Policy& policy,
                            bool client_has_secure_renegotiation,
                            const MemoryRegion<byte>& reneg_info,
                            bool client_has_npn,
@@ -37,36 +39,28 @@ Server_Hello::Server_Hello(Record_Writer& writer,
    m_next_protocol(client_has_npn),
    m_next_protocols(next_protocols)
    {
-   bool have_rsa = false, have_dsa = false;
-
-   for(size_t i = 0; i != certs.size(); ++i)
-      {
-      Public_Key* key = certs[i].subject_public_key();
-      if(key->algo_name() == "RSA")
-         have_rsa = true;
-
-      if(key->algo_name() == "DSA")
-         have_dsa = true;
-      }
-
-   suite = policy.choose_suite(c_hello.ciphersuites(), have_rsa, have_dsa, false);
+   suite = policy.choose_suite(
+      c_hello.ciphersuites(),
+      available_cert_types,
+      policy.choose_curve(c_hello.supported_ecc_curves()) != "",
+      false);
 
    if(suite == 0)
-      throw TLS_Exception(HANDSHAKE_FAILURE,
+      throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                           "Can't agree on a ciphersuite with client");
 
    comp_method = policy.choose_compression(c_hello.compression_methods());
 
-   send(writer, hash);
+   hash.update(writer.send(*this));
    }
 
 /*
 * Create a new Server Hello message
 */
 Server_Hello::Server_Hello(Record_Writer& writer,
-                           TLS_Handshake_Hash& hash,
+                           Handshake_Hash& hash,
                            const MemoryRegion<byte>& session_id,
-                           Version_Code ver,
+                           Protocol_Version ver,
                            u16bit ciphersuite,
                            byte compression,
                            size_t max_fragment_size,
@@ -86,47 +80,13 @@ Server_Hello::Server_Hello(Record_Writer& writer,
    m_next_protocol(client_has_npn),
    m_next_protocols(next_protocols)
    {
-   send(writer, hash);
-   }
-
-/*
-* Serialize a Server Hello message
-*/
-MemoryVector<byte> Server_Hello::serialize() const
-   {
-   MemoryVector<byte> buf;
-
-   buf.push_back(static_cast<byte>(s_version >> 8));
-   buf.push_back(static_cast<byte>(s_version     ));
-   buf += s_random;
-
-   append_tls_length_value(buf, m_session_id, 1);
-
-   buf.push_back(get_byte(0, suite));
-   buf.push_back(get_byte(1, suite));
-
-   buf.push_back(comp_method);
-
-   TLS_Extensions extensions;
-
-   if(m_secure_renegotiation)
-      extensions.push_back(new Renegotation_Extension(m_renegotiation_info));
-
-   if(m_fragment_size != 0)
-      extensions.push_back(new Maximum_Fragment_Length(m_fragment_size));
-
-   if(m_next_protocol)
-      extensions.push_back(new Next_Protocol_Notification(m_next_protocols));
-
-   buf += extensions.serialize();
-
-   return buf;
+   hash.update(writer.send(*this));
    }
 
 /*
 * Deserialize a Server Hello message
 */
-void Server_Hello::deserialize(const MemoryRegion<byte>& buf)
+Server_Hello::Server_Hello(const MemoryRegion<byte>& buf)
    {
    m_secure_renegotiation = false;
    m_next_protocol = false;
@@ -136,11 +96,17 @@ void Server_Hello::deserialize(const MemoryRegion<byte>& buf)
 
    TLS_Data_Reader reader(buf);
 
-   s_version = static_cast<Version_Code>(reader.get_u16bit());
+   const byte major_version = reader.get_byte();
+   const byte minor_version = reader.get_byte();
 
-   if(s_version != SSL_V3 && s_version != TLS_V10 && s_version != TLS_V11)
+   s_version = Protocol_Version(major_version, minor_version);
+
+   if(s_version != Protocol_Version::SSL_V3 &&
+      s_version != Protocol_Version::TLS_V10 &&
+      s_version != Protocol_Version::TLS_V11 &&
+      s_version != Protocol_Version::TLS_V12)
       {
-      throw TLS_Exception(PROTOCOL_VERSION,
+      throw TLS_Exception(Alert::PROTOCOL_VERSION,
                           "Server_Hello: Unsupported server version");
       }
 
@@ -152,33 +118,72 @@ void Server_Hello::deserialize(const MemoryRegion<byte>& buf)
 
    comp_method = reader.get_byte();
 
-   TLS_Extensions extensions(reader);
+   Extensions extensions(reader);
 
-   for(size_t i = 0; i != extensions.count(); ++i)
+   if(Renegotation_Extension* reneg = extensions.get<Renegotation_Extension>())
       {
-      TLS_Extension* extn = extensions.at(i);
-
-      if(Renegotation_Extension* reneg = dynamic_cast<Renegotation_Extension*>(extn))
-         {
-         // checked by TLS_Client / TLS_Server as they know the handshake state
-         m_secure_renegotiation = true;
-         m_renegotiation_info = reneg->renegotiation_info();
-         }
-      else if(Next_Protocol_Notification* npn = dynamic_cast<Next_Protocol_Notification*>(extn))
-         {
-         m_next_protocols = npn->protocols();
-         m_next_protocol = true;
-         }
+      // checked by Client / Server as they know the handshake state
+      m_secure_renegotiation = true;
+      m_renegotiation_info = reneg->renegotiation_info();
       }
+
+   if(Next_Protocol_Notification* npn = extensions.get<Next_Protocol_Notification>())
+      {
+      m_next_protocols = npn->protocols();
+      m_next_protocol = true;
+      }
+   }
+
+/*
+* Serialize a Server Hello message
+*/
+MemoryVector<byte> Server_Hello::serialize() const
+   {
+   MemoryVector<byte> buf;
+
+   buf.push_back(s_version.major_version());
+   buf.push_back(s_version.minor_version());
+   buf += s_random;
+
+   append_tls_length_value(buf, m_session_id, 1);
+
+   buf.push_back(get_byte(0, suite));
+   buf.push_back(get_byte(1, suite));
+
+   buf.push_back(comp_method);
+
+   Extensions extensions;
+
+   if(m_secure_renegotiation)
+      extensions.add(new Renegotation_Extension(m_renegotiation_info));
+
+   if(m_fragment_size != 0)
+      extensions.add(new Maximum_Fragment_Length(m_fragment_size));
+
+   if(m_next_protocol)
+      extensions.add(new Next_Protocol_Notification(m_next_protocols));
+
+   buf += extensions.serialize();
+
+   return buf;
    }
 
 /*
 * Create a new Server Hello Done message
 */
 Server_Hello_Done::Server_Hello_Done(Record_Writer& writer,
-                                     TLS_Handshake_Hash& hash)
+                                     Handshake_Hash& hash)
    {
-   send(writer, hash);
+   hash.update(writer.send(*this));
+   }
+
+/*
+* Deserialize a Server Hello Done message
+*/
+Server_Hello_Done::Server_Hello_Done(const MemoryRegion<byte>& buf)
+   {
+   if(buf.size())
+      throw Decoding_Error("Server_Hello_Done: Must be empty, and is not");
    }
 
 /*
@@ -189,13 +194,6 @@ MemoryVector<byte> Server_Hello_Done::serialize() const
    return MemoryVector<byte>();
    }
 
-/*
-* Deserialize a Server Hello Done message
-*/
-void Server_Hello_Done::deserialize(const MemoryRegion<byte>& buf)
-   {
-   if(buf.size())
-      throw Decoding_Error("Server_Hello_Done: Must be empty, and is not");
-   }
+}
 
 }

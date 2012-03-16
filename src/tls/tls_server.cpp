@@ -1,37 +1,25 @@
 /*
 * TLS Server
-* (C) 2004-2011 Jack Lloyd
+* (C) 2004-2011,2012 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
 
 #include <botan/tls_server.h>
-#include <botan/internal/tls_session_key.h>
 #include <botan/internal/tls_handshake_state.h>
+#include <botan/internal/tls_messages.h>
 #include <botan/internal/stl_util.h>
-#include <botan/rsa.h>
-#include <botan/dh.h>
+#include <botan/internal/assert.h>
+#include <memory>
 
 namespace Botan {
 
+namespace TLS {
+
 namespace {
 
-/*
-* Choose what version to respond with
-*/
-Version_Code choose_version(Version_Code client, Version_Code minimum)
-   {
-   if(client < minimum)
-      throw TLS_Exception(PROTOCOL_VERSION,
-                          "Client version is unacceptable by policy");
-
-   if(client == SSL_V3 || client == TLS_V10 || client == TLS_V11)
-      return client;
-   return TLS_V11;
-   }
-
-bool check_for_resume(TLS_Session& session_info,
-                      TLS_Session_Manager& session_manager,
+bool check_for_resume(Session& session_info,
+                      Session_Manager& session_manager,
                       Client_Hello* client_hello)
    {
    MemoryVector<byte> client_session_id = client_hello->session_id();
@@ -49,7 +37,7 @@ bool check_for_resume(TLS_Session& session_info,
 
    // client didn't send original ciphersuite
    if(!value_exists(client_hello->ciphersuites(),
-                    session_info.ciphersuite()))
+                    session_info.ciphersuite_code()))
       return false;
 
    // client didn't send original compression method
@@ -74,20 +62,40 @@ bool check_for_resume(TLS_Session& session_info,
    return true;
    }
 
+std::map<std::string, std::vector<X509_Certificate> >
+get_server_certs(const std::string& hostname,
+                 Credentials_Manager& creds)
+   {
+   const char* cert_types[] = { "RSA", "DSA", "ECDSA", 0 };
+
+   std::map<std::string, std::vector<X509_Certificate> > cert_chains;
+
+   for(size_t i = 0; cert_types[i]; ++i)
+      {
+      std::vector<X509_Certificate> certs =
+         creds.cert_chain_single_type(cert_types[i], "tls-server", hostname);
+
+      if(!certs.empty())
+         cert_chains[cert_types[i]] = certs;
+      }
+
+   return cert_chains;
+   }
+
 }
 
 /*
 * TLS Server Constructor
 */
-TLS_Server::TLS_Server(std::tr1::function<void (const byte[], size_t)> output_fn,
-                       std::tr1::function<void (const byte[], size_t, u16bit)> proc_fn,
-                       std::tr1::function<bool (const TLS_Session&)> handshake_fn,
-                       TLS_Session_Manager& session_manager,
-                       Credentials_Manager& creds,
-                       const TLS_Policy& policy,
-                       RandomNumberGenerator& rng,
-                       const std::vector<std::string>& next_protocols) :
-   TLS_Channel(output_fn, proc_fn, handshake_fn),
+Server::Server(std::tr1::function<void (const byte[], size_t)> output_fn,
+               std::tr1::function<void (const byte[], size_t, Alert)> proc_fn,
+               std::tr1::function<bool (const Session&)> handshake_fn,
+               Session_Manager& session_manager,
+               Credentials_Manager& creds,
+               const Policy& policy,
+               RandomNumberGenerator& rng,
+               const std::vector<std::string>& next_protocols) :
+   Channel(output_fn, proc_fn, handshake_fn),
    policy(policy),
    rng(rng),
    session_manager(session_manager),
@@ -99,19 +107,19 @@ TLS_Server::TLS_Server(std::tr1::function<void (const byte[], size_t)> output_fn
 /*
 * Send a hello request to the client
 */
-void TLS_Server::renegotiate()
+void Server::renegotiate()
    {
    if(state)
       return; // currently in handshake
 
-   state = new Handshake_State;
+   state = new Handshake_State(new Stream_Handshake_Reader);
    state->set_expected_next(CLIENT_HELLO);
    Hello_Request hello_req(writer);
    }
 
-void TLS_Server::alert_notify(bool, Alert_Type type)
+void Server::alert_notify(const Alert& alert)
    {
-   if(type == NO_RENEGOTIATION)
+   if(alert.type() == Alert::NO_RENEGOTIATION)
       {
       if(handshake_completed && state)
          {
@@ -124,23 +132,23 @@ void TLS_Server::alert_notify(bool, Alert_Type type)
 /*
 * Split up and process handshake messages
 */
-void TLS_Server::read_handshake(byte rec_type,
-                                const MemoryRegion<byte>& rec_buf)
+void Server::read_handshake(byte rec_type,
+                            const MemoryRegion<byte>& rec_buf)
    {
    if(rec_type == HANDSHAKE && !state)
       {
-      state = new Handshake_State;
+      state = new Handshake_State(new Stream_Handshake_Reader);
       state->set_expected_next(CLIENT_HELLO);
       }
 
-   TLS_Channel::read_handshake(rec_type, rec_buf);
+   Channel::read_handshake(rec_type, rec_buf);
    }
 
 /*
 * Process a handshake message
 */
-void TLS_Server::process_handshake_msg(Handshake_Type type,
-                                       const MemoryRegion<byte>& contents)
+void Server::process_handshake_msg(Handshake_Type type,
+                                   const MemoryRegion<byte>& contents)
    {
    if(state == 0)
       throw Unexpected_Message("Unexpected handshake message from client");
@@ -168,15 +176,23 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
       m_hostname = state->client_hello->sni_hostname();
 
-      state->version = choose_version(state->client_hello->version(),
-                                      policy.min_version());
+      Protocol_Version client_version = state->client_hello->version();
+
+      if(client_version < policy.min_version())
+         throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                             "Client version is unacceptable by policy");
+
+      if(client_version <= policy.pref_version())
+         state->set_version(client_version);
+      else
+         state->set_version(policy.pref_version());
 
       secure_renegotiation.update(state->client_hello);
 
-      writer.set_version(state->version);
-      reader.set_version(state->version);
+      writer.set_version(state->version());
+      reader.set_version(state->version());
 
-      TLS_Session session_info;
+      Session session_info;
       const bool resuming = check_for_resume(session_info,
                                              session_manager,
                                              state->client_hello);
@@ -189,8 +205,8 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             writer,
             state->hash,
             session_info.session_id(),
-            Version_Code(session_info.version()),
-            session_info.ciphersuite(),
+            Protocol_Version(session_info.version()),
+            session_info.ciphersuite_code(),
             session_info.compression_method(),
             session_info.fragment_size(),
             secure_renegotiation.supported(),
@@ -205,21 +221,16 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             writer.set_maximum_fragment_size(session_info.fragment_size());
             }
 
-         state->suite = TLS_Cipher_Suite(state->server_hello->ciphersuite());
+         state->suite = Ciphersuite::by_id(state->server_hello->ciphersuite());
 
-         state->keys = SessionKeys(state->suite, state->version,
-                                   session_info.master_secret(),
-                                   state->client_hello->random(),
-                                   state->server_hello->random(),
-                                   true);
+         state->keys = Session_Keys(state, session_info.master_secret(), true);
 
          writer.send(CHANGE_CIPHER_SPEC, 1);
 
-         writer.activate(state->suite, state->keys, SERVER);
+         writer.activate(SERVER, state->suite, state->keys,
+                         state->server_hello->compression_method());
 
-         state->server_finished = new Finished(writer, state->hash,
-                                               state->version, SERVER,
-                                               state->keys.master_secret());
+         state->server_finished = new Finished(writer, state, SERVER);
 
          if(!handshake_fn(session_info))
             session_manager.remove_entry(session_info.session_id());
@@ -228,23 +239,31 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
          }
       else // new session
          {
-         std::vector<X509_Certificate> server_certs =
-            creds.cert_chain("",
-                             "tls-server",
-                             m_hostname);
+         std::map<std::string, std::vector<X509_Certificate> > cert_chains;
 
-         Private_Key* private_key =
-            server_certs.empty() ? 0 :
-            (creds.private_key_for(server_certs[0],
-                                  "tls-server",
-                                   m_hostname));
+         cert_chains = get_server_certs(m_hostname, creds);
+
+         if(m_hostname != "" && cert_chains.empty())
+            {
+            send_alert(Alert(Alert::UNRECOGNIZED_NAME));
+            cert_chains = get_server_certs("", creds);
+            }
+
+         std::vector<std::string> available_cert_types;
+
+         for(std::map<std::string, std::vector<X509_Certificate> >::const_iterator i = cert_chains.begin();
+             i != cert_chains.end(); ++i)
+            {
+            if(!i->second.empty())
+               available_cert_types.push_back(i->first);
+            }
 
          state->server_hello = new Server_Hello(
             writer,
             state->hash,
-            state->version,
+            state->version(),
             *(state->client_hello),
-            server_certs,
+            available_cert_types,
             policy,
             secure_renegotiation.supported(),
             secure_renegotiation.for_server_hello(),
@@ -258,37 +277,53 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
             writer.set_maximum_fragment_size(state->client_hello->fragment_size());
             }
 
-         state->suite = TLS_Cipher_Suite(state->server_hello->ciphersuite());
+         state->suite = Ciphersuite::by_id(state->server_hello->ciphersuite());
 
-         if(state->suite.sig_type() != TLS_ALGO_SIGNER_ANON)
+         const std::string sig_algo = state->suite.sig_algo();
+         const std::string kex_algo = state->suite.kex_algo();
+
+         if(sig_algo != "")
             {
+            BOTAN_ASSERT(!cert_chains[sig_algo].empty(),
+                         "Attempting to send empty certificate chain");
+
             state->server_certs = new Certificate(writer,
                                                   state->hash,
-                                                  server_certs);
+                                                  cert_chains[sig_algo]);
             }
 
-         if(state->suite.kex_type() != TLS_ALGO_KEYEXCH_NOKEX)
-            {
-            if(state->suite.kex_type() == TLS_ALGO_KEYEXCH_DH)
-               state->kex_priv = new DH_PrivateKey(rng, policy.dh_group());
-            else
-               throw Internal_Error("TLS_Server: Unknown ciphersuite kex type");
+         Private_Key* private_key = 0;
 
-            state->server_kex =
-               new Server_Key_Exchange(writer, state->hash, rng,
-                                       state->kex_priv, private_key,
-                                       state->client_hello->random(),
-                                       state->server_hello->random());
+         if(kex_algo == "RSA" || sig_algo != "")
+            {
+            private_key = creds.private_key_for(state->server_certs->cert_chain()[0],
+                                                "tls-server",
+                                                m_hostname);
+
+            if(!private_key)
+               throw Internal_Error("No private key located for associated server cert");
+            }
+
+         if(kex_algo == "RSA")
+            {
+            state->server_rsa_kex_key = private_key;
             }
          else
-            state->kex_priv = PKCS8::copy_key(*private_key, rng);
-
-         if(policy.require_client_auth())
             {
-            // FIXME: figure out the allowed CAs/cert types
+            state->server_kex =
+               new Server_Key_Exchange(writer, state, policy, creds, rng, private_key);
+            }
 
-            state->cert_req = new Certificate_Req(writer, state->hash,
-                                                  std::vector<X509_Certificate>());
+         std::vector<X509_Certificate> client_auth_CAs =
+            creds.trusted_certificate_authorities("tls-server", m_hostname);
+
+         if(!client_auth_CAs.empty() && state->suite.sig_algo() != "")
+            {
+            state->cert_req = new Certificate_Req(writer,
+                                                  state->hash,
+                                                  policy,
+                                                  client_auth_CAs,
+                                                  state->version());
 
             state->set_expected_next(CERTIFICATE);
             }
@@ -311,7 +346,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
       // Is this allowed by the protocol?
       if(state->client_certs->count() > 1)
-         throw TLS_Exception(CERTIFICATE_UNKNOWN,
+         throw TLS_Exception(Alert::CERTIFICATE_UNKNOWN,
                              "Client sent more than one certificate");
 
       state->set_expected_next(CLIENT_KEX);
@@ -323,29 +358,19 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       else
          state->set_expected_next(HANDSHAKE_CCS);
 
-      state->client_kex = new Client_Key_Exchange(contents, state->suite,
-                                                  state->version);
+      state->client_kex = new Client_Key_Exchange(contents, state, creds, policy, rng);
 
-      SecureVector<byte> pre_master =
-         state->client_kex->pre_master_secret(rng, state->kex_priv,
-                                              state->client_hello->version());
-
-      state->keys = SessionKeys(state->suite, state->version, pre_master,
-                                state->client_hello->random(),
-                                state->server_hello->random());
+      state->keys = Session_Keys(state, state->client_kex->pre_master_secret(), false);
       }
    else if(type == CERTIFICATE_VERIFY)
       {
-      state->client_verify = new Certificate_Verify(contents);
+      state->client_verify = new Certificate_Verify(contents, state->version());
 
       const std::vector<X509_Certificate>& client_certs =
          state->client_certs->cert_chain();
 
       const bool sig_valid =
-         state->client_verify->verify(client_certs[0],
-                                      state->hash,
-                                      state->server_hello->version(),
-                                      state->keys.master_secret());
+         state->client_verify->verify(client_certs[0], state);
 
       state->hash.update(type, contents);
 
@@ -355,9 +380,16 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       * unable to correctly verify a signature, ..."
       */
       if(!sig_valid)
-         throw TLS_Exception(DECRYPT_ERROR, "Client cert verify failed");
+         throw TLS_Exception(Alert::DECRYPT_ERROR, "Client cert verify failed");
 
-      // FIXME: check cert was issued by a CA we requested, signatures, etc.
+      try
+         {
+         creds.verify_certificate_chain("tls-server", "", client_certs);
+         }
+      catch(std::exception& e)
+         {
+         throw TLS_Exception(Alert::BAD_CERTIFICATE, e.what());
+         }
 
       state->set_expected_next(HANDSHAKE_CCS);
       }
@@ -368,7 +400,8 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
       else
          state->set_expected_next(FINISHED);
 
-      reader.activate(state->suite, state->keys, SERVER);
+      reader.activate(SERVER, state->suite, state->keys,
+                      state->server_hello->compression_method());
       }
    else if(type == NEXT_PROTOCOL)
       {
@@ -384,46 +417,43 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
 
       state->client_finished = new Finished(contents);
 
-      if(!state->client_finished->verify(state->keys.master_secret(),
-                                         state->version, state->hash, CLIENT))
-         throw TLS_Exception(DECRYPT_ERROR,
+      if(!state->client_finished->verify(state, CLIENT))
+         throw TLS_Exception(Alert::DECRYPT_ERROR,
                              "Finished message didn't verify");
 
-      // already sent it if resuming
       if(!state->server_finished)
          {
          state->hash.update(type, contents);
 
          writer.send(CHANGE_CIPHER_SPEC, 1);
 
-         writer.activate(state->suite, state->keys, SERVER);
+         writer.activate(SERVER, state->suite, state->keys,
+                         state->server_hello->compression_method());
 
-         state->server_finished = new Finished(writer, state->hash,
-                                               state->version, SERVER,
-                                               state->keys.master_secret());
+         state->server_finished = new Finished(writer, state, SERVER);
 
          if(state->client_certs && state->client_verify)
             peer_certs = state->client_certs->cert_chain();
+
+         // already sent finished if resuming, so this is a new session
+
+         Session session_info(
+            state->server_hello->session_id(),
+            state->keys.master_secret(),
+            state->server_hello->version(),
+            state->server_hello->ciphersuite(),
+            state->server_hello->compression_method(),
+            SERVER,
+            secure_renegotiation.supported(),
+            state->server_hello->fragment_size(),
+            peer_certs,
+            m_hostname,
+            ""
+            );
+
+         if(handshake_fn(session_info))
+            session_manager.save(session_info);
          }
-
-      TLS_Session session_info(
-         state->server_hello->session_id(),
-         state->keys.master_secret(),
-         state->server_hello->version(),
-         state->server_hello->ciphersuite(),
-         state->server_hello->compression_method(),
-         SERVER,
-         secure_renegotiation.supported(),
-         state->server_hello->fragment_size(),
-         peer_certs,
-         m_hostname,
-         ""
-         );
-
-      if(handshake_fn(session_info))
-         session_manager.save(session_info);
-      else
-         session_manager.remove_entry(session_info.session_id());
 
       secure_renegotiation.update(state->client_finished,
                                   state->server_finished);
@@ -435,5 +465,7 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
    else
       throw Unexpected_Message("Unknown handshake message received");
    }
+
+}
 
 }

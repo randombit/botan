@@ -146,6 +146,12 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       std::string to_string() const;
 
       /**
+      * Check if a certain DNS name matches up with the information in
+      * the cert
+      */
+      bool matches_dns_name(const std::string& name) const;
+
+      /**
       * Check to certificates for equality.
       * @return true both certificates are (binary) equal
       */

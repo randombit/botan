@@ -14,6 +14,8 @@
 
 namespace Botan {
 
+namespace TLS {
+
 Record_Reader::Record_Reader() :
    m_readbuf(TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE),
    m_mac(0)
@@ -39,7 +41,7 @@ void Record_Reader::reset()
 
    m_block_size = 0;
    m_iv_size = 0;
-   m_major = m_minor = 0;
+   m_version = Protocol_Version();
    m_seq_no = 0;
    set_maximum_fragment_size(0);
    }
@@ -55,26 +57,26 @@ void Record_Reader::set_maximum_fragment_size(size_t max_fragment)
 /*
 * Set the version to use
 */
-void Record_Reader::set_version(Version_Code version)
+void Record_Reader::set_version(Protocol_Version version)
    {
-   if(version != SSL_V3 && version != TLS_V10 && version != TLS_V11)
-      throw Invalid_Argument("Record_Reader: Invalid protocol version");
-
-   m_major = (version >> 8) & 0xFF;
-   m_minor = (version & 0xFF);
+   m_version = version;
    }
 
 /*
 * Set the keys for reading
 */
-void Record_Reader::activate(const TLS_Cipher_Suite& suite,
-                             const SessionKeys& keys,
-                             Connection_Side side)
+void Record_Reader::activate(Connection_Side side,
+                             const Ciphersuite& suite,
+                             const Session_Keys& keys,
+                             byte compression_method)
    {
    m_cipher.reset();
    delete m_mac;
    m_mac = 0;
    m_seq_no = 0;
+
+   if(compression_method != NO_COMPRESSION)
+      throw Internal_Error("Negotiated unknown compression algorithm");
 
    SymmetricKey mac_key, cipher_key;
    InitializationVector iv;
@@ -103,7 +105,7 @@ void Record_Reader::activate(const TLS_Cipher_Suite& suite,
          );
       m_block_size = block_size_of(cipher_algo);
 
-      if(m_major > 3 || (m_major == 3 && m_minor >= 2))
+      if(m_version >= Protocol_Version::TLS_V11)
          m_iv_size = m_block_size;
       else
          m_iv_size = 0;
@@ -121,7 +123,7 @@ void Record_Reader::activate(const TLS_Cipher_Suite& suite,
       {
       Algorithm_Factory& af = global_state().algorithm_factory();
 
-      if(m_major == 3 && m_minor == 0)
+      if(m_version == Protocol_Version::SSL_V3)
          m_mac = af.make_mac("SSL3-MAC(" + mac_algo + ")");
       else
          m_mac = af.make_mac("HMAC(" + mac_algo + ")");
@@ -145,7 +147,7 @@ size_t Record_Reader::fill_buffer_to(const byte*& input,
    const size_t taken = std::min(input_size, desired - m_readbuf_pos);
 
    if(taken > space_available)
-      throw TLS_Exception(RECORD_OVERFLOW,
+      throw TLS_Exception(Alert::RECORD_OVERFLOW,
                           "Record is larger than allowed maximum size");
 
    copy_mem(&m_readbuf[m_readbuf_pos], input, taken);
@@ -182,7 +184,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
    if((!m_mac) && (m_readbuf[0] & 0x80) && (m_readbuf[2] == 1))
       {
       if(m_readbuf[3] == 0 && m_readbuf[4] == 2)
-         throw TLS_Exception(PROTOCOL_VERSION,
+         throw TLS_Exception(Alert::PROTOCOL_VERSION,
                              "Client claims to only support SSLv2, rejecting");
 
       if(m_readbuf[3] >= 3) // SSLv2 mapped TLS hello, then?
@@ -216,20 +218,24 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
       m_readbuf[0] != HANDSHAKE &&
       m_readbuf[0] != APPLICATION_DATA)
       {
-      throw TLS_Exception(UNEXPECTED_MESSAGE,
-                          "Unknown record type " + to_string(m_readbuf[0]) +
-                          " from counterparty");
+      throw Unexpected_Message(
+         "Unknown record type " + to_string(m_readbuf[0]) + " from counterparty");
       }
 
-   const u16bit version    = make_u16bit(m_readbuf[1], m_readbuf[2]);
    const size_t record_len = make_u16bit(m_readbuf[3], m_readbuf[4]);
 
-   if(m_major && (m_readbuf[1] != m_major || m_readbuf[2] != m_minor))
-      throw TLS_Exception(PROTOCOL_VERSION,
-                          "Got unexpected version from counterparty");
+   if(m_version.major_version())
+      {
+      if(m_readbuf[1] != m_version.major_version() ||
+         m_readbuf[2] != m_version.minor_version())
+         {
+         throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                             "Got unexpected version from counterparty");
+         }
+      }
 
    if(record_len > MAX_CIPHERTEXT_SIZE)
-      throw TLS_Exception(RECORD_OVERFLOW,
+      throw TLS_Exception(Alert::RECORD_OVERFLOW,
                           "Got message that exceeds maximum size");
 
    if(size_t needed = fill_buffer_to(input, input_sz, consumed,
@@ -247,7 +253,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
          m_readbuf[0] != ALERT &&
          m_readbuf[0] != HANDSHAKE)
          {
-         throw TLS_Exception(DECODE_ERROR, "Invalid msg type received during handshake");
+         throw Decoding_Error("Invalid msg type received during handshake");
          }
 
       msg_type = m_readbuf[0];
@@ -283,7 +289,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
       * This particular countermeasure is recommended in the TLS 1.2
       * spec (RFC 5246) in section 6.2.3.2
       */
-      if(version == SSL_V3)
+      if(m_version == Protocol_Version::SSL_V3)
          {
          if(pad_value > m_block_size)
             pad_size = 0;
@@ -309,14 +315,16 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
    const u16bit plain_length = record_len - mac_pad_iv_size;
 
    if(plain_length > m_max_fragment)
-      throw TLS_Exception(RECORD_OVERFLOW, "Plaintext record is too large");
+      throw TLS_Exception(Alert::RECORD_OVERFLOW, "Plaintext record is too large");
 
    m_mac->update_be(m_seq_no);
    m_mac->update(m_readbuf[0]); // msg_type
 
-   if(version != SSL_V3)
-      for(size_t i = 0; i != 2; ++i)
-         m_mac->update(get_byte(i, version));
+   if(m_version != Protocol_Version::SSL_V3)
+      {
+      m_mac->update(m_version.major_version());
+      m_mac->update(m_version.minor_version());
+      }
 
    m_mac->update_be(plain_length);
    m_mac->update(&m_readbuf[TLS_HEADER_SIZE + m_iv_size], plain_length);
@@ -328,7 +336,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
    const size_t mac_offset = record_len - (m_macbuf.size() + pad_size);
 
    if(!same_mem(&m_readbuf[TLS_HEADER_SIZE + mac_offset], &m_macbuf[0], m_macbuf.size()))
-      throw TLS_Exception(BAD_RECORD_MAC, "Message authentication failure");
+      throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure");
 
    msg_type = m_readbuf[0];
 
@@ -337,5 +345,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
    m_readbuf_pos = 0;
    return 0;
    }
+
+}
 
 }

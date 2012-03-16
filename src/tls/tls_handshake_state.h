@@ -8,9 +8,13 @@
 #ifndef BOTAN_TLS_HANDSHAKE_STATE_H__
 #define BOTAN_TLS_HANDSHAKE_STATE_H__
 
-#include <botan/internal/tls_messages.h>
+#include <botan/internal/tls_handshake_hash.h>
+#include <botan/internal/tls_handshake_reader.h>
 #include <botan/internal/tls_session_key.h>
-#include <botan/secqueue.h>
+#include <botan/pk_keys.h>
+#include <botan/pubkey.h>
+
+#include <utility>
 
 #if defined(BOTAN_USE_STD_TR1)
 
@@ -28,13 +32,17 @@
 
 namespace Botan {
 
+class KDF;
+
+namespace TLS {
+
 /**
 * SSL/TLS Handshake State
 */
 class Handshake_State
    {
    public:
-      Handshake_State();
+      Handshake_State(Handshake_Reader* reader);
       ~Handshake_State();
 
       bool received_handshake_msg(Handshake_Type handshake_msg) const;
@@ -42,32 +50,46 @@ class Handshake_State
       void confirm_transition_to(Handshake_Type handshake_msg);
       void set_expected_next(Handshake_Type handshake_msg);
 
-      Version_Code version;
+      std::pair<std::string, Signature_Format>
+         understand_sig_format(const Public_Key* key,
+                               std::string hash_algo,
+                               std::string sig_algo,
+                               bool for_client_auth);
 
-      Client_Hello* client_hello;
-      Server_Hello* server_hello;
-      Certificate* server_certs;
-      Server_Key_Exchange* server_kex;
-      Certificate_Req* cert_req;
-      Server_Hello_Done* server_hello_done;
+      std::pair<std::string, Signature_Format>
+         choose_sig_format(const Private_Key* key,
+                           std::string& hash_algo,
+                           std::string& sig_algo,
+                           bool for_client_auth);
 
-      Certificate* client_certs;
-      Client_Key_Exchange* client_kex;
-      Certificate_Verify* client_verify;
+      KDF* protocol_specific_prf();
 
-      Next_Protocol* next_protocol;
+      Protocol_Version version() const { return m_version; }
 
-      Finished* client_finished;
-      Finished* server_finished;
+      void set_version(const Protocol_Version& version);
 
-      Public_Key* kex_pub;
-      Private_Key* kex_priv;
+      class Client_Hello* client_hello;
+      class Server_Hello* server_hello;
+      class Certificate* server_certs;
+      class Server_Key_Exchange* server_kex;
+      class Certificate_Req* cert_req;
+      class Server_Hello_Done* server_hello_done;
 
-      TLS_Cipher_Suite suite;
-      SessionKeys keys;
-      TLS_Handshake_Hash hash;
+      class Certificate* client_certs;
+      class Client_Key_Exchange* client_kex;
+      class Certificate_Verify* client_verify;
 
-      SecureQueue queue;
+      class Next_Protocol* next_protocol;
+
+      class Finished* client_finished;
+      class Finished* server_finished;
+
+      // Used by the server only, in case of RSA key exchange
+      Private_Key* server_rsa_kex_key;
+
+      Ciphersuite suite;
+      Session_Keys keys;
+      Handshake_Hash hash;
 
       /*
       * Only used by clients for session resumption
@@ -79,9 +101,14 @@ class Handshake_State
       */
       std::tr1::function<std::string (std::vector<std::string>)> client_npn_cb;
 
+      Handshake_Reader* handshake_reader() { return m_handshake_reader; }
    private:
+      Handshake_Reader* m_handshake_reader;
       u32bit hand_expecting_mask, hand_received_mask;
+      Protocol_Version m_version;
    };
+
+}
 
 }
 

@@ -8,7 +8,10 @@
 #ifndef BOTAN_TLS_RECORDS_H__
 #define BOTAN_TLS_RECORDS_H__
 
-#include <botan/tls_suites.h>
+#include <botan/tls_ciphersuite.h>
+#include <botan/tls_alert.h>
+#include <botan/tls_magic.h>
+#include <botan/tls_version.h>
 #include <botan/pipe.h>
 #include <botan/mac.h>
 #include <botan/secqueue.h>
@@ -30,7 +33,9 @@
 
 namespace Botan {
 
-class SessionKeys;
+namespace TLS {
+
+class Session_Keys;
 
 /**
 * TLS Record Writer
@@ -41,13 +46,16 @@ class BOTAN_DLL Record_Writer
       void send(byte type, const byte input[], size_t length);
       void send(byte type, byte val) { send(type, &val, 1); }
 
-      void alert(Alert_Level level, Alert_Type type);
+      MemoryVector<byte> send(class Handshake_Message& msg);
 
-      void activate(const TLS_Cipher_Suite& suite,
-                    const SessionKeys& keys,
-                    Connection_Side side);
+      void send_alert(const Alert& alert);
 
-      void set_version(Version_Code version);
+      void activate(Connection_Side side,
+                    const Ciphersuite& suite,
+                    const Session_Keys& keys,
+                    byte compression_method);
+
+      void set_version(Protocol_Version version);
 
       void reset();
 
@@ -72,7 +80,7 @@ class BOTAN_DLL Record_Writer
       size_t m_block_size, m_mac_size, m_iv_size, m_max_fragment;
 
       u64bit m_seq_no;
-      byte m_major, m_minor;
+      Protocol_Version m_version;
    };
 
 /**
@@ -97,11 +105,12 @@ class BOTAN_DLL Record_Reader
                        byte& msg_type,
                        MemoryVector<byte>& msg);
 
-      void activate(const TLS_Cipher_Suite& suite,
-                    const SessionKeys& keys,
-                    Connection_Side side);
+      void activate(Connection_Side side,
+                    const Ciphersuite& suite,
+                    const Session_Keys& keys,
+                    byte compression_method);
 
-      void set_version(Version_Code version);
+      void set_version(Protocol_Version version);
 
       void reset();
 
@@ -127,8 +136,10 @@ class BOTAN_DLL Record_Reader
       MessageAuthenticationCode* m_mac;
       size_t m_block_size, m_iv_size, m_max_fragment;
       u64bit m_seq_no;
-      byte m_major, m_minor;
+      Protocol_Version m_version;
    };
+
+}
 
 }
 

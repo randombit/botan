@@ -9,25 +9,29 @@
 #define TLS_SESSION_STATE_H__
 
 #include <botan/x509cert.h>
+#include <botan/tls_version.h>
+#include <botan/tls_ciphersuite.h>
 #include <botan/tls_magic.h>
 #include <botan/secmem.h>
 #include <botan/symkey.h>
 
 namespace Botan {
 
+namespace TLS {
+
 /**
 * Class representing a TLS session state
 */
-class BOTAN_DLL TLS_Session
+class BOTAN_DLL Session
    {
    public:
 
       /**
       * Uninitialized session
       */
-      TLS_Session() :
+      Session() :
          m_start_time(0),
-         m_version(0),
+         m_version(),
          m_ciphersuite(0),
          m_compression_method(0),
          m_connection_side(static_cast<Connection_Side>(0)),
@@ -38,22 +42,34 @@ class BOTAN_DLL TLS_Session
       /**
       * New session (sets session start time)
       */
-      TLS_Session(const MemoryRegion<byte>& session_id,
-                  const MemoryRegion<byte>& master_secret,
-                  Version_Code version,
-                  u16bit ciphersuite,
-                  byte compression_method,
-                  Connection_Side side,
-                  bool secure_renegotiation_supported,
-                  size_t fragment_size,
-                  const std::vector<X509_Certificate>& peer_certs,
-                  const std::string& sni_hostname = "",
-                  const std::string& srp_identifier = "");
+      Session(const MemoryRegion<byte>& session_id,
+              const MemoryRegion<byte>& master_secret,
+              Protocol_Version version,
+              u16bit ciphersuite,
+              byte compression_method,
+              Connection_Side side,
+              bool secure_renegotiation_supported,
+              size_t fragment_size,
+              const std::vector<X509_Certificate>& peer_certs,
+              const std::string& sni_hostname = "",
+              const std::string& srp_identifier = "");
 
       /**
-      * Load a session from BER (created by BER_encode)
+      * Load a session from DER representation (created by DER_encode)
       */
-      TLS_Session(const byte ber[], size_t ber_len);
+      Session(const byte ber[], size_t ber_len);
+
+      /**
+      * Load a session from PEM representation (created by PEM_encode)
+      */
+      Session(const std::string& pem);
+
+      /**
+      * Encode this session data for storage
+      * @warning if the master secret is compromised so is the
+      * session traffic
+      */
+      SecureVector<byte> DER_encode() const;
 
       /**
       * Encrypt a session (useful for serialization or session tickets)
@@ -71,18 +87,22 @@ class BOTAN_DLL TLS_Session
       * @warning if the master secret is compromised so is the
       * session traffic
       */
-      SecureVector<byte> BER_encode() const;
+      std::string PEM_encode() const;
 
       /**
       * Get the version of the saved session
       */
-      Version_Code version() const
-         { return static_cast<Version_Code>(m_version); }
+      Protocol_Version version() const { return m_version; }
 
       /**
-      * Get the ciphersuite of the saved session
+      * Get the ciphersuite code of the saved session
       */
-      u16bit ciphersuite() const { return m_ciphersuite; }
+      u16bit ciphersuite_code() const { return m_ciphersuite; }
+
+      /**
+      * Get the ciphersuite info of the saved session
+      */
+      Ciphersuite ciphersuite() const { return Ciphersuite::by_id(m_ciphersuite); }
 
       /**
       * Get the compression method used in the saved session
@@ -129,6 +149,11 @@ class BOTAN_DLL TLS_Session
          { return m_secure_renegotiation_supported; }
 
       /**
+      * Return the certificate chain of the peer (possibly empty)
+      */
+      std::vector<X509_Certificate> peer_certs() const { return m_peer_certs; }
+
+      /**
       * Get the time this session began (seconds since Epoch)
       */
       u64bit start_time() const { return m_start_time; }
@@ -141,7 +166,7 @@ class BOTAN_DLL TLS_Session
       MemoryVector<byte> m_identifier;
       SecureVector<byte> m_master_secret;
 
-      u16bit m_version;
+      Protocol_Version m_version;
       u16bit m_ciphersuite;
       byte m_compression_method;
       Connection_Side m_connection_side;
@@ -149,10 +174,12 @@ class BOTAN_DLL TLS_Session
       bool m_secure_renegotiation_supported;
       size_t m_fragment_size;
 
-      MemoryVector<byte> m_peer_certificate; // optional
+      std::vector<X509_Certificate> m_peer_certs;
       std::string m_sni_hostname; // optional
       std::string m_srp_identifier; // optional
    };
+
+}
 
 }
 

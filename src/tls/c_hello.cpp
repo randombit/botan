@@ -15,6 +15,8 @@
 
 namespace Botan {
 
+namespace TLS {
+
 MemoryVector<byte> make_hello_random(RandomNumberGenerator& rng)
    {
    MemoryVector<byte> buf(32);
@@ -25,34 +27,20 @@ MemoryVector<byte> make_hello_random(RandomNumberGenerator& rng)
    }
 
 /*
-* Encode and send a Handshake message
-*/
-void Handshake_Message::send(Record_Writer& writer, TLS_Handshake_Hash& hash) const
-   {
-   MemoryVector<byte> buf = serialize();
-   MemoryVector<byte> send_buf(4);
-
-   const size_t buf_size = buf.size();
-
-   send_buf[0] = type();
-
-   for(size_t i = 1; i != 4; ++i)
-     send_buf[i] = get_byte<u32bit>(i, buf_size);
-
-   send_buf += buf;
-
-   hash.update(send_buf);
-
-   writer.send(HANDSHAKE, &send_buf[0], send_buf.size());
-   }
-
-/*
 * Create a new Hello Request message
 */
 Hello_Request::Hello_Request(Record_Writer& writer)
    {
-   TLS_Handshake_Hash dummy; // FIXME: *UGLY*
-   send(writer, dummy);
+   writer.send(*this);
+   }
+
+/*
+* Deserialize a Hello Request message
+*/
+Hello_Request::Hello_Request(const MemoryRegion<byte>& buf)
+   {
+   if(buf.size())
+      throw Decoding_Error("Bad Hello_Request, has non-zero size");
    }
 
 /*
@@ -64,20 +52,11 @@ MemoryVector<byte> Hello_Request::serialize() const
    }
 
 /*
-* Deserialize a Hello Request message
-*/
-void Hello_Request::deserialize(const MemoryRegion<byte>& buf)
-   {
-   if(buf.size())
-      throw Decoding_Error("Hello_Request: Must be empty, and is not");
-   }
-
-/*
 * Create a new Client Hello message
 */
 Client_Hello::Client_Hello(Record_Writer& writer,
-                           TLS_Handshake_Hash& hash,
-                           const TLS_Policy& policy,
+                           Handshake_Hash& hash,
+                           const Policy& policy,
                            RandomNumberGenerator& rng,
                            const MemoryRegion<byte>& reneg_info,
                            bool next_protocol,
@@ -85,7 +64,7 @@ Client_Hello::Client_Hello(Record_Writer& writer,
                            const std::string& srp_identifier) :
    m_version(policy.pref_version()),
    m_random(make_hello_random(rng)),
-   m_suites(policy.ciphersuites(srp_identifier != "")),
+   m_suites(policy.ciphersuite_list((srp_identifier != ""))),
    m_comp_methods(policy.compression()),
    m_hostname(hostname),
    m_srp_identifier(srp_identifier),
@@ -94,16 +73,25 @@ Client_Hello::Client_Hello(Record_Writer& writer,
    m_secure_renegotiation(true),
    m_renegotiation_info(reneg_info)
    {
-   send(writer, hash);
+   std::vector<std::string> hashes = policy.allowed_hashes();
+   std::vector<std::string> sigs = policy.allowed_signature_methods();
+
+   m_supported_curves = policy.allowed_ecc_curves();
+
+   for(size_t i = 0; i != hashes.size(); ++i)
+      for(size_t j = 0; j != sigs.size(); ++j)
+         m_supported_algos.push_back(std::make_pair(hashes[i], sigs[j]));
+
+   hash.update(writer.send(*this));
    }
 
 /*
 * Create a new Client Hello message
 */
 Client_Hello::Client_Hello(Record_Writer& writer,
-                           TLS_Handshake_Hash& hash,
+                           Handshake_Hash& hash,
                            RandomNumberGenerator& rng,
-                           const TLS_Session& session,
+                           const Session& session,
                            bool next_protocol) :
    m_version(session.version()),
    m_session_id(session.session_id()),
@@ -114,10 +102,24 @@ Client_Hello::Client_Hello(Record_Writer& writer,
    m_fragment_size(session.fragment_size()),
    m_secure_renegotiation(session.secure_renegotiation())
    {
-   m_suites.push_back(session.ciphersuite());
+   m_suites.push_back(session.ciphersuite_code());
    m_comp_methods.push_back(session.compression_method());
 
-   send(writer, hash);
+   // set m_supported_algos + m_supported_curves here?
+
+   hash.update(writer.send(*this));
+   }
+
+Client_Hello::Client_Hello(const MemoryRegion<byte>& buf, Handshake_Type type)
+   {
+   m_next_protocol = false;
+   m_secure_renegotiation = false;
+   m_fragment_size = 0;
+
+   if(type == CLIENT_HELLO)
+      deserialize(buf);
+   else
+      deserialize_sslv2(buf);
    }
 
 /*
@@ -127,8 +129,8 @@ MemoryVector<byte> Client_Hello::serialize() const
    {
    MemoryVector<byte> buf;
 
-   buf.push_back(static_cast<byte>(m_version >> 8));
-   buf.push_back(static_cast<byte>(m_version     ));
+   buf.push_back(m_version.major_version());
+   buf.push_back(m_version.minor_version());
    buf += m_random;
 
    append_tls_length_value(buf, m_session_id, 1);
@@ -142,22 +144,26 @@ MemoryVector<byte> Client_Hello::serialize() const
    * send that extension.
    */
 
-   TLS_Extensions extensions;
+   Extensions extensions;
 
    // Initial handshake
    if(m_renegotiation_info.empty())
       {
-      extensions.push_back(new Renegotation_Extension(m_renegotiation_info));
-      extensions.push_back(new Server_Name_Indicator(m_hostname));
-      extensions.push_back(new SRP_Identifier(m_srp_identifier));
+      extensions.add(new Renegotation_Extension(m_renegotiation_info));
+      extensions.add(new Server_Name_Indicator(m_hostname));
+      extensions.add(new SRP_Identifier(m_srp_identifier));
+      extensions.add(new Supported_Elliptic_Curves(m_supported_curves));
+
+      if(m_version >= Protocol_Version::TLS_V12)
+         extensions.add(new Signature_Algorithms(m_supported_algos));
 
       if(m_next_protocol)
-         extensions.push_back(new Next_Protocol_Notification());
+         extensions.add(new Next_Protocol_Notification());
       }
    else
       {
       // renegotiation
-      extensions.push_back(new Renegotation_Extension(m_renegotiation_info));
+      extensions.add(new Renegotation_Extension(m_renegotiation_info));
       }
 
    buf += extensions.serialize();
@@ -194,7 +200,7 @@ void Client_Hello::deserialize_sslv2(const MemoryRegion<byte>& buf)
       m_suites.push_back(make_u16bit(buf[i+1], buf[i+2]));
       }
 
-   m_version = static_cast<Version_Code>(make_u16bit(buf[1], buf[2]));
+   m_version = Protocol_Version(buf[1], buf[2]);
 
    m_random.resize(challenge_len);
    copy_mem(&m_random[0], &buf[9+cipher_spec_len+m_session_id_len], challenge_len);
@@ -220,7 +226,11 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
 
    TLS_Data_Reader reader(buf);
 
-   m_version = static_cast<Version_Code>(reader.get_u16bit());
+   const byte major_version = reader.get_byte();
+   const byte minor_version = reader.get_byte();
+
+   m_version = Protocol_Version(major_version, minor_version);
+
    m_random = reader.get_fixed<byte>(32);
 
    m_session_id = reader.get_range<byte>(1, 0, 32);
@@ -229,30 +239,70 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
 
    m_comp_methods = reader.get_range_vector<byte>(1, 1, 255);
 
-   m_next_protocol = false;
-   m_secure_renegotiation = false;
-   m_fragment_size = 0;
+   Extensions extensions(reader);
 
-   TLS_Extensions extensions(reader);
-
-   for(size_t i = 0; i != extensions.count(); ++i)
+   if(Server_Name_Indicator* sni = extensions.get<Server_Name_Indicator>())
       {
-      TLS_Extension* extn = extensions.at(i);
+      m_hostname = sni->host_name();
+      }
 
-      if(Server_Name_Indicator* sni = dynamic_cast<Server_Name_Indicator*>(extn))
-         {
-         m_hostname = sni->host_name();
-         }
-      else if(SRP_Identifier* srp = dynamic_cast<SRP_Identifier*>(extn))
-         {
-         m_srp_identifier = srp->identifier();
-         }
-      else if(Next_Protocol_Notification* npn = dynamic_cast<Next_Protocol_Notification*>(extn))
-         {
-         if(!npn->protocols().empty())
-            throw Decoding_Error("Client sent non-empty NPN extension");
+   if(SRP_Identifier* srp = extensions.get<SRP_Identifier>())
+      {
+      m_srp_identifier = srp->identifier();
+      }
 
-         m_next_protocol = true;
+   if(Next_Protocol_Notification* npn = extensions.get<Next_Protocol_Notification>())
+      {
+      if(!npn->protocols().empty())
+         throw Decoding_Error("Client sent non-empty NPN extension");
+
+      m_next_protocol = true;
+      }
+
+   if(Maximum_Fragment_Length* frag = extensions.get<Maximum_Fragment_Length>())
+      {
+      m_fragment_size = frag->fragment_size();
+      }
+
+   if(Renegotation_Extension* reneg = extensions.get<Renegotation_Extension>())
+      {
+      // checked by Client / Server as they know the handshake state
+      m_secure_renegotiation = true;
+      m_renegotiation_info = reneg->renegotiation_info();
+      }
+
+   if(Supported_Elliptic_Curves* ecc = extensions.get<Supported_Elliptic_Curves>())
+      m_supported_curves = ecc->curves();
+
+   if(Signature_Algorithms* sigs = extensions.get<Signature_Algorithms>())
+      {
+      m_supported_algos = sigs->supported_signature_algorthms();
+      }
+   else
+      {
+      if(m_version >= Protocol_Version::TLS_V12)
+         {
+         /*
+         The rule for when a TLS 1.2 client not sending the extension
+         is strange; in theory, the server is supposed to act as if
+         the client had sent only SHA-1 using whatever signature
+         algorithm we end up negotiating. Right here, we don't know
+         what we'll end up negotiating (depends on policy), but we do
+         know that we'll only negotiate something the client sent, so
+         we can safely say it supports everything here and know that
+         we'll filter it out later.
+         */
+         m_supported_algos.push_back(std::make_pair("SHA-1", "RSA"));
+         m_supported_algos.push_back(std::make_pair("SHA-1", "DSA"));
+         m_supported_algos.push_back(std::make_pair("SHA-1", "ECDSA"));
+         }
+      else
+         {
+         // For versions before TLS 1.2, insert fake values for the old defaults
+
+         m_supported_algos.push_back(std::make_pair("TLS.Digest.0", "RSA"));
+         m_supported_algos.push_back(std::make_pair("SHA-1", "DSA"));
+         m_supported_algos.push_back(std::make_pair("SHA-1", "ECDSA"));
          }
       else if(Maximum_Fragment_Length* frag = dynamic_cast<Maximum_Fragment_Length*>(extn))
          {
@@ -282,7 +332,7 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
          {
          if(!m_renegotiation_info.empty())
             {
-            throw TLS_Exception(HANDSHAKE_FAILURE,
+            throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                                 "Client send SCSV and non-empty extension");
             }
          }
@@ -302,5 +352,7 @@ bool Client_Hello::offered_suite(u16bit ciphersuite) const
          return true;
    return false;
    }
+
+}
 
 }

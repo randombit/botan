@@ -9,16 +9,19 @@
 #define BOTAN_TLS_HANDSHAKE_HASH_H__
 
 #include <botan/secmem.h>
+#include <botan/tls_version.h>
 #include <botan/tls_magic.h>
 
 namespace Botan {
+
+namespace TLS {
 
 using namespace Botan;
 
 /**
 * TLS Handshake Hash
 */
-class TLS_Handshake_Hash
+class Handshake_Hash
    {
    public:
       void update(const byte in[], size_t length)
@@ -33,8 +36,10 @@ class TLS_Handshake_Hash
       void update(Handshake_Type handshake_type,
                   const MemoryRegion<byte>& handshake_msg);
 
-      SecureVector<byte> final();
-      SecureVector<byte> final_ssl3(const MemoryRegion<byte>&);
+      SecureVector<byte> final(Protocol_Version version,
+                               const std::string& mac_algo);
+
+      SecureVector<byte> final_ssl3(const MemoryRegion<byte>& master_secret);
 
       const SecureVector<byte>& get_contents() const
          { return data; }
@@ -42,6 +47,8 @@ class TLS_Handshake_Hash
    private:
       SecureVector<byte> data;
    };
+
+}
 
 }
 

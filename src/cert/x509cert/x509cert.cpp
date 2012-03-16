@@ -284,6 +284,34 @@ X509_DN X509_Certificate::subject_dn() const
    return create_dn(subject);
    }
 
+namespace {
+
+bool cert_subject_dns_match(const std::string& name,
+                            const std::vector<std::string>& cert_names)
+   {
+   for(size_t i = 0; i != cert_names.size(); ++i)
+      {
+      // support basic wildcarding?
+      if(cert_names[i] == name)
+         return true;
+      }
+
+   return false;
+   }
+
+}
+
+bool X509_Certificate::matches_dns_name(const std::string& name) const
+   {
+   if(cert_subject_dns_match(name, subject_info("DNS")))
+      return true;
+
+   if(cert_subject_dns_match(name, subject_info("Name")))
+      return true;
+
+   return false;
+   }
+
 /*
 * Compare two certificates for equality
 */

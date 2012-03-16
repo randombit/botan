@@ -10,6 +10,8 @@
 #include <botan/internal/core_engine.h>
 #include <botan/internal/stl_util.h>
 
+#include <stdio.h>
+
 namespace Botan {
 
 namespace {
@@ -24,7 +26,9 @@ bool test_filter_kat(Filter* filter,
    Pipe pipe(new Hex_Decoder, filter, new Hex_Encoder);
    pipe.process_msg(input);
 
-   std::string output = pipe.read_all_as_string();
+   const std::string output = pipe.read_all_as_string();
+
+   //printf("%s %s\n", output.c_str(), expected_output.c_str());
 
    return (output == expected_output);
    }

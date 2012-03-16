@@ -3,6 +3,8 @@ CFLAGS        = -Os
 LDFLAGS       =
 WARN_FLAGS    = %{warn_flags}
 
+SERIES        = %{version_major}.%{version_minor}
+
 PYTHON_ROOT = /usr/lib/python%{python_version}/config
 PYTHON_INC = -I/usr/include/python%{python_version}
 PYTHON_SITE_PACKAGE_DIR = /usr/lib/python%{python_version}/site-packages/
@@ -19,7 +21,7 @@ all: $(BOTAN_PYTHON_MODDIR)/_botan.so
 
 $(BOTAN_PYTHON_MODDIR)/_botan.so: $(PYTHON_OBJS)
 	cp %{python_dir}/*.py $(BOTAN_PYTHON_MODDIR)
-	$(CXX) -shared -Wl,-soname,$@ $(PYTHON_OBJS) -L. -L$(PYTHON_ROOT) $(LDFLAGS) -lbotan -lboost_python -o $@
+	$(CXX) -shared -Wl,-soname,$@ $(PYTHON_OBJS) -L. -L$(PYTHON_ROOT) $(LDFLAGS) -lbotan-$(SERIES) -lboost_python -o $@
 
 clean:
 	rm -rf $(BOTAN_PYTHON_MODDIR)/*

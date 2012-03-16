@@ -8,16 +8,18 @@
 #ifndef BOTAN_TLS_SESSION_KEYS_H__
 #define BOTAN_TLS_SESSION_KEYS_H__
 
-#include <botan/tls_suites.h>
+#include <botan/tls_ciphersuite.h>
 #include <botan/tls_exceptn.h>
 #include <botan/symkey.h>
 
 namespace Botan {
 
+namespace TLS {
+
 /**
 * TLS Session Keys
 */
-class SessionKeys
+class Session_Keys
    {
    public:
       SymmetricKey client_cipher_key() const { return c_cipher; }
@@ -31,20 +33,19 @@ class SessionKeys
 
       const SecureVector<byte>& master_secret() const { return master_sec; }
 
-      SessionKeys() {}
+      Session_Keys() {}
 
-      SessionKeys(const TLS_Cipher_Suite& suite,
-                  Version_Code version,
-                  const MemoryRegion<byte>& pre_master,
-                  const MemoryRegion<byte>& client_random,
-                  const MemoryRegion<byte>& server_random,
-                  bool resuming = false);
+      Session_Keys(class Handshake_State* state,
+                   const MemoryRegion<byte>& pre_master,
+                   bool resuming);
 
    private:
       SecureVector<byte> master_sec;
       SymmetricKey c_cipher, s_cipher, c_mac, s_mac;
       InitializationVector c_iv, s_iv;
    };
+
+}
 
 }
 

@@ -6,8 +6,13 @@
 */
 
 #include <botan/internal/tls_handshake_state.h>
+#include <botan/internal/tls_messages.h>
+#include <botan/internal/assert.h>
+#include <botan/lookup.h>
 
 namespace Botan {
+
+namespace TLS {
 
 namespace {
 
@@ -71,7 +76,7 @@ u32bit bitmask_for_handshake_type(Handshake_Type type)
 /*
 * Initialize the SSL/TLS Handshake State
 */
-Handshake_State::Handshake_State()
+Handshake_State::Handshake_State(Handshake_Reader* reader)
    {
    client_hello = 0;
    server_hello = 0;
@@ -87,13 +92,19 @@ Handshake_State::Handshake_State()
    client_finished = 0;
    server_finished = 0;
 
-   kex_pub = 0;
-   kex_priv = 0;
+   m_handshake_reader = reader;
 
-   version = SSL_V3;
+   server_rsa_kex_key = 0;
+
+   m_version = Protocol_Version::SSL_V3;
 
    hand_expecting_mask = 0;
    hand_received_mask = 0;
+   }
+
+void Handshake_State::set_version(const Protocol_Version& version)
+   {
+   m_version = version;
    }
 
 void Handshake_State::confirm_transition_to(Handshake_Type handshake_msg)
@@ -128,6 +139,142 @@ bool Handshake_State::received_handshake_msg(Handshake_Type handshake_msg) const
    return (hand_received_mask & mask);
    }
 
+KDF* Handshake_State::protocol_specific_prf()
+   {
+   if(version() == Protocol_Version::SSL_V3)
+      {
+      return get_kdf("SSL3-PRF");
+      }
+   else if(version() == Protocol_Version::TLS_V10 || version() == Protocol_Version::TLS_V11)
+      {
+      return get_kdf("TLS-PRF");
+      }
+   else if(version() == Protocol_Version::TLS_V12)
+      {
+      if(suite.mac_algo() == "SHA-1" || suite.mac_algo() == "SHA-256")
+         return get_kdf("TLS-12-PRF(SHA-256)");
+
+      return get_kdf("TLS-12-PRF(" + suite.mac_algo() + ")");
+      }
+
+   throw Internal_Error("Unknown version code " + version().to_string());
+   }
+
+std::pair<std::string, Signature_Format>
+Handshake_State::choose_sig_format(const Private_Key* key,
+                                   std::string& hash_algo_out,
+                                   std::string& sig_algo_out,
+                                   bool for_client_auth)
+   {
+   const std::string sig_algo = key->algo_name();
+
+   const std::vector<std::pair<std::string, std::string> > supported_algos =
+      (for_client_auth) ? cert_req->supported_algos() : client_hello->supported_algos();
+
+   std::string hash_algo;
+
+   for(size_t i = 0; i != supported_algos.size(); ++i)
+      {
+      if(supported_algos[i].second == sig_algo)
+         {
+         hash_algo = supported_algos[i].first;
+         break;
+         }
+      }
+
+   if(for_client_auth && this->version() == Protocol_Version::SSL_V3)
+      hash_algo = "Raw";
+
+   if(hash_algo == "" && this->version() == Protocol_Version::TLS_V12)
+      hash_algo = "SHA-1"; // TLS 1.2 but no compatible hashes set (?)
+
+   BOTAN_ASSERT(hash_algo != "", "Couldn't figure out hash to use");
+
+   if(this->version() >= Protocol_Version::TLS_V12)
+      {
+      hash_algo_out = hash_algo;
+      sig_algo_out = sig_algo;
+      }
+
+   if(sig_algo == "RSA")
+      {
+      const std::string padding = "EMSA3(" + hash_algo + ")";
+
+      return std::make_pair(padding, IEEE_1363);
+      }
+   else if(sig_algo == "DSA" || sig_algo == "ECDSA")
+      {
+      const std::string padding = "EMSA1(" + hash_algo + ")";
+
+      return std::make_pair(padding, DER_SEQUENCE);
+      }
+
+   throw Invalid_Argument(sig_algo + " is invalid/unknown for TLS signatures");
+   }
+
+std::pair<std::string, Signature_Format>
+Handshake_State::understand_sig_format(const Public_Key* key,
+                                       std::string hash_algo,
+                                       std::string sig_algo,
+                                       bool for_client_auth)
+   {
+   const std::string algo_name = key->algo_name();
+
+   /*
+   FIXME: This should check what was sent against the client hello
+   preferences, or the certificate request, to ensure it was allowed
+   by those restrictions.
+
+   Or not?
+   */
+
+   if(this->version() < Protocol_Version::TLS_V12)
+      {
+      if(hash_algo != "" || sig_algo != "")
+         throw Decoding_Error("Counterparty sent hash/sig IDs with old version");
+      }
+   else
+      {
+      if(hash_algo == "")
+         throw Decoding_Error("Counterparty did not send hash/sig IDS");
+
+      if(sig_algo != algo_name)
+         throw Decoding_Error("Counterparty sent inconsistent key and sig types");
+      }
+
+   if(algo_name == "RSA")
+      {
+      if(for_client_auth && this->version() == Protocol_Version::SSL_V3)
+         {
+         hash_algo = "Raw";
+         }
+      else if(this->version() < Protocol_Version::TLS_V12)
+         {
+         hash_algo = "TLS.Digest.0";
+         }
+
+      const std::string padding = "EMSA3(" + hash_algo + ")";
+      return std::make_pair(padding, IEEE_1363);
+      }
+   else if(algo_name == "DSA" || algo_name == "ECDSA")
+      {
+      if(algo_name == "DSA" && for_client_auth && this->version() == Protocol_Version::SSL_V3)
+         {
+         hash_algo = "Raw";
+         }
+      else if(this->version() < Protocol_Version::TLS_V12)
+         {
+         hash_algo = "SHA-1";
+         }
+
+      const std::string padding = "EMSA1(" + hash_algo + ")";
+
+      return std::make_pair(padding, DER_SEQUENCE);
+      }
+
+   throw Invalid_Argument(algo_name + " is invalid/unknown for TLS signatures");
+   }
+
 /*
 * Destroy the SSL/TLS Handshake State
 */
@@ -147,8 +294,9 @@ Handshake_State::~Handshake_State()
    delete client_finished;
    delete server_finished;
 
-   delete kex_pub;
-   delete kex_priv;
+   delete m_handshake_reader;
    }
+
+}
 
 }

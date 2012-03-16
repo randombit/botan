@@ -1,26 +1,77 @@
 /*
 * Finished Message
-* (C) 2004-2006 Jack Lloyd
+* (C) 2004-2006,2012 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
 
 #include <botan/internal/tls_messages.h>
-#include <botan/prf_tls.h>
+#include <botan/tls_record.h>
+#include <memory>
 
 namespace Botan {
+
+namespace TLS {
+
+namespace {
+
+/*
+* Compute the verify_data
+*/
+MemoryVector<byte> finished_compute_verify(Handshake_State* state,
+                                           Connection_Side side)
+   {
+   if(state->version() == Protocol_Version::SSL_V3)
+      {
+      const byte SSL_CLIENT_LABEL[] = { 0x43, 0x4C, 0x4E, 0x54 };
+      const byte SSL_SERVER_LABEL[] = { 0x53, 0x52, 0x56, 0x52 };
+
+      Handshake_Hash hash = state->hash; // don't modify state
+
+      MemoryVector<byte> ssl3_finished;
+
+      if(side == CLIENT)
+         hash.update(SSL_CLIENT_LABEL, sizeof(SSL_CLIENT_LABEL));
+      else
+         hash.update(SSL_SERVER_LABEL, sizeof(SSL_SERVER_LABEL));
+
+      return hash.final_ssl3(state->keys.master_secret());
+      }
+   else
+      {
+      const byte TLS_CLIENT_LABEL[] = {
+         0x63, 0x6C, 0x69, 0x65, 0x6E, 0x74, 0x20, 0x66, 0x69, 0x6E, 0x69,
+         0x73, 0x68, 0x65, 0x64 };
+
+      const byte TLS_SERVER_LABEL[] = {
+         0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x20, 0x66, 0x69, 0x6E, 0x69,
+         0x73, 0x68, 0x65, 0x64 };
+
+      std::auto_ptr<KDF> prf(state->protocol_specific_prf());
+
+      MemoryVector<byte> input;
+      if(side == CLIENT)
+         input += std::make_pair(TLS_CLIENT_LABEL, sizeof(TLS_CLIENT_LABEL));
+      else
+         input += std::make_pair(TLS_SERVER_LABEL, sizeof(TLS_SERVER_LABEL));
+
+      input += state->hash.final(state->version(), state->suite.mac_algo());
+
+      return prf->derive_key(12, state->keys.master_secret(), input);
+      }
+   }
+
+}
 
 /*
 * Create a new Finished message
 */
 Finished::Finished(Record_Writer& writer,
-                   TLS_Handshake_Hash& hash,
-                   Version_Code version,
-                   Connection_Side side,
-                   const MemoryRegion<byte>& master_secret)
+                   Handshake_State* state,
+                   Connection_Side side)
    {
-   verification_data = compute_verify(master_secret, hash, side, version);
-   send(writer, hash);
+   verification_data = finished_compute_verify(state, side);
+   state->hash.update(writer.send(*this));
    }
 
 /*
@@ -34,7 +85,7 @@ MemoryVector<byte> Finished::serialize() const
 /*
 * Deserialize a Finished message
 */
-void Finished::deserialize(const MemoryRegion<byte>& buf)
+Finished::Finished(const MemoryRegion<byte>& buf)
    {
    verification_data = buf;
    }
@@ -42,62 +93,12 @@ void Finished::deserialize(const MemoryRegion<byte>& buf)
 /*
 * Verify a Finished message
 */
-bool Finished::verify(const MemoryRegion<byte>& secret,
-                      Version_Code version,
-                      const TLS_Handshake_Hash& hash,
+bool Finished::verify(Handshake_State* state,
                       Connection_Side side)
    {
-   MemoryVector<byte> computed = compute_verify(secret, hash, side, version);
-   if(computed == verification_data)
-      return true;
-   return false;
+   return (verification_data == finished_compute_verify(state, side));
    }
 
-/*
-* Compute the verify_data
-*/
-MemoryVector<byte> Finished::compute_verify(const MemoryRegion<byte>& secret,
-                                            TLS_Handshake_Hash hash,
-                                            Connection_Side side,
-                                            Version_Code version)
-   {
-   if(version == SSL_V3)
-      {
-      const byte SSL_CLIENT_LABEL[] = { 0x43, 0x4C, 0x4E, 0x54 };
-      const byte SSL_SERVER_LABEL[] = { 0x53, 0x52, 0x56, 0x52 };
-
-      MemoryVector<byte> ssl3_finished;
-
-      if(side == CLIENT)
-         hash.update(SSL_CLIENT_LABEL, sizeof(SSL_CLIENT_LABEL));
-      else
-         hash.update(SSL_SERVER_LABEL, sizeof(SSL_SERVER_LABEL));
-
-      return hash.final_ssl3(secret);
-      }
-   else if(version == TLS_V10 || version == TLS_V11)
-      {
-      const byte TLS_CLIENT_LABEL[] = {
-         0x63, 0x6C, 0x69, 0x65, 0x6E, 0x74, 0x20, 0x66, 0x69, 0x6E, 0x69,
-         0x73, 0x68, 0x65, 0x64 };
-
-      const byte TLS_SERVER_LABEL[] = {
-         0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x20, 0x66, 0x69, 0x6E, 0x69,
-         0x73, 0x68, 0x65, 0x64 };
-
-      TLS_PRF prf;
-
-      MemoryVector<byte> input;
-      if(side == CLIENT)
-         input += std::make_pair(TLS_CLIENT_LABEL, sizeof(TLS_CLIENT_LABEL));
-      else
-         input += std::make_pair(TLS_SERVER_LABEL, sizeof(TLS_SERVER_LABEL));
-      input += hash.final();
-
-      return prf.derive_key(12, secret, input);
-      }
-   else
-      throw Invalid_Argument("Finished message: Unknown protocol version");
-   }
+}
 
 }

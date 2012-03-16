@@ -11,31 +11,48 @@
 
 namespace Botan {
 
+namespace TLS {
+
 namespace {
 
-TLS_Extension* make_extension(TLS_Data_Reader& reader,
-                              u16bit code,
-                              u16bit size)
+Extension* make_extension(TLS_Data_Reader& reader,
+                          u16bit code,
+                          u16bit size)
    {
-   if(code == TLSEXT_SERVER_NAME_INDICATION)
-      return new Server_Name_Indicator(reader, size);
-   else if(code == TLSEXT_MAX_FRAGMENT_LENGTH)
-      return new Maximum_Fragment_Length(reader, size);
-   else if(code == TLSEXT_SRP_IDENTIFIER)
-      return new SRP_Identifier(reader, size);
-   else if(code == TLSEXT_SAFE_RENEGOTIATION)
-      return new Renegotation_Extension(reader, size);
-   else if(code == TLSEXT_SESSION_TICKET)
-      return new Session_Ticket(reader, size);
-   else if(code == TLSEXT_NEXT_PROTOCOL)
-      return new Next_Protocol_Notification(reader, size);
-   else
-      return 0; // not known
+   switch(code)
+      {
+      case TLSEXT_SERVER_NAME_INDICATION:
+         return new Server_Name_Indicator(reader, size);
+
+      case TLSEXT_MAX_FRAGMENT_LENGTH:
+         return new Maximum_Fragment_Length(reader, size);
+
+      case TLSEXT_SRP_IDENTIFIER:
+         return new SRP_Identifier(reader, size);
+
+      case TLSEXT_USABLE_ELLIPTIC_CURVES:
+         return new Supported_Elliptic_Curves(reader, size);
+
+      case TLSEXT_SAFE_RENEGOTIATION:
+         return new Renegotation_Extension(reader, size);
+
+      case TLSEXT_SIGNATURE_ALGORITHMS:
+         return new Signature_Algorithms(reader, size);
+
+      case TLSEXT_NEXT_PROTOCOL:
+         return new Next_Protocol_Notification(reader, size);
+
+      case TLSEXT_SESSION_TICKET:
+         return new Session_Ticket(reader, size);
+
+      default:
+         return 0; // not known
+      }
    }
 
 }
 
-TLS_Extensions::TLS_Extensions(TLS_Data_Reader& reader)
+Extensions::Extensions(TLS_Data_Reader& reader)
    {
    if(reader.has_remaining())
       {
@@ -49,30 +66,31 @@ TLS_Extensions::TLS_Extensions(TLS_Data_Reader& reader)
          const u16bit extension_code = reader.get_u16bit();
          const u16bit extension_size = reader.get_u16bit();
 
-         TLS_Extension* extn = make_extension(reader,
+         Extension* extn = make_extension(reader,
                                               extension_code,
                                               extension_size);
 
          if(extn)
-            extensions.push_back(extn);
+            this->add(extn);
          else // unknown/unhandled extension
             reader.discard_next(extension_size);
          }
       }
    }
 
-MemoryVector<byte> TLS_Extensions::serialize() const
+MemoryVector<byte> Extensions::serialize() const
    {
    MemoryVector<byte> buf(2); // 2 bytes for length field
 
-   for(size_t i = 0; i != extensions.size(); ++i)
+   for(std::map<Handshake_Extension_Type, Extension*>::const_iterator i = extensions.begin();
+       i != extensions.end(); ++i)
       {
-      if(extensions[i]->empty())
+      if(i->second->empty())
          continue;
 
-      const u16bit extn_code = extensions[i]->type();
+      const u16bit extn_code = i->second->type();
 
-      MemoryVector<byte> extn_val = extensions[i]->serialize();
+      MemoryVector<byte> extn_val = i->second->serialize();
 
       buf.push_back(get_byte(0, extn_code));
       buf.push_back(get_byte(1, extn_code));
@@ -95,10 +113,14 @@ MemoryVector<byte> TLS_Extensions::serialize() const
    return buf;
    }
 
-TLS_Extensions::~TLS_Extensions()
+Extensions::~Extensions()
    {
-   for(size_t i = 0; i != extensions.size(); ++i)
-      delete extensions[i];
+   for(std::map<Handshake_Extension_Type, Extension*>::const_iterator i = extensions.begin();
+       i != extensions.end(); ++i)
+      {
+      delete i->second;
+      }
+
    extensions.clear();
    }
 
@@ -204,7 +226,7 @@ size_t Maximum_Fragment_Length::fragment_size() const
       case 4:
          return 4096;
       default:
-         throw TLS_Exception(ILLEGAL_PARAMETER,
+         throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
                              "Bad value in maximum fragment extension");
       }
    }
@@ -270,5 +292,218 @@ MemoryVector<byte> Next_Protocol_Notification::serialize() const
 
    return buf;
    }
+
+std::string Supported_Elliptic_Curves::curve_id_to_name(u16bit id)
+   {
+   switch(id)
+      {
+      case 15:
+         return "secp160k1";
+      case 16:
+         return "secp160r1";
+      case 17:
+         return "secp160r2";
+      case 18:
+         return "secp192k1";
+      case 19:
+         return "secp192r1";
+      case 20:
+         return "secp224k1";
+      case 21:
+         return "secp224r1";
+      case 22:
+         return "secp256k1";
+      case 23:
+         return "secp256r1";
+      case 24:
+         return "secp384r1";
+      case 25:
+         return "secp521r1";
+      default:
+         return ""; // something we don't know or support
+      }
+   }
+
+u16bit Supported_Elliptic_Curves::name_to_curve_id(const std::string& name)
+   {
+   if(name == "secp160k1")
+      return 15;
+   if(name == "secp160r1")
+      return 16;
+   if(name == "secp160r2")
+      return 17;
+   if(name == "secp192k1")
+      return 18;
+   if(name == "secp192r1")
+      return 19;
+   if(name == "secp224k1")
+      return 20;
+   if(name == "secp224r1")
+      return 21;
+   if(name == "secp256k1")
+      return 22;
+   if(name == "secp256r1")
+      return 23;
+   if(name == "secp384r1")
+      return 24;
+   if(name == "secp521r1")
+      return 25;
+
+   throw Invalid_Argument("name_to_curve_id unknown name " + name);
+   }
+
+MemoryVector<byte> Supported_Elliptic_Curves::serialize() const
+   {
+   MemoryVector<byte> buf(2);
+
+   for(size_t i = 0; i != m_curves.size(); ++i)
+      {
+      const u16bit id = name_to_curve_id(m_curves[i]);
+      buf.push_back(get_byte(0, id));
+      buf.push_back(get_byte(1, id));
+      }
+
+   buf[0] = get_byte<u16bit>(0, buf.size()-2);
+   buf[1] = get_byte<u16bit>(1, buf.size()-2);
+
+   return buf;
+   }
+
+Supported_Elliptic_Curves::Supported_Elliptic_Curves(TLS_Data_Reader& reader,
+                                                     u16bit extension_size)
+   {
+   u16bit len = reader.get_u16bit();
+
+   if(len + 2 != extension_size)
+      throw Decoding_Error("Inconsistent length field in elliptic curve list");
+
+   if(len % 2 == 1)
+      throw Decoding_Error("Elliptic curve list of strange size");
+
+   len /= 2;
+
+   for(size_t i = 0; i != len; ++i)
+      {
+      const u16bit id = reader.get_u16bit();
+      const std::string name = curve_id_to_name(id);
+
+      if(name != "")
+         m_curves.push_back(name);
+      }
+   }
+
+std::string Signature_Algorithms::hash_algo_name(byte code)
+   {
+   switch(code)
+      {
+      // code 1 is MD5 - ignore it
+
+      case 2:
+         return "SHA-1";
+      case 3:
+         return "SHA-224";
+      case 4:
+         return "SHA-256";
+      case 5:
+         return "SHA-384";
+      case 6:
+         return "SHA-512";
+      default:
+         return "";
+      }
+   }
+
+byte Signature_Algorithms::hash_algo_code(const std::string& name)
+   {
+   if(name == "SHA-1")
+      return 2;
+
+   if(name == "SHA-224")
+      return 3;
+
+   if(name == "SHA-256")
+      return 4;
+
+   if(name == "SHA-384")
+      return 5;
+
+   if(name == "SHA-512")
+      return 6;
+
+   throw Internal_Error("Unknown hash ID " + name + " for signature_algorithms");
+   }
+
+std::string Signature_Algorithms::sig_algo_name(byte code)
+   {
+   switch(code)
+      {
+      case 1:
+         return "RSA";
+      case 2:
+         return "DSA";
+      case 3:
+         return "ECDSA";
+      default:
+         return "";
+      }
+   }
+
+byte Signature_Algorithms::sig_algo_code(const std::string& name)
+   {
+   if(name == "RSA")
+      return 1;
+
+   if(name == "DSA")
+      return 2;
+
+   if(name == "ECDSA")
+      return 3;
+
+   throw Internal_Error("Unknown sig ID " + name + " for signature_algorithms");
+   }
+
+MemoryVector<byte> Signature_Algorithms::serialize() const
+   {
+   MemoryVector<byte> buf(2);
+
+   for(size_t i = 0; i != m_supported_algos.size(); ++i)
+      {
+      if(m_supported_algos[i].second == "")
+         continue;
+
+      buf.push_back(hash_algo_code(m_supported_algos[i].first));
+      buf.push_back(sig_algo_code(m_supported_algos[i].second));
+      }
+
+   buf[0] = get_byte<u16bit>(0, buf.size()-2);
+   buf[1] = get_byte<u16bit>(1, buf.size()-2);
+
+   return buf;
+   }
+
+Signature_Algorithms::Signature_Algorithms(TLS_Data_Reader& reader,
+                                           u16bit extension_size)
+   {
+   u16bit len = reader.get_u16bit();
+
+   if(len + 2 != extension_size)
+      throw Decoding_Error("Bad encoding on signature algorithms extension");
+
+   while(len)
+      {
+      const std::string hash_code = hash_algo_name(reader.get_byte());
+      const std::string sig_code = sig_algo_name(reader.get_byte());
+
+      len -= 2;
+
+      // If not something we know, ignore it completely
+      if(hash_code == "" || sig_code == "")
+         continue;
+
+      m_supported_algos.push_back(std::make_pair(hash_code, sig_code));
+      }
+   }
+
+}
 
 }

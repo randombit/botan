@@ -28,6 +28,8 @@ class BOTAN_DLL SecureQueue : public Fanout_Filter, public DataSource
 
       bool end_of_data() const;
 
+      bool empty() const;
+
       /**
       * @return number of bytes available in the queue
       */

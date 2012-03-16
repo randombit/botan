@@ -23,7 +23,15 @@ void P_hash(MemoryRegion<byte>& output,
             const byte secret[], size_t secret_len,
             const byte seed[], size_t seed_len)
    {
-   mac->set_key(secret, secret_len);
+   try
+      {
+      mac->set_key(secret, secret_len);
+      }
+   catch(Invalid_Key_Length)
+      {
+      throw Internal_Error("The premaster secret of " + to_string(secret_len) +
+                           " bytes is too long for the PRF");
+      }
 
    SecureVector<byte> A(seed, seed_len);
 

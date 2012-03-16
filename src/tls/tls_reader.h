@@ -17,6 +17,8 @@
 
 namespace Botan {
 
+namespace TLS {
+
 /**
 * Helper class for decoding TLS protocol messages
 */
@@ -26,13 +28,10 @@ class TLS_Data_Reader
       TLS_Data_Reader(const MemoryRegion<byte>& buf_in) :
          buf(buf_in), offset(0) {}
 
-      ~TLS_Data_Reader()
+      void assert_done() const
          {
          if(has_remaining())
-            {
-            abort();
             throw Decoding_Error("Extra bytes at end of message");
-            }
          }
 
       size_t remaining_bytes() const
@@ -155,8 +154,9 @@ class TLS_Data_Reader
          {
          if(buf.size() - offset < n)
             {
-            abort();
-            throw Decoding_Error("TLS_Data_Reader: Corrupt packet");
+            throw Decoding_Error("TLS_Data_Reader: Expected " + to_string(n) +
+                                 " bytes remaining, only " + to_string(buf.size()-offset) +
+                                 " left");
             }
          }
 
@@ -206,6 +206,18 @@ void append_tls_length_value(MemoryRegion<byte>& buf,
    {
    append_tls_length_value(buf, &vals[0], vals.size(), tag_size);
    }
+
+inline void append_tls_length_value(MemoryRegion<byte>& buf,
+                                    const std::string& str,
+                                    size_t tag_size)
+   {
+   append_tls_length_value(buf,
+                           reinterpret_cast<const byte*>(&str[0]),
+                           str.size(),
+                           tag_size);
+   }
+
+}
 
 }
 

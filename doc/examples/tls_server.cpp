@@ -8,6 +8,7 @@
 #include <botan/secqueue.h>
 
 #include "socket.h"
+#include "credentials.h"
 
 using namespace Botan;
 
@@ -18,44 +19,10 @@ using namespace std::tr1::placeholders;
 #include <iostream>
 #include <memory>
 
-class Credentials_Manager_Simple : public Credentials_Manager
+bool handshake_complete(const TLS::Session& session)
    {
-   public:
-      Credentials_Manager_Simple(RandomNumberGenerator& rng) : rng(rng) {}
-
-      std::vector<X509_Certificate> cert_chain(
-         const std::string& cert_key_type,
-         const std::string& type,
-         const std::string& context)
-         {
-         const std::string hostname = (context == "" ? "localhost" : context);
-
-         X509_Certificate cert(hostname + ".crt");
-         Private_Key* key = PKCS8::load_key(hostname + ".key", rng);
-
-         certs_and_keys[cert] = key;
-
-         std::vector<X509_Certificate> certs;
-         certs.push_back(cert);
-         return certs;
-         }
-
-      Private_Key* private_key_for(const X509_Certificate& cert,
-                                   const std::string& type,
-                                   const std::string& context)
-         {
-         return certs_and_keys[cert];
-         }
-
-   private:
-      RandomNumberGenerator& rng;
-      std::map<X509_Certificate, Private_Key*> certs_and_keys;
-   };
-
-bool handshake_complete(const TLS_Session& session)
-   {
-   printf("Handshake complete, protocol=%04X ciphersuite=%04X compression=%d\n",
-          session.version(), session.ciphersuite(),
+   printf("Handshake complete, protocol=%04X ciphersuite=%s compression=%d\n",
+          session.version(), session.ciphersuite().to_string().c_str(),
           session.compression_method());
 
    printf("Session id = %s\n", hex_encode(session.session_id()).c_str());
@@ -69,9 +36,9 @@ class Blocking_TLS_Server
       Blocking_TLS_Server(std::tr1::function<void (const byte[], size_t)> output_fn,
                           std::tr1::function<size_t (byte[], size_t)> input_fn,
                           std::vector<std::string>& protocols,
-                          TLS_Session_Manager& sessions,
+                          TLS::Session_Manager& sessions,
                           Credentials_Manager& creds,
-                          TLS_Policy& policy,
+                          TLS::Policy& policy,
                           RandomNumberGenerator& rng) :
          input_fn(input_fn),
          server(
@@ -102,14 +69,14 @@ class Blocking_TLS_Server
 
       void write(const byte buf[], size_t buf_len)
          {
-         server.queue_for_sending(buf, buf_len);
+         server.send(buf, buf_len);
          }
 
       void close() { server.close(); }
 
       bool is_active() const { return server.is_active(); }
 
-      TLS_Server& underlying() { return server; }
+      TLS::Server& underlying() { return server; }
    private:
       void read_loop(size_t init_desired = 0)
          {
@@ -133,11 +100,11 @@ class Blocking_TLS_Server
             }
          }
 
-      void reader_fn(const byte buf[], size_t buf_len, u16bit alert_code)
+      void reader_fn(const byte buf[], size_t buf_len, TLS::Alert alert)
          {
-         if(buf_len == 0 && alert_code != NULL_ALERT)
+         if(alert.is_valid())
             {
-            printf("Alert: %d\n", alert_code);
+            printf("Alert %s\n", alert.type_string().c_str());
             //exit = true;
             }
 
@@ -153,27 +120,9 @@ class Blocking_TLS_Server
          }
 
       std::tr1::function<size_t (byte[], size_t)> input_fn;
-      TLS_Server server;
+      TLS::Server server;
       SecureQueue read_queue;
       bool exit;
-   };
-
-class Server_TLS_Policy : public TLS_Policy
-   {
-   public:
-      //bool require_client_auth() const { return true; }
-
-      bool check_cert(const std::vector<X509_Certificate>& certs) const
-         {
-         for(size_t i = 0; i != certs.size(); ++i)
-            {
-            std::cout << certs[i].to_string();
-            }
-
-         std::cout << "Warning: not checking cert signatures\n";
-
-         return true;
-         }
    };
 
 int main(int argc, char* argv[])
@@ -192,9 +141,9 @@ int main(int argc, char* argv[])
 
       Server_Socket listener(port);
 
-      Server_TLS_Policy policy;
+      TLS::Policy policy;
 
-      TLS_Session_Manager_In_Memory sessions;
+      TLS::Session_Manager_In_Memory sessions;
 
       Credentials_Manager_Simple creds(rng);
 

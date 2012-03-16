@@ -8,15 +8,27 @@
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_extensions.h>
 #include <botan/internal/tls_reader.h>
+#include <botan/tls_record.h>
 
 namespace Botan {
 
+namespace TLS {
+
 Next_Protocol::Next_Protocol(Record_Writer& writer,
-                             TLS_Handshake_Hash& hash,
+                             Handshake_Hash& hash,
                              const std::string& protocol) :
    m_protocol(protocol)
    {
-   send(writer, hash);
+   hash.update(writer.send(*this));
+   }
+
+Next_Protocol::Next_Protocol(const MemoryRegion<byte>& buf)
+   {
+   TLS_Data_Reader reader(buf);
+
+   m_protocol = reader.get_string(1, 0, 255);
+
+   reader.get_range_vector<byte>(1, 0, 255); // padding, ignored
    }
 
 MemoryVector<byte> Next_Protocol::serialize() const
@@ -38,13 +50,6 @@ MemoryVector<byte> Next_Protocol::serialize() const
    return buf;
    }
 
-void Next_Protocol::deserialize(const MemoryRegion<byte>& buf)
-   {
-   TLS_Data_Reader reader(buf);
-
-   m_protocol = reader.get_string(1, 0, 255);
-
-   reader.get_range_vector<byte>(1, 0, 255); // padding, ignored
-   }
+}
 
 }

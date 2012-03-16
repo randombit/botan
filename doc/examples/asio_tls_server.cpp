@@ -2,11 +2,11 @@
 #include <string>
 #include <vector>
 
+#include <boost/asio.hpp>
 #include <boost/bind.hpp>
+#include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
-
-#include <asio.hpp>
 
 #include <botan/tls_server.h>
 #include <botan/x509cert.h>
@@ -14,18 +14,20 @@
 #include <botan/auto_rng.h>
 #include <botan/init.h>
 
+#include "credentials.h"
+
 using Botan::byte;
-using asio::ip::tcp;
+using boost::asio::ip::tcp;
 
 class tls_server_session : public boost::enable_shared_from_this<tls_server_session>
    {
    public:
       typedef boost::shared_ptr<tls_server_session> pointer;
 
-      static pointer create(asio::io_service& io_service,
-                            Botan::TLS_Session_Manager& session_manager,
+      static pointer create(boost::asio::io_service& io_service,
+                            Botan::TLS::Session_Manager& session_manager,
                             Botan::Credentials_Manager& credentials,
-                            Botan::TLS_Policy& policy,
+                            Botan::TLS::Policy& policy,
                             Botan::RandomNumberGenerator& rng)
          {
          return pointer(
@@ -38,31 +40,27 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
             );
          }
 
-      tcp::socket& socket()
-         {
-         return m_socket;
-         }
+      tcp::socket& socket() { return m_socket; }
 
       void start()
          {
          m_socket.async_read_some(
-            asio::buffer(m_read_buf, sizeof(m_read_buf)),
-            boost::bind(&tls_server_session::handle_read, shared_from_this(),
-                        asio::placeholders::error,
-                        asio::placeholders::bytes_transferred));
+            boost::asio::buffer(m_read_buf, sizeof(m_read_buf)),
+            m_strand.wrap(
+               boost::bind(&tls_server_session::handle_read, shared_from_this(),
+                           boost::asio::placeholders::error,
+                           boost::asio::placeholders::bytes_transferred)));
          }
 
-      void stop()
-         {
-         m_socket.close();
-         }
+      void stop() { m_socket.close(); }
 
    private:
-      tls_server_session(asio::io_service& io_service,
-                         Botan::TLS_Session_Manager& session_manager,
+      tls_server_session(boost::asio::io_service& io_service,
+                         Botan::TLS::Session_Manager& session_manager,
                          Botan::Credentials_Manager& credentials,
-                         Botan::TLS_Policy& policy,
+                         Botan::TLS::Policy& policy,
                          Botan::RandomNumberGenerator& rng) :
+         m_strand(io_service),
          m_socket(io_service),
          m_tls(boost::bind(&tls_server_session::tls_output_wanted, this, _1, _2),
                boost::bind(&tls_server_session::tls_data_recv, this, _1, _2, _3),
@@ -74,7 +72,7 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
          {
          }
 
-      void handle_read(const asio::error_code& error,
+      void handle_read(const boost::system::error_code& error,
                        size_t bytes_transferred)
          {
          if(!error)
@@ -85,26 +83,24 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
                }
             catch(std::exception& e)
                {
-               printf("Failed - %s\n", e.what());
+               std::cout << "Read failed " << e.what() << "\n";
                stop();
                return;
                }
 
             m_socket.async_read_some(
-               asio::buffer(m_read_buf, sizeof(m_read_buf)),
-               boost::bind(&tls_server_session::handle_read, shared_from_this(),
-                           asio::placeholders::error,
-                           asio::placeholders::bytes_transferred));
+               boost::asio::buffer(m_read_buf, sizeof(m_read_buf)),
+               m_strand.wrap(boost::bind(&tls_server_session::handle_read, shared_from_this(),
+                                         boost::asio::placeholders::error,
+                                         boost::asio::placeholders::bytes_transferred)));
             }
          else
             {
             stop();
-            //printf("Error in read: %s\n", error.message().c_str());
             }
          }
 
-      void handle_write(const asio::error_code& error,
-                        size_t bytes_transferred)
+      void handle_write(const boost::system::error_code& error)
          {
          if(!error)
             {
@@ -115,7 +111,6 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
             }
          else
             {
-            //printf("Error in write: %s\n", error.message().c_str());
             stop();
             }
          }
@@ -130,60 +125,59 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
             {
             std::swap(m_outbox, m_write_buf);
 
-            asio::async_write(m_socket,
-                              asio::buffer(&m_write_buf[0], m_write_buf.size()),
-                              boost::bind(&tls_server_session::handle_write,
-                                          shared_from_this(),
-                                          asio::placeholders::error,
-                                          asio::placeholders::bytes_transferred));
+            boost::asio::async_write(m_socket,
+                              boost::asio::buffer(&m_write_buf[0], m_write_buf.size()),
+                              m_strand.wrap(
+                                 boost::bind(&tls_server_session::handle_write,
+                                             shared_from_this(),
+                                             boost::asio::placeholders::error)));
             }
          }
 
-      void tls_data_recv(const byte buf[], size_t buf_len, Botan::u16bit alert_info)
+      void tls_data_recv(const byte buf[], size_t buf_len, Botan::TLS::Alert alert)
          {
-         if(buf_len == 0 && alert_info != Botan::NULL_ALERT)
+         if(alert.is_valid())
             {
-            //printf("Alert: %d\n", alert_info);
-            if(alert_info == 0)
+            if(alert.type() == Botan::TLS::Alert::CLOSE_NOTIFY)
                {
                m_tls.close();
                return;
                }
             }
 
-
-
-         //printf("Got %d bytes: ", (int)buf_len);
-
-         if(buf_len > 4)
+         if(buf_len > 4) // FIXME: ghetto
             {
             std::string out;
             out += "\r\n";
             out += "HTTP/1.0 200 OK\r\n";
             out += "Server: Botan ASIO test server\r\n";
-            out += "Host: 192.168.10.5\r\n";
+            if(m_hostname != "")
+               out += "Host: " + m_hostname + "\r\n";
             out += "Content-Type: text/html\r\n";
             out += "\r\n";
             out += "<html><body>Greets. You said: ";
             out += std::string((const char*)buf, buf_len);
             out += "</body></html>\r\n\r\n";
 
-            m_tls.queue_for_sending(reinterpret_cast<const byte*>(&out[0]),
-                                    out.size());
+            m_tls.send(reinterpret_cast<const byte*>(&out[0]),
+                       out.size());
             m_tls.close();
             }
          }
 
-      bool tls_handshake_complete(const Botan::TLS_Session& session)
+      bool tls_handshake_complete(const Botan::TLS::Session& session)
          {
-         //printf("handshake complete\n");
+         m_hostname = session.sni_hostname();
          return true;
          }
 
-      tcp::socket m_socket;
-      Botan::TLS_Server m_tls;
+      boost::asio::io_service::strand m_strand; // serialization
 
-      unsigned char m_read_buf[Botan::MAX_TLS_RECORD_SIZE];
+      tcp::socket m_socket;
+      Botan::TLS::Server m_tls;
+      std::string m_hostname;
+
+      unsigned char m_read_buf[Botan::TLS::MAX_TLS_RECORD_SIZE];
 
       // used to hold the data currently being written by the system
       std::vector<byte> m_write_buf;
@@ -192,56 +186,39 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
       std::vector<byte> m_outbox;
    };
 
-class Credentials_Manager_Simple : public Botan::Credentials_Manager
+class Session_Manager_Locked : public Botan::TLS::Session_Manager
    {
    public:
-      Credentials_Manager_Simple(Botan::RandomNumberGenerator& rng) : rng(rng) {}
-
-      std::vector<Botan::X509_Certificate> cert_chain(
-         const std::string& cert_key_type,
-         const std::string& type,
-         const std::string& context)
+      bool load_from_session_id(const Botan::MemoryRegion<byte>& session_id,
+                                Botan::TLS::Session& session)
          {
-         const std::string hostname = (context == "" ? "localhost" : context);
-
-         Botan::X509_Certificate cert(hostname + ".crt");
-         Botan::Private_Key* key = Botan::PKCS8::load_key(hostname + ".key", rng);
-
-         certs_and_keys[cert] = key;
-
-         std::vector<Botan::X509_Certificate> certs;
-         certs.push_back(cert);
-         return certs;
+         boost::lock_guard<boost::mutex> lock(m_mutex);
+         return m_session_manager.load_from_session_id(session_id, session);
          }
 
-      Botan::Private_Key* private_key_for(const Botan::X509_Certificate& cert,
-                                          const std::string& type,
-                                          const std::string& context)
+      bool load_from_host_info(const std::string& hostname, Botan::u16bit port,
+                               Botan::TLS::Session& session)
          {
-         return certs_and_keys[cert];
+         boost::lock_guard<boost::mutex> lock(m_mutex);
+         return m_session_manager.load_from_host_info(hostname, port, session);
+         };
+
+      void remove_entry(const Botan::MemoryRegion<byte>& session_id)
+         {
+         boost::lock_guard<boost::mutex> lock(m_mutex);
+         m_session_manager.remove_entry(session_id);
+         }
+
+      void save(const Botan::TLS::Session& session)
+         {
+         boost::lock_guard<boost::mutex> lock(m_mutex);
+         m_session_manager.save(session);
          }
 
    private:
-      Botan::RandomNumberGenerator& rng;
-      std::map<Botan::X509_Certificate, Botan::Private_Key*> certs_and_keys;
-   };
+      boost::mutex m_mutex;
+      Botan::TLS::Session_Manager_In_Memory m_session_manager;
 
-class Server_TLS_Policy : public Botan::TLS_Policy
-   {
-   public:
-      //bool require_client_auth() const { return true; }
-
-      bool check_cert(const std::vector<Botan::X509_Certificate>& certs) const
-         {
-         for(size_t i = 0; i != certs.size(); ++i)
-            {
-            std::cout << certs[i].to_string();
-            }
-
-         std::cout << "Warning: not checking cert signatures\n";
-
-         return true;
-         }
    };
 
 class tls_server
@@ -249,7 +226,7 @@ class tls_server
    public:
       typedef tls_server_session session;
 
-      tls_server(asio::io_service& io_service, unsigned short port) :
+      tls_server(boost::asio::io_service& io_service, unsigned short port) :
          m_acceptor(io_service, tcp::endpoint(tcp::v4(), port)),
          m_creds(m_rng)
          {
@@ -261,7 +238,7 @@ class tls_server
                &tls_server::handle_accept,
                this,
                new_session,
-               asio::placeholders::error)
+               boost::asio::placeholders::error)
             );
          }
 
@@ -269,7 +246,7 @@ class tls_server
       session::pointer make_session()
          {
          return session::create(
-            m_acceptor.io_service(),
+            m_acceptor.get_io_service(),
             m_session_manager,
             m_creds,
             m_policy,
@@ -278,7 +255,7 @@ class tls_server
          }
 
       void handle_accept(session::pointer new_session,
-                         const asio::error_code& error)
+                         const boost::system::error_code& error)
          {
          if (!error)
             {
@@ -292,7 +269,7 @@ class tls_server
                   &tls_server::handle_accept,
                   this,
                   new_session,
-                  asio::placeholders::error)
+                  boost::asio::placeholders::error)
                );
             }
          }
@@ -300,21 +277,48 @@ class tls_server
       tcp::acceptor m_acceptor;
 
       Botan::AutoSeeded_RNG m_rng;
-      Botan::TLS_Session_Manager_In_Memory m_session_manager;
-      Server_TLS_Policy m_policy;
+      Session_Manager_Locked m_session_manager;
+      Botan::TLS::Policy m_policy;
       Credentials_Manager_Simple m_creds;
    };
+
+size_t choose_thread_count()
+   {
+   size_t result = boost::thread::hardware_concurrency();
+
+   if(result)
+      return result;
+
+   return 2;
+   }
 
 int main()
    {
    try
       {
-      Botan::LibraryInitializer init;
-      asio::io_service io_service;
+      Botan::LibraryInitializer init("thread_safe=true");
+      boost::asio::io_service io_service;
 
-      unsigned short port = 4433;
+      unsigned short port = 4434;
       tls_server server(io_service, port);
-      io_service.run();
+
+      const size_t num_threads = choose_thread_count();
+
+      std::cout << "Using " << num_threads << " threads\n";
+
+      std::vector<boost::shared_ptr<boost::thread> > threads;
+
+      for(size_t i = 0; i != num_threads; ++i)
+         {
+         boost::shared_ptr<boost::thread> thread(
+            new boost::thread(
+               boost::bind(&boost::asio::io_service::run, &io_service)));
+         threads.push_back(thread);
+         }
+
+      // Wait for all threads in the pool to exit.
+      for (size_t i = 0; i < threads.size(); ++i)
+         threads[i]->join();
       }
    catch (std::exception& e)
       {
