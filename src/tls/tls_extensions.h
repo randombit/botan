@@ -218,7 +218,7 @@ class Session_Ticket : public Extension
 
       Handshake_Extension_Type type() const { return static_type(); }
 
-      const MemoryVector<byte>& contents() const { return m_contents; }
+      const MemoryVector<byte>& contents() const { return m_ticket; }
 
       /**
       * Create empty extension, used by both client and server
@@ -229,21 +229,18 @@ class Session_Ticket : public Extension
       * Extension with ticket, used by client
       */
       Session_Ticket(const MemoryRegion<byte>& session_ticket) :
-         m_contents(session_ticket) {}
+         m_ticket(session_ticket) {}
 
       /**
       * Deserialize a session ticket
       */
-      Session_Ticket(const TLS_Data_Reader& reader, u16bit extension_size)
-         {
-         // FIXME
-         }
+      Session_Ticket(const TLS_Data_Reader& reader, u16bit extension_size);
 
-      MemoryVector<byte> serialize() const { return m_contents; }
+      MemoryVector<byte> serialize() const { return m_ticket; }
 
       bool empty() const { return false; }
    private:
-      MemoryVector<byte> m_contents;
+      MemoryVector<byte> m_ticket;
    };
 
 /**

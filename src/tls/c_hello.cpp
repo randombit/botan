@@ -159,6 +159,7 @@ MemoryVector<byte> Client_Hello::serialize() const
       extensions.add(new Server_Name_Indicator(m_hostname));
       extensions.add(new SRP_Identifier(m_srp_identifier));
       extensions.add(new Supported_Elliptic_Curves(m_supported_curves));
+      extensions.add(new Session_Ticket());
 
       if(m_version >= Protocol_Version::TLS_V12)
          extensions.add(new Signature_Algorithms(m_supported_algos));

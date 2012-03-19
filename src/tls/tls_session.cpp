@@ -138,7 +138,7 @@ Session::encrypt(const SymmetricKey& master_key,
                            " for key_name in TLS_Session::encrypt");
 
    if(master_key.length() == 0)
-      throw Decoding_Error("Session master_key not set");
+      throw Decoding_Error("Session encryption key not set");
 
    std::auto_ptr<KDF> kdf(get_kdf("KDF2(SHA-256)"));
 
