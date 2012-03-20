@@ -54,11 +54,14 @@ u32bit bitmask_for_handshake_type(Handshake_Type type)
       case NEXT_PROTOCOL:
          return (1 << 9);
 
-      case HANDSHAKE_CCS:
+      case NEW_SESSION_TICKET:
          return (1 << 10);
 
-      case FINISHED:
+      case HANDSHAKE_CCS:
          return (1 << 11);
+
+      case FINISHED:
+         return (1 << 12);
 
       // allow explicitly disabling new handshakes
       case HANDSHAKE_NONE:
@@ -85,6 +88,7 @@ Handshake_State::Handshake_State(Handshake_Reader* reader)
    cert_req = 0;
    server_hello_done = 0;
    next_protocol = 0;
+   new_session_ticket = 0;
 
    client_certs = 0;
    client_kex = 0;
@@ -287,6 +291,7 @@ Handshake_State::~Handshake_State()
    delete cert_req;
    delete server_hello_done;
    delete next_protocol;
+   delete new_session_ticket;
 
    delete client_certs;
    delete client_kex;

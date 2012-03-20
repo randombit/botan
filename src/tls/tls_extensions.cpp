@@ -507,7 +507,7 @@ Signature_Algorithms::Signature_Algorithms(TLS_Data_Reader& reader,
 Session_Ticket::Session_Ticket(const TLS_Data_Reader& reader,
                                u16bit extension_size)
    {
-
+#warning "can't read session tickets"
    }
 
 }

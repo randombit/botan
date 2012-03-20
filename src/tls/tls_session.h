@@ -51,6 +51,7 @@ class BOTAN_DLL Session
               bool secure_renegotiation_supported,
               size_t fragment_size,
               const std::vector<X509_Certificate>& peer_certs,
+              const MemoryRegion<byte>& session_ticket,
               const std::string& sni_hostname = "",
               const std::string& srp_identifier = "");
 
@@ -75,12 +76,15 @@ class BOTAN_DLL Session
       * Encrypt a session (useful for serialization or session tickets)
       */
       MemoryVector<byte> encrypt(const SymmetricKey& key,
-                                 const MemoryRegion<byte>& key_name,
                                  RandomNumberGenerator& rng);
 
+      /**
+      * Decrypt a session created by encrypt
+      * @param ctext the ciphertext returned by encrypt
+      * @param key the same key used by the encrypting side
+      */
       static Session decrypt(const MemoryRegion<byte>& ctext,
-                             const SymmetricKey& key,
-                             const MemoryRegion<byte>& key_name);
+                             const SymmetricKey& key);
 
       /**
       * Encode this session data for storage
@@ -158,12 +162,18 @@ class BOTAN_DLL Session
       */
       u64bit start_time() const { return m_start_time; }
 
+      /**
+      * Return the session ticket the server gave us
+      */
+      const MemoryVector<byte>& session_ticket() const { return m_session_ticket; }
+
    private:
-      enum { TLS_SESSION_PARAM_STRUCT_VERSION = 1 };
+      enum { TLS_SESSION_PARAM_STRUCT_VERSION = 0x2994e300 };
 
       u64bit m_start_time;
 
       MemoryVector<byte> m_identifier;
+      MemoryVector<byte> m_session_ticket; // only used by client side
       SecureVector<byte> m_master_secret;
 
       Protocol_Version m_version;

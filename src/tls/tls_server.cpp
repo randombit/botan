@@ -447,6 +447,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             secure_renegotiation.supported(),
             state->server_hello->fragment_size(),
             peer_certs,
+            MemoryVector<byte>(),
             m_hostname,
             ""
             );

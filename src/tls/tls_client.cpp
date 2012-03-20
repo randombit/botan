@@ -11,6 +11,9 @@
 #include <botan/internal/stl_util.h>
 #include <memory>
 
+#include <stdio.h>
+#include <botan/hex.h>
+
 namespace Botan {
 
 namespace TLS {
@@ -173,6 +176,13 @@ void Client::process_handshake_msg(Handshake_Type type,
                              "Server sent next protocol but we didn't request it");
          }
 
+      if(state->server_hello->supports_session_ticket())
+         {
+         if(!state->client_hello->supports_session_ticket())
+            throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                                "Server sent session ticket extension but we did not");
+         }
+
       state->set_version(state->server_hello->version());
 
       writer.set_version(state->version());
@@ -199,7 +209,10 @@ void Client::process_handshake_msg(Handshake_Type type,
                                     state->resume_master_secret,
                                     true);
 
-         state->set_expected_next(HANDSHAKE_CCS);
+         if(state->server_hello->supports_session_ticket())
+            state->set_expected_next(NEW_SESSION_TICKET);
+         else
+            state->set_expected_next(HANDSHAKE_CCS);
          }
       else
          {
@@ -306,8 +319,6 @@ void Client::process_handshake_msg(Handshake_Type type,
       }
    else if(type == SERVER_HELLO_DONE)
       {
-      state->set_expected_next(HANDSHAKE_CCS);
-
       state->server_hello_done = new Server_Hello_Done(contents);
 
       if(state->received_handshake_msg(CERTIFICATE_REQUEST))
@@ -364,6 +375,17 @@ void Client::process_handshake_msg(Handshake_Type type,
          }
 
       state->client_finished = new Finished(writer, state, CLIENT);
+
+      if(state->server_hello->supports_session_ticket())
+         state->set_expected_next(NEW_SESSION_TICKET);
+      else
+         state->set_expected_next(HANDSHAKE_CCS);
+      }
+   else if(type == NEW_SESSION_TICKET)
+      {
+      state->new_session_ticket = new New_Session_Ticket(contents);
+
+      state->set_expected_next(HANDSHAKE_CCS);
       }
    else if(type == HANDSHAKE_CCS)
       {
@@ -404,6 +426,8 @@ void Client::process_handshake_msg(Handshake_Type type,
          secure_renegotiation.supported(),
          state->server_hello->fragment_size(),
          peer_certs,
+         state->new_session_ticket ? state->new_session_ticket->ticket() :
+                                     MemoryVector<byte>(),
          state->client_hello->sni_hostname(),
          ""
          );

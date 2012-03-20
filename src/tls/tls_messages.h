@@ -178,6 +178,8 @@ class Server_Hello : public Handshake_Message
 
       bool next_protocol_notification() const { return m_next_protocol; }
 
+      bool supports_session_ticket() const { return m_supports_session_ticket; }
+
       const std::vector<std::string>& next_protocols() const
          { return m_next_protocols; }
 
@@ -227,6 +229,7 @@ class Server_Hello : public Handshake_Message
       MemoryVector<byte> m_renegotiation_info;
 
       bool m_next_protocol;
+      bool m_supports_session_ticket;
       std::vector<std::string> m_next_protocols;
    };
 
@@ -467,23 +470,18 @@ class New_Session_Ticket : public Handshake_Message
    public:
       Handshake_Type type() const { return NEW_SESSION_TICKET; }
 
-      static Session decrypt(const MemoryRegion<byte>& ctext,
-                             const SymmetricKey& key,
-                             const MemoryRegion<byte>& key_name);
+      u32bit ticket_lifetime_hint() const { return m_ticket_lifetime_hint; }
+      const MemoryVector<byte>& ticket() const { return m_ticket; }
 
-      const MemoryVector<byte>& contents() const { return m_contents; }
+      New_Session_Ticket(const MemoryVector<byte>& ticket, u32bit lifetime = 0) :
+         m_ticket_lifetime_hint(lifetime), m_ticket(ticket) {}
 
-      New_Session_Ticket(const Session& session_info,
-                         const SymmetricKey& key,
-                         const MemoryRegion<byte>& key_name,
-                         RandomNumberGenerator& rng);
-
-      New_Session_Ticket(const MemoryRegion<byte>& buf) { deserialize(buf); }
+      New_Session_Ticket(const MemoryRegion<byte>& buf);
    private:
       MemoryVector<byte> serialize() const;
-      void deserialize(const MemoryRegion<byte>&);
 
-      MemoryVector<byte> m_contents;
+      u32bit m_ticket_lifetime_hint;
+      MemoryVector<byte> m_ticket;
    };
 
 }

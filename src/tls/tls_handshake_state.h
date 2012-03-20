@@ -80,6 +80,7 @@ class Handshake_State
       class Certificate_Verify* client_verify;
 
       class Next_Protocol* next_protocol;
+      class New_Session_Ticket* new_session_ticket;
 
       class Finished* client_finished;
       class Finished* server_finished;

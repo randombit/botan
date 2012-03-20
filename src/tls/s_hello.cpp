@@ -89,6 +89,7 @@ Server_Hello::Server_Hello(Record_Writer& writer,
 Server_Hello::Server_Hello(const MemoryRegion<byte>& buf)
    {
    m_secure_renegotiation = false;
+   m_supports_session_ticket = false;
    m_next_protocol = false;
 
    if(buf.size() < 38)
@@ -131,6 +132,13 @@ Server_Hello::Server_Hello(const MemoryRegion<byte>& buf)
       {
       m_next_protocols = npn->protocols();
       m_next_protocol = true;
+      }
+
+   if(Session_Ticket* ticket = extensions.get<Session_Ticket>())
+      {
+      if(!ticket->contents().empty())
+         throw Decoding_Error("TLS server sent non-empty session ticket extension");
+      m_supports_session_ticket = true;
       }
    }
 

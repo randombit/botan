@@ -45,6 +45,7 @@ rec_read.cpp
 rec_wri.cpp
 s_hello.cpp
 s_kex.cpp
+session_ticket.cpp
 tls_channel.cpp
 tls_client.cpp
 tls_extensions.cpp

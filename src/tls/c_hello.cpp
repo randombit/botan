@@ -71,8 +71,8 @@ Client_Hello::Client_Hello(Record_Writer& writer,
    m_next_protocol(next_protocol),
    m_fragment_size(0),
    m_secure_renegotiation(true),
-   m_supports_session_ticket(true),
-   m_renegotiation_info(reneg_info)
+   m_renegotiation_info(reneg_info),
+   m_supports_session_ticket(true)
    {
    std::vector<std::string> hashes = policy.allowed_hashes();
    std::vector<std::string> sigs = policy.allowed_signature_methods();
