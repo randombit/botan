@@ -49,6 +49,32 @@ class sqlite3_statement
             throw std::runtime_error("sqlite3_bind_text failed, code " + to_string(rc));
          }
 
+      std::pair<const byte*, size_t> get_blob(int column)
+         {
+         BOTAN_ASSERT(sqlite3_column_type(m_stmt, 0) == SQLITE_BLOB,
+                      "Return value is a blob");
+
+         const void* session_blob = sqlite3_column_blob(m_stmt, column);
+         const int session_blob_size = sqlite3_column_bytes(m_stmt, column);
+
+         BOTAN_ASSERT(session_blob_size >= 0, "Blob size is non-negative");
+
+         return std::make_pair(static_cast<const byte*>(session_blob),
+                               static_cast<size_t>(session_blob_size));
+         }
+
+      size_t get_size_t(int column)
+         {
+         BOTAN_ASSERT(sqlite3_column_type(m_stmt, column) == SQLITE_INTEGER,
+                      "Return count is an integer");
+
+         const int sessions_int = sqlite3_column_int(m_stmt, column);
+
+         BOTAN_ASSERT(sessions_int >= 0, "Expected size_t is non-negative");
+
+         return static_cast<size_t>(sessions_int);
+         }
+
       void spin()
          {
          while(sqlite3_step(m_stmt) == SQLITE_ROW)
@@ -86,8 +112,8 @@ Session_Manager_SQLite::Session_Manager_SQLite(const std::string& db_filename,
       }
 
    const std::string table_sql =
-      "create table if not exists " +
-      m_table_name + "(" +
+      "create table if not exists " + m_table_name +
+      "("
       "session_id TEXT PRIMARY KEY, "
       "session_start INTEGER, "
       "hostname TEXT, "
@@ -123,15 +149,11 @@ bool Session_Manager_SQLite::load_from_session_id(const MemoryRegion<byte>& sess
 
    while(rc == SQLITE_ROW)
       {
-      BOTAN_ASSERT(sqlite3_column_type(stmt.stmt(), 0) == SQLITE_BLOB,
-                   "Return value is a text");
-
-      const void* session_blob = sqlite3_column_blob(stmt.stmt(), 0);
-      const int session_blob_size = sqlite3_column_bytes(stmt.stmt(), 0);
+      std::pair<const byte*, size_t> blob = stmt.get_blob(0);
 
       try
          {
-         session = Session(static_cast<const byte*>(session_blob), session_blob_size);
+         session = Session(blob.first, blob.second);
          return true;
          }
       catch(...)
@@ -159,15 +181,11 @@ bool Session_Manager_SQLite::load_from_host_info(const std::string& hostname,
 
    while(rc == SQLITE_ROW)
       {
-      BOTAN_ASSERT(sqlite3_column_type(stmt.stmt(), 0) == SQLITE_BLOB,
-                   "Return value is a blob");
-
-      const void* session_blob = sqlite3_column_blob(stmt.stmt(), 0);
-      const int session_blob_size = sqlite3_column_bytes(stmt.stmt(), 0);
+      std::pair<const byte*, size_t> blob = stmt.get_blob(0);
 
       try
          {
-         session = Session(static_cast<const byte*>(session_blob), session_blob_size);
+         session = Session(blob.first, blob.second);
          return true;
          }
       catch(...)
@@ -216,14 +234,7 @@ void Session_Manager_SQLite::prune_session_cache()
 
    if(row_count.step() == SQLITE_ROW)
       {
-      BOTAN_ASSERT(sqlite3_column_type(row_count.stmt(), 0) == SQLITE_INTEGER,
-                   "Return count is a blob");
-
-      const int sessions_int = sqlite3_column_int(row_count.stmt(), 0);
-
-      BOTAN_ASSERT(sessions_int >= 0, "SQLite returned positive row count");
-
-      const size_t sessions = static_cast<size_t>(sessions_int);
+      const size_t sessions = row_count.get_size_t(0);
 
       if(sessions > m_max_sessions)
          {
