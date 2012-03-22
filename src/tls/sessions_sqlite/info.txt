@@ -3,5 +3,5 @@ define TLS_SQLITE_SESSION_MANAGER
 load_on request
 
 <libs>
-all -> sqlite
+all -> sqlite3
 </libs>
