@@ -22,13 +22,15 @@ class BOTAN_DLL Session_Manager_SQLite : public Session_Manager
    {
    public:
       /**
+      * @param db_filename filename of the SQLite database file
+      * @param table_name names the table to store sessions in
       * @param max_sessions a hint on the maximum number of sessions
       *        to keep in memory at any one time. (If zero, don't cap)
       * @param session_lifetime sessions are expired after this many
       *        seconds have elapsed from initial handshake.
       */
       Session_Manager_SQLite(const std::string& db_filename,
-                             const std::string& table_name,
+                             const std::string& table_name = "tls_sessions",
                              size_t max_sessions = 1000,
                              size_t session_lifetime = 7200);
 
@@ -47,7 +49,10 @@ class BOTAN_DLL Session_Manager_SQLite : public Session_Manager
       Session_Manager_SQLite(const Session_Manager_SQLite&) {}
       Session_Manager_SQLite& operator=(const Session_Manager_SQLite&) { return (*this); }
 
-      const std::string m_table_name;
+      void prune_session_cache();
+
+      std::string m_table_name;
+      size_t m_max_sessions, m_session_lifetime;
       class sqlite3* m_db;
    };
 
