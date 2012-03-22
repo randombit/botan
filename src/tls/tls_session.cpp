@@ -56,8 +56,6 @@ Session::Session(const std::string& pem)
 
 Session::Session(const byte ber[], size_t ber_len)
    {
-   BER_Decoder decoder(ber, ber_len);
-
    byte side_code = 0;
    ASN1_String sni_hostname_str;
    ASN1_String srp_identifier_str;
