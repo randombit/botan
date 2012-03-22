@@ -11,9 +11,6 @@
 #include <botan/internal/stl_util.h>
 #include <memory>
 
-#include <stdio.h>
-#include <botan/hex.h>
-
 namespace Botan {
 
 namespace TLS {
@@ -115,7 +112,7 @@ void Client::alert_notify(const Alert& alert)
 * Process a handshake message
 */
 void Client::process_handshake_msg(Handshake_Type type,
-                                       const MemoryRegion<byte>& contents)
+                                   const MemoryRegion<byte>& contents)
    {
    if(state == 0)
       throw Unexpected_Message("Unexpected handshake message from server");
@@ -138,11 +135,11 @@ void Client::process_handshake_msg(Handshake_Type type,
          return;
          }
 
-      state->set_expected_next(SERVER_HELLO);
       state->client_hello = new Client_Hello(writer, state->hash, policy, rng,
                                              secure_renegotiation.for_client_hello());
-
       secure_renegotiation.update(state->client_hello);
+
+      state->set_expected_next(SERVER_HELLO);
 
       return;
       }
@@ -192,8 +189,11 @@ void Client::process_handshake_msg(Handshake_Type type,
 
       state->suite = Ciphersuite::by_id(state->server_hello->ciphersuite());
 
-      if(!state->server_hello->session_id().empty() &&
-         (state->server_hello->session_id() == state->client_hello->session_id()))
+      const bool server_returned_same_session_id =
+         !state->server_hello->session_id().empty() &&
+         (state->server_hello->session_id() == state->client_hello->session_id());
+
+      if(server_returned_same_session_id)
          {
          // successful resumption
 
@@ -416,8 +416,17 @@ void Client::process_handshake_msg(Handshake_Type type,
          state->client_finished = new Finished(writer, state, CLIENT);
          }
 
+      secure_renegotiation.update(state->client_finished, state->server_finished);
+
+      MemoryVector<byte> session_id = state->server_hello->session_id();
+
+      const MemoryRegion<byte>& session_ticket = state->session_ticket();
+
+      if(session_id.empty() && !session_ticket.empty())
+         session_id = make_hello_random(rng);
+
       Session session_info(
-         state->server_hello->session_id(),
+         session_id,
          state->keys.master_secret(),
          state->server_hello->version(),
          state->server_hello->ciphersuite(),
@@ -426,8 +435,7 @@ void Client::process_handshake_msg(Handshake_Type type,
          secure_renegotiation.supported(),
          state->server_hello->fragment_size(),
          peer_certs,
-         state->new_session_ticket ? state->new_session_ticket->ticket() :
-                                     MemoryVector<byte>(),
+         session_ticket,
          state->client_hello->sni_hostname(),
          ""
          );
@@ -436,8 +444,6 @@ void Client::process_handshake_msg(Handshake_Type type,
          session_manager.save(session_info);
       else
          session_manager.remove_entry(session_info.session_id());
-
-      secure_renegotiation.update(state->client_finished, state->server_finished);
 
       delete state;
       state = 0;

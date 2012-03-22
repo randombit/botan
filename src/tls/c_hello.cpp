@@ -102,7 +102,8 @@ Client_Hello::Client_Hello(Record_Writer& writer,
    m_next_protocol(next_protocol),
    m_fragment_size(session.fragment_size()),
    m_secure_renegotiation(session.secure_renegotiation()),
-   m_supports_session_ticket(true)
+   m_supports_session_ticket(true),
+   m_session_ticket(session.session_ticket())
    {
    m_suites.push_back(session.ciphersuite_code());
    m_comp_methods.push_back(session.compression_method());
@@ -159,18 +160,20 @@ MemoryVector<byte> Client_Hello::serialize() const
       extensions.add(new Server_Name_Indicator(m_hostname));
       extensions.add(new SRP_Identifier(m_srp_identifier));
       extensions.add(new Supported_Elliptic_Curves(m_supported_curves));
-      extensions.add(new Session_Ticket());
 
       if(m_version >= Protocol_Version::TLS_V12)
          extensions.add(new Signature_Algorithms(m_supported_algos));
 
       if(m_next_protocol)
          extensions.add(new Next_Protocol_Notification());
+
+      extensions.add(new Session_Ticket(m_session_ticket));
       }
    else
       {
       // renegotiation
       extensions.add(new Renegotation_Extension(m_renegotiation_info));
+      extensions.add(new Session_Ticket(m_session_ticket));
       }
 
    buf += extensions.serialize();

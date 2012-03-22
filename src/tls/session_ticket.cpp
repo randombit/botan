@@ -18,7 +18,7 @@ namespace TLS {
 New_Session_Ticket::New_Session_Ticket(const MemoryRegion<byte>& buf) :
    m_ticket_lifetime_hint(0)
    {
-   if(buf.size() >= 4)
+   if(buf.size() >= 6)
       {
       TLS_Data_Reader reader(buf);
 

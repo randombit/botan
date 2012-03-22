@@ -143,6 +143,14 @@ bool Handshake_State::received_handshake_msg(Handshake_Type handshake_msg) const
    return (hand_received_mask & mask);
    }
 
+const MemoryRegion<byte>& Handshake_State::session_ticket() const
+   {
+   if(new_session_ticket && !new_session_ticket->ticket().empty())
+      return new_session_ticket->ticket();
+
+   return client_hello->session_ticket();
+   }
+
 KDF* Handshake_State::protocol_specific_prf()
    {
    if(version() == Protocol_Version::SSL_V3)

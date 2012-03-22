@@ -191,7 +191,8 @@ void Session_Manager_SQLite::remove_entry(const MemoryRegion<byte>& session_id)
 
 void Session_Manager_SQLite::save(const Session& session)
    {
-   sqlite3_statement stmt(m_db, "insert into " + m_table_name + " values(?1, ?2, ?3, ?4, ?5)");
+   sqlite3_statement stmt(m_db, "insert or replace into " + m_table_name +
+                                " values(?1, ?2, ?3, ?4, ?5)");
 
    stmt.bind(1, hex_encode(session.session_id()));
    stmt.bind(2, session.start_time());

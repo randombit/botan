@@ -50,6 +50,8 @@ class Handshake_State
       void confirm_transition_to(Handshake_Type handshake_msg);
       void set_expected_next(Handshake_Type handshake_msg);
 
+      const MemoryRegion<byte>& session_ticket() const;
+
       std::pair<std::string, Signature_Format>
          understand_sig_format(const Public_Key* key,
                                std::string hash_algo,
