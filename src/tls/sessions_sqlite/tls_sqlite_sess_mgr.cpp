@@ -88,11 +88,11 @@ Session_Manager_SQLite::Session_Manager_SQLite(const std::string& db_filename,
    const std::string table_sql =
       "create table if not exists " +
       m_table_name + "(" +
+      "session_id TEXT PRIMARY KEY, "
+      "session_start INTEGER, "
       "hostname TEXT, "
       "hostport INTEGER, "
-      "session_start INTEGER, "
-      "session_id TEXT UNIQUE, "
-      "session TEXT"
+      "session BLOB"
       ")";
 
    char* errmsg = 0;
@@ -193,10 +193,10 @@ void Session_Manager_SQLite::save(const Session& session)
    {
    sqlite3_statement stmt(m_db, "insert into " + m_table_name + " values(?1, ?2, ?3, ?4, ?5)");
 
-   stmt.bind(1, session.sni_hostname());
-   stmt.bind(2, 0);
-   stmt.bind(3, session.start_time());
-   stmt.bind(4, hex_encode(session.session_id()));
+   stmt.bind(1, hex_encode(session.session_id()));
+   stmt.bind(2, session.start_time());
+   stmt.bind(3, session.sni_hostname());
+   stmt.bind(4, 0);
    stmt.bind(5, session.DER_encode());
 
    stmt.spin();
