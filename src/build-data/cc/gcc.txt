@@ -13,7 +13,7 @@ add_lib_option -l
 lang_flags "-D_REENTRANT -Wno-long-long"
 warning_flags "-W -Wall"
 
-maintainer_warning_flags "-Werror -Weffc++ -Wall -Wextra -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wold-style-cast"
+maintainer_warning_flags "-Werror -Wall -Wextra -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wold-style-cast"
 
 lib_opt_flags "-O3"
 check_opt_flags "-O2"

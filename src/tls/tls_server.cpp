@@ -22,14 +22,31 @@ bool check_for_resume(Session& session_info,
                       Session_Manager& session_manager,
                       Client_Hello* client_hello)
    {
-   MemoryVector<byte> client_session_id = client_hello->session_id();
+   const MemoryVector<byte>& client_session_id = client_hello->session_id();
+   const MemoryVector<byte>& session_ticket = client_hello->session_ticket();
 
-   if(client_session_id.empty()) // not resuming
-      return false;
+   if(session_ticket.empty())
+      {
+      if(client_session_id.empty()) // not resuming
+         return false;
 
-   // not found
-   if(!session_manager.load_from_session_id(client_session_id, session_info))
-      return false;
+      // not found
+      if(!session_manager.load_from_session_id(client_session_id, session_info))
+         return false;
+      }
+   else
+      {
+      // If a session ticket was sent, ignore client session ID
+      try
+         {
+#warning fixed key
+         session_info = Session::decrypt(session_ticket, SymmetricKey("ABCDEF"));
+         }
+      catch(std::exception& e)
+         {
+         return false;
+         }
+      }
 
    // wrong version
    if(client_hello->version() != session_info.version())
@@ -45,14 +62,14 @@ bool check_for_resume(Session& session_info,
                     session_info.compression_method()))
       return false;
 
-   // client sent a different SRP identity (!!!)
+   // client sent a different SRP identity
    if(client_hello->srp_identifier() != "")
       {
       if(client_hello->srp_identifier() != session_info.srp_identifier())
          return false;
       }
 
-   // client sent a different SNI hostname (!!!)
+   // client sent a different SNI hostname
    if(client_hello->sni_hostname() != "")
       {
       if(client_hello->sni_hostname() != session_info.sni_hostname())
@@ -204,13 +221,14 @@ void Server::process_handshake_msg(Handshake_Type type,
          state->server_hello = new Server_Hello(
             writer,
             state->hash,
-            session_info.session_id(),
+            state->client_hello->session_id(),
             Protocol_Version(session_info.version()),
             session_info.ciphersuite_code(),
             session_info.compression_method(),
             session_info.fragment_size(),
             secure_renegotiation.supported(),
             secure_renegotiation.for_server_hello(),
+            state->client_hello->supports_session_ticket(),
             state->client_hello->next_protocol_notification(),
             m_possible_protocols,
             rng);
@@ -225,6 +243,22 @@ void Server::process_handshake_msg(Handshake_Type type,
 
          state->keys = Session_Keys(state, session_info.master_secret(), true);
 
+         if(!handshake_fn(session_info))
+            {
+            if(state->server_hello->supports_session_ticket())
+               state->new_session_ticket = new New_Session_Ticket(writer, state->hash);
+            else
+               session_manager.remove_entry(session_info.session_id());
+            }
+
+         // Should only send a new ticket if we need too (eg old session)
+         if(state->server_hello->supports_session_ticket() && !state->new_session_ticket)
+            {
+            state->new_session_ticket =
+               new New_Session_Ticket(writer, state->hash,
+                                      session_info.encrypt(SymmetricKey("ABCDEF"), rng));
+            }
+
          writer.send(CHANGE_CIPHER_SPEC, 1);
 
          writer.activate(SERVER, state->suite, state->keys,
@@ -232,8 +266,6 @@ void Server::process_handshake_msg(Handshake_Type type,
 
          state->server_finished = new Finished(writer, state, SERVER);
 
-         if(!handshake_fn(session_info))
-            session_manager.remove_entry(session_info.session_id());
 
          state->set_expected_next(HANDSHAKE_CCS);
          }
@@ -423,19 +455,9 @@ void Server::process_handshake_msg(Handshake_Type type,
 
       if(!state->server_finished)
          {
-         state->hash.update(type, contents);
-
-         writer.send(CHANGE_CIPHER_SPEC, 1);
-
-         writer.activate(SERVER, state->suite, state->keys,
-                         state->server_hello->compression_method());
-
-         state->server_finished = new Finished(writer, state, SERVER);
-
-         if(state->client_certs && state->client_verify)
-            peer_certs = state->client_certs->cert_chain();
-
          // already sent finished if resuming, so this is a new session
+
+         state->hash.update(type, contents);
 
          Session session_info(
             state->server_hello->session_id(),
@@ -447,12 +469,35 @@ void Server::process_handshake_msg(Handshake_Type type,
             secure_renegotiation.supported(),
             state->server_hello->fragment_size(),
             peer_certs,
+            MemoryVector<byte>(),
             m_hostname,
             ""
             );
 
          if(handshake_fn(session_info))
-            session_manager.save(session_info);
+            {
+            if(state->server_hello->supports_session_ticket())
+               {
+               state->new_session_ticket =
+                  new New_Session_Ticket(writer, state->hash,
+                                         session_info.encrypt(SymmetricKey("ABCDEF"), rng));
+               }
+            else
+               session_manager.save(session_info);
+            }
+
+         if(state->server_hello->supports_session_ticket() && !state->new_session_ticket)
+            state->new_session_ticket = new New_Session_Ticket(writer, state->hash);
+
+         writer.send(CHANGE_CIPHER_SPEC, 1);
+
+         writer.activate(SERVER, state->suite, state->keys,
+                         state->server_hello->compression_method());
+
+         state->server_finished = new Finished(writer, state, SERVER);
+
+         if(state->client_certs && state->client_verify)
+            peer_certs = state->client_certs->cert_chain();
          }
 
       secure_renegotiation.update(state->client_finished,

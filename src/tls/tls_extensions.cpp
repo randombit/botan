@@ -42,6 +42,9 @@ Extension* make_extension(TLS_Data_Reader& reader,
       case TLSEXT_NEXT_PROTOCOL:
          return new Next_Protocol_Notification(reader, size);
 
+      case TLSEXT_SESSION_TICKET:
+         return new Session_Ticket(reader, size);
+
       default:
          return 0; // not known
       }
@@ -499,6 +502,12 @@ Signature_Algorithms::Signature_Algorithms(TLS_Data_Reader& reader,
 
       m_supported_algos.push_back(std::make_pair(hash_code, sig_code));
       }
+   }
+
+Session_Ticket::Session_Ticket(TLS_Data_Reader& reader,
+                               u16bit extension_size)
+   {
+   m_ticket = reader.get_elem<byte, MemoryVector<byte> >(extension_size);
    }
 
 }

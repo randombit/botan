@@ -112,7 +112,7 @@ void Client::alert_notify(const Alert& alert)
 * Process a handshake message
 */
 void Client::process_handshake_msg(Handshake_Type type,
-                                       const MemoryRegion<byte>& contents)
+                                   const MemoryRegion<byte>& contents)
    {
    if(state == 0)
       throw Unexpected_Message("Unexpected handshake message from server");
@@ -135,11 +135,11 @@ void Client::process_handshake_msg(Handshake_Type type,
          return;
          }
 
-      state->set_expected_next(SERVER_HELLO);
       state->client_hello = new Client_Hello(writer, state->hash, policy, rng,
                                              secure_renegotiation.for_client_hello());
-
       secure_renegotiation.update(state->client_hello);
+
+      state->set_expected_next(SERVER_HELLO);
 
       return;
       }
@@ -173,6 +173,13 @@ void Client::process_handshake_msg(Handshake_Type type,
                              "Server sent next protocol but we didn't request it");
          }
 
+      if(state->server_hello->supports_session_ticket())
+         {
+         if(!state->client_hello->supports_session_ticket())
+            throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                                "Server sent session ticket extension but we did not");
+         }
+
       state->set_version(state->server_hello->version());
 
       writer.set_version(state->version());
@@ -182,8 +189,11 @@ void Client::process_handshake_msg(Handshake_Type type,
 
       state->suite = Ciphersuite::by_id(state->server_hello->ciphersuite());
 
-      if(!state->server_hello->session_id().empty() &&
-         (state->server_hello->session_id() == state->client_hello->session_id()))
+      const bool server_returned_same_session_id =
+         !state->server_hello->session_id().empty() &&
+         (state->server_hello->session_id() == state->client_hello->session_id());
+
+      if(server_returned_same_session_id)
          {
          // successful resumption
 
@@ -199,7 +209,10 @@ void Client::process_handshake_msg(Handshake_Type type,
                                     state->resume_master_secret,
                                     true);
 
-         state->set_expected_next(HANDSHAKE_CCS);
+         if(state->server_hello->supports_session_ticket())
+            state->set_expected_next(NEW_SESSION_TICKET);
+         else
+            state->set_expected_next(HANDSHAKE_CCS);
          }
       else
          {
@@ -306,8 +319,6 @@ void Client::process_handshake_msg(Handshake_Type type,
       }
    else if(type == SERVER_HELLO_DONE)
       {
-      state->set_expected_next(HANDSHAKE_CCS);
-
       state->server_hello_done = new Server_Hello_Done(contents);
 
       if(state->received_handshake_msg(CERTIFICATE_REQUEST))
@@ -364,6 +375,17 @@ void Client::process_handshake_msg(Handshake_Type type,
          }
 
       state->client_finished = new Finished(writer, state, CLIENT);
+
+      if(state->server_hello->supports_session_ticket())
+         state->set_expected_next(NEW_SESSION_TICKET);
+      else
+         state->set_expected_next(HANDSHAKE_CCS);
+      }
+   else if(type == NEW_SESSION_TICKET)
+      {
+      state->new_session_ticket = new New_Session_Ticket(contents);
+
+      state->set_expected_next(HANDSHAKE_CCS);
       }
    else if(type == HANDSHAKE_CCS)
       {
@@ -394,8 +416,17 @@ void Client::process_handshake_msg(Handshake_Type type,
          state->client_finished = new Finished(writer, state, CLIENT);
          }
 
+      secure_renegotiation.update(state->client_finished, state->server_finished);
+
+      MemoryVector<byte> session_id = state->server_hello->session_id();
+
+      const MemoryRegion<byte>& session_ticket = state->session_ticket();
+
+      if(session_id.empty() && !session_ticket.empty())
+         session_id = make_hello_random(rng);
+
       Session session_info(
-         state->server_hello->session_id(),
+         session_id,
          state->keys.master_secret(),
          state->server_hello->version(),
          state->server_hello->ciphersuite(),
@@ -404,6 +435,7 @@ void Client::process_handshake_msg(Handshake_Type type,
          secure_renegotiation.supported(),
          state->server_hello->fragment_size(),
          peer_certs,
+         session_ticket,
          state->client_hello->sni_hostname(),
          ""
          );
@@ -412,8 +444,6 @@ void Client::process_handshake_msg(Handshake_Type type,
          session_manager.save(session_info);
       else
          session_manager.remove_entry(session_info.session_id());
-
-      secure_renegotiation.update(state->client_finished, state->server_finished);
 
       delete state;
       state = 0;

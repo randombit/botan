@@ -108,6 +108,11 @@ class Client_Hello : public Handshake_Message
 
       size_t fragment_size() const { return m_fragment_size; }
 
+      bool supports_session_ticket() const { return m_supports_session_ticket; }
+
+      const MemoryRegion<byte>& session_ticket() const
+         { return m_session_ticket; }
+
       Client_Hello(Record_Writer& writer,
                    Handshake_Hash& hash,
                    const Policy& policy,
@@ -145,6 +150,9 @@ class Client_Hello : public Handshake_Message
 
       std::vector<std::pair<std::string, std::string> > m_supported_algos;
       std::vector<std::string> m_supported_curves;
+
+      bool m_supports_session_ticket;
+      MemoryVector<byte> m_session_ticket;
    };
 
 /**
@@ -169,6 +177,8 @@ class Server_Hello : public Handshake_Message
       bool secure_renegotiation() const { return m_secure_renegotiation; }
 
       bool next_protocol_notification() const { return m_next_protocol; }
+
+      bool supports_session_ticket() const { return m_supports_session_ticket; }
 
       const std::vector<std::string>& next_protocols() const
          { return m_next_protocols; }
@@ -201,6 +211,7 @@ class Server_Hello : public Handshake_Message
                    size_t max_fragment_size,
                    bool client_has_secure_renegotiation,
                    const MemoryRegion<byte>& reneg_info,
+                   bool client_supports_session_tickets,
                    bool client_has_npn,
                    const std::vector<std::string>& next_protocols,
                    RandomNumberGenerator& rng);
@@ -220,6 +231,7 @@ class Server_Hello : public Handshake_Message
 
       bool m_next_protocol;
       std::vector<std::string> m_next_protocols;
+      bool m_supports_session_ticket;
    };
 
 /**
@@ -452,6 +464,30 @@ class Next_Protocol : public Handshake_Message
       MemoryVector<byte> serialize() const;
 
       std::string m_protocol;
+   };
+
+class New_Session_Ticket : public Handshake_Message
+   {
+   public:
+      Handshake_Type type() const { return NEW_SESSION_TICKET; }
+
+      u32bit ticket_lifetime_hint() const { return m_ticket_lifetime_hint; }
+      const MemoryVector<byte>& ticket() const { return m_ticket; }
+
+      New_Session_Ticket(Record_Writer& writer,
+                         Handshake_Hash& hash,
+                         const MemoryRegion<byte>& ticket,
+                         u32bit lifetime = 0);
+
+      New_Session_Ticket(Record_Writer& writer,
+                         Handshake_Hash& hash);
+
+      New_Session_Ticket(const MemoryRegion<byte>& buf);
+   private:
+      MemoryVector<byte> serialize() const;
+
+      u32bit m_ticket_lifetime_hint;
+      MemoryVector<byte> m_ticket;
    };
 
 }

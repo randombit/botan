@@ -1,6 +1,6 @@
 /*
 * TLS Extensions
-* (C) 2011 Jack Lloyd
+* (C) 2011-2012 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -208,6 +208,39 @@ class Next_Protocol_Notification : public Extension
       bool empty() const { return false; }
    private:
       std::vector<std::string> m_protocols;
+   };
+
+class Session_Ticket : public Extension
+   {
+   public:
+      static Handshake_Extension_Type static_type()
+         { return TLSEXT_SESSION_TICKET; }
+
+      Handshake_Extension_Type type() const { return static_type(); }
+
+      const MemoryVector<byte>& contents() const { return m_ticket; }
+
+      /**
+      * Create empty extension, used by both client and server
+      */
+      Session_Ticket() {}
+
+      /**
+      * Extension with ticket, used by client
+      */
+      Session_Ticket(const MemoryRegion<byte>& session_ticket) :
+         m_ticket(session_ticket) {}
+
+      /**
+      * Deserialize a session ticket
+      */
+      Session_Ticket(TLS_Data_Reader& reader, u16bit extension_size);
+
+      MemoryVector<byte> serialize() const { return m_ticket; }
+
+      bool empty() const { return false; }
+   private:
+      MemoryVector<byte> m_ticket;
    };
 
 /**
