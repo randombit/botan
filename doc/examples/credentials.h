@@ -25,8 +25,8 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
    public:
       Credentials_Manager_Simple(Botan::RandomNumberGenerator& rng) : rng(rng) {}
 
-      std::string psk_identity_hint(const std::string& type,
-                                    const std::string& context)
+      std::string psk_identity_hint(const std::string&,
+                                    const std::string&)
          {
          return "";
          }
@@ -37,11 +37,19 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
          return "Client_identity";
          }
 
-      Botan::SymmetricKey psk(const std::string&, const std::string&,
+      Botan::SymmetricKey psk(const std::string& type, const std::string& context,
                               const std::string& identity)
          {
+         if(type == "tls-server" && context == "session-ticket")
+            {
+            if(session_ticket_key.length() == 0)
+               session_ticket_key = Botan::SymmetricKey(rng, 32);
+            return session_ticket_key;
+            }
+
          if(identity == "Client_identity")
             return Botan::SymmetricKey("b5a72e1387552e6dc10766dc0eda12961f5b21e17f98ef4c41e6572e53bd7527");
+
          throw Botan::Internal_Error("No PSK set for " + identity);
          }
 
@@ -162,6 +170,8 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
 
    private:
       Botan::RandomNumberGenerator& rng;
+
+      Botan::SymmetricKey session_ticket_key;
       std::map<Botan::X509_Certificate, Botan::Private_Key*> certs_and_keys;
    };
 

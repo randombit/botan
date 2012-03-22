@@ -20,6 +20,7 @@ namespace {
 
 bool check_for_resume(Session& session_info,
                       Session_Manager& session_manager,
+                      Credentials_Manager& credentials,
                       Client_Hello* client_hello)
    {
    const MemoryVector<byte>& client_session_id = client_hello->session_id();
@@ -39,10 +40,11 @@ bool check_for_resume(Session& session_info,
       // If a session ticket was sent, ignore client session ID
       try
          {
-#warning fixed key
-         session_info = Session::decrypt(session_ticket, SymmetricKey("ABCDEF"));
+         session_info = Session::decrypt(
+            session_ticket,
+            credentials.psk("tls-server", "session-ticket", ""));
          }
-      catch(std::exception& e)
+      catch(...)
          {
          return false;
          }
@@ -212,6 +214,7 @@ void Server::process_handshake_msg(Handshake_Type type,
       Session session_info;
       const bool resuming = check_for_resume(session_info,
                                              session_manager,
+                                             creds,
                                              state->client_hello);
 
       if(resuming)
@@ -251,12 +254,19 @@ void Server::process_handshake_msg(Handshake_Type type,
                session_manager.remove_entry(session_info.session_id());
             }
 
-         // Should only send a new ticket if we need too (eg old session)
+         // FIXME: should only send a new ticket if we need too (eg old session)
          if(state->server_hello->supports_session_ticket() && !state->new_session_ticket)
             {
-            state->new_session_ticket =
-               new New_Session_Ticket(writer, state->hash,
-                                      session_info.encrypt(SymmetricKey("ABCDEF"), rng));
+            try
+               {
+               SymmetricKey key = creds.psk("tls-server", "session-ticket", "");
+               state->new_session_ticket =
+                  new New_Session_Ticket(writer, state->hash, session_info.encrypt(key, rng));
+               }
+            catch(...)
+               {
+               state->new_session_ticket = new New_Session_Ticket(writer, state->hash);
+               }
             }
 
          writer.send(CHANGE_CIPHER_SPEC, 1);
@@ -265,7 +275,6 @@ void Server::process_handshake_msg(Handshake_Type type,
                          state->server_hello->compression_method());
 
          state->server_finished = new Finished(writer, state, SERVER);
-
 
          state->set_expected_next(HANDSHAKE_CCS);
          }
@@ -478,9 +487,13 @@ void Server::process_handshake_msg(Handshake_Type type,
             {
             if(state->server_hello->supports_session_ticket())
                {
-               state->new_session_ticket =
-                  new New_Session_Ticket(writer, state->hash,
-                                         session_info.encrypt(SymmetricKey("ABCDEF"), rng));
+               try
+                  {
+                  SymmetricKey key = creds.psk("tls-server", "session-ticket", "");
+                  state->new_session_ticket =
+                     new New_Session_Ticket(writer, state->hash, session_info.encrypt(key, rng));
+                  }
+               catch(...) {}
                }
             else
                session_manager.save(session_info);
