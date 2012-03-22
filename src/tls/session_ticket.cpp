@@ -20,17 +20,18 @@ New_Session_Ticket::New_Session_Ticket(const MemoryRegion<byte>& buf) :
    {
    if(buf.size() >= 4)
       {
-      m_ticket_lifetime_hint = load_be<u32bit>(&buf[0], 0);
-      m_ticket.resize(buf.size() - 4);
-      copy_mem(&m_ticket[0], &buf[4], buf.size() - 4);
+      TLS_Data_Reader reader(buf);
+
+      m_ticket_lifetime_hint = reader.get_u32bit();
+      m_ticket = reader.get_range<byte>(2, 0, 65535);
       }
    }
 
 MemoryVector<byte> New_Session_Ticket::serialize() const
    {
-   MemoryVector<byte> buf(4 + m_ticket.size());
+   MemoryVector<byte> buf(4);
    store_be(m_ticket_lifetime_hint, &buf[0]);
-   copy_mem(&buf[4], &m_ticket[0], m_ticket.size());
+   append_tls_length_value(buf, m_ticket, 2);
    return buf;
    }
 
