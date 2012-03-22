@@ -147,7 +147,7 @@ Session::encrypt(const SymmetricKey& master_key,
                                           "tls.session.cipher-key");
 
    SymmetricKey hmac_key = kdf->derive_key(32, master_key.bits_of(),
-                                           "tls.session.hmac-key");
+                                           "tls.session.mac-key");
 
    InitializationVector aes_iv(rng, 16);
 

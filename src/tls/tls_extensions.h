@@ -234,7 +234,7 @@ class Session_Ticket : public Extension
       /**
       * Deserialize a session ticket
       */
-      Session_Ticket(const TLS_Data_Reader& reader, u16bit extension_size);
+      Session_Ticket(TLS_Data_Reader& reader, u16bit extension_size);
 
       MemoryVector<byte> serialize() const { return m_ticket; }
 

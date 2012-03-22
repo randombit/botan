@@ -15,6 +15,23 @@ namespace Botan {
 
 namespace TLS {
 
+New_Session_Ticket::New_Session_Ticket(Record_Writer& writer,
+                                       Handshake_Hash& hash,
+                                       const MemoryRegion<byte>& ticket,
+                                       u32bit lifetime) :
+   m_ticket_lifetime_hint(lifetime),
+   m_ticket(ticket)
+   {
+   hash.update(writer.send(*this));
+   }
+
+New_Session_Ticket::New_Session_Ticket(Record_Writer& writer,
+                                       Handshake_Hash& hash) :
+   m_ticket_lifetime_hint(0)
+   {
+   hash.update(writer.send(*this));
+   }
+
 New_Session_Ticket::New_Session_Ticket(const MemoryRegion<byte>& buf) :
    m_ticket_lifetime_hint(0)
    {

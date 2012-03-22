@@ -211,6 +211,7 @@ class Server_Hello : public Handshake_Message
                    size_t max_fragment_size,
                    bool client_has_secure_renegotiation,
                    const MemoryRegion<byte>& reneg_info,
+                   bool client_supports_session_tickets,
                    bool client_has_npn,
                    const std::vector<std::string>& next_protocols,
                    RandomNumberGenerator& rng);
@@ -229,8 +230,8 @@ class Server_Hello : public Handshake_Message
       MemoryVector<byte> m_renegotiation_info;
 
       bool m_next_protocol;
-      bool m_supports_session_ticket;
       std::vector<std::string> m_next_protocols;
+      bool m_supports_session_ticket;
    };
 
 /**
@@ -473,8 +474,13 @@ class New_Session_Ticket : public Handshake_Message
       u32bit ticket_lifetime_hint() const { return m_ticket_lifetime_hint; }
       const MemoryVector<byte>& ticket() const { return m_ticket; }
 
-      New_Session_Ticket(const MemoryVector<byte>& ticket, u32bit lifetime = 0) :
-         m_ticket_lifetime_hint(lifetime), m_ticket(ticket) {}
+      New_Session_Ticket(Record_Writer& writer,
+                         Handshake_Hash& hash,
+                         const MemoryRegion<byte>& ticket,
+                         u32bit lifetime = 0);
+
+      New_Session_Ticket(Record_Writer& writer,
+                         Handshake_Hash& hash);
 
       New_Session_Ticket(const MemoryRegion<byte>& buf);
    private:

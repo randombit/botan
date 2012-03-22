@@ -37,7 +37,8 @@ Server_Hello::Server_Hello(Record_Writer& writer,
    m_secure_renegotiation(client_has_secure_renegotiation),
    m_renegotiation_info(reneg_info),
    m_next_protocol(client_has_npn),
-   m_next_protocols(next_protocols)
+   m_next_protocols(next_protocols),
+   m_supports_session_ticket(c_hello.supports_session_ticket())
    {
    suite = policy.choose_suite(
       c_hello.ciphersuites(),
@@ -66,6 +67,7 @@ Server_Hello::Server_Hello(Record_Writer& writer,
                            size_t max_fragment_size,
                            bool client_has_secure_renegotiation,
                            const MemoryRegion<byte>& reneg_info,
+                           bool client_supports_session_tickets,
                            bool client_has_npn,
                            const std::vector<std::string>& next_protocols,
                            RandomNumberGenerator& rng) :
@@ -78,7 +80,8 @@ Server_Hello::Server_Hello(Record_Writer& writer,
    m_secure_renegotiation(client_has_secure_renegotiation),
    m_renegotiation_info(reneg_info),
    m_next_protocol(client_has_npn),
-   m_next_protocols(next_protocols)
+   m_next_protocols(next_protocols),
+   m_supports_session_ticket(client_supports_session_tickets)
    {
    hash.update(writer.send(*this));
    }
@@ -170,6 +173,9 @@ MemoryVector<byte> Server_Hello::serialize() const
 
    if(m_next_protocol)
       extensions.add(new Next_Protocol_Notification(m_next_protocols));
+
+   if(m_supports_session_ticket)
+      extensions.add(new Session_Ticket());
 
    buf += extensions.serialize();
 
