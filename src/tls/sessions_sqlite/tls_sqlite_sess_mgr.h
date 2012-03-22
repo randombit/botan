@@ -9,6 +9,7 @@
 #define TLS_SQLITE_SESSION_MANAGER_H__
 
 #include <botan/tls_session_manager.h>
+#include <botan/rng.h>
 
 class sqlite3;
 
@@ -22,15 +23,18 @@ class BOTAN_DLL Session_Manager_SQLite : public Session_Manager
    {
    public:
       /**
-      * @param db_filename filename of the SQLite database file
-      * @param table_name names the table to store sessions in
+      * @param passphrase used to encrypt the session data
+      * @param db_filename filename of the SQLite database file.
+               The table names tls_sessions and tls_sessions_metadata
+               will be used
       * @param max_sessions a hint on the maximum number of sessions
       *        to keep in memory at any one time. (If zero, don't cap)
       * @param session_lifetime sessions are expired after this many
       *        seconds have elapsed from initial handshake.
       */
-      Session_Manager_SQLite(const std::string& db_filename,
-                             const std::string& table_name = "tls_sessions",
+      Session_Manager_SQLite(const std::string& passphrase,
+                             RandomNumberGenerator& rng,
+                             const std::string& db_filename,
                              size_t max_sessions = 1000,
                              size_t session_lifetime = 7200);
 
@@ -46,12 +50,13 @@ class BOTAN_DLL Session_Manager_SQLite : public Session_Manager
 
       void save(const Session& session_data);
    private:
-      Session_Manager_SQLite(const Session_Manager_SQLite&) {}
-      Session_Manager_SQLite& operator=(const Session_Manager_SQLite&) { return (*this); }
+      Session_Manager_SQLite(const Session_Manager_SQLite&);
+      Session_Manager_SQLite& operator=(const Session_Manager_SQLite&);
 
       void prune_session_cache();
 
-      std::string m_table_name;
+      SymmetricKey m_session_key;
+      RandomNumberGenerator& m_rng;
       size_t m_max_sessions, m_session_lifetime;
       class sqlite3* m_db;
    };

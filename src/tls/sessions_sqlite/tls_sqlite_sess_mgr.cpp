@@ -7,8 +7,12 @@
 
 #include <botan/tls_sqlite_sess_mgr.h>
 #include <botan/internal/assert.h>
+#include <botan/lookup.h>
 #include <botan/hex.h>
 #include <botan/time.h>
+#include <botan/loadstor.h>
+#include <memory>
+
 #include <sqlite3.h>
 
 namespace Botan {
@@ -93,17 +97,61 @@ class sqlite3_statement
       sqlite3_stmt* m_stmt;
    };
 
+size_t row_count(sqlite3* db, const std::string& table_name)
+   {
+   sqlite3_statement stmt(db, "select count(*) from " + table_name);
+
+   if(stmt.step() == SQLITE_ROW)
+      return stmt.get_size_t(0);
+   else
+      throw std::runtime_error("Querying size of table " + table_name + " failed");
+   }
+
+void create_table(sqlite3* db, const char* table_schema)
+   {
+   char* errmsg = 0;
+   int rc = sqlite3_exec(db, table_schema, 0, 0, &errmsg);
+
+   if(rc != SQLITE_OK)
+      {
+      const std::string err_msg = errmsg;
+      sqlite3_free(errmsg);
+      sqlite3_close(db);
+      throw std::runtime_error("sqlite3_exec for table failed - " + err_msg);
+      }
+   }
+
+
+SymmetricKey derive_key(const std::string& passphrase,
+                        const byte salt[],
+                        size_t salt_len,
+                        size_t iterations,
+                        size_t& check_val)
+   {
+   std::auto_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(SHA-512)"));
+
+   SecureVector<byte> x = pbkdf->derive_key(32 + 3,
+                                            passphrase,
+                                            salt, salt_len,
+                                            iterations).bits_of();
+
+   check_val = make_u32bit(0, x[0], x[1], x[2]);
+   return SymmetricKey(&x[3], x.size() - 3);
+   }
+
 }
 
-Session_Manager_SQLite::Session_Manager_SQLite(const std::string& db_filename,
-                                               const std::string& table_name,
+Session_Manager_SQLite::Session_Manager_SQLite(const std::string& passphrase,
+                                               RandomNumberGenerator& rng,
+                                               const std::string& db_filename,
                                                size_t max_sessions,
                                                size_t session_lifetime) :
-   m_table_name(table_name),
+   m_rng(rng),
    m_max_sessions(max_sessions),
    m_session_lifetime(session_lifetime)
    {
    int rc = sqlite3_open(db_filename.c_str(), &m_db);
+
    if(rc)
       {
       const std::string err_msg = sqlite3_errmsg(m_db);
@@ -111,25 +159,72 @@ Session_Manager_SQLite::Session_Manager_SQLite(const std::string& db_filename,
       throw std::runtime_error("sqlite3_open failed - " + err_msg);
       }
 
-   const std::string table_sql =
-      "create table if not exists " + m_table_name +
-      "("
-      "session_id TEXT PRIMARY KEY, "
-      "session_start INTEGER, "
-      "hostname TEXT, "
-      "hostport INTEGER, "
-      "session BLOB"
-      ")";
+   create_table(m_db,
+                "create table if not exists tls_sessions "
+                "("
+                "session_id TEXT PRIMARY KEY, "
+                "session_start INTEGER, "
+                "hostname TEXT, "
+                "hostport INTEGER, "
+                "session BLOB"
+                ")");
 
-   char* errmsg = 0;
-   rc = sqlite3_exec(m_db, table_sql.c_str(), 0, 0, &errmsg);
+   create_table(m_db,
+                "create table if not exists tls_sessions_metadata "
+                "("
+                "passphrase_salt BLOB, "
+                "passphrase_iterations INTEGER, "
+                "passphrase_check INTEGER "
+                ")");
 
-   if(rc != SQLITE_OK)
+   const size_t salts = row_count(m_db, "tls_sessions_metadata");
+
+   if(salts == 1)
       {
-      const std::string err_msg = errmsg;
-      sqlite3_free(errmsg);
-      sqlite3_close(m_db);
-      throw std::runtime_error("sqlite3_exec for table failed - " + err_msg);
+      // existing db
+      sqlite3_statement stmt(m_db, "select * from tls_sessions_metadata");
+
+      int rc = stmt.step();
+      if(rc == SQLITE_ROW)
+         {
+         std::pair<const byte*, size_t> salt = stmt.get_blob(0);
+         const size_t iterations = stmt.get_size_t(1);
+         const size_t check_val_db = stmt.get_size_t(2);
+
+         size_t check_val_created;
+         m_session_key = derive_key(passphrase,
+                                    salt.first,
+                                    salt.second,
+                                    iterations,
+                                    check_val_created);
+
+         if(check_val_created != check_val_db)
+            throw std::runtime_error("Session database password not valid");
+         }
+      }
+   else
+      {
+      // maybe just zap the salts + sessions tables in this case?
+      if(salts != 0)
+         throw std::runtime_error("Seemingly corrupted database, multiple salts found");
+
+      // new database case
+
+      MemoryVector<byte> salt = rng.random_vec(16);
+      const size_t iterations = 32000;
+      size_t check_val = 0;
+
+      m_session_key = derive_key(passphrase, &salt[0], salt.size(),
+                                 iterations, check_val);
+
+      sqlite3_statement stmt(m_db, "insert into tls_sessions_metadata"
+                                   " values(?1, ?2, ?3)");
+
+      stmt.bind(1, salt);
+      stmt.bind(2, iterations);
+      stmt.bind(3, check_val);
+
+      stmt.spin();
       }
    }
 
@@ -141,7 +236,7 @@ Session_Manager_SQLite::~Session_Manager_SQLite()
 bool Session_Manager_SQLite::load_from_session_id(const MemoryRegion<byte>& session_id,
                                                   Session& session)
    {
-   sqlite3_statement stmt(m_db, "select session from " + m_table_name + " where session_id = ?1");
+   sqlite3_statement stmt(m_db, "select session from tls_sessions where session_id = ?1");
 
    stmt.bind(1, hex_encode(session_id));
 
@@ -153,7 +248,7 @@ bool Session_Manager_SQLite::load_from_session_id(const MemoryRegion<byte>& sess
 
       try
          {
-         session = Session(blob.first, blob.second);
+         session = Session::decrypt(blob.first, blob.second, m_session_key);
          return true;
          }
       catch(...)
@@ -170,7 +265,7 @@ bool Session_Manager_SQLite::load_from_host_info(const std::string& hostname,
                                                  u16bit port,
                                                  Session& session)
    {
-   sqlite3_statement stmt(m_db, "select session from " + m_table_name +
+   sqlite3_statement stmt(m_db, "select session from tls_sessions"
                                 " where hostname = ?1 and hostport = ?2"
                                 " order by session_start desc");
 
@@ -185,7 +280,7 @@ bool Session_Manager_SQLite::load_from_host_info(const std::string& hostname,
 
       try
          {
-         session = Session(blob.first, blob.second);
+         session = Session::decrypt(blob.first, blob.second, m_session_key);
          return true;
          }
       catch(...)
@@ -200,7 +295,7 @@ bool Session_Manager_SQLite::load_from_host_info(const std::string& hostname,
 
 void Session_Manager_SQLite::remove_entry(const MemoryRegion<byte>& session_id)
    {
-   sqlite3_statement stmt(m_db, "delete from " + m_table_name + " where session_id = ?1");
+   sqlite3_statement stmt(m_db, "delete from tls_sessions where session_id = ?1");
 
    stmt.bind(1, hex_encode(session_id));
 
@@ -209,14 +304,14 @@ void Session_Manager_SQLite::remove_entry(const MemoryRegion<byte>& session_id)
 
 void Session_Manager_SQLite::save(const Session& session)
    {
-   sqlite3_statement stmt(m_db, "insert or replace into " + m_table_name +
+   sqlite3_statement stmt(m_db, "insert or replace into tls_sessions"
                                 " values(?1, ?2, ?3, ?4, ?5)");
 
    stmt.bind(1, hex_encode(session.session_id()));
    stmt.bind(2, session.start_time());
    stmt.bind(3, session.sni_hostname());
    stmt.bind(4, 0);
-   stmt.bind(5, session.DER_encode());
+   stmt.bind(5, session.encrypt(m_session_key, m_rng));
 
    stmt.spin();
 
@@ -225,26 +320,21 @@ void Session_Manager_SQLite::save(const Session& session)
 
 void Session_Manager_SQLite::prune_session_cache()
    {
-   sqlite3_statement remove_expired(m_db, "delete from " + m_table_name + " where session_start <= ?1");
+   sqlite3_statement remove_expired(m_db, "delete from tls_sessions where session_start <= ?1");
 
    remove_expired.bind(1, system_time() - m_session_lifetime);
 
    remove_expired.spin();
 
-   sqlite3_statement row_count(m_db, "select count(*) from " + m_table_name);
+   const size_t sessions = row_count(m_db, "tls_sessions");
 
-   if(row_count.step() == SQLITE_ROW)
+   if(sessions > m_max_sessions)
       {
-      const size_t sessions = row_count.get_size_t(0);
+      sqlite3_statement remove_some(m_db, "delete from tls_sessions where session_id in "
+                                          "(select session_id from tls_sessions limit ?1)");
 
-      if(sessions > m_max_sessions)
-         {
-         sqlite3_statement remove_some(m_db, "delete from " + m_table_name + " where session_id in "
-                                             "(select session_id from " + m_table_name + " limit ?1)");
-
-         remove_some.bind(1, sessions - m_max_sessions);
-         remove_some.spin();
-         }
+      remove_some.bind(1, sessions - m_max_sessions);
+      remove_some.spin();
       }
    }
 

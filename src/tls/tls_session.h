@@ -76,15 +76,29 @@ class BOTAN_DLL Session
       * Encrypt a session (useful for serialization or session tickets)
       */
       MemoryVector<byte> encrypt(const SymmetricKey& key,
-                                 RandomNumberGenerator& rng);
+                                 RandomNumberGenerator& rng) const;
+
+
+      /**
+      * Decrypt a session created by encrypt
+      * @param ctext the ciphertext returned by encrypt
+      * @param ctext_size the size of ctext in bytes
+      * @param key the same key used by the encrypting side
+      */
+      static Session decrypt(const byte ctext[],
+                             size_t ctext_size,
+                             const SymmetricKey& key);
 
       /**
       * Decrypt a session created by encrypt
       * @param ctext the ciphertext returned by encrypt
       * @param key the same key used by the encrypting side
       */
-      static Session decrypt(const MemoryRegion<byte>& ctext,
-                             const SymmetricKey& key);
+      static inline Session decrypt(const MemoryRegion<byte>& ctext,
+                                    const SymmetricKey& key)
+         {
+         return Session::decrypt(&ctext[0], ctext.size(), key);
+         }
 
       /**
       * Encode this session data for storage

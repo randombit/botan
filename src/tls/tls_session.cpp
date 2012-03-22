@@ -139,7 +139,7 @@ const u64bit ENCRYPTED_SESSION_MAGIC = 0xACE4480800000000;
 
 MemoryVector<byte>
 Session::encrypt(const SymmetricKey& master_key,
-                 RandomNumberGenerator& rng)
+                 RandomNumberGenerator& rng) const
    {
    std::auto_ptr<KDF> kdf(get_kdf("KDF2(SHA-256)"));
 
@@ -169,7 +169,7 @@ Session::encrypt(const SymmetricKey& master_key,
    return out;
    }
 
-Session Session::decrypt(const MemoryRegion<byte>& buf,
+Session Session::decrypt(const byte buf[], size_t buf_len,
                          const SymmetricKey& master_key)
    {
    try
@@ -181,7 +181,7 @@ Session Session::decrypt(const MemoryRegion<byte>& buf,
       16 bytes per AES block * 4 blocks (absolute min amount due to
         48 bytes master secret)
       */
-      if(buf.size() < (8 + 16 + 32 + 4*16))
+      if(buf_len < (8 + 16 + 32 + 4*16))
          throw Decoding_Error("Encrypted TLS session too short to be valid");
 
       std::auto_ptr<KDF> kdf(get_kdf("KDF2(SHA-256)"));
@@ -192,10 +192,10 @@ Session Session::decrypt(const MemoryRegion<byte>& buf,
       std::auto_ptr<MessageAuthenticationCode> mac(get_mac("HMAC(SHA-256)"));
       mac->set_key(hmac_key);
 
-      mac->update(&buf[0], buf.size() - 32);
+      mac->update(&buf[0], buf_len - 32);
       MemoryVector<byte> computed_mac = mac->final();
 
-      if(!same_mem(&buf[buf.size() - 32], &computed_mac[0], computed_mac.size()))
+      if(!same_mem(&buf[buf_len - 32], &computed_mac[0], computed_mac.size()))
          throw Decoding_Error("MAC verification failed for encrypted session");
 
       const u64bit header = load_be<u64bit>(buf, 0);
@@ -209,7 +209,7 @@ Session Session::decrypt(const MemoryRegion<byte>& buf,
       InitializationVector aes_iv(&buf[8], 16);
 
       Pipe pipe(get_cipher("AES-256/CBC", aes_key, aes_iv, DECRYPTION));
-      pipe.process_msg(&buf[8+16], buf.size() - (32 + 8 + 16));
+      pipe.process_msg(&buf[8+16], buf_len - (32 + 8 + 16));
       SecureVector<byte> ber = pipe.read_all();
 
       return Session(&ber[0], ber.size());
