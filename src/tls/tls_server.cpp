@@ -217,6 +217,13 @@ void Server::process_handshake_msg(Handshake_Type type,
                                              creds,
                                              state->client_hello);
 
+      SymmetricKey session_ticket_key;
+      try
+         {
+         session_ticket_key = creds.psk("tls-server", "session-ticket", "");
+         }
+      catch(...) {}
+
       if(resuming)
          {
          // resume session
@@ -231,7 +238,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             session_info.fragment_size(),
             secure_renegotiation.supported(),
             secure_renegotiation.for_server_hello(),
-            state->client_hello->supports_session_ticket(),
+            state->client_hello->supports_session_ticket() && session_ticket_key.length() > 0,
             state->client_hello->next_protocol_notification(),
             m_possible_protocols,
             rng);
@@ -259,9 +266,9 @@ void Server::process_handshake_msg(Handshake_Type type,
             {
             try
                {
-               SymmetricKey key = creds.psk("tls-server", "session-ticket", "");
                state->new_session_ticket =
-                  new New_Session_Ticket(writer, state->hash, session_info.encrypt(key, rng));
+                  new New_Session_Ticket(writer, state->hash,
+                                         session_info.encrypt(session_ticket_key, rng));
                }
             catch(...)
                {

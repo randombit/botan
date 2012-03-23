@@ -35,13 +35,13 @@ New_Session_Ticket::New_Session_Ticket(Record_Writer& writer,
 New_Session_Ticket::New_Session_Ticket(const MemoryRegion<byte>& buf) :
    m_ticket_lifetime_hint(0)
    {
-   if(buf.size() >= 6)
-      {
-      TLS_Data_Reader reader(buf);
+   if(buf.size() < 6)
+      throw Decoding_Error("Session ticket message too short to be valid");
 
-      m_ticket_lifetime_hint = reader.get_u32bit();
-      m_ticket = reader.get_range<byte>(2, 0, 65535);
-      }
+   TLS_Data_Reader reader(buf);
+
+   m_ticket_lifetime_hint = reader.get_u32bit();
+   m_ticket = reader.get_range<byte>(2, 0, 65535);
    }
 
 MemoryVector<byte> New_Session_Ticket::serialize() const
