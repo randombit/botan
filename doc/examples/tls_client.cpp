@@ -16,6 +16,10 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#if defined(BOTAN_HAS_TLS_SQLITE_SESSION_MANAGER)
+  #include <botan/tls_sqlite_sess_mgr.h>
+#endif
+
 #include "credentials.h"
 
 using namespace Botan;
@@ -62,6 +66,7 @@ bool handshake_complete(const TLS::Session& session)
    std::cout << "Protocol version " << session.version().to_string() << "\n";
    std::cout << "Ciphersuite " << std::hex << session.ciphersuite().to_string() << "\n";
    std::cout << "Session ID " << hex_encode(session.session_id()) << "\n";
+   std::cout << "Session ticket " << hex_encode(session.session_ticket()) << "\n";
 
    return true;
    }
@@ -203,7 +208,13 @@ int main(int argc, char* argv[])
       LibraryInitializer botan_init;
       AutoSeeded_RNG rng;
       TLS::Policy policy;
+
+#if defined(BOTAN_HAS_TLS_SQLITE_SESSION_MANAGER)
+      TLS::Session_Manager_SQLite session_manager("my secret passphrase", rng,
+                                                  "sessions.db");
+#else
       TLS::Session_Manager_In_Memory session_manager;
+#endif
 
       Credentials_Manager_Simple creds(rng);
 
