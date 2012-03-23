@@ -5,3 +5,7 @@ load_on request
 <libs>
 all -> sqlite3
 </libs>
+
+<requires>
+pbkdf2
+</requires>

@@ -65,6 +65,7 @@ tls_version.cpp
 aes
 arc4
 asn1
+credentials
 des
 dh
 dsa
@@ -74,6 +75,7 @@ eme_pkcs
 emsa3
 filters
 hmac
+kdf2
 md5
 prf_ssl3
 prf_tls
