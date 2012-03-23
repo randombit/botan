@@ -124,6 +124,7 @@ class Client_Hello : public Handshake_Message
 
       Client_Hello(Record_Writer& writer,
                    Handshake_Hash& hash,
+                   const Policy& policy,
                    RandomNumberGenerator& rng,
                    const Session& resumed_session,
                    bool next_protocol = false);

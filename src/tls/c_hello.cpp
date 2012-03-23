@@ -72,12 +72,11 @@ Client_Hello::Client_Hello(Record_Writer& writer,
    m_fragment_size(0),
    m_secure_renegotiation(true),
    m_renegotiation_info(reneg_info),
+   m_supported_curves(policy.allowed_ecc_curves()),
    m_supports_session_ticket(true)
    {
    std::vector<std::string> hashes = policy.allowed_hashes();
    std::vector<std::string> sigs = policy.allowed_signature_methods();
-
-   m_supported_curves = policy.allowed_ecc_curves();
 
    for(size_t i = 0; i != hashes.size(); ++i)
       for(size_t j = 0; j != sigs.size(); ++j)
@@ -91,24 +90,36 @@ Client_Hello::Client_Hello(Record_Writer& writer,
 */
 Client_Hello::Client_Hello(Record_Writer& writer,
                            Handshake_Hash& hash,
+                           const Policy& policy,
                            RandomNumberGenerator& rng,
                            const Session& session,
                            bool next_protocol) :
    m_version(session.version()),
    m_session_id(session.session_id()),
    m_random(make_hello_random(rng)),
+   m_suites(policy.ciphersuite_list(session.srp_identifier() != "")),
+   m_comp_methods(policy.compression()),
    m_hostname(session.sni_hostname()),
    m_srp_identifier(session.srp_identifier()),
    m_next_protocol(next_protocol),
    m_fragment_size(session.fragment_size()),
    m_secure_renegotiation(session.secure_renegotiation()),
+   m_supported_curves(policy.allowed_ecc_curves()),
    m_supports_session_ticket(true),
    m_session_ticket(session.session_ticket())
    {
-   m_suites.push_back(session.ciphersuite_code());
-   m_comp_methods.push_back(session.compression_method());
+   if(!value_exists(m_suites, session.ciphersuite_code()))
+      m_suites.push_back(session.ciphersuite_code());
 
-   // set m_supported_algos + m_supported_curves here?
+   if(!value_exists(m_comp_methods, session.compression_method()))
+      m_comp_methods.push_back(session.compression_method());
+
+   std::vector<std::string> hashes = policy.allowed_hashes();
+   std::vector<std::string> sigs = policy.allowed_signature_methods();
+
+   for(size_t i = 0; i != hashes.size(); ++i)
+      for(size_t j = 0; j != sigs.size(); ++j)
+         m_supported_algos.push_back(std::make_pair(hashes[i], sigs[j]));
 
    hash.update(writer.send(*this));
    }

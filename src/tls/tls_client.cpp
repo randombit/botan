@@ -54,6 +54,7 @@ Client::Client(std::tr1::function<void (const byte[], size_t)> output_fn,
             state->client_hello = new Client_Hello(
                writer,
                state->hash,
+               policy,
                rng,
                session_info,
                send_npn_request);
