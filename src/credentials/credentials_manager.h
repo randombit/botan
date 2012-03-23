@@ -41,16 +41,12 @@ class BOTAN_DLL Credentials_Manager
                                        const std::string& identity_hint);
 
       /**
-      * @return the PSK used for identity
+      * @return the PSK used for identity, or throw an exception if no
+      * key exists
       */
       virtual SymmetricKey psk(const std::string& type,
                                const std::string& context,
                                const std::string& identity);
-
-      /**
-      * @return key used to encrypt session tickets by a TLS server
-      */
-      virtual const SymmetricKey& session_ticket_key();
 
       /**
       * @return identifier for client-side SRP auth, if available
@@ -142,9 +138,6 @@ class BOTAN_DLL Credentials_Manager
       virtual Private_Key* private_key_for(const X509_Certificate& cert,
                                            const std::string& type,
                                            const std::string& context);
-
-   private:
-      SymmetricKey m_session_ticket_key;
    };
 
 }

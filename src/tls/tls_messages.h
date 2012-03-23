@@ -197,6 +197,7 @@ class Server_Hello : public Handshake_Message
                    const Client_Hello& other,
                    const std::vector<std::string>& available_cert_types,
                    const Policy& policies,
+                   bool have_session_ticket_key,
                    bool client_has_secure_renegotiation,
                    const MemoryRegion<byte>& reneg_info,
                    bool client_has_npn,

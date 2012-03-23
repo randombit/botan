@@ -25,6 +25,7 @@ Server_Hello::Server_Hello(Record_Writer& writer,
                            const Client_Hello& c_hello,
                            const std::vector<std::string>& available_cert_types,
                            const Policy& policy,
+                           bool have_session_ticket_key,
                            bool client_has_secure_renegotiation,
                            const MemoryRegion<byte>& reneg_info,
                            bool client_has_npn,
@@ -38,7 +39,8 @@ Server_Hello::Server_Hello(Record_Writer& writer,
    m_renegotiation_info(reneg_info),
    m_next_protocol(client_has_npn),
    m_next_protocols(next_protocols),
-   m_supports_session_ticket(c_hello.supports_session_ticket())
+   m_supports_session_ticket(have_session_ticket_key &&
+                             c_hello.supports_session_ticket())
    {
    suite = policy.choose_suite(
       c_hello.ciphersuites(),
