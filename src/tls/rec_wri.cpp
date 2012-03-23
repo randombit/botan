@@ -23,9 +23,10 @@ namespace TLS {
 * Record_Writer Constructor
 */
 Record_Writer::Record_Writer(std::tr1::function<void (const byte[], size_t)> out) :
-   m_output_fn(out), m_writebuf(TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE)
+   m_output_fn(out),
+   m_writebuf(TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE),
+   m_mac(0)
    {
-   m_mac = 0;
    reset();
    set_maximum_fragment_size(0);
    }
@@ -210,16 +211,15 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
 
    if(m_mac_size == 0) // initial unencrypted handshake records
       {
-      const byte header[TLS_HEADER_SIZE] = {
-         type,
-         m_version.major_version(),
-         m_version.minor_version(),
-         get_byte<u16bit>(0, length),
-         get_byte<u16bit>(1, length)
-      };
+      m_writebuf[0] = type;
+      m_writebuf[1] = m_version.major_version();
+      m_writebuf[2] = m_version.minor_version();
+      m_writebuf[3] = get_byte<u16bit>(0, length);
+      m_writebuf[4] = get_byte<u16bit>(1, length);
 
-      m_output_fn(header, TLS_HEADER_SIZE);
-      m_output_fn(input, length);
+      copy_mem(&m_writebuf[TLS_HEADER_SIZE], input, length);
+
+      m_output_fn(&m_writebuf[0], TLS_HEADER_SIZE + length);
       return;
       }
 
