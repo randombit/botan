@@ -40,9 +40,13 @@ bool check_for_resume(Session& session_info,
       // If a session ticket was sent, ignore client session ID
       try
          {
-         session_info = Session::decrypt(
-            session_ticket,
-            credentials.psk("tls-server", "session-ticket", ""));
+         const SymmetricKey& session_ticket_key = credentials.session_ticket_key();
+
+         if(session_ticket_key.length() == 0)
+            return false;
+
+         session_info = Session::decrypt(session_ticket,
+                                         session_ticket_key);
          }
       catch(...)
          {
@@ -217,12 +221,7 @@ void Server::process_handshake_msg(Handshake_Type type,
                                              creds,
                                              state->client_hello);
 
-      SymmetricKey session_ticket_key;
-      try
-         {
-         session_ticket_key = creds.psk("tls-server", "session-ticket", "");
-         }
-      catch(...) {}
+      const SymmetricKey& session_ticket_key = creds.session_ticket_key();
 
       if(resuming)
          {
@@ -423,9 +422,10 @@ void Server::process_handshake_msg(Handshake_Type type,
       state->hash.update(type, contents);
 
       /*
-      * Using DECRYPT_ERROR looks weird here, but per RFC 4346 is for
-      * "A handshake cryptographic operation failed, including being
-      * unable to correctly verify a signature, ..."
+      * Using DECRYPT_ERROR looks weird here, but per RFC 4346 this
+      * error is for indicating that "A handshake cryptographic
+      * operation failed, including being unable to correctly verify a
+      * signature, ..."
       */
       if(!sig_valid)
          throw TLS_Exception(Alert::DECRYPT_ERROR, "Client cert verify failed");
@@ -496,9 +496,17 @@ void Server::process_handshake_msg(Handshake_Type type,
                {
                try
                   {
-                  SymmetricKey key = creds.psk("tls-server", "session-ticket", "");
-                  state->new_session_ticket =
-                     new New_Session_Ticket(writer, state->hash, session_info.encrypt(key, rng));
+                  const SymmetricKey& session_ticket_key =
+                     creds.session_ticket_key();
+
+                  if(session_ticket_key.length() > 0)
+                     {
+                     state->new_session_ticket =
+                        new New_Session_Ticket(
+                           writer,
+                           state->hash,
+                           session_info.encrypt(session_ticket_key, rng));
+                     }
                   }
                catch(...) {}
                }
@@ -506,8 +514,16 @@ void Server::process_handshake_msg(Handshake_Type type,
                session_manager.save(session_info);
             }
 
-         if(state->server_hello->supports_session_ticket() && !state->new_session_ticket)
-            state->new_session_ticket = new New_Session_Ticket(writer, state->hash);
+         /*
+         If we sent the extension we have to send something;
+         an empty ticket is allowed
+         */
+         if(!state->new_session_ticket &&
+            state->server_hello->supports_session_ticket())
+            {
+            state->new_session_ticket =
+               new New_Session_Ticket(writer, state->hash);
+            }
 
          writer.send(CHANGE_CIPHER_SPEC, 1);
 

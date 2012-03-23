@@ -7,6 +7,7 @@
 
 #include <botan/credentials_manager.h>
 #include <botan/x509stor.h>
+#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -28,6 +29,13 @@ SymmetricKey Credentials_Manager::psk(const std::string&,
                                       const std::string& identity)
    {
    throw Internal_Error("No PSK set for identity " + identity);
+   }
+
+const SymmetricKey& Credentials_Manager::session_ticket_key()
+   {
+   if(m_session_ticket_key.length() == 0)
+      m_session_ticket_key = SymmetricKey(global_state().global_rng(), 32);
+   return m_session_ticket_key;
    }
 
 std::string Credentials_Manager::srp_identifier(const std::string&,
