@@ -137,7 +137,7 @@ void do_x509_tests(RandomNumberGenerator& rng)
 
    /* Create the CA's key and self-signed cert */
    std::cout << '.' << std::flush;
-   RSA_PrivateKey ca_key(rng, 1024);
+   RSA_PrivateKey ca_key(rng, 2048);
 
    std::cout << '.' << std::flush;
    X509_Certificate ca_cert = X509::create_self_signed_cert(ca_opts(),
@@ -148,7 +148,7 @@ void do_x509_tests(RandomNumberGenerator& rng)
 
    /* Create user #1's key and cert request */
    std::cout << '.' << std::flush;
-   DSA_PrivateKey user1_key(rng, DL_Group("dsa/jce/1024"));
+   DSA_PrivateKey user1_key(rng, DL_Group("dsa/botan/2048"));
 
    std::cout << '.' << std::flush;
    PKCS10_Request user1_req = X509::create_cert_req(req_opts1(),
@@ -162,7 +162,7 @@ void do_x509_tests(RandomNumberGenerator& rng)
    EC_Group ecc_domain(OID("1.2.840.10045.3.1.7"));
    ECDSA_PrivateKey user2_key(rng, ecc_domain);
 #else
-   RSA_PrivateKey user2_key(rng, 1024);
+   RSA_PrivateKey user2_key(rng, 1536);
 #endif
 
    std::cout << '.' << std::flush;
@@ -197,13 +197,17 @@ void do_x509_tests(RandomNumberGenerator& rng)
 
    std::cout << '.' << std::flush;
 
-   Path_Validation_Result result_u1 = x509_path_validate(user1_cert, store);
-   if(result_u1.validation_result != VERIFIED)
-      std::cout << "\nFAILED: User cert #1 did not validate - " << result_u1.validation_result << std::endl;
+   Path_Validation_Restrictions restrictions;
 
-   Path_Validation_Result result_u2 = x509_path_validate(user2_cert, store);
-   if(result_u2.validation_result != VERIFIED)
-      std::cout << "\nFAILED: User cert #2 did not validate - " << result_u2.validation_result << std::endl;
+   Path_Validation_Result result_u1 = x509_path_validate(user1_cert, restrictions, store);
+   if(!result_u1.successful_validation())
+      std::cout << "FAILED: User cert #1 did not validate - "
+                << result_u1.result_string() << std::endl;
+
+   Path_Validation_Result result_u2 = x509_path_validate(user2_cert, restrictions, store);
+   if(!result_u2.successful_validation())
+      std::cout << "FAILED: User cert #2 did not validate - "
+                << result_u2.result_string() << std::endl;
 
    store.add_crl(crl1);
 
@@ -215,13 +219,15 @@ void do_x509_tests(RandomNumberGenerator& rng)
 
    store.add_crl(crl2);
 
-   result_u1 = x509_path_validate(user1_cert, store);
-   if(result_u1.validation_result != CERT_IS_REVOKED)
-      std::cout << "\nFAILED: User cert #1 was not revoked" << std::endl;
+   result_u1 = x509_path_validate(user1_cert, restrictions, store);
+   if(result_u1.result() != Path_Validation_Result::CERT_IS_REVOKED)
+      std::cout << "FAILED: User cert #1 was not revoked - "
+                << result_u1.result_string() << std::endl;
 
-   result_u2 = x509_path_validate(user2_cert, store);
-   if(result_u2.validation_result != CERT_IS_REVOKED)
-      std::cout << "\nFAILED: User cert #2 was not revoked" << std::endl;
+   result_u2 = x509_path_validate(user2_cert, restrictions, store);
+   if(result_u2.result() != Path_Validation_Result::CERT_IS_REVOKED)
+      std::cout << "FAILED: User cert #2 was not revoked - "
+                << result_u2.result_string() << std::endl;
 
    revoked.clear();
    revoked.push_back(CRL_Entry(user1_cert, REMOVE_FROM_CRL));
@@ -229,9 +235,10 @@ void do_x509_tests(RandomNumberGenerator& rng)
 
    store.add_crl(crl3);
 
-   result_u1 = x509_path_validate(user1_cert, store);
-   if(result_u1.validation_result != VERIFIED)
-      std::cout << "\nFAILED: User cert #1 was not un-revoked" << std::endl;
+   result_u1 = x509_path_validate(user1_cert, restrictions, store);
+   if(!result_u1.successful_validation())
+      std::cout << "FAILED: User cert #1 was not un-revoked - "
+                << result_u1.result_string() << std::endl;
 
    check_against_copy(ca_key, rng);
    check_against_copy(user1_key, rng);

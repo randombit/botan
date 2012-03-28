@@ -20,12 +20,12 @@ using namespace Botan;
 
 std::vector<std::string> dir_listing(const std::string&);
 
-void run_one_test(u32bit, X509_Path_Validation_Code,
+void run_one_test(u32bit, Path_Validation_Result::Code,
                   std::string, std::string,
                   std::vector<std::string>,
                   std::vector<std::string>);
 
-std::map<u32bit, X509_Path_Validation_Code> expected_results;
+std::map<u32bit, Path_Validation_Result::Code> expected_results;
 
 u32bit unexp_failure, unexp_success, wrong_error, skipped;
 
@@ -96,7 +96,7 @@ int main()
    return 0;
    }
 
-void run_one_test(u32bit test_no, X509_Path_Validation_Code expected,
+void run_one_test(u32bit test_no, Path_Validation_Result::Code expected,
                   std::string root_cert, std::string to_verify,
                   std::vector<std::string> certs,
                   std::vector<std::string> crls)
@@ -131,9 +131,14 @@ void run_one_test(u32bit test_no, X509_Path_Validation_Code expected,
       store.add_crl(crl);
       }
 
-   Path_Validation_Result validation_result = x509_path_validate(end_user, store);
+   Path_Validation_Restrictions restrictions(true);
 
-   X509_Path_Validation_Code result = validation_result.validation_result;
+   Path_Validation_Result validation_result =
+      x509_path_validate(end_user,
+                         restrictions,
+                         store);
+
+   Path_Validation_Result::Code result = validation_result.result();
 
    if(result == expected)
       {
@@ -141,12 +146,12 @@ void run_one_test(u32bit test_no, X509_Path_Validation_Code expected,
       return;
       }
 
-   if(expected == VERIFIED)
+   if(expected == Path_Validation_Result::VERIFIED)
       {
       std::cout << "unexpected failure: " << result << std::endl;
       unexp_failure++;
       }
-   else if(result == VERIFIED)
+   else if(result == Path_Validation_Result::VERIFIED)
       {
       std::cout << "unexpected success: " << expected << std::endl;
       unexp_success++;
@@ -198,46 +203,43 @@ std::vector<std::string> dir_listing(const std::string& dir_name)
 void populate_expected_results()
    {
    /* OK, not a super great way of doing this... */
-   expected_results[1] = VERIFIED;
-   expected_results[2] = SIGNATURE_ERROR;
-   expected_results[3] = SIGNATURE_ERROR;
-   expected_results[4] = VERIFIED;
-   expected_results[5] = CERT_NOT_YET_VALID;
-   expected_results[6] = CERT_NOT_YET_VALID;
-   expected_results[7] = VERIFIED;
-   expected_results[8] = CERT_NOT_YET_VALID;
-   expected_results[9] = CERT_HAS_EXPIRED;
-   expected_results[10] = CERT_HAS_EXPIRED;
-   expected_results[11] = CERT_HAS_EXPIRED;
-   expected_results[12] = VERIFIED;
-   expected_results[13] = CERT_ISSUER_NOT_FOUND;
+   expected_results[1] = Path_Validation_Result::VERIFIED;
+   expected_results[2] = Path_Validation_Result::SIGNATURE_ERROR;
+   expected_results[3] = Path_Validation_Result::SIGNATURE_ERROR;
+   expected_results[4] = Path_Validation_Result::VERIFIED;
+   expected_results[5] = Path_Validation_Result::CERT_NOT_YET_VALID;
+   expected_results[6] = Path_Validation_Result::CERT_NOT_YET_VALID;
+   expected_results[7] = Path_Validation_Result::VERIFIED;
+   expected_results[8] = Path_Validation_Result::CERT_NOT_YET_VALID;
+   expected_results[9] = Path_Validation_Result::CERT_HAS_EXPIRED;
+   expected_results[10] = Path_Validation_Result::CERT_HAS_EXPIRED;
+   expected_results[11] = Path_Validation_Result::CERT_HAS_EXPIRED;
+   expected_results[12] = Path_Validation_Result::VERIFIED;
+   expected_results[13] = Path_Validation_Result::CERT_ISSUER_NOT_FOUND;
 
-   // FIXME: we get the answer right for the wrong reason
-   //   ummm... I don't know if that is still true. I wish I had thought to
-   //   write down exactly what this 'wrong reason' was in the first place.
-   expected_results[14] = CERT_ISSUER_NOT_FOUND;
-   expected_results[15] = VERIFIED;
-   expected_results[16] = VERIFIED;
-   expected_results[17] = VERIFIED;
-   expected_results[18] = VERIFIED;
+   expected_results[14] = Path_Validation_Result::CERT_ISSUER_NOT_FOUND;
+   expected_results[15] = Path_Validation_Result::VERIFIED;
+   expected_results[16] = Path_Validation_Result::VERIFIED;
+   expected_results[17] = Path_Validation_Result::VERIFIED;
+   expected_results[18] = Path_Validation_Result::VERIFIED;
 
-   expected_results[19] = CRL_NOT_FOUND;
-   expected_results[20] = CERT_IS_REVOKED;
-   expected_results[21] = CERT_IS_REVOKED;
+   expected_results[19] = Path_Validation_Result::CRL_NOT_FOUND;
+   expected_results[20] = Path_Validation_Result::CERT_IS_REVOKED;
+   expected_results[21] = Path_Validation_Result::CERT_IS_REVOKED;
 
-   expected_results[22] = CA_CERT_NOT_FOR_CERT_ISSUER;
-   expected_results[23] = CA_CERT_NOT_FOR_CERT_ISSUER;
-   expected_results[24] = VERIFIED;
-   expected_results[25] = CA_CERT_NOT_FOR_CERT_ISSUER;
-   expected_results[26] = VERIFIED;
-   expected_results[27] = VERIFIED;
-   expected_results[28] = CA_CERT_NOT_FOR_CERT_ISSUER;
-   expected_results[29] = CA_CERT_NOT_FOR_CERT_ISSUER;
-   expected_results[30] = VERIFIED;
+   expected_results[22] = Path_Validation_Result::CA_CERT_NOT_FOR_CERT_ISSUER;
+   expected_results[23] = Path_Validation_Result::CA_CERT_NOT_FOR_CERT_ISSUER;
+   expected_results[24] = Path_Validation_Result::VERIFIED;
+   expected_results[25] = Path_Validation_Result::CA_CERT_NOT_FOR_CERT_ISSUER;
+   expected_results[26] = Path_Validation_Result::VERIFIED;
+   expected_results[27] = Path_Validation_Result::VERIFIED;
+   expected_results[28] = Path_Validation_Result::CA_CERT_NOT_FOR_CERT_ISSUER;
+   expected_results[29] = Path_Validation_Result::CA_CERT_NOT_FOR_CERT_ISSUER;
+   expected_results[30] = Path_Validation_Result::VERIFIED;
 
-   expected_results[31] = CA_CERT_NOT_FOR_CRL_ISSUER;
-   expected_results[32] = CA_CERT_NOT_FOR_CRL_ISSUER;
-   expected_results[33] = VERIFIED;
+   expected_results[31] = Path_Validation_Result::CA_CERT_NOT_FOR_CRL_ISSUER;
+   expected_results[32] = Path_Validation_Result::CA_CERT_NOT_FOR_CRL_ISSUER;
+   expected_results[33] = Path_Validation_Result::VERIFIED;
 
    /*
     Policy tests: a little trickier because there are other inputs
@@ -259,54 +261,54 @@ void populate_expected_results()
      This provides reasonably good coverage of the possible outcomes.
    */
 
-   expected_results[34] = VERIFIED;
-   expected_results[35] = VERIFIED;
-   expected_results[36] = VERIFIED;
-   expected_results[37] = VERIFIED;
-   expected_results[38] = VERIFIED;
-   expected_results[39] = VERIFIED;
-   expected_results[40] = VERIFIED;
-   expected_results[41] = VERIFIED;
-   expected_results[42] = VERIFIED;
-   expected_results[43] = VERIFIED;
-   expected_results[44] = VERIFIED;
+   expected_results[34] = Path_Validation_Result::VERIFIED;
+   expected_results[35] = Path_Validation_Result::VERIFIED;
+   expected_results[36] = Path_Validation_Result::VERIFIED;
+   expected_results[37] = Path_Validation_Result::VERIFIED;
+   expected_results[38] = Path_Validation_Result::VERIFIED;
+   expected_results[39] = Path_Validation_Result::VERIFIED;
+   expected_results[40] = Path_Validation_Result::VERIFIED;
+   expected_results[41] = Path_Validation_Result::VERIFIED;
+   expected_results[42] = Path_Validation_Result::VERIFIED;
+   expected_results[43] = Path_Validation_Result::VERIFIED;
+   expected_results[44] = Path_Validation_Result::VERIFIED;
 
-   //expected_results[45] = EXPLICT_POLICY_REQUIRED;
-   //expected_results[46] = ACCEPT;
-   //expected_results[47] = EXPLICT_POLICY_REQUIRED;
+   //expected_results[45] = Path_Validation_Result::EXPLICT_POLICY_REQUIRED;
+   //expected_results[46] = Path_Validation_Result::ACCEPT;
+   //expected_results[47] = Path_Validation_Result::EXPLICT_POLICY_REQUIRED;
 
-   expected_results[48] = VERIFIED;
-   expected_results[49] = VERIFIED;
-   expected_results[50] = VERIFIED;
-   expected_results[51] = VERIFIED;
-   expected_results[52] = VERIFIED;
-   expected_results[53] = VERIFIED;
+   expected_results[48] = Path_Validation_Result::VERIFIED;
+   expected_results[49] = Path_Validation_Result::VERIFIED;
+   expected_results[50] = Path_Validation_Result::VERIFIED;
+   expected_results[51] = Path_Validation_Result::VERIFIED;
+   expected_results[52] = Path_Validation_Result::VERIFIED;
+   expected_results[53] = Path_Validation_Result::VERIFIED;
 
-   expected_results[54] = CERT_CHAIN_TOO_LONG;
-   expected_results[55] = CERT_CHAIN_TOO_LONG;
-   expected_results[56] = VERIFIED;
-   expected_results[57] = VERIFIED;
-   expected_results[58] = CERT_CHAIN_TOO_LONG;
-   expected_results[59] = CERT_CHAIN_TOO_LONG;
-   expected_results[60] = CERT_CHAIN_TOO_LONG;
-   expected_results[61] = CERT_CHAIN_TOO_LONG;
-   expected_results[62] = VERIFIED;
-   expected_results[63] = VERIFIED;
+   expected_results[54] = Path_Validation_Result::CERT_CHAIN_TOO_LONG;
+   expected_results[55] = Path_Validation_Result::CERT_CHAIN_TOO_LONG;
+   expected_results[56] = Path_Validation_Result::VERIFIED;
+   expected_results[57] = Path_Validation_Result::VERIFIED;
+   expected_results[58] = Path_Validation_Result::CERT_CHAIN_TOO_LONG;
+   expected_results[59] = Path_Validation_Result::CERT_CHAIN_TOO_LONG;
+   expected_results[60] = Path_Validation_Result::CERT_CHAIN_TOO_LONG;
+   expected_results[61] = Path_Validation_Result::CERT_CHAIN_TOO_LONG;
+   expected_results[62] = Path_Validation_Result::VERIFIED;
+   expected_results[63] = Path_Validation_Result::VERIFIED;
 
-   expected_results[64] = SIGNATURE_ERROR;
+   expected_results[64] = Path_Validation_Result::SIGNATURE_ERROR;
 
-   expected_results[65] = CRL_NOT_FOUND;
-   expected_results[66] = CRL_NOT_FOUND;
+   expected_results[65] = Path_Validation_Result::CRL_NOT_FOUND;
+   expected_results[66] = Path_Validation_Result::CRL_NOT_FOUND;
 
-   expected_results[67] = VERIFIED;
+   expected_results[67] = Path_Validation_Result::VERIFIED;
 
-   expected_results[68] = CERT_IS_REVOKED;
-   expected_results[69] = CERT_IS_REVOKED;
-   expected_results[70] = CERT_IS_REVOKED;
-   expected_results[71] = CERT_IS_REVOKED;
-   expected_results[72] = CRL_HAS_EXPIRED;
-   expected_results[73] = CRL_HAS_EXPIRED;
-   expected_results[74] = VERIFIED;
+   expected_results[68] = Path_Validation_Result::CERT_IS_REVOKED;
+   expected_results[69] = Path_Validation_Result::CERT_IS_REVOKED;
+   expected_results[70] = Path_Validation_Result::CERT_IS_REVOKED;
+   expected_results[71] = Path_Validation_Result::CERT_IS_REVOKED;
+   expected_results[72] = Path_Validation_Result::CRL_HAS_EXPIRED;
+   expected_results[73] = Path_Validation_Result::CRL_HAS_EXPIRED;
+   expected_results[74] = Path_Validation_Result::VERIFIED;
 
    /* These tests use weird CRL extensions which aren't supported yet */
    //expected_results[75] = ;
