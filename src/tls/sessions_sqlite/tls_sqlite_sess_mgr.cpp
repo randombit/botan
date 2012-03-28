@@ -211,7 +211,7 @@ Session_Manager_SQLite::Session_Manager_SQLite(const std::string& passphrase,
       // new database case
 
       MemoryVector<byte> salt = rng.random_vec(16);
-      const size_t iterations = 32000;
+      const size_t iterations = 64 * 1024;
       size_t check_val = 0;
 
       m_session_key = derive_key(passphrase, &salt[0], salt.size(),

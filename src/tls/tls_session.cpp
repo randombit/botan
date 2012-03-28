@@ -133,7 +133,16 @@ std::string Session::PEM_encode() const
 
 namespace {
 
-const u64bit ENCRYPTED_SESSION_MAGIC = 0xACE4480800000000;
+const u32bit SESSION_CRYPTO_MAGIC = 0x571B0E4E;
+const std::string SESSION_CRYPTO_CIPHER = "AES-256/CBC";
+const std::string SESSION_CRYPTO_MAC = "HMAC(SHA-256)";
+const std::string SESSION_CRYPTO_KDF = "KDF2(SHA-256)";
+
+const size_t MAGIC_LENGTH = 4;
+const size_t MAC_KEY_LENGTH = 32;
+const size_t CIPHER_KEY_LENGTH = 32;
+const size_t CIPHER_IV_LENGTH = 16;
+const size_t MAC_OUTPUT_LENGTH = 32;
 
 }
 
@@ -141,26 +150,30 @@ MemoryVector<byte>
 Session::encrypt(const SymmetricKey& master_key,
                  RandomNumberGenerator& rng) const
    {
-   std::auto_ptr<KDF> kdf(get_kdf("KDF2(SHA-256)"));
+   std::auto_ptr<KDF> kdf(get_kdf(SESSION_CRYPTO_KDF));
 
-   SymmetricKey aes_key = kdf->derive_key(32, master_key.bits_of(),
-                                          "tls.session.cipher-key");
+   SymmetricKey cipher_key =
+      kdf->derive_key(CIPHER_KEY_LENGTH,
+                      master_key.bits_of(),
+                      "tls.session.cipher-key");
 
-   SymmetricKey hmac_key = kdf->derive_key(32, master_key.bits_of(),
-                                           "tls.session.mac-key");
+   SymmetricKey mac_key =
+      kdf->derive_key(MAC_KEY_LENGTH,
+                      master_key.bits_of(),
+                      "tls.session.mac-key");
 
-   InitializationVector aes_iv(rng, 16);
+   InitializationVector cipher_iv(rng, 16);
 
-   std::auto_ptr<MessageAuthenticationCode> mac(get_mac("HMAC(SHA-256)"));
-   mac->set_key(hmac_key);
+   std::auto_ptr<MessageAuthenticationCode> mac(get_mac(SESSION_CRYPTO_MAC));
+   mac->set_key(mac_key);
 
-   Pipe pipe(get_cipher("AES-256/CBC", aes_key, aes_iv, ENCRYPTION));
+   Pipe pipe(get_cipher(SESSION_CRYPTO_CIPHER, cipher_key, cipher_iv, ENCRYPTION));
    pipe.process_msg(this->DER_encode());
    MemoryVector<byte> ctext = pipe.read_all(0);
 
-   MemoryVector<byte> out(8);
-   store_be(ENCRYPTED_SESSION_MAGIC, &out[0]);
-   out += aes_iv.bits_of();
+   MemoryVector<byte> out(MAGIC_LENGTH);
+   store_be(SESSION_CRYPTO_MAGIC, &out[0]);
+   out += cipher_iv.bits_of();
    out += ctext;
 
    mac->update(out);
@@ -174,42 +187,45 @@ Session Session::decrypt(const byte buf[], size_t buf_len,
    {
    try
       {
-      /*
-      8 bytes header
-      16 bytes IV
-      32 bytes MAC
-      16 bytes per AES block * 4 blocks (absolute min amount due to
-        48 bytes master secret)
-      */
-      if(buf_len < (8 + 16 + 32 + 4*16))
+      const size_t MIN_CTEXT_SIZE = 4 * 16; // due to 48 byte master secret
+
+      if(buf_len < (MAGIC_LENGTH +
+                    CIPHER_IV_LENGTH +
+                    MIN_CTEXT_SIZE +
+                    MAC_OUTPUT_LENGTH))
          throw Decoding_Error("Encrypted TLS session too short to be valid");
 
-      std::auto_ptr<KDF> kdf(get_kdf("KDF2(SHA-256)"));
-
-      SymmetricKey hmac_key = kdf->derive_key(32, master_key.bits_of(),
-                                              "tls.session.mac-key");
-
-      std::auto_ptr<MessageAuthenticationCode> mac(get_mac("HMAC(SHA-256)"));
-      mac->set_key(hmac_key);
-
-      mac->update(&buf[0], buf_len - 32);
-      MemoryVector<byte> computed_mac = mac->final();
-
-      if(!same_mem(&buf[buf_len - 32], &computed_mac[0], computed_mac.size()))
-         throw Decoding_Error("MAC verification failed for encrypted session");
-
-      const u64bit header = load_be<u64bit>(buf, 0);
-
-      if(header != ENCRYPTED_SESSION_MAGIC)
+      if(load_be<u32bit>(buf, 0) != SESSION_CRYPTO_MAGIC)
          throw Decoding_Error("Unknown header value in encrypted session");
 
-      SymmetricKey aes_key = kdf->derive_key(32, master_key.bits_of(),
-                                             "tls.session.cipher-key");
+      std::auto_ptr<KDF> kdf(get_kdf(SESSION_CRYPTO_KDF));
 
-      InitializationVector aes_iv(&buf[8], 16);
+      SymmetricKey mac_key =
+         kdf->derive_key(MAC_KEY_LENGTH,
+                         master_key.bits_of(),
+                         "tls.session.mac-key");
 
-      Pipe pipe(get_cipher("AES-256/CBC", aes_key, aes_iv, DECRYPTION));
-      pipe.process_msg(&buf[8+16], buf_len - (32 + 8 + 16));
+      std::auto_ptr<MessageAuthenticationCode> mac(get_mac(SESSION_CRYPTO_MAC));
+      mac->set_key(mac_key);
+
+      mac->update(&buf[0], buf_len - MAC_OUTPUT_LENGTH);
+      MemoryVector<byte> computed_mac = mac->final();
+
+      if(!same_mem(&buf[buf_len - MAC_OUTPUT_LENGTH], &computed_mac[0], computed_mac.size()))
+         throw Decoding_Error("MAC verification failed for encrypted session");
+
+      SymmetricKey cipher_key =
+         kdf->derive_key(CIPHER_KEY_LENGTH,
+                         master_key.bits_of(),
+                         "tls.session.cipher-key");
+
+      InitializationVector cipher_iv(&buf[MAGIC_LENGTH], CIPHER_IV_LENGTH);
+
+      const size_t CTEXT_OFFSET = MAGIC_LENGTH + CIPHER_IV_LENGTH;
+
+      Pipe pipe(get_cipher(SESSION_CRYPTO_CIPHER, cipher_key, cipher_iv, DECRYPTION));
+      pipe.process_msg(&buf[CTEXT_OFFSET],
+                       buf_len - (MAC_OUTPUT_LENGTH + CTEXT_OFFSET));
       SecureVector<byte> ber = pipe.read_all();
 
       return Session(&ber[0], ber.size());
