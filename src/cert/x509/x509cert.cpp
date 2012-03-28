@@ -206,9 +206,15 @@ bool X509_Certificate::is_CA_cert() const
    {
    if(!subject.get1_u32bit("X509v3.BasicConstraints.is_ca"))
       return false;
-   if((constraints() & KEY_CERT_SIGN) || (constraints() == NO_CONSTRAINTS))
+
+   return allowed_usage(KEY_CERT_SIGN);
+   }
+
+bool X509_Certificate::allowed_usage(Key_Constraints restriction) const
+   {
+   if(constraints() == NO_CONSTRAINTS)
       return true;
-   return false;
+   return (constraints() & restriction);
    }
 
 /*

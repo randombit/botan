@@ -67,5 +67,5 @@ rng
 rsa
 sha1
 ssl3mac
-x509cert
+x509
 </requires>

@@ -23,10 +23,10 @@ namespace Botan {
 class BOTAN_DLL X509_Certificate : public X509_Object
    {
    public:
-     /**
-     * Get the public key associated with this certificate.
-     * @return subject public key of this certificate
-     */
+      /**
+      * Get the public key associated with this certificate.
+      * @return subject public key of this certificate
+      */
       Public_Key* subject_public_key() const;
 
       /**
@@ -110,6 +110,8 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       * @return true if this certificate is a CA certificate
       */
       bool is_CA_cert() const;
+
+      bool allowed_usage(Key_Constraints restriction) const;
 
       /**
       * Get the path limit as defined in the BasicConstraints extension of

@@ -21,7 +21,7 @@
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
   #include <botan/x509self.h>
-  #include <botan/x509stor.h>
+  #include <botan/x509path.h>
   #include <botan/x509_ca.h>
   #include <botan/pkcs10.h>
 #endif
@@ -191,19 +191,21 @@ void do_x509_tests(RandomNumberGenerator& rng)
    X509_CRL crl1 = ca.new_crl(rng);
 
    /* Verify the certs */
-   X509_Store store;
+   Certificate_Store_In_Memory store;
 
-   store.add_cert(ca_cert, true); // second arg == true: trusted CA cert
+   store.add_certificate(ca_cert);
 
    std::cout << '.' << std::flush;
-   if(store.validate_cert(user1_cert) != VERIFIED)
-      std::cout << "\nFAILED: User cert #1 did not validate" << std::endl;
 
-   if(store.validate_cert(user2_cert) != VERIFIED)
-      std::cout << "\nFAILED: User cert #2 did not validate" << std::endl;
+   Path_Validation_Result result_u1 = x509_path_validate(user1_cert, store);
+   if(result_u1.validation_result != VERIFIED)
+      std::cout << "\nFAILED: User cert #1 did not validate - " << result_u1.validation_result << std::endl;
 
-   if(store.add_crl(crl1) != VERIFIED)
-      std::cout << "\nFAILED: CRL #1 did not validate" << std::endl;
+   Path_Validation_Result result_u2 = x509_path_validate(user2_cert, store);
+   if(result_u2.validation_result != VERIFIED)
+      std::cout << "\nFAILED: User cert #2 did not validate - " << result_u2.validation_result << std::endl;
+
+   store.add_crl(crl1);
 
    std::vector<CRL_Entry> revoked;
    revoked.push_back(CRL_Entry(user1_cert, CESSATION_OF_OPERATION));
@@ -211,23 +213,24 @@ void do_x509_tests(RandomNumberGenerator& rng)
 
    X509_CRL crl2 = ca.update_crl(crl1, revoked, rng);
 
-   if(store.add_crl(crl2) != VERIFIED)
-      std::cout << "\nFAILED: CRL #2 did not validate" << std::endl;
+   store.add_crl(crl2);
 
-   if(store.validate_cert(user1_cert) != CERT_IS_REVOKED)
+   result_u1 = x509_path_validate(user1_cert, store);
+   if(result_u1.validation_result != CERT_IS_REVOKED)
       std::cout << "\nFAILED: User cert #1 was not revoked" << std::endl;
 
-   if(store.validate_cert(user2_cert) != CERT_IS_REVOKED)
+   result_u2 = x509_path_validate(user2_cert, store);
+   if(result_u2.validation_result != CERT_IS_REVOKED)
       std::cout << "\nFAILED: User cert #2 was not revoked" << std::endl;
 
    revoked.clear();
    revoked.push_back(CRL_Entry(user1_cert, REMOVE_FROM_CRL));
    X509_CRL crl3 = ca.update_crl(crl2, revoked, rng);
 
-   if(store.add_crl(crl3) != VERIFIED)
-      std::cout << "\nFAILED: CRL #3 did not validate" << std::endl;
+   store.add_crl(crl3);
 
-   if(store.validate_cert(user1_cert) != VERIFIED)
+   result_u1 = x509_path_validate(user1_cert, store);
+   if(result_u1.validation_result != VERIFIED)
       std::cout << "\nFAILED: User cert #1 was not un-revoked" << std::endl;
 
    check_against_copy(ca_key, rng);

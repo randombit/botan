@@ -12,7 +12,7 @@
 #include <botan/asn1_oid.h>
 #include <botan/asn1_obj.h>
 #include <botan/datastor.h>
-#include <botan/pubkey_enums.h>
+#include <botan/crl_ent.h>
 
 namespace Botan {
 

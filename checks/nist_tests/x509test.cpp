@@ -4,7 +4,7 @@
   which is available on NIST's web site.
 */
 
-#include <botan/x509stor.h>
+#include <botan/x509path.h>
 #include <botan/init.h>
 using namespace Botan;
 
@@ -20,12 +20,12 @@ using namespace Botan;
 
 std::vector<std::string> dir_listing(const std::string&);
 
-void run_one_test(u32bit, X509_Code,
+void run_one_test(u32bit, X509_Path_Validation_Code,
                   std::string, std::string,
                   std::vector<std::string>,
                   std::vector<std::string>);
 
-std::map<u32bit, X509_Code> expected_results;
+std::map<u32bit, X509_Path_Validation_Code> expected_results;
 
 u32bit unexp_failure, unexp_success, wrong_error, skipped;
 
@@ -96,7 +96,7 @@ int main()
    return 0;
    }
 
-void run_one_test(u32bit test_no, X509_Code expected,
+void run_one_test(u32bit test_no, X509_Path_Validation_Code expected,
                   std::string root_cert, std::string to_verify,
                   std::vector<std::string> certs,
                   std::vector<std::string> crls)
@@ -104,16 +104,14 @@ void run_one_test(u32bit test_no, X509_Code expected,
    std::cout << "Processing test #" << test_no << "... ";
    std::cout.flush();
 
-   X509_Code result = VERIFIED;
+   Certificate_Store_In_Memory store;
 
-   X509_Store store;
-
-   store.add_cert(X509_Certificate(root_cert), true);
+   store.add_certificate(X509_Certificate(root_cert));
 
    X509_Certificate end_user(to_verify);
 
    for(size_t j = 0; j != certs.size(); j++)
-      store.add_cert(X509_Certificate(certs[j]));
+      store.add_certificate(X509_Certificate(certs[j]));
 
    for(size_t j = 0; j != crls.size(); j++)
       {
@@ -130,23 +128,12 @@ void run_one_test(u32bit test_no, X509_Code expected,
          std::cout << std::endl;
          }
       */
-      result = store.add_crl(crl);
-      if(result != VERIFIED)
-         break;
+      store.add_crl(crl);
       }
 
-   /* if everything has gone well up until now */
+   Path_Validation_Result validation_result = x509_path_validate(end_user, store);
 
-   if(result == VERIFIED)
-      {
-      result = store.validate_cert(end_user);
-
-      X509_Code result2 = store.validate_cert(end_user);
-
-      if(result != result2)
-         std::cout << "Two runs, two answers: " << result << " "
-                   << result2 << std::endl;
-      }
+   X509_Path_Validation_Code result = validation_result.validation_result;
 
    if(result == expected)
       {
@@ -234,15 +221,7 @@ void populate_expected_results()
    expected_results[17] = VERIFIED;
    expected_results[18] = VERIFIED;
 
-   /************* CHANGE OF TEST RESULT FOR TEST #19 ************************
-     One of the certificates has no attached CRL. By strict X.509 rules, if
-     there is no good CRL in hand, then the certificate shouldn't be used for
-     CA stuff. But while this is usually a good idea, it interferes with simple
-     uses of certificates which shouldn't (IMO) force the use of CRLs. There is
-     no assigned error code for this scenario because I don't consider it to be
-     an error (probably would be something like NO_REVOCATION_DATA_AVAILABLE)
-   **************************************************************************/
-   expected_results[19] = VERIFIED;
+   expected_results[19] = CRL_NOT_FOUND;
    expected_results[20] = CERT_IS_REVOKED;
    expected_results[21] = CERT_IS_REVOKED;
 
@@ -316,23 +295,10 @@ void populate_expected_results()
 
    expected_results[64] = SIGNATURE_ERROR;
 
-   /************ CHANGE OF TEST RESULT FOR TEST #65 *************************
-     I cannot figure out what exactly the problem here is supposed to be;
-     looking at it by hand, everything seems fine. If someone can explain I
-     would be happy to listen.
-   ************************************************************************/
-   expected_results[65] = VERIFIED;
-   expected_results[66] = CRL_ISSUER_NOT_FOUND;
+   expected_results[65] = CRL_NOT_FOUND;
+   expected_results[66] = CRL_NOT_FOUND;
 
-   /************ CHANGE OF TEST RESULT FOR TEST #67 *************************
-     The test docs say this should be verified. However, the problem being that
-     there is an extra CRL with an unknown issuer. Returning VERIFIED in this
-     case is obviously bad, since the user may well want to know that the CRL
-     in question has no known issuer. So we return CRL_ISSUER_NOT_FOUND instead
-     of VERIFIED. The actual certificate path of course still verifies, but
-     it's kind of an all-or-nothing testing procedure.
-   ************************************************************************/
-   expected_results[67] = CRL_ISSUER_NOT_FOUND;
+   expected_results[67] = VERIFIED;
 
    expected_results[68] = CERT_IS_REVOKED;
    expected_results[69] = CERT_IS_REVOKED;

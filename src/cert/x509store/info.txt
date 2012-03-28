@@ -1,5 +1,0 @@
-define X509_STORE
-
-<requires>
-x509cert
-</requires>

@@ -7,6 +7,7 @@
 
 #include <botan/x509_crl.h>
 #include <botan/x509_ext.h>
+#include <botan/x509cert.h>
 #include <botan/ber_dec.h>
 #include <botan/parsing.h>
 #include <botan/bigint.h>
@@ -30,6 +31,43 @@ X509_CRL::X509_CRL(const std::string& in, bool touc) :
    X509_Object(in, "CRL/X509 CRL"), throw_on_unknown_critical(touc)
    {
    do_decode();
+   }
+
+/**
+* Check if this particular certificate is listed in the CRL
+*/
+bool X509_CRL::is_revoked(const X509_Certificate& cert) const
+   {
+   /*
+   If the cert wasn't issued by the CRL issuer, it's possible the cert
+   is revoked, but not by this CRL. Maybe throw an exception instead?
+   */
+   if(cert.issuer_dn() != issuer_dn())
+      return false;
+
+   MemoryVector<byte> crl_akid = authority_key_id();
+   MemoryVector<byte> cert_akid = cert.authority_key_id();
+
+   if(!crl_akid.empty() && !cert_akid.empty())
+      if(crl_akid != cert_akid)
+         return false;
+
+   MemoryVector<byte> cert_serial = cert.serial_number();
+
+   bool is_revoked = false;
+
+   for(size_t i = 0; i != revoked.size(); ++i)
+      {
+      if(cert_serial == revoked[i].serial_number())
+         {
+         if(revoked[i].reason_code() == REMOVE_FROM_CRL)
+            is_revoked = false;
+         else
+            is_revoked = true;
+         }
+      }
+
+   return is_revoked;
    }
 
 /*

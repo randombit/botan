@@ -12,6 +12,7 @@
 #include <botan/asn1_oid.h>
 #include <botan/asn1_str.h>
 #include <map>
+#include <iosfwd>
 
 namespace Botan {
 
@@ -47,6 +48,8 @@ class BOTAN_DLL X509_DN : public ASN1_Object
 bool BOTAN_DLL operator==(const X509_DN&, const X509_DN&);
 bool BOTAN_DLL operator!=(const X509_DN&, const X509_DN&);
 bool BOTAN_DLL operator<(const X509_DN&, const X509_DN&);
+
+BOTAN_DLL std::ostream& operator<<(std::ostream& out, const X509_DN& dn);
 
 }
 
