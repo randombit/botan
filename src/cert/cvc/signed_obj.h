@@ -10,7 +10,7 @@
 #define BOTAN_EAC_SIGNED_OBJECT_H__
 
 #include <botan/asn1_obj.h>
-#include <botan/pubkey_enums.h>
+#include <botan/key_constraint.h>
 #include <botan/pipe.h>
 #include <vector>
 

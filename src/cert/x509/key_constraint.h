@@ -28,6 +28,21 @@ enum Key_Constraints {
    DECIPHER_ONLY      = 128
 };
 
+class Public_Key;
+
+/**
+* Create the key constraints for a specific public key.
+* @param pub_key the public key from which the basic set of
+* constraints to be placed in the return value is derived
+* @param limits additional limits that will be incorporated into the
+* return value
+* @return combination of key type specific constraints and
+* additional limits
+*/
+
+BOTAN_DLL Key_Constraints find_constraints(const Public_Key& pub_key,
+                                           Key_Constraints limits);
+
 /**
 * BER Decoding Function for key constraints
 */
@@ -36,15 +51,6 @@ namespace BER {
 void BOTAN_DLL decode(BER_Decoder&, Key_Constraints&);
 
 }
-
-/*
-* Various Other Enumerations
-*/
-
-/**
-* The two types of X509 encoding supported by Botan.
-*/
-enum X509_Encoding { RAW_BER, PEM };
 
 }
 

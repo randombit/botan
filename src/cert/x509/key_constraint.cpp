@@ -5,7 +5,8 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/pubkey_enums.h>
+#include <botan/key_constraint.h>
+#include <botan/x509_key.h>
 #include <botan/ber_dec.h>
 
 namespace Botan {
@@ -38,5 +39,31 @@ void decode(BER_Decoder& source, Key_Constraints& key_usage)
    }
 
 }
+
+/*
+* Find the allowable key constraints
+*/
+Key_Constraints find_constraints(const Public_Key& pub_key,
+                                 Key_Constraints limits)
+   {
+   const std::string name = pub_key.algo_name();
+
+   size_t constraints = 0;
+
+   if(name == "DH" || name == "ECDH")
+      constraints |= KEY_AGREEMENT;
+
+   if(name == "RSA" || name == "ElGamal")
+      constraints |= KEY_ENCIPHERMENT | DATA_ENCIPHERMENT;
+
+   if(name == "RSA" || name == "RW" || name == "NR" ||
+      name == "DSA" || name == "ECDSA")
+      constraints |= DIGITAL_SIGNATURE | NON_REPUDIATION;
+
+   if(limits)
+      constraints &= limits;
+
+   return Key_Constraints(constraints);
+   }
 
 }

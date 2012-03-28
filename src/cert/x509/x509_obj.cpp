@@ -168,16 +168,16 @@ std::string X509_Object::hash_used_for_signature() const
 /*
 * Check the signature on an object
 */
-bool X509_Object::check_signature(Public_Key* pub_key) const
+bool X509_Object::check_signature(const Public_Key* pub_key) const
    {
-   std::auto_ptr<Public_Key> key(pub_key);
+   std::auto_ptr<const Public_Key> key(pub_key);
    return check_signature(*key);
    }
 
 /*
 * Check the signature on an object
 */
-bool X509_Object::check_signature(Public_Key& pub_key) const
+bool X509_Object::check_signature(const Public_Key& pub_key) const
    {
    try {
       std::vector<std::string> sig_info =

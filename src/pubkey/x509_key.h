@@ -10,11 +10,15 @@
 
 #include <botan/pk_keys.h>
 #include <botan/alg_id.h>
-#include <botan/pubkey_enums.h>
 #include <botan/pipe.h>
 #include <string>
 
 namespace Botan {
+
+/**
+* The two types of X509 encoding supported by Botan.
+*/
+enum X509_Encoding { RAW_BER, PEM };
 
 /**
 * This namespace contains functions for handling X.509 public keys
@@ -62,18 +66,6 @@ BOTAN_DLL Public_Key* load_key(const MemoryRegion<byte>& enc);
 * @return new public key object
 */
 BOTAN_DLL Public_Key* copy_key(const Public_Key& key);
-
-/**
-* Create the key constraints for a specific public key.
-* @param pub_key the public key from which the basic set of
-* constraints to be placed in the return value is derived
-* @param limits additional limits that will be incorporated into the
-* return value
-* @return combination of key type specific constraints and
-* additional limits
-*/
-BOTAN_DLL Key_Constraints find_constraints(const Public_Key& pub_key,
-                                           Key_Constraints limits);
 
 /**
 * Encode a key into a pipe.

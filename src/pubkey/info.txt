@@ -6,7 +6,6 @@ pk_algs.cpp
 pk_keys.cpp
 pkcs8.cpp
 pubkey.cpp
-pubkey_enums.cpp
 workfactor.cpp
 x509_key.cpp
 </source>
@@ -17,7 +16,6 @@ pk_keys.h
 pk_ops.h
 pkcs8.h
 pubkey.h
-pubkey_enums.h
 x509_key.h
 </header:public>
 

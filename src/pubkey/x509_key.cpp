@@ -107,32 +107,6 @@ Public_Key* copy_key(const Public_Key& key)
    return X509::load_key(source);
    }
 
-/*
-* Find the allowable key constraints
-*/
-Key_Constraints find_constraints(const Public_Key& pub_key,
-                                 Key_Constraints limits)
-   {
-   const std::string name = pub_key.algo_name();
-
-   size_t constraints = 0;
-
-   if(name == "DH" || name == "ECDH")
-      constraints |= KEY_AGREEMENT;
-
-   if(name == "RSA" || name == "ElGamal")
-      constraints |= KEY_ENCIPHERMENT | DATA_ENCIPHERMENT;
-
-   if(name == "RSA" || name == "RW" || name == "NR" ||
-      name == "DSA" || name == "ECDSA")
-      constraints |= DIGITAL_SIGNATURE | NON_REPUDIATION;
-
-   if(limits)
-      constraints &= limits;
-
-   return Key_Constraints(constraints);
-   }
-
 }
 
 }

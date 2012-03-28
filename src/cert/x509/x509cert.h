@@ -12,7 +12,7 @@
 #include <botan/x509_dn.h>
 #include <botan/x509_key.h>
 #include <botan/datastor.h>
-#include <botan/pubkey_enums.h>
+#include <botan/key_constraint.h>
 #include <map>
 
 namespace Botan {

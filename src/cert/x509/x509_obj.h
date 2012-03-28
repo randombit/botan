@@ -10,7 +10,7 @@
 
 #include <botan/asn1_obj.h>
 #include <botan/pipe.h>
-#include <botan/pubkey_enums.h>
+#include <botan/x509_key.h>
 #include <botan/rng.h>
 #include <vector>
 
@@ -62,7 +62,7 @@ class BOTAN_DLL X509_Object
       * @param key the public key purportedly used to sign this data
       * @return true if the signature is valid, otherwise false
       */
-      bool check_signature(class Public_Key& key) const;
+      bool check_signature(const Public_Key& key) const;
 
       /**
       * Check the signature on this data
@@ -70,7 +70,7 @@ class BOTAN_DLL X509_Object
       *        the pointer will be deleted after use
       * @return true if the signature is valid, otherwise false
       */
-      bool check_signature(class Public_Key* key) const;
+      bool check_signature(const Public_Key* key) const;
 
       /**
       * @return BER encoding of this
