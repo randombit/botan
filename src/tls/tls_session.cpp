@@ -19,16 +19,17 @@ namespace Botan {
 namespace TLS {
 
 Session::Session(const MemoryRegion<byte>& session_identifier,
-                         const MemoryRegion<byte>& master_secret,
-                         Protocol_Version version,
-                         u16bit ciphersuite,
-                         byte compression_method,
-                         Connection_Side side,
-                         bool secure_renegotiation_supported,
-                         size_t fragment_size,
-                         const std::vector<X509_Certificate>& certs,
-                         const std::string& sni_hostname,
-                         const std::string& srp_identifier) :
+                 const MemoryRegion<byte>& master_secret,
+                 Protocol_Version version,
+                 u16bit ciphersuite,
+                 byte compression_method,
+                 Connection_Side side,
+                 bool secure_renegotiation_supported,
+                 size_t fragment_size,
+                 const std::vector<X509_Certificate>& certs,
+                 const MemoryRegion<byte>& ticket,
+                 const std::string& sni_hostname,
+                 const std::string& srp_identifier) :
    m_start_time(std::chrono::system_clock::now()),
    m_identifier(session_identifier),
    m_session_ticket(ticket),
@@ -68,7 +69,7 @@ Session::Session(const byte ber[], size_t ber_len)
       .start_cons(SEQUENCE)
         .decode_and_check(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION),
                           "Unknown version in session structure")
-        .decode_integer_type(m_start_time)
+        .decode_integer_type(start_time)
         .decode_integer_type(major_version)
         .decode_integer_type(minor_version)
         .decode(m_identifier, OCTET_STRING)
@@ -151,7 +152,7 @@ MemoryVector<byte>
 Session::encrypt(const SymmetricKey& master_key,
                  RandomNumberGenerator& rng) const
    {
-   std::auto_ptr<KDF> kdf(get_kdf(SESSION_CRYPTO_KDF));
+   std::unique_ptr<KDF> kdf(get_kdf(SESSION_CRYPTO_KDF));
 
    SymmetricKey cipher_key =
       kdf->derive_key(CIPHER_KEY_LENGTH,
@@ -165,7 +166,7 @@ Session::encrypt(const SymmetricKey& master_key,
 
    InitializationVector cipher_iv(rng, 16);
 
-   std::auto_ptr<MessageAuthenticationCode> mac(get_mac(SESSION_CRYPTO_MAC));
+   std::unique_ptr<MessageAuthenticationCode> mac(get_mac(SESSION_CRYPTO_MAC));
    mac->set_key(mac_key);
 
    Pipe pipe(get_cipher(SESSION_CRYPTO_CIPHER, cipher_key, cipher_iv, ENCRYPTION));
@@ -199,14 +200,14 @@ Session Session::decrypt(const byte buf[], size_t buf_len,
       if(load_be<u32bit>(buf, 0) != SESSION_CRYPTO_MAGIC)
          throw Decoding_Error("Unknown header value in encrypted session");
 
-      std::auto_ptr<KDF> kdf(get_kdf(SESSION_CRYPTO_KDF));
+      std::unique_ptr<KDF> kdf(get_kdf(SESSION_CRYPTO_KDF));
 
       SymmetricKey mac_key =
          kdf->derive_key(MAC_KEY_LENGTH,
                          master_key.bits_of(),
                          "tls.session.mac-key");
 
-      std::auto_ptr<MessageAuthenticationCode> mac(get_mac(SESSION_CRYPTO_MAC));
+      std::unique_ptr<MessageAuthenticationCode> mac(get_mac(SESSION_CRYPTO_MAC));
       mac->set_key(mac_key);
 
       mac->update(&buf[0], buf_len - MAC_OUTPUT_LENGTH);

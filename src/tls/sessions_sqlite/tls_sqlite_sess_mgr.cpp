@@ -9,9 +9,9 @@
 #include <botan/internal/assert.h>
 #include <botan/lookup.h>
 #include <botan/hex.h>
-#include <botan/time.h>
 #include <botan/loadstor.h>
 #include <memory>
+#include <chrono>
 
 #include <sqlite3.h>
 
@@ -29,28 +29,29 @@ class sqlite3_statement
          int rc = sqlite3_prepare_v2(db, base_sql.c_str(), -1, &m_stmt, 0);
 
          if(rc != SQLITE_OK)
-            throw std::runtime_error("sqlite3_prepare failed " + base_sql + ", code " + to_string(rc));
+            throw std::runtime_error("sqlite3_prepare failed " + base_sql +
+                                     ", code " + std::to_string(rc));
          }
 
       void bind(int column, const std::string& val)
          {
          int rc = sqlite3_bind_text(m_stmt, column, val.c_str(), -1, SQLITE_TRANSIENT);
          if(rc != SQLITE_OK)
-            throw std::runtime_error("sqlite3_bind_text failed, code " + to_string(rc));
+            throw std::runtime_error("sqlite3_bind_text failed, code " + std::to_string(rc));
          }
 
       void bind(int column, int val)
          {
          int rc = sqlite3_bind_int(m_stmt, column, val);
          if(rc != SQLITE_OK)
-            throw std::runtime_error("sqlite3_bind_int failed, code " + to_string(rc));
+            throw std::runtime_error("sqlite3_bind_int failed, code " + std::to_string(rc));
          }
 
       void bind(int column, const MemoryRegion<byte>& val)
          {
          int rc = sqlite3_bind_blob(m_stmt, column, &val[0], val.size(), SQLITE_TRANSIENT);
          if(rc != SQLITE_OK)
-            throw std::runtime_error("sqlite3_bind_text failed, code " + to_string(rc));
+            throw std::runtime_error("sqlite3_bind_text failed, code " + std::to_string(rc));
          }
 
       std::pair<const byte*, size_t> get_blob(int column)
@@ -145,7 +146,7 @@ Session_Manager_SQLite::Session_Manager_SQLite(const std::string& passphrase,
                                                RandomNumberGenerator& rng,
                                                const std::string& db_filename,
                                                size_t max_sessions,
-                                               size_t session_lifetime) :
+                                               std::chrono::seconds session_lifetime) :
    m_rng(rng),
    m_max_sessions(max_sessions),
    m_session_lifetime(session_lifetime)
@@ -308,7 +309,7 @@ void Session_Manager_SQLite::save(const Session& session)
                                 " values(?1, ?2, ?3, ?4, ?5)");
 
    stmt.bind(1, hex_encode(session.session_id()));
-   stmt.bind(2, session.start_time());
+   stmt.bind(2, std::chrono::system_clock::to_time_t(session.start_time()));
    stmt.bind(3, session.sni_hostname());
    stmt.bind(4, 0);
    stmt.bind(5, session.encrypt(m_session_key, m_rng));
@@ -322,7 +323,8 @@ void Session_Manager_SQLite::prune_session_cache()
    {
    sqlite3_statement remove_expired(m_db, "delete from tls_sessions where session_start <= ?1");
 
-   remove_expired.bind(1, system_time() - m_session_lifetime);
+   remove_expired.bind(1, std::chrono::system_clock::to_time_t(
+                          std::chrono::system_clock::now() - m_session_lifetime));
 
    remove_expired.spin();
 
