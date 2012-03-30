@@ -1,6 +1,6 @@
 /*
 * Public Key Work Factor Functions
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2012 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -11,39 +11,40 @@
 
 namespace Botan {
 
-/*
-* Choose the exponent size for a DL group
-*/
 size_t dl_work_factor(size_t bits)
    {
-#if 0
    /*
-   These values were taken from RFC 3526
-   */
-   if(bits <= 1536)
-      return 90;
-   else if(bits <= 2048)
-      return 110;
-   else if(bits <= 3072)
-      return 130;
-   else if(bits <= 4096)
-      return 150;
-   else if(bits <= 6144)
-      return 170;
-   else if(bits <= 8192)
-      return 190;
-   return 256;
-#else
-   const double MIN_ESTIMATE = 64;
+   Based on GNFS work factors. Constant is 1.43 times the asymptotic
+   value; I'm not sure but I believe that came from a paper on 'real
+   world' runtimes, but I don't remember where now.
 
-   const double log_x = bits / 1.44;
+   Sample return values:
+      |512|  -> 64
+      |1024| -> 86
+      |1536| -> 102
+      |2048| -> 116
+      |3072| -> 138
+      |4096| -> 155
+      |8192| -> 206
+
+   For DL algos, we use an exponent of twice the size of the result;
+   the assumption is that an arbitrary discrete log on a group of size
+   bits would take about 2^n effort, and thus using an exponent of
+   size 2^(2*n) implies that all available attacks are about as easy
+   (as e.g Pollard's kangaroo algorithm can compute the DL in sqrt(x)
+   operations) while minimizing the exponent size for performance
+   reasons.
+   */
+
+   const size_t MIN_WORKFACTOR = 64;
+
+   // approximates natural logarithm of p
+   const double log_p = bits / 1.4426;
 
    const double strength =
-      2.76 * std::pow(log_x, 1.0/3.0) * std::pow(std::log(log_x), 2.0/3.0);
+      2.76 * std::pow(log_p, 1.0/3.0) * std::pow(std::log(log_p), 2.0/3.0);
 
-   return static_cast<size_t>(std::max(strength, MIN_ESTIMATE));
-#endif
+   return std::max(static_cast<size_t>(strength), MIN_WORKFACTOR);
    }
-
 
 }
