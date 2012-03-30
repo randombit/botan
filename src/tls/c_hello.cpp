@@ -17,6 +17,10 @@ namespace Botan {
 
 namespace TLS {
 
+enum {
+   TLS_EMPTY_RENEGOTIATION_INFO_SCSV        = 0x00FF
+};
+
 MemoryVector<byte> make_hello_random(RandomNumberGenerator& rng)
    {
    MemoryVector<byte> buf(32);

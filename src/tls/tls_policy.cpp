@@ -11,8 +11,6 @@
 #include <botan/tls_exceptn.h>
 #include <botan/internal/stl_util.h>
 
-#include <assert.h>
-
 namespace Botan {
 
 namespace TLS {
@@ -25,8 +23,7 @@ std::vector<std::string> Policy::allowed_ciphers() const
    allowed.push_back("AES-128");
    allowed.push_back("3DES");
    allowed.push_back("ARC4");
-
-   // Note that Camellia, SEED and IDEA are not included by default
+   // Note that Camellia and SEED are not included by default
 
    return allowed;
    }
@@ -49,7 +46,7 @@ std::vector<std::string> Policy::allowed_key_exchange_methods() const
    {
    std::vector<std::string> allowed;
 
-   //allowed.push_back("SRP");
+   //allowed.push_back("SRP_SHA");
    //allowed.push_back("ECDHE_PSK");
    //allowed.push_back("DHE_PSK");
    //allowed.push_back("PSK");
@@ -183,7 +180,7 @@ std::vector<u16bit> Policy::ciphersuite_list(bool have_srp) const
    if(!have_srp)
       {
       std::vector<std::string>::iterator i =
-         std::find(kex.begin(), kex.end(), "SRP");
+         std::find(kex.begin(), kex.end(), "SRP_SHA");
 
       if(i != kex.end())
          kex.erase(i);
