@@ -6,6 +6,7 @@
 */
 
 #include <botan/tls_record.h>
+#include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_session_key.h>
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/lookup.h>
@@ -22,9 +23,10 @@ namespace TLS {
 * Record_Writer Constructor
 */
 Record_Writer::Record_Writer(std::function<void (const byte[], size_t)> out) :
-   m_output_fn(out), m_writebuf(TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE)
+   m_output_fn(out),
+   m_writebuf(TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE),
+   m_mac(0)
    {
-   m_mac = 0;
    reset();
    set_maximum_fragment_size(0);
    }
@@ -144,6 +146,25 @@ void Record_Writer::activate(Connection_Side side,
       throw Invalid_Argument("Record_Writer: Unknown hash " + mac_algo);
    }
 
+MemoryVector<byte> Record_Writer::send(Handshake_Message& msg)
+   {
+   const MemoryVector<byte> buf = msg.serialize();
+   MemoryVector<byte> send_buf(4);
+
+   const size_t buf_size = buf.size();
+
+   send_buf[0] = msg.type();
+
+   for(size_t i = 1; i != 4; ++i)
+     send_buf[i] = get_byte<u32bit>(i, buf_size);
+
+   send_buf += buf;
+
+   send(HANDSHAKE, &send_buf[0], send_buf.size());
+
+   return send_buf;
+   }
+
 /*
 * Send one or more records to the other side
 */
@@ -190,16 +211,15 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
 
    if(m_mac_size == 0) // initial unencrypted handshake records
       {
-      const byte header[TLS_HEADER_SIZE] = {
-         type,
-         m_version.major_version(),
-         m_version.minor_version(),
-         get_byte<u16bit>(0, length),
-         get_byte<u16bit>(1, length)
-      };
+      m_writebuf[0] = type;
+      m_writebuf[1] = m_version.major_version();
+      m_writebuf[2] = m_version.minor_version();
+      m_writebuf[3] = get_byte<u16bit>(0, length);
+      m_writebuf[4] = get_byte<u16bit>(1, length);
 
-      m_output_fn(header, TLS_HEADER_SIZE);
-      m_output_fn(input, length);
+      copy_mem(&m_writebuf[TLS_HEADER_SIZE], input, length);
+
+      m_output_fn(&m_writebuf[0], TLS_HEADER_SIZE + length);
       return;
       }
 

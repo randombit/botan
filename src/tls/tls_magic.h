@@ -36,23 +36,24 @@ enum Record_Type {
 };
 
 enum Handshake_Type {
-   HELLO_REQUEST       = 0,
-   CLIENT_HELLO        = 1,
-   CLIENT_HELLO_SSLV2  = 200, // Not a wire value
-   SERVER_HELLO        = 2,
-   NEW_SESSION_TICKET  = 4, // RFC 5077
-   CERTIFICATE         = 11,
-   SERVER_KEX          = 12,
-   CERTIFICATE_REQUEST = 13,
-   SERVER_HELLO_DONE   = 14,
-   CERTIFICATE_VERIFY  = 15,
-   CLIENT_KEX          = 16,
-   FINISHED            = 20,
+   HELLO_REQUEST        = 0,
+   CLIENT_HELLO         = 1,
+   CLIENT_HELLO_SSLV2   = 253, // Not a wire value
+   SERVER_HELLO         = 2,
+   HELLO_VERIFY_REQUEST = 3,
+   NEW_SESSION_TICKET   = 4, // RFC 5077
+   CERTIFICATE          = 11,
+   SERVER_KEX           = 12,
+   CERTIFICATE_REQUEST  = 13,
+   SERVER_HELLO_DONE    = 14,
+   CERTIFICATE_VERIFY   = 15,
+   CLIENT_KEX           = 16,
+   FINISHED             = 20,
 
-   NEXT_PROTOCOL       = 67,
+   NEXT_PROTOCOL        = 67,
 
-   HANDSHAKE_CCS       = 100, // Not a wire value
-   HANDSHAKE_NONE      = 255  // Null value
+   HANDSHAKE_CCS        = 254, // Not a wire value
+   HANDSHAKE_NONE       = 255  // Null value
 };
 
 enum Ciphersuite_Code {

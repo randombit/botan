@@ -33,17 +33,37 @@ class Record_Reader;
 class Handshake_Message
    {
    public:
-      void send(Record_Writer& writer, Handshake_Hash& hash) const;
-
+      virtual MemoryVector<byte> serialize() const = 0;
       virtual Handshake_Type type() const = 0;
 
+      Handshake_Message() {}
       virtual ~Handshake_Message() {}
    private:
+      Handshake_Message(const Handshake_Message&) {}
       Handshake_Message& operator=(const Handshake_Message&) { return (*this); }
-      virtual MemoryVector<byte> serialize() const = 0;
    };
 
 MemoryVector<byte> make_hello_random(RandomNumberGenerator& rng);
+
+/**
+* DTLS Hello Verify Request
+*/
+class Hello_Verify_Request : public Handshake_Message
+   {
+   public:
+      MemoryVector<byte> serialize() const;
+      Handshake_Type type() const { return HELLO_VERIFY_REQUEST; }
+
+      MemoryVector<byte> cookie() const { return m_cookie; }
+
+      Hello_Verify_Request(const MemoryRegion<byte>& buf);
+
+      Hello_Verify_Request(const MemoryVector<byte>& client_hello_bits,
+                           const std::string& client_identity,
+                           const SymmetricKey& secret_key);
+   private:
+      MemoryVector<byte> m_cookie;
+   };
 
 /**
 * Client Hello Message
@@ -88,6 +108,11 @@ class Client_Hello : public Handshake_Message
 
       size_t fragment_size() const { return m_fragment_size; }
 
+      bool supports_session_ticket() const { return m_supports_session_ticket; }
+
+      const MemoryRegion<byte>& session_ticket() const
+         { return m_session_ticket; }
+
       Client_Hello(Record_Writer& writer,
                    Handshake_Hash& hash,
                    const Policy& policy,
@@ -99,6 +124,7 @@ class Client_Hello : public Handshake_Message
 
       Client_Hello(Record_Writer& writer,
                    Handshake_Hash& hash,
+                   const Policy& policy,
                    RandomNumberGenerator& rng,
                    const Session& resumed_session,
                    bool next_protocol = false);
@@ -125,6 +151,9 @@ class Client_Hello : public Handshake_Message
 
       std::vector<std::pair<std::string, std::string> > m_supported_algos;
       std::vector<std::string> m_supported_curves;
+
+      bool m_supports_session_ticket;
+      MemoryVector<byte> m_session_ticket;
    };
 
 /**
@@ -150,6 +179,8 @@ class Server_Hello : public Handshake_Message
 
       bool next_protocol_notification() const { return m_next_protocol; }
 
+      bool supports_session_ticket() const { return m_supports_session_ticket; }
+
       const std::vector<std::string>& next_protocols() const
          { return m_next_protocols; }
 
@@ -166,6 +197,7 @@ class Server_Hello : public Handshake_Message
                    const Client_Hello& other,
                    const std::vector<std::string>& available_cert_types,
                    const Policy& policies,
+                   bool have_session_ticket_key,
                    bool client_has_secure_renegotiation,
                    const MemoryRegion<byte>& reneg_info,
                    bool client_has_npn,
@@ -181,6 +213,7 @@ class Server_Hello : public Handshake_Message
                    size_t max_fragment_size,
                    bool client_has_secure_renegotiation,
                    const MemoryRegion<byte>& reneg_info,
+                   bool client_supports_session_tickets,
                    bool client_has_npn,
                    const std::vector<std::string>& next_protocols,
                    RandomNumberGenerator& rng);
@@ -200,6 +233,7 @@ class Server_Hello : public Handshake_Message
 
       bool m_next_protocol;
       std::vector<std::string> m_next_protocols;
+      bool m_supports_session_ticket;
    };
 
 /**
@@ -238,10 +272,10 @@ class Certificate : public Handshake_Message
    {
    public:
       Handshake_Type type() const { return CERTIFICATE; }
-      const std::vector<X509_Certificate>& cert_chain() const { return certs; }
+      const std::vector<X509_Certificate>& cert_chain() const { return m_certs; }
 
-      size_t count() const { return certs.size(); }
-      bool empty() const { return certs.empty(); }
+      size_t count() const { return m_certs.size(); }
+      bool empty() const { return m_certs.empty(); }
 
       Certificate(Record_Writer& writer,
                   Handshake_Hash& hash,
@@ -251,7 +285,7 @@ class Certificate : public Handshake_Message
    private:
       MemoryVector<byte> serialize() const;
 
-      std::vector<X509_Certificate> certs;
+      std::vector<X509_Certificate> m_certs;
    };
 
 /**
@@ -432,6 +466,30 @@ class Next_Protocol : public Handshake_Message
       MemoryVector<byte> serialize() const;
 
       std::string m_protocol;
+   };
+
+class New_Session_Ticket : public Handshake_Message
+   {
+   public:
+      Handshake_Type type() const { return NEW_SESSION_TICKET; }
+
+      u32bit ticket_lifetime_hint() const { return m_ticket_lifetime_hint; }
+      const MemoryVector<byte>& ticket() const { return m_ticket; }
+
+      New_Session_Ticket(Record_Writer& writer,
+                         Handshake_Hash& hash,
+                         const MemoryRegion<byte>& ticket,
+                         u32bit lifetime = 0);
+
+      New_Session_Ticket(Record_Writer& writer,
+                         Handshake_Hash& hash);
+
+      New_Session_Ticket(const MemoryRegion<byte>& buf);
+   private:
+      MemoryVector<byte> serialize() const;
+
+      u32bit m_ticket_lifetime_hint;
+      MemoryVector<byte> m_ticket;
    };
 
 }

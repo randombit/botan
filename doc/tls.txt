@@ -98,7 +98,10 @@ TLS Clients
    The *handshake_complete* function is called when a handshake
    (either initial or renegotiation) is completed. The return value of
    the callback specifies if the session should be cached for later
-   resumption.
+   resumption. If the function for some reason desires to prevent the
+   connection from completing, it should throw an exception
+   (preferably a TLS_Exception, which can provide more specific alert
+   information to the counterparty).
 
    The *session_manager* is an interface for storing TLS sessions,
    which allows for session resumption upon reconnecting to a server.

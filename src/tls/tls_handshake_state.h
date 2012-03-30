@@ -9,8 +9,8 @@
 #define BOTAN_TLS_HANDSHAKE_STATE_H__
 
 #include <botan/internal/tls_handshake_hash.h>
+#include <botan/internal/tls_handshake_reader.h>
 #include <botan/internal/tls_session_key.h>
-#include <botan/secqueue.h>
 #include <botan/pk_keys.h>
 #include <botan/pubkey.h>
 
@@ -29,13 +29,15 @@ namespace TLS {
 class Handshake_State
    {
    public:
-      Handshake_State();
+      Handshake_State(Handshake_Reader* reader);
       ~Handshake_State();
 
       bool received_handshake_msg(Handshake_Type handshake_msg) const;
 
       void confirm_transition_to(Handshake_Type handshake_msg);
       void set_expected_next(Handshake_Type handshake_msg);
+
+      const MemoryRegion<byte>& session_ticket() const;
 
       std::pair<std::string, Signature_Format>
          understand_sig_format(const Public_Key* key,
@@ -51,7 +53,9 @@ class Handshake_State
 
       KDF* protocol_specific_prf();
 
-      Protocol_Version version;
+      Protocol_Version version() const { return m_version; }
+
+      void set_version(const Protocol_Version& version);
 
       class Client_Hello* client_hello;
       class Server_Hello* server_hello;
@@ -65,6 +69,7 @@ class Handshake_State
       class Certificate_Verify* client_verify;
 
       class Next_Protocol* next_protocol;
+      class New_Session_Ticket* new_session_ticket;
 
       class Finished* client_finished;
       class Finished* server_finished;
@@ -76,8 +81,6 @@ class Handshake_State
       Session_Keys keys;
       Handshake_Hash hash;
 
-      SecureQueue queue;
-
       /*
       * Only used by clients for session resumption
       */
@@ -88,8 +91,11 @@ class Handshake_State
       */
       std::function<std::string (std::vector<std::string>)> client_npn_cb;
 
+      Handshake_Reader* handshake_reader() { return m_handshake_reader; }
    private:
+      Handshake_Reader* m_handshake_reader;
       u32bit hand_expecting_mask, hand_received_mask;
+      Protocol_Version m_version;
    };
 
 }

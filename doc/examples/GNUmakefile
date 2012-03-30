@@ -20,8 +20,5 @@ clean:
 eax_test: eax_test.cpp
 	echo $(CXX) $(CFLAGS) $? $(LIBS) -lboost_regex -o $@
 
-asio_tls_server.o: asio_tls_server.cpp
-	g++-4.6.0 -c $(CFLAGS) -pthread $? -o $@
-
-asio_tls_server: asio_tls_server.o
-	$(CXX) $? $(LIBS) -lboost_thread -lboost_system -lpthread -o $@
+asio_tls_server: asio_tls_server.cpp credentials.h
+	$(CXX) $(CFLAGS) $< $(LIBS) -lboost_thread -lboost_system -o $@

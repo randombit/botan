@@ -8,6 +8,7 @@
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_extensions.h>
+#include <botan/tls_record.h>
 #include <botan/internal/assert.h>
 #include <botan/credentials_manager.h>
 #include <botan/pubkey.h>
@@ -201,7 +202,7 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 
          MemoryVector<byte> encrypted_key = encryptor.encrypt(pre_master, rng);
 
-         if(state->version == Protocol_Version::SSL_V3)
+         if(state->version() == Protocol_Version::SSL_V3)
             key_material = encrypted_key; // no length field
          else
             append_tls_length_value(key_material, encrypted_key, 2);
@@ -212,7 +213,7 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
                              pub_key->algo_name());
       }
 
-   send(writer, state->hash);
+   state->hash.update(writer.send(*this));
    }
 
 /*
@@ -245,7 +246,7 @@ Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
 
       try
          {
-         if(state->version == Protocol_Version::SSL_V3)
+         if(state->version() == Protocol_Version::SSL_V3)
             {
             pre_master = decryptor.decrypt(contents);
             }

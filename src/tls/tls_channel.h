@@ -63,8 +63,8 @@ class BOTAN_DLL Channel
       std::vector<X509_Certificate> peer_cert_chain() const { return peer_certs; }
 
       Channel(std::function<void (const byte[], size_t)> socket_output_fn,
-                  std::function<void (const byte[], size_t, Alert)> proc_fn,
-                  std::function<bool (const Session&)> handshake_complete);
+              std::function<void (const byte[], size_t, Alert)> proc_fn,
+              std::function<bool (const Session&)> handshake_complete);
 
       virtual ~Channel();
    protected:

@@ -8,6 +8,7 @@
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_extensions.h>
+#include <botan/tls_record.h>
 #include <botan/internal/assert.h>
 #include <memory>
 
@@ -30,7 +31,7 @@ Certificate_Verify::Certificate_Verify(Record_Writer& writer,
 
    PK_Signer signer(*priv_key, format.first, format.second);
 
-   if(state->version == Protocol_Version::SSL_V3)
+   if(state->version() == Protocol_Version::SSL_V3)
       {
       SecureVector<byte> md5_sha = state->hash.final_ssl3(
          state->keys.master_secret());
@@ -45,7 +46,7 @@ Certificate_Verify::Certificate_Verify(Record_Writer& writer,
       signature = signer.sign_message(state->hash.get_contents(), rng);
       }
 
-   send(writer, state->hash);
+   state->hash.update(writer.send(*this));
    }
 
 /*
@@ -99,7 +100,7 @@ bool Certificate_Verify::verify(const X509_Certificate& cert,
 
    PK_Verifier verifier(*key, format.first, format.second);
 
-   if(state->version == Protocol_Version::SSL_V3)
+   if(state->version() == Protocol_Version::SSL_V3)
       {
       SecureVector<byte> md5_sha = state->hash.final_ssl3(
          state->keys.master_secret());

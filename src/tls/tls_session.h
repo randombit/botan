@@ -1,6 +1,6 @@
 /*
 * TLS Session
-* (C) 2011 Jack Lloyd
+* (C) 2011-2012 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -13,6 +13,7 @@
 #include <botan/tls_ciphersuite.h>
 #include <botan/tls_magic.h>
 #include <botan/secmem.h>
+#include <botan/symkey.h>
 #include <chrono>
 
 namespace Botan {
@@ -51,6 +52,7 @@ class BOTAN_DLL Session
               bool secure_renegotiation_supported,
               size_t fragment_size,
               const std::vector<X509_Certificate>& peer_certs,
+              const MemoryRegion<byte>& session_ticket,
               const std::string& sni_hostname = "",
               const std::string& srp_identifier = "");
 
@@ -70,6 +72,34 @@ class BOTAN_DLL Session
       * session traffic
       */
       SecureVector<byte> DER_encode() const;
+
+      /**
+      * Encrypt a session (useful for serialization or session tickets)
+      */
+      MemoryVector<byte> encrypt(const SymmetricKey& key,
+                                 RandomNumberGenerator& rng) const;
+
+
+      /**
+      * Decrypt a session created by encrypt
+      * @param ctext the ciphertext returned by encrypt
+      * @param ctext_size the size of ctext in bytes
+      * @param key the same key used by the encrypting side
+      */
+      static Session decrypt(const byte ctext[],
+                             size_t ctext_size,
+                             const SymmetricKey& key);
+
+      /**
+      * Decrypt a session created by encrypt
+      * @param ctext the ciphertext returned by encrypt
+      * @param key the same key used by the encrypting side
+      */
+      static inline Session decrypt(const MemoryRegion<byte>& ctext,
+                                    const SymmetricKey& key)
+         {
+         return Session::decrypt(&ctext[0], ctext.size(), key);
+         }
 
       /**
       * Encode this session data for storage
@@ -148,12 +178,18 @@ class BOTAN_DLL Session
       std::chrono::system_clock::time_point start_time() const
          { return m_start_time; }
 
+      /**
+      * Return the session ticket the server gave us
+      */
+      const MemoryVector<byte>& session_ticket() const { return m_session_ticket; }
+
    private:
-      enum { TLS_SESSION_PARAM_STRUCT_VERSION = 1 };
+      enum { TLS_SESSION_PARAM_STRUCT_VERSION = 0x2994e300 };
 
       std::chrono::system_clock::time_point m_start_time;
 
       MemoryVector<byte> m_identifier;
+      MemoryVector<byte> m_session_ticket; // only used by client side
       SecureVector<byte> m_master_secret;
 
       Protocol_Version m_version;

@@ -50,6 +50,15 @@ class TLS_Data_Reader
          offset += bytes;
          }
 
+      u16bit get_u32bit()
+         {
+         assert_at_least(4);
+         u16bit result = make_u32bit(buf[offset  ], buf[offset+1],
+                                     buf[offset+2], buf[offset+3]);
+         offset += 4;
+         return result;
+         }
+
       u16bit get_u16bit()
          {
          assert_at_least(2);

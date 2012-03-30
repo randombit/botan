@@ -41,7 +41,8 @@ class BOTAN_DLL Credentials_Manager
                                        const std::string& identity_hint);
 
       /**
-      * @return the PSK used for identity
+      * @return the PSK used for identity, or throw an exception if no
+      * key exists
       */
       virtual SymmetricKey psk(const std::string& type,
                                const std::string& context,

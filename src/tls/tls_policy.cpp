@@ -89,6 +89,16 @@ std::vector<std::string> Policy::allowed_ecc_curves() const
    return curves;
    }
 
+Protocol_Version Policy::min_version() const
+   {
+   return Protocol_Version::SSL_V3;
+   }
+
+Protocol_Version Policy::pref_version() const
+   {
+   return Protocol_Version::TLS_V12;
+   }
+
 namespace {
 
 class Ciphersuite_Preference_Ordering

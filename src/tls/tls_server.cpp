@@ -20,16 +20,35 @@ namespace {
 
 bool check_for_resume(Session& session_info,
                       Session_Manager& session_manager,
+                      Credentials_Manager& credentials,
                       Client_Hello* client_hello)
    {
-   MemoryVector<byte> client_session_id = client_hello->session_id();
+   const MemoryVector<byte>& client_session_id = client_hello->session_id();
+   const MemoryVector<byte>& session_ticket = client_hello->session_ticket();
 
-   if(client_session_id.empty()) // not resuming
-      return false;
+   if(session_ticket.empty())
+      {
+      if(client_session_id.empty()) // not resuming
+         return false;
 
-   // not found
-   if(!session_manager.load_from_session_id(client_session_id, session_info))
-      return false;
+      // not found
+      if(!session_manager.load_from_session_id(client_session_id, session_info))
+         return false;
+      }
+   else
+      {
+      // If a session ticket was sent, ignore client session ID
+      try
+         {
+         session_info = Session::decrypt(
+            session_ticket,
+            credentials.psk("tls-server", "session-ticket", ""));
+         }
+      catch(...)
+         {
+         return false;
+         }
+      }
 
    // wrong version
    if(client_hello->version() != session_info.version())
@@ -45,14 +64,14 @@ bool check_for_resume(Session& session_info,
                     session_info.compression_method()))
       return false;
 
-   // client sent a different SRP identity (!!!)
+   // client sent a different SRP identity
    if(client_hello->srp_identifier() != "")
       {
       if(client_hello->srp_identifier() != session_info.srp_identifier())
          return false;
       }
 
-   // client sent a different SNI hostname (!!!)
+   // client sent a different SNI hostname
    if(client_hello->sni_hostname() != "")
       {
       if(client_hello->sni_hostname() != session_info.sni_hostname())
@@ -112,7 +131,7 @@ void Server::renegotiate()
    if(state)
       return; // currently in handshake
 
-   state = new Handshake_State;
+   state = new Handshake_State(new Stream_Handshake_Reader);
    state->set_expected_next(CLIENT_HELLO);
    Hello_Request hello_req(writer);
    }
@@ -137,7 +156,7 @@ void Server::read_handshake(byte rec_type,
    {
    if(rec_type == HANDSHAKE && !state)
       {
-      state = new Handshake_State;
+      state = new Handshake_State(new Stream_Handshake_Reader);
       state->set_expected_next(CLIENT_HELLO);
       }
 
@@ -183,19 +202,29 @@ void Server::process_handshake_msg(Handshake_Type type,
                              "Client version is unacceptable by policy");
 
       if(client_version <= policy.pref_version())
-         state->version = client_version;
+         state->set_version(client_version);
       else
-         state->version = policy.pref_version();
+         state->set_version(policy.pref_version());
 
       secure_renegotiation.update(state->client_hello);
 
-      writer.set_version(state->version);
-      reader.set_version(state->version);
+      writer.set_version(state->version());
+      reader.set_version(state->version());
 
       Session session_info;
       const bool resuming = check_for_resume(session_info,
                                              session_manager,
+                                             creds,
                                              state->client_hello);
+
+      bool have_session_ticket_key = false;
+
+      try
+         {
+         have_session_ticket_key =
+            creds.psk("tls-server", "session-ticket", "").length() > 0;
+         }
+      catch(...) {}
 
       if(resuming)
          {
@@ -204,13 +233,14 @@ void Server::process_handshake_msg(Handshake_Type type,
          state->server_hello = new Server_Hello(
             writer,
             state->hash,
-            session_info.session_id(),
+            state->client_hello->session_id(),
             Protocol_Version(session_info.version()),
             session_info.ciphersuite_code(),
             session_info.compression_method(),
             session_info.fragment_size(),
             secure_renegotiation.supported(),
             secure_renegotiation.for_server_hello(),
+            state->client_hello->supports_session_ticket() && have_session_ticket_key,
             state->client_hello->next_protocol_notification(),
             m_possible_protocols,
             rng);
@@ -225,15 +255,37 @@ void Server::process_handshake_msg(Handshake_Type type,
 
          state->keys = Session_Keys(state, session_info.master_secret(), true);
 
+         if(!handshake_fn(session_info))
+            {
+            if(state->server_hello->supports_session_ticket())
+               state->new_session_ticket = new New_Session_Ticket(writer, state->hash);
+            else
+               session_manager.remove_entry(session_info.session_id());
+            }
+
+         // FIXME: should only send a new ticket if we need too (eg old session)
+         if(state->server_hello->supports_session_ticket() && !state->new_session_ticket)
+            {
+            try
+               {
+               const SymmetricKey ticket_key = creds.psk("tls-server", "session-ticket", "");
+
+               state->new_session_ticket =
+                  new New_Session_Ticket(writer, state->hash,
+                                         session_info.encrypt(ticket_key, rng));
+               }
+            catch(...) {}
+
+            if(!state->new_session_ticket)
+               state->new_session_ticket = new New_Session_Ticket(writer, state->hash);
+            }
+
          writer.send(CHANGE_CIPHER_SPEC, 1);
 
          writer.activate(SERVER, state->suite, state->keys,
                          state->server_hello->compression_method());
 
          state->server_finished = new Finished(writer, state, SERVER);
-
-         if(!handshake_fn(session_info))
-            session_manager.remove_entry(session_info.session_id());
 
          state->set_expected_next(HANDSHAKE_CCS);
          }
@@ -261,10 +313,11 @@ void Server::process_handshake_msg(Handshake_Type type,
          state->server_hello = new Server_Hello(
             writer,
             state->hash,
-            state->version,
+            state->version(),
             *(state->client_hello),
             available_cert_types,
             policy,
+            have_session_ticket_key,
             secure_renegotiation.supported(),
             secure_renegotiation.for_server_hello(),
             state->client_hello->next_protocol_notification(),
@@ -323,7 +376,7 @@ void Server::process_handshake_msg(Handshake_Type type,
                                                   state->hash,
                                                   policy,
                                                   client_auth_CAs,
-                                                  state->version);
+                                                  state->version());
 
             state->set_expected_next(CERTIFICATE);
             }
@@ -364,7 +417,7 @@ void Server::process_handshake_msg(Handshake_Type type,
       }
    else if(type == CERTIFICATE_VERIFY)
       {
-      state->client_verify = new Certificate_Verify(contents, state->version);
+      state->client_verify = new Certificate_Verify(contents, state->version());
 
       const std::vector<X509_Certificate>& client_certs =
          state->client_certs->cert_chain();
@@ -421,10 +474,47 @@ void Server::process_handshake_msg(Handshake_Type type,
          throw TLS_Exception(Alert::DECRYPT_ERROR,
                              "Finished message didn't verify");
 
-      // already sent it if resuming
       if(!state->server_finished)
          {
+         // already sent finished if resuming, so this is a new session
+
          state->hash.update(type, contents);
+
+         Session session_info(
+            state->server_hello->session_id(),
+            state->keys.master_secret(),
+            state->server_hello->version(),
+            state->server_hello->ciphersuite(),
+            state->server_hello->compression_method(),
+            SERVER,
+            secure_renegotiation.supported(),
+            state->server_hello->fragment_size(),
+            peer_certs,
+            MemoryVector<byte>(),
+            m_hostname,
+            ""
+            );
+
+         if(handshake_fn(session_info))
+            {
+            if(state->server_hello->supports_session_ticket())
+               {
+               try
+                  {
+                  const SymmetricKey ticket_key = creds.psk("tls-server", "session-ticket", "");
+
+                  state->new_session_ticket =
+                     new New_Session_Ticket(writer, state->hash,
+                                            session_info.encrypt(ticket_key, rng));
+                  }
+               catch(...) {}
+               }
+            else
+               session_manager.save(session_info);
+            }
+
+         if(state->server_hello->supports_session_ticket() && !state->new_session_ticket)
+            state->new_session_ticket = new New_Session_Ticket(writer, state->hash);
 
          writer.send(CHANGE_CIPHER_SPEC, 1);
 
@@ -436,25 +526,6 @@ void Server::process_handshake_msg(Handshake_Type type,
          if(state->client_certs && state->client_verify)
             peer_certs = state->client_certs->cert_chain();
          }
-
-      Session session_info(
-         state->server_hello->session_id(),
-         state->keys.master_secret(),
-         state->server_hello->version(),
-         state->server_hello->ciphersuite(),
-         state->server_hello->compression_method(),
-         SERVER,
-         secure_renegotiation.supported(),
-         state->server_hello->fragment_size(),
-         peer_certs,
-         m_hostname,
-         ""
-         );
-
-      if(handshake_fn(session_info))
-         session_manager.save(session_info);
-      else
-         session_manager.remove_entry(session_info.session_id());
 
       secure_renegotiation.update(state->client_finished,
                                   state->server_finished);

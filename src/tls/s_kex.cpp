@@ -8,6 +8,7 @@
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_extensions.h>
+#include <botan/tls_record.h>
 #include <botan/internal/assert.h>
 #include <botan/credentials_manager.h>
 #include <botan/loadstor.h>
@@ -105,7 +106,7 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
       m_signature = signer.signature(rng);
       }
 
-   send(writer, state->hash);
+   state->hash.update(writer.send(*this));
    }
 
 /**

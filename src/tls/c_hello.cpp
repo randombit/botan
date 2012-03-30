@@ -30,34 +30,11 @@ MemoryVector<byte> make_hello_random(RandomNumberGenerator& rng)
    }
 
 /*
-* Encode and send a Handshake message
-*/
-void Handshake_Message::send(Record_Writer& writer, Handshake_Hash& hash) const
-   {
-   MemoryVector<byte> buf = serialize();
-   MemoryVector<byte> send_buf(4);
-
-   const size_t buf_size = buf.size();
-
-   send_buf[0] = type();
-
-   for(size_t i = 1; i != 4; ++i)
-     send_buf[i] = get_byte<u32bit>(i, buf_size);
-
-   send_buf += buf;
-
-   hash.update(send_buf);
-
-   writer.send(HANDSHAKE, &send_buf[0], send_buf.size());
-   }
-
-/*
 * Create a new Hello Request message
 */
 Hello_Request::Hello_Request(Record_Writer& writer)
    {
-   Handshake_Hash dummy; // FIXME: *UGLY*
-   send(writer, dummy);
+   writer.send(*this);
    }
 
 /*
@@ -66,7 +43,7 @@ Hello_Request::Hello_Request(Record_Writer& writer)
 Hello_Request::Hello_Request(const MemoryRegion<byte>& buf)
    {
    if(buf.size())
-      throw Decoding_Error("Hello_Request: Must be empty, and is not");
+      throw Decoding_Error("Bad Hello_Request, has non-zero size");
    }
 
 /*
@@ -97,49 +74,67 @@ Client_Hello::Client_Hello(Record_Writer& writer,
    m_next_protocol(next_protocol),
    m_fragment_size(0),
    m_secure_renegotiation(true),
-   m_renegotiation_info(reneg_info)
+   m_renegotiation_info(reneg_info),
+   m_supported_curves(policy.allowed_ecc_curves()),
+   m_supports_session_ticket(true)
    {
    std::vector<std::string> hashes = policy.allowed_hashes();
    std::vector<std::string> sigs = policy.allowed_signature_methods();
-
-   m_supported_curves = policy.allowed_ecc_curves();
 
    for(size_t i = 0; i != hashes.size(); ++i)
       for(size_t j = 0; j != sigs.size(); ++j)
          m_supported_algos.push_back(std::make_pair(hashes[i], sigs[j]));
 
-   send(writer, hash);
+   hash.update(writer.send(*this));
    }
 
 /*
-* Create a new Client Hello message
+* Create a new Client Hello message (session resumption case)
 */
 Client_Hello::Client_Hello(Record_Writer& writer,
                            Handshake_Hash& hash,
+                           const Policy& policy,
                            RandomNumberGenerator& rng,
                            const Session& session,
                            bool next_protocol) :
    m_version(session.version()),
    m_session_id(session.session_id()),
    m_random(make_hello_random(rng)),
+   m_suites(policy.ciphersuite_list(session.srp_identifier() != "")),
+   m_comp_methods(policy.compression()),
    m_hostname(session.sni_hostname()),
    m_srp_identifier(session.srp_identifier()),
    m_next_protocol(next_protocol),
    m_fragment_size(session.fragment_size()),
-   m_secure_renegotiation(session.secure_renegotiation())
+   m_secure_renegotiation(session.secure_renegotiation()),
+   m_supported_curves(policy.allowed_ecc_curves()),
+   m_supports_session_ticket(true),
+   m_session_ticket(session.session_ticket())
    {
-   m_suites.push_back(session.ciphersuite_code());
-   m_comp_methods.push_back(session.compression_method());
+   if(!value_exists(m_suites, session.ciphersuite_code()))
+      m_suites.push_back(session.ciphersuite_code());
 
-   // set m_supported_algos + m_supported_curves here?
+   if(!value_exists(m_comp_methods, session.compression_method()))
+      m_comp_methods.push_back(session.compression_method());
 
-   send(writer, hash);
+   std::vector<std::string> hashes = policy.allowed_hashes();
+   std::vector<std::string> sigs = policy.allowed_signature_methods();
+
+   for(size_t i = 0; i != hashes.size(); ++i)
+      for(size_t j = 0; j != sigs.size(); ++j)
+         m_supported_algos.push_back(std::make_pair(hashes[i], sigs[j]));
+
+   hash.update(writer.send(*this));
    }
 
+/*
+* Read a counterparty client hello
+*/
 Client_Hello::Client_Hello(const MemoryRegion<byte>& buf, Handshake_Type type)
    {
    m_next_protocol = false;
    m_secure_renegotiation = false;
+   m_supports_session_ticket = false;
    m_fragment_size = 0;
 
    if(type == CLIENT_HELLO)
@@ -185,11 +180,14 @@ MemoryVector<byte> Client_Hello::serialize() const
 
       if(m_next_protocol)
          extensions.add(new Next_Protocol_Notification());
+
+      extensions.add(new Session_Ticket(m_session_ticket));
       }
    else
       {
       // renegotiation
       extensions.add(new Renegotation_Extension(m_renegotiation_info));
+      extensions.add(new Session_Ticket(m_session_ticket));
       }
 
    buf += extensions.serialize();
@@ -326,6 +324,24 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
          m_supported_algos.push_back(std::make_pair("SHA-1", "DSA"));
          m_supported_algos.push_back(std::make_pair("SHA-1", "ECDSA"));
          }
+      }
+
+   if(Maximum_Fragment_Length* frag = extensions.get<Maximum_Fragment_Length>())
+      {
+      m_fragment_size = frag->fragment_size();
+      }
+
+   if(Session_Ticket* ticket = extensions.get<Session_Ticket>())
+      {
+      m_supports_session_ticket = true;
+      m_session_ticket = ticket->contents();
+      }
+
+   if(Renegotation_Extension* reneg = extensions.get<Renegotation_Extension>())
+      {
+      // checked by TLS_Client / TLS_Server as they know the handshake state
+      m_secure_renegotiation = true;
+      m_renegotiation_info = reneg->renegotiation_info();
       }
 
    if(value_exists(m_suites, static_cast<u16bit>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV)))

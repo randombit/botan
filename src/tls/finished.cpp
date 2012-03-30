@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/tls_messages.h>
+#include <botan/tls_record.h>
 #include <memory>
 
 namespace Botan {
@@ -20,7 +21,7 @@ namespace {
 MemoryVector<byte> finished_compute_verify(Handshake_State* state,
                                            Connection_Side side)
    {
-   if(state->version == Protocol_Version::SSL_V3)
+   if(state->version() == Protocol_Version::SSL_V3)
       {
       const byte SSL_CLIENT_LABEL[] = { 0x43, 0x4C, 0x4E, 0x54 };
       const byte SSL_SERVER_LABEL[] = { 0x53, 0x52, 0x56, 0x52 };
@@ -54,7 +55,7 @@ MemoryVector<byte> finished_compute_verify(Handshake_State* state,
       else
          input += std::make_pair(TLS_SERVER_LABEL, sizeof(TLS_SERVER_LABEL));
 
-      input += state->hash.final(state->version, state->suite.mac_algo());
+      input += state->hash.final(state->version(), state->suite.mac_algo());
 
       return prf->derive_key(12, state->keys.master_secret(), input);
       }
@@ -70,7 +71,7 @@ Finished::Finished(Record_Writer& writer,
                    Connection_Side side)
    {
    verification_data = finished_compute_verify(state, side);
-   send(writer, state->hash);
+   state->hash.update(writer.send(*this));
    }
 
 /*

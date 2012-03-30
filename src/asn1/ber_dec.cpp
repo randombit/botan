@@ -421,7 +421,8 @@ u64bit BER_Decoder::decode_constrained_integer(ASN1_Tag type_tag,
 
    u64bit out = 0;
    for(size_t i = 0; i != 8; ++i)
-      out = (out << 8) | integer.byte_at(8-i);
+      out = (out << 8) | integer.byte_at(7-i);
+
    return out;
    }
 
