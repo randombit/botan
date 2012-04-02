@@ -43,7 +43,7 @@ SecureVector<byte> Handshake_Hash::final(Protocol_Version version,
       }
    else if(version == Protocol_Version::TLS_V12)
       {
-      if(mac_algo == "SHA-1" || mac_algo == "SHA-256")
+      if(mac_algo == "MD5" || mac_algo == "SHA-1" || mac_algo == "SHA-256")
          hash.reset(af.make_hash_function("SHA-256"));
       else
          hash.reset(af.make_hash_function(mac_algo));
