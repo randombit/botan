@@ -23,7 +23,8 @@ std::vector<std::string> Policy::allowed_ciphers() const
    allowed.push_back("AES-128");
    allowed.push_back("3DES");
    allowed.push_back("ARC4");
-   // Note that Camellia and SEED are not included by default
+   //allowed.push_back("Camellia");
+   //allowed.push_back("SEED");
 
    return allowed;
    }
@@ -37,7 +38,7 @@ std::vector<std::string> Policy::allowed_hashes() const
    allowed.push_back("SHA-256");
    allowed.push_back("SHA-224");
    allowed.push_back("SHA-1");
-   // Note that MD5 is not included by default
+   //allowed.push_back("MD5");
 
    return allowed;
    }
@@ -64,7 +65,7 @@ std::vector<std::string> Policy::allowed_signature_methods() const
    allowed.push_back("ECDSA");
    allowed.push_back("RSA");
    allowed.push_back("DSA");
-   allowed.push_back("");
+   //allowed.push_back("");
 
    return allowed;
    }
