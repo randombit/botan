@@ -95,7 +95,7 @@ u16bit choose_ciphersuite(
    const Client_Hello* client_hello)
    {
    const std::vector<u16bit> client_suites = client_hello->ciphersuites();
-   const std::vector<u16bit> server_suites = policy.ciphersuite_list(false);
+   const std::vector<u16bit> server_suites = ciphersuite_list(policy, false);
 
    const bool have_shared_ecc_curve =
       (policy.choose_curve(client_hello->supported_ecc_curves()) != "");
@@ -121,6 +121,23 @@ u16bit choose_ciphersuite(
 
    throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                        "Can't agree on a ciphersuite with client");
+   }
+
+
+/*
+* Choose which compression algorithm to use
+*/
+byte choose_compression(const Policy& policy,
+                        const std::vector<byte>& c_comp)
+   {
+   std::vector<byte> s_comp = policy.compression();
+
+   for(size_t i = 0; i != s_comp.size(); ++i)
+      for(size_t j = 0; j != c_comp.size(); ++j)
+         if(s_comp[i] == c_comp[j])
+            return s_comp[i];
+
+   return NO_COMPRESSION;
    }
 
 std::map<std::string, std::vector<X509_Certificate> >
@@ -352,7 +369,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             rng.random_vec(32), // new session ID
             state->version(),
             choose_ciphersuite(policy, cert_chains, state->client_hello),
-            policy.choose_compression(state->client_hello->compression_methods()),
+            choose_compression(policy, state->client_hello->compression_methods()),
             state->client_hello->fragment_size(),
             secure_renegotiation.supported(),
             secure_renegotiation.for_server_hello(),

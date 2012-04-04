@@ -89,7 +89,7 @@ class BOTAN_DLL Policy
       * will be rejected with an unknown_psk_identifier alert as soon
       * as the non-existence is identified. Otherwise, a false
       * identifier value will be used and the protocol allowed to
-      * proceed, causing the login to eventually fail without
+      * proceed, causing the handshake to eventually fail without
       * revealing that the username does not exist on this system.
       */
       virtual bool hide_unknown_users() const { return false; }
@@ -97,7 +97,7 @@ class BOTAN_DLL Policy
       /**
       * Return the allowed lifetime of a session ticket. If 0, session
       * tickets do not expire until the session ticket key rolls over.
-      * Old session tickets cannot be used to resume as session.
+      * Expired session tickets cannot be used to resume a session.
       */
       virtual u32bit session_ticket_lifetime() const;
 
@@ -111,20 +111,14 @@ class BOTAN_DLL Policy
       */
       virtual Protocol_Version pref_version() const;
 
-      /**
-      * Return allowed ciphersuites, in order of preference
-      */
-      std::vector<u16bit> ciphersuite_list(bool have_srp) const;
-
-      u16bit choose_suite(const std::vector<u16bit>& client_suites,
-                          const std::vector<std::string>& available_cert_types,
-                          bool have_shared_ecc_curve,
-                          bool have_srp) const;
-
-      byte choose_compression(const std::vector<byte>& client_algos) const;
-
       virtual ~Policy() {}
    };
+
+/**
+* Return allowed ciphersuites, in order of preference
+*/
+std::vector<u16bit> ciphersuite_list(const Policy& policy,
+                                     bool have_srp);
 
 }
 

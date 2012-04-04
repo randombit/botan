@@ -88,6 +88,30 @@ std::vector<std::string> Policy::allowed_ecc_curves() const
    return curves;
    }
 
+/*
+* Choose an ECC curve to use
+*/
+std::string Policy::choose_curve(const std::vector<std::string>& curve_names) const
+   {
+   const std::vector<std::string> our_curves = allowed_ecc_curves();
+
+   for(size_t i = 0; i != our_curves.size(); ++i)
+      if(value_exists(curve_names, our_curves[i]))
+         return our_curves[i];
+
+   return ""; // no shared curve
+   }
+
+/*
+* Return allowed compression algorithms
+*/
+std::vector<byte> Policy::compression() const
+   {
+   std::vector<byte> algs;
+   algs.push_back(NO_COMPRESSION);
+   return algs;
+   }
+
 u32bit Policy::session_ticket_lifetime() const
    {
    return 86400; // 1 day
@@ -177,12 +201,13 @@ class Ciphersuite_Preference_Ordering
 
 }
 
-std::vector<u16bit> Policy::ciphersuite_list(bool have_srp) const
+std::vector<u16bit> ciphersuite_list(const Policy& policy,
+                                     bool have_srp)
    {
-   std::vector<std::string> ciphers = allowed_ciphers();
-   std::vector<std::string> hashes = allowed_hashes();
-   std::vector<std::string> kex = allowed_key_exchange_methods();
-   std::vector<std::string> sigs = allowed_signature_methods();
+   std::vector<std::string> ciphers = policy.allowed_ciphers();
+   std::vector<std::string> hashes = policy.allowed_hashes();
+   std::vector<std::string> kex = policy.allowed_key_exchange_methods();
+   std::vector<std::string> sigs = policy.allowed_signature_methods();
 
    if(!have_srp)
       {
@@ -234,45 +259,6 @@ std::vector<u16bit> Policy::ciphersuite_list(bool have_srp) const
       }
 
    return ciphersuite_codes;
-   }
-
-/*
-* Return allowed compression algorithms
-*/
-std::vector<byte> Policy::compression() const
-   {
-   std::vector<byte> algs;
-   algs.push_back(NO_COMPRESSION);
-   return algs;
-   }
-
-/*
-* Choose an ECC curve to use
-*/
-std::string Policy::choose_curve(const std::vector<std::string>& curve_names) const
-   {
-   std::vector<std::string> our_curves = allowed_ecc_curves();
-
-   for(size_t i = 0; i != our_curves.size(); ++i)
-      if(value_exists(curve_names, our_curves[i]))
-         return our_curves[i];
-
-   return ""; // no shared curve
-   }
-
-/*
-* Choose which compression algorithm to use
-*/
-byte Policy::choose_compression(const std::vector<byte>& c_comp) const
-   {
-   std::vector<byte> s_comp = compression();
-
-   for(size_t i = 0; i != s_comp.size(); ++i)
-      for(size_t j = 0; j != c_comp.size(); ++j)
-         if(s_comp[i] == c_comp[j])
-            return s_comp[i];
-
-   return NO_COMPRESSION;
    }
 
 }
