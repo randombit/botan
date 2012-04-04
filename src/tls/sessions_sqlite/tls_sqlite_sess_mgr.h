@@ -36,7 +36,7 @@ class BOTAN_DLL Session_Manager_SQLite : public Session_Manager
                              RandomNumberGenerator& rng,
                              const std::string& db_filename,
                              size_t max_sessions = 1000,
-                             size_t session_lifetime = 7200);
+                             u32bit session_lifetime = 7200);
 
       ~Session_Manager_SQLite();
 
@@ -49,6 +49,8 @@ class BOTAN_DLL Session_Manager_SQLite : public Session_Manager
       void remove_entry(const MemoryRegion<byte>& session_id);
 
       void save(const Session& session_data);
+
+      u32bit session_lifetime() const { return m_session_lifetime; }
    private:
       Session_Manager_SQLite(const Session_Manager_SQLite&);
       Session_Manager_SQLite& operator=(const Session_Manager_SQLite&);
@@ -57,7 +59,8 @@ class BOTAN_DLL Session_Manager_SQLite : public Session_Manager
 
       SymmetricKey m_session_key;
       RandomNumberGenerator& m_rng;
-      size_t m_max_sessions, m_session_lifetime;
+      size_t m_max_sessions;
+      u32bit m_session_lifetime;
       class sqlite3* m_db;
    };
 

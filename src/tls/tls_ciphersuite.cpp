@@ -30,6 +30,18 @@ Ciphersuite Ciphersuite::by_name(const std::string& name)
    return Ciphersuite(); // some unknown ciphersuite
    }
 
+bool Ciphersuite::psk_ciphersuite() const
+   {
+   return (kex_algo() == "PSK" ||
+           kex_algo() == "DHE_PSK" ||
+           kex_algo() == "ECDHE_PSK");
+   }
+
+bool Ciphersuite::ecc_ciphersuite() const
+   {
+   return (kex_algo() == "ECDH" || sig_algo() == "ECDSA");
+   }
+
 std::string Ciphersuite::to_string() const
    {
    if(m_cipher_keylen == 0)

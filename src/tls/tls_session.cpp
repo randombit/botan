@@ -131,6 +131,11 @@ std::string Session::PEM_encode() const
    return PEM_Code::encode(this->DER_encode(), "SSL SESSION");
    }
 
+u32bit Session::session_age() const
+   {
+   return (system_time() - m_start_time);
+   }
+
 namespace {
 
 const u32bit SESSION_CRYPTO_MAGIC = 0x571B0E4E;

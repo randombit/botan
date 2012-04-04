@@ -21,7 +21,8 @@ namespace {
 bool check_for_resume(Session& session_info,
                       Session_Manager& session_manager,
                       Credentials_Manager& credentials,
-                      Client_Hello* client_hello)
+                      Client_Hello* client_hello,
+                      u32bit session_ticket_lifetime)
    {
    const MemoryVector<byte>& client_session_id = client_hello->session_id();
    const MemoryVector<byte>& session_ticket = client_hello->session_ticket();
@@ -43,6 +44,10 @@ bool check_for_resume(Session& session_info,
          session_info = Session::decrypt(
             session_ticket,
             credentials.psk("tls-server", "session-ticket", ""));
+
+         if(session_ticket_lifetime &&
+            session_info.session_age() > session_ticket_lifetime)
+            return false; // ticket has expired
          }
       catch(...)
          {
@@ -79,6 +84,43 @@ bool check_for_resume(Session& session_info,
       }
 
    return true;
+   }
+
+/*
+* Choose which ciphersuite to use
+*/
+u16bit choose_ciphersuite(
+   const Policy& policy,
+   const std::map<std::string, std::vector<X509_Certificate> >& cert_chains,
+   const Client_Hello* client_hello)
+   {
+   const std::vector<u16bit> client_suites = client_hello->ciphersuites();
+   const std::vector<u16bit> server_suites = policy.ciphersuite_list(false);
+
+   const bool have_shared_ecc_curve =
+      (policy.choose_curve(client_hello->supported_ecc_curves()) != "");
+
+   // Ordering by our preferences rather than by clients
+   for(size_t i = 0; i != server_suites.size(); ++i)
+      {
+      const u16bit suite_id = server_suites[i];
+
+      if(!value_exists(client_suites, suite_id))
+         continue;
+
+      Ciphersuite suite = Ciphersuite::by_id(suite_id);
+
+      if(!have_shared_ecc_curve && suite.ecc_ciphersuite())
+         continue;
+
+      if(cert_chains.count(suite.sig_algo()) == 0)
+         continue;
+
+      return suite_id;
+      }
+
+   throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                       "Can't agree on a ciphersuite with client");
    }
 
 std::map<std::string, std::vector<X509_Certificate> >
@@ -215,7 +257,8 @@ void Server::process_handshake_msg(Handshake_Type type,
       const bool resuming = check_for_resume(session_info,
                                              session_manager,
                                              creds,
-                                             state->client_hello);
+                                             state->client_hello,
+                                             policy.session_ticket_lifetime());
 
       bool have_session_ticket_key = false;
 
@@ -240,7 +283,9 @@ void Server::process_handshake_msg(Handshake_Type type,
             session_info.fragment_size(),
             secure_renegotiation.supported(),
             secure_renegotiation.for_server_hello(),
-            state->client_hello->supports_session_ticket() && have_session_ticket_key,
+            (state->client_hello->supports_session_ticket() &&
+             state->client_hello->session_ticket().empty() &&
+             have_session_ticket_key),
             state->client_hello->next_protocol_notification(),
             m_possible_protocols,
             rng);
@@ -257,13 +302,12 @@ void Server::process_handshake_msg(Handshake_Type type,
 
          if(!handshake_fn(session_info))
             {
-            if(state->server_hello->supports_session_ticket())
+            session_manager.remove_entry(session_info.session_id());
+
+            if(state->server_hello->supports_session_ticket()) // send an empty ticket
                state->new_session_ticket = new New_Session_Ticket(writer, state->hash);
-            else
-               session_manager.remove_entry(session_info.session_id());
             }
 
-         // FIXME: should only send a new ticket if we need too (eg old session)
          if(state->server_hello->supports_session_ticket() && !state->new_session_ticket)
             {
             try
@@ -272,7 +316,8 @@ void Server::process_handshake_msg(Handshake_Type type,
 
                state->new_session_ticket =
                   new New_Session_Ticket(writer, state->hash,
-                                         session_info.encrypt(ticket_key, rng));
+                                         session_info.encrypt(ticket_key, rng),
+                                         policy.session_ticket_lifetime());
                }
             catch(...) {}
 
@@ -301,25 +346,17 @@ void Server::process_handshake_msg(Handshake_Type type,
             cert_chains = get_server_certs("", creds);
             }
 
-         std::vector<std::string> available_cert_types;
-
-         for(std::map<std::string, std::vector<X509_Certificate> >::const_iterator i = cert_chains.begin();
-             i != cert_chains.end(); ++i)
-            {
-            if(!i->second.empty())
-               available_cert_types.push_back(i->first);
-            }
-
          state->server_hello = new Server_Hello(
             writer,
             state->hash,
+            rng.random_vec(32), // new session ID
             state->version(),
-            *(state->client_hello),
-            available_cert_types,
-            policy,
-            have_session_ticket_key,
+            choose_ciphersuite(policy, cert_chains, state->client_hello),
+            policy.choose_compression(state->client_hello->compression_methods()),
+            state->client_hello->fragment_size(),
             secure_renegotiation.supported(),
             secure_renegotiation.for_server_hello(),
+            state->client_hello->supports_session_ticket() && have_session_ticket_key,
             state->client_hello->next_protocol_notification(),
             m_possible_protocols,
             rng);
@@ -505,7 +542,8 @@ void Server::process_handshake_msg(Handshake_Type type,
 
                   state->new_session_ticket =
                      new New_Session_Ticket(writer, state->hash,
-                                            session_info.encrypt(ticket_key, rng));
+                                            session_info.encrypt(ticket_key, rng),
+                                            policy.session_ticket_lifetime());
                   }
                catch(...) {}
                }

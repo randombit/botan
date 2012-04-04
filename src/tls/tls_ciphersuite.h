@@ -33,6 +33,9 @@ class BOTAN_DLL Ciphersuite
       */
       std::string to_string() const;
 
+      bool psk_ciphersuite() const;
+      bool ecc_ciphersuite() const;
+
       std::string kex_algo() const { return m_kex_algo; }
       std::string sig_algo() const { return m_sig_algo; }
 

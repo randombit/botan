@@ -95,6 +95,13 @@ class BOTAN_DLL Policy
       virtual bool hide_unknown_users() const { return false; }
 
       /**
+      * Return the allowed lifetime of a session ticket. If 0, session
+      * tickets do not expire until the session ticket key rolls over.
+      * Old session tickets cannot be used to resume as session.
+      */
+      virtual u32bit session_ticket_lifetime() const;
+
+      /**
       * @return the minimum version that we are willing to negotiate
       */
       virtual Protocol_Version min_version() const;

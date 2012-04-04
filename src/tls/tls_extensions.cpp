@@ -468,11 +468,16 @@ MemoryVector<byte> Signature_Algorithms::serialize() const
 
    for(size_t i = 0; i != m_supported_algos.size(); ++i)
       {
-      if(m_supported_algos[i].second == "")
-         continue;
+      try
+         {
+         const byte hash_code = hash_algo_code(m_supported_algos[i].first);
+         const byte sig_code = sig_algo_code(m_supported_algos[i].second);
 
-      buf.push_back(hash_algo_code(m_supported_algos[i].first));
-      buf.push_back(sig_algo_code(m_supported_algos[i].second));
+         buf.push_back(hash_code);
+         buf.push_back(sig_code);
+         }
+      catch(...)
+         {}
       }
 
    buf[0] = get_byte<u16bit>(0, buf.size()-2);

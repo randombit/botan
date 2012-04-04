@@ -16,16 +16,16 @@ namespace TLS {
 bool Session_Manager_In_Memory::load_from_session_str(
    const std::string& session_str, Session& session)
    {
-   std::map<std::string, Session>::iterator i = sessions.find(session_str);
+   std::map<std::string, Session>::iterator i = m_sessions.find(session_str);
 
-   if(i == sessions.end())
+   if(i == m_sessions.end())
       return false;
 
    // session has expired, remove it
    const u64bit now = system_time();
-   if(i->second.start_time() + session_lifetime < now)
+   if(i->second.start_time() + session_lifetime() < now)
       {
-      sessions.erase(i);
+      m_sessions.erase(i);
       return false;
       }
 
@@ -45,18 +45,18 @@ bool Session_Manager_In_Memory::load_from_host_info(
    std::map<std::string, std::string>::iterator i;
 
    if(port > 0)
-      i = host_sessions.find(hostname + ":" + to_string(port));
+      i = m_host_sessions.find(hostname + ":" + to_string(port));
    else
-      i = host_sessions.find(hostname);
+      i = m_host_sessions.find(hostname);
 
-   if(i == host_sessions.end())
+   if(i == m_host_sessions.end())
       return false;
 
    if(load_from_session_str(i->second, session))
       return true;
 
-   // was removed from sessions map, remove host_sessions entry
-   host_sessions.erase(i);
+   // was removed from m_sessions map, remove m_host_sessions entry
+   m_host_sessions.erase(i);
 
    return false;
    }
@@ -65,30 +65,30 @@ void Session_Manager_In_Memory::remove_entry(
    const MemoryRegion<byte>& session_id)
    {
    std::map<std::string, Session>::iterator i =
-      sessions.find(hex_encode(session_id));
+      m_sessions.find(hex_encode(session_id));
 
-   if(i != sessions.end())
-      sessions.erase(i);
+   if(i != m_sessions.end())
+      m_sessions.erase(i);
    }
 
 void Session_Manager_In_Memory::save(const Session& session)
    {
-   if(max_sessions != 0)
+   if(m_max_sessions != 0)
       {
       /*
       This removes randomly based on ordering of session ids.
       Instead, remove oldest first?
       */
-      while(sessions.size() >= max_sessions)
-         sessions.erase(sessions.begin());
+      while(m_sessions.size() >= m_max_sessions)
+         m_sessions.erase(m_sessions.begin());
       }
 
    const std::string session_id_str = hex_encode(session.session_id());
 
-   sessions[session_id_str] = session;
+   m_sessions[session_id_str] = session;
 
    if(session.side() == CLIENT && session.sni_hostname() != "")
-      host_sessions[session.sni_hostname()] = session_id_str;
+      m_host_sessions[session.sni_hostname()] = session_id_str;
    }
 
 }

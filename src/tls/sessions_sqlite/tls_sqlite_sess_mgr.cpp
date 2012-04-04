@@ -145,7 +145,7 @@ Session_Manager_SQLite::Session_Manager_SQLite(const std::string& passphrase,
                                                RandomNumberGenerator& rng,
                                                const std::string& db_filename,
                                                size_t max_sessions,
-                                               size_t session_lifetime) :
+                                               u32bit session_lifetime) :
    m_rng(rng),
    m_max_sessions(max_sessions),
    m_session_lifetime(session_lifetime)

@@ -51,9 +51,10 @@ std::vector<std::string> Policy::allowed_key_exchange_methods() const
    //allowed.push_back("ECDHE_PSK");
    //allowed.push_back("DHE_PSK");
    //allowed.push_back("PSK");
+
    allowed.push_back("ECDH");
    allowed.push_back("DH");
-   allowed.push_back("RSA"); // RSA via server cert
+   allowed.push_back("RSA");
 
    return allowed;
    }
@@ -85,6 +86,11 @@ std::vector<std::string> Policy::allowed_ecc_curves() const
    curves.push_back("secp160r1");
    curves.push_back("secp160k1");
    return curves;
+   }
+
+u32bit Policy::session_ticket_lifetime() const
+   {
+   return 86400; // 1 day
    }
 
 Protocol_Version Policy::min_version() const
@@ -199,13 +205,24 @@ std::vector<u16bit> Policy::ciphersuite_list(bool have_srp) const
       if(!suite.valid())
          continue; // not a ciphersuite we know, skip
 
-      if(value_exists(ciphers, suite.cipher_algo()) &&
-         value_exists(hashes, suite.mac_algo()) &&
-         value_exists(kex, suite.kex_algo()) &&
-         value_exists(sigs, suite.sig_algo()))
+      if(!value_exists(kex, suite.kex_algo()))
+         continue; // unsupported key exchange
+
+      if(!value_exists(ciphers, suite.cipher_algo()))
+         continue; // unsupported cipher
+
+      if(!value_exists(hashes, suite.mac_algo()))
+         continue; // unsupported MAC algo
+
+      if(!value_exists(sigs, suite.sig_algo()))
          {
-         ciphersuites[suite] = i;
+         // allow if it's an empty sig algo and we want to use PSK
+         if(suite.sig_algo() != "" || !suite.psk_ciphersuite())
+            continue;
          }
+
+      // OK, allow it:
+      ciphersuites[suite] = i;
       }
 
    std::vector<u16bit> ciphersuite_codes;
@@ -241,40 +258,6 @@ std::string Policy::choose_curve(const std::vector<std::string>& curve_names) co
          return our_curves[i];
 
    return ""; // no shared curve
-   }
-
-/*
-* Choose which ciphersuite to use
-*/
-u16bit Policy::choose_suite(const std::vector<u16bit>& client_suites,
-                            const std::vector<std::string>& available_cert_types,
-                            bool have_shared_ecc_curve,
-                            bool have_srp) const
-   {
-   std::vector<u16bit> ciphersuites = ciphersuite_list(have_srp);
-
-   for(size_t i = 0; i != ciphersuites.size(); ++i)
-      {
-      const u16bit suite_id = ciphersuites[i];
-      Ciphersuite suite = Ciphersuite::by_id(suite_id);
-
-      if(!have_shared_ecc_curve)
-         {
-         if(suite.kex_algo() == "ECDH" || suite.sig_algo() == "ECDSA")
-            continue;
-         }
-
-      if(suite.sig_algo() != "" &&
-         !value_exists(available_cert_types, suite.sig_algo()))
-         {
-         continue;
-         }
-
-      if(value_exists(client_suites, suite_id))
-         return suite_id;
-      }
-
-   return 0; // no shared cipersuite
    }
 
 /*

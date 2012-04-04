@@ -177,6 +177,11 @@ class BOTAN_DLL Session
       u64bit start_time() const { return m_start_time; }
 
       /**
+      * Return how long this session has existed (in seconds)
+      */
+      u32bit session_age() const;
+
+      /**
       * Return the session ticket the server gave us
       */
       const MemoryVector<byte>& session_ticket() const { return m_session_ticket; }

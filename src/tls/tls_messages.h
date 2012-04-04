@@ -163,10 +163,10 @@ class Server_Hello : public Handshake_Message
    {
    public:
       Handshake_Type type() const { return SERVER_HELLO; }
-      Protocol_Version version() { return s_version; }
+      Protocol_Version version() { return m_version; }
       const MemoryVector<byte>& session_id() const { return m_session_id; }
-      u16bit ciphersuite() const { return suite; }
-      byte compression_method() const { return comp_method; }
+      u16bit ciphersuite() const { return m_ciphersuite; }
+      byte compression_method() const { return m_comp_method; }
 
       std::vector<byte> session_id_vector() const
          {
@@ -189,20 +189,7 @@ class Server_Hello : public Handshake_Message
       const MemoryVector<byte>& renegotiation_info()
          { return m_renegotiation_info; }
 
-      const MemoryVector<byte>& random() const { return s_random; }
-
-      Server_Hello(Record_Writer& writer,
-                   Handshake_Hash& hash,
-                   Protocol_Version version,
-                   const Client_Hello& other,
-                   const std::vector<std::string>& available_cert_types,
-                   const Policy& policies,
-                   bool have_session_ticket_key,
-                   bool client_has_secure_renegotiation,
-                   const MemoryRegion<byte>& reneg_info,
-                   bool client_has_npn,
-                   const std::vector<std::string>& next_protocols,
-                   RandomNumberGenerator& rng);
+      const MemoryVector<byte>& random() const { return m_random; }
 
       Server_Hello(Record_Writer& writer,
                    Handshake_Hash& hash,
@@ -213,7 +200,7 @@ class Server_Hello : public Handshake_Message
                    size_t max_fragment_size,
                    bool client_has_secure_renegotiation,
                    const MemoryRegion<byte>& reneg_info,
-                   bool client_supports_session_tickets,
+                   bool offer_session_ticket,
                    bool client_has_npn,
                    const std::vector<std::string>& next_protocols,
                    RandomNumberGenerator& rng);
@@ -222,10 +209,10 @@ class Server_Hello : public Handshake_Message
    private:
       MemoryVector<byte> serialize() const;
 
-      Protocol_Version s_version;
-      MemoryVector<byte> m_session_id, s_random;
-      u16bit suite;
-      byte comp_method;
+      Protocol_Version m_version;
+      MemoryVector<byte> m_session_id, m_random;
+      u16bit m_ciphersuite;
+      byte m_comp_method;
 
       size_t m_fragment_size;
       bool m_secure_renegotiation;
@@ -479,7 +466,7 @@ class New_Session_Ticket : public Handshake_Message
       New_Session_Ticket(Record_Writer& writer,
                          Handshake_Hash& hash,
                          const MemoryRegion<byte>& ticket,
-                         u32bit lifetime = 0);
+                         u32bit lifetime);
 
       New_Session_Ticket(Record_Writer& writer,
                          Handshake_Hash& hash);

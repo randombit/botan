@@ -241,8 +241,8 @@ void Client::process_handshake_msg(Handshake_Type type,
                ever sent. The server may or may not send a server kex,
                depending on if it has an identity hint for us.
 
-               DHE_PSK always sends a server key exchange for the DH
-               exchange portion.
+               (EC)DHE_PSK always sends a server key exchange for the
+               DH exchange portion.
             */
 
             state->set_expected_next(SERVER_KEX);
