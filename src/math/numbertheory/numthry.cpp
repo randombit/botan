@@ -10,8 +10,6 @@
 #include <botan/internal/bit_ops.h>
 #include <algorithm>
 
-#include <stdio.h>
-
 namespace Botan {
 
 namespace {

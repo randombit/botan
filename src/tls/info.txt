@@ -1,5 +1,7 @@
 define TLS
 
+load_on request
+
 <comment>
 The TLS code is complex, new, and not yet reviewed, there may be
 serious bugs or security issues.

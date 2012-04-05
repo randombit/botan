@@ -105,9 +105,12 @@ Device_EntropySource::~Device_EntropySource()
 */
 void Device_EntropySource::poll(Entropy_Accumulator& accum)
    {
-   size_t go_get = std::min<size_t>(accum.desired_remaining_bits() / 8, 48);
+   const size_t ENTROPY_BITS_PER_BYTE = 7;
 
-   size_t read_wait_ms = std::max<size_t>(go_get, 1000);
+   const size_t go_get = std::min<size_t>(
+      accum.desired_remaining_bits() / ENTROPY_BITS_PER_BYTE, 32);
+
+   const size_t read_wait_ms = std::max<size_t>(go_get, 100);
    MemoryRegion<byte>& io_buffer = accum.get_io_buffer(go_get);
 
    for(size_t i = 0; i != devices.size(); ++i)
@@ -117,7 +120,7 @@ void Device_EntropySource::poll(Entropy_Accumulator& accum)
 
       if(got)
          {
-         accum.add(&io_buffer[0], got, 8);
+         accum.add(&io_buffer[0], got, ENTROPY_BITS_PER_BYTE);
          break;
          }
       }

@@ -70,11 +70,11 @@ const std::string algos[] = {
 void benchmark_algo(const std::string& algo,
                     RandomNumberGenerator& rng)
    {
-   u32bit milliseconds = 3000;
+   u32bit milliseconds = 1000;
    Algorithm_Factory& af = global_state().algorithm_factory();
 
    std::map<std::string, double> speeds =
-      algorithm_benchmark(algo, af, rng, milliseconds, 16*1024);
+      algorithm_benchmark(algo, af, rng, milliseconds, 16);
 
    std::cout << algo << ":";
 

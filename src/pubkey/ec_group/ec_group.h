@@ -63,8 +63,8 @@ class BOTAN_DLL EC_Group
       EC_Group(const OID& oid);
 
       /**
-      * Create an EC domain from PEM encoding (as from PEM_encode), or
-      * from an OID name (eg "secp256r1", or "1.2.840.10045.3.1.7")
+      * Create an EC domain from PEM encoding (as from PEM_encode),
+      * or from an OID name (eg "secp160r1", or "1.3.132.0.8")
       * @param pem_or_oid PEM-encoded data, or an OID
       */
       EC_Group(const std::string& pem_or_oid = "");

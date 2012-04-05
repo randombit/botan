@@ -22,7 +22,6 @@ class BOTAN_DLL ECDH_PublicKey : public virtual EC_PublicKey
    {
    public:
 
-
       ECDH_PublicKey(const AlgorithmIdentifier& alg_id,
                      const MemoryRegion<byte>& key_bits) :
          EC_PublicKey(alg_id, key_bits) {}
