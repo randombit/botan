@@ -238,6 +238,7 @@ class Client_Key_Exchange : public Handshake_Message
                           Handshake_State* state,
                           Credentials_Manager& creds,
                           const std::vector<X509_Certificate>& peer_certs,
+                          const std::string& hostname,
                           RandomNumberGenerator& rng);
 
       Client_Key_Exchange(const MemoryRegion<byte>& buf,

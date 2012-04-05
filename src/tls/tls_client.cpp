@@ -342,6 +342,7 @@ void Client::process_handshake_msg(Handshake_Type type,
                                  state,
                                  creds,
                                  peer_certs,
+                                 state->client_hello->sni_hostname(),
                                  rng);
 
       state->keys = Session_Keys(state,

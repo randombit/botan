@@ -15,6 +15,7 @@
 #include <botan/dh.h>
 #include <botan/ecdh.h>
 #include <botan/rsa.h>
+#include <botan/srp6.h>
 #include <botan/rng.h>
 #include <botan/loadstor.h>
 #include <memory>
@@ -50,6 +51,7 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
                                          Handshake_State* state,
                                          Credentials_Manager& creds,
                                          const std::vector<X509_Certificate>& peer_certs,
+                                         const std::string& hostname,
                                          RandomNumberGenerator& rng)
    {
    const std::string kex_algo = state->suite.kex_algo();
@@ -170,6 +172,33 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
             }
 
          append_tls_length_value(key_material, priv_key.public_value(), 1);
+         }
+      else if(kex_algo == "SRP_SHA")
+         {
+         const BigInt N = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
+         const BigInt g = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
+         MemoryVector<byte> salt = reader.get_range<byte>(1, 1, 255);
+         const BigInt B = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
+
+         const std::string srp_group = srp6_group_identifier(N, g);
+
+         const std::string srp_identifier =
+            creds.srp_identifier("tls-client", hostname);
+
+         const std::string srp_password =
+            creds.srp_password("tls-client", hostname, srp_identifier);
+
+         std::pair<BigInt, SymmetricKey> srp_vals =
+            srp6_client_agree(srp_identifier,
+                              srp_password,
+                              srp_group,
+                              "SHA-1",
+                              salt,
+                              B,
+                              rng);
+
+         append_tls_length_value(key_material, BigInt::encode(srp_vals.first), 2);
+         pre_master = srp_vals.second.bits_of();
          }
       else
          {

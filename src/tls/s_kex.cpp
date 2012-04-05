@@ -167,6 +167,20 @@ Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
       m_params.push_back(get_byte(1, curve_id));
       append_tls_length_value(m_params, ecdh_key, 1);
       }
+   else if(kex_algo == "SRP_SHA")
+      {
+      // 2 bigints (N,g) then salt, then server B
+
+      const BigInt N = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
+      const BigInt g = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
+      MemoryVector<byte> salt = reader.get_range<byte>(1, 1, 255);
+      const BigInt B = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
+
+      append_tls_length_value(m_params, BigInt::encode(N), 2);
+      append_tls_length_value(m_params, BigInt::encode(g), 2);
+      append_tls_length_value(m_params, salt, 1);
+      append_tls_length_value(m_params, BigInt::encode(B), 2);
+      }
    else if(kex_algo != "PSK")
       throw Decoding_Error("Server_Key_Exchange: Unsupported kex type " + kex_algo);
 
