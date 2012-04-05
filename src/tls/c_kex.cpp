@@ -330,6 +330,10 @@ Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
          append_tls_length_value(pre_master, zeros, 2);
          append_tls_length_value(pre_master, psk.bits_of(), 2);
          }
+      else if(kex_algo == "SRP_SHA")
+         {
+         throw Internal_Error("SRP_SHA server side not done");
+         }
       else if(kex_algo == "DH" || kex_algo == "DHE_PSK" ||
               kex_algo == "ECDH" || kex_algo == "ECDHE_PSK")
          {

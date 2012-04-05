@@ -16,6 +16,7 @@
 #include <botan/dh.h>
 #include <botan/ecdh.h>
 #include <botan/rsa.h>
+#include <botan/srp6.h>
 #include <botan/oids.h>
 #include <memory>
 
@@ -34,13 +35,13 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
                                          const Private_Key* signing_key) :
    m_kex_key(0)
    {
+   const std::string hostname = state->client_hello->sni_hostname();
    const std::string kex_algo = state->suite.kex_algo();
 
    if(kex_algo == "PSK" || kex_algo == "DHE_PSK" || kex_algo == "ECDHE_PSK")
       {
       std::string identity_hint =
-         creds.psk_identity_hint("tls-server",
-                                 state->client_hello->sni_hostname());
+         creds.psk_identity_hint("tls-server", hostname);
 
       append_tls_length_value(m_params, identity_hint, 2);
       }
@@ -87,6 +88,39 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
       append_tls_length_value(m_params, ecdh->public_value(), 1);
 
       m_kex_key = ecdh.release();
+      }
+   else if(kex_algo == "SRP_SHA")
+      {
+      const std::string srp_identifier = state->client_hello->srp_identifier();
+
+      BigInt N, g, v;
+      MemoryVector<byte> salt;
+
+      const bool found = creds.srp_verifier("tls-server", hostname,
+                                            srp_identifier,
+                                            N, g, v, salt,
+                                            policy.hide_unknown_users());
+
+      if(!found)
+         throw TLS_Exception(Alert::UNKNOWN_PSK_IDENTITY,
+                             "Unknown SRP user " + srp_identifier);
+
+#if 0
+      BigInt B = srp6_server_step1(v, srp6_group_identifier(N, g),
+                                   "SHA-1", rng);
+#else
+      BigInt B = 0;
+#endif
+
+      append_tls_length_value(m_params, BigInt::encode(N), 2);
+      append_tls_length_value(m_params, BigInt::encode(g), 2);
+      append_tls_length_value(m_params, salt, 1);
+      append_tls_length_value(m_params, BigInt::encode(B), 2);
+
+      /*
+      * To finish, client key exchange needs to know
+      *   group_id, v, b, B
+      */
       }
    else if(kex_algo != "PSK")
       throw Internal_Error("Server_Key_Exchange: Unknown kex type " + kex_algo);

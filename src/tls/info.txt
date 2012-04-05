@@ -1,6 +1,6 @@
 define TLS
 
-load_on request
+load_on auto
 
 <comment>
 The TLS code is complex, new, and not yet reviewed, there may be
@@ -85,6 +85,7 @@ prf_tls
 rng
 rsa
 seed
+srp6
 sha1
 sha2_32
 ssl3mac
