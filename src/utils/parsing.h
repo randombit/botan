@@ -32,6 +32,16 @@ BOTAN_DLL std::vector<std::string> split_on(
    const std::string& str, char delim);
 
 /**
+* Replace a character in a string
+* @param str the input string
+* @param from_char the character to replace
+* @return to_char the character to replace it with
+*/
+BOTAN_DLL std::string replace_char(const std::string& str,
+                                   char from_char,
+                                   char to_char);
+
+/**
 * Parse an ASN.1 OID
 * @param oid the OID in string form
 * @return OID components

@@ -14,18 +14,56 @@ namespace Botan {
 
 namespace PEM_Code {
 
-/*
-* PEM Encoding/Decoding
+/**
+* Encode some binary data in PEM format
 */
-BOTAN_DLL std::string encode(const byte[], size_t,
-                             const std::string&, size_t = 64);
-BOTAN_DLL std::string encode(const MemoryRegion<byte>&,
-                             const std::string&, size_t = 64);
+BOTAN_DLL std::string encode(const byte der[],
+                             size_t der_len,
+                             const std::string& label,
+                             size_t line_width = 64);
 
-BOTAN_DLL SecureVector<byte> decode(DataSource&, std::string&);
-BOTAN_DLL SecureVector<byte> decode_check_label(DataSource&,
-                                                const std::string&);
-BOTAN_DLL bool matches(DataSource&, const std::string& = "",
+/**
+* Encode some binary data in PEM format
+*/
+BOTAN_DLL std::string encode(const MemoryRegion<byte>& der,
+                             const std::string& label,
+                             size_t line_width = 64);
+
+/**
+* Decode PEM data
+* @param label is set to the PEM label found for later inspection
+*/
+BOTAN_DLL SecureVector<byte> decode(DataSource& pem,
+                                    std::string& label);
+
+/**
+* Decode PEM data
+* @param label is set to the PEM label found for later inspection
+*/
+BOTAN_DLL SecureVector<byte> decode(const std::string& pem,
+                                    std::string& label);
+
+/**
+* Decode PEM data
+* @param label is what we expect the label to be
+*/
+BOTAN_DLL SecureVector<byte> decode_check_label(
+   DataSource& pem,
+   const std::string& label);
+
+/**
+* Decode PEM data
+* @param label is what we expect the label to be
+*/
+BOTAN_DLL SecureVector<byte> decode_check_label(
+   const std::string& pem,
+   const std::string& label);
+
+/**
+* Heuristic test for PEM data.
+*/
+BOTAN_DLL bool matches(DataSource& source,
+                       const std::string& extra = "",
                        size_t search_range = 4096);
 
 }

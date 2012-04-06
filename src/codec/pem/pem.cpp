@@ -110,6 +110,19 @@ SecureVector<byte> decode(DataSource& source, std::string& label)
    return base64.read_all();
    }
 
+SecureVector<byte> decode_check_label(const std::string& pem,
+                                      const std::string& label_want)
+   {
+   DataSource_Memory src(pem);
+   return decode_check_label(src, label_want);
+   }
+
+SecureVector<byte> decode(const std::string& pem, std::string& label)
+   {
+   DataSource_Memory src(pem);
+   return decode(src, label);
+   }
+
 /*
 * Search for a PEM signature
 */

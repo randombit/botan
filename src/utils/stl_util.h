@@ -84,6 +84,19 @@ void multimap_insert(std::multimap<K, V>& multimap,
 #endif
    }
 
+/**
+* Existence check for values
+*/
+template<typename T>
+bool value_exists(const std::vector<T>& vec,
+                  const T& val)
+   {
+   for(size_t i = 0; i != vec.size(); ++i)
+      if(vec[i] == val)
+         return true;
+   return false;
+   }
+
 }
 
 #endif

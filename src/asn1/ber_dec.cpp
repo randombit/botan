@@ -141,7 +141,11 @@ size_t find_eoc(DataSource* ber)
 void BER_Object::assert_is_a(ASN1_Tag type_tag, ASN1_Tag class_tag)
    {
    if(this->type_tag != type_tag || this->class_tag != class_tag)
-      throw BER_Decoding_Error("Tag mismatch when decoding");
+      throw BER_Decoding_Error("Tag mismatch when decoding got " +
+                               to_string(this->type_tag) + "/" +
+                               to_string(this->class_tag) + " expected " +
+                               to_string(type_tag) + "/" +
+                               to_string(class_tag));
    }
 
 /*
@@ -397,6 +401,29 @@ BER_Decoder& BER_Decoder::decode(size_t& out,
       out = (out << 8) | integer.byte_at(3-i);
 
    return (*this);
+   }
+
+/*
+* Decode a small BER encoded INTEGER
+*/
+u64bit BER_Decoder::decode_constrained_integer(ASN1_Tag type_tag,
+                                               ASN1_Tag class_tag,
+                                               size_t T_bytes)
+   {
+   if(T_bytes > 8)
+      throw BER_Decoding_Error("Can't decode small integer over 8 bytes");
+
+   BigInt integer;
+   decode(integer, type_tag, class_tag);
+
+   if(integer.bits() > 8*T_bytes)
+      throw BER_Decoding_Error("Decoded integer value larger than expected");
+
+   u64bit out = 0;
+   for(size_t i = 0; i != 8; ++i)
+      out = (out << 8) | integer.byte_at(7-i);
+
+   return out;
    }
 
 /*

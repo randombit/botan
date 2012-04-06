@@ -288,4 +288,17 @@ std::string ipv4_to_string(u32bit ip)
    return str;
    }
 
+std::string replace_char(const std::string& str,
+                         char from_char,
+                         char to_char)
+   {
+   std::string out = str;
+
+   for(size_t i = 0; i != out.size(); ++i)
+      if(out[i] == from_char)
+         out[i] = to_char;
+
+   return out;
+   }
+
 }
