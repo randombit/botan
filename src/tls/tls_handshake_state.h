@@ -64,6 +64,8 @@ class Handshake_State
                            std::string& sig_algo,
                            bool for_client_auth);
 
+      std::string srp_identifier() const;
+
       KDF* protocol_specific_prf();
 
       Protocol_Version version() const { return m_version; }

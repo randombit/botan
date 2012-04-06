@@ -19,17 +19,6 @@ using namespace std::tr1::placeholders;
 #include <iostream>
 #include <memory>
 
-bool handshake_complete(const TLS::Session& session)
-   {
-   printf("Handshake complete, protocol=%04X ciphersuite=%s compression=%d\n",
-          session.version(), session.ciphersuite().to_string().c_str(),
-          session.compression_method());
-
-   printf("Session id = %s\n", hex_encode(session.session_id()).c_str());
-   printf("Master secret = %s\n", hex_encode(session.master_secret()).c_str());
-   return true;
-   }
-
 class Blocking_TLS_Server
    {
    public:
@@ -44,14 +33,31 @@ class Blocking_TLS_Server
          server(
             output_fn,
             std::tr1::bind(&Blocking_TLS_Server::reader_fn, std::tr1::ref(*this), _1, _2, _3),
-            handshake_complete,
+            std::tr1::bind(&Blocking_TLS_Server::handshake_complete, std::tr1::ref(*this), _1),
             sessions,
             creds,
             policy,
-            rng),
+            rng,
+            protocols),
          exit(false)
          {
          read_loop();
+         }
+
+      bool handshake_complete(const TLS::Session& session)
+         {
+         std::cout << "Handshake complete: "
+                   << session.version().to_string() << " "
+                   << session.ciphersuite().to_string() << " "
+                   << "SessionID: " << hex_encode(session.session_id()) << "\n";
+
+         if(session.srp_identifier() != "")
+            std::cout << "SRP identifier: " << session.srp_identifier() << "\n";
+
+         if(server.next_protocol() != "")
+            std::cout << "Next protocol: " << server.next_protocol() << "\n";
+
+         return true;
          }
 
       size_t read(byte buf[], size_t buf_len)
@@ -60,7 +66,7 @@ class Blocking_TLS_Server
 
          while(!exit && !got)
             {
-            read_loop(5); // header size
+            read_loop(TLS::TLS_HEADER_SIZE);
             got = read_queue.read(buf, buf_len);
             }
 
@@ -148,8 +154,14 @@ int main(int argc, char* argv[])
       Credentials_Manager_Simple creds(rng);
 
       std::vector<std::string> protocols;
-      protocols.push_back("spdy/2");
-      protocols.push_back("http/1.0");
+
+      /*
+      * These are the protocols we advertise to the client, but the
+      * client will send back whatever it actually plans on talking,
+      * which may or may not take into account what we advertise.
+      */
+      protocols.push_back("echo/1.0");
+      protocols.push_back("echo/1.1");
 
       while(true)
          {

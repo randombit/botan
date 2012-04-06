@@ -332,7 +332,9 @@ Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
          }
       else if(kex_algo == "SRP_SHA")
          {
-         throw Internal_Error("SRP_SHA server side not done");
+         SRP6_Server_Session& srp = state->server_kex->server_srp_params();
+
+         pre_master = srp.step2(BigInt::decode(reader.get_range<byte>(2, 0, 65535))).bits_of();
          }
       else if(kex_algo == "DH" || kex_algo == "DHE_PSK" ||
               kex_algo == "ECDH" || kex_algo == "ECDHE_PSK")

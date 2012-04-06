@@ -47,7 +47,7 @@ std::vector<std::string> Policy::allowed_key_exchange_methods() const
    {
    std::vector<std::string> allowed;
 
-   //allowed.push_back("SRP_SHA");
+   allowed.push_back("SRP_SHA");
    //allowed.push_back("ECDHE_PSK");
    //allowed.push_back("DHE_PSK");
    //allowed.push_back("PSK");
@@ -204,19 +204,10 @@ class Ciphersuite_Preference_Ordering
 std::vector<u16bit> ciphersuite_list(const Policy& policy,
                                      bool have_srp)
    {
-   std::vector<std::string> ciphers = policy.allowed_ciphers();
-   std::vector<std::string> hashes = policy.allowed_hashes();
-   std::vector<std::string> kex = policy.allowed_key_exchange_methods();
-   std::vector<std::string> sigs = policy.allowed_signature_methods();
-
-   if(!have_srp)
-      {
-      std::vector<std::string>::iterator i =
-         std::find(kex.begin(), kex.end(), "SRP_SHA");
-
-      if(i != kex.end())
-         kex.erase(i);
-      }
+   const std::vector<std::string> ciphers = policy.allowed_ciphers();
+   const std::vector<std::string> hashes = policy.allowed_hashes();
+   const std::vector<std::string> kex = policy.allowed_key_exchange_methods();
+   const std::vector<std::string> sigs = policy.allowed_signature_methods();
 
    Ciphersuite_Preference_Ordering order(ciphers, hashes, kex, sigs);
 
@@ -229,6 +220,9 @@ std::vector<u16bit> ciphersuite_list(const Policy& policy,
 
       if(!suite.valid())
          continue; // not a ciphersuite we know, skip
+
+      if(!have_srp && suite.kex_algo() == "SRP_SHA")
+         continue;
 
       if(!value_exists(kex, suite.kex_algo()))
          continue; // unsupported key exchange

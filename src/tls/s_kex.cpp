@@ -33,7 +33,7 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
                                          Credentials_Manager& creds,
                                          RandomNumberGenerator& rng,
                                          const Private_Key* signing_key) :
-   m_kex_key(0)
+   m_kex_key(0), m_srp_params(0)
    {
    const std::string hostname = state->client_hello->sni_hostname();
    const std::string kex_algo = state->suite.kex_algo();
@@ -93,34 +93,30 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
       {
       const std::string srp_identifier = state->client_hello->srp_identifier();
 
-      BigInt N, g, v;
+      std::string group_id;
+      BigInt v;
       MemoryVector<byte> salt;
 
       const bool found = creds.srp_verifier("tls-server", hostname,
                                             srp_identifier,
-                                            N, g, v, salt,
+                                            group_id, v, salt,
                                             policy.hide_unknown_users());
 
       if(!found)
          throw TLS_Exception(Alert::UNKNOWN_PSK_IDENTITY,
                              "Unknown SRP user " + srp_identifier);
 
-#if 0
-      BigInt B = srp6_server_step1(v, srp6_group_identifier(N, g),
-                                   "SHA-1", rng);
-#else
-      BigInt B = 0;
-#endif
+      m_srp_params = new SRP6_Server_Session;
 
-      append_tls_length_value(m_params, BigInt::encode(N), 2);
-      append_tls_length_value(m_params, BigInt::encode(g), 2);
+      BigInt B = m_srp_params->step1(v, group_id,
+                                     "SHA-1", rng);
+
+      DL_Group group(group_id);
+
+      append_tls_length_value(m_params, BigInt::encode(group.get_p()), 2);
+      append_tls_length_value(m_params, BigInt::encode(group.get_g()), 2);
       append_tls_length_value(m_params, salt, 1);
       append_tls_length_value(m_params, BigInt::encode(B), 2);
-
-      /*
-      * To finish, client key exchange needs to know
-      *   group_id, v, b, B
-      */
       }
    else if(kex_algo != "PSK")
       throw Internal_Error("Server_Key_Exchange: Unknown kex type " + kex_algo);
@@ -150,7 +146,7 @@ Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
                                          const std::string& kex_algo,
                                          const std::string& sig_algo,
                                          Protocol_Version version) :
-   m_kex_key(0)
+   m_kex_key(0), m_srp_params(0)
    {
    if(buf.size() < 6)
       throw Decoding_Error("Server_Key_Exchange: Packet corrupted");
@@ -230,6 +226,11 @@ Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
       }
    }
 
+Server_Key_Exchange::~Server_Key_Exchange()
+   {
+   delete m_kex_key;
+   delete m_srp_params;
+   }
 
 /**
 * Serialize a Server Key Exchange message
@@ -278,6 +279,14 @@ const Private_Key& Server_Key_Exchange::server_kex_key() const
    BOTAN_ASSERT(m_kex_key, "Key is non-NULL");
    return *m_kex_key;
    }
+
+// Only valid for SRP negotiation
+SRP6_Server_Session& Server_Key_Exchange::server_srp_params()
+   {
+   BOTAN_ASSERT(m_srp_params, "SRP params are non-NULL");
+   return *m_srp_params;
+   }
+
 }
 
 }

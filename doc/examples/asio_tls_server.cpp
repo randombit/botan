@@ -215,6 +215,11 @@ class Session_Manager_Locked : public Botan::TLS::Session_Manager
          m_session_manager.save(session);
          }
 
+      Botan::u32bit session_lifetime() const
+         {
+         return m_session_manager.session_lifetime();
+         }
+
    private:
       boost::mutex m_mutex;
       Botan::TLS::Session_Manager_In_Memory m_session_manager;

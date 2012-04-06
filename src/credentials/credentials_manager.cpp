@@ -30,6 +30,12 @@ SymmetricKey Credentials_Manager::psk(const std::string&,
    throw Internal_Error("No PSK set for identity " + identity);
    }
 
+bool Credentials_Manager::attempt_srp(const std::string&,
+                                      const std::string&)
+   {
+   return false;
+   }
+
 std::string Credentials_Manager::srp_identifier(const std::string&,
                                                 const std::string&)
    {
@@ -46,8 +52,7 @@ std::string Credentials_Manager::srp_password(const std::string&,
 bool Credentials_Manager::srp_verifier(const std::string&,
                                        const std::string&,
                                        const std::string&,
-                                       BigInt&,
-                                       BigInt&,
+                                       std::string&,
                                        BigInt&,
                                        MemoryRegion<byte>&,
                                        bool)
@@ -99,6 +104,7 @@ void Credentials_Manager::verify_certificate_chain(
    if(!cert_chain[0].matches_dns_name(purported_hostname))
       throw std::runtime_error("Certificate did not match hostname");
 
+#if 1
    std::vector<X509_Certificate> CAs = trusted_certificate_authorities(type, purported_hostname);
 
    X509_Store store;
@@ -110,11 +116,33 @@ void Credentials_Manager::verify_certificate_chain(
 
    X509_Code result = store.validate_cert(cert_chain[0], X509_Store::TLS_SERVER);
 
-   if(CAs.empty() && result == CERT_ISSUER_NOT_FOUND)
-      return;
+   if(CAs.empty())
+      {
+      if(result == CERT_ISSUER_NOT_FOUND)
+         return;
+      if(result == CANNOT_ESTABLISH_TRUST)
+         return;
+      }
 
    if(result != VERIFIED)
-      throw std::runtime_error("Certificate did not validate");
+      throw std::runtime_error("Certificate did not validate, code " + to_string(result));
+#else
+
+   // New X.509 API
+   const Certificate_Store& CAs =
+      trusted_certificate_authorities(type, purported_hostname);
+
+   Path_Validation_Result result =
+      x509_path_validate(cert_chain,
+                         Path_Validation_Restrictions(),
+                         store);
+
+   if(!result.successful_validation())
+      throw std::runtime_error("Certificate validation failure: " + result.as_string());
+
+   if(!CAs.certificate_known(result.trust_root())
+      throw std::runtime_error("Certificate chain roots in unknown/untrusted CA");
+#endif
    }
 
 }

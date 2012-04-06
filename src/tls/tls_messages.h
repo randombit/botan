@@ -21,6 +21,7 @@
 namespace Botan {
 
 class Credentials_Manager;
+class SRP6_Server_Session;
 
 namespace TLS {
 
@@ -396,6 +397,9 @@ class Server_Key_Exchange : public Handshake_Message
       // Only valid for certain kex types
       const Private_Key& server_kex_key() const;
 
+      // Only valid for SRP negotiation
+      SRP6_Server_Session& server_srp_params();
+
       Server_Key_Exchange(Record_Writer& writer,
                           Handshake_State* state,
                           const Policy& policy,
@@ -408,11 +412,12 @@ class Server_Key_Exchange : public Handshake_Message
                           const std::string& sig_alg,
                           Protocol_Version version);
 
-      ~Server_Key_Exchange() { delete m_kex_key; }
+      ~Server_Key_Exchange();
    private:
       MemoryVector<byte> serialize() const;
 
       Private_Key* m_kex_key;
+      SRP6_Server_Session* m_srp_params;
 
       MemoryVector<byte> m_params;
 

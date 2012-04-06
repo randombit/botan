@@ -91,11 +91,18 @@ bool check_for_resume(Session& session_info,
 */
 u16bit choose_ciphersuite(
    const Policy& policy,
+   Credentials_Manager& creds,
    const std::map<std::string, std::vector<X509_Certificate> >& cert_chains,
    const Client_Hello* client_hello)
    {
+   const bool have_srp = creds.attempt_srp("tls-server",
+                                           client_hello->sni_hostname());
+
    const std::vector<u16bit> client_suites = client_hello->ciphersuites();
-   const std::vector<u16bit> server_suites = ciphersuite_list(policy, false);
+   const std::vector<u16bit> server_suites = ciphersuite_list(policy, have_srp);
+
+   if(server_suites.empty())
+      throw Internal_Error("Policy forbids us from negotiating any ciphersuite");
 
    const bool have_shared_ecc_curve =
       (policy.choose_curve(client_hello->supported_ecc_curves()) != "");
@@ -115,6 +122,18 @@ u16bit choose_ciphersuite(
 
       if(cert_chains.count(suite.sig_algo()) == 0)
          continue;
+
+      /*
+      The client may offer SRP cipher suites in the hello message but
+      omit the SRP extension.  If the server would like to select an
+      SRP cipher suite in this case, the server SHOULD return a fatal
+      "unknown_psk_identity" alert immediately after processing the
+      client hello message.
+       - RFC 5054 section 2.5.1.2
+      */
+      if(suite.kex_algo() == "SRP_SHA" && client_hello->srp_identifier() == "")
+         throw TLS_Exception(Alert::UNKNOWN_PSK_IDENTITY,
+                             "Client wanted SRP but did not send username");
 
       return suite_id;
       }
@@ -368,7 +387,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             state->hash,
             rng.random_vec(32), // new session ID
             state->version(),
-            choose_ciphersuite(policy, cert_chains, state->client_hello),
+            choose_ciphersuite(policy, creds, cert_chains, state->client_hello),
             choose_compression(policy, state->client_hello->compression_methods()),
             state->client_hello->fragment_size(),
             secure_renegotiation.supported(),
@@ -546,7 +565,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             peer_certs,
             MemoryVector<byte>(),
             m_hostname,
-            ""
+            state->srp_identifier()
             );
 
          if(handshake_fn(session_info))
