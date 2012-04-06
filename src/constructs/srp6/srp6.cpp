@@ -1,6 +1,6 @@
 /*
-* SRP-6a
-* (C) 2011 Jack Lloyd
+* SRP-6a (RFC 5054 compatatible)
+* (C) 2011,2012 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -112,7 +112,7 @@ srp6_client_agree(const std::string& identifier,
 
    BigInt k = hash_seq(hash_id, p_bytes, p, g);
 
-   BigInt a(rng, p.bits() - 1);
+   BigInt a(rng, 256);
 
    BigInt A = power_mod(g, a, p);
 
@@ -152,7 +152,7 @@ BigInt SRP6_Server_Session::step1(const BigInt& v,
 
    BigInt k = hash_seq(hash_id, p_bytes, p, g);
 
-   BigInt b(rng, p.bits() - 1);
+   BigInt b(rng, 256);
 
    B = (v*k + power_mod(g, b, p)) % p;
 

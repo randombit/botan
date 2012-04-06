@@ -51,7 +51,7 @@ SRP6_Authenticator_File::SRP6_Authenticator_File(const std::string& filename)
 
 bool SRP6_Authenticator_File::lookup_user(const std::string& username,
                                           BigInt& v,
-                                          MemoryVector<byte>& salt,
+                                          MemoryRegion<byte>& salt,
                                           std::string& group_id) const
    {
    std::map<std::string, SRP6_Data>::const_iterator i = entries.find(username);
