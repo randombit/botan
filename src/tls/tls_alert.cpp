@@ -90,9 +90,14 @@ std::string Alert::type_string() const
 
       case UNSUPPORTED_EXTENSION:
          return "unsupported_extension";
+      case CERTIFICATE_UNOBTAINABLE:
+         return "certificate_unobtainable";
       case UNRECOGNIZED_NAME:
          return "unrecognized_name";
-
+      case BAD_CERTIFICATE_STATUS_RESPONSE:
+         return "bad_certificate_status_response";
+      case BAD_CERTIFICATE_HASH_VALUE:
+         return "bad_certificate_hash_value";
       case UNKNOWN_PSK_IDENTITY:
          return "unknown_psk_identity";
 
