@@ -46,6 +46,9 @@ class BOTAN_DLL Record_Writer
       void send(byte type, const byte input[], size_t length);
       void send(byte type, byte val) { send(type, &val, 1); }
 
+      void send(byte type, const MemoryRegion<byte>& input)
+         { send(type, &input[0], input.size()); }
+
       MemoryVector<byte> send(class Handshake_Message& msg);
 
       void send_alert(const Alert& alert);

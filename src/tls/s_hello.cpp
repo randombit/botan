@@ -31,6 +31,7 @@ Server_Hello::Server_Hello(Record_Writer& writer,
                            bool offer_session_ticket,
                            bool client_has_npn,
                            const std::vector<std::string>& next_protocols,
+                           bool client_has_heartbeat,
                            RandomNumberGenerator& rng) :
    m_version(ver),
    m_session_id(session_id),
@@ -42,7 +43,9 @@ Server_Hello::Server_Hello(Record_Writer& writer,
    m_renegotiation_info(reneg_info),
    m_next_protocol(client_has_npn),
    m_next_protocols(next_protocols),
-   m_supports_session_ticket(offer_session_ticket)
+   m_supports_session_ticket(offer_session_ticket),
+   m_supports_heartbeats(client_has_heartbeat),
+   m_peer_can_send_heartbeats(true)
    {
    hash.update(writer.send(*this));
    }
@@ -104,6 +107,12 @@ Server_Hello::Server_Hello(const MemoryRegion<byte>& buf)
          throw Decoding_Error("TLS server sent non-empty session ticket extension");
       m_supports_session_ticket = true;
       }
+
+   if(Heartbeat_Support_Indicator* hb = extensions.get<Heartbeat_Support_Indicator>())
+      {
+      m_supports_heartbeats = true;
+      m_peer_can_send_heartbeats = hb->peer_allowed_to_send();
+      }
    }
 
 /*
@@ -125,6 +134,9 @@ MemoryVector<byte> Server_Hello::serialize() const
    buf.push_back(m_comp_method);
 
    Extensions extensions;
+
+   if(m_supports_heartbeats)
+      extensions.add(new Heartbeat_Support_Indicator(m_peer_can_send_heartbeats));
 
    if(m_secure_renegotiation)
       extensions.add(new Renegotation_Extension(m_renegotiation_info));

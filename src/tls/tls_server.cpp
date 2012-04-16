@@ -286,6 +286,9 @@ void Server::process_handshake_msg(Handshake_Type type,
 
       secure_renegotiation.update(state->client_hello);
 
+      m_peer_supports_heartbeats = state->client_hello->supports_heartbeats();
+      m_heartbeat_sending_allowed = state->client_hello->peer_can_send_heartbeats();
+
       writer.set_version(state->version());
       reader.set_version(state->version());
 
@@ -324,6 +327,7 @@ void Server::process_handshake_msg(Handshake_Type type,
              have_session_ticket_key),
             state->client_hello->next_protocol_notification(),
             m_possible_protocols,
+            state->client_hello->supports_heartbeats(),
             rng);
 
          if(session_info.fragment_size())
@@ -395,6 +399,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             state->client_hello->supports_session_ticket() && have_session_ticket_key,
             state->client_hello->next_protocol_notification(),
             m_possible_protocols,
+            state->client_hello->supports_heartbeats(),
             rng);
 
          if(state->client_hello->fragment_size())

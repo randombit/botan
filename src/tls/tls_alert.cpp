@@ -102,7 +102,10 @@ std::string Alert::type_string() const
          return "unknown_psk_identity";
 
       case NULL_ALERT:
-         return "";
+         return "none";
+
+      case HEARTBEAT_PAYLOAD:
+         return "heartbeat_payload";
       }
 
    /*

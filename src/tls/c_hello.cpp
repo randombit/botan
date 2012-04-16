@@ -77,7 +77,9 @@ Client_Hello::Client_Hello(Record_Writer& writer,
    m_secure_renegotiation(true),
    m_renegotiation_info(reneg_info),
    m_supported_curves(policy.allowed_ecc_curves()),
-   m_supports_session_ticket(true)
+   m_supports_session_ticket(true),
+   m_supports_heartbeats(true),
+   m_peer_can_send_heartbeats(true)
    {
    std::vector<std::string> hashes = policy.allowed_hashes();
    std::vector<std::string> sigs = policy.allowed_signature_methods();
@@ -110,7 +112,9 @@ Client_Hello::Client_Hello(Record_Writer& writer,
    m_secure_renegotiation(session.secure_renegotiation()),
    m_supported_curves(policy.allowed_ecc_curves()),
    m_supports_session_ticket(true),
-   m_session_ticket(session.session_ticket())
+   m_session_ticket(session.session_ticket()),
+   m_supports_heartbeats(true),
+   m_peer_can_send_heartbeats(true)
    {
    if(!value_exists(m_suites, session.ciphersuite_code()))
       m_suites.push_back(session.ciphersuite_code());
@@ -136,6 +140,8 @@ Client_Hello::Client_Hello(const MemoryRegion<byte>& buf, Handshake_Type type)
    m_next_protocol = false;
    m_secure_renegotiation = false;
    m_supports_session_ticket = false;
+   m_supports_heartbeats = false;
+   m_peer_can_send_heartbeats = false;
    m_fragment_size = 0;
 
    if(type == CLIENT_HELLO)
@@ -168,28 +174,23 @@ MemoryVector<byte> Client_Hello::serialize() const
 
    Extensions extensions;
 
-   // Initial handshake
+   // Extensions only used on an initial handshake
    if(m_renegotiation_info.empty())
       {
-      extensions.add(new Renegotation_Extension(m_renegotiation_info));
       extensions.add(new Server_Name_Indicator(m_hostname));
       extensions.add(new SRP_Identifier(m_srp_identifier));
       extensions.add(new Supported_Elliptic_Curves(m_supported_curves));
+      extensions.add(new Heartbeat_Support_Indicator(true));
 
       if(m_version >= Protocol_Version::TLS_V12)
          extensions.add(new Signature_Algorithms(m_supported_algos));
 
       if(m_next_protocol)
          extensions.add(new Next_Protocol_Notification());
+      }
 
-      extensions.add(new Session_Ticket(m_session_ticket));
-      }
-   else
-      {
-      // renegotiation
-      extensions.add(new Renegotation_Extension(m_renegotiation_info));
-      extensions.add(new Session_Ticket(m_session_ticket));
-      }
+   extensions.add(new Renegotation_Extension(m_renegotiation_info));
+   extensions.add(new Session_Ticket(m_session_ticket));
 
    buf += extensions.serialize();
 
@@ -336,6 +337,12 @@ void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
       {
       m_supports_session_ticket = true;
       m_session_ticket = ticket->contents();
+      }
+
+   if(Heartbeat_Support_Indicator* hb = extensions.get<Heartbeat_Support_Indicator>())
+      {
+      m_supports_heartbeats = true;
+      m_peer_can_send_heartbeats = hb->peer_allowed_to_send();
       }
 
    if(Renegotation_Extension* reneg = extensions.get<Renegotation_Extension>())

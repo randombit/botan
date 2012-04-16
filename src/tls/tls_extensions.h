@@ -32,6 +32,7 @@ enum Handshake_Extension_Type {
    TLSEXT_EC_POINT_FORMATS       = 11,
    TLSEXT_SRP_IDENTIFIER         = 12,
    TLSEXT_SIGNATURE_ALGORITHMS   = 13,
+   TLSEXT_HEARTBEAT_SUPPORT      = 15,
 
    TLSEXT_SESSION_TICKET         = 35,
 
@@ -306,6 +307,32 @@ class Signature_Algorithms : public Extension
                            u16bit extension_size);
    private:
       std::vector<std::pair<std::string, std::string> > m_supported_algos;
+   };
+
+/**
+* Heartbeat Extension (RFC 6520)
+*/
+class Heartbeat_Support_Indicator : public Extension
+   {
+   public:
+      static Handshake_Extension_Type static_type()
+         { return TLSEXT_HEARTBEAT_SUPPORT; }
+
+      Handshake_Extension_Type type() const { return static_type(); }
+
+      bool peer_allowed_to_send() const { return m_peer_allowed_to_send; }
+
+      MemoryVector<byte> serialize() const;
+
+      bool empty() const { return false; }
+
+      Heartbeat_Support_Indicator(bool peer_allowed_to_send) :
+         m_peer_allowed_to_send(peer_allowed_to_send) {}
+
+      Heartbeat_Support_Indicator(TLS_Data_Reader& reader, u16bit extension_size);
+
+   private:
+      bool m_peer_allowed_to_send;
    };
 
 /**

@@ -73,15 +73,10 @@ class Client_Hello : public Handshake_Message
    {
    public:
       Handshake_Type type() const { return CLIENT_HELLO; }
-      Protocol_Version version() const { return m_version; }
-      const MemoryVector<byte>& session_id() const { return m_session_id; }
 
-      std::vector<byte> session_id_vector() const
-         {
-         std::vector<byte> v;
-         v.insert(v.begin(), &m_session_id[0], &m_session_id[m_session_id.size()]);
-         return v;
-         }
+      Protocol_Version version() const { return m_version; }
+
+      const MemoryVector<byte>& session_id() const { return m_session_id; }
 
       const std::vector<std::pair<std::string, std::string> >& supported_algos() const
          { return m_supported_algos; }
@@ -113,6 +108,10 @@ class Client_Hello : public Handshake_Message
 
       const MemoryRegion<byte>& session_ticket() const
          { return m_session_ticket; }
+
+      bool supports_heartbeats() const { return m_supports_heartbeats; }
+
+      bool peer_can_send_heartbeats() const { return m_peer_can_send_heartbeats; }
 
       Client_Hello(Record_Writer& writer,
                    Handshake_Hash& hash,
@@ -155,6 +154,9 @@ class Client_Hello : public Handshake_Message
 
       bool m_supports_session_ticket;
       MemoryVector<byte> m_session_ticket;
+
+      bool m_supports_heartbeats;
+      bool m_peer_can_send_heartbeats;
    };
 
 /**
@@ -164,17 +166,16 @@ class Server_Hello : public Handshake_Message
    {
    public:
       Handshake_Type type() const { return SERVER_HELLO; }
-      Protocol_Version version() { return m_version; }
-      const MemoryVector<byte>& session_id() const { return m_session_id; }
-      u16bit ciphersuite() const { return m_ciphersuite; }
-      byte compression_method() const { return m_comp_method; }
 
-      std::vector<byte> session_id_vector() const
-         {
-         std::vector<byte> v;
-         v.insert(v.begin(), &m_session_id[0], &m_session_id[m_session_id.size()]);
-         return v;
-         }
+      Protocol_Version version() { return m_version; }
+
+      const MemoryVector<byte>& random() const { return m_random; }
+
+      const MemoryVector<byte>& session_id() const { return m_session_id; }
+
+      u16bit ciphersuite() const { return m_ciphersuite; }
+
+      byte compression_method() const { return m_comp_method; }
 
       bool secure_renegotiation() const { return m_secure_renegotiation; }
 
@@ -190,7 +191,9 @@ class Server_Hello : public Handshake_Message
       const MemoryVector<byte>& renegotiation_info()
          { return m_renegotiation_info; }
 
-      const MemoryVector<byte>& random() const { return m_random; }
+      bool supports_heartbeats() const { return m_supports_heartbeats; }
+
+      bool peer_can_send_heartbeats() const { return m_peer_can_send_heartbeats; }
 
       Server_Hello(Record_Writer& writer,
                    Handshake_Hash& hash,
@@ -204,6 +207,7 @@ class Server_Hello : public Handshake_Message
                    bool offer_session_ticket,
                    bool client_has_npn,
                    const std::vector<std::string>& next_protocols,
+                   bool client_has_heartbeat,
                    RandomNumberGenerator& rng);
 
       Server_Hello(const MemoryRegion<byte>& buf);
@@ -222,6 +226,9 @@ class Server_Hello : public Handshake_Message
       bool m_next_protocol;
       std::vector<std::string> m_next_protocols;
       bool m_supports_session_ticket;
+
+      bool m_supports_heartbeats;
+      bool m_peer_can_send_heartbeats;
    };
 
 /**

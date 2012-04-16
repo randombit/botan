@@ -29,6 +29,7 @@ tls_extensions.h
 tls_handshake_hash.h
 tls_handshake_reader.h
 tls_handshake_state.h
+tls_heartbeats.h
 tls_messages.h
 tls_reader.h
 tls_session_key.h
@@ -55,6 +56,7 @@ tls_extensions.cpp
 tls_handshake_hash.cpp
 tls_handshake_reader.cpp
 tls_handshake_state.cpp
+tls_heartbeats.cpp
 tls_policy.cpp
 tls_server.cpp
 tls_session.cpp

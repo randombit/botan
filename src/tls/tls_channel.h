@@ -58,6 +58,18 @@ class BOTAN_DLL Channel
       virtual void renegotiate() = 0;
 
       /**
+      * Attempt to send a heartbeat message (if negotiated with counterparty)
+      * @param payload will be echoed back
+      * @param countents_size size of payload in bytes
+      */
+      void heartbeat(const byte payload[], size_t payload_size);
+
+      /**
+      * Attempt to send a heartbeat message (if negotiated with counterparty)
+      */
+      void heartbeat() { heartbeat(0, 0); }
+
+      /**
       * @return certificate chain of the peer (may be empty)
       */
       std::vector<X509_Certificate> peer_cert_chain() const { return peer_certs; }
@@ -130,6 +142,8 @@ class BOTAN_DLL Channel
 
       bool handshake_completed;
       bool connection_closed;
+      bool m_peer_supports_heartbeats;
+      bool m_heartbeat_sending_allowed;
    };
 
 }

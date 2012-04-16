@@ -188,6 +188,9 @@ void Client::process_handshake_msg(Handshake_Type type,
 
       secure_renegotiation.update(state->server_hello);
 
+      m_peer_supports_heartbeats = state->server_hello->supports_heartbeats();
+      m_heartbeat_sending_allowed = state->server_hello->peer_can_send_heartbeats();
+
       state->suite = Ciphersuite::by_id(state->server_hello->ciphersuite());
 
       const bool server_returned_same_session_id =
