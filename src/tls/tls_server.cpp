@@ -475,11 +475,6 @@ void Server::process_handshake_msg(Handshake_Type type,
       {
       state->client_certs = new Certificate(contents);
 
-      // Is this allowed by the protocol?
-      if(state->client_certs->count() > 1)
-         throw TLS_Exception(Alert::CERTIFICATE_UNKNOWN,
-                             "Client sent more than one certificate");
-
       state->set_expected_next(CLIENT_KEX);
       }
    else if(type == CLIENT_KEX)
