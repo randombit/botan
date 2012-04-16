@@ -122,7 +122,7 @@ Certificate_Req::Certificate_Req(const MemoryRegion<byte>& buf,
       m_supported_algos.push_back(std::make_pair("SHA-1", "ECDSA"));
       }
 
-   u16bit purported_size = reader.get_u16bit();
+   const u16bit purported_size = reader.get_u16bit();
 
    if(reader.remaining_bytes() != purported_size)
       throw Decoding_Error("Inconsistent length in certificate request");
@@ -153,17 +153,19 @@ MemoryVector<byte> Certificate_Req::serialize() const
    append_tls_length_value(buf, cert_types, 1);
 
    if(!m_supported_algos.empty())
-      {
       buf += Signature_Algorithms(m_supported_algos).serialize();
-      }
+
+   MemoryVector<byte> encoded_names;
 
    for(size_t i = 0; i != names.size(); ++i)
       {
       DER_Encoder encoder;
       encoder.encode(names[i]);
 
-      append_tls_length_value(buf, encoder.get_contents(), 2);
+      append_tls_length_value(encoded_names, encoder.get_contents(), 2);
       }
+
+   append_tls_length_value(buf, encoded_names, 2);
 
    return buf;
    }
