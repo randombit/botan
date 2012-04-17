@@ -101,7 +101,7 @@ void Credentials_Manager::verify_certificate_chain(
    if(cert_chain.empty())
       throw std::invalid_argument("Certificate chain was empty");
 
-   if(!cert_chain[0].matches_dns_name(purported_hostname))
+   if(purported_hostname != "" && !cert_chain[0].matches_dns_name(purported_hostname))
       throw std::runtime_error("Certificate did not match hostname");
 
 #if 1
