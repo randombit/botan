@@ -330,6 +330,8 @@ void Server::process_handshake_msg(Handshake_Type type,
             state->client_hello->supports_heartbeats(),
             rng);
 
+         secure_renegotiation.update(state->server_hello);
+
          if(session_info.fragment_size())
             {
             reader.set_maximum_fragment_size(session_info.fragment_size());
@@ -402,6 +404,8 @@ void Server::process_handshake_msg(Handshake_Type type,
             state->client_hello->supports_heartbeats(),
             rng);
 
+         secure_renegotiation.update(state->server_hello);
+
          if(state->client_hello->fragment_size())
             {
             reader.set_maximum_fragment_size(state->client_hello->fragment_size());
@@ -459,8 +463,6 @@ void Server::process_handshake_msg(Handshake_Type type,
             state->set_expected_next(CERTIFICATE);
             }
 
-         secure_renegotiation.update(state->server_hello);
-
          /*
          * If the client doesn't have a cert they want to use they are
          * allowed to send either an empty cert message or proceed
@@ -492,11 +494,10 @@ void Server::process_handshake_msg(Handshake_Type type,
       {
       state->client_verify = new Certificate_Verify(contents, state->version());
 
-      const std::vector<X509_Certificate>& client_certs =
-         state->client_certs->cert_chain();
+      peer_certs = state->client_certs->cert_chain();
 
       const bool sig_valid =
-         state->client_verify->verify(client_certs[0], state);
+         state->client_verify->verify(peer_certs[0], state);
 
       state->hash.update(type, contents);
 
@@ -510,7 +511,7 @@ void Server::process_handshake_msg(Handshake_Type type,
 
       try
          {
-         creds.verify_certificate_chain("tls-server", "", client_certs);
+         creds.verify_certificate_chain("tls-server", "", peer_certs);
          }
       catch(std::exception& e)
          {
@@ -596,9 +597,6 @@ void Server::process_handshake_msg(Handshake_Type type,
                          state->server_hello->compression_method());
 
          state->server_finished = new Finished(writer, state, SERVER);
-
-         if(state->client_certs && state->client_verify)
-            peer_certs = state->client_certs->cert_chain();
          }
 
       secure_renegotiation.update(state->client_finished,
