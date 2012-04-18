@@ -54,8 +54,10 @@ class BOTAN_DLL Channel
 
       /**
       * Attempt to renegotiate the session
+      * @param force_full_renegotiation if true, require a full renegotiation,
+      *                                 otherwise allow session resumption
       */
-      virtual void renegotiate() = 0;
+      virtual void renegotiate(bool force_full_renegotiation) = 0;
 
       /**
       * Attempt to send a heartbeat message (if negotiated with counterparty)

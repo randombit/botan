@@ -126,6 +126,7 @@ class Client_Hello : public Handshake_Message
                    Handshake_Hash& hash,
                    const Policy& policy,
                    RandomNumberGenerator& rng,
+                   const MemoryRegion<byte>& reneg_info,
                    const Session& resumed_session,
                    bool next_protocol = false);
 

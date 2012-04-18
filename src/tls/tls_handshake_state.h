@@ -101,6 +101,11 @@ class Handshake_State
       */
       SecureVector<byte> resume_master_secret;
 
+      /*
+      *
+      */
+      bool allow_session_resumption;
+
       /**
       * Used by client using NPN
       */

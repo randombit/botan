@@ -98,6 +98,7 @@ Client_Hello::Client_Hello(Record_Writer& writer,
                            Handshake_Hash& hash,
                            const Policy& policy,
                            RandomNumberGenerator& rng,
+                           const MemoryRegion<byte>& reneg_info,
                            const Session& session,
                            bool next_protocol) :
    m_version(session.version()),
@@ -110,6 +111,7 @@ Client_Hello::Client_Hello(Record_Writer& writer,
    m_next_protocol(next_protocol),
    m_fragment_size(session.fragment_size()),
    m_secure_renegotiation(session.secure_renegotiation()),
+   m_renegotiation_info(reneg_info),
    m_supported_curves(policy.allowed_ecc_curves()),
    m_supports_session_ticket(true),
    m_session_ticket(session.session_ticket()),
@@ -174,7 +176,9 @@ MemoryVector<byte> Client_Hello::serialize() const
 
    Extensions extensions;
 
-   extensions.add(new Renegotation_Extension(m_renegotiation_info));
+   if(m_secure_renegotiation)
+      extensions.add(new Renegotation_Extension(m_renegotiation_info));
+
    extensions.add(new Session_Ticket(m_session_ticket));
 
    extensions.add(new Server_Name_Indicator(m_hostname));

@@ -204,12 +204,14 @@ Server::Server(std::tr1::function<void (const byte[], size_t)> output_fn,
 /*
 * Send a hello request to the client
 */
-void Server::renegotiate()
+void Server::renegotiate(bool force_full_renegotiation)
    {
    if(state)
       return; // currently in handshake
 
    state = new Handshake_State(new Stream_Handshake_Reader);
+
+   state->allow_session_resumption = !force_full_renegotiation;
    state->set_expected_next(CLIENT_HELLO);
    Hello_Request hello_req(writer);
    }
@@ -271,7 +273,8 @@ void Server::process_handshake_msg(Handshake_Type type,
       {
       state->client_hello = new Client_Hello(contents, type);
 
-      m_hostname = state->client_hello->sni_hostname();
+      if(state->client_hello->sni_hostname() != "")
+         m_hostname = state->client_hello->sni_hostname();
 
       Protocol_Version client_version = state->client_hello->version();
 
@@ -293,11 +296,13 @@ void Server::process_handshake_msg(Handshake_Type type,
       reader.set_version(state->version());
 
       Session session_info;
-      const bool resuming = check_for_resume(session_info,
-                                             session_manager,
-                                             creds,
-                                             state->client_hello,
-                                             policy.session_ticket_lifetime());
+      const bool resuming =
+         state->allow_session_resumption &&
+         check_for_resume(session_info,
+                          session_manager,
+                          creds,
+                          state->client_hello,
+                          policy.session_ticket_lifetime());
 
       bool have_session_ticket_key = false;
 

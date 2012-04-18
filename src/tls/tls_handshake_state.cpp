@@ -104,6 +104,8 @@ Handshake_State::Handshake_State(Handshake_Reader* reader)
 
    hand_expecting_mask = 0;
    hand_received_mask = 0;
+
+   allow_session_resumption = true;
    }
 
 void Handshake_State::set_version(const Protocol_Version& version)

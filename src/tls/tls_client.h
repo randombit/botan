@@ -53,7 +53,7 @@ class BOTAN_DLL Client : public Channel
              std::tr1::function<std::string (std::vector<std::string>)> next_protocol =
                 std::tr1::function<std::string (std::vector<std::string>)>());
 
-      void renegotiate();
+      void renegotiate(bool force_full_renegotiation);
    private:
       void process_handshake_msg(Handshake_Type type,
                                  const MemoryRegion<byte>& contents);
@@ -64,6 +64,7 @@ class BOTAN_DLL Client : public Channel
       RandomNumberGenerator& rng;
       Session_Manager& session_manager;
       Credentials_Manager& creds;
+      const std::string m_hostname;
    };
 
 }
