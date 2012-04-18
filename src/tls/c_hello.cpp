@@ -174,23 +174,21 @@ MemoryVector<byte> Client_Hello::serialize() const
 
    Extensions extensions;
 
-   // Extensions only used on an initial handshake
-   if(m_renegotiation_info.empty())
-      {
-      extensions.add(new Server_Name_Indicator(m_hostname));
-      extensions.add(new SRP_Identifier(m_srp_identifier));
-      extensions.add(new Supported_Elliptic_Curves(m_supported_curves));
-      extensions.add(new Heartbeat_Support_Indicator(true));
-
-      if(m_version >= Protocol_Version::TLS_V12)
-         extensions.add(new Signature_Algorithms(m_supported_algos));
-
-      if(m_next_protocol)
-         extensions.add(new Next_Protocol_Notification());
-      }
-
    extensions.add(new Renegotation_Extension(m_renegotiation_info));
    extensions.add(new Session_Ticket(m_session_ticket));
+
+   extensions.add(new Server_Name_Indicator(m_hostname));
+   extensions.add(new SRP_Identifier(m_srp_identifier));
+
+   extensions.add(new Supported_Elliptic_Curves(m_supported_curves));
+
+   if(m_version >= Protocol_Version::TLS_V12)
+      extensions.add(new Signature_Algorithms(m_supported_algos));
+
+   extensions.add(new Heartbeat_Support_Indicator(true));
+
+   if(m_renegotiation_info.empty() && m_next_protocol)
+      extensions.add(new Next_Protocol_Notification());
 
    buf += extensions.serialize();
 
