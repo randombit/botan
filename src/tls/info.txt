@@ -70,6 +70,8 @@ tls_version.cpp
 aes
 arc4
 asn1
+camellia
+cbc
 credentials
 des
 dh

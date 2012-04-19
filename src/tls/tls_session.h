@@ -5,8 +5,8 @@
 * Released under the terms of the Botan license
 */
 
-#ifndef TLS_SESSION_STATE_H__
-#define TLS_SESSION_STATE_H__
+#ifndef BOTAN_TLS_SESSION_STATE_H__
+#define BOTAN_TLS_SESSION_STATE_H__
 
 #include <botan/x509cert.h>
 #include <botan/tls_version.h>

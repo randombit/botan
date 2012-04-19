@@ -5,8 +5,8 @@
 * Released under the terms of the Botan license
 */
 
-#ifndef TLS_SQLITE_SESSION_MANAGER_H__
-#define TLS_SQLITE_SESSION_MANAGER_H__
+#ifndef BOTAN_TLS_SQLITE_SESSION_MANAGER_H__
+#define BOTAN_TLS_SQLITE_SESSION_MANAGER_H__
 
 #include <botan/tls_session_manager.h>
 #include <botan/rng.h>

@@ -5,8 +5,8 @@
 * Released under the terms of the Botan license
 */
 
-#ifndef TLS_SESSION_MANAGER_H__
-#define TLS_SESSION_MANAGER_H__
+#ifndef BOTAN_TLS_SESSION_MANAGER_H__
+#define BOTAN_TLS_SESSION_MANAGER_H__
 
 #include <botan/tls_session.h>
 #include <map>
