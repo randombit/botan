@@ -82,7 +82,7 @@ class BOTAN_DLL Policy
       /**
       * Return the group to use for ephemeral Diffie-Hellman key agreement
       */
-      virtual DL_Group dh_group() const { return DL_Group("modp/ietf/1536"); }
+      virtual DL_Group dh_group() const;
 
       /**
       * If this function returns false, unknown SRP/PSK identifiers

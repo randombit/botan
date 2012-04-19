@@ -102,6 +102,11 @@ std::string Policy::choose_curve(const std::vector<std::string>& curve_names) co
    return ""; // no shared curve
    }
 
+virtual DL_Group Policy::dh_group() const
+   {
+   return DL_Group("modp/ietf/2048");
+   }
+
 /*
 * Return allowed compression algorithms
 */
