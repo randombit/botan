@@ -172,11 +172,12 @@ class MemoryRegion
       * Copy constructor
       * @param other the other region to copy
       */
-      MemoryRegion(const MemoryRegion<T>& other)
+      MemoryRegion(const MemoryRegion<T>& other) :
+         buf(0),
+         used(0),
+         allocated(0),
+         alloc(other.alloc)
          {
-         buf = 0;
-         used = allocated = 0;
-         alloc = other.alloc;
          resize(other.size());
          copy(&other[0], other.size());
          }

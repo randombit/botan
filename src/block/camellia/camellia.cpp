@@ -12,6 +12,8 @@ namespace Botan {
 
 namespace Camellia_F {
 
+namespace {
+
 u64bit F(u64bit v, u64bit K)
    {
    static const byte SBOX[256] = {
@@ -100,6 +102,8 @@ u64bit left_rot_lo(u64bit h, u64bit l, size_t shift)
    {
    return (h >> (64-shift)) | (l << shift);
    }
+
+}
 
 }
 

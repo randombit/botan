@@ -59,6 +59,9 @@ class Dynamically_Loaded_Library
          }
 
    private:
+      Dynamically_Loaded_Library(const Dynamically_Loaded_Library&);
+      Dynamically_Loaded_Library& operator=(const Dynamically_Loaded_Library&);
+
       std::string lib_name;
       void* lib;
    };
