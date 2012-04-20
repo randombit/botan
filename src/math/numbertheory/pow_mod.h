@@ -61,7 +61,7 @@ class BOTAN_DLL Power_Mod
 
       Power_Mod(const BigInt& = 0, Usage_Hints = NO_HINTS);
       Power_Mod(const Power_Mod&);
-      ~Power_Mod();
+      virtual ~Power_Mod();
    private:
       mutable Modular_Exponentiator* core;
       Usage_Hints hints;

@@ -59,14 +59,14 @@ class MemoryRegion
       const T* begin() const { return buf; }
 
       /**
-      * Get a pointer to the last element in the buffer.
-      * @return pointer to the last element in the buffer
+      * Get a pointer to one past the last element in the buffer.
+      * @return pointer to one past the last element in the buffer
       */
       T* end() { return (buf + size()); }
 
       /**
-      * Get a constant pointer to the last element in the buffer.
-      * @return constant pointer to the last element in the buffer
+      * Get a const pointer to one past the last element in the buffer.
+      * @return const pointer to one past the last element in the buffer
       */
       const T* end() const { return (buf + size()); }
 
@@ -172,11 +172,12 @@ class MemoryRegion
       * Copy constructor
       * @param other the other region to copy
       */
-      MemoryRegion(const MemoryRegion<T>& other)
+      MemoryRegion(const MemoryRegion<T>& other) :
+         buf(0),
+         used(0),
+         allocated(0),
+         alloc(other.alloc)
          {
-         buf = 0;
-         used = allocated = 0;
-         alloc = other.alloc;
          resize(other.size());
          copy(&other[0], other.size());
          }
