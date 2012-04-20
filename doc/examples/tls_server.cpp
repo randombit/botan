@@ -57,6 +57,12 @@ class Blocking_TLS_Server
          if(server.next_protocol() != "")
             std::cout << "Next protocol: " << server.next_protocol() << "\n";
 
+         /*
+         std::vector<X509_Certificate> peer_certs = session.peer_certs();
+         if(peer_certs.size())
+            std::cout << peer_certs[0].to_string();
+         */
+
          return true;
          }
 
@@ -208,7 +214,9 @@ int main(int argc, char* argv[])
                      }
 
                   if(line == "reneg\n")
-                     tls.underlying().renegotiate();
+                     tls.underlying().renegotiate(false);
+                  else if(line == "RENEG\n")
+                     tls.underlying().renegotiate(true);
 
                   line.clear();
                   }

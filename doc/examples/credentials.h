@@ -30,7 +30,7 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
       std::string srp_identifier(const std::string& type,
                                  const std::string& hostname)
          {
-         if(type == "tls-client" && hostname == "localhost")
+         if(type == "tls-client" && hostname == "srp-host")
             return "user";
          return "";
          }
@@ -38,20 +38,30 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
       bool attempt_srp(const std::string& type,
                        const std::string& hostname)
          {
-         return true;
-         if(hostname == "localhost")
+         if(hostname == "srp-host")
             return true;
          return false;
          }
 
       std::vector<Botan::X509_Certificate>
-      trusted_certificate_authorities(const std::string&,
-                                      const std::string&)
+      trusted_certificate_authorities(const std::string& type,
+                                      const std::string& hostname)
          {
+
          std::vector<Botan::X509_Certificate> certs;
 
-         Botan::X509_Certificate verisign("/usr/share/ca-certificates/mozilla/VeriSign_Class_3_Public_Primary_Certification_Authority_-_G5.crt");
-         certs.push_back(verisign);
+         if(type == "tls-server")
+            {
+            Botan::X509_Certificate testca("testCA.crt");
+            certs.push_back(testca);
+            }
+
+         if(type == "tls-client" && hostname == "twitter.com")
+            {
+            Botan::X509_Certificate verisign("/usr/share/ca-certificates/mozilla/VeriSign_Class_3_Public_Primary_Certification_Authority_-_G5.crt");
+            certs.push_back(verisign);
+            }
+
          return certs;
          }
 
@@ -68,7 +78,7 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
             }
          catch(std::exception& e)
             {
-            std::cout << "Certificate verification failed - " << e.what() << "\n";
+            std::cout << "Certificate verification failed - " << e.what() << " - but will ignore\n";
             }
          }
 

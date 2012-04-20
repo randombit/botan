@@ -188,7 +188,16 @@ void doit(RandomNumberGenerator& rng,
             continue;
             }
 
-         client.send(buf, got);
+         if(got == 2 && (buf[0] == 'R' || buf[0] == 'r') && buf[1] == '\n')
+            {
+            std::cout << "Client initiated renegotiation\n";
+            client.renegotiate((buf[0] == 'R'));
+           }
+
+         if(buf[0] == 'H')
+            client.heartbeat(&buf[1], got-1);
+         else
+            client.send(buf, got);
          }
       }
 
