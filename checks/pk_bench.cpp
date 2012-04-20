@@ -10,6 +10,12 @@
 #include <botan/oids.h>
 #include <map>
 
+#if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
+  #include <botan/x509_key.h>
+  #include <botan/pkcs8.h>
+  #include <botan/pubkey.h>
+#endif
+
 #if defined(BOTAN_HAS_RSA)
   #include <botan/rsa.h>
 #endif
