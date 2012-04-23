@@ -341,7 +341,7 @@ u32bit do_validation_tests(const std::string& filename,
          if(should_pass)
             std::cout << "Testing " << algorithm << "..." << std::endl;
          else
-            std::cout << "Testing (expecing failure) "
+            std::cout << "Testing (expecting failure) "
                       << algorithm << "..." << std::endl;
 #endif
          alg_count = 0;

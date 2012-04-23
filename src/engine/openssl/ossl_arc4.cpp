@@ -71,7 +71,7 @@ void ARC4_OpenSSL::cipher(const byte in[], byte out[], size_t length)
 }
 
 /**
-* Look for an OpenSSL-suported stream cipher (ARC4)
+* Look for an OpenSSL-supported stream cipher (ARC4)
 */
 StreamCipher*
 OpenSSL_Engine::find_stream_cipher(const SCAN_Name& request,
