@@ -34,6 +34,9 @@ Version 1.10.2, Not Yet Released
 
 * Add Google's Native Client as an compile target
 
+* The Qt mutex wrapper was broken and would not compile with any recent
+  version of Qt. It has been removed.
+
 * If targetting GCC on a Windows system, configure.py will warn that
   likely you wanted to configure for either MinGW or Cygwin, not the
   generic Windows target which is oriented to Win32 plus the Visual

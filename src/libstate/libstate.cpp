@@ -25,8 +25,6 @@
   #include <botan/internal/mux_pthr.h>
 #elif defined(BOTAN_HAS_MUTEX_WIN32)
   #include <botan/internal/mux_win32.h>
-#elif defined(BOTAN_HAS_MUTEX_QT)
-  #include <botan/internal/mux_qt.h>
 #endif
 
 #if defined(BOTAN_HAS_ALLOC_MMAP)
@@ -213,8 +211,6 @@ void Library_State::initialize(bool thread_safe)
       mutex_factory = new Pthread_Mutex_Factory;
 #elif defined(BOTAN_HAS_MUTEX_WIN32)
       mutex_factory = new Win32_Mutex_Factory;
-#elif defined(BOTAN_HAS_MUTEX_QT)
-      mutex_factory Qt_Mutex_Factory;
 #else
       throw Invalid_State("Could not find a thread-safe mutex object to use");
 #endif
