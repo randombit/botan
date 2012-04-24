@@ -135,8 +135,12 @@ BlockCipher* Core_Engine::find_block_cipher(const SCAN_Name& request,
 #endif
 
 #if defined(BOTAN_HAS_CAMELLIA)
-   if(request.algo_name() == "Camellia")
-      return new Camellia;
+   if(request.algo_name() == "Camellia-128")
+      return new Camellia_128;
+   if(request.algo_name() == "Camellia-192")
+      return new Camellia_192;
+   if(request.algo_name() == "Camellia-256")
+      return new Camellia_256;
 #endif
 
 #if defined(BOTAN_HAS_CAST)
