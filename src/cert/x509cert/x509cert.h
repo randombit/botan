@@ -146,10 +146,22 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       std::string to_string() const;
 
       /**
+      * Check if a certain DNS name matches up with the information in
+      * the cert
+      */
+      bool matches_dns_name(const std::string& name) const;
+
+      /**
       * Check to certificates for equality.
       * @return true both certificates are (binary) equal
       */
       bool operator==(const X509_Certificate& other) const;
+
+      /**
+      * Impose an arbitrary (but consistent) ordering
+      * @return true if this is less than other by some unspecified criteria
+      */
+      bool operator<(const X509_Certificate& other) const;
 
       /**
       * Create a certificate from a data source providing the DER or
