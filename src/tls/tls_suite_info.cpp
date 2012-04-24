@@ -33,16 +33,16 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
          return Ciphersuite("DSA", "DH", "SHA-256", "AES-256", 32);
 
       case 0x0044: // DHE_DSS_WITH_CAMELLIA_128_CBC_SHA
-         return Ciphersuite("DSA", "DH", "SHA-1", "Camellia", 16);
+         return Ciphersuite("DSA", "DH", "SHA-1", "Camellia-128", 16);
 
       case 0x00BD: // DHE_DSS_WITH_CAMELLIA_128_CBC_SHA256
-         return Ciphersuite("DSA", "DH", "SHA-256", "Camellia", 16);
+         return Ciphersuite("DSA", "DH", "SHA-256", "Camellia-128", 16);
 
       case 0x0087: // DHE_DSS_WITH_CAMELLIA_256_CBC_SHA
-         return Ciphersuite("DSA", "DH", "SHA-1", "Camellia", 32);
+         return Ciphersuite("DSA", "DH", "SHA-1", "Camellia-256", 32);
 
       case 0x00C3: // DHE_DSS_WITH_CAMELLIA_256_CBC_SHA256
-         return Ciphersuite("DSA", "DH", "SHA-256", "Camellia", 32);
+         return Ciphersuite("DSA", "DH", "SHA-256", "Camellia-256", 32);
 
       case 0x0066: // DHE_DSS_WITH_RC4_128_SHA
          return Ciphersuite("DSA", "DH", "SHA-1", "ARC4", 16);
@@ -66,10 +66,10 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
          return Ciphersuite("", "DHE_PSK", "SHA-384", "AES-256", 32);
 
       case 0xC096: // DHE_PSK_WITH_CAMELLIA_128_CBC_SHA256
-         return Ciphersuite("", "DHE_PSK", "SHA-256", "Camellia", 16);
+         return Ciphersuite("", "DHE_PSK", "SHA-256", "Camellia-128", 16);
 
       case 0xC097: // DHE_PSK_WITH_CAMELLIA_256_CBC_SHA384
-         return Ciphersuite("", "DHE_PSK", "SHA-384", "Camellia", 32);
+         return Ciphersuite("", "DHE_PSK", "SHA-384", "Camellia-256", 32);
 
       case 0x008E: // DHE_PSK_WITH_RC4_128_SHA
          return Ciphersuite("", "DHE_PSK", "SHA-1", "ARC4", 16);
@@ -90,16 +90,16 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
          return Ciphersuite("RSA", "DH", "SHA-256", "AES-256", 32);
 
       case 0x0045: // DHE_RSA_WITH_CAMELLIA_128_CBC_SHA
-         return Ciphersuite("RSA", "DH", "SHA-1", "Camellia", 16);
+         return Ciphersuite("RSA", "DH", "SHA-1", "Camellia-128", 16);
 
       case 0x00BE: // DHE_RSA_WITH_CAMELLIA_128_CBC_SHA256
-         return Ciphersuite("RSA", "DH", "SHA-256", "Camellia", 16);
+         return Ciphersuite("RSA", "DH", "SHA-256", "Camellia-128", 16);
 
       case 0x0088: // DHE_RSA_WITH_CAMELLIA_256_CBC_SHA
-         return Ciphersuite("RSA", "DH", "SHA-1", "Camellia", 32);
+         return Ciphersuite("RSA", "DH", "SHA-1", "Camellia-256", 32);
 
       case 0x00C4: // DHE_RSA_WITH_CAMELLIA_256_CBC_SHA256
-         return Ciphersuite("RSA", "DH", "SHA-256", "Camellia", 32);
+         return Ciphersuite("RSA", "DH", "SHA-256", "Camellia-256", 32);
 
       case 0x009A: // DHE_RSA_WITH_SEED_CBC_SHA
          return Ciphersuite("RSA", "DH", "SHA-1", "SEED", 16);
@@ -120,16 +120,16 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
          return Ciphersuite("", "DH", "SHA-256", "AES-256", 32);
 
       case 0x0046: // DH_anon_WITH_CAMELLIA_128_CBC_SHA
-         return Ciphersuite("", "DH", "SHA-1", "Camellia", 16);
+         return Ciphersuite("", "DH", "SHA-1", "Camellia-128", 16);
 
       case 0x00BF: // DH_anon_WITH_CAMELLIA_128_CBC_SHA256
-         return Ciphersuite("", "DH", "SHA-256", "Camellia", 16);
+         return Ciphersuite("", "DH", "SHA-256", "Camellia-128", 16);
 
       case 0x0089: // DH_anon_WITH_CAMELLIA_256_CBC_SHA
-         return Ciphersuite("", "DH", "SHA-1", "Camellia", 32);
+         return Ciphersuite("", "DH", "SHA-1", "Camellia-256", 32);
 
       case 0x00C5: // DH_anon_WITH_CAMELLIA_256_CBC_SHA256
-         return Ciphersuite("", "DH", "SHA-256", "Camellia", 32);
+         return Ciphersuite("", "DH", "SHA-256", "Camellia-256", 32);
 
       case 0x0018: // DH_anon_WITH_RC4_128_MD5
          return Ciphersuite("", "DH", "MD5", "ARC4", 16);
@@ -153,10 +153,10 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
          return Ciphersuite("ECDSA", "ECDH", "SHA-384", "AES-256", 32);
 
       case 0xC072: // ECDHE_ECDSA_WITH_CAMELLIA_128_CBC_SHA256
-         return Ciphersuite("ECDSA", "ECDH", "SHA-256", "Camellia", 16);
+         return Ciphersuite("ECDSA", "ECDH", "SHA-256", "Camellia-128", 16);
 
       case 0xC073: // ECDHE_ECDSA_WITH_CAMELLIA_256_CBC_SHA384
-         return Ciphersuite("ECDSA", "ECDH", "SHA-384", "Camellia", 32);
+         return Ciphersuite("ECDSA", "ECDH", "SHA-384", "Camellia-256", 32);
 
       case 0xC007: // ECDHE_ECDSA_WITH_RC4_128_SHA
          return Ciphersuite("ECDSA", "ECDH", "SHA-1", "ARC4", 16);
@@ -177,10 +177,10 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
          return Ciphersuite("", "ECDHE_PSK", "SHA-384", "AES-256", 32);
 
       case 0xC09A: // ECDHE_PSK_WITH_CAMELLIA_128_CBC_SHA256
-         return Ciphersuite("", "ECDHE_PSK", "SHA-256", "Camellia", 16);
+         return Ciphersuite("", "ECDHE_PSK", "SHA-256", "Camellia-128", 16);
 
       case 0xC09B: // ECDHE_PSK_WITH_CAMELLIA_256_CBC_SHA384
-         return Ciphersuite("", "ECDHE_PSK", "SHA-384", "Camellia", 32);
+         return Ciphersuite("", "ECDHE_PSK", "SHA-384", "Camellia-256", 32);
 
       case 0xC033: // ECDHE_PSK_WITH_RC4_128_SHA
          return Ciphersuite("", "ECDHE_PSK", "SHA-1", "ARC4", 16);
@@ -201,10 +201,10 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
          return Ciphersuite("RSA", "ECDH", "SHA-384", "AES-256", 32);
 
       case 0xC076: // ECDHE_RSA_WITH_CAMELLIA_128_CBC_SHA256
-         return Ciphersuite("RSA", "ECDH", "SHA-256", "Camellia", 16);
+         return Ciphersuite("RSA", "ECDH", "SHA-256", "Camellia-128", 16);
 
       case 0xC077: // ECDHE_RSA_WITH_CAMELLIA_256_CBC_SHA384
-         return Ciphersuite("RSA", "ECDH", "SHA-384", "Camellia", 32);
+         return Ciphersuite("RSA", "ECDH", "SHA-384", "Camellia-256", 32);
 
       case 0xC011: // ECDHE_RSA_WITH_RC4_128_SHA
          return Ciphersuite("RSA", "ECDH", "SHA-1", "ARC4", 16);
@@ -237,10 +237,10 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
          return Ciphersuite("", "PSK", "SHA-384", "AES-256", 32);
 
       case 0xC094: // PSK_WITH_CAMELLIA_128_CBC_SHA256
-         return Ciphersuite("", "PSK", "SHA-256", "Camellia", 16);
+         return Ciphersuite("", "PSK", "SHA-256", "Camellia-128", 16);
 
       case 0xC095: // PSK_WITH_CAMELLIA_256_CBC_SHA384
-         return Ciphersuite("", "PSK", "SHA-384", "Camellia", 32);
+         return Ciphersuite("", "PSK", "SHA-384", "Camellia-256", 32);
 
       case 0x008A: // PSK_WITH_RC4_128_SHA
          return Ciphersuite("", "PSK", "SHA-1", "ARC4", 16);
@@ -261,16 +261,16 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
          return Ciphersuite("RSA", "RSA", "SHA-256", "AES-256", 32);
 
       case 0x0041: // RSA_WITH_CAMELLIA_128_CBC_SHA
-         return Ciphersuite("RSA", "RSA", "SHA-1", "Camellia", 16);
+         return Ciphersuite("RSA", "RSA", "SHA-1", "Camellia-128", 16);
 
       case 0x00BA: // RSA_WITH_CAMELLIA_128_CBC_SHA256
-         return Ciphersuite("RSA", "RSA", "SHA-256", "Camellia", 16);
+         return Ciphersuite("RSA", "RSA", "SHA-256", "Camellia-128", 16);
 
       case 0x0084: // RSA_WITH_CAMELLIA_256_CBC_SHA
-         return Ciphersuite("RSA", "RSA", "SHA-1", "Camellia", 32);
+         return Ciphersuite("RSA", "RSA", "SHA-1", "Camellia-256", 32);
 
       case 0x00C0: // RSA_WITH_CAMELLIA_256_CBC_SHA256
-         return Ciphersuite("RSA", "RSA", "SHA-256", "Camellia", 32);
+         return Ciphersuite("RSA", "RSA", "SHA-256", "Camellia-256", 32);
 
       case 0x0004: // RSA_WITH_RC4_128_MD5
          return Ciphersuite("RSA", "RSA", "MD5", "ARC4", 16);
