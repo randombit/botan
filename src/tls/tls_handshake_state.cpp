@@ -68,7 +68,7 @@ u32bit bitmask_for_handshake_type(Handshake_Type type)
          return 0;
 
       default:
-         throw Internal_Error("Unknown handshake type " + std::to_string(type));
+         throw Internal_Error("Unknown handshake type " + to_string(type));
       }
 
    return 0;
@@ -104,6 +104,8 @@ Handshake_State::Handshake_State(Handshake_Reader* reader)
 
    hand_expecting_mask = 0;
    hand_received_mask = 0;
+
+   allow_session_resumption = true;
    }
 
 void Handshake_State::set_version(const Protocol_Version& version)
@@ -121,8 +123,8 @@ void Handshake_State::confirm_transition_to(Handshake_Type handshake_msg)
 
    if(!ok)
       throw Unexpected_Message("Unexpected state transition in handshake, got " +
-                               std::to_string(handshake_msg) + " mask is " +
-                               std::to_string(hand_expecting_mask));
+                               to_string(handshake_msg) + " mask is " +
+                               to_string(hand_expecting_mask));
 
    /* We don't know what to expect next, so force a call to
       set_expected_next; if it doesn't happen, the next transition
@@ -141,6 +143,14 @@ bool Handshake_State::received_handshake_msg(Handshake_Type handshake_msg) const
    const u32bit mask = bitmask_for_handshake_type(handshake_msg);
 
    return (hand_received_mask & mask);
+   }
+
+std::string Handshake_State::srp_identifier() const
+   {
+   if(suite.valid() && suite.kex_algo() == "SRP_SHA")
+      return client_hello->srp_identifier();
+
+   return "";
    }
 
 const MemoryRegion<byte>& Handshake_State::session_ticket() const
@@ -163,8 +173,12 @@ KDF* Handshake_State::protocol_specific_prf()
       }
    else if(version() == Protocol_Version::TLS_V12)
       {
-      if(suite.mac_algo() == "SHA-1" || suite.mac_algo() == "SHA-256")
+      if(suite.mac_algo() == "MD5" ||
+         suite.mac_algo() == "SHA-1" ||
+         suite.mac_algo() == "SHA-256")
+         {
          return get_kdf("TLS-12-PRF(SHA-256)");
+         }
 
       return get_kdf("TLS-12-PRF(" + suite.mac_algo() + ")");
       }

@@ -16,6 +16,7 @@
 #include <botan/dh.h>
 #include <botan/ecdh.h>
 #include <botan/rsa.h>
+#include <botan/srp6.h>
 #include <botan/oids.h>
 #include <memory>
 
@@ -32,22 +33,22 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
                                          Credentials_Manager& creds,
                                          RandomNumberGenerator& rng,
                                          const Private_Key* signing_key) :
-   m_kex_key(0)
+   m_kex_key(0), m_srp_params(0)
    {
+   const std::string hostname = state->client_hello->sni_hostname();
    const std::string kex_algo = state->suite.kex_algo();
 
    if(kex_algo == "PSK" || kex_algo == "DHE_PSK" || kex_algo == "ECDHE_PSK")
       {
       std::string identity_hint =
-         creds.psk_identity_hint("tls-server",
-                                 state->client_hello->sni_hostname());
+         creds.psk_identity_hint("tls-server", hostname);
 
       append_tls_length_value(m_params, identity_hint, 2);
       }
 
    if(kex_algo == "DH" || kex_algo == "DHE_PSK")
       {
-      std::unique_ptr<DH_PrivateKey> dh(new DH_PrivateKey(rng, policy.dh_group()));
+      std::auto_ptr<DH_PrivateKey> dh(new DH_PrivateKey(rng, policy.dh_group()));
 
       append_tls_length_value(m_params, BigInt::encode(dh->get_domain().get_p()), 2);
       append_tls_length_value(m_params, BigInt::encode(dh->get_domain().get_g()), 2);
@@ -70,7 +71,7 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
 
       EC_Group ec_group(curve_name);
 
-      std::unique_ptr<ECDH_PrivateKey> ecdh(new ECDH_PrivateKey(rng, ec_group));
+      std::auto_ptr<ECDH_PrivateKey> ecdh(new ECDH_PrivateKey(rng, ec_group));
 
       const std::string ecdh_domain_oid = ecdh->domain().get_oid();
       const std::string domain = OIDS::lookup(OID(ecdh_domain_oid));
@@ -87,6 +88,35 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
       append_tls_length_value(m_params, ecdh->public_value(), 1);
 
       m_kex_key = ecdh.release();
+      }
+   else if(kex_algo == "SRP_SHA")
+      {
+      const std::string srp_identifier = state->client_hello->srp_identifier();
+
+      std::string group_id;
+      BigInt v;
+      MemoryVector<byte> salt;
+
+      const bool found = creds.srp_verifier("tls-server", hostname,
+                                            srp_identifier,
+                                            group_id, v, salt,
+                                            policy.hide_unknown_users());
+
+      if(!found)
+         throw TLS_Exception(Alert::UNKNOWN_PSK_IDENTITY,
+                             "Unknown SRP user " + srp_identifier);
+
+      m_srp_params = new SRP6_Server_Session;
+
+      BigInt B = m_srp_params->step1(v, group_id,
+                                     "SHA-1", rng);
+
+      DL_Group group(group_id);
+
+      append_tls_length_value(m_params, BigInt::encode(group.get_p()), 2);
+      append_tls_length_value(m_params, BigInt::encode(group.get_g()), 2);
+      append_tls_length_value(m_params, salt, 1);
+      append_tls_length_value(m_params, BigInt::encode(B), 2);
       }
    else if(kex_algo != "PSK")
       throw Internal_Error("Server_Key_Exchange: Unknown kex type " + kex_algo);
@@ -116,7 +146,7 @@ Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
                                          const std::string& kex_algo,
                                          const std::string& sig_algo,
                                          Protocol_Version version) :
-   m_kex_key(0)
+   m_kex_key(0), m_srp_params(0)
    {
    if(buf.size() < 6)
       throw Decoding_Error("Server_Key_Exchange: Packet corrupted");
@@ -160,12 +190,26 @@ Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
 
       if(name == "")
          throw Decoding_Error("Server_Key_Exchange: Server sent unknown named curve " +
-                              std::to_string(curve_id));
+                              to_string(curve_id));
 
       m_params.push_back(curve_type);
       m_params.push_back(get_byte(0, curve_id));
       m_params.push_back(get_byte(1, curve_id));
       append_tls_length_value(m_params, ecdh_key, 1);
+      }
+   else if(kex_algo == "SRP_SHA")
+      {
+      // 2 bigints (N,g) then salt, then server B
+
+      const BigInt N = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
+      const BigInt g = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
+      MemoryVector<byte> salt = reader.get_range<byte>(1, 1, 255);
+      const BigInt B = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
+
+      append_tls_length_value(m_params, BigInt::encode(N), 2);
+      append_tls_length_value(m_params, BigInt::encode(g), 2);
+      append_tls_length_value(m_params, salt, 1);
+      append_tls_length_value(m_params, BigInt::encode(B), 2);
       }
    else if(kex_algo != "PSK")
       throw Decoding_Error("Server_Key_Exchange: Unsupported kex type " + kex_algo);
@@ -180,6 +224,12 @@ Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
 
       m_signature = reader.get_range<byte>(2, 0, 65535);
       }
+   }
+
+Server_Key_Exchange::~Server_Key_Exchange()
+   {
+   delete m_kex_key;
+   delete m_srp_params;
    }
 
 
@@ -211,7 +261,7 @@ MemoryVector<byte> Server_Key_Exchange::serialize() const
 bool Server_Key_Exchange::verify(const X509_Certificate& cert,
                                  Handshake_State* state) const
    {
-   std::unique_ptr<Public_Key> key(cert.subject_public_key());
+   std::auto_ptr<Public_Key> key(cert.subject_public_key());
 
    std::pair<std::string, Signature_Format> format =
       state->understand_sig_format(key.get(), m_hash_algo, m_sig_algo, false);
@@ -230,6 +280,15 @@ const Private_Key& Server_Key_Exchange::server_kex_key() const
    BOTAN_ASSERT(m_kex_key, "Key is non-NULL");
    return *m_kex_key;
    }
+
+// Only valid for SRP negotiation
+SRP6_Server_Session& Server_Key_Exchange::server_srp_params()
+   {
+   BOTAN_ASSERT(m_srp_params, "SRP params are non-NULL");
+   return *m_srp_params;
+   }
+}
+
 }
 
 }

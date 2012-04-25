@@ -90,14 +90,22 @@ std::string Alert::type_string() const
 
       case UNSUPPORTED_EXTENSION:
          return "unsupported_extension";
+      case CERTIFICATE_UNOBTAINABLE:
+         return "certificate_unobtainable";
       case UNRECOGNIZED_NAME:
          return "unrecognized_name";
-
+      case BAD_CERTIFICATE_STATUS_RESPONSE:
+         return "bad_certificate_status_response";
+      case BAD_CERTIFICATE_HASH_VALUE:
+         return "bad_certificate_hash_value";
       case UNKNOWN_PSK_IDENTITY:
          return "unknown_psk_identity";
 
       case NULL_ALERT:
-         return "";
+         return "none";
+
+      case HEARTBEAT_PAYLOAD:
+         return "heartbeat_payload";
       }
 
    /*
@@ -106,7 +114,7 @@ std::string Alert::type_string() const
    * compiler can warn us that it is not included in the switch
    * statement.
    */
-   return "unrecognized_alert_" + std::to_string(type());
+   return "unrecognized_alert_" + to_string(type());
    }
 
 

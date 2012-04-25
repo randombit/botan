@@ -21,7 +21,8 @@ namespace {
 bool check_for_resume(Session& session_info,
                       Session_Manager& session_manager,
                       Credentials_Manager& credentials,
-                      Client_Hello* client_hello)
+                      Client_Hello* client_hello,
+                      u32bit session_ticket_lifetime)
    {
    const MemoryVector<byte>& client_session_id = client_hello->session_id();
    const MemoryVector<byte>& session_ticket = client_hello->session_ticket();
@@ -43,6 +44,10 @@ bool check_for_resume(Session& session_info,
          session_info = Session::decrypt(
             session_ticket,
             credentials.psk("tls-server", "session-ticket", ""));
+
+         if(session_ticket_lifetime &&
+            session_info.session_age() > session_ticket_lifetime)
+            return false; // ticket has expired
          }
       catch(...)
          {
@@ -81,6 +86,79 @@ bool check_for_resume(Session& session_info,
    return true;
    }
 
+/*
+* Choose which ciphersuite to use
+*/
+u16bit choose_ciphersuite(
+   const Policy& policy,
+   Credentials_Manager& creds,
+   const std::map<std::string, std::vector<X509_Certificate> >& cert_chains,
+   const Client_Hello* client_hello)
+   {
+   const bool have_srp = creds.attempt_srp("tls-server",
+                                           client_hello->sni_hostname());
+
+   const std::vector<u16bit> client_suites = client_hello->ciphersuites();
+   const std::vector<u16bit> server_suites = ciphersuite_list(policy, have_srp);
+
+   if(server_suites.empty())
+      throw Internal_Error("Policy forbids us from negotiating any ciphersuite");
+
+   const bool have_shared_ecc_curve =
+      (policy.choose_curve(client_hello->supported_ecc_curves()) != "");
+
+   // Ordering by our preferences rather than by clients
+   for(size_t i = 0; i != server_suites.size(); ++i)
+      {
+      const u16bit suite_id = server_suites[i];
+
+      if(!value_exists(client_suites, suite_id))
+         continue;
+
+      Ciphersuite suite = Ciphersuite::by_id(suite_id);
+
+      if(!have_shared_ecc_curve && suite.ecc_ciphersuite())
+         continue;
+
+      if(cert_chains.count(suite.sig_algo()) == 0)
+         continue;
+
+      /*
+      The client may offer SRP cipher suites in the hello message but
+      omit the SRP extension.  If the server would like to select an
+      SRP cipher suite in this case, the server SHOULD return a fatal
+      "unknown_psk_identity" alert immediately after processing the
+      client hello message.
+       - RFC 5054 section 2.5.1.2
+      */
+      if(suite.kex_algo() == "SRP_SHA" && client_hello->srp_identifier() == "")
+         throw TLS_Exception(Alert::UNKNOWN_PSK_IDENTITY,
+                             "Client wanted SRP but did not send username");
+
+      return suite_id;
+      }
+
+   throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                       "Can't agree on a ciphersuite with client");
+   }
+
+
+/*
+* Choose which compression algorithm to use
+*/
+byte choose_compression(const Policy& policy,
+                        const std::vector<byte>& c_comp)
+   {
+   std::vector<byte> s_comp = policy.compression();
+
+   for(size_t i = 0; i != s_comp.size(); ++i)
+      for(size_t j = 0; j != c_comp.size(); ++j)
+         if(s_comp[i] == c_comp[j])
+            return s_comp[i];
+
+   return NO_COMPRESSION;
+   }
+
 std::map<std::string, std::vector<X509_Certificate> >
 get_server_certs(const std::string& hostname,
                  Credentials_Manager& creds)
@@ -106,9 +184,9 @@ get_server_certs(const std::string& hostname,
 /*
 * TLS Server Constructor
 */
-Server::Server(std::function<void (const byte[], size_t)> output_fn,
-               std::function<void (const byte[], size_t, Alert)> proc_fn,
-               std::function<bool (const Session&)> handshake_fn,
+Server::Server(std::tr1::function<void (const byte[], size_t)> output_fn,
+               std::tr1::function<void (const byte[], size_t, Alert)> proc_fn,
+               std::tr1::function<bool (const Session&)> handshake_fn,
                Session_Manager& session_manager,
                Credentials_Manager& creds,
                const Policy& policy,
@@ -126,12 +204,14 @@ Server::Server(std::function<void (const byte[], size_t)> output_fn,
 /*
 * Send a hello request to the client
 */
-void Server::renegotiate()
+void Server::renegotiate(bool force_full_renegotiation)
    {
    if(state)
       return; // currently in handshake
 
    state = new Handshake_State(new Stream_Handshake_Reader);
+
+   state->allow_session_resumption = !force_full_renegotiation;
    state->set_expected_next(CLIENT_HELLO);
    Hello_Request hello_req(writer);
    }
@@ -193,7 +273,8 @@ void Server::process_handshake_msg(Handshake_Type type,
       {
       state->client_hello = new Client_Hello(contents, type);
 
-      m_hostname = state->client_hello->sni_hostname();
+      if(state->client_hello->sni_hostname() != "")
+         m_hostname = state->client_hello->sni_hostname();
 
       Protocol_Version client_version = state->client_hello->version();
 
@@ -208,14 +289,20 @@ void Server::process_handshake_msg(Handshake_Type type,
 
       secure_renegotiation.update(state->client_hello);
 
+      m_peer_supports_heartbeats = state->client_hello->supports_heartbeats();
+      m_heartbeat_sending_allowed = state->client_hello->peer_can_send_heartbeats();
+
       writer.set_version(state->version());
       reader.set_version(state->version());
 
       Session session_info;
-      const bool resuming = check_for_resume(session_info,
-                                             session_manager,
-                                             creds,
-                                             state->client_hello);
+      const bool resuming =
+         state->allow_session_resumption &&
+         check_for_resume(session_info,
+                          session_manager,
+                          creds,
+                          state->client_hello,
+                          policy.session_ticket_lifetime());
 
       bool have_session_ticket_key = false;
 
@@ -240,10 +327,15 @@ void Server::process_handshake_msg(Handshake_Type type,
             session_info.fragment_size(),
             secure_renegotiation.supported(),
             secure_renegotiation.for_server_hello(),
-            state->client_hello->supports_session_ticket() && have_session_ticket_key,
+            (state->client_hello->supports_session_ticket() &&
+             state->client_hello->session_ticket().empty() &&
+             have_session_ticket_key),
             state->client_hello->next_protocol_notification(),
             m_possible_protocols,
+            state->client_hello->supports_heartbeats(),
             rng);
+
+         secure_renegotiation.update(state->server_hello);
 
          if(session_info.fragment_size())
             {
@@ -257,13 +349,12 @@ void Server::process_handshake_msg(Handshake_Type type,
 
          if(!handshake_fn(session_info))
             {
-            if(state->server_hello->supports_session_ticket())
+            session_manager.remove_entry(session_info.session_id());
+
+            if(state->server_hello->supports_session_ticket()) // send an empty ticket
                state->new_session_ticket = new New_Session_Ticket(writer, state->hash);
-            else
-               session_manager.remove_entry(session_info.session_id());
             }
 
-         // FIXME: should only send a new ticket if we need too (eg old session)
          if(state->server_hello->supports_session_ticket() && !state->new_session_ticket)
             {
             try
@@ -272,7 +363,8 @@ void Server::process_handshake_msg(Handshake_Type type,
 
                state->new_session_ticket =
                   new New_Session_Ticket(writer, state->hash,
-                                         session_info.encrypt(ticket_key, rng));
+                                         session_info.encrypt(ticket_key, rng),
+                                         policy.session_ticket_lifetime());
                }
             catch(...) {}
 
@@ -301,28 +393,23 @@ void Server::process_handshake_msg(Handshake_Type type,
             cert_chains = get_server_certs("", creds);
             }
 
-         std::vector<std::string> available_cert_types;
-
-         for(std::map<std::string, std::vector<X509_Certificate> >::const_iterator i = cert_chains.begin();
-             i != cert_chains.end(); ++i)
-            {
-            if(!i->second.empty())
-               available_cert_types.push_back(i->first);
-            }
-
          state->server_hello = new Server_Hello(
             writer,
             state->hash,
+            rng.random_vec(32), // new session ID
             state->version(),
-            *(state->client_hello),
-            available_cert_types,
-            policy,
-            have_session_ticket_key,
+            choose_ciphersuite(policy, creds, cert_chains, state->client_hello),
+            choose_compression(policy, state->client_hello->compression_methods()),
+            state->client_hello->fragment_size(),
             secure_renegotiation.supported(),
             secure_renegotiation.for_server_hello(),
+            state->client_hello->supports_session_ticket() && have_session_ticket_key,
             state->client_hello->next_protocol_notification(),
             m_possible_protocols,
+            state->client_hello->supports_heartbeats(),
             rng);
+
+         secure_renegotiation.update(state->server_hello);
 
          if(state->client_hello->fragment_size())
             {
@@ -381,8 +468,6 @@ void Server::process_handshake_msg(Handshake_Type type,
             state->set_expected_next(CERTIFICATE);
             }
 
-         secure_renegotiation.update(state->server_hello);
-
          /*
          * If the client doesn't have a cert they want to use they are
          * allowed to send either an empty cert message or proceed
@@ -396,11 +481,6 @@ void Server::process_handshake_msg(Handshake_Type type,
    else if(type == CERTIFICATE)
       {
       state->client_certs = new Certificate(contents);
-
-      // Is this allowed by the protocol?
-      if(state->client_certs->count() > 1)
-         throw TLS_Exception(Alert::CERTIFICATE_UNKNOWN,
-                             "Client sent more than one certificate");
 
       state->set_expected_next(CLIENT_KEX);
       }
@@ -419,11 +499,10 @@ void Server::process_handshake_msg(Handshake_Type type,
       {
       state->client_verify = new Certificate_Verify(contents, state->version());
 
-      const std::vector<X509_Certificate>& client_certs =
-         state->client_certs->cert_chain();
+      peer_certs = state->client_certs->cert_chain();
 
       const bool sig_valid =
-         state->client_verify->verify(client_certs[0], state);
+         state->client_verify->verify(peer_certs[0], state);
 
       state->hash.update(type, contents);
 
@@ -437,7 +516,7 @@ void Server::process_handshake_msg(Handshake_Type type,
 
       try
          {
-         creds.verify_certificate_chain("tls-server", "", client_certs);
+         creds.verify_certificate_chain("tls-server", "", peer_certs);
          }
       catch(std::exception& e)
          {
@@ -492,7 +571,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             peer_certs,
             MemoryVector<byte>(),
             m_hostname,
-            ""
+            state->srp_identifier()
             );
 
          if(handshake_fn(session_info))
@@ -505,7 +584,8 @@ void Server::process_handshake_msg(Handshake_Type type,
 
                   state->new_session_ticket =
                      new New_Session_Ticket(writer, state->hash,
-                                            session_info.encrypt(ticket_key, rng));
+                                            session_info.encrypt(ticket_key, rng),
+                                            policy.session_ticket_lifetime());
                   }
                catch(...) {}
                }
@@ -522,9 +602,6 @@ void Server::process_handshake_msg(Handshake_Type type,
                          state->server_hello->compression_method());
 
          state->server_finished = new Finished(writer, state, SERVER);
-
-         if(state->client_certs && state->client_verify)
-            peer_certs = state->client_certs->cert_chain();
          }
 
       secure_renegotiation.update(state->client_finished,

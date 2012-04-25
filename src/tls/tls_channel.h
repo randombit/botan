@@ -54,17 +54,31 @@ class BOTAN_DLL Channel
 
       /**
       * Attempt to renegotiate the session
+      * @param force_full_renegotiation if true, require a full renegotiation,
+      *                                 otherwise allow session resumption
       */
-      virtual void renegotiate() = 0;
+      virtual void renegotiate(bool force_full_renegotiation) = 0;
+
+      /**
+      * Attempt to send a heartbeat message (if negotiated with counterparty)
+      * @param payload will be echoed back
+      * @param countents_size size of payload in bytes
+      */
+      void heartbeat(const byte payload[], size_t payload_size);
+
+      /**
+      * Attempt to send a heartbeat message (if negotiated with counterparty)
+      */
+      void heartbeat() { heartbeat(0, 0); }
 
       /**
       * @return certificate chain of the peer (may be empty)
       */
       std::vector<X509_Certificate> peer_cert_chain() const { return peer_certs; }
 
-      Channel(std::function<void (const byte[], size_t)> socket_output_fn,
-              std::function<void (const byte[], size_t, Alert)> proc_fn,
-              std::function<bool (const Session&)> handshake_complete);
+      Channel(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
+              std::tr1::function<void (const byte[], size_t, Alert)> proc_fn,
+              std::tr1::function<bool (const Session&)> handshake_complete);
 
       virtual ~Channel();
    protected:
@@ -85,8 +99,8 @@ class BOTAN_DLL Channel
 
       virtual void alert_notify(const Alert& alert) = 0;
 
-      std::function<void (const byte[], size_t, Alert)> proc_fn;
-      std::function<bool (const Session&)> handshake_fn;
+      std::tr1::function<void (const byte[], size_t, Alert)> proc_fn;
+      std::tr1::function<bool (const Session&)> handshake_fn;
 
       Record_Writer writer;
       Record_Reader reader;
@@ -130,6 +144,8 @@ class BOTAN_DLL Channel
 
       bool handshake_completed;
       bool connection_closed;
+      bool m_peer_supports_heartbeats;
+      bool m_heartbeat_sending_allowed;
    };
 
 }

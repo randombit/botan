@@ -24,7 +24,7 @@
 
 using namespace Botan;
 
-using namespace std::placeholders;
+using namespace std::tr1::placeholders;
 
 int connect_to_host(const std::string& host, u16bit port)
    {
@@ -125,7 +125,7 @@ void doit(RandomNumberGenerator& rng,
    {
    int sockfd = connect_to_host(host, port);
 
-   TLS::Client client(std::bind(socket_write, sockfd, _1, _2),
+   TLS::Client client(std::tr1::bind(socket_write, sockfd, _1, _2),
                      process_data,
                      handshake_complete,
                      session_manager,
@@ -188,7 +188,16 @@ void doit(RandomNumberGenerator& rng,
             continue;
             }
 
-         client.send(buf, got);
+         if(got == 2 && (buf[0] == 'R' || buf[0] == 'r') && buf[1] == '\n')
+            {
+            std::cout << "Client initiated renegotiation\n";
+            client.renegotiate((buf[0] == 'R'));
+           }
+
+         if(buf[0] == 'H')
+            client.heartbeat(&buf[1], got-1);
+         else
+            client.send(buf, got);
          }
       }
 

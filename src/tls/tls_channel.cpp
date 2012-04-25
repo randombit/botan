@@ -8,6 +8,7 @@
 #include <botan/tls_channel.h>
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_messages.h>
+#include <botan/internal/tls_heartbeats.h>
 #include <botan/internal/assert.h>
 #include <botan/loadstor.h>
 
@@ -15,15 +16,17 @@ namespace Botan {
 
 namespace TLS {
 
-Channel::Channel(std::function<void (const byte[], size_t)> socket_output_fn,
-                 std::function<void (const byte[], size_t, Alert)> proc_fn,
-                 std::function<bool (const Session&)> handshake_complete) :
+Channel::Channel(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
+                 std::tr1::function<void (const byte[], size_t, Alert)> proc_fn,
+                 std::tr1::function<bool (const Session&)> handshake_complete) :
    proc_fn(proc_fn),
    handshake_fn(handshake_complete),
    writer(socket_output_fn),
    state(0),
    handshake_completed(false),
-   connection_closed(false)
+   connection_closed(false),
+   m_peer_supports_heartbeats(false),
+   m_heartbeat_sending_allowed(false)
    {
    }
 
@@ -56,7 +59,30 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
          if(buf_size == 0 && needed != 0)
             return needed; // need more data to complete record
 
-         if(rec_type == APPLICATION_DATA)
+         if(rec_type == HANDSHAKE || rec_type == CHANGE_CIPHER_SPEC)
+            {
+            read_handshake(rec_type, record);
+            }
+         else if(rec_type == HEARTBEAT && m_peer_supports_heartbeats)
+            {
+            Heartbeat_Message heartbeat(record);
+
+            const MemoryRegion<byte>& payload = heartbeat.payload();
+
+            if(heartbeat.is_request() && !state)
+               {
+               Heartbeat_Message response(Heartbeat_Message::RESPONSE,
+                                          payload, payload.size());
+
+               writer.send(HEARTBEAT, response.contents());
+               }
+            else
+               {
+               // pass up to the application
+               proc_fn(&payload[0], payload.size(), Alert(Alert::HEARTBEAT_PAYLOAD));
+               }
+            }
+         else if(rec_type == APPLICATION_DATA)
             {
             if(handshake_completed)
                {
@@ -72,10 +98,6 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
                {
                throw Unexpected_Message("Application data before handshake done");
                }
-            }
-         else if(rec_type == HANDSHAKE || rec_type == CHANGE_CIPHER_SPEC)
-            {
-            read_handshake(rec_type, record);
             }
          else if(rec_type == ALERT)
             {
@@ -106,7 +128,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
             }
          else
             throw Unexpected_Message("Unknown TLS message type " +
-                                     std::to_string(rec_type) + " received");
+                                     to_string(rec_type) + " received");
          }
 
       return 0; // on a record boundary
@@ -175,6 +197,20 @@ void Channel::read_handshake(byte rec_type,
 
       if(type == HANDSHAKE_CCS || !state || !state->handshake_reader()->have_full_record())
          break;
+      }
+   }
+
+void Channel::heartbeat(const byte payload[], size_t payload_size)
+   {
+   if(!is_active())
+      throw std::runtime_error("Heartbeat cannot be sent on inactive TLS connection");
+
+   if(m_heartbeat_sending_allowed)
+      {
+      Heartbeat_Message heartbeat(Heartbeat_Message::REQUEST,
+                                  payload, payload_size);
+
+      writer.send(HEARTBEAT, heartbeat.contents());
       }
    }
 
@@ -283,6 +319,8 @@ void Channel::Secure_Renegotiation_State::update(Finished* client_finished,
    client_verify = client_finished->verify_data();
    server_verify = server_finished->verify_data();
    }
+
+}
 
 }
 

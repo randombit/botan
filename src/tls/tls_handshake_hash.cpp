@@ -35,7 +35,7 @@ SecureVector<byte> Handshake_Hash::final(Protocol_Version version,
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
 
-   std::unique_ptr<HashFunction> hash;
+   std::auto_ptr<HashFunction> hash;
 
    if(version == Protocol_Version::TLS_V10 || version == Protocol_Version::TLS_V11)
       {
@@ -43,7 +43,7 @@ SecureVector<byte> Handshake_Hash::final(Protocol_Version version,
       }
    else if(version == Protocol_Version::TLS_V12)
       {
-      if(mac_algo == "SHA-1" || mac_algo == "SHA-256")
+      if(mac_algo == "MD5" || mac_algo == "SHA-1" || mac_algo == "SHA-256")
          hash.reset(af.make_hash_function("SHA-256"));
       else
          hash.reset(af.make_hash_function(mac_algo));
@@ -65,8 +65,8 @@ SecureVector<byte> Handshake_Hash::final_ssl3(const MemoryRegion<byte>& secret)
 
    Algorithm_Factory& af = global_state().algorithm_factory();
 
-   std::unique_ptr<HashFunction> md5(af.make_hash_function("MD5"));
-   std::unique_ptr<HashFunction> sha1(af.make_hash_function("SHA-1"));
+   std::auto_ptr<HashFunction> md5(af.make_hash_function("MD5"));
+   std::auto_ptr<HashFunction> sha1(af.make_hash_function("SHA-1"));
 
    md5->update(data);
    sha1->update(data);

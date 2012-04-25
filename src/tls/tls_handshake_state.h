@@ -15,7 +15,20 @@
 #include <botan/pubkey.h>
 
 #include <utility>
-#include <functional>
+
+#if defined(BOTAN_USE_STD_TR1)
+
+#if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+    #include <functional>
+#else
+    #include <tr1/functional>
+#endif
+
+#elif defined(BOTAN_USE_BOOST_TR1)
+  #include <boost/tr1/functional.hpp>
+#else
+  #error "No TR1 library defined for use"
+#endif
 
 namespace Botan {
 
@@ -50,6 +63,8 @@ class Handshake_State
                            std::string& hash_algo,
                            std::string& sig_algo,
                            bool for_client_auth);
+
+      std::string srp_identifier() const;
 
       KDF* protocol_specific_prf();
 
@@ -86,10 +101,15 @@ class Handshake_State
       */
       SecureVector<byte> resume_master_secret;
 
+      /*
+      *
+      */
+      bool allow_session_resumption;
+
       /**
       * Used by client using NPN
       */
-      std::function<std::string (std::vector<std::string>)> client_npn_cb;
+      std::tr1::function<std::string (std::vector<std::string>)> client_npn_cb;
 
       Handshake_Reader* handshake_reader() { return m_handshake_reader; }
    private:

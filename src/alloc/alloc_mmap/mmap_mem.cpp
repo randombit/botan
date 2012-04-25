@@ -128,15 +128,17 @@ void MemoryMapping_Allocator::dealloc_block(void* ptr, size_t n)
 
    const byte PATTERNS[] = { 0x00, 0xF5, 0x5A, 0xAF, 0x00 };
 
+   // The char* casts are for Solaris, args are void* on most other systems
+
    for(size_t i = 0; i != sizeof(PATTERNS); ++i)
       {
       std::memset(ptr, PATTERNS[i], n);
 
-      if(::msync((char*)ptr, n, MS_SYNC))
+      if(::msync(static_cast<char*>(ptr), n, MS_SYNC))
          throw MemoryMapping_Failed("Sync operation failed");
       }
 
-   if(::munmap((char*)ptr, n))
+   if(::munmap(static_cast<char*>(ptr), n))
       throw MemoryMapping_Failed("Could not unmap file");
    }
 

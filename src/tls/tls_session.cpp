@@ -10,6 +10,7 @@
 #include <botan/ber_dec.h>
 #include <botan/asn1_str.h>
 #include <botan/pem.h>
+#include <botan/time.h>
 #include <botan/lookup.h>
 #include <botan/loadstor.h>
 #include <memory>
@@ -30,7 +31,7 @@ Session::Session(const MemoryRegion<byte>& session_identifier,
                  const MemoryRegion<byte>& ticket,
                  const std::string& sni_hostname,
                  const std::string& srp_identifier) :
-   m_start_time(std::chrono::system_clock::now()),
+   m_start_time(system_time()),
    m_identifier(session_identifier),
    m_session_ticket(ticket),
    m_master_secret(master_secret),
@@ -63,13 +64,11 @@ Session::Session(const byte ber[], size_t ber_len)
 
    MemoryVector<byte> peer_cert_bits;
 
-   size_t start_time = 0;
-
    BER_Decoder(ber, ber_len)
       .start_cons(SEQUENCE)
         .decode_and_check(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION),
                           "Unknown version in session structure")
-        .decode_integer_type(start_time)
+        .decode_integer_type(m_start_time)
         .decode_integer_type(major_version)
         .decode_integer_type(minor_version)
         .decode(m_identifier, OCTET_STRING)
@@ -87,7 +86,6 @@ Session::Session(const byte ber[], size_t ber_len)
       .verify_end();
 
    m_version = Protocol_Version(major_version, minor_version);
-   m_start_time = std::chrono::system_clock::from_time_t(start_time);
    m_sni_hostname = sni_hostname_str.value();
    m_srp_identifier = srp_identifier_str.value();
    m_connection_side = static_cast<Connection_Side>(side_code);
@@ -110,7 +108,7 @@ SecureVector<byte> Session::DER_encode() const
    return DER_Encoder()
       .start_cons(SEQUENCE)
          .encode(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION))
-         .encode(static_cast<size_t>(std::chrono::system_clock::to_time_t(m_start_time)))
+         .encode(static_cast<size_t>(m_start_time))
          .encode(static_cast<size_t>(m_version.major_version()))
          .encode(static_cast<size_t>(m_version.minor_version()))
          .encode(m_identifier, OCTET_STRING)
@@ -133,6 +131,11 @@ std::string Session::PEM_encode() const
    return PEM_Code::encode(this->DER_encode(), "SSL SESSION");
    }
 
+u32bit Session::session_age() const
+   {
+   return (system_time() - m_start_time);
+   }
+
 namespace {
 
 const u32bit SESSION_CRYPTO_MAGIC = 0x571B0E4E;
@@ -152,7 +155,7 @@ MemoryVector<byte>
 Session::encrypt(const SymmetricKey& master_key,
                  RandomNumberGenerator& rng) const
    {
-   std::unique_ptr<KDF> kdf(get_kdf(SESSION_CRYPTO_KDF));
+   std::auto_ptr<KDF> kdf(get_kdf(SESSION_CRYPTO_KDF));
 
    SymmetricKey cipher_key =
       kdf->derive_key(CIPHER_KEY_LENGTH,
@@ -166,7 +169,7 @@ Session::encrypt(const SymmetricKey& master_key,
 
    InitializationVector cipher_iv(rng, 16);
 
-   std::unique_ptr<MessageAuthenticationCode> mac(get_mac(SESSION_CRYPTO_MAC));
+   std::auto_ptr<MessageAuthenticationCode> mac(get_mac(SESSION_CRYPTO_MAC));
    mac->set_key(mac_key);
 
    Pipe pipe(get_cipher(SESSION_CRYPTO_CIPHER, cipher_key, cipher_iv, ENCRYPTION));
@@ -200,14 +203,14 @@ Session Session::decrypt(const byte buf[], size_t buf_len,
       if(load_be<u32bit>(buf, 0) != SESSION_CRYPTO_MAGIC)
          throw Decoding_Error("Unknown header value in encrypted session");
 
-      std::unique_ptr<KDF> kdf(get_kdf(SESSION_CRYPTO_KDF));
+      std::auto_ptr<KDF> kdf(get_kdf(SESSION_CRYPTO_KDF));
 
       SymmetricKey mac_key =
          kdf->derive_key(MAC_KEY_LENGTH,
                          master_key.bits_of(),
                          "tls.session.mac-key");
 
-      std::unique_ptr<MessageAuthenticationCode> mac(get_mac(SESSION_CRYPTO_MAC));
+      std::auto_ptr<MessageAuthenticationCode> mac(get_mac(SESSION_CRYPTO_MAC));
       mac->set_key(mac_key);
 
       mac->update(&buf[0], buf_len - MAC_OUTPUT_LENGTH);

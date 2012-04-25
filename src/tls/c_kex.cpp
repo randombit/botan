@@ -15,6 +15,7 @@
 #include <botan/dh.h>
 #include <botan/ecdh.h>
 #include <botan/rsa.h>
+#include <botan/srp6.h>
 #include <botan/rng.h>
 #include <botan/loadstor.h>
 #include <memory>
@@ -50,6 +51,7 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
                                          Handshake_State* state,
                                          Credentials_Manager& creds,
                                          const std::vector<X509_Certificate>& peer_certs,
+                                         const std::string& hostname,
                                          RandomNumberGenerator& rng)
    {
    const std::string kex_algo = state->suite.kex_algo();
@@ -147,8 +149,7 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
          const std::string name = Supported_Elliptic_Curves::curve_id_to_name(curve_id);
 
          if(name == "")
-            throw Decoding_Error("Server sent unknown named curve " +
-                                 std::to_string(curve_id));
+            throw Decoding_Error("Server sent unknown named curve " + to_string(curve_id));
 
          EC_Group group(name);
 
@@ -172,6 +173,33 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 
          append_tls_length_value(key_material, priv_key.public_value(), 1);
          }
+      else if(kex_algo == "SRP_SHA")
+         {
+         const BigInt N = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
+         const BigInt g = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
+         MemoryVector<byte> salt = reader.get_range<byte>(1, 1, 255);
+         const BigInt B = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
+
+         const std::string srp_group = srp6_group_identifier(N, g);
+
+         const std::string srp_identifier =
+            creds.srp_identifier("tls-client", hostname);
+
+         const std::string srp_password =
+            creds.srp_password("tls-client", hostname, srp_identifier);
+
+         std::pair<BigInt, SymmetricKey> srp_vals =
+            srp6_client_agree(srp_identifier,
+                              srp_password,
+                              srp_group,
+                              "SHA-1",
+                              salt,
+                              B,
+                              rng);
+
+         append_tls_length_value(key_material, BigInt::encode(srp_vals.first), 2);
+         pre_master = srp_vals.second.bits_of();
+         }
       else
          {
          throw Internal_Error("Client_Key_Exchange: Unknown kex " +
@@ -188,7 +216,7 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
       if(peer_certs.empty())
          throw Internal_Error("No certificate and no server key exchange");
 
-      std::unique_ptr<Public_Key> pub_key(peer_certs[0].subject_public_key());
+      std::auto_ptr<Public_Key> pub_key(peer_certs[0].subject_public_key());
 
       if(const RSA_PublicKey* rsa_pub = dynamic_cast<const RSA_PublicKey*>(pub_key.get()))
          {
@@ -301,6 +329,12 @@ Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
          MemoryVector<byte> zeros(psk.length());
          append_tls_length_value(pre_master, zeros, 2);
          append_tls_length_value(pre_master, psk.bits_of(), 2);
+         }
+      else if(kex_algo == "SRP_SHA")
+         {
+         SRP6_Server_Session& srp = state->server_kex->server_srp_params();
+
+         pre_master = srp.step2(BigInt::decode(reader.get_range<byte>(2, 0, 65535))).bits_of();
          }
       else if(kex_algo == "DH" || kex_algo == "DHE_PSK" ||
               kex_algo == "ECDH" || kex_algo == "ECDHE_PSK")

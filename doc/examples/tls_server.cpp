@@ -19,22 +19,11 @@ using namespace std::placeholders;
 #include <iostream>
 #include <memory>
 
-bool handshake_complete(const TLS::Session& session)
-   {
-   printf("Handshake complete, protocol=%04X ciphersuite=%s compression=%d\n",
-          session.version(), session.ciphersuite().to_string().c_str(),
-          session.compression_method());
-
-   printf("Session id = %s\n", hex_encode(session.session_id()).c_str());
-   printf("Master secret = %s\n", hex_encode(session.master_secret()).c_str());
-   return true;
-   }
-
 class Blocking_TLS_Server
    {
    public:
-      Blocking_TLS_Server(std::function<void (const byte[], size_t)> output_fn,
-                          std::function<size_t (byte[], size_t)> input_fn,
+      Blocking_TLS_Server(std::tr1::function<void (const byte[], size_t)> output_fn,
+                          std::tr1::function<size_t (byte[], size_t)> input_fn,
                           std::vector<std::string>& protocols,
                           TLS::Session_Manager& sessions,
                           Credentials_Manager& creds,
@@ -43,15 +32,38 @@ class Blocking_TLS_Server
          input_fn(input_fn),
          server(
             output_fn,
-            std::bind(&Blocking_TLS_Server::reader_fn, std::ref(*this), _1, _2, _3),
-            handshake_complete,
+            std::tr1::bind(&Blocking_TLS_Server::reader_fn, std::tr1::ref(*this), _1, _2, _3),
+            std::tr1::bind(&Blocking_TLS_Server::handshake_complete, std::tr1::ref(*this), _1),
             sessions,
             creds,
             policy,
-            rng),
+            rng,
+            protocols),
          exit(false)
          {
          read_loop();
+         }
+
+      bool handshake_complete(const TLS::Session& session)
+         {
+         std::cout << "Handshake complete: "
+                   << session.version().to_string() << " "
+                   << session.ciphersuite().to_string() << " "
+                   << "SessionID: " << hex_encode(session.session_id()) << "\n";
+
+         if(session.srp_identifier() != "")
+            std::cout << "SRP identifier: " << session.srp_identifier() << "\n";
+
+         if(server.next_protocol() != "")
+            std::cout << "Next protocol: " << server.next_protocol() << "\n";
+
+         /*
+         std::vector<X509_Certificate> peer_certs = session.peer_certs();
+         if(peer_certs.size())
+            std::cout << peer_certs[0].to_string();
+         */
+
+         return true;
          }
 
       size_t read(byte buf[], size_t buf_len)
@@ -60,7 +72,7 @@ class Blocking_TLS_Server
 
          while(!exit && !got)
             {
-            read_loop(5); // header size
+            read_loop(TLS::TLS_HEADER_SIZE);
             got = read_queue.read(buf, buf_len);
             }
 
@@ -119,7 +131,7 @@ class Blocking_TLS_Server
          read_queue.write(buf, buf_len);
          }
 
-      std::function<size_t (byte[], size_t)> input_fn;
+      std::tr1::function<size_t (byte[], size_t)> input_fn;
       TLS::Server server;
       SecureQueue read_queue;
       bool exit;
@@ -148,8 +160,14 @@ int main(int argc, char* argv[])
       Credentials_Manager_Simple creds(rng);
 
       std::vector<std::string> protocols;
-      protocols.push_back("spdy/2");
-      protocols.push_back("http/1.0");
+
+      /*
+      * These are the protocols we advertise to the client, but the
+      * client will send back whatever it actually plans on talking,
+      * which may or may not take into account what we advertise.
+      */
+      protocols.push_back("echo/1.0");
+      protocols.push_back("echo/1.1");
 
       while(true)
          {
@@ -161,8 +179,8 @@ int main(int argc, char* argv[])
             printf("Got new connection\n");
 
             Blocking_TLS_Server tls(
-               std::bind(&Socket::write, std::ref(sock), _1, _2),
-               std::bind(&Socket::read, std::ref(sock), _1, _2, true),
+               std::tr1::bind(&Socket::write, std::tr1::ref(sock), _1, _2),
+               std::tr1::bind(&Socket::read, std::tr1::ref(sock), _1, _2, true),
                protocols,
                sessions,
                creds,
@@ -196,7 +214,9 @@ int main(int argc, char* argv[])
                      }
 
                   if(line == "reneg\n")
-                     tls.underlying().renegotiate();
+                     tls.underlying().renegotiate(false);
+                  else if(line == "RENEG\n")
+                     tls.underlying().renegotiate(true);
 
                   line.clear();
                   }

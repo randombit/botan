@@ -18,20 +18,21 @@ namespace TLS {
 /*
 * TLS Client Constructor
 */
-Client::Client(std::function<void (const byte[], size_t)> output_fn,
-               std::function<void (const byte[], size_t, Alert)> proc_fn,
-               std::function<bool (const Session&)> handshake_fn,
+Client::Client(std::tr1::function<void (const byte[], size_t)> output_fn,
+               std::tr1::function<void (const byte[], size_t, Alert)> proc_fn,
+               std::tr1::function<bool (const Session&)> handshake_fn,
                Session_Manager& session_manager,
                Credentials_Manager& creds,
                const Policy& policy,
                RandomNumberGenerator& rng,
                const std::string& hostname,
-               std::function<std::string (std::vector<std::string>)> next_protocol) :
+               std::tr1::function<std::string (std::vector<std::string>)> next_protocol) :
    Channel(output_fn, proc_fn, handshake_fn),
    policy(policy),
    rng(rng),
    session_manager(session_manager),
-   creds(creds)
+   creds(creds),
+   m_hostname(hostname)
    {
    writer.set_version(Protocol_Version::SSL_V3);
 
@@ -56,6 +57,7 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
                state->hash,
                policy,
                rng,
+               secure_renegotiation.for_client_hello(),
                session_info,
                send_npn_request);
 
@@ -83,16 +85,42 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
 /*
 * Send a new client hello to renegotiate
 */
-void Client::renegotiate()
+void Client::renegotiate(bool force_full_renegotiation)
    {
-   if(state)
-      return; // currently in handshake
+   if(state && state->client_hello)
+      return; // currently in active handshake
 
+   delete state;
    state = new Handshake_State(new Stream_Handshake_Reader);
+
    state->set_expected_next(SERVER_HELLO);
 
-   state->client_hello = new Client_Hello(writer, state->hash, policy, rng,
-                                          secure_renegotiation.for_client_hello());
+   if(!force_full_renegotiation)
+      {
+      Session session_info;
+      if(session_manager.load_from_host_info(m_hostname, 0, session_info))
+         {
+         state->client_hello = new Client_Hello(
+            writer,
+            state->hash,
+            policy,
+            rng,
+            secure_renegotiation.for_client_hello(),
+            session_info);
+
+         state->resume_master_secret = session_info.master_secret();
+         }
+      }
+
+   if(!state->client_hello)
+      {
+      state->client_hello = new Client_Hello(
+         writer,
+         state->hash,
+         policy,
+         rng,
+         secure_renegotiation.for_client_hello());
+      }
 
    secure_renegotiation.update(state->client_hello);
    }
@@ -136,11 +164,7 @@ void Client::process_handshake_msg(Handshake_Type type,
          return;
          }
 
-      state->client_hello = new Client_Hello(writer, state->hash, policy, rng,
-                                             secure_renegotiation.for_client_hello());
-      secure_renegotiation.update(state->client_hello);
-
-      state->set_expected_next(SERVER_HELLO);
+      renegotiate(false);
 
       return;
       }
@@ -187,6 +211,9 @@ void Client::process_handshake_msg(Handshake_Type type,
       reader.set_version(state->version());
 
       secure_renegotiation.update(state->server_hello);
+
+      m_peer_supports_heartbeats = state->server_hello->supports_heartbeats();
+      m_heartbeat_sending_allowed = state->server_hello->peer_can_send_heartbeats();
 
       state->suite = Ciphersuite::by_id(state->server_hello->ciphersuite());
 
@@ -241,8 +268,8 @@ void Client::process_handshake_msg(Handshake_Type type,
                ever sent. The server may or may not send a server kex,
                depending on if it has an identity hint for us.
 
-               DHE_PSK always sends a server key exchange for the DH
-               exchange portion.
+               (EC)DHE_PSK always sends a server key exchange for the
+               DH exchange portion.
             */
 
             state->set_expected_next(SERVER_KEX);
@@ -280,15 +307,14 @@ void Client::process_handshake_msg(Handshake_Type type,
 
       try
          {
-         const std::string hostname = state->client_hello->sni_hostname();
-         creds.verify_certificate_chain("tls-client", hostname, peer_certs);
+         creds.verify_certificate_chain("tls-client", m_hostname, peer_certs);
          }
       catch(std::exception& e)
          {
          throw TLS_Exception(Alert::BAD_CERTIFICATE, e.what());
          }
 
-      std::unique_ptr<Public_Key> peer_key(peer_certs[0].subject_public_key());
+      std::auto_ptr<Public_Key> peer_key(peer_certs[0].subject_public_key());
 
       if(peer_key->algo_name() != state->suite.sig_algo())
          throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
@@ -330,7 +356,7 @@ void Client::process_handshake_msg(Handshake_Type type,
          std::vector<X509_Certificate> client_certs =
             creds.cert_chain(types,
                              "tls-client",
-                             state->client_hello->sni_hostname());
+                             m_hostname);
 
          state->client_certs = new Certificate(writer,
                                                state->hash,
@@ -342,6 +368,7 @@ void Client::process_handshake_msg(Handshake_Type type,
                                  state,
                                  creds,
                                  peer_certs,
+                                 m_hostname,
                                  rng);
 
       state->keys = Session_Keys(state,
@@ -354,7 +381,7 @@ void Client::process_handshake_msg(Handshake_Type type,
          Private_Key* private_key =
             creds.private_key_for(state->client_certs->cert_chain()[0],
                                   "tls-client",
-                                  state->client_hello->sni_hostname());
+                                  m_hostname);
 
          state->client_verify = new Certificate_Verify(writer,
                                                        state,
@@ -437,7 +464,7 @@ void Client::process_handshake_msg(Handshake_Type type,
          state->server_hello->fragment_size(),
          peer_certs,
          session_ticket,
-         state->client_hello->sni_hostname(),
+         m_hostname,
          ""
          );
 

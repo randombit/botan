@@ -26,9 +26,9 @@ class BOTAN_DLL Server : public Channel
       /**
       * Server initialization
       */
-      Server(std::function<void (const byte[], size_t)> socket_output_fn,
-             std::function<void (const byte[], size_t, Alert)> proc_fn,
-             std::function<bool (const Session&)> handshake_complete,
+      Server(std::tr1::function<void (const byte[], size_t)> socket_output_fn,
+             std::tr1::function<void (const byte[], size_t, Alert)> proc_fn,
+             std::tr1::function<bool (const Session&)> handshake_complete,
              Session_Manager& session_manager,
              Credentials_Manager& creds,
              const Policy& policy,
@@ -36,7 +36,7 @@ class BOTAN_DLL Server : public Channel
              const std::vector<std::string>& protocols =
                 std::vector<std::string>());
 
-      void renegotiate();
+      void renegotiate(bool force_full_renegotiation);
 
       /**
       * Return the server name indicator, if sent by the client

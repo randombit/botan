@@ -45,20 +45,27 @@ def get_vc_revision():
     try:
         mtn = subprocess.Popen(['mtn', 'automate', 'heads'],
                                stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE)
+                               stderr=subprocess.PIPE,
+                               universal_newlines=True)
 
         (stdout, stderr) = mtn.communicate()
 
-        if(stderr != ''):
-            logging.debug('Error getting rev from monotone - %s' % (stderr))
+        if mtn.returncode != 0:
+            logging.debug('Error getting rev from monotone - %d (%s)'
+                          % (mtn.returncode, stderr))
             return 'unknown'
 
-        logging.debug('Monotone reported revision ' + stdout.strip())
+        rev = str(stdout).strip()
+        logging.debug('Monotone reported revision %s' % (rev))
 
-        return 'mtn:' + stdout.strip()
+        return 'mtn:' + rev
     except OSError as e:
         logging.debug('Error getting rev from monotone - %s' % (e[1]))
         return 'unknown'
+    except Exception as e:
+        logging.debug('Error getting rev from monotone - %s' % (e))
+        return 'unknown'
+
 
 class BuildConfigurationInformation(object):
 
@@ -523,6 +530,7 @@ def force_to_dict(l):
 Represents the information about a particular module
 """
 class ModuleInfo(object):
+
     def __init__(self, infofile):
 
         lex_me_harder(infofile, self,
@@ -535,21 +543,22 @@ class ModuleInfo(object):
                         'need_isa': None,
                         'mp_bits': 0 })
 
-        if self.source == [] and \
-            self.header_internal == [] and \
-            self.header_public == []:
-
-            for (dirpath, dirnames, filenames) in os.walk(self.lives_in):
-                if dirpath == self.lives_in:
+        def extract_files_matching(basedir, suffixes):
+            for (dirpath, dirnames, filenames) in os.walk(basedir):
+                if dirpath == basedir:
                     for filename in filenames:
                         if filename.startswith('.'):
                             continue
 
-                        if filename.endswith('.cpp') or \
-                           filename.endswith('.S'):
-                            self.source.append(filename)
-                        elif filename.endswith('.h'):
-                            self.header_public.append(filename)
+                        for suffix in suffixes:
+                            if filename.endswith(suffix):
+                                yield filename
+
+        if self.source == []:
+            self.source = list(extract_files_matching(self.lives_in, ['.cpp', '.S']))
+
+        if self.header_internal == [] and self.header_public == []:
+            self.header_public = list(extract_files_matching(self.lives_in, ['.h']))
 
         # Coerce to more useful types
         def convert_lib_list(l):
@@ -1728,12 +1737,19 @@ def main(argv = None):
 
         def get_gcc_version(gcc_bin):
             try:
-                subproc_result = subprocess.Popen(
+                gcc_proc = subprocess.Popen(
                     gcc_bin.split(' ') + ['-dumpversion'],
                     stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE).communicate()
+                    stderr=subprocess.PIPE,
+                    universal_newlines=True)
 
-                gcc_version = ''.join(map(str, subproc_result)).strip()
+                (stdout, stderr) = gcc_proc.communicate()
+
+                if gcc_proc.returncode != 0:
+                    logging.warning("GCC returned non-zero result %s" % (stderr))
+                    return None
+
+                gcc_version = stdout.strip()
 
                 logging.info('Detected gcc version %s' % (gcc_version))
                 return gcc_version

@@ -21,6 +21,7 @@
 namespace Botan {
 
 class Credentials_Manager;
+class SRP6_Server_Session;
 
 namespace TLS {
 
@@ -72,15 +73,10 @@ class Client_Hello : public Handshake_Message
    {
    public:
       Handshake_Type type() const { return CLIENT_HELLO; }
-      Protocol_Version version() const { return m_version; }
-      const MemoryVector<byte>& session_id() const { return m_session_id; }
 
-      std::vector<byte> session_id_vector() const
-         {
-         std::vector<byte> v;
-         v.insert(v.begin(), &m_session_id[0], &m_session_id[m_session_id.size()]);
-         return v;
-         }
+      Protocol_Version version() const { return m_version; }
+
+      const MemoryVector<byte>& session_id() const { return m_session_id; }
 
       const std::vector<std::pair<std::string, std::string> >& supported_algos() const
          { return m_supported_algos; }
@@ -113,6 +109,10 @@ class Client_Hello : public Handshake_Message
       const MemoryRegion<byte>& session_ticket() const
          { return m_session_ticket; }
 
+      bool supports_heartbeats() const { return m_supports_heartbeats; }
+
+      bool peer_can_send_heartbeats() const { return m_peer_can_send_heartbeats; }
+
       Client_Hello(Record_Writer& writer,
                    Handshake_Hash& hash,
                    const Policy& policy,
@@ -126,6 +126,7 @@ class Client_Hello : public Handshake_Message
                    Handshake_Hash& hash,
                    const Policy& policy,
                    RandomNumberGenerator& rng,
+                   const MemoryRegion<byte>& reneg_info,
                    const Session& resumed_session,
                    bool next_protocol = false);
 
@@ -154,6 +155,9 @@ class Client_Hello : public Handshake_Message
 
       bool m_supports_session_ticket;
       MemoryVector<byte> m_session_ticket;
+
+      bool m_supports_heartbeats;
+      bool m_peer_can_send_heartbeats;
    };
 
 /**
@@ -163,17 +167,16 @@ class Server_Hello : public Handshake_Message
    {
    public:
       Handshake_Type type() const { return SERVER_HELLO; }
-      Protocol_Version version() { return s_version; }
-      const MemoryVector<byte>& session_id() const { return m_session_id; }
-      u16bit ciphersuite() const { return suite; }
-      byte compression_method() const { return comp_method; }
 
-      std::vector<byte> session_id_vector() const
-         {
-         std::vector<byte> v;
-         v.insert(v.begin(), &m_session_id[0], &m_session_id[m_session_id.size()]);
-         return v;
-         }
+      Protocol_Version version() { return m_version; }
+
+      const MemoryVector<byte>& random() const { return m_random; }
+
+      const MemoryVector<byte>& session_id() const { return m_session_id; }
+
+      u16bit ciphersuite() const { return m_ciphersuite; }
+
+      byte compression_method() const { return m_comp_method; }
 
       bool secure_renegotiation() const { return m_secure_renegotiation; }
 
@@ -189,20 +192,9 @@ class Server_Hello : public Handshake_Message
       const MemoryVector<byte>& renegotiation_info()
          { return m_renegotiation_info; }
 
-      const MemoryVector<byte>& random() const { return s_random; }
+      bool supports_heartbeats() const { return m_supports_heartbeats; }
 
-      Server_Hello(Record_Writer& writer,
-                   Handshake_Hash& hash,
-                   Protocol_Version version,
-                   const Client_Hello& other,
-                   const std::vector<std::string>& available_cert_types,
-                   const Policy& policies,
-                   bool have_session_ticket_key,
-                   bool client_has_secure_renegotiation,
-                   const MemoryRegion<byte>& reneg_info,
-                   bool client_has_npn,
-                   const std::vector<std::string>& next_protocols,
-                   RandomNumberGenerator& rng);
+      bool peer_can_send_heartbeats() const { return m_peer_can_send_heartbeats; }
 
       Server_Hello(Record_Writer& writer,
                    Handshake_Hash& hash,
@@ -213,19 +205,20 @@ class Server_Hello : public Handshake_Message
                    size_t max_fragment_size,
                    bool client_has_secure_renegotiation,
                    const MemoryRegion<byte>& reneg_info,
-                   bool client_supports_session_tickets,
+                   bool offer_session_ticket,
                    bool client_has_npn,
                    const std::vector<std::string>& next_protocols,
+                   bool client_has_heartbeat,
                    RandomNumberGenerator& rng);
 
       Server_Hello(const MemoryRegion<byte>& buf);
    private:
       MemoryVector<byte> serialize() const;
 
-      Protocol_Version s_version;
-      MemoryVector<byte> m_session_id, s_random;
-      u16bit suite;
-      byte comp_method;
+      Protocol_Version m_version;
+      MemoryVector<byte> m_session_id, m_random;
+      u16bit m_ciphersuite;
+      byte m_comp_method;
 
       size_t m_fragment_size;
       bool m_secure_renegotiation;
@@ -234,6 +227,9 @@ class Server_Hello : public Handshake_Message
       bool m_next_protocol;
       std::vector<std::string> m_next_protocols;
       bool m_supports_session_ticket;
+
+      bool m_supports_heartbeats;
+      bool m_peer_can_send_heartbeats;
    };
 
 /**
@@ -251,6 +247,7 @@ class Client_Key_Exchange : public Handshake_Message
                           Handshake_State* state,
                           Credentials_Manager& creds,
                           const std::vector<X509_Certificate>& peer_certs,
+                          const std::string& hostname,
                           RandomNumberGenerator& rng);
 
       Client_Key_Exchange(const MemoryRegion<byte>& buf,
@@ -408,6 +405,9 @@ class Server_Key_Exchange : public Handshake_Message
       // Only valid for certain kex types
       const Private_Key& server_kex_key() const;
 
+      // Only valid for SRP negotiation
+      SRP6_Server_Session& server_srp_params();
+
       Server_Key_Exchange(Record_Writer& writer,
                           Handshake_State* state,
                           const Policy& policy,
@@ -420,11 +420,12 @@ class Server_Key_Exchange : public Handshake_Message
                           const std::string& sig_alg,
                           Protocol_Version version);
 
-      ~Server_Key_Exchange() { delete m_kex_key; }
+      ~Server_Key_Exchange();
    private:
       MemoryVector<byte> serialize() const;
 
       Private_Key* m_kex_key;
+      SRP6_Server_Session* m_srp_params;
 
       MemoryVector<byte> m_params;
 
@@ -479,7 +480,7 @@ class New_Session_Ticket : public Handshake_Message
       New_Session_Ticket(Record_Writer& writer,
                          Handshake_Hash& hash,
                          const MemoryRegion<byte>& ticket,
-                         u32bit lifetime = 0);
+                         u32bit lifetime);
 
       New_Session_Ticket(Record_Writer& writer,
                          Handshake_Hash& hash);

@@ -1,5 +1,7 @@
 define TLS
 
+load_on auto
+
 <comment>
 The TLS code is complex, new, and not yet reviewed, there may be
 serious bugs or security issues.
@@ -8,6 +10,7 @@ serious bugs or security issues.
 <header:public>
 tls_alert.h
 tls_channel.h
+tls_ciphersuite.h
 tls_client.h
 tls_exceptn.h
 tls_magic.h
@@ -16,7 +19,6 @@ tls_record.h
 tls_server.h
 tls_session.h
 tls_session_manager.h
-tls_ciphersuite.h
 tls_version.h
 </header:public>
 
@@ -25,13 +27,13 @@ tls_extensions.h
 tls_handshake_hash.h
 tls_handshake_reader.h
 tls_handshake_state.h
+tls_heartbeats.h
 tls_messages.h
 tls_reader.h
 tls_session_key.h
 </header:internal>
 
 <source>
-tls_alert.cpp
 c_hello.cpp
 c_kex.cpp
 cert_req.cpp
@@ -44,18 +46,21 @@ rec_wri.cpp
 s_hello.cpp
 s_kex.cpp
 session_ticket.cpp
+tls_alert.cpp
 tls_channel.cpp
+tls_ciphersuite.cpp
 tls_client.cpp
 tls_extensions.cpp
 tls_handshake_hash.cpp
 tls_handshake_reader.cpp
 tls_handshake_state.cpp
+tls_heartbeats.cpp
 tls_policy.cpp
 tls_server.cpp
 tls_session.cpp
 tls_session_key.cpp
 tls_session_manager.cpp
-tls_ciphersuite.cpp
+tls_suite_info.cpp
 tls_version.cpp
 </source>
 
@@ -63,6 +68,8 @@ tls_version.cpp
 aes
 arc4
 asn1
+camellia
+cbc
 credentials
 des
 dh
@@ -80,6 +87,7 @@ prf_tls
 rng
 rsa
 seed
+srp6
 sha1
 sha2_32
 ssl3mac

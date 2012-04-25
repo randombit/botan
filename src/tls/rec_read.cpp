@@ -216,10 +216,11 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
    if(m_readbuf[0] != CHANGE_CIPHER_SPEC &&
       m_readbuf[0] != ALERT &&
       m_readbuf[0] != HANDSHAKE &&
-      m_readbuf[0] != APPLICATION_DATA)
+      m_readbuf[0] != APPLICATION_DATA &&
+      m_readbuf[0] != HEARTBEAT)
       {
       throw Unexpected_Message(
-         "Unknown record type " + std::to_string(m_readbuf[0]) + " from counterparty");
+         "Unknown record type " + to_string(m_readbuf[0]) + " from counterparty");
       }
 
    const size_t record_len = make_u16bit(m_readbuf[3], m_readbuf[4]);

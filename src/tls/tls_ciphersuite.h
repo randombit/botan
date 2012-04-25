@@ -21,6 +21,9 @@ namespace TLS {
 class BOTAN_DLL Ciphersuite
    {
    public:
+      /**
+      * Convert an SSL/TLS ciphersuite to algorithm fields
+      */
       static Ciphersuite by_id(u16bit suite);
 
       static Ciphersuite by_name(const std::string& name);
@@ -29,6 +32,9 @@ class BOTAN_DLL Ciphersuite
       * Formats the ciphersuite back to an RFC-style ciphersuite string
       */
       std::string to_string() const;
+
+      bool psk_ciphersuite() const;
+      bool ecc_ciphersuite() const;
 
       std::string kex_algo() const { return m_kex_algo; }
       std::string sig_algo() const { return m_sig_algo; }
@@ -46,7 +52,15 @@ class BOTAN_DLL Ciphersuite
                   const std::string& kex_algo,
                   const std::string& mac_algo,
                   const std::string& cipher_algo,
-                  size_t cipher_algo_keylen);
+                  size_t cipher_algo_keylen) :
+         m_sig_algo(sig_algo),
+         m_kex_algo(kex_algo),
+         m_mac_algo(mac_algo),
+         m_cipher_algo(cipher_algo),
+         m_cipher_keylen(cipher_algo_keylen)
+            {
+            }
+
    private:
       std::string m_sig_algo, m_kex_algo, m_mac_algo, m_cipher_algo;
       size_t m_cipher_keylen;

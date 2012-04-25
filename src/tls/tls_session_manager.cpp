@@ -20,7 +20,7 @@ bool Session_Manager_In_Memory::load_from_session_str(
 
    auto i = sessions.find(session_str);
 
-   if(i == sessions.end())
+   if(i == m_sessions.end())
       return false;
 
    // if session has expired, remove it
@@ -28,7 +28,7 @@ bool Session_Manager_In_Memory::load_from_session_str(
 
    if(i->second.start_time() + session_lifetime < now)
       {
-      sessions.erase(i);
+      m_sessions.erase(i);
       return false;
       }
 
@@ -75,8 +75,8 @@ void Session_Manager_In_Memory::remove_entry(
 
    auto i = sessions.find(hex_encode(session_id));
 
-   if(i != sessions.end())
-      sessions.erase(i);
+   if(i != m_sessions.end())
+      m_sessions.erase(i);
    }
 
 void Session_Manager_In_Memory::save(const Session& session)
@@ -89,8 +89,8 @@ void Session_Manager_In_Memory::save(const Session& session)
       This removes randomly based on ordering of session ids.
       Instead, remove oldest first?
       */
-      while(sessions.size() >= max_sessions)
-         sessions.erase(sessions.begin());
+      while(m_sessions.size() >= m_max_sessions)
+         m_sessions.erase(m_sessions.begin());
       }
 
    const std::string session_id_str = hex_encode(session.session_id());

@@ -42,6 +42,9 @@ Extension* make_extension(TLS_Data_Reader& reader,
       case TLSEXT_NEXT_PROTOCOL:
          return new Next_Protocol_Notification(reader, size);
 
+      case TLSEXT_HEARTBEAT_SUPPORT:
+         return new Heartbeat_Support_Indicator(reader, size);
+
       case TLSEXT_SESSION_TICKET:
          return new Session_Ticket(reader, size);
 
@@ -242,7 +245,7 @@ Maximum_Fragment_Length::Maximum_Fragment_Length(size_t max_fragment)
    else if(max_fragment == 4096)
       val = 4;
    else
-      throw std::invalid_argument("Bad setting " + std::to_string(max_fragment) +
+      throw std::invalid_argument("Bad setting " + to_string(max_fragment) +
                                   " for maximum fragment size");
    }
 
@@ -468,11 +471,16 @@ MemoryVector<byte> Signature_Algorithms::serialize() const
 
    for(size_t i = 0; i != m_supported_algos.size(); ++i)
       {
-      if(m_supported_algos[i].second == "")
-         continue;
+      try
+         {
+         const byte hash_code = hash_algo_code(m_supported_algos[i].first);
+         const byte sig_code = sig_algo_code(m_supported_algos[i].second);
 
-      buf.push_back(hash_algo_code(m_supported_algos[i].first));
-      buf.push_back(sig_algo_code(m_supported_algos[i].second));
+         buf.push_back(hash_code);
+         buf.push_back(sig_code);
+         }
+      catch(...)
+         {}
       }
 
    buf[0] = get_byte<u16bit>(0, buf.size()-2);

@@ -287,9 +287,22 @@ bool cert_subject_dns_match(const std::string& name,
    {
    for(size_t i = 0; i != cert_names.size(); ++i)
       {
-      // support basic wildcarding?
-      if(cert_names[i] == name)
+      const std::string cn = cert_names[i];
+
+      if(cn == name)
          return true;
+
+      /*
+      * Possible wildcard match. We only support the most basic form of
+      * cert wildcarding ala RFC 2595
+      */
+      if(cn.size() > 2 && cn[0] == '*' && cn[1] == '.' && name.size() > cn.size())
+         {
+         const std::string base = cn.substr(1, std::string::npos);
+
+         if(name.compare(name.size() - base.size(), base.size(), base) == 0)
+            return true;
+         }
       }
 
    return false;
@@ -299,6 +312,9 @@ bool cert_subject_dns_match(const std::string& name,
 
 bool X509_Certificate::matches_dns_name(const std::string& name) const
    {
+   if(name == "")
+      return false;
+
    if(cert_subject_dns_match(name, subject_info("DNS")))
       return true;
 

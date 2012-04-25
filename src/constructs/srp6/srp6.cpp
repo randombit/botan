@@ -1,6 +1,6 @@
 /*
-* SRP-6a
-* (C) 2011 Jack Lloyd
+* SRP-6a (RFC 5054 compatatible)
+* (C) 2011,2012 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -69,14 +69,37 @@ BigInt compute_x(const std::string& hash_id,
 
 }
 
+std::string srp6_group_identifier(const BigInt& N, const BigInt& g)
+   {
+   /*
+   This function assumes that only one 'standard' SRP parameter set has
+   been defined for a particular bitsize. As of this writing that is the case.
+   */
+   try
+      {
+      const std::string group_name = "modp/srp/" + to_string(N.bits());
+
+      DL_Group group(group_name);
+
+      if(group.get_p() == N && group.get_g() == g)
+         return group_name;
+
+      throw std::runtime_error("Unknown SRP params");
+      }
+   catch(...)
+      {
+      throw Invalid_Argument("Bad SRP group parameters");
+      }
+   }
+
 std::pair<BigInt, SymmetricKey>
-SRP6_Client_Session:: step1(const std::string& identifier,
-                            const std::string& password,
-                            const std::string& group_id,
-                            const std::string& hash_id,
-                            const MemoryRegion<byte>& salt,
-                            const BigInt& B,
-                            RandomNumberGenerator& rng)
+srp6_client_agree(const std::string& identifier,
+                  const std::string& password,
+                  const std::string& group_id,
+                  const std::string& hash_id,
+                  const MemoryRegion<byte>& salt,
+                  const BigInt& B,
+                  RandomNumberGenerator& rng)
    {
    DL_Group group(group_id);
    const BigInt& g = group.get_g();
@@ -89,7 +112,7 @@ SRP6_Client_Session:: step1(const std::string& identifier,
 
    BigInt k = hash_seq(hash_id, p_bytes, p, g);
 
-   BigInt a(rng, p.bits() - 1);
+   BigInt a(rng, 256);
 
    BigInt A = power_mod(g, a, p);
 
@@ -104,11 +127,11 @@ SRP6_Client_Session:: step1(const std::string& identifier,
    return std::make_pair(A, Sk);
    }
 
-BigInt SRP6_Client_Session::generate_verifier(const std::string& identifier,
-                                              const std::string& password,
-                                              const MemoryRegion<byte>& salt,
-                                              const std::string& group_id,
-                                              const std::string& hash_id)
+BigInt generate_srp6_verifier(const std::string& identifier,
+                              const std::string& password,
+                              const MemoryRegion<byte>& salt,
+                              const std::string& group_id,
+                              const std::string& hash_id)
    {
    const BigInt x = compute_x(hash_id, identifier, password, salt);
 
@@ -129,7 +152,7 @@ BigInt SRP6_Server_Session::step1(const BigInt& v,
 
    BigInt k = hash_seq(hash_id, p_bytes, p, g);
 
-   BigInt b(rng, p.bits() - 1);
+   BigInt b(rng, 256);
 
    B = (v*k + power_mod(g, b, p)) % p;
 

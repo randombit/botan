@@ -5,8 +5,8 @@
 * Released under the terms of the Botan license
 */
 
-#ifndef TLS_SESSION_MANAGER_H__
-#define TLS_SESSION_MANAGER_H__
+#ifndef BOTAN_TLS_SESSION_MANAGER_H__
+#define BOTAN_TLS_SESSION_MANAGER_H__
 
 #include <botan/tls_session.h>
 #include <mutex>
@@ -65,6 +65,13 @@ class BOTAN_DLL Session_Manager
       */
       virtual void save(const Session& session) = 0;
 
+      /**
+      * Return the allowed lifetime of a session; beyond this time,
+      * sessions are not resumed. Returns 0 if unknown/no explicit
+      * expiration policy.
+      */
+      virtual u32bit session_lifetime() const = 0;
+
       virtual ~Session_Manager() {}
    };
 
@@ -82,9 +89,9 @@ class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
       *        seconds have elapsed from initial handshake.
       */
       Session_Manager_In_Memory(size_t max_sessions = 1000,
-                                std::chrono::seconds session_lifetime = std::chrono::seconds(7200)) :
-         max_sessions(max_sessions),
-         session_lifetime(session_lifetime)
+                                u32bit session_lifetime = 7200) :
+         m_max_sessions(max_sessions),
+         m_session_lifetime(session_lifetime)
             {}
 
       bool load_from_session_id(const MemoryRegion<byte>& session_id,
@@ -97,17 +104,18 @@ class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
 
       void save(const Session& session_data);
 
+      u32bit session_lifetime() const { return m_session_lifetime; }
+
    private:
       bool load_from_session_str(const std::string& session_str,
                                  Session& session);
 
-      std::mutex mutex;
+      size_t m_max_sessions;
 
-      size_t max_sessions;
-      std::chrono::seconds session_lifetime;
+      u32bit m_session_lifetime;
 
-      std::map<std::string, Session> sessions; // hex(session_id) -> session
-      std::map<std::string, std::string> host_sessions;
+      std::map<std::string, Session> m_sessions; // hex(session_id) -> session
+      std::map<std::string, std::string> m_host_sessions;
    };
 
 }

@@ -153,18 +153,6 @@ void report_results(const std::string& algo,
 
    std::cout << algo;
 
-#if defined(__SUNPRO_CC)
-  #define REVERSE_ITERATOR_BUG 1
-#elif defined(__GNUC__) && __GNUC__ <= 3
-  #define REVERSE_ITERATOR_BUG 1
-#elif defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 0)
-  #define REVERSE_ITERATOR_BUG 1
-#endif
-
-#ifndef REVERSE_ITERATOR_BUG
-  #define REVERSE_ITERATOR_BUG 0
-#endif
-
 #if (defined(__GNUC__) && __GNUC__ <= 3) || defined(__SUNPRO_CC)
    // Work around GCC 3.x bug, reverse iterators don't work
    for(std::map<double, std::string>::const_iterator i = results.begin(); i != results.end(); ++i)

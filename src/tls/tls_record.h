@@ -22,6 +22,16 @@ namespace Botan {
 
 namespace TLS {
 
+#elif defined(BOTAN_USE_BOOST_TR1)
+  #include <boost/tr1/functional.hpp>
+#else
+  #error "No TR1 library defined for use"
+#endif
+
+namespace Botan {
+
+namespace TLS {
+
 class Session_Keys;
 
 /**
@@ -32,6 +42,9 @@ class BOTAN_DLL Record_Writer
    public:
       void send(byte type, const byte input[], size_t length);
       void send(byte type, byte val) { send(type, &val, 1); }
+
+      void send(byte type, const MemoryRegion<byte>& input)
+         { send(type, &input[0], input.size()); }
 
       MemoryVector<byte> send(class Handshake_Message& msg);
 
@@ -48,7 +61,7 @@ class BOTAN_DLL Record_Writer
 
       void set_maximum_fragment_size(size_t max_fragment);
 
-      Record_Writer(std::function<void (const byte[], size_t)> output_fn);
+      Record_Writer(std::tr1::function<void (const byte[], size_t)> output_fn);
 
       ~Record_Writer() { delete m_mac; }
    private:
@@ -57,7 +70,7 @@ class BOTAN_DLL Record_Writer
 
       void send_record(byte type, const byte input[], size_t length);
 
-      std::function<void (const byte[], size_t)> m_output_fn;
+      std::tr1::function<void (const byte[], size_t)> m_output_fn;
 
       MemoryVector<byte> m_writebuf;
 

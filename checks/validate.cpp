@@ -110,6 +110,7 @@ bool keywrap_test(const char* key_str,
 
    bool ok = true;
 
+#if defined(BOTAN_HAS_RFC3394_KEYWRAP)
    try
       {
       SymmetricKey key(key_str);
@@ -140,6 +141,7 @@ bool keywrap_test(const char* key_str,
       {
       std::cout << e.what() << "\n";
       }
+#endif
 
    return ok;
    }
@@ -339,7 +341,7 @@ u32bit do_validation_tests(const std::string& filename,
          if(should_pass)
             std::cout << "Testing " << algorithm << "..." << std::endl;
          else
-            std::cout << "Testing (expecing failure) "
+            std::cout << "Testing (expecting failure) "
                       << algorithm << "..." << std::endl;
 #endif
          alg_count = 0;

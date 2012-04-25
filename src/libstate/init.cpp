@@ -22,7 +22,7 @@ void LibraryInitializer::initialize(const std::string&)
       /*
       This two stage initialization process is because Library_State's
       constructor will implicitly refer to global state through the
-      allocators and so for, so global_state() has to be a valid
+      allocators and so forth, so global_state() has to be a valid
       reference before initialize() can be called. Yeah, gross.
       */
       Global_State_Management::set_global_state(new Library_State);

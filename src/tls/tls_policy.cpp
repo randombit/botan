@@ -11,8 +11,6 @@
 #include <botan/tls_exceptn.h>
 #include <botan/internal/stl_util.h>
 
-#include <assert.h>
-
 namespace Botan {
 
 namespace TLS {
@@ -25,8 +23,8 @@ std::vector<std::string> Policy::allowed_ciphers() const
    allowed.push_back("AES-128");
    allowed.push_back("3DES");
    allowed.push_back("ARC4");
-
-   // Note that Camellia, SEED and IDEA are not included by default
+   //allowed.push_back("Camellia");
+   //allowed.push_back("SEED");
 
    return allowed;
    }
@@ -40,7 +38,7 @@ std::vector<std::string> Policy::allowed_hashes() const
    allowed.push_back("SHA-256");
    allowed.push_back("SHA-224");
    allowed.push_back("SHA-1");
-   // Note that MD5 is not included by default
+   //allowed.push_back("MD5");
 
    return allowed;
    }
@@ -49,13 +47,14 @@ std::vector<std::string> Policy::allowed_key_exchange_methods() const
    {
    std::vector<std::string> allowed;
 
-   //allowed.push_back("SRP");
+   allowed.push_back("SRP_SHA");
    //allowed.push_back("ECDHE_PSK");
    //allowed.push_back("DHE_PSK");
    //allowed.push_back("PSK");
+
    allowed.push_back("ECDH");
    allowed.push_back("DH");
-   allowed.push_back("RSA"); // RSA via server cert
+   allowed.push_back("RSA");
 
    return allowed;
    }
@@ -67,7 +66,7 @@ std::vector<std::string> Policy::allowed_signature_methods() const
    allowed.push_back("ECDSA");
    allowed.push_back("RSA");
    allowed.push_back("DSA");
-   allowed.push_back("");
+   //allowed.push_back("");
 
    return allowed;
    }
@@ -87,6 +86,40 @@ std::vector<std::string> Policy::allowed_ecc_curves() const
    curves.push_back("secp160r1");
    curves.push_back("secp160k1");
    return curves;
+   }
+
+/*
+* Choose an ECC curve to use
+*/
+std::string Policy::choose_curve(const std::vector<std::string>& curve_names) const
+   {
+   const std::vector<std::string> our_curves = allowed_ecc_curves();
+
+   for(size_t i = 0; i != our_curves.size(); ++i)
+      if(value_exists(curve_names, our_curves[i]))
+         return our_curves[i];
+
+   return ""; // no shared curve
+   }
+
+DL_Group Policy::dh_group() const
+   {
+   return DL_Group("modp/ietf/2048");
+   }
+
+/*
+* Return allowed compression algorithms
+*/
+std::vector<byte> Policy::compression() const
+   {
+   std::vector<byte> algs;
+   algs.push_back(NO_COMPRESSION);
+   return algs;
+   }
+
+u32bit Policy::session_ticket_lifetime() const
+   {
+   return 86400; // 1 day
    }
 
 Protocol_Version Policy::min_version() const
@@ -173,21 +206,13 @@ class Ciphersuite_Preference_Ordering
 
 }
 
-std::vector<u16bit> Policy::ciphersuite_list(bool have_srp) const
+std::vector<u16bit> ciphersuite_list(const Policy& policy,
+                                     bool have_srp)
    {
-   std::vector<std::string> ciphers = allowed_ciphers();
-   std::vector<std::string> hashes = allowed_hashes();
-   std::vector<std::string> kex = allowed_key_exchange_methods();
-   std::vector<std::string> sigs = allowed_signature_methods();
-
-   if(!have_srp)
-      {
-      std::vector<std::string>::iterator i =
-         std::find(kex.begin(), kex.end(), "SRP");
-
-      if(i != kex.end())
-         kex.erase(i);
-      }
+   const std::vector<std::string> ciphers = policy.allowed_ciphers();
+   const std::vector<std::string> hashes = policy.allowed_hashes();
+   const std::vector<std::string> kex = policy.allowed_key_exchange_methods();
+   const std::vector<std::string> sigs = policy.allowed_signature_methods();
 
    Ciphersuite_Preference_Ordering order(ciphers, hashes, kex, sigs);
 
@@ -201,13 +226,27 @@ std::vector<u16bit> Policy::ciphersuite_list(bool have_srp) const
       if(!suite.valid())
          continue; // not a ciphersuite we know, skip
 
-      if(value_exists(ciphers, suite.cipher_algo()) &&
-         value_exists(hashes, suite.mac_algo()) &&
-         value_exists(kex, suite.kex_algo()) &&
-         value_exists(sigs, suite.sig_algo()))
+      if(!have_srp && suite.kex_algo() == "SRP_SHA")
+         continue;
+
+      if(!value_exists(kex, suite.kex_algo()))
+         continue; // unsupported key exchange
+
+      if(!value_exists(ciphers, suite.cipher_algo()))
+         continue; // unsupported cipher
+
+      if(!value_exists(hashes, suite.mac_algo()))
+         continue; // unsupported MAC algo
+
+      if(!value_exists(sigs, suite.sig_algo()))
          {
-         ciphersuites[suite] = i;
+         // allow if it's an empty sig algo and we want to use PSK
+         if(suite.sig_algo() != "" || !suite.psk_ciphersuite())
+            continue;
          }
+
+      // OK, allow it:
+      ciphersuites[suite] = i;
       }
 
    std::vector<u16bit> ciphersuite_codes;
@@ -219,79 +258,6 @@ std::vector<u16bit> Policy::ciphersuite_list(bool have_srp) const
       }
 
    return ciphersuite_codes;
-   }
-
-/*
-* Return allowed compression algorithms
-*/
-std::vector<byte> Policy::compression() const
-   {
-   std::vector<byte> algs;
-   algs.push_back(NO_COMPRESSION);
-   return algs;
-   }
-
-/*
-* Choose an ECC curve to use
-*/
-std::string Policy::choose_curve(const std::vector<std::string>& curve_names) const
-   {
-   std::vector<std::string> our_curves = allowed_ecc_curves();
-
-   for(size_t i = 0; i != our_curves.size(); ++i)
-      if(value_exists(curve_names, our_curves[i]))
-         return our_curves[i];
-
-   return ""; // no shared curve
-   }
-
-/*
-* Choose which ciphersuite to use
-*/
-u16bit Policy::choose_suite(const std::vector<u16bit>& client_suites,
-                            const std::vector<std::string>& available_cert_types,
-                            bool have_shared_ecc_curve,
-                            bool have_srp) const
-   {
-   std::vector<u16bit> ciphersuites = ciphersuite_list(have_srp);
-
-   for(size_t i = 0; i != ciphersuites.size(); ++i)
-      {
-      const u16bit suite_id = ciphersuites[i];
-      Ciphersuite suite = Ciphersuite::by_id(suite_id);
-
-      if(!have_shared_ecc_curve)
-         {
-         if(suite.kex_algo() == "ECDH" || suite.sig_algo() == "ECDSA")
-            continue;
-         }
-
-      if(suite.sig_algo() != "" &&
-         !value_exists(available_cert_types, suite.sig_algo()))
-         {
-         continue;
-         }
-
-      if(value_exists(client_suites, suite_id))
-         return suite_id;
-      }
-
-   return 0; // no shared cipersuite
-   }
-
-/*
-* Choose which compression algorithm to use
-*/
-byte Policy::choose_compression(const std::vector<byte>& c_comp) const
-   {
-   std::vector<byte> s_comp = compression();
-
-   for(size_t i = 0; i != s_comp.size(); ++i)
-      for(size_t j = 0; j != c_comp.size(); ++j)
-         if(s_comp[i] == c_comp[j])
-            return s_comp[i];
-
-   return NO_COMPRESSION;
    }
 
 }

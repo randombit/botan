@@ -49,6 +49,12 @@ class BOTAN_DLL Credentials_Manager
                                const std::string& identity);
 
       /**
+      * Return true if we should attempt SRP authentication
+      */
+      virtual bool attempt_srp(const std::string& type,
+                               const std::string& context);
+
+      /**
       * @return identifier for client-side SRP auth, if available
                 for this type/context. Should return empty string
                 if password auth not desired/available.
@@ -73,20 +79,21 @@ class BOTAN_DLL Credentials_Manager
       virtual bool srp_verifier(const std::string& type,
                                 const std::string& context,
                                 const std::string& identifier,
-                                BigInt& group_prime,
-                                BigInt& group_generator,
+                                std::string& group_name,
                                 BigInt& verifier,
                                 MemoryRegion<byte>& salt,
                                 bool generate_fake_on_unknown);
 
       /**
-      * Return a cert chain we can use, ordered from leaf to root.
-      * Assumed that we can get the private key of the leaf with
-      * private_key_for
+      * Return a cert chain we can use, ordered from leaf to root,
+      * or else an empty vector.
       *
-      * @param cert_key_type is a set string representing the allowed
-      * key type ("RSA", "DSA", "ECDSA", etc) or empty if no
-      * preference.
+      * It is assumed that the caller can get the private key of the
+      * leaf with private_key_for
+      *
+      * @param cert_key_types specifies the key types desired ("RSA",
+      *                       "DSA", "ECDSA", etc), or empty if there
+      *                       is no preference by the caller.
       */
       virtual std::vector<X509_Certificate> cert_chain(
          const std::vector<std::string>& cert_key_types,
@@ -94,13 +101,14 @@ class BOTAN_DLL Credentials_Manager
          const std::string& context);
 
       /**
-      * Return a cert chain we can use, ordered from leaf to root.
-      * Assumed that we can get the private key of the leaf with
-      * private_key_for
+      * Return a cert chain we can use, ordered from leaf to root,
+      * or else an empty vector.
       *
-      * @param cert_key_type is a set string representing the allowed
-      * key type ("RSA", "DSA", "ECDSA", etc) or empty if no
-      * preference.
+      * It is assumed that the caller can get the private key of the
+      * leaf with private_key_for
+      *
+      * @param cert_key_type specifies the type of key requested
+      *                      ("RSA", "DSA", "ECDSA", etc)
       */
       std::vector<X509_Certificate> cert_chain_single_type(
          const std::string& cert_key_type,
