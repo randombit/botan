@@ -245,7 +245,8 @@ Maximum_Fragment_Length::Maximum_Fragment_Length(size_t max_fragment)
    else if(max_fragment == 4096)
       val = 4;
    else
-      throw std::invalid_argument("Bad setting " + to_string(max_fragment) +
+      throw std::invalid_argument("Bad setting " +
+                                  std::to_string(max_fragment) +
                                   " for maximum fragment size");
    }
 

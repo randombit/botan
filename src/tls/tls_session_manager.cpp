@@ -18,7 +18,7 @@ bool Session_Manager_In_Memory::load_from_session_str(
    {
    // assert(lock is held)
 
-   auto i = sessions.find(session_str);
+   auto i = m_sessions.find(session_str);
 
    if(i == m_sessions.end())
       return false;
@@ -26,7 +26,7 @@ bool Session_Manager_In_Memory::load_from_session_str(
    // if session has expired, remove it
    const auto now = std::chrono::system_clock::now();
 
-   if(i->second.start_time() + session_lifetime < now)
+   if(i->second.start_time() + session_lifetime() < now)
       {
       m_sessions.erase(i);
       return false;
@@ -39,7 +39,7 @@ bool Session_Manager_In_Memory::load_from_session_str(
 bool Session_Manager_In_Memory::load_from_session_id(
    const MemoryRegion<byte>& session_id, Session& session)
    {
-   std::lock_guard<std::mutex> lock(mutex);
+   std::lock_guard<std::mutex> lock(m_mutex);
 
    return load_from_session_str(hex_encode(session_id), session);
    }
@@ -47,23 +47,23 @@ bool Session_Manager_In_Memory::load_from_session_id(
 bool Session_Manager_In_Memory::load_from_host_info(
    const std::string& hostname, u16bit port, Session& session)
    {
-   std::lock_guard<std::mutex> lock(mutex);
+   std::lock_guard<std::mutex> lock(m_mutex);
 
    std::map<std::string, std::string>::iterator i;
 
    if(port > 0)
-      i = host_sessions.find(hostname + ":" + std::to_string(port));
+      i = m_host_sessions.find(hostname + ":" + std::to_string(port));
    else
-      i = host_sessions.find(hostname);
+      i = m_host_sessions.find(hostname);
 
-   if(i == host_sessions.end())
+   if(i == m_host_sessions.end())
       return false;
 
    if(load_from_session_str(i->second, session))
       return true;
 
-   // was removed from sessions map, remove host_sessions entry
-   host_sessions.erase(i);
+   // was removed from sessions map, remove m_host_sessions entry
+   m_host_sessions.erase(i);
 
    return false;
    }
@@ -71,9 +71,9 @@ bool Session_Manager_In_Memory::load_from_host_info(
 void Session_Manager_In_Memory::remove_entry(
    const MemoryRegion<byte>& session_id)
    {
-   std::lock_guard<std::mutex> lock(mutex);
+   std::lock_guard<std::mutex> lock(m_mutex);
 
-   auto i = sessions.find(hex_encode(session_id));
+   auto i = m_sessions.find(hex_encode(session_id));
 
    if(i != m_sessions.end())
       m_sessions.erase(i);
@@ -81,9 +81,9 @@ void Session_Manager_In_Memory::remove_entry(
 
 void Session_Manager_In_Memory::save(const Session& session)
    {
-   std::lock_guard<std::mutex> lock(mutex);
+   std::lock_guard<std::mutex> lock(m_mutex);
 
-   if(max_sessions != 0)
+   if(m_max_sessions != 0)
       {
       /*
       This removes randomly based on ordering of session ids.
@@ -95,10 +95,10 @@ void Session_Manager_In_Memory::save(const Session& session)
 
    const std::string session_id_str = hex_encode(session.session_id());
 
-   sessions[session_id_str] = session;
+   m_sessions[session_id_str] = session;
 
    if(session.side() == CLIENT && session.sni_hostname() != "")
-      host_sessions[session.sni_hostname()] = session_id_str;
+      m_host_sessions[session.sni_hostname()] = session_id_str;
    }
 
 }

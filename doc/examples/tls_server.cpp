@@ -22,8 +22,8 @@ using namespace std::placeholders;
 class Blocking_TLS_Server
    {
    public:
-      Blocking_TLS_Server(std::tr1::function<void (const byte[], size_t)> output_fn,
-                          std::tr1::function<size_t (byte[], size_t)> input_fn,
+      Blocking_TLS_Server(std::function<void (const byte[], size_t)> output_fn,
+                          std::function<size_t (byte[], size_t)> input_fn,
                           std::vector<std::string>& protocols,
                           TLS::Session_Manager& sessions,
                           Credentials_Manager& creds,
@@ -32,8 +32,8 @@ class Blocking_TLS_Server
          input_fn(input_fn),
          server(
             output_fn,
-            std::tr1::bind(&Blocking_TLS_Server::reader_fn, std::tr1::ref(*this), _1, _2, _3),
-            std::tr1::bind(&Blocking_TLS_Server::handshake_complete, std::tr1::ref(*this), _1),
+            std::bind(&Blocking_TLS_Server::reader_fn, std::ref(*this), _1, _2, _3),
+            std::bind(&Blocking_TLS_Server::handshake_complete, std::ref(*this), _1),
             sessions,
             creds,
             policy,
@@ -131,7 +131,7 @@ class Blocking_TLS_Server
          read_queue.write(buf, buf_len);
          }
 
-      std::tr1::function<size_t (byte[], size_t)> input_fn;
+      std::function<size_t (byte[], size_t)> input_fn;
       TLS::Server server;
       SecureQueue read_queue;
       bool exit;
@@ -179,8 +179,8 @@ int main(int argc, char* argv[])
             printf("Got new connection\n");
 
             Blocking_TLS_Server tls(
-               std::tr1::bind(&Socket::write, std::tr1::ref(sock), _1, _2),
-               std::tr1::bind(&Socket::read, std::tr1::ref(sock), _1, _2, true),
+               std::bind(&Socket::write, std::ref(sock), _1, _2),
+               std::bind(&Socket::read, std::ref(sock), _1, _2, true),
                protocols,
                sessions,
                creds,

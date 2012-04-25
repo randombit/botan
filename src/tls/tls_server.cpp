@@ -22,7 +22,7 @@ bool check_for_resume(Session& session_info,
                       Session_Manager& session_manager,
                       Credentials_Manager& credentials,
                       Client_Hello* client_hello,
-                      u32bit session_ticket_lifetime)
+                      std::chrono::seconds session_ticket_lifetime)
    {
    const MemoryVector<byte>& client_session_id = client_hello->session_id();
    const MemoryVector<byte>& session_ticket = client_hello->session_ticket();
@@ -45,7 +45,7 @@ bool check_for_resume(Session& session_info,
             session_ticket,
             credentials.psk("tls-server", "session-ticket", ""));
 
-         if(session_ticket_lifetime &&
+         if(session_ticket_lifetime != std::chrono::seconds(0) &&
             session_info.session_age() > session_ticket_lifetime)
             return false; // ticket has expired
          }
@@ -184,9 +184,9 @@ get_server_certs(const std::string& hostname,
 /*
 * TLS Server Constructor
 */
-Server::Server(std::tr1::function<void (const byte[], size_t)> output_fn,
-               std::tr1::function<void (const byte[], size_t, Alert)> proc_fn,
-               std::tr1::function<bool (const Session&)> handshake_fn,
+Server::Server(std::function<void (const byte[], size_t)> output_fn,
+               std::function<void (const byte[], size_t, Alert)> proc_fn,
+               std::function<bool (const Session&)> handshake_fn,
                Session_Manager& session_manager,
                Credentials_Manager& creds,
                const Policy& policy,
@@ -302,7 +302,7 @@ void Server::process_handshake_msg(Handshake_Type type,
                           session_manager,
                           creds,
                           state->client_hello,
-                          policy.session_ticket_lifetime());
+                          std::chrono::seconds(policy.session_ticket_lifetime()));
 
       bool have_session_ticket_key = false;
 

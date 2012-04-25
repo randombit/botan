@@ -14,6 +14,7 @@
 #include <botan/tls_magic.h>
 #include <botan/secmem.h>
 #include <botan/symkey.h>
+#include <chrono>
 
 namespace Botan {
 
@@ -30,7 +31,7 @@ class BOTAN_DLL Session
       * Uninitialized session
       */
       Session() :
-         m_start_time(0),
+         m_start_time(std::chrono::system_clock::time_point::min()),
          m_version(),
          m_ciphersuite(0),
          m_compression_method(0),
@@ -172,14 +173,15 @@ class BOTAN_DLL Session
       std::vector<X509_Certificate> peer_certs() const { return m_peer_certs; }
 
       /**
-      * Get the time this session began (seconds since Epoch)
+      * Get the wall clock time this session began
       */
-      u64bit start_time() const { return m_start_time; }
+      std::chrono::system_clock::time_point start_time() const
+         { return m_start_time; }
 
       /**
       * Return how long this session has existed (in seconds)
       */
-      u32bit session_age() const;
+      std::chrono::seconds session_age() const;
 
       /**
       * Return the session ticket the server gave us
@@ -189,7 +191,7 @@ class BOTAN_DLL Session
    private:
       enum { TLS_SESSION_PARAM_STRUCT_VERSION = 0x2994e300 };
 
-      u64bit m_start_time;
+      std::chrono::system_clock::time_point m_start_time;
 
       MemoryVector<byte> m_identifier;
       MemoryVector<byte> m_session_ticket; // only used by client side

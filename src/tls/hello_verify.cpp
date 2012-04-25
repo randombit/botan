@@ -29,7 +29,7 @@ Hello_Verify_Request::Hello_Verify_Request(const MemoryVector<byte>& client_hell
                                            const std::string& client_identity,
                                            const SymmetricKey& secret_key)
    {
-   std::auto_ptr<MessageAuthenticationCode> hmac(get_mac("HMAC(SHA-256)"));
+   std::unique_ptr<MessageAuthenticationCode> hmac(get_mac("HMAC(SHA-256)"));
    hmac->set_key(secret_key);
 
    hmac->update_be(client_hello_bits.size());

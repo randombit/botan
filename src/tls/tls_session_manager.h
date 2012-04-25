@@ -70,7 +70,7 @@ class BOTAN_DLL Session_Manager
       * sessions are not resumed. Returns 0 if unknown/no explicit
       * expiration policy.
       */
-      virtual u32bit session_lifetime() const = 0;
+      virtual std::chrono::seconds session_lifetime() const = 0;
 
       virtual ~Session_Manager() {}
    };
@@ -89,7 +89,7 @@ class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
       *        seconds have elapsed from initial handshake.
       */
       Session_Manager_In_Memory(size_t max_sessions = 1000,
-                                u32bit session_lifetime = 7200) :
+                                std::chrono::seconds session_lifetime = std::chrono::seconds(7200)) :
          m_max_sessions(max_sessions),
          m_session_lifetime(session_lifetime)
             {}
@@ -104,15 +104,17 @@ class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
 
       void save(const Session& session_data);
 
-      u32bit session_lifetime() const { return m_session_lifetime; }
+      std::chrono::seconds session_lifetime() const { return m_session_lifetime; }
 
    private:
       bool load_from_session_str(const std::string& session_str,
                                  Session& session);
 
+      std::mutex m_mutex;
+
       size_t m_max_sessions;
 
-      u32bit m_session_lifetime;
+      std::chrono::seconds m_session_lifetime;
 
       std::map<std::string, Session> m_sessions; // hex(session_id) -> session
       std::map<std::string, std::string> m_host_sessions;

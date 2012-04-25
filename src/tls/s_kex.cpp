@@ -48,7 +48,7 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
 
    if(kex_algo == "DH" || kex_algo == "DHE_PSK")
       {
-      std::auto_ptr<DH_PrivateKey> dh(new DH_PrivateKey(rng, policy.dh_group()));
+      std::unique_ptr<DH_PrivateKey> dh(new DH_PrivateKey(rng, policy.dh_group()));
 
       append_tls_length_value(m_params, BigInt::encode(dh->get_domain().get_p()), 2);
       append_tls_length_value(m_params, BigInt::encode(dh->get_domain().get_g()), 2);
@@ -71,7 +71,7 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
 
       EC_Group ec_group(curve_name);
 
-      std::auto_ptr<ECDH_PrivateKey> ecdh(new ECDH_PrivateKey(rng, ec_group));
+      std::unique_ptr<ECDH_PrivateKey> ecdh(new ECDH_PrivateKey(rng, ec_group));
 
       const std::string ecdh_domain_oid = ecdh->domain().get_oid();
       const std::string domain = OIDS::lookup(OID(ecdh_domain_oid));
@@ -190,7 +190,7 @@ Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
 
       if(name == "")
          throw Decoding_Error("Server_Key_Exchange: Server sent unknown named curve " +
-                              to_string(curve_id));
+                              std::to_string(curve_id));
 
       m_params.push_back(curve_type);
       m_params.push_back(get_byte(0, curve_id));
@@ -261,7 +261,7 @@ MemoryVector<byte> Server_Key_Exchange::serialize() const
 bool Server_Key_Exchange::verify(const X509_Certificate& cert,
                                  Handshake_State* state) const
    {
-   std::auto_ptr<Public_Key> key(cert.subject_public_key());
+   std::unique_ptr<Public_Key> key(cert.subject_public_key());
 
    std::pair<std::string, Signature_Format> format =
       state->understand_sig_format(key.get(), m_hash_algo, m_sig_algo, false);
@@ -287,8 +287,6 @@ SRP6_Server_Session& Server_Key_Exchange::server_srp_params()
    BOTAN_ASSERT(m_srp_params, "SRP params are non-NULL");
    return *m_srp_params;
    }
-}
-
 }
 
 }

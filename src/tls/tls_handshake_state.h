@@ -14,21 +14,8 @@
 #include <botan/pk_keys.h>
 #include <botan/pubkey.h>
 
+#include <functional>
 #include <utility>
-
-#if defined(BOTAN_USE_STD_TR1)
-
-#if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
-    #include <functional>
-#else
-    #include <tr1/functional>
-#endif
-
-#elif defined(BOTAN_USE_BOOST_TR1)
-  #include <boost/tr1/functional.hpp>
-#else
-  #error "No TR1 library defined for use"
-#endif
 
 namespace Botan {
 
@@ -109,7 +96,7 @@ class Handshake_State
       /**
       * Used by client using NPN
       */
-      std::tr1::function<std::string (std::vector<std::string>)> client_npn_cb;
+      std::function<std::string (std::vector<std::string>)> client_npn_cb;
 
       Handshake_Reader* handshake_reader() { return m_handshake_reader; }
    private:

@@ -114,9 +114,8 @@ std::string Alert::type_string() const
    * compiler can warn us that it is not included in the switch
    * statement.
    */
-   return "unrecognized_alert_" + to_string(type());
+   return "unrecognized_alert_" + std::to_string(type());
    }
-
 
 }
 

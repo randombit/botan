@@ -1,6 +1,6 @@
 macro_name GCC
 
-binary_name g++-4.7.0
+binary_name g++-4.6.0
 
 compile_option "-c "
 output_to_option "-o "
@@ -8,7 +8,7 @@ add_include_dir_option -I
 add_lib_dir_option -L
 add_lib_option -l
 
-lang_flags "-D_REENTRANT -std=c++11"
+lang_flags "-D_REENTRANT -std=c++0x"
 warning_flags "-W -Wall"
 
 maintainer_warning_flags "-Werror -Wall -Wextra -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wold-style-cast"

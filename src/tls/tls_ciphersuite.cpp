@@ -79,7 +79,7 @@ std::string Ciphersuite::to_string() const
       if(cipher_algo() == "3DES")
          out << "3DES_EDE";
       else if(cipher_algo() == "Camellia")
-         out << "CAMELLIA_" << Botan::to_string(8*cipher_keylen());
+         out << "CAMELLIA_" << std::to_string(8*cipher_keylen());
       else
          out << replace_char(cipher_algo(), '-', '_');
 
@@ -102,4 +102,3 @@ std::string Ciphersuite::to_string() const
 
 }
 
-}

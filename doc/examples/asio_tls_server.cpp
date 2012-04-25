@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-
+#define _GLIBCXX_HAVE_GTHR_DEFAULT
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
@@ -186,46 +186,6 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
       std::vector<byte> m_outbox;
    };
 
-class Session_Manager_Locked : public Botan::TLS::Session_Manager
-   {
-   public:
-      bool load_from_session_id(const Botan::MemoryRegion<byte>& session_id,
-                                Botan::TLS::Session& session)
-         {
-         boost::lock_guard<boost::mutex> lock(m_mutex);
-         return m_session_manager.load_from_session_id(session_id, session);
-         }
-
-      bool load_from_host_info(const std::string& hostname, Botan::u16bit port,
-                               Botan::TLS::Session& session)
-         {
-         boost::lock_guard<boost::mutex> lock(m_mutex);
-         return m_session_manager.load_from_host_info(hostname, port, session);
-         };
-
-      void remove_entry(const Botan::MemoryRegion<byte>& session_id)
-         {
-         boost::lock_guard<boost::mutex> lock(m_mutex);
-         m_session_manager.remove_entry(session_id);
-         }
-
-      void save(const Botan::TLS::Session& session)
-         {
-         boost::lock_guard<boost::mutex> lock(m_mutex);
-         m_session_manager.save(session);
-         }
-
-      Botan::u32bit session_lifetime() const
-         {
-         return m_session_manager.session_lifetime();
-         }
-
-   private:
-      boost::mutex m_mutex;
-      Botan::TLS::Session_Manager_In_Memory m_session_manager;
-
-   };
-
 class tls_server
    {
    public:
@@ -282,7 +242,7 @@ class tls_server
       tcp::acceptor m_acceptor;
 
       Botan::AutoSeeded_RNG m_rng;
-      Session_Manager_Locked m_session_manager;
+      Botan::TLS::Session_Manager_In_Memory m_session_manager;
       Botan::TLS::Policy m_policy;
       Credentials_Manager_Simple m_creds;
    };

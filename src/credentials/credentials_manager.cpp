@@ -125,7 +125,8 @@ void Credentials_Manager::verify_certificate_chain(
       }
 
    if(result != VERIFIED)
-      throw std::runtime_error("Certificate did not validate, code " + to_string(result));
+      throw std::runtime_error("Certificate did not validate, code " +
+                               std::to_string(result));
 #else
 
    // New X.509 API

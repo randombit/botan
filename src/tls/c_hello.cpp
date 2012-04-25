@@ -11,7 +11,7 @@
 #include <botan/internal/tls_extensions.h>
 #include <botan/tls_record.h>
 #include <botan/internal/stl_util.h>
-#include <botan/time.h>
+#include <chrono>
 
 namespace Botan {
 
@@ -24,7 +24,10 @@ enum {
 MemoryVector<byte> make_hello_random(RandomNumberGenerator& rng)
    {
    MemoryVector<byte> buf(32);
-   const u32bit time32 = system_time();
+
+   const u32bit time32 = static_cast<u32bit>(
+      std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
+
    store_be(time32, buf);
    rng.randomize(&buf[4], buf.size() - 4);
    return buf;
