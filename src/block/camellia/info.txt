@@ -1,1 +1,9 @@
 define CAMELLIA
+
+<header:internal>
+camellia_sbox.h
+</header:internal>
+
+<header:public>
+camellia.h
+</header:public>
