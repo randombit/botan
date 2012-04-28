@@ -124,7 +124,7 @@ void HMAC_RNG::reseed(size_t poll_bits)
 */
 void HMAC_RNG::add_entropy(const byte input[], size_t length)
    {
-   const size_t USER_ENTROPY_WATERSHED = 20;
+   const size_t USER_ENTROPY_WATERSHED = 64;
 
    extractor->update(input, length);
    user_input_len += length;
@@ -136,7 +136,7 @@ void HMAC_RNG::add_entropy(const byte input[], size_t length)
    * the extractor input.
    */
    if(user_input_len >= USER_ENTROPY_WATERSHED)
-      reseed(128);
+      reseed(0);
    }
 
 /*
