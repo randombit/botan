@@ -30,7 +30,7 @@ Certificate_Verify::Certificate_Verify(RandomNumberGenerator& rng,
       padding = "EMSA3(TLS.Digest.0)";
    else if(priv_key->algo_name() == "DSA")
       {
-      padding == "EMSA1(SHA-1)";
+      padding = "EMSA1(SHA-1)";
       format = DER_SEQUENCE;
       }
    else
@@ -84,7 +84,7 @@ bool Certificate_Verify::verify(const X509_Certificate& cert,
       padding = "EMSA3(TLS.Digest.0)";
    else if(key->algo_name() == "DSA")
       {
-      padding == "EMSA1(SHA-1)";
+      padding = "EMSA1(SHA-1)";
       format = DER_SEQUENCE;
       }
    else
