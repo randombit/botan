@@ -7,7 +7,10 @@
 
 #include <botan/internal/rdrand.h>
 #include <botan/cpuid.h>
-#include <immintrin.h>
+
+#if !defined(BOTAN_USE_GCC_INLINE_ASM)
+  #include <immintrin.h>
+#endif
 
 namespace Botan {
 
@@ -41,8 +44,10 @@ void Intel_Rdrand::poll(Entropy_Accumulator& accum)
 
 #if BOTAN_USE_GCC_INLINE_ASM
       int cf = 0;
-      asm("rdrand %0; adcl $0,%1" :
-          "=r" (r), "=r" (cf) : "0" (r), "1" (cf) : "cc");
+
+      // Encoding of rdrand %eax
+      asm(".byte 0x0F, 0xC7, 0xF0; adcl $0,%1" :
+          "=a" (r), "=r" (cf) : "0" (r), "1" (cf) : "cc");
 #else
       int cf = _rdrand32_step(&r);
 #endif
