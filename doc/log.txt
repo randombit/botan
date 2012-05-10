@@ -17,6 +17,9 @@ Version 1.10.2, Not Yet Released
 * Add support for the rdrand instruction introduced in Intel's Ivy
   Bridge processors.
 
+* CPUID::has_rdrand was checking the wrong cpuid bit, and would false
+  positive on AMD Bulldozer processors.
+
 * Add the Camellia block cipher
 
 * An implementation of SRP-6a compatible with the specification in
