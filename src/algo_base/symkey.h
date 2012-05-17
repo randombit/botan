@@ -57,23 +57,10 @@ class BOTAN_DLL OctetString
       void set_odd_parity();
 
       /**
-      * Change the contents of this octet string
-      * @param hex_string a hex encoded bytestring
+      * Create a new OctetString
+      * @param str is a hex encoded string
       */
-      void change(const std::string& hex_string);
-
-      /**
-      * Change the contents of this octet string
-      * @param in the input
-      * @param length of in in bytes
-      */
-      void change(const byte in[], size_t length);
-
-      /**
-      * Change the contents of this octet string
-      * @param in the input
-      */
-      void change(const MemoryRegion<byte>& in) { bits = in; }
+      OctetString(const std::string& str = "");
 
       /**
       * Create a new random OctetString
@@ -84,22 +71,16 @@ class BOTAN_DLL OctetString
 
       /**
       * Create a new OctetString
-      * @param str is a hex encoded string
-      */
-      OctetString(const std::string& str = "") { change(str); }
-
-      /**
-      * Create a new OctetString
       * @param in is an array
       * @param len is the length of in in bytes
       */
-      OctetString(const byte in[], size_t len) { change(in, len); }
+      OctetString(const byte in[], size_t len);
 
       /**
       * Create a new OctetString
       * @param in a bytestring
       */
-      OctetString(const MemoryRegion<byte>& in) { change(in); }
+      OctetString(const MemoryRegion<byte>& in);
    private:
       SecureVector<byte> bits;
    };

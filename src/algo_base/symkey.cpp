@@ -26,7 +26,7 @@ OctetString::OctetString(RandomNumberGenerator& rng,
 /*
 * Create an OctetString from a hex string
 */
-void OctetString::change(const std::string& hex_string)
+OctetString::OctetString(const std::string& hex_string)
    {
    bits.resize(1 + hex_string.length() / 2);
    bits.resize(hex_decode(&bits[0], hex_string));
@@ -35,10 +35,14 @@ void OctetString::change(const std::string& hex_string)
 /*
 * Create an OctetString from a byte string
 */
-void OctetString::change(const byte in[], size_t n)
+OctetString::OctetString(const byte in[], size_t n)
    {
    bits.resize(n);
    bits.copy(in, n);
+   }
+
+OctetString::OctetString(const MemoryRegion<byte>& b) : bits(b)
+   {
    }
 
 /*
