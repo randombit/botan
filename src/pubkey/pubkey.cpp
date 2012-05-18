@@ -38,7 +38,7 @@ PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
       throw Lookup_Error("PK_Encryptor_EME: No working engine for " +
                          key.algo_name());
 
-   eme = (eme_name == "Raw") ? 0 : get_eme(eme_name);
+   eme = (eme_name == "Raw") ? nullptr : get_eme(eme_name);
    }
 
 /*
@@ -98,7 +98,7 @@ PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
       throw Lookup_Error("PK_Decryptor_EME: No working engine for " +
                          key.algo_name());
 
-   eme = (eme_name == "Raw") ? 0 : get_eme(eme_name);
+   eme = (eme_name == "Raw") ? nullptr : get_eme(eme_name);
    }
 
 /*
@@ -130,8 +130,8 @@ PK_Signer::PK_Signer(const Private_Key& key,
    {
    Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
 
-   op = 0;
-   verify_op = 0;
+   op = nullptr;
+   verify_op = nullptr;
 
    while(const Engine* engine = i.next())
       {
@@ -370,7 +370,7 @@ PK_Key_Agreement::PK_Key_Agreement(const PK_Key_Agreement_Key& key,
       throw Lookup_Error("PK_Key_Agreement: No working engine for " +
                          key.algo_name());
 
-   kdf = (kdf_name == "Raw") ? 0 : get_kdf(kdf_name);
+   kdf = (kdf_name == "Raw") ? nullptr : get_kdf(kdf_name);
    }
 
 SymmetricKey PK_Key_Agreement::derive_key(size_t key_len, const byte in[],

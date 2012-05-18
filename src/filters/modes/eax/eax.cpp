@@ -70,7 +70,7 @@ void EAX_Base::set_key(const SymmetricKey& key)
    ctr->set_key(key);
    cmac->set_key(key);
 
-   header_mac = eax_prf(1, BLOCK_SIZE, cmac, 0, 0);
+   header_mac = eax_prf(1, BLOCK_SIZE, cmac, nullptr, 0);
    }
 
 /*

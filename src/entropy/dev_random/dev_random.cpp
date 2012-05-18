@@ -45,7 +45,7 @@ size_t Device_EntropySource::Device_Reader::get(byte out[], size_t length,
    timeout.tv_sec = (ms_wait_time / 1000);
    timeout.tv_usec = (ms_wait_time % 1000) * 1000;
 
-   if(::select(fd + 1, &read_set, 0, 0, &timeout) < 0)
+   if(::select(fd + 1, &read_set, nullptr, nullptr, &timeout) < 0)
       return 0;
 
    if(!(FD_ISSET(fd, &read_set)))

@@ -22,7 +22,7 @@ Channel::Channel(std::function<void (const byte[], size_t)> socket_output_fn,
    proc_fn(proc_fn),
    handshake_fn(handshake_complete),
    writer(socket_output_fn),
-   state(0),
+   state(nullptr),
    handshake_completed(false),
    connection_closed(false),
    m_peer_supports_heartbeats(false),
@@ -33,7 +33,7 @@ Channel::Channel(std::function<void (const byte[], size_t)> socket_output_fn,
 Channel::~Channel()
    {
    delete state;
-   state = 0;
+   state = nullptr;
    }
 
 size_t Channel::received_data(const byte buf[], size_t buf_size)
@@ -105,7 +105,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
 
             alert_notify(alert_msg);
 
-            proc_fn(0, 0, alert_msg);
+            proc_fn(nullptr, 0, alert_msg);
 
             if(alert_msg.type() == Alert::CLOSE_NOTIFY)
                {
@@ -120,7 +120,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
                connection_closed = true;
 
                delete state;
-               state = 0;
+               state = nullptr;
 
                writer.reset();
                reader.reset();
@@ -238,7 +238,7 @@ void Channel::send_alert(const Alert& alert)
       connection_closed = true;
 
       delete state;
-      state = 0;
+      state = nullptr;
 
       writer.reset();
       }

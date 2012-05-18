@@ -30,7 +30,7 @@ template<typename T>
 T* engine_get_algo(Engine*,
                    const SCAN_Name&,
                    Algorithm_Factory&)
-   { return 0; }
+   { return nullptr; }
 
 template<>
 BlockCipher* engine_get_algo(Engine* engine,
@@ -75,7 +75,7 @@ const T* factory_prototype(const std::string& algo_spec,
    SCAN_Name scan_name(algo_spec);
 
    if(scan_name.cipher_mode() != "")
-      return 0;
+      return nullptr;
 
    for(size_t i = 0; i != engines.size(); ++i)
       {
@@ -157,7 +157,7 @@ void Algorithm_Factory::set_preferred_provider(const std::string& algo_spec,
 Engine* Algorithm_Factory::get_engine_n(size_t n) const
    {
    if(n >= engines.size())
-      return 0;
+      return nullptr;
    return engines[n];
    }
 

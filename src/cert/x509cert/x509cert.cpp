@@ -385,7 +385,7 @@ std::string X509_Certificate::to_string() const
                                "DNS",
                                "URI",
                                "PKIX.XMPPAddr",
-                               0 };
+                               nullptr };
 
    std::ostringstream out;
 

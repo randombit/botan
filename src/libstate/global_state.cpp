@@ -22,7 +22,7 @@ namespace Global_State_Management {
 */
 namespace {
 
-Library_State* global_lib_state = 0;
+Library_State* global_lib_state = nullptr;
 
 }
 
@@ -83,7 +83,7 @@ Library_State* swap_global_state(Library_State* new_state)
 */
 bool global_state_exists()
    {
-   return (global_lib_state != 0);
+   return (global_lib_state != nullptr);
    }
 
 }

@@ -112,7 +112,7 @@ const T* Algorithm_Cache<T>::get(const std::string& algo_spec,
 
    auto algo = find_algorithm(algo_spec);
    if(algo == algorithms.end()) // algo not found at all (no providers)
-      return 0;
+      return nullptr;
 
    // If a provider is requested specifically, return it or fail entirely
    if(requested_provider != "")
@@ -120,10 +120,10 @@ const T* Algorithm_Cache<T>::get(const std::string& algo_spec,
       auto prov = algo->second.find(requested_provider);
       if(prov != algo->second.end())
          return prov->second;
-      return 0;
+      return nullptr;
       }
 
-   const T* prototype = 0;
+   const T* prototype = nullptr;
    std::string prototype_provider;
    size_t prototype_prov_weight = 0;
 

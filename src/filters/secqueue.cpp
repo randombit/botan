@@ -17,9 +17,9 @@ class SecureQueueNode
    {
    public:
       SecureQueueNode() : buffer(DEFAULT_BUFFERSIZE)
-         { next = 0; start = end = 0; }
+         { next = nullptr; start = end = 0; }
 
-      ~SecureQueueNode() { next = 0; start = end = 0; }
+      ~SecureQueueNode() { next = nullptr; start = end = 0; }
 
       size_t write(const byte input[], size_t length)
          {
@@ -59,7 +59,7 @@ class SecureQueueNode
 */
 SecureQueue::SecureQueue()
    {
-   set_next(0, 0);
+   set_next(nullptr, 0);
    head = tail = new SecureQueueNode;
    }
 
@@ -69,7 +69,7 @@ SecureQueue::SecureQueue()
 SecureQueue::SecureQueue(const SecureQueue& input) :
    Fanout_Filter(), DataSource()
    {
-   set_next(0, 0);
+   set_next(nullptr, 0);
 
    head = tail = new SecureQueueNode;
    SecureQueueNode* temp = input.head;
@@ -92,7 +92,7 @@ void SecureQueue::destroy()
       delete temp;
       temp = holder;
       }
-   head = tail = 0;
+   head = tail = nullptr;
    }
 
 /*

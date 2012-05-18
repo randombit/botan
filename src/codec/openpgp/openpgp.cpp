@@ -136,7 +136,7 @@ secure_vector<byte> PGP_decode(DataSource& source,
       }
 
    Pipe base64(new Base64_Decoder,
-               new Fork(0,
+               new Fork(nullptr,
                         new Chain(new Hash_Filter(new CRC24),
                                   new Base64_Encoder)
                   )

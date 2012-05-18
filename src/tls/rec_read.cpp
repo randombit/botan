@@ -18,7 +18,7 @@ namespace TLS {
 
 Record_Reader::Record_Reader() :
    m_readbuf(TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE),
-   m_mac(0)
+   m_mac(nullptr)
    {
    reset();
    set_maximum_fragment_size(0);
@@ -37,7 +37,7 @@ void Record_Reader::reset()
    m_cipher.reset();
 
    delete m_mac;
-   m_mac = 0;
+   m_mac = nullptr;
 
    m_block_size = 0;
    m_iv_size = 0;
@@ -72,7 +72,7 @@ void Record_Reader::activate(Connection_Side side,
    {
    m_cipher.reset();
    delete m_mac;
-   m_mac = 0;
+   m_mac = nullptr;
    m_seq_no = 0;
 
    if(compression_method != NO_COMPRESSION)

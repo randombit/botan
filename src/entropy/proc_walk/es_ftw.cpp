@@ -42,7 +42,7 @@ class Directory_Walker : public File_Descriptor_Source
    {
    public:
       Directory_Walker(const std::string& root) :
-         m_cur_dir(std::make_pair<DIR*, std::string>(0, ""))
+         m_cur_dir(std::make_pair<DIR*, std::string>(nullptr, ""))
          {
          if(DIR* root_dir = ::opendir(root.c_str()))
             m_cur_dir = std::make_pair(root_dir, root);
@@ -75,9 +75,9 @@ std::pair<struct dirent*, std::string> Directory_Walker::get_next_dirent()
          return std::make_pair(dir, m_cur_dir.second);
 
       ::closedir(m_cur_dir.first);
-      m_cur_dir = std::make_pair<DIR*, std::string>(0, "");
+      m_cur_dir = std::make_pair<DIR*, std::string>(nullptr, "");
 
-      while(!m_dirlist.empty() && m_cur_dir.first == 0)
+      while(!m_dirlist.empty() && !m_cur_dir.first)
          {
          const std::string next_dir_name = m_dirlist[0];
          m_dirlist.pop_front();
@@ -87,7 +87,7 @@ std::pair<struct dirent*, std::string> Directory_Walker::get_next_dirent()
          }
       }
 
-   return std::make_pair<struct dirent*, std::string>(0, ""); // nothing left
+   return std::make_pair<struct dirent*, std::string>(nullptr, ""); // nothing left
    }
 
 int Directory_Walker::next_fd()
@@ -131,9 +131,8 @@ int Directory_Walker::next_fd()
 /**
 * FTW_EntropySource Constructor
 */
-FTW_EntropySource::FTW_EntropySource(const std::string& p) : path(p)
+FTW_EntropySource::FTW_EntropySource(const std::string& p) : path(p), dir(nullptr)
    {
-   dir = 0;
    }
 
 /**
@@ -142,6 +141,7 @@ FTW_EntropySource::FTW_EntropySource(const std::string& p) : path(p)
 FTW_EntropySource::~FTW_EntropySource()
    {
    delete dir;
+   dir = nullptr;
    }
 
 void FTW_EntropySource::poll(Entropy_Accumulator& accum)
@@ -161,7 +161,7 @@ void FTW_EntropySource::poll(Entropy_Accumulator& accum)
       if(fd == -1)
          {
          delete dir;
-         dir = 0;
+         dir = nullptr;
          break;
          }
 

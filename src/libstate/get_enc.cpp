@@ -151,7 +151,7 @@ EME* get_eme(const std::string& algo_spec)
    Algorithm_Factory& af = global_state().algorithm_factory();
 
    if(request.algo_name() == "Raw")
-      return 0; // No padding
+      return nullptr; // No padding
 
 #if defined(BOTAN_HAS_EME_PKCS1v15)
    if(request.algo_name() == "PKCS1v15" && request.arg_count() == 0)
@@ -182,7 +182,7 @@ KDF* get_kdf(const std::string& algo_spec)
    Algorithm_Factory& af = global_state().algorithm_factory();
 
    if(request.algo_name() == "Raw")
-      return 0; // No KDF
+      return nullptr; // No KDF
 
 #if defined(BOTAN_HAS_KDF1)
    if(request.algo_name() == "KDF1" && request.arg_count() == 1)

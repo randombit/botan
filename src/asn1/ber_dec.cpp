@@ -276,7 +276,7 @@ BER_Decoder::BER_Decoder(DataSource& src)
    source = &src;
    owns = false;
    pushed.type_tag = pushed.class_tag = NO_OBJECT;
-   parent = 0;
+   parent = nullptr;
    }
 
 /*
@@ -287,7 +287,7 @@ BER_Decoder::BER_Decoder(const byte data[], size_t length)
    source = new DataSource_Memory(data, length);
    owns = true;
    pushed.type_tag = pushed.class_tag = NO_OBJECT;
-   parent = 0;
+   parent = nullptr;
    }
 
 /*
@@ -298,7 +298,7 @@ BER_Decoder::BER_Decoder(const secure_vector<byte>& data)
    source = new DataSource_Memory(data);
    owns = true;
    pushed.type_tag = pushed.class_tag = NO_OBJECT;
-   parent = 0;
+   parent = nullptr;
    }
 
 /*
@@ -309,7 +309,7 @@ BER_Decoder::BER_Decoder(const std::vector<byte>& data)
    source = new DataSource_Memory(&data[0], data.size());
    owns = true;
    pushed.type_tag = pushed.class_tag = NO_OBJECT;
-   parent = 0;
+   parent = nullptr;
    }
 
 /*
@@ -335,7 +335,7 @@ BER_Decoder::~BER_Decoder()
    {
    if(owns)
       delete source;
-   source = 0;
+   source = nullptr;
    }
 
 /*

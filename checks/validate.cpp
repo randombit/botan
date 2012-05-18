@@ -474,8 +474,10 @@ bool failed_test(const std::string& algo,
 
    try {
       Botan::Filter* test = lookup(algo, params);
-      if(test == 0 && is_extension) return !exp_pass;
-      if(test == 0)
+
+      if(!test && is_extension) return !exp_pass;
+
+      if(!test)
          {
          if(algo != last_missing)
             {

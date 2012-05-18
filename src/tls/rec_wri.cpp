@@ -25,7 +25,7 @@ namespace TLS {
 Record_Writer::Record_Writer(std::function<void (const byte[], size_t)> out) :
    m_output_fn(out),
    m_writebuf(TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE),
-   m_mac(0)
+   m_mac(nullptr)
    {
    reset();
    set_maximum_fragment_size(0);
@@ -48,7 +48,7 @@ void Record_Writer::reset()
    m_cipher.reset();
 
    delete m_mac;
-   m_mac = 0;
+   m_mac = nullptr;
 
    m_version = Protocol_Version();
    m_block_size = 0;
@@ -76,7 +76,7 @@ void Record_Writer::activate(Connection_Side side,
    {
    m_cipher.reset();
    delete m_mac;
-   m_mac = 0;
+   m_mac = nullptr;
 
    if(compression_method != NO_COMPRESSION)
       throw Internal_Error("Negotiated unknown compression algorithm");

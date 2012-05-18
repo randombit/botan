@@ -235,7 +235,7 @@ BOTAN_DLL bool have_algorithm(const std::string& algo_spec);
 inline bool have_block_cipher(const std::string& algo_spec)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
-   return (af.prototype_block_cipher(algo_spec) != 0);
+   return (af.prototype_block_cipher(algo_spec) != nullptr);
    }
 
 /**
@@ -248,7 +248,7 @@ inline bool have_block_cipher(const std::string& algo_spec)
 inline bool have_stream_cipher(const std::string& algo_spec)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
-   return (af.prototype_stream_cipher(algo_spec) != 0);
+   return (af.prototype_stream_cipher(algo_spec) != nullptr);
    }
 
 /**
@@ -261,7 +261,7 @@ inline bool have_stream_cipher(const std::string& algo_spec)
 inline bool have_hash(const std::string& algo_spec)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
-   return (af.prototype_hash_function(algo_spec) != 0);
+   return (af.prototype_hash_function(algo_spec) != nullptr);
    }
 
 /**
@@ -274,7 +274,7 @@ inline bool have_hash(const std::string& algo_spec)
 inline bool have_mac(const std::string& algo_spec)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
-   return (af.prototype_mac(algo_spec) != 0);
+   return (af.prototype_mac(algo_spec) != nullptr);
    }
 
 /*

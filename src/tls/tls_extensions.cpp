@@ -49,7 +49,7 @@ Extension* make_extension(TLS_Data_Reader& reader,
          return new Session_Ticket(reader, size);
 
       default:
-         return 0; // not known
+         return nullptr; // not known
       }
    }
 

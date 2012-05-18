@@ -21,7 +21,7 @@ extern "C" {
 
 Dynamically_Loaded_Engine::Dynamically_Loaded_Engine(
    const std::string& library_path) :
-   engine(0)
+   engine(nullptr)
    {
    lib = new Dynamically_Loaded_Library(library_path);
 
@@ -49,7 +49,7 @@ Dynamically_Loaded_Engine::Dynamically_Loaded_Engine(
    catch(...)
       {
       delete lib;
-      lib = 0;
+      lib = nullptr;
       throw;
       }
    }

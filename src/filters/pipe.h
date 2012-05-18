@@ -276,7 +276,8 @@ class BOTAN_DLL Pipe : public DataSource
       * Construct a Pipe of up to four filters. The filters are set up
       * in the same order as the arguments.
       */
-      Pipe(Filter* = 0, Filter* = 0, Filter* = 0, Filter* = 0);
+      Pipe(Filter* = nullptr, Filter* = nullptr,
+           Filter* = nullptr, Filter* = nullptr);
 
       /**
       * Construct a Pipe from a list of filters

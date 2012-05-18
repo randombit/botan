@@ -228,8 +228,8 @@ PBE_PKCS5v20::PBE_PKCS5v20(BlockCipher* cipher,
 */
 PBE_PKCS5v20::PBE_PKCS5v20(DataSource& params) : direction(DECRYPTION)
    {
-   hash_function = 0;
-   block_cipher = 0;
+   hash_function = nullptr;
+   block_cipher = nullptr;
    decode_params(params);
    }
 

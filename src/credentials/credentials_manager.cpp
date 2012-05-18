@@ -82,7 +82,7 @@ Private_Key* Credentials_Manager::private_key_for(const X509_Certificate&,
                                                   const std::string&,
                                                   const std::string&)
    {
-   return 0;
+   return nullptr;
    }
 
 std::vector<X509_Certificate>

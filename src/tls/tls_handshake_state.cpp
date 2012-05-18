@@ -82,24 +82,24 @@ u32bit bitmask_for_handshake_type(Handshake_Type type)
 */
 Handshake_State::Handshake_State(Handshake_Reader* reader)
    {
-   client_hello = 0;
-   server_hello = 0;
-   server_certs = 0;
-   server_kex = 0;
-   cert_req = 0;
-   server_hello_done = 0;
-   next_protocol = 0;
-   new_session_ticket = 0;
+   client_hello = nullptr;
+   server_hello = nullptr;
+   server_certs = nullptr;
+   server_kex = nullptr;
+   cert_req = nullptr;
+   server_hello_done = nullptr;
+   next_protocol = nullptr;
+   new_session_ticket = nullptr;
 
-   client_certs = 0;
-   client_kex = 0;
-   client_verify = 0;
-   client_finished = 0;
-   server_finished = 0;
+   client_certs = nullptr;
+   client_kex = nullptr;
+   client_verify = nullptr;
+   client_finished = nullptr;
+   server_finished = nullptr;
 
    m_handshake_reader = reader;
 
-   server_rsa_kex_key = 0;
+   server_rsa_kex_key = nullptr;
 
    m_version = Protocol_Version::SSL_V3;
 

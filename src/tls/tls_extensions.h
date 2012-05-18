@@ -351,7 +351,7 @@ class Extensions
 
          if(i != extensions.end())
             return dynamic_cast<T*>(i->second);
-         return 0;
+         return nullptr;
          }
 
       void add(Extension* extn)

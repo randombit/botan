@@ -66,7 +66,7 @@ Pipe::~Pipe()
 void Pipe::init()
    {
    outputs = new Output_Buffers;
-   pipe = 0;
+   pipe = nullptr;
    default_read = 0;
    inside_msg = false;
    }
@@ -77,7 +77,7 @@ void Pipe::init()
 void Pipe::reset()
    {
    destruct(pipe);
-   pipe = 0;
+   pipe = nullptr;
    inside_msg = false;
    }
 
@@ -159,7 +159,7 @@ void Pipe::start_msg()
    {
    if(inside_msg)
       throw Invalid_State("Pipe::start_msg: Message was already started");
-   if(pipe == 0)
+   if(pipe == nullptr)
       pipe = new Null_Filter;
    find_endpoints(pipe);
    pipe->new_msg();
@@ -178,7 +178,7 @@ void Pipe::end_msg()
    if(dynamic_cast<Null_Filter*>(pipe))
       {
       delete pipe;
-      pipe = 0;
+      pipe = nullptr;
       }
    inside_msg = false;
 
@@ -210,7 +210,7 @@ void Pipe::clear_endpoints(Filter* f)
    for(size_t j = 0; j != f->total_ports(); ++j)
       {
       if(f->next[j] && dynamic_cast<SecureQueue*>(f->next[j]))
-         f->next[j] = 0;
+         f->next[j] = nullptr;
       clear_endpoints(f->next[j]);
       }
    }

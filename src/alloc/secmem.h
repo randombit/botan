@@ -61,9 +61,10 @@ class secure_allocator
          }
 
       template<typename U, typename... Args>
-        void
-        construct(U* p, Args&&... args)
-        { ::new((void *)p) U(std::forward<Args>(args)...); }
+      void construct(U* p, Args&&... args)
+         {
+         ::new(static_cast<void*>(p)) U(std::forward<Args>(args)...);
+         }
 
       template<typename U> void destroy(U* p) { p->~U(); }
 

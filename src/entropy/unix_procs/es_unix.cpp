@@ -68,7 +68,7 @@ void Unix_EntropySource::poll(Entropy_Accumulator& accum)
       "/etc/passwd",
       ".",
       "..",
-      0 };
+      nullptr };
 
    for(size_t i = 0; stat_targets[i]; i++)
       {

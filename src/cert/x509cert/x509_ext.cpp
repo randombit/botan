@@ -36,7 +36,7 @@ Certificate_Extension* Extensions::get_extension(const OID& oid)
    X509_EXTENSION("X509v3.CertificatePolicies", Certificate_Policies);
    X509_EXTENSION("X509v3.ReasonCode", CRL_ReasonCode);
 
-   return 0;
+   return nullptr;
    }
 
 /*

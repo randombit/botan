@@ -129,7 +129,7 @@ secure_vector<byte> EMSA3_Raw::encoding_of(const secure_vector<byte>& msg,
                                           size_t output_bits,
                                           RandomNumberGenerator&)
    {
-   return emsa3_encoding(msg, output_bits, 0, 0);
+   return emsa3_encoding(msg, output_bits, nullptr, 0);
    }
 
 /*
@@ -141,7 +141,7 @@ bool EMSA3_Raw::verify(const secure_vector<byte>& coded,
    {
    try
       {
-      return (coded == emsa3_encoding(raw, key_bits, 0, 0));
+      return (coded == emsa3_encoding(raw, key_bits, nullptr, 0));
       }
    catch(...)
       {

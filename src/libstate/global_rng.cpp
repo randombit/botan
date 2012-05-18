@@ -169,7 +169,7 @@ class Serialized_PRNG : public RandomNumberGenerator
 RandomNumberGenerator* Library_State::make_global_rng(Algorithm_Factory& af,
                                                       std::mutex& mutex)
    {
-   RandomNumberGenerator* rng = 0;
+   RandomNumberGenerator* rng = nullptr;
 
 #if defined(BOTAN_HAS_HMAC_RNG)
 

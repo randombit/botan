@@ -41,7 +41,7 @@ void LibraryInitializer::initialize(const std::string&)
 */
 void LibraryInitializer::deinitialize()
    {
-   Global_State_Management::set_global_state(0);
+   Global_State_Management::set_global_state(nullptr);
    }
 
 }

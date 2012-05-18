@@ -108,7 +108,7 @@ void validate_save_and_load(const Private_Key* priv_key,
       DataSource_Memory input_pub(pub_pem);
       std::auto_ptr<Public_Key> restored_pub(X509::load_key(input_pub));
 
-      if(restored_pub.get() == 0)
+      if(!restored_pub.get())
          std::cout << "Could not recover " << name << " public key\n";
       else if(restored_pub->check_key(rng, true) == false)
          std::cout << "Restored pubkey failed self tests " << name << "\n";
@@ -128,7 +128,7 @@ void validate_save_and_load(const Private_Key* priv_key,
       std::auto_ptr<Private_Key> restored_priv(
          PKCS8::load_key(input_priv, rng));
 
-      if(restored_priv.get() == 0)
+      if(!restored_priv.get())
          std::cout << "Could not recover " << name << " privlic key\n";
       else if(restored_priv->check_key(rng, true) == false)
          std::cout << "Restored privkey failed self tests " << name << "\n";

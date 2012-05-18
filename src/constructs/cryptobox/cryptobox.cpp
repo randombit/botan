@@ -64,7 +64,7 @@ std::string encrypt(const byte input[], size_t input_len,
 
    Pipe pipe(get_cipher("Serpent/CTR-BE", cipher_key, iv, ENCRYPTION),
              new Fork(
-                0,
+                nullptr,
                 new MAC_Filter(new HMAC(new SHA_512),
                                mac_key, MAC_OUTPUT_LEN)));
 

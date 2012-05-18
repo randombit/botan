@@ -39,7 +39,8 @@ class BOTAN_DLL Chain : public Fanout_Filter
       * Construct a chain of up to four filters. The filters are set
       * up in the same order as the arguments.
       */
-      Chain(Filter* = 0, Filter* = 0, Filter* = 0, Filter* = 0);
+      Chain(Filter* = nullptr, Filter* = nullptr,
+            Filter* = nullptr, Filter* = nullptr);
 
       /**
       * Construct a chain from range of filters
@@ -65,7 +66,7 @@ class BOTAN_DLL Fork : public Fanout_Filter
       /**
       * Construct a Fork filter with up to four forks.
       */
-      Fork(Filter*, Filter*, Filter* = 0, Filter* = 0);
+      Fork(Filter*, Filter*, Filter* = nullptr, Filter* = nullptr);
 
       /**
       * Construct a Fork from range of filters

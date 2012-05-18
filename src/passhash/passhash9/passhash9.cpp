@@ -40,7 +40,7 @@ MessageAuthenticationCode* get_pbkdf_prf(byte alg_id)
       }
    catch(Algorithm_Not_Found) {}
 
-   return 0;
+   return nullptr;
    }
 
 }
@@ -120,7 +120,7 @@ bool check_passhash9(const std::string& pass, const std::string& hash)
 
    MessageAuthenticationCode* pbkdf_prf = get_pbkdf_prf(alg_id);
 
-   if(pbkdf_prf == 0)
+   if(!pbkdf_prf)
       return false; // unknown algorithm, reject
 
    PKCS5_PBKDF2 kdf(pbkdf_prf); // takes ownership of pointer

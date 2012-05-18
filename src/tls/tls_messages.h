@@ -414,7 +414,7 @@ class Server_Key_Exchange : public Handshake_Message
                           const Policy& policy,
                           Credentials_Manager& creds,
                           RandomNumberGenerator& rng,
-                          const Private_Key* signing_key = 0);
+                          const Private_Key* signing_key = nullptr);
 
       Server_Key_Exchange(const std::vector<byte>& buf,
                           const std::string& kex_alg,

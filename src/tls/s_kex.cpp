@@ -33,7 +33,7 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
                                          Credentials_Manager& creds,
                                          RandomNumberGenerator& rng,
                                          const Private_Key* signing_key) :
-   m_kex_key(0), m_srp_params(0)
+   m_kex_key(nullptr), m_srp_params(nullptr)
    {
    const std::string hostname = state->client_hello->sni_hostname();
    const std::string kex_algo = state->suite.kex_algo();
@@ -146,7 +146,7 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<byte>& buf,
                                          const std::string& kex_algo,
                                          const std::string& sig_algo,
                                          Protocol_Version version) :
-   m_kex_key(0), m_srp_params(0)
+   m_kex_key(nullptr), m_srp_params(nullptr)
    {
    if(buf.size() < 6)
       throw Decoding_Error("Server_Key_Exchange: Packet corrupted");

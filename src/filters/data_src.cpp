@@ -174,7 +174,7 @@ DataSource_Stream::DataSource_Stream(const std::string& path,
 DataSource_Stream::DataSource_Stream(std::istream& in,
                                      const std::string& name) :
    identifier(name),
-   source_p(0),
+   source_p(nullptr),
    source(in),
    total_read(0)
    {

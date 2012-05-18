@@ -168,9 +168,9 @@ void Library_State::initialize()
 */
 Library_State::Library_State()
    {
-   m_algorithm_factory = 0;
+   m_algorithm_factory = nullptr;
 
-   global_rng_ptr = 0;
+   global_rng_ptr = nullptr;
    }
 
 /*
@@ -179,10 +179,10 @@ Library_State::Library_State()
 Library_State::~Library_State()
    {
    delete m_algorithm_factory;
-   m_algorithm_factory = 0;
+   m_algorithm_factory = nullptr;
 
    delete global_rng_ptr;
-   global_rng_ptr = 0;
+   global_rng_ptr = nullptr;
    }
 
 }

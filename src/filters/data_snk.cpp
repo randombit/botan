@@ -29,7 +29,7 @@ void DataSink_Stream::write(const byte out[], size_t length)
 DataSink_Stream::DataSink_Stream(std::ostream& out,
                                  const std::string& name) :
    identifier(name),
-   sink_p(0),
+   sink_p(nullptr),
    sink(out)
    {
    }

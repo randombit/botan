@@ -205,7 +205,7 @@ DER_Encoder& DER_Encoder::raw_bytes(const byte bytes[], size_t length)
 */
 DER_Encoder& DER_Encoder::encode_null()
    {
-   return add_object(NULL_TAG, UNIVERSAL, 0, 0);
+   return add_object(NULL_TAG, UNIVERSAL, nullptr, 0);
    }
 
 /*

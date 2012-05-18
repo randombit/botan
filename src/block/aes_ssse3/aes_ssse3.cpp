@@ -568,7 +568,7 @@ void AES_256_SSSE3::key_schedule(const byte keyb[], size_t)
       _mm_storeu_si128(EK_mm + i, aes_schedule_mangle(key2, i % 4));
       _mm_storeu_si128(DK_mm + (14-i), aes_schedule_mangle_dec(key2, (i+2) % 4));
 
-      key2 = aes_schedule_round(NULL, _mm_shuffle_epi32(key2, 0xFF), k_t);
+      key2 = aes_schedule_round(nullptr, _mm_shuffle_epi32(key2, 0xFF), k_t);
       _mm_storeu_si128(EK_mm + i + 1, aes_schedule_mangle(key2, (i - 1) % 4));
       _mm_storeu_si128(DK_mm + (13-i), aes_schedule_mangle_dec(key2, (i+1) % 4));
       }

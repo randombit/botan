@@ -163,7 +163,7 @@ std::map<std::string, std::vector<X509_Certificate> >
 get_server_certs(const std::string& hostname,
                  Credentials_Manager& creds)
    {
-   const char* cert_types[] = { "RSA", "DSA", "ECDSA", 0 };
+   const char* cert_types[] = { "RSA", "DSA", "ECDSA", nullptr };
 
    std::map<std::string, std::vector<X509_Certificate> > cert_chains;
 
@@ -223,7 +223,7 @@ void Server::alert_notify(const Alert& alert)
       if(handshake_completed && state)
          {
          delete state;
-         state = 0;
+         state = nullptr;
          }
       }
    }
@@ -249,7 +249,7 @@ void Server::read_handshake(byte rec_type,
 void Server::process_handshake_msg(Handshake_Type type,
                                    const std::vector<byte>& contents)
    {
-   if(state == 0)
+   if(!state)
       throw Unexpected_Message("Unexpected handshake message from client");
 
    state->confirm_transition_to(type);
@@ -432,7 +432,7 @@ void Server::process_handshake_msg(Handshake_Type type,
                                                   cert_chains[sig_algo]);
             }
 
-         Private_Key* private_key = 0;
+         Private_Key* private_key = nullptr;
 
          if(kex_algo == "RSA" || sig_algo != "")
             {
@@ -608,7 +608,7 @@ void Server::process_handshake_msg(Handshake_Type type,
                                   state->server_finished);
 
       delete state;
-      state = 0;
+      state = nullptr;
       handshake_completed = true;
       }
    else

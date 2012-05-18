@@ -132,7 +132,7 @@ void Client::alert_notify(const Alert& alert)
       if(handshake_completed && state)
          {
          delete state;
-         state = 0;
+         state = nullptr;
          }
       }
    }
@@ -143,7 +143,7 @@ void Client::alert_notify(const Alert& alert)
 void Client::process_handshake_msg(Handshake_Type type,
                                    const std::vector<byte>& contents)
    {
-   if(state == 0)
+   if(!state)
       throw Unexpected_Message("Unexpected handshake message from server");
 
    if(type == HELLO_REQUEST)
@@ -157,7 +157,7 @@ void Client::process_handshake_msg(Handshake_Type type,
       if(!secure_renegotiation.supported() && policy.require_secure_renegotiation())
          {
          delete state;
-         state = 0;
+         state = nullptr;
 
          // RFC 5746 section 4.2
          send_alert(Alert(Alert::NO_RENEGOTIATION));
@@ -474,7 +474,7 @@ void Client::process_handshake_msg(Handshake_Type type,
          session_manager.remove_entry(session_info.session_id());
 
       delete state;
-      state = 0;
+      state = nullptr;
       handshake_completed = true;
       }
    else

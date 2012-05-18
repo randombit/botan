@@ -273,7 +273,7 @@ void Turing::key_schedule(const byte key[], size_t length)
       S3[i] = (W3 & 0xFFFFFF00) | C3;
       }
 
-   set_iv(0, 0);
+   set_iv(nullptr, 0);
    }
 
 /*

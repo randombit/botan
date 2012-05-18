@@ -40,7 +40,7 @@ Assembler_Engine::find_block_cipher(const SCAN_Name& request,
 #endif
       }
 
-   return 0;
+   return nullptr;
    }
 
 HashFunction*
@@ -66,7 +66,7 @@ Assembler_Engine::find_hash(const SCAN_Name& request,
 #endif
       }
 
-   return 0;
+   return nullptr;
    }
 
 }

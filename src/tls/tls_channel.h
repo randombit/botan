@@ -69,7 +69,7 @@ class BOTAN_DLL Channel
       /**
       * Attempt to send a heartbeat message (if negotiated with counterparty)
       */
-      void heartbeat() { heartbeat(0, 0); }
+      void heartbeat() { heartbeat(nullptr, 0); }
 
       /**
       * @return certificate chain of the peer (may be empty)

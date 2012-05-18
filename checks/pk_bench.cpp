@@ -83,7 +83,7 @@ const char* ec_domains[] = {
    "secp256r1",
    "secp384r1",
    "secp521r1",
-   0
+   nullptr
 };
 
 class Benchmark_Report
@@ -462,7 +462,7 @@ void benchmark_dsa_nr(RandomNumberGenerator& rng,
    const char* domains[] = { "dsa/jce/1024",
                              "dsa/botan/2048",
                              "dsa/botan/3072",
-                             NULL };
+                             nullptr };
 
    std::string algo_name;
 
@@ -513,7 +513,7 @@ void benchmark_dh(RandomNumberGenerator& rng,
                              "modp/ietf/4096",
                              "modp/ietf/6144",
                              "modp/ietf/8192",
-                             NULL };
+                             nullptr };
 
    for(size_t j = 0; domains[j]; j++)
       {
@@ -574,7 +574,7 @@ void benchmark_dlies(RandomNumberGenerator& rng,
                              "modp/ietf/4096",
                              "modp/ietf/6144",
                              "modp/ietf/8192",
-                             NULL };
+                             nullptr };
 
    for(size_t j = 0; domains[j]; j++)
       {
@@ -633,7 +633,7 @@ void benchmark_elg(RandomNumberGenerator& rng,
                              "modp/ietf/4096",
                              "modp/ietf/6144",
                              "modp/ietf/8192",
-                             NULL };
+                             nullptr };
 
    const std::string algo_name = "ElGamal";
 
