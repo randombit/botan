@@ -125,7 +125,7 @@ NR_Verification_Operation::verify_mr(const byte msg[], size_t msg_len)
    const BigInt& q = mod_q.get_modulus();
 
    if(msg_len != 2*q.bytes())
-      return false;
+      throw Invalid_Argument("NR verification: Invalid signature");
 
    BigInt c(msg, q.bytes());
    BigInt d(msg + q.bytes(), q.bytes());

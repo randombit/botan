@@ -74,10 +74,13 @@ bool EMSA4::verify(const MemoryRegion<byte>& const_coded,
 
    if(key_bits < 8*HASH_SIZE + 9)
       return false;
+
    if(raw.size() != HASH_SIZE)
       return false;
-   if(const_coded.size() > KEY_BYTES)
+
+   if(const_coded.size() > KEY_BYTES || const_coded.size() <= 1)
       return false;
+
    if(const_coded[const_coded.size()-1] != 0xBC)
       return false;
 

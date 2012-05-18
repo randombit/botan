@@ -23,6 +23,10 @@
   #include <botan/internal/hres_timer.h>
 #endif
 
+#if defined(BOTAN_HAS_ENTROPY_SRC_RDRAND)
+  #include <botan/internal/rdrand.h>
+#endif
+
 #if defined(BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM)
   #include <botan/internal/dev_random.h>
 #endif
@@ -62,6 +66,10 @@ void add_entropy_sources(RandomNumberGenerator* rng)
    {
 #if defined(BOTAN_HAS_ENTROPY_SRC_HIGH_RESOLUTION_TIMER)
    rng->add_entropy_source(new High_Resolution_Timestamp);
+#endif
+
+#if defined(BOTAN_HAS_ENTROPY_SRC_RDRAND)
+   rng->add_entropy_source(new Intel_Rdrand);
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM)

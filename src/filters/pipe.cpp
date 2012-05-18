@@ -76,8 +76,6 @@ void Pipe::init()
 */
 void Pipe::reset()
    {
-   if(inside_msg)
-      throw Invalid_State("Pipe cannot be reset while it is processing");
    destruct(pipe);
    pipe = 0;
    inside_msg = false;
