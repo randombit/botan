@@ -178,12 +178,12 @@ void Keccak_1600::add_data(const byte input[], size_t length)
 
 void Keccak_1600::final_result(byte output[])
    {
-   MemoryVector<byte> padding(bitrate / 8 - S_pos);
+   std::vector<byte> padding(bitrate / 8 - S_pos);
 
    padding[0] = 0x01;
    padding[padding.size()-1] |= 0x80;
 
-   add_data(padding, padding.size());
+   add_data(&padding[0], padding.size());
 
    /*
    * We never have to run the permutation again because we only support

@@ -22,7 +22,7 @@ class BOTAN_DLL IF_Scheme_PublicKey : public virtual Public_Key
    {
    public:
       IF_Scheme_PublicKey(const AlgorithmIdentifier& alg_id,
-                          const MemoryRegion<byte>& key_bits);
+                          const secure_vector<byte>& key_bits);
 
       IF_Scheme_PublicKey(const BigInt& n, const BigInt& e) :
          n(n), e(e) {}
@@ -31,7 +31,7 @@ class BOTAN_DLL IF_Scheme_PublicKey : public virtual Public_Key
 
       AlgorithmIdentifier algorithm_identifier() const;
 
-      MemoryVector<byte> x509_subject_public_key() const;
+      std::vector<byte> x509_subject_public_key() const;
 
       /**
       * @return public modulus
@@ -67,7 +67,7 @@ class BOTAN_DLL IF_Scheme_PrivateKey : public virtual IF_Scheme_PublicKey,
 
       IF_Scheme_PrivateKey(RandomNumberGenerator& rng,
                            const AlgorithmIdentifier& alg_id,
-                           const MemoryRegion<byte>& key_bits);
+                           const secure_vector<byte>& key_bits);
 
       bool check_key(RandomNumberGenerator& rng, bool) const;
 
@@ -93,7 +93,7 @@ class BOTAN_DLL IF_Scheme_PrivateKey : public virtual IF_Scheme_PublicKey,
       const BigInt& get_d1() const { return d1; }
       const BigInt& get_d2() const { return d2; }
 
-      MemoryVector<byte> pkcs8_private_key() const;
+      secure_vector<byte> pkcs8_private_key() const;
 
    protected:
       IF_Scheme_PrivateKey() {}

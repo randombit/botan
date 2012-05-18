@@ -19,7 +19,7 @@ namespace Botan {
 class BOTAN_DLL KDF1 : public KDF
    {
    public:
-      SecureVector<byte> derive(size_t,
+      secure_vector<byte> derive(size_t,
                                 const byte secret[], size_t secret_len,
                                 const byte P[], size_t P_len) const;
 

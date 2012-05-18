@@ -50,7 +50,7 @@ inline u32bit sigma(u32bit X, u32bit rot1, u32bit rot2, u32bit shift)
 /*
 * SHA-224 / SHA-256 compression function
 */
-void compress(MemoryRegion<u32bit>& digest,
+void compress(secure_vector<u32bit>& digest,
               const byte input[], size_t blocks)
    {
    u32bit A = digest[0], B = digest[1], C = digest[2],

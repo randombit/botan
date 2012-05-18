@@ -51,9 +51,9 @@ class BOTAN_DLL Server : public Channel
          { return m_next_protocol; }
 
    private:
-      void read_handshake(byte, const MemoryRegion<byte>&);
+      void read_handshake(byte, const std::vector<byte>&);
 
-      void process_handshake_msg(Handshake_Type, const MemoryRegion<byte>&);
+      void process_handshake_msg(Handshake_Type, const std::vector<byte>&);
 
       void alert_notify(const Alert& alert);
 

@@ -80,7 +80,7 @@ class BOTAN_DLL BER_Object
       void assert_is_a(ASN1_Tag, ASN1_Tag);
 
       ASN1_Tag type_tag, class_tag;
-      SecureVector<byte> value;
+      secure_vector<byte> value;
    };
 
 /*
@@ -90,7 +90,7 @@ class DataSource;
 
 namespace ASN1 {
 
-SecureVector<byte> put_in_sequence(const MemoryRegion<byte>& val);
+std::vector<byte> put_in_sequence(const std::vector<byte>& val);
 std::string to_string(const BER_Object& obj);
 
 /**

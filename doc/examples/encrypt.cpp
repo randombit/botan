@@ -33,7 +33,7 @@ you're encrypting is 1 Gb... you better have a lot of RAM.
 
 using namespace Botan;
 
-std::string b64_encode(const SecureVector<byte>&);
+std::string b64_encode(const secure_vector<byte>&);
 
 int main(int argc, char* argv[])
    {
@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
 
       std::auto_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(SHA-1)"));
 
-      SecureVector<byte> salt(8);
+      secure_vector<byte> salt(8);
       rng.randomize(&salt[0], salt.size());
 
       const u32bit PBKDF2_ITERATIONS = 8192;
@@ -185,7 +185,7 @@ int main(int argc, char* argv[])
    return 0;
    }
 
-std::string b64_encode(const SecureVector<byte>& in)
+std::string b64_encode(const secure_vector<byte>& in)
    {
    Pipe pipe(new Base64_Encoder);
    pipe.process_msg(in);

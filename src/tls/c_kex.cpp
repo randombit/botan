@@ -26,7 +26,7 @@ namespace TLS {
 
 namespace {
 
-SecureVector<byte> strip_leading_zeros(const MemoryRegion<byte>& input)
+secure_vector<byte> strip_leading_zeros(const secure_vector<byte>& input)
    {
    size_t leading_zeros = 0;
 
@@ -37,8 +37,8 @@ SecureVector<byte> strip_leading_zeros(const MemoryRegion<byte>& input)
       ++leading_zeros;
       }
 
-   SecureVector<byte> output(&input[leading_zeros],
-                             input.size() - leading_zeros);
+   secure_vector<byte> output(&input[leading_zeros],
+                              &input[input.size()-1]);
    return output;
    }
 
@@ -76,7 +76,7 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 
       SymmetricKey psk = creds.psk("tls-client", hostname, psk_identity);
 
-      MemoryVector<byte> zeros(psk.length());
+      std::vector<byte> zeros(psk.length());
 
       append_tls_length_value(pre_master, zeros, 2);
       append_tls_length_value(pre_master, psk.bits_of(), 2);
@@ -124,7 +124,7 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 
          PK_Key_Agreement ka(priv_key, "Raw");
 
-         SecureVector<byte> dh_secret = strip_leading_zeros(
+         secure_vector<byte> dh_secret = strip_leading_zeros(
             ka.derive_key(0, counterparty_key.public_value()).bits_of());
 
          if(kex_algo == "DH")
@@ -153,7 +153,7 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 
          EC_Group group(name);
 
-         MemoryVector<byte> ecdh_key = reader.get_range<byte>(1, 1, 255);
+         std::vector<byte> ecdh_key = reader.get_range<byte>(1, 1, 255);
 
          ECDH_PublicKey counterparty_key(group, OS2ECP(ecdh_key, group.get_curve()));
 
@@ -161,7 +161,7 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 
          PK_Key_Agreement ka(priv_key, "Raw");
 
-         SecureVector<byte> ecdh_secret = ka.derive_key(0, counterparty_key.public_value()).bits_of();
+         secure_vector<byte> ecdh_secret = ka.derive_key(0, counterparty_key.public_value()).bits_of();
 
          if(kex_algo == "ECDH")
             pre_master = ecdh_secret;
@@ -177,7 +177,7 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
          {
          const BigInt N = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
          const BigInt g = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
-         MemoryVector<byte> salt = reader.get_range<byte>(1, 1, 255);
+         std::vector<byte> salt = reader.get_range<byte>(1, 1, 255);
          const BigInt B = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
 
          const std::string srp_group = srp6_group_identifier(N, g);
@@ -228,7 +228,7 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 
          PK_Encryptor_EME encryptor(*rsa_pub, "PKCS1v15");
 
-         MemoryVector<byte> encrypted_key = encryptor.encrypt(pre_master, rng);
+         std::vector<byte> encrypted_key = encryptor.encrypt(pre_master, rng);
 
          if(state->version() == Protocol_Version::SSL_V3)
             key_material = encrypted_key; // no length field
@@ -247,7 +247,7 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 /*
 * Read a Client Key Exchange message
 */
-Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
+Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
                                          const Handshake_State* state,
                                          Credentials_Manager& creds,
                                          const Policy& policy,
@@ -326,7 +326,7 @@ Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
 
       if(kex_algo == "PSK")
          {
-         MemoryVector<byte> zeros(psk.length());
+         std::vector<byte> zeros(psk.length());
          append_tls_length_value(pre_master, zeros, 2);
          append_tls_length_value(pre_master, psk.bits_of(), 2);
          }
@@ -352,14 +352,14 @@ Client_Key_Exchange::Client_Key_Exchange(const MemoryRegion<byte>& contents,
             {
             PK_Key_Agreement ka(*ka_key, "Raw");
 
-            MemoryVector<byte> client_pubkey;
+            std::vector<byte> client_pubkey;
 
             if(ka_key->algo_name() == "DH")
                client_pubkey = reader.get_range<byte>(2, 0, 65535);
             else
                client_pubkey = reader.get_range<byte>(1, 0, 255);
 
-            SecureVector<byte> shared_secret = ka.derive_key(0, client_pubkey).bits_of();
+            secure_vector<byte> shared_secret = ka.derive_key(0, client_pubkey).bits_of();
 
             if(ka_key->algo_name() == "DH")
                shared_secret = strip_leading_zeros(shared_secret);

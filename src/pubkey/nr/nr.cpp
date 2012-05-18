@@ -13,7 +13,7 @@
 namespace Botan {
 
 NR_PublicKey::NR_PublicKey(const AlgorithmIdentifier& alg_id,
-                           const MemoryRegion<byte>& key_bits) :
+                           const secure_vector<byte>& key_bits) :
    DL_Scheme_PublicKey(alg_id, key_bits, DL_Group::ANSI_X9_57)
    {
    }
@@ -49,7 +49,7 @@ NR_PrivateKey::NR_PrivateKey(RandomNumberGenerator& rng,
    }
 
 NR_PrivateKey::NR_PrivateKey(const AlgorithmIdentifier& alg_id,
-                             const MemoryRegion<byte>& key_bits,
+                             const secure_vector<byte>& key_bits,
                              RandomNumberGenerator& rng) :
    DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_57)
    {
@@ -80,7 +80,7 @@ NR_Signature_Operation::NR_Signature_Operation(const NR_PrivateKey& nr) :
    {
    }
 
-SecureVector<byte>
+secure_vector<byte>
 NR_Signature_Operation::sign(const byte msg[], size_t msg_len,
                              RandomNumberGenerator& rng)
    {
@@ -104,7 +104,7 @@ NR_Signature_Operation::sign(const byte msg[], size_t msg_len,
       d = mod_q.reduce(k - x * c);
       }
 
-   SecureVector<byte> output(2*q.bytes());
+   secure_vector<byte> output(2*q.bytes());
    c.binary_encode(&output[output.size() / 2 - c.bytes()]);
    d.binary_encode(&output[output.size() - d.bytes()]);
    return output;
@@ -119,7 +119,7 @@ NR_Verification_Operation::NR_Verification_Operation(const NR_PublicKey& nr) :
    mod_q = Modular_Reducer(nr.group_q());
    }
 
-SecureVector<byte>
+secure_vector<byte>
 NR_Verification_Operation::verify_mr(const byte msg[], size_t msg_len)
    {
    const BigInt& q = mod_q.get_modulus();
@@ -137,7 +137,7 @@ NR_Verification_Operation::verify_mr(const byte msg[], size_t msg_len)
    BigInt g_d = powermod_g_p(d);
 
    BigInt i = mod_p.multiply(g_d, future_y_c.get());
-   return BigInt::encode(mod_q.reduce(c - i));
+   return BigInt::encode_locked(mod_q.reduce(c - i));
    }
 
 }

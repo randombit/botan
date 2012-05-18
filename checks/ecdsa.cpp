@@ -32,7 +32,7 @@ using namespace Botan;
 
 namespace {
 
-std::string to_hex(const SecureVector<byte>& bin)
+std::string to_hex(const std::vector<byte>& bin)
    {
    return hex_encode(&bin[0], bin.size());
    }
@@ -54,7 +54,7 @@ void test_hash_larger_than_n(RandomNumberGenerator& rng)
 
    ECDSA_PrivateKey priv_key(rng, dom_pars);
 
-   SecureVector<byte> message(20);
+   std::vector<byte> message(20);
    for(size_t i = 0; i != message.size(); ++i)
       message[i] = i;
 
@@ -64,14 +64,14 @@ void test_hash_larger_than_n(RandomNumberGenerator& rng)
    PK_Signer pk_signer_224(priv_key, "EMSA1_BSI(SHA-224)");
 
    // Verify we can sign and verify with SHA-160
-   SecureVector<byte> signature_160 = pk_signer_160.sign_message(message, rng);
+   std::vector<byte> signature_160 = pk_signer_160.sign_message(message, rng);
 
    CHECK(pk_verifier_160.verify_message(message, signature_160));
 
    bool signature_failed = false;
    try
       {
-      SecureVector<byte> signature_224 = pk_signer_224.sign_message(message, rng);
+      std::vector<byte> signature_224 = pk_signer_224.sign_message(message, rng);
       }
    catch(Encoding_Error)
       {
@@ -84,7 +84,7 @@ void test_hash_larger_than_n(RandomNumberGenerator& rng)
 
    // sign it with the normal EMSA1
    PK_Signer pk_signer(priv_key, "EMSA1(SHA-224)");
-   SecureVector<byte> signature = pk_signer.sign_message(message, rng);
+   std::vector<byte> signature = pk_signer.sign_message(message, rng);
 
    PK_Verifier pk_verifier(priv_key, "EMSA1_BSI(SHA-224)");
 
@@ -142,8 +142,8 @@ void test_sign_then_ver(RandomNumberGenerator& rng)
 
    PK_Signer signer(ecdsa, "EMSA1(SHA-1)");
 
-   SecureVector<byte> msg = hex_decode("12345678901234567890abcdef12");
-   SecureVector<byte> sig = signer.sign_message(msg, rng);
+   secure_vector<byte> msg = hex_decode("12345678901234567890abcdef12");
+   std::vector<byte> sig = signer.sign_message(msg, rng);
 
    PK_Verifier verifier(ecdsa, "EMSA1(SHA-1)");
 
@@ -174,7 +174,7 @@ bool test_ec_sign(RandomNumberGenerator& rng)
 
       for(size_t i = 0; i != 256; ++i)
          signer.update(static_cast<byte>(i));
-      SecureVector<byte> sig = signer.signature(rng);
+      std::vector<byte> sig = signer.signature(rng);
 
       for(u32bit i = 0; i != 256; ++i)
          verifier.update(static_cast<byte>(i));
@@ -267,11 +267,11 @@ void test_create_and_verify(RandomNumberGenerator& rng)
    std::string G_secp_comp = "04081523d03d4f12cd02879dea4bf6a4f3a7df26ed888f10c5b2235a1274c386a2f218300dee6ed217841164533bcdc903f07a096f9fbf4ee95bac098a111f296f5830fe5c35b3e344d5df3a2256985f64fbe6d0edcc4c61d18bef681dd399df3d0194c5a4315e012e0245ecea56365baa9e8be1f7";
    std::string order_g = "0e1a16196e6000000000bc7f1618d867b15bb86474418f";
 
-   //	::SecureVector<byte> sv_p_secp = hex_decode ( p_secp );
-   SecureVector<byte> sv_a_secp = hex_decode ( a_secp );
-   SecureVector<byte> sv_b_secp = hex_decode ( b_secp );
-   SecureVector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
-   SecureVector<byte> sv_order_g = hex_decode ( order_g );
+   //	::std::vector<byte> sv_p_secp = hex_decode ( p_secp );
+   secure_vector<byte> sv_a_secp = hex_decode ( a_secp );
+   secure_vector<byte> sv_b_secp = hex_decode ( b_secp );
+   secure_vector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
+   secure_vector<byte> sv_order_g = hex_decode ( order_g );
 
    //	BigInt bi_p_secp = BigInt::decode ( &sv_p_secp[0], sv_p_secp.size() );
    BigInt bi_p_secp("2117607112719756483104013348936480976596328609518055062007450442679169492999007105354629105748524349829824407773719892437896937279095106809");
@@ -343,8 +343,8 @@ void test_curve_registry(RandomNumberGenerator& rng)
          PK_Signer signer(ecdsa, "EMSA1(SHA-1)");
          PK_Verifier verifier(ecdsa, "EMSA1(SHA-1)");
 
-         SecureVector<byte> msg = hex_decode("12345678901234567890abcdef12");
-         SecureVector<byte> sig = signer.sign_message(msg, rng);
+         secure_vector<byte> msg = hex_decode("12345678901234567890abcdef12");
+         std::vector<byte> sig = signer.sign_message(msg, rng);
 
          if(!verifier.verify_message(msg, sig))
             std::cout << "Failed testing ECDSA sig for curve " << oids[i] << "\n";
@@ -361,7 +361,7 @@ void test_read_pkcs8(RandomNumberGenerator& rng)
    {
    std::cout << "." << std::flush;
 
-   SecureVector<byte> msg = hex_decode("12345678901234567890abcdef12");
+   secure_vector<byte> msg = hex_decode("12345678901234567890abcdef12");
 
    try
       {
@@ -371,7 +371,7 @@ void test_read_pkcs8(RandomNumberGenerator& rng)
 
       PK_Signer signer(*ecdsa, "EMSA1(SHA-1)");
 
-      SecureVector<byte> sig = signer.sign_message(msg, rng);
+      std::vector<byte> sig = signer.sign_message(msg, rng);
 
       PK_Verifier verifier(*ecdsa, "EMSA1(SHA-1)");
 
@@ -393,7 +393,7 @@ void test_read_pkcs8(RandomNumberGenerator& rng)
       PK_Signer signer(*ecdsa_nodp, "EMSA1(SHA-1)");
       PK_Verifier verifier(*ecdsa_nodp, "EMSA1(SHA-1)");
 
-      SecureVector<byte> signature_nodp = signer.sign_message(msg, rng);
+      std::vector<byte> signature_nodp = signer.sign_message(msg, rng);
 
       CHECK_MESSAGE(verifier.verify_message(msg, signature_nodp),
                     "generated signature could not be verified positively (no_dom)");

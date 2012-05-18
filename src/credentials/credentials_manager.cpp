@@ -54,7 +54,7 @@ bool Credentials_Manager::srp_verifier(const std::string&,
                                        const std::string&,
                                        std::string&,
                                        BigInt&,
-                                       MemoryRegion<byte>&,
+                                       std::vector<byte>&,
                                        bool)
    {
    return false;

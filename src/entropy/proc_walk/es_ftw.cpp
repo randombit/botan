@@ -151,7 +151,7 @@ void FTW_EntropySource::poll(Entropy_Accumulator& accum)
    if(!dir)
       dir = new Directory_Walker(path);
 
-   MemoryRegion<byte>& io_buffer = accum.get_io_buffer(4096);
+   secure_vector<byte>& io_buffer = accum.get_io_buffer(4096);
 
    for(size_t i = 0; i != MAX_FILES_READ_PER_POLL; ++i)
       {

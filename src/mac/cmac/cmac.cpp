@@ -13,12 +13,12 @@ namespace Botan {
 /*
 * Perform CMAC's multiplication in GF(2^n)
 */
-SecureVector<byte> CMAC::poly_double(const MemoryRegion<byte>& in,
+secure_vector<byte> CMAC::poly_double(const secure_vector<byte>& in,
                                      byte polynomial)
    {
    const byte poly_xor = (in[0] & 0x80) ? polynomial : 0;
 
-   SecureVector<byte> out = in;
+   secure_vector<byte> out = in;
 
    byte carry = 0;
    for(size_t i = out.size(); i != 0; --i)

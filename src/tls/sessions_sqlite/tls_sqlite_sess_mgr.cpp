@@ -53,7 +53,7 @@ class sqlite3_statement
          bind(column, timeval);
          }
 
-      void bind(int column, const MemoryRegion<byte>& val)
+      void bind(int column, const std::vector<byte>& val)
          {
          int rc = sqlite3_bind_blob(m_stmt, column, &val[0], val.size(), SQLITE_TRANSIENT);
          if(rc != SQLITE_OK)
@@ -137,7 +137,7 @@ SymmetricKey derive_key(const std::string& passphrase,
    {
    std::unique_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(SHA-512)"));
 
-   SecureVector<byte> x = pbkdf->derive_key(32 + 3,
+   std::vector<byte> x = pbkdf->derive_key(32 + 3,
                                             passphrase,
                                             salt, salt_len,
                                             iterations).bits_of();
@@ -217,7 +217,7 @@ Session_Manager_SQLite::Session_Manager_SQLite(const std::string& passphrase,
 
       // new database case
 
-      MemoryVector<byte> salt = rng.random_vec(16);
+      std::vector<byte> salt = rng.random_vec(16);
       const size_t iterations = 64 * 1024;
       size_t check_val = 0;
 
@@ -240,7 +240,7 @@ Session_Manager_SQLite::~Session_Manager_SQLite()
    sqlite3_close(m_db);
    }
 
-bool Session_Manager_SQLite::load_from_session_id(const MemoryRegion<byte>& session_id,
+bool Session_Manager_SQLite::load_from_session_id(const std::vector<byte>& session_id,
                                                   Session& session)
    {
    sqlite3_statement stmt(m_db, "select session from tls_sessions where session_id = ?1");
@@ -300,7 +300,7 @@ bool Session_Manager_SQLite::load_from_host_info(const std::string& hostname,
    return false;
    }
 
-void Session_Manager_SQLite::remove_entry(const MemoryRegion<byte>& session_id)
+void Session_Manager_SQLite::remove_entry(const std::vector<byte>& session_id)
    {
    sqlite3_statement stmt(m_db, "delete from tls_sessions where session_id = ?1");
 

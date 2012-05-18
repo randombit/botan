@@ -106,7 +106,7 @@ std::vector<std::string> X509_DN::get_attribute(const std::string& attr) const
 /*
 * Return the BER encoded data, if any
 */
-MemoryVector<byte> X509_DN::get_bits() const
+std::vector<byte> X509_DN::get_bits() const
    {
    return dn_bits;
    }
@@ -247,7 +247,7 @@ void X509_DN::encode_into(DER_Encoder& der) const
 */
 void X509_DN::decode_from(BER_Decoder& source)
    {
-   MemoryVector<byte> bits;
+   std::vector<byte> bits;
 
    source.start_cons(SEQUENCE)
       .raw_bytes(bits)

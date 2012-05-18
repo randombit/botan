@@ -28,10 +28,10 @@ int main()
 
    const u32bit PBKDF2_ITERATIONS = 8192;
 
-   SecureVector<byte> salt(8);
+   secure_vector<byte> salt(8);
    rng.randomize(&salt[0], salt.size());
 
-   SecureVector<byte> master_key = pbkdf2.derive_key(48, passphrase,
+   secure_vector<byte> master_key = pbkdf2.derive_key(48, passphrase,
                                                      &salt[0], salt.size(),
                                                      PBKDF2_ITERATIONS).bits_of();
 
@@ -55,12 +55,12 @@ int main()
                 )
       );
 
-   outfile.write((const char*)salt.begin(), salt.size());
+   outfile.write((const char*)&salt[0], salt.size());
 
    pipe.start_msg();
    infile >> pipe;
    pipe.end_msg();
 
-   SecureVector<byte> hmac = pipe.read_all(1);
-   outfile.write((const char*)hmac.begin(), hmac.size());
+   secure_vector<byte> hmac = pipe.read_all(1);
+   outfile.write((const char*)&hmac[0], hmac.size());
    }

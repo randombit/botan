@@ -34,7 +34,7 @@ inline std::string make_string(const byte input[], u32bit length)
    return std::string((const char*)input, length);
    }
 
-inline std::string make_string(const MemoryRegion<byte>& in)
+inline std::string make_string(const secure_vector<byte>& in)
    {
    return make_string(in.begin(), in.size());
    }

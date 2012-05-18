@@ -16,7 +16,7 @@ namespace Botan {
 /*
 * Return a BER encoded X.509 object
 */
-SecureVector<byte> EAC_Signed_Object::BER_encode() const
+secure_vector<byte> EAC_Signed_Object::BER_encode() const
    {
    Pipe ber;
    ber.start_msg();
@@ -46,7 +46,7 @@ AlgorithmIdentifier EAC_Signed_Object::signature_algorithm() const
    }
 
 bool EAC_Signed_Object::check_signature(Public_Key& pub_key,
-                                        const MemoryRegion<byte>& sig) const
+                                        const secure_vector<byte>& sig) const
    {
    try
       {
@@ -62,7 +62,7 @@ bool EAC_Signed_Object::check_signature(Public_Key& pub_key,
       Signature_Format format =
          (pub_key.message_parts() >= 2) ? DER_SEQUENCE : IEEE_1363;
 
-      SecureVector<byte> to_sign = tbs_data();
+      secure_vector<byte> to_sign = tbs_data();
 
       PK_Verifier verifier(pub_key, padding, format);
       return verifier.verify_message(to_sign, sig);

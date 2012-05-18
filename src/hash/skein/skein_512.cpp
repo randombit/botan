@@ -27,8 +27,8 @@ enum type_code {
    SKEIN_OUTPUT = 63
 };
 
-void ubi_512(MemoryRegion<u64bit>& H,
-             MemoryRegion<u64bit>& T,
+void ubi_512(secure_vector<u64bit>& H,
+             secure_vector<u64bit>& T,
              const byte msg[], size_t msg_len)
    {
    do
@@ -125,7 +125,7 @@ void ubi_512(MemoryRegion<u64bit>& H,
       } while(msg_len);
    }
 
-void reset_tweak(MemoryRegion<u64bit>& T,
+void reset_tweak(secure_vector<u64bit>& T,
                  type_code type, bool final)
    {
    T[0] = 0;
@@ -135,8 +135,8 @@ void reset_tweak(MemoryRegion<u64bit>& T,
           (static_cast<u64bit>(final) << 63);
    }
 
-void initial_block(MemoryRegion<u64bit>& H,
-                   MemoryRegion<u64bit>& T,
+void initial_block(secure_vector<u64bit>& H,
+                   secure_vector<u64bit>& T,
                    size_t output_bits,
                    const std::string& personalization)
    {
@@ -245,7 +245,7 @@ void Skein_512::final_result(byte out[])
 
    size_t out_bytes = output_bits / 8;
 
-   SecureVector<u64bit> H_out(9);
+   secure_vector<u64bit> H_out(9);
 
    while(out_bytes)
       {

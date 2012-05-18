@@ -63,7 +63,7 @@ void export_x509()
    {
    vector_to_list<std::string>();
    vector_to_list<X509_Certificate>();
-   memvec_to_hexstr<MemoryVector<byte> >();
+   memvec_to_hexstr<std::vector<byte> >();
 
    python::class_<X509_Certificate>
       ("X509_Certificate", python::init<std::string>())

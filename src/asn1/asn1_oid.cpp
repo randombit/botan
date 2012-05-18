@@ -129,7 +129,7 @@ void OID::encode_into(DER_Encoder& der) const
    if(id.size() < 2)
       throw Invalid_Argument("OID::encode_into: OID is invalid");
 
-   MemoryVector<byte> encoding;
+   std::vector<byte> encoding;
    encoding.push_back(40 * id[0] + id[1]);
 
    for(size_t i = 2; i != id.size(); ++i)

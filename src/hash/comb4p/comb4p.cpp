@@ -13,8 +13,8 @@ namespace Botan {
 
 namespace {
 
-void comb4p_round(MemoryRegion<byte>& out,
-                  const MemoryRegion<byte>& in,
+void comb4p_round(secure_vector<byte>& out,
+                  const secure_vector<byte>& in,
                   byte round_no,
                   HashFunction* h1,
                   HashFunction* h2)
@@ -25,7 +25,7 @@ void comb4p_round(MemoryRegion<byte>& out,
    h1->update(&in[0], in.size());
    h2->update(&in[0], in.size());
 
-   SecureVector<byte> h_buf = h1->final();
+   secure_vector<byte> h_buf = h1->final();
    xor_buf(&out[0], &h_buf[0], std::min(out.size(), h_buf.size()));
 
    h_buf = h2->final();
@@ -78,8 +78,8 @@ void Comb4P::add_data(const byte input[], size_t length)
 
 void Comb4P::final_result(byte out[])
    {
-   SecureVector<byte> h1 = hash1->final();
-   SecureVector<byte> h2 = hash2->final();
+   secure_vector<byte> h1 = hash1->final();
+   secure_vector<byte> h2 = hash2->final();
 
    // First round
    xor_buf(&h1[0], &h2[0], std::min(h1.size(), h2.size()));

@@ -35,7 +35,7 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey
       * Construct from X.509 algorithm id and subject public key bits
       */
       GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
-                          const MemoryRegion<byte>& key_bits);
+                          const secure_vector<byte>& key_bits);
 
       /**
       * Get this keys algorithm name.
@@ -45,7 +45,7 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey
 
       AlgorithmIdentifier algorithm_identifier() const;
 
-      MemoryVector<byte> x509_subject_public_key() const;
+      std::vector<byte> x509_subject_public_key() const;
 
       /**
       * Get the maximum number of bits allowed to be fed to this key.
@@ -73,7 +73,7 @@ class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
    public:
 
       GOST_3410_PrivateKey(const AlgorithmIdentifier& alg_id,
-                           const MemoryRegion<byte>& key_bits) :
+                           const secure_vector<byte>& key_bits) :
          EC_PrivateKey(alg_id, key_bits) {}
 
       /**
@@ -103,7 +103,7 @@ class BOTAN_DLL GOST_3410_Signature_Operation : public PK_Ops::Signature
       size_t message_part_size() const { return order.bytes(); }
       size_t max_input_bits() const { return order.bits(); }
 
-      SecureVector<byte> sign(const byte msg[], size_t msg_len,
+      secure_vector<byte> sign(const byte msg[], size_t msg_len,
                               RandomNumberGenerator& rng);
 
    private:

@@ -168,7 +168,7 @@ void doit(RandomNumberGenerator& rng,
             continue;
             }
 
-         const size_t needed = client.received_data(buf, got);
+         client.received_data(buf, got);
          //std::cout << "Socket - got " << got << " bytes, need " << needed << "\n";
          }
       else if(FD_ISSET(STDIN_FILENO, &readfds))

@@ -44,27 +44,27 @@ PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
 /*
 * Encrypt a message
 */
-SecureVector<byte>
+std::vector<byte>
 PK_Encryptor_EME::enc(const byte in[],
                       size_t length,
                       RandomNumberGenerator& rng) const
    {
    if(eme)
       {
-      SecureVector<byte> encoded =
+      secure_vector<byte> encoded =
          eme->encode(in, length, op->max_input_bits(), rng);
 
       if(8*(encoded.size() - 1) + high_bit(encoded[0]) > op->max_input_bits())
          throw Invalid_Argument("PK_Encryptor_EME: Input is too large");
 
-      return op->encrypt(&encoded[0], encoded.size(), rng);
+      return unlock(op->encrypt(&encoded[0], encoded.size(), rng));
       }
    else
       {
       if(8*(length - 1) + high_bit(in[0]) > op->max_input_bits())
          throw Invalid_Argument("PK_Encryptor_EME: Input is too large");
 
-      return op->encrypt(&in[0], length, rng);
+      return unlock(op->encrypt(&in[0], length, rng));
       }
    }
 
@@ -104,11 +104,11 @@ PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
 /*
 * Decrypt a message
 */
-SecureVector<byte> PK_Decryptor_EME::dec(const byte msg[],
-                                         size_t length) const
+secure_vector<byte> PK_Decryptor_EME::dec(const byte msg[],
+                                          size_t length) const
    {
    try {
-      SecureVector<byte> decrypted = op->decrypt(msg, length);
+      secure_vector<byte> decrypted = op->decrypt(msg, length);
       if(eme)
          return eme->decode(decrypted, op->max_input_bits());
       else
@@ -156,7 +156,7 @@ PK_Signer::PK_Signer(const Private_Key& key,
 /*
 * Sign a message
 */
-SecureVector<byte> PK_Signer::sign_message(const byte msg[], size_t length,
+std::vector<byte> PK_Signer::sign_message(const byte msg[], size_t length,
                                            RandomNumberGenerator& rng)
    {
    update(msg, length);
@@ -174,16 +174,16 @@ void PK_Signer::update(const byte in[], size_t length)
 /*
 * Check the signature we just created, to help prevent fault attacks
 */
-bool PK_Signer::self_test_signature(const MemoryRegion<byte>& msg,
-                                    const MemoryRegion<byte>& sig) const
+bool PK_Signer::self_test_signature(const std::vector<byte>& msg,
+                                    const std::vector<byte>& sig) const
    {
    if(!verify_op)
       return true; // checking disabled, assume ok
 
    if(verify_op->with_recovery())
       {
-      SecureVector<byte> recovered =
-         verify_op->verify_mr(&sig[0], sig.size());
+      std::vector<byte> recovered =
+         unlock(verify_op->verify_mr(&sig[0], sig.size()));
 
       if(msg.size() > recovered.size())
          {
@@ -206,13 +206,13 @@ bool PK_Signer::self_test_signature(const MemoryRegion<byte>& msg,
 /*
 * Create a signature
 */
-SecureVector<byte> PK_Signer::signature(RandomNumberGenerator& rng)
+std::vector<byte> PK_Signer::signature(RandomNumberGenerator& rng)
    {
-   SecureVector<byte> encoded = emsa->encoding_of(emsa->raw_data(),
-                                                  op->max_input_bits(),
-                                                  rng);
+   std::vector<byte> encoded = unlock(emsa->encoding_of(emsa->raw_data(),
+                                                 op->max_input_bits(),
+                                                        rng));
 
-   SecureVector<byte> plain_sig = op->sign(&encoded[0], encoded.size(), rng);
+   std::vector<byte> plain_sig = unlock(op->sign(&encoded[0], encoded.size(), rng));
 
    BOTAN_ASSERT(self_test_signature(encoded, plain_sig),
                 "PK_Signer consistency check failed");
@@ -234,7 +234,7 @@ SecureVector<byte> PK_Signer::signature(RandomNumberGenerator& rng)
          .start_cons(SEQUENCE)
             .encode_list(sig_parts)
          .end_cons()
-      .get_contents();
+      .get_contents_unlocked();
       }
    else
       throw Encoding_Error("PK_Signer: Unknown signature format " +
@@ -307,7 +307,7 @@ bool PK_Verifier::check_signature(const byte sig[], size_t length)
          BER_Decoder ber_sig = decoder.start_cons(SEQUENCE);
 
          size_t count = 0;
-         SecureVector<byte> real_sig;
+         std::vector<byte> real_sig;
          while(ber_sig.more_items())
             {
             BigInt sig_part;
@@ -332,19 +332,19 @@ bool PK_Verifier::check_signature(const byte sig[], size_t length)
 /*
 * Verify a signature
 */
-bool PK_Verifier::validate_signature(const MemoryRegion<byte>& msg,
+bool PK_Verifier::validate_signature(const secure_vector<byte>& msg,
                                      const byte sig[], size_t sig_len)
    {
    if(op->with_recovery())
       {
-      SecureVector<byte> output_of_key = op->verify_mr(sig, sig_len);
+      secure_vector<byte> output_of_key = op->verify_mr(sig, sig_len);
       return emsa->verify(output_of_key, msg, op->max_input_bits());
       }
    else
       {
       Null_RNG rng;
 
-      SecureVector<byte> encoded =
+      secure_vector<byte> encoded =
          emsa->encoding_of(msg, op->max_input_bits(), rng);
 
       return op->verify(&encoded[0], encoded.size(), sig, sig_len);
@@ -377,7 +377,7 @@ SymmetricKey PK_Key_Agreement::derive_key(size_t key_len, const byte in[],
                                           size_t in_len, const byte params[],
                                           size_t params_len) const
    {
-   SecureVector<byte> z = op->agree(in, in_len);
+   secure_vector<byte> z = op->agree(in, in_len);
 
    if(!kdf)
       return z;

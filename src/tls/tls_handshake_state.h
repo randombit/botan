@@ -37,7 +37,7 @@ class Handshake_State
       void confirm_transition_to(Handshake_Type handshake_msg);
       void set_expected_next(Handshake_Type handshake_msg);
 
-      const MemoryRegion<byte>& session_ticket() const;
+      const std::vector<byte>& session_ticket() const;
 
       std::pair<std::string, Signature_Format>
          understand_sig_format(const Public_Key* key,
@@ -86,7 +86,7 @@ class Handshake_State
       /*
       * Only used by clients for session resumption
       */
-      SecureVector<byte> resume_master_secret;
+      secure_vector<byte> resume_master_secret;
 
       /*
       *

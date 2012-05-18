@@ -42,7 +42,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
                          Algorithm_Factory& af,
                          BigInt& p, BigInt& q,
                          size_t pbits, size_t qbits,
-                         const MemoryRegion<byte>& seed_c)
+                         const std::vector<byte>& seed_c)
    {
    if(!fips186_3_valid_size(pbits, qbits))
       throw Invalid_Argument(
@@ -62,9 +62,9 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
    class Seed
       {
       public:
-         Seed(const MemoryRegion<byte>& s) : seed(s) {}
+         Seed(const std::vector<byte>& s) : seed(s) {}
 
-         operator MemoryRegion<byte>& () { return seed; }
+         operator std::vector<byte>& () { return seed; }
 
          Seed& operator++()
             {
@@ -74,7 +74,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
             return (*this);
             }
       private:
-         SecureVector<byte> seed;
+         std::vector<byte> seed;
       };
 
    Seed seed(seed_c);
@@ -90,7 +90,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
                 b = (pbits-1) % (HASH_SIZE * 8);
 
    BigInt X;
-   SecureVector<byte> V(HASH_SIZE * (n+1));
+   std::vector<byte> V(HASH_SIZE * (n+1));
 
    for(size_t j = 0; j != 4096; ++j)
       {
@@ -116,14 +116,15 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
 /*
 * Generate DSA Primes
 */
-SecureVector<byte> generate_dsa_primes(RandomNumberGenerator& rng,
-                                       Algorithm_Factory& af,
-                                       BigInt& p, BigInt& q,
-                                       size_t pbits, size_t qbits)
+std::vector<byte> generate_dsa_primes(RandomNumberGenerator& rng,
+                                      Algorithm_Factory& af,
+                                      BigInt& p, BigInt& q,
+                                      size_t pbits, size_t qbits)
    {
    while(true)
       {
-      SecureVector<byte> seed = rng.random_vec(qbits / 8);
+      std::vector<byte> seed(qbits / 8);
+      rng.randomize(&seed[0], seed.size());
 
       if(generate_dsa_primes(rng, af, p, q, pbits, qbits, seed))
          return seed;

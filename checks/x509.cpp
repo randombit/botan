@@ -49,7 +49,7 @@ u64bit key_id(const Public_Key* key)
    pipe.write(key->x509_subject_public_key());
    pipe.end_msg();
 
-   SecureVector<byte> output = pipe.read_all();
+   secure_vector<byte> output = pipe.read_all();
 
    if(output.size() != 8)
       throw Internal_Error("Public_Key::key_id: Incorrect output size");

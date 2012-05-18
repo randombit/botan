@@ -33,11 +33,11 @@ OctetString next_hash(size_t where, size_t want,
      sha1.update(static_cast<byte>(ASCII_A_CHAR + where));
    sha1.update(secret, secret_len);
    sha1.update(seed, seed_len);
-   SecureVector<byte> sha1_hash = sha1.final();
+   secure_vector<byte> sha1_hash = sha1.final();
 
    md5.update(secret, secret_len);
    md5.update(sha1_hash);
-   SecureVector<byte> md5_hash = md5.final();
+   secure_vector<byte> md5_hash = md5.final();
 
    return OctetString(&md5_hash[0], want);
    }
@@ -47,7 +47,7 @@ OctetString next_hash(size_t where, size_t want,
 /*
 * SSL3 PRF
 */
-SecureVector<byte> SSL3_PRF::derive(size_t key_len,
+secure_vector<byte> SSL3_PRF::derive(size_t key_len,
                                     const byte secret[], size_t secret_len,
                                     const byte seed[], size_t seed_len) const
    {

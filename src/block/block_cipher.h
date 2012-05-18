@@ -75,6 +75,50 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
 
       /**
       * Encrypt one or more blocks
+      * @param block the input/output buffer (multiple of block_size())
+      */
+      template<typename Alloc>
+      void encrypt(std::vector<byte, Alloc>& block) const
+         {
+         return encrypt_n(&block[0], &block[0], block.size() / block_size());
+         }
+
+      /**
+      * Decrypt one or more blocks
+      * @param block the input/output buffer (multiple of block_size())
+      */
+      template<typename Alloc>
+      void decrypt(std::vector<byte, Alloc>& block) const
+         {
+         return decrypt_n(&block[0], &block[0], block.size() / block_size());
+         }
+
+      /**
+      * Encrypt one or more blocks
+      * @param in the input buffer (multiple of block_size())
+      * @param out the output buffer (same size as in)
+      */
+      template<typename Alloc, typename Alloc2>
+      void encrypt(const std::vector<byte, Alloc>& in,
+                   std::vector<byte, Alloc2>& out) const
+         {
+         return encrypt_n(&in[0], &out[0], in.size() / block_size());
+         }
+
+      /**
+      * Decrypt one or more blocks
+      * @param in the input buffer (multiple of block_size())
+      * @param out the output buffer (same size as in)
+      */
+      template<typename Alloc, typename Alloc2>
+      void decrypt(const std::vector<byte, Alloc>& in,
+                   std::vector<byte, Alloc2>& out) const
+         {
+         return decrypt_n(&in[0], &out[0], in.size() / block_size());
+         }
+
+      /**
+      * Encrypt one or more blocks
       * @param in the input buffer (multiple of block_size())
       * @param out the output buffer (same size as in)
       * @param blocks the number of blocks to process

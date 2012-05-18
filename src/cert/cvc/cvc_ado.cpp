@@ -26,7 +26,7 @@ EAC1_1_ADO::EAC1_1_ADO(const std::string& in)
 
 void EAC1_1_ADO::force_decode()
    {
-   SecureVector<byte> inner_cert;
+   secure_vector<byte> inner_cert;
    BER_Decoder(tbs_bits)
       .start_cons(ASN1_Tag(33))
       .raw_bytes(inner_cert)
@@ -34,7 +34,7 @@ void EAC1_1_ADO::force_decode()
       .decode(m_car)
       .verify_end();
 
-   SecureVector<byte> req_bits = DER_Encoder()
+   secure_vector<byte> req_bits = DER_Encoder()
       .start_cons(ASN1_Tag(33), APPLICATION)
       .raw_bytes(inner_cert)
       .end_cons()
@@ -45,11 +45,11 @@ void EAC1_1_ADO::force_decode()
    sig_algo = m_req.sig_algo;
    }
 
-MemoryVector<byte> EAC1_1_ADO::make_signed(PK_Signer& signer,
-                                           const MemoryRegion<byte>& tbs_bits,
+std::vector<byte> EAC1_1_ADO::make_signed(PK_Signer& signer,
+                                           const secure_vector<byte>& tbs_bits,
                                            RandomNumberGenerator& rng)
    {
-   SecureVector<byte> concat_sig = signer.sign_message(tbs_bits, rng);
+   secure_vector<byte> concat_sig = signer.sign_message(tbs_bits, rng);
 
    return DER_Encoder()
       .start_cons(ASN1_Tag(7), APPLICATION)
@@ -65,11 +65,11 @@ ASN1_Car EAC1_1_ADO::get_car() const
    }
 
 void EAC1_1_ADO::decode_info(DataSource& source,
-                             SecureVector<byte> & res_tbs_bits,
+                             secure_vector<byte> & res_tbs_bits,
                              ECDSA_Signature & res_sig)
    {
-   SecureVector<byte> concat_sig;
-   SecureVector<byte> cert_inner_bits;
+   secure_vector<byte> concat_sig;
+   secure_vector<byte> cert_inner_bits;
    ASN1_Car car;
 
    BER_Decoder(source)
@@ -81,7 +81,7 @@ void EAC1_1_ADO::decode_info(DataSource& source,
       .decode(concat_sig, OCTET_STRING, ASN1_Tag(55), APPLICATION)
       .end_cons();
 
-   SecureVector<byte> enc_cert = DER_Encoder()
+   secure_vector<byte> enc_cert = DER_Encoder()
       .start_cons(ASN1_Tag(33), APPLICATION)
       .raw_bytes(cert_inner_bits)
       .end_cons()
@@ -97,7 +97,7 @@ void EAC1_1_ADO::encode(Pipe& out, X509_Encoding encoding) const
    if(encoding == PEM)
       throw Invalid_Argument("EAC1_1_ADO::encode() cannot PEM encode an EAC object");
 
-   SecureVector<byte> concat_sig(
+   secure_vector<byte> concat_sig(
       EAC1_1_obj<EAC1_1_ADO>::m_sig.get_concatenation());
 
    out.write(DER_Encoder()
@@ -108,7 +108,7 @@ void EAC1_1_ADO::encode(Pipe& out, X509_Encoding encoding) const
              .get_contents());
    }
 
-SecureVector<byte> EAC1_1_ADO::tbs_data() const
+secure_vector<byte> EAC1_1_ADO::tbs_data() const
    {
    return tbs_bits;
    }

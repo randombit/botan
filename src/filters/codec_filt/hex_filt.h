@@ -49,7 +49,7 @@ class BOTAN_DLL Hex_Encoder : public Filter
 
       const Case casing;
       const size_t line_length;
-      MemoryVector<byte> in, out;
+      std::vector<byte> in, out;
       size_t position, counter;
    };
 
@@ -72,7 +72,7 @@ class BOTAN_DLL Hex_Decoder : public Filter
       Hex_Decoder(Decoder_Checking checking = NONE);
    private:
       const Decoder_Checking checking;
-      MemoryVector<byte> in, out;
+      std::vector<byte> in, out;
       size_t position;
    };
 

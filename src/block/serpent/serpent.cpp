@@ -358,7 +358,7 @@ void Serpent::key_schedule(const byte key[], size_t length)
    {
    const u32bit PHI = 0x9E3779B9;
 
-   SecureVector<u32bit> W(140);
+   secure_vector<u32bit> W(140);
    for(size_t i = 0; i != length / 4; ++i)
       W[i] = load_le<u32bit>(key, i);
 

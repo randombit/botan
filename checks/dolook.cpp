@@ -83,14 +83,14 @@ class PBKDF_Filter : public Filter
          pbkdf = algo;
          outlen = o;
          iterations = i;
-         salt = s.bits_of();
+         salt = unlock(s.bits_of());
          }
 
       ~PBKDF_Filter() { delete pbkdf; }
    private:
       std::string passphrase;
       PBKDF* pbkdf;
-      SecureVector<byte> salt;
+      std::vector<byte> salt;
       u32bit outlen, iterations;
    };
 
@@ -126,12 +126,12 @@ class KDF_Filter : public Filter
          {
          kdf = algo;
          outlen = o;
-         salt = s.bits_of();
+         salt = unlock(s.bits_of());
          }
       ~KDF_Filter() { delete kdf; }
    private:
-      SecureVector<byte> secret;
-      SecureVector<byte> salt;
+      std::vector<byte> secret;
+      std::vector<byte> salt;
       KDF* kdf;
       u32bit outlen;
    };

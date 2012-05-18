@@ -45,7 +45,7 @@ class BOTAN_DLL Zlib_Compression : public Filter
       const size_t level;
       const bool raw_deflate;
 
-      SecureVector<byte> buffer;
+      secure_vector<byte> buffer;
       class Zlib_Stream* zlib;
    };
 
@@ -68,7 +68,7 @@ class BOTAN_DLL Zlib_Decompression : public Filter
 
       const bool raw_deflate;
 
-      SecureVector<byte> buffer;
+      secure_vector<byte> buffer;
       class Zlib_Stream* zlib;
       bool no_writes;
    };

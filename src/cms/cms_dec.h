@@ -52,7 +52,7 @@ class BOTAN_DLL CMS_Decoder
       std::vector<Private_Key*> keys;
 
       OID type, next_type;
-      SecureVector<byte> data;
+      secure_vector<byte> data;
       Status status;
       std::string info;
    };

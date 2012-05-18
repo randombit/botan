@@ -16,7 +16,7 @@ namespace Botan {
 */
 void Lion::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   SecureVector<byte> buffer_vec(LEFT_SIZE);
+   secure_vector<byte> buffer_vec(LEFT_SIZE);
    byte* buffer = &buffer_vec[0];
 
    for(size_t i = 0; i != blocks; ++i)
@@ -43,7 +43,7 @@ void Lion::encrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void Lion::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   SecureVector<byte> buffer_vec(LEFT_SIZE);
+   secure_vector<byte> buffer_vec(LEFT_SIZE);
    byte* buffer = &buffer_vec[0];
 
    for(size_t i = 0; i != blocks; ++i)

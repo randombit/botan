@@ -33,12 +33,12 @@ class BOTAN_DLL MD5 : public MDx_HashFunction
       /**
       * The message buffer, exposed for use by subclasses (x86 asm)
       */
-      SecureVector<u32bit> M;
+      secure_vector<u32bit> M;
 
       /**
       * The digest value, exposed for use by subclasses (x86 asm)
       */
-      SecureVector<u32bit> digest;
+      secure_vector<u32bit> digest;
    };
 
 }

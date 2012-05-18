@@ -189,7 +189,7 @@ class Algorithm_Factory;
 * @param qbits how long q will be in bits
 * @return random seed used to generate this parameter set
 */
-SecureVector<byte> BOTAN_DLL
+std::vector<byte> BOTAN_DLL
 generate_dsa_primes(RandomNumberGenerator& rng,
                     Algorithm_Factory& af,
                     BigInt& p_out, BigInt& q_out,
@@ -212,7 +212,7 @@ generate_dsa_primes(RandomNumberGenerator& rng,
                     Algorithm_Factory& af,
                     BigInt& p_out, BigInt& q_out,
                     size_t pbits, size_t qbits,
-                    const MemoryRegion<byte>& seed);
+                    const std::vector<byte>& seed);
 
 /**
 * The size of the PRIMES[] array

@@ -15,7 +15,7 @@ namespace {
 /*
 * EMSA3 Encode Operation
 */
-SecureVector<byte> emsa3_encoding(const MemoryRegion<byte>& msg,
+secure_vector<byte> emsa3_encoding(const secure_vector<byte>& msg,
                                   size_t output_bits,
                                   const byte hash_id[],
                                   size_t hash_id_length)
@@ -24,7 +24,7 @@ SecureVector<byte> emsa3_encoding(const MemoryRegion<byte>& msg,
    if(output_length < hash_id_length + msg.size() + 10)
       throw Encoding_Error("emsa3_encoding: Output length is too small");
 
-   SecureVector<byte> T(output_length);
+   secure_vector<byte> T(output_length);
    const size_t P_LENGTH = output_length - msg.size() - hash_id_length - 2;
 
    T[0] = 0x01;
@@ -48,7 +48,7 @@ void EMSA3::update(const byte input[], size_t length)
 /*
 * Return the raw (unencoded) data
 */
-SecureVector<byte> EMSA3::raw_data()
+secure_vector<byte> EMSA3::raw_data()
    {
    return hash->final();
    }
@@ -56,7 +56,7 @@ SecureVector<byte> EMSA3::raw_data()
 /*
 * EMSA3 Encode Operation
 */
-SecureVector<byte> EMSA3::encoding_of(const MemoryRegion<byte>& msg,
+secure_vector<byte> EMSA3::encoding_of(const secure_vector<byte>& msg,
                                       size_t output_bits,
                                       RandomNumberGenerator&)
    {
@@ -70,8 +70,8 @@ SecureVector<byte> EMSA3::encoding_of(const MemoryRegion<byte>& msg,
 /*
 * Default signature decoding
 */
-bool EMSA3::verify(const MemoryRegion<byte>& coded,
-                   const MemoryRegion<byte>& raw,
+bool EMSA3::verify(const secure_vector<byte>& coded,
+                   const secure_vector<byte>& raw,
                    size_t key_bits)
    {
    if(raw.size() != hash->output_length())
@@ -115,9 +115,9 @@ void EMSA3_Raw::update(const byte input[], size_t length)
 /*
 * Return the raw (unencoded) data
 */
-SecureVector<byte> EMSA3_Raw::raw_data()
+secure_vector<byte> EMSA3_Raw::raw_data()
    {
-   SecureVector<byte> ret;
+   secure_vector<byte> ret;
    std::swap(ret, message);
    return ret;
    }
@@ -125,7 +125,7 @@ SecureVector<byte> EMSA3_Raw::raw_data()
 /*
 * EMSA3_Raw Encode Operation
 */
-SecureVector<byte> EMSA3_Raw::encoding_of(const MemoryRegion<byte>& msg,
+secure_vector<byte> EMSA3_Raw::encoding_of(const secure_vector<byte>& msg,
                                           size_t output_bits,
                                           RandomNumberGenerator&)
    {
@@ -135,8 +135,8 @@ SecureVector<byte> EMSA3_Raw::encoding_of(const MemoryRegion<byte>& msg,
 /*
 * Default signature decoding
 */
-bool EMSA3_Raw::verify(const MemoryRegion<byte>& coded,
-                       const MemoryRegion<byte>& raw,
+bool EMSA3_Raw::verify(const secure_vector<byte>& coded,
+                       const secure_vector<byte>& raw,
                        size_t key_bits)
    {
    try

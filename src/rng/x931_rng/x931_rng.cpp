@@ -40,7 +40,7 @@ void ANSI_X931_RNG::update_buffer()
    {
    const size_t BLOCK_SIZE = cipher->block_size();
 
-   SecureVector<byte> DT = prng->random_vec(BLOCK_SIZE);
+   secure_vector<byte> DT = prng->random_vec(BLOCK_SIZE);
    cipher->encrypt(DT);
 
    xor_buf(&R[0], &V[0], &DT[0], BLOCK_SIZE);

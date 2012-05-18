@@ -116,7 +116,7 @@ inline u64bit FLINV(u64bit v, u64bit K)
 * Camellia Encryption
 */
 void encrypt(const byte in[], byte out[], size_t blocks,
-             const SecureVector<u64bit>& SK, const size_t rounds)
+             const secure_vector<u64bit>& SK, const size_t rounds)
    {
    for(size_t i = 0; i != blocks; ++i)
       {
@@ -160,7 +160,7 @@ void encrypt(const byte in[], byte out[], size_t blocks,
 * Camellia Decryption
 */
 void decrypt(const byte in[], byte out[], size_t blocks,
-             const SecureVector<u64bit>& SK, const size_t rounds)
+             const secure_vector<u64bit>& SK, const size_t rounds)
    {
    for(size_t i = 0; i != blocks; ++i)
       {
@@ -213,7 +213,7 @@ u64bit left_rot_lo(u64bit h, u64bit l, size_t shift)
 /*
 * Camellia Key Schedule
 */
-void key_schedule(SecureVector<u64bit>& SK, const byte key[], size_t length)
+void key_schedule(secure_vector<u64bit>& SK, const byte key[], size_t length)
    {
    const u64bit Sigma1 = 0xA09E667F3BCC908B;
    const u64bit Sigma2 = 0xB67AE8584CAA73B2;

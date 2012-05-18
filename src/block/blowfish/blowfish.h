@@ -39,7 +39,7 @@ class BOTAN_DLL Blowfish : public Block_Cipher_Fixed_Params<8, 1, 56>
                          size_t key_length,
                          const byte salt[16]);
 
-      void generate_sbox(MemoryRegion<u32bit>& box,
+      void generate_sbox(secure_vector<u32bit>& box,
                          u32bit& L, u32bit& R,
                          const byte salt[16],
                          size_t salt_off) const;
@@ -47,8 +47,8 @@ class BOTAN_DLL Blowfish : public Block_Cipher_Fixed_Params<8, 1, 56>
       static const u32bit P_INIT[18];
       static const u32bit S_INIT[1024];
 
-      SecureVector<u32bit> S;
-      SecureVector<u32bit> P;
+      secure_vector<u32bit> S;
+      secure_vector<u32bit> P;
    };
 
 }

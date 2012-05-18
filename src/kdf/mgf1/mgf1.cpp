@@ -25,7 +25,7 @@ void MGF1::mask(const byte in[], size_t in_len, byte out[],
       {
       hash->update(in, in_len);
       hash->update_be(counter);
-      SecureVector<byte> buffer = hash->final();
+      secure_vector<byte> buffer = hash->final();
 
       size_t xored = std::min<size_t>(buffer.size(), out_len);
       xor_buf(out, &buffer[0], xored);

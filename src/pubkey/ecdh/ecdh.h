@@ -23,7 +23,7 @@ class BOTAN_DLL ECDH_PublicKey : public virtual EC_PublicKey
    public:
 
       ECDH_PublicKey(const AlgorithmIdentifier& alg_id,
-                     const MemoryRegion<byte>& key_bits) :
+                     const secure_vector<byte>& key_bits) :
          EC_PublicKey(alg_id, key_bits) {}
 
       /**
@@ -52,8 +52,8 @@ class BOTAN_DLL ECDH_PublicKey : public virtual EC_PublicKey
       /**
       * @return public point value
       */
-      MemoryVector<byte> public_value() const
-         { return EC2OSP(public_point(), PointGFp::UNCOMPRESSED); }
+      std::vector<byte> public_value() const
+         { return unlock(EC2OSP(public_point(), PointGFp::UNCOMPRESSED)); }
 
    protected:
       ECDH_PublicKey() {}
@@ -69,7 +69,7 @@ class BOTAN_DLL ECDH_PrivateKey : public ECDH_PublicKey,
    public:
 
       ECDH_PrivateKey(const AlgorithmIdentifier& alg_id,
-                      const MemoryRegion<byte>& key_bits) :
+                      const secure_vector<byte>& key_bits) :
          EC_PrivateKey(alg_id, key_bits) {}
 
       /**
@@ -83,7 +83,7 @@ class BOTAN_DLL ECDH_PrivateKey : public ECDH_PublicKey,
                       const BigInt& x = 0) :
          EC_PrivateKey(rng, domain, x) {}
 
-      MemoryVector<byte> public_value() const
+      std::vector<byte> public_value() const
          { return ECDH_PublicKey::public_value(); }
    };
 
@@ -95,7 +95,7 @@ class BOTAN_DLL ECDH_KA_Operation : public PK_Ops::Key_Agreement
    public:
       ECDH_KA_Operation(const ECDH_PrivateKey& key);
 
-      SecureVector<byte> agree(const byte w[], size_t w_len);
+      secure_vector<byte> agree(const byte w[], size_t w_len);
    private:
       const CurveGFp& curve;
       const BigInt& cofactor;

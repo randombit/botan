@@ -32,6 +32,12 @@ X509_CRL::X509_CRL(const std::string& in, bool touc) :
    do_decode();
    }
 
+X509_CRL::X509_CRL(const std::vector<byte>& in, bool touc) :
+   X509_Object(in, "CRL/X509 CRL"), throw_on_unknown_critical(touc)
+   {
+   do_decode();
+   }
+
 /*
 * Decode the TBSCertList data
 */
@@ -115,7 +121,7 @@ X509_DN X509_CRL::issuer_dn() const
 /*
 * Return the key identifier of the issuer
 */
-MemoryVector<byte> X509_CRL::authority_key_id() const
+std::vector<byte> X509_CRL::authority_key_id() const
    {
    return info.get1_memvec("X509v3.AuthorityKeyIdentifier");
    }

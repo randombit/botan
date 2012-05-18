@@ -28,7 +28,7 @@ class BOTAN_DLL TEA : public Block_Cipher_Fixed_Params<8, 16>
       TEA() : K(4) {}
    private:
       void key_schedule(const byte[], size_t);
-      SecureVector<u32bit> K;
+      secure_vector<u32bit> K;
    };
 
 }

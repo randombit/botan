@@ -48,7 +48,7 @@ class BOTAN_DLL XTS_Encryption : public Keyed_Filter,
 
       BlockCipher* cipher;
       BlockCipher* cipher2;
-      SecureVector<byte> tweak;
+      secure_vector<byte> tweak;
    };
 
 /**
@@ -85,7 +85,7 @@ class BOTAN_DLL XTS_Decryption : public Keyed_Filter,
 
       BlockCipher* cipher;
       BlockCipher* cipher2;
-      SecureVector<byte> tweak;
+      secure_vector<byte> tweak;
    };
 
 }

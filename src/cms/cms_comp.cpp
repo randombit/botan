@@ -37,13 +37,13 @@ void CMS_Encoder::compress(const std::string& algo)
 
    Pipe pipe(compressor);
    pipe.process_msg(data);
-   SecureVector<byte> compressed = pipe.read_all();
+   secure_vector<byte> compressed = pipe.read_all();
 
    DER_Encoder encoder;
    encoder.start_cons(SEQUENCE).
       encode(static_cast<size_t>(0)).
       encode(AlgorithmIdentifier("Compression." + algo,
-                                 MemoryVector<byte>())).
+                                 std::vector<byte>())).
       raw_bytes(make_econtent(compressed, type)).
    end_cons();
 

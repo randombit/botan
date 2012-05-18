@@ -56,7 +56,7 @@ void Randpool::update_buffer()
 
    mac->update(static_cast<byte>(GEN_OUTPUT));
    mac->update(counter);
-   SecureVector<byte> mac_val = mac->final();
+   secure_vector<byte> mac_val = mac->final();
 
    for(size_t i = 0; i != mac_val.size(); ++i)
       buffer[i % buffer.size()] ^= mac_val[i];
@@ -112,7 +112,7 @@ void Randpool::reseed(size_t poll_bits)
          }
       }
 
-   SecureVector<byte> mac_val = mac->final();
+   secure_vector<byte> mac_val = mac->final();
 
    xor_buf(pool, mac_val, mac_val.size());
    mix_pool();
@@ -126,7 +126,7 @@ void Randpool::reseed(size_t poll_bits)
 */
 void Randpool::add_entropy(const byte input[], size_t length)
    {
-   SecureVector<byte> mac_val = mac->process(input, length);
+   secure_vector<byte> mac_val = mac->process(input, length);
    xor_buf(pool, mac_val, mac_val.size());
    mix_pool();
 

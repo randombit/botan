@@ -45,10 +45,10 @@ class BOTAN_DLL WiderWake_41_BE : public StreamCipher
 
       void generate(size_t);
 
-      SecureVector<u32bit> T;
-      SecureVector<u32bit> state;
-      SecureVector<u32bit> t_key;
-      SecureVector<byte> buffer;
+      secure_vector<u32bit> T;
+      secure_vector<u32bit> state;
+      secure_vector<u32bit> t_key;
+      secure_vector<byte> buffer;
       size_t position;
    };
 

@@ -24,7 +24,7 @@ namespace FPE {
 */
 BigInt BOTAN_DLL fe1_encrypt(const BigInt& n, const BigInt& X,
                              const SymmetricKey& key,
-                             const MemoryRegion<byte>& tweak);
+                             const std::vector<byte>& tweak);
 
 /**
 * Decrypt X from and onto the group Z_n using key and tweak
@@ -35,7 +35,7 @@ BigInt BOTAN_DLL fe1_encrypt(const BigInt& n, const BigInt& X,
 */
 BigInt BOTAN_DLL fe1_decrypt(const BigInt& n, const BigInt& X,
                              const SymmetricKey& key,
-                             const MemoryRegion<byte>& tweak);
+                             const std::vector<byte>& tweak);
 
 }
 

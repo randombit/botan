@@ -27,25 +27,28 @@ class Handshake_Hash
       void update(const byte in[], size_t length)
          { data += std::make_pair(in, length); }
 
-      void update(const MemoryRegion<byte>& in)
+      void update(const secure_vector<byte>& in)
+         { data += in; }
+
+      void update(const std::vector<byte>& in)
          { data += in; }
 
       void update(byte in)
          { data.push_back(in); }
 
       void update(Handshake_Type handshake_type,
-                  const MemoryRegion<byte>& handshake_msg);
+                  const std::vector<byte>& handshake_msg);
 
-      SecureVector<byte> final(Protocol_Version version,
+      secure_vector<byte> final(Protocol_Version version,
                                const std::string& mac_algo);
 
-      SecureVector<byte> final_ssl3(const MemoryRegion<byte>& master_secret);
+      secure_vector<byte> final_ssl3(const secure_vector<byte>& master_secret);
 
-      const SecureVector<byte>& get_contents() const
+      const secure_vector<byte>& get_contents() const
          { return data; }
 
    private:
-      SecureVector<byte> data;
+      secure_vector<byte> data;
    };
 
 }

@@ -92,10 +92,10 @@ class BOTAN_DLL Channel
       void send_alert(const Alert& alert);
 
       virtual void read_handshake(byte rec_type,
-                                  const MemoryRegion<byte>& rec_buf);
+                                  const std::vector<byte>& rec_buf);
 
       virtual void process_handshake_msg(Handshake_Type type,
-                                         const MemoryRegion<byte>& contents) = 0;
+                                         const std::vector<byte>& contents) = 0;
 
       virtual void alert_notify(const Alert& alert) = 0;
 
@@ -122,12 +122,12 @@ class BOTAN_DLL Channel
             void update(class Finished* client_finished,
                         class Finished* server_finished);
 
-            const MemoryVector<byte>& for_client_hello() const
+            const std::vector<byte>& for_client_hello() const
                { return client_verify; }
 
-            MemoryVector<byte> for_server_hello() const
+            std::vector<byte> for_server_hello() const
                {
-               MemoryVector<byte> buf = client_verify;
+               std::vector<byte> buf = client_verify;
                buf += server_verify;
                return buf;
                }
@@ -137,7 +137,7 @@ class BOTAN_DLL Channel
          private:
             bool initial_handshake;
             bool secure_renegotiation;
-            MemoryVector<byte> client_verify, server_verify;
+            std::vector<byte> client_verify, server_verify;
          };
 
       Secure_Renegotiation_State secure_renegotiation;

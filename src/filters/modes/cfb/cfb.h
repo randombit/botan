@@ -43,7 +43,7 @@ class BOTAN_DLL CFB_Encryption : public Keyed_Filter
       void write(const byte[], size_t);
 
       BlockCipher* cipher;
-      SecureVector<byte> buffer, state;
+      secure_vector<byte> buffer, state;
       size_t position, feedback;
    };
 
@@ -77,7 +77,7 @@ class BOTAN_DLL CFB_Decryption : public Keyed_Filter
       void write(const byte[], size_t);
 
       BlockCipher* cipher;
-      SecureVector<byte> buffer, state;
+      secure_vector<byte> buffer, state;
       size_t position, feedback;
    };
 

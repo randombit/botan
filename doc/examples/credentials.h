@@ -97,7 +97,7 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
                         const std::string& identifier,
                         std::string& group_id,
                         Botan::BigInt& verifier,
-                        Botan::MemoryRegion<Botan::byte>& salt,
+                        std::vector<Botan::byte>& salt,
                         bool generate_fake_on_unknown)
          {
 

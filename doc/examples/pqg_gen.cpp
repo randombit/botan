@@ -13,7 +13,7 @@
 
 #include <botan/botan.h>
 #include <botan/auto_rng.h>
-#include <botan/dsa.h>
+#include <botan/hex.h>
 #include <botan/numthry.h>
 #include <botan/dl_group.h>
 using namespace Botan;
@@ -94,9 +94,7 @@ bool check(RandomNumberGenerator& rng,
 
    //u32bit c = to_u32bit(inputs["c"]);
 
-   Pipe pipe(new Hex_Decoder);
-   pipe.process_msg(inputs["Seed"]);
-   SecureVector<byte> seed = pipe.read_all();
+   std::vector<byte> seed = unlock(hex_decode(inputs["Seed"]));
 
    BigInt our_p, our_q;
 

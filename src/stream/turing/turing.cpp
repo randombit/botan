@@ -17,7 +17,7 @@ namespace {
 /*
 * Perform an N-way PHT
 */
-inline void PHT(MemoryRegion<u32bit>& B)
+inline void PHT(secure_vector<u32bit>& B)
    {
    u32bit sum = 0;
    for(size_t i = 0; i < B.size() - 1; ++i)
@@ -284,7 +284,7 @@ void Turing::set_iv(const byte iv[], size_t length)
    if(!valid_iv_length(length))
       throw Invalid_IV_Length(name(), length);
 
-   SecureVector<u32bit> IV(length / 4);
+   secure_vector<u32bit> IV(length / 4);
    for(size_t i = 0; i != length; ++i)
       IV[i/4] = (IV[i/4] << 8) + iv[i];
 

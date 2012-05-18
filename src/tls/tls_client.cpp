@@ -141,7 +141,7 @@ void Client::alert_notify(const Alert& alert)
 * Process a handshake message
 */
 void Client::process_handshake_msg(Handshake_Type type,
-                                   const MemoryRegion<byte>& contents)
+                                   const std::vector<byte>& contents)
    {
    if(state == 0)
       throw Unexpected_Message("Unexpected handshake message from server");
@@ -446,9 +446,9 @@ void Client::process_handshake_msg(Handshake_Type type,
 
       secure_renegotiation.update(state->client_finished, state->server_finished);
 
-      MemoryVector<byte> session_id = state->server_hello->session_id();
+      std::vector<byte> session_id = state->server_hello->session_id();
 
-      const MemoryRegion<byte>& session_ticket = state->session_ticket();
+      const std::vector<byte>& session_ticket = state->session_ticket();
 
       if(session_id.empty() && !session_ticket.empty())
          session_id = make_hello_random(rng);

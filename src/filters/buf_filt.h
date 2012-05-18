@@ -27,6 +27,12 @@ class BOTAN_DLL Buffered_Filter
       */
       void write(const byte in[], size_t length);
 
+      template<typename Alloc>
+         void write(const std::vector<byte, Alloc>& in, size_t length)
+         {
+         write(&in[0], length);
+         }
+
       /**
       * Finish a message, emitting to buffered_block and buffered_final
       * Will throw an exception if less than final_minimum bytes were
@@ -78,7 +84,7 @@ class BOTAN_DLL Buffered_Filter
    private:
       size_t main_block_mod, final_minimum;
 
-      SecureVector<byte> buffer;
+      secure_vector<byte> buffer;
       size_t buffer_pos;
    };
 

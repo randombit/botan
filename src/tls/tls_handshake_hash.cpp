@@ -16,7 +16,7 @@ namespace Botan {
 namespace TLS {
 
 void Handshake_Hash::update(Handshake_Type handshake_type,
-                            const MemoryRegion<byte>& handshake_msg)
+                            const std::vector<byte>& handshake_msg)
    {
    update(static_cast<byte>(handshake_type));
 
@@ -30,7 +30,7 @@ void Handshake_Hash::update(Handshake_Type handshake_type,
 /**
 * Return a TLS Handshake Hash
 */
-SecureVector<byte> Handshake_Hash::final(Protocol_Version version,
+secure_vector<byte> Handshake_Hash::final(Protocol_Version version,
                                          const std::string& mac_algo)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
@@ -59,7 +59,7 @@ SecureVector<byte> Handshake_Hash::final(Protocol_Version version,
 /**
 * Return a SSLv3 Handshake Hash
 */
-SecureVector<byte> Handshake_Hash::final_ssl3(const MemoryRegion<byte>& secret)
+secure_vector<byte> Handshake_Hash::final_ssl3(const secure_vector<byte>& secret)
    {
    const byte PAD_INNER = 0x36, PAD_OUTER = 0x5C;
 
@@ -79,7 +79,7 @@ SecureVector<byte> Handshake_Hash::final_ssl3(const MemoryRegion<byte>& secret)
    for(size_t i = 0; i != 40; ++i)
       sha1->update(PAD_INNER);
 
-   SecureVector<byte> inner_md5 = md5->final(), inner_sha1 = sha1->final();
+   secure_vector<byte> inner_md5 = md5->final(), inner_sha1 = sha1->final();
 
    md5->update(secret);
    sha1->update(secret);
@@ -92,7 +92,7 @@ SecureVector<byte> Handshake_Hash::final_ssl3(const MemoryRegion<byte>& secret)
    md5->update(inner_md5);
    sha1->update(inner_sha1);
 
-   SecureVector<byte> output;
+   secure_vector<byte> output;
    output += md5->final();
    output += sha1->final();
    return output;

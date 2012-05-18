@@ -65,13 +65,13 @@ class BOTAN_DLL GOST_28147_89 : public Block_Cipher_Fixed_Params<8, 32>
       */
       GOST_28147_89(const GOST_28147_89_Params& params);
    private:
-      GOST_28147_89(const SecureVector<u32bit>& other_SBOX) :
+      GOST_28147_89(const secure_vector<u32bit>& other_SBOX) :
          SBOX(other_SBOX), EK(8) {}
 
       void key_schedule(const byte[], size_t);
 
-      SecureVector<u32bit> SBOX;
-      SecureVector<u32bit> EK;
+      secure_vector<u32bit> SBOX;
+      secure_vector<u32bit> EK;
    };
 
 }

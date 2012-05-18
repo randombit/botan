@@ -23,7 +23,7 @@ class BOTAN_DLL Encryption
    public:
       virtual size_t max_input_bits() const = 0;
 
-      virtual SecureVector<byte> encrypt(const byte msg[], size_t msg_len,
+      virtual secure_vector<byte> encrypt(const byte msg[], size_t msg_len,
                                          RandomNumberGenerator& rng) = 0;
 
       virtual ~Encryption() {}
@@ -37,7 +37,7 @@ class BOTAN_DLL Decryption
    public:
       virtual size_t max_input_bits() const = 0;
 
-      virtual SecureVector<byte> decrypt(const byte msg[],
+      virtual secure_vector<byte> decrypt(const byte msg[],
                                          size_t msg_len) = 0;
 
       virtual ~Decryption() {}
@@ -73,7 +73,7 @@ class BOTAN_DLL Signature
       * @param msg_len the length of msg in bytes
       * @param rng a random number generator
       */
-      virtual SecureVector<byte> sign(const byte msg[], size_t msg_len,
+      virtual secure_vector<byte> sign(const byte msg[], size_t msg_len,
                                       RandomNumberGenerator& rng) = 0;
 
       virtual ~Signature() {}
@@ -130,7 +130,7 @@ class BOTAN_DLL Verification
       * @param msg_len the length of msg in bytes
       * @returns recovered message
       */
-      virtual SecureVector<byte> verify_mr(const byte[],
+      virtual secure_vector<byte> verify_mr(const byte[],
                                            size_t)
          {
          throw Invalid_State("Message recovery not supported");
@@ -151,7 +151,7 @@ class BOTAN_DLL Key_Agreement
       * @param w_len the length of w in bytes
       * @returns the agreed key
       */
-      virtual SecureVector<byte> agree(const byte w[], size_t w_len) = 0;
+      virtual secure_vector<byte> agree(const byte w[], size_t w_len) = 0;
 
       virtual ~Key_Agreement() {}
    };

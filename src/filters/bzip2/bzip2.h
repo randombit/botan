@@ -33,7 +33,7 @@ class BOTAN_DLL Bzip_Compression : public Filter
       void clear();
 
       const size_t level;
-      SecureVector<byte> buffer;
+      secure_vector<byte> buffer;
       class Bzip_Stream* bz;
    };
 
@@ -55,7 +55,7 @@ class BOTAN_DLL Bzip_Decompression : public Filter
       void clear();
 
       const bool small_mem;
-      SecureVector<byte> buffer;
+      secure_vector<byte> buffer;
       class Bzip_Stream* bz;
       bool no_writes;
    };

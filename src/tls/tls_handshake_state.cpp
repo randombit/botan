@@ -154,7 +154,7 @@ std::string Handshake_State::srp_identifier() const
    return "";
    }
 
-const MemoryRegion<byte>& Handshake_State::session_ticket() const
+const std::vector<byte>& Handshake_State::session_ticket() const
    {
    if(new_session_ticket && !new_session_ticket->ticket().empty())
       return new_session_ticket->ticket();

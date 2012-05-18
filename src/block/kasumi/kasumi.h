@@ -29,7 +29,7 @@ class BOTAN_DLL KASUMI : public Block_Cipher_Fixed_Params<8, 16>
    private:
       void key_schedule(const byte[], size_t);
 
-      SecureVector<u16bit> EK;
+      secure_vector<u16bit> EK;
    };
 
 }

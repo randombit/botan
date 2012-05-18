@@ -9,7 +9,6 @@
 #define BOTAN_LIB_STATE_H__
 
 #include <botan/global_state.h>
-#include <botan/allocate.h>
 #include <botan/algo_factory.h>
 #include <botan/rng.h>
 
@@ -43,18 +42,6 @@ class BOTAN_DLL Library_State
       * @return global RandomNumberGenerator
       */
       RandomNumberGenerator& global_rng();
-
-      /**
-      * @param name the name of the allocator
-      * @return allocator matching this name, or NULL
-      */
-      Allocator* get_allocator(const std::string& name = "");
-
-      /**
-      * Add a new allocator to the list of available ones
-      * @param alloc the allocator to add
-      */
-      void add_allocator(Allocator* alloc);
 
       /**
       * Set the default allocator
@@ -120,12 +107,6 @@ class BOTAN_DLL Library_State
 
       std::mutex config_lock;
       std::map<std::string, std::string> config;
-
-      std::mutex allocator_lock;
-      std::string default_allocator_name;
-      std::map<std::string, Allocator*> alloc_factory;
-      mutable Allocator* cached_default_allocator;
-      std::vector<Allocator*> allocators;
 
       Algorithm_Factory* m_algorithm_factory;
    };

@@ -18,7 +18,7 @@ namespace {
 /*
 * Compute the verify_data
 */
-MemoryVector<byte> finished_compute_verify(Handshake_State* state,
+std::vector<byte> finished_compute_verify(Handshake_State* state,
                                            Connection_Side side)
    {
    if(state->version() == Protocol_Version::SSL_V3)
@@ -28,14 +28,14 @@ MemoryVector<byte> finished_compute_verify(Handshake_State* state,
 
       Handshake_Hash hash = state->hash; // don't modify state
 
-      MemoryVector<byte> ssl3_finished;
+      std::vector<byte> ssl3_finished;
 
       if(side == CLIENT)
          hash.update(SSL_CLIENT_LABEL, sizeof(SSL_CLIENT_LABEL));
       else
          hash.update(SSL_SERVER_LABEL, sizeof(SSL_SERVER_LABEL));
 
-      return hash.final_ssl3(state->keys.master_secret());
+      return unlock(hash.final_ssl3(state->keys.master_secret()));
       }
    else
       {
@@ -49,7 +49,7 @@ MemoryVector<byte> finished_compute_verify(Handshake_State* state,
 
       std::unique_ptr<KDF> prf(state->protocol_specific_prf());
 
-      MemoryVector<byte> input;
+      std::vector<byte> input;
       if(side == CLIENT)
          input += std::make_pair(TLS_CLIENT_LABEL, sizeof(TLS_CLIENT_LABEL));
       else
@@ -57,7 +57,7 @@ MemoryVector<byte> finished_compute_verify(Handshake_State* state,
 
       input += state->hash.final(state->version(), state->suite.mac_algo());
 
-      return prf->derive_key(12, state->keys.master_secret(), input);
+      return unlock(prf->derive_key(12, state->keys.master_secret(), input));
       }
    }
 
@@ -77,7 +77,7 @@ Finished::Finished(Record_Writer& writer,
 /*
 * Serialize a Finished message
 */
-MemoryVector<byte> Finished::serialize() const
+std::vector<byte> Finished::serialize() const
    {
    return verification_data;
    }
@@ -85,7 +85,7 @@ MemoryVector<byte> Finished::serialize() const
 /*
 * Deserialize a Finished message
 */
-Finished::Finished(const MemoryRegion<byte>& buf)
+Finished::Finished(const std::vector<byte>& buf)
    {
    verification_data = buf;
    }

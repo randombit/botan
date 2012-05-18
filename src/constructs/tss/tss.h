@@ -38,7 +38,7 @@ class BOTAN_DLL RTSS_Share
       /**
       * @param shares the list of shares
       */
-      static SecureVector<byte>
+      static secure_vector<byte>
         reconstruct(const std::vector<RTSS_Share>& shares);
 
       RTSS_Share() {}
@@ -68,7 +68,7 @@ class BOTAN_DLL RTSS_Share
       */
       bool initialized() const { return (contents.size() > 0); }
    private:
-      SecureVector<byte> contents;
+      secure_vector<byte> contents;
    };
 
 }

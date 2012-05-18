@@ -96,7 +96,7 @@ inline bool operator!=(EAC1_1_CVC const& lhs, EAC1_1_CVC const& rhs)
 * @param rng a random number generator
 */
 EAC1_1_CVC BOTAN_DLL make_cvc_cert(PK_Signer& signer,
-                                   const MemoryRegion<byte>& public_key,
+                                   const secure_vector<byte>& public_key,
                                    ASN1_Car const& car,
                                    ASN1_Chr const& chr,
                                    byte holder_auth_templ,
@@ -107,7 +107,7 @@ EAC1_1_CVC BOTAN_DLL make_cvc_cert(PK_Signer& signer,
 /**
 * Decode an EAC encoding ECDSA key
 */
-BOTAN_DLL ECDSA_PublicKey* decode_eac1_1_key(const MemoryRegion<byte>& enc_key,
+BOTAN_DLL ECDSA_PublicKey* decode_eac1_1_key(const secure_vector<byte>& enc_key,
                                              AlgorithmIdentifier& sig_algo);
 
 }

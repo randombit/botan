@@ -34,7 +34,7 @@ class Record_Reader;
 class Handshake_Message
    {
    public:
-      virtual MemoryVector<byte> serialize() const = 0;
+      virtual std::vector<byte> serialize() const = 0;
       virtual Handshake_Type type() const = 0;
 
       Handshake_Message() {}
@@ -44,7 +44,7 @@ class Handshake_Message
       Handshake_Message& operator=(const Handshake_Message&) { return (*this); }
    };
 
-MemoryVector<byte> make_hello_random(RandomNumberGenerator& rng);
+std::vector<byte> make_hello_random(RandomNumberGenerator& rng);
 
 /**
 * DTLS Hello Verify Request
@@ -52,18 +52,18 @@ MemoryVector<byte> make_hello_random(RandomNumberGenerator& rng);
 class Hello_Verify_Request : public Handshake_Message
    {
    public:
-      MemoryVector<byte> serialize() const;
+      std::vector<byte> serialize() const;
       Handshake_Type type() const { return HELLO_VERIFY_REQUEST; }
 
-      MemoryVector<byte> cookie() const { return m_cookie; }
+      std::vector<byte> cookie() const { return m_cookie; }
 
-      Hello_Verify_Request(const MemoryRegion<byte>& buf);
+      Hello_Verify_Request(const std::vector<byte>& buf);
 
-      Hello_Verify_Request(const MemoryVector<byte>& client_hello_bits,
+      Hello_Verify_Request(const std::vector<byte>& client_hello_bits,
                            const std::string& client_identity,
                            const SymmetricKey& secret_key);
    private:
-      MemoryVector<byte> m_cookie;
+      std::vector<byte> m_cookie;
    };
 
 /**
@@ -76,7 +76,7 @@ class Client_Hello : public Handshake_Message
 
       Protocol_Version version() const { return m_version; }
 
-      const MemoryVector<byte>& session_id() const { return m_session_id; }
+      const std::vector<byte>& session_id() const { return m_session_id; }
 
       const std::vector<std::pair<std::string, std::string> >& supported_algos() const
          { return m_supported_algos; }
@@ -87,7 +87,7 @@ class Client_Hello : public Handshake_Message
       std::vector<u16bit> ciphersuites() const { return m_suites; }
       std::vector<byte> compression_methods() const { return m_comp_methods; }
 
-      const MemoryVector<byte>& random() const { return m_random; }
+      const std::vector<byte>& random() const { return m_random; }
 
       std::string sni_hostname() const { return m_hostname; }
 
@@ -95,7 +95,7 @@ class Client_Hello : public Handshake_Message
 
       bool secure_renegotiation() const { return m_secure_renegotiation; }
 
-      const MemoryVector<byte>& renegotiation_info()
+      const std::vector<byte>& renegotiation_info()
          { return m_renegotiation_info; }
 
       bool offered_suite(u16bit ciphersuite) const;
@@ -106,7 +106,7 @@ class Client_Hello : public Handshake_Message
 
       bool supports_session_ticket() const { return m_supports_session_ticket; }
 
-      const MemoryRegion<byte>& session_ticket() const
+      const std::vector<byte>& session_ticket() const
          { return m_session_ticket; }
 
       bool supports_heartbeats() const { return m_supports_heartbeats; }
@@ -117,7 +117,7 @@ class Client_Hello : public Handshake_Message
                    Handshake_Hash& hash,
                    const Policy& policy,
                    RandomNumberGenerator& rng,
-                   const MemoryRegion<byte>& reneg_info,
+                   const std::vector<byte>& reneg_info,
                    bool next_protocol = false,
                    const std::string& hostname = "",
                    const std::string& srp_identifier = "");
@@ -126,20 +126,20 @@ class Client_Hello : public Handshake_Message
                    Handshake_Hash& hash,
                    const Policy& policy,
                    RandomNumberGenerator& rng,
-                   const MemoryRegion<byte>& reneg_info,
+                   const std::vector<byte>& reneg_info,
                    const Session& resumed_session,
                    bool next_protocol = false);
 
-      Client_Hello(const MemoryRegion<byte>& buf,
+      Client_Hello(const std::vector<byte>& buf,
                    Handshake_Type type);
 
    private:
-      MemoryVector<byte> serialize() const;
-      void deserialize(const MemoryRegion<byte>& buf);
-      void deserialize_sslv2(const MemoryRegion<byte>& buf);
+      std::vector<byte> serialize() const;
+      void deserialize(const std::vector<byte>& buf);
+      void deserialize_sslv2(const std::vector<byte>& buf);
 
       Protocol_Version m_version;
-      MemoryVector<byte> m_session_id, m_random;
+      std::vector<byte> m_session_id, m_random;
       std::vector<u16bit> m_suites;
       std::vector<byte> m_comp_methods;
       std::string m_hostname;
@@ -148,13 +148,13 @@ class Client_Hello : public Handshake_Message
 
       size_t m_fragment_size;
       bool m_secure_renegotiation;
-      MemoryVector<byte> m_renegotiation_info;
+      std::vector<byte> m_renegotiation_info;
 
       std::vector<std::pair<std::string, std::string> > m_supported_algos;
       std::vector<std::string> m_supported_curves;
 
       bool m_supports_session_ticket;
-      MemoryVector<byte> m_session_ticket;
+      std::vector<byte> m_session_ticket;
 
       bool m_supports_heartbeats;
       bool m_peer_can_send_heartbeats;
@@ -170,9 +170,9 @@ class Server_Hello : public Handshake_Message
 
       Protocol_Version version() { return m_version; }
 
-      const MemoryVector<byte>& random() const { return m_random; }
+      const std::vector<byte>& random() const { return m_random; }
 
-      const MemoryVector<byte>& session_id() const { return m_session_id; }
+      const std::vector<byte>& session_id() const { return m_session_id; }
 
       u16bit ciphersuite() const { return m_ciphersuite; }
 
@@ -189,7 +189,7 @@ class Server_Hello : public Handshake_Message
 
       size_t fragment_size() const { return m_fragment_size; }
 
-      const MemoryVector<byte>& renegotiation_info()
+      const std::vector<byte>& renegotiation_info()
          { return m_renegotiation_info; }
 
       bool supports_heartbeats() const { return m_supports_heartbeats; }
@@ -198,31 +198,31 @@ class Server_Hello : public Handshake_Message
 
       Server_Hello(Record_Writer& writer,
                    Handshake_Hash& hash,
-                   const MemoryRegion<byte>& session_id,
+                   const std::vector<byte>& session_id,
                    Protocol_Version ver,
                    u16bit ciphersuite,
                    byte compression,
                    size_t max_fragment_size,
                    bool client_has_secure_renegotiation,
-                   const MemoryRegion<byte>& reneg_info,
+                   const std::vector<byte>& reneg_info,
                    bool offer_session_ticket,
                    bool client_has_npn,
                    const std::vector<std::string>& next_protocols,
                    bool client_has_heartbeat,
                    RandomNumberGenerator& rng);
 
-      Server_Hello(const MemoryRegion<byte>& buf);
+      Server_Hello(const std::vector<byte>& buf);
    private:
-      MemoryVector<byte> serialize() const;
+      std::vector<byte> serialize() const;
 
       Protocol_Version m_version;
-      MemoryVector<byte> m_session_id, m_random;
+      std::vector<byte> m_session_id, m_random;
       u16bit m_ciphersuite;
       byte m_comp_method;
 
       size_t m_fragment_size;
       bool m_secure_renegotiation;
-      MemoryVector<byte> m_renegotiation_info;
+      std::vector<byte> m_renegotiation_info;
 
       bool m_next_protocol;
       std::vector<std::string> m_next_protocols;
@@ -240,7 +240,7 @@ class Client_Key_Exchange : public Handshake_Message
    public:
       Handshake_Type type() const { return CLIENT_KEX; }
 
-      const SecureVector<byte>& pre_master_secret() const
+      const secure_vector<byte>& pre_master_secret() const
          { return pre_master; }
 
       Client_Key_Exchange(Record_Writer& output,
@@ -250,16 +250,17 @@ class Client_Key_Exchange : public Handshake_Message
                           const std::string& hostname,
                           RandomNumberGenerator& rng);
 
-      Client_Key_Exchange(const MemoryRegion<byte>& buf,
+      Client_Key_Exchange(const std::vector<byte>& buf,
                           const Handshake_State* state,
                           Credentials_Manager& creds,
                           const Policy& policy,
                           RandomNumberGenerator& rng);
 
    private:
-      MemoryVector<byte> serialize() const { return key_material; }
+      std::vector<byte> serialize() const { return key_material; }
 
-      SecureVector<byte> key_material, pre_master;
+      std::vector<byte> key_material;
+      secure_vector<byte> pre_master;
    };
 
 /**
@@ -278,9 +279,9 @@ class Certificate : public Handshake_Message
                   Handshake_Hash& hash,
                   const std::vector<X509_Certificate>& certs);
 
-      Certificate(const MemoryRegion<byte>& buf);
+      Certificate(const std::vector<byte>& buf);
    private:
-      MemoryVector<byte> serialize() const;
+      std::vector<byte> serialize() const;
 
       std::vector<X509_Certificate> m_certs;
    };
@@ -307,10 +308,10 @@ class Certificate_Req : public Handshake_Message
                       const std::vector<X509_Certificate>& allowed_cas,
                       Protocol_Version version);
 
-      Certificate_Req(const MemoryRegion<byte>& buf,
+      Certificate_Req(const std::vector<byte>& buf,
                       Protocol_Version version);
    private:
-      MemoryVector<byte> serialize() const;
+      std::vector<byte> serialize() const;
 
       std::vector<X509_DN> names;
       std::vector<std::string> cert_key_types;
@@ -339,14 +340,14 @@ class Certificate_Verify : public Handshake_Message
                          RandomNumberGenerator& rng,
                          const Private_Key* key);
 
-      Certificate_Verify(const MemoryRegion<byte>& buf,
+      Certificate_Verify(const std::vector<byte>& buf,
                          Protocol_Version version);
    private:
-      MemoryVector<byte> serialize() const;
+      std::vector<byte> serialize() const;
 
       std::string sig_algo; // sig algo used to create signature
       std::string hash_algo; // hash used to create signature
-      MemoryVector<byte> signature;
+      std::vector<byte> signature;
    };
 
 /**
@@ -357,7 +358,7 @@ class Finished : public Handshake_Message
    public:
       Handshake_Type type() const { return FINISHED; }
 
-      MemoryVector<byte> verify_data() const
+      std::vector<byte> verify_data() const
          { return verification_data; }
 
       bool verify(Handshake_State* state,
@@ -367,12 +368,12 @@ class Finished : public Handshake_Message
                Handshake_State* state,
                Connection_Side side);
 
-      Finished(const MemoryRegion<byte>& buf);
+      Finished(const std::vector<byte>& buf);
    private:
-      MemoryVector<byte> serialize() const;
+      std::vector<byte> serialize() const;
 
       Connection_Side side;
-      MemoryVector<byte> verification_data;
+      std::vector<byte> verification_data;
    };
 
 /**
@@ -384,9 +385,9 @@ class Hello_Request : public Handshake_Message
       Handshake_Type type() const { return HELLO_REQUEST; }
 
       Hello_Request(Record_Writer& writer);
-      Hello_Request(const MemoryRegion<byte>& buf);
+      Hello_Request(const std::vector<byte>& buf);
    private:
-      MemoryVector<byte> serialize() const;
+      std::vector<byte> serialize() const;
    };
 
 /**
@@ -397,7 +398,7 @@ class Server_Key_Exchange : public Handshake_Message
    public:
       Handshake_Type type() const { return SERVER_KEX; }
 
-      const MemoryVector<byte>& params() const { return m_params; }
+      const std::vector<byte>& params() const { return m_params; }
 
       bool verify(const X509_Certificate& cert,
                   Handshake_State* state) const;
@@ -415,23 +416,23 @@ class Server_Key_Exchange : public Handshake_Message
                           RandomNumberGenerator& rng,
                           const Private_Key* signing_key = 0);
 
-      Server_Key_Exchange(const MemoryRegion<byte>& buf,
+      Server_Key_Exchange(const std::vector<byte>& buf,
                           const std::string& kex_alg,
                           const std::string& sig_alg,
                           Protocol_Version version);
 
       ~Server_Key_Exchange();
    private:
-      MemoryVector<byte> serialize() const;
+      std::vector<byte> serialize() const;
 
       Private_Key* m_kex_key;
       SRP6_Server_Session* m_srp_params;
 
-      MemoryVector<byte> m_params;
+      std::vector<byte> m_params;
 
       std::string m_sig_algo; // sig algo used to create signature
       std::string m_hash_algo; // hash used to create signature
-      MemoryVector<byte> m_signature;
+      std::vector<byte> m_signature;
    };
 
 /**
@@ -443,9 +444,9 @@ class Server_Hello_Done : public Handshake_Message
       Handshake_Type type() const { return SERVER_HELLO_DONE; }
 
       Server_Hello_Done(Record_Writer& writer, Handshake_Hash& hash);
-      Server_Hello_Done(const MemoryRegion<byte>& buf);
+      Server_Hello_Done(const std::vector<byte>& buf);
    private:
-      MemoryVector<byte> serialize() const;
+      std::vector<byte> serialize() const;
    };
 
 /**
@@ -462,9 +463,9 @@ class Next_Protocol : public Handshake_Message
                     Handshake_Hash& hash,
                     const std::string& protocol);
 
-      Next_Protocol(const MemoryRegion<byte>& buf);
+      Next_Protocol(const std::vector<byte>& buf);
    private:
-      MemoryVector<byte> serialize() const;
+      std::vector<byte> serialize() const;
 
       std::string m_protocol;
    };
@@ -475,22 +476,22 @@ class New_Session_Ticket : public Handshake_Message
       Handshake_Type type() const { return NEW_SESSION_TICKET; }
 
       u32bit ticket_lifetime_hint() const { return m_ticket_lifetime_hint; }
-      const MemoryVector<byte>& ticket() const { return m_ticket; }
+      const std::vector<byte>& ticket() const { return m_ticket; }
 
       New_Session_Ticket(Record_Writer& writer,
                          Handshake_Hash& hash,
-                         const MemoryRegion<byte>& ticket,
+                         const std::vector<byte>& ticket,
                          u32bit lifetime);
 
       New_Session_Ticket(Record_Writer& writer,
                          Handshake_Hash& hash);
 
-      New_Session_Ticket(const MemoryRegion<byte>& buf);
+      New_Session_Ticket(const std::vector<byte>& buf);
    private:
-      MemoryVector<byte> serialize() const;
+      std::vector<byte> serialize() const;
 
       u32bit m_ticket_lifetime_hint;
-      MemoryVector<byte> m_ticket;
+      std::vector<byte> m_ticket;
    };
 
 }

@@ -31,7 +31,7 @@ class BOTAN_DLL Serpent : public Block_Cipher_Fixed_Params<16, 16, 32, 8>
       * For use by subclasses using SIMD, asm, etc
       * @return const reference to the key schedule
       */
-      const SecureVector<u32bit>& get_round_keys() const
+      const secure_vector<u32bit>& get_round_keys() const
          { return round_key; }
 
       /**
@@ -45,7 +45,7 @@ class BOTAN_DLL Serpent : public Block_Cipher_Fixed_Params<16, 16, 32, 8>
 
    private:
       void key_schedule(const byte key[], size_t length);
-      SecureVector<u32bit> round_key;
+      secure_vector<u32bit> round_key;
    };
 
 }

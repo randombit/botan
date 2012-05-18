@@ -40,7 +40,7 @@ namespace {
 // helper functions
 void helper_write_file(EAC_Signed_Object const& to_write, std::string const& file_path)
    {
-   SecureVector<byte> sv = to_write.BER_encode();
+   std::vector<byte> sv = to_write.BER_encode();
    std::ofstream cert_file(file_path.c_str(), std::ios::binary);
    cert_file.write((char*)&sv[0], sv.size());
    cert_file.close();
@@ -50,8 +50,8 @@ bool helper_files_equal(std::string const& file_path1, std::string const& file_p
    {
    std::ifstream cert_1_in(file_path1.c_str());
    std::ifstream cert_2_in(file_path2.c_str());
-   SecureVector<byte> sv1;
-   SecureVector<byte> sv2;
+   std::vector<byte> sv1;
+   std::vector<byte> sv2;
    if (!cert_1_in || !cert_2_in)
       {
       return false;
@@ -94,7 +94,7 @@ void test_enc_gen_selfsigned(RandomNumberGenerator& rng)
    key.set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
    EAC1_1_CVC cert = CVC_EAC::create_self_signed_cert(key, opts, rng);
 
-   SecureVector<byte> der(cert.BER_encode());
+   std::vector<byte> der(cert.BER_encode());
    std::ofstream cert_file;
    cert_file.open(TEST_DATA_DIR "/my_cv_cert.ber", std::ios::binary);
    //cert_file << der; // this is bad !!!
@@ -104,15 +104,15 @@ void test_enc_gen_selfsigned(RandomNumberGenerator& rng)
    EAC1_1_CVC cert_in(TEST_DATA_DIR "/my_cv_cert.ber");
    CHECK(cert == cert_in);
    // encoding it again while it has no dp
-   SecureVector<byte> der2(cert_in.BER_encode());
+   std::vector<byte> der2(cert_in.BER_encode());
    std::ofstream cert_file2(TEST_DATA_DIR "/my_cv_cert2.ber", std::ios::binary);
    cert_file2.write((char*)&der2[0], der2.size());
    cert_file2.close();
    // read both and compare them
    std::ifstream cert_1_in(TEST_DATA_DIR "/my_cv_cert.ber");
    std::ifstream cert_2_in(TEST_DATA_DIR "/my_cv_cert2.ber");
-   SecureVector<byte> sv1;
-   SecureVector<byte> sv2;
+   std::vector<byte> sv1;
+   std::vector<byte> sv2;
    if (!cert_1_in || !cert_2_in)
       {
       CHECK_MESSAGE(false, "could not read certificate files");
@@ -203,7 +203,7 @@ void test_enc_gen_req(RandomNumberGenerator& rng)
    ECDSA_PrivateKey key(rng, dom_pars);
    key.set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
    EAC1_1_Req req = CVC_EAC::create_cvc_req(key, opts.chr, opts.hash_alg, rng);
-   SecureVector<byte> der(req.BER_encode());
+   std::vector<byte> der(req.BER_encode());
    std::ofstream req_file(TEST_DATA_DIR "/my_cv_req.ber", std::ios::binary);
    req_file.write((char*)&der[0], der.size());
    req_file.close();
@@ -260,7 +260,7 @@ void test_cvc_ado_creation(RandomNumberGenerator& rng)
    req_key.set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
    //EAC1_1_Req req = CVC_EAC::create_cvc_req(req_key, opts);
    EAC1_1_Req req = CVC_EAC::create_cvc_req(req_key, opts.chr, opts.hash_alg, rng);
-   SecureVector<byte> der(req.BER_encode());
+   std::vector<byte> der(req.BER_encode());
    std::ofstream req_file(TEST_DATA_DIR "/my_cv_req.ber", std::ios::binary);
    req_file.write((char*)&der[0], der.size());
    req_file.close();
@@ -276,7 +276,7 @@ void test_cvc_ado_creation(RandomNumberGenerator& rng)
    CHECK_MESSAGE(ado.check_signature(ado_key), "failure of ado verification after creation");
 
    std::ofstream ado_file(TEST_DATA_DIR "/ado", std::ios::binary);
-   SecureVector<byte> ado_der(ado.BER_encode());
+   std::vector<byte> ado_der(ado.BER_encode());
    ado_file.write((char*)&ado_der[0], ado_der.size());
    ado_file.close();
    // read it again and check the signature
@@ -332,7 +332,7 @@ void test_cvc_ado_comparison(RandomNumberGenerator& rng)
 
    CHECK_MESSAGE(ado != ado2, "ado's found to be equal where they are not");
    //     std::ofstream ado_file(TEST_DATA_DIR "/ado");
-   //     SecureVector<byte> ado_der(ado.BER_encode());
+   //     std::vector<byte> ado_der(ado.BER_encode());
    //     ado_file.write((char*)&ado_der[0], ado_der.size());
    //     ado_file.close();
    // read it again and check the signature
@@ -490,7 +490,7 @@ void test_cvc_chain(RandomNumberGenerator& rng)
    ASN1_Car car("DECVCA00001");
    EAC1_1_CVC cvca_cert = DE_EAC::create_cvca(cvca_privk, hash, car, true, true, 12, rng);
    std::ofstream cvca_file(TEST_DATA_DIR "/cvc_chain_cvca.cer", std::ios::binary);
-   SecureVector<byte> cvca_sv = cvca_cert.BER_encode();
+   std::vector<byte> cvca_sv = cvca_cert.BER_encode();
    cvca_file.write((char*)&cvca_sv[0], cvca_sv.size());
    cvca_file.close();
 
@@ -498,7 +498,7 @@ void test_cvc_chain(RandomNumberGenerator& rng)
    ASN1_Car car2("DECVCA00002");
    EAC1_1_CVC cvca_cert2 = DE_EAC::create_cvca(cvca_privk2, hash, car2, true, true, 12, rng);
    EAC1_1_CVC link12 = DE_EAC::link_cvca(cvca_cert, cvca_privk, cvca_cert2, rng);
-   SecureVector<byte> link12_sv = link12.BER_encode();
+   std::vector<byte> link12_sv = link12.BER_encode();
    std::ofstream link12_file(TEST_DATA_DIR "/cvc_chain_link12.cer", std::ios::binary);
    link12_file.write((char*)&link12_sv[0], link12_sv.size());
    link12_file.close();
@@ -514,7 +514,7 @@ void test_cvc_chain(RandomNumberGenerator& rng)
    ECDSA_PrivateKey dvca_priv_key(rng, dom_pars);
    EAC1_1_Req dvca_req = DE_EAC::create_cvc_req(dvca_priv_key, ASN1_Chr("DEDVCAEPASS"), hash, rng);
    std::ofstream dvca_file(TEST_DATA_DIR "/cvc_chain_dvca_req.cer", std::ios::binary);
-   SecureVector<byte> dvca_sv = dvca_req.BER_encode();
+   std::vector<byte> dvca_sv = dvca_req.BER_encode();
    dvca_file.write((char*)&dvca_sv[0], dvca_sv.size());
    dvca_file.close();
 
@@ -528,7 +528,7 @@ void test_cvc_chain(RandomNumberGenerator& rng)
    ECDSA_PrivateKey dvca_priv_key2(rng, dom_pars);
    EAC1_1_Req dvca_req2 = DE_EAC::create_cvc_req(dvca_priv_key2, ASN1_Chr("DEDVCAEPASS"), hash, rng);
    std::ofstream dvca_file2(TEST_DATA_DIR "/cvc_chain_dvca_req2.cer", std::ios::binary);
-   SecureVector<byte> dvca_sv2 = dvca_req2.BER_encode();
+   std::vector<byte> dvca_sv2 = dvca_req2.BER_encode();
    dvca_file2.write((char*)&dvca_sv2[0], dvca_sv2.size());
    dvca_file2.close();
    EAC1_1_ADO dvca_ado2 = CVC_EAC::create_ado_req(dvca_priv_key, dvca_req2,

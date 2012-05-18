@@ -22,7 +22,7 @@ void EMSA4::update(const byte input[], size_t length)
 /*
 * Return the raw (unencoded) data
 */
-SecureVector<byte> EMSA4::raw_data()
+secure_vector<byte> EMSA4::raw_data()
    {
    return hash->final();
    }
@@ -30,7 +30,7 @@ SecureVector<byte> EMSA4::raw_data()
 /*
 * EMSA4 Encode Operation
 */
-SecureVector<byte> EMSA4::encoding_of(const MemoryRegion<byte>& msg,
+secure_vector<byte> EMSA4::encoding_of(const secure_vector<byte>& msg,
                                       size_t output_bits,
                                       RandomNumberGenerator& rng)
    {
@@ -43,19 +43,19 @@ SecureVector<byte> EMSA4::encoding_of(const MemoryRegion<byte>& msg,
 
    const size_t output_length = (output_bits + 7) / 8;
 
-   SecureVector<byte> salt = rng.random_vec(SALT_SIZE);
+   secure_vector<byte> salt = rng.random_vec(SALT_SIZE);
 
    for(size_t j = 0; j != 8; ++j)
       hash->update(0);
    hash->update(msg);
-   hash->update(salt, SALT_SIZE);
-   SecureVector<byte> H = hash->final();
+   hash->update(salt);
+   secure_vector<byte> H = hash->final();
 
-   SecureVector<byte> EM(output_length);
+   secure_vector<byte> EM(output_length);
 
    EM[output_length - HASH_SIZE - SALT_SIZE - 2] = 0x01;
    buffer_insert(EM, output_length - 1 - HASH_SIZE - SALT_SIZE, salt);
-   mgf->mask(H, HASH_SIZE, EM, output_length - HASH_SIZE - 1);
+   mgf->mask(&H[0], HASH_SIZE, &EM[0], output_length - HASH_SIZE - 1);
    EM[0] &= 0xFF >> (8 * ((output_bits + 7) / 8) - output_bits);
    buffer_insert(EM, output_length - 1 - HASH_SIZE, H);
    EM[output_length-1] = 0xBC;
@@ -66,8 +66,8 @@ SecureVector<byte> EMSA4::encoding_of(const MemoryRegion<byte>& msg,
 /*
 * EMSA4 Decode/Verify Operation
 */
-bool EMSA4::verify(const MemoryRegion<byte>& const_coded,
-                   const MemoryRegion<byte>& raw, size_t key_bits)
+bool EMSA4::verify(const secure_vector<byte>& const_coded,
+                   const secure_vector<byte>& raw, size_t key_bits)
    {
    const size_t HASH_SIZE = hash->output_length();
    const size_t KEY_BYTES = (key_bits + 7) / 8;
@@ -84,10 +84,10 @@ bool EMSA4::verify(const MemoryRegion<byte>& const_coded,
    if(const_coded[const_coded.size()-1] != 0xBC)
       return false;
 
-   SecureVector<byte> coded = const_coded;
+   secure_vector<byte> coded = const_coded;
    if(coded.size() < KEY_BYTES)
       {
-      SecureVector<byte> temp(KEY_BYTES);
+      secure_vector<byte> temp(KEY_BYTES);
       buffer_insert(temp, KEY_BYTES - coded.size(), coded);
       coded = temp;
       }
@@ -96,14 +96,17 @@ bool EMSA4::verify(const MemoryRegion<byte>& const_coded,
    if(TOP_BITS > 8 - high_bit(coded[0]))
       return false;
 
-   SecureVector<byte> DB(&coded[0], coded.size() - HASH_SIZE - 1);
-   SecureVector<byte> H(&coded[coded.size() - HASH_SIZE - 1], HASH_SIZE);
+   byte* DB = &coded[0];
+   const size_t DB_size = coded.size() - HASH_SIZE - 1;
 
-   mgf->mask(H, H.size(), DB, coded.size() - H.size() - 1);
+   const byte* H = &coded[DB_size];
+   const size_t H_size = HASH_SIZE;
+
+   mgf->mask(&H[0], H_size, &DB[0], DB_size);
    DB[0] &= 0xFF >> TOP_BITS;
 
    size_t salt_offset = 0;
-   for(size_t j = 0; j != DB.size(); ++j)
+   for(size_t j = 0; j != DB_size; ++j)
       {
       if(DB[j] == 0x01)
          { salt_offset = j + 1; break; }
@@ -113,15 +116,13 @@ bool EMSA4::verify(const MemoryRegion<byte>& const_coded,
    if(salt_offset == 0)
       return false;
 
-   SecureVector<byte> salt(&DB[salt_offset], DB.size() - salt_offset);
-
    for(size_t j = 0; j != 8; ++j)
       hash->update(0);
    hash->update(raw);
-   hash->update(salt);
-   SecureVector<byte> H2 = hash->final();
+   hash->update(&DB[salt_offset], DB_size - salt_offset);
+   secure_vector<byte> H2 = hash->final();
 
-   return (H == H2);
+   return same_mem(&H[0], &H2[0], HASH_SIZE);
    }
 
 /*

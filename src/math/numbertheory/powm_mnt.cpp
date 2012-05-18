@@ -29,8 +29,8 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
 
    g.resize((1 << window_bits) - 1);
 
-   SecureVector<word> z(2 * (mod_words + 1));
-   SecureVector<word> workspace(z.size());
+   secure_vector<word> z(2 * (mod_words + 1));
+   secure_vector<word> workspace(z.size());
 
    g[0] = (base >= modulus) ? (base % modulus) : base;
 
@@ -69,8 +69,8 @@ BigInt Montgomery_Exponentiator::execute() const
    const size_t exp_nibbles = (exp_bits + window_bits - 1) / window_bits;
 
    BigInt x = R_mod;
-   SecureVector<word> z(2 * (mod_words + 1));
-   SecureVector<word> workspace(2 * (mod_words + 1));
+   secure_vector<word> z(2 * (mod_words + 1));
+   secure_vector<word> workspace(2 * (mod_words + 1));
 
    for(size_t i = exp_nibbles; i > 0; --i)
       {

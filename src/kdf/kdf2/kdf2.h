@@ -19,7 +19,7 @@ namespace Botan {
 class BOTAN_DLL KDF2 : public KDF
    {
    public:
-      SecureVector<byte> derive(size_t, const byte[], size_t,
+      secure_vector<byte> derive(size_t, const byte[], size_t,
                                 const byte[], size_t) const;
 
       std::string name() const { return "KDF2(" + hash->name() + ")"; }

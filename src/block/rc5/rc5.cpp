@@ -95,7 +95,7 @@ void RC5::key_schedule(const byte key[], size_t length)
    for(size_t i = 1; i != S.size(); ++i)
       S[i] = S[i-1] + 0x9E3779B9;
 
-   SecureVector<u32bit> K(8);
+   secure_vector<u32bit> K(8);
 
    for(s32bit i = length-1; i >= 0; --i)
       K[i/4] = (K[i/4] << 8) + key[i];

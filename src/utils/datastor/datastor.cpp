@@ -72,21 +72,21 @@ std::string Data_Store::get1(const std::string& key) const
    }
 
 /*
-* Get a single MemoryVector atom
+* Get a single std::vector atom
 */
-MemoryVector<byte>
+std::vector<byte>
 Data_Store::get1_memvec(const std::string& key) const
    {
    std::vector<std::string> vals = get(key);
 
    if(vals.empty())
-      return MemoryVector<byte>();
+      return std::vector<byte>();
 
    if(vals.size() > 1)
       throw Invalid_State("Data_Store::get1_memvec: Multiple values for " +
                           key);
 
-   return hex_decode(vals[0]);
+   return unlock(hex_decode(vals[0]));
    }
 
 /*
@@ -125,7 +125,12 @@ void Data_Store::add(const std::string& key, u32bit val)
 /*
 * Insert a single key and value
 */
-void Data_Store::add(const std::string& key, const MemoryRegion<byte>& val)
+void Data_Store::add(const std::string& key, const secure_vector<byte>& val)
+   {
+   add(key, hex_encode(&val[0], val.size()));
+   }
+
+void Data_Store::add(const std::string& key, const std::vector<byte>& val)
    {
    add(key, hex_encode(&val[0], val.size()));
    }

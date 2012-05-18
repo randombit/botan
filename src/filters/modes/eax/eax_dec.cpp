@@ -62,7 +62,7 @@ void EAX_Decryption::write(const byte input[], size_t length)
       if(queue_start + TAG_SIZE == queue_end &&
          queue_start >= queue.size() / 2)
          {
-         SecureVector<byte> queue_data(TAG_SIZE);
+         secure_vector<byte> queue_data(TAG_SIZE);
          copy_mem(&queue_data[0], &queue[queue_start], TAG_SIZE);
          copy_mem(&queue[0], &queue_data[0], TAG_SIZE);
          queue_start = 0;
@@ -100,7 +100,7 @@ void EAX_Decryption::end_msg()
    if((queue_end - queue_start) != TAG_SIZE)
       throw Decoding_Error(name() + ": Message authentication failure");
 
-   SecureVector<byte> data_mac = cmac->final();
+   secure_vector<byte> data_mac = cmac->final();
 
    for(size_t j = 0; j != TAG_SIZE; ++j)
       if(queue[queue_start+j] != (data_mac[j] ^ nonce_mac[j] ^ header_mac[j]))

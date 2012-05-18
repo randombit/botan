@@ -40,7 +40,7 @@ class BOTAN_DLL CBC_MAC : public MessageAuthenticationCode
       void key_schedule(const byte[], size_t);
 
       BlockCipher* e;
-      SecureVector<byte> state;
+      secure_vector<byte> state;
       size_t position;
    };
 

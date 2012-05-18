@@ -19,18 +19,18 @@ class Heartbeat_Message
    public:
       enum Type { REQUEST = 1, RESPONSE = 2 };
 
-      MemoryVector<byte> contents() const;
+      std::vector<byte> contents() const;
 
-      const MemoryRegion<byte>& payload() const { return m_payload; }
+      const std::vector<byte>& payload() const { return m_payload; }
 
       bool is_request() const { return m_type == REQUEST; }
 
-      Heartbeat_Message(const MemoryRegion<byte>& buf);
+      Heartbeat_Message(const std::vector<byte>& buf);
 
       Heartbeat_Message(Type type, const byte payload[], size_t payload_len);
    private:
       Type m_type;
-      MemoryVector<byte> m_payload;
+      std::vector<byte> m_payload;
    };
 
 }

@@ -21,14 +21,14 @@ enum {
    TLS_EMPTY_RENEGOTIATION_INFO_SCSV        = 0x00FF
 };
 
-MemoryVector<byte> make_hello_random(RandomNumberGenerator& rng)
+std::vector<byte> make_hello_random(RandomNumberGenerator& rng)
    {
-   MemoryVector<byte> buf(32);
+   std::vector<byte> buf(32);
 
    const u32bit time32 = static_cast<u32bit>(
       std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
 
-   store_be(time32, buf);
+   store_be(time32, &buf[0]);
    rng.randomize(&buf[4], buf.size() - 4);
    return buf;
    }
@@ -44,7 +44,7 @@ Hello_Request::Hello_Request(Record_Writer& writer)
 /*
 * Deserialize a Hello Request message
 */
-Hello_Request::Hello_Request(const MemoryRegion<byte>& buf)
+Hello_Request::Hello_Request(const std::vector<byte>& buf)
    {
    if(buf.size())
       throw Decoding_Error("Bad Hello_Request, has non-zero size");
@@ -53,9 +53,9 @@ Hello_Request::Hello_Request(const MemoryRegion<byte>& buf)
 /*
 * Serialize a Hello Request message
 */
-MemoryVector<byte> Hello_Request::serialize() const
+std::vector<byte> Hello_Request::serialize() const
    {
-   return MemoryVector<byte>();
+   return std::vector<byte>();
    }
 
 /*
@@ -65,7 +65,7 @@ Client_Hello::Client_Hello(Record_Writer& writer,
                            Handshake_Hash& hash,
                            const Policy& policy,
                            RandomNumberGenerator& rng,
-                           const MemoryRegion<byte>& reneg_info,
+                           const std::vector<byte>& reneg_info,
                            bool next_protocol,
                            const std::string& hostname,
                            const std::string& srp_identifier) :
@@ -101,7 +101,7 @@ Client_Hello::Client_Hello(Record_Writer& writer,
                            Handshake_Hash& hash,
                            const Policy& policy,
                            RandomNumberGenerator& rng,
-                           const MemoryRegion<byte>& reneg_info,
+                           const std::vector<byte>& reneg_info,
                            const Session& session,
                            bool next_protocol) :
    m_version(session.version()),
@@ -140,7 +140,7 @@ Client_Hello::Client_Hello(Record_Writer& writer,
 /*
 * Read a counterparty client hello
 */
-Client_Hello::Client_Hello(const MemoryRegion<byte>& buf, Handshake_Type type)
+Client_Hello::Client_Hello(const std::vector<byte>& buf, Handshake_Type type)
    {
    m_next_protocol = false;
    m_secure_renegotiation = false;
@@ -158,9 +158,9 @@ Client_Hello::Client_Hello(const MemoryRegion<byte>& buf, Handshake_Type type)
 /*
 * Serialize a Client Hello message
 */
-MemoryVector<byte> Client_Hello::serialize() const
+std::vector<byte> Client_Hello::serialize() const
    {
-   MemoryVector<byte> buf;
+   std::vector<byte> buf;
 
    buf.push_back(m_version.major_version());
    buf.push_back(m_version.minor_version());
@@ -202,7 +202,7 @@ MemoryVector<byte> Client_Hello::serialize() const
    return buf;
    }
 
-void Client_Hello::deserialize_sslv2(const MemoryRegion<byte>& buf)
+void Client_Hello::deserialize_sslv2(const std::vector<byte>& buf)
    {
    if(buf.size() < 12 || buf[0] != 1)
       throw Decoding_Error("Client_Hello: SSLv2 hello corrupted");
@@ -243,7 +243,7 @@ void Client_Hello::deserialize_sslv2(const MemoryRegion<byte>& buf)
 /*
 * Deserialize a Client Hello message
 */
-void Client_Hello::deserialize(const MemoryRegion<byte>& buf)
+void Client_Hello::deserialize(const std::vector<byte>& buf)
    {
    if(buf.size() == 0)
       throw Decoding_Error("Client_Hello: Packet corrupted");

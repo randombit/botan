@@ -18,18 +18,18 @@ AlgorithmIdentifier IF_Scheme_PublicKey::algorithm_identifier() const
                               AlgorithmIdentifier::USE_NULL_PARAM);
    }
 
-MemoryVector<byte> IF_Scheme_PublicKey::x509_subject_public_key() const
+std::vector<byte> IF_Scheme_PublicKey::x509_subject_public_key() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
          .encode(n)
          .encode(e)
       .end_cons()
-      .get_contents();
+      .get_contents_unlocked();
    }
 
 IF_Scheme_PublicKey::IF_Scheme_PublicKey(const AlgorithmIdentifier&,
-                                         const MemoryRegion<byte>& key_bits)
+                                         const secure_vector<byte>& key_bits)
    {
    BER_Decoder(key_bits)
       .start_cons(SEQUENCE)
@@ -49,7 +49,7 @@ bool IF_Scheme_PublicKey::check_key(RandomNumberGenerator&, bool) const
    return true;
    }
 
-MemoryVector<byte> IF_Scheme_PrivateKey::pkcs8_private_key() const
+secure_vector<byte> IF_Scheme_PrivateKey::pkcs8_private_key() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
@@ -68,7 +68,7 @@ MemoryVector<byte> IF_Scheme_PrivateKey::pkcs8_private_key() const
 
 IF_Scheme_PrivateKey::IF_Scheme_PrivateKey(RandomNumberGenerator& rng,
                                            const AlgorithmIdentifier&,
-                                           const MemoryRegion<byte>& key_bits)
+                                           const secure_vector<byte>& key_bits)
    {
    BER_Decoder(key_bits)
       .start_cons(SEQUENCE)

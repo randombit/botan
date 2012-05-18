@@ -96,8 +96,8 @@ void test_ecdh_der_derivation(RandomNumberGenerator& rng)
       ECDH_PrivateKey private_a(rng, dom_pars);
       ECDH_PrivateKey private_b(rng, dom_pars);
 
-      MemoryVector<byte> key_a = private_a.public_value();
-      MemoryVector<byte> key_b = private_b.public_value();
+      std::vector<byte> key_a = private_a.public_value();
+      std::vector<byte> key_b = private_b.public_value();
 
       PK_Key_Agreement ka(private_a, "KDF2(SHA-1)");
       PK_Key_Agreement kb(private_b, "KDF2(SHA-1)");

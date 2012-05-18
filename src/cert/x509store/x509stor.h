@@ -87,7 +87,7 @@ class BOTAN_DLL X509_Store
          {
          public:
             X509_DN issuer;
-            MemoryVector<byte> serial, auth_key_id;
+            std::vector<byte> serial, auth_key_id;
             bool operator==(const CRL_Data&) const;
             bool operator!=(const CRL_Data&) const;
             bool operator<(const CRL_Data&) const;
@@ -112,7 +112,7 @@ class BOTAN_DLL X509_Store
 
       static X509_Code check_sig(const X509_Object&, Public_Key*);
 
-      size_t find_cert(const X509_DN&, const MemoryRegion<byte>&) const;
+      size_t find_cert(const X509_DN&, const std::vector<byte>&) const;
       X509_Code check_sig(const Cert_Info&, const Cert_Info&) const;
       void recompute_revoked_info() const;
 

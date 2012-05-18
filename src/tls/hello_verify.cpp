@@ -13,7 +13,7 @@ namespace Botan {
 
 namespace TLS {
 
-Hello_Verify_Request::Hello_Verify_Request(const MemoryRegion<byte>& buf)
+Hello_Verify_Request::Hello_Verify_Request(const std::vector<byte>& buf)
    {
    if(buf.size() < 3)
       throw Decoding_Error("Hello verify request too small");
@@ -25,7 +25,7 @@ Hello_Verify_Request::Hello_Verify_Request(const MemoryRegion<byte>& buf)
    copy_mem(&m_cookie[0], &buf[2], buf.size() - 2);
    }
 
-Hello_Verify_Request::Hello_Verify_Request(const MemoryVector<byte>& client_hello_bits,
+Hello_Verify_Request::Hello_Verify_Request(const std::vector<byte>& client_hello_bits,
                                            const std::string& client_identity,
                                            const SymmetricKey& secret_key)
    {
@@ -37,10 +37,10 @@ Hello_Verify_Request::Hello_Verify_Request(const MemoryVector<byte>& client_hell
    hmac->update_be(client_identity.size());
    hmac->update(client_identity);
 
-   m_cookie = hmac->final();
+   m_cookie = unlock(hmac->final());
    }
 
-MemoryVector<byte> Hello_Verify_Request::serialize() const
+std::vector<byte> Hello_Verify_Request::serialize() const
    {
    /* DTLS 1.2 server implementations SHOULD use DTLS version 1.0
       regardless of the version of TLS that is expected to be
@@ -49,7 +49,7 @@ MemoryVector<byte> Hello_Verify_Request::serialize() const
 
    Protocol_Version format_version(Protocol_Version::TLS_V11);
 
-   MemoryVector<byte> bits;
+   std::vector<byte> bits;
    bits.push_back(format_version.major_version());
    bits.push_back(format_version.minor_version());
    bits += m_cookie;

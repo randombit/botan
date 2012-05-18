@@ -59,12 +59,12 @@ std::string generate_passhash9(const std::string& pass,
 
    PKCS5_PBKDF2 kdf(prf); // takes ownership of pointer
 
-   SecureVector<byte> salt(SALT_BYTES);
+   secure_vector<byte> salt(SALT_BYTES);
    rng.randomize(&salt[0], salt.size());
 
    const size_t kdf_iterations = WORK_FACTOR_SCALE * work_factor;
 
-   SecureVector<byte> pbkdf2_output =
+   secure_vector<byte> pbkdf2_output =
       kdf.derive_key(PASSHASH9_PBKDF_OUTPUT_LEN,
                      pass,
                      &salt[0], salt.size(),
@@ -105,7 +105,7 @@ bool check_passhash9(const std::string& pass, const std::string& hash)
    pipe.write(hash.c_str() + MAGIC_PREFIX.size());
    pipe.end_msg();
 
-   SecureVector<byte> bin = pipe.read_all();
+   secure_vector<byte> bin = pipe.read_all();
 
    if(bin.size() != BINARY_LENGTH)
       return false;
@@ -125,7 +125,7 @@ bool check_passhash9(const std::string& pass, const std::string& hash)
 
    PKCS5_PBKDF2 kdf(pbkdf_prf); // takes ownership of pointer
 
-   SecureVector<byte> cmp = kdf.derive_key(
+   secure_vector<byte> cmp = kdf.derive_key(
       PASSHASH9_PBKDF_OUTPUT_LEN,
       pass,
       &bin[ALGID_BYTES + WORKFACTOR_BYTES], SALT_BYTES,

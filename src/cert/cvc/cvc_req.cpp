@@ -19,7 +19,7 @@ bool EAC1_1_Req::operator==(EAC1_1_Req const& rhs) const
 
 void EAC1_1_Req::force_decode()
    {
-   SecureVector<byte> enc_pk;
+   secure_vector<byte> enc_pk;
    BER_Decoder tbs_cert(tbs_bits);
    size_t cpi;
    tbs_cert.decode(cpi, ASN1_Tag(41), APPLICATION)

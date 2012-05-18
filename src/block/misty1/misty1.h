@@ -33,7 +33,7 @@ class BOTAN_DLL MISTY1 : public Block_Cipher_Fixed_Params<8, 16>
    private:
       void key_schedule(const byte[], size_t);
 
-      SecureVector<u16bit> EK, DK;
+      secure_vector<u16bit> EK, DK;
    };
 
 }

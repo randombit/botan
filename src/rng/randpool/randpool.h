@@ -52,7 +52,7 @@ class BOTAN_DLL Randpool : public RandomNumberGenerator
       MessageAuthenticationCode* mac;
 
       std::vector<EntropySource*> entropy_sources;
-      SecureVector<byte> pool, buffer, counter;
+      secure_vector<byte> pool, buffer, counter;
       bool seeded;
    };
 

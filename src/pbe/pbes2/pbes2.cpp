@@ -72,7 +72,7 @@ void PBE_PKCS5v20::flush_pipe(bool safe_to_skip)
    if(safe_to_skip && pipe.remaining() < 64)
       return;
 
-   SecureVector<byte> buffer(DEFAULT_BUFFERSIZE);
+   secure_vector<byte> buffer(DEFAULT_BUFFERSIZE);
    while(pipe.remaining())
       {
       size_t got = pipe.read(&buffer[0], buffer.size());
@@ -107,7 +107,7 @@ void PBE_PKCS5v20::new_params(RandomNumberGenerator& rng)
 /*
 * Encode PKCS#5 PBES2 parameters
 */
-MemoryVector<byte> PBE_PKCS5v20::encode_params() const
+std::vector<byte> PBE_PKCS5v20::encode_params() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
@@ -119,18 +119,18 @@ MemoryVector<byte> PBE_PKCS5v20::encode_params() const
                   .encode(iterations)
                   .encode(key_length)
                .end_cons()
-            .get_contents()
+            .get_contents_unlocked()
             )
          )
       .encode(
          AlgorithmIdentifier(block_cipher->name() + "/CBC",
             DER_Encoder()
                .encode(iv, OCTET_STRING)
-            .get_contents()
+            .get_contents_unlocked()
             )
          )
       .end_cons()
-      .get_contents();
+      .get_contents_unlocked();
    }
 
 /*

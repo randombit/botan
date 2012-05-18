@@ -25,7 +25,7 @@ namespace TLS {
 class TLS_Data_Reader
    {
    public:
-      TLS_Data_Reader(const MemoryRegion<byte>& buf_in) :
+      TLS_Data_Reader(const std::vector<byte>& buf_in) :
          buf(buf_in), offset(0) {}
 
       void assert_done() const
@@ -91,14 +91,14 @@ class TLS_Data_Reader
          }
 
       template<typename T>
-      SecureVector<T> get_range(size_t len_bytes,
+      std::vector<T> get_range(size_t len_bytes,
                                 size_t min_elems,
                                 size_t max_elems)
          {
          const size_t num_elems =
             get_num_elems(len_bytes, sizeof(T), min_elems, max_elems);
 
-         return get_elem<T, SecureVector<T> >(num_elems);
+         return get_elem<T, std::vector<T> >(num_elems);
          }
 
       template<typename T>
@@ -123,9 +123,9 @@ class TLS_Data_Reader
          }
 
       template<typename T>
-      SecureVector<T> get_fixed(size_t size)
+      std::vector<T> get_fixed(size_t size)
          {
-         return get_elem<T, SecureVector<T> >(size);
+         return get_elem<T, std::vector<T> >(size);
          }
 
    private:
@@ -169,15 +169,15 @@ class TLS_Data_Reader
             }
          }
 
-      const MemoryRegion<byte>& buf;
+      const std::vector<byte>& buf;
       size_t offset;
    };
 
 /**
 * Helper function for encoding length-tagged vectors
 */
-template<typename T>
-void append_tls_length_value(MemoryRegion<byte>& buf,
+template<typename T, typename Alloc>
+void append_tls_length_value(std::vector<byte, Alloc>& buf,
                              const T* vals,
                              size_t vals_size,
                              size_t tag_size)
@@ -200,25 +200,18 @@ void append_tls_length_value(MemoryRegion<byte>& buf,
          buf.push_back(get_byte(j, vals[i]));
    }
 
-template<typename T>
-void append_tls_length_value(MemoryRegion<byte>& buf,
-                             const MemoryRegion<T>& vals,
+template<typename T, typename Alloc, typename Alloc2>
+void append_tls_length_value(std::vector<byte, Alloc>& buf,
+                             const std::vector<T, Alloc2>& vals,
                              size_t tag_size)
    {
    append_tls_length_value(buf, &vals[0], vals.size(), tag_size);
    }
 
-template<typename T>
-void append_tls_length_value(MemoryRegion<byte>& buf,
-                             const std::vector<T>& vals,
+template<typename Alloc>
+void append_tls_length_value(std::vector<byte, Alloc>& buf,
+                             const std::string& str,
                              size_t tag_size)
-   {
-   append_tls_length_value(buf, &vals[0], vals.size(), tag_size);
-   }
-
-inline void append_tls_length_value(MemoryRegion<byte>& buf,
-                                    const std::string& str,
-                                    size_t tag_size)
    {
    append_tls_length_value(buf,
                            reinterpret_cast<const byte*>(&str[0]),

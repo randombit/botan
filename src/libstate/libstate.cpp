@@ -9,7 +9,6 @@
 #include <botan/charset.h>
 #include <botan/engine.h>
 #include <botan/cpuid.h>
-#include <botan/internal/defalloc.h>
 #include <botan/internal/core_engine.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/mlock.h>
@@ -17,10 +16,6 @@
 
 #if defined(BOTAN_HAS_SELFTESTS)
   #include <botan/selftest.h>
-#endif
-
-#if defined(BOTAN_HAS_ALLOC_MMAP)
-  #include <botan/internal/mmap_mem.h>
 #endif
 
 #if defined(BOTAN_HAS_ENGINE_ASSEMBLER)
@@ -44,53 +39,6 @@
 #endif
 
 namespace Botan {
-
-/*
-* Get an allocator by its name
-*/
-Allocator* Library_State::get_allocator(const std::string& type)
-   {
-   std::lock_guard<std::mutex> lock(allocator_lock);
-
-   if(type != "")
-      return search_map<std::string, Allocator*>(alloc_factory, type, 0);
-
-   if(!cached_default_allocator)
-      {
-      cached_default_allocator =
-         search_map<std::string, Allocator*>(alloc_factory,
-                                             default_allocator_name, 0);
-      }
-
-   return cached_default_allocator;
-   }
-
-/*
-* Create a new name to object mapping
-*/
-void Library_State::add_allocator(Allocator* allocator)
-   {
-   std::lock_guard<std::mutex> lock(allocator_lock);
-
-   allocator->init();
-
-   allocators.push_back(allocator);
-   alloc_factory[allocator->type()] = allocator;
-   }
-
-/*
-* Set the default allocator type
-*/
-void Library_State::set_default_allocator(const std::string& type)
-   {
-   if(type == "")
-      return;
-
-   std::lock_guard<std::mutex> lock(allocator_lock);
-
-   default_allocator_name = type;
-   cached_default_allocator = 0;
-   }
 
 /*
 * Get a configuration value
@@ -184,16 +132,6 @@ void Library_State::initialize()
    if(m_algorithm_factory)
       throw Invalid_State("Library_State has already been initialized");
 
-   cached_default_allocator = 0;
-   default_allocator_name = has_mlock() ? "locking" : "malloc";
-
-   add_allocator(new Malloc_Allocator);
-   add_allocator(new Locking_Allocator);
-
-#if defined(BOTAN_HAS_ALLOC_MMAP)
-   add_allocator(new MemoryMapping_Allocator);
-#endif
-
    load_default_config();
 
    m_algorithm_factory = new Algorithm_Factory();
@@ -230,7 +168,6 @@ void Library_State::initialize()
 */
 Library_State::Library_State()
    {
-   cached_default_allocator = 0;
    m_algorithm_factory = 0;
 
    global_rng_ptr = 0;
@@ -246,15 +183,6 @@ Library_State::~Library_State()
 
    delete global_rng_ptr;
    global_rng_ptr = 0;
-
-
-   cached_default_allocator = 0;
-
-   for(size_t i = 0; i != allocators.size(); ++i)
-      {
-      allocators[i]->destroy();
-      delete allocators[i];
-      }
    }
 
 }

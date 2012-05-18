@@ -30,8 +30,8 @@ class BOTAN_DLL AES_128 : public Block_Cipher_Fixed_Params<16, 16>
    private:
       void key_schedule(const byte key[], size_t length);
 
-      SecureVector<u32bit> EK, DK;
-      SecureVector<byte> ME, MD;
+      secure_vector<u32bit> EK, DK;
+      secure_vector<byte> ME, MD;
    };
 
 /**
@@ -52,8 +52,8 @@ class BOTAN_DLL AES_192 : public Block_Cipher_Fixed_Params<16, 24>
    private:
       void key_schedule(const byte key[], size_t length);
 
-      SecureVector<u32bit> EK, DK;
-      SecureVector<byte> ME, MD;
+      secure_vector<u32bit> EK, DK;
+      secure_vector<byte> ME, MD;
    };
 
 /**
@@ -74,8 +74,8 @@ class BOTAN_DLL AES_256 : public Block_Cipher_Fixed_Params<16, 32>
    private:
       void key_schedule(const byte key[], size_t length);
 
-      SecureVector<u32bit> EK, DK;
-      SecureVector<byte> ME, MD;
+      secure_vector<u32bit> EK, DK;
+      secure_vector<byte> ME, MD;
    };
 
 }

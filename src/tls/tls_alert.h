@@ -82,7 +82,7 @@ class BOTAN_DLL Alert
       * Deserialize an Alert message
       * @param buf the serialized alert
       */
-      Alert(const MemoryRegion<byte>& buf);
+      Alert(const std::vector<byte>& buf);
 
       Alert(Type alert_type, bool is_fatal = false) :
          fatal(is_fatal), type_code(alert_type) {}

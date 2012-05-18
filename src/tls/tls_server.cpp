@@ -24,8 +24,8 @@ bool check_for_resume(Session& session_info,
                       Client_Hello* client_hello,
                       std::chrono::seconds session_ticket_lifetime)
    {
-   const MemoryVector<byte>& client_session_id = client_hello->session_id();
-   const MemoryVector<byte>& session_ticket = client_hello->session_ticket();
+   const std::vector<byte>& client_session_id = client_hello->session_id();
+   const std::vector<byte>& session_ticket = client_hello->session_ticket();
 
    if(session_ticket.empty())
       {
@@ -232,7 +232,7 @@ void Server::alert_notify(const Alert& alert)
 * Split up and process handshake messages
 */
 void Server::read_handshake(byte rec_type,
-                            const MemoryRegion<byte>& rec_buf)
+                            const std::vector<byte>& rec_buf)
    {
    if(rec_type == HANDSHAKE && !state)
       {
@@ -247,7 +247,7 @@ void Server::read_handshake(byte rec_type,
 * Process a handshake message
 */
 void Server::process_handshake_msg(Handshake_Type type,
-                                   const MemoryRegion<byte>& contents)
+                                   const std::vector<byte>& contents)
    {
    if(state == 0)
       throw Unexpected_Message("Unexpected handshake message from client");
@@ -396,7 +396,7 @@ void Server::process_handshake_msg(Handshake_Type type,
          state->server_hello = new Server_Hello(
             writer,
             state->hash,
-            rng.random_vec(32), // new session ID
+            unlock(rng.random_vec(32)), // new session ID
             state->version(),
             choose_ciphersuite(policy, creds, cert_chains, state->client_hello),
             choose_compression(policy, state->client_hello->compression_methods()),
@@ -569,7 +569,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             secure_renegotiation.supported(),
             state->server_hello->fragment_size(),
             peer_certs,
-            MemoryVector<byte>(),
+            std::vector<byte>(),
             m_hostname,
             state->srp_identifier()
             );

@@ -123,7 +123,7 @@ void EVP_BlockCipher::decrypt_n(const byte in[], byte out[],
 */
 void EVP_BlockCipher::key_schedule(const byte key[], size_t length)
    {
-   SecureVector<byte> full_key(key, length);
+   secure_vector<byte> full_key(key, length);
 
    if(cipher_name == "TripleDES" && length == 16)
       {

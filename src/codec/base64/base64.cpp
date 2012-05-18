@@ -92,11 +92,6 @@ std::string base64_encode(const byte input[],
    return output;
    }
 
-std::string base64_encode(const MemoryRegion<byte>& input)
-   {
-   return base64_encode(&input[0], input.size());
-   }
-
 size_t base64_decode(byte output[],
                      const char input[],
                      size_t input_length,
@@ -226,11 +221,11 @@ size_t base64_decode(byte output[],
    return base64_decode(output, &input[0], input.length(), ignore_ws);
    }
 
-SecureVector<byte> base64_decode(const char input[],
+secure_vector<byte> base64_decode(const char input[],
                                  size_t input_length,
                                  bool ignore_ws)
    {
-   SecureVector<byte> bin((round_up<size_t>(input_length, 4) * 3) / 4);
+   secure_vector<byte> bin((round_up<size_t>(input_length, 4) * 3) / 4);
 
    size_t written = base64_decode(&bin[0],
                                   input,
@@ -241,7 +236,7 @@ SecureVector<byte> base64_decode(const char input[],
    return bin;
    }
 
-SecureVector<byte> base64_decode(const std::string& input,
+secure_vector<byte> base64_decode(const std::string& input,
                                  bool ignore_ws)
    {
    return base64_decode(&input[0], input.size(), ignore_ws);

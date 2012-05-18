@@ -94,7 +94,7 @@ class BOTAN_DLL StreamCipher_Filter : public Keyed_Filter
 
       ~StreamCipher_Filter() { delete cipher; }
    private:
-      SecureVector<byte> buffer;
+      secure_vector<byte> buffer;
       StreamCipher* cipher;
    };
 

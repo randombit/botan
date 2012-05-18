@@ -138,7 +138,7 @@ void CAST_256::decrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void CAST_256::key_schedule(const byte key[], size_t length)
    {
-   SecureVector<u32bit> K(8);
+   secure_vector<u32bit> K(8);
    for(size_t j = 0; j != length; ++j)
       K[j/4] = (K[j/4] << 8) + key[j];
 

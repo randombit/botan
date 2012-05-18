@@ -111,7 +111,7 @@ void Device_EntropySource::poll(Entropy_Accumulator& accum)
       accum.desired_remaining_bits() / ENTROPY_BITS_PER_BYTE, 32);
 
    const size_t read_wait_ms = std::max<size_t>(go_get, 100);
-   MemoryRegion<byte>& io_buffer = accum.get_io_buffer(go_get);
+   secure_vector<byte>& io_buffer = accum.get_io_buffer(go_get);
 
    for(size_t i = 0; i != devices.size(); ++i)
       {

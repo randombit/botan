@@ -43,7 +43,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
       while(buf_size)
          {
          byte rec_type = CONNECTION_CLOSED;
-         MemoryVector<byte> record;
+         std::vector<byte> record;
          size_t consumed = 0;
 
          const size_t needed = reader.add_input(buf, buf_size,
@@ -67,12 +67,12 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
             {
             Heartbeat_Message heartbeat(record);
 
-            const MemoryRegion<byte>& payload = heartbeat.payload();
+            const std::vector<byte>& payload = heartbeat.payload();
 
             if(heartbeat.is_request() && !state)
                {
                Heartbeat_Message response(Heartbeat_Message::RESPONSE,
-                                          payload, payload.size());
+                                          &payload[0], payload.size());
 
                writer.send(HEARTBEAT, response.contents());
                }
@@ -159,7 +159,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
 * Split up and process handshake messages
 */
 void Channel::read_handshake(byte rec_type,
-                             const MemoryRegion<byte>& rec_buf)
+                             const std::vector<byte>& rec_buf)
    {
    if(rec_type == HANDSHAKE)
       {
@@ -178,7 +178,7 @@ void Channel::read_handshake(byte rec_type,
          {
          if(state->handshake_reader()->have_full_record())
             {
-            std::pair<Handshake_Type, MemoryVector<byte> > msg =
+            std::pair<Handshake_Type, std::vector<byte> > msg =
                state->handshake_reader()->get_next_record();
             process_handshake_msg(msg.first, msg.second);
             }
@@ -188,7 +188,7 @@ void Channel::read_handshake(byte rec_type,
       else if(rec_type == CHANGE_CIPHER_SPEC)
          {
          if(state->handshake_reader()->empty() && rec_buf.size() == 1 && rec_buf[0] == 1)
-            process_handshake_msg(HANDSHAKE_CCS, MemoryVector<byte>());
+            process_handshake_msg(HANDSHAKE_CCS, std::vector<byte>());
          else
             throw Decoding_Error("Malformed ChangeCipherSpec message");
          }
@@ -259,7 +259,7 @@ void Channel::Secure_Renegotiation_State::update(Client_Hello* client_hello)
 
    if(client_hello->secure_renegotiation())
       {
-      const MemoryVector<byte>& data = client_hello->renegotiation_info();
+      const std::vector<byte>& data = client_hello->renegotiation_info();
 
       if(initial_handshake)
          {
@@ -294,7 +294,7 @@ void Channel::Secure_Renegotiation_State::update(Server_Hello* server_hello)
 
    if(secure_renegotiation)
       {
-      const MemoryVector<byte>& data = server_hello->renegotiation_info();
+      const std::vector<byte>& data = server_hello->renegotiation_info();
 
       if(initial_handshake)
          {

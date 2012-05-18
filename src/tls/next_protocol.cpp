@@ -22,7 +22,7 @@ Next_Protocol::Next_Protocol(Record_Writer& writer,
    hash.update(writer.send(*this));
    }
 
-Next_Protocol::Next_Protocol(const MemoryRegion<byte>& buf)
+Next_Protocol::Next_Protocol(const std::vector<byte>& buf)
    {
    TLS_Data_Reader reader(buf);
 
@@ -31,9 +31,9 @@ Next_Protocol::Next_Protocol(const MemoryRegion<byte>& buf)
    reader.get_range_vector<byte>(1, 0, 255); // padding, ignored
    }
 
-MemoryVector<byte> Next_Protocol::serialize() const
+std::vector<byte> Next_Protocol::serialize() const
    {
-   MemoryVector<byte> buf;
+   std::vector<byte> buf;
 
    append_tls_length_value(buf,
                            reinterpret_cast<const byte*>(m_protocol.data()),

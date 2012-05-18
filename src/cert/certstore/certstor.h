@@ -39,7 +39,7 @@ class BOTAN_DLL Certificate_Store
       virtual std::vector<X509_Certificate>
          find_cert_by_subject_and_key_id(
             const X509_DN& subject_dn,
-            const MemoryRegion<byte>& key_id) const = 0;
+            const std::vector<byte>& key_id) const = 0;
 
       /**
       * Find CRLs by the DN and key id of the issuer
@@ -47,7 +47,7 @@ class BOTAN_DLL Certificate_Store
       virtual std::vector<X509_CRL>
          find_crl_by_subject_and_key_id(
             const X509_DN& issuer_dn,
-            const MemoryRegion<byte>& key_id) const = 0;
+            const std::vector<byte>& key_id) const = 0;
    };
 
 /**
@@ -64,11 +64,11 @@ class BOTAN_DLL Certificate_Store_Memory : public Certificate_Store
 
       std::vector<X509_Certificate> find_cert_by_subject_and_key_id(
          const X509_DN& subject_dn,
-         const MemoryRegion<byte>& key_id) const;
+         const std::vector<byte>& key_id) const;
 
       std::vector<X509_CRL> find_crl_by_subject_and_key_id(
          const X509_DN& issuer_dn,
-         const MemoryRegion<byte>& key_id) const;
+         const std::vector<byte>& key_id) const;
 
       Certificate_Store_Memory() {}
    private:

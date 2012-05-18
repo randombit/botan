@@ -34,12 +34,6 @@ void hex_encode(char output[],
       }
    }
 
-std::string hex_encode(const MemoryRegion<byte>& input,
-                       bool uppercase)
-   {
-   return hex_encode(&input[0], input.size(), uppercase);
-   }
-
 std::string hex_encode(const byte input[],
                        size_t input_length,
                        bool uppercase)
@@ -165,11 +159,11 @@ size_t hex_decode(byte output[],
    return hex_decode(output, &input[0], input.length(), ignore_ws);
    }
 
-SecureVector<byte> hex_decode(const char input[],
+secure_vector<byte> hex_decode(const char input[],
                               size_t input_length,
                               bool ignore_ws)
    {
-   SecureVector<byte> bin(1 + input_length / 2);
+   secure_vector<byte> bin(1 + input_length / 2);
 
    size_t written = hex_decode(&bin[0],
                                input,
@@ -180,7 +174,7 @@ SecureVector<byte> hex_decode(const char input[],
    return bin;
    }
 
-SecureVector<byte> hex_decode(const std::string& input,
+secure_vector<byte> hex_decode(const std::string& input,
                               bool ignore_ws)
    {
    return hex_decode(&input[0], input.size(), ignore_ws);

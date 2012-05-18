@@ -35,7 +35,7 @@ void BigInt::randomize(RandomNumberGenerator& rng,
       clear();
    else
       {
-      SecureVector<byte> array = rng.random_vec((bitsize + 7) / 8);
+      secure_vector<byte> array = rng.random_vec((bitsize + 7) / 8);
 
       if(bitsize % 8)
          array[0] &= 0xFF >> (8 - (bitsize % 8));

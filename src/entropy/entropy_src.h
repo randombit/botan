@@ -35,7 +35,7 @@ class BOTAN_DLL Entropy_Accumulator
       * @param size requested size for the I/O buffer
       * @return cached I/O buffer for repeated polls
       */
-      MemoryRegion<byte>& get_io_buffer(size_t size)
+      secure_vector<byte>& get_io_buffer(size_t size)
          { io_buffer.resize(size); return io_buffer; }
 
       /**
@@ -87,7 +87,7 @@ class BOTAN_DLL Entropy_Accumulator
    private:
       virtual void add_bytes(const byte bytes[], size_t length) = 0;
 
-      SecureVector<byte> io_buffer;
+      secure_vector<byte> io_buffer;
       size_t entropy_goal;
       double collected_bits;
    };

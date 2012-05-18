@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-ECDSA_Signature::ECDSA_Signature(const MemoryRegion<byte>& ber)
+ECDSA_Signature::ECDSA_Signature(const secure_vector<byte>& ber)
    {
    BER_Decoder(ber)
       .start_cons(SEQUENCE)
@@ -20,7 +20,7 @@ ECDSA_Signature::ECDSA_Signature(const MemoryRegion<byte>& ber)
       .verify_end();
    }
 
-MemoryVector<byte> ECDSA_Signature::DER_encode() const
+std::vector<byte> ECDSA_Signature::DER_encode() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
@@ -30,20 +30,20 @@ MemoryVector<byte> ECDSA_Signature::DER_encode() const
       .get_contents();
    }
 
-MemoryVector<byte> ECDSA_Signature::get_concatenation() const
+std::vector<byte> ECDSA_Signature::get_concatenation() const
    {
    // use the larger
    const size_t enc_len = m_r > m_s ? m_r.bytes() : m_s.bytes();
 
-   SecureVector<byte> sv_r = BigInt::encode_1363(m_r, enc_len);
-   SecureVector<byte> sv_s = BigInt::encode_1363(m_s, enc_len);
+   secure_vector<byte> sv_r = BigInt::encode_1363(m_r, enc_len);
+   secure_vector<byte> sv_s = BigInt::encode_1363(m_s, enc_len);
 
-   SecureVector<byte> result(sv_r);
+   secure_vector<byte> result(sv_r);
    result += sv_s;
    return result;
    }
 
-ECDSA_Signature decode_concatenation(const MemoryRegion<byte>& concat)
+ECDSA_Signature decode_concatenation(const secure_vector<byte>& concat)
    {
    if(concat.size() % 2 != 0)
       throw Invalid_Argument("Erroneous length of signature");

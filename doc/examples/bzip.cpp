@@ -37,6 +37,7 @@ int main(int argc, char* argv[])
 
    Botan::LibraryInitializer init;
 
+#ifdef BOTAN_HAS_COMPRESSOR_BZIP2
    std::vector<std::string> files;
    bool decompress = false, small = false;
    int level = 9;
@@ -60,18 +61,10 @@ int main(int argc, char* argv[])
    try {
 
       Botan::Filter* bzip = 0;
-#ifdef BOTAN_HAS_COMPRESSOR_BZIP2
       if(decompress)
          bzip = new Botan::Bzip_Decompression(small);
       else
          bzip = new Botan::Bzip_Compression(level);
-#endif
-
-      if(!bzip)
-         {
-         std::cout << "Sorry, support for bzip2 not compiled into Botan\n";
-         return 1;
-         }
 
       Botan::Pipe pipe(bzip);
 
@@ -112,5 +105,11 @@ int main(int argc, char* argv[])
       std::cout << "Exception caught: " << e.what() << std::endl;
       return 1;
       }
+#else
+
+   std::cout << "Sorry, support for bzip2 not compiled into Botan\n";
+
+#endif
+
    return 0;
    }

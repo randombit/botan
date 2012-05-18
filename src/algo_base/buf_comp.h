@@ -34,9 +34,18 @@ class BOTAN_DLL Buffered_Computation
 
       /**
       * Add new input to process.
-      * @param in the input to process as a MemoryRegion
+      * @param in the input to process as a secure_vector
       */
-      void update(const MemoryRegion<byte>& in)
+      void update(const secure_vector<byte>& in)
+         {
+         add_data(&in[0], in.size());
+         }
+
+      /**
+      * Add new input to process.
+      * @param in the input to process as a std::vector
+      */
+      void update(const std::vector<byte>& in)
          {
          add_data(&in[0], in.size());
          }
@@ -82,11 +91,11 @@ class BOTAN_DLL Buffered_Computation
       /**
       * Complete the computation and retrieve the
       * final result.
-      * @return SecureVector holding the result
+      * @return secure_vector holding the result
       */
-      SecureVector<byte> final()
+      secure_vector<byte> final()
          {
-         SecureVector<byte> output(output_length());
+         secure_vector<byte> output(output_length());
          final_result(&output[0]);
          return output;
          }
@@ -98,7 +107,7 @@ class BOTAN_DLL Buffered_Computation
       * @param length the length of the byte array
       * @result the result of the call to final()
       */
-      SecureVector<byte> process(const byte in[], size_t length)
+      secure_vector<byte> process(const byte in[], size_t length)
          {
          add_data(in, length);
          return final();
@@ -110,7 +119,13 @@ class BOTAN_DLL Buffered_Computation
       * @param in the input to process
       * @result the result of the call to final()
       */
-      SecureVector<byte> process(const MemoryRegion<byte>& in)
+      secure_vector<byte> process(const secure_vector<byte>& in)
+         {
+         add_data(&in[0], in.size());
+         return final();
+         }
+
+      secure_vector<byte> process(const std::vector<byte>& in)
          {
          add_data(&in[0], in.size());
          return final();
@@ -122,7 +137,7 @@ class BOTAN_DLL Buffered_Computation
       * @param in the input to process as a string
       * @result the result of the call to final()
       */
-      SecureVector<byte> process(const std::string& in)
+      secure_vector<byte> process(const std::string& in)
          {
          update(in);
          return final();

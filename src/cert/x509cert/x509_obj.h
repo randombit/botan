@@ -27,12 +27,12 @@ class BOTAN_DLL X509_Object
       * The underlying data that is to be or was signed
       * @return data that is or was signed
       */
-      MemoryVector<byte> tbs_data() const;
+      std::vector<byte> tbs_data() const;
 
       /**
       * @return signature on tbs_data()
       */
-      MemoryVector<byte> signature() const;
+      std::vector<byte> signature() const;
 
       /**
       * @return signature algorithm that was used to generate signature
@@ -52,10 +52,10 @@ class BOTAN_DLL X509_Object
       * @param tbs the tbs bits to be signed
       * @return signed X509 object
       */
-      static MemoryVector<byte> make_signed(class PK_Signer* signer,
-                                            RandomNumberGenerator& rng,
-                                            const AlgorithmIdentifier& alg_id,
-                                            const MemoryRegion<byte>& tbs);
+      static std::vector<byte> make_signed(class PK_Signer* signer,
+                                           RandomNumberGenerator& rng,
+                                           const AlgorithmIdentifier& alg_id,
+                                           const secure_vector<byte>& tbs);
 
       /**
       * Check the signature on this data
@@ -75,7 +75,7 @@ class BOTAN_DLL X509_Object
       /**
       * @return BER encoding of this
       */
-      MemoryVector<byte> BER_encode() const;
+      std::vector<byte> BER_encode() const;
 
       /**
       * @return PEM encoding of this
@@ -95,15 +95,17 @@ class BOTAN_DLL X509_Object
    protected:
       X509_Object(DataSource& src, const std::string& pem_labels);
       X509_Object(const std::string& file, const std::string& pem_labels);
+      X509_Object(const std::vector<byte>& vec, const std::string& labels);
 
       void do_decode();
       X509_Object() {}
       AlgorithmIdentifier sig_algo;
-      MemoryVector<byte> tbs_bits, sig;
+      std::vector<byte> tbs_bits, sig;
    private:
       virtual void force_decode() = 0;
       void init(DataSource&, const std::string&);
       void decode_info(DataSource&);
+
       std::vector<std::string> PEM_labels_allowed;
       std::string PEM_label_pref;
    };

@@ -35,7 +35,7 @@ class BOTAN_DLL CMAC : public MessageAuthenticationCode
       * @param in the input
       * @param polynomial the byte value of the polynomial
       */
-      static SecureVector<byte> poly_double(const MemoryRegion<byte>& in,
+      static secure_vector<byte> poly_double(const secure_vector<byte>& in,
                                             byte polynomial);
 
       /**
@@ -49,7 +49,7 @@ class BOTAN_DLL CMAC : public MessageAuthenticationCode
       void key_schedule(const byte[], size_t);
 
       BlockCipher* e;
-      SecureVector<byte> buffer, state, B, P;
+      secure_vector<byte> buffer, state, B, P;
       size_t position;
       byte polynomial;
    };

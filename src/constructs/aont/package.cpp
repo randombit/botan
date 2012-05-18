@@ -37,7 +37,7 @@ void aont_package(RandomNumberGenerator& rng,
    // Set K0 (the all zero key)
    cipher->set_key(SymmetricKey(all_zeros));
 
-   SecureVector<byte> buf(BLOCK_SIZE);
+   secure_vector<byte> buf(BLOCK_SIZE);
 
    const size_t blocks =
       (input_len + BLOCK_SIZE - 1) / BLOCK_SIZE;
@@ -57,13 +57,13 @@ void aont_package(RandomNumberGenerator& rng,
       for(size_t j = 0; j != sizeof(i); ++j)
          buf[BLOCK_SIZE - 1 - j] ^= get_byte(sizeof(i)-1-j, i);
 
-      cipher->encrypt(buf);
+      cipher->encrypt(&buf[0]);
 
-      xor_buf(final_block, buf, BLOCK_SIZE);
+      xor_buf(&final_block[0], &buf[0], BLOCK_SIZE);
       }
 
    // XOR the random package key into the final block
-   xor_buf(final_block, package_key.begin(), BLOCK_SIZE);
+   xor_buf(&final_block[0], package_key.begin(), BLOCK_SIZE);
    }
 
 void aont_unpackage(BlockCipher* cipher,
@@ -83,8 +83,8 @@ void aont_unpackage(BlockCipher* cipher,
 
    cipher->set_key(SymmetricKey(all_zeros));
 
-   SecureVector<byte> package_key(BLOCK_SIZE);
-   SecureVector<byte> buf(BLOCK_SIZE);
+   secure_vector<byte> package_key(BLOCK_SIZE);
+   secure_vector<byte> buf(BLOCK_SIZE);
 
    // Copy the package key (masked with the block hashes)
    copy_mem(&package_key[0],
@@ -105,9 +105,9 @@ void aont_unpackage(BlockCipher* cipher,
       for(size_t j = 0; j != sizeof(i); ++j)
          buf[BLOCK_SIZE - 1 - j] ^= get_byte(sizeof(i)-1-j, i);
 
-      cipher->encrypt(buf);
+      cipher->encrypt(&buf[0]);
 
-      xor_buf(&package_key[0], buf, BLOCK_SIZE);
+      xor_buf(&package_key[0], &buf[0], BLOCK_SIZE);
       }
 
    Pipe pipe(new StreamCipher_Filter(new CTR_BE(cipher), package_key));

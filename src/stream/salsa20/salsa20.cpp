@@ -193,7 +193,7 @@ void Salsa20::set_iv(const byte iv[], size_t length)
       state[8] = load_le<u32bit>(iv, 2);
       state[9] = load_le<u32bit>(iv, 3);
 
-      SecureVector<u32bit> hsalsa(8);
+      secure_vector<u32bit> hsalsa(8);
       hsalsa20(&hsalsa[0], &state[0]);
 
       state[ 1] = hsalsa[0];

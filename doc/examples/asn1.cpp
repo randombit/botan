@@ -72,8 +72,8 @@ void decode(BER_Decoder& decoder, size_t level)
       /* hack to insert the tag+length back in front of the stuff now
          that we've gotten the type info */
       DER_Encoder encoder;
-      encoder.add_object(type_tag, class_tag, obj.value, obj.value.size());
-      SecureVector<byte> bits = encoder.get_contents();
+      encoder.add_object(type_tag, class_tag, obj.value);
+      secure_vector<byte> bits = encoder.get_contents();
 
       BER_Decoder data(bits);
 
@@ -143,7 +143,7 @@ void decode(BER_Decoder& decoder, size_t level)
          BigInt number;
          data.decode(number);
 
-         SecureVector<byte> rep;
+         std::vector<byte> rep;
 
          /* If it's small, it's probably a number, not a hash */
          if(number.bits() <= 16)
@@ -170,7 +170,7 @@ void decode(BER_Decoder& decoder, size_t level)
          }
       else if(type_tag == OCTET_STRING)
          {
-         SecureVector<byte> bits;
+         secure_vector<byte> bits;
          data.decode(bits, type_tag);
          bool not_text = false;
 
@@ -184,7 +184,7 @@ void decode(BER_Decoder& decoder, size_t level)
          }
       else if(type_tag == BIT_STRING)
          {
-         SecureVector<byte> bits;
+         secure_vector<byte> bits;
          data.decode(bits, type_tag);
 
          std::vector<bool> bit_set;

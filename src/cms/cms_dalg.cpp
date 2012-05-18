@@ -20,7 +20,7 @@ namespace {
 /*
 * Compute the hash of some content
 */
-SecureVector<byte> hash_of(const SecureVector<byte>& content,
+secure_vector<byte> hash_of(const secure_vector<byte>& content,
                            const AlgorithmIdentifier& hash_algo,
                            std::string& hash_name)
    {
@@ -106,11 +106,11 @@ void read_orig_info(BER_Decoder& info, X509_Store& store)
 /*
 * Decode any Attributes, and check type
 */
-SecureVector<byte> decode_attributes(BER_Decoder& ber, const OID& type,
+secure_vector<byte> decode_attributes(BER_Decoder& ber, const OID& type,
                                      bool& bad_attributes)
    {
    BER_Object obj = ber.get_next_object();
-   SecureVector<byte> digest;
+   secure_vector<byte> digest;
 
    bool got_digest = false;
    bool got_content_type = false;
@@ -178,7 +178,7 @@ void CMS_Decoder::decode_layer()
          {
          size_t version;
          AlgorithmIdentifier hash_algo;
-         SecureVector<byte> digest;
+         secure_vector<byte> digest;
 
          BER_Decoder hash_info = decoder.start_cons(SEQUENCE);
 
@@ -213,7 +213,7 @@ void CMS_Decoder::decode_layer()
          while(signer_infos.more_items())
             {
             AlgorithmIdentifier sig_algo, hash_algo;
-            SecureVector<byte> signature, digest;
+            secure_vector<byte> signature, digest;
             size_t version;
 
             BER_Decoder signer_info = BER::get_subsequence(signer_infos);

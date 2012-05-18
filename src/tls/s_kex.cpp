@@ -95,7 +95,7 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
 
       std::string group_id;
       BigInt v;
-      MemoryVector<byte> salt;
+      std::vector<byte> salt;
 
       const bool found = creds.srp_verifier("tls-server", hostname,
                                             srp_identifier,
@@ -142,7 +142,7 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
 /**
 * Deserialize a Server Key Exchange message
 */
-Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
+Server_Key_Exchange::Server_Key_Exchange(const std::vector<byte>& buf,
                                          const std::string& kex_algo,
                                          const std::string& sig_algo,
                                          Protocol_Version version) :
@@ -186,7 +186,7 @@ Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
 
       const std::string name = Supported_Elliptic_Curves::curve_id_to_name(curve_id);
 
-      MemoryVector<byte> ecdh_key = reader.get_range<byte>(1, 1, 255);
+      std::vector<byte> ecdh_key = reader.get_range<byte>(1, 1, 255);
 
       if(name == "")
          throw Decoding_Error("Server_Key_Exchange: Server sent unknown named curve " +
@@ -203,7 +203,7 @@ Server_Key_Exchange::Server_Key_Exchange(const MemoryRegion<byte>& buf,
 
       const BigInt N = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
       const BigInt g = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
-      MemoryVector<byte> salt = reader.get_range<byte>(1, 1, 255);
+      std::vector<byte> salt = reader.get_range<byte>(1, 1, 255);
       const BigInt B = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
 
       append_tls_length_value(m_params, BigInt::encode(N), 2);
@@ -236,9 +236,9 @@ Server_Key_Exchange::~Server_Key_Exchange()
 /**
 * Serialize a Server Key Exchange message
 */
-MemoryVector<byte> Server_Key_Exchange::serialize() const
+std::vector<byte> Server_Key_Exchange::serialize() const
    {
-   MemoryVector<byte> buf = params();
+   std::vector<byte> buf = params();
 
    if(m_signature.size())
       {

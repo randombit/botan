@@ -19,7 +19,7 @@ namespace TLS {
 * Session_Keys Constructor
 */
 Session_Keys::Session_Keys(Handshake_State* state,
-                           const MemoryRegion<byte>& pre_master_secret,
+                           const secure_vector<byte>& pre_master_secret,
                            bool resuming)
    {
    const size_t mac_keylen = output_length_of(state->suite.mac_algo());
@@ -45,7 +45,7 @@ Session_Keys::Session_Keys(Handshake_State* state,
       }
    else
       {
-      SecureVector<byte> salt;
+      secure_vector<byte> salt;
 
       if(state->version() != Protocol_Version::SSL_V3)
          salt += std::make_pair(MASTER_SECRET_MAGIC, sizeof(MASTER_SECRET_MAGIC));
@@ -56,7 +56,7 @@ Session_Keys::Session_Keys(Handshake_State* state,
       master_sec = prf->derive_key(48, pre_master_secret, salt);
       }
 
-   SecureVector<byte> salt;
+   secure_vector<byte> salt;
    if(state->version() != Protocol_Version::SSL_V3)
       salt += std::make_pair(KEY_GEN_MAGIC, sizeof(KEY_GEN_MAGIC));
    salt += state->server_hello->random();

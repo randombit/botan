@@ -18,9 +18,9 @@ namespace Botan {
 
 namespace {
 
-SecureVector<byte> enc_two_digit(u32bit in)
+secure_vector<byte> enc_two_digit(u32bit in)
    {
-   SecureVector<byte> result;
+   secure_vector<byte> result;
    in %= 100;
    if(in < 10)
       result.push_back(0x00);
@@ -281,9 +281,9 @@ void EAC_Time::decode_from(BER_Decoder& source)
 /*
 * make the value an octet string for encoding
 */
-SecureVector<byte> EAC_Time::encoded_eac_time() const
+secure_vector<byte> EAC_Time::encoded_eac_time() const
    {
-   SecureVector<byte> result;
+   secure_vector<byte> result;
    result += enc_two_digit(year);
    result += enc_two_digit(month);
    result += enc_two_digit(day);

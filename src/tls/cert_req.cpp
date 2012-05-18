@@ -80,7 +80,7 @@ Certificate_Req::Certificate_Req(Record_Writer& writer,
 /**
 * Deserialize a Certificate Request message
 */
-Certificate_Req::Certificate_Req(const MemoryRegion<byte>& buf,
+Certificate_Req::Certificate_Req(const std::vector<byte>& buf,
                                  Protocol_Version version)
    {
    if(buf.size() < 4)
@@ -141,9 +141,9 @@ Certificate_Req::Certificate_Req(const MemoryRegion<byte>& buf,
 /**
 * Serialize a Certificate Request message
 */
-MemoryVector<byte> Certificate_Req::serialize() const
+std::vector<byte> Certificate_Req::serialize() const
    {
-   MemoryVector<byte> buf;
+   std::vector<byte> buf;
 
    std::vector<byte> cert_types;
 
@@ -155,7 +155,7 @@ MemoryVector<byte> Certificate_Req::serialize() const
    if(!m_supported_algos.empty())
       buf += Signature_Algorithms(m_supported_algos).serialize();
 
-   MemoryVector<byte> encoded_names;
+   std::vector<byte> encoded_names;
 
    for(size_t i = 0; i != names.size(); ++i)
       {
@@ -184,7 +184,7 @@ Certificate::Certificate(Record_Writer& writer,
 /**
 * Deserialize a Certificate message
 */
-Certificate::Certificate(const MemoryRegion<byte>& buf)
+Certificate::Certificate(const std::vector<byte>& buf)
    {
    if(buf.size() < 3)
       throw Decoding_Error("Certificate: Message malformed");
@@ -196,14 +196,14 @@ Certificate::Certificate(const MemoryRegion<byte>& buf)
 
    const byte* certs = &buf[3];
 
-   while(certs != buf.end())
+   while(size_t remaining_bytes = &buf[buf.size()] - certs)
       {
-      if(buf.end() - certs < 3)
+      if(remaining_bytes < 3)
          throw Decoding_Error("Certificate: Message malformed");
 
       const size_t cert_size = make_u32bit(0, certs[0], certs[1], certs[2]);
 
-      if(buf.end() - certs < (3 + cert_size))
+      if(remaining_bytes < (3 + cert_size))
          throw Decoding_Error("Certificate: Message malformed");
 
       DataSource_Memory cert_buf(&certs[3], cert_size);
@@ -216,13 +216,13 @@ Certificate::Certificate(const MemoryRegion<byte>& buf)
 /**
 * Serialize a Certificate message
 */
-MemoryVector<byte> Certificate::serialize() const
+std::vector<byte> Certificate::serialize() const
    {
-   MemoryVector<byte> buf(3);
+   std::vector<byte> buf(3);
 
    for(size_t i = 0; i != m_certs.size(); ++i)
       {
-      MemoryVector<byte> raw_cert = m_certs[i].BER_encode();
+      std::vector<byte> raw_cert = m_certs[i].BER_encode();
       const size_t cert_size = raw_cert.size();
       for(size_t i = 0; i != 3; ++i)
          buf.push_back(get_byte<u32bit>(i+1, cert_size));

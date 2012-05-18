@@ -34,7 +34,7 @@ class BOTAN_DLL SAFER_SK : public Block_Cipher_Fixed_Params<8, 16>
       size_t get_rounds() const { return (EK.size() - 8) / 16; }
       void key_schedule(const byte[], size_t);
 
-      SecureVector<byte> EK;
+      secure_vector<byte> EK;
    };
 
 }

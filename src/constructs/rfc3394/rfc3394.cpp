@@ -32,9 +32,9 @@ BlockCipher* make_aes(size_t keylength,
 
 }
 
-SecureVector<byte> rfc3394_keywrap(const MemoryRegion<byte>& key,
-                                   const SymmetricKey& kek,
-                                   Algorithm_Factory& af)
+secure_vector<byte> rfc3394_keywrap(const secure_vector<byte>& key,
+                                    const SymmetricKey& kek,
+                                    Algorithm_Factory& af)
    {
    if(key.size() % 8 != 0)
       throw std::invalid_argument("Bad input key size for NIST key wrap");
@@ -44,13 +44,13 @@ SecureVector<byte> rfc3394_keywrap(const MemoryRegion<byte>& key,
 
    const size_t n = key.size() / 8;
 
-   SecureVector<byte> R((n + 1) * 8);
-   SecureVector<byte> A(16);
+   secure_vector<byte> R((n + 1) * 8);
+   secure_vector<byte> A(16);
 
    for(size_t i = 0; i != 8; ++i)
       A[i] = 0xA6;
 
-   copy_mem(&R[8], key.begin(), key.size());
+   copy_mem(&R[8], &key[0], key.size());
 
    for(size_t j = 0; j <= 5; ++j)
       {
@@ -74,7 +74,7 @@ SecureVector<byte> rfc3394_keywrap(const MemoryRegion<byte>& key,
    return R;
    }
 
-SecureVector<byte> rfc3394_keyunwrap(const MemoryRegion<byte>& key,
+secure_vector<byte> rfc3394_keyunwrap(const secure_vector<byte>& key,
                                      const SymmetricKey& kek,
                                      Algorithm_Factory& af)
    {
@@ -86,13 +86,13 @@ SecureVector<byte> rfc3394_keyunwrap(const MemoryRegion<byte>& key,
 
    const size_t n = (key.size() - 8) / 8;
 
-   SecureVector<byte> R(n * 8);
-   SecureVector<byte> A(16);
+   secure_vector<byte> R(n * 8);
+   secure_vector<byte> A(16);
 
    for(size_t i = 0; i != 8; ++i)
       A[i] = key[i];
 
-   copy_mem(&R[0], key.begin() + 8, key.size() - 8);
+   copy_mem(&R[0], &key[8], key.size() - 8);
 
    for(size_t j = 0; j <= 5; ++j)
       {

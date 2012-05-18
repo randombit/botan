@@ -29,7 +29,7 @@ class BOTAN_DLL Skipjack : public Block_Cipher_Fixed_Params<8, 10>
    private:
       void key_schedule(const byte[], size_t);
 
-      SecureVector<byte> FTAB;
+      secure_vector<byte> FTAB;
    };
 
 }

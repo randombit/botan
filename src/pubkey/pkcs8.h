@@ -32,7 +32,7 @@ namespace PKCS8 {
 * @param key the private key to encode
 * @return BER encoded key
 */
-BOTAN_DLL SecureVector<byte> BER_encode(const Private_Key& key);
+BOTAN_DLL secure_vector<byte> BER_encode(const Private_Key& key);
 
 /**
 * Get a string containing a PEM encoded private key.
@@ -51,7 +51,7 @@ BOTAN_DLL std::string PEM_encode(const Private_Key& key);
          default will be chosen.
 * @return encrypted key in binary BER form
 */
-BOTAN_DLL SecureVector<byte> BER_encode(const Private_Key& key,
+BOTAN_DLL secure_vector<byte> BER_encode(const Private_Key& key,
                                         RandomNumberGenerator& rng,
                                         const std::string& pass,
                                         const std::string& pbe_algo = "");

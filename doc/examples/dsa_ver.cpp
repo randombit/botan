@@ -12,7 +12,7 @@ using namespace Botan;
 
 namespace {
 
-SecureVector<byte> b64_decode(const std::string& in)
+secure_vector<byte> b64_decode(const std::string& in)
    {
    Pipe pipe(new Base64_Decoder);
    pipe.process_msg(in);
@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
          return 1;
          }
 
-      SecureVector<byte> sig = b64_decode(sigstr);
+      secure_vector<byte> sig = b64_decode(sigstr);
 
       PK_Verifier ver(*dsakey, "EMSA1(SHA-1)");
 

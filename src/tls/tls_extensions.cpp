@@ -81,9 +81,9 @@ Extensions::Extensions(TLS_Data_Reader& reader)
       }
    }
 
-MemoryVector<byte> Extensions::serialize() const
+std::vector<byte> Extensions::serialize() const
    {
-   MemoryVector<byte> buf(2); // 2 bytes for length field
+   std::vector<byte> buf(2); // 2 bytes for length field
 
    for(std::map<Handshake_Extension_Type, Extension*>::const_iterator i = extensions.begin();
        i != extensions.end(); ++i)
@@ -93,7 +93,7 @@ MemoryVector<byte> Extensions::serialize() const
 
       const u16bit extn_code = i->second->type();
 
-      MemoryVector<byte> extn_val = i->second->serialize();
+      std::vector<byte> extn_val = i->second->serialize();
 
       buf.push_back(get_byte(0, extn_code));
       buf.push_back(get_byte(1, extn_code));
@@ -111,7 +111,7 @@ MemoryVector<byte> Extensions::serialize() const
 
    // avoid sending a completely empty extensions block
    if(buf.size() == 2)
-      return MemoryVector<byte>();
+      return std::vector<byte>();
 
    return buf;
    }
@@ -159,9 +159,9 @@ Server_Name_Indicator::Server_Name_Indicator(TLS_Data_Reader& reader,
       }
    }
 
-MemoryVector<byte> Server_Name_Indicator::serialize() const
+std::vector<byte> Server_Name_Indicator::serialize() const
    {
-   MemoryVector<byte> buf;
+   std::vector<byte> buf;
 
    size_t name_len = sni_host_name.size();
 
@@ -188,9 +188,9 @@ SRP_Identifier::SRP_Identifier(TLS_Data_Reader& reader,
       throw Decoding_Error("Bad encoding for SRP identifier extension");
    }
 
-MemoryVector<byte> SRP_Identifier::serialize() const
+std::vector<byte> SRP_Identifier::serialize() const
    {
-   MemoryVector<byte> buf;
+   std::vector<byte> buf;
 
    const byte* srp_bytes =
       reinterpret_cast<const byte*>(srp_identifier.data());
@@ -209,9 +209,9 @@ Renegotation_Extension::Renegotation_Extension(TLS_Data_Reader& reader,
       throw Decoding_Error("Bad encoding for secure renegotiation extn");
    }
 
-MemoryVector<byte> Renegotation_Extension::serialize() const
+std::vector<byte> Renegotation_Extension::serialize() const
    {
-   MemoryVector<byte> buf;
+   std::vector<byte> buf;
    append_tls_length_value(buf, reneg_data, 1);
    return buf;
    }
@@ -279,9 +279,9 @@ Next_Protocol_Notification::Next_Protocol_Notification(TLS_Data_Reader& reader,
       }
    }
 
-MemoryVector<byte> Next_Protocol_Notification::serialize() const
+std::vector<byte> Next_Protocol_Notification::serialize() const
    {
-   MemoryVector<byte> buf;
+   std::vector<byte> buf;
 
    for(size_t i = 0; i != m_protocols.size(); ++i)
       {
@@ -356,9 +356,9 @@ u16bit Supported_Elliptic_Curves::name_to_curve_id(const std::string& name)
    throw Invalid_Argument("name_to_curve_id unknown name " + name);
    }
 
-MemoryVector<byte> Supported_Elliptic_Curves::serialize() const
+std::vector<byte> Supported_Elliptic_Curves::serialize() const
    {
-   MemoryVector<byte> buf(2);
+   std::vector<byte> buf(2);
 
    for(size_t i = 0; i != m_curves.size(); ++i)
       {
@@ -466,9 +466,9 @@ byte Signature_Algorithms::sig_algo_code(const std::string& name)
    throw Internal_Error("Unknown sig ID " + name + " for signature_algorithms");
    }
 
-MemoryVector<byte> Signature_Algorithms::serialize() const
+std::vector<byte> Signature_Algorithms::serialize() const
    {
-   MemoryVector<byte> buf(2);
+   std::vector<byte> buf(2);
 
    for(size_t i = 0; i != m_supported_algos.size(); ++i)
       {
@@ -516,7 +516,7 @@ Signature_Algorithms::Signature_Algorithms(TLS_Data_Reader& reader,
 Session_Ticket::Session_Ticket(TLS_Data_Reader& reader,
                                u16bit extension_size)
    {
-   m_ticket = reader.get_elem<byte, MemoryVector<byte> >(extension_size);
+   m_ticket = reader.get_elem<byte, std::vector<byte> >(extension_size);
    }
 
 }

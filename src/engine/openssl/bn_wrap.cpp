@@ -15,7 +15,7 @@ namespace Botan {
 OSSL_BN::OSSL_BN(const BigInt& in)
    {
    value = BN_new();
-   SecureVector<byte> encoding = BigInt::encode(in);
+   secure_vector<byte> encoding = BigInt::encode(in);
    if(in != 0)
       BN_bin2bn(encoding, encoding.size(), value);
    }
@@ -75,7 +75,7 @@ size_t OSSL_BN::bytes() const
 */
 BigInt OSSL_BN::to_bigint() const
    {
-   SecureVector<byte> out(bytes());
+   secure_vector<byte> out(bytes());
    BN_bn2bin(value, out);
    return BigInt::decode(out);
    }

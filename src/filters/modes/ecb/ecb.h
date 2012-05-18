@@ -46,7 +46,7 @@ class BOTAN_DLL ECB_Encryption : public Keyed_Filter,
 
       BlockCipher* cipher;
       BlockCipherModePaddingMethod* padder;
-      SecureVector<byte> temp;
+      secure_vector<byte> temp;
    };
 
 /**
@@ -80,7 +80,7 @@ class BOTAN_DLL ECB_Decryption : public Keyed_Filter,
 
       BlockCipher* cipher;
       BlockCipherModePaddingMethod* padder;
-      SecureVector<byte> temp;
+      secure_vector<byte> temp;
    };
 
 }

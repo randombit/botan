@@ -1,4 +1,3 @@
 <header:public>
-allocate.h
 secmem.h
 </header:public>

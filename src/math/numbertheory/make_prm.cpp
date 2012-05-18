@@ -48,7 +48,7 @@ BigInt random_prime(RandomNumberGenerator& rng,
          p += (modulo - p % modulo) + equiv;
 
       const size_t sieve_size = std::min(bits / 2, PRIME_TABLE_SIZE);
-      SecureVector<size_t> sieve(sieve_size);
+      secure_vector<u16bit> sieve(sieve_size);
 
       for(size_t j = 0; j != sieve.size(); ++j)
          sieve[j] = p % PRIMES[j];

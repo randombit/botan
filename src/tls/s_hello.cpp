@@ -21,13 +21,13 @@ namespace TLS {
 */
 Server_Hello::Server_Hello(Record_Writer& writer,
                            Handshake_Hash& hash,
-                           const MemoryRegion<byte>& session_id,
+                           const std::vector<byte>& session_id,
                            Protocol_Version ver,
                            u16bit ciphersuite,
                            byte compression,
                            size_t max_fragment_size,
                            bool client_has_secure_renegotiation,
-                           const MemoryRegion<byte>& reneg_info,
+                           const std::vector<byte>& reneg_info,
                            bool offer_session_ticket,
                            bool client_has_npn,
                            const std::vector<std::string>& next_protocols,
@@ -53,7 +53,7 @@ Server_Hello::Server_Hello(Record_Writer& writer,
 /*
 * Deserialize a Server Hello message
 */
-Server_Hello::Server_Hello(const MemoryRegion<byte>& buf)
+Server_Hello::Server_Hello(const std::vector<byte>& buf)
    {
    m_secure_renegotiation = false;
    m_supports_session_ticket = false;
@@ -118,9 +118,9 @@ Server_Hello::Server_Hello(const MemoryRegion<byte>& buf)
 /*
 * Serialize a Server Hello message
 */
-MemoryVector<byte> Server_Hello::serialize() const
+std::vector<byte> Server_Hello::serialize() const
    {
-   MemoryVector<byte> buf;
+   std::vector<byte> buf;
 
    buf.push_back(m_version.major_version());
    buf.push_back(m_version.minor_version());
@@ -167,7 +167,7 @@ Server_Hello_Done::Server_Hello_Done(Record_Writer& writer,
 /*
 * Deserialize a Server Hello Done message
 */
-Server_Hello_Done::Server_Hello_Done(const MemoryRegion<byte>& buf)
+Server_Hello_Done::Server_Hello_Done(const std::vector<byte>& buf)
    {
    if(buf.size())
       throw Decoding_Error("Server_Hello_Done: Must be empty, and is not");
@@ -176,9 +176,9 @@ Server_Hello_Done::Server_Hello_Done(const MemoryRegion<byte>& buf)
 /*
 * Serialize a Server Hello Done message
 */
-MemoryVector<byte> Server_Hello_Done::serialize() const
+std::vector<byte> Server_Hello_Done::serialize() const
    {
-   return MemoryVector<byte>();
+   return std::vector<byte>();
    }
 
 }

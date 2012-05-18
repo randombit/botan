@@ -56,7 +56,7 @@ class BOTAN_DLL Client : public Channel
       void renegotiate(bool force_full_renegotiation);
    private:
       void process_handshake_msg(Handshake_Type type,
-                                 const MemoryRegion<byte>& contents);
+                                 const std::vector<byte>& contents) override;
 
       void alert_notify(const Alert& alert);
 

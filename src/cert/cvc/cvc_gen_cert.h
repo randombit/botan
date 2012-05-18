@@ -56,14 +56,14 @@ class EAC1_1_gen_CVC : public EAC1_1_obj<Derived> // CRTP continuation from EAC1
       * Get the to-be-signed (TBS) data of this object.
       * @result the TBS data of this object
       */
-      SecureVector<byte> tbs_data() const;
+      secure_vector<byte> tbs_data() const;
 
       /**
       * Build the DER encoded certifcate body of an object
       * @param tbs the data to be signed
       * @result the correctly encoded body of the object
       */
-      static SecureVector<byte> build_cert_body(MemoryRegion<byte> const& tbs);
+      static secure_vector<byte> build_cert_body(secure_vector<byte> const& tbs);
 
       /**
       * Create a signed generalized CVC object.
@@ -72,9 +72,9 @@ class EAC1_1_gen_CVC : public EAC1_1_obj<Derived> // CRTP continuation from EAC1
       * @param rng a random number generator
       * @result the DER encoded signed generalized CVC object
       */
-      static MemoryVector<byte> make_signed(
+      static std::vector<byte> make_signed(
          PK_Signer& signer,
-         const MemoryRegion<byte>& tbs_bits,
+         const secure_vector<byte>& tbs_bits,
          RandomNumberGenerator& rng);
 
       EAC1_1_gen_CVC() { m_pk = 0; }
@@ -88,7 +88,7 @@ class EAC1_1_gen_CVC : public EAC1_1_obj<Derived> // CRTP continuation from EAC1
       bool self_signed;
 
       static void decode_info(DataSource& source,
-                              SecureVector<byte> & res_tbs_bits,
+                              secure_vector<byte> & res_tbs_bits,
                               ECDSA_Signature & res_sig);
 
    };
@@ -104,12 +104,12 @@ template<typename Derived> bool EAC1_1_gen_CVC<Derived>::is_self_signed() const
    }
 
 template<typename Derived>
-MemoryVector<byte> EAC1_1_gen_CVC<Derived>::make_signed(
+std::vector<byte> EAC1_1_gen_CVC<Derived>::make_signed(
    PK_Signer& signer,
-   const MemoryRegion<byte>& tbs_bits,
+   const secure_vector<byte>& tbs_bits,
    RandomNumberGenerator& rng) // static
    {
-   SecureVector<byte> concat_sig = signer.sign_message(tbs_bits, rng);
+   secure_vector<byte> concat_sig = signer.sign_message(tbs_bits, rng);
 
    return DER_Encoder()
       .start_cons(ASN1_Tag(33), APPLICATION)
@@ -125,7 +125,7 @@ Public_Key* EAC1_1_gen_CVC<Derived>::subject_public_key() const
    return new ECDSA_PublicKey(*m_pk);
    }
 
-template<typename Derived> SecureVector<byte> EAC1_1_gen_CVC<Derived>::build_cert_body(MemoryRegion<byte> const& tbs)
+template<typename Derived> secure_vector<byte> EAC1_1_gen_CVC<Derived>::build_cert_body(secure_vector<byte> const& tbs)
    {
    return DER_Encoder()
       .start_cons(ASN1_Tag(78), APPLICATION)
@@ -133,15 +133,15 @@ template<typename Derived> SecureVector<byte> EAC1_1_gen_CVC<Derived>::build_cer
       .end_cons().get_contents();
    }
 
-template<typename Derived> SecureVector<byte> EAC1_1_gen_CVC<Derived>::tbs_data() const
+template<typename Derived> secure_vector<byte> EAC1_1_gen_CVC<Derived>::tbs_data() const
    {
    return build_cert_body(EAC1_1_obj<Derived>::tbs_bits);
    }
 
 template<typename Derived> void EAC1_1_gen_CVC<Derived>::encode(Pipe& out, X509_Encoding encoding) const
    {
-   SecureVector<byte> concat_sig(EAC1_1_obj<Derived>::m_sig.get_concatenation());
-   SecureVector<byte> der = DER_Encoder()
+   secure_vector<byte> concat_sig(EAC1_1_obj<Derived>::m_sig.get_concatenation());
+   secure_vector<byte> der = DER_Encoder()
       .start_cons(ASN1_Tag(33), APPLICATION)
       .start_cons(ASN1_Tag(78), APPLICATION)
       .raw_bytes(EAC1_1_obj<Derived>::tbs_bits)
@@ -159,10 +159,10 @@ template<typename Derived> void EAC1_1_gen_CVC<Derived>::encode(Pipe& out, X509_
 template<typename Derived>
 void EAC1_1_gen_CVC<Derived>::decode_info(
    DataSource& source,
-   SecureVector<byte> & res_tbs_bits,
+   secure_vector<byte> & res_tbs_bits,
    ECDSA_Signature & res_sig)
    {
-   SecureVector<byte> concat_sig;
+   secure_vector<byte> concat_sig;
    BER_Decoder(source)
       .start_cons(ASN1_Tag(33))
       .start_cons(ASN1_Tag(78))

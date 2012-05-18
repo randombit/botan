@@ -12,7 +12,7 @@ namespace Botan {
 /*
 * PKCS1 Pad Operation
 */
-SecureVector<byte> EME_PKCS1v15::pad(const byte in[], size_t inlen,
+secure_vector<byte> EME_PKCS1v15::pad(const byte in[], size_t inlen,
                                      size_t olen,
                                      RandomNumberGenerator& rng) const
    {
@@ -23,7 +23,7 @@ SecureVector<byte> EME_PKCS1v15::pad(const byte in[], size_t inlen,
    if(inlen > olen - 10)
       throw Encoding_Error("PKCS1: Input is too large");
 
-   SecureVector<byte> out(olen);
+   secure_vector<byte> out(olen);
 
    out[0] = 0x02;
    for(size_t j = 1; j != olen - inlen - 1; ++j)
@@ -37,7 +37,7 @@ SecureVector<byte> EME_PKCS1v15::pad(const byte in[], size_t inlen,
 /*
 * PKCS1 Unpad Operation
 */
-SecureVector<byte> EME_PKCS1v15::unpad(const byte in[], size_t inlen,
+secure_vector<byte> EME_PKCS1v15::unpad(const byte in[], size_t inlen,
                                        size_t key_len) const
    {
    if(inlen != key_len / 8 || inlen < 10 || in[0] != 0x02)
@@ -53,7 +53,7 @@ SecureVector<byte> EME_PKCS1v15::unpad(const byte in[], size_t inlen,
    if(seperator < 9)
       throw Decoding_Error("PKCS1::unpad");
 
-   return SecureVector<byte>(in + seperator + 1, inlen - seperator - 1);
+   return secure_vector<byte>(&in[seperator + 1], &in[inlen]);
    }
 
 /*

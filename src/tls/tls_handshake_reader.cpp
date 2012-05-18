@@ -38,7 +38,7 @@ bool Stream_Handshake_Reader::have_full_record() const
    return false;
    }
 
-std::pair<Handshake_Type, MemoryVector<byte> > Stream_Handshake_Reader::get_next_record()
+std::pair<Handshake_Type, std::vector<byte> > Stream_Handshake_Reader::get_next_record()
    {
    if(m_queue.size() >= 4)
       {
@@ -50,7 +50,7 @@ std::pair<Handshake_Type, MemoryVector<byte> > Stream_Handshake_Reader::get_next
       if(m_queue.size() >= length + 4)
          {
          Handshake_Type type = static_cast<Handshake_Type>(head[0]);
-         MemoryVector<byte> contents(length);
+         std::vector<byte> contents(length);
          m_queue.read(head, 4); // discard
          m_queue.read(&contents[0], contents.size());
 

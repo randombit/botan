@@ -29,11 +29,11 @@ class BOTAN_DLL Attribute : public ASN1_Object
       void decode_from(class BER_Decoder& from);
 
       OID oid;
-      MemoryVector<byte> parameters;
+      std::vector<byte> parameters;
 
       Attribute() {}
-      Attribute(const OID&, const MemoryRegion<byte>&);
-      Attribute(const std::string&, const MemoryRegion<byte>&);
+      Attribute(const OID&, const std::vector<byte>&);
+      Attribute(const std::string&, const std::vector<byte>&);
    };
 
 /**

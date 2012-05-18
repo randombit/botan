@@ -56,8 +56,8 @@ class BOTAN_DLL Certificate_Extension
    protected:
       friend class Extensions;
       virtual bool should_encode() const { return true; }
-      virtual MemoryVector<byte> encode_inner() const = 0;
-      virtual void decode_inner(const MemoryRegion<byte>&) = 0;
+      virtual std::vector<byte> encode_inner() const = 0;
+      virtual void decode_inner(const std::vector<byte>&) = 0;
    };
 
 /**
@@ -107,8 +107,8 @@ class BOTAN_DLL Basic_Constraints : public Certificate_Extension
       std::string config_id() const { return "basic_constraints"; }
       std::string oid_name() const { return "X509v3.BasicConstraints"; }
 
-      MemoryVector<byte> encode_inner() const;
-      void decode_inner(const MemoryRegion<byte>&);
+      std::vector<byte> encode_inner() const;
+      void decode_inner(const std::vector<byte>&);
       void contents_to(Data_Store&, Data_Store&) const;
 
       bool is_ca;
@@ -131,8 +131,8 @@ class BOTAN_DLL Key_Usage : public Certificate_Extension
       std::string oid_name() const { return "X509v3.KeyUsage"; }
 
       bool should_encode() const { return (constraints != NO_CONSTRAINTS); }
-      MemoryVector<byte> encode_inner() const;
-      void decode_inner(const MemoryRegion<byte>&);
+      std::vector<byte> encode_inner() const;
+      void decode_inner(const std::vector<byte>&);
       void contents_to(Data_Store&, Data_Store&) const;
 
       Key_Constraints constraints;
@@ -147,19 +147,19 @@ class BOTAN_DLL Subject_Key_ID : public Certificate_Extension
       Subject_Key_ID* copy() const { return new Subject_Key_ID(key_id); }
 
       Subject_Key_ID() {}
-      Subject_Key_ID(const MemoryRegion<byte>&);
+      Subject_Key_ID(const std::vector<byte>&);
 
-      MemoryVector<byte> get_key_id() const { return key_id; }
+      std::vector<byte> get_key_id() const { return key_id; }
    private:
       std::string config_id() const { return "subject_key_id"; }
       std::string oid_name() const { return "X509v3.SubjectKeyIdentifier"; }
 
       bool should_encode() const { return (key_id.size() > 0); }
-      MemoryVector<byte> encode_inner() const;
-      void decode_inner(const MemoryRegion<byte>&);
+      std::vector<byte> encode_inner() const;
+      void decode_inner(const std::vector<byte>&);
       void contents_to(Data_Store&, Data_Store&) const;
 
-      MemoryVector<byte> key_id;
+      std::vector<byte> key_id;
    };
 
 /**
@@ -171,19 +171,19 @@ class BOTAN_DLL Authority_Key_ID : public Certificate_Extension
       Authority_Key_ID* copy() const { return new Authority_Key_ID(key_id); }
 
       Authority_Key_ID() {}
-      Authority_Key_ID(const MemoryRegion<byte>& k) : key_id(k) {}
+      Authority_Key_ID(const std::vector<byte>& k) : key_id(k) {}
 
-      MemoryVector<byte> get_key_id() const { return key_id; }
+      std::vector<byte> get_key_id() const { return key_id; }
    private:
       std::string config_id() const { return "authority_key_id"; }
       std::string oid_name() const { return "X509v3.AuthorityKeyIdentifier"; }
 
       bool should_encode() const { return (key_id.size() > 0); }
-      MemoryVector<byte> encode_inner() const;
-      void decode_inner(const MemoryRegion<byte>&);
+      std::vector<byte> encode_inner() const;
+      void decode_inner(const std::vector<byte>&);
       void contents_to(Data_Store&, Data_Store&) const;
 
-      MemoryVector<byte> key_id;
+      std::vector<byte> key_id;
    };
 
 /**
@@ -204,8 +204,8 @@ class BOTAN_DLL Alternative_Name : public Certificate_Extension
       std::string oid_name() const { return oid_name_str; }
 
       bool should_encode() const { return alt_name.has_items(); }
-      MemoryVector<byte> encode_inner() const;
-      void decode_inner(const MemoryRegion<byte>&);
+      std::vector<byte> encode_inner() const;
+      void decode_inner(const std::vector<byte>&);
       void contents_to(Data_Store&, Data_Store&) const;
 
       std::string config_name_str, oid_name_str;
@@ -253,8 +253,8 @@ class BOTAN_DLL Extended_Key_Usage : public Certificate_Extension
       std::string oid_name() const { return "X509v3.ExtendedKeyUsage"; }
 
       bool should_encode() const { return (oids.size() > 0); }
-      MemoryVector<byte> encode_inner() const;
-      void decode_inner(const MemoryRegion<byte>&);
+      std::vector<byte> encode_inner() const;
+      void decode_inner(const std::vector<byte>&);
       void contents_to(Data_Store&, Data_Store&) const;
 
       std::vector<OID> oids;
@@ -278,8 +278,8 @@ class BOTAN_DLL Certificate_Policies : public Certificate_Extension
       std::string oid_name() const { return "X509v3.CertificatePolicies"; }
 
       bool should_encode() const { return (oids.size() > 0); }
-      MemoryVector<byte> encode_inner() const;
-      void decode_inner(const MemoryRegion<byte>&);
+      std::vector<byte> encode_inner() const;
+      void decode_inner(const std::vector<byte>&);
       void contents_to(Data_Store&, Data_Store&) const;
 
       std::vector<OID> oids;
@@ -302,8 +302,8 @@ class BOTAN_DLL CRL_Number : public Certificate_Extension
       std::string oid_name() const { return "X509v3.CRLNumber"; }
 
       bool should_encode() const { return has_value; }
-      MemoryVector<byte> encode_inner() const;
-      void decode_inner(const MemoryRegion<byte>&);
+      std::vector<byte> encode_inner() const;
+      void decode_inner(const std::vector<byte>&);
       void contents_to(Data_Store&, Data_Store&) const;
 
       bool has_value;
@@ -326,8 +326,8 @@ class BOTAN_DLL CRL_ReasonCode : public Certificate_Extension
       std::string oid_name() const { return "X509v3.ReasonCode"; }
 
       bool should_encode() const { return (reason != UNSPECIFIED); }
-      MemoryVector<byte> encode_inner() const;
-      void decode_inner(const MemoryRegion<byte>&);
+      std::vector<byte> encode_inner() const;
+      void decode_inner(const std::vector<byte>&);
       void contents_to(Data_Store&, Data_Store&) const;
 
       CRL_Code reason;

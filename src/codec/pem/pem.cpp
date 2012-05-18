@@ -28,22 +28,13 @@ std::string encode(const byte der[], size_t length, const std::string& label,
    }
 
 /*
-* PEM encode BER/DER-encoded objects
-*/
-std::string encode(const MemoryRegion<byte>& data, const std::string& label,
-                   size_t width)
-   {
-   return encode(&data[0], data.size(), label, width);
-   }
-
-/*
 * Decode PEM down to raw BER/DER
 */
-SecureVector<byte> decode_check_label(DataSource& source,
+secure_vector<byte> decode_check_label(DataSource& source,
                                       const std::string& label_want)
    {
    std::string label_got;
-   SecureVector<byte> ber = decode(source, label_got);
+   secure_vector<byte> ber = decode(source, label_got);
    if(label_got != label_want)
       throw Decoding_Error("PEM: Label mismatch, wanted " + label_want +
                            ", got " + label_got);
@@ -53,7 +44,7 @@ SecureVector<byte> decode_check_label(DataSource& source,
 /*
 * Decode PEM down to raw BER/DER
 */
-SecureVector<byte> decode(DataSource& source, std::string& label)
+secure_vector<byte> decode(DataSource& source, std::string& label)
    {
    const size_t RANDOM_CHAR_LIMIT = 8;
 
@@ -110,14 +101,14 @@ SecureVector<byte> decode(DataSource& source, std::string& label)
    return base64.read_all();
    }
 
-SecureVector<byte> decode_check_label(const std::string& pem,
+secure_vector<byte> decode_check_label(const std::string& pem,
                                       const std::string& label_want)
    {
    DataSource_Memory src(pem);
    return decode_check_label(src, label_want);
    }
 
-SecureVector<byte> decode(const std::string& pem, std::string& label)
+secure_vector<byte> decode(const std::string& pem, std::string& label)
    {
    DataSource_Memory src(pem);
    return decode(src, label);
@@ -131,7 +122,7 @@ bool matches(DataSource& source, const std::string& extra,
    {
    const std::string PEM_HEADER = "-----BEGIN " + extra;
 
-   SecureVector<byte> search_buf(search_range);
+   secure_vector<byte> search_buf(search_range);
    size_t got = source.peek(&search_buf[0], search_buf.size(), 0);
 
    if(got < PEM_HEADER.length())

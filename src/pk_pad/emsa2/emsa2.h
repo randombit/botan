@@ -27,15 +27,15 @@ class BOTAN_DLL EMSA2 : public EMSA
       ~EMSA2() { delete hash; }
    private:
       void update(const byte[], size_t);
-      SecureVector<byte> raw_data();
+      secure_vector<byte> raw_data();
 
-      SecureVector<byte> encoding_of(const MemoryRegion<byte>&, size_t,
+      secure_vector<byte> encoding_of(const secure_vector<byte>&, size_t,
                                      RandomNumberGenerator& rng);
 
-      bool verify(const MemoryRegion<byte>&, const MemoryRegion<byte>&,
+      bool verify(const secure_vector<byte>&, const secure_vector<byte>&,
                   size_t);
 
-      SecureVector<byte> empty_hash;
+      secure_vector<byte> empty_hash;
       HashFunction* hash;
       byte hash_id;
    };

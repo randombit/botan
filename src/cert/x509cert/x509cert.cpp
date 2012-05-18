@@ -58,6 +58,16 @@ X509_Certificate::X509_Certificate(const std::string& in) :
    }
 
 /*
+* X509_Certificate Constructor
+*/
+X509_Certificate::X509_Certificate(const std::vector<byte>& in) :
+   X509_Object(in, "CERTIFICATE/X509 CERTIFICATE")
+   {
+   self_signed = false;
+   do_decode();
+   }
+
+/*
 * Decode the TBSCertificate data
 */
 void X509_Certificate::force_decode()
@@ -97,7 +107,7 @@ void X509_Certificate::force_decode()
       throw BER_Bad_Tag("X509_Certificate: Unexpected tag for public key",
                         public_key.type_tag, public_key.class_tag);
 
-   MemoryVector<byte> v2_issuer_key_id, v2_subject_key_id;
+   std::vector<byte> v2_issuer_key_id, v2_subject_key_id;
 
    tbs_cert.decode_optional_string(v2_issuer_key_id, BIT_STRING, 1);
    tbs_cert.decode_optional_string(v2_subject_key_id, BIT_STRING, 2);
@@ -129,7 +139,7 @@ void X509_Certificate::force_decode()
 
    subject.add("X509.Certificate.public_key",
                PEM_Code::encode(
-                  ASN1::put_in_sequence(public_key.value),
+                  ASN1::put_in_sequence(unlock(public_key.value)),
                   "PUBLIC KEY"
                   )
       );
@@ -243,7 +253,7 @@ std::vector<std::string> X509_Certificate::policies() const
 /*
 * Return the authority key id
 */
-MemoryVector<byte> X509_Certificate::authority_key_id() const
+std::vector<byte> X509_Certificate::authority_key_id() const
    {
    return issuer.get1_memvec("X509v3.AuthorityKeyIdentifier");
    }
@@ -251,7 +261,7 @@ MemoryVector<byte> X509_Certificate::authority_key_id() const
 /*
 * Return the subject key id
 */
-MemoryVector<byte> X509_Certificate::subject_key_id() const
+std::vector<byte> X509_Certificate::subject_key_id() const
    {
    return subject.get1_memvec("X509v3.SubjectKeyIdentifier");
    }
@@ -259,7 +269,7 @@ MemoryVector<byte> X509_Certificate::subject_key_id() const
 /*
 * Return the certificate serial number
 */
-MemoryVector<byte> X509_Certificate::serial_number() const
+std::vector<byte> X509_Certificate::serial_number() const
    {
    return subject.get1_memvec("X509.Certificate.serial");
    }

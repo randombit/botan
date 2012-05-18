@@ -61,7 +61,7 @@ void CFB_Encryption::set_iv(const InitializationVector& iv)
    zeroise(buffer);
    position = 0;
 
-   cipher->encrypt(state, buffer);
+   cipher->encrypt(&state[0], &buffer[0]);
    }
 
 /*

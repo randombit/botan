@@ -136,7 +136,7 @@ void XTS_Encryption::buffered_block(const byte input[], size_t length)
    const size_t blocks_in_tweak = tweak.size() / cipher->block_size();
    size_t blocks = length / cipher->block_size();
 
-   SecureVector<byte> temp(tweak.size());
+   secure_vector<byte> temp(tweak.size());
 
    while(blocks)
       {
@@ -194,7 +194,7 @@ void XTS_Encryption::buffered_final(const byte input[], size_t length)
       input += leftover_blocks;
       length -= leftover_blocks;
 
-      SecureVector<byte> temp(input, length);
+      secure_vector<byte> temp(input, input + length);
 
       xor_buf(temp, tweak, cipher->block_size());
       cipher->encrypt(temp);
@@ -311,7 +311,7 @@ void XTS_Decryption::buffered_block(const byte input[], size_t input_length)
    const size_t blocks_in_tweak = tweak.size() / cipher->block_size();
    size_t blocks = input_length / cipher->block_size();
 
-   SecureVector<byte> temp(tweak.size());
+   secure_vector<byte> temp(tweak.size());
 
    while(blocks)
       {
@@ -365,8 +365,8 @@ void XTS_Decryption::buffered_final(const byte input[], size_t length)
       input += leftover_blocks;
       length -= leftover_blocks;
 
-      SecureVector<byte> temp(input, length);
-      SecureVector<byte> tweak_copy(&tweak[0], cipher->block_size());
+      secure_vector<byte> temp(input, input + length);
+      secure_vector<byte> tweak_copy(&tweak[0], &tweak[cipher->block_size()]);
 
       poly_double(&tweak_copy[0], cipher->block_size());
 

@@ -17,7 +17,7 @@ namespace TLS {
 
 New_Session_Ticket::New_Session_Ticket(Record_Writer& writer,
                                        Handshake_Hash& hash,
-                                       const MemoryRegion<byte>& ticket,
+                                       const std::vector<byte>& ticket,
                                        u32bit lifetime) :
    m_ticket_lifetime_hint(lifetime),
    m_ticket(ticket)
@@ -32,7 +32,7 @@ New_Session_Ticket::New_Session_Ticket(Record_Writer& writer,
    hash.update(writer.send(*this));
    }
 
-New_Session_Ticket::New_Session_Ticket(const MemoryRegion<byte>& buf) :
+New_Session_Ticket::New_Session_Ticket(const std::vector<byte>& buf) :
    m_ticket_lifetime_hint(0)
    {
    if(buf.size() < 6)
@@ -44,9 +44,9 @@ New_Session_Ticket::New_Session_Ticket(const MemoryRegion<byte>& buf) :
    m_ticket = reader.get_range<byte>(2, 0, 65535);
    }
 
-MemoryVector<byte> New_Session_Ticket::serialize() const
+std::vector<byte> New_Session_Ticket::serialize() const
    {
-   MemoryVector<byte> buf(4);
+   std::vector<byte> buf(4);
    store_be(m_ticket_lifetime_hint, &buf[0]);
    append_tls_length_value(buf, m_ticket, 2);
    return buf;

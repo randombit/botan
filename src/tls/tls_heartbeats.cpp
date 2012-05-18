@@ -14,7 +14,7 @@ namespace Botan {
 
 namespace TLS {
 
-Heartbeat_Message::Heartbeat_Message(const MemoryRegion<byte>& buf)
+Heartbeat_Message::Heartbeat_Message(const std::vector<byte>& buf)
    {
    TLS_Data_Reader reader(buf);
 
@@ -35,13 +35,13 @@ Heartbeat_Message::Heartbeat_Message(Type type,
                                      const byte payload[],
                                      size_t payload_len) :
    m_type(type),
-   m_payload(payload, payload_len)
+   m_payload(payload, payload + payload_len)
    {
    }
 
-MemoryVector<byte> Heartbeat_Message::contents() const
+std::vector<byte> Heartbeat_Message::contents() const
    {
-   MemoryVector<byte> send_buf(3 + m_payload.size() + 16);
+   std::vector<byte> send_buf(3 + m_payload.size() + 16);
    send_buf[0] = m_type;
    send_buf[1] = get_byte<u16bit>(0, m_payload.size());
    send_buf[2] = get_byte<u16bit>(1, m_payload.size());
@@ -51,9 +51,9 @@ MemoryVector<byte> Heartbeat_Message::contents() const
    return send_buf;
    }
 
-MemoryVector<byte> Heartbeat_Support_Indicator::serialize() const
+std::vector<byte> Heartbeat_Support_Indicator::serialize() const
    {
-   MemoryVector<byte> heartbeat(1);
+   std::vector<byte> heartbeat(1);
    heartbeat[0] = (m_peer_allowed_to_send ? 1 : 2);
    return heartbeat;
    }

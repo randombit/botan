@@ -33,10 +33,10 @@ class BOTAN_DLL Record_Writer
       void send(byte type, const byte input[], size_t length);
       void send(byte type, byte val) { send(type, &val, 1); }
 
-      void send(byte type, const MemoryRegion<byte>& input)
+      void send(byte type, const std::vector<byte>& input)
          { send(type, &input[0], input.size()); }
 
-      MemoryVector<byte> send(class Handshake_Message& msg);
+      std::vector<byte> send(class Handshake_Message& msg);
 
       void send_alert(const Alert& alert);
 
@@ -62,7 +62,7 @@ class BOTAN_DLL Record_Writer
 
       std::function<void (const byte[], size_t)> m_output_fn;
 
-      MemoryVector<byte> m_writebuf;
+      std::vector<byte> m_writebuf;
 
       Pipe m_cipher;
       MessageAuthenticationCode* m_mac;
@@ -93,7 +93,7 @@ class BOTAN_DLL Record_Reader
       size_t add_input(const byte input[], size_t input_size,
                        size_t& input_consumed,
                        byte& msg_type,
-                       MemoryVector<byte>& msg);
+                       std::vector<byte>& msg);
 
       void activate(Connection_Side side,
                     const Ciphersuite& suite,
@@ -118,8 +118,8 @@ class BOTAN_DLL Record_Reader
                             size_t& input_consumed,
                             size_t desired);
 
-      MemoryVector<byte> m_readbuf;
-      MemoryVector<byte> m_macbuf;
+      std::vector<byte> m_readbuf;
+      std::vector<byte> m_macbuf;
       size_t m_readbuf_pos;
 
       Pipe m_cipher;

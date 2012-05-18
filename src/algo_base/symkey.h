@@ -25,9 +25,9 @@ class BOTAN_DLL OctetString
       size_t length() const { return bits.size(); }
 
       /**
-      * @return this object as a SecureVector<byte>
+      * @return this object as a secure_vector<byte>
       */
-      SecureVector<byte> bits_of() const { return bits; }
+      secure_vector<byte> bits_of() const { return bits; }
 
       /**
       * @return start of this string
@@ -80,9 +80,15 @@ class BOTAN_DLL OctetString
       * Create a new OctetString
       * @param in a bytestring
       */
-      OctetString(const MemoryRegion<byte>& in);
+      OctetString(const secure_vector<byte>& in) : bits(in) {}
+
+      /**
+      * Create a new OctetString
+      * @param in a bytestring
+      */
+      OctetString(const std::vector<byte>& in) : bits(&in[0], &in[in.size()]) {}
    private:
-      SecureVector<byte> bits;
+      secure_vector<byte> bits;
    };
 
 /**

@@ -28,11 +28,11 @@ int main()
 
    Algorithm_Factory& af = global_state().algorithm_factory();
 
-   SecureVector<byte> enc = rfc3394_keywrap(key.bits_of(), kek, af);
+   secure_vector<byte> enc = rfc3394_keywrap(key.bits_of(), kek, af);
 
    std::cout << "Encrypted: " << hex_encode(enc) << "\n";
 
-   SecureVector<byte> dec = rfc3394_keyunwrap(enc, kek, af);
+   secure_vector<byte> dec = rfc3394_keyunwrap(enc, kek, af);
 
    std::cout << "Decrypted: " << hex_encode(dec) << "\n";
    }

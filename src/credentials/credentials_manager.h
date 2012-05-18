@@ -81,7 +81,7 @@ class BOTAN_DLL Credentials_Manager
                                 const std::string& identifier,
                                 std::string& group_name,
                                 BigInt& verifier,
-                                MemoryRegion<byte>& salt,
+                                std::vector<byte>& salt,
                                 bool generate_fake_on_unknown);
 
       /**

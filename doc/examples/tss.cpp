@@ -11,7 +11,7 @@
 
 namespace {
 
-void print(const Botan::SecureVector<Botan::byte>& r)
+void print(const Botan::secure_vector<Botan::byte>& r)
    {
    for(Botan::u32bit i = 0; i != r.size(); ++i)
       printf("%02X", r[i]);

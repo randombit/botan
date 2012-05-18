@@ -23,13 +23,13 @@ class BOTAN_DLL DH_PublicKey : public virtual DL_Scheme_PublicKey
    public:
       std::string algo_name() const { return "DH"; }
 
-      MemoryVector<byte> public_value() const;
+      std::vector<byte> public_value() const;
       size_t max_input_bits() const { return group_p().bits(); }
 
       DL_Group::Format group_format() const { return DL_Group::ANSI_X9_42; }
 
       DH_PublicKey(const AlgorithmIdentifier& alg_id,
-                   const MemoryRegion<byte>& key_bits) :
+                   const secure_vector<byte>& key_bits) :
          DL_Scheme_PublicKey(alg_id, key_bits, DL_Group::ANSI_X9_42) {}
 
       /**
@@ -50,7 +50,7 @@ class BOTAN_DLL DH_PrivateKey : public DH_PublicKey,
                                 public virtual DL_Scheme_PrivateKey
    {
    public:
-      MemoryVector<byte> public_value() const;
+      std::vector<byte> public_value() const;
 
       /**
       * Load a DH private key
@@ -59,7 +59,7 @@ class BOTAN_DLL DH_PrivateKey : public DH_PublicKey,
       * @param rng a random number generator
       */
       DH_PrivateKey(const AlgorithmIdentifier& alg_id,
-                    const MemoryRegion<byte>& key_bits,
+                    const secure_vector<byte>& key_bits,
                     RandomNumberGenerator& rng);
 
       /**
@@ -80,7 +80,7 @@ class BOTAN_DLL DH_KA_Operation : public PK_Ops::Key_Agreement
    public:
       DH_KA_Operation(const DH_PrivateKey& key);
 
-      SecureVector<byte> agree(const byte w[], size_t w_len);
+      secure_vector<byte> agree(const byte w[], size_t w_len);
    private:
       const BigInt& p;
 

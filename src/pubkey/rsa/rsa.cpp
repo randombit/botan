@@ -88,7 +88,7 @@ BigInt RSA_Private_Operation::private_op(const BigInt& m) const
    return mul_add(j1, q, j2);
    }
 
-SecureVector<byte>
+secure_vector<byte>
 RSA_Private_Operation::sign(const byte msg[], size_t msg_len,
                             RandomNumberGenerator&)
    {
@@ -105,7 +105,7 @@ RSA_Private_Operation::sign(const byte msg[], size_t msg_len,
 /*
 * RSA Decryption Operation
 */
-SecureVector<byte>
+secure_vector<byte>
 RSA_Private_Operation::decrypt(const byte msg[], size_t msg_len)
    {
    BigInt m(msg, msg_len);
@@ -114,7 +114,7 @@ RSA_Private_Operation::decrypt(const byte msg[], size_t msg_len)
    BOTAN_ASSERT(m == powermod_e_n(x),
                 "RSA private op failed consistency check");
 
-   return BigInt::encode(x);
+   return BigInt::encode_locked(x);
    }
 
 }

@@ -82,7 +82,7 @@ class BOTAN_DLL X509_CA
       static X509_Certificate make_cert(PK_Signer* signer,
                                         RandomNumberGenerator& rng,
                                         const AlgorithmIdentifier& sig_algo,
-                                        const MemoryRegion<byte>& pub_key,
+                                        const std::vector<byte>& pub_key,
                                         const X509_Time& not_before,
                                         const X509_Time& not_after,
                                         const X509_DN& issuer_dn,

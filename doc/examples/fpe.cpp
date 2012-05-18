@@ -55,11 +55,11 @@ u64bit cc_derank(u64bit cc_number)
 /*
 * Use the SHA-1 hash of the account name or ID as a tweak
 */
-SecureVector<byte> sha1(const std::string& acct_name)
+std::vector<byte> sha1(const std::string& acct_name)
    {
    SHA_160 hash;
    hash.update(acct_name);
-   return hash.final();
+   return unlock(hash.final());
    }
 
 u64bit encrypt_cc_number(u64bit cc_number,
@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
    * In practice something like PBKDF2 with a salt and high iteration
    * count would be a good idea.
    */
-   SymmetricKey key = sha1(passwd);
+   SymmetricKey key(sha1(passwd));
 
    u64bit enc_cc = encrypt_cc_number(cc_number, key, acct_name);
 

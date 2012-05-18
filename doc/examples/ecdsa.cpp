@@ -40,7 +40,7 @@ int main()
 
       signer.update((const byte*)message, strlen(message));
 
-      SecureVector<byte> sig = signer.signature(rng);
+      std::vector<byte> sig = signer.signature(rng);
 
       std::cout << sig.size() << "\n";
 

@@ -30,7 +30,7 @@ class BOTAN_DLL RIPEMD_160 : public MDx_HashFunction
       void compress_n(const byte[], size_t blocks);
       void copy_out(byte[]);
 
-      SecureVector<u32bit> M, digest;
+      secure_vector<u32bit> M, digest;
    };
 
 }

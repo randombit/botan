@@ -40,13 +40,13 @@ class BOTAN_DLL Session_Manager_SQLite : public Session_Manager
 
       ~Session_Manager_SQLite();
 
-      bool load_from_session_id(const MemoryRegion<byte>& session_id,
+      bool load_from_session_id(const std::vector<byte>& session_id,
                                 Session& session);
 
       bool load_from_host_info(const std::string& hostname, u16bit port,
                                Session& session);
 
-      void remove_entry(const MemoryRegion<byte>& session_id);
+      void remove_entry(const std::vector<byte>& session_id);
 
       void save(const Session& session_data);
 

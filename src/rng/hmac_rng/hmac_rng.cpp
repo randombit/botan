@@ -15,7 +15,7 @@ namespace Botan {
 namespace {
 
 void hmac_prf(MessageAuthenticationCode* prf,
-              MemoryRegion<byte>& K,
+              secure_vector<byte>& K,
               u32bit& counter,
               const std::string& label)
    {
@@ -200,7 +200,7 @@ HMAC_RNG::HMAC_RNG(MessageAuthenticationCode* extractor_mac,
    the estimated entropy counter is high enough. That variable is only
    set when a reseeding is performed.
    */
-   MemoryVector<byte> prf_key(extractor->output_length());
+   secure_vector<byte> prf_key(extractor->output_length());
    prf->set_key(prf_key);
 
    /*

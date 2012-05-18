@@ -14,7 +14,7 @@
 
 namespace Botan {
 
-MemoryVector<byte> GOST_3410_PublicKey::x509_subject_public_key() const
+std::vector<byte> GOST_3410_PublicKey::x509_subject_public_key() const
    {
    // Trust CryptoPro to come up with something obnoxious
    const BigInt x = public_point().get_affine_x();
@@ -22,7 +22,7 @@ MemoryVector<byte> GOST_3410_PublicKey::x509_subject_public_key() const
 
    size_t part_size = std::max(x.bytes(), y.bytes());
 
-   MemoryVector<byte> bits(2*part_size);
+   std::vector<byte> bits(2*part_size);
 
    x.binary_encode(&bits[part_size - x.bytes()]);
    y.binary_encode(&bits[2*part_size - y.bytes()]);
@@ -34,22 +34,22 @@ MemoryVector<byte> GOST_3410_PublicKey::x509_subject_public_key() const
       std::swap(bits[part_size+i], bits[2*part_size-1-i]);
       }
 
-   return DER_Encoder().encode(bits, OCTET_STRING).get_contents();
+   return DER_Encoder().encode(bits, OCTET_STRING).get_contents_unlocked();
    }
 
 AlgorithmIdentifier GOST_3410_PublicKey::algorithm_identifier() const
    {
-   MemoryVector<byte> params =
+   std::vector<byte> params =
       DER_Encoder().start_cons(SEQUENCE)
          .encode(OID(domain().get_oid()))
          .end_cons()
-      .get_contents();
+      .get_contents_unlocked();
 
    return AlgorithmIdentifier(get_oid(), params);
    }
 
 GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
-                                         const MemoryRegion<byte>& key_bits)
+                                         const secure_vector<byte>& key_bits)
    {
    OID ecc_param_id;
 
@@ -58,7 +58,7 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
 
    domain_params = EC_Group(ecc_param_id);
 
-   SecureVector<byte> bits;
+   secure_vector<byte> bits;
    BER_Decoder(key_bits).decode(bits, OCTET_STRING);
 
    const size_t part_size = bits.size() / 2;
@@ -83,7 +83,7 @@ namespace {
 
 BigInt decode_le(const byte msg[], size_t msg_len)
    {
-   SecureVector<byte> msg_le(msg, msg_len);
+   secure_vector<byte> msg_le(msg, msg + msg_len);
 
    for(size_t i = 0; i != msg_le.size() / 2; ++i)
       std::swap(msg_le[i], msg_le[msg_le.size()-1-i]);
@@ -102,7 +102,7 @@ GOST_3410_Signature_Operation::GOST_3410_Signature_Operation(
    {
    }
 
-SecureVector<byte>
+secure_vector<byte>
 GOST_3410_Signature_Operation::sign(const byte msg[], size_t msg_len,
                                     RandomNumberGenerator& rng)
    {
@@ -129,7 +129,7 @@ GOST_3410_Signature_Operation::sign(const byte msg[], size_t msg_len,
    if(r == 0 || s == 0)
       throw Invalid_State("GOST 34.10: r == 0 || s == 0");
 
-   SecureVector<byte> output(2*order.bytes());
+   secure_vector<byte> output(2*order.bytes());
    s.binary_encode(&output[output.size() / 2 - s.bytes()]);
    r.binary_encode(&output[output.size() - r.bytes()]);
    return output;

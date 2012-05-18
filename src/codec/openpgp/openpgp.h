@@ -42,7 +42,7 @@ BOTAN_DLL std::string PGP_encode(
 * @param headers is set to any headers
 * @return decoded output as raw binary
 */
-BOTAN_DLL SecureVector<byte> PGP_decode(
+BOTAN_DLL secure_vector<byte> PGP_decode(
    DataSource& source,
    std::string& label,
    std::map<std::string, std::string>& headers);
@@ -52,7 +52,7 @@ BOTAN_DLL SecureVector<byte> PGP_decode(
 * @param label is set to the human-readable label
 * @return decoded output as raw binary
 */
-BOTAN_DLL SecureVector<byte> PGP_decode(
+BOTAN_DLL secure_vector<byte> PGP_decode(
    DataSource& source,
    std::string& label);
 

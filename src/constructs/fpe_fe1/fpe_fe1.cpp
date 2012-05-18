@@ -84,7 +84,7 @@ class FPE_Encryptor
    public:
       FPE_Encryptor(const SymmetricKey& key,
                     const BigInt& n,
-                    const MemoryRegion<byte>& tweak);
+                    const std::vector<byte>& tweak);
 
       ~FPE_Encryptor() { delete mac; }
 
@@ -92,17 +92,17 @@ class FPE_Encryptor
 
    private:
       MessageAuthenticationCode* mac;
-      SecureVector<byte> mac_n_t;
+      std::vector<byte> mac_n_t;
    };
 
 FPE_Encryptor::FPE_Encryptor(const SymmetricKey& key,
                              const BigInt& n,
-                             const MemoryRegion<byte>& tweak)
+                             const std::vector<byte>& tweak)
    {
    mac = new HMAC(new SHA_256);
    mac->set_key(key);
 
-   SecureVector<byte> n_bin = BigInt::encode(n);
+   std::vector<byte> n_bin = BigInt::encode(n);
 
    if(n_bin.size() > MAX_N_BYTES)
       throw std::runtime_error("N is too large for FPE encryption");
@@ -113,12 +113,12 @@ FPE_Encryptor::FPE_Encryptor(const SymmetricKey& key,
    mac->update_be(static_cast<u32bit>(tweak.size()));
    mac->update(&tweak[0], tweak.size());
 
-   mac_n_t = mac->final();
+   mac_n_t = unlock(mac->final());
    }
 
 BigInt FPE_Encryptor::operator()(size_t round_no, const BigInt& R)
    {
-   SecureVector<byte> r_bin = BigInt::encode(R);
+   secure_vector<byte> r_bin = BigInt::encode_locked(R);
 
    mac->update(mac_n_t);
    mac->update_be(static_cast<u32bit>(round_no));
@@ -126,7 +126,7 @@ BigInt FPE_Encryptor::operator()(size_t round_no, const BigInt& R)
    mac->update_be(static_cast<u32bit>(r_bin.size()));
    mac->update(&r_bin[0], r_bin.size());
 
-   SecureVector<byte> X = mac->final();
+   secure_vector<byte> X = mac->final();
    return BigInt(&X[0], X.size());
    }
 
@@ -137,7 +137,7 @@ BigInt FPE_Encryptor::operator()(size_t round_no, const BigInt& R)
 */
 BigInt fe1_encrypt(const BigInt& n, const BigInt& X0,
                    const SymmetricKey& key,
-                   const MemoryRegion<byte>& tweak)
+                   const std::vector<byte>& tweak)
    {
    FPE_Encryptor F(key, n, tweak);
 
@@ -165,7 +165,7 @@ BigInt fe1_encrypt(const BigInt& n, const BigInt& X0,
 */
 BigInt fe1_decrypt(const BigInt& n, const BigInt& X0,
                    const SymmetricKey& key,
-                   const MemoryRegion<byte>& tweak)
+                   const std::vector<byte>& tweak)
    {
    FPE_Encryptor F(key, n, tweak);
 

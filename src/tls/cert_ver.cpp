@@ -33,7 +33,7 @@ Certificate_Verify::Certificate_Verify(Record_Writer& writer,
 
    if(state->version() == Protocol_Version::SSL_V3)
       {
-      SecureVector<byte> md5_sha = state->hash.final_ssl3(
+      secure_vector<byte> md5_sha = state->hash.final_ssl3(
          state->keys.master_secret());
 
       if(priv_key->algo_name() == "DSA")
@@ -52,7 +52,7 @@ Certificate_Verify::Certificate_Verify(Record_Writer& writer,
 /*
 * Deserialize a Certificate Verify message
 */
-Certificate_Verify::Certificate_Verify(const MemoryRegion<byte>& buf,
+Certificate_Verify::Certificate_Verify(const std::vector<byte>& buf,
                                        Protocol_Version version)
    {
    TLS_Data_Reader reader(buf);
@@ -69,9 +69,9 @@ Certificate_Verify::Certificate_Verify(const MemoryRegion<byte>& buf,
 /*
 * Serialize a Certificate Verify message
 */
-MemoryVector<byte> Certificate_Verify::serialize() const
+std::vector<byte> Certificate_Verify::serialize() const
    {
-   MemoryVector<byte> buf;
+   std::vector<byte> buf;
 
    if(hash_algo != "" && sig_algo != "")
       {
@@ -102,7 +102,7 @@ bool Certificate_Verify::verify(const X509_Certificate& cert,
 
    if(state->version() == Protocol_Version::SSL_V3)
       {
-      SecureVector<byte> md5_sha = state->hash.final_ssl3(
+      secure_vector<byte> md5_sha = state->hash.final_ssl3(
          state->keys.master_secret());
 
       return verifier.verify_message(&md5_sha[16], md5_sha.size()-16,

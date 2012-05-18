@@ -67,7 +67,7 @@ std::string PGP_encode(const byte input[], size_t length,
 /*
 * OpenPGP Base64 decoding
 */
-SecureVector<byte> PGP_decode(DataSource& source,
+secure_vector<byte> PGP_decode(DataSource& source,
                               std::string& label,
                               std::map<std::string, std::string>& headers)
    {
@@ -186,7 +186,7 @@ SecureVector<byte> PGP_decode(DataSource& source,
 /*
 * OpenPGP Base64 decoding
 */
-SecureVector<byte> PGP_decode(DataSource& source, std::string& label)
+secure_vector<byte> PGP_decode(DataSource& source, std::string& label)
    {
    std::map<std::string, std::string> ignored;
    return PGP_decode(source, label, ignored);

@@ -44,7 +44,7 @@ void ANSI_X919_MAC::final_result(byte mac[])
    {
    if(position)
       e->encrypt(state);
-   d->decrypt(state, mac);
+   d->decrypt(&state[0], mac);
    e->encrypt(mac);
    zeroise(state);
    position = 0;

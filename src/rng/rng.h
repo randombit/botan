@@ -37,9 +37,9 @@ class BOTAN_DLL RandomNumberGenerator
       * @param bytes number of bytes in the result
       * @return randomized vector of length bytes
       */
-      SecureVector<byte> random_vec(size_t bytes)
+      secure_vector<byte> random_vec(size_t bytes)
          {
-         SecureVector<byte> output(bytes);
+         secure_vector<byte> output(bytes);
          randomize(&output[0], output.size());
          return output;
          }

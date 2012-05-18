@@ -56,7 +56,7 @@ void CTS_Encryption::set_iv(const InitializationVector& iv)
 */
 void CTS_Encryption::encrypt(const byte block[])
    {
-   xor_buf(state, block, cipher->block_size());
+   xor_buf(&state[0], &block[0], cipher->block_size());
    cipher->encrypt(state);
    send(state, cipher->block_size());
    }
@@ -105,7 +105,7 @@ void CTS_Encryption::end_msg()
 
    xor_buf(state, buffer, cipher->block_size());
    cipher->encrypt(state);
-   SecureVector<byte> cn = state;
+   secure_vector<byte> cn = state;
    clear_mem(&buffer[position], buffer.size() - position);
    encrypt(&buffer[cipher->block_size()]);
    send(cn, position - cipher->block_size());
@@ -177,7 +177,7 @@ void CTS_Decryption::write(const byte input[], size_t length)
 
    if(length == 0) return;
 
-   decrypt(buffer);
+   decrypt(&buffer[0]);
    if(length > cipher->block_size())
       {
       decrypt(&buffer[cipher->block_size()]);
@@ -203,17 +203,17 @@ void CTS_Decryption::write(const byte input[], size_t length)
 */
 void CTS_Decryption::end_msg()
    {
-   cipher->decrypt(buffer, temp);
-   xor_buf(temp, &buffer[cipher->block_size()], position - cipher->block_size());
+   cipher->decrypt(&buffer[0], &temp[0]);
+   xor_buf(&temp[0], &buffer[cipher->block_size()], position - cipher->block_size());
 
-   SecureVector<byte> xn = temp;
+   secure_vector<byte> xn = temp;
 
    copy_mem(&buffer[position],
             &xn[position - cipher->block_size()],
             buffer.size() - position);
 
-   cipher->decrypt(&buffer[cipher->block_size()], temp);
-   xor_buf(temp, state, cipher->block_size());
+   cipher->decrypt(&buffer[cipher->block_size()], &temp[0]);
+   xor_buf(&temp[0], &state[0], cipher->block_size());
    send(temp, cipher->block_size());
    send(xn, position - cipher->block_size());
    }

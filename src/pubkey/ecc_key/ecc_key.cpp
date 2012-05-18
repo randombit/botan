@@ -28,7 +28,7 @@ EC_PublicKey::EC_PublicKey(const EC_Group& dom_par,
    }
 
 EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id,
-                           const MemoryRegion<byte>& key_bits)
+                           const secure_vector<byte>& key_bits)
    {
    domain_params = EC_Group(alg_id.parameters);
    domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
@@ -47,9 +47,9 @@ AlgorithmIdentifier EC_PublicKey::algorithm_identifier() const
    return AlgorithmIdentifier(get_oid(), DER_domain());
    }
 
-MemoryVector<byte> EC_PublicKey::x509_subject_public_key() const
+std::vector<byte> EC_PublicKey::x509_subject_public_key() const
    {
-   return EC2OSP(public_point(), PointGFp::COMPRESSED);
+   return unlock(EC2OSP(public_point(), PointGFp::COMPRESSED));
    }
 
 void EC_PublicKey::set_parameter_encoding(EC_Group_Encoding form)
@@ -96,7 +96,7 @@ EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
                 "ECC private key was not on the curve");
    }
 
-MemoryVector<byte> EC_PrivateKey::pkcs8_private_key() const
+secure_vector<byte> EC_PrivateKey::pkcs8_private_key() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
@@ -108,7 +108,7 @@ MemoryVector<byte> EC_PrivateKey::pkcs8_private_key() const
    }
 
 EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
-                             const MemoryRegion<byte>& key_bits)
+                             const secure_vector<byte>& key_bits)
    {
    domain_params = EC_Group(alg_id.parameters);
    domain_encoding = EC_DOMPAR_ENC_EXPLICIT;

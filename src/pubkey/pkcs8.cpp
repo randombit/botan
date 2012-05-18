@@ -24,10 +24,10 @@ namespace {
 /*
 * Get info from an EncryptedPrivateKeyInfo
 */
-SecureVector<byte> PKCS8_extract(DataSource& source,
+secure_vector<byte> PKCS8_extract(DataSource& source,
                                  AlgorithmIdentifier& pbe_alg_id)
    {
-   SecureVector<byte> key_data;
+   secure_vector<byte> key_data;
 
    BER_Decoder(source)
       .start_cons(SEQUENCE)
@@ -41,13 +41,13 @@ SecureVector<byte> PKCS8_extract(DataSource& source,
 /*
 * PEM decode and/or decrypt a private key
 */
-SecureVector<byte> PKCS8_decode(
+secure_vector<byte> PKCS8_decode(
    DataSource& source,
    std::function<std::pair<bool,std::string> ()> get_passphrase,
    AlgorithmIdentifier& pk_alg_id)
    {
    AlgorithmIdentifier pbe_alg_id;
-   SecureVector<byte> key_data, key;
+   secure_vector<byte> key_data, key;
    bool is_encrypted = true;
 
    try {
@@ -71,9 +71,9 @@ SecureVector<byte> PKCS8_decode(
       if(key_data.empty())
          throw PKCS8_Exception("No key data found");
       }
-   catch(Decoding_Error)
+   catch(Decoding_Error& e)
       {
-      throw Decoding_Error("PKCS #8 private key decoding failed");
+      throw Decoding_Error("PKCS #8 private key decoding failed: " + std::string(e.what()));
       }
 
    if(!is_encrypted)
@@ -131,7 +131,7 @@ SecureVector<byte> PKCS8_decode(
 /*
 * BER encode a PKCS #8 private key, unencrypted
 */
-SecureVector<byte> BER_encode(const Private_Key& key)
+secure_vector<byte> BER_encode(const Private_Key& key)
    {
    const size_t PKCS8_VERSION = 0;
 
@@ -155,7 +155,7 @@ std::string PEM_encode(const Private_Key& key)
 /*
 * BER encode a PKCS #8 private key, encrypted
 */
-SecureVector<byte> BER_encode(const Private_Key& key,
+secure_vector<byte> BER_encode(const Private_Key& key,
                               RandomNumberGenerator& rng,
                               const std::string& pass,
                               const std::string& pbe_algo)
@@ -203,7 +203,7 @@ Private_Key* load_key(DataSource& source,
                       std::function<std::pair<bool, std::string> ()> get_pass)
    {
    AlgorithmIdentifier alg_id;
-   SecureVector<byte> pkcs8_key = PKCS8_decode(source, get_pass, alg_id);
+   secure_vector<byte> pkcs8_key = PKCS8_decode(source, get_pass, alg_id);
 
    const std::string alg_name = OIDS::lookup(alg_id.oid);
    if(alg_name == "" || alg_name == alg_id.oid.as_string())

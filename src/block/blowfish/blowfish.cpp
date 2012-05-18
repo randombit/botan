@@ -143,7 +143,7 @@ void Blowfish::eks_key_schedule(const byte key[], size_t length,
 /*
 * Generate one of the Sboxes
 */
-void Blowfish::generate_sbox(MemoryRegion<u32bit>& box,
+void Blowfish::generate_sbox(secure_vector<u32bit>& box,
                              u32bit& L, u32bit& R,
                              const byte salt[16],
                              size_t salt_off) const

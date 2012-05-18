@@ -49,7 +49,7 @@ class Extension
    public:
       virtual Handshake_Extension_Type type() const = 0;
 
-      virtual MemoryVector<byte> serialize() const = 0;
+      virtual std::vector<byte> serialize() const = 0;
 
       virtual bool empty() const = 0;
 
@@ -75,7 +75,7 @@ class Server_Name_Indicator : public Extension
 
       std::string host_name() const { return sni_host_name; }
 
-      MemoryVector<byte> serialize() const;
+      std::vector<byte> serialize() const;
 
       bool empty() const { return sni_host_name == ""; }
    private:
@@ -101,7 +101,7 @@ class SRP_Identifier : public Extension
 
       std::string identifier() const { return srp_identifier; }
 
-      MemoryVector<byte> serialize() const;
+      std::vector<byte> serialize() const;
 
       bool empty() const { return srp_identifier == ""; }
    private:
@@ -121,20 +121,20 @@ class Renegotation_Extension : public Extension
 
       Renegotation_Extension() {}
 
-      Renegotation_Extension(const MemoryRegion<byte>& bits) :
+      Renegotation_Extension(const std::vector<byte>& bits) :
          reneg_data(bits) {}
 
       Renegotation_Extension(TLS_Data_Reader& reader,
                              u16bit extension_size);
 
-      const MemoryVector<byte>& renegotiation_info() const
+      const std::vector<byte>& renegotiation_info() const
          { return reneg_data; }
 
-      MemoryVector<byte> serialize() const;
+      std::vector<byte> serialize() const;
 
       bool empty() const { return false; } // always send this
    private:
-      MemoryVector<byte> reneg_data;
+      std::vector<byte> reneg_data;
    };
 
 /**
@@ -152,9 +152,9 @@ class Maximum_Fragment_Length : public Extension
 
       size_t fragment_size() const;
 
-      MemoryVector<byte> serialize() const
+      std::vector<byte> serialize() const
          {
-         return MemoryVector<byte>(&val, 1);
+         return std::vector<byte>(1, val);
          }
 
       /**
@@ -204,7 +204,7 @@ class Next_Protocol_Notification : public Extension
       Next_Protocol_Notification(TLS_Data_Reader& reader,
                                  u16bit extension_size);
 
-      MemoryVector<byte> serialize() const;
+      std::vector<byte> serialize() const;
 
       bool empty() const { return false; }
    private:
@@ -219,7 +219,7 @@ class Session_Ticket : public Extension
 
       Handshake_Extension_Type type() const { return static_type(); }
 
-      const MemoryVector<byte>& contents() const { return m_ticket; }
+      const std::vector<byte>& contents() const { return m_ticket; }
 
       /**
       * Create empty extension, used by both client and server
@@ -229,7 +229,7 @@ class Session_Ticket : public Extension
       /**
       * Extension with ticket, used by client
       */
-      Session_Ticket(const MemoryRegion<byte>& session_ticket) :
+      Session_Ticket(const std::vector<byte>& session_ticket) :
          m_ticket(session_ticket) {}
 
       /**
@@ -237,11 +237,11 @@ class Session_Ticket : public Extension
       */
       Session_Ticket(TLS_Data_Reader& reader, u16bit extension_size);
 
-      MemoryVector<byte> serialize() const { return m_ticket; }
+      std::vector<byte> serialize() const { return m_ticket; }
 
       bool empty() const { return false; }
    private:
-      MemoryVector<byte> m_ticket;
+      std::vector<byte> m_ticket;
    };
 
 /**
@@ -260,7 +260,7 @@ class Supported_Elliptic_Curves : public Extension
 
       const std::vector<std::string>& curves() const { return m_curves; }
 
-      MemoryVector<byte> serialize() const;
+      std::vector<byte> serialize() const;
 
       Supported_Elliptic_Curves(const std::vector<std::string>& curves) :
          m_curves(curves) {}
@@ -296,7 +296,7 @@ class Signature_Algorithms : public Extension
          return m_supported_algos;
          }
 
-      MemoryVector<byte> serialize() const;
+      std::vector<byte> serialize() const;
 
       bool empty() const { return false; }
 
@@ -322,7 +322,7 @@ class Heartbeat_Support_Indicator : public Extension
 
       bool peer_allowed_to_send() const { return m_peer_allowed_to_send; }
 
-      MemoryVector<byte> serialize() const;
+      std::vector<byte> serialize() const;
 
       bool empty() const { return false; }
 
@@ -360,7 +360,7 @@ class Extensions
          extensions[extn->type()] = extn;
          }
 
-      MemoryVector<byte> serialize() const;
+      std::vector<byte> serialize() const;
 
       Extensions() {}
 

@@ -31,13 +31,13 @@ namespace ASN1 {
 /*
 * Put some arbitrary bytes into a SEQUENCE
 */
-SecureVector<byte> put_in_sequence(const MemoryRegion<byte>& contents)
+std::vector<byte> put_in_sequence(const std::vector<byte>& contents)
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
          .raw_bytes(contents)
       .end_cons()
-   .get_contents();
+   .get_contents_unlocked();
    }
 
 /*

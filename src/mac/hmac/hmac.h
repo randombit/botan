@@ -41,7 +41,7 @@ class BOTAN_DLL HMAC : public MessageAuthenticationCode
       void key_schedule(const byte[], size_t);
 
       HashFunction* hash;
-      SecureVector<byte> i_key, o_key;
+      secure_vector<byte> i_key, o_key;
    };
 
 }

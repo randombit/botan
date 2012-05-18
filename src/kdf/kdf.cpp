@@ -12,8 +12,8 @@ namespace Botan {
 /*
 * Derive a key
 */
-SecureVector<byte> KDF::derive_key(size_t key_len,
-                                   const MemoryRegion<byte>& secret,
+secure_vector<byte> KDF::derive_key(size_t key_len,
+                                   const secure_vector<byte>& secret,
                                    const std::string& salt) const
    {
    return derive_key(key_len, &secret[0], secret.size(),
@@ -24,8 +24,8 @@ SecureVector<byte> KDF::derive_key(size_t key_len,
 /*
 * Derive a key
 */
-SecureVector<byte> KDF::derive_key(size_t key_len,
-                                   const MemoryRegion<byte>& secret,
+secure_vector<byte> KDF::derive_key(size_t key_len,
+                                   const secure_vector<byte>& secret,
                                    const byte salt[], size_t salt_len) const
    {
    return derive_key(key_len, &secret[0], secret.size(),
@@ -35,18 +35,7 @@ SecureVector<byte> KDF::derive_key(size_t key_len,
 /*
 * Derive a key
 */
-SecureVector<byte> KDF::derive_key(size_t key_len,
-                                   const MemoryRegion<byte>& secret,
-                                   const MemoryRegion<byte>& salt) const
-   {
-   return derive_key(key_len, &secret[0], secret.size(),
-                     &salt[0], salt.size());
-   }
-
-/*
-* Derive a key
-*/
-SecureVector<byte> KDF::derive_key(size_t key_len,
+secure_vector<byte> KDF::derive_key(size_t key_len,
                                    const byte secret[], size_t secret_len,
                                    const std::string& salt) const
    {
@@ -58,7 +47,7 @@ SecureVector<byte> KDF::derive_key(size_t key_len,
 /*
 * Derive a key
 */
-SecureVector<byte> KDF::derive_key(size_t key_len,
+secure_vector<byte> KDF::derive_key(size_t key_len,
                                    const byte secret[], size_t secret_len,
                                    const byte salt[], size_t salt_len) const
    {

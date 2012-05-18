@@ -44,7 +44,7 @@ class BOTAN_DLL CTS_Encryption : public Keyed_Filter
       void encrypt(const byte[]);
 
       BlockCipher* cipher;
-      SecureVector<byte> buffer, state;
+      secure_vector<byte> buffer, state;
       size_t position;
    };
 
@@ -79,7 +79,7 @@ class BOTAN_DLL CTS_Decryption : public Keyed_Filter
       void decrypt(const byte[]);
 
       BlockCipher* cipher;
-      SecureVector<byte> buffer, state, temp;
+      secure_vector<byte> buffer, state, temp;
       size_t position;
    };
 

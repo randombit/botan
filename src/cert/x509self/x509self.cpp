@@ -53,7 +53,7 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
 
    opts.sanity_check();
 
-   MemoryVector<byte> pub_key = X509::BER_encode(key);
+   std::vector<byte> pub_key = X509::BER_encode(key);
    std::unique_ptr<PK_Signer> signer(choose_sig_format(key, hash_fn, sig_algo));
    load_info(opts, subject_dn, subject_alt);
 
@@ -99,7 +99,7 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
 
    opts.sanity_check();
 
-   MemoryVector<byte> pub_key = X509::BER_encode(key);
+   std::vector<byte> pub_key = X509::BER_encode(key);
    std::unique_ptr<PK_Signer> signer(choose_sig_format(key, hash_fn, sig_algo));
    load_info(opts, subject_dn, subject_alt);
 
@@ -134,7 +134,7 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
 
       tbs_req.encode(
          Attribute("PKCS9.ChallengePassword",
-                   DER_Encoder().encode(challenge).get_contents()
+                   DER_Encoder().encode(challenge).get_contents_unlocked()
             )
          );
       }
@@ -145,20 +145,17 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
                    .start_cons(SEQUENCE)
                       .encode(extensions)
                    .end_cons()
-               .get_contents()
+               .get_contents_unlocked()
          )
       )
       .end_explicit()
       .end_cons();
 
-   DataSource_Memory source(
-      X509_Object::make_signed(signer.get(),
-                               rng,
-                               sig_algo,
-                               tbs_req.get_contents())
-      );
+   const std::vector<byte> req =
+      X509_Object::make_signed(signer.get(), rng, sig_algo,
+                               tbs_req.get_contents());
 
-   return PKCS10_Request(source);
+   return PKCS10_Request(req);
    }
 
 }

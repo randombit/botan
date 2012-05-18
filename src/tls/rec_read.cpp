@@ -165,7 +165,7 @@ size_t Record_Reader::fill_buffer_to(const byte*& input,
 size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
                                 size_t& consumed,
                                 byte& msg_type,
-                                MemoryVector<byte>& msg)
+                                std::vector<byte>& msg)
    {
    const byte* input = &input_array[0];
 
@@ -333,7 +333,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
 
    ++m_seq_no;
 
-   m_mac->final(m_macbuf);
+   m_mac->final(&m_macbuf[0]);
 
    const size_t mac_offset = record_len - (m_macbuf.size() + pad_size);
 

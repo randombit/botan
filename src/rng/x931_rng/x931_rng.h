@@ -42,7 +42,7 @@ class BOTAN_DLL ANSI_X931_RNG : public RandomNumberGenerator
 
       BlockCipher* cipher;
       RandomNumberGenerator* prng;
-      SecureVector<byte> V, R;
+      secure_vector<byte> V, R;
       size_t position;
    };
 

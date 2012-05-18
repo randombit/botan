@@ -17,7 +17,7 @@ void LubyRackoff::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const size_t len = hash->output_length();
 
-   SecureVector<byte> buffer_vec(len);
+   secure_vector<byte> buffer_vec(len);
    byte* buffer = &buffer_vec[0];
 
    for(size_t i = 0; i != blocks; ++i)
@@ -54,7 +54,7 @@ void LubyRackoff::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const size_t len = hash->output_length();
 
-   SecureVector<byte> buffer_vec(len);
+   secure_vector<byte> buffer_vec(len);
    byte* buffer = &buffer_vec[0];
 
    for(size_t i = 0; i != blocks; ++i)

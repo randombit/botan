@@ -48,7 +48,7 @@ class BOTAN_DLL CTR_BE : public StreamCipher
       void increment_counter();
 
       BlockCipher* permutation;
-      SecureVector<byte> counter, buffer;
+      secure_vector<byte> counter, buffer;
       size_t position;
    };
 

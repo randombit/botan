@@ -42,7 +42,7 @@ DSA_PrivateKey::DSA_PrivateKey(RandomNumberGenerator& rng,
    }
 
 DSA_PrivateKey::DSA_PrivateKey(const AlgorithmIdentifier& alg_id,
-                               const MemoryRegion<byte>& key_bits,
+                               const secure_vector<byte>& key_bits,
                                RandomNumberGenerator& rng) :
    DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_57)
    {
@@ -73,7 +73,7 @@ DSA_Signature_Operation::DSA_Signature_Operation(const DSA_PrivateKey& dsa) :
    {
    }
 
-SecureVector<byte>
+secure_vector<byte>
 DSA_Signature_Operation::sign(const byte msg[], size_t msg_len,
                               RandomNumberGenerator& rng)
    {
@@ -97,7 +97,7 @@ DSA_Signature_Operation::sign(const byte msg[], size_t msg_len,
       s = mod_q.multiply(s, mul_add(x, r, i));
       }
 
-   SecureVector<byte> output(2*q.bytes());
+   secure_vector<byte> output(2*q.bytes());
    r.binary_encode(&output[output.size() / 2 - r.bytes()]);
    s.binary_encode(&output[output.size() - s.bytes()]);
    return output;

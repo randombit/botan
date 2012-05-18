@@ -29,7 +29,7 @@ class Handshake_Reader
 
       virtual bool have_full_record() const = 0;
 
-      virtual std::pair<Handshake_Type, MemoryVector<byte> > get_next_record() = 0;
+      virtual std::pair<Handshake_Type, std::vector<byte> > get_next_record() = 0;
 
       virtual ~Handshake_Reader() {}
    };
@@ -46,7 +46,7 @@ class Stream_Handshake_Reader : public Handshake_Reader
 
       bool have_full_record() const;
 
-      std::pair<Handshake_Type, MemoryVector<byte> > get_next_record();
+      std::pair<Handshake_Type, std::vector<byte> > get_next_record();
    private:
       SecureQueue m_queue;
    };

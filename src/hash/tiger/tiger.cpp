@@ -17,7 +17,7 @@ namespace {
 /*
 * Tiger Mixing Function
 */
-inline void mix(MemoryRegion<u64bit>& X)
+inline void mix(secure_vector<u64bit>& X)
    {
    X[0] -= X[7] ^ 0xA5A5A5A5A5A5A5A5;
    X[1] ^= X[0];
@@ -83,7 +83,7 @@ void Tiger::copy_out(byte output[])
 * Tiger Pass
 */
 void Tiger::pass(u64bit& A, u64bit& B, u64bit& C,
-                 const MemoryRegion<u64bit>& X,
+                 const secure_vector<u64bit>& X,
                  byte mul)
    {
    C ^= X[0];

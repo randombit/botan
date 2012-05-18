@@ -36,8 +36,8 @@ s32bit validity_check(const X509_Time& start, const X509_Time& end,
 /*
 * Compare the value of unique ID fields
 */
-bool compare_ids(const MemoryVector<byte>& id1,
-                 const MemoryVector<byte>& id2)
+bool compare_ids(const std::vector<byte>& id1,
+                 const std::vector<byte>& id2)
    {
    if(!id1.size() || !id2.size())
       return true;
@@ -136,10 +136,10 @@ bool X509_Store::CRL_Data::operator<(const X509_Store::CRL_Data& other) const
    if(*this == other)
       return false;
 
-   const MemoryVector<byte>& serial1 = serial;
-   const MemoryVector<byte>& key_id1 = auth_key_id;
-   const MemoryVector<byte>& serial2 = other.serial;
-   const MemoryVector<byte>& key_id2 = other.auth_key_id;
+   const std::vector<byte>& serial1 = serial;
+   const std::vector<byte>& key_id1 = auth_key_id;
+   const std::vector<byte>& serial2 = other.serial;
+   const std::vector<byte>& key_id2 = other.auth_key_id;
 
    if(compare_ids(key_id1, key_id2) == false)
       {
@@ -252,7 +252,7 @@ X509_Code X509_Store::validate_cert(const X509_Certificate& cert,
 * Find this certificate
 */
 size_t X509_Store::find_cert(const X509_DN& subject_dn,
-                             const MemoryRegion<byte>& subject_key_id) const
+                             const std::vector<byte>& subject_key_id) const
    {
    for(size_t j = 0; j != certs.size(); ++j)
       {
@@ -270,7 +270,7 @@ size_t X509_Store::find_cert(const X509_DN& subject_dn,
 size_t X509_Store::find_parent_of(const X509_Certificate& cert)
    {
    const X509_DN issuer_dn = cert.issuer_dn();
-   const MemoryVector<byte> auth_key_id = cert.authority_key_id();
+   const std::vector<byte> auth_key_id = cert.authority_key_id();
 
    size_t index = find_cert(issuer_dn, auth_key_id);
 

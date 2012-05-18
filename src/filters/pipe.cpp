@@ -124,7 +124,12 @@ void Pipe::process_msg(const byte input[], size_t length)
 /*
 * Process a full message at once
 */
-void Pipe::process_msg(const MemoryRegion<byte>& input)
+void Pipe::process_msg(const secure_vector<byte>& input)
+   {
+   process_msg(&input[0], input.size());
+   }
+
+void Pipe::process_msg(const std::vector<byte>& input)
    {
    process_msg(&input[0], input.size());
    }

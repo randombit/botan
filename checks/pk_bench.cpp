@@ -104,7 +104,7 @@ void benchmark_enc_dec(PK_Encryptor& enc, PK_Decryptor& dec,
                        RandomNumberGenerator& rng,
                        u32bit runs, double seconds)
    {
-   SecureVector<byte> plaintext, ciphertext;
+   std::vector<byte> plaintext, ciphertext;
 
    for(u32bit i = 0; i != runs; ++i)
       {
@@ -127,7 +127,7 @@ void benchmark_enc_dec(PK_Encryptor& enc, PK_Decryptor& dec,
       if(dec_timer.seconds() < seconds)
          {
          dec_timer.start();
-         SecureVector<byte> plaintext_out = dec.decrypt(ciphertext);
+         std::vector<byte> plaintext_out = unlock(dec.decrypt(ciphertext));
          dec_timer.stop();
 
          if(plaintext_out != plaintext)
@@ -143,7 +143,7 @@ void benchmark_sig_ver(PK_Verifier& ver, PK_Signer& sig,
                        RandomNumberGenerator& rng,
                        u32bit runs, double seconds)
    {
-   SecureVector<byte> message, signature, sig_random;
+   std::vector<byte> message, signature, sig_random;
 
    for(u32bit i = 0; i != runs; ++i)
       {
@@ -171,7 +171,7 @@ void benchmark_sig_ver(PK_Verifier& ver, PK_Signer& sig,
 
          if((i % 100) == 0)
             {
-            sig_random = rng.random_vec(signature.size());
+            sig_random = unlock(rng.random_vec(signature.size()));
 
             verify_timer.start();
             const bool verified_bad = ver.verify_message(message, sig_random);

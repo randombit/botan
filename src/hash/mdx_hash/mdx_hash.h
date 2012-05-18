@@ -55,7 +55,7 @@ class BOTAN_DLL MDx_HashFunction : public HashFunction
       */
       virtual void write_count(byte out[]);
    private:
-      SecureVector<byte> buffer;
+      secure_vector<byte> buffer;
       u64bit count;
       size_t position;
 

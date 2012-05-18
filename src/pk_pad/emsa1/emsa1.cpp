@@ -11,7 +11,7 @@ namespace Botan {
 
 namespace {
 
-SecureVector<byte> emsa1_encoding(const MemoryRegion<byte>& msg,
+secure_vector<byte> emsa1_encoding(const secure_vector<byte>& msg,
                                   size_t output_bits)
    {
    if(8*msg.size() <= output_bits)
@@ -20,7 +20,7 @@ SecureVector<byte> emsa1_encoding(const MemoryRegion<byte>& msg,
    size_t shift = 8*msg.size() - output_bits;
 
    size_t byte_shift = shift / 8, bit_shift = shift % 8;
-   SecureVector<byte> digest(msg.size() - byte_shift);
+   secure_vector<byte> digest(msg.size() - byte_shift);
 
    for(size_t j = 0; j != msg.size() - byte_shift; ++j)
       digest[j] = msg[j];
@@ -51,7 +51,7 @@ void EMSA1::update(const byte input[], size_t length)
 /*
 * Return the raw (unencoded) data
 */
-SecureVector<byte> EMSA1::raw_data()
+secure_vector<byte> EMSA1::raw_data()
    {
    return hash->final();
    }
@@ -59,7 +59,7 @@ SecureVector<byte> EMSA1::raw_data()
 /*
 * EMSA1 Encode Operation
 */
-SecureVector<byte> EMSA1::encoding_of(const MemoryRegion<byte>& msg,
+secure_vector<byte> EMSA1::encoding_of(const secure_vector<byte>& msg,
                                       size_t output_bits,
                                       RandomNumberGenerator&)
    {
@@ -71,14 +71,14 @@ SecureVector<byte> EMSA1::encoding_of(const MemoryRegion<byte>& msg,
 /*
 * EMSA1 Decode/Verify Operation
 */
-bool EMSA1::verify(const MemoryRegion<byte>& coded,
-                   const MemoryRegion<byte>& raw, size_t key_bits)
+bool EMSA1::verify(const secure_vector<byte>& coded,
+                   const secure_vector<byte>& raw, size_t key_bits)
    {
    try {
       if(raw.size() != hash->output_length())
          throw Encoding_Error("EMSA1::encoding_of: Invalid size for input");
 
-      SecureVector<byte> our_coding = emsa1_encoding(raw, key_bits);
+      secure_vector<byte> our_coding = emsa1_encoding(raw, key_bits);
 
       if(our_coding == coded) return true;
       if(our_coding[0] != 0) return false;

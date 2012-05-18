@@ -27,7 +27,7 @@ std::ostream& operator<<(std::ostream& stream, const BigInt& n)
       {
       if(n < 0)
          stream.write("-", 1);
-      SecureVector<byte> buffer = BigInt::encode(n, base);
+      const std::vector<byte> buffer = BigInt::encode(n, base);
       size_t skip = 0;
       while(buffer[skip] == '0' && skip < buffer.size())
          ++skip;

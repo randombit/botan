@@ -150,7 +150,7 @@ RTSS_Share::split(byte M, byte N,
       shares[i].contents.push_back(i+1);
 
    // secret = S || H(S)
-   SecureVector<byte> secret(S, S_len);
+   secure_vector<byte> secret(S, S + S_len);
    secret += hash.process(S, S_len);
 
    for(size_t i = 0; i != secret.size(); ++i)
@@ -178,7 +178,7 @@ RTSS_Share::split(byte M, byte N,
    return shares;
    }
 
-SecureVector<byte>
+secure_vector<byte>
 RTSS_Share::reconstruct(const std::vector<RTSS_Share>& shares)
    {
    const size_t RTSS_HEADER_SIZE = 20;
@@ -211,7 +211,7 @@ RTSS_Share::reconstruct(const std::vector<RTSS_Share>& shares)
       throw Decoding_Error("Bad RTSS length field in header");
 
    std::vector<byte> V(shares.size());
-   SecureVector<byte> secret;
+   secure_vector<byte> secret;
 
    for(size_t i = RTSS_HEADER_SIZE + 1; i != shares[0].size(); ++i)
       {
@@ -250,13 +250,13 @@ RTSS_Share::reconstruct(const std::vector<RTSS_Share>& shares)
       throw Decoding_Error("Bad length in RTSS output");
 
    hash->update(&secret[0], secret_len);
-   SecureVector<byte> hash_check = hash->final();
+   secure_vector<byte> hash_check = hash->final();
 
    if(!same_mem(&hash_check[0],
                 &secret[secret_len], hash->output_length()))
       throw Decoding_Error("RTSS hash check failed");
 
-   return SecureVector<byte>(&secret[0], secret_len);
+   return secure_vector<byte>(&secret[0], &secret[secret_len]);
    }
 
 }

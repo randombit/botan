@@ -27,11 +27,20 @@ X509_Object::X509_Object(DataSource& stream, const std::string& labels)
    }
 
 /*
-* Createa a generic X.509 object
+* Create a generic X.509 object
 */
 X509_Object::X509_Object(const std::string& file, const std::string& labels)
    {
    DataSource_Stream stream(file, true);
+   init(stream, labels);
+   }
+
+/*
+* Create a generic X.509 object
+*/
+X509_Object::X509_Object(const std::vector<byte>& vec, const std::string& labels)
+   {
+   DataSource_Memory stream(&vec[0], vec.size());
    init(stream, labels);
    }
 
@@ -97,7 +106,7 @@ void X509_Object::encode(Pipe& out, X509_Encoding encoding) const
 /*
 * Return a BER encoded X.509 object
 */
-MemoryVector<byte> X509_Object::BER_encode() const
+std::vector<byte> X509_Object::BER_encode() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
@@ -107,7 +116,7 @@ MemoryVector<byte> X509_Object::BER_encode() const
          .encode(sig_algo)
          .encode(sig, BIT_STRING)
       .end_cons()
-   .get_contents();
+   .get_contents_unlocked();
    }
 
 /*
@@ -121,7 +130,7 @@ std::string X509_Object::PEM_encode() const
 /*
 * Return the TBS data
 */
-MemoryVector<byte> X509_Object::tbs_data() const
+std::vector<byte> X509_Object::tbs_data() const
    {
    return ASN1::put_in_sequence(tbs_bits);
    }
@@ -129,7 +138,7 @@ MemoryVector<byte> X509_Object::tbs_data() const
 /*
 * Return the signature of this object
 */
-MemoryVector<byte> X509_Object::signature() const
+std::vector<byte> X509_Object::signature() const
    {
    return sig;
    }
@@ -201,10 +210,10 @@ bool X509_Object::check_signature(Public_Key& pub_key) const
 /*
 * Apply the X.509 SIGNED macro
 */
-MemoryVector<byte> X509_Object::make_signed(PK_Signer* signer,
+std::vector<byte> X509_Object::make_signed(PK_Signer* signer,
                                             RandomNumberGenerator& rng,
                                             const AlgorithmIdentifier& algo,
-                                            const MemoryRegion<byte>& tbs_bits)
+                                            const secure_vector<byte>& tbs_bits)
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
@@ -212,7 +221,7 @@ MemoryVector<byte> X509_Object::make_signed(PK_Signer* signer,
          .encode(algo)
          .encode(signer->sign_message(tbs_bits, rng), BIT_STRING)
       .end_cons()
-   .get_contents();
+   .get_contents_unlocked();
    }
 
 /*

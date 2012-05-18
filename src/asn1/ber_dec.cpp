@@ -99,7 +99,7 @@ size_t decode_length(DataSource* ber)
 */
 size_t find_eoc(DataSource* ber)
    {
-   SecureVector<byte> buffer(DEFAULT_BUFFERSIZE), data;
+   secure_vector<byte> buffer(DEFAULT_BUFFERSIZE), data;
 
    while(true)
       {
@@ -171,7 +171,16 @@ BER_Decoder& BER_Decoder::verify_end()
 /*
 * Save all the bytes remaining in the source
 */
-BER_Decoder& BER_Decoder::raw_bytes(MemoryRegion<byte>& out)
+BER_Decoder& BER_Decoder::raw_bytes(secure_vector<byte>& out)
+   {
+   out.clear();
+   byte buf;
+   while(source->read_byte(buf))
+      out.push_back(buf);
+   return (*this);
+   }
+
+BER_Decoder& BER_Decoder::raw_bytes(std::vector<byte>& out)
    {
    out.clear();
    byte buf;
@@ -212,7 +221,10 @@ BER_Object BER_Decoder::get_next_object()
    size_t length = decode_length(source);
    next.value.resize(length);
    if(source->read(&next.value[0], length) != length)
+      {
+      abort();
       throw BER_Decoding_Error("Value truncated");
+      }
 
    if(next.type_tag == EOC && next.class_tag == UNIVERSAL)
       return get_next_object();
@@ -281,9 +293,20 @@ BER_Decoder::BER_Decoder(const byte data[], size_t length)
 /*
 * BER_Decoder Constructor
 */
-BER_Decoder::BER_Decoder(const MemoryRegion<byte>& data)
+BER_Decoder::BER_Decoder(const secure_vector<byte>& data)
    {
    source = new DataSource_Memory(data);
+   owns = true;
+   pushed.type_tag = pushed.class_tag = NO_OBJECT;
+   parent = 0;
+   }
+
+/*
+* BER_Decoder Constructor
+*/
+BER_Decoder::BER_Decoder(const std::vector<byte>& data)
+   {
+   source = new DataSource_Memory(&data[0], data.size());
    owns = true;
    pushed.type_tag = pushed.class_tag = NO_OBJECT;
    parent = 0;
@@ -362,7 +385,7 @@ BER_Decoder& BER_Decoder::decode(BigInt& out)
 
 BER_Decoder& BER_Decoder::decode_octet_string_bigint(BigInt& out)
    {
-   SecureVector<byte> out_vec;
+   secure_vector<byte> out_vec;
    decode(out_vec, OCTET_STRING);
    out = BigInt::decode(&out_vec[0], out_vec.size());
    return (*this);
@@ -462,7 +485,7 @@ BER_Decoder& BER_Decoder::decode(BigInt& out,
 /*
 * BER decode a BIT STRING or OCTET STRING
 */
-BER_Decoder& BER_Decoder::decode(MemoryRegion<byte>& out, ASN1_Tag real_type)
+BER_Decoder& BER_Decoder::decode(secure_vector<byte>& out, ASN1_Tag real_type)
    {
    return decode(out, real_type, real_type, UNIVERSAL);
    }
@@ -470,7 +493,15 @@ BER_Decoder& BER_Decoder::decode(MemoryRegion<byte>& out, ASN1_Tag real_type)
 /*
 * BER decode a BIT STRING or OCTET STRING
 */
-BER_Decoder& BER_Decoder::decode(MemoryRegion<byte>& buffer,
+BER_Decoder& BER_Decoder::decode(std::vector<byte>& out, ASN1_Tag real_type)
+   {
+   return decode(out, real_type, real_type, UNIVERSAL);
+   }
+
+/*
+* BER decode a BIT STRING or OCTET STRING
+*/
+BER_Decoder& BER_Decoder::decode(secure_vector<byte>& buffer,
                                  ASN1_Tag real_type,
                                  ASN1_Tag type_tag, ASN1_Tag class_tag)
    {
@@ -493,10 +524,50 @@ BER_Decoder& BER_Decoder::decode(MemoryRegion<byte>& buffer,
    return (*this);
    }
 
+BER_Decoder& BER_Decoder::decode(std::vector<byte>& buffer,
+                                 ASN1_Tag real_type,
+                                 ASN1_Tag type_tag, ASN1_Tag class_tag)
+   {
+   if(real_type != OCTET_STRING && real_type != BIT_STRING)
+      throw BER_Bad_Tag("Bad tag for {BIT,OCTET} STRING", real_type);
+
+   BER_Object obj = get_next_object();
+   obj.assert_is_a(type_tag, class_tag);
+
+   if(real_type == OCTET_STRING)
+      buffer = unlock(obj.value);
+   else
+      {
+      if(obj.value[0] >= 8)
+         throw BER_Decoding_Error("Bad number of unused bits in BIT STRING");
+
+      buffer.resize(obj.value.size() - 1);
+      copy_mem(&buffer[0], &obj.value[1], obj.value.size() - 1);
+      }
+   return (*this);
+   }
+
 /*
 * Decode an OPTIONAL string type
 */
-BER_Decoder& BER_Decoder::decode_optional_string(MemoryRegion<byte>& out,
+BER_Decoder& BER_Decoder::decode_optional_string(secure_vector<byte>& out,
+                                                 ASN1_Tag real_type,
+                                                 u16bit type_no)
+   {
+   BER_Object obj = get_next_object();
+
+   ASN1_Tag type_tag = static_cast<ASN1_Tag>(type_no);
+
+   out.clear();
+   push_back(obj);
+
+   if(obj.type_tag == type_tag && obj.class_tag == CONTEXT_SPECIFIC)
+      decode(out, real_type, type_tag, CONTEXT_SPECIFIC);
+
+   return (*this);
+   }
+
+BER_Decoder& BER_Decoder::decode_optional_string(std::vector<byte>& out,
                                                  ASN1_Tag real_type,
                                                  u16bit type_no)
    {

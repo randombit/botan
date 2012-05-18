@@ -72,7 +72,7 @@ void Serpent_X86_32::decrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void Serpent_X86_32::key_schedule(const byte key[], size_t length)
    {
-   SecureVector<u32bit> W(140);
+   secure_vector<u32bit> W(140);
    for(size_t i = 0; i != length / 4; ++i)
       W[i] = load_le<u32bit>(key, i);
    W[length / 4] |= u32bit(1) << ((length%4)*8);

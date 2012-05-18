@@ -119,7 +119,7 @@ bool keywrap_test(const char* key_str,
 
       Algorithm_Factory& af = global_state().algorithm_factory();
 
-      SecureVector<byte> enc = rfc3394_keywrap(key.bits_of(), kek, af);
+      secure_vector<byte> enc = rfc3394_keywrap(key.bits_of(), kek, af);
 
       if(enc != expected.bits_of())
          {
@@ -128,7 +128,7 @@ bool keywrap_test(const char* key_str,
          ok = false;
          }
 
-      SecureVector<byte> dec = rfc3394_keyunwrap(expected.bits_of(), kek, af);
+      secure_vector<byte> dec = rfc3394_keyunwrap(expected.bits_of(), kek, af);
 
       if(dec != key.bits_of())
          {
@@ -490,7 +490,7 @@ bool failed_test(const std::string& algo,
       pipe.append(test);
       pipe.append(new Botan::Hex_Encoder);
 
-      Botan::SecureVector<byte> data = Botan::hex_decode(in);
+      secure_vector<byte> data = Botan::hex_decode(in);
       const byte* data_ptr = &data[0];
 
       // this can help catch errors with buffering, etc
@@ -538,7 +538,7 @@ bool failed_test(const std::string& algo,
       size_t offset = random_word(rng, pipe.remaining() - 1);
       size_t length = random_word(rng, pipe.remaining() - offset);
 
-      Botan::SecureVector<byte> peekbuf(length);
+      std::vector<byte> peekbuf(length);
       pipe.peek(&peekbuf[0], peekbuf.size(), offset);
 
       output = pipe.read_all_as_string();

@@ -70,7 +70,7 @@ RW_Signature_Operation::RW_Signature_Operation(const RW_PrivateKey& rw) :
    {
    }
 
-SecureVector<byte>
+secure_vector<byte>
 RW_Signature_Operation::sign(const byte msg[], size_t msg_len,
                              RandomNumberGenerator& rng)
    {
@@ -101,7 +101,7 @@ RW_Signature_Operation::sign(const byte msg[], size_t msg_len,
    return BigInt::encode_1363(r, n.bytes());
    }
 
-SecureVector<byte>
+secure_vector<byte>
 RW_Verification_Operation::verify_mr(const byte msg[], size_t msg_len)
    {
    BigInt m(msg, msg_len);
@@ -111,15 +111,15 @@ RW_Verification_Operation::verify_mr(const byte msg[], size_t msg_len)
 
    BigInt r = powermod_e_n(m);
    if(r % 16 == 12)
-      return BigInt::encode(r);
+      return BigInt::encode_locked(r);
    if(r % 8 == 6)
-      return BigInt::encode(2*r);
+      return BigInt::encode_locked(2*r);
 
    r = n - r;
    if(r % 16 == 12)
-      return BigInt::encode(r);
+      return BigInt::encode_locked(r);
    if(r % 8 == 6)
-      return BigInt::encode(2*r);
+      return BigInt::encode_locked(2*r);
 
    throw Invalid_Argument("RW signature verification: Invalid signature");
    }

@@ -37,7 +37,7 @@ bool Session_Manager_In_Memory::load_from_session_str(
    }
 
 bool Session_Manager_In_Memory::load_from_session_id(
-   const MemoryRegion<byte>& session_id, Session& session)
+   const std::vector<byte>& session_id, Session& session)
    {
    std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -69,7 +69,7 @@ bool Session_Manager_In_Memory::load_from_host_info(
    }
 
 void Session_Manager_In_Memory::remove_entry(
-   const MemoryRegion<byte>& session_id)
+   const std::vector<byte>& session_id)
    {
    std::lock_guard<std::mutex> lock(m_mutex);
 

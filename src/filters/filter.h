@@ -65,13 +65,27 @@ class BOTAN_DLL Filter
       /**
       * @param in some input for the filter
       */
-      void send(const MemoryRegion<byte>& in) { send(&in[0], in.size()); }
+      void send(const secure_vector<byte>& in) { send(&in[0], in.size()); }
+
+      /**
+      * @param in some input for the filter
+      */
+      void send(const std::vector<byte>& in) { send(&in[0], in.size()); }
 
       /**
       * @param in some input for the filter
       * @param length the number of bytes of in to send
       */
-      void send(const MemoryRegion<byte>& in, size_t length)
+      void send(const secure_vector<byte>& in, size_t length)
+         {
+         send(&in[0], length);
+         }
+
+      /**
+      * @param in some input for the filter
+      * @param length the number of bytes of in to send
+      */
+      void send(const std::vector<byte>& in, size_t length)
          {
          send(&in[0], length);
          }
@@ -120,7 +134,7 @@ class BOTAN_DLL Filter
       void set_next(Filter* filters[], size_t count);
       Filter* get_next() const;
 
-      SecureVector<byte> write_queue;
+      secure_vector<byte> write_queue;
       std::vector<Filter*> next;
       size_t port_num, filter_owns;
 

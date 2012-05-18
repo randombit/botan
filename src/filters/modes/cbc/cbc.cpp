@@ -65,9 +65,9 @@ void CBC_Encryption::buffered_block(const byte input[], size_t length)
 
    for(size_t i = 0; i != blocks; ++i)
       {
-      xor_buf(state, input + i * cipher->block_size(), state.size());
+      xor_buf(&state[0], input + i * cipher->block_size(), state.size());
       cipher->encrypt(state);
-      send(state, state.size());
+      send(state);
       }
    }
 
@@ -91,13 +91,13 @@ void CBC_Encryption::end_msg()
    {
    size_t last_block = current_position() % cipher->block_size();
 
-   SecureVector<byte> padding(cipher->block_size());
-   padder->pad(padding, padding.size(), last_block);
+   std::vector<byte> padding(cipher->block_size());
+   padder->pad(&padding[0], padding.size(), last_block);
 
    size_t pad_bytes = padder->pad_bytes(cipher->block_size(), last_block);
 
    if(pad_bytes)
-      Buffered_Filter::write(padding, pad_bytes);
+      Buffered_Filter::write(&padding[0], pad_bytes);
    Buffered_Filter::end_msg();
    }
 
@@ -170,7 +170,7 @@ void CBC_Decryption::buffered_block(const byte input[], size_t length)
 
       cipher->decrypt_n(input, &temp[0], to_proc);
 
-      xor_buf(temp, state, cipher->block_size());
+      xor_buf(&temp[0], &state[0], cipher->block_size());
 
       for(size_t i = 1; i < to_proc; ++i)
          xor_buf(&temp[i * cipher->block_size()],
@@ -202,9 +202,9 @@ void CBC_Decryption::buffered_final(const byte input[], size_t length)
 
    input += extra_blocks * cipher->block_size();
 
-   cipher->decrypt(input, temp);
-   xor_buf(temp, state, cipher->block_size());
-   send(temp, padder->unpad(temp, cipher->block_size()));
+   cipher->decrypt(&input[0], &temp[0]);
+   xor_buf(&temp[0], &state[0], cipher->block_size());
+   send(&temp[0], padder->unpad(&temp[0], cipher->block_size()));
 
    copy_mem(&state[0], input, state.size()); // save for IV chaining
    }

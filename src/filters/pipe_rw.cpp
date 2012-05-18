@@ -39,14 +39,6 @@ void Pipe::write(const byte input[], size_t length)
    }
 
 /*
-* Write into a Pipe
-*/
-void Pipe::write(const MemoryRegion<byte>& input)
-   {
-   write(&input[0], input.size());
-   }
-
-/*
 * Write a string into a Pipe
 */
 void Pipe::write(const std::string& str)
@@ -67,7 +59,7 @@ void Pipe::write(byte input)
 */
 void Pipe::write(DataSource& source)
    {
-   SecureVector<byte> buffer(DEFAULT_BUFFERSIZE);
+   secure_vector<byte> buffer(DEFAULT_BUFFERSIZE);
    while(!source.end_of_data())
       {
       size_t got = source.read(&buffer[0], buffer.size());
@@ -102,10 +94,10 @@ size_t Pipe::read(byte& out, message_id msg)
 /*
 * Return all data in the pipe
 */
-SecureVector<byte> Pipe::read_all(message_id msg)
+secure_vector<byte> Pipe::read_all(message_id msg)
    {
    msg = ((msg != DEFAULT_MESSAGE) ? msg : default_msg());
-   SecureVector<byte> buffer(remaining(msg));
+   secure_vector<byte> buffer(remaining(msg));
    size_t got = read(&buffer[0], buffer.size(), msg);
    buffer.resize(got);
    return buffer;
@@ -117,7 +109,7 @@ SecureVector<byte> Pipe::read_all(message_id msg)
 std::string Pipe::read_all_as_string(message_id msg)
    {
    msg = ((msg != DEFAULT_MESSAGE) ? msg : default_msg());
-   SecureVector<byte> buffer(DEFAULT_BUFFERSIZE);
+   secure_vector<byte> buffer(DEFAULT_BUFFERSIZE);
    std::string str;
    str.reserve(remaining(msg));
 

@@ -27,7 +27,7 @@ stderr so there is no confusion.
 
 using namespace Botan;
 
-SecureVector<byte> b64_decode(const std::string&);
+secure_vector<byte> b64_decode(const std::string&);
 
 int main(int argc, char* argv[])
    {
@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
 
       const u32bit PBKDF2_ITERATIONS = 8192;
 
-      SecureVector<byte> salt = b64_decode(salt_str);
+      secure_vector<byte> salt = b64_decode(salt_str);
 
       SymmetricKey bc_key = pbkdf->derive_key(key_len, "BLK" + passphrase,
                                               &salt[0], salt.size(),
@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
    return 0;
    }
 
-SecureVector<byte> b64_decode(const std::string& in)
+secure_vector<byte> b64_decode(const std::string& in)
    {
    Pipe pipe(new Base64_Decoder);
    pipe.process_msg(in);

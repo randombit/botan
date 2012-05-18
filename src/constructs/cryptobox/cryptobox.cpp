@@ -44,7 +44,7 @@ std::string encrypt(const byte input[], size_t input_len,
                     const std::string& passphrase,
                     RandomNumberGenerator& rng)
    {
-   SecureVector<byte> pbkdf_salt(PBKDF_SALT_LEN);
+   secure_vector<byte> pbkdf_salt(PBKDF_SALT_LEN);
    rng.randomize(&pbkdf_salt[0], pbkdf_salt.size());
 
    PKCS5_PBKDF2 pbkdf(new HMAC(new SHA_512));
@@ -79,10 +79,10 @@ std::string encrypt(const byte input[], size_t input_len,
    */
    const size_t ciphertext_len = pipe.remaining(0);
 
-   SecureVector<byte> out_buf(VERSION_CODE_LEN +
-                              PBKDF_SALT_LEN +
-                              MAC_OUTPUT_LEN +
-                              ciphertext_len);
+   std::vector<byte> out_buf(VERSION_CODE_LEN +
+                             PBKDF_SALT_LEN +
+                             MAC_OUTPUT_LEN +
+                             ciphertext_len);
 
    for(size_t i = 0; i != VERSION_CODE_LEN; ++i)
      out_buf[i] = get_byte(i, CRYPTOBOX_VERSION_CODE);
@@ -100,7 +100,7 @@ std::string decrypt(const byte input[], size_t input_len,
                     const std::string& passphrase)
    {
    DataSource_Memory input_src(input, input_len);
-   SecureVector<byte> ciphertext =
+   secure_vector<byte> ciphertext =
       PEM_Code::decode_check_label(input_src,
                                    "BOTAN CRYPTOBOX MESSAGE");
 

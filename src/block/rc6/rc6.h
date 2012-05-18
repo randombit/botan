@@ -29,7 +29,7 @@ class BOTAN_DLL RC6 : public Block_Cipher_Fixed_Params<16, 1, 32>
    private:
       void key_schedule(const byte[], size_t);
 
-      SecureVector<u32bit> S;
+      secure_vector<u32bit> S;
    };
 
 }

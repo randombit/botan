@@ -36,7 +36,7 @@ class BOTAN_DLL Session_Manager
                or not modified if not found
       * @return true if session was modified
       */
-      virtual bool load_from_session_id(const MemoryRegion<byte>& session_id,
+      virtual bool load_from_session_id(const std::vector<byte>& session_id,
                                         Session& session) = 0;
 
       /**
@@ -53,7 +53,7 @@ class BOTAN_DLL Session_Manager
       /**
       * Remove this session id from the cache, if it exists
       */
-      virtual void remove_entry(const MemoryRegion<byte>& session_id) = 0;
+      virtual void remove_entry(const std::vector<byte>& session_id) = 0;
 
       /**
       * Save a session on a best effort basis; the manager may not in
@@ -94,13 +94,13 @@ class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
          m_session_lifetime(session_lifetime)
             {}
 
-      bool load_from_session_id(const MemoryRegion<byte>& session_id,
+      bool load_from_session_id(const std::vector<byte>& session_id,
                                 Session& session);
 
       bool load_from_host_info(const std::string& hostname, u16bit port,
                                Session& session);
 
-      void remove_entry(const MemoryRegion<byte>& session_id);
+      void remove_entry(const std::vector<byte>& session_id);
 
       void save(const Session& session_data);
 

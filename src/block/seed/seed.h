@@ -37,7 +37,7 @@ class BOTAN_DLL SEED : public Block_Cipher_Fixed_Params<16, 16>
             static const u32bit S0[256], S1[256], S2[256], S3[256];
          };
 
-      SecureVector<u32bit> K;
+      secure_vector<u32bit> K;
    };
 
 }

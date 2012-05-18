@@ -42,7 +42,7 @@ void HMAC::key_schedule(const byte key[], size_t length)
 
    if(length > hash->hash_block_size())
       {
-      SecureVector<byte> hmac_key = hash->process(key, length);
+      secure_vector<byte> hmac_key = hash->process(key, length);
       xor_buf(i_key, hmac_key, hmac_key.size());
       xor_buf(o_key, hmac_key, hmac_key.size());
       }

@@ -35,7 +35,7 @@ class BOTAN_DLL RC5 : public Block_Cipher_Fixed_Params<8, 1, 32>
 
       void key_schedule(const byte[], size_t);
 
-      SecureVector<u32bit> S;
+      secure_vector<u32bit> S;
    };
 
 }

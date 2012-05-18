@@ -40,10 +40,6 @@ OctetString::OctetString(const byte in[], size_t n)
    bits.assign(in, in + n);
    }
 
-OctetString::OctetString(const MemoryRegion<byte>& b) : bits(b)
-   {
-   }
-
 /*
 * Set the parity of each key byte to odd
 */
@@ -116,7 +112,7 @@ bool operator!=(const OctetString& s1, const OctetString& s2)
 */
 OctetString operator+(const OctetString& k1, const OctetString& k2)
    {
-   SecureVector<byte> out;
+   secure_vector<byte> out;
    out += k1.bits_of();
    out += k2.bits_of();
    return OctetString(out);
@@ -127,9 +123,10 @@ OctetString operator+(const OctetString& k1, const OctetString& k2)
 */
 OctetString operator^(const OctetString& k1, const OctetString& k2)
    {
-   SecureVector<byte> ret(std::max(k1.length(), k2.length()));
+   secure_vector<byte> ret(std::max(k1.length(), k2.length()));
+
    copy_mem(&ret[0], k1.begin(), k1.length());
-   xor_buf(ret, k2.begin(), k2.length());
+   xor_buf(&ret[0], k2.begin(), k2.length());
    return OctetString(ret);
    }
 

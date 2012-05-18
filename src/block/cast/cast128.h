@@ -29,15 +29,15 @@ class BOTAN_DLL CAST_128 : public Block_Cipher_Fixed_Params<8, 11, 16>
    private:
       void key_schedule(const byte[], size_t);
 
-      static void cast_ks(MemoryRegion<u32bit>& ks,
-                          MemoryRegion<u32bit>& user_key);
+      static void cast_ks(secure_vector<u32bit>& ks,
+                          secure_vector<u32bit>& user_key);
 
       static const u32bit S5[256];
       static const u32bit S6[256];
       static const u32bit S7[256];
       static const u32bit S8[256];
 
-      SecureVector<u32bit> MK, RK;
+      secure_vector<u32bit> MK, RK;
    };
 
 extern const u32bit CAST_SBOX1[256];

@@ -50,7 +50,7 @@ class SecureQueueNode
    private:
       friend class SecureQueue;
       SecureQueueNode* next;
-      SecureVector<byte> buffer;
+      secure_vector<byte> buffer;
       size_t start, end;
    };
 

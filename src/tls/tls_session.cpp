@@ -18,8 +18,8 @@ namespace Botan {
 
 namespace TLS {
 
-Session::Session(const MemoryRegion<byte>& session_identifier,
-                 const MemoryRegion<byte>& master_secret,
+Session::Session(const std::vector<byte>& session_identifier,
+                 const secure_vector<byte>& master_secret,
                  Protocol_Version version,
                  u16bit ciphersuite,
                  byte compression_method,
@@ -27,7 +27,7 @@ Session::Session(const MemoryRegion<byte>& session_identifier,
                  bool secure_renegotiation_supported,
                  size_t fragment_size,
                  const std::vector<X509_Certificate>& certs,
-                 const MemoryRegion<byte>& ticket,
+                 const std::vector<byte>& ticket,
                  const std::string& sni_hostname,
                  const std::string& srp_identifier) :
    m_start_time(std::chrono::system_clock::now()),
@@ -48,7 +48,7 @@ Session::Session(const MemoryRegion<byte>& session_identifier,
 
 Session::Session(const std::string& pem)
    {
-   SecureVector<byte> der = PEM_Code::decode_check_label(pem, "SSL SESSION");
+   secure_vector<byte> der = PEM_Code::decode_check_label(pem, "SSL SESSION");
 
    *this = Session(&der[0], der.size());
    }
@@ -61,7 +61,7 @@ Session::Session(const byte ber[], size_t ber_len)
 
    byte major_version = 0, minor_version = 0;
 
-   MemoryVector<byte> peer_cert_bits;
+   std::vector<byte> peer_cert_bits;
 
    size_t start_time = 0;
 
@@ -94,16 +94,16 @@ Session::Session(const byte ber[], size_t ber_len)
 
    if(!peer_cert_bits.empty())
       {
-      DataSource_Memory certs(peer_cert_bits);
+      DataSource_Memory certs(&peer_cert_bits[0], peer_cert_bits.size());
 
       while(!certs.end_of_data())
          m_peer_certs.push_back(X509_Certificate(certs));
       }
    }
 
-SecureVector<byte> Session::DER_encode() const
+secure_vector<byte> Session::DER_encode() const
    {
-   MemoryVector<byte> peer_cert_bits;
+   std::vector<byte> peer_cert_bits;
    for(size_t i = 0; i != m_peer_certs.size(); ++i)
       peer_cert_bits += m_peer_certs[i].BER_encode();
 
@@ -154,7 +154,7 @@ const size_t MAC_OUTPUT_LENGTH = 32;
 
 }
 
-MemoryVector<byte>
+std::vector<byte>
 Session::encrypt(const SymmetricKey& master_key,
                  RandomNumberGenerator& rng) const
    {
@@ -177,9 +177,9 @@ Session::encrypt(const SymmetricKey& master_key,
 
    Pipe pipe(get_cipher(SESSION_CRYPTO_CIPHER, cipher_key, cipher_iv, ENCRYPTION));
    pipe.process_msg(this->DER_encode());
-   MemoryVector<byte> ctext = pipe.read_all(0);
+   secure_vector<byte> ctext = pipe.read_all(0);
 
-   MemoryVector<byte> out(MAGIC_LENGTH);
+   std::vector<byte> out(MAGIC_LENGTH);
    store_be(SESSION_CRYPTO_MAGIC, &out[0]);
    out += cipher_iv.bits_of();
    out += ctext;
@@ -217,7 +217,7 @@ Session Session::decrypt(const byte buf[], size_t buf_len,
       mac->set_key(mac_key);
 
       mac->update(&buf[0], buf_len - MAC_OUTPUT_LENGTH);
-      MemoryVector<byte> computed_mac = mac->final();
+      secure_vector<byte> computed_mac = mac->final();
 
       if(!same_mem(&buf[buf_len - MAC_OUTPUT_LENGTH], &computed_mac[0], computed_mac.size()))
          throw Decoding_Error("MAC verification failed for encrypted session");
@@ -234,7 +234,7 @@ Session Session::decrypt(const byte buf[], size_t buf_len,
       Pipe pipe(get_cipher(SESSION_CRYPTO_CIPHER, cipher_key, cipher_iv, DECRYPTION));
       pipe.process_msg(&buf[CTEXT_OFFSET],
                        buf_len - (MAC_OUTPUT_LENGTH + CTEXT_OFFSET));
-      SecureVector<byte> ber = pipe.read_all();
+      secure_vector<byte> ber = pipe.read_all();
 
       return Session(&ber[0], ber.size());
       }

@@ -25,7 +25,7 @@ class BOTAN_DLL CRL_Entry : public ASN1_Object
       * Get the serial number of the certificate associated with this entry.
       * @return certificate's serial number
       */
-      MemoryVector<byte> serial_number() const { return serial; }
+      std::vector<byte> serial_number() const { return serial; }
 
       /**
       * Get the revocation date of the certificate associated with this entry
@@ -54,7 +54,7 @@ class BOTAN_DLL CRL_Entry : public ASN1_Object
 
    private:
       bool throw_on_unknown_critical;
-      MemoryVector<byte> serial;
+      std::vector<byte> serial;
       X509_Time time;
       CRL_Code reason;
    };

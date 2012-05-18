@@ -47,7 +47,7 @@ class BOTAN_DLL CMS_Encoder
       void compress(const std::string&);
       static bool can_compress_with(const std::string&);
 
-      SecureVector<byte> get_contents();
+      secure_vector<byte> get_contents();
       std::string PEM_contents();
 
       void set_data(const std::string&);
@@ -65,25 +65,25 @@ class BOTAN_DLL CMS_Encoder
                         const X509_Certificate&, Public_Key*,
                         const std::string&);
 
-      SecureVector<byte> do_encrypt(RandomNumberGenerator& rng,
+      secure_vector<byte> do_encrypt(RandomNumberGenerator& rng,
                                     const SymmetricKey&, const std::string&);
 
-      static SecureVector<byte> make_econtent(const SecureVector<byte>&,
+      static secure_vector<byte> make_econtent(const secure_vector<byte>&,
                                               const std::string&);
 
       static SymmetricKey setup_key(RandomNumberGenerator& rng,
                                     const std::string&);
 
-      static SecureVector<byte> wrap_key(RandomNumberGenerator& rng,
+      static secure_vector<byte> wrap_key(RandomNumberGenerator& rng,
                                          const std::string&,
                                          const SymmetricKey&,
                                          const SymmetricKey&);
 
-      static SecureVector<byte> encode_params(const std::string&,
+      static secure_vector<byte> encode_params(const std::string&,
                                               const SymmetricKey&,
                                               const InitializationVector&);
 
-      SecureVector<byte> data;
+      secure_vector<byte> data;
       std::string type;
    };
 

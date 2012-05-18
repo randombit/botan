@@ -93,7 +93,7 @@ void Unix_EntropySource::poll(Entropy_Accumulator& accum)
 
    const size_t MINIMAL_WORKING = 16;
 
-   MemoryRegion<byte>& io_buffer = accum.get_io_buffer(DEFAULT_BUFFERSIZE);
+   secure_vector<byte>& io_buffer = accum.get_io_buffer(DEFAULT_BUFFERSIZE);
 
    for(size_t i = 0; i != sources.size(); i++)
       {

@@ -43,8 +43,8 @@ class BOTAN_DLL Session
       /**
       * New session (sets session start time)
       */
-      Session(const MemoryRegion<byte>& session_id,
-              const MemoryRegion<byte>& master_secret,
+      Session(const std::vector<byte>& session_id,
+              const secure_vector<byte>& master_secret,
               Protocol_Version version,
               u16bit ciphersuite,
               byte compression_method,
@@ -52,7 +52,7 @@ class BOTAN_DLL Session
               bool secure_renegotiation_supported,
               size_t fragment_size,
               const std::vector<X509_Certificate>& peer_certs,
-              const MemoryRegion<byte>& session_ticket,
+              const std::vector<byte>& session_ticket,
               const std::string& sni_hostname = "",
               const std::string& srp_identifier = "");
 
@@ -71,12 +71,12 @@ class BOTAN_DLL Session
       * @warning if the master secret is compromised so is the
       * session traffic
       */
-      SecureVector<byte> DER_encode() const;
+      secure_vector<byte> DER_encode() const;
 
       /**
       * Encrypt a session (useful for serialization or session tickets)
       */
-      MemoryVector<byte> encrypt(const SymmetricKey& key,
+      std::vector<byte> encrypt(const SymmetricKey& key,
                                  RandomNumberGenerator& rng) const;
 
 
@@ -95,7 +95,7 @@ class BOTAN_DLL Session
       * @param ctext the ciphertext returned by encrypt
       * @param key the same key used by the encrypting side
       */
-      static inline Session decrypt(const MemoryRegion<byte>& ctext,
+      static inline Session decrypt(const std::vector<byte>& ctext,
                                     const SymmetricKey& key)
          {
          return Session::decrypt(&ctext[0], ctext.size(), key);
@@ -147,13 +147,13 @@ class BOTAN_DLL Session
       /**
       * Get the saved master secret
       */
-      const SecureVector<byte>& master_secret() const
+      const secure_vector<byte>& master_secret() const
          { return m_master_secret; }
 
       /**
       * Get the session identifier
       */
-      const MemoryVector<byte>& session_id() const
+      const std::vector<byte>& session_id() const
          { return m_identifier; }
 
       /**
@@ -186,16 +186,16 @@ class BOTAN_DLL Session
       /**
       * Return the session ticket the server gave us
       */
-      const MemoryVector<byte>& session_ticket() const { return m_session_ticket; }
+      const std::vector<byte>& session_ticket() const { return m_session_ticket; }
 
    private:
       enum { TLS_SESSION_PARAM_STRUCT_VERSION = 0x2994e300 };
 
       std::chrono::system_clock::time_point m_start_time;
 
-      MemoryVector<byte> m_identifier;
-      MemoryVector<byte> m_session_ticket; // only used by client side
-      SecureVector<byte> m_master_secret;
+      std::vector<byte> m_identifier;
+      std::vector<byte> m_session_ticket; // only used by client side
+      secure_vector<byte> m_master_secret;
 
       Protocol_Version m_version;
       u16bit m_ciphersuite;
