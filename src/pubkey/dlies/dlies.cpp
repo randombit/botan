@@ -43,7 +43,7 @@ SecureVector<byte> DLIES_Encryptor::enc(const byte in[], size_t length,
       throw Invalid_State("DLIES: The other key was never set");
 
    SecureVector<byte> out(my_key.size() + length + mac->output_length());
-   out.copy(&my_key[0], my_key.size());
+   buffer_insert(out, 0, my_key);
    buffer_insert(out, my_key.size(), in, length);
 
    SecureVector<byte> vz = my_key;

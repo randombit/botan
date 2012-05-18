@@ -72,8 +72,8 @@ void Lion::key_schedule(const byte key[], size_t length)
    {
    clear();
 
-   key1.copy(key,              length / 2);
-   key2.copy(key + length / 2, length / 2);
+   key1.assign(key,                key + (length / 2));
+   key2.assign(key + (length / 2), key + length);
    }
 
 /*

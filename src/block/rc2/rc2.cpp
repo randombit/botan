@@ -125,7 +125,7 @@ void RC2::key_schedule(const byte key[], size_t length)
       0xFE, 0x7F, 0xC1, 0xAD };
 
    SecureVector<byte> L(128);
-   L.copy(key, length);
+   copy_mem(&L[0], key, length);
 
    for(size_t i = length; i != 128; ++i)
       L[i] = TABLE[(L[i-1] + L[i-length]) % 256];

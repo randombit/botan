@@ -79,7 +79,7 @@ void MD2::add_data(const byte input[], size_t length)
          input += hash_block_size();
          length -= hash_block_size();
          }
-      buffer.copy(input, length);
+      copy_mem(&buffer[0], input, length);
       position = 0;
       }
    position += length;

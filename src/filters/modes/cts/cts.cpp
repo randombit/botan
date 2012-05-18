@@ -161,7 +161,7 @@ void CTS_Decryption::decrypt(const byte block[])
    cipher->decrypt(block, &temp[0]);
    xor_buf(temp, state, cipher->block_size());
    send(temp, cipher->block_size());
-   state.copy(block, cipher->block_size());
+   copy_mem(&state[0], block, cipher->block_size());
    }
 
 /*

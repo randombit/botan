@@ -38,8 +38,9 @@ void SSL3_MAC::key_schedule(const byte key[], size_t length)
    std::fill(i_key.begin(), i_key.end(), 0x36);
    std::fill(o_key.begin(), o_key.end(), 0x5C);
 
-   i_key.copy(key, length);
-   o_key.copy(key, length);
+   copy_mem(&i_key[0], key, length);
+   copy_mem(&o_key[0], key, length);
+
    hash->update(i_key);
    }
 

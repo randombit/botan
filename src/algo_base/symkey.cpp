@@ -37,8 +37,7 @@ OctetString::OctetString(const std::string& hex_string)
 */
 OctetString::OctetString(const byte in[], size_t n)
    {
-   bits.resize(n);
-   bits.copy(in, n);
+   bits.assign(in, in + n);
    }
 
 OctetString::OctetString(const MemoryRegion<byte>& b) : bits(b)
@@ -129,7 +128,7 @@ OctetString operator+(const OctetString& k1, const OctetString& k2)
 OctetString operator^(const OctetString& k1, const OctetString& k2)
    {
    SecureVector<byte> ret(std::max(k1.length(), k2.length()));
-   ret.copy(k1.begin(), k1.length());
+   copy_mem(&ret[0], k1.begin(), k1.length());
    xor_buf(ret, k2.begin(), k2.length());
    return OctetString(ret);
    }

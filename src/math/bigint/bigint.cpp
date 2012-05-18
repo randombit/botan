@@ -44,19 +44,8 @@ BigInt::BigInt(Sign s, size_t size)
 */
 BigInt::BigInt(const BigInt& b)
    {
-   const size_t b_words = b.sig_words();
-
-   if(b_words)
-      {
-      reg.resize(round_up<size_t>(b_words, 8));
-      reg.copy(b.data(), b_words);
-      set_sign(b.sign());
-      }
-   else
-      {
-      reg.resize(2);
-      set_sign(Positive);
-      }
+   reg = b.get_reg();
+   set_sign(b.sign());
    }
 
 /*

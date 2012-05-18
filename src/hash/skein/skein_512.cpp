@@ -251,7 +251,7 @@ void Skein_512::final_result(byte out[])
       {
       const size_t to_proc = std::min<size_t>(out_bytes, 64);
 
-      H_out.copy(&H[0], 8);
+      copy_mem(&H_out[0], &H[0], 8);
 
       reset_tweak(T, SKEIN_OUTPUT, true);
       ubi_512(H_out, T, counter, sizeof(counter));

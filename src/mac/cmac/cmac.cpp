@@ -52,7 +52,7 @@ void CMAC::add_data(const byte input[], size_t length)
          input += output_length();
          length -= output_length();
          }
-      buffer.copy(input, length);
+      copy_mem(&buffer[0], input, length);
       position = 0;
       }
    position += length;

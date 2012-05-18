@@ -63,8 +63,8 @@ void EAX_Decryption::write(const byte input[], size_t length)
          queue_start >= queue.size() / 2)
          {
          SecureVector<byte> queue_data(TAG_SIZE);
-         queue_data.copy(&queue[queue_start], TAG_SIZE);
-         queue.copy(&queue_data[0], TAG_SIZE);
+         copy_mem(&queue_data[0], &queue[queue_start], TAG_SIZE);
+         copy_mem(&queue[0], &queue_data[0], TAG_SIZE);
          queue_start = 0;
          queue_end = TAG_SIZE;
          }

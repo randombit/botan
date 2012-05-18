@@ -210,7 +210,7 @@ void GOST_34_11::compress_n(const byte input[], size_t blocks)
       S2[30] = S[ 2] ^ S[ 4] ^ S[ 8] ^ S[14] ^ S[16] ^ S[18] ^ S[22] ^ S[24] ^ S[28] ^ S[30];
       S2[31] = S[ 3] ^ S[ 5] ^ S[ 9] ^ S[15] ^ S[17] ^ S[19] ^ S[23] ^ S[25] ^ S[29] ^ S[31];
 
-      hash.copy(S2, 32);
+      copy_mem(&hash[0], &S2[0], 32);
       }
    }
 

@@ -160,6 +160,9 @@ void Square::key_schedule(const byte key[], size_t)
       transform(&XEK[4*i]);
       }
 
+   ME.resize(16);
+   MD.resize(16);
+
    for(size_t i = 0; i != 4; ++i)
       for(size_t j = 0; j != 4; ++j)
          {
@@ -169,8 +172,8 @@ void Square::key_schedule(const byte key[], size_t)
          MD[4*i+j+16] = get_byte(j, XEK[i   ]);
          }
 
-   EK.copy(&XEK[4], 28);
-   DK.copy(&XDK[4], 28);
+   EK.assign(&XEK[4], &XEK[36]);
+   DK.assign(&XDK[4], &XDK[36]);
    }
 
 /*
