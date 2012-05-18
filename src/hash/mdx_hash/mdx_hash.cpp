@@ -44,7 +44,7 @@ void MDx_HashFunction::add_data(const byte input[], size_t length)
 
    if(position)
       {
-      buffer.copy(position, input, length);
+      buffer_insert(buffer, position, input, length);
 
       if(position + length >= buffer.size())
          {
@@ -61,7 +61,7 @@ void MDx_HashFunction::add_data(const byte input[], size_t length)
    if(full_blocks)
       compress_n(input, full_blocks);
 
-   buffer.copy(position, input + full_blocks * buffer.size(), remaining);
+   buffer_insert(buffer, position, input + full_blocks * buffer.size(), remaining);
    position += remaining;
    }
 

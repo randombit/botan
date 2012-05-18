@@ -97,9 +97,9 @@ void XTS_Encryption::set_iv(const InitializationVector& iv)
 
    for(size_t i = 1; i < blocks_in_tweak; ++i)
       {
-      tweak.copy(i*cipher->block_size(),
-                 &tweak[(i-1)*cipher->block_size()],
-                 cipher->block_size());
+      buffer_insert(tweak, i*cipher->block_size(),
+                    &tweak[(i-1)*cipher->block_size()],
+                    cipher->block_size());
 
       poly_double(&tweak[i*cipher->block_size()], cipher->block_size());
       }
@@ -157,7 +157,7 @@ void XTS_Encryption::buffered_block(const byte input[], size_t length)
 
       for(size_t i = 1; i < blocks_in_tweak; ++i)
          {
-         tweak.copy(i*cipher->block_size(),
+         buffer_insert(tweak, i*cipher->block_size(),
                     &tweak[(i-1)*cipher->block_size()],
                     cipher->block_size());
 
@@ -269,7 +269,7 @@ void XTS_Decryption::set_iv(const InitializationVector& iv)
 
    for(size_t i = 1; i < blocks_in_tweak; ++i)
       {
-      tweak.copy(i*cipher->block_size(),
+      buffer_insert(tweak, i*cipher->block_size(),
                  &tweak[(i-1)*cipher->block_size()],
                  cipher->block_size());
 
@@ -330,9 +330,9 @@ void XTS_Decryption::buffered_block(const byte input[], size_t input_length)
 
       for(size_t i = 1; i < blocks_in_tweak; ++i)
          {
-         tweak.copy(i*cipher->block_size(),
-                    &tweak[(i-1)*cipher->block_size()],
-                    cipher->block_size());
+         buffer_insert(tweak, i*cipher->block_size(),
+                       &tweak[(i-1)*cipher->block_size()],
+                       cipher->block_size());
 
          poly_double(&tweak[i*cipher->block_size()], cipher->block_size());
          }

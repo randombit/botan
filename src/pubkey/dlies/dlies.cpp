@@ -44,7 +44,7 @@ SecureVector<byte> DLIES_Encryptor::enc(const byte in[], size_t length,
 
    SecureVector<byte> out(my_key.size() + length + mac->output_length());
    out.copy(&my_key[0], my_key.size());
-   out.copy(my_key.size(), in, length);
+   buffer_insert(out, my_key.size(), in, length);
 
    SecureVector<byte> vz = my_key;
    vz += ka.derive_key(0, other_key).bits_of();

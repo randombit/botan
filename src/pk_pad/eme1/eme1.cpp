@@ -28,9 +28,9 @@ SecureVector<byte> EME1::pad(const byte in[], size_t in_length,
 
    rng.randomize(&out[0], Phash.size());
 
-   out.copy(Phash.size(), &Phash[0], Phash.size());
+   buffer_insert(out, Phash.size(), &Phash[0], Phash.size());
    out[out.size() - in_length - 1] = 0x01;
-   out.copy(out.size() - in_length, in, in_length);
+   buffer_insert(out, out.size() - in_length, in, in_length);
 
    mgf->mask(&out[0], Phash.size(),
              &out[Phash.size()], out.size() - Phash.size());
@@ -66,7 +66,7 @@ SecureVector<byte> EME1::unpad(const byte in[], size_t in_length,
       in_length = 0;
 
    SecureVector<byte> input(key_length);
-   input.copy(key_length - in_length, in, in_length);
+   buffer_insert(input, key_length - in_length, in, in_length);
 
    mgf->mask(&input[Phash.size()], input.size() - Phash.size(),
              &input[0], Phash.size());

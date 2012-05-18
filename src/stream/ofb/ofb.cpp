@@ -84,7 +84,7 @@ void OFB::set_iv(const byte iv[], size_t iv_len)
       throw Invalid_IV_Length(name(), iv_len);
 
    zeroise(buffer);
-   buffer.copy(0, iv, iv_len);
+   buffer_insert(buffer, 0, iv, iv_len);
 
    permutation->encrypt(buffer);
    position = 0;

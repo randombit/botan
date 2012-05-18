@@ -29,7 +29,7 @@ SecureVector<byte> EME_PKCS1v15::pad(const byte in[], size_t inlen,
    for(size_t j = 1; j != olen - inlen - 1; ++j)
       while(out[j] == 0)
          out[j] = rng.next_byte();
-   out.copy(olen - inlen, in, inlen);
+   buffer_insert(out, olen - inlen, in, inlen);
 
    return out;
    }

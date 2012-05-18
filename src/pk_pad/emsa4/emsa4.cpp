@@ -54,10 +54,10 @@ SecureVector<byte> EMSA4::encoding_of(const MemoryRegion<byte>& msg,
    SecureVector<byte> EM(output_length);
 
    EM[output_length - HASH_SIZE - SALT_SIZE - 2] = 0x01;
-   EM.copy(output_length - 1 - HASH_SIZE - SALT_SIZE, salt, SALT_SIZE);
+   buffer_insert(EM, output_length - 1 - HASH_SIZE - SALT_SIZE, salt);
    mgf->mask(H, HASH_SIZE, EM, output_length - HASH_SIZE - 1);
    EM[0] &= 0xFF >> (8 * ((output_bits + 7) / 8) - output_bits);
-   EM.copy(output_length - 1 - HASH_SIZE, H, HASH_SIZE);
+   buffer_insert(EM, output_length - 1 - HASH_SIZE, H);
    EM[output_length-1] = 0xBC;
 
    return EM;
@@ -85,7 +85,7 @@ bool EMSA4::verify(const MemoryRegion<byte>& const_coded,
    if(coded.size() < KEY_BYTES)
       {
       SecureVector<byte> temp(KEY_BYTES);
-      temp.copy(KEY_BYTES - coded.size(), coded, coded.size());
+      buffer_insert(temp, KEY_BYTES - coded.size(), coded);
       coded = temp;
       }
 

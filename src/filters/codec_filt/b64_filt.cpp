@@ -79,7 +79,7 @@ void Base64_Encoder::do_output(const byte input[], size_t length)
 */
 void Base64_Encoder::write(const byte input[], size_t length)
    {
-   in.copy(position, input, length);
+   buffer_insert(in, position, input, length);
    if(position + length >= in.size())
       {
       encode_and_send(&in[0], in.size());

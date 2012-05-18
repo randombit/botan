@@ -38,7 +38,7 @@ SecureVector<byte> CMAC::poly_double(const MemoryRegion<byte>& in,
 */
 void CMAC::add_data(const byte input[], size_t length)
    {
-   buffer.copy(position, input, length);
+   buffer_insert(buffer, position, input, length);
    if(position + length > output_length())
       {
       xor_buf(state, buffer, output_length());

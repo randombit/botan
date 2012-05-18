@@ -47,7 +47,7 @@ void EAX_Decryption::write(const byte input[], size_t length)
       {
       const size_t copied = std::min<size_t>(length, queue.size() - queue_end);
 
-      queue.copy(queue_end, input, copied);
+      buffer_insert(queue, queue_end, input, copied);
       input += copied;
       length -= copied;
       queue_end += copied;

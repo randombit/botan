@@ -82,7 +82,10 @@ void CFB_Encryption::write(const byte input[], size_t length)
          {
          for(size_t j = 0; j != cipher->block_size() - feedback; ++j)
             state[j] = state[j + feedback];
-         state.copy(cipher->block_size() - feedback, buffer, feedback);
+
+         buffer_insert(state, cipher->block_size() - feedback,
+                       &buffer[0], feedback);
+
          cipher->encrypt(state, buffer);
          position = 0;
          }
@@ -151,7 +154,7 @@ void CFB_Decryption::write(const byte input[], size_t length)
       size_t xored = std::min(feedback - position, length);
       xor_buf(&buffer[position], input, xored);
       send(&buffer[position], xored);
-      buffer.copy(position, input, xored);
+      buffer_insert(buffer, position, input, xored);
       input += xored;
       length -= xored;
       position += xored;
@@ -159,7 +162,10 @@ void CFB_Decryption::write(const byte input[], size_t length)
          {
          for(size_t j = 0; j != cipher->block_size() - feedback; ++j)
             state[j] = state[j + feedback];
-         state.copy(cipher->block_size() - feedback, buffer, feedback);
+
+         buffer_insert(state, cipher->block_size() - feedback,
+                       &buffer[0], feedback);
+
          cipher->encrypt(state, buffer);
          position = 0;
          }

@@ -67,7 +67,7 @@ void CTS_Encryption::encrypt(const byte block[])
 void CTS_Encryption::write(const byte input[], size_t length)
    {
    size_t copied = std::min<size_t>(buffer.size() - position, length);
-   buffer.copy(position, input, copied);
+   buffer_insert(buffer, position, input, copied);
    length -= copied;
    input += copied;
    position += copied;
@@ -91,7 +91,7 @@ void CTS_Encryption::write(const byte input[], size_t length)
       copy_mem(&buffer[0], &buffer[cipher->block_size()], cipher->block_size());
       position = cipher->block_size();
       }
-   buffer.copy(position, input, length);
+   buffer_insert(buffer, position, input, length);
    position += length;
    }
 
@@ -170,7 +170,7 @@ void CTS_Decryption::decrypt(const byte block[])
 void CTS_Decryption::write(const byte input[], size_t length)
    {
    size_t copied = std::min<size_t>(buffer.size() - position, length);
-   buffer.copy(position, input, copied);
+   buffer_insert(buffer, position, input, copied);
    length -= copied;
    input += copied;
    position += copied;
@@ -194,7 +194,7 @@ void CTS_Decryption::write(const byte input[], size_t length)
       copy_mem(&buffer[0], &buffer[cipher->block_size()], cipher->block_size());
       position = cipher->block_size();
       }
-   buffer.copy(position, input, length);
+   buffer_insert(buffer, position, input, length);
    position += length;
    }
 

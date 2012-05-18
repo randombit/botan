@@ -30,8 +30,8 @@ SecureVector<byte> emsa3_encoding(const MemoryRegion<byte>& msg,
    T[0] = 0x01;
    set_mem(&T[1], P_LENGTH, 0xFF);
    T[P_LENGTH+1] = 0x00;
-   T.copy(P_LENGTH+2, hash_id, hash_id_length);
-   T.copy(output_length-msg.size(), &msg[0], msg.size());
+   buffer_insert(T, P_LENGTH+2, hash_id, hash_id_length);
+   buffer_insert(T, output_length-msg.size(), &msg[0], msg.size());
    return T;
    }
 

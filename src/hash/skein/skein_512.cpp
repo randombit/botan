@@ -210,7 +210,7 @@ void Skein_512::add_data(const byte input[], size_t length)
 
    if(buf_pos)
       {
-      buffer.copy(buf_pos, input, length);
+      buffer_insert(buffer, buf_pos, input, length);
       if(buf_pos + length > 64)
          {
          ubi_512(H, T, &buffer[0], buffer.size());
@@ -228,7 +228,7 @@ void Skein_512::add_data(const byte input[], size_t length)
 
    length -= full_blocks * 64;
 
-   buffer.copy(buf_pos, input + full_blocks * 64, length);
+   buffer_insert(buffer, buf_pos, input + full_blocks * 64, length);
    buf_pos += length;
    }
 

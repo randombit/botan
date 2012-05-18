@@ -43,7 +43,7 @@ void GOST_34_11::add_data(const byte input[], size_t length)
 
    if(position)
       {
-      buffer.copy(position, input, length);
+      buffer_insert(buffer, position, input, length);
 
       if(position + length >= hash_block_size())
          {
@@ -60,7 +60,7 @@ void GOST_34_11::add_data(const byte input[], size_t length)
    if(full_blocks)
       compress_n(input, full_blocks);
 
-   buffer.copy(position, input + full_blocks * hash_block_size(), remaining);
+   buffer_insert(buffer, position, input + full_blocks * hash_block_size(), remaining);
    position += remaining;
    }
 

@@ -117,23 +117,16 @@ class MemoryRegion
       * @param in the array to copy the contents from
       * @param n the length of in
       */
+
       void copy(const T in[], size_t n)
          {
          copy_mem(buf, in, std::min(n, size()));
          }
 
-      /**
-      * Copy the contents of an array of objects of type T into this buffer.
-      * The former contents of *this are discarded.
-      * The length of *this must be at least n, otherwise memory errors occur.
-      * @param off the offset position inside this buffer to start inserting
-      * the copied bytes
-      * @param in the array to copy the contents from
-      * @param n the length of in
-      */
-      void copy(size_t off, const T in[], size_t n)
+      void assign(const T* start, const T* end)
          {
-         copy_mem(buf + off, in, std::min(n, size() - off));
+         resize(end - start);
+         copy_mem(buf, start, (end - start));
          }
 
       /**
@@ -368,6 +361,27 @@ class SecureVector : public MemoryRegion<T>
          this->copy(&in[0], in.size());
          }
    };
+
+template<typename T>
+size_t buffer_insert(MemoryRegion<T>& buf,
+                     size_t buf_offset,
+                     const T input[],
+                     size_t input_length)
+   {
+   const size_t to_copy = std::min(input_length, buf.size() - buf_offset);
+   copy_mem(&buf[buf_offset], input, to_copy);
+   return to_copy;
+   }
+
+template<typename T>
+size_t buffer_insert(MemoryRegion<T>& buf,
+                     size_t buf_offset,
+                     const MemoryRegion<T>& input)
+   {
+   const size_t to_copy = std::min(input.size(), buf.size() - buf_offset);
+   copy_mem(&buf[buf_offset], &input[0], to_copy);
+   return to_copy;
+   }
 
 template<typename T>
 MemoryRegion<T>& operator+=(MemoryRegion<T>& out,
