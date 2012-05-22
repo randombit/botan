@@ -11,7 +11,9 @@
 #include <botan/mem_ops.h>
 #include <algorithm>
 
-extern void note_alloc(int n);
+#if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
+  #include <botan/locking_allocator.h>
+#endif
 
 namespace Botan {
 
@@ -42,17 +44,26 @@ class secure_allocator
 
       pointer allocate(size_type n, const void* = 0)
          {
+#if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
+         if(pointer p = static_cast<pointer>(mlock_allocator::instance().allocate(n*sizeof(T), sizeof(T))))
+            return p;
+#endif
+
          pointer p = new T[n];
          clear_mem(p, n);
-         note_alloc(sizeof(T)*n);
          return p;
          }
 
       void deallocate(pointer p, size_type n)
          {
          clear_mem(p, n);
+
+#if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
+         if(mlock_allocator::instance().deallocate(p, n*sizeof(T)))
+            return;
+#endif
+
          delete [] p;
-         note_alloc(-(int(n)*sizeof(T)));
          }
 
       size_type max_size() const noexcept
@@ -67,7 +78,6 @@ class secure_allocator
          }
 
       template<typename U> void destroy(U* p) { p->~U(); }
-
    };
 
 template<typename T> inline bool
