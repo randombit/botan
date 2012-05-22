@@ -11,7 +11,6 @@
 #include <botan/cpuid.h>
 #include <botan/internal/core_engine.h>
 #include <botan/internal/stl_util.h>
-#include <botan/internal/mlock.h>
 #include <algorithm>
 
 #if defined(BOTAN_HAS_SELFTESTS)

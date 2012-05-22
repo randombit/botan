@@ -30,6 +30,21 @@ size_t mlock_limit()
    return std::min<size_t>(limits.rlim_cur, 256*1024);
    }
 
+bool ptr_in_pool(const void* pool_ptr, size_t poolsize,
+                 const void* buf_ptr, size_t bufsize)
+   {
+   const size_t pool = reinterpret_cast<size_t>(pool_ptr);
+   const size_t buf = reinterpret_cast<size_t>(buf_ptr);
+
+   if(buf < pool || buf >= pool + poolsize)
+      return false;
+
+   BOTAN_ASSERT(buf + bufsize <= pool + poolsize,
+                "Invalid pointer/length halfway into mem pool");
+
+   return true;
+   }
+
 }
 
 void* mlock_allocator::allocate(size_t n, size_t alignment)
@@ -43,32 +58,38 @@ void* mlock_allocator::allocate(size_t n, size_t alignment)
 
    for(auto i = m_freelist.begin(); i != m_freelist.end(); ++i)
       {
-      if((i->first % alignment) != 0)
-         continue;
-
-      if(i->second == n)
+      // If we have a perfect fit, use it immediately
+      if(i->second == n && (i->first % alignment) == 0)
          {
+         const size_t offset = i->first;
          m_freelist.erase(i);
-         return m_pool + i->first;
+         ::memset(m_pool + offset, 0, n);
+         return m_pool + offset;
          }
-      else if((i->second > n) &&
-              ((best_fit.second > i->second) || (best_fit.second == 0)))
+
+      if((i->second > (i->first % alignment) + n) &&
+         ((best_fit.second > i->second) || (best_fit.second == 0)))
          {
          best_fit = *i;
          }
       }
 
-   if(best_fit.second >= n)
+   if(best_fit.second)
       {
       const size_t offset = best_fit.first;
-      const size_t left = best_fit.second - n;
 
       BOTAN_ASSERT(m_freelist.erase(offset) == 1,
                    "Bad manipulation in freelist");
 
-      m_freelist[offset+n] = left;
+      size_t alignment_padding = offset % alignment;
 
-      return m_pool + offset;
+      // Need to realign, split the block
+      if(alignment_padding)
+         m_freelist[offset] = alignment_padding;
+
+      m_freelist[offset + n + alignment_padding] = best_fit.second - n - alignment_padding;
+      ::memset(m_pool + offset + alignment_padding, 0, n);
+      return m_pool + offset + alignment_padding;
       }
 
    return nullptr;
@@ -76,7 +97,7 @@ void* mlock_allocator::allocate(size_t n, size_t alignment)
 
 bool mlock_allocator::deallocate(void* p, size_t n)
    {
-   if(!m_pool || p < m_pool || p >= static_cast<byte*>(m_pool) + m_poolsize)
+   if(!m_pool || !ptr_in_pool(m_pool, m_poolsize, p, n))
       return false;
 
    std::lock_guard<std::mutex> lock(m_mutex);
@@ -130,7 +151,7 @@ mlock_allocator::mlock_allocator() :
             MAP_ANONYMOUS | MAP_SHARED | MAP_NOCORE,
             -1, 0));
 
-      if(m_pool == static_cast<void*>(MAP_FAILED))
+      if(m_pool == static_cast<byte*>(MAP_FAILED))
          throw std::runtime_error("Failed to mmap pool");
 
       std::memset(m_pool, 0x00, m_poolsize);

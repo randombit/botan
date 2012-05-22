@@ -7,7 +7,6 @@ assert.cpp
 calendar.cpp
 charset.cpp
 cpuid.cpp
-mlock.cpp
 parsing.cpp
 version.cpp
 </source>
@@ -15,7 +14,6 @@ version.cpp
 <header:internal>
 assert.h
 bit_ops.h
-mlock.h
 prefetch.h
 rounding.h
 stl_util.h
