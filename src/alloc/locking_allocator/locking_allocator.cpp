@@ -7,6 +7,7 @@
 
 #include <botan/locking_allocator.h>
 #include <botan/internal/assert.h>
+#include <algorithm>
 #include <cstring>
 #include <sys/mman.h>
 #include <sys/resource.h>
@@ -54,7 +55,7 @@ void* mlock_allocator::allocate(size_t n, size_t alignment)
 
    std::lock_guard<std::mutex> lock(m_mutex);
 
-   std::pair<size_t, size_t> best_fit(0, 0);
+   auto best_fit = m_freelist.end();
 
    for(auto i = m_freelist.begin(); i != m_freelist.end(); ++i)
       {
@@ -68,27 +69,27 @@ void* mlock_allocator::allocate(size_t n, size_t alignment)
          }
 
       if((i->second > (i->first % alignment) + n) &&
-         ((best_fit.second > i->second) || (best_fit.second == 0)))
+         ((best_fit == m_freelist.end()) || (best_fit->second > i->second)))
          {
-         best_fit = *i;
+         best_fit = i;
          }
       }
 
-   if(best_fit.second)
+   if(best_fit != m_freelist.end())
       {
-      const size_t offset = best_fit.first;
-
-      BOTAN_ASSERT(m_freelist.erase(offset) == 1,
-                   "Bad manipulation in freelist");
+      const size_t offset = best_fit->first;
 
       size_t alignment_padding = offset % alignment;
 
+      best_fit->first += n + alignment_padding;
+      best_fit->second -= n + alignment_padding;
+
       // Need to realign, split the block
       if(alignment_padding)
-         m_freelist[offset] = alignment_padding;
+         m_freelist.insert(best_fit, std::make_pair(offset, alignment_padding));
 
-      m_freelist[offset + n + alignment_padding] = best_fit.second - n - alignment_padding;
       ::memset(m_pool + offset + alignment_padding, 0, n);
+
       return m_pool + offset + alignment_padding;
       }
 
@@ -102,34 +103,44 @@ bool mlock_allocator::deallocate(void* p, size_t n)
 
    std::lock_guard<std::mutex> lock(m_mutex);
 
-   size_t start = static_cast<byte*>(p) - m_pool;
+   const size_t start = static_cast<byte*>(p) - m_pool;
 
-   m_freelist[start] = n;
+   auto comp = [](std::pair<size_t, size_t> x, std::pair<size_t, size_t> y){ return x.first < y.first; };
 
-   std::map<size_t, size_t> new_freelist;
-   std::pair<size_t, size_t> current(0, 0);
+   auto i = std::lower_bound(m_freelist.begin(), m_freelist.end(),
+                             std::make_pair(start, 0), comp);
 
-   for(auto i : m_freelist)
+   // try to merge with later block
+   if(start + n == i->first)
       {
-      if(current.second == 0)
+      i->first = start;
+      i->second += n;
+      n = 0;
+      }
+
+   // try to merge with previous block
+   if(i != m_freelist.begin())
+      {
+      auto prev = std::prev(i);
+
+      if(prev->first + prev->second == start)
          {
-         current = i;
-         }
-      else if(i.first == current.first + current.second)
-         {
-         current.second += i.second;
-         }
-      else
-         {
-         new_freelist.insert(current);
-         current = i;
+         if(n)
+            {
+            prev->second += n;
+            n = 0;
+            }
+         else
+            {
+            // merge adjoining
+            prev->second += i->second;
+            m_freelist.erase(i);
+            }
          }
       }
 
-   if(current.second != 0)
-       new_freelist.insert(current);
-
-   std::swap(m_freelist, new_freelist);
+   if(n != 0) // no merge possible?
+      m_freelist.insert(i, std::make_pair(start, n));
 
    return true;
    }
@@ -163,7 +174,7 @@ mlock_allocator::mlock_allocator() :
          throw std::runtime_error("Failed to lock pool");
          }
 
-      m_freelist[0] = m_poolsize;
+      m_freelist.push_back(std::make_pair(0, m_poolsize));
       }
    }
 
