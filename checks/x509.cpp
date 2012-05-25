@@ -147,7 +147,6 @@ void do_x509_tests(RandomNumberGenerator& rng)
    std::cout << '.' << std::flush;
 
    /* Create user #1's key and cert request */
-   std::cout << '.' << std::flush;
    DSA_PrivateKey user1_key(rng, DL_Group("dsa/jce/1024"));
 
    std::cout << '.' << std::flush;
