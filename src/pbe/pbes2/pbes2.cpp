@@ -26,15 +26,8 @@ namespace Botan {
 */
 void PBE_PKCS5v20::write(const byte input[], size_t length)
    {
-   while(length)
-      {
-      size_t put = std::min(DEFAULT_BUFFERSIZE, length);
-      pipe.write(input, length);
-      flush_pipe(true);
-
-      input += put;
-      length -= put;
-      }
+   pipe.write(input, length);
+   flush_pipe(true);
    }
 
 /*
