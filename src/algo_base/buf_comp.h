@@ -10,6 +10,7 @@
 
 #include <botan/secmem.h>
 #include <botan/get_byte.h>
+#include <string>
 
 namespace Botan {
 

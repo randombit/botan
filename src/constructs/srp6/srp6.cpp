@@ -29,22 +29,6 @@ BigInt hash_seq(const std::string& hash_id,
    return BigInt::decode(hash_fn->final());
    }
 
-BigInt hash_seq(const std::string& hash_id,
-                size_t pad_to,
-                const BigInt& in1,
-                const BigInt& in2,
-                const BigInt& in3)
-   {
-   std::unique_ptr<HashFunction> hash_fn(
-      global_state().algorithm_factory().make_hash_function(hash_id));
-
-   hash_fn->update(BigInt::encode_1363(in1, pad_to));
-   hash_fn->update(BigInt::encode_1363(in2, pad_to));
-   hash_fn->update(BigInt::encode_1363(in3, pad_to));
-
-   return BigInt::decode(hash_fn->final());
-   }
-
 BigInt compute_x(const std::string& hash_id,
                  const std::string& identifier,
                  const std::string& password,
