@@ -37,6 +37,10 @@ void HMAC::final_result(byte mac[])
 void HMAC::key_schedule(const byte key[], size_t length)
    {
    hash->clear();
+
+   i_key.resize(hash->hash_block_size());
+   o_key.resize(hash->hash_block_size());
+
    std::fill(i_key.begin(), i_key.end(), 0x36);
    std::fill(o_key.begin(), o_key.end(), 0x5C);
 
@@ -61,8 +65,8 @@ void HMAC::key_schedule(const byte key[], size_t length)
 void HMAC::clear()
    {
    hash->clear();
-   zeroise(i_key);
-   zeroise(o_key);
+   i_key.clear();
+   o_key.clear();
    }
 
 /*
@@ -88,9 +92,6 @@ HMAC::HMAC(HashFunction* hash_in) : hash(hash_in)
    {
    if(hash->hash_block_size() == 0)
       throw Invalid_Argument("HMAC cannot be used with " + hash->name());
-
-   i_key.resize(hash->hash_block_size());
-   o_key.resize(hash->hash_block_size());
    }
 
 }

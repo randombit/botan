@@ -43,8 +43,7 @@ class BOTAN_DLL Turing : public StreamCipher
       static const byte SBOX[256];
 
       secure_vector<u32bit> S0, S1, S2, S3;
-      secure_vector<u32bit> R;
-      secure_vector<u32bit> K;
+      secure_vector<u32bit> R, K;
       secure_vector<byte> buffer;
       size_t position;
    };

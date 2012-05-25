@@ -252,7 +252,7 @@ void Turing::key_schedule(const byte key[], size_t length)
    S1.resize(256);
    S2.resize(256);
    S3.resize(256);
-   buffer.resize(340);
+   buffer.resize(17*20);
 
    for(u32bit i = 0; i != 256; ++i)
       {
