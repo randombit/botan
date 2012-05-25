@@ -39,13 +39,7 @@ westmere  -> "-march=corei7 -maes"
 all     -> "-pthread"
 
 x86_64  -> "-m64"
-mips64  -> "-mabi=64"
-s390    -> "-m31"
-s390x   -> "-m64"
-sparc32 -> "-m32 -mno-app-regs"
-sparc64 -> "-m64 -mno-app-regs"
 ppc64   -> "-m64"
 
 netbsd  -> "-D_NETBSD_SOURCE"
-qnx     -> "-fexceptions -D_QNX_SOURCE"
 </mach_abi_linking>
