@@ -10,6 +10,7 @@
 #include <botan/keypair.h>
 #include <botan/parsing.h>
 #include <algorithm>
+#include <future>
 
 namespace Botan {
 
@@ -90,15 +91,15 @@ RW_Signature_Operation::sign(const byte msg[], size_t msg_len,
 
    i = blinder.blind(i);
 
-   BigInt j1 = powermod_d1_p(i);
-   BigInt j2 = powermod_d2_q(i);
+   auto future_j1 = std::async(std::launch::async, powermod_d1_p, i);
+   const BigInt j2 = powermod_d2_q(i);
+   BigInt j1 = future_j1.get();
+
    j1 = mod_p.reduce(sub_mul(j1, j2, c));
 
-   BigInt r = blinder.unblind(mul_add(j1, q, j2));
+   const BigInt r = blinder.unblind(mul_add(j1, q, j2));
 
-   r = std::min(r, n - r);
-
-   return BigInt::encode_1363(r, n.bytes());
+   return BigInt::encode_1363(std::min(r, n - r), n.bytes());
    }
 
 secure_vector<byte>
