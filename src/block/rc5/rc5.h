@@ -21,9 +21,9 @@ class BOTAN_DLL RC5 : public Block_Cipher_Fixed_Params<8, 1, 32>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
-      void clear() { zeroise(S); }
+      void clear() { S.clear(); }
       std::string name() const;
-      BlockCipher* clone() const { return new RC5(get_rounds()); }
+      BlockCipher* clone() const { return new RC5(rounds); }
 
       /**
       * @param rounds the number of RC5 rounds to run. Must be between
@@ -31,10 +31,9 @@ class BOTAN_DLL RC5 : public Block_Cipher_Fixed_Params<8, 1, 32>
       */
       RC5(size_t rounds);
    private:
-      size_t get_rounds() const { return (S.size() - 2) / 2; }
-
       void key_schedule(const byte[], size_t);
 
+      size_t rounds;
       secure_vector<u32bit> S;
    };
 

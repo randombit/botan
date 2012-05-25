@@ -74,6 +74,10 @@ void WiderWake_41_BE::generate(size_t length)
 */
 void WiderWake_41_BE::key_schedule(const byte key[], size_t)
    {
+   t_key.resize(4);
+   state.resize(5);
+   buffer.resize(DEFAULT_BUFFERSIZE);
+
    for(size_t i = 0; i != 4; ++i)
       t_key[i] = load_be<u32bit>(key, i);
 
@@ -81,6 +85,7 @@ void WiderWake_41_BE::key_schedule(const byte key[], size_t)
       0x726A8F3B, 0xE69A3B5C, 0xD3C71FE5, 0xAB3C73D2,
       0x4D3A8EB3, 0x0396D6E8, 0x3D4C2F7A, 0x9EE27CF3 };
 
+   T.resize(256);
    for(size_t i = 0; i != 4; ++i)
       T[i] = t_key[i];
 
@@ -143,10 +148,10 @@ void WiderWake_41_BE::set_iv(const byte iv[], size_t length)
 void WiderWake_41_BE::clear()
    {
    position = 0;
-   zeroise(t_key);
-   zeroise(state);
-   zeroise(T);
-   zeroise(buffer);
+   t_key.clear();
+   state.clear();
+   T.clear();
+   buffer.clear();
    }
 
 }

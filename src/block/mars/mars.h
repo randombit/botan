@@ -21,11 +21,9 @@ class BOTAN_DLL MARS : public Block_Cipher_Fixed_Params<16, 16, 32, 4>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
-      void clear() { zeroise(EK); }
+      void clear() { EK.clear(); }
       std::string name() const { return "MARS"; }
       BlockCipher* clone() const { return new MARS; }
-
-      MARS() : EK(40) {}
    private:
       void key_schedule(const byte[], size_t);
 

@@ -21,11 +21,9 @@ class BOTAN_DLL CAST_256 : public Block_Cipher_Fixed_Params<16, 4, 32, 4>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
-      void clear() { zeroise(MK); zeroise(RK); }
+      void clear() { MK.clear(); RK.clear(); }
       std::string name() const { return "CAST-256"; }
       BlockCipher* clone() const { return new CAST_256; }
-
-      CAST_256() : MK(48), RK(48) {}
    private:
       void key_schedule(const byte[], size_t);
 

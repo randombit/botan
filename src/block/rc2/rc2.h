@@ -28,11 +28,9 @@ class BOTAN_DLL RC2 : public Block_Cipher_Fixed_Params<8, 1, 32>
       */
       static byte EKB_code(size_t bits);
 
-      void clear() { zeroise(K); }
+      void clear() { K.clear(); }
       std::string name() const { return "RC2"; }
       BlockCipher* clone() const { return new RC2; }
-
-      RC2() : K(64) {}
    private:
       void key_schedule(const byte[], size_t);
 

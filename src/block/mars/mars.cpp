@@ -326,6 +326,8 @@ void MARS::key_schedule(const byte key[], size_t length)
 
    T[length / 4] = static_cast<u32bit>(length) / 4;
 
+   EK.resize(40);
+
    for(u32bit i = 0; i != 4; ++i)
       {
       T[ 0] ^= rotate_left(T[ 8] ^ T[13], 3) ^ (i     );

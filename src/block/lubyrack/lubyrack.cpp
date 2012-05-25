@@ -89,10 +89,8 @@ void LubyRackoff::decrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void LubyRackoff::key_schedule(const byte key[], size_t length)
    {
-   K1.resize(length / 2);
-   K2.resize(length / 2);
-   copy_mem(&K1[0], key             , length / 2);
-   copy_mem(&K2[0], key + length / 2, length / 2);
+   K1.assign(key, key + (length / 2));
+   K2.assign(key + (length / 2), key + length);
    }
 
 /*
@@ -100,8 +98,8 @@ void LubyRackoff::key_schedule(const byte key[], size_t length)
 */
 void LubyRackoff::clear()
    {
-   zeroise(K1);
-   zeroise(K2);
+   K1.clear();
+   K2.clear();
    hash->clear();
    }
 

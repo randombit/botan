@@ -85,7 +85,11 @@ void Blowfish::decrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void Blowfish::key_schedule(const byte key[], size_t length)
    {
-   clear();
+   P.resize(18);
+   std::copy(P_INIT, P_INIT + 18, P.begin());
+
+   S.resize(1024);
+   std::copy(S_INIT, S_INIT + 1024, S.begin());
 
    const byte null_salt[16] = { 0 };
 
@@ -125,12 +129,15 @@ void Blowfish::eks_key_schedule(const byte key[], size_t length,
    if(workfactor > 18)
       throw std::invalid_argument("Requested Bcrypt work factor too large");
 
-   clear();
+   P.resize(18);
+   std::copy(P_INIT, P_INIT + 18, P.begin());
 
-   const byte null_salt[16] = { 0 };
+   S.resize(1024);
+   std::copy(S_INIT, S_INIT + 1024, S.begin());
 
    key_expansion(key, length, salt);
 
+   const byte null_salt[16] = { 0 };
    const size_t rounds = 1 << workfactor;
 
    for(size_t r = 0; r != rounds; ++r)
@@ -180,8 +187,8 @@ void Blowfish::generate_sbox(secure_vector<u32bit>& box,
 */
 void Blowfish::clear()
    {
-   std::copy(P_INIT, P_INIT + 18, P.begin());
-   std::copy(S_INIT, S_INIT + 1024, S.begin());
+   P.clear();
+   S.clear();
    }
 
 }

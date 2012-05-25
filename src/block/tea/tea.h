@@ -21,11 +21,9 @@ class BOTAN_DLL TEA : public Block_Cipher_Fixed_Params<8, 16>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
-      void clear() { zeroise(K); }
+      void clear() { K.clear(); }
       std::string name() const { return "TEA"; }
       BlockCipher* clone() const { return new TEA; }
-
-      TEA() : K(4) {}
    private:
       void key_schedule(const byte[], size_t);
       secure_vector<u32bit> K;

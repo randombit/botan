@@ -21,11 +21,9 @@ class BOTAN_DLL DESX : public Block_Cipher_Fixed_Params<8, 24>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
-      void clear() { des.clear(); zeroise(K1); zeroise(K2); }
+      void clear() { des.clear(); K1.clear(); K2.clear(); }
       std::string name() const { return "DESX"; }
       BlockCipher* clone() const { return new DESX; }
-
-      DESX() : K1(8), K2(8) {}
    private:
       void key_schedule(const byte[], size_t);
       secure_vector<byte> K1, K2;

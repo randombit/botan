@@ -185,6 +185,7 @@ void Noekeon::key_schedule(const byte key[], size_t)
 
    A0 ^= RC[16];
 
+   DK.resize(4);
    DK[0] = A0;
    DK[1] = A1;
    DK[2] = A2;
@@ -192,6 +193,7 @@ void Noekeon::key_schedule(const byte key[], size_t)
 
    theta(A0, A1, A2, A3);
 
+   EK.resize(4);
    EK[0] = A0;
    EK[1] = A1;
    EK[2] = A2;
@@ -203,8 +205,8 @@ void Noekeon::key_schedule(const byte key[], size_t)
 */
 void Noekeon::clear()
    {
-   zeroise(EK);
-   zeroise(DK);
+   EK.clear();
+   DK.clear();
    }
 
 }

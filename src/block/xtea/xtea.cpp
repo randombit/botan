@@ -123,6 +123,8 @@ void XTEA::decrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void XTEA::key_schedule(const byte key[], size_t)
    {
+   EK.resize(64);
+
    secure_vector<u32bit> UK(4);
    for(size_t i = 0; i != 4; ++i)
       UK[i] = load_be<u32bit>(key, i);

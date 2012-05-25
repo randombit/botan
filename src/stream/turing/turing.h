@@ -33,9 +33,6 @@ class BOTAN_DLL Turing : public StreamCipher
       std::string name() const { return "Turing"; }
       StreamCipher* clone() const { return new Turing; }
 
-      Turing() : S0(256), S1(256), S2(256), S3(256),
-                 R(17), buffer(340), position(0) {}
-
    private:
       void key_schedule(const byte[], size_t);
       void generate();

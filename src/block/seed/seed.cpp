@@ -118,6 +118,8 @@ void SEED::key_schedule(const byte key[], size_t)
 
    G_FUNC G;
 
+   K.resize(32);
+
    for(size_t i = 0; i != 16; i += 2)
       {
       K[2*i  ] = G(WK[0] + WK[2] - RC[i]);

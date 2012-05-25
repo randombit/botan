@@ -21,7 +21,7 @@ class BOTAN_DLL MISTY1 : public Block_Cipher_Fixed_Params<8, 16>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
-      void clear() { zeroise(EK); zeroise(DK); }
+      void clear() { EK.clear(); DK.clear(); }
       std::string name() const { return "MISTY1"; }
       BlockCipher* clone() const { return new MISTY1; }
 

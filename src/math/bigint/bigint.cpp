@@ -213,8 +213,7 @@ void BigInt::mask_bits(size_t n)
    const word mask = (static_cast<word>(1) << (n % MP_WORD_BITS)) - 1;
 
    if(top_word < size())
-      for(size_t i = top_word + 1; i != size(); ++i)
-         reg[i] = 0;
+      clear_mem(&reg[top_word+1], size() - (top_word + 1));
 
    reg[top_word] &= mask;
    }

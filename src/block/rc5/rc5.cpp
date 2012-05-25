@@ -18,8 +18,6 @@ namespace Botan {
 */
 void RC5::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   const size_t rounds = (S.size() - 2) / 2;
-
    for(size_t i = 0; i != blocks; ++i)
       {
       u32bit A = load_le<u32bit>(in, 0);
@@ -53,8 +51,6 @@ void RC5::encrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void RC5::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   const size_t rounds = (S.size() - 2) / 2;
-
    for(size_t i = 0; i != blocks; ++i)
       {
       u32bit A = load_le<u32bit>(in, 0);
@@ -88,6 +84,8 @@ void RC5::decrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void RC5::key_schedule(const byte key[], size_t length)
    {
+   S.resize(2*rounds + 2);
+
    const size_t WORD_KEYLENGTH = (((length - 1) / 4) + 1);
    const size_t MIX_ROUNDS     = 3 * std::max(WORD_KEYLENGTH, S.size());
 
@@ -116,19 +114,17 @@ void RC5::key_schedule(const byte key[], size_t length)
 */
 std::string RC5::name() const
    {
-   return "RC5(" + std::to_string(get_rounds()) + ")";
+   return "RC5(" + std::to_string(rounds) + ")";
    }
 
 /*
 * RC5 Constructor
 */
-RC5::RC5(size_t rounds)
+RC5::RC5(size_t r) : rounds(r)
    {
    if(rounds < 8 || rounds > 32 || (rounds % 4 != 0))
       throw Invalid_Argument("RC5: Invalid number of rounds " +
                              std::to_string(rounds));
-
-   S.resize(2*rounds + 2);
    }
 
 }

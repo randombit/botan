@@ -247,6 +247,13 @@ void Turing::key_schedule(const byte key[], size_t length)
 
    PHT(K);
 
+   R.resize(17);
+   S0.resize(256);
+   S1.resize(256);
+   S2.resize(256);
+   S3.resize(256);
+   buffer.resize(340);
+
    for(u32bit i = 0; i != 256; ++i)
       {
       u32bit W0 = 0, C0 = i;
@@ -313,12 +320,13 @@ void Turing::set_iv(const byte iv[], size_t length)
 */
 void Turing::clear()
    {
-   zeroise(S0);
-   zeroise(S1);
-   zeroise(S2);
-   zeroise(S3);
-
-   zeroise(buffer);
+   S0.clear();
+   S1.clear();
+   S2.clear();
+   S3.clear();
+   R.clear();
+   K.clear();
+   buffer.clear();
    position = 0;
    }
 

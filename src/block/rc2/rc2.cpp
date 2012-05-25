@@ -135,6 +135,7 @@ void RC2::key_schedule(const byte key[], size_t length)
    for(s32bit i = 127-length; i >= 0; --i)
       L[i] = TABLE[L[i+1] ^ L[i+length]];
 
+   K.resize(64);
    load_le<u16bit>(&K[0], &L[0], 64);
    }
 

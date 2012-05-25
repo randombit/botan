@@ -659,6 +659,9 @@ void aes_key_schedule(const byte key[], size_t length,
                TD[SE[get_byte(2, XDK[i])] + 512] ^
                TD[SE[get_byte(3, XDK[i])] + 768];
 
+   ME.resize(16);
+   MD.resize(16);
+
    for(size_t i = 0; i != 4; ++i)
       {
       store_be(XEK[i+4*rounds], &ME[4*i]);

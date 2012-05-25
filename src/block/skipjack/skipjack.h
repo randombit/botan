@@ -24,8 +24,6 @@ class BOTAN_DLL Skipjack : public Block_Cipher_Fixed_Params<8, 10>
       void clear();
       std::string name() const { return "Skipjack"; }
       BlockCipher* clone() const { return new Skipjack; }
-
-      Skipjack() : FTAB(2560) {}
    private:
       void key_schedule(const byte[], size_t);
 

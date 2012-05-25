@@ -113,6 +113,8 @@ void RC6::decrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void RC6::key_schedule(const byte key[], size_t length)
    {
+   S.resize(44);
+
    const size_t WORD_KEYLENGTH = (((length - 1) / 4) + 1);
    const size_t MIX_ROUNDS     = 3 * std::max(WORD_KEYLENGTH, S.size());
 

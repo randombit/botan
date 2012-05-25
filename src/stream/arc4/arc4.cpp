@@ -61,7 +61,10 @@ void ARC4::generate()
 */
 void ARC4::key_schedule(const byte key[], size_t length)
    {
-   clear();
+   state.resize(256);
+   buffer.resize(DEFAULT_BUFFERSIZE);
+
+   position = X = Y = 0;
 
    for(size_t i = 0; i != 256; ++i)
       state[i] = static_cast<byte>(i);
@@ -93,19 +96,14 @@ std::string ARC4::name() const
 */
 void ARC4::clear()
    {
-   zeroise(state);
-   zeroise(buffer);
+   state.clear();
+   buffer.clear();
    position = X = Y = 0;
    }
 
 /*
 * ARC4 Constructor
 */
-ARC4::ARC4(size_t s) : SKIP(s),
-                       state(256),
-                       buffer(DEFAULT_BUFFERSIZE)
-   {
-   clear();
-   }
+ARC4::ARC4(size_t s) : SKIP(s) {}
 
 }

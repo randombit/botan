@@ -28,6 +28,14 @@ size_t mlock_limit()
       ::getrlimit(RLIMIT_MEMLOCK, &limits);
       }
 
+   /*
+   * Linux defaults to only 64 KiB of mlockable memory per process
+   * (too small) but BSDs offer a small fraction of total RAM (more
+   * than we need). Bound the total mlock size to 256 KiB which is
+   * enough to run the entire test suite without spilling to non-mlock
+   * memory, but small enough that we should not cause problems if
+   * multiple processes are mlocking on the same machine.
+   */
    return std::min<size_t>(limits.rlim_cur, 256*1024);
    }
 

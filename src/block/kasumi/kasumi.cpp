@@ -211,6 +211,8 @@ void KASUMI::key_schedule(const byte key[], size_t)
       K[i+8] = K[i] ^ RC[i];
       }
 
+   EK.resize(64);
+
    for(size_t i = 0; i != 8; ++i)
       {
       EK[8*i  ] = rotate_left(K[(i+0) % 8    ], 2);

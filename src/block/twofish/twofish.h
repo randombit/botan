@@ -24,8 +24,6 @@ class BOTAN_DLL Twofish : public Block_Cipher_Fixed_Params<16, 16, 32, 8>
       void clear();
       std::string name() const { return "Twofish"; }
       BlockCipher* clone() const { return new Twofish; }
-
-      Twofish() : SB(1024), RK(40) {}
    private:
       void key_schedule(const byte[], size_t);
 

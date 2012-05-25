@@ -24,8 +24,6 @@ class BOTAN_DLL Noekeon : public Block_Cipher_Fixed_Params<16, 16>
       void clear();
       std::string name() const { return "Noekeon"; }
       BlockCipher* clone() const { return new Noekeon; }
-
-      Noekeon() : EK(4), DK(4) {}
    protected:
       /**
       * The Noekeon round constants

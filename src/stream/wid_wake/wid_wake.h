@@ -36,10 +36,6 @@ class BOTAN_DLL WiderWake_41_BE : public StreamCipher
       std::string name() const { return "WiderWake4+1-BE"; }
       StreamCipher* clone() const { return new WiderWake_41_BE; }
 
-      WiderWake_41_BE() : T(256), state(5), t_key(4),
-                          buffer(DEFAULT_BUFFERSIZE), position(0)
-         {}
-
    private:
       void key_schedule(const byte[], size_t);
 

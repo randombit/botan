@@ -30,8 +30,6 @@ class BOTAN_DLL Blowfish : public Block_Cipher_Fixed_Params<8, 1, 56>
       void clear();
       std::string name() const { return "Blowfish"; }
       BlockCipher* clone() const { return new Blowfish; }
-
-      Blowfish() : S(1024), P(18) {}
    private:
       void key_schedule(const byte key[], size_t length);
 
@@ -47,8 +45,7 @@ class BOTAN_DLL Blowfish : public Block_Cipher_Fixed_Params<8, 1, 56>
       static const u32bit P_INIT[18];
       static const u32bit S_INIT[1024];
 
-      secure_vector<u32bit> S;
-      secure_vector<u32bit> P;
+      secure_vector<u32bit> S, P;
    };
 
 }

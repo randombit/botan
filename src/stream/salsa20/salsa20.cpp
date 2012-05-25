@@ -134,7 +134,8 @@ void Salsa20::key_schedule(const byte key[], size_t length)
    static const u32bit SIGMA[] =
       { 0x61707865, 0x3320646e, 0x79622d32, 0x6b206574 };
 
-   clear();
+   state.resize(16);
+   buffer.resize(64);
 
    if(length == 16)
       {
@@ -166,6 +167,8 @@ void Salsa20::key_schedule(const byte key[], size_t length)
       state[14] = load_le<u32bit>(key, 7);
       state[15] = SIGMA[3];
       }
+
+   position = 0;
 
    const byte ZERO[8] = { 0 };
    set_iv(ZERO, sizeof(ZERO));
@@ -232,8 +235,8 @@ std::string Salsa20::name() const
 */
 void Salsa20::clear()
    {
-   zeroise(state);
-   zeroise(buffer);
+   state.clear();
+   buffer.clear();
    position = 0;
    }
 

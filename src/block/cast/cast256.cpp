@@ -138,40 +138,43 @@ void CAST_256::decrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void CAST_256::key_schedule(const byte key[], size_t length)
    {
+   MK.resize(48);
+   RK.resize(48);
+
    secure_vector<u32bit> K(8);
-   for(size_t j = 0; j != length; ++j)
-      K[j/4] = (K[j/4] << 8) + key[j];
+   for(size_t i = 0; i != length; ++i)
+      K[i/4] = (K[i/4] << 8) + key[i];
 
    u32bit A = K[0], B = K[1], C = K[2], D = K[3],
           E = K[4], F = K[5], G = K[6], H = K[7];
 
-   for(size_t j = 0; j != 48; j += 4)
+   for(size_t i = 0; i != 48; i += 4)
       {
-      round1(G, H, KEY_MASK[4*j+ 0], KEY_ROT[(4*j+ 0) % 32]);
-      round2(F, G, KEY_MASK[4*j+ 1], KEY_ROT[(4*j+ 1) % 32]);
-      round3(E, F, KEY_MASK[4*j+ 2], KEY_ROT[(4*j+ 2) % 32]);
-      round1(D, E, KEY_MASK[4*j+ 3], KEY_ROT[(4*j+ 3) % 32]);
-      round2(C, D, KEY_MASK[4*j+ 4], KEY_ROT[(4*j+ 4) % 32]);
-      round3(B, C, KEY_MASK[4*j+ 5], KEY_ROT[(4*j+ 5) % 32]);
-      round1(A, B, KEY_MASK[4*j+ 6], KEY_ROT[(4*j+ 6) % 32]);
-      round2(H, A, KEY_MASK[4*j+ 7], KEY_ROT[(4*j+ 7) % 32]);
-      round1(G, H, KEY_MASK[4*j+ 8], KEY_ROT[(4*j+ 8) % 32]);
-      round2(F, G, KEY_MASK[4*j+ 9], KEY_ROT[(4*j+ 9) % 32]);
-      round3(E, F, KEY_MASK[4*j+10], KEY_ROT[(4*j+10) % 32]);
-      round1(D, E, KEY_MASK[4*j+11], KEY_ROT[(4*j+11) % 32]);
-      round2(C, D, KEY_MASK[4*j+12], KEY_ROT[(4*j+12) % 32]);
-      round3(B, C, KEY_MASK[4*j+13], KEY_ROT[(4*j+13) % 32]);
-      round1(A, B, KEY_MASK[4*j+14], KEY_ROT[(4*j+14) % 32]);
-      round2(H, A, KEY_MASK[4*j+15], KEY_ROT[(4*j+15) % 32]);
+      round1(G, H, KEY_MASK[4*i+ 0], KEY_ROT[(4*i+ 0) % 32]);
+      round2(F, G, KEY_MASK[4*i+ 1], KEY_ROT[(4*i+ 1) % 32]);
+      round3(E, F, KEY_MASK[4*i+ 2], KEY_ROT[(4*i+ 2) % 32]);
+      round1(D, E, KEY_MASK[4*i+ 3], KEY_ROT[(4*i+ 3) % 32]);
+      round2(C, D, KEY_MASK[4*i+ 4], KEY_ROT[(4*i+ 4) % 32]);
+      round3(B, C, KEY_MASK[4*i+ 5], KEY_ROT[(4*i+ 5) % 32]);
+      round1(A, B, KEY_MASK[4*i+ 6], KEY_ROT[(4*i+ 6) % 32]);
+      round2(H, A, KEY_MASK[4*i+ 7], KEY_ROT[(4*i+ 7) % 32]);
+      round1(G, H, KEY_MASK[4*i+ 8], KEY_ROT[(4*i+ 8) % 32]);
+      round2(F, G, KEY_MASK[4*i+ 9], KEY_ROT[(4*i+ 9) % 32]);
+      round3(E, F, KEY_MASK[4*i+10], KEY_ROT[(4*i+10) % 32]);
+      round1(D, E, KEY_MASK[4*i+11], KEY_ROT[(4*i+11) % 32]);
+      round2(C, D, KEY_MASK[4*i+12], KEY_ROT[(4*i+12) % 32]);
+      round3(B, C, KEY_MASK[4*i+13], KEY_ROT[(4*i+13) % 32]);
+      round1(A, B, KEY_MASK[4*i+14], KEY_ROT[(4*i+14) % 32]);
+      round2(H, A, KEY_MASK[4*i+15], KEY_ROT[(4*i+15) % 32]);
 
-      RK[j  ] = (A % 32);
-      RK[j+1] = (C % 32);
-      RK[j+2] = (E % 32);
-      RK[j+3] = (G % 32);
-      MK[j  ] = H;
-      MK[j+1] = F;
-      MK[j+2] = D;
-      MK[j+3] = B;
+      RK[i  ] = (A % 32);
+      RK[i+1] = (C % 32);
+      RK[i+2] = (E % 32);
+      RK[i+3] = (G % 32);
+      MK[i  ] = H;
+      MK[i+1] = F;
+      MK[i+2] = D;
+      MK[i+3] = B;
       }
    }
 
