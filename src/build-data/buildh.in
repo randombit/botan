@@ -87,7 +87,7 @@
 
   #elif defined(__GNUG__)
 
-    #if BOTAN_GCC_VERSION >= 450
+    #if BOTAN_GCC_VERSION >= 450 && !defined(__INTEL_COMPILER)
       #define BOTAN_DEPRECATED(msg) __attribute__ ((deprecated(msg)))
     #else
       #define BOTAN_DEPRECATED(msg) __attribute__ ((deprecated))
