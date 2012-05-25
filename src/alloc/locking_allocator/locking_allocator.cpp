@@ -107,12 +107,16 @@ void* mlock_allocator::allocate(size_t n, size_t alignment)
       // Need to realign, split the block
       if(alignment_padding)
          {
+         /*
+         If we used the entire block except for small piece used for
+         alignment at the beginning, so just update the entry already
+         in place (as it is in the correct location), rather than
+         deleting the empty range and inserting the new one in the
+         same location.
+         */
          if(best_fit->second == 0)
             {
-            /*
-            We used the entire block except for small piece used for
-            alignment at the beginning, so just update this entry.
-            */
+            best_fit->first = offset;
             best_fit->second = alignment_padding;
             }
          else
@@ -145,7 +149,7 @@ bool mlock_allocator::deallocate(void* p, size_t n)
                              std::make_pair(start, 0), comp);
 
    // try to merge with later block
-   if(start + n == i->first)
+   if(i != m_freelist.end() && start + n == i->first)
       {
       i->first = start;
       i->second += n;
