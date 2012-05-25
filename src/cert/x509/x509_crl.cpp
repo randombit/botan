@@ -51,14 +51,14 @@ bool X509_CRL::is_revoked(const X509_Certificate& cert) const
    if(cert.issuer_dn() != issuer_dn())
       return false;
 
-   MemoryVector<byte> crl_akid = authority_key_id();
-   MemoryVector<byte> cert_akid = cert.authority_key_id();
+   std::vector<byte> crl_akid = authority_key_id();
+   std::vector<byte> cert_akid = cert.authority_key_id();
 
    if(!crl_akid.empty() && !cert_akid.empty())
       if(crl_akid != cert_akid)
          return false;
 
-   MemoryVector<byte> cert_serial = cert.serial_number();
+   std::vector<byte> cert_serial = cert.serial_number();
 
    bool is_revoked = false;
 

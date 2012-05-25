@@ -8,6 +8,7 @@
 #include <botan/wid_wake.h>
 #include <botan/loadstor.h>
 #include <botan/internal/xor_buf.h>
+#include <botan/internal/rounding.h>
 
 namespace Botan {
 
@@ -76,7 +77,8 @@ void WiderWake_41_BE::key_schedule(const byte key[], size_t)
    {
    t_key.resize(4);
    state.resize(5);
-   buffer.resize(DEFAULT_BUFFERSIZE);
+   buffer.resize(
+      round_up<size_t>(std::max<size_t>(8*4, DEFAULT_BUFFERSIZE), 8));
 
    for(size_t i = 0; i != 4; ++i)
       t_key[i] = load_be<u32bit>(key, i);

@@ -33,7 +33,7 @@ X509_Certificate find_issuing_cert(const X509_Certificate& cert,
                                    const std::vector<Certificate_Store*>& certstores)
    {
    const X509_DN issuer_dn = cert.issuer_dn();
-   const MemoryVector<byte> auth_key_id = cert.authority_key_id();
+   const std::vector<byte> auth_key_id = cert.authority_key_id();
 
    for(size_t i = 0; i != certstores.size(); ++i)
       {
@@ -55,7 +55,7 @@ std::vector<X509_CRL> find_crls_from(const X509_Certificate& cert,
                                      const std::vector<Certificate_Store*>& certstores)
    {
    const X509_DN issuer_dn = cert.subject_dn();
-   const MemoryVector<byte> auth_key_id = cert.subject_key_id();
+   const std::vector<byte> auth_key_id = cert.subject_key_id();
 
    for(size_t i = 0; i != certstores.size(); ++i)
       {
@@ -143,7 +143,7 @@ std::string Path_Validation_Result::result_string() const
          return "CA certificate not allowed to issue CRLs";
 
       default:
-         return "Unknown code " + to_string(m_result);
+         return "Unknown code " + std::to_string(m_result);
       }
     }
 
@@ -210,7 +210,7 @@ Path_Validation_Result x509_path_validate(
 
       const bool self_signed_ee_cert = (cert_path.size() == 1);
 
-      X509_Time current_time(system_time());
+      X509_Time current_time(std::chrono::system_clock::now());
 
       for(size_t i = 0; i != cert_path.size(); ++i)
          {

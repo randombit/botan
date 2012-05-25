@@ -13,7 +13,6 @@
 #include <botan/parsing.h>
 #include <botan/lookup.h>
 #include <botan/oids.h>
-#include <botan/time.h>
 #include <botan/key_constraint.h>
 #include <algorithm>
 #include <typeinfo>
@@ -58,7 +57,7 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
    else
       {
       std::unique_ptr<Public_Key> key(req.subject_public_key());
-      constraints = X509::find_constraints(*key, req.constraints());
+      constraints = find_constraints(*key, req.constraints());
       }
 
    Extensions extensions;

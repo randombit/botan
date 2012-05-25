@@ -10,12 +10,7 @@
 
 #include <botan/x509cert.h>
 #include <botan/certstor.h>
-<<<<<<< variant A
 #include <set>
->>>>>>> variant B
-#include <functional>
-####### Ancestor
-======= end
 
 namespace Botan {
 

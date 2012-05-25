@@ -40,11 +40,14 @@ void PKCS7_Padding::pad(byte block[], size_t size, size_t position) const
 size_t PKCS7_Padding::unpad(const byte block[], size_t size) const
    {
    size_t position = block[size-1];
+
    if(position > size)
-      throw Decoding_Error(name());
+      throw Decoding_Error("Bad padding in " + name());
+
    for(size_t j = size-position; j != size-1; ++j)
       if(block[j] != position)
-         throw Decoding_Error(name());
+         throw Decoding_Error("Bad padding in " + name());
+
    return (size-position);
    }
 

@@ -6,7 +6,7 @@
 */
 
 #include <botan/credentials_manager.h>
-#include <botan/x509stor.h>
+#include <botan/x509path.h>
 
 namespace Botan {
 
@@ -104,46 +104,22 @@ void Credentials_Manager::verify_certificate_chain(
    if(purported_hostname != "" && !cert_chain[0].matches_dns_name(purported_hostname))
       throw std::runtime_error("Certificate did not match hostname");
 
-#if 1
-   std::vector<X509_Certificate> CAs = trusted_certificate_authorities(type, purported_hostname);
+   auto trusted_CAs = trusted_certificate_authorities(type, purported_hostname);
 
-   X509_Store store;
-
-   for(size_t i = 0; i != CAs.size(); ++i)
-      store.add_cert(CAs[i], true);
-   for(size_t i = 0; i != cert_chain.size(); ++i)
-      store.add_cert(cert_chain[i]);
-
-   X509_Code result = store.validate_cert(cert_chain[0], X509_Store::TLS_SERVER);
-
-   if(CAs.empty())
-      {
-      if(result == CERT_ISSUER_NOT_FOUND)
-         return;
-      if(result == CANNOT_ESTABLISH_TRUST)
-         return;
-      }
-
-   if(result != VERIFIED)
-      throw std::runtime_error("Certificate did not validate, code " +
-                               std::to_string(result));
-#else
-
-   // New X.509 API
-   const Certificate_Store& CAs =
-      trusted_certificate_authorities(type, purported_hostname);
+   Certificate_Store_In_Memory CAs;
+   for(auto cert : trusted_CAs)
+      CAs.add_certificate(cert);
 
    Path_Validation_Result result =
       x509_path_validate(cert_chain,
                          Path_Validation_Restrictions(),
-                         store);
+                         CAs);
 
    if(!result.successful_validation())
-      throw std::runtime_error("Certificate validation failure: " + result.as_string());
+      throw std::runtime_error("Certificate validation failure: " + result.result_string());
 
-   if(!CAs.certificate_known(result.trust_root())
+   if(!CAs.certificate_known(result.trust_root()))
       throw std::runtime_error("Certificate chain roots in unknown/untrusted CA");
-#endif
    }
 
 }

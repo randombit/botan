@@ -7,7 +7,7 @@
 
 #include <botan/arc4.h>
 #include <botan/internal/xor_buf.h>
-#include <botan/parsing.h>
+#include <botan/internal/rounding.h>
 
 namespace Botan {
 
@@ -62,7 +62,7 @@ void ARC4::generate()
 void ARC4::key_schedule(const byte key[], size_t length)
    {
    state.resize(256);
-   buffer.resize(DEFAULT_BUFFERSIZE);
+   buffer.resize(round_up<size_t>(DEFAULT_BUFFERSIZE, 4));
 
    position = X = Y = 0;
 
