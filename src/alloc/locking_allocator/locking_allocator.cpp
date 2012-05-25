@@ -54,6 +54,14 @@ bool ptr_in_pool(const void* pool_ptr, size_t poolsize,
    return true;
    }
 
+size_t padding_for_alignment(size_t offset, size_t desired_alignment)
+   {
+   size_t mod = offset % desired_alignment;
+   if(mod == 0)
+      return 0; // already right on
+   return desired_alignment - mod;
+   }
+
 }
 
 void* mlock_allocator::allocate(size_t n, size_t alignment)
@@ -73,11 +81,15 @@ void* mlock_allocator::allocate(size_t n, size_t alignment)
          const size_t offset = i->first;
          m_freelist.erase(i);
          ::memset(m_pool + offset, 0, n);
+
+         BOTAN_ASSERT((reinterpret_cast<size_t>(m_pool) + offset) % alignment == 0,
+                      "Returning correctly aligned pointer");
+
          return m_pool + offset;
          }
 
-      if((i->second > (i->first % alignment) + n) &&
-         ((best_fit == m_freelist.end()) || (best_fit->second > i->second)))
+      if((i->second >= (n + padding_for_alignment(i->first, alignment)) &&
+          ((best_fit == m_freelist.end()) || (best_fit->second > i->second))))
          {
          best_fit = i;
          }
@@ -87,16 +99,30 @@ void* mlock_allocator::allocate(size_t n, size_t alignment)
       {
       const size_t offset = best_fit->first;
 
-      size_t alignment_padding = offset % alignment;
+      const size_t alignment_padding = padding_for_alignment(offset, alignment);
 
       best_fit->first += n + alignment_padding;
       best_fit->second -= n + alignment_padding;
 
       // Need to realign, split the block
       if(alignment_padding)
-         m_freelist.insert(best_fit, std::make_pair(offset, alignment_padding));
+         {
+         if(best_fit->second == 0)
+            {
+            /*
+            We used the entire block except for small piece used for
+            alignment at the beginning, so just update this entry.
+            */
+            best_fit->second = alignment_padding;
+            }
+         else
+            m_freelist.insert(best_fit, std::make_pair(offset, alignment_padding));
+         }
 
       ::memset(m_pool + offset + alignment_padding, 0, n);
+
+      BOTAN_ASSERT((reinterpret_cast<size_t>(m_pool) + offset + alignment_padding) % alignment == 0,
+                   "Returning correctly aligned pointer");
 
       return m_pool + offset + alignment_padding;
       }
