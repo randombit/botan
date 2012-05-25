@@ -320,11 +320,13 @@ void MARS::decrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void MARS::key_schedule(const byte key[], size_t length)
    {
-   SecureVector<u32bit> T(15);
+   secure_vector<u32bit> T(15);
    for(size_t i = 0; i != length / 4; ++i)
       T[i] = load_le<u32bit>(key, i);
 
    T[length / 4] = static_cast<u32bit>(length) / 4;
+
+   EK.resize(40);
 
    for(u32bit i = 0; i != 4; ++i)
       {

@@ -30,7 +30,7 @@ class BOTAN_DLL NR_PublicKey : public virtual DL_Scheme_PublicKey
       size_t max_input_bits() const { return (group_q().bits() - 1); }
 
       NR_PublicKey(const AlgorithmIdentifier& alg_id,
-                   const MemoryRegion<byte>& key_bits);
+                   const secure_vector<byte>& key_bits);
 
       NR_PublicKey(const DL_Group& group, const BigInt& pub_key);
    protected:
@@ -47,7 +47,7 @@ class BOTAN_DLL NR_PrivateKey : public NR_PublicKey,
       bool check_key(RandomNumberGenerator& rng, bool strong) const;
 
       NR_PrivateKey(const AlgorithmIdentifier& alg_id,
-                    const MemoryRegion<byte>& key_bits,
+                    const secure_vector<byte>& key_bits,
                     RandomNumberGenerator& rng);
 
       NR_PrivateKey(RandomNumberGenerator& rng,
@@ -67,7 +67,7 @@ class BOTAN_DLL NR_Signature_Operation : public PK_Ops::Signature
       size_t message_part_size() const { return q.bytes(); }
       size_t max_input_bits() const { return (q.bits() - 1); }
 
-      SecureVector<byte> sign(const byte msg[], size_t msg_len,
+      secure_vector<byte> sign(const byte msg[], size_t msg_len,
                               RandomNumberGenerator& rng);
    private:
       const BigInt& q;
@@ -90,7 +90,7 @@ class BOTAN_DLL NR_Verification_Operation : public PK_Ops::Verification
 
       bool with_recovery() const { return true; }
 
-      SecureVector<byte> verify_mr(const byte msg[], size_t msg_len);
+      secure_vector<byte> verify_mr(const byte msg[], size_t msg_len);
    private:
       const BigInt& q;
       const BigInt& y;

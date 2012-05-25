@@ -52,7 +52,7 @@ class BOTAN_DLL X509_CRL : public X509_Object
       * Get the AuthorityKeyIdentifier of this CRL.
       * @return this CRLs AuthorityKeyIdentifier
       */
-      MemoryVector<byte> authority_key_id() const;
+      std::vector<byte> authority_key_id() const;
 
       /**
       * Get the serial number of this CRL.
@@ -88,6 +88,16 @@ class BOTAN_DLL X509_CRL : public X509_Object
       */
       X509_CRL(const std::string& filename,
                bool throw_on_unknown_critical = false);
+
+      /**
+      * Construct a CRL from a binary vector
+      * @param vec the binary (DER) representation of the CRL
+      * @param throw_on_unknown_critical should we throw an exception
+      * if an unknown CRL extension marked as critical is encountered.
+      */
+      X509_CRL(const std::vector<byte>& vec,
+               bool throw_on_unknown_critical = false);
+
    private:
       void force_decode();
 

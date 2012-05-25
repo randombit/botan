@@ -17,7 +17,7 @@ OctetString OpenPGP_S2K::derive_key(size_t key_len,
                                     const byte salt_buf[], size_t salt_size,
                                     size_t iterations) const
    {
-   SecureVector<byte> key(key_len), hash_buf;
+   secure_vector<byte> key(key_len), hash_buf;
 
    size_t pass = 0, generated = 0,
           total_size = passphrase.size() + salt_size;
@@ -46,7 +46,7 @@ OctetString OpenPGP_S2K::derive_key(size_t key_len,
          }
 
       hash_buf = hash->final();
-      key.copy(generated, &hash_buf[0], hash->output_length());
+      buffer_insert(key, generated, &hash_buf[0], hash->output_length());
       generated += hash->output_length();
       ++pass;
       }

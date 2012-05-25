@@ -30,7 +30,7 @@ void raise_runtime_loader_exception(const std::string& lib_name,
 
 Dynamically_Loaded_Library::Dynamically_Loaded_Library(
    const std::string& library) :
-   lib_name(library), lib(0)
+   lib_name(library), lib(nullptr)
    {
 #if defined(BOTAN_TARGET_OS_HAS_DLOPEN)
    lib = ::dlopen(lib_name.c_str(), RTLD_LAZY);
@@ -60,7 +60,7 @@ Dynamically_Loaded_Library::~Dynamically_Loaded_Library()
 
 void* Dynamically_Loaded_Library::resolve_symbol(const std::string& symbol)
    {
-   void* addr = 0;
+   void* addr = nullptr;
 
 #if defined(BOTAN_TARGET_OS_HAS_DLOPEN)
    addr = ::dlsym(lib, symbol.c_str());

@@ -54,7 +54,7 @@ std::string bcrypt_base64_encode(const byte input[], size_t length)
    return b64;
    }
 
-MemoryVector<byte> bcrypt_base64_decode(std::string input)
+std::vector<byte> bcrypt_base64_decode(std::string input)
    {
    const byte OPENBSD_BASE64_SUB[256] = {
       0x00, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
@@ -84,11 +84,11 @@ MemoryVector<byte> bcrypt_base64_decode(std::string input)
    for(size_t i = 0; i != input.size(); ++i)
       input[i] = OPENBSD_BASE64_SUB[static_cast<byte>(input[i])];
 
-   return base64_decode(input);
+   return unlock(base64_decode(input));
    }
 
 std::string make_bcrypt(const std::string& pass,
-                        const MemoryRegion<byte>& salt,
+                        const std::vector<byte>& salt,
                         u16bit work_factor)
    {
    const byte magic[24] = {
@@ -97,14 +97,14 @@ std::string make_bcrypt(const std::string& pass,
       0x63, 0x72, 0x79, 0x44, 0x6F, 0x75, 0x62, 0x74
    };
 
-   MemoryVector<byte> ctext(magic, 24);
+   std::vector<byte> ctext(magic, magic + sizeof(magic));
 
    Blowfish blowfish;
 
    // Include the trailing NULL byte
    blowfish.eks_key_schedule(reinterpret_cast<const byte*>(pass.c_str()),
                              pass.length() + 1,
-                             salt,
+                             &salt[0],
                              work_factor);
 
    for(size_t i = 0; i != 64; ++i)
@@ -112,8 +112,13 @@ std::string make_bcrypt(const std::string& pass,
 
    std::string salt_b64 = bcrypt_base64_encode(&salt[0], salt.size());
 
-   return "$2a$" + to_string(work_factor, 2) + "$" + salt_b64.substr(0, 22) +
-             bcrypt_base64_encode(&ctext[0], ctext.size() - 1);
+   std::string work_factor_str = std::to_string(work_factor);
+   if(work_factor_str.length() == 1)
+      work_factor_str = "0" + work_factor_str;
+
+   return "$2a$" + work_factor_str +
+          "$" + salt_b64.substr(0, 22) +
+          bcrypt_base64_encode(&ctext[0], ctext.size() - 1);
    }
 
 }
@@ -122,7 +127,7 @@ std::string generate_bcrypt(const std::string& pass,
                             RandomNumberGenerator& rng,
                             u16bit work_factor)
    {
-   return make_bcrypt(pass, rng.random_vec(16), work_factor);
+   return make_bcrypt(pass, unlock(rng.random_vec(16)), work_factor);
    }
 
 bool check_bcrypt(const std::string& pass, const std::string& hash)
@@ -136,7 +141,7 @@ bool check_bcrypt(const std::string& pass, const std::string& hash)
 
    const u16bit workfactor = to_u32bit(hash.substr(4, 2));
 
-   MemoryVector<byte> salt = bcrypt_base64_decode(hash.substr(7, 22));
+   std::vector<byte> salt = bcrypt_base64_decode(hash.substr(7, 22));
 
    const std::string compare = make_bcrypt(pass, salt, workfactor);
 

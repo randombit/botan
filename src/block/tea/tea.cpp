@@ -65,6 +65,7 @@ void TEA::decrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void TEA::key_schedule(const byte key[], size_t)
    {
+   K.resize(4);
    for(size_t i = 0; i != 4; ++i)
       K[i] = load_be<u32bit>(key, i);
    }

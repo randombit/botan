@@ -378,6 +378,9 @@ void AES_128_SSSE3::key_schedule(const byte keyb[], size_t)
 
    __m128i key = _mm_loadu_si128(reinterpret_cast<const __m128i*>(keyb));
 
+   EK.resize(11*4);
+   DK.resize(11*4);
+
    __m128i* EK_mm = reinterpret_cast<__m128i*>(&EK[0]);
    __m128i* DK_mm = reinterpret_cast<__m128i*>(&DK[0]);
 
@@ -444,6 +447,9 @@ void AES_192_SSSE3::key_schedule(const byte keyb[], size_t)
    {
    __m128i rcon = _mm_set_epi32(0x702A9808, 0x4D7C7D81,
                                 0x1F8391B9, 0xAF9DEEB6);
+
+   EK.resize(13*4);
+   DK.resize(13*4);
 
    __m128i* EK_mm = reinterpret_cast<__m128i*>(&EK[0]);
    __m128i* DK_mm = reinterpret_cast<__m128i*>(&DK[0]);
@@ -544,6 +550,9 @@ void AES_256_SSSE3::key_schedule(const byte keyb[], size_t)
    __m128i rcon = _mm_set_epi32(0x702A9808, 0x4D7C7D81,
                                 0x1F8391B9, 0xAF9DEEB6);
 
+   EK.resize(15*4);
+   DK.resize(15*4);
+
    __m128i* EK_mm = reinterpret_cast<__m128i*>(&EK[0]);
    __m128i* DK_mm = reinterpret_cast<__m128i*>(&DK[0]);
 
@@ -568,7 +577,7 @@ void AES_256_SSSE3::key_schedule(const byte keyb[], size_t)
       _mm_storeu_si128(EK_mm + i, aes_schedule_mangle(key2, i % 4));
       _mm_storeu_si128(DK_mm + (14-i), aes_schedule_mangle_dec(key2, (i+2) % 4));
 
-      key2 = aes_schedule_round(NULL, _mm_shuffle_epi32(key2, 0xFF), k_t);
+      key2 = aes_schedule_round(nullptr, _mm_shuffle_epi32(key2, 0xFF), k_t);
       _mm_storeu_si128(EK_mm + i + 1, aes_schedule_mangle(key2, (i - 1) % 4));
       _mm_storeu_si128(DK_mm + (13-i), aes_schedule_mangle_dec(key2, (i+1) % 4));
       }

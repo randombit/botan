@@ -47,7 +47,7 @@
 namespace Botan {
 
 Public_Key* make_public_key(const AlgorithmIdentifier& alg_id,
-                            const MemoryRegion<byte>& key_bits)
+                            const secure_vector<byte>& key_bits)
    {
    const std::string alg_name = OIDS::lookup(alg_id.oid);
    if(alg_name == "")
@@ -98,11 +98,11 @@ Public_Key* make_public_key(const AlgorithmIdentifier& alg_id,
       return new ECDH_PublicKey(alg_id, key_bits);
 #endif
 
-   return 0;
+   return nullptr;
    }
 
 Private_Key* make_private_key(const AlgorithmIdentifier& alg_id,
-                              const MemoryRegion<byte>& key_bits,
+                              const secure_vector<byte>& key_bits,
                               RandomNumberGenerator& rng)
    {
    const std::string alg_name = OIDS::lookup(alg_id.oid);
@@ -154,7 +154,7 @@ Private_Key* make_private_key(const AlgorithmIdentifier& alg_id,
       return new ECDH_PrivateKey(alg_id, key_bits);
 #endif
 
-   return 0;
+   return nullptr;
    }
 
 }

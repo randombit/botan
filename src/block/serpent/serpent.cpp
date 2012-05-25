@@ -358,7 +358,7 @@ void Serpent::key_schedule(const byte key[], size_t length)
    {
    const u32bit PHI = 0x9E3779B9;
 
-   SecureVector<u32bit> W(140);
+   secure_vector<u32bit> W(140);
    for(size_t i = 0; i != length / 4; ++i)
       W[i] = load_le<u32bit>(key, i);
 
@@ -387,7 +387,8 @@ void Serpent::key_schedule(const byte key[], size_t length)
    SBoxE8(W[120],W[121],W[122],W[123]); SBoxE7(W[124],W[125],W[126],W[127]);
    SBoxE6(W[128],W[129],W[130],W[131]); SBoxE5(W[132],W[133],W[134],W[135]);
    SBoxE4(W[136],W[137],W[138],W[139]);
-   round_key.copy(&W[8], 132);
+
+   round_key.assign(&W[8], &W[140]);
    }
 
 }

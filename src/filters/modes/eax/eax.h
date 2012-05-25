@@ -81,17 +81,17 @@ class BOTAN_DLL EAX_Base : public Keyed_Filter
       /**
       * The MAC of the nonce
       */
-      SecureVector<byte> nonce_mac;
+      secure_vector<byte> nonce_mac;
 
       /**
       * The MAC of the header
       */
-      SecureVector<byte> header_mac;
+      secure_vector<byte> header_mac;
 
       /**
       * A buffer for CTR mode encryption
       */
-      SecureVector<byte> ctr_buf;
+      secure_vector<byte> ctr_buf;
    };
 
 /**
@@ -151,7 +151,7 @@ class BOTAN_DLL EAX_Decryption : public EAX_Base
       void do_write(const byte[], size_t);
       void end_msg();
 
-      SecureVector<byte> queue;
+      secure_vector<byte> queue;
       size_t queue_start, queue_end;
    };
 

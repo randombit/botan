@@ -24,12 +24,12 @@ int main()
       DH_PrivateKey private_b(rng, shared_domain);
 
       // Alice sends to Bob her public key and a session parameter
-      MemoryVector<byte> public_a = private_a.public_value();
+      std::vector<byte> public_a = private_a.public_value();
       const std::string session_param =
          "Alice and Bob's shared session parameter";
 
       // Bob sends his public key to Alice
-      MemoryVector<byte> public_b = private_b.public_value();
+      std::vector<byte> public_b = private_b.public_value();
 
       // Now Alice performs the key agreement operation
       PK_Key_Agreement ka_alice(private_a, "KDF2(SHA-256)");

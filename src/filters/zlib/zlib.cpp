@@ -47,7 +47,7 @@ void* zlib_malloc(void* info_ptr, unsigned int n, unsigned int size)
 void zlib_free(void* info_ptr, void* ptr)
    {
    Zlib_Alloc_Info* info = static_cast<Zlib_Alloc_Info*>(info_ptr);
-   std::map<void*, size_t>::const_iterator i = info->current_allocs.find(ptr);
+   auto i = info->current_allocs.find(ptr);
    if(i == info->current_allocs.end())
       throw Invalid_Argument("zlib_free: Got pointer not allocated by us");
    info->alloc->deallocate(ptr, i->second);
@@ -91,10 +91,12 @@ class Zlib_Stream
 /*
 * Zlib_Compression Constructor
 */
-Zlib_Compression::Zlib_Compression(size_t l) :
-   level((l >= 9) ? 9 : l), buffer(DEFAULT_BUFFERSIZE)
+Zlib_Compression::Zlib_Compression(size_t l, bool raw_deflate) :
+   level((l >= 9) ? 9 : l),
+   raw_deflate(raw_deflate),
+   buffer(DEFAULT_BUFFERSIZE),
+   zlib(0)
    {
-   zlib = 0;
    }
 
 /*
@@ -104,7 +106,17 @@ void Zlib_Compression::start_msg()
    {
    clear();
    zlib = new Zlib_Stream;
-   if(deflateInit(&(zlib->stream), level) != Z_OK)
+
+   int res = deflateInit2(&(zlib->stream),
+                          level,
+                          Z_DEFLATED,
+                          (raw_deflate ? -15 : 15),
+                          8,
+                          Z_DEFAULT_STRATEGY);
+
+   if(res == Z_STREAM_ERROR)
+      throw Invalid_Argument("Bad setting in deflateInit2");
+   else if(res != Z_OK)
       throw Memory_Exhaustion();
    }
 
@@ -185,10 +197,12 @@ void Zlib_Compression::clear()
 /*
 * Zlib_Decompression Constructor
 */
-Zlib_Decompression::Zlib_Decompression() : buffer(DEFAULT_BUFFERSIZE)
+Zlib_Decompression::Zlib_Decompression(bool raw_deflate) :
+   raw_deflate(raw_deflate),
+   buffer(DEFAULT_BUFFERSIZE),
+   zlib(0),
+   no_writes(true)
    {
-   zlib = 0;
-   no_writes = true;
    }
 
 /*
@@ -198,7 +212,8 @@ void Zlib_Decompression::start_msg()
    {
    clear();
    zlib = new Zlib_Stream;
-   if(inflateInit(&(zlib->stream)) != Z_OK)
+
+   if(inflateInit2(&(zlib->stream), (raw_deflate ? -15 : 15)) != Z_OK)
       throw Memory_Exhaustion();
    }
 

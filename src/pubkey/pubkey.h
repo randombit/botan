@@ -45,7 +45,7 @@ class BOTAN_DLL PK_Encryptor
       * @param rng the random number source to use
       * @return encrypted message
       */
-      SecureVector<byte> encrypt(const byte in[], size_t length,
+      std::vector<byte> encrypt(const byte in[], size_t length,
                                  RandomNumberGenerator& rng) const
          {
          return enc(in, length, rng);
@@ -57,8 +57,9 @@ class BOTAN_DLL PK_Encryptor
       * @param rng the random number source to use
       * @return encrypted message
       */
-      SecureVector<byte> encrypt(const MemoryRegion<byte>& in,
-                                 RandomNumberGenerator& rng) const
+      template<typename Alloc>
+      std::vector<byte> encrypt(const std::vector<byte, Alloc>& in,
+                                RandomNumberGenerator& rng) const
          {
          return enc(&in[0], in.size(), rng);
          }
@@ -75,7 +76,7 @@ class BOTAN_DLL PK_Encryptor
       PK_Encryptor(const PK_Encryptor&) {}
       PK_Encryptor& operator=(const PK_Encryptor&) { return *this; }
 
-      virtual SecureVector<byte> enc(const byte[], size_t,
+      virtual std::vector<byte> enc(const byte[], size_t,
                                      RandomNumberGenerator&) const = 0;
    };
 
@@ -91,7 +92,7 @@ class BOTAN_DLL PK_Decryptor
       * @param length the length of the above byte array
       * @return decrypted message
       */
-      SecureVector<byte> decrypt(const byte in[], size_t length) const
+      secure_vector<byte> decrypt(const byte in[], size_t length) const
          {
          return dec(in, length);
          }
@@ -101,7 +102,8 @@ class BOTAN_DLL PK_Decryptor
       * @param in the ciphertext
       * @return decrypted message
       */
-      SecureVector<byte> decrypt(const MemoryRegion<byte>& in) const
+      template<typename Alloc>
+      secure_vector<byte> decrypt(const std::vector<byte, Alloc>& in) const
          {
          return dec(&in[0], in.size());
          }
@@ -112,7 +114,7 @@ class BOTAN_DLL PK_Decryptor
       PK_Decryptor(const PK_Decryptor&) {}
       PK_Decryptor& operator=(const PK_Decryptor&) { return *this; }
 
-      virtual SecureVector<byte> dec(const byte[], size_t) const = 0;
+      virtual secure_vector<byte> dec(const byte[], size_t) const = 0;
    };
 
 /**
@@ -130,7 +132,7 @@ class BOTAN_DLL PK_Signer
       * @param rng the rng to use
       * @return signature
       */
-      SecureVector<byte> sign_message(const byte in[], size_t length,
+      std::vector<byte> sign_message(const byte in[], size_t length,
                                       RandomNumberGenerator& rng);
 
       /**
@@ -139,8 +141,12 @@ class BOTAN_DLL PK_Signer
       * @param rng the rng to use
       * @return signature
       */
-      SecureVector<byte> sign_message(const MemoryRegion<byte>& in,
-                                      RandomNumberGenerator& rng)
+      std::vector<byte> sign_message(const std::vector<byte>& in,
+                                     RandomNumberGenerator& rng)
+         { return sign_message(&in[0], in.size(), rng); }
+
+      std::vector<byte> sign_message(const secure_vector<byte>& in,
+                                     RandomNumberGenerator& rng)
          { return sign_message(&in[0], in.size(), rng); }
 
       /**
@@ -160,7 +166,7 @@ class BOTAN_DLL PK_Signer
       * Add a message part.
       * @param in the message part to add
       */
-      void update(const MemoryRegion<byte>& in) { update(&in[0], in.size()); }
+      void update(const std::vector<byte>& in) { update(&in[0], in.size()); }
 
       /**
       * Get the signature of the so far processed message (provided by the
@@ -168,7 +174,7 @@ class BOTAN_DLL PK_Signer
       * @param rng the rng to use
       * @return signature of the total message
       */
-      SecureVector<byte> signature(RandomNumberGenerator& rng);
+      std::vector<byte> signature(RandomNumberGenerator& rng);
 
       /**
       * Set the output format of the signature.
@@ -191,8 +197,8 @@ class BOTAN_DLL PK_Signer
 
       ~PK_Signer() { delete op; delete verify_op; delete emsa; }
    private:
-      bool self_test_signature(const MemoryRegion<byte>& msg,
-                               const MemoryRegion<byte>& sig) const;
+      bool self_test_signature(const std::vector<byte>& msg,
+                               const std::vector<byte>& sig) const;
 
       PK_Signer(const PK_Signer&) {}
       PK_Signer& operator=(const PK_Signer&) { return *this; }
@@ -227,8 +233,9 @@ class BOTAN_DLL PK_Verifier
       * @param sig the signature
       * @return true if the signature is valid
       */
-      bool verify_message(const MemoryRegion<byte>& msg,
-                          const MemoryRegion<byte>& sig)
+      template<typename Alloc, typename Alloc2>
+      bool verify_message(const std::vector<byte, Alloc>& msg,
+                          const std::vector<byte, Alloc2>& sig)
          {
          return verify_message(&msg[0], msg.size(),
                                &sig[0], sig.size());
@@ -254,7 +261,7 @@ class BOTAN_DLL PK_Verifier
       * signature to be verified.
       * @param in the new message part
       */
-      void update(const MemoryRegion<byte>& in)
+      void update(const std::vector<byte>& in)
          { update(&in[0], in.size()); }
 
       /**
@@ -272,7 +279,8 @@ class BOTAN_DLL PK_Verifier
       * @param sig the signature to be verified
       * @return true if the signature is valid, false otherwise
       */
-      bool check_signature(const MemoryRegion<byte>& sig)
+      template<typename Alloc>
+      bool check_signature(const std::vector<byte, Alloc>& sig)
          {
          return check_signature(&sig[0], sig.size());
          }
@@ -298,7 +306,7 @@ class BOTAN_DLL PK_Verifier
       PK_Verifier(const PK_Verifier&) {}
       PK_Verifier& operator=(const PK_Verifier&) { return *this; }
 
-      bool validate_signature(const MemoryRegion<byte>& msg,
+      bool validate_signature(const secure_vector<byte>& msg,
                               const byte sig[], size_t sig_len);
 
       PK_Ops::Verification* op;
@@ -336,7 +344,7 @@ class BOTAN_DLL PK_Key_Agreement
       * @param params_len the length of params in bytes
       */
       SymmetricKey derive_key(size_t key_len,
-                              const MemoryRegion<byte>& in,
+                              const std::vector<byte>& in,
                               const byte params[],
                               size_t params_len) const
          {
@@ -367,7 +375,7 @@ class BOTAN_DLL PK_Key_Agreement
       * @param params extra derivation params
       */
       SymmetricKey derive_key(size_t key_len,
-                              const MemoryRegion<byte>& in,
+                              const std::vector<byte>& in,
                               const std::string& params = "") const
          {
          return derive_key(key_len, &in[0], in.size(),
@@ -410,7 +418,7 @@ class BOTAN_DLL PK_Encryptor_EME : public PK_Encryptor
 
       ~PK_Encryptor_EME() { delete op; delete eme; }
    private:
-      SecureVector<byte> enc(const byte[], size_t,
+      std::vector<byte> enc(const byte[], size_t,
                              RandomNumberGenerator& rng) const;
 
       PK_Ops::Encryption* op;
@@ -433,7 +441,7 @@ class BOTAN_DLL PK_Decryptor_EME : public PK_Decryptor
 
       ~PK_Decryptor_EME() { delete op; delete eme; }
    private:
-      SecureVector<byte> dec(const byte[], size_t) const;
+      secure_vector<byte> dec(const byte[], size_t) const;
 
       PK_Ops::Decryption* op;
       const EME* eme;

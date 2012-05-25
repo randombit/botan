@@ -139,7 +139,7 @@ void EGD_EntropySource::poll(Entropy_Accumulator& accum)
    {
    size_t go_get = std::min<size_t>(accum.desired_remaining_bits() / 8, 32);
 
-   MemoryRegion<byte>& io_buffer = accum.get_io_buffer(go_get);
+   secure_vector<byte>& io_buffer = accum.get_io_buffer(go_get);
 
    for(size_t i = 0; i != sockets.size(); ++i)
       {

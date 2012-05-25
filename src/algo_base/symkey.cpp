@@ -26,7 +26,7 @@ OctetString::OctetString(RandomNumberGenerator& rng,
 /*
 * Create an OctetString from a hex string
 */
-void OctetString::change(const std::string& hex_string)
+OctetString::OctetString(const std::string& hex_string)
    {
    bits.resize(1 + hex_string.length() / 2);
    bits.resize(hex_decode(&bits[0], hex_string));
@@ -35,10 +35,9 @@ void OctetString::change(const std::string& hex_string)
 /*
 * Create an OctetString from a byte string
 */
-void OctetString::change(const byte in[], size_t n)
+OctetString::OctetString(const byte in[], size_t n)
    {
-   bits.resize(n);
-   bits.copy(in, n);
+   bits.assign(in, in + n);
    }
 
 /*
@@ -113,7 +112,7 @@ bool operator!=(const OctetString& s1, const OctetString& s2)
 */
 OctetString operator+(const OctetString& k1, const OctetString& k2)
    {
-   SecureVector<byte> out;
+   secure_vector<byte> out;
    out += k1.bits_of();
    out += k2.bits_of();
    return OctetString(out);
@@ -124,9 +123,10 @@ OctetString operator+(const OctetString& k1, const OctetString& k2)
 */
 OctetString operator^(const OctetString& k1, const OctetString& k2)
    {
-   SecureVector<byte> ret(std::max(k1.length(), k2.length()));
-   ret.copy(k1.begin(), k1.length());
-   xor_buf(ret, k2.begin(), k2.length());
+   secure_vector<byte> ret(std::max(k1.length(), k2.length()));
+
+   copy_mem(&ret[0], k1.begin(), k1.length());
+   xor_buf(&ret[0], k2.begin(), k2.length());
    return OctetString(ret);
    }
 

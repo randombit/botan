@@ -40,7 +40,7 @@ class BOTAN_DLL PBE_PKCS5v15 : public PBE
    private:
       void set_key(const std::string&);
       void new_params(RandomNumberGenerator& rng);
-      MemoryVector<byte> encode_params() const;
+      std::vector<byte> encode_params() const;
       void decode_params(DataSource&);
       OID get_oid() const;
 
@@ -50,7 +50,7 @@ class BOTAN_DLL PBE_PKCS5v15 : public PBE
       BlockCipher* block_cipher;
       HashFunction* hash_function;
 
-      SecureVector<byte> salt, key, iv;
+      secure_vector<byte> salt, key, iv;
       size_t iterations;
       Pipe pipe;
    };

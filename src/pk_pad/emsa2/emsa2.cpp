@@ -15,9 +15,9 @@ namespace {
 /*
 * EMSA2 Encode Operation
 */
-SecureVector<byte> emsa2_encoding(const MemoryRegion<byte>& msg,
+secure_vector<byte> emsa2_encoding(const secure_vector<byte>& msg,
                                   size_t output_bits,
-                                  const MemoryRegion<byte>& empty_hash,
+                                  const secure_vector<byte>& empty_hash,
                                   byte hash_id)
    {
    const size_t HASH_SIZE = empty_hash.size();
@@ -34,12 +34,12 @@ SecureVector<byte> emsa2_encoding(const MemoryRegion<byte>& msg,
       if(empty_hash[j] != msg[j])
          empty = false;
 
-   SecureVector<byte> output(output_length);
+   secure_vector<byte> output(output_length);
 
    output[0] = (empty ? 0x4B : 0x6B);
    output[output_length - 3 - HASH_SIZE] = 0xBA;
    set_mem(&output[1], output_length - 4 - HASH_SIZE, 0xBB);
-   output.copy(output_length - (HASH_SIZE + 2), &msg[0], msg.size());
+   buffer_insert(output, output_length - (HASH_SIZE + 2), &msg[0], msg.size());
    output[output_length-2] = hash_id;
    output[output_length-1] = 0xCC;
 
@@ -59,7 +59,7 @@ void EMSA2::update(const byte input[], size_t length)
 /*
 * Return the raw (unencoded) data
 */
-SecureVector<byte> EMSA2::raw_data()
+secure_vector<byte> EMSA2::raw_data()
    {
    return hash->final();
    }
@@ -67,7 +67,7 @@ SecureVector<byte> EMSA2::raw_data()
 /*
 * EMSA2 Encode Operation
 */
-SecureVector<byte> EMSA2::encoding_of(const MemoryRegion<byte>& msg,
+secure_vector<byte> EMSA2::encoding_of(const secure_vector<byte>& msg,
                                       size_t output_bits,
                                       RandomNumberGenerator&)
    {
@@ -77,8 +77,8 @@ SecureVector<byte> EMSA2::encoding_of(const MemoryRegion<byte>& msg,
 /*
 * EMSA2 Verify Operation
 */
-bool EMSA2::verify(const MemoryRegion<byte>& coded,
-                   const MemoryRegion<byte>& raw,
+bool EMSA2::verify(const secure_vector<byte>& coded,
+                   const secure_vector<byte>& raw,
                    size_t key_bits)
    {
    try

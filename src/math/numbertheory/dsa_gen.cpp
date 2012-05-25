@@ -42,29 +42,29 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
                          Algorithm_Factory& af,
                          BigInt& p, BigInt& q,
                          size_t pbits, size_t qbits,
-                         const MemoryRegion<byte>& seed_c)
+                         const std::vector<byte>& seed_c)
    {
    if(!fips186_3_valid_size(pbits, qbits))
       throw Invalid_Argument(
          "FIPS 186-3 does not allow DSA domain parameters of " +
-         to_string(pbits) + "/" + to_string(qbits) + " bits long");
+         std::to_string(pbits) + "/" + std::to_string(qbits) + " bits long");
 
    if(seed_c.size() * 8 < qbits)
       throw Invalid_Argument(
-         "Generating a DSA parameter set with a " + to_string(qbits) +
+         "Generating a DSA parameter set with a " + std::to_string(qbits) +
          "long q requires a seed at least as many bits long");
 
-   std::auto_ptr<HashFunction> hash(
-      af.make_hash_function("SHA-" + to_string(qbits)));
+   std::unique_ptr<HashFunction> hash(
+      af.make_hash_function("SHA-" + std::to_string(qbits)));
 
    const size_t HASH_SIZE = hash->output_length();
 
    class Seed
       {
       public:
-         Seed(const MemoryRegion<byte>& s) : seed(s) {}
+         Seed(const std::vector<byte>& s) : seed(s) {}
 
-         operator MemoryRegion<byte>& () { return seed; }
+         operator std::vector<byte>& () { return seed; }
 
          Seed& operator++()
             {
@@ -74,7 +74,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
             return (*this);
             }
       private:
-         SecureVector<byte> seed;
+         std::vector<byte> seed;
       };
 
    Seed seed(seed_c);
@@ -90,7 +90,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
                 b = (pbits-1) % (HASH_SIZE * 8);
 
    BigInt X;
-   SecureVector<byte> V(HASH_SIZE * (n+1));
+   std::vector<byte> V(HASH_SIZE * (n+1));
 
    for(size_t j = 0; j != 4096; ++j)
       {
@@ -116,14 +116,15 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
 /*
 * Generate DSA Primes
 */
-SecureVector<byte> generate_dsa_primes(RandomNumberGenerator& rng,
-                                       Algorithm_Factory& af,
-                                       BigInt& p, BigInt& q,
-                                       size_t pbits, size_t qbits)
+std::vector<byte> generate_dsa_primes(RandomNumberGenerator& rng,
+                                      Algorithm_Factory& af,
+                                      BigInt& p, BigInt& q,
+                                      size_t pbits, size_t qbits)
    {
    while(true)
       {
-      SecureVector<byte> seed = rng.random_vec(qbits / 8);
+      std::vector<byte> seed(qbits / 8);
+      rng.randomize(&seed[0], seed.size());
 
       if(generate_dsa_primes(rng, af, p, q, pbits, qbits, seed))
          return seed;

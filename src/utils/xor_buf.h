@@ -9,6 +9,7 @@
 #define BOTAN_XOR_BUF_H__
 
 #include <botan/types.h>
+#include <vector>
 
 namespace Botan {
 
@@ -68,6 +69,31 @@ inline void xor_buf(byte out[],
 
    for(size_t i = 0; i != length; ++i)
       out[i] = in[i] ^ in2[i];
+   }
+
+template<typename Alloc, typename Alloc2>
+void xor_buf(std::vector<byte, Alloc>& out,
+             const std::vector<byte, Alloc2>& in,
+             size_t n)
+   {
+   xor_buf(&out[0], &in[0], n);
+   }
+
+template<typename Alloc>
+void xor_buf(std::vector<byte, Alloc>& out,
+             const byte* in,
+             size_t n)
+   {
+   xor_buf(&out[0], in, n);
+   }
+
+template<typename Alloc, typename Alloc2>
+void xor_buf(std::vector<byte, Alloc>& out,
+             const byte* in,
+             const std::vector<byte, Alloc2>& in2,
+             size_t n)
+   {
+   xor_buf(&out[0], &in[0], &in2[0], n);
    }
 
 }

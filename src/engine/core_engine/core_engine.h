@@ -44,10 +44,10 @@ class Core_Engine : public Engine
       StreamCipher* find_stream_cipher(const SCAN_Name&,
                                        Algorithm_Factory&) const;
 
-      HashFunction* find_hash(const SCAN_Name& reqeust,
+      HashFunction* find_hash(const SCAN_Name& request,
                               Algorithm_Factory&) const;
 
-      MessageAuthenticationCode* find_mac(const SCAN_Name& reqeust,
+      MessageAuthenticationCode* find_mac(const SCAN_Name& request,
                                           Algorithm_Factory&) const;
 
       PBKDF* find_pbkdf(const SCAN_Name& algo_spec,

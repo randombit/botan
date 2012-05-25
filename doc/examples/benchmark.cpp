@@ -26,14 +26,13 @@ int main(int argc, char* argv[])
 
    Botan::Algorithm_Factory& af = Botan::global_state().algorithm_factory();
 
-   double ms = 1000 * std::atof(argv[1]);
+   std::chrono::milliseconds ms(static_cast<std::chrono::milliseconds::rep>(1000 * std::atof(argv[1])));
 
    for(size_t i = 2; argv[i]; ++i)
       {
       std::string algo = argv[i];
 
-      std::map<std::string, double> results =
-         algorithm_benchmark(algo, af, rng, ms, 16);
+      auto results = algorithm_benchmark(algo, af, rng, ms, 16);
 
       std::cout << algo << ":\n";
       for(std::map<std::string, double>::iterator r = results.begin();

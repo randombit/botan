@@ -18,14 +18,23 @@ namespace {
 /*
 * TLS PRF P_hash function
 */
-void P_hash(MemoryRegion<byte>& output,
+void P_hash(secure_vector<byte>& output,
             MessageAuthenticationCode* mac,
             const byte secret[], size_t secret_len,
             const byte seed[], size_t seed_len)
    {
-   mac->set_key(secret, secret_len);
+   try
+      {
+      mac->set_key(secret, secret_len);
+      }
+   catch(Invalid_Key_Length)
+      {
+      throw Internal_Error("The premaster secret of " +
+                           std::to_string(secret_len) +
+                           " bytes is too long for the PRF");
+      }
 
-   SecureVector<byte> A(seed, seed_len);
+   secure_vector<byte> A(seed, seed + seed_len);
 
    size_t offset = 0;
 
@@ -38,7 +47,7 @@ void P_hash(MemoryRegion<byte>& output,
 
       mac->update(A);
       mac->update(seed, seed_len);
-      SecureVector<byte> block = mac->final();
+      secure_vector<byte> block = mac->final();
 
       xor_buf(&output[offset], &block[0], this_block_len);
       offset += this_block_len;
@@ -65,11 +74,11 @@ TLS_PRF::~TLS_PRF()
 /*
 * TLS PRF
 */
-SecureVector<byte> TLS_PRF::derive(size_t key_len,
+secure_vector<byte> TLS_PRF::derive(size_t key_len,
                                    const byte secret[], size_t secret_len,
                                    const byte seed[], size_t seed_len) const
    {
-   SecureVector<byte> output(key_len);
+   secure_vector<byte> output(key_len);
 
    size_t S1_len = (secret_len + 1) / 2,
           S2_len = (secret_len + 1) / 2;
@@ -94,11 +103,11 @@ TLS_12_PRF::~TLS_12_PRF()
    delete hmac;
    }
 
-SecureVector<byte> TLS_12_PRF::derive(size_t key_len,
+secure_vector<byte> TLS_12_PRF::derive(size_t key_len,
                                       const byte secret[], size_t secret_len,
                                       const byte seed[], size_t seed_len) const
    {
-   SecureVector<byte> output(key_len);
+   secure_vector<byte> output(key_len);
 
    P_hash(output, hmac, secret, secret_len, seed, seed_len);
 

@@ -27,8 +27,8 @@ enum type_code {
    SKEIN_OUTPUT = 63
 };
 
-void ubi_512(MemoryRegion<u64bit>& H,
-             MemoryRegion<u64bit>& T,
+void ubi_512(secure_vector<u64bit>& H,
+             secure_vector<u64bit>& T,
              const byte msg[], size_t msg_len)
    {
    do
@@ -125,7 +125,7 @@ void ubi_512(MemoryRegion<u64bit>& H,
       } while(msg_len);
    }
 
-void reset_tweak(MemoryRegion<u64bit>& T,
+void reset_tweak(secure_vector<u64bit>& T,
                  type_code type, bool final)
    {
    T[0] = 0;
@@ -135,8 +135,8 @@ void reset_tweak(MemoryRegion<u64bit>& T,
           (static_cast<u64bit>(final) << 63);
    }
 
-void initial_block(MemoryRegion<u64bit>& H,
-                   MemoryRegion<u64bit>& T,
+void initial_block(secure_vector<u64bit>& H,
+                   secure_vector<u64bit>& T,
                    size_t output_bits,
                    const std::string& personalization)
    {
@@ -185,8 +185,9 @@ Skein_512::Skein_512(size_t arg_output_bits,
 std::string Skein_512::name() const
    {
    if(personalization != "")
-      return "Skein-512(" + to_string(output_bits) + "," + personalization + ")";
-   return "Skein-512(" + to_string(output_bits) + ")";
+      return "Skein-512(" + std::to_string(output_bits) + "," +
+                            personalization + ")";
+   return "Skein-512(" + std::to_string(output_bits) + ")";
    }
 
 HashFunction* Skein_512::clone() const
@@ -209,7 +210,7 @@ void Skein_512::add_data(const byte input[], size_t length)
 
    if(buf_pos)
       {
-      buffer.copy(buf_pos, input, length);
+      buffer_insert(buffer, buf_pos, input, length);
       if(buf_pos + length > 64)
          {
          ubi_512(H, T, &buffer[0], buffer.size());
@@ -227,7 +228,7 @@ void Skein_512::add_data(const byte input[], size_t length)
 
    length -= full_blocks * 64;
 
-   buffer.copy(buf_pos, input + full_blocks * 64, length);
+   buffer_insert(buffer, buf_pos, input + full_blocks * 64, length);
    buf_pos += length;
    }
 
@@ -244,13 +245,13 @@ void Skein_512::final_result(byte out[])
 
    size_t out_bytes = output_bits / 8;
 
-   SecureVector<u64bit> H_out(9);
+   secure_vector<u64bit> H_out(9);
 
    while(out_bytes)
       {
       const size_t to_proc = std::min<size_t>(out_bytes, 64);
 
-      H_out.copy(&H[0], 8);
+      copy_mem(&H_out[0], &H[0], 8);
 
       reset_tweak(T, SKEIN_OUTPUT, true);
       ubi_512(H_out, T, counter, sizeof(counter));

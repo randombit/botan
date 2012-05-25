@@ -42,7 +42,7 @@ BigInt read_bigint(Pipe& pipe)
    {
    u32bit len = read_u32bit(pipe);
 
-   SecureVector<byte> buf(len);
+   secure_vector<byte> buf(len);
    pipe.read(&buf[0], len);
    return BigInt::decode(buf);
    }

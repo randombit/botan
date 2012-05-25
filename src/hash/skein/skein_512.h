@@ -41,9 +41,9 @@ class BOTAN_DLL Skein_512 : public HashFunction
       std::string personalization;
       size_t output_bits;
 
-      SecureVector<u64bit> H;
-      SecureVector<u64bit> T;
-      SecureVector<byte> buffer;
+      secure_vector<u64bit> H;
+      secure_vector<u64bit> T;
+      secure_vector<byte> buffer;
       size_t buf_pos;
    };
 

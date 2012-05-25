@@ -40,23 +40,12 @@ BigInt::BigInt(Sign s, size_t size)
    }
 
 /*
-* Construct a BigInt from a "raw" BigInt
+* Copy constructor
 */
 BigInt::BigInt(const BigInt& b)
    {
-   const size_t b_words = b.sig_words();
-
-   if(b_words)
-      {
-      reg.resize(round_up<size_t>(b_words, 8));
-      reg.copy(b.data(), b_words);
-      set_sign(b.sign());
-      }
-   else
-      {
-      reg.resize(2);
-      set_sign(Positive);
-      }
+   reg = b.get_reg();
+   set_sign(b.sign());
    }
 
 /*
@@ -98,15 +87,6 @@ BigInt::BigInt(RandomNumberGenerator& rng, size_t bits)
    {
    set_sign(Positive);
    randomize(rng, bits);
-   }
-
-/*
-* Swap this BigInt with another
-*/
-void BigInt::swap(BigInt& other)
-   {
-   reg.swap(other.reg);
-   std::swap(signedness, other.signedness);
    }
 
 /*
@@ -233,8 +213,7 @@ void BigInt::mask_bits(size_t n)
    const word mask = (static_cast<word>(1) << (n % MP_WORD_BITS)) - 1;
 
    if(top_word < size())
-      for(size_t i = top_word + 1; i != size(); ++i)
-         reg[i] = 0;
+      clear_mem(&reg[top_word+1], size() - (top_word + 1));
 
    reg[top_word] &= mask;
    }
@@ -363,14 +342,6 @@ void BigInt::binary_decode(const byte buf[], size_t length)
 
    for(size_t i = 0; i != length % WORD_BYTES; ++i)
       reg[length / WORD_BYTES] = (reg[length / WORD_BYTES] << 8) | buf[i];
-   }
-
-/*
-* Set this number to the value in buf
-*/
-void BigInt::binary_decode(const MemoryRegion<byte>& buf)
-   {
-   binary_decode(buf, buf.size());
    }
 
 }

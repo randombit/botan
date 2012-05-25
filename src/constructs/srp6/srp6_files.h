@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * A GnuTLS compatible SRP6 authenticator file
 */
-class SRP6_Authenticator_File
+class BOTAN_DLL SRP6_Authenticator_File
    {
    public:
       /**
@@ -28,7 +28,7 @@ class SRP6_Authenticator_File
 
       bool lookup_user(const std::string& username,
                        BigInt& v,
-                       MemoryVector<byte>& salt,
+                       std::vector<byte>& salt,
                        std::string& group_id) const;
    private:
       struct SRP6_Data
@@ -36,12 +36,12 @@ class SRP6_Authenticator_File
          SRP6_Data() {}
 
          SRP6_Data(const BigInt& v,
-                   const MemoryRegion<byte>& salt,
+                   const std::vector<byte>& salt,
                    const std::string& group_id) :
             v(v), salt(salt), group_id(group_id) {}
 
          BigInt v;
-         MemoryVector<byte> salt;
+         std::vector<byte> salt;
          std::string group_id;
          };
 

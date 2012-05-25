@@ -44,9 +44,9 @@ class BOTAN_DLL ARC4 : public StreamCipher
       const size_t SKIP;
 
       byte X, Y;
-      SecureVector<byte> state;
+      secure_vector<byte> state;
 
-      SecureVector<byte> buffer;
+      secure_vector<byte> buffer;
       size_t position;
    };
 

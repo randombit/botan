@@ -29,16 +29,16 @@ class BOTAN_DLL EMSA3 : public EMSA
 
       void update(const byte[], size_t);
 
-      SecureVector<byte> raw_data();
+      secure_vector<byte> raw_data();
 
-      SecureVector<byte> encoding_of(const MemoryRegion<byte>&, size_t,
+      secure_vector<byte> encoding_of(const secure_vector<byte>&, size_t,
                                      RandomNumberGenerator& rng);
 
-      bool verify(const MemoryRegion<byte>&, const MemoryRegion<byte>&,
+      bool verify(const secure_vector<byte>&, const secure_vector<byte>&,
                   size_t);
    private:
       HashFunction* hash;
-      SecureVector<byte> hash_id;
+      std::vector<byte> hash_id;
    };
 
 /**
@@ -51,16 +51,16 @@ class BOTAN_DLL EMSA3_Raw : public EMSA
    public:
       void update(const byte[], size_t);
 
-      SecureVector<byte> raw_data();
+      secure_vector<byte> raw_data();
 
-      SecureVector<byte> encoding_of(const MemoryRegion<byte>&, size_t,
+      secure_vector<byte> encoding_of(const secure_vector<byte>&, size_t,
                                      RandomNumberGenerator& rng);
 
-      bool verify(const MemoryRegion<byte>&, const MemoryRegion<byte>&,
+      bool verify(const secure_vector<byte>&, const secure_vector<byte>&,
                   size_t);
 
    private:
-      SecureVector<byte> message;
+      secure_vector<byte> message;
    };
 
 }

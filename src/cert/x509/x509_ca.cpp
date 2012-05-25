@@ -57,8 +57,8 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
       constraints = Key_Constraints(KEY_CERT_SIGN | CRL_SIGN);
    else
       {
-      std::auto_ptr<Public_Key> key(req.subject_public_key());
-      constraints = find_constraints(*key, req.constraints());
+      std::unique_ptr<Public_Key> key(req.subject_public_key());
+      constraints = X509::find_constraints(*key, req.constraints());
       }
 
    Extensions extensions;
@@ -91,7 +91,7 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
 X509_Certificate X509_CA::make_cert(PK_Signer* signer,
                                     RandomNumberGenerator& rng,
                                     const AlgorithmIdentifier& sig_algo,
-                                    const MemoryRegion<byte>& pub_key,
+                                    const std::vector<byte>& pub_key,
                                     const X509_Time& not_before,
                                     const X509_Time& not_after,
                                     const X509_DN& issuer_dn,
@@ -103,35 +103,35 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
 
    BigInt serial_no(rng, SERIAL_BITS);
 
-   DataSource_Memory source(X509_Object::make_signed(signer, rng, sig_algo,
-         DER_Encoder().start_cons(SEQUENCE)
-            .start_explicit(0)
-               .encode(X509_CERT_VERSION-1)
-            .end_explicit()
+   const std::vector<byte> cert = X509_Object::make_signed(
+      signer, rng, sig_algo,
+      DER_Encoder().start_cons(SEQUENCE)
+         .start_explicit(0)
+            .encode(X509_CERT_VERSION-1)
+         .end_explicit()
 
-            .encode(serial_no)
+         .encode(serial_no)
 
-            .encode(sig_algo)
-            .encode(issuer_dn)
+         .encode(sig_algo)
+         .encode(issuer_dn)
 
-            .start_cons(SEQUENCE)
-               .encode(not_before)
-               .encode(not_after)
-            .end_cons()
-
-            .encode(subject_dn)
-            .raw_bytes(pub_key)
-
-            .start_explicit(3)
-               .start_cons(SEQUENCE)
-                  .encode(extensions)
-                .end_cons()
-            .end_explicit()
+         .start_cons(SEQUENCE)
+            .encode(not_before)
+            .encode(not_after)
          .end_cons()
-      .get_contents()
-   ));
 
-   return X509_Certificate(source);
+         .encode(subject_dn)
+         .raw_bytes(pub_key)
+
+         .start_explicit(3)
+            .start_cons(SEQUENCE)
+               .encode(extensions)
+             .end_cons()
+         .end_explicit()
+      .end_cons()
+      .get_contents());
+
+   return X509_Certificate(cert);
    }
 
 /*
@@ -173,36 +173,37 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
       next_update = timespec_to_u32bit("7d");
 
    // Totally stupid: ties encoding logic to the return of std::time!!
-   const u64bit current_time = system_time();
+   auto current_time = std::chrono::system_clock::now();
+   auto expire_time = current_time + std::chrono::seconds(next_update);
 
    Extensions extensions;
    extensions.add(
       new Cert_Extension::Authority_Key_ID(cert.subject_key_id()));
    extensions.add(new Cert_Extension::CRL_Number(crl_number));
 
-   DataSource_Memory source(X509_Object::make_signed(signer, rng, ca_sig_algo,
-         DER_Encoder().start_cons(SEQUENCE)
-            .encode(X509_CRL_VERSION-1)
-            .encode(ca_sig_algo)
-            .encode(cert.issuer_dn())
-            .encode(X509_Time(current_time))
-            .encode(X509_Time(current_time + next_update))
-            .encode_if(revoked.size() > 0,
-                 DER_Encoder()
-                    .start_cons(SEQUENCE)
-                       .encode_list(revoked)
-                    .end_cons()
-               )
-            .start_explicit(0)
-               .start_cons(SEQUENCE)
-                  .encode(extensions)
-               .end_cons()
-            .end_explicit()
-         .end_cons()
-      .get_contents()
-   ));
+   const std::vector<byte> crl = X509_Object::make_signed(
+      signer, rng, ca_sig_algo,
+      DER_Encoder().start_cons(SEQUENCE)
+         .encode(X509_CRL_VERSION-1)
+         .encode(ca_sig_algo)
+         .encode(cert.issuer_dn())
+         .encode(X509_Time(current_time))
+         .encode(X509_Time(expire_time))
+         .encode_if(revoked.size() > 0,
+              DER_Encoder()
+                 .start_cons(SEQUENCE)
+                    .encode_list(revoked)
+                 .end_cons()
+            )
+         .start_explicit(0)
+            .start_cons(SEQUENCE)
+               .encode(extensions)
+            .end_cons()
+         .end_explicit()
+      .end_cons()
+      .get_contents());
 
-   return X509_CRL(source);
+   return X509_CRL(crl);
    }
 
 /*

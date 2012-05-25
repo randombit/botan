@@ -24,7 +24,7 @@ class BOTAN_DLL RSA_PublicKey : public virtual IF_Scheme_PublicKey
       std::string algo_name() const { return "RSA"; }
 
       RSA_PublicKey(const AlgorithmIdentifier& alg_id,
-                    const MemoryRegion<byte>& key_bits) :
+                    const secure_vector<byte>& key_bits) :
          IF_Scheme_PublicKey(alg_id, key_bits)
          {}
 
@@ -51,7 +51,7 @@ class BOTAN_DLL RSA_PrivateKey : public RSA_PublicKey,
       bool check_key(RandomNumberGenerator& rng, bool) const;
 
       RSA_PrivateKey(const AlgorithmIdentifier& alg_id,
-                     const MemoryRegion<byte>& key_bits,
+                     const secure_vector<byte>& key_bits,
                      RandomNumberGenerator& rng) :
          IF_Scheme_PrivateKey(rng, alg_id, key_bits) {}
 
@@ -94,10 +94,10 @@ class BOTAN_DLL RSA_Private_Operation : public PK_Ops::Signature,
 
       size_t max_input_bits() const { return (n.bits() - 1); }
 
-      SecureVector<byte> sign(const byte msg[], size_t msg_len,
+      secure_vector<byte> sign(const byte msg[], size_t msg_len,
                               RandomNumberGenerator& rng);
 
-      SecureVector<byte> decrypt(const byte msg[], size_t msg_len);
+      secure_vector<byte> decrypt(const byte msg[], size_t msg_len);
 
    private:
       BigInt private_op(const BigInt& m) const;
@@ -124,17 +124,17 @@ class BOTAN_DLL RSA_Public_Operation : public PK_Ops::Verification,
       size_t max_input_bits() const { return (n.bits() - 1); }
       bool with_recovery() const { return true; }
 
-      SecureVector<byte> encrypt(const byte msg[], size_t msg_len,
+      secure_vector<byte> encrypt(const byte msg[], size_t msg_len,
                                  RandomNumberGenerator&)
          {
          BigInt m(msg, msg_len);
          return BigInt::encode_1363(public_op(m), n.bytes());
          }
 
-      SecureVector<byte> verify_mr(const byte msg[], size_t msg_len)
+      secure_vector<byte> verify_mr(const byte msg[], size_t msg_len)
          {
          BigInt m(msg, msg_len);
-         return BigInt::encode(public_op(m));
+         return BigInt::encode_locked(public_op(m));
          }
 
    private:

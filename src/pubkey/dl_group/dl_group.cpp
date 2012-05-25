@@ -47,7 +47,7 @@ DL_Group::DL_Group(RandomNumberGenerator& rng,
                    PrimeType type, size_t pbits, size_t qbits)
    {
    if(pbits < 512)
-      throw Invalid_Argument("DL_Group: prime size " + to_string(pbits) +
+      throw Invalid_Argument("DL_Group: prime size " + std::to_string(pbits) +
                              " is too small");
 
    if(type == Strong)
@@ -90,7 +90,8 @@ DL_Group::DL_Group(RandomNumberGenerator& rng,
 * DL_Group Constructor
 */
 DL_Group::DL_Group(RandomNumberGenerator& rng,
-                   const MemoryRegion<byte>& seed, size_t pbits, size_t qbits)
+                   const std::vector<byte>& seed,
+                   size_t pbits, size_t qbits)
    {
    if(!generate_dsa_primes(rng,
                            global_state().algorithm_factory(),
@@ -202,7 +203,7 @@ const BigInt& DL_Group::get_q() const
 /*
 * DER encode the parameters
 */
-SecureVector<byte> DL_Group::DER_encode(Format format) const
+std::vector<byte> DL_Group::DER_encode(Format format) const
    {
    init_check();
 
@@ -217,7 +218,7 @@ SecureVector<byte> DL_Group::DER_encode(Format format) const
             .encode(q)
             .encode(g)
          .end_cons()
-      .get_contents();
+      .get_contents_unlocked();
       }
    else if(format == ANSI_X9_42)
       {
@@ -227,7 +228,7 @@ SecureVector<byte> DL_Group::DER_encode(Format format) const
             .encode(g)
             .encode(q)
          .end_cons()
-      .get_contents();
+      .get_contents_unlocked();
       }
    else if(format == PKCS_3)
       {
@@ -236,10 +237,10 @@ SecureVector<byte> DL_Group::DER_encode(Format format) const
             .encode(p)
             .encode(g)
          .end_cons()
-      .get_contents();
+      .get_contents_unlocked();
       }
 
-   throw Invalid_Argument("Unknown DL_Group encoding " + to_string(format));
+   throw Invalid_Argument("Unknown DL_Group encoding " + std::to_string(format));
    }
 
 /*
@@ -247,7 +248,8 @@ SecureVector<byte> DL_Group::DER_encode(Format format) const
 */
 std::string DL_Group::PEM_encode(Format format) const
    {
-   SecureVector<byte> encoding = DER_encode(format);
+   const std::vector<byte> encoding = DER_encode(format);
+
    if(format == PKCS_3)
       return PEM_Code::encode(encoding, "DH PARAMETERS");
    else if(format == ANSI_X9_57)
@@ -255,7 +257,7 @@ std::string DL_Group::PEM_encode(Format format) const
    else if(format == ANSI_X9_42)
       return PEM_Code::encode(encoding, "X942 DH PARAMETERS");
    else
-      throw Invalid_Argument("Unknown DL_Group encoding " + to_string(format));
+      throw Invalid_Argument("Unknown DL_Group encoding " + std::to_string(format));
    }
 
 /*
@@ -289,7 +291,7 @@ void DL_Group::BER_decode(DataSource& source, Format format)
          .discard_remaining();
       }
    else
-      throw Invalid_Argument("Unknown DL_Group encoding " + to_string(format));
+      throw Invalid_Argument("Unknown DL_Group encoding " + std::to_string(format));
 
    initialize(new_p, new_q, new_g);
    }

@@ -46,7 +46,7 @@ std::string ARC4_OpenSSL::name() const
    {
    if(SKIP == 0)   return "ARC4";
    if(SKIP == 256) return "MARK-4";
-   else            return "RC4_skip(" + to_string(SKIP) + ")";
+   else            return "RC4_skip(" + std::to_string(SKIP) + ")";
    }
 
 /*
@@ -71,7 +71,7 @@ void ARC4_OpenSSL::cipher(const byte in[], byte out[], size_t length)
 }
 
 /**
-* Look for an OpenSSL-suported stream cipher (ARC4)
+* Look for an OpenSSL-supported stream cipher (ARC4)
 */
 StreamCipher*
 OpenSSL_Engine::find_stream_cipher(const SCAN_Name& request,

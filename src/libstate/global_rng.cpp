@@ -6,7 +6,6 @@
 */
 
 #include <botan/libstate.h>
-#include <botan/internal/mutex.h>
 
 #if defined(BOTAN_HAS_RANDPOOL)
   #include <botan/randpool.h>
@@ -22,6 +21,10 @@
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_HIGH_RESOLUTION_TIMER)
   #include <botan/internal/hres_timer.h>
+#endif
+
+#if defined(BOTAN_HAS_ENTROPY_SRC_RDRAND)
+  #include <botan/internal/rdrand.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM)
@@ -63,6 +66,10 @@ void add_entropy_sources(RandomNumberGenerator* rng)
    {
 #if defined(BOTAN_HAS_ENTROPY_SRC_HIGH_RESOLUTION_TIMER)
    rng->add_entropy_source(new High_Resolution_Timestamp);
+#endif
+
+#if defined(BOTAN_HAS_ENTROPY_SRC_RDRAND)
+   rng->add_entropy_source(new Intel_Rdrand);
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM)
@@ -107,62 +114,62 @@ class Serialized_PRNG : public RandomNumberGenerator
    public:
       void randomize(byte out[], size_t len)
          {
-         Mutex_Holder lock(mutex);
+         std::lock_guard<std::mutex> lock(mutex);
          rng->randomize(out, len);
          }
 
       bool is_seeded() const
          {
-         Mutex_Holder lock(mutex);
+         std::lock_guard<std::mutex> lock(mutex);
          return rng->is_seeded();
          }
 
       void clear()
          {
-         Mutex_Holder lock(mutex);
+         std::lock_guard<std::mutex> lock(mutex);
          rng->clear();
          }
 
       std::string name() const
          {
-         Mutex_Holder lock(mutex);
+         std::lock_guard<std::mutex> lock(mutex);
          return rng->name();
          }
 
       void reseed(size_t poll_bits)
          {
-         Mutex_Holder lock(mutex);
+         std::lock_guard<std::mutex> lock(mutex);
          rng->reseed(poll_bits);
          }
 
       void add_entropy_source(EntropySource* es)
          {
-         Mutex_Holder lock(mutex);
+         std::lock_guard<std::mutex> lock(mutex);
          rng->add_entropy_source(es);
          }
 
       void add_entropy(const byte in[], size_t len)
          {
-         Mutex_Holder lock(mutex);
+         std::lock_guard<std::mutex> lock(mutex);
          rng->add_entropy(in, len);
          }
 
       // We do not own the mutex; Library_State does
-      Serialized_PRNG(RandomNumberGenerator* r, Mutex* m) :
+      Serialized_PRNG(RandomNumberGenerator* r, std::mutex& m) :
          mutex(m), rng(r) {}
 
       ~Serialized_PRNG() { delete rng; }
    private:
-      Mutex* mutex;
+      std::mutex& mutex;
       RandomNumberGenerator* rng;
    };
 
 }
 
 RandomNumberGenerator* Library_State::make_global_rng(Algorithm_Factory& af,
-                                                      Mutex* mutex)
+                                                      std::mutex& mutex)
    {
-   RandomNumberGenerator* rng = 0;
+   RandomNumberGenerator* rng = nullptr;
 
 #if defined(BOTAN_HAS_HMAC_RNG)
 

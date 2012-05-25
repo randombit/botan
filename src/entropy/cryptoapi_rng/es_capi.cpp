@@ -55,7 +55,7 @@ class CSP_Handle
 */
 void Win32_CAPI_EntropySource::poll(Entropy_Accumulator& accum)
    {
-   MemoryRegion<byte>& io_buffer = accum.get_io_buffer(32);
+   secure_vector<byte>& io_buffer = accum.get_io_buffer(32);
 
    for(size_t i = 0; i != prov_types.size(); ++i)
       {

@@ -112,12 +112,12 @@ Keccak_1600::Keccak_1600(size_t output_bits) :
    if(output_bits != 224 && output_bits != 256 &&
       output_bits != 384 && output_bits != 512)
       throw Invalid_Argument("Keccak_1600: Invalid output length " +
-                             to_string(output_bits));
+                             std::to_string(output_bits));
    }
 
 std::string Keccak_1600::name() const
    {
-   return "Keccak-1600(" + to_string(output_bits) + ")";
+   return "Keccak-1600(" + std::to_string(output_bits) + ")";
    }
 
 HashFunction* Keccak_1600::clone() const
@@ -178,12 +178,12 @@ void Keccak_1600::add_data(const byte input[], size_t length)
 
 void Keccak_1600::final_result(byte output[])
    {
-   MemoryVector<byte> padding(bitrate / 8 - S_pos);
+   std::vector<byte> padding(bitrate / 8 - S_pos);
 
    padding[0] = 0x01;
    padding[padding.size()-1] |= 0x80;
 
-   add_data(padding, padding.size());
+   add_data(&padding[0], padding.size());
 
    /*
    * We never have to run the permutation again because we only support

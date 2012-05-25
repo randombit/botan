@@ -83,14 +83,14 @@ class PBKDF_Filter : public Filter
          pbkdf = algo;
          outlen = o;
          iterations = i;
-         salt = s.bits_of();
+         salt = unlock(s.bits_of());
          }
 
       ~PBKDF_Filter() { delete pbkdf; }
    private:
       std::string passphrase;
       PBKDF* pbkdf;
-      SecureVector<byte> salt;
+      std::vector<byte> salt;
       u32bit outlen, iterations;
    };
 
@@ -126,12 +126,12 @@ class KDF_Filter : public Filter
          {
          kdf = algo;
          outlen = o;
-         salt = s.bits_of();
+         salt = unlock(s.bits_of());
          }
       ~KDF_Filter() { delete kdf; }
    private:
-      SecureVector<byte> secret;
-      SecureVector<byte> salt;
+      std::vector<byte> secret;
+      std::vector<byte> salt;
       KDF* kdf;
       u32bit outlen;
    };
@@ -139,7 +139,7 @@ class KDF_Filter : public Filter
 Filter* lookup_pbkdf(const std::string& algname,
                    const std::vector<std::string>& params)
    {
-   PBKDF* pbkdf = 0;
+   PBKDF* pbkdf = nullptr;
 
    try {
       pbkdf = get_pbkdf(algname);
@@ -149,7 +149,7 @@ Filter* lookup_pbkdf(const std::string& algname,
    if(pbkdf)
       return new PBKDF_Filter(pbkdf, params[0], to_u32bit(params[1]),
                               to_u32bit(params[2]));
-   return 0;
+   return nullptr;
    }
 
 void RNG_Filter::write(const byte[], size_t length)
@@ -163,7 +163,7 @@ void RNG_Filter::write(const byte[], size_t length)
 Filter* lookup_rng(const std::string& algname,
                    const std::string& key)
    {
-   RandomNumberGenerator* prng = 0;
+   RandomNumberGenerator* prng = nullptr;
 
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
    if(algname == "AutoSeeded")
@@ -233,21 +233,21 @@ Filter* lookup_rng(const std::string& algname,
       return new RNG_Filter(prng);
       }
 
-   return 0;
+   return nullptr;
    }
 
 Filter* lookup_kdf(const std::string& algname, const std::string& salt,
                    const std::string& params)
    {
-   KDF* kdf = 0;
+   KDF* kdf = nullptr;
    try {
       kdf = get_kdf(algname);
       }
-   catch(...) { return 0; }
+   catch(...) { return nullptr; }
 
    if(kdf)
       return new KDF_Filter(kdf, salt, to_u32bit(params));
-   return 0;
+   return nullptr;
    }
 
 Filter* lookup_encoder(const std::string& algname)
@@ -278,7 +278,7 @@ Filter* lookup_encoder(const std::string& algname)
       return new Zlib_Decompression;
 #endif
 
-   return 0;
+   return nullptr;
    }
 
 }
@@ -288,7 +288,7 @@ Filter* lookup(const std::string& algname,
    {
    std::string key = params[0];
    std::string iv = params[1];
-   Filter* filter = 0;
+   Filter* filter = nullptr;
 
    // The order of the lookup has to change based on how the names are
    // formatted and parsed.
@@ -304,6 +304,6 @@ Filter* lookup(const std::string& algname,
    filter = lookup_pbkdf(algname, params);
    if(filter) return filter;
 
-   return 0;
+   return nullptr;
    }
 

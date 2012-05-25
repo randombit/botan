@@ -46,7 +46,7 @@ PBKDF* Core_Engine::find_pbkdf(const SCAN_Name& algo_spec,
       return new OpenPGP_S2K(af.make_hash_function(algo_spec.arg(0)));
 #endif
 
-   return 0;
+   return nullptr;
    }
 
 }

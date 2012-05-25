@@ -18,7 +18,7 @@ namespace Botan {
 class BOTAN_DLL X942_PRF : public KDF
    {
    public:
-      SecureVector<byte> derive(size_t, const byte[], size_t,
+      secure_vector<byte> derive(size_t, const byte[], size_t,
                                 const byte[], size_t) const;
 
       std::string name() const { return "X942_PRF(" + key_wrap_oid + ")"; }

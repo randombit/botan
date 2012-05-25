@@ -49,7 +49,7 @@ void CTR_BE::key_schedule(const byte key[], size_t key_len)
    permutation->set_key(key, key_len);
 
    // Set a default all-zeros IV
-   set_iv(0, 0);
+   set_iv(nullptr, 0);
    }
 
 /*
@@ -89,14 +89,14 @@ void CTR_BE::set_iv(const byte iv[], size_t iv_len)
 
    zeroise(counter);
 
-   counter.copy(0, iv, iv_len);
+   buffer_insert(counter, 0, iv, iv_len);
 
    /*
    * Set counter blocks to IV, IV + 1, ... IV + 255
    */
    for(size_t i = 1; i != 256; ++i)
       {
-      counter.copy(i*bs, &counter[(i-1)*bs], bs);
+      buffer_insert(counter, i*bs, &counter[(i-1)*bs], bs);
 
       for(size_t j = 0; j != bs; ++j)
          if(++counter[i*bs + (bs - 1 - j)])

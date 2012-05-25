@@ -25,7 +25,7 @@ class GMP_MPZ
       void encode(byte[], size_t) const;
       size_t bytes() const;
 
-      SecureVector<byte> to_bytes() const
+      secure_vector<byte> to_bytes() const
          { return BigInt::encode(to_bigint()); }
 
       GMP_MPZ& operator=(const GMP_MPZ&);

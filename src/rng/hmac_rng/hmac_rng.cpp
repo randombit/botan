@@ -8,7 +8,6 @@
 #include <botan/hmac_rng.h>
 #include <botan/get_byte.h>
 #include <botan/internal/xor_buf.h>
-#include <botan/internal/stl_util.h>
 #include <algorithm>
 
 namespace Botan {
@@ -16,7 +15,7 @@ namespace Botan {
 namespace {
 
 void hmac_prf(MessageAuthenticationCode* prf,
-              MemoryRegion<byte>& K,
+              secure_vector<byte>& K,
               u32bit& counter,
               const std::string& label)
    {
@@ -124,7 +123,7 @@ void HMAC_RNG::reseed(size_t poll_bits)
 */
 void HMAC_RNG::add_entropy(const byte input[], size_t length)
    {
-   const size_t USER_ENTROPY_WATERSHED = 20;
+   const size_t USER_ENTROPY_WATERSHED = 64;
 
    extractor->update(input, length);
    user_input_len += length;
@@ -136,7 +135,7 @@ void HMAC_RNG::add_entropy(const byte input[], size_t length)
    * the extractor input.
    */
    if(user_input_len >= USER_ENTROPY_WATERSHED)
-      reseed(128);
+      reseed(0);
    }
 
 /*
@@ -201,7 +200,7 @@ HMAC_RNG::HMAC_RNG(MessageAuthenticationCode* extractor_mac,
    the estimated entropy counter is high enough. That variable is only
    set when a reseeding is performed.
    */
-   MemoryVector<byte> prf_key(extractor->output_length());
+   secure_vector<byte> prf_key(extractor->output_length());
    prf->set_key(prf_key);
 
    /*
@@ -224,8 +223,8 @@ HMAC_RNG::~HMAC_RNG()
    delete extractor;
    delete prf;
 
-   std::for_each(entropy_sources.begin(), entropy_sources.end(),
-                 del_fun<EntropySource>());
+   for(auto src : entropy_sources)
+     delete src;
 
    counter = 0;
    }

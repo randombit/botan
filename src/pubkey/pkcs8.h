@@ -9,7 +9,7 @@
 #define BOTAN_PKCS8_H__
 
 #include <botan/x509_key.h>
-#include <botan/ui.h>
+#include <functional>
 
 namespace Botan {
 
@@ -32,7 +32,7 @@ namespace PKCS8 {
 * @param key the private key to encode
 * @return BER encoded key
 */
-BOTAN_DLL SecureVector<byte> BER_encode(const Private_Key& key);
+BOTAN_DLL secure_vector<byte> BER_encode(const Private_Key& key);
 
 /**
 * Get a string containing a PEM encoded private key.
@@ -51,7 +51,7 @@ BOTAN_DLL std::string PEM_encode(const Private_Key& key);
          default will be chosen.
 * @return encrypted key in binary BER form
 */
-BOTAN_DLL SecureVector<byte> BER_encode(const Private_Key& key,
+BOTAN_DLL secure_vector<byte> BER_encode(const Private_Key& key,
                                         RandomNumberGenerator& rng,
                                         const std::string& pass,
                                         const std::string& pbe_algo = "");
@@ -123,18 +123,19 @@ inline void encrypt_key(const Private_Key& key,
 * Load a key from a data source.
 * @param source the data source providing the encoded key
 * @param rng the rng to use
-* @param ui the user interface to be used for passphrase dialog
+* @param get_passphrase a function that returns passphrases
 * @return loaded private key object
 */
-BOTAN_DLL Private_Key* load_key(DataSource& source,
-                                RandomNumberGenerator& rng,
-                                const User_Interface& ui);
+BOTAN_DLL Private_Key* load_key(
+  DataSource& source,
+  RandomNumberGenerator& rng,
+  std::function<std::pair<bool, std::string> ()> get_passphrase);
 
 /** Load a key from a data source.
 * @param source the data source providing the encoded key
 * @param rng the rng to use
 * @param pass the passphrase to decrypt the key. Provide an empty
-* string if the key is not encoded.
+* string if the key is not encrypted
 * @return loaded private key object
 */
 BOTAN_DLL Private_Key* load_key(DataSource& source,
@@ -145,18 +146,19 @@ BOTAN_DLL Private_Key* load_key(DataSource& source,
 * Load a key from a file.
 * @param filename the path to the file containing the encoded key
 * @param rng the rng to use
-* @param ui the user interface to be used for passphrase dialog
+* @param get_passphrase a function that returns passphrases
 * @return loaded private key object
 */
-BOTAN_DLL Private_Key* load_key(const std::string& filename,
-                                RandomNumberGenerator& rng,
-                                const User_Interface& ui);
+BOTAN_DLL Private_Key* load_key(
+  const std::string& filename,
+  RandomNumberGenerator& rng,
+  std::function<std::pair<bool, std::string> ()> get_passphrase);
 
 /** Load a key from a file.
 * @param filename the path to the file containing the encoded key
 * @param rng the rng to use
 * @param pass the passphrase to decrypt the key. Provide an empty
-* string if the key is not encoded.
+* string if the key is not encrypted
 * @return loaded private key object
 */
 BOTAN_DLL Private_Key* load_key(const std::string& filename,

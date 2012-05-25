@@ -69,7 +69,7 @@ class BOTAN_DLL Public_Key
       /**
       * @return X.509 subject key encoding for this key object
       */
-      virtual MemoryVector<byte> x509_subject_public_key() const = 0;
+      virtual std::vector<byte> x509_subject_public_key() const = 0;
 
       virtual ~Public_Key() {}
    protected:
@@ -89,7 +89,7 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
       /**
       * @return PKCS #8 private key encoding for this key object
       */
-      virtual MemoryVector<byte> pkcs8_private_key() const = 0;
+      virtual secure_vector<byte> pkcs8_private_key() const = 0;
 
       /**
       * @return PKCS #8 AlgorithmIdentifier for this key
@@ -121,7 +121,7 @@ class BOTAN_DLL PK_Key_Agreement_Key : public virtual Private_Key
       /*
       * @return public component of this key
       */
-      virtual MemoryVector<byte> public_value() const = 0;
+      virtual std::vector<byte> public_value() const = 0;
 
       virtual ~PK_Key_Agreement_Key() {}
    };

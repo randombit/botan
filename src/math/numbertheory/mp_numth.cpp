@@ -20,9 +20,9 @@ BigInt square(const BigInt& x)
    const size_t x_sw = x.sig_words();
 
    BigInt z(BigInt::Positive, round_up<size_t>(2*x_sw, 16));
-   SecureVector<word> workspace(z.size());
+   secure_vector<word> workspace(z.size());
 
-   bigint_sqr(z.get_reg(), z.size(), workspace,
+   bigint_sqr(z.data(), z.size(), &workspace[0],
               x.data(), x.size(), x_sw);
    return z;
    }
@@ -44,13 +44,13 @@ BigInt mul_add(const BigInt& a, const BigInt& b, const BigInt& c)
    const size_t c_sw = c.sig_words();
 
    BigInt r(sign, std::max(a.size() + b.size(), c_sw) + 1);
-   SecureVector<word> workspace(r.size());
+   secure_vector<word> workspace(r.size());
 
-   bigint_mul(r.get_reg(), r.size(), workspace,
+   bigint_mul(r.data(), r.size(), &workspace[0],
               a.data(), a.size(), a_sw,
               b.data(), b.size(), b_sw);
    const size_t r_size = std::max(r.sig_words(), c_sw);
-   bigint_add2(r.get_reg(), r_size, c.data(), c_sw);
+   bigint_add2(r.data(), r_size, c.data(), c_sw);
    return r;
    }
 

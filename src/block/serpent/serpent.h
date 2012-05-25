@@ -21,17 +21,15 @@ class BOTAN_DLL Serpent : public Block_Cipher_Fixed_Params<16, 16, 32, 8>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
-      void clear() { zeroise(round_key); }
+      void clear() { round_key.clear(); }
       std::string name() const { return "Serpent"; }
       BlockCipher* clone() const { return new Serpent; }
-
-      Serpent() : round_key(132) {}
    protected:
       /**
       * For use by subclasses using SIMD, asm, etc
       * @return const reference to the key schedule
       */
-      const SecureVector<u32bit>& get_round_keys() const
+      const secure_vector<u32bit>& get_round_keys() const
          { return round_key; }
 
       /**
@@ -45,7 +43,7 @@ class BOTAN_DLL Serpent : public Block_Cipher_Fixed_Params<16, 16, 32, 8>
 
    private:
       void key_schedule(const byte key[], size_t length);
-      SecureVector<u32bit> round_key;
+      secure_vector<u32bit> round_key;
    };
 
 }

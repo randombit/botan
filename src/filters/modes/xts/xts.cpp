@@ -92,14 +92,14 @@ void XTS_Encryption::set_iv(const InitializationVector& iv)
 
    const size_t blocks_in_tweak = tweak.size() / cipher->block_size();
 
-   tweak.copy(iv.begin(), iv.length());
+   tweak.assign(iv.begin(), iv.end());
    cipher2->encrypt(tweak);
 
    for(size_t i = 1; i < blocks_in_tweak; ++i)
       {
-      tweak.copy(i*cipher->block_size(),
-                 &tweak[(i-1)*cipher->block_size()],
-                 cipher->block_size());
+      buffer_insert(tweak, i*cipher->block_size(),
+                    &tweak[(i-1)*cipher->block_size()],
+                    cipher->block_size());
 
       poly_double(&tweak[i*cipher->block_size()], cipher->block_size());
       }
@@ -136,7 +136,7 @@ void XTS_Encryption::buffered_block(const byte input[], size_t length)
    const size_t blocks_in_tweak = tweak.size() / cipher->block_size();
    size_t blocks = length / cipher->block_size();
 
-   SecureVector<byte> temp(tweak.size());
+   secure_vector<byte> temp(tweak.size());
 
    while(blocks)
       {
@@ -151,13 +151,15 @@ void XTS_Encryption::buffered_block(const byte input[], size_t length)
 
       send(temp, to_proc_bytes);
 
-      tweak.copy(&tweak[(to_proc-1)*cipher->block_size()],
-                 cipher->block_size());
+      copy_mem(&tweak[0],
+               &tweak[(to_proc-1)*cipher->block_size()],
+               cipher->block_size());
+
       poly_double(&tweak[0], cipher->block_size());
 
       for(size_t i = 1; i < blocks_in_tweak; ++i)
          {
-         tweak.copy(i*cipher->block_size(),
+         buffer_insert(tweak, i*cipher->block_size(),
                     &tweak[(i-1)*cipher->block_size()],
                     cipher->block_size());
 
@@ -192,7 +194,7 @@ void XTS_Encryption::buffered_final(const byte input[], size_t length)
       input += leftover_blocks;
       length -= leftover_blocks;
 
-      SecureVector<byte> temp(input, length);
+      secure_vector<byte> temp(input, input + length);
 
       xor_buf(temp, tweak, cipher->block_size());
       cipher->encrypt(temp);
@@ -264,12 +266,12 @@ void XTS_Decryption::set_iv(const InitializationVector& iv)
 
    const size_t blocks_in_tweak = tweak.size() / cipher->block_size();
 
-   tweak.copy(iv.begin(), iv.length());
+   tweak.assign(iv.begin(), iv.end());
    cipher2->encrypt(tweak);
 
    for(size_t i = 1; i < blocks_in_tweak; ++i)
       {
-      tweak.copy(i*cipher->block_size(),
+      buffer_insert(tweak, i*cipher->block_size(),
                  &tweak[(i-1)*cipher->block_size()],
                  cipher->block_size());
 
@@ -309,7 +311,7 @@ void XTS_Decryption::buffered_block(const byte input[], size_t input_length)
    const size_t blocks_in_tweak = tweak.size() / cipher->block_size();
    size_t blocks = input_length / cipher->block_size();
 
-   SecureVector<byte> temp(tweak.size());
+   secure_vector<byte> temp(tweak.size());
 
    while(blocks)
       {
@@ -324,15 +326,17 @@ void XTS_Decryption::buffered_block(const byte input[], size_t input_length)
 
       send(temp, to_proc_bytes);
 
-      tweak.copy(&tweak[(to_proc-1)*cipher->block_size()],
-                 cipher->block_size());
+      copy_mem(&tweak[0],
+               &tweak[(to_proc-1)*cipher->block_size()],
+               cipher->block_size());
+
       poly_double(&tweak[0], cipher->block_size());
 
       for(size_t i = 1; i < blocks_in_tweak; ++i)
          {
-         tweak.copy(i*cipher->block_size(),
-                    &tweak[(i-1)*cipher->block_size()],
-                    cipher->block_size());
+         buffer_insert(tweak, i*cipher->block_size(),
+                       &tweak[(i-1)*cipher->block_size()],
+                       cipher->block_size());
 
          poly_double(&tweak[i*cipher->block_size()], cipher->block_size());
          }
@@ -361,8 +365,8 @@ void XTS_Decryption::buffered_final(const byte input[], size_t length)
       input += leftover_blocks;
       length -= leftover_blocks;
 
-      SecureVector<byte> temp(input, length);
-      SecureVector<byte> tweak_copy(&tweak[0], cipher->block_size());
+      secure_vector<byte> temp(input, input + length);
+      secure_vector<byte> tweak_copy(&tweak[0], &tweak[cipher->block_size()]);
 
       poly_double(&tweak_copy[0], cipher->block_size());
 

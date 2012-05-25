@@ -218,7 +218,7 @@ HashFunction* Core_Engine::find_hash(const SCAN_Name& request,
          {
          const HashFunction* hash = af.prototype_hash_function(request.arg(i));
          if(!hash)
-            return 0;
+            return nullptr;
 
          hash_prototypes.push_back(hash);
          }
@@ -232,7 +232,7 @@ HashFunction* Core_Engine::find_hash(const SCAN_Name& request,
 
 #endif
 
-   return 0;
+   return nullptr;
    }
 
 }

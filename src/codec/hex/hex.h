@@ -42,8 +42,12 @@ std::string BOTAN_DLL hex_encode(const byte input[],
 * @param uppercase should output be upper or lower case?
 * @return hexadecimal representation of input
 */
-std::string BOTAN_DLL hex_encode(const MemoryRegion<byte>& input,
-                                 bool uppercase = true);
+template<typename Alloc>
+std::string hex_encode(const std::vector<byte, Alloc>& input,
+                       bool uppercase = true)
+   {
+   return hex_encode(&input[0], input.size(), uppercase);
+   }
 
 /**
 * Perform hex decoding
@@ -98,7 +102,7 @@ size_t BOTAN_DLL hex_decode(byte output[],
                    exception if whitespace is encountered
 * @return decoded hex output
 */
-SecureVector<byte> BOTAN_DLL hex_decode(const char input[],
+secure_vector<byte> BOTAN_DLL hex_decode(const char input[],
                                         size_t input_length,
                                         bool ignore_ws = true);
 
@@ -109,8 +113,8 @@ SecureVector<byte> BOTAN_DLL hex_decode(const char input[],
                    exception if whitespace is encountered
 * @return decoded hex output
 */
-SecureVector<byte> BOTAN_DLL hex_decode(const std::string& input,
-                                        bool ignore_ws = true);
+secure_vector<byte> BOTAN_DLL hex_decode(const std::string& input,
+                                         bool ignore_ws = true);
 
 }
 

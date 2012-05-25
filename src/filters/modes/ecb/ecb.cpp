@@ -70,8 +70,8 @@ void ECB_Encryption::end_msg()
    {
    size_t last_block = current_position() % cipher->block_size();
 
-   SecureVector<byte> padding(cipher->block_size());
-   padder->pad(padding, padding.size(), last_block);
+   secure_vector<byte> padding(cipher->block_size());
+   padder->pad(&padding[0], padding.size(), last_block);
 
    size_t pad_bytes = padder->pad_bytes(cipher->block_size(), last_block);
 
@@ -203,8 +203,8 @@ void ECB_Decryption::buffered_final(const byte input[], size_t length)
 
    input += extra_blocks * cipher->block_size();
 
-   cipher->decrypt(input, temp);
-   send(temp, padder->unpad(temp, cipher->block_size()));
+   cipher->decrypt(input, &temp[0]);
+   send(&temp[0], padder->unpad(&temp[0], cipher->block_size()));
    }
 
 }

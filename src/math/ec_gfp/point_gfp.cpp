@@ -45,7 +45,7 @@ void PointGFp::monty_mult(BigInt& z, const BigInt& x, const BigInt& y) const
    const size_t p_size = curve.get_p_words();
    const word p_dash = curve.get_p_dash();
 
-   SecureVector<word>& z_reg = z.get_reg();
+   secure_vector<word>& z_reg = z.get_reg();
    z_reg.resize(2*p_size+1);
    zeroise(z_reg);
 
@@ -71,7 +71,7 @@ void PointGFp::monty_sqr(BigInt& z, const BigInt& x) const
    const size_t p_size = curve.get_p_words();
    const word p_dash = curve.get_p_dash();
 
-   SecureVector<word>& z_reg = z.get_reg();
+   secure_vector<word>& z_reg = z.get_reg();
    z_reg.resize(2*p_size+1);
    zeroise(z_reg);
 
@@ -479,22 +479,22 @@ bool PointGFp::operator==(const PointGFp& other) const
    }
 
 // encoding and decoding
-SecureVector<byte> EC2OSP(const PointGFp& point, byte format)
+secure_vector<byte> EC2OSP(const PointGFp& point, byte format)
    {
    if(point.is_zero())
-      return SecureVector<byte>(1); // single 0 byte
+      return secure_vector<byte>(1); // single 0 byte
 
    const size_t p_bytes = point.get_curve().get_p().bytes();
 
    BigInt x = point.get_affine_x();
    BigInt y = point.get_affine_y();
 
-   SecureVector<byte> bX = BigInt::encode_1363(x, p_bytes);
-   SecureVector<byte> bY = BigInt::encode_1363(y, p_bytes);
+   secure_vector<byte> bX = BigInt::encode_1363(x, p_bytes);
+   secure_vector<byte> bY = BigInt::encode_1363(y, p_bytes);
 
    if(format == PointGFp::UNCOMPRESSED)
       {
-      SecureVector<byte> result;
+      secure_vector<byte> result;
       result.push_back(0x04);
 
       result += bX;
@@ -504,7 +504,7 @@ SecureVector<byte> EC2OSP(const PointGFp& point, byte format)
       }
    else if(format == PointGFp::COMPRESSED)
       {
-      SecureVector<byte> result;
+      secure_vector<byte> result;
       result.push_back(0x02 | static_cast<byte>(y.get_bit(0)));
 
       result += bX;
@@ -513,7 +513,7 @@ SecureVector<byte> EC2OSP(const PointGFp& point, byte format)
       }
    else if(format == PointGFp::HYBRID)
       {
-      SecureVector<byte> result;
+      secure_vector<byte> result;
       result.push_back(0x06 | static_cast<byte>(y.get_bit(0)));
 
       result += bX;
@@ -591,7 +591,7 @@ PointGFp OS2ECP(const byte data[], size_t data_len,
          throw Illegal_Point("OS2ECP: Decoding error in hybrid format");
       }
    else
-      throw Invalid_Argument("OS2ECP: Unknown format type");
+      throw Invalid_Argument("OS2ECP: Unknown format type " + std::to_string(pc));
 
    PointGFp result(curve, x, y);
 

@@ -26,7 +26,7 @@ CFB_Encryption::CFB_Encryption(BlockCipher* ciph, size_t fback_bits)
 
    if(feedback == 0 || fback_bits % 8 != 0 || feedback > cipher->block_size())
       throw Invalid_Argument("CFB_Encryption: Invalid feedback size " +
-                             to_string(fback_bits));
+                             std::to_string(fback_bits));
    }
 
 /*
@@ -46,7 +46,7 @@ CFB_Encryption::CFB_Encryption(BlockCipher* ciph,
 
    if(feedback == 0 || fback_bits % 8 != 0 || feedback > cipher->block_size())
       throw Invalid_Argument("CFB_Encryption: Invalid feedback size " +
-                             to_string(fback_bits));
+                             std::to_string(fback_bits));
 
    set_key(key);
    set_iv(iv);
@@ -61,7 +61,7 @@ void CFB_Encryption::set_iv(const InitializationVector& iv)
    zeroise(buffer);
    position = 0;
 
-   cipher->encrypt(state, buffer);
+   cipher->encrypt(&state[0], &buffer[0]);
    }
 
 /*
@@ -82,7 +82,10 @@ void CFB_Encryption::write(const byte input[], size_t length)
          {
          for(size_t j = 0; j != cipher->block_size() - feedback; ++j)
             state[j] = state[j + feedback];
-         state.copy(cipher->block_size() - feedback, buffer, feedback);
+
+         buffer_insert(state, cipher->block_size() - feedback,
+                       &buffer[0], feedback);
+
          cipher->encrypt(state, buffer);
          position = 0;
          }
@@ -103,7 +106,7 @@ CFB_Decryption::CFB_Decryption(BlockCipher* ciph, size_t fback_bits)
 
    if(feedback == 0 || fback_bits % 8 != 0 || feedback > cipher->block_size())
       throw Invalid_Argument("CFB_Decryption: Invalid feedback size " +
-                             to_string(fback_bits));
+                             std::to_string(fback_bits));
    }
 
 /*
@@ -123,7 +126,7 @@ CFB_Decryption::CFB_Decryption(BlockCipher* ciph,
 
    if(feedback == 0 || fback_bits % 8 != 0 || feedback > cipher->block_size())
       throw Invalid_Argument("CFB_Decryption: Invalid feedback size " +
-                             to_string(fback_bits));
+                             std::to_string(fback_bits));
 
    set_key(key);
    set_iv(iv);
@@ -151,7 +154,7 @@ void CFB_Decryption::write(const byte input[], size_t length)
       size_t xored = std::min(feedback - position, length);
       xor_buf(&buffer[position], input, xored);
       send(&buffer[position], xored);
-      buffer.copy(position, input, xored);
+      buffer_insert(buffer, position, input, xored);
       input += xored;
       length -= xored;
       position += xored;
@@ -159,7 +162,10 @@ void CFB_Decryption::write(const byte input[], size_t length)
          {
          for(size_t j = 0; j != cipher->block_size() - feedback; ++j)
             state[j] = state[j + feedback];
-         state.copy(cipher->block_size() - feedback, buffer, feedback);
+
+         buffer_insert(state, cipher->block_size() - feedback,
+                       &buffer[0], feedback);
+
          cipher->encrypt(state, buffer);
          position = 0;
          }

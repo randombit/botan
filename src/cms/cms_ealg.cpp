@@ -53,22 +53,22 @@ DER_Encoder& encode_si(DER_Encoder& der, const X509_Certificate& cert,
 /*
 * Compute the hash of some content
 */
-SecureVector<byte> hash_of(const SecureVector<byte>& content,
+secure_vector<byte> hash_of(const secure_vector<byte>& content,
                            const std::string& hash_name)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
-   std::auto_ptr<HashFunction> hash_fn(af.make_hash_function(hash_name));
+   std::unique_ptr<HashFunction> hash_fn(af.make_hash_function(hash_name));
    return hash_fn->process(content);
    }
 
 /*
 * Encode Attributes containing info on content
 */
-SecureVector<byte> encode_attr(const SecureVector<byte>& data,
+secure_vector<byte> encode_attr(const secure_vector<byte>& data,
                                const std::string& type,
                                const std::string& hash)
    {
-   SecureVector<byte> digest = hash_of(data, hash);
+   secure_vector<byte> digest = hash_of(data, hash);
 
    DER_Encoder encoder;
    encoder.encode(OIDS::lookup(type));
@@ -96,7 +96,7 @@ void CMS_Encoder::encrypt(RandomNumberGenerator& rng,
    {
    const std::string cipher = choose_algo(user_cipher, "TripleDES");
 
-   std::auto_ptr<Public_Key> key(to.subject_public_key());
+   std::unique_ptr<Public_Key> key(to.subject_public_key());
    const std::string algo = key->algo_name();
 
    Key_Constraints constraints = to.constraints();
@@ -198,7 +198,7 @@ void CMS_Encoder::encrypt(RandomNumberGenerator& rng,
    const std::string cipher = choose_algo(user_cipher, "TripleDES");
    SymmetricKey cek = setup_key(rng, cipher);
 
-   SecureVector<byte> kek_id; // FIXME: ?
+   secure_vector<byte> kek_id; // FIXME: ?
 
    DER_Encoder encoder;
 
@@ -244,7 +244,7 @@ void CMS_Encoder::encrypt(RandomNumberGenerator&,
 /*
 * Encrypt the content with the chosen key/cipher
 */
-SecureVector<byte> CMS_Encoder::do_encrypt(RandomNumberGenerator& rng,
+secure_vector<byte> CMS_Encoder::do_encrypt(RandomNumberGenerator& rng,
                                            const SymmetricKey& key,
                                            const std::string& cipher_name)
    {
@@ -297,9 +297,9 @@ void CMS_Encoder::sign(const X509_Certificate& cert,
    AlgorithmIdentifier sig_algo(OIDS::lookup(key.algo_name() + "/" + padding),
                                 AlgorithmIdentifier::USE_NULL_PARAM);
 
-   SecureVector<byte> signed_attr = encode_attr(data, type, hash);
+   secure_vector<byte> signed_attr = encode_attr(data, type, hash);
    signer.update(signed_attr);
-   SecureVector<byte> signature = signer.signature(rng);
+   secure_vector<byte> signature = signer.signature(rng);
    signed_attr[0] = 0xA0;
 
    const size_t SI_VERSION = cert.subject_key_id().size() ? 3 : 1;

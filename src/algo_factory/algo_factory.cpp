@@ -30,7 +30,7 @@ template<typename T>
 T* engine_get_algo(Engine*,
                    const SCAN_Name&,
                    Algorithm_Factory&)
-   { return 0; }
+   { return nullptr; }
 
 template<>
 BlockCipher* engine_get_algo(Engine* engine,
@@ -75,7 +75,7 @@ const T* factory_prototype(const std::string& algo_spec,
    SCAN_Name scan_name(algo_spec);
 
    if(scan_name.cipher_mode() != "")
-      return 0;
+      return nullptr;
 
    for(size_t i = 0; i != engines.size(); ++i)
       {
@@ -94,13 +94,13 @@ const T* factory_prototype(const std::string& algo_spec,
 /*
 * Setup caches
 */
-Algorithm_Factory::Algorithm_Factory(Mutex_Factory& mf)
+Algorithm_Factory::Algorithm_Factory()
    {
-   block_cipher_cache = new Algorithm_Cache<BlockCipher>(mf.make());
-   stream_cipher_cache = new Algorithm_Cache<StreamCipher>(mf.make());
-   hash_cache = new Algorithm_Cache<HashFunction>(mf.make());
-   mac_cache = new Algorithm_Cache<MessageAuthenticationCode>(mf.make());
-   pbkdf_cache = new Algorithm_Cache<PBKDF>(mf.make());
+   block_cipher_cache = new Algorithm_Cache<BlockCipher>();
+   stream_cipher_cache = new Algorithm_Cache<StreamCipher>();
+   hash_cache = new Algorithm_Cache<HashFunction>();
+   mac_cache = new Algorithm_Cache<MessageAuthenticationCode>();
+   pbkdf_cache = new Algorithm_Cache<PBKDF>();
    }
 
 /*
@@ -114,7 +114,8 @@ Algorithm_Factory::~Algorithm_Factory()
    delete mac_cache;
    delete pbkdf_cache;
 
-   std::for_each(engines.begin(), engines.end(), del_fun<Engine>());
+   for(auto i = engines.begin(); i != engines.end(); ++i)
+      delete *i;
    }
 
 void Algorithm_Factory::clear_caches()
@@ -156,7 +157,7 @@ void Algorithm_Factory::set_preferred_provider(const std::string& algo_spec,
 Engine* Algorithm_Factory::get_engine_n(size_t n) const
    {
    if(n >= engines.size())
-      return 0;
+      return nullptr;
    return engines[n];
    }
 

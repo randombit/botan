@@ -124,6 +124,9 @@ void IDEA::decrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void IDEA::key_schedule(const byte key[], size_t)
    {
+   EK.resize(52);
+   DK.resize(52);
+
    for(size_t i = 0; i != 8; ++i)
       EK[i] = load_be<u16bit>(key, i);
 

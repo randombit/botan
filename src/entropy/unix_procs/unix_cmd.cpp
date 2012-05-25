@@ -29,10 +29,10 @@ void do_exec(const std::vector<std::string>& arg_list,
    {
    const size_t args = arg_list.size() - 1;
 
-   const char* arg1 = (args >= 1) ? arg_list[1].c_str() : 0;
-   const char* arg2 = (args >= 2) ? arg_list[2].c_str() : 0;
-   const char* arg3 = (args >= 3) ? arg_list[3].c_str() : 0;
-   const char* arg4 = (args >= 4) ? arg_list[4].c_str() : 0;
+   const char* arg1 = (args >= 1) ? arg_list[1].c_str() : nullptr;
+   const char* arg2 = (args >= 2) ? arg_list[2].c_str() : nullptr;
+   const char* arg3 = (args >= 3) ? arg_list[3].c_str() : nullptr;
+   const char* arg4 = (args >= 4) ? arg_list[4].c_str() : nullptr;
 
    for(size_t j = 0; j != paths.size(); j++)
       {
@@ -74,7 +74,7 @@ size_t DataSource_Command::read(byte buf[], size_t length)
    tv.tv_usec = MAX_BLOCK_USECS;
 
    ssize_t got = 0;
-   if(::select(pipe->fd + 1, &set, 0, 0, &tv) == 1)
+   if(::select(pipe->fd + 1, &set, nullptr, nullptr, &tv) == 1)
       {
       if(FD_ISSET(pipe->fd, &set))
          got = ::read(pipe->fd, buf, length);
@@ -182,7 +182,7 @@ void DataSource_Command::shutdown_pipe()
    {
    if(pipe)
       {
-      pid_t reaped = waitpid(pipe->pid, 0, WNOHANG);
+      pid_t reaped = waitpid(pipe->pid, nullptr, WNOHANG);
 
       if(reaped == 0)
          {
@@ -191,21 +191,21 @@ void DataSource_Command::shutdown_pipe()
          struct ::timeval tv;
          tv.tv_sec = 0;
          tv.tv_usec = KILL_WAIT;
-         select(0, 0, 0, 0, &tv);
+         select(0, nullptr, nullptr, nullptr, &tv);
 
-         reaped = ::waitpid(pipe->pid, 0, WNOHANG);
+         reaped = ::waitpid(pipe->pid, nullptr, WNOHANG);
 
          if(reaped == 0)
             {
             ::kill(pipe->pid, SIGKILL);
             do
-               reaped = ::waitpid(pipe->pid, 0, 0);
+               reaped = ::waitpid(pipe->pid, nullptr, 0);
             while(reaped == -1);
             }
          }
 
       delete pipe;
-      pipe = 0;
+      pipe = nullptr;
       }
    }
 
@@ -223,7 +223,7 @@ DataSource_Command::DataSource_Command(const std::string& prog_and_args,
    if(arg_list.size() > 5)
       throw Invalid_Argument("DataSource_Command: Too many args");
 
-   pipe = 0;
+   pipe = nullptr;
    create_pipe(paths);
    }
 

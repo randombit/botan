@@ -14,8 +14,11 @@
 #include <botan/engine.h>
 #include <botan/parsing.h>
 #include <botan/symkey.h>
-#include <botan/time.h>
 #include <botan/hex.h>
+
+#include <chrono>
+
+typedef std::chrono::high_resolution_clock benchmark_clock;
 
 #include "common.h"
 #include "bench.h"
@@ -150,18 +153,6 @@ void report_results(const std::string& algo,
 
    std::cout << algo;
 
-#if defined(__SUNPRO_CC)
-  #define REVERSE_ITERATOR_BUG 1
-#elif defined(__GNUC__) && __GNUC__ <= 3
-  #define REVERSE_ITERATOR_BUG 1
-#elif defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 0)
-  #define REVERSE_ITERATOR_BUG 1
-#endif
-
-#ifndef REVERSE_ITERATOR_BUG
-  #define REVERSE_ITERATOR_BUG 0
-#endif
-
 #if (defined(__GNUC__) && __GNUC__ <= 3) || defined(__SUNPRO_CC)
    // Work around GCC 3.x bug, reverse iterators don't work
    for(std::map<double, std::string>::const_iterator i = results.begin(); i != results.end(); ++i)
@@ -184,10 +175,11 @@ bool bench_algo(const std::string& algo,
    {
    Botan::Algorithm_Factory& af = Botan::global_state().algorithm_factory();
 
-   u32bit milliseconds = static_cast<u32bit>(seconds * 1000);
+   std::chrono::milliseconds ms(
+      static_cast<std::chrono::milliseconds::rep>(seconds * 1000));
 
    std::map<std::string, double> speeds =
-      algorithm_benchmark(algo, af, rng, milliseconds, buf_size);
+      algorithm_benchmark(algo, af, rng, ms, buf_size);
 
    if(speeds.empty()) // maybe a cipher mode, then?
       {
@@ -236,16 +228,22 @@ bool bench_algo(const std::string& algo,
          Botan::Pipe pipe(filt, new Botan::BitBucket);
          pipe.start_msg();
 
-         const u64bit start = Botan::get_nanoseconds_clock();
-         u64bit nanoseconds_used = 0;
+         std::chrono::nanoseconds max_time(nanoseconds_max);
+         std::chrono::nanoseconds time_used(0);
+
+         auto start = benchmark_clock::now();
+
          u64bit reps = 0;
 
-         while(nanoseconds_used < nanoseconds_max)
+         while(time_used < max_time)
             {
             pipe.write(&buf[0], buf.size());
             ++reps;
-            nanoseconds_used = Botan::get_nanoseconds_clock() - start;
+            time_used = benchmark_clock::now() - start;
             }
+
+         u64bit nanoseconds_used =
+            std::chrono::duration_cast<std::chrono::nanoseconds>(time_used).count();
 
          double mbytes_per_second =
             (953.67 * (buf.size() * reps)) / nanoseconds_used;

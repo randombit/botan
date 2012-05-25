@@ -20,7 +20,7 @@ namespace Botan {
 class BOTAN_DLL TLS_PRF : public KDF
    {
    public:
-      SecureVector<byte> derive(size_t key_len,
+      secure_vector<byte> derive(size_t key_len,
                                 const byte secret[], size_t secret_len,
                                 const byte seed[], size_t seed_len) const;
 
@@ -40,7 +40,7 @@ class BOTAN_DLL TLS_PRF : public KDF
 class BOTAN_DLL TLS_12_PRF : public KDF
    {
    public:
-      SecureVector<byte> derive(size_t key_len,
+      secure_vector<byte> derive(size_t key_len,
                                 const byte secret[], size_t secret_len,
                                 const byte seed[], size_t seed_len) const;
 

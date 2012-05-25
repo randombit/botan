@@ -64,7 +64,7 @@ Core_Engine::find_mac(const SCAN_Name& request,
       return new ANSI_X919_MAC(af.make_block_cipher("DES"));
 #endif
 
-   return 0;
+   return nullptr;
    }
 
 }

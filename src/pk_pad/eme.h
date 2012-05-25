@@ -34,7 +34,7 @@ class BOTAN_DLL EME
       * @param rng a random number generator
       * @return encoded plaintext
       */
-      SecureVector<byte> encode(const byte in[],
+      secure_vector<byte> encode(const byte in[],
                                 size_t in_length,
                                 size_t key_length,
                                 RandomNumberGenerator& rng) const;
@@ -46,7 +46,7 @@ class BOTAN_DLL EME
       * @param rng a random number generator
       * @return encoded plaintext
       */
-      SecureVector<byte> encode(const MemoryRegion<byte>& in,
+      secure_vector<byte> encode(const secure_vector<byte>& in,
                                 size_t key_length,
                                 RandomNumberGenerator& rng) const;
 
@@ -57,7 +57,7 @@ class BOTAN_DLL EME
       * @param key_length length of the key in bits
       * @return plaintext
       */
-      SecureVector<byte> decode(const byte in[],
+      secure_vector<byte> decode(const byte in[],
                                 size_t in_length,
                                 size_t key_length) const;
 
@@ -67,7 +67,7 @@ class BOTAN_DLL EME
       * @param key_length length of the key in bits
       * @return plaintext
       */
-      SecureVector<byte> decode(const MemoryRegion<byte>& in,
+      secure_vector<byte> decode(const secure_vector<byte>& in,
                                 size_t key_length) const;
 
       virtual ~EME() {}
@@ -80,7 +80,7 @@ class BOTAN_DLL EME
       * @param rng a random number generator
       * @return encoded plaintext
       */
-      virtual SecureVector<byte> pad(const byte in[],
+      virtual secure_vector<byte> pad(const byte in[],
                                      size_t in_length,
                                      size_t key_length,
                                      RandomNumberGenerator& rng) const = 0;
@@ -92,7 +92,7 @@ class BOTAN_DLL EME
       * @param key_length length of the key in bits
       * @return plaintext
       */
-      virtual SecureVector<byte> unpad(const byte in[],
+      virtual secure_vector<byte> unpad(const byte in[],
                                        size_t in_length,
                                        size_t key_length) const = 0;
    };

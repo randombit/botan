@@ -8,7 +8,6 @@
 #include <botan/cvc_self.h>
 #include <botan/ecc_key.h>
 #include <botan/point_gfp.h>
-#include <botan/time.h>
 #include <botan/oids.h>
 #include <sstream>
 #include <memory>
@@ -35,7 +34,7 @@ void encode_eac_bigint(DER_Encoder& der, const BigInt& x, ASN1_Tag tag)
    der.encode(BigInt::encode_1363(x, x.bytes()), OCTET_STRING, tag);
    }
 
-MemoryVector<byte> eac_1_1_encoding(const EC_PublicKey* key,
+std::vector<byte> eac_1_1_encoding(const EC_PublicKey* key,
                                     const OID& sig_algo)
    {
    if(key->domain_format() == EC_DOMPAR_ENC_OID)
@@ -107,7 +106,7 @@ EAC1_1_CVC create_self_signed_cert(Private_Key const& key,
 
    PK_Signer signer(*priv_key, padding_and_hash);
 
-   MemoryVector<byte> enc_public_key = eac_1_1_encoding(priv_key, sig_algo.oid);
+   std::vector<byte> enc_public_key = eac_1_1_encoding(priv_key, sig_algo.oid);
 
    return make_cvc_cert(signer,
                         enc_public_key,
@@ -134,17 +133,17 @@ EAC1_1_Req create_cvc_req(Private_Key const& key,
 
    PK_Signer signer(*priv_key, padding_and_hash);
 
-   MemoryVector<byte> enc_public_key = eac_1_1_encoding(priv_key, sig_algo.oid);
+   std::vector<byte> enc_public_key = eac_1_1_encoding(priv_key, sig_algo.oid);
 
-   MemoryVector<byte> enc_cpi;
+   std::vector<byte> enc_cpi;
    enc_cpi.push_back(0x00);
-   MemoryVector<byte> tbs = DER_Encoder()
+   std::vector<byte> tbs = DER_Encoder()
       .encode(enc_cpi, OCTET_STRING, ASN1_Tag(41), APPLICATION)
       .raw_bytes(enc_public_key)
       .encode(chr)
       .get_contents();
 
-   MemoryVector<byte> signed_cert =
+   std::vector<byte> signed_cert =
       EAC1_1_gen_CVC<EAC1_1_Req>::make_signed(signer,
                                               EAC1_1_gen_CVC<EAC1_1_Req>::build_cert_body(tbs),
                                               rng);
@@ -164,12 +163,13 @@ EAC1_1_ADO create_ado_req(Private_Key const& key,
       {
       throw Invalid_Argument("CVC_EAC::create_self_signed_cert(): unsupported key type");
       }
+
    std::string padding_and_hash = padding_and_hash_from_oid(req.signature_algorithm().oid);
    PK_Signer signer(*priv_key, padding_and_hash);
-   SecureVector<byte> tbs_bits = req.BER_encode();
+   secure_vector<byte> tbs_bits = req.BER_encode();
    tbs_bits += DER_Encoder().encode(car).get_contents();
 
-   MemoryVector<byte> signed_cert =
+   std::vector<byte> signed_cert =
       EAC1_1_ADO::make_signed(signer, tbs_bits, rng);
 
    DataSource_Memory source(signed_cert);
@@ -193,9 +193,8 @@ EAC1_1_CVC create_cvca(Private_Key const& key,
       }
    EAC1_1_CVC_Options opts;
    opts.car = car;
-   const u64bit current_time = system_time();
 
-   opts.ced = ASN1_Ced(current_time);
+   opts.ced = ASN1_Ced(std::chrono::system_clock::now());
    opts.cex = ASN1_Cex(opts.ced);
    opts.cex.add_months(cvca_validity_months);
    opts.holder_auth_templ = (CVCA | (iris * IRIS) | (fingerpr * FINGERPRINT));
@@ -210,12 +209,12 @@ EAC1_1_CVC link_cvca(EAC1_1_CVC const& signer,
                      EAC1_1_CVC const& signee,
                      RandomNumberGenerator& rng)
    {
-   ECDSA_PrivateKey const* priv_key = dynamic_cast<ECDSA_PrivateKey const*>(&key);
+   const ECDSA_PrivateKey* priv_key = dynamic_cast<ECDSA_PrivateKey const*>(&key);
+
    if (priv_key == 0)
-      {
-      throw Invalid_Argument("CVC_EAC::create_self_signed_cert(): unsupported key type");
-      }
-   ASN1_Ced ced(system_time());
+      throw Invalid_Argument("link_cvca(): unsupported key type");
+
+   ASN1_Ced ced(std::chrono::system_clock::now());
    ASN1_Cex cex(signee.get_cex());
    if (*static_cast<EAC_Time*>(&ced) > *static_cast<EAC_Time*>(&cex))
       {
@@ -232,11 +231,11 @@ EAC1_1_CVC link_cvca(EAC1_1_CVC const& signer,
    AlgorithmIdentifier sig_algo = signer.signature_algorithm();
    std::string padding_and_hash = padding_and_hash_from_oid(sig_algo.oid);
    PK_Signer pk_signer(*priv_key, padding_and_hash);
-   std::auto_ptr<Public_Key> pk(signee.subject_public_key());
+   std::unique_ptr<Public_Key> pk(signee.subject_public_key());
    ECDSA_PublicKey* subj_pk = dynamic_cast<ECDSA_PublicKey*>(pk.get());
    subj_pk->set_parameter_encoding(EC_DOMPAR_ENC_EXPLICIT);
 
-   MemoryVector<byte> enc_public_key = eac_1_1_encoding(priv_key, sig_algo.oid);
+   std::vector<byte> enc_public_key = eac_1_1_encoding(priv_key, sig_algo.oid);
 
    return make_cvc_cert(pk_signer, enc_public_key,
                         signer.get_car(),
@@ -262,13 +261,19 @@ EAC1_1_CVC sign_request(EAC1_1_CVC const& signer_cert,
       throw Invalid_Argument("CVC_EAC::create_self_signed_cert(): unsupported key type");
       }
    std::string chr_str = signee.get_chr().value();
-   chr_str += to_string(seqnr, seqnr_len);
+
+   std::string seqnr_string = std::to_string(seqnr);
+
+   while(seqnr_string.size() < seqnr_len)
+      seqnr_string = '0' + seqnr_string;
+
+   chr_str += seqnr_string;
    ASN1_Chr chr(chr_str);
    std::string padding_and_hash = padding_and_hash_from_oid(signee.signature_algorithm().oid);
    PK_Signer pk_signer(*priv_key, padding_and_hash);
-   std::auto_ptr<Public_Key> pk(signee.subject_public_key());
+   std::unique_ptr<Public_Key> pk(signee.subject_public_key());
    ECDSA_PublicKey*  subj_pk = dynamic_cast<ECDSA_PublicKey*>(pk.get());
-   std::auto_ptr<Public_Key> signer_pk(signer_cert.subject_public_key());
+   std::unique_ptr<Public_Key> signer_pk(signer_cert.subject_public_key());
 
    // for the case that the domain parameters are not set...
    // (we use those from the signer because they must fit)
@@ -277,8 +282,9 @@ EAC1_1_CVC sign_request(EAC1_1_CVC const& signer_cert,
    subj_pk->set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
 
    AlgorithmIdentifier sig_algo(signer_cert.signature_algorithm());
-   const u64bit current_time = system_time();
-   ASN1_Ced ced(current_time);
+
+   ASN1_Ced ced(std::chrono::system_clock::now());
+
    u32bit chat_val;
    u32bit chat_low = signer_cert.get_chat_value() & 0x3; // take the chat rights from signer
    ASN1_Cex cex(ced);
@@ -303,7 +309,7 @@ EAC1_1_CVC sign_request(EAC1_1_CVC const& signer_cert,
       // (IS cannot sign certificates)
       }
 
-   MemoryVector<byte> enc_public_key = eac_1_1_encoding(priv_key, sig_algo.oid);
+   std::vector<byte> enc_public_key = eac_1_1_encoding(priv_key, sig_algo.oid);
 
    return make_cvc_cert(pk_signer, enc_public_key,
                         ASN1_Car(signer_cert.get_chr().iso_8859()),

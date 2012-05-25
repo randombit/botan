@@ -21,20 +21,18 @@ class BOTAN_DLL XTEA : public Block_Cipher_Fixed_Params<8, 16>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
-      void clear() { zeroise(EK); }
+      void clear() { EK.clear(); }
       std::string name() const { return "XTEA"; }
       BlockCipher* clone() const { return new XTEA; }
-
-      XTEA() : EK(64) {}
    protected:
       /**
       * @return const reference to the key schedule
       */
-      const SecureVector<u32bit>& get_EK() const { return EK; }
+      const secure_vector<u32bit>& get_EK() const { return EK; }
 
    private:
       void key_schedule(const byte[], size_t);
-      SecureVector<u32bit> EK;
+      secure_vector<u32bit> EK;
    };
 
 }

@@ -1,9 +1,0 @@
-define MUTEX_NOOP
-
-<source>
-mux_noop.cpp
-</source>
-
-<header:internal>
-mux_noop.h
-</header:internal>

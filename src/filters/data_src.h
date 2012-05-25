@@ -81,9 +81,8 @@ class BOTAN_DLL DataSource
 
       DataSource() {}
       virtual ~DataSource() {}
-   private:
-      DataSource& operator=(const DataSource&) { return (*this); }
-      DataSource(const DataSource&);
+      DataSource& operator=(const DataSource&) = delete;
+      DataSource(const DataSource&) = delete;
    };
 
 /**
@@ -107,15 +106,24 @@ class BOTAN_DLL DataSource_Memory : public DataSource
       * @param in the byte array to read from
       * @param length the length of the byte array
       */
-      DataSource_Memory(const byte in[], size_t length);
+      DataSource_Memory(const byte in[], size_t length) :
+         source(in, in + length), offset(0) {}
 
       /**
-      * Construct a memory source that reads from a MemoryRegion
+      * Construct a memory source that reads from a secure_vector
       * @param in the MemoryRegion to read from
       */
-      DataSource_Memory(const MemoryRegion<byte>& in);
+      DataSource_Memory(const secure_vector<byte>& in) :
+         source(in), offset(0) {}
+
+      /**
+      * Construct a memory source that reads from a std::vector
+      * @param in the MemoryRegion to read from
+      */
+      DataSource_Memory(const std::vector<byte>& in) :
+         source(&in[0], &in[in.size()]), offset(0) {}
    private:
-      SecureVector<byte> source;
+      secure_vector<byte> source;
       size_t offset;
    };
 

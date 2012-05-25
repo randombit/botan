@@ -20,7 +20,7 @@ BigInt random_prime(RandomNumberGenerator& rng,
    {
    if(bits <= 1)
       throw Invalid_Argument("random_prime: Can't make a prime of " +
-                             to_string(bits) + " bits");
+                             std::to_string(bits) + " bits");
    else if(bits == 2)
       return ((rng.next_byte() % 2) ? 2 : 3);
    else if(bits == 3)
@@ -48,7 +48,7 @@ BigInt random_prime(RandomNumberGenerator& rng,
          p += (modulo - p % modulo) + equiv;
 
       const size_t sieve_size = std::min(bits / 2, PRIME_TABLE_SIZE);
-      SecureVector<size_t> sieve(sieve_size);
+      secure_vector<u16bit> sieve(sieve_size);
 
       for(size_t j = 0; j != sieve.size(); ++j)
          sieve[j] = p % PRIMES[j];
@@ -88,7 +88,7 @@ BigInt random_safe_prime(RandomNumberGenerator& rng, size_t bits)
    {
    if(bits <= 64)
       throw Invalid_Argument("random_safe_prime: Can't make a prime of " +
-                             to_string(bits) + " bits");
+                             std::to_string(bits) + " bits");
 
    BigInt p;
    do

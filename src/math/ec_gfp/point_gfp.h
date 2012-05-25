@@ -59,15 +59,40 @@ class BOTAN_DLL PointGFp
       PointGFp(const CurveGFp& curve);
 
       /**
+      * Copy constructor
+      */
+      PointGFp(const PointGFp&) = default;
+
+      /**
+      * Move Constructor
+      */
+      PointGFp(PointGFp&& other)
+         {
+         this->swap(other);
+         }
+
+      /**
+      * Standard Assignment
+      */
+      PointGFp& operator=(const PointGFp&) = default;
+
+      /**
+      * Move Assignment
+      */
+      PointGFp& operator=(PointGFp&& other)
+         {
+         if(this != &other)
+            this->swap(other);
+         return (*this);
+         }
+
+      /**
       * Construct a point from its affine coordinates
       * @param curve the base curve
       * @param x affine x coordinate
       * @param y affine y coordinate
       */
       PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y);
-
-      //PointGFp(const PointGFp& other) = default;
-      //PointGFp& operator=(const PointGFp& other) = default;
 
       /**
       * += Operator
@@ -220,7 +245,7 @@ class BOTAN_DLL PointGFp
 
       CurveGFp curve;
       BigInt coord_x, coord_y, coord_z;
-      mutable SecureVector<word> ws; // workspace for Montgomery
+      mutable secure_vector<word> ws; // workspace for Montgomery
    };
 
 // relational operators
@@ -253,12 +278,13 @@ inline PointGFp operator*(const PointGFp& point, const BigInt& scalar)
    }
 
 // encoding and decoding
-SecureVector<byte> BOTAN_DLL EC2OSP(const PointGFp& point, byte format);
+secure_vector<byte> BOTAN_DLL EC2OSP(const PointGFp& point, byte format);
 
 PointGFp BOTAN_DLL OS2ECP(const byte data[], size_t data_len,
                           const CurveGFp& curve);
 
-inline PointGFp OS2ECP(const MemoryRegion<byte>& data, const CurveGFp& curve)
+template<typename Alloc>
+PointGFp OS2ECP(const std::vector<byte, Alloc>& data, const CurveGFp& curve)
    { return OS2ECP(&data[0], data.size(), curve); }
 
 }

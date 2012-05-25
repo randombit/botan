@@ -10,7 +10,7 @@ add_include_dir_option -I
 add_lib_dir_option -L
 add_lib_option -l
 
-lang_flags "-D_REENTRANT -ansi -Wno-long-long"
+lang_flags "-D_REENTRANT -std=c++0x"
 warning_flags "-W -Wall"
 
 makefile_style unix
@@ -36,18 +36,10 @@ westmere  -> "-march=corei7 -maes"
 </mach_opt>
 
 <mach_abi_linking>
+all     -> "-pthread"
+
 x86_64  -> "-m64"
-mips64  -> "-mabi=64"
-s390    -> "-m31"
-s390x   -> "-m64"
-sparc32 -> "-m32 -mno-app-regs"
-sparc64 -> "-m64 -mno-app-regs"
 ppc64   -> "-m64"
 
-# This should probably be used on most/all targets, but the docs are incomplete
-openbsd -> "-pthread"
-freebsd -> "-pthread"
-dragonfly -> "-pthread"
-netbsd  -> "-pthread -D_NETBSD_SOURCE"
-qnx     -> "-fexceptions -D_QNX_SOURCE"
+netbsd  -> "-D_NETBSD_SOURCE"
 </mach_abi_linking>

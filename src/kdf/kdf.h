@@ -26,8 +26,8 @@ class BOTAN_DLL KDF : public Algorithm
       * @param secret the secret input
       * @param salt a diversifier
       */
-      SecureVector<byte> derive_key(size_t key_len,
-                                    const MemoryRegion<byte>& secret,
+      secure_vector<byte> derive_key(size_t key_len,
+                                    const secure_vector<byte>& secret,
                                     const std::string& salt = "") const;
 
       /**
@@ -36,9 +36,15 @@ class BOTAN_DLL KDF : public Algorithm
       * @param secret the secret input
       * @param salt a diversifier
       */
-      SecureVector<byte> derive_key(size_t key_len,
-                                    const MemoryRegion<byte>& secret,
-                                    const MemoryRegion<byte>& salt) const;
+      template<typename Alloc, typename Alloc2>
+      secure_vector<byte> derive_key(size_t key_len,
+                                     const std::vector<byte, Alloc>& secret,
+                                     const std::vector<byte, Alloc2>& salt) const
+         {
+         return derive_key(key_len, &secret[0], secret.size(),
+                           &salt[0], salt.size());
+
+         }
 
       /**
       * Derive a key
@@ -47,8 +53,8 @@ class BOTAN_DLL KDF : public Algorithm
       * @param salt a diversifier
       * @param salt_len size of salt in bytes
       */
-      SecureVector<byte> derive_key(size_t key_len,
-                                    const MemoryRegion<byte>& secret,
+      secure_vector<byte> derive_key(size_t key_len,
+                                    const secure_vector<byte>& secret,
                                     const byte salt[],
                                     size_t salt_len) const;
 
@@ -59,7 +65,7 @@ class BOTAN_DLL KDF : public Algorithm
       * @param secret_len size of secret in bytes
       * @param salt a diversifier
       */
-      SecureVector<byte> derive_key(size_t key_len,
+      secure_vector<byte> derive_key(size_t key_len,
                                     const byte secret[],
                                     size_t secret_len,
                                     const std::string& salt = "") const;
@@ -72,7 +78,7 @@ class BOTAN_DLL KDF : public Algorithm
       * @param salt a diversifier
       * @param salt_len size of salt in bytes
       */
-      SecureVector<byte> derive_key(size_t key_len,
+      secure_vector<byte> derive_key(size_t key_len,
                                     const byte secret[],
                                     size_t secret_len,
                                     const byte salt[],
@@ -82,7 +88,7 @@ class BOTAN_DLL KDF : public Algorithm
 
       virtual KDF* clone() const = 0;
    private:
-      virtual SecureVector<byte>
+      virtual secure_vector<byte>
          derive(size_t key_len,
                 const byte secret[], size_t secret_len,
                 const byte salt[], size_t salt_len) const = 0;

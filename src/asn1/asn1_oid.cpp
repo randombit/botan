@@ -52,7 +52,7 @@ std::string OID::as_string() const
    std::string oid_str;
    for(size_t i = 0; i != id.size(); ++i)
       {
-      oid_str += to_string(id[i]);
+      oid_str += std::to_string(id[i]);
       if(i != id.size() - 1)
          oid_str += '.';
       }
@@ -129,7 +129,7 @@ void OID::encode_into(DER_Encoder& der) const
    if(id.size() < 2)
       throw Invalid_Argument("OID::encode_into: OID is invalid");
 
-   MemoryVector<byte> encoding;
+   std::vector<byte> encoding;
    encoding.push_back(40 * id[0] + id[1]);
 
    for(size_t i = 2; i != id.size(); ++i)

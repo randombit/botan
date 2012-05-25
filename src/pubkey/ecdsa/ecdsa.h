@@ -33,7 +33,7 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey
          EC_PublicKey(dom_par, public_point) {}
 
       ECDSA_PublicKey(const AlgorithmIdentifier& alg_id,
-                      const MemoryRegion<byte>& key_bits) :
+                      const secure_vector<byte>& key_bits) :
          EC_PublicKey(alg_id, key_bits) {}
 
       /**
@@ -72,7 +72,7 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
       * @param key_bits PKCS #8 structure
       */
       ECDSA_PrivateKey(const AlgorithmIdentifier& alg_id,
-                       const MemoryRegion<byte>& key_bits) :
+                       const secure_vector<byte>& key_bits) :
          EC_PrivateKey(alg_id, key_bits) {}
 
       /**
@@ -97,7 +97,7 @@ class BOTAN_DLL ECDSA_Signature_Operation : public PK_Ops::Signature
    public:
       ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa);
 
-      SecureVector<byte> sign(const byte msg[], size_t msg_len,
+      secure_vector<byte> sign(const byte msg[], size_t msg_len,
                               RandomNumberGenerator& rng);
 
       size_t message_parts() const { return 2; }

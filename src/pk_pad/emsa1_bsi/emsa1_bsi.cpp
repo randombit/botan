@@ -13,7 +13,7 @@ namespace Botan {
 /*
 * EMSA1 BSI Encode Operation
 */
-SecureVector<byte> EMSA1_BSI::encoding_of(const MemoryRegion<byte>& msg,
+secure_vector<byte> EMSA1_BSI::encoding_of(const secure_vector<byte>& msg,
                                           size_t output_bits,
                                           RandomNumberGenerator&)
    {

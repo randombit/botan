@@ -34,19 +34,19 @@ DLIES_Encryptor::~DLIES_Encryptor()
 /*
 * DLIES Encryption
 */
-SecureVector<byte> DLIES_Encryptor::enc(const byte in[], size_t length,
-                                        RandomNumberGenerator&) const
+std::vector<byte> DLIES_Encryptor::enc(const byte in[], size_t length,
+                                       RandomNumberGenerator&) const
    {
    if(length > maximum_input_size())
       throw Invalid_Argument("DLIES: Plaintext too large");
    if(other_key.empty())
       throw Invalid_State("DLIES: The other key was never set");
 
-   SecureVector<byte> out(my_key.size() + length + mac->output_length());
-   out.copy(&my_key[0], my_key.size());
-   out.copy(my_key.size(), in, length);
+   secure_vector<byte> out(my_key.size() + length + mac->output_length());
+   buffer_insert(out, 0, my_key);
+   buffer_insert(out, my_key.size(), in, length);
 
-   SecureVector<byte> vz = my_key;
+   secure_vector<byte> vz(my_key.begin(), my_key.end());
    vz += ka.derive_key(0, other_key).bits_of();
 
    const size_t K_LENGTH = length + mac_keylen;
@@ -65,13 +65,13 @@ SecureVector<byte> DLIES_Encryptor::enc(const byte in[], size_t length,
 
    mac->final(C + length);
 
-   return out;
+   return unlock(out);
    }
 
 /*
 * Set the other parties public key
 */
-void DLIES_Encryptor::set_other_key(const MemoryRegion<byte>& ok)
+void DLIES_Encryptor::set_other_key(const std::vector<byte>& ok)
    {
    other_key = ok;
    }
@@ -108,18 +108,21 @@ DLIES_Decryptor::~DLIES_Decryptor()
 /*
 * DLIES Decryption
 */
-SecureVector<byte> DLIES_Decryptor::dec(const byte msg[], size_t length) const
+secure_vector<byte> DLIES_Decryptor::dec(const byte msg[], size_t length) const
    {
    if(length < my_key.size() + mac->output_length())
       throw Decoding_Error("DLIES decryption: ciphertext is too short");
 
    const size_t CIPHER_LEN = length - my_key.size() - mac->output_length();
 
-   SecureVector<byte> v(msg, my_key.size());
-   SecureVector<byte> C(msg + my_key.size(), CIPHER_LEN);
-   SecureVector<byte> T(msg + my_key.size() + CIPHER_LEN, mac->output_length());
+   std::vector<byte> v(msg, msg + my_key.size());
 
-   SecureVector<byte> vz(msg, my_key.size());
+   secure_vector<byte> C(msg + my_key.size(), msg + my_key.size() + CIPHER_LEN);
+
+   secure_vector<byte> T(msg + my_key.size() + CIPHER_LEN,
+                         msg + my_key.size() + CIPHER_LEN + mac->output_length());
+
+   secure_vector<byte> vz(msg, msg + my_key.size());
    vz += ka.derive_key(0, v).bits_of();
 
    const size_t K_LENGTH = C.size() + mac_keylen;
@@ -131,7 +134,7 @@ SecureVector<byte> DLIES_Decryptor::dec(const byte msg[], size_t length) const
    mac->update(C);
    for(size_t j = 0; j != 8; ++j)
       mac->update(0);
-   SecureVector<byte> T2 = mac->final();
+   secure_vector<byte> T2 = mac->final();
    if(T != T2)
       throw Decoding_Error("DLIES: message authentication failed");
 

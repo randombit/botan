@@ -10,6 +10,7 @@
 #include <botan/keypair.h>
 #include <botan/parsing.h>
 #include <algorithm>
+#include <future>
 
 namespace Botan {
 
@@ -21,7 +22,7 @@ RW_PrivateKey::RW_PrivateKey(RandomNumberGenerator& rng,
    {
    if(bits < 512)
       throw Invalid_Argument(algo_name() + ": Can't make a key that is only " +
-                             to_string(bits) + " bits long");
+                             std::to_string(bits) + " bits long");
    if(exp < 2 || exp % 2 == 1)
       throw Invalid_Argument(algo_name() + ": Invalid encryption exponent");
 
@@ -70,7 +71,7 @@ RW_Signature_Operation::RW_Signature_Operation(const RW_PrivateKey& rw) :
    {
    }
 
-SecureVector<byte>
+secure_vector<byte>
 RW_Signature_Operation::sign(const byte msg[], size_t msg_len,
                              RandomNumberGenerator& rng)
    {
@@ -90,18 +91,18 @@ RW_Signature_Operation::sign(const byte msg[], size_t msg_len,
 
    i = blinder.blind(i);
 
-   BigInt j1 = powermod_d1_p(i);
-   BigInt j2 = powermod_d2_q(i);
+   auto future_j1 = std::async(std::launch::async, powermod_d1_p, i);
+   const BigInt j2 = powermod_d2_q(i);
+   BigInt j1 = future_j1.get();
+
    j1 = mod_p.reduce(sub_mul(j1, j2, c));
 
-   BigInt r = blinder.unblind(mul_add(j1, q, j2));
+   const BigInt r = blinder.unblind(mul_add(j1, q, j2));
 
-   r = std::min(r, n - r);
-
-   return BigInt::encode_1363(r, n.bytes());
+   return BigInt::encode_1363(std::min(r, n - r), n.bytes());
    }
 
-SecureVector<byte>
+secure_vector<byte>
 RW_Verification_Operation::verify_mr(const byte msg[], size_t msg_len)
    {
    BigInt m(msg, msg_len);
@@ -111,15 +112,15 @@ RW_Verification_Operation::verify_mr(const byte msg[], size_t msg_len)
 
    BigInt r = powermod_e_n(m);
    if(r % 16 == 12)
-      return BigInt::encode(r);
+      return BigInt::encode_locked(r);
    if(r % 8 == 6)
-      return BigInt::encode(2*r);
+      return BigInt::encode_locked(2*r);
 
    r = n - r;
    if(r % 16 == 12)
-      return BigInt::encode(r);
+      return BigInt::encode_locked(r);
    if(r % 8 == 6)
-      return BigInt::encode(2*r);
+      return BigInt::encode_locked(2*r);
 
    throw Invalid_Argument("RW signature verification: Invalid signature");
    }

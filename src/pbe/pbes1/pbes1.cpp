@@ -65,7 +65,7 @@ void PBE_PKCS5v15::flush_pipe(bool safe_to_skip)
    if(safe_to_skip && pipe.remaining() < 64)
       return;
 
-   SecureVector<byte> buffer(DEFAULT_BUFFERSIZE);
+   secure_vector<byte> buffer(DEFAULT_BUFFERSIZE);
    while(pipe.remaining())
       {
       size_t got = pipe.read(&buffer[0], buffer.size());
@@ -80,7 +80,7 @@ void PBE_PKCS5v15::set_key(const std::string& passphrase)
    {
    PKCS5_PBKDF1 pbkdf(hash_function->clone());
 
-   SecureVector<byte> key_and_iv = pbkdf.derive_key(16, passphrase,
+   secure_vector<byte> key_and_iv = pbkdf.derive_key(16, passphrase,
                                                     &salt[0], salt.size(),
                                                     iterations).bits_of();
 
@@ -102,14 +102,14 @@ void PBE_PKCS5v15::new_params(RandomNumberGenerator& rng)
 /*
 * Encode PKCS#5 PBES1 parameters
 */
-MemoryVector<byte> PBE_PKCS5v15::encode_params() const
+std::vector<byte> PBE_PKCS5v15::encode_params() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
          .encode(salt, OCTET_STRING)
          .encode(iterations)
       .end_cons()
-   .get_contents();
+   .get_contents_unlocked();
    }
 
 /*

@@ -29,7 +29,7 @@ class BOTAN_DLL DSA_PublicKey : public virtual DL_Scheme_PublicKey
       size_t max_input_bits() const { return group_q().bits(); }
 
       DSA_PublicKey(const AlgorithmIdentifier& alg_id,
-                    const MemoryRegion<byte>& key_bits) :
+                    const secure_vector<byte>& key_bits) :
          DL_Scheme_PublicKey(alg_id, key_bits, DL_Group::ANSI_X9_57)
          {
          }
@@ -47,7 +47,7 @@ class BOTAN_DLL DSA_PrivateKey : public DSA_PublicKey,
    {
    public:
       DSA_PrivateKey(const AlgorithmIdentifier& alg_id,
-                     const MemoryRegion<byte>& key_bits,
+                     const secure_vector<byte>& key_bits,
                      RandomNumberGenerator& rng);
 
       DSA_PrivateKey(RandomNumberGenerator& rng,
@@ -69,7 +69,7 @@ class BOTAN_DLL DSA_Signature_Operation : public PK_Ops::Signature
       size_t message_part_size() const { return q.bytes(); }
       size_t max_input_bits() const { return q.bits(); }
 
-      SecureVector<byte> sign(const byte msg[], size_t msg_len,
+      secure_vector<byte> sign(const byte msg[], size_t msg_len,
                               RandomNumberGenerator& rng);
    private:
       const BigInt& q;

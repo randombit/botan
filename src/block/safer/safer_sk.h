@@ -21,7 +21,7 @@ class BOTAN_DLL SAFER_SK : public Block_Cipher_Fixed_Params<8, 16>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
-      void clear() { zeroise(EK); }
+      void clear() { EK.clear(); }
       std::string name() const;
       BlockCipher* clone() const;
 
@@ -31,10 +31,10 @@ class BOTAN_DLL SAFER_SK : public Block_Cipher_Fixed_Params<8, 16>
       */
       SAFER_SK(size_t rounds);
    private:
-      size_t get_rounds() const { return (EK.size() - 8) / 16; }
       void key_schedule(const byte[], size_t);
 
-      SecureVector<byte> EK;
+      size_t rounds;
+      secure_vector<byte> EK;
    };
 
 }

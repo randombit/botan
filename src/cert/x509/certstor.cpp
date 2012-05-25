@@ -32,7 +32,7 @@ void Certificate_Store_In_Memory::add_certificate(const X509_Certificate& cert)
 std::vector<X509_Certificate>
 Certificate_Store_In_Memory::find_cert_by_subject_and_key_id(
    const X509_DN& subject_dn,
-   const MemoryRegion<byte>& key_id) const
+   const std::vector<byte>& key_id) const
    {
    std::vector<X509_Certificate> result;
 
@@ -41,7 +41,7 @@ Certificate_Store_In_Memory::find_cert_by_subject_and_key_id(
       // Only compare key ids if set in both call and in the cert
       if(key_id.size())
          {
-         MemoryVector<byte> skid = certs[i].subject_key_id();
+         std::vector<byte> skid = certs[i].subject_key_id();
 
          if(skid.size() && skid != key_id) // no match
             continue;
@@ -76,7 +76,7 @@ void Certificate_Store_In_Memory::add_crl(const X509_CRL& crl)
 std::vector<X509_CRL>
 Certificate_Store_In_Memory::find_crl_by_issuer_and_key_id(
    const X509_DN& issuer_dn,
-   const MemoryRegion<byte>& key_id) const
+   const std::vector<byte>& key_id) const
    {
    std::vector<X509_CRL> result;
 
@@ -85,7 +85,7 @@ Certificate_Store_In_Memory::find_crl_by_issuer_and_key_id(
       // Only compare key ids if set in both call and in the CRL
       if(key_id.size())
          {
-         MemoryVector<byte> akid = crls[i].authority_key_id();
+         std::vector<byte> akid = crls[i].authority_key_id();
 
          if(akid.size() && akid != key_id) // no match
             continue;

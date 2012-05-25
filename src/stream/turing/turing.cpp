@@ -17,7 +17,7 @@ namespace {
 /*
 * Perform an N-way PHT
 */
-inline void PHT(MemoryRegion<u32bit>& B)
+inline void PHT(secure_vector<u32bit>& B)
    {
    u32bit sum = 0;
    for(size_t i = 0; i < B.size() - 1; ++i)
@@ -247,6 +247,13 @@ void Turing::key_schedule(const byte key[], size_t length)
 
    PHT(K);
 
+   R.resize(17);
+   S0.resize(256);
+   S1.resize(256);
+   S2.resize(256);
+   S3.resize(256);
+   buffer.resize(17*20);
+
    for(u32bit i = 0; i != 256; ++i)
       {
       u32bit W0 = 0, C0 = i;
@@ -273,7 +280,7 @@ void Turing::key_schedule(const byte key[], size_t length)
       S3[i] = (W3 & 0xFFFFFF00) | C3;
       }
 
-   set_iv(0, 0);
+   set_iv(nullptr, 0);
    }
 
 /*
@@ -284,7 +291,7 @@ void Turing::set_iv(const byte iv[], size_t length)
    if(!valid_iv_length(length))
       throw Invalid_IV_Length(name(), length);
 
-   SecureVector<u32bit> IV(length / 4);
+   secure_vector<u32bit> IV(length / 4);
    for(size_t i = 0; i != length; ++i)
       IV[i/4] = (IV[i/4] << 8) + iv[i];
 
@@ -313,12 +320,13 @@ void Turing::set_iv(const byte iv[], size_t length)
 */
 void Turing::clear()
    {
-   zeroise(S0);
-   zeroise(S1);
-   zeroise(S2);
-   zeroise(S3);
-
-   zeroise(buffer);
+   S0.clear();
+   S1.clear();
+   S2.clear();
+   S3.clear();
+   R.clear();
+   K.clear();
+   buffer.clear();
    position = 0;
    }
 

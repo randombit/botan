@@ -14,16 +14,6 @@
 namespace Botan {
 
 /*
-* Default Matcher transform operation (identity)
-*/
-std::pair<std::string, std::string>
-Data_Store::Matcher::transform(const std::string& key,
-                               const std::string& value) const
-   {
-   return std::make_pair(key, value);
-   }
-
-/*
 * Data_Store Equality Comparison
 */
 bool Data_Store::operator==(const Data_Store& other) const
@@ -42,26 +32,14 @@ bool Data_Store::has_value(const std::string& key) const
 /*
 * Search based on an arbitrary predicate
 */
-std::multimap<std::string, std::string>
-Data_Store::search_with(const Matcher& matcher) const
+std::multimap<std::string, std::string> Data_Store::search_for(
+   std::function<bool (std::string, std::string)> predicate) const
    {
    std::multimap<std::string, std::string> out;
 
-   std::multimap<std::string, std::string>::const_iterator i =
-      contents.begin();
-
-   while(i != contents.end())
-      {
-      if(matcher(i->first, i->second))
-         {
-         std::pair<std::string, std::string> p(
-            matcher.transform(i->first, i->second));
-
-         multimap_insert(out, p.first, p.second);
-         }
-
-      ++i;
-      }
+   for(auto i = contents.begin(); i != contents.end(); ++i)
+      if(predicate(i->first, i->second))
+         out.insert(std::make_pair(i->first, i->second));
 
    return out;
    }
@@ -71,12 +49,9 @@ Data_Store::search_with(const Matcher& matcher) const
 */
 std::vector<std::string> Data_Store::get(const std::string& looking_for) const
    {
-   typedef std::multimap<std::string, std::string>::const_iterator iter;
-
-   std::pair<iter, iter> range = contents.equal_range(looking_for);
-
    std::vector<std::string> out;
-   for(iter i = range.first; i != range.second; ++i)
+   auto range = contents.equal_range(looking_for);
+   for(auto i = range.first; i != range.second; ++i)
       out.push_back(i->second);
    return out;
    }
@@ -97,21 +72,21 @@ std::string Data_Store::get1(const std::string& key) const
    }
 
 /*
-* Get a single MemoryVector atom
+* Get a single std::vector atom
 */
-MemoryVector<byte>
+std::vector<byte>
 Data_Store::get1_memvec(const std::string& key) const
    {
    std::vector<std::string> vals = get(key);
 
    if(vals.empty())
-      return MemoryVector<byte>();
+      return std::vector<byte>();
 
    if(vals.size() > 1)
       throw Invalid_State("Data_Store::get1_memvec: Multiple values for " +
                           key);
 
-   return hex_decode(vals[0]);
+   return unlock(hex_decode(vals[0]));
    }
 
 /*
@@ -144,13 +119,18 @@ void Data_Store::add(const std::string& key, const std::string& val)
 */
 void Data_Store::add(const std::string& key, u32bit val)
    {
-   add(key, to_string(val));
+   add(key, std::to_string(val));
    }
 
 /*
 * Insert a single key and value
 */
-void Data_Store::add(const std::string& key, const MemoryRegion<byte>& val)
+void Data_Store::add(const std::string& key, const secure_vector<byte>& val)
+   {
+   add(key, hex_encode(&val[0], val.size()));
+   }
+
+void Data_Store::add(const std::string& key, const std::vector<byte>& val)
    {
    add(key, hex_encode(&val[0], val.size()));
    }

@@ -21,15 +21,13 @@ class BOTAN_DLL KASUMI : public Block_Cipher_Fixed_Params<8, 16>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
-      void clear() { zeroise(EK); }
+      void clear() { EK.clear(); }
       std::string name() const { return "KASUMI"; }
       BlockCipher* clone() const { return new KASUMI; }
-
-      KASUMI() : EK(64) {}
    private:
       void key_schedule(const byte[], size_t);
 
-      SecureVector<u16bit> EK;
+      secure_vector<u16bit> EK;
    };
 
 }

@@ -68,11 +68,11 @@ void x931_tests(std::vector<std::pair<std::string, std::string> > vecs,
       ANSI_X931_RNG prng(get_block_cipher(cipher),
                          new Fixed_Output_RNG);
 
-      SecureVector<byte> x = hex_decode(input);
-      prng.add_entropy(x.begin(), x.size());
+      secure_vector<byte> x = hex_decode(input);
+      prng.add_entropy(&x[0], x.size());
 
-      SecureVector<byte> output(result.size() / 2);
-      prng.randomize(output, output.size());
+      secure_vector<byte> output(result.size() / 2);
+      prng.randomize(&output[0], output.size());
 
       if(hex_decode(result) != output)
          std::cout << "FAIL";

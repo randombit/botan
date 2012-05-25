@@ -43,7 +43,7 @@ class XOR_Cipher : public StreamCipher
          copy_mem(&mask[0], key, length);
          }
 
-      SecureVector<byte> mask;
+      secure_vector<byte> mask;
       u32bit mask_pos;
    };
 

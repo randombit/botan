@@ -30,7 +30,7 @@ namespace X509 {
 * @param key the public key to encode
 * @return BER encoding of this key
 */
-BOTAN_DLL MemoryVector<byte> BER_encode(const Public_Key& key);
+BOTAN_DLL std::vector<byte> BER_encode(const Public_Key& key);
 
 /**
 * PEM encode a public key into a string.
@@ -58,7 +58,7 @@ BOTAN_DLL Public_Key* load_key(const std::string& filename);
 * @param enc the memory region containing the DER or PEM encoded key
 * @return new public key object
 */
-BOTAN_DLL Public_Key* load_key(const MemoryRegion<byte>& enc);
+BOTAN_DLL Public_Key* load_key(const secure_vector<byte>& enc);
 
 /**
 * Copy a key.

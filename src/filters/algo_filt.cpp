@@ -92,7 +92,7 @@ Hash_Filter::Hash_Filter(const std::string& algo_spec,
 */
 void Hash_Filter::end_msg()
    {
-   SecureVector<byte> output = hash->final();
+   secure_vector<byte> output = hash->final();
    if(OUTPUT_LENGTH)
       send(output, std::min<size_t>(OUTPUT_LENGTH, output.size()));
    else
@@ -125,7 +125,7 @@ MAC_Filter::MAC_Filter(const std::string& mac_name, const SymmetricKey& key,
 */
 void MAC_Filter::end_msg()
    {
-   SecureVector<byte> output = mac->final();
+   secure_vector<byte> output = mac->final();
    if(OUTPUT_LENGTH)
       send(output, std::min<size_t>(OUTPUT_LENGTH, output.size()));
    else

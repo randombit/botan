@@ -33,8 +33,8 @@ u32bit EAC1_1_CVC::get_chat_value() const
 */
 void EAC1_1_CVC::force_decode()
    {
-   SecureVector<byte> enc_pk;
-   SecureVector<byte> enc_chat_val;
+   secure_vector<byte> enc_pk;
+   secure_vector<byte> enc_chat_val;
    size_t cpi;
    BER_Decoder tbs_cert(tbs_bits);
    tbs_cert.decode(cpi, ASN1_Tag(41), APPLICATION)
@@ -88,7 +88,7 @@ bool EAC1_1_CVC::operator==(EAC1_1_CVC const& rhs) const
            && get_concat_sig() == rhs.get_concat_sig());
    }
 
-ECDSA_PublicKey* decode_eac1_1_key(const MemoryRegion<byte>&,
+ECDSA_PublicKey* decode_eac1_1_key(const secure_vector<byte>&,
                                    AlgorithmIdentifier&)
    {
    throw Internal_Error("decode_eac1_1_key: Unimplemented");
@@ -96,7 +96,7 @@ ECDSA_PublicKey* decode_eac1_1_key(const MemoryRegion<byte>&,
    }
 
 EAC1_1_CVC make_cvc_cert(PK_Signer& signer,
-                         MemoryRegion<byte> const& public_key,
+                         secure_vector<byte> const& public_key,
                          ASN1_Car const& car,
                          ASN1_Chr const& chr,
                          byte holder_auth_templ,
@@ -105,12 +105,12 @@ EAC1_1_CVC make_cvc_cert(PK_Signer& signer,
                          RandomNumberGenerator& rng)
    {
    OID chat_oid(OIDS::lookup("CertificateHolderAuthorizationTemplate"));
-   MemoryVector<byte> enc_chat_val;
+   std::vector<byte> enc_chat_val;
    enc_chat_val.push_back(holder_auth_templ);
 
-   MemoryVector<byte> enc_cpi;
+   std::vector<byte> enc_cpi;
    enc_cpi.push_back(0x00);
-   MemoryVector<byte> tbs = DER_Encoder()
+   std::vector<byte> tbs = DER_Encoder()
       .encode(enc_cpi, OCTET_STRING, ASN1_Tag(41), APPLICATION) // cpi
       .encode(car)
       .raw_bytes(public_key)
@@ -123,7 +123,7 @@ EAC1_1_CVC make_cvc_cert(PK_Signer& signer,
       .encode(cex)
       .get_contents();
 
-   MemoryVector<byte> signed_cert =
+   std::vector<byte> signed_cert =
       EAC1_1_CVC::make_signed(signer,
                               EAC1_1_CVC::build_cert_body(tbs),
                               rng);

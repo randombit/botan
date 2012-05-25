@@ -23,10 +23,10 @@ namespace {
 /*
 * Wrap a key as specified in RFC 3217
 */
-SecureVector<byte> do_rfc3217_wrap(RandomNumberGenerator& rng,
+secure_vector<byte> do_rfc3217_wrap(RandomNumberGenerator& rng,
                                    const std::string& cipher_name,
                                    const SymmetricKey& kek,
-                                   const SecureVector<byte>& input)
+                                   const secure_vector<byte>& input)
    {
    class Flip_Bytes : public Filter
       {
@@ -44,9 +44,9 @@ SecureVector<byte> do_rfc3217_wrap(RandomNumberGenerator& rng,
             buf.clear();
             }
 
-         Flip_Bytes(const SecureVector<byte>& prefix) : buf(prefix) {}
+         Flip_Bytes(const secure_vector<byte>& prefix) : buf(prefix) {}
       private:
-         SecureVector<byte> buf;
+         secure_vector<byte> buf;
       };
 
    Algorithm_Factory& af = global_state().algorithm_factory();
@@ -78,7 +78,7 @@ SecureVector<byte> do_rfc3217_wrap(RandomNumberGenerator& rng,
 /*
 * Wrap a CEK with a KEK
 */
-SecureVector<byte> CMS_Encoder::wrap_key(RandomNumberGenerator& rng,
+secure_vector<byte> CMS_Encoder::wrap_key(RandomNumberGenerator& rng,
                                          const std::string& cipher,
                                          const SymmetricKey& cek,
                                          const SymmetricKey& kek)
@@ -98,7 +98,7 @@ SecureVector<byte> CMS_Encoder::wrap_key(RandomNumberGenerator& rng,
       if(kek.length() != 16)
          throw Encoding_Error("CMS: 128-bit KEKs must be used with " + cipher);
 
-      SecureVector<byte> lcekpad;
+      secure_vector<byte> lcekpad;
       lcekpad.push_back(static_cast<byte>(cek.length()));
       lcekpad += cek.bits_of();
       while(lcekpad.size() % 8)
@@ -113,7 +113,7 @@ SecureVector<byte> CMS_Encoder::wrap_key(RandomNumberGenerator& rng,
 /*
 * Encode the parameters for an encryption algo
 */
-SecureVector<byte> CMS_Encoder::encode_params(const std::string& cipher,
+secure_vector<byte> CMS_Encoder::encode_params(const std::string& cipher,
                                               const SymmetricKey& key,
                                               const InitializationVector& iv)
    {

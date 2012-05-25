@@ -12,7 +12,7 @@ namespace Botan {
 /*
 * KDF1 Key Derivation Mechanism
 */
-SecureVector<byte> KDF1::derive(size_t,
+secure_vector<byte> KDF1::derive(size_t,
                                 const byte secret[], size_t secret_len,
                                 const byte P[], size_t P_len) const
    {

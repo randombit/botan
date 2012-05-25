@@ -16,7 +16,7 @@ namespace Botan {
 */
 void Lion::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   SecureVector<byte> buffer_vec(LEFT_SIZE);
+   secure_vector<byte> buffer_vec(LEFT_SIZE);
    byte* buffer = &buffer_vec[0];
 
    for(size_t i = 0; i != blocks; ++i)
@@ -43,7 +43,7 @@ void Lion::encrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void Lion::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   SecureVector<byte> buffer_vec(LEFT_SIZE);
+   secure_vector<byte> buffer_vec(LEFT_SIZE);
    byte* buffer = &buffer_vec[0];
 
    for(size_t i = 0; i != blocks; ++i)
@@ -72,8 +72,8 @@ void Lion::key_schedule(const byte key[], size_t length)
    {
    clear();
 
-   key1.copy(key,              length / 2);
-   key2.copy(key + length / 2, length / 2);
+   key1.assign(key,                key + (length / 2));
+   key2.assign(key + (length / 2), key + length);
    }
 
 /*
@@ -83,7 +83,7 @@ std::string Lion::name() const
    {
    return "Lion(" + hash->name() + "," +
                     cipher->name() + "," +
-                    to_string(BLOCK_SIZE) + ")";
+                    std::to_string(BLOCK_SIZE) + ")";
    }
 
 /*
@@ -99,10 +99,10 @@ BlockCipher* Lion::clone() const
 */
 void Lion::clear()
    {
+   key1.clear();
+   key2.clear();
    hash->clear();
    cipher->clear();
-   zeroise(key1);
-   zeroise(key2);
    }
 
 /*

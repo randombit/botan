@@ -96,7 +96,7 @@ Filter* Filter::get_next() const
    {
    if(port_num < next.size())
       return next[port_num];
-   return 0;
+   return nullptr;
    }
 
 /*
@@ -104,7 +104,7 @@ Filter* Filter::get_next() const
 */
 void Filter::set_next(Filter* filters[], size_t size)
    {
-   while(size && filters && filters[size-1] == 0)
+   while(size && filters && filters[size-1] == nullptr)
       --size;
 
    next.clear();

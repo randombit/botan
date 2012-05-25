@@ -34,9 +34,10 @@
 #include <botan/botan.h>
 #include <botan/pubkey.h>
 #include <botan/rsa.h>
+#include <botan/base64.h>
+
 using namespace Botan;
 
-std::string b64_encode(const SecureVector<byte>&);
 SymmetricKey derive_key(const std::string&, const SymmetricKey&, u32bit);
 
 int main(int argc, char* argv[])
@@ -98,10 +99,10 @@ int main(int argc, char* argv[])
       SymmetricKey mac_key  = derive_key("MAC",  masterkey, 16);
       SymmetricKey iv       = derive_key("IV",   masterkey, 8);
 
-      SecureVector<byte> encrypted_key =
+      std::vector<byte> encrypted_key =
          encryptor.encrypt(masterkey.bits_of(), rng);
 
-      ciphertext << b64_encode(encrypted_key) << std::endl;
+      ciphertext << base64_encode(encrypted_key) << std::endl;
 
       Pipe pipe(new Fork(
                    new Chain(
@@ -133,13 +134,6 @@ int main(int argc, char* argv[])
       std::cout << "Exception: " << e.what() << std::endl;
       }
    return 0;
-   }
-
-std::string b64_encode(const SecureVector<byte>& in)
-   {
-   Pipe pipe(new Base64_Encoder);
-   pipe.process_msg(in);
-   return pipe.read_all_as_string();
    }
 
 SymmetricKey derive_key(const std::string& param,

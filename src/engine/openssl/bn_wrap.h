@@ -25,7 +25,7 @@ class OSSL_BN
       void encode(byte[], size_t) const;
       size_t bytes() const;
 
-      SecureVector<byte> to_bytes() const
+      secure_vector<byte> to_bytes() const
          { return BigInt::encode(to_bigint()); }
 
       OSSL_BN& operator=(const OSSL_BN&);

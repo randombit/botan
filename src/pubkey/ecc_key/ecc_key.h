@@ -34,7 +34,7 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
                    const PointGFp& pub_point);
 
       EC_PublicKey(const AlgorithmIdentifier& alg_id,
-                   const MemoryRegion<byte>& key_bits);
+                   const secure_vector<byte>& key_bits);
 
       /**
       * Get the public point of this key.
@@ -46,7 +46,7 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
 
       AlgorithmIdentifier algorithm_identifier() const;
 
-      MemoryVector<byte> x509_subject_public_key() const;
+      std::vector<byte> x509_subject_public_key() const;
 
       bool check_key(RandomNumberGenerator& rng,
                      bool strong) const;
@@ -69,7 +69,7 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       * Return the DER encoding of this keys domain in whatever format
       * is preset for this particular key
       */
-      MemoryVector<byte> DER_domain() const
+      std::vector<byte> DER_domain() const
          { return domain().DER_encode(domain_format()); }
 
       /**
@@ -98,9 +98,9 @@ class BOTAN_DLL EC_PrivateKey : public virtual EC_PublicKey,
                    const BigInt& private_key);
 
       EC_PrivateKey(const AlgorithmIdentifier& alg_id,
-                    const MemoryRegion<byte>& key_bits);
+                    const secure_vector<byte>& key_bits);
 
-      MemoryVector<byte> pkcs8_private_key() const;
+      secure_vector<byte> pkcs8_private_key() const;
 
       /**
       * Get the private key value of this key object.

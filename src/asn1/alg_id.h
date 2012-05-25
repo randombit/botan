@@ -29,11 +29,11 @@ class BOTAN_DLL AlgorithmIdentifier : public ASN1_Object
       AlgorithmIdentifier(const OID&, Encoding_Option);
       AlgorithmIdentifier(const std::string&, Encoding_Option);
 
-      AlgorithmIdentifier(const OID&, const MemoryRegion<byte>&);
-      AlgorithmIdentifier(const std::string&, const MemoryRegion<byte>&);
+      AlgorithmIdentifier(const OID&, const std::vector<byte>&);
+      AlgorithmIdentifier(const std::string&, const std::vector<byte>&);
 
       OID oid;
-      SecureVector<byte> parameters;
+      std::vector<byte> parameters;
    };
 
 /*

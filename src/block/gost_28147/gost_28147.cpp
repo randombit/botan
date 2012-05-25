@@ -51,8 +51,7 @@ GOST_28147_89_Params::GOST_28147_89_Params(const std::string& n) : name(n)
 /*
 * GOST Constructor
 */
-GOST_28147_89::GOST_28147_89(const GOST_28147_89_Params& param) :
-   SBOX(1024), EK(8)
+GOST_28147_89::GOST_28147_89(const GOST_28147_89_Params& param) : SBOX(1024)
    {
    // Convert the parallel 4x4 sboxes into larger word-based sboxes
    for(size_t i = 0; i != 4; ++i)
@@ -165,6 +164,7 @@ void GOST_28147_89::decrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void GOST_28147_89::key_schedule(const byte key[], size_t)
    {
+   EK.resize(8);
    for(size_t i = 0; i != 8; ++i)
       EK[i] = load_le<u32bit>(key, i);
    }

@@ -67,22 +67,19 @@ const std::string algos[] = {
    "",
 };
 
+
 void benchmark_algo(const std::string& algo,
                     RandomNumberGenerator& rng)
    {
-   u32bit milliseconds = 1000;
+   std::chrono::milliseconds ms(1000);
    Algorithm_Factory& af = global_state().algorithm_factory();
 
-   std::map<std::string, double> speeds =
-      algorithm_benchmark(algo, af, rng, milliseconds, 16);
+   auto speeds = algorithm_benchmark(algo, af, rng, ms, 16);
 
    std::cout << algo << ":";
 
-   for(std::map<std::string, double>::const_iterator i = speeds.begin();
-       i != speeds.end(); ++i)
-      {
-      std::cout << " " << i->second << " [" << i->first << "]";
-      }
+   for(auto s: speeds)
+      std::cout << " " << s.second << " [" << s.first << "]";
    std::cout << "\n";
    }
 
@@ -96,12 +93,12 @@ int main(int argc, char* argv[])
 
    if(argc == 1) // no args, benchmark everything
       {
-      for(u32bit i = 0; algos[i] != ""; ++i)
+      for(size_t i = 0; algos[i] != ""; ++i)
          benchmark_algo(algos[i], rng);
       }
    else
       {
-      for(int i = 1; argv[i]; ++i)
+      for(size_t i = 1; argv[i]; ++i)
          benchmark_algo(argv[i], rng);
       }
    }

@@ -21,15 +21,13 @@ class BOTAN_DLL DES : public Block_Cipher_Fixed_Params<8, 8>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
-      void clear() { zeroise(round_key); }
+      void clear() { round_key.clear(); }
       std::string name() const { return "DES"; }
       BlockCipher* clone() const { return new DES; }
-
-      DES() : round_key(32) {}
    private:
       void key_schedule(const byte[], size_t);
 
-      SecureVector<u32bit> round_key;
+      secure_vector<u32bit> round_key;
    };
 
 /**
@@ -41,7 +39,7 @@ class BOTAN_DLL TripleDES : public Block_Cipher_Fixed_Params<8, 16, 24, 8>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
-      void clear() { zeroise(round_key); }
+      void clear() { round_key.clear(); }
       std::string name() const { return "TripleDES"; }
       BlockCipher* clone() const { return new TripleDES; }
 
@@ -49,7 +47,7 @@ class BOTAN_DLL TripleDES : public Block_Cipher_Fixed_Params<8, 16, 24, 8>
    private:
       void key_schedule(const byte[], size_t);
 
-      SecureVector<u32bit> round_key;
+      secure_vector<u32bit> round_key;
    };
 
 /*

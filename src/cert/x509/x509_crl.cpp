@@ -33,6 +33,12 @@ X509_CRL::X509_CRL(const std::string& in, bool touc) :
    do_decode();
    }
 
+X509_CRL::X509_CRL(const std::vector<byte>& in, bool touc) :
+   X509_Object(in, "CRL/X509 CRL"), throw_on_unknown_critical(touc)
+   {
+   do_decode();
+   }
+
 /**
 * Check if this particular certificate is listed in the CRL
 */
@@ -82,7 +88,7 @@ void X509_CRL::force_decode()
 
    if(version != 0 && version != 1)
       throw X509_CRL_Error("Unknown X.509 CRL version " +
-                           to_string(version+1));
+                           std::to_string(version+1));
 
    AlgorithmIdentifier sig_algo_inner;
    tbs_crl.decode(sig_algo_inner);
@@ -153,7 +159,7 @@ X509_DN X509_CRL::issuer_dn() const
 /*
 * Return the key identifier of the issuer
 */
-MemoryVector<byte> X509_CRL::authority_key_id() const
+std::vector<byte> X509_CRL::authority_key_id() const
    {
    return info.get1_memvec("X509v3.AuthorityKeyIdentifier");
    }

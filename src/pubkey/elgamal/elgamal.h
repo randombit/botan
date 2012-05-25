@@ -28,7 +28,7 @@ class BOTAN_DLL ElGamal_PublicKey : public virtual DL_Scheme_PublicKey
       size_t max_input_bits() const { return (group_p().bits() - 1); }
 
       ElGamal_PublicKey(const AlgorithmIdentifier& alg_id,
-                        const MemoryRegion<byte>& key_bits) :
+                        const secure_vector<byte>& key_bits) :
          DL_Scheme_PublicKey(alg_id, key_bits, DL_Group::ANSI_X9_42)
          {}
 
@@ -47,7 +47,7 @@ class BOTAN_DLL ElGamal_PrivateKey : public ElGamal_PublicKey,
       bool check_key(RandomNumberGenerator& rng, bool) const;
 
       ElGamal_PrivateKey(const AlgorithmIdentifier& alg_id,
-                         const MemoryRegion<byte>& key_bits,
+                         const secure_vector<byte>& key_bits,
                          RandomNumberGenerator& rng);
 
       ElGamal_PrivateKey(RandomNumberGenerator& rng,
@@ -65,7 +65,7 @@ class BOTAN_DLL ElGamal_Encryption_Operation : public PK_Ops::Encryption
 
       ElGamal_Encryption_Operation(const ElGamal_PublicKey& key);
 
-      SecureVector<byte> encrypt(const byte msg[], size_t msg_len,
+      secure_vector<byte> encrypt(const byte msg[], size_t msg_len,
                                  RandomNumberGenerator& rng);
 
    private:
@@ -83,7 +83,7 @@ class BOTAN_DLL ElGamal_Decryption_Operation : public PK_Ops::Decryption
 
       ElGamal_Decryption_Operation(const ElGamal_PrivateKey& key);
 
-      SecureVector<byte> decrypt(const byte msg[], size_t msg_len);
+      secure_vector<byte> decrypt(const byte msg[], size_t msg_len);
    private:
       Fixed_Exponent_Power_Mod powermod_x_p;
       Modular_Reducer mod_p;

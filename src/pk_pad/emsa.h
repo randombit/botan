@@ -29,7 +29,7 @@ class BOTAN_DLL EMSA
       /**
       * @return raw hash
       */
-      virtual SecureVector<byte> raw_data() = 0;
+      virtual secure_vector<byte> raw_data() = 0;
 
       /**
       * Return the encoding of a message
@@ -38,7 +38,7 @@ class BOTAN_DLL EMSA
       * @param rng a random number generator
       * @return encoded signature
       */
-      virtual SecureVector<byte> encoding_of(const MemoryRegion<byte>& msg,
+      virtual secure_vector<byte> encoding_of(const secure_vector<byte>& msg,
                                              size_t output_bits,
                                              RandomNumberGenerator& rng) = 0;
 
@@ -49,8 +49,8 @@ class BOTAN_DLL EMSA
       * @param key_bits the size of the key in bits
       * @return true if coded is a valid encoding of raw, otherwise false
       */
-      virtual bool verify(const MemoryRegion<byte>& coded,
-                          const MemoryRegion<byte>& raw,
+      virtual bool verify(const secure_vector<byte>& coded,
+                          const secure_vector<byte>& raw,
                           size_t key_bits) = 0;
       virtual ~EMSA() {}
    };

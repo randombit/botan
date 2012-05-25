@@ -12,11 +12,11 @@ namespace Botan {
 /*
 * KDF2 Key Derivation Mechanism
 */
-SecureVector<byte> KDF2::derive(size_t out_len,
+secure_vector<byte> KDF2::derive(size_t out_len,
                                 const byte secret[], size_t secret_len,
                                 const byte P[], size_t P_len) const
    {
-   SecureVector<byte> output;
+   secure_vector<byte> output;
    u32bit counter = 1;
 
    while(out_len && counter)
@@ -25,7 +25,7 @@ SecureVector<byte> KDF2::derive(size_t out_len,
       hash->update_be(counter);
       hash->update(P, P_len);
 
-      SecureVector<byte> hash_result = hash->final();
+      secure_vector<byte> hash_result = hash->final();
 
       size_t added = std::min(hash_result.size(), out_len);
       output += std::make_pair(&hash_result[0], added);

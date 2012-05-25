@@ -52,7 +52,7 @@ class BOTAN_DLL CBC_Encryption : public Keyed_Filter,
 
       BlockCipher* cipher;
       const BlockCipherModePaddingMethod* padder;
-      SecureVector<byte> state;
+      secure_vector<byte> state;
    };
 
 /**
@@ -92,7 +92,7 @@ class BOTAN_DLL CBC_Decryption : public Keyed_Filter,
 
       BlockCipher* cipher;
       const BlockCipherModePaddingMethod* padder;
-      SecureVector<byte> state, temp;
+      secure_vector<byte> state, temp;
    };
 
 }

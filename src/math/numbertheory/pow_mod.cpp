@@ -16,7 +16,7 @@ namespace Botan {
 */
 Power_Mod::Power_Mod(const BigInt& n, Usage_Hints hints)
    {
-   core = 0;
+   core = nullptr;
    set_modulus(n, hints);
    }
 
@@ -25,7 +25,7 @@ Power_Mod::Power_Mod(const BigInt& n, Usage_Hints hints)
 */
 Power_Mod::Power_Mod(const Power_Mod& other)
    {
-   core = 0;
+   core = nullptr;
    if(other.core)
       core = other.core->copy();
    }
@@ -36,7 +36,7 @@ Power_Mod::Power_Mod(const Power_Mod& other)
 Power_Mod& Power_Mod::operator=(const Power_Mod& other)
    {
    delete core;
-   core = 0;
+   core = nullptr;
    if(other.core)
       core = other.core->copy();
    return (*this);
@@ -56,7 +56,7 @@ Power_Mod::~Power_Mod()
 void Power_Mod::set_modulus(const BigInt& n, Usage_Hints hints) const
    {
    delete core;
-   core = 0;
+   core = nullptr;
 
    if(n != 0)
       {

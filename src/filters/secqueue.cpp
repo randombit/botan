@@ -17,9 +17,9 @@ class SecureQueueNode
    {
    public:
       SecureQueueNode() : buffer(DEFAULT_BUFFERSIZE)
-         { next = 0; start = end = 0; }
+         { next = nullptr; start = end = 0; }
 
-      ~SecureQueueNode() { next = 0; start = end = 0; }
+      ~SecureQueueNode() { next = nullptr; start = end = 0; }
 
       size_t write(const byte input[], size_t length)
          {
@@ -50,7 +50,7 @@ class SecureQueueNode
    private:
       friend class SecureQueue;
       SecureQueueNode* next;
-      SecureVector<byte> buffer;
+      secure_vector<byte> buffer;
       size_t start, end;
    };
 
@@ -59,7 +59,7 @@ class SecureQueueNode
 */
 SecureQueue::SecureQueue()
    {
-   set_next(0, 0);
+   set_next(nullptr, 0);
    head = tail = new SecureQueueNode;
    }
 
@@ -69,7 +69,7 @@ SecureQueue::SecureQueue()
 SecureQueue::SecureQueue(const SecureQueue& input) :
    Fanout_Filter(), DataSource()
    {
-   set_next(0, 0);
+   set_next(nullptr, 0);
 
    head = tail = new SecureQueueNode;
    SecureQueueNode* temp = input.head;
@@ -92,7 +92,7 @@ void SecureQueue::destroy()
       delete temp;
       temp = holder;
       }
-   head = tail = 0;
+   head = tail = nullptr;
    }
 
 /*
@@ -204,6 +204,11 @@ size_t SecureQueue::size() const
 * Test if the queue has any data in it
 */
 bool SecureQueue::end_of_data() const
+   {
+   return (size() == 0);
+   }
+
+bool SecureQueue::empty() const
    {
    return (size() == 0);
    }

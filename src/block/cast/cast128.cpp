@@ -16,7 +16,7 @@ namespace {
 /*
 * CAST-128 Round Type 1
 */
-inline void R1(u32bit& L, u32bit R, u32bit MK, u32bit RK)
+inline void R1(u32bit& L, u32bit R, u32bit MK, byte RK)
    {
    u32bit T = rotate_left(MK + R, RK);
    L ^= (CAST_SBOX1[get_byte(0, T)] ^ CAST_SBOX2[get_byte(1, T)]) -
@@ -26,7 +26,7 @@ inline void R1(u32bit& L, u32bit R, u32bit MK, u32bit RK)
 /*
 * CAST-128 Round Type 2
 */
-inline void R2(u32bit& L, u32bit R, u32bit MK, u32bit RK)
+inline void R2(u32bit& L, u32bit R, u32bit MK, byte RK)
    {
    u32bit T = rotate_left(MK ^ R, RK);
    L ^= (CAST_SBOX1[get_byte(0, T)]  - CAST_SBOX2[get_byte(1, T)] +
@@ -36,7 +36,7 @@ inline void R2(u32bit& L, u32bit R, u32bit MK, u32bit RK)
 /*
 * CAST-128 Round Type 3
 */
-inline void R3(u32bit& L, u32bit R, u32bit MK, u32bit RK)
+inline void R3(u32bit& L, u32bit R, u32bit MK, byte RK)
    {
    u32bit T = rotate_left(MK - R, RK);
    L ^= ((CAST_SBOX1[get_byte(0, T)]  + CAST_SBOX2[get_byte(1, T)]) ^
@@ -118,23 +118,27 @@ void CAST_128::decrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void CAST_128::key_schedule(const byte key[], size_t length)
    {
-   clear();
-   SecureVector<u32bit> X(4);
-   for(size_t j = 0; j != length; ++j)
-      X[j/4] = (X[j/4] << 8) + key[j];
+   MK.resize(48);
+   RK.resize(48);
+
+   secure_vector<u32bit> X(4);
+   for(size_t i = 0; i != length; ++i)
+      X[i/4] = (X[i/4] << 8) + key[i];
 
    cast_ks(MK, X);
-   cast_ks(RK, X);
 
-   for(size_t j = 0; j != 16; ++j)
-      RK[j] %= 32;
+   secure_vector<u32bit> RK32(48);
+   cast_ks(RK32, X);
+
+   for(size_t i = 0; i != 16; ++i)
+      RK[i] = RK32[i] % 32;
    }
 
 /*
 * S-Box Based Key Expansion
 */
-void CAST_128::cast_ks(MemoryRegion<u32bit>& K,
-                       MemoryRegion<u32bit>& X)
+void CAST_128::cast_ks(secure_vector<u32bit>& K,
+                       secure_vector<u32bit>& X)
    {
    class ByteReader
       {
@@ -145,7 +149,7 @@ void CAST_128::cast_ks(MemoryRegion<u32bit>& K,
          const u32bit* X;
       };
 
-   SecureVector<u32bit> Z(4);
+   secure_vector<u32bit> Z(4);
    ByteReader x(&X[0]), z(&Z[0]);
 
    Z[0]  = X[0] ^ S5[x(13)] ^ S6[x(15)] ^ S7[x(12)] ^ S8[x(14)] ^ S7[x( 8)];

@@ -20,13 +20,13 @@ namespace {
 /*
 * DER encode an ASN.1 type tag
 */
-SecureVector<byte> encode_tag(ASN1_Tag type_tag, ASN1_Tag class_tag)
+secure_vector<byte> encode_tag(ASN1_Tag type_tag, ASN1_Tag class_tag)
    {
    if((class_tag | 0xE0) != 0xE0)
       throw Encoding_Error("DER_Encoder: Invalid class tag " +
-                           to_string(class_tag));
+                           std::to_string(class_tag));
 
-   SecureVector<byte> encoded_tag;
+   secure_vector<byte> encoded_tag;
    if(type_tag <= 30)
       encoded_tag.push_back(static_cast<byte>(type_tag | class_tag));
    else
@@ -46,9 +46,9 @@ SecureVector<byte> encode_tag(ASN1_Tag type_tag, ASN1_Tag class_tag)
 /*
 * DER encode an ASN.1 length field
 */
-SecureVector<byte> encode_length(size_t length)
+secure_vector<byte> encode_length(size_t length)
    {
-   SecureVector<byte> encoded_length;
+   secure_vector<byte> encoded_length;
    if(length <= 127)
       encoded_length.push_back(static_cast<byte>(length));
    else
@@ -68,7 +68,7 @@ SecureVector<byte> encode_length(size_t length)
 /*
 * Return the encoded SEQUENCE/SET
 */
-SecureVector<byte> DER_Encoder::DER_Sequence::get_contents()
+secure_vector<byte> DER_Encoder::DER_Sequence::get_contents()
    {
    const ASN1_Tag real_class_tag = ASN1_Tag(class_tag | CONSTRUCTED);
 
@@ -80,7 +80,7 @@ SecureVector<byte> DER_Encoder::DER_Sequence::get_contents()
       set_contents.clear();
       }
 
-   SecureVector<byte> result;
+   secure_vector<byte> result;
    result += encode_tag(type_tag, real_class_tag);
    result += encode_length(contents.size());
    result += contents;
@@ -95,7 +95,7 @@ SecureVector<byte> DER_Encoder::DER_Sequence::get_contents()
 void DER_Encoder::DER_Sequence::add_bytes(const byte data[], size_t length)
    {
    if(type_tag == SET)
-      set_contents.push_back(SecureVector<byte>(data, length));
+      set_contents.push_back(secure_vector<byte>(data, data + length));
    else
       contents += std::make_pair(data, length);
    }
@@ -119,12 +119,12 @@ DER_Encoder::DER_Sequence::DER_Sequence(ASN1_Tag t1, ASN1_Tag t2) :
 /*
 * Return the encoded contents
 */
-SecureVector<byte> DER_Encoder::get_contents()
+secure_vector<byte> DER_Encoder::get_contents()
    {
    if(subsequences.size() != 0)
       throw Invalid_State("DER_Encoder: Sequence hasn't been marked done");
 
-   SecureVector<byte> output;
+   secure_vector<byte> output;
    std::swap(output, contents);
    return output;
    }
@@ -147,7 +147,7 @@ DER_Encoder& DER_Encoder::end_cons()
    if(subsequences.empty())
       throw Invalid_State("DER_Encoder::end_cons: No such sequence");
 
-   SecureVector<byte> seq = subsequences[subsequences.size()-1].get_contents();
+   secure_vector<byte> seq = subsequences[subsequences.size()-1].get_contents();
    subsequences.pop_back();
    raw_bytes(seq);
    return (*this);
@@ -177,7 +177,12 @@ DER_Encoder& DER_Encoder::end_explicit()
 /*
 * Write raw bytes into the stream
 */
-DER_Encoder& DER_Encoder::raw_bytes(const MemoryRegion<byte>& val)
+DER_Encoder& DER_Encoder::raw_bytes(const secure_vector<byte>& val)
+   {
+   return raw_bytes(&val[0], val.size());
+   }
+
+DER_Encoder& DER_Encoder::raw_bytes(const std::vector<byte>& val)
    {
    return raw_bytes(&val[0], val.size());
    }
@@ -200,7 +205,7 @@ DER_Encoder& DER_Encoder::raw_bytes(const byte bytes[], size_t length)
 */
 DER_Encoder& DER_Encoder::encode_null()
    {
-   return add_object(NULL_TAG, UNIVERSAL, 0, 0);
+   return add_object(NULL_TAG, UNIVERSAL, nullptr, 0);
    }
 
 /*
@@ -230,7 +235,17 @@ DER_Encoder& DER_Encoder::encode(const BigInt& n)
 /*
 * DER encode an OCTET STRING or BIT STRING
 */
-DER_Encoder& DER_Encoder::encode(const MemoryRegion<byte>& bytes,
+DER_Encoder& DER_Encoder::encode(const secure_vector<byte>& bytes,
+                                 ASN1_Tag real_type)
+   {
+   return encode(&bytes[0], bytes.size(),
+                 real_type, real_type, UNIVERSAL);
+   }
+
+/*
+* DER encode an OCTET STRING or BIT STRING
+*/
+DER_Encoder& DER_Encoder::encode(const std::vector<byte>& bytes,
                                  ASN1_Tag real_type)
    {
    return encode(&bytes[0], bytes.size(),
@@ -275,7 +290,7 @@ DER_Encoder& DER_Encoder::encode(const BigInt& n,
       return add_object(type_tag, class_tag, 0);
 
    bool extra_zero = (n.bits() % 8 == 0);
-   SecureVector<byte> contents(extra_zero + n.bytes());
+   secure_vector<byte> contents(extra_zero + n.bytes());
    BigInt::encode(&contents[extra_zero], n);
    if(n < 0)
       {
@@ -292,7 +307,18 @@ DER_Encoder& DER_Encoder::encode(const BigInt& n,
 /*
 * DER encode an OCTET STRING or BIT STRING
 */
-DER_Encoder& DER_Encoder::encode(const MemoryRegion<byte>& bytes,
+DER_Encoder& DER_Encoder::encode(const secure_vector<byte>& bytes,
+                                 ASN1_Tag real_type,
+                                 ASN1_Tag type_tag, ASN1_Tag class_tag)
+   {
+   return encode(&bytes[0], bytes.size(),
+                 real_type, type_tag, class_tag);
+   }
+
+/*
+* DER encode an OCTET STRING or BIT STRING
+*/
+DER_Encoder& DER_Encoder::encode(const std::vector<byte>& bytes,
                                  ASN1_Tag real_type,
                                  ASN1_Tag type_tag, ASN1_Tag class_tag)
    {
@@ -312,7 +338,7 @@ DER_Encoder& DER_Encoder::encode(const byte bytes[], size_t length,
 
    if(real_type == BIT_STRING)
       {
-      SecureVector<byte> encoded;
+      secure_vector<byte> encoded;
       encoded.push_back(0);
       encoded += std::make_pair(bytes, length);
       return add_object(type_tag, class_tag, encoded);
@@ -346,23 +372,12 @@ DER_Encoder& DER_Encoder::encode(const ASN1_Object& obj)
 DER_Encoder& DER_Encoder::add_object(ASN1_Tag type_tag, ASN1_Tag class_tag,
                                      const byte rep[], size_t length)
    {
-   SecureVector<byte> buffer;
+   secure_vector<byte> buffer;
    buffer += encode_tag(type_tag, class_tag);
    buffer += encode_length(length);
    buffer += std::make_pair(rep, length);
 
    return raw_bytes(buffer);
-   }
-
-/*
-* Write the encoding of the byte(s)
-*/
-DER_Encoder& DER_Encoder::add_object(ASN1_Tag type_tag, ASN1_Tag class_tag,
-                                     const MemoryRegion<byte>& rep_buf)
-   {
-   const byte* rep = &rep_buf[0];
-   const size_t rep_len = rep_buf.size();
-   return add_object(type_tag, class_tag, rep, rep_len);
    }
 
 /*

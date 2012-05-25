@@ -46,7 +46,7 @@ void OFB::key_schedule(const byte key[], size_t key_len)
    permutation->set_key(key, key_len);
 
    // Set a default all-zeros IV
-   set_iv(0, 0);
+   set_iv(nullptr, 0);
    }
 
 /*
@@ -84,7 +84,7 @@ void OFB::set_iv(const byte iv[], size_t iv_len)
       throw Invalid_IV_Length(name(), iv_len);
 
    zeroise(buffer);
-   buffer.copy(0, iv, iv_len);
+   buffer_insert(buffer, 0, iv, iv_len);
 
    permutation->encrypt(buffer);
    position = 0;

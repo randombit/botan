@@ -11,6 +11,7 @@
 #include <botan/numthry.h>
 #include <botan/keypair.h>
 #include <botan/internal/assert.h>
+#include <future>
 
 namespace Botan {
 
@@ -22,7 +23,7 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
    {
    if(bits < 512)
       throw Invalid_Argument(algo_name() + ": Can't make a key that is only " +
-                             to_string(bits) + " bits long");
+                             std::to_string(bits) + " bits long");
    if(exp < 3 || exp % 2 == 0)
       throw Invalid_Argument(algo_name() + ": Invalid encryption exponent");
 
@@ -78,15 +79,16 @@ BigInt RSA_Private_Operation::private_op(const BigInt& m) const
    if(m >= n)
       throw Invalid_Argument("RSA private op - input is too large");
 
-   BigInt j1 = powermod_d1_p(m);
+   auto future_j1 = std::async(std::launch::async, powermod_d1_p, m);
    BigInt j2 = powermod_d2_q(m);
+   BigInt j1 = future_j1.get();
 
    j1 = mod_p.reduce(sub_mul(j1, j2, c));
 
    return mul_add(j1, q, j2);
    }
 
-SecureVector<byte>
+secure_vector<byte>
 RSA_Private_Operation::sign(const byte msg[], size_t msg_len,
                             RandomNumberGenerator&)
    {
@@ -103,7 +105,7 @@ RSA_Private_Operation::sign(const byte msg[], size_t msg_len,
 /*
 * RSA Decryption Operation
 */
-SecureVector<byte>
+secure_vector<byte>
 RSA_Private_Operation::decrypt(const byte msg[], size_t msg_len)
    {
    BigInt m(msg, msg_len);
@@ -112,7 +114,7 @@ RSA_Private_Operation::decrypt(const byte msg[], size_t msg_len)
    BOTAN_ASSERT(m == powermod_e_n(x),
                 "RSA private op failed consistency check");
 
-   return BigInt::encode(x);
+   return BigInt::encode_locked(x);
    }
 
 }

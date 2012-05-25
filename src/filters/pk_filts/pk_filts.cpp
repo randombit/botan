@@ -83,14 +83,13 @@ void PK_Verifier_Filter::end_msg()
 */
 void PK_Verifier_Filter::set_signature(const byte sig[], size_t length)
    {
-   signature.resize(length);
-   copy_mem(&signature[0], sig, length);
+   signature.assign(sig, sig + length);
    }
 
 /*
 * Set the signature to check
 */
-void PK_Verifier_Filter::set_signature(const MemoryRegion<byte>& sig)
+void PK_Verifier_Filter::set_signature(const secure_vector<byte>& sig)
    {
    signature = sig;
    }
@@ -100,7 +99,7 @@ void PK_Verifier_Filter::set_signature(const MemoryRegion<byte>& sig)
 */
 PK_Verifier_Filter::PK_Verifier_Filter(PK_Verifier* v, const byte sig[],
                                        size_t length) :
-   verifier(v), signature(sig, length)
+   verifier(v), signature(sig, sig + length)
    {
    }
 
@@ -108,7 +107,7 @@ PK_Verifier_Filter::PK_Verifier_Filter(PK_Verifier* v, const byte sig[],
 * PK_Verifier_Filter Constructor
 */
 PK_Verifier_Filter::PK_Verifier_Filter(PK_Verifier* v,
-                                       const MemoryRegion<byte>& sig) :
+                                       const secure_vector<byte>& sig) :
    verifier(v), signature(sig)
    {
    }

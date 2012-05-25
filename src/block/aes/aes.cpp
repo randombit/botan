@@ -414,8 +414,8 @@ const u32bit TD[1024] = {
 */
 void aes_encrypt_n(const byte in[], byte out[],
                    size_t blocks,
-                   const MemoryRegion<u32bit>& EK,
-                   const MemoryRegion<byte>& ME)
+                   const secure_vector<u32bit>& EK,
+                   const secure_vector<byte>& ME)
    {
    const size_t BLOCK_SIZE = 16;
 
@@ -525,8 +525,8 @@ void aes_encrypt_n(const byte in[], byte out[],
 * AES Decryption
 */
 void aes_decrypt_n(const byte in[], byte out[], size_t blocks,
-                   const MemoryRegion<u32bit>& DK,
-                   const MemoryRegion<byte>& MD)
+                   const secure_vector<u32bit>& DK,
+                   const secure_vector<byte>& MD)
    {
    const size_t BLOCK_SIZE = 16;
 
@@ -606,10 +606,10 @@ void aes_decrypt_n(const byte in[], byte out[], size_t blocks,
    }
 
 void aes_key_schedule(const byte key[], size_t length,
-                      MemoryRegion<u32bit>& EK,
-                      MemoryRegion<u32bit>& DK,
-                      MemoryRegion<byte>& ME,
-                      MemoryRegion<byte>& MD)
+                      secure_vector<u32bit>& EK,
+                      secure_vector<u32bit>& DK,
+                      secure_vector<byte>& ME,
+                      secure_vector<byte>& MD)
    {
    static const u32bit RC[10] = {
       0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000,
@@ -617,7 +617,7 @@ void aes_key_schedule(const byte key[], size_t length,
 
    const size_t rounds = (length / 4) + 6;
 
-   SecureVector<u32bit> XEK(length + 32), XDK(length + 32);
+   secure_vector<u32bit> XEK(length + 32), XDK(length + 32);
 
    const size_t X = length / 4;
    for(size_t i = 0; i != X; ++i)
@@ -658,6 +658,9 @@ void aes_key_schedule(const byte key[], size_t length,
                TD[SE[get_byte(1, XDK[i])] + 256] ^
                TD[SE[get_byte(2, XDK[i])] + 512] ^
                TD[SE[get_byte(3, XDK[i])] + 768];
+
+   ME.resize(16);
+   MD.resize(16);
 
    for(size_t i = 0; i != 4; ++i)
       {

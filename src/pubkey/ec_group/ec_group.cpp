@@ -37,8 +37,8 @@ EC_Group::EC_Group(const std::string& str)
       {
       DataSource_Memory input(str);
 
-      SecureVector<byte> ber =
-         PEM_Code::decode_check_label(input, "EC PARAMETERS");
+      std::vector<byte> ber =
+         unlock(PEM_Code::decode_check_label(input, "EC PARAMETERS"));
 
       *this = EC_Group(ber);
       }
@@ -48,7 +48,7 @@ EC_Group::EC_Group(const std::string& str)
       }
    }
 
-EC_Group::EC_Group(const MemoryRegion<byte>& ber_data)
+EC_Group::EC_Group(const std::vector<byte>& ber_data)
    {
    BER_Decoder ber(ber_data);
    BER_Object obj = ber.get_next_object();
@@ -64,7 +64,7 @@ EC_Group::EC_Group(const MemoryRegion<byte>& ber_data)
    else if(obj.type_tag == SEQUENCE)
       {
       BigInt p, a, b;
-      SecureVector<byte> sv_base_point;
+      std::vector<byte> sv_base_point;
 
       BER_Decoder(ber_data)
          .start_cons(SEQUENCE)
@@ -91,7 +91,7 @@ EC_Group::EC_Group(const MemoryRegion<byte>& ber_data)
       throw Decoding_Error("Unexpected tag while decoding ECC domain params");
    }
 
-SecureVector<byte>
+std::vector<byte>
 EC_Group::DER_encode(EC_Group_Encoding form) const
    {
    if(form == EC_DOMPAR_ENC_EXPLICIT)
@@ -118,19 +118,19 @@ EC_Group::DER_encode(EC_Group_Encoding form) const
             .encode(order)
             .encode(cofactor)
          .end_cons()
-         .get_contents();
+         .get_contents_unlocked();
       }
    else if(form == EC_DOMPAR_ENC_OID)
-      return DER_Encoder().encode(get_oid()).get_contents();
+      return DER_Encoder().encode(get_oid()).get_contents_unlocked();
    else if(form == EC_DOMPAR_ENC_IMPLICITCA)
-      return DER_Encoder().encode_null().get_contents();
+      return DER_Encoder().encode_null().get_contents_unlocked();
    else
       throw Internal_Error("EC_Group::DER_encode: Unknown encoding");
    }
 
 std::string EC_Group::PEM_encode() const
    {
-   SecureVector<byte> der = DER_encode(EC_DOMPAR_ENC_EXPLICIT);
+   const std::vector<byte> der = DER_encode(EC_DOMPAR_ENC_EXPLICIT);
    return PEM_Code::encode(der, "EC PARAMETERS");
    }
 

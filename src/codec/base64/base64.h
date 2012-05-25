@@ -46,7 +46,11 @@ std::string BOTAN_DLL base64_encode(const byte input[],
 * @param input some input
 * @return base64adecimal representation of input
 */
-std::string BOTAN_DLL base64_encode(const MemoryRegion<byte>& input);
+template<typename Alloc>
+std::string base64_encode(const std::vector<byte, Alloc>& input)
+   {
+   return base64_encode(&input[0], input.size());
+   }
 
 /**
 * Perform base64 decoding
@@ -104,7 +108,7 @@ size_t BOTAN_DLL base64_decode(byte output[],
                    exception if whitespace is encountered
 * @return decoded base64 output
 */
-SecureVector<byte> BOTAN_DLL base64_decode(const char input[],
+secure_vector<byte> BOTAN_DLL base64_decode(const char input[],
                                            size_t input_length,
                                            bool ignore_ws = true);
 
@@ -115,7 +119,7 @@ SecureVector<byte> BOTAN_DLL base64_decode(const char input[],
                    exception if whitespace is encountered
 * @return decoded base64 output
 */
-SecureVector<byte> BOTAN_DLL base64_decode(const std::string& input,
+secure_vector<byte> BOTAN_DLL base64_decode(const std::string& input,
                                            bool ignore_ws = true);
 
 }

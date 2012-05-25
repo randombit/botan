@@ -56,7 +56,7 @@ class BOTAN_DLL Lion : public BlockCipher
 
       HashFunction* hash;
       StreamCipher* cipher;
-      SecureVector<byte> key1, key2;
+      secure_vector<byte> key1, key2;
    };
 
 }

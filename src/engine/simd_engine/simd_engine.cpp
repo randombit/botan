@@ -68,7 +68,7 @@ SIMD_Engine::find_block_cipher(const SCAN_Name& request,
       return new XTEA_SIMD;
 #endif
 
-   return 0;
+   return nullptr;
    }
 
 HashFunction*
@@ -80,7 +80,7 @@ SIMD_Engine::find_hash(const SCAN_Name& request,
       return new SHA_160_SSE2;
 #endif
 
-   return 0;
+   return nullptr;
    }
 
 }

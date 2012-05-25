@@ -30,11 +30,11 @@ class BOTAN_DLL EME1 : public EME
 
       ~EME1() { delete mgf; }
    private:
-      SecureVector<byte> pad(const byte[], size_t, size_t,
+      secure_vector<byte> pad(const byte[], size_t, size_t,
                              RandomNumberGenerator&) const;
-      SecureVector<byte> unpad(const byte[], size_t, size_t) const;
+      secure_vector<byte> unpad(const byte[], size_t, size_t) const;
 
-      SecureVector<byte> Phash;
+      secure_vector<byte> Phash;
       MGF* mgf;
    };
 

@@ -21,11 +21,9 @@ class BOTAN_DLL SEED : public Block_Cipher_Fixed_Params<16, 16>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
-      void clear() { zeroise(K); }
+      void clear() { K.clear(); }
       std::string name() const { return "SEED"; }
       BlockCipher* clone() const { return new SEED; }
-
-      SEED() : K(32) {}
    private:
       void key_schedule(const byte[], size_t);
 
@@ -37,7 +35,7 @@ class BOTAN_DLL SEED : public Block_Cipher_Fixed_Params<16, 16>
             static const u32bit S0[256], S1[256], S2[256], S3[256];
          };
 
-      SecureVector<u32bit> K;
+      secure_vector<u32bit> K;
    };
 
 }

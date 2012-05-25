@@ -21,7 +21,7 @@ void BigInt::encode(byte output[], const BigInt& n, Base base)
       n.binary_encode(output);
    else if(base == Hexadecimal)
       {
-      SecureVector<byte> binary(n.encoded_size(Binary));
+      secure_vector<byte> binary(n.encoded_size(Binary));
       n.binary_encode(&binary[0]);
 
       hex_encode(reinterpret_cast<char*>(output),
@@ -61,9 +61,23 @@ void BigInt::encode(byte output[], const BigInt& n, Base base)
 /*
 * Encode a BigInt
 */
-SecureVector<byte> BigInt::encode(const BigInt& n, Base base)
+std::vector<byte> BigInt::encode(const BigInt& n, Base base)
    {
-   SecureVector<byte> output(n.encoded_size(base));
+   std::vector<byte> output(n.encoded_size(base));
+   encode(&output[0], n, base);
+   if(base != Binary)
+      for(size_t j = 0; j != output.size(); ++j)
+         if(output[j] == 0)
+            output[j] = '0';
+   return output;
+   }
+
+/*
+* Encode a BigInt
+*/
+secure_vector<byte> BigInt::encode_locked(const BigInt& n, Base base)
+   {
+   secure_vector<byte> output(n.encoded_size(base));
    encode(&output[0], n, base);
    if(base != Binary)
       for(size_t j = 0; j != output.size(); ++j)
@@ -75,7 +89,7 @@ SecureVector<byte> BigInt::encode(const BigInt& n, Base base)
 /*
 * Encode a BigInt, with leading 0s if needed
 */
-SecureVector<byte> BigInt::encode_1363(const BigInt& n, size_t bytes)
+secure_vector<byte> BigInt::encode_1363(const BigInt& n, size_t bytes)
    {
    const size_t n_bytes = n.bytes();
    if(n_bytes > bytes)
@@ -83,17 +97,9 @@ SecureVector<byte> BigInt::encode_1363(const BigInt& n, size_t bytes)
 
    const size_t leading_0s = bytes - n_bytes;
 
-   SecureVector<byte> output(bytes);
+   secure_vector<byte> output(bytes);
    encode(&output[leading_0s], n, Binary);
    return output;
-   }
-
-/*
-* Decode a BigInt
-*/
-BigInt BigInt::decode(const MemoryRegion<byte>& buf, Base base)
-   {
-   return BigInt::decode(&buf[0], buf.size(), base);
    }
 
 /*
@@ -106,12 +112,14 @@ BigInt BigInt::decode(const byte buf[], size_t length, Base base)
       r.binary_decode(buf, length);
    else if(base == Hexadecimal)
       {
-      SecureVector<byte> binary;
+      secure_vector<byte> binary;
 
       if(length % 2)
          {
          // Handle lack of leading 0
-         const char buf0_with_leading_0[2] = { '0', buf[0] };
+         const char buf0_with_leading_0[2] =
+            { '0', static_cast<char>(buf[0]) };
+
          binary = hex_decode(buf0_with_leading_0, 2);
 
          binary += hex_decode(reinterpret_cast<const char*>(&buf[1]),

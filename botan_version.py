@@ -1,6 +1,6 @@
 
 release_major = 1
-release_minor = 10
+release_minor = 99
 release_patch = 2
 
 release_vc_rev = None

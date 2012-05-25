@@ -110,6 +110,7 @@ bool keywrap_test(const char* key_str,
 
    bool ok = true;
 
+#if defined(BOTAN_HAS_RFC3394_KEYWRAP)
    try
       {
       SymmetricKey key(key_str);
@@ -118,7 +119,7 @@ bool keywrap_test(const char* key_str,
 
       Algorithm_Factory& af = global_state().algorithm_factory();
 
-      SecureVector<byte> enc = rfc3394_keywrap(key.bits_of(), kek, af);
+      secure_vector<byte> enc = rfc3394_keywrap(key.bits_of(), kek, af);
 
       if(enc != expected.bits_of())
          {
@@ -127,7 +128,7 @@ bool keywrap_test(const char* key_str,
          ok = false;
          }
 
-      SecureVector<byte> dec = rfc3394_keyunwrap(expected.bits_of(), kek, af);
+      secure_vector<byte> dec = rfc3394_keyunwrap(expected.bits_of(), kek, af);
 
       if(dec != key.bits_of())
          {
@@ -140,6 +141,7 @@ bool keywrap_test(const char* key_str,
       {
       std::cout << e.what() << "\n";
       }
+#endif
 
    return ok;
    }
@@ -339,7 +341,7 @@ u32bit do_validation_tests(const std::string& filename,
          if(should_pass)
             std::cout << "Testing " << algorithm << "..." << std::endl;
          else
-            std::cout << "Testing (expecing failure) "
+            std::cout << "Testing (expecting failure) "
                       << algorithm << "..." << std::endl;
 #endif
          alg_count = 0;
@@ -472,8 +474,10 @@ bool failed_test(const std::string& algo,
 
    try {
       Botan::Filter* test = lookup(algo, params);
-      if(test == 0 && is_extension) return !exp_pass;
-      if(test == 0)
+
+      if(!test && is_extension) return !exp_pass;
+
+      if(!test)
          {
          if(algo != last_missing)
             {
@@ -488,7 +492,7 @@ bool failed_test(const std::string& algo,
       pipe.append(test);
       pipe.append(new Botan::Hex_Encoder);
 
-      Botan::SecureVector<byte> data = Botan::hex_decode(in);
+      secure_vector<byte> data = Botan::hex_decode(in);
       const byte* data_ptr = &data[0];
 
       // this can help catch errors with buffering, etc
@@ -536,7 +540,7 @@ bool failed_test(const std::string& algo,
       size_t offset = random_word(rng, pipe.remaining() - 1);
       size_t length = random_word(rng, pipe.remaining() - offset);
 
-      Botan::SecureVector<byte> peekbuf(length);
+      std::vector<byte> peekbuf(length);
       pipe.peek(&peekbuf[0], peekbuf.size(), offset);
 
       output = pipe.read_all_as_string();

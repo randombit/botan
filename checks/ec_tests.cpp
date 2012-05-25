@@ -76,10 +76,10 @@ void test_point_turn_on_sp_red_mul()
    std::string a_secp = "ffffffffffffffffffffffffffffffff7ffffffc";
    std::string b_secp = "1c97befc54bd7a8b65acf89f81d4d4adc565fa45";
    std::string G_secp_comp = "024a96b5688ef573284664698968c38bb913cbfc82";
-   SecureVector<byte> sv_p_secp = hex_decode(p_secp);
-   SecureVector<byte> sv_a_secp = hex_decode(a_secp);
-   SecureVector<byte> sv_b_secp = hex_decode(b_secp);
-   SecureVector<byte> sv_G_secp_comp = hex_decode(G_secp_comp);
+   secure_vector<byte> sv_p_secp = hex_decode(p_secp);
+   secure_vector<byte> sv_a_secp = hex_decode(a_secp);
+   secure_vector<byte> sv_b_secp = hex_decode(b_secp);
+   secure_vector<byte> sv_G_secp_comp = hex_decode(G_secp_comp);
    BigInt bi_p_secp = BigInt::decode(&sv_p_secp[0], sv_p_secp.size());
    BigInt bi_a_secp = BigInt::decode(&sv_a_secp[0], sv_a_secp.size());
    BigInt bi_b_secp = BigInt::decode(&sv_b_secp[0], sv_b_secp.size());
@@ -139,10 +139,10 @@ void test_coordinates()
    std::string a_secp = "ffffffffffffffffffffffffffffffff7ffffffc";
    std::string b_secp = "1c97befc54bd7a8b65acf89f81d4d4adc565fa45";
    std::string G_secp_comp = "024a96b5688ef573284664698968c38bb913cbfc82";
-   SecureVector<byte> sv_p_secp = hex_decode ( p_secp );
-   SecureVector<byte> sv_a_secp = hex_decode ( a_secp );
-   SecureVector<byte> sv_b_secp = hex_decode ( b_secp );
-   SecureVector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
+   secure_vector<byte> sv_p_secp = hex_decode ( p_secp );
+   secure_vector<byte> sv_a_secp = hex_decode ( a_secp );
+   secure_vector<byte> sv_b_secp = hex_decode ( b_secp );
+   secure_vector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
 
    BigInt bi_p_secp = BigInt::decode ( &sv_p_secp[0], sv_p_secp.size() );
    BigInt bi_a_secp = BigInt::decode ( &sv_a_secp[0], sv_a_secp.size() );
@@ -196,7 +196,7 @@ void test_point_mult ()
    const CurveGFp& curve = secp160r1.get_curve();
 
    std::string G_secp_comp = "024a96b5688ef573284664698968c38bb913cbfc82";
-   SecureVector<byte> sv_G_secp_comp = hex_decode(G_secp_comp);
+   secure_vector<byte> sv_G_secp_comp = hex_decode(G_secp_comp);
    PointGFp p_G = OS2ECP(sv_G_secp_comp, curve);
 
    BigInt d_U("0xaa374ffc3ce144e6b073307972cb6d57b2a4e982");
@@ -215,10 +215,10 @@ void test_point_negative()
    std::string a_secp = "ffffffffffffffffffffffffffffffff7ffffffc";
    std::string b_secp = "1c97befc54bd7a8b65acf89f81d4d4adc565fa45";
    std::string G_secp_comp = "024a96b5688ef573284664698968c38bb913cbfc82";
-   SecureVector<byte> sv_p_secp = hex_decode ( p_secp );
-   SecureVector<byte> sv_a_secp = hex_decode ( a_secp );
-   SecureVector<byte> sv_b_secp = hex_decode ( b_secp );
-   SecureVector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
+   secure_vector<byte> sv_p_secp = hex_decode ( p_secp );
+   secure_vector<byte> sv_a_secp = hex_decode ( a_secp );
+   secure_vector<byte> sv_b_secp = hex_decode ( b_secp );
+   secure_vector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
    BigInt bi_p_secp = BigInt::decode ( &sv_p_secp[0], sv_p_secp.size() );
    BigInt bi_a_secp = BigInt::decode ( &sv_a_secp[0], sv_a_secp.size() );
    BigInt bi_b_secp = BigInt::decode ( &sv_b_secp[0], sv_b_secp.size() );
@@ -242,7 +242,7 @@ void test_zeropoint()
 
 
    std::string G_secp_comp = "024a96b5688ef573284664698968c38bb913cbfc82";
-   SecureVector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
+   secure_vector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
    BigInt bi_p_secp("0xffffffffffffffffffffffffffffffff7fffffff");
    BigInt bi_a_secp("0xffffffffffffffffffffffffffffffff7ffffffc");
    BigInt bi_b_secp("0x1c97befc54bd7a8b65acf89f81d4d4adc565fa45");
@@ -273,7 +273,7 @@ void test_zeropoint_enc_dec()
    CHECK_MESSAGE(  p.is_zero(), "by constructor created zeropoint is no zeropoint!");
 
 
-   SecureVector<byte> sv_p = EC2OSP(p, PointGFp::UNCOMPRESSED);
+   secure_vector<byte> sv_p = EC2OSP(p, PointGFp::UNCOMPRESSED);
    PointGFp p_encdec = OS2ECP(sv_p, curve);
    CHECK_MESSAGE(  p == p_encdec, "encoded-decoded (uncompressed) point is not equal the original!");
 
@@ -291,7 +291,7 @@ void test_calc_with_zeropoint()
    std::cout << "." << std::flush;
 
    std::string G_secp_comp = "024a96b5688ef573284664698968c38bb913cbfc82";
-   SecureVector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
+   secure_vector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
    BigInt bi_p_secp("0xffffffffffffffffffffffffffffffff7fffffff");
    BigInt bi_a_secp("0xffffffffffffffffffffffffffffffff7ffffffc");
    BigInt bi_b_secp("0x1c97befc54bd7a8b65acf89f81d4d4adc565fa45");
@@ -327,10 +327,10 @@ void test_add_point()
    std::string a_secp = "ffffffffffffffffffffffffffffffff7ffffffc";
    std::string b_secp = "1c97befc54bd7a8b65acf89f81d4d4adc565fa45";
    std::string G_secp_comp = "024a96b5688ef573284664698968c38bb913cbfc82";
-   SecureVector<byte> sv_p_secp = hex_decode ( p_secp );
-   SecureVector<byte> sv_a_secp = hex_decode ( a_secp );
-   SecureVector<byte> sv_b_secp = hex_decode ( b_secp );
-   SecureVector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
+   secure_vector<byte> sv_p_secp = hex_decode ( p_secp );
+   secure_vector<byte> sv_a_secp = hex_decode ( a_secp );
+   secure_vector<byte> sv_b_secp = hex_decode ( b_secp );
+   secure_vector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
    BigInt bi_p_secp = BigInt::decode ( &sv_p_secp[0], sv_p_secp.size() );
    BigInt bi_a_secp = BigInt::decode ( &sv_a_secp[0], sv_a_secp.size() );
    BigInt bi_b_secp = BigInt::decode ( &sv_b_secp[0], sv_b_secp.size() );
@@ -363,10 +363,10 @@ void test_sub_point()
    std::string a_secp = "ffffffffffffffffffffffffffffffff7ffffffc";
    std::string b_secp = "1c97befc54bd7a8b65acf89f81d4d4adc565fa45";
    std::string G_secp_comp = "024a96b5688ef573284664698968c38bb913cbfc82";
-   SecureVector<byte> sv_p_secp = hex_decode ( p_secp );
-   SecureVector<byte> sv_a_secp = hex_decode ( a_secp );
-   SecureVector<byte> sv_b_secp = hex_decode ( b_secp );
-   SecureVector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
+   secure_vector<byte> sv_p_secp = hex_decode ( p_secp );
+   secure_vector<byte> sv_a_secp = hex_decode ( a_secp );
+   secure_vector<byte> sv_b_secp = hex_decode ( b_secp );
+   secure_vector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
    BigInt bi_p_secp = BigInt::decode ( &sv_p_secp[0], sv_p_secp.size() );
    BigInt bi_a_secp = BigInt::decode ( &sv_a_secp[0], sv_a_secp.size() );
    BigInt bi_b_secp = BigInt::decode ( &sv_b_secp[0], sv_b_secp.size() );
@@ -398,10 +398,10 @@ void test_mult_point()
    std::string a_secp = "ffffffffffffffffffffffffffffffff7ffffffc";
    std::string b_secp = "1c97befc54bd7a8b65acf89f81d4d4adc565fa45";
    std::string G_secp_comp = "024a96b5688ef573284664698968c38bb913cbfc82";
-   SecureVector<byte> sv_p_secp = hex_decode ( p_secp );
-   SecureVector<byte> sv_a_secp = hex_decode ( a_secp );
-   SecureVector<byte> sv_b_secp = hex_decode ( b_secp );
-   SecureVector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
+   secure_vector<byte> sv_p_secp = hex_decode ( p_secp );
+   secure_vector<byte> sv_a_secp = hex_decode ( a_secp );
+   secure_vector<byte> sv_b_secp = hex_decode ( b_secp );
+   secure_vector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
    BigInt bi_p_secp = BigInt::decode ( &sv_p_secp[0], sv_p_secp.size() );
    BigInt bi_a_secp = BigInt::decode ( &sv_a_secp[0], sv_a_secp.size() );
    BigInt bi_b_secp = BigInt::decode ( &sv_b_secp[0], sv_b_secp.size() );
@@ -427,10 +427,10 @@ void test_basic_operations()
    std::string a_secp = "ffffffffffffffffffffffffffffffff7ffffffc";
    std::string b_secp = "1c97befc54bd7a8b65acf89f81d4d4adc565fa45";
    std::string G_secp_comp = "024a96b5688ef573284664698968c38bb913cbfc82";
-   SecureVector<byte> sv_p_secp = hex_decode ( p_secp );
-   SecureVector<byte> sv_a_secp = hex_decode ( a_secp );
-   SecureVector<byte> sv_b_secp = hex_decode ( b_secp );
-   SecureVector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
+   secure_vector<byte> sv_p_secp = hex_decode ( p_secp );
+   secure_vector<byte> sv_a_secp = hex_decode ( a_secp );
+   secure_vector<byte> sv_b_secp = hex_decode ( b_secp );
+   secure_vector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
    BigInt bi_p_secp = BigInt::decode ( &sv_p_secp[0], sv_p_secp.size() );
    BigInt bi_a_secp = BigInt::decode ( &sv_a_secp[0], sv_a_secp.size() );
    BigInt bi_b_secp = BigInt::decode ( &sv_b_secp[0], sv_b_secp.size() );
@@ -490,10 +490,10 @@ void test_enc_dec_compressed_160()
    std::string G_secp_comp = "024A96B5688EF573284664698968C38BB913CBFC82";
    std::string G_order_secp_comp = "0100000000000000000001F4C8F927AED3CA752257";
 
-   SecureVector<byte> sv_p_secp = hex_decode ( p_secp );
-   SecureVector<byte> sv_a_secp = hex_decode ( a_secp );
-   SecureVector<byte> sv_b_secp = hex_decode ( b_secp );
-   SecureVector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
+   secure_vector<byte> sv_p_secp = hex_decode ( p_secp );
+   secure_vector<byte> sv_a_secp = hex_decode ( a_secp );
+   secure_vector<byte> sv_b_secp = hex_decode ( b_secp );
+   secure_vector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
 
    BigInt bi_p_secp = BigInt::decode ( &sv_p_secp[0], sv_p_secp.size() );
    BigInt bi_a_secp = BigInt::decode ( &sv_a_secp[0], sv_a_secp.size() );
@@ -502,7 +502,7 @@ void test_enc_dec_compressed_160()
    CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
 
    PointGFp p_G = OS2ECP ( sv_G_secp_comp, secp160r1 );
-   SecureVector<byte> sv_result = EC2OSP(p_G, PointGFp::COMPRESSED);
+   secure_vector<byte> sv_result = EC2OSP(p_G, PointGFp::COMPRESSED);
 
    CHECK( sv_result == sv_G_secp_comp);
    }
@@ -519,10 +519,10 @@ void test_enc_dec_compressed_256()
    std::string G_secp_comp = "036B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296";
    std::string G_order_secp_comp = "ffffffff00000000ffffffffffffffffBCE6FAADA7179E84F3B9CAC2FC632551";
 
-   SecureVector<byte> sv_p_secp = hex_decode ( p_secp );
-   SecureVector<byte> sv_a_secp = hex_decode ( a_secp );
-   SecureVector<byte> sv_b_secp = hex_decode ( b_secp );
-   SecureVector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
+   secure_vector<byte> sv_p_secp = hex_decode ( p_secp );
+   secure_vector<byte> sv_a_secp = hex_decode ( a_secp );
+   secure_vector<byte> sv_b_secp = hex_decode ( b_secp );
+   secure_vector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
 
    BigInt bi_p_secp = BigInt::decode ( &sv_p_secp[0], sv_p_secp.size() );
    BigInt bi_a_secp = BigInt::decode ( &sv_a_secp[0], sv_a_secp.size() );
@@ -531,7 +531,7 @@ void test_enc_dec_compressed_256()
    CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
 
    PointGFp p_G = OS2ECP ( sv_G_secp_comp, secp160r1 );
-   SecureVector<byte> sv_result = EC2OSP(p_G, PointGFp::COMPRESSED);
+   secure_vector<byte> sv_result = EC2OSP(p_G, PointGFp::COMPRESSED);
 
    CHECK( sv_result == sv_G_secp_comp);
    }
@@ -550,10 +550,10 @@ void test_enc_dec_uncompressed_112()
    std::string G_secp_uncomp = "044BA30AB5E892B4E1649DD0928643ADCD46F5882E3747DEF36E956E97";
    std::string G_order_secp_uncomp = "36DF0AAFD8B8D7597CA10520D04B";
 
-   SecureVector<byte> sv_p_secp = hex_decode ( p_secp );
-   SecureVector<byte> sv_a_secp = hex_decode ( a_secp );
-   SecureVector<byte> sv_b_secp = hex_decode ( b_secp );
-   SecureVector<byte> sv_G_secp_uncomp = hex_decode ( G_secp_uncomp );
+   secure_vector<byte> sv_p_secp = hex_decode ( p_secp );
+   secure_vector<byte> sv_a_secp = hex_decode ( a_secp );
+   secure_vector<byte> sv_b_secp = hex_decode ( b_secp );
+   secure_vector<byte> sv_G_secp_uncomp = hex_decode ( G_secp_uncomp );
 
    BigInt bi_p_secp = BigInt::decode ( &sv_p_secp[0], sv_p_secp.size() );
    BigInt bi_a_secp = BigInt::decode ( &sv_a_secp[0], sv_a_secp.size() );
@@ -562,7 +562,7 @@ void test_enc_dec_uncompressed_112()
    CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
 
    PointGFp p_G = OS2ECP ( sv_G_secp_uncomp, secp160r1 );
-   SecureVector<byte> sv_result = EC2OSP(p_G, PointGFp::UNCOMPRESSED);
+   secure_vector<byte> sv_result = EC2OSP(p_G, PointGFp::UNCOMPRESSED);
 
    CHECK( sv_result == sv_G_secp_uncomp);
    }
@@ -579,10 +579,10 @@ void test_enc_dec_uncompressed_521()
    std::string G_secp_uncomp = "0400C6858E06B70404E9CD9E3ECB662395B4429C648139053FB521F828AF606B4D3DBAA14B5E77EFE75928FE1DC127A2ffA8DE3348B3C1856A429BF97E7E31C2E5BD66011839296A789A3BC0045C8A5FB42C7D1BD998F54449579B446817AFBD17273E662C97EE72995EF42640C550B9013FAD0761353C7086A272C24088BE94769FD16650";
    std::string G_order_secp_uncomp = "01ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffFA51868783BF2F966B7FCC0148F709A5D03BB5C9B8899C47AEBB6FB71E91386409";
 
-   SecureVector<byte> sv_p_secp = hex_decode ( p_secp );
-   SecureVector<byte> sv_a_secp = hex_decode ( a_secp );
-   SecureVector<byte> sv_b_secp = hex_decode ( b_secp );
-   SecureVector<byte> sv_G_secp_uncomp = hex_decode ( G_secp_uncomp );
+   secure_vector<byte> sv_p_secp = hex_decode ( p_secp );
+   secure_vector<byte> sv_a_secp = hex_decode ( a_secp );
+   secure_vector<byte> sv_b_secp = hex_decode ( b_secp );
+   secure_vector<byte> sv_G_secp_uncomp = hex_decode ( G_secp_uncomp );
 
    BigInt bi_p_secp = BigInt::decode ( &sv_p_secp[0], sv_p_secp.size() );
    BigInt bi_a_secp = BigInt::decode ( &sv_a_secp[0], sv_a_secp.size() );
@@ -592,7 +592,7 @@ void test_enc_dec_uncompressed_521()
 
    PointGFp p_G = OS2ECP ( sv_G_secp_uncomp, secp160r1 );
 
-   SecureVector<byte> sv_result = EC2OSP(p_G, PointGFp::UNCOMPRESSED);
+   secure_vector<byte> sv_result = EC2OSP(p_G, PointGFp::UNCOMPRESSED);
    std::string result = hex_encode(&sv_result[0], sv_result.size());
    std::string exp_result = hex_encode(&sv_G_secp_uncomp[0], sv_G_secp_uncomp.size());
 
@@ -611,21 +611,21 @@ void test_enc_dec_uncompressed_521_prime_too_large()
    std::string G_secp_uncomp = "0400C6858E06B70404E9CD9E3ECB662395B4429C648139053FB521F828AF606B4D3DBAA14B5E77EFE75928FE1DC127A2ffA8DE3348B3C1856A429BF97E7E31C2E5BD66011839296A789A3BC0045C8A5FB42C7D1BD998F54449579B446817AFBD17273E662C97EE72995EF42640C550B9013FAD0761353C7086A272C24088BE94769FD16650";
    std::string G_order_secp_uncomp = "01ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffFA51868783BF2F966B7FCC0148F709A5D03BB5C9B8899C47AEBB6FB71E91386409";
 
-   SecureVector<byte> sv_p_secp = hex_decode ( p_secp );
-   SecureVector<byte> sv_a_secp = hex_decode ( a_secp );
-   SecureVector<byte> sv_b_secp = hex_decode ( b_secp );
-   SecureVector<byte> sv_G_secp_uncomp = hex_decode ( G_secp_uncomp );
+   secure_vector<byte> sv_p_secp = hex_decode ( p_secp );
+   secure_vector<byte> sv_a_secp = hex_decode ( a_secp );
+   secure_vector<byte> sv_b_secp = hex_decode ( b_secp );
+   secure_vector<byte> sv_G_secp_uncomp = hex_decode ( G_secp_uncomp );
 
    BigInt bi_p_secp = BigInt::decode ( &sv_p_secp[0], sv_p_secp.size() );
    BigInt bi_a_secp = BigInt::decode ( &sv_a_secp[0], sv_a_secp.size() );
    BigInt bi_b_secp = BigInt::decode ( &sv_b_secp[0], sv_b_secp.size() );
 
    CurveGFp secp521r1 (bi_p_secp, bi_a_secp, bi_b_secp);
-   std::auto_ptr<PointGFp> p_G;
+   std::unique_ptr<PointGFp> p_G;
    bool exc = false;
    try
       {
-      p_G = std::auto_ptr<PointGFp>(new PointGFp(OS2ECP ( sv_G_secp_uncomp, secp521r1)));
+      p_G = std::unique_ptr<PointGFp>(new PointGFp(OS2ECP ( sv_G_secp_uncomp, secp521r1)));
       if(!p_G->on_the_curve())
          throw Internal_Error("Point not on the curve");
       }
@@ -648,7 +648,7 @@ void test_gfp_store_restore()
    PointGFp p = dom_pars.get_base_point();
 
    //store point (to std::string)
-   SecureVector<byte> sv_mes = EC2OSP(p, PointGFp::COMPRESSED);
+   secure_vector<byte> sv_mes = EC2OSP(p, PointGFp::COMPRESSED);
    PointGFp new_p = OS2ECP(sv_mes, dom_pars.get_curve());
 
    CHECK_MESSAGE( p == new_p, "original and restored point are different!");
@@ -662,7 +662,7 @@ void test_cdc_curve_33()
 
    std::string G_secp_uncomp = "04081523d03d4f12cd02879dea4bf6a4f3a7df26ed888f10c5b2235a1274c386a2f218300dee6ed217841164533bcdc903f07a096f9fbf4ee95bac098a111f296f5830fe5c35b3e344d5df3a2256985f64fbe6d0edcc4c61d18bef681dd399df3d0194c5a4315e012e0245ecea56365baa9e8be1f7";
 
-   SecureVector<byte> sv_G_uncomp = hex_decode ( G_secp_uncomp );
+   secure_vector<byte> sv_G_uncomp = hex_decode ( G_secp_uncomp );
 
    BigInt bi_p_secp = BigInt("2117607112719756483104013348936480976596328609518055062007450442679169492999007105354629105748524349829824407773719892437896937279095106809");
    BigInt bi_a_secp("0xa377dede6b523333d36c78e9b0eaa3bf48ce93041f6d4fc34014d08f6833807498deedd4290101c5866e8dfb589485d13357b9e78c2d7fbe9fe");
@@ -689,7 +689,7 @@ void test_more_zeropoint()
    // by Falko
 
    std::string G = "024a96b5688ef573284664698968c38bb913cbfc82";
-   SecureVector<byte> sv_G_secp_comp = hex_decode ( G );
+   secure_vector<byte> sv_G_secp_comp = hex_decode ( G );
    BigInt bi_p("0xffffffffffffffffffffffffffffffff7fffffff");
    BigInt bi_a("0xffffffffffffffffffffffffffffffff7ffffffc");
    BigInt bi_b("0x1c97befc54bd7a8b65acf89f81d4d4adc565fa45");

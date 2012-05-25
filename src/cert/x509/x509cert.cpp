@@ -30,12 +30,8 @@ std::vector<std::string> lookup_oids(const std::vector<std::string>& in)
    {
    std::vector<std::string> out;
 
-   std::vector<std::string>::const_iterator i = in.begin();
-   while(i != in.end())
-      {
+   for(auto i = in.begin(); i != in.end(); ++i)
       out.push_back(OIDS::lookup(OID(*i)));
-      ++i;
-      }
    return out;
    }
 
@@ -55,6 +51,16 @@ X509_Certificate::X509_Certificate(DataSource& in) :
 * X509_Certificate Constructor
 */
 X509_Certificate::X509_Certificate(const std::string& in) :
+   X509_Object(in, "CERTIFICATE/X509 CERTIFICATE")
+   {
+   self_signed = false;
+   do_decode();
+   }
+
+/*
+* X509_Certificate Constructor
+*/
+X509_Certificate::X509_Certificate(const std::vector<byte>& in) :
    X509_Object(in, "CERTIFICATE/X509 CERTIFICATE")
    {
    self_signed = false;
@@ -87,7 +93,7 @@ void X509_Certificate::force_decode()
       .decode(dn_subject);
 
    if(version > 2)
-      throw Decoding_Error("Unknown X.509 cert version " + Botan::to_string(version));
+      throw Decoding_Error("Unknown X.509 cert version " + std::to_string(version));
    if(sig_algo != sig_algo_inner)
       throw Decoding_Error("Algorithm identifier mismatch");
 
@@ -101,7 +107,7 @@ void X509_Certificate::force_decode()
       throw BER_Bad_Tag("X509_Certificate: Unexpected tag for public key",
                         public_key.type_tag, public_key.class_tag);
 
-   MemoryVector<byte> v2_issuer_key_id, v2_subject_key_id;
+   std::vector<byte> v2_issuer_key_id, v2_subject_key_id;
 
    tbs_cert.decode_optional_string(v2_issuer_key_id, BIT_STRING, 1);
    tbs_cert.decode_optional_string(v2_subject_key_id, BIT_STRING, 2);
@@ -133,7 +139,7 @@ void X509_Certificate::force_decode()
 
    subject.add("X509.Certificate.public_key",
                PEM_Code::encode(
-                  ASN1::put_in_sequence(public_key.value),
+                  ASN1::put_in_sequence(unlock(public_key.value)),
                   "PUBLIC KEY"
                   )
       );
@@ -253,7 +259,7 @@ std::vector<std::string> X509_Certificate::policies() const
 /*
 * Return the authority key id
 */
-MemoryVector<byte> X509_Certificate::authority_key_id() const
+std::vector<byte> X509_Certificate::authority_key_id() const
    {
    return issuer.get1_memvec("X509v3.AuthorityKeyIdentifier");
    }
@@ -261,7 +267,7 @@ MemoryVector<byte> X509_Certificate::authority_key_id() const
 /*
 * Return the subject key id
 */
-MemoryVector<byte> X509_Certificate::subject_key_id() const
+std::vector<byte> X509_Certificate::subject_key_id() const
    {
    return subject.get1_memvec("X509v3.SubjectKeyIdentifier");
    }
@@ -269,7 +275,7 @@ MemoryVector<byte> X509_Certificate::subject_key_id() const
 /*
 * Return the certificate serial number
 */
-MemoryVector<byte> X509_Certificate::serial_number() const
+std::vector<byte> X509_Certificate::serial_number() const
    {
    return subject.get1_memvec("X509.Certificate.serial");
    }
@@ -290,6 +296,50 @@ X509_DN X509_Certificate::subject_dn() const
    return create_dn(subject);
    }
 
+namespace {
+
+bool cert_subject_dns_match(const std::string& name,
+                            const std::vector<std::string>& cert_names)
+   {
+   for(size_t i = 0; i != cert_names.size(); ++i)
+      {
+      const std::string cn = cert_names[i];
+
+      if(cn == name)
+         return true;
+
+      /*
+      * Possible wildcard match. We only support the most basic form of
+      * cert wildcarding ala RFC 2595
+      */
+      if(cn.size() > 2 && cn[0] == '*' && cn[1] == '.' && name.size() > cn.size())
+         {
+         const std::string base = cn.substr(1, std::string::npos);
+
+         if(name.compare(name.size() - base.size(), base.size(), base) == 0)
+            return true;
+         }
+      }
+
+   return false;
+   }
+
+}
+
+bool X509_Certificate::matches_dns_name(const std::string& name) const
+   {
+   if(name == "")
+      return false;
+
+   if(cert_subject_dns_match(name, subject_info("DNS")))
+      return true;
+
+   if(cert_subject_dns_match(name, subject_info("Name")))
+      return true;
+
+   return false;
+   }
+
 /*
 * Compare two certificates for equality
 */
@@ -300,6 +350,24 @@ bool X509_Certificate::operator==(const X509_Certificate& other) const
            self_signed == other.self_signed &&
            issuer == other.issuer &&
            subject == other.subject);
+   }
+
+bool X509_Certificate::operator<(const X509_Certificate& other) const
+   {
+   /* If signature values are not equal, sort by lexicographic ordering of that */
+   if(sig != other.sig)
+      {
+      if(sig < other.sig)
+         return true;
+      return false;
+      }
+
+   /*
+   * same signatures, highly unlikely case, revert to compare
+   * of entire contents
+   */
+
+   return to_string() < other.to_string();
    }
 
 /*
@@ -323,7 +391,7 @@ std::string X509_Certificate::to_string() const
                                "DNS",
                                "URI",
                                "PKIX.XMPPAddr",
-                               0 };
+                               nullptr };
 
    std::ostringstream out;
 
@@ -419,24 +487,15 @@ std::string X509_Certificate::to_string() const
 */
 X509_DN create_dn(const Data_Store& info)
    {
-   class DN_Matcher : public Data_Store::Matcher
+   auto names = info.search_for(
+      [](const std::string& key, const std::string&)
       {
-      public:
-         bool operator()(const std::string& key, const std::string&) const
-            {
-            if(key.find("X520.") != std::string::npos)
-               return true;
-            return false;
-            }
-      };
-
-   std::multimap<std::string, std::string> names =
-      info.search_with(DN_Matcher());
+         return (key.find("X520.") != std::string::npos);
+      });
 
    X509_DN dn;
 
-   std::multimap<std::string, std::string>::iterator i;
-   for(i = names.begin(); i != names.end(); ++i)
+   for(auto i = names.begin(); i != names.end(); ++i)
       dn.add_attribute(i->first, i->second);
 
    return dn;
@@ -447,32 +506,18 @@ X509_DN create_dn(const Data_Store& info)
 */
 AlternativeName create_alt_name(const Data_Store& info)
    {
-   class AltName_Matcher : public Data_Store::Matcher
+   auto names = info.search_for(
+      [](const std::string& key, const std::string&)
       {
-      public:
-         bool operator()(const std::string& key, const std::string&) const
-            {
-            for(size_t i = 0; i != matches.size(); ++i)
-               if(key.compare(matches[i]) == 0)
-                  return true;
-            return false;
-            }
-
-         AltName_Matcher(const std::string& match_any_of)
-            {
-            matches = split_on(match_any_of, '/');
-            }
-      private:
-         std::vector<std::string> matches;
-      };
-
-   std::multimap<std::string, std::string> names =
-      info.search_with(AltName_Matcher("RFC822/DNS/URI/IP"));
+         return (key == "RFC822" ||
+                 key == "DNS" ||
+                 key == "URI" ||
+                 key == "IP");
+      });
 
    AlternativeName alt_name;
 
-   std::multimap<std::string, std::string>::iterator i;
-   for(i = names.begin(); i != names.end(); ++i)
+   for(auto i = names.begin(); i != names.end(); ++i)
       alt_name.add_attribute(i->first, i->second);
 
    return alt_name;

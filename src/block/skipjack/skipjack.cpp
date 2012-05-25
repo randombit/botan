@@ -183,6 +183,7 @@ void Skipjack::key_schedule(const byte key[], size_t)
       0x5E, 0x6C, 0xA9, 0x13, 0x57, 0x25, 0xB5, 0xE3, 0xBD, 0xA8, 0x3A, 0x01,
       0x05, 0x59, 0x2A, 0x46 };
 
+   FTAB.resize(256*10);
    for(size_t i = 0; i != 10; ++i)
       for(size_t j = 0; j != 256; ++j)
          FTAB[256*i+j] = F[j ^ key[9-i]];
@@ -193,7 +194,7 @@ void Skipjack::key_schedule(const byte key[], size_t)
 */
 void Skipjack::clear()
    {
-   zeroise(FTAB);
+   FTAB.clear();
    }
 
 }

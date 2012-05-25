@@ -28,7 +28,7 @@ class BOTAN_DLL PK_Encryptor_Filter : public Filter
    private:
       PK_Encryptor* cipher;
       RandomNumberGenerator& rng;
-      SecureVector<byte> buffer;
+      secure_vector<byte> buffer;
    };
 
 /**
@@ -43,7 +43,7 @@ class BOTAN_DLL PK_Decryptor_Filter : public Filter
       ~PK_Decryptor_Filter() { delete cipher; }
    private:
       PK_Decryptor* cipher;
-      SecureVector<byte> buffer;
+      secure_vector<byte> buffer;
    };
 
 /**
@@ -75,15 +75,15 @@ class BOTAN_DLL PK_Verifier_Filter : public Filter
       void end_msg();
 
       void set_signature(const byte[], size_t);
-      void set_signature(const MemoryRegion<byte>&);
+      void set_signature(const secure_vector<byte>&);
 
       PK_Verifier_Filter(PK_Verifier* v) : verifier(v) {}
       PK_Verifier_Filter(PK_Verifier*, const byte[], size_t);
-      PK_Verifier_Filter(PK_Verifier*, const MemoryRegion<byte>&);
+      PK_Verifier_Filter(PK_Verifier*, const secure_vector<byte>&);
       ~PK_Verifier_Filter() { delete verifier; }
    private:
       PK_Verifier* verifier;
-      SecureVector<byte> signature;
+      secure_vector<byte> signature;
    };
 
 }

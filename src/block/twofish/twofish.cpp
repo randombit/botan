@@ -121,7 +121,10 @@ void Twofish::decrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void Twofish::key_schedule(const byte key[], size_t length)
    {
-   SecureVector<byte> S(16);
+   SB.resize(1024);
+   RK.resize(40);
+
+   secure_vector<byte> S(16);
 
    for(size_t i = 0; i != length; ++i)
       rs_mul(&S[4*(i/8)], key[i], i);
@@ -235,8 +238,8 @@ void Twofish::rs_mul(byte S[4], byte key, size_t offset)
 */
 void Twofish::clear()
    {
-   zeroise(SB);
-   zeroise(RK);
+   SB.clear();
+   RK.clear();
    }
 
 }

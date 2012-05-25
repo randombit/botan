@@ -19,7 +19,7 @@ namespace {
 /*
 * EAX MAC-based PRF
 */
-SecureVector<byte> eax_prf(byte tag, size_t BLOCK_SIZE,
+secure_vector<byte> eax_prf(byte tag, size_t BLOCK_SIZE,
                            MessageAuthenticationCode* mac,
                            const byte in[], size_t length)
    {
@@ -45,7 +45,7 @@ EAX_Base::EAX_Base(BlockCipher* cipher, size_t tag_size) :
    ctr = new CTR_BE(cipher); // takes ownership
 
    if(tag_size % 8 != 0 || TAG_SIZE == 0 || TAG_SIZE > cmac->output_length())
-      throw Invalid_Argument(name() + ": Bad tag size " + to_string(tag_size));
+      throw Invalid_Argument(name() + ": Bad tag size " + std::to_string(tag_size));
    }
 
 /*
@@ -70,7 +70,7 @@ void EAX_Base::set_key(const SymmetricKey& key)
    ctr->set_key(key);
    cmac->set_key(key);
 
-   header_mac = eax_prf(1, BLOCK_SIZE, cmac, 0, 0);
+   header_mac = eax_prf(1, BLOCK_SIZE, cmac, nullptr, 0);
    }
 
 /*
@@ -131,7 +131,7 @@ void EAX_Encryption::write(const byte input[], size_t length)
 */
 void EAX_Encryption::end_msg()
    {
-   SecureVector<byte> data_mac = cmac->final();
+   secure_vector<byte> data_mac = cmac->final();
    xor_buf(data_mac, nonce_mac, data_mac.size());
    xor_buf(data_mac, header_mac, data_mac.size());
 

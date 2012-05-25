@@ -49,7 +49,7 @@ u64bit key_id(const Public_Key* key)
    pipe.write(key->x509_subject_public_key());
    pipe.end_msg();
 
-   SecureVector<byte> output = pipe.read_all();
+   secure_vector<byte> output = pipe.read_all();
 
    if(output.size() != 8)
       throw Internal_Error("Public_Key::key_id: Incorrect output size");
@@ -147,7 +147,6 @@ void do_x509_tests(RandomNumberGenerator& rng)
    std::cout << '.' << std::flush;
 
    /* Create user #1's key and cert request */
-   std::cout << '.' << std::flush;
    DSA_PrivateKey user1_key(rng, DL_Group("dsa/botan/2048"));
 
    std::cout << '.' << std::flush;

@@ -12,7 +12,7 @@ namespace Botan {
 /*
 * Encode a message
 */
-SecureVector<byte> EME::encode(const byte msg[], size_t msg_len,
+secure_vector<byte> EME::encode(const byte msg[], size_t msg_len,
                                size_t key_bits,
                                RandomNumberGenerator& rng) const
    {
@@ -22,7 +22,7 @@ SecureVector<byte> EME::encode(const byte msg[], size_t msg_len,
 /*
 * Encode a message
 */
-SecureVector<byte> EME::encode(const MemoryRegion<byte>& msg,
+secure_vector<byte> EME::encode(const secure_vector<byte>& msg,
                                size_t key_bits,
                                RandomNumberGenerator& rng) const
    {
@@ -32,7 +32,7 @@ SecureVector<byte> EME::encode(const MemoryRegion<byte>& msg,
 /*
 * Decode a message
 */
-SecureVector<byte> EME::decode(const byte msg[], size_t msg_len,
+secure_vector<byte> EME::decode(const byte msg[], size_t msg_len,
                                size_t key_bits) const
    {
    return unpad(msg, msg_len, key_bits);
@@ -41,7 +41,7 @@ SecureVector<byte> EME::decode(const byte msg[], size_t msg_len,
 /*
 * Decode a message
 */
-SecureVector<byte> EME::decode(const MemoryRegion<byte>& msg,
+secure_vector<byte> EME::decode(const secure_vector<byte>& msg,
                                size_t key_bits) const
    {
    return unpad(&msg[0], msg.size(), key_bits);

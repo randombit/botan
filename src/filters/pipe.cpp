@@ -43,11 +43,12 @@ Pipe::Pipe(Filter* f1, Filter* f2, Filter* f3, Filter* f4)
 /*
 * Pipe Constructor
 */
-Pipe::Pipe(Filter* filter_array[], size_t count)
+Pipe::Pipe(std::initializer_list<Filter*> args)
    {
    init();
-   for(size_t j = 0; j != count; ++j)
-      append(filter_array[j]);
+
+   for(auto i = args.begin(); i != args.end(); ++i)
+      append(*i);
    }
 
 /*
@@ -65,7 +66,7 @@ Pipe::~Pipe()
 void Pipe::init()
    {
    outputs = new Output_Buffers;
-   pipe = 0;
+   pipe = nullptr;
    default_read = 0;
    inside_msg = false;
    }
@@ -75,10 +76,8 @@ void Pipe::init()
 */
 void Pipe::reset()
    {
-   if(inside_msg)
-      throw Invalid_State("Pipe cannot be reset while it is processing");
    destruct(pipe);
-   pipe = 0;
+   pipe = nullptr;
    inside_msg = false;
    }
 
@@ -125,7 +124,12 @@ void Pipe::process_msg(const byte input[], size_t length)
 /*
 * Process a full message at once
 */
-void Pipe::process_msg(const MemoryRegion<byte>& input)
+void Pipe::process_msg(const secure_vector<byte>& input)
+   {
+   process_msg(&input[0], input.size());
+   }
+
+void Pipe::process_msg(const std::vector<byte>& input)
    {
    process_msg(&input[0], input.size());
    }
@@ -155,7 +159,7 @@ void Pipe::start_msg()
    {
    if(inside_msg)
       throw Invalid_State("Pipe::start_msg: Message was already started");
-   if(pipe == 0)
+   if(pipe == nullptr)
       pipe = new Null_Filter;
    find_endpoints(pipe);
    pipe->new_msg();
@@ -174,7 +178,7 @@ void Pipe::end_msg()
    if(dynamic_cast<Null_Filter*>(pipe))
       {
       delete pipe;
-      pipe = 0;
+      pipe = nullptr;
       }
    inside_msg = false;
 
@@ -206,7 +210,7 @@ void Pipe::clear_endpoints(Filter* f)
    for(size_t j = 0; j != f->total_ports(); ++j)
       {
       if(f->next[j] && dynamic_cast<SecureQueue*>(f->next[j]))
-         f->next[j] = 0;
+         f->next[j] = nullptr;
       clear_endpoints(f->next[j]);
       }
    }

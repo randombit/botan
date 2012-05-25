@@ -4,19 +4,16 @@ load_on always
 
 <source>
 assert.cpp
+calendar.cpp
 charset.cpp
 cpuid.cpp
-mlock.cpp
 parsing.cpp
-time.cpp
-ui.cpp
 version.cpp
 </source>
 
 <header:internal>
 assert.h
 bit_ops.h
-mlock.h
 prefetch.h
 rounding.h
 stl_util.h
@@ -25,6 +22,7 @@ xor_buf.h
 
 <header:public>
 bswap.h
+calendar.h
 charset.h
 cpuid.h
 exceptn.h
@@ -32,9 +30,7 @@ loadstor.h
 mem_ops.h
 parsing.h
 rotate.h
-time.h
 types.h
-ui.h
 version.h
 get_byte.h
 </header:public>

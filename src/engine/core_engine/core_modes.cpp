@@ -111,7 +111,7 @@ Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
          else
             return new CTS_Decryption(block_cipher->clone());
 #else
-         return 0;
+         return nullptr;
 #endif
          }
 
@@ -123,7 +123,7 @@ Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
          return new CBC_Decryption(block_cipher->clone(),
                                    get_bc_pad(padding, "PKCS7"));
 #else
-      return 0;
+      return nullptr;
 #endif
       }
 
@@ -149,7 +149,7 @@ Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
       else if(algo_info.size() == 2)
          bits = to_u32bit(algo_info[1]);
       else
-         return 0;
+         return nullptr;
 
 #if defined(BOTAN_HAS_CFB)
       if(mode_name == "CFB")
@@ -172,7 +172,7 @@ Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
 #endif
       }
 
-   return 0;
+   return nullptr;
    }
 
 /*
@@ -195,10 +195,10 @@ Keyed_Filter* Core_Engine::get_cipher(const std::string& algo_spec,
 
    const BlockCipher* block_cipher = af.prototype_block_cipher(cipher_name);
    if(!block_cipher)
-      return 0;
+      return nullptr;
 
    if(algo_parts.size() >= 4)
-      return 0; // 4 part mode, not something we know about
+      return nullptr; // 4 part mode, not something we know about
 
    if(algo_parts.size() < 2)
       throw Lookup_Error("Cipher specification '" + algo_spec +
@@ -213,7 +213,7 @@ Keyed_Filter* Core_Engine::get_cipher(const std::string& algo_spec,
       padding = (mode == "CBC") ? "PKCS7" : "NoPadding";
 
    if(mode == "ECB" && padding == "CTS")
-      return 0;
+      return nullptr;
    else if((mode != "CBC" && mode != "ECB") && padding != "NoPadding")
       throw Invalid_Algorithm_Name(algo_spec);
 

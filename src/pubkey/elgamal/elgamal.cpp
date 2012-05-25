@@ -44,7 +44,7 @@ ElGamal_PrivateKey::ElGamal_PrivateKey(RandomNumberGenerator& rng,
    }
 
 ElGamal_PrivateKey::ElGamal_PrivateKey(const AlgorithmIdentifier& alg_id,
-                                       const MemoryRegion<byte>& key_bits,
+                                       const secure_vector<byte>& key_bits,
                                        RandomNumberGenerator& rng) :
    DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_42)
    {
@@ -76,7 +76,7 @@ ElGamal_Encryption_Operation::ElGamal_Encryption_Operation(const ElGamal_PublicK
    mod_p = Modular_Reducer(p);
    }
 
-SecureVector<byte>
+secure_vector<byte>
 ElGamal_Encryption_Operation::encrypt(const byte msg[], size_t msg_len,
                                       RandomNumberGenerator& rng)
    {
@@ -92,7 +92,7 @@ ElGamal_Encryption_Operation::encrypt(const byte msg[], size_t msg_len,
    BigInt a = powermod_g_p(k);
    BigInt b = mod_p.multiply(m, powermod_y_p(k));
 
-   SecureVector<byte> output(2*p.bytes());
+   secure_vector<byte> output(2*p.bytes());
    a.binary_encode(&output[p.bytes() - a.bytes()]);
    b.binary_encode(&output[output.size() / 2 + (p.bytes() - b.bytes())]);
    return output;
@@ -109,7 +109,7 @@ ElGamal_Decryption_Operation::ElGamal_Decryption_Operation(const ElGamal_Private
    blinder = Blinder(k, powermod_x_p(k), p);
    }
 
-SecureVector<byte>
+secure_vector<byte>
 ElGamal_Decryption_Operation::decrypt(const byte msg[], size_t msg_len)
    {
    const BigInt& p = mod_p.get_modulus();
@@ -129,7 +129,7 @@ ElGamal_Decryption_Operation::decrypt(const byte msg[], size_t msg_len)
 
    BigInt r = mod_p.multiply(b, inverse_mod(powermod_x_p(a), p));
 
-   return BigInt::encode(blinder.unblind(r));
+   return BigInt::encode_locked(blinder.unblind(r));
    }
 
 }

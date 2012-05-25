@@ -69,7 +69,7 @@ void Output_Buffers::retire()
       if(buffers[i] && buffers[i]->size() == 0)
          {
          delete buffers[i];
-         buffers[i] = 0;
+         buffers[i] = nullptr;
          }
 
    while(buffers.size() && !buffers[0])
@@ -85,7 +85,7 @@ void Output_Buffers::retire()
 SecureQueue* Output_Buffers::get(Pipe::message_id msg) const
    {
    if(msg < offset)
-      return 0;
+      return nullptr;
 
    BOTAN_ASSERT(msg < message_count(),
                 "Message number out of range");

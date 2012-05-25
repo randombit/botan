@@ -22,7 +22,10 @@ class ASN1_Object;
 class BOTAN_DLL DER_Encoder
    {
    public:
-      SecureVector<byte> get_contents();
+      secure_vector<byte> get_contents();
+
+      std::vector<byte> get_contents_unlocked()
+         { return unlock(get_contents()); }
 
       DER_Encoder& start_cons(ASN1_Tag type_tag,
                               ASN1_Tag class_tag = UNIVERSAL);
@@ -32,13 +35,15 @@ class BOTAN_DLL DER_Encoder
       DER_Encoder& end_explicit();
 
       DER_Encoder& raw_bytes(const byte val[], size_t len);
-      DER_Encoder& raw_bytes(const MemoryRegion<byte>& val);
+      DER_Encoder& raw_bytes(const secure_vector<byte>& val);
+      DER_Encoder& raw_bytes(const std::vector<byte>& val);
 
       DER_Encoder& encode_null();
       DER_Encoder& encode(bool b);
       DER_Encoder& encode(size_t s);
       DER_Encoder& encode(const BigInt& n);
-      DER_Encoder& encode(const MemoryRegion<byte>& v, ASN1_Tag real_type);
+      DER_Encoder& encode(const secure_vector<byte>& v, ASN1_Tag real_type);
+      DER_Encoder& encode(const std::vector<byte>& v, ASN1_Tag real_type);
       DER_Encoder& encode(const byte val[], size_t len, ASN1_Tag real_type);
 
       DER_Encoder& encode(bool b,
@@ -53,7 +58,12 @@ class BOTAN_DLL DER_Encoder
                           ASN1_Tag type_tag,
                           ASN1_Tag class_tag = CONTEXT_SPECIFIC);
 
-      DER_Encoder& encode(const MemoryRegion<byte>& v,
+      DER_Encoder& encode(const std::vector<byte>& v,
+                          ASN1_Tag real_type,
+                          ASN1_Tag type_tag,
+                          ASN1_Tag class_tag = CONTEXT_SPECIFIC);
+
+      DER_Encoder& encode(const secure_vector<byte>& v,
                           ASN1_Tag real_type,
                           ASN1_Tag type_tag,
                           ASN1_Tag class_tag = CONTEXT_SPECIFIC);
@@ -86,7 +96,16 @@ class BOTAN_DLL DER_Encoder
                               const byte rep[], size_t length);
 
       DER_Encoder& add_object(ASN1_Tag type_tag, ASN1_Tag class_tag,
-                              const MemoryRegion<byte>& rep);
+                              const std::vector<byte>& rep)
+         {
+         return add_object(type_tag, class_tag, &rep[0], rep.size());
+         }
+
+      DER_Encoder& add_object(ASN1_Tag type_tag, ASN1_Tag class_tag,
+                              const secure_vector<byte>& rep)
+         {
+         return add_object(type_tag, class_tag, &rep[0], rep.size());
+         }
 
       DER_Encoder& add_object(ASN1_Tag type_tag, ASN1_Tag class_tag,
                               const std::string& str);
@@ -99,16 +118,16 @@ class BOTAN_DLL DER_Encoder
          {
          public:
             ASN1_Tag tag_of() const;
-            SecureVector<byte> get_contents();
+            secure_vector<byte> get_contents();
             void add_bytes(const byte[], size_t);
             DER_Sequence(ASN1_Tag, ASN1_Tag);
          private:
             ASN1_Tag type_tag, class_tag;
-            SecureVector<byte> contents;
-            std::vector< SecureVector<byte> > set_contents;
+            secure_vector<byte> contents;
+            std::vector< secure_vector<byte> > set_contents;
          };
 
-      SecureVector<byte> contents;
+      secure_vector<byte> contents;
       std::vector<DER_Sequence> subsequences;
    };
 

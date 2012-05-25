@@ -142,7 +142,7 @@ void Square::decrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void Square::key_schedule(const byte key[], size_t)
    {
-   SecureVector<u32bit> XEK(36), XDK(36);
+   secure_vector<u32bit> XEK(36), XDK(36);
 
    for(size_t i = 0; i != 4; ++i)
       XEK[i] = load_be<u32bit>(key, i);
@@ -160,6 +160,12 @@ void Square::key_schedule(const byte key[], size_t)
       transform(&XEK[4*i]);
       }
 
+   EK.assign(&XEK[4], &XEK[36]);
+   DK.assign(&XDK[4], &XDK[36]);
+
+   ME.resize(32);
+   MD.resize(32);
+
    for(size_t i = 0; i != 4; ++i)
       for(size_t j = 0; j != 4; ++j)
          {
@@ -168,9 +174,6 @@ void Square::key_schedule(const byte key[], size_t)
          MD[4*i+j   ] = get_byte(j, XDK[i   ]);
          MD[4*i+j+16] = get_byte(j, XEK[i   ]);
          }
-
-   EK.copy(&XEK[4], 28);
-   DK.copy(&XDK[4], 28);
    }
 
 /*
@@ -209,10 +212,10 @@ void Square::transform(u32bit round_key[4])
 */
 void Square::clear()
    {
-   zeroise(EK);
-   zeroise(DK);
-   zeroise(ME);
-   zeroise(MD);
+   EK.clear();
+   DK.clear();
+   ME.clear();
+   MD.clear();
    }
 
 }

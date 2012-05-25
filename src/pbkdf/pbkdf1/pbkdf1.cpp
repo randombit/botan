@@ -26,7 +26,7 @@ OctetString PKCS5_PBKDF1::derive_key(size_t key_len,
 
    hash->update(passphrase);
    hash->update(salt, salt_size);
-   SecureVector<byte> key = hash->final();
+   secure_vector<byte> key = hash->final();
 
    for(size_t j = 1; j != iterations; ++j)
       {

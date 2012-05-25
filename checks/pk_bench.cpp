@@ -10,6 +10,12 @@
 #include <botan/oids.h>
 #include <map>
 
+#if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
+  #include <botan/x509_key.h>
+  #include <botan/pkcs8.h>
+  #include <botan/pubkey.h>
+#endif
+
 #if defined(BOTAN_HAS_RSA)
   #include <botan/rsa.h>
 #endif
@@ -77,7 +83,7 @@ const char* ec_domains[] = {
    "secp256r1",
    "secp384r1",
    "secp521r1",
-   0
+   nullptr
 };
 
 class Benchmark_Report
@@ -98,7 +104,7 @@ void benchmark_enc_dec(PK_Encryptor& enc, PK_Decryptor& dec,
                        RandomNumberGenerator& rng,
                        u32bit runs, double seconds)
    {
-   SecureVector<byte> plaintext, ciphertext;
+   std::vector<byte> plaintext, ciphertext;
 
    for(u32bit i = 0; i != runs; ++i)
       {
@@ -121,7 +127,7 @@ void benchmark_enc_dec(PK_Encryptor& enc, PK_Decryptor& dec,
       if(dec_timer.seconds() < seconds)
          {
          dec_timer.start();
-         SecureVector<byte> plaintext_out = dec.decrypt(ciphertext);
+         std::vector<byte> plaintext_out = unlock(dec.decrypt(ciphertext));
          dec_timer.stop();
 
          if(plaintext_out != plaintext)
@@ -137,7 +143,7 @@ void benchmark_sig_ver(PK_Verifier& ver, PK_Signer& sig,
                        RandomNumberGenerator& rng,
                        u32bit runs, double seconds)
    {
-   SecureVector<byte> message, signature, sig_random;
+   std::vector<byte> message, signature, sig_random;
 
    for(u32bit i = 0; i != runs; ++i)
       {
@@ -165,7 +171,7 @@ void benchmark_sig_ver(PK_Verifier& ver, PK_Signer& sig,
 
          if((i % 100) == 0)
             {
-            sig_random = rng.random_vec(signature.size());
+            sig_random = unlock(rng.random_vec(signature.size()));
 
             verify_timer.start();
             const bool verified_bad = ver.verify_message(message, sig_random);
@@ -240,7 +246,7 @@ void benchmark_rsa(RandomNumberGenerator& rng,
                               sig_timer, rng, 10000, seconds);
             }
 
-         const std::string rsa_keylen = "RSA-" + to_string(keylen);
+         const std::string rsa_keylen = "RSA-" + std::to_string(keylen);
 
          report.report(rsa_keylen, keygen_timer);
          report.report(rsa_keylen, verify_timer);
@@ -292,7 +298,7 @@ void benchmark_rw(RandomNumberGenerator& rng,
                            rng, 10000, seconds);
          }
 
-      const std::string nm = "RW-" + to_string(keylen);
+      const std::string nm = "RW-" + std::to_string(keylen);
       report.report(nm, keygen_timer);
       report.report(nm, verify_timer);
       report.report(nm, sig_timer);
@@ -319,7 +325,7 @@ void benchmark_ecdsa(RandomNumberGenerator& rng,
       if(hashbits == 521)
          hashbits = 512;
 
-      const std::string padding = "EMSA1(SHA-" + to_string(hashbits) + ")";
+      const std::string padding = "EMSA1(SHA-" + std::to_string(hashbits) + ")";
 
       Timer keygen_timer("keygen");
       Timer verify_timer(padding + " verify");
@@ -339,7 +345,7 @@ void benchmark_ecdsa(RandomNumberGenerator& rng,
                            sig_timer, rng, 1000, seconds);
          }
 
-      const std::string nm = "ECDSA-" + to_string(pbits);
+      const std::string nm = "ECDSA-" + std::to_string(pbits);
 
       report.report(nm, keygen_timer);
       report.report(nm, verify_timer);
@@ -381,7 +387,7 @@ void benchmark_gost_3410(RandomNumberGenerator& rng,
                            sig_timer, rng, 1000, seconds);
          }
 
-      const std::string nm = "GOST-34.10-" + to_string(pbits);
+      const std::string nm = "GOST-34.10-" + std::to_string(pbits);
 
       report.report(nm, keygen_timer);
       report.report(nm, verify_timer);
@@ -439,7 +445,7 @@ void benchmark_ecdh(RandomNumberGenerator& rng,
             }
          }
 
-      const std::string nm = "ECDH-" + to_string(pbits);
+      const std::string nm = "ECDH-" + std::to_string(pbits);
       report.report(nm, keygen_timer);
       report.report(nm, kex_timer);
       }
@@ -456,7 +462,7 @@ void benchmark_dsa_nr(RandomNumberGenerator& rng,
    const char* domains[] = { "dsa/jce/1024",
                              "dsa/botan/2048",
                              "dsa/botan/3072",
-                             NULL };
+                             nullptr };
 
    std::string algo_name;
 
@@ -465,7 +471,7 @@ void benchmark_dsa_nr(RandomNumberGenerator& rng,
       size_t pbits = to_u32bit(split_on(domains[j], '/')[2]);
       size_t qbits = (pbits <= 1024) ? 160 : 256;
 
-      const std::string padding = "EMSA1(SHA-" + to_string(qbits) + ")";
+      const std::string padding = "EMSA1(SHA-" + std::to_string(qbits) + ")";
 
       Timer keygen_timer("keygen");
       Timer verify_timer(padding + " verify");
@@ -488,7 +494,7 @@ void benchmark_dsa_nr(RandomNumberGenerator& rng,
                            sig_timer, rng, 1000, seconds);
          }
 
-      const std::string nm = algo_name + "-" + to_string(pbits);
+      const std::string nm = algo_name + "-" + std::to_string(pbits);
       report.report(nm, keygen_timer);
       report.report(nm, verify_timer);
       report.report(nm, sig_timer);
@@ -507,7 +513,7 @@ void benchmark_dh(RandomNumberGenerator& rng,
                              "modp/ietf/4096",
                              "modp/ietf/6144",
                              "modp/ietf/8192",
-                             NULL };
+                             nullptr };
 
    for(size_t j = 0; domains[j]; j++)
       {
@@ -568,7 +574,7 @@ void benchmark_dlies(RandomNumberGenerator& rng,
                              "modp/ietf/4096",
                              "modp/ietf/6144",
                              "modp/ietf/8192",
-                             NULL };
+                             nullptr };
 
    for(size_t j = 0; domains[j]; j++)
       {
@@ -627,7 +633,7 @@ void benchmark_elg(RandomNumberGenerator& rng,
                              "modp/ietf/4096",
                              "modp/ietf/6144",
                              "modp/ietf/8192",
-                             NULL };
+                             nullptr };
 
    const std::string algo_name = "ElGamal";
 
@@ -657,7 +663,7 @@ void benchmark_elg(RandomNumberGenerator& rng,
                            rng, 1000, seconds);
          }
 
-      const std::string nm = algo_name + "-" + to_string(pbits);
+      const std::string nm = algo_name + "-" + std::to_string(pbits);
       report.report(nm, keygen_timer);
       report.report(nm, enc_timer);
       report.report(nm, dec_timer);

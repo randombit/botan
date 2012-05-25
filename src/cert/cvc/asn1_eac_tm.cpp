@@ -1,7 +1,7 @@
 /*
 * EAC Time Types
 * (C) 2007 FlexSecure GmbH
-*     2008 Jack Lloyd
+*     2008-2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -12,17 +12,17 @@
 #include <botan/charset.h>
 #include <botan/parsing.h>
 #include <botan/internal/rounding.h>
-#include <botan/time.h>
+#include <botan/calendar.h>
 
 namespace Botan {
 
 namespace {
 
-SecureVector<byte> enc_two_digit(u32bit in)
+secure_vector<byte> enc_two_digit(u32bit in)
    {
-   SecureVector<byte> result;
+   secure_vector<byte> result;
    in %= 100;
-   if (in < 10)
+   if(in < 10)
       result.push_back(0x00);
    else
       {
@@ -51,9 +51,10 @@ u32bit dec_two_digit(byte b1, byte b2)
 /*
 * Create an EAC_Time
 */
-EAC_Time::EAC_Time(u64bit timer, ASN1_Tag t) : tag(t)
+EAC_Time::EAC_Time(const std::chrono::system_clock::time_point& time,
+                   ASN1_Tag t) : tag(t)
    {
-   calendar_point cal = calendar_value(timer);
+   calendar_point cal = calendar_value(time);
 
    year   = cal.year;
    month  = cal.month;
@@ -67,6 +68,7 @@ EAC_Time::EAC_Time(const std::string& t_spec, ASN1_Tag t) : tag(t)
    {
    set_to(t_spec);
    }
+
 /*
 * Create an EAC_Time
 */
@@ -80,7 +82,7 @@ EAC_Time::EAC_Time(u32bit y, u32bit m, u32bit d, ASN1_Tag t) :
 */
 void EAC_Time::set_to(const std::string& time_str)
    {
-   if (time_str == "")
+   if(time_str == "")
       {
       year = month = day = 0;
       return;
@@ -89,28 +91,28 @@ void EAC_Time::set_to(const std::string& time_str)
    std::vector<std::string> params;
    std::string current;
 
-   for (u32bit j = 0; j != time_str.size(); ++j)
+   for(u32bit j = 0; j != time_str.size(); ++j)
       {
-      if (Charset::is_digit(time_str[j]))
+      if(Charset::is_digit(time_str[j]))
          current += time_str[j];
       else
          {
-         if (current != "")
+         if(current != "")
             params.push_back(current);
          current.clear();
          }
       }
-   if (current != "")
+   if(current != "")
       params.push_back(current);
 
-   if (params.size() != 3)
+   if(params.size() != 3)
       throw Invalid_Argument("Invalid time specification " + time_str);
 
    year   = to_u32bit(params[0]);
    month  = to_u32bit(params[1]);
    day    = to_u32bit(params[2]);
 
-   if (!passes_sanity_check())
+   if(!passes_sanity_check())
       throw Invalid_Argument("Invalid time specification " + time_str);
    }
 
@@ -129,15 +131,10 @@ void EAC_Time::encode_into(DER_Encoder& der) const
 */
 std::string EAC_Time::as_string() const
    {
-   if (time_is_set() == false)
+   if(time_is_set() == false)
       throw Invalid_State("EAC_Time::as_string: No time set");
 
-   std::string asn1rep;
-   asn1rep = to_string(year, 2);
-
-   asn1rep += to_string(month, 2) + to_string(day, 2);
-
-   return asn1rep;
+   return std::to_string(year * 10000 + month * 100 + day);
    }
 
 /*
@@ -153,15 +150,14 @@ bool EAC_Time::time_is_set() const
 */
 std::string EAC_Time::readable_string() const
    {
-   if (time_is_set() == false)
+   if(time_is_set() == false)
       throw Invalid_State("EAC_Time::readable_string: No time set");
 
-   std::string readable;
-   readable += to_string(year,     2) + "/";
-   readable += to_string(month,    2) + "/";
-   readable += to_string(day,      2) + " ";
+   std::string output(11, 0);
 
-   return readable;
+   std::sprintf(&output[0], "%04d/%02d/%02d", year, month, day);
+
+   return output;
    }
 
 /*
@@ -169,11 +165,11 @@ std::string EAC_Time::readable_string() const
 */
 bool EAC_Time::passes_sanity_check() const
    {
-   if (year < 2000 || year > 2099)
+   if(year < 2000 || year > 2099)
       return false;
-   if (month == 0 || month > 12)
+   if(month == 0 || month > 12)
       return false;
-   if (day == 0 || day > 31)
+   if(day == 0 || day > 31)
       return false;
 
    return true;
@@ -182,11 +178,11 @@ bool EAC_Time::passes_sanity_check() const
 /*
 * modification functions
 */
-
 void EAC_Time::add_years(u32bit years)
    {
    year += years;
    }
+
 void EAC_Time::add_months(u32bit months)
    {
    year += months/12;
@@ -198,23 +194,22 @@ void EAC_Time::add_months(u32bit months)
       }
    }
 
-
 /*
 * Compare this time against another
 */
 s32bit EAC_Time::cmp(const EAC_Time& other) const
    {
-   if (time_is_set() == false)
+   if(time_is_set() == false)
       throw Invalid_State("EAC_Time::cmp: No time set");
 
    const s32bit EARLIER = -1, LATER = 1, SAME_TIME = 0;
 
-   if (year < other.year)     return EARLIER;
-   if (year > other.year)     return LATER;
-   if (month < other.month)   return EARLIER;
-   if (month > other.month)   return LATER;
-   if (day < other.day)       return EARLIER;
-   if (day > other.day)       return LATER;
+   if(year < other.year)     return EARLIER;
+   if(year > other.year)     return LATER;
+   if(month < other.month)   return EARLIER;
+   if(month > other.month)   return LATER;
+   if(day < other.day)       return EARLIER;
+   if(day > other.day)       return LATER;
 
    return SAME_TIME;
    }
@@ -283,61 +278,16 @@ void EAC_Time::decode_from(BER_Decoder& source)
 
    }
 
-u32bit EAC_Time::get_year() const
-   {
-   return year;
-   }
-
-u32bit EAC_Time::get_month() const
-   {
-   return month;
-   }
-
-u32bit EAC_Time::get_day() const
-   {
-   return day;
-   }
-
 /*
 * make the value an octet string for encoding
 */
-SecureVector<byte> EAC_Time::encoded_eac_time() const
+secure_vector<byte> EAC_Time::encoded_eac_time() const
    {
-   SecureVector<byte> result;
+   secure_vector<byte> result;
    result += enc_two_digit(year);
    result += enc_two_digit(month);
    result += enc_two_digit(day);
    return result;
    }
-
-ASN1_Ced::ASN1_Ced(std::string const& str) :
-   EAC_Time(str, ASN1_Tag(37))
-   {}
-
-ASN1_Ced::ASN1_Ced(u64bit val) :
-   EAC_Time(val, ASN1_Tag(37))
-   {}
-
-ASN1_Ced::ASN1_Ced(EAC_Time const& other) :
-   EAC_Time(other.get_year(),
-            other.get_month(),
-            other.get_day(),
-            ASN1_Tag(37))
-   {}
-
-ASN1_Cex::ASN1_Cex(std::string const& str) :
-   EAC_Time(str, ASN1_Tag(36))
-   {}
-
-ASN1_Cex::ASN1_Cex(u64bit val) :
-   EAC_Time(val, ASN1_Tag(36))
-   {}
-
-ASN1_Cex::ASN1_Cex(EAC_Time const& other) :
-   EAC_Time(other.get_year(),
-            other.get_month(),
-            other.get_day(),
-            ASN1_Tag(36))
-   {}
 
 }

@@ -37,7 +37,7 @@ class BOTAN_DLL PBE : public Filter
       * DER encode the params (the number of iterations and the salt value)
       * @return encoded params
       */
-      virtual MemoryVector<byte> encode_params() const = 0;
+      virtual std::vector<byte> encode_params() const = 0;
 
       /**
       * Decode params and use them inside this Filter.

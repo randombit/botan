@@ -24,7 +24,8 @@ class Bad_Size : public Exception
    public:
       Bad_Size(u32bit got, u32bit expected) :
          Exception("Bad size detected in Python/C++ conversion layer: got " +
-                   to_string(got) + " bytes, expected " + to_string(expected))
+                   std::to_string(got) + " bytes, expected " +
+                   std::to_string(expected))
          {}
    };
 
@@ -33,7 +34,7 @@ inline std::string make_string(const byte input[], u32bit length)
    return std::string((const char*)input, length);
    }
 
-inline std::string make_string(const MemoryRegion<byte>& in)
+inline std::string make_string(const secure_vector<byte>& in)
    {
    return make_string(in.begin(), in.size());
    }

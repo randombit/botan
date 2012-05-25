@@ -43,9 +43,9 @@ class BOTAN_DLL EAC1_1_ADO : public EAC1_1_obj<EAC1_1_ADO>
       * @param tbs_bits the TBS data to sign
       * @param rng a random number generator
       */
-      static MemoryVector<byte> make_signed(
+      static std::vector<byte> make_signed(
          PK_Signer& signer,
-         const MemoryRegion<byte>& tbs_bits,
+         const secure_vector<byte>& tbs_bits,
          RandomNumberGenerator& rng);
 
       /**
@@ -73,7 +73,7 @@ class BOTAN_DLL EAC1_1_ADO : public EAC1_1_obj<EAC1_1_ADO>
       * Get the TBS data of this CVC ADO request.
       * @result the TBS data
       */
-      SecureVector<byte> tbs_data() const;
+      secure_vector<byte> tbs_data() const;
 
       virtual ~EAC1_1_ADO() {}
    private:
@@ -82,7 +82,7 @@ class BOTAN_DLL EAC1_1_ADO : public EAC1_1_obj<EAC1_1_ADO>
 
       void force_decode();
       static void decode_info(DataSource& source,
-                              SecureVector<byte> & res_tbs_bits,
+                              secure_vector<byte> & res_tbs_bits,
                               ECDSA_Signature & res_sig);
    };
 

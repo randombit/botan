@@ -204,12 +204,14 @@ void KASUMI::key_schedule(const byte key[], size_t)
    static const u16bit RC[] = { 0x0123, 0x4567, 0x89AB, 0xCDEF,
                                 0xFEDC, 0xBA98, 0x7654, 0x3210 };
 
-   SecureVector<u16bit> K(16);
+   secure_vector<u16bit> K(16);
    for(size_t i = 0; i != 8; ++i)
       {
       K[i] = load_be<u16bit>(key, i);
       K[i+8] = K[i] ^ RC[i];
       }
+
+   EK.resize(64);
 
    for(size_t i = 0; i != 8; ++i)
       {

@@ -10,6 +10,7 @@
 
 #include <botan/secmem.h>
 #include <vector>
+#include <string>
 
 namespace Botan {
 
@@ -65,22 +66,33 @@ class BOTAN_DLL Filter
       /**
       * @param in some input for the filter
       */
-      void send(const MemoryRegion<byte>& in) { send(&in[0], in.size()); }
+      void send(const secure_vector<byte>& in) { send(&in[0], in.size()); }
+
+      /**
+      * @param in some input for the filter
+      */
+      void send(const std::vector<byte>& in) { send(&in[0], in.size()); }
 
       /**
       * @param in some input for the filter
       * @param length the number of bytes of in to send
       */
-      void send(const MemoryRegion<byte>& in, size_t length)
+      void send(const secure_vector<byte>& in, size_t length)
+         {
+         send(&in[0], length);
+         }
+
+      /**
+      * @param in some input for the filter
+      * @param length the number of bytes of in to send
+      */
+      void send(const std::vector<byte>& in, size_t length)
          {
          send(&in[0], length);
          }
 
       Filter();
    private:
-      Filter(const Filter&) {}
-      Filter& operator=(const Filter&) { return (*this); }
-
       /**
       * Start a new message in *this and all following filters. Only for
       * internal use, not intended for use in client applications.
@@ -95,6 +107,9 @@ class BOTAN_DLL Filter
 
       friend class Pipe;
       friend class Fanout_Filter;
+
+      Filter(const Filter&) = delete;
+      Filter& operator=(const Filter&) = delete;
 
       size_t total_ports() const;
       size_t current_port() const { return port_num; }
@@ -120,7 +135,7 @@ class BOTAN_DLL Filter
       void set_next(Filter* filters[], size_t count);
       Filter* get_next() const;
 
-      SecureVector<byte> write_queue;
+      secure_vector<byte> write_queue;
       std::vector<Filter*> next;
       size_t port_num, filter_owns;
 

@@ -15,7 +15,7 @@ namespace Botan {
 */
 bool MessageAuthenticationCode::verify_mac(const byte mac[], size_t length)
    {
-   SecureVector<byte> our_mac = final();
+   secure_vector<byte> our_mac = final();
 
    if(our_mac.size() != length)
       return false;

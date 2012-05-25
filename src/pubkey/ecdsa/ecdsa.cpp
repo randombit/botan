@@ -32,7 +32,7 @@ ECDSA_Signature_Operation::ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecd
    {
    }
 
-SecureVector<byte>
+secure_vector<byte>
 ECDSA_Signature_Operation::sign(const byte msg[], size_t msg_len,
                                 RandomNumberGenerator& rng)
    {
@@ -56,7 +56,7 @@ ECDSA_Signature_Operation::sign(const byte msg[], size_t msg_len,
       s = mod_order.multiply(inverse_mod(k, order), mul_add(x, r, m));
       }
 
-   SecureVector<byte> output(2*order.bytes());
+   secure_vector<byte> output(2*order.bytes());
    r.binary_encode(&output[output.size() / 2 - r.bytes()]);
    s.binary_encode(&output[output.size() - s.bytes()]);
    return output;

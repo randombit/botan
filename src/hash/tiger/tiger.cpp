@@ -17,7 +17,7 @@ namespace {
 /*
 * Tiger Mixing Function
 */
-inline void mix(MemoryRegion<u64bit>& X)
+inline void mix(secure_vector<u64bit>& X)
    {
    X[0] -= X[7] ^ 0xA5A5A5A5A5A5A5A5;
    X[1] ^= X[0];
@@ -83,7 +83,7 @@ void Tiger::copy_out(byte output[])
 * Tiger Pass
 */
 void Tiger::pass(u64bit& A, u64bit& B, u64bit& C,
-                 const MemoryRegion<u64bit>& X,
+                 const secure_vector<u64bit>& X,
                  byte mul)
    {
    C ^= X[0];
@@ -160,7 +160,8 @@ void Tiger::clear()
 */
 std::string Tiger::name() const
    {
-   return "Tiger(" + to_string(output_length()) + "," + to_string(passes) + ")";
+   return "Tiger(" + std::to_string(output_length()) + "," +
+                     std::to_string(passes) + ")";
    }
 
 /*
@@ -175,11 +176,11 @@ Tiger::Tiger(size_t hash_len, size_t passes) :
    {
    if(output_length() != 16 && output_length() != 20 && output_length() != 24)
       throw Invalid_Argument("Tiger: Illegal hash output size: " +
-                             to_string(output_length()));
+                             std::to_string(output_length()));
 
    if(passes < 3)
       throw Invalid_Argument("Tiger: Invalid number of passes: "
-                             + to_string(passes));
+                             + std::to_string(passes));
    clear();
    }
 

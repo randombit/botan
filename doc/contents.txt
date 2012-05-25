@@ -12,7 +12,8 @@ Contents
    filters
    pubkey
    x509
-   ssl
+   tls
+   credentials_manager
    bigint
    lowlevel
    secmem

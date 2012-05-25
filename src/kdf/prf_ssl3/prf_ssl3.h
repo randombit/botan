@@ -18,7 +18,7 @@ namespace Botan {
 class BOTAN_DLL SSL3_PRF : public KDF
    {
    public:
-      SecureVector<byte> derive(size_t, const byte[], size_t,
+      secure_vector<byte> derive(size_t, const byte[], size_t,
                                 const byte[], size_t) const;
 
       std::string name() const { return "SSL3-PRF"; }

@@ -58,9 +58,8 @@ void AlternativeName::add_attribute(const std::string& type,
    if(type == "" || str == "")
       return;
 
-   typedef std::multimap<std::string, std::string>::iterator iter;
-   std::pair<iter, iter> range = alt_info.equal_range(type);
-   for(iter j = range.first; j != range.second; ++j)
+   auto range = alt_info.equal_range(type);
+   for(auto j = range.first; j != range.second; ++j)
       if(j->second == str)
          return;
 
@@ -101,13 +100,11 @@ std::multimap<std::string, std::string> AlternativeName::contents() const
    {
    std::multimap<std::string, std::string> names;
 
-   typedef std::multimap<std::string, std::string>::const_iterator rdn_iter;
-   for(rdn_iter j = alt_info.begin(); j != alt_info.end(); ++j)
-      multimap_insert(names, j->first, j->second);
+   for(auto i = alt_info.begin(); i != alt_info.end(); ++i)
+      multimap_insert(names, i->first, i->second);
 
-   typedef std::multimap<OID, ASN1_String>::const_iterator on_iter;
-   for(on_iter j = othernames.begin(); j != othernames.end(); ++j)
-      multimap_insert(names, OIDS::lookup(j->first), j->second.value());
+   for(auto i = othernames.begin(); i != othernames.end(); ++i)
+      multimap_insert(names, OIDS::lookup(i->first), i->second.value());
 
    return names;
    }
@@ -129,19 +126,18 @@ void encode_entries(DER_Encoder& encoder,
                     const std::multimap<std::string, std::string>& attr,
                     const std::string& type, ASN1_Tag tagging)
    {
-   typedef std::multimap<std::string, std::string>::const_iterator iter;
+   auto range = attr.equal_range(type);
 
-   std::pair<iter, iter> range = attr.equal_range(type);
-   for(iter j = range.first; j != range.second; ++j)
+   for(auto i = range.first; i != range.second; ++i)
       {
       if(type == "RFC822" || type == "DNS" || type == "URI")
          {
-         ASN1_String asn1_string(j->second, IA5_STRING);
+         ASN1_String asn1_string(i->second, IA5_STRING);
          encoder.add_object(tagging, CONTEXT_SPECIFIC, asn1_string.iso_8859());
          }
       else if(type == "IP")
          {
-         const u32bit ip = string_to_ipv4(j->second);
+         const u32bit ip = string_to_ipv4(i->second);
          byte ip_buf[4] = { 0 };
          store_be(ip, ip_buf);
          encoder.add_object(tagging, CONTEXT_SPECIFIC, ip_buf, 4);
@@ -163,8 +159,7 @@ void AlternativeName::encode_into(DER_Encoder& der) const
    encode_entries(der, alt_info, "URI", ASN1_Tag(6));
    encode_entries(der, alt_info, "IP", ASN1_Tag(7));
 
-   std::multimap<OID, ASN1_String>::const_iterator i;
-   for(i = othernames.begin(); i != othernames.end(); ++i)
+   for(auto i = othernames.begin(); i != othernames.end(); ++i)
       {
       der.start_explicit(0)
          .encode(i->first)

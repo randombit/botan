@@ -103,7 +103,7 @@ class BOTAN_DLL CPUID
          CPUID_MOVBE_BIT = 54,
          CPUID_AESNI_BIT = 57,
          CPUID_AVX_BIT = 60,
-         CPUID_RDRAND_BIT = 61
+         CPUID_RDRAND_BIT = 62
       };
 
       static bool x86_processor_flags_has(u64bit bit)

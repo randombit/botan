@@ -55,7 +55,7 @@ Core_Engine::find_stream_cipher(const SCAN_Name& request,
       return new WiderWake_41_BE;
 #endif
 
-   return 0;
+   return nullptr;
    }
 
 }

@@ -23,7 +23,7 @@ class SIMD_Engine : public Engine
       BlockCipher* find_block_cipher(const SCAN_Name&,
                                      Algorithm_Factory&) const;
 
-      HashFunction* find_hash(const SCAN_Name& reqeust,
+      HashFunction* find_hash(const SCAN_Name& request,
                               Algorithm_Factory&) const;
    };
 

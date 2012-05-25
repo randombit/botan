@@ -45,7 +45,7 @@ size_t Device_EntropySource::Device_Reader::get(byte out[], size_t length,
    timeout.tv_sec = (ms_wait_time / 1000);
    timeout.tv_usec = (ms_wait_time % 1000) * 1000;
 
-   if(::select(fd + 1, &read_set, 0, 0, &timeout) < 0)
+   if(::select(fd + 1, &read_set, nullptr, nullptr, &timeout) < 0)
       return 0;
 
    if(!(FD_ISSET(fd, &read_set)))
@@ -111,7 +111,7 @@ void Device_EntropySource::poll(Entropy_Accumulator& accum)
       accum.desired_remaining_bits() / ENTROPY_BITS_PER_BYTE, 32);
 
    const size_t read_wait_ms = std::max<size_t>(go_get, 100);
-   MemoryRegion<byte>& io_buffer = accum.get_io_buffer(go_get);
+   secure_vector<byte>& io_buffer = accum.get_io_buffer(go_get);
 
    for(size_t i = 0; i != devices.size(); ++i)
       {

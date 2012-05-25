@@ -29,14 +29,14 @@ bool encryption_consistency_check(RandomNumberGenerator& rng,
    if(encryptor.maximum_input_size() == 0)
       return true;
 
-   SecureVector<byte> plaintext =
-      rng.random_vec(encryptor.maximum_input_size() - 1);
+   std::vector<byte> plaintext =
+      unlock(rng.random_vec(encryptor.maximum_input_size() - 1));
 
-   SecureVector<byte> ciphertext = encryptor.encrypt(plaintext, rng);
+   std::vector<byte> ciphertext = encryptor.encrypt(plaintext, rng);
    if(ciphertext == plaintext)
       return false;
 
-   SecureVector<byte> decrypted = decryptor.decrypt(ciphertext);
+   std::vector<byte> decrypted = unlock(decryptor.decrypt(ciphertext));
 
    return (plaintext == decrypted);
    }
@@ -51,9 +51,9 @@ bool signature_consistency_check(RandomNumberGenerator& rng,
    PK_Signer signer(key, padding);
    PK_Verifier verifier(key, padding);
 
-   SecureVector<byte> message = rng.random_vec(16);
+   std::vector<byte> message = unlock(rng.random_vec(16));
 
-   SecureVector<byte> signature;
+   std::vector<byte> signature;
 
    try
       {

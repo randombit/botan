@@ -32,7 +32,7 @@ class BOTAN_DLL MD2 : public HashFunction
       void hash(const byte[]);
       void final_result(byte[]);
 
-      SecureVector<byte> X, checksum, buffer;
+      secure_vector<byte> X, checksum, buffer;
       size_t position;
    };
 

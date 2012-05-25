@@ -75,7 +75,7 @@ void Hex_Encoder::encode_and_send(const byte block[], size_t length)
 */
 void Hex_Encoder::write(const byte input[], size_t length)
    {
-   in.copy(position, input, length);
+   buffer_insert(in, position, input, length);
    if(position + length >= in.size())
       {
       encode_and_send(&in[0], in.size());
@@ -87,7 +87,7 @@ void Hex_Encoder::write(const byte input[], size_t length)
          input += in.size();
          length -= in.size();
          }
-      in.copy(input, length);
+      copy_mem(&in[0], input, length);
       position = 0;
       }
    position += length;

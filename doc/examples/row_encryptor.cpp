@@ -26,22 +26,22 @@ class Row_Encryptor
                     RandomNumberGenerator& rng);
 
       Row_Encryptor(const std::string& passphrase,
-                    const MemoryRegion<byte>& salt);
+                    const std::vector<byte>& salt);
 
       std::string encrypt(const std::string& input,
-                          const MemoryRegion<byte>& salt);
+                          const std::vector<byte>& salt);
 
       std::string decrypt(const std::string& input,
-                          const MemoryRegion<byte>& salt);
+                          const std::vector<byte>& salt);
 
-      SecureVector<byte> get_pbkdf_salt() const { return pbkdf_salt; }
+      std::vector<byte> get_pbkdf_salt() const { return pbkdf_salt; }
    private:
       void init(const std::string& passphrase);
 
       Row_Encryptor(const Row_Encryptor&) {}
       Row_Encryptor& operator=(const Row_Encryptor&) { return (*this); }
 
-      SecureVector<byte> pbkdf_salt;
+      std::vector<byte> pbkdf_salt;
       Pipe enc_pipe, dec_pipe;
       EAX_Encryption* eax_enc; // owned by enc_pipe
       EAX_Decryption* eax_dec; // owned by dec_pipe;
@@ -56,7 +56,7 @@ Row_Encryptor::Row_Encryptor(const std::string& passphrase,
    }
 
 Row_Encryptor::Row_Encryptor(const std::string& passphrase,
-                             const MemoryRegion<byte>& salt)
+                             const std::vector<byte>& salt)
    {
    pbkdf_salt = salt;
    init(passphrase);
@@ -66,7 +66,7 @@ void Row_Encryptor::init(const std::string& passphrase)
    {
    std::auto_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(SHA-160)"));
 
-   SecureVector<byte> key = pbkdf->derive_key(32, passphrase,
+   secure_vector<byte> key = pbkdf->derive_key(32, passphrase,
                                             &pbkdf_salt[0], pbkdf_salt.size(),
                                             10000).bits_of();
 
@@ -89,7 +89,7 @@ void Row_Encryptor::init(const std::string& passphrase)
    }
 
 std::string Row_Encryptor::encrypt(const std::string& input,
-                                   const MemoryRegion<byte>& salt)
+                                   const std::vector<byte>& salt)
    {
    eax_enc->set_iv(salt);
    enc_pipe.process_msg(input);
@@ -97,7 +97,7 @@ std::string Row_Encryptor::encrypt(const std::string& input,
    }
 
 std::string Row_Encryptor::decrypt(const std::string& input,
-                                   const MemoryRegion<byte>& salt)
+                                   const std::vector<byte>& salt)
    {
    eax_dec->set_iv(salt);
    dec_pipe.process_msg(input);
@@ -133,7 +133,7 @@ int main()
       }
 
    std::vector<std::string> encrypted_values;
-   MemoryVector<byte> salt(4); // keep out of loop to avoid excessive dynamic allocation
+   std::vector<byte> salt(4);
 
    for(u32bit i = 0; i != original_inputs.size(); ++i)
       {

@@ -90,8 +90,6 @@ const byte LOG[512] = {
 */
 void SAFER_SK::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   const size_t rounds = get_rounds();
-
    for(size_t i = 0; i != blocks; ++i)
       {
       byte A = in[0], B = in[1], C = in[2], D = in[3],
@@ -128,8 +126,6 @@ void SAFER_SK::encrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void SAFER_SK::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   const size_t rounds = get_rounds();
-
    for(size_t i = 0; i != blocks; ++i)
       {
       byte A = in[0], B = in[1], C = in[2], D = in[3],
@@ -208,7 +204,9 @@ void SAFER_SK::key_schedule(const byte key[], size_t)
       0x07, 0x08, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x11, 0x09, 0x0A, 0x0B,
       0x0C, 0x0D, 0x0E, 0x0F };
 
-   SecureVector<byte> KB(18);
+   EK.resize(16 * rounds + 8);
+
+   secure_vector<byte> KB(18);
 
    for(size_t i = 0; i != 8; ++i)
       {
@@ -216,7 +214,7 @@ void SAFER_SK::key_schedule(const byte key[], size_t)
       KB[17] ^= KB[i+9] = EK[i] = key[i+8];
       }
 
-   for(size_t i = 0; i != get_rounds(); ++i)
+   for(size_t i = 0; i != rounds; ++i)
       {
       for(size_t j = 0; j != 18; ++j)
          KB[j] = rotate_left(KB[j], 6);
@@ -230,7 +228,7 @@ void SAFER_SK::key_schedule(const byte key[], size_t)
 */
 std::string SAFER_SK::name() const
    {
-   return "SAFER-SK(" + to_string(get_rounds()) + ")";
+   return "SAFER-SK(" + std::to_string(rounds) + ")";
    }
 
 /*
@@ -238,18 +236,16 @@ std::string SAFER_SK::name() const
 */
 BlockCipher* SAFER_SK::clone() const
    {
-   return new SAFER_SK(get_rounds());
+   return new SAFER_SK(rounds);
    }
 
 /*
 * SAFER-SK Constructor
 */
-SAFER_SK::SAFER_SK(size_t rounds)
+SAFER_SK::SAFER_SK(size_t r) : rounds(r)
    {
    if(rounds > 13 || rounds == 0)
       throw Invalid_Argument(name() + ": Invalid number of rounds");
-
-   EK.resize(16 * rounds + 8);
    }
 
 }

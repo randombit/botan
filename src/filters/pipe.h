@@ -11,6 +11,7 @@
 #include <botan/data_src.h>
 #include <botan/filter.h>
 #include <botan/exceptn.h>
+#include <initializer_list>
 #include <iosfwd>
 
 namespace Botan {
@@ -42,7 +43,7 @@ class BOTAN_DLL Pipe : public DataSource
          */
          Invalid_Message_Number(const std::string& where, message_id msg) :
             Invalid_Argument("Pipe::" + where + ": Invalid message number " +
-                             to_string(msg))
+                             std::to_string(msg))
             {}
          };
 
@@ -65,9 +66,17 @@ class BOTAN_DLL Pipe : public DataSource
 
       /**
       * Write input to the pipe, i.e. to its first filter.
-      * @param in the MemoryRegion containing the data to write
+      * @param in the secure_vector containing the data to write
       */
-      void write(const MemoryRegion<byte>& in);
+      void write(const secure_vector<byte>& in)
+         { write(&in[0], in.size()); }
+
+      /**
+      * Write input to the pipe, i.e. to its first filter.
+      * @param in the std::vector containing the data to write
+      */
+      void write(const std::vector<byte>& in)
+         { write(&in[0], in.size()); }
 
       /**
       * Write input to the pipe, i.e. to its first filter.
@@ -96,9 +105,15 @@ class BOTAN_DLL Pipe : public DataSource
 
       /**
       * Perform start_msg(), write() and end_msg() sequentially.
-      * @param in the MemoryRegion containing the data to write
+      * @param in the secure_vector containing the data to write
       */
-      void process_msg(const MemoryRegion<byte>& in);
+      void process_msg(const secure_vector<byte>& in);
+
+      /**
+      * Perform start_msg(), write() and end_msg() sequentially.
+      * @param in the secure_vector containing the data to write
+      */
+      void process_msg(const std::vector<byte>& in);
 
       /**
       * Perform start_msg(), write() and end_msg() sequentially.
@@ -156,9 +171,9 @@ class BOTAN_DLL Pipe : public DataSource
       /**
       * Read the full contents of the pipe.
       * @param msg the number identifying the message to read from
-      * @return SecureVector holding the contents of the pipe
+      * @return secure_vector holding the contents of the pipe
       */
-      SecureVector<byte> read_all(message_id msg = DEFAULT_MESSAGE);
+      secure_vector<byte> read_all(message_id msg = DEFAULT_MESSAGE);
 
       /**
       * Read the full contents of the pipe.
@@ -261,18 +276,20 @@ class BOTAN_DLL Pipe : public DataSource
       * Construct a Pipe of up to four filters. The filters are set up
       * in the same order as the arguments.
       */
-      Pipe(Filter* = 0, Filter* = 0, Filter* = 0, Filter* = 0);
+      Pipe(Filter* = nullptr, Filter* = nullptr,
+           Filter* = nullptr, Filter* = nullptr);
 
       /**
-      * Construct a Pipe from range of filters passed as an array
+      * Construct a Pipe from a list of filters
       * @param filters the set of filters to use
-      * @param count the number of elements in filters
       */
-      Pipe(Filter* filters[], size_t count);
+      Pipe(std::initializer_list<Filter*> filters);
+
+      Pipe(const Pipe&) = delete;
+      Pipe& operator=(const Pipe&) = delete;
+
       ~Pipe();
    private:
-      Pipe(const Pipe&) : DataSource() {}
-      Pipe& operator=(const Pipe&) { return (*this); }
       void init();
       void destruct(Filter*);
       void find_endpoints(Filter*);

@@ -314,22 +314,29 @@ class BOTAN_DLL BigInt
      * @result a pointer to the start of the internal register of
      * the integer value
      */
+     word* data() { return &reg[0]; }
+
+     /**
+     * Return a pointer to the big integer word register
+     * @result a pointer to the start of the internal register of
+     * the integer value
+     */
      const word* data() const { return &reg[0]; }
 
      /**
      * return a reference to the internal register containing the value
-     * @result a reference to the word-array (SecureVector<word>)
+     * @result a reference to the word-array (secure_vector<word>)
      * with the internal register value (containing the integer
      * value)
      */
-     SecureVector<word>& get_reg() { return reg; }
+     secure_vector<word>& get_reg() { return reg; }
 
      /**
      * return a const reference to the internal register containing the value
-     * @result a const reference to the word-array (SecureVector<word>)
+     * @result a const reference to the word-array (secure_vector<word>)
      * with the internal register value (containing the integer value)
      */
-     const SecureVector<word>& get_reg() const { return reg; }
+     const secure_vector<word>& get_reg() const { return reg; }
 
      /**
      * Assign using a plain word array
@@ -369,10 +376,13 @@ class BOTAN_DLL BigInt
      void binary_decode(const byte buf[], size_t length);
 
      /**
-     * Read integer value from a byte array (MemoryRegion<byte>)
+     * Read integer value from a byte array (secure_vector<byte>)
      * @param buf the array to load from
      */
-     void binary_decode(const MemoryRegion<byte>& buf);
+     void binary_decode(const secure_vector<byte>& buf)
+        {
+        binary_decode(&buf[0], buf.size());
+        }
 
      /**
      * @param base the base to measure the size for
@@ -391,12 +401,21 @@ class BOTAN_DLL BigInt
                                   const BigInt& max);
 
      /**
-     * Encode the integer value from a BigInt to a SecureVector of bytes
+     * Encode the integer value from a BigInt to a std::vector of bytes
      * @param n the BigInt to use as integer source
      * @param base number-base of resulting byte array representation
-     * @result SecureVector of bytes containing the integer with given base
+     * @result secure_vector of bytes containing the integer with given base
      */
-     static SecureVector<byte> encode(const BigInt& n, Base base = Binary);
+     static std::vector<byte> encode(const BigInt& n, Base base = Binary);
+
+     /**
+     * Encode the integer value from a BigInt to a secure_vector of bytes
+     * @param n the BigInt to use as integer source
+     * @param base number-base of resulting byte array representation
+     * @result secure_vector of bytes containing the integer with given base
+     */
+     static secure_vector<byte> encode_locked(const BigInt& n,
+                                              Base base = Binary);
 
      /**
      * Encode the integer value from a BigInt to a byte array
@@ -423,22 +442,41 @@ class BOTAN_DLL BigInt
      * @param base number-base of the integer in buf
      * @result BigInt representing the integer in the byte array
      */
-     static BigInt decode(const MemoryRegion<byte>& buf,
-                          Base base = Binary);
+     static BigInt decode(const secure_vector<byte>& buf,
+                          Base base = Binary)
+        {
+        return BigInt::decode(&buf[0], buf.size(), base);
+        }
+
+     /**
+     * Create a BigInt from an integer in a byte array
+     * @param buf the binary value to load
+     * @param base number-base of the integer in buf
+     * @result BigInt representing the integer in the byte array
+     */
+     static BigInt decode(const std::vector<byte>& buf,
+                          Base base = Binary)
+        {
+        return BigInt::decode(&buf[0], buf.size(), base);
+        }
 
      /**
      * Encode a BigInt to a byte array according to IEEE 1363
      * @param n the BigInt to encode
-     * @param bytes the length of the resulting SecureVector<byte>
-     * @result a SecureVector<byte> containing the encoded BigInt
+     * @param bytes the length of the resulting secure_vector<byte>
+     * @result a secure_vector<byte> containing the encoded BigInt
      */
-     static SecureVector<byte> encode_1363(const BigInt& n, size_t bytes);
+     static secure_vector<byte> encode_1363(const BigInt& n, size_t bytes);
 
      /**
      * Swap this value with another
      * @param other BigInt to swap values with
      */
-     void swap(BigInt& other);
+     void swap(BigInt& other)
+        {
+        reg.swap(other.reg);
+        std::swap(signedness, other.signedness);
+        }
 
      /**
      * Create empty BigInt
@@ -500,8 +538,31 @@ class BOTAN_DLL BigInt
      */
      BigInt(NumberType type, size_t n);
 
+     /**
+     * Move constructor
+     */
+     BigInt(BigInt&& other)
+        {
+        this->swap(other);
+        }
+
+     /**
+     * Move assignment
+     */
+     BigInt& operator=(BigInt&& other)
+        {
+        if(this != &other)
+           this->swap(other);
+
+        return (*this);
+        }
+
+     /**
+     * Copy assignment
+     */
+     BigInt& operator=(const BigInt&) = default;
    private:
-      SecureVector<word> reg;
+      secure_vector<word> reg;
       Sign signedness;
    };
 

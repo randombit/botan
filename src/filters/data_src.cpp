@@ -77,26 +77,10 @@ bool DataSource_Memory::end_of_data() const
 /*
 * DataSource_Memory Constructor
 */
-DataSource_Memory::DataSource_Memory(const byte in[], size_t length) :
-   source(in, length)
-   {
-   offset = 0;
-   }
-
-/*
-* DataSource_Memory Constructor
-*/
-DataSource_Memory::DataSource_Memory(const MemoryRegion<byte>& in) :
-   source(in)
-   {
-   offset = 0;
-   }
-
-/*
-* DataSource_Memory Constructor
-*/
 DataSource_Memory::DataSource_Memory(const std::string& in) :
-   source(reinterpret_cast<const byte*>(in.data()), in.length())
+   source(reinterpret_cast<const byte*>(in.data()),
+          reinterpret_cast<const byte*>(in.data()) + in.length()),
+   offset(0)
    {
    offset = 0;
    }
@@ -127,7 +111,7 @@ size_t DataSource_Stream::peek(byte out[], size_t length, size_t offset) const
 
    if(offset)
       {
-      SecureVector<byte> buf(offset);
+      secure_vector<byte> buf(offset);
       source.read(reinterpret_cast<char*>(&buf[0]), buf.size());
       if(source.bad())
          throw Stream_IO_Error("DataSource_Stream::peek: Source failure");
@@ -190,7 +174,7 @@ DataSource_Stream::DataSource_Stream(const std::string& path,
 DataSource_Stream::DataSource_Stream(std::istream& in,
                                      const std::string& name) :
    identifier(name),
-   source_p(0),
+   source_p(nullptr),
    source(in),
    total_read(0)
    {

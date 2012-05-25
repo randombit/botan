@@ -36,7 +36,7 @@ void CMS_Encoder::set_data(const std::string& str)
 /*
 * Finalize and return the CMS encoded data
 */
-SecureVector<byte> CMS_Encoder::get_contents()
+secure_vector<byte> CMS_Encoder::get_contents()
    {
    DER_Encoder encoder;
 
@@ -72,7 +72,7 @@ std::string CMS_Encoder::PEM_contents()
 /*
 * Make an EncapsulatedContentInfo
 */
-SecureVector<byte> CMS_Encoder::make_econtent(const SecureVector<byte>& data,
+secure_vector<byte> CMS_Encoder::make_econtent(const secure_vector<byte>& data,
                                               const std::string& type)
    {
    return DER_Encoder().start_cons(SEQUENCE).

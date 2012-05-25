@@ -55,7 +55,7 @@ class BOTAN_DLL GOST_28147_89 : public Block_Cipher_Fixed_Params<8, 32>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
-      void clear() { zeroise(EK); }
+      void clear() { EK.clear(); }
 
       std::string name() const;
       BlockCipher* clone() const { return new GOST_28147_89(SBOX); }
@@ -65,13 +65,18 @@ class BOTAN_DLL GOST_28147_89 : public Block_Cipher_Fixed_Params<8, 32>
       */
       GOST_28147_89(const GOST_28147_89_Params& params);
    private:
-      GOST_28147_89(const SecureVector<u32bit>& other_SBOX) :
+      GOST_28147_89(const std::vector<u32bit>& other_SBOX) :
          SBOX(other_SBOX), EK(8) {}
 
       void key_schedule(const byte[], size_t);
 
-      SecureVector<u32bit> SBOX;
-      SecureVector<u32bit> EK;
+      /*
+      * The sbox is not secret, this is just a larger expansion of it
+      * which we generate at runtime for faster execution
+      */
+      std::vector<u32bit> SBOX;
+
+      secure_vector<u32bit> EK;
    };
 
 }

@@ -42,7 +42,7 @@ class BOTAN_DLL LubyRackoff : public BlockCipher
       void key_schedule(const byte[], size_t);
 
       HashFunction* hash;
-      SecureVector<byte> K1, K2;
+      secure_vector<byte> K1, K2;
    };
 
 }

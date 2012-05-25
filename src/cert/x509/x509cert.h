@@ -85,19 +85,19 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       * Get the serial number of this certificate.
       * @return certificates serial number
       */
-      MemoryVector<byte> serial_number() const;
+      std::vector<byte> serial_number() const;
 
       /**
       * Get the DER encoded AuthorityKeyIdentifier of this certificate.
       * @return DER encoded AuthorityKeyIdentifier
       */
-      MemoryVector<byte> authority_key_id() const;
+      std::vector<byte> authority_key_id() const;
 
       /**
       * Get the DER encoded SubjectKeyIdentifier of this certificate.
       * @return DER encoded SubjectKeyIdentifier
       */
-      MemoryVector<byte> subject_key_id() const;
+      std::vector<byte> subject_key_id() const;
 
       /**
       * Check whether this certificate is self signed.
@@ -148,10 +148,22 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       std::string to_string() const;
 
       /**
+      * Check if a certain DNS name matches up with the information in
+      * the cert
+      */
+      bool matches_dns_name(const std::string& name) const;
+
+      /**
       * Check to certificates for equality.
       * @return true both certificates are (binary) equal
       */
       bool operator==(const X509_Certificate& other) const;
+
+      /**
+      * Impose an arbitrary (but consistent) ordering
+      * @return true if this is less than other by some unspecified criteria
+      */
+      bool operator<(const X509_Certificate& other) const;
 
       /**
       * Create a certificate from a data source providing the DER or
@@ -166,6 +178,9 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       * @param filename the name of the certificate file
       */
       X509_Certificate(const std::string& filename);
+
+      X509_Certificate(const std::vector<byte>& in);
+
    private:
       void force_decode();
       friend class X509_CA;

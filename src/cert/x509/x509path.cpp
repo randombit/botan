@@ -9,8 +9,8 @@
 #include <botan/parsing.h>
 #include <botan/pubkey.h>
 #include <botan/oids.h>
-#include <botan/time.h>
 #include <algorithm>
+#include <chrono>
 #include <memory>
 
 namespace Botan {

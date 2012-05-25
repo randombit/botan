@@ -58,7 +58,7 @@ Core_Engine::get_encryption_op(const Public_Key& key) const
       return new ElGamal_Encryption_Operation(*s);
 #endif
 
-   return 0;
+   return nullptr;
    }
 
 PK_Ops::Decryption*
@@ -74,7 +74,7 @@ Core_Engine::get_decryption_op(const Private_Key& key) const
       return new ElGamal_Decryption_Operation(*s);
 #endif
 
-   return 0;
+   return nullptr;
    }
 
 PK_Ops::Key_Agreement*
@@ -90,7 +90,7 @@ Core_Engine::get_key_agreement_op(const Private_Key& key) const
       return new ECDH_KA_Operation(*ecdh);
 #endif
 
-   return 0;
+   return nullptr;
    }
 
 PK_Ops::Signature*
@@ -127,7 +127,7 @@ Core_Engine::get_signature_op(const Private_Key& key) const
       return new NR_Signature_Operation(*s);
 #endif
 
-   return 0;
+   return nullptr;
    }
 
 PK_Ops::Verification*
@@ -164,7 +164,7 @@ Core_Engine::get_verify_op(const Public_Key& key) const
       return new NR_Verification_Operation(*s);
 #endif
 
-   return 0;
+   return nullptr;
    }
 
 }

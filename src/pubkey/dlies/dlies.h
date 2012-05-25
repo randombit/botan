@@ -27,13 +27,14 @@ class BOTAN_DLL DLIES_Encryptor : public PK_Encryptor
 
       ~DLIES_Encryptor();
 
-      void set_other_key(const MemoryRegion<byte>&);
+      void set_other_key(const std::vector<byte>&);
    private:
-      SecureVector<byte> enc(const byte[], size_t,
-                             RandomNumberGenerator&) const;
+      std::vector<byte> enc(const byte[], size_t,
+                            RandomNumberGenerator&) const;
+
       size_t maximum_input_size() const;
 
-      SecureVector<byte> other_key, my_key;
+      std::vector<byte> other_key, my_key;
 
       PK_Key_Agreement ka;
       KDF* kdf;
@@ -55,9 +56,9 @@ class BOTAN_DLL DLIES_Decryptor : public PK_Decryptor
       ~DLIES_Decryptor();
 
    private:
-      SecureVector<byte> dec(const byte[], size_t) const;
+      secure_vector<byte> dec(const byte[], size_t) const;
 
-      SecureVector<byte> my_key;
+      std::vector<byte> my_key;
 
       PK_Key_Agreement ka;
       KDF* kdf;

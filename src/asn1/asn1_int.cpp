@@ -20,24 +20,24 @@ BER_Decoding_Error::BER_Decoding_Error(const std::string& str) :
    Decoding_Error("BER: " + str) {}
 
 BER_Bad_Tag::BER_Bad_Tag(const std::string& str, ASN1_Tag tag) :
-      BER_Decoding_Error(str + ": " + to_string(tag)) {}
+      BER_Decoding_Error(str + ": " + std::to_string(tag)) {}
 
 BER_Bad_Tag::BER_Bad_Tag(const std::string& str,
                          ASN1_Tag tag1, ASN1_Tag tag2) :
-   BER_Decoding_Error(str + ": " + to_string(tag1) + "/" + to_string(tag2)) {}
+   BER_Decoding_Error(str + ": " + std::to_string(tag1) + "/" + std::to_string(tag2)) {}
 
 namespace ASN1 {
 
 /*
 * Put some arbitrary bytes into a SEQUENCE
 */
-SecureVector<byte> put_in_sequence(const MemoryRegion<byte>& contents)
+std::vector<byte> put_in_sequence(const std::vector<byte>& contents)
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
          .raw_bytes(contents)
       .end_cons()
-   .get_contents();
+   .get_contents_unlocked();
    }
 
 /*

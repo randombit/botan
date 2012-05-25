@@ -24,7 +24,7 @@ class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
 
       AlgorithmIdentifier algorithm_identifier() const;
 
-      MemoryVector<byte> x509_subject_public_key() const;
+      std::vector<byte> x509_subject_public_key() const;
 
       /**
       * Get the DL domain parameters of this key.
@@ -62,7 +62,7 @@ class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
       virtual DL_Group::Format group_format() const = 0;
 
       DL_Scheme_PublicKey(const AlgorithmIdentifier& alg_id,
-                          const MemoryRegion<byte>& key_bits,
+                          const secure_vector<byte>& key_bits,
                           DL_Group::Format group_format);
 
    protected:
@@ -94,10 +94,10 @@ class BOTAN_DLL DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
       */
       const BigInt& get_x() const { return x; }
 
-      MemoryVector<byte> pkcs8_private_key() const;
+      secure_vector<byte> pkcs8_private_key() const;
 
       DL_Scheme_PrivateKey(const AlgorithmIdentifier& alg_id,
-                           const MemoryRegion<byte>& key_bits,
+                           const secure_vector<byte>& key_bits,
                            DL_Group::Format group_format);
 
    protected:
