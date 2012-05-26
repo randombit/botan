@@ -58,7 +58,7 @@ BOTAN_DLL Public_Key* load_key(const std::string& filename);
 * @param enc the memory region containing the DER or PEM encoded key
 * @return new public key object
 */
-BOTAN_DLL Public_Key* load_key(const secure_vector<byte>& enc);
+BOTAN_DLL Public_Key* load_key(const std::vector<byte>& enc);
 
 /**
 * Copy a key.

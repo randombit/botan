@@ -92,7 +92,7 @@ Public_Key* load_key(const std::string& fsname)
 /*
 * Extract a public key and return it
 */
-Public_Key* load_key(const secure_vector<byte>& mem)
+Public_Key* load_key(const std::vector<byte>& mem)
    {
    DataSource_Memory source(mem);
    return X509::load_key(source);
