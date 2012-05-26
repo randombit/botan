@@ -13,6 +13,14 @@ Version 1.11.0, Not Yet Released
 * The codebase has converted to C++11. Currently GCC 4.7 and Clang 3.1
   are known to work.
 
+* The MemoryVector and SecureVector container types have been removed.
+  An alias of std::vector using an allocator that clears memory named
+  secure_vector is used for key material, and std::vector is used for
+  everything else.
+
+* The method of mlocking memory is much improved, and if the process
+  can mlock memory then it will be used automatically.
+
 * The TLS interface is now non-blocking and does not directly interact
   with sockets. An example TLS server using asio is included which
   scales to at least 64 processors.
