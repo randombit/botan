@@ -120,15 +120,15 @@ BigInt BigInt::decode(const byte buf[], size_t length, Base base)
          const char buf0_with_leading_0[2] =
             { '0', static_cast<char>(buf[0]) };
 
-         binary = hex_decode(buf0_with_leading_0, 2);
+         binary = hex_decode_locked(buf0_with_leading_0, 2);
 
-         binary += hex_decode(reinterpret_cast<const char*>(&buf[1]),
-                              length - 1,
-                              false);
+         binary += hex_decode_locked(reinterpret_cast<const char*>(&buf[1]),
+                                     length - 1,
+                                     false);
          }
       else
-         binary = hex_decode(reinterpret_cast<const char*>(buf),
-                             length, false);
+         binary = hex_decode_locked(reinterpret_cast<const char*>(buf),
+                                    length, false);
 
       r.binary_decode(&binary[0], binary.size());
       }

@@ -160,8 +160,8 @@ void validate_encryption(PK_Encryptor& e, PK_Decryptor& d,
                          const std::string& random, const std::string& exp,
                          bool& failure)
    {
-   std::vector<byte> message = unlock(hex_decode(input));
-   std::vector<byte> expected = unlock(hex_decode(exp));
+   std::vector<byte> message = hex_decode(input);
+   std::vector<byte> expected = hex_decode(exp);
    Fixed_Output_RNG rng(hex_decode(random));
 
    std::vector<byte> out = e.encrypt(message, rng);
@@ -180,9 +180,9 @@ void validate_signature(PK_Verifier& v, PK_Signer& s, const std::string& algo,
                         RandomNumberGenerator& rng,
                         const std::string& exp, bool& failure)
    {
-   std::vector<byte> message = unlock(hex_decode(input));
+   std::vector<byte> message = hex_decode(input);
 
-   std::vector<byte> expected = unlock(hex_decode(exp));
+   std::vector<byte> expected = hex_decode(exp);
 
    std::vector<byte> sig = s.sign_message(message, rng);
 
@@ -223,15 +223,15 @@ void validate_kas(PK_Key_Agreement& kas, const std::string& algo,
                   const std::vector<byte>& pubkey, const std::string& output,
                   u32bit keylen, bool& failure)
    {
-   secure_vector<byte> expected = hex_decode(output);
+   std::vector<byte> expected = hex_decode(output);
 
-   secure_vector<byte> got = kas.derive_key(keylen,
-                                            pubkey).bits_of();
+   std::vector<byte> got = unlock(kas.derive_key(keylen,
+                                                 pubkey).bits_of());
 
    if(got != expected)
       {
       std::cout << "FAILED: " << algo << std::endl;
-      dump_data(unlock(got), unlock(expected));
+      dump_data(got, expected);
       failure = true;
       }
    }
@@ -325,8 +325,8 @@ u32bit validate_elg_enc(const std::string& algo,
       validate_encryption(e, d, algo, str[4], str[5], str[6], failure);
       }
    else
-      validate_decryption(d, algo, unlock(hex_decode(str[5])),
-                          unlock(hex_decode(str[4])), failure);
+      validate_decryption(d, algo, hex_decode(str[5]),
+                          hex_decode(str[4]), failure);
    return (failure ? 1 : 0);
 #endif
 
@@ -373,8 +373,8 @@ u32bit validate_rsa_ver(const std::string& algo,
 
    PK_Verifier v(key, emsa);
 
-   std::vector<byte> msg = unlock(hex_decode(str[2]));
-   std::vector<byte> sig = unlock(hex_decode(str[3]));
+   std::vector<byte> msg = hex_decode(str[2]);
+   std::vector<byte> sig = hex_decode(str[3]);
 
    bool passed = true;
    passed = v.verify_message(msg, sig);
@@ -405,8 +405,8 @@ u32bit validate_rsa_ver_x509(const std::string& algo,
 
    PK_Verifier v(*rsakey, emsa);
 
-   std::vector<byte> msg = unlock(hex_decode(str[1]));
-   std::vector<byte> sig = unlock(hex_decode(str[2]));
+   std::vector<byte> msg = hex_decode(str[1]);
+   std::vector<byte> sig = hex_decode(str[2]);
 
    bool passed = v.verify_message(msg, sig);
    return (passed ? 0 : 1);
@@ -429,8 +429,8 @@ u32bit validate_rw_ver(const std::string& algo,
 
    PK_Verifier v(key, emsa);
 
-   std::vector<byte> msg = unlock(hex_decode(str[2]));
-   std::vector<byte> sig = unlock(hex_decode(str[3]));
+   std::vector<byte> msg = hex_decode(str[2]);
+   std::vector<byte> sig = hex_decode(str[3]);
 
    bool passed = true;
    passed = v.verify_message(msg, sig);
@@ -538,7 +538,7 @@ u32bit validate_gost_ver(const std::string& algo,
 
    EC_Group group(OIDS::lookup(str[0]));
 
-   PointGFp public_point = OS2ECP(unlock(hex_decode(str[1])), group.get_curve());
+   PointGFp public_point = OS2ECP(hex_decode(str[1]), group.get_curve());
 
    GOST_3410_PublicKey gost(group, public_point);
 
@@ -546,8 +546,8 @@ u32bit validate_gost_ver(const std::string& algo,
 
    PK_Verifier v(gost, emsa);
 
-   std::vector<byte> msg = unlock(hex_decode(str[2]));
-   std::vector<byte> sig = unlock(hex_decode(str[3]));
+   std::vector<byte> msg = hex_decode(str[2]);
+   std::vector<byte> sig = hex_decode(str[3]);
 
    bool passed = v.verify_message(msg, sig);
    return (passed ? 0 : 1);
@@ -578,8 +578,8 @@ u32bit validate_dsa_ver(const std::string& algo,
 
    PK_Verifier v(*dsakey, emsa);
 
-   std::vector<byte> msg = unlock(hex_decode(str[1]));
-   std::vector<byte> sig = unlock(hex_decode(str[2]));
+   std::vector<byte> msg = hex_decode(str[1]);
+   std::vector<byte> sig = hex_decode(str[2]);
 
    v.set_input_format(DER_SEQUENCE);
    bool passed = v.verify_message(msg, sig);

@@ -86,7 +86,7 @@ Data_Store::get1_memvec(const std::string& key) const
       throw Invalid_State("Data_Store::get1_memvec: Multiple values for " +
                           key);
 
-   return unlock(hex_decode(vals[0]));
+   return hex_decode(vals[0]);
    }
 
 /*

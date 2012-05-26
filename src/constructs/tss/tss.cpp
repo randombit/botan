@@ -106,7 +106,7 @@ HashFunction* get_rtss_hash_by_id(byte id)
 
 RTSS_Share::RTSS_Share(const std::string& hex_input)
    {
-   contents = hex_decode(hex_input);
+   contents = hex_decode_locked(hex_input);
    }
 
 byte RTSS_Share::share_id() const

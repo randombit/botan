@@ -492,7 +492,7 @@ bool failed_test(const std::string& algo,
       pipe.append(test);
       pipe.append(new Botan::Hex_Encoder);
 
-      secure_vector<byte> data = Botan::hex_decode(in);
+      std::vector<byte> data = Botan::hex_decode(in);
       const byte* data_ptr = &data[0];
 
       // this can help catch errors with buffering, etc

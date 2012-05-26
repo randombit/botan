@@ -159,9 +159,9 @@ size_t hex_decode(byte output[],
    return hex_decode(output, &input[0], input.length(), ignore_ws);
    }
 
-secure_vector<byte> hex_decode(const char input[],
-                              size_t input_length,
-                              bool ignore_ws)
+secure_vector<byte> hex_decode_locked(const char input[],
+                                      size_t input_length,
+                                      bool ignore_ws)
    {
    secure_vector<byte> bin(1 + input_length / 2);
 
@@ -174,8 +174,29 @@ secure_vector<byte> hex_decode(const char input[],
    return bin;
    }
 
-secure_vector<byte> hex_decode(const std::string& input,
-                              bool ignore_ws)
+secure_vector<byte> hex_decode_locked(const std::string& input,
+                                      bool ignore_ws)
+   {
+   return hex_decode_locked(&input[0], input.size(), ignore_ws);
+   }
+
+std::vector<byte> hex_decode(const char input[],
+                             size_t input_length,
+                             bool ignore_ws)
+   {
+   std::vector<byte> bin(1 + input_length / 2);
+
+   size_t written = hex_decode(&bin[0],
+                               input,
+                               input_length,
+                               ignore_ws);
+
+   bin.resize(written);
+   return bin;
+   }
+
+std::vector<byte> hex_decode(const std::string& input,
+                             bool ignore_ws)
    {
    return hex_decode(&input[0], input.size(), ignore_ws);
    }

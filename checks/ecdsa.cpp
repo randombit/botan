@@ -142,7 +142,7 @@ void test_sign_then_ver(RandomNumberGenerator& rng)
 
    PK_Signer signer(ecdsa, "EMSA1(SHA-1)");
 
-   secure_vector<byte> msg = hex_decode("12345678901234567890abcdef12");
+   auto msg = hex_decode("12345678901234567890abcdef12");
    std::vector<byte> sig = signer.sign_message(msg, rng);
 
    PK_Verifier verifier(ecdsa, "EMSA1(SHA-1)");
@@ -268,10 +268,10 @@ void test_create_and_verify(RandomNumberGenerator& rng)
    std::string order_g = "0e1a16196e6000000000bc7f1618d867b15bb86474418f";
 
    //	::std::vector<byte> sv_p_secp = hex_decode ( p_secp );
-   secure_vector<byte> sv_a_secp = hex_decode ( a_secp );
-   secure_vector<byte> sv_b_secp = hex_decode ( b_secp );
-   secure_vector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
-   secure_vector<byte> sv_order_g = hex_decode ( order_g );
+   auto sv_a_secp = hex_decode ( a_secp );
+   auto sv_b_secp = hex_decode ( b_secp );
+   auto sv_G_secp_comp = hex_decode ( G_secp_comp );
+   auto sv_order_g = hex_decode ( order_g );
 
    //	BigInt bi_p_secp = BigInt::decode ( &sv_p_secp[0], sv_p_secp.size() );
    BigInt bi_p_secp("2117607112719756483104013348936480976596328609518055062007450442679169492999007105354629105748524349829824407773719892437896937279095106809");
@@ -343,7 +343,7 @@ void test_curve_registry(RandomNumberGenerator& rng)
          PK_Signer signer(ecdsa, "EMSA1(SHA-1)");
          PK_Verifier verifier(ecdsa, "EMSA1(SHA-1)");
 
-         secure_vector<byte> msg = hex_decode("12345678901234567890abcdef12");
+         auto msg = hex_decode("12345678901234567890abcdef12");
          std::vector<byte> sig = signer.sign_message(msg, rng);
 
          if(!verifier.verify_message(msg, sig))
@@ -361,7 +361,7 @@ void test_read_pkcs8(RandomNumberGenerator& rng)
    {
    std::cout << "." << std::flush;
 
-   secure_vector<byte> msg = hex_decode("12345678901234567890abcdef12");
+   auto msg = hex_decode("12345678901234567890abcdef12");
 
    try
       {

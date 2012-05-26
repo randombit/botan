@@ -102,9 +102,10 @@ size_t BOTAN_DLL hex_decode(byte output[],
                    exception if whitespace is encountered
 * @return decoded hex output
 */
-secure_vector<byte> BOTAN_DLL hex_decode(const char input[],
-                                        size_t input_length,
-                                        bool ignore_ws = true);
+std::vector<byte> BOTAN_DLL
+hex_decode(const char input[],
+           size_t input_length,
+           bool ignore_ws = true);
 
 /**
 * Perform hex decoding
@@ -113,8 +114,34 @@ secure_vector<byte> BOTAN_DLL hex_decode(const char input[],
                    exception if whitespace is encountered
 * @return decoded hex output
 */
-secure_vector<byte> BOTAN_DLL hex_decode(const std::string& input,
-                                         bool ignore_ws = true);
+std::vector<byte> BOTAN_DLL
+hex_decode(const std::string& input,
+           bool ignore_ws = true);
+
+
+/**
+* Perform hex decoding
+* @param input some hex input
+* @param input_length the length of input in bytes
+* @param ignore_ws ignore whitespace on input; if false, throw an
+                   exception if whitespace is encountered
+* @return decoded hex output
+*/
+secure_vector<byte> BOTAN_DLL
+hex_decode_locked(const char input[],
+                  size_t input_length,
+                  bool ignore_ws = true);
+
+/**
+* Perform hex decoding
+* @param input some hex input
+* @param ignore_ws ignore whitespace on input; if false, throw an
+                   exception if whitespace is encountered
+* @return decoded hex output
+*/
+secure_vector<byte> BOTAN_DLL
+hex_decode_locked(const std::string& input,
+                  bool ignore_ws = true);
 
 }
 
