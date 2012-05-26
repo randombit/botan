@@ -1,1 +1,9 @@
 define LOCKING_ALLOCATOR
+
+<os>
+linux
+freebsd
+netbsd
+openbsd
+solaris
+</os>
