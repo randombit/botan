@@ -9,8 +9,9 @@
 #define BOTAN_TLS_HANDSHAKE_READER_H__
 
 #include <botan/tls_magic.h>
-#include <botan/secqueue.h>
 #include <botan/loadstor.h>
+#include <vector>
+#include <deque>
 #include <utility>
 
 namespace Botan {
@@ -48,7 +49,7 @@ class Stream_Handshake_Reader : public Handshake_Reader
 
       std::pair<Handshake_Type, std::vector<byte> > get_next_record();
    private:
-      SecureQueue m_queue;
+      std::deque<byte> m_queue;
    };
 
 }

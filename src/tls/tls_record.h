@@ -14,7 +14,6 @@
 #include <botan/tls_version.h>
 #include <botan/pipe.h>
 #include <botan/mac.h>
-#include <botan/secqueue.h>
 #include <vector>
 #include <functional>
 

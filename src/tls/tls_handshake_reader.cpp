@@ -15,7 +15,7 @@ namespace TLS {
 void Stream_Handshake_Reader::add_input(const byte record[],
                                         size_t record_size)
    {
-   m_queue.write(record, record_size);
+   m_queue.insert(m_queue.end(), record, record + record_size);
    }
 
 bool Stream_Handshake_Reader::empty() const
@@ -27,10 +27,10 @@ bool Stream_Handshake_Reader::have_full_record() const
    {
    if(m_queue.size() >= 4)
       {
-      byte head[4] = { 0 };
-      m_queue.peek(head, 4);
-
-      const size_t length = make_u32bit(0, head[1], head[2], head[3]);
+      const size_t length = make_u32bit(0,
+                                        m_queue[1],
+                                        m_queue[2],
+                                        m_queue[3]);
 
       return (m_queue.size() >= length + 4);
       }
@@ -42,17 +42,19 @@ std::pair<Handshake_Type, std::vector<byte> > Stream_Handshake_Reader::get_next_
    {
    if(m_queue.size() >= 4)
       {
-      byte head[4] = { 0 };
-      m_queue.peek(head, 4);
-
-      const size_t length = make_u32bit(0, head[1], head[2], head[3]);
+      const size_t length = make_u32bit(0,
+                                        m_queue[1],
+                                        m_queue[2],
+                                        m_queue[3]);
 
       if(m_queue.size() >= length + 4)
          {
-         Handshake_Type type = static_cast<Handshake_Type>(head[0]);
-         std::vector<byte> contents(length);
-         m_queue.read(head, 4); // discard
-         m_queue.read(&contents[0], contents.size());
+         Handshake_Type type = static_cast<Handshake_Type>(m_queue[0]);
+
+         std::vector<byte> contents(m_queue.begin() + 4,
+                                    m_queue.begin() + 4 + length);
+
+         m_queue.erase(m_queue.begin(), m_queue.begin() + 4 + length);
 
          return std::make_pair(type, contents);
          }
