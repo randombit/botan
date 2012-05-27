@@ -29,6 +29,8 @@ Version 1.11.0, Not Yet Released
   handles path validation and Certificate_Store handles storage of
   certificates and CRLs.
 
+* Add support for OCSP
+
 * TLS v1.2 is now supported
 
 * TLS now supports session resumption. Session information can be

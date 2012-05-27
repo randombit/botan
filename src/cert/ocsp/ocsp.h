@@ -9,6 +9,7 @@
 #define BOTAN_OCSP_H__
 
 #include <botan/ocsp_types.h>
+#include <botan/certstor.h>
 
 namespace Botan {
 
@@ -37,9 +38,11 @@ class BOTAN_DLL Request
 class BOTAN_DLL Response
    {
    public:
-      Response(const std::vector<byte>& response);
+      Response(const Certificate_Store& trusted_roots,
+               const std::vector<byte>& response);
 
-      bool affirmative_response_for(const Request&);
+      bool affirmative_response_for(const X509_Certificate& issuer,
+                                    const X509_Certificate& subject) const;
 
    private:
       std::vector<SingleResponse> m_responses;
