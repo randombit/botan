@@ -41,8 +41,9 @@ X509_Certificate find_issuing_cert(const X509_Certificate& cert,
          certstores[i]->find_cert_by_subject_and_key_id(issuer_dn, auth_key_id);
 
       if(certs.size() == 0)
-         throw PKIX_Validation_Failure(Path_Validation_Result::CERT_ISSUER_NOT_FOUND);
-      else if(certs.size() > 1)
+         continue;
+
+      if(certs.size() > 1)
          throw PKIX_Validation_Failure(Path_Validation_Result::CERT_MULTIPLE_ISSUERS_FOUND);
 
       return certs[0];
@@ -160,10 +161,10 @@ Path_Validation_Result x509_path_validate(
 Path_Validation_Result x509_path_validate(
    const std::vector<X509_Certificate>& end_certs,
    const Path_Validation_Restrictions& restrictions,
-   Certificate_Store& store)
+   const Certificate_Store& store)
    {
    std::vector<Certificate_Store*> certstores;
-   certstores.push_back(&store);
+   certstores.push_back(const_cast<Certificate_Store*>(&store));
 
    return x509_path_validate(end_certs, restrictions, certstores);
    }
@@ -171,13 +172,13 @@ Path_Validation_Result x509_path_validate(
 Path_Validation_Result x509_path_validate(
    const X509_Certificate& end_cert,
    const Path_Validation_Restrictions& restrictions,
-   Certificate_Store& store)
+   const Certificate_Store& store)
    {
    std::vector<X509_Certificate> certs;
    certs.push_back(end_cert);
 
    std::vector<Certificate_Store*> certstores;
-   certstores.push_back(&store);
+   certstores.push_back(const_cast<Certificate_Store*>(&store));
 
    return x509_path_validate(certs, restrictions, certstores);
    }

@@ -95,7 +95,8 @@ class BOTAN_DLL BER_Decoder
 
       template<typename T>
          BER_Decoder& decode_list(std::vector<T>& out,
-                                  bool clear_out = true);
+                                  ASN1_Tag type_tag = SEQUENCE,
+                                  ASN1_Tag class_tag = UNIVERSAL);
 
       template<typename T>
          BER_Decoder& decode_and_check(const T& expected,
@@ -171,12 +172,11 @@ BER_Decoder& BER_Decoder::decode_optional(T& out,
 * Decode a list of homogenously typed values
 */
 template<typename T>
-BER_Decoder& BER_Decoder::decode_list(std::vector<T>& vec, bool clear_it)
+BER_Decoder& BER_Decoder::decode_list(std::vector<T>& vec,
+                                      ASN1_Tag type_tag,
+                                      ASN1_Tag class_tag)
    {
-   if(clear_it)
-      vec.clear();
-
-   BER_Decoder list = start_cons(SEQUENCE);
+   BER_Decoder list = start_cons(type_tag, class_tag);
 
    while(list.more_items())
       {

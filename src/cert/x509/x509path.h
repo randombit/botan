@@ -112,12 +112,12 @@ Path_Validation_Result BOTAN_DLL x509_path_validate(
 Path_Validation_Result BOTAN_DLL x509_path_validate(
    const X509_Certificate& end_cert,
    const Path_Validation_Restrictions& restrictions,
-   Certificate_Store& store);
+   const Certificate_Store& store);
 
 Path_Validation_Result BOTAN_DLL x509_path_validate(
    const std::vector<X509_Certificate>& end_certs,
    const Path_Validation_Restrictions& restrictions,
-   Certificate_Store& store);
+   const Certificate_Store& store);
 
 }
 

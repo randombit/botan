@@ -200,6 +200,8 @@ class BOTAN_DLL X509_Certificate : public X509_Object
    private:
       void force_decode();
       friend class X509_CA;
+      friend class BER_Decoder;
+
       X509_Certificate() {}
 
       Data_Store subject, issuer;

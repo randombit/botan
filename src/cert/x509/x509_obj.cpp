@@ -58,7 +58,10 @@ void X509_Object::init(DataSource& in, const std::string& labels)
 
    try {
       if(ASN1::maybe_BER(in) && !PEM_Code::matches(in))
-         decode_info(in);
+         {
+         BER_Decoder dec(in);
+         decode_from(dec);
+         }
       else
          {
          std::string got_label;
@@ -67,7 +70,9 @@ void X509_Object::init(DataSource& in, const std::string& labels)
          if(!std::binary_search(PEM_labels_allowed.begin(),
                                 PEM_labels_allowed.end(), got_label))
             throw Decoding_Error("Invalid PEM label: " + got_label);
-         decode_info(ber);
+
+         BER_Decoder dec(ber);
+         decode_from(dec);
          }
       }
    catch(Decoding_Error& e)
@@ -76,13 +81,24 @@ void X509_Object::init(DataSource& in, const std::string& labels)
       }
    }
 
+
+void X509_Object::encode_into(DER_Encoder& to) const
+   {
+   to.start_cons(SEQUENCE)
+         .start_cons(SEQUENCE)
+            .raw_bytes(tbs_bits)
+         .end_cons()
+         .encode(sig_algo)
+         .encode(sig, BIT_STRING)
+      .end_cons();
+   }
+
 /*
 * Read a BER encoded X.509 object
 */
-void X509_Object::decode_info(DataSource& source)
+void X509_Object::decode_from(BER_Decoder& from)
    {
-   BER_Decoder(source)
-      .start_cons(SEQUENCE)
+   from.start_cons(SEQUENCE)
          .start_cons(SEQUENCE)
             .raw_bytes(tbs_bits)
          .end_cons()
@@ -108,15 +124,9 @@ void X509_Object::encode(Pipe& out, X509_Encoding encoding) const
 */
 std::vector<byte> X509_Object::BER_encode() const
    {
-   return DER_Encoder()
-      .start_cons(SEQUENCE)
-         .start_cons(SEQUENCE)
-            .raw_bytes(tbs_bits)
-         .end_cons()
-         .encode(sig_algo)
-         .encode(sig, BIT_STRING)
-      .end_cons()
-   .get_contents_unlocked();
+   DER_Encoder der;
+   encode_into(der);
+   return der.get_contents_unlocked();
    }
 
 /*

@@ -144,6 +144,12 @@ void X509_Certificate::force_decode()
    subject.add("X509.Certificate.public_key",
                hex_encode(public_key.value));
 
+   if(self_signed && version == 0)
+      {
+      subject.add("X509v3.BasicConstraints.is_ca", 1);
+      subject.add("X509v3.BasicConstraints.path_constraint", Cert_Extension::NO_CERT_PATH_LIMIT);
+      }
+
    if(is_CA_cert() &&
       !subject.has_value("X509v3.BasicConstraints.path_constraint"))
       {

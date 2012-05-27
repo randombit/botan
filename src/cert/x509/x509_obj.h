@@ -20,7 +20,7 @@ namespace Botan {
 * This class represents abstract X.509 signed objects as
 * in the X.500 SIGNED macro
 */
-class BOTAN_DLL X509_Object
+class BOTAN_DLL X509_Object : public ASN1_Object
    {
    public:
       /**
@@ -72,6 +72,10 @@ class BOTAN_DLL X509_Object
       */
       bool check_signature(const Public_Key* key) const;
 
+      void encode_into(class DER_Encoder& to) const override;
+
+      void decode_from(class BER_Decoder& from) override;
+
       /**
       * @return BER encoding of this
       */
@@ -104,7 +108,6 @@ class BOTAN_DLL X509_Object
    private:
       virtual void force_decode() = 0;
       void init(DataSource&, const std::string&);
-      void decode_info(DataSource&);
 
       std::vector<std::string> PEM_labels_allowed;
       std::string PEM_label_pref;
