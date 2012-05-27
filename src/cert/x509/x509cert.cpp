@@ -276,6 +276,11 @@ std::vector<std::string> X509_Certificate::policies() const
    return lookup_oids(subject.get("X509v3.CertificatePolicies"));
    }
 
+std::string X509_Certificate::ocsp_responder() const
+   {
+   return subject.get1("OCSP.responder");
+   }
+
 /*
 * Return the authority key id
 */

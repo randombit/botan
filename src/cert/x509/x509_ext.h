@@ -285,6 +285,31 @@ class BOTAN_DLL Certificate_Policies : public Certificate_Extension
       std::vector<OID> oids;
    };
 
+class BOTAN_DLL Authority_Information_Access : public Certificate_Extension
+   {
+   public:
+      Authority_Information_Access* copy() const
+         { return new Authority_Information_Access(m_ocsp_responder); }
+
+      Authority_Information_Access() {}
+
+      Authority_Information_Access(const std::string& ocsp) :
+         m_ocsp_responder(ocsp) {}
+
+   private:
+      std::string config_id() const { return "auth_information_access"; }
+      std::string oid_name() const { return "PKIX.AuthorityInformationAccess"; }
+
+      bool should_encode() const { return (m_ocsp_responder != ""); }
+
+      std::vector<byte> encode_inner() const;
+      void decode_inner(const std::vector<byte>&);
+
+      void contents_to(Data_Store&, Data_Store&) const;
+
+      std::string m_ocsp_responder;
+   };
+
 /**
 * CRL Number Extension
 */

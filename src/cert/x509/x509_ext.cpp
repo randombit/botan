@@ -10,6 +10,7 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/oids.h>
+#include <botan/charset.h>
 #include <botan/internal/bit_ops.h>
 #include <algorithm>
 #include <memory>
@@ -32,8 +33,9 @@ Certificate_Extension* Extensions::get_extension(const OID& oid)
    X509_EXTENSION("X509v3.ExtendedKeyUsage", Extended_Key_Usage);
    X509_EXTENSION("X509v3.IssuerAlternativeName", Issuer_Alternative_Name);
    X509_EXTENSION("X509v3.SubjectAlternativeName", Subject_Alternative_Name);
-   X509_EXTENSION("X509v3.CRLNumber", CRL_Number);
    X509_EXTENSION("X509v3.CertificatePolicies", Certificate_Policies);
+   X509_EXTENSION("PKIX.AuthorityInformationAccess", Authority_Information_Access);
+   X509_EXTENSION("X509v3.CRLNumber", CRL_Number);
    X509_EXTENSION("X509v3.ReasonCode", CRL_ReasonCode);
 
    return nullptr;
@@ -499,6 +501,52 @@ void Certificate_Policies::contents_to(Data_Store& info, Data_Store&) const
    {
    for(size_t i = 0; i != oids.size(); ++i)
       info.add("X509v3.CertificatePolicies", oids[i].as_string());
+   }
+
+std::vector<byte> Authority_Information_Access::encode_inner() const
+   {
+   ASN1_String url(m_ocsp_responder, IA5_STRING);
+
+   return DER_Encoder()
+      .start_cons(SEQUENCE)
+      .start_cons(SEQUENCE)
+      .encode(OIDS::lookup("PKIX.OCSP"))
+      .add_object(ASN1_Tag(6), CONTEXT_SPECIFIC, url.iso_8859())
+      .end_cons()
+      .end_cons().get_contents_unlocked();
+   }
+
+void Authority_Information_Access::decode_inner(const std::vector<byte>& in)
+   {
+   BER_Decoder ber = BER_Decoder(in).start_cons(SEQUENCE);
+
+   while(ber.more_items())
+      {
+      OID oid;
+
+      BER_Decoder info = ber.start_cons(SEQUENCE);
+
+      info.decode(oid);
+
+      if(oid == OIDS::lookup("PKIX.OCSP"))
+         {
+         BER_Object name = info.get_next_object();
+
+         if(name.type_tag == 6 && name.class_tag == CONTEXT_SPECIFIC)
+            {
+            m_ocsp_responder = Charset::transcode(ASN1::to_string(name),
+                                                  LATIN1_CHARSET,
+                                                  LOCAL_CHARSET);
+            }
+
+         }
+      }
+   }
+
+void Authority_Information_Access::contents_to(Data_Store& subject, Data_Store&) const
+   {
+   if(m_ocsp_responder != "")
+      subject.add("OCSP.responder", m_ocsp_responder);
    }
 
 /*

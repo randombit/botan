@@ -193,6 +193,7 @@ void set_default_oids(Library_State& config)
    add_oid(config, "2.5.29.35", "X509v3.AuthorityKeyIdentifier");
    add_oid(config, "2.5.29.36", "X509v3.PolicyConstraints");
    add_oid(config, "2.5.29.37", "X509v3.ExtendedKeyUsage");
+   add_oid(config, "1.3.6.1.5.5.7.1.1", "PKIX.AuthorityInformationAccess");
 
    add_oid(config, "2.5.29.32.0", "X509v3.AnyPolicy");
 
@@ -208,6 +209,7 @@ void set_default_oids(Library_State& config)
 
    add_oid(config, "1.3.6.1.5.5.7.8.5", "PKIX.XMPPAddr");
 
+   add_oid(config, "1.3.6.1.5.5.7.48.1", "PKIX.OCSP");
    add_oid(config, "1.3.6.1.5.5.7.48.1.1", "PKIX.OCSP.BasicResponse");
 
    /* ECC domain parameters */

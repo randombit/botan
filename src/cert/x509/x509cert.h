@@ -166,6 +166,11 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       std::vector<std::string> policies() const;
 
       /**
+      * Return the listed address of an OCSP responder, or empty if not set
+      */
+      std::string ocsp_responder() const;
+
+      /**
       * @return a string describing the certificate
       */
       std::string to_string() const;
