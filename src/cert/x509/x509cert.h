@@ -127,7 +127,14 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       */
       bool is_CA_cert() const;
 
-      bool allowed_usage(Key_Constraints restriction) const;
+      bool allowed_usage(Key_Constraints usage) const;
+
+      /**
+      * Returns true if and only if name (referring to an extended key
+      * constraint, eg "PKIX.ServerAuth") is included in the extended
+      * key extension.
+      */
+      bool allowed_usage(const std::string& usage) const;
 
       /**
       * Get the path limit as defined in the BasicConstraints extension of

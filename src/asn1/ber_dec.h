@@ -20,6 +20,9 @@ class BOTAN_DLL BER_Decoder
    {
    public:
       BER_Object get_next_object();
+
+      std::vector<byte> get_next_octet_string();
+
       void push_back(const BER_Object& obj);
 
       bool more_items() const;

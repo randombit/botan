@@ -398,6 +398,13 @@ BER_Decoder& BER_Decoder::decode_octet_string_bigint(BigInt& out)
    return (*this);
    }
 
+std::vector<byte> BER_Decoder::get_next_octet_string()
+   {
+   std::vector<byte> out_vec;
+   decode(out_vec, OCTET_STRING);
+   return out_vec;
+   }
+
 /*
 * Decode a BER encoded BOOLEAN
 */

@@ -227,11 +227,20 @@ bool X509_Certificate::is_CA_cert() const
    return allowed_usage(KEY_CERT_SIGN);
    }
 
-bool X509_Certificate::allowed_usage(Key_Constraints restriction) const
+bool X509_Certificate::allowed_usage(Key_Constraints usage) const
    {
    if(constraints() == NO_CONSTRAINTS)
       return true;
-   return (constraints() & restriction);
+   return (constraints() & usage);
+   }
+
+bool X509_Certificate::allowed_usage(const std::string& usage) const
+   {
+   for(auto constraint : ex_constraints())
+      if(constraint == usage)
+         return true;
+
+   return false;
    }
 
 /*
