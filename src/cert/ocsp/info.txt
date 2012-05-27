@@ -1,0 +1,8 @@
+define OCSP
+
+load_on never
+
+<requires>
+x509
+sha1
+</requires>
