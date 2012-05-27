@@ -208,6 +208,8 @@ void set_default_oids(Library_State& config)
 
    add_oid(config, "1.3.6.1.5.5.7.8.5", "PKIX.XMPPAddr");
 
+   add_oid(config, "1.3.6.1.5.5.7.48.1.1", "PKIX.OCSP.BasicResponse");
+
    /* ECC domain parameters */
 
    add_oid(config, "1.3.132.0.6",  "secp112r1");

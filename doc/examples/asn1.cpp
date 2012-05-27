@@ -5,6 +5,7 @@
 #include <botan/asn1_obj.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
+#include <botan/hex.h>
 #include <botan/charset.h>
 using namespace Botan;
 
@@ -73,7 +74,7 @@ void decode(BER_Decoder& decoder, size_t level)
          that we've gotten the type info */
       DER_Encoder encoder;
       encoder.add_object(type_tag, class_tag, obj.value);
-      secure_vector<byte> bits = encoder.get_contents();
+      std::vector<byte> bits = encoder.get_contents_unlocked();
 
       BER_Decoder data(bits);
 
@@ -94,8 +95,7 @@ void decode(BER_Decoder& decoder, size_t level)
             {
             std::string name;
 
-            if((class_tag & APPLICATION) || (class_tag & CONTEXT_SPECIFIC) ||
-               (class_tag & PRIVATE))
+            if((class_tag & APPLICATION) || (class_tag & CONTEXT_SPECIFIC))
                {
                name = "cons [" + std::to_string(type_tag) + "]";
 
@@ -103,8 +103,6 @@ void decode(BER_Decoder& decoder, size_t level)
                   name += " appl";
                if(class_tag & CONTEXT_SPECIFIC)
                   name += " context";
-               if(class_tag & PRIVATE)
-                  name += " private";
                }
             else
                name = type_name(type_tag) + " (cons)";
@@ -113,8 +111,7 @@ void decode(BER_Decoder& decoder, size_t level)
             decode(cons_info, level+1);
             }
          }
-      else if(class_tag == APPLICATION || class_tag == CONTEXT_SPECIFIC ||
-              class_tag == PRIVATE)
+      else if((class_tag & APPLICATION) || (class_tag & CONTEXT_SPECIFIC))
          {
          bool not_text = false;
 
@@ -123,7 +120,7 @@ void decode(BER_Decoder& decoder, size_t level)
                not_text = true;
 
          Pipe pipe(((not_text) ? new Hex_Encoder : 0));
-         pipe.process_msg(bits);
+         pipe.process_msg(obj.value);
          emit("[" + std::to_string(type_tag) + "]", level, length,
               pipe.read_all_as_string());
          }
@@ -138,10 +135,14 @@ void decode(BER_Decoder& decoder, size_t level)
 
          emit(type_name(type_tag), level, length, out);
          }
-      else if(type_tag == INTEGER)
+      else if(type_tag == INTEGER || type_tag == ENUMERATED)
          {
          BigInt number;
-         data.decode(number);
+
+         if(type_tag == INTEGER)
+            data.decode(number);
+         else if(type_tag == ENUMERATED)
+            data.decode(number, ENUMERATED, class_tag);
 
          std::vector<byte> rep;
 
@@ -170,7 +171,7 @@ void decode(BER_Decoder& decoder, size_t level)
          }
       else if(type_tag == OCTET_STRING)
          {
-         secure_vector<byte> bits;
+         std::vector<byte> bits;
          data.decode(bits, type_tag);
          bool not_text = false;
 
@@ -180,11 +181,20 @@ void decode(BER_Decoder& decoder, size_t level)
 
          Pipe pipe(((not_text) ? new Hex_Encoder : 0));
          pipe.process_msg(bits);
-         emit(type_name(type_tag), level, length, pipe.read_all_as_string());
+
+         try
+            {
+            BER_Decoder inner(bits);
+            decode(inner, level + 1);
+            }
+         catch(...)
+            {
+            emit(type_name(type_tag), level, length, pipe.read_all_as_string());
+            }
          }
       else if(type_tag == BIT_STRING)
          {
-         secure_vector<byte> bits;
+         std::vector<byte> bits;
          data.decode(bits, type_tag);
 
          std::vector<bool> bit_set;
@@ -280,6 +290,7 @@ std::string type_name(ASN1_Tag type)
    if(type == OCTET_STRING)     return "OCTET STRING";
    if(type == BIT_STRING)       return "BIT STRING";
 
+   if(type == ENUMERATED)       return "ENUMERATED";
    if(type == INTEGER)          return "INTEGER";
    if(type == NULL_TAG)         return "NULL";
    if(type == OBJECT_ID)        return "OBJECT";

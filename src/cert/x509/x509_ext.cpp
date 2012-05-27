@@ -504,7 +504,7 @@ void Certificate_Policies::decode_inner(const std::vector<byte>& in)
 void Certificate_Policies::contents_to(Data_Store& info, Data_Store&) const
    {
    for(size_t i = 0; i != oids.size(); ++i)
-      info.add("X509v3.ExtendedKeyUsage", oids[i].as_string());
+      info.add("X509v3.CertificatePolicies", oids[i].as_string());
    }
 
 /*

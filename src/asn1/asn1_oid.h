@@ -73,7 +73,7 @@ class BOTAN_DLL OID : public ASN1_Object
 * @param oid the OID to add the new component to
 * @param new_comp the new component to add
 */
-OID operator+(const OID& oid, u32bit new_comp);
+OID BOTAN_DLL operator+(const OID& oid, u32bit new_comp);
 
 /**
 * Compare two OIDs.
@@ -81,7 +81,7 @@ OID operator+(const OID& oid, u32bit new_comp);
 * @param b the second OID
 * @return true if a is not equal to b
 */
-bool operator!=(const OID& a, const OID& b);
+bool BOTAN_DLL operator!=(const OID& a, const OID& b);
 
 /**
 * Compare two OIDs.
@@ -89,7 +89,7 @@ bool operator!=(const OID& a, const OID& b);
 * @param b the second OID
 * @return true if a is lexicographically smaller than b
 */
-bool operator<(const OID& a, const OID& b);
+bool BOTAN_DLL operator<(const OID& a, const OID& b);
 
 }
 
