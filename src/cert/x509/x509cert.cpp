@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <iterator>
 #include <sstream>
+#include <memory>
 
 namespace Botan {
 
@@ -102,6 +103,9 @@ void X509_Certificate::force_decode()
    subject.add(dn_subject.contents());
    issuer.add(dn_issuer.contents());
 
+   subject.add("X509.Certificate.dn_bits", ASN1::put_in_sequence(dn_subject.get_bits()));
+   issuer.add("X509.Certificate.dn_bits", ASN1::put_in_sequence(dn_issuer.get_bits()));
+
    BER_Object public_key = tbs_cert.get_next_object();
    if(public_key.type_tag != SEQUENCE || public_key.class_tag != CONSTRUCTED)
       throw BER_Bad_Tag("X509_Certificate: Unexpected tag for public key",
@@ -138,11 +142,7 @@ void X509_Certificate::force_decode()
    subject.add("X509.Certificate.v2.key_id", v2_subject_key_id);
 
    subject.add("X509.Certificate.public_key",
-               PEM_Code::encode(
-                  ASN1::put_in_sequence(unlock(public_key.value)),
-                  "PUBLIC KEY"
-                  )
-      );
+               hex_encode(public_key.value));
 
    if(is_CA_cert() &&
       !subject.has_value("X509v3.BasicConstraints.path_constraint"))
@@ -201,8 +201,13 @@ X509_Certificate::issuer_info(const std::string& what) const
 */
 Public_Key* X509_Certificate::subject_public_key() const
    {
-   DataSource_Memory source(subject.get1("X509.Certificate.public_key"));
-   return X509::load_key(source);
+   return X509::load_key(
+      ASN1::put_in_sequence(this->subject_public_key_bits()));
+   }
+
+std::vector<byte> X509_Certificate::subject_public_key_bits() const
+   {
+   return hex_decode(subject.get1("X509.Certificate.public_key"));
    }
 
 /*
@@ -288,12 +293,22 @@ X509_DN X509_Certificate::issuer_dn() const
    return create_dn(issuer);
    }
 
+std::vector<byte> X509_Certificate::raw_issuer_dn() const
+   {
+   return issuer.get1_memvec("X509.Certificate.dn_bits");
+   }
+
 /*
 * Return the distinguished name of the subject
 */
 X509_DN X509_Certificate::subject_dn() const
    {
    return create_dn(subject);
+   }
+
+std::vector<byte> X509_Certificate::raw_subject_dn() const
+   {
+   return subject.get1_memvec("X509.Certificate.dn_bits");
    }
 
 namespace {
@@ -475,9 +490,8 @@ std::string X509_Certificate::to_string() const
    if(this->subject_key_id().size())
      out << "Subject keyid: " << hex_encode(this->subject_key_id()) << "\n";
 
-   X509_PublicKey* pubkey = this->subject_public_key();
+   std::unique_ptr<X509_PublicKey> pubkey(this->subject_public_key());
    out << "Public Key:\n" << X509::PEM_encode(*pubkey);
-   delete pubkey;
 
    return out.str();
    }

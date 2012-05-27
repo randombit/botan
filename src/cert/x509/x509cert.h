@@ -30,6 +30,12 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       Public_Key* subject_public_key() const;
 
       /**
+      * Get the public key associated with this certificate.
+      * @return subject public key of this certificate
+      */
+      std::vector<byte> subject_public_key_bits() const;
+
+      /**
       * Get the issuer certificate DN.
       * @return issuer DN of this certificate
       */
@@ -62,6 +68,16 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       * @return value(s) of the specified parameter
       */
       std::vector<std::string> issuer_info(const std::string& name) const;
+
+      /**
+      * Raw subject DN
+      */
+      std::vector<byte> raw_issuer_dn() const;
+
+      /**
+      * Raw issuer DN
+      */
+      std::vector<byte> raw_subject_dn() const;
 
       /**
       * Get the notBefore of the certificate.
