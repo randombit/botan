@@ -23,6 +23,10 @@ namespace OCSP {
 CertID::CertID(const X509_Certificate& issuer,
                const X509_Certificate& subject)
    {
+   /*
+   In practice it seems some responders, including, notably,
+   ocsp.verisign.com, will reject anything but SHA-1 here
+   */
    std::unique_ptr<HashFunction> hash(get_hash("SHA-160"));
 
    m_hash_id = AlgorithmIdentifier(hash->name(), AlgorithmIdentifier::USE_NULL_PARAM);

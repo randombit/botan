@@ -48,20 +48,18 @@ std::vector<byte> Request::BER_encode() const
    {
    CertID certid(m_issuer, m_subject);
 
-   DER_Encoder der;
-
-   der.start_cons(SEQUENCE)
-      .start_cons(SEQUENCE)
-      .start_explicit(0)
-        .encode(static_cast<size_t>(0)) // version #
-      .end_explicit()
-      .start_cons(SEQUENCE);
-
-   der.start_cons(SEQUENCE).encode(certid).end_cons();
-
-   der.end_cons().end_cons().end_cons();
-
-   return der.get_contents_unlocked();
+   return DER_Encoder().start_cons(SEQUENCE)
+        .start_cons(SEQUENCE)
+          .start_explicit(0)
+            .encode(static_cast<size_t>(0)) // version #
+          .end_explicit()
+            .start_cons(SEQUENCE)
+              .start_cons(SEQUENCE)
+                .encode(certid)
+              .end_cons()
+            .end_cons()
+          .end_cons()
+      .end_cons().get_contents_unlocked();
    }
 
 std::string Request::base64_encode() const
@@ -78,7 +76,6 @@ Response::Response(const std::vector<byte>& response_bits)
    size_t resp_status = 0;
 
    response_outer.decode(resp_status, ENUMERATED, UNIVERSAL);
-   std::cout << resp_status << "\n";
 
    if(response_outer.more_items())
       {
@@ -94,7 +91,6 @@ Response::Response(const std::vector<byte>& response_bits)
       BER_Decoder basicresponse_x(response_vec);
 
       BER_Decoder basicresponse = basicresponse_x.start_cons(SEQUENCE);
-
       BER_Decoder tbs_response = basicresponse.start_cons(SEQUENCE);
 
       AlgorithmIdentifier sig_algo;
@@ -105,9 +101,6 @@ Response::Response(const std::vector<byte>& response_bits)
 
       std::vector<X509_Certificate> certs;
       decode_optional_list(basicresponse, ASN1_Tag(0), certs);
-
-      for(auto c : certs)
-         std::cout << c.to_string() << "\n";
 
       size_t responsedata_version = 0;
       X509_DN name;
@@ -127,13 +120,7 @@ Response::Response(const std::vector<byte>& response_bits)
 
       tbs_response.decode(produced_at);
 
-      std::cout << responsedata_version << "\n";
-      std::cout << "Name = " << name << "\n";
-      std::cout << "Key hash = " << hex_encode(key_hash) << "\n";
-      std::cout << produced_at.readable_string() << "\n";
-
-      std::vector<SingleResponse> sr;
-      tbs_response.decode_list(sr);
+      tbs_response.decode_list(m_responses);
 
       Extensions extensions;
       tbs_response.decode_optional(extensions, ASN1_Tag(1),
@@ -144,6 +131,14 @@ Response::Response(const std::vector<byte>& response_bits)
 
    }
 
+bool Response::affirmative_response_for(const Request& req)
+   {
+   for(auto response : m_responses)
+      if(response.affirmative_response_for(req.issuer(), req.subject()))
+         return true;
+
+   return false;
+   }
 
 }
 
