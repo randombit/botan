@@ -29,6 +29,8 @@ class BOTAN_DLL BER_Decoder
       BER_Decoder  start_cons(ASN1_Tag type_tag, ASN1_Tag class_tag = UNIVERSAL);
       BER_Decoder& end_cons();
 
+      BER_Decoder& get_next(BER_Object& ber);
+
       BER_Decoder& raw_bytes(secure_vector<byte>& v);
       BER_Decoder& raw_bytes(std::vector<byte>& v);
 
@@ -61,7 +63,9 @@ class BOTAN_DLL BER_Decoder
                           ASN1_Tag type_tag,
                           ASN1_Tag class_tag = CONTEXT_SPECIFIC);
 
-      BER_Decoder& decode(class ASN1_Object& obj);
+      BER_Decoder& decode(class ASN1_Object& obj,
+                          ASN1_Tag type_tag = NO_OBJECT,
+                          ASN1_Tag class_tag = NO_OBJECT);
 
       BER_Decoder& decode_octet_string_bigint(class BigInt& b);
 
@@ -172,12 +176,17 @@ BER_Decoder& BER_Decoder::decode_list(std::vector<T>& vec, bool clear_it)
    if(clear_it)
       vec.clear();
 
-   while(more_items())
+   BER_Decoder list = start_cons(SEQUENCE);
+
+   while(list.more_items())
       {
       T value;
-      decode(value);
+      list.decode(value);
       vec.push_back(value);
       }
+
+   list.end_cons();
+
    return (*this);
    }
 

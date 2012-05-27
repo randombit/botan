@@ -418,10 +418,7 @@ std::vector<byte> Extended_Key_Usage::encode_inner() const
 */
 void Extended_Key_Usage::decode_inner(const std::vector<byte>& in)
    {
-   BER_Decoder(in)
-      .start_cons(SEQUENCE)
-         .decode_list(oids)
-      .end_cons();
+   BER_Decoder(in).decode_list(oids);
    }
 
 /*
@@ -488,10 +485,7 @@ void Certificate_Policies::decode_inner(const std::vector<byte>& in)
    {
    std::vector<Policy_Information> policies;
 
-   BER_Decoder(in)
-      .start_cons(SEQUENCE)
-         .decode_list(policies)
-      .end_cons();
+   BER_Decoder(in).decode_list(policies);
 
    oids.clear();
    for(size_t i = 0; i != policies.size(); ++i)

@@ -232,6 +232,12 @@ BER_Object BER_Decoder::get_next_object()
    return next;
    }
 
+BER_Decoder& BER_Decoder::get_next(BER_Object& ber)
+   {
+   ber = get_next_object();
+   return (*this);
+   }
+
 /*
 * Push a object back into the stream
 */
@@ -341,7 +347,8 @@ BER_Decoder::~BER_Decoder()
 /*
 * Request for an object to decode itself
 */
-BER_Decoder& BER_Decoder::decode(ASN1_Object& obj)
+BER_Decoder& BER_Decoder::decode(ASN1_Object& obj,
+                                 ASN1_Tag, ASN1_Tag)
    {
    obj.decode_from(*this);
    return (*this);
