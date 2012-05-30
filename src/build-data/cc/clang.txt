@@ -36,7 +36,7 @@ westmere  -> "-march=corei7 -maes"
 </mach_opt>
 
 <mach_abi_linking>
-all     -> "-pthread"
+all     -> "-stdlib=libc++ -pthread"
 
 x86_64  -> "-m64"
 ppc64   -> "-m64"
