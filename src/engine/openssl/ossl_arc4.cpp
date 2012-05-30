@@ -19,7 +19,8 @@ namespace {
 class ARC4_OpenSSL : public StreamCipher
    {
    public:
-      void clear() { std::memset(&state, 0, sizeof(state)); }
+      void clear() { clear_mem(&state, 1); }
+
       std::string name() const;
       StreamCipher* clone() const { return new ARC4_OpenSSL(SKIP); }
 

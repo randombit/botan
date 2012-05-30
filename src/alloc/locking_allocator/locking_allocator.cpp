@@ -7,8 +7,8 @@
 
 #include <botan/locking_allocator.h>
 #include <botan/internal/assert.h>
+#include <botan/mem_ops.h>
 #include <algorithm>
-#include <cstring>
 #include <sys/mman.h>
 #include <sys/resource.h>
 
@@ -80,7 +80,7 @@ void* mlock_allocator::allocate(size_t n, size_t alignment)
          {
          const size_t offset = i->first;
          m_freelist.erase(i);
-         ::memset(m_pool + offset, 0, n);
+         clear_mem(m_pool + offset, n);
 
          BOTAN_ASSERT((reinterpret_cast<size_t>(m_pool) + offset) % alignment == 0,
                       "Returning correctly aligned pointer");
@@ -123,7 +123,7 @@ void* mlock_allocator::allocate(size_t n, size_t alignment)
             m_freelist.insert(best_fit, std::make_pair(offset, alignment_padding));
          }
 
-      ::memset(m_pool + offset + alignment_padding, 0, n);
+      clear_mem(m_pool + offset + alignment_padding, n);
 
       BOTAN_ASSERT((reinterpret_cast<size_t>(m_pool) + offset + alignment_padding) % alignment == 0,
                    "Returning correctly aligned pointer");
@@ -203,7 +203,7 @@ mlock_allocator::mlock_allocator() :
       if(m_pool == static_cast<byte*>(MAP_FAILED))
          throw std::runtime_error("Failed to mmap pool");
 
-      std::memset(m_pool, 0x00, m_poolsize);
+      clear_mem(m_pool, m_poolsize);
 
       if(::mlock(m_pool, m_poolsize) != 0)
          {
@@ -220,7 +220,7 @@ mlock_allocator::~mlock_allocator()
    {
    if(m_pool)
       {
-      std::memset(m_pool, 0, m_poolsize);
+      clear_mem(m_pool, m_poolsize);
       ::munlock(m_pool, m_poolsize);
       ::munmap(m_pool, m_poolsize);
       m_pool = nullptr;
