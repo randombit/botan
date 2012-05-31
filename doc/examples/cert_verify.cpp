@@ -7,29 +7,38 @@
 
 #include <botan/botan.h>
 #include <botan/x509cert.h>
-#include <botan/x509stor.h>
-
-#include <stdio.h>
+#include <botan/x509path.h>
+#include <iostream>
 
 using namespace Botan;
 
-int main()
+int main(int argc, char* argv[])
    {
+   if(argc <= 2)
+      {
+      std::cout << "Usage: " << argv[0] << " subject.pem [CA certificates...]\n";
+      return 1;
+      }
+
    LibraryInitializer init;
+   X509_Certificate subject_cert(argv[1]);
 
-   X509_Certificate ca_cert("ca_cert.pem");
-   X509_Certificate subject_cert("http_cert.pem");
+   Certificate_Store_In_Memory certs;
 
-   X509_Store cert_store;
+   for(size_t i = 2; argv[i]; ++i)
+      certs.add_certificate(X509_Certificate(argv[i]));
 
-   cert_store.add_cert(ca_cert, /*trusted=*/true);
+   Path_Validation_Restrictions restrictions;
 
-   X509_Code code = cert_store.validate_cert(subject_cert);
+   Path_Validation_Result result =
+      x509_path_validate(subject_cert,
+                         restrictions,
+                         certs);
 
-   if(code == VERIFIED)
-      printf("Cert validated\n");
+   if(result.successful_validation())
+      std::cout << "Certificate validated\n";
    else
-      printf("Cert did not validate, code = %d\n", code);
+      std::cout << "Certificate did not validate - " << result.result_string() << "\n";
 
    return 0;
    }

@@ -94,7 +94,7 @@ bool check(RandomNumberGenerator& rng,
 
    //u32bit c = to_u32bit(inputs["c"]);
 
-   std::vector<byte> seed = unlock(hex_decode(inputs["Seed"]));
+   std::vector<byte> seed = hex_decode(inputs["Seed"]);
 
    BigInt our_p, our_q;
 

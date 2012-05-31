@@ -30,7 +30,8 @@ int main(int argc, char* argv[])
 
       AutoSeeded_RNG rng;
 
-      DL_Group group(rng, DL_Group::DSA_Kosherizer, 2048, 256);
+      //DL_Group group(rng, DL_Group::DSA_Kosherizer, 2048, 256);
+      DL_Group group("dsa/jce/1024");
 
       DSA_PrivateKey key(rng, group);
 

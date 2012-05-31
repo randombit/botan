@@ -68,7 +68,7 @@ void x931_tests(std::vector<std::pair<std::string, std::string> > vecs,
       ANSI_X931_RNG prng(get_block_cipher(cipher),
                          new Fixed_Output_RNG);
 
-      secure_vector<byte> x = hex_decode(input);
+      std::vector<byte> x = hex_decode(input);
       prng.add_entropy(&x[0], x.size());
 
       secure_vector<byte> output(result.size() / 2);
