@@ -357,6 +357,13 @@ DER_Encoder& DER_Encoder::encode_if(bool cond, DER_Encoder& codec)
    return (*this);
    }
 
+DER_Encoder& DER_Encoder::encode_if(bool cond, const ASN1_Object& obj)
+   {
+   if(cond)
+      encode(obj);
+   return (*this);
+   }
+
 /*
 * Request for an object to encode itself
 */

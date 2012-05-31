@@ -221,10 +221,7 @@ BER_Object BER_Decoder::get_next_object()
    size_t length = decode_length(source);
    next.value.resize(length);
    if(source->read(&next.value[0], length) != length)
-      {
-      abort();
       throw BER_Decoding_Error("Value truncated");
-      }
 
    if(next.type_tag == EOC && next.class_tag == UNIVERSAL)
       return get_next_object();

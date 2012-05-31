@@ -74,7 +74,7 @@ void set_default_oids(Library_State& config)
    add_oid(config, "2.16.840.1.101.3.4.2.3", "SHA-512");
 
    /* MACs */
-   add_oid(config, "1.2.840.113549.2.7", "HMAC(SHA-1)");
+   add_oid(config, "1.2.840.113549.2.7", "HMAC(SHA-160)");
    add_oid(config, "1.2.840.113549.2.8", "HMAC(SHA-224)");
    add_oid(config, "1.2.840.113549.2.9", "HMAC(SHA-256)");
    add_oid(config, "1.2.840.113549.2.10", "HMAC(SHA-384)");

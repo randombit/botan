@@ -17,6 +17,7 @@
 
 #if defined(BOTAN_HAS_PBE_PKCS_V20)
   #include <botan/pbes2.h>
+  #include <botan/hmac.h>
 #endif
 
 namespace Botan {
@@ -70,7 +71,7 @@ PBE* get_pbe(const std::string& algo_spec,
 #if defined(BOTAN_HAS_PBE_PKCS_V20)
    if(pbe == "PBE-PKCS5v20")
       return new PBE_PKCS5v20(block_cipher->clone(),
-                              hash_function->clone(),
+                              new HMAC(hash_function->clone()),
                               passphrase,
                               msec,
                               rng);

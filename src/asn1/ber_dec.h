@@ -154,7 +154,7 @@ BER_Decoder& BER_Decoder::decode_optional(T& out,
 
    if(obj.type_tag == type_tag && obj.class_tag == class_tag)
       {
-      if(class_tag & CONSTRUCTED)
+      if((class_tag & CONSTRUCTED) && (class_tag & CONTEXT_SPECIFIC))
          BER_Decoder(obj.value).decode(out).verify_end();
       else
          {

@@ -91,6 +91,7 @@ class BOTAN_DLL DER_Encoder
 
       DER_Encoder& encode(const ASN1_Object& obj);
       DER_Encoder& encode_if(bool pred, DER_Encoder& enc);
+      DER_Encoder& encode_if(bool pred, const ASN1_Object& obj);
 
       DER_Encoder& add_object(ASN1_Tag type_tag, ASN1_Tag class_tag,
                               const byte rep[], size_t length);

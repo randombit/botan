@@ -10,7 +10,7 @@
 
 #include <botan/pbe.h>
 #include <botan/block_cipher.h>
-#include <botan/hash.h>
+#include <botan/mac.h>
 #include <botan/pipe.h>
 
 namespace Botan {
@@ -21,12 +21,6 @@ namespace Botan {
 class BOTAN_DLL PBE_PKCS5v20 : public PBE
    {
    public:
-      /**
-      * @param cipher names a block cipher
-      * @return true iff PKCS #5 knows how to use this cipher
-      */
-      static bool known_cipher(const std::string& cipher);
-
       OID get_oid() const;
 
       std::vector<byte> encode_params() const;
@@ -49,7 +43,7 @@ class BOTAN_DLL PBE_PKCS5v20 : public PBE
       * @param hash the hash function to use
       */
       PBE_PKCS5v20(BlockCipher* cipher,
-                   HashFunction* hash,
+                   MessageAuthenticationCode* mac,
                    const std::string& passphrase,
                    std::chrono::milliseconds msec,
                    RandomNumberGenerator& rng);
@@ -60,7 +54,7 @@ class BOTAN_DLL PBE_PKCS5v20 : public PBE
 
       Cipher_Dir direction;
       BlockCipher* block_cipher;
-      HashFunction* hash_function;
+      MessageAuthenticationCode* m_prf;
       secure_vector<byte> salt, key, iv;
       size_t iterations, key_length;
       Pipe pipe;
