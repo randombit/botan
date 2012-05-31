@@ -1,6 +1,6 @@
 /*
 * PBKDF
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2012 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -10,6 +10,7 @@
 
 #include <botan/algo_base.h>
 #include <botan/symkey.h>
+#include <chrono>
 
 namespace Botan {
 
@@ -37,10 +38,43 @@ class BOTAN_DLL PBKDF : public Algorithm
       * @param salt_len length of salt in bytes
       * @param iterations the number of iterations to use (use 10K or more)
       */
-      virtual OctetString derive_key(size_t output_len,
-                                     const std::string& passphrase,
-                                     const byte salt[], size_t salt_len,
-                                     size_t iterations) const = 0;
+      OctetString derive_key(size_t output_len,
+                             const std::string& passphrase,
+                             const byte salt[], size_t salt_len,
+                             size_t iterations) const;
+
+      /**
+      * Derive a key from a passphrase
+      * @param output_len the desired length of the key to produce
+      * @param passphrase the password to derive the key from
+      * @param salt a randomly chosen salt
+      * @param salt_len length of salt in bytes
+      * @param msec is how long to run the PBKDF
+      * @param iterations is set to the number of iterations used
+      */
+      OctetString derive_key(size_t output_len,
+                             const std::string& passphrase,
+                             const byte salt[], size_t salt_len,
+                             std::chrono::milliseconds msec,
+                             size_t& iterations) const;
+
+      /**
+      * Derive a key from a passphrase for a number of iterations
+      * specified by either iterations or if iterations == 0 then
+      * running until seconds time has elapsed.
+      *
+      * @param output_len the desired length of the key to produce
+      * @param passphrase the password to derive the key from
+      * @param salt a randomly chosen salt
+      * @param salt_len length of salt in bytes
+      * @param iterations the number of iterations to use (use 10K or more)
+      */
+      virtual std::pair<size_t, OctetString>
+         key_derivation(size_t output_len,
+                        const std::string& passphrase,
+                        const byte salt[], size_t salt_len,
+                        size_t iterations,
+                        std::chrono::milliseconds msec) const = 0;
    };
 
 /**

@@ -24,7 +24,10 @@ namespace Botan {
 /*
 * Get an encryption PBE, set new parameters
 */
-PBE* get_pbe(const std::string& algo_spec)
+PBE* get_pbe(const std::string& algo_spec,
+             const std::string& passphrase,
+             std::chrono::milliseconds msec,
+             RandomNumberGenerator& rng)
    {
    SCAN_Name request(algo_spec);
 
@@ -59,13 +62,18 @@ PBE* get_pbe(const std::string& algo_spec)
    if(pbe == "PBE-PKCS5v15")
       return new PBE_PKCS5v15(block_cipher->clone(),
                               hash_function->clone(),
-                              ENCRYPTION);
+                              passphrase,
+                              msec,
+                              rng);
 #endif
 
 #if defined(BOTAN_HAS_PBE_PKCS_V20)
    if(pbe == "PBE-PKCS5v20")
       return new PBE_PKCS5v20(block_cipher->clone(),
-                              hash_function->clone());
+                              hash_function->clone(),
+                              passphrase,
+                              msec,
+                              rng);
 #endif
 
    throw Algorithm_Not_Found(algo_spec);
@@ -74,7 +82,9 @@ PBE* get_pbe(const std::string& algo_spec)
 /*
 * Get a decryption PBE, decode parameters
 */
-PBE* get_pbe(const OID& pbe_oid, DataSource& params)
+PBE* get_pbe(const OID& pbe_oid,
+             const std::vector<byte>& params,
+             const std::string& passphrase)
    {
    SCAN_Name request(OIDS::lookup(pbe_oid));
 
@@ -111,17 +121,16 @@ PBE* get_pbe(const OID& pbe_oid, DataSource& params)
       if(!hash_function)
          throw Algorithm_Not_Found(digest_name);
 
-      PBE* pbe = new PBE_PKCS5v15(block_cipher->clone(),
-                                  hash_function->clone(),
-                                  DECRYPTION);
-      pbe->decode_params(params);
-      return pbe;
+      return new PBE_PKCS5v15(block_cipher->clone(),
+                              hash_function->clone(),
+                              params,
+                              passphrase);
       }
 #endif
 
 #if defined(BOTAN_HAS_PBE_PKCS_V20)
    if(pbe == "PBE-PKCS5v20")
-      return new PBE_PKCS5v20(params);
+      return new PBE_PKCS5v20(params, passphrase);
 #endif
 
    throw Algorithm_Not_Found(pbe_oid.as_string());

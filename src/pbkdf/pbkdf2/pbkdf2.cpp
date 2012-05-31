@@ -8,19 +8,22 @@
 #include <botan/pbkdf2.h>
 #include <botan/get_byte.h>
 #include <botan/internal/xor_buf.h>
+#include <botan/internal/rounding.h>
 
 namespace Botan {
 
 /*
 * Return a PKCS #5 PBKDF2 derived key
 */
-OctetString PKCS5_PBKDF2::derive_key(size_t key_len,
-                                     const std::string& passphrase,
-                                     const byte salt[], size_t salt_size,
-                                     size_t iterations) const
+std::pair<size_t, OctetString>
+PKCS5_PBKDF2::key_derivation(size_t key_len,
+                             const std::string& passphrase,
+                             const byte salt[], size_t salt_len,
+                             size_t iterations,
+                             std::chrono::milliseconds msec) const
    {
-   if(iterations == 0)
-      throw Invalid_Argument("PKCS#5 PBKDF2: Invalid iteration count");
+   if(key_len == 0)
+      return std::make_pair(iterations, OctetString());
 
    try
       {
@@ -39,22 +42,62 @@ OctetString PKCS5_PBKDF2::derive_key(size_t key_len,
 
    secure_vector<byte> U(mac->output_length());
 
+   const size_t blocks_needed = round_up(key_len, mac->output_length()) / mac->output_length();
+
+   std::chrono::microseconds usec_per_block =
+      std::chrono::duration_cast<std::chrono::microseconds>(msec) / blocks_needed;
+
    u32bit counter = 1;
    while(key_len)
       {
       size_t T_size = std::min<size_t>(mac->output_length(), key_len);
 
-      mac->update(salt, salt_size);
+      mac->update(salt, salt_len);
       mac->update_be(counter);
       mac->final(&U[0]);
 
       xor_buf(T, &U[0], T_size);
 
-      for(size_t j = 1; j != iterations; ++j)
+      if(iterations == 0)
          {
-         mac->update(U);
-         mac->final(&U[0]);
-         xor_buf(T, &U[0], T_size);
+         /*
+         If no iterations set, run the first block to calibrate based
+         on how long hashing takes on whatever machine we're running on.
+         */
+
+         const auto start = std::chrono::high_resolution_clock::now();
+
+         iterations = 1; // the first iteration we did above
+
+         while(true)
+            {
+            mac->update(U);
+            mac->final(&U[0]);
+            xor_buf(T, &U[0], T_size);
+            iterations++;
+
+            /*
+            Only break on relatively 'even' iterations. For one it
+            avoids confusion, and likely some broken implementations
+            break on getting completely randomly distributed values
+            */
+            if(iterations % 8192 == 0)
+               {
+               auto time_taken = std::chrono::high_resolution_clock::now() - start;
+               auto usec_taken = std::chrono::duration_cast<std::chrono::microseconds>(time_taken);
+               if(usec_taken > usec_per_block)
+                  break;
+               }
+            }
+         }
+      else
+         {
+         for(size_t i = 1; i != iterations; ++i)
+            {
+            mac->update(U);
+            mac->final(&U[0]);
+            xor_buf(T, &U[0], T_size);
+            }
          }
 
       key_len -= T_size;
@@ -62,7 +105,7 @@ OctetString PKCS5_PBKDF2::derive_key(size_t key_len,
       ++counter;
       }
 
-   return key;
+   return std::make_pair(iterations, key);
    }
 
 }

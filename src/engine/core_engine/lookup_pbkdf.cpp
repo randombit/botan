@@ -17,10 +17,6 @@
   #include <botan/pbkdf2.h>
 #endif
 
-#if defined(BOTAN_HAS_PGPS2K)
-  #include <botan/pgp_s2k.h>
-#endif
-
 namespace Botan {
 
 PBKDF* Core_Engine::find_pbkdf(const SCAN_Name& algo_spec,
@@ -39,11 +35,6 @@ PBKDF* Core_Engine::find_pbkdf(const SCAN_Name& algo_spec,
 
       return new PKCS5_PBKDF2(af.make_mac("HMAC(" + algo_spec.arg(0) + ")"));
       }
-#endif
-
-#if defined(BOTAN_HAS_PGPS2K)
-   if(algo_spec.algo_name() == "OpenPGP-S2K" && algo_spec.arg_count() == 1)
-      return new OpenPGP_S2K(af.make_hash_function(algo_spec.arg(0)));
 #endif
 
    return nullptr;

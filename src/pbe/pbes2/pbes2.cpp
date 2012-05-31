@@ -76,30 +76,6 @@ void PBE_PKCS5v20::flush_pipe(bool safe_to_skip)
    }
 
 /*
-* Set the passphrase to use
-*/
-void PBE_PKCS5v20::set_key(const std::string& passphrase)
-   {
-   PKCS5_PBKDF2 pbkdf(new HMAC(hash_function->clone()));
-
-   key = pbkdf.derive_key(key_length, passphrase,
-                          &salt[0], salt.size(),
-                          iterations).bits_of();
-   }
-
-/*
-* Create a new set of PBES2 parameters
-*/
-void PBE_PKCS5v20::new_params(RandomNumberGenerator& rng)
-   {
-   iterations = 10000;
-   key_length = block_cipher->maximum_keylength();
-
-   salt = rng.random_vec(12);
-   iv = rng.random_vec(block_cipher->block_size());
-   }
-
-/*
 * Encode PKCS#5 PBES2 parameters
 */
 std::vector<byte> PBE_PKCS5v20::encode_params() const
@@ -129,13 +105,74 @@ std::vector<byte> PBE_PKCS5v20::encode_params() const
    }
 
 /*
-* Decode PKCS#5 PBES2 parameters
+* Return an OID for PBES2
 */
-void PBE_PKCS5v20::decode_params(DataSource& source)
+OID PBE_PKCS5v20::get_oid() const
    {
+   return OIDS::lookup("PBE-PKCS5v20");
+   }
+
+/*
+* Check if this is a known PBES2 cipher
+*/
+bool PBE_PKCS5v20::known_cipher(const std::string& algo)
+   {
+   if(algo == "AES-128" || algo == "AES-192" || algo == "AES-256")
+      return true;
+
+   if(algo == "DES" || algo == "TripleDES")
+      return true;
+
+   return false;
+   }
+
+std::string PBE_PKCS5v20::name() const
+   {
+   return "PBE-PKCS5v20(" + block_cipher->name() + "," +
+                            hash_function->name() + ")";
+   }
+
+/*
+* PKCS#5 v2.0 PBE Constructor
+*/
+PBE_PKCS5v20::PBE_PKCS5v20(BlockCipher* cipher,
+                           HashFunction* digest,
+                           const std::string& passphrase,
+                           std::chrono::milliseconds msec,
+                           RandomNumberGenerator& rng) :
+   direction(ENCRYPTION),
+   block_cipher(cipher),
+   hash_function(digest),
+   salt(rng.random_vec(12)),
+   iv(rng.random_vec(block_cipher->block_size())),
+   iterations(0),
+   key_length(block_cipher->maximum_keylength())
+   {
+   if(!known_cipher(block_cipher->name()))
+      throw Invalid_Argument("PBE-PKCS5 v2.0: Invalid cipher " + cipher->name());
+   if(hash_function->name() != "SHA-160")
+      throw Invalid_Argument("PBE-PKCS5 v2.0: Invalid digest " + digest->name());
+
+   PKCS5_PBKDF2 pbkdf(new HMAC(hash_function->clone()));
+
+   key = pbkdf.derive_key(key_length, passphrase,
+                          &salt[0], salt.size(),
+                          msec, iterations).bits_of();
+   }
+
+/*
+* PKCS#5 v2.0 PBE Constructor
+*/
+PBE_PKCS5v20::PBE_PKCS5v20(const std::vector<byte>& params,
+                           const std::string& passphrase) :
+direction(DECRYPTION)
+   {
+   hash_function = nullptr;
+   block_cipher = nullptr;
+
    AlgorithmIdentifier kdf_algo, enc_algo;
 
-   BER_Decoder(source)
+   BER_Decoder(params)
       .start_cons(SEQUENCE)
          .decode(kdf_algo)
          .decode(enc_algo)
@@ -177,55 +214,12 @@ void PBE_PKCS5v20::decode_params(DataSource& source)
 
    if(salt.size() < 8)
       throw Decoding_Error("PBE-PKCS5 v2.0: Encoded salt is too small");
-   }
 
-/*
-* Return an OID for PBES2
-*/
-OID PBE_PKCS5v20::get_oid() const
-   {
-   return OIDS::lookup("PBE-PKCS5v20");
-   }
+   PKCS5_PBKDF2 pbkdf(new HMAC(hash_function->clone()));
 
-/*
-* Check if this is a known PBES2 cipher
-*/
-bool PBE_PKCS5v20::known_cipher(const std::string& algo)
-   {
-   if(algo == "AES-128" || algo == "AES-192" || algo == "AES-256")
-      return true;
-   if(algo == "DES" || algo == "TripleDES")
-      return true;
-   return false;
-   }
-
-std::string PBE_PKCS5v20::name() const
-   {
-   return "PBE-PKCS5v20(" + block_cipher->name() + "," +
-                            hash_function->name() + ")";
-   }
-
-/*
-* PKCS#5 v2.0 PBE Constructor
-*/
-PBE_PKCS5v20::PBE_PKCS5v20(BlockCipher* cipher,
-                           HashFunction* digest) :
-   direction(ENCRYPTION), block_cipher(cipher), hash_function(digest)
-   {
-   if(!known_cipher(block_cipher->name()))
-      throw Invalid_Argument("PBE-PKCS5 v2.0: Invalid cipher " + cipher->name());
-   if(hash_function->name() != "SHA-160")
-      throw Invalid_Argument("PBE-PKCS5 v2.0: Invalid digest " + digest->name());
-   }
-
-/*
-* PKCS#5 v2.0 PBE Constructor
-*/
-PBE_PKCS5v20::PBE_PKCS5v20(DataSource& params) : direction(DECRYPTION)
-   {
-   hash_function = nullptr;
-   block_cipher = nullptr;
-   decode_params(params);
+   key = pbkdf.derive_key(key_length, passphrase,
+                          &salt[0], salt.size(),
+                          iterations).bits_of();
    }
 
 PBE_PKCS5v20::~PBE_PKCS5v20()

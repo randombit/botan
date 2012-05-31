@@ -1,5 +1,0 @@
-define PGPS2K
-
-<requires>
-hash
-</requires>

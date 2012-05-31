@@ -21,6 +21,10 @@ namespace Botan {
 class BOTAN_DLL PBE_PKCS5v15 : public PBE
    {
    public:
+      OID get_oid() const;
+
+      std::vector<byte> encode_params() const;
+
       std::string name() const;
 
       void write(const byte[], size_t);
@@ -30,29 +34,30 @@ class BOTAN_DLL PBE_PKCS5v15 : public PBE
       /**
       * @param cipher the block cipher to use (DES or RC2)
       * @param hash the hash function to use
-      * @param direction are we encrypting or decrypting
       */
       PBE_PKCS5v15(BlockCipher* cipher,
                    HashFunction* hash,
-                   Cipher_Dir direction);
+                   const std::string& passphrase,
+                   std::chrono::milliseconds msec,
+                   RandomNumberGenerator& rng);
+
+      PBE_PKCS5v15(BlockCipher* cipher,
+                   HashFunction* hash,
+                   const std::vector<byte>& params,
+                   const std::string& passphrase);
 
       ~PBE_PKCS5v15();
    private:
-      void set_key(const std::string&);
-      void new_params(RandomNumberGenerator& rng);
-      std::vector<byte> encode_params() const;
-      void decode_params(DataSource&);
-      OID get_oid() const;
 
       void flush_pipe(bool);
 
-      Cipher_Dir direction;
-      BlockCipher* block_cipher;
-      HashFunction* hash_function;
+      Cipher_Dir m_direction;
+      BlockCipher* m_block_cipher;
+      HashFunction* m_hash_function;
 
-      secure_vector<byte> salt, key, iv;
-      size_t iterations;
-      Pipe pipe;
+      secure_vector<byte> m_salt, m_key, m_iv;
+      size_t m_iterations;
+      Pipe m_pipe;
    };
 
 }

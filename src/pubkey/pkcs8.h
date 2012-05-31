@@ -10,6 +10,7 @@
 
 #include <botan/x509_key.h>
 #include <functional>
+#include <chrono>
 
 namespace Botan {
 
@@ -46,15 +47,18 @@ BOTAN_DLL std::string PEM_encode(const Private_Key& key);
 * @param key the key to encode
 * @param rng the rng to use
 * @param pass the password to use for encryption
+* @param msec number of milliseconds to run the password derivation
 * @param pbe_algo the name of the desired password-based encryption
          algorithm; if empty ("") a reasonable (portable/secure)
          default will be chosen.
 * @return encrypted key in binary BER form
 */
-BOTAN_DLL secure_vector<byte> BER_encode(const Private_Key& key,
-                                        RandomNumberGenerator& rng,
-                                        const std::string& pass,
-                                        const std::string& pbe_algo = "");
+BOTAN_DLL std::vector<byte>
+BER_encode(const Private_Key& key,
+           RandomNumberGenerator& rng,
+           const std::string& pass,
+           std::chrono::milliseconds msec = std::chrono::milliseconds(200),
+           const std::string& pbe_algo = "");
 
 /**
 * Get a string containing a PEM encoded private key, encrypting it with a
@@ -62,62 +66,18 @@ BOTAN_DLL secure_vector<byte> BER_encode(const Private_Key& key,
 * @param key the key to encode
 * @param rng the rng to use
 * @param pass the password to use for encryption
+* @param msec number of milliseconds to run the password derivation
 * @param pbe_algo the name of the desired password-based encryption
          algorithm; if empty ("") a reasonable (portable/secure)
          default will be chosen.
 * @return encrypted key in PEM form
 */
-BOTAN_DLL std::string PEM_encode(const Private_Key& key,
-                                 RandomNumberGenerator& rng,
-                                 const std::string& pass,
-                                 const std::string& pbe_algo = "");
-
-
-/**
-* Encode a private key into a pipe.
-* @deprecated Use PEM_encode or BER_encode instead
-*
-* @param key the private key to encode
-* @param pipe the pipe to feed the encoded key into
-* @param encoding the encoding type to use
-*/
-BOTAN_DEPRECATED("Use PEM_encode or BER_encode")
-inline void encode(const Private_Key& key,
-                   Pipe& pipe,
-                   X509_Encoding encoding = PEM)
-   {
-   if(encoding == PEM)
-      pipe.write(PKCS8::PEM_encode(key));
-   else
-      pipe.write(PKCS8::BER_encode(key));
-   }
-
-/**
-* Encode and encrypt a private key into a pipe.
-* @deprecated Use PEM_encode or BER_encode instead
-*
-* @param key the private key to encode
-* @param pipe the pipe to feed the encoded key into
-* @param pass the password to use for encryption
-* @param rng the rng to use
-* @param pbe_algo the name of the desired password-based encryption
-         algorithm; if empty ("") a reasonable (portable/secure)
-         default will be chosen.
-* @param encoding the encoding type to use
-*/
-BOTAN_DEPRECATED("Use PEM_encode or BER_encode")
-inline void encrypt_key(const Private_Key& key,
-                        Pipe& pipe,
-                        RandomNumberGenerator& rng,
-                        const std::string& pass,
-                        const std::string& pbe_algo = "",
-                        X509_Encoding encoding = PEM)
-   {
-   if(encoding == PEM)
-      pipe.write(PKCS8::PEM_encode(key, rng, pass, pbe_algo));
-   else
-      pipe.write(PKCS8::BER_encode(key, rng, pass, pbe_algo));
-   }
+BOTAN_DLL std::string
+PEM_encode(const Private_Key& key,
+           RandomNumberGenerator& rng,
+           const std::string& pass,
+           std::chrono::milliseconds msec = std::chrono::milliseconds(200),
+           const std::string& pbe_algo = "");
 
 /**
 * Load a key from a data source.

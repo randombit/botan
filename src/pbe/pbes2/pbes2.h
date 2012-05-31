@@ -27,6 +27,10 @@ class BOTAN_DLL PBE_PKCS5v20 : public PBE
       */
       static bool known_cipher(const std::string& cipher);
 
+      OID get_oid() const;
+
+      std::vector<byte> encode_params() const;
+
       std::string name() const;
 
       void write(const byte[], size_t);
@@ -37,22 +41,21 @@ class BOTAN_DLL PBE_PKCS5v20 : public PBE
       * Load a PKCS #5 v2.0 encrypted stream
       * @param input is the input source
       */
-      PBE_PKCS5v20(DataSource& input);
+      PBE_PKCS5v20(const std::vector<byte>& params,
+                   const std::string& passphrase);
 
       /**
       * @param cipher the block cipher to use
       * @param hash the hash function to use
       */
-      PBE_PKCS5v20(BlockCipher* cipher, HashFunction* hash);
+      PBE_PKCS5v20(BlockCipher* cipher,
+                   HashFunction* hash,
+                   const std::string& passphrase,
+                   std::chrono::milliseconds msec,
+                   RandomNumberGenerator& rng);
 
       ~PBE_PKCS5v20();
    private:
-      void set_key(const std::string&);
-      void new_params(RandomNumberGenerator& rng);
-      std::vector<byte> encode_params() const;
-      void decode_params(DataSource&);
-      OID get_oid() const;
-
       void flush_pipe(bool);
 
       Cipher_Dir direction;

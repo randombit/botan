@@ -1,6 +1,6 @@
 /*
 * PBKDF2
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2012 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -19,20 +19,22 @@ namespace Botan {
 class BOTAN_DLL PKCS5_PBKDF2 : public PBKDF
    {
    public:
-      std::string name() const
+      std::string name() const override
          {
          return "PBKDF2(" + mac->name() + ")";
          }
 
-      PBKDF* clone() const
+      PBKDF* clone() const override
          {
          return new PKCS5_PBKDF2(mac->clone());
          }
 
-      OctetString derive_key(size_t output_len,
-                             const std::string& passphrase,
-                             const byte salt[], size_t salt_len,
-                             size_t iterations) const;
+      std::pair<size_t, OctetString>
+         key_derivation(size_t output_len,
+                        const std::string& passphrase,
+                        const byte salt[], size_t salt_len,
+                        size_t iterations,
+                        std::chrono::milliseconds msec) const override;
 
       /**
       * Create a PKCS #5 instance using the specified message auth code

@@ -19,7 +19,7 @@ namespace Botan {
 */
 void PBE_PKCS5v15::write(const byte input[], size_t length)
    {
-   pipe.write(input, length);
+   m_pipe.write(input, length);
    flush_pipe(true);
    }
 
@@ -28,18 +28,18 @@ void PBE_PKCS5v15::write(const byte input[], size_t length)
 */
 void PBE_PKCS5v15::start_msg()
    {
-   if(direction == ENCRYPTION)
-      pipe.append(new CBC_Encryption(block_cipher->clone(),
-                                     new PKCS7_Padding,
-                                     key, iv));
+   if(m_direction == ENCRYPTION)
+      m_pipe.append(new CBC_Encryption(m_block_cipher->clone(),
+                                       new PKCS7_Padding,
+                                       m_key, m_iv));
    else
-      pipe.append(new CBC_Decryption(block_cipher->clone(),
-                                     new PKCS7_Padding,
-                                     key, iv));
+      m_pipe.append(new CBC_Decryption(m_block_cipher->clone(),
+                                       new PKCS7_Padding,
+                                       m_key, m_iv));
 
-   pipe.start_msg();
-   if(pipe.message_count() > 1)
-      pipe.set_default_msg(pipe.default_msg() + 1);
+   m_pipe.start_msg();
+   if(m_pipe.message_count() > 1)
+      m_pipe.set_default_msg(m_pipe.default_msg() + 1);
    }
 
 /*
@@ -47,9 +47,9 @@ void PBE_PKCS5v15::start_msg()
 */
 void PBE_PKCS5v15::end_msg()
    {
-   pipe.end_msg();
+   m_pipe.end_msg();
    flush_pipe(false);
-   pipe.reset();
+   m_pipe.reset();
    }
 
 /*
@@ -57,41 +57,15 @@ void PBE_PKCS5v15::end_msg()
 */
 void PBE_PKCS5v15::flush_pipe(bool safe_to_skip)
    {
-   if(safe_to_skip && pipe.remaining() < 64)
+   if(safe_to_skip && m_pipe.remaining() < 64)
       return;
 
    secure_vector<byte> buffer(DEFAULT_BUFFERSIZE);
-   while(pipe.remaining())
+   while(m_pipe.remaining())
       {
-      size_t got = pipe.read(&buffer[0], buffer.size());
+      size_t got = m_pipe.read(&buffer[0], buffer.size());
       send(buffer, got);
       }
-   }
-
-/*
-* Set the passphrase to use
-*/
-void PBE_PKCS5v15::set_key(const std::string& passphrase)
-   {
-   PKCS5_PBKDF1 pbkdf(hash_function->clone());
-
-   secure_vector<byte> key_and_iv = pbkdf.derive_key(16, passphrase,
-                                                    &salt[0], salt.size(),
-                                                    iterations).bits_of();
-
-   key.resize(8);
-   iv.resize(8);
-   copy_mem(&key[0], &key_and_iv[0], 8);
-   copy_mem(&iv[0], &key_and_iv[8], 8);
-   }
-
-/*
-* Create a new set of PBES1 parameters
-*/
-void PBE_PKCS5v15::new_params(RandomNumberGenerator& rng)
-   {
-   iterations = 10000;
-   salt = rng.random_vec(8);
    }
 
 /*
@@ -101,26 +75,10 @@ std::vector<byte> PBE_PKCS5v15::encode_params() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
-         .encode(salt, OCTET_STRING)
-         .encode(iterations)
+         .encode(m_salt, OCTET_STRING)
+         .encode(m_iterations)
       .end_cons()
    .get_contents_unlocked();
-   }
-
-/*
-* Decode PKCS#5 PBES1 parameters
-*/
-void PBE_PKCS5v15::decode_params(DataSource& source)
-   {
-   BER_Decoder(source)
-      .start_cons(SEQUENCE)
-         .decode(salt, OCTET_STRING)
-         .decode(iterations)
-         .verify_end()
-      .end_cons();
-
-   if(salt.size() != 8)
-      throw Decoding_Error("PBES1: Encoded salt is not 8 octets");
    }
 
 /*
@@ -130,8 +88,8 @@ OID PBE_PKCS5v15::get_oid() const
    {
    const OID base_pbes1_oid("1.2.840.113549.1.5");
 
-   const std::string cipher = block_cipher->name();
-   const std::string digest = hash_function->name();
+   const std::string cipher = m_block_cipher->name();
+   const std::string digest = m_hash_function->name();
 
    if(cipher == "DES" && digest == "MD2")
       return (base_pbes1_oid + 1);
@@ -151,17 +109,19 @@ OID PBE_PKCS5v15::get_oid() const
 
 std::string PBE_PKCS5v15::name() const
    {
-   return "PBE-PKCS5v15(" + block_cipher->name() + "," +
-                            hash_function->name() + ")";
+   return "PBE-PKCS5v15(" + m_block_cipher->name() + "," +
+                            m_hash_function->name() + ")";
    }
 
-/*
-* PKCS#5 v1.5 PBE Constructor
-*/
 PBE_PKCS5v15::PBE_PKCS5v15(BlockCipher* cipher,
                            HashFunction* hash,
-                           Cipher_Dir dir) :
-   direction(dir), block_cipher(cipher), hash_function(hash)
+                           const std::string& passphrase,
+                           std::chrono::milliseconds msec,
+                           RandomNumberGenerator& rng) :
+   m_direction(ENCRYPTION),
+   m_block_cipher(cipher),
+   m_hash_function(hash),
+   m_salt(rng.random_vec(8))
    {
    if(cipher->name() != "DES" && cipher->name() != "RC2")
       {
@@ -175,12 +135,65 @@ PBE_PKCS5v15::PBE_PKCS5v15(BlockCipher* cipher,
       throw Invalid_Argument("PBE_PKCS5v1.5: Unknown hash " +
                              hash->name());
       }
+
+   PKCS5_PBKDF1 pbkdf(m_hash_function->clone());
+
+   secure_vector<byte> key_and_iv =
+      pbkdf.derive_key(16, passphrase,
+                       &m_salt[0], m_salt.size(),
+                       msec, m_iterations).bits_of();
+
+   m_key.assign(&key_and_iv[0], &key_and_iv[8]);
+   m_iv.assign(&key_and_iv[8], &key_and_iv[16]);
+
+   }
+
+PBE_PKCS5v15::PBE_PKCS5v15(BlockCipher* cipher,
+                           HashFunction* hash,
+                           const std::vector<byte>& params,
+                           const std::string& passphrase) :
+   m_direction(DECRYPTION),
+   m_block_cipher(cipher),
+   m_hash_function(hash)
+   {
+   if(cipher->name() != "DES" && cipher->name() != "RC2")
+      {
+      throw Invalid_Argument("PBE_PKCS5v1.5: Unknown cipher " +
+                             cipher->name());
+      }
+
+   if(hash->name() != "MD2" && hash->name() != "MD5" &&
+      hash->name() != "SHA-160")
+      {
+      throw Invalid_Argument("PBE_PKCS5v1.5: Unknown hash " +
+                             hash->name());
+      }
+
+   BER_Decoder(params)
+      .start_cons(SEQUENCE)
+         .decode(m_salt, OCTET_STRING)
+         .decode(m_iterations)
+         .verify_end()
+      .end_cons();
+
+   if(m_salt.size() != 8)
+      throw Decoding_Error("PBES1: Encoded salt is not 8 octets");
+
+   PKCS5_PBKDF1 pbkdf(m_hash_function->clone());
+
+   secure_vector<byte> key_and_iv =
+      pbkdf.derive_key(16, passphrase,
+                       &m_salt[0], m_salt.size(),
+                       m_iterations).bits_of();
+
+   m_key.assign(&key_and_iv[0], &key_and_iv[8]);
+   m_iv.assign(&key_and_iv[8], &key_and_iv[16]);
    }
 
 PBE_PKCS5v15::~PBE_PKCS5v15()
    {
-   delete block_cipher;
-   delete hash_function;
+   delete m_block_cipher;
+   delete m_hash_function;
    }
 
 }

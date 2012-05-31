@@ -90,16 +90,12 @@ secure_vector<byte> PKCS8_decode(
 
          if(is_encrypted)
             {
-            DataSource_Memory params(pbe_alg_id.parameters);
-            std::unique_ptr<PBE> pbe(get_pbe(pbe_alg_id.oid, params));
-
             std::pair<bool, std::string> pass = get_passphrase();
 
             if(pass.first == false)
                break;
 
-            pbe->set_key(pass.second);
-            Pipe decryptor(pbe.release());
+            Pipe decryptor(get_pbe(pbe_alg_id.oid, pbe_alg_id.parameters, pass.second));
 
             decryptor.process_msg(key_data);
             key = decryptor.read_all();
@@ -155,17 +151,19 @@ std::string PEM_encode(const Private_Key& key)
 /*
 * BER encode a PKCS #8 private key, encrypted
 */
-secure_vector<byte> BER_encode(const Private_Key& key,
-                              RandomNumberGenerator& rng,
-                              const std::string& pass,
-                              const std::string& pbe_algo)
+std::vector<byte> BER_encode(const Private_Key& key,
+                             RandomNumberGenerator& rng,
+                             const std::string& pass,
+                             std::chrono::milliseconds msec,
+                             const std::string& pbe_algo)
    {
    const std::string DEFAULT_PBE = "PBE-PKCS5v20(SHA-1,AES-256/CBC)";
 
-   std::unique_ptr<PBE> pbe(get_pbe(((pbe_algo != "") ? pbe_algo : DEFAULT_PBE)));
-
-   pbe->new_params(rng);
-   pbe->set_key(pass);
+   std::unique_ptr<PBE> pbe(
+      get_pbe(((pbe_algo != "") ? pbe_algo : DEFAULT_PBE),
+              pass,
+              msec,
+              rng));
 
    AlgorithmIdentifier pbe_algid(pbe->get_oid(), pbe->encode_params());
 
@@ -177,7 +175,7 @@ secure_vector<byte> BER_encode(const Private_Key& key,
             .encode(pbe_algid)
             .encode(key_encrytor.read_all(), OCTET_STRING)
          .end_cons()
-      .get_contents();
+      .get_contents_unlocked();
    }
 
 /*
@@ -186,12 +184,13 @@ secure_vector<byte> BER_encode(const Private_Key& key,
 std::string PEM_encode(const Private_Key& key,
                        RandomNumberGenerator& rng,
                        const std::string& pass,
+                       std::chrono::milliseconds msec,
                        const std::string& pbe_algo)
    {
    if(pass == "")
       return PEM_encode(key);
 
-   return PEM_Code::encode(PKCS8::BER_encode(key, rng, pass, pbe_algo),
+   return PEM_Code::encode(PKCS8::BER_encode(key, rng, pass, msec, pbe_algo),
                            "ENCRYPTED PRIVATE KEY");
    }
 
