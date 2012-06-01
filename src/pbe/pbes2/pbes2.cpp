@@ -172,7 +172,7 @@ PBE_PKCS5v20::PBE_PKCS5v20(const std::vector<byte>& params,
          .decode(iterations)
          .decode_optional(key_length, INTEGER, UNIVERSAL)
          .decode_optional(prf_algo, SEQUENCE, CONSTRUCTED,
-                          AlgorithmIdentifier("HMAC(SHA-1)",
+                          AlgorithmIdentifier("HMAC(SHA-160)",
                                               AlgorithmIdentifier::USE_NULL_PARAM))
       .verify_end()
       .end_cons();
