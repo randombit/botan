@@ -67,25 +67,6 @@ BOTAN_DLL Public_Key* load_key(const std::vector<byte>& enc);
 */
 BOTAN_DLL Public_Key* copy_key(const Public_Key& key);
 
-/**
-* Encode a key into a pipe.
-* @deprecated Use PEM_encode or BER_encode instead
-*
-* @param key the public key to encode
-* @param pipe the pipe to feed the encoded key into
-* @param encoding the encoding type to use
-*/
-BOTAN_DEPRECATED("Use PEM_encode or BER_encode")
-inline void encode(const Public_Key& key,
-                   Pipe& pipe,
-                   X509_Encoding encoding = PEM)
-   {
-   if(encoding == PEM)
-      pipe.write(X509::PEM_encode(key));
-   else
-      pipe.write(X509::BER_encode(key));
-   }
-
 }
 
 }

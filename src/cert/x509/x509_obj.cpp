@@ -109,17 +109,6 @@ void X509_Object::decode_from(BER_Decoder& from)
    }
 
 /*
-* Return a BER or PEM encoded X.509 object
-*/
-void X509_Object::encode(Pipe& out, X509_Encoding encoding) const
-   {
-   if(encoding == PEM)
-      out.write(this->PEM_encode());
-   else
-      out.write(this->BER_encode());
-   }
-
-/*
 * Return a BER encoded X.509 object
 */
 std::vector<byte> X509_Object::BER_encode() const

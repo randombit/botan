@@ -86,15 +86,6 @@ class BOTAN_DLL X509_Object : public ASN1_Object
       */
       std::string PEM_encode() const;
 
-      /**
-      * Encode this to a pipe
-      * @deprecated use BER_encode or PEM_encode instead
-      * @param out the pipe to write to
-      * @param encoding the encoding to use
-      */
-      BOTAN_DEPRECATED("Use BER_encode or PEM_encode")
-      void encode(Pipe& out, X509_Encoding encoding = PEM) const;
-
       virtual ~X509_Object() {}
    protected:
       X509_Object(DataSource& src, const std::string& pem_labels);

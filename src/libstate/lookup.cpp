@@ -62,63 +62,6 @@ size_t output_length_of(const std::string& name)
    }
 
 /*
-* Query the minimum allowed key length of an algorithm implementation
-*/
-size_t min_keylength_of(const std::string& name)
-   {
-   Algorithm_Factory& af = global_state().algorithm_factory();
-
-   if(const BlockCipher* bc = af.prototype_block_cipher(name))
-      return bc->key_spec().minimum_keylength();
-
-   if(const StreamCipher* sc = af.prototype_stream_cipher(name))
-      return sc->key_spec().minimum_keylength();
-
-   if(const MessageAuthenticationCode* mac = af.prototype_mac(name))
-      return mac->key_spec().minimum_keylength();
-
-   throw Algorithm_Not_Found(name);
-   }
-
-/*
-* Query the maximum allowed keylength of an algorithm implementation
-*/
-size_t max_keylength_of(const std::string& name)
-   {
-   Algorithm_Factory& af = global_state().algorithm_factory();
-
-   if(const BlockCipher* bc = af.prototype_block_cipher(name))
-      return bc->key_spec().maximum_keylength();
-
-   if(const StreamCipher* sc = af.prototype_stream_cipher(name))
-      return sc->key_spec().maximum_keylength();
-
-   if(const MessageAuthenticationCode* mac = af.prototype_mac(name))
-      return mac->key_spec().maximum_keylength();
-
-   throw Algorithm_Not_Found(name);
-   }
-
-/*
-* Query the number of byte a valid key must be a multiple of
-*/
-size_t keylength_multiple_of(const std::string& name)
-   {
-   Algorithm_Factory& af = global_state().algorithm_factory();
-
-   if(const BlockCipher* bc = af.prototype_block_cipher(name))
-      return bc->key_spec().keylength_multiple();
-
-   if(const StreamCipher* sc = af.prototype_stream_cipher(name))
-      return sc->key_spec().keylength_multiple();
-
-   if(const MessageAuthenticationCode* mac = af.prototype_mac(name))
-      return mac->key_spec().keylength_multiple();
-
-   throw Algorithm_Not_Found(name);
-   }
-
-/*
 * Get a cipher object
 */
 Keyed_Filter* get_cipher(const std::string& algo_spec,
