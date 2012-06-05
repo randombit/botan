@@ -81,16 +81,17 @@ class BOTAN_DLL DL_Group
 
       /**
       * Decode a DER/BER encoded group into this instance.
-      * @param src a DataSource providing the encoded group
+      * @param ber a vector containing the DER/BER encoded group
       * @param format the format of the encoded group
       */
-      void BER_decode(DataSource& src, Format format);
+      void BER_decode(const std::vector<byte>& ber,
+                      Format format);
 
       /**
       * Decode a PEM encoded group into this instance.
-      * @param src a DataSource providing the encoded group
+      * @param pem the PEM encoding of the group
       */
-      void PEM_decode(DataSource& src);
+      void PEM_decode(const std::string& pem);
 
       /**
       * Construct a DL group with uninitialized internal value.

@@ -25,7 +25,7 @@ namespace {
 * Get info from an EncryptedPrivateKeyInfo
 */
 secure_vector<byte> PKCS8_extract(DataSource& source,
-                                 AlgorithmIdentifier& pbe_alg_id)
+                                  AlgorithmIdentifier& pbe_alg_id)
    {
    secure_vector<byte> key_data;
 

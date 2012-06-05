@@ -31,13 +31,12 @@ DL_Group::DL_Group()
 */
 DL_Group::DL_Group(const std::string& type)
    {
-   std::string grp_contents = global_state().get("dl", type);
+   const std::string grp_contents = global_state().get("dl", type);
 
    if(grp_contents == "")
       throw Invalid_Argument("DL_Group: Unknown group " + type);
 
-   DataSource_Memory pem(grp_contents);
-   PEM_decode(pem);
+   PEM_decode(grp_contents);
    }
 
 /*
@@ -263,11 +262,12 @@ std::string DL_Group::PEM_encode(Format format) const
 /*
 * Decode BER encoded parameters
 */
-void DL_Group::BER_decode(DataSource& source, Format format)
+void DL_Group::BER_decode(const std::vector<byte>& data,
+                          Format format)
    {
    BigInt new_p, new_q, new_g;
 
-   BER_Decoder decoder(source);
+   BER_Decoder decoder(data);
    BER_Decoder ber = decoder.start_cons(SEQUENCE);
 
    if(format == ANSI_X9_57)
@@ -299,10 +299,11 @@ void DL_Group::BER_decode(DataSource& source, Format format)
 /*
 * Decode PEM encoded parameters
 */
-void DL_Group::PEM_decode(DataSource& source)
+void DL_Group::PEM_decode(const std::string& pem)
    {
    std::string label;
-   DataSource_Memory ber(PEM_Code::decode(source, label));
+
+   auto ber = unlock(PEM_Code::decode(pem, label));
 
    if(label == "DH PARAMETERS")
       BER_decode(ber, PKCS_3);

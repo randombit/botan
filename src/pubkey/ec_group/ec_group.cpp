@@ -35,10 +35,8 @@ EC_Group::EC_Group(const std::string& str)
 
    try
       {
-      DataSource_Memory input(str);
-
       std::vector<byte> ber =
-         unlock(PEM_Code::decode_check_label(input, "EC PARAMETERS"));
+         unlock(PEM_Code::decode_check_label(str, "EC PARAMETERS"));
 
       *this = EC_Group(ber);
       }

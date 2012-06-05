@@ -27,8 +27,7 @@ DL_Scheme_PublicKey::DL_Scheme_PublicKey(const AlgorithmIdentifier& alg_id,
                                          const secure_vector<byte>& key_bits,
                                          DL_Group::Format format)
    {
-   DataSource_Memory source(alg_id.parameters);
-   group.BER_decode(source, format);
+   group.BER_decode(alg_id.parameters, format);
 
    BER_Decoder(key_bits).decode(y);
    }
@@ -42,8 +41,7 @@ DL_Scheme_PrivateKey::DL_Scheme_PrivateKey(const AlgorithmIdentifier& alg_id,
                                            const secure_vector<byte>& key_bits,
                                            DL_Group::Format format)
    {
-   DataSource_Memory source(alg_id.parameters);
-   group.BER_decode(source, format);
+   group.BER_decode(alg_id.parameters, format);
 
    BER_Decoder(key_bits).decode(x);
    }
