@@ -46,10 +46,7 @@ while test $# -gt 0; do
         exit 0
         ;;
     --cflags)
-        if [ $prefix != "/usr" -a $prefix != "/usr/local" ]
-        then
-           echo -I$prefix/$includedir
-        fi
+        echo -I$prefix/$includedir
         ;;
     --libs)
         if [ $prefix != "/usr" -a $prefix != "/usr/local" ]
