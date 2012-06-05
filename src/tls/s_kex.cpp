@@ -224,6 +224,8 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<byte>& buf,
 
       m_signature = reader.get_range<byte>(2, 0, 65535);
       }
+
+   reader.assert_done();
    }
 
 Server_Key_Exchange::~Server_Key_Exchange()

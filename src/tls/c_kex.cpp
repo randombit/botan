@@ -205,6 +205,8 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
          throw Internal_Error("Client_Key_Exchange: Unknown kex " +
                               kex_algo);
          }
+
+      reader.assert_done();
       }
    else
       {
