@@ -38,7 +38,7 @@ secure_vector<byte> strip_leading_zeros(const secure_vector<byte>& input)
       }
 
    secure_vector<byte> output(&input[leading_zeros],
-                              &input[input.size()-1]);
+                              &input[input.size()]);
    return output;
    }
 
