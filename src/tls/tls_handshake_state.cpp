@@ -124,8 +124,9 @@ void Handshake_State::confirm_transition_to(Handshake_Type handshake_msg)
 
    if(!ok)
       throw Unexpected_Message("Unexpected state transition in handshake, got " +
-                               std::to_string(handshake_msg) + " mask is " +
-                               std::to_string(hand_expecting_mask));
+                               std::to_string(handshake_msg) +
+                               " expected " + std::to_string(hand_expecting_mask) +
+                               " recveived " + std::to_string(hand_received_mask));
 
    /* We don't know what to expect next, so force a call to
       set_expected_next; if it doesn't happen, the next transition

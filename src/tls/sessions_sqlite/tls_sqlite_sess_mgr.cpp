@@ -137,10 +137,10 @@ SymmetricKey derive_key(const std::string& passphrase,
    {
    std::unique_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(SHA-512)"));
 
-   std::vector<byte> x = pbkdf->derive_key(32 + 3,
-                                            passphrase,
-                                            salt, salt_len,
-                                            iterations).bits_of();
+   secure_vector<byte> x = pbkdf->derive_key(32 + 3,
+                                             passphrase,
+                                             salt, salt_len,
+                                             iterations).bits_of();
 
    check_val = make_u32bit(0, x[0], x[1], x[2]);
    return SymmetricKey(&x[3], x.size() - 3);
@@ -217,7 +217,7 @@ Session_Manager_SQLite::Session_Manager_SQLite(const std::string& passphrase,
 
       // new database case
 
-      std::vector<byte> salt = rng.random_vec(16);
+      std::vector<byte> salt = unlock(rng.random_vec(16));
       const size_t iterations = 64 * 1024;
       size_t check_val = 0;
 
