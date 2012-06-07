@@ -287,9 +287,8 @@ void Server::process_handshake_msg(Handshake_Type type,
       else
          state->set_version(policy.pref_version());
 
-      if(secure_renegotiation.renegotiation() &&
-         !secure_renegotiation.supported() &&
-         policy.require_secure_renegotiation())
+      if(policy.require_secure_renegotiation() &&
+         !(secure_renegotiation.initial_handshake() || secure_renegotiation.supported()))
          {
          delete state;
          state = nullptr;

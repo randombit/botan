@@ -246,13 +246,13 @@ void Channel::send_alert(const Alert& alert)
 
 void Channel::Secure_Renegotiation_State::update(Client_Hello* client_hello)
    {
-   if(initial_handshake)
+   if(initial_handshake())
       {
-      secure_renegotiation = client_hello->secure_renegotiation();
+      m_secure_renegotiation = client_hello->secure_renegotiation();
       }
    else
       {
-      if(secure_renegotiation != client_hello->secure_renegotiation())
+      if(supported() != client_hello->secure_renegotiation())
          throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                              "Client changed its mind about secure renegotiation");
       }
@@ -261,7 +261,7 @@ void Channel::Secure_Renegotiation_State::update(Client_Hello* client_hello)
       {
       const std::vector<byte>& data = client_hello->renegotiation_info();
 
-      if(initial_handshake)
+      if(initial_handshake())
          {
          if(!data.empty())
             throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
@@ -278,25 +278,26 @@ void Channel::Secure_Renegotiation_State::update(Client_Hello* client_hello)
 
 void Channel::Secure_Renegotiation_State::update(Server_Hello* server_hello)
    {
-   if(initial_handshake)
+   if(initial_handshake())
       {
       /* If the client offered but server rejected, then this toggles
       *  secure_renegotiation to off
       */
-      secure_renegotiation = server_hello->secure_renegotiation();
+      if(m_secure_renegotiation)
+         m_secure_renegotiation = server_hello->secure_renegotiation();
       }
    else
       {
-      if(secure_renegotiation != server_hello->secure_renegotiation())
+      if(supported() != server_hello->secure_renegotiation())
          throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                              "Server changed its mind about secure renegotiation");
       }
 
-   if(secure_renegotiation)
+   if(supported())
       {
       const std::vector<byte>& data = server_hello->renegotiation_info();
 
-      if(initial_handshake)
+      if(initial_handshake())
          {
          if(!data.empty())
             throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
@@ -310,14 +311,14 @@ void Channel::Secure_Renegotiation_State::update(Server_Hello* server_hello)
          }
       }
 
-   initial_handshake = false;
+   m_initial_handshake = false;
    }
 
 void Channel::Secure_Renegotiation_State::update(Finished* client_finished,
-                                                     Finished* server_finished)
+                                                 Finished* server_finished)
    {
-   client_verify = client_finished->verify_data();
-   server_verify = server_finished->verify_data();
+   m_client_verify = client_finished->verify_data();
+   m_server_verify = server_finished->verify_data();
    }
 
 }
