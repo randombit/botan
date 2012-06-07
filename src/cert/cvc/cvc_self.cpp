@@ -68,7 +68,7 @@ std::vector<byte> eac_1_1_encoding(const EC_PublicKey* key,
 
    enc.end_cons();
 
-   return enc.get_contents();
+   return enc.get_contents_unlocked();
    }
 
 std::string padding_and_hash_from_oid(OID const& oid)
@@ -141,7 +141,7 @@ EAC1_1_Req create_cvc_req(Private_Key const& key,
       .encode(enc_cpi, OCTET_STRING, ASN1_Tag(41), APPLICATION)
       .raw_bytes(enc_public_key)
       .encode(chr)
-      .get_contents();
+      .get_contents_unlocked();
 
    std::vector<byte> signed_cert =
       EAC1_1_gen_CVC<EAC1_1_Req>::make_signed(signer,
@@ -166,7 +166,7 @@ EAC1_1_ADO create_ado_req(Private_Key const& key,
 
    std::string padding_and_hash = padding_and_hash_from_oid(req.signature_algorithm().oid);
    PK_Signer signer(*priv_key, padding_and_hash);
-   secure_vector<byte> tbs_bits = req.BER_encode();
+   std::vector<byte> tbs_bits = req.BER_encode();
    tbs_bits += DER_Encoder().encode(car).get_contents();
 
    std::vector<byte> signed_cert =

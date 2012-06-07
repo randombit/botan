@@ -33,8 +33,8 @@ u32bit EAC1_1_CVC::get_chat_value() const
 */
 void EAC1_1_CVC::force_decode()
    {
-   secure_vector<byte> enc_pk;
-   secure_vector<byte> enc_chat_val;
+   std::vector<byte> enc_pk;
+   std::vector<byte> enc_chat_val;
    size_t cpi;
    BER_Decoder tbs_cert(tbs_bits);
    tbs_cert.decode(cpi, ASN1_Tag(41), APPLICATION)
@@ -88,7 +88,7 @@ bool EAC1_1_CVC::operator==(EAC1_1_CVC const& rhs) const
            && get_concat_sig() == rhs.get_concat_sig());
    }
 
-ECDSA_PublicKey* decode_eac1_1_key(const secure_vector<byte>&,
+ECDSA_PublicKey* decode_eac1_1_key(const std::vector<byte>&,
                                    AlgorithmIdentifier&)
    {
    throw Internal_Error("decode_eac1_1_key: Unimplemented");
@@ -96,7 +96,7 @@ ECDSA_PublicKey* decode_eac1_1_key(const secure_vector<byte>&,
    }
 
 EAC1_1_CVC make_cvc_cert(PK_Signer& signer,
-                         secure_vector<byte> const& public_key,
+                         const std::vector<byte>& public_key,
                          ASN1_Car const& car,
                          ASN1_Chr const& chr,
                          byte holder_auth_templ,
@@ -121,7 +121,7 @@ EAC1_1_CVC make_cvc_cert(PK_Signer& signer,
       .end_cons()
       .encode(ced)
       .encode(cex)
-      .get_contents();
+      .get_contents_unlocked();
 
    std::vector<byte> signed_cert =
       EAC1_1_CVC::make_signed(signer,

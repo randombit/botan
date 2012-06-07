@@ -14,10 +14,10 @@ namespace Botan {
 */
 OSSL_BN::OSSL_BN(const BigInt& in)
    {
-   value = BN_new();
-   secure_vector<byte> encoding = BigInt::encode(in);
+   m_bn = BN_new();
+   secure_vector<byte> encoding = BigInt::encode_locked(in);
    if(in != 0)
-      BN_bin2bn(encoding, encoding.size(), value);
+      BN_bin2bn(&encoding[0], encoding.size(), m_bn);
    }
 
 /*
@@ -25,8 +25,8 @@ OSSL_BN::OSSL_BN(const BigInt& in)
 */
 OSSL_BN::OSSL_BN(const byte in[], size_t length)
    {
-   value = BN_new();
-   BN_bin2bn(in, length, value);
+   m_bn = BN_new();
+   BN_bin2bn(in, length, m_bn);
    }
 
 /*
@@ -34,7 +34,7 @@ OSSL_BN::OSSL_BN(const byte in[], size_t length)
 */
 OSSL_BN::OSSL_BN(const OSSL_BN& other)
    {
-   value = BN_dup(other.value);
+   m_bn = BN_dup(other.m_bn);
    }
 
 /*
@@ -42,7 +42,7 @@ OSSL_BN::OSSL_BN(const OSSL_BN& other)
 */
 OSSL_BN::~OSSL_BN()
    {
-   BN_clear_free(value);
+   BN_clear_free(m_bn);
    }
 
 /*
@@ -50,7 +50,7 @@ OSSL_BN::~OSSL_BN()
 */
 OSSL_BN& OSSL_BN::operator=(const OSSL_BN& other)
    {
-   BN_copy(value, other.value);
+   BN_copy(m_bn, other.m_bn);
    return (*this);
    }
 
@@ -59,7 +59,7 @@ OSSL_BN& OSSL_BN::operator=(const OSSL_BN& other)
 */
 void OSSL_BN::encode(byte out[], size_t length) const
    {
-   BN_bn2bin(value, out + (length - bytes()));
+   BN_bn2bin(m_bn, out + (length - bytes()));
    }
 
 /*
@@ -67,7 +67,7 @@ void OSSL_BN::encode(byte out[], size_t length) const
 */
 size_t OSSL_BN::bytes() const
    {
-   return BN_num_bytes(value);
+   return BN_num_bytes(m_bn);
    }
 
 /*
@@ -76,7 +76,7 @@ size_t OSSL_BN::bytes() const
 BigInt OSSL_BN::to_bigint() const
    {
    secure_vector<byte> out(bytes());
-   BN_bn2bin(value, out);
+   BN_bn2bin(m_bn, &out[0]);
    return BigInt::decode(out);
    }
 
@@ -85,7 +85,7 @@ BigInt OSSL_BN::to_bigint() const
 */
 OSSL_BN_CTX::OSSL_BN_CTX()
    {
-   value = BN_CTX_new();
+   m_ctx = BN_CTX_new();
    }
 
 /*
@@ -93,7 +93,7 @@ OSSL_BN_CTX::OSSL_BN_CTX()
 */
 OSSL_BN_CTX::OSSL_BN_CTX(const OSSL_BN_CTX&)
    {
-   value = BN_CTX_new();
+   m_ctx = BN_CTX_new();
    }
 
 /*
@@ -101,7 +101,7 @@ OSSL_BN_CTX::OSSL_BN_CTX(const OSSL_BN_CTX&)
 */
 OSSL_BN_CTX::~OSSL_BN_CTX()
    {
-   BN_CTX_free(value);
+   BN_CTX_free(m_ctx);
    }
 
 /*
@@ -109,7 +109,7 @@ OSSL_BN_CTX::~OSSL_BN_CTX()
 */
 OSSL_BN_CTX& OSSL_BN_CTX::operator=(const OSSL_BN_CTX&)
    {
-   value = BN_CTX_new();
+   m_ctx = BN_CTX_new();
    return (*this);
    }
 

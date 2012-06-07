@@ -11,6 +11,7 @@
 
 #include <botan/asn1_obj.h>
 #include <botan/key_constraint.h>
+#include <botan/x509_key.h>
 #include <botan/pipe.h>
 #include <vector>
 
@@ -26,7 +27,7 @@ class BOTAN_DLL EAC_Signed_Object
       * Get the TBS (to-be-signed) data in this object.
       * @return DER encoded TBS data of this object
       */
-      virtual secure_vector<byte> tbs_data() const = 0;
+      virtual std::vector<byte> tbs_data() const = 0;
 
       /**
       * Get the signature of this object as a concatenation, i.e. if the
@@ -39,7 +40,7 @@ class BOTAN_DLL EAC_Signed_Object
        NOTE: this is here only because abstract signature objects have
        not yet been introduced
       */
-      virtual secure_vector<byte> get_concat_sig() const = 0;
+      virtual std::vector<byte> get_concat_sig() const = 0;
 
       /**
       * Get the signature algorithm identifier used to sign this object.
@@ -55,7 +56,7 @@ class BOTAN_DLL EAC_Signed_Object
       * associated with this public key
       */
       bool check_signature(class Public_Key& key,
-                           const secure_vector<byte>& sig) const;
+                           const std::vector<byte>& sig) const;
 
       /**
       * Write this object DER encoded into a specified pipe.
@@ -69,7 +70,7 @@ class BOTAN_DLL EAC_Signed_Object
       * BER encode this object.
       * @return result containing the BER representation of this object.
       */
-      secure_vector<byte> BER_encode() const;
+      std::vector<byte> BER_encode() const;
 
       /**
       * PEM encode this object.
@@ -83,7 +84,7 @@ class BOTAN_DLL EAC_Signed_Object
       EAC_Signed_Object() {}
 
       AlgorithmIdentifier sig_algo;
-      secure_vector<byte> tbs_bits;
+      std::vector<byte> tbs_bits;
       std::string PEM_label_pref;
       std::vector<std::string> PEM_labels_allowed;
    private:

@@ -2,10 +2,10 @@ define TLS
 
 load_on auto
 
-<comment>
+<warning>
 The TLS code is complex, new, and not yet reviewed, there may be
 serious bugs or security issues.
-</comment>
+</warning>
 
 <header:public>
 tls_alert.h

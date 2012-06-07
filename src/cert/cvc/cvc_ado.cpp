@@ -26,7 +26,7 @@ EAC1_1_ADO::EAC1_1_ADO(const std::string& in)
 
 void EAC1_1_ADO::force_decode()
    {
-   secure_vector<byte> inner_cert;
+   std::vector<byte> inner_cert;
    BER_Decoder(tbs_bits)
       .start_cons(ASN1_Tag(33))
       .raw_bytes(inner_cert)
@@ -34,11 +34,11 @@ void EAC1_1_ADO::force_decode()
       .decode(m_car)
       .verify_end();
 
-   secure_vector<byte> req_bits = DER_Encoder()
+   std::vector<byte> req_bits = DER_Encoder()
       .start_cons(ASN1_Tag(33), APPLICATION)
       .raw_bytes(inner_cert)
       .end_cons()
-      .get_contents();
+      .get_contents_unlocked();
 
    DataSource_Memory req_source(req_bits);
    m_req = EAC1_1_Req(req_source);
@@ -46,17 +46,17 @@ void EAC1_1_ADO::force_decode()
    }
 
 std::vector<byte> EAC1_1_ADO::make_signed(PK_Signer& signer,
-                                           const secure_vector<byte>& tbs_bits,
+                                           const std::vector<byte>& tbs_bits,
                                            RandomNumberGenerator& rng)
    {
-   secure_vector<byte> concat_sig = signer.sign_message(tbs_bits, rng);
+   const std::vector<byte> concat_sig = signer.sign_message(tbs_bits, rng);
 
    return DER_Encoder()
       .start_cons(ASN1_Tag(7), APPLICATION)
       .raw_bytes(tbs_bits)
       .encode(concat_sig, OCTET_STRING, ASN1_Tag(55), APPLICATION)
       .end_cons()
-      .get_contents();
+      .get_contents_unlocked();
    }
 
 ASN1_Car EAC1_1_ADO::get_car() const
@@ -65,11 +65,11 @@ ASN1_Car EAC1_1_ADO::get_car() const
    }
 
 void EAC1_1_ADO::decode_info(DataSource& source,
-                             secure_vector<byte> & res_tbs_bits,
+                             std::vector<byte> & res_tbs_bits,
                              ECDSA_Signature & res_sig)
    {
-   secure_vector<byte> concat_sig;
-   secure_vector<byte> cert_inner_bits;
+   std::vector<byte> concat_sig;
+   std::vector<byte> cert_inner_bits;
    ASN1_Car car;
 
    BER_Decoder(source)
@@ -81,11 +81,11 @@ void EAC1_1_ADO::decode_info(DataSource& source,
       .decode(concat_sig, OCTET_STRING, ASN1_Tag(55), APPLICATION)
       .end_cons();
 
-   secure_vector<byte> enc_cert = DER_Encoder()
+   std::vector<byte> enc_cert = DER_Encoder()
       .start_cons(ASN1_Tag(33), APPLICATION)
       .raw_bytes(cert_inner_bits)
       .end_cons()
-      .get_contents();
+      .get_contents_unlocked();
 
    res_tbs_bits = enc_cert;
    res_tbs_bits += DER_Encoder().encode(car).get_contents();
@@ -97,8 +97,7 @@ void EAC1_1_ADO::encode(Pipe& out, X509_Encoding encoding) const
    if(encoding == PEM)
       throw Invalid_Argument("EAC1_1_ADO::encode() cannot PEM encode an EAC object");
 
-   secure_vector<byte> concat_sig(
-      EAC1_1_obj<EAC1_1_ADO>::m_sig.get_concatenation());
+   auto concat_sig = EAC1_1_obj<EAC1_1_ADO>::m_sig.get_concatenation();
 
    out.write(DER_Encoder()
              .start_cons(ASN1_Tag(7), APPLICATION)
@@ -108,7 +107,7 @@ void EAC1_1_ADO::encode(Pipe& out, X509_Encoding encoding) const
              .get_contents());
    }
 
-secure_vector<byte> EAC1_1_ADO::tbs_data() const
+std::vector<byte> EAC1_1_ADO::tbs_data() const
    {
    return tbs_bits;
    }

@@ -39,7 +39,7 @@ class OSSL_DH_KA_Operation : public PK_Ops::Key_Agreement
       secure_vector<byte> agree(const byte w[], size_t w_len)
          {
          OSSL_BN i(w, w_len), r;
-         BN_mod_exp(r.value, i.value, x.value, p.value, ctx.value);
+         BN_mod_exp(r.ptr(), i.ptr(), x.ptr(), p.ptr(), ctx.ptr());
          return r.to_bytes();
          }
 
@@ -90,22 +90,22 @@ OSSL_DSA_Signature_Operation::sign(const byte msg[], size_t msg_len,
    OSSL_BN k(k_bn);
 
    OSSL_BN r;
-   BN_mod_exp(r.value, g.value, k.value, p.value, ctx.value);
-   BN_nnmod(r.value, r.value, q.value, ctx.value);
+   BN_mod_exp(r.ptr(), g.ptr(), k.ptr(), p.ptr(), ctx.ptr());
+   BN_nnmod(r.ptr(), r.ptr(), q.ptr(), ctx.ptr());
 
-   BN_mod_inverse(k.value, k.value, q.value, ctx.value);
+   BN_mod_inverse(k.ptr(), k.ptr(), q.ptr(), ctx.ptr());
 
    OSSL_BN s;
-   BN_mul(s.value, x.value, r.value, ctx.value);
-   BN_add(s.value, s.value, i.value);
-   BN_mod_mul(s.value, s.value, k.value, q.value, ctx.value);
+   BN_mul(s.ptr(), x.ptr(), r.ptr(), ctx.ptr());
+   BN_add(s.ptr(), s.ptr(), i.ptr());
+   BN_mod_mul(s.ptr(), s.ptr(), k.ptr(), q.ptr(), ctx.ptr());
 
-   if(BN_is_zero(r.value) || BN_is_zero(s.value))
+   if(BN_is_zero(r.ptr()) || BN_is_zero(s.ptr()))
       throw Internal_Error("OpenSSL_DSA_Op::sign: r or s was zero");
 
    secure_vector<byte> output(2*q_bytes);
-   r.encode(output, q_bytes);
-   s.encode(output + q_bytes, q_bytes);
+   r.encode(&output[0], q_bytes);
+   s.encode(&output[q_bytes], q_bytes);
    return output;
    }
 
@@ -145,26 +145,26 @@ bool OSSL_DSA_Verification_Operation::verify(const byte msg[], size_t msg_len,
    OSSL_BN s(sig + q_bytes, q_bytes);
    OSSL_BN i(msg, msg_len);
 
-   if(BN_is_zero(r.value) || BN_cmp(r.value, q.value) >= 0)
+   if(BN_is_zero(r.ptr()) || BN_cmp(r.ptr(), q.ptr()) >= 0)
       return false;
-   if(BN_is_zero(s.value) || BN_cmp(s.value, q.value) >= 0)
+   if(BN_is_zero(s.ptr()) || BN_cmp(s.ptr(), q.ptr()) >= 0)
       return false;
 
-   if(BN_mod_inverse(s.value, s.value, q.value, ctx.value) == 0)
+   if(BN_mod_inverse(s.ptr(), s.ptr(), q.ptr(), ctx.ptr()) == 0)
       return false;
 
    OSSL_BN si;
-   BN_mod_mul(si.value, s.value, i.value, q.value, ctx.value);
-   BN_mod_exp(si.value, g.value, si.value, p.value, ctx.value);
+   BN_mod_mul(si.ptr(), s.ptr(), i.ptr(), q.ptr(), ctx.ptr());
+   BN_mod_exp(si.ptr(), g.ptr(), si.ptr(), p.ptr(), ctx.ptr());
 
    OSSL_BN sr;
-   BN_mod_mul(sr.value, s.value, r.value, q.value, ctx.value);
-   BN_mod_exp(sr.value, y.value, sr.value, p.value, ctx.value);
+   BN_mod_mul(sr.ptr(), s.ptr(), r.ptr(), q.ptr(), ctx.ptr());
+   BN_mod_exp(sr.ptr(), y.ptr(), sr.ptr(), p.ptr(), ctx.ptr());
 
-   BN_mod_mul(si.value, si.value, sr.value, p.value, ctx.value);
-   BN_nnmod(si.value, si.value, q.value, ctx.value);
+   BN_mod_mul(si.ptr(), si.ptr(), sr.ptr(), p.ptr(), ctx.ptr());
+   BN_nnmod(si.ptr(), si.ptr(), q.ptr(), ctx.ptr());
 
-   if(BN_cmp(si.value, r.value) == 0)
+   if(BN_cmp(si.ptr(), r.ptr()) == 0)
       return true;
    return false;
 
@@ -202,7 +202,7 @@ class OSSL_RSA_Private_Operation : public PK_Ops::Signature,
       secure_vector<byte> decrypt(const byte msg[], size_t msg_len)
          {
          BigInt m(msg, msg_len);
-         return BigInt::encode(private_op(m));
+         return BigInt::encode_locked(private_op(m));
          }
 
    private:
@@ -217,12 +217,12 @@ BigInt OSSL_RSA_Private_Operation::private_op(const BigInt& m) const
    {
    OSSL_BN j1, j2, h(m);
 
-   BN_mod_exp(j1.value, h.value, d1.value, p.value, ctx.value);
-   BN_mod_exp(j2.value, h.value, d2.value, q.value, ctx.value);
-   BN_sub(h.value, j1.value, j2.value);
-   BN_mod_mul(h.value, h.value, c.value, p.value, ctx.value);
-   BN_mul(h.value, h.value, q.value, ctx.value);
-   BN_add(h.value, h.value, j2.value);
+   BN_mod_exp(j1.ptr(), h.ptr(), d1.ptr(), p.ptr(), ctx.ptr());
+   BN_mod_exp(j2.ptr(), h.ptr(), d2.ptr(), q.ptr(), ctx.ptr());
+   BN_sub(h.ptr(), j1.ptr(), j2.ptr());
+   BN_mod_mul(h.ptr(), h.ptr(), c.ptr(), p.ptr(), ctx.ptr());
+   BN_mul(h.ptr(), h.ptr(), q.ptr(), ctx.ptr());
+   BN_add(h.ptr(), h.ptr(), j2.ptr());
    return h.to_bigint();
    }
 
@@ -247,7 +247,7 @@ class OSSL_RSA_Public_Operation : public PK_Ops::Verification,
       secure_vector<byte> verify_mr(const byte msg[], size_t msg_len)
          {
          BigInt m(msg, msg_len);
-         return BigInt::encode(public_op(m));
+         return BigInt::encode_locked(public_op(m));
          }
 
    private:
@@ -257,7 +257,7 @@ class OSSL_RSA_Public_Operation : public PK_Ops::Verification,
             throw Invalid_Argument("RSA public op - input is too large");
 
          OSSL_BN m_bn(m), r;
-         BN_mod_exp(r.value, m_bn.value, e.value, mod.value, ctx.value);
+         BN_mod_exp(r.ptr(), m_bn.ptr(), e.ptr(), mod.ptr(), ctx.ptr());
          return r.to_bigint();
          }
 

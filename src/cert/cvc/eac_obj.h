@@ -24,7 +24,7 @@ class EAC1_1_obj : public EAC_Signed_Object
       * Return the signature as a concatenation of the encoded parts.
       * @result the concatenated signature
       */
-      secure_vector<byte> get_concat_sig() const
+      std::vector<byte> get_concat_sig() const
          { return m_sig.get_concatenation(); }
 
       bool check_signature(class Public_Key& key) const

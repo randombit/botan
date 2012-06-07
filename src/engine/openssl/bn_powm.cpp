@@ -36,7 +36,7 @@ class OpenSSL_Modular_Exponentiator : public Modular_Exponentiator
 BigInt OpenSSL_Modular_Exponentiator::execute() const
    {
    OSSL_BN r;
-   BN_mod_exp(r.value, base.value, exp.value, mod.value, ctx.value);
+   BN_mod_exp(r.ptr(), base.ptr(), exp.ptr(), mod.ptr(), ctx.ptr());
    return r.to_bigint();
    }
 
@@ -46,7 +46,7 @@ BigInt OpenSSL_Modular_Exponentiator::execute() const
 * Return the OpenSSL-based modular exponentiator
 */
 Modular_Exponentiator* OpenSSL_Engine::mod_exp(const BigInt& n,
-                                           Power_Mod::Usage_Hints) const
+                                               Power_Mod::Usage_Hints) const
    {
    return new OpenSSL_Modular_Exponentiator(n);
    }

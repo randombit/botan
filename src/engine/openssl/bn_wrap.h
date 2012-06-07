@@ -19,14 +19,12 @@ namespace Botan {
 class OSSL_BN
    {
    public:
-      BIGNUM* value;
-
       BigInt to_bigint() const;
       void encode(byte[], size_t) const;
       size_t bytes() const;
 
       secure_vector<byte> to_bytes() const
-         { return BigInt::encode(to_bigint()); }
+         { return BigInt::encode_locked(to_bigint()); }
 
       OSSL_BN& operator=(const OSSL_BN&);
 
@@ -34,6 +32,10 @@ class OSSL_BN
       OSSL_BN(const BigInt& = 0);
       OSSL_BN(const byte[], size_t);
       ~OSSL_BN();
+
+      BIGNUM* ptr() const { return m_bn; }
+   private:
+      BIGNUM* m_bn;
    };
 
 /**
@@ -42,13 +44,15 @@ class OSSL_BN
 class OSSL_BN_CTX
    {
    public:
-      BN_CTX* value;
-
       OSSL_BN_CTX& operator=(const OSSL_BN_CTX&);
 
       OSSL_BN_CTX();
       OSSL_BN_CTX(const OSSL_BN_CTX&);
       ~OSSL_BN_CTX();
+
+      BN_CTX* ptr() const { return m_ctx; }
+   private:
+      BN_CTX* m_ctx;
    };
 
 }

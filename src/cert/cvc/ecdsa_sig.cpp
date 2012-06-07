@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-ECDSA_Signature::ECDSA_Signature(const secure_vector<byte>& ber)
+ECDSA_Signature::ECDSA_Signature(const std::vector<byte>& ber)
    {
    BER_Decoder(ber)
       .start_cons(SEQUENCE)
@@ -27,7 +27,7 @@ std::vector<byte> ECDSA_Signature::DER_encode() const
         .encode(get_r())
         .encode(get_s())
       .end_cons()
-      .get_contents();
+      .get_contents_unlocked();
    }
 
 std::vector<byte> ECDSA_Signature::get_concatenation() const
@@ -35,15 +35,15 @@ std::vector<byte> ECDSA_Signature::get_concatenation() const
    // use the larger
    const size_t enc_len = m_r > m_s ? m_r.bytes() : m_s.bytes();
 
-   secure_vector<byte> sv_r = BigInt::encode_1363(m_r, enc_len);
-   secure_vector<byte> sv_s = BigInt::encode_1363(m_s, enc_len);
+   const auto sv_r = BigInt::encode_1363(m_r, enc_len);
+   const auto sv_s = BigInt::encode_1363(m_s, enc_len);
 
    secure_vector<byte> result(sv_r);
    result += sv_s;
-   return result;
+   return unlock(result);
    }
 
-ECDSA_Signature decode_concatenation(const secure_vector<byte>& concat)
+ECDSA_Signature decode_concatenation(const std::vector<byte>& concat)
    {
    if(concat.size() % 2 != 0)
       throw Invalid_Argument("Erroneous length of signature");

@@ -56,14 +56,14 @@ class EAC1_1_gen_CVC : public EAC1_1_obj<Derived> // CRTP continuation from EAC1
       * Get the to-be-signed (TBS) data of this object.
       * @result the TBS data of this object
       */
-      secure_vector<byte> tbs_data() const;
+      std::vector<byte> tbs_data() const;
 
       /**
       * Build the DER encoded certifcate body of an object
       * @param tbs the data to be signed
       * @result the correctly encoded body of the object
       */
-      static secure_vector<byte> build_cert_body(secure_vector<byte> const& tbs);
+      static std::vector<byte> build_cert_body(const std::vector<byte>& tbs);
 
       /**
       * Create a signed generalized CVC object.
@@ -74,7 +74,7 @@ class EAC1_1_gen_CVC : public EAC1_1_obj<Derived> // CRTP continuation from EAC1
       */
       static std::vector<byte> make_signed(
          PK_Signer& signer,
-         const secure_vector<byte>& tbs_bits,
+         const std::vector<byte>& tbs_bits,
          RandomNumberGenerator& rng);
 
       EAC1_1_gen_CVC() { m_pk = 0; }
@@ -88,7 +88,7 @@ class EAC1_1_gen_CVC : public EAC1_1_obj<Derived> // CRTP continuation from EAC1
       bool self_signed;
 
       static void decode_info(DataSource& source,
-                              secure_vector<byte> & res_tbs_bits,
+                              std::vector<byte> & res_tbs_bits,
                               ECDSA_Signature & res_sig);
 
    };
@@ -106,17 +106,17 @@ template<typename Derived> bool EAC1_1_gen_CVC<Derived>::is_self_signed() const
 template<typename Derived>
 std::vector<byte> EAC1_1_gen_CVC<Derived>::make_signed(
    PK_Signer& signer,
-   const secure_vector<byte>& tbs_bits,
+   const std::vector<byte>& tbs_bits,
    RandomNumberGenerator& rng) // static
    {
-   secure_vector<byte> concat_sig = signer.sign_message(tbs_bits, rng);
+   const auto concat_sig = signer.sign_message(tbs_bits, rng);
 
    return DER_Encoder()
       .start_cons(ASN1_Tag(33), APPLICATION)
       .raw_bytes(tbs_bits)
       .encode(concat_sig, OCTET_STRING, ASN1_Tag(55), APPLICATION)
       .end_cons()
-      .get_contents();
+      .get_contents_unlocked();
    }
 
 template<typename Derived>
@@ -125,30 +125,30 @@ Public_Key* EAC1_1_gen_CVC<Derived>::subject_public_key() const
    return new ECDSA_PublicKey(*m_pk);
    }
 
-template<typename Derived> secure_vector<byte> EAC1_1_gen_CVC<Derived>::build_cert_body(secure_vector<byte> const& tbs)
+template<typename Derived> std::vector<byte> EAC1_1_gen_CVC<Derived>::build_cert_body(const std::vector<byte>& tbs)
    {
    return DER_Encoder()
       .start_cons(ASN1_Tag(78), APPLICATION)
       .raw_bytes(tbs)
-      .end_cons().get_contents();
+      .end_cons().get_contents_unlocked();
    }
 
-template<typename Derived> secure_vector<byte> EAC1_1_gen_CVC<Derived>::tbs_data() const
+template<typename Derived> std::vector<byte> EAC1_1_gen_CVC<Derived>::tbs_data() const
    {
    return build_cert_body(EAC1_1_obj<Derived>::tbs_bits);
    }
 
 template<typename Derived> void EAC1_1_gen_CVC<Derived>::encode(Pipe& out, X509_Encoding encoding) const
    {
-   secure_vector<byte> concat_sig(EAC1_1_obj<Derived>::m_sig.get_concatenation());
-   secure_vector<byte> der = DER_Encoder()
+   std::vector<byte> concat_sig(EAC1_1_obj<Derived>::m_sig.get_concatenation());
+   std::vector<byte> der = DER_Encoder()
       .start_cons(ASN1_Tag(33), APPLICATION)
       .start_cons(ASN1_Tag(78), APPLICATION)
       .raw_bytes(EAC1_1_obj<Derived>::tbs_bits)
       .end_cons()
       .encode(concat_sig, OCTET_STRING, ASN1_Tag(55), APPLICATION)
       .end_cons()
-      .get_contents();
+      .get_contents_unlocked();
 
    if (encoding == PEM)
       throw Invalid_Argument("EAC1_1_gen_CVC::encode() cannot PEM encode an EAC object");
@@ -159,10 +159,10 @@ template<typename Derived> void EAC1_1_gen_CVC<Derived>::encode(Pipe& out, X509_
 template<typename Derived>
 void EAC1_1_gen_CVC<Derived>::decode_info(
    DataSource& source,
-   secure_vector<byte> & res_tbs_bits,
+   std::vector<byte> & res_tbs_bits,
    ECDSA_Signature & res_sig)
    {
-   secure_vector<byte> concat_sig;
+   std::vector<byte> concat_sig;
    BER_Decoder(source)
       .start_cons(ASN1_Tag(33))
       .start_cons(ASN1_Tag(78))

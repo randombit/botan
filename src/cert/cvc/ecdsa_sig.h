@@ -27,7 +27,7 @@ class BOTAN_DLL ECDSA_Signature
       ECDSA_Signature(const BigInt& r, const BigInt& s) :
          m_r(r), m_s(s) {}
 
-      ECDSA_Signature(const secure_vector<byte>& ber);
+      ECDSA_Signature(const std::vector<byte>& ber);
 
       const BigInt& get_r() const { return m_r; }
       const BigInt& get_s() const { return m_s; }
@@ -54,7 +54,7 @@ inline bool operator!=(const ECDSA_Signature& lhs, const ECDSA_Signature& rhs)
    return !(lhs == rhs);
    }
 
-ECDSA_Signature decode_concatenation(const secure_vector<byte>& concatenation);
+ECDSA_Signature decode_concatenation(const std::vector<byte>& concatenation);
 
 }
 

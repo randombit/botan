@@ -105,8 +105,8 @@ GMP_DSA_Signature_Operation::sign(const byte msg[], size_t msg_len,
       throw Internal_Error("GMP_DSA_Op::sign: r or s was zero");
 
    secure_vector<byte> output(2*q_bytes);
-   r.encode(output, q_bytes);
-   s.encode(output + q_bytes, q_bytes);
+   r.encode(&output[0], q_bytes);
+   s.encode(&output[q_bytes], q_bytes);
    return output;
    }
 
@@ -203,7 +203,7 @@ class GMP_RSA_Private_Operation : public PK_Ops::Signature,
       secure_vector<byte> decrypt(const byte msg[], size_t msg_len)
          {
          BigInt m(msg, msg_len);
-         return BigInt::encode(private_op(m));
+         return BigInt::encode_locked(private_op(m));
          }
 
    private:
@@ -248,7 +248,7 @@ class GMP_RSA_Public_Operation : public PK_Ops::Verification,
       secure_vector<byte> verify_mr(const byte msg[], size_t msg_len)
          {
          BigInt m(msg, msg_len);
-         return BigInt::encode(public_op(m));
+         return BigInt::encode_locked(public_op(m));
          }
 
    private:

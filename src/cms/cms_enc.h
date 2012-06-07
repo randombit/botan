@@ -9,7 +9,6 @@
 #define BOTAN_CMS_ENCODER_H__
 
 #include <botan/x509cert.h>
-#include <botan/x509stor.h>
 #include <botan/pkcs8.h>
 #include <botan/symkey.h>
 

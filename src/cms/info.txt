@@ -2,6 +2,10 @@ define CMS
 
 load_on never
 
+<warning>
+Currently broken, needs much love and updating before useful
+</warning>
+
 <requires>
 asn1
 bigint
