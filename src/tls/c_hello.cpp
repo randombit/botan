@@ -238,6 +238,19 @@ void Client_Hello::deserialize_sslv2(const std::vector<byte>& buf)
 
    m_secure_renegotiation =
       value_exists(m_suites, static_cast<u16bit>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV));
+
+   if(m_version >= Protocol_Version::TLS_V12)
+      {
+      m_supported_algos.push_back(std::make_pair("SHA-1", "RSA"));
+      m_supported_algos.push_back(std::make_pair("SHA-1", "DSA"));
+      m_supported_algos.push_back(std::make_pair("SHA-1", "ECDSA"));
+      }
+   else
+      {
+      m_supported_algos.push_back(std::make_pair("TLS.Digest.0", "RSA"));
+      m_supported_algos.push_back(std::make_pair("SHA-1", "DSA"));
+      m_supported_algos.push_back(std::make_pair("SHA-1", "ECDSA"));
+      }
    }
 
 /*
@@ -305,7 +318,8 @@ void Client_Hello::deserialize(const std::vector<byte>& buf)
       {
       m_supported_algos = sigs->supported_signature_algorthms();
       }
-   else
+
+   if(m_supported_algos.empty())
       {
       if(m_version >= Protocol_Version::TLS_V12)
          {
@@ -326,7 +340,6 @@ void Client_Hello::deserialize(const std::vector<byte>& buf)
       else
          {
          // For versions before TLS 1.2, insert fake values for the old defaults
-
          m_supported_algos.push_back(std::make_pair("TLS.Digest.0", "RSA"));
          m_supported_algos.push_back(std::make_pair("SHA-1", "DSA"));
          m_supported_algos.push_back(std::make_pair("SHA-1", "ECDSA"));

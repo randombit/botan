@@ -287,6 +287,16 @@ void Server::process_handshake_msg(Handshake_Type type,
       else
          state->set_version(policy.pref_version());
 
+      if(secure_renegotiation.renegotiation() &&
+         !secure_renegotiation.supported() &&
+         policy.require_secure_renegotiation())
+         {
+         delete state;
+         state = nullptr;
+         send_alert(Alert(Alert::NO_RENEGOTIATION));
+         return;
+         }
+
       secure_renegotiation.update(state->client_hello);
 
       m_peer_supports_heartbeats = state->client_hello->supports_heartbeats();
