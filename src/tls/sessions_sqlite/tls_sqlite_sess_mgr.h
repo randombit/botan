@@ -11,9 +11,9 @@
 #include <botan/tls_session_manager.h>
 #include <botan/rng.h>
 
-class sqlite3;
-
 namespace Botan {
+
+class sqlite3_database;
 
 namespace TLS {
 
@@ -61,7 +61,7 @@ class BOTAN_DLL Session_Manager_SQLite : public Session_Manager
       RandomNumberGenerator& m_rng;
       size_t m_max_sessions;
       std::chrono::seconds m_session_lifetime;
-      class sqlite3* m_db;
+      sqlite3_database* m_db;
    };
 
 }

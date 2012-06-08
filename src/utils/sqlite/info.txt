@@ -1,0 +1,14 @@
+
+load_on request
+
+<libs>
+all -> sqlite3
+</libs>
+
+<header:internal>
+sqlite.h
+</header:internal>
+
+<source>
+sqlite.cpp
+</source>
