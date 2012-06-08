@@ -10,12 +10,12 @@ add_include_dir_option -I
 add_lib_dir_option -L
 add_lib_option -l
 
-lang_flags "-D_REENTRANT -std=c++0x"
+lang_flags "-D_REENTRANT -std=c++11"
 warning_flags "-W -Wall"
 
 makefile_style unix
 
-lib_opt_flags "-O2"
+lib_opt_flags "-O3"
 check_opt_flags "-O2"
 shared_flags "-fPIC"
 debug_flags -g
