@@ -71,13 +71,13 @@ class BOTAN_DLL Policy
       virtual std::string choose_curve(const std::vector<std::string>& curve_names) const;
 
       /**
-      * Require support for RFC 5746 extensions to enable
-      * renegotiation.
+      * Allow renegotiation even if the counterparty doesn't
+      * support the secure renegotiation extension.
       *
-      * @warning Changing this to false exposes you to injected
-      * plaintext attacks. Read the RFC for background.
+      * @warning Changing this to true exposes you to injected
+      * plaintext attacks. Read RFC 5746 for background.
       */
-      virtual bool require_secure_renegotiation() const { return true; }
+      virtual bool allow_insecure_renegotiation() const { return false; }
 
       /**
       * Return the group to use for ephemeral Diffie-Hellman key agreement

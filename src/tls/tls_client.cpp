@@ -154,7 +154,7 @@ void Client::process_handshake_msg(Handshake_Type type,
       if(state->client_hello)
          return;
 
-      if(!secure_renegotiation.supported() && policy.require_secure_renegotiation())
+      if(!secure_renegotiation.supported() && !policy.allow_insecure_renegotiation())
          {
          delete state;
          state = nullptr;
