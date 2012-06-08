@@ -327,7 +327,7 @@ u32bit do_validation_tests(const std::string& filename,
 
       if(line[0] == '[' && line[line.size() - 1] == ']')
          {
-         const std::string ext_mark = "<EXTENSION>";
+         const std::string ext_mark = " <EXTENSION>";
          algorithm = line.substr(1, line.size() - 2);
          is_extension = false;
          if(algorithm.find(ext_mark) != std::string::npos)
