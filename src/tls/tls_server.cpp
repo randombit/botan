@@ -206,24 +206,24 @@ Server::Server(std::function<void (const byte[], size_t)> output_fn,
 */
 void Server::renegotiate(bool force_full_renegotiation)
    {
-   if(state)
+   if(m_state)
       return; // currently in handshake
 
-   state = new Handshake_State(new Stream_Handshake_Reader);
+   m_state = new Handshake_State(new Stream_Handshake_Reader);
 
-   state->allow_session_resumption = !force_full_renegotiation;
-   state->set_expected_next(CLIENT_HELLO);
-   Hello_Request hello_req(writer);
+   m_state->allow_session_resumption = !force_full_renegotiation;
+   m_state->set_expected_next(CLIENT_HELLO);
+   Hello_Request hello_req(m_writer);
    }
 
 void Server::alert_notify(const Alert& alert)
    {
    if(alert.type() == Alert::NO_RENEGOTIATION)
       {
-      if(handshake_completed && state)
+      if(m_handshake_completed && m_state)
          {
-         delete state;
-         state = nullptr;
+         delete m_state;
+         m_state = nullptr;
          }
       }
    }
@@ -234,10 +234,10 @@ void Server::alert_notify(const Alert& alert)
 void Server::read_handshake(byte rec_type,
                             const std::vector<byte>& rec_buf)
    {
-   if(rec_type == HANDSHAKE && !state)
+   if(rec_type == HANDSHAKE && !m_state)
       {
-      state = new Handshake_State(new Stream_Handshake_Reader);
-      state->set_expected_next(CLIENT_HELLO);
+      m_state = new Handshake_State(new Stream_Handshake_Reader);
+      m_state->set_expected_next(CLIENT_HELLO);
       }
 
    Channel::read_handshake(rec_type, rec_buf);
@@ -249,10 +249,10 @@ void Server::read_handshake(byte rec_type,
 void Server::process_handshake_msg(Handshake_Type type,
                                    const std::vector<byte>& contents)
    {
-   if(!state)
+   if(!m_state)
       throw Unexpected_Message("Unexpected handshake message from client");
 
-   state->confirm_transition_to(type);
+   m_state->confirm_transition_to(type);
 
    /*
    * The change cipher spec message isn't technically a handshake
@@ -264,19 +264,19 @@ void Server::process_handshake_msg(Handshake_Type type,
    if(type != HANDSHAKE_CCS && type != FINISHED && type != CERTIFICATE_VERIFY)
       {
       if(type == CLIENT_HELLO_SSLV2)
-         state->hash.update(contents);
+         m_state->hash.update(contents);
       else
-         state->hash.update(type, contents);
+         m_state->hash.update(type, contents);
       }
 
    if(type == CLIENT_HELLO || type == CLIENT_HELLO_SSLV2)
       {
-      state->client_hello = new Client_Hello(contents, type);
+      m_state->client_hello = new Client_Hello(contents, type);
 
-      if(state->client_hello->sni_hostname() != "")
-         m_hostname = state->client_hello->sni_hostname();
+      if(m_state->client_hello->sni_hostname() != "")
+         m_hostname = m_state->client_hello->sni_hostname();
 
-      Protocol_Version client_version = state->client_hello->version();
+      Protocol_Version client_version = m_state->client_hello->version();
 
       if(client_version < policy.min_version())
          throw TLS_Exception(Alert::PROTOCOL_VERSION,
@@ -284,11 +284,11 @@ void Server::process_handshake_msg(Handshake_Type type,
 
       if(client_version > policy.pref_version())
          {
-         state->set_version(policy.pref_version());
+         m_state->set_version(policy.pref_version());
          }
       else
          {
-         Protocol_Version prev_version = reader.get_version();
+         Protocol_Version prev_version = m_reader.get_version();
 
          if(prev_version.valid() && client_version != prev_version)
             {
@@ -302,7 +302,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             */
             if(client_version > prev_version)
                {
-               state->set_version(prev_version);
+               m_state->set_version(prev_version);
                }
             else
                {
@@ -315,34 +315,34 @@ void Server::process_handshake_msg(Handshake_Type type,
             }
          else
             {
-            state->set_version(client_version);
+            m_state->set_version(client_version);
             }
          }
 
       if(!policy.allow_insecure_renegotiation() &&
-         !(secure_renegotiation.initial_handshake() || secure_renegotiation.supported()))
+         !(m_secure_renegotiation.initial_handshake() || m_secure_renegotiation.supported()))
          {
-         delete state;
-         state = nullptr;
+         delete m_state;
+         m_state = nullptr;
          send_alert(Alert(Alert::NO_RENEGOTIATION));
          return;
          }
 
-      secure_renegotiation.update(state->client_hello);
+      m_secure_renegotiation.update(m_state->client_hello);
 
-      m_peer_supports_heartbeats = state->client_hello->supports_heartbeats();
-      m_heartbeat_sending_allowed = state->client_hello->peer_can_send_heartbeats();
+      m_peer_supports_heartbeats = m_state->client_hello->supports_heartbeats();
+      m_heartbeat_sending_allowed = m_state->client_hello->peer_can_send_heartbeats();
 
-      writer.set_version(state->version());
-      reader.set_version(state->version());
+      m_writer.set_version(m_state->version());
+      m_reader.set_version(m_state->version());
 
       Session session_info;
       const bool resuming =
-         state->allow_session_resumption &&
+         m_state->allow_session_resumption &&
          check_for_resume(session_info,
                           session_manager,
                           creds,
-                          state->client_hello,
+                          m_state->client_hello,
                           std::chrono::seconds(policy.session_ticket_lifetime()));
 
       bool have_session_ticket_key = false;
@@ -358,69 +358,69 @@ void Server::process_handshake_msg(Handshake_Type type,
          {
          // resume session
 
-         state->server_hello = new Server_Hello(
-            writer,
-            state->hash,
-            state->client_hello->session_id(),
+         m_state->server_hello = new Server_Hello(
+            m_writer,
+            m_state->hash,
+            m_state->client_hello->session_id(),
             Protocol_Version(session_info.version()),
             session_info.ciphersuite_code(),
             session_info.compression_method(),
             session_info.fragment_size(),
-            secure_renegotiation.supported(),
-            secure_renegotiation.for_server_hello(),
-            (state->client_hello->supports_session_ticket() &&
-             state->client_hello->session_ticket().empty() &&
+            m_secure_renegotiation.supported(),
+            m_secure_renegotiation.for_server_hello(),
+            (m_state->client_hello->supports_session_ticket() &&
+             m_state->client_hello->session_ticket().empty() &&
              have_session_ticket_key),
-            state->client_hello->next_protocol_notification(),
+            m_state->client_hello->next_protocol_notification(),
             m_possible_protocols,
-            state->client_hello->supports_heartbeats(),
+            m_state->client_hello->supports_heartbeats(),
             rng);
 
-         secure_renegotiation.update(state->server_hello);
+         m_secure_renegotiation.update(m_state->server_hello);
 
          if(session_info.fragment_size())
             {
-            reader.set_maximum_fragment_size(session_info.fragment_size());
-            writer.set_maximum_fragment_size(session_info.fragment_size());
+            m_reader.set_maximum_fragment_size(session_info.fragment_size());
+            m_writer.set_maximum_fragment_size(session_info.fragment_size());
             }
 
-         state->suite = Ciphersuite::by_id(state->server_hello->ciphersuite());
+         m_state->suite = Ciphersuite::by_id(m_state->server_hello->ciphersuite());
 
-         state->keys = Session_Keys(state, session_info.master_secret(), true);
+         m_state->keys = Session_Keys(m_state, session_info.master_secret(), true);
 
-         if(!handshake_fn(session_info))
+         if(!m_handshake_fn(session_info))
             {
             session_manager.remove_entry(session_info.session_id());
 
-            if(state->server_hello->supports_session_ticket()) // send an empty ticket
-               state->new_session_ticket = new New_Session_Ticket(writer, state->hash);
+            if(m_state->server_hello->supports_session_ticket()) // send an empty ticket
+               m_state->new_session_ticket = new New_Session_Ticket(m_writer, m_state->hash);
             }
 
-         if(state->server_hello->supports_session_ticket() && !state->new_session_ticket)
+         if(m_state->server_hello->supports_session_ticket() && !m_state->new_session_ticket)
             {
             try
                {
                const SymmetricKey ticket_key = creds.psk("tls-server", "session-ticket", "");
 
-               state->new_session_ticket =
-                  new New_Session_Ticket(writer, state->hash,
+               m_state->new_session_ticket =
+                  new New_Session_Ticket(m_writer, m_state->hash,
                                          session_info.encrypt(ticket_key, rng),
                                          policy.session_ticket_lifetime());
                }
             catch(...) {}
 
-            if(!state->new_session_ticket)
-               state->new_session_ticket = new New_Session_Ticket(writer, state->hash);
+            if(!m_state->new_session_ticket)
+               m_state->new_session_ticket = new New_Session_Ticket(m_writer, m_state->hash);
             }
 
-         writer.send(CHANGE_CIPHER_SPEC, 1);
+         m_writer.send(CHANGE_CIPHER_SPEC, 1);
 
-         writer.activate(SERVER, state->suite, state->keys,
-                         state->server_hello->compression_method());
+         m_writer.activate(SERVER, m_state->suite, m_state->keys,
+                         m_state->server_hello->compression_method());
 
-         state->server_finished = new Finished(writer, state, SERVER);
+         m_state->server_finished = new Finished(m_writer, m_state, SERVER);
 
-         state->set_expected_next(HANDSHAKE_CCS);
+         m_state->set_expected_next(HANDSHAKE_CCS);
          }
       else // new session
          {
@@ -434,42 +434,42 @@ void Server::process_handshake_msg(Handshake_Type type,
             cert_chains = get_server_certs("", creds);
             }
 
-         state->server_hello = new Server_Hello(
-            writer,
-            state->hash,
+         m_state->server_hello = new Server_Hello(
+            m_writer,
+            m_state->hash,
             unlock(rng.random_vec(32)), // new session ID
-            state->version(),
-            choose_ciphersuite(policy, creds, cert_chains, state->client_hello),
-            choose_compression(policy, state->client_hello->compression_methods()),
-            state->client_hello->fragment_size(),
-            secure_renegotiation.supported(),
-            secure_renegotiation.for_server_hello(),
-            state->client_hello->supports_session_ticket() && have_session_ticket_key,
-            state->client_hello->next_protocol_notification(),
+            m_state->version(),
+            choose_ciphersuite(policy, creds, cert_chains, m_state->client_hello),
+            choose_compression(policy, m_state->client_hello->compression_methods()),
+            m_state->client_hello->fragment_size(),
+            m_secure_renegotiation.supported(),
+            m_secure_renegotiation.for_server_hello(),
+            m_state->client_hello->supports_session_ticket() && have_session_ticket_key,
+            m_state->client_hello->next_protocol_notification(),
             m_possible_protocols,
-            state->client_hello->supports_heartbeats(),
+            m_state->client_hello->supports_heartbeats(),
             rng);
 
-         secure_renegotiation.update(state->server_hello);
+         m_secure_renegotiation.update(m_state->server_hello);
 
-         if(state->client_hello->fragment_size())
+         if(m_state->client_hello->fragment_size())
             {
-            reader.set_maximum_fragment_size(state->client_hello->fragment_size());
-            writer.set_maximum_fragment_size(state->client_hello->fragment_size());
+            m_reader.set_maximum_fragment_size(m_state->client_hello->fragment_size());
+            m_writer.set_maximum_fragment_size(m_state->client_hello->fragment_size());
             }
 
-         state->suite = Ciphersuite::by_id(state->server_hello->ciphersuite());
+         m_state->suite = Ciphersuite::by_id(m_state->server_hello->ciphersuite());
 
-         const std::string sig_algo = state->suite.sig_algo();
-         const std::string kex_algo = state->suite.kex_algo();
+         const std::string sig_algo = m_state->suite.sig_algo();
+         const std::string kex_algo = m_state->suite.kex_algo();
 
          if(sig_algo != "")
             {
             BOTAN_ASSERT(!cert_chains[sig_algo].empty(),
                          "Attempting to send empty certificate chain");
 
-            state->server_certs = new Certificate(writer,
-                                                  state->hash,
+            m_state->server_certs = new Certificate(m_writer,
+                                                  m_state->hash,
                                                   cert_chains[sig_algo]);
             }
 
@@ -477,7 +477,7 @@ void Server::process_handshake_msg(Handshake_Type type,
 
          if(kex_algo == "RSA" || sig_algo != "")
             {
-            private_key = creds.private_key_for(state->server_certs->cert_chain()[0],
+            private_key = creds.private_key_for(m_state->server_certs->cert_chain()[0],
                                                 "tls-server",
                                                 m_hostname);
 
@@ -487,26 +487,26 @@ void Server::process_handshake_msg(Handshake_Type type,
 
          if(kex_algo == "RSA")
             {
-            state->server_rsa_kex_key = private_key;
+            m_state->server_rsa_kex_key = private_key;
             }
          else
             {
-            state->server_kex =
-               new Server_Key_Exchange(writer, state, policy, creds, rng, private_key);
+            m_state->server_kex =
+               new Server_Key_Exchange(m_writer, m_state, policy, creds, rng, private_key);
             }
 
          std::vector<X509_Certificate> client_auth_CAs =
             creds.trusted_certificate_authorities("tls-server", m_hostname);
 
-         if(!client_auth_CAs.empty() && state->suite.sig_algo() != "")
+         if(!client_auth_CAs.empty() && m_state->suite.sig_algo() != "")
             {
-            state->cert_req = new Certificate_Req(writer,
-                                                  state->hash,
+            m_state->cert_req = new Certificate_Req(m_writer,
+                                                  m_state->hash,
                                                   policy,
                                                   client_auth_CAs,
-                                                  state->version());
+                                                  m_state->version());
 
-            state->set_expected_next(CERTIFICATE);
+            m_state->set_expected_next(CERTIFICATE);
             }
 
          /*
@@ -514,38 +514,38 @@ void Server::process_handshake_msg(Handshake_Type type,
          * allowed to send either an empty cert message or proceed
          * directly to the client key exchange, so allow either case.
          */
-         state->set_expected_next(CLIENT_KEX);
+         m_state->set_expected_next(CLIENT_KEX);
 
-         state->server_hello_done = new Server_Hello_Done(writer, state->hash);
+         m_state->server_hello_done = new Server_Hello_Done(m_writer, m_state->hash);
          }
       }
    else if(type == CERTIFICATE)
       {
-      state->client_certs = new Certificate(contents);
+      m_state->client_certs = new Certificate(contents);
 
-      state->set_expected_next(CLIENT_KEX);
+      m_state->set_expected_next(CLIENT_KEX);
       }
    else if(type == CLIENT_KEX)
       {
-      if(state->received_handshake_msg(CERTIFICATE) && !state->client_certs->empty())
-         state->set_expected_next(CERTIFICATE_VERIFY);
+      if(m_state->received_handshake_msg(CERTIFICATE) && !m_state->client_certs->empty())
+         m_state->set_expected_next(CERTIFICATE_VERIFY);
       else
-         state->set_expected_next(HANDSHAKE_CCS);
+         m_state->set_expected_next(HANDSHAKE_CCS);
 
-      state->client_kex = new Client_Key_Exchange(contents, state, creds, policy, rng);
+      m_state->client_kex = new Client_Key_Exchange(contents, m_state, creds, policy, rng);
 
-      state->keys = Session_Keys(state, state->client_kex->pre_master_secret(), false);
+      m_state->keys = Session_Keys(m_state, m_state->client_kex->pre_master_secret(), false);
       }
    else if(type == CERTIFICATE_VERIFY)
       {
-      state->client_verify = new Certificate_Verify(contents, state->version());
+      m_state->client_verify = new Certificate_Verify(contents, m_state->version());
 
-      peer_certs = state->client_certs->cert_chain();
+      m_peer_certs = m_state->client_certs->cert_chain();
 
       const bool sig_valid =
-         state->client_verify->verify(peer_certs[0], state);
+         m_state->client_verify->verify(m_peer_certs[0], m_state);
 
-      state->hash.update(type, contents);
+      m_state->hash.update(type, contents);
 
       /*
       * Using DECRYPT_ERROR looks weird here, but per RFC 4346 is for
@@ -557,74 +557,74 @@ void Server::process_handshake_msg(Handshake_Type type,
 
       try
          {
-         creds.verify_certificate_chain("tls-server", "", peer_certs);
+         creds.verify_certificate_chain("tls-server", "", m_peer_certs);
          }
       catch(std::exception& e)
          {
          throw TLS_Exception(Alert::BAD_CERTIFICATE, e.what());
          }
 
-      state->set_expected_next(HANDSHAKE_CCS);
+      m_state->set_expected_next(HANDSHAKE_CCS);
       }
    else if(type == HANDSHAKE_CCS)
       {
-      if(state->server_hello->next_protocol_notification())
-         state->set_expected_next(NEXT_PROTOCOL);
+      if(m_state->server_hello->next_protocol_notification())
+         m_state->set_expected_next(NEXT_PROTOCOL);
       else
-         state->set_expected_next(FINISHED);
+         m_state->set_expected_next(FINISHED);
 
-      reader.activate(SERVER, state->suite, state->keys,
-                      state->server_hello->compression_method());
+      m_reader.activate(SERVER, m_state->suite, m_state->keys,
+                        m_state->server_hello->compression_method());
       }
    else if(type == NEXT_PROTOCOL)
       {
-      state->set_expected_next(FINISHED);
+      m_state->set_expected_next(FINISHED);
 
-      state->next_protocol = new Next_Protocol(contents);
+      m_state->next_protocol = new Next_Protocol(contents);
 
-      m_next_protocol = state->next_protocol->protocol();
+      m_next_protocol = m_state->next_protocol->protocol();
       }
    else if(type == FINISHED)
       {
-      state->set_expected_next(HANDSHAKE_NONE);
+      m_state->set_expected_next(HANDSHAKE_NONE);
 
-      state->client_finished = new Finished(contents);
+      m_state->client_finished = new Finished(contents);
 
-      if(!state->client_finished->verify(state, CLIENT))
+      if(!m_state->client_finished->verify(m_state, CLIENT))
          throw TLS_Exception(Alert::DECRYPT_ERROR,
                              "Finished message didn't verify");
 
-      if(!state->server_finished)
+      if(!m_state->server_finished)
          {
          // already sent finished if resuming, so this is a new session
 
-         state->hash.update(type, contents);
+         m_state->hash.update(type, contents);
 
          Session session_info(
-            state->server_hello->session_id(),
-            state->keys.master_secret(),
-            state->server_hello->version(),
-            state->server_hello->ciphersuite(),
-            state->server_hello->compression_method(),
+            m_state->server_hello->session_id(),
+            m_state->keys.master_secret(),
+            m_state->server_hello->version(),
+            m_state->server_hello->ciphersuite(),
+            m_state->server_hello->compression_method(),
             SERVER,
-            secure_renegotiation.supported(),
-            state->server_hello->fragment_size(),
-            peer_certs,
+            m_secure_renegotiation.supported(),
+            m_state->server_hello->fragment_size(),
+            m_peer_certs,
             std::vector<byte>(),
             m_hostname,
-            state->srp_identifier()
+            m_state->srp_identifier()
             );
 
-         if(handshake_fn(session_info))
+         if(m_handshake_fn(session_info))
             {
-            if(state->server_hello->supports_session_ticket())
+            if(m_state->server_hello->supports_session_ticket())
                {
                try
                   {
                   const SymmetricKey ticket_key = creds.psk("tls-server", "session-ticket", "");
 
-                  state->new_session_ticket =
-                     new New_Session_Ticket(writer, state->hash,
+                  m_state->new_session_ticket =
+                     new New_Session_Ticket(m_writer, m_state->hash,
                                             session_info.encrypt(ticket_key, rng),
                                             policy.session_ticket_lifetime());
                   }
@@ -634,23 +634,23 @@ void Server::process_handshake_msg(Handshake_Type type,
                session_manager.save(session_info);
             }
 
-         if(state->server_hello->supports_session_ticket() && !state->new_session_ticket)
-            state->new_session_ticket = new New_Session_Ticket(writer, state->hash);
+         if(m_state->server_hello->supports_session_ticket() && !m_state->new_session_ticket)
+            m_state->new_session_ticket = new New_Session_Ticket(m_writer, m_state->hash);
 
-         writer.send(CHANGE_CIPHER_SPEC, 1);
+         m_writer.send(CHANGE_CIPHER_SPEC, 1);
 
-         writer.activate(SERVER, state->suite, state->keys,
-                         state->server_hello->compression_method());
+         m_writer.activate(SERVER, m_state->suite, m_state->keys,
+                           m_state->server_hello->compression_method());
 
-         state->server_finished = new Finished(writer, state, SERVER);
+         m_state->server_finished = new Finished(m_writer, m_state, SERVER);
          }
 
-      secure_renegotiation.update(state->client_finished,
-                                  state->server_finished);
+      m_secure_renegotiation.update(m_state->client_finished,
+                                    m_state->server_finished);
 
-      delete state;
-      state = nullptr;
-      handshake_completed = true;
+      delete m_state;
+      m_state = nullptr;
+      m_handshake_completed = true;
       }
    else
       throw Unexpected_Message("Unknown handshake message received");

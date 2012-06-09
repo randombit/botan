@@ -19,12 +19,12 @@ namespace TLS {
 Channel::Channel(std::function<void (const byte[], size_t)> socket_output_fn,
                  std::function<void (const byte[], size_t, Alert)> proc_fn,
                  std::function<bool (const Session&)> handshake_complete) :
-   proc_fn(proc_fn),
-   handshake_fn(handshake_complete),
-   writer(socket_output_fn),
-   state(nullptr),
-   handshake_completed(false),
-   connection_closed(false),
+   m_proc_fn(proc_fn),
+   m_handshake_fn(handshake_complete),
+   m_writer(socket_output_fn),
+   m_state(nullptr),
+   m_handshake_completed(false),
+   m_connection_closed(false),
    m_peer_supports_heartbeats(false),
    m_heartbeat_sending_allowed(false)
    {
@@ -32,8 +32,8 @@ Channel::Channel(std::function<void (const byte[], size_t)> socket_output_fn,
 
 Channel::~Channel()
    {
-   delete state;
-   state = nullptr;
+   delete m_state;
+   m_state = nullptr;
    }
 
 size_t Channel::received_data(const byte buf[], size_t buf_size)
@@ -46,9 +46,9 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
          std::vector<byte> record;
          size_t consumed = 0;
 
-         const size_t needed = reader.add_input(buf, buf_size,
-                                                consumed,
-                                                rec_type, record);
+         const size_t needed = m_reader.add_input(buf, buf_size,
+                                                  consumed,
+                                                  rec_type, record);
 
          BOTAN_ASSERT(consumed <= buf_size,
                       "Record reader consumed sane amount");
@@ -72,22 +72,22 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
 
             const std::vector<byte>& payload = heartbeat.payload();
 
-            if(heartbeat.is_request() && !state)
+            if(heartbeat.is_request() && !m_state)
                {
                Heartbeat_Message response(Heartbeat_Message::RESPONSE,
                                           &payload[0], payload.size());
 
-               writer.send(HEARTBEAT, response.contents());
+               m_writer.send(HEARTBEAT, response.contents());
                }
             else
                {
                // pass up to the application
-               proc_fn(&payload[0], payload.size(), Alert(Alert::HEARTBEAT_PAYLOAD));
+               m_proc_fn(&payload[0], payload.size(), Alert(Alert::HEARTBEAT_PAYLOAD));
                }
             }
          else if(rec_type == APPLICATION_DATA)
             {
-            if(handshake_completed)
+            if(m_handshake_completed)
                {
                /*
                * OpenSSL among others sends empty records in versions
@@ -95,7 +95,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
                * following record. Avoid spurious callbacks.
                */
                if(record.size() > 0)
-                  proc_fn(&record[0], record.size(), Alert());
+                  m_proc_fn(&record[0], record.size(), Alert());
                }
             else
                {
@@ -108,25 +108,25 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
 
             alert_notify(alert_msg);
 
-            proc_fn(nullptr, 0, alert_msg);
+            m_proc_fn(nullptr, 0, alert_msg);
 
             if(alert_msg.type() == Alert::CLOSE_NOTIFY)
                {
-               if(connection_closed)
-                  reader.reset();
+               if(m_connection_closed)
+                  m_reader.reset();
                else
                   send_alert(Alert(Alert::CLOSE_NOTIFY)); // reply in kind
                }
             else if(alert_msg.is_fatal())
                {
                // delete state immediately
-               connection_closed = true;
+               m_connection_closed = true;
 
-               delete state;
-               state = nullptr;
+               delete m_state;
+               m_state = nullptr;
 
-               writer.reset();
-               reader.reset();
+               m_writer.reset();
+               m_reader.reset();
                }
             }
          else
@@ -166,12 +166,12 @@ void Channel::read_handshake(byte rec_type,
    {
    if(rec_type == HANDSHAKE)
       {
-      if(!state)
-         state = new Handshake_State(new Stream_Handshake_Reader);
-      state->handshake_reader()->add_input(&rec_buf[0], rec_buf.size());
+      if(!m_state)
+         m_state = new Handshake_State(new Stream_Handshake_Reader);
+      m_state->handshake_reader()->add_input(&rec_buf[0], rec_buf.size());
       }
 
-   BOTAN_ASSERT(state, "Handshake message recieved without state in place");
+   BOTAN_ASSERT(m_state, "Handshake message recieved without state in place");
 
    while(true)
       {
@@ -179,10 +179,10 @@ void Channel::read_handshake(byte rec_type,
 
       if(rec_type == HANDSHAKE)
          {
-         if(state->handshake_reader()->have_full_record())
+         if(m_state->handshake_reader()->have_full_record())
             {
             std::pair<Handshake_Type, std::vector<byte> > msg =
-               state->handshake_reader()->get_next_record();
+               m_state->handshake_reader()->get_next_record();
             process_handshake_msg(msg.first, msg.second);
             }
          else
@@ -190,7 +190,7 @@ void Channel::read_handshake(byte rec_type,
          }
       else if(rec_type == CHANGE_CIPHER_SPEC)
          {
-         if(state->handshake_reader()->empty() && rec_buf.size() == 1 && rec_buf[0] == 1)
+         if(m_state->handshake_reader()->empty() && rec_buf.size() == 1 && rec_buf[0] == 1)
             process_handshake_msg(HANDSHAKE_CCS, std::vector<byte>());
          else
             throw Decoding_Error("Malformed ChangeCipherSpec message");
@@ -198,7 +198,7 @@ void Channel::read_handshake(byte rec_type,
       else
          throw Decoding_Error("Unknown message type in handshake processing");
 
-      if(type == HANDSHAKE_CCS || !state || !state->handshake_reader()->have_full_record())
+      if(type == HANDSHAKE_CCS || !m_state || !m_state->handshake_reader()->have_full_record())
          break;
       }
    }
@@ -213,7 +213,7 @@ void Channel::heartbeat(const byte payload[], size_t payload_size)
       Heartbeat_Message heartbeat(Heartbeat_Message::REQUEST,
                                   payload, payload_size);
 
-      writer.send(HEARTBEAT, heartbeat.contents());
+      m_writer.send(HEARTBEAT, heartbeat.contents());
       }
    }
 
@@ -222,28 +222,28 @@ void Channel::send(const byte buf[], size_t buf_size)
    if(!is_active())
       throw std::runtime_error("Data cannot be sent on inactive TLS connection");
 
-   writer.send(APPLICATION_DATA, buf, buf_size);
+   m_writer.send(APPLICATION_DATA, buf, buf_size);
    }
 
 void Channel::send_alert(const Alert& alert)
    {
-   if(alert.is_valid() && !connection_closed)
+   if(alert.is_valid() && !m_connection_closed)
       {
       try
          {
-         writer.send_alert(alert);
+         m_writer.send_alert(alert);
          }
       catch(...) { /* swallow it */ }
       }
 
-   if(!connection_closed && (alert.type() == Alert::CLOSE_NOTIFY || alert.is_fatal()))
+   if(!m_connection_closed && (alert.type() == Alert::CLOSE_NOTIFY || alert.is_fatal()))
       {
-      connection_closed = true;
+      m_connection_closed = true;
 
-      delete state;
-      state = nullptr;
+      delete m_state;
+      m_state = nullptr;
 
-      writer.reset();
+      m_writer.reset();
       }
    }
 

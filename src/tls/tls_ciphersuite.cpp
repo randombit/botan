@@ -78,7 +78,7 @@ std::string Ciphersuite::to_string() const
       {
       if(cipher_algo() == "3DES")
          out << "3DES_EDE";
-      else if(cipher_algo() == "Camellia")
+      else if(cipher_algo() == "Camellia-128" || cipher_algo() == "Camellia-256")
          out << "CAMELLIA_" << std::to_string(8*cipher_keylen());
       else
          out << replace_char(cipher_algo(), '-', '_');

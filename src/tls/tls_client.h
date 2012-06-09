@@ -60,10 +60,10 @@ class BOTAN_DLL Client : public Channel
 
       void alert_notify(const Alert& alert);
 
-      const Policy& policy;
-      RandomNumberGenerator& rng;
-      Session_Manager& session_manager;
-      Credentials_Manager& creds;
+      const Policy& m_policy;
+      RandomNumberGenerator& m_rng;
+      Session_Manager& m_session_manager;
+      Credentials_Manager& m_creds;
       const std::string m_hostname;
    };
 

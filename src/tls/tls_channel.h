@@ -45,12 +45,12 @@ class BOTAN_DLL Channel
       /**
       * @return true iff the connection is active for sending application data
       */
-      bool is_active() const { return handshake_completed && !is_closed(); }
+      bool is_active() const { return m_handshake_completed && !is_closed(); }
 
       /**
       * @return true iff the connection has been definitely closed
       */
-      bool is_closed() const { return connection_closed; }
+      bool is_closed() const { return m_connection_closed; }
 
       /**
       * Attempt to renegotiate the session
@@ -74,7 +74,7 @@ class BOTAN_DLL Channel
       /**
       * @return certificate chain of the peer (may be empty)
       */
-      std::vector<X509_Certificate> peer_cert_chain() const { return peer_certs; }
+      std::vector<X509_Certificate> peer_cert_chain() const { return m_peer_certs; }
 
       Channel(std::function<void (const byte[], size_t)> socket_output_fn,
               std::function<void (const byte[], size_t, Alert)> proc_fn,
@@ -99,15 +99,15 @@ class BOTAN_DLL Channel
 
       virtual void alert_notify(const Alert& alert) = 0;
 
-      std::function<void (const byte[], size_t, Alert)> proc_fn;
-      std::function<bool (const Session&)> handshake_fn;
+      std::function<void (const byte[], size_t, Alert)> m_proc_fn;
+      std::function<bool (const Session&)> m_handshake_fn;
 
-      Record_Writer writer;
-      Record_Reader reader;
+      Record_Writer m_writer;
+      Record_Reader m_reader;
 
-      std::vector<X509_Certificate> peer_certs;
+      std::vector<X509_Certificate> m_peer_certs;
 
-      class Handshake_State* state;
+      class Handshake_State* m_state;
 
       class Secure_Renegotiation_State
          {
@@ -142,10 +142,10 @@ class BOTAN_DLL Channel
             std::vector<byte> m_client_verify, m_server_verify;
          };
 
-      Secure_Renegotiation_State secure_renegotiation;
+      Secure_Renegotiation_State m_secure_renegotiation;
 
-      bool handshake_completed;
-      bool connection_closed;
+      bool m_handshake_completed;
+      bool m_connection_closed;
       bool m_peer_supports_heartbeats;
       bool m_heartbeat_sending_allowed;
    };
