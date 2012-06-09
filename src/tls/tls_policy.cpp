@@ -17,75 +17,66 @@ namespace TLS {
 
 std::vector<std::string> Policy::allowed_ciphers() const
    {
-   std::vector<std::string> allowed;
-
-   allowed.push_back("AES-256");
-   allowed.push_back("AES-128");
-   allowed.push_back("3DES");
-   allowed.push_back("ARC4");
-   //allowed.push_back("Camellia");
-   //allowed.push_back("SEED");
-
-   return allowed;
+   return std::vector<std::string>({
+      "AES-256",
+      "AES-128",
+      "3DES",
+      "ARC4",
+      //"Camellia-256",
+      //"Camellia-128",
+      //"SEED"
+      });
    }
 
 std::vector<std::string> Policy::allowed_hashes() const
    {
-   std::vector<std::string> allowed;
-
-   allowed.push_back("SHA-512");
-   allowed.push_back("SHA-384");
-   allowed.push_back("SHA-256");
-   allowed.push_back("SHA-224");
-   allowed.push_back("SHA-1");
-   //allowed.push_back("MD5");
-
-   return allowed;
+   return std::vector<std::string>({
+      "SHA-512",
+      "SHA-384",
+      "SHA-256",
+      "SHA-224",
+      "SHA-1",
+      //"MD5",
+      });
    }
 
 std::vector<std::string> Policy::allowed_key_exchange_methods() const
    {
-   std::vector<std::string> allowed;
-
-   allowed.push_back("SRP_SHA");
-   //allowed.push_back("ECDHE_PSK");
-   //allowed.push_back("DHE_PSK");
-   //allowed.push_back("PSK");
-
-   allowed.push_back("ECDH");
-   allowed.push_back("DH");
-   allowed.push_back("RSA");
-
-   return allowed;
+   return std::vector<std::string>({
+      "SRP_SHA",
+      //"ECDHE_PSK",
+      //"DHE_PSK",
+      //"PSK",
+      "ECDH",
+      "DH",
+      "RSA",
+      });
    }
 
 std::vector<std::string> Policy::allowed_signature_methods() const
    {
-   std::vector<std::string> allowed;
-
-   allowed.push_back("ECDSA");
-   allowed.push_back("RSA");
-   allowed.push_back("DSA");
-   //allowed.push_back("");
-
-   return allowed;
+   return std::vector<std::string>({
+      "ECDSA",
+      "RSA",
+      "DSA",
+      });
    }
 
 std::vector<std::string> Policy::allowed_ecc_curves() const
    {
-   std::vector<std::string> curves;
-   curves.push_back("secp521r1");
-   curves.push_back("secp384r1");
-   curves.push_back("secp256r1");
-   curves.push_back("secp256k1");
-   curves.push_back("secp224r1");
-   curves.push_back("secp224k1");
-   curves.push_back("secp192r1");
-   curves.push_back("secp192k1");
-   curves.push_back("secp160r2");
-   curves.push_back("secp160r1");
-   curves.push_back("secp160k1");
-   return curves;
+   return std::vector<std::string>({
+      "secp521r1",
+      "secp384r1",
+      "secp256r1",
+      "secp256k1",
+      "secp224r1",
+      "secp224k1",
+      "secp192r1",
+      "secp192k1",
+      "secp160r2",
+      "secp160r1",
+      "secp160k1",
+      });
    }
 
 /*
