@@ -62,6 +62,11 @@ void Record_Reader::set_version(Protocol_Version version)
    m_version = version;
    }
 
+Protocol_Version Record_Reader::get_version() const
+   {
+   return m_version;
+   }
+
 /*
 * Set the keys for reading
 */

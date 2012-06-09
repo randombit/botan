@@ -50,6 +50,9 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
                                                 consumed,
                                                 rec_type, record);
 
+         BOTAN_ASSERT(consumed <= buf_size,
+                      "Record reader consumed sane amount");
+
          buf += consumed;
          buf_size -= consumed;
 

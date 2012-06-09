@@ -188,6 +188,47 @@ KDF* Handshake_State::protocol_specific_prf()
    throw Internal_Error("Unknown version code " + version().to_string());
    }
 
+namespace {
+
+std::string choose_hash(const std::string& sig_algo,
+                        Protocol_Version negotiated_version,
+                        bool for_client_auth,
+                        Client_Hello* client_hello,
+                        Certificate_Req* cert_req)
+   {
+   if(negotiated_version < Protocol_Version::TLS_V12)
+      {
+      if(for_client_auth && negotiated_version == Protocol_Version::SSL_V3)
+         return "Raw";
+
+      if(sig_algo == "RSA")
+         return "TLS.Digest.0";
+
+      if(sig_algo == "DSA")
+         return "SHA-1";
+
+      if(sig_algo == "ECDSA")
+         return "SHA-1";
+
+      throw Internal_Error("Unknown TLS signature algo " + sig_algo);
+      }
+
+   const auto supported_algos = for_client_auth ?
+      cert_req->supported_algos() :
+      client_hello->supported_algos();
+
+   for(auto algo : supported_algos)
+      {
+      if(algo.second == sig_algo)
+         return algo.first;
+      }
+
+   // TLS v1.2 default hash if the counterparty sent nothing
+   return "SHA-1";
+   }
+
+}
+
 std::pair<std::string, Signature_Format>
 Handshake_State::choose_sig_format(const Private_Key* key,
                                    std::string& hash_algo_out,
@@ -196,27 +237,12 @@ Handshake_State::choose_sig_format(const Private_Key* key,
    {
    const std::string sig_algo = key->algo_name();
 
-   const std::vector<std::pair<std::string, std::string> > supported_algos =
-      (for_client_auth) ? cert_req->supported_algos() : client_hello->supported_algos();
-
-   std::string hash_algo;
-
-   for(size_t i = 0; i != supported_algos.size(); ++i)
-      {
-      if(supported_algos[i].second == sig_algo)
-         {
-         hash_algo = supported_algos[i].first;
-         break;
-         }
-      }
-
-   if(for_client_auth && this->version() == Protocol_Version::SSL_V3)
-      hash_algo = "Raw";
-
-   if(hash_algo == "" && this->version() == Protocol_Version::TLS_V12)
-      hash_algo = "SHA-1"; // TLS 1.2 but no compatible hashes set (?)
-
-   BOTAN_ASSERT(hash_algo != "", "Couldn't figure out hash to use");
+   const std::string hash_algo =
+      choose_hash(sig_algo,
+                  this->version(),
+                  for_client_auth,
+                  client_hello,
+                  cert_req);
 
    if(this->version() >= Protocol_Version::TLS_V12)
       {

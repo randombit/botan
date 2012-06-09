@@ -101,6 +101,8 @@ class BOTAN_DLL Record_Reader
 
       void set_version(Protocol_Version version);
 
+      Protocol_Version get_version() const;
+
       void reset();
 
       void set_maximum_fragment_size(size_t max_fragment);

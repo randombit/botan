@@ -114,13 +114,6 @@ Certificate_Req::Certificate_Req(const std::vector<byte>& buf,
          m_supported_algos.push_back(std::make_pair(hash, sig));
          }
       }
-   else
-      {
-      // The hardcoded settings from previous protocol versions
-      m_supported_algos.push_back(std::make_pair("TLS.Digest.0", "RSA"));
-      m_supported_algos.push_back(std::make_pair("SHA-1", "DSA"));
-      m_supported_algos.push_back(std::make_pair("SHA-1", "ECDSA"));
-      }
 
    const u16bit purported_size = reader.get_u16bit();
 

@@ -33,6 +33,8 @@ class BOTAN_DLL Protocol_Version
       Protocol_Version(byte major, byte minor) :
          m_version((static_cast<u16bit>(major) << 8) | minor) {}
 
+      bool valid() const { return (m_version != 0); }
+
       /**
       * Get the major version of the protocol version
       */

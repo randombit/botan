@@ -63,13 +63,14 @@ std::vector<byte> Hello_Request::serialize() const
 */
 Client_Hello::Client_Hello(Record_Writer& writer,
                            Handshake_Hash& hash,
+                           Protocol_Version version,
                            const Policy& policy,
                            RandomNumberGenerator& rng,
                            const std::vector<byte>& reneg_info,
                            bool next_protocol,
                            const std::string& hostname,
                            const std::string& srp_identifier) :
-   m_version(policy.pref_version()),
+   m_version(version),
    m_random(make_hello_random(rng)),
    m_suites(ciphersuite_list(policy, (srp_identifier != ""))),
    m_comp_methods(policy.compression()),
@@ -238,19 +239,6 @@ void Client_Hello::deserialize_sslv2(const std::vector<byte>& buf)
 
    m_secure_renegotiation =
       value_exists(m_suites, static_cast<u16bit>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV));
-
-   if(m_version >= Protocol_Version::TLS_V12)
-      {
-      m_supported_algos.push_back(std::make_pair("SHA-1", "RSA"));
-      m_supported_algos.push_back(std::make_pair("SHA-1", "DSA"));
-      m_supported_algos.push_back(std::make_pair("SHA-1", "ECDSA"));
-      }
-   else
-      {
-      m_supported_algos.push_back(std::make_pair("TLS.Digest.0", "RSA"));
-      m_supported_algos.push_back(std::make_pair("SHA-1", "DSA"));
-      m_supported_algos.push_back(std::make_pair("SHA-1", "ECDSA"));
-      }
    }
 
 /*
@@ -317,33 +305,6 @@ void Client_Hello::deserialize(const std::vector<byte>& buf)
    if(Signature_Algorithms* sigs = extensions.get<Signature_Algorithms>())
       {
       m_supported_algos = sigs->supported_signature_algorthms();
-      }
-
-   if(m_supported_algos.empty())
-      {
-      if(m_version >= Protocol_Version::TLS_V12)
-         {
-         /*
-         The rule for when a TLS 1.2 client not sending the extension
-         is strange; in theory, the server is supposed to act as if
-         the client had sent only SHA-1 using whatever signature
-         algorithm we end up negotiating. Right here, we don't know
-         what we'll end up negotiating (depends on policy), but we do
-         know that we'll only negotiate something the client sent, so
-         we can safely say it supports everything here and know that
-         we'll filter it out later.
-         */
-         m_supported_algos.push_back(std::make_pair("SHA-1", "RSA"));
-         m_supported_algos.push_back(std::make_pair("SHA-1", "DSA"));
-         m_supported_algos.push_back(std::make_pair("SHA-1", "ECDSA"));
-         }
-      else
-         {
-         // For versions before TLS 1.2, insert fake values for the old defaults
-         m_supported_algos.push_back(std::make_pair("TLS.Digest.0", "RSA"));
-         m_supported_algos.push_back(std::make_pair("SHA-1", "DSA"));
-         m_supported_algos.push_back(std::make_pair("SHA-1", "ECDSA"));
-         }
       }
 
    if(Maximum_Fragment_Length* frag = extensions.get<Maximum_Fragment_Length>())

@@ -295,7 +295,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
          }
       catch(...)
          {
-         // Randomize the hide timing channel
+         // Randomize to hide timing channel
          pre_master = rng.random_vec(48);
          pre_master[0] = client_version.major_version();
          pre_master[1] = client_version.minor_version();

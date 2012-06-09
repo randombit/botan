@@ -115,6 +115,7 @@ class Client_Hello : public Handshake_Message
 
       Client_Hello(Record_Writer& writer,
                    Handshake_Hash& hash,
+                   Protocol_Version version,
                    const Policy& policy,
                    RandomNumberGenerator& rng,
                    const std::vector<byte>& reneg_info,

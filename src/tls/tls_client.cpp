@@ -71,6 +71,7 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
       state->client_hello = new Client_Hello(
          writer,
          state->hash,
+         policy.pref_version(),
          policy,
          rng,
          secure_renegotiation.for_client_hello(),
@@ -117,6 +118,7 @@ void Client::renegotiate(bool force_full_renegotiation)
       state->client_hello = new Client_Hello(
          writer,
          state->hash,
+         reader.get_version(),
          policy,
          rng,
          secure_renegotiation.for_client_hello());
