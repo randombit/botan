@@ -430,8 +430,17 @@ void Server::process_handshake_msg(Handshake_Type type,
 
          if(m_hostname != "" && cert_chains.empty())
             {
-            send_alert(Alert(Alert::UNRECOGNIZED_NAME));
             cert_chains = get_server_certs("", creds);
+
+            /*
+            * Only send the unrecognized_name alert if we couldn't
+            * find any certs for the requested name but did find at
+            * least one cert to use in general. That avoids sending an
+            * unrecognized_name when a server is configured for purely
+            * anonymous operation.
+            */
+            if(!cert_chains.empty())
+               send_alert(Alert(Alert::UNRECOGNIZED_NAME));
             }
 
          m_state->server_hello = new Server_Hello(
