@@ -192,11 +192,10 @@ Server::Server(std::function<void (const byte[], size_t)> output_fn,
                const Policy& policy,
                RandomNumberGenerator& rng,
                const std::vector<std::string>& next_protocols) :
-   Channel(output_fn, proc_fn, handshake_fn),
-   policy(policy),
-   rng(rng),
-   session_manager(session_manager),
-   creds(creds),
+   Channel(output_fn, proc_fn, handshake_fn, session_manager),
+   m_policy(policy),
+   m_rng(rng),
+   m_creds(creds),
    m_possible_protocols(next_protocols)
    {
    }
@@ -278,13 +277,13 @@ void Server::process_handshake_msg(Handshake_Type type,
 
       Protocol_Version client_version = m_state->client_hello->version();
 
-      if(client_version < policy.min_version())
+      if(client_version < m_policy.min_version())
          throw TLS_Exception(Alert::PROTOCOL_VERSION,
                              "Client version is unacceptable by policy");
 
-      if(client_version > policy.pref_version())
+      if(client_version > m_policy.pref_version())
          {
-         m_state->set_version(policy.pref_version());
+         m_state->set_version(m_policy.pref_version());
          }
       else
          {
@@ -319,7 +318,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             }
          }
 
-      if(!policy.allow_insecure_renegotiation() &&
+      if(!m_policy.allow_insecure_renegotiation() &&
          !(m_secure_renegotiation.initial_handshake() || m_secure_renegotiation.supported()))
          {
          delete m_state;
@@ -340,17 +339,17 @@ void Server::process_handshake_msg(Handshake_Type type,
       const bool resuming =
          m_state->allow_session_resumption &&
          check_for_resume(session_info,
-                          session_manager,
-                          creds,
+                          m_session_manager,
+                          m_creds,
                           m_state->client_hello,
-                          std::chrono::seconds(policy.session_ticket_lifetime()));
+                          std::chrono::seconds(m_policy.session_ticket_lifetime()));
 
       bool have_session_ticket_key = false;
 
       try
          {
          have_session_ticket_key =
-            creds.psk("tls-server", "session-ticket", "").length() > 0;
+            m_creds.psk("tls-server", "session-ticket", "").length() > 0;
          }
       catch(...) {}
 
@@ -374,7 +373,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             m_state->client_hello->next_protocol_notification(),
             m_possible_protocols,
             m_state->client_hello->supports_heartbeats(),
-            rng);
+            m_rng);
 
          m_secure_renegotiation.update(m_state->server_hello);
 
@@ -390,7 +389,7 @@ void Server::process_handshake_msg(Handshake_Type type,
 
          if(!m_handshake_fn(session_info))
             {
-            session_manager.remove_entry(session_info.session_id());
+            m_session_manager.remove_entry(session_info.session_id());
 
             if(m_state->server_hello->supports_session_ticket()) // send an empty ticket
                m_state->new_session_ticket = new New_Session_Ticket(m_writer, m_state->hash);
@@ -400,12 +399,12 @@ void Server::process_handshake_msg(Handshake_Type type,
             {
             try
                {
-               const SymmetricKey ticket_key = creds.psk("tls-server", "session-ticket", "");
+               const SymmetricKey ticket_key = m_creds.psk("tls-server", "session-ticket", "");
 
                m_state->new_session_ticket =
                   new New_Session_Ticket(m_writer, m_state->hash,
-                                         session_info.encrypt(ticket_key, rng),
-                                         policy.session_ticket_lifetime());
+                                         session_info.encrypt(ticket_key, m_rng),
+                                         m_policy.session_ticket_lifetime());
                }
             catch(...) {}
 
@@ -416,7 +415,7 @@ void Server::process_handshake_msg(Handshake_Type type,
          m_writer.send(CHANGE_CIPHER_SPEC, 1);
 
          m_writer.activate(SERVER, m_state->suite, m_state->keys,
-                         m_state->server_hello->compression_method());
+                           m_state->server_hello->compression_method());
 
          m_state->server_finished = new Finished(m_writer, m_state, SERVER);
 
@@ -426,11 +425,11 @@ void Server::process_handshake_msg(Handshake_Type type,
          {
          std::map<std::string, std::vector<X509_Certificate> > cert_chains;
 
-         cert_chains = get_server_certs(m_hostname, creds);
+         cert_chains = get_server_certs(m_hostname, m_creds);
 
          if(m_hostname != "" && cert_chains.empty())
             {
-            cert_chains = get_server_certs("", creds);
+            cert_chains = get_server_certs("", m_creds);
 
             /*
             * Only send the unrecognized_name alert if we couldn't
@@ -446,10 +445,10 @@ void Server::process_handshake_msg(Handshake_Type type,
          m_state->server_hello = new Server_Hello(
             m_writer,
             m_state->hash,
-            unlock(rng.random_vec(32)), // new session ID
+            unlock(m_rng.random_vec(32)), // new session ID
             m_state->version(),
-            choose_ciphersuite(policy, creds, cert_chains, m_state->client_hello),
-            choose_compression(policy, m_state->client_hello->compression_methods()),
+            choose_ciphersuite(m_policy, m_creds, cert_chains, m_state->client_hello),
+            choose_compression(m_policy, m_state->client_hello->compression_methods()),
             m_state->client_hello->fragment_size(),
             m_secure_renegotiation.supported(),
             m_secure_renegotiation.for_server_hello(),
@@ -457,7 +456,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             m_state->client_hello->next_protocol_notification(),
             m_possible_protocols,
             m_state->client_hello->supports_heartbeats(),
-            rng);
+            m_rng);
 
          m_secure_renegotiation.update(m_state->server_hello);
 
@@ -486,9 +485,10 @@ void Server::process_handshake_msg(Handshake_Type type,
 
          if(kex_algo == "RSA" || sig_algo != "")
             {
-            private_key = creds.private_key_for(m_state->server_certs->cert_chain()[0],
-                                                "tls-server",
-                                                m_hostname);
+            private_key = m_creds.private_key_for(
+               m_state->server_certs->cert_chain()[0],
+               "tls-server",
+               m_hostname);
 
             if(!private_key)
                throw Internal_Error("No private key located for associated server cert");
@@ -501,17 +501,17 @@ void Server::process_handshake_msg(Handshake_Type type,
          else
             {
             m_state->server_kex =
-               new Server_Key_Exchange(m_writer, m_state, policy, creds, rng, private_key);
+               new Server_Key_Exchange(m_writer, m_state, m_policy, m_creds, m_rng, private_key);
             }
 
          std::vector<X509_Certificate> client_auth_CAs =
-            creds.trusted_certificate_authorities("tls-server", m_hostname);
+            m_creds.trusted_certificate_authorities("tls-server", m_hostname);
 
          if(!client_auth_CAs.empty() && m_state->suite.sig_algo() != "")
             {
             m_state->cert_req = new Certificate_Req(m_writer,
                                                   m_state->hash,
-                                                  policy,
+                                                  m_policy,
                                                   client_auth_CAs,
                                                   m_state->version());
 
@@ -541,7 +541,7 @@ void Server::process_handshake_msg(Handshake_Type type,
       else
          m_state->set_expected_next(HANDSHAKE_CCS);
 
-      m_state->client_kex = new Client_Key_Exchange(contents, m_state, creds, policy, rng);
+      m_state->client_kex = new Client_Key_Exchange(contents, m_state, m_creds, m_policy, m_rng);
 
       m_state->keys = Session_Keys(m_state, m_state->client_kex->pre_master_secret(), false);
       }
@@ -566,7 +566,7 @@ void Server::process_handshake_msg(Handshake_Type type,
 
       try
          {
-         creds.verify_certificate_chain("tls-server", "", m_peer_certs);
+         m_creds.verify_certificate_chain("tls-server", "", m_peer_certs);
          }
       catch(std::exception& e)
          {
@@ -630,17 +630,17 @@ void Server::process_handshake_msg(Handshake_Type type,
                {
                try
                   {
-                  const SymmetricKey ticket_key = creds.psk("tls-server", "session-ticket", "");
+                  const SymmetricKey ticket_key = m_creds.psk("tls-server", "session-ticket", "");
 
                   m_state->new_session_ticket =
                      new New_Session_Ticket(m_writer, m_state->hash,
-                                            session_info.encrypt(ticket_key, rng),
-                                            policy.session_ticket_lifetime());
+                                            session_info.encrypt(ticket_key, m_rng),
+                                            m_policy.session_ticket_lifetime());
                   }
                catch(...) {}
                }
             else
-               session_manager.save(session_info);
+               m_session_manager.save(session_info);
             }
 
          if(m_state->server_hello->supports_session_ticket() && !m_state->new_session_ticket)
@@ -657,9 +657,11 @@ void Server::process_handshake_msg(Handshake_Type type,
       m_secure_renegotiation.update(m_state->client_finished,
                                     m_state->server_finished);
 
+      m_active_session = m_state->server_hello->session_id();
       delete m_state;
       m_state = nullptr;
       m_handshake_completed = true;
+
       }
    else
       throw Unexpected_Message("Unknown handshake message received");

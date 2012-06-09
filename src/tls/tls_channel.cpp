@@ -18,11 +18,13 @@ namespace TLS {
 
 Channel::Channel(std::function<void (const byte[], size_t)> socket_output_fn,
                  std::function<void (const byte[], size_t, Alert)> proc_fn,
-                 std::function<bool (const Session&)> handshake_complete) :
+                 std::function<bool (const Session&)> handshake_complete,
+                 Session_Manager& session_manager) :
    m_proc_fn(proc_fn),
    m_handshake_fn(handshake_complete),
-   m_writer(socket_output_fn),
    m_state(nullptr),
+   m_session_manager(session_manager),
+   m_writer(socket_output_fn),
    m_handshake_completed(false),
    m_connection_closed(false),
    m_peer_supports_heartbeats(false),
@@ -120,6 +122,13 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
             else if(alert_msg.is_fatal())
                {
                // delete state immediately
+
+               if(!m_active_session.empty())
+                  {
+                  m_session_manager.remove_entry(m_active_session);
+                  m_active_session.clear();
+                  }
+
                m_connection_closed = true;
 
                delete m_state;
@@ -234,6 +243,12 @@ void Channel::send_alert(const Alert& alert)
          m_writer.send_alert(alert);
          }
       catch(...) { /* swallow it */ }
+      }
+
+   if(alert.is_fatal() && !m_active_session.empty())
+      {
+      m_session_manager.remove_entry(m_active_session);
+      m_active_session.clear();
       }
 
    if(!m_connection_closed && (alert.type() == Alert::CLOSE_NOTIFY || alert.is_fatal()))

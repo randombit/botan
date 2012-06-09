@@ -12,6 +12,7 @@
 #include <botan/tls_record.h>
 #include <botan/tls_session.h>
 #include <botan/tls_alert.h>
+#include <botan/tls_session_manager.h>
 #include <botan/x509cert.h>
 #include <vector>
 
@@ -78,7 +79,8 @@ class BOTAN_DLL Channel
 
       Channel(std::function<void (const byte[], size_t)> socket_output_fn,
               std::function<void (const byte[], size_t, Alert)> proc_fn,
-              std::function<bool (const Session&)> handshake_complete);
+              std::function<bool (const Session&)> handshake_complete,
+              Session_Manager& session_manager);
 
       virtual ~Channel();
    protected:
@@ -98,16 +100,6 @@ class BOTAN_DLL Channel
                                          const std::vector<byte>& contents) = 0;
 
       virtual void alert_notify(const Alert& alert) = 0;
-
-      std::function<void (const byte[], size_t, Alert)> m_proc_fn;
-      std::function<bool (const Session&)> m_handshake_fn;
-
-      Record_Writer m_writer;
-      Record_Reader m_reader;
-
-      std::vector<X509_Certificate> m_peer_certs;
-
-      class Handshake_State* m_state;
 
       class Secure_Renegotiation_State
          {
@@ -142,8 +134,20 @@ class BOTAN_DLL Channel
             std::vector<byte> m_client_verify, m_server_verify;
          };
 
+      std::function<void (const byte[], size_t, Alert)> m_proc_fn;
+      std::function<bool (const Session&)> m_handshake_fn;
+
+      class Handshake_State* m_state;
+
+      Session_Manager& m_session_manager;
+      Record_Writer m_writer;
+      Record_Reader m_reader;
+
+      std::vector<X509_Certificate> m_peer_certs;
+
       Secure_Renegotiation_State m_secure_renegotiation;
 
+      std::vector<byte> m_active_session;
       bool m_handshake_completed;
       bool m_connection_closed;
       bool m_peer_supports_heartbeats;

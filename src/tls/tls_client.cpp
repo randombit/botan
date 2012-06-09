@@ -27,10 +27,9 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
                RandomNumberGenerator& rng,
                const std::string& hostname,
                std::function<std::string (std::vector<std::string>)> next_protocol) :
-   Channel(output_fn, proc_fn, handshake_fn),
+   Channel(output_fn, proc_fn, handshake_fn, session_manager),
    m_policy(policy),
    m_rng(rng),
-   m_session_manager(session_manager),
    m_creds(creds),
    m_hostname(hostname)
    {
@@ -471,14 +470,20 @@ void Client::process_handshake_msg(Handshake_Type type,
          ""
          );
 
-      if(m_handshake_fn(session_info))
-         m_session_manager.save(session_info);
-      else
-         m_session_manager.remove_entry(session_info.session_id());
+      const bool should_save = m_handshake_fn(session_info);
+
+      if(!session_id.empty())
+         {
+         if(should_save)
+            m_session_manager.save(session_info);
+         else
+            m_session_manager.remove_entry(session_info.session_id());
+         }
 
       delete m_state;
       m_state = nullptr;
       m_handshake_completed = true;
+      m_active_session = session_info.session_id();
       }
    else
       throw Unexpected_Message("Unknown handshake message received");

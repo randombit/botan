@@ -9,7 +9,6 @@
 #define BOTAN_TLS_SERVER_H__
 
 #include <botan/tls_channel.h>
-#include <botan/tls_session_manager.h>
 #include <botan/credentials_manager.h>
 #include <vector>
 
@@ -57,10 +56,9 @@ class BOTAN_DLL Server : public Channel
 
       void alert_notify(const Alert& alert);
 
-      const Policy& policy;
-      RandomNumberGenerator& rng;
-      Session_Manager& session_manager;
-      Credentials_Manager& creds;
+      const Policy& m_policy;
+      RandomNumberGenerator& m_rng;
+      Credentials_Manager& m_creds;
 
       std::vector<std::string> m_possible_protocols;
       std::string m_hostname;
