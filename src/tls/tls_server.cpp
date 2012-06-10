@@ -445,7 +445,7 @@ void Server::process_handshake_msg(Handshake_Type type,
          m_state->server_hello = new Server_Hello(
             m_writer,
             m_state->hash,
-            unlock(m_rng.random_vec(32)), // new session ID
+            make_hello_random(m_rng), // new session ID
             m_state->version(),
             choose_ciphersuite(m_policy, m_creds, cert_chains, m_state->client_hello),
             choose_compression(m_policy, m_state->client_hello->compression_methods()),

@@ -86,8 +86,8 @@ void Session_Manager_In_Memory::save(const Session& session)
    if(m_max_sessions != 0)
       {
       /*
-      This removes randomly based on ordering of session ids.
-      Instead, remove oldest first?
+      We generate new session IDs with the first 4 bytes being a
+      timestamp, so this actually removes the oldest sessions first.
       */
       while(m_sessions.size() >= m_max_sessions)
          m_sessions.erase(m_sessions.begin());
