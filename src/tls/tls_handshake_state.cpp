@@ -20,59 +20,64 @@ u32bit bitmask_for_handshake_type(Handshake_Type type)
    {
    switch(type)
       {
-      case HELLO_REQUEST:
+      case HELLO_VERIFY_REQUEST:
          return (1 << 0);
+
+      case HELLO_REQUEST:
+         return (1 << 1);
 
       /*
       * Same code point for both client hello styles
       */
       case CLIENT_HELLO:
       case CLIENT_HELLO_SSLV2:
-         return (1 << 1);
-
-      case SERVER_HELLO:
          return (1 << 2);
 
-      case CERTIFICATE:
+      case SERVER_HELLO:
          return (1 << 3);
 
-      case SERVER_KEX:
+      case CERTIFICATE:
          return (1 << 4);
 
-      case CERTIFICATE_REQUEST:
+      case CERTIFICATE_URL:
          return (1 << 5);
 
-      case SERVER_HELLO_DONE:
+      case CERTIFICATE_STATUS:
          return (1 << 6);
 
-      case CERTIFICATE_VERIFY:
+      case SERVER_KEX:
          return (1 << 7);
 
-      case CLIENT_KEX:
+      case CERTIFICATE_REQUEST:
          return (1 << 8);
 
-      case NEXT_PROTOCOL:
+      case SERVER_HELLO_DONE:
          return (1 << 9);
 
-      case NEW_SESSION_TICKET:
+      case CERTIFICATE_VERIFY:
          return (1 << 10);
 
-      case HANDSHAKE_CCS:
+      case CLIENT_KEX:
          return (1 << 11);
 
-      case FINISHED:
+      case NEXT_PROTOCOL:
          return (1 << 12);
+
+      case NEW_SESSION_TICKET:
+         return (1 << 13);
+
+      case HANDSHAKE_CCS:
+         return (1 << 14);
+
+      case FINISHED:
+         return (1 << 15);
 
       // allow explicitly disabling new handshakes
       case HANDSHAKE_NONE:
          return 0;
-
-      default:
-         throw Internal_Error("Unknown handshake type " +
-                              std::to_string(type));
       }
 
-   return 0;
+   throw Internal_Error("Unknown handshake type " + std::to_string(type));
    }
 
 }
@@ -126,7 +131,7 @@ void Handshake_State::confirm_transition_to(Handshake_Type handshake_msg)
       throw Unexpected_Message("Unexpected state transition in handshake, got " +
                                std::to_string(handshake_msg) +
                                " expected " + std::to_string(hand_expecting_mask) +
-                               " recveived " + std::to_string(hand_received_mask));
+                               " received " + std::to_string(hand_received_mask));
 
    /* We don't know what to expect next, so force a call to
       set_expected_next; if it doesn't happen, the next transition
