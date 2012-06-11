@@ -70,7 +70,7 @@ size_t padding_for_alignment(size_t offset, size_t desired_alignment)
 void* mlock_allocator::allocate(size_t num_elems, size_t elem_size)
    {
    if(!m_pool)
-      return;
+      return nullptr;
 
    const size_t n = num_elems * elem_size;
    const size_t alignment = elem_size;
