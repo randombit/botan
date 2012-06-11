@@ -18,6 +18,17 @@ namespace {
 
 size_t mlock_limit()
    {
+   /*
+   * Linux defaults to only 64 KiB of mlockable memory per process
+   * (too small) but BSDs offer a small fraction of total RAM (more
+   * than we need). Bound the total mlock size to 512 KiB which is
+   * enough to run the entire test suite without spilling to non-mlock
+   * memory (and thus presumably also enough for many useful
+   * programs), but small enough that we should not cause problems
+   * even if many processes are mlocking on the same machine.
+   */
+   const size_t MLOCK_UPPER_BOUND = 512*1024;
+
    struct rlimit limits;
    ::getrlimit(RLIMIT_MEMLOCK, &limits);
 
@@ -28,15 +39,7 @@ size_t mlock_limit()
       ::getrlimit(RLIMIT_MEMLOCK, &limits);
       }
 
-   /*
-   * Linux defaults to only 64 KiB of mlockable memory per process
-   * (too small) but BSDs offer a small fraction of total RAM (more
-   * than we need). Bound the total mlock size to 256 KiB which is
-   * enough to run the entire test suite without spilling to non-mlock
-   * memory, but small enough that we should not cause problems if
-   * multiple processes are mlocking on the same machine.
-   */
-   return std::min<size_t>(limits.rlim_cur, 256*1024);
+   return std::min<size_t>(limits.rlim_cur, MLOCK_UPPER_BOUND);
    }
 
 bool ptr_in_pool(const void* pool_ptr, size_t poolsize,
@@ -49,7 +52,7 @@ bool ptr_in_pool(const void* pool_ptr, size_t poolsize,
       return false;
 
    BOTAN_ASSERT(buf + bufsize <= pool + poolsize,
-                "Invalid pointer/length halfway into mem pool");
+                "Pointer does not partially overlap pool");
 
    return true;
    }
@@ -64,9 +67,18 @@ size_t padding_for_alignment(size_t offset, size_t desired_alignment)
 
 }
 
-void* mlock_allocator::allocate(size_t n, size_t alignment)
+void* mlock_allocator::allocate(size_t num_elems, size_t elem_size)
    {
-   if(!m_pool || n >= m_poolsize)
+   if(!m_pool)
+      return;
+
+   const size_t n = num_elems * elem_size;
+   const size_t alignment = elem_size;
+
+   if(n / elem_size != num_elems)
+      return nullptr; // overflow!
+
+   if(n >= m_poolsize)
       return nullptr; // bigger than the whole pool!
 
    std::lock_guard<std::mutex> lock(m_mutex);
@@ -134,9 +146,21 @@ void* mlock_allocator::allocate(size_t n, size_t alignment)
    return nullptr;
    }
 
-bool mlock_allocator::deallocate(void* p, size_t n)
+bool mlock_allocator::deallocate(void* p, size_t num_elems, size_t elem_size)
    {
-   if(!m_pool || !ptr_in_pool(m_pool, m_poolsize, p, n))
+   if(!m_pool)
+      return false;
+
+   size_t n = num_elems * elem_size;
+
+   /*
+   We return nullptr in allocate if there was an overflow, so we
+   should never ever see an overflow in a deallocation.
+   */
+   BOTAN_ASSERT(n / elem_size == num_elems,
+                "No overflow in deallocation");
+
+   if(!ptr_in_pool(m_pool, m_poolsize, p, n))
       return false;
 
    std::lock_guard<std::mutex> lock(m_mutex);
@@ -201,7 +225,7 @@ mlock_allocator::mlock_allocator() :
             -1, 0));
 
       if(m_pool == static_cast<byte*>(MAP_FAILED))
-         throw std::runtime_error("Failed to mmap pool");
+         throw std::runtime_error("Failed to mmap locking_allocator pool");
 
       clear_mem(m_pool, m_poolsize);
 
@@ -209,7 +233,7 @@ mlock_allocator::mlock_allocator() :
          {
          ::munmap(m_pool, m_poolsize);
          m_pool = nullptr;
-         throw std::runtime_error("Failed to lock pool");
+         throw std::runtime_error("Failed to lock pool in memory");
          }
 
       m_freelist.push_back(std::make_pair(0, m_poolsize));
