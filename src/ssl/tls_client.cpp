@@ -304,7 +304,12 @@ void TLS_Client::read_handshake(byte rec_type,
                                 const MemoryRegion<byte>& rec_buf)
    {
    if(rec_type == HANDSHAKE)
+      {
+      if(!state)
+         return;
+
       state->queue.write(&rec_buf[0], rec_buf.size());
+      }
 
    while(true)
       {
@@ -355,15 +360,8 @@ void TLS_Client::read_handshake(byte rec_type,
 void TLS_Client::process_handshake_msg(Handshake_Type type,
                                        const MemoryRegion<byte>& contents)
    {
-   rng.add_entropy(&contents[0], contents.size());
-
    if(type == HELLO_REQUEST)
-      {
-      if(state == 0)
-         state = new Handshake_State();
-      else
-         return;
-      }
+      return;
 
    if(state == 0)
       throw Unexpected_Message("Unexpected handshake message");
@@ -377,14 +375,7 @@ void TLS_Client::process_handshake_msg(Handshake_Type type,
       state->hash.update(contents);
       }
 
-   if(type == HELLO_REQUEST)
-      {
-      client_check_state(type, state);
-
-      Hello_Request hello_request(contents);
-      state->client_hello = new Client_Hello(rng, writer, policy, state->hash);
-      }
-   else if(type == SERVER_HELLO)
+   if(type == SERVER_HELLO)
       {
       client_check_state(type, state);
 

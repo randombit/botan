@@ -1,7 +1,5 @@
 define SSL_TLS
 
-load_on request
-
 <comment>
 A new TLS API is being developed. This version has numerous
 performance and usability issues and will not be supported in the

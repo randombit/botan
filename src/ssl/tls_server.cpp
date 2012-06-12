@@ -332,6 +332,14 @@ void TLS_Server::process_handshake_msg(Handshake_Type type,
    if(state == 0)
       throw Unexpected_Message("Unexpected handshake message");
 
+   if(active && (type == CLIENT_HELLO || type == CLIENT_HELLO_SSLV2))
+      {
+      delete state;
+      state = 0;
+      writer.alert(WARNING, NO_RENEGOTIATION);
+      return;
+      }
+
    if(type != HANDSHAKE_CCS && type != FINISHED)
       {
       if(type != CLIENT_HELLO_SSLV2)

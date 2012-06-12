@@ -49,6 +49,7 @@ void Record_Reader::set_keys(const CipherSuite& suite, const SessionKeys& keys,
    cipher.reset();
    delete mac;
    mac = 0;
+   seq_no = 0;
 
    SymmetricKey mac_key, cipher_key;
    InitializationVector iv;

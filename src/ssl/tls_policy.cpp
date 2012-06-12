@@ -57,6 +57,8 @@ std::vector<u16bit> TLS_Policy::suite_list(bool use_rsa,
       throw TLS_Exception(INTERNAL_ERROR,
                           "TLS_Policy error: All ciphersuites disabled");
 
+   suites.push_back(TLS_NO_RENEGOTIATION_SCSV);
+
    return suites;
    }
 
