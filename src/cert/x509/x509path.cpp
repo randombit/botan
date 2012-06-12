@@ -24,7 +24,7 @@ class PKIX_Validation_Failure : public std::exception
 
       Path_Validation_Result::Code code() const { return m_code; }
 
-      const char* what() { return "PKIX validation failed"; }
+      const char* what() const noexcept { return "PKIX validation failed"; }
    private:
       Path_Validation_Result::Code m_code;
    };
