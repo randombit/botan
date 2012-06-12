@@ -20,6 +20,7 @@ solaris
 
 <cc>
 gcc
+clang
 icc
 </cc>
 
