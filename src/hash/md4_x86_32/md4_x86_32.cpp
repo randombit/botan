@@ -26,7 +26,7 @@ void MD4_X86_32::compress_n(const byte input[], size_t blocks)
    {
    for(size_t i = 0; i != blocks; ++i)
       {
-      botan_md4_x86_32_compress(digest, input, M);
+      botan_md4_x86_32_compress(&digest[0], input, &M[0]);
       input += hash_block_size();
       }
    }

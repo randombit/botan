@@ -38,7 +38,7 @@ class BOTAN_DLL Serpent : public Block_Cipher_Fixed_Params<16, 16, 32, 8>
       */
       void set_round_keys(const u32bit ks[132])
          {
-         copy_mem(&round_key[0], ks, 132);
+         round_key.assign(&ks[0], &ks[132]);
          }
 
    private:
