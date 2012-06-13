@@ -50,11 +50,13 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
 
          std::vector<Botan::X509_Certificate> certs;
 
+         /*
          if(type == "tls-server" && hostname == "localhost")
             {
             Botan::X509_Certificate testca("testCA.crt");
             certs.push_back(testca);
             }
+         */
 
          if(type == "tls-client" && hostname == "twitter.com")
             {

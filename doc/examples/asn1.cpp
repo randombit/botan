@@ -9,6 +9,7 @@
 #include <botan/charset.h>
 using namespace Botan;
 
+#include <sstream>
 #include <stdio.h>
 #include <ctype.h>
 
@@ -25,6 +26,21 @@ using namespace Botan;
 void decode(BER_Decoder&, size_t);
 void emit(const std::string&, size_t, size_t, const std::string& = "");
 std::string type_name(ASN1_Tag);
+
+std::string url_encode(const std::vector<byte>& in)
+   {
+   std::ostringstream out;
+
+   for(size_t i = 0; i != in.size(); ++i)
+      {
+      const int c = in[i];
+      if(isprint((int)c))
+         out << (char)c;
+      else
+         out << "%" << std::hex << (int)c << std::dec;
+      }
+   return out.str();
+   }
 
 int main(int argc, char* argv[])
    {
@@ -113,16 +129,24 @@ void decode(BER_Decoder& decoder, size_t level)
          }
       else if((class_tag & APPLICATION) || (class_tag & CONTEXT_SPECIFIC))
          {
-         bool not_text = false;
+#if 0
+         std::vector<byte> bits;
+         data.decode(bits, type_tag);
 
-         for(size_t i = 0; i != bits.size(); ++i)
-            if(!isgraph(bits[i]) && !isspace(bits[i]))
-               not_text = true;
-
-         Pipe pipe(((not_text) ? new Hex_Encoder : 0));
-         pipe.process_msg(obj.value);
+         try
+            {
+            BER_Decoder inner(bits);
+            decode(inner, level + 1);
+            }
+         catch(...)
+            {
+            emit("[" + std::to_string(type_tag) + "]", level, length,
+                 url_encode(bits));
+            }
+#else
          emit("[" + std::to_string(type_tag) + "]", level, length,
-              pipe.read_all_as_string());
+              url_encode(bits));
+#endif
          }
       else if(type_tag == OBJECT_ID)
          {
@@ -173,14 +197,6 @@ void decode(BER_Decoder& decoder, size_t level)
          {
          std::vector<byte> bits;
          data.decode(bits, type_tag);
-         bool not_text = false;
-
-         for(size_t i = 0; i != bits.size(); ++i)
-            if(!isgraph(bits[i]) && !isspace(bits[i]))
-               not_text = true;
-
-         Pipe pipe(((not_text) ? new Hex_Encoder : 0));
-         pipe.process_msg(bits);
 
          try
             {
@@ -189,7 +205,8 @@ void decode(BER_Decoder& decoder, size_t level)
             }
          catch(...)
             {
-            emit(type_name(type_tag), level, length, pipe.read_all_as_string());
+            emit(type_name(type_tag), level, length,
+                 url_encode(bits));
             }
          }
       else if(type_tag == BIT_STRING)

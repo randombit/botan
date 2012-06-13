@@ -62,11 +62,18 @@ int connect_to_host(const std::string& host, u16bit port)
 
 bool handshake_complete(const TLS::Session& session)
    {
-   std::cout << "Handshake complete!\n";
-   std::cout << "Protocol version " << session.version().to_string() << "\n";
-   std::cout << "Ciphersuite " << std::hex << session.ciphersuite().to_string() << "\n";
-   std::cout << "Session ID " << hex_encode(session.session_id()) << "\n";
-   std::cout << "Session ticket " << hex_encode(session.session_ticket()) << "\n";
+   std::cout << "Handshake complete, " << session.version().to_string()
+             << " using " << session.ciphersuite().to_string() << "\n";
+
+   if(!session.session_id().empty())
+      std::cout << "Session ID " << hex_encode(session.session_id()) << "\n";
+
+   if(!session.session_ticket().empty())
+      std::cout << "Session ticket " << hex_encode(session.session_ticket()) << "\n";
+
+   std::cout << "Secure renegotiation is"
+             << (session.secure_renegotiation() ? "" : " NOT")
+             << " supported\n";
 
    return true;
    }
