@@ -270,7 +270,7 @@ void Channel::Secure_Renegotiation_State::update(Client_Hello* client_hello)
       }
    else
       {
-      if(supported() != client_hello->secure_renegotiation())
+      if(supported() && !client_hello->secure_renegotiation())
          throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                              "Client changed its mind about secure renegotiation");
       }
