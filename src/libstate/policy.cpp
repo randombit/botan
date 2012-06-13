@@ -189,6 +189,7 @@ void set_default_oids(Library_State& config)
    add_oid(config, "2.5.29.21", "X509v3.ReasonCode");
    add_oid(config, "2.5.29.23", "X509v3.HoldInstructionCode");
    add_oid(config, "2.5.29.24", "X509v3.InvalidityDate");
+   add_oid(config, "2.5.29.31", "X509v3.CRLDistributionPoints");
    add_oid(config, "2.5.29.32", "X509v3.CertificatePolicies");
    add_oid(config, "2.5.29.35", "X509v3.AuthorityKeyIdentifier");
    add_oid(config, "2.5.29.36", "X509v3.PolicyConstraints");

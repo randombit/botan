@@ -1,6 +1,6 @@
 /*
 * X.509 Certificate Extensions
-* (C) 1999-2010 Jack Lloyd
+* (C) 1999-2010,2012 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -34,6 +34,7 @@ Certificate_Extension* Extensions::get_extension(const OID& oid)
    X509_EXTENSION("X509v3.IssuerAlternativeName", Issuer_Alternative_Name);
    X509_EXTENSION("X509v3.SubjectAlternativeName", Subject_Alternative_Name);
    X509_EXTENSION("X509v3.CertificatePolicies", Certificate_Policies);
+   X509_EXTENSION("X509v3.CRLDistributionPoints", CRL_Distribution_Points);
    X509_EXTENSION("PKIX.AuthorityInformationAccess", Authority_Information_Access);
    X509_EXTENSION("X509v3.CRLNumber", CRL_Number);
    X509_EXTENSION("X509v3.ReasonCode", CRL_ReasonCode);
@@ -375,22 +376,18 @@ void Alternative_Name::contents_to(Data_Store& subject_info,
 * Alternative_Name Constructor
 */
 Alternative_Name::Alternative_Name(const AlternativeName& alt_name,
-                                   const std::string& oid_name_str,
-                                   const std::string& config_name_str)
+                                   const std::string& oid_name_str)
    {
    this->alt_name = alt_name;
    this->oid_name_str = oid_name_str;
-   this->config_name_str = config_name_str;
    }
 
 /*
 * Subject_Alternative_Name Constructor
 */
 Subject_Alternative_Name::Subject_Alternative_Name(
-   const AlternativeName& name) :
-
-   Alternative_Name(name, "X509v3.SubjectAlternativeName",
-                    "subject_alternative_name")
+  const AlternativeName& name) :
+   Alternative_Name(name, "X509v3.SubjectAlternativeName")
    {
    }
 
@@ -398,8 +395,7 @@ Subject_Alternative_Name::Subject_Alternative_Name(
 * Issuer_Alternative_Name Constructor
 */
 Issuer_Alternative_Name::Issuer_Alternative_Name(const AlternativeName& name) :
-   Alternative_Name(name, "X509v3.IssuerAlternativeName",
-                    "issuer_alternative_name")
+   Alternative_Name(name, "X509v3.IssuerAlternativeName")
    {
    }
 
@@ -619,6 +615,44 @@ void CRL_ReasonCode::decode_inner(const std::vector<byte>& in)
 void CRL_ReasonCode::contents_to(Data_Store& info, Data_Store&) const
    {
    info.add("X509v3.CRLReasonCode", reason);
+   }
+
+std::vector<byte> CRL_Distribution_Points::encode_inner() const
+   {
+   throw std::runtime_error("CRL_Distribution_Points encoding not implemented");
+   }
+
+void CRL_Distribution_Points::decode_inner(const std::vector<byte>& buf)
+   {
+   BER_Decoder(buf).decode_list(m_distribution_points).verify_end();
+   }
+
+void CRL_Distribution_Points::contents_to(Data_Store& info, Data_Store&) const
+   {
+   for(size_t i = 0; i != m_distribution_points.size(); ++i)
+      {
+      auto point = m_distribution_points[i].point().contents();
+
+      auto uris = point.equal_range("URI");
+
+      for(auto uri = uris.first; uri != uris.second; ++uri)
+         info.add("CRL.DistributionPoint", uri->second);
+      }
+   }
+
+void CRL_Distribution_Points::Distribution_Point::encode_into(class DER_Encoder&) const
+   {
+   throw std::runtime_error("CRL_Distribution_Points encoding not implemented");
+   }
+
+void CRL_Distribution_Points::Distribution_Point::decode_from(class BER_Decoder& ber)
+   {
+   ber.start_cons(SEQUENCE)
+      .start_cons(ASN1_Tag(0), CONTEXT_SPECIFIC)
+        .decode_optional_implicit(m_point, ASN1_Tag(0),
+                                  ASN1_Tag(CONTEXT_SPECIFIC | CONSTRUCTED),
+                                  SEQUENCE, CONSTRUCTED)
+      .end_cons().end_cons();
    }
 
 }

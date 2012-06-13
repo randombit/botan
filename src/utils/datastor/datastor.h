@@ -33,7 +33,10 @@ class BOTAN_DLL Data_Store
 
       std::vector<std::string> get(const std::string&) const;
 
-      std::string get1(const std::string&) const;
+      std::string get1(const std::string& key) const;
+
+      std::string get1(const std::string& key,
+                       const std::string& default_value) const;
 
       std::vector<byte> get1_memvec(const std::string&) const;
       u32bit get1_u32bit(const std::string&, u32bit = 0) const;

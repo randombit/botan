@@ -171,6 +171,11 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       std::string ocsp_responder() const;
 
       /**
+      * Return the CRL distribution point, or empty if not set
+      */
+      std::string crl_distribution_point() const;
+
+      /**
       * @return a string describing the certificate
       */
       std::string to_string() const;

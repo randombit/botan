@@ -278,7 +278,12 @@ std::vector<std::string> X509_Certificate::policies() const
 
 std::string X509_Certificate::ocsp_responder() const
    {
-   return subject.get1("OCSP.responder");
+   return subject.get1("OCSP.responder", "");
+   }
+
+std::string X509_Certificate::crl_distribution_point() const
+   {
+   return subject.get1("CRL.DistributionPoint", "");
    }
 
 /*

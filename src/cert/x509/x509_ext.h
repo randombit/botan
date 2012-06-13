@@ -1,6 +1,6 @@
 /*
 * X.509 Certificate Extensions
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2012 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -41,11 +41,6 @@ class BOTAN_DLL Certificate_Extension
       */
       virtual void contents_to(Data_Store& subject,
                                Data_Store& issuer) const = 0;
-
-      /*
-      * @return short readable name
-      */
-      virtual std::string config_id() const = 0;
 
       /*
       * @return specific OID name
@@ -104,7 +99,6 @@ class BOTAN_DLL Basic_Constraints : public Certificate_Extension
       bool get_is_ca() const { return is_ca; }
       size_t get_path_limit() const;
    private:
-      std::string config_id() const { return "basic_constraints"; }
       std::string oid_name() const { return "X509v3.BasicConstraints"; }
 
       std::vector<byte> encode_inner() const;
@@ -127,7 +121,6 @@ class BOTAN_DLL Key_Usage : public Certificate_Extension
 
       Key_Constraints get_constraints() const { return constraints; }
    private:
-      std::string config_id() const { return "key_usage"; }
       std::string oid_name() const { return "X509v3.KeyUsage"; }
 
       bool should_encode() const { return (constraints != NO_CONSTRAINTS); }
@@ -151,7 +144,6 @@ class BOTAN_DLL Subject_Key_ID : public Certificate_Extension
 
       std::vector<byte> get_key_id() const { return key_id; }
    private:
-      std::string config_id() const { return "subject_key_id"; }
       std::string oid_name() const { return "X509v3.SubjectKeyIdentifier"; }
 
       bool should_encode() const { return (key_id.size() > 0); }
@@ -175,7 +167,6 @@ class BOTAN_DLL Authority_Key_ID : public Certificate_Extension
 
       std::vector<byte> get_key_id() const { return key_id; }
    private:
-      std::string config_id() const { return "authority_key_id"; }
       std::string oid_name() const { return "X509v3.AuthorityKeyIdentifier"; }
 
       bool should_encode() const { return (key_id.size() > 0); }
@@ -195,12 +186,10 @@ class BOTAN_DLL Alternative_Name : public Certificate_Extension
       AlternativeName get_alt_name() const { return alt_name; }
 
    protected:
-      Alternative_Name(const AlternativeName&,
-                       const std::string&, const std::string&);
+      Alternative_Name(const AlternativeName&, const std::string& oid_name);
 
       Alternative_Name(const std::string&, const std::string&);
    private:
-      std::string config_id() const { return config_name_str; }
       std::string oid_name() const { return oid_name_str; }
 
       bool should_encode() const { return alt_name.has_items(); }
@@ -208,7 +197,7 @@ class BOTAN_DLL Alternative_Name : public Certificate_Extension
       void decode_inner(const std::vector<byte>&);
       void contents_to(Data_Store&, Data_Store&) const;
 
-      std::string config_name_str, oid_name_str;
+      std::string oid_name_str;
       AlternativeName alt_name;
    };
 
@@ -249,7 +238,6 @@ class BOTAN_DLL Extended_Key_Usage : public Certificate_Extension
 
       std::vector<OID> get_oids() const { return oids; }
    private:
-      std::string config_id() const { return "extended_key_usage"; }
       std::string oid_name() const { return "X509v3.ExtendedKeyUsage"; }
 
       bool should_encode() const { return (oids.size() > 0); }
@@ -274,7 +262,6 @@ class BOTAN_DLL Certificate_Policies : public Certificate_Extension
 
       std::vector<OID> get_oids() const { return oids; }
    private:
-      std::string config_id() const { return "policy_info"; }
       std::string oid_name() const { return "X509v3.CertificatePolicies"; }
 
       bool should_encode() const { return (oids.size() > 0); }
@@ -297,7 +284,6 @@ class BOTAN_DLL Authority_Information_Access : public Certificate_Extension
          m_ocsp_responder(ocsp) {}
 
    private:
-      std::string config_id() const { return "auth_information_access"; }
       std::string oid_name() const { return "PKIX.AuthorityInformationAccess"; }
 
       bool should_encode() const { return (m_ocsp_responder != ""); }
@@ -323,7 +309,6 @@ class BOTAN_DLL CRL_Number : public Certificate_Extension
 
       size_t get_crl_number() const;
    private:
-      std::string config_id() const { return "crl_number"; }
       std::string oid_name() const { return "X509v3.CRLNumber"; }
 
       bool should_encode() const { return has_value; }
@@ -347,7 +332,6 @@ class BOTAN_DLL CRL_ReasonCode : public Certificate_Extension
 
       CRL_Code get_reason() const { return reason; }
    private:
-      std::string config_id() const { return "crl_reason"; }
       std::string oid_name() const { return "X509v3.ReasonCode"; }
 
       bool should_encode() const { return (reason != UNSPECIFIED); }
@@ -356,6 +340,46 @@ class BOTAN_DLL CRL_ReasonCode : public Certificate_Extension
       void contents_to(Data_Store&, Data_Store&) const;
 
       CRL_Code reason;
+   };
+
+/**
+* CRL Distribution Points Extension
+*/
+class BOTAN_DLL CRL_Distribution_Points : public Certificate_Extension
+   {
+   public:
+      class BOTAN_DLL Distribution_Point : public ASN1_Object
+         {
+         public:
+            void encode_into(class DER_Encoder&) const;
+            void decode_from(class BER_Decoder&);
+
+            const AlternativeName& point() const { return m_point; }
+         private:
+            AlternativeName m_point;
+         };
+
+      CRL_Distribution_Points* copy() const
+         { return new CRL_Distribution_Points(m_distribution_points); }
+
+      CRL_Distribution_Points() {}
+
+      CRL_Distribution_Points(const std::vector<Distribution_Point>& points) :
+         m_distribution_points(points) {}
+
+      std::vector<Distribution_Point> distribution_points() const
+         { return m_distribution_points; }
+
+   private:
+      std::string oid_name() const { return "X509v3.CRLDistributionPoints"; }
+
+      bool should_encode() const { return !m_distribution_points.empty(); }
+
+      std::vector<byte> encode_inner() const;
+      void decode_inner(const std::vector<byte>&);
+      void contents_to(Data_Store&, Data_Store&) const;
+
+      std::vector<Distribution_Point> m_distribution_points;
    };
 
 }

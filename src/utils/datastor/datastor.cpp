@@ -64,9 +64,23 @@ std::string Data_Store::get1(const std::string& key) const
    std::vector<std::string> vals = get(key);
 
    if(vals.empty())
-      throw Invalid_State("Data_Store::get1: Not values for " + key);
+      throw Invalid_State("Data_Store::get1: No values set for " + key);
    if(vals.size() > 1)
       throw Invalid_State("Data_Store::get1: More than one value for " + key);
+
+   return vals[0];
+   }
+
+std::string Data_Store::get1(const std::string& key,
+                             const std::string& default_value) const
+   {
+   std::vector<std::string> vals = get(key);
+
+   if(vals.size() > 1)
+      throw Invalid_State("Data_Store::get1: More than one value for " + key);
+
+   if(vals.empty())
+      return default_value;
 
    return vals[0];
    }

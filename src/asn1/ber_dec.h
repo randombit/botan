@@ -97,6 +97,15 @@ class BOTAN_DLL BER_Decoder
                                       const T& default_value = T());
 
       template<typename T>
+         BER_Decoder& decode_optional_implicit(
+            T& out,
+            ASN1_Tag type_tag,
+            ASN1_Tag class_tag,
+            ASN1_Tag real_type,
+            ASN1_Tag real_class,
+            const T& default_value = T());
+
+      template<typename T>
          BER_Decoder& decode_list(std::vector<T>& out,
                                   ASN1_Tag type_tag = SEQUENCE,
                                   ASN1_Tag class_tag = UNIVERSAL);
@@ -171,6 +180,35 @@ BER_Decoder& BER_Decoder::decode_optional(T& out,
    return (*this);
    }
 
+/*
+* Decode an OPTIONAL or DEFAULT element
+*/
+template<typename T>
+BER_Decoder& BER_Decoder::decode_optional_implicit(
+   T& out,
+   ASN1_Tag type_tag,
+   ASN1_Tag class_tag,
+   ASN1_Tag real_type,
+   ASN1_Tag real_class,
+   const T& default_value)
+   {
+   BER_Object obj = get_next_object();
+
+   if(obj.type_tag == type_tag && obj.class_tag == class_tag)
+      {
+      obj.type_tag = real_type;
+      obj.class_tag = real_class;
+      push_back(obj);
+      decode(out, real_type, real_class);
+      }
+   else
+      {
+      out = default_value;
+      push_back(obj);
+      }
+
+   return (*this);
+   }
 /*
 * Decode a list of homogenously typed values
 */
