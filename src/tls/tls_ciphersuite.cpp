@@ -14,8 +14,16 @@ namespace Botan {
 
 namespace TLS {
 
-Ciphersuite Ciphersuite::by_name(const std::string& name)
+namespace {
+
+/*
+* This way all work happens at the constuctor call, and we can
+* rely on that happening only once in C++11.
+*/
+std::vector<Ciphersuite> gather_known_ciphersuites()
    {
+   std::vector<Ciphersuite> ciphersuites;
+
    for(size_t i = 0; i != 65536; ++i)
       {
       Ciphersuite suite = Ciphersuite::by_id(i);
@@ -23,6 +31,24 @@ Ciphersuite Ciphersuite::by_name(const std::string& name)
       if(!suite.valid())
          continue; // not a ciphersuite we know, skip
 
+      ciphersuites.push_back(suite);
+      }
+
+   return ciphersuites;
+   }
+
+}
+
+const std::vector<Ciphersuite>& Ciphersuite::all_known_ciphersuites()
+   {
+   static std::vector<Ciphersuite> all_ciphersuites(gather_known_ciphersuites());
+   return all_ciphersuites;
+   }
+
+Ciphersuite Ciphersuite::by_name(const std::string& name)
+   {
+   for(auto suite : all_known_ciphersuites())
+      {
       if(suite.to_string() == name)
          return suite;
       }

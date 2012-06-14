@@ -10,6 +10,7 @@
 
 #include <botan/types.h>
 #include <string>
+#include <vector>
 
 namespace Botan {
 
@@ -28,10 +29,14 @@ class BOTAN_DLL Ciphersuite
 
       static Ciphersuite by_name(const std::string& name);
 
+      static const std::vector<Ciphersuite>& all_known_ciphersuites();
+
       /**
       * Formats the ciphersuite back to an RFC-style ciphersuite string
       */
       std::string to_string() const;
+
+      u16bit ciphersuite_code() const { return m_ciphersuite_code; }
 
       bool psk_ciphersuite() const;
       bool ecc_ciphersuite() const;
@@ -48,11 +53,13 @@ class BOTAN_DLL Ciphersuite
 
       Ciphersuite() : m_cipher_keylen(0) {}
 
-      Ciphersuite(const std::string& sig_algo,
+      Ciphersuite(u16bit ciphersuite_code,
+                  const std::string& sig_algo,
                   const std::string& kex_algo,
                   const std::string& mac_algo,
                   const std::string& cipher_algo,
                   size_t cipher_algo_keylen) :
+         m_ciphersuite_code(ciphersuite_code),
          m_sig_algo(sig_algo),
          m_kex_algo(kex_algo),
          m_mac_algo(mac_algo),
@@ -62,6 +69,7 @@ class BOTAN_DLL Ciphersuite
             }
 
    private:
+      u16bit m_ciphersuite_code;
       std::string m_sig_algo, m_kex_algo, m_mac_algo, m_cipher_algo;
       size_t m_cipher_keylen;
    };

@@ -10,6 +10,7 @@
 #include <botan/tls_magic.h>
 #include <botan/tls_exceptn.h>
 #include <botan/internal/stl_util.h>
+#include <set>
 
 namespace Botan {
 
@@ -207,16 +208,10 @@ std::vector<u16bit> ciphersuite_list(const Policy& policy,
 
    Ciphersuite_Preference_Ordering order(ciphers, hashes, kex, sigs);
 
-   std::map<Ciphersuite, u16bit, Ciphersuite_Preference_Ordering>
-      ciphersuites(order);
+   std::set<Ciphersuite, Ciphersuite_Preference_Ordering> ciphersuites(order);
 
-   for(size_t i = 0; i != 65536; ++i)
+   for(auto suite : Ciphersuite::all_known_ciphersuites())
       {
-      Ciphersuite suite = Ciphersuite::by_id(i);
-
-      if(!suite.valid())
-         continue; // not a ciphersuite we know, skip
-
       if(!have_srp && suite.kex_algo() == "SRP_SHA")
          continue;
 
@@ -237,17 +232,12 @@ std::vector<u16bit> ciphersuite_list(const Policy& policy,
          }
 
       // OK, allow it:
-      ciphersuites[suite] = i;
+      ciphersuites.insert(suite);
       }
 
    std::vector<u16bit> ciphersuite_codes;
-
-   for(std::map<Ciphersuite, u16bit, Ciphersuite_Preference_Ordering>::iterator i = ciphersuites.begin();
-       i != ciphersuites.end(); ++i)
-      {
-      ciphersuite_codes.push_back(i->second);
-      }
-
+   for(auto i : ciphersuites)
+      ciphersuite_codes.push_back(i.ciphersuite_code());
    return ciphersuite_codes;
    }
 

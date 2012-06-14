@@ -323,7 +323,6 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
                throw TLS_Exception(Alert::UNKNOWN_PSK_IDENTITY,
                                    "No PSK for identifier " + psk_identity);
             }
-
          }
 
       if(kex_algo == "PSK")
