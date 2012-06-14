@@ -12,6 +12,7 @@
 #include <botan/internal/stl_util.h>
 #include <botan/parsing.h>
 #include <botan/bigint.h>
+#include <botan/lookup.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
 #include <botan/hex.h>
@@ -366,6 +367,26 @@ bool cert_subject_dns_match(const std::string& name,
 
 }
 
+std::string X509_Certificate::fingerprint(const std::string& hash_name) const
+   {
+   std::unique_ptr<HashFunction> hash(get_hash(hash_name));
+   hash->update(this->BER_encode());
+   const auto hex_print = hex_encode(hash->final());
+
+   std::string formatted_print;
+
+   for(size_t i = 0; i != hex_print.size(); i += 2)
+      {
+      formatted_print.push_back(hex_print[i]);
+      formatted_print.push_back(hex_print[i+1]);
+
+      if(i != hex_print.size() - 2)
+         formatted_print.push_back(':');
+      }
+
+   return formatted_print;
+   }
+
 bool X509_Certificate::matches_dns_name(const std::string& name) const
    {
    if(name == "")
@@ -402,12 +423,8 @@ bool X509_Certificate::operator<(const X509_Certificate& other) const
       return false;
       }
 
-   /*
-   * same signatures, highly unlikely case, revert to compare
-   * of entire contents
-   */
-
-   return to_string() < other.to_string();
+   // Then compare the signed contents
+   return tbs_bits < other.tbs_bits;
    }
 
 /*

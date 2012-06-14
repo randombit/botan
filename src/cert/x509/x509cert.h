@@ -181,6 +181,11 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       std::string to_string() const;
 
       /**
+      * Return a fingerprint of the certificate
+      */
+      std::string fingerprint(const std::string& = "SHA-1") const;
+
+      /**
       * Check if a certain DNS name matches up with the information in
       * the cert
       */
