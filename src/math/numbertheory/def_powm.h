@@ -51,12 +51,11 @@ class Montgomery_Exponentiator : public Modular_Exponentiator
 
       Montgomery_Exponentiator(const BigInt&, Power_Mod::Usage_Hints);
    private:
-      BigInt exp, modulus;
-      BigInt R2, R_mod;
-      std::vector<BigInt> g;
-      word mod_prime;
-      size_t mod_words, exp_bits, window_bits;
-      Power_Mod::Usage_Hints hints;
+      BigInt m_exp, m_modulus, m_R_mod, m_R2_mod;
+      word m_mod_prime;
+      size_t m_mod_words, m_exp_bits, m_window_bits;
+      Power_Mod::Usage_Hints m_hints;
+      std::vector<BigInt> m_g;
    };
 
 }
