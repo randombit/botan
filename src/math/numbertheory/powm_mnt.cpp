@@ -116,7 +116,7 @@ BigInt Montgomery_Exponentiator::execute() const
 * Montgomery_Exponentiator Constructor
 */
 Montgomery_Exponentiator::Montgomery_Exponentiator(const BigInt& mod,
-   Power_Mod::Usage_Hints hints)
+                                                   Power_Mod::Usage_Hints hints)
    {
    // Montgomery reduction only works for positive odd moduli
    if(!mod.is_positive() || mod.is_even())
@@ -128,9 +128,10 @@ Montgomery_Exponentiator::Montgomery_Exponentiator(const BigInt& mod,
 
    mod_words = modulus.sig_words();
 
-   BigInt r(BigInt::Power2, mod_words * BOTAN_MP_WORD_BITS);
-   mod_prime = (((r * inverse_mod(r, mod)) - 1) / mod).word_at(0);
+   const BigInt b = BigInt(1) << BOTAN_MP_WORD_BITS;
+   mod_prime = (b - inverse_mod(modulus.word_at(0), b)).word_at(0);
 
+   const BigInt r(BigInt::Power2, mod_words * BOTAN_MP_WORD_BITS);
    R_mod = r % modulus;
 
    R2 = (R_mod * R_mod) % modulus;
