@@ -253,6 +253,12 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
 BigInt power_mod(const BigInt& base, const BigInt& exp, const BigInt& mod)
    {
    Power_Mod pow_mod(mod);
+
+   /*
+   * Calling set_base before set_exponent means we end up using a
+   * minimal window. This makes sense given that here we know that any
+   * precomputation is wasted.
+   */
    pow_mod.set_base(base);
    pow_mod.set_exponent(exp);
    return pow_mod.execute();

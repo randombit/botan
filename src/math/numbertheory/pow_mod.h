@@ -77,8 +77,10 @@ class BOTAN_DLL Fixed_Exponent_Power_Mod : public Power_Mod
          { set_base(b); return execute(); }
 
       Fixed_Exponent_Power_Mod() {}
-      Fixed_Exponent_Power_Mod(const BigInt&, const BigInt&,
-                               Usage_Hints = NO_HINTS);
+
+      Fixed_Exponent_Power_Mod(const BigInt& exponent,
+                               const BigInt& modulus,
+                               Usage_Hints hints = NO_HINTS);
    };
 
 /**
@@ -91,8 +93,10 @@ class BOTAN_DLL Fixed_Base_Power_Mod : public Power_Mod
          { set_exponent(e); return execute(); }
 
       Fixed_Base_Power_Mod() {}
-      Fixed_Base_Power_Mod(const BigInt&, const BigInt&,
-                           Usage_Hints = NO_HINTS);
+
+      Fixed_Base_Power_Mod(const BigInt& base,
+                           const BigInt& modulus,
+                           Usage_Hints hints = NO_HINTS);
    };
 
 }
