@@ -70,7 +70,7 @@ RSA_Private_Operation::RSA_Private_Operation(const RSA_PrivateKey& rsa) :
    powermod_d2_q(rsa.get_d2(), rsa.get_q()),
    mod_p(rsa.get_p())
    {
-   BigInt k(global_state().global_rng(), n.bits() - 1);
+   BigInt k(global_state().global_rng(), std::min<size_t>(160, n.bits() - 1));
    blinder = Blinder(powermod_e_n(k), inverse_mod(k, n), n);
    }
 

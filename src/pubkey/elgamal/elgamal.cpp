@@ -105,7 +105,7 @@ ElGamal_Decryption_Operation::ElGamal_Decryption_Operation(const ElGamal_Private
    powermod_x_p = Fixed_Exponent_Power_Mod(key.get_x(), p);
    mod_p = Modular_Reducer(p);
 
-   BigInt k(global_state().global_rng(), p.bits() - 1);
+   BigInt k(global_state().global_rng(), std::min<size_t>(160, p.bits() - 1));
    blinder = Blinder(k, powermod_x_p(k), p);
    }
 

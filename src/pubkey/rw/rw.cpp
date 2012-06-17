@@ -77,7 +77,7 @@ RW_Signature_Operation::sign(const byte msg[], size_t msg_len,
    {
    if(!blinder.initialized())
       {
-      BigInt k(rng, n.bits() / 2);
+      BigInt k(rng, std::min<size_t>(160, n.bits() - 1));
       blinder = Blinder(power_mod(k, e, n), inverse_mod(k, n), n);
       }
 
