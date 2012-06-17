@@ -47,7 +47,7 @@ static int callback(void *NotUsed, int argc, char **argv, char **azColName){
 int main(int argc, char** argv)
 {
     sqlite3 * db;
-    const char * key = "testkey";
+    const char * key = "anotherkey";
     const char * dbname = "./testdb";
     int keylen = 7;
     char * error=0;

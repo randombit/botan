@@ -177,7 +177,7 @@ int sqlite3_rekey(sqlite3 *db, const void *zKey, int nKey)
     {
         // Rewrite all pages using the new encryption key (if specified)
         int nPageCount = -1;
-        int rc = sqlite3PagerPagecount(pPager, &nPageCount);
+        sqlite3PagerPagecount(pPager, &nPageCount);
         Pgno nPage = (Pgno) nPageCount;
 
         Pgno nSkip = PAGER_MJ_PGNO(pPager);
@@ -225,7 +225,7 @@ int sqlite3_rekey(sqlite3 *db, const void *zKey, int nKey)
     else
     {
         // Rollback, rekey failed
-        sqlite3BtreeRollback(pbt);
+        sqlite3BtreeRollback(pbt, SQLITE_ERROR);
 
         // go back to read key
         if (HasReadKey(pCodec))
