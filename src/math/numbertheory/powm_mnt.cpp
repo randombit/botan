@@ -11,6 +11,56 @@
 
 namespace Botan {
 
+namespace {
+
+/*
+* Compute -input^-1 mod 2^MP_WORD_BITS. We are assured that the
+* inverse exists because input is odd (checked by checking that the
+* modulus is odd in the Montgomery_Exponentiator constructor, and
+* input is the low word of the modulus and thus also odd), and thus
+* input and 2^n are relatively prime.
+*/
+word monty_inverse(word input)
+   {
+   word b = input;
+   word x2 = 1, x1 = 0, y2 = 0, y1 = 1;
+
+   // First iteration, a = n+1
+   word q = bigint_divop(1, 0, b);
+   word r = (MP_WORD_MAX - q*b) + 1;
+   word x = x2 - q*x1;
+   word y = y2 - q*y1;
+
+   word a = b;
+   b = r;
+   x2 = x1;
+   x1 = x;
+   y2 = y1;
+   y1 = y;
+
+   while(b > 0)
+      {
+      q = a / b;
+      r = a - q*b;
+      x = x2 - q*x1;
+      y = y2 - q*y1;
+
+      a = b;
+      b = r;
+      x2 = x1;
+      x1 = x;
+      y2 = y1;
+      y1 = y;
+      }
+
+   // Now invert in addition space
+   y2 = (MP_WORD_MAX - y2) + 1;
+
+   return y2;
+   }
+
+}
+
 /*
 * Set the exponent
 */
@@ -116,20 +166,17 @@ BigInt Montgomery_Exponentiator::execute() const
 * Montgomery_Exponentiator Constructor
 */
 Montgomery_Exponentiator::Montgomery_Exponentiator(const BigInt& mod,
-                                                   Power_Mod::Usage_Hints hints)
+                                                   Power_Mod::Usage_Hints hints) :
+   m_modulus(mod),
+   m_mod_words(m_modulus.sig_words()),
+   m_window_bits(1),
+   m_hints(hints)
    {
    // Montgomery reduction only works for positive odd moduli
-   if(!mod.is_positive() || mod.is_even())
+   if(!m_modulus.is_positive() || m_modulus.is_even())
       throw Invalid_Argument("Montgomery_Exponentiator: invalid modulus");
 
-   m_window_bits = 0;
-   m_hints = hints;
-   m_modulus = mod;
-
-   m_mod_words = m_modulus.sig_words();
-
-   const BigInt b = BigInt(1) << BOTAN_MP_WORD_BITS;
-   m_mod_prime = (b - inverse_mod(m_modulus.word_at(0), b)).word_at(0);
+   m_mod_prime = monty_inverse(mod.word_at(0));
 
    const BigInt r(BigInt::Power2, m_mod_words * BOTAN_MP_WORD_BITS);
    m_R_mod = r % m_modulus;
