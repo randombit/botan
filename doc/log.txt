@@ -7,7 +7,7 @@ Release Notes
 Series 1.10
 ----------------------------------------
 
-Version 1.10.2, Not Yet Released
+Version 1.10.2, 2012-06-17
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * To protect clients against renegotiation attacks, the TLS client
