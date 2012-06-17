@@ -60,6 +60,7 @@ std::vector<std::string> Policy::allowed_signature_methods() const
       "ECDSA",
       "RSA",
       "DSA",
+      //""
       });
    }
 
