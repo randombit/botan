@@ -176,7 +176,7 @@ void SetReadIsWrite(void *codec) {
     ((Codec*)codec)->SetReadIsWrite();
 }
 unsigned char* Encrypt(void *codec, int page, unsigned char *data, Bool useWriteKey) {
-    ((Codec*)codec)->Encrypt(page, data, useWriteKey);
+    return ((Codec*)codec)->Encrypt(page, data, useWriteKey);
 }
 void Decrypt(void *codec, int page, unsigned char *data) {
     ((Codec*)codec)->Decrypt(page, data);

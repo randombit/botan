@@ -1,31 +1,35 @@
-Build instructions for Botan SQLite3 codec
+Build instructions for BotanSqlite3
 ---
 
-1. Requires Botan 1.9.0 or later
+Requirements:
+  1. Botan 1.9.0 or later
+  2. SQLite3 amalgamation source, version 3.7.12.1 or later (previous versions may work, some will need minor changes)
 
-2. Download and extract SQLite3 version 3.7.0.1 or later (previous
-   versions may work, untested)
 
-3. From the extracted sqlite folder, apply the patch "sqlite3.diff":
-       $ patch -p0 < ../sqlite.diff
-       patching file Makefile.in
-       patching file sqlite3.c
+Building:
 
-   If the patch to fails for some reason (ie, changes in SQLite3), it
-   should be trivial to do it manually.
+1. Extract sqlite3 amalgamation to a directory and add BotanSqlite3 source files
 
-4. Copy all files inside the "src" directory into the Sqlite3 directory
-   (codec.cpp, codec.h, codec_c_interface.h, codecext.c)
+   If desired, codec.h can be modified to tweak the encryption algothrithms and parameters. (Defaults to Twofish/XTS with 256 bit key)
 
-5. As desired, edit the constants in codec.h to tweak the encryption
-   type to your needs. (Currently, Twofish/XTS with 256 bit key)
+2. Apply the patch "sqlite3.diff":
+    $ patch -p0 < sqlite3-amalgamation.patch
 
-6. "./configure" and "make" Sqlite3
+   If the patching fails for some reason (ie, changes in SQLite3), it should be trivial to do it manually.
 
-And to make sure it all worked...
+3. Compile the sqlite3 library with Botan encryption support:
+    $ gcc -c sqlite3.c -o botansqlite3.o && gcc -c codec.cpp -o codec.o `pkg-config --cflags botan-1.10` && ar rcs libbotansqlite3.a botansqlite3.o codec.o
+    
+    (replace "botan-1.10" with appropriate version)
 
-7. Make the test_sqlite.cpp file:
-      $ g++ test_sqlite.cpp -o test_sqlite -lbotan /path/to/libsqlite3.a
-8. Run it
+Testing:
+
+1. Build the test:
+      $ g++ test_sqlite.cpp -o test_sqlite `botan-config-1.10 --libs` ./libbotansqlite3.a
+      
+      (replace botan-config-1.10 w/ appropriate version)
+
+2. Run the test
       $ ./test_sqlite
-9. Look for "All seems good"
+
+3. Look for "All seems good"
