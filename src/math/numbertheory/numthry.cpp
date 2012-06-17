@@ -209,28 +209,29 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
       throw Invalid_Argument("inverse_mod: arguments must be non-negative");
 
    if(n.is_zero() || (n.is_even() && mod.is_even()))
-      return 0;
+      return 0; // fast fail checks
 
-   BigInt x = mod, y = n, u = mod, v = n;
+   //const BigInt x = mod, y = n;
+   BigInt u = mod, v = n;
    BigInt A = 1, B = 0, C = 0, D = 1;
 
    while(u.is_nonzero())
       {
-      size_t zero_bits = low_zero_bits(u);
-      u >>= zero_bits;
-      for(size_t i = 0; i != zero_bits; ++i)
+      const size_t u_zero_bits = low_zero_bits(u);
+      u >>= u_zero_bits;
+      for(size_t i = 0; i != u_zero_bits; ++i)
          {
          if(A.is_odd() || B.is_odd())
-            { A += y; B -= x; }
+            { A += n; B -= mod; }
          A >>= 1; B >>= 1;
          }
 
-      zero_bits = low_zero_bits(v);
-      v >>= zero_bits;
-      for(size_t i = 0; i != zero_bits; ++i)
+      const size_t v_zero_bits = low_zero_bits(v);
+      v >>= v_zero_bits;
+      for(size_t i = 0; i != v_zero_bits; ++i)
          {
          if(C.is_odd() || D.is_odd())
-            { C += y; D -= x; }
+            { C += n; D -= mod; }
          C >>= 1; D >>= 1;
          }
 
@@ -239,7 +240,7 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
       }
 
    if(v != 1)
-      return 0;
+      return 0; // no modular inverse
 
    while(D.is_negative()) D += mod;
    while(D >= mod) D -= mod;
