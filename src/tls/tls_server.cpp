@@ -120,7 +120,7 @@ u16bit choose_ciphersuite(
       if(!have_shared_ecc_curve && suite.ecc_ciphersuite())
          continue;
 
-      if(cert_chains.count(suite.sig_algo()) == 0)
+      if(suite.sig_algo() != "" && cert_chains.count(suite.sig_algo()) == 0)
          continue;
 
       /*
