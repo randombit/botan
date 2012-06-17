@@ -54,17 +54,22 @@ Version 1.11.0, Not Yet Released
 Series 1.10
 ----------------------------------------
 
-Version 1.10.2, Not Yet Released
+Version 1.10.2, 2012-06-17
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* To protect clients against renegotiation attacks, the TLS client
+  now sends the renegotiation extension SCSV.
+
+* TLS renegotiation is completely disabled in this release. All hello
+  requests, and all client hellos after the initial negotiation, are
+  ignored.
+
+* Fix bugs in TLS affecting DSA servers.
 
 * Pipe::reset no longer requires that message processing be completed,
   a requirement that caused problems when a Filter's end_msg call
   threw an exception, after which point the Pipe object was no longer
   usable.
-
-* The SSL/TLS code is disabled by default in this release. A new
-  version is being developed and the current iteration should not be
-  used unless needed for existing code.
 
 * Add support for the rdrand instruction introduced in Intel's Ivy
   Bridge processors.
