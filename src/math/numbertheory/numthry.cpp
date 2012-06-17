@@ -198,6 +198,54 @@ BigInt lcm(const BigInt& a, const BigInt& b)
    return ((a * b) / gcd(a, b));
    }
 
+namespace {
+
+/*
+* If the modulus is odd, then we can avoid computing A and C. This is
+* a critical path algorithm in some instances and an odd modulus is
+* the common case for crypto, so worth special casing. See note 14.64
+* in Handbook of Applied Cryptography for more details.
+*/
+BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod)
+   {
+   BigInt u = mod, v = n;
+   BigInt B = 0, D = 1;
+
+   while(u.is_nonzero())
+      {
+      const size_t u_zero_bits = low_zero_bits(u);
+      u >>= u_zero_bits;
+      for(size_t i = 0; i != u_zero_bits; ++i)
+         {
+         if(B.is_odd())
+            { B -= mod; }
+         B >>= 1;
+         }
+
+      const size_t v_zero_bits = low_zero_bits(v);
+      v >>= v_zero_bits;
+      for(size_t i = 0; i != v_zero_bits; ++i)
+         {
+         if(D.is_odd())
+            { D -= mod; }
+         D >>= 1;
+         }
+
+      if(u >= v) { u -= v; B -= D; }
+      else       { v -= u; D -= B; }
+      }
+
+   if(v != 1)
+      return 0; // no modular inverse
+
+   while(D.is_negative()) D += mod;
+   while(D >= mod) D -= mod;
+
+   return D;
+   }
+
+}
+
 /*
 * Find the Modular Inverse
 */
@@ -211,7 +259,9 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
    if(n.is_zero() || (n.is_even() && mod.is_even()))
       return 0; // fast fail checks
 
-   //const BigInt x = mod, y = n;
+   if(mod.is_odd())
+      return inverse_mod_odd_modulus(n, mod);
+
    BigInt u = mod, v = n;
    BigInt A = 1, B = 0, C = 0, D = 1;
 
