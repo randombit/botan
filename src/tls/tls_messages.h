@@ -338,6 +338,7 @@ class Certificate_Verify : public Handshake_Message
 
       Certificate_Verify(Record_Writer& writer,
                          Handshake_State* state,
+                         const Policy& policy,
                          RandomNumberGenerator& rng,
                          const Private_Key* key);
 

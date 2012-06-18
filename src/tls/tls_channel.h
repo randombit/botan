@@ -1,6 +1,6 @@
 /*
 * TLS Channel
-* (C) 2011 Jack Lloyd
+* (C) 2011,2012 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -15,6 +15,7 @@
 #include <botan/tls_session_manager.h>
 #include <botan/x509cert.h>
 #include <vector>
+#include <string>
 
 namespace Botan {
 
@@ -36,7 +37,12 @@ class BOTAN_DLL Channel
       /**
       * Inject plaintext intended for counterparty
       */
-      virtual void send(const byte buf[], size_t buf_size);
+      void send(const byte buf[], size_t buf_size);
+
+      /**
+      * Inject plaintext intended for counterparty
+      */
+      void send(const std::string& string);
 
       /**
       * Send a close notification alert
@@ -58,7 +64,7 @@ class BOTAN_DLL Channel
       * @param force_full_renegotiation if true, require a full renegotiation,
       *                                 otherwise allow session resumption
       */
-      virtual void renegotiate(bool force_full_renegotiation) = 0;
+      virtual void renegotiate(bool force_full_renegotiation = false) = 0;
 
       /**
       * Attempt to send a heartbeat message (if negotiated with counterparty)

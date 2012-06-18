@@ -23,6 +23,8 @@ class KDF;
 
 namespace TLS {
 
+class Policy;
+
 /**
 * SSL/TLS Handshake State
 */
@@ -49,7 +51,8 @@ class Handshake_State
          choose_sig_format(const Private_Key* key,
                            std::string& hash_algo,
                            std::string& sig_algo,
-                           bool for_client_auth);
+                           bool for_client_auth,
+                           const Policy& policy);
 
       std::string srp_identifier() const;
 

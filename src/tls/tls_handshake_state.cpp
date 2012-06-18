@@ -197,6 +197,7 @@ namespace {
 
 std::string choose_hash(const std::string& sig_algo,
                         Protocol_Version negotiated_version,
+                        const Policy& policy,
                         bool for_client_auth,
                         Client_Hello* client_hello,
                         Certificate_Req* cert_req)
@@ -222,10 +223,22 @@ std::string choose_hash(const std::string& sig_algo,
       cert_req->supported_algos() :
       client_hello->supported_algos();
 
-   for(auto algo : supported_algos)
+   if(!supported_algos.empty())
       {
-      if(algo.second == sig_algo)
-         return algo.first;
+      const auto hashes = policy.allowed_hashes();
+
+      /*
+      * Choose our most preferred hash that the counterparty supports
+      * in pairing with the signature algorithm we want to use.
+      */
+      for(auto hash : hashes)
+         {
+         for(auto algo : supported_algos)
+            {
+            if(algo.first == hash && algo.second == sig_algo)
+               return hash;
+            }
+         }
       }
 
    // TLS v1.2 default hash if the counterparty sent nothing
@@ -238,13 +251,15 @@ std::pair<std::string, Signature_Format>
 Handshake_State::choose_sig_format(const Private_Key* key,
                                    std::string& hash_algo_out,
                                    std::string& sig_algo_out,
-                                   bool for_client_auth)
+                                   bool for_client_auth,
+                                   const Policy& policy)
    {
    const std::string sig_algo = key->algo_name();
 
    const std::string hash_algo =
       choose_hash(sig_algo,
                   this->version(),
+                  policy,
                   for_client_auth,
                   client_hello,
                   cert_req);

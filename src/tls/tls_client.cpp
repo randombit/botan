@@ -1,6 +1,6 @@
 /*
 * TLS Client
-* (C) 2004-2011 Jack Lloyd
+* (C) 2004-2011,2012 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -328,9 +328,9 @@ void Client::process_handshake_msg(Handshake_Type type,
       m_state->set_expected_next(SERVER_HELLO_DONE);
 
       m_state->server_kex = new Server_Key_Exchange(contents,
-                                                  m_state->suite.kex_algo(),
-                                                  m_state->suite.sig_algo(),
-                                                  m_state->version());
+                                                    m_state->suite.kex_algo(),
+                                                    m_state->suite.sig_algo(),
+                                                    m_state->version());
 
       if(m_state->suite.sig_algo() != "")
          {
@@ -361,8 +361,8 @@ void Client::process_handshake_msg(Handshake_Type type,
                                m_hostname);
 
          m_state->client_certs = new Certificate(m_writer,
-                                               m_state->hash,
-                                               client_certs);
+                                                 m_state->hash,
+                                                 client_certs);
          }
 
       m_state->client_kex =
@@ -374,8 +374,8 @@ void Client::process_handshake_msg(Handshake_Type type,
                                  m_rng);
 
       m_state->keys = Session_Keys(m_state,
-                                 m_state->client_kex->pre_master_secret(),
-                                 false);
+                                   m_state->client_kex->pre_master_secret(),
+                                   false);
 
       if(m_state->received_handshake_msg(CERTIFICATE_REQUEST) &&
          !m_state->client_certs->empty())
@@ -386,9 +386,10 @@ void Client::process_handshake_msg(Handshake_Type type,
                                     m_hostname);
 
          m_state->client_verify = new Certificate_Verify(m_writer,
-                                                       m_state,
-                                                       m_rng,
-                                                       private_key);
+                                                         m_state,
+                                                         m_policy,
+                                                         m_rng,
+                                                         private_key);
          }
 
       m_writer.send(CHANGE_CIPHER_SPEC, 1);

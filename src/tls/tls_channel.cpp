@@ -234,6 +234,11 @@ void Channel::send(const byte buf[], size_t buf_size)
    m_writer.send(APPLICATION_DATA, buf, buf_size);
    }
 
+void Channel::send(const std::string& string)
+   {
+   this->send(reinterpret_cast<const byte*>(string.c_str()), string.size());
+   }
+
 void Channel::send_alert(const Alert& alert)
    {
    if(alert.is_valid() && !m_connection_closed)

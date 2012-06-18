@@ -21,13 +21,14 @@ namespace TLS {
 */
 Certificate_Verify::Certificate_Verify(Record_Writer& writer,
                                        Handshake_State* state,
+                                       const Policy& policy,
                                        RandomNumberGenerator& rng,
                                        const Private_Key* priv_key)
    {
    BOTAN_ASSERT_NONNULL(priv_key);
 
    std::pair<std::string, Signature_Format> format =
-      state->choose_sig_format(priv_key, hash_algo, sig_algo, true);
+      state->choose_sig_format(priv_key, hash_algo, sig_algo, true, policy);
 
    PK_Signer signer(*priv_key, format.first, format.second);
 

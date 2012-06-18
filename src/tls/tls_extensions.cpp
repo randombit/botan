@@ -400,6 +400,8 @@ std::string Signature_Algorithms::hash_algo_name(byte code)
    {
    switch(code)
       {
+      case 1:
+         return "MD5";
       // code 1 is MD5 - ignore it
 
       case 2:
@@ -419,6 +421,9 @@ std::string Signature_Algorithms::hash_algo_name(byte code)
 
 byte Signature_Algorithms::hash_algo_code(const std::string& name)
    {
+   if(name == "MD5")
+      return 1;
+
    if(name == "SHA-1")
       return 2;
 
