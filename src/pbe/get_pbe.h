@@ -11,6 +11,7 @@
 #include <botan/pbe.h>
 #include <vector>
 #include <string>
+#include <chrono>
 
 namespace Botan {
 
