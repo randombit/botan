@@ -25,15 +25,14 @@
   #define BOTAN_DLL %{visibility_attribute}
 #endif
 
-/* Chunk sizes */
+/* How much to allocate for a buffer of no particular size */
 #define BOTAN_DEFAULT_BUFFER_SIZE 1024
-#define BOTAN_MEM_POOL_CHUNK_SIZE 64*1024
+
+/* Multiplier on a block cipher's native parallelism */
 #define BOTAN_BLOCK_CIPHER_PAR_MULT 4
 
-/* BigInt toggles */
+/* How many bits per limb in a BigInt */
 #define BOTAN_MP_WORD_BITS %{mp_bits}
-#define BOTAN_KARAT_MUL_THRESHOLD 32
-#define BOTAN_KARAT_SQR_THRESHOLD 32
 
 /* PK key consistency checking toggles */
 #define BOTAN_PUBLIC_KEY_STRONG_CHECKS_ON_LOAD 1

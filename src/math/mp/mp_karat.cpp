@@ -13,13 +13,16 @@ namespace Botan {
 
 namespace {
 
+static const size_t KARATSUBA_MULTIPLY_THRESHOLD = 32;
+static const size_t KARATSUBA_SQUARE_THRESHOLD = 32;
+
 /*
 * Karatsuba Multiplication Operation
 */
 void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
                    word workspace[])
    {
-   if(N < BOTAN_KARAT_MUL_THRESHOLD || N % 2)
+   if(N < KARATSUBA_MULTIPLY_THRESHOLD || N % 2)
       {
       if(N == 6)
          return bigint_comba_mul6(z, x, y);
@@ -80,7 +83,7 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
 */
 void karatsuba_sqr(word z[], const word x[], size_t N, word workspace[])
    {
-   if(N < BOTAN_KARAT_SQR_THRESHOLD || N % 2)
+   if(N < KARATSUBA_SQUARE_THRESHOLD || N % 2)
       {
       if(N == 6)
          return bigint_comba_sqr6(z, x);
@@ -239,8 +242,8 @@ void bigint_mul(word z[], size_t z_size, word workspace[],
       {
       bigint_comba_mul16(z, x, y);
       }
-   else if(x_sw < BOTAN_KARAT_MUL_THRESHOLD ||
-           y_sw < BOTAN_KARAT_MUL_THRESHOLD ||
+   else if(x_sw < KARATSUBA_MULTIPLY_THRESHOLD ||
+           y_sw < KARATSUBA_MULTIPLY_THRESHOLD ||
            !workspace)
       {
       bigint_simple_mul(z, x, x_sw, y, y_sw);
@@ -285,7 +288,7 @@ void bigint_sqr(word z[], size_t z_size, word workspace[],
       {
       bigint_comba_sqr16(z, x);
       }
-   else if(x_size < BOTAN_KARAT_SQR_THRESHOLD || !workspace)
+   else if(x_size < KARATSUBA_SQUARE_THRESHOLD || !workspace)
       {
       bigint_simple_sqr(z, x, x_sw);
       }
