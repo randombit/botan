@@ -45,7 +45,7 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
 
    clear_mem(workspace, 2*N);
 
-   if(cmp0 && cmp1)
+   //if(cmp0 && cmp1)
       {
       if(cmp0 > 0)
          bigint_sub3(z0, x0, N2, x1, N2);
@@ -63,30 +63,11 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
    karatsuba_mul(z0, x0, y0, N2, workspace+N);
    karatsuba_mul(z1, x1, y1, N2, workspace+N);
 
-   const size_t blocks_of_8 = N - (N % 8);
+   const word ws_carry = bigint_add3_nc(workspace + N, z0, N, z1, N);
+   word z_carry = bigint_add2_nc(z + N2, N, workspace + N, N);
 
-   word ws_carry = 0;
-
-   for(size_t j = 0; j != blocks_of_8; j += 8)
-      ws_carry = word8_add3(workspace + N + j, z0 + j, z1 + j, ws_carry);
-
-   for(size_t j = blocks_of_8; j != N; ++j)
-      workspace[N + j] = word_add(z0[j], z1[j], &ws_carry);
-
-   word z_carry = 0;
-
-   for(size_t j = 0; j != blocks_of_8; j += 8)
-      z_carry = word8_add2(z + N2 + j, workspace + N + j, z_carry);
-
-   for(size_t j = blocks_of_8; j != N; ++j)
-      z[N2 + j] = word_add(z[N2 + j], workspace[N + j], &z_carry);
-
-   z[N + N2] = word_add(z[N + N2], ws_carry, &z_carry);
-
-   if(z_carry)
-      for(size_t j = 1; j != N2; ++j)
-         if(++z[N + N2 + j])
-            break;
+   z_carry += bigint_add2_nc(z + N + N2, N2, &ws_carry, 1);
+   bigint_add2_nc(z + N + N2, N2, &z_carry, 1);
 
    if((cmp0 == cmp1) || (cmp0 == 0) || (cmp1 == 0))
       bigint_add2(z + N2, 2*N-N2, workspace, N);
@@ -122,7 +103,7 @@ void karatsuba_sqr(word z[], const word x[], size_t N, word workspace[])
 
    clear_mem(workspace, 2*N);
 
-   if(cmp)
+   //if(cmp)
       {
       if(cmp > 0)
          bigint_sub3(z0, x0, N2, x1, N2);
@@ -135,30 +116,11 @@ void karatsuba_sqr(word z[], const word x[], size_t N, word workspace[])
    karatsuba_sqr(z0, x0, N2, workspace+N);
    karatsuba_sqr(z1, x1, N2, workspace+N);
 
-   const size_t blocks_of_8 = N - (N % 8);
+   const word ws_carry = bigint_add3_nc(workspace + N, z0, N, z1, N);
+   word z_carry = bigint_add2_nc(z + N2, N, workspace + N, N);
 
-   word ws_carry = 0;
-
-   for(size_t j = 0; j != blocks_of_8; j += 8)
-      ws_carry = word8_add3(workspace + N + j, z0 + j, z1 + j, ws_carry);
-
-   for(size_t j = blocks_of_8; j != N; ++j)
-      workspace[N + j] = word_add(z0[j], z1[j], &ws_carry);
-
-   word z_carry = 0;
-
-   for(size_t j = 0; j != blocks_of_8; j += 8)
-      z_carry = word8_add2(z + N2 + j, workspace + N + j, z_carry);
-
-   for(size_t j = blocks_of_8; j != N; ++j)
-      z[N2 + j] = word_add(z[N2 + j], workspace[N + j], &z_carry);
-
-   z[N + N2] = word_add(z[N + N2], ws_carry, &z_carry);
-
-   if(z_carry)
-      for(size_t j = 1; j != N2; ++j)
-         if(++z[N + N2 + j])
-            break;
+   z_carry += bigint_add2_nc(z + N + N2, N2, &ws_carry, 1);
+   bigint_add2_nc(z + N + N2, N2, &z_carry, 1);
 
    /*
    * This is only actually required if cmp is != 0, however
