@@ -331,18 +331,9 @@ for calculations with the MPI implementation in Botan. You can choose
 on the processor. Unless you are building for a 8 or 16-bit CPU, this
 isn't worth messing with.
 
-``BOTAN_VECTOR_OVER_ALLOCATE``: The memory container ``SecureVector``
-will over-allocate requests by this amount (in elements). In several
-areas of the library, we grow a vector fairly often. By
-over-allocating by a small amount, we don't have to do allocations as
-often (which is good, because the allocators can be quite slow). If
-you *really* want to reduce memory usage, set it to 0. Otherwise, the
-default should be perfectly fine.
-
 ``BOTAN_DEFAULT_BUFFER_SIZE``: This constant is used as the size of
-buffers throughout Botan. A good rule of thumb would be to use the
-page size of your machine. The default should be fine for most
-purposes.
+buffers throughout Botan. The default should be fine for most
+purposes, reduce if you are very concerned about runtime memory usage.
 
 Building Applications
 ----------------------------------------

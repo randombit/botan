@@ -13,11 +13,11 @@ system.
 Especially recommended are:
 
 - *Cryptography Engineering*
-  Niels Ferguson, Bruce Schneier, and Tadayoshi Kohno
+  by Niels Ferguson, Bruce Schneier, and Tadayoshi Kohno
 
 - *Security Engineering -- A Guide to Building Dependable Distributed Systems*
-  Ross Anderson
+  by Ross Anderson
 
 - *Handbook of Applied Cryptography*
-  Alfred J. Menezes, Paul C. Van Oorschot, and Scott A. Vanstone
+  by Alfred J. Menezes, Paul C. Van Oorschot, and Scott A. Vanstone
   (`available online <http://www.cacr.math.uwaterloo.ca/hac/>`_)

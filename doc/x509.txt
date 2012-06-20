@@ -243,7 +243,7 @@ The three certificate lookup methods are ``by_SKID`` (Subject Key Identifier),
 ``by_name`` (the CommonName DN entry), and ``by_email`` (stored in either the
 distinguished name, or in a subjectAlternativeName extension). The name and
 email versions take a ``std::string``, while the SKID version takes a
-``SecureVector<byte>`` containing the subject key identifier in raw binary. You
+``secure_vector<byte>`` containing the subject key identifier in raw binary. You
 can choose not to implement ``by_name`` or ``by_email``, but ``by_SKID`` is
 mandatory to implement, and, currently, is the only version that is used by
 ``X509_Store``.
@@ -417,7 +417,7 @@ The ``CRL_Entry`` type is a structure that contains, at a minimum, the serial
 number of the revoked certificate. As serial numbers are never repeated, the
 pairing of an issuer and a serial number (should) distinctly identify any
 certificate. In this case, we represent the serial number as a
-``SecureVector<byte>`` called ``serial``. There are two additional (optional)
+``secure_vector<byte>`` called ``serial``. There are two additional (optional)
 values, an enumeration called ``CRL_Code`` that specifies the reason for
 revocation (``reason``), and an object that represents the time that the
 certificate became invalid (if this information is known).

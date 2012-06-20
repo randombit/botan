@@ -198,7 +198,7 @@ Updates the hash/mac calculation with *input*.
 
 .. cpp:function:: void BufferedComputation::final(byte* out)
 
-.. cpp:function:: SecureVector<byte> BufferedComputation::final()
+.. cpp:function:: secure_vector<byte> BufferedComputation::final()
 
 Complete the hash/MAC calculation and place the result into ``out``.
 For the argument taking an array, exactly ``output_length`` bytes will

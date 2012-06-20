@@ -1,0 +1,8 @@
+Version 1.8.13, 2011-07-02
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* A race condition in `Algorithm_Factory` could cause crashes in
+  multithreaded code. See `this thread on botan-devel
+  <http://lists.randombit.net/pipermail/botan-devel/2011-July/001455.html>`_
+  for details and workarounds.
+

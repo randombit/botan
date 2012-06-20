@@ -76,13 +76,6 @@ destroyed. This implies you can't have static variables that are Botan
 objects inside functions or classes; in many C++ runtimes, these
 objects will be destroyed after main has returned.
 
-The memory object classes (``MemoryRegion``, ``MemoryVector``,
-``SecureVector``) are extremely primitive, and meant only for
-secure storage of potentially sensitive data like keys. They do not
-meet the requirements for an STL container object and you should not
-try to use them with STL algorithms. For a general-purpose container,
-use ``std::vector``.
-
 Use a ``try``/``catch`` block inside your ``main`` function, and catch
 any ``std::exception`` throws (remember to catch by reference, as
 ``std::exception::what`` is polymorphic)::

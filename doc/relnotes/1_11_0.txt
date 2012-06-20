@@ -1,0 +1,45 @@
+Version 1.11.0, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* The codebase has converted to C++11. Currently GCC 4.7 and Clang 3.1
+  are known to work.
+
+* The MemoryVector and SecureVector container types have been removed.
+  An alias of std::vector using an allocator that clears memory named
+  secure_vector is used for key material, and std::vector is used for
+  everything else.
+
+* The method of mlocking memory is much improved, and if the process
+  can mlock memory then it will be used automatically.
+
+* The TLS interface is now non-blocking and does not directly interact
+  with sockets. An example TLS server using asio is included which
+  scales to at least 64 processors.
+
+* X509_Store has been removed. x509_path_validate in x509path.h now
+  handles path validation and Certificate_Store handles storage of
+  certificates and CRLs.
+
+* Add support for OCSP
+
+* TLS v1.2 is now supported
+
+* TLS now supports session resumption. Session information can be
+  saved in memory or to an encrypted SQLite database.
+
+* TLS renegotiation is now supported
+
+* TLS client authentication is now supported
+
+* TLS SRP and PSK ciphersuites are now supported
+
+* TLS session tickets are now supported
+
+* TLS ECDH key exchange and ECDSA certificates are now supported
+
+* Add support for SHA-2 ciphersuites
+
+* Add support for anonymous DH/ECDH ciphersuites
+
+
+

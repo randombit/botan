@@ -23,11 +23,11 @@ Contents
    rng
    fpe
    python
+   relnotes/index
 
 .. toctree::
    :hidden:
 
-   log
    license
    credits
    faq
