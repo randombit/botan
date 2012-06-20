@@ -15,6 +15,17 @@ import sys, os
 
 sys.path.insert(0, os.pardir)
 
+def is_website_build():
+    # Nasty hack :(
+    try:
+        opt_t = sys.argv.index('-t')
+        opt_website = sys.argv.index('website')
+        return opt_t + 1 == opt_website
+    except ValueError:
+        return False
+
+is_website_build = is_website_build()
+
 # Avoid useless botan_version.pyc (Python 2.6 or higher)
 if 'dont_write_bytecode' in sys.__dict__:
     sys.dont_write_bytecode = True
@@ -54,20 +65,23 @@ check_sphinx_version()
 extensions = []
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ['_sphinx/templates']
+
+if is_website_build:
+    templates_path += ['_sphinx/disqus']
 
 # The suffix of source filenames.
 source_suffix = '.txt'
 
 # The encoding of source files.
-#source_encoding = 'utf-8-sig'
+source_encoding = 'utf-8-sig'
 
 # The master toctree document.
 master_doc = 'contents'
 
 # General information about the project.
 project = u'botan'
-copyright = u'2000-2011, Jack Lloyd'
+copyright = u'2000-2012, Jack Lloyd'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -160,7 +174,7 @@ html_static_path = []
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
-#html_last_updated_fmt = '%b %d, %Y'
+html_last_updated_fmt = '%Y-%m-%d'
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
@@ -194,7 +208,10 @@ html_show_copyright = False
 # If true, an OpenSearch description file will be output, and all pages will
 # contain a <link> tag referring to it.  The value of this option must be the
 # base URL from which the finished HTML is served.
-#html_use_opensearch = ''
+if is_website_build:
+    html_use_opensearch = 'http://botan.randombit.net/'
+else:
+    html_use_opensearch = ''
 
 # This is the file name suffix for HTML files (e.g. ".xhtml").
 #html_file_suffix = None
