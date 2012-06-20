@@ -170,7 +170,8 @@ Does botan support SSL/TLS, SSH, S/MIME, OpenPGP...
 ------------------------------------------------------------
 
 Support for SSL/TLS is included in version 1.9.4 and later. Currently
-SSLv3 and TLS 1.0 and 1.1 are supported.
+SSLv3 and TLS 1.0 and 1.1 are supported. The latest development
+versions also support TLS 1.2.
 
 `NetSieben SSH <http://netsieben.com/products/ssh/>`_ is an open
 source SSHv2 implementation that uses botan.
@@ -188,6 +189,9 @@ The most common stumbling block is a compiler that is buggy or can't
 handle modern C++ (specifically, C++98). Check out the :doc:`build log
 <build_log>` for a sense of which platforms are actively being tested.
 
+Versions 1.11.0 and higher require a C++11 compiler. GCC 4.7.0 and
+Clang 3.1 are known to work well.
+
 I'm not feeling this, what can I use instead?
 ------------------------------------------------------------
 
@@ -199,10 +203,6 @@ I'm not feeling this, what can I use instead?
 * `OpenSSL <http://www.openssl.org>`_ is written in C and mostly
   targeted to being an SSL/TLS implementation but there is a lot of
   other stuff in there as well.
-
-* `XySSL <http://www.ohloh.net/projects/xyssl>`_ is a C library
-  providing a very small footprint crypto library and SSL
-  implementation.
 
 * `Adam Shostack <http://www.homeport.org/~adam/crypto/>`_ maintains a
   (somewhat out of date) list of open source crypto libraries.

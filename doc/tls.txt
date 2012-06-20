@@ -56,7 +56,7 @@ these methods available:
    received, or if a fatal alert of any kind was received from the
    counterparty.
 
-   .. cpp:function:: void renegotiate()
+   .. cpp:function:: void renegotiate(bool force_full_renegotiation = false)
 
    Initiates a renegotiation. The counterparty is allowed by the
    protocol to ignore this request. If a successful renegotiation
