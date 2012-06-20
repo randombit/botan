@@ -257,7 +257,7 @@ size_t choose_thread_count()
    return 2;
    }
 
-int main()
+int main(int argc, char* argv[])
    {
    try
       {
@@ -267,7 +267,9 @@ int main()
       unsigned short port = 4434;
       tls_server server(io_service, port);
 
-      const size_t num_threads = choose_thread_count();
+      size_t num_threads = choose_thread_count();
+      if(argc == 2)
+         std::istringstream(argv[1]) >> num_threads;
 
       std::cout << "Using " << num_threads << " threads\n";
 
