@@ -35,7 +35,7 @@ of different commercial and open source compilers. The :doc:`build log
 already included in most major package distributions, including
 \
 `Fedora <https://admin.fedoraproject.org/pkgdb/acls/name/botan>`_,
-`EPEL <http://download.fedora.redhat.com/pub/epel/beta/6/SRPMS/repoview/botan.html>`_ (for RHEL/CentOS),
+`EPEL <http://dl.fedoraproject.org/pub/epel/6/SRPMS/repoview/botan.html>`_ (for RHEL/CentOS),
 `Debian <http://packages.debian.org/search?keywords=libbotan>`_,
 `Ubuntu <http://packages.ubuntu.com/search?keywords=botan>`_,
 `Gentoo <http://packages.gentoo.org/package/botan>`_,

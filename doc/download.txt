@@ -13,58 +13,45 @@ Unsure which release you want? Check the :ref:`FAQ <devel_vs_stable>`.
       If you are viewing this documentation offline, a more recent
       release `may be available <http://botan.randombit.net/download.html>`_.
 
-Current Development Release (1.11)
-----------------------------------------
+Current Development Series (1.11, branch ``net.randombit.botan``)
+---------------------------------------------------------------------------
 
-The current development release (from branch ``net.randombit.botan``) is
+The latest version of the current development series is
 :doc:`relnotes/1_11_0`
 
+Current Stable Series (1.10, branch ``net.randombit.botan.1_10``)
+---------------------------------------------------------------------------
 
-Current Stable Release (1.10)
-----------------------------------------
+The latest version of the current stable series is
+:doc:`relnotes/1_10_2`
 
-The current stable release (from branch ``net.randombit.botan.1_10``)
-is :doc:`relnotes/1_10_2`
+:tgz:`1.10.2` (:tgz_sig:`1.10.2`)
 
-Sources:
-
-`1.10.2 tar/gz <http://botan.randombit.net/files/Botan-1.10.2.tgz>`_
-(`1.10.2 tar/gz sig <http://botan.randombit.net/files/Botan-1.10.2.tgz.asc>`_),
-
-`1.10.2 tar/bzip <http://botan.randombit.net/files/Botan-1.10.2.tbz>`_
-(`1.10.2 tar/bzip sig <http://botan.randombit.net/files/Botan-1.10.2.tbz.asc>`_)
+:tbz:`1.10.2` (:tbz_sig:`1.10.2`)
 
 ..
   Windows binary installer for use with Visual C++ 2010:
 
-  `1.10.2 x86-32 installer
-  <http://botan.randombit.net/files/win32/botan-1.10.2_win32.exe>`_
+  :installer_x86_32:`1.10.2`
 
-  `1.10.2 x86-64 installer
-  <http://botan.randombit.net/files/win32/botan-1.10.2_win64.exe>`_
+  :installer_x86_64:`1.10.2`
 
-Previous Stable Release (1.8)
-----------------------------------------
+Previous Stable Series (1.8, branch ``net.randombit.botan.1_8``)
+---------------------------------------------------------------------------
 
-The previous stable release (from branch ``net.randombit.botan.1_8``)
-is :doc:`relnotes/1_8_13`
+The latest version of the previous stable series is
+:doc:`relnotes/1_8_13`
 
-Sources:
+:tgz:`1.8.13` (:tgz_sig:`1.8.13`)
 
-`1.8.13 tar/gz <http://botan.randombit.net/files/Botan-1.8.13.tgz>`_
-(`1.8.13 tar/gz sig <http://botan.randombit.net/files/Botan-1.8.13.tgz.asc>`_),
-
-`1.8.13 tar/bzip <http://botan.randombit.net/files/Botan-1.8.13.tbz>`_
-(`1.8.13 tar/bzip sig <http://botan.randombit.net/files/Botan-1.8.13.tbz.asc>`_)
+:tbz:`1.8.13` (:tbz_sig:`1.8.13`)
 
 ..
   Windows binary installer for use with Visual C++ 2008:
 
-  `1.8.13 x86-32 installer
-  <http://botan.randombit.net/files/win32/botan-1.8.13_win32.exe>`_
+  :installer_x86_32:`1.8.13`
 
-  `1.8.13 x86-64 installer
-  <http://botan.randombit.net/files/win32/botan-1.8.13_win64.exe>`_
+  :installer_x86_64:`1.8.13`
 
 Accessing Version Control
 ----------------------------------------

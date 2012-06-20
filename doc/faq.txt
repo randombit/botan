@@ -91,9 +91,8 @@ file to be unencrypted, otherwise it will ask you for a new password
 to use.
 
 For unencrypted keys, you can also manually decode the parameters
-using the existing PEM and BER support; see `this post
-<http://lists.randombit.net/pipermail/botan-devel/2010-June/001156.html>`_
-to the dev list for an example.
+using the existing PEM and BER support; see :botan-devel:`this post
+<2010-June/001156>` to the dev list for an example.
 
 Is botan FIPS 140 certified?
 ----------------------------------------
@@ -159,7 +158,7 @@ You can do any combination of:
 
 * Contact the current lead maintainer personally; currently
   `Jack Lloyd <http://www.randombit.net>`_
-  (`personal PGP key <http://www.randombit.net/pgpgkey.html>`_)
+  (`personal PGP key <http://www.randombit.net/keys/pgpkey.html>`_)
 
 * Email the `development list
   <http://lists.randombit.net/mailman/listinfo/botan-devel>`_

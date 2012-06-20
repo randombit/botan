@@ -38,7 +38,7 @@ The Qt mutex wrapper was broken and would not compile with any recent
 version of Qt. Taking this as a clear indication that it is not in use,
 it has been removed.
 
-Avoid setting the soname on OpenBSD, as it doesn't support it (PR 158)
+Avoid setting the soname on OpenBSD, as it doesn't support it (:pr:`158`)
 
 A compilation problem in the dynamic loader that prevented using
 dyn_load under MinGW GCC has been fixed.
@@ -56,7 +56,7 @@ searches for an exact match, and only if no exact match is found will
 it search for substring matches.
 
 An incompatability in configure.py with the subprocess module included
-in Python 3.1 has been fixed (PR 157).
+in Python 3.1 has been fixed (:pr:`157`).
 
 The exception catching syntax of configure.py has been changed to the
 Python 3.x syntax. This syntax also works with Python 2.6 and 2.7, but

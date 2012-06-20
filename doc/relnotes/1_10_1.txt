@@ -2,8 +2,8 @@ Version 1.10.1, 2011-07-11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * A race condition in `Algorithm_Factory` could cause crashes in
-  multithreaded code. See `this thread on botan-devel
-  <http://lists.randombit.net/pipermail/botan-devel/2011-July/001455.html>`_
+  multithreaded code. See
+  :botan-devel:`this thread on botan-devel <2011-July/001455>`
   for details and workarounds.
 
 * The return value of ``name`` has changed for GOST 28147-89 and

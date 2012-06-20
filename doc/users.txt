@@ -79,9 +79,6 @@ Commercial Software
   uses botan for the drive encryption in the Maxtor OneTouch III Mini
   Edition hard drive.
 
-* `Aegeus Technology Ltd <http://www.aegeus-technology.com>`_ used
-  botan in a research implementation of SPKI.
-
 * `E.V.E. Paradox <http://www.entropicsoftware.com/eve/eve.html>`_, a
   suite of games for Windows.
 
@@ -101,7 +98,7 @@ Research Projects
 
 * The system described in `Enabling Intrusion Detection in IPsec
   Protected IPv6 Networks Through Secret-key Sharing
-  <http://www.stormingmedia.us/01/0151/A015134.pdf>`_
+  <http://www.dtic.mil/dtic/tr/fulltext/u2/a431510.pdf>`_.
 
 * `An experimental tamper detection system
   <http://www.cis.udel.edu/~hiper/passages/papers/jochenMILCOM03.pdf>`_

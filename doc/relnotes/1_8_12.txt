@@ -10,5 +10,5 @@ Version 1.8.12, 2011-06-20
 * Fix compilation under Sun Studio 12 on Solaris
 
 * Fix a memory leak in the constructors of DataSource_Stream and
-  DataSink_Stream which would occur if opening the file failed. PR 144
+  DataSink_Stream which would occur if opening the file failed (:pr:`144`)
 

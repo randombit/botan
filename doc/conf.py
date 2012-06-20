@@ -15,16 +15,19 @@ import sys, os
 
 sys.path.insert(0, os.pardir)
 
-def is_website_build():
+import sphinx
+
+def check_for_tag(tag):
     # Nasty hack :(
     try:
         opt_t = sys.argv.index('-t')
-        opt_website = sys.argv.index('website')
-        return opt_t + 1 == opt_website
+        opt_tag = sys.argv.index(tag)
+        return opt_t + 1 == opt_tag
     except ValueError:
         return False
 
-is_website_build = is_website_build()
+is_website_build = check_for_tag('website')
+use_disqus = is_website_build and check_for_tag('disqus')
 
 # Avoid useless botan_version.pyc (Python 2.6 or higher)
 if 'dont_write_bytecode' in sys.__dict__:
@@ -62,13 +65,30 @@ check_sphinx_version()
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = []
+extensions = ['sphinx.ext.extlinks']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_sphinx/templates']
 
-if is_website_build:
+if is_website_build and use_disqus:
     templates_path += ['_sphinx/disqus']
+
+extlinks = {
+    'pr': ('http://bugs.randombit.net/show_bug.cgi?id=%s', 'PR '),
+    'tgz': ('http://botan.randombit.net/files/Botan-%s.tgz', 'tar/gz '),
+    'tgz_sig': ('http://botan.randombit.net/files/Botan-%s.tgz.asc', 'tar/gz sig '),
+    'tbz': ('http://botan.randombit.net/files/Botan-%s.tbz', 'tar/bzip '),
+    'tbz_sig': ('http://botan.randombit.net/files/Botan-%s.tbz.asc', 'tar/bzip sig '),
+
+    'botan-devel': ('http://lists.randombit.net/pipermail/botan-devel/%s.html', None),
+
+    'installer_x86_32': ('http://botan.randombit.net/files/win32/botan-%s_win32.exe',
+                         'Windows x86-32 installer '),
+
+    'installer_x86_64': ('http://botan.randombit.net/files/win32/botan-%s_win64.exe',
+                         'Windows x86-64 installer ')
+}
+
 
 # The suffix of source filenames.
 source_suffix = '.txt'
