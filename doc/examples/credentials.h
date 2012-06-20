@@ -237,6 +237,20 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
                if(hostname == "nosuchname")
                   return std::vector<Botan::X509_Certificate>();
 
+               for(auto i : certs_and_keys)
+                  {
+                  if(hostname != "" && !i.first.matches_dns_name(hostname))
+                     continue;
+
+                  if(!value_exists(cert_key_types, i.second->algo_name()))
+                     continue;
+
+                  certs.push_back(i.first);
+                  }
+
+               if(!certs.empty())
+                  return certs;
+
                std::string key_name = "";
 
                if(value_exists(cert_key_types, "RSA"))
@@ -280,6 +294,7 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
       Botan::RandomNumberGenerator& rng;
 
       Botan::SymmetricKey session_ticket_key;
+
       std::map<Botan::X509_Certificate, Botan::Private_Key*> certs_and_keys;
    };
 
