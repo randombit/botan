@@ -13,45 +13,41 @@ Unsure which release you want? Check the :ref:`FAQ <devel_vs_stable>`.
       If you are viewing this documentation offline, a more recent
       release `may be available <http://botan.randombit.net/download.html>`_.
 
-Current Development Series (1.11, branch ``net.randombit.botan``)
+Current Development Series (1.11)
 ---------------------------------------------------------------------------
 
-The latest version of the current development series is
-:doc:`relnotes/1_11_0`
+The latest version of the current development series, from branch
+``net.randombit.botan``, is :doc:`relnotes/1_11_0`
 
-Current Stable Series (1.10, branch ``net.randombit.botan.1_10``)
+Current Stable Series (1.10)
 ---------------------------------------------------------------------------
 
-The latest version of the current stable series is
-:doc:`relnotes/1_10_2`
+The latest version of the current stable series, from branch
+``net.randombit.botan.1_10``, is :doc:`relnotes/1_10_2`:
+:tgz:`1.10.2` (:tgz_sig:`sig <1.10.2>`),
+:tbz:`1.10.2` (:tbz_sig:`sig <1.10.2>`)
 
-:tgz:`1.10.2` (:tgz_sig:`1.10.2`)
+Windows Installer
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-:tbz:`1.10.2` (:tbz_sig:`1.10.2`)
+Windows installers for :installer_x86_32:`1.10.1` and
+:installer_x86_64:`1.10.1` for use with Visual C++ 2010 are
+also available.
 
-..
-  Windows binary installer for use with Visual C++ 2010:
-
-  :installer_x86_32:`1.10.2`
-
-  :installer_x86_64:`1.10.2`
-
-Previous Stable Series (1.8, branch ``net.randombit.botan.1_8``)
+Previous Stable Series (1.8)
 ---------------------------------------------------------------------------
 
-The latest version of the previous stable series is
-:doc:`relnotes/1_8_13`
+The latest version of the previous stable series, from branch
+``net.randombit.botan.1_8`` is :doc:`relnotes/1_8_13`:
+:tgz:`1.8.13` (:tgz_sig:`sig <1.8.13>`),
+:tbz:`1.8.13` (:tbz_sig:`sig <1.8.13>`)
 
-:tgz:`1.8.13` (:tgz_sig:`1.8.13`)
+Windows Installer
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-:tbz:`1.8.13` (:tbz_sig:`1.8.13`)
-
-..
-  Windows binary installer for use with Visual C++ 2008:
-
-  :installer_x86_32:`1.8.13`
-
-  :installer_x86_64:`1.8.13`
+Windows installers for :installer_x86_32:`1.8.11` and
+:installer_x86_64:`1.8.11` for use with Visual C++ 2008 are also
+available.
 
 Accessing Version Control
 ----------------------------------------
