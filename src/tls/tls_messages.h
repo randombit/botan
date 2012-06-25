@@ -246,6 +246,7 @@ class Client_Key_Exchange : public Handshake_Message
 
       Client_Key_Exchange(Record_Writer& output,
                           Handshake_State* state,
+                          const Policy& policy,
                           Credentials_Manager& creds,
                           const std::vector<X509_Certificate>& peer_certs,
                           const std::string& hostname,

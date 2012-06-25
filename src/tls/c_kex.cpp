@@ -49,6 +49,7 @@ secure_vector<byte> strip_leading_zeros(const secure_vector<byte>& input)
 */
 Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
                                          Handshake_State* state,
+                                         const Policy& policy,
                                          Credentials_Manager& creds,
                                          const std::vector<X509_Certificate>& peer_certs,
                                          const std::string& hostname,
@@ -111,14 +112,29 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
          if(reader.remaining_bytes())
             throw Decoding_Error("Bad params size for DH key exchange");
 
+         if(p.bits() < policy.minimum_dh_group_size())
+            throw TLS_Exception(Alert::INSUFFICIENT_SECURITY,
+                                "Server sent DH group of " +
+                                std::to_string(p.bits()) +
+                                " bits, policy requires at least " +
+                                std::to_string(policy.minimum_dh_group_size()));
+
+         /*
+         * A basic check for key validity. As we do not know q here we
+         * cannot check that Y is in the right subgroup. However since
+         * our key is ephemeral there does not seem to be any
+         * advantage to bogus keys anyway.
+         */
+         if(Y <= 1 || Y >= p - 1)
+            throw TLS_Exception(Alert::INSUFFICIENT_SECURITY,
+                                "Server sent bad DH key for DHE exchange");
+
          DL_Group group(p, g);
 
          if(!group.verify_group(rng, true))
             throw Internal_Error("DH group failed validation, possible attack");
 
          DH_PublicKey counterparty_key(group, Y);
-
-         // FIXME Check that public key is residue?
 
          DH_PrivateKey priv_key(rng, group);
 

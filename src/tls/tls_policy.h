@@ -85,6 +85,11 @@ class BOTAN_DLL Policy
       virtual DL_Group dh_group() const;
 
       /**
+      * Return the minimum DH group size we're willing to use
+      */
+      virtual size_t minimum_dh_group_size() const;
+
+      /**
       * If this function returns false, unknown SRP/PSK identifiers
       * will be rejected with an unknown_psk_identifier alert as soon
       * as the non-existence is identified. Otherwise, a false

@@ -100,6 +100,11 @@ DL_Group Policy::dh_group() const
    return DL_Group("modp/ietf/2048");
    }
 
+size_t Policy::minimum_dh_group_size() const
+   {
+   return 1024;
+   }
+
 /*
 * Return allowed compression algorithms
 */

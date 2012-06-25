@@ -368,6 +368,7 @@ void Client::process_handshake_msg(Handshake_Type type,
       m_state->client_kex =
          new Client_Key_Exchange(m_writer,
                                  m_state,
+                                 m_policy,
                                  m_creds,
                                  m_peer_certs,
                                  m_hostname,
