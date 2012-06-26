@@ -225,7 +225,11 @@ mlock_allocator::mlock_allocator() :
             -1, 0));
 
       if(m_pool == static_cast<byte*>(MAP_FAILED))
+         {
+         m_pool = nullptr;
+         m_poolsize = 0;
          throw std::runtime_error("Failed to mmap locking_allocator pool");
+         }
 
       clear_mem(m_pool, m_poolsize);
 
@@ -233,6 +237,7 @@ mlock_allocator::mlock_allocator() :
          {
          ::munmap(m_pool, m_poolsize);
          m_pool = nullptr;
+         m_poolsize = 0;
          throw std::runtime_error("Failed to lock pool in memory");
          }
 
@@ -248,6 +253,7 @@ mlock_allocator::~mlock_allocator()
       ::munlock(m_pool, m_poolsize);
       ::munmap(m_pool, m_poolsize);
       m_pool = nullptr;
+      m_poolsize = 0;
       }
    }
 
