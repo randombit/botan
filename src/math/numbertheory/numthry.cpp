@@ -322,8 +322,6 @@ bool primality_test(const BigInt& n,
                     RandomNumberGenerator& rng,
                     size_t level)
    {
-   const size_t PREF_NONCE_BITS = 64;
-
    if(n == 2)
       return true;
    if(n <= 1 || n.is_even())
@@ -347,6 +345,8 @@ bool primality_test(const BigInt& n,
 
    if(level > 2)
       level = 2;
+
+   const size_t PREF_NONCE_BITS = 192;
 
    const size_t NONCE_BITS = std::min(n.bits() - 2, PREF_NONCE_BITS);
 
