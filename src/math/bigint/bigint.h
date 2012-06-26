@@ -605,7 +605,7 @@ BOTAN_DLL std::istream& operator>>(std::istream&, BigInt&);
 namespace std {
 
 template<>
-inline void swap(Botan::BigInt& x, Botan::BigInt& y)
+inline void swap<Botan::BigInt>(Botan::BigInt& x, Botan::BigInt& y)
    {
    x.swap(y);
    }
