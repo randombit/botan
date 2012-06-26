@@ -113,7 +113,7 @@ bool SingleResponse::affirmative_response_for(
    return true;
    }
 
-void SingleResponse::encode_into(class DER_Encoder& to) const
+void SingleResponse::encode_into(class DER_Encoder&) const
    {
    throw std::runtime_error("Not implemented (SingleResponse::encode_into)");
    }
