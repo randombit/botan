@@ -1,7 +1,7 @@
 
 .. _tls_api:
 
-SSL and TLS
+Transport Layer Security (TLS)
 ========================================
 
 .. versionadded:: 1.10.2
