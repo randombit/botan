@@ -35,13 +35,15 @@ development releases are the obvious choice.
 
 If you want to ship a binary that is usable out of the box on a Linux
 distro that ships botan, you'll probably want to match versions with
-that distro; as of this writing most ship with 1.8.
+that distro; as of this writing most ship with 1.8 though some are
+moving to 1.10.
 
 If you're building an application that will embed botan into it
 (without relying on a shared library), you want to use an amalgamation
 build, which basically turns botan into a single header and a single
 source file which you can easily include in your existing application
-build. In this case you can pick which ever tree you prefer.
+build. This feature is available in all versions of 1.10 and all later
+branches.
 
 The self-test program can't locate the library
 -----------------------------------------------
