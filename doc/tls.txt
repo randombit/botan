@@ -1,10 +1,8 @@
 
-.. _tls_api:
-
 Transport Layer Security (TLS)
 ========================================
 
-.. versionadded:: 1.10.2
+.. versionadded:: 1.11.0
 
 Botan supports both client and server implementations of the SSL/TLS
 protocols, including SSL v3, TLS v1.0, TLS v1.1, and TLS v1.2 (the
@@ -12,19 +10,21 @@ insecure and obsolete SSL v2 protocol is not supported, beyond
 processing SSL v2 client hellos which some clients still send for
 backwards compatability with ancient servers).
 
-The implementation uses ``std::tr1::function`` for callbacks, so it
-may not have been compiled into the version you are using; you can
-test for the feature macro ``BOTAN_HAS_TLS`` to check.
+The TLS implementation uses an event driven model. Information read
+from the socket is passed to a TLS object using a function
+``received_data``, which is processed and then (potentially) various
+callback functions are called. For instance one callback is called
+whenever a session is established or renegotiated, and another is
+called whenevever a new plaintext record is available.
 
-General TLS Interface
+TLS Channels
 ----------------------------------------
 
-TLS servers and clients share most of an interface, called
-`TLS_Channel`.  The primary difference is in terms of how the objects
-are constructed. A TLS channel (either client or server object) has
-these methods available:
+TLS servers and clients share an interface called `TLS::Channel`. A
+TLS channel (either client or server object) has these methods
+available:
 
-.. cpp:class:: TLS_Channel
+.. cpp:class:: TLS::Channel
 
    .. cpp:function size_t received_data(const byte buf[], size_t buf_size)
 
@@ -66,56 +66,66 @@ these methods available:
 
    Returns the certificate chain of the server
 
-
+.. _tls_client:
 
 TLS Clients
 ----------------------------------------
 
-.. cpp:class:: TLS_Client
+.. cpp:class:: TLS::Client
 
-   .. cpp:function:: TLS_Client( \
-         std::tr1::function<void, const byte*, size_t> socket_output_fn, \
-         std::tr1::function<void, const byte*, size_t, u16bit> proc_fn, \
-         std::tr1::function<bool, const TLS_Session&> handshake_complete, \
-         TLS_Session_Manager& session_manager, \
+   .. cpp:function:: TLS::Client( \
+         std::function<void, const byte*, size_t> socket_output_fn, \
+         std::function<void, const byte*, size_t, TLS::Alert> proc_fn, \
+         std::function<bool, const TLS::Session&> handshake_complete, \
+         TLS::Session_Manager& session_manager, \
          Credentials_Manager& credendials_manager, \
-         const TLS_Policy& policy, \
+         const TLS::Policy& policy, \
          RandomNumberGenerator& rng, \
          const std::string& servername = "", \
-         std::tr1::function<std::string, std::vector<std::string> > next_protocol)
+         std::function<std::string, std::vector<std::string> > next_protocol)
 
    Initialize a new TLS client. The constructor will immediately
-   initiate a new session. The *socket_output_fn* callback will be
-   called with output that should be sent to the counterparty.
+   initiate a new session.
+
+   The *socket_output_fn* callback will be called with output that
+   should be sent to the counterparty. For instance this will be
+   called immediately from the constructor after the client hello
+   message is constructed. An implementation of *socket_output_fn* is
+   allowed to defer the write (for instance if writing when the
+   callback occurs would block), but should eventually write the data
+   to the counterparty *in order*.
 
    The *proc_fn* will be called with data sent by the counterparty
    after it has been processed. The byte array and size_t represent
-   the plaintext; the u16bit value provides notification if the
-   counterparty sent an alert via the TLS alert system. Possible values
-   of alert data are included in the Alert_Type enum. Particularly
-   relevant is the CLOSE_NOTIFY value.
+   the plaintext; the :cpp:class:`TLS::Alert` value provides
+   notification if the counterparty sent an alert via the TLS alert
+   system. Possible values of alert data are included in the
+   Alert_Type enum. Particularly relevant is the CLOSE_NOTIFY value.
 
    The *handshake_complete* function is called when a handshake
    (either initial or renegotiation) is completed. The return value of
    the callback specifies if the session should be cached for later
    resumption. If the function for some reason desires to prevent the
    connection from completing, it should throw an exception
-   (preferably a TLS_Exception, which can provide more specific alert
-   information to the counterparty).
+   (preferably a TLS::Exception, which can provide more specific alert
+   information to the counterparty). The :cpp:class:`TLS::Session`
+   provides information about the session that was just established.
 
    The *session_manager* is an interface for storing TLS sessions,
    which allows for session resumption upon reconnecting to a server.
    In the absence of a need for persistent sessions, use
-   `TLS_Session_Manager_In_Memory` which caches connections for the
-   lifetime of a single process.
+   :cpp:class:`TLS::Session_Manager_In_Memory` which caches
+   connections for the lifetime of a single process. See
+   :ref:`tls_session_managers` for more about session managers.
 
    The *credentials_manager* is an interface that will be called to
    retrieve any certificates, secret keys, pre-shared keys, or SRP
-   intformation; see :doc:`credentials <credentials_manager>` for more
-   information.
+   intformation; see :doc:`credentials_manager` for more information.
 
    Use *servername* to specify the DNS name of the server you are
-   attempting to connect to, if you know it.
+   attempting to connect to, if you know it. This helps the server
+   select what certificate to use and helps the client validate the
+   connection.
 
    The optional *next_protocol* callback is called if the server
    indicates it supports the next protocol notification extension.
@@ -127,25 +137,383 @@ A simple TLS client example:
 
 .. literalinclude:: examples/tls_client.cpp
 
-
 TLS Servers
 ----------------------------------------
 
-.. cpp:class:: TLS_Server
+.. cpp:class:: TLS::Server
 
-   .. cpp:function:: TLS_Server(std::tr1::function<void, const byte*, size_t> socket_output_fn, \
-          std::tr1::function<void, const byte*, size_t, u16bit> proc_fn, \
-          std::tr1::function<bool, const TLS_Session&> handshake_complete, \
-          TLS_Session_Manager& session_manager, \
+   .. cpp:function:: TLS::Server( \
+          std::function<void, const byte*, size_t> socket_output_fn, \
+          std::function<void, const byte*, size_t, TLS::Alert> proc_fn, \
+          std::function<bool, const TLS::Session&> handshake_complete, \
+          TLS::Session_Manager& session_manager, \
           Credentials_Manager& creds, \
-          const TLS_Policy& policy, \
+          const TLS::Policy& policy, \
           RandomNumberGenerator& rng, \
           const std::vector<std::string>& protocols)
 
-The first 7 arguments are treated similiarly to `TLS_Client`. The
-final (optional) argument, protocols, specifies the protocols the
-server is willing to advertise it supports.
+The first 7 arguments are treated similiarly to the :ref:`client
+<tls_client>`.  The final (optional) argument, protocols, specifies
+the protocols the server is willing to advertise it supports.
 
 A TLS server that can handle concurrent connections using asio:
 
 .. literalinclude:: examples/asio_tls_server.cpp
+
+.. _tls_sessions:
+
+TLS Sessions
+----------------------------------------
+
+TLS allows clients and servers to support *session resumption*, where
+the end point retains some information about an established session
+and then reuse that information to bootstrap a new session in way that
+is much cheaper computationally than a full handshake.
+
+Every time your handshake callback is called, a new session has been
+established, and a ``TLS::Session`` is included that provides
+information about that session:
+
+.. cpp:class:: TLS::Session
+
+   .. cpp:function:: Protocol_Version version() const
+
+       Returns the protocol version that was negotiated
+
+   .. cpp:function:: Ciphersuite ciphersite() const
+
+       Returns the :ref:`ciphersuite <tls_ciphersuite>` that was negotiated.
+
+   .. cpp:function:: std::string sni_hostname() const
+
+       Returns the hostname the client indicated in the hello message.
+
+   .. cpp:function:: std::vector<X509_Certificate> peer_certs() const
+
+       Returns the certificate chain of the peer
+
+   .. cpp:function:: std::string srp_identifier() const
+
+       If an SRP ciphersuite was used, then this is the identifier
+       that was used for authentication.
+
+   .. cpp:function:: bool secure_renegotiation() const
+
+      Returns ``true`` if the connection was negotiated with the
+      correct extensions to prevent the renegotiation attack.
+
+There are also functions for serialization and deserializing sessions:
+
+.. cpp:class:: TLS::Session
+
+   .. cpp:function:: std::vector<byte> encrypt(const SymmetricKey& key, \
+                                               RandomNumberGenerator& rng)
+
+      Encrypts a session using a symmetric key *key* and returns a raw
+      binary value that can later be passed to ``decrypt``.
+
+   .. cpp:function:: static Session decrypt(const byte ciphertext[], \
+                                            size_t length, \
+                                            const SymmetricKey& key)
+
+      Decrypts a session that was encrypted previously with
+      ``encrypt`` and *key*, or throws an exception if decryption
+      fails.
+
+   .. cpp:function:: secure_vector<byte> DER_encode() const
+
+       Returns a serialized version of the session.
+
+       .. warning:: The return value contains the master secret for
+                    the session, and an attacker who recovers it could
+                    recover plaintext of previous sessions or
+                    impersonate one side to the other.
+
+.. _tls_session_managers:
+
+TLS Session Managers
+----------------------------------------
+
+You may want sessions stored in a specific format or storage type. To
+do so, implement the ``TLS::Session_Manager`` interface and pass your
+implementation to the ``TLS::Client`` or ``TLS::Server`` constructor.
+
+.. cpp:class:: TLS::Session_Mananger
+
+ .. cpp:function:: void save(const Session& session)
+
+     Save a new *session*. It is possible that this sessions session
+     ID will replicate a session ID already stored, in which case the
+     new session information should overwrite the previous information.
+
+ .. cpp:function:: void remove_entry(const std::vector<byte>& session_id)
+
+      Remove the session identified by *session_id*. Future attempts
+      at resumption should fail for this session.
+
+ .. cpp:function:: bool load_from_session_id(const std::vector<byte>& session_id, \
+                                             Session& session)
+
+      Attempt to resume a session identified by *session_id*. If
+      located, *session* is set to the session data previously passed
+      to *save*, and ``true`` is returned. Otherwise *session* is not
+      modified and ``false`` is returned.
+
+ .. cpp:function:: bool load_from_host_info(const std::string& hostname, u16bit port, \
+                                            Session& session)
+
+      Attempt to resume a session for *hostname* / *port*. If *port*
+      is zero, try to find a session for *hostname* on any port. With
+      the current client implementation, *port* is always zero.
+
+
+ .. cpp:function:: std::chrono::seconds session_lifetime() const
+
+      Returns the expected maximum lifetime of a session when using
+      this session manager. Will return 0 if the lifetime is unknown
+      or has no explicit expiration policy.
+
+.. _tls_session_manager_inmem:
+
+In Memory Session Manager
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``TLS::Session_Manager_In_Memory`` implementation saves sessions
+in memory, with an upper bound on the maximum number of sessions and
+the lifetime of a session.
+
+.. cpp:class:: TLS::Session_Manager_In_Memory
+
+ .. cpp:function:: Session_Manager_In_Memory(size_t max_sessions = 1000, \
+                                             std::chrono::seconds session_lifetime = 7200)
+
+    Limits the maximum number of saved sessions to *max_sessions*, and
+    expires all sessions older than *session_lifetime*.
+
+Noop Session Mananger
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``TLS::Session_Manager_Noop`` implementation does not save
+sessions at all, and thus session resumption always fails. Its
+constructor has no arguments.
+
+SQLite3 Session Manager
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This session manager is only available if requiested at build time. If
+the macro ``BOTAN_HAS_TLS_SQLITE_SESSION_MANAGER`` is defined, then
+``botan/tls_sqlite_sess_mgr.h`` contains
+``TLS::Session_Manager_SQLite`` which stores sessions persistently a
+sqlite3 database. The session data is encrypted using a passphrase,
+and stored in two tables, named ``tls_sessions`` (which holds the
+actual session information) and ``tls_sessions_metadata`` (which holds
+the PBKDF information).
+
+.. warning:: The hostnames associated with the saved sessions are
+             stored in the database in plaintext. This may be a
+             serious privacy risk in some applications.
+
+.. cpp:class:: TLS::Session_Manager_SQLite
+
+ .. cpp:function:: Session_Manager_SQLite( \
+       const std::string& passphrase, \
+       RandomNumberGenerator& rng, \
+       const std::string& db_filename, \
+       size_t max_sessions = 1000, \
+       std::chrono::seconds session_lifetime = 7200)
+
+   As the sqlite database is stored to long term storage, *passphrase*
+   is used to encrypt all data in the sqlite3 database.
+
+
+TLS Policies
+----------------------------------------
+
+``TLS::Policy`` is how an application can control details of what will
+be negotiated during a handshake.
+
+.. cpp:class:: TLS::Policy
+
+ .. cpp:function:: Protocol_Version min_version() const
+
+     Returns the minimum protocol version we are willing to negotiate.
+
+     Default: SSL v3
+
+ .. cpp:function:: Protocol_Version pref_version() const
+
+     Return the protocol version we would prefer to negotiate. This is
+     the version that clients will offer to servers.
+
+     Default: TLS v1.2
+
+ .. cpp:function:: std::vector<std::string> allowed_ciphers() const
+
+     Returns the list of ciphers we are willing to negotiate, in order
+     of preference.
+
+     Default: returns "AES-256", "AES-128", "3DES", "ARC4".
+
+     Also allowed: "Camellia-256", "Camellia-128", "SEED"
+
+ .. cpp:function:: std::vector<std::string> allowed_hashes() const
+
+     Returns the list of hash functions we are willing to use, in
+     order of preference.
+
+     Default: "SHA-512", "SHA-384", "SHA-256", "SHA-224", "SHA-1"
+
+     Also allowed: "MD5"
+
+ .. cpp:function:: std::vector<std::string> allowed_key_exchange_methods() const
+
+     Returns the list of key exchange methods we are willing to use,
+     in order of preference.
+
+     Default: "ECDH", "DH", "RSA"
+
+     Also allowed: "SRP_SHA", "ECDHE_PSK", "DHE_PSK", "PSK"
+
+ .. cpp:function:: std::vector<std::string> allowed_signature_methods() const
+
+     Default: "ECDSA", "RSA", "DSA"
+
+     Also allowed: "" (meaning anonymous)
+
+ .. cpp:function:: std::vector<std::string> allowed_ecc_curves() const
+
+ .. cpp:function:: std::vector<byte> compression() const
+
+ .. cpp:function:: bool allow_insecure_renegotiation() const
+
+     If this function returns true, we will allow renegotiation attempts
+     even if the counterparty does not support the RFC 5746 extensions.
+
+     .. warning:: Returning true here could expose you to attacks
+
+     Default: false
+
+ .. cpp:function:: DL_Group dh_group() const
+
+     For ephemeral Diffie-Hellman key exchange, the server sends a
+     group parameter. Return the group parameter a server should
+     use.
+
+     Default: 2048 bit IETF IPsec group ("modp/ietf/2048")
+
+ .. cpp:function:: size_t minimum_dh_group_size() const
+
+     Return the minimum size in bits for a Diffie-Hellman group that a
+     client will accept.
+
+     Default: 1024 bits
+
+ .. cpp:function:: bool hide_unknown_users() const
+
+     The SRP and PSK suites work using an identifier along with a
+     shared secret. If this function returns true, when an identifier
+     that the server does not recognize is provided by a client, a
+     random shared secret will be generated in such a way that a
+     client should not be able to tell the difference between the
+     identifier not being known and the secret being wrong.  This can
+     help protect against some username probing attacks.  If it
+     returns false, the server will instead send an
+     ``unknown_psk_identity`` alert when an unknown identifier is
+     used.
+
+     Default: false
+
+ .. cpp:function:: u32bit session_ticket_lifetime() const
+
+     Return the lifetime of session tickets. Each session includes the
+     start time. Sessions resumptions using tickets older than
+     ``session_ticket_lifetime`` seconds will fail, forcing a full
+     renegotiation.
+
+     Default: 86400 seconds (1 day)
+
+
+.. _tls_ciphersuite:
+
+TLS Ciphersuites
+----------------------------------------
+
+.. cpp:class:: TLS::Ciphersuite
+
+ .. cpp:function:: u16bit ciphersuite_code() const
+
+     Return the numerical code for this ciphersuite
+
+ .. cpp:function:: std::string to_string() const
+
+     Return name of ciphersuite
+
+ .. cpp:function:: std::string kex_algo() const
+
+     Return the key exchange algorithm of this ciphersuite
+
+ .. cpp:function:: std::string sig_algo() const
+
+     Return the signature algorithm of this ciphersuite
+
+ .. cpp:function:: std::string cipher_algo() const
+
+     Return the cipher algorithm of this ciphersuite
+
+ .. cpp:function:: std::string mac_algo() const
+
+     Return the authentication algorithm of this ciphersuite
+
+TLS Alerts
+----------------------------------------
+
+A ``TLS::Alert`` is passed to every invocation of a channel's
+*proc_fn*. Most of the time, no alert was sent and so the alert will
+be of type ``NULL_ALERT``.
+
+.. cpp:class:: TLS::Alert
+
+  .. cpp:function:: is_valid() const
+
+       Return true if this alert is not a null alert
+
+  .. cpp:function:: is_fatal() const
+
+       Return if this alert is fatal or a warning alert
+
+  .. cpp:function:: Type type() const
+
+       Returns the type of the alert as an enum
+
+  .. cpp:function:: std::string type_string()
+
+       Returns the type of the alert as a string
+
+TLS Protocol Version
+----------------------------------------
+
+TLS has several different versions with slightly different behaviors.
+The ``TLS::Protocol_Version`` class represents a specific version:
+
+.. cpp:class:: TLS::Protocol_Version
+
+ .. cpp:type:: enum Version_Code
+
+     ``SSL_V3``, ``TLS_V10``, ``TLS_V11``, ``TLS_V12``
+
+ .. cpp:function:: Protocol_Version(Version_Code named_version)
+
+      Create a specific version
+
+ .. cpp:function:: byte major_version() const
+
+      Returns major number of the protocol version
+
+ .. cpp:function:: byte minor_version() const
+
+      Returns minor number of the protocol version
+
+ .. cpp:function:: std::string to_string() const
+
+      Returns string description of the version, typically "SSL v3" or
+      "TLS v1.n"
