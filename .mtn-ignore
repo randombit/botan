@@ -18,3 +18,5 @@ callgrind.out.*
 ^src/wrap/perl-xs/Botan.(bs|c)$
 ^src/wrap/perl-xs/Makefile(\.old)?$
 ^src/wrap/perl-xs/.*blib$
+^.*\.(key|crt|pem)$
+^.*\.patch$
