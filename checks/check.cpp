@@ -229,6 +229,7 @@ int run_test_suite(RandomNumberGenerator& rng)
       errors += do_bigint_tests(BIGINT_VALIDATION_FILE, rng);
       errors += do_pk_validation_tests(PK_VALIDATION_FILE, rng);
       do_x509_tests(rng);
+      do_tls_tests(rng);
       //errors += do_cvc_tests(rng);
       }
    catch(std::exception& e)

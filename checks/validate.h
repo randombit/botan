@@ -28,4 +28,6 @@ u32bit do_cvc_tests(RandomNumberGenerator& rng);
 
 void do_x509_tests(RandomNumberGenerator&);
 
+size_t do_tls_tests(RandomNumberGenerator& rng);
+
 #endif
