@@ -10,12 +10,61 @@ insecure and obsolete SSL v2 protocol is not supported, beyond
 processing SSL v2 client hellos which some clients still send for
 backwards compatability with ancient servers).
 
-The TLS implementation uses an event driven model. Information read
-from the socket is passed to a TLS object using a function
-``received_data``, which is processed and then (potentially) various
-callback functions are called. For instance one callback is called
-whenever a session is established or renegotiated, and another is
-called whenevever a new plaintext record is available.
+The TLS implementation does not know anything about sockets or
+networks. Instead, it calls a user provided callback (hereafter
+``output_fn``) whenever it has data that it would want to send to the
+other party, and whenever the application receives some data from the
+counterparty it passes that information to TLS using
+:cpp:func:`TLS::Channel::received_data`. If the data passed in results
+in a handshake completing, then the user provided
+``handshake_complete`` is called, and if some application data being
+received, or a TLS :ref:`alert <tls_alerts>` is received, the another
+user provided callback, hereafter ``proc_fn``, is called.
+
+The callbacks that TLS calls have the signatures
+
+ .. cpp:function:: void output_fn(const byte data[], size_t data_len)
+
+    TLS requests that all bytes of *data* be queued up to send.  After
+    this function returns, *data* will be overwritten, so a copy
+    should be made if the callback cannot send the immediately.
+
+ .. cpp:function:: void proc_fn(const byte data[], size_t data_len, \
+                                const TLS::Alert& alert)
+
+     Called whenever application data or an alert is received from the
+     other side of the connection, in which case *data* and *data_len*
+     specify the data received. This array will be overwritten
+     sometime after the callback returns, so again a copy should be
+     made if need be.
+
+     If :cpp:func:`TLS::Alert::is_valid` is true then *alert*
+     specifies a valid alert that was received. Note that if received
+     before the handshake has completed, an attacker can easily insert
+     false alert values.
+
+     .. note::
+
+       Currently, if an alert was passed in then no other data was
+       provided.  This allows an appliction to easily distinguish
+       between data sent before and after the alert was received.
+
+ .. cpp:function:: bool handshake_complete(const TLS::Session& session)
+
+     Called whenever a negotiation completes. This can happen more
+     than once on any connection. The *session* parameter provides
+     information about the session which was established.
+
+     If this function returns false, the session will not be cached
+     for later resumption.
+
+     If this function wishes to cancel the handshake, it can throw an
+     exception which will send a close message to the counterparty and
+     reset the connection state.
+
+You can of course use tools like ``std::bind`` to bind additional
+parameters to your callback functions.
+
 
 TLS Channels
 ----------------------------------------
@@ -89,7 +138,7 @@ TLS Clients
 .. cpp:class:: TLS::Client
 
    .. cpp:function:: TLS::Client( \
-         std::function<void, const byte*, size_t> socket_output_fn, \
+         std::function<void, const byte*, size_t> output_fn, \
          std::function<void, const byte*, size_t, TLS::Alert> proc_fn, \
          std::function<bool, const TLS::Session&> handshake_complete, \
          TLS::Session_Manager& session_manager, \
@@ -102,10 +151,10 @@ TLS Clients
    Initialize a new TLS client. The constructor will immediately
    initiate a new session.
 
-   The *socket_output_fn* callback will be called with output that
+   The *output_fn* callback will be called with output that
    should be sent to the counterparty. For instance this will be
    called immediately from the constructor after the client hello
-   message is constructed. An implementation of *socket_output_fn* is
+   message is constructed. An implementation of *output_fn* is
    allowed to defer the write (for instance if writing when the
    callback occurs would block), but should eventually write the data
    to the counterparty *in order*.
@@ -158,7 +207,7 @@ TLS Servers
 .. cpp:class:: TLS::Server
 
    .. cpp:function:: TLS::Server( \
-          std::function<void, const byte*, size_t> socket_output_fn, \
+          std::function<void, const byte*, size_t> output_fn, \
           std::function<void, const byte*, size_t, TLS::Alert> proc_fn, \
           std::function<bool, const TLS::Session&> handshake_complete, \
           TLS::Session_Manager& session_manager, \
@@ -508,6 +557,8 @@ TLS Ciphersuites
  .. cpp:function:: std::string mac_algo() const
 
      Return the authentication algorithm of this ciphersuite
+
+.. _tls_alerts:
 
 TLS Alerts
 ----------------------------------------
