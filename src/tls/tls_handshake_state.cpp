@@ -225,7 +225,7 @@ std::string choose_hash(const std::string& sig_algo,
 
    if(!supported_algos.empty())
       {
-      const auto hashes = policy.allowed_hashes();
+      const auto hashes = policy.allowed_signature_hashes();
 
       /*
       * Choose our most preferred hash that the counterparty supports

@@ -66,7 +66,7 @@ Certificate_Req::Certificate_Req(Record_Writer& writer,
 
    if(version >= Protocol_Version::TLS_V12)
       {
-      std::vector<std::string> hashes = policy.allowed_hashes();
+      std::vector<std::string> hashes = policy.allowed_signature_hashes();
       std::vector<std::string> sigs = policy.allowed_signature_methods();
 
       for(size_t i = 0; i != hashes.size(); ++i)

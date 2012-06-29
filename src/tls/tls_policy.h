@@ -33,12 +33,15 @@ class BOTAN_DLL Policy
       virtual std::vector<std::string> allowed_ciphers() const;
 
       /**
-      * Returns a list of hash algorithms we are willing to use, in
-      * order of preference. This is used for both MACs and signatures.
-      * Allowed values: any hash name, though currently only MD5,
-      * SHA-1, and the SHA-2 variants are used.
+      * Returns a list of hash algorithms we are willing to use for
+      * signatures.
       */
-      virtual std::vector<std::string> allowed_hashes() const;
+      virtual std::vector<std::string> allowed_signature_hashes() const;
+
+      /**
+      * Returns a list of MAC algorithms we are willing to use.
+      */
+      virtual std::vector<std::string> allowed_macs() const;
 
       /**
       * Returns a list of key exchange algorithms we are willing to

@@ -35,7 +35,7 @@ class BOTAN_DLL Server : public Channel
              const std::vector<std::string>& protocols =
                 std::vector<std::string>());
 
-      void renegotiate(bool force_full_renegotiation);
+      void renegotiate(bool force_full_renegotiation = false);
 
       /**
       * Return the server name indicator, if sent by the client

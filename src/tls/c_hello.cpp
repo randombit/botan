@@ -85,7 +85,7 @@ Client_Hello::Client_Hello(Record_Writer& writer,
    m_supports_heartbeats(true),
    m_peer_can_send_heartbeats(true)
    {
-   std::vector<std::string> hashes = policy.allowed_hashes();
+   std::vector<std::string> hashes = policy.allowed_signature_hashes();
    std::vector<std::string> sigs = policy.allowed_signature_methods();
 
    for(size_t i = 0; i != hashes.size(); ++i)
@@ -128,7 +128,7 @@ Client_Hello::Client_Hello(Record_Writer& writer,
    if(!value_exists(m_comp_methods, session.compression_method()))
       m_comp_methods.push_back(session.compression_method());
 
-   std::vector<std::string> hashes = policy.allowed_hashes();
+   std::vector<std::string> hashes = policy.allowed_signature_hashes();
    std::vector<std::string> sigs = policy.allowed_signature_methods();
 
    for(size_t i = 0; i != hashes.size(); ++i)

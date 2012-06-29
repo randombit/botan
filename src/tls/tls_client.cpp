@@ -165,7 +165,7 @@ void Client::process_handshake_msg(Handshake_Type type,
          return;
          }
 
-      renegotiate(false);
+      this->renegotiate(false);
 
       return;
       }

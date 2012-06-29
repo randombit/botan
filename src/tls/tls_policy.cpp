@@ -21,21 +21,31 @@ std::vector<std::string> Policy::allowed_ciphers() const
    return std::vector<std::string>({
       "AES-256",
       "AES-128",
-      "3DES",
       "ARC4",
+      "3DES",
       //"Camellia-256",
       //"Camellia-128",
       //"SEED"
       });
    }
 
-std::vector<std::string> Policy::allowed_hashes() const
+std::vector<std::string> Policy::allowed_signature_hashes() const
    {
    return std::vector<std::string>({
       "SHA-512",
       "SHA-384",
       "SHA-256",
       "SHA-224",
+      "SHA-1",
+      //"MD5",
+      });
+   }
+
+std::vector<std::string> Policy::allowed_macs() const
+   {
+   return std::vector<std::string>({
+      "SHA-384",
+      "SHA-256",
       "SHA-1",
       //"MD5",
       });
@@ -73,11 +83,11 @@ std::vector<std::string> Policy::allowed_ecc_curves() const
       "secp256k1",
       "secp224r1",
       "secp224k1",
-      "secp192r1",
-      "secp192k1",
-      "secp160r2",
-      "secp160r1",
-      "secp160k1",
+      //"secp192r1",
+      //"secp192k1",
+      //"secp160r2",
+      //"secp160r1",
+      //"secp160k1",
       });
    }
 
@@ -136,10 +146,10 @@ class Ciphersuite_Preference_Ordering
    {
    public:
       Ciphersuite_Preference_Ordering(const std::vector<std::string>& ciphers,
-                                      const std::vector<std::string>& hashes,
+                                      const std::vector<std::string>& macs,
                                       const std::vector<std::string>& kex,
                                       const std::vector<std::string>& sigs) :
-         m_ciphers(ciphers), m_hashes(hashes), m_kex(kex), m_sigs(sigs) {}
+         m_ciphers(ciphers), m_macs(macs), m_kex(kex), m_sigs(sigs) {}
 
       bool operator()(const Ciphersuite& a, const Ciphersuite& b) const
          {
@@ -186,11 +196,11 @@ class Ciphersuite_Preference_Ordering
 
          if(a.mac_algo() != b.mac_algo())
             {
-            for(size_t i = 0; i != m_hashes.size(); ++i)
+            for(size_t i = 0; i != m_macs.size(); ++i)
                {
-               if(a.mac_algo() == m_hashes[i])
+               if(a.mac_algo() == m_macs[i])
                   return true;
-               if(b.mac_algo() == m_hashes[i])
+               if(b.mac_algo() == m_macs[i])
                   return false;
                }
             }
@@ -198,8 +208,7 @@ class Ciphersuite_Preference_Ordering
          return false; // equal (?!?)
          }
    private:
-      std::vector<std::string> m_ciphers, m_hashes, m_kex, m_sigs;
-
+      std::vector<std::string> m_ciphers, m_macs, m_kex, m_sigs;
    };
 
 }
@@ -208,11 +217,11 @@ std::vector<u16bit> ciphersuite_list(const Policy& policy,
                                      bool have_srp)
    {
    const std::vector<std::string> ciphers = policy.allowed_ciphers();
-   const std::vector<std::string> hashes = policy.allowed_hashes();
+   const std::vector<std::string> macs = policy.allowed_macs();
    const std::vector<std::string> kex = policy.allowed_key_exchange_methods();
    const std::vector<std::string> sigs = policy.allowed_signature_methods();
 
-   Ciphersuite_Preference_Ordering order(ciphers, hashes, kex, sigs);
+   Ciphersuite_Preference_Ordering order(ciphers, macs, kex, sigs);
 
    std::set<Ciphersuite, Ciphersuite_Preference_Ordering> ciphersuites(order);
 
@@ -227,7 +236,7 @@ std::vector<u16bit> ciphersuite_list(const Policy& policy,
       if(!value_exists(ciphers, suite.cipher_algo()))
          continue; // unsupported cipher
 
-      if(!value_exists(hashes, suite.mac_algo()))
+      if(!value_exists(macs, suite.mac_algo()))
          continue; // unsupported MAC algo
 
       if(!value_exists(sigs, suite.sig_algo()))

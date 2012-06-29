@@ -315,8 +315,9 @@ constructor has no arguments.
 SQLite3 Session Manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This session manager is only available if requiested at build time. If
-the macro ``BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER`` is defined, then
+This session manager is only available if support for SQLite3 was
+enabled at build time. If the macro
+``BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER`` is defined, then
 ``botan/tls_session_manager_sqlite.h`` contains
 ``TLS::Session_Manager_SQLite`` which stores sessions persistently to
 a sqlite3 database. The session data is encrypted using a passphrase,
@@ -365,16 +366,16 @@ be negotiated during a handshake.
      Returns the list of ciphers we are willing to negotiate, in order
      of preference.
 
-     Default: returns "AES-256", "AES-128", "3DES", "ARC4".
+     Default: "AES-256", "AES-128", "ARC4", "3DES"
 
      Also allowed: "Camellia-256", "Camellia-128", "SEED"
 
- .. cpp:function:: std::vector<std::string> allowed_hashes() const
+ .. cpp:function:: std::vector<std::string> allowed_macs() const
 
-     Returns the list of hash functions we are willing to use, in
-     order of preference.
+     Returns the list of algorithms we are willing to use for
+     message authentication, in order of preference.
 
-     Default: "SHA-512", "SHA-384", "SHA-256", "SHA-224", "SHA-1"
+     Default: "SHA-384", "SHA-256", "SHA-1"
 
      Also allowed: "MD5"
 
@@ -387,6 +388,21 @@ be negotiated during a handshake.
 
      Also allowed: "SRP_SHA", "ECDHE_PSK", "DHE_PSK", "PSK"
 
+ .. cpp:function:: std::vector<std::string> allowed_signature_hashes() const
+
+     Returns the list of algorithms we are willing to use for
+     public key signatures, in order of preference.
+
+     Default: "SHA-512", "SHA-384", "SHA-256", "SHA-224", "SHA-1"
+
+     Also allowed (although **not recommended**): "MD5"
+
+     .. note::
+
+        This is only used with TLS v1.2. In earlier versions of the
+        protocol, signatures are fixed to using only SHA-1 (for
+        DSA/ECDSA) or a MD5/SHA-1 pair (for RSA).
+
  .. cpp:function:: std::vector<std::string> allowed_signature_methods() const
 
      Default: "ECDSA", "RSA", "DSA"
@@ -395,7 +411,21 @@ be negotiated during a handshake.
 
  .. cpp:function:: std::vector<std::string> allowed_ecc_curves() const
 
+     Return a list of ECC curves we are willing to use, in order of preference.
+
+     Default: "secp521r1", "secp384r1", "secp256r1",
+     "secp256k1", "secp224r1", "secp224k1"
+
+     Also allowed: "secp192r1", "secp192k1", "secp160r2", "secp160r1", "secp160k1"
+
  .. cpp:function:: std::vector<byte> compression() const
+
+     Return the list of compression methods we are willing to use, in order of
+     preference.
+
+     .. note::
+
+        TLS compression is not currently supported.
 
  .. cpp:function:: bool allow_insecure_renegotiation() const
 
@@ -417,7 +447,10 @@ be negotiated during a handshake.
  .. cpp:function:: size_t minimum_dh_group_size() const
 
      Return the minimum size in bits for a Diffie-Hellman group that a
-     client will accept.
+     client will accept. Due to the design of the protocol the client
+     has only two options - accept the group, or reject it with a
+     fatal alert then attempt to reconnect after disabling ephemeral
+     Diffie-Hellman.
 
      Default: 1024 bits
 
@@ -444,7 +477,6 @@ be negotiated during a handshake.
      renegotiation.
 
      Default: 86400 seconds (1 day)
-
 
 .. _tls_ciphersuite:
 
