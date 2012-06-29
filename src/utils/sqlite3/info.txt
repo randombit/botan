@@ -6,9 +6,9 @@ all -> sqlite3
 </libs>
 
 <header:internal>
-sqlite.h
+sqlite3.h
 </header:internal>
 
 <source>
-sqlite.cpp
+sqlite3.cpp
 </source>

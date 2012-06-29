@@ -5,7 +5,7 @@
 * Released under the terms of the Botan license
 */
 
-#include <botan/internal/sqlite.h>
+#include <botan/internal/sqlite3.h>
 #include <botan/internal/assert.h>
 #include <stdexcept>
 #include <sqlite3.h>

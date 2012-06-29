@@ -4,10 +4,9 @@
 *
 * Released under the terms of the Botan license
 */
- 
-#include <botan/tls_sqlite_sess_mgr.h>
-#include <botan/internal/sqlite.h>
-#include <botan/internal/assert.h>
+
+#include <botan/tls_session_manager_sqlite.h>
+#include <botan/internal/sqlite3.h>
 #include <botan/lookup.h>
 #include <botan/hex.h>
 #include <botan/loadstor.h>
@@ -26,13 +25,13 @@ SymmetricKey derive_key(const std::string& passphrase,
    {
    std::unique_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(SHA-512)"));
 
-   secure_vector<byte> x = pbkdf->derive_key(32 + 3,
+   secure_vector<byte> x = pbkdf->derive_key(32 + 2,
                                              passphrase,
                                              salt, salt_len,
                                              iterations).bits_of();
 
-   check_val = make_u32bit(0, x[0], x[1], x[2]);
-   return SymmetricKey(&x[3], x.size() - 3);
+   check_val = make_u16bit(x[0], x[1]);
+   return SymmetricKey(&x[2], x.size() - 2);
    }
 
 Session_Manager_SQLite::Session_Manager_SQLite(const std::string& passphrase,

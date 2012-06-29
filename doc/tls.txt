@@ -301,10 +301,10 @@ SQLite3 Session Manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This session manager is only available if requiested at build time. If
-the macro ``BOTAN_HAS_TLS_SQLITE_SESSION_MANAGER`` is defined, then
-``botan/tls_sqlite_sess_mgr.h`` contains
-``TLS::Session_Manager_SQLite`` which stores sessions persistently a
-sqlite3 database. The session data is encrypted using a passphrase,
+the macro ``BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER`` is defined, then
+``botan/tls_session_manager_sqlite.h`` contains
+``TLS::Session_Manager_SQLite`` which stores sessions persistently to
+a sqlite3 database. The session data is encrypted using a passphrase,
 and stored in two tables, named ``tls_sessions`` (which holds the
 actual session information) and ``tls_sessions_metadata`` (which holds
 the PBKDF information).
@@ -322,9 +322,7 @@ the PBKDF information).
        size_t max_sessions = 1000, \
        std::chrono::seconds session_lifetime = 7200)
 
-   As the sqlite database is stored to long term storage, *passphrase*
-   is used to encrypt all data in the sqlite3 database.
-
+   Uses the sqlite3 database named by *db_filename*.
 
 TLS Policies
 ----------------------------------------

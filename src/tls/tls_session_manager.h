@@ -76,8 +76,28 @@ class BOTAN_DLL Session_Manager
    };
 
 /**
-* A simple implementation of Session_Manager that just saves
-* values in memory, with no persistance abilities
+* An implementation of Session_Manager that does not save sessions at
+* all, preventing session resumption.
+*/
+class BOTAN_DLL Session_Manager_Noop : public Session_Manager
+   {
+   public:
+      bool load_from_session_id(const std::vector<byte>&, Session&)
+         { return false; }
+
+      bool load_from_host_info(const std::string&, u16bit, Session&)
+         { return false; }
+
+      void remove_entry(const std::vector<byte>&) {}
+
+      void save(const Session&) {}
+
+      std::chrono::seconds session_lifetime() const
+         { return std::chrono::seconds(0); }
+   };
+
+/**
+* An implementation of Session_Manager that saves values in memory
 */
 class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
    {

@@ -1,6 +1,6 @@
-define TLS_SQLITE_SESSION_MANAGER
+define TLS_SQLITE3_SESSION_MANAGER
 
 <requires>
 pbkdf2
-sqlite
+sqlite3
 </requires>
