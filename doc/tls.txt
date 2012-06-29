@@ -83,6 +83,11 @@ available:
      result in one or more callback functions that were provided to
      the constructor being called.
 
+     The return value of ``received_data`` specifies how many more
+     bytes of input are needed to make any progress, unless the end of
+     the data fell exactly on a message boundary, in which case it
+     will return 0 instead.
+
    .. cpp:function:: void send(const byte buf[], size_t buf_size)
 
      If the connection has completed the initial handshake process,
