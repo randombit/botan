@@ -26,54 +26,60 @@ available:
 
 .. cpp:class:: TLS::Channel
 
-   .. cpp:function size_t received_data(const byte buf[], size_t buf_size)
+   .. cpp:function:: size_t received_data(const byte buf[], size_t buf_size)
 
-   This function is used to provide data sent by the counterparty (eg
-   data that you read off the socket layer). Depending on the current
-   protocol state and the amount of data provided this may result in one
-   or more callback functions that were provided to the constructor being
-   called.
+     This function is used to provide data sent by the counterparty
+     (eg data that you read off the socket layer). Depending on the
+     current protocol state and the amount of data provided this may
+     result in one or more callback functions that were provided to
+     the constructor being called.
 
-   .. cpp:function void send(const byte buf[], size_t buf_size)
+   .. cpp:function:: void send(const byte buf[], size_t buf_size)
 
-   If the connection has completed the initial handshake process, the
-   data provided is sent to the counterparty as TLS
-   traffic. Otherwise, an exception is thrown.
+     If the connection has completed the initial handshake process,
+     the data provided is sent to the counterparty as TLS
+     traffic. Otherwise, an exception is thrown.
 
    .. cpp:function:: void close()
 
-   A close notification is sent to the counterparty, and the internal
-   state is cleared.
+     A close notification is sent to the counterparty, and the
+     internal state is cleared.
 
    .. cpp:function:: bool is_active()
 
-   Returns true if and only if a handshake has been completed on this
-   connection and the connection has not been subsequently closed.
+     Returns true if and only if a handshake has been completed on
+     this connection and the connection has not been subsequently
+     closed.
 
    .. cpp:function:: bool is_closed()
 
-   Returns true if and only if either a close notification or a fatal
-   alert message have been either sent or received.
+      Returns true if and only if either a close notification or a
+      fatal alert message have been either sent or received.
 
    .. cpp:function:: void renegotiate(bool force_full_renegotiation = false)
 
-   Initiates a renegotiation. The counterparty is allowed by the
-   protocol to ignore this request. If a successful renegotiation
-   occurs, the *handshake_complete* callback will be called again.
+      Initiates a renegotiation. The counterparty is allowed by the
+      protocol to ignore this request. If a successful renegotiation
+      occurs, the *handshake_complete* callback will be called again.
 
-   If *force_full_renegotiation* is false, then the client will
-   attempt to simply renew the current session - this will refresh the
-   symmetric keys but will not change the session master
-   secret. Otherwise it will initiate a completely new session.
+      If *force_full_renegotiation* is false, then the client will
+      attempt to simply renew the current session - this will refresh
+      the symmetric keys but will not change the session master
+      secret. Otherwise it will initiate a completely new session.
 
-   For a server, if *force_full_renegotiation* is false, then a
-   session resumption will be allowed if the client attempts
-   it. Otherwise the server will prevent resumption and force the
-   creation of a new session.
+      For a server, if *force_full_renegotiation* is false, then a
+      session resumption will be allowed if the client attempts
+      it. Otherwise the server will prevent resumption and force the
+      creation of a new session.
 
    .. cpp:function:: std::vector<X509_Certificate> peer_cert_chain()
 
-   Returns the certificate chain of the server
+      Returns the certificate chain of the counterparty. When acting
+      as a client, this value will be non-empty unless the client's
+      policy allowed anonymous connections and the server then chose
+      an anonymous ciphersuite. Acting as a server, this value will
+      ordinarily be empty, unless the server requested a certificate
+      and the client responded with one.
 
 .. _tls_client:
 
