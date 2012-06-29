@@ -16,8 +16,8 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#if defined(BOTAN_HAS_TLS_SQLITE_SESSION_MANAGER)
-  #include <botan/tls_sqlite_sess_mgr.h>
+#if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
+  #include <botan/tls_session_manager_sqlite.h>
 #endif
 
 #include "credentials.h"
