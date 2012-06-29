@@ -48,19 +48,28 @@ available:
    .. cpp:function:: bool is_active()
 
    Returns true if and only if a handshake has been completed on this
-   connection.
+   connection and the connection has not been subsequently closed.
 
    .. cpp:function:: bool is_closed()
 
-   Returns true if and only if a close notification has been sent or
-   received, or if a fatal alert of any kind was received from the
-   counterparty.
+   Returns true if and only if either a close notification or a fatal
+   alert message have been either sent or received.
 
    .. cpp:function:: void renegotiate(bool force_full_renegotiation = false)
 
    Initiates a renegotiation. The counterparty is allowed by the
    protocol to ignore this request. If a successful renegotiation
    occurs, the *handshake_complete* callback will be called again.
+
+   If *force_full_renegotiation* is false, then the client will
+   attempt to simply renew the current session - this will refresh the
+   symmetric keys but will not change the session master
+   secret. Otherwise it will initiate a completely new session.
+
+   For a server, if *force_full_renegotiation* is false, then a
+   session resumption will be allowed if the client attempts
+   it. Otherwise the server will prevent resumption and force the
+   creation of a new session.
 
    .. cpp:function:: std::vector<X509_Certificate> peer_cert_chain()
 
