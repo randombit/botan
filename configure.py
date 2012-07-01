@@ -1759,6 +1759,12 @@ def main(argv = None):
                 gcc_version = stdout.strip()
 
                 logging.info('Detected gcc version %s' % (gcc_version))
+
+                (gcc_major, gcc_minor, gcc_patch) = map(int, gcc_version.split('.'))
+
+                if gcc_major == 4 and gcc_minor < 7:
+                    logging.warning('GCC 4.7.0 or higher is required')
+
                 return gcc_version
             except OSError:
                 logging.warning('Could not execute %s for version check' % (gcc_bin))
