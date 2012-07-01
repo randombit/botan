@@ -162,9 +162,7 @@ std::pair<std::string, int> translate_algo(const std::string& in)
    if(in == "skipjack (10 byte key)")
       return std::make_pair("Skipjack", 10);
 
-   // Noekeon: unknown cause, though LTC's lone test vector does not
-   // match Botan
-
+   // Noekeon: uses direct keying instead of indirect
    if(in == "noekeon (16 byte key)")
       return std::make_pair("Noekeon", 16);
 
@@ -236,7 +234,7 @@ void run_tests(std::istream& in)
 
 int main()
    {
-   std::ifstream in("eax.vec");
+   std::ifstream in("eax_vecs.txt")
 
    Botan::LibraryInitializer init;
 

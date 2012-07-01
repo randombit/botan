@@ -67,7 +67,7 @@ extlinks = {
                          'x86-64 ')
 }
 
-source_suffix = '.txt'
+source_suffix = '.rst'
 
 source_encoding = 'utf-8-sig'
 
