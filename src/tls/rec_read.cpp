@@ -164,6 +164,58 @@ size_t Record_Reader::fill_buffer_to(const byte*& input,
    return (desired - m_readbuf_pos); // how many bytes do we still need?
    }
 
+namespace {
+
+/*
+* Checks the TLS padding. Returns 0 if the padding is invalid (we
+* count the padding_length field as part of the padding size so a
+* valid padding will always be at least one byte long), or the
+* length of the padding otherwise.
+*
+* Returning 0 in the error case should ensure the MAC check will fail.
+* This approach is suggested in section 6.2.3.2 of RFC 5246.
+*
+* Also returns 0 if block_size == 0, so can be safely called with a
+* stream cipher in use.
+*/
+size_t tls_padding_check(Protocol_Version version,
+                         size_t block_size,
+                         const byte record[],
+                         size_t record_len)
+   {
+   if(block_size == 0 || record_len == 0 || record_len % block_size != 0)
+      return 0;
+
+   const size_t padding_length = record[(record_len-1)];
+
+   if(padding_length >= record_len)
+      return 0;
+
+   /*
+   * SSL v3 requires that the padding be less than the block size
+   * but not does specify the value of the padding bytes.
+   */
+   if(version == Protocol_Version::SSL_V3)
+      {
+      if(padding_length > 0 && padding_length < block_size)
+         return (padding_length + 1);
+      else
+         return 0;
+      }
+
+   /*
+   * TLS v1.0 and up require all the padding bytes be the same value
+   * and allows up to 255 bytes.
+   */
+   for(size_t i = 0; i != padding_length; ++i)
+      if(record[(record_len-i-1)] != padding_length)
+         return 0;
+
+   return padding_length + 1;
+   }
+
+}
+
 /*
 * Retrieve the next record
 */
@@ -281,38 +333,13 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
    BOTAN_ASSERT_EQUAL(m_cipher.remaining(Pipe::LAST_MESSAGE), 0,
                       "Cipher had no remaining inputs");
 
-   size_t pad_size = 0;
-
-   if(m_block_size)
-      {
-      byte pad_value = m_readbuf[TLS_HEADER_SIZE + (record_len-1)];
-      pad_size = pad_value + 1;
-
-      /*
-      * Check the padding; if it is wrong, then say we have 0 bytes of
-      * padding, which should ensure that the MAC check below does not
-      * succeed. This hides a timing channel.
-      *
-      * This particular countermeasure is recommended in the TLS 1.2
-      * spec (RFC 5246) in section 6.2.3.2
-      */
-      if(m_version == Protocol_Version::SSL_V3)
-         {
-         if(pad_value > m_block_size)
-            pad_size = 0;
-         }
-      else
-         {
-         bool padding_good = true;
-
-         for(size_t i = 0; i != pad_size; ++i)
-            if(m_readbuf[TLS_HEADER_SIZE + (record_len-i-1)] != pad_value)
-               padding_good = false;
-
-         if(!padding_good)
-            pad_size = 0;
-         }
-      }
+   /*
+   * This is actually padding_length + 1 because both the padding and
+   * padding_length fields are padding from our perspective.
+   */
+   const size_t pad_size =
+      tls_padding_check(m_version, m_block_size,
+                        &m_readbuf[TLS_HEADER_SIZE], record_len);
 
    const size_t mac_pad_iv_size = m_macbuf.size() + pad_size + m_iv_size;
 
