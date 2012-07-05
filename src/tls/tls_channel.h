@@ -86,7 +86,8 @@ class BOTAN_DLL Channel
       Channel(std::function<void (const byte[], size_t)> socket_output_fn,
               std::function<void (const byte[], size_t, Alert)> proc_fn,
               std::function<bool (const Session&)> handshake_complete,
-              Session_Manager& session_manager);
+              Session_Manager& session_manager,
+              RandomNumberGenerator& rng);
 
       virtual ~Channel();
    protected:

@@ -27,7 +27,7 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
                RandomNumberGenerator& rng,
                const std::string& hostname,
                std::function<std::string (std::vector<std::string>)> next_protocol) :
-   Channel(output_fn, proc_fn, handshake_fn, session_manager),
+   Channel(output_fn, proc_fn, handshake_fn, session_manager, rng),
    m_policy(policy),
    m_rng(rng),
    m_creds(creds),

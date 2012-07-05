@@ -50,13 +50,15 @@ class BOTAN_DLL Record_Writer
 
       void set_maximum_fragment_size(size_t max_fragment);
 
-      Record_Writer(std::function<void (const byte[], size_t)> output_fn);
+      Record_Writer(std::function<void (const byte[], size_t)> output_fn,
+                    RandomNumberGenerator& rng);
+
+      Record_Writer(const Record_Writer&) = delete;
+
+      Record_Writer& operator=(const Record_Writer&) = delete;
 
       ~Record_Writer() { delete m_mac; }
    private:
-      Record_Writer(const Record_Writer&) {}
-      Record_Writer& operator=(const Record_Writer&) { return (*this); }
-
       void send_record(byte type, const byte input[], size_t length);
 
       std::function<void (const byte[], size_t)> m_output_fn;
@@ -65,6 +67,7 @@ class BOTAN_DLL Record_Writer
 
       Pipe m_cipher;
       MessageAuthenticationCode* m_mac;
+      RandomNumberGenerator& m_rng;
 
       size_t m_block_size, m_mac_size, m_iv_size, m_max_fragment;
 
@@ -109,11 +112,11 @@ class BOTAN_DLL Record_Reader
 
       Record_Reader();
 
+      Record_Reader(const Record_Reader&) = delete;
+      Record_Reader& operator=(const Record_Reader&) = delete;
+
       ~Record_Reader() { delete m_mac; }
    private:
-      Record_Reader(const Record_Reader&) {}
-      Record_Reader& operator=(const Record_Reader&) { return (*this); }
-
       size_t fill_buffer_to(const byte*& input,
                             size_t& input_size,
                             size_t& input_consumed,

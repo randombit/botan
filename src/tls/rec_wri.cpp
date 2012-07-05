@@ -22,10 +22,12 @@ namespace TLS {
 /*
 * Record_Writer Constructor
 */
-Record_Writer::Record_Writer(std::function<void (const byte[], size_t)> out) :
+Record_Writer::Record_Writer(std::function<void (const byte[], size_t)> out,
+                             RandomNumberGenerator& rng) :
    m_output_fn(out),
    m_writebuf(TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE),
-   m_mac(nullptr)
+   m_mac(nullptr),
+   m_rng(rng)
    {
    reset();
    set_maximum_fragment_size(0);
@@ -258,8 +260,7 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
 
    if(m_iv_size)
       {
-      RandomNumberGenerator& rng = global_state().global_rng();
-      rng.randomize(buf_write_ptr, m_iv_size);
+      m_rng.randomize(buf_write_ptr, m_iv_size);
       buf_write_ptr += m_iv_size;
       }
 
