@@ -3,7 +3,8 @@ OCSP
 
 A client makes an OCSP request to what is termed an 'OCSP responder'.
 This responder returns a signed response attesting that the
-certificate in question has not been revoked.
+certificate in question has not been revoked. One common way of making
+OCSP requests is via HTTP, see :rfc:`2560` Appendix A for details.
 
 .. cpp:class:: OCSP::Request
 
@@ -11,6 +12,10 @@ certificate in question has not been revoked.
                                  const X509_Certificate& subject_cert)
 
       Create a new OCSP request
+
+ .. cpp:function:: std::vector<byte> BER_encode() const
+
+      Encode the current OCSP request as a binary string.
 
  .. cpp:function:: std::string base64_encode() const
 
@@ -29,6 +34,6 @@ certificate in question has not been revoked.
                                                   const X509_Certificate& subject) const
 
       Returns true if and only if this OCSP response is not an error,
-      is signed correctly, and the response indicates that *issuer* is
-      not currently revoked.
+      is signed correctly, and the response indicates that *subject*
+      is not currently revoked.
 
