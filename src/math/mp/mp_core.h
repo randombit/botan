@@ -19,30 +19,49 @@ const size_t MP_WORD_BITS = BOTAN_MP_WORD_BITS;
 
 extern "C" {
 
-/*
-* Addition/Subtraction Operations
+/**
+* Two operand addition
+* @param x the first operand (and output)
+* @param x_size size of x
+* @param y the second operand
+* @param y_size size of y (must be >= x_size)
 */
 void bigint_add2(word x[], size_t x_size,
                  const word y[], size_t y_size);
 
+/**
+* Three operand addition
+*/
 void bigint_add3(word z[],
                  const word x[], size_t x_size,
                  const word y[], size_t y_size);
 
+/**
+* Two operand addition with carry out
+*/
 word bigint_add2_nc(word x[], size_t x_size, const word y[], size_t y_size);
 
+/**
+* Three operand addition with carry out
+*/
 word bigint_add3_nc(word z[],
                     const word x[], size_t x_size,
                     const word y[], size_t y_size);
 
+/**
+* Two operand subtraction
+*/
 word bigint_sub2(word x[], size_t x_size,
                  const word y[], size_t y_size);
 
 /**
-* x = y - x; assumes y >= x
+* Two operand subtraction, x = y - x; assumes y >= x
 */
 void bigint_sub2_rev(word x[], const word y[], size_t y_size);
 
+/**
+* Three operand subtraction
+*/
 word bigint_sub3(word z[],
                  const word x[], size_t x_size,
                  const word y[], size_t y_size);

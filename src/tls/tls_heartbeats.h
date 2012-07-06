@@ -14,6 +14,9 @@ namespace Botan {
 
 namespace TLS {
 
+/**
+* TLS Heartbeat message
+*/
 class Heartbeat_Message
    {
    public:

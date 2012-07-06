@@ -1,6 +1,6 @@
 /*
 * Alert Message
-* (C) 2004-2006,2011 Jack Lloyd
+* (C) 2004-2006,2011,2012 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -21,6 +21,9 @@ namespace TLS {
 class BOTAN_DLL Alert
    {
    public:
+      /**
+      * Type codes for TLS alerts
+      */
       enum Type {
          CLOSE_NOTIFY                    = 0,
          UNEXPECTED_MESSAGE              = 10,
@@ -84,6 +87,11 @@ class BOTAN_DLL Alert
       */
       Alert(const std::vector<byte>& buf);
 
+      /**
+      * Create a new Alert
+      * @param alert_type the type of alert
+      * @param is_fatal specifies if this is a fatal alert
+      */
       Alert(Type alert_type, bool is_fatal = false) :
          fatal(is_fatal), type_code(alert_type) {}
 

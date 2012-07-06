@@ -47,10 +47,19 @@ enum Handshake_Extension_Type {
 class Extension
    {
    public:
+      /**
+      * @return code number of the extension
+      */
       virtual Handshake_Extension_Type type() const = 0;
 
+      /**
+      * @return serialized binary for the extension
+      */
       virtual std::vector<byte> serialize() const = 0;
 
+      /**
+      * @return if we should encode this extension or not
+      */
       virtual bool empty() const = 0;
 
       virtual ~Extension() {}
@@ -211,6 +220,9 @@ class Next_Protocol_Notification : public Extension
       std::vector<std::string> m_protocols;
    };
 
+/**
+* Session Ticket Extension (RFC 5077)
+*/
 class Session_Ticket : public Extension
    {
    public:
@@ -219,6 +231,9 @@ class Session_Ticket : public Extension
 
       Handshake_Extension_Type type() const { return static_type(); }
 
+      /**
+      * @return contents of the session ticket
+      */
       const std::vector<byte>& contents() const { return m_ticket; }
 
       /**

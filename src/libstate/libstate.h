@@ -19,8 +19,8 @@
 
 namespace Botan {
 
-/*
-* Global State Container Base
+/**
+* Global Library State
 */
 class BOTAN_DLL Library_State
    {

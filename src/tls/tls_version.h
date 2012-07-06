@@ -15,6 +15,9 @@ namespace Botan {
 
 namespace TLS {
 
+/**
+* TLS Protocol Version
+*/
 class BOTAN_DLL Protocol_Version
    {
    public:
@@ -27,55 +30,86 @@ class BOTAN_DLL Protocol_Version
 
       Protocol_Version() : m_version(0) {}
 
+      /**
+      * @param named_version a specific named version of the protocol
+      */
       Protocol_Version(Version_Code named_version) :
          m_version(static_cast<u16bit>(named_version)) {}
 
+      /**
+      * @param major the major version
+      * @param minor the minor version
+      */
       Protocol_Version(byte major, byte minor) :
          m_version((static_cast<u16bit>(major) << 8) | minor) {}
 
+      /**
+      * @return true if this is a valid protocol version
+      */
       bool valid() const { return (m_version != 0); }
 
       /**
-      * Get the major version of the protocol version
+      * @return major version of the protocol version
       */
       byte major_version() const { return get_byte(0, m_version); }
 
       /**
-      * Get the minor version of the protocol version
+      * @return minor version of the protocol version
       */
       byte minor_version() const { return get_byte(1, m_version); }
 
+      /**
+      * @return human-readable description of this version
+      */
+      std::string to_string() const;
+
+      /**
+      * @return if this version is equal to other
+      */
       bool operator==(const Protocol_Version& other) const
          {
          return (m_version == other.m_version);
          }
 
+      /**
+      * @return if this version is not equal to other
+      */
       bool operator!=(const Protocol_Version& other) const
          {
          return (m_version != other.m_version);
          }
 
+      /**
+      * @return if this version is later than or equal to other
+      */
       bool operator>=(const Protocol_Version& other) const
          {
          return (m_version >= other.m_version);
          }
 
+      /**
+      * @return if this version is later than other
+      */
       bool operator>(const Protocol_Version& other) const
          {
          return (m_version > other.m_version);
          }
 
+      /**
+      * @return if this version is earlier than or equal to other
+      */
       bool operator<=(const Protocol_Version& other) const
          {
          return (m_version <= other.m_version);
          }
 
+      /**
+      * @return if this version is earlier than other
+      */
       bool operator<(const Protocol_Version& other) const
          {
          return (m_version < other.m_version);
          }
-
-      std::string to_string() const;
 
    private:
       u16bit m_version;
