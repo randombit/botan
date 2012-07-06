@@ -23,6 +23,7 @@ Contents
    kdf
    pbkdf
    passhash
+   srp
    rng
    fpe
    python
