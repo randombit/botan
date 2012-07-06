@@ -131,6 +131,14 @@ GENERATE_TREEVIEW      = NO
 TREEVIEW_WIDTH         = 250
 
 #---------------------------------------------------------------------------
+# Configuration options related to other output formats
+#---------------------------------------------------------------------------
+GENERATE_LATEX = NO
+GENERATE_MAN = NO
+GENERATE_RTF = NO
+GENERATE_XML = NO
+
+#---------------------------------------------------------------------------
 # Configuration options related to the preprocessor
 #---------------------------------------------------------------------------
 ENABLE_PREPROCESSING   = YES
