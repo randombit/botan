@@ -56,6 +56,8 @@ extlinks = {
     'tbz': ('http://botan.randombit.net/files/Botan-%s.tbz', 'tar/bzip for '),
     'tbz_sig': ('http://botan.randombit.net/files/Botan-%s.tbz.asc', 'tar/bzip sig '),
 
+    'wikipedia': ('http://en.wikipedia.org/wiki/%s', ''),
+
     'viewmtn': ('http://viewmtn.randombit.net/tree/h:%s', ''),
 
     'botan-devel': ('http://lists.randombit.net/pipermail/botan-devel/%s.html', None),
