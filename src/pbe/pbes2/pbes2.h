@@ -27,20 +27,24 @@ class BOTAN_DLL PBE_PKCS5v20 : public PBE
 
       std::string name() const;
 
-      void write(const byte[], size_t);
+      void write(const byte buf[], size_t buf_len);
       void start_msg();
       void end_msg();
 
       /**
       * Load a PKCS #5 v2.0 encrypted stream
-      * @param input is the input source
+      * @param params the PBES2 parameters
+      * @param passphrase the passphrase to use for decryption
       */
       PBE_PKCS5v20(const std::vector<byte>& params,
                    const std::string& passphrase);
 
       /**
       * @param cipher the block cipher to use
-      * @param hash the hash function to use
+      * @param mac the MAC to use
+      * @param passphrase the passphrase to use for encryption
+      * @param msec how many milliseconds to run the PBKDF
+      * @param rng a random number generator
       */
       PBE_PKCS5v20(BlockCipher* cipher,
                    MessageAuthenticationCode* mac,

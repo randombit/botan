@@ -42,6 +42,8 @@ BOTAN_DLL srp6_client_agree(const std::string& username,
 * @param identifier a username or other client identifier
 * @param password the secret used to authenticate user
 * @param salt a randomly chosen value, at least 128 bits long
+* @param group_id specifies the shared SRP group
+* @param hash_id specifies a secure hash function
 */
 BigInt BOTAN_DLL generate_srp6_verifier(const std::string& identifier,
                                         const std::string& password,
@@ -52,6 +54,9 @@ BigInt BOTAN_DLL generate_srp6_verifier(const std::string& identifier,
 /**
 * Return the group id for this SRP param set, or else thrown an
 * exception
+* @param N the group modulus
+* @param g the group generator
+* @return group identifier
 */
 std::string BOTAN_DLL srp6_group_identifier(const BigInt& N, const BigInt& g);
 
