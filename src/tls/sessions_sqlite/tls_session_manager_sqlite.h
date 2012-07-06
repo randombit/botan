@@ -30,6 +30,7 @@ class BOTAN_DLL Session_Manager_SQLite : public Session_Manager
    public:
       /**
       * @param passphrase used to encrypt the session data
+      * @param rng a random number generator
       * @param db_filename filename of the SQLite database file.
                The table names tls_sessions and tls_sessions_metadata
                will be used

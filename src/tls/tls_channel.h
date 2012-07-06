@@ -69,7 +69,7 @@ class BOTAN_DLL Channel
       /**
       * Attempt to send a heartbeat message (if negotiated with counterparty)
       * @param payload will be echoed back
-      * @param countents_size size of payload in bytes
+      * @param payload_size size of payload in bytes
       */
       void heartbeat(const byte payload[], size_t payload_size);
 
@@ -93,10 +93,9 @@ class BOTAN_DLL Channel
    protected:
 
       /**
-      * Send a TLS alert message. If the alert is fatal, the
-      * internal state (keys, etc) will be reset
-      * @param level is warning or fatal
-      * @param type is the type of alert
+      * Send a TLS alert message. If the alert is fatal, the internal
+      * state (keys, etc) will be reset.
+      * @param alert the Alert to send
       */
       void send_alert(const Alert& alert);
 
