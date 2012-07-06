@@ -113,13 +113,25 @@ servers for SRP authentication.
 Preshared Keys
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+TLS and some other protocols support the use of pre shared keys for
+authentication.
+
+.. cpp:function:: SymmetricKey psk(const std::string& type, \
+                                   const std::string& context, \
+                                   const std::string& identity)
+
+    Return a symmetric key for use with *identity*
+
 .. cpp:function:: std::string psk_identity_hint(const std::string& type, \
                                                 const std::string& context)
+
+    Returns an identity hint which may be provided to the client. This
+    can help a client understand what PSK to use.
 
 .. cpp:function:: std::string psk_identity(const std::string& type, \
                                            const std::string& context, \
                                            const std::string& identity_hint)
 
-.. cpp:function:: SymmetricKey psk(const std::string& type, \
-                                   const std::string& context, \
-                                   const std::string& identity)
+    Returns the identity we would like to use given this *type* and
+    *context* and the optional *identity_hint*. Not all servers or
+    protocols will provide a hint.
