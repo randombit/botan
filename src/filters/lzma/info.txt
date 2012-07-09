@@ -1,0 +1,11 @@
+define COMPRESSOR_LZMA
+
+load_on request
+
+<libs>
+all -> lzma
+</libs>
+
+<requires>
+filters
+</requires>

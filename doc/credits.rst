@@ -78,3 +78,8 @@ snail-mail address (S).
   W: http://www.flexsecure.de/
   D: GF(p) arithmetic, CVC, Shanks-Tonelli algorithm
   S: Darmstadt, Germany
+
+  N: Vojtech Kral
+  E: vojtech@kral.hk
+  D: LZMA compression module
+  S: Czech Republic

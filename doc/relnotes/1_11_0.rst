@@ -37,6 +37,10 @@ using a best-fit allocator and all metadata held outside the mmap'ed
 range, in an effort to make best use of the very limited amount of
 memory current Linux kernels allow unpriveledged users to lock.
 
+A filter using LZMA was contributed by Vojtech Kral. It is available
+if LZMA support was enabled at compilation time by passing
+``--with-lzma`` to ``configure.py``.
+
 :rfc:`5915` adds some extended information which can be included in
 ECC private keys which the ECC key decoder did not expect, causing an
 exception when such a key was loaded. In particular, recent versions
