@@ -35,7 +35,6 @@ Contents
    license
    credits
    users
-   support
    pgpkey
    algos
    build_log

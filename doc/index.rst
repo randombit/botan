@@ -60,8 +60,7 @@ If you need help or have questions, send a mail to the `development
 mailing list
 <http://lists.randombit.net/mailman/listinfo/botan-devel/>`_.
 Patches, "philosophical" bug reports, announcements of programs using
-the library, and related topics are also welcome. :doc:`Commercial
-support options <support>` are also available. If you find what you
+the library, and related topics are also welcome. If you find what you
 believe to be a bug, please file a ticket in `Bugzilla
 <http://bugs.randombit.net/>`_.
 

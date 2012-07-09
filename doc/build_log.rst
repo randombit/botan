@@ -14,8 +14,20 @@ Debian reports the build results for 1.8 on `a number of platforms
 ===========   =======   ===================   ========================   ============================   ========
 Date          Version   OS                    CPU                        Compiler                       Results
 ===========   =======   ===================   ========================   ============================   ========
-2011-05-09    1.9.17    Debian 6.0            Intel Atom D510            GCC 4.4.5                      OK
-2010-05-09    1.9.17    Gentoo 10.0           PowerPC G5                 GCC 4.4.5                      OK
+2012-07-09    1.11.0    Gentoo                Intel Core i7-860          GCC 4.7.0                      OK
+2012-07-09    1.11.0    Gentoo                Intel Core i7-860          Clang 3.1                      OK
+
+2012-07-09    1.10.2    Gentoo                Intel Core i7-860          GCC 4.7.0                      OK
+2012-07-09    1.10.2    Gentoo                Intel Core i7-860          GCC 4.6.3                      OK
+2012-07-09    1.10.2    Gentoo                Intel Core i7-860          GCC 4.5.3                      OK
+2012-07-09    1.10.2    Gentoo                Intel Core i7-860          GCC 4.4.7                      OK
+2012-07-09    1.10.2    Gentoo                Intel Core i7-860          GCC 4.3.6                      OK
+2012-07-09    1.10.2    Gentoo                Intel Core i7-860          GCC 4.1.2                      OK
+2012-07-09    1.10.2    Gentoo                Intel Core i7-860          GCC 3.4.6                      OK
+2012-07-09    1.10.2    Gentoo                Intel Core i7-860          Clang 3.1                      OK
+2012-07-09    1.10.2    Gentoo                Intel Core i7-860          Intel C++ 12.1                 OK
+
+2011-05-09    1.9.17    Gentoo 10.0           PowerPC G5                 GCC 4.4.5                      OK
 2011-05-02    1.9.17    FreeBSD 8.2           x86-64                     GCC 4.2.1                      OK
 2011-04-25    1.9.16    Gentoo 10.0           Intel Core i7-860          Clang 2.9                      Miscompiles SSE2 IDEA
 2011-04-23    1.9.16    Gentoo 10.0           Intel Core i7-860          Sun C++ 5.10                   OK
