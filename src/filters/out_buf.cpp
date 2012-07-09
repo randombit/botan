@@ -1,6 +1,7 @@
 /*
 * Pipe Output Buffer
 * (C) 1999-2007,2011 Jack Lloyd
+*     2012 Markus Wanner
 *
 * Distributed under the terms of the Botan license
 */
@@ -44,6 +45,17 @@ size_t Output_Buffers::remaining(Pipe::message_id msg) const
    SecureQueue* q = get(msg);
    if(q)
       return q->size();
+   return 0;
+   }
+
+/*
+* Return the total bytes of a message that have already been read.
+*/
+size_t Output_Buffers::get_bytes_read(Pipe::message_id msg) const
+   {
+   SecureQueue* q = get(msg);
+   if (q)
+      return q->get_bytes_read();
    return 0;
    }
 

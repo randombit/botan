@@ -1,6 +1,7 @@
 /*
 * Unix Command Execution
 * (C) 1999-2007 Jack Lloyd
+*     2012 Markus Wanner
 *
 * Distributed under the terms of the Botan license
 */
@@ -53,6 +54,7 @@ class DataSource_Command : public DataSource
       size_t peek(byte[], size_t, size_t) const;
       bool end_of_data() const;
       std::string id() const;
+      size_t get_bytes_read() const;
 
       int fd() const;
 
@@ -67,6 +69,7 @@ class DataSource_Command : public DataSource
 
       std::vector<std::string> arg_list;
       struct pipe_wrapper* pipe;
+      size_t bytes_read;
    };
 
 }

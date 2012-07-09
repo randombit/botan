@@ -1,6 +1,7 @@
 /*
 * Pipe
 * (C) 1999-2007 Jack Lloyd
+*     2012 Markus Wanner
 *
 * Distributed under the terms of the Botan license
 */
@@ -214,6 +215,16 @@ class BOTAN_DLL Pipe : public DataSource
       */
       size_t peek(byte& output, size_t offset,
                   message_id msg = DEFAULT_MESSAGE) const;
+
+      /**
+      * @return the number of bytes read from the default message.
+      */
+      size_t get_bytes_read() const;
+
+      /**
+      * @return the number of bytes read from the specified message.
+      */
+      size_t get_bytes_read(message_id msg = DEFAULT_MESSAGE) const;
 
       /**
       * @return currently set default message

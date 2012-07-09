@@ -1,6 +1,7 @@
 /*
 * DataSource
 * (C) 1999-2007 Jack Lloyd
+*     2012 Markus Wanner
 *
 * Distributed under the terms of the Botan license
 */
@@ -79,6 +80,11 @@ class BOTAN_DLL DataSource
       */
       size_t discard_next(size_t N);
 
+      /**
+      * @return number of bytes read so far.
+      */
+      virtual size_t get_bytes_read() const = 0;
+
       DataSource() {}
       virtual ~DataSource() {}
       DataSource& operator=(const DataSource&) = delete;
@@ -122,6 +128,8 @@ class BOTAN_DLL DataSource_Memory : public DataSource
       */
       DataSource_Memory(const std::vector<byte>& in) :
          source(&in[0], &in[in.size()]), offset(0) {}
+
+      virtual size_t get_bytes_read() const { return offset; }
    private:
       secure_vector<byte> source;
       size_t offset;
@@ -149,6 +157,8 @@ class BOTAN_DLL DataSource_Stream : public DataSource
       DataSource_Stream(const std::string& file, bool use_binary = false);
 
       ~DataSource_Stream();
+
+      virtual size_t get_bytes_read() const { return total_read; }
    private:
       const std::string identifier;
 

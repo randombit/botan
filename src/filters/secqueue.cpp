@@ -1,6 +1,7 @@
 /*
 * SecureQueue
 * (C) 1999-2007 Jack Lloyd
+*     2012 Markus Wanner
 *
 * Distributed under the terms of the Botan license
 */
@@ -59,6 +60,7 @@ class SecureQueueNode
 */
 SecureQueue::SecureQueue()
    {
+   bytes_read = 0;
    set_next(nullptr, 0);
    head = tail = new SecureQueueNode;
    }
@@ -69,6 +71,7 @@ SecureQueue::SecureQueue()
 SecureQueue::SecureQueue(const SecureQueue& input) :
    Fanout_Filter(), DataSource()
    {
+   bytes_read = 0;
    set_next(nullptr, 0);
 
    head = tail = new SecureQueueNode;
@@ -150,6 +153,7 @@ size_t SecureQueue::read(byte output[], size_t length)
          head = holder;
          }
       }
+   bytes_read += got;
    return got;
    }
 
@@ -182,6 +186,14 @@ size_t SecureQueue::peek(byte output[], size_t length, size_t offset) const
       current = current->next;
       }
    return got;
+   }
+
+/**
+* Return how many bytes have been read so far.
+*/
+size_t SecureQueue::get_bytes_read() const
+   {
+   return bytes_read;
    }
 
 /*

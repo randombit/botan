@@ -1,6 +1,7 @@
 /*
 * Pipe Reading/Writing
 * (C) 1999-2007 Jack Lloyd
+*     2012 Markus Wanner
 *
 * Distributed under the terms of the Botan license
 */
@@ -155,6 +156,16 @@ size_t Pipe::peek(byte output[], size_t length, size_t offset) const
 size_t Pipe::peek(byte& out, size_t offset, message_id msg) const
    {
    return peek(&out, 1, offset, msg);
+   }
+
+size_t Pipe::get_bytes_read() const
+   {
+   return outputs->get_bytes_read(DEFAULT_MESSAGE);
+   }
+
+size_t Pipe::get_bytes_read(message_id msg) const
+   {
+   return outputs->get_bytes_read(msg);
    }
 
 }

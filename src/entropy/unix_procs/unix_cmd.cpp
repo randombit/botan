@@ -1,6 +1,7 @@
 /*
 * Unix Command Execution
 * (C) 1999-2007 Jack Lloyd
+*     2012 Markus Wanner
 *
 * Distributed under the terms of the Botan license
 */
@@ -86,6 +87,7 @@ size_t DataSource_Command::read(byte buf[], size_t length)
       return 0;
       }
 
+   bytes_read += got;
    return static_cast<size_t>(got);
    }
 
@@ -105,6 +107,11 @@ size_t DataSource_Command::peek(byte[], size_t, size_t) const
 bool DataSource_Command::end_of_data() const
    {
    return (pipe) ? false : true;
+   }
+
+size_t DataSource_Command::get_bytes_read() const
+   {
+   return bytes_read;
    }
 
 /**
