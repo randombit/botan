@@ -10,59 +10,53 @@
 
 namespace Botan {
 
+/**
+* Called when an assertion fails
+*/
 void assertion_failure(const char* expr_str,
-                       const char* msg,
+                       const char* assertion_made,
                        const char* func,
                        const char* file,
                        int line);
 
-#define BOTAN_ASSERT(expr, msg)                           \
+/**
+* Make an assertion
+*/
+#define BOTAN_ASSERT(expr, assertion_made)                \
    do {                                                   \
       if(!(expr))                                         \
          Botan::assertion_failure(#expr,                  \
-                                  msg,                    \
-                                  BOTAN_ASSERT_FUNCTION,  \
+                                  assertion_made,         \
+                                  __func__,               \
                                   __FILE__,               \
                                   __LINE__);              \
    } while(0)
 
-#define BOTAN_ASSERT_EQUAL(value1, value2, msg)           \
-   do {                                                   \
-     if(value1 != value2)                                 \
-         Botan::assertion_failure(#value1 " == " #value2, \
-                                  msg,                    \
-                                  BOTAN_ASSERT_FUNCTION,  \
-                                  __FILE__,               \
-                                  __LINE__);              \
-   } while(0)
-
-#define BOTAN_ASSERT_NONNULL(ptr)                         \
-   do {                                                   \
-      if(static_cast<bool>(ptr) == false)                 \
-         Botan::assertion_failure(#ptr " is not null",    \
-                                  "",                     \
-                                  BOTAN_ASSERT_FUNCTION,  \
-                                  __FILE__,               \
-                                  __LINE__);              \
-   } while(0)
-
-/*
-* Unfortunately getting the function name from the preprocessor
-* isn't standard in C++98 (C++0x uses C99's __func__)
+/**
+* Assert that value1 == value2
 */
-#if defined(BOTAN_BUILD_COMPILER_IS_GCC) || \
-    defined(BOTAN_BUILD_COMPILER_IS_CLANG) || \
-    defined(BOTAN_BUILD_COMPILER_IS_INTEL)
+#define BOTAN_ASSERT_EQUAL(value1, value2, assertion_made) \
+   do {                                                    \
+     if(value1 != value2)                                  \
+         Botan::assertion_failure(#value1 " == " #value2,  \
+                                  assertion_made,          \
+                                  __func__,                \
+                                  __FILE__,                \
+                                  __LINE__);               \
+   } while(0)
 
-  #define BOTAN_ASSERT_FUNCTION __PRETTY_FUNCTION__
-
-#elif defined(BOTAN_BUILD_COMPILER_IS_MSVC)
-
-  #define BOTAN_ASSERT_FUNCTION __FUNCTION__
-
-#else
-  #define BOTAN_ASSERT_FUNCTION ((const char*)0)
-#endif
+/**
+* Assert that a pointer is not null
+*/
+#define BOTAN_ASSERT_NONNULL(ptr)                          \
+   do {                                                    \
+      if(static_cast<bool>(ptr) == false)                  \
+         Botan::assertion_failure(#ptr " is not null",     \
+                                  "",                      \
+                                  __func__,                \
+                                  __FILE__,                \
+                                  __LINE__);               \
+   } while(0)
 
 }
 

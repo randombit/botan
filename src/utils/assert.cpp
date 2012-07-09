@@ -12,7 +12,7 @@
 namespace Botan {
 
 void assertion_failure(const char* expr_str,
-                       const char* msg,
+                       const char* assertion_made,
                        const char* func,
                        const char* file,
                        int line)
@@ -21,8 +21,8 @@ void assertion_failure(const char* expr_str,
 
    format << "Assertion " << expr_str << " failed ";
 
-   if(msg && msg[0] != 0)
-      format << "(" << msg << ") ";
+   if(assertion_made && assertion_made[0] != 0)
+      format << "(" << assertion_made << ") ";
 
    if(func)
       format << "in " << func << " ";
