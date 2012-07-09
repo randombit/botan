@@ -123,13 +123,37 @@ class BOTAN_DLL BER_Decoder
          return (*this);
          }
 
-      BER_Decoder& decode_optional_string(std::vector<byte>& out,
+      /*
+      * Decode an OPTIONAL string type
+      */
+      template<typename Alloc>
+      BER_Decoder& decode_optional_string(std::vector<byte, Alloc>& out,
                                           ASN1_Tag real_type,
-                                          u16bit type_no);
+                                          u16bit type_no,
+                                          ASN1_Tag class_tag = CONTEXT_SPECIFIC)
+         {
+         BER_Object obj = get_next_object();
 
-      BER_Decoder& decode_optional_string(secure_vector<byte>& out,
-                                          ASN1_Tag real_type,
-                                          u16bit type_no);
+         ASN1_Tag type_tag = static_cast<ASN1_Tag>(type_no);
+
+         if(obj.type_tag == type_tag && obj.class_tag == class_tag)
+            {
+            if((class_tag & CONSTRUCTED) && (class_tag & CONTEXT_SPECIFIC))
+               BER_Decoder(obj.value).decode(out, real_type).verify_end();
+            else
+               {
+               push_back(obj);
+               decode(out, real_type, type_tag, class_tag);
+               }
+            }
+         else
+            {
+            out.clear();
+            push_back(obj);
+            }
+
+         return (*this);
+         }
 
       BER_Decoder& operator=(const BER_Decoder&) = delete;
 

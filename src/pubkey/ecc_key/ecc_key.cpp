@@ -113,17 +113,31 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
    domain_params = EC_Group(alg_id.parameters);
    domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
 
+   OID key_parameters;
+   secure_vector<byte> public_key_bits;
+
    BER_Decoder(key_bits)
       .start_cons(SEQUENCE)
          .decode_and_check<size_t>(1, "Unknown version code for ECC key")
          .decode_octet_string_bigint(private_key)
-      .verify_end()
+         .decode_optional(key_parameters, ASN1_Tag(0), PRIVATE)
+         .decode_optional_string(public_key_bits, BIT_STRING, 1, PRIVATE)
       .end_cons();
 
-   public_key = domain().get_base_point() * private_key;
+   if(!key_parameters.empty() && key_parameters != alg_id.oid)
+      throw Decoding_Error("EC_PrivateKey - inner and outer OIDs did not match");
 
-   BOTAN_ASSERT(public_key.on_the_curve(),
-                "Loaded ECC private key not on the curve");
+   if(public_key_bits.empty())
+      {
+      public_key = domain().get_base_point() * private_key;
+      BOTAN_ASSERT(public_key.on_the_curve(),
+                   "Public key derived from private key was on the curve");
+      }
+   else
+      {
+      public_key = OS2ECP(public_key_bits, domain().get_curve());
+      // OS2ECP verifies that the point is on the curve
+      }
    }
 
 }

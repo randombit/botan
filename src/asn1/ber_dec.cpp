@@ -558,41 +558,4 @@ BER_Decoder& BER_Decoder::decode(std::vector<byte>& buffer,
    return (*this);
    }
 
-/*
-* Decode an OPTIONAL string type
-*/
-BER_Decoder& BER_Decoder::decode_optional_string(secure_vector<byte>& out,
-                                                 ASN1_Tag real_type,
-                                                 u16bit type_no)
-   {
-   BER_Object obj = get_next_object();
-
-   ASN1_Tag type_tag = static_cast<ASN1_Tag>(type_no);
-
-   out.clear();
-   push_back(obj);
-
-   if(obj.type_tag == type_tag && obj.class_tag == CONTEXT_SPECIFIC)
-      decode(out, real_type, type_tag, CONTEXT_SPECIFIC);
-
-   return (*this);
-   }
-
-BER_Decoder& BER_Decoder::decode_optional_string(std::vector<byte>& out,
-                                                 ASN1_Tag real_type,
-                                                 u16bit type_no)
-   {
-   BER_Object obj = get_next_object();
-
-   ASN1_Tag type_tag = static_cast<ASN1_Tag>(type_no);
-
-   out.clear();
-   push_back(obj);
-
-   if(obj.type_tag == type_tag && obj.class_tag == CONTEXT_SPECIFIC)
-      decode(out, real_type, type_tag, CONTEXT_SPECIFIC);
-
-   return (*this);
-   }
-
 }

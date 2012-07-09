@@ -23,6 +23,8 @@ enum ASN1_Tag {
 
    CONSTRUCTED      = 0x20,
 
+   PRIVATE          = CONSTRUCTED | CONTEXT_SPECIFIC,
+
    EOC              = 0x00,
    BOOLEAN          = 0x01,
    INTEGER          = 0x02,

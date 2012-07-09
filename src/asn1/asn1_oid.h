@@ -27,7 +27,7 @@ class BOTAN_DLL OID : public ASN1_Object
       * Find out whether this OID is empty
       * @return true is no OID value is set
       */
-      bool is_empty() const { return id.size() == 0; }
+      bool empty() const { return id.size() == 0; }
 
       /**
       * Get this OID as list (vector) of its components.

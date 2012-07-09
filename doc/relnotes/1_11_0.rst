@@ -36,3 +36,13 @@ limit of what we can mlock) is mmap'ed, with allocations being done
 using a best-fit allocator and all metadata held outside the mmap'ed
 range, in an effort to make best use of the very limited amount of
 memory current Linux kernels allow unpriveledged users to lock.
+
+:rfc:`5915` adds some extended information which can be included in
+ECC private keys which the ECC key decoder did not expect, causing an
+exception when such a key was loaded. In particular, recent versions
+of OpenSSL use these fields. Now these fields are decoded properly,
+and if the public key value is included it is used, as otherwise the
+public key needs to be rederived from the private key. However the
+library does not include these fields on encoding keys for
+compatability with software that does not expect them (including older
+versions of botan).

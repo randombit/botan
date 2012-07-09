@@ -413,6 +413,24 @@ void test_read_pkcs8(RandomNumberGenerator& rng)
       }
    }
 
+void test_ecc_key_with_rfc5915_extensions(RandomNumberGenerator& rng)
+   {
+   const std::string pw = "G3bz1L1gmB5ULietOZdoLPu63D7uwTLMEk";
+
+   try
+      {
+      std::unique_ptr<PKCS8_PrivateKey> pkcs8(
+         PKCS8::load_key(TEST_DATA_DIR "/ecc_private_with_rfc5915_ext.pem", rng, pw));
+
+      if(!dynamic_cast<ECDSA_PrivateKey*>(pkcs8.get()))
+         std::cout << "Loaded RFC 5915 key, but got something other than an ECDSA key\n";
+      }
+   catch(std::exception& e)
+      {
+      std::cout << "Exception in " << __func__ << " - " << e.what() << "\n";
+      }
+   }
+
 }
 
 u32bit do_ecdsa_tests(Botan::RandomNumberGenerator& rng)
@@ -429,6 +447,8 @@ u32bit do_ecdsa_tests(Botan::RandomNumberGenerator& rng)
    test_create_and_verify(rng);
    test_curve_registry(rng);
    test_read_pkcs8(rng);
+
+   test_ecc_key_with_rfc5915_extensions(rng);
 
    std::cout << std::endl;
 
