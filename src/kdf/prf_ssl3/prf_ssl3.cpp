@@ -25,7 +25,8 @@ OctetString next_hash(size_t where, size_t want,
                       const byte secret[], size_t secret_len,
                       const byte seed[], size_t seed_len)
    {
-   BOTAN_ASSERT(want <= md5.output_length(), "Desired output too large");
+   BOTAN_ASSERT(want <= md5.output_length(),
+                "Output size producable by MD5");
 
    const byte ASCII_A_CHAR = 0x41;
 

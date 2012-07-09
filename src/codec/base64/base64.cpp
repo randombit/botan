@@ -86,8 +86,8 @@ std::string base64_encode(const byte input[],
                                    input, input_length,
                                    consumed, true);
 
-   BOTAN_ASSERT_EQUAL(consumed, input_length, "Did not consume all input");
-   BOTAN_ASSERT_EQUAL(produced, output.size(), "Did not produce right amount");
+   BOTAN_ASSERT_EQUAL(consumed, input_length, "Consumed the entire input");
+   BOTAN_ASSERT_EQUAL(produced, output.size(), "Produced expected size");
 
    return output;
    }

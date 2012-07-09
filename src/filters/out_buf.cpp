@@ -52,10 +52,10 @@ size_t Output_Buffers::remaining(Pipe::message_id msg) const
 */
 void Output_Buffers::add(SecureQueue* queue)
    {
-   BOTAN_ASSERT(queue, "argument was NULL");
+   BOTAN_ASSERT(queue, "queue was provided");
 
    BOTAN_ASSERT(buffers.size() < buffers.max_size(),
-                "No more room in container");
+                "Room was available in container");
 
    buffers.push_back(queue);
    }
@@ -87,8 +87,7 @@ SecureQueue* Output_Buffers::get(Pipe::message_id msg) const
    if(msg < offset)
       return nullptr;
 
-   BOTAN_ASSERT(msg < message_count(),
-                "Message number out of range");
+   BOTAN_ASSERT(msg < message_count(), "Message number is in range");
 
    return buffers[msg-offset];
    }

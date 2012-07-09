@@ -27,7 +27,7 @@ secure_vector<byte> ECDH_KA_Operation::agree(const byte w[], size_t w_len)
    PointGFp S = (cofactor * point) * l_times_priv;
 
    BOTAN_ASSERT(S.on_the_curve(),
-                "ECDH agreed value not on the curve");
+                "ECDH agreed value was on the curve");
 
    return BigInt::encode_1363(S.get_affine_x(),
                               curve.get_p().bytes());

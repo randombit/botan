@@ -93,7 +93,7 @@ EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
    public_key = domain().get_base_point() * private_key;
 
    BOTAN_ASSERT(public_key.on_the_curve(),
-                "ECC private key was not on the curve");
+                "Generated public key point was on the curve");
    }
 
 secure_vector<byte> EC_PrivateKey::pkcs8_private_key() const
@@ -130,8 +130,9 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
    if(public_key_bits.empty())
       {
       public_key = domain().get_base_point() * private_key;
+
       BOTAN_ASSERT(public_key.on_the_curve(),
-                   "Public key derived from private key was on the curve");
+                   "Public point derived from loaded key was on the curve");
       }
    else
       {

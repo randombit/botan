@@ -322,7 +322,7 @@ BigInt DL_Group::make_dsa_generator(const BigInt& p, const BigInt& q)
    {
    BigInt g, e = (p - 1) / q;
 
-   BOTAN_ASSERT(e > 0, "q does not divide p, invalid group");
+   BOTAN_ASSERT(e > 0, "q divides p-1");
 
    for(size_t i = 0; i != PRIME_TABLE_SIZE; ++i)
       {

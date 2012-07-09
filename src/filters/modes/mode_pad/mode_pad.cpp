@@ -28,7 +28,7 @@ void PKCS7_Padding::pad(byte block[], size_t size, size_t position) const
    const byte pad_value = static_cast<byte>(bytes_remaining);
 
    BOTAN_ASSERT_EQUAL(pad_value, bytes_remaining,
-                      "Overflow in PKCS7_Padding");
+                      "PKCS7 pad values match bytes remaining");
 
    for(size_t j = 0; j != size; ++j)
       block[j] = pad_value;

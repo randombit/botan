@@ -76,7 +76,7 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
    public_key = PointGFp(domain().get_curve(), x, y);
 
    BOTAN_ASSERT(public_key.on_the_curve(),
-                "Loaded GOST 34.10 public key not on the curve");
+                "Loaded GOST 34.10 public key is on the curve");
    }
 
 namespace {
@@ -120,7 +120,7 @@ GOST_3410_Signature_Operation::sign(const byte msg[], size_t msg_len,
    PointGFp k_times_P = base_point * k;
 
    BOTAN_ASSERT(k_times_P.on_the_curve(),
-                "GOST 34.10 k*g not on the curve");
+                "GOST 34.10 k*g is on the curve");
 
    BigInt r = k_times_P.get_affine_x() % order;
 

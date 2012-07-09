@@ -214,8 +214,7 @@ std::vector<byte> PK_Signer::signature(RandomNumberGenerator& rng)
 
    std::vector<byte> plain_sig = unlock(op->sign(&encoded[0], encoded.size(), rng));
 
-   BOTAN_ASSERT(self_test_signature(encoded, plain_sig),
-                "PK_Signer consistency check failed");
+   BOTAN_ASSERT(self_test_signature(encoded, plain_sig), "Signature was consistent");
 
    if(op->message_parts() == 1 || sig_format == IEEE_1363)
       return plain_sig;

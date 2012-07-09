@@ -181,7 +181,7 @@ void Channel::read_handshake(byte rec_type,
       m_state->handshake_reader()->add_input(&rec_buf[0], rec_buf.size());
       }
 
-   BOTAN_ASSERT(m_state, "Handshake message recieved without state in place");
+   BOTAN_ASSERT_NONNULL(m_state);
 
    while(true)
       {

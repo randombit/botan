@@ -112,7 +112,7 @@ RSA_Private_Operation::decrypt(const byte msg[], size_t msg_len)
    BigInt x = blinder.unblind(private_op(blinder.blind(m)));
 
    BOTAN_ASSERT(m == powermod_e_n(x),
-                "RSA private op failed consistency check");
+                "RSA decrypt passed consistency check");
 
    return BigInt::encode_locked(x);
    }

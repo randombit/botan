@@ -1,6 +1,6 @@
 /*
 * Runtime assertion checking
-* (C) 2010 Jack Lloyd
+* (C) 2010,2012 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -19,10 +19,12 @@ void assertion_failure(const char* expr_str,
    {
    std::ostringstream format;
 
-   format << "Assertion " << expr_str << " failed ";
+   format << "False assertion ";
 
    if(assertion_made && assertion_made[0] != 0)
-      format << "(" << assertion_made << ") ";
+      format << "'" << assertion_made << "' (expression " << expr_str << ") ";
+   else
+      format << expr_str << " ";
 
    if(func)
       format << "in " << func << " ";

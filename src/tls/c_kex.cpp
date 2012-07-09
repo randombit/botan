@@ -276,7 +276,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
    if(kex_algo == "RSA")
       {
       BOTAN_ASSERT(state->server_certs && !state->server_certs->cert_chain().empty(),
-                   "No server certificate to use for RSA");
+                   "RSA key exchange negotiated so server sent a certificate");
 
       const Private_Key* private_key = state->server_rsa_kex_key;
 

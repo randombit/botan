@@ -123,7 +123,7 @@ Server_Key_Exchange::Server_Key_Exchange(Record_Writer& writer,
 
    if(state->suite.sig_algo() != "")
       {
-      BOTAN_ASSERT(signing_key, "No signing key set");
+      BOTAN_ASSERT(signing_key, "Signing key was set");
 
       std::pair<std::string, Signature_Format> format =
          state->choose_sig_format(signing_key, m_hash_algo, m_sig_algo, false, policy);
@@ -279,14 +279,14 @@ bool Server_Key_Exchange::verify(const X509_Certificate& cert,
 
 const Private_Key& Server_Key_Exchange::server_kex_key() const
    {
-   BOTAN_ASSERT(m_kex_key, "Key is non-NULL");
+   BOTAN_ASSERT_NONNULL(m_kex_key);
    return *m_kex_key;
    }
 
 // Only valid for SRP negotiation
 SRP6_Server_Session& Server_Key_Exchange::server_srp_params()
    {
-   BOTAN_ASSERT(m_srp_params, "SRP params are non-NULL");
+   BOTAN_ASSERT_NONNULL(m_srp_params);
    return *m_srp_params;
    }
 }

@@ -32,6 +32,8 @@ class BOTAN_DLL Credentials_Manager
       /**
       * Return a list of the certificates of CAs that we trust in this
       * type/context.
+      * @param context specifies a context relative to type. For instance
+      *  for type "tls-client", context specifies the servers name.
       */
       virtual std::vector<X509_Certificate> trusted_certificate_authorities(
          const std::string& type,
