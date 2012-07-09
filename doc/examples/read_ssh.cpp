@@ -8,12 +8,13 @@
 * Example of reading SSH2 format public keys (see RFC 4716)
 */
 
-#include <fstream>
 #include <botan/x509_key.h>
 #include <botan/filters.h>
 #include <botan/loadstor.h>
 #include <botan/rsa.h>
 #include <botan/dsa.h>
+#include <fstream>
+#include <memory>
 
 using namespace Botan;
 
@@ -115,7 +116,7 @@ int main()
    {
    LibraryInitializer init;
 
-   Public_Key* key = read_ssh_pubkey("dsa.ssh");
+   std::unique_ptr<Public_Key> key(read_ssh_pubkey("dsa.ssh"));
 
    if(key == 0)
       {
