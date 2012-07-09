@@ -35,7 +35,6 @@ class BOTAN_DLL Algorithm_Factory
    public:
       /**
       * Constructor
-      * @param mf a mutex factory
       */
       Algorithm_Factory();
 

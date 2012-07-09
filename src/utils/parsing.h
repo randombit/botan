@@ -35,7 +35,8 @@ BOTAN_DLL std::vector<std::string> split_on(
 * Replace a character in a string
 * @param str the input string
 * @param from_char the character to replace
-* @return to_char the character to replace it with
+* @param to_char the character to replace it with
+* @return str with all instances of from_char replaced by to_char
 */
 BOTAN_DLL std::string replace_char(const std::string& str,
                                    char from_char,

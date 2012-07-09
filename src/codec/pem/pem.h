@@ -44,6 +44,7 @@ inline std::string encode(const secure_vector<byte>& data,
 
 /**
 * Decode PEM data
+* @param pem a datasource containing PEM encoded data
 * @param label is set to the PEM label found for later inspection
 */
 BOTAN_DLL secure_vector<byte> decode(DataSource& pem,
@@ -51,6 +52,7 @@ BOTAN_DLL secure_vector<byte> decode(DataSource& pem,
 
 /**
 * Decode PEM data
+* @param pem a string containing PEM encoded data
 * @param label is set to the PEM label found for later inspection
 */
 BOTAN_DLL secure_vector<byte> decode(const std::string& pem,
@@ -58,6 +60,7 @@ BOTAN_DLL secure_vector<byte> decode(const std::string& pem,
 
 /**
 * Decode PEM data
+* @param pem a datasource containing PEM encoded data
 * @param label is what we expect the label to be
 */
 BOTAN_DLL secure_vector<byte> decode_check_label(
@@ -66,6 +69,7 @@ BOTAN_DLL secure_vector<byte> decode_check_label(
 
 /**
 * Decode PEM data
+* @param pem a string containing PEM encoded data
 * @param label is what we expect the label to be
 */
 BOTAN_DLL secure_vector<byte> decode_check_label(

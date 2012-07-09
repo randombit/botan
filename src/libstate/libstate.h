@@ -95,7 +95,7 @@ class BOTAN_DLL Library_State
       * @param alias the alias to resolve.
       * @return what the alias stands for
       */
-      std::string deref_alias(const std::string&);
+      std::string deref_alias(const std::string& alias);
    private:
       static RandomNumberGenerator* make_global_rng(Algorithm_Factory& af,
                                                     std::mutex& mutex);

@@ -32,8 +32,11 @@ class BOTAN_DLL Credentials_Manager
       /**
       * Return a list of the certificates of CAs that we trust in this
       * type/context.
+      *
+      * @param type specifies the type of operation occuring
+      *
       * @param context specifies a context relative to type. For instance
-      *  for type "tls-client", context specifies the servers name.
+      *        for type "tls-client", context specifies the servers name.
       */
       virtual std::vector<X509_Certificate> trusted_certificate_authorities(
          const std::string& type,
@@ -47,6 +50,11 @@ class BOTAN_DLL Credentials_Manager
       * This function should throw an exception derived from
       * std::exception with an informative what() result if the
       * certificate chain cannot be verified.
+
+      * @param type specifies the type of operation occuring
+      * @param hostname specifies the purported hostname
+      * @param cert_chain specifies a certificate chain leading to a
+      *        trusted root CA certificate.
       */
       virtual void verify_certificate_chain(
          const std::string& type,
@@ -63,6 +71,10 @@ class BOTAN_DLL Credentials_Manager
       * @param cert_key_types specifies the key types desired ("RSA",
       *                       "DSA", "ECDSA", etc), or empty if there
       *                       is no preference by the caller.
+      *
+      * @param type specifies the type of operation occuring
+      *
+      * @param context specifies a context relative to type.
       */
       virtual std::vector<X509_Certificate> cert_chain(
          const std::vector<std::string>& cert_key_types,
@@ -78,6 +90,10 @@ class BOTAN_DLL Credentials_Manager
       *
       * @param cert_key_type specifies the type of key requested
       *                      ("RSA", "DSA", "ECDSA", etc)
+      *
+      * @param type specifies the type of operation occuring
+      *
+      * @param context specifies a context relative to type.
       */
       std::vector<X509_Certificate> cert_chain_single_type(
          const std::string& cert_key_type,
@@ -95,12 +111,16 @@ class BOTAN_DLL Credentials_Manager
                                            const std::string& context);
 
       /**
-      * Return true if we should attempt SRP authentication
+      * @param type specifies the type of operation occuring
+      * @param context specifies a context relative to type.
+      * @return true if we should attempt SRP authentication
       */
       virtual bool attempt_srp(const std::string& type,
                                const std::string& context);
 
       /**
+      * @param type specifies the type of operation occuring
+      * @param context specifies a context relative to type.
       * @return identifier for client-side SRP auth, if available
                 for this type/context. Should return empty string
                 if password auth not desired/available.
@@ -109,6 +129,8 @@ class BOTAN_DLL Credentials_Manager
                                          const std::string& context);
 
       /**
+      * @param type specifies the type of operation occuring
+      * @param context specifies a context relative to type.
       * @param identifier specifies what identifier we want the
       *        password for. This will be a value previously returned
       *        by srp_identifier.
@@ -131,12 +153,16 @@ class BOTAN_DLL Credentials_Manager
                                 bool generate_fake_on_unknown);
 
       /**
+      * @param type specifies the type of operation occuring
+      * @param context specifies a context relative to type.
       * @return the PSK identity hint for this type/context
       */
       virtual std::string psk_identity_hint(const std::string& type,
                                             const std::string& context);
 
       /**
+      * @param type specifies the type of operation occuring
+      * @param context specifies a context relative to type.
       * @param identity_hint was passed by the server (but may be empty)
       * @return the PSK identity we want to use
       */
@@ -145,6 +171,10 @@ class BOTAN_DLL Credentials_Manager
                                        const std::string& identity_hint);
 
       /**
+      * @param type specifies the type of operation occuring
+      * @param context specifies a context relative to type.
+      * @param identity is a PSK identity previously returned by
+               psk_identity for the same type and context.
       * @return the PSK used for identity, or throw an exception if no
       * key exists
       */
