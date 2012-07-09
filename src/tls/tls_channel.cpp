@@ -177,7 +177,7 @@ void Channel::read_handshake(byte rec_type,
    if(rec_type == HANDSHAKE)
       {
       if(!m_state)
-         m_state = new Handshake_State(new Stream_Handshake_Reader);
+         m_state = new_handshake_state();
       m_state->handshake_reader()->add_input(&rec_buf[0], rec_buf.size());
       }
 

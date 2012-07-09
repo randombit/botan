@@ -35,7 +35,7 @@ class BOTAN_DLL Server : public Channel
              const std::vector<std::string>& protocols =
                 std::vector<std::string>());
 
-      void renegotiate(bool force_full_renegotiation = false);
+      void renegotiate(bool force_full_renegotiation = false) override;
 
       /**
       * Return the server name indicator, if sent by the client
@@ -50,11 +50,13 @@ class BOTAN_DLL Server : public Channel
          { return m_next_protocol; }
 
    private:
-      void read_handshake(byte, const std::vector<byte>&);
+      void read_handshake(byte, const std::vector<byte>&) override;
 
-      void process_handshake_msg(Handshake_Type, const std::vector<byte>&);
+      void process_handshake_msg(Handshake_Type, const std::vector<byte>&) override;
 
-      void alert_notify(const Alert& alert);
+      void alert_notify(const Alert& alert) override;
+
+      Handshake_State* new_handshake_state() const override;
 
       const Policy& m_policy;
       RandomNumberGenerator& m_rng;

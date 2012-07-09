@@ -107,6 +107,8 @@ class BOTAN_DLL Channel
 
       virtual void alert_notify(const Alert& alert) = 0;
 
+      virtual class Handshake_State* new_handshake_state() const = 0;
+
       class Secure_Renegotiation_State
          {
          public:

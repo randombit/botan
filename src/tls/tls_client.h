@@ -52,12 +52,14 @@ class BOTAN_DLL Client : public Channel
              std::function<std::string (std::vector<std::string>)> next_protocol =
                 std::function<std::string (std::vector<std::string>)>());
 
-      void renegotiate(bool force_full_renegotiation = false);
+      void renegotiate(bool force_full_renegotiation = false) override;
    private:
       void process_handshake_msg(Handshake_Type type,
                                  const std::vector<byte>& contents) override;
 
-      void alert_notify(const Alert& alert);
+      void alert_notify(const Alert& alert) override;
+
+      Handshake_State* new_handshake_state() const override;
 
       const Policy& m_policy;
       RandomNumberGenerator& m_rng;
