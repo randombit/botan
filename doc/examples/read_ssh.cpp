@@ -125,5 +125,7 @@ int main()
 
    std::cout << X509::PEM_encode(*key);
 
+   delete key;
+
    return 0;
    }
