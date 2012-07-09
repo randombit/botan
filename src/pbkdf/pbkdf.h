@@ -68,6 +68,9 @@ class BOTAN_DLL PBKDF : public Algorithm
       * @param salt a randomly chosen salt
       * @param salt_len length of salt in bytes
       * @param iterations the number of iterations to use (use 10K or more)
+      * @param msec if iterations is zero, then instead the PBKDF is
+      *        run until msec milliseconds has passed.
+      * @return the number of iterations performed and the derived key
       */
       virtual std::pair<size_t, OctetString>
          key_derivation(size_t output_len,

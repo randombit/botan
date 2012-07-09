@@ -34,6 +34,9 @@ class BOTAN_DLL PBE_PKCS5v15 : public PBE
       /**
       * @param cipher the block cipher to use (DES or RC2)
       * @param hash the hash function to use
+      * @param passphrase the passphrase to use
+      * @param msec how many milliseconds to run the PBKDF
+      * @param rng a random number generator
       */
       PBE_PKCS5v15(BlockCipher* cipher,
                    HashFunction* hash,
