@@ -164,7 +164,7 @@ class MemoryRegion
       */
       void swap(MemoryRegion<T>& other);
 
-      virtual ~MemoryRegion() { deallocate(buf, allocated); }
+      ~MemoryRegion() { deallocate(buf, allocated); }
    protected:
       MemoryRegion() : buf(0), used(0), allocated(0), alloc(0) {}
 
