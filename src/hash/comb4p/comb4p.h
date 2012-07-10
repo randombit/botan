@@ -25,8 +25,8 @@ class BOTAN_DLL Comb4P : public HashFunction
       */
       Comb4P(HashFunction* h1, HashFunction* h2);
 
-      Comp4P(const Comp4P&) = delete;
-      Comp4P& operator=(const Comp4P&) = delete;
+      Comb4P(const Comb4P&) = delete;
+      Comb4P& operator=(const Comb4P&) = delete;
 
       ~Comb4P() { delete hash1; delete hash2; }
 
