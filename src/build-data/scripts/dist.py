@@ -1,5 +1,13 @@
 #!/usr/bin/python
 
+"""
+Release script for botan (http://botan.randombit.net/)
+
+(C) 2011, 2012 Jack Lloyd
+
+Distributed under the terms of the Botan license
+"""
+
 import optparse
 import subprocess
 import logging
@@ -35,7 +43,8 @@ def run_monotone(db, args):
     return check_subprocess_results(mtn, 'mtn')
 
 def gpg_sign(file, keyid):
-    print file
+    logging.info('Signing %s using PGP id %s' % (file, keyid))
+
     gpg = subprocess.Popen(['gpg', '--armor', '--detach-sign',
                             '--local-user', keyid, file],
                            stdout=subprocess.PIPE,
@@ -65,7 +74,7 @@ def parse_args(args):
 def remove_file_if_exists(fspath):
     try:
         os.unlink(fspath)
-    except OSError, e:
+    except OSError as e:
         if e.errno != errno.ENOENT:
             raise
 
@@ -96,73 +105,82 @@ def main(args = None):
         logging.error('Usage: %s version' % (sys.argv[0]))
         return 1
 
+    version = args[0]
+
+    rev_id = run_monotone(options.mtn_db,
+                          ['automate', 'select', 't:' + version])
+
+    if rev_id == '':
+        logging.error('No revision for %s found' % (version))
+        return 2
+
+    output_basename = os.path.join(options.output_dir, 'Botan-' + version)
+
+    output_tgz = output_basename + '.tgz'
+    output_tbz = output_basename + '.tbz'
+
+    logging.info('Found revision id %s' % (rev_id))
+
+    if os.access(output_basename, os.X_OK):
+        shutil.rmtree(output_basename)
+
+    run_monotone(options.mtn_db,
+                 ['checkout', '-r', rev_id, output_basename])
+
+    shutil.rmtree(os.path.join(output_basename, '_MTN'))
+    remove_file_if_exists(os.path.join(output_basename, '.mtn-ignore'))
+
+    version_file = os.path.join(output_basename, 'botan_version.py')
+
+    if os.access(version_file, os.R_OK):
+        # rewrite botan_version.py
+
+        contents = open(version_file).readlines()
+
+        def content_rewriter():
+            for line in contents:
+                if line == 'release_vc_rev = None\n':
+                    yield 'release_vc_rev = \'mtn:%s\'\n' % (rev_id)
+                else:
+                    yield line
+
+        open(version_file, 'w').write(''.join(list(content_rewriter())))
+    else:
+        logging.error('Cannot find %s' % (version_file))
+        return 2
+
     try:
-        version = args[0]
-
-        rev_id = run_monotone(options.mtn_db,
-                              ['automate', 'select', 't:' + version])
-
-        if rev_id == '':
-            logging.error('No revision for %s found' % (version))
+        os.makedirs(options.output_dir)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            logging.error('Creating dir %s failed %s' % (options.output_dir, e))
             return 2
 
-        output_basename = 'Botan-' + version
-        output_name = os.path.join(options.output_dir, output_basename)
+    remove_file_if_exists(output_tgz)
+    remove_file_if_exists(output_tgz + '.asc')
+    archive = tarfile.open(output_tgz, 'w:gz')
+    archive.add(output_basename)
+    archive.close()
+    if options.pgp_key_id != '':
+        gpg_sign(output_tgz, options.pgp_key_id)
 
-        output_tgz = output_name + '.tgz'
-        output_tbz = output_name + '.tbz'
+    remove_file_if_exists(output_tbz)
+    remove_file_if_exists(output_tbz + '.asc')
+    archive = tarfile.open(output_tbz, 'w:bz2')
+    archive.add(output_basename)
+    archive.close()
+    if options.pgp_key_id != '':
+        gpg_sign(output_tbz, options.pgp_key_id)
 
-        logging.info('Found revision id %s' % (rev_id))
+    shutil.rmtree(output_basename)
 
-        if os.access(output_name, os.X_OK):
-            shutil.rmtree(output_name)
-
-        run_monotone(options.mtn_db,
-                     ['checkout', '-r', rev_id, output_name])
-
-        shutil.rmtree(os.path.join(output_name, '_MTN'))
-        remove_file_if_exists(os.path.join(output_name, '.mtn-ignore'))
-
-        version_file = os.path.join(output_name, 'botan_version.py')
-        if os.access(version_file, os.R_OK):
-            # rewrite botan_version.py
-
-            contents = open(version_file).readlines()
-
-            def content_rewriter():
-                for line in contents:
-                    if line == 'release_vc_rev = None\n':
-                        yield 'release_vc_rev = \'mtn:%s\'\n' % (rev_id)
-                    else:
-                        yield line
-
-            open(version_file, 'w').write(''.join(list(content_rewriter())))
-
-        os.chdir(options.output_dir)
-
-        remove_file_if_exists(output_tgz)
-        remove_file_if_exists(output_tgz + '.asc')
-        archive = tarfile.open(output_tgz, 'w:gz')
-        archive.add(output_basename)
-        archive.close()
-        if options.pgp_key_id != '':
-            gpg_sign(output_tgz, options.pgp_key_id)
-
-        remove_file_if_exists(output_tbz)
-        remove_file_if_exists(output_tbz + '.asc')
-        archive = tarfile.open(output_tbz, 'w:bz2')
-        archive.add(output_basename)
-        archive.close()
-        if options.pgp_key_id != '':
-            gpg_sign(output_tbz, options.pgp_key_id)
-
-        shutil.rmtree(output_name)
-
-    except Exception, e:
-        import traceback
-        traceback.print_exc(file=sys.stderr)
-        logging.error(str(e))
-        return 1
+    return 0
 
 if __name__ == '__main__':
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except Exception as e:
+        logging.error(e)
+        import traceback
+        logging.info(traceback.format_exc())
+        sys.exit(1)
