@@ -16,17 +16,17 @@ Unsure which release you want? Check the :ref:`FAQ <devel_vs_stable>`.
 Current Stable Release (1.10)
 ----------------------------------------
 
-The current stable release is `1.10.1
-<http://botan.randombit.net/news/releases/1_10_1.html>`_ which was
-released on 2011-07-11.
+The current stable release is `1.10.3
+<http://botan.randombit.net/relnotes/1_10_3.html>`_ which was
+released on 2012-07-10.
 
 Sources:
 
-`1.10.1 tar/gz <http://botan.randombit.net/files/Botan-1.10.1.tgz>`_
-(`1.10.1 tar/gz sig <http://botan.randombit.net/files/Botan-1.10.1.tgz.asc>`_),
+`1.10.3 tar/gz <http://botan.randombit.net/files/Botan-1.10.3.tgz>`_
+(`1.10.3 tar/gz sig <http://botan.randombit.net/files/Botan-1.10.3.tgz.asc>`_),
 
-`1.10.1 tar/bzip <http://botan.randombit.net/files/Botan-1.10.1.tbz>`_
-(`1.10.1 tar/bzip sig <http://botan.randombit.net/files/Botan-1.10.1.tbz.asc>`_)
+`1.10.3 tar/bzip <http://botan.randombit.net/files/Botan-1.10.3.tbz>`_
+(`1.10.3 tar/bzip sig <http://botan.randombit.net/files/Botan-1.10.3.tbz.asc>`_)
 
 ..
   Windows binary installer for use with Visual C++ 2010:
