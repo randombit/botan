@@ -1827,8 +1827,8 @@ if __name__ == '__main__':
     try:
         main()
     except Exception as e:
-        logging.error(str(e))
-        #import traceback
-        #traceback.print_exc(file=sys.stderr)
+        logging.error(e)
+        import traceback
+        logging.info(traceback.format_exc())
         sys.exit(1)
     sys.exit(0)
