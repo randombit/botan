@@ -116,9 +116,8 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
    BER_Decoder(key_bits)
       .start_cons(SEQUENCE)
          .decode_and_check<size_t>(1, "Unknown version code for ECC key")
-         .decode_octet_string_bigint(private_key)
-      .verify_end()
-      .end_cons();
+         .decode_octet_string_bigint(private_key);
+         // possibly group params and public key follow
 
    public_key = domain().get_base_point() * private_key;
 
