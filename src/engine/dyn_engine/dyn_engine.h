@@ -24,6 +24,10 @@ class BOTAN_DLL Dynamically_Loaded_Engine : public Engine
       */
       Dynamically_Loaded_Engine(const std::string& lib_path);
 
+      Dynamically_Loaded_Engine(const Dynamically_Loaded_Engine&) = delete;
+
+      Dynamically_Loaded_Engine& operator=(const Dynamically_Loaded_Engine&) = delete;
+
       ~Dynamically_Loaded_Engine();
 
       std::string provider_name() const { return engine->provider_name(); }

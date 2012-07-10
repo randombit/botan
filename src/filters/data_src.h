@@ -156,6 +156,10 @@ class BOTAN_DLL DataSource_Stream : public DataSource
       */
       DataSource_Stream(const std::string& file, bool use_binary = false);
 
+      DataSource_Stream(const DataSource_Stream&) = delete;
+
+      DataSource_Stream& operator=(const DataSource_Stream&) = delete;
+
       ~DataSource_Stream();
 
       virtual size_t get_bytes_read() const { return total_read; }

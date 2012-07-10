@@ -89,6 +89,10 @@ class BOTAN_DLL Channel
               Session_Manager& session_manager,
               RandomNumberGenerator& rng);
 
+      Channel(const Channel&) = delete;
+
+      Channel& operator=(const Channel&) = delete;
+
       virtual ~Channel();
    protected:
 

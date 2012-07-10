@@ -34,6 +34,10 @@ class BOTAN_DLL HMAC : public MessageAuthenticationCode
       * @param hash the hash to use for HMACing
       */
       HMAC(HashFunction* hash);
+
+      HMAC(const HMAC&) = delete;
+      HMAC& operator=(const HMAC&) = delete;
+
       ~HMAC() { delete hash; }
    private:
       void add_data(const byte[], size_t);

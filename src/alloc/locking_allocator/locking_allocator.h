@@ -23,6 +23,10 @@ class BOTAN_DLL mlock_allocator
 
       bool deallocate(void* p, size_t num_elems, size_t elem_size);
 
+      mlock_allocator(const mlock_allocator&) = delete;
+
+      mlock_allocator& operator=(const mlock_allocator&) = delete;
+
    private:
       mlock_allocator();
 

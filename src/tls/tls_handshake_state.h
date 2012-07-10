@@ -34,6 +34,9 @@ class Handshake_State
       Handshake_State(Handshake_Reader* reader);
       ~Handshake_State();
 
+      Handshake_State(const Handshake_State&) = delete;
+      Handshake_State& operator=(const Handshake_State&) = delete;
+
       bool received_handshake_msg(Handshake_Type handshake_msg) const;
 
       void confirm_transition_to(Handshake_Type handshake_msg);

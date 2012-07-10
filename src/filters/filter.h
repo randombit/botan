@@ -92,6 +92,11 @@ class BOTAN_DLL Filter
          }
 
       Filter();
+
+      Filter(const Filter&) = delete;
+
+      Filter& operator=(const Filter&) = delete;
+
    private:
       /**
       * Start a new message in *this and all following filters. Only for
@@ -107,9 +112,6 @@ class BOTAN_DLL Filter
 
       friend class Pipe;
       friend class Fanout_Filter;
-
-      Filter(const Filter&) = delete;
-      Filter& operator=(const Filter&) = delete;
 
       size_t total_ports() const;
       size_t current_port() const { return port_num; }

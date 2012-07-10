@@ -42,6 +42,10 @@ class BOTAN_DLL CTR_BE : public StreamCipher
       * @param cipher the underlying block cipher to use
       */
       CTR_BE(BlockCipher* cipher);
+
+      CTR_BE(const CTR_BE&) = delete;
+      CTR_BE& operator=(const CTR_BE&) = delete;
+
       ~CTR_BE();
    private:
       void key_schedule(const byte key[], size_t key_len);

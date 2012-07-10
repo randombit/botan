@@ -48,6 +48,9 @@ class BOTAN_DLL Lion : public BlockCipher
            StreamCipher* cipher,
            size_t block_size);
 
+      Lion(const Lion&) = delete;
+      Lion& operator=(const Lion&) = delete;
+
       ~Lion() { delete hash; delete cipher; }
    private:
       void key_schedule(const byte[], size_t);

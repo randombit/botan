@@ -33,6 +33,10 @@ class BOTAN_DLL ANSI_X919_MAC : public MessageAuthenticationCode
       * @param cipher the underlying block cipher to use
       */
       ANSI_X919_MAC(BlockCipher* cipher);
+
+      ANSI_X919_MAC(const ANSI_X919_MAC&) = delete;
+      ANSI_X919_MAC& operator=(const ANSI_X919_MAC&) = delete;
+
       ~ANSI_X919_MAC();
    private:
       void add_data(const byte[], size_t);

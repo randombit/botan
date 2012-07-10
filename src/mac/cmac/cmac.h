@@ -42,6 +42,10 @@ class BOTAN_DLL CMAC : public MessageAuthenticationCode
       * @param cipher the underlying block cipher to use
       */
       CMAC(BlockCipher* cipher);
+
+      CMAC(const CMAC&) = delete;
+      CMAC& operator=(const CMAC&) = delete;
+
       ~CMAC();
    private:
       void add_data(const byte[], size_t);

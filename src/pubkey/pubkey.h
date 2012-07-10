@@ -72,10 +72,12 @@ class BOTAN_DLL PK_Encryptor
 
       PK_Encryptor() {}
       virtual ~PK_Encryptor() {}
-   private:
-      PK_Encryptor(const PK_Encryptor&) {}
-      PK_Encryptor& operator=(const PK_Encryptor&) { return *this; }
 
+      PK_Encryptor(const PK_Encryptor&) = delete;
+
+      PK_Encryptor& operator=(const PK_Encryptor&) = delete;
+
+   private:
       virtual std::vector<byte> enc(const byte[], size_t,
                                      RandomNumberGenerator&) const = 0;
    };
@@ -110,10 +112,11 @@ class BOTAN_DLL PK_Decryptor
 
       PK_Decryptor() {}
       virtual ~PK_Decryptor() {}
-   private:
-      PK_Decryptor(const PK_Decryptor&) {}
-      PK_Decryptor& operator=(const PK_Decryptor&) { return *this; }
 
+      PK_Decryptor(const PK_Decryptor&) = delete;
+      PK_Decryptor& operator=(const PK_Decryptor&) = delete;
+
+   private:
       virtual secure_vector<byte> dec(const byte[], size_t) const = 0;
    };
 
@@ -195,13 +198,13 @@ class BOTAN_DLL PK_Signer
                 Signature_Format format = IEEE_1363,
                 Fault_Protection prot = ENABLE_FAULT_PROTECTION);
 
+      PK_Signer(const PK_Signer&) = delete;
+      PK_Signer& operator=(const PK_Signer&) = delete;
+
       ~PK_Signer() { delete op; delete verify_op; delete emsa; }
    private:
       bool self_test_signature(const std::vector<byte>& msg,
                                const std::vector<byte>& sig) const;
-
-      PK_Signer(const PK_Signer&) {}
-      PK_Signer& operator=(const PK_Signer&) { return *this; }
 
       PK_Ops::Signature* op;
       PK_Ops::Verification* verify_op;
@@ -301,11 +304,11 @@ class BOTAN_DLL PK_Verifier
                   const std::string& emsa,
                   Signature_Format format = IEEE_1363);
 
+      PK_Verifier(const PK_Verifier&) = delete;
+      PK_Verifier& operator=(const PK_Verifier&) = delete;
+
       ~PK_Verifier() { delete op; delete emsa; }
    private:
-      PK_Verifier(const PK_Verifier&) {}
-      PK_Verifier& operator=(const PK_Verifier&) { return *this; }
-
       bool validate_signature(const secure_vector<byte>& msg,
                               const byte sig[], size_t sig_len);
 
@@ -391,11 +394,11 @@ class BOTAN_DLL PK_Key_Agreement
       PK_Key_Agreement(const PK_Key_Agreement_Key& key,
                        const std::string& kdf);
 
+      PK_Key_Agreement(const PK_Key_Agreement_Key&) = delete;
+      PK_Key_Agreement& operator=(const PK_Key_Agreement&) = delete;
+
       ~PK_Key_Agreement() { delete op; delete kdf; }
    private:
-      PK_Key_Agreement(const PK_Key_Agreement_Key&) {}
-      PK_Key_Agreement& operator=(const PK_Key_Agreement&) { return *this; }
-
       PK_Ops::Key_Agreement* op;
       KDF* kdf;
    };
