@@ -37,6 +37,7 @@ Contents
    users
    pgpkey
    algos
+   release_process
    build_log
 
 Indices and tables
