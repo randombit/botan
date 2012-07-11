@@ -14,13 +14,17 @@ Unsure which release you want? Check the :ref:`FAQ <devel_vs_stable>`.
       release `may be available <http://botan.randombit.net/download.html>`_.
 
 Current Development Series (1.11)
----------------------------------------------------------------------------
+----------------------------------------
 
 The latest version of the current development series, from branch
 ``net.randombit.botan``, is :doc:`relnotes/1_11_0`
 
+.. note::
+
+   Versions 1.11.0 and later require a C++11 compiler.
+
 Current Stable Series (1.10)
----------------------------------------------------------------------------
+----------------------------------------
 
 The latest version of the current stable series, from branch
 ``net.randombit.botan.1_10``, is :doc:`relnotes/1_10_3`:
@@ -30,24 +34,19 @@ The latest version of the current stable series, from branch
 Windows Installer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Windows installers for :installer_x86_32:`1.10.1` and
-:installer_x86_64:`1.10.1` for use with Visual C++ 2010 are
-also available.
+Windows installers for use with Visual C++ 2010
+:installer_x86_32:`1.10.3` (:installer_sig_x86_32:`sig <1.10.3>`)
+and
+:installer_x86_64:`1.10.3` (:installer_sig_x86_64:`sig <1.10.3>`)
+are also available.
 
 Previous Stable Series (1.8)
----------------------------------------------------------------------------
+----------------------------------------
 
 The latest version of the previous stable series, from branch
 ``net.randombit.botan.1_8`` is :doc:`relnotes/1_8_13`:
 :tgz:`1.8.13` (:tgz_sig:`sig <1.8.13>`),
 :tbz:`1.8.13` (:tbz_sig:`sig <1.8.13>`)
-
-Windows Installer
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Windows installers for :installer_x86_32:`1.8.11` and
-:installer_x86_64:`1.8.11` for use with Visual C++ 2008 are also
-available.
 
 Accessing Version Control
 ----------------------------------------

@@ -49,24 +49,24 @@ templates_path = ['_sphinx/templates']
 if is_website_build and use_disqus:
     templates_path += ['_sphinx/disqus']
 
+files_dir = 'http://botan.randombit.net/files'
+
 extlinks = {
     'pr': ('http://bugs.randombit.net/show_bug.cgi?id=%s', 'PR '),
-    'tgz': ('http://botan.randombit.net/files/Botan-%s.tgz', 'tar/gz for '),
-    'tgz_sig': ('http://botan.randombit.net/files/Botan-%s.tgz.asc', 'tar/gz sig '),
-    'tbz': ('http://botan.randombit.net/files/Botan-%s.tbz', 'tar/bzip for '),
-    'tbz_sig': ('http://botan.randombit.net/files/Botan-%s.tbz.asc', 'tar/bzip sig '),
-
     'wikipedia': ('http://en.wikipedia.org/wiki/%s', ''),
-
     'viewmtn': ('http://viewmtn.randombit.net/tree/h:%s', ''),
-
     'botan-devel': ('http://lists.randombit.net/pipermail/botan-devel/%s.html', None),
 
-    'installer_x86_32': ('http://botan.randombit.net/files/win32/botan-%s_win32.exe',
-                         'x86-32 '),
+    'tgz': (files_dir + '/Botan-%s.tgz', 'tar/gz for '),
+    'tgz_sig': (files_dir + '/Botan-%s.tgz.asc', 'tar/gz sig '),
+    'tbz': (files_dir + '/Botan-%s.tbz', 'tar/bzip for '),
+    'tbz_sig': (files_dir + '/Botan-%s.tbz.asc', 'tar/bzip sig '),
 
-    'installer_x86_64': ('http://botan.randombit.net/files/win32/botan-%s_win64.exe',
-                         'x86-64 ')
+    'installer_x86_32': (files_dir + '/win32/botan-%s_win32.exe', 'x86-32 '),
+    'installer_x86_64': (files_dir + '/win32/botan-%s_win64.exe', 'x86-64 '),
+
+    'installer_sig_x86_32': (files_dir + '/win32/botan-%s_win32.exe.asc', None),
+    'installer_sig_x86_64': (files_dir + '/win32/botan-%s_win64.exe.asc', None),
 }
 
 source_suffix = '.rst'

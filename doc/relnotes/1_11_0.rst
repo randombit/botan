@@ -1,10 +1,15 @@
 Version 1.11.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In this release, many new features of C++11 are being used in the
-library. Currently GCC 4.7 and Clang 3.1 are known to work. This
-version of the library cannot be compiled by or used with a C++98
-compiler.
+.. note::
+
+  In this release, many new features of C++11 are being used in the
+  library. Currently GCC 4.7 and Clang 3.1 are known to work well.
+  This version of the library cannot be compiled by or used with a
+  C++98 compiler.
+
+TLS and PKI Changes
+""""""""""""""""""""""""""""""""""""""""
 
 There have been many changes and improvements to :doc:`TLS
 <../tls>`. The interface is now purely event driven and does not
@@ -24,11 +29,14 @@ The API for X.509 path validation has changed, with
 ``x509_path_validate`` in x509path.h now handles path validation and
 ``Certificate_Store`` handles storage of certificates and CRLs.
 
+Memory Container Changes
+""""""""""""""""""""""""""""""""""""""""
+
 The memory container types have changed substantially.  The
-MemoryVector and SecureVector container types have been removed, and
-an alias of std::vector using an allocator that clears memory named
-secure_vector is used for key material, with std::vector being used
-for everything else.
+``MemoryVector`` and ``SecureVector`` container types have been
+removed, and an alias of ``std::vector`` using an allocator that
+clears memory named ``secure_vector`` is used for key material, with
+plain ``std::vector`` being used for everything else.
 
 The technique used for mlock'ing memory on Linux and BSD systems is
 much improved. Now a single page-aligned block of memory (the exact
@@ -37,9 +45,15 @@ using a best-fit allocator and all metadata held outside the mmap'ed
 range, in an effort to make best use of the very limited amount of
 memory current Linux kernels allow unpriveledged users to lock.
 
+New LZMA Compression Filter
+""""""""""""""""""""""""""""""""""""""""
+
 A filter using LZMA was contributed by Vojtech Kral. It is available
 if LZMA support was enabled at compilation time by passing
 ``--with-lzma`` to ``configure.py``.
+
+ECC Key Decoding Problem Resolved
+""""""""""""""""""""""""""""""""""""""""
 
 :rfc:`5915` adds some extended information which can be included in
 ECC private keys which the ECC key decoder did not expect, causing an

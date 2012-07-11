@@ -17,6 +17,9 @@ Date          Version   OS                    CPU                        Compile
 2012-07-09    1.11.0    Gentoo                Intel Core i7-860          GCC 4.7.0                      OK
 2012-07-09    1.11.0    Gentoo                Intel Core i7-860          Clang 3.1                      OK
 
+2012-07-11    1.10.3    Windows 7 x64         x86                        Visual C++ 16.00.30319.01      OK
+2012-07-11    1.10.3    Windows 7 x64         x86-64                     Visual C++ 16.00.30319.01      OK
+
 2012-07-09    1.10.2    Gentoo                Intel Core i7-860          GCC 4.7.0                      OK
 2012-07-09    1.10.2    Gentoo                Intel Core i7-860          GCC 4.6.3                      OK
 2012-07-09    1.10.2    Gentoo                Intel Core i7-860          GCC 4.5.3                      OK
