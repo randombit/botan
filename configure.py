@@ -1070,6 +1070,20 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
             return maintainer_flags
         return normal_flags
 
+    def innosetup_arch(os, arch):
+        if os != 'windows':
+            return None
+
+        if arch == 'x86_32':
+            return '' # allow 32-bit installs on 64 bit systems
+        elif arch == 'x86_64':
+            return 'x64'
+        elif arch == 'ia64':
+            return 'ia64'
+
+        logging.warn('Unknown arch in innosetup_arch %s' % (arch))
+        return None
+
     return {
         'version_major':  build_config.version_major,
         'version_minor':  build_config.version_minor,
@@ -1106,6 +1120,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'os': options.os,
         'arch': options.arch,
         'submodel': options.cpu,
+
+        'innosetup_arch': innosetup_arch(options.os, options.arch),
 
         'mp_bits': choose_mp_bits(),
 
