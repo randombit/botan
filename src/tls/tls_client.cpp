@@ -37,7 +37,7 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
    {
    m_writer.set_version(Protocol_Version::SSL_V3);
 
-   m_state = new_handshake_state();
+   m_state = new Handshake_State(this->new_handshake_reader());
    m_state->set_expected_next(SERVER_HELLO);
 
    m_state->client_npn_cb = next_protocol;
@@ -84,9 +84,9 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
    m_secure_renegotiation.update(m_state->client_hello);
    }
 
-Handshake_State* Client::new_handshake_state() const
+Handshake_Reader* Client::new_handshake_reader() const
    {
-   return new Handshake_State(new Stream_Handshake_Reader);
+   return new Stream_Handshake_Reader;
    }
 
 /*
@@ -98,7 +98,7 @@ void Client::renegotiate(bool force_full_renegotiation)
       return; // currently in active handshake
 
    delete m_state;
-   m_state = new_handshake_state();
+   m_state = new Handshake_State(this->new_handshake_reader());
 
    m_state->set_expected_next(SERVER_HELLO);
 

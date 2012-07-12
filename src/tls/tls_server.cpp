@@ -200,9 +200,9 @@ Server::Server(std::function<void (const byte[], size_t)> output_fn,
    {
    }
 
-Handshake_State* Server::new_handshake_state() const
+Handshake_Reader* Server::new_handshake_reader() const
    {
-   return new Handshake_State(new Stream_Handshake_Reader);
+   return new Stream_Handshake_Reader;
    }
 
 /*
@@ -213,7 +213,7 @@ void Server::renegotiate(bool force_full_renegotiation)
    if(m_state)
       return; // currently in handshake
 
-   m_state = new_handshake_state();
+   m_state = new Handshake_State(this->new_handshake_reader());
 
    m_state->allow_session_resumption = !force_full_renegotiation;
    m_state->set_expected_next(CLIENT_HELLO);
@@ -240,7 +240,7 @@ void Server::read_handshake(byte rec_type,
    {
    if(rec_type == HANDSHAKE && !m_state)
       {
-      m_state = new_handshake_state();
+      m_state = new Handshake_State(this->new_handshake_reader());
       m_state->set_expected_next(CLIENT_HELLO);
       }
 
