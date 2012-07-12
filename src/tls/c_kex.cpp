@@ -238,11 +238,11 @@ Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
 
       if(const RSA_PublicKey* rsa_pub = dynamic_cast<const RSA_PublicKey*>(pub_key.get()))
          {
-         const Protocol_Version pref_version = state->client_hello->version();
+         const Protocol_Version offered_version = state->client_hello->version();
 
          pre_master = rng.random_vec(48);
-         pre_master[0] = pref_version.major_version();
-         pre_master[1] = pref_version.minor_version();
+         pre_master[0] = offered_version.major_version();
+         pre_master[1] = offered_version.minor_version();
 
          PK_Encryptor_EME encryptor(*rsa_pub, "PKCS1v15");
 

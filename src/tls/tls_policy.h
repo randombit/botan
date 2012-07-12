@@ -110,9 +110,9 @@ class BOTAN_DLL Policy
       virtual u32bit session_ticket_lifetime() const;
 
       /**
-      * @return the minimum version that we are willing to negotiate
+      * @return true if and only if we are willing to accept this version
       */
-      virtual Protocol_Version min_version() const;
+      virtual bool acceptable_protocol_version(const Protocol_Version& version) const;
 
       /**
       * @return the version we would prefer to negotiate

@@ -110,7 +110,7 @@ void Record_Reader::activate(Connection_Side side,
          );
       m_block_size = block_size_of(cipher_algo);
 
-      if(m_version >= Protocol_Version::TLS_V11)
+      if(m_version.supports_explicit_cbc_ivs())
          m_iv_size = m_block_size;
       else
          m_iv_size = 0;

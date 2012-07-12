@@ -282,13 +282,20 @@ void Server::process_handshake_msg(Handshake_Type type,
 
       Protocol_Version client_version = m_state->client_hello->version();
 
-      if(client_version < m_policy.min_version())
+      if(!m_policy.acceptable_protocol_version(m_state->version()))
+         {
          throw TLS_Exception(Alert::PROTOCOL_VERSION,
                              "Client version is unacceptable by policy");
+         }
 
-      if(client_version > m_policy.pref_version())
+      if(!client_version.known_version())
          {
-         m_state->set_version(m_policy.pref_version());
+         /*
+         This isn't a version we know. This implies this is a later
+         version than any version defined as of 2012. Offer them
+         the latest version we know.
+         */
+         m_state->set_version(Protocol_Version::TLS_V12);
          }
       else
          {
@@ -304,11 +311,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             * than what it initially negotiated, reject as a probable
             * attack.
             */
-            if(client_version > prev_version)
-               {
-               m_state->set_version(prev_version);
-               }
-            else
+            if(prev_version > client_version)
                {
                throw TLS_Exception(Alert::PROTOCOL_VERSION,
                                    "Client negotiated " +
@@ -316,6 +319,8 @@ void Server::process_handshake_msg(Handshake_Type type,
                                    " then renegotiated with " +
                                    client_version.to_string());
                }
+
+            m_state->set_version(prev_version);
             }
          else
             {

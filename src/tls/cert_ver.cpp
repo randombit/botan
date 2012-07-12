@@ -58,7 +58,7 @@ Certificate_Verify::Certificate_Verify(const std::vector<byte>& buf,
    {
    TLS_Data_Reader reader(buf);
 
-   if(version >= Protocol_Version::TLS_V12)
+   if(version.supports_negotiable_signature_algorithms())
       {
       hash_algo = Signature_Algorithms::hash_algo_name(reader.get_byte());
       sig_algo = Signature_Algorithms::sig_algo_name(reader.get_byte());

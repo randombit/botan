@@ -216,7 +216,7 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<byte>& buf,
 
    if(sig_algo != "")
       {
-      if(version >= Protocol_Version::TLS_V12)
+      if(version.supports_negotiable_signature_algorithms())
          {
          m_hash_algo = Signature_Algorithms::hash_algo_name(reader.get_byte());
          m_sig_algo = Signature_Algorithms::sig_algo_name(reader.get_byte());

@@ -47,7 +47,7 @@ std::vector<byte> Hello_Verify_Request::serialize() const
       negotiated (RFC 6347, section 4.2.1)
    */
 
-   Protocol_Version format_version(Protocol_Version::TLS_V11);
+   Protocol_Version format_version(Protocol_Version::DTLS_V10);
 
    std::vector<byte> bits;
    bits.push_back(format_version.major_version());

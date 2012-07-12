@@ -64,7 +64,7 @@ Certificate_Req::Certificate_Req(Record_Writer& writer,
    cert_key_types.push_back("DSA");
    cert_key_types.push_back("ECDSA");
 
-   if(version >= Protocol_Version::TLS_V12)
+   if(version.supports_negotiable_signature_algorithms())
       {
       std::vector<std::string> hashes = policy.allowed_signature_hashes();
       std::vector<std::string> sigs = policy.allowed_signature_methods();
@@ -100,7 +100,7 @@ Certificate_Req::Certificate_Req(const std::vector<byte>& buf,
       cert_key_types.push_back(cert_type_name);
       }
 
-   if(version >= Protocol_Version::TLS_V12)
+   if(version.supports_negotiable_signature_algorithms())
       {
       std::vector<byte> sig_hash_algs = reader.get_range_vector<byte>(2, 2, 65534);
 

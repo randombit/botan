@@ -69,15 +69,6 @@ Server_Hello::Server_Hello(const std::vector<byte>& buf)
 
    m_version = Protocol_Version(major_version, minor_version);
 
-   if(m_version != Protocol_Version::SSL_V3 &&
-      m_version != Protocol_Version::TLS_V10 &&
-      m_version != Protocol_Version::TLS_V11 &&
-      m_version != Protocol_Version::TLS_V12)
-      {
-      throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                          "Server_Hello: Unsupported server version");
-      }
-
    m_random = reader.get_fixed<byte>(32);
 
    m_session_id = reader.get_range<byte>(1, 0, 32);

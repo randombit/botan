@@ -202,7 +202,7 @@ std::string choose_hash(const std::string& sig_algo,
                         Client_Hello* client_hello,
                         Certificate_Req* cert_req)
    {
-   if(negotiated_version < Protocol_Version::TLS_V12)
+   if(!negotiated_version.supports_negotiable_signature_algorithms())
       {
       if(for_client_auth && negotiated_version == Protocol_Version::SSL_V3)
          return "Raw";
@@ -264,7 +264,7 @@ Handshake_State::choose_sig_format(const Private_Key* key,
                   client_hello,
                   cert_req);
 
-   if(this->version() >= Protocol_Version::TLS_V12)
+   if(this->version().supports_negotiable_signature_algorithms())
       {
       hash_algo_out = hash_algo;
       sig_algo_out = sig_algo;
@@ -302,18 +302,18 @@ Handshake_State::understand_sig_format(const Public_Key* key,
    Or not?
    */
 
-   if(this->version() < Protocol_Version::TLS_V12)
-      {
-      if(hash_algo != "" || sig_algo != "")
-         throw Decoding_Error("Counterparty sent hash/sig IDs with old version");
-      }
-   else
+   if(this->version().supports_negotiable_signature_algorithms())
       {
       if(hash_algo == "")
          throw Decoding_Error("Counterparty did not send hash/sig IDS");
 
       if(sig_algo != algo_name)
          throw Decoding_Error("Counterparty sent inconsistent key and sig types");
+      }
+   else
+      {
+      if(hash_algo != "" || sig_algo != "")
+         throw Decoding_Error("Counterparty sent hash/sig IDs with old version");
       }
 
    if(algo_name == "RSA")
@@ -322,7 +322,7 @@ Handshake_State::understand_sig_format(const Public_Key* key,
          {
          hash_algo = "Raw";
          }
-      else if(this->version() < Protocol_Version::TLS_V12)
+      else if(!this->version().supports_negotiable_signature_algorithms())
          {
          hash_algo = "TLS.Digest.0";
          }
@@ -336,7 +336,7 @@ Handshake_State::understand_sig_format(const Public_Key* key,
          {
          hash_algo = "Raw";
          }
-      else if(this->version() < Protocol_Version::TLS_V12)
+      else if(!this->version().supports_negotiable_signature_algorithms())
          {
          hash_algo = "SHA-1";
          }

@@ -190,7 +190,7 @@ std::vector<byte> Client_Hello::serialize() const
 
    extensions.add(new Supported_Elliptic_Curves(m_supported_curves));
 
-   if(m_version >= Protocol_Version::TLS_V12)
+   if(m_version.supports_negotiable_signature_algorithms())
       extensions.add(new Signature_Algorithms(m_supported_algos));
 
    extensions.add(new Heartbeat_Support_Indicator(true));

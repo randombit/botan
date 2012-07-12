@@ -256,13 +256,13 @@ void Client::process_handshake_msg(Handshake_Type type,
          if(m_state->version() > m_state->client_hello->version())
             {
             throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
-                                "Client: Server replied with bad version");
+                                "Server replied with later version than in hello");
             }
 
-         if(m_state->version() < m_policy.min_version())
+         if(!m_policy.acceptable_protocol_version(m_state->version()))
             {
             throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                                "Client: Server is too old for specified policy");
+                                "Server version is unacceptable by policy");
             }
 
          if(m_state->suite.sig_algo() != "")
