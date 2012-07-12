@@ -122,6 +122,22 @@ authentication.
 
     Return a symmetric key for use with *identity*
 
+    One important special case for ``psk`` is where *type* is
+    "tls-server", *context* is "session-ticket" and *identity* is an
+    empty string. If a key is returned for this case, a TLS server
+    will offer session tickets to clients who can use them, and the
+    returned key will be used to encrypt the ticket. The server is
+    allowed to change the key at any time (though changing the key
+    means old session tickets can no longer be used for resumption,
+    forcing a full re-handshake when the client next connects). One
+    simple approach to add support for session tickets in your server
+    is to generate a random key the first time ``psk`` is called to
+    retrieve the session ticket key, cache it for later use in the
+    ``Credentials_Manager``, and simply let it be thrown away when the
+    process terminates.
+
+    See :rfc:`4507` for more information about TLS session tickets.
+
 .. cpp:function:: std::string psk_identity_hint(const std::string& type, \
                                                 const std::string& context)
 

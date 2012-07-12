@@ -21,9 +21,9 @@ namespace TLS {
 * An implementation of Session_Manager that saves values in a SQLite3
 * database file, with the session data encrypted using a passphrase.
 *
-* @warning The hostnames associated with the saved sessions are stored
-* in the database in plaintext. This may be a serious privacy risk in
-* some applications.
+* @warning For clients, the hostnames associated with the saved
+* sessions are stored in the database in plaintext. This may be a
+* serious privacy risk in some situations.
 */
 class BOTAN_DLL Session_Manager_SQLite : public Session_Manager
    {
@@ -48,16 +48,18 @@ class BOTAN_DLL Session_Manager_SQLite : public Session_Manager
       ~Session_Manager_SQLite();
 
       bool load_from_session_id(const std::vector<byte>& session_id,
-                                Session& session);
+                                Session& session) override;
 
       bool load_from_host_info(const std::string& hostname, u16bit port,
-                               Session& session);
+                               Session& session) override;
 
-      void remove_entry(const std::vector<byte>& session_id);
+      void remove_entry(const std::vector<byte>& session_id) override;
 
-      void save(const Session& session_data);
+      void save(const Session& session_data, u16bit port) override;
 
-      std::chrono::seconds session_lifetime() const { return m_session_lifetime; }
+      std::chrono::seconds session_lifetime() const override
+         { return m_session_lifetime; }
+
    private:
       Session_Manager_SQLite(const Session_Manager_SQLite&);
       Session_Manager_SQLite& operator=(const Session_Manager_SQLite&);

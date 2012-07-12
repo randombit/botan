@@ -26,12 +26,14 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
                const Policy& policy,
                RandomNumberGenerator& rng,
                const std::string& hostname,
+               u16bit port,
                std::function<std::string (std::vector<std::string>)> next_protocol) :
    Channel(output_fn, proc_fn, handshake_fn, session_manager, rng),
    m_policy(policy),
    m_rng(rng),
    m_creds(creds),
-   m_hostname(hostname)
+   m_hostname(hostname),
+   m_port(port)
    {
    m_writer.set_version(Protocol_Version::SSL_V3);
 
@@ -47,7 +49,7 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
    if(hostname != "")
       {
       Session session_info;
-      if(m_session_manager.load_from_host_info(m_hostname, 0, session_info))
+      if(m_session_manager.load_from_host_info(m_hostname, m_port, session_info))
          {
          if(session_info.srp_identifier() == srp_identifier)
             {
@@ -103,7 +105,7 @@ void Client::renegotiate(bool force_full_renegotiation)
    if(!force_full_renegotiation)
       {
       Session session_info;
-      if(m_session_manager.load_from_host_info(m_hostname, 0, session_info))
+      if(m_session_manager.load_from_host_info(m_hostname, m_port, session_info))
          {
          m_state->client_hello = new Client_Hello(
             m_writer,
@@ -482,7 +484,7 @@ void Client::process_handshake_msg(Handshake_Type type,
       if(!session_id.empty())
          {
          if(should_save)
-            m_session_manager.save(session_info);
+            m_session_manager.save(session_info, m_port);
          else
             m_session_manager.remove_entry(session_info.session_id());
          }

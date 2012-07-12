@@ -133,13 +133,14 @@ void doit(RandomNumberGenerator& rng,
    int sockfd = connect_to_host(host, port);
 
    TLS::Client client(std::bind(socket_write, sockfd, _1, _2),
-                     process_data,
-                     handshake_complete,
-                     session_manager,
-                     creds,
-                     policy,
-                     rng,
-                     host);
+                      process_data,
+                      handshake_complete,
+                      session_manager,
+                      creds,
+                      policy,
+                      rng,
+                      host,
+                      port);
 
    fd_set readfds;
 
@@ -225,7 +226,7 @@ int main(int argc, char* argv[])
       AutoSeeded_RNG rng;
       TLS::Policy policy;
 
-#if defined(BOTAN_HAS_TLS_SQLITE_SESSION_MANAGER)
+#if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
       TLS::Session_Manager_SQLite session_manager("my secret passphrase", rng,
                                                   "sessions.db");
 #else

@@ -309,11 +309,16 @@ implementation to the ``TLS::Client`` or ``TLS::Server`` constructor.
 
 .. cpp:class:: TLS::Session_Mananger
 
- .. cpp:function:: void save(const Session& session)
+ .. cpp:function:: void save(const Session& session, u16bit port)
 
      Save a new *session*. It is possible that this sessions session
      ID will replicate a session ID already stored, in which case the
      new session information should overwrite the previous information.
+
+     Clients will specify *port* if they know it (it will be zero if
+     they do not, or for servers). It specifies the remote port of the
+     server which is used to assist with looking up the correct
+     session when using :cpp:func:`load_from_host_info`.
 
  .. cpp:function:: void remove_entry(const std::vector<byte>& session_id)
 
@@ -328,13 +333,16 @@ implementation to the ``TLS::Client`` or ``TLS::Server`` constructor.
       to *save*, and ``true`` is returned. Otherwise *session* is not
       modified and ``false`` is returned.
 
- .. cpp:function:: bool load_from_host_info(const std::string& hostname, u16bit port, \
+ .. cpp:function:: bool load_from_host_info(const std::string& hostname, \
+                                            u16bit port, \
                                             Session& session)
 
-      Attempt to resume a session for *hostname* / *port*. If *port*
-      is zero, try to find a session for *hostname* on any port. With
-      the current client implementation, *port* is always zero.
+      Attempt to resume a session for *hostname* / *port*.
 
+      The session managers included in the library will, if they fail
+      to find an exact match for *hostname* and *port*, will also
+      check for a session saved using a matching hostname and a port
+      of zero.
 
  .. cpp:function:: std::chrono::seconds session_lifetime() const
 

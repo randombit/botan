@@ -167,6 +167,9 @@ bool Session_Manager_SQLite::load_from_host_info(const std::string& hostname,
          }
       }
 
+   if(port != 0)
+      return load_from_host_info(hostname, 0, session);
+
    return false;
    }
 
@@ -179,7 +182,7 @@ void Session_Manager_SQLite::remove_entry(const std::vector<byte>& session_id)
    stmt.spin();
    }
 
-void Session_Manager_SQLite::save(const Session& session)
+void Session_Manager_SQLite::save(const Session& session, u16bit port)
    {
    sqlite3_statement stmt(m_db, "insert or replace into tls_sessions"
                                 " values(?1, ?2, ?3, ?4, ?5)");
@@ -187,7 +190,7 @@ void Session_Manager_SQLite::save(const Session& session)
    stmt.bind(1, hex_encode(session.session_id()));
    stmt.bind(2, session.start_time());
    stmt.bind(3, session.sni_hostname());
-   stmt.bind(4, 0);
+   stmt.bind(4, port);
    stmt.bind(5, session.encrypt(m_session_key, m_rng));
 
    stmt.spin();

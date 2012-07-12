@@ -62,8 +62,9 @@ class BOTAN_DLL Session_Manager
       * immediately by load_from_* will result in a successful lookup.
       *
       * @param session to save
+      * @param port the protocol port (if known)
       */
-      virtual void save(const Session& session) = 0;
+      virtual void save(const Session& session, u16bit port = 0) = 0;
 
       /**
       * Return the allowed lifetime of a session; beyond this time,
@@ -82,17 +83,17 @@ class BOTAN_DLL Session_Manager
 class BOTAN_DLL Session_Manager_Noop : public Session_Manager
    {
    public:
-      bool load_from_session_id(const std::vector<byte>&, Session&)
+      bool load_from_session_id(const std::vector<byte>&, Session&) override
          { return false; }
 
-      bool load_from_host_info(const std::string&, u16bit, Session&)
+      bool load_from_host_info(const std::string&, u16bit, Session&) override
          { return false; }
 
-      void remove_entry(const std::vector<byte>&) {}
+      void remove_entry(const std::vector<byte>&) override {}
 
-      void save(const Session&) {}
+      void save(const Session&, u16bit) override {}
 
-      std::chrono::seconds session_lifetime() const
+      std::chrono::seconds session_lifetime() const override
          { return std::chrono::seconds(0); }
    };
 
@@ -115,16 +116,17 @@ class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
             {}
 
       bool load_from_session_id(const std::vector<byte>& session_id,
-                                Session& session);
+                                Session& session) override;
 
       bool load_from_host_info(const std::string& hostname, u16bit port,
-                               Session& session);
+                               Session& session) override;
 
-      void remove_entry(const std::vector<byte>& session_id);
+      void remove_entry(const std::vector<byte>& session_id) override;
 
-      void save(const Session& session_data);
+      void save(const Session& session_data, u16bit port) override;
 
-      std::chrono::seconds session_lifetime() const { return m_session_lifetime; }
+      std::chrono::seconds session_lifetime() const override
+         { return m_session_lifetime; }
 
    private:
       bool load_from_session_str(const std::string& session_str,

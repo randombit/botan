@@ -49,15 +49,16 @@ bool Session_Manager_In_Memory::load_from_host_info(
    {
    std::lock_guard<std::mutex> lock(m_mutex);
 
-   std::map<std::string, std::string>::iterator i;
-
-   if(port > 0)
-      i = m_host_sessions.find(hostname + ":" + std::to_string(port));
-   else
-      i = m_host_sessions.find(hostname);
+   auto i = m_host_sessions.find(hostname + ":" + std::to_string(port));
 
    if(i == m_host_sessions.end())
-      return false;
+      {
+      if(port > 0)
+         i = m_host_sessions.find(hostname + ":" + std::to_string(0));
+
+      if(i == m_host_sessions.end())
+         return false;
+      }
 
    if(load_from_session_str(i->second, session))
       return true;
@@ -79,7 +80,7 @@ void Session_Manager_In_Memory::remove_entry(
       m_sessions.erase(i);
    }
 
-void Session_Manager_In_Memory::save(const Session& session)
+void Session_Manager_In_Memory::save(const Session& session, u16bit port)
    {
    std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -97,8 +98,10 @@ void Session_Manager_In_Memory::save(const Session& session)
 
    m_sessions[session_id_str] = session;
 
-   if(session.side() == CLIENT && session.sni_hostname() != "")
-      m_host_sessions[session.sni_hostname()] = session_id_str;
+   const std::string hostname = session.sni_hostname();
+
+   if(session.side() == CLIENT && hostname != "")
+      m_host_sessions[hostname + ":" + std::to_string(port)] = session_id_str;
    }
 
 }
