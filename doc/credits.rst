@@ -50,6 +50,11 @@ snail-mail address (S).
   N: Justin Karneges
   D: Qt support modules (mutexes and types), X.509 API design
 
+  N: Vojtech Kral
+  E: vojtech@kral.hk
+  D: LZMA compression module
+  S: Czech Republic
+
   N: Jack Lloyd
   E: lloyd@randombit.net
   W: http://www.randombit.net/
@@ -78,8 +83,3 @@ snail-mail address (S).
   W: http://www.flexsecure.de/
   D: GF(p) arithmetic, CVC, Shanks-Tonelli algorithm
   S: Darmstadt, Germany
-
-  N: Vojtech Kral
-  E: vojtech@kral.hk
-  D: LZMA compression module
-  S: Czech Republic
