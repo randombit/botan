@@ -128,7 +128,9 @@ html_theme_options = {
     'headerlinkcolor': 'blue',
     'headercolor1': 'darkblue',
     'headercolor2': 'darkblue',
-    'textalign': 'left'
+    'textalign': 'left',
+    'pagewidth': '80em',
+    'documentwidth': '60em'
     }
 
 # Add any paths that contain custom themes here, relative to this directory.

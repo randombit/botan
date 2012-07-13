@@ -8,8 +8,9 @@ results and relevant system information (OS versions, compiler name
 and version, CPU architecture and other hardware information,
 configuration settings).
 
-Debian reports the build results for 1.8 on `a number of platforms
-<http://buildd.debian.org/pkg.cgi?pkg=botan1.8>`_.
+Debian reports the build results on a number of platforms for both
+`1.8 <https://buildd.debian.org/status/logs.php?pkg=botan1.8>`_ and
+`1.10 <https://buildd.debian.org/status/logs.php?pkg=botan1.10>`_.
 
 ===========   =======   ===================   ========================   ============================   ========
 Date          Version   OS                    CPU                        Compiler                       Results
@@ -17,6 +18,7 @@ Date          Version   OS                    CPU                        Compile
 2012-07-09    1.11.0    Gentoo                Intel Core i7-860          GCC 4.7.0                      OK
 2012-07-09    1.11.0    Gentoo                Intel Core i7-860          Clang 3.1                      OK
 
+2011-07-13    1.10.3    QNX 6.4.1             x86                        GCC 4.3.3                      OK
 2012-07-11    1.10.3    Windows 7 x64         x86                        Visual C++ 16.00.30319.01      OK
 2012-07-11    1.10.3    Windows 7 x64         x86-64                     Visual C++ 16.00.30319.01      OK
 
