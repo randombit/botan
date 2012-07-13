@@ -45,8 +45,8 @@ size_t mlock_limit()
 bool ptr_in_pool(const void* pool_ptr, size_t poolsize,
                  const void* buf_ptr, size_t bufsize)
    {
-   const size_t pool = reinterpret_cast<size_t>(pool_ptr);
-   const size_t buf = reinterpret_cast<size_t>(buf_ptr);
+   const uintptr_t pool = reinterpret_cast<uintptr_t>(pool_ptr);
+   const uintptr_t buf = reinterpret_cast<uintptr_t>(buf_ptr);
 
    if(buf < pool || buf >= pool + poolsize)
       return false;
@@ -227,7 +227,6 @@ mlock_allocator::mlock_allocator() :
       if(m_pool == static_cast<byte*>(MAP_FAILED))
          {
          m_pool = nullptr;
-         m_poolsize = 0;
          throw std::runtime_error("Failed to mmap locking_allocator pool");
          }
 
@@ -237,7 +236,6 @@ mlock_allocator::mlock_allocator() :
          {
          ::munmap(m_pool, m_poolsize);
          m_pool = nullptr;
-         m_poolsize = 0;
          throw std::runtime_error("Failed to lock pool in memory");
          }
 
@@ -253,7 +251,6 @@ mlock_allocator::~mlock_allocator()
       ::munlock(m_pool, m_poolsize);
       ::munmap(m_pool, m_poolsize);
       m_pool = nullptr;
-      m_poolsize = 0;
       }
    }
 

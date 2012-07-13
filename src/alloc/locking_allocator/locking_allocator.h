@@ -32,8 +32,9 @@ class BOTAN_DLL mlock_allocator
 
       ~mlock_allocator();
 
+      const size_t m_poolsize;
+
       std::mutex m_mutex;
-      size_t m_poolsize;
       std::vector<std::pair<size_t, size_t>> m_freelist;
       byte* m_pool;
    };
