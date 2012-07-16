@@ -54,7 +54,10 @@ void do_free(void* ptr, u32bit n, bool do_lock)
 */
 void* Malloc_Allocator::allocate(u32bit n)
    {
-   return do_malloc(n, false);
+   void* ptr = do_malloc(n, false);
+   if(!ptr)
+      throw Memory_Exhaustion();
+   return ptr;
    }
 
 /*
