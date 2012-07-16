@@ -14,6 +14,17 @@ namespace Botan {
 
 namespace TLS {
 
+namespace {
+
+void store_be24(byte* out, size_t val)
+   {
+   out[0] = get_byte<u32bit>(1, val);
+   out[1] = get_byte<u32bit>(2, val);
+   out[2] = get_byte<u32bit>(3, val);
+   }
+
+}
+
 std::vector<byte> Stream_Handshake_Writer::send(Handshake_Message& msg)
    {
    const std::vector<byte> buf = msg.serialize();
@@ -23,8 +34,7 @@ std::vector<byte> Stream_Handshake_Writer::send(Handshake_Message& msg)
 
    send_buf[0] = msg.type();
 
-   for(size_t i = 1; i != 4; ++i)
-     send_buf[i] = get_byte<u32bit>(i, buf_size);
+   store_be24(&send_buf[1], buf_size);
 
    send_buf += buf;
 
