@@ -8,14 +8,14 @@
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_extensions.h>
 #include <botan/internal/tls_reader.h>
-#include <botan/tls_record.h>
+#include <botan/internal/tls_handshake_writer.h>
 #include <botan/loadstor.h>
 
 namespace Botan {
 
 namespace TLS {
 
-New_Session_Ticket::New_Session_Ticket(Record_Writer& writer,
+New_Session_Ticket::New_Session_Ticket(Handshake_Writer& writer,
                                        Handshake_Hash& hash,
                                        const std::vector<byte>& ticket,
                                        u32bit lifetime) :
@@ -25,7 +25,7 @@ New_Session_Ticket::New_Session_Ticket(Record_Writer& writer,
    hash.update(writer.send(*this));
    }
 
-New_Session_Ticket::New_Session_Ticket(Record_Writer& writer,
+New_Session_Ticket::New_Session_Ticket(Handshake_Writer& writer,
                                        Handshake_Hash& hash) :
    m_ticket_lifetime_hint(0)
    {

@@ -37,7 +37,7 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
    {
    m_writer.set_version(Protocol_Version::SSL_V3);
 
-   m_state = new Handshake_State(this->new_handshake_reader());
+   m_state = new_handshake_state();
    m_state->set_expected_next(SERVER_HELLO);
 
    m_state->client_npn_cb = next_protocol;
@@ -54,7 +54,7 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
          if(session_info.srp_identifier() == srp_identifier)
             {
             m_state->client_hello = new Client_Hello(
-               m_writer,
+               m_state->handshake_writer(),
                m_state->hash,
                m_policy,
                m_rng,
@@ -70,7 +70,7 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
    if(!m_state->client_hello) // not resuming
       {
       m_state->client_hello = new Client_Hello(
-         m_writer,
+         m_state->handshake_writer(),
          m_state->hash,
          m_policy.pref_version(),
          m_policy,
@@ -84,9 +84,10 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
    m_secure_renegotiation.update(m_state->client_hello);
    }
 
-Handshake_Reader* Client::new_handshake_reader() const
+Handshake_State* Client::new_handshake_state()
    {
-   return new Stream_Handshake_Reader;
+   return new Handshake_State(new Stream_Handshake_Reader,
+                              new Stream_Handshake_Writer(m_writer));
    }
 
 /*
@@ -98,7 +99,7 @@ void Client::renegotiate(bool force_full_renegotiation)
       return; // currently in active handshake
 
    delete m_state;
-   m_state = new Handshake_State(this->new_handshake_reader());
+   m_state = new_handshake_state();
 
    m_state->set_expected_next(SERVER_HELLO);
 
@@ -108,7 +109,7 @@ void Client::renegotiate(bool force_full_renegotiation)
       if(m_session_manager.load_from_host_info(m_hostname, m_port, session_info))
          {
          m_state->client_hello = new Client_Hello(
-            m_writer,
+            m_state->handshake_writer(),
             m_state->hash,
             m_policy,
             m_rng,
@@ -122,7 +123,7 @@ void Client::renegotiate(bool force_full_renegotiation)
    if(!m_state->client_hello)
       {
       m_state->client_hello = new Client_Hello(
-         m_writer,
+         m_state->handshake_writer(),
          m_state->hash,
          m_reader.get_version(),
          m_policy,
@@ -367,13 +368,13 @@ void Client::process_handshake_msg(Handshake_Type type,
                                "tls-client",
                                m_hostname);
 
-         m_state->client_certs = new Certificate(m_writer,
+         m_state->client_certs = new Certificate(m_state->handshake_writer(),
                                                  m_state->hash,
                                                  client_certs);
          }
 
       m_state->client_kex =
-         new Client_Key_Exchange(m_writer,
+         new Client_Key_Exchange(m_state->handshake_writer(),
                                  m_state,
                                  m_policy,
                                  m_creds,
@@ -393,7 +394,7 @@ void Client::process_handshake_msg(Handshake_Type type,
                                     "tls-client",
                                     m_hostname);
 
-         m_state->client_verify = new Certificate_Verify(m_writer,
+         m_state->client_verify = new Certificate_Verify(m_state->handshake_writer(),
                                                          m_state,
                                                          m_policy,
                                                          m_rng,
@@ -410,10 +411,10 @@ void Client::process_handshake_msg(Handshake_Type type,
          const std::string protocol =
             m_state->client_npn_cb(m_state->server_hello->next_protocols());
 
-         m_state->next_protocol = new Next_Protocol(m_writer, m_state->hash, protocol);
+         m_state->next_protocol = new Next_Protocol(m_state->handshake_writer(), m_state->hash, protocol);
          }
 
-      m_state->client_finished = new Finished(m_writer, m_state, CLIENT);
+      m_state->client_finished = new Finished(m_state->handshake_writer(), m_state, CLIENT);
 
       if(m_state->server_hello->supports_session_ticket())
          m_state->set_expected_next(NEW_SESSION_TICKET);
@@ -452,7 +453,8 @@ void Client::process_handshake_msg(Handshake_Type type,
          m_writer.activate(CLIENT, m_state->suite, m_state->keys,
                            m_state->server_hello->compression_method());
 
-         m_state->client_finished = new Finished(m_writer, m_state, CLIENT);
+         m_state->client_finished = new Finished(m_state->handshake_writer(),
+                                                 m_state, CLIENT);
          }
 
       m_secure_renegotiation.update(m_state->client_finished, m_state->server_finished);

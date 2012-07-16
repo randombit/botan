@@ -35,8 +35,6 @@ class BOTAN_DLL Record_Writer
       void send(byte type, const std::vector<byte>& input)
          { send(type, &input[0], input.size()); }
 
-      std::vector<byte> send(class Handshake_Message& msg);
-
       void send_alert(const Alert& alert);
 
       void activate(Connection_Side side,

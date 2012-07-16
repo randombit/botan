@@ -56,7 +56,7 @@ class BOTAN_DLL Server : public Channel
 
       void alert_notify(const Alert& alert) override;
 
-      class Handshake_Reader* new_handshake_reader() const override;
+      class Handshake_State* new_handshake_state() override;
 
       const Policy& m_policy;
       RandomNumberGenerator& m_rng;

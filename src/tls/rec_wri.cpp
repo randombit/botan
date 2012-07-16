@@ -148,25 +148,6 @@ void Record_Writer::activate(Connection_Side side,
       throw Invalid_Argument("Record_Writer: Unknown hash " + mac_algo);
    }
 
-std::vector<byte> Record_Writer::send(Handshake_Message& msg)
-   {
-   const std::vector<byte> buf = msg.serialize();
-   std::vector<byte> send_buf(4);
-
-   const size_t buf_size = buf.size();
-
-   send_buf[0] = msg.type();
-
-   for(size_t i = 1; i != 4; ++i)
-     send_buf[i] = get_byte<u32bit>(i, buf_size);
-
-   send_buf += buf;
-
-   send(HANDSHAKE, &send_buf[0], send_buf.size());
-
-   return send_buf;
-   }
-
 /*
 * Send one or more records to the other side
 */

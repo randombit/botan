@@ -8,7 +8,7 @@
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_extensions.h>
-#include <botan/tls_record.h>
+#include <botan/internal/tls_handshake_writer.h>
 #include <botan/internal/assert.h>
 #include <botan/credentials_manager.h>
 #include <botan/pubkey.h>
@@ -47,7 +47,7 @@ secure_vector<byte> strip_leading_zeros(const secure_vector<byte>& input)
 /*
 * Create a new Client Key Exchange message
 */
-Client_Key_Exchange::Client_Key_Exchange(Record_Writer& writer,
+Client_Key_Exchange::Client_Key_Exchange(Handshake_Writer& writer,
                                          Handshake_State* state,
                                          const Policy& policy,
                                          Credentials_Manager& creds,

@@ -83,11 +83,11 @@ std::vector<std::string> Policy::allowed_ecc_curves() const
       "secp256k1",
       "secp224r1",
       "secp224k1",
-      //"secp192r1",
-      //"secp192k1",
-      //"secp160r2",
-      //"secp160r1",
-      //"secp160k1",
+      "secp192r1",
+      "secp192k1",
+      "secp160r2",
+      "secp160r1",
+      "secp160k1",
       });
    }
 

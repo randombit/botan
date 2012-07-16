@@ -85,33 +85,12 @@ u32bit bitmask_for_handshake_type(Handshake_Type type)
 /*
 * Initialize the SSL/TLS Handshake State
 */
-Handshake_State::Handshake_State(Handshake_Reader* reader)
+Handshake_State::Handshake_State(Handshake_Reader* reader,
+                                 Handshake_Writer* writer) :
+   m_handshake_reader(reader),
+   m_handshake_writer(writer),
+   m_version(Protocol_Version::SSL_V3)
    {
-   client_hello = nullptr;
-   server_hello = nullptr;
-   server_certs = nullptr;
-   server_kex = nullptr;
-   cert_req = nullptr;
-   server_hello_done = nullptr;
-   next_protocol = nullptr;
-   new_session_ticket = nullptr;
-
-   client_certs = nullptr;
-   client_kex = nullptr;
-   client_verify = nullptr;
-   client_finished = nullptr;
-   server_finished = nullptr;
-
-   m_handshake_reader = reader;
-
-   server_rsa_kex_key = nullptr;
-
-   m_version = Protocol_Version::SSL_V3;
-
-   hand_expecting_mask = 0;
-   hand_received_mask = 0;
-
-   allow_session_resumption = true;
    }
 
 void Handshake_State::set_version(const Protocol_Version& version)
@@ -123,33 +102,33 @@ void Handshake_State::confirm_transition_to(Handshake_Type handshake_msg)
    {
    const u32bit mask = bitmask_for_handshake_type(handshake_msg);
 
-   hand_received_mask |= mask;
+   m_hand_received_mask |= mask;
 
-   const bool ok = (hand_expecting_mask & mask); // overlap?
+   const bool ok = (m_hand_expecting_mask & mask); // overlap?
 
    if(!ok)
       throw Unexpected_Message("Unexpected state transition in handshake, got " +
                                std::to_string(handshake_msg) +
-                               " expected " + std::to_string(hand_expecting_mask) +
-                               " received " + std::to_string(hand_received_mask));
+                               " expected " + std::to_string(m_hand_expecting_mask) +
+                               " received " + std::to_string(m_hand_received_mask));
 
    /* We don't know what to expect next, so force a call to
       set_expected_next; if it doesn't happen, the next transition
       check will always fail which is what we want.
    */
-   hand_expecting_mask = 0;
+   m_hand_expecting_mask = 0;
    }
 
 void Handshake_State::set_expected_next(Handshake_Type handshake_msg)
    {
-   hand_expecting_mask |= bitmask_for_handshake_type(handshake_msg);
+   m_hand_expecting_mask |= bitmask_for_handshake_type(handshake_msg);
    }
 
 bool Handshake_State::received_handshake_msg(Handshake_Type handshake_msg) const
    {
    const u32bit mask = bitmask_for_handshake_type(handshake_msg);
 
-   return (hand_received_mask & mask);
+   return (m_hand_received_mask & mask);
    }
 
 std::string Handshake_State::srp_identifier() const
@@ -370,6 +349,7 @@ Handshake_State::~Handshake_State()
    delete server_finished;
 
    delete m_handshake_reader;
+   delete m_handshake_writer;
    }
 
 }

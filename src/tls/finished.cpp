@@ -6,7 +6,7 @@
 */
 
 #include <botan/internal/tls_messages.h>
-#include <botan/tls_record.h>
+#include <botan/internal/tls_handshake_writer.h>
 #include <memory>
 
 namespace Botan {
@@ -19,7 +19,7 @@ namespace {
 * Compute the verify_data
 */
 std::vector<byte> finished_compute_verify(Handshake_State* state,
-                                           Connection_Side side)
+                                          Connection_Side side)
    {
    if(state->version() == Protocol_Version::SSL_V3)
       {
@@ -66,7 +66,7 @@ std::vector<byte> finished_compute_verify(Handshake_State* state,
 /*
 * Create a new Finished message
 */
-Finished::Finished(Record_Writer& writer,
+Finished::Finished(Handshake_Writer& writer,
                    Handshake_State* state,
                    Connection_Side side)
    {
