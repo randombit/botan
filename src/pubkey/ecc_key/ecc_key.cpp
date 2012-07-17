@@ -236,9 +236,8 @@ PKCS8_Decoder* EC_PrivateKey::pkcs8_decoder(RandomNumberGenerator&)
             BER_Decoder(bits)
                .start_cons(SEQUENCE)
                .decode(version)
-               .decode(octstr_secret, OCTET_STRING)
-               .verify_end()
-               .end_cons();
+               .decode(octstr_secret, OCTET_STRING);
+            // ECC public key or domain params might follow, ignore
 
             key->m_private_value = BigInt::decode(octstr_secret, octstr_secret.size());
 
