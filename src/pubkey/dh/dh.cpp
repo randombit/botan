@@ -87,6 +87,9 @@ SecureVector<byte> DH_KA_Operation::agree(const byte w[], size_t w_len)
    {
    BigInt input = BigInt::decode(w, w_len);
 
+   if(input <= 1 || input >= p - 1)
+      throw Invalid_Argument("DH agreement - invalid key provided");
+
    BigInt r = blinder.unblind(powermod_x_p(blinder.blind(input)));
 
    return BigInt::encode_1363(r, p.bytes());
