@@ -44,9 +44,9 @@ Previous Stable Series (1.8)
 ----------------------------------------
 
 The latest version of the previous stable series, from branch
-``net.randombit.botan.1_8`` is :doc:`relnotes/1_8_13`:
-:tgz:`1.8.13` (:tgz_sig:`sig <1.8.13>`),
-:tbz:`1.8.13` (:tbz_sig:`sig <1.8.13>`)
+``net.randombit.botan.1_8`` is :doc:`relnotes/1_8_14`:
+:tgz:`1.8.14` (:tgz_sig:`sig <1.8.14>`),
+:tbz:`1.8.14` (:tbz_sig:`sig <1.8.14>`)
 
 Accessing Version Control
 ----------------------------------------
