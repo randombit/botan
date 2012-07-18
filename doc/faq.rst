@@ -45,6 +45,36 @@ source file which you can easily include in your existing application
 build. This feature is available in all versions of 1.10 and all later
 branches.
 
+Why do I get a SyntaxError when I run configure.py?
+----------------------------------------------------
+
+The ``configure.py`` script in 1.10 and later versions requires Python
+2.6 or higher. In Python 3 the exception catching syntax changed, and
+while 2.6 and 2.7 understand both syntaxes, 2.5 does not. If you see
+an error like this::
+
+   File "./configure.py", line 62
+     except OSError as e:
+                    ^
+   SyntaxError: invalid syntax
+
+Then you are using Python 2.5 (or earlier). For Python 2.5, a Perl
+one liner can fix the syntax::
+
+   perl -pi -e "s/except (.*) as (.*):/except $1, $2:/g" configure.py
+
+or in Python::
+
+   import re
+
+   lines = re.sub(r"except (.*) as (.*):", r"except \1, \2:",
+                  "".join(open("configure.py").readlines()))
+   open("configure.py", "w").write(lines)
+
+However Python 2.4 is missing a number of features and cannot be used
+to configure the build in 1.10; you'll need to upgrade to at least 2.5
+(or preferably 2.7 or 3.1).
+
 The self-test program can't locate the library
 -----------------------------------------------
 
