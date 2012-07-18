@@ -1,6 +1,5 @@
 
-* 1.8.14, ????-??-??
-
+* 1.8.14, 2012-07-18
  - The malloc allocator would return null instead of throwing in the
    event of an allocation failure, which could cause an application
    crash due to null pointer dereference where normally an exception
