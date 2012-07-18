@@ -56,7 +56,7 @@ void* Malloc_Allocator::allocate(u32bit n)
    {
    void* ptr = do_malloc(n, false);
    if(!ptr)
-      throw Memory_Exhaustion();
+      throw std::bad_alloc();
    return ptr;
    }
 
