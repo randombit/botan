@@ -80,12 +80,6 @@ void add_entropy_sources(RandomNumberGenerator* rng)
       );
 #endif
 
-#if defined(BOTAN_HAS_ENTROPY_SRC_EGD)
-   rng->add_entropy_source(
-      new EGD_EntropySource(split_on("/var/run/egd-pool:/dev/egd-pool", ':'))
-      );
-#endif
-
 #if defined(BOTAN_HAS_ENTROPY_SRC_CAPI)
    rng->add_entropy_source(new Win32_CAPI_EntropySource);
 #endif
@@ -105,6 +99,12 @@ void add_entropy_sources(RandomNumberGenerator* rng)
 #if defined(BOTAN_HAS_ENTROPY_SRC_UNIX)
    rng->add_entropy_source(
       new Unix_EntropySource(split_on("/bin:/sbin:/usr/bin:/usr/sbin", ':'))
+      );
+#endif
+
+#if defined(BOTAN_HAS_ENTROPY_SRC_EGD)
+   rng->add_entropy_source(
+      new EGD_EntropySource(split_on("/var/run/egd-pool:/dev/egd-pool", ':'))
       );
 #endif
    }
