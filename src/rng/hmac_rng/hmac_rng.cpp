@@ -44,11 +44,14 @@ void HMAC_RNG::randomize(byte out[], size_t length)
       {
       hmac_prf(prf, K, counter, "rng");
 
-      const size_t copied = std::min<size_t>(K.size(), length);
+      const size_t copied = std::min<size_t>(K.size() / 2, length);
 
       copy_mem(out, &K[0], copied);
       out += copied;
       length -= copied;
+
+      if(counter % 1024 == 0)
+         reseed(128);
       }
    }
 
@@ -60,10 +63,9 @@ void HMAC_RNG::reseed(size_t poll_bits)
    /*
    Using the terminology of E-t-E, XTR is the MAC function (normally
    HMAC) seeded with XTS (below) and we form SKM, the key material, by
-   fast polling each source, and then slow polling as many as we think
-   we need (in the following loop), and feeding all of the poll
-   results, along with any optional user input, along with, finally,
-   feedback of the current PRK value, into the extractor function.
+   polling as many sources as we think needed to reach our polling
+   goal. We then also include feedback of the current PRK so that
+   a bad poll doesn't wipe us out.
    */
 
    Entropy_Accumulator_BufferedComputation accum(*extractor, poll_bits);
@@ -107,12 +109,10 @@ void HMAC_RNG::reseed(size_t poll_bits)
 
    // Reset state
    zeroise(K);
-   counter = 0;
-   user_input_len = 0;
 
    /*
-   Consider ourselves seeded once we've collected an estimated 128 bits of
-   entropy in a single poll.
+   * Consider ourselves seeded once we've collected an estimated 128 bits of
+   * entropy in a single poll.
    */
    if(seeded == false && accum.bits_collected() >= 128)
       seeded = true;
@@ -123,19 +123,12 @@ void HMAC_RNG::reseed(size_t poll_bits)
 */
 void HMAC_RNG::add_entropy(const byte input[], size_t length)
    {
-   const size_t USER_ENTROPY_WATERSHED = 64;
-
-   extractor->update(input, length);
-   user_input_len += length;
-
    /*
-   * After we've accumulated at least USER_ENTROPY_WATERSHED bytes of
-   * user input, reseed.  This input will automatically have been
-   * included if reseed was called already, as it's just included in
-   * the extractor input.
+   * Simply include the data in the extractor input. During the
+   * next periodic reseed, the input will be incorporated into
+   * the state.
    */
-   if(user_input_len >= USER_ENTROPY_WATERSHED)
-      reseed(0);
+   extractor->update(input, length);
    }
 
 /*
@@ -155,7 +148,6 @@ void HMAC_RNG::clear()
    prf->clear();
    zeroise(K);
    counter = 0;
-   user_input_len = 0;
    seeded = false;
    }
 
@@ -184,7 +176,6 @@ HMAC_RNG::HMAC_RNG(MessageAuthenticationCode* extractor_mac,
    K.resize(prf->output_length());
 
    counter = 0;
-   user_input_len = 0;
    seeded = false;
 
    /*

@@ -52,7 +52,6 @@ class BOTAN_DLL HMAC_RNG : public RandomNumberGenerator
       bool seeded;
 
       secure_vector<byte> K, io_buffer;
-      size_t user_input_len;
       u32bit counter;
    };
 
