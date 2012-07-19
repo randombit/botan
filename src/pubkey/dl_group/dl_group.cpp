@@ -320,13 +320,14 @@ void DL_Group::PEM_decode(const std::string& pem)
 */
 BigInt DL_Group::make_dsa_generator(const BigInt& p, const BigInt& q)
    {
-   BigInt g, e = (p - 1) / q;
+   const BigInt e = (p - 1) / q;
 
-   BOTAN_ASSERT(e > 0, "q divides p-1");
+   if(e == 0 || (p - 1) % q > 0)
+      throw std::invalid_argument("make_dsa_generator q does not divide p-1");
 
    for(size_t i = 0; i != PRIME_TABLE_SIZE; ++i)
       {
-      g = power_mod(PRIMES[i], e, p);
+      BigInt g = power_mod(PRIMES[i], e, p);
       if(g > 1)
          return g;
       }
