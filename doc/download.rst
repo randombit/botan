@@ -17,7 +17,9 @@ Current Development Series (1.11)
 ----------------------------------------
 
 The latest version of the current development series, from branch
-``net.randombit.botan``, is :doc:`relnotes/1_11_0`
+``net.randombit.botan``, is :doc:`relnotes/1_11_0`:
+:tgz:`1.11.0` (:tgz_sig:`sig <1.11.0>`),
+:tbz:`1.11.0` (:tbz_sig:`sig <1.11.0>`)
 
 .. note::
 
