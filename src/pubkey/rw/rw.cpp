@@ -75,6 +75,8 @@ secure_vector<byte>
 RW_Signature_Operation::sign(const byte msg[], size_t msg_len,
                              RandomNumberGenerator& rng)
    {
+   rng.add_entropy(msg, msg_len);
+
    if(!blinder.initialized())
       {
       BigInt k(rng, std::min<size_t>(160, n.bits() - 1));

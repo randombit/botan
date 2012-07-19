@@ -90,15 +90,17 @@ BigInt RSA_Private_Operation::private_op(const BigInt& m) const
 
 secure_vector<byte>
 RSA_Private_Operation::sign(const byte msg[], size_t msg_len,
-                            RandomNumberGenerator&)
+                            RandomNumberGenerator& rng)
    {
+   rng.add_entropy(msg, msg_len);
+
    /* We don't check signatures against powermod_e_n here because
       PK_Signer checks verification consistency for all signature
       algorithms.
    */
 
-   BigInt m(msg, msg_len);
-   BigInt x = blinder.unblind(private_op(blinder.blind(m)));
+   const BigInt m(msg, msg_len);
+   const BigInt x = blinder.unblind(private_op(blinder.blind(m)));
    return BigInt::encode_1363(x, n.bytes());
    }
 
@@ -108,8 +110,8 @@ RSA_Private_Operation::sign(const byte msg[], size_t msg_len,
 secure_vector<byte>
 RSA_Private_Operation::decrypt(const byte msg[], size_t msg_len)
    {
-   BigInt m(msg, msg_len);
-   BigInt x = blinder.unblind(private_op(blinder.blind(m)));
+   const BigInt m(msg, msg_len);
+   const BigInt x = blinder.unblind(private_op(blinder.blind(m)));
 
    BOTAN_ASSERT(m == powermod_e_n(x),
                 "RSA decrypt passed consistency check");
