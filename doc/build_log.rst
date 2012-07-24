@@ -18,6 +18,8 @@ Date          Version   OS                    CPU                        Compile
 2012-07-09    1.11.0    Gentoo                Intel Core i7-860          GCC 4.7.0                      OK
 2012-07-09    1.11.0    Gentoo                Intel Core i7-860          Clang 3.1                      OK
 
+2011-07-24    1.10.3    Ubuntu 9.04           ARM926EJ-S                 GCC 4.3.3                      OK
+
 2011-07-13    1.10.3    QNX 6.4.1             x86                        GCC 4.3.3                      OK
 2012-07-11    1.10.3    Windows 7 x64         x86                        Visual C++ 16.00.30319.01      OK
 2012-07-11    1.10.3    Windows 7 x64         x86-64                     Visual C++ 16.00.30319.01      OK
