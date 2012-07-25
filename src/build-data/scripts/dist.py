@@ -8,14 +8,16 @@ Release script for botan (http://botan.randombit.net/)
 Distributed under the terms of the Botan license
 """
 
-import optparse
-import subprocess
-import logging
-import os
-import sys
-import shutil
-import tarfile
 import errno
+import logging
+import optparse
+import os
+import shlex
+import StringIO
+import shutil
+import subprocess
+import sys
+import tarfile
 
 def check_subprocess_results(subproc, name):
     (stdout, stderr) = subproc.communicate()
@@ -41,6 +43,45 @@ def run_monotone(db, args):
                            stderr=subprocess.PIPE)
 
     return check_subprocess_results(mtn, 'mtn')
+
+def get_certs(db, rev_id):
+    tokens = shlex.split(run_monotone(db, ['automate', 'certs', rev_id]))
+
+    def usable_cert(cert):
+        if 'signature' not in cert or cert['signature'] != 'ok':
+            return False
+        if 'trust' not in cert or cert['trust'] != 'trusted':
+            return False
+        if 'name' not in cert or 'value' not in cert:
+            return False
+        return True
+
+    def cert_builder(tokens):
+        pairs = zip(tokens[::2], tokens[1::2])
+        current_cert = {}
+        for pair in pairs:
+            if pair[0] == 'key':
+                if usable_cert(current_cert):
+                    name = current_cert['name']
+                    value = current_cert['value']
+                    current_cert = {}
+
+                    logging.debug('Cert %s "%s" for rev %s' % (name, value, rev_id))
+                    yield (name, value)
+
+            current_cert[pair[0]] = pair[1]
+
+    certs = dict(cert_builder(tokens))
+    return certs
+
+def datestamp(db, rev_id):
+    certs = get_certs(db, rev_id)
+
+    if 'date' in certs:
+        return int(certs['date'].replace('-','')[0:8])
+
+    logging.info('Could not retreive date for %s' % (rev_id))
+    return 0
 
 def gpg_sign(file, keyid):
     logging.info('Signing %s using PGP id %s' % (file, keyid))
@@ -141,6 +182,8 @@ def main(args = None):
             for line in contents:
                 if line == 'release_vc_rev = None\n':
                     yield 'release_vc_rev = \'mtn:%s\'\n' % (rev_id)
+                elif line == 'release_datestamp = 0\n':
+                    yield 'release_vc_rev = %d\n' % (datestamp(rev_iv))
                 else:
                     yield line
 
