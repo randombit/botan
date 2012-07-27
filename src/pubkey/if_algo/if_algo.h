@@ -45,6 +45,8 @@ class BOTAN_DLL IF_Scheme_PublicKey : public virtual Public_Key
 
       size_t max_input_bits() const { return (n.bits() - 1); }
 
+      size_t estimated_strength() const override;
+
    protected:
       IF_Scheme_PublicKey() {}
 

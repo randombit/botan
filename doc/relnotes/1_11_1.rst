@@ -1,0 +1,13 @@
+Version 1.11.1, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A new function :cpp:func:`Public_Key::estimated_strength` returns
+an estimate for the upper bound of the strength of the key. For
+instance for an RSA key, it will return an estimate of how many
+operations GNFS would take to factor the key.
+
+A new :cpp:class:`Path_Validation_Result` code has been added
+``SIGNATURE_METHOD_TOO_WEAK``. By default signatures created with keys
+below 80 bits of strength (as estimated by ``estimated_strength``) are
+rejected. This level can be modified using a parameter to the
+:cpp:class:`Path_Validation_Restrictions` constructor.

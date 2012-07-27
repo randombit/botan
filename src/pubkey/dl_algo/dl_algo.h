@@ -61,6 +61,8 @@ class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
       */
       virtual DL_Group::Format group_format() const = 0;
 
+      size_t estimated_strength() const override;
+
       DL_Scheme_PublicKey(const AlgorithmIdentifier& alg_id,
                           const secure_vector<byte>& key_bits,
                           DL_Group::Format group_format);

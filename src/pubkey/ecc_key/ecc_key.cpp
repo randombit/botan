@@ -18,6 +18,11 @@
 
 namespace Botan {
 
+size_t EC_PublicKey::estimated_strength() const
+   {
+   return domain().get_curve().get_p().bits() / 2;
+   }
+
 EC_PublicKey::EC_PublicKey(const EC_Group& dom_par,
                            const PointGFp& pub_point) :
    domain_params(dom_par), public_key(pub_point),

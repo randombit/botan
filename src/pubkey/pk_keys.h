@@ -28,6 +28,17 @@ class BOTAN_DLL Public_Key
       virtual std::string algo_name() const = 0;
 
       /**
+      * Return the estimated strength of the underlying key against
+      * the best currently known attack. Note that this ignores anything
+      * but pure attacks against the key itself and do not take into
+      * account padding schemes, usage mistakes, etc which might reduce
+      * the strength. However it does suffice to provide an upper bound.
+      *
+      * @return estimated strength in bits
+      */
+      virtual size_t estimated_strength() const = 0;
+
+      /**
       * Get the OID of the underlying public key scheme.
       * @return OID of the public key scheme
       */

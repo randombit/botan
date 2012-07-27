@@ -72,8 +72,10 @@ std::vector<X509_CRL> find_crls_from(const X509_Certificate& cert,
 
 }
 
-Path_Validation_Restrictions::Path_Validation_Restrictions(bool require_rev) :
-   m_require_revocation_information(require_rev)
+Path_Validation_Restrictions::Path_Validation_Restrictions(bool require_rev,
+                                                           size_t key_strength) :
+   m_require_revocation_information(require_rev),
+   m_minimum_key_strength(key_strength)
    {
    m_trusted_hashes.insert("SHA-160");
    m_trusted_hashes.insert("SHA-224");
@@ -96,7 +98,7 @@ std::set<std::string> Path_Validation_Result::trusted_hashes() const
    }
 
 std::string Path_Validation_Result::result_string() const
-    {
+   {
    switch(m_result)
       {
       case VERIFIED:
@@ -109,6 +111,9 @@ std::string Path_Validation_Result::result_string() const
          return "certificate chain too long";
       case SIGNATURE_ERROR:
          return "signature error";
+      case SIGNATURE_METHOD_TOO_WEAK:
+         return "signature method too weak";
+
       case POLICY_ERROR:
          return "policy error";
       case INVALID_USAGE:
@@ -142,11 +147,11 @@ std::string Path_Validation_Result::result_string() const
          return "CA certificate not allowed to issue certs";
       case CA_CERT_NOT_FOR_CRL_ISSUER:
          return "CA certificate not allowed to issue CRLs";
-
-      default:
-         return "Unknown code " + std::to_string(m_result);
       }
-    }
+
+   // default case
+   return "Unknown code " + std::to_string(m_result);
+   }
 
 Path_Validation_Result x509_path_validate(
    const X509_Certificate& end_cert,
@@ -244,8 +249,13 @@ Path_Validation_Result x509_path_validate(
          if(issuer.path_limit() < i)
             throw PKIX_Validation_Failure(Path_Validation_Result::CERT_CHAIN_TOO_LONG);
 
-         if(subject.check_signature(issuer.subject_public_key()) == false)
+         std::unique_ptr<Public_Key> issuer_key(issuer.subject_public_key());
+
+         if(subject.check_signature(*issuer_key) == false)
             throw PKIX_Validation_Failure(Path_Validation_Result::SIGNATURE_ERROR);
+
+         if(issuer_key->estimated_strength() < restrictions.minimum_key_strength())
+            throw PKIX_Validation_Failure(Path_Validation_Result::SIGNATURE_METHOD_TOO_WEAK);
          }
 
       for(size_t i = 1; i != cert_path.size(); ++i)

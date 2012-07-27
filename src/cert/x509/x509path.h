@@ -17,21 +17,29 @@ namespace Botan {
 class BOTAN_DLL Path_Validation_Restrictions
    {
    public:
-   Path_Validation_Restrictions(bool require_rev = false);
+      Path_Validation_Restrictions(bool require_rev = false,
+                                   size_t minimum_key_strength = 80);
 
-   Path_Validation_Restrictions(bool require_rev,
-                                const std::set<std::string>& trusted_hashes) :
-      m_require_revocation_information(require_rev),
-      m_trusted_hashes(trusted_hashes) {}
+      Path_Validation_Restrictions(bool require_rev,
+                                   size_t minimum_key_strength,
+                                   const std::set<std::string>& trusted_hashes) :
+         m_require_revocation_information(require_rev),
+         m_trusted_hashes(trusted_hashes),
+         m_minimum_key_strength(minimum_key_strength) {}
 
       bool require_revocation_information() const
          { return m_require_revocation_information; }
 
       const std::set<std::string>& trusted_hashes() const
          { return m_trusted_hashes; }
+
+      size_t minimum_key_strength() const
+         { return m_minimum_key_strength; }
+
    private:
       bool m_require_revocation_information;
       std::set<std::string> m_trusted_hashes;
+      size_t m_minimum_key_strength;
    };
 
 class BOTAN_DLL Path_Validation_Result
@@ -48,6 +56,8 @@ class BOTAN_DLL Path_Validation_Result
          SIGNATURE_ERROR,
          POLICY_ERROR,
          INVALID_USAGE,
+
+         SIGNATURE_METHOD_TOO_WEAK,
          UNTRUSTED_HASH,
 
          CERT_MULTIPLE_ISSUERS_FOUND,
