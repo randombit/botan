@@ -10,9 +10,10 @@ Pre Release Checks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Confirm that the release notes under ``doc/relnotes`` are accurate and
-complete, updating the datestamp in the release notes and in
-``readme.txt``. Additionally confirm the version number in
-``botan_version.py`` is correct. Change the entry for the appropriate branch in ``doc/download.rst`` to point to the new release.
+complete and that the version number in ``botan_version.py`` is
+correct. Update the release date in the release notes and in
+``readme.txt``, and change the entry for the appropriate branch in
+``doc/download.rst`` to point to the new release.
 
 Check in these changes (alone, with no other modifications) with a
 checkin message along the lines of "Update for X.Y.Z release", then
@@ -85,6 +86,6 @@ Post Release Process
 
 Immediately after the new release is created, update
 ``botan_version.py`` and ``readme.txt`` once again, incrementing the
-version number as appropriate and removing the release dates. For
-release notes, use "Not Yet Released" as the placeholder.
-
+version number and removing the release dates. Create a new release
+notes file for the next release. Use "Not Yet Released" as the
+placeholder for the release date.

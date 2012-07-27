@@ -1,7 +1,7 @@
 
 .. _x509_certificates:
 
-Certificate Handling
+X.509 Certificates and CRLs
 =================================
 
 A certificate is a binding between some identifying information

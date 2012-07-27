@@ -2,12 +2,14 @@
 Welcome
 ========================================
 
-Botan is a :doc:`BSD-licensed <license>` crypto library for C++. It
-provides applications with most any :doc:`cryptographic algorithm
-<algos>` you might be looking for, along with :doc:`tls`, :doc:`X.509
-certificates and CRLs <x509>`, a :doc:`pipeline-style message
-processing system <filters>`, and a wide variety of other features. A
-third party open source implementation of `SSHv2
+Botan is a crypto library for C++ released under the :doc:`BSD license
+<license>`.
+
+It provides most any :doc:`cryptographic algorithm <algos>` you might
+be looking for, along with :doc:`tls`, :doc:`X.509 certificates and
+CRLs <x509>`, a :doc:`pipeline-style message processing system
+<filters>`, and a wide variety of other features. A third party open
+source implementation of `SSHv2
 <http://www.netsieben.com/products/ssh/>`_ that uses botan is also
 available. In addition to C++ you can use botan from :doc:`Python
 <python>` or `Node.js <https://github.com/justinfreitag/node-botan>`_
@@ -31,8 +33,9 @@ x86 and x86-64 processors are also included.
 
 It runs on most common operating systems and can be used with a number
 of different commercial and open source compilers. The :doc:`build log
-<build_log>` contains information about recently tested targets. It is
-already included in most major package distributions, including
+<build_log>` contains information about recently tested targets. It
+has more than a few :doc:`known users <users>` and is already included
+in most major package distributions, including
 \
 `Fedora <https://admin.fedoraproject.org/pkgdb/acls/name/botan>`_,
 `EPEL <http://dl.fedoraproject.org/pub/epel/6/SRPMS/repoview/botan.html>`_ (for RHEL/CentOS),
@@ -46,8 +49,7 @@ already included in most major package distributions, including
 `Cygwin <http://cygwin.com/packages/botan/>`_,
 `MacPorts <http://www.macports.org/ports.php?by=name&amp;substr=botan>`_,
 `OpenPKG <http://www.openpkg.org/product/packages/?package=botan>`_, and
-`T2 SDE <http://www.t2-project.org/packages/botan.html>`_ and has
-more than a few :doc:`known users <users>`.
+`T2 SDE <http://www.t2-project.org/packages/botan.html>`_
 
 It was started as a personal project by `Jack Lloyd
 <http://www.randombit.net>`_,who continues to be the maintainer and

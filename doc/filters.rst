@@ -1,5 +1,5 @@
 
-Information Flow: Pipes and Filters
+Pipe/Filter Message Processing
 ========================================
 
 Many common uses of cryptography involve processing one or more

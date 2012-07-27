@@ -1,9 +1,9 @@
-Botan 1.11.0, 2012-07-19
+Botan 1.11.1, Not Yet Released
 http://botan.randombit.net/
 
 Botan is a C++ class library for performing a wide variety of
 cryptographic operations. It is released under the 2 clause BSD
-license; see doc/license.txt for the specifics. You can file bugs in
+license; see doc/license.rst for the specifics. You can file bugs in
 Bugzilla (http://bugs.randombit.net/) or by sending a report to the
 botan-devel mailing list. More information about the mailing list is
 at http://lists.randombit.net/mailman/listinfo/botan-devel/
