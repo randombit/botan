@@ -37,51 +37,9 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
    {
    m_writer.set_version(Protocol_Version::SSL_V3);
 
-   m_state = new_handshake_state();
-   m_state->set_expected_next(SERVER_HELLO);
+   const std::string srp_identifier = m_creds.srp_identifier("tls-client", m_hostname);
 
-   m_state->client_npn_cb = next_protocol;
-
-   const std::string srp_identifier = m_creds.srp_identifier("tls-client", hostname);
-
-   const bool send_npn_request = static_cast<bool>(next_protocol);
-
-   if(hostname != "")
-      {
-      Session session_info;
-      if(m_session_manager.load_from_host_info(m_hostname, m_port, session_info))
-         {
-         if(session_info.srp_identifier() == srp_identifier)
-            {
-            m_state->client_hello = new Client_Hello(
-               m_state->handshake_writer(),
-               m_state->hash,
-               m_policy,
-               m_rng,
-               m_secure_renegotiation.for_client_hello(),
-               session_info,
-               send_npn_request);
-
-            m_state->resume_master_secret = session_info.master_secret();
-            }
-         }
-      }
-
-   if(!m_state->client_hello) // not resuming
-      {
-      m_state->client_hello = new Client_Hello(
-         m_state->handshake_writer(),
-         m_state->hash,
-         m_policy.pref_version(),
-         m_policy,
-         m_rng,
-         m_secure_renegotiation.for_client_hello(),
-         send_npn_request,
-         m_hostname,
-         srp_identifier);
-      }
-
-   m_secure_renegotiation.update(m_state->client_hello);
+   initiate_handshake(false, srp_identifier, next_protocol);
    }
 
 Handshake_State* Client::new_handshake_state()
@@ -99,36 +57,57 @@ void Client::renegotiate(bool force_full_renegotiation)
       return; // currently in active handshake
 
    delete m_state;
-   m_state = new_handshake_state();
 
+   initiate_handshake(force_full_renegotiation);
+   }
+
+void Client::initiate_handshake(bool force_full_renegotiation,
+                                const std::string& srp_identifier,
+                                std::function<std::string (std::vector<std::string>)> next_protocol)
+   {
+   m_state = new_handshake_state();
    m_state->set_expected_next(SERVER_HELLO);
 
-   if(!force_full_renegotiation)
+   m_state->client_npn_cb = next_protocol;
+
+   const bool send_npn_request = static_cast<bool>(next_protocol);
+
+   if(!force_full_renegotiation && m_hostname != "")
       {
       Session session_info;
       if(m_session_manager.load_from_host_info(m_hostname, m_port, session_info))
          {
-         m_state->client_hello = new Client_Hello(
-            m_state->handshake_writer(),
-            m_state->hash,
-            m_policy,
-            m_rng,
-            m_secure_renegotiation.for_client_hello(),
-            session_info);
+         if(srp_identifier == "" || session_info.srp_identifier() == srp_identifier)
+            {
+            m_state->client_hello = new Client_Hello(
+               m_state->handshake_writer(),
+               m_state->hash,
+               m_policy,
+               m_rng,
+               m_secure_renegotiation.for_client_hello(),
+               session_info,
+               send_npn_request);
 
-         m_state->resume_master_secret = session_info.master_secret();
+            m_state->resume_master_secret = session_info.master_secret();
+            }
          }
       }
 
-   if(!m_state->client_hello)
+   const Protocol_Version version = m_reader.get_version().valid() ?
+         m_reader.get_version() : m_policy.pref_version();
+
+   if(!m_state->client_hello) // not resuming
       {
       m_state->client_hello = new Client_Hello(
          m_state->handshake_writer(),
          m_state->hash,
-         m_reader.get_version(),
+         version,
          m_policy,
          m_rng,
-         m_secure_renegotiation.for_client_hello());
+         m_secure_renegotiation.for_client_hello(),
+         send_npn_request,
+         m_hostname,
+         srp_identifier);
       }
 
    m_secure_renegotiation.update(m_state->client_hello);

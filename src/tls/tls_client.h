@@ -68,6 +68,11 @@ class BOTAN_DLL Client : public Channel
 
       void renegotiate(bool force_full_renegotiation = false) override;
    private:
+      void initiate_handshake(bool force_full_renegotiation,
+                              const std::string& srp_identifier = "",
+                              std::function<std::string (std::vector<std::string>)> next_protocol =
+                                 std::function<std::string (std::vector<std::string>)>());
+
       void process_handshake_msg(Handshake_Type type,
                                  const std::vector<byte>& contents) override;
 
