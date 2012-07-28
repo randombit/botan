@@ -33,6 +33,12 @@ class Handshake_Writer
          const std::vector<byte>& handshake_msg,
          Handshake_Type handshake_type) = 0;
 
+      Handshake_Writer() {}
+
+      Handshake_Writer(const Handshake_Writer&) = delete;
+
+      Handshake_Writer& operator=(const Handshake_Writer&) = delete;
+
       virtual ~Handshake_Writer() {}
    };
 
