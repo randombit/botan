@@ -25,22 +25,30 @@ void store_be24(byte* out, size_t val)
 
 }
 
-std::vector<byte> Stream_Handshake_Writer::send(Handshake_Message& msg)
+std::vector<byte>
+Stream_Handshake_Writer::format(const std::vector<byte>& msg,
+                                Handshake_Type type)
    {
-   const std::vector<byte> buf = msg.serialize();
-   std::vector<byte> send_buf(4);
+   std::vector<byte> send_buf(4 + msg.size());
 
-   const size_t buf_size = buf.size();
+   const size_t buf_size = msg.size();
 
-   send_buf[0] = msg.type();
+   send_buf[0] = type;
 
    store_be24(&send_buf[1], buf_size);
 
-   send_buf += buf;
-
-   m_writer.send(HANDSHAKE, &send_buf[0], send_buf.size());
+   copy_mem(&send_buf[4], &msg[0], msg.size());
 
    return send_buf;
+   }
+
+std::vector<byte> Stream_Handshake_Writer::send(Handshake_Message& msg)
+   {
+   const std::vector<byte> buf = format(msg.serialize(), msg.type());
+
+   m_writer.send(HANDSHAKE, &buf[0], buf.size());
+
+   return buf;
    }
 
 }

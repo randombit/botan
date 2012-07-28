@@ -271,7 +271,7 @@ void Server::process_handshake_msg(Handshake_Type type,
       if(type == CLIENT_HELLO_SSLV2)
          m_state->hash.update(contents);
       else
-         m_state->hash.update(type, contents);
+         m_state->hash.update(m_state->handshake_writer().format(contents, type));
       }
 
    if(type == CLIENT_HELLO || type == CLIENT_HELLO_SSLV2)
@@ -580,7 +580,7 @@ void Server::process_handshake_msg(Handshake_Type type,
       const bool sig_valid =
          m_state->client_verify->verify(m_peer_certs[0], m_state);
 
-      m_state->hash.update(type, contents);
+      m_state->hash.update(m_state->handshake_writer().format(contents, type));
 
       /*
       * Using DECRYPT_ERROR looks weird here, but per RFC 4346 is for
@@ -633,7 +633,7 @@ void Server::process_handshake_msg(Handshake_Type type,
          {
          // already sent finished if resuming, so this is a new session
 
-         m_state->hash.update(type, contents);
+         m_state->hash.update(m_state->handshake_writer().format(contents, type));
 
          Session session_info(
             m_state->server_hello->session_id(),

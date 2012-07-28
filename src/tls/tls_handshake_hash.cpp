@@ -1,6 +1,6 @@
 /*
 * TLS Handshake Hash
-* (C) 2004-2006,2011 Jack Lloyd
+* (C) 2004-2006,2011,2012 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -15,23 +15,11 @@ namespace Botan {
 
 namespace TLS {
 
-void Handshake_Hash::update(Handshake_Type handshake_type,
-                            const std::vector<byte>& handshake_msg)
-   {
-   update(static_cast<byte>(handshake_type));
-
-   const size_t record_length = handshake_msg.size();
-   for(size_t i = 0; i != 3; i++)
-      update(get_byte<u32bit>(i+1, record_length));
-
-   update(handshake_msg);
-   }
-
 /**
 * Return a TLS Handshake Hash
 */
 secure_vector<byte> Handshake_Hash::final(Protocol_Version version,
-                                         const std::string& mac_algo)
+                                          const std::string& mac_algo)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
 

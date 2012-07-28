@@ -181,7 +181,7 @@ void Client::process_handshake_msg(Handshake_Type type,
    m_state->confirm_transition_to(type);
 
    if(type != HANDSHAKE_CCS && type != FINISHED)
-      m_state->hash.update(type, contents);
+      m_state->hash.update(m_state->handshake_writer().format(contents, type));
 
    if(type == SERVER_HELLO)
       {
@@ -444,7 +444,7 @@ void Client::process_handshake_msg(Handshake_Type type,
          throw TLS_Exception(Alert::DECRYPT_ERROR,
                              "Finished message didn't verify");
 
-      m_state->hash.update(type, contents);
+      m_state->hash.update(m_state->handshake_writer().format(contents, type));
 
       if(!m_state->client_finished) // session resume case
          {

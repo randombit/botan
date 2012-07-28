@@ -29,6 +29,10 @@ class Handshake_Writer
    public:
       virtual std::vector<byte> send(Handshake_Message& msg) = 0;
 
+      virtual std::vector<byte> format(
+         const std::vector<byte>& handshake_msg,
+         Handshake_Type handshake_type) = 0;
+
       virtual ~Handshake_Writer() {}
    };
 
@@ -41,6 +45,10 @@ class Stream_Handshake_Writer : public Handshake_Writer
       Stream_Handshake_Writer(Record_Writer& writer) : m_writer(writer) {}
 
       std::vector<byte> send(Handshake_Message& msg) override;
+
+      std::vector<byte> format(
+         const std::vector<byte>& handshake_msg,
+         Handshake_Type handshake_type) override;
    private:
       Record_Writer& m_writer;
    };
