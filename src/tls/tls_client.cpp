@@ -39,7 +39,8 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
 
    const std::string srp_identifier = m_creds.srp_identifier("tls-client", m_hostname);
 
-   initiate_handshake(false, srp_identifier, next_protocol);
+   const Protocol_Version version = m_policy.pref_version();
+   initiate_handshake(false, version, srp_identifier, next_protocol);
    }
 
 Handshake_State* Client::new_handshake_state()
@@ -58,10 +59,13 @@ void Client::renegotiate(bool force_full_renegotiation)
 
    delete m_state;
 
-   initiate_handshake(force_full_renegotiation);
+   const Protocol_Version version = m_reader.get_version();
+
+   initiate_handshake(force_full_renegotiation, version);
    }
 
 void Client::initiate_handshake(bool force_full_renegotiation,
+                                Protocol_Version version,
                                 const std::string& srp_identifier,
                                 std::function<std::string (std::vector<std::string>)> next_protocol)
    {
@@ -92,9 +96,6 @@ void Client::initiate_handshake(bool force_full_renegotiation,
             }
          }
       }
-
-   const Protocol_Version version = m_reader.get_version().valid() ?
-         m_reader.get_version() : m_policy.pref_version();
 
    if(!m_state->client_hello) // not resuming
       {
