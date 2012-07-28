@@ -200,9 +200,8 @@ void doit(RandomNumberGenerator& rng,
             {
             std::cout << "Client initiated renegotiation\n";
             client.renegotiate((buf[0] == 'R'));
-           }
-
-         if(buf[0] == 'H')
+            }
+         else if(buf[0] == 'H')
             client.heartbeat(&buf[1], got-1);
          else
             client.send(buf, got);
