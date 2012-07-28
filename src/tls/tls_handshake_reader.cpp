@@ -12,6 +12,19 @@ namespace Botan {
 
 namespace TLS {
 
+namespace {
+
+inline size_t load_be24(const byte q[3])
+   {
+   return make_u32bit(0,
+                      q[0],
+                      q[1],
+                      q[2]);
+   }
+
+}
+
+
 void Stream_Handshake_Reader::add_input(const byte record[],
                                         size_t record_size)
    {
@@ -27,10 +40,7 @@ bool Stream_Handshake_Reader::have_full_record() const
    {
    if(m_queue.size() >= 4)
       {
-      const size_t length = make_u32bit(0,
-                                        m_queue[1],
-                                        m_queue[2],
-                                        m_queue[3]);
+      const size_t length = load_be24(&m_queue[1]);
 
       return (m_queue.size() >= length + 4);
       }
@@ -42,10 +52,7 @@ std::pair<Handshake_Type, std::vector<byte> > Stream_Handshake_Reader::get_next_
    {
    if(m_queue.size() >= 4)
       {
-      const size_t length = make_u32bit(0,
-                                        m_queue[1],
-                                        m_queue[2],
-                                        m_queue[3]);
+      const size_t length = load_be24(&m_queue[1]);
 
       if(m_queue.size() >= length + 4)
          {
