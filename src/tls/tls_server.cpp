@@ -91,6 +91,7 @@ bool check_for_resume(Session& session_info,
 */
 u16bit choose_ciphersuite(
    const Policy& policy,
+   Protocol_Version version,
    Credentials_Manager& creds,
    const std::map<std::string, std::vector<X509_Certificate> >& cert_chains,
    const Client_Hello* client_hello)
@@ -98,11 +99,15 @@ u16bit choose_ciphersuite(
    const bool have_srp = creds.attempt_srp("tls-server",
                                            client_hello->sni_hostname());
 
-   const std::vector<u16bit> client_suites = client_hello->ciphersuites();
-   const std::vector<u16bit> server_suites = ciphersuite_list(policy, have_srp);
+   const std::vector<u16bit> client_suites =
+      client_hello->ciphersuites();
+
+   const std::vector<u16bit> server_suites =
+      ciphersuite_list(policy, version, have_srp);
 
    if(server_suites.empty())
-      throw Internal_Error("Policy forbids us from negotiating any ciphersuite");
+      throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                          "Policy forbids us from negotiating any ciphersuite");
 
    const bool have_shared_ecc_curve =
       (policy.choose_curve(client_hello->supported_ecc_curves()) != "");
@@ -467,7 +472,11 @@ void Server::process_handshake_msg(Handshake_Type type,
             m_state->hash,
             make_hello_random(m_rng), // new session ID
             m_state->version(),
-            choose_ciphersuite(m_policy, m_creds, cert_chains, m_state->client_hello),
+            choose_ciphersuite(m_policy,
+                               m_state->version(),
+                               m_creds,
+                               cert_chains,
+                               m_state->client_hello),
             choose_compression(m_policy, m_state->client_hello->compression_methods()),
             m_state->client_hello->fragment_size(),
             m_secure_renegotiation.supported(),

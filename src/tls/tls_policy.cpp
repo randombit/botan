@@ -83,11 +83,11 @@ std::vector<std::string> Policy::allowed_ecc_curves() const
       "secp256k1",
       "secp224r1",
       "secp224k1",
-      "secp192r1",
-      "secp192k1",
-      "secp160r2",
-      "secp160r1",
-      "secp160k1",
+      //"secp192r1",
+      //"secp192k1",
+      //"secp160r2",
+      //"secp160r1",
+      //"secp160k1",
       });
    }
 
@@ -120,9 +120,7 @@ size_t Policy::minimum_dh_group_size() const
 */
 std::vector<byte> Policy::compression() const
    {
-   std::vector<byte> algs;
-   algs.push_back(NO_COMPRESSION);
-   return algs;
+   return std::vector<byte>{ NO_COMPRESSION };
    }
 
 u32bit Policy::session_ticket_lifetime() const
@@ -217,6 +215,7 @@ class Ciphersuite_Preference_Ordering
 }
 
 std::vector<u16bit> ciphersuite_list(const Policy& policy,
+                                     Protocol_Version version,
                                      bool have_srp)
    {
    const std::vector<std::string> ciphers = policy.allowed_ciphers();
@@ -231,6 +230,9 @@ std::vector<u16bit> ciphersuite_list(const Policy& policy,
    for(auto suite : Ciphersuite::all_known_ciphersuites())
       {
       if(!have_srp && suite.kex_algo() == "SRP_SHA")
+         continue;
+
+      if(version.is_datagram_protocol() && suite.cipher_algo() == "ARC4")
          continue;
 
       if(!value_exists(kex, suite.kex_algo()))

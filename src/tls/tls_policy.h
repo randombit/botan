@@ -126,6 +126,7 @@ class BOTAN_DLL Policy
 * Return allowed ciphersuites, in order of preference
 */
 std::vector<u16bit> ciphersuite_list(const Policy& policy,
+                                     Protocol_Version version,
                                      bool have_srp);
 
 }

@@ -25,7 +25,7 @@ std::string Protocol_Version::to_string() const
       return "TLS v1." + std::to_string(min-1);
 
    if(maj == 254) // DTLS 1.x
-      return "DTLS v1." + std::to_string(256 - min);
+      return "DTLS v1." + std::to_string(255 - min);
 
    // Some very new or very old protocol (or bogus data)
    return "Unknown " + std::to_string(maj) + "." + std::to_string(min);
