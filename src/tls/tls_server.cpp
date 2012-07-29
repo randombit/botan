@@ -219,7 +219,7 @@ void Server::renegotiate(bool force_full_renegotiation)
    if(m_state)
       return; // currently in handshake
 
-   m_state = new_handshake_state();
+   m_state.reset(new_handshake_state());
 
    m_state->allow_session_resumption = !force_full_renegotiation;
    m_state->set_expected_next(CLIENT_HELLO);
@@ -231,10 +231,7 @@ void Server::alert_notify(const Alert& alert)
    if(alert.type() == Alert::NO_RENEGOTIATION)
       {
       if(m_handshake_completed && m_state)
-         {
-         delete m_state;
-         m_state = nullptr;
-         }
+         m_state.reset();
       }
    }
 
@@ -246,7 +243,7 @@ void Server::read_handshake(byte rec_type,
    {
    if(rec_type == HANDSHAKE && !m_state)
       {
-      m_state = new_handshake_state();
+      m_state.reset(new_handshake_state());
       m_state->set_expected_next(CLIENT_HELLO);
       }
 
@@ -284,8 +281,7 @@ void Server::process_handshake_msg(Handshake_Type type,
       if(!m_policy.allow_insecure_renegotiation() &&
          !(m_secure_renegotiation.initial_handshake() || m_secure_renegotiation.supported()))
          {
-         delete m_state;
-         m_state = nullptr;
+         m_state.reset();
          send_alert(Alert(Alert::NO_RENEGOTIATION));
          return;
          }
@@ -405,7 +401,7 @@ void Server::process_handshake_msg(Handshake_Type type,
 
          m_state->suite = Ciphersuite::by_id(m_state->server_hello->ciphersuite());
 
-         m_state->keys = Session_Keys(m_state, session_info.master_secret(), true);
+         m_state->keys = Session_Keys(m_state.get(), session_info.master_secret(), true);
 
          if(!m_handshake_fn(session_info))
             {
@@ -446,7 +442,8 @@ void Server::process_handshake_msg(Handshake_Type type,
          m_writer.activate(SERVER, m_state->suite, m_state->keys,
                            m_state->server_hello->compression_method());
 
-         m_state->server_finished = new Finished(m_state->handshake_writer(), m_state, SERVER);
+         m_state->server_finished = new Finished(m_state->handshake_writer(),
+                                                 m_state.get(), SERVER);
 
          m_state->set_expected_next(HANDSHAKE_CCS);
          }
@@ -535,7 +532,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             {
             m_state->server_kex =
                new Server_Key_Exchange(m_state->handshake_writer(),
-                                       m_state,
+                                       m_state.get(),
                                        m_policy,
                                        m_creds,
                                        m_rng,
@@ -580,9 +577,16 @@ void Server::process_handshake_msg(Handshake_Type type,
       else
          m_state->set_expected_next(HANDSHAKE_CCS);
 
-      m_state->client_kex = new Client_Key_Exchange(contents, m_state, m_creds, m_policy, m_rng);
+      m_state->client_kex = new Client_Key_Exchange(contents,
+                                                    m_state.get(),
+                                                    m_creds,
+                                                    m_policy,
+                                                    m_rng);
 
-      m_state->keys = Session_Keys(m_state, m_state->client_kex->pre_master_secret(), false);
+      m_state->keys = Session_Keys(m_state.get(),
+                                   m_state->client_kex->pre_master_secret(),
+                                   false);
+
       }
    else if(type == CERTIFICATE_VERIFY)
       {
@@ -591,7 +595,7 @@ void Server::process_handshake_msg(Handshake_Type type,
       m_peer_certs = m_state->client_certs->cert_chain();
 
       const bool sig_valid =
-         m_state->client_verify->verify(m_peer_certs[0], m_state);
+         m_state->client_verify->verify(m_peer_certs[0], m_state.get());
 
       m_state->hash.update(m_state->handshake_writer().format(contents, type));
 
@@ -638,7 +642,7 @@ void Server::process_handshake_msg(Handshake_Type type,
 
       m_state->client_finished = new Finished(contents);
 
-      if(!m_state->client_finished->verify(m_state, CLIENT))
+      if(!m_state->client_finished->verify(m_state.get(), CLIENT))
          throw TLS_Exception(Alert::DECRYPT_ERROR,
                              "Finished message didn't verify");
 
@@ -695,17 +699,16 @@ void Server::process_handshake_msg(Handshake_Type type,
          m_writer.activate(SERVER, m_state->suite, m_state->keys,
                            m_state->server_hello->compression_method());
 
-         m_state->server_finished = new Finished(m_state->handshake_writer(), m_state, SERVER);
+         m_state->server_finished = new Finished(m_state->handshake_writer(),
+                                                 m_state.get(), SERVER);
          }
 
       m_secure_renegotiation.update(m_state->client_finished,
                                     m_state->server_finished);
 
       m_active_session = m_state->server_hello->session_id();
-      delete m_state;
-      m_state = nullptr;
+      m_state.reset();
       m_handshake_completed = true;
-
       }
    else
       throw Unexpected_Message("Unknown handshake message received");

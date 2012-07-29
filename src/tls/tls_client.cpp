@@ -57,7 +57,7 @@ void Client::renegotiate(bool force_full_renegotiation)
    if(m_state && m_state->client_hello)
       return; // currently in active handshake
 
-   delete m_state;
+   m_state.reset();
 
    const Protocol_Version version = m_reader.get_version();
 
@@ -69,7 +69,7 @@ void Client::initiate_handshake(bool force_full_renegotiation,
                                 const std::string& srp_identifier,
                                 std::function<std::string (std::vector<std::string>)> next_protocol)
    {
-   m_state = new_handshake_state();
+   m_state.reset(new_handshake_state());
    m_state->set_expected_next(SERVER_HELLO);
 
    m_state->client_npn_cb = next_protocol;
@@ -119,10 +119,7 @@ void Client::alert_notify(const Alert& alert)
    if(alert.type() == Alert::NO_RENEGOTIATION)
       {
       if(m_handshake_completed && m_state)
-         {
-         delete m_state;
-         m_state = nullptr;
-         }
+         m_state.reset();
       }
    }
 
@@ -145,8 +142,7 @@ void Client::process_handshake_msg(Handshake_Type type,
 
       if(!m_secure_renegotiation.supported() && !m_policy.allow_insecure_renegotiation())
          {
-         delete m_state;
-         m_state = nullptr;
+         m_state.reset();
 
          // RFC 5746 section 4.2
          send_alert(Alert(Alert::NO_RENEGOTIATION));
@@ -222,9 +218,9 @@ void Client::process_handshake_msg(Handshake_Type type,
             throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                                 "Server resumed session but with wrong version");
 
-         m_state->keys = Session_Keys(m_state,
-                                    m_state->resume_master_secret,
-                                    true);
+         m_state->keys = Session_Keys(m_state.get(),
+                                      m_state->resume_master_secret,
+                                      true);
 
          // The server is not strictly required to send us a new ticket
          if(m_state->server_hello->supports_session_ticket())
@@ -322,7 +318,7 @@ void Client::process_handshake_msg(Handshake_Type type,
 
       if(m_state->suite.sig_algo() != "")
          {
-         if(!m_state->server_kex->verify(m_peer_certs[0], m_state))
+         if(!m_state->server_kex->verify(m_peer_certs[0], m_state.get()))
             {
             throw TLS_Exception(Alert::DECRYPT_ERROR,
                                 "Bad signature on server key exchange");
@@ -355,14 +351,14 @@ void Client::process_handshake_msg(Handshake_Type type,
 
       m_state->client_kex =
          new Client_Key_Exchange(m_state->handshake_writer(),
-                                 m_state,
+                                 m_state.get(),
                                  m_policy,
                                  m_creds,
                                  m_peer_certs,
                                  m_hostname,
                                  m_rng);
 
-      m_state->keys = Session_Keys(m_state,
+      m_state->keys = Session_Keys(m_state.get(),
                                    m_state->client_kex->pre_master_secret(),
                                    false);
 
@@ -375,7 +371,7 @@ void Client::process_handshake_msg(Handshake_Type type,
                                     m_hostname);
 
          m_state->client_verify = new Certificate_Verify(m_state->handshake_writer(),
-                                                         m_state,
+                                                         m_state.get(),
                                                          m_policy,
                                                          m_rng,
                                                          private_key);
@@ -394,7 +390,8 @@ void Client::process_handshake_msg(Handshake_Type type,
          m_state->next_protocol = new Next_Protocol(m_state->handshake_writer(), m_state->hash, protocol);
          }
 
-      m_state->client_finished = new Finished(m_state->handshake_writer(), m_state, CLIENT);
+      m_state->client_finished = new Finished(m_state->handshake_writer(),
+                                              m_state.get(), CLIENT);
 
       if(m_state->server_hello->supports_session_ticket())
          m_state->set_expected_next(NEW_SESSION_TICKET);
@@ -420,7 +417,7 @@ void Client::process_handshake_msg(Handshake_Type type,
 
       m_state->server_finished = new Finished(contents);
 
-      if(!m_state->server_finished->verify(m_state, SERVER))
+      if(!m_state->server_finished->verify(m_state.get(), SERVER))
          throw TLS_Exception(Alert::DECRYPT_ERROR,
                              "Finished message didn't verify");
 
@@ -434,7 +431,7 @@ void Client::process_handshake_msg(Handshake_Type type,
                            m_state->server_hello->compression_method());
 
          m_state->client_finished = new Finished(m_state->handshake_writer(),
-                                                 m_state, CLIENT);
+                                                 m_state.get(), CLIENT);
          }
 
       m_secure_renegotiation.update(m_state->client_finished, m_state->server_finished);
@@ -471,8 +468,7 @@ void Client::process_handshake_msg(Handshake_Type type,
             m_session_manager.remove_entry(session_info.session_id());
          }
 
-      delete m_state;
-      m_state = nullptr;
+      m_state.reset();
       m_handshake_completed = true;
       m_active_session = session_info.session_id();
       }

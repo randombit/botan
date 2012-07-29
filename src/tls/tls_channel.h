@@ -16,6 +16,7 @@
 #include <botan/x509cert.h>
 #include <vector>
 #include <string>
+#include <memory>
 
 namespace Botan {
 
@@ -149,7 +150,7 @@ class BOTAN_DLL Channel
       std::function<void (const byte[], size_t, Alert)> m_proc_fn;
       std::function<bool (const Session&)> m_handshake_fn;
 
-      class Handshake_State* m_state;
+      std::unique_ptr<class Handshake_State> m_state;
 
       Session_Manager& m_session_manager;
       Record_Writer m_writer;

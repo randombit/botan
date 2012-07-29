@@ -35,8 +35,6 @@ Channel::Channel(std::function<void (const byte[], size_t)> socket_output_fn,
 
 Channel::~Channel()
    {
-   delete m_state;
-   m_state = nullptr;
    }
 
 size_t Channel::received_data(const byte buf[], size_t buf_size)
@@ -132,8 +130,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
 
                m_connection_closed = true;
 
-               delete m_state;
-               m_state = nullptr;
+               m_state.reset();
 
                m_writer.reset();
                m_reader.reset();
@@ -177,7 +174,7 @@ void Channel::read_handshake(byte rec_type,
    if(rec_type == HANDSHAKE)
       {
       if(!m_state)
-         m_state = new_handshake_state();
+         m_state.reset(new_handshake_state());
       m_state->handshake_reader().add_input(&rec_buf[0], rec_buf.size());
       }
 
@@ -261,9 +258,7 @@ void Channel::send_alert(const Alert& alert)
       {
       m_connection_closed = true;
 
-      delete m_state;
-      m_state = nullptr;
-
+      m_state.reset();
       m_writer.reset();
       }
    }
