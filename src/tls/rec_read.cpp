@@ -70,10 +70,10 @@ Protocol_Version Record_Reader::get_version() const
 /*
 * Set the keys for reading
 */
-void Record_Reader::activate(Connection_Side side,
-                             const Ciphersuite& suite,
-                             const Session_Keys& keys,
-                             byte compression_method)
+void Record_Reader::change_cipher_spec(Connection_Side side,
+                                       const Ciphersuite& suite,
+                                       const Session_Keys& keys,
+                                       byte compression_method)
    {
    m_cipher.reset();
    delete m_mac;

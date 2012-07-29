@@ -30,6 +30,7 @@ class BOTAN_DLL Record_Writer
    {
    public:
       void send(byte type, const byte input[], size_t length);
+
       void send(byte type, byte val) { send(type, &val, 1); }
 
       void send(byte type, const std::vector<byte>& input)
@@ -37,10 +38,10 @@ class BOTAN_DLL Record_Writer
 
       void send_alert(const Alert& alert);
 
-      void activate(Connection_Side side,
-                    const Ciphersuite& suite,
-                    const Session_Keys& keys,
-                    byte compression_method);
+      void change_cipher_spec(Connection_Side side,
+                              const Ciphersuite& suite,
+                              const Session_Keys& keys,
+                              byte compression_method);
 
       void set_version(Protocol_Version version);
 
@@ -95,10 +96,10 @@ class BOTAN_DLL Record_Reader
                        byte& msg_type,
                        std::vector<byte>& msg);
 
-      void activate(Connection_Side side,
-                    const Ciphersuite& suite,
-                    const Session_Keys& keys,
-                    byte compression_method);
+      void change_cipher_spec(Connection_Side side,
+                              const Ciphersuite& suite,
+                              const Session_Keys& keys,
+                              byte compression_method);
 
       void set_version(Protocol_Version version);
 

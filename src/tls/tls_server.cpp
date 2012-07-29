@@ -439,8 +439,10 @@ void Server::process_handshake_msg(Handshake_Type type,
 
          m_writer.send(CHANGE_CIPHER_SPEC, 1);
 
-         m_writer.activate(SERVER, m_state->suite, m_state->keys,
-                           m_state->server_hello->compression_method());
+         m_writer.change_cipher_spec(SERVER,
+                                     m_state->suite,
+                                     m_state->keys,
+                                     m_state->server_hello->compression_method());
 
          m_state->server_finished = new Finished(m_state->handshake_writer(),
                                                  m_state.get(), SERVER);
@@ -625,8 +627,10 @@ void Server::process_handshake_msg(Handshake_Type type,
       else
          m_state->set_expected_next(FINISHED);
 
-      m_reader.activate(SERVER, m_state->suite, m_state->keys,
-                        m_state->server_hello->compression_method());
+      m_reader.change_cipher_spec(SERVER,
+                                  m_state->suite,
+                                  m_state->keys,
+                                  m_state->server_hello->compression_method());
       }
    else if(type == NEXT_PROTOCOL)
       {
@@ -696,8 +700,10 @@ void Server::process_handshake_msg(Handshake_Type type,
 
          m_writer.send(CHANGE_CIPHER_SPEC, 1);
 
-         m_writer.activate(SERVER, m_state->suite, m_state->keys,
-                           m_state->server_hello->compression_method());
+         m_writer.change_cipher_spec(SERVER,
+                                     m_state->suite,
+                                     m_state->keys,
+                                     m_state->server_hello->compression_method());
 
          m_state->server_finished = new Finished(m_state->handshake_writer(),
                                                  m_state.get(), SERVER);
