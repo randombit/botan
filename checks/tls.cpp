@@ -141,7 +141,7 @@ void test_handshake(RandomNumberGenerator& rng)
 
    std::vector<byte> c2s_q, s2c_q, c2s_data, s2c_data;
 
-   auto handshake_complete = [](const TLS::Session& session)
+   auto handshake_complete = [](const TLS::Session& session) -> bool
    {
       std::cout << "Handshake complete, " << session.version().to_string()
       << " using " << session.ciphersuite().to_string() << "\n";
