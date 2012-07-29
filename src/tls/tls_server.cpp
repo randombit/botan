@@ -281,59 +281,6 @@ void Server::process_handshake_msg(Handshake_Type type,
 
    if(type == CLIENT_HELLO || type == CLIENT_HELLO_SSLV2)
       {
-      m_state->client_hello = new Client_Hello(contents, type);
-
-      if(m_state->client_hello->sni_hostname() != "")
-         m_hostname = m_state->client_hello->sni_hostname();
-
-      Protocol_Version client_version = m_state->client_hello->version();
-
-      if(!m_policy.acceptable_protocol_version(m_state->version()))
-         {
-         throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                             "Client version is unacceptable by policy");
-         }
-
-      if(!client_version.known_version())
-         {
-         /*
-         This isn't a version we know. This implies this is a later
-         version than any version defined as of 2012. Offer them
-         the latest version we know.
-         */
-         m_state->set_version(Protocol_Version::TLS_V12);
-         }
-      else
-         {
-         Protocol_Version prev_version = m_reader.get_version();
-
-         if(prev_version.valid() && client_version != prev_version)
-            {
-            /*
-            * If this is a renegotation, and the client has offered a
-            * later version than what it initially negotiated,
-            * negotiate the old version. This matches OpenSSL's
-            * behavior. If the client is offering a version earlier
-            * than what it initially negotiated, reject as a probable
-            * attack.
-            */
-            if(prev_version > client_version)
-               {
-               throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                                   "Client negotiated " +
-                                   prev_version.to_string() +
-                                   " then renegotiated with " +
-                                   client_version.to_string());
-               }
-
-            m_state->set_version(prev_version);
-            }
-         else
-            {
-            m_state->set_version(client_version);
-            }
-         }
-
       if(!m_policy.allow_insecure_renegotiation() &&
          !(m_secure_renegotiation.initial_handshake() || m_secure_renegotiation.supported()))
          {
@@ -341,6 +288,63 @@ void Server::process_handshake_msg(Handshake_Type type,
          m_state = nullptr;
          send_alert(Alert(Alert::NO_RENEGOTIATION));
          return;
+         }
+
+      m_state->client_hello = new Client_Hello(contents, type);
+
+      if(m_state->client_hello->sni_hostname() != "")
+         m_hostname = m_state->client_hello->sni_hostname();
+
+      Protocol_Version client_version = m_state->client_hello->version();
+
+      const Protocol_Version prev_version = m_reader.get_version();
+      const bool is_renegotiation = prev_version.valid();
+
+      if((is_renegotiation && client_version == prev_version) ||
+         (!is_renegotiation && client_version.known_version()))
+         {
+         /*
+         Common cases: new client hello with some known version, or a
+         renegotiation using the same version as previously
+         negotiated.
+         */
+
+         m_state->set_version(client_version);
+         }
+      else if(is_renegotiation && (client_version != prev_version))
+         {
+         /*
+         * If this is a renegotation, and the client has offered a
+         * later version than what it initially negotiated,
+         * negotiate the old version. This matches OpenSSL's
+         * behavior. If the client is offering a version earlier
+         * than what it initially negotiated, reject as a probable
+         * attack.
+         */
+         if(prev_version > client_version)
+            {
+            throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                                "Client negotiated " +
+                                prev_version.to_string() +
+                                " then renegotiated with " +
+                                client_version.to_string());
+            }
+         else
+            m_state->set_version(prev_version);
+         }
+      else
+         {
+         /*
+         New negotiation using a version we don't know. Offer
+         them the best we currently know.
+         */
+         m_state->set_version(client_version.best_known_match());
+         }
+
+      if(!m_policy.acceptable_protocol_version(m_state->version()))
+         {
+         throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                             "Client version is unacceptable by policy");
          }
 
       m_secure_renegotiation.update(m_state->client_hello);
