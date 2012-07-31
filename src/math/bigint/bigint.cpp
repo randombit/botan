@@ -25,9 +25,9 @@ BigInt::BigInt(u64bit n)
 
    const size_t limbs_needed = sizeof(u64bit) / sizeof(word);
 
-   reg.resize(4*limbs_needed);
+   m_reg.resize(4*limbs_needed);
    for(size_t i = 0; i != limbs_needed; ++i)
-      reg[i] = ((n >> (i*MP_WORD_BITS)) & MP_WORD_MASK);
+      m_reg[i] = ((n >> (i*MP_WORD_BITS)) & MP_WORD_MASK);
    }
 
 /*
@@ -35,8 +35,8 @@ BigInt::BigInt(u64bit n)
 */
 BigInt::BigInt(Sign s, size_t size)
    {
-   reg.resize(round_up<size_t>(size, 8));
-   signedness = s;
+   m_reg.resize(round_up<size_t>(size, 8));
+   m_signedness = s;
    }
 
 /*
@@ -44,7 +44,7 @@ BigInt::BigInt(Sign s, size_t size)
 */
 BigInt::BigInt(const BigInt& b)
    {
-   reg = b.get_reg();
+   m_reg = b.get_reg();
    set_sign(b.sign());
    }
 
@@ -95,7 +95,7 @@ BigInt::BigInt(RandomNumberGenerator& rng, size_t bits)
 void BigInt::grow_to(size_t n)
    {
    if(n > size())
-      reg.resize(round_up<size_t>(n, 8));
+      m_reg.resize(round_up<size_t>(n, 8));
    }
 
 /*
@@ -123,7 +123,7 @@ byte BigInt::byte_at(size_t n) const
    if(word_num >= size())
       return 0;
    else
-      return get_byte(WORD_BYTES - byte_num - 1, reg[word_num]);
+      return get_byte(WORD_BYTES - byte_num - 1, m_reg[word_num]);
    }
 
 /*
@@ -179,7 +179,7 @@ void BigInt::set_bit(size_t n)
    const size_t which = n / MP_WORD_BITS;
    const word mask = static_cast<word>(1) << (n % MP_WORD_BITS);
    if(which >= size()) grow_to(which + 1);
-   reg[which] |= mask;
+   m_reg[which] |= mask;
    }
 
 /*
@@ -190,7 +190,7 @@ void BigInt::clear_bit(size_t n)
    const size_t which = n / MP_WORD_BITS;
    const word mask = static_cast<word>(1) << (n % MP_WORD_BITS);
    if(which < size())
-      reg[which] &= ~mask;
+      m_reg[which] &= ~mask;
    }
 
 /*
@@ -205,9 +205,9 @@ void BigInt::mask_bits(size_t n)
    const word mask = (static_cast<word>(1) << (n % MP_WORD_BITS)) - 1;
 
    if(top_word < size())
-      clear_mem(&reg[top_word+1], size() - (top_word + 1));
+      clear_mem(&m_reg[top_word+1], size() - (top_word + 1));
 
-   reg[top_word] &= mask;
+   m_reg[top_word] &= mask;
    }
 
 /*
@@ -262,9 +262,9 @@ size_t BigInt::encoded_size(Base base) const
 void BigInt::set_sign(Sign s)
    {
    if(is_zero())
-      signedness = Positive;
+      m_signedness = Positive;
    else
-      signedness = s;
+      m_signedness = s;
    }
 
 /*
@@ -323,17 +323,17 @@ void BigInt::binary_decode(const byte buf[], size_t length)
    const size_t WORD_BYTES = sizeof(word);
 
    clear();
-   reg.resize(round_up<size_t>((length / WORD_BYTES) + 1, 8));
+   m_reg.resize(round_up<size_t>((length / WORD_BYTES) + 1, 8));
 
    for(size_t i = 0; i != length / WORD_BYTES; ++i)
       {
       const size_t top = length - WORD_BYTES*i;
       for(size_t j = WORD_BYTES; j > 0; --j)
-         reg[i] = (reg[i] << 8) | buf[top - j];
+         m_reg[i] = (m_reg[i] << 8) | buf[top - j];
       }
 
    for(size_t i = 0; i != length % WORD_BYTES; ++i)
-      reg[length / WORD_BYTES] = (reg[length / WORD_BYTES] << 8) | buf[i];
+      m_reg[length / WORD_BYTES] = (m_reg[length / WORD_BYTES] << 8) | buf[i];
    }
 
 }

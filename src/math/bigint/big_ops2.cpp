@@ -32,12 +32,12 @@ BigInt& BigInt::operator+=(const BigInt& y)
          {
          secure_vector<word> z(reg_size - 1);
          bigint_sub3(&z[0], y.data(), reg_size - 1, data(), x_sw);
-         copy_mem(&reg[0], &z[0], z.size());
+         copy_mem(&m_reg[0], &z[0], z.size());
          set_sign(y.sign());
          }
       else if(relative_size == 0)
          {
-         zeroise(reg);
+         zeroise(m_reg);
          set_sign(Positive);
          }
       else if(relative_size > 0)
@@ -159,7 +159,7 @@ word BigInt::operator%=(word mod)
        word result = (word_at(0) & (mod - 1));
        clear();
        grow_to(2);
-       reg[0] = result;
+       m_reg[0] = result;
        return result;
        }
 
@@ -171,9 +171,9 @@ word BigInt::operator%=(word mod)
    grow_to(2);
 
    if(remainder && sign() == BigInt::Negative)
-      reg[0] = mod - remainder;
+      m_reg[0] = mod - remainder;
    else
-      reg[0] = remainder;
+      m_reg[0] = remainder;
 
    set_sign(BigInt::Positive);
 

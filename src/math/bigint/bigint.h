@@ -128,19 +128,19 @@ class BOTAN_DLL BigInt
      * @param i a word index
      * @return the word at index i
      */
-     word& operator[](size_t i) { return reg[i]; }
+     word& operator[](size_t i) { return m_reg[i]; }
 
      /**
      * [] operator (array access)
      * @param i a word index
      * @return the word at index i
      */
-     const word& operator[](size_t i) const { return reg[i]; }
+     const word& operator[](size_t i) const { return m_reg[i]; }
 
      /**
      * Zeroize the BigInt
      */
-     void clear() { zeroise(reg); }
+     void clear() { zeroise(m_reg); }
 
      /**
      * Compare this to another BigInt
@@ -178,7 +178,7 @@ class BOTAN_DLL BigInt
         const size_t sw = sig_words();
 
         for(size_t i = 0; i != sw; ++i)
-           if(reg[i])
+           if(m_reg[i])
               return false;
         return true;
         }
@@ -236,7 +236,7 @@ class BOTAN_DLL BigInt
      * @return value at position n
      */
      word word_at(size_t n) const
-        { return ((n < size()) ? reg[n] : 0); }
+        { return ((n < size()) ? m_reg[n] : 0); }
 
      /**
      * Tests if the sign of the integer is negative
@@ -254,7 +254,7 @@ class BOTAN_DLL BigInt
      * Return the sign of the integer
      * @result the sign of the integer
      */
-     Sign sign() const { return (signedness); }
+     Sign sign() const { return (m_signedness); }
 
      /**
      * @result the opposite sign of the represented integer value
@@ -289,8 +289,8 @@ class BOTAN_DLL BigInt
      */
      size_t sig_words() const
         {
-        const word* x = &reg[0];
-        size_t sig = reg.size();
+        const word* x = &m_reg[0];
+        size_t sig = m_reg.size();
 
         while(sig && (x[sig-1] == 0))
            sig--;
@@ -314,14 +314,14 @@ class BOTAN_DLL BigInt
      * @result a pointer to the start of the internal register of
      * the integer value
      */
-     word* data() { return &reg[0]; }
+     word* data() { return &m_reg[0]; }
 
      /**
      * Return a pointer to the big integer word register
      * @result a pointer to the start of the internal register of
      * the integer value
      */
-     const word* data() const { return &reg[0]; }
+     const word* data() const { return &m_reg[0]; }
 
      /**
      * return a reference to the internal register containing the value
@@ -329,22 +329,22 @@ class BOTAN_DLL BigInt
      * with the internal register value (containing the integer
      * value)
      */
-     secure_vector<word>& get_reg() { return reg; }
+     secure_vector<word>& get_reg() { return m_reg; }
 
      /**
      * return a const reference to the internal register containing the value
      * @result a const reference to the word-array (secure_vector<word>)
      * with the internal register value (containing the integer value)
      */
-     const secure_vector<word>& get_reg() const { return reg; }
+     const secure_vector<word>& get_reg() const { return m_reg; }
 
      /**
      * Assign using a plain word array
      */
      void assign(const word x[], size_t length)
         {
-        reg.resize(length);
-        copy_mem(&reg[0], x, length);
+        m_reg.resize(length);
+        copy_mem(&m_reg[0], x, length);
         }
 
      /**
@@ -472,14 +472,14 @@ class BOTAN_DLL BigInt
      */
      void swap(BigInt& other)
         {
-        reg.swap(other.reg);
-        std::swap(signedness, other.signedness);
+        m_reg.swap(other.m_reg);
+        std::swap(m_signedness, other.m_signedness);
         }
 
      /**
      * Create empty BigInt
      */
-     BigInt() { signedness = Positive; }
+     BigInt() { m_signedness = Positive; }
 
      /**
      * Create BigInt from 64 bit integer
@@ -560,8 +560,8 @@ class BOTAN_DLL BigInt
      */
      BigInt& operator=(const BigInt&) = default;
    private:
-      secure_vector<word> reg;
-      Sign signedness;
+      secure_vector<word> m_reg;
+      Sign m_signedness;
    };
 
 /*
