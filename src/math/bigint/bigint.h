@@ -138,7 +138,8 @@ class BOTAN_DLL BigInt
      const word& operator[](size_t i) const { return m_reg[i]; }
 
      /**
-     * Zeroize the BigInt
+     * Zeroize the BigInt. The size of the underlying register is not
+     * modified.
      */
      void clear() { zeroise(m_reg); }
 
@@ -322,14 +323,6 @@ class BOTAN_DLL BigInt
      * the integer value
      */
      const word* data() const { return &m_reg[0]; }
-
-     /**
-     * return a reference to the internal register containing the value
-     * @result a reference to the word-array (secure_vector<word>)
-     * with the internal register value (containing the integer
-     * value)
-     */
-     secure_vector<word>& get_reg() { return m_reg; }
 
      /**
      * return a const reference to the internal register containing the value

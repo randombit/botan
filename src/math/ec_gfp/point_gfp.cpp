@@ -2,7 +2,7 @@
 * Point arithmetic on elliptic curves over GF(p)
 *
 * (C) 2007 Martin Doering, Christoph Ludwig, Falko Strenzke
-*     2008-2011 Jack Lloyd
+*     2008-2011,2012 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -45,11 +45,13 @@ void PointGFp::monty_mult(BigInt& z, const BigInt& x, const BigInt& y) const
    const size_t p_size = curve.get_p_words();
    const word p_dash = curve.get_p_dash();
 
-   secure_vector<word>& z_reg = z.get_reg();
-   z_reg.resize(2*p_size+1);
-   zeroise(z_reg);
+   const size_t output_size = 2*p_size + 1;
 
-   bigint_monty_mul(&z_reg[0], z_reg.size(),
+   z.grow_to(output_size);
+   z.clear();
+
+
+   bigint_monty_mul(z.data(), output_size,
                     x.data(), x.size(), x.sig_words(),
                     y.data(), y.size(), y.sig_words(),
                     p.data(), p_size, p_dash,
@@ -71,11 +73,12 @@ void PointGFp::monty_sqr(BigInt& z, const BigInt& x) const
    const size_t p_size = curve.get_p_words();
    const word p_dash = curve.get_p_dash();
 
-   secure_vector<word>& z_reg = z.get_reg();
-   z_reg.resize(2*p_size+1);
-   zeroise(z_reg);
+   const size_t output_size = 2*p_size + 1;
 
-   bigint_monty_sqr(&z_reg[0], z_reg.size(),
+   z.grow_to(output_size);
+   z.clear();
+
+   bigint_monty_sqr(z.data(), output_size,
                     x.data(), x.size(), x.sig_words(),
                     p.data(), p_size, p_dash,
                     &ws[0]);

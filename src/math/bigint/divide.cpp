@@ -65,7 +65,7 @@ void divide(const BigInt& x, const BigInt& y_arg, BigInt& q, BigInt& r)
       if(n < t)
          throw Internal_Error("BigInt division word sizes");
 
-      q.get_reg().resize(n - t + 1);
+      q.grow_to(n - t + 1);
       if(n <= t)
          {
          while(r > y) { r -= y; ++q; }

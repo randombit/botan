@@ -151,13 +151,13 @@ BigInt Montgomery_Exponentiator::execute() const
          }
       }
 
-   x.get_reg().resize(2*m_mod_words+1);
+   x.grow_to(2*m_mod_words + 1);
 
    bigint_monty_redc(&x[0], x.size(),
                      m_modulus.data(), m_mod_words, m_mod_prime,
                      &workspace[0]);
 
-   x.get_reg().resize(m_mod_words+1);
+   x.mask_bits(MP_WORD_BITS * (m_mod_words + 1));
 
    return x;
    }
