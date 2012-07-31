@@ -214,8 +214,8 @@ u32bit check_mul(const std::vector<std::string>& args)
       which is what we really want to test here (the simple n^2 multiply is
       pretty well tested at this point).
    */
-   a.grow_reg(32);
-   b.grow_reg(32);
+   a.grow_to(64);
+   b.grow_to(64);
 
    BigInt d = a * b;
    BigInt e = a;
@@ -236,8 +236,8 @@ u32bit check_sqr(const std::vector<std::string>& args)
    BigInt a(args[0]);
    BigInt b(args[1]);
 
-   a.grow_reg(16);
-   b.grow_reg(16);
+   a.grow_to(64);
+   b.grow_to(64);
 
    BigInt c = square(a);
    BigInt d = a * a;

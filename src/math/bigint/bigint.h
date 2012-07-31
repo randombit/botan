@@ -1,6 +1,6 @@
 /*
 * BigInt
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2008,2012 Jack Lloyd
 *     2007 FlexSecure
 *
 * Distributed under the terms of the Botan license
@@ -348,11 +348,9 @@ class BOTAN_DLL BigInt
         }
 
      /**
-     * Increase internal register buffer by n words
-     * @param n increase by n words
+     * Increase internal register buffer to at least n words
+     * @param n new size of register
      */
-     void grow_reg(size_t n);
-
      void grow_to(size_t n);
 
      /**

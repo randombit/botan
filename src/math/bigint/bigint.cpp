@@ -1,6 +1,6 @@
 /*
 * BigInt Base
-* (C) 1999-2011 Jack Lloyd
+* (C) 1999-2011,2012 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -87,14 +87,6 @@ BigInt::BigInt(RandomNumberGenerator& rng, size_t bits)
    {
    set_sign(Positive);
    randomize(rng, bits);
-   }
-
-/*
-* Grow the internal storage
-*/
-void BigInt::grow_reg(size_t n)
-   {
-   reg.resize(round_up<size_t>(size() + n, 8));
    }
 
 /*
