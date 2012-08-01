@@ -23,20 +23,20 @@ BigInt operator+(const BigInt& x, const BigInt& y)
    BigInt z(x.sign(), std::max(x_sw, y_sw) + 1);
 
    if((x.sign() == y.sign()))
-      bigint_add3(z.data(), x.data(), x_sw, y.data(), y_sw);
+      bigint_add3(z.mutable_data(), x.data(), x_sw, y.data(), y_sw);
    else
       {
       s32bit relative_size = bigint_cmp(x.data(), x_sw, y.data(), y_sw);
 
       if(relative_size < 0)
          {
-         bigint_sub3(z.data(), y.data(), y_sw, x.data(), x_sw);
+         bigint_sub3(z.mutable_data(), y.data(), y_sw, x.data(), x_sw);
          z.set_sign(y.sign());
          }
       else if(relative_size == 0)
          z.set_sign(BigInt::Positive);
       else if(relative_size > 0)
-         bigint_sub3(z.data(), x.data(), x_sw, y.data(), y_sw);
+         bigint_sub3(z.mutable_data(), x.data(), x_sw, y.data(), y_sw);
       }
 
    return z;
@@ -56,22 +56,22 @@ BigInt operator-(const BigInt& x, const BigInt& y)
    if(relative_size < 0)
       {
       if(x.sign() == y.sign())
-         bigint_sub3(z.data(), y.data(), y_sw, x.data(), x_sw);
+         bigint_sub3(z.mutable_data(), y.data(), y_sw, x.data(), x_sw);
       else
-         bigint_add3(z.data(), x.data(), x_sw, y.data(), y_sw);
+         bigint_add3(z.mutable_data(), x.data(), x_sw, y.data(), y_sw);
       z.set_sign(y.reverse_sign());
       }
    else if(relative_size == 0)
       {
       if(x.sign() != y.sign())
-         bigint_shl2(z.data(), x.data(), x_sw, 0, 1);
+         bigint_shl2(z.mutable_data(), x.data(), x_sw, 0, 1);
       }
    else if(relative_size > 0)
       {
       if(x.sign() == y.sign())
-         bigint_sub3(z.data(), x.data(), x_sw, y.data(), y_sw);
+         bigint_sub3(z.mutable_data(), x.data(), x_sw, y.data(), y_sw);
       else
-         bigint_add3(z.data(), x.data(), x_sw, y.data(), y_sw);
+         bigint_add3(z.mutable_data(), x.data(), x_sw, y.data(), y_sw);
       z.set_sign(x.sign());
       }
    return z;
@@ -87,13 +87,13 @@ BigInt operator*(const BigInt& x, const BigInt& y)
    BigInt z(BigInt::Positive, x.size() + y.size());
 
    if(x_sw == 1 && y_sw)
-      bigint_linmul3(z.data(), y.data(), y_sw, x.word_at(0));
+      bigint_linmul3(z.mutable_data(), y.data(), y_sw, x.word_at(0));
    else if(y_sw == 1 && x_sw)
-      bigint_linmul3(z.data(), x.data(), x_sw, y.word_at(0));
+      bigint_linmul3(z.mutable_data(), x.data(), x_sw, y.word_at(0));
    else if(x_sw && y_sw)
       {
       secure_vector<word> workspace(z.size());
-      bigint_mul(z.data(), z.size(), &workspace[0],
+      bigint_mul(z.mutable_data(), z.size(), &workspace[0],
                  x.data(), x.size(), x_sw,
                  y.data(), y.size(), y_sw);
       }
@@ -164,7 +164,7 @@ BigInt operator<<(const BigInt& x, size_t shift)
    const size_t x_sw = x.sig_words();
 
    BigInt y(x.sign(), x_sw + shift_words + (shift_bits ? 1 : 0));
-   bigint_shl2(y.data(), x.data(), x_sw, shift_words, shift_bits);
+   bigint_shl2(y.mutable_data(), x.data(), x_sw, shift_words, shift_bits);
    return y;
    }
 
@@ -183,7 +183,7 @@ BigInt operator>>(const BigInt& x, size_t shift)
                 x_sw = x.sig_words();
 
    BigInt y(x.sign(), x_sw - shift_words);
-   bigint_shr2(y.data(), x.data(), x_sw, shift_words, shift_bits);
+   bigint_shr2(y.mutable_data(), x.data(), x_sw, shift_words, shift_bits);
    return y;
    }
 

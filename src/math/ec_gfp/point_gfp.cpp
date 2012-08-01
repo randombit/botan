@@ -50,8 +50,7 @@ void PointGFp::monty_mult(BigInt& z, const BigInt& x, const BigInt& y) const
    z.grow_to(output_size);
    z.clear();
 
-
-   bigint_monty_mul(z.data(), output_size,
+   bigint_monty_mul(z.mutable_data(), output_size,
                     x.data(), x.size(), x.sig_words(),
                     y.data(), y.size(), y.sig_words(),
                     p.data(), p_size, p_dash,
@@ -78,7 +77,7 @@ void PointGFp::monty_sqr(BigInt& z, const BigInt& x) const
    z.grow_to(output_size);
    z.clear();
 
-   bigint_monty_sqr(z.data(), output_size,
+   bigint_monty_sqr(z.mutable_data(), output_size,
                     x.data(), x.size(), x.sig_words(),
                     p.data(), p_size, p_dash,
                     &ws[0]);

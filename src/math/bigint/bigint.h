@@ -311,16 +311,14 @@ class BOTAN_DLL BigInt
      size_t bits() const;
 
      /**
-     * Return a pointer to the big integer word register
-     * @result a pointer to the start of the internal register of
-     * the integer value
+     * Return a mutable pointer to the register
+     * @result a pointer to the start of the internal register
      */
-     word* data() { return &m_reg[0]; }
+     word* mutable_data() { return &m_reg[0]; }
 
      /**
-     * Return a pointer to the big integer word register
-     * @result a pointer to the start of the internal register of
-     * the integer value
+     * Return a const pointer to the register
+     * @result a pointer to the start of the internal register
      */
      const word* data() const { return &m_reg[0]; }
 
