@@ -124,13 +124,6 @@ class BOTAN_DLL BigInt
      bool operator !() const { return (!is_nonzero()); }
 
      /**
-     * [] operator (array access)
-     * @param i a word index
-     * @return the word at index i
-     */
-     const word& operator[](size_t i) const { return m_reg[i]; }
-
-     /**
      * Zeroize the BigInt. The size of the underlying register is not
      * modified.
      */

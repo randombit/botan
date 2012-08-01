@@ -1,6 +1,6 @@
 /*
 * Division Algorithm
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2012 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -55,7 +55,7 @@ void divide(const BigInt& x, const BigInt& y_arg, BigInt& q, BigInt& r)
    else if(compare > 0)
       {
       size_t shifts = 0;
-      word y_top = y[y.sig_words()-1];
+      word y_top = y.word_at(y.sig_words()-1);
       while(y_top < MP_WORD_TOP_BIT) { y_top <<= 1; ++shifts; }
       y <<= shifts;
       r <<= shifts;
@@ -92,11 +92,15 @@ void divide(const BigInt& x, const BigInt& y_arg, BigInt& q, BigInt& r)
          else
             q_words[j-t-1] = bigint_divop(x_j0, x_j1, y_t);
 
-         while(bigint_divcore(q[j-t-1], y_t, y.word_at(t-1),
+         while(bigint_divcore(q_words[j-t-1],
+                              y_t, y.word_at(t-1),
                               x_j0, x_j1, r.word_at(j-2)))
+            {
             q_words[j-t-1] -= 1;
+            }
 
-         r -= (q[j-t-1] * y) << (MP_WORD_BITS * (j-t-1));
+         r -= (q_words[j-t-1] * y) << (MP_WORD_BITS * (j-t-1));
+
          if(r.is_negative())
             {
             r += y << (MP_WORD_BITS * (j-t-1));

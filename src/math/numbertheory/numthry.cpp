@@ -148,7 +148,7 @@ size_t low_zero_bits(const BigInt& n)
       {
       for(size_t i = 0; i != n.size(); ++i)
          {
-         word x = n[i];
+         const word x = n.word_at(i);
 
          if(x)
             {

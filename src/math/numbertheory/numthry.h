@@ -108,9 +108,10 @@ BigInt BOTAN_DLL power_mod(const BigInt& b,
 BigInt BOTAN_DLL ressol(const BigInt& x, const BigInt& p);
 
 /**
-* @param x an integer
+* @param x a positive integer
 * @return count of the zero bits in x, or, equivalently, the largest
-* value of n such that 2^n divides x evently
+*         value of n such that 2^n divides x evenly. Returns zero if
+*         n is less than or equal to zero.
 */
 size_t BOTAN_DLL low_zero_bits(const BigInt& x);
 
