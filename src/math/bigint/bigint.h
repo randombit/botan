@@ -25,7 +25,7 @@ class BOTAN_DLL BigInt
      /**
      * Base enumerator for encoding and decoding
      */
-     enum Base { Octal = 8, Decimal = 10, Hexadecimal = 16, Binary = 256 };
+     enum Base { Decimal = 10, Hexadecimal = 16, Binary = 256 };
 
      /**
      * Sign symbol definitions for positive and negative numbers
@@ -466,10 +466,7 @@ class BOTAN_DLL BigInt
      /**
      * Create BigInt from a string. If the string starts with 0x the
      * rest of the string will be interpreted as hexadecimal digits.
-     * If the string starts with 0 and the second character is NOT an
-     * 'x' the string will be interpreted as octal digits. If the
-     * string starts with non-zero digit, it will be interpreted as a
-     * decimal number.
+     * Otherwise, it will be interpreted as a decimal number.
      *
      * @param str the string to parse for an integer value
      */

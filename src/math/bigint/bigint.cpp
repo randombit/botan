@@ -56,13 +56,19 @@ BigInt::BigInt(const std::string& str)
    Base base = Decimal;
    size_t markers = 0;
    bool negative = false;
-   if(str.length() > 0 && str[0] == '-') { markers += 1; negative = true; }
+
+   if(str.length() > 0 && str[0] == '-')
+      {
+      markers += 1;
+      negative = true;
+      }
 
    if(str.length() > markers + 2 && str[markers    ] == '0' &&
                                     str[markers + 1] == 'x')
-      { markers += 2; base = Hexadecimal; }
-   else if(str.length() > markers + 1 && str[markers] == '0')
-      { markers += 1; base = Octal; }
+      {
+      markers += 2;
+      base = Hexadecimal;
+      }
 
    *this = decode(reinterpret_cast<const byte*>(str.data()) + markers,
                   str.length() - markers, base);
@@ -248,8 +254,6 @@ size_t BigInt::encoded_size(Base base) const
       return bytes();
    else if(base == Hexadecimal)
       return 2*bytes();
-   else if(base == Octal)
-      return ((bits() + 2) / 3);
    else if(base == Decimal)
       return static_cast<size_t>((bits() * LOG_2_BASE_10) + 1);
    else

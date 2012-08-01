@@ -1,6 +1,6 @@
 /*
 * BigInt Encoding/Decoding
-* (C) 1999-2010 Jack Lloyd
+* (C) 1999-2010,2012 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -18,7 +18,9 @@ namespace Botan {
 void BigInt::encode(byte output[], const BigInt& n, Base base)
    {
    if(base == Binary)
+      {
       n.binary_encode(output);
+      }
    else if(base == Hexadecimal)
       {
       secure_vector<byte> binary(n.encoded_size(Binary));
@@ -26,18 +28,6 @@ void BigInt::encode(byte output[], const BigInt& n, Base base)
 
       hex_encode(reinterpret_cast<char*>(output),
                  &binary[0], binary.size());
-      }
-   else if(base == Octal)
-      {
-      BigInt copy = n;
-      const size_t output_size = n.encoded_size(Octal);
-      for(size_t j = 0; j != output_size; ++j)
-         {
-         output[output_size - 1 - j] =
-            Charset::digit2char(static_cast<byte>(copy % 8));
-
-         copy /= 8;
-         }
       }
    else if(base == Decimal)
       {
@@ -132,28 +122,23 @@ BigInt BigInt::decode(const byte buf[], size_t length, Base base)
 
       r.binary_decode(&binary[0], binary.size());
       }
-   else if(base == Decimal || base == Octal)
+   else if(base == Decimal)
       {
-      const size_t RADIX = ((base == Decimal) ? 10 : 8);
-      for(size_t j = 0; j != length; ++j)
+      for(size_t i = 0; i != length; ++i)
          {
-         if(Charset::is_space(buf[j]))
+         if(Charset::is_space(buf[i]))
             continue;
 
-         if(!Charset::is_digit(buf[j]))
+         if(!Charset::is_digit(buf[i]))
             throw Invalid_Argument("BigInt::decode: "
                                    "Invalid character in decimal input");
 
-         byte x = Charset::char2digit(buf[j]);
-         if(x >= RADIX)
-            {
-            if(RADIX == 10)
-               throw Invalid_Argument("BigInt: Invalid decimal string");
-            else
-               throw Invalid_Argument("BigInt: Invalid octal string");
-            }
+         const byte x = Charset::char2digit(buf[i]);
 
-         r *= RADIX;
+         if(x >= 10)
+            throw Invalid_Argument("BigInt: Invalid decimal string");
+
+         r *= 10;
          r += x;
          }
       }
