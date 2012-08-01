@@ -7,6 +7,7 @@
 
 #include <botan/divide.h>
 #include <botan/internal/mp_core.h>
+#include <botan/internal/mp_asmi.h>
 
 namespace Botan {
 
@@ -24,6 +25,29 @@ void sign_fixup(const BigInt& x, const BigInt& y, BigInt& q, BigInt& r)
       }
    if(y.sign() == BigInt::Negative)
       q.flip_sign();
+   }
+
+bool division_check(word q, word y2, word y1,
+                    word x3, word x2, word x1)
+   {
+   // Compute (y3,y2,y1) = (y2,y1) * q
+
+   word y3 = 0;
+   y1 = word_madd2(q, y1, &y3);
+   y2 = word_madd2(q, y2, &y3);
+
+   // Return (y3,y2,y1) >? (x3,x2,x1)
+
+   if(y3 > x3) return true;
+   if(y3 < x3) return false;
+
+   if(y2 > x2) return true;
+   if(y2 < x2) return false;
+
+   if(y1 > x1) return true;
+   if(y1 < x1) return false;
+
+   return false;
    }
 
 }
@@ -92,7 +116,7 @@ void divide(const BigInt& x, const BigInt& y_arg, BigInt& q, BigInt& r)
          else
             q_words[j-t-1] = bigint_divop(x_j0, x_j1, y_t);
 
-         while(bigint_divcore(q_words[j-t-1],
+         while(division_check(q_words[j-t-1],
                               y_t, y.word_at(t-1),
                               x_j0, x_j1, r.word_at(j-2)))
             {

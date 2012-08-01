@@ -126,12 +126,6 @@ void bigint_monty_sqr(word z[], size_t z_size,
                       const word p[], size_t p_size, word p_dash,
                       word workspace[]);
 
-/*
-* Division operation
-*/
-size_t bigint_divcore(word q, word y2, word y1,
-                      word x3, word x2, word x1);
-
 /**
 * Compare x and y
 */

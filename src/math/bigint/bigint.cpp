@@ -107,16 +107,23 @@ void BigInt::grow_to(size_t n)
 /*
 * Comparison Function
 */
-s32bit BigInt::cmp(const BigInt& n, bool check_signs) const
+s32bit BigInt::cmp(const BigInt& other, bool check_signs) const
    {
    if(check_signs)
       {
-      if(n.is_positive() && this->is_negative()) return -1;
-      if(n.is_negative() && this->is_positive()) return 1;
-      if(n.is_negative() && this->is_negative())
-         return (-bigint_cmp(data(), sig_words(), n.data(), n.sig_words()));
+      if(other.is_positive() && this->is_negative())
+         return -1;
+
+      if(other.is_negative() && this->is_positive())
+         return 1;
+
+      if(other.is_negative() && this->is_negative())
+         return (-bigint_cmp(this->data(), this->sig_words(),
+                             other.data(), other.sig_words()));
       }
-   return bigint_cmp(data(), sig_words(), n.data(), n.sig_words());
+
+   return bigint_cmp(this->data(), this->sig_words(),
+                     other.data(), other.sig_words());
    }
 
 /*
