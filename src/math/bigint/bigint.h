@@ -39,6 +39,88 @@ class BOTAN_DLL BigInt
         { DivideByZero() : Exception("BigInt divide by zero") {} };
 
      /**
+     * Create empty BigInt
+     */
+     BigInt() { m_signedness = Positive; }
+
+     /**
+     * Create BigInt from 64 bit integer
+     * @param n initial value of this BigInt
+     */
+     BigInt(u64bit n);
+
+     /**
+     * Copy Constructor
+     * @param other the BigInt to copy
+     */
+     BigInt(const BigInt& other);
+
+     /**
+     * Create BigInt from a string. If the string starts with 0x the
+     * rest of the string will be interpreted as hexadecimal digits.
+     * Otherwise, it will be interpreted as a decimal number.
+     *
+     * @param str the string to parse for an integer value
+     */
+     BigInt(const std::string& str);
+
+     /**
+     * Create a BigInt from an integer in a byte array
+     * @param buf the byte array holding the value
+     * @param length size of buf
+     * @param base is the number base of the integer in buf
+     */
+     BigInt(const byte buf[], size_t length, Base base = Binary);
+
+     /**
+     * Create a random BigInt of the specified size
+     * @param rng random number generator
+     * @param bits size in bits
+     */
+     BigInt(RandomNumberGenerator& rng, size_t bits);
+
+     /**
+     * Create BigInt of specified size, all zeros
+     * @param sign the sign
+     * @param n size of the internal register in words
+     */
+     BigInt(Sign sign, size_t n);
+
+     /**
+     * Move constructor
+     */
+     BigInt(BigInt&& other)
+        {
+        this->swap(other);
+        }
+
+     /**
+     * Move assignment
+     */
+     BigInt& operator=(BigInt&& other)
+        {
+        if(this != &other)
+           this->swap(other);
+
+        return (*this);
+        }
+
+     /**
+     * Copy assignment
+     */
+     BigInt& operator=(const BigInt&) = default;
+
+     /**
+     * Swap this value with another
+     * @param other BigInt to swap values with
+     */
+     void swap(BigInt& other)
+        {
+        m_reg.swap(other.m_reg);
+        std::swap(m_signedness, other.m_signedness);
+        }
+
+     /**
      * += operator
      * @param y the BigInt to add to this
      */
@@ -434,87 +516,6 @@ class BOTAN_DLL BigInt
      */
      static secure_vector<byte> encode_1363(const BigInt& n, size_t bytes);
 
-     /**
-     * Swap this value with another
-     * @param other BigInt to swap values with
-     */
-     void swap(BigInt& other)
-        {
-        m_reg.swap(other.m_reg);
-        std::swap(m_signedness, other.m_signedness);
-        }
-
-     /**
-     * Create empty BigInt
-     */
-     BigInt() { m_signedness = Positive; }
-
-     /**
-     * Create BigInt from 64 bit integer
-     * @param n initial value of this BigInt
-     */
-     BigInt(u64bit n);
-
-     /**
-     * Copy Constructor
-     * @param other the BigInt to copy
-     */
-     BigInt(const BigInt& other);
-
-     /**
-     * Create BigInt from a string. If the string starts with 0x the
-     * rest of the string will be interpreted as hexadecimal digits.
-     * Otherwise, it will be interpreted as a decimal number.
-     *
-     * @param str the string to parse for an integer value
-     */
-     BigInt(const std::string& str);
-
-     /**
-     * Create a BigInt from an integer in a byte array
-     * @param buf the byte array holding the value
-     * @param length size of buf
-     * @param base is the number base of the integer in buf
-     */
-     BigInt(const byte buf[], size_t length, Base base = Binary);
-
-     /**
-     * Create a random BigInt of the specified size
-     * @param rng random number generator
-     * @param bits size in bits
-     */
-     BigInt(RandomNumberGenerator& rng, size_t bits);
-
-     /**
-     * Create BigInt of specified size, all zeros
-     * @param sign the sign
-     * @param n size of the internal register in words
-     */
-     BigInt(Sign sign, size_t n);
-
-     /**
-     * Move constructor
-     */
-     BigInt(BigInt&& other)
-        {
-        this->swap(other);
-        }
-
-     /**
-     * Move assignment
-     */
-     BigInt& operator=(BigInt&& other)
-        {
-        if(this != &other)
-           this->swap(other);
-
-        return (*this);
-        }
-
-     /**
-     * Copy assignment
-     */
-     BigInt& operator=(const BigInt&) = default;
    private:
       secure_vector<word> m_reg;
       Sign m_signedness;
