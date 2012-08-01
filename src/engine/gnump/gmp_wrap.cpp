@@ -88,9 +88,9 @@ BigInt GMP_MPZ::to_bigint() const
    BigInt out(BigInt::Positive, (bytes() + sizeof(word) - 1) / sizeof(word));
    size_t dummy = 0;
 
-   auto reg = out.get_reg();
+   const word* reg = out.data();
 
-   mpz_export(&reg[0], &dummy, -1, sizeof(word), 0, 0, value);
+   mpz_export(reg, &dummy, -1, sizeof(word), 0, 0, value);
 
    if(mpz_sgn(value) < 0)
       out.flip_sign();

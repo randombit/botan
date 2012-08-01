@@ -268,7 +268,7 @@ class BOTAN_DLL BigInt
      * Give size of internal register
      * @result size of internal register in words
      */
-     size_t size() const { return get_reg().size(); }
+     size_t size() const { return m_reg.size(); }
 
      /**
      * Return how many words we need to hold this value
@@ -307,13 +307,6 @@ class BOTAN_DLL BigInt
      * @result a pointer to the start of the internal register
      */
      const word* data() const { return &m_reg[0]; }
-
-     /**
-     * return a const reference to the internal register containing the value
-     * @result a const reference to the word-array (secure_vector<word>)
-     * with the internal register value (containing the integer value)
-     */
-     const secure_vector<word>& get_reg() const { return m_reg; }
 
      /**
      * Assign using a plain word array

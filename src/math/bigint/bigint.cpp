@@ -42,10 +42,10 @@ BigInt::BigInt(Sign s, size_t size)
 /*
 * Copy constructor
 */
-BigInt::BigInt(const BigInt& b)
+BigInt::BigInt(const BigInt& other)
    {
-   m_reg = b.get_reg();
-   set_sign(b.sign());
+   m_reg = other.m_reg;
+   m_signedness = other.m_signedness;
    }
 
 /*
