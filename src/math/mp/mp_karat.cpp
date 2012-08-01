@@ -253,10 +253,7 @@ void bigint_mul(word z[], size_t z_size, word workspace[],
       const size_t N = karatsuba_size(z_size, x_size, x_sw, y_size, y_sw);
 
       if(N)
-         {
-         clear_mem(workspace, 2*N);
          karatsuba_mul(z, x, y, N, workspace);
-         }
       else
          bigint_simple_mul(z, x, x_sw, y, y_sw);
       }
@@ -297,10 +294,7 @@ void bigint_sqr(word z[], size_t z_size, word workspace[],
       const size_t N = karatsuba_size(z_size, x_size, x_sw);
 
       if(N)
-         {
-         clear_mem(workspace, 2*N);
          karatsuba_sqr(z, x, N, workspace);
-         }
       else
          bigint_simple_sqr(z, x, x_sw);
       }

@@ -98,15 +98,17 @@ void bigint_linmul3(word z[], const word x[], size_t x_size, word y);
 
 /**
 * Montgomery Reduction
-* @param z integer to reduce (also output in first p_size+1 words)
-* @param z_size size of z (should be >= 2*p_size+1)
+* @param z integer to reduce, of size exactly 2*(p_size+1).
+           Output is in the first p_size+1 words, higher
+           words are set to zero.
 * @param p modulus
 * @param p_size size of p
 * @param p_dash Montgomery value
 * @param workspace array of at least 2*(p_size+1) words
 */
-void bigint_monty_redc(word z[], size_t z_size,
-                       const word p[], size_t p_size, word p_dash,
+void bigint_monty_redc(word z[],
+                       const word p[], size_t p_size,
+                       word p_dash,
                        word workspace[]);
 
 /*

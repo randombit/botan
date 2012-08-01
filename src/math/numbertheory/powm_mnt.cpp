@@ -90,7 +90,6 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
                     m_modulus.data(), m_mod_words, m_mod_prime,
                     &workspace[0]);
 
-   z.mask_bits(BOTAN_MP_WORD_BITS * (m_mod_words + 1));
    m_g[0] = z;
 
    const BigInt& x = m_g[0];
@@ -101,15 +100,12 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
       const BigInt& y = m_g[i-1];
       const size_t y_sig = y.sig_words();
 
-      z.clear();
-
       bigint_monty_mul(z.mutable_data(), z.size(),
                        x.data(), x.size(), x_sig,
                        y.data(), y.size(), y_sig,
                        m_modulus.data(), m_mod_words, m_mod_prime,
                        &workspace[0]);
 
-      z.mask_bits(BOTAN_MP_WORD_BITS * (m_mod_words + 1));
       m_g[i] = z;
       }
    }
@@ -132,14 +128,11 @@ BigInt Montgomery_Exponentiator::execute() const
       {
       for(size_t k = 0; k != m_window_bits; ++k)
          {
-         z.clear();
-
          bigint_monty_sqr(z.mutable_data(), z_size,
                           x.data(), x.size(), x.sig_words(),
                           m_modulus.data(), m_mod_words, m_mod_prime,
                           &workspace[0]);
 
-         z.mask_bits(BOTAN_MP_WORD_BITS * (m_mod_words + 1));
          x = z;
          }
 
@@ -147,26 +140,21 @@ BigInt Montgomery_Exponentiator::execute() const
          {
          const BigInt& y = m_g[nibble-1];
 
-         z.clear();
-
          bigint_monty_mul(z.mutable_data(), z_size,
                           x.data(), x.size(), x.sig_words(),
                           y.data(), y.size(), y.sig_words(),
                           m_modulus.data(), m_mod_words, m_mod_prime,
                           &workspace[0]);
 
-         z.mask_bits(BOTAN_MP_WORD_BITS * (m_mod_words + 1));
          x = z;
          }
       }
 
    x.grow_to(2*m_mod_words + 1);
 
-   bigint_monty_redc(x.mutable_data(), x.size(),
+   bigint_monty_redc(x.mutable_data(),
                      m_modulus.data(), m_mod_words, m_mod_prime,
                      &workspace[0]);
-
-   x.mask_bits(MP_WORD_BITS * (m_mod_words + 1));
 
    return x;
    }

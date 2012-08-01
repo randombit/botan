@@ -18,10 +18,12 @@ extern "C" {
 /*
 * Montgomery Reduction Algorithm
 */
-void bigint_monty_redc(word z[], size_t z_size,
+void bigint_monty_redc(word z[],
                        const word p[], size_t p_size,
                        word p_dash, word ws[])
    {
+   const size_t z_size = 2*(p_size+1);
+
    const size_t blocks_of_8 = p_size - (p_size % 8);
 
    for(size_t i = 0; i != p_size; ++i)
@@ -76,7 +78,7 @@ void bigint_monty_mul(word z[], size_t z_size,
               &x[0], x_size, x_sw,
               &y[0], y_size, y_sw);
 
-   bigint_monty_redc(&z[0], z_size,
+   bigint_monty_redc(&z[0],
                      &p[0], p_size, p_dash,
                      &ws[0]);
    }
@@ -89,7 +91,7 @@ void bigint_monty_sqr(word z[], size_t z_size,
    bigint_sqr(&z[0], z_size, &ws[0],
               &x[0], x_size, x_sw);
 
-   bigint_monty_redc(&z[0], z_size,
+   bigint_monty_redc(&z[0],
                      &p[0], p_size, p_dash,
                      &ws[0]);
    }
