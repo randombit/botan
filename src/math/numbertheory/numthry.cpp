@@ -8,6 +8,7 @@
 #include <botan/numthry.h>
 #include <botan/reducer.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/mp_core.h>
 #include <algorithm>
 
 namespace Botan {
@@ -296,6 +297,45 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
    while(D >= mod) D -= mod;
 
    return D;
+   }
+
+word monty_inverse(word input)
+   {
+   word b = input;
+   word x2 = 1, x1 = 0, y2 = 0, y1 = 1;
+
+   // First iteration, a = n+1
+   word q = bigint_divop(1, 0, b);
+   word r = (MP_WORD_MAX - q*b) + 1;
+   word x = x2 - q*x1;
+   word y = y2 - q*y1;
+
+   word a = b;
+   b = r;
+   x2 = x1;
+   x1 = x;
+   y2 = y1;
+   y1 = y;
+
+   while(b > 0)
+      {
+      q = a / b;
+      r = a - q*b;
+      x = x2 - q*x1;
+      y = y2 - q*y1;
+
+      a = b;
+      b = r;
+      x2 = x1;
+      x1 = x;
+      y2 = y1;
+      y1 = y;
+      }
+
+   // Now invert in addition space
+   y2 = (MP_WORD_MAX - y2) + 1;
+
+   return y2;
    }
 
 /*

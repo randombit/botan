@@ -107,6 +107,13 @@ BigInt BOTAN_DLL power_mod(const BigInt& b,
 */
 BigInt BOTAN_DLL ressol(const BigInt& x, const BigInt& p);
 
+/*
+* Compute -input^-1 mod 2^MP_WORD_BITS. Returns zero if input
+* is even. If input is odd, input and 2^n are relatively prime
+* and an inverse exists.
+*/
+word BOTAN_DLL monty_inverse(word input);
+
 /**
 * @param x a positive integer
 * @return count of the zero bits in x, or, equivalently, the largest
