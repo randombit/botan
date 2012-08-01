@@ -128,13 +128,6 @@ class BOTAN_DLL BigInt
      * @param i a word index
      * @return the word at index i
      */
-     word& operator[](size_t i) { return m_reg[i]; }
-
-     /**
-     * [] operator (array access)
-     * @param i a word index
-     * @return the word at index i
-     */
      const word& operator[](size_t i) const { return m_reg[i]; }
 
      /**

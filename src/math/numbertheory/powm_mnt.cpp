@@ -153,7 +153,7 @@ BigInt Montgomery_Exponentiator::execute() const
 
    x.grow_to(2*m_mod_words + 1);
 
-   bigint_monty_redc(&x[0], x.size(),
+   bigint_monty_redc(x.mutable_data(), x.size(),
                      m_modulus.data(), m_mod_words, m_mod_prime,
                      &workspace[0]);
 

@@ -66,6 +66,9 @@ void divide(const BigInt& x, const BigInt& y_arg, BigInt& q, BigInt& r)
          throw Internal_Error("BigInt division word sizes");
 
       q.grow_to(n - t + 1);
+
+      word* q_words = q.mutable_data();
+
       if(n <= t)
          {
          while(r > y) { r -= y; ++q; }
@@ -76,7 +79,7 @@ void divide(const BigInt& x, const BigInt& y_arg, BigInt& q, BigInt& r)
 
       BigInt temp = y << (MP_WORD_BITS * (n-t));
 
-      while(r >= temp) { r -= temp; ++q[n-t]; }
+      while(r >= temp) { r -= temp; q_words[n-t] += 1; }
 
       for(size_t j = n; j != t; --j)
          {
@@ -85,19 +88,19 @@ void divide(const BigInt& x, const BigInt& y_arg, BigInt& q, BigInt& r)
          const word y_t  = y.word_at(t);
 
          if(x_j0 == y_t)
-            q[j-t-1] = MP_WORD_MAX;
+            q_words[j-t-1] = MP_WORD_MAX;
          else
-            q[j-t-1] = bigint_divop(x_j0, x_j1, y_t);
+            q_words[j-t-1] = bigint_divop(x_j0, x_j1, y_t);
 
          while(bigint_divcore(q[j-t-1], y_t, y.word_at(t-1),
                               x_j0, x_j1, r.word_at(j-2)))
-            --q[j-t-1];
+            q_words[j-t-1] -= 1;
 
          r -= (q[j-t-1] * y) << (MP_WORD_BITS * (j-t-1));
          if(r.is_negative())
             {
             r += y << (MP_WORD_BITS * (j-t-1));
-            --q[j-t-1];
+            q_words[j-t-1] -= 1;
             }
          }
       r >>= shifts;
