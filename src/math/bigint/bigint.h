@@ -304,15 +304,6 @@ class BOTAN_DLL BigInt
      const word* data() const { return &m_reg[0]; }
 
      /**
-     * Assign using a plain word array
-     */
-     void assign(const word x[], size_t length)
-        {
-        m_reg.resize(length);
-        copy_mem(&m_reg[0], x, length);
-        }
-
-     /**
      * Increase internal register buffer to at least n words
      * @param n new size of register
      */
@@ -362,7 +353,6 @@ class BOTAN_DLL BigInt
      static BigInt random_integer(RandomNumberGenerator& rng,
                                   const BigInt& min,
                                   const BigInt& max);
-
 
      /**
      * Create a power of two

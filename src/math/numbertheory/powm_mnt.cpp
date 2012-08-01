@@ -1,6 +1,6 @@
 /*
 * Montgomery Exponentiation
-* (C) 1999-2010 Jack Lloyd
+* (C) 1999-2010,2012 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -79,18 +79,19 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
 
    m_g.resize((1 << m_window_bits) - 1);
 
-   secure_vector<word> z(2 * (m_mod_words + 1));
+   BigInt z(BigInt::Positive, 2 * (m_mod_words + 1));
    secure_vector<word> workspace(z.size());
 
    m_g[0] = (base >= m_modulus) ? (base % m_modulus) : base;
 
-   bigint_monty_mul(&z[0], z.size(),
+   bigint_monty_mul(z.mutable_data(), z.size(),
                     m_g[0].data(), m_g[0].size(), m_g[0].sig_words(),
                     m_R2_mod.data(), m_R2_mod.size(), m_R2_mod.sig_words(),
                     m_modulus.data(), m_mod_words, m_mod_prime,
                     &workspace[0]);
 
-   m_g[0].assign(&z[0], m_mod_words + 1);
+   z.mask_bits(BOTAN_MP_WORD_BITS * (m_mod_words + 1));
+   m_g[0] = z;
 
    const BigInt& x = m_g[0];
    const size_t x_sig = x.sig_words();
@@ -100,14 +101,16 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
       const BigInt& y = m_g[i-1];
       const size_t y_sig = y.sig_words();
 
-      zeroise(z);
-      bigint_monty_mul(&z[0], z.size(),
+      z.clear();
+
+      bigint_monty_mul(z.mutable_data(), z.size(),
                        x.data(), x.size(), x_sig,
                        y.data(), y.size(), y_sig,
                        m_modulus.data(), m_mod_words, m_mod_prime,
                        &workspace[0]);
 
-      m_g[i].assign(&z[0], m_mod_words + 1);
+      z.mask_bits(BOTAN_MP_WORD_BITS * (m_mod_words + 1));
+      m_g[i] = z;
       }
    }
 
@@ -119,35 +122,41 @@ BigInt Montgomery_Exponentiator::execute() const
    const size_t exp_nibbles = (m_exp_bits + m_window_bits - 1) / m_window_bits;
 
    BigInt x = m_R_mod;
-   secure_vector<word> z(2 * (m_mod_words + 1));
-   secure_vector<word> workspace(2 * (m_mod_words + 1));
+
+   const size_t z_size = 2*(m_mod_words + 1);
+
+   BigInt z(BigInt::Positive, z_size);
+   secure_vector<word> workspace(z_size);
 
    for(size_t i = exp_nibbles; i > 0; --i)
       {
       for(size_t k = 0; k != m_window_bits; ++k)
          {
-         zeroise(z);
+         z.clear();
 
-         bigint_monty_sqr(&z[0], z.size(),
+         bigint_monty_sqr(z.mutable_data(), z_size,
                           x.data(), x.size(), x.sig_words(),
                           m_modulus.data(), m_mod_words, m_mod_prime,
                           &workspace[0]);
 
-         x.assign(&z[0], m_mod_words + 1);
+         z.mask_bits(BOTAN_MP_WORD_BITS * (m_mod_words + 1));
+         x = z;
          }
 
       if(u32bit nibble = m_exp.get_substring(m_window_bits*(i-1), m_window_bits))
          {
          const BigInt& y = m_g[nibble-1];
 
-         zeroise(z);
-         bigint_monty_mul(&z[0], z.size(),
+         z.clear();
+
+         bigint_monty_mul(z.mutable_data(), z_size,
                           x.data(), x.size(), x.sig_words(),
                           y.data(), y.size(), y.sig_words(),
                           m_modulus.data(), m_mod_words, m_mod_prime,
                           &workspace[0]);
 
-         x.assign(&z[0], m_mod_words + 1);
+         z.mask_bits(BOTAN_MP_WORD_BITS * (m_mod_words + 1));
+         x = z;
          }
       }
 
