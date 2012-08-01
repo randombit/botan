@@ -2,7 +2,7 @@
 * Elliptic curves over GF(p)
 *
 * (C) 2007 Martin Doering, Christoph Ludwig, Falko Strenzke
-*     2010-2011 Jack Lloyd
+*     2010-2011,2012 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -33,60 +33,63 @@ class BOTAN_DLL CurveGFp
       * @param b second coefficient
       */
       CurveGFp(const BigInt& p, const BigInt& a, const BigInt& b) :
-         p(p), a(a), b(b), p_words(p.sig_words())
+         m_p(p),
+         m_a(a),
+         m_b(b),
+         m_p_words(m_p.sig_words()),
+         m_p_dash(monty_inverse(m_p.word_at(0)))
          {
-         const BigInt r = BigInt::power_of_2(p_words * BOTAN_MP_WORD_BITS);
+         const BigInt r = BigInt::power_of_2(m_p_words * BOTAN_MP_WORD_BITS);
 
-         p_dash = monty_inverse(p.word_at(0));
-
-         r2  = (r * r) % p;
-         a_r = (a * r) % p;
-         b_r = (b * r) % p;
+         m_r2  = (r * r) % p;
+         m_a_r = (a * r) % p;
+         m_b_r = (b * r) % p;
          }
 
-      // CurveGFp(const CurveGFp& other) = default;
-      // CurveGFp& operator=(const CurveGFp& other) = default;
+      CurveGFp(const CurveGFp&) = default;
+
+      CurveGFp& operator=(const CurveGFp&) = default;
 
       /**
       * @return curve coefficient a
       */
-      const BigInt& get_a() const { return a; }
+      const BigInt& get_a() const { return m_a; }
 
       /**
       * @return curve coefficient b
       */
-      const BigInt& get_b() const { return b; }
+      const BigInt& get_b() const { return m_b; }
 
       /**
       * Get prime modulus of the field of the curve
       * @return prime modulus of the field of the curve
       */
-      const BigInt& get_p() const { return p; }
+      const BigInt& get_p() const { return m_p; }
 
       /**
       * @return Montgomery parameter r^2 % p
       */
-      const BigInt& get_r2() const { return r2; }
+      const BigInt& get_r2() const { return m_r2; }
 
       /**
       * @return a * r mod p
       */
-      const BigInt& get_a_r() const { return a_r; }
+      const BigInt& get_a_r() const { return m_a_r; }
 
       /**
       * @return b * r mod p
       */
-      const BigInt& get_b_r() const { return b_r; }
+      const BigInt& get_b_r() const { return m_b_r; }
 
       /**
       * @return Montgomery parameter p-dash
       */
-      word get_p_dash() const { return p_dash; }
+      word get_p_dash() const { return m_p_dash; }
 
       /**
       * @return p.sig_words()
       */
-      size_t get_p_words() const { return p_words; }
+      size_t get_p_words() const { return m_p_words; }
 
       /**
       * swaps the states of *this and other, does not throw
@@ -94,18 +97,18 @@ class BOTAN_DLL CurveGFp
       */
       void swap(CurveGFp& other)
          {
-         std::swap(p, other.p);
+         std::swap(m_p, other.m_p);
 
-         std::swap(a, other.a);
-         std::swap(b, other.b);
+         std::swap(m_a, other.m_a);
+         std::swap(m_b, other.m_b);
 
-         std::swap(a_r, other.a_r);
-         std::swap(b_r, other.b_r);
+         std::swap(m_a_r, other.m_a_r);
+         std::swap(m_b_r, other.m_b_r);
 
-         std::swap(p_words, other.p_words);
+         std::swap(m_p_words, other.m_p_words);
 
-         std::swap(r2, other.r2);
-         std::swap(p_dash, other.p_dash);
+         std::swap(m_r2, other.m_r2);
+         std::swap(m_p_dash, other.m_p_dash);
          }
 
       /**
@@ -115,22 +118,20 @@ class BOTAN_DLL CurveGFp
       */
       bool operator==(const CurveGFp& other) const
          {
-         /*
-         Relies on choice of R, but that is fixed by constructor based
-         on size of p
-         */
-         return (p == other.p && a_r == other.a_r && b_r == other.b_r);
+         return (m_p == other.m_p &&
+                 m_a == other.m_a &&
+                 m_b == other.m_b);
          }
 
    private:
       // Curve parameters
-      BigInt p, a, b;
+      BigInt m_p, m_a, m_b;
 
-      size_t p_words; // cache of p.sig_words()
+      size_t m_p_words; // cache of m_p.sig_words()
 
       // Montgomery parameters
-      BigInt r2, a_r, b_r;
-      word p_dash;
+      BigInt m_r2, m_a_r, m_b_r;
+      word m_p_dash;
    };
 
 /**
