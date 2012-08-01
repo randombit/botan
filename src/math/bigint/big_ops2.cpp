@@ -132,7 +132,7 @@ BigInt& BigInt::operator*=(const BigInt& y)
 */
 BigInt& BigInt::operator/=(const BigInt& y)
    {
-   if(y.sig_words() == 1 && power_of_2(y.word_at(0)))
+   if(y.sig_words() == 1 && is_power_of_2(y.word_at(0)))
       (*this) >>= (y.bits() - 1);
    else
       (*this) = (*this) / y;
@@ -154,7 +154,8 @@ word BigInt::operator%=(word mod)
    {
    if(mod == 0)
       throw BigInt::DivideByZero();
-   if(power_of_2(mod))
+
+   if(is_power_of_2(mod))
        {
        word result = (word_at(0) & (mod - 1));
        clear();

@@ -11,19 +11,6 @@
 namespace Botan {
 
 /*
-* Construct a BigInt of a specific form
-*/
-BigInt::BigInt(NumberType type, size_t bits)
-   {
-   set_sign(Positive);
-
-   if(type == Power2)
-      set_bit(bits);
-   else
-      throw Invalid_Argument("BigInt(NumberType): Unknown type");
-   }
-
-/*
 * Randomize this number
 */
 void BigInt::randomize(RandomNumberGenerator& rng,

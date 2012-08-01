@@ -18,7 +18,7 @@ namespace Botan {
 * @return true iff arg is 2^n for some n > 0
 */
 template<typename T>
-inline bool power_of_2(T arg)
+inline bool is_power_of_2(T arg)
    {
    return ((arg != 0 && arg != 1) && ((arg & (arg-1)) == 0));
    }

@@ -137,7 +137,8 @@ word operator%(const BigInt& n, word mod)
    {
    if(mod == 0)
       throw BigInt::DivideByZero();
-   if(power_of_2(mod))
+
+   if(is_power_of_2(mod))
       return (n.word_at(0) & (mod - 1));
 
    word remainder = 0;

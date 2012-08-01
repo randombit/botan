@@ -23,7 +23,7 @@ Modular_Reducer::Modular_Reducer(const BigInt& mod)
 
    modulus_2 = Botan::square(modulus);
 
-   mu = BigInt(BigInt::Power2, 2 * MP_WORD_BITS * mod_words) / modulus;
+   mu = BigInt::power_of_2(2 * MP_WORD_BITS * mod_words) / modulus;
    }
 
 /*
@@ -60,8 +60,7 @@ BigInt Modular_Reducer::reduce(const BigInt& x) const
 
       if(t2.is_negative())
          {
-         BigInt b_to_k1(BigInt::Power2, MP_WORD_BITS * (mod_words + 1));
-         t2 += b_to_k1;
+         t2 += BigInt::power_of_2(MP_WORD_BITS * (mod_words + 1));
          }
 
       while(t2 >= modulus)

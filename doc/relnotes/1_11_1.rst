@@ -21,3 +21,5 @@ Several :cpp:class:`BigInt` functions have been removed, including
 that returns a mutable pointer has been renamed ``mutable_data``.
 Support for octal conversions has been removed.
 
+The constructor ``BigInt(NumberType type, size_t n)`` has been
+removed, replaced by ``BigInt::power_of_2``.

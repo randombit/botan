@@ -35,7 +35,7 @@ class BOTAN_DLL CurveGFp
       CurveGFp(const BigInt& p, const BigInt& a, const BigInt& b) :
          p(p), a(a), b(b), p_words(p.sig_words())
          {
-         BigInt r(BigInt::Power2, p_words * BOTAN_MP_WORD_BITS);
+         const BigInt r = BigInt::power_of_2(p_words * BOTAN_MP_WORD_BITS);
 
          p_dash = (((r * inverse_mod(r, p)) - 1) / p).word_at(0);
 

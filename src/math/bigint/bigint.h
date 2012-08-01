@@ -33,11 +33,6 @@ class BOTAN_DLL BigInt
      enum Sign { Negative = 0, Positive = 1 };
 
      /**
-     * Number types (currently only power-of-2 supported)
-     */
-     enum NumberType { Power2 };
-
-     /**
      * DivideByZero Exception
      */
      struct BOTAN_DLL DivideByZero : public Exception
@@ -368,6 +363,19 @@ class BOTAN_DLL BigInt
                                   const BigInt& min,
                                   const BigInt& max);
 
+
+     /**
+     * Create a power of two
+     * @param n the power of two to create
+     * @return bigint representing 2^n
+     */
+     static BigInt power_of_2(size_t n)
+        {
+        BigInt b;
+        b.set_bit(n);
+        return b;
+        }
+
      /**
      * Encode the integer value from a BigInt to a std::vector of bytes
      * @param n the BigInt to use as integer source
@@ -493,15 +501,6 @@ class BOTAN_DLL BigInt
      * @param n size of the internal register in words
      */
      BigInt(Sign sign, size_t n);
-
-     /**
-     * Create a number of the specified type and size
-     * @param type the type of number to create. For Power2,
-     * will create the integer 2^n
-     * @param n a size/length parameter, interpretation depends upon
-     * the value of type
-     */
-     BigInt(NumberType type, size_t n);
 
      /**
      * Move constructor
