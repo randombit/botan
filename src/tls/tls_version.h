@@ -94,6 +94,11 @@ class BOTAN_DLL Protocol_Version
       bool supports_explicit_cbc_ivs() const;
 
       /**
+      * @return true if this version uses a ciphersuite specific PRF
+      */
+      bool supports_ciphersuite_specific_prf() const;
+
+      /**
       * @return if this version is equal to other
       */
       bool operator==(const Protocol_Version& other) const

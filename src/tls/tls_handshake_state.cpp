@@ -157,14 +157,10 @@ KDF* Handshake_State::protocol_specific_prf()
       {
       return get_kdf("TLS-PRF");
       }
-   else if(version() == Protocol_Version::TLS_V12)
+   else if(version().supports_ciphersuite_specific_prf())
       {
-      if(suite.mac_algo() == "MD5" ||
-         suite.mac_algo() == "SHA-1" ||
-         suite.mac_algo() == "SHA-256")
-         {
+      if(suite.mac_algo() == "MD5" || suite.mac_algo() == "SHA-1")
          return get_kdf("TLS-12-PRF(SHA-256)");
-         }
 
       return get_kdf("TLS-12-PRF(" + suite.mac_algo() + ")");
       }

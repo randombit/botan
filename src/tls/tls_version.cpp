@@ -80,6 +80,12 @@ bool Protocol_Version::supports_explicit_cbc_ivs() const
            m_version == Protocol_Version::DTLS_V12);
    }
 
+bool Protocol_Version::supports_ciphersuite_specific_prf() const
+   {
+   return (m_version == Protocol_Version::TLS_V12 ||
+           m_version == Protocol_Version::DTLS_V12);
+   }
+
 }
 
 }

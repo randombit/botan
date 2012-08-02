@@ -25,20 +25,15 @@ secure_vector<byte> Handshake_Hash::final(Protocol_Version version,
 
    std::unique_ptr<HashFunction> hash;
 
-   if(version == Protocol_Version::TLS_V10 || version == Protocol_Version::TLS_V11)
+   if(version.supports_ciphersuite_specific_prf())
       {
-      hash.reset(af.make_hash_function("TLS.Digest.0"));
-      }
-   else if(version == Protocol_Version::TLS_V12)
-      {
-      if(mac_algo == "MD5" || mac_algo == "SHA-1" || mac_algo == "SHA-256")
+      if(mac_algo == "MD5" || mac_algo == "SHA-1")
          hash.reset(af.make_hash_function("SHA-256"));
       else
          hash.reset(af.make_hash_function(mac_algo));
       }
    else
-      throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                          "Unknown version for handshake hashes");
+      hash.reset(af.make_hash_function("TLS.Digest.0"));
 
    hash->update(data);
    return hash->final();
