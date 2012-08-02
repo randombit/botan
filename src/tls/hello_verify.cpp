@@ -18,11 +18,19 @@ Hello_Verify_Request::Hello_Verify_Request(const std::vector<byte>& buf)
    if(buf.size() < 3)
       throw Decoding_Error("Hello verify request too small");
 
-   if(buf[0] != 254 || (buf[1] != 255 && buf[1] != 253))
-      throw Decoding_Error("Unknown version from server in hello verify request");
+   Protocol_Version version(buf[0], buf[1]);
 
-   m_cookie.resize(buf.size() - 2);
-   copy_mem(&m_cookie[0], &buf[2], buf.size() - 2);
+   if(version != Protocol_Version::DTLS_V10 &&
+      version != Protocol_Version::DTLS_V12)
+      {
+      throw Decoding_Error("Unknown version from server in hello verify request");
+      }
+
+   if(static_cast<size_t>(buf[2]) + 3 != buf.size())
+      throw Decoding_Error("Bad length in hello verify request");
+
+   m_cookie.resize(buf.size() - 3);
+   copy_mem(&m_cookie[0], &buf[3], buf.size() - 3);
    }
 
 Hello_Verify_Request::Hello_Verify_Request(const std::vector<byte>& client_hello_bits,
@@ -52,6 +60,7 @@ std::vector<byte> Hello_Verify_Request::serialize() const
    std::vector<byte> bits;
    bits.push_back(format_version.major_version());
    bits.push_back(format_version.minor_version());
+   bits.push_back(static_cast<byte>(m_cookie.size()));
    bits += m_cookie;
    return bits;
    }
