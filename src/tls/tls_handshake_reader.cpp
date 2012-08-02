@@ -25,10 +25,24 @@ inline size_t load_be24(const byte q[3])
 }
 
 
-void Stream_Handshake_Reader::add_input(const byte record[],
+void Stream_Handshake_Reader::add_input(const byte rec_type,
+                                        const byte record[],
                                         size_t record_size)
    {
-   m_queue.insert(m_queue.end(), record, record + record_size);
+   if(rec_type == HANDSHAKE)
+      {
+      m_queue.insert(m_queue.end(), record, record + record_size);
+      }
+   else if(rec_type == CHANGE_CIPHER_SPEC)
+      {
+      if(record_size != 1 || record[0] != 1)
+         throw Decoding_Error("Invalid ChangeCipherSpec");
+
+      const byte ccs_hs[] = { HANDSHAKE_CCS, 0, 0, 0 };
+      m_queue.insert(m_queue.end(), ccs_hs, ccs_hs + sizeof(ccs_hs));
+      }
+   else
+      throw Decoding_Error("Unknown message type in handshake processing");
    }
 
 bool Stream_Handshake_Reader::empty() const

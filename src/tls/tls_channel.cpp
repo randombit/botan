@@ -171,42 +171,16 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
 void Channel::read_handshake(byte rec_type,
                              const std::vector<byte>& rec_buf)
    {
-   if(rec_type == HANDSHAKE)
+   if(!m_state)
+      m_state.reset(new_handshake_state());
+
+   m_state->handshake_reader().add_input(rec_type, &rec_buf[0], rec_buf.size());
+
+   while(m_state && m_state->handshake_reader().have_full_record())
       {
-      if(!m_state)
-         m_state.reset(new_handshake_state());
-      m_state->handshake_reader().add_input(&rec_buf[0], rec_buf.size());
-      }
-
-   BOTAN_ASSERT_NONNULL(m_state);
-
-   while(true)
-      {
-      Handshake_Type type = HANDSHAKE_NONE;
-
-      if(rec_type == HANDSHAKE)
-         {
-         if(m_state->handshake_reader().have_full_record())
-            {
-            std::pair<Handshake_Type, std::vector<byte> > msg =
-               m_state->handshake_reader().get_next_record();
-            process_handshake_msg(msg.first, msg.second);
-            }
-         else
-            break;
-         }
-      else if(rec_type == CHANGE_CIPHER_SPEC)
-         {
-         if(m_state->handshake_reader().empty() && rec_buf.size() == 1 && rec_buf[0] == 1)
-            process_handshake_msg(HANDSHAKE_CCS, std::vector<byte>());
-         else
-            throw Decoding_Error("Malformed ChangeCipherSpec message");
-         }
-      else
-         throw Decoding_Error("Unknown message type in handshake processing");
-
-      if(type == HANDSHAKE_CCS || !m_state || !m_state->handshake_reader().have_full_record())
-         break;
+      std::pair<Handshake_Type, std::vector<byte> > msg =
+         m_state->handshake_reader().get_next_record();
+      process_handshake_msg(msg.first, msg.second);
       }
    }
 
