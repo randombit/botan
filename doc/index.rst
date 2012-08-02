@@ -54,9 +54,8 @@ in most major package distributions, including
 It was started as a personal project by `Jack Lloyd
 <http://www.randombit.net>`_,who continues to be the maintainer and
 release manager. Since the first release in 2001, a number of
-:doc:`individuals and organizations <credits>` have contributed bug
-fixes and new features. Check out the :doc:`release notes
-<relnotes/index>` for more project history.
+individuals and organizations have `contributed <credits>`. Check out
+the :doc:`release notes <relnotes/index>` for more project history.
 
 If you need help or have questions, send a mail to the `development
 mailing list
