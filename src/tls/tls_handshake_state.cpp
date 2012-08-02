@@ -153,16 +153,17 @@ KDF* Handshake_State::protocol_specific_prf()
       {
       return get_kdf("SSL3-PRF");
       }
-   else if(version() == Protocol_Version::TLS_V10 || version() == Protocol_Version::TLS_V11)
-      {
-      return get_kdf("TLS-PRF");
-      }
    else if(version().supports_ciphersuite_specific_prf())
       {
       if(suite.mac_algo() == "MD5" || suite.mac_algo() == "SHA-1")
          return get_kdf("TLS-12-PRF(SHA-256)");
 
       return get_kdf("TLS-12-PRF(" + suite.mac_algo() + ")");
+      }
+   else
+      {
+      // TLS v1.0, v1.1 and DTLS v1.0
+      return get_kdf("TLS-PRF");
       }
 
    throw Internal_Error("Unknown version code " + version().to_string());
