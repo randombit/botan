@@ -38,6 +38,7 @@ class Handshake_Hash
       const std::vector<byte>& get_contents() const
          { return data; }
 
+      void reset() { data.clear(); }
    private:
       std::vector<byte> data;
    };

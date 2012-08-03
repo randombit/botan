@@ -156,6 +156,18 @@ Client_Hello::Client_Hello(const std::vector<byte>& buf, Handshake_Type type)
       deserialize_sslv2(buf);
    }
 
+Client_Hello::Client_Hello(Handshake_IO& io,
+                           Handshake_Hash& hash,
+                           const Client_Hello& initial_hello,
+                           const Hello_Verify_Request& hello_verify)
+   {
+   *this = initial_hello;
+   m_hello_cookie = hello_verify.cookie();
+
+   hash.reset();
+   hash.update(io.send(*this));
+   }
+
 /*
 * Serialize a Client Hello message
 */
@@ -168,6 +180,10 @@ std::vector<byte> Client_Hello::serialize() const
    buf += m_random;
 
    append_tls_length_value(buf, m_session_id, 1);
+
+   if(m_version.is_datagram_protocol())
+      append_tls_length_value(buf, m_hello_cookie, 1);
+
    append_tls_length_value(buf, m_suites, 2);
    append_tls_length_value(buf, m_comp_methods, 1);
 

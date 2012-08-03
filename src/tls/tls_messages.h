@@ -38,9 +38,6 @@ class Handshake_Message
 
       Handshake_Message() {}
       virtual ~Handshake_Message() {}
-   private:
-      Handshake_Message(const Handshake_Message&) {}
-      Handshake_Message& operator=(const Handshake_Message&) { return (*this); }
    };
 
 std::vector<byte> make_hello_random(RandomNumberGenerator& rng);
@@ -130,6 +127,11 @@ class Client_Hello : public Handshake_Message
                    const Session& resumed_session,
                    bool next_protocol = false);
 
+      Client_Hello(Handshake_IO& io,
+                   Handshake_Hash& hash,
+                   const Client_Hello& initial_hello,
+                   const Hello_Verify_Request& hello_verify);
+
       Client_Hello(const std::vector<byte>& buf,
                    Handshake_Type type);
 
@@ -155,6 +157,8 @@ class Client_Hello : public Handshake_Message
 
       bool m_supports_session_ticket;
       std::vector<byte> m_session_ticket;
+
+      std::vector<byte> m_hello_cookie;
 
       bool m_supports_heartbeats;
       bool m_peer_can_send_heartbeats;
