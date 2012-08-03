@@ -85,10 +85,8 @@ u32bit bitmask_for_handshake_type(Handshake_Type type)
 /*
 * Initialize the SSL/TLS Handshake State
 */
-Handshake_State::Handshake_State(Handshake_Reader* reader,
-                                 Handshake_Writer* writer) :
-   m_handshake_reader(reader),
-   m_handshake_writer(writer),
+Handshake_State::Handshake_State(Handshake_IO* io) :
+   m_handshake_io(io),
    m_version(Protocol_Version::SSL_V3)
    {
    }
@@ -345,8 +343,7 @@ Handshake_State::~Handshake_State()
    delete client_finished;
    delete server_finished;
 
-   delete m_handshake_reader;
-   delete m_handshake_writer;
+   delete m_handshake_io;
    }
 
 }

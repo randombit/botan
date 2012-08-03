@@ -6,7 +6,7 @@
 */
 
 #include <botan/internal/tls_messages.h>
-#include <botan/internal/tls_handshake_writer.h>
+#include <botan/internal/tls_handshake_io.h>
 #include <memory>
 
 namespace Botan {
@@ -66,12 +66,12 @@ std::vector<byte> finished_compute_verify(Handshake_State* state,
 /*
 * Create a new Finished message
 */
-Finished::Finished(Handshake_Writer& writer,
+Finished::Finished(Handshake_IO& io,
                    Handshake_State* state,
                    Connection_Side side)
    {
    verification_data = finished_compute_verify(state, side);
-   state->hash.update(writer.send(*this));
+   state->hash.update(io.send(*this));
    }
 
 /*

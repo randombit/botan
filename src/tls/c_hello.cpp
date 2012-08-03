@@ -9,7 +9,7 @@
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_session_key.h>
 #include <botan/internal/tls_extensions.h>
-#include <botan/internal/tls_handshake_writer.h>
+#include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/stl_util.h>
 #include <chrono>
 
@@ -36,9 +36,9 @@ std::vector<byte> make_hello_random(RandomNumberGenerator& rng)
 /*
 * Create a new Hello Request message
 */
-Hello_Request::Hello_Request(Handshake_Writer& writer)
+Hello_Request::Hello_Request(Handshake_IO& io)
    {
-   writer.send(*this);
+   io.send(*this);
    }
 
 /*
@@ -61,7 +61,7 @@ std::vector<byte> Hello_Request::serialize() const
 /*
 * Create a new Client Hello message
 */
-Client_Hello::Client_Hello(Handshake_Writer& writer,
+Client_Hello::Client_Hello(Handshake_IO& io,
                            Handshake_Hash& hash,
                            Protocol_Version version,
                            const Policy& policy,
@@ -92,13 +92,13 @@ Client_Hello::Client_Hello(Handshake_Writer& writer,
       for(size_t j = 0; j != sigs.size(); ++j)
          m_supported_algos.push_back(std::make_pair(hashes[i], sigs[j]));
 
-   hash.update(writer.send(*this));
+   hash.update(io.send(*this));
    }
 
 /*
 * Create a new Client Hello message (session resumption case)
 */
-Client_Hello::Client_Hello(Handshake_Writer& writer,
+Client_Hello::Client_Hello(Handshake_IO& io,
                            Handshake_Hash& hash,
                            const Policy& policy,
                            RandomNumberGenerator& rng,
@@ -135,7 +135,7 @@ Client_Hello::Client_Hello(Handshake_Writer& writer,
       for(size_t j = 0; j != sigs.size(); ++j)
          m_supported_algos.push_back(std::make_pair(hashes[i], sigs[j]));
 
-   hash.update(writer.send(*this));
+   hash.update(io.send(*this));
    }
 
 /*

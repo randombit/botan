@@ -8,7 +8,7 @@
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_extensions.h>
-#include <botan/internal/tls_handshake_writer.h>
+#include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/assert.h>
 #include <memory>
 
@@ -19,7 +19,7 @@ namespace TLS {
 /*
 * Create a new Certificate Verify message
 */
-Certificate_Verify::Certificate_Verify(Handshake_Writer& writer,
+Certificate_Verify::Certificate_Verify(Handshake_IO& io,
                                        Handshake_State* state,
                                        const Policy& policy,
                                        RandomNumberGenerator& rng,
@@ -47,7 +47,7 @@ Certificate_Verify::Certificate_Verify(Handshake_Writer& writer,
       signature = signer.sign_message(state->hash.get_contents(), rng);
       }
 
-   state->hash.update(writer.send(*this));
+   state->hash.update(io.send(*this));
    }
 
 /*

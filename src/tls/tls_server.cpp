@@ -207,8 +207,7 @@ Server::Server(std::function<void (const byte[], size_t)> output_fn,
 
 Handshake_State* Server::new_handshake_state()
    {
-   return new Handshake_State(new Stream_Handshake_Reader,
-                              new Stream_Handshake_Writer(m_writer));
+   return new Handshake_State(new Stream_Handshake_IO(m_writer));
    }
 
 /*
@@ -223,7 +222,7 @@ void Server::renegotiate(bool force_full_renegotiation)
 
    m_state->allow_session_resumption = !force_full_renegotiation;
    m_state->set_expected_next(CLIENT_HELLO);
-   Hello_Request hello_req(m_state->handshake_writer());
+   Hello_Request hello_req(m_state->handshake_io());
    }
 
 void Server::alert_notify(const Alert& alert)
@@ -273,7 +272,7 @@ void Server::process_handshake_msg(Handshake_Type type,
       if(type == CLIENT_HELLO_SSLV2)
          m_state->hash.update(contents);
       else
-         m_state->hash.update(m_state->handshake_writer().format(contents, type));
+         m_state->hash.update(m_state->handshake_io().format(contents, type));
       }
 
    if(type == CLIENT_HELLO || type == CLIENT_HELLO_SSLV2)
@@ -374,7 +373,7 @@ void Server::process_handshake_msg(Handshake_Type type,
          // resume session
 
          m_state->server_hello = new Server_Hello(
-            m_state->handshake_writer(),
+            m_state->handshake_io(),
             m_state->hash,
             m_state->client_hello->session_id(),
             Protocol_Version(session_info.version()),
@@ -410,7 +409,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             if(m_state->server_hello->supports_session_ticket()) // send an empty ticket
                {
                m_state->new_session_ticket =
-                  new New_Session_Ticket(m_state->handshake_writer(),
+                  new New_Session_Ticket(m_state->handshake_io(),
                                          m_state->hash);
                }
             }
@@ -422,7 +421,7 @@ void Server::process_handshake_msg(Handshake_Type type,
                const SymmetricKey ticket_key = m_creds.psk("tls-server", "session-ticket", "");
 
                m_state->new_session_ticket =
-                  new New_Session_Ticket(m_state->handshake_writer(),
+                  new New_Session_Ticket(m_state->handshake_io(),
                                          m_state->hash,
                                          session_info.encrypt(ticket_key, m_rng),
                                          m_policy.session_ticket_lifetime());
@@ -432,7 +431,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             if(!m_state->new_session_ticket)
                {
                m_state->new_session_ticket =
-                  new New_Session_Ticket(m_state->handshake_writer(),
+                  new New_Session_Ticket(m_state->handshake_io(),
                                          m_state->hash);
                }
             }
@@ -444,7 +443,7 @@ void Server::process_handshake_msg(Handshake_Type type,
                                      m_state->keys,
                                      m_state->server_hello->compression_method());
 
-         m_state->server_finished = new Finished(m_state->handshake_writer(),
+         m_state->server_finished = new Finished(m_state->handshake_io(),
                                                  m_state.get(), SERVER);
 
          m_state->set_expected_next(HANDSHAKE_CCS);
@@ -471,7 +470,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             }
 
          m_state->server_hello = new Server_Hello(
-            m_state->handshake_writer(),
+            m_state->handshake_io(),
             m_state->hash,
             make_hello_random(m_rng), // new session ID
             m_state->version(),
@@ -508,7 +507,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             BOTAN_ASSERT(!cert_chains[sig_algo].empty(),
                          "Attempting to send empty certificate chain");
 
-            m_state->server_certs = new Certificate(m_state->handshake_writer(),
+            m_state->server_certs = new Certificate(m_state->handshake_io(),
                                                     m_state->hash,
                                                     cert_chains[sig_algo]);
             }
@@ -533,7 +532,7 @@ void Server::process_handshake_msg(Handshake_Type type,
          else
             {
             m_state->server_kex =
-               new Server_Key_Exchange(m_state->handshake_writer(),
+               new Server_Key_Exchange(m_state->handshake_io(),
                                        m_state.get(),
                                        m_policy,
                                        m_creds,
@@ -546,7 +545,7 @@ void Server::process_handshake_msg(Handshake_Type type,
 
          if(!client_auth_CAs.empty() && m_state->suite.sig_algo() != "")
             {
-            m_state->cert_req = new Certificate_Req(m_state->handshake_writer(),
+            m_state->cert_req = new Certificate_Req(m_state->handshake_io(),
                                                     m_state->hash,
                                                     m_policy,
                                                     client_auth_CAs,
@@ -562,7 +561,7 @@ void Server::process_handshake_msg(Handshake_Type type,
          */
          m_state->set_expected_next(CLIENT_KEX);
 
-         m_state->server_hello_done = new Server_Hello_Done(m_state->handshake_writer(),
+         m_state->server_hello_done = new Server_Hello_Done(m_state->handshake_io(),
                                                             m_state->hash);
          }
       }
@@ -599,7 +598,7 @@ void Server::process_handshake_msg(Handshake_Type type,
       const bool sig_valid =
          m_state->client_verify->verify(m_peer_certs[0], m_state.get());
 
-      m_state->hash.update(m_state->handshake_writer().format(contents, type));
+      m_state->hash.update(m_state->handshake_io().format(contents, type));
 
       /*
       * Using DECRYPT_ERROR looks weird here, but per RFC 4346 is for
@@ -654,7 +653,7 @@ void Server::process_handshake_msg(Handshake_Type type,
          {
          // already sent finished if resuming, so this is a new session
 
-         m_state->hash.update(m_state->handshake_writer().format(contents, type));
+         m_state->hash.update(m_state->handshake_io().format(contents, type));
 
          Session session_info(
             m_state->server_hello->session_id(),
@@ -680,7 +679,7 @@ void Server::process_handshake_msg(Handshake_Type type,
                   const SymmetricKey ticket_key = m_creds.psk("tls-server", "session-ticket", "");
 
                   m_state->new_session_ticket =
-                     new New_Session_Ticket(m_state->handshake_writer(),
+                     new New_Session_Ticket(m_state->handshake_io(),
                                             m_state->hash,
                                             session_info.encrypt(ticket_key, m_rng),
                                             m_policy.session_ticket_lifetime());
@@ -693,7 +692,7 @@ void Server::process_handshake_msg(Handshake_Type type,
 
          if(m_state->server_hello->supports_session_ticket() && !m_state->new_session_ticket)
             {
-            m_state->new_session_ticket = new New_Session_Ticket(m_state->handshake_writer(),
+            m_state->new_session_ticket = new New_Session_Ticket(m_state->handshake_io(),
                                                                  m_state->hash);
 
             }
@@ -705,7 +704,7 @@ void Server::process_handshake_msg(Handshake_Type type,
                                      m_state->keys,
                                      m_state->server_hello->compression_method());
 
-         m_state->server_finished = new Finished(m_state->handshake_writer(),
+         m_state->server_finished = new Finished(m_state->handshake_io(),
                                                  m_state.get(), SERVER);
          }
 

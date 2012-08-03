@@ -8,18 +8,18 @@
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_extensions.h>
 #include <botan/internal/tls_reader.h>
-#include <botan/internal/tls_handshake_writer.h>
+#include <botan/internal/tls_handshake_io.h>
 
 namespace Botan {
 
 namespace TLS {
 
-Next_Protocol::Next_Protocol(Handshake_Writer& writer,
+Next_Protocol::Next_Protocol(Handshake_IO& io,
                              Handshake_Hash& hash,
                              const std::string& protocol) :
    m_protocol(protocol)
    {
-   hash.update(writer.send(*this));
+   hash.update(io.send(*this));
    }
 
 Next_Protocol::Next_Protocol(const std::vector<byte>& buf)

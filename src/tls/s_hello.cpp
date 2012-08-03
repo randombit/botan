@@ -9,7 +9,7 @@
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_session_key.h>
 #include <botan/internal/tls_extensions.h>
-#include <botan/internal/tls_handshake_writer.h>
+#include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/stl_util.h>
 
 namespace Botan {
@@ -19,7 +19,7 @@ namespace TLS {
 /*
 * Create a new Server Hello message
 */
-Server_Hello::Server_Hello(Handshake_Writer& writer,
+Server_Hello::Server_Hello(Handshake_IO& io,
                            Handshake_Hash& hash,
                            const std::vector<byte>& session_id,
                            Protocol_Version ver,
@@ -47,7 +47,7 @@ Server_Hello::Server_Hello(Handshake_Writer& writer,
    m_supports_heartbeats(client_has_heartbeat),
    m_peer_can_send_heartbeats(true)
    {
-   hash.update(writer.send(*this));
+   hash.update(io.send(*this));
    }
 
 /*
@@ -149,10 +149,10 @@ std::vector<byte> Server_Hello::serialize() const
 /*
 * Create a new Server Hello Done message
 */
-Server_Hello_Done::Server_Hello_Done(Handshake_Writer& writer,
+Server_Hello_Done::Server_Hello_Done(Handshake_IO& io,
                                      Handshake_Hash& hash)
    {
-   hash.update(writer.send(*this));
+   hash.update(io.send(*this));
    }
 
 /*

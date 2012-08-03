@@ -174,12 +174,12 @@ void Channel::read_handshake(byte rec_type,
    if(!m_state)
       m_state.reset(new_handshake_state());
 
-   m_state->handshake_reader().add_input(rec_type, &rec_buf[0], rec_buf.size());
+   m_state->handshake_io().add_input(rec_type, &rec_buf[0], rec_buf.size());
 
-   while(m_state && m_state->handshake_reader().have_full_record())
+   while(m_state && m_state->handshake_io().have_full_record())
       {
       std::pair<Handshake_Type, std::vector<byte> > msg =
-         m_state->handshake_reader().get_next_record();
+         m_state->handshake_io().get_next_record();
       process_handshake_msg(msg.first, msg.second);
       }
    }

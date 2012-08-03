@@ -8,7 +8,7 @@
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_extensions.h>
-#include <botan/internal/tls_handshake_writer.h>
+#include <botan/internal/tls_handshake_io.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/loadstor.h>
@@ -51,7 +51,7 @@ byte cert_type_name_to_code(const std::string& name)
 /**
 * Create a new Certificate Request message
 */
-Certificate_Req::Certificate_Req(Handshake_Writer& writer,
+Certificate_Req::Certificate_Req(Handshake_IO& io,
                                  Handshake_Hash& hash,
                                  const Policy& policy,
                                  const std::vector<X509_Certificate>& ca_certs,
@@ -74,7 +74,7 @@ Certificate_Req::Certificate_Req(Handshake_Writer& writer,
             m_supported_algos.push_back(std::make_pair(hashes[i], sigs[j]));
       }
 
-   hash.update(writer.send(*this));
+   hash.update(io.send(*this));
    }
 
 /**
@@ -166,12 +166,12 @@ std::vector<byte> Certificate_Req::serialize() const
 /**
 * Create a new Certificate message
 */
-Certificate::Certificate(Handshake_Writer& writer,
+Certificate::Certificate(Handshake_IO& io,
                          Handshake_Hash& hash,
                          const std::vector<X509_Certificate>& cert_list) :
    m_certs(cert_list)
    {
-   hash.update(writer.send(*this));
+   hash.update(io.send(*this));
    }
 
 /**

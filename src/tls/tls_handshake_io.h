@@ -1,12 +1,12 @@
 /*
-* TLS Handshake Reader
+* TLS Handshake Serialization
 * (C) 2012 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
 
-#ifndef BOTAN_TLS_HANDSHAKE_READER_H__
-#define BOTAN_TLS_HANDSHAKE_READER_H__
+#ifndef BOTAN_TLS_HANDSHAKE_IO_H__
+#define BOTAN_TLS_HANDSHAKE_IO_H__
 
 #include <botan/tls_magic.h>
 #include <botan/loadstor.h>
@@ -18,12 +18,21 @@ namespace Botan {
 
 namespace TLS {
 
+class Record_Writer;
+class Handshake_Message;
+
 /**
-* Handshake Reader Interface
+* Handshake IO Interface
 */
-class Handshake_Reader
+class Handshake_IO
    {
    public:
+      virtual std::vector<byte> send(Handshake_Message& msg) = 0;
+
+      virtual std::vector<byte> format(
+         const std::vector<byte>& handshake_msg,
+         Handshake_Type handshake_type) = 0;
+
       virtual void add_input(byte record_type,
                              const byte record[],
                              size_t record_size) = 0;
@@ -34,15 +43,29 @@ class Handshake_Reader
 
       virtual std::pair<Handshake_Type, std::vector<byte> > get_next_record() = 0;
 
-      virtual ~Handshake_Reader() {}
+      Handshake_IO() {}
+
+      Handshake_IO(const Handshake_IO&) = delete;
+
+      Handshake_IO& operator=(const Handshake_IO&) = delete;
+
+      virtual ~Handshake_IO() {}
    };
 
 /**
-* Reader of TLS handshake messages
+* Handshake IO for stream-based handshakes
 */
-class Stream_Handshake_Reader : public Handshake_Reader
+class Stream_Handshake_IO : public Handshake_IO
    {
    public:
+      Stream_Handshake_IO(Record_Writer& writer) : m_writer(writer) {}
+
+      std::vector<byte> send(Handshake_Message& msg) override;
+
+      std::vector<byte> format(
+         const std::vector<byte>& handshake_msg,
+         Handshake_Type handshake_type) override;
+
       void add_input(byte record_type,
                      const byte record[],
                      size_t record_size) override;
@@ -54,6 +77,7 @@ class Stream_Handshake_Reader : public Handshake_Reader
       std::pair<Handshake_Type, std::vector<byte> > get_next_record() override;
    private:
       std::deque<byte> m_queue;
+      Record_Writer& m_writer;
    };
 
 }

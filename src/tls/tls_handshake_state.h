@@ -9,8 +9,7 @@
 #define BOTAN_TLS_HANDSHAKE_STATE_H__
 
 #include <botan/internal/tls_handshake_hash.h>
-#include <botan/internal/tls_handshake_reader.h>
-#include <botan/internal/tls_handshake_writer.h>
+#include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_session_key.h>
 #include <botan/pk_keys.h>
 #include <botan/pubkey.h>
@@ -32,8 +31,7 @@ class Policy;
 class Handshake_State
    {
    public:
-      Handshake_State(Handshake_Reader* reader,
-                      Handshake_Writer* writer);
+      Handshake_State(Handshake_IO* io);
 
       ~Handshake_State();
 
@@ -108,12 +106,9 @@ class Handshake_State
       */
       std::function<std::string (std::vector<std::string>)> client_npn_cb;
 
-      Handshake_Reader& handshake_reader() { return *m_handshake_reader; }
-
-      Handshake_Writer& handshake_writer() { return *m_handshake_writer; }
+      Handshake_IO& handshake_io() { return *m_handshake_io; }
    private:
-      Handshake_Reader* m_handshake_reader = nullptr;
-      Handshake_Writer* m_handshake_writer = nullptr;
+      Handshake_IO* m_handshake_io = nullptr;
 
       u32bit m_hand_expecting_mask = 0;
       u32bit m_hand_received_mask = 0;

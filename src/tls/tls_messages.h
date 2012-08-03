@@ -25,7 +25,7 @@ class SRP6_Server_Session;
 
 namespace TLS {
 
-class Handshake_Writer;
+class Handshake_IO;
 
 /**
 * TLS Handshake Message Base Class
@@ -112,7 +112,7 @@ class Client_Hello : public Handshake_Message
 
       bool peer_can_send_heartbeats() const { return m_peer_can_send_heartbeats; }
 
-      Client_Hello(Handshake_Writer& writer,
+      Client_Hello(Handshake_IO& io,
                    Handshake_Hash& hash,
                    Protocol_Version version,
                    const Policy& policy,
@@ -122,7 +122,7 @@ class Client_Hello : public Handshake_Message
                    const std::string& hostname = "",
                    const std::string& srp_identifier = "");
 
-      Client_Hello(Handshake_Writer& writer,
+      Client_Hello(Handshake_IO& io,
                    Handshake_Hash& hash,
                    const Policy& policy,
                    RandomNumberGenerator& rng,
@@ -196,7 +196,7 @@ class Server_Hello : public Handshake_Message
 
       bool peer_can_send_heartbeats() const { return m_peer_can_send_heartbeats; }
 
-      Server_Hello(Handshake_Writer& writer,
+      Server_Hello(Handshake_IO& io,
                    Handshake_Hash& hash,
                    const std::vector<byte>& session_id,
                    Protocol_Version ver,
@@ -243,7 +243,7 @@ class Client_Key_Exchange : public Handshake_Message
       const secure_vector<byte>& pre_master_secret() const
          { return pre_master; }
 
-      Client_Key_Exchange(Handshake_Writer& output,
+      Client_Key_Exchange(Handshake_IO& io,
                           Handshake_State* state,
                           const Policy& policy,
                           Credentials_Manager& creds,
@@ -276,7 +276,7 @@ class Certificate : public Handshake_Message
       size_t count() const { return m_certs.size(); }
       bool empty() const { return m_certs.empty(); }
 
-      Certificate(Handshake_Writer& writer,
+      Certificate(Handshake_IO& io,
                   Handshake_Hash& hash,
                   const std::vector<X509_Certificate>& certs);
 
@@ -303,7 +303,7 @@ class Certificate_Req : public Handshake_Message
       std::vector<std::pair<std::string, std::string> > supported_algos() const
          { return m_supported_algos; }
 
-      Certificate_Req(Handshake_Writer& writer,
+      Certificate_Req(Handshake_IO& io,
                       Handshake_Hash& hash,
                       const Policy& policy,
                       const std::vector<X509_Certificate>& allowed_cas,
@@ -336,7 +336,7 @@ class Certificate_Verify : public Handshake_Message
       bool verify(const X509_Certificate& cert,
                   Handshake_State* state);
 
-      Certificate_Verify(Handshake_Writer& writer,
+      Certificate_Verify(Handshake_IO& io,
                          Handshake_State* state,
                          const Policy& policy,
                          RandomNumberGenerator& rng,
@@ -366,7 +366,7 @@ class Finished : public Handshake_Message
       bool verify(Handshake_State* state,
                   Connection_Side side);
 
-      Finished(Handshake_Writer& writer,
+      Finished(Handshake_IO& io,
                Handshake_State* state,
                Connection_Side side);
 
@@ -386,7 +386,7 @@ class Hello_Request : public Handshake_Message
    public:
       Handshake_Type type() const { return HELLO_REQUEST; }
 
-      Hello_Request(Handshake_Writer& writer);
+      Hello_Request(Handshake_IO& io);
       Hello_Request(const std::vector<byte>& buf);
    private:
       std::vector<byte> serialize() const;
@@ -411,7 +411,7 @@ class Server_Key_Exchange : public Handshake_Message
       // Only valid for SRP negotiation
       SRP6_Server_Session& server_srp_params();
 
-      Server_Key_Exchange(Handshake_Writer& writer,
+      Server_Key_Exchange(Handshake_IO& io,
                           Handshake_State* state,
                           const Policy& policy,
                           Credentials_Manager& creds,
@@ -445,7 +445,7 @@ class Server_Hello_Done : public Handshake_Message
    public:
       Handshake_Type type() const { return SERVER_HELLO_DONE; }
 
-      Server_Hello_Done(Handshake_Writer& writer, Handshake_Hash& hash);
+      Server_Hello_Done(Handshake_IO& io, Handshake_Hash& hash);
       Server_Hello_Done(const std::vector<byte>& buf);
    private:
       std::vector<byte> serialize() const;
@@ -461,7 +461,7 @@ class Next_Protocol : public Handshake_Message
 
       std::string protocol() const { return m_protocol; }
 
-      Next_Protocol(Handshake_Writer& writer,
+      Next_Protocol(Handshake_IO& io,
                     Handshake_Hash& hash,
                     const std::string& protocol);
 
@@ -480,12 +480,12 @@ class New_Session_Ticket : public Handshake_Message
       u32bit ticket_lifetime_hint() const { return m_ticket_lifetime_hint; }
       const std::vector<byte>& ticket() const { return m_ticket; }
 
-      New_Session_Ticket(Handshake_Writer& writer,
+      New_Session_Ticket(Handshake_IO& io,
                          Handshake_Hash& hash,
                          const std::vector<byte>& ticket,
                          u32bit lifetime);
 
-      New_Session_Ticket(Handshake_Writer& writer,
+      New_Session_Ticket(Handshake_IO& io,
                          Handshake_Hash& hash);
 
       New_Session_Ticket(const std::vector<byte>& buf);

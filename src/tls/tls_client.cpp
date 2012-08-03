@@ -45,8 +45,7 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
 
 Handshake_State* Client::new_handshake_state()
    {
-   return new Handshake_State(new Stream_Handshake_Reader,
-                              new Stream_Handshake_Writer(m_writer));
+   return new Handshake_State(new Stream_Handshake_IO(m_writer));
    }
 
 /*
@@ -84,7 +83,7 @@ void Client::initiate_handshake(bool force_full_renegotiation,
          if(srp_identifier == "" || session_info.srp_identifier() == srp_identifier)
             {
             m_state->client_hello = new Client_Hello(
-               m_state->handshake_writer(),
+               m_state->handshake_io(),
                m_state->hash,
                m_policy,
                m_rng,
@@ -100,7 +99,7 @@ void Client::initiate_handshake(bool force_full_renegotiation,
    if(!m_state->client_hello) // not resuming
       {
       m_state->client_hello = new Client_Hello(
-         m_state->handshake_writer(),
+         m_state->handshake_io(),
          m_state->hash,
          version,
          m_policy,
@@ -157,7 +156,7 @@ void Client::process_handshake_msg(Handshake_Type type,
    m_state->confirm_transition_to(type);
 
    if(type != HANDSHAKE_CCS && type != FINISHED)
-      m_state->hash.update(m_state->handshake_writer().format(contents, type));
+      m_state->hash.update(m_state->handshake_io().format(contents, type));
 
    if(type == SERVER_HELLO)
       {
@@ -344,13 +343,13 @@ void Client::process_handshake_msg(Handshake_Type type,
                                "tls-client",
                                m_hostname);
 
-         m_state->client_certs = new Certificate(m_state->handshake_writer(),
+         m_state->client_certs = new Certificate(m_state->handshake_io(),
                                                  m_state->hash,
                                                  client_certs);
          }
 
       m_state->client_kex =
-         new Client_Key_Exchange(m_state->handshake_writer(),
+         new Client_Key_Exchange(m_state->handshake_io(),
                                  m_state.get(),
                                  m_policy,
                                  m_creds,
@@ -370,7 +369,7 @@ void Client::process_handshake_msg(Handshake_Type type,
                                     "tls-client",
                                     m_hostname);
 
-         m_state->client_verify = new Certificate_Verify(m_state->handshake_writer(),
+         m_state->client_verify = new Certificate_Verify(m_state->handshake_io(),
                                                          m_state.get(),
                                                          m_policy,
                                                          m_rng,
@@ -389,10 +388,10 @@ void Client::process_handshake_msg(Handshake_Type type,
          const std::string protocol =
             m_state->client_npn_cb(m_state->server_hello->next_protocols());
 
-         m_state->next_protocol = new Next_Protocol(m_state->handshake_writer(), m_state->hash, protocol);
+         m_state->next_protocol = new Next_Protocol(m_state->handshake_io(), m_state->hash, protocol);
          }
 
-      m_state->client_finished = new Finished(m_state->handshake_writer(),
+      m_state->client_finished = new Finished(m_state->handshake_io(),
                                               m_state.get(), CLIENT);
 
       if(m_state->server_hello->supports_session_ticket())
@@ -425,7 +424,7 @@ void Client::process_handshake_msg(Handshake_Type type,
          throw TLS_Exception(Alert::DECRYPT_ERROR,
                              "Finished message didn't verify");
 
-      m_state->hash.update(m_state->handshake_writer().format(contents, type));
+      m_state->hash.update(m_state->handshake_io().format(contents, type));
 
       if(!m_state->client_finished) // session resume case
          {
@@ -436,7 +435,7 @@ void Client::process_handshake_msg(Handshake_Type type,
                                      m_state->keys,
                                      m_state->server_hello->compression_method());
 
-         m_state->client_finished = new Finished(m_state->handshake_writer(),
+         m_state->client_finished = new Finished(m_state->handshake_io(),
                                                  m_state.get(), CLIENT);
          }
 

@@ -8,7 +8,7 @@
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_extensions.h>
-#include <botan/internal/tls_handshake_writer.h>
+#include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/assert.h>
 #include <botan/credentials_manager.h>
 #include <botan/loadstor.h>
@@ -27,7 +27,7 @@ namespace TLS {
 /**
 * Create a new Server Key Exchange message
 */
-Server_Key_Exchange::Server_Key_Exchange(Handshake_Writer& writer,
+Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
                                          Handshake_State* state,
                                          const Policy& policy,
                                          Credentials_Manager& creds,
@@ -136,7 +136,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_Writer& writer,
       m_signature = signer.signature(rng);
       }
 
-   state->hash.update(writer.send(*this));
+   state->hash.update(io.send(*this));
    }
 
 /**
