@@ -12,6 +12,7 @@
 #include <botan/loadstor.h>
 #include <vector>
 #include <deque>
+#include <map>
 #include <utility>
 
 namespace Botan {
@@ -77,6 +78,56 @@ class Stream_Handshake_IO : public Handshake_IO
       std::pair<Handshake_Type, std::vector<byte> > get_next_record() override;
    private:
       std::deque<byte> m_queue;
+      Record_Writer& m_writer;
+   };
+
+/**
+* Handshake IO for datagram-based handshakes
+*/
+class Datagram_Handshake_IO : public Handshake_IO
+   {
+   public:
+      Datagram_Handshake_IO(Record_Writer& writer) : m_writer(writer) {}
+
+      std::vector<byte> send(Handshake_Message& msg) override;
+
+      std::vector<byte> format(
+         const std::vector<byte>& handshake_msg,
+         Handshake_Type handshake_type) override;
+
+      void add_input(const byte rec_type,
+                     const byte record[],
+                     size_t record_size) override;
+
+      bool empty() const override;
+
+      bool have_full_record() const override;
+
+      std::pair<Handshake_Type, std::vector<byte>> get_next_record() override;
+   private:
+      class Handshake_Reassembly
+         {
+         public:
+            void add_fragment(const byte fragment[],
+                              size_t fragment_length,
+                              size_t fragment_offset,
+                              byte msg_type,
+                              size_t msg_length);
+
+            bool complete() const;
+
+            std::pair<Handshake_Type, std::vector<byte>> message() const;
+         private:
+            byte m_msg_type = HANDSHAKE_NONE;
+            size_t m_msg_length = 0;
+
+            std::vector<byte> m_buffer;
+         };
+
+      std::map<u16bit, Handshake_Reassembly> m_messages;
+
+      u16bit m_in_message_seq = 0;
+      u16bit m_out_message_seq = 0;
       Record_Writer& m_writer;
    };
 
