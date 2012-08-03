@@ -9,6 +9,7 @@
 #define BOTAN_TLS_HANDSHAKE_IO_H__
 
 #include <botan/tls_magic.h>
+#include <botan/tls_version.h>
 #include <botan/loadstor.h>
 #include <vector>
 #include <deque>
@@ -28,6 +29,8 @@ class Handshake_Message;
 class Handshake_IO
    {
    public:
+      virtual Protocol_Version initial_record_version() const = 0;
+
       virtual std::vector<byte> send(Handshake_Message& msg) = 0;
 
       virtual std::vector<byte> format(
@@ -61,6 +64,8 @@ class Stream_Handshake_IO : public Handshake_IO
    public:
       Stream_Handshake_IO(Record_Writer& writer) : m_writer(writer) {}
 
+      Protocol_Version initial_record_version() const override;
+
       std::vector<byte> send(Handshake_Message& msg) override;
 
       std::vector<byte> format(
@@ -88,6 +93,8 @@ class Datagram_Handshake_IO : public Handshake_IO
    {
    public:
       Datagram_Handshake_IO(Record_Writer& writer) : m_writer(writer) {}
+
+      Protocol_Version initial_record_version() const override;
 
       std::vector<byte> send(Handshake_Message& msg) override;
 

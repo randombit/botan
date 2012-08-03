@@ -45,6 +45,8 @@ class BOTAN_DLL Record_Writer
 
       void set_version(Protocol_Version version);
 
+      bool record_version_set() const { return m_version.valid(); }
+
       void reset();
 
       void set_maximum_fragment_size(size_t max_fragment);

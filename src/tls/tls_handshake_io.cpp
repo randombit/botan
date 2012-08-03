@@ -33,6 +33,11 @@ void store_be24(byte out[3], size_t val)
 
 }
 
+Protocol_Version Stream_Handshake_IO::initial_record_version() const
+   {
+   return Protocol_Version::SSL_V3;
+   }
+
 void Stream_Handshake_IO::add_input(const byte rec_type,
                                     const byte record[],
                                     size_t record_size)
@@ -117,6 +122,11 @@ std::vector<byte> Stream_Handshake_IO::send(Handshake_Message& msg)
    m_writer.send(HANDSHAKE, &buf[0], buf.size());
 
    return buf;
+   }
+
+Protocol_Version Datagram_Handshake_IO::initial_record_version() const
+   {
+   return Protocol_Version::DTLS_V10;
    }
 
 void Datagram_Handshake_IO::add_input(const byte rec_type,

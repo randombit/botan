@@ -35,8 +35,6 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
    m_hostname(hostname),
    m_port(port)
    {
-   m_writer.set_version(Protocol_Version::SSL_V3);
-
    const std::string srp_identifier = m_creds.srp_identifier("tls-client", m_hostname);
 
    const Protocol_Version version = m_policy.pref_version();
@@ -69,6 +67,10 @@ void Client::initiate_handshake(bool force_full_renegotiation,
                                 std::function<std::string (std::vector<std::string>)> next_protocol)
    {
    m_state.reset(new_handshake_state());
+
+   if(!m_writer.record_version_set())
+      m_writer.set_version(m_state->handshake_io().initial_record_version());
+
    m_state->set_expected_next(SERVER_HELLO);
 
    m_state->client_npn_cb = next_protocol;

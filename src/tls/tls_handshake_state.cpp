@@ -87,7 +87,7 @@ u32bit bitmask_for_handshake_type(Handshake_Type type)
 */
 Handshake_State::Handshake_State(Handshake_IO* io) :
    m_handshake_io(io),
-   m_version(Protocol_Version::SSL_V3)
+   m_version(m_handshake_io->initial_record_version())
    {
    }
 
