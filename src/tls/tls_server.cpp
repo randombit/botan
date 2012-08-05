@@ -207,7 +207,9 @@ Server::Server(std::function<void (const byte[], size_t)> output_fn,
 
 Handshake_State* Server::new_handshake_state()
    {
-   return new Handshake_State(new Stream_Handshake_IO(m_writer));
+   Handshake_State* state = new Handshake_State(new Stream_Handshake_IO(m_writer));
+   state->set_expected_next(CLIENT_HELLO);
+   return state;
    }
 
 /*
@@ -219,9 +221,8 @@ void Server::renegotiate(bool force_full_renegotiation)
       return; // currently in handshake
 
    m_state.reset(new_handshake_state());
-
    m_state->allow_session_resumption = !force_full_renegotiation;
-   m_state->set_expected_next(CLIENT_HELLO);
+
    Hello_Request hello_req(m_state->handshake_io());
    }
 
@@ -232,21 +233,6 @@ void Server::alert_notify(const Alert& alert)
       if(m_handshake_completed && m_state)
          m_state.reset();
       }
-   }
-
-/*
-* Split up and process handshake messages
-*/
-void Server::read_handshake(byte rec_type,
-                            const std::vector<byte>& rec_buf)
-   {
-   if(rec_type == HANDSHAKE && !m_state)
-      {
-      m_state.reset(new_handshake_state());
-      m_state->set_expected_next(CLIENT_HELLO);
-      }
-
-   Channel::read_handshake(rec_type, rec_buf);
    }
 
 /*

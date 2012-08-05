@@ -65,7 +65,17 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
 
          if(rec_type == HANDSHAKE || rec_type == CHANGE_CIPHER_SPEC)
             {
-            read_handshake(rec_type, record);
+            if(!m_state)
+               m_state.reset(new_handshake_state());
+
+            m_state->handshake_io().add_input(rec_type, &record[0], record.size());
+
+            while(m_state && m_state->handshake_io().have_full_record())
+               {
+               std::pair<Handshake_Type, std::vector<byte> > msg =
+                  m_state->handshake_io().get_next_record();
+               process_handshake_msg(msg.first, msg.second);
+               }
             }
          else if(rec_type == HEARTBEAT && m_peer_supports_heartbeats)
             {
@@ -162,25 +172,6 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
       {
       send_alert(Alert(Alert::INTERNAL_ERROR, true));
       throw;
-      }
-   }
-
-/*
-* Split up and process handshake messages
-*/
-void Channel::read_handshake(byte rec_type,
-                             const std::vector<byte>& rec_buf)
-   {
-   if(!m_state)
-      m_state.reset(new_handshake_state());
-
-   m_state->handshake_io().add_input(rec_type, &rec_buf[0], rec_buf.size());
-
-   while(m_state && m_state->handshake_io().have_full_record())
-      {
-      std::pair<Handshake_Type, std::vector<byte> > msg =
-         m_state->handshake_io().get_next_record();
-      process_handshake_msg(msg.first, msg.second);
       }
    }
 

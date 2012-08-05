@@ -104,9 +104,6 @@ class BOTAN_DLL Channel
       */
       void send_alert(const Alert& alert);
 
-      virtual void read_handshake(byte rec_type,
-                                  const std::vector<byte>& rec_buf);
-
       virtual void process_handshake_msg(Handshake_Type type,
                                          const std::vector<byte>& contents) = 0;
 
