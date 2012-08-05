@@ -110,10 +110,8 @@ class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
       *        seconds have elapsed from initial handshake.
       */
       Session_Manager_In_Memory(size_t max_sessions = 1000,
-                                std::chrono::seconds session_lifetime = std::chrono::seconds(7200)) :
-         m_max_sessions(max_sessions),
-         m_session_lifetime(session_lifetime)
-            {}
+                                std::chrono::seconds session_lifetime =
+                                   std::chrono::seconds(7200));
 
       bool load_from_session_id(const std::vector<byte>& session_id,
                                 Session& session) override;
@@ -138,7 +136,10 @@ class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
 
       std::chrono::seconds m_session_lifetime;
 
-      std::map<std::string, Session> m_sessions; // hex(session_id) -> session
+      RandomNumberGenerator& m_rng;
+      SymmetricKey m_session_key;
+
+      std::map<std::string, std::vector<byte>> m_sessions; // hex(session_id) -> session
       std::map<std::string, std::string> m_host_sessions;
    };
 

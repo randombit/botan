@@ -77,7 +77,7 @@ class BOTAN_DLL Session
       * Encrypt a session (useful for serialization or session tickets)
       */
       std::vector<byte> encrypt(const SymmetricKey& key,
-                                 RandomNumberGenerator& rng) const;
+                                RandomNumberGenerator& rng) const;
 
 
       /**

@@ -1,17 +1,26 @@
 /*
 * TLS Session Management
-* (C) 2011 Jack Lloyd
+* (C) 2011,2012 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
 
 #include <botan/tls_session_manager.h>
+#include <botan/libstate.h>
 #include <botan/hex.h>
 #include <chrono>
 
 namespace Botan {
 
 namespace TLS {
+
+Session_Manager_In_Memory::Session_Manager_In_Memory(
+   size_t max_sessions, std::chrono::seconds session_lifetime) :
+   m_max_sessions(max_sessions),
+   m_session_lifetime(session_lifetime),
+   m_rng(global_state().global_rng()),
+   m_session_key(m_rng, 32)
+   {}
 
 bool Session_Manager_In_Memory::load_from_session_str(
    const std::string& session_str, Session& session)
@@ -23,16 +32,24 @@ bool Session_Manager_In_Memory::load_from_session_str(
    if(i == m_sessions.end())
       return false;
 
+   try
+      {
+      session = Session::decrypt(i->second, m_session_key);
+      }
+   catch(...)
+      {
+      return false;
+      }
+
    // if session has expired, remove it
    const auto now = std::chrono::system_clock::now();
 
-   if(i->second.start_time() + session_lifetime() < now)
+   if(session.start_time() + session_lifetime() < now)
       {
       m_sessions.erase(i);
       return false;
       }
 
-   session = i->second;
    return true;
    }
 
@@ -96,7 +113,7 @@ void Session_Manager_In_Memory::save(const Session& session, u16bit port)
 
    const std::string session_id_str = hex_encode(session.session_id());
 
-   m_sessions[session_id_str] = session;
+   m_sessions[session_id_str] = session.encrypt(m_session_key, m_rng);
 
    const std::string hostname = session.sni_hostname();
 
