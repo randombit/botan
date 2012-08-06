@@ -83,6 +83,11 @@ class BOTAN_DLL Policy
       virtual bool allow_insecure_renegotiation() const { return false; }
 
       /**
+      * Allow servers to initiate a new handshake
+      */
+      virtual bool allow_server_initiated_renegotiation() const { return true; }
+
+      /**
       * Return the group to use for ephemeral Diffie-Hellman key agreement
       */
       virtual DL_Group dh_group() const;
