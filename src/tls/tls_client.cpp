@@ -15,6 +15,24 @@ namespace Botan {
 
 namespace TLS {
 
+namespace {
+
+class Client_Handshake_State : public Handshake_State
+   {
+   public:
+      Client_Handshake_State(Handshake_IO* io) : Handshake_State(io) {}
+
+      secure_vector<byte> resume_master_secret; // FIXME make private
+
+      /**
+      * Used by client using NPN
+      * FIXME make private
+      */
+      std::function<std::string (std::vector<std::string>)> client_npn_cb;
+   };
+
+}
+
 /*
 * TLS Client Constructor
 */
@@ -43,7 +61,7 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
 
 Handshake_State* Client::new_handshake_state()
    {
-   return new Handshake_State(new Stream_Handshake_IO(m_writer));
+   return new Client_Handshake_State(new Stream_Handshake_IO(m_writer));
    }
 
 /*
@@ -75,7 +93,7 @@ void Client::initiate_handshake(bool force_full_renegotiation,
       m_state->set_expected_next(HELLO_VERIFY_REQUEST);
    m_state->set_expected_next(SERVER_HELLO);
 
-   m_state->client_npn_cb = next_protocol;
+   dynamic_cast<Client_Handshake_State&>(*m_state).client_npn_cb = next_protocol;
 
    const bool send_npn_request = static_cast<bool>(next_protocol);
 
@@ -95,7 +113,8 @@ void Client::initiate_handshake(bool force_full_renegotiation,
                session_info,
                send_npn_request));
 
-            m_state->resume_master_secret = session_info.master_secret();
+            dynamic_cast<Client_Handshake_State&>(*m_state).resume_master_secret =
+               session_info.master_secret();
             }
          }
       }
@@ -234,7 +253,9 @@ void Client::process_handshake_msg(Handshake_Type type,
             throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                                 "Server resumed session but with wrong version");
 
-         m_state->compute_session_keys(m_state->resume_master_secret);
+         m_state->compute_session_keys(
+            dynamic_cast<Client_Handshake_State&>(*m_state).resume_master_secret
+            );
 
          // The server is not strictly required to send us a new ticket
          if(m_state->server_hello()->supports_session_ticket())
@@ -410,7 +431,8 @@ void Client::process_handshake_msg(Handshake_Type type,
       if(m_state->server_hello()->next_protocol_notification())
          {
          const std::string protocol =
-            m_state->client_npn_cb(m_state->server_hello()->next_protocols());
+            dynamic_cast<Client_Handshake_State&>(*m_state).client_npn_cb(
+               m_state->server_hello()->next_protocols());
 
          m_state->next_protocol(
             new Next_Protocol(m_state->handshake_io(), m_state->hash(), protocol)

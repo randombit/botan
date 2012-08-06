@@ -47,7 +47,7 @@ class Handshake_State
    public:
       Handshake_State(Handshake_IO* io);
 
-      ~Handshake_State();
+      virtual ~Handshake_State();
 
       Handshake_State(const Handshake_State&) = delete;
       Handshake_State& operator=(const Handshake_State&) = delete;
@@ -151,20 +151,10 @@ class Handshake_State
       Private_Key* server_rsa_kex_key = nullptr; // FIXME make private
 
       /*
-      * Only used by clients for session resumption
-      */
-      secure_vector<byte> resume_master_secret; // FIXME make private
-
-      /*
       * Used by the server to know if resumption should be allowed on
       * a server-initiated renegotiation
       */
       bool allow_session_resumption = true; // FIXME make private
-
-      /**
-      * Used by client using NPN FIXME make private
-      */
-      std::function<std::string (std::vector<std::string>)> client_npn_cb;
 
    private:
       std::unique_ptr<Handshake_IO> m_handshake_io;
