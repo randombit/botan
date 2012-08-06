@@ -16,6 +16,7 @@
 #include <botan/mac.h>
 #include <vector>
 #include <functional>
+#include <memory>
 
 namespace Botan {
 
@@ -57,8 +58,6 @@ class BOTAN_DLL Record_Writer
       Record_Writer(const Record_Writer&) = delete;
 
       Record_Writer& operator=(const Record_Writer&) = delete;
-
-      ~Record_Writer() { delete m_mac; }
    private:
       void send_record(byte type, const byte input[], size_t length);
 
@@ -67,7 +66,7 @@ class BOTAN_DLL Record_Writer
       std::vector<byte> m_writebuf;
 
       Pipe m_cipher;
-      MessageAuthenticationCode* m_mac;
+      std::unique_ptr<MessageAuthenticationCode> m_mac;
       RandomNumberGenerator& m_rng;
 
       size_t m_block_size, m_mac_size, m_iv_size, m_max_fragment;
@@ -115,8 +114,6 @@ class BOTAN_DLL Record_Reader
 
       Record_Reader(const Record_Reader&) = delete;
       Record_Reader& operator=(const Record_Reader&) = delete;
-
-      ~Record_Reader() { delete m_mac; }
    private:
       size_t fill_buffer_to(const byte*& input,
                             size_t& input_size,
@@ -128,7 +125,7 @@ class BOTAN_DLL Record_Reader
       size_t m_readbuf_pos;
 
       Pipe m_cipher;
-      MessageAuthenticationCode* m_mac;
+      std::unique_ptr<MessageAuthenticationCode> m_mac;
       size_t m_block_size, m_iv_size, m_max_fragment;
       u64bit m_seq_no;
       Protocol_Version m_version;

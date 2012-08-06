@@ -26,7 +26,6 @@ Record_Writer::Record_Writer(std::function<void (const byte[], size_t)> out,
                              RandomNumberGenerator& rng) :
    m_output_fn(out),
    m_writebuf(TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE),
-   m_mac(nullptr),
    m_rng(rng)
    {
    reset();
@@ -49,8 +48,7 @@ void Record_Writer::reset()
    set_maximum_fragment_size(0);
    m_cipher.reset();
 
-   delete m_mac;
-   m_mac = nullptr;
+   m_mac.reset();
 
    m_version = Protocol_Version();
    m_block_size = 0;
@@ -77,8 +75,7 @@ void Record_Writer::change_cipher_spec(Connection_Side side,
                                        byte compression_method)
    {
    m_cipher.reset();
-   delete m_mac;
-   m_mac = nullptr;
+   m_mac.reset();
 
    if(compression_method != NO_COMPRESSION)
       throw Internal_Error("Negotiated unknown compression algorithm");
@@ -137,9 +134,9 @@ void Record_Writer::change_cipher_spec(Connection_Side side,
       Algorithm_Factory& af = global_state().algorithm_factory();
 
       if(m_version == Protocol_Version::SSL_V3)
-         m_mac = af.make_mac("SSL3-MAC(" + mac_algo + ")");
+         m_mac.reset(af.make_mac("SSL3-MAC(" + mac_algo + ")"));
       else
-         m_mac = af.make_mac("HMAC(" + mac_algo + ")");
+         m_mac.reset(af.make_mac("HMAC(" + mac_algo + ")"));
 
       m_mac->set_key(mac_key);
       m_mac_size = m_mac->output_length();

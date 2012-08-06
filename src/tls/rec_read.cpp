@@ -17,8 +17,7 @@ namespace Botan {
 namespace TLS {
 
 Record_Reader::Record_Reader() :
-   m_readbuf(TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE),
-   m_mac(nullptr)
+   m_readbuf(TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE)
    {
    reset();
    set_maximum_fragment_size(0);
@@ -36,8 +35,7 @@ void Record_Reader::reset()
 
    m_cipher.reset();
 
-   delete m_mac;
-   m_mac = nullptr;
+   m_mac.reset();
 
    m_block_size = 0;
    m_iv_size = 0;
@@ -76,8 +74,7 @@ void Record_Reader::change_cipher_spec(Connection_Side side,
                                        byte compression_method)
    {
    m_cipher.reset();
-   delete m_mac;
-   m_mac = nullptr;
+   m_mac.reset();
    m_seq_no = 0;
 
    if(compression_method != NO_COMPRESSION)
@@ -129,9 +126,9 @@ void Record_Reader::change_cipher_spec(Connection_Side side,
       Algorithm_Factory& af = global_state().algorithm_factory();
 
       if(m_version == Protocol_Version::SSL_V3)
-         m_mac = af.make_mac("SSL3-MAC(" + mac_algo + ")");
+         m_mac.reset(af.make_mac("SSL3-MAC(" + mac_algo + ")"));
       else
-         m_mac = af.make_mac("HMAC(" + mac_algo + ")");
+         m_mac.reset(af.make_mac("HMAC(" + mac_algo + ")"));
 
       m_mac->set_key(mac_key);
       m_macbuf.resize(m_mac->output_length());
