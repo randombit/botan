@@ -140,7 +140,8 @@ void doit(RandomNumberGenerator& rng,
                       policy,
                       rng,
                       host,
-                      port);
+                      port,
+                      protocol_chooser);
 
    fd_set readfds;
 
