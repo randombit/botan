@@ -22,12 +22,10 @@ class Client_Handshake_State : public Handshake_State
    public:
       Client_Handshake_State(Handshake_IO* io) : Handshake_State(io) {}
 
-      secure_vector<byte> resume_master_secret; // FIXME make private
+      // Used during session resumption
+      secure_vector<byte> resume_master_secret;
 
-      /**
-      * Used by client using NPN
-      * FIXME make private
-      */
+      // Used by client using NPN
       std::function<std::string (std::vector<std::string>)> client_npn_cb;
    };
 
