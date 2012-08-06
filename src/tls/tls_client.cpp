@@ -484,6 +484,17 @@ void Client::process_handshake_msg(Handshake_Type type,
                                      m_state->session_keys(),
                                      m_state->server_hello()->compression_method());
 
+         if(m_state->server_hello()->next_protocol_notification())
+            {
+            const std::string protocol =
+               dynamic_cast<Client_Handshake_State&>(*m_state).client_npn_cb(
+                  m_state->server_hello()->next_protocols());
+
+            m_state->next_protocol(
+               new Next_Protocol(m_state->handshake_io(), m_state->hash(), protocol)
+               );
+            }
+
          m_state->client_finished(
             new Finished(m_state->handshake_io(), m_state.get(), CLIENT)
             );
