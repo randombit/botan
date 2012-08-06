@@ -368,7 +368,7 @@ class Finished : public Handshake_Message
       std::vector<byte> verify_data() const
          { return m_verification_data; }
 
-      bool verify(Handshake_State* state,
+      bool verify(const Handshake_State* state,
                   Connection_Side side) const;
 
       Finished(Handshake_IO& io,
@@ -408,7 +408,7 @@ class Server_Key_Exchange : public Handshake_Message
       const std::vector<byte>& params() const { return m_params; }
 
       bool verify(const X509_Certificate& cert,
-                  Handshake_State* state) const;
+                  const Handshake_State* state) const;
 
       // Only valid for certain kex types
       const Private_Key& server_kex_key() const;

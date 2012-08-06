@@ -18,7 +18,7 @@ namespace {
 /*
 * Compute the verify_data
 */
-std::vector<byte> finished_compute_verify(Handshake_State* state,
+std::vector<byte> finished_compute_verify(const Handshake_State* state,
                                           Connection_Side side)
    {
    if(state->version() == Protocol_Version::SSL_V3)
@@ -93,7 +93,7 @@ Finished::Finished(const std::vector<byte>& buf)
 /*
 * Verify a Finished message
 */
-bool Finished::verify(Handshake_State* state,
+bool Finished::verify(const Handshake_State* state,
                       Connection_Side side) const
    {
    return (m_verification_data == finished_compute_verify(state, side));

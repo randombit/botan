@@ -255,7 +255,7 @@ std::vector<byte> Server_Key_Exchange::serialize() const
 * Verify a Server Key Exchange message
 */
 bool Server_Key_Exchange::verify(const X509_Certificate& cert,
-                                 Handshake_State* state) const
+                                 const Handshake_State* state) const
    {
    std::unique_ptr<Public_Key> key(cert.subject_public_key());
 
