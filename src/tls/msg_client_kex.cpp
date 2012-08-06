@@ -177,7 +177,8 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
          PK_Key_Agreement ka(priv_key, "Raw");
 
-         secure_vector<byte> ecdh_secret = ka.derive_key(0, counterparty_key.public_value()).bits_of();
+         secure_vector<byte> ecdh_secret =
+            ka.derive_key(0, counterparty_key.public_value()).bits_of();
 
          if(kex_algo == "ECDH")
             m_pre_master = ecdh_secret;

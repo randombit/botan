@@ -324,7 +324,11 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
 
    // FIXME: avoid memory allocation by processing in place
    m_cipher.process_msg(&m_readbuf[TLS_HEADER_SIZE], record_len);
-   size_t got_back = m_cipher.read(&m_readbuf[TLS_HEADER_SIZE], record_len, Pipe::LAST_MESSAGE);
+
+   const size_t got_back = m_cipher.read(&m_readbuf[TLS_HEADER_SIZE],
+                                         record_len,
+                                         Pipe::LAST_MESSAGE);
+
    BOTAN_ASSERT_EQUAL(got_back, record_len, "Cipher encrypted full amount");
 
    BOTAN_ASSERT_EQUAL(m_cipher.remaining(Pipe::LAST_MESSAGE), 0,
