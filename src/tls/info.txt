@@ -36,6 +36,7 @@ tls_session_key.h
 <source>
 msg_cert_req.cpp
 msg_cert_verify.cpp
+msg_certificate.cpp
 msg_client_hello.cpp
 msg_client_kex.cpp
 msg_finished.cpp

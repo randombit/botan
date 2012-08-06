@@ -379,8 +379,6 @@ class Extensions
       Extensions() {}
 
       Extensions(TLS_Data_Reader& reader); // deserialize
-
-      ~Extensions();
    private:
       Extensions(const Extensions&) {}
       Extensions& operator=(const Extensions&) { return (*this); }
