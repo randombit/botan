@@ -166,7 +166,7 @@ void Client::process_handshake_msg(Handshake_Type type,
          return;
 
       if(!m_policy.allow_server_initiated_renegotiation() ||
-         (!m_policy.allow_insecure_renegotiation()) && !m_secure_renegotiation.supported())
+         (!m_policy.allow_insecure_renegotiation() && !m_secure_renegotiation.supported()))
          {
          m_state.reset();
 
