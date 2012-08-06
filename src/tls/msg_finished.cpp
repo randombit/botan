@@ -35,7 +35,7 @@ std::vector<byte> finished_compute_verify(const Handshake_State* state,
       else
          hash.update(SSL_SERVER_LABEL, sizeof(SSL_SERVER_LABEL));
 
-      return unlock(hash.final_ssl3(state->keys.master_secret()));
+      return unlock(hash.final_ssl3(state->session_keys().master_secret()));
       }
    else
       {
@@ -57,7 +57,7 @@ std::vector<byte> finished_compute_verify(const Handshake_State* state,
 
       input += state->hash.final(state->version(), state->ciphersuite().mac_algo());
 
-      return unlock(prf->derive_key(12, state->keys.master_secret(), input));
+      return unlock(prf->derive_key(12, state->session_keys().master_secret(), input));
       }
    }
 

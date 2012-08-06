@@ -234,9 +234,7 @@ void Client::process_handshake_msg(Handshake_Type type,
             throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                                 "Server resumed session but with wrong version");
 
-         m_state->keys = Session_Keys(m_state.get(),
-                                      m_state->resume_master_secret,
-                                      true);
+         m_state->compute_session_keys(m_state->resume_master_secret);
 
          // The server is not strictly required to send us a new ticket
          if(m_state->server_hello()->supports_session_ticket())
@@ -383,9 +381,7 @@ void Client::process_handshake_msg(Handshake_Type type,
                                  m_rng)
          );
 
-      m_state->keys = Session_Keys(m_state.get(),
-                                   m_state->client_kex()->pre_master_secret(),
-                                   false);
+      m_state->compute_session_keys();
 
       if(m_state->received_handshake_msg(CERTIFICATE_REQUEST) &&
          !m_state->client_certs()->empty())
@@ -408,7 +404,7 @@ void Client::process_handshake_msg(Handshake_Type type,
 
       m_writer.change_cipher_spec(CLIENT,
                                   m_state->ciphersuite(),
-                                  m_state->keys,
+                                  m_state->session_keys(),
                                   m_state->server_hello()->compression_method());
 
       if(m_state->server_hello()->next_protocol_notification())
@@ -442,7 +438,7 @@ void Client::process_handshake_msg(Handshake_Type type,
 
       m_reader.change_cipher_spec(CLIENT,
                                   m_state->ciphersuite(),
-                                  m_state->keys,
+                                  m_state->session_keys(),
                                   m_state->server_hello()->compression_method());
       }
    else if(type == FINISHED)
@@ -463,7 +459,7 @@ void Client::process_handshake_msg(Handshake_Type type,
 
          m_writer.change_cipher_spec(CLIENT,
                                      m_state->ciphersuite(),
-                                     m_state->keys,
+                                     m_state->session_keys(),
                                      m_state->server_hello()->compression_method());
 
          m_state->client_finished(
@@ -483,7 +479,7 @@ void Client::process_handshake_msg(Handshake_Type type,
 
       Session session_info(
          session_id,
-         m_state->keys.master_secret(),
+         m_state->session_keys().master_secret(),
          m_state->server_hello()->version(),
          m_state->server_hello()->ciphersuite(),
          m_state->server_hello()->compression_method(),

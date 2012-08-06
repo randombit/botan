@@ -164,6 +164,16 @@ void Handshake_State::set_version(const Protocol_Version& version)
    m_version = version;
    }
 
+void Handshake_State::compute_session_keys()
+   {
+   m_session_keys = Session_Keys(this, client_kex()->pre_master_secret(), false);
+   }
+
+void Handshake_State::compute_session_keys(const secure_vector<byte>& resume_master_secret)
+   {
+   m_session_keys = Session_Keys(this, resume_master_secret, true);
+   }
+
 void Handshake_State::confirm_transition_to(Handshake_Type handshake_msg)
    {
    const u32bit mask = bitmask_for_handshake_type(handshake_msg);

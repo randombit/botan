@@ -389,7 +389,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             m_writer.set_maximum_fragment_size(session_info.fragment_size());
             }
 
-         m_state->keys = Session_Keys(m_state.get(), session_info.master_secret(), true);
+         m_state->compute_session_keys(session_info.master_secret());
 
          if(!m_handshake_fn(session_info))
             {
@@ -431,7 +431,7 @@ void Server::process_handshake_msg(Handshake_Type type,
 
          m_writer.change_cipher_spec(SERVER,
                                      m_state->ciphersuite(),
-                                     m_state->keys,
+                                     m_state->session_keys(),
                                      m_state->server_hello()->compression_method());
 
          m_state->server_finished(
@@ -580,10 +580,7 @@ void Server::process_handshake_msg(Handshake_Type type,
          new Client_Key_Exchange(contents, m_state.get(), m_creds, m_policy, m_rng)
          );
 
-      m_state->keys = Session_Keys(m_state.get(),
-                                   m_state->client_kex()->pre_master_secret(),
-                                   false);
-
+      m_state->compute_session_keys();
       }
    else if(type == CERTIFICATE_VERIFY)
       {
@@ -624,7 +621,7 @@ void Server::process_handshake_msg(Handshake_Type type,
 
       m_reader.change_cipher_spec(SERVER,
                                   m_state->ciphersuite(),
-                                  m_state->keys,
+                                  m_state->session_keys(),
                                   m_state->server_hello()->compression_method());
       }
    else if(type == NEXT_PROTOCOL)
@@ -654,7 +651,7 @@ void Server::process_handshake_msg(Handshake_Type type,
 
          Session session_info(
             m_state->server_hello()->session_id(),
-            m_state->keys.master_secret(),
+            m_state->session_keys().master_secret(),
             m_state->server_hello()->version(),
             m_state->server_hello()->ciphersuite(),
             m_state->server_hello()->compression_method(),
@@ -700,7 +697,7 @@ void Server::process_handshake_msg(Handshake_Type type,
 
          m_writer.change_cipher_spec(SERVER,
                                      m_state->ciphersuite(),
-                                     m_state->keys,
+                                     m_state->session_keys(),
                                      m_state->server_hello()->compression_method());
 
          m_state->server_finished(

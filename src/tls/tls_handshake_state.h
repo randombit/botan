@@ -137,10 +137,15 @@ class Handshake_State
 
       const Ciphersuite& ciphersuite() const { return m_ciphersuite; }
 
+      const Session_Keys& session_keys() const { return m_session_keys; }
+
+      void compute_session_keys();
+
+      void compute_session_keys(const secure_vector<byte>& resume_master_secret);
+
       // Used by the server only, in case of RSA key exchange
       Private_Key* server_rsa_kex_key = nullptr; // FIXME make private
 
-      Session_Keys keys; // FIXME make private
       Handshake_Hash hash; // FIXME make private
 
       /*
@@ -166,6 +171,7 @@ class Handshake_State
       u32bit m_hand_received_mask = 0;
       Protocol_Version m_version;
       Ciphersuite m_ciphersuite;
+      Session_Keys m_session_keys;
 
       std::unique_ptr<Client_Hello> m_client_hello;
       std::unique_ptr<Server_Hello> m_server_hello;
