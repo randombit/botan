@@ -22,12 +22,12 @@ Session_Keys::Session_Keys(const Handshake_State* state,
                            const secure_vector<byte>& pre_master_secret,
                            bool resuming)
    {
-   const size_t mac_keylen = output_length_of(state->suite.mac_algo());
-   const size_t cipher_keylen = state->suite.cipher_keylen();
+   const size_t mac_keylen = output_length_of(state->ciphersuite().mac_algo());
+   const size_t cipher_keylen = state->ciphersuite().cipher_keylen();
 
    size_t cipher_ivlen = 0;
-   if(have_block_cipher(state->suite.cipher_algo()))
-      cipher_ivlen = block_size_of(state->suite.cipher_algo());
+   if(have_block_cipher(state->ciphersuite().cipher_algo()))
+      cipher_ivlen = block_size_of(state->ciphersuite().cipher_algo());
 
    const size_t prf_gen = 2 * (mac_keylen + cipher_keylen + cipher_ivlen);
 

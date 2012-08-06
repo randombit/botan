@@ -55,7 +55,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
                                          const std::string& hostname,
                                          RandomNumberGenerator& rng)
    {
-   const std::string kex_algo = state->suite.kex_algo();
+   const std::string kex_algo = state->ciphersuite().kex_algo();
 
    if(kex_algo == "PSK")
       {
@@ -271,7 +271,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
                                          const Policy& policy,
                                          RandomNumberGenerator& rng)
    {
-   const std::string kex_algo = state->suite.kex_algo();
+   const std::string kex_algo = state->ciphersuite().kex_algo();
 
    if(kex_algo == "RSA")
       {

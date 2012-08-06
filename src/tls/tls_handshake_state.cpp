@@ -101,6 +101,7 @@ void Handshake_State::client_hello(Client_Hello* client_hello)
 void Handshake_State::server_hello(Server_Hello* server_hello)
    {
    m_server_hello.reset(server_hello);
+   m_ciphersuite = Ciphersuite::by_id(m_server_hello->ciphersuite());
    }
 
 void Handshake_State::server_certs(Certificate* server_certs)
@@ -198,7 +199,7 @@ bool Handshake_State::received_handshake_msg(Handshake_Type handshake_msg) const
 
 std::string Handshake_State::srp_identifier() const
    {
-   if(suite.valid() && suite.kex_algo() == "SRP_SHA")
+   if(ciphersuite().valid() && ciphersuite().kex_algo() == "SRP_SHA")
       return client_hello()->srp_identifier();
 
    return "";
@@ -220,10 +221,12 @@ KDF* Handshake_State::protocol_specific_prf() const
       }
    else if(version().supports_ciphersuite_specific_prf())
       {
-      if(suite.mac_algo() == "MD5" || suite.mac_algo() == "SHA-1")
+      const std::string mac_algo = ciphersuite().mac_algo();
+
+      if(mac_algo == "MD5" || mac_algo == "SHA-1")
          return get_kdf("TLS-12-PRF(SHA-256)");
 
-      return get_kdf("TLS-12-PRF(" + suite.mac_algo() + ")");
+      return get_kdf("TLS-12-PRF(" + mac_algo + ")");
       }
    else
       {

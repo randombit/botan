@@ -218,8 +218,6 @@ void Client::process_handshake_msg(Handshake_Type type,
       m_peer_supports_heartbeats = m_state->server_hello()->supports_heartbeats();
       m_heartbeat_sending_allowed = m_state->server_hello()->peer_can_send_heartbeats();
 
-      m_state->suite = Ciphersuite::by_id(m_state->server_hello()->ciphersuite());
-
       const bool server_returned_same_session_id =
          !m_state->server_hello()->session_id().empty() &&
          (m_state->server_hello()->session_id() == m_state->client_hello()->session_id());
@@ -262,11 +260,11 @@ void Client::process_handshake_msg(Handshake_Type type,
                                 "Server version is unacceptable by policy");
             }
 
-         if(m_state->suite.sig_algo() != "")
+         if(m_state->ciphersuite().sig_algo() != "")
             {
             m_state->set_expected_next(CERTIFICATE);
             }
-         else if(m_state->suite.kex_algo() == "PSK")
+         else if(m_state->ciphersuite().kex_algo() == "PSK")
             {
             /* PSK is anonymous so no certificate/cert req message is
                ever sent. The server may or may not send a server kex,
@@ -279,7 +277,7 @@ void Client::process_handshake_msg(Handshake_Type type,
             m_state->set_expected_next(SERVER_KEX);
             m_state->set_expected_next(SERVER_HELLO_DONE);
             }
-         else if(m_state->suite.kex_algo() != "RSA")
+         else if(m_state->ciphersuite().kex_algo() != "RSA")
             {
             m_state->set_expected_next(SERVER_KEX);
             }
@@ -292,7 +290,7 @@ void Client::process_handshake_msg(Handshake_Type type,
       }
    else if(type == CERTIFICATE)
       {
-      if(m_state->suite.kex_algo() != "RSA")
+      if(m_state->ciphersuite().kex_algo() != "RSA")
          {
          m_state->set_expected_next(SERVER_KEX);
          }
@@ -320,7 +318,7 @@ void Client::process_handshake_msg(Handshake_Type type,
 
       std::unique_ptr<Public_Key> peer_key(m_peer_certs[0].subject_public_key());
 
-      if(peer_key->algo_name() != m_state->suite.sig_algo())
+      if(peer_key->algo_name() != m_state->ciphersuite().sig_algo())
          throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
                              "Certificate key type did not match ciphersuite");
       }
@@ -331,12 +329,12 @@ void Client::process_handshake_msg(Handshake_Type type,
 
       m_state->server_kex(
          new Server_Key_Exchange(contents,
-                                 m_state->suite.kex_algo(),
-                                 m_state->suite.sig_algo(),
+                                 m_state->ciphersuite().kex_algo(),
+                                 m_state->ciphersuite().sig_algo(),
                                  m_state->version())
          );
 
-      if(m_state->suite.sig_algo() != "")
+      if(m_state->ciphersuite().sig_algo() != "")
          {
          if(!m_state->server_kex()->verify(m_peer_certs[0], m_state.get()))
             {
@@ -409,7 +407,7 @@ void Client::process_handshake_msg(Handshake_Type type,
       m_writer.send(CHANGE_CIPHER_SPEC, 1);
 
       m_writer.change_cipher_spec(CLIENT,
-                                  m_state->suite,
+                                  m_state->ciphersuite(),
                                   m_state->keys,
                                   m_state->server_hello()->compression_method());
 
@@ -443,7 +441,7 @@ void Client::process_handshake_msg(Handshake_Type type,
       m_state->set_expected_next(FINISHED);
 
       m_reader.change_cipher_spec(CLIENT,
-                                  m_state->suite,
+                                  m_state->ciphersuite(),
                                   m_state->keys,
                                   m_state->server_hello()->compression_method());
       }
@@ -464,7 +462,7 @@ void Client::process_handshake_msg(Handshake_Type type,
          m_writer.send(CHANGE_CIPHER_SPEC, 1);
 
          m_writer.change_cipher_spec(CLIENT,
-                                     m_state->suite,
+                                     m_state->ciphersuite(),
                                      m_state->keys,
                                      m_state->server_hello()->compression_method());
 

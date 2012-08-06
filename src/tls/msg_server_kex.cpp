@@ -35,7 +35,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
                                          const Private_Key* signing_key)
    {
    const std::string hostname = state->client_hello()->sni_hostname();
-   const std::string kex_algo = state->suite.kex_algo();
+   const std::string kex_algo = state->ciphersuite().kex_algo();
 
    if(kex_algo == "PSK" || kex_algo == "DHE_PSK" || kex_algo == "ECDHE_PSK")
       {
@@ -120,7 +120,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
    else if(kex_algo != "PSK")
       throw Internal_Error("Server_Key_Exchange: Unknown kex type " + kex_algo);
 
-   if(state->suite.sig_algo() != "")
+   if(state->ciphersuite().sig_algo() != "")
       {
       BOTAN_ASSERT(signing_key, "Signing key was set");
 

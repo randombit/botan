@@ -389,8 +389,6 @@ void Server::process_handshake_msg(Handshake_Type type,
             m_writer.set_maximum_fragment_size(session_info.fragment_size());
             }
 
-         m_state->suite = Ciphersuite::by_id(m_state->server_hello()->ciphersuite());
-
          m_state->keys = Session_Keys(m_state.get(), session_info.master_secret(), true);
 
          if(!m_handshake_fn(session_info))
@@ -432,7 +430,7 @@ void Server::process_handshake_msg(Handshake_Type type,
          m_writer.send(CHANGE_CIPHER_SPEC, 1);
 
          m_writer.change_cipher_spec(SERVER,
-                                     m_state->suite,
+                                     m_state->ciphersuite(),
                                      m_state->keys,
                                      m_state->server_hello()->compression_method());
 
@@ -493,10 +491,8 @@ void Server::process_handshake_msg(Handshake_Type type,
             m_writer.set_maximum_fragment_size(m_state->client_hello()->fragment_size());
             }
 
-         m_state->suite = Ciphersuite::by_id(m_state->server_hello()->ciphersuite());
-
-         const std::string sig_algo = m_state->suite.sig_algo();
-         const std::string kex_algo = m_state->suite.kex_algo();
+         const std::string sig_algo = m_state->ciphersuite().sig_algo();
+         const std::string kex_algo = m_state->ciphersuite().kex_algo();
 
          if(sig_algo != "")
             {
@@ -542,7 +538,7 @@ void Server::process_handshake_msg(Handshake_Type type,
          std::vector<X509_Certificate> client_auth_CAs =
             m_creds.trusted_certificate_authorities("tls-server", m_hostname);
 
-         if(!client_auth_CAs.empty() && m_state->suite.sig_algo() != "")
+         if(!client_auth_CAs.empty() && m_state->ciphersuite().sig_algo() != "")
             {
             m_state->cert_req(
                new Certificate_Req(m_state->handshake_io(),
@@ -627,7 +623,7 @@ void Server::process_handshake_msg(Handshake_Type type,
          m_state->set_expected_next(FINISHED);
 
       m_reader.change_cipher_spec(SERVER,
-                                  m_state->suite,
+                                  m_state->ciphersuite(),
                                   m_state->keys,
                                   m_state->server_hello()->compression_method());
       }
@@ -703,7 +699,7 @@ void Server::process_handshake_msg(Handshake_Type type,
          m_writer.send(CHANGE_CIPHER_SPEC, 1);
 
          m_writer.change_cipher_spec(SERVER,
-                                     m_state->suite,
+                                     m_state->ciphersuite(),
                                      m_state->keys,
                                      m_state->server_hello()->compression_method());
 
