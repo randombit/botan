@@ -135,7 +135,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       m_signature = signer.signature(rng);
       }
 
-   state->hash.update(io.send(*this));
+   state->hash().update(io.send(*this));
    }
 
 /**

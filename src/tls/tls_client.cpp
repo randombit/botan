@@ -88,7 +88,7 @@ void Client::initiate_handshake(bool force_full_renegotiation,
             {
             m_state->client_hello(new Client_Hello(
                m_state->handshake_io(),
-               m_state->hash,
+               m_state->hash(),
                m_policy,
                m_rng,
                m_secure_renegotiation.for_client_hello(),
@@ -104,7 +104,7 @@ void Client::initiate_handshake(bool force_full_renegotiation,
       {
       m_state->client_hello(new Client_Hello(
          m_state->handshake_io(),
-         m_state->hash,
+         m_state->hash(),
          version,
          m_policy,
          m_rng,
@@ -160,7 +160,7 @@ void Client::process_handshake_msg(Handshake_Type type,
    m_state->confirm_transition_to(type);
 
    if(type != HANDSHAKE_CCS && type != FINISHED && type != HELLO_VERIFY_REQUEST)
-      m_state->hash.update(m_state->handshake_io().format(contents, type));
+      m_state->hash().update(m_state->handshake_io().format(contents, type));
 
    if(type == HELLO_VERIFY_REQUEST)
       {
@@ -171,7 +171,7 @@ void Client::process_handshake_msg(Handshake_Type type,
 
       std::unique_ptr<Client_Hello> client_hello_w_cookie(
          new Client_Hello(m_state->handshake_io(),
-                          m_state->hash,
+                          m_state->hash(),
                           *m_state->client_hello(),
                           hello_verify_request));
 
@@ -366,7 +366,7 @@ void Client::process_handshake_msg(Handshake_Type type,
 
          m_state->client_certs(
             new Certificate(m_state->handshake_io(),
-                            m_state->hash,
+                            m_state->hash(),
                             client_certs)
             );
          }
@@ -413,7 +413,7 @@ void Client::process_handshake_msg(Handshake_Type type,
             m_state->client_npn_cb(m_state->server_hello()->next_protocols());
 
          m_state->next_protocol(
-            new Next_Protocol(m_state->handshake_io(), m_state->hash, protocol)
+            new Next_Protocol(m_state->handshake_io(), m_state->hash(), protocol)
             );
          }
 
@@ -451,7 +451,7 @@ void Client::process_handshake_msg(Handshake_Type type,
          throw TLS_Exception(Alert::DECRYPT_ERROR,
                              "Finished message didn't verify");
 
-      m_state->hash.update(m_state->handshake_io().format(contents, type));
+      m_state->hash().update(m_state->handshake_io().format(contents, type));
 
       if(!m_state->client_finished()) // session resume case
          {

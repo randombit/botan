@@ -259,7 +259,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
                              pub_key->algo_name());
       }
 
-   state->hash.update(io.send(*this));
+   state->hash().update(io.send(*this));
    }
 
 /*

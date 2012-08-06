@@ -26,7 +26,7 @@ std::vector<byte> finished_compute_verify(const Handshake_State* state,
       const byte SSL_CLIENT_LABEL[] = { 0x43, 0x4C, 0x4E, 0x54 };
       const byte SSL_SERVER_LABEL[] = { 0x53, 0x52, 0x56, 0x52 };
 
-      Handshake_Hash hash = state->hash; // don't modify state
+      Handshake_Hash hash = state->hash(); // don't modify state
 
       std::vector<byte> ssl3_finished;
 
@@ -55,7 +55,7 @@ std::vector<byte> finished_compute_verify(const Handshake_State* state,
       else
          input += std::make_pair(TLS_SERVER_LABEL, sizeof(TLS_SERVER_LABEL));
 
-      input += state->hash.final(state->version(), state->ciphersuite().mac_algo());
+      input += state->hash().final(state->version(), state->ciphersuite().mac_algo());
 
       return unlock(prf->derive_key(12, state->session_keys().master_secret(), input));
       }
@@ -71,7 +71,7 @@ Finished::Finished(Handshake_IO& io,
                    Connection_Side side)
    {
    m_verification_data = finished_compute_verify(state, side);
-   state->hash.update(io.send(*this));
+   state->hash().update(io.send(*this));
    }
 
 /*

@@ -256,9 +256,9 @@ void Server::process_handshake_msg(Handshake_Type type,
    if(type != HANDSHAKE_CCS && type != FINISHED && type != CERTIFICATE_VERIFY)
       {
       if(type == CLIENT_HELLO_SSLV2)
-         m_state->hash.update(contents);
+         m_state->hash().update(contents);
       else
-         m_state->hash.update(m_state->handshake_io().format(contents, type));
+         m_state->hash().update(m_state->handshake_io().format(contents, type));
       }
 
    if(type == CLIENT_HELLO || type == CLIENT_HELLO_SSLV2)
@@ -366,7 +366,7 @@ void Server::process_handshake_msg(Handshake_Type type,
          m_state->server_hello(
             new Server_Hello(
                m_state->handshake_io(),
-               m_state->hash,
+               m_state->hash(),
                m_state->client_hello()->session_id(),
                Protocol_Version(session_info.version()),
                session_info.ciphersuite_code(),
@@ -399,7 +399,7 @@ void Server::process_handshake_msg(Handshake_Type type,
                {
                m_state->new_session_ticket(
                   new New_Session_Ticket(m_state->handshake_io(),
-                                         m_state->hash)
+                                         m_state->hash())
                   );
                }
             }
@@ -412,7 +412,7 @@ void Server::process_handshake_msg(Handshake_Type type,
 
                m_state->new_session_ticket(
                   new New_Session_Ticket(m_state->handshake_io(),
-                                         m_state->hash,
+                                         m_state->hash(),
                                          session_info.encrypt(ticket_key, m_rng),
                                          m_policy.session_ticket_lifetime())
                   );
@@ -422,7 +422,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             if(!m_state->new_session_ticket())
                {
                m_state->new_session_ticket(
-                  new New_Session_Ticket(m_state->handshake_io(), m_state->hash)
+                  new New_Session_Ticket(m_state->handshake_io(), m_state->hash())
                   );
                }
             }
@@ -464,7 +464,7 @@ void Server::process_handshake_msg(Handshake_Type type,
          m_state->server_hello(
             new Server_Hello(
                m_state->handshake_io(),
-               m_state->hash,
+               m_state->hash(),
                make_hello_random(m_rng), // new session ID
                m_state->version(),
                choose_ciphersuite(m_policy,
@@ -501,7 +501,7 @@ void Server::process_handshake_msg(Handshake_Type type,
 
             m_state->server_certs(
                new Certificate(m_state->handshake_io(),
-                               m_state->hash,
+                               m_state->hash(),
                                cert_chains[sig_algo])
                );
             }
@@ -542,7 +542,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             {
             m_state->cert_req(
                new Certificate_Req(m_state->handshake_io(),
-                                   m_state->hash,
+                                   m_state->hash(),
                                    m_policy,
                                    client_auth_CAs,
                                    m_state->version())
@@ -559,7 +559,7 @@ void Server::process_handshake_msg(Handshake_Type type,
          m_state->set_expected_next(CLIENT_KEX);
 
          m_state->server_hello_done(
-            new Server_Hello_Done(m_state->handshake_io(), m_state->hash)
+            new Server_Hello_Done(m_state->handshake_io(), m_state->hash())
             );
          }
       }
@@ -591,7 +591,7 @@ void Server::process_handshake_msg(Handshake_Type type,
       const bool sig_valid =
          m_state->client_verify()->verify(m_peer_certs[0], m_state.get());
 
-      m_state->hash.update(m_state->handshake_io().format(contents, type));
+      m_state->hash().update(m_state->handshake_io().format(contents, type));
 
       /*
       * Using DECRYPT_ERROR looks weird here, but per RFC 4346 is for
@@ -647,7 +647,7 @@ void Server::process_handshake_msg(Handshake_Type type,
          {
          // already sent finished if resuming, so this is a new session
 
-         m_state->hash.update(m_state->handshake_io().format(contents, type));
+         m_state->hash().update(m_state->handshake_io().format(contents, type));
 
          Session session_info(
             m_state->server_hello()->session_id(),
@@ -674,7 +674,7 @@ void Server::process_handshake_msg(Handshake_Type type,
 
                   m_state->new_session_ticket(
                      new New_Session_Ticket(m_state->handshake_io(),
-                                            m_state->hash,
+                                            m_state->hash(),
                                             session_info.encrypt(ticket_key, m_rng),
                                             m_policy.session_ticket_lifetime())
                      );
@@ -689,7 +689,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             m_state->server_hello()->supports_session_ticket())
             {
             m_state->new_session_ticket(
-               new New_Session_Ticket(m_state->handshake_io(), m_state->hash)
+               new New_Session_Ticket(m_state->handshake_io(), m_state->hash())
                );
             }
 
