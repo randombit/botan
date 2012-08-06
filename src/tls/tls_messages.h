@@ -91,7 +91,7 @@ class Client_Hello : public Handshake_Message
 
       bool secure_renegotiation() const { return m_secure_renegotiation; }
 
-      const std::vector<byte>& renegotiation_info()
+      const std::vector<byte>& renegotiation_info() const
          { return m_renegotiation_info; }
 
       bool offered_suite(u16bit ciphersuite) const;
@@ -172,7 +172,7 @@ class Server_Hello : public Handshake_Message
    public:
       Handshake_Type type() const { return SERVER_HELLO; }
 
-      Protocol_Version version() { return m_version; }
+      Protocol_Version version() const { return m_version; }
 
       const std::vector<byte>& random() const { return m_random; }
 
@@ -193,7 +193,7 @@ class Server_Hello : public Handshake_Message
 
       size_t fragment_size() const { return m_fragment_size; }
 
-      const std::vector<byte>& renegotiation_info()
+      const std::vector<byte>& renegotiation_info() const
          { return m_renegotiation_info; }
 
       bool supports_heartbeats() const { return m_supports_heartbeats; }
@@ -338,7 +338,7 @@ class Certificate_Verify : public Handshake_Message
       * @param state the handshake state
       */
       bool verify(const X509_Certificate& cert,
-                  Handshake_State* state);
+                  const Handshake_State* state) const;
 
       Certificate_Verify(Handshake_IO& io,
                          Handshake_State* state,
@@ -368,7 +368,7 @@ class Finished : public Handshake_Message
          { return m_verification_data; }
 
       bool verify(Handshake_State* state,
-                  Connection_Side side);
+                  Connection_Side side) const;
 
       Finished(Handshake_IO& io,
                Handshake_State* state,
@@ -413,7 +413,7 @@ class Server_Key_Exchange : public Handshake_Message
       const Private_Key& server_kex_key() const;
 
       // Only valid for SRP negotiation
-      SRP6_Server_Session& server_srp_params();
+      SRP6_Server_Session& server_srp_params() const;
 
       Server_Key_Exchange(Handshake_IO& io,
                           Handshake_State* state,

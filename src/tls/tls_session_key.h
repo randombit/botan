@@ -35,7 +35,7 @@ class Session_Keys
 
       Session_Keys() {}
 
-      Session_Keys(class Handshake_State* state,
+      Session_Keys(const class Handshake_State* state,
                    const secure_vector<byte>& pre_master,
                    bool resuming);
 

@@ -18,7 +18,7 @@ namespace TLS {
 /**
 * Session_Keys Constructor
 */
-Session_Keys::Session_Keys(Handshake_State* state,
+Session_Keys::Session_Keys(const Handshake_State* state,
                            const secure_vector<byte>& pre_master_secret,
                            bool resuming)
    {
@@ -50,8 +50,8 @@ Session_Keys::Session_Keys(Handshake_State* state,
       if(state->version() != Protocol_Version::SSL_V3)
          salt += std::make_pair(MASTER_SECRET_MAGIC, sizeof(MASTER_SECRET_MAGIC));
 
-      salt += state->client_hello->random();
-      salt += state->server_hello->random();
+      salt += state->client_hello()->random();
+      salt += state->server_hello()->random();
 
       master_sec = prf->derive_key(48, pre_master_secret, salt);
       }
@@ -59,8 +59,8 @@ Session_Keys::Session_Keys(Handshake_State* state,
    secure_vector<byte> salt;
    if(state->version() != Protocol_Version::SSL_V3)
       salt += std::make_pair(KEY_GEN_MAGIC, sizeof(KEY_GEN_MAGIC));
-   salt += state->server_hello->random();
-   salt += state->client_hello->random();
+   salt += state->server_hello()->random();
+   salt += state->client_hello()->random();
 
    SymmetricKey keyblock = prf->derive_key(prf_gen, master_sec, salt);
 

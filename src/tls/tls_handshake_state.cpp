@@ -1,6 +1,6 @@
 /*
 * TLS Handshaking
-* (C) 2004-2006,2011 Jack Lloyd
+* (C) 2004-2006,2011,2012 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -91,6 +91,73 @@ Handshake_State::Handshake_State(Handshake_IO* io) :
    {
    }
 
+Handshake_State::~Handshake_State() {}
+
+void Handshake_State::client_hello(Client_Hello* client_hello)
+   {
+   m_client_hello.reset(client_hello);
+   }
+
+void Handshake_State::server_hello(Server_Hello* server_hello)
+   {
+   m_server_hello.reset(server_hello);
+   }
+
+void Handshake_State::server_certs(Certificate* server_certs)
+   {
+   m_server_certs.reset(server_certs);
+   }
+
+void Handshake_State::server_kex(Server_Key_Exchange* server_kex)
+   {
+   m_server_kex.reset(server_kex);
+   }
+
+void Handshake_State::cert_req(Certificate_Req* cert_req)
+   {
+   m_cert_req.reset(cert_req);
+   }
+
+void Handshake_State::server_hello_done(Server_Hello_Done* server_hello_done)
+   {
+   m_server_hello_done.reset(server_hello_done);
+   }
+
+void Handshake_State::client_certs(Certificate* client_certs)
+   {
+   m_client_certs.reset(client_certs);
+   }
+
+void Handshake_State::client_kex(Client_Key_Exchange* client_kex)
+   {
+   m_client_kex.reset(client_kex);
+   }
+
+void Handshake_State::client_verify(Certificate_Verify* client_verify)
+   {
+   m_client_verify.reset(client_verify);
+   }
+
+void Handshake_State::next_protocol(Next_Protocol* next_protocol)
+   {
+   m_next_protocol.reset(next_protocol);
+   }
+
+void Handshake_State::new_session_ticket(New_Session_Ticket* new_session_ticket)
+   {
+   m_new_session_ticket.reset(new_session_ticket);
+   }
+
+void Handshake_State::server_finished(Finished* server_finished)
+   {
+   m_server_finished.reset(server_finished);
+   }
+
+void Handshake_State::client_finished(Finished* client_finished)
+   {
+   m_client_finished.reset(client_finished);
+   }
+
 void Handshake_State::set_version(const Protocol_Version& version)
    {
    m_version = version;
@@ -132,20 +199,20 @@ bool Handshake_State::received_handshake_msg(Handshake_Type handshake_msg) const
 std::string Handshake_State::srp_identifier() const
    {
    if(suite.valid() && suite.kex_algo() == "SRP_SHA")
-      return client_hello->srp_identifier();
+      return client_hello()->srp_identifier();
 
    return "";
    }
 
 const std::vector<byte>& Handshake_State::session_ticket() const
    {
-   if(new_session_ticket && !new_session_ticket->ticket().empty())
-      return new_session_ticket->ticket();
+   if(new_session_ticket() && !new_session_ticket()->ticket().empty())
+      return new_session_ticket()->ticket();
 
-   return client_hello->session_ticket();
+   return client_hello()->session_ticket();
    }
 
-KDF* Handshake_State::protocol_specific_prf()
+KDF* Handshake_State::protocol_specific_prf() const
    {
    if(version() == Protocol_Version::SSL_V3)
       {
@@ -173,8 +240,8 @@ std::string choose_hash(const std::string& sig_algo,
                         Protocol_Version negotiated_version,
                         const Policy& policy,
                         bool for_client_auth,
-                        Client_Hello* client_hello,
-                        Certificate_Req* cert_req)
+                        const Client_Hello* client_hello,
+                        const Certificate_Req* cert_req)
    {
    if(!negotiated_version.supports_negotiable_signature_algorithms())
       {
@@ -226,7 +293,7 @@ Handshake_State::choose_sig_format(const Private_Key* key,
                                    std::string& hash_algo_out,
                                    std::string& sig_algo_out,
                                    bool for_client_auth,
-                                   const Policy& policy)
+                                   const Policy& policy) const
    {
    const std::string sig_algo = key->algo_name();
 
@@ -235,8 +302,8 @@ Handshake_State::choose_sig_format(const Private_Key* key,
                   this->version(),
                   policy,
                   for_client_auth,
-                  client_hello,
-                  cert_req);
+                  client_hello(),
+                  cert_req());
 
    if(this->version().supports_negotiable_signature_algorithms())
       {
@@ -264,7 +331,7 @@ std::pair<std::string, Signature_Format>
 Handshake_State::understand_sig_format(const Public_Key* key,
                                        std::string hash_algo,
                                        std::string sig_algo,
-                                       bool for_client_auth)
+                                       bool for_client_auth) const
    {
    const std::string algo_name = key->algo_name();
 
@@ -321,29 +388,6 @@ Handshake_State::understand_sig_format(const Public_Key* key,
       }
 
    throw Invalid_Argument(algo_name + " is invalid/unknown for TLS signatures");
-   }
-
-/*
-* Destroy the SSL/TLS Handshake State
-*/
-Handshake_State::~Handshake_State()
-   {
-   delete client_hello;
-   delete server_hello;
-   delete server_certs;
-   delete server_kex;
-   delete cert_req;
-   delete server_hello_done;
-   delete next_protocol;
-   delete new_session_ticket;
-
-   delete client_certs;
-   delete client_kex;
-   delete client_verify;
-   delete client_finished;
-   delete server_finished;
-
-   delete m_handshake_io;
    }
 
 }

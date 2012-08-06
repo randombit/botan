@@ -94,7 +94,7 @@ Finished::Finished(const std::vector<byte>& buf)
 * Verify a Finished message
 */
 bool Finished::verify(Handshake_State* state,
-                      Connection_Side side)
+                      Connection_Side side) const
    {
    return (m_verification_data == finished_compute_verify(state, side));
    }

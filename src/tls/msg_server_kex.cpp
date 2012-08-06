@@ -35,7 +35,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
                                          const Private_Key* signing_key) :
    m_kex_key(nullptr), m_srp_params(nullptr)
    {
-   const std::string hostname = state->client_hello->sni_hostname();
+   const std::string hostname = state->client_hello()->sni_hostname();
    const std::string kex_algo = state->suite.kex_algo();
 
    if(kex_algo == "PSK" || kex_algo == "DHE_PSK" || kex_algo == "ECDHE_PSK")
@@ -58,7 +58,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
    else if(kex_algo == "ECDH" || kex_algo == "ECDHE_PSK")
       {
       const std::vector<std::string>& curves =
-         state->client_hello->supported_ecc_curves();
+         state->client_hello()->supported_ecc_curves();
 
       if(curves.empty())
          throw Internal_Error("Client sent no ECC extension but we negotiated ECDH");
@@ -91,7 +91,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       }
    else if(kex_algo == "SRP_SHA")
       {
-      const std::string srp_identifier = state->client_hello->srp_identifier();
+      const std::string srp_identifier = state->client_hello()->srp_identifier();
 
       std::string group_id;
       BigInt v;
@@ -130,8 +130,8 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 
       PK_Signer signer(*signing_key, format.first, format.second);
 
-      signer.update(state->client_hello->random());
-      signer.update(state->server_hello->random());
+      signer.update(state->client_hello()->random());
+      signer.update(state->server_hello()->random());
       signer.update(params());
       m_signature = signer.signature(rng);
       }
@@ -270,8 +270,8 @@ bool Server_Key_Exchange::verify(const X509_Certificate& cert,
 
    PK_Verifier verifier(*key, format.first, format.second);
 
-   verifier.update(state->client_hello->random());
-   verifier.update(state->server_hello->random());
+   verifier.update(state->client_hello()->random());
+   verifier.update(state->server_hello()->random());
    verifier.update(params());
 
    return verifier.check_signature(m_signature);
@@ -284,7 +284,7 @@ const Private_Key& Server_Key_Exchange::server_kex_key() const
    }
 
 // Only valid for SRP negotiation
-SRP6_Server_Session& Server_Key_Exchange::server_srp_params()
+SRP6_Server_Session& Server_Key_Exchange::server_srp_params() const
    {
    BOTAN_ASSERT_NONNULL(m_srp_params);
    return *m_srp_params;

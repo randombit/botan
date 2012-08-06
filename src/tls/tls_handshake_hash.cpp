@@ -19,7 +19,7 @@ namespace TLS {
 * Return a TLS Handshake Hash
 */
 secure_vector<byte> Handshake_Hash::final(Protocol_Version version,
-                                          const std::string& mac_algo)
+                                          const std::string& mac_algo) const
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
 
@@ -42,7 +42,7 @@ secure_vector<byte> Handshake_Hash::final(Protocol_Version version,
 /**
 * Return a SSLv3 Handshake Hash
 */
-secure_vector<byte> Handshake_Hash::final_ssl3(const secure_vector<byte>& secret)
+secure_vector<byte> Handshake_Hash::final_ssl3(const secure_vector<byte>& secret) const
    {
    const byte PAD_INNER = 0x36, PAD_OUTER = 0x5C;
 

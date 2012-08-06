@@ -228,7 +228,7 @@ void Channel::send_alert(const Alert& alert)
       }
    }
 
-void Channel::Secure_Renegotiation_State::update(Client_Hello* client_hello)
+void Channel::Secure_Renegotiation_State::update(const Client_Hello* client_hello)
    {
    if(initial_handshake())
       {
@@ -260,7 +260,7 @@ void Channel::Secure_Renegotiation_State::update(Client_Hello* client_hello)
       }
    }
 
-void Channel::Secure_Renegotiation_State::update(Server_Hello* server_hello)
+void Channel::Secure_Renegotiation_State::update(const Server_Hello* server_hello)
    {
    if(initial_handshake())
       {
@@ -298,8 +298,8 @@ void Channel::Secure_Renegotiation_State::update(Server_Hello* server_hello)
    m_initial_handshake = false;
    }
 
-void Channel::Secure_Renegotiation_State::update(Finished* client_finished,
-                                                 Finished* server_finished)
+void Channel::Secure_Renegotiation_State::update(const Finished* client_finished,
+                                                 const Finished* server_finished)
    {
    m_client_verify = client_finished->verify_data();
    m_server_verify = server_finished->verify_data();

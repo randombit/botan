@@ -61,13 +61,13 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
       {
       std::string identity_hint = "";
 
-      if(state->server_kex)
+      if(state->server_kex())
          {
-         TLS_Data_Reader reader(state->server_kex->params());
+         TLS_Data_Reader reader(state->server_kex()->params());
          identity_hint = reader.get_string(2, 0, 65535);
          }
 
-      const std::string hostname = state->client_hello->sni_hostname();
+      const std::string hostname = state->client_hello()->sni_hostname();
 
       const std::string psk_identity = creds.psk_identity("tls-client",
                                                           hostname,
@@ -82,9 +82,9 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
       append_tls_length_value(m_pre_master, zeros, 2);
       append_tls_length_value(m_pre_master, psk.bits_of(), 2);
       }
-   else if(state->server_kex)
+   else if(state->server_kex())
       {
-      TLS_Data_Reader reader(state->server_kex->params());
+      TLS_Data_Reader reader(state->server_kex()->params());
 
       SymmetricKey psk;
 
@@ -92,7 +92,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          {
          std::string identity_hint = reader.get_string(2, 0, 65535);
 
-         const std::string hostname = state->client_hello->sni_hostname();
+         const std::string hostname = state->client_hello()->sni_hostname();
 
          const std::string psk_identity = creds.psk_identity("tls-client",
                                                              hostname,
@@ -238,7 +238,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
       if(const RSA_PublicKey* rsa_pub = dynamic_cast<const RSA_PublicKey*>(pub_key.get()))
          {
-         const Protocol_Version offered_version = state->client_hello->version();
+         const Protocol_Version offered_version = state->client_hello()->version();
 
          m_pre_master = rng.random_vec(48);
          m_pre_master[0] = offered_version.major_version();
@@ -275,7 +275,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
 
    if(kex_algo == "RSA")
       {
-      BOTAN_ASSERT(state->server_certs && !state->server_certs->cert_chain().empty(),
+      BOTAN_ASSERT(state->server_certs() && !state->server_certs()->cert_chain().empty(),
                    "RSA key exchange negotiated so server sent a certificate");
 
       const Private_Key* private_key = state->server_rsa_kex_key;
@@ -288,7 +288,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
 
       PK_Decryptor_EME decryptor(*private_key, "PKCS1v15");
 
-      Protocol_Version client_version = state->client_hello->version();
+      Protocol_Version client_version = state->client_hello()->version();
 
       try
          {
@@ -328,7 +328,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
          const std::string psk_identity = reader.get_string(2, 0, 65535);
 
          psk = creds.psk("tls-server",
-                         state->client_hello->sni_hostname(),
+                         state->client_hello()->sni_hostname(),
                          psk_identity);
 
          if(psk.length() == 0)
@@ -349,14 +349,14 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
          }
       else if(kex_algo == "SRP_SHA")
          {
-         SRP6_Server_Session& srp = state->server_kex->server_srp_params();
+         SRP6_Server_Session& srp = state->server_kex()->server_srp_params();
 
          m_pre_master = srp.step2(BigInt::decode(reader.get_range<byte>(2, 0, 65535))).bits_of();
          }
       else if(kex_algo == "DH" || kex_algo == "DHE_PSK" ||
               kex_algo == "ECDH" || kex_algo == "ECDHE_PSK")
          {
-         const Private_Key& private_key = state->server_kex->server_kex_key();
+         const Private_Key& private_key = state->server_kex()->server_kex_key();
 
          const PK_Key_Agreement_Key* ka_key =
             dynamic_cast<const PK_Key_Agreement_Key*>(&private_key);

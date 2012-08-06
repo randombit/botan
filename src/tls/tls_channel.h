@@ -118,11 +118,11 @@ class BOTAN_DLL Channel
                                            m_secure_renegotiation(false)
                {}
 
-            void update(class Client_Hello* client_hello);
-            void update(class Server_Hello* server_hello);
+            void update(const class Client_Hello* client_hello);
+            void update(const class Server_Hello* server_hello);
 
-            void update(class Finished* client_finished,
-                        class Finished* server_finished);
+            void update(const class Finished* client_finished,
+                        const class Finished* server_finished);
 
             const std::vector<byte>& for_client_hello() const
                { return m_client_verify; }

@@ -92,7 +92,7 @@ std::vector<byte> Certificate_Verify::serialize() const
 * Verify a Certificate Verify message
 */
 bool Certificate_Verify::verify(const X509_Certificate& cert,
-                                Handshake_State* state)
+                                const Handshake_State* state) const
    {
    std::unique_ptr<Public_Key> key(cert.subject_public_key());
 
