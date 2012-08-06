@@ -267,6 +267,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 */
 Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
                                          const Handshake_State* state,
+                                         const Private_Key* server_rsa_kex_key,
                                          Credentials_Manager& creds,
                                          const Policy& policy,
                                          RandomNumberGenerator& rng)
@@ -278,15 +279,13 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
       BOTAN_ASSERT(state->server_certs() && !state->server_certs()->cert_chain().empty(),
                    "RSA key exchange negotiated so server sent a certificate");
 
-      const Private_Key* private_key = state->server_rsa_kex_key;
-
-      if(!private_key)
+      if(!server_rsa_kex_key)
          throw Internal_Error("Expected RSA kex but no server kex key set");
 
-      if(!dynamic_cast<const RSA_PrivateKey*>(private_key))
-         throw Internal_Error("Expected RSA key but got " + private_key->algo_name());
+      if(!dynamic_cast<const RSA_PrivateKey*>(server_rsa_kex_key))
+         throw Internal_Error("Expected RSA key but got " + server_rsa_kex_key->algo_name());
 
-      PK_Decryptor_EME decryptor(*private_key, "PKCS1v15");
+      PK_Decryptor_EME decryptor(*server_rsa_kex_key, "PKCS1v15");
 
       Protocol_Version client_version = state->client_hello()->version();
 

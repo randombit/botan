@@ -13,7 +13,6 @@
 #include <botan/internal/tls_session_key.h>
 #include <botan/pk_keys.h>
 #include <botan/pubkey.h>
-
 #include <functional>
 #include <utility>
 #include <memory>
@@ -146,15 +145,6 @@ class Handshake_State
       Handshake_Hash& hash() { return m_handshake_hash; }
 
       const Handshake_Hash& hash() const { return m_handshake_hash; }
-
-      // Used by the server only, in case of RSA key exchange
-      Private_Key* server_rsa_kex_key = nullptr; // FIXME make private
-
-      /*
-      * Used by the server to know if resumption should be allowed on
-      * a server-initiated renegotiation
-      */
-      bool allow_session_resumption = true; // FIXME make private
 
    private:
       std::unique_ptr<Handshake_IO> m_handshake_io;

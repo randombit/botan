@@ -18,6 +18,21 @@ namespace TLS {
 
 namespace {
 
+class Server_Handshake_State : public Handshake_State
+   {
+   public:
+      Server_Handshake_State(Handshake_IO* io) : Handshake_State(io) {}
+
+      // Used by the server only, in case of RSA key exchange. Not owned
+      Private_Key* server_rsa_kex_key = nullptr;
+
+      /*
+      * Used by the server to know if resumption should be allowed on
+      * a server-initiated renegotiation
+      */
+      bool allow_session_resumption = true;
+   };
+
 bool check_for_resume(Session& session_info,
                       Session_Manager& session_manager,
                       Credentials_Manager& credentials,
@@ -207,7 +222,7 @@ Server::Server(std::function<void (const byte[], size_t)> output_fn,
 
 Handshake_State* Server::new_handshake_state()
    {
-   Handshake_State* state = new Handshake_State(new Stream_Handshake_IO(m_writer));
+   Handshake_State* state = new Server_Handshake_State(new Stream_Handshake_IO(m_writer));
    state->set_expected_next(CLIENT_HELLO);
    return state;
    }
@@ -221,7 +236,8 @@ void Server::renegotiate(bool force_full_renegotiation)
       return; // currently in handshake
 
    m_state.reset(new_handshake_state());
-   m_state->allow_session_resumption = !force_full_renegotiation;
+   dynamic_cast<Server_Handshake_State&>(*m_state).allow_session_resumption =
+      !force_full_renegotiation;
 
    Hello_Request hello_req(m_state->handshake_io());
    }
@@ -338,7 +354,7 @@ void Server::process_handshake_msg(Handshake_Type type,
 
       Session session_info;
       const bool resuming =
-         m_state->allow_session_resumption &&
+         dynamic_cast<Server_Handshake_State&>(*m_state).allow_session_resumption &&
          check_for_resume(session_info,
                           m_session_manager,
                           m_creds,
@@ -521,7 +537,7 @@ void Server::process_handshake_msg(Handshake_Type type,
 
          if(kex_algo == "RSA")
             {
-            m_state->server_rsa_kex_key = private_key;
+            dynamic_cast<Server_Handshake_State&>(*m_state).server_rsa_kex_key = private_key;
             }
          else
             {
@@ -577,7 +593,9 @@ void Server::process_handshake_msg(Handshake_Type type,
          m_state->set_expected_next(HANDSHAKE_CCS);
 
       m_state->client_kex(
-         new Client_Key_Exchange(contents, m_state.get(), m_creds, m_policy, m_rng)
+         new Client_Key_Exchange(contents, m_state.get(),
+                                 dynamic_cast<Server_Handshake_State&>(*m_state).server_rsa_kex_key,
+                                 m_creds, m_policy, m_rng)
          );
 
       m_state->compute_session_keys();

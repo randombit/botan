@@ -258,6 +258,7 @@ class Client_Key_Exchange : public Handshake_Message
 
       Client_Key_Exchange(const std::vector<byte>& buf,
                           const Handshake_State* state,
+                          const Private_Key* server_rsa_kex_key,
                           Credentials_Manager& creds,
                           const Policy& policy,
                           RandomNumberGenerator& rng);
