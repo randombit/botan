@@ -12,6 +12,7 @@
 #include <botan/tls_magic.h>
 #include <vector>
 #include <string>
+#include <memory>
 #include <map>
 
 namespace Botan {
@@ -361,18 +362,16 @@ class Extensions
          {
          Handshake_Extension_Type type = T::static_type();
 
-         std::map<Handshake_Extension_Type, Extension*>::const_iterator i =
-            extensions.find(type);
+         auto i = extensions.find(type);
 
          if(i != extensions.end())
-            return dynamic_cast<T*>(i->second);
+            return dynamic_cast<T*>(i->second.get());
          return nullptr;
          }
 
       void add(Extension* extn)
          {
-         delete extensions[extn->type()]; // or hard error if already exists?
-         extensions[extn->type()] = extn;
+         extensions[extn->type()].reset(extn);
          }
 
       std::vector<byte> serialize() const;
@@ -386,7 +385,7 @@ class Extensions
       Extensions(const Extensions&) {}
       Extensions& operator=(const Extensions&) { return (*this); }
 
-      std::map<Handshake_Extension_Type, Extension*> extensions;
+      std::map<Handshake_Extension_Type, std::unique_ptr<Extension>> extensions;
    };
 
 }

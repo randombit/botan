@@ -17,6 +17,7 @@
 #include <botan/pkcs8.h>
 #include <botan/x509cert.h>
 #include <vector>
+#include <memory>
 
 namespace Botan {
 
@@ -431,8 +432,8 @@ class Server_Key_Exchange : public Handshake_Message
    private:
       std::vector<byte> serialize() const;
 
-      Private_Key* m_kex_key;
-      SRP6_Server_Session* m_srp_params;
+      std::unique_ptr<Private_Key> m_kex_key;
+      std::unique_ptr<SRP6_Server_Session> m_srp_params;
 
       std::vector<byte> m_params;
 

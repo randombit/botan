@@ -32,8 +32,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
                                          const Policy& policy,
                                          Credentials_Manager& creds,
                                          RandomNumberGenerator& rng,
-                                         const Private_Key* signing_key) :
-   m_kex_key(nullptr), m_srp_params(nullptr)
+                                         const Private_Key* signing_key)
    {
    const std::string hostname = state->client_hello()->sni_hostname();
    const std::string kex_algo = state->suite.kex_algo();
@@ -53,7 +52,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       append_tls_length_value(m_params, BigInt::encode(dh->get_domain().get_p()), 2);
       append_tls_length_value(m_params, BigInt::encode(dh->get_domain().get_g()), 2);
       append_tls_length_value(m_params, dh->public_value(), 2);
-      m_kex_key = dh.release();
+      m_kex_key.reset(dh.release());
       }
    else if(kex_algo == "ECDH" || kex_algo == "ECDHE_PSK")
       {
@@ -87,7 +86,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 
       append_tls_length_value(m_params, ecdh->public_value(), 1);
 
-      m_kex_key = ecdh.release();
+      m_kex_key.reset(ecdh.release());
       }
    else if(kex_algo == "SRP_SHA")
       {
@@ -106,7 +105,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
          throw TLS_Exception(Alert::UNKNOWN_PSK_IDENTITY,
                              "Unknown SRP user " + srp_identifier);
 
-      m_srp_params = new SRP6_Server_Session;
+      m_srp_params.reset(new SRP6_Server_Session);
 
       BigInt B = m_srp_params->step1(v, group_id,
                                      "SHA-1", rng);
@@ -228,12 +227,7 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<byte>& buf,
    reader.assert_done();
    }
 
-Server_Key_Exchange::~Server_Key_Exchange()
-   {
-   delete m_kex_key;
-   delete m_srp_params;
-   }
-
+Server_Key_Exchange::~Server_Key_Exchange() {}
 
 /**
 * Serialize a Server Key Exchange message

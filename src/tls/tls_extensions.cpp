@@ -70,8 +70,8 @@ Extensions::Extensions(TLS_Data_Reader& reader)
          const u16bit extension_size = reader.get_u16bit();
 
          Extension* extn = make_extension(reader,
-                                              extension_code,
-                                              extension_size);
+                                          extension_code,
+                                          extension_size);
 
          if(extn)
             this->add(extn);
@@ -85,15 +85,14 @@ std::vector<byte> Extensions::serialize() const
    {
    std::vector<byte> buf(2); // 2 bytes for length field
 
-   for(std::map<Handshake_Extension_Type, Extension*>::const_iterator i = extensions.begin();
-       i != extensions.end(); ++i)
+   for(auto& extn : extensions)
       {
-      if(i->second->empty())
+      if(extn.second->empty())
          continue;
 
-      const u16bit extn_code = i->second->type();
+      const u16bit extn_code = extn.second->type();
 
-      std::vector<byte> extn_val = i->second->serialize();
+      std::vector<byte> extn_val = extn.second->serialize();
 
       buf.push_back(get_byte(0, extn_code));
       buf.push_back(get_byte(1, extn_code));
@@ -114,17 +113,6 @@ std::vector<byte> Extensions::serialize() const
       return std::vector<byte>();
 
    return buf;
-   }
-
-Extensions::~Extensions()
-   {
-   for(std::map<Handshake_Extension_Type, Extension*>::const_iterator i = extensions.begin();
-       i != extensions.end(); ++i)
-      {
-      delete i->second;
-      }
-
-   extensions.clear();
    }
 
 Server_Name_Indicator::Server_Name_Indicator(TLS_Data_Reader& reader,
