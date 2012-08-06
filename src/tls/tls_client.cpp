@@ -20,7 +20,12 @@ namespace {
 class Client_Handshake_State : public Handshake_State
    {
    public:
-      Client_Handshake_State(Handshake_IO* io) : Handshake_State(io) {}
+      // using Handshake_State::Handshake_State;
+
+      Client_Handshake_State(Handshake_IO* io,
+                             std::function<void (const Handshake_Message&)> msg_callback =
+                                std::function<void (const Handshake_Message&)>()) :
+         Handshake_State(io, msg_callback) {}
 
       // Used during session resumption
       secure_vector<byte> resume_master_secret;
@@ -185,6 +190,8 @@ void Client::process_handshake_msg(Handshake_Type type,
       m_state->set_expected_next(HELLO_VERIFY_REQUEST); // might get it again
 
       Hello_Verify_Request hello_verify_request(contents);
+
+      m_state->note_message(hello_verify_request);
 
       std::unique_ptr<Client_Hello> client_hello_w_cookie(
          new Client_Hello(m_state->handshake_io(),

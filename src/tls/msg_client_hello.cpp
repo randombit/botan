@@ -143,13 +143,6 @@ Client_Hello::Client_Hello(Handshake_IO& io,
 */
 Client_Hello::Client_Hello(const std::vector<byte>& buf, Handshake_Type type)
    {
-   m_next_protocol = false;
-   m_secure_renegotiation = false;
-   m_supports_session_ticket = false;
-   m_supports_heartbeats = false;
-   m_peer_can_send_heartbeats = false;
-   m_fragment_size = 0;
-
    if(type == CLIENT_HELLO)
       deserialize(buf);
    else

@@ -21,6 +21,8 @@ namespace {
 class Server_Handshake_State : public Handshake_State
    {
    public:
+      // using Handshake_State::Handshake_State;
+
       Server_Handshake_State(Handshake_IO* io) : Handshake_State(io) {}
 
       // Used by the server only, in case of RSA key exchange. Not owned

@@ -85,8 +85,10 @@ u32bit bitmask_for_handshake_type(Handshake_Type type)
 /*
 * Initialize the SSL/TLS Handshake State
 */
-Handshake_State::Handshake_State(Handshake_IO* io) :
+Handshake_State::Handshake_State(Handshake_IO* io,
+                                 std::function<void (const Handshake_Message&)> msg_callback) :
    m_handshake_io(io),
+   m_msg_callback(msg_callback),
    m_version(m_handshake_io->initial_record_version())
    {
    }
@@ -96,67 +98,80 @@ Handshake_State::~Handshake_State() {}
 void Handshake_State::client_hello(Client_Hello* client_hello)
    {
    m_client_hello.reset(client_hello);
+   note_message(*m_client_hello);
    }
 
 void Handshake_State::server_hello(Server_Hello* server_hello)
    {
    m_server_hello.reset(server_hello);
    m_ciphersuite = Ciphersuite::by_id(m_server_hello->ciphersuite());
+   note_message(*m_server_hello);
    }
 
 void Handshake_State::server_certs(Certificate* server_certs)
    {
    m_server_certs.reset(server_certs);
+   note_message(*m_server_certs);
    }
 
 void Handshake_State::server_kex(Server_Key_Exchange* server_kex)
    {
    m_server_kex.reset(server_kex);
+   note_message(*m_server_kex);
    }
 
 void Handshake_State::cert_req(Certificate_Req* cert_req)
    {
    m_cert_req.reset(cert_req);
+   note_message(*m_cert_req);
    }
 
 void Handshake_State::server_hello_done(Server_Hello_Done* server_hello_done)
    {
    m_server_hello_done.reset(server_hello_done);
+   note_message(*m_server_hello_done);
    }
 
 void Handshake_State::client_certs(Certificate* client_certs)
    {
    m_client_certs.reset(client_certs);
+   note_message(*m_client_certs);
    }
 
 void Handshake_State::client_kex(Client_Key_Exchange* client_kex)
    {
    m_client_kex.reset(client_kex);
+   note_message(*m_client_kex);
    }
 
 void Handshake_State::client_verify(Certificate_Verify* client_verify)
    {
    m_client_verify.reset(client_verify);
+   note_message(*m_client_verify);
    }
 
 void Handshake_State::next_protocol(Next_Protocol* next_protocol)
    {
    m_next_protocol.reset(next_protocol);
+   note_message(*m_next_protocol);
    }
 
 void Handshake_State::new_session_ticket(New_Session_Ticket* new_session_ticket)
    {
    m_new_session_ticket.reset(new_session_ticket);
+   note_message(*m_new_session_ticket);
    }
 
 void Handshake_State::server_finished(Finished* server_finished)
    {
    m_server_finished.reset(server_finished);
+   note_message(*m_server_finished);
    }
 
 void Handshake_State::client_finished(Finished* client_finished)
    {
    m_client_finished.reset(client_finished);
+   note_message(*m_client_finished);
    }
 
 void Handshake_State::set_version(const Protocol_Version& version)

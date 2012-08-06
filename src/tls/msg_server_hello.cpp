@@ -55,10 +55,6 @@ Server_Hello::Server_Hello(Handshake_IO& io,
 */
 Server_Hello::Server_Hello(const std::vector<byte>& buf)
    {
-   m_secure_renegotiation = false;
-   m_supports_session_ticket = false;
-   m_next_protocol = false;
-
    if(buf.size() < 38)
       throw Decoding_Error("Server_Hello: Packet corrupted");
 

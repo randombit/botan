@@ -11,6 +11,7 @@
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_session_key.h>
+#include <botan/tls_handshake_msg.h>
 #include <botan/pk_keys.h>
 #include <botan/pubkey.h>
 #include <functional>
@@ -44,7 +45,9 @@ class Finished;
 class Handshake_State
    {
    public:
-      Handshake_State(Handshake_IO* io);
+      Handshake_State(Handshake_IO* io,
+                      std::function<void (const Handshake_Message&)> msg_callback =
+                         std::function<void (const Handshake_Message&)>());
 
       virtual ~Handshake_State();
 
@@ -146,8 +149,17 @@ class Handshake_State
 
       const Handshake_Hash& hash() const { return m_handshake_hash; }
 
+      void note_message(const Handshake_Message& msg)
+         {
+         if(m_msg_callback)
+            m_msg_callback(msg);
+         }
+
    private:
+
       std::unique_ptr<Handshake_IO> m_handshake_io;
+
+      std::function<void (const Handshake_Message&)> m_msg_callback;
 
       u32bit m_hand_expecting_mask = 0;
       u32bit m_hand_received_mask = 0;
