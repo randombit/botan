@@ -83,16 +83,19 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
 
             const std::vector<byte>& payload = heartbeat.payload();
 
-            if(heartbeat.is_request() && !m_state)
+            if(heartbeat.is_request())
                {
-               Heartbeat_Message response(Heartbeat_Message::RESPONSE,
-                                          &payload[0], payload.size());
+               if(!m_state) // no heartbeats during handshake
+                  {
+                  Heartbeat_Message response(Heartbeat_Message::RESPONSE,
+                                             &payload[0], payload.size());
 
-               m_writer.send(HEARTBEAT, response.contents());
+                  m_writer.send(HEARTBEAT, response.contents());
+                  }
                }
             else
                {
-               // pass up to the application
+               // a response, pass up to the application
                m_proc_fn(&payload[0], payload.size(), Alert(Alert::HEARTBEAT_PAYLOAD));
                }
             }
