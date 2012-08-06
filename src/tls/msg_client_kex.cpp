@@ -73,14 +73,14 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
                                                           hostname,
                                                           identity_hint);
 
-      append_tls_length_value(key_material, psk_identity, 2);
+      append_tls_length_value(m_key_material, psk_identity, 2);
 
       SymmetricKey psk = creds.psk("tls-client", hostname, psk_identity);
 
       std::vector<byte> zeros(psk.length());
 
-      append_tls_length_value(pre_master, zeros, 2);
-      append_tls_length_value(pre_master, psk.bits_of(), 2);
+      append_tls_length_value(m_pre_master, zeros, 2);
+      append_tls_length_value(m_pre_master, psk.bits_of(), 2);
       }
    else if(state->server_kex)
       {
@@ -98,7 +98,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
                                                              hostname,
                                                              identity_hint);
 
-         append_tls_length_value(key_material, psk_identity, 2);
+         append_tls_length_value(m_key_material, psk_identity, 2);
 
          psk = creds.psk("tls-client", hostname, psk_identity);
          }
@@ -144,14 +144,14 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
             ka.derive_key(0, counterparty_key.public_value()).bits_of());
 
          if(kex_algo == "DH")
-            pre_master = dh_secret;
+            m_pre_master = dh_secret;
          else
             {
-            append_tls_length_value(pre_master, dh_secret, 2);
-            append_tls_length_value(pre_master, psk.bits_of(), 2);
+            append_tls_length_value(m_pre_master, dh_secret, 2);
+            append_tls_length_value(m_pre_master, psk.bits_of(), 2);
             }
 
-         append_tls_length_value(key_material, priv_key.public_value(), 2);
+         append_tls_length_value(m_key_material, priv_key.public_value(), 2);
          }
       else if(kex_algo == "ECDH" || kex_algo == "ECDHE_PSK")
          {
@@ -180,14 +180,14 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          secure_vector<byte> ecdh_secret = ka.derive_key(0, counterparty_key.public_value()).bits_of();
 
          if(kex_algo == "ECDH")
-            pre_master = ecdh_secret;
+            m_pre_master = ecdh_secret;
          else
             {
-            append_tls_length_value(pre_master, ecdh_secret, 2);
-            append_tls_length_value(pre_master, psk.bits_of(), 2);
+            append_tls_length_value(m_pre_master, ecdh_secret, 2);
+            append_tls_length_value(m_pre_master, psk.bits_of(), 2);
             }
 
-         append_tls_length_value(key_material, priv_key.public_value(), 1);
+         append_tls_length_value(m_key_material, priv_key.public_value(), 1);
          }
       else if(kex_algo == "SRP_SHA")
          {
@@ -213,8 +213,8 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
                               B,
                               rng);
 
-         append_tls_length_value(key_material, BigInt::encode(srp_vals.first), 2);
-         pre_master = srp_vals.second.bits_of();
+         append_tls_length_value(m_key_material, BigInt::encode(srp_vals.first), 2);
+         m_pre_master = srp_vals.second.bits_of();
          }
       else
          {
@@ -240,18 +240,18 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          {
          const Protocol_Version offered_version = state->client_hello->version();
 
-         pre_master = rng.random_vec(48);
-         pre_master[0] = offered_version.major_version();
-         pre_master[1] = offered_version.minor_version();
+         m_pre_master = rng.random_vec(48);
+         m_pre_master[0] = offered_version.major_version();
+         m_pre_master[1] = offered_version.minor_version();
 
          PK_Encryptor_EME encryptor(*rsa_pub, "PKCS1v15");
 
-         std::vector<byte> encrypted_key = encryptor.encrypt(pre_master, rng);
+         std::vector<byte> encrypted_key = encryptor.encrypt(m_pre_master, rng);
 
          if(state->version() == Protocol_Version::SSL_V3)
-            key_material = encrypted_key; // no length field
+            m_key_material = encrypted_key; // no length field
          else
-            append_tls_length_value(key_material, encrypted_key, 2);
+            append_tls_length_value(m_key_material, encrypted_key, 2);
          }
       else
          throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
@@ -294,17 +294,17 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
          {
          if(state->version() == Protocol_Version::SSL_V3)
             {
-            pre_master = decryptor.decrypt(contents);
+            m_pre_master = decryptor.decrypt(contents);
             }
          else
             {
             TLS_Data_Reader reader(contents);
-            pre_master = decryptor.decrypt(reader.get_range<byte>(2, 0, 65535));
+            m_pre_master = decryptor.decrypt(reader.get_range<byte>(2, 0, 65535));
             }
 
-         if(pre_master.size() != 48 ||
-            client_version.major_version() != pre_master[0] ||
-            client_version.minor_version() != pre_master[1])
+         if(m_pre_master.size() != 48 ||
+            client_version.major_version() != m_pre_master[0] ||
+            client_version.minor_version() != m_pre_master[1])
             {
             throw Decoding_Error("Client_Key_Exchange: Secret corrupted");
             }
@@ -312,9 +312,9 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
       catch(...)
          {
          // Randomize to hide timing channel
-         pre_master = rng.random_vec(48);
-         pre_master[0] = client_version.major_version();
-         pre_master[1] = client_version.minor_version();
+         m_pre_master = rng.random_vec(48);
+         m_pre_master[0] = client_version.major_version();
+         m_pre_master[1] = client_version.minor_version();
          }
       }
    else
@@ -344,14 +344,14 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
       if(kex_algo == "PSK")
          {
          std::vector<byte> zeros(psk.length());
-         append_tls_length_value(pre_master, zeros, 2);
-         append_tls_length_value(pre_master, psk.bits_of(), 2);
+         append_tls_length_value(m_pre_master, zeros, 2);
+         append_tls_length_value(m_pre_master, psk.bits_of(), 2);
          }
       else if(kex_algo == "SRP_SHA")
          {
          SRP6_Server_Session& srp = state->server_kex->server_srp_params();
 
-         pre_master = srp.step2(BigInt::decode(reader.get_range<byte>(2, 0, 65535))).bits_of();
+         m_pre_master = srp.step2(BigInt::decode(reader.get_range<byte>(2, 0, 65535))).bits_of();
          }
       else if(kex_algo == "DH" || kex_algo == "DHE_PSK" ||
               kex_algo == "ECDH" || kex_algo == "ECDHE_PSK")
@@ -383,11 +383,11 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
 
             if(kex_algo == "DHE_PSK" || kex_algo == "ECDHE_PSK")
                {
-               append_tls_length_value(pre_master, shared_secret, 2);
-               append_tls_length_value(pre_master, psk.bits_of(), 2);
+               append_tls_length_value(m_pre_master, shared_secret, 2);
+               append_tls_length_value(m_pre_master, psk.bits_of(), 2);
                }
             else
-               pre_master = shared_secret;
+               m_pre_master = shared_secret;
             }
          catch(std::exception &e)
             {
@@ -397,7 +397,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
             * on, allowing the protocol to fail later in the finished
             * checks.
             */
-            pre_master = rng.random_vec(ka_key->public_value().size());
+            m_pre_master = rng.random_vec(ka_key->public_value().size());
             }
          }
       else

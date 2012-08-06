@@ -245,7 +245,7 @@ class Client_Key_Exchange : public Handshake_Message
       Handshake_Type type() const { return CLIENT_KEX; }
 
       const secure_vector<byte>& pre_master_secret() const
-         { return pre_master; }
+         { return m_pre_master; }
 
       Client_Key_Exchange(Handshake_IO& io,
                           Handshake_State* state,
@@ -262,10 +262,10 @@ class Client_Key_Exchange : public Handshake_Message
                           RandomNumberGenerator& rng);
 
    private:
-      std::vector<byte> serialize() const { return key_material; }
+      std::vector<byte> serialize() const { return m_key_material; }
 
-      std::vector<byte> key_material;
-      secure_vector<byte> pre_master;
+      std::vector<byte> m_key_material;
+      secure_vector<byte> m_pre_master;
    };
 
 /**
@@ -300,9 +300,9 @@ class Certificate_Req : public Handshake_Message
       Handshake_Type type() const { return CERTIFICATE_REQUEST; }
 
       const std::vector<std::string>& acceptable_cert_types() const
-         { return cert_key_types; }
+         { return m_cert_key_types; }
 
-      std::vector<X509_DN> acceptable_CAs() const { return names; }
+      std::vector<X509_DN> acceptable_CAs() const { return m_names; }
 
       std::vector<std::pair<std::string, std::string> > supported_algos() const
          { return m_supported_algos; }
@@ -318,8 +318,8 @@ class Certificate_Req : public Handshake_Message
    private:
       std::vector<byte> serialize() const;
 
-      std::vector<X509_DN> names;
-      std::vector<std::string> cert_key_types;
+      std::vector<X509_DN> m_names;
+      std::vector<std::string> m_cert_key_types;
 
       std::vector<std::pair<std::string, std::string> > m_supported_algos;
    };
@@ -351,9 +351,9 @@ class Certificate_Verify : public Handshake_Message
    private:
       std::vector<byte> serialize() const;
 
-      std::string sig_algo; // sig algo used to create signature
-      std::string hash_algo; // hash used to create signature
-      std::vector<byte> signature;
+      std::string m_sig_algo; // sig algo used to create signature
+      std::string m_hash_algo; // hash used to create signature
+      std::vector<byte> m_signature;
    };
 
 /**
@@ -365,7 +365,7 @@ class Finished : public Handshake_Message
       Handshake_Type type() const { return FINISHED; }
 
       std::vector<byte> verify_data() const
-         { return verification_data; }
+         { return m_verification_data; }
 
       bool verify(Handshake_State* state,
                   Connection_Side side);
@@ -378,8 +378,8 @@ class Finished : public Handshake_Message
    private:
       std::vector<byte> serialize() const;
 
-      Connection_Side side;
-      std::vector<byte> verification_data;
+      Connection_Side m_side;
+      std::vector<byte> m_verification_data;
    };
 
 /**

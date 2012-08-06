@@ -58,11 +58,11 @@ Certificate_Req::Certificate_Req(Handshake_IO& io,
                                  Protocol_Version version)
    {
    for(size_t i = 0; i != ca_certs.size(); ++i)
-      names.push_back(ca_certs[i].subject_dn());
+      m_names.push_back(ca_certs[i].subject_dn());
 
-   cert_key_types.push_back("RSA");
-   cert_key_types.push_back("DSA");
-   cert_key_types.push_back("ECDSA");
+   m_cert_key_types.push_back("RSA");
+   m_cert_key_types.push_back("DSA");
+   m_cert_key_types.push_back("ECDSA");
 
    if(version.supports_negotiable_signature_algorithms())
       {
@@ -97,7 +97,7 @@ Certificate_Req::Certificate_Req(const std::vector<byte>& buf,
       if(cert_type_name == "") // something we don't know
          continue;
 
-      cert_key_types.push_back(cert_type_name);
+      m_cert_key_types.push_back(cert_type_name);
       }
 
    if(version.supports_negotiable_signature_algorithms())
@@ -127,7 +127,7 @@ Certificate_Req::Certificate_Req(const std::vector<byte>& buf,
       BER_Decoder decoder(&name_bits[0], name_bits.size());
       X509_DN name;
       decoder.decode(name);
-      names.push_back(name);
+      m_names.push_back(name);
       }
    }
 
@@ -140,8 +140,8 @@ std::vector<byte> Certificate_Req::serialize() const
 
    std::vector<byte> cert_types;
 
-   for(size_t i = 0; i != cert_key_types.size(); ++i)
-      cert_types.push_back(cert_type_name_to_code(cert_key_types[i]));
+   for(size_t i = 0; i != m_cert_key_types.size(); ++i)
+      cert_types.push_back(cert_type_name_to_code(m_cert_key_types[i]));
 
    append_tls_length_value(buf, cert_types, 1);
 
@@ -150,10 +150,10 @@ std::vector<byte> Certificate_Req::serialize() const
 
    std::vector<byte> encoded_names;
 
-   for(size_t i = 0; i != names.size(); ++i)
+   for(size_t i = 0; i != m_names.size(); ++i)
       {
       DER_Encoder encoder;
-      encoder.encode(names[i]);
+      encoder.encode(m_names[i]);
 
       append_tls_length_value(encoded_names, encoder.get_contents(), 2);
       }
