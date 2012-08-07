@@ -43,10 +43,9 @@ class Handshake_IO
                              size_t record_size,
                              u64bit record_number) = 0;
 
-      virtual bool empty() const = 0;
-
-      virtual bool have_full_record() const = 0;
-
+      /**
+      * Returns (HANDSHAKE_NONE, std::vector<>()) if no message currently available
+      */
       virtual std::pair<Handshake_Type, std::vector<byte> > get_next_record() = 0;
 
       Handshake_IO() {}
@@ -79,10 +78,6 @@ class Stream_Handshake_IO : public Handshake_IO
                      size_t record_size,
                      u64bit record_number) override;
 
-      bool empty() const override;
-
-      bool have_full_record() const override;
-
       std::pair<Handshake_Type, std::vector<byte> > get_next_record() override;
    private:
       std::deque<byte> m_queue;
@@ -109,10 +104,6 @@ class Datagram_Handshake_IO : public Handshake_IO
                      const byte record[],
                      size_t record_size,
                      u64bit record_number) override;
-
-      bool empty() const override;
-
-      bool have_full_record() const override;
 
       std::pair<Handshake_Type, std::vector<byte>> get_next_record() override;
    private:

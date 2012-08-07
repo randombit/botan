@@ -77,10 +77,13 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
                                               record.size(),
                                               record_number);
 
-            while(m_state && m_state->handshake_io().have_full_record())
+            while(m_state)
                {
-               std::pair<Handshake_Type, std::vector<byte> > msg =
-                  m_state->handshake_io().get_next_record();
+               auto msg = m_state->handshake_io().get_next_record();
+
+               if(msg.first == HANDSHAKE_NONE) // no full handshake yet
+                  break;
+
                process_handshake_msg(msg.first, msg.second);
                }
             }

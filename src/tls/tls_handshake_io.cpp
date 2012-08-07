@@ -60,24 +60,7 @@ void Stream_Handshake_IO::add_input(const byte rec_type,
       throw Decoding_Error("Unknown message type in handshake processing");
    }
 
-bool Stream_Handshake_IO::empty() const
-   {
-   return m_queue.empty();
-   }
-
-bool Stream_Handshake_IO::have_full_record() const
-   {
-   if(m_queue.size() >= 4)
-      {
-      const size_t length = load_be24(&m_queue[1]);
-
-      return (m_queue.size() >= length + 4);
-      }
-
-   return false;
-   }
-
-std::pair<Handshake_Type, std::vector<byte> >
+std::pair<Handshake_Type, std::vector<byte>>
 Stream_Handshake_IO::get_next_record()
    {
    if(m_queue.size() >= 4)
@@ -97,7 +80,7 @@ Stream_Handshake_IO::get_next_record()
          }
       }
 
-   throw Internal_Error("Stream_Handshake_IO::get_next_record called without a full record");
+   return std::make_pair(HANDSHAKE_NONE, std::vector<byte>());
    }
 
 std::vector<byte>
@@ -163,26 +146,13 @@ void Datagram_Handshake_IO::add_input(const byte rec_type,
                                         msg_len);
    }
 
-bool Datagram_Handshake_IO::empty() const
-   {
-   return m_messages.find(m_in_message_seq) == m_messages.end();
-   }
-
-bool Datagram_Handshake_IO::have_full_record() const
-   {
-   auto i = m_messages.find(m_in_message_seq);
-
-   const bool complete = (i != m_messages.end() && i->second.complete());
-
-   return complete;
-   }
-
-std::pair<Handshake_Type, std::vector<byte> > Datagram_Handshake_IO::get_next_record()
+std::pair<Handshake_Type, std::vector<byte>>
+Datagram_Handshake_IO::get_next_record()
    {
    auto i = m_messages.find(m_in_message_seq);
 
    if(i == m_messages.end() || !i->second.complete())
-      throw Internal_Error("Datagram_Handshake_IO::get_next_record called without a full record");
+      return std::make_pair(HANDSHAKE_NONE, std::vector<byte>());
 
    auto m = i->second.message();
 
