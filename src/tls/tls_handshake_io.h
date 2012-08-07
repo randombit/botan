@@ -14,6 +14,7 @@
 #include <vector>
 #include <deque>
 #include <map>
+#include <set>
 #include <utility>
 
 namespace Botan {
@@ -39,7 +40,8 @@ class Handshake_IO
 
       virtual void add_input(byte record_type,
                              const byte record[],
-                             size_t record_size) = 0;
+                             size_t record_size,
+                             u64bit record_number) = 0;
 
       virtual bool empty() const = 0;
 
@@ -74,7 +76,8 @@ class Stream_Handshake_IO : public Handshake_IO
 
       void add_input(byte record_type,
                      const byte record[],
-                     size_t record_size) override;
+                     size_t record_size,
+                     u64bit record_number) override;
 
       bool empty() const override;
 
@@ -104,7 +107,8 @@ class Datagram_Handshake_IO : public Handshake_IO
 
       void add_input(const byte rec_type,
                      const byte record[],
-                     size_t record_size) override;
+                     size_t record_size,
+                     u64bit record_number) override;
 
       bool empty() const override;
 
@@ -132,6 +136,7 @@ class Datagram_Handshake_IO : public Handshake_IO
          };
 
       std::map<u16bit, Handshake_Reassembly> m_messages;
+      std::set<u16bit> m_ccs_epochs;
 
       u16bit m_in_message_seq = 0;
       u16bit m_out_message_seq = 0;

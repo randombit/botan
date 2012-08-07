@@ -45,11 +45,15 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
          {
          byte rec_type = CONNECTION_CLOSED;
          std::vector<byte> record;
+         u64bit record_number = 0;
+
          size_t consumed = 0;
 
          const size_t needed = m_reader.add_input(buf, buf_size,
                                                   consumed,
-                                                  rec_type, record);
+                                                  rec_type,
+                                                  record,
+                                                  record_number);
 
          BOTAN_ASSERT(consumed <= buf_size,
                       "Record reader consumed sane amount");
@@ -68,7 +72,10 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
             if(!m_state)
                m_state.reset(new_handshake_state());
 
-            m_state->handshake_io().add_input(rec_type, &record[0], record.size());
+            m_state->handshake_io().add_input(rec_type,
+                                              &record[0],
+                                              record.size(),
+                                              record_number);
 
             while(m_state && m_state->handshake_io().have_full_record())
                {

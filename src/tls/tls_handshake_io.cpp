@@ -40,7 +40,8 @@ Protocol_Version Stream_Handshake_IO::initial_record_version() const
 
 void Stream_Handshake_IO::add_input(const byte rec_type,
                                     const byte record[],
-                                    size_t record_size)
+                                    size_t record_size,
+                                    u64bit /*record_number*/)
    {
    if(rec_type == HANDSHAKE)
       {
@@ -51,6 +52,7 @@ void Stream_Handshake_IO::add_input(const byte rec_type,
       if(record_size != 1 || record[0] != 1)
          throw Decoding_Error("Invalid ChangeCipherSpec");
 
+      // Pretend it's a regular handshake message of zero length
       const byte ccs_hs[] = { HANDSHAKE_CCS, 0, 0, 0 };
       m_queue.insert(m_queue.end(), ccs_hs, ccs_hs + sizeof(ccs_hs));
       }
@@ -131,12 +133,12 @@ Protocol_Version Datagram_Handshake_IO::initial_record_version() const
 
 void Datagram_Handshake_IO::add_input(const byte rec_type,
                                       const byte record[],
-                                      size_t record_size)
+                                      size_t record_size,
+                                      u64bit record_number)
    {
    if(rec_type == CHANGE_CIPHER_SPEC)
       {
-      const u16bit message_seq = 666; // fixme
-      m_messages[message_seq].add_fragment(nullptr, 0, 0, HANDSHAKE_CCS, 0);
+      m_ccs_epochs.insert(static_cast<u16bit>(record_number >> 48));
       return;
       }
 
@@ -182,13 +184,12 @@ std::pair<Handshake_Type, std::vector<byte> > Datagram_Handshake_IO::get_next_re
    if(i == m_messages.end() || !i->second.complete())
       throw Internal_Error("Datagram_Handshake_IO::get_next_record called without a full record");
 
-
-   //return i->second.message();
    auto m = i->second.message();
 
    m_in_message_seq += 1;
 
    return m;
+   //return i->second.message();
    }
 
 void Datagram_Handshake_IO::Handshake_Reassembly::add_fragment(
@@ -214,7 +215,7 @@ void Datagram_Handshake_IO::Handshake_Reassembly::add_fragment(
 
 bool Datagram_Handshake_IO::Handshake_Reassembly::complete() const
    {
-   return true; // fixme!
+   return true; // FIXME
    }
 
 std::pair<Handshake_Type, std::vector<byte>>

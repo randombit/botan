@@ -90,12 +90,14 @@ class BOTAN_DLL Record_Reader
       * @param msg_type is set to the type of the message just read if
       *        this function returns 0
       * @param msg is set to the contents of the record
+      * @param msg_sequence is set to this records sequence number
       * @return number of bytes still needed (minimum), or 0 if success
       */
       size_t add_input(const byte input[], size_t input_size,
                        size_t& input_consumed,
                        byte& msg_type,
-                       std::vector<byte>& msg);
+                       std::vector<byte>& msg,
+                       u64bit& msg_sequence);
 
       void change_cipher_spec(Connection_Side side,
                               const Ciphersuite& suite,

@@ -219,7 +219,8 @@ size_t tls_padding_check(Protocol_Version version,
 size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
                                 size_t& consumed,
                                 byte& msg_type,
-                                std::vector<byte>& msg)
+                                std::vector<byte>& msg,
+                                u64bit& msg_sequence)
    {
    const byte* input = &input_array[0];
 
@@ -263,6 +264,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
 
          copy_mem(&msg[4], &m_readbuf[2], m_readbuf_pos - 2);
          m_readbuf_pos = 0;
+         msg_sequence = m_seq_no++;
          return 0;
          }
       }
@@ -317,6 +319,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
       copy_mem(&msg[0], &m_readbuf[TLS_HEADER_SIZE], record_len);
 
       m_readbuf_pos = 0;
+      msg_sequence = m_seq_no++;
       return 0; // got a full record
       }
 
@@ -364,7 +367,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
    m_mac->update_be(plain_length);
    m_mac->update(&m_readbuf[TLS_HEADER_SIZE + m_iv_size], plain_length);
 
-   ++m_seq_no;
+   msg_sequence = m_seq_no++;
 
    m_mac->final(&m_macbuf[0]);
 
