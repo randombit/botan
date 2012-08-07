@@ -367,8 +367,6 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
    m_mac->update_be(plain_length);
    m_mac->update(&m_readbuf[TLS_HEADER_SIZE + m_iv_size], plain_length);
 
-   msg_sequence = m_seq_no++;
-
    m_mac->final(&m_macbuf[0]);
 
    const size_t mac_offset = record_len - (m_macbuf.size() + pad_size);
@@ -377,6 +375,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
       throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure");
 
    msg_type = m_readbuf[0];
+   msg_sequence = m_seq_no++;
 
    msg.resize(plain_length);
    copy_mem(&msg[0], &m_readbuf[TLS_HEADER_SIZE + m_iv_size], plain_length);
