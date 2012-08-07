@@ -244,7 +244,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
 
       if(m_readbuf[3] >= 3) // SSLv2 mapped TLS hello, then?
          {
-         size_t record_len = make_u16bit(m_readbuf[0], m_readbuf[1]) & 0x7FFF;
+         const size_t record_len = make_u16bit(m_readbuf[0], m_readbuf[1]) & 0x7FFF;
 
          if(size_t needed = fill_buffer_to(input, input_sz, consumed, record_len + 2))
             return needed;
@@ -350,11 +350,6 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
    if(record_len < mac_pad_iv_size)
       throw Decoding_Error("Record sent with invalid length");
 
-   const u16bit plain_length = record_len - mac_pad_iv_size;
-
-   if(plain_length > m_max_fragment)
-      throw TLS_Exception(Alert::RECORD_OVERFLOW, "Plaintext record is too large");
-
    m_mac->update_be(m_seq_no);
    m_mac->update(m_readbuf[0]); // msg_type
 
@@ -363,6 +358,8 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
       m_mac->update(m_version.major_version());
       m_mac->update(m_version.minor_version());
       }
+
+   const u16bit plain_length = record_len - mac_pad_iv_size;
 
    m_mac->update_be(plain_length);
    m_mac->update(&m_readbuf[TLS_HEADER_SIZE + m_iv_size], plain_length);
@@ -374,11 +371,14 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
    if(!same_mem(&m_readbuf[TLS_HEADER_SIZE + mac_offset], &m_macbuf[0], m_macbuf.size()))
       throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure");
 
+   if(plain_length > m_max_fragment)
+      throw TLS_Exception(Alert::RECORD_OVERFLOW, "Plaintext record is too large");
+
    msg_type = m_readbuf[0];
    msg_sequence = m_seq_no++;
+   msg.assign(&m_readbuf[TLS_HEADER_SIZE + m_iv_size],
+              &m_readbuf[TLS_HEADER_SIZE + m_iv_size + plain_length]);
 
-   msg.resize(plain_length);
-   copy_mem(&msg[0], &m_readbuf[TLS_HEADER_SIZE + m_iv_size], plain_length);
    m_readbuf_pos = 0;
    return 0;
    }
