@@ -135,7 +135,8 @@ class Datagram_Handshake_IO : public Handshake_IO
             size_t m_msg_length = 0;
             u16bit m_epoch = 0;
 
-            std::vector<byte> m_buffer;
+            std::map<size_t, std::deque<byte>> m_fragments;
+            std::vector<byte> m_message;
          };
 
       std::map<u16bit, Handshake_Reassembly> m_messages;

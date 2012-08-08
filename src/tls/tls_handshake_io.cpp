@@ -145,15 +145,15 @@ void Datagram_Handshake_IO::add_input(const byte rec_type,
       if(record_size < total_size)
          throw Decoding_Error("Bad lengths in DTLS header");
 
-      if(message_seq < m_in_message_seq)
-         return;
-
-      m_messages[message_seq].add_fragment(&record[DTLS_HANDSHAKE_HEADER_LEN],
-                                           fragment_length,
-                                           fragment_offset,
-                                           epoch,
-                                           msg_type,
-                                           msg_len);
+      if(message_seq >= m_in_message_seq)
+         {
+         m_messages[message_seq].add_fragment(&record[DTLS_HANDSHAKE_HEADER_LEN],
+                                              fragment_length,
+                                              fragment_offset,
+                                              epoch,
+                                              msg_type,
+                                              msg_len);
+         }
 
       record += total_size;
       record_size -= total_size;
@@ -194,32 +194,44 @@ void Datagram_Handshake_IO::Handshake_Reassembly::add_fragment(
    byte msg_type,
    size_t msg_length)
    {
+   if(complete())
+      return; // already have entire message, ignore this
+
    if(m_msg_type == HANDSHAKE_NONE)
       {
+      m_epoch = epoch;
       m_msg_type = msg_type;
       m_msg_length = msg_length;
-#warning DoS should resize as inputs are added (?)
-      m_buffer.resize(m_msg_length);
-      m_epoch = epoch;
       }
 
+   if(msg_type != m_msg_type || msg_length != m_msg_length || epoch != m_epoch)
+      throw Decoding_Error("Inconsistent values in DTLS handshake header");
+
    if(fragment_offset > m_msg_length)
-      throw Decoding_Error("Fragment offset greater than message length");
+      throw Decoding_Error("Fragment offset past end of message");
 
    if(fragment_offset + fragment_length > m_msg_length)
-      throw Decoding_Error("Fragment passes end of message");
+      throw Decoding_Error("Fragment overlaps past end of message");
 
-   if(msg_type != m_msg_type ||
-      msg_length != m_msg_length ||
-      epoch != m_epoch)
-      throw Decoding_Error("Datagram_Handshake_IO - inconsistent values");
+   if(fragment_offset == 0 && fragment_length == m_msg_length)
+      {
+      m_fragments.clear();
+      m_message.assign(fragment, fragment+fragment_length);
+      }
+   else
+      {
+      throw Internal_Error("Defragmentation not implemented");
 
-   copy_mem(&m_buffer[fragment_offset], fragment, fragment_length);
+      m_fragments[fragment_offset] =
+         std::deque<byte>(fragment, fragment+fragment_length);
+
+      auto range = m_fragments.equal_range(fragment_offset);
+      }
    }
 
 bool Datagram_Handshake_IO::Handshake_Reassembly::complete() const
    {
-   return true; // FIXME
+   return (m_msg_type != HANDSHAKE_NONE && m_message.size() == m_msg_length);
    }
 
 std::pair<Handshake_Type, std::vector<byte>>
@@ -228,9 +240,7 @@ Datagram_Handshake_IO::Handshake_Reassembly::message() const
    if(!complete())
       throw Internal_Error("Datagram_Handshake_IO - message not complete");
 
-   auto msg = std::make_pair(static_cast<Handshake_Type>(m_msg_type), m_buffer);
-
-   return msg;
+   return std::make_pair(static_cast<Handshake_Type>(m_msg_type), m_message);
    }
 
 std::vector<byte>
