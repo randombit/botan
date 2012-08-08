@@ -110,6 +110,11 @@ class Datagram_Handshake_IO : public Handshake_IO
       std::pair<Handshake_Type, std::vector<byte>>
          get_next_record(bool expecting_ccs) override;
    private:
+      std::vector<byte> format_w_seq(
+         const std::vector<byte>& handshake_msg,
+         Handshake_Type handshake_type,
+         u16bit msg_sequence) const;
+
       class Handshake_Reassembly
          {
          public:

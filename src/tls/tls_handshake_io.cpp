@@ -234,8 +234,9 @@ Datagram_Handshake_IO::Handshake_Reassembly::message() const
    }
 
 std::vector<byte>
-Datagram_Handshake_IO::format(const std::vector<byte>& msg,
-                              Handshake_Type type) const
+Datagram_Handshake_IO::format_w_seq(const std::vector<byte>& msg,
+                                    Handshake_Type type,
+                                    u16bit msg_sequence) const
    {
    std::vector<byte> send_buf(12 + msg.size());
 
@@ -245,7 +246,7 @@ Datagram_Handshake_IO::format(const std::vector<byte>& msg,
 
    store_be24(&send_buf[1], buf_size);
 
-   store_be(static_cast<u16bit>(m_in_message_seq - 1), &send_buf[4]);
+   store_be(msg_sequence, &send_buf[4]);
 
    store_be24(&send_buf[6], 0); // fragment_offset
    store_be24(&send_buf[9], buf_size); // fragment_length
@@ -256,30 +257,26 @@ Datagram_Handshake_IO::format(const std::vector<byte>& msg,
    }
 
 std::vector<byte>
+Datagram_Handshake_IO::format(const std::vector<byte>& msg,
+                              Handshake_Type type) const
+   {
+   return format_w_seq(msg, type, m_in_message_seq - 1);
+   }
+
+std::vector<byte>
 Datagram_Handshake_IO::send(Handshake_Message& handshake_msg)
    {
    const std::vector<byte> msg = handshake_msg.serialize();
-   std::vector<byte> send_buf(12 + msg.size());
 
-   const size_t buf_size = msg.size();
+   const std::vector<byte> no_fragment =
+      format_w_seq(msg, handshake_msg.type(), m_out_message_seq);
 
-   send_buf[0] = handshake_msg.type();
-
-   store_be24(&send_buf[1], buf_size);
-
-   store_be(static_cast<u16bit>(m_out_message_seq), &send_buf[4]);
-
-   store_be24(&send_buf[6], 0); // fragment_offset
-   store_be24(&send_buf[9], buf_size); // fragment_length
-
-   copy_mem(&send_buf[12], &msg[0], msg.size());
-
-   // FIXME: fragment to mtu size
-   m_writer.send(HANDSHAKE, &send_buf[0], send_buf.size());
+   // FIXME: fragment to mtu size if needed
+   m_writer.send(HANDSHAKE, &no_fragment[0], no_fragment.size());
 
    m_out_message_seq += 1;
 
-   return send_buf;
+   return no_fragment;
    }
 
 }
