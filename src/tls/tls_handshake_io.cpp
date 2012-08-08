@@ -129,23 +129,35 @@ void Datagram_Handshake_IO::add_input(const byte rec_type,
 
    const size_t DTLS_HANDSHAKE_HEADER_LEN = 12;
 
-   if(record_size < DTLS_HANDSHAKE_HEADER_LEN)
-      return; // completely bogus? at least degenerate/weird
+   while(record_size)
+      {
+      if(record_size < DTLS_HANDSHAKE_HEADER_LEN)
+         return; // completely bogus? at least degenerate/weird
 
-   const byte msg_type = record[0];
-   const size_t msg_len = load_be24(&record[1]);
-   const u16bit message_seq = load_be<u16bit>(&record[4], 0);
-   const size_t fragment_offset = load_be24(&record[6]);
-   const size_t fragment_length = load_be24(&record[9]);
+      const byte msg_type = record[0];
+      const size_t msg_len = load_be24(&record[1]);
+      const u16bit message_seq = load_be<u16bit>(&record[4], 0);
+      const size_t fragment_offset = load_be24(&record[6]);
+      const size_t fragment_length = load_be24(&record[9]);
 
-   if(fragment_length + DTLS_HANDSHAKE_HEADER_LEN != record_size)
-      throw Decoding_Error("Bogus DTLS handshake, header sizes do not match");
+      const size_t total_size = DTLS_HANDSHAKE_HEADER_LEN + fragment_length;
 
-   m_messages[message_seq].add_fragment(&record[DTLS_HANDSHAKE_HEADER_LEN],
-                                        fragment_length,
-                                        fragment_offset,
-                                        msg_type,
-                                        msg_len);
+      if(record_size < total_size)
+         throw Decoding_Error("Bad lengths in DTLS header");
+
+      if(message_seq < m_in_message_seq)
+         return;
+
+      m_messages[message_seq].add_fragment(&record[DTLS_HANDSHAKE_HEADER_LEN],
+                                           fragment_length,
+                                           fragment_offset,
+                                           epoch,
+                                           msg_type,
+                                           msg_len);
+
+      record += total_size;
+      record_size -= total_size;
+      }
    }
 
 std::pair<Handshake_Type, std::vector<byte>>
@@ -153,12 +165,15 @@ Datagram_Handshake_IO::get_next_record(bool expecting_ccs)
    {
    if(expecting_ccs)
       {
-      const u16bit current_epoch = 0; // fixme
+      if(!m_messages.empty())
+         {
+         const u16bit current_epoch = m_messages.begin()->second.epoch();
 
-      if(m_ccs_epochs.count(current_epoch))
-         return std::make_pair(HANDSHAKE_CCS, std::vector<byte>());
-      else
-         return std::make_pair(HANDSHAKE_NONE, std::vector<byte>());
+         if(m_ccs_epochs.count(current_epoch))
+            return std::make_pair(HANDSHAKE_CCS, std::vector<byte>());
+         }
+
+      return std::make_pair(HANDSHAKE_NONE, std::vector<byte>());
       }
 
    auto i = m_messages.find(m_in_message_seq);
@@ -166,18 +181,16 @@ Datagram_Handshake_IO::get_next_record(bool expecting_ccs)
    if(i == m_messages.end() || !i->second.complete())
       return std::make_pair(HANDSHAKE_NONE, std::vector<byte>());
 
-   auto m = i->second.message();
-
    m_in_message_seq += 1;
 
-   return m;
-   //return i->second.message();
+   return i->second.message();
    }
 
 void Datagram_Handshake_IO::Handshake_Reassembly::add_fragment(
    const byte fragment[],
    size_t fragment_length,
    size_t fragment_offset,
+   u16bit epoch,
    byte msg_type,
    size_t msg_length)
    {
@@ -187,9 +200,18 @@ void Datagram_Handshake_IO::Handshake_Reassembly::add_fragment(
       m_msg_length = msg_length;
 #warning DoS should resize as inputs are added (?)
       m_buffer.resize(m_msg_length);
+      m_epoch = epoch;
       }
 
-   if(msg_type != m_msg_type || msg_length != m_msg_length)
+   if(fragment_offset > m_msg_length)
+      throw Decoding_Error("Fragment offset greater than message length");
+
+   if(fragment_offset + fragment_length > m_msg_length)
+      throw Decoding_Error("Fragment passes end of message");
+
+   if(msg_type != m_msg_type ||
+      msg_length != m_msg_length ||
+      epoch != m_epoch)
       throw Decoding_Error("Datagram_Handshake_IO - inconsistent values");
 
    copy_mem(&m_buffer[fragment_offset], fragment, fragment_length);
@@ -234,15 +256,30 @@ Datagram_Handshake_IO::format(const std::vector<byte>& msg,
    }
 
 std::vector<byte>
-Datagram_Handshake_IO::send(Handshake_Message& msg)
+Datagram_Handshake_IO::send(Handshake_Message& handshake_msg)
    {
-   const std::vector<byte> buf = format(msg.serialize(), msg.type());
+   const std::vector<byte> msg = handshake_msg.serialize();
+   std::vector<byte> send_buf(12 + msg.size());
+
+   const size_t buf_size = msg.size();
+
+   send_buf[0] = handshake_msg.type();
+
+   store_be24(&send_buf[1], buf_size);
+
+   store_be(static_cast<u16bit>(m_out_message_seq), &send_buf[4]);
+
+   store_be24(&send_buf[6], 0); // fragment_offset
+   store_be24(&send_buf[9], buf_size); // fragment_length
+
+   copy_mem(&send_buf[12], &msg[0], msg.size());
 
    // FIXME: fragment to mtu size
-   m_writer.send(HANDSHAKE, &buf[0], buf.size());
+   m_writer.send(HANDSHAKE, &send_buf[0], send_buf.size());
 
-   return buf;
+   m_out_message_seq += 1;
 
+   return send_buf;
    }
 
 }

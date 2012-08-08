@@ -116,15 +116,19 @@ class Datagram_Handshake_IO : public Handshake_IO
             void add_fragment(const byte fragment[],
                               size_t fragment_length,
                               size_t fragment_offset,
+                              u16bit epoch,
                               byte msg_type,
                               size_t msg_length);
 
             bool complete() const;
 
+            u16bit epoch() const { return m_epoch; }
+
             std::pair<Handshake_Type, std::vector<byte>> message() const;
          private:
             byte m_msg_type = HANDSHAKE_NONE;
             size_t m_msg_length = 0;
+            u16bit m_epoch = 0;
 
             std::vector<byte> m_buffer;
          };
