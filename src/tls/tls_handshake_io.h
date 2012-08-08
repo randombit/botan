@@ -46,7 +46,8 @@ class Handshake_IO
       /**
       * Returns (HANDSHAKE_NONE, std::vector<>()) if no message currently available
       */
-      virtual std::pair<Handshake_Type, std::vector<byte> > get_next_record() = 0;
+      virtual std::pair<Handshake_Type, std::vector<byte>>
+         get_next_record(bool expecting_ccs) = 0;
 
       Handshake_IO() {}
 
@@ -78,7 +79,8 @@ class Stream_Handshake_IO : public Handshake_IO
                      size_t record_size,
                      u64bit record_number) override;
 
-      std::pair<Handshake_Type, std::vector<byte> > get_next_record() override;
+      std::pair<Handshake_Type, std::vector<byte>>
+         get_next_record(bool expecting_ccs) override;
    private:
       std::deque<byte> m_queue;
       Record_Writer& m_writer;
@@ -105,7 +107,8 @@ class Datagram_Handshake_IO : public Handshake_IO
                      size_t record_size,
                      u64bit record_number) override;
 
-      std::pair<Handshake_Type, std::vector<byte>> get_next_record() override;
+      std::pair<Handshake_Type, std::vector<byte>>
+         get_next_record(bool expecting_ccs) override;
    private:
       class Handshake_Reassembly
          {

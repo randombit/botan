@@ -56,10 +56,26 @@ class Handshake_State
 
       Handshake_IO& handshake_io() { return *m_handshake_io; }
 
-      bool received_handshake_msg(Handshake_Type handshake_msg) const;
+      /**
+      * Return true iff we have received a particular message already
+      * @param msg_type the message type
+      */
+      bool received_handshake_msg(Handshake_Type msg_type) const;
 
-      void confirm_transition_to(Handshake_Type handshake_msg);
-      void set_expected_next(Handshake_Type handshake_msg);
+      /**
+      * Confirm that we were expecting this message type
+      * @param msg_type the message type
+      */
+      void confirm_transition_to(Handshake_Type msg_type);
+
+      /**
+      * Record that we are expecting a particular message type next
+      * @param msg_type the message type
+      */
+      void set_expected_next(Handshake_Type msg_type);
+
+      std::pair<Handshake_Type, std::vector<byte>>
+         get_next_handshake_msg();
 
       const std::vector<byte>& session_ticket() const;
 

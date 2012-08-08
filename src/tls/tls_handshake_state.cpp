@@ -222,6 +222,15 @@ bool Handshake_State::received_handshake_msg(Handshake_Type handshake_msg) const
    return (m_hand_received_mask & mask);
    }
 
+std::pair<Handshake_Type, std::vector<byte>>
+Handshake_State::get_next_handshake_msg()
+   {
+   const bool expecting_ccs =
+      (bitmask_for_handshake_type(HANDSHAKE_CCS) & m_hand_expecting_mask);
+
+   return m_handshake_io->get_next_record(expecting_ccs);
+   }
+
 std::string Handshake_State::srp_identifier() const
    {
    if(ciphersuite().valid() && ciphersuite().kex_algo() == "SRP_SHA")

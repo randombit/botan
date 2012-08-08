@@ -79,7 +79,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
 
             while(m_state)
                {
-               auto msg = m_state->handshake_io().get_next_record();
+               auto msg = m_state->get_next_handshake_msg();
 
                if(msg.first == HANDSHAKE_NONE) // no full handshake yet
                   break;

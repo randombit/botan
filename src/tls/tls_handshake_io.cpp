@@ -61,7 +61,7 @@ void Stream_Handshake_IO::add_input(const byte rec_type,
    }
 
 std::pair<Handshake_Type, std::vector<byte>>
-Stream_Handshake_IO::get_next_record()
+Stream_Handshake_IO::get_next_record(bool)
    {
    if(m_queue.size() >= 4)
       {
@@ -119,9 +119,11 @@ void Datagram_Handshake_IO::add_input(const byte rec_type,
                                       size_t record_size,
                                       u64bit record_number)
    {
+   const u16bit epoch = static_cast<u16bit>(record_number >> 48);
+
    if(rec_type == CHANGE_CIPHER_SPEC)
       {
-      m_ccs_epochs.insert(static_cast<u16bit>(record_number >> 48));
+      m_ccs_epochs.insert(epoch);
       return;
       }
 
@@ -147,8 +149,18 @@ void Datagram_Handshake_IO::add_input(const byte rec_type,
    }
 
 std::pair<Handshake_Type, std::vector<byte>>
-Datagram_Handshake_IO::get_next_record()
+Datagram_Handshake_IO::get_next_record(bool expecting_ccs)
    {
+   if(expecting_ccs)
+      {
+      const u16bit current_epoch = 0; // fixme
+
+      if(m_ccs_epochs.count(current_epoch))
+         return std::make_pair(HANDSHAKE_CCS, std::vector<byte>());
+      else
+         return std::make_pair(HANDSHAKE_NONE, std::vector<byte>());
+      }
+
    auto i = m_messages.find(m_in_message_seq);
 
    if(i == m_messages.end() || !i->second.complete())
