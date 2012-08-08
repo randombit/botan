@@ -85,7 +85,7 @@ Stream_Handshake_IO::get_next_record(bool)
 
 std::vector<byte>
 Stream_Handshake_IO::format(const std::vector<byte>& msg,
-                            Handshake_Type type)
+                            Handshake_Type type) const
    {
    std::vector<byte> send_buf(4 + msg.size());
 
@@ -235,7 +235,7 @@ Datagram_Handshake_IO::Handshake_Reassembly::message() const
 
 std::vector<byte>
 Datagram_Handshake_IO::format(const std::vector<byte>& msg,
-                              Handshake_Type type)
+                              Handshake_Type type) const
    {
    std::vector<byte> send_buf(12 + msg.size());
 

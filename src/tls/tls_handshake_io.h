@@ -36,7 +36,7 @@ class Handshake_IO
 
       virtual std::vector<byte> format(
          const std::vector<byte>& handshake_msg,
-         Handshake_Type handshake_type) = 0;
+         Handshake_Type handshake_type) const = 0;
 
       virtual void add_input(byte record_type,
                              const byte record[],
@@ -72,7 +72,7 @@ class Stream_Handshake_IO : public Handshake_IO
 
       std::vector<byte> format(
          const std::vector<byte>& handshake_msg,
-         Handshake_Type handshake_type) override;
+         Handshake_Type handshake_type) const override;
 
       void add_input(byte record_type,
                      const byte record[],
@@ -100,7 +100,7 @@ class Datagram_Handshake_IO : public Handshake_IO
 
       std::vector<byte> format(
          const std::vector<byte>& handshake_msg,
-         Handshake_Type handshake_type) override;
+         Handshake_Type handshake_type) const override;
 
       void add_input(const byte rec_type,
                      const byte record[],
