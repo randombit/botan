@@ -43,7 +43,6 @@ class BOTAN_DLL KDF : public Algorithm
          {
          return derive_key(key_len, &secret[0], secret.size(),
                            &salt[0], salt.size());
-
          }
 
       /**
