@@ -220,12 +220,20 @@ void Datagram_Handshake_IO::Handshake_Reassembly::add_fragment(
       }
    else
       {
-      throw Internal_Error("Defragmentation not implemented");
+      /*
+      * FIXME. This is a pretty lame way to do defragmentation, huge
+      * overhead with a tree node per byte.
+      */
+      for(size_t i = 0; i != fragment_length; ++i)
+         m_fragments[fragment_offset+i] = fragment[i];
 
-      m_fragments[fragment_offset] =
-         std::deque<byte>(fragment, fragment+fragment_length);
-
-      auto range = m_fragments.equal_range(fragment_offset);
+      if(m_fragments.size() == m_msg_length)
+         {
+         m_message.resize(m_msg_length);
+         for(size_t i = 0; i != m_msg_length; ++i)
+            m_message[i] = m_fragments[i];
+         m_fragments.clear();
+         }
       }
    }
 
