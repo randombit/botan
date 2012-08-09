@@ -7,14 +7,6 @@ integer. Thanks to C++'s operator overloading features, using
 number of functions related to ``BigInt`` is quite large. You can find
 most of them in ``botan/bigint.h`` and ``botan/numthry.h``.
 
-.. note::
-
-  If you can, always use expressions of the form ``a += b`` over ``a =
-  a + b``. The difference can be *very* substantial, because the first
-  form prevents at least one needless memory allocation, and possibly
-  as many as three. This will be less of an issue once the library
-  adopts use of C++0x's rvalue references.
-
 Encoding Functions
 ----------------------------------------
 
@@ -25,7 +17,7 @@ other form, such as a decimal string:
 
   This function encodes the BigInt n into a memory
   vector. ``Encoding`` is an enum that has values ``Binary``,
-  ``Octal``, ``Decimal``, and ``Hexadecimal``.
+  ``Decimal``, and ``Hexadecimal``.
 
 .. cpp:function:: BigInt BigInt::decode(const std::vector<byte>& vec, Encoding enc)
 
@@ -40,13 +32,13 @@ like this::
   assert(n1 == n2);
 
 There are also C++-style I/O operators defined for use with
-``BigInt``. The input operator understands negative numbers,
-hexadecimal numbers (marked with a leading "0x"), and octal numbers
-(marked with a leading '0'). The '-' must come before the "0x" or '0'
-marker. The output operator will never adorn the output; for example,
-when printing a hexadecimal number, there will not be a leading "0x"
-(though a leading '-' will be printed if the number is negative). If
-you want such things, you'll have to do them yourself.
+``BigInt``. The input operator understands negative numbers and
+hexadecimal numbers (marked with a leading "0x"). The '-' must come
+before the "0x" marker. The output operator will never adorn the
+output; for example, when printing a hexadecimal number, there will
+not be a leading "0x" (though a leading '-' will be printed if the
+number is negative). If you want such things, you'll have to do them
+yourself.
 
 ``BigInt`` has constructors that can create a ``BigInt`` from an
 unsigned integer or a string. You can also decode an array (a ``byte``
