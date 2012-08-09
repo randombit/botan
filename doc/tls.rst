@@ -247,11 +247,13 @@ information about that session:
 
    .. cpp:function:: Protocol_Version version() const
 
-       Returns the protocol version that was negotiated
+       Returns the :cpp:class:`protocol version <TLS::Protocol_Version>`
+       that was negotiated
 
    .. cpp:function:: Ciphersuite ciphersite() const
 
-       Returns the :ref:`ciphersuite <tls_ciphersuite>` that was negotiated.
+       Returns the :cpp:class:`ciphersuite <TLS::Ciphersuite>` that
+       was negotiated.
 
    .. cpp:function:: std::string sni_hostname() const
 
@@ -558,8 +560,6 @@ be negotiated during a handshake.
 
      Default: 86400 seconds (1 day)
 
-.. _tls_ciphersuite:
-
 TLS Ciphersuites
 ----------------------------------------
 
@@ -626,7 +626,8 @@ The ``TLS::Protocol_Version`` class represents a specific version:
 
  .. cpp:type:: enum Version_Code
 
-     ``SSL_V3``, ``TLS_V10``, ``TLS_V11``, ``TLS_V12``
+     ``SSL_V3``, ``TLS_V10``, ``TLS_V11``, ``TLS_V12``, ``DTLS_V10``,
+     ``DTLS_V12``
 
  .. cpp:function:: Protocol_Version(Version_Code named_version)
 
@@ -642,5 +643,5 @@ The ``TLS::Protocol_Version`` class represents a specific version:
 
  .. cpp:function:: std::string to_string() const
 
-      Returns string description of the version, typically "SSL v3" or
-      "TLS v1.n"
+      Returns string description of the version, for instance "SSL v3",
+      "TLS v1.1", or "DTLS v1.0".
