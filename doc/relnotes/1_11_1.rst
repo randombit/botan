@@ -1,6 +1,34 @@
 Version 1.11.1, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+TLS and DTLS
+""""""""""""""""""""""""""""""""""""""""
+
+Initial support for DTLS (v1.0 and v1.2) is available in this
+release.
+
+Added :cpp:func:`TLS::Policy::acceptable_protocol_version`
+and :cpp:func:`TLS::Policy::allow_server_initiated_renegotiation`
+
+:cpp:class:`TLS::Session_Manager_In_Memory` now chooses a random
+256-bit key at startup and encrypts all sessions (using the existing
+:cpp:func:`TLS::Session::encrypt` mechanism) while they are stored in
+memory. This is primarily to reduce pressure on ``mlock``ed memory, as
+each session normally requires 48 bytes of locked memory for the
+master secret, whereas now only 32 bytes are needed total. This change
+may also make it slightly harder for an attacker to extract session
+data from memory dumps (eg with a cold boot attack).
+
+TLS clients were not sending a next protocol message during a session
+resumption, which would cause resumption failures with servers that
+support NPN if NPN was being offered by the client.
+
+A heartbeat request send by the counterparty during a handshake would
+be passed to the application callback as a heartbeat response.
+
+Public Key Strength Checking
+""""""""""""""""""""""""""""""""""""""""
+
 A new function :cpp:func:`Public_Key::estimated_strength` returns
 an estimate for the upper bound of the strength of the key. For
 instance for an RSA key, it will return an estimate of how many

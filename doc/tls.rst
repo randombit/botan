@@ -279,7 +279,12 @@ There are also functions for serialization and deserializing sessions:
                                                RandomNumberGenerator& rng)
 
       Encrypts a session using a symmetric key *key* and returns a raw
-      binary value that can later be passed to ``decrypt``.
+      binary value that can later be passed to ``decrypt``. The key
+      may be of any length.
+
+      Currently the implementation uses AES-256 in CBC mode with a
+      SHA-256 HMAC. The keys for these are derived from *key* using
+      KDF2(SHA-256).
 
    .. cpp:function:: static Session decrypt(const byte ciphertext[], \
                                             size_t length, \
@@ -410,18 +415,19 @@ be negotiated during a handshake.
 
 .. cpp:class:: TLS::Policy
 
- .. cpp:function:: Protocol_Version min_version() const
-
-     Returns the minimum protocol version we are willing to negotiate.
-
-     Default: SSL v3
-
  .. cpp:function:: Protocol_Version pref_version() const
 
      Return the protocol version we would prefer to negotiate. This is
      the version that clients will offer to servers.
 
      Default: TLS v1.2
+
+ .. cpp:function:: bool acceptable_protocol_version(const Protocol_Version& version)
+
+     Return true if this version of the protocol is one that we are
+     willing to negotiate.
+
+     Default: True for all known protocol versions
 
  .. cpp:function:: std::vector<std::string> allowed_ciphers() const
 
@@ -431,6 +437,10 @@ be negotiated during a handshake.
      Default: "AES-256", "AES-128", "ARC4", "3DES"
 
      Also allowed: "Camellia-256", "Camellia-128", "SEED"
+
+     .. note::
+
+        ARC4 will never be negotiated in DTLS due to protocol limitations
 
  .. cpp:function:: std::vector<std::string> allowed_macs() const
 
@@ -488,6 +498,14 @@ be negotiated during a handshake.
      .. note::
 
         TLS compression is not currently supported.
+
+ .. cpp:function:: bool allow_server_initiated_renegotiation() const
+
+     If this function returns true, a client will accept a
+     server-initiated renegotiation attempt. Otherwise it will send
+     the server a non-fatal ``no_renegotiation`` alert.
+
+     Default: true
 
  .. cpp:function:: bool allow_insecure_renegotiation() const
 
