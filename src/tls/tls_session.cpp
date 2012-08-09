@@ -141,12 +141,13 @@ std::chrono::seconds Session::session_age() const
 
 namespace {
 
-const u32bit SESSION_CRYPTO_MAGIC = 0x571B0E4E;
+const u32bit SESSION_CRYPTO_MAGIC = 0x571B0E4F;
 const std::string SESSION_CRYPTO_CIPHER = "AES-256/CBC";
 const std::string SESSION_CRYPTO_MAC = "HMAC(SHA-256)";
 const std::string SESSION_CRYPTO_KDF = "KDF2(SHA-256)";
 
 const size_t MAGIC_LENGTH = 4;
+const size_t KEY_KDF_SALT_LENGTH = 10;
 const size_t MAC_KEY_LENGTH = 32;
 const size_t CIPHER_KEY_LENGTH = 32;
 const size_t CIPHER_IV_LENGTH = 16;
@@ -160,15 +161,21 @@ Session::encrypt(const SymmetricKey& master_key,
    {
    std::unique_ptr<KDF> kdf(get_kdf(SESSION_CRYPTO_KDF));
 
+   const secure_vector<byte> cipher_key_salt =
+      rng.random_vec(KEY_KDF_SALT_LENGTH);
+
+   const secure_vector<byte> mac_key_salt =
+      rng.random_vec(KEY_KDF_SALT_LENGTH);
+
    SymmetricKey cipher_key =
       kdf->derive_key(CIPHER_KEY_LENGTH,
                       master_key.bits_of(),
-                      "tls.session.cipher-key");
+                      cipher_key_salt);
 
    SymmetricKey mac_key =
       kdf->derive_key(MAC_KEY_LENGTH,
                       master_key.bits_of(),
-                      "tls.session.mac-key");
+                      mac_key_salt);
 
    InitializationVector cipher_iv(rng, 16);
 
@@ -181,6 +188,8 @@ Session::encrypt(const SymmetricKey& master_key,
 
    std::vector<byte> out(MAGIC_LENGTH);
    store_be(SESSION_CRYPTO_MAGIC, &out[0]);
+   out += cipher_key_salt;
+   out += mac_key_salt;
    out += cipher_iv.bits_of();
    out += ctext;
 
@@ -198,6 +207,7 @@ Session Session::decrypt(const byte buf[], size_t buf_len,
       const size_t MIN_CTEXT_SIZE = 4 * 16; // due to 48 byte master secret
 
       if(buf_len < (MAGIC_LENGTH +
+                    2 * KEY_KDF_SALT_LENGTH +
                     CIPHER_IV_LENGTH +
                     MIN_CTEXT_SIZE +
                     MAC_OUTPUT_LENGTH))
@@ -208,10 +218,14 @@ Session Session::decrypt(const byte buf[], size_t buf_len,
 
       std::unique_ptr<KDF> kdf(get_kdf(SESSION_CRYPTO_KDF));
 
+      const byte* cipher_key_salt = &buf[MAGIC_LENGTH];
+
+      const byte* mac_key_salt = &buf[MAGIC_LENGTH + KEY_KDF_SALT_LENGTH];
+
       SymmetricKey mac_key =
          kdf->derive_key(MAC_KEY_LENGTH,
                          master_key.bits_of(),
-                         "tls.session.mac-key");
+                         mac_key_salt, KEY_KDF_SALT_LENGTH);
 
       std::unique_ptr<MessageAuthenticationCode> mac(get_mac(SESSION_CRYPTO_MAC));
       mac->set_key(mac_key);
@@ -225,11 +239,12 @@ Session Session::decrypt(const byte buf[], size_t buf_len,
       SymmetricKey cipher_key =
          kdf->derive_key(CIPHER_KEY_LENGTH,
                          master_key.bits_of(),
-                         "tls.session.cipher-key");
+                         cipher_key_salt, KEY_KDF_SALT_LENGTH);
 
-      InitializationVector cipher_iv(&buf[MAGIC_LENGTH], CIPHER_IV_LENGTH);
+      InitializationVector cipher_iv(&buf[MAGIC_LENGTH+2*KEY_KDF_SALT_LENGTH],
+                                     CIPHER_IV_LENGTH);
 
-      const size_t CTEXT_OFFSET = MAGIC_LENGTH + CIPHER_IV_LENGTH;
+      const size_t CTEXT_OFFSET = MAGIC_LENGTH + 2 * KEY_KDF_SALT_LENGTH + CIPHER_IV_LENGTH;
 
       Pipe pipe(get_cipher(SESSION_CRYPTO_CIPHER, cipher_key, cipher_iv, DECRYPTION));
       pipe.process_msg(&buf[CTEXT_OFFSET],
