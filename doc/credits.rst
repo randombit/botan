@@ -5,8 +5,8 @@ Credits
 This is at least a partial credits-file of people that have contributed
 to botan. It is sorted by name and formatted to allow easy grepping
 and beautification by scripts. The fields are name (N), email (E),
-web-address (W), PGP key ID and fingerprint (P), description (D), and
-snail-mail address (S).
+web-address (W), PGP key ID and fingerprint (P), description (D),
+snail-mail address (S), and Bitcoin address (B).
 
 ::
 
@@ -59,6 +59,7 @@ snail-mail address (S).
   E: lloyd@randombit.net
   W: http://www.randombit.net/
   P: 3F69 2E64 6D92 3BBE E7AE  9258 5C0F 96E8 4EC1 6D6B
+  B: 1DwxWb2J4vuX4vjsbzaCXW696rZfeamahz
   D: Original designer/author, maintainer 2001-current
   S: Vermont, USA
 
