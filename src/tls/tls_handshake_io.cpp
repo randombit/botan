@@ -258,26 +258,34 @@ Datagram_Handshake_IO::Handshake_Reassembly::message() const
    }
 
 std::vector<byte>
+Datagram_Handshake_IO::format_fragment(const std::vector<byte>& frag,
+                                       Handshake_Type type,
+                                       u16bit msg_len,
+                                       u16bit frag_offset,
+                                       u16bit msg_sequence) const
+   {
+   std::vector<byte> send_buf(12 + frag.size());
+
+   send_buf[0] = type;
+
+   store_be24(&send_buf[1], msg_len);
+
+   store_be(msg_sequence, &send_buf[4]);
+
+   store_be24(&send_buf[6], frag_offset);
+   store_be24(&send_buf[9], frag.size());
+
+   copy_mem(&send_buf[12], &frag[0], frag.size());
+
+   return send_buf;
+   }
+
+std::vector<byte>
 Datagram_Handshake_IO::format_w_seq(const std::vector<byte>& msg,
                                     Handshake_Type type,
                                     u16bit msg_sequence) const
    {
-   std::vector<byte> send_buf(12 + msg.size());
-
-   const size_t buf_size = msg.size();
-
-   send_buf[0] = type;
-
-   store_be24(&send_buf[1], buf_size);
-
-   store_be(msg_sequence, &send_buf[4]);
-
-   store_be24(&send_buf[6], 0); // fragment_offset
-   store_be24(&send_buf[9], buf_size); // fragment_length
-
-   copy_mem(&send_buf[12], &msg[0], msg.size());
-
-   return send_buf;
+   return format_fragment(msg, type, msg.size(), 0, msg_sequence);
    }
 
 std::vector<byte>
@@ -301,8 +309,12 @@ Datagram_Handshake_IO::send(const Handshake_Message& msg)
    const std::vector<byte> no_fragment =
       format_w_seq(msg_bits, msg.type(), m_out_message_seq);
 
-   // FIXME: fragment to mtu size if needed
-   m_writer.send(HANDSHAKE, no_fragment);
+   if(no_fragment.size() <= m_mtu)
+      m_writer.send(HANDSHAKE, no_fragment);
+   else
+      {
+      throw Internal_Error("Fragmentation required");
+      }
 
    m_out_message_seq += 1;
 

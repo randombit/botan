@@ -110,6 +110,13 @@ class Datagram_Handshake_IO : public Handshake_IO
       std::pair<Handshake_Type, std::vector<byte>>
          get_next_record(bool expecting_ccs) override;
    private:
+      std::vector<byte> format_fragment(
+         const std::vector<byte>& fragment,
+         Handshake_Type type,
+         u16bit msg_len,
+         u16bit frag_offset,
+         u16bit msg_sequence) const;
+
       std::vector<byte> format_w_seq(
          const std::vector<byte>& handshake_msg,
          Handshake_Type handshake_type,
@@ -142,6 +149,7 @@ class Datagram_Handshake_IO : public Handshake_IO
       std::map<u16bit, Handshake_Reassembly> m_messages;
       std::set<u16bit> m_ccs_epochs;
 
+      u16bit m_mtu = 320;
       u16bit m_in_message_seq = 0;
       u16bit m_out_message_seq = 0;
       Record_Writer& m_writer;
