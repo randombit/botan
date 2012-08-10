@@ -32,7 +32,7 @@ class Handshake_IO
    public:
       virtual Protocol_Version initial_record_version() const = 0;
 
-      virtual std::vector<byte> send(Handshake_Message& msg) = 0;
+      virtual std::vector<byte> send(const Handshake_Message& msg) = 0;
 
       virtual std::vector<byte> format(
          const std::vector<byte>& handshake_msg,
@@ -68,7 +68,7 @@ class Stream_Handshake_IO : public Handshake_IO
 
       Protocol_Version initial_record_version() const override;
 
-      std::vector<byte> send(Handshake_Message& msg) override;
+      std::vector<byte> send(const Handshake_Message& msg) override;
 
       std::vector<byte> format(
          const std::vector<byte>& handshake_msg,
@@ -96,7 +96,7 @@ class Datagram_Handshake_IO : public Handshake_IO
 
       Protocol_Version initial_record_version() const override;
 
-      std::vector<byte> send(Handshake_Message& msg) override;
+      std::vector<byte> send(const Handshake_Message& msg) override;
 
       std::vector<byte> format(
          const std::vector<byte>& handshake_msg,

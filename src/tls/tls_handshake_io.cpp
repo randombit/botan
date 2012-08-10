@@ -100,7 +100,7 @@ Stream_Handshake_IO::format(const std::vector<byte>& msg,
    return send_buf;
    }
 
-std::vector<byte> Stream_Handshake_IO::send(Handshake_Message& msg)
+std::vector<byte> Stream_Handshake_IO::send(const Handshake_Message& msg)
    {
    const std::vector<byte> buf = format(msg.serialize(), msg.type());
 
@@ -282,7 +282,7 @@ Datagram_Handshake_IO::format(const std::vector<byte>& msg,
    }
 
 std::vector<byte>
-Datagram_Handshake_IO::send(Handshake_Message& handshake_msg)
+Datagram_Handshake_IO::send(const Handshake_Message& handshake_msg)
    {
    const std::vector<byte> msg = handshake_msg.serialize();
 
