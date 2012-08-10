@@ -102,10 +102,16 @@ Stream_Handshake_IO::format(const std::vector<byte>& msg,
 
 std::vector<byte> Stream_Handshake_IO::send(const Handshake_Message& msg)
    {
-   const std::vector<byte> buf = format(msg.serialize(), msg.type());
+   const std::vector<byte> msg_bits = msg.serialize();
 
-   m_writer.send(HANDSHAKE, &buf[0], buf.size());
+   if(msg.type() == HANDSHAKE_CCS)
+      {
+      m_writer.send(CHANGE_CIPHER_SPEC, msg_bits);
+      return std::vector<byte>(); // not included in handshake hashes
+      }
 
+   const std::vector<byte> buf = format(msg_bits, msg.type());
+   m_writer.send(HANDSHAKE, buf);
    return buf;
    }
 
@@ -282,15 +288,21 @@ Datagram_Handshake_IO::format(const std::vector<byte>& msg,
    }
 
 std::vector<byte>
-Datagram_Handshake_IO::send(const Handshake_Message& handshake_msg)
+Datagram_Handshake_IO::send(const Handshake_Message& msg)
    {
-   const std::vector<byte> msg = handshake_msg.serialize();
+   const std::vector<byte> msg_bits = msg.serialize();
+
+   if(msg.type() == HANDSHAKE_CCS)
+      {
+      m_writer.send(CHANGE_CIPHER_SPEC, msg_bits);
+      return std::vector<byte>(); // not included in handshake hashes
+      }
 
    const std::vector<byte> no_fragment =
-      format_w_seq(msg, handshake_msg.type(), m_out_message_seq);
+      format_w_seq(msg_bits, msg.type(), m_out_message_seq);
 
    // FIXME: fragment to mtu size if needed
-   m_writer.send(HANDSHAKE, &no_fragment[0], no_fragment.size());
+   m_writer.send(HANDSHAKE, no_fragment);
 
    m_out_message_seq += 1;
 

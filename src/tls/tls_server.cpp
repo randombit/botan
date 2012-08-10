@@ -445,7 +445,7 @@ void Server::process_handshake_msg(Handshake_Type type,
                }
             }
 
-         m_writer.send(CHANGE_CIPHER_SPEC, 1);
+         m_state->handshake_io().send(Change_Cipher_Spec());
 
          m_writer.change_cipher_spec(SERVER,
                                      m_state->ciphersuite(),
@@ -713,7 +713,7 @@ void Server::process_handshake_msg(Handshake_Type type,
                );
             }
 
-         m_writer.send(CHANGE_CIPHER_SPEC, 1);
+         m_state->handshake_io().send(Change_Cipher_Spec());
 
          m_writer.change_cipher_spec(SERVER,
                                      m_state->ciphersuite(),

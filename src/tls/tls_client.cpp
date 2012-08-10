@@ -427,7 +427,7 @@ void Client::process_handshake_msg(Handshake_Type type,
             );
          }
 
-      m_writer.send(CHANGE_CIPHER_SPEC, 1);
+      m_state->handshake_io().send(Change_Cipher_Spec());
 
       m_writer.change_cipher_spec(CLIENT,
                                   m_state->ciphersuite(),
@@ -483,7 +483,7 @@ void Client::process_handshake_msg(Handshake_Type type,
 
       if(!m_state->client_finished()) // session resume case
          {
-         m_writer.send(CHANGE_CIPHER_SPEC, 1);
+         m_state->handshake_io().send(Change_Cipher_Spec());
 
          m_writer.change_cipher_spec(CLIENT,
                                      m_state->ciphersuite(),

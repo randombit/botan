@@ -491,6 +491,15 @@ class New_Session_Ticket : public Handshake_Message
       std::vector<byte> m_ticket;
    };
 
+class Change_Cipher_Spec : public Handshake_Message
+   {
+   public:
+      Handshake_Type type() const override { return HANDSHAKE_CCS; }
+
+      std::vector<byte> serialize() const override
+         { return std::vector<byte>(1, 1); }
+   };
+
 }
 
 }

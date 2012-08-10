@@ -32,8 +32,6 @@ class BOTAN_DLL Record_Writer
    public:
       void send(byte type, const byte input[], size_t length);
 
-      void send(byte type, byte val) { send(type, &val, 1); }
-
       void send(byte type, const std::vector<byte>& input)
          { send(type, &input[0], input.size()); }
 
