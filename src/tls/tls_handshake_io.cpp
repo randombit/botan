@@ -169,6 +169,9 @@ void Datagram_Handshake_IO::add_input(const byte rec_type,
 std::pair<Handshake_Type, std::vector<byte>>
 Datagram_Handshake_IO::get_next_record(bool expecting_ccs)
    {
+   if(!m_flights.rbegin()->empty())
+      m_flights.push_back(std::vector<u16bit>());
+
    if(expecting_ccs)
       {
       if(!m_messages.empty())
@@ -258,13 +261,14 @@ Datagram_Handshake_IO::Handshake_Reassembly::message() const
    }
 
 std::vector<byte>
-Datagram_Handshake_IO::format_fragment(const std::vector<byte>& frag,
-                                       Handshake_Type type,
-                                       u16bit msg_len,
+Datagram_Handshake_IO::format_fragment(const byte fragment[],
+                                       size_t frag_len,
                                        u16bit frag_offset,
+                                       u16bit msg_len,
+                                       Handshake_Type type,
                                        u16bit msg_sequence) const
    {
-   std::vector<byte> send_buf(12 + frag.size());
+   std::vector<byte> send_buf(12 + frag_len);
 
    send_buf[0] = type;
 
@@ -273,9 +277,9 @@ Datagram_Handshake_IO::format_fragment(const std::vector<byte>& frag,
    store_be(msg_sequence, &send_buf[4]);
 
    store_be24(&send_buf[6], frag_offset);
-   store_be24(&send_buf[9], frag.size());
+   store_be24(&send_buf[9], frag_len);
 
-   copy_mem(&send_buf[12], &frag[0], frag.size());
+   copy_mem(&send_buf[12], &fragment[0], frag_len);
 
    return send_buf;
    }
@@ -285,7 +289,7 @@ Datagram_Handshake_IO::format_w_seq(const std::vector<byte>& msg,
                                     Handshake_Type type,
                                     u16bit msg_sequence) const
    {
-   return format_fragment(msg, type, msg.size(), 0, msg_sequence);
+   return format_fragment(&msg[0], msg.size(), 0, msg.size(), type, msg_sequence);
    }
 
 std::vector<byte>
@@ -294,6 +298,23 @@ Datagram_Handshake_IO::format(const std::vector<byte>& msg,
    {
    return format_w_seq(msg, type, m_in_message_seq - 1);
    }
+
+namespace {
+
+size_t split_for_mtu(size_t mtu, size_t msg_size)
+   {
+   const size_t DTLS_HEADERS_SIZE = 25; // DTLS record+handshake headers
+
+   const size_t parts = (msg_size + mtu) / mtu;
+
+   if(parts + DTLS_HEADERS_SIZE > mtu)
+      return parts + 1;
+
+   return parts;
+   }
+
+}
+
 
 std::vector<byte>
 Datagram_Handshake_IO::send(const Handshake_Message& msg)
@@ -309,12 +330,37 @@ Datagram_Handshake_IO::send(const Handshake_Message& msg)
    const std::vector<byte> no_fragment =
       format_w_seq(msg_bits, msg.type(), m_out_message_seq);
 
-   if(no_fragment.size() <= m_mtu)
+   m_mtu = 64;
+
+   if(no_fragment.size() + DTLS_HEADER_SIZE <= m_mtu)
       m_writer.send(HANDSHAKE, no_fragment);
    else
       {
-      throw Internal_Error("Fragmentation required");
+      const size_t parts = split_for_mtu(m_mtu, msg_bits.size());
+
+      const size_t parts_size = (msg_bits.size() + parts) / parts;
+
+      size_t frag_offset = 0;
+
+      while(frag_offset != msg_bits.size())
+         {
+         const size_t frag_len =
+            std::min<size_t>(msg_bits.size() - frag_offset,
+                             parts_size);
+
+         m_writer.send(HANDSHAKE,
+                       format_fragment(&msg_bits[frag_offset],
+                                       frag_len,
+                                       frag_offset,
+                                       msg_bits.size(),
+                                       msg.type(),
+                                       m_out_message_seq));
+
+         frag_offset += frag_len;
+         }
       }
+
+   m_flights.rbegin()->push_back(m_out_message_seq);
 
    m_out_message_seq += 1;
 

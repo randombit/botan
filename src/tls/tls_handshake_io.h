@@ -92,7 +92,8 @@ class Stream_Handshake_IO : public Handshake_IO
 class Datagram_Handshake_IO : public Handshake_IO
    {
    public:
-      Datagram_Handshake_IO(Record_Writer& writer) : m_writer(writer) {}
+      Datagram_Handshake_IO(Record_Writer& writer, u16bit mtu) :
+         m_flights(1), m_mtu(mtu), m_writer(writer) {}
 
       Protocol_Version initial_record_version() const override;
 
@@ -111,10 +112,11 @@ class Datagram_Handshake_IO : public Handshake_IO
          get_next_record(bool expecting_ccs) override;
    private:
       std::vector<byte> format_fragment(
-         const std::vector<byte>& fragment,
-         Handshake_Type type,
-         u16bit msg_len,
+         const byte fragment[],
+         size_t fragment_len,
          u16bit frag_offset,
+         u16bit msg_len,
+         Handshake_Type type,
          u16bit msg_sequence) const;
 
       std::vector<byte> format_w_seq(
@@ -148,8 +150,9 @@ class Datagram_Handshake_IO : public Handshake_IO
 
       std::map<u16bit, Handshake_Reassembly> m_messages;
       std::set<u16bit> m_ccs_epochs;
+      std::vector<std::vector<u16bit>> m_flights;
 
-      u16bit m_mtu = 320;
+      u16bit m_mtu = 0;
       u16bit m_in_message_seq = 0;
       u16bit m_out_message_seq = 0;
       Record_Writer& m_writer;
