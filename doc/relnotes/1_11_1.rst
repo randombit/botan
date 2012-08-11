@@ -1,7 +1,7 @@
 Version 1.11.1, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-TLS and DTLS
+TLS Enhancements and Bug Fixes
 """"""""""""""""""""""""""""""""""""""""
 
 ..
@@ -18,24 +18,25 @@ secret, whereas now only 32 bytes are needed total. This change may
 also make it slightly harder for an attacker to extract session data
 from memory dumps (eg with a cold boot attack).
 
-TLS clients were not sending a next protocol message during a session
-resumption, which would cause resumption failures with servers that
-support NPN if NPN was being offered by the client.
-
-New policy hooks :cpp:func:`TLS::Policy::acceptable_protocol_version`
-and :cpp:func:`TLS::Policy::allow_server_initiated_renegotiation` were
-added.
-
 The keys used for session encryption were previously uniquely
 determined by the master key. Now the encrypted session blob includes
 two 80 bit salts which are used in the derivation of the cipher and
 MAC keys.
 
-A heartbeat request send by the counterparty during a handshake would
-be passed to the application callback as a heartbeat response.
+New policy hooks :cpp:func:`TLS::Policy::acceptable_protocol_version`
+and :cpp:func:`TLS::Policy::allow_server_initiated_renegotiation` were
+added.
 
-Public Key Strength Checking
-""""""""""""""""""""""""""""""""""""""""
+TLS clients were not sending a next protocol message during a session
+resumption, which would cause resumption failures with servers that
+support NPN if NPN was being offered by the client.
+
+A bug caused heartbeat requests sent by the counterparty during a
+handshake to be passed to the application callback as if they were
+heartbeat responses.
+
+New Feature: Public Key Strength Checking
+""""""""""""""""""""""""""""""""""""""""""
 
 A new function :cpp:func:`Public_Key::estimated_strength` returns
 an estimate for the upper bound of the strength of the key. For
@@ -48,8 +49,17 @@ below 80 bits of strength (as estimated by ``estimated_strength``) are
 rejected. This level can be modified using a parameter to the
 :cpp:class:`Path_Validation_Restrictions` constructor.
 
+SRP6 Is Picker About Values
+""""""""""""""""""""""""""""""""""""""""
 
-BigInt Modifications
+The SRP6 code was checking for invalid values as specified in RFC
+5054, ones equal to zero mod p, however it would accept negative A/B
+values, or ones larger than p, neither of which should occur in a
+normal run of the protocol. These values are now rejected. Credits
+to Timothy Prepscius for pointing out these values are not normally
+used and probably signal something fishy.
+
+Removal of Various BigInt Functions
 """"""""""""""""""""""""""""""""""""""""
 
 Several :cpp:class:`BigInt` functions have been removed, including

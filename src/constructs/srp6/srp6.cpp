@@ -91,7 +91,7 @@ srp6_client_agree(const std::string& identifier,
 
    const size_t p_bytes = group.get_p().bytes();
 
-   if(B % p == 0)
+   if(B <= 0 || B >= p)
       throw std::runtime_error("Invalid SRP parameter from server");
 
    BigInt k = hash_seq(hash_id, p_bytes, p, g);
@@ -150,7 +150,7 @@ BigInt SRP6_Server_Session::step1(const BigInt& v,
 
 SymmetricKey SRP6_Server_Session::step2(const BigInt& A)
    {
-   if(A % p == 0)
+   if(A <= 0 || A >= p)
       throw std::runtime_error("Invalid SRP parameter from client");
 
    BigInt u = hash_seq(hash_id, p_bytes, A, B);
