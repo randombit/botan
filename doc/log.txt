@@ -7,6 +7,16 @@ Release Notes
 Series 1.10
 ----------------------------------------
 
+Version 1.10.4, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* The SRP6 code was checking for invalid values as specified in RFC
+  5054, ones equal to zero mod p, however it would accept negative A/B
+  values, or ones larger than p, neither of which should occur in a
+  normal run of the protocol. These values are now rejected. Credits
+  to Timothy Prepscius for pointing out these values are not normally
+  used and probably signal something fishy.
+
 Version 1.10.3, 2012-07-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
