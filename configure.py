@@ -1581,7 +1581,7 @@ def generate_amalgamation(build_config):
                 else:
                     match = std_include.search(line)
 
-                    if match and match.group(1) != 'functional':
+                    if match:
                         self.all_std_includes.add(match.group(1))
                     else:
                         yield line
