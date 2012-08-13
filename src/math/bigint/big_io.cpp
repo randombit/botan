@@ -29,7 +29,7 @@ std::ostream& operator<<(std::ostream& stream, const BigInt& n)
          stream.write("-", 1);
       const std::vector<byte> buffer = BigInt::encode(n, base);
       size_t skip = 0;
-      while(buffer[skip] == '0' && skip < buffer.size())
+      while(skip < buffer.size() && buffer[skip] == '0')
          ++skip;
       stream.write(reinterpret_cast<const char*>(&buffer[0]) + skip,
                    buffer.size() - skip);

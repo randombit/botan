@@ -38,7 +38,6 @@ class EVP_HashFunction : public HashFunction
       void add_data(const byte[], size_t);
       void final_result(byte[]);
 
-      size_t block_size;
       std::string algo_name;
       EVP_MD_CTX md;
    };

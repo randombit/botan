@@ -40,7 +40,7 @@ X509_Certificate find_issuing_cert(const X509_Certificate& cert,
       std::vector<X509_Certificate> certs =
          certstores[i]->find_cert_by_subject_and_key_id(issuer_dn, auth_key_id);
 
-      if(certs.size() == 0)
+      if(certs.empty())
          continue;
 
       if(certs.size() > 1)

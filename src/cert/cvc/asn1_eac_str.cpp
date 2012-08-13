@@ -88,7 +88,7 @@ void ASN1_EAC_String::decode_from(BER_Decoder& source)
          Charset::transcode(ASN1::to_string(obj), charset_is, LOCAL_CHARSET),
          obj.type_tag);
       }
-   catch(Invalid_Argument inv_arg)
+   catch(Invalid_Argument& inv_arg)
       {
       throw Decoding_Error(std::string("ASN1_EAC_String decoding failed: ") +
                            inv_arg.what());

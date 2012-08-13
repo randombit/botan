@@ -15,7 +15,7 @@ bool Certificate_Store::certificate_known(const X509_Certificate& cert) const
       find_cert_by_subject_and_key_id(cert.subject_dn(),
                                       cert.subject_key_id());
 
-   return (found.size() > 0);
+   return !found.empty();
    }
 
 void Certificate_Store_In_Memory::add_certificate(const X509_Certificate& cert)

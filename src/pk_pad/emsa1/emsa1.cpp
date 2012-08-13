@@ -81,11 +81,11 @@ bool EMSA1::verify(const secure_vector<byte>& coded,
       secure_vector<byte> our_coding = emsa1_encoding(raw, key_bits);
 
       if(our_coding == coded) return true;
-      if(our_coding[0] != 0) return false;
+      if(our_coding.empty() || our_coding[0] != 0) return false;
       if(our_coding.size() <= coded.size()) return false;
 
       size_t offset = 0;
-      while(our_coding[offset] == 0 && offset < our_coding.size())
+      while(offset < our_coding.size() && our_coding[offset] == 0)
          ++offset;
       if(our_coding.size() - offset != coded.size())
          return false;

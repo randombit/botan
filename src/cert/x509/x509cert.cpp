@@ -506,7 +506,7 @@ std::string X509_Certificate::to_string() const
       }
 
    std::vector<std::string> policies = this->policies();
-   if(policies.size())
+   if(!policies.empty())
       {
       out << "Policies: " << "\n";
       for(size_t i = 0; i != policies.size(); i++)
@@ -514,7 +514,7 @@ std::string X509_Certificate::to_string() const
       }
 
    std::vector<std::string> ex_constraints = this->ex_constraints();
-   if(ex_constraints.size())
+   if(!ex_constraints.empty())
       {
       out << "Extended Constraints:\n";
       for(size_t i = 0; i != ex_constraints.size(); i++)
