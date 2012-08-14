@@ -263,11 +263,10 @@ void Client::process_handshake_msg(Handshake_Type type,
             dynamic_cast<Client_Handshake_State&>(*m_state).resume_master_secret
             );
 
-         // The server is not strictly required to send us a new ticket
          if(m_state->server_hello()->supports_session_ticket())
             m_state->set_expected_next(NEW_SESSION_TICKET);
-
-         m_state->set_expected_next(HANDSHAKE_CCS);
+         else
+            m_state->set_expected_next(HANDSHAKE_CCS);
          }
       else
          {
