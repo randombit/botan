@@ -206,6 +206,9 @@ def process_command_line(args):
                             metavar='BINARY',
                             help='set the name of the compiler binary')
 
+    target_group.add_option('--chost', dest='chost',
+                            help=optparse.SUPPRESS_HELP)
+
     target_group.add_option('--with-endian', metavar='ORDER', default=None,
                             help='override guess of CPU byte order')
 
@@ -1699,6 +1702,15 @@ def main(argv = None):
 
     (modules, archinfo, ccinfo, osinfo) = load_info_files(options)
 
+    if options.chost:
+        chost = options.chost.split('-')
+
+        if options.cpu is None and len(chost) > 0:
+            options.cpu = chost[0]
+
+        if options.os is None and len(chost) > 2:
+            options.os = '-'.join(chost[2:])
+
     if options.compiler is None:
         if options.os == 'windows':
             if have_program('g++') and not have_program('cl'):
@@ -1747,7 +1759,7 @@ def main(argv = None):
     else:
         cpu_from_user = options.cpu
         (options.arch, options.cpu) = canon_processor(archinfo, options.cpu)
-        logging.info('Canonicalizized --cpu=%s to %s/%s' % (
+        logging.info('Canonicalizized CPU target %s to %s/%s' % (
             cpu_from_user, options.arch, options.cpu))
 
     logging.info('Target is %s-%s-%s-%s' % (
@@ -1844,7 +1856,7 @@ if __name__ == '__main__':
         main()
     except Exception as e:
         logging.error(e)
-        import traceback
-        logging.info(traceback.format_exc())
+        #import traceback
+        #logging.info(traceback.format_exc())
         sys.exit(1)
     sys.exit(0)

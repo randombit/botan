@@ -7,3 +7,7 @@ posix_mlock
 gmtime_r
 dlopen
 </target_features>
+
+<aliases>
+linux-gnu
+</aliases>

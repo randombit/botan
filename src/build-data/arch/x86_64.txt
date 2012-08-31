@@ -19,6 +19,7 @@ core2
 nehalem
 westmere
 sandybridge
+ivybridge
 </submodels>
 
 <submodel_aliases>
@@ -38,6 +39,6 @@ corei7cpu860 -> nehalem
 
 <isa_extn>
 sse2:all
-ssse3:core2,nehalem,westmere,atom,sandybridge
-aes-ni:westmere,sandybridge
+ssse3:core2,nehalem,westmere,atom,sandybridge,ivybridge
+aes-ni:westmere,sandybridge,ivybridge
 </isa_extn>
