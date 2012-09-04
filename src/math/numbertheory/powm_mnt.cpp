@@ -27,12 +27,12 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
    {
    m_window_bits = Power_Mod::window_bits(m_exp.bits(), base.bits(), m_hints);
 
-   m_g.resize((1 << m_window_bits) - 1);
+   m_g.resize((1 << m_window_bits));
 
    BigInt z(BigInt::Positive, 2 * (m_mod_words + 1));
    secure_vector<word> workspace(z.size());
 
-   m_g[0] = (base >= m_modulus) ? (base % m_modulus) : base;
+   m_g[0] = 1;
 
    bigint_monty_mul(z.mutable_data(), z.size(),
                     m_g[0].data(), m_g[0].size(), m_g[0].sig_words(),
@@ -42,10 +42,20 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
 
    m_g[0] = z;
 
-   const BigInt& x = m_g[0];
+   m_g[1] = (base >= m_modulus) ? (base % m_modulus) : base;
+
+   bigint_monty_mul(z.mutable_data(), z.size(),
+                    m_g[1].data(), m_g[1].size(), m_g[1].sig_words(),
+                    m_R2_mod.data(), m_R2_mod.size(), m_R2_mod.sig_words(),
+                    m_modulus.data(), m_mod_words, m_mod_prime,
+                    &workspace[0]);
+
+   m_g[1] = z;
+
+   const BigInt& x = m_g[1];
    const size_t x_sig = x.sig_words();
 
-   for(size_t i = 1; i != m_g.size(); ++i)
+   for(size_t i = 2; i != m_g.size(); ++i)
       {
       const BigInt& y = m_g[i-1];
       const size_t y_sig = y.sig_words();
@@ -86,18 +96,17 @@ BigInt Montgomery_Exponentiator::execute() const
          x = z;
          }
 
-      if(u32bit nibble = m_exp.get_substring(m_window_bits*(i-1), m_window_bits))
-         {
-         const BigInt& y = m_g[nibble-1];
+      const u32bit nibble = m_exp.get_substring(m_window_bits*(i-1), m_window_bits);
 
-         bigint_monty_mul(z.mutable_data(), z_size,
-                          x.data(), x.size(), x.sig_words(),
-                          y.data(), y.size(), y.sig_words(),
-                          m_modulus.data(), m_mod_words, m_mod_prime,
-                          &workspace[0]);
+      const BigInt& y = m_g[nibble];
 
-         x = z;
-         }
+      bigint_monty_mul(z.mutable_data(), z_size,
+                       x.data(), x.size(), x.sig_words(),
+                       y.data(), y.size(), y.sig_words(),
+                       m_modulus.data(), m_mod_words, m_mod_prime,
+                       &workspace[0]);
+
+      x = z;
       }
 
    x.grow_to(2*m_mod_words + 1);
