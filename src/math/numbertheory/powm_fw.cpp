@@ -26,10 +26,12 @@ void Fixed_Window_Exponentiator::set_base(const BigInt& base)
    {
    window_bits = Power_Mod::window_bits(exp.bits(), base.bits(), hints);
 
-   g.resize((1 << window_bits) - 1);
-   g[0] = base;
-   for(size_t j = 1; j != g.size(); ++j)
-      g[j] = reducer.multiply(g[j-1], g[0]);
+   g.resize((1 << window_bits));
+   g[0] = 1;
+   g[1] = base;
+
+   for(size_t i = 2; i != g.size(); ++i)
+      g[i] = reducer.multiply(g[i-1], g[0]);
    }
 
 /*
@@ -40,13 +42,15 @@ BigInt Fixed_Window_Exponentiator::execute() const
    const size_t exp_nibbles = (exp.bits() + window_bits - 1) / window_bits;
 
    BigInt x = 1;
-   for(size_t j = exp_nibbles; j > 0; --j)
+
+   for(size_t i = exp_nibbles; i > 0; --i)
       {
-      for(size_t k = 0; k != window_bits; ++k)
+      for(size_t j = 0; j != window_bits; ++j)
          x = reducer.square(x);
 
-      if(u32bit nibble = exp.get_substring(window_bits*(j-1), window_bits))
-         x = reducer.multiply(x, g[nibble-1]);
+      const u32bit nibble = exp.get_substring(window_bits*(i-1), window_bits);
+
+      x = reducer.multiply(x, g[nibble]);
       }
    return x;
    }
