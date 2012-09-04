@@ -9,9 +9,9 @@
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_session_key.h>
 #include <botan/internal/tls_handshake_hash.h>
-#include <botan/lookup.h>
 #include <botan/internal/rounding.h>
 #include <botan/internal/assert.h>
+#include <botan/internal/xor_buf.h>
 #include <botan/loadstor.h>
 #include <botan/libstate.h>
 
@@ -46,8 +46,9 @@ void Record_Writer::set_maximum_fragment_size(size_t max_fragment)
 void Record_Writer::reset()
    {
    set_maximum_fragment_size(0);
-   m_write_cipher.reset();
 
+   m_write_block_cipher.reset();
+   m_write_stream_cipher.reset();
    m_write_mac.reset();
 
    m_version = Protocol_Version();
@@ -74,7 +75,8 @@ void Record_Writer::change_cipher_spec(Connection_Side side,
                                        const Session_Keys& keys,
                                        byte compression_method)
    {
-   m_write_cipher.reset();
+   m_write_block_cipher.reset();
+   m_write_stream_cipher.reset();
    m_write_mac.reset();
 
    if(compression_method != NO_COMPRESSION)
@@ -107,42 +109,37 @@ void Record_Writer::change_cipher_spec(Connection_Side side,
    const std::string cipher_algo = suite.cipher_algo();
    const std::string mac_algo = suite.mac_algo();
 
-   if(have_block_cipher(cipher_algo))
+   Algorithm_Factory& af = global_state().algorithm_factory();
+
+   if(const BlockCipher* bc = af.prototype_block_cipher(cipher_algo))
       {
-      m_write_cipher.append(get_cipher(
-                       cipher_algo + "/CBC/NoPadding",
-                       cipher_key, iv, ENCRYPTION)
-         );
-      m_block_size = block_size_of(cipher_algo);
+      m_write_block_cipher.reset(bc->clone());
+      m_write_block_cipher->set_key(cipher_key);
+      m_write_block_cipher_cbc_state = iv.bits_of();
+      m_block_size = bc->block_size();
 
       if(m_version.supports_explicit_cbc_ivs())
          m_iv_size = m_block_size;
       else
          m_iv_size = 0;
       }
-   else if(have_stream_cipher(cipher_algo))
+   else if(const StreamCipher* sc = af.prototype_stream_cipher(cipher_algo))
       {
-      m_write_cipher.append(get_cipher(cipher_algo, cipher_key, ENCRYPTION));
+      m_write_stream_cipher.reset(sc->clone());
+      m_write_stream_cipher->set_key(cipher_key);
       m_block_size = 0;
       m_iv_size = 0;
       }
    else
       throw Invalid_Argument("Record_Writer: Unknown cipher " + cipher_algo);
 
-   if(have_hash(mac_algo))
-      {
-      Algorithm_Factory& af = global_state().algorithm_factory();
-
-      if(m_version == Protocol_Version::SSL_V3)
-         m_write_mac.reset(af.make_mac("SSL3-MAC(" + mac_algo + ")"));
-      else
-         m_write_mac.reset(af.make_mac("HMAC(" + mac_algo + ")"));
-
-      m_write_mac->set_key(mac_key);
-      m_mac_size = m_write_mac->output_length();
-      }
+   if(m_version == Protocol_Version::SSL_V3)
+      m_write_mac.reset(af.make_mac("SSL3-MAC(" + mac_algo + ")"));
    else
-      throw Invalid_Argument("Record_Writer: Unknown hash " + mac_algo);
+      m_write_mac.reset(af.make_mac("HMAC(" + mac_algo + ")"));
+
+   m_write_mac->set_key(mac_key);
+   m_mac_size = m_write_mac->output_length();
    }
 
 /*
@@ -216,9 +213,9 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
    m_write_mac->update(get_byte<u16bit>(1, length));
    m_write_mac->update(input, length);
 
-   const size_t buf_size = round_up(m_iv_size + length +
-                                    m_mac_size + (m_block_size ? 1 : 0),
-                                    m_block_size);
+   const size_t buf_size = round_up(
+      m_iv_size + length + m_mac_size + (m_block_size ? 1 : 0),
+      m_block_size);
 
    if(buf_size >= MAX_CIPHERTEXT_SIZE)
       throw Internal_Error("Record_Writer: Record is too big");
@@ -259,20 +256,34 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
          }
       }
 
-   // FIXME: this could be done in-place without copying
-   m_write_cipher.process_msg(&m_writebuf[TLS_HEADER_SIZE], buf_size);
-
-   const size_t ctext_size = m_write_cipher.remaining(Pipe::LAST_MESSAGE);
-
-   BOTAN_ASSERT_EQUAL(ctext_size, buf_size, "Cipher encrypted full amount");
-
-   if(ctext_size > MAX_CIPHERTEXT_SIZE)
+   if(buf_size > MAX_CIPHERTEXT_SIZE)
       throw Internal_Error("Produced ciphertext larger than protocol allows");
 
-   m_write_cipher.read(&m_writebuf[TLS_HEADER_SIZE], ctext_size, Pipe::LAST_MESSAGE);
+   if(m_write_stream_cipher)
+      {
+      m_write_stream_cipher->cipher1(&m_writebuf[TLS_HEADER_SIZE], buf_size);
+      }
+   else
+      {
+      const size_t bs = m_block_size;
 
-   BOTAN_ASSERT_EQUAL(m_write_cipher.remaining(Pipe::LAST_MESSAGE), 0,
-                      "No data remains in pipe");
+      BOTAN_ASSERT(buf_size % bs == 0,
+                   "Buffer is an even multiple of block size");
+
+      byte* buf = &m_writebuf[TLS_HEADER_SIZE];
+
+      const size_t blocks = buf_size / bs;
+
+      xor_buf(&buf[0], &m_write_block_cipher_cbc_state[0], m_block_size);
+      m_write_block_cipher->encrypt(&buf[0]);
+
+      for(size_t i = 1; i <= blocks; ++i)
+         {
+         xor_buf(&buf[bs*i], &buf[bs*(i-1)], bs);
+         m_write_block_cipher->encrypt(&buf[bs*i]);
+         }
+
+      }
 
    m_output_fn(&m_writebuf[0], TLS_HEADER_SIZE + buf_size);
 

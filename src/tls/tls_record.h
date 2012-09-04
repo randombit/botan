@@ -12,8 +12,10 @@
 #include <botan/tls_alert.h>
 #include <botan/tls_magic.h>
 #include <botan/tls_version.h>
-#include <botan/pipe.h>
+#include <botan/block_cipher.h>
+#include <botan/stream_cipher.h>
 #include <botan/mac.h>
+#include <botan/pipe.h>
 #include <vector>
 #include <functional>
 #include <memory>
@@ -60,13 +62,19 @@ class BOTAN_DLL Record_Writer
 
       std::vector<byte> m_writebuf;
 
-      Pipe m_write_cipher;
+      std::unique_ptr<BlockCipher> m_write_block_cipher;
+      secure_vector<byte> m_write_block_cipher_cbc_state;
+      std::unique_ptr<StreamCipher> m_write_stream_cipher;
       std::unique_ptr<MessageAuthenticationCode> m_write_mac;
+
       RandomNumberGenerator& m_rng;
 
-      size_t m_block_size, m_mac_size, m_iv_size, m_max_fragment;
+      size_t m_block_size = 0;
+      size_t m_mac_size = 0;
+      size_t m_iv_size = 0;
+      size_t m_max_fragment = 0;
 
-      u64bit m_write_seq_no;
+      u64bit m_write_seq_no = 0;
       Protocol_Version m_version;
    };
 
