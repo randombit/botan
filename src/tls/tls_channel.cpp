@@ -207,7 +207,7 @@ void Channel::send(const byte buf[], size_t buf_size)
    if(!is_active())
       throw std::runtime_error("Data cannot be sent on inactive TLS connection");
 
-   m_writer.send(APPLICATION_DATA, buf, buf_size);
+   m_writer.send_array(APPLICATION_DATA, buf, buf_size);
    }
 
 void Channel::send(const std::string& string)

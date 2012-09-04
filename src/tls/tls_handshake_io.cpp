@@ -106,12 +106,12 @@ std::vector<byte> Stream_Handshake_IO::send(const Handshake_Message& msg)
 
    if(msg.type() == HANDSHAKE_CCS)
       {
-      m_writer.send(CHANGE_CIPHER_SPEC, msg_bits);
+      m_writer(CHANGE_CIPHER_SPEC, msg_bits);
       return std::vector<byte>(); // not included in handshake hashes
       }
 
    const std::vector<byte> buf = format(msg_bits, msg.type());
-   m_writer.send(HANDSHAKE, buf);
+   m_writer(HANDSHAKE, buf);
    return buf;
    }
 
@@ -323,7 +323,7 @@ Datagram_Handshake_IO::send(const Handshake_Message& msg)
 
    if(msg.type() == HANDSHAKE_CCS)
       {
-      m_writer.send(CHANGE_CIPHER_SPEC, msg_bits);
+      m_writer(CHANGE_CIPHER_SPEC, msg_bits);
       return std::vector<byte>(); // not included in handshake hashes
       }
 
@@ -333,7 +333,7 @@ Datagram_Handshake_IO::send(const Handshake_Message& msg)
    m_mtu = 64;
 
    if(no_fragment.size() + DTLS_HEADER_SIZE <= m_mtu)
-      m_writer.send(HANDSHAKE, no_fragment);
+      m_writer(HANDSHAKE, no_fragment);
    else
       {
       const size_t parts = split_for_mtu(m_mtu, msg_bits.size());
@@ -348,13 +348,13 @@ Datagram_Handshake_IO::send(const Handshake_Message& msg)
             std::min<size_t>(msg_bits.size() - frag_offset,
                              parts_size);
 
-         m_writer.send(HANDSHAKE,
-                       format_fragment(&msg_bits[frag_offset],
-                                       frag_len,
-                                       frag_offset,
-                                       msg_bits.size(),
-                                       msg.type(),
-                                       m_out_message_seq));
+         m_writer(HANDSHAKE,
+                  format_fragment(&msg_bits[frag_offset],
+                                  frag_len,
+                                  frag_offset,
+                                  msg_bits.size(),
+                                  msg.type(),
+                                  m_out_message_seq));
 
          frag_offset += frag_len;
          }

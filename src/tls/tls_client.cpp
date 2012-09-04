@@ -64,7 +64,11 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
 
 Handshake_State* Client::new_handshake_state()
    {
-   return new Client_Handshake_State(new Stream_Handshake_IO(m_writer));
+   using namespace std::placeholders;
+
+   return new Client_Handshake_State(
+      new Stream_Handshake_IO(std::bind(&Record_Writer::send,
+                                        std::ref(m_writer), _1, _2)));
    }
 
 /*

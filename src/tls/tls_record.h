@@ -30,10 +30,10 @@ class Session_Keys;
 class BOTAN_DLL Record_Writer
    {
    public:
-      void send(byte type, const byte input[], size_t length);
+      void send_array(byte type, const byte input[], size_t length);
 
       void send(byte type, const std::vector<byte>& input)
-         { send(type, &input[0], input.size()); }
+         { send_array(type, &input[0], input.size()); }
 
       void send_alert(const Alert& alert);
 

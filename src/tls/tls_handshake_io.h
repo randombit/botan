@@ -11,6 +11,7 @@
 #include <botan/tls_magic.h>
 #include <botan/tls_version.h>
 #include <botan/loadstor.h>
+#include <functional>
 #include <vector>
 #include <deque>
 #include <map>
@@ -21,8 +22,9 @@ namespace Botan {
 
 namespace TLS {
 
-class Record_Writer;
 class Handshake_Message;
+
+typedef std::function<void (byte, const std::vector<byte>&)> handshake_write_fn;
 
 /**
 * Handshake IO Interface
@@ -64,7 +66,8 @@ class Handshake_IO
 class Stream_Handshake_IO : public Handshake_IO
    {
    public:
-      Stream_Handshake_IO(Record_Writer& writer) : m_writer(writer) {}
+      Stream_Handshake_IO(handshake_write_fn writer) :
+         m_writer(writer) {}
 
       Protocol_Version initial_record_version() const override;
 
@@ -83,7 +86,7 @@ class Stream_Handshake_IO : public Handshake_IO
          get_next_record(bool expecting_ccs) override;
    private:
       std::deque<byte> m_queue;
-      Record_Writer& m_writer;
+      handshake_write_fn m_writer;
    };
 
 /**
@@ -92,7 +95,7 @@ class Stream_Handshake_IO : public Handshake_IO
 class Datagram_Handshake_IO : public Handshake_IO
    {
    public:
-      Datagram_Handshake_IO(Record_Writer& writer, u16bit mtu) :
+      Datagram_Handshake_IO(handshake_write_fn writer, u16bit mtu) :
          m_flights(1), m_mtu(mtu), m_writer(writer) {}
 
       Protocol_Version initial_record_version() const override;
@@ -155,7 +158,7 @@ class Datagram_Handshake_IO : public Handshake_IO
       u16bit m_mtu = 0;
       u16bit m_in_message_seq = 0;
       u16bit m_out_message_seq = 0;
-      Record_Writer& m_writer;
+      handshake_write_fn m_writer;
    };
 
 }

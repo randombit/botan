@@ -148,7 +148,7 @@ void Record_Writer::change_cipher_spec(Connection_Side side,
 /*
 * Send one or more records to the other side
 */
-void Record_Writer::send(byte type, const byte input[], size_t length)
+void Record_Writer::send_array(byte type, const byte input[], size_t length)
    {
    if(length == 0)
       return;
@@ -288,7 +288,7 @@ void Record_Writer::send_alert(const Alert& alert)
    const byte alert_bits[2] = { static_cast<byte>(alert.is_fatal() ? 2 : 1),
                                 static_cast<byte>(alert.type()) };
 
-   send(ALERT, alert_bits, sizeof(alert_bits));
+   send_array(ALERT, alert_bits, sizeof(alert_bits));
    }
 
 }

@@ -224,7 +224,12 @@ Server::Server(std::function<void (const byte[], size_t)> output_fn,
 
 Handshake_State* Server::new_handshake_state()
    {
-   Handshake_State* state = new Server_Handshake_State(new Stream_Handshake_IO(m_writer));
+   using namespace std::placeholders;
+
+   Handshake_State* state = new Server_Handshake_State(
+      new Stream_Handshake_IO(std::bind(&Record_Writer::send,
+                                        std::ref(m_writer), _1, _2)));
+
    state->set_expected_next(CLIENT_HELLO);
    return state;
    }
