@@ -52,7 +52,6 @@ class BOTAN_DLL Record_Writer
                     RandomNumberGenerator& rng);
 
       Record_Writer(const Record_Writer&) = delete;
-
       Record_Writer& operator=(const Record_Writer&) = delete;
    private:
       void send_record(byte type, const byte input[], size_t length);
@@ -61,13 +60,13 @@ class BOTAN_DLL Record_Writer
 
       std::vector<byte> m_writebuf;
 
-      Pipe m_cipher;
-      std::unique_ptr<MessageAuthenticationCode> m_mac;
+      Pipe m_write_cipher;
+      std::unique_ptr<MessageAuthenticationCode> m_write_mac;
       RandomNumberGenerator& m_rng;
 
       size_t m_block_size, m_mac_size, m_iv_size, m_max_fragment;
 
-      u64bit m_seq_no;
+      u64bit m_write_seq_no;
       Protocol_Version m_version;
    };
 
@@ -122,10 +121,12 @@ class BOTAN_DLL Record_Reader
       std::vector<byte> m_macbuf;
       size_t m_readbuf_pos;
 
-      Pipe m_cipher;
-      std::unique_ptr<MessageAuthenticationCode> m_mac;
+      Pipe m_read_cipher;
+      std::unique_ptr<MessageAuthenticationCode> m_read_mac;
+
       size_t m_block_size, m_iv_size, m_max_fragment;
-      u64bit m_seq_no;
+
+      u64bit m_read_seq_no;
       Protocol_Version m_version;
    };
 

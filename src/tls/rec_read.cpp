@@ -33,14 +33,14 @@ void Record_Reader::reset()
    zeroise(m_readbuf);
    m_readbuf_pos = 0;
 
-   m_cipher.reset();
+   m_read_cipher.reset();
 
-   m_mac.reset();
+   m_read_mac.reset();
 
    m_block_size = 0;
    m_iv_size = 0;
    m_version = Protocol_Version();
-   m_seq_no = 0;
+   m_read_seq_no = 0;
    set_maximum_fragment_size(0);
    }
 
@@ -73,9 +73,9 @@ void Record_Reader::change_cipher_spec(Connection_Side side,
                                        const Session_Keys& keys,
                                        byte compression_method)
    {
-   m_cipher.reset();
-   m_mac.reset();
-   m_seq_no = 0;
+   m_read_cipher.reset();
+   m_read_mac.reset();
+   m_read_seq_no = 0;
 
    if(compression_method != NO_COMPRESSION)
       throw Internal_Error("Negotiated unknown compression algorithm");
@@ -101,7 +101,7 @@ void Record_Reader::change_cipher_spec(Connection_Side side,
 
    if(have_block_cipher(cipher_algo))
       {
-      m_cipher.append(get_cipher(
+      m_read_cipher.append(get_cipher(
                        cipher_algo + "/CBC/NoPadding",
                        cipher_key, iv, DECRYPTION)
          );
@@ -114,7 +114,7 @@ void Record_Reader::change_cipher_spec(Connection_Side side,
       }
    else if(have_stream_cipher(cipher_algo))
       {
-      m_cipher.append(get_cipher(cipher_algo, cipher_key, DECRYPTION));
+      m_read_cipher.append(get_cipher(cipher_algo, cipher_key, DECRYPTION));
       m_block_size = 0;
       m_iv_size = 0;
       }
@@ -126,12 +126,12 @@ void Record_Reader::change_cipher_spec(Connection_Side side,
       Algorithm_Factory& af = global_state().algorithm_factory();
 
       if(m_version == Protocol_Version::SSL_V3)
-         m_mac.reset(af.make_mac("SSL3-MAC(" + mac_algo + ")"));
+         m_read_mac.reset(af.make_mac("SSL3-MAC(" + mac_algo + ")"));
       else
-         m_mac.reset(af.make_mac("HMAC(" + mac_algo + ")"));
+         m_read_mac.reset(af.make_mac("HMAC(" + mac_algo + ")"));
 
-      m_mac->set_key(mac_key);
-      m_macbuf.resize(m_mac->output_length());
+      m_read_mac->set_key(mac_key);
+      m_macbuf.resize(m_read_mac->output_length());
       }
    else
       throw Invalid_Argument("Record_Reader: Unknown hash " + mac_algo);
@@ -236,7 +236,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
       }
 
    // Possible SSLv2 format client hello
-   if((!m_mac) && (m_readbuf[0] & 0x80) && (m_readbuf[2] == 1))
+   if((!m_read_mac) && (m_readbuf[0] & 0x80) && (m_readbuf[2] == 1))
       {
       if(m_readbuf[3] == 0 && m_readbuf[4] == 2)
          throw TLS_Exception(Alert::PROTOCOL_VERSION,
@@ -264,7 +264,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
 
          copy_mem(&msg[4], &m_readbuf[2], m_readbuf_pos - 2);
          m_readbuf_pos = 0;
-         msg_sequence = m_seq_no++;
+         msg_sequence = m_read_seq_no++;
          return 0;
          }
       }
@@ -305,7 +305,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
                       "Have the full record");
 
    // Null mac means no encryption either, only valid during handshake
-   if(!m_mac)
+   if(!m_read_mac)
       {
       if(m_readbuf[0] != CHANGE_CIPHER_SPEC &&
          m_readbuf[0] != ALERT &&
@@ -319,22 +319,22 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
       copy_mem(&msg[0], &m_readbuf[TLS_HEADER_SIZE], record_len);
 
       m_readbuf_pos = 0;
-      msg_sequence = m_seq_no++;
+      msg_sequence = m_read_seq_no++;
       return 0; // got a full record
       }
 
    // Otherwise, decrypt, check MAC, return plaintext
 
    // FIXME: avoid memory allocation by processing in place
-   m_cipher.process_msg(&m_readbuf[TLS_HEADER_SIZE], record_len);
+   m_read_cipher.process_msg(&m_readbuf[TLS_HEADER_SIZE], record_len);
 
-   const size_t got_back = m_cipher.read(&m_readbuf[TLS_HEADER_SIZE],
-                                         record_len,
-                                         Pipe::LAST_MESSAGE);
+   const size_t got_back = m_read_cipher.read(&m_readbuf[TLS_HEADER_SIZE],
+                                              record_len,
+                                              Pipe::LAST_MESSAGE);
 
    BOTAN_ASSERT_EQUAL(got_back, record_len, "Cipher encrypted full amount");
 
-   BOTAN_ASSERT_EQUAL(m_cipher.remaining(Pipe::LAST_MESSAGE), 0,
+   BOTAN_ASSERT_EQUAL(m_read_cipher.remaining(Pipe::LAST_MESSAGE), 0,
                       "Cipher had no remaining inputs");
 
    /*
@@ -350,21 +350,21 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
    if(record_len < mac_pad_iv_size)
       throw Decoding_Error("Record sent with invalid length");
 
-   m_mac->update_be(m_seq_no);
-   m_mac->update(m_readbuf[0]); // msg_type
+   m_read_mac->update_be(m_read_seq_no);
+   m_read_mac->update(m_readbuf[0]); // msg_type
 
    if(m_version != Protocol_Version::SSL_V3)
       {
-      m_mac->update(m_version.major_version());
-      m_mac->update(m_version.minor_version());
+      m_read_mac->update(m_version.major_version());
+      m_read_mac->update(m_version.minor_version());
       }
 
    const u16bit plain_length = record_len - mac_pad_iv_size;
 
-   m_mac->update_be(plain_length);
-   m_mac->update(&m_readbuf[TLS_HEADER_SIZE + m_iv_size], plain_length);
+   m_read_mac->update_be(plain_length);
+   m_read_mac->update(&m_readbuf[TLS_HEADER_SIZE + m_iv_size], plain_length);
 
-   m_mac->final(&m_macbuf[0]);
+   m_read_mac->final(&m_macbuf[0]);
 
    const size_t mac_offset = record_len - (m_macbuf.size() + pad_size);
 
@@ -375,7 +375,7 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
       throw TLS_Exception(Alert::RECORD_OVERFLOW, "Plaintext record is too large");
 
    msg_type = m_readbuf[0];
-   msg_sequence = m_seq_no++;
+   msg_sequence = m_read_seq_no++;
    msg.assign(&m_readbuf[TLS_HEADER_SIZE + m_iv_size],
               &m_readbuf[TLS_HEADER_SIZE + m_iv_size + plain_length]);
 

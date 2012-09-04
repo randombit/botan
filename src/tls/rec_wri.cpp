@@ -46,16 +46,16 @@ void Record_Writer::set_maximum_fragment_size(size_t max_fragment)
 void Record_Writer::reset()
    {
    set_maximum_fragment_size(0);
-   m_cipher.reset();
+   m_write_cipher.reset();
 
-   m_mac.reset();
+   m_write_mac.reset();
 
    m_version = Protocol_Version();
    m_block_size = 0;
    m_mac_size = 0;
    m_iv_size = 0;
 
-   m_seq_no = 0;
+   m_write_seq_no = 0;
    }
 
 /*
@@ -74,8 +74,8 @@ void Record_Writer::change_cipher_spec(Connection_Side side,
                                        const Session_Keys& keys,
                                        byte compression_method)
    {
-   m_cipher.reset();
-   m_mac.reset();
+   m_write_cipher.reset();
+   m_write_mac.reset();
 
    if(compression_method != NO_COMPRESSION)
       throw Internal_Error("Negotiated unknown compression algorithm");
@@ -86,7 +86,7 @@ void Record_Writer::change_cipher_spec(Connection_Side side,
      the first record transmitted under a particular connection state
      MUST use sequence number 0
    */
-   m_seq_no = 0;
+   m_write_seq_no = 0;
 
    SymmetricKey mac_key, cipher_key;
    InitializationVector iv;
@@ -109,7 +109,7 @@ void Record_Writer::change_cipher_spec(Connection_Side side,
 
    if(have_block_cipher(cipher_algo))
       {
-      m_cipher.append(get_cipher(
+      m_write_cipher.append(get_cipher(
                        cipher_algo + "/CBC/NoPadding",
                        cipher_key, iv, ENCRYPTION)
          );
@@ -122,7 +122,7 @@ void Record_Writer::change_cipher_spec(Connection_Side side,
       }
    else if(have_stream_cipher(cipher_algo))
       {
-      m_cipher.append(get_cipher(cipher_algo, cipher_key, ENCRYPTION));
+      m_write_cipher.append(get_cipher(cipher_algo, cipher_key, ENCRYPTION));
       m_block_size = 0;
       m_iv_size = 0;
       }
@@ -134,12 +134,12 @@ void Record_Writer::change_cipher_spec(Connection_Side side,
       Algorithm_Factory& af = global_state().algorithm_factory();
 
       if(m_version == Protocol_Version::SSL_V3)
-         m_mac.reset(af.make_mac("SSL3-MAC(" + mac_algo + ")"));
+         m_write_mac.reset(af.make_mac("SSL3-MAC(" + mac_algo + ")"));
       else
-         m_mac.reset(af.make_mac("HMAC(" + mac_algo + ")"));
+         m_write_mac.reset(af.make_mac("HMAC(" + mac_algo + ")"));
 
-      m_mac->set_key(mac_key);
-      m_mac_size = m_mac->output_length();
+      m_write_mac->set_key(mac_key);
+      m_mac_size = m_write_mac->output_length();
       }
    else
       throw Invalid_Argument("Record_Writer: Unknown hash " + mac_algo);
@@ -203,22 +203,21 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
       return;
       }
 
-   m_mac->update_be(m_seq_no);
-   m_mac->update(type);
+   m_write_mac->update_be(m_write_seq_no);
+   m_write_mac->update(type);
 
    if(m_version != Protocol_Version::SSL_V3)
       {
-      m_mac->update(m_version.major_version());
-      m_mac->update(m_version.minor_version());
+      m_write_mac->update(m_version.major_version());
+      m_write_mac->update(m_version.minor_version());
       }
 
-   m_mac->update(get_byte<u16bit>(0, length));
-   m_mac->update(get_byte<u16bit>(1, length));
-   m_mac->update(input, length);
+   m_write_mac->update(get_byte<u16bit>(0, length));
+   m_write_mac->update(get_byte<u16bit>(1, length));
+   m_write_mac->update(input, length);
 
    const size_t buf_size = round_up(m_iv_size + length +
-                                    m_mac->output_length() +
-                                    (m_block_size ? 1 : 0),
+                                    m_mac_size + (m_block_size ? 1 : 0),
                                     m_block_size);
 
    if(buf_size >= MAX_CIPHERTEXT_SIZE)
@@ -245,13 +244,13 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
    copy_mem(buf_write_ptr, input, length);
    buf_write_ptr += length;
 
-   m_mac->final(buf_write_ptr);
-   buf_write_ptr += m_mac->output_length();
+   m_write_mac->final(buf_write_ptr);
+   buf_write_ptr += m_mac_size;
 
    if(m_block_size)
       {
       const size_t pad_val =
-         buf_size - (m_iv_size + length + m_mac->output_length() + 1);
+         buf_size - (m_iv_size + length + m_mac_size + 1);
 
       for(size_t i = 0; i != pad_val + 1; ++i)
          {
@@ -261,23 +260,23 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
       }
 
    // FIXME: this could be done in-place without copying
-   m_cipher.process_msg(&m_writebuf[TLS_HEADER_SIZE], buf_size);
+   m_write_cipher.process_msg(&m_writebuf[TLS_HEADER_SIZE], buf_size);
 
-   const size_t ctext_size = m_cipher.remaining(Pipe::LAST_MESSAGE);
+   const size_t ctext_size = m_write_cipher.remaining(Pipe::LAST_MESSAGE);
 
    BOTAN_ASSERT_EQUAL(ctext_size, buf_size, "Cipher encrypted full amount");
 
    if(ctext_size > MAX_CIPHERTEXT_SIZE)
       throw Internal_Error("Produced ciphertext larger than protocol allows");
 
-   m_cipher.read(&m_writebuf[TLS_HEADER_SIZE], ctext_size, Pipe::LAST_MESSAGE);
+   m_write_cipher.read(&m_writebuf[TLS_HEADER_SIZE], ctext_size, Pipe::LAST_MESSAGE);
 
-   BOTAN_ASSERT_EQUAL(m_cipher.remaining(Pipe::LAST_MESSAGE), 0,
+   BOTAN_ASSERT_EQUAL(m_write_cipher.remaining(Pipe::LAST_MESSAGE), 0,
                       "No data remains in pipe");
 
    m_output_fn(&m_writebuf[0], TLS_HEADER_SIZE + buf_size);
 
-   m_seq_no++;
+   m_write_seq_no++;
    }
 
 }
