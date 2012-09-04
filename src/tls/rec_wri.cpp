@@ -280,17 +280,6 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
    m_seq_no++;
    }
 
-/*
-* Send an alert
-*/
-void Record_Writer::send_alert(const Alert& alert)
-   {
-   const byte alert_bits[2] = { static_cast<byte>(alert.is_fatal() ? 2 : 1),
-                                static_cast<byte>(alert.type()) };
-
-   send_array(ALERT, alert_bits, sizeof(alert_bits));
-   }
-
 }
 
 }

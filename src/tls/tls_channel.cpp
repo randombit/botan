@@ -221,7 +221,7 @@ void Channel::send_alert(const Alert& alert)
       {
       try
          {
-         m_writer.send_alert(alert);
+         m_writer.send(ALERT, alert.serialize());
          }
       catch(...) { /* swallow it */ }
       }

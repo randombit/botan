@@ -64,22 +64,27 @@ class BOTAN_DLL Alert
       /**
       * @return true iff this alert is non-empty
       */
-      bool is_valid() const { return (type_code != NULL_ALERT); }
+      bool is_valid() const { return (m_type_code != NULL_ALERT); }
 
       /**
       * @return if this alert is a fatal one or not
       */
-      bool is_fatal() const { return fatal; }
+      bool is_fatal() const { return m_fatal; }
 
       /**
       * @return type of alert
       */
-      Type type() const { return type_code; }
+      Type type() const { return m_type_code; }
 
       /**
       * @return type of alert
       */
       std::string type_string() const;
+
+      /**
+      * Serialize an alert
+      */
+      std::vector<byte> serialize() const;
 
       /**
       * Deserialize an Alert message
@@ -89,16 +94,16 @@ class BOTAN_DLL Alert
 
       /**
       * Create a new Alert
-      * @param alert_type the type of alert
-      * @param is_fatal specifies if this is a fatal alert
+      * @param type_code the type of alert
+      * @param fatal specifies if this is a fatal alert
       */
-      Alert(Type alert_type, bool is_fatal = false) :
-         fatal(is_fatal), type_code(alert_type) {}
+      Alert(Type type_code, bool fatal = false) :
+         m_fatal(fatal), m_type_code(type_code) {}
 
-      Alert() : fatal(false), type_code(NULL_ALERT) {}
+      Alert() : m_fatal(false), m_type_code(NULL_ALERT) {}
    private:
-      bool fatal;
-      Type type_code;
+      bool m_fatal;
+      Type m_type_code;
    };
 
 }

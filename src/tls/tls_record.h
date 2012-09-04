@@ -35,8 +35,6 @@ class BOTAN_DLL Record_Writer
       void send(byte type, const std::vector<byte>& input)
          { send_array(type, &input[0], input.size()); }
 
-      void send_alert(const Alert& alert);
-
       void change_cipher_spec(Connection_Side side,
                               const Ciphersuite& suite,
                               const Session_Keys& keys,

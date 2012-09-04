@@ -67,8 +67,10 @@ Handshake_State* Client::new_handshake_state()
    using namespace std::placeholders;
 
    return new Client_Handshake_State(
-      new Stream_Handshake_IO(std::bind(&Record_Writer::send,
-                                        std::ref(m_writer), _1, _2)));
+      new Stream_Handshake_IO(
+         std::bind(&Record_Writer::send, std::ref(m_writer), _1, _2)
+         )
+      );
    }
 
 /*

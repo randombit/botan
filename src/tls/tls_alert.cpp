@@ -18,8 +18,8 @@ Alert::Alert(const std::vector<byte>& buf)
       throw Decoding_Error("Alert: Bad size " + std::to_string(buf.size()) +
                            " for alert message");
 
-   if(buf[0] == 1)      fatal = false;
-   else if(buf[0] == 2) fatal = true;
+   if(buf[0] == 1)      m_fatal = false;
+   else if(buf[0] == 2) m_fatal = true;
    else
       throw Decoding_Error("Alert: Bad code for alert level");
 
@@ -32,7 +32,15 @@ Alert::Alert(const std::vector<byte>& buf)
    if(dc == 255)
       throw Internal_Error("Alert: description code 255, rejecting");
 
-   type_code = static_cast<Type>(dc);
+   m_type_code = static_cast<Type>(dc);
+   }
+
+std::vector<byte> Alert::serialize() const
+   {
+   std::vector<byte> alert(2);
+   alert[0] = static_cast<byte>(is_fatal() ? 2 : 1);
+   alert[1] = static_cast<byte>(type());
+   return alert;
    }
 
 std::string Alert::type_string() const
