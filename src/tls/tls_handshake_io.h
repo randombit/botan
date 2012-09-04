@@ -67,7 +67,7 @@ class Stream_Handshake_IO : public Handshake_IO
    {
    public:
       Stream_Handshake_IO(handshake_write_fn writer) :
-         m_writer(writer) {}
+         m_send_hs(writer) {}
 
       Protocol_Version initial_record_version() const override;
 
@@ -86,7 +86,7 @@ class Stream_Handshake_IO : public Handshake_IO
          get_next_record(bool expecting_ccs) override;
    private:
       std::deque<byte> m_queue;
-      handshake_write_fn m_writer;
+      handshake_write_fn m_send_hs;
    };
 
 /**
@@ -96,7 +96,7 @@ class Datagram_Handshake_IO : public Handshake_IO
    {
    public:
       Datagram_Handshake_IO(handshake_write_fn writer, u16bit mtu) :
-         m_flights(1), m_mtu(mtu), m_writer(writer) {}
+         m_flights(1), m_mtu(mtu), m_send_hs(writer) {}
 
       Protocol_Version initial_record_version() const override;
 
@@ -158,7 +158,7 @@ class Datagram_Handshake_IO : public Handshake_IO
       u16bit m_mtu = 0;
       u16bit m_in_message_seq = 0;
       u16bit m_out_message_seq = 0;
-      handshake_write_fn m_writer;
+      handshake_write_fn m_send_hs;
    };
 
 }
