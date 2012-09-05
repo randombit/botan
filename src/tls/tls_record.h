@@ -15,7 +15,6 @@
 #include <botan/block_cipher.h>
 #include <botan/stream_cipher.h>
 #include <botan/mac.h>
-#include <botan/pipe.h>
 #include <vector>
 #include <functional>
 #include <memory>
@@ -129,7 +128,9 @@ class BOTAN_DLL Record_Reader
       std::vector<byte> m_macbuf;
       size_t m_readbuf_pos;
 
-      Pipe m_read_cipher;
+      std::unique_ptr<BlockCipher> m_read_block_cipher;
+      secure_vector<byte> m_read_block_cipher_cbc_state;
+      std::unique_ptr<StreamCipher> m_read_stream_cipher;
       std::unique_ptr<MessageAuthenticationCode> m_read_mac;
 
       size_t m_block_size, m_iv_size, m_max_fragment;

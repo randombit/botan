@@ -48,6 +48,7 @@ void Record_Writer::reset()
    set_maximum_fragment_size(0);
 
    m_write_block_cipher.reset();
+   zeroise(m_write_block_cipher_cbc_state);
    m_write_stream_cipher.reset();
    m_write_mac.reset();
 
@@ -76,6 +77,7 @@ void Record_Writer::change_cipher_spec(Connection_Side side,
                                        byte compression_method)
    {
    m_write_block_cipher.reset();
+   m_write_block_cipher_cbc_state.clear();
    m_write_stream_cipher.reset();
    m_write_mac.reset();
 
@@ -283,6 +285,7 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
          m_write_block_cipher->encrypt(&buf[bs*i]);
          }
 
+      m_write_block_cipher_cbc_state.assign(&buf[bs*(blocks-1)], &buf[bs*blocks]);
       }
 
    m_output_fn(&m_writebuf[0], TLS_HEADER_SIZE + buf_size);

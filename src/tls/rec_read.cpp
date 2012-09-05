@@ -11,6 +11,7 @@
 #include <botan/internal/tls_session_key.h>
 #include <botan/internal/rounding.h>
 #include <botan/internal/assert.h>
+#include <botan/internal/xor_buf.h>
 
 namespace Botan {
 
@@ -33,7 +34,8 @@ void Record_Reader::reset()
    zeroise(m_readbuf);
    m_readbuf_pos = 0;
 
-   m_read_cipher.reset();
+   m_read_block_cipher.reset();
+   m_read_stream_cipher.reset();
 
    m_read_mac.reset();
 
@@ -73,7 +75,9 @@ void Record_Reader::change_cipher_spec(Connection_Side side,
                                        const Session_Keys& keys,
                                        byte compression_method)
    {
-   m_read_cipher.reset();
+   m_read_block_cipher.reset();
+   m_read_block_cipher_cbc_state.clear();
+   m_read_stream_cipher.reset();
    m_read_mac.reset();
    m_read_seq_no = 0;
 
@@ -99,42 +103,37 @@ void Record_Reader::change_cipher_spec(Connection_Side side,
    const std::string cipher_algo = suite.cipher_algo();
    const std::string mac_algo = suite.mac_algo();
 
-   if(have_block_cipher(cipher_algo))
+   Algorithm_Factory& af = global_state().algorithm_factory();
+
+   if(const BlockCipher* bc = af.prototype_block_cipher(cipher_algo))
       {
-      m_read_cipher.append(get_cipher(
-                       cipher_algo + "/CBC/NoPadding",
-                       cipher_key, iv, DECRYPTION)
-         );
-      m_block_size = block_size_of(cipher_algo);
+      m_read_block_cipher.reset(bc->clone());
+      m_read_block_cipher->set_key(cipher_key);
+      m_read_block_cipher_cbc_state = iv.bits_of();
+      m_block_size = bc->block_size();
 
       if(m_version.supports_explicit_cbc_ivs())
          m_iv_size = m_block_size;
       else
          m_iv_size = 0;
       }
-   else if(have_stream_cipher(cipher_algo))
+   else if(const StreamCipher* sc = af.prototype_stream_cipher(cipher_algo))
       {
-      m_read_cipher.append(get_cipher(cipher_algo, cipher_key, DECRYPTION));
+      m_read_stream_cipher.reset(sc->clone());
+      m_read_stream_cipher->set_key(cipher_key);
       m_block_size = 0;
       m_iv_size = 0;
       }
    else
       throw Invalid_Argument("Record_Reader: Unknown cipher " + cipher_algo);
 
-   if(have_hash(mac_algo))
-      {
-      Algorithm_Factory& af = global_state().algorithm_factory();
-
-      if(m_version == Protocol_Version::SSL_V3)
-         m_read_mac.reset(af.make_mac("SSL3-MAC(" + mac_algo + ")"));
-      else
-         m_read_mac.reset(af.make_mac("HMAC(" + mac_algo + ")"));
-
-      m_read_mac->set_key(mac_key);
-      m_macbuf.resize(m_read_mac->output_length());
-      }
+   if(m_version == Protocol_Version::SSL_V3)
+      m_read_mac.reset(af.make_mac("SSL3-MAC(" + mac_algo + ")"));
    else
-      throw Invalid_Argument("Record_Reader: Unknown hash " + mac_algo);
+      m_read_mac.reset(af.make_mac("HMAC(" + mac_algo + ")"));
+
+   m_read_mac->set_key(mac_key);
+   m_macbuf.resize(m_read_mac->output_length());
    }
 
 size_t Record_Reader::fill_buffer_to(const byte*& input,
@@ -326,16 +325,36 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
    // Otherwise, decrypt, check MAC, return plaintext
 
    // FIXME: avoid memory allocation by processing in place
-   m_read_cipher.process_msg(&m_readbuf[TLS_HEADER_SIZE], record_len);
+   if(m_read_stream_cipher)
+      {
+      m_read_stream_cipher->cipher1(&m_readbuf[TLS_HEADER_SIZE], record_len);
+      }
+   else
+      {
+      const size_t bs = m_block_size;
 
-   const size_t got_back = m_read_cipher.read(&m_readbuf[TLS_HEADER_SIZE],
-                                              record_len,
-                                              Pipe::LAST_MESSAGE);
+      BOTAN_ASSERT(record_len % bs == 0,
+                   "Buffer is an even multiple of block size");
 
-   BOTAN_ASSERT_EQUAL(got_back, record_len, "Cipher encrypted full amount");
+      byte* buf = &m_readbuf[TLS_HEADER_SIZE];
 
-   BOTAN_ASSERT_EQUAL(m_read_cipher.remaining(Pipe::LAST_MESSAGE), 0,
-                      "Cipher had no remaining inputs");
+      const size_t blocks = record_len / bs;
+
+      secure_vector<byte> last_ciphertext(bs);
+      copy_mem(&last_ciphertext[0], &buf[0], bs);
+
+      m_read_block_cipher->decrypt(&buf[0]);
+      xor_buf(&buf[0], &m_read_block_cipher_cbc_state[0], bs);
+
+      for(size_t i = 1; i <= blocks; ++i)
+         {
+         secure_vector<byte> last_ciphertext2(&buf[bs*i], &buf[bs*(i+1)]);
+         m_read_block_cipher->decrypt(&buf[bs*i]);
+         xor_buf(&buf[bs*i], &last_ciphertext[0], bs);
+         std::swap(last_ciphertext, last_ciphertext2);
+         }
+      m_read_block_cipher_cbc_state = last_ciphertext;
+      }
 
    /*
    * This is actually padding_length + 1 because both the padding and
