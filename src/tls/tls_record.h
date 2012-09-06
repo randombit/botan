@@ -96,52 +96,6 @@ size_t read_record(std::vector<byte>& read_buffer,
                    Connection_Cipher_State* cipherstate);
 
 /**
-* TLS Record Writer
-*/
-class BOTAN_DLL Record_Writer
-   {
-   public:
-      void send_array(byte type, const byte input[], size_t length);
-
-      void send(byte type, const std::vector<byte>& input)
-         { send_array(type, &input[0], input.size()); }
-
-      void change_cipher_spec(Connection_Side side,
-                              const Ciphersuite& suite,
-                              const Session_Keys& keys,
-                              byte compression_method);
-
-      void set_version(Protocol_Version version);
-
-      bool record_version_set() const { return m_version.valid(); }
-
-      void reset();
-
-      void set_maximum_fragment_size(size_t max_fragment);
-
-      Record_Writer(std::function<void (const byte[], size_t)> output_fn,
-                    RandomNumberGenerator& rng);
-
-      Record_Writer(const Record_Writer&) = delete;
-      Record_Writer& operator=(const Record_Writer&) = delete;
-   private:
-      void send_record(byte type, const byte input[], size_t length);
-
-      std::function<void (const byte[], size_t)> m_output_fn;
-
-      std::vector<byte> m_writebuf;
-
-      std::unique_ptr<Connection_Cipher_State> m_write_cipherstate;
-
-      RandomNumberGenerator& m_rng;
-
-      size_t m_max_fragment = MAX_PLAINTEXT_SIZE;
-
-      u64bit m_write_seq_no = 0;
-      Protocol_Version m_version;
-   };
-
-/**
 * TLS Record Reader
 */
 class BOTAN_DLL Record_Reader

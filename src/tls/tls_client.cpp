@@ -94,9 +94,6 @@ void Client::initiate_handshake(bool force_full_renegotiation,
    {
    m_state.reset(new_handshake_state());
 
-   if(!m_writer.record_version_set())
-      m_writer.set_version(m_state->handshake_io().initial_record_version());
-
    if(m_state->version().is_datagram_protocol())
       m_state->set_expected_next(HELLO_VERIFY_REQUEST);
    m_state->set_expected_next(SERVER_HELLO);

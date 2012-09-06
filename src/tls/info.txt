@@ -47,7 +47,6 @@ msg_server_hello.cpp
 msg_server_kex.cpp
 msg_session_ticket.cpp
 rec_read.cpp
-rec_wri.cpp
 tls_alert.cpp
 tls_channel.cpp
 tls_ciphersuite.cpp

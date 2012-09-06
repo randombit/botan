@@ -10,13 +10,14 @@
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_heartbeats.h>
 #include <botan/internal/assert.h>
+#include <botan/internal/rounding.h>
 #include <botan/loadstor.h>
 
 namespace Botan {
 
 namespace TLS {
 
-Channel::Channel(std::function<void (const byte[], size_t)> socket_output_fn,
+Channel::Channel(std::function<void (const byte[], size_t)> output_fn,
                  std::function<void (const byte[], size_t, Alert)> proc_fn,
                  std::function<bool (const Session&)> handshake_complete,
                  Session_Manager& session_manager,
@@ -25,8 +26,9 @@ Channel::Channel(std::function<void (const byte[], size_t)> socket_output_fn,
    m_state(nullptr),
    m_rng(rng),
    m_session_manager(session_manager),
-   m_writer(socket_output_fn, rng),
-   m_proc_fn(proc_fn)
+   m_proc_fn(proc_fn),
+   m_output_fn(output_fn),
+   m_writebuf(TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE)
    {
    }
 
@@ -37,7 +39,6 @@ Channel::~Channel()
 void Channel::set_protocol_version(Protocol_Version version)
    {
    m_state->set_version(version);
-   m_writer.set_version(version);
    m_reader.set_version(version);
    }
 
@@ -46,10 +47,14 @@ Protocol_Version Channel::current_protocol_version() const
    return m_reader.get_version();
    }
 
-void Channel::set_maximum_fragment_size(size_t maximum)
+void Channel::set_maximum_fragment_size(size_t max_fragment)
    {
-   m_reader.set_maximum_fragment_size(maximum);
-   m_writer.set_maximum_fragment_size(maximum);
+   m_reader.set_maximum_fragment_size(max_fragment);
+
+   if(max_fragment == 0)
+      m_max_fragment = MAX_PLAINTEXT_SIZE;
+   else
+      m_max_fragment = clamp(max_fragment, 128, MAX_PLAINTEXT_SIZE);
    }
 
 void Channel::change_cipher_spec_reader(Connection_Side side)
@@ -62,10 +67,23 @@ void Channel::change_cipher_spec_reader(Connection_Side side)
 
 void Channel::change_cipher_spec_writer(Connection_Side side)
    {
-   m_writer.change_cipher_spec(side,
-                               m_state->ciphersuite(),
-                               m_state->session_keys(),
-                               m_state->server_hello()->compression_method());
+   if(m_state->server_hello()->compression_method()!= NO_COMPRESSION)
+      throw Internal_Error("Negotiated unknown compression algorithm");
+
+   /*
+   RFC 4346:
+     A sequence number is incremented after each record: specifically,
+     the first record transmitted under a particular connection state
+     MUST use sequence number 0
+   */
+   m_write_seq_no = 0;
+
+   m_write_cipherstate.reset(
+      new Connection_Cipher_State(current_protocol_version(),
+                                  side,
+                                  m_state->ciphersuite(),
+                                  m_state->session_keys())
+      );
    }
 
 void Channel::activate_session(const std::vector<byte>& session_id)
@@ -206,7 +224,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
 
                m_state.reset();
 
-               m_writer.reset();
+               m_write_cipherstate.reset();
                m_reader.reset();
                }
             }
@@ -253,9 +271,66 @@ void Channel::heartbeat(const byte payload[], size_t payload_size)
       }
    }
 
+void Channel::send_record(byte type, const byte input[], size_t length)
+   {
+   if(length == 0)
+      return;
+
+   /*
+   * If using CBC mode in SSLv3/TLS v1.0, send a single byte of
+   * plaintext to randomize the (implicit) IV of the following main
+   * block. If using a stream cipher, or TLS v1.1 or higher, this
+   * isn't necessary.
+   *
+   * An empty record also works but apparently some implementations do
+   * not like this (https://bugzilla.mozilla.org/show_bug.cgi?id=665814)
+   *
+   * See http://www.openssl.org/~bodo/tls-cbc.txt for background.
+   */
+   if((type == APPLICATION_DATA) &&
+      (m_write_cipherstate->block_size() > 0) &&
+      (m_write_cipherstate->iv_size() == 0))
+      {
+      write_record(type, &input[0], 1);
+      input += 1;
+      length -= 1;
+      }
+
+   while(length)
+      {
+      const size_t sending = std::min(length, m_max_fragment);
+      write_record(type, &input[0], sending);
+
+      input += sending;
+      length -= sending;
+      }
+   }
+
 void Channel::send_record(byte record_type, const std::vector<byte>& record)
    {
-   m_writer.send(record_type, record);
+   send_record(record_type, &record[0], record.size());
+   }
+
+void Channel::write_record(byte record_type, const byte input[], size_t length)
+   {
+   if(length >= m_max_fragment)
+      throw Internal_Error("Record is larger than allowed fragment size");
+
+   Protocol_Version version = current_protocol_version();
+   if(!version.valid())
+      version = m_state->handshake_io().initial_record_version();
+
+   const size_t written = TLS::write_record(m_writebuf,
+                                            record_type,
+                                            input,
+                                            length,
+                                            m_write_seq_no,
+                                            version,
+                                            m_write_cipherstate.get(),
+                                            m_rng);
+
+   m_write_seq_no += 1;
+   m_output_fn(&m_writebuf[0], written);
    }
 
 void Channel::send(const byte buf[], size_t buf_size)
@@ -263,7 +338,7 @@ void Channel::send(const byte buf[], size_t buf_size)
    if(!is_active())
       throw std::runtime_error("Data cannot be sent on inactive TLS connection");
 
-   m_writer.send_array(APPLICATION_DATA, buf, buf_size);
+   send_record(APPLICATION_DATA, buf, buf_size);
    }
 
 void Channel::send(const std::string& string)
@@ -293,7 +368,7 @@ void Channel::send_alert(const Alert& alert)
       m_connection_closed = true;
 
       m_state.reset();
-      m_writer.reset();
+      m_write_cipherstate.reset();
       }
    }
 

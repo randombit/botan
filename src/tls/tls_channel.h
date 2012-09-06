@@ -164,7 +164,6 @@ class BOTAN_DLL Channel
 
       RandomNumberGenerator& m_rng;
       Session_Manager& m_session_manager;
-      Record_Writer m_writer;
    private:
       Record_Reader m_reader;
    protected:
@@ -173,7 +172,18 @@ class BOTAN_DLL Channel
       Secure_Renegotiation_State m_secure_renegotiation;
 
    private:
+      void send_record(byte type, const byte input[], size_t length);
+
+      void write_record(byte type, const byte input[], size_t length);
+
       std::function<void (const byte[], size_t, Alert)> m_proc_fn;
+      std::function<void (const byte[], size_t)> m_output_fn;
+
+      std::vector<byte> m_writebuf;
+      std::unique_ptr<Connection_Cipher_State> m_write_cipherstate;
+      u64bit m_write_seq_no = 0;
+
+      size_t m_max_fragment = MAX_PLAINTEXT_SIZE;
 
       bool m_peer_supports_heartbeats = false;
       bool m_heartbeat_sending_allowed = false;
