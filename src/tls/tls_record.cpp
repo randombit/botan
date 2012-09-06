@@ -285,6 +285,10 @@ size_t read_record(std::vector<byte>& readbuf,
    // Possible SSLv2 format client hello
    if((!cipherstate) && (readbuf[0] & 0x80) && (readbuf[2] == 1))
       {
+      if(version.is_datagram_protocol())
+         throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                             "Client sent SSLv2-style DTLS hello");
+
       if(readbuf[3] == 0 && readbuf[4] == 2)
          throw TLS_Exception(Alert::PROTOCOL_VERSION,
                              "Client claims to only support SSLv2, rejecting");
