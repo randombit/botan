@@ -163,7 +163,7 @@ void Client::process_handshake_msg(Handshake_State& state,
          return;
          }
 
-      this->renegotiate(false);
+      this->initiate_handshake(state, false);
 
       return;
       }
