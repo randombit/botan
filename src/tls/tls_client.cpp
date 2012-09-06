@@ -67,7 +67,8 @@ Handshake_State* Client::new_handshake_state()
 
    return new Client_Handshake_State(
       new Stream_Handshake_IO(
-         std::bind(&Record_Writer::send, std::ref(m_writer), _1, _2)
+         [this](byte type, const std::vector<byte>& rec)
+            { this->send_record(type, rec); }
          )
       );
    }

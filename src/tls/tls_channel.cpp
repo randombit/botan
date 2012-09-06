@@ -147,7 +147,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
                   Heartbeat_Message response(Heartbeat_Message::RESPONSE,
                                              &payload[0], payload.size());
 
-                  m_writer.send(HEARTBEAT, response.contents());
+                  send_record(HEARTBEAT, response.contents());
                   }
                }
             else
@@ -249,8 +249,13 @@ void Channel::heartbeat(const byte payload[], size_t payload_size)
       Heartbeat_Message heartbeat(Heartbeat_Message::REQUEST,
                                   payload, payload_size);
 
-      m_writer.send(HEARTBEAT, heartbeat.contents());
+      send_record(HEARTBEAT, heartbeat.contents());
       }
+   }
+
+void Channel::send_record(byte record_type, const std::vector<byte>& record)
+   {
+   m_writer.send(record_type, record);
    }
 
 void Channel::send(const byte buf[], size_t buf_size)
@@ -272,7 +277,7 @@ void Channel::send_alert(const Alert& alert)
       {
       try
          {
-         m_writer.send(ALERT, alert.serialize());
+         send_record(ALERT, alert.serialize());
          }
       catch(...) { /* swallow it */ }
       }

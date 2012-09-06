@@ -123,6 +123,8 @@ class BOTAN_DLL Channel
 
       void change_cipher_spec_writer(Connection_Side side);
 
+      void send_record(byte record_type, const std::vector<byte>& record);
+
       class Secure_Renegotiation_State
          {
          public:
@@ -165,8 +167,7 @@ class BOTAN_DLL Channel
       Record_Writer m_writer;
    private:
       Record_Reader m_reader;
-   public:
-
+   protected:
       std::vector<X509_Certificate> m_peer_certs;
 
       Secure_Renegotiation_State m_secure_renegotiation;

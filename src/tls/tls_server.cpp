@@ -226,8 +226,11 @@ Handshake_State* Server::new_handshake_state()
    using namespace std::placeholders;
 
    Handshake_State* state = new Server_Handshake_State(
-      new Stream_Handshake_IO(std::bind(&Record_Writer::send,
-                                        std::ref(m_writer), _1, _2)));
+      new Stream_Handshake_IO(
+         [this](byte type, const std::vector<byte>& rec)
+            { this->send_record(type, rec); }
+         )
+      );
 
    state->set_expected_next(CLIENT_HELLO);
    return state;
