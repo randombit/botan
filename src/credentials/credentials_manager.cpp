@@ -101,9 +101,6 @@ void Credentials_Manager::verify_certificate_chain(
    if(cert_chain.empty())
       throw std::invalid_argument("Certificate chain was empty");
 
-   if(purported_hostname != "" && !cert_chain[0].matches_dns_name(purported_hostname))
-      throw std::runtime_error("Certificate did not match hostname");
-
    auto trusted_CAs = trusted_certificate_authorities(type, purported_hostname);
 
    Certificate_Store_In_Memory CAs;
@@ -120,6 +117,9 @@ void Credentials_Manager::verify_certificate_chain(
 
    if(!CAs.certificate_known(result.trust_root()))
       throw std::runtime_error("Certificate chain roots in unknown/untrusted CA");
+
+   if(purported_hostname != "" && !cert_chain[0].matches_dns_name(purported_hostname))
+      throw std::runtime_error("Certificate did not match hostname");
    }
 
 }
