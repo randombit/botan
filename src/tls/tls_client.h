@@ -82,7 +82,6 @@ class BOTAN_DLL Client : public Channel
       class Handshake_State* new_handshake_state() override;
 
       const Policy& m_policy;
-      RandomNumberGenerator& m_rng;
       Credentials_Manager& m_creds;
       const std::string m_hostname;
       const u16bit m_port;

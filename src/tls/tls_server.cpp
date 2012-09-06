@@ -216,7 +216,6 @@ Server::Server(std::function<void (const byte[], size_t)> output_fn,
                const std::vector<std::string>& next_protocols) :
    Channel(output_fn, proc_fn, handshake_fn, session_manager, rng),
    m_policy(policy),
-   m_rng(rng),
    m_creds(creds),
    m_possible_protocols(next_protocols)
    {

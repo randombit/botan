@@ -51,7 +51,6 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
                std::function<std::string (std::vector<std::string>)> next_protocol) :
    Channel(output_fn, proc_fn, handshake_fn, session_manager, rng),
    m_policy(policy),
-   m_rng(rng),
    m_creds(creds),
    m_hostname(hostname),
    m_port(port)

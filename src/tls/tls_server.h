@@ -57,7 +57,6 @@ class BOTAN_DLL Server : public Channel
       class Handshake_State* new_handshake_state() override;
 
       const Policy& m_policy;
-      RandomNumberGenerator& m_rng;
       Credentials_Manager& m_creds;
 
       std::vector<std::string> m_possible_protocols;

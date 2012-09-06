@@ -149,6 +149,7 @@ class BOTAN_DLL Channel
 
       std::unique_ptr<class Handshake_State> m_state;
 
+      RandomNumberGenerator& m_rng;
       Session_Manager& m_session_manager;
       Record_Writer m_writer;
       Record_Reader m_reader;
