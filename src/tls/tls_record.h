@@ -67,6 +67,16 @@ class Connection_Cipher_State
    };
 
 /**
+* Create a TLS record
+*/
+size_t write_record(std::vector<byte>& write_buffer,
+                    byte msg_type, const byte msg[], size_t msg_length,
+                    u64bit msg_sequence_number,
+                    Protocol_Version version,
+                    Connection_Cipher_State* cipherstate,
+                    RandomNumberGenerator& rng);
+
+/**
 * TLS Record Writer
 */
 class BOTAN_DLL Record_Writer
