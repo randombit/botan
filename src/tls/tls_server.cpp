@@ -291,8 +291,10 @@ void Server::process_handshake_msg(Handshake_Type type,
 
       Protocol_Version client_version = m_state->client_hello()->version();
 
-      const Protocol_Version prev_version = m_reader.get_version();
+      const Protocol_Version prev_version = current_protocol_version();
       const bool is_renegotiation = prev_version.valid();
+
+      Protocol_Version negotiated_version;
 
       if((is_renegotiation && client_version == prev_version) ||
          (!is_renegotiation && client_version.known_version()))
@@ -303,7 +305,7 @@ void Server::process_handshake_msg(Handshake_Type type,
          negotiated.
          */
 
-         m_state->set_version(client_version);
+         negotiated_version = client_version;
          }
       else if(is_renegotiation && (client_version != prev_version))
          {
@@ -324,7 +326,7 @@ void Server::process_handshake_msg(Handshake_Type type,
                                 client_version.to_string());
             }
          else
-            m_state->set_version(prev_version);
+            negotiated_version = prev_version;
          }
       else
          {
@@ -332,10 +334,10 @@ void Server::process_handshake_msg(Handshake_Type type,
          New negotiation using a version we don't know. Offer
          them the best we currently know.
          */
-         m_state->set_version(client_version.best_known_match());
+         negotiated_version = client_version.best_known_match();
          }
 
-      if(!m_policy.acceptable_protocol_version(m_state->version()))
+      if(!m_policy.acceptable_protocol_version(negotiated_version))
          {
          throw TLS_Exception(Alert::PROTOCOL_VERSION,
                              "Client version is unacceptable by policy");
@@ -343,11 +345,10 @@ void Server::process_handshake_msg(Handshake_Type type,
 
       m_secure_renegotiation.update(m_state->client_hello());
 
+      set_protocol_version(negotiated_version);
+
       heartbeat_support(m_state->client_hello()->supports_heartbeats(),
                         m_state->client_hello()->peer_can_send_heartbeats());
-
-      m_writer.set_version(m_state->version());
-      m_reader.set_version(m_state->version());
 
       Session session_info;
       const bool resuming =
@@ -397,10 +398,7 @@ void Server::process_handshake_msg(Handshake_Type type,
          m_secure_renegotiation.update(m_state->server_hello());
 
          if(session_info.fragment_size())
-            {
-            m_reader.set_maximum_fragment_size(session_info.fragment_size());
-            m_writer.set_maximum_fragment_size(session_info.fragment_size());
-            }
+            set_maximum_fragment_size(session_info.fragment_size());
 
          m_state->compute_session_keys(session_info.master_secret());
 
@@ -442,10 +440,7 @@ void Server::process_handshake_msg(Handshake_Type type,
 
          m_state->handshake_io().send(Change_Cipher_Spec());
 
-         m_writer.change_cipher_spec(SERVER,
-                                     m_state->ciphersuite(),
-                                     m_state->session_keys(),
-                                     m_state->server_hello()->compression_method());
+         change_cipher_spec_writer(SERVER);
 
          m_state->server_finished(
             new Finished(m_state->handshake_io(), m_state.get(), SERVER)
@@ -499,10 +494,7 @@ void Server::process_handshake_msg(Handshake_Type type,
          m_secure_renegotiation.update(m_state->server_hello());
 
          if(m_state->client_hello()->fragment_size())
-            {
-            m_reader.set_maximum_fragment_size(m_state->client_hello()->fragment_size());
-            m_writer.set_maximum_fragment_size(m_state->client_hello()->fragment_size());
-            }
+            set_maximum_fragment_size(m_state->client_hello()->fragment_size());
 
          const std::string sig_algo = m_state->ciphersuite().sig_algo();
          const std::string kex_algo = m_state->ciphersuite().kex_algo();
@@ -634,10 +626,7 @@ void Server::process_handshake_msg(Handshake_Type type,
       else
          m_state->set_expected_next(FINISHED);
 
-      m_reader.change_cipher_spec(SERVER,
-                                  m_state->ciphersuite(),
-                                  m_state->session_keys(),
-                                  m_state->server_hello()->compression_method());
+      change_cipher_spec_reader(SERVER);
       }
    else if(type == NEXT_PROTOCOL)
       {
@@ -710,10 +699,7 @@ void Server::process_handshake_msg(Handshake_Type type,
 
          m_state->handshake_io().send(Change_Cipher_Spec());
 
-         m_writer.change_cipher_spec(SERVER,
-                                     m_state->ciphersuite(),
-                                     m_state->session_keys(),
-                                     m_state->server_hello()->compression_method());
+         change_cipher_spec_writer(SERVER);
 
          m_state->server_finished(
             new Finished(m_state->handshake_io(), m_state.get(), SERVER)

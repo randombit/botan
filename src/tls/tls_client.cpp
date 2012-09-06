@@ -82,9 +82,8 @@ void Client::renegotiate(bool force_full_renegotiation)
 
    m_state.reset();
 
-   const Protocol_Version version = m_reader.get_version();
-
-   initiate_handshake(force_full_renegotiation, version);
+   initiate_handshake(force_full_renegotiation,
+                      current_protocol_version());
    }
 
 void Client::initiate_handshake(bool force_full_renegotiation,
@@ -142,6 +141,8 @@ void Client::initiate_handshake(bool force_full_renegotiation,
       }
 
    m_secure_renegotiation.update(m_state->client_hello());
+
+   set_maximum_fragment_size(m_state->client_hello()->fragment_size());
    }
 
 /*
@@ -229,10 +230,7 @@ void Client::process_handshake_msg(Handshake_Type type,
                                 "Server sent session ticket extension but we did not");
          }
 
-      m_state->set_version(m_state->server_hello()->version());
-
-      m_writer.set_version(m_state->version());
-      m_reader.set_version(m_state->version());
+      set_protocol_version(m_state->server_hello()->version());
 
       m_secure_renegotiation.update(m_state->server_hello());
 
@@ -424,10 +422,7 @@ void Client::process_handshake_msg(Handshake_Type type,
 
       m_state->handshake_io().send(Change_Cipher_Spec());
 
-      m_writer.change_cipher_spec(CLIENT,
-                                  m_state->ciphersuite(),
-                                  m_state->session_keys(),
-                                  m_state->server_hello()->compression_method());
+      change_cipher_spec_writer(CLIENT);
 
       if(m_state->server_hello()->next_protocol_notification())
          {
@@ -459,10 +454,7 @@ void Client::process_handshake_msg(Handshake_Type type,
       {
       m_state->set_expected_next(FINISHED);
 
-      m_reader.change_cipher_spec(CLIENT,
-                                  m_state->ciphersuite(),
-                                  m_state->session_keys(),
-                                  m_state->server_hello()->compression_method());
+      change_cipher_spec_reader(CLIENT);
       }
    else if(type == FINISHED)
       {
@@ -480,10 +472,7 @@ void Client::process_handshake_msg(Handshake_Type type,
          {
          m_state->handshake_io().send(Change_Cipher_Spec());
 
-         m_writer.change_cipher_spec(CLIENT,
-                                     m_state->ciphersuite(),
-                                     m_state->session_keys(),
-                                     m_state->server_hello()->compression_method());
+         change_cipher_spec_writer(CLIENT);
 
          if(m_state->server_hello()->next_protocol_notification())
             {

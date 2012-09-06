@@ -113,6 +113,16 @@ class BOTAN_DLL Channel
 
       void heartbeat_support(bool peer_supports, bool allowed_to_send);
 
+      void set_protocol_version(Protocol_Version version);
+
+      Protocol_Version current_protocol_version() const;
+
+      void set_maximum_fragment_size(size_t maximum);
+
+      void change_cipher_spec_reader(Connection_Side side);
+
+      void change_cipher_spec_writer(Connection_Side side);
+
       class Secure_Renegotiation_State
          {
          public:
@@ -153,7 +163,9 @@ class BOTAN_DLL Channel
       RandomNumberGenerator& m_rng;
       Session_Manager& m_session_manager;
       Record_Writer m_writer;
+   private:
       Record_Reader m_reader;
+   public:
 
       std::vector<X509_Certificate> m_peer_certs;
 

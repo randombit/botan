@@ -34,6 +34,40 @@ Channel::~Channel()
    {
    }
 
+void Channel::set_protocol_version(Protocol_Version version)
+   {
+   m_state->set_version(version);
+   m_writer.set_version(version);
+   m_reader.set_version(version);
+   }
+
+Protocol_Version Channel::current_protocol_version() const
+   {
+   return m_reader.get_version();
+   }
+
+void Channel::set_maximum_fragment_size(size_t maximum)
+   {
+   m_reader.set_maximum_fragment_size(maximum);
+   m_writer.set_maximum_fragment_size(maximum);
+   }
+
+void Channel::change_cipher_spec_reader(Connection_Side side)
+   {
+   m_reader.change_cipher_spec(side,
+                               m_state->ciphersuite(),
+                               m_state->session_keys(),
+                               m_state->server_hello()->compression_method());
+   }
+
+void Channel::change_cipher_spec_writer(Connection_Side side)
+   {
+   m_writer.change_cipher_spec(side,
+                               m_state->ciphersuite(),
+                               m_state->session_keys(),
+                               m_state->server_hello()->compression_method());
+   }
+
 void Channel::activate_session(const std::vector<byte>& session_id)
    {
    m_secure_renegotiation.update(m_state->client_finished(),
