@@ -64,7 +64,7 @@ class BOTAN_DLL Channel
       * @param force_full_renegotiation if true, require a full renegotiation,
       *                                 otherwise allow session resumption
       */
-      virtual void renegotiate(bool force_full_renegotiation = false) = 0;
+      void renegotiate(bool force_full_renegotiation = false);
 
       /**
       * Attempt to send a heartbeat message (if negotiated with counterparty)
@@ -100,7 +100,12 @@ class BOTAN_DLL Channel
                                          Handshake_Type type,
                                          const std::vector<byte>& contents) = 0;
 
+      virtual void initiate_handshake(class Handshake_State& state,
+                                      bool force_full_renegotiation) = 0;
+
       virtual class Handshake_State* new_handshake_state() = 0;
+
+      class Handshake_State& create_handshake_state();
 
       /**
       * Send a TLS alert message. If the alert is fatal, the internal
@@ -160,8 +165,6 @@ class BOTAN_DLL Channel
 
       std::function<bool (const Session&)> m_handshake_fn;
 
-      std::unique_ptr<class Handshake_State> m_state;
-
       RandomNumberGenerator& m_rng;
       Session_Manager& m_session_manager;
 
@@ -190,6 +193,8 @@ class BOTAN_DLL Channel
       u64bit m_read_seq_no = 0;
 
       /* connection parameters */
+      std::unique_ptr<class Handshake_State> m_state;
+
       Protocol_Version m_current_version;
       size_t m_max_fragment = MAX_PLAINTEXT_SIZE;
 

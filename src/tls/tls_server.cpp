@@ -239,16 +239,13 @@ Handshake_State* Server::new_handshake_state()
 /*
 * Send a hello request to the client
 */
-void Server::renegotiate(bool force_full_renegotiation)
+void Server::initiate_handshake(Handshake_State& state,
+                                bool force_full_renegotiation)
    {
-   if(m_state)
-      return; // currently in handshake
-
-   m_state.reset(new_handshake_state());
-   dynamic_cast<Server_Handshake_State&>(*m_state).allow_session_resumption =
+   dynamic_cast<Server_Handshake_State&>(state).allow_session_resumption =
       !force_full_renegotiation;
 
-   Hello_Request hello_req(m_state->handshake_io());
+   Hello_Request hello_req(state.handshake_io());
    }
 
 /*

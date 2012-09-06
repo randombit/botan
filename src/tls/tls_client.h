@@ -65,10 +65,12 @@ class BOTAN_DLL Client : public Channel
              u16bit port = 0,
              std::function<std::string (std::vector<std::string>)> next_protocol =
                 std::function<std::string (std::vector<std::string>)>());
-
-      void renegotiate(bool force_full_renegotiation = false) override;
    private:
-      void initiate_handshake(bool force_full_renegotiation,
+      void initiate_handshake(class Handshake_State& state,
+                              bool force_full_renegotiation) override;
+
+      void initiate_handshake(class Handshake_State& state,
+                              bool force_full_renegotiation,
                               Protocol_Version version,
                               const std::string& srp_identifier = "",
                               std::function<std::string (std::vector<std::string>)> next_protocol =

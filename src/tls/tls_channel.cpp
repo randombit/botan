@@ -24,7 +24,6 @@ Channel::Channel(std::function<void (const byte[], size_t)> output_fn,
                  Session_Manager& session_manager,
                  RandomNumberGenerator& rng) :
    m_handshake_fn(handshake_complete),
-   m_state(nullptr),
    m_rng(rng),
    m_session_manager(session_manager),
    m_proc_fn(proc_fn),
@@ -37,6 +36,25 @@ Channel::Channel(std::function<void (const byte[], size_t)> output_fn,
 Channel::~Channel()
    {
    // So unique_ptr destructors run correctly
+   }
+
+Handshake_State& Channel::create_handshake_state()
+   {
+   if(m_state)
+      throw Internal_Error("create_handshake_state called during handshake");
+
+   m_state.reset(new_handshake_state());
+   return *m_state.get();
+   }
+
+void Channel::renegotiate(bool force_full_renegotiation)
+   {
+   if(m_state) // currently in handshake?
+      return;
+
+   m_state.reset(new_handshake_state());
+
+   initiate_handshake(*m_state.get(), force_full_renegotiation);
    }
 
 void Channel::set_protocol_version(Protocol_Version version)

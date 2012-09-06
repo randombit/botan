@@ -431,7 +431,6 @@ size_t read_record(std::vector<byte>& readbuf,
    if(record_len < mac_pad_iv_size)
       throw Decoding_Error("Record sent with invalid length");
 
-   printf("%016llX\n", msg_sequence);
    cipherstate->mac()->update_be(msg_sequence);
    cipherstate->mac()->update(readbuf[0]); // msg_type
 

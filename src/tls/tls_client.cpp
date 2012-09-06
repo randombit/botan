@@ -57,8 +57,9 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
    {
    const std::string srp_identifier = m_creds.srp_identifier("tls-client", m_hostname);
 
+   Handshake_State& state = create_handshake_state();
    const Protocol_Version version = m_policy.pref_version();
-   initiate_handshake(false, version, srp_identifier, next_protocol);
+   initiate_handshake(state, false, version, srp_identifier, next_protocol);
    }
 
 Handshake_State* Client::new_handshake_state()
@@ -76,29 +77,25 @@ Handshake_State* Client::new_handshake_state()
 /*
 * Send a new client hello to renegotiate
 */
-void Client::renegotiate(bool force_full_renegotiation)
+void Client::initiate_handshake(Handshake_State& state,
+                                bool force_full_renegotiation)
    {
-   if(m_state && m_state->client_hello())
-      return; // currently in active handshake
-
-   m_state.reset();
-
-   initiate_handshake(force_full_renegotiation,
+   initiate_handshake(state,
+                      force_full_renegotiation,
                       current_protocol_version());
    }
 
-void Client::initiate_handshake(bool force_full_renegotiation,
+void Client::initiate_handshake(Handshake_State& state,
+                                bool force_full_renegotiation,
                                 Protocol_Version version,
                                 const std::string& srp_identifier,
                                 std::function<std::string (std::vector<std::string>)> next_protocol)
    {
-   m_state.reset(new_handshake_state());
+   if(state.version().is_datagram_protocol())
+      state.set_expected_next(HELLO_VERIFY_REQUEST);
+   state.set_expected_next(SERVER_HELLO);
 
-   if(m_state->version().is_datagram_protocol())
-      m_state->set_expected_next(HELLO_VERIFY_REQUEST);
-   m_state->set_expected_next(SERVER_HELLO);
-
-   dynamic_cast<Client_Handshake_State&>(*m_state).client_npn_cb = next_protocol;
+   dynamic_cast<Client_Handshake_State&>(state).client_npn_cb = next_protocol;
 
    const bool send_npn_request = static_cast<bool>(next_protocol);
 
@@ -109,26 +106,26 @@ void Client::initiate_handshake(bool force_full_renegotiation,
          {
          if(srp_identifier == "" || session_info.srp_identifier() == srp_identifier)
             {
-            m_state->client_hello(new Client_Hello(
-               m_state->handshake_io(),
-               m_state->hash(),
+            state.client_hello(new Client_Hello(
+               state.handshake_io(),
+               state.hash(),
                m_policy,
                m_rng,
                m_secure_renegotiation.for_client_hello(),
                session_info,
                send_npn_request));
 
-            dynamic_cast<Client_Handshake_State&>(*m_state).resume_master_secret =
+            dynamic_cast<Client_Handshake_State&>(state).resume_master_secret =
                session_info.master_secret();
             }
          }
       }
 
-   if(!m_state->client_hello()) // not resuming
+   if(!state.client_hello()) // not resuming
       {
-      m_state->client_hello(new Client_Hello(
-         m_state->handshake_io(),
-         m_state->hash(),
+      state.client_hello(new Client_Hello(
+         state.handshake_io(),
+         state.hash(),
          version,
          m_policy,
          m_rng,
@@ -138,9 +135,9 @@ void Client::initiate_handshake(bool force_full_renegotiation,
          srp_identifier));
       }
 
-   m_secure_renegotiation.update(m_state->client_hello());
+   m_secure_renegotiation.update(state.client_hello());
 
-   set_maximum_fragment_size(m_state->client_hello()->fragment_size());
+   set_maximum_fragment_size(state.client_hello()->fragment_size());
    }
 
 /*
@@ -471,7 +468,7 @@ void Client::process_handshake_msg(Handshake_State& state,
          if(state.server_hello()->next_protocol_notification())
             {
             const std::string protocol =
-               dynamic_cast<Client_Handshake_State&>(*m_state).client_npn_cb(
+               dynamic_cast<Client_Handshake_State&>(state).client_npn_cb(
                   state.server_hello()->next_protocols());
 
             state.next_protocol(
