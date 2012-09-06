@@ -271,14 +271,17 @@ size_t read_record(std::vector<byte>& readbuf,
    {
    consumed = 0;
 
-   if(readbuf_pos < TLS_HEADER_SIZE) // header incomplete?
+   const size_t header_size =
+      (version.is_datagram_protocol()) ? DTLS_HEADER_SIZE : TLS_HEADER_SIZE;
+
+   if(readbuf_pos < header_size) // header incomplete?
       {
       if(size_t needed = fill_buffer_to(readbuf, readbuf_pos,
                                         input, input_sz, consumed,
-                                        TLS_HEADER_SIZE))
+                                        header_size))
          return needed;
 
-      BOTAN_ASSERT_EQUAL(readbuf_pos, TLS_HEADER_SIZE,
+      BOTAN_ASSERT_EQUAL(readbuf_pos, header_size,
                          "Have an entire header");
       }
 
@@ -350,12 +353,14 @@ size_t read_record(std::vector<byte>& readbuf,
 
    if(size_t needed = fill_buffer_to(readbuf, readbuf_pos,
                                      input, input_sz, consumed,
-                                     TLS_HEADER_SIZE + record_len))
+                                     header_size + record_len))
       return needed;
 
-   BOTAN_ASSERT_EQUAL(static_cast<size_t>(TLS_HEADER_SIZE) + record_len,
+   BOTAN_ASSERT_EQUAL(static_cast<size_t>(header_size) + record_len,
                       readbuf_pos,
                       "Have the full record");
+
+   byte* record_contents = &readbuf[header_size];
 
    if(!cipherstate) // Only handshake messages allowed here
       {
@@ -368,7 +373,7 @@ size_t read_record(std::vector<byte>& readbuf,
 
       msg_type = readbuf[0];
       msg.resize(record_len);
-      copy_mem(&msg[0], &readbuf[TLS_HEADER_SIZE], record_len);
+      copy_mem(&msg[0], record_contents, record_len);
 
       readbuf_pos = 0;
       return 0; // got a full record
@@ -381,7 +386,7 @@ size_t read_record(std::vector<byte>& readbuf,
 
    if(StreamCipher* sc = cipherstate->stream_cipher())
       {
-      sc->cipher1(&readbuf[TLS_HEADER_SIZE], record_len);
+      sc->cipher1(record_contents, record_len);
       }
    else if(BlockCipher* bc = cipherstate->block_cipher())
       {
@@ -390,7 +395,7 @@ size_t read_record(std::vector<byte>& readbuf,
       BOTAN_ASSERT(record_len % block_size == 0,
                    "Buffer is an even multiple of block size");
 
-      byte* buf = &readbuf[TLS_HEADER_SIZE];
+      byte* buf = record_contents;
 
       const size_t blocks = record_len / block_size;
 
@@ -420,7 +425,7 @@ size_t read_record(std::vector<byte>& readbuf,
    */
    const size_t pad_size =
       tls_padding_check(version, block_size,
-                        &readbuf[TLS_HEADER_SIZE], record_len);
+                        record_contents, record_len);
 
    const size_t mac_pad_iv_size = mac_size + pad_size + iv_size;
 
@@ -439,19 +444,19 @@ size_t read_record(std::vector<byte>& readbuf,
    const u16bit plain_length = record_len - mac_pad_iv_size;
 
    cipherstate->mac()->update_be(plain_length);
-   cipherstate->mac()->update(&readbuf[TLS_HEADER_SIZE + iv_size], plain_length);
+   cipherstate->mac()->update(&record_contents[iv_size], plain_length);
 
    std::vector<byte> mac_buf(mac_size);
    cipherstate->mac()->final(&mac_buf[0]);
 
    const size_t mac_offset = record_len - (mac_size + pad_size);
 
-   if(!same_mem(&readbuf[TLS_HEADER_SIZE + mac_offset], &mac_buf[0], mac_size))
+   if(!same_mem(&record_contents[mac_offset], &mac_buf[0], mac_size))
       throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure");
 
    msg_type = readbuf[0];
-   msg.assign(&readbuf[TLS_HEADER_SIZE + iv_size],
-              &readbuf[TLS_HEADER_SIZE + iv_size + plain_length]);
+   msg.assign(&record_contents[iv_size],
+              &record_contents[iv_size + plain_length]);
 
    readbuf_pos = 0;
    return 0;
