@@ -11,9 +11,8 @@ Version 1.10.4, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Avoid a conditional operation in the power mod implementations on if
-  a nibble of the exponenent was zero or not. This may help protect
-  against some timing attacks, especially for the Montgomery
-  implementation.
+  a nibble of the exponent was zero or not. This may help protect
+  against certain forms of side channel attacks.
 
 * The SRP6 code was checking for invalid values as specified in RFC
   5054, specifically values equal to zero mod p. However SRP would
