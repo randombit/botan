@@ -26,6 +26,47 @@ namespace TLS {
 class Session_Keys;
 
 /**
+* TLS Cipher State
+*/
+class Connection_Cipher_State
+   {
+   public:
+      /**
+      * Create an empty (NULL_WITH_NULL_NULL) cipher state
+      */
+      Connection_Cipher_State() {}
+
+      /**
+      * Initialize a new cipher state
+      */
+      Connection_Cipher_State(Protocol_Version version,
+                              Connection_Side side,
+                              const Ciphersuite& suite,
+                              const Session_Keys& keys);
+
+      BlockCipher* block_cipher() { return m_block_cipher.get(); }
+
+      StreamCipher* stream_cipher() { return m_stream_cipher.get(); }
+
+      MessageAuthenticationCode* mac() { return m_mac.get(); }
+
+      secure_vector<byte>& cbc_state() { return m_block_cipher_cbc_state; }
+
+      size_t block_size() const { return m_block_size; }
+
+      size_t mac_size() const { return m_mac->output_length(); }
+
+      size_t iv_size() const { return m_iv_size; }
+   private:
+      std::unique_ptr<BlockCipher> m_block_cipher;
+      secure_vector<byte> m_block_cipher_cbc_state;
+      std::unique_ptr<StreamCipher> m_stream_cipher;
+      std::unique_ptr<MessageAuthenticationCode> m_mac;
+      size_t m_block_size = 0;
+      size_t m_iv_size = 0;
+   };
+
+/**
 * TLS Record Writer
 */
 class BOTAN_DLL Record_Writer
@@ -61,16 +102,10 @@ class BOTAN_DLL Record_Writer
 
       std::vector<byte> m_writebuf;
 
-      std::unique_ptr<BlockCipher> m_write_block_cipher;
-      secure_vector<byte> m_write_block_cipher_cbc_state;
-      std::unique_ptr<StreamCipher> m_write_stream_cipher;
-      std::unique_ptr<MessageAuthenticationCode> m_write_mac;
+      std::unique_ptr<Connection_Cipher_State> m_write_cipherstate;
 
       RandomNumberGenerator& m_rng;
 
-      size_t m_block_size = 0;
-      size_t m_mac_size = 0;
-      size_t m_iv_size = 0;
       size_t m_max_fragment = 0;
 
       u64bit m_write_seq_no = 0;

@@ -13,7 +13,6 @@
 #include <botan/internal/assert.h>
 #include <botan/internal/xor_buf.h>
 #include <botan/loadstor.h>
-#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -29,7 +28,6 @@ Record_Writer::Record_Writer(std::function<void (const byte[], size_t)> out,
    m_rng(rng)
    {
    reset();
-   set_maximum_fragment_size(0);
    }
 
 void Record_Writer::set_maximum_fragment_size(size_t max_fragment)
@@ -47,15 +45,9 @@ void Record_Writer::reset()
    {
    set_maximum_fragment_size(0);
 
-   m_write_block_cipher.reset();
-   zeroise(m_write_block_cipher_cbc_state);
-   m_write_stream_cipher.reset();
-   m_write_mac.reset();
+   m_write_cipherstate.reset();
 
    m_version = Protocol_Version();
-   m_block_size = 0;
-   m_mac_size = 0;
-   m_iv_size = 0;
 
    m_write_seq_no = 0;
    }
@@ -76,11 +68,6 @@ void Record_Writer::change_cipher_spec(Connection_Side side,
                                        const Session_Keys& keys,
                                        byte compression_method)
    {
-   m_write_block_cipher.reset();
-   m_write_block_cipher_cbc_state.clear();
-   m_write_stream_cipher.reset();
-   m_write_mac.reset();
-
    if(compression_method != NO_COMPRESSION)
       throw Internal_Error("Negotiated unknown compression algorithm");
 
@@ -92,56 +79,9 @@ void Record_Writer::change_cipher_spec(Connection_Side side,
    */
    m_write_seq_no = 0;
 
-   SymmetricKey mac_key, cipher_key;
-   InitializationVector iv;
-
-   if(side == CLIENT)
-      {
-      cipher_key = keys.client_cipher_key();
-      iv = keys.client_iv();
-      mac_key = keys.client_mac_key();
-      }
-   else
-      {
-      cipher_key = keys.server_cipher_key();
-      iv = keys.server_iv();
-      mac_key = keys.server_mac_key();
-      }
-
-   const std::string cipher_algo = suite.cipher_algo();
-   const std::string mac_algo = suite.mac_algo();
-
-   Algorithm_Factory& af = global_state().algorithm_factory();
-
-   if(const BlockCipher* bc = af.prototype_block_cipher(cipher_algo))
-      {
-      m_write_block_cipher.reset(bc->clone());
-      m_write_block_cipher->set_key(cipher_key);
-      m_write_block_cipher_cbc_state = iv.bits_of();
-      m_block_size = bc->block_size();
-
-      if(m_version.supports_explicit_cbc_ivs())
-         m_iv_size = m_block_size;
-      else
-         m_iv_size = 0;
-      }
-   else if(const StreamCipher* sc = af.prototype_stream_cipher(cipher_algo))
-      {
-      m_write_stream_cipher.reset(sc->clone());
-      m_write_stream_cipher->set_key(cipher_key);
-      m_block_size = 0;
-      m_iv_size = 0;
-      }
-   else
-      throw Invalid_Argument("Record_Writer: Unknown cipher " + cipher_algo);
-
-   if(m_version == Protocol_Version::SSL_V3)
-      m_write_mac.reset(af.make_mac("SSL3-MAC(" + mac_algo + ")"));
-   else
-      m_write_mac.reset(af.make_mac("HMAC(" + mac_algo + ")"));
-
-   m_write_mac->set_key(mac_key);
-   m_mac_size = m_write_mac->output_length();
+   m_write_cipherstate.reset(
+      new Connection_Cipher_State(m_version, side, suite, keys)
+      );
    }
 
 /*
@@ -155,15 +95,17 @@ void Record_Writer::send_array(byte type, const byte input[], size_t length)
    /*
    * If using CBC mode in SSLv3/TLS v1.0, send a single byte of
    * plaintext to randomize the (implicit) IV of the following main
-   * block. If using a stream cipher, or TLS v1.1, this isn't
-   * necessary.
+   * block. If using a stream cipher, or TLS v1.1 or higher, this
+   * isn't necessary.
    *
    * An empty record also works but apparently some implementations do
    * not like this (https://bugzilla.mozilla.org/show_bug.cgi?id=665814)
    *
    * See http://www.openssl.org/~bodo/tls-cbc.txt for background.
    */
-   if((type == APPLICATION) && (m_block_size > 0) && (m_iv_size == 0))
+   if((type == APPLICATION) &&
+      (m_write_cipherstate->block_size() > 0) &&
+      (m_write_cipherstate->iv_size() == 0))
       {
       send_record(type, &input[0], 1);
       input += 1;
@@ -188,7 +130,7 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
    if(length >= MAX_PLAINTEXT_SIZE)
       throw Internal_Error("Record_Writer: Compressed packet is too big");
 
-   if(m_mac_size == 0) // initial unencrypted handshake records
+   if(!m_write_cipherstate) // initial unencrypted handshake records
       {
       m_writebuf[0] = type;
       m_writebuf[1] = m_version.major_version();
@@ -202,22 +144,26 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
       return;
       }
 
-   m_write_mac->update_be(m_write_seq_no);
-   m_write_mac->update(type);
+   m_write_cipherstate->mac()->update_be(m_write_seq_no);
+   m_write_cipherstate->mac()->update(type);
 
    if(m_version != Protocol_Version::SSL_V3)
       {
-      m_write_mac->update(m_version.major_version());
-      m_write_mac->update(m_version.minor_version());
+      m_write_cipherstate->mac()->update(m_version.major_version());
+      m_write_cipherstate->mac()->update(m_version.minor_version());
       }
 
-   m_write_mac->update(get_byte<u16bit>(0, length));
-   m_write_mac->update(get_byte<u16bit>(1, length));
-   m_write_mac->update(input, length);
+   m_write_cipherstate->mac()->update(get_byte<u16bit>(0, length));
+   m_write_cipherstate->mac()->update(get_byte<u16bit>(1, length));
+   m_write_cipherstate->mac()->update(input, length);
+
+   const size_t block_size = m_write_cipherstate->block_size();
+   const size_t iv_size = m_write_cipherstate->iv_size();
+   const size_t mac_size = m_write_cipherstate->mac_size();
 
    const size_t buf_size = round_up(
-      m_iv_size + length + m_mac_size + (m_block_size ? 1 : 0),
-      m_block_size);
+      iv_size + length + mac_size + (block_size ? 1 : 0),
+      block_size);
 
    if(buf_size >= MAX_CIPHERTEXT_SIZE)
       throw Internal_Error("Record_Writer: Record is too big");
@@ -234,22 +180,22 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
 
    byte* buf_write_ptr = &m_writebuf[TLS_HEADER_SIZE];
 
-   if(m_iv_size)
+   if(iv_size)
       {
-      m_rng.randomize(buf_write_ptr, m_iv_size);
-      buf_write_ptr += m_iv_size;
+      m_rng.randomize(buf_write_ptr, iv_size);
+      buf_write_ptr += iv_size;
       }
 
    copy_mem(buf_write_ptr, input, length);
    buf_write_ptr += length;
 
-   m_write_mac->final(buf_write_ptr);
-   buf_write_ptr += m_mac_size;
+   m_write_cipherstate->mac()->final(buf_write_ptr);
+   buf_write_ptr += mac_size;
 
-   if(m_block_size)
+   if(block_size)
       {
       const size_t pad_val =
-         buf_size - (m_iv_size + length + m_mac_size + 1);
+         buf_size - (iv_size + length + mac_size + 1);
 
       for(size_t i = 0; i != pad_val + 1; ++i)
          {
@@ -261,32 +207,35 @@ void Record_Writer::send_record(byte type, const byte input[], size_t length)
    if(buf_size > MAX_CIPHERTEXT_SIZE)
       throw Internal_Error("Produced ciphertext larger than protocol allows");
 
-   if(m_write_stream_cipher)
+   if(StreamCipher* sc = m_write_cipherstate->stream_cipher())
       {
-      m_write_stream_cipher->cipher1(&m_writebuf[TLS_HEADER_SIZE], buf_size);
+      sc->cipher1(&m_writebuf[TLS_HEADER_SIZE], buf_size);
       }
-   else
+   else if(BlockCipher* bc = m_write_cipherstate->block_cipher())
       {
-      const size_t bs = m_block_size;
+      secure_vector<byte>& cbc_state = m_write_cipherstate->cbc_state();
 
-      BOTAN_ASSERT(buf_size % bs == 0,
+      BOTAN_ASSERT(buf_size % block_size == 0,
                    "Buffer is an even multiple of block size");
 
       byte* buf = &m_writebuf[TLS_HEADER_SIZE];
 
-      const size_t blocks = buf_size / bs;
+      const size_t blocks = buf_size / block_size;
 
-      xor_buf(&buf[0], &m_write_block_cipher_cbc_state[0], m_block_size);
-      m_write_block_cipher->encrypt(&buf[0]);
+      xor_buf(&buf[0], &cbc_state[0], block_size);
+      bc->encrypt(&buf[0]);
 
       for(size_t i = 1; i <= blocks; ++i)
          {
-         xor_buf(&buf[bs*i], &buf[bs*(i-1)], bs);
-         m_write_block_cipher->encrypt(&buf[bs*i]);
+         xor_buf(&buf[block_size*i], &buf[block_size*(i-1)], block_size);
+         bc->encrypt(&buf[block_size*i]);
          }
 
-      m_write_block_cipher_cbc_state.assign(&buf[bs*(blocks-1)], &buf[bs*blocks]);
+      cbc_state.assign(&buf[block_size*(blocks-1)],
+                       &buf[block_size*blocks]);
       }
+   else
+      throw Internal_Error("NULL cipher not supported");
 
    m_output_fn(&m_writebuf[0], TLS_HEADER_SIZE + buf_size);
 
