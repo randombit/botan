@@ -32,11 +32,6 @@ class Connection_Cipher_State
    {
    public:
       /**
-      * Create an empty (NULL_WITH_NULL_NULL) cipher state
-      */
-      Connection_Cipher_State() {}
-
-      /**
       * Initialize a new cipher state
       */
       Connection_Cipher_State(Protocol_Version version,
@@ -68,6 +63,15 @@ class Connection_Cipher_State
 
 /**
 * Create a TLS record
+* @param write_buffer the output record is placed here
+* @param msg_type is the type of the message (handshake, alert, ...)
+* @param msg is the plaintext message
+* @param msg_length is the length of msg
+* @param msg_sequence_number is the sequence number
+* @param version is the protocol version
+* @param cipherstate is the writing cipher state
+* @param rng is a random number generator
+* @return number of bytes written to write_buffer
 */
 size_t write_record(std::vector<byte>& write_buffer,
                     byte msg_type, const byte msg[], size_t msg_length,
@@ -75,6 +79,21 @@ size_t write_record(std::vector<byte>& write_buffer,
                     Protocol_Version version,
                     Connection_Cipher_State* cipherstate,
                     RandomNumberGenerator& rng);
+
+/**
+* Decode a TLS record
+* @return zero if full message, else number of bytes still needed
+*/
+size_t read_record(std::vector<byte>& read_buffer,
+                   size_t& read_buffer_position,
+                   const byte input[],
+                   size_t input_length,
+                   size_t& input_consumed,
+                   byte& msg_type,
+                   std::vector<byte>& msg,
+                   u64bit msg_sequence,
+                   Protocol_Version version,
+                   Connection_Cipher_State* cipherstate);
 
 /**
 * TLS Record Writer
@@ -164,11 +183,6 @@ class BOTAN_DLL Record_Reader
       Record_Reader(const Record_Reader&) = delete;
       Record_Reader& operator=(const Record_Reader&) = delete;
    private:
-      size_t fill_buffer_to(const byte*& input,
-                            size_t& input_size,
-                            size_t& input_consumed,
-                            size_t desired);
-
       std::vector<byte> m_readbuf;
       std::vector<byte> m_macbuf;
       size_t m_readbuf_pos = 0;

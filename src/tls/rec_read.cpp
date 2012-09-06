@@ -6,12 +6,8 @@
 */
 
 #include <botan/tls_record.h>
-#include <botan/lookup.h>
-#include <botan/loadstor.h>
-#include <botan/internal/tls_session_key.h>
+#include <botan/tls_exceptn.h>
 #include <botan/internal/rounding.h>
-#include <botan/internal/assert.h>
-#include <botan/internal/xor_buf.h>
 
 namespace Botan {
 
@@ -86,82 +82,6 @@ void Record_Reader::change_cipher_spec(Connection_Side side,
    m_macbuf.resize(m_read_cipherstate->mac_size());
    }
 
-size_t Record_Reader::fill_buffer_to(const byte*& input,
-                                     size_t& input_size,
-                                     size_t& input_consumed,
-                                     size_t desired)
-   {
-   if(desired <= m_readbuf_pos)
-      return 0; // already have it
-
-   const size_t space_available = (m_readbuf.size() - m_readbuf_pos);
-   const size_t taken = std::min(input_size, desired - m_readbuf_pos);
-
-   if(taken > space_available)
-      throw TLS_Exception(Alert::RECORD_OVERFLOW,
-                          "Record is larger than allowed maximum size");
-
-   copy_mem(&m_readbuf[m_readbuf_pos], input, taken);
-   m_readbuf_pos += taken;
-   input_consumed += taken;
-   input_size -= taken;
-   input += taken;
-
-   return (desired - m_readbuf_pos); // how many bytes do we still need?
-   }
-
-namespace {
-
-/*
-* Checks the TLS padding. Returns 0 if the padding is invalid (we
-* count the padding_length field as part of the padding size so a
-* valid padding will always be at least one byte long), or the
-* length of the padding otherwise.
-*
-* Returning 0 in the error case should ensure the MAC check will fail.
-* This approach is suggested in section 6.2.3.2 of RFC 5246.
-*
-* Also returns 0 if block_size == 0, so can be safely called with a
-* stream cipher in use.
-*/
-size_t tls_padding_check(Protocol_Version version,
-                         size_t block_size,
-                         const byte record[],
-                         size_t record_len)
-   {
-   if(block_size == 0 || record_len == 0 || record_len % block_size != 0)
-      return 0;
-
-   const size_t padding_length = record[(record_len-1)];
-
-   if(padding_length >= record_len)
-      return 0;
-
-   /*
-   * SSL v3 requires that the padding be less than the block size
-   * but not does specify the value of the padding bytes.
-   */
-   if(version == Protocol_Version::SSL_V3)
-      {
-      if(padding_length > 0 && padding_length < block_size)
-         return (padding_length + 1);
-      else
-         return 0;
-      }
-
-   /*
-   * TLS v1.0 and up require all the padding bytes be the same value
-   * and allows up to 255 bytes.
-   */
-   for(size_t i = 0; i != padding_length; ++i)
-      if(record[(record_len-i-1)] != padding_length)
-         return 0;
-
-   return padding_length + 1;
-   }
-
-}
-
 /*
 * Retrieve the next record
 */
@@ -171,187 +91,27 @@ size_t Record_Reader::add_input(const byte input_array[], size_t input_sz,
                                 std::vector<byte>& msg,
                                 u64bit& msg_sequence)
    {
-   const byte* input = &input_array[0];
+   const size_t needed = read_record(m_readbuf,
+                                     m_readbuf_pos,
+                                     input_array,
+                                     input_sz,
+                                     consumed,
+                                     msg_type,
+                                     msg,
+                                     m_read_seq_no,
+                                     m_version,
+                                     m_read_cipherstate.get());
 
-   consumed = 0;
-
-   if(m_readbuf_pos < TLS_HEADER_SIZE) // header incomplete?
-      {
-      if(size_t needed = fill_buffer_to(input, input_sz, consumed, TLS_HEADER_SIZE))
-         return needed;
-
-      BOTAN_ASSERT_EQUAL(m_readbuf_pos, TLS_HEADER_SIZE,
-                         "Have an entire header");
-      }
-
-   // Possible SSLv2 format client hello
-   if((!m_read_cipherstate) && (m_readbuf[0] & 0x80) && (m_readbuf[2] == 1))
-      {
-      if(m_readbuf[3] == 0 && m_readbuf[4] == 2)
-         throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                             "Client claims to only support SSLv2, rejecting");
-
-      if(m_readbuf[3] >= 3) // SSLv2 mapped TLS hello, then?
-         {
-         const size_t record_len = make_u16bit(m_readbuf[0], m_readbuf[1]) & 0x7FFF;
-
-         if(size_t needed = fill_buffer_to(input, input_sz, consumed, record_len + 2))
-            return needed;
-
-         BOTAN_ASSERT_EQUAL(m_readbuf_pos, (record_len + 2),
-                            "Have the entire SSLv2 hello");
-
-         msg_type = HANDSHAKE;
-
-         msg.resize(record_len + 4);
-
-         // Fake v3-style handshake message wrapper
-         msg[0] = CLIENT_HELLO_SSLV2;
-         msg[1] = 0;
-         msg[2] = m_readbuf[0] & 0x7F;
-         msg[3] = m_readbuf[1];
-
-         copy_mem(&msg[4], &m_readbuf[2], m_readbuf_pos - 2);
-         m_readbuf_pos = 0;
-         msg_sequence = m_read_seq_no++;
-         return 0;
-         }
-      }
-
-   if(m_readbuf[0] != CHANGE_CIPHER_SPEC &&
-      m_readbuf[0] != ALERT &&
-      m_readbuf[0] != HANDSHAKE &&
-      m_readbuf[0] != APPLICATION_DATA &&
-      m_readbuf[0] != HEARTBEAT)
-      {
-      throw Unexpected_Message(
-         "Unknown record type " + std::to_string(m_readbuf[0]) +
-         " from counterparty");
-      }
-
-   const size_t record_len = make_u16bit(m_readbuf[3], m_readbuf[4]);
-
-   if(m_version.major_version())
-      {
-      if(m_readbuf[1] != m_version.major_version() ||
-         m_readbuf[2] != m_version.minor_version())
-         {
-         throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                             "Got unexpected version from counterparty");
-         }
-      }
-
-   if(record_len > MAX_CIPHERTEXT_SIZE)
-      throw TLS_Exception(Alert::RECORD_OVERFLOW,
-                          "Got message that exceeds maximum size");
-
-   if(size_t needed = fill_buffer_to(input, input_sz, consumed,
-                                     TLS_HEADER_SIZE + record_len))
+   if(needed)
       return needed;
 
-   BOTAN_ASSERT_EQUAL(static_cast<size_t>(TLS_HEADER_SIZE) + record_len,
-                      m_readbuf_pos,
-                      "Have the full record");
-
-   if(!m_read_cipherstate) // Only handshake messages allowed here
-      {
-      if(m_readbuf[0] != CHANGE_CIPHER_SPEC &&
-         m_readbuf[0] != ALERT &&
-         m_readbuf[0] != HANDSHAKE)
-         {
-         throw Decoding_Error("Invalid msg type received during handshake");
-         }
-
-      msg_type = m_readbuf[0];
-      msg.resize(record_len);
-      copy_mem(&msg[0], &m_readbuf[TLS_HEADER_SIZE], record_len);
-
-      m_readbuf_pos = 0;
-      msg_sequence = m_read_seq_no++;
-      return 0; // got a full record
-      }
-
-   // Otherwise, decrypt, check MAC, return plaintext
-   const size_t block_size = m_read_cipherstate->block_size();
-   const size_t iv_size = m_read_cipherstate->iv_size();
-   const size_t mac_size = m_read_cipherstate->mac_size();
-
-   if(StreamCipher* sc = m_read_cipherstate->stream_cipher())
-      {
-      sc->cipher1(&m_readbuf[TLS_HEADER_SIZE], record_len);
-      }
-   else if(BlockCipher* bc = m_read_cipherstate->block_cipher())
-      {
-      secure_vector<byte>& cbc_state = m_read_cipherstate->cbc_state();
-
-      BOTAN_ASSERT(record_len % block_size == 0,
-                   "Buffer is an even multiple of block size");
-
-      byte* buf = &m_readbuf[TLS_HEADER_SIZE];
-
-      const size_t blocks = record_len / block_size;
-
-      secure_vector<byte> last_ciphertext(block_size);
-      copy_mem(&last_ciphertext[0], &buf[0], block_size);
-
-      bc->decrypt(&buf[0]);
-      xor_buf(&buf[0], &cbc_state[0], block_size);
-
-      for(size_t i = 1; i <= blocks; ++i)
-         {
-         secure_vector<byte> last_ciphertext2(&buf[block_size*i], &buf[block_size*(i+1)]);
-         bc->decrypt(&buf[block_size*i]);
-         xor_buf(&buf[block_size*i], &last_ciphertext[0], block_size);
-         std::swap(last_ciphertext, last_ciphertext2);
-         }
-      cbc_state = last_ciphertext;
-      }
-   else
-      throw Internal_Error("NULL cipher not supported");
-
-   /*
-   * This is actually padding_length + 1 because both the padding and
-   * padding_length fields are padding from our perspective.
-   */
-   const size_t pad_size =
-      tls_padding_check(m_version, block_size,
-                        &m_readbuf[TLS_HEADER_SIZE], record_len);
-
-   const size_t mac_pad_iv_size = m_macbuf.size() + pad_size + iv_size;
-
-   if(record_len < mac_pad_iv_size)
-      throw Decoding_Error("Record sent with invalid length");
-
-   m_read_cipherstate->mac()->update_be(m_read_seq_no);
-   m_read_cipherstate->mac()->update(m_readbuf[0]); // msg_type
-
-   if(m_version != Protocol_Version::SSL_V3)
-      {
-      m_read_cipherstate->mac()->update(m_version.major_version());
-      m_read_cipherstate->mac()->update(m_version.minor_version());
-      }
-
-   const u16bit plain_length = record_len - mac_pad_iv_size;
-
-   m_read_cipherstate->mac()->update_be(plain_length);
-   m_read_cipherstate->mac()->update(&m_readbuf[TLS_HEADER_SIZE + iv_size], plain_length);
-
-   m_read_cipherstate->mac()->final(&m_macbuf[0]);
-
-   const size_t mac_offset = record_len - (m_macbuf.size() + pad_size);
-
-   if(!same_mem(&m_readbuf[TLS_HEADER_SIZE + mac_offset], &m_macbuf[0], m_macbuf.size()))
-      throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure");
-
-   if(plain_length > m_max_fragment)
+   // full message decoded
+   if(msg.size() > m_max_fragment)
       throw TLS_Exception(Alert::RECORD_OVERFLOW, "Plaintext record is too large");
 
-   msg_type = m_readbuf[0];
-   msg_sequence = m_read_seq_no++;
-   msg.assign(&m_readbuf[TLS_HEADER_SIZE + iv_size],
-              &m_readbuf[TLS_HEADER_SIZE + iv_size + plain_length]);
+   msg_sequence = m_read_seq_no;
+   m_read_seq_no += 1;
 
-   m_readbuf_pos = 0;
    return 0;
    }
 
