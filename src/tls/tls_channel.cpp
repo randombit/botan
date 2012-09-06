@@ -9,6 +9,7 @@
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_heartbeats.h>
+#include <botan/internal/tls_record.h>
 #include <botan/internal/assert.h>
 #include <botan/internal/rounding.h>
 #include <botan/loadstor.h>
@@ -28,29 +29,29 @@ Channel::Channel(std::function<void (const byte[], size_t)> output_fn,
    m_session_manager(session_manager),
    m_proc_fn(proc_fn),
    m_output_fn(output_fn),
-   m_writebuf(TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE)
+   m_writebuf(TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE),
+   m_readbuf(TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE)
    {
    }
 
 Channel::~Channel()
    {
+   // So unique_ptr destructors run correctly
    }
 
 void Channel::set_protocol_version(Protocol_Version version)
    {
+   m_current_version = version;
    m_state->set_version(version);
-   m_reader.set_version(version);
    }
 
 Protocol_Version Channel::current_protocol_version() const
    {
-   return m_reader.get_version();
+   return m_current_version;
    }
 
 void Channel::set_maximum_fragment_size(size_t max_fragment)
    {
-   m_reader.set_maximum_fragment_size(max_fragment);
-
    if(max_fragment == 0)
       m_max_fragment = MAX_PLAINTEXT_SIZE;
    else
@@ -59,10 +60,20 @@ void Channel::set_maximum_fragment_size(size_t max_fragment)
 
 void Channel::change_cipher_spec_reader(Connection_Side side)
    {
-   m_reader.change_cipher_spec(side,
-                               m_state->ciphersuite(),
-                               m_state->session_keys(),
-                               m_state->server_hello()->compression_method());
+   if(m_state->server_hello()->compression_method()!= NO_COMPRESSION)
+      throw Internal_Error("Negotiated unknown compression algorithm");
+
+   m_read_seq_no = 0;
+
+   // flip side as we are reading
+   side = (side == CLIENT) ? SERVER : CLIENT;
+
+   m_read_cipherstate.reset(
+      new Connection_Cipher_State(current_protocol_version(),
+                                  side,
+                                  m_state->ciphersuite(),
+                                  m_state->session_keys())
+      );
    }
 
 void Channel::change_cipher_spec_writer(Connection_Side side)
@@ -114,11 +125,26 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
 
          size_t consumed = 0;
 
-         const size_t needed = m_reader.add_input(buf, buf_size,
-                                                  consumed,
-                                                  rec_type,
-                                                  record,
-                                                  record_number);
+         const size_t needed = TLS::read_record(m_readbuf,
+                                                m_readbuf_pos,
+                                                buf,
+                                                buf_size,
+                                                consumed,
+                                                rec_type,
+                                                record,
+                                                m_read_seq_no,
+                                                m_current_version,
+                                                m_read_cipherstate.get());
+
+         if(needed == 0) // full message decoded
+            {
+            if(record.size() > m_max_fragment)
+               throw TLS_Exception(Alert::RECORD_OVERFLOW,
+                                   "Plaintext record is too large");
+
+            record_number = m_read_seq_no;
+            m_read_seq_no += 1;
+            }
 
          BOTAN_ASSERT(consumed <= buf_size,
                       "Record reader consumed sane amount");
@@ -206,7 +232,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
             if(alert_msg.type() == Alert::CLOSE_NOTIFY)
                {
                if(m_connection_closed)
-                  m_reader.reset();
+                  m_read_cipherstate.reset();
                else
                   send_alert(Alert(Alert::CLOSE_NOTIFY)); // reply in kind
                }
@@ -225,7 +251,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
                m_state.reset();
 
                m_write_cipherstate.reset();
-               m_reader.reset();
+               m_read_cipherstate.reset();
                }
             }
          else

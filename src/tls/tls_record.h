@@ -95,59 +95,6 @@ size_t read_record(std::vector<byte>& read_buffer,
                    Protocol_Version version,
                    Connection_Cipher_State* cipherstate);
 
-/**
-* TLS Record Reader
-*/
-class BOTAN_DLL Record_Reader
-   {
-   public:
-
-      /**
-      * @param input new input data (may be NULL if input_size == 0)
-      * @param input_size size of input in bytes
-      * @param input_consumed is set to the number of bytes of input
-      *        that were consumed
-      * @param msg_type is set to the type of the message just read if
-      *        this function returns 0
-      * @param msg is set to the contents of the record
-      * @param msg_sequence is set to this records sequence number
-      * @return number of bytes still needed (minimum), or 0 if success
-      */
-      size_t add_input(const byte input[], size_t input_size,
-                       size_t& input_consumed,
-                       byte& msg_type,
-                       std::vector<byte>& msg,
-                       u64bit& msg_sequence);
-
-      void change_cipher_spec(Connection_Side side,
-                              const Ciphersuite& suite,
-                              const Session_Keys& keys,
-                              byte compression_method);
-
-      void set_version(Protocol_Version version);
-
-      Protocol_Version get_version() const;
-
-      void reset();
-
-      void set_maximum_fragment_size(size_t max_fragment);
-
-      Record_Reader();
-
-      Record_Reader(const Record_Reader&) = delete;
-      Record_Reader& operator=(const Record_Reader&) = delete;
-   private:
-      std::vector<byte> m_readbuf;
-      size_t m_readbuf_pos = 0;
-
-      std::unique_ptr<Connection_Cipher_State> m_read_cipherstate;
-
-      size_t m_max_fragment = MAX_PLAINTEXT_SIZE;
-
-      u64bit m_read_seq_no = 0;
-      Protocol_Version m_version;
-   };
-
 }
 
 }

@@ -5,7 +5,7 @@
 * Released under the terms of the Botan license
 */
 
-#include <botan/tls_record.h>
+#include <botan/internal/tls_record.h>
 #include <botan/libstate.h>
 #include <botan/loadstor.h>
 #include <botan/internal/tls_session_key.h>

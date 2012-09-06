@@ -9,7 +9,6 @@
 #define BOTAN_TLS_CHANNEL_H__
 
 #include <botan/tls_policy.h>
-#include <botan/tls_record.h>
 #include <botan/tls_session.h>
 #include <botan/tls_alert.h>
 #include <botan/tls_session_manager.h>
@@ -164,9 +163,7 @@ class BOTAN_DLL Channel
 
       RandomNumberGenerator& m_rng;
       Session_Manager& m_session_manager;
-   private:
-      Record_Reader m_reader;
-   protected:
+
       std::vector<X509_Certificate> m_peer_certs;
 
       Secure_Renegotiation_State m_secure_renegotiation;
@@ -176,13 +173,23 @@ class BOTAN_DLL Channel
 
       void write_record(byte type, const byte input[], size_t length);
 
+      /* callbacks */
       std::function<void (const byte[], size_t, Alert)> m_proc_fn;
       std::function<void (const byte[], size_t)> m_output_fn;
 
+      /* writing cipher state */
       std::vector<byte> m_writebuf;
-      std::unique_ptr<Connection_Cipher_State> m_write_cipherstate;
+      std::unique_ptr<class Connection_Cipher_State> m_write_cipherstate;
       u64bit m_write_seq_no = 0;
 
+      /* reading cipher state */
+      std::vector<byte> m_readbuf;
+      size_t m_readbuf_pos = 0;
+      std::unique_ptr<class Connection_Cipher_State> m_read_cipherstate;
+      u64bit m_read_seq_no = 0;
+
+      /* connection parameters */
+      Protocol_Version m_current_version;
       size_t m_max_fragment = MAX_PLAINTEXT_SIZE;
 
       bool m_peer_supports_heartbeats = false;
