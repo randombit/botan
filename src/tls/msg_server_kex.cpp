@@ -28,14 +28,14 @@ namespace TLS {
 * Create a new Server Key Exchange message
 */
 Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
-                                         Handshake_State* state,
+                                         Handshake_State& state,
                                          const Policy& policy,
                                          Credentials_Manager& creds,
                                          RandomNumberGenerator& rng,
                                          const Private_Key* signing_key)
    {
-   const std::string hostname = state->client_hello()->sni_hostname();
-   const std::string kex_algo = state->ciphersuite().kex_algo();
+   const std::string hostname = state.client_hello()->sni_hostname();
+   const std::string kex_algo = state.ciphersuite().kex_algo();
 
    if(kex_algo == "PSK" || kex_algo == "DHE_PSK" || kex_algo == "ECDHE_PSK")
       {
@@ -57,7 +57,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
    else if(kex_algo == "ECDH" || kex_algo == "ECDHE_PSK")
       {
       const std::vector<std::string>& curves =
-         state->client_hello()->supported_ecc_curves();
+         state.client_hello()->supported_ecc_curves();
 
       if(curves.empty())
          throw Internal_Error("Client sent no ECC extension but we negotiated ECDH");
@@ -90,7 +90,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       }
    else if(kex_algo == "SRP_SHA")
       {
-      const std::string srp_identifier = state->client_hello()->srp_identifier();
+      const std::string srp_identifier = state.client_hello()->srp_identifier();
 
       std::string group_id;
       BigInt v;
@@ -120,22 +120,22 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
    else if(kex_algo != "PSK")
       throw Internal_Error("Server_Key_Exchange: Unknown kex type " + kex_algo);
 
-   if(state->ciphersuite().sig_algo() != "")
+   if(state.ciphersuite().sig_algo() != "")
       {
       BOTAN_ASSERT(signing_key, "Signing key was set");
 
       std::pair<std::string, Signature_Format> format =
-         state->choose_sig_format(signing_key, m_hash_algo, m_sig_algo, false, policy);
+         state.choose_sig_format(signing_key, m_hash_algo, m_sig_algo, false, policy);
 
       PK_Signer signer(*signing_key, format.first, format.second);
 
-      signer.update(state->client_hello()->random());
-      signer.update(state->server_hello()->random());
+      signer.update(state.client_hello()->random());
+      signer.update(state.server_hello()->random());
       signer.update(params());
       m_signature = signer.signature(rng);
       }
 
-   state->hash().update(io.send(*this));
+   state.hash().update(io.send(*this));
    }
 
 /**
@@ -255,17 +255,17 @@ std::vector<byte> Server_Key_Exchange::serialize() const
 * Verify a Server Key Exchange message
 */
 bool Server_Key_Exchange::verify(const X509_Certificate& cert,
-                                 const Handshake_State* state) const
+                                 const Handshake_State& state) const
    {
    std::unique_ptr<Public_Key> key(cert.subject_public_key());
 
    std::pair<std::string, Signature_Format> format =
-      state->understand_sig_format(key.get(), m_hash_algo, m_sig_algo, false);
+      state.understand_sig_format(key.get(), m_hash_algo, m_sig_algo, false);
 
    PK_Verifier verifier(*key, format.first, format.second);
 
-   verifier.update(state->client_hello()->random());
-   verifier.update(state->server_hello()->random());
+   verifier.update(state.client_hello()->random());
+   verifier.update(state.server_hello()->random());
    verifier.update(params());
 
    return verifier.check_signature(m_signature);

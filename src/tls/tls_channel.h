@@ -96,6 +96,12 @@ class BOTAN_DLL Channel
       virtual ~Channel();
    protected:
 
+      virtual void process_handshake_msg(class Handshake_State& state,
+                                         Handshake_Type type,
+                                         const std::vector<byte>& contents) = 0;
+
+      virtual class Handshake_State* new_handshake_state() = 0;
+
       /**
       * Send a TLS alert message. If the alert is fatal, the internal
       * state (keys, etc) will be reset.
@@ -104,11 +110,6 @@ class BOTAN_DLL Channel
       void send_alert(const Alert& alert);
 
       void activate_session(const std::vector<byte>& session_id);
-
-      virtual void process_handshake_msg(Handshake_Type type,
-                                         const std::vector<byte>& contents) = 0;
-
-      virtual class Handshake_State* new_handshake_state() = 0;
 
       void heartbeat_support(bool peer_supports, bool allowed_to_send);
 

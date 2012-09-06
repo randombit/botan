@@ -237,7 +237,7 @@ class Client_Key_Exchange : public Handshake_Message
          { return m_pre_master; }
 
       Client_Key_Exchange(Handshake_IO& io,
-                          Handshake_State* state,
+                          Handshake_State& state,
                           const Policy& policy,
                           Credentials_Manager& creds,
                           const std::vector<X509_Certificate>& peer_certs,
@@ -245,7 +245,7 @@ class Client_Key_Exchange : public Handshake_Message
                           RandomNumberGenerator& rng);
 
       Client_Key_Exchange(const std::vector<byte>& buf,
-                          const Handshake_State* state,
+                          const Handshake_State& state,
                           const Private_Key* server_rsa_kex_key,
                           Credentials_Manager& creds,
                           const Policy& policy,
@@ -329,10 +329,10 @@ class Certificate_Verify : public Handshake_Message
       * @param state the handshake state
       */
       bool verify(const X509_Certificate& cert,
-                  const Handshake_State* state) const;
+                  const Handshake_State& state) const;
 
       Certificate_Verify(Handshake_IO& io,
-                         Handshake_State* state,
+                         Handshake_State& state,
                          const Policy& policy,
                          RandomNumberGenerator& rng,
                          const Private_Key* key);
@@ -358,11 +358,11 @@ class Finished : public Handshake_Message
       std::vector<byte> verify_data() const
          { return m_verification_data; }
 
-      bool verify(const Handshake_State* state,
+      bool verify(const Handshake_State& state,
                   Connection_Side side) const;
 
       Finished(Handshake_IO& io,
-               Handshake_State* state,
+               Handshake_State& state,
                Connection_Side side);
 
       Finished(const std::vector<byte>& buf);
@@ -398,7 +398,7 @@ class Server_Key_Exchange : public Handshake_Message
       const std::vector<byte>& params() const { return m_params; }
 
       bool verify(const X509_Certificate& cert,
-                  const Handshake_State* state) const;
+                  const Handshake_State& state) const;
 
       // Only valid for certain kex types
       const Private_Key& server_kex_key() const;
@@ -407,7 +407,7 @@ class Server_Key_Exchange : public Handshake_Message
       SRP6_Server_Session& server_srp_params() const;
 
       Server_Key_Exchange(Handshake_IO& io,
-                          Handshake_State* state,
+                          Handshake_State& state,
                           const Policy& policy,
                           Credentials_Manager& creds,
                           RandomNumberGenerator& rng,

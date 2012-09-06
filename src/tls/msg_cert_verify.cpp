@@ -20,7 +20,7 @@ namespace TLS {
 * Create a new Certificate Verify message
 */
 Certificate_Verify::Certificate_Verify(Handshake_IO& io,
-                                       Handshake_State* state,
+                                       Handshake_State& state,
                                        const Policy& policy,
                                        RandomNumberGenerator& rng,
                                        const Private_Key* priv_key)
@@ -28,14 +28,14 @@ Certificate_Verify::Certificate_Verify(Handshake_IO& io,
    BOTAN_ASSERT_NONNULL(priv_key);
 
    std::pair<std::string, Signature_Format> format =
-      state->choose_sig_format(priv_key, m_hash_algo, m_sig_algo, true, policy);
+      state.choose_sig_format(priv_key, m_hash_algo, m_sig_algo, true, policy);
 
    PK_Signer signer(*priv_key, format.first, format.second);
 
-   if(state->version() == Protocol_Version::SSL_V3)
+   if(state.version() == Protocol_Version::SSL_V3)
       {
-      secure_vector<byte> md5_sha = state->hash().final_ssl3(
-         state->session_keys().master_secret());
+      secure_vector<byte> md5_sha = state.hash().final_ssl3(
+         state.session_keys().master_secret());
 
       if(priv_key->algo_name() == "DSA")
          m_signature = signer.sign_message(&md5_sha[16], md5_sha.size()-16, rng);
@@ -44,10 +44,10 @@ Certificate_Verify::Certificate_Verify(Handshake_IO& io,
       }
    else
       {
-      m_signature = signer.sign_message(state->hash().get_contents(), rng);
+      m_signature = signer.sign_message(state.hash().get_contents(), rng);
       }
 
-   state->hash().update(io.send(*this));
+   state.hash().update(io.send(*this));
    }
 
 /*
@@ -92,25 +92,25 @@ std::vector<byte> Certificate_Verify::serialize() const
 * Verify a Certificate Verify message
 */
 bool Certificate_Verify::verify(const X509_Certificate& cert,
-                                const Handshake_State* state) const
+                                const Handshake_State& state) const
    {
    std::unique_ptr<Public_Key> key(cert.subject_public_key());
 
    std::pair<std::string, Signature_Format> format =
-      state->understand_sig_format(key.get(), m_hash_algo, m_sig_algo, true);
+      state.understand_sig_format(key.get(), m_hash_algo, m_sig_algo, true);
 
    PK_Verifier verifier(*key, format.first, format.second);
 
-   if(state->version() == Protocol_Version::SSL_V3)
+   if(state.version() == Protocol_Version::SSL_V3)
       {
-      secure_vector<byte> md5_sha = state->hash().final_ssl3(
-         state->session_keys().master_secret());
+      secure_vector<byte> md5_sha = state.hash().final_ssl3(
+         state.session_keys().master_secret());
 
       return verifier.verify_message(&md5_sha[16], md5_sha.size()-16,
                                      &m_signature[0], m_signature.size());
       }
 
-   return verifier.verify_message(state->hash().get_contents(), m_signature);
+   return verifier.verify_message(state.hash().get_contents(), m_signature);
    }
 
 }

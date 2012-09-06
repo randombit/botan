@@ -175,7 +175,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
                if(msg.first == HANDSHAKE_NONE) // no full handshake yet
                   break;
 
-               process_handshake_msg(msg.first, msg.second);
+               process_handshake_msg(*m_state.get(), msg.first, msg.second);
                }
             }
          else if(rec_type == HEARTBEAT && m_peer_supports_heartbeats)
@@ -382,6 +382,9 @@ void Channel::send_alert(const Alert& alert)
          }
       catch(...) { /* swallow it */ }
       }
+
+   if(alert.type() == Alert::NO_RENEGOTIATION)
+      m_state.reset();
 
    if(alert.is_fatal() && !m_active_session.empty())
       {

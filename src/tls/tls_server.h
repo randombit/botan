@@ -50,7 +50,9 @@ class BOTAN_DLL Server : public Channel
          { return m_next_protocol; }
 
    private:
-      void process_handshake_msg(Handshake_Type, const std::vector<byte>&) override;
+      void process_handshake_msg(Handshake_State& state,
+                                 Handshake_Type type,
+                                 const std::vector<byte>& contents) override;
 
       class Handshake_State* new_handshake_state() override;
 
