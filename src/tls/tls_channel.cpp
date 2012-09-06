@@ -21,21 +21,33 @@ Channel::Channel(std::function<void (const byte[], size_t)> socket_output_fn,
                  std::function<bool (const Session&)> handshake_complete,
                  Session_Manager& session_manager,
                  RandomNumberGenerator& rng) :
-   m_proc_fn(proc_fn),
    m_handshake_fn(handshake_complete),
    m_state(nullptr),
    m_rng(rng),
    m_session_manager(session_manager),
    m_writer(socket_output_fn, rng),
-   m_handshake_completed(false),
-   m_connection_closed(false),
-   m_peer_supports_heartbeats(false),
-   m_heartbeat_sending_allowed(false)
+   m_proc_fn(proc_fn)
    {
    }
 
 Channel::~Channel()
    {
+   }
+
+void Channel::activate_session(const std::vector<byte>& session_id)
+   {
+   m_secure_renegotiation.update(m_state->client_finished(),
+                                 m_state->server_finished());
+
+   m_state.reset();
+   m_handshake_completed = true;
+   m_active_session = session_id;
+   }
+
+void Channel::heartbeat_support(bool peer_supports, bool sending_allowed)
+   {
+   m_peer_supports_heartbeats = peer_supports;
+   m_heartbeat_sending_allowed = sending_allowed;
    }
 
 size_t Channel::received_data(const byte buf[], size_t buf_size)
@@ -131,7 +143,11 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
             {
             Alert alert_msg(record);
 
-            alert_notify(alert_msg);
+            if(alert_msg.type() == Alert::NO_RENEGOTIATION)
+               {
+               if(m_handshake_completed && m_state)
+                  m_state.reset();
+               }
 
             m_proc_fn(nullptr, 0, alert_msg);
 

@@ -248,15 +248,6 @@ void Server::renegotiate(bool force_full_renegotiation)
    Hello_Request hello_req(m_state->handshake_io());
    }
 
-void Server::alert_notify(const Alert& alert)
-   {
-   if(alert.type() == Alert::NO_RENEGOTIATION)
-      {
-      if(m_handshake_completed && m_state)
-         m_state.reset();
-      }
-   }
-
 /*
 * Process a handshake message
 */
@@ -352,8 +343,8 @@ void Server::process_handshake_msg(Handshake_Type type,
 
       m_secure_renegotiation.update(m_state->client_hello());
 
-      m_peer_supports_heartbeats = m_state->client_hello()->supports_heartbeats();
-      m_heartbeat_sending_allowed = m_state->client_hello()->peer_can_send_heartbeats();
+      heartbeat_support(m_state->client_hello()->supports_heartbeats(),
+                        m_state->client_hello()->peer_can_send_heartbeats());
 
       m_writer.set_version(m_state->version());
       m_reader.set_version(m_state->version());
@@ -729,12 +720,7 @@ void Server::process_handshake_msg(Handshake_Type type,
             );
          }
 
-      m_secure_renegotiation.update(m_state->client_finished(),
-                                    m_state->server_finished());
-
-      m_active_session = m_state->server_hello()->session_id();
-      m_state.reset();
-      m_handshake_completed = true;
+      activate_session(m_state->server_hello()->session_id());
       }
    else
       throw Unexpected_Message("Unknown handshake message received");

@@ -104,12 +104,14 @@ class BOTAN_DLL Channel
       */
       void send_alert(const Alert& alert);
 
+      void activate_session(const std::vector<byte>& session_id);
+
       virtual void process_handshake_msg(Handshake_Type type,
                                          const std::vector<byte>& contents) = 0;
 
-      virtual void alert_notify(const Alert& alert) = 0;
-
       virtual class Handshake_State* new_handshake_state() = 0;
+
+      void heartbeat_support(bool peer_supports, bool allowed_to_send);
 
       class Secure_Renegotiation_State
          {
@@ -144,7 +146,6 @@ class BOTAN_DLL Channel
             std::vector<byte> m_client_verify, m_server_verify;
          };
 
-      std::function<void (const byte[], size_t, Alert)> m_proc_fn;
       std::function<bool (const Session&)> m_handshake_fn;
 
       std::unique_ptr<class Handshake_State> m_state;
@@ -158,11 +159,15 @@ class BOTAN_DLL Channel
 
       Secure_Renegotiation_State m_secure_renegotiation;
 
+   private:
+      std::function<void (const byte[], size_t, Alert)> m_proc_fn;
+
+      bool m_peer_supports_heartbeats = false;
+      bool m_heartbeat_sending_allowed = false;
+
+      bool m_connection_closed = false;
+      bool m_handshake_completed = false;
       std::vector<byte> m_active_session;
-      bool m_handshake_completed;
-      bool m_connection_closed;
-      bool m_peer_supports_heartbeats;
-      bool m_heartbeat_sending_allowed;
    };
 
 }

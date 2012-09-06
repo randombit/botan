@@ -52,8 +52,6 @@ class BOTAN_DLL Server : public Channel
    private:
       void process_handshake_msg(Handshake_Type, const std::vector<byte>&) override;
 
-      void alert_notify(const Alert& alert) override;
-
       class Handshake_State* new_handshake_state() override;
 
       const Policy& m_policy;
