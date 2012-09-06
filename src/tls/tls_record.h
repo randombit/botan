@@ -73,12 +73,12 @@ class Connection_Cipher_State
 * @param rng is a random number generator
 * @return number of bytes written to write_buffer
 */
-size_t write_record(std::vector<byte>& write_buffer,
-                    byte msg_type, const byte msg[], size_t msg_length,
-                    u64bit msg_sequence_number,
-                    Protocol_Version version,
-                    Connection_Cipher_State* cipherstate,
-                    RandomNumberGenerator& rng);
+void write_record(std::vector<byte>& write_buffer,
+                  byte msg_type, const byte msg[], size_t msg_length,
+                  u64bit msg_sequence_number,
+                  Protocol_Version version,
+                  Connection_Cipher_State* cipherstate,
+                  RandomNumberGenerator& rng);
 
 /**
 * Decode a TLS record

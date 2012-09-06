@@ -74,28 +74,27 @@ Connection_Cipher_State::Connection_Cipher_State(
    m_mac->set_key(mac_key);
    }
 
-size_t write_record(std::vector<byte>& output,
-                    byte msg_type, const byte msg[], size_t msg_length,
-                    u64bit msg_sequence_number,
-                    Protocol_Version version,
-                    Connection_Cipher_State* cipherstate,
-                    RandomNumberGenerator& rng)
+void write_record(std::vector<byte>& output,
+                  byte msg_type, const byte msg[], size_t msg_length,
+                  u64bit msg_sequence_number,
+                  Protocol_Version version,
+                  Connection_Cipher_State* cipherstate,
+                  RandomNumberGenerator& rng)
    {
-   BOTAN_ASSERT(output.size() >= TLS_HEADER_SIZE + msg_length,
-                "Write buffer is big enough");
+   output.clear();
 
-   output[0] = msg_type;
-   output[1] = version.major_version();
-   output[2] = version.minor_version();
+   output.push_back(msg_type);
+   output.push_back(version.major_version());
+   output.push_back(version.minor_version());
 
    if(!cipherstate) // initial unencrypted handshake records
       {
-      output[3] = get_byte<u16bit>(0, msg_length);
-      output[4] = get_byte<u16bit>(1, msg_length);
+      output.push_back(get_byte<u16bit>(0, msg_length));
+      output.push_back(get_byte<u16bit>(1, msg_length));
 
-      copy_mem(&output[TLS_HEADER_SIZE], msg, msg_length);
+      output.insert(output.end(), &msg[0], &msg[msg_length]);
 
-      return (TLS_HEADER_SIZE + msg_length);
+      return;
       }
 
    cipherstate->mac()->update_be(msg_sequence_number);
@@ -120,27 +119,23 @@ size_t write_record(std::vector<byte>& output,
       block_size);
 
    if(buf_size >= MAX_CIPHERTEXT_SIZE)
-      throw Internal_Error("Record_Writer: Record is too big");
+      throw Internal_Error("Output record is larger than allowed by protocol");
 
-   BOTAN_ASSERT(output.size() >= TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE,
-                "Write buffer is big enough");
+   output.push_back(get_byte<u16bit>(0, buf_size));
+   output.push_back(get_byte<u16bit>(1, buf_size));
 
-   output[3] = get_byte<u16bit>(0, buf_size);
-   output[4] = get_byte<u16bit>(1, buf_size);
-
-   byte* buf_write_ptr = &output[TLS_HEADER_SIZE];
+   const size_t header_size = output.size();
 
    if(iv_size)
       {
-      rng.randomize(buf_write_ptr, iv_size);
-      buf_write_ptr += iv_size;
+      output.resize(output.size() + iv_size);
+      rng.randomize(&output[output.size() - iv_size], iv_size);
       }
 
-   copy_mem(buf_write_ptr, msg, msg_length);
-   buf_write_ptr += msg_length;
+   output.insert(output.end(), &msg[0], &msg[msg_length]);
 
-   cipherstate->mac()->final(buf_write_ptr);
-   buf_write_ptr += mac_size;
+   output.resize(output.size() + mac_size);
+   cipherstate->mac()->final(&output[output.size() - mac_size]);
 
    if(block_size)
       {
@@ -148,10 +143,7 @@ size_t write_record(std::vector<byte>& output,
          buf_size - (iv_size + msg_length + mac_size + 1);
 
       for(size_t i = 0; i != pad_val + 1; ++i)
-         {
-         *buf_write_ptr = pad_val;
-         buf_write_ptr += 1;
-         }
+         output.push_back(pad_val);
       }
 
    if(buf_size > MAX_CIPHERTEXT_SIZE)
@@ -159,7 +151,7 @@ size_t write_record(std::vector<byte>& output,
 
    if(StreamCipher* sc = cipherstate->stream_cipher())
       {
-      sc->cipher1(&output[TLS_HEADER_SIZE], buf_size);
+      sc->cipher1(&output[header_size], buf_size);
       }
    else if(BlockCipher* bc = cipherstate->block_cipher())
       {
@@ -168,7 +160,7 @@ size_t write_record(std::vector<byte>& output,
       BOTAN_ASSERT(buf_size % block_size == 0,
                    "Buffer is an even multiple of block size");
 
-      byte* buf = &output[TLS_HEADER_SIZE];
+      byte* buf = &output[header_size];
 
       const size_t blocks = buf_size / block_size;
 
@@ -186,8 +178,6 @@ size_t write_record(std::vector<byte>& output,
       }
    else
       throw Internal_Error("NULL cipher not supported");
-
-   return (TLS_HEADER_SIZE + buf_size);
    }
 
 namespace {

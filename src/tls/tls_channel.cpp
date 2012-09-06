@@ -365,17 +365,17 @@ void Channel::write_record(byte record_type, const byte input[], size_t length)
       record_version = m_state->handshake_io().initial_record_version();
       }
 
-   const size_t written = TLS::write_record(m_writebuf,
-                                            record_type,
-                                            input,
-                                            length,
-                                            m_write_seq_no,
-                                            record_version,
-                                            m_write_cipherstate.get(),
-                                            m_rng);
+   TLS::write_record(m_writebuf,
+                     record_type,
+                     input,
+                     length,
+                     m_write_seq_no,
+                     record_version,
+                     m_write_cipherstate.get(),
+                     m_rng);
 
    m_write_seq_no += 1;
-   m_output_fn(&m_writebuf[0], written);
+   m_output_fn(&m_writebuf[0], m_writebuf.size());
    }
 
 void Channel::send(const byte buf[], size_t buf_size)
