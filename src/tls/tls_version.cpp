@@ -43,6 +43,9 @@ bool Protocol_Version::operator>(const Protocol_Version& other) const
                           "Version comparing " + to_string() +
                           " with " + other.to_string());
 
+   if(this->is_datagram_protocol())
+      return m_version < other.m_version; // goes backwards
+
    return m_version > other.m_version;
    }
 
