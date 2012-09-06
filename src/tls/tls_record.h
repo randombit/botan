@@ -106,7 +106,7 @@ class BOTAN_DLL Record_Writer
 
       RandomNumberGenerator& m_rng;
 
-      size_t m_max_fragment = 0;
+      size_t m_max_fragment = MAX_PLAINTEXT_SIZE;
 
       u64bit m_write_seq_no = 0;
       Protocol_Version m_version;
@@ -161,16 +161,13 @@ class BOTAN_DLL Record_Reader
 
       std::vector<byte> m_readbuf;
       std::vector<byte> m_macbuf;
-      size_t m_readbuf_pos;
+      size_t m_readbuf_pos = 0;
 
-      std::unique_ptr<BlockCipher> m_read_block_cipher;
-      secure_vector<byte> m_read_block_cipher_cbc_state;
-      std::unique_ptr<StreamCipher> m_read_stream_cipher;
-      std::unique_ptr<MessageAuthenticationCode> m_read_mac;
+      std::unique_ptr<Connection_Cipher_State> m_read_cipherstate;
 
-      size_t m_block_size, m_iv_size, m_max_fragment;
+      size_t m_max_fragment = MAX_PLAINTEXT_SIZE;
 
-      u64bit m_read_seq_no;
+      u64bit m_read_seq_no = 0;
       Protocol_Version m_version;
    };
 
