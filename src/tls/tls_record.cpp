@@ -396,9 +396,11 @@ size_t read_record(std::vector<byte>& readbuf,
       bc->decrypt(&buf[0]);
       xor_buf(&buf[0], &cbc_state[0], block_size);
 
+      secure_vector<byte> last_ciphertext2;
+
       for(size_t i = 1; i <= blocks; ++i)
          {
-         secure_vector<byte> last_ciphertext2(&buf[block_size*i], &buf[block_size*(i+1)]);
+         last_ciphertext2.assign(&buf[block_size*i], &buf[block_size*(i+1)]);
          bc->decrypt(&buf[block_size*i]);
          xor_buf(&buf[block_size*i], &last_ciphertext[0], block_size);
          std::swap(last_ciphertext, last_ciphertext2);
