@@ -120,7 +120,8 @@ class BOTAN_DLL Channel
 
       void set_protocol_version(Protocol_Version version);
 
-      Protocol_Version current_protocol_version() const;
+      Protocol_Version current_protocol_version() const
+         { return m_current_version; }
 
       void set_maximum_fragment_size(size_t maximum);
 

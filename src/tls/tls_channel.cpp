@@ -44,6 +44,7 @@ Handshake_State& Channel::create_handshake_state()
       throw Internal_Error("create_handshake_state called during handshake");
 
    m_state.reset(new_handshake_state());
+
    return *m_state.get();
    }
 
@@ -61,11 +62,6 @@ void Channel::set_protocol_version(Protocol_Version version)
    {
    m_current_version = version;
    m_state->set_version(version);
-   }
-
-Protocol_Version Channel::current_protocol_version() const
-   {
-   return m_current_version;
    }
 
 void Channel::set_maximum_fragment_size(size_t max_fragment)
@@ -357,19 +353,24 @@ void Channel::send_record(byte record_type, const std::vector<byte>& record)
 
 void Channel::write_record(byte record_type, const byte input[], size_t length)
    {
-   if(length >= m_max_fragment)
+   if(length > m_max_fragment)
       throw Internal_Error("Record is larger than allowed fragment size");
 
-   Protocol_Version version = current_protocol_version();
-   if(!version.valid())
-      version = m_state->handshake_io().initial_record_version();
+   Protocol_Version record_version = current_protocol_version();
+   if(!record_version.valid())
+      {
+      BOTAN_ASSERT(m_state && !m_state->server_hello(),
+                   "In first record of client connection");
+
+      record_version = m_state->handshake_io().initial_record_version();
+      }
 
    const size_t written = TLS::write_record(m_writebuf,
                                             record_type,
                                             input,
                                             length,
                                             m_write_seq_no,
-                                            version,
+                                            record_version,
                                             m_write_cipherstate.get(),
                                             m_rng);
 
