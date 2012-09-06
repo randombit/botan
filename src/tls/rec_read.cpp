@@ -27,8 +27,6 @@ void Record_Reader::reset()
    {
    set_maximum_fragment_size(0);
 
-   m_macbuf.clear();
-
    zeroise(m_readbuf);
    m_readbuf_pos = 0;
 
@@ -78,8 +76,6 @@ void Record_Reader::change_cipher_spec(Connection_Side side,
    m_read_cipherstate.reset(
       new Connection_Cipher_State(m_version, side, suite, keys)
       );
-
-   m_macbuf.resize(m_read_cipherstate->mac_size());
    }
 
 /*

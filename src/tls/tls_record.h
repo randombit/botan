@@ -184,7 +184,6 @@ class BOTAN_DLL Record_Reader
       Record_Reader& operator=(const Record_Reader&) = delete;
    private:
       std::vector<byte> m_readbuf;
-      std::vector<byte> m_macbuf;
       size_t m_readbuf_pos = 0;
 
       std::unique_ptr<Connection_Cipher_State> m_read_cipherstate;
