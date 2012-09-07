@@ -12,6 +12,7 @@
 #include <botan/internal/tls_record.h>
 #include <botan/internal/assert.h>
 #include <botan/internal/rounding.h>
+#include <botan/internal/stl_util.h>
 #include <botan/loadstor.h>
 
 namespace Botan {
@@ -524,6 +525,38 @@ std::vector<byte> Channel::secure_renegotiation_data_for_server_hello() const
 bool Channel::secure_renegotiation_supported() const
    {
    return m_secure_renegotiation;
+   }
+
+SymmetricKey Channel::key_material_export(const std::string& label,
+                                          const std::string& context,
+                                          size_t length) const
+   {
+   if(!m_active_state)
+      throw std::runtime_error("Channel::key_material_export connection not active");
+
+   Handshake_State& state = *m_active_state;
+
+   std::unique_ptr<KDF> prf(state.protocol_specific_prf());
+
+   const secure_vector<byte>& master_secret =
+      state.session_keys().master_secret();
+
+   std::vector<byte> salt;
+   salt += to_byte_vector(label);
+   salt += state.client_hello()->random();
+   salt += state.server_hello()->random();
+
+   if(context != "")
+      {
+      size_t context_size = context.length();
+      if(context_size > 0xFFFF)
+         throw std::runtime_error("key_material_export context is too long");
+      salt.push_back(get_byte<u16bit>(0, context_size));
+      salt.push_back(get_byte<u16bit>(1, context_size));
+      salt += to_byte_vector(context);
+      }
+
+   return prf->derive_key(length, master_secret, salt);
    }
 
 }

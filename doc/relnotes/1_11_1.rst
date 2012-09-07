@@ -35,6 +35,9 @@ A bug caused heartbeat requests sent by the counterparty during a
 handshake to be passed to the application callback as if they were
 heartbeat responses.
 
+Support for TLS key material export as specified in :rfc:`5057`
+has been added, called via :cpp:func:`TLS::Channel::key_material_export`
+
 New Feature: Public Key Strength Checking
 """"""""""""""""""""""""""""""""""""""""""
 

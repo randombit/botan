@@ -85,6 +85,17 @@ class BOTAN_DLL Channel
       */
       std::vector<X509_Certificate> peer_cert_chain() const;
 
+      /**
+      * Key material export (RFC 5705)
+      * @param label a disambiguating label string
+      * @param context a per-association context value
+      * @param length the length of the desired key in bytes
+      * @return key of length bytes
+      */
+      SymmetricKey key_material_export(const std::string& label,
+                                       const std::string& context,
+                                       size_t length) const;
+
       Channel(std::function<void (const byte[], size_t)> socket_output_fn,
               std::function<void (const byte[], size_t, Alert)> proc_fn,
               std::function<bool (const Session&)> handshake_complete,

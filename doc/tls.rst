@@ -135,6 +135,21 @@ available:
       ordinarily be empty, unless the server requested a certificate
       and the client responded with one.
 
+   .. cpp:function:: SymmetricKey key_material_export( \
+          const std::string& label, \
+          const std::string& context, \
+          size_t length)
+
+      Returns an exported key of *length* bytes derived from *label*,
+      *context*, and the session's master secret and client and server
+      random values. This key will be unique to this connection, and
+      as long as the session master secret remains secure an attacker
+      should not be able to guess the key.
+
+      Per :rfc:`5057`, *label* should begin with "EXPERIMENTAL" unless
+      the label has been standardized in an RFC.
+
+
 .. _tls_client:
 
 TLS Clients

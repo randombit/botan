@@ -9,9 +9,16 @@
 #define BOTAN_STL_UTIL_H__
 
 #include <vector>
+#include <string>
 #include <map>
 
 namespace Botan {
+
+std::vector<byte> to_byte_vector(const std::string& s)
+   {
+   return std::vector<byte>(reinterpret_cast<const byte*>(&s[0]),
+                            reinterpret_cast<const byte*>(&s[s.size()]));
+   }
 
 /*
 * Searching through a std::map
