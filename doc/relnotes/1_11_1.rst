@@ -18,10 +18,10 @@ secret, whereas now only 32 bytes are needed total. This change may
 also make it slightly harder for an attacker to extract session data
 from memory dumps (eg with a cold boot attack).
 
-The keys used for session encryption were previously uniquely
-determined by the master key. Now the encrypted session blob includes
-two 80 bit salts which are used in the derivation of the cipher and
-MAC keys.
+The keys used in :cpp:func:`session encryption <TLS::Session::encrypt>`
+were previously uniquely determined by the master key. Now the
+encrypted session blob includes two 80 bit salts which are used in the
+derivation of the cipher and MAC keys.
 
 New policy hooks :cpp:func:`TLS::Policy::acceptable_protocol_version`
 and :cpp:func:`TLS::Policy::allow_server_initiated_renegotiation` were
@@ -35,8 +35,8 @@ A bug caused heartbeat requests sent by the counterparty during a
 handshake to be passed to the application callback as if they were
 heartbeat responses.
 
-Support for TLS key material export as specified in :rfc:`5057`
-has been added, called via :cpp:func:`TLS::Channel::key_material_export`
+Support for TLS key material export as specified in :rfc:`5057` has
+been added, available via :cpp:func:`TLS::Channel::key_material_export`
 
 New Feature: Public Key Strength Checking
 """"""""""""""""""""""""""""""""""""""""""
