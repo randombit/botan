@@ -161,14 +161,14 @@ void Client::initiate_handshake(Handshake_State& state_base,
 /*
 * Process a handshake message
 */
-void Client::process_handshake_msg(const Handshake_State* /*active_state*/,
+void Client::process_handshake_msg(const Handshake_State* active_state,
                                    Handshake_State& state_base,
                                    Handshake_Type type,
                                    const std::vector<byte>& contents)
    {
    Client_Handshake_State& state = dynamic_cast<Client_Handshake_State&>(state_base);
 
-   if(type == HELLO_REQUEST)
+   if(type == HELLO_REQUEST && active_state)
       {
       Hello_Request hello_request(contents);
 
@@ -470,8 +470,6 @@ void Client::process_handshake_msg(const Handshake_State* /*active_state*/,
       }
    else if(type == FINISHED)
       {
-      state.set_expected_next(HELLO_REQUEST);
-
       state.server_finished(new Finished(contents));
 
       if(!state.server_finished()->verify(state, SERVER))
