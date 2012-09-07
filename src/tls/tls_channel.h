@@ -21,6 +21,8 @@ namespace Botan {
 
 namespace TLS {
 
+class Handshake_State;
+
 /**
 * Generic interface for TLS endpoint
 */
@@ -96,16 +98,16 @@ class BOTAN_DLL Channel
       virtual ~Channel();
    protected:
 
-      virtual void process_handshake_msg(class Handshake_State& state,
+      virtual void process_handshake_msg(Handshake_State& state,
                                          Handshake_Type type,
                                          const std::vector<byte>& contents) = 0;
 
-      virtual void initiate_handshake(class Handshake_State& state,
+      virtual void initiate_handshake(Handshake_State& state,
                                       bool force_full_renegotiation) = 0;
 
-      virtual class Handshake_State* new_handshake_state() = 0;
+      virtual Handshake_State* new_handshake_state() = 0;
 
-      class Handshake_State& create_handshake_state();
+      Handshake_State& create_handshake_state();
 
       /**
       * Send a TLS alert message. If the alert is fatal, the internal
@@ -194,8 +196,8 @@ class BOTAN_DLL Channel
       u64bit m_read_seq_no = 0;
 
       /* connection parameters */
-      std::unique_ptr<class Handshake_State> m_active_state;
-      std::unique_ptr<class Handshake_State> m_pending_state;
+      std::unique_ptr<Handshake_State> m_active_state;
+      std::unique_ptr<Handshake_State> m_pending_state;
 
       Protocol_Version m_current_version;
       size_t m_max_fragment = MAX_PLAINTEXT_SIZE;

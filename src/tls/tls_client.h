@@ -66,10 +66,10 @@ class BOTAN_DLL Client : public Channel
              std::function<std::string (std::vector<std::string>)> next_protocol =
                 std::function<std::string (std::vector<std::string>)>());
    private:
-      void initiate_handshake(class Handshake_State& state,
+      void initiate_handshake(Handshake_State& state,
                               bool force_full_renegotiation) override;
 
-      void initiate_handshake(class Handshake_State& state,
+      void initiate_handshake(Handshake_State& state,
                               bool force_full_renegotiation,
                               Protocol_Version version,
                               const std::string& srp_identifier = "",
@@ -80,7 +80,7 @@ class BOTAN_DLL Client : public Channel
                                  Handshake_Type type,
                                  const std::vector<byte>& contents) override;
 
-      class Handshake_State* new_handshake_state() override;
+      Handshake_State* new_handshake_state() override;
 
       const Policy& m_policy;
       Credentials_Manager& m_creds;

@@ -48,14 +48,14 @@ class BOTAN_DLL Server : public Channel
          { return m_next_protocol; }
 
    private:
-      void initiate_handshake(class Handshake_State& state,
+      void initiate_handshake(Handshake_State& state,
                               bool force_full_renegotiation) override;
 
       void process_handshake_msg(Handshake_State& state,
                                  Handshake_Type type,
                                  const std::vector<byte>& contents) override;
 
-      class Handshake_State* new_handshake_state() override;
+      Handshake_State* new_handshake_state() override;
 
       const Policy& m_policy;
       Credentials_Manager& m_creds;
