@@ -340,15 +340,6 @@ size_t read_record(std::vector<byte>& readbuf,
 
    Protocol_Version record_version(readbuf[1], readbuf[2]);
 
-   if(negotiated_version.valid() && record_version != negotiated_version)
-      {
-      throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                          "Got record with version " +
-                          record_version.to_string() +
-                          " expected " +
-                          negotiated_version.to_string());
-      }
-
    if(record_version.is_datagram_protocol() && readbuf_pos < DTLS_HEADER_SIZE)
       {
       if(size_t needed = fill_buffer_to(readbuf, readbuf_pos,
