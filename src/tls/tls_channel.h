@@ -52,7 +52,7 @@ class BOTAN_DLL Channel
       /**
       * @return true iff the connection is active for sending application data
       */
-      bool is_active() const { return m_handshake_completed && !is_closed(); }
+      bool is_active() const { return m_active_state && !is_closed(); }
 
       /**
       * @return true iff the connection has been definitely closed
@@ -114,7 +114,7 @@ class BOTAN_DLL Channel
       */
       void send_alert(const Alert& alert);
 
-      void activate_session(const std::vector<byte>& session_id);
+      void activate_session();
 
       void heartbeat_support(bool peer_supports, bool allowed_to_send);
 
@@ -174,6 +174,10 @@ class BOTAN_DLL Channel
 
       void write_record(byte type, const byte input[], size_t length);
 
+      bool peer_supports_heartbeats() const;
+
+      bool heartbeat_sending_allowed() const;
+
       /* callbacks */
       std::function<void (const byte[], size_t, Alert)> m_proc_fn;
       std::function<void (const byte[], size_t)> m_output_fn;
@@ -190,17 +194,13 @@ class BOTAN_DLL Channel
       u64bit m_read_seq_no = 0;
 
       /* connection parameters */
-      std::unique_ptr<class Handshake_State> m_state;
+      std::unique_ptr<class Handshake_State> m_active_state;
+      std::unique_ptr<class Handshake_State> m_pending_state;
 
       Protocol_Version m_current_version;
       size_t m_max_fragment = MAX_PLAINTEXT_SIZE;
 
-      bool m_peer_supports_heartbeats = false;
-      bool m_heartbeat_sending_allowed = false;
-
       bool m_connection_closed = false;
-      bool m_handshake_completed = false;
-      std::vector<byte> m_active_session;
    };
 
 }

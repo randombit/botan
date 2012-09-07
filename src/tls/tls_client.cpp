@@ -516,7 +516,7 @@ void Client::process_handshake_msg(Handshake_State& state,
             m_session_manager.remove_entry(session_info.session_id());
          }
 
-      activate_session(session_info.session_id());
+      activate_session();
       }
    else
       throw Unexpected_Message("Unknown handshake message received");

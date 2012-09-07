@@ -703,7 +703,7 @@ void Server::process_handshake_msg(Handshake_State& state,
             );
          }
 
-      activate_session(state.server_hello()->session_id());
+      activate_session();
       }
    else
       throw Unexpected_Message("Unknown handshake message received");
