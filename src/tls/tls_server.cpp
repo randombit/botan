@@ -252,10 +252,12 @@ void Server::initiate_handshake(Handshake_State& state,
 * Process a handshake message
 */
 void Server::process_handshake_msg(const Handshake_State* active_state,
-                                   Handshake_State& state,
+                                   Handshake_State& state_base,
                                    Handshake_Type type,
                                    const std::vector<byte>& contents)
    {
+   Server_Handshake_State& state = dynamic_cast<Server_Handshake_State&>(state_base);
+
    state.confirm_transition_to(type);
 
    /*
@@ -346,7 +348,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
 
       Session session_info;
       const bool resuming =
-         dynamic_cast<Server_Handshake_State&>(state).allow_session_resumption &&
+         state.allow_session_resumption &&
          check_for_resume(session_info,
                           m_session_manager,
                           m_creds,
@@ -520,7 +522,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
 
          if(kex_algo == "RSA")
             {
-            dynamic_cast<Server_Handshake_State&>(state).server_rsa_kex_key = private_key;
+            state.server_rsa_kex_key = private_key;
             }
          else
             {
@@ -577,7 +579,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
 
       state.client_kex(
          new Client_Key_Exchange(contents, state,
-                                 dynamic_cast<Server_Handshake_State&>(state).server_rsa_kex_key,
+                                 state.server_rsa_kex_key,
                                  m_creds, m_policy, m_rng)
          );
 

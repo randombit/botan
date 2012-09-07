@@ -94,17 +94,19 @@ void Client::initiate_handshake(Handshake_State& state,
                       current_protocol_version());
    }
 
-void Client::initiate_handshake(Handshake_State& state,
+void Client::initiate_handshake(Handshake_State& state_base,
                                 bool force_full_renegotiation,
                                 Protocol_Version version,
                                 const std::string& srp_identifier,
                                 std::function<std::string (std::vector<std::string>)> next_protocol)
    {
+   Client_Handshake_State& state = dynamic_cast<Client_Handshake_State&>(state_base);
+
    if(state.version().is_datagram_protocol())
       state.set_expected_next(HELLO_VERIFY_REQUEST);
    state.set_expected_next(SERVER_HELLO);
 
-   dynamic_cast<Client_Handshake_State&>(state).client_npn_cb = next_protocol;
+   state.client_npn_cb = next_protocol;
 
    const bool send_npn_request = static_cast<bool>(next_protocol);
 
@@ -124,8 +126,7 @@ void Client::initiate_handshake(Handshake_State& state,
                session_info,
                send_npn_request));
 
-            dynamic_cast<Client_Handshake_State&>(state).resume_master_secret =
-               session_info.master_secret();
+            state.resume_master_secret = session_info.master_secret();
             }
          }
       }
@@ -153,10 +154,12 @@ void Client::initiate_handshake(Handshake_State& state,
 * Process a handshake message
 */
 void Client::process_handshake_msg(const Handshake_State* /*active_state*/,
-                                   Handshake_State& state,
+                                   Handshake_State& state_base,
                                    Handshake_Type type,
                                    const std::vector<byte>& contents)
    {
+   Client_Handshake_State& state = dynamic_cast<Client_Handshake_State&>(state_base);
+
    if(type == HELLO_REQUEST)
       {
       Hello_Request hello_request(contents);
@@ -251,9 +254,7 @@ void Client::process_handshake_msg(const Handshake_State* /*active_state*/,
             throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                                 "Server resumed session but with wrong version");
 
-         state.compute_session_keys(
-            dynamic_cast<Client_Handshake_State&>(state).resume_master_secret
-            );
+         state.compute_session_keys(state.resume_master_secret);
 
          if(state.server_hello()->supports_session_ticket())
             state.set_expected_next(NEW_SESSION_TICKET);
@@ -338,8 +339,7 @@ void Client::process_handshake_msg(const Handshake_State* /*active_state*/,
          throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
                              "Certificate key type did not match ciphersuite");
 
-      dynamic_cast<Client_Handshake_State&>(state).
-         server_public_key.reset(peer_key.release());
+      state.server_public_key.reset(peer_key.release());
       }
    else if(type == SERVER_KEX)
       {
@@ -355,8 +355,7 @@ void Client::process_handshake_msg(const Handshake_State* /*active_state*/,
 
       if(state.ciphersuite().sig_algo() != "")
          {
-         const Public_Key& server_key =
-            dynamic_cast<Client_Handshake_State&>(state).get_server_public_Key();
+         const Public_Key& server_key = state.get_server_public_Key();
 
          if(!state.server_kex()->verify(server_key, state))
             {
@@ -430,9 +429,8 @@ void Client::process_handshake_msg(const Handshake_State* /*active_state*/,
 
       if(state.server_hello()->next_protocol_notification())
          {
-         const std::string protocol =
-            dynamic_cast<Client_Handshake_State&>(state).client_npn_cb(
-               state.server_hello()->next_protocols());
+         const std::string protocol = state.client_npn_cb(
+            state.server_hello()->next_protocols());
 
          state.next_protocol(
             new Next_Protocol(state.handshake_io(), state.hash(), protocol)
@@ -480,8 +478,7 @@ void Client::process_handshake_msg(const Handshake_State* /*active_state*/,
 
          if(state.server_hello()->next_protocol_notification())
             {
-            const std::string protocol =
-               dynamic_cast<Client_Handshake_State&>(state).client_npn_cb(
+            const std::string protocol = state.client_npn_cb(
                   state.server_hello()->next_protocols());
 
             state.next_protocol(
