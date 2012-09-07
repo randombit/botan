@@ -134,10 +134,6 @@ class BOTAN_DLL Channel
       class Secure_Renegotiation_State
          {
          public:
-            Secure_Renegotiation_State() : m_initial_handshake(true),
-                                           m_secure_renegotiation(false)
-               {}
-
             void update(const class Client_Hello* client_hello);
             void update(const class Server_Hello* server_hello);
 
@@ -159,8 +155,8 @@ class BOTAN_DLL Channel
 
             bool initial_handshake() const { return m_initial_handshake; }
          private:
-            bool m_initial_handshake;
-            bool m_secure_renegotiation;
+            bool m_initial_handshake = true;
+            bool m_secure_renegotiation = false;
             std::vector<byte> m_client_verify, m_server_verify;
          };
 
