@@ -28,7 +28,7 @@ Certificate_Verify::Certificate_Verify(Handshake_IO& io,
    BOTAN_ASSERT_NONNULL(priv_key);
 
    std::pair<std::string, Signature_Format> format =
-      state.choose_sig_format(priv_key, m_hash_algo, m_sig_algo, true, policy);
+      state.choose_sig_format(*priv_key, m_hash_algo, m_sig_algo, true, policy);
 
    PK_Signer signer(*priv_key, format.first, format.second);
 
@@ -97,7 +97,7 @@ bool Certificate_Verify::verify(const X509_Certificate& cert,
    std::unique_ptr<Public_Key> key(cert.subject_public_key());
 
    std::pair<std::string, Signature_Format> format =
-      state.understand_sig_format(key.get(), m_hash_algo, m_sig_algo, true);
+      state.understand_sig_format(*key.get(), m_hash_algo, m_sig_algo, true);
 
    PK_Verifier verifier(*key, format.first, format.second);
 

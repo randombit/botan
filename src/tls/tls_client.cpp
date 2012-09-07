@@ -9,6 +9,7 @@
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/assert.h>
 #include <memory>
 
 namespace Botan {
@@ -27,8 +28,16 @@ class Client_Handshake_State : public Handshake_State
                                 std::function<void (const Handshake_Message&)>()) :
          Handshake_State(io, msg_callback) {}
 
+      const Public_Key& get_server_public_Key() const
+         {
+         BOTAN_ASSERT(server_public_key, "Server sent us a certificate");
+         return *server_public_key.get();
+         }
+
       // Used during session resumption
       secure_vector<byte> resume_master_secret;
+
+      std::unique_ptr<Public_Key> server_public_key;
 
       // Used by client using NPN
       std::function<std::string (std::vector<std::string>)> client_npn_cb;
@@ -328,6 +337,9 @@ void Client::process_handshake_msg(const Handshake_State* /*active_state*/,
       if(peer_key->algo_name() != state.ciphersuite().sig_algo())
          throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
                              "Certificate key type did not match ciphersuite");
+
+      dynamic_cast<Client_Handshake_State&>(state).
+         server_public_key.reset(peer_key.release());
       }
    else if(type == SERVER_KEX)
       {
@@ -343,7 +355,10 @@ void Client::process_handshake_msg(const Handshake_State* /*active_state*/,
 
       if(state.ciphersuite().sig_algo() != "")
          {
-         if(!state.server_kex()->verify(m_peer_certs[0], state))
+         const Public_Key& server_key =
+            dynamic_cast<Client_Handshake_State&>(state).get_server_public_Key();
+
+         if(!state.server_kex()->verify(server_key, state))
             {
             throw TLS_Exception(Alert::DECRYPT_ERROR,
                                 "Bad signature on server key exchange");

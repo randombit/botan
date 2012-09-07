@@ -326,13 +326,13 @@ std::string choose_hash(const std::string& sig_algo,
 }
 
 std::pair<std::string, Signature_Format>
-Handshake_State::choose_sig_format(const Private_Key* key,
+Handshake_State::choose_sig_format(const Private_Key& key,
                                    std::string& hash_algo_out,
                                    std::string& sig_algo_out,
                                    bool for_client_auth,
                                    const Policy& policy) const
    {
-   const std::string sig_algo = key->algo_name();
+   const std::string sig_algo = key.algo_name();
 
    const std::string hash_algo =
       choose_hash(sig_algo,
@@ -365,12 +365,12 @@ Handshake_State::choose_sig_format(const Private_Key* key,
    }
 
 std::pair<std::string, Signature_Format>
-Handshake_State::understand_sig_format(const Public_Key* key,
+Handshake_State::understand_sig_format(const Public_Key& key,
                                        std::string hash_algo,
                                        std::string sig_algo,
                                        bool for_client_auth) const
    {
-   const std::string algo_name = key->algo_name();
+   const std::string algo_name = key.algo_name();
 
    /*
    FIXME: This should check what was sent against the client hello

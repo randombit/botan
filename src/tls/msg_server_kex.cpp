@@ -125,7 +125,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       BOTAN_ASSERT(signing_key, "Signing key was set");
 
       std::pair<std::string, Signature_Format> format =
-         state.choose_sig_format(signing_key, m_hash_algo, m_sig_algo, false, policy);
+         state.choose_sig_format(*signing_key, m_hash_algo, m_sig_algo, false, policy);
 
       PK_Signer signer(*signing_key, format.first, format.second);
 
@@ -254,15 +254,13 @@ std::vector<byte> Server_Key_Exchange::serialize() const
 /**
 * Verify a Server Key Exchange message
 */
-bool Server_Key_Exchange::verify(const X509_Certificate& cert,
+bool Server_Key_Exchange::verify(const Public_Key& server_key,
                                  const Handshake_State& state) const
    {
-   std::unique_ptr<Public_Key> key(cert.subject_public_key());
-
    std::pair<std::string, Signature_Format> format =
-      state.understand_sig_format(key.get(), m_hash_algo, m_sig_algo, false);
+      state.understand_sig_format(server_key, m_hash_algo, m_sig_algo, false);
 
-   PK_Verifier verifier(*key, format.first, format.second);
+   PK_Verifier verifier(server_key, format.first, format.second);
 
    verifier.update(state.client_hello()->random());
    verifier.update(state.server_hello()->random());

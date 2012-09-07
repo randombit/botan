@@ -397,7 +397,7 @@ class Server_Key_Exchange : public Handshake_Message
 
       const std::vector<byte>& params() const { return m_params; }
 
-      bool verify(const X509_Certificate& cert,
+      bool verify(const Public_Key& server_key,
                   const Handshake_State& state) const;
 
       // Only valid for certain kex types

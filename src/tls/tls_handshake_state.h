@@ -80,13 +80,13 @@ class Handshake_State
       const std::vector<byte>& session_ticket() const;
 
       std::pair<std::string, Signature_Format>
-         understand_sig_format(const Public_Key* key,
+         understand_sig_format(const Public_Key& key,
                                std::string hash_algo,
                                std::string sig_algo,
                                bool for_client_auth) const;
 
       std::pair<std::string, Signature_Format>
-         choose_sig_format(const Private_Key* key,
+         choose_sig_format(const Private_Key& key,
                            std::string& hash_algo,
                            std::string& sig_algo,
                            bool for_client_auth,
