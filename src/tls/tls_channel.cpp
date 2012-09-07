@@ -203,7 +203,9 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
                if(msg.first == HANDSHAKE_NONE) // no full handshake yet
                   break;
 
-               process_handshake_msg(*m_pending_state.get(), msg.first, msg.second);
+               process_handshake_msg(m_active_state.get(),
+                                     *m_pending_state.get(),
+                                     msg.first, msg.second);
                }
             }
          else if(rec_type == HEARTBEAT && peer_supports_heartbeats())

@@ -76,7 +76,8 @@ class BOTAN_DLL Client : public Channel
                               std::function<std::string (std::vector<std::string>)> next_protocol =
                                  std::function<std::string (std::vector<std::string>)>());
 
-      void process_handshake_msg(Handshake_State& state,
+      void process_handshake_msg(const Handshake_State* active_state,
+                                 Handshake_State& pending_state,
                                  Handshake_Type type,
                                  const std::vector<byte>& contents) override;
 

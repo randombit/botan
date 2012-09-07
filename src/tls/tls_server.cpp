@@ -251,7 +251,8 @@ void Server::initiate_handshake(Handshake_State& state,
 /*
 * Process a handshake message
 */
-void Server::process_handshake_msg(Handshake_State& state,
+void Server::process_handshake_msg(const Handshake_State* active_state,
+                                   Handshake_State& state,
                                    Handshake_Type type,
                                    const std::vector<byte>& contents)
    {
@@ -274,8 +275,10 @@ void Server::process_handshake_msg(Handshake_State& state,
 
    if(type == CLIENT_HELLO || type == CLIENT_HELLO_SSLV2)
       {
+      const bool initial_handshake = !active_state;
+
       if(!m_policy.allow_insecure_renegotiation() &&
-         !(m_secure_renegotiation.initial_handshake() || m_secure_renegotiation.supported()))
+         !(initial_handshake || m_secure_renegotiation.supported()))
          {
          send_alert(Alert(Alert::NO_RENEGOTIATION));
          return;
@@ -288,13 +291,10 @@ void Server::process_handshake_msg(Handshake_State& state,
 
       Protocol_Version client_version = state.client_hello()->version();
 
-      const Protocol_Version prev_version = current_protocol_version();
-      const bool is_renegotiation = prev_version.valid();
-
       Protocol_Version negotiated_version;
 
-      if((is_renegotiation && client_version == prev_version) ||
-         (!is_renegotiation && client_version.known_version()))
+      if((initial_handshake && client_version.known_version()) ||
+         (!initial_handshake && client_version == active_state->version()))
          {
          /*
          Common cases: new client hello with some known version, or a
@@ -304,7 +304,7 @@ void Server::process_handshake_msg(Handshake_State& state,
 
          negotiated_version = client_version;
          }
-      else if(is_renegotiation && (client_version != prev_version))
+      else if(!initial_handshake && (client_version != active_state->version()))
          {
          /*
          * If this is a renegotation, and the client has offered a
@@ -314,16 +314,16 @@ void Server::process_handshake_msg(Handshake_State& state,
          * than what it initially negotiated, reject as a probable
          * attack.
          */
-         if(prev_version > client_version)
+         if(active_state->version() > client_version)
             {
             throw TLS_Exception(Alert::PROTOCOL_VERSION,
                                 "Client negotiated " +
-                                prev_version.to_string() +
+                                active_state->version().to_string() +
                                 " then renegotiated with " +
                                 client_version.to_string());
             }
          else
-            negotiated_version = prev_version;
+            negotiated_version = active_state->version();
          }
       else
          {

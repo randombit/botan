@@ -51,7 +51,8 @@ class BOTAN_DLL Server : public Channel
       void initiate_handshake(Handshake_State& state,
                               bool force_full_renegotiation) override;
 
-      void process_handshake_msg(Handshake_State& state,
+      void process_handshake_msg(const Handshake_State* active_state,
+                                 Handshake_State& pending_state,
                                  Handshake_Type type,
                                  const std::vector<byte>& contents) override;
 

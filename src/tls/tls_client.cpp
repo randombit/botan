@@ -143,7 +143,8 @@ void Client::initiate_handshake(Handshake_State& state,
 /*
 * Process a handshake message
 */
-void Client::process_handshake_msg(Handshake_State& state,
+void Client::process_handshake_msg(const Handshake_State* /*active_state*/,
+                                   Handshake_State& state,
                                    Handshake_Type type,
                                    const std::vector<byte>& contents)
    {
