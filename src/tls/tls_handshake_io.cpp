@@ -34,7 +34,7 @@ void store_be24(byte out[3], size_t val)
 
 Protocol_Version Stream_Handshake_IO::initial_record_version() const
    {
-   return Protocol_Version::SSL_V3;
+   return Protocol_Version::TLS_V10;
    }
 
 void Stream_Handshake_IO::add_input(const byte rec_type,
