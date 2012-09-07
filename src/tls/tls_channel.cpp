@@ -144,16 +144,17 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
 
          size_t consumed = 0;
 
-         const size_t needed = TLS::read_record(m_readbuf,
-                                                m_readbuf_pos,
-                                                buf,
-                                                buf_size,
-                                                consumed,
-                                                rec_type,
-                                                record,
-                                                m_read_seq_no,
-                                                m_current_version,
-                                                m_read_cipherstate.get());
+         const size_t needed =
+            read_record(m_readbuf,
+                        m_readbuf_pos,
+                        buf,
+                        buf_size,
+                        consumed,
+                        rec_type,
+                        record,
+                        m_read_seq_no,
+                        m_current_version,
+                        m_read_cipherstate.get());
 
          BOTAN_ASSERT(consumed <= buf_size,
                       "Record reader consumed sane amount");
