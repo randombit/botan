@@ -83,7 +83,7 @@ class BOTAN_DLL Channel
       /**
       * @return certificate chain of the peer (may be empty)
       */
-      std::vector<X509_Certificate> peer_cert_chain() const { return m_peer_certs; }
+      std::vector<X509_Certificate> peer_cert_chain() const;
 
       Channel(std::function<void (const byte[], size_t)> socket_output_fn,
               std::function<void (const byte[], size_t, Alert)> proc_fn,
@@ -105,6 +105,9 @@ class BOTAN_DLL Channel
 
       virtual void initiate_handshake(Handshake_State& state,
                                       bool force_full_renegotiation) = 0;
+
+      virtual std::vector<X509_Certificate>
+         get_peer_cert_chain(const Handshake_State& state) const = 0;
 
       virtual Handshake_State* new_handshake_state() = 0;
 
@@ -147,8 +150,6 @@ class BOTAN_DLL Channel
 
       RandomNumberGenerator& m_rng;
       Session_Manager& m_session_manager;
-
-      std::vector<X509_Certificate> m_peer_certs;
 
    private:
       void send_record(byte type, const byte input[], size_t length);

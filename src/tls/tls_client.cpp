@@ -83,6 +83,14 @@ Handshake_State* Client::new_handshake_state()
       );
    }
 
+std::vector<X509_Certificate>
+Client::get_peer_cert_chain(const Handshake_State& state) const
+   {
+   if(state.server_certs())
+      return state.server_certs()->cert_chain();
+   return std::vector<X509_Certificate>();
+   }
+
 /*
 * Send a new client hello to renegotiate
 */
@@ -319,21 +327,23 @@ void Client::process_handshake_msg(const Handshake_State* /*active_state*/,
 
       state.server_certs(new Certificate(contents));
 
-      m_peer_certs = state.server_certs()->cert_chain();
-      if(m_peer_certs.empty())
+      const std::vector<X509_Certificate>& server_certs =
+         state.server_certs()->cert_chain();
+
+      if(server_certs.empty())
          throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                              "Client: No certificates sent by server");
 
       try
          {
-         m_creds.verify_certificate_chain("tls-client", m_hostname, m_peer_certs);
+         m_creds.verify_certificate_chain("tls-client", m_hostname, server_certs);
          }
       catch(std::exception& e)
          {
          throw TLS_Exception(Alert::BAD_CERTIFICATE, e.what());
          }
 
-      std::unique_ptr<Public_Key> peer_key(m_peer_certs[0].subject_public_key());
+      std::unique_ptr<Public_Key> peer_key(server_certs[0].subject_public_key());
 
       if(peer_key->algo_name() != state.ciphersuite().sig_algo())
          throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
@@ -507,7 +517,7 @@ void Client::process_handshake_msg(const Handshake_State* /*active_state*/,
          CLIENT,
          secure_renegotiation_supported(),
          state.server_hello()->fragment_size(),
-         m_peer_certs,
+         get_peer_cert_chain(state),
          session_ticket,
          m_hostname,
          ""

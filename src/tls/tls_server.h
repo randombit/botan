@@ -48,6 +48,9 @@ class BOTAN_DLL Server : public Channel
          { return m_next_protocol; }
 
    private:
+      std::vector<X509_Certificate>
+         get_peer_cert_chain(const Handshake_State& state) const override;
+
       void initiate_handshake(Handshake_State& state,
                               bool force_full_renegotiation) override;
 

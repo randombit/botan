@@ -38,6 +38,13 @@ Channel::~Channel()
    // So unique_ptr destructors run correctly
    }
 
+std::vector<X509_Certificate> Channel::peer_cert_chain() const
+   {
+   if(!m_active_state)
+      return std::vector<X509_Certificate>();
+   return get_peer_cert_chain(*m_active_state);
+   }
+
 Handshake_State& Channel::create_handshake_state()
    {
    if(m_pending_state)

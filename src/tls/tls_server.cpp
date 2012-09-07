@@ -236,6 +236,14 @@ Handshake_State* Server::new_handshake_state()
    return state;
    }
 
+std::vector<X509_Certificate>
+Server::get_peer_cert_chain(const Handshake_State& state) const
+   {
+   if(state.client_certs())
+      return state.client_certs()->cert_chain();
+   return std::vector<X509_Certificate>();
+   }
+
 /*
 * Send a hello request to the client
 */
@@ -589,10 +597,11 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
       {
       state.client_verify(new Certificate_Verify(contents, state.version()));
 
-      m_peer_certs = state.client_certs()->cert_chain();
+      const std::vector<X509_Certificate>& client_certs =
+         state.client_certs()->cert_chain();
 
       const bool sig_valid =
-         state.client_verify()->verify(m_peer_certs[0], state);
+         state.client_verify()->verify(client_certs[0], state);
 
       state.hash().update(state.handshake_io().format(contents, type));
 
@@ -606,7 +615,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
 
       try
          {
-         m_creds.verify_certificate_chain("tls-server", "", m_peer_certs);
+         m_creds.verify_certificate_chain("tls-server", "", client_certs);
          }
       catch(std::exception& e)
          {
@@ -658,7 +667,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
             SERVER,
             secure_renegotiation_supported(),
             state.server_hello()->fragment_size(),
-            m_peer_certs,
+            get_peer_cert_chain(state),
             std::vector<byte>(),
             m_hostname,
             state.srp_identifier()
