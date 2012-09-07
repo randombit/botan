@@ -399,7 +399,7 @@ void Client::process_handshake_msg(const Handshake_State* /*active_state*/,
                                  state,
                                  m_policy,
                                  m_creds,
-                                 m_peer_certs,
+                                 state.server_public_key.get(),
                                  m_hostname,
                                  m_rng)
          );

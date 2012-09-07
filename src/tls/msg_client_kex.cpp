@@ -51,7 +51,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
                                          Handshake_State& state,
                                          const Policy& policy,
                                          Credentials_Manager& creds,
-                                         const std::vector<X509_Certificate>& peer_certs,
+                                         const Public_Key* server_public_key,
                                          const std::string& hostname,
                                          RandomNumberGenerator& rng)
    {
@@ -232,12 +232,10 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
       if(kex_algo != "RSA")
          throw Unexpected_Message("No server kex but negotiated kex " + kex_algo);
 
-      if(peer_certs.empty())
-         throw Internal_Error("No certificate and no server key exchange");
+      if(!server_public_key)
+         throw Internal_Error("No server public key for RSA exchange");
 
-      std::unique_ptr<Public_Key> pub_key(peer_certs[0].subject_public_key());
-
-      if(const RSA_PublicKey* rsa_pub = dynamic_cast<const RSA_PublicKey*>(pub_key.get()))
+      if(auto rsa_pub = dynamic_cast<const RSA_PublicKey*>(server_public_key))
          {
          const Protocol_Version offered_version = state.client_hello()->version();
 
@@ -257,7 +255,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
       else
          throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                              "Expected a RSA key in server cert but got " +
-                             pub_key->algo_name());
+                             server_public_key->algo_name());
       }
 
    state.hash().update(io.send(*this));

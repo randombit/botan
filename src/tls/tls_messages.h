@@ -240,7 +240,7 @@ class Client_Key_Exchange : public Handshake_Message
                           Handshake_State& state,
                           const Policy& policy,
                           Credentials_Manager& creds,
-                          const std::vector<X509_Certificate>& peer_certs,
+                          const Public_Key* server_public_key,
                           const std::string& hostname,
                           RandomNumberGenerator& rng);
 
