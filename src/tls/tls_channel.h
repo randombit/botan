@@ -119,8 +119,6 @@ class BOTAN_DLL Channel
 
       void activate_session();
 
-      void heartbeat_support(bool peer_supports, bool allowed_to_send);
-
       void set_protocol_version(Protocol_Version version);
 
       Protocol_Version current_protocol_version() const

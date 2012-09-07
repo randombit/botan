@@ -344,9 +344,6 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
 
       set_protocol_version(negotiated_version);
 
-      heartbeat_support(state.client_hello()->supports_heartbeats(),
-                        state.client_hello()->peer_can_send_heartbeats());
-
       Session session_info;
       const bool resuming =
          dynamic_cast<Server_Handshake_State&>(state).allow_session_resumption &&

@@ -226,9 +226,6 @@ void Client::process_handshake_msg(const Handshake_State* /*active_state*/,
 
       m_secure_renegotiation.update(state.server_hello());
 
-      heartbeat_support(state.server_hello()->supports_heartbeats(),
-                        state.server_hello()->peer_can_send_heartbeats());
-
       const bool server_returned_same_session_id =
          !state.server_hello()->session_id().empty() &&
          (state.server_hello()->session_id() == state.client_hello()->session_id());
