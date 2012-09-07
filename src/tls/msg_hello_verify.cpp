@@ -29,8 +29,7 @@ Hello_Verify_Request::Hello_Verify_Request(const std::vector<byte>& buf)
    if(static_cast<size_t>(buf[2]) + 3 != buf.size())
       throw Decoding_Error("Bad length in hello verify request");
 
-   m_cookie.resize(buf.size() - 3);
-   copy_mem(&m_cookie[0], &buf[3], buf.size() - 3);
+   m_cookie.assign(&buf[3], &buf[buf.size()]);
    }
 
 Hello_Verify_Request::Hello_Verify_Request(const std::vector<byte>& client_hello_bits,

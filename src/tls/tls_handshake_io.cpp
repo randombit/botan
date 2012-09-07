@@ -314,7 +314,6 @@ size_t split_for_mtu(size_t mtu, size_t msg_size)
 
 }
 
-
 std::vector<byte>
 Datagram_Handshake_IO::send(const Handshake_Message& msg)
    {
@@ -328,8 +327,6 @@ Datagram_Handshake_IO::send(const Handshake_Message& msg)
 
    const std::vector<byte> no_fragment =
       format_w_seq(msg_bits, msg.type(), m_out_message_seq);
-
-   m_mtu = 64;
 
    if(no_fragment.size() + DTLS_HEADER_SIZE <= m_mtu)
       m_send_hs(HANDSHAKE, no_fragment);

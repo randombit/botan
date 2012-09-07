@@ -87,6 +87,12 @@ void write_record(std::vector<byte>& output,
    output.push_back(version.major_version());
    output.push_back(version.minor_version());
 
+   if(version.is_datagram_protocol())
+      {
+      for(size_t i = 0; i != 8; ++i)
+         output.push_back(get_byte(i, msg_sequence_number));
+      }
+
    if(!cipherstate) // initial unencrypted handshake records
       {
       output.push_back(get_byte<u16bit>(0, msg_length));
@@ -271,6 +277,9 @@ size_t read_record(std::vector<byte>& readbuf,
    {
    consumed = 0;
 
+   BOTAN_ASSERT(version.valid(),
+                "We know what version we are using");
+
    const size_t header_size =
       (version.is_datagram_protocol()) ? DTLS_HEADER_SIZE : TLS_HEADER_SIZE;
 
@@ -335,7 +344,11 @@ size_t read_record(std::vector<byte>& readbuf,
          " from counterparty");
       }
 
-   const size_t record_len = make_u16bit(readbuf[3], readbuf[4]);
+   if(version.is_datagram_protocol())
+      msg_sequence = load_be<u64bit>(&readbuf[3], 0);
+
+   const size_t record_len = make_u16bit(readbuf[header_size-2],
+                                         readbuf[header_size-1]);
 
    if(version.major_version())
       {
@@ -372,8 +385,7 @@ size_t read_record(std::vector<byte>& readbuf,
          }
 
       msg_type = readbuf[0];
-      msg.resize(record_len);
-      copy_mem(&msg[0], record_contents, record_len);
+      msg.assign(&record_contents[0], &record_contents[record_len]);
 
       readbuf_pos = 0;
       return 0; // got a full record

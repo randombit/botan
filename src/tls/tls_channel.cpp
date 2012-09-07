@@ -100,8 +100,13 @@ void Channel::change_cipher_spec_writer(Connection_Side side)
      A sequence number is incremented after each record: specifically,
      the first record transmitted under a particular connection state
      MUST use sequence number 0
+
+   For DTLS, increment the epoch
    */
-   m_write_seq_no = 0;
+   if(current_protocol_version().is_datagram_protocol())
+      m_write_seq_no = ((m_write_seq_no >> 48) + 1) << 48;
+   else
+      m_write_seq_no = 0;
 
    m_write_cipherstate.reset(
       new Connection_Cipher_State(current_protocol_version(),
