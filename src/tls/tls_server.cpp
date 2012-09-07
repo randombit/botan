@@ -278,7 +278,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
       const bool initial_handshake = !active_state;
 
       if(!m_policy.allow_insecure_renegotiation() &&
-         !(initial_handshake || m_secure_renegotiation.supported()))
+         !(initial_handshake || secure_renegotiation_supported()))
          {
          send_alert(Alert(Alert::NO_RENEGOTIATION));
          return;
@@ -340,7 +340,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
                              "Client version is unacceptable by policy");
          }
 
-      m_secure_renegotiation.update(state.client_hello());
+      secure_renegotiation_check(state.client_hello());
 
       set_protocol_version(negotiated_version);
 
@@ -380,8 +380,8 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
                session_info.ciphersuite_code(),
                session_info.compression_method(),
                session_info.fragment_size(),
-               m_secure_renegotiation.supported(),
-               m_secure_renegotiation.for_server_hello(),
+               secure_renegotiation_supported(),
+               secure_renegotiation_data_for_server_hello(),
                offer_new_session_ticket,
                state.client_hello()->next_protocol_notification(),
                m_possible_protocols,
@@ -389,7 +389,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
                m_rng)
             );
 
-         m_secure_renegotiation.update(state.server_hello());
+         secure_renegotiation_check(state.server_hello());
 
          if(session_info.fragment_size())
             set_maximum_fragment_size(session_info.fragment_size());
@@ -476,8 +476,8 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
                                   state.client_hello()),
                choose_compression(m_policy, state.client_hello()->compression_methods()),
                state.client_hello()->fragment_size(),
-               m_secure_renegotiation.supported(),
-               m_secure_renegotiation.for_server_hello(),
+               secure_renegotiation_supported(),
+               secure_renegotiation_data_for_server_hello(),
                state.client_hello()->supports_session_ticket() && have_session_ticket_key,
                state.client_hello()->next_protocol_notification(),
                m_possible_protocols,
@@ -485,7 +485,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
                m_rng)
             );
 
-         m_secure_renegotiation.update(state.server_hello());
+         secure_renegotiation_check(state.server_hello());
 
          if(state.client_hello()->fragment_size())
             set_maximum_fragment_size(state.client_hello()->fragment_size());
@@ -654,7 +654,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
             state.server_hello()->ciphersuite(),
             state.server_hello()->compression_method(),
             SERVER,
-            m_secure_renegotiation.supported(),
+            secure_renegotiation_supported(),
             state.server_hello()->fragment_size(),
             m_peer_certs,
             std::vector<byte>(),

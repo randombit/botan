@@ -111,7 +111,7 @@ void Client::initiate_handshake(Handshake_State& state,
                state.hash(),
                m_policy,
                m_rng,
-               m_secure_renegotiation.for_client_hello(),
+               secure_renegotiation_data_for_client_hello(),
                session_info,
                send_npn_request));
 
@@ -129,13 +129,13 @@ void Client::initiate_handshake(Handshake_State& state,
          version,
          m_policy,
          m_rng,
-         m_secure_renegotiation.for_client_hello(),
+         secure_renegotiation_data_for_client_hello(),
          send_npn_request,
          m_hostname,
          srp_identifier));
       }
 
-   m_secure_renegotiation.update(state.client_hello());
+   secure_renegotiation_check(state.client_hello());
 
    set_maximum_fragment_size(state.client_hello()->fragment_size());
    }
@@ -157,7 +157,7 @@ void Client::process_handshake_msg(const Handshake_State* /*active_state*/,
          return;
 
       if(!m_policy.allow_server_initiated_renegotiation() ||
-         (!m_policy.allow_insecure_renegotiation() && !m_secure_renegotiation.supported()))
+         (!m_policy.allow_insecure_renegotiation() && !secure_renegotiation_supported()))
          {
          // RFC 5746 section 4.2
          send_alert(Alert(Alert::NO_RENEGOTIATION));
@@ -224,7 +224,7 @@ void Client::process_handshake_msg(const Handshake_State* /*active_state*/,
 
       set_protocol_version(state.server_hello()->version());
 
-      m_secure_renegotiation.update(state.server_hello());
+      secure_renegotiation_check(state.server_hello());
 
       const bool server_returned_same_session_id =
          !state.server_hello()->session_id().empty() &&
@@ -479,9 +479,6 @@ void Client::process_handshake_msg(const Handshake_State* /*active_state*/,
             );
          }
 
-      m_secure_renegotiation.update(state.client_finished(),
-                                    state.server_finished());
-
       std::vector<byte> session_id = state.server_hello()->session_id();
 
       const std::vector<byte>& session_ticket = state.session_ticket();
@@ -496,7 +493,7 @@ void Client::process_handshake_msg(const Handshake_State* /*active_state*/,
          state.server_hello()->ciphersuite(),
          state.server_hello()->compression_method(),
          CLIENT,
-         m_secure_renegotiation.supported(),
+         secure_renegotiation_supported(),
          state.server_hello()->fragment_size(),
          m_peer_certs,
          session_ticket,

@@ -132,43 +132,23 @@ class BOTAN_DLL Channel
 
       void send_record(byte record_type, const std::vector<byte>& record);
 
-      class Secure_Renegotiation_State
-         {
-         public:
-            void update(const class Client_Hello* client_hello);
-            void update(const class Server_Hello* server_hello);
+      /* secure renegotiation handling */
 
-            void update(const class Finished* client_finished,
-                        const class Finished* server_finished);
+      void secure_renegotiation_check(const class Client_Hello* client_hello);
+      void secure_renegotiation_check(const class Server_Hello* server_hello);
 
-            const std::vector<byte>& for_client_hello() const
-               { return m_client_verify; }
+      std::vector<byte> secure_renegotiation_data_for_client_hello() const;
+      std::vector<byte> secure_renegotiation_data_for_server_hello() const;
 
-            std::vector<byte> for_server_hello() const
-               {
-               std::vector<byte> buf = m_client_verify;
-               buf += m_server_verify;
-               return buf;
-               }
+      bool secure_renegotiation_supported() const;
 
-            bool supported() const
-               { return m_secure_renegotiation; }
-
-            bool initial_handshake() const { return m_initial_handshake; }
-         private:
-            bool m_initial_handshake = true;
-            bool m_secure_renegotiation = false;
-            std::vector<byte> m_client_verify, m_server_verify;
-         };
-
+      /* state accesssible by subclasses */
       std::function<bool (const Session&)> m_handshake_fn;
 
       RandomNumberGenerator& m_rng;
       Session_Manager& m_session_manager;
 
       std::vector<X509_Certificate> m_peer_certs;
-
-      Secure_Renegotiation_State m_secure_renegotiation;
 
    private:
       void send_record(byte type, const byte input[], size_t length);
@@ -201,6 +181,7 @@ class BOTAN_DLL Channel
       Protocol_Version m_current_version;
       size_t m_max_fragment = MAX_PLAINTEXT_SIZE;
 
+      bool m_secure_renegotiation = false;
       bool m_connection_closed = false;
    };
 

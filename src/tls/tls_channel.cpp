@@ -124,9 +124,6 @@ void Channel::change_cipher_spec_writer(Connection_Side side)
 
 void Channel::activate_session()
    {
-   m_secure_renegotiation.update(m_pending_state->client_finished(),
-                                 m_pending_state->server_finished());
-
    std::swap(m_active_state, m_pending_state);
    m_pending_state.reset();
    }
@@ -426,15 +423,17 @@ void Channel::send_alert(const Alert& alert)
       }
    }
 
-void Channel::Secure_Renegotiation_State::update(const Client_Hello* client_hello)
+void Channel::secure_renegotiation_check(const Client_Hello* client_hello)
    {
-   if(initial_handshake())
+   const bool initial_handshake = !m_active_state;
+
+   if(initial_handshake)
       {
       m_secure_renegotiation = client_hello->secure_renegotiation();
       }
    else
       {
-      if(supported() && !client_hello->secure_renegotiation())
+      if(secure_renegotiation_supported() && !client_hello->secure_renegotiation())
          throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                              "Client changed its mind about secure renegotiation");
       }
@@ -443,7 +442,7 @@ void Channel::Secure_Renegotiation_State::update(const Client_Hello* client_hell
       {
       const std::vector<byte>& data = client_hello->renegotiation_info();
 
-      if(initial_handshake())
+      if(initial_handshake)
          {
          if(!data.empty())
             throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
@@ -451,35 +450,37 @@ void Channel::Secure_Renegotiation_State::update(const Client_Hello* client_hell
          }
       else
          {
-         if(data != for_client_hello())
+         if(data != secure_renegotiation_data_for_client_hello())
             throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                                 "Client sent bad renegotiation data");
          }
       }
    }
 
-void Channel::Secure_Renegotiation_State::update(const Server_Hello* server_hello)
+void Channel::secure_renegotiation_check(const Server_Hello* server_hello)
    {
-   if(initial_handshake())
+   const bool initial_handshake = !m_active_state;
+
+   if(initial_handshake)
       {
       /* If the client offered but server rejected, then this toggles
-      *  secure_renegotiation to off
+      *  secure renegotiation to off
       */
       if(m_secure_renegotiation)
          m_secure_renegotiation = server_hello->secure_renegotiation();
       }
    else
       {
-      if(supported() != server_hello->secure_renegotiation())
+      if(secure_renegotiation_supported() != server_hello->secure_renegotiation())
          throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                              "Server changed its mind about secure renegotiation");
       }
 
-   if(supported())
+   if(secure_renegotiation_supported())
       {
       const std::vector<byte>& data = server_hello->renegotiation_info();
 
-      if(initial_handshake())
+      if(initial_handshake)
          {
          if(!data.empty())
             throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
@@ -487,20 +488,35 @@ void Channel::Secure_Renegotiation_State::update(const Server_Hello* server_hell
          }
       else
          {
-         if(data != for_server_hello())
+         if(data != secure_renegotiation_data_for_server_hello())
             throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                                 "Server sent bad renegotiation data");
          }
       }
-
-   m_initial_handshake = false;
    }
 
-void Channel::Secure_Renegotiation_State::update(const Finished* client_finished,
-                                                 const Finished* server_finished)
+std::vector<byte> Channel::secure_renegotiation_data_for_client_hello() const
    {
-   m_client_verify = client_finished->verify_data();
-   m_server_verify = server_finished->verify_data();
+   if(m_active_state)
+      return m_active_state->client_finished()->verify_data();
+   return std::vector<byte>();
+   }
+
+std::vector<byte> Channel::secure_renegotiation_data_for_server_hello() const
+   {
+   if(m_active_state)
+      {
+      std::vector<byte> buf = m_active_state->client_finished()->verify_data();
+      buf += m_active_state->server_finished()->verify_data();
+      return buf;
+      }
+
+   return std::vector<byte>();
+   }
+
+bool Channel::secure_renegotiation_supported() const
+   {
+   return m_secure_renegotiation;
    }
 
 }
