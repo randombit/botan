@@ -155,16 +155,6 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
                                                 m_current_version,
                                                 m_read_cipherstate.get());
 
-         if(needed == 0) // full message decoded
-            {
-            if(record.size() > m_max_fragment)
-               throw TLS_Exception(Alert::RECORD_OVERFLOW,
-                                   "Plaintext record is too large");
-
-            record_number = m_read_seq_no;
-            m_read_seq_no += 1;
-            }
-
          BOTAN_ASSERT(consumed <= buf_size,
                       "Record reader consumed sane amount");
 
@@ -176,6 +166,13 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
 
          if(buf_size == 0 && needed != 0)
             return needed; // need more data to complete record
+
+         if(record.size() > m_max_fragment)
+            throw TLS_Exception(Alert::RECORD_OVERFLOW,
+                                "Plaintext record is too large");
+
+         record_number = m_read_seq_no;
+         m_read_seq_no += 1;
 
          if(rec_type == HANDSHAKE || rec_type == CHANGE_CIPHER_SPEC)
             {

@@ -344,20 +344,21 @@ size_t read_record(std::vector<byte>& readbuf,
          " from counterparty");
       }
 
-   if(version.is_datagram_protocol())
+   Protocol_Version record_version(readbuf[1], readbuf[2]);
+
+   if(record_version.is_datagram_protocol())
       msg_sequence = load_be<u64bit>(&readbuf[3], 0);
 
    const size_t record_len = make_u16bit(readbuf[header_size-2],
                                          readbuf[header_size-1]);
 
-   if(version.major_version())
+   if(version.valid() && record_version != version)
       {
-      if(readbuf[1] != version.major_version() ||
-         readbuf[2] != version.minor_version())
-         {
-         throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                             "Got unexpected version from counterparty");
-         }
+      throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                          "Got record with version " +
+                          record_version.to_string() +
+                          " expected " +
+                          version.to_string());
       }
 
    if(record_len > MAX_CIPHERTEXT_SIZE)
