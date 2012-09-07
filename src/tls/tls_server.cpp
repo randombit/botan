@@ -350,6 +350,10 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
                              "Client version is unacceptable by policy");
          }
 
+      if(!initial_handshake && state.client_hello()->next_protocol_notification())
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                             "Client included NPN extension for renegotiation");
+
       secure_renegotiation_check(state.client_hello());
 
       set_protocol_version(negotiated_version);
