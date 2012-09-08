@@ -467,7 +467,11 @@ size_t read_record(std::vector<byte>& readbuf,
 
    const size_t mac_offset = record_len - (mac_size + pad_size);
 
-   if(!same_mem(&record_contents[mac_offset], &mac_buf[0], mac_size))
+   const bool mac_bad = !same_mem(&record_contents[mac_offset], &mac_buf[0], mac_size);
+
+   const bool padding_bad = (block_size > 0) && (pad_size == 0);
+
+   if(mac_bad || padding_bad)
       throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure");
 
    msg_type = readbuf[0];
