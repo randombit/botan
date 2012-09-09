@@ -62,11 +62,12 @@ Protocol_Version Protocol_Version::best_known_match() const
 
 bool Protocol_Version::known_version() const
    {
-   // Don't include DTLS yet here as we can't actually process it
    return (m_version == Protocol_Version::SSL_V3 ||
            m_version == Protocol_Version::TLS_V10 ||
            m_version == Protocol_Version::TLS_V11 ||
-           m_version == Protocol_Version::TLS_V12);
+           m_version == Protocol_Version::TLS_V12 ||
+           m_version == Protocol_Version::DTLS_V10 ||
+           m_version == Protocol_Version::DTLS_V12);
    }
 
 bool Protocol_Version::supports_negotiable_signature_algorithms() const
