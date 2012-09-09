@@ -26,7 +26,7 @@ using namespace Botan;
 
 using namespace std::placeholders;
 
-int connect_to_host(const std::string& host, u16bit port)
+int connect_to_host(const std::string& host, u16bit port, const std::string& transport)
    {
    hostent* host_addr = ::gethostbyname(host.c_str());
 
@@ -36,7 +36,9 @@ int connect_to_host(const std::string& host, u16bit port)
    if(host_addr->h_addrtype != AF_INET) // FIXME
       throw std::runtime_error(host + " has IPv6 address");
 
-   int fd = ::socket(PF_INET, SOCK_STREAM, 0);
+   int type = (transport == "tcp") ? SOCK_STREAM : SOCK_DGRAM;
+
+   int fd = ::socket(PF_INET, type, 0);
    if(fd == -1)
       throw std::runtime_error("Unable to acquire socket");
 
@@ -78,7 +80,12 @@ bool handshake_complete(const TLS::Session& session)
    return true;
    }
 
-void socket_write(int sockfd, const byte buf[], size_t length)
+void dgram_socket_write(int sockfd, const byte buf[], size_t length)
+   {
+   send(sockfd, buf, length, MSG_NOSIGNAL);
+   }
+
+void stream_socket_write(int sockfd, const byte buf[], size_t length)
    {
    size_t offset = 0;
 
@@ -123,100 +130,11 @@ std::string protocol_chooser(const std::vector<std::string>& protocols)
    return "http/1.1";
    }
 
-void doit(RandomNumberGenerator& rng,
-          TLS::Policy& policy,
-          TLS::Session_Manager& session_manager,
-          Credentials_Manager& creds,
-          const std::string& host,
-          u16bit port)
-   {
-   int sockfd = connect_to_host(host, port);
-
-   TLS::Client client(std::bind(socket_write, sockfd, _1, _2),
-                      process_data,
-                      handshake_complete,
-                      session_manager,
-                      creds,
-                      policy,
-                      rng,
-                      host,
-                      port,
-                      protocol_chooser);
-
-   fd_set readfds;
-
-   while(true)
-      {
-      FD_ZERO(&readfds);
-      FD_SET(sockfd, &readfds);
-      FD_SET(STDIN_FILENO, &readfds);
-
-      ::select(sockfd + 1, &readfds, NULL, NULL, NULL);
-
-      if(client.is_closed())
-         break;
-
-      if(FD_ISSET(sockfd, &readfds))
-         {
-         byte buf[64] = { 0 };
-
-         size_t to_read = rand() % sizeof(buf);
-         if(to_read == 0)
-            to_read = 1;
-
-         ssize_t got = read(sockfd, buf, to_read);
-
-         if(got == 0)
-            {
-            std::cout << "EOF on socket\n";
-            break;
-            }
-         else if(got == -1)
-            {
-            std::cout << "Socket error: " << errno << " " << strerror(errno) << "\n";
-            continue;
-            }
-
-         client.received_data(buf, got);
-         //std::cout << "Socket - got " << got << " bytes, need " << needed << "\n";
-         }
-      else if(FD_ISSET(STDIN_FILENO, &readfds))
-         {
-         byte buf[1024] = { 0 };
-         ssize_t got = read(STDIN_FILENO, buf, sizeof(buf));
-
-         if(got == 0)
-            {
-            std::cout << "EOF on stdin\n";
-            client.close();
-            break;
-            }
-         else if(got == -1)
-            {
-            std::cout << "Stdin error: " << errno << " " << strerror(errno) << "\n";
-            continue;
-            }
-
-         if(got == 2 && (buf[0] == 'R' || buf[0] == 'r') && buf[1] == '\n')
-            {
-            std::cout << "Client initiated renegotiation\n";
-            client.renegotiate((buf[0] == 'R'));
-            }
-         else if(buf[0] == 'H')
-            client.heartbeat(&buf[1], got-1);
-         else
-            client.send(buf, got);
-         }
-      }
-
-   ::close(sockfd);
-   }
-
 int main(int argc, char* argv[])
    {
-   if(argc != 2 && argc != 3)
+   if(argc != 2 && argc != 3 && argc != 4)
       {
-      std::cout << "Usage " << argv[0] << " host [port]\n";
+      std::cout << "Usage " << argv[0] << " host [port] [udp|tcp]\n";
       return 1;
       }
 
@@ -227,7 +145,8 @@ int main(int argc, char* argv[])
       TLS::Policy policy;
 
 #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
-      TLS::Session_Manager_SQLite session_manager("my secret passphrase", rng,
+      TLS::Session_Manager_SQLite session_manager("my secret passphrase",
+                                                  rng,
                                                   "sessions.db");
 #else
       TLS::Session_Manager_In_Memory session_manager;
@@ -236,10 +155,96 @@ int main(int argc, char* argv[])
       Credentials_Manager_Simple creds(rng);
 
       std::string host = argv[1];
-      u32bit port = argc == 3 ? Botan::to_u32bit(argv[2]) : 443;
+      u32bit port = argc >= 3 ? Botan::to_u32bit(argv[2]) : 443;
+      std::string transport = argc >= 4 ? argv[3] : "tcp";
 
-      //while(true)
-         doit(rng, policy, session_manager, creds, host, port);
+      int sockfd = connect_to_host(host, port, transport);
+
+      auto socket_write =
+         (transport == "tcp") ?
+         std::bind(stream_socket_write, sockfd, _1, _2) :
+         std::bind(dgram_socket_write, sockfd, _1, _2);
+
+      TLS::Client client(socket_write,
+                         process_data,
+                         handshake_complete,
+                         session_manager,
+                         creds,
+                         policy,
+                         rng,
+                         host,
+                         port,
+                         protocol_chooser);
+
+      while(!client.is_closed())
+         {
+         fd_set readfds;
+         FD_ZERO(&readfds);
+         FD_SET(sockfd, &readfds);
+         FD_SET(STDIN_FILENO, &readfds);
+
+         ::select(sockfd + 1, &readfds, NULL, NULL, NULL);
+
+         if(FD_ISSET(sockfd, &readfds))
+            {
+            byte buf[4*1024] = { 0 };
+
+            ssize_t got = ::read(sockfd, buf, sizeof(buf));
+
+            if(got == 0)
+               {
+               std::cout << "EOF on socket\n";
+               break;
+               }
+            else if(got == -1)
+               {
+               std::cout << "Socket error: " << errno << " " << strerror(errno) << "\n";
+               continue;
+               }
+
+            std::cout << "Socket - got " << got << " bytes\n";
+            client.received_data(buf, got);
+            }
+         else if(FD_ISSET(STDIN_FILENO, &readfds))
+            {
+            byte buf[1024] = { 0 };
+            ssize_t got = read(STDIN_FILENO, buf, sizeof(buf));
+
+            if(got == 0)
+               {
+               std::cout << "EOF on stdin\n";
+               client.close();
+               break;
+               }
+            else if(got == -1)
+               {
+               std::cout << "Stdin error: " << errno << " " << strerror(errno) << "\n";
+               continue;
+               }
+
+            if(got == 2 && buf[1] == '\n')
+               {
+               char cmd = buf[0];
+
+               if(cmd == 'R' || cmd == 'r')
+                  {
+                  std::cout << "Client initiated renegotiation\n";
+                  client.renegotiate(cmd == 'R');
+                  }
+               else if(cmd == 'Q')
+                  {
+                  std::cout << "Client initiated close\n";
+                  client.close();
+                  }
+               }
+            else if(buf[0] == 'H')
+               client.heartbeat(&buf[1], got-1);
+            else
+               client.send(buf, got);
+            }
+         }
+
+      ::close(sockfd);
 
    }
    catch(std::exception& e)
