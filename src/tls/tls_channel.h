@@ -21,6 +21,7 @@ namespace Botan {
 
 namespace TLS {
 
+class Handshake_IO;
 class Handshake_State;
 
 /**
@@ -120,9 +121,9 @@ class BOTAN_DLL Channel
       virtual std::vector<X509_Certificate>
          get_peer_cert_chain(const Handshake_State& state) const = 0;
 
-      virtual Handshake_State* new_handshake_state() = 0;
+      virtual Handshake_State* new_handshake_state(Handshake_IO* io) = 0;
 
-      Handshake_State& create_handshake_state();
+      Handshake_State& create_handshake_state(Protocol_Version version);
 
       /**
       * Send a TLS alert message. If the alert is fatal, the internal
@@ -144,8 +145,6 @@ class BOTAN_DLL Channel
 
       void change_cipher_spec_writer(Connection_Side side);
 
-      void send_record(byte record_type, const std::vector<byte>& record);
-
       /* secure renegotiation handling */
 
       void secure_renegotiation_check(const class Client_Hello* client_hello);
@@ -163,7 +162,9 @@ class BOTAN_DLL Channel
       bool save_session(const Session& session) const { return m_handshake_fn(session); }
 
    private:
-      void send_record(byte type, const byte input[], size_t length);
+      void send_record(byte record_type, const std::vector<byte>& record);
+
+      void send_record_array(byte type, const byte input[], size_t length);
 
       void write_record(byte type, const byte input[], size_t length);
 

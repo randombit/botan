@@ -59,7 +59,7 @@ class BOTAN_DLL Server : public Channel
                                  Handshake_Type type,
                                  const std::vector<byte>& contents) override;
 
-      Handshake_State* new_handshake_state() override;
+      Handshake_State* new_handshake_state(Handshake_IO* io) override;
 
       const Policy& m_policy;
       Credentials_Manager& m_creds;

@@ -221,19 +221,11 @@ Server::Server(std::function<void (const byte[], size_t)> output_fn,
    {
    }
 
-Handshake_State* Server::new_handshake_state()
+Handshake_State* Server::new_handshake_state(Handshake_IO* io)
    {
-   using namespace std::placeholders;
-
-   Handshake_State* state = new Server_Handshake_State(
-      new Stream_Handshake_IO(
-         [this](byte type, const std::vector<byte>& rec)
-            { this->send_record(type, rec); }
-         )
-      );
-
+   std::unique_ptr<Handshake_State> state(new Server_Handshake_State(io));
    state->set_expected_next(CLIENT_HELLO);
-   return state;
+   return state.release();
    }
 
 std::vector<X509_Certificate>

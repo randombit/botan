@@ -46,12 +46,25 @@ std::vector<X509_Certificate> Channel::peer_cert_chain() const
    return get_peer_cert_chain(*m_active_state);
    }
 
-Handshake_State& Channel::create_handshake_state()
+Handshake_State& Channel::create_handshake_state(Protocol_Version version)
    {
    if(m_pending_state)
       throw Internal_Error("create_handshake_state called during handshake");
 
-   m_pending_state.reset(new_handshake_state());
+   const size_t dtls_mtu = 1400;
+
+   std::unique_ptr<Handshake_IO> handshake_io;
+
+   auto send_rec = std::bind(&Channel::send_record, this,
+                             std::placeholders::_1,
+                             std::placeholders::_2);
+
+   if(version.is_datagram_protocol())
+      handshake_io.reset(new Datagram_Handshake_IO(send_rec, dtls_mtu));
+   else
+      handshake_io.reset(new Stream_Handshake_IO(send_rec));
+
+   m_pending_state.reset(new_handshake_state(handshake_io.release()));
 
    return *m_pending_state.get();
    }
@@ -61,9 +74,11 @@ void Channel::renegotiate(bool force_full_renegotiation)
    if(m_pending_state) // currently in handshake?
       return;
 
-   m_pending_state.reset(new_handshake_state());
+   if(!m_active_state)
+      throw std::runtime_error("Cannot renegotiate on inactive connection");
 
-   initiate_handshake(*m_pending_state.get(), force_full_renegotiation);
+   initiate_handshake(create_handshake_state(m_active_state->version()),
+                      force_full_renegotiation);
    }
 
 void Channel::set_protocol_version(Protocol_Version version)
@@ -196,7 +211,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
          if(rec_type == HANDSHAKE || rec_type == CHANGE_CIPHER_SPEC)
             {
             if(!m_pending_state)
-               m_pending_state.reset(new_handshake_state());
+               create_handshake_state(m_current_version); // fixme
 
             m_pending_state->handshake_io().add_input(
                rec_type, &record[0], record.size(), record_number);
@@ -324,7 +339,7 @@ void Channel::heartbeat(const byte payload[], size_t payload_size)
       }
    }
 
-void Channel::send_record(byte type, const byte input[], size_t length)
+void Channel::send_record_array(byte type, const byte input[], size_t length)
    {
    if(length == 0)
       return;
@@ -361,7 +376,7 @@ void Channel::send_record(byte type, const byte input[], size_t length)
 
 void Channel::send_record(byte record_type, const std::vector<byte>& record)
    {
-   send_record(record_type, &record[0], record.size());
+   send_record_array(record_type, &record[0], record.size());
    }
 
 void Channel::write_record(byte record_type, const byte input[], size_t length)
@@ -396,7 +411,7 @@ void Channel::send(const byte buf[], size_t buf_size)
    if(!is_active())
       throw std::runtime_error("Data cannot be sent on inactive TLS connection");
 
-   send_record(APPLICATION_DATA, buf, buf_size);
+   send_record_array(APPLICATION_DATA, buf, buf_size);
    }
 
 void Channel::send(const std::string& string)

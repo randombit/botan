@@ -66,21 +66,14 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
    {
    const std::string srp_identifier = m_creds.srp_identifier("tls-client", m_hostname);
 
-   Handshake_State& state = create_handshake_state();
    const Protocol_Version version = m_policy.pref_version();
+   Handshake_State& state = create_handshake_state(version);
    initiate_handshake(state, false, version, srp_identifier, next_protocol);
    }
 
-Handshake_State* Client::new_handshake_state()
+Handshake_State* Client::new_handshake_state(Handshake_IO* io)
    {
-   using namespace std::placeholders;
-
-   return new Client_Handshake_State(
-      new Stream_Handshake_IO(
-         [this](byte type, const std::vector<byte>& rec)
-            { this->send_record(type, rec); }
-         )
-      );
+   return new Client_Handshake_State(io);
    }
 
 std::vector<X509_Certificate>

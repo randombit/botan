@@ -274,6 +274,7 @@ size_t read_record(std::vector<byte>& readbuf,
                    byte& msg_type,
                    std::vector<byte>& msg,
                    u64bit msg_sequence,
+                   Protocol_Version& record_version,
                    Connection_Cipher_State* cipherstate)
    {
    consumed = 0;
@@ -335,7 +336,7 @@ size_t read_record(std::vector<byte>& readbuf,
          " from counterparty");
       }
 
-   Protocol_Version record_version(readbuf[1], readbuf[2]);
+   record_version = Protocol_Version(readbuf[1], readbuf[2]);
 
    if(record_version.is_datagram_protocol() && readbuf_pos < DTLS_HEADER_SIZE)
       {
