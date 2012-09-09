@@ -4,10 +4,9 @@ Version 1.11.1, Not Yet Released
 TLS Enhancements and Bug Fixes
 """"""""""""""""""""""""""""""""""""""""
 
-..
-  Initial support for DTLS (v1.0 and v1.2) is available in this release
-  though it should be considered highly experimental. Currently timeouts
-  and retransmissions are not handled.
+Initial support for DTLS (both v1.0 and v1.2) is available in this
+release, though it should be considered highly experimental. Currently
+timeouts and retransmissions are not handled.
 
 :cpp:class:`TLS::Session_Manager_In_Memory` now chooses a random
 256-bit key at startup and encrypts all sessions (using the existing
