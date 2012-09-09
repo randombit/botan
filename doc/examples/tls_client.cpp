@@ -202,7 +202,7 @@ int main(int argc, char* argv[])
                continue;
                }
 
-            std::cout << "Socket - got " << got << " bytes\n";
+            //std::cout << "Socket - got " << got << " bytes\n";
             client.received_data(buf, got);
             }
          else if(FD_ISSET(STDIN_FILENO, &readfds))
