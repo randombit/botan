@@ -6,6 +6,8 @@
 */
 
 #include <botan/internal/tls_record.h>
+#include <botan/tls_ciphersuite.h>
+#include <botan/tls_exceptn.h>
 #include <botan/libstate.h>
 #include <botan/loadstor.h>
 #include <botan/internal/tls_session_key.h>

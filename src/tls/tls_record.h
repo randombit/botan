@@ -8,21 +8,19 @@
 #ifndef BOTAN_TLS_RECORDS_H__
 #define BOTAN_TLS_RECORDS_H__
 
-#include <botan/tls_ciphersuite.h>
-#include <botan/tls_alert.h>
 #include <botan/tls_magic.h>
 #include <botan/tls_version.h>
 #include <botan/block_cipher.h>
 #include <botan/stream_cipher.h>
 #include <botan/mac.h>
 #include <vector>
-#include <functional>
 #include <memory>
 
 namespace Botan {
 
 namespace TLS {
 
+class Ciphersuite;
 class Session_Keys;
 
 /**
