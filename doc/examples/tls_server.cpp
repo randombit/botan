@@ -7,7 +7,6 @@
 #include <botan/x509self.h>
 #include <botan/secqueue.h>
 
-#include "socket.h"
 #include "credentials.h"
 
 using namespace Botan;
@@ -18,209 +17,228 @@ using namespace std::placeholders;
 #include <string>
 #include <iostream>
 #include <memory>
+#include <list>
 
-class Blocking_TLS_Server
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <errno.h>
+#include <fcntl.h>
+
+int make_server_socket(const std::string& transport, u16bit port)
    {
-   public:
-      Blocking_TLS_Server(std::function<void (const byte[], size_t)> output_fn,
-                          std::function<size_t (byte[], size_t)> input_fn,
-                          std::vector<std::string>& protocols,
-                          TLS::Session_Manager& sessions,
-                          Credentials_Manager& creds,
-                          TLS::Policy& policy,
-                          RandomNumberGenerator& rng) :
-         input_fn(input_fn),
-         server(
-            output_fn,
-            std::bind(&Blocking_TLS_Server::reader_fn, std::ref(*this), _1, _2, _3),
-            std::bind(&Blocking_TLS_Server::handshake_complete, std::ref(*this), _1),
-            sessions,
-            creds,
-            policy,
-            rng,
-            protocols),
-         exit(false)
+   int type = (transport == "tcp") ? SOCK_STREAM : SOCK_DGRAM;
+
+   int fd = ::socket(PF_INET, type, 0);
+   if(fd == -1)
+      throw std::runtime_error("Unable to acquire socket");
+
+   sockaddr_in socket_info;
+   ::memset(&socket_info, 0, sizeof(socket_info));
+   socket_info.sin_family = AF_INET;
+   socket_info.sin_port = htons(port);
+
+   // FIXME: support limiting listeners
+   socket_info.sin_addr.s_addr = INADDR_ANY;
+
+   if(::bind(fd, (sockaddr*)&socket_info, sizeof(struct sockaddr)) != 0)
+      {
+      ::close(fd);
+      throw std::runtime_error("server bind failed");
+      }
+
+   if(transport != "udp")
+      {
+      if(::listen(fd, 100) != 0)
          {
-         read_loop();
+         ::close(fd);
+         throw std::runtime_error("listen failed");
+         }
+      }
+
+   return fd;
+   }
+
+bool handshake_complete(const TLS::Session& session)
+   {
+   std::cout << "Handshake complete, " << session.version().to_string()
+             << " using " << session.ciphersuite().to_string() << "\n";
+
+   if(!session.session_id().empty())
+      std::cout << "Session ID " << hex_encode(session.session_id()) << "\n";
+
+   if(!session.session_ticket().empty())
+      std::cout << "Session ticket " << hex_encode(session.session_ticket()) << "\n";
+
+   std::cout << "Secure renegotiation is"
+             << (session.secure_renegotiation() ? "" : " NOT")
+             << " supported\n";
+
+   return true;
+   }
+
+void dgram_socket_write(int sockfd, const byte buf[], size_t length)
+   {
+   ssize_t sent = ::send(sockfd, buf, length, MSG_NOSIGNAL);
+
+   if(sent == -1)
+      printf("Error writing to socket %s\n", strerror(errno));
+   else if(sent != length)
+      printf("Note: packet of length %d truncated to %d\n", length, sent);
+   }
+
+void stream_socket_write(int sockfd, const byte buf[], size_t length)
+   {
+   size_t offset = 0;
+
+   while(length)
+      {
+      ssize_t sent = ::send(sockfd, (const char*)buf + offset,
+                            length, MSG_NOSIGNAL);
+
+      if(sent == -1)
+         {
+         if(errno == EINTR)
+            sent = 0;
+         else
+            throw std::runtime_error("Socket::write: Socket write failed");
          }
 
-      bool handshake_complete(const TLS::Session& session)
-         {
-         std::cout << "Handshake complete: "
-                   << session.version().to_string() << " "
-                   << session.ciphersuite().to_string() << " "
-                   << "SessionID: " << hex_encode(session.session_id()) << "\n";
-
-         if(session.srp_identifier() != "")
-            std::cout << "SRP identifier: " << session.srp_identifier() << "\n";
-
-         if(server.next_protocol() != "")
-            std::cout << "Next protocol: " << server.next_protocol() << "\n";
-
-         /*
-         std::vector<X509_Certificate> peer_certs = session.peer_certs();
-         if(peer_certs.size())
-            std::cout << peer_certs[0].to_string();
-         */
-
-         return true;
-         }
-
-      size_t read(byte buf[], size_t buf_len)
-         {
-         size_t got = read_queue.read(buf, buf_len);
-
-         while(!exit && !got)
-            {
-            read_loop(TLS::TLS_HEADER_SIZE);
-            got = read_queue.read(buf, buf_len);
-            }
-
-         return got;
-         }
-
-      void write(const byte buf[], size_t buf_len)
-         {
-         server.send(buf, buf_len);
-         }
-
-      void close() { server.close(); }
-
-      bool is_active() const { return server.is_active(); }
-
-      TLS::Server& underlying() { return server; }
-   private:
-      void read_loop(size_t init_desired = 0)
-         {
-         size_t desired = init_desired;
-
-         byte buf[4096];
-         while(!exit && (!server.is_active() || desired))
-            {
-            const size_t asking = std::max(sizeof(buf), std::min(desired, static_cast<size_t>(1)));
-
-            const size_t socket_got = input_fn(&buf[0], asking);
-
-            if(socket_got == 0) // eof?
-               {
-               close();
-               printf("got eof on socket\n");
-               exit = true;
-               }
-
-            desired = server.received_data(&buf[0], socket_got);
-            }
-         }
-
-      void reader_fn(const byte buf[], size_t buf_len, TLS::Alert alert)
-         {
-         if(alert.is_valid())
-            {
-            printf("Alert %s\n", alert.type_string().c_str());
-            //exit = true;
-            }
-
-         printf("Got %d bytes: ", (int)buf_len);
-         for(size_t i = 0; i != buf_len; ++i)
-            {
-            if(isprint(buf[i]))
-               printf("%c", buf[i]);
-            }
-         printf("\n");
-
-         read_queue.write(buf, buf_len);
-         }
-
-      std::function<size_t (byte[], size_t)> input_fn;
-      TLS::Server server;
-      SecureQueue read_queue;
-      bool exit;
-   };
+      offset += sent;
+      length -= sent;
+      }
+   }
 
 int main(int argc, char* argv[])
    {
    int port = 4433;
+   std::string transport = "tcp";
 
-   if(argc == 2)
+   if(argc >= 2)
       port = to_u32bit(argv[1]);
+   if(argc >= 3)
+      transport = argv[2];
 
    try
       {
       LibraryInitializer botan_init;
-      //SocketInitializer socket_init;
 
       AutoSeeded_RNG rng;
 
-      Server_Socket listener(port);
-
       TLS::Policy policy;
 
-      TLS::Session_Manager_In_Memory sessions;
+      TLS::Session_Manager_In_Memory session_manager;
 
       Credentials_Manager_Simple creds(rng);
-
-      std::vector<std::string> protocols;
 
       /*
       * These are the protocols we advertise to the client, but the
       * client will send back whatever it actually plans on talking,
       * which may or may not take into account what we advertise.
       */
-      protocols.push_back("echo/1.0");
-      protocols.push_back("echo/1.1");
+      const std::vector<std::string> protocols = { "echo/1.0", "echo/1.1" };
+
+      printf("Listening for new connection on %s port %d\n", transport.c_str(), port);
+
+      int server_fd = make_server_socket(transport, port);
 
       while(true)
          {
-         try {
-            printf("Listening for new connection on port %d\n", port);
+         try
+            {
+            int fd;
 
-            std::auto_ptr<Socket> sock(listener.accept());
-
-            printf("Got new connection\n");
-
-            Blocking_TLS_Server tls(
-               std::bind(&Socket::write, std::ref(sock), _1, _2),
-               std::bind(&Socket::read, std::ref(sock), _1, _2, true),
-               protocols,
-               sessions,
-               creds,
-               policy,
-               rng);
-
-            const char* msg = "Welcome to the best echo server evar\n";
-            tls.write((const Botan::byte*)msg, strlen(msg));
-
-            std::string line;
-
-            while(tls.is_active())
+            if(transport == "tcp")
+               fd = ::accept(server_fd, NULL, NULL);
+            else
                {
-               byte b;
-               size_t got = tls.read(&b, 1);
+               struct sockaddr_in from;
+               socklen_t from_len = sizeof(sockaddr_in);
+
+               if(::recvfrom(server_fd, NULL, 0, MSG_PEEK,
+                             (struct sockaddr*)&from, &from_len) != 0)
+                  throw std::runtime_error("Could not peek next packet");
+
+               if(::connect(server_fd, (struct sockaddr*)&from, from_len) != 0)
+                  throw std::runtime_error("Could not connect UDP socket");
+
+               fd = server_fd;
+               }
+
+            printf("New connection received\n");
+
+            auto socket_write =
+               (transport == "tcp") ?
+               std::bind(stream_socket_write, fd, _1, _2) :
+               std::bind(dgram_socket_write, fd, _1, _2);
+
+            std::string s;
+            std::list<std::string> pending_output;
+
+            pending_output.push_back("Welcome to the best echo server evar\n");
+
+            auto proc_fn = [&](const byte input[], size_t input_len, TLS::Alert alert)
+            {
+               if(alert.is_valid())
+                  std::cout << "Alert: " << alert.type_string() << "\n";
+
+               for(size_t i = 0; i != input_len; ++i)
+                  {
+                  char c = (char)input[i];
+                  s += c;
+                  if(c == '\n')
+                     {
+                     pending_output.push_back(s);
+                     s.clear();
+                     }
+                  }
+            };
+
+            TLS::Server server(socket_write,
+                               proc_fn,
+                               handshake_complete,
+                               session_manager,
+                               creds,
+                               policy,
+                               rng,
+                               protocols);
+
+            while(!server.is_closed())
+               {
+               byte buf[4*1024] = { 0 };
+               size_t got = ::read(fd, buf, sizeof(buf));
+
+               if(got == -1)
+                  {
+                  printf("Error in socket read %s\n", strerror(errno));
+                  break;
+                  }
 
                if(got == 0)
-                  break;
-
-               line += (char)b;
-               if(b == '\n')
                   {
-                  //std::cout << line;
+                  printf("EOF on socket\n");
+                  break;
+                  }
 
-                  tls.write(reinterpret_cast<const byte*>(line.data()), line.size());
+               server.received_data(buf, got);
 
-                  if(line == "quit\n")
-                     {
-                     tls.close();
-                     break;
-                     }
+               while(server.is_active() && !pending_output.empty())
+                  {
+                  std::string s = pending_output.front();
+                  pending_output.pop_front();
+                  server.send(s);
 
-                  if(line == "reneg\n")
-                     tls.underlying().renegotiate(false);
-                  else if(line == "RENEG\n")
-                     tls.underlying().renegotiate(true);
-
-                  line.clear();
+                  if(s == "quit\n")
+                     server.close();
                   }
                }
+
+            if(transport == "tcp")
+               ::close(fd);
+
             }
          catch(std::exception& e) { printf("Connection problem: %s\n", e.what()); }
          }
