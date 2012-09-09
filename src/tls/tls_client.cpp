@@ -68,7 +68,7 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
 
    const Protocol_Version version = m_policy.pref_version();
    Handshake_State& state = create_handshake_state(version);
-   initiate_handshake(state, false, version, srp_identifier, next_protocol);
+   send_client_hello(state, false, version, srp_identifier, next_protocol);
    }
 
 Handshake_State* Client::new_handshake_state(Handshake_IO* io)
@@ -90,21 +90,21 @@ Client::get_peer_cert_chain(const Handshake_State& state) const
 void Client::initiate_handshake(Handshake_State& state,
                                 bool force_full_renegotiation)
    {
-   initiate_handshake(state,
-                      force_full_renegotiation,
-                      state.version());
+   send_client_hello(state,
+                     force_full_renegotiation,
+                     state.version());
    }
 
-void Client::initiate_handshake(Handshake_State& state_base,
-                                bool force_full_renegotiation,
-                                Protocol_Version version,
-                                const std::string& srp_identifier,
-                                std::function<std::string (std::vector<std::string>)> next_protocol)
+void Client::send_client_hello(Handshake_State& state_base,
+                               bool force_full_renegotiation,
+                               Protocol_Version version,
+                               const std::string& srp_identifier,
+                               std::function<std::string (std::vector<std::string>)> next_protocol)
    {
    Client_Handshake_State& state = dynamic_cast<Client_Handshake_State&>(state_base);
 
    if(state.version().is_datagram_protocol())
-      state.set_expected_next(HELLO_VERIFY_REQUEST);
+      state.set_expected_next(HELLO_VERIFY_REQUEST); // optional
    state.set_expected_next(SERVER_HELLO);
 
    state.client_npn_cb = next_protocol;

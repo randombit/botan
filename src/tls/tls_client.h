@@ -72,12 +72,12 @@ class BOTAN_DLL Client : public Channel
       void initiate_handshake(Handshake_State& state,
                               bool force_full_renegotiation) override;
 
-      void initiate_handshake(Handshake_State& state,
-                              bool force_full_renegotiation,
-                              Protocol_Version version,
-                              const std::string& srp_identifier = "",
-                              std::function<std::string (std::vector<std::string>)> next_protocol =
-                                 std::function<std::string (std::vector<std::string>)>());
+      void send_client_hello(Handshake_State& state,
+                             bool force_full_renegotiation,
+                             Protocol_Version version,
+                             const std::string& srp_identifier = "",
+                             std::function<std::string (std::vector<std::string>)> next_protocol =
+                                std::function<std::string (std::vector<std::string>)>());
 
       void process_handshake_msg(const Handshake_State* active_state,
                                  Handshake_State& pending_state,
