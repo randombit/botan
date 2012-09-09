@@ -521,7 +521,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          ""
          );
 
-      const bool should_save = m_handshake_fn(session_info);
+      const bool should_save = save_session(session_info);
 
       if(!session_id.empty())
          {

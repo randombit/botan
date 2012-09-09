@@ -410,7 +410,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
 
          state.compute_session_keys(session_info.master_secret());
 
-         if(!m_handshake_fn(session_info))
+         if(!save_session(session_info))
             {
             session_manager().remove_entry(session_info.session_id());
 
@@ -677,7 +677,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
             state.srp_identifier()
             );
 
-         if(m_handshake_fn(session_info))
+         if(save_session(session_info))
             {
             if(state.server_hello()->supports_session_ticket())
                {
