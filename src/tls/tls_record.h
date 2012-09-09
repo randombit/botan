@@ -50,6 +50,10 @@ class Connection_Cipher_State
       size_t mac_size() const { return m_mac->output_length(); }
 
       size_t iv_size() const { return m_iv_size; }
+
+      bool mac_includes_record_version() const { return !m_is_ssl3; }
+
+      bool cipher_padding_single_byte() const { return m_is_ssl3; }
    private:
       std::unique_ptr<BlockCipher> m_block_cipher;
       secure_vector<byte> m_block_cipher_cbc_state;
@@ -57,6 +61,7 @@ class Connection_Cipher_State
       std::unique_ptr<MessageAuthenticationCode> m_mac;
       size_t m_block_size = 0;
       size_t m_iv_size = 0;
+      bool m_is_ssl3 = false;
    };
 
 /**
@@ -90,7 +95,7 @@ size_t read_record(std::vector<byte>& read_buffer,
                    byte& msg_type,
                    std::vector<byte>& msg,
                    u64bit msg_sequence,
-                   Protocol_Version version,
+                   Protocol_Version& record_version,
                    Connection_Cipher_State* cipherstate);
 
 }

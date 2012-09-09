@@ -19,11 +19,11 @@ namespace Botan {
 
 namespace TLS {
 
-Connection_Cipher_State::Connection_Cipher_State(
-   Protocol_Version version,
-   Connection_Side side,
-   const Ciphersuite& suite,
-   const Session_Keys& keys)
+Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
+                                                 Connection_Side side,
+                                                 const Ciphersuite& suite,
+                                                 const Session_Keys& keys) :
+   m_is_ssl3(version == Protocol_Version::SSL_V3)
    {
    SymmetricKey mac_key, cipher_key;
    InitializationVector iv;
@@ -108,7 +108,7 @@ void write_record(std::vector<byte>& output,
    cipherstate->mac()->update_be(msg_sequence_number);
    cipherstate->mac()->update(msg_type);
 
-   if(version != Protocol_Version::SSL_V3)
+   if(cipherstate->mac_includes_record_version())
       {
       cipherstate->mac()->update(version.major_version());
       cipherstate->mac()->update(version.minor_version());
@@ -228,7 +228,7 @@ size_t fill_buffer_to(std::vector<byte>& readbuf,
 * Also returns 0 if block_size == 0, so can be safely called with a
 * stream cipher in use.
 */
-size_t tls_padding_check(Protocol_Version version,
+size_t tls_padding_check(bool sslv3_padding,
                          size_t block_size,
                          const byte record[],
                          size_t record_len)
@@ -245,7 +245,7 @@ size_t tls_padding_check(Protocol_Version version,
    * SSL v3 requires that the padding be less than the block size
    * but not does specify the value of the padding bytes.
    */
-   if(version == Protocol_Version::SSL_V3)
+   if(sslv3_padding)
       {
       if(padding_length > 0 && padding_length < block_size)
          return (padding_length + 1);
@@ -274,7 +274,6 @@ size_t read_record(std::vector<byte>& readbuf,
                    byte& msg_type,
                    std::vector<byte>& msg,
                    u64bit msg_sequence,
-                   Protocol_Version negotiated_version,
                    Connection_Cipher_State* cipherstate)
    {
    consumed = 0;
@@ -293,10 +292,6 @@ size_t read_record(std::vector<byte>& readbuf,
    // Possible SSLv2 format client hello
    if((!cipherstate) && (readbuf[0] & 0x80) && (readbuf[2] == 1))
       {
-      if(negotiated_version.is_datagram_protocol())
-         throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                             "Client sent SSLv2-style DTLS hello");
-
       if(readbuf[3] == 0 && readbuf[4] == 2)
          throw TLS_Exception(Alert::PROTOCOL_VERSION,
                              "Client claims to only support SSLv2, rejecting");
@@ -393,9 +388,6 @@ size_t read_record(std::vector<byte>& readbuf,
       return 0; // got a full record
       }
 
-   BOTAN_ASSERT(negotiated_version.valid(),
-                "We know what version we are using");
-
    // Otherwise, decrypt, check MAC, return plaintext
    const size_t block_size = cipherstate->block_size();
    const size_t iv_size = cipherstate->iv_size();
@@ -442,8 +434,8 @@ size_t read_record(std::vector<byte>& readbuf,
    * padding_length fields are padding from our perspective.
    */
    const size_t pad_size =
-      tls_padding_check(negotiated_version, block_size,
-                        record_contents, record_len);
+      tls_padding_check(cipherstate->cipher_padding_single_byte(),
+                        block_size, record_contents, record_len);
 
    const size_t mac_pad_iv_size = mac_size + pad_size + iv_size;
 
@@ -453,10 +445,10 @@ size_t read_record(std::vector<byte>& readbuf,
    cipherstate->mac()->update_be(msg_sequence);
    cipherstate->mac()->update(readbuf[0]); // msg_type
 
-   if(negotiated_version != Protocol_Version::SSL_V3)
+   if(cipherstate->mac_includes_record_version())
       {
-      cipherstate->mac()->update(negotiated_version.major_version());
-      cipherstate->mac()->update(negotiated_version.minor_version());
+      cipherstate->mac()->update(record_version.major_version());
+      cipherstate->mac()->update(record_version.minor_version());
       }
 
    const u16bit plain_length = record_len - mac_pad_iv_size;
