@@ -121,7 +121,7 @@ void Client::initiate_handshake(Handshake_State& state_base,
    if(!force_full_renegotiation && m_hostname != "")
       {
       Session session_info;
-      if(m_session_manager.load_from_host_info(m_hostname, m_port, session_info))
+      if(session_manager().load_from_host_info(m_hostname, m_port, session_info))
          {
          if(srp_identifier == "" || session_info.srp_identifier() == srp_identifier)
             {
@@ -129,7 +129,7 @@ void Client::initiate_handshake(Handshake_State& state_base,
                state.handshake_io(),
                state.hash(),
                m_policy,
-               m_rng,
+               rng(),
                secure_renegotiation_data_for_client_hello(),
                session_info,
                send_npn_request));
@@ -146,7 +146,7 @@ void Client::initiate_handshake(Handshake_State& state_base,
          state.hash(),
          version,
          m_policy,
-         m_rng,
+         rng(),
          secure_renegotiation_data_for_client_hello(),
          send_npn_request,
          m_hostname,
@@ -411,7 +411,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
                                  m_creds,
                                  state.server_public_key.get(),
                                  m_hostname,
-                                 m_rng)
+                                 rng())
          );
 
       state.compute_session_keys();
@@ -428,7 +428,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
             new Certificate_Verify(state.handshake_io(),
                                    state,
                                    m_policy,
-                                   m_rng,
+                                   rng(),
                                    private_key)
             );
          }
@@ -504,7 +504,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
       const std::vector<byte>& session_ticket = state.session_ticket();
 
       if(session_id.empty() && !session_ticket.empty())
-         session_id = make_hello_random(m_rng);
+         session_id = make_hello_random(rng());
 
       Session session_info(
          session_id,
@@ -526,9 +526,9 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
       if(!session_id.empty())
          {
          if(should_save)
-            m_session_manager.save(session_info, m_port);
+            session_manager().save(session_info, m_port);
          else
-            m_session_manager.remove_entry(session_info.session_id());
+            session_manager().remove_entry(session_info.session_id());
          }
 
       activate_session();

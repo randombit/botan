@@ -362,7 +362,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
       const bool resuming =
          state.allow_session_resumption &&
          check_for_resume(session_info,
-                          m_session_manager,
+                          session_manager(),
                           m_creds,
                           state.client_hello(),
                           std::chrono::seconds(m_policy.session_ticket_lifetime()));
@@ -400,7 +400,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
                state.client_hello()->next_protocol_notification(),
                m_possible_protocols,
                state.client_hello()->supports_heartbeats(),
-               m_rng)
+               rng())
             );
 
          secure_renegotiation_check(state.server_hello());
@@ -412,7 +412,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
 
          if(!m_handshake_fn(session_info))
             {
-            m_session_manager.remove_entry(session_info.session_id());
+            session_manager().remove_entry(session_info.session_id());
 
             if(state.server_hello()->supports_session_ticket()) // send an empty ticket
                {
@@ -432,7 +432,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
                state.new_session_ticket(
                   new New_Session_Ticket(state.handshake_io(),
                                          state.hash(),
-                                         session_info.encrypt(ticket_key, m_rng),
+                                         session_info.encrypt(ticket_key, rng()),
                                          m_policy.session_ticket_lifetime())
                   );
                }
@@ -481,7 +481,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
             new Server_Hello(
                state.handshake_io(),
                state.hash(),
-               make_hello_random(m_rng), // new session ID
+               make_hello_random(rng()), // new session ID
                state.version(),
                choose_ciphersuite(m_policy,
                                   state.version(),
@@ -496,7 +496,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
                state.client_hello()->next_protocol_notification(),
                m_possible_protocols,
                state.client_hello()->supports_heartbeats(),
-               m_rng)
+               rng())
             );
 
          secure_renegotiation_check(state.server_hello());
@@ -543,7 +543,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
                                        state,
                                        m_policy,
                                        m_creds,
-                                       m_rng,
+                                       rng(),
                                        private_key)
                );
             }
@@ -592,7 +592,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
       state.client_kex(
          new Client_Key_Exchange(contents, state,
                                  state.server_rsa_kex_key,
-                                 m_creds, m_policy, m_rng)
+                                 m_creds, m_policy, rng())
          );
 
       state.compute_session_keys();
@@ -688,14 +688,14 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
                   state.new_session_ticket(
                      new New_Session_Ticket(state.handshake_io(),
                                             state.hash(),
-                                            session_info.encrypt(ticket_key, m_rng),
+                                            session_info.encrypt(ticket_key, rng()),
                                             m_policy.session_ticket_lifetime())
                      );
                   }
                catch(...) {}
                }
             else
-               m_session_manager.save(session_info);
+               session_manager().save(session_info);
             }
 
          if(!state.new_session_ticket() &&

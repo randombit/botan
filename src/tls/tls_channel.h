@@ -156,11 +156,12 @@ class BOTAN_DLL Channel
 
       bool secure_renegotiation_supported() const;
 
+      RandomNumberGenerator& rng() { return m_rng; }
+
+      Session_Manager& session_manager() { return m_session_manager; }
+
       /* state accesssible by subclasses */
       std::function<bool (const Session&)> m_handshake_fn;
-
-      RandomNumberGenerator& m_rng;
-      Session_Manager& m_session_manager;
 
    private:
       void send_record(byte type, const byte input[], size_t length);
@@ -174,6 +175,10 @@ class BOTAN_DLL Channel
       /* callbacks */
       std::function<void (const byte[], size_t, Alert)> m_proc_fn;
       std::function<void (const byte[], size_t)> m_output_fn;
+
+      /* external state */
+      RandomNumberGenerator& m_rng;
+      Session_Manager& m_session_manager;
 
       /* writing cipher state */
       std::vector<byte> m_writebuf;
