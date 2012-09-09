@@ -92,7 +92,7 @@ void Client::initiate_handshake(Handshake_State& state,
    {
    initiate_handshake(state,
                       force_full_renegotiation,
-                      current_protocol_version());
+                      state.version());
    }
 
 void Client::initiate_handshake(Handshake_State& state_base,
@@ -235,7 +235,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
                                 "Server sent session ticket extension but we did not");
          }
 
-      set_protocol_version(state.server_hello()->version());
+      state.set_version(state.server_hello()->version());
 
       secure_renegotiation_check(state.server_hello());
 

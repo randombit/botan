@@ -348,7 +348,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
 
       secure_renegotiation_check(state.client_hello());
 
-      set_protocol_version(negotiated_version);
+      state.set_version(negotiated_version);
 
       Session session_info;
       const bool resuming =

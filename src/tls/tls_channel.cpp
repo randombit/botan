@@ -48,23 +48,37 @@ std::vector<X509_Certificate> Channel::peer_cert_chain() const
 
 Handshake_State& Channel::create_handshake_state(Protocol_Version version)
    {
+   const size_t dtls_mtu = 1400; // fixme should be settable
+
    if(m_pending_state)
       throw Internal_Error("create_handshake_state called during handshake");
 
-   const size_t dtls_mtu = 1400;
+   if(m_active_state)
+      {
+      Protocol_Version active_version = m_active_state->version();
 
-   std::unique_ptr<Handshake_IO> handshake_io;
+      if(active_version.is_datagram_protocol() != version.is_datagram_protocol())
+         throw std::runtime_error("Active state using version " +
+                                  active_version.to_string() +
+                                  " cannot change to " +
+                                  version.to_string() +
+                                  " in pending");
+      }
 
    auto send_rec = std::bind(&Channel::send_record, this,
                              std::placeholders::_1,
                              std::placeholders::_2);
 
+   std::unique_ptr<Handshake_IO> io;
    if(version.is_datagram_protocol())
-      handshake_io.reset(new Datagram_Handshake_IO(send_rec, dtls_mtu));
+      io.reset(new Datagram_Handshake_IO(send_rec, dtls_mtu));
    else
-      handshake_io.reset(new Stream_Handshake_IO(send_rec));
+      io.reset(new Stream_Handshake_IO(send_rec));
 
-   m_pending_state.reset(new_handshake_state(handshake_io.release()));
+   m_pending_state.reset(new_handshake_state(io.release()));
+
+   if(m_active_state)
+      m_pending_state->set_version(m_active_state->version());
 
    return *m_pending_state.get();
    }
@@ -79,12 +93,6 @@ void Channel::renegotiate(bool force_full_renegotiation)
 
    initiate_handshake(create_handshake_state(m_active_state->version()),
                       force_full_renegotiation);
-   }
-
-void Channel::set_protocol_version(Protocol_Version version)
-   {
-   m_current_version = version;
-   m_pending_state->set_version(version);
    }
 
 void Channel::set_maximum_fragment_size(size_t max_fragment)
@@ -174,6 +182,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
          byte rec_type = CONNECTION_CLOSED;
          std::vector<byte> record;
          u64bit record_number = 0;
+         Protocol_Version record_version;
 
          size_t consumed = 0;
 
@@ -186,7 +195,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
                         rec_type,
                         record,
                         m_read_seq_no,
-                        m_current_version,
+                        record_version,
                         m_read_cipherstate.get());
 
          BOTAN_ASSERT(consumed <= buf_size,
@@ -211,7 +220,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
          if(rec_type == HANDSHAKE || rec_type == CHANGE_CIPHER_SPEC)
             {
             if(!m_pending_state)
-               create_handshake_state(m_current_version); // fixme
+               create_handshake_state(record_version);
 
             m_pending_state->handshake_io().add_input(
                rec_type, &record[0], record.size(), record_number);
@@ -384,14 +393,11 @@ void Channel::write_record(byte record_type, const byte input[], size_t length)
    if(length > m_max_fragment)
       throw Internal_Error("Record is larger than allowed fragment size");
 
-   Protocol_Version record_version = current_protocol_version();
-   if(!record_version.valid())
-      {
-      BOTAN_ASSERT(m_pending_state && !m_pending_state->server_hello(),
-                   "In first record of client connection");
+   BOTAN_ASSERT(m_pending_state || m_active_state,
+                "Some connection state exists");
 
-      record_version = m_pending_state->handshake_io().initial_record_version();
-      }
+   Protocol_Version record_version =
+      (m_pending_state) ? (m_pending_state->version()) : (m_active_state->version());
 
    TLS::write_record(m_writebuf,
                      record_type,

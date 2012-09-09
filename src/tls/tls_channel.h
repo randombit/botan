@@ -134,11 +134,6 @@ class BOTAN_DLL Channel
 
       void activate_session();
 
-      void set_protocol_version(Protocol_Version version);
-
-      Protocol_Version current_protocol_version() const
-         { return m_current_version; }
-
       void set_maximum_fragment_size(size_t maximum);
 
       void change_cipher_spec_reader(Connection_Side side);
@@ -196,7 +191,6 @@ class BOTAN_DLL Channel
       std::unique_ptr<Handshake_State> m_active_state;
       std::unique_ptr<Handshake_State> m_pending_state;
 
-      Protocol_Version m_current_version;
       size_t m_max_fragment = MAX_PLAINTEXT_SIZE;
 
       bool m_secure_renegotiation = false;
