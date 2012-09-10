@@ -439,7 +439,7 @@ be negotiated during a handshake.
 
      Default: TLS v1.2
 
- .. cpp:function:: bool acceptable_protocol_version(const Protocol_Version& version)
+ .. cpp:function:: bool acceptable_protocol_version(Protocol_Version version)
 
      Return true if this version of the protocol is one that we are
      willing to negotiate.

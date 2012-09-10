@@ -128,7 +128,7 @@ u32bit Policy::session_ticket_lifetime() const
    return 86400; // 1 day
    }
 
-bool Policy::acceptable_protocol_version(const Protocol_Version& version) const
+bool Policy::acceptable_protocol_version(Protocol_Version version) const
    {
    return (version == Protocol_Version::SSL_V3 ||
            version == Protocol_Version::TLS_V10 ||
