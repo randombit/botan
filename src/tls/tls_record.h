@@ -23,6 +23,8 @@ namespace TLS {
 class Ciphersuite;
 class Session_Keys;
 
+class Connection_Sequence_Numbers;
+
 /**
 * TLS Cipher State
 */
@@ -78,8 +80,8 @@ class Connection_Cipher_State
 */
 void write_record(std::vector<byte>& write_buffer,
                   byte msg_type, const byte msg[], size_t msg_length,
-                  u64bit msg_sequence_number,
                   Protocol_Version version,
+                  Connection_Sequence_Numbers& sequence_numbers,
                   Connection_Cipher_State* cipherstate,
                   RandomNumberGenerator& rng);
 
@@ -94,8 +96,8 @@ size_t read_record(std::vector<byte>& read_buffer,
                    size_t& input_consumed,
                    byte& msg_type,
                    std::vector<byte>& msg,
-                   u64bit msg_sequence,
                    Protocol_Version& record_version,
+                   Connection_Sequence_Numbers* sequence_numbers,
                    Connection_Cipher_State* cipherstate);
 
 }

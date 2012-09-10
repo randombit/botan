@@ -21,7 +21,6 @@ namespace Botan {
 
 namespace TLS {
 
-class Handshake_IO;
 class Handshake_State;
 
 /**
@@ -121,7 +120,7 @@ class BOTAN_DLL Channel
       virtual std::vector<X509_Certificate>
          get_peer_cert_chain(const Handshake_State& state) const = 0;
 
-      virtual Handshake_State* new_handshake_state(Handshake_IO* io) = 0;
+      virtual Handshake_State* new_handshake_state(class Handshake_IO* io) = 0;
 
       Handshake_State& create_handshake_state(Protocol_Version version);
 
@@ -167,6 +166,8 @@ class BOTAN_DLL Channel
 
       bool heartbeat_sending_allowed() const;
 
+      class Connection_Sequence_Numbers& sequence_numbers() const;
+
       /* callbacks */
       std::function<bool (const Session&)> m_handshake_fn;
       std::function<void (const byte[], size_t, Alert)> m_proc_fn;
@@ -176,16 +177,16 @@ class BOTAN_DLL Channel
       RandomNumberGenerator& m_rng;
       Session_Manager& m_session_manager;
 
+      std::unique_ptr<class Connection_Sequence_Numbers> m_sequence_numbers;
+
       /* writing cipher state */
       std::vector<byte> m_writebuf;
       std::unique_ptr<class Connection_Cipher_State> m_write_cipherstate;
-      u64bit m_write_seq_no = 0;
 
       /* reading cipher state */
       std::vector<byte> m_readbuf;
       size_t m_readbuf_pos = 0;
       std::unique_ptr<class Connection_Cipher_State> m_read_cipherstate;
-      u64bit m_read_seq_no = 0;
 
       /* connection parameters */
       std::unique_ptr<Handshake_State> m_active_state;

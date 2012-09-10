@@ -10,6 +10,7 @@
 #include <botan/tls_exceptn.h>
 #include <botan/libstate.h>
 #include <botan/loadstor.h>
+#include <botan/internal/tls_seq_numbers.h>
 #include <botan/internal/tls_session_key.h>
 #include <botan/internal/rounding.h>
 #include <botan/internal/assert.h>
@@ -78,8 +79,8 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
 
 void write_record(std::vector<byte>& output,
                   byte msg_type, const byte msg[], size_t msg_length,
-                  u64bit msg_sequence_number,
                   Protocol_Version version,
+                  Connection_Sequence_Numbers& sequence_numbers,
                   Connection_Cipher_State* cipherstate,
                   RandomNumberGenerator& rng)
    {
@@ -89,10 +90,12 @@ void write_record(std::vector<byte>& output,
    output.push_back(version.major_version());
    output.push_back(version.minor_version());
 
+   const u64bit msg_sequence = sequence_numbers.next_write_sequence();
+
    if(version.is_datagram_protocol())
       {
       for(size_t i = 0; i != 8; ++i)
-         output.push_back(get_byte(i, msg_sequence_number));
+         output.push_back(get_byte(i, msg_sequence));
       }
 
    if(!cipherstate) // initial unencrypted handshake records
@@ -105,7 +108,7 @@ void write_record(std::vector<byte>& output,
       return;
       }
 
-   cipherstate->mac()->update_be(msg_sequence_number);
+   cipherstate->mac()->update_be(msg_sequence);
    cipherstate->mac()->update(msg_type);
 
    if(cipherstate->mac_includes_record_version())
@@ -273,8 +276,8 @@ size_t read_record(std::vector<byte>& readbuf,
                    size_t& consumed,
                    byte& msg_type,
                    std::vector<byte>& msg,
-                   u64bit msg_sequence,
                    Protocol_Version& record_version,
+                   Connection_Sequence_Numbers* sequence_numbers,
                    Connection_Cipher_State* cipherstate)
    {
    consumed = 0;
@@ -352,8 +355,14 @@ size_t read_record(std::vector<byte>& readbuf,
    const size_t header_size =
       (record_version.is_datagram_protocol()) ? DTLS_HEADER_SIZE : TLS_HEADER_SIZE;
 
+   u64bit msg_sequence = 0;
+
    if(record_version.is_datagram_protocol())
       msg_sequence = load_be<u64bit>(&readbuf[3], 0);
+   else if(sequence_numbers)
+      msg_sequence = sequence_numbers->next_read_sequence();
+   else
+      msg_sequence = 0; // server initial handshake case
 
    const size_t record_len = make_u16bit(readbuf[header_size-2],
                                          readbuf[header_size-1]);
@@ -370,6 +379,9 @@ size_t read_record(std::vector<byte>& readbuf,
    BOTAN_ASSERT_EQUAL(static_cast<size_t>(header_size) + record_len,
                       readbuf_pos,
                       "Have the full record");
+
+   if(sequence_numbers && sequence_numbers->already_seen(msg_sequence))
+      return 0;
 
    byte* record_contents = &readbuf[header_size];
 
@@ -468,6 +480,9 @@ size_t read_record(std::vector<byte>& readbuf,
 
    if(mac_bad || padding_bad)
       throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure");
+
+   if(sequence_numbers)
+      sequence_numbers->read_accept(msg_sequence);
 
    msg_type = readbuf[0];
    msg.assign(&record_contents[iv_size],

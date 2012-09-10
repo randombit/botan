@@ -10,6 +10,7 @@
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_heartbeats.h>
 #include <botan/internal/tls_record.h>
+#include <botan/internal/tls_seq_numbers.h>
 #include <botan/internal/assert.h>
 #include <botan/internal/rounding.h>
 #include <botan/internal/stl_util.h>
@@ -39,6 +40,12 @@ Channel::~Channel()
    // So unique_ptr destructors run correctly
    }
 
+Connection_Sequence_Numbers& Channel::sequence_numbers() const
+   {
+   BOTAN_ASSERT(m_sequence_numbers, "Have a sequence numbers object");
+   return *m_sequence_numbers;
+   }
+
 std::vector<X509_Certificate> Channel::peer_cert_chain() const
    {
    if(!m_active_state)
@@ -63,6 +70,14 @@ Handshake_State& Channel::create_handshake_state(Protocol_Version version)
                                   " cannot change to " +
                                   version.to_string() +
                                   " in pending");
+      }
+
+   if(!m_sequence_numbers)
+      {
+      if(version.is_datagram_protocol())
+         m_sequence_numbers.reset(new Datagram_Sequence_Numbers);
+      else
+         m_sequence_numbers.reset(new Stream_Sequence_Numbers);
       }
 
    auto send_rec = std::bind(&Channel::send_record, this,
@@ -111,7 +126,7 @@ void Channel::change_cipher_spec_reader(Connection_Side side)
    if(m_pending_state->server_hello()->compression_method()!= NO_COMPRESSION)
       throw Internal_Error("Negotiated unknown compression algorithm");
 
-   m_read_seq_no = 0;
+   sequence_numbers().new_read_cipher_state();
 
    // flip side as we are reading
    side = (side == CLIENT) ? SERVER : CLIENT;
@@ -132,18 +147,7 @@ void Channel::change_cipher_spec_writer(Connection_Side side)
    if(m_pending_state->server_hello()->compression_method()!= NO_COMPRESSION)
       throw Internal_Error("Negotiated unknown compression algorithm");
 
-   /*
-   RFC 4346:
-     A sequence number is incremented after each record: specifically,
-     the first record transmitted under a particular connection state
-     MUST use sequence number 0
-
-   For DTLS, increment the epoch
-   */
-   if(m_pending_state->version().is_datagram_protocol())
-      m_write_seq_no = ((m_write_seq_no >> 48) + 1) << 48;
-   else
-      m_write_seq_no = 0;
+   sequence_numbers().new_write_cipher_state();
 
    m_write_cipherstate.reset(
       new Connection_Cipher_State(m_pending_state->version(),
@@ -194,8 +198,8 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
                         consumed,
                         rec_type,
                         record,
-                        m_read_seq_no,
                         record_version,
+                        m_sequence_numbers.get(),
                         m_read_cipherstate.get());
 
          BOTAN_ASSERT(consumed <= buf_size,
@@ -214,13 +218,17 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
             throw TLS_Exception(Alert::RECORD_OVERFLOW,
                                 "Plaintext record is too large");
 
-         record_number = m_read_seq_no;
-         m_read_seq_no += 1;
-
-         if(rec_type == HANDSHAKE || rec_type == CHANGE_CIPHER_SPEC)
+         if(rec_type == CONNECTION_CLOSED)
+            {
+            continue;
+            }
+         else if(rec_type == HANDSHAKE || rec_type == CHANGE_CIPHER_SPEC)
             {
             if(!m_pending_state)
+               {
                create_handshake_state(record_version);
+               sequence_numbers().read_accept(0);
+               }
 
             m_pending_state->handshake_io().add_input(
                rec_type, &record[0], record.size(), record_number);
@@ -403,12 +411,11 @@ void Channel::write_record(byte record_type, const byte input[], size_t length)
                      record_type,
                      input,
                      length,
-                     m_write_seq_no,
                      record_version,
+                     sequence_numbers(),
                      m_write_cipherstate.get(),
                      m_rng);
 
-   m_write_seq_no += 1;
    m_output_fn(&m_writebuf[0], m_writebuf.size());
    }
 
