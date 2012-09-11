@@ -97,6 +97,7 @@ size_t read_record(std::vector<byte>& read_buffer,
                    byte& msg_type,
                    std::vector<byte>& msg,
                    Protocol_Version& record_version,
+                   u64bit& record_sequence,
                    Connection_Sequence_Numbers* sequence_numbers,
                    Connection_Cipher_State* cipherstate);
 

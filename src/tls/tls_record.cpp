@@ -277,6 +277,7 @@ size_t read_record(std::vector<byte>& readbuf,
                    byte& msg_type,
                    std::vector<byte>& msg,
                    Protocol_Version& record_version,
+                   u64bit& record_sequence,
                    Connection_Sequence_Numbers* sequence_numbers,
                    Connection_Cipher_State* cipherstate)
    {
@@ -344,14 +345,12 @@ size_t read_record(std::vector<byte>& readbuf,
    const size_t header_size =
       (record_version.is_datagram_protocol()) ? DTLS_HEADER_SIZE : TLS_HEADER_SIZE;
 
-   u64bit msg_sequence = 0;
-
    if(record_version.is_datagram_protocol())
-      msg_sequence = load_be<u64bit>(&readbuf[3], 0);
+      record_sequence = load_be<u64bit>(&readbuf[3], 0);
    else if(sequence_numbers)
-      msg_sequence = sequence_numbers->next_read_sequence();
+      record_sequence = sequence_numbers->next_read_sequence();
    else
-      msg_sequence = 0; // server initial handshake case
+      record_sequence = 0; // server initial handshake case
 
    const size_t record_len = make_u16bit(readbuf[header_size-2],
                                          readbuf[header_size-1]);
@@ -369,7 +368,7 @@ size_t read_record(std::vector<byte>& readbuf,
                       readbuf_pos,
                       "Have the full record");
 
-   if(sequence_numbers && sequence_numbers->already_seen(msg_sequence))
+   if(sequence_numbers && sequence_numbers->already_seen(record_sequence))
       return 0;
 
    byte* record_contents = &readbuf[header_size];
@@ -437,7 +436,7 @@ size_t read_record(std::vector<byte>& readbuf,
    if(record_len < mac_pad_iv_size)
       throw Decoding_Error("Record sent with invalid length");
 
-   cipherstate->mac()->update_be(msg_sequence);
+   cipherstate->mac()->update_be(record_sequence);
    cipherstate->mac()->update(readbuf[0]); // msg_type
 
    if(cipherstate->mac_includes_record_version())
@@ -464,7 +463,7 @@ size_t read_record(std::vector<byte>& readbuf,
       throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure");
 
    if(sequence_numbers)
-      sequence_numbers->read_accept(msg_sequence);
+      sequence_numbers->read_accept(record_sequence);
 
    msg_type = readbuf[0];
    msg.assign(&record_contents[iv_size],

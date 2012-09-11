@@ -185,7 +185,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
          {
          byte rec_type = NO_RECORD;
          std::vector<byte> record;
-         u64bit record_number = 0;
+         u64bit record_sequence = 0;
          Protocol_Version record_version;
 
          size_t consumed = 0;
@@ -199,6 +199,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
                         rec_type,
                         record,
                         record_version,
+                        record_sequence,
                         m_sequence_numbers.get(),
                         m_read_cipherstate.get());
 
@@ -226,11 +227,11 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
             if(!m_pending_state)
                {
                create_handshake_state(record_version);
-               sequence_numbers().read_accept(0);
+               sequence_numbers().read_accept(record_sequence);
                }
 
             m_pending_state->handshake_io().add_input(
-               rec_type, &record[0], record.size(), record_number);
+               rec_type, &record[0], record.size(), record_sequence);
 
             while(m_pending_state)
                {
@@ -316,7 +317,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
             }
          else
             throw Unexpected_Message("Unknown record type " +
-                                     std::to_string(readbuf[0]) +
+                                     std::to_string(rec_type) +
                                      " from counterparty");
          }
 
