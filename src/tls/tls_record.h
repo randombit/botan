@@ -57,7 +57,7 @@ class Connection_Cipher_State
 
       bool cipher_padding_single_byte() const { return m_is_ssl3; }
 
-      bool cbc_withiout_explicit_iv() const
+      bool cbc_without_explicit_iv() const
          { return (m_block_size > 0) && (m_iv_size == 0); }
    private:
       std::unique_ptr<BlockCipher> m_block_cipher;
