@@ -359,19 +359,17 @@ void Channel::send_record_array(byte type, const byte input[], size_t length)
       return;
 
    /*
-   * If using CBC mode in SSLv3/TLS v1.0, send a single byte of
-   * plaintext to randomize the (implicit) IV of the following main
-   * block. If using a stream cipher, or TLS v1.1 or higher, this
-   * isn't necessary.
+   * If using CBC mode without an explicit IV (SSL v3 or TLS v1.0),
+   * send a single byte of plaintext to randomize the (implicit) IV of
+   * the following main block. If using a stream cipher, or TLS v1.1
+   * or higher, this isn't necessary.
    *
    * An empty record also works but apparently some implementations do
    * not like this (https://bugzilla.mozilla.org/show_bug.cgi?id=665814)
    *
    * See http://www.openssl.org/~bodo/tls-cbc.txt for background.
    */
-   if((type == APPLICATION_DATA) &&
-      (m_write_cipherstate->block_size() > 0) &&
-      (m_write_cipherstate->iv_size() == 0))
+   if(type == APPLICATION_DATA && m_write_cipherstate->cbc_without_explicit_iv())
       {
       write_record(type, &input[0], 1);
       input += 1;
