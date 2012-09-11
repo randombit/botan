@@ -291,10 +291,9 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
 
             if(alert_msg.type() == Alert::CLOSE_NOTIFY)
                {
-               if(m_connection_closed)
-                  m_read_cipherstate.reset();
-               else
+               if(!m_connection_closed)
                   send_alert(Alert(Alert::CLOSE_NOTIFY)); // reply in kind
+               m_read_cipherstate.reset();
                }
             else if(alert_msg.is_fatal())
                {
@@ -310,10 +309,12 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
 
                m_write_cipherstate.reset();
                m_read_cipherstate.reset();
+
+               return 0;
                }
             }
          else
-            throw Unexpected_Message("Unknown record type " +
+            throw Unexpected_Message("Unexpected record type " +
                                      std::to_string(rec_type) +
                                      " from counterparty");
          }
@@ -446,11 +447,11 @@ void Channel::send_alert(const Alert& alert)
 
    if(alert.type() == Alert::CLOSE_NOTIFY || alert.is_fatal())
       {
-      m_connection_closed = true;
-
       m_active_state.reset();
       m_pending_state.reset();
       m_write_cipherstate.reset();
+
+      m_connection_closed = true;
       }
    }
 
