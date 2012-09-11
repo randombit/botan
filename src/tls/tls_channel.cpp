@@ -30,7 +30,6 @@ Channel::Channel(std::function<void (const byte[], size_t)> output_fn,
    m_output_fn(output_fn),
    m_rng(rng),
    m_session_manager(session_manager),
-   m_writebuf(TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE),
    m_readbuf(TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE)
    {
    }

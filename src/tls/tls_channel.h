@@ -177,21 +177,21 @@ class BOTAN_DLL Channel
       RandomNumberGenerator& m_rng;
       Session_Manager& m_session_manager;
 
+      /* cipher/sequence state */
       std::unique_ptr<class Connection_Sequence_Numbers> m_sequence_numbers;
-
-      /* writing cipher state */
-      std::vector<byte> m_writebuf;
       std::unique_ptr<class Connection_Cipher_State> m_write_cipherstate;
+      std::unique_ptr<class Connection_Cipher_State> m_read_cipherstate;
 
-      /* reading cipher state */
+      /* I/O buffers */
+      std::vector<byte> m_writebuf;
       std::vector<byte> m_readbuf;
       size_t m_readbuf_pos = 0;
-      std::unique_ptr<class Connection_Cipher_State> m_read_cipherstate;
 
       /* connection parameters */
       std::unique_ptr<Handshake_State> m_active_state;
       std::unique_ptr<Handshake_State> m_pending_state;
 
+      /* misc, should be removed? */
       size_t m_max_fragment = MAX_PLAINTEXT_SIZE;
 
       bool m_secure_renegotiation = false;
