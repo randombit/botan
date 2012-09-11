@@ -177,7 +177,7 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
       Botan::TLS::Server m_tls;
       std::string m_hostname;
 
-      unsigned char m_read_buf[Botan::TLS::MAX_TLS_RECORD_SIZE];
+      unsigned char m_read_buf[1024];
 
       // used to hold the data currently being written by the system
       std::vector<byte> m_write_buf;
