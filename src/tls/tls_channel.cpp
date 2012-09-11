@@ -121,7 +121,7 @@ void Channel::change_cipher_spec_reader(Connection_Side side)
    BOTAN_ASSERT(m_pending_state && m_pending_state->server_hello(),
                 "Have received server hello");
 
-   if(m_pending_state->server_hello()->compression_method()!= NO_COMPRESSION)
+   if(m_pending_state->server_hello()->compression_method() != NO_COMPRESSION)
       throw Internal_Error("Negotiated unknown compression algorithm");
 
    sequence_numbers().new_read_cipher_state();
@@ -142,7 +142,7 @@ void Channel::change_cipher_spec_writer(Connection_Side side)
    BOTAN_ASSERT(m_pending_state && m_pending_state->server_hello(),
                 "Have received server hello");
 
-   if(m_pending_state->server_hello()->compression_method()!= NO_COMPRESSION)
+   if(m_pending_state->server_hello()->compression_method() != NO_COMPRESSION)
       throw Internal_Error("Negotiated unknown compression algorithm");
 
    sequence_numbers().new_write_cipher_state();
