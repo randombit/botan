@@ -328,17 +328,6 @@ size_t read_record(std::vector<byte>& readbuf,
          }
       }
 
-   if(readbuf[0] != CHANGE_CIPHER_SPEC &&
-      readbuf[0] != ALERT &&
-      readbuf[0] != HANDSHAKE &&
-      readbuf[0] != APPLICATION_DATA &&
-      readbuf[0] != HEARTBEAT)
-      {
-      throw Unexpected_Message(
-         "Unknown record type " + std::to_string(readbuf[0]) +
-         " from counterparty");
-      }
-
    record_version = Protocol_Version(readbuf[1], readbuf[2]);
 
    if(record_version.is_datagram_protocol() && readbuf_pos < DTLS_HEADER_SIZE)
@@ -385,15 +374,8 @@ size_t read_record(std::vector<byte>& readbuf,
 
    byte* record_contents = &readbuf[header_size];
 
-   if(!cipherstate) // Only handshake messages allowed during initial handshake
+   if(!cipherstate) // Unencrypted initial handshake
       {
-      if(readbuf[0] != CHANGE_CIPHER_SPEC &&
-         readbuf[0] != ALERT &&
-         readbuf[0] != HANDSHAKE)
-         {
-         throw Decoding_Error("Invalid msg type received during handshake");
-         }
-
       msg_type = readbuf[0];
       msg.assign(&record_contents[0], &record_contents[record_len]);
 

@@ -29,7 +29,7 @@ enum Size_Limits {
 enum Connection_Side { CLIENT = 1, SERVER = 2 };
 
 enum Record_Type {
-   CONNECTION_CLOSED  = 0,
+   NO_RECORD          = 0,
 
    CHANGE_CIPHER_SPEC = 20,
    ALERT              = 21,
