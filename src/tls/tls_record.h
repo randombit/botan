@@ -90,7 +90,6 @@ void write_record(std::vector<byte>& write_buffer,
 * @return zero if full message, else number of bytes still needed
 */
 size_t read_record(std::vector<byte>& read_buffer,
-                   size_t& read_buffer_position,
                    const byte input[],
                    size_t input_length,
                    size_t& input_consumed,

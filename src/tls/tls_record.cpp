@@ -129,7 +129,7 @@ void write_record(std::vector<byte>& output,
       iv_size + msg_length + mac_size + (block_size ? 1 : 0),
       block_size);
 
-   if(buf_size >= MAX_CIPHERTEXT_SIZE)
+   if(buf_size > MAX_CIPHERTEXT_SIZE)
       throw Internal_Error("Output record is larger than allowed by protocol");
 
    output.push_back(get_byte<u16bit>(0, buf_size));
@@ -194,29 +194,22 @@ void write_record(std::vector<byte>& output,
 namespace {
 
 size_t fill_buffer_to(std::vector<byte>& readbuf,
-                      size_t& readbuf_pos,
                       const byte*& input,
                       size_t& input_size,
                       size_t& input_consumed,
                       size_t desired)
    {
-   if(desired <= readbuf_pos)
+   if(readbuf.size() >= desired)
       return 0; // already have it
 
-   const size_t space_available = (readbuf.size() - readbuf_pos);
-   const size_t taken = std::min(input_size, desired - readbuf_pos);
+   const size_t taken = std::min(input_size, desired - readbuf.size());
 
-   if(taken > space_available)
-      throw TLS_Exception(Alert::RECORD_OVERFLOW,
-                          "Record is larger than allowed maximum size");
-
-   copy_mem(&readbuf[readbuf_pos], input, taken);
-   readbuf_pos += taken;
+   readbuf.insert(readbuf.end(), &input[0], &input[taken]);
    input_consumed += taken;
    input_size -= taken;
    input += taken;
 
-   return (desired - readbuf_pos); // how many bytes do we still need?
+   return (desired - readbuf.size()); // how many bytes do we still need?
    }
 
 /*
@@ -270,7 +263,6 @@ size_t tls_padding_check(bool sslv3_padding,
 }
 
 size_t read_record(std::vector<byte>& readbuf,
-                   size_t& readbuf_pos,
                    const byte input[],
                    size_t input_sz,
                    size_t& consumed,
@@ -283,14 +275,14 @@ size_t read_record(std::vector<byte>& readbuf,
    {
    consumed = 0;
 
-   if(readbuf_pos < TLS_HEADER_SIZE) // header incomplete?
+   if(readbuf.size() < TLS_HEADER_SIZE) // header incomplete?
       {
-      if(size_t needed = fill_buffer_to(readbuf, readbuf_pos,
+      if(size_t needed = fill_buffer_to(readbuf,
                                         input, input_sz, consumed,
                                         TLS_HEADER_SIZE))
          return needed;
 
-      BOTAN_ASSERT_EQUAL(readbuf_pos, TLS_HEADER_SIZE,
+      BOTAN_ASSERT_EQUAL(readbuf.size(), TLS_HEADER_SIZE,
                          "Have an entire header");
       }
 
@@ -305,12 +297,12 @@ size_t read_record(std::vector<byte>& readbuf,
          {
          const size_t record_len = make_u16bit(readbuf[0], readbuf[1]) & 0x7FFF;
 
-         if(size_t needed = fill_buffer_to(readbuf, readbuf_pos,
+         if(size_t needed = fill_buffer_to(readbuf,
                                            input, input_sz, consumed,
                                            record_len + 2))
             return needed;
 
-         BOTAN_ASSERT_EQUAL(readbuf_pos, (record_len + 2),
+         BOTAN_ASSERT_EQUAL(readbuf.size(), (record_len + 2),
                             "Have the entire SSLv2 hello");
 
          msg_type = HANDSHAKE;
@@ -323,22 +315,23 @@ size_t read_record(std::vector<byte>& readbuf,
          msg[2] = readbuf[0] & 0x7F;
          msg[3] = readbuf[1];
 
-         copy_mem(&msg[4], &readbuf[2], readbuf_pos - 2);
-         readbuf_pos = 0;
+         copy_mem(&msg[4], &readbuf[2], readbuf.size() - 2);
+
+         readbuf.clear();
          return 0;
          }
       }
 
    record_version = Protocol_Version(readbuf[1], readbuf[2]);
 
-   if(record_version.is_datagram_protocol() && readbuf_pos < DTLS_HEADER_SIZE)
+   if(record_version.is_datagram_protocol() && readbuf.size() < DTLS_HEADER_SIZE)
       {
-      if(size_t needed = fill_buffer_to(readbuf, readbuf_pos,
+      if(size_t needed = fill_buffer_to(readbuf,
                                         input, input_sz, consumed,
                                         DTLS_HEADER_SIZE))
          return needed;
 
-      BOTAN_ASSERT_EQUAL(readbuf_pos, DTLS_HEADER_SIZE,
+      BOTAN_ASSERT_EQUAL(readbuf.size(), DTLS_HEADER_SIZE,
                          "Have an entire header");
       }
 
@@ -359,13 +352,13 @@ size_t read_record(std::vector<byte>& readbuf,
       throw TLS_Exception(Alert::RECORD_OVERFLOW,
                           "Got message that exceeds maximum size");
 
-   if(size_t needed = fill_buffer_to(readbuf, readbuf_pos,
+   if(size_t needed = fill_buffer_to(readbuf,
                                      input, input_sz, consumed,
                                      header_size + record_len))
       return needed;
 
    BOTAN_ASSERT_EQUAL(static_cast<size_t>(header_size) + record_len,
-                      readbuf_pos,
+                      readbuf.size(),
                       "Have the full record");
 
    if(sequence_numbers && sequence_numbers->already_seen(record_sequence))
@@ -378,7 +371,7 @@ size_t read_record(std::vector<byte>& readbuf,
       msg_type = readbuf[0];
       msg.assign(&record_contents[0], &record_contents[record_len]);
 
-      readbuf_pos = 0;
+      readbuf.clear();
       return 0; // got a full record
       }
 
@@ -469,7 +462,7 @@ size_t read_record(std::vector<byte>& readbuf,
    msg.assign(&record_contents[iv_size],
               &record_contents[iv_size + plain_length]);
 
-   readbuf_pos = 0;
+   readbuf.clear();
    return 0;
    }
 

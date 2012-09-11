@@ -185,7 +185,6 @@ class BOTAN_DLL Channel
       /* I/O buffers */
       std::vector<byte> m_writebuf;
       std::vector<byte> m_readbuf;
-      size_t m_readbuf_pos = 0;
 
       /* connection parameters */
       std::unique_ptr<Handshake_State> m_active_state;

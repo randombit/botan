@@ -29,8 +29,7 @@ Channel::Channel(std::function<void (const byte[], size_t)> output_fn,
    m_proc_fn(proc_fn),
    m_output_fn(output_fn),
    m_rng(rng),
-   m_session_manager(session_manager),
-   m_readbuf(TLS_HEADER_SIZE + MAX_CIPHERTEXT_SIZE)
+   m_session_manager(session_manager)
    {
    }
 
@@ -191,7 +190,6 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
 
          const size_t needed =
             read_record(m_readbuf,
-                        m_readbuf_pos,
                         buf,
                         buf_size,
                         consumed,
