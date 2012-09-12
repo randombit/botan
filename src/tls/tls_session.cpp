@@ -24,7 +24,6 @@ Session::Session(const std::vector<byte>& session_identifier,
                  u16bit ciphersuite,
                  byte compression_method,
                  Connection_Side side,
-                 bool secure_renegotiation_supported,
                  size_t fragment_size,
                  const std::vector<X509_Certificate>& certs,
                  const std::vector<byte>& ticket,
@@ -38,7 +37,6 @@ Session::Session(const std::vector<byte>& session_identifier,
    m_ciphersuite(ciphersuite),
    m_compression_method(compression_method),
    m_connection_side(side),
-   m_secure_renegotiation_supported(secure_renegotiation_supported),
    m_fragment_size(fragment_size),
    m_peer_certs(certs),
    m_sni_hostname(sni_hostname),
@@ -78,7 +76,6 @@ Session::Session(const byte ber[], size_t ber_len)
         .decode_integer_type(m_compression_method)
         .decode_integer_type(side_code)
         .decode_integer_type(m_fragment_size)
-        .decode(m_secure_renegotiation_supported)
         .decode(m_master_secret, OCTET_STRING)
         .decode(peer_cert_bits, OCTET_STRING)
         .decode(sni_hostname_str)
@@ -119,7 +116,6 @@ secure_vector<byte> Session::DER_encode() const
          .encode(static_cast<size_t>(m_compression_method))
          .encode(static_cast<size_t>(m_connection_side))
          .encode(static_cast<size_t>(m_fragment_size))
-         .encode(m_secure_renegotiation_supported)
          .encode(m_master_secret, OCTET_STRING)
          .encode(peer_cert_bits, OCTET_STRING)
          .encode(ASN1_String(m_sni_hostname, UTF8_STRING))

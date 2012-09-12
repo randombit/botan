@@ -36,7 +36,6 @@ class BOTAN_DLL Session
          m_ciphersuite(0),
          m_compression_method(0),
          m_connection_side(static_cast<Connection_Side>(0)),
-         m_secure_renegotiation_supported(false),
          m_fragment_size(0)
             {}
 
@@ -49,7 +48,6 @@ class BOTAN_DLL Session
               u16bit ciphersuite,
               byte compression_method,
               Connection_Side side,
-              bool secure_renegotiation_supported,
               size_t fragment_size,
               const std::vector<X509_Certificate>& peer_certs,
               const std::vector<byte>& session_ticket,
@@ -162,12 +160,6 @@ class BOTAN_DLL Session
       size_t fragment_size() const { return m_fragment_size; }
 
       /**
-      * Is secure renegotiation supported?
-      */
-      bool secure_renegotiation() const
-         { return m_secure_renegotiation_supported; }
-
-      /**
       * Return the certificate chain of the peer (possibly empty)
       */
       std::vector<X509_Certificate> peer_certs() const { return m_peer_certs; }
@@ -189,7 +181,7 @@ class BOTAN_DLL Session
       const std::vector<byte>& session_ticket() const { return m_session_ticket; }
 
    private:
-      enum { TLS_SESSION_PARAM_STRUCT_VERSION = 0x2994e300 };
+      enum { TLS_SESSION_PARAM_STRUCT_VERSION = 0x2994e301 };
 
       std::chrono::system_clock::time_point m_start_time;
 
@@ -202,7 +194,6 @@ class BOTAN_DLL Session
       byte m_compression_method;
       Connection_Side m_connection_side;
 
-      bool m_secure_renegotiation_supported;
       size_t m_fragment_size;
 
       std::vector<X509_Certificate> m_peer_certs;

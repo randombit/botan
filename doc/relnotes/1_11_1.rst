@@ -20,10 +20,14 @@ from memory dumps (eg with a cold boot attack).
 The keys used in :cpp:func:`session encryption <TLS::Session::encrypt>`
 were previously uniquely determined by the master key. Now the
 encrypted session blob includes two 80 bit salts which are used in the
-derivation of the cipher and MAC keys. Sessions saved by 1.11.0 will
-not load in this version and vice versa. In both cases this will not
-cause any errors, the session will simply not resume and instead a
-full handshake will occur.
+derivation of the cipher and MAC keys.
+
+The ``secure_renegotiation`` flag is now considered an aspect of the
+connection rather than the session, which matches the behavior of
+other implementations. As the format has changed, sessions saved to
+persistent storage by 1.11.0 will not load in this version and vice
+versa. In either case this will not cause any errors, the session will
+simply not resume and instead a full handshake will occur.
 
 New policy hooks :cpp:func:`TLS::Policy::acceptable_protocol_version`
 and :cpp:func:`TLS::Policy::allow_server_initiated_renegotiation` were
