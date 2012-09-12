@@ -160,6 +160,9 @@ void write_record(std::vector<byte>& output,
    if(buf_size > MAX_CIPHERTEXT_SIZE)
       throw Internal_Error("Produced ciphertext larger than protocol allows");
 
+   BOTAN_ASSERT(buf_size + header_size == output.size(),
+                "Output buffer is sized properly");
+
    if(StreamCipher* sc = cipherstate->stream_cipher())
       {
       sc->cipher1(&output[header_size], buf_size);
@@ -178,7 +181,7 @@ void write_record(std::vector<byte>& output,
       xor_buf(&buf[0], &cbc_state[0], block_size);
       bc->encrypt(&buf[0]);
 
-      for(size_t i = 1; i <= blocks; ++i)
+      for(size_t i = 1; i < blocks; ++i)
          {
          xor_buf(&buf[block_size*i], &buf[block_size*(i-1)], block_size);
          bc->encrypt(&buf[block_size*i]);
