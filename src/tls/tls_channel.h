@@ -193,7 +193,6 @@ class BOTAN_DLL Channel
       /* misc, should be removed? */
       size_t m_max_fragment = MAX_PLAINTEXT_SIZE;
 
-      bool m_secure_renegotiation = false;
       bool m_connection_closed = false;
    };
 

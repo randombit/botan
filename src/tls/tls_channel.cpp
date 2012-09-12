@@ -457,73 +457,47 @@ void Channel::send_alert(const Alert& alert)
 
 void Channel::secure_renegotiation_check(const Client_Hello* client_hello)
    {
-   const bool initial_handshake = !m_active_state;
+   const bool secure_renegotiation = client_hello->secure_renegotiation();
 
-   if(initial_handshake)
+   if(m_active_state)
       {
-      m_secure_renegotiation = client_hello->secure_renegotiation();
-      }
-   else
-      {
-      if(secure_renegotiation_supported() && !client_hello->secure_renegotiation())
+      const bool active_sr = m_active_state->client_hello()->secure_renegotiation();
+
+      if(active_sr != secure_renegotiation)
          throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                              "Client changed its mind about secure renegotiation");
       }
 
-   if(client_hello->secure_renegotiation())
+   if(secure_renegotiation)
       {
       const std::vector<byte>& data = client_hello->renegotiation_info();
 
-      if(initial_handshake)
-         {
-         if(!data.empty())
-            throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
-                                "Client sent renegotiation data on initial handshake");
-         }
-      else
-         {
-         if(data != secure_renegotiation_data_for_client_hello())
-            throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
-                                "Client sent bad renegotiation data");
-         }
+      if(data != secure_renegotiation_data_for_client_hello())
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                             "Client sent bad values for secure renegotiation");
       }
    }
 
 void Channel::secure_renegotiation_check(const Server_Hello* server_hello)
    {
-   const bool initial_handshake = !m_active_state;
+   const bool secure_renegotiation = server_hello->secure_renegotiation();
 
-   if(initial_handshake)
+   if(m_active_state)
       {
-      /* If the client offered but server rejected, then this toggles
-      *  secure renegotiation to off
-      */
-      if(m_secure_renegotiation)
-         m_secure_renegotiation = server_hello->secure_renegotiation();
-      }
-   else
-      {
-      if(secure_renegotiation_supported() != server_hello->secure_renegotiation())
+      const bool active_sr = m_active_state->client_hello()->secure_renegotiation();
+
+      if(active_sr != secure_renegotiation)
          throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                              "Server changed its mind about secure renegotiation");
       }
 
-   if(secure_renegotiation_supported())
+   if(secure_renegotiation)
       {
       const std::vector<byte>& data = server_hello->renegotiation_info();
 
-      if(initial_handshake)
-         {
-         if(!data.empty())
-            throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
-                                "Server sent renegotiation data on initial handshake");
-         }
-      else
-         {
-         if(data != secure_renegotiation_data_for_server_hello())
-            throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
-                                "Server sent bad renegotiation data");
-         }
+      if(data != secure_renegotiation_data_for_server_hello())
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                             "Server sent bad values for secure renegotiation");
       }
    }
 
@@ -548,7 +522,11 @@ std::vector<byte> Channel::secure_renegotiation_data_for_server_hello() const
 
 bool Channel::secure_renegotiation_supported() const
    {
-   return m_secure_renegotiation;
+   if(m_active_state)
+      return m_active_state->server_hello()->secure_renegotiation();
+   if(m_pending_state && m_pending_state->server_hello())
+      return m_pending_state->server_hello()->secure_renegotiation();
+   return false;
    }
 
 SymmetricKey Channel::key_material_export(const std::string& label,
