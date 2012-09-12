@@ -1,5 +1,5 @@
 /*
-* Next Protocol Negotation
+* Next Protocol Negotiation
 * (C) 2012 Jack Lloyd
 *
 * Released under the terms of the Botan license

@@ -121,7 +121,7 @@ class SRP_Identifier : public Extension
 /**
 * Renegotiation Indication Extension (RFC 5746)
 */
-class Renegotation_Extension : public Extension
+class Renegotiation_Extension : public Extension
    {
    public:
       static Handshake_Extension_Type static_type()
@@ -129,12 +129,12 @@ class Renegotation_Extension : public Extension
 
       Handshake_Extension_Type type() const { return static_type(); }
 
-      Renegotation_Extension() {}
+      Renegotiation_Extension() {}
 
-      Renegotation_Extension(const std::vector<byte>& bits) :
+      Renegotiation_Extension(const std::vector<byte>& bits) :
          reneg_data(bits) {}
 
-      Renegotation_Extension(TLS_Data_Reader& reader,
+      Renegotiation_Extension(TLS_Data_Reader& reader,
                              u16bit extension_size);
 
       const std::vector<byte>& renegotiation_info() const

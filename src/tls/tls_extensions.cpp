@@ -34,7 +34,7 @@ Extension* make_extension(TLS_Data_Reader& reader,
          return new Supported_Elliptic_Curves(reader, size);
 
       case TLSEXT_SAFE_RENEGOTIATION:
-         return new Renegotation_Extension(reader, size);
+         return new Renegotiation_Extension(reader, size);
 
       case TLSEXT_SIGNATURE_ALGORITHMS:
          return new Signature_Algorithms(reader, size);
@@ -188,7 +188,7 @@ std::vector<byte> SRP_Identifier::serialize() const
    return buf;
    }
 
-Renegotation_Extension::Renegotation_Extension(TLS_Data_Reader& reader,
+Renegotiation_Extension::Renegotiation_Extension(TLS_Data_Reader& reader,
                                                u16bit extension_size)
    {
    reneg_data = reader.get_range<byte>(1, 0, 255);
@@ -197,7 +197,7 @@ Renegotation_Extension::Renegotation_Extension(TLS_Data_Reader& reader,
       throw Decoding_Error("Bad encoding for secure renegotiation extn");
    }
 
-std::vector<byte> Renegotation_Extension::serialize() const
+std::vector<byte> Renegotiation_Extension::serialize() const
    {
    std::vector<byte> buf;
    append_tls_length_value(buf, reneg_data, 1);

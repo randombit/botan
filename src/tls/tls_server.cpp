@@ -309,12 +309,11 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
       else if(!initial_handshake && (client_version != active_state->version()))
          {
          /*
-         * If this is a renegotation, and the client has offered a
-         * later version than what it initially negotiated,
-         * negotiate the old version. This matches OpenSSL's
-         * behavior. If the client is offering a version earlier
-         * than what it initially negotiated, reject as a probable
-         * attack.
+         * If this is a renegotiation, and the client has offered a
+         * later version than what it initially negotiated, negotiate
+         * the old version. This matches OpenSSL's behavior. If the
+         * client is offering a version earlier than what it initially
+         * negotiated, reject as a probable attack.
          */
          if(active_state->version() > client_version)
             {

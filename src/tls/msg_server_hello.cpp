@@ -75,7 +75,7 @@ Server_Hello::Server_Hello(const std::vector<byte>& buf)
 
    Extensions extensions(reader);
 
-   if(Renegotation_Extension* reneg = extensions.get<Renegotation_Extension>())
+   if(Renegotiation_Extension* reneg = extensions.get<Renegotiation_Extension>())
       {
       // checked by Client / Server as they know the handshake state
       m_secure_renegotiation = true;
@@ -126,7 +126,7 @@ std::vector<byte> Server_Hello::serialize() const
       extensions.add(new Heartbeat_Support_Indicator(m_peer_can_send_heartbeats));
 
    if(m_secure_renegotiation)
-      extensions.add(new Renegotation_Extension(m_renegotiation_info));
+      extensions.add(new Renegotiation_Extension(m_renegotiation_info));
 
    if(m_fragment_size != 0)
       extensions.add(new Maximum_Fragment_Length(m_fragment_size));

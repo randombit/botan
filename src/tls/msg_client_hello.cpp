@@ -190,7 +190,7 @@ std::vector<byte> Client_Hello::serialize() const
    Extensions extensions;
 
    if(m_secure_renegotiation)
-      extensions.add(new Renegotation_Extension(m_renegotiation_info));
+      extensions.add(new Renegotiation_Extension(m_renegotiation_info));
 
    extensions.add(new Session_Ticket(m_session_ticket));
 
@@ -304,7 +304,7 @@ void Client_Hello::deserialize(const std::vector<byte>& buf)
       m_fragment_size = frag->fragment_size();
       }
 
-   if(Renegotation_Extension* reneg = extensions.get<Renegotation_Extension>())
+   if(Renegotiation_Extension* reneg = extensions.get<Renegotiation_Extension>())
       {
       // checked by Client / Server as they know the handshake state
       m_secure_renegotiation = true;
