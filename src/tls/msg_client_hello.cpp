@@ -319,11 +319,6 @@ void Client_Hello::deserialize(const std::vector<byte>& buf)
       m_supported_algos = sigs->supported_signature_algorthms();
       }
 
-   if(Maximum_Fragment_Length* frag = extensions.get<Maximum_Fragment_Length>())
-      {
-      m_fragment_size = frag->fragment_size();
-      }
-
    if(Session_Ticket* ticket = extensions.get<Session_Ticket>())
       {
       m_supports_session_ticket = true;
@@ -334,13 +329,6 @@ void Client_Hello::deserialize(const std::vector<byte>& buf)
       {
       m_supports_heartbeats = true;
       m_peer_can_send_heartbeats = hb->peer_allowed_to_send();
-      }
-
-   if(Renegotation_Extension* reneg = extensions.get<Renegotation_Extension>())
-      {
-      // checked by TLS_Client / TLS_Server as they know the handshake state
-      m_secure_renegotiation = true;
-      m_renegotiation_info = reneg->renegotiation_info();
       }
 
    if(value_exists(m_suites, static_cast<u16bit>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV)))
