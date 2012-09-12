@@ -194,15 +194,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
 
       Hello_Verify_Request hello_verify_request(contents);
 
-      state.note_message(hello_verify_request);
-
-      std::unique_ptr<Client_Hello> client_hello_w_cookie(
-         new Client_Hello(state.handshake_io(),
-                          state.hash(),
-                          *state.client_hello(),
-                          hello_verify_request));
-
-      state.client_hello(client_hello_w_cookie.release());
+      state.hello_verify_request(hello_verify_request);
       }
    else if(type == SERVER_HELLO)
       {

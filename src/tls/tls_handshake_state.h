@@ -27,6 +27,7 @@ namespace TLS {
 
 class Policy;
 
+class Hello_Verify_Request;
 class Client_Hello;
 class Server_Hello;
 class Certificate;
@@ -78,7 +79,7 @@ class Handshake_State
       std::pair<Handshake_Type, std::vector<byte>>
          get_next_handshake_msg();
 
-      const std::vector<byte>& session_ticket() const;
+      std::vector<byte> session_ticket() const;
 
       std::pair<std::string, Signature_Format>
          understand_sig_format(const Public_Key& key,
@@ -100,6 +101,8 @@ class Handshake_State
       Protocol_Version version() const { return m_version; }
 
       void set_version(const Protocol_Version& version);
+
+      void hello_verify_request(const Hello_Verify_Request& hello_verify);
 
       void client_hello(Client_Hello* client_hello);
       void server_hello(Server_Hello* server_hello);

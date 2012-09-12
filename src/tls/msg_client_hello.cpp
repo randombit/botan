@@ -8,7 +8,6 @@
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_session_key.h>
-#include <botan/internal/tls_extensions.h>
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/stl_util.h>
 #include <chrono>
@@ -73,24 +72,21 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    m_version(version),
    m_random(make_hello_random(rng)),
    m_suites(ciphersuite_list(policy, m_version, (srp_identifier != ""))),
-   m_comp_methods(policy.compression()),
-   m_hostname(hostname),
-   m_srp_identifier(srp_identifier),
-   m_next_protocol(next_protocol),
-   m_fragment_size(0),
-   m_secure_renegotiation(true),
-   m_renegotiation_info(reneg_info),
-   m_supported_curves(policy.allowed_ecc_curves()),
-   m_supports_session_ticket(true),
-   m_supports_heartbeats(true),
-   m_peer_can_send_heartbeats(true)
+   m_comp_methods(policy.compression())
    {
-   std::vector<std::string> hashes = policy.allowed_signature_hashes();
-   std::vector<std::string> sigs = policy.allowed_signature_methods();
+   m_extensions.add(new Heartbeat_Support_Indicator(true));
+   m_extensions.add(new Renegotiation_Extension(reneg_info));
+   m_extensions.add(new SRP_Identifier(srp_identifier));
+   m_extensions.add(new Server_Name_Indicator(hostname));
+   m_extensions.add(new Session_Ticket());
+   m_extensions.add(new Supported_Elliptic_Curves(policy.allowed_ecc_curves()));
 
-   for(size_t i = 0; i != hashes.size(); ++i)
-      for(size_t j = 0; j != sigs.size(); ++j)
-         m_supported_algos.push_back(std::make_pair(hashes[i], sigs[j]));
+   if(m_version.supports_negotiable_signature_algorithms())
+      m_extensions.add(new Signature_Algorithms(policy.allowed_signature_hashes(),
+                                                policy.allowed_signature_methods()));
+
+   if(reneg_info.empty() && next_protocol)
+      m_extensions.add(new Next_Protocol_Notification());
 
    hash.update(io.send(*this));
    }
@@ -109,18 +105,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    m_session_id(session.session_id()),
    m_random(make_hello_random(rng)),
    m_suites(ciphersuite_list(policy, m_version, (session.srp_identifier() != ""))),
-   m_comp_methods(policy.compression()),
-   m_hostname(session.sni_hostname()),
-   m_srp_identifier(session.srp_identifier()),
-   m_next_protocol(next_protocol),
-   m_fragment_size(session.fragment_size()),
-   m_secure_renegotiation(session.secure_renegotiation()),
-   m_renegotiation_info(reneg_info),
-   m_supported_curves(policy.allowed_ecc_curves()),
-   m_supports_session_ticket(true),
-   m_session_ticket(session.session_ticket()),
-   m_supports_heartbeats(true),
-   m_peer_can_send_heartbeats(true)
+   m_comp_methods(policy.compression())
    {
    if(!value_exists(m_suites, session.ciphersuite_code()))
       m_suites.push_back(session.ciphersuite_code());
@@ -128,12 +113,22 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    if(!value_exists(m_comp_methods, session.compression_method()))
       m_comp_methods.push_back(session.compression_method());
 
-   std::vector<std::string> hashes = policy.allowed_signature_hashes();
-   std::vector<std::string> sigs = policy.allowed_signature_methods();
+   m_extensions.add(new Heartbeat_Support_Indicator(true));
+   m_extensions.add(new Renegotiation_Extension(reneg_info));
+   m_extensions.add(new SRP_Identifier(session.srp_identifier()));
+   m_extensions.add(new Server_Name_Indicator(session.sni_hostname()));
+   m_extensions.add(new Session_Ticket(session.session_ticket()));
+   m_extensions.add(new Supported_Elliptic_Curves(policy.allowed_ecc_curves()));
 
-   for(size_t i = 0; i != hashes.size(); ++i)
-      for(size_t j = 0; j != sigs.size(); ++j)
-         m_supported_algos.push_back(std::make_pair(hashes[i], sigs[j]));
+   if(session.fragment_size() != 0)
+      m_extensions.add(new Maximum_Fragment_Length(session.fragment_size()));
+
+   if(m_version.supports_negotiable_signature_algorithms())
+      m_extensions.add(new Signature_Algorithms(policy.allowed_signature_hashes(),
+                                                policy.allowed_signature_methods()));
+
+   if(reneg_info.empty() && next_protocol)
+      m_extensions.add(new Next_Protocol_Notification());
 
    hash.update(io.send(*this));
    }
@@ -149,16 +144,12 @@ Client_Hello::Client_Hello(const std::vector<byte>& buf, Handshake_Type type)
       deserialize_sslv2(buf);
    }
 
-Client_Hello::Client_Hello(Handshake_IO& io,
-                           Handshake_Hash& hash,
-                           const Client_Hello& initial_hello,
-                           const Hello_Verify_Request& hello_verify)
+void Client_Hello::update_hello_cookie(const Hello_Verify_Request& hello_verify)
    {
-   *this = initial_hello;
-   m_hello_cookie = hello_verify.cookie();
+   if(!m_version.is_datagram_protocol())
+      throw std::runtime_error("Cannot use hello cookie with stream protocol");
 
-   hash.reset();
-   hash.update(io.send(*this));
+   m_hello_cookie = hello_verify.cookie();
    }
 
 /*
@@ -181,33 +172,12 @@ std::vector<byte> Client_Hello::serialize() const
    append_tls_length_value(buf, m_comp_methods, 1);
 
    /*
-   * May not want to send extensions at all in some cases.
-   * If so, should include SCSV value (if reneg info is empty, if
-   * not we are renegotiating with a modern server and should only
-   * send that extension.
+   * May not want to send extensions at all in some cases. If so,
+   * should include SCSV value (if reneg info is empty, if not we are
+   * renegotiating with a modern server)
    */
 
-   Extensions extensions;
-
-   if(m_secure_renegotiation)
-      extensions.add(new Renegotiation_Extension(m_renegotiation_info));
-
-   extensions.add(new Session_Ticket(m_session_ticket));
-
-   extensions.add(new Server_Name_Indicator(m_hostname));
-   extensions.add(new SRP_Identifier(m_srp_identifier));
-
-   extensions.add(new Supported_Elliptic_Curves(m_supported_curves));
-
-   if(m_version.supports_negotiable_signature_algorithms())
-      extensions.add(new Signature_Algorithms(m_supported_algos));
-
-   extensions.add(new Heartbeat_Support_Indicator(true));
-
-   if(m_renegotiation_info.empty() && m_next_protocol)
-      extensions.add(new Next_Protocol_Notification());
-
-   buf += extensions.serialize();
+   buf += m_extensions.serialize();
 
    return buf;
    }
@@ -233,6 +203,8 @@ void Client_Hello::deserialize_sslv2(const std::vector<byte>& buf)
       throw Decoding_Error("Client_Hello: SSLv2 hello corrupted");
       }
 
+   m_version = Protocol_Version(buf[1], buf[2]);
+
    for(size_t i = 9; i != 9 + cipher_spec_len; i += 3)
       {
       if(buf[i] != 0) // a SSLv2 cipherspec; ignore it
@@ -241,13 +213,11 @@ void Client_Hello::deserialize_sslv2(const std::vector<byte>& buf)
       m_suites.push_back(make_u16bit(buf[i+1], buf[i+2]));
       }
 
-   m_version = Protocol_Version(buf[1], buf[2]);
-
    m_random.resize(challenge_len);
    copy_mem(&m_random[0], &buf[9+cipher_spec_len+m_session_id_len], challenge_len);
 
-   m_secure_renegotiation =
-      value_exists(m_suites, static_cast<u16bit>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV));
+   if(offered_suite(static_cast<u16bit>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV)))
+      m_extensions.add(new Renegotiation_Extension());
    }
 
 /*
@@ -279,76 +249,21 @@ void Client_Hello::deserialize(const std::vector<byte>& buf)
 
    m_comp_methods = reader.get_range_vector<byte>(1, 1, 255);
 
-   Extensions extensions(reader);
+   m_extensions.deserialize(reader);
 
-   if(Server_Name_Indicator* sni = extensions.get<Server_Name_Indicator>())
+   if(offered_suite(static_cast<u16bit>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV)))
       {
-      m_hostname = sni->host_name();
-      }
-
-   if(SRP_Identifier* srp = extensions.get<SRP_Identifier>())
-      {
-      m_srp_identifier = srp->identifier();
-      }
-
-   if(Next_Protocol_Notification* npn = extensions.get<Next_Protocol_Notification>())
-      {
-      if(!npn->protocols().empty())
-         throw Decoding_Error("Client sent non-empty NPN extension");
-
-      m_next_protocol = true;
-      }
-
-   if(Maximum_Fragment_Length* frag = extensions.get<Maximum_Fragment_Length>())
-      {
-      m_fragment_size = frag->fragment_size();
-      }
-
-   if(Renegotiation_Extension* reneg = extensions.get<Renegotiation_Extension>())
-      {
-      // checked by Client / Server as they know the handshake state
-      m_secure_renegotiation = true;
-      m_renegotiation_info = reneg->renegotiation_info();
-      }
-
-   if(Supported_Elliptic_Curves* ecc = extensions.get<Supported_Elliptic_Curves>())
-      m_supported_curves = ecc->curves();
-
-   if(Signature_Algorithms* sigs = extensions.get<Signature_Algorithms>())
-      {
-      m_supported_algos = sigs->supported_signature_algorthms();
-      }
-
-   if(Session_Ticket* ticket = extensions.get<Session_Ticket>())
-      {
-      m_supports_session_ticket = true;
-      m_session_ticket = ticket->contents();
-      }
-
-   if(Heartbeat_Support_Indicator* hb = extensions.get<Heartbeat_Support_Indicator>())
-      {
-      m_supports_heartbeats = true;
-      m_peer_can_send_heartbeats = hb->peer_allowed_to_send();
-      }
-
-   if(value_exists(m_suites, static_cast<u16bit>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV)))
-      {
-      /*
-      * Clients are allowed to send both the extension and the SCSV
-      * though it is not recommended. If it did, require that the
-      * extension value be empty.
-      */
-      if(m_secure_renegotiation)
+      if(Renegotiation_Extension* reneg = m_extensions.get<Renegotiation_Extension>())
          {
-         if(!m_renegotiation_info.empty())
-            {
+         if(!reneg->renegotiation_info().empty())
             throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
-                                "Client send SCSV and non-empty extension");
-            }
+                                "Client send renegotiation SCSV and non-empty extension");
          }
-
-      m_secure_renegotiation = true;
-      m_renegotiation_info.clear();
+      else
+         {
+         // add fake extension
+         m_extensions.add(new Renegotiation_Extension());
+         }
       }
    }
 

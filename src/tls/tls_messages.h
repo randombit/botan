@@ -9,6 +9,7 @@
 #define BOTAN_TLS_MESSAGES_H__
 
 #include <botan/internal/tls_handshake_state.h>
+#include <botan/internal/tls_extensions.h>
 #include <botan/tls_handshake_msg.h>
 #include <botan/tls_session.h>
 #include <botan/tls_policy.h>
@@ -61,42 +62,92 @@ class Client_Hello : public Handshake_Message
 
       Protocol_Version version() const { return m_version; }
 
-      const std::vector<byte>& session_id() const { return m_session_id; }
-
-      const std::vector<std::pair<std::string, std::string> >& supported_algos() const
-         { return m_supported_algos; }
-
-      const std::vector<std::string>& supported_ecc_curves() const
-         { return m_supported_curves; }
-
-      std::vector<u16bit> ciphersuites() const { return m_suites; }
-      std::vector<byte> compression_methods() const { return m_comp_methods; }
-
       const std::vector<byte>& random() const { return m_random; }
 
-      std::string sni_hostname() const { return m_hostname; }
+      const std::vector<byte>& session_id() const { return m_session_id; }
 
-      std::string srp_identifier() const { return m_srp_identifier; }
+      std::vector<u16bit> ciphersuites() const { return m_suites; }
 
-      bool secure_renegotiation() const { return m_secure_renegotiation; }
-
-      const std::vector<byte>& renegotiation_info() const
-         { return m_renegotiation_info; }
+      std::vector<byte> compression_methods() const { return m_comp_methods; }
 
       bool offered_suite(u16bit ciphersuite) const;
 
-      bool next_protocol_notification() const { return m_next_protocol; }
+      std::vector<std::pair<std::string, std::string>> supported_algos() const
+         {
+         if(Signature_Algorithms* sigs = m_extensions.get<Signature_Algorithms>())
+            return sigs->supported_signature_algorthms();
+         return std::vector<std::pair<std::string, std::string>>();
+         }
 
-      size_t fragment_size() const { return m_fragment_size; }
+      std::vector<std::string> supported_ecc_curves() const
+         {
+         if(Supported_Elliptic_Curves* ecc = m_extensions.get<Supported_Elliptic_Curves>())
+            return ecc->curves();
+         return std::vector<std::string>();
+         }
 
-      bool supports_session_ticket() const { return m_supports_session_ticket; }
+      std::string sni_hostname() const
+         {
+         if(Server_Name_Indicator* sni = m_extensions.get<Server_Name_Indicator>())
+            return sni->host_name();
+         return "";
+         }
 
-      const std::vector<byte>& session_ticket() const
-         { return m_session_ticket; }
+      std::string srp_identifier() const
+         {
+         if(SRP_Identifier* srp = m_extensions.get<SRP_Identifier>())
+            return srp->identifier();
+         return "";
+         }
 
-      bool supports_heartbeats() const { return m_supports_heartbeats; }
+      bool secure_renegotiation() const
+         {
+         return m_extensions.get<Renegotiation_Extension>();
+         }
 
-      bool peer_can_send_heartbeats() const { return m_peer_can_send_heartbeats; }
+      std::vector<byte> renegotiation_info() const
+         {
+         if(Renegotiation_Extension* reneg = m_extensions.get<Renegotiation_Extension>())
+            return reneg->renegotiation_info();
+         return std::vector<byte>();
+         }
+
+      bool next_protocol_notification() const
+         {
+         return m_extensions.get<Next_Protocol_Notification>();
+         }
+
+      size_t fragment_size() const
+         {
+         if(Maximum_Fragment_Length* frag = m_extensions.get<Maximum_Fragment_Length>())
+            return frag->fragment_size();
+         return 0;
+         }
+
+      bool supports_session_ticket() const
+         {
+         return m_extensions.get<Session_Ticket>();
+         }
+
+      std::vector<byte> session_ticket() const
+         {
+         if(Session_Ticket* ticket = m_extensions.get<Session_Ticket>())
+            return ticket->contents();
+         return std::vector<byte>();
+         }
+
+      bool supports_heartbeats() const
+         {
+         return m_extensions.get<Heartbeat_Support_Indicator>();
+         }
+
+      bool peer_can_send_heartbeats() const
+         {
+         if(Heartbeat_Support_Indicator* hb = m_extensions.get<Heartbeat_Support_Indicator>())
+            return hb->peer_allowed_to_send();
+         }
+
+      void update_hello_cookie(const Hello_Verify_Request& hello_verify);
 
       Client_Hello(Handshake_IO& io,
                    Handshake_Hash& hash,
@@ -116,11 +167,6 @@ class Client_Hello : public Handshake_Message
                    const Session& resumed_session,
                    bool next_protocol = false);
 
-      Client_Hello(Handshake_IO& io,
-                   Handshake_Hash& hash,
-                   const Client_Hello& initial_hello,
-                   const Hello_Verify_Request& hello_verify);
-
       Client_Hello(const std::vector<byte>& buf,
                    Handshake_Type type);
 
@@ -130,27 +176,13 @@ class Client_Hello : public Handshake_Message
       void deserialize_sslv2(const std::vector<byte>& buf);
 
       Protocol_Version m_version;
-      std::vector<byte> m_session_id, m_random;
+      std::vector<byte> m_session_id;
+      std::vector<byte> m_random;
       std::vector<u16bit> m_suites;
       std::vector<byte> m_comp_methods;
-      std::string m_hostname;
-      std::string m_srp_identifier;
-      bool m_next_protocol = false;
+      std::vector<byte> m_hello_cookie; // DTLS only
 
-      size_t m_fragment_size = 0;
-      bool m_secure_renegotiation = false;
-      std::vector<byte> m_renegotiation_info;
-
-      std::vector<std::pair<std::string, std::string> > m_supported_algos;
-      std::vector<std::string> m_supported_curves;
-
-      bool m_supports_session_ticket = false;
-      std::vector<byte> m_session_ticket;
-
-      std::vector<byte> m_hello_cookie;
-
-      bool m_supports_heartbeats = false;
-      bool m_peer_can_send_heartbeats = false;
+      Extensions m_extensions;
    };
 
 /**
@@ -171,23 +203,53 @@ class Server_Hello : public Handshake_Message
 
       byte compression_method() const { return m_comp_method; }
 
-      bool secure_renegotiation() const { return m_secure_renegotiation; }
+      bool secure_renegotiation() const
+         {
+         return m_extensions.get<Renegotiation_Extension>();
+         }
 
-      bool next_protocol_notification() const { return m_next_protocol; }
+      std::vector<byte> renegotiation_info() const
+         {
+         if(Renegotiation_Extension* reneg = m_extensions.get<Renegotiation_Extension>())
+            return reneg->renegotiation_info();
+         return std::vector<byte>();
+         }
 
-      bool supports_session_ticket() const { return m_supports_session_ticket; }
+      bool next_protocol_notification() const
+         {
+         return m_extensions.get<Next_Protocol_Notification>();
+         }
 
-      const std::vector<std::string>& next_protocols() const
-         { return m_next_protocols; }
+      std::vector<std::string> next_protocols() const
+         {
+         if(Next_Protocol_Notification* npn = m_extensions.get<Next_Protocol_Notification>())
+            return npn->protocols();
+         return std::vector<std::string>();
+         }
 
-      size_t fragment_size() const { return m_fragment_size; }
+      size_t fragment_size() const
+         {
+         if(Maximum_Fragment_Length* frag = m_extensions.get<Maximum_Fragment_Length>())
+            return frag->fragment_size();
+         return 0;
+         }
 
-      const std::vector<byte>& renegotiation_info() const
-         { return m_renegotiation_info; }
+      bool supports_session_ticket() const
+         {
+         return m_extensions.get<Session_Ticket>();
+         }
 
-      bool supports_heartbeats() const { return m_supports_heartbeats; }
+      bool supports_heartbeats() const
+         {
+         return m_extensions.get<Heartbeat_Support_Indicator>();
+         }
 
-      bool peer_can_send_heartbeats() const { return m_peer_can_send_heartbeats; }
+      bool peer_can_send_heartbeats() const
+         {
+         if(Heartbeat_Support_Indicator* hb = m_extensions.get<Heartbeat_Support_Indicator>())
+            return hb->peer_allowed_to_send();
+         return false;
+         }
 
       Server_Hello(Handshake_IO& io,
                    Handshake_Hash& hash,
@@ -213,16 +275,7 @@ class Server_Hello : public Handshake_Message
       u16bit m_ciphersuite;
       byte m_comp_method;
 
-      size_t m_fragment_size = 0;
-      bool m_secure_renegotiation = false;
-      std::vector<byte> m_renegotiation_info;
-
-      bool m_next_protocol = false;
-      std::vector<std::string> m_next_protocols;
-      bool m_supports_session_ticket = false;
-
-      bool m_supports_heartbeats = false;
-      bool m_peer_can_send_heartbeats = false;
+      Extensions m_extensions;
    };
 
 /**

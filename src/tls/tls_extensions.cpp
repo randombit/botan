@@ -55,7 +55,7 @@ Extension* make_extension(TLS_Data_Reader& reader,
 
 }
 
-Extensions::Extensions(TLS_Data_Reader& reader)
+void Extensions::deserialize(TLS_Data_Reader& reader)
    {
    if(reader.has_remaining())
       {
@@ -481,6 +481,14 @@ std::vector<byte> Signature_Algorithms::serialize() const
    buf[1] = get_byte<u16bit>(1, buf.size()-2);
 
    return buf;
+   }
+
+Signature_Algorithms::Signature_Algorithms(const std::vector<std::string>& hashes,
+                                           const std::vector<std::string>& sigs)
+   {
+   for(size_t i = 0; i != hashes.size(); ++i)
+      for(size_t j = 0; j != sigs.size(); ++j)
+         m_supported_algos.push_back(std::make_pair(hashes[i], sigs[j]));
    }
 
 Signature_Algorithms::Signature_Algorithms(TLS_Data_Reader& reader,

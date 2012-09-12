@@ -37,16 +37,23 @@ Server_Hello::Server_Hello(Handshake_IO& io,
    m_session_id(session_id),
    m_random(make_hello_random(rng)),
    m_ciphersuite(ciphersuite),
-   m_comp_method(compression),
-   m_fragment_size(max_fragment_size),
-   m_secure_renegotiation(client_has_secure_renegotiation),
-   m_renegotiation_info(reneg_info),
-   m_next_protocol(client_has_npn),
-   m_next_protocols(next_protocols),
-   m_supports_session_ticket(offer_session_ticket),
-   m_supports_heartbeats(client_has_heartbeat),
-   m_peer_can_send_heartbeats(true)
+   m_comp_method(compression)
    {
+   if(client_has_heartbeat)
+      m_extensions.add(new Heartbeat_Support_Indicator(true));
+
+   if(client_has_secure_renegotiation)
+      m_extensions.add(new Renegotiation_Extension(reneg_info));
+
+   if(max_fragment_size)
+      m_extensions.add(new Maximum_Fragment_Length(max_fragment_size));
+
+   if(client_has_npn)
+      m_extensions.add(new Next_Protocol_Notification(next_protocols));
+
+   if(offer_session_ticket)
+      m_extensions.add(new Session_Ticket());
+
    hash.update(io.send(*this));
    }
 
@@ -73,33 +80,7 @@ Server_Hello::Server_Hello(const std::vector<byte>& buf)
 
    m_comp_method = reader.get_byte();
 
-   Extensions extensions(reader);
-
-   if(Renegotiation_Extension* reneg = extensions.get<Renegotiation_Extension>())
-      {
-      // checked by Client / Server as they know the handshake state
-      m_secure_renegotiation = true;
-      m_renegotiation_info = reneg->renegotiation_info();
-      }
-
-   if(Next_Protocol_Notification* npn = extensions.get<Next_Protocol_Notification>())
-      {
-      m_next_protocols = npn->protocols();
-      m_next_protocol = true;
-      }
-
-   if(Session_Ticket* ticket = extensions.get<Session_Ticket>())
-      {
-      if(!ticket->contents().empty())
-         throw Decoding_Error("TLS server sent non-empty session ticket extension");
-      m_supports_session_ticket = true;
-      }
-
-   if(Heartbeat_Support_Indicator* hb = extensions.get<Heartbeat_Support_Indicator>())
-      {
-      m_supports_heartbeats = true;
-      m_peer_can_send_heartbeats = hb->peer_allowed_to_send();
-      }
+   m_extensions.deserialize(reader);
    }
 
 /*
@@ -120,24 +101,7 @@ std::vector<byte> Server_Hello::serialize() const
 
    buf.push_back(m_comp_method);
 
-   Extensions extensions;
-
-   if(m_supports_heartbeats)
-      extensions.add(new Heartbeat_Support_Indicator(m_peer_can_send_heartbeats));
-
-   if(m_secure_renegotiation)
-      extensions.add(new Renegotiation_Extension(m_renegotiation_info));
-
-   if(m_fragment_size != 0)
-      extensions.add(new Maximum_Fragment_Length(m_fragment_size));
-
-   if(m_next_protocol)
-      extensions.add(new Next_Protocol_Notification(m_next_protocols));
-
-   if(m_supports_session_ticket)
-      extensions.add(new Session_Ticket());
-
-   buf += extensions.serialize();
+   buf += m_extensions.serialize();
 
    return buf;
    }

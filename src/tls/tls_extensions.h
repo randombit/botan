@@ -316,6 +316,9 @@ class Signature_Algorithms : public Extension
 
       bool empty() const { return false; }
 
+      Signature_Algorithms(const std::vector<std::string>& hashes,
+                           const std::vector<std::string>& sig_algos);
+
       Signature_Algorithms(const std::vector<std::pair<std::string, std::string> >& algos) :
          m_supported_algos(algos) {}
 
@@ -376,9 +379,12 @@ class Extensions
 
       std::vector<byte> serialize() const;
 
+      void deserialize(TLS_Data_Reader& reader);
+
       Extensions() {}
 
-      Extensions(TLS_Data_Reader& reader); // deserialize
+      Extensions(TLS_Data_Reader& reader) { deserialize(reader); }
+
    private:
       Extensions(const Extensions&) {}
       Extensions& operator=(const Extensions&) { return (*this); }

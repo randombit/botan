@@ -95,6 +95,16 @@ Handshake_State::Handshake_State(Handshake_IO* io,
 
 Handshake_State::~Handshake_State() {}
 
+void Handshake_State::hello_verify_request(const Hello_Verify_Request& hello_verify)
+   {
+   note_message(hello_verify);
+
+   m_client_hello->update_hello_cookie(hello_verify);
+   hash().reset();
+   hash().update(handshake_io().send(*m_client_hello));
+   note_message(*m_client_hello);
+   }
+
 void Handshake_State::client_hello(Client_Hello* client_hello)
    {
    m_client_hello.reset(client_hello);
@@ -239,7 +249,7 @@ std::string Handshake_State::srp_identifier() const
    return "";
    }
 
-const std::vector<byte>& Handshake_State::session_ticket() const
+std::vector<byte> Handshake_State::session_ticket() const
    {
    if(new_session_ticket() && !new_session_ticket()->ticket().empty())
       return new_session_ticket()->ticket();
