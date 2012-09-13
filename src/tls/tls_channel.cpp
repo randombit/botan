@@ -44,6 +44,24 @@ Connection_Sequence_Numbers& Channel::sequence_numbers() const
    return *m_sequence_numbers;
    }
 
+std::shared_ptr<Connection_Cipher_State> Channel::read_cipher_state() const
+   {
+   if(m_pending_state)
+      return m_pending_state->read_cipher_state();
+   if(m_active_state)
+      return m_active_state->read_cipher_state();
+   return std::shared_ptr<Connection_Cipher_State>(nullptr);
+   }
+
+std::shared_ptr<Connection_Cipher_State> Channel::write_cipher_state() const
+   {
+   if(m_pending_state)
+      return m_pending_state->write_cipher_state();
+   if(m_active_state)
+      return m_active_state->write_cipher_state();
+   return std::shared_ptr<Connection_Cipher_State>(nullptr);
+   }
+
 std::vector<X509_Certificate> Channel::peer_cert_chain() const
    {
    if(!m_active_state)
@@ -91,7 +109,10 @@ Handshake_State& Channel::create_handshake_state(Protocol_Version version)
    m_pending_state.reset(new_handshake_state(io.release()));
 
    if(m_active_state)
+      {
       m_pending_state->set_version(m_active_state->version());
+      m_pending_state->copy_cipher_states(*m_active_state);
+      }
 
    return *m_pending_state.get();
    }
@@ -127,14 +148,7 @@ void Channel::change_cipher_spec_reader(Connection_Side side)
    sequence_numbers().new_read_cipher_state();
 
    // flip side as we are reading
-   side = (side == CLIENT) ? SERVER : CLIENT;
-
-   m_read_cipherstate.reset(
-      new Connection_Cipher_State(m_pending_state->version(),
-                                  side,
-                                  m_pending_state->ciphersuite(),
-                                  m_pending_state->session_keys())
-      );
+   m_pending_state->new_read_cipher_state((side == CLIENT) ? SERVER : CLIENT);
    }
 
 void Channel::change_cipher_spec_writer(Connection_Side side)
@@ -147,12 +161,7 @@ void Channel::change_cipher_spec_writer(Connection_Side side)
 
    sequence_numbers().new_write_cipher_state();
 
-   m_write_cipherstate.reset(
-      new Connection_Cipher_State(m_pending_state->version(),
-                                  side,
-                                  m_pending_state->ciphersuite(),
-                                  m_pending_state->session_keys())
-      );
+   m_pending_state->new_write_cipher_state(side);
    }
 
 void Channel::activate_session()
@@ -179,7 +188,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
    {
    try
       {
-      while(buf_size)
+      while(!is_closed() && buf_size)
          {
          byte rec_type = NO_RECORD;
          std::vector<byte> record;
@@ -187,6 +196,8 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
          Protocol_Version record_version;
 
          size_t consumed = 0;
+
+         std::shared_ptr<Connection_Cipher_State> cipher_state = read_cipher_state();
 
          const size_t needed =
             read_record(m_readbuf,
@@ -198,7 +209,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
                         record_version,
                         record_sequence,
                         m_sequence_numbers.get(),
-                        m_read_cipherstate.get());
+                        cipher_state.get());
 
          BOTAN_ASSERT(consumed <= buf_size,
                       "Record reader consumed sane amount");
@@ -289,26 +300,21 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
 
             m_proc_fn(nullptr, 0, alert_msg);
 
-            if(alert_msg.type() == Alert::CLOSE_NOTIFY)
+            if(alert_msg.is_fatal())
                {
-               if(!m_connection_closed)
-                  send_alert(Alert(Alert::CLOSE_NOTIFY)); // reply in kind
-               m_read_cipherstate.reset();
-               }
-            else if(alert_msg.is_fatal())
-               {
-               // delete state immediately
-
                if(m_active_state && m_active_state->server_hello())
                   m_session_manager.remove_entry(m_active_state->server_hello()->session_id());
+               }
 
+            if(alert_msg.type() == Alert::CLOSE_NOTIFY)
+               send_alert(Alert(Alert::CLOSE_NOTIFY)); // reply in kind
+
+            if(alert_msg.type() == Alert::CLOSE_NOTIFY || alert_msg.is_fatal())
+               {
                m_connection_closed = true;
 
                m_active_state.reset();
                m_pending_state.reset();
-
-               m_write_cipherstate.reset();
-               m_read_cipherstate.reset();
 
                return 0;
                }
@@ -370,9 +376,11 @@ void Channel::send_record_array(byte type, const byte input[], size_t length)
    *
    * See http://www.openssl.org/~bodo/tls-cbc.txt for background.
    */
-   if(type == APPLICATION_DATA && m_write_cipherstate->cbc_without_explicit_iv())
+   std::shared_ptr<Connection_Cipher_State> cipher_state = write_cipher_state();
+
+   if(type == APPLICATION_DATA && cipher_state->cbc_without_explicit_iv())
       {
-      write_record(type, &input[0], 1);
+      write_record(cipher_state.get(), type, &input[0], 1);
       input += 1;
       length -= 1;
       }
@@ -380,7 +388,7 @@ void Channel::send_record_array(byte type, const byte input[], size_t length)
    while(length)
       {
       const size_t sending = std::min(length, m_max_fragment);
-      write_record(type, &input[0], sending);
+      write_record(cipher_state.get(), type, &input[0], sending);
 
       input += sending;
       length -= sending;
@@ -392,7 +400,8 @@ void Channel::send_record(byte record_type, const std::vector<byte>& record)
    send_record_array(record_type, &record[0], record.size());
    }
 
-void Channel::write_record(byte record_type, const byte input[], size_t length)
+void Channel::write_record(Connection_Cipher_State* cipher_state,
+                           byte record_type, const byte input[], size_t length)
    {
    if(length > m_max_fragment)
       throw Internal_Error("Record is larger than allowed fragment size");
@@ -409,7 +418,7 @@ void Channel::write_record(byte record_type, const byte input[], size_t length)
                      length,
                      record_version,
                      sequence_numbers(),
-                     m_write_cipherstate.get(),
+                     cipher_state,
                      m_rng);
 
    m_output_fn(&m_writebuf[0], m_writebuf.size());
@@ -449,7 +458,6 @@ void Channel::send_alert(const Alert& alert)
       {
       m_active_state.reset();
       m_pending_state.reset();
-      m_write_cipherstate.reset();
 
       m_connection_closed = true;
       }

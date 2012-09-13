@@ -21,6 +21,8 @@ namespace Botan {
 
 namespace TLS {
 
+class Connection_Cipher_State;
+class Connection_Sequence_Numbers;
 class Handshake_State;
 
 /**
@@ -54,7 +56,7 @@ class BOTAN_DLL Channel
       /**
       * @return true iff the connection is active for sending application data
       */
-      bool is_active() const { return m_active_state && !is_closed(); }
+      bool is_active() const { return m_active_state.get(); }
 
       /**
       * @return true iff the connection has been definitely closed
@@ -160,13 +162,18 @@ class BOTAN_DLL Channel
 
       void send_record_array(byte type, const byte input[], size_t length);
 
-      void write_record(byte type, const byte input[], size_t length);
+      void write_record(Connection_Cipher_State* cipher_state,
+                        byte type, const byte input[], size_t length);
 
       bool peer_supports_heartbeats() const;
 
       bool heartbeat_sending_allowed() const;
 
-      class Connection_Sequence_Numbers& sequence_numbers() const;
+      Connection_Sequence_Numbers& sequence_numbers() const;
+
+      std::shared_ptr<Connection_Cipher_State> read_cipher_state() const;
+
+      std::shared_ptr<Connection_Cipher_State> write_cipher_state() const;
 
       /* callbacks */
       std::function<bool (const Session&)> m_handshake_fn;
@@ -177,10 +184,8 @@ class BOTAN_DLL Channel
       RandomNumberGenerator& m_rng;
       Session_Manager& m_session_manager;
 
-      /* cipher/sequence state */
-      std::unique_ptr<class Connection_Sequence_Numbers> m_sequence_numbers;
-      std::unique_ptr<class Connection_Cipher_State> m_write_cipherstate;
-      std::unique_ptr<class Connection_Cipher_State> m_read_cipherstate;
+      /* sequence number state */
+      std::unique_ptr<Connection_Sequence_Numbers> m_sequence_numbers;
 
       /* I/O buffers */
       std::vector<byte> m_writebuf;

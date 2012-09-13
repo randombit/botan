@@ -7,6 +7,7 @@
 
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_messages.h>
+#include <botan/internal/tls_record.h>
 #include <botan/internal/assert.h>
 #include <botan/lookup.h>
 
@@ -87,8 +88,8 @@ u32bit bitmask_for_handshake_type(Handshake_Type type)
 */
 Handshake_State::Handshake_State(Handshake_IO* io,
                                  std::function<void (const Handshake_Message&)> msg_callback) :
-   m_handshake_io(io),
    m_msg_callback(msg_callback),
+   m_handshake_io(io),
    m_version(m_handshake_io->initial_record_version())
    {
    }
@@ -197,6 +198,26 @@ void Handshake_State::compute_session_keys()
 void Handshake_State::compute_session_keys(const secure_vector<byte>& resume_master_secret)
    {
    m_session_keys = Session_Keys(this, resume_master_secret, true);
+   }
+
+void Handshake_State::copy_cipher_states(const Handshake_State& prev_state)
+   {
+   m_write_cipher_state = prev_state.m_write_cipher_state;
+   m_read_cipher_state = prev_state.m_read_cipher_state;
+   }
+
+void Handshake_State::new_read_cipher_state(Connection_Side side)
+   {
+   m_read_cipher_state.reset(
+      new Connection_Cipher_State(version(), side, ciphersuite(), session_keys())
+      );
+   }
+
+void Handshake_State::new_write_cipher_state(Connection_Side side)
+   {
+   m_write_cipher_state.reset(
+      new Connection_Cipher_State(version(), side, ciphersuite(), session_keys())
+      );
    }
 
 void Handshake_State::confirm_transition_to(Handshake_Type handshake_msg)
