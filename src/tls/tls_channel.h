@@ -71,6 +71,22 @@ class BOTAN_DLL Channel
       void renegotiate(bool force_full_renegotiation = false);
 
       /**
+      * @return true iff the peer supports heartbeat messages
+      */
+      bool peer_supports_heartbeats() const;
+
+      /**
+      * @return true iff we are allowed to send heartbeat messages
+      */
+      bool heartbeat_sending_allowed() const;
+
+      /**
+      * @return true iff the counterparty supports the secure
+      * renegotiation extensions.
+      */
+      bool secure_renegotiation_supported() const;
+
+      /**
       * Attempt to send a heartbeat message (if negotiated with counterparty)
       * @param payload will be echoed back
       * @param payload_size size of payload in bytes
@@ -149,8 +165,6 @@ class BOTAN_DLL Channel
       std::vector<byte> secure_renegotiation_data_for_client_hello() const;
       std::vector<byte> secure_renegotiation_data_for_server_hello() const;
 
-      bool secure_renegotiation_supported() const;
-
       RandomNumberGenerator& rng() { return m_rng; }
 
       Session_Manager& session_manager() { return m_session_manager; }
@@ -164,10 +178,6 @@ class BOTAN_DLL Channel
 
       void write_record(Connection_Cipher_State* cipher_state,
                         byte type, const byte input[], size_t length);
-
-      bool peer_supports_heartbeats() const;
-
-      bool heartbeat_sending_allowed() const;
 
       Connection_Sequence_Numbers& sequence_numbers() const;
 
