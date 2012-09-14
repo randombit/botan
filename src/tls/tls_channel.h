@@ -181,10 +181,6 @@ class BOTAN_DLL Channel
 
       Connection_Sequence_Numbers& sequence_numbers() const;
 
-      std::shared_ptr<Connection_Cipher_State> read_cipher_state() const;
-
-      std::shared_ptr<Connection_Cipher_State> write_cipher_state() const;
-
       /* callbacks */
       std::function<bool (const Session&)> m_handshake_fn;
       std::function<void (const byte[], size_t, Alert)> m_proc_fn;

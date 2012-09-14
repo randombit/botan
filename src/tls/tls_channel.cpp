@@ -44,24 +44,6 @@ Connection_Sequence_Numbers& Channel::sequence_numbers() const
    return *m_sequence_numbers;
    }
 
-std::shared_ptr<Connection_Cipher_State> Channel::read_cipher_state() const
-   {
-   if(m_pending_state)
-      return m_pending_state->read_cipher_state();
-   if(m_active_state)
-      return m_active_state->read_cipher_state();
-   return std::shared_ptr<Connection_Cipher_State>(nullptr);
-   }
-
-std::shared_ptr<Connection_Cipher_State> Channel::write_cipher_state() const
-   {
-   if(m_pending_state)
-      return m_pending_state->write_cipher_state();
-   if(m_active_state)
-      return m_active_state->write_cipher_state();
-   return std::shared_ptr<Connection_Cipher_State>(nullptr);
-   }
-
 std::vector<X509_Certificate> Channel::peer_cert_chain() const
    {
    if(!m_active_state)
@@ -197,7 +179,11 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
 
          size_t consumed = 0;
 
-         std::shared_ptr<Connection_Cipher_State> cipher_state = read_cipher_state();
+         std::shared_ptr<Connection_Cipher_State> cipher_state;
+         if(m_pending_state)
+            cipher_state = m_pending_state->read_cipher_state();
+         else if(m_active_state)
+            cipher_state = m_active_state->read_cipher_state();
 
          const size_t needed =
             read_record(m_readbuf,
@@ -376,7 +362,12 @@ void Channel::send_record_array(byte type, const byte input[], size_t length)
    *
    * See http://www.openssl.org/~bodo/tls-cbc.txt for background.
    */
-   std::shared_ptr<Connection_Cipher_State> cipher_state = write_cipher_state();
+   std::shared_ptr<Connection_Cipher_State> cipher_state;
+
+   if(m_pending_state)
+      cipher_state = m_pending_state->write_cipher_state();
+   else if(m_active_state)
+      cipher_state = m_active_state->write_cipher_state();
 
    if(type == APPLICATION_DATA && cipher_state->cbc_without_explicit_iv())
       {
