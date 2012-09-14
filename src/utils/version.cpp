@@ -7,7 +7,6 @@
 
 #include <botan/version.h>
 #include <botan/parsing.h>
-#include <sstream>
 
 namespace Botan {
 
@@ -22,21 +21,23 @@ namespace Botan {
 */
 std::string version_string()
    {
-   std::ostringstream out;
+#define QUOTE(name) #name
+#define STR(macro) QUOTE(macro)
 
-   out << "Botan " << version_major() << "."
-       << version_minor() << "."
-       << version_patch() << " (";
+   return "Botan " STR(BOTAN_VERSION_MAJOR) "."
+                   STR(BOTAN_VERSION_MINOR) "."
+                   STR(BOTAN_VERSION_PATCH) " ("
 
-   if(BOTAN_VERSION_DATESTAMP == 0)
-      out << "unreleased version";
-   else
-      out << "released " << version_datestamp();
+#if (BOTAN_VERSION_DATESTAMP == 0)
+      "unreleased version built " __DATE__
+#else
+      "released " STR(BOTAN_VERSION_DATESTAMP)
+#endif
+      ", revision " BOTAN_VERSION_VC_REVISION
+      ", distribution " BOTAN_DISTRIBUTION_INFO ")";
 
-   out << ", revision " << BOTAN_VERSION_VC_REVISION;
-   out << ", distribution " << BOTAN_DISTRIBUTION_INFO << ")";
-
-   return out.str();
+#undef STR
+#undef QUOTE
    }
 
 u32bit version_datestamp() { return BOTAN_VERSION_DATESTAMP; }
