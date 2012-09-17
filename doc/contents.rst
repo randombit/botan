@@ -26,6 +26,7 @@ Contents
    srp
    rng
    fpe
+   versions
    python
    relnotes/index
 
