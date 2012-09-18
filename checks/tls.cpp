@@ -152,10 +152,6 @@ void test_handshake(RandomNumberGenerator& rng)
       if(!session.session_ticket().empty())
          std::cout << "Session ticket " << hex_encode(session.session_ticket()) << "\n";
 
-      std::cout << "Secure renegotiation is"
-      << (session.secure_renegotiation() ? "" : " NOT")
-      << " supported\n";
-
       return true;
    };
 
