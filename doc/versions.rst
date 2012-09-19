@@ -21,7 +21,7 @@ The compile time version information is defined in `botan/build.h`
 
 .. c:macro:: BOTAN_VERSION_PATCH
 
-   The major version of the release.
+   The patch version of the release.
 
 .. c:macro:: BOTAN_VERSION_DATESTAMP
 
@@ -44,8 +44,8 @@ The compile time version information is defined in `botan/build.h`
 
    A macro expanding to a string that is set to a revision identifier
    cooresponding to the source, or 'unknown' if this could not be
-   determined. It is set for all official releases and for releases
-   occuring within a Monotone workspace.
+   determined. It is set for all official releases and for builds that
+   originated from within a Monotone workspace.
 
 The runtime version information, and some helpers for compile time
 version checks, are included in `botan/version.h`
