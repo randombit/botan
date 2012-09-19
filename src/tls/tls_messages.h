@@ -145,6 +145,7 @@ class Client_Hello : public Handshake_Message
          {
          if(Heartbeat_Support_Indicator* hb = m_extensions.get<Heartbeat_Support_Indicator>())
             return hb->peer_allowed_to_send();
+         return false;
          }
 
       void update_hello_cookie(const Hello_Verify_Request& hello_verify);
