@@ -288,6 +288,21 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
 
       Protocol_Version client_version = state.client_hello()->version();
 
+      /*
+      * This is used as the pre-master if RSA decryption fails.
+      * Otherwise we can be used as an oracle. See Bleichenbacher
+      * "Chosen Ciphertext Attacks against Protocols Based on RSA
+      * Encryption Standard PKCS #1", Crypto 98
+      *
+      * Create it here instead if in the catch clause as otherwise we
+      * expose a timing channel WRT the generation of the fake value.
+      * Some timing channel likely remains due to exception handling
+      * and the like.
+      */
+      secure_vector<byte> fake_pre_master = rng.random_vec(48);
+      fake_pre_master[0] = client_version.major_version();
+      fake_pre_master[1] = client_version.minor_version();
+
       try
          {
          if(state.version() == Protocol_Version::SSL_V3)
@@ -309,10 +324,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
          }
       catch(...)
          {
-         // Randomize to hide timing channel
-         m_pre_master = rng.random_vec(48);
-         m_pre_master[0] = client_version.major_version();
-         m_pre_master[1] = client_version.minor_version();
+         m_pre_master = fake_pre_master;
          }
       }
    else
