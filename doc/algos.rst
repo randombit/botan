@@ -22,8 +22,9 @@ primitives, including:
 * Hash functions
 
   * NIST hashes: SHA-1, SHA-224, SHA-256, SHA-384, and SHA-512
+  * SHA-3 (Keccak) and SHA-3 candidates Skein-512 and Blue Midnight Wish-512
   * RIPE hashes: RIPEMD-160 and RIPEMD-128
-  * SHA-3 candidates Skein-512, Keccak, and Blue Midnight Wish-512
+  * Hash function combiners (Parallel and Comb4P)
   * Other common hash functions Whirlpool and Tiger
   * National standard hashes HAS-160 and GOST 34.11
   * Obsolete or insecure hashes MD5, MD4, MD2
