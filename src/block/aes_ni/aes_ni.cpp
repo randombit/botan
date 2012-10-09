@@ -488,7 +488,7 @@ void AES_192_NI::key_schedule(const byte key[], size_t)
 #define AES_192_key_exp(RCON, EK_OFF)                         \
    aes_192_key_expansion(&K0, &K1,                            \
                          _mm_aeskeygenassist_si128(K1, RCON), \
-                         EK + EK_OFF, EK_OFF == 48)
+                         &EK[EK_OFF], EK_OFF == 48)
 
    AES_192_key_exp(0x01, 6);
    AES_192_key_exp(0x02, 12);
