@@ -165,8 +165,8 @@ TLS Clients
          Credentials_Manager& credendials_manager, \
          const TLS::Policy& policy, \
          RandomNumberGenerator& rng, \
-         const std::string& servername = "", \
-         std::function<std::string, std::vector<std::string> > next_protocol)
+         const Server_Information& server_info = Server_Information(), \
+         std::function<std::string, std::vector<std::string>> next_protocol)
 
    Initialize a new TLS client. The constructor will immediately
    initiate a new session.
@@ -206,7 +206,7 @@ TLS Clients
    retrieve any certificates, secret keys, pre-shared keys, or SRP
    intformation; see :doc:`credentials_manager` for more information.
 
-   Use *servername* to specify the DNS name of the server you are
+   Use *server_info* to specify the DNS name of the server you are
    attempting to connect to, if you know it. This helps the server
    select what certificate to use and helps the client validate the
    connection.
@@ -240,6 +240,16 @@ The first 7 arguments are treated similiarly to the :ref:`client
 <tls_client>`.  The final (optional) argument, protocols, specifies
 the protocols the server is willing to advertise it supports.
 
+.. cpp:class:: std::string TLS::Server::next_protocol() const
+
+   If a handshake has completed, and if the client indicated a next
+   protocol (ie, the protocol that it intends to run over this TLS
+   session) this return value will specify it. The next protocol
+   extension is somewhat unusual in that it applies to the connection
+   rather than the session. The next protocol can not change during a
+   renegotiation, but might change across different connections using
+   that session.
+
 A TLS server that can handle concurrent connections using asio:
 
 .. literalinclude:: examples/asio_tls_server.cpp
@@ -270,9 +280,13 @@ information about that session:
        Returns the :cpp:class:`ciphersuite <TLS::Ciphersuite>` that
        was negotiated.
 
-   .. cpp:function:: std::string sni_hostname() const
+   .. cpp:function:: Server_Information server_info() const
 
-       Returns the hostname the client indicated in the hello message.
+       Returns information that identifies the server side of the
+       connection.  This is useful for the client in that it
+       identifies what was originally passed to the constructor. For
+       the server, it includes the name the client specified in the
+       server name indicator extension.
 
    .. cpp:function:: std::vector<X509_Certificate> peer_certs() const
 
@@ -331,16 +345,11 @@ implementation to the ``TLS::Client`` or ``TLS::Server`` constructor.
 
 .. cpp:class:: TLS::Session_Mananger
 
- .. cpp:function:: void save(const Session& session, u16bit port)
+ .. cpp:function:: void save(const Session& session)
 
      Save a new *session*. It is possible that this sessions session
      ID will replicate a session ID already stored, in which case the
      new session information should overwrite the previous information.
-
-     Clients will specify *port* if they know it (it will be zero if
-     they do not, or for servers). It specifies the remote port of the
-     server which is used to assist with looking up the correct
-     session when using :cpp:func:`load_from_host_info`.
 
  .. cpp:function:: void remove_entry(const std::vector<byte>& session_id)
 
@@ -355,16 +364,10 @@ implementation to the ``TLS::Client`` or ``TLS::Server`` constructor.
       to *save*, and ``true`` is returned. Otherwise *session* is not
       modified and ``false`` is returned.
 
- .. cpp:function:: bool load_from_host_info(const std::string& hostname, \
-                                            u16bit port, \
-                                            Session& session)
+ .. cpp:function:: bool load_from_server_info(const Server_Information& server, \
+                                              Session& session)
 
-      Attempt to resume a session for *hostname* / *port*.
-
-      The session managers included in the library will, if they fail
-      to find an exact match for *hostname* and *port*, will also
-      check for a session saved using a matching hostname and a port
-      of zero.
+      Attempt to resume a session with a known server.
 
  .. cpp:function:: std::chrono::seconds session_lifetime() const
 
@@ -431,13 +434,6 @@ TLS Policies
 be negotiated during a handshake.
 
 .. cpp:class:: TLS::Policy
-
- .. cpp:function:: Protocol_Version pref_version() const
-
-     Return the protocol version we would prefer to negotiate. This is
-     the version that clients will offer to servers.
-
-     Default: TLS v1.2
 
  .. cpp:function:: bool acceptable_protocol_version(Protocol_Version version)
 
@@ -515,6 +511,14 @@ be negotiated during a handshake.
      .. note::
 
         TLS compression is not currently supported.
+
+ .. cpp:function:: bool negotiate_heartbeat_support() const
+
+     If this function returns true, clients will offer the heartbeat
+     support extension, and servers will respond to clients offering
+     the extension. Otherwise, clients will not offer heartbeat
+     support and servers will ignore clients offering heartbeat
+     support.
 
  .. cpp:function:: bool allow_server_initiated_renegotiation() const
 
@@ -660,3 +664,15 @@ The ``TLS::Protocol_Version`` class represents a specific version:
 
       Returns string description of the version, for instance "SSL v3",
       "TLS v1.1", or "DTLS v1.0".
+
+ .. cpp:function:: static Protocol_Version latest_tls_version()
+
+      Returns the latest version of the TLS protocol known the the library
+      (currently TLS v1.2)
+
+ .. cpp:function:: static Protocol_Version latest_dtls_version()
+
+      Returns the latest version of the DTLS protocol known the the
+      library (currently DTLS v1.2)
+
+

@@ -96,7 +96,7 @@ bool check_for_resume(Session& session_info,
    // client sent a different SNI hostname
    if(client_hello->sni_hostname() != "")
       {
-      if(client_hello->sni_hostname() != session_info.sni_hostname())
+      if(client_hello->sni_hostname() != session_info.server_info().hostname())
          return false;
       }
 
@@ -288,9 +288,6 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
 
       state.client_hello(new Client_Hello(contents, type));
 
-      if(state.client_hello()->sni_hostname() != "")
-         m_hostname = state.client_hello()->sni_hostname();
-
       Protocol_Version client_version = state.client_hello()->version();
 
       Protocol_Version negotiated_version;
@@ -380,6 +377,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
             new Server_Hello(
                state.handshake_io(),
                state.hash(),
+               m_policy,
                state.client_hello()->session_id(),
                Protocol_Version(session_info.version()),
                session_info.ciphersuite_code(),
@@ -451,9 +449,11 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
          {
          std::map<std::string, std::vector<X509_Certificate> > cert_chains;
 
-         cert_chains = get_server_certs(m_hostname, m_creds);
+         const std::string sni_hostname = state.client_hello()->sni_hostname();
 
-         if(m_hostname != "" && cert_chains.empty())
+         cert_chains = get_server_certs(sni_hostname, m_creds);
+
+         if(sni_hostname != "" && cert_chains.empty())
             {
             cert_chains = get_server_certs("", m_creds);
 
@@ -472,6 +472,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
             new Server_Hello(
                state.handshake_io(),
                state.hash(),
+               m_policy,
                make_hello_random(rng()), // new session ID
                state.version(),
                choose_ciphersuite(m_policy,
@@ -517,7 +518,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
             private_key = m_creds.private_key_for(
                state.server_certs()->cert_chain()[0],
                "tls-server",
-               m_hostname);
+               sni_hostname);
 
             if(!private_key)
                throw Internal_Error("No private key located for associated server cert");
@@ -540,7 +541,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
             }
 
          std::vector<X509_Certificate> client_auth_CAs =
-            m_creds.trusted_certificate_authorities("tls-server", m_hostname);
+            m_creds.trusted_certificate_authorities("tls-server", sni_hostname);
 
          if(!client_auth_CAs.empty() && state.ciphersuite().sig_algo() != "")
             {
@@ -663,7 +664,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
             state.server_hello()->fragment_size(),
             get_peer_cert_chain(state),
             std::vector<byte>(),
-            m_hostname,
+            Server_Information(state.client_hello()->sni_hostname()),
             state.srp_identifier()
             );
 

@@ -12,6 +12,7 @@
 #include <botan/tls_version.h>
 #include <botan/tls_ciphersuite.h>
 #include <botan/tls_magic.h>
+#include <botan/tls_server_info.h>
 #include <botan/secmem.h>
 #include <botan/symkey.h>
 #include <chrono>
@@ -51,8 +52,8 @@ class BOTAN_DLL Session
               size_t fragment_size,
               const std::vector<X509_Certificate>& peer_certs,
               const std::vector<byte>& session_ticket,
-              const std::string& sni_hostname = "",
-              const std::string& srp_identifier = "");
+              const Server_Information& server_info,
+              const std::string& srp_identifier);
 
       /**
       * Load a session from DER representation (created by DER_encode)
@@ -133,11 +134,6 @@ class BOTAN_DLL Session
       Connection_Side side() const { return m_connection_side; }
 
       /**
-      * Get the SNI hostname (if sent by the client in the initial handshake)
-      */
-      std::string sni_hostname() const { return m_sni_hostname; }
-
-      /**
       * Get the SRP identity (if sent by the client in the initial handshake)
       */
       std::string srp_identifier() const { return m_srp_identifier; }
@@ -180,6 +176,8 @@ class BOTAN_DLL Session
       */
       const std::vector<byte>& session_ticket() const { return m_session_ticket; }
 
+      Server_Information server_info() const { return m_server_info; }
+
    private:
       enum { TLS_SESSION_PARAM_STRUCT_VERSION = 0x2994e301 };
 
@@ -197,7 +195,7 @@ class BOTAN_DLL Session
       size_t m_fragment_size;
 
       std::vector<X509_Certificate> m_peer_certs;
-      std::string m_sni_hostname; // optional
+      Server_Information m_server_info; // optional
       std::string m_srp_identifier; // optional
    };
 

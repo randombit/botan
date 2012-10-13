@@ -31,6 +31,16 @@ class BOTAN_DLL Protocol_Version
          DTLS_V12           = 0xFEFD
       };
 
+      static Protocol_Version latest_tls_version()
+         {
+         return Protocol_Version(TLS_V12);
+         }
+
+      static Protocol_Version latest_dtls_version()
+         {
+         return Protocol_Version(DTLS_V12);
+         }
+
       Protocol_Version() : m_version(0) {}
 
       /**

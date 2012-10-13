@@ -61,27 +61,24 @@ bool Session_Manager_In_Memory::load_from_session_id(
    return load_from_session_str(hex_encode(session_id), session);
    }
 
-bool Session_Manager_In_Memory::load_from_host_info(
-   const std::string& hostname, u16bit port, Session& session)
+bool Session_Manager_In_Memory::load_from_server_info(
+   const Server_Information& info, Session& session)
    {
    std::lock_guard<std::mutex> lock(m_mutex);
 
-   auto i = m_host_sessions.find(hostname + ":" + std::to_string(port));
+   auto i = m_info_sessions.find(info);
 
-   if(i == m_host_sessions.end())
-      {
-      if(port > 0)
-         i = m_host_sessions.find(hostname + ":" + std::to_string(0));
-
-      if(i == m_host_sessions.end())
-         return false;
-      }
+   if(i == m_info_sessions.end())
+      return false;
 
    if(load_from_session_str(i->second, session))
       return true;
 
-   // was removed from sessions map, remove m_host_sessions entry
-   m_host_sessions.erase(i);
+   /*
+   * It existed at one point but was removed from the sessions map,
+   * remove m_info_sessions entry as well
+   */
+   m_info_sessions.erase(i);
 
    return false;
    }
@@ -97,7 +94,7 @@ void Session_Manager_In_Memory::remove_entry(
       m_sessions.erase(i);
    }
 
-void Session_Manager_In_Memory::save(const Session& session, u16bit port)
+void Session_Manager_In_Memory::save(const Session& session)
    {
    std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -115,10 +112,8 @@ void Session_Manager_In_Memory::save(const Session& session, u16bit port)
 
    m_sessions[session_id_str] = session.encrypt(m_session_key, m_rng);
 
-   const std::string hostname = session.sni_hostname();
-
-   if(session.side() == CLIENT && hostname != "")
-      m_host_sessions[hostname + ":" + std::to_string(port)] = session_id_str;
+   if(session.side() == CLIENT && !session.server_info().empty())
+      m_info_sessions[session.server_info()] = session_id_str;
    }
 
 }

@@ -254,6 +254,7 @@ class Server_Hello : public Handshake_Message
 
       Server_Hello(Handshake_IO& io,
                    Handshake_Hash& hash,
+                   const Policy& policy,
                    const std::vector<byte>& session_id,
                    Protocol_Version ver,
                    u16bit ciphersuite,

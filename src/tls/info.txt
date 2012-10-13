@@ -15,6 +15,7 @@ tls_client.h
 tls_exceptn.h
 tls_handshake_msg.h
 tls_magic.h
+tls_server_info.h
 tls_policy.h
 tls_server.h
 tls_session.h

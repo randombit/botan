@@ -142,16 +142,15 @@ bool Session_Manager_SQLite::load_from_session_id(const std::vector<byte>& sessi
    return false;
    }
 
-bool Session_Manager_SQLite::load_from_host_info(const std::string& hostname,
-                                                 u16bit port,
-                                                 Session& session)
+bool Session_Manager_SQLite::load_from_server_info(const Server_Information& server,
+                                                   Session& session)
    {
    sqlite3_statement stmt(m_db, "select session from tls_sessions"
                                 " where hostname = ?1 and hostport = ?2"
                                 " order by session_start desc");
 
-   stmt.bind(1, hostname);
-   stmt.bind(2, port);
+   stmt.bind(1, server.hostname());
+   stmt.bind(2, server.port());
 
    while(stmt.step())
       {
@@ -167,9 +166,6 @@ bool Session_Manager_SQLite::load_from_host_info(const std::string& hostname,
          }
       }
 
-   if(port != 0)
-      return load_from_host_info(hostname, 0, session);
-
    return false;
    }
 
@@ -182,15 +178,15 @@ void Session_Manager_SQLite::remove_entry(const std::vector<byte>& session_id)
    stmt.spin();
    }
 
-void Session_Manager_SQLite::save(const Session& session, u16bit port)
+void Session_Manager_SQLite::save(const Session& session)
    {
    sqlite3_statement stmt(m_db, "insert or replace into tls_sessions"
                                 " values(?1, ?2, ?3, ?4, ?5)");
 
    stmt.bind(1, hex_encode(session.session_id()));
    stmt.bind(2, session.start_time());
-   stmt.bind(3, session.sni_hostname());
-   stmt.bind(4, port);
+   stmt.bind(3, session.server_info().hostname());
+   stmt.bind(4, session.server_info().port());
    stmt.bind(5, session.encrypt(m_session_key, m_rng));
 
    stmt.spin();

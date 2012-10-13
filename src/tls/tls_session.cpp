@@ -27,7 +27,7 @@ Session::Session(const std::vector<byte>& session_identifier,
                  size_t fragment_size,
                  const std::vector<X509_Certificate>& certs,
                  const std::vector<byte>& ticket,
-                 const std::string& sni_hostname,
+                 const Server_Information& server_info,
                  const std::string& srp_identifier) :
    m_start_time(std::chrono::system_clock::now()),
    m_identifier(session_identifier),
@@ -39,7 +39,7 @@ Session::Session(const std::vector<byte>& session_identifier,
    m_connection_side(side),
    m_fragment_size(fragment_size),
    m_peer_certs(certs),
-   m_sni_hostname(sni_hostname),
+   m_server_info(server_info),
    m_srp_identifier(srp_identifier)
    {
    }
@@ -54,7 +54,11 @@ Session::Session(const std::string& pem)
 Session::Session(const byte ber[], size_t ber_len)
    {
    byte side_code = 0;
-   ASN1_String sni_hostname_str;
+
+   ASN1_String server_hostname;
+   ASN1_String server_service;
+   size_t server_port;
+
    ASN1_String srp_identifier_str;
 
    byte major_version = 0, minor_version = 0;
@@ -78,16 +82,22 @@ Session::Session(const byte ber[], size_t ber_len)
         .decode_integer_type(m_fragment_size)
         .decode(m_master_secret, OCTET_STRING)
         .decode(peer_cert_bits, OCTET_STRING)
-        .decode(sni_hostname_str)
+        .decode(server_hostname)
+        .decode(server_service)
+        .decode(server_port)
         .decode(srp_identifier_str)
       .end_cons()
       .verify_end();
 
    m_version = Protocol_Version(major_version, minor_version);
    m_start_time = std::chrono::system_clock::from_time_t(start_time);
-   m_sni_hostname = sni_hostname_str.value();
-   m_srp_identifier = srp_identifier_str.value();
    m_connection_side = static_cast<Connection_Side>(side_code);
+
+   m_server_info = Server_Information(server_hostname.value(),
+                                      server_service.value(),
+                                      server_port);
+
+   m_srp_identifier = srp_identifier_str.value();
 
    if(!peer_cert_bits.empty())
       {
@@ -118,7 +128,9 @@ secure_vector<byte> Session::DER_encode() const
          .encode(static_cast<size_t>(m_fragment_size))
          .encode(m_master_secret, OCTET_STRING)
          .encode(peer_cert_bits, OCTET_STRING)
-         .encode(ASN1_String(m_sni_hostname, UTF8_STRING))
+         .encode(ASN1_String(m_server_info.hostname(), UTF8_STRING))
+         .encode(ASN1_String(m_server_info.service(), UTF8_STRING))
+         .encode(static_cast<size_t>(m_server_info.port()))
          .encode(ASN1_String(m_srp_identifier, UTF8_STRING))
       .end_cons()
    .get_contents();

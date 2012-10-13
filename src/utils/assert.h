@@ -35,10 +35,10 @@ void assertion_failure(const char* expr_str,
 /**
 * Assert that value1 == value2
 */
-#define BOTAN_ASSERT_EQUAL(value1, value2, assertion_made) \
+#define BOTAN_ASSERT_EQUAL(expr1, expr2, assertion_made)   \
    do {                                                    \
-     if(value1 != value2)                                  \
-         Botan::assertion_failure(#value1 " == " #value2,  \
+     if((expr1) != (expr2))                                \
+       Botan::assertion_failure(#expr1 " == " #expr2,      \
                                   assertion_made,          \
                                   __func__,                \
                                   __FILE__,                \

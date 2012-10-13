@@ -8,6 +8,10 @@ Initial support for DTLS (both v1.0 and v1.2) is available in this
 release, though it should be considered highly experimental. Currently
 timeouts and retransmissions are not handled.
 
+The :cpp:class:`TLS::Client` constructor now takes the version to
+offer to the server. The policy hook :cpp:class:`TLS::Policy` function
+`pref_version`, which previously controlled this, has been removed.
+
 :cpp:class:`TLS::Session_Manager_In_Memory` now chooses a random
 256-bit key at startup and encrypts all sessions (using the existing
 :cpp:func:`TLS::Session::encrypt` mechanism) while they are stored in
@@ -29,9 +33,9 @@ persistent storage by 1.11.0 will not load in this version and vice
 versa. In either case this will not cause any errors, the session will
 simply not resume and instead a full handshake will occur.
 
-New policy hooks :cpp:func:`TLS::Policy::acceptable_protocol_version`
-and :cpp:func:`TLS::Policy::allow_server_initiated_renegotiation` were
-added.
+New policy hooks :cpp:func:`TLS::Policy::acceptable_protocol_version`,
+:cpp:func:`TLS::Policy::allow_server_initiated_renegotiation`, and
+:cpp:func:`TLS::Policy::negotiate_heartbeat_support` were added.
 
 TLS clients were not sending a next protocol message during a session
 resumption, which would cause resumption failures with servers that
@@ -78,3 +82,10 @@ of ``data`` that returns a mutable pointer has been renamed
 
 The constructor ``BigInt(NumberType type, size_t n)`` has been
 removed, replaced by ``BigInt::power_of_2``.
+
+AES-NI Crash Fixed
+""""""""""""""""""""""""""""""""""""""""
+
+In 1.11.0, when compiled by GCC, the AES-NI implementation of AES-192
+would crash if the mlock-based allocator was used due to an alignment
+issue.

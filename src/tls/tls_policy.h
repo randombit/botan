@@ -74,6 +74,11 @@ class BOTAN_DLL Policy
       virtual std::string choose_curve(const std::vector<std::string>& curve_names) const;
 
       /**
+      * Attempt to negotiate the use of the heartbeat extension
+      */
+      virtual bool negotiate_heartbeat_support() const { return false; }
+
+      /**
       * Allow renegotiation even if the counterparty doesn't
       * support the secure renegotiation extension.
       *
@@ -118,11 +123,6 @@ class BOTAN_DLL Policy
       * @return true if and only if we are willing to accept this version
       */
       virtual bool acceptable_protocol_version(Protocol_Version version) const;
-
-      /**
-      * @return the version we would prefer to negotiate
-      */
-      virtual Protocol_Version pref_version() const;
 
       virtual ~Policy() {}
    };

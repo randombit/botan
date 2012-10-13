@@ -39,11 +39,10 @@ class BOTAN_DLL Client : public Channel
       *
       * @param rng a random number generator
       *
-      * @param servername the server's DNS name, if known
+      * @param server_info is identifying information about the TLS server
       *
-      * @param port specifies the protocol port of the server (eg for
-      *        TCP/UDP). Only used if servername is also specified.
-      *        Use 0 if unknown.
+      * @param offer_version specifies which version we will offer
+      *        to the TLS server.
       *
       * @param next_protocol allows the client to specify what the next
       *        protocol will be. For more information read
@@ -61,8 +60,8 @@ class BOTAN_DLL Client : public Channel
              Credentials_Manager& creds,
              const Policy& policy,
              RandomNumberGenerator& rng,
-             const std::string& servername = "",
-             u16bit port = 0,
+             const Server_Information& server_info = Server_Information(),
+             const Protocol_Version offer_version = Protocol_Version::latest_tls_version(),
              std::function<std::string (std::vector<std::string>)> next_protocol =
                 std::function<std::string (std::vector<std::string>)>());
    private:
@@ -88,8 +87,7 @@ class BOTAN_DLL Client : public Channel
 
       const Policy& m_policy;
       Credentials_Manager& m_creds;
-      const std::string m_hostname;
-      const u16bit m_port;
+      const Server_Information m_info;
    };
 
 }

@@ -21,6 +21,7 @@ namespace TLS {
 */
 Server_Hello::Server_Hello(Handshake_IO& io,
                            Handshake_Hash& hash,
+                           const Policy& policy,
                            const std::vector<byte>& session_id,
                            Protocol_Version ver,
                            u16bit ciphersuite,
@@ -39,9 +40,13 @@ Server_Hello::Server_Hello(Handshake_IO& io,
    m_ciphersuite(ciphersuite),
    m_comp_method(compression)
    {
-   if(client_has_heartbeat)
+   if(client_has_heartbeat && policy.negotiate_heartbeat_support())
       m_extensions.add(new Heartbeat_Support_Indicator(true));
 
+   /*
+   * Even a client that offered SSLv3 and sent the SCSV will get an
+   * extension back. This is probably the right thing to do.
+   */
    if(client_has_secure_renegotiation)
       m_extensions.add(new Renegotiation_Extension(reneg_info));
 
