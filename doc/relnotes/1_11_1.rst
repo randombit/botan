@@ -78,3 +78,10 @@ of ``data`` that returns a mutable pointer has been renamed
 
 The constructor ``BigInt(NumberType type, size_t n)`` has been
 removed, replaced by ``BigInt::power_of_2``.
+
+AES-NI Crash Fixed
+""""""""""""""""""""""""""""""""""""""""
+
+In 1.11.0, when compiled by GCC, the AES-NI implementation of AES-192
+would crash if the mlock-based allocator was used due to an alignment
+issue.

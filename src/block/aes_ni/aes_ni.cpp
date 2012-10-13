@@ -1,6 +1,6 @@
 /*
 * AES using AES-NI instructions
-* (C) 2009 Jack Lloyd
+* (C) 2009,2012 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -485,10 +485,10 @@ void AES_192_NI::key_schedule(const byte key[], size_t)
 
    load_le(&EK[0], key, 6);
 
-#define AES_192_key_exp(RCON, EK_OFF)                         \
-   aes_192_key_expansion(&K0, &K1,                            \
-                         _mm_aeskeygenassist_si128(K1, RCON), \
-                         &EK[EK_OFF], EK_OFF == 48)
+   #define AES_192_key_exp(RCON, EK_OFF)                         \
+     aes_192_key_expansion(&K0, &K1,                             \
+                           _mm_aeskeygenassist_si128(K1, RCON),  \
+                           &EK[EK_OFF], EK_OFF == 48)
 
    AES_192_key_exp(0x01, 6);
    AES_192_key_exp(0x02, 12);
@@ -499,22 +499,25 @@ void AES_192_NI::key_schedule(const byte key[], size_t)
    AES_192_key_exp(0x40, 42);
    AES_192_key_exp(0x80, 48);
 
+   #undef AES_192_key_exp
+
    // Now generate decryption keys
    const __m128i* EK_mm = (const __m128i*)&EK[0];
+
    __m128i* DK_mm = (__m128i*)&DK[0];
-   _mm_storeu_si128(DK_mm     , EK_mm[12]);
-   _mm_storeu_si128(DK_mm +  1, _mm_aesimc_si128(EK_mm[11]));
-   _mm_storeu_si128(DK_mm +  2, _mm_aesimc_si128(EK_mm[10]));
-   _mm_storeu_si128(DK_mm +  3, _mm_aesimc_si128(EK_mm[9]));
-   _mm_storeu_si128(DK_mm +  4, _mm_aesimc_si128(EK_mm[8]));
-   _mm_storeu_si128(DK_mm +  5, _mm_aesimc_si128(EK_mm[7]));
-   _mm_storeu_si128(DK_mm +  6, _mm_aesimc_si128(EK_mm[6]));
-   _mm_storeu_si128(DK_mm +  7, _mm_aesimc_si128(EK_mm[5]));
-   _mm_storeu_si128(DK_mm +  8, _mm_aesimc_si128(EK_mm[4]));
-   _mm_storeu_si128(DK_mm +  9, _mm_aesimc_si128(EK_mm[3]));
-   _mm_storeu_si128(DK_mm + 10, _mm_aesimc_si128(EK_mm[2]));
-   _mm_storeu_si128(DK_mm + 11, _mm_aesimc_si128(EK_mm[1]));
-   _mm_storeu_si128(DK_mm + 12, EK_mm[0]);
+   _mm_storeu_si128(DK_mm     , _mm_loadu_si128(EK_mm + 12));
+   _mm_storeu_si128(DK_mm +  1, _mm_aesimc_si128(_mm_loadu_si128(EK_mm + 11)));
+   _mm_storeu_si128(DK_mm +  2, _mm_aesimc_si128(_mm_loadu_si128(EK_mm + 10)));
+   _mm_storeu_si128(DK_mm +  3, _mm_aesimc_si128(_mm_loadu_si128(EK_mm + 9)));
+   _mm_storeu_si128(DK_mm +  4, _mm_aesimc_si128(_mm_loadu_si128(EK_mm + 8)));
+   _mm_storeu_si128(DK_mm +  5, _mm_aesimc_si128(_mm_loadu_si128(EK_mm + 7)));
+   _mm_storeu_si128(DK_mm +  6, _mm_aesimc_si128(_mm_loadu_si128(EK_mm + 6)));
+   _mm_storeu_si128(DK_mm +  7, _mm_aesimc_si128(_mm_loadu_si128(EK_mm + 5)));
+   _mm_storeu_si128(DK_mm +  8, _mm_aesimc_si128(_mm_loadu_si128(EK_mm + 4)));
+   _mm_storeu_si128(DK_mm +  9, _mm_aesimc_si128(_mm_loadu_si128(EK_mm + 3)));
+   _mm_storeu_si128(DK_mm + 10, _mm_aesimc_si128(_mm_loadu_si128(EK_mm + 2)));
+   _mm_storeu_si128(DK_mm + 11, _mm_aesimc_si128(_mm_loadu_si128(EK_mm + 1)));
+   _mm_storeu_si128(DK_mm + 12, _mm_loadu_si128(EK_mm + 0));
    }
 
 /*
@@ -775,5 +778,10 @@ void AES_256_NI::clear()
    zeroise(EK);
    zeroise(DK);
    }
+
+#undef AES_ENC_4_ROUNDS
+#undef AES_ENC_4_LAST_ROUNDS
+#undef AES_DEC_4_ROUNDS
+#undef AES_DEC_4_LAST_ROUNDS
 
 }
