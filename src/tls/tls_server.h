@@ -36,16 +36,10 @@ class BOTAN_DLL Server : public Channel
                 std::vector<std::string>());
 
       /**
-      * Return the server name indicator, if sent by the client
+      * Return the protocol notification set by the client (using the
+      * NPN extension) for this connection, if any
       */
-      std::string server_name_indicator() const
-         { return m_hostname; }
-
-      /**
-      * Return the protocol negotiated with NPN extension
-      */
-      std::string next_protocol() const
-         { return m_next_protocol; }
+      std::string next_protocol() const { return m_next_protocol; }
 
    private:
       std::vector<X509_Certificate>
@@ -65,7 +59,6 @@ class BOTAN_DLL Server : public Channel
       Credentials_Manager& m_creds;
 
       std::vector<std::string> m_possible_protocols;
-      std::string m_hostname;
       std::string m_next_protocol;
    };
 

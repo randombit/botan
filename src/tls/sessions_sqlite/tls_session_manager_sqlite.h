@@ -50,12 +50,12 @@ class BOTAN_DLL Session_Manager_SQLite : public Session_Manager
       bool load_from_session_id(const std::vector<byte>& session_id,
                                 Session& session) override;
 
-      bool load_from_host_info(const std::string& hostname, u16bit port,
-                               Session& session) override;
+      bool load_from_server_info(const Server_Information& info,
+                                 Session& session) override;
 
       void remove_entry(const std::vector<byte>& session_id) override;
 
-      void save(const Session& session_data, u16bit port) override;
+      void save(const Session& session_data) override;
 
       std::chrono::seconds session_lifetime() const override
          { return m_session_lifetime; }

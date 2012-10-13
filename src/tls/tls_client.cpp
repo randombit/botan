@@ -55,16 +55,14 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
                Credentials_Manager& creds,
                const Policy& policy,
                RandomNumberGenerator& rng,
-               const std::string& hostname,
-               u16bit port,
+               const Server_Information& info,
                std::function<std::string (std::vector<std::string>)> next_protocol) :
    Channel(output_fn, proc_fn, handshake_fn, session_manager, rng),
    m_policy(policy),
    m_creds(creds),
-   m_hostname(hostname),
-   m_port(port)
+   m_info(info)
    {
-   const std::string srp_identifier = m_creds.srp_identifier("tls-client", m_hostname);
+   const std::string srp_identifier = m_creds.srp_identifier("tls-client", m_info.hostname());
 
    const Protocol_Version version = m_policy.pref_version();
    Handshake_State& state = create_handshake_state(version);
@@ -111,10 +109,10 @@ void Client::send_client_hello(Handshake_State& state_base,
 
    const bool send_npn_request = static_cast<bool>(next_protocol);
 
-   if(!force_full_renegotiation && m_hostname != "")
+   if(!force_full_renegotiation && !m_info.empty())
       {
       Session session_info;
-      if(session_manager().load_from_host_info(m_hostname, m_port, session_info))
+      if(session_manager().load_from_server_info(m_info, session_info))
          {
          if(srp_identifier == "" || session_info.srp_identifier() == srp_identifier)
             {
@@ -142,7 +140,7 @@ void Client::send_client_hello(Handshake_State& state_base,
          rng(),
          secure_renegotiation_data_for_client_hello(),
          send_npn_request,
-         m_hostname,
+         m_info.hostname(),
          srp_identifier));
       }
 
@@ -321,7 +319,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
 
       try
          {
-         m_creds.verify_certificate_chain("tls-client", m_hostname, server_certs);
+         m_creds.verify_certificate_chain("tls-client", m_info.hostname(), server_certs);
          }
       catch(std::exception& e)
          {
@@ -380,7 +378,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          std::vector<X509_Certificate> client_certs =
             m_creds.cert_chain(types,
                                "tls-client",
-                               m_hostname);
+                               m_info.hostname());
 
          state.client_certs(
             new Certificate(state.handshake_io(),
@@ -395,7 +393,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
                                  m_policy,
                                  m_creds,
                                  state.server_public_key.get(),
-                                 m_hostname,
+                                 m_info.hostname(),
                                  rng())
          );
 
@@ -407,7 +405,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          Private_Key* private_key =
             m_creds.private_key_for(state.client_certs()->cert_chain()[0],
                                     "tls-client",
-                                    m_hostname);
+                                    m_info.hostname());
 
          state.client_verify(
             new Certificate_Verify(state.handshake_io(),
@@ -501,7 +499,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          state.server_hello()->fragment_size(),
          get_peer_cert_chain(state),
          session_ticket,
-         m_hostname,
+         m_info,
          ""
          );
 
@@ -510,7 +508,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
       if(!session_id.empty())
          {
          if(should_save)
-            session_manager().save(session_info, m_port);
+            session_manager().save(session_info);
          else
             session_manager().remove_entry(session_info.session_id());
          }

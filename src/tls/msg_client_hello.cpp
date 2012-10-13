@@ -116,7 +116,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    m_extensions.add(new Heartbeat_Support_Indicator(true));
    m_extensions.add(new Renegotiation_Extension(reneg_info));
    m_extensions.add(new SRP_Identifier(session.srp_identifier()));
-   m_extensions.add(new Server_Name_Indicator(session.sni_hostname()));
+   m_extensions.add(new Server_Name_Indicator(session.server_info().hostname()));
    m_extensions.add(new Session_Ticket(session.session_ticket()));
    m_extensions.add(new Supported_Elliptic_Curves(policy.allowed_ecc_curves()));
 

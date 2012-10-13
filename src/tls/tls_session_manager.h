@@ -30,7 +30,7 @@ class BOTAN_DLL Session_Manager
    {
    public:
       /**
-      * Try to load a saved session (server side)
+      * Try to load a saved session (using session ID)
       * @param session_id the session identifier we are trying to resume
       * @param session will be set to the saved session data (if found),
                or not modified if not found
@@ -40,15 +40,14 @@ class BOTAN_DLL Session_Manager
                                         Session& session) = 0;
 
       /**
-      * Try to load a saved session (client side)
-      * @param hostname of the host we are connecting to
-      * @param port the port number if we know it, or 0 if unknown
+      * Try to load a saved session (using info about server)
+      * @param info the information about the server
       * @param session will be set to the saved session data (if found),
                or not modified if not found
       * @return true if session was modified
       */
-      virtual bool load_from_host_info(const std::string& hostname, u16bit port,
-                                       Session& session) = 0;
+      virtual bool load_from_server_info(const Server_Information& info,
+                                         Session& session) = 0;
 
       /**
       * Remove this session id from the cache, if it exists
@@ -64,7 +63,7 @@ class BOTAN_DLL Session_Manager
       * @param session to save
       * @param port the protocol port (if known)
       */
-      virtual void save(const Session& session, u16bit port = 0) = 0;
+      virtual void save(const Session& session) = 0;
 
       /**
       * Return the allowed lifetime of a session; beyond this time,
@@ -86,12 +85,12 @@ class BOTAN_DLL Session_Manager_Noop : public Session_Manager
       bool load_from_session_id(const std::vector<byte>&, Session&) override
          { return false; }
 
-      bool load_from_host_info(const std::string&, u16bit, Session&) override
+      bool load_from_server_info(const Server_Information&, Session&) override
          { return false; }
 
       void remove_entry(const std::vector<byte>&) override {}
 
-      void save(const Session&, u16bit) override {}
+      void save(const Session&) override {}
 
       std::chrono::seconds session_lifetime() const override
          { return std::chrono::seconds(0); }
@@ -116,12 +115,12 @@ class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
       bool load_from_session_id(const std::vector<byte>& session_id,
                                 Session& session) override;
 
-      bool load_from_host_info(const std::string& hostname, u16bit port,
-                               Session& session) override;
+      bool load_from_server_info(const Server_Information& info,
+                                 Session& session) override;
 
       void remove_entry(const std::vector<byte>& session_id) override;
 
-      void save(const Session& session_data, u16bit port) override;
+      void save(const Session& session_data) override;
 
       std::chrono::seconds session_lifetime() const override
          { return m_session_lifetime; }
@@ -140,7 +139,7 @@ class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
       SymmetricKey m_session_key;
 
       std::map<std::string, std::vector<byte>> m_sessions; // hex(session_id) -> session
-      std::map<std::string, std::string> m_host_sessions;
+      std::map<Server_Information, std::string> m_info_sessions;
    };
 
 }

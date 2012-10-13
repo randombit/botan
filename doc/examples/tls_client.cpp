@@ -168,8 +168,7 @@ int main(int argc, char* argv[])
                          creds,
                          policy,
                          rng,
-                         host,
-                         port,
+                         TLS::Server_Information(host, port),
                          protocol_chooser);
 
       while(!client.is_closed())
