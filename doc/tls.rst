@@ -512,6 +512,14 @@ be negotiated during a handshake.
 
         TLS compression is not currently supported.
 
+ .. cpp:function:: bool negotiate_heartbeat_support() const
+
+     If this function returns true, clients will offer the heartbeat
+     support extension, and servers will respond to clients offering
+     the extension. Otherwise, clients will not offer heartbeat
+     support and servers will ignore clients offering heartbeat
+     support.
+
  .. cpp:function:: bool allow_server_initiated_renegotiation() const
 
      If this function returns true, a client will accept a

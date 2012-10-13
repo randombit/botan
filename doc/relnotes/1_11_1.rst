@@ -33,9 +33,9 @@ persistent storage by 1.11.0 will not load in this version and vice
 versa. In either case this will not cause any errors, the session will
 simply not resume and instead a full handshake will occur.
 
-New policy hooks :cpp:func:`TLS::Policy::acceptable_protocol_version`
-and :cpp:func:`TLS::Policy::allow_server_initiated_renegotiation` were
-added.
+New policy hooks :cpp:func:`TLS::Policy::acceptable_protocol_version`,
+:cpp:func:`TLS::Policy::allow_server_initiated_renegotiation`, and
+:cpp:func:`TLS::Policy::negotiate_heartbeat_support` were added.
 
 TLS clients were not sending a next protocol message during a session
 resumption, which would cause resumption failures with servers that

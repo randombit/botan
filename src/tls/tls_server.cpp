@@ -377,6 +377,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
             new Server_Hello(
                state.handshake_io(),
                state.hash(),
+               m_policy,
                state.client_hello()->session_id(),
                Protocol_Version(session_info.version()),
                session_info.ciphersuite_code(),
@@ -471,6 +472,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
             new Server_Hello(
                state.handshake_io(),
                state.hash(),
+               m_policy,
                make_hello_random(rng()), // new session ID
                state.version(),
                choose_ciphersuite(m_policy,
