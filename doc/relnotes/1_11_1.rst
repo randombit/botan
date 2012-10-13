@@ -8,6 +8,10 @@ Initial support for DTLS (both v1.0 and v1.2) is available in this
 release, though it should be considered highly experimental. Currently
 timeouts and retransmissions are not handled.
 
+The :cpp:class:`TLS::Client` constructor now takes the version to
+offer to the server. The policy hook :cpp:class:`TLS::Policy` function
+`pref_version`, which previously controlled this, has been removed.
+
 :cpp:class:`TLS::Session_Manager_In_Memory` now chooses a random
 256-bit key at startup and encrypts all sessions (using the existing
 :cpp:func:`TLS::Session::encrypt` mechanism) while they are stored in

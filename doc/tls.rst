@@ -166,7 +166,7 @@ TLS Clients
          const TLS::Policy& policy, \
          RandomNumberGenerator& rng, \
          const Server_Information& server_info = Server_Information(), \
-         std::function<std::string, std::vector<std::string> > next_protocol)
+         std::function<std::string, std::vector<std::string>> next_protocol)
 
    Initialize a new TLS client. The constructor will immediately
    initiate a new session.
@@ -657,14 +657,14 @@ The ``TLS::Protocol_Version`` class represents a specific version:
       Returns string description of the version, for instance "SSL v3",
       "TLS v1.1", or "DTLS v1.0".
 
-  .. cpp:function:: static Protocol_Version latest_tls_version()
+ .. cpp:function:: static Protocol_Version latest_tls_version()
 
-       Returns the latest version of the TLS protocol known the the library
-       (currently TLS v1.2)
+      Returns the latest version of the TLS protocol known the the library
+      (currently TLS v1.2)
 
-  .. cpp:function:: static Protocol_Version latest_dtls_version()
+ .. cpp:function:: static Protocol_Version latest_dtls_version()
 
-       Returns the latest version of the DTLS protocol known the the
-       library (currently DTLS v1.2)
+      Returns the latest version of the DTLS protocol known the the
+      library (currently DTLS v1.2)
 
 
