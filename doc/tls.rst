@@ -435,13 +435,6 @@ be negotiated during a handshake.
 
 .. cpp:class:: TLS::Policy
 
- .. cpp:function:: Protocol_Version pref_version() const
-
-     Return the protocol version we would prefer to negotiate. This is
-     the version that clients will offer to servers.
-
-     Default: TLS v1.2
-
  .. cpp:function:: bool acceptable_protocol_version(Protocol_Version version)
 
      Return true if this version of the protocol is one that we are
@@ -663,3 +656,15 @@ The ``TLS::Protocol_Version`` class represents a specific version:
 
       Returns string description of the version, for instance "SSL v3",
       "TLS v1.1", or "DTLS v1.0".
+
+  .. cpp:function:: static Protocol_Version latest_tls_version()
+
+       Returns the latest version of the TLS protocol known the the library
+       (currently TLS v1.2)
+
+  .. cpp:function:: static Protocol_Version latest_dtls_version()
+
+       Returns the latest version of the DTLS protocol known the the
+       library (currently DTLS v1.2)
+
+

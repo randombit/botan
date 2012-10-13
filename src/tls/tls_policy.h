@@ -119,11 +119,6 @@ class BOTAN_DLL Policy
       */
       virtual bool acceptable_protocol_version(Protocol_Version version) const;
 
-      /**
-      * @return the version we would prefer to negotiate
-      */
-      virtual Protocol_Version pref_version() const;
-
       virtual ~Policy() {}
    };
 

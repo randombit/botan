@@ -56,6 +56,7 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
                const Policy& policy,
                RandomNumberGenerator& rng,
                const Server_Information& info,
+               const Protocol_Version offer_version,
                std::function<std::string (std::vector<std::string>)> next_protocol) :
    Channel(output_fn, proc_fn, handshake_fn, session_manager, rng),
    m_policy(policy),
@@ -64,9 +65,8 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
    {
    const std::string srp_identifier = m_creds.srp_identifier("tls-client", m_info.hostname());
 
-   const Protocol_Version version = m_policy.pref_version();
-   Handshake_State& state = create_handshake_state(version);
-   send_client_hello(state, false, version, srp_identifier, next_protocol);
+   Handshake_State& state = create_handshake_state(offer_version);
+   send_client_hello(state, false, offer_version, srp_identifier, next_protocol);
    }
 
 Handshake_State* Client::new_handshake_state(Handshake_IO* io)

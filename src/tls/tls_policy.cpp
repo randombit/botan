@@ -136,11 +136,6 @@ bool Policy::acceptable_protocol_version(Protocol_Version version) const
            version == Protocol_Version::TLS_V12);
    }
 
-Protocol_Version Policy::pref_version() const
-   {
-   return Protocol_Version::TLS_V12;
-   }
-
 namespace {
 
 class Ciphersuite_Preference_Ordering
