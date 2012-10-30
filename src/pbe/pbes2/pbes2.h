@@ -12,6 +12,7 @@
 #include <botan/block_cipher.h>
 #include <botan/mac.h>
 #include <botan/pipe.h>
+#include <chrono>
 
 namespace Botan {
 

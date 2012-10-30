@@ -10,6 +10,7 @@
 
 #include <botan/mem_ops.h>
 #include <algorithm>
+#include <vector>
 
 #if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
   #include <botan/locking_allocator.h>
