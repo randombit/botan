@@ -1767,45 +1767,6 @@ def main(argv = None):
 
     cc = ccinfo[options.compiler]
 
-    # Kind of a hack...
-    if options.compiler == 'gcc':
-
-        def get_gcc_version(gcc_bin):
-            try:
-                gcc_proc = subprocess.Popen(
-                    gcc_bin.split(' ') + ['-dumpversion'],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    universal_newlines=True)
-
-                (stdout, stderr) = gcc_proc.communicate()
-
-                if gcc_proc.returncode != 0:
-                    logging.warning("GCC returned non-zero result %s" % (stderr))
-                    return None
-
-                gcc_version = stdout.strip()
-
-                logging.info('Detected gcc version %s' % (gcc_version))
-
-                (gcc_major, gcc_minor, gcc_patch) = map(int, gcc_version.split('.'))
-
-                if gcc_major == 4 and gcc_minor < 7:
-                    logging.warning('GCC 4.7.0 or higher is required')
-
-                return gcc_version
-            except OSError:
-                logging.warning('Could not execute %s for version check' % (gcc_bin))
-                return None
-
-        gcc_version = get_gcc_version(options.compiler_binary or cc.binary_name)
-
-        if gcc_version:
-            versions_without_cpp0x = '(4\.[01234]\.)|(3\.[0-4]\.)|(2\.95\.[0-4])'
-
-            if re.search(versions_without_cpp0x, gcc_version):
-                logging.info('This GCC is too old to compile C++0x')
-
     if options.with_visibility is None:
         options.with_visibility = True
 
