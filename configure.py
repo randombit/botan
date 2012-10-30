@@ -139,7 +139,7 @@ class BuildConfigurationInformation(object):
                 yield 'sphinx-build $(SPHINX_OPTS) -b html doc %s' % (
                     self.manual_dir)
             else:
-                yield '$(COPY) doc/*.txt %s' % (self.manual_dir)
+                yield '$(COPY) doc/*.rst %s' % (self.manual_dir)
 
             if options.with_doxygen:
                 yield 'doxygen %s/botan.doxy' % (self.build_dir)
