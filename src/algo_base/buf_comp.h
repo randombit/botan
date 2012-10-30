@@ -126,6 +126,12 @@ class BOTAN_DLL Buffered_Computation
          return final();
          }
 
+      /**
+      * Update and finalize computation. Does the same as calling update()
+      * and final() consecutively.
+      * @param in the input to process
+      * @result the result of the call to final()
+      */
       secure_vector<byte> process(const std::vector<byte>& in)
          {
          add_data(&in[0], in.size());

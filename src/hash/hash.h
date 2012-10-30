@@ -22,12 +22,12 @@ class BOTAN_DLL HashFunction : public Buffered_Computation,
    {
    public:
       /**
-      * Get a new object representing the same algorithm as *this
+      * @return new object representing the same algorithm as *this
       */
       virtual HashFunction* clone() const = 0;
 
       /**
-      * The hash block size as defined for this algorithm
+      * @return hash block size as defined for this algorithm
       */
       virtual size_t hash_block_size() const { return 0; }
    };
