@@ -1780,7 +1780,7 @@ def main(argv = None):
                 gcc_version = stdout.strip()
 
                 logging.info('Detected gcc version %s' % (gcc_version))
-                return gcc_version
+                return map(int, gcc_version.split('.')[0:2])
             except OSError:
                 logging.warning('Could not execute %s for version check' % (gcc_bin))
                 return None
@@ -1792,24 +1792,29 @@ def main(argv = None):
 
         gcc_version = get_gcc_version(options.compiler_binary or cc.binary_name)
 
+        def gcc_version_matches(matches):
+            for match in matches.items():
+                if gcc_version[0] != match[0]:
+                    continue
+
+                for minor in match[1]:
+                    if minor == gcc_version[1]:
+                        return True
+            return False
+
         if gcc_version:
 
             if not is_64bit_arch(options.arch) and not options.dumb_gcc:
-                matching_version = '(4\.[01234]\.)|(3\.[34]\.)|(2\.95\.[0-4])'
-
-                if re.search(matching_version, gcc_version):
+                if gcc_version_matches({ 4 : [0, 1, 2, 3, 4], 3 : [3, 4], 2 : [95] }):
                     options.dumb_gcc = True
 
-            versions_without_tr1 = '(4\.0\.)|(3\.[0-4]\.)|(2\.95\.[0-4])'
-
             if options.with_tr1 == None and \
-               re.search(versions_without_tr1, gcc_version):
+                    gcc_version_matches({ 4 : [0], 3 : [0,1,2,3,4], 2 : [95] }):
                 logging.info('Disabling TR1 support for this gcc, too old')
                 options.with_tr1 = 'none'
 
-            versions_without_visibility = '(3\.[0-4]\.)|(2\.95\.[0-4])'
             if options.with_visibility == None and \
-               re.search(versions_without_visibility, gcc_version):
+                    gcc_version_matches({ 3 : [0,1,2,3,4], 2 : [95] }):
                 logging.info('Disabling DSO visibility support for this gcc, too old')
                 options.with_visibility = False
 
