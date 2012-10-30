@@ -1,4 +1,4 @@
-Botan 1.11.1, Not Yet Released
+Botan 1.11.1, 2012-10-30
 http://botan.randombit.net/
 
 Botan is a C++ class library for performing a wide variety of
