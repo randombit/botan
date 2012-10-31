@@ -644,7 +644,9 @@ be of type ``NULL_ALERT``.
 
   .. cpp:function:: is_fatal() const
 
-       Return if this alert is fatal or a warning alert
+       Return true if this alert is fatal. A fatal alert causes the
+       connection to be immediately disconnected. Otherwise, the alert
+       is a warning and the connection remains valid.
 
   .. cpp:function:: Type type() const
 
