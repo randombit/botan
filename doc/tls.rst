@@ -8,7 +8,8 @@ Botan supports both client and server implementations of the SSL/TLS
 protocols, including SSL v3, TLS v1.0, TLS v1.1, and TLS v1.2 (the
 insecure and obsolete SSL v2 protocol is not supported, beyond
 processing SSL v2 client hellos which some clients still send for
-backwards compatability with ancient servers).
+backwards compatability with ancient servers). DTLS, a variant of TLS
+adapted for operation on datagram sockets, is also supported.
 
 The TLS implementation does not know anything about sockets or
 networks. Instead, it calls a user provided callback (hereafter
@@ -166,6 +167,7 @@ TLS Clients
          const TLS::Policy& policy, \
          RandomNumberGenerator& rng, \
          const Server_Information& server_info = Server_Information(), \
+         const Protocol_Version offer_version = Protocol_Version::latest_tls_version(),
          std::function<std::string, std::vector<std::string>> next_protocol)
 
    Initialize a new TLS client. The constructor will immediately
@@ -210,6 +212,23 @@ TLS Clients
    attempting to connect to, if you know it. This helps the server
    select what certificate to use and helps the client validate the
    connection.
+
+   Use *offer_version* to control the version of TLS you wish the
+   client to offer. Normally, you'll want to offer the most recent
+   version of TLS that is available, however some broken servers are
+   intolerant of certain versions being offered, and for classes of
+   applications that have to deal with such servers (typically web
+   browsers) it may be necessary to implement a version backdown
+   strategy if the initial attempt fails.
+
+   Setting *offer_version* is also used to offer DTLS instead of TLS;
+   use :cpp:func:`TLS::Protocol_Version::latest_dtls_version`.
+
+   .. warning::
+
+     Implementing such a backdown strategy allows an attacker to
+     downgrade your connection to the weakest protocol that both you
+     and the server support.
 
    The optional *next_protocol* callback is called if the server
    indicates it supports the next protocol notification extension.
@@ -647,6 +666,16 @@ The ``TLS::Protocol_Version`` class represents a specific version:
 
      ``SSL_V3``, ``TLS_V10``, ``TLS_V11``, ``TLS_V12``, ``DTLS_V10``,
      ``DTLS_V12``
+
+ .. cpp:function:: static Protocol_Version latest_tls_version()
+
+      Returns the latest version of TLS supported by this implementation
+      (currently TLS v1.2)
+
+ .. cpp:function:: static Protocol_Version latest_dtls_version()
+
+      Returns the latest version of DTLS supported by this implementation
+      (currently DTLS v1.2)
 
  .. cpp:function:: Protocol_Version(Version_Code named_version)
 
