@@ -166,9 +166,9 @@ TLS Clients
          Credentials_Manager& credendials_manager, \
          const TLS::Policy& policy, \
          RandomNumberGenerator& rng, \
-         const Server_Information& server_info = Server_Information(), \
-         const Protocol_Version offer_version = Protocol_Version::latest_tls_version(),
-         std::function<std::string, std::vector<std::string>> next_protocol)
+         const Server_Information& server_info, \
+         const Protocol_Version offer_version, \
+         std::function<std::string, std::vector<std::string> > next_protocol)
 
    Initialize a new TLS client. The constructor will immediately
    initiate a new session.
@@ -259,7 +259,7 @@ The first 7 arguments are treated similiarly to the :ref:`client
 <tls_client>`.  The final (optional) argument, protocols, specifies
 the protocols the server is willing to advertise it supports.
 
-.. cpp:class:: std::string TLS::Server::next_protocol() const
+.. cpp:function:: std::string TLS::Server::next_protocol() const
 
    If a handshake has completed, and if the client indicated a next
    protocol (ie, the protocol that it intends to run over this TLS
