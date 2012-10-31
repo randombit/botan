@@ -8,6 +8,7 @@ Series 1.11
 .. toctree::
    :maxdepth: 1
 
+   1_11_2
    1_11_1
    1_11_0
 

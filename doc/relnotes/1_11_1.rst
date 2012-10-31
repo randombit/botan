@@ -1,4 +1,4 @@
-Version 1.11.1, Not Yet Released
+Version 1.11.1, 2012-10-30
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 TLS Enhancements and Bug Fixes

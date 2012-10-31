@@ -183,7 +183,7 @@ def main(args = None):
                 if line == 'release_vc_rev = None\n':
                     yield 'release_vc_rev = \'mtn:%s\'\n' % (rev_id)
                 elif line == 'release_datestamp = 0\n':
-                    yield 'release_vc_rev = %d\n' % (datestamp(rev_iv))
+                    yield 'release_vc_rev = %d\n' % (datestamp(options.mtn_db, rev_id))
                 else:
                     yield line
 
