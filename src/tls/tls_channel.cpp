@@ -146,6 +146,16 @@ void Channel::change_cipher_spec_writer(Connection_Side side)
    m_pending_state->new_write_cipher_state(side);
    }
 
+bool Channel::is_active() const
+   {
+   return m_active_state.get();
+   }
+
+bool Channel::is_closed() const
+   {
+   return m_connection_closed;
+   }
+
 void Channel::activate_session()
    {
    std::swap(m_active_state, m_pending_state);

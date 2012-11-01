@@ -56,12 +56,12 @@ class BOTAN_DLL Channel
       /**
       * @return true iff the connection is active for sending application data
       */
-      bool is_active() const { return m_active_state.get(); }
+      bool is_active() const;
 
       /**
       * @return true iff the connection has been definitely closed
       */
-      bool is_closed() const { return m_connection_closed; }
+      bool is_closed() const;
 
       /**
       * Attempt to renegotiate the session
