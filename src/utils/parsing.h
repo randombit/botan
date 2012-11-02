@@ -72,8 +72,7 @@ BOTAN_DLL bool x500_name_cmp(const std::string& name1,
 * @param str the string to convert
 * @return number value of the string
 */
-inline u32bit to_u32bit(const std::string& str)
-   { return std::stoul(str); }
+BOTAN_DLL u32bit to_u32bit(const std::string& str);
 
 /**
 * Convert a time specification to a number

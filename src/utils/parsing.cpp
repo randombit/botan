@@ -12,6 +12,11 @@
 
 namespace Botan {
 
+u32bit to_u32bit(const std::string& str)
+   {
+   return std::stoul(str);
+   }
+
 /*
 * Convert a string into a time duration
 */

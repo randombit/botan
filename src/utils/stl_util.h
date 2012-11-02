@@ -76,6 +76,19 @@ bool value_exists(const std::vector<T>& vec,
    return false;
    }
 
+template<typename T, typename Pred>
+void map_remove_if(Pred pred, T& assoc)
+   {
+   auto i = assoc.begin();
+   while(i != assoc.end())
+      {
+      if(pred(i->first))
+         assoc.erase(i++);
+      else
+         i++;
+      }
+   }
+
 }
 
 #endif
