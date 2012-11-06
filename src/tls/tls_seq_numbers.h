@@ -20,9 +20,12 @@ class Connection_Sequence_Numbers
       virtual void new_read_cipher_state() = 0;
       virtual void new_write_cipher_state() = 0;
 
-      virtual u64bit next_write_sequence() = 0;
+      virtual u16bit current_read_epoch() const = 0;
+      virtual u16bit current_write_epoch() const = 0;
 
+      virtual u64bit next_write_sequence() = 0;
       virtual u64bit next_read_sequence() = 0;
+
       virtual bool already_seen(u64bit seq) const = 0;
       virtual void read_accept(u64bit seq) = 0;
    };
@@ -30,29 +33,37 @@ class Connection_Sequence_Numbers
 class Stream_Sequence_Numbers : public Connection_Sequence_Numbers
    {
    public:
-      void new_read_cipher_state() override { m_read_seq_no = 0; }
-      void new_write_cipher_state() override { m_write_seq_no = 0; }
+      void new_read_cipher_state() override { m_read_seq_no = 0; m_read_epoch += 1; }
+      void new_write_cipher_state() override { m_write_seq_no = 0; m_write_epoch += 1; }
+
+      u16bit current_read_epoch() const override { return m_read_epoch; }
+      u16bit current_write_epoch() const override { return m_write_epoch; }
 
       u64bit next_write_sequence() override { return m_write_seq_no++; }
-
       u64bit next_read_sequence() override { return m_read_seq_no; }
+
       bool already_seen(u64bit) const override { return false; }
       void read_accept(u64bit) override { m_read_seq_no++; }
    private:
       u64bit m_write_seq_no = 0;
       u64bit m_read_seq_no = 0;
+      u16bit m_read_epoch = 0;
+      u16bit m_write_epoch = 0;
    };
 
 class Datagram_Sequence_Numbers : public Connection_Sequence_Numbers
    {
    public:
-      void new_read_cipher_state() override {}
+      void new_read_cipher_state() override { m_read_epoch += 1; }
 
       void new_write_cipher_state() override
          {
          // increment epoch
          m_write_seq_no = ((m_write_seq_no >> 48) + 1) << 48;
          }
+
+      u16bit current_read_epoch() const override { return m_read_epoch; }
+      u16bit current_write_epoch() const override { return (m_write_seq_no >> 48); }
 
       u64bit next_write_sequence() override { return m_write_seq_no++; }
 
@@ -101,6 +112,7 @@ class Datagram_Sequence_Numbers : public Connection_Sequence_Numbers
 
    private:
       u64bit m_write_seq_no = 0;
+      u16bit m_read_epoch = 0;
       u64bit m_window_highest = 0;
       u64bit m_window_bits = 0;
    };

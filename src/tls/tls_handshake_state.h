@@ -41,8 +41,6 @@ class Next_Protocol;
 class New_Session_Ticket;
 class Finished;
 
-class Connection_Cipher_State;
-
 /**
 * SSL/TLS Handshake State
 */
@@ -120,10 +118,6 @@ class Handshake_State
       void server_finished(Finished* server_finished);
       void client_finished(Finished* client_finished);
 
-      void new_read_cipher_state(Connection_Side side);
-
-      void new_write_cipher_state(Connection_Side side);
-
       const Client_Hello* client_hello() const
          { return m_client_hello.get(); }
 
@@ -181,22 +175,11 @@ class Handshake_State
             m_msg_callback(msg);
          }
 
-      std::shared_ptr<Connection_Cipher_State> read_cipher_state()
-         { return m_read_cipher_state; }
-
-      std::shared_ptr<Connection_Cipher_State> write_cipher_state()
-         { return m_write_cipher_state; }
-
-      void copy_cipher_states(const Handshake_State& prev_state);
-
    private:
 
       std::function<void (const Handshake_Message&)> m_msg_callback;
 
       std::unique_ptr<Handshake_IO> m_handshake_io;
-
-      std::shared_ptr<Connection_Cipher_State> m_write_cipher_state;
-      std::shared_ptr<Connection_Cipher_State> m_read_cipher_state;
 
       u32bit m_hand_expecting_mask = 0;
       u32bit m_hand_received_mask = 0;

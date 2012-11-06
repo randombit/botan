@@ -15,6 +15,7 @@
 #include <botan/mac.h>
 #include <vector>
 #include <memory>
+#include <chrono>
 
 namespace Botan {
 
@@ -59,7 +60,15 @@ class Connection_Cipher_State
 
       bool cbc_without_explicit_iv() const
          { return (m_block_size > 0) && (m_iv_size == 0); }
+
+      std::chrono::seconds age() const
+         {
+         return std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::system_clock::now() - m_start_time);
+         }
+
    private:
+      std::chrono::system_clock::time_point m_start_time;
       std::unique_ptr<BlockCipher> m_block_cipher;
       secure_vector<byte> m_block_cipher_cbc_state;
       std::unique_ptr<StreamCipher> m_stream_cipher;

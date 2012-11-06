@@ -44,6 +44,36 @@ Connection_Sequence_Numbers& Channel::sequence_numbers() const
    return *m_sequence_numbers;
    }
 
+std::shared_ptr<Connection_Cipher_State> Channel::read_cipher_state_epoch(u16bit epoch) const
+   {
+   auto i = m_read_cipher_states.find(epoch);
+
+   BOTAN_ASSERT(i != m_read_cipher_states.end(),
+                "Have a cipher state for the specified epoch");
+
+   return i->second;
+   }
+
+std::shared_ptr<Connection_Cipher_State> Channel::write_cipher_state_epoch(u16bit epoch) const
+   {
+   auto i = m_write_cipher_states.find(epoch);
+
+   BOTAN_ASSERT(i != m_write_cipher_states.end(),
+                "Have a cipher state for the specified epoch");
+
+   return i->second;
+   }
+
+std::shared_ptr<Connection_Cipher_State> Channel::read_cipher_state_current() const
+   {
+   return read_cipher_state_epoch(sequence_numbers().current_read_epoch());
+   }
+
+std::shared_ptr<Connection_Cipher_State> Channel::write_cipher_state_current() const
+   {
+   return write_cipher_state_epoch(sequence_numbers().current_write_epoch());
+   }
+
 std::vector<X509_Certificate> Channel::peer_cert_chain() const
    {
    if(!m_active_state)
@@ -91,10 +121,7 @@ Handshake_State& Channel::create_handshake_state(Protocol_Version version)
    m_pending_state.reset(new_handshake_state(io.release()));
 
    if(m_active_state)
-      {
       m_pending_state->set_version(m_active_state->version());
-      m_pending_state->copy_cipher_states(*m_active_state);
-      }
 
    return *m_pending_state.get();
    }
@@ -129,8 +156,19 @@ void Channel::change_cipher_spec_reader(Connection_Side side)
 
    sequence_numbers().new_read_cipher_state();
 
+   const u16bit epoch = sequence_numbers().current_read_epoch();
+
+   BOTAN_ASSERT(m_read_cipher_states.count(epoch) == 0,
+                "No read cipher state currently set for next epoch");
+
    // flip side as we are reading
-   m_pending_state->new_read_cipher_state((side == CLIENT) ? SERVER : CLIENT);
+   std::shared_ptr<Connection_Cipher_State> read_state(
+      new Connection_Cipher_State(m_pending_state->version(),
+                                  (side == CLIENT) ? SERVER : CLIENT,
+                                  m_pending_state->ciphersuite(),
+                                  m_pending_state->session_keys()));
+
+   m_read_cipher_states[epoch] = read_state;
    }
 
 void Channel::change_cipher_spec_writer(Connection_Side side)
@@ -143,7 +181,18 @@ void Channel::change_cipher_spec_writer(Connection_Side side)
 
    sequence_numbers().new_write_cipher_state();
 
-   m_pending_state->new_write_cipher_state(side);
+   const u16bit epoch = sequence_numbers().current_write_epoch();
+
+   BOTAN_ASSERT(m_write_cipher_states.count(epoch) == 0,
+                "No write cipher state currently set for next epoch");
+
+   std::shared_ptr<Connection_Cipher_State> write_state(
+      new Connection_Cipher_State(m_pending_state->version(),
+                                  side,
+                                  m_pending_state->ciphersuite(),
+                                  m_pending_state->session_keys()));
+
+   m_write_cipher_states[epoch] = write_state;
    }
 
 bool Channel::is_active() const
@@ -160,6 +209,41 @@ void Channel::activate_session()
    {
    std::swap(m_active_state, m_pending_state);
    m_pending_state.reset();
+
+   const u16bit last_valid_epoch = get_last_valid_epoch();
+
+   const auto obsolete_epoch =
+      [last_valid_epoch](u16bit epoch) { return (epoch < last_valid_epoch); };
+
+   map_remove_if(obsolete_epoch, m_write_cipher_states);
+   map_remove_if(obsolete_epoch, m_read_cipher_states);
+   }
+
+u16bit Channel::get_last_valid_epoch() const
+   {
+   if(m_active_state->version().is_datagram_protocol())
+      {
+      // DTLS: find first epoch less than TCP MSL
+
+      // FIXME: what about lost/retransmitted flights?
+      const std::chrono::seconds tcp_msl(120);
+
+      for(auto i : m_read_cipher_states)
+         {
+         if(i.second->age() <= tcp_msl)
+            return i.first;
+
+         if(i.first == sequence_numbers().current_read_epoch())
+            return i.first;
+         }
+
+      throw std::logic_error("Could not find current DTLS epoch");
+      }
+   else
+      {
+      // TLS is easy case
+      return sequence_numbers().current_write_epoch();
+      }
    }
 
 bool Channel::peer_supports_heartbeats() const
@@ -189,11 +273,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
 
          size_t consumed = 0;
 
-         std::shared_ptr<Connection_Cipher_State> cipher_state;
-         if(m_pending_state)
-            cipher_state = m_pending_state->read_cipher_state();
-         else if(m_active_state)
-            cipher_state = m_active_state->read_cipher_state();
+         auto cipher_state = read_cipher_state_current();
 
          const size_t needed =
             read_record(m_readbuf,
@@ -231,7 +311,8 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
             if(!m_pending_state)
                {
                create_handshake_state(record_version);
-               sequence_numbers().read_accept(record_sequence);
+               if(record_version.is_datagram_protocol())
+                  sequence_numbers().read_accept(record_sequence);
                }
 
             m_pending_state->handshake_io().add_input(
@@ -372,12 +453,8 @@ void Channel::send_record_array(byte type, const byte input[], size_t length)
    *
    * See http://www.openssl.org/~bodo/tls-cbc.txt for background.
    */
-   std::shared_ptr<Connection_Cipher_State> cipher_state;
 
-   if(m_pending_state)
-      cipher_state = m_pending_state->write_cipher_state();
-   else if(m_active_state)
-      cipher_state = m_active_state->write_cipher_state();
+   auto cipher_state = write_cipher_state_current();
 
    if(type == APPLICATION_DATA && cipher_state->cbc_without_explicit_iv())
       {

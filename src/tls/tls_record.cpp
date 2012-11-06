@@ -24,6 +24,7 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
                                                  Connection_Side side,
                                                  const Ciphersuite& suite,
                                                  const Session_Keys& keys) :
+   m_start_time(std::chrono::system_clock::now()),
    m_is_ssl3(version == Protocol_Version::SSL_V3)
    {
    SymmetricKey mac_key, cipher_key;
@@ -341,13 +342,6 @@ size_t read_record(std::vector<byte>& readbuf,
    const size_t header_size =
       (record_version.is_datagram_protocol()) ? DTLS_HEADER_SIZE : TLS_HEADER_SIZE;
 
-   if(record_version.is_datagram_protocol())
-      record_sequence = load_be<u64bit>(&readbuf[3], 0);
-   else if(sequence_numbers)
-      record_sequence = sequence_numbers->next_read_sequence();
-   else
-      record_sequence = 0; // server initial handshake case
-
    const size_t record_len = make_u16bit(readbuf[header_size-2],
                                          readbuf[header_size-1]);
 
@@ -363,6 +357,13 @@ size_t read_record(std::vector<byte>& readbuf,
    BOTAN_ASSERT_EQUAL(static_cast<size_t>(header_size) + record_len,
                       readbuf.size(),
                       "Have the full record");
+
+   if(record_version.is_datagram_protocol())
+      record_sequence = load_be<u64bit>(&readbuf[3], 0);
+   else if(sequence_numbers)
+      record_sequence = sequence_numbers->next_read_sequence();
+   else
+      record_sequence = 0; // server initial handshake case
 
    if(sequence_numbers && sequence_numbers->already_seen(record_sequence))
       return 0;

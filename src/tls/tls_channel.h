@@ -16,6 +16,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <map>
 
 namespace Botan {
 
@@ -181,6 +182,16 @@ class BOTAN_DLL Channel
 
       Connection_Sequence_Numbers& sequence_numbers() const;
 
+      std::shared_ptr<Connection_Cipher_State> read_cipher_state_epoch(u16bit epoch) const;
+
+      std::shared_ptr<Connection_Cipher_State> write_cipher_state_epoch(u16bit epoch) const;
+
+      std::shared_ptr<Connection_Cipher_State> read_cipher_state_current() const;
+
+      std::shared_ptr<Connection_Cipher_State> write_cipher_state_current() const;
+
+      u16bit get_last_valid_epoch() const;
+
       /* callbacks */
       std::function<bool (const Session&)> m_handshake_fn;
       std::function<void (const byte[], size_t, Alert)> m_proc_fn;
@@ -197,7 +208,13 @@ class BOTAN_DLL Channel
       std::vector<byte> m_writebuf;
       std::vector<byte> m_readbuf;
 
-      /* connection parameters */
+      /* cipher states for each epoch - epoch 0 is plaintext, thus null cipher state */
+      std::map<u16bit, std::shared_ptr<Connection_Cipher_State>> m_write_cipher_states =
+         { { 0, nullptr } };
+      std::map<u16bit, std::shared_ptr<Connection_Cipher_State>> m_read_cipher_states =
+         { { 0, nullptr } };
+
+      /* pending and active connection states */
       std::unique_ptr<Handshake_State> m_active_state;
       std::unique_ptr<Handshake_State> m_pending_state;
 
