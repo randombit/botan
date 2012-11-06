@@ -293,6 +293,7 @@ void set_default_aliases(Library_State& config)
    config.add_alias("MARK-4",   "ARC4(256)");
    config.add_alias("OMAC",     "CMAC");
    config.add_alias("GOST",     "GOST-28147-89");
+   config.add_alias("GOST-34.11", "GOST-R-34.11-94");
    }
 
 /*

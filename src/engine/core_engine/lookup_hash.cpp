@@ -119,7 +119,7 @@ HashFunction* Core_Engine::find_hash(const SCAN_Name& request,
 #endif
 
 #if defined(BOTAN_HAS_GOST_34_11)
-   if(request.algo_name() == "GOST-34.11")
+   if(request.algo_name() == "GOST-R-34.11-94")
       return new GOST_34_11;
 #endif
 
