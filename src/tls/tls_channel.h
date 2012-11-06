@@ -186,12 +186,6 @@ class BOTAN_DLL Channel
 
       std::shared_ptr<Connection_Cipher_State> write_cipher_state_epoch(u16bit epoch) const;
 
-      std::shared_ptr<Connection_Cipher_State> read_cipher_state_current() const;
-
-      std::shared_ptr<Connection_Cipher_State> write_cipher_state_current() const;
-
-      u16bit get_last_valid_epoch() const;
-
       const Handshake_State* active_state() const { return m_active_state.get(); }
 
       const Handshake_State* pending_state() const { return m_pending_state.get(); }

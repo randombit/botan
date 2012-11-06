@@ -275,7 +275,7 @@ size_t read_record(std::vector<byte>& readbuf,
                    Protocol_Version& record_version,
                    u64bit& record_sequence,
                    Connection_Sequence_Numbers* sequence_numbers,
-                   Connection_Cipher_State* cipherstate)
+                   std::function<Connection_Cipher_State* (u16bit)> get_cipherstate)
    {
    consumed = 0;
 
@@ -291,7 +291,7 @@ size_t read_record(std::vector<byte>& readbuf,
       }
 
    // Possible SSLv2 format client hello
-   if((!cipherstate) && (readbuf[0] & 0x80) && (readbuf[2] == 1))
+   if(!sequence_numbers && (readbuf[0] & 0x80) && (readbuf[2] == 1))
       {
       if(readbuf[3] == 0 && readbuf[4] == 2)
          throw TLS_Exception(Alert::PROTOCOL_VERSION,
@@ -358,19 +358,31 @@ size_t read_record(std::vector<byte>& readbuf,
                       readbuf.size(),
                       "Have the full record");
 
+   u16bit epoch = 0;
+
    if(record_version.is_datagram_protocol())
+      {
       record_sequence = load_be<u64bit>(&readbuf[3], 0);
+      epoch = (record_sequence >> 48);
+      }
    else if(sequence_numbers)
+      {
       record_sequence = sequence_numbers->next_read_sequence();
+      epoch = sequence_numbers->current_read_epoch();
+      }
    else
-      record_sequence = 0; // server initial handshake case
+      {
+      // server initial handshake case
+      record_sequence = 0;
+      epoch = 0;
+      }
 
    if(sequence_numbers && sequence_numbers->already_seen(record_sequence))
       return 0;
 
    byte* record_contents = &readbuf[header_size];
 
-   if(!cipherstate) // Unencrypted initial handshake
+   if(epoch == 0) // Unencrypted initial handshake
       {
       msg_type = readbuf[0];
       msg.assign(&record_contents[0], &record_contents[record_len]);
@@ -380,6 +392,12 @@ size_t read_record(std::vector<byte>& readbuf,
       }
 
    // Otherwise, decrypt, check MAC, return plaintext
+   Connection_Cipher_State* cipherstate = get_cipherstate(epoch);
+
+   // FIXME: DTLS reordering might cause us not to have the cipher state
+
+   BOTAN_ASSERT(cipherstate, "Have cipherstate for this epoch");
+
    const size_t block_size = cipherstate->block_size();
    const size_t iv_size = cipherstate->iv_size();
    const size_t mac_size = cipherstate->mac_size();

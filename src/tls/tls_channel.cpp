@@ -64,16 +64,6 @@ std::shared_ptr<Connection_Cipher_State> Channel::write_cipher_state_epoch(u16bi
    return i->second;
    }
 
-std::shared_ptr<Connection_Cipher_State> Channel::read_cipher_state_current() const
-   {
-   return read_cipher_state_epoch(sequence_numbers().current_read_epoch());
-   }
-
-std::shared_ptr<Connection_Cipher_State> Channel::write_cipher_state_current() const
-   {
-   return write_cipher_state_epoch(sequence_numbers().current_write_epoch());
-   }
-
 std::vector<X509_Certificate> Channel::peer_cert_chain() const
    {
    if(auto active = active_state())
@@ -214,39 +204,20 @@ void Channel::activate_session()
    std::swap(m_active_state, m_pending_state);
    m_pending_state.reset();
 
-   const u16bit last_valid_epoch = get_last_valid_epoch();
-
-   const auto obsolete_epoch =
-      [last_valid_epoch](u16bit epoch) { return (epoch < last_valid_epoch); };
-
-   map_remove_if(obsolete_epoch, m_write_cipher_states);
-   map_remove_if(obsolete_epoch, m_read_cipher_states);
-   }
-
-u16bit Channel::get_last_valid_epoch() const
-   {
    if(m_active_state->version().is_datagram_protocol())
       {
-      // DTLS: find first epoch less than TCP MSL
-
-      // FIXME: what about lost/retransmitted flights?
-      const std::chrono::seconds tcp_msl(120);
-
-      for(auto i : m_read_cipher_states)
-         {
-         if(i.second->age() <= tcp_msl)
-            return i.first;
-
-         if(i.first == sequence_numbers().current_read_epoch())
-            return i.first;
-         }
-
-      throw std::logic_error("Could not find current DTLS epoch");
+      // FIXME, remove old states when we are sure not needed anymore
       }
    else
       {
-      // TLS is easy case
-      return sequence_numbers().current_write_epoch();
+      // TLS is easy just remove all but the current state
+      auto current_epoch = sequence_numbers().current_write_epoch();
+
+      const auto not_current_epoch =
+         [current_epoch](u16bit epoch) { return (epoch != current_epoch); };
+
+      map_remove_if(not_current_epoch, m_write_cipher_states);
+      map_remove_if(not_current_epoch, m_read_cipher_states);
       }
    }
 
@@ -266,6 +237,9 @@ bool Channel::heartbeat_sending_allowed() const
 
 size_t Channel::received_data(const byte buf[], size_t buf_size)
    {
+   const auto get_cipherstate = [this](u16bit epoch)
+      { return this->read_cipher_state_epoch(epoch).get(); };
+
    try
       {
       while(!is_closed() && buf_size)
@@ -277,8 +251,6 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
 
          size_t consumed = 0;
 
-         auto cipher_state = read_cipher_state_current();
-
          const size_t needed =
             read_record(m_readbuf,
                         buf,
@@ -289,7 +261,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
                         record_version,
                         record_sequence,
                         m_sequence_numbers.get(),
-                        cipher_state.get());
+                        get_cipherstate);
 
          BOTAN_ASSERT(consumed <= buf_size,
                       "Record reader consumed sane amount");
@@ -457,7 +429,8 @@ void Channel::send_record_array(byte type, const byte input[], size_t length)
    * See http://www.openssl.org/~bodo/tls-cbc.txt for background.
    */
 
-   auto cipher_state = write_cipher_state_current();
+   auto cipher_state =
+      write_cipher_state_epoch(sequence_numbers().current_write_epoch());
 
    if(type == APPLICATION_DATA && cipher_state->cbc_without_explicit_iv())
       {

@@ -110,7 +110,7 @@ size_t read_record(std::vector<byte>& read_buffer,
                    Protocol_Version& record_version,
                    u64bit& record_sequence,
                    Connection_Sequence_Numbers* sequence_numbers,
-                   Connection_Cipher_State* cipherstate);
+                   std::function<Connection_Cipher_State* (u16bit)> get_cipherstate);
 
 }
 
