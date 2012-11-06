@@ -10,7 +10,8 @@ extern "C" {
 }
 #endif
 
-#include <botan/asn1_obj.h>
+#include <botan/alg_id.h>
+#include <botan/asn1_alt_name.h>
 #include <botan/asn1_oid.h>
 #include <botan/filters.h>
 #include <botan/init.h>

@@ -11,6 +11,7 @@
 #include <botan/x509cert.h>
 #include <botan/pkcs8.h>
 #include <botan/pkcs10.h>
+#include <botan/asn1_time.h>
 
 namespace Botan {
 

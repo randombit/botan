@@ -7,10 +7,10 @@
 
 #include <botan/x509_key.h>
 #include <botan/filters.h>
-#include <botan/asn1_obj.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/pem.h>
+#include <botan/alg_id.h>
 #include <botan/internal/pk_algs.h>
 #include <memory>
 

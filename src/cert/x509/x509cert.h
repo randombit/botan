@@ -11,6 +11,7 @@
 #include <botan/x509_obj.h>
 #include <botan/x509_dn.h>
 #include <botan/x509_key.h>
+#include <botan/asn1_alt_name.h>
 #include <botan/datastor.h>
 #include <botan/key_constraint.h>
 #include <map>
