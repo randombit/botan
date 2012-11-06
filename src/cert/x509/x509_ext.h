@@ -8,7 +8,7 @@
 #ifndef BOTAN_X509_EXTENSIONS_H__
 #define BOTAN_X509_EXTENSIONS_H__
 
-#include <botan/asn1_int.h>
+#include <botan/asn1_obj.h>
 #include <botan/asn1_oid.h>
 #include <botan/datastor.h>
 #include <botan/crl_ent.h>

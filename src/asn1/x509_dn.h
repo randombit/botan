@@ -8,7 +8,7 @@
 #ifndef BOTAN_X509_DN_H__
 #define BOTAN_X509_DN_H__
 
-#include <botan/asn1_int.h>
+#include <botan/asn1_obj.h>
 #include <botan/asn1_oid.h>
 #include <botan/asn1_str.h>
 #include <map>

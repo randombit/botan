@@ -8,7 +8,7 @@
 #ifndef BOTAN_X509_OBJECT_H__
 #define BOTAN_X509_OBJECT_H__
 
-#include <botan/asn1_int.h>
+#include <botan/asn1_obj.h>
 #include <botan/pipe.h>
 #include <botan/x509_key.h>
 #include <botan/rng.h>

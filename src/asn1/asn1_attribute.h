@@ -8,7 +8,7 @@
 #ifndef BOTAN_ASN1_ATTRIBUTE_H__
 #define BOTAN_ASN1_ATTRIBUTE_H__
 
-#include <botan/asn1_int.h>
+#include <botan/asn1_obj.h>
 #include <botan/asn1_oid.h>
 #include <vector>
 

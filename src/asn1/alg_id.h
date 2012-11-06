@@ -8,7 +8,7 @@
 #ifndef BOTAN_ALGORITHM_IDENTIFIER_H__
 #define BOTAN_ALGORITHM_IDENTIFIER_H__
 
-#include <botan/asn1_int.h>
+#include <botan/asn1_obj.h>
 #include <botan/asn1_oid.h>
 #include <string>
 

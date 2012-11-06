@@ -8,7 +8,7 @@
 #ifndef BOTAN_ASN1_TIME_H__
 #define BOTAN_ASN1_TIME_H__
 
-#include <botan/asn1_int.h>
+#include <botan/asn1_obj.h>
 #include <chrono>
 
 namespace Botan {

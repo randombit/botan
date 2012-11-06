@@ -7,7 +7,7 @@
 
 #include <botan/cms_dec.h>
 #include <botan/ber_dec.h>
-#include <botan/asn1_int.h>
+#include <botan/asn1_obj.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
 

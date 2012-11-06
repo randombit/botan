@@ -9,7 +9,7 @@
 #ifndef BOTAN_ASN1_ALT_NAME_H__
 #define BOTAN_ASN1_ALT_NAME_H__
 
-#include <botan/asn1_int.h>
+#include <botan/asn1_obj.h>
 #include <botan/asn1_str.h>
 #include <botan/asn1_oid.h>
 #include <map>
