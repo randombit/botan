@@ -192,6 +192,10 @@ class BOTAN_DLL Channel
 
       u16bit get_last_valid_epoch() const;
 
+      const Handshake_State* active_state() const { return m_active_state.get(); }
+
+      const Handshake_State* pending_state() const { return m_pending_state.get(); }
+
       /* callbacks */
       std::function<bool (const Session&)> m_handshake_fn;
       std::function<void (const byte[], size_t, Alert)> m_proc_fn;
