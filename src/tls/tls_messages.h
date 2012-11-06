@@ -522,6 +522,9 @@ class Next_Protocol : public Handshake_Message
       std::string m_protocol;
    };
 
+/**
+* New Session Ticket Message
+*/
 class New_Session_Ticket : public Handshake_Message
    {
    public:
@@ -546,6 +549,9 @@ class New_Session_Ticket : public Handshake_Message
       std::vector<byte> m_ticket;
    };
 
+/**
+* Change Cipher Spec
+*/
 class Change_Cipher_Spec : public Handshake_Message
    {
    public:

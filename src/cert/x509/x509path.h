@@ -14,12 +14,30 @@
 
 namespace Botan {
 
+/**
+* Specifies restrictions on the PKIX path validation
+*/
 class BOTAN_DLL Path_Validation_Restrictions
    {
    public:
+      /**
+      * @param require_rev if true, revocation information is required
+      * @param minimum_key_strength is the minimum strength (in terms of
+      *        operations, eg 80 means 2^80) of a signature. Signatures
+      *        weaker than this are rejected.
+      */
       Path_Validation_Restrictions(bool require_rev = false,
                                    size_t minimum_key_strength = 80);
 
+      /**
+      * @param require_rev if true, revocation information is required
+      * @param minimum_key_strength is the minimum strength (in terms of
+      *        operations, eg 80 means 2^80) of a signature. Signatures
+      *        weaker than this are rejected.
+      * @param trusted_hashes a set of trusted hashes. Any signatures
+      *        created using a hash other than one of these will be
+      *        rejected.
+      */
       Path_Validation_Restrictions(bool require_rev,
                                    size_t minimum_key_strength,
                                    const std::set<std::string>& trusted_hashes) :
@@ -42,6 +60,9 @@ class BOTAN_DLL Path_Validation_Restrictions
       size_t m_minimum_key_strength;
    };
 
+/**
+* Represents the result of a PKIX path validation
+*/
 class BOTAN_DLL Path_Validation_Result
    {
    public:
@@ -79,19 +100,34 @@ class BOTAN_DLL Path_Validation_Result
       };
 
       /**
-      * Returns the set of hash functions you are implicitly
+      * @return the set of hash functions you are implicitly
       * trusting by trusting this result.
       */
       std::set<std::string> trusted_hashes() const;
 
+      /**
+      * @return the trust root of the validation
+      */
       const X509_Certificate& trust_root() const;
 
+      /**
+      * @return the full path from subject to trust root
+      */
       const std::vector<X509_Certificate>& cert_path() const { return m_cert_path; }
 
+      /**
+      * @return true iff the validation was succesful
+      */
       bool successful_validation() const { return result() == VERIFIED; }
 
+      /**
+      * @return validation result code
+      */
       Code result() const { return m_result; }
 
+      /**
+      * @return string representation of the validation result
+      */
       std::string result_string() const;
 
    private:
@@ -109,21 +145,33 @@ class BOTAN_DLL Path_Validation_Result
       std::vector<X509_Certificate> m_cert_path;
    };
 
+/**
+* PKIX Path Validation
+*/
 Path_Validation_Result BOTAN_DLL x509_path_validate(
    const std::vector<X509_Certificate>& end_certs,
    const Path_Validation_Restrictions& restrictions,
    const std::vector<Certificate_Store*>& certstores);
 
+/**
+* PKIX Path Validation
+*/
 Path_Validation_Result BOTAN_DLL x509_path_validate(
    const X509_Certificate& end_cert,
    const Path_Validation_Restrictions& restrictions,
    const std::vector<Certificate_Store*>& certstores);
 
+/**
+* PKIX Path Validation
+*/
 Path_Validation_Result BOTAN_DLL x509_path_validate(
    const X509_Certificate& end_cert,
    const Path_Validation_Restrictions& restrictions,
    const Certificate_Store& store);
 
+/**
+* PKIX Path Validation
+*/
 Path_Validation_Result BOTAN_DLL x509_path_validate(
    const std::vector<X509_Certificate>& end_certs,
    const Path_Validation_Restrictions& restrictions,

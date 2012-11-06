@@ -13,7 +13,7 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/parsing.h>
-#include <botan/asn1_obj.h>
+#include <botan/alg_id.h>
 #include <botan/oids.h>
 #include <algorithm>
 #include <memory>
