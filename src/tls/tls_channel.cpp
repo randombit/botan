@@ -196,7 +196,16 @@ bool Channel::is_active() const
 
 bool Channel::is_closed() const
    {
-   return m_connection_closed;
+   if(active_state() || pending_state())
+      return false;
+
+   /*
+   * If no active or pending state, then either we had a connection
+   * and it has been closed, or we are a server which has never
+   * received a connection. This case is detectable by also lacking
+   * m_sequence_numbers
+   */
+   return (m_sequence_numbers != nullptr);
    }
 
 void Channel::activate_session()
@@ -363,8 +372,6 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
 
             if(alert_msg.type() == Alert::CLOSE_NOTIFY || alert_msg.is_fatal())
                {
-               m_connection_closed = true;
-
                m_active_state.reset();
                m_pending_state.reset();
 
@@ -493,7 +500,7 @@ void Channel::send(const std::string& string)
 
 void Channel::send_alert(const Alert& alert)
    {
-   if(alert.is_valid() && !m_connection_closed)
+   if(alert.is_valid() && !is_closed())
       {
       try
          {
@@ -513,8 +520,6 @@ void Channel::send_alert(const Alert& alert)
       {
       m_active_state.reset();
       m_pending_state.reset();
-
-      m_connection_closed = true;
       }
    }
 
