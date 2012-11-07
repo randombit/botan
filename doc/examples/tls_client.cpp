@@ -161,6 +161,11 @@ int main(int argc, char* argv[])
          std::bind(stream_socket_write, sockfd, _1, _2) :
          std::bind(dgram_socket_write, sockfd, _1, _2);
 
+      auto version =
+         (transport == "tcp") ?
+         TLS::Protocol_Version::latest_tls_version() :
+         TLS::Protocol_Version::latest_dtls_version();
+
       TLS::Client client(socket_write,
                          process_data,
                          handshake_complete,
@@ -169,6 +174,7 @@ int main(int argc, char* argv[])
                          policy,
                          rng,
                          TLS::Server_Information(host, port),
+                         version,
                          protocol_chooser);
 
       while(!client.is_closed())
