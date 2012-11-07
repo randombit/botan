@@ -204,38 +204,21 @@ std::vector<byte> Renegotiation_Extension::serialize() const
    return buf;
    }
 
-size_t Maximum_Fragment_Length::fragment_size() const
+std::vector<byte> Maximum_Fragment_Length::serialize() const
    {
-   switch(val)
-      {
-      case 1:
-         return 512;
-      case 2:
-         return 1024;
-      case 3:
-         return 2048;
-      case 4:
-         return 4096;
-      default:
-         throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
-                             "Bad value in maximum fragment extension");
-      }
-   }
+   const std::map<size_t, byte> fragment_to_code = { {  512, 1 },
+                                                     { 1024, 2 },
+                                                     { 2048, 3 },
+                                                     { 4096, 4 } };
 
-Maximum_Fragment_Length::Maximum_Fragment_Length(size_t max_fragment)
-   {
-   if(max_fragment == 512)
-      val = 1;
-   else if(max_fragment == 1024)
-      val = 2;
-   else if(max_fragment == 2048)
-      val = 3;
-   else if(max_fragment == 4096)
-      val = 4;
-   else
+   auto i = fragment_to_code.find(m_max_fragment);
+
+   if(i == fragment_to_code.end())
       throw std::invalid_argument("Bad setting " +
-                                  std::to_string(max_fragment) +
+                                  std::to_string(m_max_fragment) +
                                   " for maximum fragment size");
+
+   return std::vector<byte>(1, i->second);
    }
 
 Maximum_Fragment_Length::Maximum_Fragment_Length(TLS_Data_Reader& reader,
@@ -243,7 +226,20 @@ Maximum_Fragment_Length::Maximum_Fragment_Length(TLS_Data_Reader& reader,
    {
    if(extension_size != 1)
       throw Decoding_Error("Bad size for maximum fragment extension");
-   val = reader.get_byte();
+   byte val = reader.get_byte();
+
+   const std::map<byte, size_t> code_to_fragment = { { 1,  512 },
+                                                     { 2, 1024 },
+                                                     { 3, 2048 },
+                                                     { 4, 4096 } };
+
+   auto i = code_to_fragment.find(val);
+
+   if(i == code_to_fragment.end())
+      throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+                          "Bad value in maximum fragment extension");
+
+   m_max_fragment = i->second;
    }
 
 Next_Protocol_Notification::Next_Protocol_Notification(TLS_Data_Reader& reader,

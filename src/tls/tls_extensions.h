@@ -158,27 +158,25 @@ class Maximum_Fragment_Length : public Extension
 
       Handshake_Extension_Type type() const { return static_type(); }
 
-      bool empty() const { return val != 0; }
+      bool empty() const { return false; }
 
-      size_t fragment_size() const;
+      size_t fragment_size() const { return m_max_fragment; }
 
-      std::vector<byte> serialize() const
-         {
-         return std::vector<byte>(1, val);
-         }
+      std::vector<byte> serialize() const;
 
       /**
       * @param max_fragment specifies what maximum fragment size to
       *        advertise. Currently must be one of 512, 1024, 2048, or
       *        4096.
       */
-      Maximum_Fragment_Length(size_t max_fragment);
+      Maximum_Fragment_Length(size_t max_fragment) :
+         m_max_fragment(max_fragment) {}
 
       Maximum_Fragment_Length(TLS_Data_Reader& reader,
                               u16bit extension_size);
 
    private:
-      byte val;
+      size_t m_max_fragment;
    };
 
 /**
