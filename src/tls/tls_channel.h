@@ -152,8 +152,6 @@ class BOTAN_DLL Channel
 
       void activate_session();
 
-      void set_maximum_fragment_size(size_t maximum);
-
       void change_cipher_spec_reader(Connection_Side side);
 
       void change_cipher_spec_writer(Connection_Side side);
@@ -173,6 +171,8 @@ class BOTAN_DLL Channel
       bool save_session(const Session& session) const { return m_handshake_fn(session); }
 
    private:
+      size_t maximum_fragment_size() const;
+
       void send_record(byte record_type, const std::vector<byte>& record);
 
       void send_record_array(byte type, const byte input[], size_t length);
@@ -202,9 +202,9 @@ class BOTAN_DLL Channel
       /* sequence number state */
       std::unique_ptr<Connection_Sequence_Numbers> m_sequence_numbers;
 
-      /* I/O buffers */
-      std::vector<byte> m_writebuf;
-      std::vector<byte> m_readbuf;
+      /* pending and active connection states */
+      std::unique_ptr<Handshake_State> m_active_state;
+      std::unique_ptr<Handshake_State> m_pending_state;
 
       /* cipher states for each epoch - epoch 0 is plaintext, thus null cipher state */
       std::map<u16bit, std::shared_ptr<Connection_Cipher_State>> m_write_cipher_states =
@@ -212,12 +212,9 @@ class BOTAN_DLL Channel
       std::map<u16bit, std::shared_ptr<Connection_Cipher_State>> m_read_cipher_states =
          { { 0, nullptr } };
 
-      /* pending and active connection states */
-      std::unique_ptr<Handshake_State> m_active_state;
-      std::unique_ptr<Handshake_State> m_pending_state;
-
-      /* misc, should be removed? */
-      size_t m_max_fragment = MAX_PLAINTEXT_SIZE;
+      /* I/O buffers */
+      std::vector<byte> m_writebuf;
+      std::vector<byte> m_readbuf;
    };
 
 }

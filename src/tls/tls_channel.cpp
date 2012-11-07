@@ -128,12 +128,20 @@ void Channel::renegotiate(bool force_full_renegotiation)
       throw std::runtime_error("Cannot renegotiate on inactive connection");
    }
 
-void Channel::set_maximum_fragment_size(size_t max_fragment)
+size_t Channel::maximum_fragment_size() const
    {
-   if(max_fragment == 0)
-      m_max_fragment = MAX_PLAINTEXT_SIZE;
-   else
-      m_max_fragment = clamp(max_fragment, 128, MAX_PLAINTEXT_SIZE);
+   // should we be caching this value?
+
+   if(auto pending = pending_state())
+      if(auto server_hello = pending->server_hello())
+         if(size_t frag = server_hello->fragment_size())
+            return frag;
+
+   if(auto active = active_state())
+      if(size_t frag = active->server_hello()->fragment_size())
+         return frag;
+
+   return MAX_PLAINTEXT_SIZE;
    }
 
 void Channel::change_cipher_spec_reader(Connection_Side side)
@@ -249,6 +257,8 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
    const auto get_cipherstate = [this](u16bit epoch)
       { return this->read_cipher_state_epoch(epoch).get(); };
 
+   const size_t max_fragment_size = maximum_fragment_size();
+
    try
       {
       while(!is_closed() && buf_size)
@@ -287,7 +297,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
          if(rec_type == NO_RECORD)
             continue;
 
-         if(record.size() > m_max_fragment)
+         if(record.size() > max_fragment_size)
             throw TLS_Exception(Alert::RECORD_OVERFLOW,
                                 "Plaintext record is too large");
 
@@ -446,9 +456,11 @@ void Channel::send_record_array(byte type, const byte input[], size_t length)
       length -= 1;
       }
 
+   const size_t max_fragment_size = maximum_fragment_size();
+
    while(length)
       {
-      const size_t sending = std::min(length, m_max_fragment);
+      const size_t sending = std::min(length, max_fragment_size);
       write_record(cipher_state.get(), type, &input[0], sending);
 
       input += sending;
@@ -464,9 +476,6 @@ void Channel::send_record(byte record_type, const std::vector<byte>& record)
 void Channel::write_record(Connection_Cipher_State* cipher_state,
                            byte record_type, const byte input[], size_t length)
    {
-   if(length > m_max_fragment)
-      throw Internal_Error("Record is larger than allowed fragment size");
-
    BOTAN_ASSERT(m_pending_state || m_active_state,
                 "Some connection state exists");
 

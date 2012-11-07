@@ -145,8 +145,6 @@ void Client::send_client_hello(Handshake_State& state_base,
       }
 
    secure_renegotiation_check(state.client_hello());
-
-   set_maximum_fragment_size(state.client_hello()->fragment_size());
    }
 
 /*

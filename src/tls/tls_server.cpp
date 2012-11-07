@@ -394,9 +394,6 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
 
          secure_renegotiation_check(state.server_hello());
 
-         if(session_info.fragment_size())
-            set_maximum_fragment_size(session_info.fragment_size());
-
          state.compute_session_keys(session_info.master_secret());
 
          if(!save_session(session_info))
@@ -492,9 +489,6 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
             );
 
          secure_renegotiation_check(state.server_hello());
-
-         if(state.client_hello()->fragment_size())
-            set_maximum_fragment_size(state.client_hello()->fragment_size());
 
          const std::string sig_algo = state.ciphersuite().sig_algo();
          const std::string kex_algo = state.ciphersuite().kex_algo();
