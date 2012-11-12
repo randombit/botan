@@ -1,6 +1,6 @@
 /*
 * Memory Operations
-* (C) 1999-2009 Jack Lloyd
+* (C) 1999-2009,2012 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -14,15 +14,11 @@
 namespace Botan {
 
 /**
-* Copy memory
-* @param out the destination array
-* @param in the source array
-* @param n the number of elements of in/out
+* Zeroize memory
+* @param ptr a pointer to memory to zero out
+* @param n the number of bytes pointed to by ptr
 */
-template<typename T> inline void copy_mem(T* out, const T* in, size_t n)
-   {
-   std::memmove(out, in, sizeof(T)*n);
-   }
+BOTAN_DLL void zero_mem(void* ptr, size_t n);
 
 /**
 * Zeroize memory
@@ -31,8 +27,18 @@ template<typename T> inline void copy_mem(T* out, const T* in, size_t n)
 */
 template<typename T> inline void clear_mem(T* ptr, size_t n)
    {
-   if(n) // avoid glibc warning if n == 0
-      std::memset(ptr, 0, sizeof(T)*n);
+   zero_mem(ptr, sizeof(T)*n);
+   }
+
+/**
+* Copy memory
+* @param out the destination array
+* @param in the source array
+* @param n the number of elements of in/out
+*/
+template<typename T> inline void copy_mem(T* out, const T* in, size_t n)
+   {
+   std::memmove(out, in, sizeof(T)*n);
    }
 
 /**

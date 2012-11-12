@@ -9,6 +9,7 @@ charset.cpp
 cpuid.cpp
 parsing.cpp
 version.cpp
+zero_mem.cpp
 </source>
 
 <header:internal>
