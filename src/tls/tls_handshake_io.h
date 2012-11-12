@@ -17,14 +17,13 @@
 #include <map>
 #include <set>
 #include <utility>
+#include <tuple>
 
 namespace Botan {
 
 namespace TLS {
 
 class Handshake_Message;
-
-typedef std::function<void (byte, const std::vector<byte>&)> handshake_write_fn;
 
 /**
 * Handshake IO Interface
@@ -66,7 +65,7 @@ class Handshake_IO
 class Stream_Handshake_IO : public Handshake_IO
    {
    public:
-      Stream_Handshake_IO(handshake_write_fn writer) :
+      Stream_Handshake_IO(std::function<void (byte, const std::vector<byte>&)> writer) :
          m_send_hs(writer) {}
 
       Protocol_Version initial_record_version() const override;
@@ -86,7 +85,7 @@ class Stream_Handshake_IO : public Handshake_IO
          get_next_record(bool expecting_ccs) override;
    private:
       std::deque<byte> m_queue;
-      handshake_write_fn m_send_hs;
+      std::function<void (byte, const std::vector<byte>&)> m_send_hs;
    };
 
 /**
@@ -95,8 +94,9 @@ class Stream_Handshake_IO : public Handshake_IO
 class Datagram_Handshake_IO : public Handshake_IO
    {
    public:
-      Datagram_Handshake_IO(handshake_write_fn writer, u16bit mtu) :
-         m_flights(1), m_mtu(mtu), m_send_hs(writer) {}
+      Datagram_Handshake_IO(class Connection_Sequence_Numbers& seq,
+                            std::function<void (u16bit, byte, const std::vector<byte>&)> writer) :
+         m_seqs(seq), m_flights(1), m_send_hs(writer) {}
 
       Protocol_Version initial_record_version() const override;
 
@@ -151,14 +151,17 @@ class Datagram_Handshake_IO : public Handshake_IO
             std::vector<byte> m_message;
          };
 
+      class Connection_Sequence_Numbers& m_seqs;
       std::map<u16bit, Handshake_Reassembly> m_messages;
       std::set<u16bit> m_ccs_epochs;
       std::vector<std::vector<u16bit>> m_flights;
+      std::map<u16bit, std::tuple<u16bit, byte, std::vector<byte>>> m_flight_data;
 
-      u16bit m_mtu = 0;
+      // default MTU is IPv6 min MTU minus UDP/IP headers
+      u16bit m_mtu = 1280 - 40 - 8;
       u16bit m_in_message_seq = 0;
       u16bit m_out_message_seq = 0;
-      handshake_write_fn m_send_hs;
+      std::function<void (u16bit, byte, const std::vector<byte>&)> m_send_hs;
    };
 
 }

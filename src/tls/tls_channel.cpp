@@ -73,8 +73,6 @@ std::vector<X509_Certificate> Channel::peer_cert_chain() const
 
 Handshake_State& Channel::create_handshake_state(Protocol_Version version)
    {
-   const size_t dtls_mtu = 1400; // fixme should be settable
-
    if(pending_state())
       throw Internal_Error("create_handshake_state called during handshake");
 
@@ -98,15 +96,19 @@ Handshake_State& Channel::create_handshake_state(Protocol_Version version)
          m_sequence_numbers.reset(new Stream_Sequence_Numbers);
       }
 
-   auto send_rec = std::bind(&Channel::send_record, this,
-                             std::placeholders::_1,
-                             std::placeholders::_2);
-
    std::unique_ptr<Handshake_IO> io;
    if(version.is_datagram_protocol())
-      io.reset(new Datagram_Handshake_IO(send_rec, dtls_mtu));
+      io.reset(new Datagram_Handshake_IO(
+                  sequence_numbers(),
+                  std::bind(&Channel::send_record_under_epoch, this,
+                            std::placeholders::_1,
+                            std::placeholders::_2,
+                            std::placeholders::_3)));
    else
-      io.reset(new Stream_Handshake_IO(send_rec));
+      io.reset(new Stream_Handshake_IO(
+                  std::bind(&Channel::send_record, this,
+                            std::placeholders::_1,
+                            std::placeholders::_2)));
 
    m_pending_state.reset(new_handshake_state(io.release()));
 
@@ -429,7 +431,28 @@ void Channel::heartbeat(const byte payload[], size_t payload_size)
       }
    }
 
-void Channel::send_record_array(byte type, const byte input[], size_t length)
+void Channel::write_record(Connection_Cipher_State* cipher_state,
+                           byte record_type, const byte input[], size_t length)
+   {
+   BOTAN_ASSERT(m_pending_state || m_active_state,
+                "Some connection state exists");
+
+   Protocol_Version record_version =
+      (m_pending_state) ? (m_pending_state->version()) : (m_active_state->version());
+
+   TLS::write_record(m_writebuf,
+                     record_type,
+                     input,
+                     length,
+                     record_version,
+                     sequence_numbers(),
+                     cipher_state,
+                     m_rng);
+
+   m_output_fn(&m_writebuf[0], m_writebuf.size());
+   }
+
+void Channel::send_record_array(u16bit epoch, byte type, const byte input[], size_t length)
    {
    if(length == 0)
       return;
@@ -446,8 +469,7 @@ void Channel::send_record_array(byte type, const byte input[], size_t length)
    * See http://www.openssl.org/~bodo/tls-cbc.txt for background.
    */
 
-   auto cipher_state =
-      write_cipher_state_epoch(sequence_numbers().current_write_epoch());
+   auto cipher_state = write_cipher_state_epoch(epoch);
 
    if(type == APPLICATION_DATA && cipher_state->cbc_without_explicit_iv())
       {
@@ -470,28 +492,14 @@ void Channel::send_record_array(byte type, const byte input[], size_t length)
 
 void Channel::send_record(byte record_type, const std::vector<byte>& record)
    {
-   send_record_array(record_type, &record[0], record.size());
+   send_record_array(sequence_numbers().current_write_epoch(),
+                     record_type, &record[0], record.size());
    }
 
-void Channel::write_record(Connection_Cipher_State* cipher_state,
-                           byte record_type, const byte input[], size_t length)
+void Channel::send_record_under_epoch(u16bit epoch, byte record_type,
+                                      const std::vector<byte>& record)
    {
-   BOTAN_ASSERT(m_pending_state || m_active_state,
-                "Some connection state exists");
-
-   Protocol_Version record_version =
-      (m_pending_state) ? (m_pending_state->version()) : (m_active_state->version());
-
-   TLS::write_record(m_writebuf,
-                     record_type,
-                     input,
-                     length,
-                     record_version,
-                     sequence_numbers(),
-                     cipher_state,
-                     m_rng);
-
-   m_output_fn(&m_writebuf[0], m_writebuf.size());
+   send_record_array(epoch, record_type, &record[0], record.size());
    }
 
 void Channel::send(const byte buf[], size_t buf_size)
@@ -499,7 +507,8 @@ void Channel::send(const byte buf[], size_t buf_size)
    if(!is_active())
       throw std::runtime_error("Data cannot be sent on inactive TLS connection");
 
-   send_record_array(APPLICATION_DATA, buf, buf_size);
+   send_record_array(sequence_numbers().current_write_epoch(),
+                     APPLICATION_DATA, buf, buf_size);
    }
 
 void Channel::send(const std::string& string)

@@ -175,7 +175,11 @@ class BOTAN_DLL Channel
 
       void send_record(byte record_type, const std::vector<byte>& record);
 
-      void send_record_array(byte type, const byte input[], size_t length);
+      void send_record_under_epoch(u16bit epoch, byte record_type,
+                                   const std::vector<byte>& record);
+
+      void send_record_array(u16bit epoch, byte record_type,
+                             const byte input[], size_t length);
 
       void write_record(Connection_Cipher_State* cipher_state,
                         byte type, const byte input[], size_t length);

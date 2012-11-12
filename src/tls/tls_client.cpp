@@ -254,6 +254,10 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          {
          // new session
 
+         BOTAN_ASSERT_EQUAL(state.client_hello()->version().is_datagram_protocol(),
+                            state.server_hello()->version().is_datagram_protocol(),
+                            "Server replied with same protocol type client offered");
+
          if(state.version() > state.client_hello()->version())
             {
             throw TLS_Exception(Alert::HANDSHAKE_FAILURE,

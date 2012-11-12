@@ -328,7 +328,9 @@ size_t read_record(std::vector<byte>& readbuf,
 
    record_version = Protocol_Version(readbuf[1], readbuf[2]);
 
-   if(record_version.is_datagram_protocol() && readbuf.size() < DTLS_HEADER_SIZE)
+   const bool is_dtls = record_version.is_datagram_protocol();
+
+   if(is_dtls && readbuf.size() < DTLS_HEADER_SIZE)
       {
       if(size_t needed = fill_buffer_to(readbuf,
                                         input, input_sz, consumed,
@@ -339,8 +341,7 @@ size_t read_record(std::vector<byte>& readbuf,
                          "Have an entire header");
       }
 
-   const size_t header_size =
-      (record_version.is_datagram_protocol()) ? DTLS_HEADER_SIZE : TLS_HEADER_SIZE;
+   const size_t header_size = (is_dtls) ? DTLS_HEADER_SIZE : TLS_HEADER_SIZE;
 
    const size_t record_len = make_u16bit(readbuf[header_size-2],
                                          readbuf[header_size-1]);
@@ -352,7 +353,7 @@ size_t read_record(std::vector<byte>& readbuf,
    if(size_t needed = fill_buffer_to(readbuf,
                                      input, input_sz, consumed,
                                      header_size + record_len))
-      return needed;
+      return needed; // wrong for DTLS?
 
    BOTAN_ASSERT_EQUAL(static_cast<size_t>(header_size) + record_len,
                       readbuf.size(),
@@ -360,7 +361,7 @@ size_t read_record(std::vector<byte>& readbuf,
 
    u16bit epoch = 0;
 
-   if(record_version.is_datagram_protocol())
+   if(is_dtls)
       {
       record_sequence = load_be<u64bit>(&readbuf[3], 0);
       epoch = (record_sequence >> 48);

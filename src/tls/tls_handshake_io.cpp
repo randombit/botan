@@ -7,6 +7,7 @@
 
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_messages.h>
+#include <botan/internal/tls_seq_numbers.h>
 #include <botan/exceptn.h>
 
 namespace Botan {
@@ -231,6 +232,10 @@ void Datagram_Handshake_IO::Handshake_Reassembly::add_fragment(
       /*
       * FIXME. This is a pretty lame way to do defragmentation, huge
       * overhead with a tree node per byte.
+      *
+      * Also should confirm that all overlaps have no changes,
+      * otherwise we expose ourselves to the classic fingerprinting
+      * and IDS evasion attacks on IP fragmentation.
       */
       for(size_t i = 0; i != fragment_length; ++i)
          m_fragments[fragment_offset+i] = fragment[i];
@@ -318,18 +323,22 @@ std::vector<byte>
 Datagram_Handshake_IO::send(const Handshake_Message& msg)
    {
    const std::vector<byte> msg_bits = msg.serialize();
+   const u16bit epoch = m_seqs.current_write_epoch();
+   const Handshake_Type msg_type = msg.type();
 
-   if(msg.type() == HANDSHAKE_CCS)
+   std::tuple<u16bit, byte, std::vector<byte>> msg_info(epoch, msg_type, msg_bits);
+
+   if(msg_type == HANDSHAKE_CCS)
       {
-      m_send_hs(CHANGE_CIPHER_SPEC, msg_bits);
+      m_send_hs(epoch, CHANGE_CIPHER_SPEC, msg_bits);
       return std::vector<byte>(); // not included in handshake hashes
       }
 
    const std::vector<byte> no_fragment =
-      format_w_seq(msg_bits, msg.type(), m_out_message_seq);
+      format_w_seq(msg_bits, msg_type, m_out_message_seq);
 
    if(no_fragment.size() + DTLS_HEADER_SIZE <= m_mtu)
-      m_send_hs(HANDSHAKE, no_fragment);
+      m_send_hs(epoch, HANDSHAKE, no_fragment);
    else
       {
       const size_t parts = split_for_mtu(m_mtu, msg_bits.size());
@@ -344,19 +353,22 @@ Datagram_Handshake_IO::send(const Handshake_Message& msg)
             std::min<size_t>(msg_bits.size() - frag_offset,
                              parts_size);
 
-         m_send_hs(HANDSHAKE,
+         m_send_hs(epoch,
+                   HANDSHAKE,
                    format_fragment(&msg_bits[frag_offset],
                                    frag_len,
                                    frag_offset,
                                    msg_bits.size(),
-                                   msg.type(),
+                                   msg_type,
                                    m_out_message_seq));
 
          frag_offset += frag_len;
          }
       }
 
+   // Note: not saving CCS, instead we know it was there due to change in epoch
    m_flights.rbegin()->push_back(m_out_message_seq);
+   m_flight_data[m_out_message_seq] = msg_info;
 
    m_out_message_seq += 1;
 

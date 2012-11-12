@@ -130,10 +130,7 @@ u32bit Policy::session_ticket_lifetime() const
 
 bool Policy::acceptable_protocol_version(Protocol_Version version) const
    {
-   return (version == Protocol_Version::SSL_V3 ||
-           version == Protocol_Version::TLS_V10 ||
-           version == Protocol_Version::TLS_V11 ||
-           version == Protocol_Version::TLS_V12);
+   return version.known_version(); // accept any version we know about
    }
 
 namespace {
