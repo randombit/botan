@@ -43,25 +43,20 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
          return false;
          }
 
-      std::vector<Botan::X509_Certificate>
+      std::vector<Botan::Certificate_Store*>
       trusted_certificate_authorities(const std::string& type,
                                       const std::string& hostname)
          {
 
-         std::vector<Botan::X509_Certificate> certs;
-
-         /*
-         if(type == "tls-server" && hostname == "localhost")
-            {
-            Botan::X509_Certificate testca("testCA.crt");
-            certs.push_back(testca);
-            }
-         */
+         std::vector<Botan::Certificate_Store*> certs;
 
          if(type == "tls-client" && hostname == "twitter.com")
             {
             Botan::X509_Certificate verisign("/usr/share/ca-certificates/mozilla/VeriSign_Class_3_Public_Primary_Certification_Authority_-_G5.crt");
-            certs.push_back(verisign);
+
+            auto store = new Botan::Certificate_Store_In_Memory;
+            store->add_certificate(verisign);
+            certs.push_back(store);
             }
 
          return certs;
