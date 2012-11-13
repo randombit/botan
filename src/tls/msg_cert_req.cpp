@@ -54,16 +54,11 @@ byte cert_type_name_to_code(const std::string& name)
 Certificate_Req::Certificate_Req(Handshake_IO& io,
                                  Handshake_Hash& hash,
                                  const Policy& policy,
-                                 const std::vector<X509_Certificate>& ca_certs,
-                                 Protocol_Version version)
+                                 const std::vector<X509_DN>& ca_certs,
+                                 Protocol_Version version) :
+   m_names(ca_certs),
+   m_cert_key_types({ "RSA", "DSA", "ECDSA" })
    {
-   for(size_t i = 0; i != ca_certs.size(); ++i)
-      m_names.push_back(ca_certs[i].subject_dn());
-
-   m_cert_key_types.push_back("RSA");
-   m_cert_key_types.push_back("DSA");
-   m_cert_key_types.push_back("ECDSA");
-
    if(version.supports_negotiable_signature_algorithms())
       {
       std::vector<std::string> hashes = policy.allowed_signature_hashes();

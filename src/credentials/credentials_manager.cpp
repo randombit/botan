@@ -85,13 +85,26 @@ Private_Key* Credentials_Manager::private_key_for(const X509_Certificate&,
    return nullptr;
    }
 
-std::vector<X509_Certificate>
+std::vector<Certificate_Store*>
 Credentials_Manager::trusted_certificate_authorities(
    const std::string&,
    const std::string&)
    {
-   return std::vector<X509_Certificate>();
+   return std::vector<Certificate_Store*>();
    }
+
+namespace {
+
+bool cert_in_some_store(const std::vector<Certificate_Store*>& trusted_CAs,
+                        const X509_Certificate& trust_root)
+   {
+   for(auto CAs : trusted_CAs)
+      if(CAs->certificate_known(trust_root))
+         return true;
+   return false;
+   }
+
+}
 
 void Credentials_Manager::verify_certificate_chain(
    const std::string& type,
@@ -103,19 +116,16 @@ void Credentials_Manager::verify_certificate_chain(
 
    auto trusted_CAs = trusted_certificate_authorities(type, purported_hostname);
 
-   Certificate_Store_In_Memory CAs;
-   for(auto cert : trusted_CAs)
-      CAs.add_certificate(cert);
+   Path_Validation_Restrictions restrictions;
 
-   Path_Validation_Result result =
-      x509_path_validate(cert_chain,
-                         Path_Validation_Restrictions(),
-                         CAs);
+   auto result = x509_path_validate(cert_chain,
+                                    restrictions,
+                                    trusted_CAs);
 
    if(!result.successful_validation())
       throw std::runtime_error("Certificate validation failure: " + result.result_string());
 
-   if(!CAs.certificate_known(result.trust_root()))
+   if(!cert_in_some_store(trusted_CAs, result.trust_root()))
       throw std::runtime_error("Certificate chain roots in unknown/untrusted CA");
 
    if(purported_hostname != "" && !cert_chain[0].matches_dns_name(purported_hostname))

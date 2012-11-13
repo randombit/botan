@@ -9,6 +9,7 @@
 #define BOTAN_CREDENTIALS_MANAGER_H__
 
 #include <botan/x509cert.h>
+#include <botan/certstor.h>
 #include <botan/symkey.h>
 #include <string>
 
@@ -38,7 +39,7 @@ class BOTAN_DLL Credentials_Manager
       * @param context specifies a context relative to type. For instance
       *        for type "tls-client", context specifies the servers name.
       */
-      virtual std::vector<X509_Certificate> trusted_certificate_authorities(
+      virtual std::vector<Certificate_Store*> trusted_certificate_authorities(
          const std::string& type,
          const std::string& context);
 

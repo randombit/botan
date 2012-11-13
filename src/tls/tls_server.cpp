@@ -534,8 +534,18 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
                );
             }
 
-         std::vector<X509_Certificate> client_auth_CAs =
+         auto trusted_CAs =
             m_creds.trusted_certificate_authorities("tls-server", sni_hostname);
+
+         std::vector<X509_DN> client_auth_CAs;
+
+         for(auto store : trusted_CAs)
+            {
+            auto subjects = store->all_subjects();
+            client_auth_CAs.insert(client_auth_CAs.end(),
+                                   subjects.begin(),
+                                   subjects.end());
+            }
 
          if(!client_auth_CAs.empty() && state.ciphersuite().sig_algo() != "")
             {

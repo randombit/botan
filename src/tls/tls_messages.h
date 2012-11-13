@@ -356,7 +356,7 @@ class Certificate_Req : public Handshake_Message
       Certificate_Req(Handshake_IO& io,
                       Handshake_Hash& hash,
                       const Policy& policy,
-                      const std::vector<X509_Certificate>& allowed_cas,
+                      const std::vector<X509_DN>& allowed_cas,
                       Protocol_Version version);
 
       Certificate_Req(const std::vector<byte>& buf,
