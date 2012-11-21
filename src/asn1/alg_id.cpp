@@ -43,10 +43,7 @@ AlgorithmIdentifier::AlgorithmIdentifier(const OID& alg_id,
    oid = alg_id;
 
    if(option == USE_NULL_PARAM)
-      {
-      parameters += std::make_pair<const byte*, size_t>(
-         DER_NULL, sizeof(DER_NULL));
-      }
+      parameters += std::pair<const byte*, size_t>(DER_NULL, sizeof(DER_NULL));
    }
 
 /*
@@ -60,10 +57,7 @@ AlgorithmIdentifier::AlgorithmIdentifier(const std::string& alg_id,
    oid = OIDS::lookup(alg_id);
 
    if(option == USE_NULL_PARAM)
-      {
-      parameters += std::make_pair<const byte*, size_t>(
-         DER_NULL, sizeof(DER_NULL));
-      }
+      parameters += std::pair<const byte*, size_t>(DER_NULL, sizeof(DER_NULL));
    }
 
 /*
