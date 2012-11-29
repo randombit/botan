@@ -55,7 +55,7 @@ class BOTAN_DLL GOST_28147_89 : public Block_Cipher_Fixed_Params<8, 32>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
-      void clear() { EK.clear(); }
+      void clear();
 
       std::string name() const;
       BlockCipher* clone() const { return new GOST_28147_89(SBOX); }

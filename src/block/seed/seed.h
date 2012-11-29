@@ -21,7 +21,7 @@ class BOTAN_DLL SEED : public Block_Cipher_Fixed_Params<16, 16>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
-      void clear() { K.clear(); }
+      void clear();
       std::string name() const { return "SEED"; }
       BlockCipher* clone() const { return new SEED; }
    private:

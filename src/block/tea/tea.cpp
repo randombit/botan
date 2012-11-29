@@ -70,4 +70,9 @@ void TEA::key_schedule(const byte key[], size_t)
       K[i] = load_be<u32bit>(key, i);
    }
 
+void TEA::clear()
+   {
+   zap(K);
+   }
+
 }

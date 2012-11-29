@@ -98,8 +98,8 @@ void LubyRackoff::key_schedule(const byte key[], size_t length)
 */
 void LubyRackoff::clear()
    {
-   K1.clear();
-   K2.clear();
+   zap(K1);
+   zap(K2);
    hash->clear();
    }
 

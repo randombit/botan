@@ -205,8 +205,8 @@ void Noekeon::key_schedule(const byte key[], size_t)
 */
 void Noekeon::clear()
    {
-   EK.clear();
-   DK.clear();
+   zap(EK);
+   zap(DK);
    }
 
 }

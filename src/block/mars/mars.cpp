@@ -385,4 +385,9 @@ void MARS::key_schedule(const byte key[], size_t length)
       }
    }
 
+void MARS::clear()
+   {
+   zap(EK);
+   }
+
 }

@@ -187,8 +187,8 @@ void Blowfish::generate_sbox(secure_vector<u32bit>& box,
 */
 void Blowfish::clear()
    {
-   P.clear();
-   S.clear();
+   zap(P);
+   zap(S);
    }
 
 }

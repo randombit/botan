@@ -251,6 +251,12 @@ void MISTY1::key_schedule(const byte key[], size_t length)
       }
    }
 
+void MISTY1::clear()
+   {
+   zap(EK);
+   zap(DK);
+   }
+
 /*
 * MISTY1 Constructor
 */

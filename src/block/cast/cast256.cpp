@@ -178,4 +178,10 @@ void CAST_256::key_schedule(const byte key[], size_t length)
       }
    }
 
+void CAST_256::clear()
+   {
+   zap(MK);
+   zap(RK);
+   }
+
 }

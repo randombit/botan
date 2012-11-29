@@ -235,8 +235,8 @@ std::string Salsa20::name() const
 */
 void Salsa20::clear()
    {
-   state.clear();
-   buffer.clear();
+   zap(state);
+   zap(buffer);
    position = 0;
    }
 

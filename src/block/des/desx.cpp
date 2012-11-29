@@ -52,4 +52,11 @@ void DESX::key_schedule(const byte key[], size_t)
    K2.assign(key + 16, key + 24);
    }
 
+void DESX::clear()
+   {
+   des.clear();
+   zap(K1);
+   zap(K2);
+   }
+
 }

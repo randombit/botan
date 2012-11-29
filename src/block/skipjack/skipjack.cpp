@@ -194,7 +194,7 @@ void Skipjack::key_schedule(const byte key[], size_t)
 */
 void Skipjack::clear()
    {
-   FTAB.clear();
+   zap(FTAB);
    }
 
 }

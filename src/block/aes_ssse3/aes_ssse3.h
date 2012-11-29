@@ -21,7 +21,7 @@ class BOTAN_DLL AES_128_SSSE3 : public Block_Cipher_Fixed_Params<16, 16>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
-      void clear() { zeroise(EK); zeroise(DK); }
+      void clear();
       std::string name() const { return "AES-128"; }
       BlockCipher* clone() const { return new AES_128_SSSE3; }
    private:
@@ -39,7 +39,7 @@ class BOTAN_DLL AES_192_SSSE3 : public Block_Cipher_Fixed_Params<16, 24>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
-      void clear() { zeroise(EK); zeroise(DK); }
+      void clear();
       std::string name() const { return "AES-192"; }
       BlockCipher* clone() const { return new AES_192_SSSE3; }
    private:
@@ -57,7 +57,7 @@ class BOTAN_DLL AES_256_SSSE3 : public Block_Cipher_Fixed_Params<16, 32>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
-      void clear() { zeroise(EK); zeroise(DK); }
+      void clear();
       std::string name() const { return "AES-256"; }
       BlockCipher* clone() const { return new AES_256_SSSE3; }
    private:

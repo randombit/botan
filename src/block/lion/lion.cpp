@@ -99,8 +99,8 @@ BlockCipher* Lion::clone() const
 */
 void Lion::clear()
    {
-   key1.clear();
-   key2.clear();
+   zap(key1);
+   zap(key2);
    hash->clear();
    cipher->clear();
    }

@@ -169,4 +169,9 @@ void GOST_28147_89::key_schedule(const byte key[], size_t)
       EK[i] = load_le<u32bit>(key, i);
    }
 
+void GOST_28147_89::clear()
+   {
+   zap(EK);
+   }
+
 }

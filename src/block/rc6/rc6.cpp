@@ -137,4 +137,9 @@ void RC6::key_schedule(const byte key[], size_t length)
       }
    }
 
+void RC6::clear()
+   {
+   zap(S);
+   }
+
 }

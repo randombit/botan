@@ -96,8 +96,8 @@ std::string ARC4::name() const
 */
 void ARC4::clear()
    {
-   state.clear();
-   buffer.clear();
+   zap(state);
+   zap(buffer);
    position = X = Y = 0;
    }
 

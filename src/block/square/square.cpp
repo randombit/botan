@@ -212,10 +212,10 @@ void Square::transform(u32bit round_key[4])
 */
 void Square::clear()
    {
-   EK.clear();
-   DK.clear();
-   ME.clear();
-   MD.clear();
+   zap(EK);
+   zap(DK);
+   zap(ME);
+   zap(MD);
    }
 
 }

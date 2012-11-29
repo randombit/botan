@@ -406,6 +406,12 @@ void AES_128_SSSE3::key_schedule(const byte keyb[], size_t)
    _mm_storeu_si128(DK_mm, aes_schedule_mangle_last_dec(key));
    }
 
+void AES_128_SSSE3::clear()
+   {
+   zap(EK);
+   zap(DK);
+   }
+
 /*
 * AES-192 Encryption
 */
@@ -507,6 +513,11 @@ void AES_192_SSSE3::key_schedule(const byte keyb[], size_t)
       }
    }
 
+void AES_192_SSSE3::clear()
+   {
+   zap(EK);
+   zap(DK);
+   }
 
 /*
 * AES-256 Encryption
@@ -586,6 +597,12 @@ void AES_256_SSSE3::key_schedule(const byte keyb[], size_t)
 
    _mm_storeu_si128(EK_mm + 14, aes_schedule_mangle_last(key2, 2));
    _mm_storeu_si128(DK_mm + 0, aes_schedule_mangle_last_dec(key2));
+   }
+
+void AES_256_SSSE3::clear()
+   {
+   zap(EK);
+   zap(DK);
    }
 
 }

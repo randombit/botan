@@ -21,7 +21,7 @@ class BOTAN_DLL RC5 : public Block_Cipher_Fixed_Params<8, 1, 32>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
-      void clear() { S.clear(); }
+      void clear();
       std::string name() const;
       BlockCipher* clone() const { return new RC5(rounds); }
 
