@@ -223,6 +223,11 @@ void SAFER_SK::key_schedule(const byte key[], size_t)
       }
    }
 
+void SAFER_SK::clear()
+   {
+   zap(EK);
+   }
+
 /*
 * Return the name of this type
 */

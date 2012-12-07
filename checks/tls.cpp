@@ -25,15 +25,15 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
          m_ca_cert(ca_cert),
          m_key(server_key)
          {
+         m_stores.push_back(new Certificate_Store_In_Memory);
+         m_stores[0]->add_certificate(m_ca_cert);
          }
 
-      std::vector<X509_Certificate>
+      std::vector<Certificate_Store*>
       trusted_certificate_authorities(const std::string&,
                                       const std::string&) override
          {
-         std::vector<X509_Certificate> certs;
-         certs.push_back(m_ca_cert);
-         return certs;
+         return m_stores;
          }
 
       std::vector<X509_Certificate> cert_chain(
@@ -86,6 +86,7 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
    public:
       X509_Certificate m_server_cert, m_ca_cert;
       Private_Key* m_key;
+      std::vector<Certificate_Store*> m_stores;
    };
 
 Credentials_Manager* create_creds(RandomNumberGenerator& rng)

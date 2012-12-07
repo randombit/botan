@@ -138,4 +138,9 @@ void XTEA::key_schedule(const byte key[], size_t)
       }
    }
 
+void XTEA::clear()
+   {
+   zap(EK);
+   }
+
 }

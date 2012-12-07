@@ -693,10 +693,10 @@ void AES_128::key_schedule(const byte key[], size_t length)
 
 void AES_128::clear()
    {
-   zeroise(EK);
-   zeroise(DK);
-   zeroise(ME);
-   zeroise(MD);
+   zap(EK);
+   zap(DK);
+   zap(ME);
+   zap(MD);
    }
 
 void AES_192::encrypt_n(const byte in[], byte out[], size_t blocks) const
@@ -716,10 +716,10 @@ void AES_192::key_schedule(const byte key[], size_t length)
 
 void AES_192::clear()
    {
-   zeroise(EK);
-   zeroise(DK);
-   zeroise(ME);
-   zeroise(MD);
+   zap(EK);
+   zap(DK);
+   zap(ME);
+   zap(MD);
    }
 
 void AES_256::encrypt_n(const byte in[], byte out[], size_t blocks) const
@@ -739,10 +739,10 @@ void AES_256::key_schedule(const byte key[], size_t length)
 
 void AES_256::clear()
    {
-   zeroise(EK);
-   zeroise(DK);
-   zeroise(ME);
-   zeroise(MD);
+   zap(EK);
+   zap(DK);
+   zap(ME);
+   zap(MD);
    }
 
 }

@@ -21,7 +21,7 @@ class BOTAN_DLL Camellia_128 : public Block_Cipher_Fixed_Params<16, 16>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
-      void clear() { SK.clear(); }
+      void clear();
       std::string name() const { return "Camellia-128"; }
       BlockCipher* clone() const { return new Camellia_128; }
    private:
@@ -39,7 +39,7 @@ class BOTAN_DLL Camellia_192 : public Block_Cipher_Fixed_Params<16, 24>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
-      void clear() { SK.clear(); }
+      void clear();
       std::string name() const { return "Camellia-192"; }
       BlockCipher* clone() const { return new Camellia_192; }
    private:
@@ -57,7 +57,7 @@ class BOTAN_DLL Camellia_256 : public Block_Cipher_Fixed_Params<16, 32>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
-      void clear() { SK.clear(); }
+      void clear();
       std::string name() const { return "Camellia-256"; }
       BlockCipher* clone() const { return new Camellia_256; }
    private:

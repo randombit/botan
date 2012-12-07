@@ -210,6 +210,11 @@ void DES::key_schedule(const byte key[], size_t)
    des_key_schedule(&round_key[0], key);
    }
 
+void DES::clear()
+   {
+   zap(round_key);
+   }
+
 /*
 * TripleDES Encryption
 */
@@ -289,6 +294,11 @@ void TripleDES::key_schedule(const byte key[], size_t length)
       des_key_schedule(&round_key[64], key + 16);
    else
       copy_mem(&round_key[64], &round_key[0], 32);
+   }
+
+void TripleDES::clear()
+   {
+   zap(round_key);
    }
 
 }

@@ -391,4 +391,9 @@ void Serpent::key_schedule(const byte key[], size_t length)
    round_key.assign(&W[8], &W[140]);
    }
 
+void Serpent::clear()
+   {
+   zap(round_key);
+   }
+
 }

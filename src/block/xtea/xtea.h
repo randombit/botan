@@ -21,7 +21,7 @@ class BOTAN_DLL XTEA : public Block_Cipher_Fixed_Params<8, 16>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
-      void clear() { EK.clear(); }
+      void clear();
       std::string name() const { return "XTEA"; }
       BlockCipher* clone() const { return new XTEA; }
    protected:

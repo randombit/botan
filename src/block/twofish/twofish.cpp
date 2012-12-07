@@ -238,8 +238,8 @@ void Twofish::rs_mul(byte S[4], byte key, size_t offset)
 */
 void Twofish::clear()
    {
-   SB.clear();
-   RK.clear();
+   zap(SB);
+   zap(RK);
    }
 
 }

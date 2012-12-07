@@ -109,6 +109,11 @@ void RC5::key_schedule(const byte key[], size_t length)
       }
    }
 
+void RC5::clear()
+   {
+   zap(S);
+   }
+
 /*
 * Return the name of this type
 */

@@ -376,4 +376,19 @@ void Camellia_256::key_schedule(const byte key[], size_t length)
    Camellia_F::key_schedule(SK, key, length);
    }
 
+void Camellia_128::clear()
+   {
+   zap(SK);
+   }
+
+void Camellia_192::clear()
+   {
+   zap(SK);
+   }
+
+void Camellia_256::clear()
+   {
+   zap(SK);
+   }
+
 }

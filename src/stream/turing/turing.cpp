@@ -320,12 +320,12 @@ void Turing::set_iv(const byte iv[], size_t length)
 */
 void Turing::clear()
    {
-   S0.clear();
-   S1.clear();
-   S2.clear();
-   S3.clear();
-   R.clear();
-   K.clear();
+   zap(S0);
+   zap(S1);
+   zap(S2);
+   zap(S3);
+   zap(R);
+   zap(K);
    buffer.clear();
    position = 0;
    }

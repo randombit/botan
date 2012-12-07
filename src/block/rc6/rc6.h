@@ -21,7 +21,7 @@ class BOTAN_DLL RC6 : public Block_Cipher_Fixed_Params<16, 1, 32>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
-      void clear() { S.clear(); }
+      void clear();
       std::string name() const { return "RC6"; }
       BlockCipher* clone() const { return new RC6; }
    private:

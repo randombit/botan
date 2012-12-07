@@ -168,6 +168,18 @@ void zeroise(std::vector<T, Alloc>& vec)
    clear_mem(&vec[0], vec.size());
    }
 
+/**
+* Zeroise the values then free the memory
+* @param vec the vector to zeroise and free
+*/
+template<typename T, typename Alloc>
+void zap(std::vector<T, Alloc>& vec)
+   {
+   zeroise(vec);
+   vec.clear();
+   vec.shrink_to_fit();
+   }
+
 }
 
 #endif

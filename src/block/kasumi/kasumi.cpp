@@ -226,4 +226,9 @@ void KASUMI::key_schedule(const byte key[], size_t)
       }
    }
 
+void KASUMI::clear()
+   {
+   zap(EK);
+   }
+
 }

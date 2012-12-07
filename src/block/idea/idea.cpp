@@ -160,4 +160,10 @@ void IDEA::key_schedule(const byte key[], size_t)
    DK[0] = mul_inv(EK[48]);
    }
 
+void IDEA::clear()
+   {
+   zap(EK);
+   zap(DK);
+   }
+
 }

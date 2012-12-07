@@ -58,8 +58,8 @@ void SSL3_MAC::key_schedule(const byte key[], size_t length)
 void SSL3_MAC::clear()
    {
    hash->clear();
-   i_key.clear();
-   o_key.clear();
+   zap(i_key);
+   zap(o_key);
    }
 
 /*

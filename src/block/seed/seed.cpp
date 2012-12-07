@@ -138,4 +138,9 @@ void SEED::key_schedule(const byte key[], size_t)
       }
    }
 
+void SEED::clear()
+   {
+   zap(K);
+   }
+
 }

@@ -21,7 +21,7 @@ class BOTAN_DLL SAFER_SK : public Block_Cipher_Fixed_Params<8, 16>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const;
 
-      void clear() { EK.clear(); }
+      void clear();
       std::string name() const;
       BlockCipher* clone() const;
 

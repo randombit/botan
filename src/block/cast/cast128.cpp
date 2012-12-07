@@ -134,6 +134,12 @@ void CAST_128::key_schedule(const byte key[], size_t length)
       RK[i] = RK32[i] % 32;
    }
 
+void CAST_128::clear()
+   {
+   zap(MK);
+   zap(RK);
+   }
+
 /*
 * S-Box Based Key Expansion
 */
