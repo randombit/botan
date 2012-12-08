@@ -11,8 +11,22 @@ signature on the certificate, which is placed there by some authority
 the certificate really "owns" the private key corresponding to the
 public key in the certificate.
 
-The major certificate format in use today is X.509v3, designed by ISO
-and further hacked on by dozens (hundreds?) of other organizations.
+The major certificate format in use today is X.509v3, used for instance
+in the :doc:`tls` protocol. A X.509 certificate is represented by
+
+.. cpp:class:: X509_Certificate
+
+ .. cpp:function:: Public_Key* subject_public_key() const
+
+     Returns the public key of the subject
+
+ .. cpp:function:: X509_DN subject_dn() const
+
+     Returns the distinguished name of the issuer
+
+ .. cpp:function:: X509_DN subject_dn() const
+
+     Returns the distinguished name of the issuer
 
 When working with certificates, the main class to remember is
 ``X509_Certificate``. You can read an object of this type, but you

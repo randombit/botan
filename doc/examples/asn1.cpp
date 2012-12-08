@@ -2,7 +2,8 @@
 #include <botan/bigint.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/asn1_obj.h>
+#include <botan/asn1_time.h>
+#include <botan/asn1_str.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
 #include <botan/hex.h>

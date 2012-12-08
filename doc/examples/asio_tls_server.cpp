@@ -167,7 +167,7 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
 
       bool tls_handshake_complete(const Botan::TLS::Session& session)
          {
-         m_hostname = session.sni_hostname();
+         m_hostname = session.server_info().hostname();
          return true;
          }
 

@@ -234,7 +234,7 @@ void run_tests(std::istream& in)
 
 int main()
    {
-   std::ifstream in("eax_vecs.txt")
+   std::ifstream in("eax_vecs.txt");
 
    Botan::LibraryInitializer init;
 
