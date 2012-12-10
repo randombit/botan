@@ -254,7 +254,7 @@ bool Channel::heartbeat_sending_allowed() const
    return false;
    }
 
-size_t Channel::received_data(const byte buf[], size_t buf_size)
+size_t Channel::received_data(const byte input[], size_t input_size)
    {
    const auto get_cipherstate = [this](u16bit epoch)
       { return this->read_cipher_state_epoch(epoch).get(); };
@@ -263,57 +263,49 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
 
    try
       {
-      while(!is_closed() && buf_size)
+      while(!is_closed() && input_size)
          {
-         byte rec_type = NO_RECORD;
-         std::vector<byte> record;
-         u64bit record_sequence = 0;
-         Protocol_Version record_version;
+         Record record;
 
          size_t consumed = 0;
 
          const size_t needed =
             read_record(m_readbuf,
-                        buf,
-                        buf_size,
+                        input,
+                        input_size,
                         consumed,
-                        rec_type,
                         record,
-                        record_version,
-                        record_sequence,
                         m_sequence_numbers.get(),
                         get_cipherstate);
 
-         BOTAN_ASSERT(consumed <= buf_size,
+         BOTAN_ASSERT(consumed <= input_size,
                       "Record reader consumed sane amount");
 
-         buf += consumed;
-         buf_size -= consumed;
+         input += consumed;
+         input_size -= consumed;
 
-         BOTAN_ASSERT(buf_size == 0 || needed == 0,
+         BOTAN_ASSERT(input_size == 0 || needed == 0,
                       "Got a full record or consumed all input");
 
-         if(buf_size == 0 && needed != 0)
+         if(input_size == 0 && needed != 0)
             return needed; // need more data to complete record
 
-         if(rec_type == NO_RECORD)
-            continue;
+         BOTAN_ASSERT(record.is_valid(), "Got a full record");
 
          if(record.size() > max_fragment_size)
             throw TLS_Exception(Alert::RECORD_OVERFLOW,
                                 "Plaintext record is too large");
 
-         if(rec_type == HANDSHAKE || rec_type == CHANGE_CIPHER_SPEC)
+         if(record.type() == HANDSHAKE || record.type() == CHANGE_CIPHER_SPEC)
             {
             if(!m_pending_state)
                {
-               create_handshake_state(record_version);
-               if(record_version.is_datagram_protocol())
-                  sequence_numbers().read_accept(record_sequence);
+               create_handshake_state(record.version());
+               if(record.version().is_datagram_protocol())
+                  sequence_numbers().read_accept(record.sequence());
                }
 
-            m_pending_state->handshake_io().add_input(
-               rec_type, &record[0], record.size(), record_sequence);
+            m_pending_state->handshake_io().add_record(record);
 
             while(auto pending = m_pending_state.get())
                {
@@ -326,12 +318,12 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
                                      msg.first, msg.second);
                }
             }
-         else if(rec_type == HEARTBEAT && peer_supports_heartbeats())
+         else if(record.type() == HEARTBEAT && peer_supports_heartbeats())
             {
             if(!active_state())
                throw Unexpected_Message("Heartbeat sent before handshake done");
 
-            Heartbeat_Message heartbeat(record);
+            Heartbeat_Message heartbeat(record.contents());
 
             const std::vector<byte>& payload = heartbeat.payload();
 
@@ -351,7 +343,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
                m_proc_fn(&payload[0], payload.size(), Alert(Alert::HEARTBEAT_PAYLOAD));
                }
             }
-         else if(rec_type == APPLICATION_DATA)
+         else if(record.type() == APPLICATION_DATA)
             {
             if(!active_state())
                throw Unexpected_Message("Application data before handshake done");
@@ -362,11 +354,11 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
             * following record. Avoid spurious callbacks.
             */
             if(record.size() > 0)
-               m_proc_fn(&record[0], record.size(), Alert());
+               m_proc_fn(record.bits(), record.size(), Alert());
             }
-         else if(rec_type == ALERT)
+         else if(record.type() == ALERT)
             {
-            Alert alert_msg(record);
+            Alert alert_msg(record.contents());
 
             if(alert_msg.type() == Alert::NO_RENEGOTIATION)
                m_pending_state.reset();
@@ -392,7 +384,7 @@ size_t Channel::received_data(const byte buf[], size_t buf_size)
             }
          else
             throw Unexpected_Message("Unexpected record type " +
-                                     std::to_string(rec_type) +
+                                     std::to_string(record.type()) +
                                      " from counterparty");
          }
 

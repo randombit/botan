@@ -24,6 +24,7 @@ namespace Botan {
 namespace TLS {
 
 class Handshake_Message;
+class Record;
 
 /**
 * Handshake IO Interface
@@ -39,10 +40,7 @@ class Handshake_IO
          const std::vector<byte>& handshake_msg,
          Handshake_Type handshake_type) const = 0;
 
-      virtual void add_input(byte record_type,
-                             const byte record[],
-                             size_t record_size,
-                             u64bit record_number) = 0;
+      virtual void add_record(const Record& record) = 0;
 
       /**
       * Returns (HANDSHAKE_NONE, std::vector<>()) if no message currently available
@@ -76,10 +74,7 @@ class Stream_Handshake_IO : public Handshake_IO
          const std::vector<byte>& handshake_msg,
          Handshake_Type handshake_type) const override;
 
-      void add_input(byte record_type,
-                     const byte record[],
-                     size_t record_size,
-                     u64bit record_number) override;
+      void add_record(const Record& record) override;
 
       std::pair<Handshake_Type, std::vector<byte>>
          get_next_record(bool expecting_ccs) override;
@@ -106,10 +101,7 @@ class Datagram_Handshake_IO : public Handshake_IO
          const std::vector<byte>& handshake_msg,
          Handshake_Type handshake_type) const override;
 
-      void add_input(const byte rec_type,
-                     const byte record[],
-                     size_t record_size,
-                     u64bit record_number) override;
+      void add_record(const Record& record) override;
 
       std::pair<Handshake_Type, std::vector<byte>>
          get_next_record(bool expecting_ccs) override;
