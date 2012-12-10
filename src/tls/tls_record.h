@@ -93,6 +93,15 @@ class Record
          m_type(type),
          m_contents(contents, contents + contents_size) {}
 
+      Record(u64bit sequence,
+             Protocol_Version version,
+             Record_Type type,
+             std::vector<byte>&& contents) :
+         m_sequence(sequence),
+         m_version(version),
+         m_type(type),
+         m_contents(contents) {}
+
       bool is_valid() const { return m_type != NO_RECORD; }
 
       u64bit sequence() const { return m_sequence; }

@@ -306,19 +306,21 @@ size_t read_record(std::vector<byte>& readbuf,
          BOTAN_ASSERT_EQUAL(readbuf.size(), (record_len + 2),
                             "Have the entire SSLv2 hello");
 
-#if 0
-         msg_type = HANDSHAKE;
-
-         msg.resize(record_len + 4);
-
          // Fake v3-style handshake message wrapper
-         msg[0] = CLIENT_HELLO_SSLV2;
-         msg[1] = 0;
-         msg[2] = readbuf[0] & 0x7F;
-         msg[3] = readbuf[1];
+         std::vector<byte> sslv2_hello(4 + readbuf.size() - 2);
 
-         copy_mem(&msg[4], &readbuf[2], readbuf.size() - 2);
-#endif
+         sslv2_hello[0] = CLIENT_HELLO_SSLV2;
+         sslv2_hello[1] = 0;
+         sslv2_hello[2] = readbuf[0] & 0x7F;
+         sslv2_hello[3] = readbuf[1];
+
+         copy_mem(&sslv2_hello[4], &readbuf[2], readbuf.size() - 2);
+
+         record = Record(0,
+                         Protocol_Version::TLS_V10,
+                         HANDSHAKE,
+                         std::move(sslv2_hello));
+
          readbuf.clear();
          return 0;
          }
@@ -457,7 +459,7 @@ size_t read_record(std::vector<byte>& readbuf,
       throw Decoding_Error("Record sent with invalid length");
 
    cipherstate->mac()->update_be(record_sequence);
-   cipherstate->mac()->update(readbuf[0]); // msg_type
+   cipherstate->mac()->update(static_cast<byte>(record_type));
 
    if(cipherstate->mac_includes_record_version())
       {
