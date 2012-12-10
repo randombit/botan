@@ -270,10 +270,7 @@ size_t read_record(std::vector<byte>& readbuf,
                    const byte input[],
                    size_t input_sz,
                    size_t& consumed,
-                   byte& msg_type,
-                   std::vector<byte>& msg,
-                   Protocol_Version& record_version,
-                   u64bit& record_sequence,
+                   Record& record,
                    Connection_Sequence_Numbers* sequence_numbers,
                    std::function<Connection_Cipher_State* (u16bit)> get_cipherstate)
    {
@@ -309,24 +306,27 @@ size_t read_record(std::vector<byte>& readbuf,
          BOTAN_ASSERT_EQUAL(readbuf.size(), (record_len + 2),
                             "Have the entire SSLv2 hello");
 
-         msg_type = HANDSHAKE;
-
-         msg.resize(record_len + 4);
-
          // Fake v3-style handshake message wrapper
-         msg[0] = CLIENT_HELLO_SSLV2;
-         msg[1] = 0;
-         msg[2] = readbuf[0] & 0x7F;
-         msg[3] = readbuf[1];
+         std::vector<byte> sslv2_hello(4 + readbuf.size() - 2);
 
-         copy_mem(&msg[4], &readbuf[2], readbuf.size() - 2);
+         sslv2_hello[0] = CLIENT_HELLO_SSLV2;
+         sslv2_hello[1] = 0;
+         sslv2_hello[2] = readbuf[0] & 0x7F;
+         sslv2_hello[3] = readbuf[1];
+
+         copy_mem(&sslv2_hello[4], &readbuf[2], readbuf.size() - 2);
+
+         record = Record(0,
+                         Protocol_Version::TLS_V10,
+                         HANDSHAKE,
+                         std::move(sslv2_hello));
 
          readbuf.clear();
          return 0;
          }
       }
 
-   record_version = Protocol_Version(readbuf[1], readbuf[2]);
+   Protocol_Version record_version = Protocol_Version(readbuf[1], readbuf[2]);
 
    const bool is_dtls = record_version.is_datagram_protocol();
 
@@ -359,6 +359,9 @@ size_t read_record(std::vector<byte>& readbuf,
                       readbuf.size(),
                       "Have the full record");
 
+   Record_Type record_type = static_cast<Record_Type>(readbuf[0]);
+
+   u64bit record_sequence = 0;
    u16bit epoch = 0;
 
    if(is_dtls)
@@ -385,8 +388,11 @@ size_t read_record(std::vector<byte>& readbuf,
 
    if(epoch == 0) // Unencrypted initial handshake
       {
-      msg_type = readbuf[0];
-      msg.assign(&record_contents[0], &record_contents[record_len]);
+      record = Record(record_sequence,
+                      record_version,
+                      record_type,
+                      &readbuf[header_size],
+                      record_len);
 
       readbuf.clear();
       return 0; // got a full record
@@ -453,7 +459,7 @@ size_t read_record(std::vector<byte>& readbuf,
       throw Decoding_Error("Record sent with invalid length");
 
    cipherstate->mac()->update_be(record_sequence);
-   cipherstate->mac()->update(readbuf[0]); // msg_type
+   cipherstate->mac()->update(static_cast<byte>(record_type));
 
    if(cipherstate->mac_includes_record_version())
       {
@@ -461,10 +467,11 @@ size_t read_record(std::vector<byte>& readbuf,
       cipherstate->mac()->update(record_version.minor_version());
       }
 
-   const u16bit plain_length = record_len - mac_pad_iv_size;
+   const byte* plaintext_block = &record_contents[iv_size];
+   const u16bit plaintext_length = record_len - mac_pad_iv_size;
 
-   cipherstate->mac()->update_be(plain_length);
-   cipherstate->mac()->update(&record_contents[iv_size], plain_length);
+   cipherstate->mac()->update_be(plaintext_length);
+   cipherstate->mac()->update(plaintext_block, plaintext_length);
 
    std::vector<byte> mac_buf(mac_size);
    cipherstate->mac()->final(&mac_buf[0]);
@@ -481,9 +488,11 @@ size_t read_record(std::vector<byte>& readbuf,
    if(sequence_numbers)
       sequence_numbers->read_accept(record_sequence);
 
-   msg_type = readbuf[0];
-   msg.assign(&record_contents[iv_size],
-              &record_contents[iv_size + plain_length]);
+   record = Record(record_sequence,
+                   record_version,
+                   record_type,
+                   plaintext_block,
+                   plaintext_length);
 
    readbuf.clear();
    return 0;

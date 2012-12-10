@@ -7,6 +7,7 @@
 
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_messages.h>
+#include <botan/internal/tls_record.h>
 #include <botan/internal/tls_seq_numbers.h>
 #include <botan/exceptn.h>
 
@@ -38,18 +39,15 @@ Protocol_Version Stream_Handshake_IO::initial_record_version() const
    return Protocol_Version::TLS_V10;
    }
 
-void Stream_Handshake_IO::add_input(const byte rec_type,
-                                    const byte record[],
-                                    size_t record_size,
-                                    u64bit /*record_number*/)
+void Stream_Handshake_IO::add_record(const Record& record)
    {
-   if(rec_type == HANDSHAKE)
+   if(record.type() == HANDSHAKE)
       {
-      m_queue.insert(m_queue.end(), record, record + record_size);
+      m_queue.insert(m_queue.end(), record.bits(), record.bits() + record.size());
       }
-   else if(rec_type == CHANGE_CIPHER_SPEC)
+   else if(record.type() == CHANGE_CIPHER_SPEC)
       {
-      if(record_size != 1 || record[0] != 1)
+      if(record.size() != 1 || record.bits()[0] != 1)
          throw Decoding_Error("Invalid ChangeCipherSpec");
 
       // Pretend it's a regular handshake message of zero length
@@ -120,14 +118,11 @@ Protocol_Version Datagram_Handshake_IO::initial_record_version() const
    return Protocol_Version::DTLS_V10;
    }
 
-void Datagram_Handshake_IO::add_input(const byte rec_type,
-                                      const byte record[],
-                                      size_t record_size,
-                                      u64bit record_number)
+void Datagram_Handshake_IO::add_record(const Record& record)
    {
-   const u16bit epoch = static_cast<u16bit>(record_number >> 48);
+   const u16bit epoch = static_cast<u16bit>(record.sequence() >> 48);
 
-   if(rec_type == CHANGE_CIPHER_SPEC)
+   if(record.type() == CHANGE_CIPHER_SPEC)
       {
       m_ccs_epochs.insert(epoch);
       return;
@@ -135,16 +130,19 @@ void Datagram_Handshake_IO::add_input(const byte rec_type,
 
    const size_t DTLS_HANDSHAKE_HEADER_LEN = 12;
 
+   const byte* record_bits = record.bits();
+   size_t record_size = record.size();
+
    while(record_size)
       {
       if(record_size < DTLS_HANDSHAKE_HEADER_LEN)
          return; // completely bogus? at least degenerate/weird
 
-      const byte msg_type = record[0];
-      const size_t msg_len = load_be24(&record[1]);
-      const u16bit message_seq = load_be<u16bit>(&record[4], 0);
-      const size_t fragment_offset = load_be24(&record[6]);
-      const size_t fragment_length = load_be24(&record[9]);
+      const byte msg_type = record_bits[0];
+      const size_t msg_len = load_be24(&record_bits[1]);
+      const u16bit message_seq = load_be<u16bit>(&record_bits[4], 0);
+      const size_t fragment_offset = load_be24(&record_bits[6]);
+      const size_t fragment_length = load_be24(&record_bits[9]);
 
       const size_t total_size = DTLS_HANDSHAKE_HEADER_LEN + fragment_length;
 
@@ -153,7 +151,7 @@ void Datagram_Handshake_IO::add_input(const byte rec_type,
 
       if(message_seq >= m_in_message_seq)
          {
-         m_messages[message_seq].add_fragment(&record[DTLS_HANDSHAKE_HEADER_LEN],
+         m_messages[message_seq].add_fragment(&record_bits[DTLS_HANDSHAKE_HEADER_LEN],
                                               fragment_length,
                                               fragment_offset,
                                               epoch,
@@ -161,7 +159,7 @@ void Datagram_Handshake_IO::add_input(const byte rec_type,
                                               msg_len);
          }
 
-      record += total_size;
+      record_bits += total_size;
       record_size -= total_size;
       }
    }
