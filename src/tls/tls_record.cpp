@@ -81,7 +81,7 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
 void write_record(std::vector<byte>& output,
                   byte msg_type, const byte msg[], size_t msg_length,
                   Protocol_Version version,
-                  Connection_Sequence_Numbers& sequence_numbers,
+                  u64bit msg_sequence,
                   Connection_Cipher_State* cipherstate,
                   RandomNumberGenerator& rng)
    {
@@ -90,8 +90,6 @@ void write_record(std::vector<byte>& output,
    output.push_back(msg_type);
    output.push_back(version.major_version());
    output.push_back(version.minor_version());
-
-   const u64bit msg_sequence = sequence_numbers.next_write_sequence();
 
    if(version.is_datagram_protocol())
       {

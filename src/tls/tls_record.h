@@ -138,7 +138,7 @@ class Record
 void write_record(std::vector<byte>& write_buffer,
                   byte msg_type, const byte msg[], size_t msg_length,
                   Protocol_Version version,
-                  Connection_Sequence_Numbers& sequence_numbers,
+                  u64bit msg_sequence,
                   Connection_Cipher_State* cipherstate,
                   RandomNumberGenerator& rng);
 

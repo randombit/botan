@@ -437,7 +437,7 @@ void Channel::write_record(Connection_Cipher_State* cipher_state,
                      input,
                      length,
                      record_version,
-                     sequence_numbers(),
+                     sequence_numbers().next_write_sequence(),
                      cipher_state,
                      m_rng);
 
