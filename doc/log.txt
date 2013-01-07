@@ -21,6 +21,11 @@ Version 1.10.4, Not Yet Released
   rejected. Credits to Timothy Prepscius for pointing out these values
   are not normally used and probably signal something fishy.
 
+* The result of version_string is now built at compile time, so it can
+  be found using tools such as `strings`.
+
+* A compile time incompatability with Visual C++ 2012 was fixed.
+
 Version 1.10.3, 2012-07-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
