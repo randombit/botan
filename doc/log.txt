@@ -7,7 +7,7 @@ Release Notes
 Series 1.10
 ----------------------------------------
 
-Version 1.10.4, Not Yet Released
+Version 1.10.4, 2013-01-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Avoid a conditional operation in the power mod implementations on if
@@ -20,6 +20,10 @@ Version 1.10.4, Not Yet Released
   should occur in a normal run of the protocol. These values are now
   rejected. Credits to Timothy Prepscius for pointing out these values
   are not normally used and probably signal something fishy.
+
+* The return value of version_string is now a compile time constant
+  string, so version information can be more easily extracted from
+  binaries.
 
 Version 1.10.3, 2012-07-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
