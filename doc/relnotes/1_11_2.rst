@@ -1,2 +1,23 @@
 Version 1.11.2, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Previously `clear_mem` was implemented by an inlined call to
+  `std::memset`. However an optimizing compiler might notice cases
+  where the memset could be skipped in cases allowed by the standard.
+  Now `clear_mem` calls `zero_mem` which is compiled separately and
+  which zeros out the array through a volatile pointer. It is possible
+  some compiler with some optimization setting (especially with
+  something like LTO) might still skip the writes. It would be nice if
+  there was an automated way to test this.
+
+* The API of `Credentials_Manager::trusted_certificate_authorities`
+  has changed to return a vector of `Certificate_Store*` instead of
+  `X509_Certificate`. This allows the list of trusted CAs to be
+  more easily updated dynamically or loaded lazily.
+
+* A bug in the release script caused the `botan_version.py` included
+  in :doc:`1.11.1 <1_11_1>` to be invalid, which required a manual
+  edit to fix (:pr:`226`)
+
+* The `asn1_int.h` header was split into `asn1_alt_name.h`,
+  `asn1_attribute.h` and `asn1_time.h`.
