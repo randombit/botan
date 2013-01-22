@@ -13,19 +13,6 @@ Unsure which release you want? Check the :ref:`FAQ <devel_vs_stable>`.
       If you are viewing this documentation offline, a more recent
       release `may be available <http://botan.randombit.net/download.html>`_.
 
-Current Development Series (1.11)
-----------------------------------------
-
-The latest version of the current development series, from branch
-``net.randombit.botan``, is :doc:`relnotes/1_11_1`:
-:tgz:`1.11.1` (:tgz_sig:`sig <1.11.1>`),
-:tbz:`1.11.1` (:tbz_sig:`sig <1.11.1>`)
-
-.. note::
-
-   Versions 1.11.0 and later require a mostly-compliant C++11 compiler
-   such as Clang 3.1 or GCC 4.7.
-
 Current Stable Series (1.10)
 ----------------------------------------
 
@@ -43,7 +30,20 @@ and
 :installer_x86_64:`1.10.3` (:installer_sig_x86_64:`sig <1.10.3>`)
 are also available.
 
-Previous Stable Series (1.8)
+Current Development Series (1.11)
+----------------------------------------
+
+The latest version of the current development series, from branch
+``net.randombit.botan``, is :doc:`relnotes/1_11_1`:
+:tgz:`1.11.1` (:tgz_sig:`sig <1.11.1>`),
+:tbz:`1.11.1` (:tbz_sig:`sig <1.11.1>`)
+
+.. note::
+
+   Versions 1.11.0 and later require a mostly-compliant C++11 compiler
+   such as Clang 3.1 or GCC 4.7.
+
+Older Stable Series (1.8)
 ----------------------------------------
 
 The latest version of the previous stable series, from branch
