@@ -274,6 +274,11 @@ def process_command_line(args):
                            metavar='DIR', default='',
                            help='setup the build in DIR')
 
+    build_group.add_option('--link-method',
+                           default=None,
+                           metavar='METHOD',
+                           help='choose how links are created')
+
     build_group.add_option('--makefile-style', metavar='STYLE', default=None,
                            help='choose a makefile style (unix or nmake)')
 
@@ -311,10 +316,6 @@ def process_command_line(args):
 
     build_group.add_option('--dirty-tree', dest='clean_build_tree',
                            action='store_false', default=True,
-                           help=optparse.SUPPRESS_HELP)
-
-    build_group.add_option('--link-method',
-                           default=None,
                            help=optparse.SUPPRESS_HELP)
 
     wrapper_group = optparse.OptionGroup(parser, 'Wrapper options')
@@ -1391,7 +1392,7 @@ def setup_build(build_config, options, template_vars):
             if req_method is None or req_method == method:
                 return method
 
-        logging.info('Could not use requested link method %s' % (req_method))
+        logging.warning('Could not use requested link method "%s", defaulting to copy' % (req_method))
         return 'copy'
 
     """
@@ -1490,7 +1491,7 @@ def setup_build(build_config, options, template_vars):
             f.close()
 
     link_method = choose_link_method(options.link_method)
-    logging.info('Using %s to link files into build directory' % (link_method))
+    logging.info('Using %s to link files into build directory (use --link-method to change)' % (link_method))
 
     def link_headers(header_list, type, dir):
         logging.debug('Linking %d %s header files in %s' % (
