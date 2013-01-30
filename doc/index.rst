@@ -47,7 +47,7 @@ in most major package distributions, including
 `FreeBSD <http://www.freshports.org/security/botan>`_,
 `NetBSD <ftp://ftp.netbsd.org/pub/pkgsrc/current/pkgsrc/security/botan/README.html>`_,
 `Cygwin <http://cygwin.com/packages/botan/>`_,
-`MacPorts <http://www.macports.org/ports.php?by=name&amp;substr=botan>`_,
+`MacPorts <http://www.macports.org/ports.php?by=name&substr=botan>`_,
 `OpenPKG <http://www.openpkg.org/product/packages/?package=botan>`_, and
 `T2 SDE <http://www.t2-project.org/packages/botan.html>`_
 
