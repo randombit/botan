@@ -8,11 +8,14 @@ Botan supports both client and server implementations of the SSL/TLS
 protocols, including SSL v3, TLS v1.0, TLS v1.1, and TLS v1.2 (the
 insecure and obsolete SSL v2 protocol is not supported, beyond
 processing SSL v2 client hellos which some clients still send for
-backwards compatability with ancient servers). DTLS, a variant of TLS
-adapted for operation on datagram sockets, is also supported.
+backwards compatability with ancient servers). There is also some
+initial support for DTLS (v1.0 and v1.2), a variant of TLS adapted for
+operation on datagram sockets such as UDP. However currently many
+important DTLS features (including timeouts and retransmission during
+handshaking) are not yet implemented.
 
-The TLS implementation does not know anything about sockets or
-networks. Instead, it calls a user provided callback (hereafter
+The TLS implementation does not know anything about sockets or the
+network layer.. Instead, it calls a user provided callback (hereafter
 ``output_fn``) whenever it has data that it would want to send to the
 other party, and whenever the application receives some data from the
 counterparty it passes that information to TLS using
@@ -20,7 +23,10 @@ counterparty it passes that information to TLS using
 in a handshake completing, then the user provided
 ``handshake_complete`` is called, and if some application data being
 received, or a TLS :ref:`alert <tls_alerts>` is received, the another
-user provided callback, hereafter ``proc_fn``, is called.
+user provided callback, hereafter ``proc_fn``, is called. (If the
+reader is familiar with OpenSSL's BIO layer, it might be analagous to
+saying the only way of interacting with the SSL protocol stack is via
+a `BIO_mem` I/O abstraction.)
 
 The callbacks that TLS calls have the signatures
 
@@ -28,7 +34,7 @@ The callbacks that TLS calls have the signatures
 
     TLS requests that all bytes of *data* be queued up to send.  After
     this function returns, *data* will be overwritten, so a copy
-    should be made if the callback cannot send the immediately.
+    should be made if the callback cannot send the data immediately.
 
  .. cpp:function:: void proc_fn(const byte data[], size_t data_len, \
                                 const TLS::Alert& alert)
