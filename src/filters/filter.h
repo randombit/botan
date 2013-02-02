@@ -1,6 +1,7 @@
 /*
 * Filter
 * (C) 1999-2007 Jack Lloyd
+* (C) 2013 Joel Low
 *
 * Distributed under the terms of the Botan license
 */
@@ -56,7 +57,7 @@ class BOTAN_DLL Filter
       * @param in some input for the filter
       * @param length the length of in
       */
-      void send(const byte in[], size_t length);
+      virtual void send(const byte in[], size_t length);
 
       /**
       * @param in some input for the filter
@@ -161,6 +162,12 @@ class BOTAN_DLL Fanout_Filter : public Filter
       void set_next(Filter* f[], size_t n) { Filter::set_next(f, n); }
 
       void attach(Filter* f) { Filter::attach(f); }
+
+   private:
+      friend class Threaded_Fork;
+      using Filter::write_queue;
+      using Filter::total_ports;
+      using Filter::next;
    };
 
 /**

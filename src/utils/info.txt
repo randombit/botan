@@ -8,6 +8,7 @@ calendar.cpp
 charset.cpp
 cpuid.cpp
 parsing.cpp
+semaphore.cpp
 version.cpp
 zero_mem.cpp
 </source>
@@ -17,6 +18,7 @@ assert.h
 bit_ops.h
 prefetch.h
 rounding.h
+semaphore.h
 stl_util.h
 xor_buf.h
 </header:internal>
@@ -27,13 +29,14 @@ calendar.h
 charset.h
 cpuid.h
 exceptn.h
+get_byte.h
 loadstor.h
 mem_ops.h
 parsing.h
 rotate.h
+semaphore.h
 types.h
 version.h
-get_byte.h
 </header:public>
 
 <libs>

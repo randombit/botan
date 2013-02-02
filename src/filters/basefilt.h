@@ -1,6 +1,7 @@
 /*
 * Basic Filters
 * (C) 1999-2007 Jack Lloyd
+* (C) 2013 Joel Low
 *
 * Distributed under the terms of the Botan license
 */
@@ -9,6 +10,8 @@
 #define BOTAN_BASEFILT_H__
 
 #include <botan/filter.h>
+#include <thread>
+#include <memory>
 
 namespace Botan {
 
@@ -74,6 +77,42 @@ class BOTAN_DLL Fork : public Fanout_Filter
       * @param length how many filters
       */
       Fork(Filter* filter_arr[], size_t length);
+   };
+
+/**
+* This class is a threaded version of the Fork filter. While this uses
+* threads, the class itself is NOT thread-safe. This is meant as a drop-
+* in replacement for Fork where performance gains are possible.
+*/
+class BOTAN_DLL Threaded_Fork : public Fork
+   {
+   public:
+      std::string name() const;
+
+      /**
+      * Construct a Threaded_Fork filter with up to four forks.
+      */
+      Threaded_Fork(Filter*, Filter*, Filter* = nullptr, Filter* = nullptr);
+
+      /**
+      * Construct a Threaded_Fork from range of filters
+      * @param filter_arr the list of filters
+      * @param length how many filters
+      */
+      Threaded_Fork(Filter* filter_arr[], size_t length);
+
+      ~Threaded_Fork();
+
+   protected:
+      void set_next(Filter* f[], size_t n);
+      void send(const byte in[], size_t length);
+
+   private:
+      void thread_delegate_work(const byte input[], size_t length);
+      void thread_entry(Filter* filter);
+
+      std::vector<std::shared_ptr<std::thread>> m_threads;
+      std::unique_ptr<struct Threaded_Fork_Data> m_thread_data;
    };
 
 }

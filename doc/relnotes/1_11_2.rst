@@ -1,6 +1,11 @@
 Version 1.11.2, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* The new filter :cpp:class:`Threaded_Fork` acts like a normal
+  :cpp:class:`Fork,` sending its input to a number of different
+  filters, but each subchain of filters in the fork runs in its own
+  thread. Contributed by Joel Low.
+
 * Previously `clear_mem` was implemented by an inlined call to
   `std::memset`. However an optimizing compiler might notice cases
   where the memset could be skipped in cases allowed by the standard.

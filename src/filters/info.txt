@@ -12,6 +12,7 @@ pipe.cpp
 pipe_io.cpp
 pipe_rw.cpp
 secqueue.cpp
+threaded_fork.cpp
 </source>
 
 <header:public>
