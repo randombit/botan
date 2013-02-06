@@ -153,7 +153,7 @@ available:
       as long as the session master secret remains secure an attacker
       should not be able to guess the key.
 
-      Per :rfc:`5057`, *label* should begin with "EXPERIMENTAL" unless
+      Per :rfc:`5705`, *label* should begin with "EXPERIMENTAL" unless
       the label has been standardized in an RFC.
 
 
