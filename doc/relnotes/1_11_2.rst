@@ -1,6 +1,10 @@
 Version 1.11.2, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* The default TLS policy formerly preferred AES over RC4, and allowed
+  3DES by default. Now the default policy is to negotiate only either
+  AES or RC4, and to prefer RC4.
+
 * The new filter :cpp:class:`Threaded_Fork` acts like a normal
   :cpp:class:`Fork,` sending its input to a number of different
   filters, but each subchain of filters in the fork runs in its own

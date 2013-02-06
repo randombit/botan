@@ -19,10 +19,10 @@ namespace TLS {
 std::vector<std::string> Policy::allowed_ciphers() const
    {
    return std::vector<std::string>({
-      "AES-256",
-      "AES-128",
       "ARC4",
-      "3DES",
+      "AES-128",
+      "AES-256",
+      //"3DES",
       //"Camellia-256",
       //"Camellia-128",
       //"SEED"
