@@ -57,6 +57,8 @@ extlinks = {
     'viewmtn': ('http://viewmtn.randombit.net/tree/h:%s', ''),
     'botan-devel': ('http://lists.randombit.net/pipermail/botan-devel/%s.html', None),
 
+    'cve': ('http://www.cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-%s', 'CVE-'),
+
     'tgz': (files_dir + '/Botan-%s.tgz', 'tar/gz for '),
     'tgz_sig': (files_dir + '/Botan-%s.tgz.asc', 'tar/gz sig '),
     'tbz': (files_dir + '/Botan-%s.tbz', 'tar/bzip for '),
