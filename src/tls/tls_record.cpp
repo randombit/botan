@@ -262,6 +262,102 @@ size_t tls_padding_check(bool sslv3_padding,
    return padding_length + 1;
    }
 
+bool decrypt_record(Record& output_record,
+                    byte record_contents[], size_t record_len,
+                    u64bit record_sequence,
+                    Protocol_Version record_version,
+                    Record_Type record_type,
+                    Connection_Cipher_State& cipherstate)
+   {
+   const size_t block_size = cipherstate.block_size();
+   const size_t iv_size = cipherstate.iv_size();
+   const size_t mac_size = cipherstate.mac_size();
+
+   if(StreamCipher* sc = cipherstate.stream_cipher())
+      {
+      sc->cipher1(record_contents, record_len);
+      }
+   else if(BlockCipher* bc = cipherstate.block_cipher())
+      {
+      BOTAN_ASSERT(record_len % block_size == 0,
+                   "Buffer is an even multiple of block size");
+
+      const size_t blocks = record_len / block_size;
+
+      BOTAN_ASSERT(blocks > 0, "At least one ciphertext block");
+
+      byte* buf = record_contents;
+
+      secure_vector<byte> last_ciphertext(block_size);
+      copy_mem(&last_ciphertext[0], &buf[0], block_size);
+
+      bc->decrypt(&buf[0]);
+      xor_buf(&buf[0], &cipherstate.cbc_state()[0], block_size);
+
+      secure_vector<byte> last_ciphertext2;
+
+      for(size_t i = 1; i < blocks; ++i)
+         {
+         last_ciphertext2.assign(&buf[block_size*i], &buf[block_size*(i+1)]);
+         bc->decrypt(&buf[block_size*i]);
+         xor_buf(&buf[block_size*i], &last_ciphertext[0], block_size);
+         std::swap(last_ciphertext, last_ciphertext2);
+         }
+
+      cipherstate.cbc_state() = last_ciphertext;
+      }
+   else
+      throw Internal_Error("NULL cipher not supported");
+
+   /*
+   * This is actually padding_length + 1 because both the padding and
+   * padding_length fields are padding from our perspective.
+   */
+   const size_t pad_size =
+      tls_padding_check(cipherstate.cipher_padding_single_byte(),
+                        block_size, record_contents, record_len);
+
+   const size_t mac_pad_iv_size = mac_size + pad_size + iv_size;
+
+   if(record_len < mac_pad_iv_size)
+      throw Decoding_Error("Record sent with invalid length");
+
+   cipherstate.mac()->update_be(record_sequence);
+   cipherstate.mac()->update(static_cast<byte>(record_type));
+
+   if(cipherstate.mac_includes_record_version())
+      {
+      cipherstate.mac()->update(record_version.major_version());
+      cipherstate.mac()->update(record_version.minor_version());
+      }
+
+   const byte* plaintext_block = &record_contents[iv_size];
+   const u16bit plaintext_length = record_len - mac_pad_iv_size;
+
+   cipherstate.mac()->update_be(plaintext_length);
+   cipherstate.mac()->update(plaintext_block, plaintext_length);
+
+   std::vector<byte> mac_buf(mac_size);
+   cipherstate.mac()->final(&mac_buf[0]);
+
+   const size_t mac_offset = record_len - (mac_size + pad_size);
+
+   const bool mac_bad = !same_mem(&record_contents[mac_offset], &mac_buf[0], mac_size);
+
+   const bool padding_bad = (block_size > 0) && (pad_size == 0);
+
+   if(mac_bad || padding_bad)
+      throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure");
+
+   output_record = Record(record_sequence,
+                          record_version,
+                          record_type,
+                          plaintext_block,
+                          plaintext_length);
+
+   return true;
+   }
+
 }
 
 size_t read_record(std::vector<byte>& readbuf,
@@ -403,94 +499,16 @@ size_t read_record(std::vector<byte>& readbuf,
 
    BOTAN_ASSERT(cipherstate, "Have cipherstate for this epoch");
 
-   const size_t block_size = cipherstate->block_size();
-   const size_t iv_size = cipherstate->iv_size();
-   const size_t mac_size = cipherstate->mac_size();
+   const bool ok = decrypt_record(record,
+                                  record_contents,
+                                  record_len,
+                                  record_sequence,
+                                  record_version,
+                                  record_type,
+                                  *cipherstate);
 
-   if(StreamCipher* sc = cipherstate->stream_cipher())
-      {
-      sc->cipher1(record_contents, record_len);
-      }
-   else if(BlockCipher* bc = cipherstate->block_cipher())
-      {
-      BOTAN_ASSERT(record_len % block_size == 0,
-                   "Buffer is an even multiple of block size");
-
-      const size_t blocks = record_len / block_size;
-
-      BOTAN_ASSERT(blocks > 0, "At least one ciphertext block");
-
-      byte* buf = record_contents;
-
-      secure_vector<byte> last_ciphertext(block_size);
-      copy_mem(&last_ciphertext[0], &buf[0], block_size);
-
-      bc->decrypt(&buf[0]);
-      xor_buf(&buf[0], &cipherstate->cbc_state()[0], block_size);
-
-      secure_vector<byte> last_ciphertext2;
-
-      for(size_t i = 1; i < blocks; ++i)
-         {
-         last_ciphertext2.assign(&buf[block_size*i], &buf[block_size*(i+1)]);
-         bc->decrypt(&buf[block_size*i]);
-         xor_buf(&buf[block_size*i], &last_ciphertext[0], block_size);
-         std::swap(last_ciphertext, last_ciphertext2);
-         }
-
-      cipherstate->cbc_state() = last_ciphertext;
-      }
-   else
-      throw Internal_Error("NULL cipher not supported");
-
-   /*
-   * This is actually padding_length + 1 because both the padding and
-   * padding_length fields are padding from our perspective.
-   */
-   const size_t pad_size =
-      tls_padding_check(cipherstate->cipher_padding_single_byte(),
-                        block_size, record_contents, record_len);
-
-   const size_t mac_pad_iv_size = mac_size + pad_size + iv_size;
-
-   if(record_len < mac_pad_iv_size)
-      throw Decoding_Error("Record sent with invalid length");
-
-   cipherstate->mac()->update_be(record_sequence);
-   cipherstate->mac()->update(static_cast<byte>(record_type));
-
-   if(cipherstate->mac_includes_record_version())
-      {
-      cipherstate->mac()->update(record_version.major_version());
-      cipherstate->mac()->update(record_version.minor_version());
-      }
-
-   const byte* plaintext_block = &record_contents[iv_size];
-   const u16bit plaintext_length = record_len - mac_pad_iv_size;
-
-   cipherstate->mac()->update_be(plaintext_length);
-   cipherstate->mac()->update(plaintext_block, plaintext_length);
-
-   std::vector<byte> mac_buf(mac_size);
-   cipherstate->mac()->final(&mac_buf[0]);
-
-   const size_t mac_offset = record_len - (mac_size + pad_size);
-
-   const bool mac_bad = !same_mem(&record_contents[mac_offset], &mac_buf[0], mac_size);
-
-   const bool padding_bad = (block_size > 0) && (pad_size == 0);
-
-   if(mac_bad || padding_bad)
-      throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure");
-
-   if(sequence_numbers)
+   if(ok && sequence_numbers)
       sequence_numbers->read_accept(record_sequence);
-
-   record = Record(record_sequence,
-                   record_version,
-                   record_type,
-                   plaintext_block,
-                   plaintext_length);
 
    readbuf.clear();
    return 0;
