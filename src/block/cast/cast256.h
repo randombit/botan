@@ -27,17 +27,9 @@ class BOTAN_DLL CAST_256 : public Block_Cipher_Fixed_Params<16, 4, 32, 4>
    private:
       void key_schedule(const byte[], size_t);
 
-      static const u32bit KEY_MASK[192];
-      static const byte   KEY_ROT[32];
-
       secure_vector<u32bit> MK;
       secure_vector<byte> RK;
    };
-
-extern const u32bit CAST_SBOX1[256];
-extern const u32bit CAST_SBOX2[256];
-extern const u32bit CAST_SBOX3[256];
-extern const u32bit CAST_SBOX4[256];
 
 }
 

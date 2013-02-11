@@ -31,19 +31,9 @@ class BOTAN_DLL CAST_128 : public Block_Cipher_Fixed_Params<8, 11, 16>
       static void cast_ks(secure_vector<u32bit>& ks,
                           secure_vector<u32bit>& user_key);
 
-      static const u32bit S5[256];
-      static const u32bit S6[256];
-      static const u32bit S7[256];
-      static const u32bit S8[256];
-
       secure_vector<u32bit> MK;
       secure_vector<byte> RK;
    };
-
-extern const u32bit CAST_SBOX1[256];
-extern const u32bit CAST_SBOX2[256];
-extern const u32bit CAST_SBOX3[256];
-extern const u32bit CAST_SBOX4[256];
 
 }
 
