@@ -400,12 +400,7 @@ size_t Channel::received_data(const byte input[], size_t input_size)
       send_alert(Alert(Alert::DECODE_ERROR, true));
       throw;
       }
-   catch(Internal_Error& e)
-      {
-      send_alert(Alert(Alert::INTERNAL_ERROR, true));
-      throw;
-      }
-   catch(std::exception& e)
+   catch(...)
       {
       send_alert(Alert(Alert::INTERNAL_ERROR, true));
       throw;
