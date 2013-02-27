@@ -502,19 +502,19 @@ void AES_192_NI::key_schedule(const byte key[], size_t)
    // Now generate decryption keys
    const __m128i* EK_mm = (const __m128i*)&EK[0];
    __m128i* DK_mm = (__m128i*)&DK[0];
-   _mm_storeu_si128(DK_mm     , EK_mm[12]);
-   _mm_storeu_si128(DK_mm +  1, _mm_aesimc_si128(EK_mm[11]));
-   _mm_storeu_si128(DK_mm +  2, _mm_aesimc_si128(EK_mm[10]));
-   _mm_storeu_si128(DK_mm +  3, _mm_aesimc_si128(EK_mm[9]));
-   _mm_storeu_si128(DK_mm +  4, _mm_aesimc_si128(EK_mm[8]));
-   _mm_storeu_si128(DK_mm +  5, _mm_aesimc_si128(EK_mm[7]));
-   _mm_storeu_si128(DK_mm +  6, _mm_aesimc_si128(EK_mm[6]));
-   _mm_storeu_si128(DK_mm +  7, _mm_aesimc_si128(EK_mm[5]));
-   _mm_storeu_si128(DK_mm +  8, _mm_aesimc_si128(EK_mm[4]));
-   _mm_storeu_si128(DK_mm +  9, _mm_aesimc_si128(EK_mm[3]));
-   _mm_storeu_si128(DK_mm + 10, _mm_aesimc_si128(EK_mm[2]));
-   _mm_storeu_si128(DK_mm + 11, _mm_aesimc_si128(EK_mm[1]));
-   _mm_storeu_si128(DK_mm + 12, EK_mm[0]);
+   _mm_storeu_si128(DK_mm     , _mm_loadu_si128(EK_mm + 12));
+   _mm_storeu_si128(DK_mm +  1, _mm_aesimc_si128(_mm_loadu_si128(EK_mm + 11)));
+   _mm_storeu_si128(DK_mm +  2, _mm_aesimc_si128(_mm_loadu_si128(EK_mm + 10)));
+   _mm_storeu_si128(DK_mm +  3, _mm_aesimc_si128(_mm_loadu_si128(EK_mm + 9)));
+   _mm_storeu_si128(DK_mm +  4, _mm_aesimc_si128(_mm_loadu_si128(EK_mm + 8)));
+   _mm_storeu_si128(DK_mm +  5, _mm_aesimc_si128(_mm_loadu_si128(EK_mm + 7)));
+   _mm_storeu_si128(DK_mm +  6, _mm_aesimc_si128(_mm_loadu_si128(EK_mm + 6)));
+   _mm_storeu_si128(DK_mm +  7, _mm_aesimc_si128(_mm_loadu_si128(EK_mm + 5)));
+   _mm_storeu_si128(DK_mm +  8, _mm_aesimc_si128(_mm_loadu_si128(EK_mm + 4)));
+   _mm_storeu_si128(DK_mm +  9, _mm_aesimc_si128(_mm_loadu_si128(EK_mm + 3)));
+   _mm_storeu_si128(DK_mm + 10, _mm_aesimc_si128(_mm_loadu_si128(EK_mm + 2)));
+   _mm_storeu_si128(DK_mm + 11, _mm_aesimc_si128(_mm_loadu_si128(EK_mm + 1)));
+   _mm_storeu_si128(DK_mm + 12, _mm_loadu_si128(EK_mm + 0));
    }
 
 /*
