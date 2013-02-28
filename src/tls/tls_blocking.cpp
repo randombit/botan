@@ -25,7 +25,7 @@ Blocking_Client::Blocking_Client(std::function<size_t (byte[], size_t)> read_fn,
    m_read_fn(read_fn),
    m_channel(write_fn,
              std::bind(&Blocking_Client::process_data, this, _1, _2, _3),
-             std::bind(&Blocking_Client::handshake_complete, this, _1, _2, _3),
+             std::bind(&Blocking_Client::handshake_complete, this, _1),
              session_manager,
              creds,
              policy,
@@ -35,14 +35,6 @@ Blocking_Client::Blocking_Client(std::function<size_t (byte[], size_t)> read_fn,
              next_protocol)
    {
    }
-
-#if 0
-Blocking_Client::Blocking_Client(std::function<size_t (byte[], size_t)> read_fn,
-                                 std::function<void (const byte[], size_t)> write_fn,
-                                 const TLS_Policy& policy,
-                                 RandomNumberGenerator& rng) :
-   m_read_fn(read_fn)
-#endif
 
 bool Blocking_Client::handshake_complete_cb(const Session& session)
    {

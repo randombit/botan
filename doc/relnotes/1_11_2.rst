@@ -1,14 +1,12 @@
 Version 1.11.2, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* The default TLS policy formerly preferred AES over RC4, and allowed
-  3DES by default. Now the default policy is to negotiate only either
-  AES or RC4, and to prefer RC4.
+* A bug in the release script caused the `botan_version.py` included
+  in :doc:`1.11.1 <1_11_1>` to be invalid, which required a manual
+  edit to fix (:pr:`226`)
 
-* The new filter :cpp:class:`Threaded_Fork` acts like a normal
-  :cpp:class:`Fork,` sending its input to a number of different
-  filters, but each subchain of filters in the fork runs in its own
-  thread. Contributed by Joel Low.
+Memory Zeroization Changes
+""""""""""""""""""""""""""""""""""""""""
 
 * Previously `clear_mem` was implemented by an inlined call to
   `std::memset`. However an optimizing compiler might notice cases
@@ -19,14 +17,31 @@ Version 1.11.2, Not Yet Released
   something like LTO) might still skip the writes. It would be nice if
   there was an automated way to test this.
 
+New Parallel Filter
+""""""""""""""""""""""""""""""""""""""""
+
+* The new filter :cpp:class:`Threaded_Fork` acts like a normal
+  :cpp:class:`Fork,` sending its input to a number of different
+  filters, but each subchain of filters in the fork runs in its own
+  thread. Contributed by Joel Low.
+
+TLS Enhancements and Bug Fixes
+""""""""""""""""""""""""""""""""""""""""
+
+* The default TLS policy formerly preferred AES over RC4, and allowed
+  3DES by default. Now the default policy is to negotiate only either
+  AES or RC4, and to prefer RC4.
+
+* New TLS :cpp:class:`Blocking_Client` provides a thread per
+  connection style API similar to that provided in 1.10
+
+Other API Changes
+""""""""""""""""""""""""""""""""""""""""
+
 * The API of `Credentials_Manager::trusted_certificate_authorities`
   has changed to return a vector of `Certificate_Store*` instead of
   `X509_Certificate`. This allows the list of trusted CAs to be
   more easily updated dynamically or loaded lazily.
-
-* A bug in the release script caused the `botan_version.py` included
-  in :doc:`1.11.1 <1_11_1>` to be invalid, which required a manual
-  edit to fix (:pr:`226`)
 
 * The `asn1_int.h` header was split into `asn1_alt_name.h`,
   `asn1_attribute.h` and `asn1_time.h`.

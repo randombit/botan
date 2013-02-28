@@ -62,9 +62,11 @@ class BOTAN_DLL Policy
       virtual std::vector<std::string> allowed_ecc_curves() const;
 
       /**
-      * Returns a list of signature algorithms we are willing to use,
+      * Returns a list of compression algorithms we are willing to use,
       * in order of preference. Allowed values any value of
       * Compression_Method.
+      *
+      * @note Compression is not currently supported
       */
       virtual std::vector<byte> compression() const;
 

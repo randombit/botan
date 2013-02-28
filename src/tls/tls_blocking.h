@@ -36,12 +36,6 @@ class BOTAN_DLL Blocking_Client
                       std::function<std::string (std::vector<std::string>)> next_protocol =
                         std::function<std::string (std::vector<std::string>)>());
 
-      // Constructor like the 1.10 Client API
-      Blocking_Client(std::function<size_t (byte[], size_t)> read_fn,
-                      std::function<void (const byte[], size_t)> write_fn,
-                      const Policy& policy,
-                      RandomNumberGenerator& rng);
-
       size_t currently_readable() const { return m_plaintext.size(); }
 
       size_t read(byte buf[], size_t buf_len); // blocking read
@@ -70,6 +64,7 @@ class BOTAN_DLL Blocking_Client
       * Can override to get notification of alerts
       */
       virtual void alert_notification(const Alert&) {}
+
    private:
 
       bool handshake_complete_cb(const Session&);
