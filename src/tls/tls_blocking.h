@@ -36,9 +36,21 @@ class BOTAN_DLL Blocking_Client
                       std::function<std::string (std::vector<std::string>)> next_protocol =
                         std::function<std::string (std::vector<std::string>)>());
 
-      size_t currently_readable() const { return m_plaintext.size(); }
+      /**
+      * Completes full handshake then returns
+      */
+      void do_handshake();
 
-      size_t read(byte buf[], size_t buf_len); // blocking read
+      /**
+      * Number of bytes pending read in the plaintext buffer (bytes
+      * readable without blocking)
+      */
+      size_t pending() const { return m_plaintext.size(); }
+
+      /**
+      * Blocking read, will return at least 1 byte or 0 on connection close
+      */
+      size_t read(byte buf[], size_t buf_len);
 
       void write(const byte buf[], size_t buf_len) { m_channel.send(buf, buf_len); }
 
