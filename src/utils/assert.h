@@ -46,6 +46,19 @@ void assertion_failure(const char* expr_str,
    } while(0)
 
 /**
+* Assert that expr1 (if true) implies expr2 is also true
+*/
+#define BOTAN_ASSERT_IMPLICATION(expr1, expr2, msg)        \
+   do {                                                    \
+     if((expr1) && !(expr2))                               \
+       Botan::assertion_failure(#expr1 " implies " #expr2, \
+                                msg,                       \
+                                  __func__,                \
+                                  __FILE__,                \
+                                  __LINE__);               \
+   } while(0)
+
+/**
 * Assert that a pointer is not null
 */
 #define BOTAN_ASSERT_NONNULL(ptr)                          \
