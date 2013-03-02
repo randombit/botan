@@ -49,7 +49,7 @@ Build The Windows Installer
 
 On Windows, run ``configure.py`` to setup a build::
 
- $ python ./configure.py --cc=msvc --cpu=$ARCH --enable-ssse3
+ $ python ./configure.py --cc=msvc --cpu=$ARCH --enable-ssse3 --distribution-info=unmodified
 
 The ``--enable-ssse3`` looks unsafe, but in fact under Visual C++ we
 do not compile with any special CPU specific flags, so this merely has

@@ -8,6 +8,9 @@ be added to the list, email the development list.
 Open Source Software
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* `BIND 10 <http://www.isc.org/bind10>`_ the new version of the BIND
+   DNS server, uses botan internally.
+
 * `SoftHSM <http://trac.opendnssec.org/wiki/SoftHSM>`_ an open sourced
   software PKCS #11 implementation, which is used as part of the
   `OpenDNSSEC <http://www.opendnssec.org>`_ project.
