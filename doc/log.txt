@@ -7,7 +7,7 @@ Release Notes
 Series 1.10
 ----------------------------------------
 
-Version 1.10.5, Not Yet Released
+Version 1.10.5, 2013-03-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * A potential crash in the AES-NI implementation of the AES-192 key
