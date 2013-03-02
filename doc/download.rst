@@ -25,9 +25,9 @@ Windows Installer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Windows installers for use with Visual C++ 2010
-:installer_x86_32:`1.10.3` (:installer_sig_x86_32:`sig <1.10.3>`)
+:installer_x86_32:`1.10.5` (:installer_sig_x86_32:`sig <1.10.5>`)
 and
-:installer_x86_64:`1.10.3` (:installer_sig_x86_64:`sig <1.10.3>`)
+:installer_x86_64:`1.10.5` (:installer_sig_x86_64:`sig <1.10.5>`)
 are also available.
 
 Current Development Series (1.11)
