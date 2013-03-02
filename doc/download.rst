@@ -17,9 +17,9 @@ Current Stable Series (1.10)
 ----------------------------------------
 
 The latest version of the current stable series, from branch
-``net.randombit.botan.1_10``, is :doc:`relnotes/1_10_4`:
-:tgz:`1.10.4` (:tgz_sig:`sig <1.10.4>`),
-:tbz:`1.10.4` (:tbz_sig:`sig <1.10.4>`)
+``net.randombit.botan.1_10``, is :doc:`relnotes/1_10_5`:
+:tgz:`1.10.5` (:tgz_sig:`sig <1.10.5>`),
+:tbz:`1.10.5` (:tbz_sig:`sig <1.10.5>`)
 
 Windows Installer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
