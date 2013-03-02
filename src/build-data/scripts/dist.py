@@ -83,15 +83,16 @@ def datestamp(db, rev_id):
     logging.info('Could not retreive date for %s' % (rev_id))
     return 0
 
-def gpg_sign(file, keyid):
-    logging.info('Signing %s using PGP id %s' % (file, keyid))
+def gpg_sign(keyid, files):
+    for filename in files:
+        logging.info('Signing %s using PGP id %s' % (filename, keyid))
 
-    gpg = subprocess.Popen(['gpg', '--armor', '--detach-sign',
-                            '--local-user', keyid, file],
-                           stdout=subprocess.PIPE,
-                           stderr=subprocess.PIPE)
+        gpg = subprocess.Popen(['gpg', '--armor', '--detach-sign',
+                                '--local-user', keyid, filename],
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
 
-    check_subprocess_results(gpg, 'gpg')
+        check_subprocess_results(gpg, 'gpg')
 
 def parse_args(args):
     parser = optparse.OptionParser()
@@ -204,16 +205,15 @@ def main(args = None):
     archive = tarfile.open(output_tgz, 'w:gz')
     archive.add(output_basename)
     archive.close()
-    if options.pgp_key_id != '':
-        gpg_sign(output_tgz, options.pgp_key_id)
 
     remove_file_if_exists(output_tbz)
     remove_file_if_exists(output_tbz + '.asc')
     archive = tarfile.open(output_tbz, 'w:bz2')
     archive.add(output_basename)
     archive.close()
+
     if options.pgp_key_id != '':
-        gpg_sign(output_tbz, options.pgp_key_id)
+        gpg_sign(options.pgp_key_id, [output_tbz, output_tgz])
 
     shutil.rmtree(output_basename)
 
