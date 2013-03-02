@@ -61,7 +61,6 @@ class BOTAN_DLL Session_Manager
       * immediately by load_from_* will result in a successful lookup.
       *
       * @param session to save
-      * @param port the protocol port (if known)
       */
       virtual void save(const Session& session) = 0;
 

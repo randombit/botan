@@ -129,7 +129,7 @@ class Record
 * @param msg_type is the type of the message (handshake, alert, ...)
 * @param msg is the plaintext message
 * @param msg_length is the length of msg
-* @param msg_sequence_number is the sequence number
+* @param msg_sequence is the sequence number
 * @param version is the protocol version
 * @param cipherstate is the writing cipher state
 * @param rng is a random number generator
