@@ -64,11 +64,11 @@ extlinks = {
     'tbz': (files_dir + '/Botan-%s.tbz', 'tar/bzip for '),
     'tbz_sig': (files_dir + '/Botan-%s.tbz.asc', 'tar/bzip sig '),
 
-    'installer_x86_32': (files_dir + '/win32/botan-%s_x86_32.exe', 'x86-32 '),
-    'installer_x86_64': (files_dir + '/win32/botan-%s_x86_64.exe', 'x86-64 '),
+    'installer_x86_32': (files_dir + '/win32/botan-%s-x86_32.exe', 'x86-32 '),
+    'installer_x86_64': (files_dir + '/win32/botan-%s-x86_64.exe', 'x86-64 '),
 
-    'installer_sig_x86_32': (files_dir + '/win32/botan-%s_x86_32.exe.asc', None),
-    'installer_sig_x86_64': (files_dir + '/win32/botan-%s_x86_64.exe.asc', None),
+    'installer_sig_x86_32': (files_dir + '/win32/botan-%s-x86_32.exe.asc', None),
+    'installer_sig_x86_64': (files_dir + '/win32/botan-%s-x86_64.exe.asc', None),
 }
 
 source_suffix = '.rst'
