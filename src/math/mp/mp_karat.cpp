@@ -45,7 +45,7 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
 
    clear_mem(workspace, 2*N);
 
-   if(cmp0 && cmp1)
+   //if(cmp0 && cmp1)
       {
       if(cmp0 > 0)
          bigint_sub3(z0, x0, N2, x1, N2);
@@ -122,7 +122,7 @@ void karatsuba_sqr(word z[], const word x[], size_t N, word workspace[])
 
    clear_mem(workspace, 2*N);
 
-   if(cmp)
+   //if(cmp)
       {
       if(cmp > 0)
          bigint_sub3(z0, x0, N2, x1, N2);
