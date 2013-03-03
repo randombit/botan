@@ -1,4 +1,4 @@
-Version 1.11.2, Not Yet Released
+Version 1.11.2, 2013-03-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * A bug in the release script caused the `botan_version.py` included
