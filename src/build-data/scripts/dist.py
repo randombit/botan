@@ -97,7 +97,7 @@ def gpg_sign(keyid, passphrase_file, files):
         cmd = ['gpg', '--batch', '--armor', '--detach-sign', '--local-user', keyid, filename]
 
         if passphrase_file != None:
-            gpg += ['--passphrase-file', passphrase_file]
+            cmd[1:1] = ['--passphrase-file', passphrase_file]
 
         logging.debug('Running %s' % (' '.join(cmd)))
 
@@ -127,6 +127,9 @@ def parse_args(args):
                       default=os.getenv('BOTAN_MTN_DB', ''),
                       help='Set monotone db (default \'%default\')')
 
+    parser.add_option('--print-output-names', action='store_true',
+                      help='Print output archive filenames to stdout')
+
     parser.add_option('--archive-types', metavar='LIST', default='tbz,tgz',
                       help='Set archive types to generate (default %default)')
 
@@ -135,7 +138,7 @@ def parse_args(args):
                       help='PGP signing key (default %default)')
 
     parser.add_option('--pgp-passphrase-file', metavar='FILE',
-                      default=None
+                      default=None,
                       help='PGP signing key passphrase file')
 
     return parser.parse_args(args)
@@ -160,7 +163,7 @@ def main(args = None):
             return logging.ERROR
         return logging.INFO
 
-    logging.basicConfig(stream = sys.stdout,
+    logging.basicConfig(stream = sys.stderr,
                         format = '%(levelname) 7s: %(message)s',
                         level = log_level())
 
@@ -304,10 +307,14 @@ def main(args = None):
 
         output_files.append(output_archive)
 
+    shutil.rmtree(output_basename)
+
     if options.pgp_key_id != '':
         gpg_sign(options.pgp_key_id, options.pgp_passphrase_file, output_files)
 
-    shutil.rmtree(output_basename)
+    if options.print_output_names:
+        for output_file in output_files:
+            print output_file
 
     return 0
 
