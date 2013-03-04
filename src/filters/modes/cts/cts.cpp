@@ -109,6 +109,7 @@ void CTS_Encryption::end_msg()
    clear_mem(&buffer[position], buffer.size() - position);
    encrypt(&buffer[cipher->block_size()]);
    send(cn, position - cipher->block_size());
+   position = 0;
    }
 
 /*
@@ -216,6 +217,7 @@ void CTS_Decryption::end_msg()
    xor_buf(&temp[0], &state[0], cipher->block_size());
    send(temp, cipher->block_size());
    send(xn, position - cipher->block_size());
+   position = 0;
    }
 
 }
