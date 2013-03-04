@@ -86,7 +86,7 @@ Post Release Process
 
 Immediately after the new release is created, update
 ``botan_version.py`` and ``readme.txt`` once again, incrementing the
-version number and removing the release dates.
+version number and removing the release dates in ``readme.txt``.
 
 Add a new release notes file for the next release, including a new
 entry in ``relnotes/index.rst``.
