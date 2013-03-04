@@ -193,17 +193,17 @@ def main(args = None):
 
     def output_name(args):
         if args[0] == 'snapshot':
-            datestamp = datetime.date.today().isoformat()
+            datestamp = datetime.date.today().isoformat().replace('-', '')
 
             def snapshot_name(branch):
                 if branch == 'net.randombit.botan':
-                    return 'mainline'
+                    return 'trunk'
                 elif branch == 'net.randombit.botan.1_10':
                     return '1.10'
                 else:
                     return branch
 
-            return 'Botan-%s-snapshot-%s' % (snapshot_name(args[1]), datestamp)
+            return 'botan-%s-snapshot-%s' % (snapshot_name(args[1]), datestamp)
         else:
             return 'Botan-' + args[0]
 
@@ -237,14 +237,14 @@ def main(args = None):
         def content_rewriter():
             for line in contents:
                 if line == 'release_vc_rev = None\n':
-                    yield 'release_vc_rev = "mtn:%s"\n' % (rev_id)
+                    yield 'release_vc_rev = \'mtn:%s\'\n' % (rev_id)
                 elif line == 'release_datestamp = 0\n':
                     yield 'release_datestamp = %d\n' % (datestamp(options.mtn_db, rev_id))
-                elif line == "release_type = \'unreleased\'":
+                elif line == "release_type = \'unreleased\'\n":
                     if args[0] == 'snapshot':
-                        yield 'release_type = "snapshot"'
+                        yield "release_type = 'snapshot'\n"
                     else:
-                        yield 'release_type = "released"'
+                        yield "release_type = 'released'\n"
                 else:
                     yield line
 
