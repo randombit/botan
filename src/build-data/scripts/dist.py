@@ -237,9 +237,14 @@ def main(args = None):
         def content_rewriter():
             for line in contents:
                 if line == 'release_vc_rev = None\n':
-                    yield 'release_vc_rev = \'mtn:%s\'\n' % (rev_id)
+                    yield 'release_vc_rev = "mtn:%s"\n' % (rev_id)
                 elif line == 'release_datestamp = 0\n':
                     yield 'release_datestamp = %d\n' % (datestamp(options.mtn_db, rev_id))
+                elif line == "release_type = \'unreleased\'":
+                    if args[0] == 'snapshot':
+                        yield 'release_type = "snapshot"'
+                    else:
+                        yield 'release_type = "released"'
                 else:
                     yield line
 

@@ -77,6 +77,8 @@ class BuildConfigurationInformation(object):
     version_patch = botan_version.release_patch
     version_so_rev = botan_version.release_so_abi_rev
 
+    version_release_type = botan_version.release_type
+
     version_datestamp = botan_version.release_datestamp
 
     version_vc_rev = botan_version.release_vc_rev
@@ -1095,6 +1097,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'version_vc_rev': build_config.version_vc_rev,
         'so_abi_rev':     build_config.version_so_rev,
         'version':        build_config.version_string,
+
+        'release_type':   build_config.version_release_type,
 
         'distribution_info': options.distribution_info,
 

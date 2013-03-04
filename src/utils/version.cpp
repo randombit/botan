@@ -1,6 +1,6 @@
 /*
 * Version Information
-* (C) 1999-2011 Jack Lloyd
+* (C) 1999-2013 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -24,17 +24,20 @@ std::string version_string()
 #define QUOTE(name) #name
 #define STR(macro) QUOTE(macro)
 
+   /*
+   It is intentional that this string is a compile-time constant;
+   it makes it much easier to find in binaries.
+   */
+
    return "Botan " STR(BOTAN_VERSION_MAJOR) "."
                    STR(BOTAN_VERSION_MINOR) "."
                    STR(BOTAN_VERSION_PATCH) " ("
-
-#if (BOTAN_VERSION_DATESTAMP == 0)
-      "unreleased version built " __DATE__
-#else
-      "released " STR(BOTAN_VERSION_DATESTAMP)
+                   BOTAN_VERSION_RELEASE_TYPE
+#if (BOTAN_VERSION_DATESTAMP != 0)
+                   ", dated " STR(BOTAN_VERSION_DATESTAMP)
 #endif
-      ", revision " BOTAN_VERSION_VC_REVISION
-      ", distribution " BOTAN_DISTRIBUTION_INFO ")";
+                   ", revision " BOTAN_VERSION_VC_REVISION
+                   ", distribution " BOTAN_DISTRIBUTION_INFO ")";
 
 #undef STR
 #undef QUOTE

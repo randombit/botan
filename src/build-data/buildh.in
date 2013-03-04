@@ -17,6 +17,8 @@
 #define BOTAN_VERSION_PATCH %{version_patch}
 #define BOTAN_VERSION_DATESTAMP %{version_datestamp}
 
+#define BOTAN_VERSION_RELEASE_TYPE "%{release_type}"
+
 #define BOTAN_VERSION_VC_REVISION "%{version_vc_rev}"
 
 #define BOTAN_DISTRIBUTION_INFO "%{distribution_info}"
