@@ -106,8 +106,12 @@ def parse_args(args):
         "usage: %prog [options] <version #>\n" +
         "       %prog [options] snapshot <branch>"
         )
+
     parser.add_option('--verbose', action='store_true',
                       default=False, help='Extra debug output')
+
+    parser.add_option('--quiet', action='store_true',
+                      default=False, help='Only show errors')
 
     parser.add_option('--output-dir', metavar='DIR',
                       default='.',
@@ -142,6 +146,8 @@ def main(args = None):
     def log_level():
         if options.verbose:
             return logging.DEBUG
+        if options.quiet:
+            return logging.ERROR
         return logging.INFO
 
     logging.basicConfig(stream = sys.stdout,
