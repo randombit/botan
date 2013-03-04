@@ -90,12 +90,18 @@ def datestamp(db, rev_id):
     logging.info('Could not retreive date for %s' % (rev_id))
     return 0
 
-def gpg_sign(keyid, files):
+def gpg_sign(keyid, passphrase_file, files):
     for filename in files:
         logging.info('Signing %s using PGP id %s' % (filename, keyid))
 
-        gpg = subprocess.Popen(['gpg', '--armor', '--detach-sign',
-                                '--local-user', keyid, filename],
+        cmd = ['gpg', '--batch', '--armor', '--detach-sign', '--local-user', keyid, filename]
+
+        if passphrase_file != None:
+            gpg += ['--passphrase-file', passphrase_file]
+
+        logging.debug('Running %s' % (' '.join(cmd)))
+
+        gpg = subprocess.Popen(cmd,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
 
@@ -127,6 +133,10 @@ def parse_args(args):
     parser.add_option('--pgp-key-id', metavar='KEYID',
                       default='EFBADFBC',
                       help='PGP signing key (default %default)')
+
+    parser.add_option('--pgp-passphrase-file', metavar='FILE',
+                      default=None
+                      help='PGP signing key passphrase file')
 
     return parser.parse_args(args)
 
@@ -295,7 +305,7 @@ def main(args = None):
         output_files.append(output_archive)
 
     if options.pgp_key_id != '':
-        gpg_sign(options.pgp_key_id, output_files)
+        gpg_sign(options.pgp_key_id, options.pgp_passphrase_file, output_files)
 
     shutil.rmtree(output_basename)
 
