@@ -1,3 +1,4 @@
 Version 1.11.3, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* New functions for symmetric encryption are included in cryptobox.h
