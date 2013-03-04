@@ -18,6 +18,7 @@ import shutil
 import subprocess
 import sys
 import tarfile
+import datetime
 
 def check_subprocess_results(subproc, name):
     (stdout, stderr) = subproc.communicate()
@@ -38,7 +39,11 @@ def check_subprocess_results(subproc, name):
     return stdout
 
 def run_monotone(db, args):
-    mtn = subprocess.Popen(['mtn', '--db', db] + args,
+    cmd = ['mtn', '--db', db] + args
+
+    logging.debug('Running %s' % (' '.join(cmd)))
+
+    mtn = subprocess.Popen(cmd,
                            stdout=subprocess.PIPE,
                            stderr=subprocess.PIPE)
 
@@ -60,7 +65,7 @@ def get_certs(db, rev_id):
         pairs = zip(tokens[::2], tokens[1::2])
         current_cert = {}
         for pair in pairs:
-            if pair[0] == 'key':
+            if pair[0] == 'trust':
                 if usable_cert(current_cert):
                     name = current_cert['name']
                     value = current_cert['value']
@@ -78,7 +83,9 @@ def datestamp(db, rev_id):
     certs = get_certs(db, rev_id)
 
     if 'date' in certs:
-        return int(certs['date'].replace('-','')[0:8])
+        datestamp = int(certs['date'].replace('-','')[0:8])
+        logging.info('Using datestamp %s for rev %s' % (datestamp, rev_id))
+        return datestamp
 
     logging.info('Could not retreive date for %s' % (rev_id))
     return 0
@@ -95,7 +102,10 @@ def gpg_sign(keyid, files):
         check_subprocess_results(gpg, 'gpg')
 
 def parse_args(args):
-    parser = optparse.OptionParser()
+    parser = optparse.OptionParser(
+        "usage: %prog [options] <version #>\n" +
+        "       %prog [options] snapshot <branch>"
+        )
     parser.add_option('--verbose', action='store_true',
                       default=False, help='Extra debug output')
 
@@ -106,6 +116,9 @@ def parse_args(args):
     parser.add_option('--mtn-db', metavar='DB',
                       default=os.getenv('BOTAN_MTN_DB', ''),
                       help='Set monotone db (default \'%default\')')
+
+    parser.add_option('--archive-types', metavar='LIST', default='tbz,tgz',
+                      help='Set archive types to generate (default %default)')
 
     parser.add_option('--pgp-key-id', metavar='KEYID',
                       default='EFBADFBC',
@@ -143,31 +156,73 @@ def main(args = None):
         logging.error('Monotone db %s not found' % (options.mtn_db))
         return 1
 
-    if len(args) != 1:
-        logging.error('Usage: %s version' % (sys.argv[0]))
+    if len(args) == 0 or len(args) >= 3:
+        logging.error('Usage error, try --help')
         return 1
 
-    version = args[0]
+    # Sanity check arguments
 
-    rev_id = run_monotone(options.mtn_db,
-                          ['automate', 'select', 't:' + version])
+    if args[0] == 'snapshot':
+
+        if len(args) == 1:
+            logging.error('Missing branch name for snapshot command')
+            return 1
+
+        logging.info('Creating snapshot release from branch %s', args[1])
+
+    elif len(args) == 1:
+        try:
+            logging.info('Creating release for version %s' % (args[0]))
+
+            (major,minor,patch) = map(int, args[0].split('.'))
+
+            assert args[0] == '%d.%d.%d' % (major,minor,patch)
+        except:
+            logging.error('Invalid version number %s' % (args[0]))
+            return 1
+
+    else:
+        logging.error('Usage error, try --help')
+        return 1
+
+    def selector(args):
+        if args[0] == 'snapshot':
+            return 'h:' + args[1]
+        else:
+            return 't:' + args[0]
+
+    def output_name(args):
+        if args[0] == 'snapshot':
+            datestamp = datetime.date.today().isoformat()
+
+            def snapshot_name(branch):
+                if branch == 'net.randombit.botan':
+                    return 'mainline'
+                elif branch == 'net.randombit.botan.1_10':
+                    return '1.10'
+                else:
+                    return branch
+
+            return 'Botan-%s-snapshot-%s' % (snapshot_name(args[1]), datestamp)
+        else:
+            return 'Botan-' + args[0]
+
+    rev_id = run_monotone(options.mtn_db, ['automate', 'select', selector(args)])
 
     if rev_id == '':
         logging.error('No revision for %s found' % (version))
         return 2
 
-    output_basename = os.path.join(options.output_dir, 'Botan-' + version)
-
-    output_tgz = output_basename + '.tgz'
-    output_tbz = output_basename + '.tbz'
-
     logging.info('Found revision id %s' % (rev_id))
 
+    output_basename = os.path.join(options.output_dir, output_name(args))
+
     if os.access(output_basename, os.X_OK):
+        logging.debug('Removing existing ouptut dir %s' % (output_basename))
         shutil.rmtree(output_basename)
 
     run_monotone(options.mtn_db,
-                 ['checkout', '-r', rev_id, output_basename])
+                 ['checkout', '--quiet', '-r', rev_id, output_basename])
 
     shutil.rmtree(os.path.join(output_basename, '_MTN'))
     remove_file_if_exists(os.path.join(output_basename, '.mtn-ignore'))
@@ -200,20 +255,36 @@ def main(args = None):
             logging.error('Creating dir %s failed %s' % (options.output_dir, e))
             return 2
 
-    remove_file_if_exists(output_tgz)
-    remove_file_if_exists(output_tgz + '.asc')
-    archive = tarfile.open(output_tgz, 'w:gz')
-    archive.add(output_basename)
-    archive.close()
+    output_files = []
 
-    remove_file_if_exists(output_tbz)
-    remove_file_if_exists(output_tbz + '.asc')
-    archive = tarfile.open(output_tbz, 'w:bz2')
-    archive.add(output_basename)
-    archive.close()
+    archives = options.archive_types.split(',') if options.archive_types != '' else []
+
+    for archive in archives:
+        logging.debug('Writing archive type "%s"' % (archive))
+
+        output_archive = output_basename + '.' + archive
+
+        remove_file_if_exists(output_archive)
+        remove_file_if_exists(output_archive + '.asc')
+
+        if archive in ['tgz', 'tbz']:
+
+            def write_mode():
+                if archive == 'tgz':
+                    return 'w:gz'
+                elif archive == 'tbz':
+                    return 'w:bz2'
+
+            archive = tarfile.open(output_archive, write_mode())
+            archive.add(output_basename)
+            archive.close()
+        else:
+            raise Exception('Unknown archive type "%s"' % (archive))
+
+        output_files.append(output_archive)
 
     if options.pgp_key_id != '':
-        gpg_sign(options.pgp_key_id, [output_tbz, output_tgz])
+        gpg_sign(options.pgp_key_id, output_files)
 
     shutil.rmtree(output_basename)
 
