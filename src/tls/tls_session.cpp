@@ -10,8 +10,7 @@
 #include <botan/ber_dec.h>
 #include <botan/asn1_str.h>
 #include <botan/pem.h>
-#include <botan/lookup.h>
-#include <botan/loadstor.h>
+#include <botan/cryptobox.h>
 #include <memory>
 
 namespace Botan {
@@ -147,64 +146,13 @@ std::chrono::seconds Session::session_age() const
       std::chrono::system_clock::now() - m_start_time);
    }
 
-namespace {
-
-const u32bit SESSION_CRYPTO_MAGIC = 0x571B0E4F;
-const std::string SESSION_CRYPTO_CIPHER = "AES-256/CBC";
-const std::string SESSION_CRYPTO_MAC = "HMAC(SHA-256)";
-const std::string SESSION_CRYPTO_KDF = "KDF2(SHA-256)";
-
-const size_t MAGIC_LENGTH = 4;
-const size_t KEY_KDF_SALT_LENGTH = 10;
-const size_t MAC_KEY_LENGTH = 32;
-const size_t CIPHER_KEY_LENGTH = 32;
-const size_t CIPHER_IV_LENGTH = 16;
-const size_t MAC_OUTPUT_LENGTH = 32;
-
-}
-
 std::vector<byte>
 Session::encrypt(const SymmetricKey& master_key,
                  RandomNumberGenerator& rng) const
    {
-   std::unique_ptr<KDF> kdf(get_kdf(SESSION_CRYPTO_KDF));
+   const auto der = this->DER_encode();
 
-   const secure_vector<byte> cipher_key_salt =
-      rng.random_vec(KEY_KDF_SALT_LENGTH);
-
-   const secure_vector<byte> mac_key_salt =
-      rng.random_vec(KEY_KDF_SALT_LENGTH);
-
-   SymmetricKey cipher_key =
-      kdf->derive_key(CIPHER_KEY_LENGTH,
-                      master_key.bits_of(),
-                      cipher_key_salt);
-
-   SymmetricKey mac_key =
-      kdf->derive_key(MAC_KEY_LENGTH,
-                      master_key.bits_of(),
-                      mac_key_salt);
-
-   InitializationVector cipher_iv(rng, 16);
-
-   std::unique_ptr<MessageAuthenticationCode> mac(get_mac(SESSION_CRYPTO_MAC));
-   mac->set_key(mac_key);
-
-   Pipe pipe(get_cipher(SESSION_CRYPTO_CIPHER, cipher_key, cipher_iv, ENCRYPTION));
-   pipe.process_msg(this->DER_encode());
-   secure_vector<byte> ctext = pipe.read_all(0);
-
-   std::vector<byte> out(MAGIC_LENGTH);
-   store_be(SESSION_CRYPTO_MAGIC, &out[0]);
-   out += cipher_key_salt;
-   out += mac_key_salt;
-   out += cipher_iv.bits_of();
-   out += ctext;
-
-   mac->update(out);
-
-   out += mac->final();
-   return out;
+   return CryptoBox::encrypt(&der[0], der.size(), master_key, rng);
    }
 
 Session Session::decrypt(const byte buf[], size_t buf_len,
@@ -212,52 +160,7 @@ Session Session::decrypt(const byte buf[], size_t buf_len,
    {
    try
       {
-      const size_t MIN_CTEXT_SIZE = 4 * 16; // due to 48 byte master secret
-
-      if(buf_len < (MAGIC_LENGTH +
-                    2 * KEY_KDF_SALT_LENGTH +
-                    CIPHER_IV_LENGTH +
-                    MIN_CTEXT_SIZE +
-                    MAC_OUTPUT_LENGTH))
-         throw Decoding_Error("Encrypted TLS session too short to be valid");
-
-      if(load_be<u32bit>(buf, 0) != SESSION_CRYPTO_MAGIC)
-         throw Decoding_Error("Unknown header value in encrypted session");
-
-      std::unique_ptr<KDF> kdf(get_kdf(SESSION_CRYPTO_KDF));
-
-      const byte* cipher_key_salt = &buf[MAGIC_LENGTH];
-
-      const byte* mac_key_salt = &buf[MAGIC_LENGTH + KEY_KDF_SALT_LENGTH];
-
-      SymmetricKey mac_key =
-         kdf->derive_key(MAC_KEY_LENGTH,
-                         master_key.bits_of(),
-                         mac_key_salt, KEY_KDF_SALT_LENGTH);
-
-      std::unique_ptr<MessageAuthenticationCode> mac(get_mac(SESSION_CRYPTO_MAC));
-      mac->set_key(mac_key);
-
-      mac->update(&buf[0], buf_len - MAC_OUTPUT_LENGTH);
-      secure_vector<byte> computed_mac = mac->final();
-
-      if(!same_mem(&buf[buf_len - MAC_OUTPUT_LENGTH], &computed_mac[0], computed_mac.size()))
-         throw Decoding_Error("MAC verification failed for encrypted session");
-
-      SymmetricKey cipher_key =
-         kdf->derive_key(CIPHER_KEY_LENGTH,
-                         master_key.bits_of(),
-                         cipher_key_salt, KEY_KDF_SALT_LENGTH);
-
-      InitializationVector cipher_iv(&buf[MAGIC_LENGTH+2*KEY_KDF_SALT_LENGTH],
-                                     CIPHER_IV_LENGTH);
-
-      const size_t CTEXT_OFFSET = MAGIC_LENGTH + 2 * KEY_KDF_SALT_LENGTH + CIPHER_IV_LENGTH;
-
-      Pipe pipe(get_cipher(SESSION_CRYPTO_CIPHER, cipher_key, cipher_iv, DECRYPTION));
-      pipe.process_msg(&buf[CTEXT_OFFSET],
-                       buf_len - (MAC_OUTPUT_LENGTH + CTEXT_OFFSET));
-      secure_vector<byte> ber = pipe.read_all();
+      const auto ber = CryptoBox::decrypt(buf, buf_len, master_key);
 
       return Session(&ber[0], ber.size());
       }

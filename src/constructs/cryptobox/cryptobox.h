@@ -10,6 +10,7 @@
 
 #include <string>
 #include <botan/rng.h>
+#include <botan/symkey.h>
 
 namespace Botan {
 
@@ -29,6 +30,7 @@ BOTAN_DLL std::string encrypt(const byte input[], size_t input_len,
                               const std::string& passphrase,
                               RandomNumberGenerator& rng);
 
+
 /**
 * Decrypt a message encrypted with CryptoBox::encrypt
 * @param input the input data
@@ -45,6 +47,29 @@ BOTAN_DLL std::string decrypt(const byte input[], size_t input_len,
 */
 BOTAN_DLL std::string decrypt(const std::string& input,
                               const std::string& passphrase);
+
+/**
+* Encrypt a message using a shared key
+* @param input the input data
+* @param input_len the length of input in bytes
+* @param key the key used to encrypt the message
+* @param rng a ref to a random number generator, such as AutoSeeded_RNG
+*/
+BOTAN_DLL std::vector<byte>
+encrypt(const byte input[], size_t input_len,
+        const SymmetricKey& key,
+        RandomNumberGenerator& rng);
+
+/**
+* Encrypt a message using a shared key
+* @param input the input data
+* @param input_len the length of input in bytes
+* @param key the key used to encrypt the message
+* @param rng a ref to a random number generator, such as AutoSeeded_RNG
+*/
+BOTAN_DLL secure_vector<byte>
+decrypt(const byte input[], size_t input_len,
+        const SymmetricKey& key);
 
 }
 
