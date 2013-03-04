@@ -10,7 +10,19 @@ Supported Algorithms
 Botan provides a number of different cryptographic algorithms and
 primitives, including:
 
-* Public key cryptography
+TLS/Public Key Infrastructure
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  * SSL/TLS (from SSL v3 to TLS v1.2), including using preshared
+    keys (TLS-PSK) or passwords (TLS-SRP)
+  * X.509 certificates (including generating new self-signed and CA
+    certs) and CRLs
+  * Certificate path validation
+  * PKCS #10 certificate requests (creation and certificate issue)
+
+
+Public Key Cryptography
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Encryption algorithms RSA, ElGamal, DLIES (padding schemes OAEP,
     PKCS #1 v1.5)
@@ -19,7 +31,8 @@ primitives, including:
     X9.31)
   * Key agreement techniques Diffie-Hellman and ECDH
 
-* Hash functions
+Hash functions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * NIST hashes: SHA-1, SHA-224, SHA-256, SHA-384, and SHA-512
   * SHA-3 (Keccak) and SHA-3 candidates Skein-512 and Blue Midnight Wish-512
@@ -30,7 +43,8 @@ primitives, including:
   * Obsolete or insecure hashes MD5, MD4, MD2
   * Non-cryptographic checksums Adler32, CRC24, CRC32
 
-* Block ciphers
+Block ciphers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * AES (Rijndael) and AES candidates Serpent, Twofish, MARS, CAST-256, RC6
   * DES, and variants 3DES and DESX
@@ -41,22 +55,24 @@ primitives, including:
   * Block cipher modes ECB, CBC, CBC/CTS, CFB, OFB, CTR, XTS and
     authenticated cipher mode EAX
 
-* Stream ciphers ARC4, Salsa20/XSalsa20, Turing, and WiderWake4+1
+Stream Ciphers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Authentication codes HMAC, CMAC (aka OMAC1), CBC-MAC, ANSI X9.19
-  DES-MAC, and the protocol-specific SSLv3 authentication code
+ * RC4, Salsa20/XSalsa20
+ * Obsolete designs Turing and WiderWake4+1
 
-* Public Key Infrastructure
+Authentication Codes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-  * X.509 certificates (including generating new self-signed and CA
-    certs) and CRLs
-  * Certificate path validation
-  * PKCS #10 certificate requests (creation and certificate issue)
+ * HMAC, CMAC (aka OMAC1)
+ * Obsolete designs CBC-MAC, ANSI X9.19 DES-MAC, and the
+   protocol-specific SSLv3 authentication code
 
-* Other cryptographic utility functions including
+Other Useful Things
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-  * Key derivation functions for passwords: PBKDF1 (PKCS #5 v1.5),
-    PBKDF2 (PKCS #5 v2.0), OpenPGP S2K (RFC 2440)
+  * Key derivation functions for passwords, including PBKDF2
+  * Password hashing functions, including bcrypt
   * General key derivation functions KDF1 and KDF2 from IEEE 1363
   * PRFs from ANSI X9.42, SSL v3.0, TLS v1.0
 
