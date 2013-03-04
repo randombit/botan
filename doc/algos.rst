@@ -72,20 +72,22 @@ were evaluated when making this list: security, standardization,
 patent status, support by other implementations, and efficiency (in
 roughly that order).
 
-It is intended as a set of simple guidelines for developers, and
-nothing more.  It's entirely possible that there are algorithms that
-will turn out to be more secure than the ones listed, but the
-algorithms listed here are (currently) thought to be safe.
+If your data is in motion, strongly consider using :doc:`tls` as a
+pre built, already standard and well studied protocol.
 
-* Block ciphers: AES or Serpent in CBC, CTR, or XTS mode
+Otherwise, if you simply *must* do something custom, use:
 
-* Hash functions: SHA-256, SHA-512
+* Block ciphers: AES or Serpent in EAX mode, or in CBC, CTR, or XTS
+  mode with a message authentication code.
 
-* MACs: HMAC with any recommended hash function
+* General hash functions: SHA-256, SHA-512, SHA-3
 
-* Public Key Encryption: RSA with "EME1(SHA-256)"
+* Message authentication: HMAC with SHA-256
 
-* Public Key Signatures: RSA with EMSA4 and any recommended hash, or
-  DSA or ECDSA with "EMSA1(SHA-256)"
+* Public Key Encryption: RSA, 2048+ bit keys, with OAEP and SHA-256
+  ("EME1(SHA-256)")
+
+* Public Key Signatures: RSA, 2048+ bit keys with PSS and SHA-512
+  ("EMSA4(SHA-512)")
 
 * Key Agreement: Diffie-Hellman or ECDH, with "KDF2(SHA-256)"
