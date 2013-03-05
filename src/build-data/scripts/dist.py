@@ -3,7 +3,7 @@
 """
 Release script for botan (http://botan.randombit.net/)
 
-(C) 2011, 2012 Jack Lloyd
+(C) 2011, 2012, 2013 Jack Lloyd
 
 Distributed under the terms of the Botan license
 """
