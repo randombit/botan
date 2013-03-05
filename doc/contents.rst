@@ -23,6 +23,7 @@ Contents
    kdf
    pbkdf
    passhash
+   cryptobox
    srp
    rng
    fpe
