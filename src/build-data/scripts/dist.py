@@ -107,6 +107,8 @@ def gpg_sign(keyid, passphrase_file, files):
 
         check_subprocess_results(gpg, 'gpg')
 
+    return [filename + '.asc' for filename in files]
+
 def parse_args(args):
     parser = optparse.OptionParser(
         "usage: %prog [options] <version #>\n" +
@@ -234,10 +236,10 @@ def main(args = None):
 
     logging.info('Found revision id %s' % (rev_id))
 
-    output_basename = os.path.join(options.output_dir, output_name(args))
+    output_basename = output_name(args)
 
     if os.access(output_basename, os.X_OK):
-        logging.debug('Removing existing ouptut dir %s' % (output_basename))
+        logging.info('Removing existing output dir %s' % (output_basename))
         shutil.rmtree(output_basename)
 
     run_monotone(options.mtn_db,
@@ -309,12 +311,17 @@ def main(args = None):
 
     shutil.rmtree(output_basename)
 
-    if options.pgp_key_id != '':
-        gpg_sign(options.pgp_key_id, options.pgp_passphrase_file, output_files)
-
     if options.print_output_names:
         for output_file in output_files:
             print output_file
+
+    if options.pgp_key_id != '':
+        output_files += gpg_sign(options.pgp_key_id, options.pgp_passphrase_file, output_files)
+
+    if options.output_dir != '.':
+        for output_file in output_files:
+            logging.debug('Moving %s to %s' % (output_file, options.output_dir))
+            shutil.move(output_file, os.path.join(options.output_dir, output_file))
 
     return 0
 
