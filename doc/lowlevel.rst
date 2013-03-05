@@ -161,6 +161,12 @@ All block ciphers classes in botan are subclasses of
 
       Identical to :cpp:func:`decrypt`\ (block, block)
 
+   .. cpp:function:: size_t parallelism() const
+
+      Returns the native parallelism of this implementation, ie how
+      many blocks can be processed in parallel if sufficient data is
+      passed to :cpp:func:`encrypt_n` or :cpp:func:`decrypt_n`.
+
 Stream Ciphers
 ---------------------------------
 
