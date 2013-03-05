@@ -38,6 +38,9 @@ The latest version of the current development series, from branch
 :tgz:`1.11.2` (:tgz_sig:`sig <1.11.2>`),
 :tbz:`1.11.2` (:tbz_sig:`sig <1.11.2>`)
 
+A script also creates daily snapshots of trunk, which are available
+`here <http://files.randombit.net/botan/snapshots/>`_.
+
 .. note::
 
    Versions 1.11.0 and later require a mostly-compliant C++11 compiler
