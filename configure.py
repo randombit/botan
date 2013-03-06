@@ -1814,8 +1814,15 @@ def main(argv = None):
     if options.gen_amalgamation:
         generate_amalgamation(build_config)
 
-    logging.info('Botan %s build setup is complete' % (
-        build_config.version_string))
+    def release_date(datestamp):
+        if datestamp == 0:
+            return 'undated'
+        return 'dated %d' % (datestamp)
+
+    logging.info('Botan %s (%s %s) build setup is complete' % (
+        build_config.version_string,
+        build_config.version_release_type,
+        release_date(build_config.version_datestamp)))
 
 if __name__ == '__main__':
     try:
