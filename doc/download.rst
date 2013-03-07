@@ -58,9 +58,11 @@ Accessing Version Control
 ----------------------------------------
 
 Botan's development occurs using a distributed version control system
-called `Monotone <http://www.monotone.ca>`_. The main branch of
-development occurs on the branch named ``net.randombit.botan``. To
-download that branch and set up a new workspace, run::
+called `Monotone <http://www.monotone.ca>`_ (though there is also a
+mirror on `github <http://github.com/randombit/botan>`_. The main
+branch of development occurs on the branch named
+``net.randombit.botan``. To download that branch and set up a new
+workspace, run::
 
    $ mtn db init --db=botan.mtn
    $ mtn pull --db=botan.mtn randombit.net 'net.randombit.botan'
