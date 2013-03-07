@@ -1,10 +1,15 @@
 
 Cryptobox
-==================================================
+========================================
 
-This is a set of simple routines that cover some common cases. They
-are defined in the header `cryptobox.h`, inside namespace
-`Botan::CryptoBox`.
+Encryption using a passphrase
+----------------------------------------
+
+.. versionadded:: 1.8.6
+
+This is a set of simple routines that encrypt some data using a
+passphrase. There are defined in the header `cryptobox.h`, inside
+namespace `Botan::CryptoBox`.
 
  .. cpp:function:: std::string encrypt(const byte input[], size_t input_len, \
                                        const std::string& passphrase, \
@@ -21,4 +26,3 @@ are defined in the header `cryptobox.h`, inside namespace
                                        const std::string& passphrase)
 
     Decrypts something encrypted with encrypt.
-
