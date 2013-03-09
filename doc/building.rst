@@ -233,11 +233,9 @@ more opportunities for interprocedural optimizations.
 Modules Relying on Third Party Libraries
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-There are a fairly large number of modules included with Botan. Some
-of these are extremely useful, while others are only necessary in very
-unusual circumstances. Most are loaded (or not) automatically as
-necessary, but some require external libraries are thus must be
-enabled at build time; these include:
+Currently ``configure.py`` cannot detect if external libraries are
+available, so using them is controlled explicitly at build time
+by the user using
 
  - ``--with-bzip2`` enables the filters providing bzip2 compression
    and decompression. Requires the bzip2 development libraries to be
@@ -247,14 +245,20 @@ enabled at build time; these include:
    and decompression. Requires the zlib development libraries to be
    installed.
 
+ - ``--with-lzma`` enables the filters providing lzma compression and
+   decompression. Requires the lzma development libraries to be
+   installed.
+
+ - ``--with-sqlite3`` enables storing TLS session information to an
+   encrypted SQLite database.
+
  - ``--with-gnump`` adds an alternative engine for public key
    cryptography that uses the GNU MP library. GNU MP 4.1 or later is
    required.
 
  - ``--with-openssl`` adds an engine that uses OpenSSL for some public
    key operations and ciphers/hashes. OpenSSL 0.9.7 or later is
-   required. Note that OpenSSL's versions are not always faster than
-   the versions built into botan.
+   required.
 
 Multiple Builds
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
