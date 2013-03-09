@@ -2,7 +2,7 @@
 
 """
 Configuration program for botan (http://botan.randombit.net/)
-  (C) 2009,2010,2011,2012 Jack Lloyd
+  (C) 2009,2010,2011,2012,2013 Jack Lloyd
   Distributed under the terms of the Botan license
 
 Tested with CPython 2.6, 2.7, 3.1 and PyPy 1.5
@@ -601,6 +601,11 @@ class ModuleInfo(object):
             self.warning = ' '.join(self.warning)
         else:
             self.warning = None
+
+        intersection = set(self.header_public) & set(self.header_internal)
+
+        if len(intersection) > 0:
+            logging.warning('Headers %s marked both public and internal' % (' '.join(intersection)))
 
     def sources(self):
         return self.source
@@ -1516,14 +1521,9 @@ def setup_build(build_config, options, template_vars):
                  build_config.internal_include_dir)
 
 """
-Generate Amalgamation
+Generate the amalgamation
 """
 def generate_amalgamation(build_config):
-    def ending_with_suffix(suffix):
-        def predicate(val):
-            return val.endswith(suffix)
-        return predicate
-
     def strip_header_goop(header_name, contents):
         header_guard = re.compile('^#define BOTAN_.*_H__$')
 
@@ -1548,7 +1548,7 @@ def generate_amalgamation(build_config):
         return contents
 
     botan_include = re.compile('#include <botan/(.*)>$')
-    std_include = re.compile('#include <([^/\.]+)>$')
+    std_include = re.compile('#include <([^/\.]+|stddef.h)>$')
 
     class Amalgamation_Generator:
         def __init__(self, input_list):
@@ -1597,6 +1597,9 @@ def generate_amalgamation(build_config):
     amalg_basename = 'botan_all'
 
     header_name = '%s.h' % (amalg_basename)
+    source_name = '%s.cpp' % (amalg_basename)
+
+    logging.info('Writing amalgamation to %s and %s' % (header_name, source_name))
 
     botan_h = open(header_name, 'w')
 
@@ -1604,7 +1607,7 @@ def generate_amalgamation(build_config):
 
     amalg_header = """/*
 * Botan %s Amalgamation
-* (C) 1999-2011 Jack Lloyd and others
+* (C) 1999-2013 Jack Lloyd and others
 *
 * Distributed under the terms of the Botan license
 */
@@ -1626,7 +1629,7 @@ def generate_amalgamation(build_config):
         [s for s in build_config.internal_headers
          if s.find('asm_macr_') == -1])
 
-    botan_cpp = open('%s.cpp' % (amalg_basename), 'w')
+    botan_cpp = open(source_name, 'w')
 
     botan_cpp.write(amalg_header)
 
