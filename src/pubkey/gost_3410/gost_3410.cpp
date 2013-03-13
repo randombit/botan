@@ -10,7 +10,6 @@
 #include <botan/gost_3410.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/internal/assert.h>
 
 namespace Botan {
 

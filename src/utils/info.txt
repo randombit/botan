@@ -14,7 +14,6 @@ zero_mem.cpp
 </source>
 
 <header:internal>
-assert.h
 bit_ops.h
 prefetch.h
 rounding.h
@@ -24,6 +23,7 @@ xor_buf.h
 </header:internal>
 
 <header:public>
+assert.h
 bswap.h
 calendar.h
 charset.h

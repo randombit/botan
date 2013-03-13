@@ -6,7 +6,6 @@
 */
 
 #include <botan/internal/sqlite3.h>
-#include <botan/internal/assert.h>
 #include <stdexcept>
 #include <sqlite3.h>
 

@@ -5,7 +5,6 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/internal/assert.h>
 #include <botan/exceptn.h>
 #include <sstream>
 

@@ -6,7 +6,6 @@
 */
 
 #include <botan/locking_allocator.h>
-#include <botan/internal/assert.h>
 #include <botan/mem_ops.h>
 #include <algorithm>
 #include <sys/mman.h>

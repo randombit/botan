@@ -7,7 +7,6 @@
 
 #include <botan/mode_pad.h>
 #include <botan/exceptn.h>
-#include <botan/internal/assert.h>
 
 namespace Botan {
 

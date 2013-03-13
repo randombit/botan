@@ -8,7 +8,6 @@
 #include <botan/base64.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/rounding.h>
-#include <botan/internal/assert.h>
 #include <stdexcept>
 
 namespace Botan {

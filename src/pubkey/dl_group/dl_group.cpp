@@ -14,7 +14,6 @@
 #include <botan/pipe.h>
 #include <botan/pem.h>
 #include <botan/internal/workfactor.h>
-#include <botan/internal/assert.h>
 
 namespace Botan {
 

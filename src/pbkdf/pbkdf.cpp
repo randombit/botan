@@ -6,7 +6,6 @@
 */
 
 #include <botan/pbkdf.h>
-#include <botan/internal/assert.h>
 #include <stdexcept>
 
 namespace Botan {

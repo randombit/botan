@@ -8,7 +8,6 @@
 */
 
 #include <botan/ecdh.h>
-#include <botan/internal/assert.h>
 
 namespace Botan {
 

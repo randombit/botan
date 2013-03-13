@@ -6,7 +6,6 @@
 */
 
 #include <botan/tls_blocking.h>
-#include <botan/internal/assert.h>
 
 namespace Botan {
 

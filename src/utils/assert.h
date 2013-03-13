@@ -8,16 +8,18 @@
 #ifndef BOTAN_ASSERTION_CHECKING_H__
 #define BOTAN_ASSERTION_CHECKING_H__
 
+#include <botan/build.h>
+
 namespace Botan {
 
 /**
 * Called when an assertion fails
 */
-void assertion_failure(const char* expr_str,
-                       const char* assertion_made,
-                       const char* func,
-                       const char* file,
-                       int line);
+void BOTAN_DLL assertion_failure(const char* expr_str,
+                                 const char* assertion_made,
+                                 const char* func,
+                                 const char* file,
+                                 int line);
 
 /**
 * Make an assertion

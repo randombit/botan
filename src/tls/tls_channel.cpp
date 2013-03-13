@@ -11,7 +11,6 @@
 #include <botan/internal/tls_heartbeats.h>
 #include <botan/internal/tls_record.h>
 #include <botan/internal/tls_seq_numbers.h>
-#include <botan/internal/assert.h>
 #include <botan/internal/rounding.h>
 #include <botan/internal/stl_util.h>
 #include <botan/loadstor.h>

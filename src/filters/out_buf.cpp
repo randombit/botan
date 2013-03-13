@@ -8,7 +8,6 @@
 
 #include <botan/internal/out_buf.h>
 #include <botan/secqueue.h>
-#include <botan/internal/assert.h>
 
 namespace Botan {
 
