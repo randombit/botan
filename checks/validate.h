@@ -30,4 +30,6 @@ void do_x509_tests(RandomNumberGenerator&);
 
 size_t do_tls_tests(RandomNumberGenerator& rng);
 
+void test_ocb();
+
 #endif

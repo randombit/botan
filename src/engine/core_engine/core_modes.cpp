@@ -40,6 +40,10 @@
   #include <botan/eax.h>
 #endif
 
+#if defined(BOTAN_HAS_OCB)
+  #include <botan/ocb.h>
+#endif
+
 #if defined(BOTAN_HAS_XTS)
   #include <botan/xts.h>
 #endif
@@ -126,6 +130,18 @@ Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
       return nullptr;
 #endif
       }
+
+#if defined(BOTAN_HAS_OCB)
+   if(mode == "OCB")
+      {
+      if(direction == ENCRYPTION)
+         return new OCB_Encryption(block_cipher->clone(), 16);
+      /*
+      else
+         return new OCB_Decryption(block_cipher->clone(), 16);
+      */
+      }
+#endif
 
 #if defined(BOTAN_HAS_XTS)
    if(mode == "XTS")

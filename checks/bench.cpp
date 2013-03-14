@@ -76,6 +76,7 @@ const std::string algos[] = {
    "AES-128/CBC/CTS",
    "AES-128/CTR-BE",
    "AES-128/EAX",
+   "AES-128/OCB",
    "AES-128/OFB",
    "AES-128/XTS",
    "AES-128/CFB(128)",
