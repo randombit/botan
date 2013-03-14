@@ -11,24 +11,12 @@
 #include <botan/internal/bit_ops.h>
 #include <algorithm>
 
+#include <botan/hex.h>
 #include <iostream>
 
 namespace Botan {
 
 namespace ShouldNotBeHere {
-
-inline void xor_mem(byte out[], const byte in[], size_t length)
-   {
-   for(size_t i = 0; i != length; ++i)
-      out[i] ^= in[i];
-   }
-
-inline void xor_mem(byte out[], const byte in[], const byte in2[], size_t length)
-   {
-   for(size_t i = 0; i != length; ++i)
-      out[i] = in[i] ^ in2[i];
-   }
-
 
 template<typename T, typename Alloc, typename Alloc2>
 std::vector<T, Alloc>&
@@ -38,7 +26,7 @@ operator^=(std::vector<T, Alloc>& out,
    if(out.size() < in.size())
       out.resize(in.size());
 
-   xor_mem(&out[0], &in[0], in.size());
+   xor_buf(&out[0], &in[0], in.size());
    return out;
    }
 
@@ -109,7 +97,7 @@ secure_vector<byte> ocb_hash(const L_computer& L,
       offset ^= L(ctz(i+1));
 
       buf = offset;
-      xor_mem(&buf[0], &ad[16*i], 16);
+      xor_buf(&buf[0], &ad[16*i], 16);
 
       cipher.encrypt(buf);
 
@@ -121,7 +109,7 @@ secure_vector<byte> ocb_hash(const L_computer& L,
       offset ^= L.star();
 
       buf = offset;
-      xor_mem(&buf[0], &ad[16*ad_blocks], ad_remainder);
+      xor_buf(&buf[0], &ad[16*ad_blocks], ad_remainder);
       buf[ad_len % 16] ^= 0x80;
 
       cipher.encrypt(buf);
@@ -134,14 +122,19 @@ secure_vector<byte> ocb_hash(const L_computer& L,
 
 }
 
-OCB_Mode::OCB_Mode(BlockCipher* cipher, size_t tag_size) :
-   Buffered_Filter(16, 0),
+OCB_Mode::OCB_Mode(BlockCipher* cipher, size_t tag_size, bool decrypting) :
+   Buffered_Filter(16, decrypting ? tag_size : 0),
    m_cipher(cipher), m_tag_size(tag_size),
    m_ad_hash(16), m_offset(16), m_checksum(16)
    {
    if(m_cipher->block_size() != 16)
       throw std::invalid_argument("OCB requires a 128 bit cipher so cannot be used with " +
                                   m_cipher->name());
+
+   if(m_tag_size != 16) // 64, 96 bits also supported
+      throw std::invalid_argument("OCB cannot produce a " + std::to_string(m_tag_size) +
+                                  " byte tag");
+
    }
 
 OCB_Mode::~OCB_Mode() { /* for unique_ptr destructor */ }
@@ -164,7 +157,7 @@ void OCB_Mode::set_key(const SymmetricKey& key)
 
 void OCB_Mode::set_nonce(const byte nonce[], size_t nonce_len)
    {
-   if(nonce_len > 15) // OCB supports 127 bits, we support 120
+   if(!valid_iv_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
 
    byte bottom;
@@ -236,12 +229,12 @@ void OCB_Encryption::buffered_block(const byte input[], size_t input_length)
       {
       // could run in parallel
 
-      xor_mem(&m_checksum[0], &input[16*i], 16);
+      xor_buf(&m_checksum[0], &input[16*i], 16);
 
       m_offset ^= L(ctz(++m_block_index));
 
       ctext_buf = m_offset;
-      xor_mem(&ctext_buf[0], &input[16*i], 16);
+      xor_buf(&ctext_buf[0], &input[16*i], 16);
       m_cipher->encrypt(ctext_buf);
       ctext_buf ^= m_offset;
 
@@ -261,14 +254,14 @@ void OCB_Encryption::buffered_final(const byte input[], size_t input_length)
       {
       BOTAN_ASSERT(input_length < 16, "Only a partial block left");
 
-      xor_mem(&m_checksum[0], &input[0], input_length);
+      xor_buf(&m_checksum[0], &input[0], input_length);
       m_checksum[input_length] ^= 0x80;
 
       m_offset ^= m_L->star(); // Offset_*
 
       secure_vector<byte> buf(16);
       m_cipher->encrypt(m_offset, buf);
-      xor_mem(&buf[0], &input[0], input_length);
+      xor_buf(&buf[0], &input[0], input_length);
 
       send(buf, input_length); // final ciphertext
       }
@@ -286,6 +279,80 @@ void OCB_Encryption::buffered_final(const byte input[], size_t input_length)
 
    zeroise(m_checksum);
    zeroise(m_offset);
+   m_block_index = 0;
+   }
+
+void OCB_Decryption::buffered_block(const byte input[], size_t input_length)
+   {
+   BOTAN_ASSERT(input_length % 16 == 0, "Input length is an even number of blocks");
+
+   const size_t blocks = input_length / 16;
+
+   const L_computer& L = *m_L;
+
+   secure_vector<byte> ptext_buf(16);
+
+   for(size_t i = 0; i != blocks; ++i)
+      {
+      // could run in parallel
+
+      m_offset ^= L(ctz(++m_block_index));
+
+      ptext_buf = m_offset;
+      xor_buf(&ptext_buf[0], &input[16*i], 16);
+      m_cipher->decrypt(ptext_buf);
+      ptext_buf ^= m_offset;
+
+      send(ptext_buf);
+      m_checksum ^= ptext_buf;
+      }
+   }
+
+void OCB_Decryption::buffered_final(const byte input[], size_t input_length)
+   {
+   /*
+   todo - might have multiple blocks here if buffering up multiple
+   blocks for bitslice mode, run those first by calling buffered_write
+   directly
+   */
+
+   BOTAN_ASSERT(input_length >= m_tag_size, "We have the tag");
+
+   const byte* included_tag = &input[input_length-m_tag_size];
+   input_length -= m_tag_size;
+
+   if(input_length)
+      {
+      BOTAN_ASSERT(input_length < 16, "Only a partial block left");
+
+      m_offset ^= m_L->star(); // Offset_*
+
+      secure_vector<byte> buf(16);
+      m_cipher->encrypt(m_offset, buf); // P_*
+
+      xor_buf(&buf[0], &input[0], input_length);
+
+      xor_buf(&m_checksum[0], &buf[0], input_length);
+      m_checksum[input_length] ^= 0x80;
+
+      send(buf, input_length); // final plaintext
+      }
+
+   // now compute the tag
+   secure_vector<byte> mac = m_offset;
+   mac ^= m_checksum;
+   mac ^= m_L->dollar();
+
+   m_cipher->encrypt(mac);
+
+   mac ^= m_ad_hash;
+
+   zeroise(m_checksum);
+   zeroise(m_offset);
+   m_block_index = 0;
+
+   if(!same_mem(&mac[0], included_tag, m_tag_size))
+      throw Integrity_Failure("OCB tag check failed");
    }
 
 }

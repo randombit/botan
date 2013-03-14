@@ -15,6 +15,8 @@
 
 namespace Botan {
 
+class L_computer;
+
 /**
 * OCB Mode (base class for OCB_Encryption and OCB_Decryption). Note
 * that OCB is patented, but is freely licensed in some circumstances.
@@ -32,8 +34,9 @@ class BOTAN_DLL OCB_Mode : public AEAD_Mode,
       /**
       * @param cipher the 128-bit block cipher to use
       * @param tag_size is how big the auth tag will be
+      * @param decrypting  true if decrypting
       */
-      OCB_Mode(BlockCipher* cipher, size_t tag_size = 16);
+      OCB_Mode(BlockCipher* cipher, size_t tag_size, bool decrypting);
 
       ~OCB_Mode();
 
@@ -46,10 +49,15 @@ class BOTAN_DLL OCB_Mode : public AEAD_Mode,
 
       std::string name() const override;
 
+      bool valid_iv_length(size_t length) const override
+         {
+         return (length > 0 && length < 16);
+         }
+
    protected:
       // fixme make these private
       std::unique_ptr<BlockCipher> m_cipher;
-      std::unique_ptr<class L_computer> m_L;
+      std::unique_ptr<L_computer> m_L;
       size_t m_tag_size = 0;
       size_t m_block_index = 0;
 
@@ -71,56 +79,27 @@ class BOTAN_DLL OCB_Encryption : public OCB_Mode
       * @param tag_size is how big the auth tag will be
       */
       OCB_Encryption(BlockCipher* cipher, size_t tag_size = 16) :
-         OCB_Mode(cipher, tag_size) {}
+         OCB_Mode(cipher, tag_size, false) {}
 
    private:
       void buffered_block(const byte input[], size_t input_length) override;
       void buffered_final(const byte input[], size_t input_length) override;
    };
 
-#if 0
-/**
-* OCB Decryption
-*/
-class BOTAN_DLL OCB_Decryption : public AEAD_Mode,
-                                 private Buffered_Filter
+class BOTAN_DLL OCB_Decryption : public OCB_Mode
    {
    public:
       /**
-      * @param cipher the cipher to use
+      * @param cipher the 128-bit block cipher to use
       * @param tag_size is how big the auth tag will be
       */
-      OCB_Decryption(BlockCipher* cipher, size_t tag_size = 16);
-
-      ~OCB_Decryption();
-
-      void set_key(const SymmetricKey& key) override;
-      void set_nonce(const byte nonce[], size_t nonce_len) override;
-
-      void set_associated_data(const byte ad[], size_t ad_len) override;
-
-      bool valid_keylength(size_t n) const override;
-
-      std::string name() const override;
+      OCB_Decryption(BlockCipher* cipher, size_t tag_size = 16) :
+         OCB_Mode(cipher, tag_size, true) {}
 
    private:
       void buffered_block(const byte input[], size_t input_length) override;
       void buffered_final(const byte input[], size_t input_length) override;
-
-      void write(const byte input[], size_t input_length) override;
-      void start_msg() override;
-      void end_msg() override;
-
-      std::unique_ptr<BlockCipher> m_cipher;
-      std::unique_ptr<class L_computer> m_L;
-      size_t m_tag_size = 0;
-      size_t m_block_index = 0;
-
-      secure_vector<byte> m_ad_hash;
-      secure_vector<byte> m_offset;
-      secure_vector<byte> m_checksum;
    };
-#endif
 
 }
 

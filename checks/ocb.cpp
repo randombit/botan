@@ -35,9 +35,6 @@ std::vector<byte> ocb_decrypt(const SymmetricKey& key,
                               const byte pt[], size_t pt_len,
                               const byte ad[], size_t ad_len)
    {
-   throw std::runtime_error("Not implemented");
-
-#if 0
    OCB_Decryption* ocb = new OCB_Decryption(new AES_128);
 
    ocb->set_key(key);
@@ -46,8 +43,7 @@ std::vector<byte> ocb_decrypt(const SymmetricKey& key,
 
    Pipe pipe(ocb);
    pipe.process_msg(pt, pt_len);
-   return pipe.read_all_unlocked();
-#endif
+   return unlock(pipe.read_all());
    }
 
 template<typename Alloc, typename Alloc2>
@@ -59,6 +55,82 @@ std::vector<byte> ocb_encrypt(const SymmetricKey& key,
    return ocb_encrypt(key, nonce, &pt[0], pt.size(), &ad[0], ad.size());
    }
 
+template<typename Alloc, typename Alloc2>
+std::vector<byte> ocb_decrypt(const SymmetricKey& key,
+                              const std::vector<byte>& nonce,
+                              const std::vector<byte, Alloc>& pt,
+                              const std::vector<byte, Alloc2>& ad)
+   {
+   return ocb_decrypt(key, nonce, &pt[0], pt.size(), &ad[0], ad.size());
+   }
+
+std::vector<byte> ocb_encrypt(OCB_Encryption& ocb,
+                              Pipe& pipe,
+                              const std::vector<byte>& nonce,
+                              const std::vector<byte>& pt,
+                              const std::vector<byte>& ad)
+   {
+   ocb.set_nonce(&nonce[0], nonce.size());
+   ocb.set_associated_data(&ad[0], ad.size());
+
+   pipe.process_msg(pt);
+   return unlock(pipe.read_all(Pipe::LAST_MESSAGE));
+   }
+
+void test_ocb_long_filters()
+   {
+   SymmetricKey key("00000000000000000000000000000000");
+
+   OCB_Encryption* ocb = new OCB_Encryption(new AES_128);
+
+   ocb->set_key(key);
+   Pipe pipe(ocb);
+
+   const std::vector<byte> empty;
+   std::vector<byte> N(12);
+   std::vector<byte> C;
+
+   for(size_t i = 0; i != 128; ++i)
+      {
+      const std::vector<byte> S(i);
+      N[11] = i;
+
+      const std::vector<byte> C1 = ocb_encrypt(*ocb, pipe, N, S, S);
+      const std::vector<byte> C2 = ocb_encrypt(*ocb, pipe, N, S, empty);
+      const std::vector<byte> C3 = ocb_encrypt(*ocb, pipe, N, empty, S);
+
+      //std::cout << "C_" << i << " = " << hex_encode(C1) << " " << hex_encode(C2) << " " << hex_encode(C3) << "\n";
+
+      C += C1;
+      C += C2;
+      C += C3;
+      }
+
+   SHA_256 sha256;
+   sha256.update(C);
+   const std::string C_hash = hex_encode(sha256.final());
+   const std::string expected_C_hash = "C4E5158067F49356042296B13B050DE00A120EA846073E5E0DACFD0C9F43CC65";
+
+   if(C_hash != expected_C_hash)
+      {
+      std::cout << "OCB-128 long test, C hashes differ\n";
+      std::cout << C_hash << " !=\n" << expected_C_hash << "\n";
+      }
+
+   //std::cout << "SHA-256(C) = " << C_hash << "\n";
+
+   N[11] = 0;
+   const std::vector<byte> cipher = ocb_encrypt(*ocb, pipe, N, empty, C);
+
+   const std::string expected = "B2B41CBF9B05037DA7F16C24A35C1C94";
+
+   const std::string cipher_hex = hex_encode(cipher);
+
+   if(cipher_hex != expected)
+      std::cout << "OCB AES-128 long test mistmatch " << cipher_hex << " != " << expected << "\n";
+   else
+      std::cout << "OCB AES-128 long test OK\n";
+   }
 
 void test_ocb_long()
    {
@@ -114,6 +186,29 @@ void test_ocb_long()
       std::cout << "OCB AES-128 long test mistmatch " << cipher_hex << " != " << expected << "\n";
    else
       std::cout << "OCB AES-128 long test OK\n";
+
+   try
+      {
+      const std::vector<byte> p = ocb_decrypt(key, N, cipher, C);
+
+      BOTAN_ASSERT(p.empty(), "return plaintext is empty");
+      }
+   catch(std::exception& e)
+      {
+      std::cout << "Error in OCB decrypt - " << e.what() << "\n";
+      }
+
+   try
+      {
+      C[0] ^= 1;
+      ocb_decrypt(key, N, cipher, C);
+      std::cout << "OCB failed to reject bad message\n";
+      }
+   catch(std::exception& e)
+      {
+      }
+
+
    }
 
 void test_ocb()
@@ -129,20 +224,27 @@ void test_ocb()
 
    std::vector<byte> ctext = ocb_encrypt(key, nonce, pt, ad);
 
-   std::string ctext_hex = hex_encode(ctext);
+   const std::string ctext_hex = hex_encode(ctext);
 
    if(ctext_hex != expected)
       std::cout << "OCB/AES-128 encrypt test failure\n" << ctext_hex << " !=\n" << expected << "\n";
    else
       std::cout << "OCB/AES-128 encrypt OK\n";
 
-#if 0
-   std::vector<byte> dec = ocb_decrypt(key, nonce, ctext, ad);
+   try
+      {
+      std::vector<byte> dec = ocb_decrypt(key, nonce, ctext, ad);
 
-   std::cout << hex_encode(dec) << "\n";
-#endif
+      if(dec == pt) { std::cout << "OCB decrypts OK\n"; }
+      else { std::cout << "OCB fails to decrypt\n"; }
+      }
+   catch(std::exception& e)
+      {
+      std::cout << "Correct OCB message rejected - " << e.what() << "\n";
+      }
 
-   test_ocb_long();
+   //test_ocb_long();
+   test_ocb_long_filters();
    }
 
 

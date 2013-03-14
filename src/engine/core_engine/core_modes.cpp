@@ -136,10 +136,8 @@ Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
       {
       if(direction == ENCRYPTION)
          return new OCB_Encryption(block_cipher->clone(), 16);
-      /*
       else
          return new OCB_Decryption(block_cipher->clone(), 16);
-      */
       }
 #endif
 
@@ -237,7 +235,10 @@ Keyed_Filter* Core_Engine::get_cipher(const std::string& algo_spec,
    if(filt)
       return filt;
 
-   throw Algorithm_Not_Found(cipher_name + "/" + mode + "/" + padding);
+   if(padding != "NoPadding")
+      throw Algorithm_Not_Found(cipher_name + "/" + mode + "/" + padding);
+   else
+      throw Algorithm_Not_Found(cipher_name + "/" + mode);
    }
 
 }
