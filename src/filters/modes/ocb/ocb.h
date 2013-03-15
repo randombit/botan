@@ -16,6 +16,7 @@
 namespace Botan {
 
 class L_computer;
+//class Nonce_State;
 
 /**
 * OCB Mode (base class for OCB_Encryption and OCB_Decryption). Note
@@ -25,7 +26,6 @@ class L_computer;
         http://tools.ietf.org/html/draft-irtf-cfrg-ocb-00
 * @see Free Licenses http://www.cs.ucdavis.edu/~rogaway/ocb/license.htm
 * @see OCB home page http://www.cs.ucdavis.edu/~rogaway/ocb
-
 */
 class BOTAN_DLL OCB_Mode : public AEAD_Mode,
                            private Buffered_Filter
@@ -55,9 +55,12 @@ class BOTAN_DLL OCB_Mode : public AEAD_Mode,
          }
 
    protected:
+      static const size_t BS = 16;
+
       // fixme make these private
       std::unique_ptr<BlockCipher> m_cipher;
       std::unique_ptr<L_computer> m_L;
+
       size_t m_tag_size = 0;
       size_t m_block_index = 0;
 
