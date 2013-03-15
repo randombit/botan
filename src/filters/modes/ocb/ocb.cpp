@@ -16,37 +16,32 @@
 
 namespace Botan {
 
-namespace ShouldNotBeHere {
-
-template<typename T, typename Alloc, typename Alloc2>
-std::vector<T, Alloc>&
-operator^=(std::vector<T, Alloc>& out,
-           const std::vector<T, Alloc2>& in)
-   {
-   if(out.size() < in.size())
-      out.resize(in.size());
-
-   xor_buf(&out[0], &in[0], in.size());
-   return out;
-   }
-
-
-}
-
-using namespace ShouldNotBeHere;
-
 // Has to be in Botan namespace so unique_ptr can reference it
 class L_computer
    {
    public:
-      L_computer(const BlockCipher& cipher);
+      L_computer(const BlockCipher& cipher)
+         {
+         m_L_star.resize(cipher.block_size());
+         cipher.encrypt(m_L_star);
+         m_L_dollar = poly_double(star());
+         m_L.push_back(poly_double(dollar()));
+         }
 
       const secure_vector<byte>& star() const { return m_L_star; }
 
       const secure_vector<byte>& dollar() const { return m_L_dollar; }
 
-      // this should apply ctz (and cache it)
-      const secure_vector<byte>& operator()(size_t i) const;
+      const secure_vector<byte>& operator()(size_t i) const { return get(i); }
+
+      const secure_vector<byte>& get(size_t i) const
+         {
+         while(m_L.size() <= i)
+            m_L.push_back(poly_double(m_L.back()));
+
+         return m_L.at(i);
+         }
+
    private:
       secure_vector<byte> poly_double(const secure_vector<byte>& in) const
          {
@@ -56,22 +51,6 @@ class L_computer
       secure_vector<byte> m_L_dollar, m_L_star;
       mutable std::vector<secure_vector<byte>> m_L;
    };
-
-L_computer::L_computer(const BlockCipher& cipher)
-   {
-   m_L_star.resize(cipher.block_size());
-   cipher.encrypt(m_L_star);
-   m_L_dollar = poly_double(star());
-   m_L.push_back(poly_double(dollar()));
-   }
-
-const secure_vector<byte>& L_computer::operator()(size_t i) const
-   {
-   while(m_L.size() <= i)
-      m_L.push_back(poly_double(m_L.back()));
-
-   return m_L.at(i);
-   }
 
 #if 0
 class Nonce_State
@@ -237,15 +216,23 @@ void OCB_Encryption::buffered_block(const byte input[], size_t input_length)
 
    const L_computer& L = *m_L;
 
-   secure_vector<byte> ctext_buf(BS);
+   //const size_t par_bytes = m_cipher->parallel_bytes();
+   const size_t par_bytes = m_cipher->block_size();
+
+   const size_t block_index = m_block_index + 1;
+
+   BOTAN_ASSERT(par_bytes % BS == 0, "Cipher is parallel in full blocks");
+
+   secure_vector<byte> ctext_buf(par_bytes);
+   secure_vector<byte> csum_accum(par_bytes);
 
    for(size_t i = 0; i != blocks; ++i)
       {
       // could run in parallel
 
-      xor_buf(&m_checksum[0], &input[BS*i], BS);
+      xor_buf(&csum_accum[0], &input[BS*i], BS);
 
-      m_offset ^= L(ctz(++m_block_index));
+      m_offset ^= L(ctz(block_index + i));
 
       ctext_buf = m_offset;
       xor_buf(&ctext_buf[0], &input[BS*i], BS);
@@ -254,6 +241,9 @@ void OCB_Encryption::buffered_block(const byte input[], size_t input_length)
 
       send(ctext_buf);
       }
+
+   m_block_index += blocks;
+   m_checksum ^= csum_accum;
    }
 
 void OCB_Encryption::buffered_final(const byte input[], size_t input_length)

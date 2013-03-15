@@ -96,6 +96,18 @@ void xor_buf(std::vector<byte, Alloc>& out,
    xor_buf(&out[0], &in[0], &in2[0], n);
    }
 
+template<typename T, typename Alloc, typename Alloc2>
+std::vector<T, Alloc>&
+operator^=(std::vector<T, Alloc>& out,
+           const std::vector<T, Alloc2>& in)
+   {
+   if(out.size() < in.size())
+      out.resize(in.size());
+
+   xor_buf(&out[0], &in[0], in.size());
+   return out;
+   }
+
 }
 
 #endif
