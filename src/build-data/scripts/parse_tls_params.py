@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+# Used to generate src/tls/tls_suite_info.cpp
+
 import sys, re
 
 def to_ciphersuite_info(code, name):
@@ -36,6 +38,7 @@ def to_ciphersuite_info(code, name):
         'CAMELLIA': ('Camellia',None),
         'AES': ('AES',None),
         'SEED': ('SEED',16),
+        'ARIA': ('ARIA',16)
         }
 
     tls_to_botan_names = {
@@ -66,11 +69,21 @@ def to_ciphersuite_info(code, name):
     kex_algo = tls_to_botan_names[kex_algo]
 
     (cipher_algo, cipher_keylen) = cipher_info[cipher[0]]
+
     if cipher_keylen is None:
         cipher_keylen = int(cipher[1]) / 8
 
     if cipher_algo in ['AES', 'Camellia']:
         cipher_algo += '-%d' % (cipher_keylen*8)
+
+    modestr = ''
+    if cipher_algo != 'ARC4':
+        mode = cipher[-1]
+        if mode not in ['CBC', 'GCM', 'CCM']:
+            print "** Unknown mode %s" % (' '.join(cipher))
+
+        if mode != 'CBC':
+            cipher_algo += '/' + mode
 
     return 'Ciphersuite(0x%s, "%s", "%s", "%s", "%s", %d)' % (
         code, sig_algo, kex_algo, mac_algo, cipher_algo, cipher_keylen)
@@ -78,6 +91,16 @@ def to_ciphersuite_info(code, name):
 def main(args = None):
     if args is None:
         args = sys.argv
+
+    weak_crypto = ['EXPORT', 'RC2', '_DES_', 'WITH_NULL']
+    weird_crypto = ['ARIA', 'IDEA']
+    static_dh = ['ECDH_ECDSA', 'ECDH_RSA', 'DH_DSS', 'DH_RSA']
+    protocol_goop = ['SCSV', 'KRB5']
+    just_not_yet = ['RSA_PSK', 'CCM', 'GCM']
+
+    not_supported = weak_crypto + weird_crypto + static_dh + protocol_goop + just_not_yet
+
+    print not_supported
 
     # http://www.iana.org/assignments/tls-parameters/tls-parameters.txt
     input = open('tls-parameters.txt')
@@ -92,10 +115,6 @@ def main(args = None):
         if match:
             code = match.group(1) + match.group(2)
             name = match.group(3)
-
-            not_supported = ['SCSV', 'KRB5', 'EXPORT', 'RC2', '_DES_', 'WITH_NULL',
-                             'ECDH_ECDSA', 'ECDH_RSA', 'DH_DSS', 'DH_RSA',
-                             'RSA_PSK', 'GCM', 'CCM', 'ARIA', 'IDEA']
 
             should_use = True
             for ns in not_supported:
