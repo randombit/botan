@@ -113,7 +113,6 @@ Nonce_State::update_nonce(const byte nonce[], size_t nonce_len)
    return offset;
    }
 
-
 namespace {
 
 /*
@@ -375,7 +374,7 @@ void OCB_Decryption::buffered_final(const byte input[], size_t input_length)
    {
    BOTAN_ASSERT(input_length >= m_tag_size, "We have the tag");
 
-   const byte* included_tag = &input[input_length-m_tag_size];
+   const byte* included_tag = &input[input_length - m_tag_size];
    input_length -= m_tag_size;
 
    if(input_length >= BS)

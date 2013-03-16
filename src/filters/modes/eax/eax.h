@@ -1,6 +1,6 @@
 /*
 * EAX Mode
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2013 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -8,49 +8,41 @@
 #ifndef BOTAN_EAX_H__
 #define BOTAN_EAX_H__
 
-#include <botan/key_filt.h>
+#include <botan/aead.h>
+#include <botan/buf_filt.h>
 #include <botan/block_cipher.h>
 #include <botan/stream_cipher.h>
 #include <botan/mac.h>
+#include <memory>
 
 namespace Botan {
 
 /**
-* EAX Base Class
+* EAX Mode
 */
-class BOTAN_DLL EAX_Base : public Keyed_Filter
+class BOTAN_DLL EAX_Mode : public AEAD_Mode,
+                           private Buffered_Filter
    {
    public:
-      void set_key(const SymmetricKey& key);
-      void set_iv(const InitializationVector& iv);
+      void set_key(const SymmetricKey& key) override;
 
-      /**
-      * Set some additional data that is not included in the
-      * ciphertext but that will be authenticated.
-      * @param header the header contents
-      * @param header_len length of header in bytes
-      */
-      void set_header(const byte header[], size_t header_len);
+      void set_nonce(const byte nonce[], size_t nonce_len) override;
 
-      /**
-      * @return name of this mode
-      */
-      std::string name() const;
+      void set_associated_data(const byte ad[], size_t ad_len) override;
 
-      bool valid_keylength(size_t key_len) const;
+      std::string name() const override;
 
-      /**
-      * EAX supports arbitrary IV lengths
-      */
-      bool valid_iv_length(size_t) const { return true; }
+      bool valid_keylength(size_t key_len) const override;
 
-      ~EAX_Base() { delete ctr; delete cmac; }
+      // EAX supports arbitrary IV lengths
+      bool valid_iv_length(size_t) const override { return true; }
    protected:
       /**
       * @param cipher the cipher to use
       * @param tag_size is how big the auth tag will be
       */
-      EAX_Base(BlockCipher* cipher, size_t tag_size);
+      EAX_Mode(BlockCipher* cipher, size_t tag_size, bool decrypting);
+
       void start_msg();
 
       /**
@@ -71,12 +63,12 @@ class BOTAN_DLL EAX_Base : public Keyed_Filter
       /**
       * The stream cipher (CTR mode)
       */
-      StreamCipher* ctr;
+      std::unique_ptr<StreamCipher> ctr;
 
       /**
       * The MAC (CMAC)
       */
-      MessageAuthenticationCode* cmac;
+      std::unique_ptr<MessageAuthenticationCode> cmac;
 
       /**
       * The MAC of the nonce
@@ -84,20 +76,23 @@ class BOTAN_DLL EAX_Base : public Keyed_Filter
       secure_vector<byte> nonce_mac;
 
       /**
-      * The MAC of the header
+      * The MAC of the associated data
       */
-      secure_vector<byte> header_mac;
+      secure_vector<byte> ad_mac;
 
       /**
       * A buffer for CTR mode encryption
       */
       secure_vector<byte> ctr_buf;
+   private:
+      void write(const byte[], size_t);
+      void end_msg();
    };
 
 /**
 * EAX Encryption
 */
-class BOTAN_DLL EAX_Encryption : public EAX_Base
+class BOTAN_DLL EAX_Encryption : public EAX_Mode
    {
    public:
       /**
@@ -105,54 +100,29 @@ class BOTAN_DLL EAX_Encryption : public EAX_Base
       * @param tag_size is how big the auth tag will be
       */
       EAX_Encryption(BlockCipher* ciph, size_t tag_size = 0) :
-         EAX_Base(ciph, tag_size) {}
+         EAX_Mode(ciph, tag_size, false) {}
 
-      /**
-      * @param ciph the cipher to use
-      * @param key the key to use
-      * @param iv the initially set IV
-      * @param tag_size is how big the auth tag will be
-      */
-      EAX_Encryption(BlockCipher* ciph, const SymmetricKey& key,
-                     const InitializationVector& iv,
-                     size_t tag_size) : EAX_Base(ciph, tag_size)
-         {
-         set_key(key);
-         set_iv(iv);
-         }
    private:
-      void write(const byte[], size_t);
-      void end_msg();
+      void buffered_block(const byte input[], size_t input_length) override;
+      void buffered_final(const byte input[], size_t input_length) override;
    };
 
 /**
 * EAX Decryption
 */
-class BOTAN_DLL EAX_Decryption : public EAX_Base
+class BOTAN_DLL EAX_Decryption : public EAX_Mode
    {
    public:
       /**
       * @param ciph the cipher to use
       * @param tag_size is how big the auth tag will be
       */
-      EAX_Decryption(BlockCipher* ciph, size_t tag_size = 0);
+      EAX_Decryption(BlockCipher* cipher, size_t tag_size = 0) :
+         EAX_Mode(cipher, tag_size, true) {}
 
-      /**
-      * @param ciph the cipher to use
-      * @param key the key to use
-      * @param iv the initially set IV
-      * @param tag_size is how big the auth tag will be
-      */
-      EAX_Decryption(BlockCipher* ciph, const SymmetricKey& key,
-                     const InitializationVector& iv,
-                     size_t tag_size = 0);
    private:
-      void write(const byte[], size_t);
-      void do_write(const byte[], size_t);
-      void end_msg();
-
-      secure_vector<byte> queue;
-      size_t queue_start, queue_end;
+      void buffered_block(const byte input[], size_t input_length) override;
+      void buffered_final(const byte input[], size_t input_length) override;
    };
 
 }
