@@ -235,11 +235,10 @@ void OCB_Encryption::buffered_block(const byte input[], size_t input_length)
 
       xor_buf(&csum_accum[0], &input[0], proc_bytes);
 
-      offsets.clear();
       for(size_t i = 0; i != to_proc; ++i)
          {
          m_offset ^= L(ctz(++m_block_index));
-         offsets += m_offset;
+         copy_mem(&offsets[BS*i], &m_offset[0], BS);
          }
 
       copy_mem(&ctext_buf[0], &input[0], proc_bytes);
