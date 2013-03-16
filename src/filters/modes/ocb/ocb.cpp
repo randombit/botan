@@ -214,36 +214,49 @@ void OCB_Encryption::buffered_block(const byte input[], size_t input_length)
 
    const size_t blocks = input_length / BS;
 
-   const L_computer& L = *m_L;
-
-   //const size_t par_bytes = m_cipher->parallel_bytes();
-   const size_t par_bytes = m_cipher->block_size();
-
-   const size_t block_index = m_block_index + 1;
+#if 1
+   const size_t par_bytes = m_cipher->parallel_bytes();
+#else
+   const size_t par_bytes = 2*m_cipher->block_size();
+#endif
 
    BOTAN_ASSERT(par_bytes % BS == 0, "Cipher is parallel in full blocks");
 
-   secure_vector<byte> ctext_buf(par_bytes);
+   const size_t par_blocks = par_bytes / BS;
+
+   const L_computer& L = *m_L; // convenient name
+
+   secure_vector<byte> ctext_buf(BS);
    secure_vector<byte> csum_accum(par_bytes);
 
-   for(size_t i = 0; i != blocks; ++i)
+   size_t blocks_left = blocks;
+
+   while(blocks_left)
       {
-      // could run in parallel
+      const size_t to_proc = std::min(blocks_left, par_blocks);
+      const size_t proc_bytes = to_proc * BS;
 
-      xor_buf(&csum_accum[0], &input[BS*i], BS);
+      xor_buf(&csum_accum[0], &input[0], proc_bytes);
 
-      m_offset ^= L(ctz(block_index + i));
+      for(size_t i = 0; i != to_proc; ++i)
+         {
+         m_offset ^= L(ctz(++m_block_index));
 
-      ctext_buf = m_offset;
-      xor_buf(&ctext_buf[0], &input[BS*i], BS);
-      m_cipher->encrypt(ctext_buf);
-      ctext_buf ^= m_offset;
+         ctext_buf = m_offset;
+         xor_buf(&ctext_buf[0], &input[BS*i], BS);
+         m_cipher->encrypt(ctext_buf);
+         ctext_buf ^= m_offset;
 
-      send(ctext_buf);
+         send(ctext_buf);
+         }
+
+      input += proc_bytes;
+      blocks_left -= to_proc;
       }
 
-   m_block_index += blocks;
-   m_checksum ^= csum_accum;
+   // fold into checksum
+   for(size_t i = 0; i != csum_accum.size(); ++i)
+      m_checksum[i % BS] ^= csum_accum[i];
    }
 
 void OCB_Encryption::buffered_final(const byte input[], size_t input_length)
