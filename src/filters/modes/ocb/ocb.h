@@ -16,7 +16,7 @@
 namespace Botan {
 
 class L_computer;
-//class Nonce_State;
+class Nonce_State;
 
 /**
 * OCB Mode (base class for OCB_Encryption and OCB_Decryption). Note
@@ -73,6 +73,8 @@ class BOTAN_DLL OCB_Mode : public AEAD_Mode,
       void write(const byte input[], size_t input_length) override;
       void start_msg() override;
       void end_msg() override;
+
+      std::unique_ptr<Nonce_State> m_nonce_state;
    };
 
 class BOTAN_DLL OCB_Encryption : public OCB_Mode

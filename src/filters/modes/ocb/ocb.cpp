@@ -52,18 +52,67 @@ class L_computer
       mutable std::vector<secure_vector<byte>> m_L;
    };
 
-#if 0
 class Nonce_State
    {
    public:
-      secure_vector<byte> update_nonce(const byte nonce[], size_t nonce_len);
+      Nonce_State(const BlockCipher& cipher) : m_cipher(cipher) {}
+
+      secure_vector<byte> update_nonce(const byte nonce[],
+                                       size_t nonce_len);
 
       bool fresh_nonce() { bool b = false; std::swap(b, m_fresh); return b; }
    private:
+      const BlockCipher& m_cipher;
+      secure_vector<byte> m_last_nonce;
       secure_vector<byte> m_stretch;
       bool m_fresh = false;
    };
-#endif
+
+secure_vector<byte>
+Nonce_State::update_nonce(const byte nonce[], size_t nonce_len)
+   {
+   const size_t BS = 16;
+
+   BOTAN_ASSERT(nonce_len < BS, "Nonce is less than 128 bits");
+
+   secure_vector<byte> nonce_buf(BS);
+
+   copy_mem(&nonce_buf[BS - nonce_len], nonce, nonce_len);
+   nonce_buf[BS - nonce_len - 1] = 1;
+
+   const byte bottom = nonce_buf[15] & 0x3F;
+   nonce_buf[15] &= 0xC0;
+
+   const bool need_new_stretch = (m_last_nonce != nonce_buf);
+
+   if(need_new_stretch)
+      {
+      m_last_nonce = nonce_buf;
+
+      m_cipher.encrypt(nonce_buf);
+
+      for(size_t i = 0; i != 8; ++i)
+         nonce_buf.push_back(nonce_buf[i] ^ nonce_buf[i+1]);
+
+      m_stretch = nonce_buf;
+      }
+
+   // now set the offset from stretch and bottom
+
+   const size_t shift_bytes = bottom / 8;
+   const size_t shift_bits  = bottom % 8;
+
+   secure_vector<byte> offset(BS);
+   for(size_t i = 0; i != BS; ++i)
+      {
+      offset[i]  = (m_stretch[i+shift_bytes] << shift_bits);
+      offset[i] |= (m_stretch[i+shift_bytes+1] >> (8-shift_bits));
+      }
+
+   m_fresh = true;
+   return offset;
+   }
+
 
 namespace {
 
@@ -146,6 +195,7 @@ void OCB_Mode::set_key(const SymmetricKey& key)
    {
    m_cipher->set_key(key);
    m_L.reset(new L_computer(*m_cipher));
+   m_nonce_state.reset(new Nonce_State(*m_cipher));
    }
 
 void OCB_Mode::set_nonce(const byte nonce[], size_t nonce_len)
@@ -153,44 +203,14 @@ void OCB_Mode::set_nonce(const byte nonce[], size_t nonce_len)
    if(!valid_iv_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
 
-   byte bottom;
-   secure_vector<byte> stretch;
+   BOTAN_ASSERT(m_nonce_state, "A key was set");
 
-   if(1) // need to recompute stretch (save iv to compare)
-      {
-      secure_vector<byte> buf(BS);
-
-      const size_t offset = BS - nonce_len;
-
-      copy_mem(&buf[offset], nonce, nonce_len);
-      buf[offset-1] = 1;
-
-      bottom = buf[15] & 0x3F;
-      buf[15] &= 0xC0;
-
-      m_cipher->encrypt(buf);
-
-      for(size_t i = 0; i != 8; ++i)
-         buf.push_back(buf[i] ^ buf[i+1]);
-
-      stretch = buf;
-      }
-
-   // now set the offset from stretch and bottom
-
-   const size_t shift_bytes = bottom / 8;
-   const size_t shift_bits  = bottom % 8;
-
-   for(size_t i = 0; i != BS; ++i)
-      {
-      m_offset[i]  = (stretch[i+shift_bytes] << shift_bits);
-      m_offset[i] |= (stretch[i+shift_bytes+1] >> (8-shift_bits));
-      }
+   m_offset = m_nonce_state->update_nonce(nonce, nonce_len);
    }
 
 void OCB_Mode::start_msg()
    {
-   //BOTAN_ASSERT(m_nonce_state.fresh_nonce(), "Nonce state is fresh");
+   BOTAN_ASSERT(m_nonce_state->fresh_nonce(), "Nonce state is fresh");
    }
 
 void OCB_Mode::set_associated_data(const byte ad[], size_t ad_len)
