@@ -41,14 +41,16 @@ class BOTAN_DLL GCM_Mode : public AEAD_Mode,
    protected:
       GCM_Mode(BlockCipher* cipher, size_t tag_size, bool decrypting);
 
+      static const size_t BS = 16;
+
       const size_t m_tag_size;
       const std::string m_cipher_name;
 
       std::unique_ptr<StreamCipher> m_ctr;
       secure_vector<byte> m_H;
       secure_vector<byte> m_H_ad;
-      secure_vector<byte> m_H_current;
-      secure_vector<byte> m_y0_cipher;
+      secure_vector<byte> m_mac;
+      secure_vector<byte> m_enc_y0;
       size_t m_ad_len, m_text_len;
       secure_vector<byte> m_ctr_buf;
 

@@ -10,64 +10,45 @@
 #include <botan/internal/xor_buf.h>
 #include <botan/loadstor.h>
 
-#include <iostream>
-#include <botan/hex.h>
-
 namespace Botan {
-
-void dump(const std::string& name, const byte x[], size_t x_len)
-   {
-   std::cout << name << " = " << hex_encode(x, x_len) << "\n";
-   }
-
-void dump(const std::string& name, const secure_vector<byte>& x)
-   {
-   dump(name, &x[0], x.size());
-   }
-
-bool rightshift(secure_vector<byte>& x)
-   {
-   byte carry = 0;
-
-   for(size_t i = 0; i != x.size(); ++i)
-      {
-      byte carry2 = x[i] & 1;
-      x[i] = (x[i] >> 1) | (carry << 7);
-      carry = carry2;
-      }
-
-   return carry;
-   }
-
-bool get_bit(const secure_vector<byte>& x, size_t bit)
-   {
-   const byte b = x[16 - (bit / 8)];
-
-   return (b >> (bit % 8)) & 0x01;
-   }
 
 secure_vector<byte>
 gcm_multiply(const secure_vector<byte>& x,
              const secure_vector<byte>& y)
    {
-   secure_vector<byte> z(x.size());
-   secure_vector<byte> v = x;
+   static const u64bit R = 0xE100000000000000;
 
-   for(size_t i = 0; i != 128; ++i)
+   u64bit V[2] = {
+      load_be<u64bit>(&y[0], 0),
+      load_be<u64bit>(&y[0], 1)
+   };
+
+   u64bit Z[2] = { 0, 0 };
+
+   for(size_t i = 0; i != 2; ++i)
       {
-      if(get_bit(y, i))
-         z ^= v;
+      u64bit X = load_be<u64bit>(&x[0], i);
 
-      const bool highbit = get_bit(v, 127);
+      for(size_t j = 0; j != 64; ++j)
+         {
+         if(X >> 63)
+            {
+            Z[0] ^= V[0];
+            Z[1] ^= V[1];
+            }
 
-      const bool carry = rightshift(v);
-      BOTAN_ASSERT(carry == highbit, "That makes sense");
+         const u64bit r = (V[1] & 1) ? R : 0;
 
-      if(highbit)
-         v[0] ^= 0xE1;
+         V[1] = (V[0] << 63) | (V[1] >> 1);
+         V[0] = (V[0] >> 1) ^ r;
+
+         X <<= 1;
+         }
       }
 
-   return z;
+   secure_vector<byte> out(16);
+   store_be<u64bit>(&out[0], Z[0], Z[1]);
+   return out;
    }
 
 void ghash_update(const secure_vector<byte>& H,
@@ -75,10 +56,6 @@ void ghash_update(const secure_vector<byte>& H,
                   const byte input[], size_t length)
    {
    const size_t BS = 16;
-
-   dump("H", H);
-
-   dump("ghash-in", ghash);
 
    /*
    This assumes if less than block size input then we're just on the
@@ -88,13 +65,9 @@ void ghash_update(const secure_vector<byte>& H,
       {
       const size_t to_proc = std::min(length, BS);
 
-      dump("input", input, to_proc);
-
       xor_buf(&ghash[0], &input[0], to_proc);
 
       ghash = gcm_multiply(ghash, H);
-
-      dump("X", ghash);
 
       input += to_proc;
       length -= to_proc;
@@ -107,9 +80,7 @@ void ghash_finalize(const secure_vector<byte>& H,
    {
    secure_vector<byte> final_block(16);
    store_be<u64bit>(&final_block[0], 8*ad_len, 8*text_len);
-   dump("lens", final_block);
    ghash_update(H, ghash, &final_block[0], final_block.size());
-   dump("final ghash", ghash);
    }
 
 /*
@@ -118,10 +89,14 @@ void ghash_finalize(const secure_vector<byte>& H,
 GCM_Mode::GCM_Mode(BlockCipher* cipher, size_t tag_size, bool decrypting) :
    Buffered_Filter(cipher->parallel_bytes(), decrypting ? tag_size : 0),
    m_tag_size(tag_size), m_cipher_name(cipher->name()),
-   m_H(16), m_H_ad(16), m_H_current(16),
+   m_H(16), m_H_ad(16), m_mac(16),
    m_ad_len(0), m_text_len(0),
    m_ctr_buf(8 * cipher->parallel_bytes())
    {
+   if(cipher->block_size() != BS)
+      throw std::invalid_argument("OCB requires a 128 bit cipher so cannot be used with " +
+                                  cipher->name());
+
    m_ctr.reset(new CTR_BE(cipher)); // CTR_BE takes ownership of cipher
 
    if(m_tag_size < 8 || m_tag_size > 16)
@@ -142,7 +117,7 @@ void GCM_Mode::set_key(const SymmetricKey& key)
    {
    m_ctr->set_key(key);
 
-   const std::vector<byte> zeros(16);
+   const std::vector<byte> zeros(BS);
    m_ctr->set_iv(&zeros[0], zeros.size());
 
    zeroise(m_H);
@@ -165,7 +140,7 @@ void GCM_Mode::set_associated_data(const byte ad[], size_t ad_len)
 */
 void GCM_Mode::set_nonce(const byte nonce[], size_t nonce_len)
    {
-   secure_vector<byte> y0(16);
+   secure_vector<byte> y0(BS);
 
    if(nonce_len == 12)
       {
@@ -180,8 +155,8 @@ void GCM_Mode::set_nonce(const byte nonce[], size_t nonce_len)
 
    m_ctr->set_iv(&y0[0], y0.size());
 
-   m_y0_cipher.resize(16);
-   m_ctr->cipher(&m_y0_cipher[0], &m_y0_cipher[0], m_y0_cipher.size());
+   m_enc_y0.resize(BS);
+   m_ctr->encipher(m_enc_y0);
    }
 
 /*
@@ -190,7 +165,7 @@ void GCM_Mode::set_nonce(const byte nonce[], size_t nonce_len)
 void GCM_Mode::start_msg()
    {
    m_text_len = 0;
-   m_H_current = m_H_ad;
+   m_mac = m_H_ad;
    }
 
 /*
@@ -218,7 +193,7 @@ void GCM_Encryption::buffered_block(const byte input[], size_t length)
       size_t copied = std::min<size_t>(length, m_ctr_buf.size());
 
       m_ctr->cipher(input, &m_ctr_buf[0], copied);
-      ghash_update(m_H, m_H_current, &m_ctr_buf[0], copied);
+      ghash_update(m_H, m_mac, &m_ctr_buf[0], copied);
       m_text_len += copied;
 
       send(m_ctr_buf, copied);
@@ -232,11 +207,11 @@ void GCM_Encryption::buffered_final(const byte input[], size_t input_length)
    {
    buffered_block(input, input_length);
 
-   ghash_finalize(m_H, m_H_current, m_ad_len, m_text_len);
+   ghash_finalize(m_H, m_mac, m_ad_len, m_text_len);
 
-   m_H_current ^= m_y0_cipher;
+   m_mac ^= m_enc_y0;
 
-   send(m_H_current, m_tag_size);
+   send(m_mac, m_tag_size);
    }
 
 void GCM_Decryption::buffered_block(const byte input[], size_t length)
@@ -245,7 +220,7 @@ void GCM_Decryption::buffered_block(const byte input[], size_t length)
       {
       size_t copied = std::min<size_t>(length, m_ctr_buf.size());
 
-      ghash_update(m_H, m_H_current, &input[0], copied);
+      ghash_update(m_H, m_mac, &input[0], copied);
       m_ctr->cipher(input, &m_ctr_buf[0], copied);
       m_text_len += copied;
 
@@ -266,11 +241,11 @@ void GCM_Decryption::buffered_final(const byte input[], size_t input_length)
    if(input_length) // handle any remaining input
       buffered_block(input, input_length);
 
-   ghash_finalize(m_H, m_H_current, m_ad_len, m_text_len);
+   ghash_finalize(m_H, m_mac, m_ad_len, m_text_len);
 
-   m_H_current ^= m_y0_cipher;
+   m_mac ^= m_enc_y0;
 
-   if(!same_mem(&m_H_current[0], included_tag, m_tag_size))
+   if(!same_mem(&m_mac[0], included_tag, m_tag_size))
       throw Integrity_Failure("GCM tag check failed");
    }
 

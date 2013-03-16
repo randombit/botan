@@ -442,6 +442,9 @@ bool failed_test(const std::string& algo,
    if(params.size() > 3)
       vars["iv"] = params[3];
 
+   if(params.size() > 4)
+      vars["ad"] = params[4];
+
    Algorithm_Factory& af = global_state().algorithm_factory();
 
    const auto results = algorithm_kat_detailed(algo, vars, af);
