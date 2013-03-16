@@ -31,16 +31,8 @@ class BOTAN_DLL OCB_Mode : public AEAD_Mode,
                            private Buffered_Filter
    {
    public:
-      /**
-      * @param cipher the 128-bit block cipher to use
-      * @param tag_size is how big the auth tag will be
-      * @param decrypting  true if decrypting
-      */
-      OCB_Mode(BlockCipher* cipher, size_t tag_size, bool decrypting);
-
-      ~OCB_Mode();
-
       void set_key(const SymmetricKey& key) override;
+
       void set_nonce(const byte nonce[], size_t nonce_len) override;
 
       void set_associated_data(const byte ad[], size_t ad_len) override;
@@ -54,8 +46,17 @@ class BOTAN_DLL OCB_Mode : public AEAD_Mode,
          return (length > 0 && length < 16);
          }
 
+      ~OCB_Mode();
+
    protected:
-      static const size_t BS = 16;
+      /**
+      * @param cipher the 128-bit block cipher to use
+      * @param tag_size is how big the auth tag will be
+      * @param decrypting  true if decrypting
+      */
+      OCB_Mode(BlockCipher* cipher, size_t tag_size, bool decrypting);
+
+      static const size_t BS = 16; // intrinsic to OCB definition
 
       // fixme make these private
       std::unique_ptr<BlockCipher> m_cipher;
