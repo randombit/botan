@@ -20,7 +20,6 @@ TLS/Public Key Infrastructure
   * Certificate path validation
   * PKCS #10 certificate requests (creation and certificate issue)
 
-
 Public Key Cryptography
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -46,14 +45,14 @@ Hash functions
 Block ciphers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+  * Authenticated cipher modes EAX and OCB
+  * Unauthenticated block cipher modes ECB, CBC, CBC/CTS, CFB, OFB, CTR, XTS
   * AES (Rijndael) and AES candidates Serpent, Twofish, MARS, CAST-256, RC6
   * DES, and variants 3DES and DESX
-  * National/telecom block ciphers SEED, KASUMI, MISTY1, GOST 28147, Skipjack
+  * National/telecom block ciphers SEED, KASUMI, MISTY1, GOST 28147
   * Other block ciphers including Blowfish, CAST-128, IDEA, Noekeon,
-    TEA, XTEA, RC2, RC5, SAFER-SK, and Square
+    Skipjack, TEA, XTEA, RC2, RC5, SAFER-SK, and Square
   * Block cipher constructions Luby-Rackoff and Lion
-  * Block cipher modes ECB, CBC, CBC/CTS, CFB, OFB, CTR, XTS and
-    authenticated cipher mode EAX
 
 Stream Ciphers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
