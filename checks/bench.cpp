@@ -76,6 +76,7 @@ const std::string algos[] = {
    "AES-128/CBC/CTS",
    "AES-128/CTR-BE",
    "AES-128/EAX",
+   "AES-128/OCB",
    "AES-128/OFB",
    "AES-128/XTS",
    "AES-128/CFB(128)",
@@ -202,10 +203,13 @@ bool bench_algo(const std::string& algo,
          }
 
       size_t cipher_keylen = proto_cipher->maximum_keylength();
-      const size_t cipher_ivlen = proto_cipher->block_size();
+      size_t cipher_ivlen = proto_cipher->block_size();
 
+      // hacks!
       if(algo_parts[1] == "XTS")
-         cipher_keylen *= 2; // hack!
+         cipher_keylen *= 2;
+      if(algo_parts[1] == "OCB")
+         cipher_ivlen -= 1;
 
       std::vector<byte> buf(16 * 1024);
       rng.randomize(&buf[0], buf.size());

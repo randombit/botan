@@ -416,6 +416,9 @@ u32bit do_validation_tests(const std::string& filename,
       errors++;
       }
 
+   if(should_pass)
+      test_ocb();
+
    return errors;
    }
 
