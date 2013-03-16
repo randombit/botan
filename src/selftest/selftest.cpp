@@ -1,12 +1,14 @@
 /*
 * Startup Self Tests
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2013 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
 #include <botan/selftest.h>
 #include <botan/filters.h>
+#include <botan/aead.h>
+#include <botan/hex.h>
 #include <botan/internal/core_engine.h>
 #include <botan/internal/stl_util.h>
 
@@ -23,17 +25,24 @@ std::string test_filter_kat(Filter* filter,
                             const std::string& input,
                             const std::string& expected)
    {
-   Pipe pipe(new Hex_Decoder, filter, new Hex_Encoder);
-   pipe.process_msg(input);
+   try
+      {
+      Pipe pipe(new Hex_Decoder, filter, new Hex_Encoder);
+      pipe.process_msg(input);
 
-   const std::string got = pipe.read_all_as_string();
+      const std::string got = pipe.read_all_as_string();
 
-   const bool same = (got == expected);
+      const bool same = (got == expected);
 
-   if(same)
-      return "passed";
-   else
-      return (std::string("got ") + got + " expected " + expected);
+      if(same)
+         return "passed";
+      else
+         return (std::string("got ") + got + " expected " + expected);
+      }
+   catch(std::exception& e)
+      {
+      return std::string("exception ") + e.what();
+      }
    }
 
 }
@@ -116,6 +125,19 @@ algorithm_kat_detailed(const SCAN_Name& algo_name,
             dec->set_iv(iv);
          else if(!dec->valid_iv_length(0))
             throw Invalid_IV_Length(algo, iv.length());
+
+#if defined(BOTAN_HAS_AEAD)
+
+         if(AEAD_Mode* enc_aead = dynamic_cast<AEAD_Mode*>(enc))
+            {
+            const std::vector<byte> ad = hex_decode(search_map(vars, std::string("ad")));
+
+            enc_aead->set_associated_data(&ad[0], ad.size());
+
+            if(AEAD_Mode* dec_aead = dynamic_cast<AEAD_Mode*>(dec))
+               dec_aead->set_associated_data(&ad[0], ad.size());
+            }
+#endif
 
          all_results[provider + " (encrypt)"] = test_filter_kat(enc, input, output);
          all_results[provider + " (decrypt)"] = test_filter_kat(dec, output, input);

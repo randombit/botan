@@ -1,0 +1,6 @@
+define GCM
+
+<requires>
+block
+ctr
+</requires>
