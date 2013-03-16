@@ -439,18 +439,18 @@ bool failed_test(const std::string& algo,
    if(params.size() > 3)
       vars["iv"] = params[3];
 
-   std::map<std::string, bool> results =
-      algorithm_kat(algo, vars, global_state().algorithm_factory());
+   Algorithm_Factory& af = global_state().algorithm_factory();
+
+   const auto results = algorithm_kat_detailed(algo, vars, af);
 
    if(results.size())
       {
-      for(std::map<std::string, bool>::const_iterator i = results.begin();
-          i != results.end(); ++i)
+      for(auto i : results)
          {
-         if(i->second == false)
+         if(i.second != "passed")
             {
             std::cout << algo << " test with provider "
-                      << i->first << " failed\n";
+                      << i.first << " failed - " << i.second << "\n";
             return true;
             }
          }

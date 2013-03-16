@@ -10,6 +10,8 @@
 #include <botan/internal/core_engine.h>
 #include <botan/internal/stl_util.h>
 
+#include <iostream>
+
 namespace Botan {
 
 namespace {
@@ -17,16 +19,21 @@ namespace {
 /*
 * Perform a Known Answer Test
 */
-bool test_filter_kat(Filter* filter,
-                     const std::string& input,
-                     const std::string& expected_output)
+std::string test_filter_kat(Filter* filter,
+                            const std::string& input,
+                            const std::string& expected)
    {
    Pipe pipe(new Hex_Decoder, filter, new Hex_Encoder);
    pipe.process_msg(input);
 
-   const std::string output = pipe.read_all_as_string();
+   const std::string got = pipe.read_all_as_string();
 
-   return (output == expected_output);
+   const bool same = (got == expected);
+
+   if(same)
+      return "passed";
+   else
+      return (std::string("got ") + got + " expected " + expected);
    }
 
 }
@@ -34,15 +41,15 @@ bool test_filter_kat(Filter* filter,
 /*
 * Run a set of KATs
 */
-std::map<std::string, bool>
-algorithm_kat(const SCAN_Name& algo_name,
-              const std::map<std::string, std::string>& vars,
-              Algorithm_Factory& af)
+std::map<std::string, std::string>
+algorithm_kat_detailed(const SCAN_Name& algo_name,
+                       const std::map<std::string, std::string>& vars,
+                       Algorithm_Factory& af)
    {
    const std::string& algo = algo_name.algo_name_and_args();
 
    std::vector<std::string> providers = af.providers_of(algo);
-   std::map<std::string, bool> all_results;
+   std::map<std::string, std::string> all_results;
 
    if(providers.empty()) // no providers, nothing to do
       return all_results;
@@ -110,14 +117,30 @@ algorithm_kat(const SCAN_Name& algo_name,
          else if(!dec->valid_iv_length(0))
             throw Invalid_IV_Length(algo, iv.length());
 
-         bool enc_ok = test_filter_kat(enc, input, output);
-         bool dec_ok = test_filter_kat(dec, output, input);
-
-         all_results[provider] = enc_ok && dec_ok;
+         all_results[provider + " (encrypt)"] = test_filter_kat(enc, input, output);
+         all_results[provider + " (decrypt)"] = test_filter_kat(dec, output, input);
          }
       }
 
    return all_results;
+   }
+
+std::map<std::string, bool>
+algorithm_kat(const SCAN_Name& algo_name,
+              const std::map<std::string, std::string>& vars,
+              Algorithm_Factory& af)
+   {
+   const auto result = algorithm_kat_detailed(algo_name, vars, af);
+
+   std::map<std::string, bool> pass_or_fail;
+
+   for(auto i : result)
+      {
+      //std::cout << i.first << " " << i.second << "\n";
+      pass_or_fail[i.first] = (i.second == "passed");
+      }
+
+   return pass_or_fail;
    }
 
 namespace {
