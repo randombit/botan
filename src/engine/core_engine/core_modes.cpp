@@ -44,6 +44,10 @@
   #include <botan/ocb.h>
 #endif
 
+#if defined(BOTAN_HAS_GCM)
+  #include <botan/gcm.h>
+#endif
+
 #if defined(BOTAN_HAS_XTS)
   #include <botan/xts.h>
 #endif
@@ -138,6 +142,16 @@ Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
          return new OCB_Encryption(block_cipher->clone(), 16);
       else
          return new OCB_Decryption(block_cipher->clone(), 16);
+      }
+#endif
+
+#if defined(BOTAN_HAS_GCM)
+   if(mode == "GCM")
+      {
+      if(direction == ENCRYPTION)
+         return new GCM_Encryption(block_cipher->clone(), 16);
+      else
+         return new GCM_Decryption(block_cipher->clone(), 16);
       }
 #endif
 
