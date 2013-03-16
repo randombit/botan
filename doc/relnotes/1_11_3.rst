@@ -1,8 +1,8 @@
 Version 1.11.3, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* An implementation of the OCB authenticated cipher mode is now
-  included
+* Implementations of the OCB and GCM authenticated cipher modes are
+  now included
 
 * New functions for symmetric encryption are included in cryptobox.h
 
