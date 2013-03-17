@@ -32,7 +32,7 @@ class BOTAN_DLL GCM_Mode : public AEAD_Mode,
       */
       void set_associated_data(const byte ad[], size_t ad_len) override;
 
-      bool valid_keylength(size_t key_len) const override;
+      Key_Length_Specification key_spec() const override { return m_ctr->key_spec(); }
 
       // GCM supports arbitrary IV lengths
       bool valid_iv_length(size_t) const override { return true; }

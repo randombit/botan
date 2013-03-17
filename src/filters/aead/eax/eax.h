@@ -32,7 +32,7 @@ class BOTAN_DLL EAX_Mode : public AEAD_Mode,
 
       std::string name() const override;
 
-      bool valid_keylength(size_t key_len) const override;
+      Key_Length_Specification key_spec() const override { return ctr->key_spec(); }
 
       // EAX supports arbitrary IV lengths
       bool valid_iv_length(size_t) const override { return true; }

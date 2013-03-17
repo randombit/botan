@@ -39,6 +39,15 @@ size_t xts_parallelism(BlockCipher* cipher)
                            2 * cipher->block_size());
    }
 
+Key_Length_Specification xts_key_spec(const BlockCipher& cipher)
+   {
+   const Key_Length_Specification& spec = cipher.key_spec();
+
+   return Key_Length_Specification(2*spec.minimum_keylength(),
+                                   2*spec.maximum_keylength(),
+                                   2*spec.keylength_multiple());
+   }
+
 }
 
 /*
@@ -80,6 +89,11 @@ XTS_Encryption::XTS_Encryption(BlockCipher* ciph,
 std::string XTS_Encryption::name() const
    {
    return (cipher->name() + "/XTS");
+   }
+
+Key_Length_Specification XTS_Encryption::key_spec() const
+   {
+   return xts_key_spec(*cipher);
    }
 
 /*
@@ -254,6 +268,11 @@ XTS_Decryption::XTS_Decryption(BlockCipher* ciph,
 std::string XTS_Decryption::name() const
    {
    return (cipher->name() + "/XTS");
+   }
+
+Key_Length_Specification XTS_Decryption::key_spec() const
+   {
+   return xts_key_spec(*cipher);
    }
 
 /*

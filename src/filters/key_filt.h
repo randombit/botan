@@ -38,7 +38,15 @@ class BOTAN_DLL Keyed_Filter : public Filter
       * @param length the key length to be checked for validity
       * @return true if the key length is valid, false otherwise
       */
-      virtual bool valid_keylength(size_t length) const = 0;
+      bool valid_keylength(size_t length) const
+         {
+         return key_spec().valid_keylength(length);
+         }
+
+      /**
+      * @return object describing limits on key size
+      */
+      virtual Key_Length_Specification key_spec() const = 0;
 
       /**
       * Check whether an IV length is valid for this filter

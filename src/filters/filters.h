@@ -58,13 +58,7 @@ class BOTAN_DLL StreamCipher_Filter : public Keyed_Filter
       */
       void set_key(const SymmetricKey& key) { cipher->set_key(key); }
 
-      /**
-      * Check whether a key length is valid for this filter.
-      * @param length the key length to be checked for validity
-      * @return true if the key length is valid, false otherwise
-      */
-      bool valid_keylength(size_t length) const
-         { return cipher->valid_keylength(length); }
+      Key_Length_Specification key_spec() const override { return cipher->key_spec(); }
 
       /**
       * Construct a stream cipher filter.
@@ -153,13 +147,7 @@ class BOTAN_DLL MAC_Filter : public Keyed_Filter
       */
       void set_key(const SymmetricKey& key) { mac->set_key(key); }
 
-      /**
-      * Check whether a key length is valid for this filter.
-      * @param length the key length to be checked for validity
-      * @return true if the key length is valid, false otherwise
-      */
-      bool valid_keylength(size_t length) const
-         { return mac->valid_keylength(length); }
+      Key_Length_Specification key_spec() const override { return mac->key_spec(); }
 
       /**
       * Construct a MAC filter. The MAC key will be left empty.

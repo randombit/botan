@@ -58,16 +58,6 @@ EAX_Mode::EAX_Mode(BlockCipher* cipher, size_t tag_size, bool decrypting) :
    }
 
 /*
-* Check if a keylength is valid for EAX
-*/
-bool EAX_Mode::valid_keylength(size_t n) const
-   {
-   if(!ctr->valid_keylength(n))
-      return false;
-   return true;
-   }
-
-/*
 * Set the EAX key
 */
 void EAX_Mode::set_key(const SymmetricKey& key)

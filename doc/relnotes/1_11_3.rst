@@ -4,6 +4,10 @@ Version 1.11.3, Not Yet Released
 * Implementations of the OCB and GCM authenticated cipher modes are
   now included
 
+* :cpp:class:`Keyed_Filter` now supports returning a
+  :cpp:class:`Key_Length_Specification` so the full details of what
+  keylengths are supported is now available in keyed filters.
+
 * New functions for symmetric encryption are included in cryptobox.h
 
 * A new function :cpp:func:`algorithm_kat_detailed` returns a string

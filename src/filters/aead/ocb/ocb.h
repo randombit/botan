@@ -37,7 +37,7 @@ class BOTAN_DLL OCB_Mode : public AEAD_Mode,
 
       void set_associated_data(const byte ad[], size_t ad_len) override;
 
-      bool valid_keylength(size_t n) const override;
+      Key_Length_Specification key_spec() const override { return m_cipher->key_spec(); }
 
       std::string name() const override;
 
