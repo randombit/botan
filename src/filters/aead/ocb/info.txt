@@ -2,6 +2,5 @@ define OCB
 
 <requires>
 block
-aead
 cmac
 </requires>
