@@ -12,6 +12,8 @@
 
 namespace Botan {
 
+namespace {
+
 secure_vector<byte>
 gcm_multiply(const secure_vector<byte>& x,
              const secure_vector<byte>& y)
@@ -82,6 +84,8 @@ void ghash_finalize(const secure_vector<byte>& H,
    store_be<u64bit>(&final_block[0], 8*ad_len, 8*text_len);
    ghash_update(H, ghash, &final_block[0], final_block.size());
    }
+
+}
 
 /*
 * GCM_Mode Constructor
