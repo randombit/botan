@@ -11,7 +11,7 @@ Unsure which release you want? Check the :ref:`FAQ <devel_vs_stable>`.
    .. note::
 
       If you are viewing this documentation offline, a more recent
-      release `may be available <http://botan.randombit.net/download.html>`_.
+      release `may be available <https://botan.randombit.net/download.html>`_.
 
 Current Stable Series (1.10)
 ----------------------------------------
@@ -39,7 +39,7 @@ The latest version of the current development series, from branch
 :tbz:`1.11.2` (:tbz_sig:`sig <1.11.2>`)
 
 A script also creates daily snapshots of trunk, which are available
-`here <http://files.randombit.net/botan/snapshots/>`_.
+`here <https://files.randombit.net/botan/snapshots/>`_.
 
 .. note::
 
@@ -59,7 +59,7 @@ Accessing Version Control
 
 Botan's development occurs using a distributed version control system
 called `Monotone <http://www.monotone.ca>`_ (though there is also a
-mirror on `github <http://github.com/randombit/botan>`_. The main
+mirror on `github <https://github.com/randombit/botan>`_. The main
 branch of development occurs on the branch named
 ``net.randombit.botan``. To download that branch and set up a new
 workspace, run::

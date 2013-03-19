@@ -49,15 +49,14 @@ templates_path = ['_sphinx/templates']
 if is_website_build and use_disqus:
     templates_path += ['_sphinx/disqus']
 
-files_dir = 'http://botan.randombit.net/files'
+files_dir = 'https://files.randombit.net/botan'
 
 extlinks = {
-    'pr': ('http://bugs.randombit.net/show_bug.cgi?id=%s', 'PR '),
-    'wikipedia': ('http://en.wikipedia.org/wiki/%s', ''),
-    'viewmtn': ('http://viewmtn.randombit.net/tree/h:%s', ''),
-    'botan-devel': ('http://lists.randombit.net/pipermail/botan-devel/%s.html', None),
+    'pr': ('https://bugs.randombit.net/show_bug.cgi?id=%s', 'PR '),
+    'wikipedia': ('https://en.wikipedia.org/wiki/%s', ''),
+    'botan-devel': ('https://lists.randombit.net/pipermail/botan-devel/%s.html', None),
 
-    'cve': ('http://www.cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-%s', 'CVE-'),
+    'cve': ('https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-%s', 'CVE-'),
 
     'tgz': (files_dir + '/Botan-%s.tgz', 'tar/gz for '),
     'tgz_sig': (files_dir + '/Botan-%s.tgz.asc', 'tar/gz sig '),
