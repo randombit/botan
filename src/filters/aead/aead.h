@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-class AEAD_Mode : public Keyed_Filter
+class BOTAN_DLL AEAD_Mode : public Keyed_Filter
    {
    public:
       /**
