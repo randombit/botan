@@ -28,7 +28,7 @@ const std::string algos[] = {
    "GOST",
    "IDEA",
    "KASUMI",
-   "Lion(SHA-256,Turing,8192)",
+   "Lion(SHA-256,Salsa20,8192)",
    "Luby-Rackoff(SHA-512)",
    "MARS",
    "MISTY1",

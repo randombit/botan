@@ -8,6 +8,8 @@ Version 1.11.3, Not Yet Released
   :cpp:class:`Key_Length_Specification` so the full details of what
   keylengths are supported is now available in keyed filters.
 
+* The 
+
 * New functions for symmetric encryption are included in cryptobox.h
 
 * A new function :cpp:func:`algorithm_kat_detailed` returns a string
