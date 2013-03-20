@@ -1,7 +1,7 @@
 
 BOTAN_CONFIG = botan-config
 
-CXX       = g++-4.7.0
+CXX       = g++
 CFLAGS    = -O2 -ansi -std=c++11 -W -Wall -I../../build/include
 LIBS      = -L../.. -lbotan-1.11
 
