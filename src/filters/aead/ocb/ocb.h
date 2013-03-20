@@ -8,7 +8,7 @@
 #ifndef BOTAN_OCB_H__
 #define BOTAN_OCB_H__
 
-#include <botan/aead.h>
+#include <botan/aead_filt.h>
 #include <botan/block_cipher.h>
 #include <botan/buf_filt.h>
 #include <memory>
@@ -27,7 +27,7 @@ class Nonce_State;
 * @see Free Licenses http://www.cs.ucdavis.edu/~rogaway/ocb/license.htm
 * @see OCB home page http://www.cs.ucdavis.edu/~rogaway/ocb
 */
-class BOTAN_DLL OCB_Mode : public AEAD_Mode,
+class BOTAN_DLL OCB_Mode : public AEAD_Filter,
                            private Buffered_Filter
    {
    public:

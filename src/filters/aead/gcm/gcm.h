@@ -8,7 +8,7 @@
 #ifndef BOTAN_GCM_H__
 #define BOTAN_GCM_H__
 
-#include <botan/aead.h>
+#include <botan/aead_filt.h>
 #include <botan/buf_filt.h>
 #include <botan/block_cipher.h>
 #include <botan/stream_cipher.h>
@@ -19,7 +19,7 @@ namespace Botan {
 /**
 * GCM Mode
 */
-class BOTAN_DLL GCM_Mode : public AEAD_Mode,
+class BOTAN_DLL GCM_Mode : public AEAD_Filter,
                            private Buffered_Filter
    {
    public:
