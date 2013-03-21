@@ -1,3 +1,7 @@
+<aliases>
+mips64el
+</aliases>
+
 <submodels>
 r4000
 r4100
