@@ -231,7 +231,7 @@ def main(args = None):
     rev_id = run_monotone(options.mtn_db, ['automate', 'select', selector(args)])
 
     if rev_id == '':
-        logging.error('No revision for %s found' % (version))
+        logging.error('No revision matching %s found' % (selector(args)))
         return 2
 
     logging.info('Found revision id %s' % (rev_id))
