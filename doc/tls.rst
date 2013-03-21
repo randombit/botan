@@ -526,16 +526,23 @@ be negotiated during a handshake.
      Default: "secp521r1", "secp384r1", "secp256r1",
      "secp256k1", "secp224r1", "secp224k1"
 
-     Also allowed: "secp192r1", "secp192k1", "secp160r2", "secp160r1", "secp160k1"
+     Also allowed: "secp192r1", "secp192k1", "secp160r2", "secp160r1",
+     "secp160k1"
 
  .. cpp:function:: std::vector<byte> compression() const
 
      Return the list of compression methods we are willing to use, in order of
-     preference.
+     preference. Default is null compression only.
 
      .. note::
 
         TLS compression is not currently supported.
+
+ .. cpp:function:: bool server_uses_own_ciphersuite_preferences() const
+
+     If this returns true, a server will pick the cipher it prefers the
+     most out of the client's list. Otherwise, it will negotiate the
+     first cipher in the client's ciphersuite list that it supports.
 
  .. cpp:function:: bool negotiate_heartbeat_support() const
 
@@ -544,6 +551,11 @@ be negotiated during a handshake.
      the extension. Otherwise, clients will not offer heartbeat
      support and servers will ignore clients offering heartbeat
      support.
+
+     If this returns true, callers should expect to handle heartbeat
+     data in their ``proc_fn``.
+
+     Default
 
  .. cpp:function:: bool allow_server_initiated_renegotiation() const
 

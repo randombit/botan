@@ -112,6 +112,8 @@ u16bit choose_ciphersuite(
    const std::map<std::string, std::vector<X509_Certificate> >& cert_chains,
    const Client_Hello* client_hello)
    {
+   const bool our_choice = policy.server_uses_own_ciphersuite_preferences();
+
    const bool have_srp = creds.attempt_srp("tls-server",
                                            client_hello->sni_hostname());
 
@@ -128,12 +130,15 @@ u16bit choose_ciphersuite(
    const bool have_shared_ecc_curve =
       (policy.choose_curve(client_hello->supported_ecc_curves()) != "");
 
-   // Ordering by our preferences rather than by clients
-   for(size_t i = 0; i != server_suites.size(); ++i)
-      {
-      const u16bit suite_id = server_suites[i];
+   std::vector<u16bit> pref_list = server_suites;
+   std::vector<u16bit> other_list = client_suites;
 
-      if(!value_exists(client_suites, suite_id))
+   if(!our_choice)
+      std::swap(pref_list, other_list);
+
+   for(auto suite_id : pref_list)
+      {
+      if(!value_exists(other_list, suite_id))
          continue;
 
       Ciphersuite suite = Ciphersuite::by_id(suite_id);
