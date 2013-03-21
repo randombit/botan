@@ -73,7 +73,7 @@ The current botan website is derived entirely from the ReST content in
 called ``mtn-watch`` periodically checks for new updates on the
 ``net.randombit.botan`` branch (only), and if found regenerates the
 site content. Thus as soon as the changes are synced to the server
-running on ``randombit.net``, the website will be updated.
+running on ``mtn.randombit.net``, the website will be updated.
 
 Announce The Release
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

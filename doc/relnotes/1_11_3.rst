@@ -12,8 +12,8 @@ Version 1.11.3, Not Yet Released
   now included
 
 * New functions for symmetric encryption are included in cryptobox.h
+  though interfaces and formats are subject to change.
 
 * A new function :cpp:func:`algorithm_kat_detailed` returns a string
   providing information about failures, instead of just a pass/fail
   indicator as in :cpp:func:`algorithm_kat`.
-

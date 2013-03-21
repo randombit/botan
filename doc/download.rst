@@ -38,8 +38,9 @@ The latest version of the current development series, from branch
 :tgz:`1.11.2` (:tgz_sig:`sig <1.11.2>`),
 :tbz:`1.11.2` (:tbz_sig:`sig <1.11.2>`)
 
-A script also creates daily snapshots of trunk, which are available
-`here <https://files.randombit.net/botan/snapshots/>`_.
+To access the latest unreleased sources, see :doc:`vcs`. A script also
+creates regular snapshots of trunk, which are available `here
+<https://files.randombit.net/botan/snapshots/>`_.
 
 .. note::
 
@@ -53,44 +54,3 @@ The latest version of the previous stable series, from branch
 ``net.randombit.botan.1_8`` is :doc:`relnotes/1_8_14`:
 :tgz:`1.8.14` (:tgz_sig:`sig <1.8.14>`),
 :tbz:`1.8.14` (:tbz_sig:`sig <1.8.14>`)
-
-Accessing Version Control
-----------------------------------------
-
-Botan's development occurs using a distributed version control system
-called `Monotone <http://www.monotone.ca>`_ (though there is also a
-mirror on `github <https://github.com/randombit/botan>`_. The main
-branch of development occurs on the branch named
-``net.randombit.botan``. To download that branch and set up a new
-workspace, run::
-
-   $ mtn db init --db=botan.mtn
-   $ mtn pull --db=botan.mtn randombit.net 'net.randombit.botan'
-   [...]
-   $ mtn checkout --db=botan.mtn --branch=net.randombit.botan
-   [...]
-
-By default the ``checkout`` command will place the workspace in a
-directory with the same name as the branch you are checking out. If
-you want a different directory name, just include it after the
-``--branch`` option (you can also rename this directory at any time).
-
-If this is the first time you've connected to the server, Monotone
-will print::
-
-  mtn: first time connecting to server randombit.net
-  mtn: I'll assume it's really them, but you might want to double-check
-  mtn: their key's fingerprint: 8c0b868f2247215c63c96983b1c8ca0f0f0cfd9a
-
-The fingerprint shown above was the correct one as of June 20, 2012.
-
-To pull further changes, from anywhere in the workspace run these
-commands::
-
-  $ mtn pull
-  [...]
-  $ mtn update
-  [summary of changes]
-
-The ``mtn update`` command will give you a summary of which files
-changed; to view the full changelog, run ``mtn log``.

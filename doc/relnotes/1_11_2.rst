@@ -21,7 +21,7 @@ New Parallel Filter
 """"""""""""""""""""""""""""""""""""""""
 
 * The new filter :cpp:class:`Threaded_Fork` acts like a normal
-  :cpp:class:`Fork,` sending its input to a number of different
+  :cpp:class:`Fork`, sending its input to a number of different
   filters, but each subchain of filters in the fork runs in its own
   thread. Contributed by Joel Low.
 
