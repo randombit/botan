@@ -8,7 +8,7 @@
 #ifndef BOTAN_OCB_H__
 #define BOTAN_OCB_H__
 
-#include <botan/aead.h>
+#include <botan/aead_filt.h>
 #include <botan/block_cipher.h>
 #include <botan/buf_filt.h>
 #include <memory>
@@ -27,7 +27,7 @@ class Nonce_State;
 * @see Free Licenses http://www.cs.ucdavis.edu/~rogaway/ocb/license.htm
 * @see OCB home page http://www.cs.ucdavis.edu/~rogaway/ocb
 */
-class BOTAN_DLL OCB_Mode : public AEAD_Mode,
+class BOTAN_DLL OCB_Mode : public AEAD_Filter,
                            private Buffered_Filter
    {
    public:
@@ -37,7 +37,7 @@ class BOTAN_DLL OCB_Mode : public AEAD_Mode,
 
       void set_associated_data(const byte ad[], size_t ad_len) override;
 
-      bool valid_keylength(size_t n) const override;
+      Key_Length_Specification key_spec() const override { return m_cipher->key_spec(); }
 
       std::string name() const override;
 

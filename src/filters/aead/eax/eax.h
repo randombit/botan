@@ -8,7 +8,7 @@
 #ifndef BOTAN_EAX_H__
 #define BOTAN_EAX_H__
 
-#include <botan/aead.h>
+#include <botan/aead_filt.h>
 #include <botan/buf_filt.h>
 #include <botan/block_cipher.h>
 #include <botan/stream_cipher.h>
@@ -20,7 +20,7 @@ namespace Botan {
 /**
 * EAX Mode
 */
-class BOTAN_DLL EAX_Mode : public AEAD_Mode,
+class BOTAN_DLL EAX_Mode : public AEAD_Filter,
                            private Buffered_Filter
    {
    public:
@@ -32,7 +32,7 @@ class BOTAN_DLL EAX_Mode : public AEAD_Mode,
 
       std::string name() const override;
 
-      bool valid_keylength(size_t key_len) const override;
+      Key_Length_Specification key_spec() const override { return ctr->key_spec(); }
 
       // EAX supports arbitrary IV lengths
       bool valid_iv_length(size_t) const override { return true; }

@@ -107,16 +107,6 @@ GCM_Mode::GCM_Mode(BlockCipher* cipher, size_t tag_size, bool decrypting) :
       throw Invalid_Argument(name() + ": Bad tag size " + std::to_string(m_tag_size));
    }
 
-/*
-* Check if a keylength is valid for GCM
-*/
-bool GCM_Mode::valid_keylength(size_t n) const
-   {
-   if(!m_ctr->valid_keylength(n))
-      return false;
-   return true;
-   }
-
 void GCM_Mode::set_key(const SymmetricKey& key)
    {
    m_ctr->set_key(key);

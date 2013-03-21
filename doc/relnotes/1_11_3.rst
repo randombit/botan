@@ -11,6 +11,13 @@ Version 1.11.3, Not Yet Released
 * Implementations of the OCB and GCM authenticated cipher modes are
   now included
 
+* :cpp:class:`Keyed_Filter` now supports returning a
+  :cpp:class:`Key_Length_Specification` so the full details of what
+  keylengths are supported is now available in keyed filters.
+
+* The experimental and rarely used Turing and WiderWAKE stream ciphers
+  have been removed
+
 * New functions for symmetric encryption are included in cryptobox.h
   though interfaces and formats are subject to change.
 

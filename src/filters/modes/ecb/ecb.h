@@ -26,8 +26,7 @@ class BOTAN_DLL ECB_Encryption : public Keyed_Filter,
 
       void set_key(const SymmetricKey& key) { cipher->set_key(key); }
 
-      bool valid_keylength(size_t key_len) const
-         { return cipher->valid_keylength(key_len); }
+      Key_Length_Specification key_spec() const override { return cipher->key_spec(); }
 
       ECB_Encryption(BlockCipher* ciph,
                      BlockCipherModePaddingMethod* pad);
@@ -60,8 +59,7 @@ class BOTAN_DLL ECB_Decryption : public Keyed_Filter,
 
       void set_key(const SymmetricKey& key) { cipher->set_key(key); }
 
-      bool valid_keylength(size_t key_len) const
-         { return cipher->valid_keylength(key_len); }
+      Key_Length_Specification key_spec() const override { return cipher->key_spec(); }
 
       ECB_Decryption(BlockCipher* ciph,
                      BlockCipherModePaddingMethod* pad);

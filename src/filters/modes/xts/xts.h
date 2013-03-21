@@ -24,8 +24,7 @@ class BOTAN_DLL XTS_Encryption : public Keyed_Filter,
       void set_key(const SymmetricKey& key);
       void set_iv(const InitializationVector& iv);
 
-      bool valid_keylength(size_t key_len) const
-         { return cipher->valid_keylength(key_len); }
+      Key_Length_Specification key_spec() const override;
 
       bool valid_iv_length(size_t iv_len) const
          { return (iv_len == cipher->block_size()); }
@@ -61,8 +60,7 @@ class BOTAN_DLL XTS_Decryption : public Keyed_Filter,
       void set_key(const SymmetricKey& key);
       void set_iv(const InitializationVector& iv);
 
-      bool valid_keylength(size_t key_len) const
-         { return cipher->valid_keylength(key_len); }
+      Key_Length_Specification key_spec() const override;
 
       bool valid_iv_length(size_t iv_len) const
          { return (iv_len == cipher->block_size()); }

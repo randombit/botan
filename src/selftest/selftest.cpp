@@ -7,7 +7,7 @@
 
 #include <botan/selftest.h>
 #include <botan/filters.h>
-#include <botan/aead.h>
+#include <botan/aead_filt.h>
 #include <botan/hex.h>
 #include <botan/internal/core_engine.h>
 #include <botan/internal/stl_util.h>
@@ -128,13 +128,13 @@ algorithm_kat_detailed(const SCAN_Name& algo_name,
 
 #if defined(BOTAN_HAS_AEAD)
 
-         if(AEAD_Mode* enc_aead = dynamic_cast<AEAD_Mode*>(enc))
+         if(AEAD_Filter* enc_aead = dynamic_cast<AEAD_Filter*>(enc))
             {
             const std::vector<byte> ad = hex_decode(search_map(vars, std::string("ad")));
 
             enc_aead->set_associated_data(&ad[0], ad.size());
 
-            if(AEAD_Mode* dec_aead = dynamic_cast<AEAD_Mode*>(dec))
+            if(AEAD_Filter* dec_aead = dynamic_cast<AEAD_Filter*>(dec))
                dec_aead->set_associated_data(&ad[0], ad.size());
             }
 #endif

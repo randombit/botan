@@ -57,8 +57,9 @@ Block ciphers
 Stream Ciphers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
- * RC4, Salsa20/XSalsa20
- * Obsolete designs Turing and WiderWake4+1
+ * RC4 of course
+ * Salsa20/XSalsa20
+ * CTR and OFB modes also present a stream cipher interface
 
 Authentication Codes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -180,11 +180,6 @@ OCB_Mode::OCB_Mode(BlockCipher* cipher, size_t tag_size, bool decrypting) :
 
 OCB_Mode::~OCB_Mode() { /* for unique_ptr destructor */ }
 
-bool OCB_Mode::valid_keylength(size_t n) const
-   {
-   return m_cipher->valid_keylength(n);
-   }
-
 std::string OCB_Mode::name() const
    {
    return m_cipher->name() + "/OCB"; // include tag size

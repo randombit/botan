@@ -8,7 +8,7 @@
 #ifndef BOTAN_GCM_H__
 #define BOTAN_GCM_H__
 
-#include <botan/aead.h>
+#include <botan/aead_filt.h>
 #include <botan/buf_filt.h>
 #include <botan/block_cipher.h>
 #include <botan/stream_cipher.h>
@@ -19,7 +19,7 @@ namespace Botan {
 /**
 * GCM Mode
 */
-class BOTAN_DLL GCM_Mode : public AEAD_Mode,
+class BOTAN_DLL GCM_Mode : public AEAD_Filter,
                            private Buffered_Filter
    {
    public:
@@ -32,7 +32,7 @@ class BOTAN_DLL GCM_Mode : public AEAD_Mode,
       */
       void set_associated_data(const byte ad[], size_t ad_len) override;
 
-      bool valid_keylength(size_t key_len) const override;
+      Key_Length_Specification key_spec() const override { return m_ctr->key_spec(); }
 
       // GCM supports arbitrary IV lengths
       bool valid_iv_length(size_t) const override { return true; }
