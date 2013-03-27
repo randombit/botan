@@ -12,8 +12,6 @@
 #include <botan/internal/core_engine.h>
 #include <botan/internal/stl_util.h>
 
-#include <iostream>
-
 namespace Botan {
 
 namespace {
@@ -126,18 +124,18 @@ algorithm_kat_detailed(const SCAN_Name& algo_name,
          else if(!dec->valid_iv_length(0))
             throw Invalid_IV_Length(algo, iv.length());
 
-#if defined(BOTAN_HAS_AEAD)
+         const std::vector<byte> ad = hex_decode(search_map(vars, std::string("ad")));
 
-         if(AEAD_Filter* enc_aead = dynamic_cast<AEAD_Filter*>(enc))
+         if(!ad.empty())
             {
-            const std::vector<byte> ad = hex_decode(search_map(vars, std::string("ad")));
+            if(AEAD_Filter* enc_aead = dynamic_cast<AEAD_Filter*>(enc))
+               {
+               enc_aead->set_associated_data(&ad[0], ad.size());
 
-            enc_aead->set_associated_data(&ad[0], ad.size());
-
-            if(AEAD_Filter* dec_aead = dynamic_cast<AEAD_Filter*>(dec))
-               dec_aead->set_associated_data(&ad[0], ad.size());
+               if(AEAD_Filter* dec_aead = dynamic_cast<AEAD_Filter*>(dec))
+                  dec_aead->set_associated_data(&ad[0], ad.size());
+               }
             }
-#endif
 
          all_results[provider + " (encrypt)"] = test_filter_kat(enc, input, output);
          all_results[provider + " (decrypt)"] = test_filter_kat(dec, output, input);

@@ -3,5 +3,6 @@ define SELFTESTS
 <requires>
 algo_factory
 filters
+aead_filt
 core_engine
 </requires>
