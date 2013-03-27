@@ -313,7 +313,7 @@ void OCB_Encryption::finish(secure_vector<byte>& buffer)
 
    mac ^= m_ad_hash;
 
-   buffer += std::pair(&mac[0], tag_size());
+   buffer += std::make_pair(&mac[0], tag_size());
 
    zeroise(m_checksum);
    zeroise(m_offset);
