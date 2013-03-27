@@ -1,11 +1,13 @@
 define SSL_TLS
 
-<comment>
+load_on request
+
+<warning>
 A new TLS API is being developed. This version has numerous
 performance and usability issues and will not be supported in the
 future. Only use it if you need it for compatability with code written
 against previous versions.
-</comment>
+</warning>
 
 uses_tr1 yes
 
