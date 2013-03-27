@@ -36,20 +36,26 @@
   #include <botan/ctr.h>
 #endif
 
-#if defined(BOTAN_HAS_EAX)
+#if defined(BOTAN_HAS_XTS)
+  #include <botan/xts.h>
+#endif
+
+#if defined(BOTAN_HAS_AEAD_FILTER)
+
+#include <botan/aead_filt.h>
+
+#if defined(BOTAN_HAS_AEAD_EAX)
   #include <botan/eax.h>
 #endif
 
-#if defined(BOTAN_HAS_OCB)
+#if defined(BOTAN_HAS_AEAD_OCB)
   #include <botan/ocb.h>
 #endif
 
-#if defined(BOTAN_HAS_GCM)
+#if defined(BOTAN_HAS_AEAD_GCM)
   #include <botan/gcm.h>
 #endif
 
-#if defined(BOTAN_HAS_XTS)
-  #include <botan/xts.h>
 #endif
 
 namespace Botan {
@@ -135,24 +141,28 @@ Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
 #endif
       }
 
-#if defined(BOTAN_HAS_OCB)
+#if defined(BOTAN_HAS_AEAD_FILTER)
+
+#if defined(BOTAN_HAS_AEAD_OCB)
    if(mode == "OCB")
       {
       if(direction == ENCRYPTION)
-         return new OCB_Encryption(block_cipher->clone(), 16);
+         return new AEAD_Filter(new OCB_Encryption(block_cipher->clone(), 16));
       else
-         return new OCB_Decryption(block_cipher->clone(), 16);
+         return new AEAD_Filter(new OCB_Decryption(block_cipher->clone(), 16));
       }
 #endif
 
-#if defined(BOTAN_HAS_GCM)
+#if defined(BOTAN_HAS_AEAD_GCM)
    if(mode == "GCM")
       {
       if(direction == ENCRYPTION)
-         return new GCM_Encryption(block_cipher->clone(), 16);
+         return new AEAD_Filter(new GCM_Encryption(block_cipher->clone(), 16));
       else
-         return new GCM_Decryption(block_cipher->clone(), 16);
+         return new AEAD_Filter(new GCM_Decryption(block_cipher->clone(), 16));
       }
+#endif
+
 #endif
 
 #if defined(BOTAN_HAS_XTS)
@@ -189,13 +199,13 @@ Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
          }
 #endif
 
-#if defined(BOTAN_HAS_EAX)
+#if defined(BOTAN_HAS_AEAD_EAX)
       if(mode_name == "EAX")
          {
          if(direction == ENCRYPTION)
-            return new EAX_Encryption(block_cipher->clone(), bits);
+            return new AEAD_Filter(new EAX_Encryption(block_cipher->clone(), bits / 8));
          else
-            return new EAX_Decryption(block_cipher->clone(), bits);
+            return new AEAD_Filter(new EAX_Decryption(block_cipher->clone(), bits / 8));
          }
 #endif
       }

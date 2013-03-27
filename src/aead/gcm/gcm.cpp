@@ -27,6 +27,8 @@ gcm_multiply(const secure_vector<byte>& x,
 
    u64bit Z[2] = { 0, 0 };
 
+   // Both CLMUL and SSE2 versions would be useful
+
    for(size_t i = 0; i != 2; ++i)
       {
       u64bit X = load_be<u64bit>(&x[0], i);
@@ -192,7 +194,7 @@ void GCM_Encryption::finish(secure_vector<byte>& buffer)
 
    m_mac ^= m_enc_y0;
 
-   buffer += m_mac;
+   buffer += std::make_pair(&m_mac[0], tag_size());
    }
 
 void GCM_Decryption::update(secure_vector<byte>& buffer)
@@ -207,22 +209,26 @@ void GCM_Decryption::finish(secure_vector<byte>& buffer)
    BOTAN_ASSERT(buffer.size() >= tag_size(),
                 "Have the tag as part of final input");
 
+   const size_t remaining = buffer.size() - tag_size();
+
    // handle any final input before the tag
-   if(size_t input_length = buffer.size() - tag_size())
+   if(remaining)
       {
-      ghash_update(m_H, m_mac, &buffer[0], input_length);
-      m_ctr->cipher(&buffer[0], &buffer[0], input_length);
-      m_text_len += input_length;
+      ghash_update(m_H, m_mac, &buffer[0], remaining);
+      m_ctr->cipher(&buffer[0], &buffer[0], remaining);
+      m_text_len += remaining;
       }
 
    ghash_finalize(m_H, m_mac, m_ad_len, m_text_len);
 
    m_mac ^= m_enc_y0;
 
-   const byte* included_tag = &buffer[buffer.size() - tag_size()];
+   const byte* included_tag = &buffer[remaining];
 
    if(!same_mem(&m_mac[0], included_tag, tag_size()))
       throw Integrity_Failure("GCM tag check failed");
+
+   buffer.resize(remaining);
    }
 
 }

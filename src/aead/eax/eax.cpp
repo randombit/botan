@@ -119,7 +119,7 @@ void EAX_Encryption::finish(secure_vector<byte>& buffer)
    xor_buf(data_mac, m_nonce_mac, data_mac.size());
    xor_buf(data_mac, m_ad_mac, data_mac.size());
 
-   buffer += data_mac;
+   buffer += std::make_pair(&data_mac[0], tag_size());
    }
 
 void EAX_Decryption::update(secure_vector<byte>& buffer)
@@ -133,15 +133,15 @@ void EAX_Decryption::finish(secure_vector<byte>& buffer)
    BOTAN_ASSERT(buffer.size() >= tag_size(),
                 "Have the tag as part of final input");
 
-   const size_t input_length = buffer.size() - tag_size();
+   const size_t remaining = buffer.size() - tag_size();
 
-   if(input_length) // handle any remaining input
+   if(remaining) // handle any remaining input
       {
-      m_cmac->update(&buffer[0], buffer.size());
-      m_ctr->cipher(&buffer[0], &buffer[0], buffer.size());
+      m_cmac->update(&buffer[0], remaining);
+      m_ctr->cipher(&buffer[0], &buffer[0], remaining);
       }
 
-   const byte* included_tag = &buffer[input_length];
+   const byte* included_tag = &buffer[remaining];
 
    secure_vector<byte> mac = m_cmac->final();
    mac ^= m_nonce_mac;
@@ -149,6 +149,8 @@ void EAX_Decryption::finish(secure_vector<byte>& buffer)
 
    if(!same_mem(&mac[0], included_tag, tag_size()))
       throw Integrity_Failure("EAX tag check failed");
+
+   buffer.resize(remaining);
    }
 
 }

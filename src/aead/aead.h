@@ -57,6 +57,12 @@ class AEAD_Mode : public SymmetricAlgorithm
       */
       virtual secure_vector<byte> start(const byte nonce[], size_t nonce_len) = 0;
 
+      template<typename Alloc>
+      secure_vector<byte> start_vec(const std::vector<byte, Alloc>& nonce)
+         {
+         return start(&nonce[0], nonce.size());
+         }
+
       /**
       * Update (encrypt or decrypt) some data. Input must be in size
       * update_granularity() byte blocks.

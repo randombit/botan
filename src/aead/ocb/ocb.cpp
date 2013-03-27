@@ -11,9 +11,6 @@
 #include <botan/internal/bit_ops.h>
 #include <algorithm>
 
-#include <botan/hex.h>
-#include <iostream>
-
 namespace Botan {
 
 // Has to be in Botan namespace so unique_ptr can reference it
@@ -377,33 +374,34 @@ void OCB_Decryption::finish(secure_vector<byte>& buffer)
    {
    BOTAN_ASSERT(buffer.size() >= tag_size(), "We have the tag");
 
-   if(const size_t remaining_ctext = buffer.size() - tag_size())
+   const size_t remaining = buffer.size() - tag_size();
+
+   if(remaining)
       {
-      const size_t final_full_blocks = remaining_ctext / BS;
-      const size_t remainder_bytes = remaining_ctext - (final_full_blocks * BS);
+      const size_t final_full_blocks = remaining / BS;
+      const size_t final_bytes = remaining - (final_full_blocks * BS);
 
       decrypt(&buffer[0], final_full_blocks);
 
-      if(remainder_bytes)
+      if(final_bytes)
          {
-         BOTAN_ASSERT(remainder_bytes < BS, "Only a partial block left");
+         BOTAN_ASSERT(final_bytes < BS, "Only a partial block left");
 
-         byte* remainder = &buffer[buffer.size() - remainder_bytes];
+         byte* remainder = &buffer[remaining - final_bytes];
 
          m_offset ^= m_L->star(); // Offset_*
 
          secure_vector<byte> pad(BS);
          m_cipher->encrypt(m_offset, pad); // P_*
 
-         xor_buf(&remainder[0], &pad[0], remainder_bytes);
+         xor_buf(&remainder[0], &pad[0], final_bytes);
 
-         xor_buf(&m_checksum[0], &remainder[0], remainder_bytes);
-         m_checksum[remainder_bytes] ^= 0x80;
+         xor_buf(&m_checksum[0], &remainder[0], final_bytes);
+         m_checksum[final_bytes] ^= 0x80;
          }
       }
 
-   const byte* included_tag = &buffer[buffer.size() - tag_size()];
-
+   // compute the mac
    secure_vector<byte> mac = m_offset;
    mac ^= m_checksum;
    mac ^= m_L->dollar();
@@ -412,12 +410,19 @@ void OCB_Decryption::finish(secure_vector<byte>& buffer)
 
    mac ^= m_ad_hash;
 
+   // reset state
    zeroise(m_checksum);
    zeroise(m_offset);
    m_block_index = 0;
 
-   if(!same_mem(&mac[0], included_tag, m_tag_size))
+   // compare mac
+   const byte* included_tag = &buffer[remaining];
+
+   if(!same_mem(&mac[0], included_tag, tag_size()))
       throw Integrity_Failure("OCB tag check failed");
+
+   // remove tag from end of message
+   buffer.resize(remaining);
    }
 
 }
