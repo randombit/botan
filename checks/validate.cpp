@@ -449,6 +449,7 @@ bool failed_test(const std::string& algo,
 
    const auto results = algorithm_kat_detailed(algo, vars, af);
 
+   bool failure = false;
    if(results.size())
       {
       for(auto i : results)
@@ -457,12 +458,12 @@ bool failed_test(const std::string& algo,
             {
             std::cout << algo << " test with provider "
                       << i.first << " failed - " << i.second << "\n";
-            return true;
+            failure = true;
             }
          }
-
-      return false; // OK
       }
+
+   return failure;
 
    const std::string in = params[0];
    const std::string expected = params[1];
