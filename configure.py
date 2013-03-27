@@ -544,7 +544,7 @@ class ModuleInfo(object):
         lex_me_harder(infofile, self,
                       ['source', 'header:internal', 'header:public',
                        'requires', 'os', 'arch', 'cc', 'libs',
-                       'comment'],
+                       'comment', 'warning'],
                       {
                         'load_on': 'auto',
                         'define': [],
@@ -603,6 +603,11 @@ class ModuleInfo(object):
             self.comment = ' '.join(self.comment)
         else:
             self.comment = None
+
+        if self.warning != []:
+            self.warning = ' '.join(self.warning)
+        else:
+            self.warning = None
 
     def sources(self):
         return self.source
@@ -1321,6 +1326,8 @@ def choose_modules_to_use(modules, archinfo, options):
             logging.info('Using SIMD module ' + mod)
         if modules[mod].comment:
             logging.info('%s: %s' % (mod, modules[mod].comment))
+        if modules[mod].warning:
+            logging.warning('%s: %s' % (mod, modules[mod].warning))
 
     logging.debug('Loading modules %s', ' '.join(sorted(to_load)))
 
