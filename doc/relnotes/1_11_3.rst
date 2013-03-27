@@ -1,15 +1,17 @@
 Version 1.11.3, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Add a new interface for AEAD modes (:cpp:class:`AEAD_Mode`).
+
+* Implementations of the OCB and GCM authenticated cipher modes are
+  now included.
+
 * A new TLS policy mechanism
   :cpp:func:`TLS::Policy::server_uses_own_ciphersuite_preferences`
   controls how a server chooses a ciphersuite. Previously it always
   chose its most preferred cipher out of the client's list, but this
   can allow configuring a server to choose by the client's preferences
   instead.
-
-* Implementations of the OCB and GCM authenticated cipher modes are
-  now included
 
 * :cpp:class:`Keyed_Filter` now supports returning a
   :cpp:class:`Key_Length_Specification` so the full details of what
