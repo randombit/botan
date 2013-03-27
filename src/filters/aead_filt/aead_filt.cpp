@@ -77,9 +77,22 @@ void AEAD_Filter::start_msg()
 
 void AEAD_Filter::buffered_block(const byte input[], size_t input_length)
    {
-   secure_vector<byte> buf(input, input + input_length);
-   m_aead->update(buf);
-   send(buf);
+   secure_vector<byte> buf(m_aead->update_granularity());
+
+   while(input_length)
+      {
+      const size_t take = std::min(buf.size(), input_length);
+
+      buf.resize(take);
+      copy_mem(&buf[0], input, take);
+
+      m_aead->update(buf);
+
+      send(buf);
+
+      input += take;
+      input_length -= take;
+      }
    }
 
 void AEAD_Filter::buffered_final(const byte input[], size_t input_length)
