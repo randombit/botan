@@ -1,16 +1,21 @@
 AEAD Modes
 ========================================
 
+.. versionadded:: 1.11.3
+
 AEAD (Authenticated Encryption with Associated Data) modes provide
 message encryption, message authentication, and the ability to
 authenticate additional data that is not included in the ciphertext
-(such as a sequence number or header).
+(such as a sequence number or header). It is a subclass of
+:cpp:class:`Symmetric_Algorithm`.
 
 The AEAD interface can be used directly, or as part of the filter
-system by using :cpp:class:`AEAD_Filter` (which will be returned by
+system by using :cpp:class:`AEAD_Filter` (a subclass of
+:cpp:class:`Keyed_Filter` which will be returned by
 :cpp:func:`get_cipher` if the named cipher is an AEAD mode).
 
-AEAD modes currently available include GCM, OCB, and EAX.
+AEAD modes currently available include GCM, OCB, and EAX. All three
+use a 128-bit block cipher such as AES.
 
 .. cpp:class:: AEAD_Mode
 
@@ -44,29 +49,33 @@ AEAD modes currently available include GCM, OCB, and EAX.
        Continue processing a message. The *buffer* is an in/out
        parameter and may be resized. In particular, some modes require
        that all input be consumed before any output is produced; with
-       these modes, *buffer* will be returned resized to 0.
+       these modes, *buffer* will be returned empty.
+
+       On input, the buffer must be sized in blocks of size
+       :cpp:func:`update_granularity`. For instance if the update
+       granularity was 64, then *buffer* could be 64, 128, 192,
+       ... bytes.
 
   .. cpp:function:: void finish(secure_vector<byte>& buffer)
 
        Complete processing a message with a final input of *buffer*,
-       which is treated the same as with :cpp:func:`update`. The
-       *buffer* is an in/out parameter. On input it contains any final
-       part of the message that needs to be processed. On output it
-       contains any final output.
+       which is treated the same as with :cpp:func:`update`. It must
+       contain at least :cpp:func:`final_minimum_size` bytes.
 
        Note that if you have the entire message in hand, calling
-       finish with the entire message (without ever calling update) is
-       both efficient and convenient.
+       finish without ever calling update is both efficient and
+       convenient.
 
   .. cpp:function:: size_t update_granularity() const
 
        The AEAD interface requires :cpp:func:`update` be called
-       with at least this many bytes.
+       with blocks of this size.
 
   .. cpp:function:: size_t final_minimum_size() const
 
-       The AEAD interface requires :cpp:func:`finish` be called
-       with at least this many bytes.
+       The AEAD interface requires :cpp:func:`finish` be called with
+       at least this many bytes (which may be zero, or greater than
+       :cpp:func:`update_granularity`)
 
   .. cpp:function:: bool valid_nonce_length(size_t nonce_len) const
 
