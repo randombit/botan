@@ -14,7 +14,7 @@ namespace Botan {
 
 u32bit to_u32bit(const std::string& str)
    {
-   return std::stoul(str);
+   return std::stoul(str, nullptr);
    }
 
 /*
