@@ -1,4 +1,4 @@
-define GCM
+define AEAD_GCM
 
 <requires>
 block

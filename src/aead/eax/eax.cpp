@@ -45,9 +45,28 @@ EAX_Mode::EAX_Mode(BlockCipher* cipher, size_t tag_size) :
       throw Invalid_Argument(name() + ": Bad tag size " + std::to_string(tag_size));
    }
 
+void EAX_Mode::clear()
+   {
+   m_cipher.reset();
+   m_ctr.reset();
+   m_cmac.reset();
+   zeroise(m_ad_mac);
+   zeroise(m_nonce_mac);
+   }
+
+std::string EAX_Mode::name() const
+   {
+   return (m_cipher->name() + "/EAX");
+   }
+
 size_t EAX_Mode::update_granularity() const
    {
    return 8 * m_cipher->parallel_bytes();
+   }
+
+Key_Length_Specification EAX_Mode::key_spec() const
+   {
+   return m_cipher->key_spec();
    }
 
 /*
@@ -84,14 +103,6 @@ secure_vector<byte> EAX_Mode::start(const byte nonce[], size_t nonce_len)
    m_cmac->update(2);
 
    return secure_vector<byte>();
-   }
-
-/*
-* Return the name of this cipher mode
-*/
-std::string EAX_Mode::name() const
-   {
-   return (m_cipher->name() + "/EAX");
    }
 
 void EAX_Encryption::update(secure_vector<byte>& buffer)

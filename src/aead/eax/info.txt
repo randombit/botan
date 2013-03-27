@@ -1,4 +1,4 @@
-define EAX
+define AEAD_EAX
 
 <requires>
 block

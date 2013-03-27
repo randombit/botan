@@ -1,25 +1,24 @@
 /*
-* EAX Mode
-* (C) 1999-2007,2013 Jack Lloyd
+* GCM Mode
+* (C) 2013 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
-#ifndef BOTAN_EAX_H__
-#define BOTAN_EAX_H__
+#ifndef BOTAN_GCM_H__
+#define BOTAN_GCM_H__
 
 #include <botan/aead.h>
 #include <botan/block_cipher.h>
 #include <botan/stream_cipher.h>
-#include <botan/mac.h>
 #include <memory>
 
 namespace Botan {
 
 /**
-* EAX base class
+* GCM Mode
 */
-class BOTAN_DLL EAX_Mode : public AEAD_Mode
+class BOTAN_DLL GCM_Mode : public AEAD_Mode
    {
    public:
       secure_vector<byte> start(const byte nonce[], size_t nonce_len) override;
@@ -32,46 +31,42 @@ class BOTAN_DLL EAX_Mode : public AEAD_Mode
 
       Key_Length_Specification key_spec() const override;
 
-      // EAX supports arbitrary nonce lengths
+      // GCM supports arbitrary nonce lengths
       bool valid_nonce_length(size_t) const override { return true; }
 
       void clear();
    protected:
       void key_schedule(const byte key[], size_t length) override;
 
-      /**
-      * @param cipher the cipher to use
-      * @param tag_size is how big the auth tag will be
-      */
-      EAX_Mode(BlockCipher* cipher, size_t tag_size);
+      GCM_Mode(BlockCipher* cipher, size_t tag_size);
 
       size_t tag_size() const { return m_tag_size; }
 
-      size_t block_size() const { return m_cipher->block_size(); }
+      static const size_t BS = 16;
 
-      size_t m_tag_size;
+      const size_t m_tag_size;
+      const std::string m_cipher_name;
 
-      std::unique_ptr<BlockCipher> m_cipher;
       std::unique_ptr<StreamCipher> m_ctr;
-      std::unique_ptr<MessageAuthenticationCode> m_cmac;
-
-      secure_vector<byte> m_ad_mac;
-
-      secure_vector<byte> m_nonce_mac;
+      secure_vector<byte> m_H;
+      secure_vector<byte> m_H_ad;
+      secure_vector<byte> m_mac;
+      secure_vector<byte> m_enc_y0;
+      size_t m_ad_len, m_text_len;
    };
 
 /**
-* EAX Encryption
+* GCM Encryption
 */
-class BOTAN_DLL EAX_Encryption : public EAX_Mode
+class BOTAN_DLL GCM_Encryption : public GCM_Mode
    {
    public:
       /**
-      * @param cipher a 128-bit block cipher
+      * @param cipher the 128 bit block cipher to use
       * @param tag_size is how big the auth tag will be
       */
-      EAX_Encryption(BlockCipher* cipher, size_t tag_size = 16) :
-         EAX_Mode(cipher, tag_size) {}
+      GCM_Encryption(BlockCipher* cipher, size_t tag_size = 16) :
+         GCM_Mode(cipher, tag_size) {}
 
       size_t minimum_final_size() const override { return 0; }
 
@@ -81,17 +76,17 @@ class BOTAN_DLL EAX_Encryption : public EAX_Mode
    };
 
 /**
-* EAX Decryption
+* GCM Decryption
 */
-class BOTAN_DLL EAX_Decryption : public EAX_Mode
+class BOTAN_DLL GCM_Decryption : public GCM_Mode
    {
    public:
       /**
-      * @param cipher a 128-bit block cipher
+      * @param cipher the 128 bit block cipher to use
       * @param tag_size is how big the auth tag will be
       */
-      EAX_Decryption(BlockCipher* cipher, size_t tag_size = 16) :
-         EAX_Mode(cipher, tag_size) {}
+      GCM_Decryption(BlockCipher* cipher, size_t tag_size = 16) :
+         GCM_Mode(cipher, tag_size) {}
 
       size_t minimum_final_size() const override { return tag_size(); }
 
