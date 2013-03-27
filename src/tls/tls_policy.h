@@ -126,6 +126,13 @@ class BOTAN_DLL Policy
       */
       virtual bool acceptable_protocol_version(Protocol_Version version) const;
 
+      /**
+      * @return true if servers should choose the ciphersuite matching
+      *         their highest preference, rather than the clients.
+      *         Has no effect on client side.
+      */
+      virtual bool server_uses_own_ciphersuite_preferences() const;
+
       virtual ~Policy() {}
    };
 

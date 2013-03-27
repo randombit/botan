@@ -39,6 +39,7 @@ Contents
    users
    pgpkey
    algos
+   vcs
    release_process
    build_log
 

@@ -131,6 +131,14 @@ u32bit Policy::session_ticket_lifetime() const
 bool Policy::acceptable_protocol_version(Protocol_Version version) const
    {
    return version.known_version(); // accept any version we know about
+
+   // maybe someday...
+   //return version >= Protocol_Version::TLS_V11;
+   }
+
+bool Policy::server_uses_own_ciphersuite_preferences() const
+   {
+   return true;
    }
 
 namespace {

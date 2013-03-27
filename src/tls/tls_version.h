@@ -129,6 +129,14 @@ class BOTAN_DLL Protocol_Version
       */
       bool operator>(const Protocol_Version& other) const;
 
+      /**
+      * @return if this version is later than or equal to other
+      */
+      bool operator>=(const Protocol_Version& other) const
+         {
+         return (*this == other || *this > other);
+         }
+
    private:
       u16bit m_version;
    };

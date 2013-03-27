@@ -1,6 +1,13 @@
 Version 1.11.3, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* A new TLS policy mechanism
+  :cpp:func:`TLS::Policy::server_uses_own_ciphersuite_preferences`
+  controls how a server chooses a ciphersuite. Previously it always
+  chose its most preferred cipher out of the client's list, but this
+  can allow configuring a server to choose by the client's preferences
+  instead.
+
 * Implementations of the OCB and GCM authenticated cipher modes are
   now included
 
@@ -12,8 +19,8 @@ Version 1.11.3, Not Yet Released
   have been removed
 
 * New functions for symmetric encryption are included in cryptobox.h
+  though interfaces and formats are subject to change.
 
 * A new function :cpp:func:`algorithm_kat_detailed` returns a string
   providing information about failures, instead of just a pass/fail
   indicator as in :cpp:func:`algorithm_kat`.
-

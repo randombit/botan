@@ -30,7 +30,7 @@ AES_ISA_Engine::find_block_cipher(const SCAN_Name& request,
       }
 #endif
 
-   return 0;
+   return nullptr;
    }
 
 }

@@ -22,7 +22,7 @@ namespace `Botan::CryptoBox`.
 
     Decrypts something encrypted with encrypt.
 
- .. cpp:function:: std::string decrypt(const std::string& input,
+ .. cpp:function:: std::string decrypt(const std::string& input, \
                                        const std::string& passphrase)
 
     Decrypts something encrypted with encrypt.
