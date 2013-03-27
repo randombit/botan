@@ -1,6 +1,15 @@
 #!/usr/bin/python
 
-# Used to generate src/tls/tls_suite_info.cpp
+"""
+Used to generate src/tls/tls_suite_info.cpp
+
+(C) 2011, 2012, 2013 Jack Lloyd
+
+Distributed under the terms of the Botan license
+
+First thing,
+  wget https://www.iana.org/assignments/tls-parameters/tls-parameters.txt
+"""
 
 import sys, re
 
@@ -100,9 +109,6 @@ def main(args = None):
 
     not_supported = weak_crypto + weird_crypto + static_dh + protocol_goop + just_not_yet
 
-    print not_supported
-
-    # http://www.iana.org/assignments/tls-parameters/tls-parameters.txt
     input = open('tls-parameters.txt')
 
     ciphersuite_re = re.compile(' +0x([0-9a-fA-F][0-9a-fA-F]),0x([0-9a-fA-F][0-9a-fA-F]) + TLS_([A-Za-z_0-9]+) ')
