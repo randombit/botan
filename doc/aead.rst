@@ -7,7 +7,8 @@ authenticate additional data that is not included in the ciphertext
 (such as a sequence number or header).
 
 The AEAD interface can be used directly, or as part of the filter
-system by using :cpp:class:`AEAD_Filter`.
+system by using :cpp:class:`AEAD_Filter` (which will be returned by
+:cpp:func:`get_cipher` if the named cipher is an AEAD mode).
 
 AEAD modes currently available include GCM, OCB, and EAX.
 
