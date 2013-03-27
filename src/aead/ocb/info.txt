@@ -1,4 +1,4 @@
-define OCB
+define AEAD_OCB
 
 <requires>
 block

@@ -8,7 +8,7 @@
 #ifndef BOTAN_OCB_H__
 #define BOTAN_OCB_H__
 
-#include <botan/aead_filt.h>
+#include <botan/aead.h>
 #include <botan/block_cipher.h>
 #include <botan/buf_filt.h>
 #include <memory>
@@ -27,36 +27,36 @@ class Nonce_State;
 * @see Free Licenses http://www.cs.ucdavis.edu/~rogaway/ocb/license.htm
 * @see OCB home page http://www.cs.ucdavis.edu/~rogaway/ocb
 */
-class BOTAN_DLL OCB_Mode : public AEAD_Filter,
-                           private Buffered_Filter
+class BOTAN_DLL OCB_Mode : public AEAD_Mode
    {
    public:
-      void set_key(const SymmetricKey& key) override;
-
-      void set_nonce(const byte nonce[], size_t nonce_len) override;
+      secure_vector<byte> start(const byte nonce[], size_t nonce_len) override;
 
       void set_associated_data(const byte ad[], size_t ad_len) override;
 
-      Key_Length_Specification key_spec() const override { return m_cipher->key_spec(); }
-
       std::string name() const override;
 
-      bool valid_iv_length(size_t length) const override
-         {
-         return (length > 0 && length < 16);
-         }
+      size_t update_granularity() const;
+
+      Key_Length_Specification key_spec() const override;
+
+      bool valid_nonce_length(size_t) const override;
+
+      void clear();
 
       ~OCB_Mode();
-
    protected:
+      static const size_t BS = 16; // intrinsic to OCB definition
+
       /**
       * @param cipher the 128-bit block cipher to use
       * @param tag_size is how big the auth tag will be
-      * @param decrypting  true if decrypting
       */
-      OCB_Mode(BlockCipher* cipher, size_t tag_size, bool decrypting);
+      OCB_Mode(BlockCipher* cipher, size_t tag_size);
 
-      static const size_t BS = 16; // intrinsic to OCB definition
+      void key_schedule(const byte key[], size_t length) override;
+
+      size_t tag_size() const { return m_tag_size; }
 
       // fixme make these private
       std::unique_ptr<BlockCipher> m_cipher;
@@ -68,12 +68,7 @@ class BOTAN_DLL OCB_Mode : public AEAD_Filter,
       secure_vector<byte> m_ad_hash;
       secure_vector<byte> m_offset;
       secure_vector<byte> m_checksum;
-
    private:
-      void write(const byte input[], size_t input_length) override;
-      void start_msg() override;
-      void end_msg() override;
-
       std::unique_ptr<Nonce_State> m_nonce_state;
    };
 
@@ -85,11 +80,15 @@ class BOTAN_DLL OCB_Encryption : public OCB_Mode
       * @param tag_size is how big the auth tag will be
       */
       OCB_Encryption(BlockCipher* cipher, size_t tag_size = 16) :
-         OCB_Mode(cipher, tag_size, false) {}
+         OCB_Mode(cipher, tag_size) {}
 
+      size_t minimum_final_size() const override { return 0; }
+
+      void update(secure_vector<byte>& blocks) override;
+
+      void finish(secure_vector<byte>& final_block) override;
    private:
-      void buffered_block(const byte input[], size_t input_length) override;
-      void buffered_final(const byte input[], size_t input_length) override;
+      void encrypt(byte input[], size_t blocks);
    };
 
 class BOTAN_DLL OCB_Decryption : public OCB_Mode
@@ -100,11 +99,15 @@ class BOTAN_DLL OCB_Decryption : public OCB_Mode
       * @param tag_size is how big the auth tag will be
       */
       OCB_Decryption(BlockCipher* cipher, size_t tag_size = 16) :
-         OCB_Mode(cipher, tag_size, true) {}
+         OCB_Mode(cipher, tag_size) {}
 
+      size_t minimum_final_size() const override { return tag_size(); }
+
+      void update(secure_vector<byte>& blocks) override;
+
+      void finish(secure_vector<byte>& final_block) override;
    private:
-      void buffered_block(const byte input[], size_t input_length) override;
-      void buffered_final(const byte input[], size_t input_length) override;
+      void decrypt(byte input[], size_t blocks);
    };
 
 }

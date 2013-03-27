@@ -59,13 +59,10 @@ class Nonce_State
 
       secure_vector<byte> update_nonce(const byte nonce[],
                                        size_t nonce_len);
-
-      bool fresh_nonce() { bool b = false; std::swap(b, m_fresh); return b; }
    private:
       const BlockCipher& m_cipher;
       secure_vector<byte> m_last_nonce;
       secure_vector<byte> m_stretch;
-      bool m_fresh = false;
    };
 
 secure_vector<byte>
@@ -109,7 +106,6 @@ Nonce_State::update_nonce(const byte nonce[], size_t nonce_len)
       offset[i] |= (m_stretch[i+shift_bytes+1] >> (8-shift_bits));
       }
 
-   m_fresh = true;
    return offset;
    }
 
@@ -163,16 +159,16 @@ secure_vector<byte> ocb_hash(const L_computer& L,
 
 }
 
-OCB_Mode::OCB_Mode(BlockCipher* cipher, size_t tag_size, bool decrypting) :
-   Buffered_Filter(cipher->parallel_bytes(), decrypting ? tag_size : 0),
-   m_cipher(cipher), m_tag_size(tag_size),
+OCB_Mode::OCB_Mode(BlockCipher* cipher, size_t tag_size) :
+   m_cipher(cipher),
+   m_tag_size(tag_size),
    m_ad_hash(BS), m_offset(BS), m_checksum(BS)
    {
    if(m_cipher->block_size() != BS)
       throw std::invalid_argument("OCB requires a 128 bit cipher so cannot be used with " +
                                   m_cipher->name());
 
-   if(m_tag_size != 16) // 64, 96 bits also supported
+   if(m_tag_size != 16) // fixme: 64, 96 bits also supported
       throw std::invalid_argument("OCB cannot produce a " + std::to_string(m_tag_size) +
                                   " byte tag");
 
@@ -180,53 +176,65 @@ OCB_Mode::OCB_Mode(BlockCipher* cipher, size_t tag_size, bool decrypting) :
 
 OCB_Mode::~OCB_Mode() { /* for unique_ptr destructor */ }
 
+void OCB_Mode::clear()
+   {
+   m_cipher.reset();
+   m_L.reset();
+   zeroise(m_ad_hash);
+   zeroise(m_offset);
+   zeroise(m_checksum);
+   }
+
+bool OCB_Mode::valid_nonce_length(size_t length) const
+   {
+   return (length > 0 && length < 16);
+   }
+
 std::string OCB_Mode::name() const
    {
    return m_cipher->name() + "/OCB"; // include tag size
    }
 
-void OCB_Mode::set_key(const SymmetricKey& key)
+size_t OCB_Mode::update_granularity() const
    {
-   m_cipher->set_key(key);
+   return 8 * m_cipher->parallel_bytes();
+   }
+
+Key_Length_Specification OCB_Mode::key_spec() const
+   {
+   return m_cipher->key_spec();
+   }
+
+void OCB_Mode::key_schedule(const byte key[], size_t length)
+   {
+   m_cipher->set_key(key, length);
    m_L.reset(new L_computer(*m_cipher));
    m_nonce_state.reset(new Nonce_State(*m_cipher));
    }
 
-void OCB_Mode::set_nonce(const byte nonce[], size_t nonce_len)
+void OCB_Mode::set_associated_data(const byte ad[], size_t ad_len)
    {
-   if(!valid_iv_length(nonce_len))
+   BOTAN_ASSERT(m_L, "A key was set");
+   m_ad_hash = ocb_hash(*m_L, *m_cipher, &ad[0], ad_len);
+   }
+
+secure_vector<byte> OCB_Mode::start(const byte nonce[], size_t nonce_len)
+   {
+   if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
 
    BOTAN_ASSERT(m_nonce_state, "A key was set");
 
    m_offset = m_nonce_state->update_nonce(nonce, nonce_len);
+   zeroise(m_checksum);
+   m_block_index = 0;
+
+   return secure_vector<byte>();
    }
 
-void OCB_Mode::start_msg()
+void OCB_Encryption::encrypt(byte buffer[], size_t blocks)
    {
-   BOTAN_ASSERT(m_nonce_state->fresh_nonce(), "Nonce state is fresh");
-   }
-
-void OCB_Mode::set_associated_data(const byte ad[], size_t ad_len)
-   {
-   m_ad_hash = ocb_hash(*m_L, *m_cipher, &ad[0], ad_len);
-   }
-
-void OCB_Mode::write(const byte input[], size_t length)
-   {
-   Buffered_Filter::write(input, length);
-   }
-
-void OCB_Mode::end_msg()
-   {
-   Buffered_Filter::end_msg();
-   }
-
-void OCB_Encryption::buffered_block(const byte input[], size_t input_length)
-   {
-   BOTAN_ASSERT(input_length % BS == 0, "Input length is an even number of blocks");
-
-   const size_t blocks = input_length / BS;
+   const L_computer& L = *m_L; // convenient name
 
    const size_t par_bytes = m_cipher->parallel_bytes();
 
@@ -234,9 +242,6 @@ void OCB_Encryption::buffered_block(const byte input[], size_t input_length)
 
    const size_t par_blocks = par_bytes / BS;
 
-   const L_computer& L = *m_L; // convenient name
-
-   secure_vector<byte> ctext_buf(par_bytes);
    secure_vector<byte> csum_accum(par_bytes);
    secure_vector<byte> offsets(par_bytes);
 
@@ -244,27 +249,25 @@ void OCB_Encryption::buffered_block(const byte input[], size_t input_length)
 
    while(blocks_left)
       {
-      const size_t to_proc = std::min(blocks_left, par_blocks);
-      const size_t proc_bytes = to_proc * BS;
+      const size_t proc_blocks = std::min(blocks_left, par_blocks);
+      const size_t proc_bytes = proc_blocks * BS;
 
-      xor_buf(&csum_accum[0], &input[0], proc_bytes);
-
-      for(size_t i = 0; i != to_proc; ++i)
-         {
+      for(size_t i = 0; i != proc_blocks; ++i)
+         { // could be done in parallel
          m_offset ^= L(ctz(++m_block_index));
          copy_mem(&offsets[BS*i], &m_offset[0], BS);
          }
 
-      copy_mem(&ctext_buf[0], &input[0], proc_bytes);
+      xor_buf(&csum_accum[0], &buffer[0], proc_bytes);
 
-      ctext_buf ^= offsets;
-      m_cipher->encrypt(ctext_buf);
-      ctext_buf ^= offsets;
+      xor_buf(&buffer[0], &offsets[0], proc_bytes);
 
-      send(ctext_buf, proc_bytes);
+      m_cipher->encrypt_n(&buffer[0], &buffer[0], proc_blocks);
 
-      input += proc_bytes;
-      blocks_left -= to_proc;
+      xor_buf(&buffer[0], &offsets[0], proc_bytes);
+
+      buffer += proc_bytes;
+      blocks_left -= proc_blocks;
       }
 
    // fold into checksum
@@ -272,31 +275,36 @@ void OCB_Encryption::buffered_block(const byte input[], size_t input_length)
       m_checksum[i % BS] ^= csum_accum[i];
    }
 
-void OCB_Encryption::buffered_final(const byte input[], size_t input_length)
+void OCB_Encryption::update(secure_vector<byte>& buffer)
    {
-   if(input_length >= BS)
+   BOTAN_ASSERT(buffer.size() % BS == 0, "Input length is an even number of blocks");
+
+   encrypt(&buffer[0], buffer.size() / BS);
+   }
+
+void OCB_Encryption::finish(secure_vector<byte>& buffer)
+   {
+   if(!buffer.empty())
       {
-      const size_t final_blocks = input_length / BS;
-      const size_t final_bytes = final_blocks * BS;
-      buffered_block(input, final_bytes);
-      input += final_bytes;
-      input_length -= final_bytes;
-      }
+      const size_t final_full_blocks = buffer.size() / BS;
+      const size_t remainder_bytes = buffer.size() - (final_full_blocks * BS);
 
-   if(input_length)
-      {
-      BOTAN_ASSERT(input_length < BS, "Only a partial block left");
+      encrypt(&buffer[0], final_full_blocks);
 
-      xor_buf(&m_checksum[0], &input[0], input_length);
-      m_checksum[input_length] ^= 0x80;
+      if(remainder_bytes)
+         {
+         BOTAN_ASSERT(remainder_bytes < BS, "Only a partial block left");
+         byte* remainder = &buffer[buffer.size() - remainder_bytes];
 
-      m_offset ^= m_L->star(); // Offset_*
+         xor_buf(&m_checksum[0], &remainder[0], remainder_bytes);
+         m_checksum[remainder_bytes] ^= 0x80;
 
-      secure_vector<byte> buf(BS);
-      m_cipher->encrypt(m_offset, buf);
-      xor_buf(&buf[0], &input[0], input_length);
+         m_offset ^= m_L->star(); // Offset_*
 
-      send(buf, input_length); // final ciphertext
+         secure_vector<byte> buf(BS);
+         m_cipher->encrypt(m_offset, buf);
+         xor_buf(&remainder[0], &buf[0], remainder_bytes);
+         }
       }
 
    // now compute the tag
@@ -308,18 +316,16 @@ void OCB_Encryption::buffered_final(const byte input[], size_t input_length)
 
    mac ^= m_ad_hash;
 
-   send(mac);
+   buffer += mac;
 
    zeroise(m_checksum);
    zeroise(m_offset);
    m_block_index = 0;
    }
 
-void OCB_Decryption::buffered_block(const byte input[], size_t input_length)
+void OCB_Decryption::decrypt(byte buffer[], size_t blocks)
    {
-   BOTAN_ASSERT(input_length % BS == 0, "Input length is an even number of blocks");
-
-   const size_t blocks = input_length / BS;
+   const L_computer& L = *m_L; // convenient name
 
    const size_t par_bytes = m_cipher->parallel_bytes();
 
@@ -327,9 +333,6 @@ void OCB_Decryption::buffered_block(const byte input[], size_t input_length)
 
    const size_t par_blocks = par_bytes / BS;
 
-   const L_computer& L = *m_L; // convenient name
-
-   secure_vector<byte> ptext_buf(par_bytes);
    secure_vector<byte> csum_accum(par_bytes);
    secure_vector<byte> offsets(par_bytes);
 
@@ -337,27 +340,25 @@ void OCB_Decryption::buffered_block(const byte input[], size_t input_length)
 
    while(blocks_left)
       {
-      const size_t to_proc = std::min(blocks_left, par_blocks);
-      const size_t proc_bytes = to_proc * BS;
+      const size_t proc_blocks = std::min(blocks_left, par_blocks);
+      const size_t proc_bytes = proc_blocks * BS;
 
-      for(size_t i = 0; i != to_proc; ++i)
-         {
+      for(size_t i = 0; i != proc_blocks; ++i)
+         { // could be done in parallel
          m_offset ^= L(ctz(++m_block_index));
          copy_mem(&offsets[BS*i], &m_offset[0], BS);
          }
 
-      copy_mem(&ptext_buf[0], &input[0], proc_bytes);
+      xor_buf(&buffer[0], &offsets[0], proc_bytes);
 
-      ptext_buf ^= offsets;
-      m_cipher->decrypt(ptext_buf);
-      ptext_buf ^= offsets;
+      m_cipher->decrypt_n(&buffer[0], &buffer[0], proc_blocks);
 
-      xor_buf(&csum_accum[0], &ptext_buf[0], proc_bytes);
+      xor_buf(&buffer[0], &offsets[0], proc_bytes);
 
-      send(ptext_buf, proc_bytes);
+      xor_buf(&csum_accum[0], &buffer[0], proc_bytes);
 
-      input += proc_bytes;
-      blocks_left -= to_proc;
+      buffer += proc_bytes;
+      blocks_left -= proc_blocks;
       }
 
    // fold into checksum
@@ -365,40 +366,44 @@ void OCB_Decryption::buffered_block(const byte input[], size_t input_length)
       m_checksum[i % BS] ^= csum_accum[i];
    }
 
-void OCB_Decryption::buffered_final(const byte input[], size_t input_length)
+void OCB_Decryption::update(secure_vector<byte>& buffer)
    {
-   BOTAN_ASSERT(input_length >= m_tag_size, "We have the tag");
+   BOTAN_ASSERT(buffer.size() % BS == 0, "Input length is an even number of blocks");
 
-   const byte* included_tag = &input[input_length - m_tag_size];
-   input_length -= m_tag_size;
+   decrypt(&buffer[0], buffer.size() / BS);
+   }
 
-   if(input_length >= BS)
+void OCB_Decryption::finish(secure_vector<byte>& buffer)
+   {
+   BOTAN_ASSERT(buffer.size() >= tag_size(), "We have the tag");
+
+   if(const size_t remaining_ctext = buffer.size() - tag_size())
       {
-      const size_t final_blocks = input_length / BS;
-      const size_t final_bytes = final_blocks * BS;
-      buffered_block(input, final_bytes);
-      input += final_bytes;
-      input_length -= final_bytes;
+      const size_t final_full_blocks = remaining_ctext / BS;
+      const size_t remainder_bytes = remaining_ctext - (final_full_blocks * BS);
+
+      decrypt(&buffer[0], final_full_blocks);
+
+      if(remainder_bytes)
+         {
+         BOTAN_ASSERT(remainder_bytes < BS, "Only a partial block left");
+
+         byte* remainder = &buffer[buffer.size() - remainder_bytes];
+
+         m_offset ^= m_L->star(); // Offset_*
+
+         secure_vector<byte> pad(BS);
+         m_cipher->encrypt(m_offset, pad); // P_*
+
+         xor_buf(&remainder[0], &pad[0], remainder_bytes);
+
+         xor_buf(&m_checksum[0], &remainder[0], remainder_bytes);
+         m_checksum[remainder_bytes] ^= 0x80;
+         }
       }
 
-   if(input_length)
-      {
-      BOTAN_ASSERT(input_length < BS, "Only a partial block left");
+   const byte* included_tag = &buffer[buffer.size() - tag_size()];
 
-      m_offset ^= m_L->star(); // Offset_*
-
-      secure_vector<byte> buf(BS);
-      m_cipher->encrypt(m_offset, buf); // P_*
-
-      xor_buf(&buf[0], &input[0], input_length);
-
-      xor_buf(&m_checksum[0], &buf[0], input_length);
-      m_checksum[input_length] ^= 0x80;
-
-      send(buf, input_length); // final plaintext
-      }
-
-   // now compute the tag
    secure_vector<byte> mac = m_offset;
    mac ^= m_checksum;
    mac ^= m_L->dollar();

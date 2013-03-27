@@ -225,5 +225,4 @@ void GCM_Decryption::finish(secure_vector<byte>& buffer)
       throw Integrity_Failure("GCM tag check failed");
    }
 
-
 }

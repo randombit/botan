@@ -1,7 +1,6 @@
 
 #include "validate.h"
 
-#include <botan/pipe.h>
 #include <botan/ocb.h>
 #include <botan/hex.h>
 #include <botan/sha2_32.h>
@@ -19,31 +18,35 @@ std::vector<byte> ocb_encrypt(const SymmetricKey& key,
    {
    //std::unique_ptr<AEAD_Mode> ocb = get_aead("AES-128/OCB", ENCRYPTION);
 
-   OCB_Encryption* ocb = new OCB_Encryption(new AES_128);
+   OCB_Encryption ocb(new AES_128);
 
-   ocb->set_key(key);
-   ocb->set_nonce(&nonce[0], nonce.size());
-   ocb->set_associated_data(ad, ad_len);
+   ocb.set_key(key);
+   ocb.set_associated_data(ad, ad_len);
 
-   Pipe pipe(ocb);
-   pipe.process_msg(pt, pt_len);
-   return unlock(pipe.read_all());
+   ocb.start(&nonce[0], nonce.size());
+
+   secure_vector<byte> buf(pt, pt+pt_len);
+   ocb.finish(buf);
+
+   return unlock(buf);
    }
 
 std::vector<byte> ocb_decrypt(const SymmetricKey& key,
                               const std::vector<byte>& nonce,
-                              const byte pt[], size_t pt_len,
+                              const byte ct[], size_t ct_len,
                               const byte ad[], size_t ad_len)
    {
-   OCB_Decryption* ocb = new OCB_Decryption(new AES_128);
+   OCB_Decryption ocb(new AES_128);
 
-   ocb->set_key(key);
-   ocb->set_nonce(&nonce[0], nonce.size());
-   ocb->set_associated_data(ad, ad_len);
+   ocb.set_key(key);
+   ocb.set_associated_data(ad, ad_len);
 
-   Pipe pipe(ocb);
-   pipe.process_msg(pt, pt_len);
-   return unlock(pipe.read_all());
+   ocb.start(&nonce[0], nonce.size());
+
+   secure_vector<byte> buf(ct, ct+ct_len);
+   ocb.finish(buf);
+
+   return unlock(buf);
    }
 
 template<typename Alloc, typename Alloc2>
@@ -65,26 +68,27 @@ std::vector<byte> ocb_decrypt(const SymmetricKey& key,
    }
 
 std::vector<byte> ocb_encrypt(OCB_Encryption& ocb,
-                              Pipe& pipe,
                               const std::vector<byte>& nonce,
                               const std::vector<byte>& pt,
                               const std::vector<byte>& ad)
    {
-   ocb.set_nonce(&nonce[0], nonce.size());
    ocb.set_associated_data(&ad[0], ad.size());
 
-   pipe.process_msg(pt);
-   return unlock(pipe.read_all(Pipe::LAST_MESSAGE));
+   ocb.start(&nonce[0], nonce.size());
+
+   secure_vector<byte> buf(pt.begin(), pt.end());
+   ocb.finish(buf);
+
+   return unlock(buf);
    }
 
 void test_ocb_long_filters()
    {
    SymmetricKey key("00000000000000000000000000000000");
 
-   OCB_Encryption* ocb = new OCB_Encryption(new AES_128);
+   OCB_Encryption ocb(new AES_128);
 
-   ocb->set_key(key);
-   Pipe pipe(ocb);
+   ocb.set_key(key);
 
    const std::vector<byte> empty;
    std::vector<byte> N(12);
@@ -95,9 +99,9 @@ void test_ocb_long_filters()
       const std::vector<byte> S(i);
       N[11] = i;
 
-      const std::vector<byte> C1 = ocb_encrypt(*ocb, pipe, N, S, S);
-      const std::vector<byte> C2 = ocb_encrypt(*ocb, pipe, N, S, empty);
-      const std::vector<byte> C3 = ocb_encrypt(*ocb, pipe, N, empty, S);
+      const std::vector<byte> C1 = ocb_encrypt(ocb, N, S, S);
+      const std::vector<byte> C2 = ocb_encrypt(ocb, N, S, empty);
+      const std::vector<byte> C3 = ocb_encrypt(ocb, N, empty, S);
 
       //std::cout << "C_" << i << " = " << hex_encode(C1) << " " << hex_encode(C2) << " " << hex_encode(C3) << "\n";
 
@@ -120,7 +124,7 @@ void test_ocb_long_filters()
    //std::cout << "SHA-256(C) = " << C_hash << "\n";
 
    N[11] = 0;
-   const std::vector<byte> cipher = ocb_encrypt(*ocb, pipe, N, empty, C);
+   const std::vector<byte> cipher = ocb_encrypt(ocb, N, empty, C);
 
    const std::string expected = "B2B41CBF9B05037DA7F16C24A35C1C94";
 
