@@ -272,26 +272,34 @@ void OCB_Encryption::encrypt(byte buffer[], size_t blocks)
       m_checksum[i % BS] ^= csum_accum[i];
    }
 
-void OCB_Encryption::update(secure_vector<byte>& buffer)
+void OCB_Encryption::update(secure_vector<byte>& buffer, size_t offset)
    {
-   BOTAN_ASSERT(buffer.size() % BS == 0, "Input length is an even number of blocks");
+   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   const size_t sz = buffer.size() - offset;
+   byte* buf = &buffer[offset];
 
-   encrypt(&buffer[0], buffer.size() / BS);
+   BOTAN_ASSERT(sz % BS == 0, "Input length is an even number of blocks");
+
+   encrypt(buf, sz / BS);
    }
 
-void OCB_Encryption::finish(secure_vector<byte>& buffer)
+void OCB_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
    {
-   if(!buffer.empty())
-      {
-      const size_t final_full_blocks = buffer.size() / BS;
-      const size_t remainder_bytes = buffer.size() - (final_full_blocks * BS);
+   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   const size_t sz = buffer.size() - offset;
+   byte* buf = &buffer[offset];
 
-      encrypt(&buffer[0], final_full_blocks);
+   if(sz)
+      {
+      const size_t final_full_blocks = sz / BS;
+      const size_t remainder_bytes = sz - (final_full_blocks * BS);
+
+      encrypt(buf, final_full_blocks);
 
       if(remainder_bytes)
          {
          BOTAN_ASSERT(remainder_bytes < BS, "Only a partial block left");
-         byte* remainder = &buffer[buffer.size() - remainder_bytes];
+         byte* remainder = &buf[sz - remainder_bytes];
 
          xor_buf(&m_checksum[0], &remainder[0], remainder_bytes);
          m_checksum[remainder_bytes] ^= 0x80;
@@ -363,31 +371,39 @@ void OCB_Decryption::decrypt(byte buffer[], size_t blocks)
       m_checksum[i % BS] ^= csum_accum[i];
    }
 
-void OCB_Decryption::update(secure_vector<byte>& buffer)
+void OCB_Decryption::update(secure_vector<byte>& buffer, size_t offset)
    {
-   BOTAN_ASSERT(buffer.size() % BS == 0, "Input length is an even number of blocks");
+   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   const size_t sz = buffer.size() - offset;
+   byte* buf = &buffer[offset];
 
-   decrypt(&buffer[0], buffer.size() / BS);
+   BOTAN_ASSERT(sz % BS == 0, "Input length is an even number of blocks");
+
+   decrypt(buf, sz / BS);
    }
 
-void OCB_Decryption::finish(secure_vector<byte>& buffer)
+void OCB_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
    {
-   BOTAN_ASSERT(buffer.size() >= tag_size(), "We have the tag");
+   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   const size_t sz = buffer.size() - offset;
+   byte* buf = &buffer[offset];
 
-   const size_t remaining = buffer.size() - tag_size();
+   BOTAN_ASSERT(sz >= tag_size(), "We have the tag");
+
+   const size_t remaining = sz - tag_size();
 
    if(remaining)
       {
       const size_t final_full_blocks = remaining / BS;
       const size_t final_bytes = remaining - (final_full_blocks * BS);
 
-      decrypt(&buffer[0], final_full_blocks);
+      decrypt(&buf[0], final_full_blocks);
 
       if(final_bytes)
          {
          BOTAN_ASSERT(final_bytes < BS, "Only a partial block left");
 
-         byte* remainder = &buffer[remaining - final_bytes];
+         byte* remainder = &buf[remaining - final_bytes];
 
          m_offset ^= m_L->star(); // Offset_*
 
@@ -416,13 +432,13 @@ void OCB_Decryption::finish(secure_vector<byte>& buffer)
    m_block_index = 0;
 
    // compare mac
-   const byte* included_tag = &buffer[remaining];
+   const byte* included_tag = &buf[remaining];
 
    if(!same_mem(&mac[0], included_tag, tag_size()))
       throw Integrity_Failure("OCB tag check failed");
 
    // remove tag from end of message
-   buffer.resize(remaining);
+   buffer.resize(remaining + offset);
    }
 
 }

@@ -182,16 +182,20 @@ secure_vector<byte> GCM_Mode::start(const byte nonce[], size_t nonce_len)
    return secure_vector<byte>();
    }
 
-void GCM_Encryption::update(secure_vector<byte>& buffer)
+void GCM_Encryption::update(secure_vector<byte>& buffer, size_t offset)
    {
-   m_ctr->cipher(&buffer[0], &buffer[0], buffer.size());
-   ghash_update(m_H, m_mac, &buffer[0], buffer.size());
-   m_text_len += buffer.size();
+   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   const size_t sz = buffer.size() - offset;
+   byte* buf = &buffer[offset];
+
+   m_ctr->cipher(buf, buf, sz);
+   ghash_update(m_H, m_mac, buf, sz);
+   m_text_len += sz;
    }
 
-void GCM_Encryption::finish(secure_vector<byte>& buffer)
+void GCM_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
    {
-   update(buffer);
+   update(buffer, offset);
 
    ghash_finalize(m_H, m_mac, m_ad_len, m_text_len);
 
@@ -200,25 +204,32 @@ void GCM_Encryption::finish(secure_vector<byte>& buffer)
    buffer += std::make_pair(&m_mac[0], tag_size());
    }
 
-void GCM_Decryption::update(secure_vector<byte>& buffer)
+void GCM_Decryption::update(secure_vector<byte>& buffer, size_t offset)
    {
-   ghash_update(m_H, m_mac, &buffer[0], buffer.size());
-   m_ctr->cipher(&buffer[0], &buffer[0], buffer.size());
-   m_text_len += buffer.size();
+   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   const size_t sz = buffer.size() - offset;
+   byte* buf = &buffer[offset];
+
+   ghash_update(m_H, m_mac, buf, sz);
+   m_ctr->cipher(buf, buf, sz);
+   m_text_len += sz;
    }
 
-void GCM_Decryption::finish(secure_vector<byte>& buffer)
+void GCM_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
    {
-   BOTAN_ASSERT(buffer.size() >= tag_size(),
-                "Have the tag as part of final input");
+   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   const size_t sz = buffer.size() - offset;
+   byte* buf = &buffer[offset];
 
-   const size_t remaining = buffer.size() - tag_size();
+   BOTAN_ASSERT(sz >= tag_size(), "Have the tag as part of final input");
+
+   const size_t remaining = sz - tag_size();
 
    // handle any final input before the tag
    if(remaining)
       {
-      ghash_update(m_H, m_mac, &buffer[0], remaining);
-      m_ctr->cipher(&buffer[0], &buffer[0], remaining);
+      ghash_update(m_H, m_mac, buf, remaining);
+      m_ctr->cipher(buf, buf, remaining);
       m_text_len += remaining;
       }
 
@@ -231,7 +242,7 @@ void GCM_Decryption::finish(secure_vector<byte>& buffer)
    if(!same_mem(&m_mac[0], included_tag, tag_size()))
       throw Integrity_Failure("GCM tag check failed");
 
-   buffer.resize(remaining);
+   buffer.resize(offset + remaining);
    }
 
 }

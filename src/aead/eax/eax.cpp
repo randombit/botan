@@ -108,15 +108,19 @@ secure_vector<byte> EAX_Mode::start(const byte nonce[], size_t nonce_len)
    return secure_vector<byte>();
    }
 
-void EAX_Encryption::update(secure_vector<byte>& buffer)
+void EAX_Encryption::update(secure_vector<byte>& buffer, size_t offset)
    {
-   m_ctr->cipher(&buffer[0], &buffer[0], buffer.size());
-   m_cmac->update(&buffer[0], buffer.size());
+   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   const size_t sz = buffer.size() - offset;
+   byte* buf = &buffer[offset];
+
+   m_ctr->cipher(buf, buf, sz);
+   m_cmac->update(buf, sz);
    }
 
-void EAX_Encryption::finish(secure_vector<byte>& buffer)
+void EAX_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
    {
-   update(buffer);
+   update(buffer, offset);
 
    secure_vector<byte> data_mac = m_cmac->final();
    xor_buf(data_mac, m_nonce_mac, data_mac.size());
@@ -125,26 +129,33 @@ void EAX_Encryption::finish(secure_vector<byte>& buffer)
    buffer += std::make_pair(&data_mac[0], tag_size());
    }
 
-void EAX_Decryption::update(secure_vector<byte>& buffer)
+void EAX_Decryption::update(secure_vector<byte>& buffer, size_t offset)
    {
-   m_cmac->update(&buffer[0], buffer.size());
-   m_ctr->cipher(&buffer[0], &buffer[0], buffer.size());
+   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   const size_t sz = buffer.size() - offset;
+   byte* buf = &buffer[offset];
+
+   m_cmac->update(buf, sz);
+   m_ctr->cipher(buf, buf, sz);
    }
 
-void EAX_Decryption::finish(secure_vector<byte>& buffer)
+void EAX_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
    {
-   BOTAN_ASSERT(buffer.size() >= tag_size(),
-                "Have the tag as part of final input");
+   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   const size_t sz = buffer.size() - offset;
+   byte* buf = &buffer[offset];
 
-   const size_t remaining = buffer.size() - tag_size();
+   BOTAN_ASSERT(sz >= tag_size(), "Have the tag as part of final input");
 
-   if(remaining) // handle any remaining input
+   const size_t remaining = sz - tag_size();
+
+   if(remaining)
       {
-      m_cmac->update(&buffer[0], remaining);
-      m_ctr->cipher(&buffer[0], &buffer[0], remaining);
+      m_cmac->update(buf, remaining);
+      m_ctr->cipher(buf, buf, remaining);
       }
 
-   const byte* included_tag = &buffer[remaining];
+   const byte* included_tag = &buf[remaining];
 
    secure_vector<byte> mac = m_cmac->final();
    mac ^= m_nonce_mac;
@@ -153,7 +164,7 @@ void EAX_Decryption::finish(secure_vector<byte>& buffer)
    if(!same_mem(&mac[0], included_tag, tag_size()))
       throw Integrity_Failure("EAX tag check failed");
 
-   buffer.resize(remaining);
+   buffer.resize(offset + remaining);
    }
 
 }

@@ -34,6 +34,11 @@ class AEAD_Mode : public SymmetricAlgorithm
       virtual size_t minimum_final_size() const = 0;
 
       /**
+      * @return Random nonce appropriate for passing to start
+      */
+      //virtual secure_vector<byte> nonce(RandomNumberGenerator& rng) const = 0;
+
+      /**
       * Set associated data that is not included in the ciphertext but
       * that should be authenticated. Must be called after set_key
       * and before end_msg.
@@ -46,6 +51,12 @@ class AEAD_Mode : public SymmetricAlgorithm
       * @param ad_len length of add in bytes
       */
       virtual void set_associated_data(const byte ad[], size_t ad_len) = 0;
+
+      template<typename Alloc>
+      void set_associated_data_vec(const std::vector<byte, Alloc>& ad)
+         {
+         set_associated_data(&ad[0], ad.size());
+         }
 
       virtual bool valid_nonce_length(size_t) const = 0;
 
@@ -68,7 +79,7 @@ class AEAD_Mode : public SymmetricAlgorithm
       * update_granularity() byte blocks.
       * @param blocks in/out paramter which will possibly be resized
       */
-      virtual void update(secure_vector<byte>& blocks) = 0;
+      virtual void update(secure_vector<byte>& blocks, size_t offset = 0) = 0;
 
       /**
       * Complete processing of a message. For decryption, may throw an exception
@@ -76,8 +87,9 @@ class AEAD_Mode : public SymmetricAlgorithm
       *
       * @param final_block in/out parameter which must be at least
       *        minimum_final_size() bytes, and will be set to any final output
+      * @param offset an offset into final_block to begin processing
       */
-      virtual void finish(secure_vector<byte>& final_block) = 0;
+      virtual void finish(secure_vector<byte>& final_block, size_t offset = 0) = 0;
 
       virtual ~AEAD_Mode() {}
    };
