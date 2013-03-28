@@ -155,6 +155,9 @@ void GCM_Mode::set_associated_data(const byte ad[], size_t ad_len)
 
 secure_vector<byte> GCM_Mode::start(const byte nonce[], size_t nonce_len)
    {
+   if(!valid_nonce_length(nonce_len))
+      throw Invalid_IV_Length(name(), nonce_len);
+
    secure_vector<byte> y0(BS);
 
    if(nonce_len == 12)
