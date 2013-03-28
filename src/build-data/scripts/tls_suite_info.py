@@ -133,6 +133,28 @@ def main(args = None):
     # From http://tools.ietf.org/html/draft-ietf-tls-56-bit-ciphersuites-01
     suites['DHE_DSS_WITH_RC4_128_SHA'] = ('0066', to_ciphersuite_info('0066', 'DHE_DSS_WITH_RC4_128_SHA'))
 
+    print """/*
+* List of TLS cipher suites
+*
+* This file was automatically generated from the IANA assignments
+* by %s
+*
+* Released under the terms of the Botan license
+*/
+
+#include <botan/tls_ciphersuite.h>
+
+namespace Botan {
+
+namespace TLS {
+
+Ciphersuite Ciphersuite::by_id(u16bit suite)
+   {
+
+   switch(suite)
+      {
+""" % (sys.argv[0])
+
     for k in sorted(suites.keys()):
         print "      case 0x%s: // %s" % (suites[k][0], k)
         print "         return %s;" % (suites[k][1])
@@ -142,6 +164,15 @@ def main(args = None):
     #for k in sorted([k[0] for k in suites.values()]):
     #    print "0x%s, " % (k),
     #print "});"
+
+    print """      }
+
+   return Ciphersuite(); // some unknown ciphersuite
+   }
+
+}
+
+}"""
 
 if __name__ == '__main__':
     sys.exit(main())

@@ -1,6 +1,8 @@
 /*
-* TLS Cipher Suite
-* (C) 2004-2010,2012 Jack Lloyd
+* List of TLS cipher suites
+*
+* This file was automatically generated from the IANA assignments
+* by ./src/build-data/scripts/tls_suite_info.py
 *
 * Released under the terms of the Botan license
 */
@@ -13,13 +15,10 @@ namespace TLS {
 
 Ciphersuite Ciphersuite::by_id(u16bit suite)
    {
-   /*
-   * This switch was automatically generated from the IANA assignments
-   * by the script src/build-data/scripts/parse_tls_params.py
-   */
 
    switch(suite)
       {
+
       case 0x0013: // DHE_DSS_WITH_3DES_EDE_CBC_SHA
          return Ciphersuite(0x0013, "DSA", "DH", "SHA-1", "3DES", 24);
 
@@ -310,6 +309,7 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
 
       case 0xC020: // SRP_SHA_WITH_AES_256_CBC_SHA
          return Ciphersuite(0xC020, "", "SRP_SHA", "SHA-1", "AES-256", 32);
+
       }
 
    return Ciphersuite(); // some unknown ciphersuite
