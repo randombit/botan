@@ -26,7 +26,9 @@ std::vector<byte> ocb_encrypt(const SymmetricKey& key,
    ocb.start(&nonce[0], nonce.size());
 
    secure_vector<byte> buf(pt, pt+pt_len);
-   ocb.finish(buf);
+   ocb.update(buf, 0);
+   ocb.finish(buf, buf.size());
+   //ocb.finish(buf);
 
    return unlock(buf);
    }
@@ -44,7 +46,9 @@ std::vector<byte> ocb_decrypt(const SymmetricKey& key,
    ocb.start(&nonce[0], nonce.size());
 
    secure_vector<byte> buf(ct, ct+ct_len);
-   ocb.finish(buf);
+   ocb.update(buf, 0);
+   ocb.finish(buf, buf.size());
+   //ocb.finish(buf);
 
    return unlock(buf);
    }
@@ -77,7 +81,7 @@ std::vector<byte> ocb_encrypt(OCB_Encryption& ocb,
    ocb.start(&nonce[0], nonce.size());
 
    secure_vector<byte> buf(pt.begin(), pt.end());
-   ocb.finish(buf);
+   ocb.finish(buf, 0);
 
    return unlock(buf);
    }
