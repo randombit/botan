@@ -2,19 +2,19 @@
 Welcome
 ========================================
 
-Botan is a crypto library for C++ released under the :doc:`BSD license
-<license>`.
+Botan is a crypto library for C++ released under the permissive
+:doc:`BSD-2 (or FreeBSD) license <license>`.
 
 It provides most any :doc:`cryptographic algorithm <algos>` you might
-be looking for, along with :doc:`tls`, :doc:`X.509 certificates and
-CRLs <x509>`, a :doc:`pipeline-style message processing system
-<filters>`, and a wide variety of other features. A third party open
-source implementation of `SSHv2
+be looking for, along with :doc:`TLS v1.2 client and server <tls>`,
+:doc:`X.509 certs, CRLs, and path validation <x509>`, a
+:doc:`pipeline-style message processing system <filters>`,
+:doc:`bcrypt password hashing <passhash>`, and other useful things. A
+third party open source implementation of `SSHv2
 <http://www.netsieben.com/products/ssh/>`_ that uses botan is also
 available. In addition to C++ you can use botan from :doc:`Python
-<python>` or `Node.js <https://github.com/justinfreitag/node-botan>`_
-or Perl, though the current bindings only wrap portions of the
-library.
+<python>` or Perl (both included in tree), or
+with `Node.js <https://github.com/justinfreitag/node-botan>`_.
 
 See the :doc:`faq` for a list of common questions and answers.
 
