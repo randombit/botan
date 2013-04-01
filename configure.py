@@ -1787,7 +1787,7 @@ def main(argv = None):
                 gcc_version = stdout.strip()
 
                 logging.info('Detected gcc version %s' % (gcc_version))
-                return map(int, gcc_version.split('.')[0:2])
+                return [int(v) for v in gcc_version.split('.')]
             except OSError:
                 logging.warning('Could not execute %s for version check' % (gcc_bin))
                 return None
@@ -1887,7 +1887,7 @@ if __name__ == '__main__':
         main()
     except Exception as e:
         logging.error(str(e))
-        #import traceback
-        #traceback.print_exc(file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
         sys.exit(1)
     sys.exit(0)
