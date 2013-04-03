@@ -153,7 +153,7 @@ void GCM_Mode::set_associated_data(const byte ad[], size_t ad_len)
    m_ad_len = ad_len;
    }
 
-secure_vector<byte> GCM_Mode::start(const byte nonce[], size_t nonce_len)
+void GCM_Mode::start(const byte nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
@@ -178,8 +178,6 @@ secure_vector<byte> GCM_Mode::start(const byte nonce[], size_t nonce_len)
 
    m_text_len = 0;
    m_mac = m_H_ad;
-
-   return secure_vector<byte>();
    }
 
 void GCM_Encryption::update(secure_vector<byte>& buffer, size_t offset)

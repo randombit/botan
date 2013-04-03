@@ -92,7 +92,7 @@ void EAX_Mode::set_associated_data(const byte ad[], size_t length)
    m_ad_mac = eax_prf(1, block_size(), *m_cmac, ad, length);
    }
 
-secure_vector<byte> EAX_Mode::start(const byte nonce[], size_t nonce_len)
+void EAX_Mode::start(const byte nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
@@ -104,8 +104,6 @@ secure_vector<byte> EAX_Mode::start(const byte nonce[], size_t nonce_len)
    for(size_t i = 0; i != block_size() - 1; ++i)
       m_cmac->update(0);
    m_cmac->update(2);
-
-   return secure_vector<byte>();
    }
 
 void EAX_Encryption::update(secure_vector<byte>& buffer, size_t offset)

@@ -24,7 +24,6 @@ scan_name.cpp
 
 <requires>
 aes
-aead
 algo_factory
 alloc
 bigint

@@ -11,7 +11,6 @@
 #include <botan/libstate.h>
 #include <botan/engine.h>
 #include <botan/filters.h>
-#include <botan/aead_filt.h>
 #include <botan/mode_pad.h>
 #include <botan/kdf.h>
 #include <botan/eme.h>
@@ -218,17 +217,6 @@ BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
 */
 BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
                                    Cipher_Dir direction);
-
-/**
-* Factory method for AEAD filters. No key will be set in the filter.
-*
-* @param algo_spec the name of the desired AEAD mode (eg "AES-128/OCB")
-* @param direction determines whether the filter will be an encrypting or
-* decrypting filter
-* @return pointer to the encryption or decryption filter
-*/
-BOTAN_DLL AEAD_Filter* get_aead(const std::string& algo_spec,
-                              Cipher_Dir direction);
 
 /**
 * Check if an algorithm exists.

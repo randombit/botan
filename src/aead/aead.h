@@ -66,10 +66,10 @@ class AEAD_Mode : public SymmetricAlgorithm
       * @param nonce the per message nonce
       * @param nonce_len length of nonce
       */
-      virtual secure_vector<byte> start(const byte nonce[], size_t nonce_len) = 0;
+      virtual void start(const byte nonce[], size_t nonce_len) = 0;
 
       template<typename Alloc>
-      secure_vector<byte> start_vec(const std::vector<byte, Alloc>& nonce)
+      void start_vec(const std::vector<byte, Alloc>& nonce)
          {
          return start(&nonce[0], nonce.size());
          }
@@ -93,6 +93,11 @@ class AEAD_Mode : public SymmetricAlgorithm
 
       virtual ~AEAD_Mode() {}
    };
+
+/**
+* Get an AEAD mode by name (eg "AES-128/GCM" or "Serpent/EAX")
+*/
+BOTAN_DLL AEAD_Mode* get_aead(const std::string& name, Cipher_Dir direction);
 
 }
 

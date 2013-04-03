@@ -108,18 +108,4 @@ Keyed_Filter* get_cipher(const std::string& algo_spec,
                      key, InitializationVector(), direction);
    }
 
-AEAD_Filter* get_aead(const std::string& algo_spec,
-                    Cipher_Dir direction)
-   {
-   std::unique_ptr<Keyed_Filter> c(get_cipher(algo_spec, direction));
-
-   if(AEAD_Filter* aead = dynamic_cast<AEAD_Filter*>(c.get()))
-      {
-      c.release();
-      return aead;
-      }
-
-   return nullptr;
-   }
-
 }
