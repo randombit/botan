@@ -21,12 +21,14 @@ namespace Botan {
 *        0 is HMAC(SHA-1)
 *        1 is HMAC(SHA-256)
 *        2 is CMAC(Blowfish)
+*        3 is HMAC(SHA-384)
+*        4 is HMAC(SHA-512)
 *        all other values are currently undefined
 */
 std::string BOTAN_DLL generate_passhash9(const std::string& password,
                                          RandomNumberGenerator& rng,
                                          u16bit work_factor = 10,
-                                         byte alg_id = 0);
+                                         byte alg_id = 1);
 
 /**
 * Check a previously created password hash

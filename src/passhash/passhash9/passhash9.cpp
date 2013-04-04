@@ -37,6 +37,10 @@ MessageAuthenticationCode* get_pbkdf_prf(byte alg_id)
          return af.make_mac("HMAC(SHA-256)");
       else if(alg_id == 2)
          return af.make_mac("CMAC(Blowfish)");
+      else if(alg_id == 3)
+         return af.make_mac("CMAC(SHA-384)");
+      else if(alg_id == 4)
+         return af.make_mac("CMAC(SHA-512)");
       }
    catch(Algorithm_Not_Found) {}
 
@@ -112,11 +116,17 @@ bool check_passhash9(const std::string& pass, const std::string& hash)
 
    byte alg_id = bin[0];
 
-   const size_t kdf_iterations =
-      WORK_FACTOR_SCALE * load_be<u16bit>(&bin[ALGID_BYTES], 0);
+   const size_t work_factor = load_be<u16bit>(&bin[ALGID_BYTES], 0);
 
-   if(kdf_iterations == 0)
+   // Bug in the format, bad states shouldn't be representable, but are...
+   if(work_factor == 0)
       return false;
+
+   if(work_factor > 512)
+      throw std::invalid_argument("Requested Bcrypt work factor " +
+                                  std::to_string(work_factor) + " too large");
+
+   const size_t kdf_iterations = WORK_FACTOR_SCALE * work_factor;
 
    MessageAuthenticationCode* pbkdf_prf = get_pbkdf_prf(alg_id);
 
