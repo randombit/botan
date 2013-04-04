@@ -34,7 +34,7 @@ PKCS5_PBKDF1::key_derivation(size_t key_len,
       {
       if(iterations == 0)
          {
-         if(iterations_performed % 8192 == 0)
+         if(iterations_performed % 10000 == 0)
             {
             auto time_taken = std::chrono::high_resolution_clock::now() - start;
             auto msec_taken = std::chrono::duration_cast<std::chrono::milliseconds>(time_taken);

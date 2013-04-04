@@ -81,7 +81,7 @@ PKCS5_PBKDF2::key_derivation(size_t key_len,
             avoids confusion, and likely some broken implementations
             break on getting completely randomly distributed values
             */
-            if(iterations % 8192 == 0)
+            if(iterations % 10000 == 0)
                {
                auto time_taken = std::chrono::high_resolution_clock::now() - start;
                auto usec_taken = std::chrono::duration_cast<std::chrono::microseconds>(time_taken);

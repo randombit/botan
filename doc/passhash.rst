@@ -33,18 +33,23 @@ inspection of the database.
 There are two solutions to these problems: salting and
 iteration. Salting refers to including, along with the password, a
 randomly chosen value which perturbs the one way function. Salting can
-reduce the effectivness of offline dictionary generation (because for
+reduce the effectivness of offline dictionary generation, because for
 each potential password, an attacker would have to compute the one way
-function output for all possible salts - with a large enough salt,
-this can make the problem quite difficult). It also prevents the same
+function output for all possible salts. It also prevents the same
 password from producing the same output, as long as the salts do not
-collide. With a large salt (say 80 to 128 bits) this will be quite
-unlikely. Iteration refers to the general technique of forcing
-multiple one way function evaluations when computing the output, to
-slow down the operation. For instance if hashing a single password
-requires running SHA-256 100,000 times instead of just once, that will
-slow down user authentication by a factor of 100,000, but user
-authentication happens quite rarely, and usually there are more
+collide. Choosing n-bit salts randomly, salt collisions become likely
+only after about 2:sup:`(n/2)` salts have been generated. Choosing a
+large salt (say 80 to 128 bits) ensures this is very unlikely. Note
+that in password hashing salt collisions are unfortunate, but not
+fatal - it simply allows the attacker to attack those two passwords in
+parallel easier than they would otherwise be able to.
+
+The other approach, iteration, refers to the general technique of
+forcing multiple one way function evaluations when computing the
+output, to slow down the operation. For instance if hashing a single
+password requires running SHA-256 100,000 times instead of just once,
+that will slow down user authentication by a factor of 100,000, but
+user authentication happens quite rarely, and usually there are more
 expensive operations that need to occur anyway (network and database
 I/O, etc). On the other hand, an attacker who is attempting to break a
 database full of stolen password hashes will be seriously
@@ -52,6 +57,14 @@ inconvenienced by a factor of 100,000 slowdown; they will be able to
 only test at a rate of .0001% of what they would without iterations
 (or, equivalently, will require 100,000 times as many zombie botnet
 hosts).
+
+Memory usage while checking a password is also a consideration; if the
+computation requires using a certain minimum amount of memory, then an
+attacker can become memory-bound, which may in particular make
+customized cracking hardware more expensive. Some password hashing
+designs, such as scrypt, explicitly attempt to provide this. The
+bcrypt approach requires over 4 KiB of RAM (for the Blowfish key
+schedule) and may also make some hardware attacks more expensive.
 
 Botan provides two techniques for password hashing, bcrypt and
 passhash9.
@@ -61,10 +74,10 @@ passhash9.
 Bcrypt Password Hashing
 ----------------------------------------
 
-Bcrypt is a password hashing scheme originally designed for use in
-OpenBSD, but numerous other implementations exist. It is made
-available by including ``bcrypt.h``. Bcrypt provides outputs that
-look like this::
+:wikipedia:`Bcrypt` is a password hashing scheme originally designed
+for use in OpenBSD, but numerous other implementations exist.
+It is made available by including ``bcrypt.h``. Bcrypt provides
+outputs that look like this::
 
   "$2a$12$7KIYdyv8Bp32WAvc.7YvI.wvRlyVn0HP/EhPmmOyMQA4YKxINO0p2"
 
@@ -97,19 +110,16 @@ Botan also provides a password hashing technique called passhash9, in
   "$9$AAAKxwMGNPSdPkOKJS07Xutm3+1Cr3ytmbnkjO6LjHzCMcMQXvcT"
 
 .. cpp:function:: std::string generate_passhash9(const std::string& password, \
-   RandomNumberGenerator& rng, u16bit work_factor = 10, byte alg_id = 0)
+   RandomNumberGenerator& rng, u16bit work_factor = 10, byte alg_id = 1)
 
    Functions much like ``generate_bcrypt``. The last parameter,
    ``alg_id``, specifies which PRF to use. Currently defined values
-   are
+   are 0: HMAC(SHA-1), 1: HMAC(SHA-256), 2: CMAC(Blowfish),
+       3: HMAC(SHA-384), 4: HMAC(SHA-512)
 
-   ======= ==============
-   Value   PRF algorithm
-   ======= ==============
-   0       HMAC(SHA-1)
-   1       HMAC(SHA-256)
-   2       CMAC(Blowfish)
-   ======= ==============
+   Currently, this performs 10000 * ``work_factor`` PBKDF2 iterations,
+   using 96 bits of salt taken from ``rng``. The iteration count is
+   encoded as a 16-bit integer and is multiplied by 10000.
 
 .. cpp:function:: bool check_passhash9(const std::string& password, \
    const std::string& hash)

@@ -57,7 +57,7 @@ BOTAN_DLL std::vector<byte>
 BER_encode(const Private_Key& key,
            RandomNumberGenerator& rng,
            const std::string& pass,
-           std::chrono::milliseconds msec = std::chrono::milliseconds(200),
+           std::chrono::milliseconds msec = std::chrono::milliseconds(300),
            const std::string& pbe_algo = "");
 
 /**
@@ -76,7 +76,7 @@ BOTAN_DLL std::string
 PEM_encode(const Private_Key& key,
            RandomNumberGenerator& rng,
            const std::string& pass,
-           std::chrono::milliseconds msec = std::chrono::milliseconds(200),
+           std::chrono::milliseconds msec = std::chrono::milliseconds(300),
            const std::string& pbe_algo = "");
 
 /**
