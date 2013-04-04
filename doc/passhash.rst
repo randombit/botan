@@ -38,7 +38,7 @@ each potential password, an attacker would have to compute the one way
 function output for all possible salts. It also prevents the same
 password from producing the same output, as long as the salts do not
 collide. Choosing n-bit salts randomly, salt collisions become likely
-only after about 2:sup:`(n/2)` salts have been generated. Choosing a
+only after about 2\ :sup:\ `(n/2)` salts have been generated. Choosing a
 large salt (say 80 to 128 bits) ensures this is very unlikely. Note
 that in password hashing salt collisions are unfortunate, but not
 fatal - it simply allows the attacker to attack those two passwords in
