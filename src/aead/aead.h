@@ -94,6 +94,11 @@ class AEAD_Mode : public SymmetricAlgorithm
       virtual ~AEAD_Mode() {}
    };
 
+/**
+* Get an AEAD mode by name (eg "AES-128/GCM" or "Serpent/EAX")
+*/
+BOTAN_DLL AEAD_Mode* get_aead(const std::string& name, Cipher_Dir direction);
+
 }
 
 #endif
