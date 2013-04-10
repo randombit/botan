@@ -117,11 +117,9 @@ u16bit choose_ciphersuite(
    const bool have_srp = creds.attempt_srp("tls-server",
                                            client_hello->sni_hostname());
 
-   const std::vector<u16bit> client_suites =
-      client_hello->ciphersuites();
+   const std::vector<u16bit> client_suites = client_hello->ciphersuites();
 
-   const std::vector<u16bit> server_suites =
-      ciphersuite_list(policy, version, have_srp);
+   const std::vector<u16bit> server_suites = policy.ciphersuite_list(version, have_srp);
 
    if(server_suites.empty())
       throw TLS_Exception(Alert::HANDSHAKE_FAILURE,

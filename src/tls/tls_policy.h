@@ -133,15 +133,15 @@ class BOTAN_DLL Policy
       */
       virtual bool server_uses_own_ciphersuite_preferences() const;
 
+
+      /**
+      * Return allowed ciphersuites, in order of preference
+      */
+      virtual std::vector<u16bit> ciphersuite_list(Protocol_Version version,
+                                                   bool have_srp) const;
+
       virtual ~Policy() {}
    };
-
-/**
-* Return allowed ciphersuites, in order of preference
-*/
-std::vector<u16bit> ciphersuite_list(const Policy& policy,
-                                     Protocol_Version version,
-                                     bool have_srp);
 
 }
 

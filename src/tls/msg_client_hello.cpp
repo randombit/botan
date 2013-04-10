@@ -71,7 +71,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
                            const std::string& srp_identifier) :
    m_version(version),
    m_random(make_hello_random(rng)),
-   m_suites(ciphersuite_list(policy, m_version, (srp_identifier != ""))),
+   m_suites(policy.ciphersuite_list(m_version, (srp_identifier != ""))),
    m_comp_methods(policy.compression())
    {
    m_extensions.add(new Renegotiation_Extension(reneg_info));
@@ -106,7 +106,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    m_version(session.version()),
    m_session_id(session.session_id()),
    m_random(make_hello_random(rng)),
-   m_suites(ciphersuite_list(policy, m_version, (session.srp_identifier() != ""))),
+   m_suites(policy.ciphersuite_list(m_version, (session.srp_identifier() != ""))),
    m_comp_methods(policy.compression())
    {
    if(!value_exists(m_suites, session.ciphersuite_code()))

@@ -10,7 +10,6 @@
 #include <botan/tls_magic.h>
 #include <botan/tls_exceptn.h>
 #include <botan/internal/stl_util.h>
-#include <set>
 
 namespace Botan {
 
@@ -214,14 +213,13 @@ class Ciphersuite_Preference_Ordering
 
 }
 
-std::vector<u16bit> ciphersuite_list(const Policy& policy,
-                                     Protocol_Version version,
-                                     bool have_srp)
+std::vector<u16bit> Policy::ciphersuite_list(Protocol_Version version,
+                                             bool have_srp) const
    {
-   const std::vector<std::string> ciphers = policy.allowed_ciphers();
-   const std::vector<std::string> macs = policy.allowed_macs();
-   const std::vector<std::string> kex = policy.allowed_key_exchange_methods();
-   const std::vector<std::string> sigs = policy.allowed_signature_methods();
+   const std::vector<std::string> ciphers = allowed_ciphers();
+   const std::vector<std::string> macs = allowed_macs();
+   const std::vector<std::string> kex = allowed_key_exchange_methods();
+   const std::vector<std::string> sigs = allowed_signature_methods();
 
    Ciphersuite_Preference_Ordering order(ciphers, macs, kex, sigs);
 
@@ -254,6 +252,9 @@ std::vector<u16bit> ciphersuite_list(const Policy& policy,
       // OK, allow it:
       ciphersuites.insert(suite);
       }
+
+   if(ciphersuites.empty())
+      throw std::logic_error("Policy does not allow any available cipher suite");
 
    std::vector<u16bit> ciphersuite_codes;
    for(auto i : ciphersuites)
