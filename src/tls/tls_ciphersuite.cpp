@@ -104,22 +104,23 @@ std::string Ciphersuite::to_string() const
       {
       if(cipher_algo() == "3DES")
          out << "3DES_EDE";
-      else if(cipher_algo() == "Camellia-128" || cipher_algo() == "Camellia-256")
+      else if(cipher_algo().find("Camellia") == 0)
          out << "CAMELLIA_" << std::to_string(8*cipher_keylen());
       else
-         out << replace_char(cipher_algo(), '-', '_');
+         out << replace_chars(cipher_algo(), {'-', '/'}, '_');
 
-      out << "_CBC_";
+      if(cipher_algo().find("/GCM") != std::string::npos)
+         out << "_";
+      else
+         out << "_CBC_";
       }
 
    if(mac_algo() == "SHA-1")
       out << "SHA";
-   else if(mac_algo() == "SHA-256")
-      out << "SHA256";
-   else if(mac_algo() == "SHA-384")
-      out << "SHA384";
+   else if(mac_algo() == "AEAD")
+      out << erase_chars(prf_algo(), {'-'});
    else
-      out << mac_algo();
+      out << erase_chars(mac_algo(), {'-'});
 
    return out.str();
    }

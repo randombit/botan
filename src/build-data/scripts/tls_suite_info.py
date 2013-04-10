@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python2
 
 """
 Used to generate src/tls/tls_suite_info.cpp
@@ -73,6 +73,14 @@ def to_ciphersuite_info(code, name):
         'ECDHE_PSK': 'ECDHE_PSK',
         }
 
+    mac_keylen = {
+        'MD5': 16,
+        'SHA-1': 20,
+        'SHA-256': 32,
+        'SHA-384': 48,
+        'SHA-512': 64,
+        }
+
     mac_algo = tls_to_botan_names[mac_algo]
     sig_algo = tls_to_botan_names[sig_algo]
     kex_algo = tls_to_botan_names[kex_algo]
@@ -86,16 +94,24 @@ def to_ciphersuite_info(code, name):
         cipher_algo += '-%d' % (cipher_keylen*8)
 
     modestr = ''
+    mode = ''
+    ivlen = 0
     if cipher_algo != 'ARC4':
         mode = cipher[-1]
         if mode not in ['CBC', 'GCM', 'CCM']:
             print "** Unknown mode %s" % (' '.join(cipher))
 
+        ivlen = 8 if cipher_algo == '3DES' else 16
+
         if mode != 'CBC':
             cipher_algo += '/' + mode
 
-    return 'Ciphersuite(0x%s, "%s", "%s", "%s", "%s", %d)' % (
-        code, sig_algo, kex_algo, mac_algo, cipher_algo, cipher_keylen)
+    if cipher_algo != 'ARC4' and mode != 'CBC':
+        return 'Ciphersuite(0x%s, "%s", "%s", "%s", %d, %d, "AEAD", %d, "%s")' % (
+            code, sig_algo, kex_algo, cipher_algo, cipher_keylen, 4, 0, mac_algo)
+    else:
+        return 'Ciphersuite(0x%s, "%s", "%s", "%s", %d, %d, "%s", %d)' % (
+            code, sig_algo, kex_algo, cipher_algo, cipher_keylen, ivlen, mac_algo, mac_keylen[mac_algo])
 
 def main(args = None):
     if args is None:
@@ -150,7 +166,6 @@ namespace TLS {
 
 Ciphersuite Ciphersuite::by_id(u16bit suite)
    {
-
    switch(suite)
       {
 """ % (sys.argv[0])

@@ -265,12 +265,12 @@ KDF* Handshake_State::protocol_specific_prf() const
       }
    else if(version().supports_ciphersuite_specific_prf())
       {
-      const std::string mac_algo = ciphersuite().mac_algo();
+      const std::string prf_algo = ciphersuite().prf_algo();
 
-      if(mac_algo == "MD5" || mac_algo == "SHA-1")
+      if(prf_algo == "MD5" || prf_algo == "SHA-1")
          return get_kdf("TLS-12-PRF(SHA-256)");
 
-      return get_kdf("TLS-12-PRF(" + mac_algo + ")");
+      return get_kdf("TLS-12-PRF(" + prf_algo + ")");
       }
    else
       {

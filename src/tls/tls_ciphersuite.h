@@ -84,37 +84,61 @@ class BOTAN_DLL Ciphersuite
       */
       std::string mac_algo() const { return m_mac_algo; }
 
+      std::string prf_algo() const
+         {
+         return (m_prf_algo != "") ? m_prf_algo : m_mac_algo;
+         }
+
       /**
       * @return cipher key length used by this ciphersuite
       */
       size_t cipher_keylen() const { return m_cipher_keylen; }
+
+      size_t cipher_ivlen() const { return m_cipher_ivlen; }
+
+      size_t mac_keylen() const { return m_mac_keylen; }
 
       /**
       * @return true if this is a valid/known ciphersuite
       */
       bool valid() const { return (m_cipher_keylen > 0); }
 
-      Ciphersuite() : m_cipher_keylen(0) {}
+      Ciphersuite() {}
+
+   private:
 
       Ciphersuite(u16bit ciphersuite_code,
                   const std::string& sig_algo,
                   const std::string& kex_algo,
-                  const std::string& mac_algo,
                   const std::string& cipher_algo,
-                  size_t cipher_algo_keylen) :
+                  size_t cipher_keylen,
+                  size_t cipher_ivlen,
+                  const std::string& mac_algo,
+                  size_t mac_keylen,
+                  const std::string& prf_algo = "") :
          m_ciphersuite_code(ciphersuite_code),
          m_sig_algo(sig_algo),
          m_kex_algo(kex_algo),
-         m_mac_algo(mac_algo),
          m_cipher_algo(cipher_algo),
-         m_cipher_keylen(cipher_algo_keylen)
+         m_mac_algo(mac_algo),
+         m_prf_algo(prf_algo),
+         m_cipher_keylen(cipher_keylen),
+         m_cipher_ivlen(cipher_ivlen),
+         m_mac_keylen(mac_keylen)
             {
             }
 
-   private:
-      u16bit m_ciphersuite_code;
-      std::string m_sig_algo, m_kex_algo, m_mac_algo, m_cipher_algo;
-      size_t m_cipher_keylen;
+      u16bit m_ciphersuite_code = 0;
+
+      std::string m_sig_algo;
+      std::string m_kex_algo;
+      std::string m_cipher_algo;
+      std::string m_mac_algo;
+      std::string m_prf_algo;
+
+      size_t m_cipher_keylen = 0;
+      size_t m_cipher_ivlen = 0;
+      size_t m_mac_keylen = 0;
    };
 
 }

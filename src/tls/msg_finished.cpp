@@ -55,7 +55,7 @@ std::vector<byte> finished_compute_verify(const Handshake_State& state,
       else
          input += std::make_pair(TLS_SERVER_LABEL, sizeof(TLS_SERVER_LABEL));
 
-      input += state.hash().final(state.version(), state.ciphersuite().mac_algo());
+      input += state.hash().final(state.version(), state.ciphersuite().prf_algo());
 
       return unlock(prf->derive_key(12, state.session_keys().master_secret(), input));
       }
