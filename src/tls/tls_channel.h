@@ -217,8 +217,8 @@ class BOTAN_DLL Channel
          { { 0, nullptr } };
 
       /* I/O buffers */
-      std::vector<byte> m_writebuf;
-      std::vector<byte> m_readbuf;
+      secure_vector<byte> m_writebuf;
+      secure_vector<byte> m_readbuf;
    };
 
 }

@@ -136,7 +136,7 @@ class Record
 * @param rng is a random number generator
 * @return number of bytes written to write_buffer
 */
-void write_record(std::vector<byte>& write_buffer,
+void write_record(secure_vector<byte>& write_buffer,
                   byte msg_type, const byte msg[], size_t msg_length,
                   Protocol_Version version,
                   u64bit msg_sequence,
@@ -147,7 +147,7 @@ void write_record(std::vector<byte>& write_buffer,
 * Decode a TLS record
 * @return zero if full message, else number of bytes still needed
 */
-size_t read_record(std::vector<byte>& read_buffer,
+size_t read_record(secure_vector<byte>& read_buffer,
                    const byte input[],
                    size_t input_length,
                    size_t& input_consumed,

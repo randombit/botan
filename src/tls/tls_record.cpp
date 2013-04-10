@@ -78,7 +78,7 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
    m_mac->set_key(mac_key);
    }
 
-void write_record(std::vector<byte>& output,
+void write_record(secure_vector<byte>& output,
                   byte msg_type, const byte msg[], size_t msg_length,
                   Protocol_Version version,
                   u64bit msg_sequence,
@@ -195,7 +195,7 @@ void write_record(std::vector<byte>& output,
 
 namespace {
 
-size_t fill_buffer_to(std::vector<byte>& readbuf,
+size_t fill_buffer_to(secure_vector<byte>& readbuf,
                       const byte*& input,
                       size_t& input_size,
                       size_t& input_consumed,
@@ -397,7 +397,7 @@ bool decrypt_record(Record& output_record,
 
 }
 
-size_t read_record(std::vector<byte>& readbuf,
+size_t read_record(secure_vector<byte>& readbuf,
                    const byte input[],
                    size_t input_sz,
                    size_t& consumed,
