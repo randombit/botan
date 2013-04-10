@@ -23,6 +23,13 @@ class AEAD_Mode : public SymmetricAlgorithm
    {
    public:
       /**
+      * Returns the size of the output if this mode is used to process
+      * a message with input_length bytes. Typically this will be
+      * input_length plus or minus the length of the tag.
+      */
+      virtual size_t output_length(size_t input_length) const = 0;
+
+      /**
       * @return size of required blocks to update
       */
       virtual size_t update_granularity() const = 0;

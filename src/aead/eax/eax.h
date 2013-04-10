@@ -73,6 +73,9 @@ class BOTAN_DLL EAX_Encryption : public EAX_Mode
       EAX_Encryption(BlockCipher* cipher, size_t tag_size = 16) :
          EAX_Mode(cipher, tag_size) {}
 
+      size_t output_length(size_t input_length) const override
+         { return input_length + tag_size(); }
+
       size_t minimum_final_size() const override { return 0; }
 
       void update(secure_vector<byte>& blocks, size_t offset) override;
@@ -92,6 +95,12 @@ class BOTAN_DLL EAX_Decryption : public EAX_Mode
       */
       EAX_Decryption(BlockCipher* cipher, size_t tag_size = 16) :
          EAX_Mode(cipher, tag_size) {}
+
+      size_t output_length(size_t input_length) const override
+         {
+         BOTAN_ASSERT(input_length > tag_size(), "Sufficient input");
+         return input_length - tag_size();
+         }
 
       size_t minimum_final_size() const override { return tag_size(); }
 
