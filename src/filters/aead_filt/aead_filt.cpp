@@ -72,7 +72,7 @@ void AEAD_Filter::end_msg()
 
 void AEAD_Filter::start_msg()
    {
-   m_aead->start_vec(m_nonce.get());
+   send(m_aead->start_vec(m_nonce.get()));
    }
 
 void AEAD_Filter::buffered_block(const byte input[], size_t input_length)

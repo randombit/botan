@@ -215,7 +215,7 @@ void OCB_Mode::set_associated_data(const byte ad[], size_t ad_len)
    m_ad_hash = ocb_hash(*m_L, *m_cipher, &ad[0], ad_len);
    }
 
-void OCB_Mode::start(const byte nonce[], size_t nonce_len)
+secure_vector<byte> OCB_Mode::start(const byte nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
@@ -225,6 +225,8 @@ void OCB_Mode::start(const byte nonce[], size_t nonce_len)
    m_offset = m_nonce_state->update_nonce(nonce, nonce_len);
    zeroise(m_checksum);
    m_block_index = 0;
+
+   return secure_vector<byte>();
    }
 
 void OCB_Encryption::encrypt(byte buffer[], size_t blocks)

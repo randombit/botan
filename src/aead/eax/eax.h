@@ -22,7 +22,7 @@ namespace Botan {
 class BOTAN_DLL EAX_Mode : public AEAD_Mode
    {
    public:
-      void start(const byte nonce[], size_t nonce_len) override;
+      secure_vector<byte> start(const byte nonce[], size_t nonce_len) override;
 
       void set_associated_data(const byte ad[], size_t ad_len) override;
 
