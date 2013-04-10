@@ -1,6 +1,6 @@
 /*
-* Parser Functions
-* (C) 1999-2007 Jack Lloyd
+* Various string utils and parsing functions
+* (C) 1999-2007,2013 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -9,6 +9,7 @@
 #include <botan/exceptn.h>
 #include <botan/charset.h>
 #include <botan/get_byte.h>
+#include <set>
 
 namespace Botan {
 
@@ -263,9 +264,31 @@ std::string ipv4_to_string(u32bit ip)
    return str;
    }
 
-std::string replace_char(const std::string& str,
-                         char from_char,
-                         char to_char)
+std::string erase_chars(const std::string& str, const std::set<char>& chars)
+   {
+   std::string out;
+
+   for(auto c: str)
+      if(chars.count(c) == 0)
+         out += c;
+
+   return out;
+   }
+
+std::string replace_chars(const std::string& str,
+                          const std::set<char>& chars,
+                          char to_char)
+   {
+   std::string out = str;
+
+   for(size_t i = 0; i != out.size(); ++i)
+      if(chars.count(out[i]))
+         out[i] = to_char;
+
+   return out;
+   }
+
+std::string replace_char(const std::string& str, char from_char, char to_char)
    {
    std::string out = str;
 

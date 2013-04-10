@@ -1,6 +1,6 @@
 /*
-* Parser Functions
-* (C) 1999-2007 Jack Lloyd
+* Various string utils and parsing functions
+* (C) 1999-2007,2013 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -11,6 +11,7 @@
 #include <botan/types.h>
 #include <string>
 #include <vector>
+#include <set>
 
 namespace Botan {
 
@@ -32,6 +33,11 @@ BOTAN_DLL std::vector<std::string> split_on(
    const std::string& str, char delim);
 
 /**
+* Erase characters from a string
+*/
+BOTAN_DLL std::string erase_chars(const std::string& str, const std::set<char>& chars);
+
+/**
 * Replace a character in a string
 * @param str the input string
 * @param from_char the character to replace
@@ -41,6 +47,17 @@ BOTAN_DLL std::vector<std::string> split_on(
 BOTAN_DLL std::string replace_char(const std::string& str,
                                    char from_char,
                                    char to_char);
+
+/**
+* Replace a character in a string
+* @param str the input string
+* @param from_chars the characters to replace
+* @param to_char the character to replace it with
+* @return str with all instances of from_chars replaced by to_char
+*/
+BOTAN_DLL std::string replace_chars(const std::string& str,
+                                    const std::set<char>& from_chars,
+                                    char to_char);
 
 /**
 * Join a string
