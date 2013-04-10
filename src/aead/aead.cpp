@@ -30,6 +30,9 @@ AEAD_Mode* get_aead(const std::string& algo_spec, Cipher_Dir direction)
    if(algo_parts.empty())
       throw Invalid_Algorithm_Name(algo_spec);
 
+   if(algo_parts.size() < 2)
+      return nullptr;
+
    const std::string cipher_name = algo_parts[0];
    const std::string mode_name = algo_parts[1];
 
