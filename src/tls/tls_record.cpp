@@ -21,6 +21,7 @@ namespace TLS {
 
 Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
                                                  Connection_Side side,
+                                                 bool our_side,
                                                  const Ciphersuite& suite,
                                                  const Session_Keys& keys) :
    m_start_time(std::chrono::system_clock::now()),

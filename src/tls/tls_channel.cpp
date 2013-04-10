@@ -166,6 +166,7 @@ void Channel::change_cipher_spec_reader(Connection_Side side)
    std::shared_ptr<Connection_Cipher_State> read_state(
       new Connection_Cipher_State(pending->version(),
                                   (side == CLIENT) ? SERVER : CLIENT,
+                                  false,
                                   pending->ciphersuite(),
                                   pending->session_keys()));
 
@@ -192,6 +193,7 @@ void Channel::change_cipher_spec_writer(Connection_Side side)
    std::shared_ptr<Connection_Cipher_State> write_state(
       new Connection_Cipher_State(pending->version(),
                                   side,
+                                  true,
                                   pending->ciphersuite(),
                                   pending->session_keys()));
 

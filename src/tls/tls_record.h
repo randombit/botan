@@ -36,7 +36,8 @@ class Connection_Cipher_State
       * Initialize a new cipher state
       */
       Connection_Cipher_State(Protocol_Version version,
-                              Connection_Side side,
+                              Connection_Side which_side,
+                              bool is_our_side,
                               const Ciphersuite& suite,
                               const Session_Keys& keys);
 
