@@ -49,7 +49,7 @@ templates_path = ['_sphinx/templates']
 if is_website_build and use_disqus:
     templates_path += ['_sphinx/disqus']
 
-files_dir = 'https://files.randombit.net/botan'
+files_dir = 'http://files.randombit.net/botan'
 
 extlinks = {
     'pr': ('https://bugs.randombit.net/show_bug.cgi?id=%s', 'PR '),
