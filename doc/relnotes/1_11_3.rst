@@ -1,4 +1,4 @@
-Version 1.11.3, Not Yet Released
+Version 1.11.3, 2013-04-11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Add a new interface for AEAD modes (:cpp:class:`AEAD_Mode`).
