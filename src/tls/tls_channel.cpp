@@ -30,6 +30,8 @@ Channel::Channel(std::function<void (const byte[], size_t)> output_fn,
    m_rng(rng),
    m_session_manager(session_manager)
    {
+   m_writebuf.reserve(16*1024);
+   m_readbuf.reserve(16*1024);
    }
 
 Channel::~Channel()
@@ -394,6 +396,11 @@ size_t Channel::received_data(const byte input[], size_t input_size)
    catch(TLS_Exception& e)
       {
       send_alert(Alert(e.type(), true));
+      throw;
+      }
+   catch(Integrity_Failure& e)
+      {
+      send_alert(Alert(Alert::BAD_RECORD_MAC, true));
       throw;
       }
    catch(Decoding_Error& e)
