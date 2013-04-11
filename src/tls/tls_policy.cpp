@@ -18,13 +18,15 @@ namespace TLS {
 std::vector<std::string> Policy::allowed_ciphers() const
    {
    return std::vector<std::string>({
-      "ARC4",
-      "AES-128",
+      "AES-256/GCM",
+      "AES-128/GCM",
       "AES-256",
-      //"3DES",
+      "AES-128",
+      "ARC4",
       //"Camellia-256",
       //"Camellia-128",
       //"SEED"
+      //"3DES",
       });
    }
 
@@ -43,7 +45,7 @@ std::vector<std::string> Policy::allowed_signature_hashes() const
 std::vector<std::string> Policy::allowed_macs() const
    {
    return std::vector<std::string>({
-      //"AEAD",
+      "AEAD",
       "SHA-384",
       "SHA-256",
       "SHA-1",

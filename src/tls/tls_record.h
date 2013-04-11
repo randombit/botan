@@ -10,6 +10,7 @@
 
 #include <botan/tls_magic.h>
 #include <botan/tls_version.h>
+#include <botan/aead.h>
 #include <botan/block_cipher.h>
 #include <botan/stream_cipher.h>
 #include <botan/mac.h>
@@ -40,6 +41,16 @@ class Connection_Cipher_State
                               bool is_our_side,
                               const Ciphersuite& suite,
                               const Session_Keys& keys);
+
+      AEAD_Mode* aead() { return m_aead.get(); }
+
+      const secure_vector<byte>& aead_nonce(u64bit seq);
+
+      const secure_vector<byte>& aead_nonce(const byte record[], size_t record_len);
+
+      const secure_vector<byte>& format_ad(u64bit seq, byte type,
+                                           Protocol_Version version,
+                                           u16bit ptext_length);
 
       BlockCipher* block_cipher() { return m_block_cipher.get(); }
 
@@ -74,6 +85,11 @@ class Connection_Cipher_State
       secure_vector<byte> m_block_cipher_cbc_state;
       std::unique_ptr<StreamCipher> m_stream_cipher;
       std::unique_ptr<MessageAuthenticationCode> m_mac;
+
+      std::unique_ptr<AEAD_Mode> m_aead;
+      size_t m_aead_extra = 0;
+      secure_vector<byte> m_nonce, m_ad;
+
       size_t m_block_size = 0;
       size_t m_iv_size = 0;
       bool m_is_ssl3 = false;

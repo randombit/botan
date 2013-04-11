@@ -1,6 +1,6 @@
 /*
 * TLS Record Handling
-* (C) 2012 Jack Lloyd
+* (C) 2012,2013 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -46,6 +46,17 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
    const std::string cipher_algo = suite.cipher_algo();
    const std::string mac_algo = suite.mac_algo();
 
+   if(AEAD_Mode* aead = get_aead(cipher_algo, our_side ? ENCRYPTION : DECRYPTION))
+      {
+      m_aead.reset(aead);
+      m_aead->set_key(cipher_key + mac_key);
+
+      BOTAN_ASSERT(iv.length() == 4, "Using 4/8 partial implicit nonce");
+      m_nonce = iv.bits_of();
+      m_nonce.resize(12);
+      return;
+      }
+
    Algorithm_Factory& af = global_state().algorithm_factory();
 
    if(const BlockCipher* bc = af.prototype_block_cipher(cipher_algo))
@@ -57,15 +68,11 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
 
       if(version.supports_explicit_cbc_ivs())
          m_iv_size = m_block_size;
-      else
-         m_iv_size = 0;
       }
    else if(const StreamCipher* sc = af.prototype_stream_cipher(cipher_algo))
       {
       m_stream_cipher.reset(sc->clone());
       m_stream_cipher->set_key(cipher_key);
-      m_block_size = 0;
-      m_iv_size = 0;
       }
    else
       throw Invalid_Argument("Unknown TLS cipher " + cipher_algo);
@@ -76,6 +83,44 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
       m_mac.reset(af.make_mac("HMAC(" + mac_algo + ")"));
 
    m_mac->set_key(mac_key);
+   }
+
+const secure_vector<byte>& Connection_Cipher_State::aead_nonce(u64bit seq)
+   {
+   BOTAN_ASSERT(m_aead, "Using AEAD mode");
+   BOTAN_ASSERT(m_nonce.size() == 12, "Expected nonce size");
+   store_be(seq, &m_nonce[4]);
+   return m_nonce;
+   }
+
+const secure_vector<byte>&
+Connection_Cipher_State::aead_nonce(const byte record[], size_t record_len)
+   {
+   BOTAN_ASSERT(m_aead, "Using AEAD mode");
+   BOTAN_ASSERT(m_nonce.size() == 12, "Expected nonce size");
+   BOTAN_ASSERT(record_len >= 8, "Record includes nonce");
+   copy_mem(&m_nonce[4], record, 8);
+   return m_nonce;
+   }
+
+const secure_vector<byte>&
+Connection_Cipher_State::format_ad(u64bit msg_sequence,
+                                   byte msg_type,
+                                   Protocol_Version version,
+                                   u16bit msg_length)
+   {
+   m_ad.clear();
+   for(size_t i = 0; i != 8; ++i)
+      m_ad.push_back(get_byte(i, msg_sequence));
+   m_ad.push_back(msg_type);
+
+   m_ad.push_back(version.major_version());
+   m_ad.push_back(version.minor_version());
+
+   m_ad.push_back(get_byte(0, msg_length));
+   m_ad.push_back(get_byte(1, msg_length));
+
+   return m_ad;
    }
 
 void write_record(secure_vector<byte>& output,
@@ -104,6 +149,43 @@ void write_record(secure_vector<byte>& output,
 
       output.insert(output.end(), &msg[0], &msg[msg_length]);
 
+      return;
+      }
+
+   if(AEAD_Mode* aead = cipherstate->aead())
+      {
+      const size_t ctext_size = aead->output_length(msg_length);
+
+      auto nonce = cipherstate->aead_nonce(msg_sequence);
+      const size_t implicit_nonce_bytes = 4; // FIXME, take from ciphersuite
+      const size_t explicit_nonce_bytes = 8;
+
+      BOTAN_ASSERT(nonce.size() == implicit_nonce_bytes + explicit_nonce_bytes,
+                   "Expected nonce size");
+
+      // wrong if start_vec returns something
+      const size_t rec_size = ctext_size + explicit_nonce_bytes;
+
+      BOTAN_ASSERT(rec_size <= 0xFFFF, "Ciphertext length fits in field");
+
+      output.push_back(get_byte<u16bit>(0, rec_size));
+      output.push_back(get_byte<u16bit>(1, rec_size));
+
+      aead->set_associated_data_vec(
+         cipherstate->format_ad(msg_sequence, msg_type, version, msg_length)
+         );
+
+      output += std::make_pair(&nonce[implicit_nonce_bytes], explicit_nonce_bytes);
+      output += aead->start_vec(nonce);
+
+      const size_t offset = output.size();
+      output += std::make_pair(&msg[0], msg_length);
+      aead->finish(output, offset);
+
+      BOTAN_ASSERT(output.size() == offset + ctext_size, "Expected size");
+
+      BOTAN_ASSERT(output.size() < MAX_CIPHERTEXT_SIZE,
+                   "Produced ciphertext larger than protocol allows");
       return;
       }
 
@@ -361,6 +443,40 @@ bool decrypt_record(Record& output_record,
                     Record_Type record_type,
                     Connection_Cipher_State& cipherstate)
    {
+   if(AEAD_Mode* aead = cipherstate.aead())
+      {
+      auto nonce = cipherstate.aead_nonce(record_contents, record_len);
+      const size_t nonce_length = 8; // fixme, take from ciphersuite
+
+      BOTAN_ASSERT(record_len > nonce_length, "Have data past the nonce");
+      const byte* msg = &record_contents[nonce_length];
+      const size_t msg_length = record_len - nonce_length;
+
+      const size_t ptext_size = aead->output_length(msg_length);
+
+      aead->set_associated_data_vec(
+         cipherstate.format_ad(record_sequence, record_type, record_version, ptext_size)
+         );
+
+      // fixme - making a copy, should steal from Record
+      secure_vector<byte> buffer;
+      buffer += aead->start_vec(nonce);
+
+      const size_t offset = buffer.size();
+      buffer += std::make_pair(&msg[0], msg_length);
+      aead->finish(buffer, offset);
+
+      BOTAN_ASSERT(buffer.size() == ptext_size + offset, "Produced expected size");
+
+      output_record = Record(record_sequence,
+                             record_version,
+                             record_type,
+                             &buffer[0],
+                             buffer.size());
+
+      return true;
+      }
+
    volatile bool padding_bad = false;
    size_t pad_size = 0;
 

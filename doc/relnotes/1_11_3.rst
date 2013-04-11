@@ -6,6 +6,8 @@ Version 1.11.3, Not Yet Released
 * Implementations of the OCB and GCM authenticated cipher modes are
   now included.
 
+* Support for TLS GCM ciphersuites is now available.
+
 * A new TLS policy mechanism
   :cpp:func:`TLS::Policy::server_uses_own_ciphersuite_preferences`
   controls how a server chooses a ciphersuite. Previously it always

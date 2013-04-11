@@ -121,7 +121,7 @@ def main(args = None):
     weird_crypto = ['ARIA', 'IDEA']
     static_dh = ['ECDH_ECDSA', 'ECDH_RSA', 'DH_DSS', 'DH_RSA']
     protocol_goop = ['SCSV', 'KRB5']
-    just_not_yet = ['RSA_PSK', 'CCM', 'GCM']
+    just_not_yet = ['RSA_PSK', 'CCM']
 
     not_supported = weak_crypto + weird_crypto + static_dh + protocol_goop + just_not_yet
 
