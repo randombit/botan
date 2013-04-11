@@ -95,11 +95,11 @@ void ghash_finalize(const secure_vector<byte>& H,
 GCM_Mode::GCM_Mode(BlockCipher* cipher, size_t tag_size) :
    m_tag_size(tag_size),
    m_cipher_name(cipher->name()),
-   m_H(16), m_H_ad(16), m_mac(16),
+   m_H(BS), m_H_ad(BS), m_mac(BS), m_enc_y0(BS),
    m_ad_len(0), m_text_len(0)
    {
    if(cipher->block_size() != BS)
-      throw std::invalid_argument("OCB requires a 128 bit cipher so cannot be used with " +
+      throw std::invalid_argument("GCM requires a 128 bit cipher so cannot be used with " +
                                   cipher->name());
 
    m_ctr.reset(new CTR_BE(cipher)); // CTR_BE takes ownership of cipher
@@ -173,7 +173,7 @@ secure_vector<byte> GCM_Mode::start(const byte nonce[], size_t nonce_len)
 
    m_ctr->set_iv(&y0[0], y0.size());
 
-   m_enc_y0.resize(BS);
+   zeroise(m_enc_y0);
    m_ctr->encipher(m_enc_y0);
 
    m_text_len = 0;
