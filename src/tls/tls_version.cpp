@@ -90,6 +90,12 @@ bool Protocol_Version::supports_ciphersuite_specific_prf() const
            m_version == Protocol_Version::DTLS_V12);
    }
 
+bool Protocol_Version::supports_aead_modes() const
+   {
+   return (m_version == Protocol_Version::TLS_V12 ||
+           m_version == Protocol_Version::DTLS_V12);
+   }
+
 }
 
 }

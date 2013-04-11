@@ -108,6 +108,8 @@ class BOTAN_DLL Protocol_Version
       */
       bool supports_ciphersuite_specific_prf() const;
 
+      bool supports_aead_modes() const;
+
       /**
       * @return if this version is equal to other
       */

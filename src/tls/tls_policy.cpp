@@ -43,6 +43,7 @@ std::vector<std::string> Policy::allowed_signature_hashes() const
 std::vector<std::string> Policy::allowed_macs() const
    {
    return std::vector<std::string>({
+      //"AEAD",
       "SHA-384",
       "SHA-256",
       "SHA-1",
@@ -231,6 +232,9 @@ std::vector<u16bit> Policy::ciphersuite_list(Protocol_Version version,
          continue;
 
       if(version.is_datagram_protocol() && suite.cipher_algo() == "ARC4")
+         continue;
+
+      if(!version.supports_aead_modes() && suite.mac_algo() == "AEAD")
          continue;
 
       if(!value_exists(kex, suite.kex_algo()))
