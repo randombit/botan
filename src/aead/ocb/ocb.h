@@ -23,7 +23,7 @@ class Nonce_State;
 * that OCB is patented, but is freely licensed in some circumstances.
 *
 * @see "The OCB Authenticated-Encryption Algorithm" internet draft
-        http://tools.ietf.org/html/draft-irtf-cfrg-ocb-00
+        http://tools.ietf.org/html/draft-irtf-cfrg-ocb-01
 * @see Free Licenses http://www.cs.ucdavis.edu/~rogaway/ocb/license.htm
 * @see OCB home page http://www.cs.ucdavis.edu/~rogaway/ocb
 */
