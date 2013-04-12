@@ -119,8 +119,7 @@ void report_results(const std::string& algo,
    // invert, showing fastest impl first
    std::map<double, std::string> results;
 
-   for(std::map<std::string, double>::const_iterator i = speeds.begin();
-       i != speeds.end(); ++i)
+   for(auto i = speeds.begin(); i != speeds.end(); ++i)
       {
       // Speeds might collide, tweak slightly to handle this
       if(results[i->second] == "")
@@ -131,12 +130,7 @@ void report_results(const std::string& algo,
 
    std::cout << algo;
 
-#if (defined(__GNUC__) && __GNUC__ <= 3) || defined(__SUNPRO_CC)
-   // Work around GCC 3.x bug, reverse iterators don't work
-   for(std::map<double, std::string>::const_iterator i = results.begin(); i != results.end(); ++i)
-#else
-   for(std::map<double, std::string>::const_reverse_iterator i = results.rbegin(); i != results.rend(); ++i)
-#endif
+   for(auto i = results.rbegin(); i != results.rend(); ++i)
       {
       std::cout << " [" << i->second << "] "
                 << std::fixed << std::setprecision(2) << i->first;
