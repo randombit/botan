@@ -109,8 +109,8 @@ std::string Ciphersuite::to_string() const
       else
          out << replace_chars(cipher_algo(), {'-', '/'}, '_');
 
-      if(cipher_algo().find("/GCM") != std::string::npos)
-         out << "_";
+      if(cipher_algo().find("/") != std::string::npos)
+         out << "_"; // some explicit mode already included
       else
          out << "_CBC_";
       }
