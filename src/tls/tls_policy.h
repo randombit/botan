@@ -1,6 +1,6 @@
 /*
-* Policies
-* (C) 2004-2006 Jack Lloyd
+* Hooks for application level policies on TLS connections
+* (C) 2004-2006,2013 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -27,14 +27,13 @@ class BOTAN_DLL Policy
 
       /**
       * Returns a list of ciphers we are willing to negotiate, in
-      * order of preference. Allowed values: any block cipher name, or
-      * ARC4.
+      * order of preference.
       */
       virtual std::vector<std::string> allowed_ciphers() const;
 
       /**
       * Returns a list of hash algorithms we are willing to use for
-      * signatures.
+      * signatures, in order of preference.
       */
       virtual std::vector<std::string> allowed_signature_hashes() const;
 
@@ -131,8 +130,7 @@ class BOTAN_DLL Policy
       *         their highest preference, rather than the clients.
       *         Has no effect on client side.
       */
-      virtual bool server_uses_own_ciphersuite_preferences() const;
-
+      virtual bool server_uses_own_ciphersuite_preferences() const { return true; }
 
       /**
       * Return allowed ciphersuites, in order of preference
@@ -141,6 +139,34 @@ class BOTAN_DLL Policy
                                                    bool have_srp) const;
 
       virtual ~Policy() {}
+   };
+
+/**
+* NSA Suite B 128-bit security level (see @rfc 6460)
+*/
+class NSA_Suite_B_128 : public Policy
+   {
+   public:
+      std::vector<std::string> allowed_ciphers() const override
+         { return std::vector<std::string>({"AES-128/GCM"}); }
+
+      std::vector<std::string> allowed_signature_hashes() const override
+         { return std::vector<std::string>({"SHA-256"}); }
+
+      std::vector<std::string> allowed_macs() const override
+         { return std::vector<std::string>({"AEAD"}); }
+
+      std::vector<std::string> allowed_key_exchange_methods() const override
+         { return std::vector<std::string>({"ECDH"}); }
+
+      std::vector<std::string> allowed_signature_methods() const override
+         { return std::vector<std::string>({"ECDSA"}); }
+
+      std::vector<std::string> allowed_ecc_curves() const override
+         { return std::vector<std::string>({"secp256r1"}); }
+
+      bool acceptable_protocol_version(Protocol_Version version) const override
+         { return version == Protocol_Version::TLS_V12; }
    };
 
 }

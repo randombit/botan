@@ -138,11 +138,6 @@ bool Policy::acceptable_protocol_version(Protocol_Version version) const
    //return version >= Protocol_Version::TLS_V11;
    }
 
-bool Policy::server_uses_own_ciphersuite_preferences() const
-   {
-   return true;
-   }
-
 namespace {
 
 class Ciphersuite_Preference_Ordering
