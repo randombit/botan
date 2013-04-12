@@ -11,7 +11,9 @@ First thing,
   wget https://www.iana.org/assignments/tls-parameters/tls-parameters.txt
 """
 
-import sys, re
+import sys
+import re
+import datetime
 
 def to_ciphersuite_info(code, name):
 
@@ -98,8 +100,8 @@ def to_ciphersuite_info(code, name):
     ivlen = 0
     if cipher_algo != 'ARC4':
         mode = cipher[-1]
-        if mode not in ['CBC', 'GCM', 'CCM']:
-            print "** Unknown mode %s" % (' '.join(cipher))
+        if mode not in ['CBC', 'GCM', 'CCM', 'OCB']:
+            print "#warning Unknown mode %s" % (' '.join(cipher))
 
         ivlen = 8 if cipher_algo == '3DES' else 16
 
@@ -144,16 +146,18 @@ def main(args = None):
                     should_use = False
 
             if should_use:
-                suites[name] = (code,to_ciphersuite_info(code, name))
+                suites[name] = (code, to_ciphersuite_info(code, name))
 
     # From http://tools.ietf.org/html/draft-ietf-tls-56-bit-ciphersuites-01
     suites['DHE_DSS_WITH_RC4_128_SHA'] = ('0066', to_ciphersuite_info('0066', 'DHE_DSS_WITH_RC4_128_SHA'))
 
+    #suites['ECDHE_RSA_WITH_AES_128_OCB_SHA256'] = ('FF66', to_ciphersuite_info('FF66', 'ECDHE_RSA_WITH_AES_128_OCB_SHA256'))
+
     print """/*
-* List of TLS cipher suites
+* TLS cipher suite information
 *
 * This file was automatically generated from the IANA assignments
-* by %s
+* by %s on %s
 *
 * Released under the terms of the Botan license
 */
@@ -167,18 +171,12 @@ namespace TLS {
 Ciphersuite Ciphersuite::by_id(u16bit suite)
    {
    switch(suite)
-      {
-""" % (sys.argv[0])
+      {""" % (sys.argv[0], datetime.date.today().strftime("%Y-%m-%d"))
 
     for k in sorted(suites.keys()):
         print "      case 0x%s: // %s" % (suites[k][0], k)
         print "         return %s;" % (suites[k][1])
         print
-
-    #print "return std::vector<u16bit>({"
-    #for k in sorted([k[0] for k in suites.values()]):
-    #    print "0x%s, " % (k),
-    #print "});"
 
     print """      }
 

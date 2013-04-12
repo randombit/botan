@@ -1,8 +1,8 @@
 /*
-* List of TLS cipher suites
+* TLS cipher suite information
 *
 * This file was automatically generated from the IANA assignments
-* by ./src/build-data/scripts/tls_suite_info.py
+* by ./src/build-data/scripts/tls_suite_info.py on 2013-04-12
 *
 * Released under the terms of the Botan license
 */
@@ -17,7 +17,6 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
    {
    switch(suite)
       {
-
       case 0x0013: // DHE_DSS_WITH_3DES_EDE_CBC_SHA
          return Ciphersuite(0x0013, "DSA", "DH", "3DES", 24, 8, "SHA-1", 20);
 
