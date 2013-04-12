@@ -417,6 +417,8 @@ void aes_encrypt_n(const byte in[], byte out[],
                    const secure_vector<u32bit>& EK,
                    const secure_vector<byte>& ME)
    {
+   BOTAN_ASSERT(EK.size() && ME.size() == 16, "Key was set");
+
    const size_t BLOCK_SIZE = 16;
 
    const u32bit* TE0 = TE;
@@ -528,6 +530,8 @@ void aes_decrypt_n(const byte in[], byte out[], size_t blocks,
                    const secure_vector<u32bit>& DK,
                    const secure_vector<byte>& MD)
    {
+   BOTAN_ASSERT(DK.size() && MD.size() == 16, "Key was set");
+
    const size_t BLOCK_SIZE = 16;
 
    const u32bit* TD0 = TD;
