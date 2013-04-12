@@ -9,9 +9,9 @@ add_lib_dir_option -L
 add_lib_option -l
 
 lang_flags "-D_REENTRANT -std=c++11"
-warning_flags "-Wextra -Wall -Wzero-as-null-pointer-constant"
+warning_flags "-Wextra -Wall"
 
-maintainer_warning_flags "-Werror -Wall -Wextra -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wold-style-cast -Wno-error=old-style-cast"
+maintainer_warning_flags "-Werror -Wall -Wextra -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wold-style-cast -Wno-error=old-style-cast -Wzero-as-null-pointer-constant"
 
 lib_opt_flags "-O3"
 check_opt_flags "-O2"
