@@ -371,9 +371,6 @@ size_t tls_padding_check(bool sslv3_padding,
                          const byte record[],
                          size_t record_len)
    {
-   if(block_size == 0 || record_len == 0 || record_len % block_size != 0)
-      return 0;
-
    const size_t padding_length = record[(record_len-1)];
 
    if(padding_length >= record_len)
@@ -395,11 +392,14 @@ size_t tls_padding_check(bool sslv3_padding,
    * TLS v1.0 and up require all the padding bytes be the same value
    * and allows up to 255 bytes.
    */
-   for(size_t i = 0; i != padding_length; ++i)
-      if(record[(record_len-i-1)] != padding_length)
-         return 0;
+   const size_t pad_start = record_len - padding_length - 1;
 
-   return padding_length + 1;
+   volatile size_t cmp = 0;
+
+   for(size_t i = 0; i != padding_length; ++i)
+      cmp += record[pad_start + i] ^ padding_length;
+
+   return cmp ? 0 : padding_length + 1;
    }
 
 void cbc_decrypt_record(byte record_contents[], size_t record_len,
