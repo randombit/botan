@@ -17,6 +17,24 @@
 namespace Botan {
 
 /**
+* Time aspects of an algorithm/provider
+* @param name the name of the algorithm to test
+* @param af the algorithm factory used to create objects
+* @param provider the provider to use
+* @param rng the rng to use to generate random inputs
+* @param runtime total time for the benchmark to run
+* @param buf_size size of buffer to benchmark against, in KiB
+* @return results a map from op type to operations per second
+*/
+std::map<std::string, double>
+BOTAN_DLL time_algorithm_ops(const std::string& name,
+                             Algorithm_Factory& af,
+                             const std::string& provider,
+                             RandomNumberGenerator& rng,
+                             std::chrono::nanoseconds runtime,
+                             size_t buf_size);
+
+/**
 * Algorithm benchmark
 * @param name the name of the algorithm to test (cipher, hash, or MAC)
 * @param af the algorithm factory used to create objects

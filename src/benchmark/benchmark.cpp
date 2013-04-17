@@ -1,6 +1,6 @@
 /*
 * Runtime benchmarking
-* (C) 2008-2009 Jack Lloyd
+* (C) 2008-2009,2013 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -9,6 +9,7 @@
 #include <botan/buf_comp.h>
 #include <botan/block_cipher.h>
 #include <botan/stream_cipher.h>
+#include <botan/aead.h>
 #include <botan/hash.h>
 #include <botan/mac.h>
 #include <memory>
@@ -19,117 +20,119 @@ namespace Botan {
 
 namespace {
 
-typedef std::chrono::high_resolution_clock benchmark_clock;
-
-/**
-* Benchmark Buffered_Computation (hash or MAC)
-*/
-std::pair<u64bit, u64bit> bench_buf_comp(Buffered_Computation* buf_comp,
-                                         std::chrono::nanoseconds max_time,
-                                         const byte buf[], size_t buf_len)
+double time_op(std::chrono::nanoseconds runtime, std::function<void ()> op)
    {
-   u64bit reps = 0;
-
    std::chrono::nanoseconds time_used(0);
+   size_t reps = 0;
 
-   while(time_used < max_time)
+   auto start = std::chrono::high_resolution_clock::now();
+
+   while(time_used < runtime)
       {
-      auto start = benchmark_clock::now();
-      buf_comp->update(buf, buf_len);
-      time_used += std::chrono::duration_cast<std::chrono::nanoseconds>(benchmark_clock::now() - start);
-
+      op();
       ++reps;
+      time_used = std::chrono::high_resolution_clock::now() - start;
       }
 
-   u64bit ns_taken =
-      std::chrono::duration_cast<std::chrono::nanoseconds>(time_used).count();
+   const u64bit nsec_used = std::chrono::duration_cast<std::chrono::nanoseconds>(time_used).count();
 
-   return std::make_pair(reps * buf_len, ns_taken);
+   const double seconds_used = static_cast<double>(nsec_used) / 1000000000;
+
+   return reps / seconds_used; // ie, return ops per second
    }
 
-/**
-* Benchmark block cipher
-*/
-std::pair<u64bit, u64bit>
-bench_block_cipher(BlockCipher* block_cipher,
-                   std::chrono::nanoseconds max_time,
-                   byte buf[], size_t buf_len)
+}
+
+std::map<std::string, double>
+time_algorithm_ops(const std::string& name,
+                   Algorithm_Factory& af,
+                   const std::string& provider,
+                   RandomNumberGenerator& rng,
+                   std::chrono::nanoseconds runtime,
+                   size_t buf_size)
    {
-   const size_t in_blocks = buf_len / block_cipher->block_size();
+   const size_t Mebibyte = 1024*1024;
 
-   u64bit reps = 0;
+   secure_vector<byte> buffer(buf_size * 1024);
+   rng.randomize(&buffer[0], buffer.size());
 
-   std::chrono::nanoseconds time_used(0);
+   const double mb_mult = buffer.size() / static_cast<double>(Mebibyte);
 
-   block_cipher->set_key(buf, block_cipher->maximum_keylength());
-
-   while(time_used < max_time)
+   if(const BlockCipher* proto = af.prototype_block_cipher(name, provider))
       {
-      auto start = benchmark_clock::now();
-      block_cipher->encrypt_n(buf, buf, in_blocks);
-      time_used += std::chrono::duration_cast<std::chrono::nanoseconds>(benchmark_clock::now() - start);
-      //time_used += benchmark_clock::now() - start;
+      std::unique_ptr<BlockCipher> bc(proto->clone());
 
-      ++reps;
+      const SymmetricKey key(rng, bc->maximum_keylength());
+
+      return std::map<std::string, double>({
+            { "key schedule", time_op(runtime / 8, [&]() { bc->set_key(key); }) },
+            { "encrypt", mb_mult * time_op(runtime / 2, [&]() { bc->encrypt(buffer); }) },
+            { "decrypt", mb_mult * time_op(runtime / 2, [&]() { bc->decrypt(buffer); }) },
+         });
+      }
+   else if(const StreamCipher* proto = af.prototype_stream_cipher(name, provider))
+      {
+      std::unique_ptr<StreamCipher> sc(proto->clone());
+
+      const SymmetricKey key(rng, sc->maximum_keylength());
+
+      return std::map<std::string, double>({
+            { "key schedule", time_op(runtime / 8, [&]() { sc->set_key(key); }) },
+            { "", mb_mult * time_op(runtime, [&]() { sc->encipher(buffer); }) },
+         });
+      }
+   else if(const HashFunction* proto = af.prototype_hash_function(name, provider))
+      {
+      std::unique_ptr<HashFunction> h(proto->clone());
+
+      return std::map<std::string, double>({
+            { "", mb_mult * time_op(runtime, [&]() { h->update(buffer); }) },
+         });
+      }
+   else if(const MessageAuthenticationCode* proto = af.prototype_mac(name, provider))
+      {
+      std::unique_ptr<MessageAuthenticationCode> mac(proto->clone());
+
+      const SymmetricKey key(rng, mac->maximum_keylength());
+
+      return std::map<std::string, double>({
+            { "key schedule", time_op(runtime / 8, [&]() { mac->set_key(key); }) },
+            { "", mb_mult * time_op(runtime, [&]() { mac->update(buffer); }) },
+         });
+      }
+   else
+      {
+      std::unique_ptr<AEAD_Mode> enc(get_aead(name, ENCRYPTION));
+      std::unique_ptr<AEAD_Mode> dec(get_aead(name, DECRYPTION));
+
+      if(enc && dec)
+         {
+         const SymmetricKey key(rng, enc->maximum_keylength());
+
+         return std::map<std::string, double>({
+               { "key schedule", time_op(runtime / 4, [&]() { enc->set_key(key); dec->set_key(key); }) / 2 },
+               { "encrypt", mb_mult * time_op(runtime / 2, [&]() { enc->update(buffer, 0); buffer.resize(buf_size*1024); }) },
+               { "decrypt", mb_mult * time_op(runtime / 2, [&]() { dec->update(buffer, 0); buffer.resize(buf_size*1024); }) },
+            });
+         }
       }
 
-   u64bit ns_taken =
-      std::chrono::duration_cast<std::chrono::nanoseconds>(time_used).count();
-
-   return std::make_pair(reps * in_blocks * block_cipher->block_size(),
-                         ns_taken);
+   return std::map<std::string, double>();
    }
 
-/**
-* Benchmark stream
-*/
-std::pair<u64bit, u64bit>
-bench_stream_cipher(StreamCipher* stream_cipher,
-                    std::chrono::nanoseconds max_time,
-                    byte buf[], size_t buf_len)
+namespace {
+
+double find_first_in(const std::map<std::string, double>& m,
+                     const std::vector<std::string>& keys)
    {
-   u64bit reps = 0;
-
-   stream_cipher->set_key(buf, stream_cipher->maximum_keylength());
-
-   std::chrono::nanoseconds time_used(0);
-
-   while(time_used < max_time)
+   for(auto key : keys)
       {
-      auto start = benchmark_clock::now();
-      stream_cipher->cipher1(buf, buf_len);
-      time_used += benchmark_clock::now() - start;
-
-      ++reps;
+      auto i = m.find(key);
+      if(i != m.end())
+         return i->second;
       }
 
-   u64bit ns_taken =
-      std::chrono::duration_cast<std::chrono::nanoseconds>(time_used).count();
-
-   return std::make_pair(reps * buf_len, ns_taken);
-   }
-
-/**
-* Benchmark hash
-*/
-std::pair<u64bit, u64bit>
-bench_hash(HashFunction* hash,
-           std::chrono::nanoseconds max_time,
-           const byte buf[], size_t buf_len)
-   {
-   return bench_buf_comp(hash, max_time, buf, buf_len);
-   }
-
-/**
-* Benchmark MAC
-*/
-std::pair<u64bit, u64bit>
-bench_mac(MessageAuthenticationCode* mac,
-          std::chrono::nanoseconds max_time,
-          const byte buf[], size_t buf_len)
-   {
-   mac->set_key(buf, mac->maximum_keylength());
-   return bench_buf_comp(mac, max_time, buf, buf_len);
+   throw std::runtime_error("algorithm_factory no usable keys found in result");
    }
 
 }
@@ -141,62 +144,15 @@ algorithm_benchmark(const std::string& name,
                     std::chrono::milliseconds milliseconds,
                     size_t buf_size)
    {
-   std::vector<std::string> providers = af.providers_of(name);
-   std::map<std::string, double> all_results;
+   const std::vector<std::string> providers = af.providers_of(name);
+   const std::chrono::nanoseconds ns_per_provider = milliseconds / providers.size();
 
-   if(providers.empty()) // no providers, nothing to do
-      return all_results;
+   std::map<std::string, double> all_results; // provider -> ops/sec
 
-   std::chrono::nanoseconds ns_per_provider = milliseconds / providers.size();
-
-   std::vector<byte> buf(buf_size * 1024);
-   rng.randomize(&buf[0], buf.size());
-
-   for(size_t i = 0; i != providers.size(); ++i)
+   for(auto provider : providers)
       {
-      const std::string provider = providers[i];
-
-      std::pair<u64bit, u64bit> results(0, 0);
-
-      if(const BlockCipher* proto =
-            af.prototype_block_cipher(name, provider))
-         {
-         std::unique_ptr<BlockCipher> block_cipher(proto->clone());
-         results = bench_block_cipher(block_cipher.get(),
-                                      ns_per_provider,
-                                      &buf[0], buf.size());
-         }
-      else if(const StreamCipher* proto =
-                 af.prototype_stream_cipher(name, provider))
-         {
-         std::unique_ptr<StreamCipher> stream_cipher(proto->clone());
-         results = bench_stream_cipher(stream_cipher.get(),
-                                       ns_per_provider,
-                                       &buf[0], buf.size());
-         }
-      else if(const HashFunction* proto =
-                 af.prototype_hash_function(name, provider))
-         {
-         std::unique_ptr<HashFunction> hash(proto->clone());
-         results = bench_hash(hash.get(), ns_per_provider,
-                              &buf[0], buf.size());
-         }
-      else if(const MessageAuthenticationCode* proto =
-                 af.prototype_mac(name, provider))
-         {
-         std::unique_ptr<MessageAuthenticationCode> mac(proto->clone());
-         results = bench_mac(mac.get(), ns_per_provider,
-                             &buf[0], buf.size());
-         }
-
-      if(results.first && results.second)
-         {
-         /* 953.67 == 1000 * 1000 * 1000 / 1024 / 1024 - the conversion
-            factor from bytes per nanosecond to mebibytes per second.
-         */
-         double speed = (953.67 * results.first) / results.second;
-         all_results[provider] = speed;
-         }
+      auto results = time_algorithm_ops(name, af, provider, rng, ns_per_provider, buf_size);
+      all_results[provider] = find_first_in(results, { "", "update", "encrypt" });
       }
 
    return all_results;
