@@ -77,12 +77,6 @@ class BOTAN_DLL CPUID
          { return x86_processor_flags_has(CPUID_PCMUL_BIT); }
 
       /**
-      * Check if the processor supports MOVBE
-      */
-      static bool has_movbe()
-         { return x86_processor_flags_has(CPUID_MOVBE_BIT); }
-
-      /**
       * Check if the processor supports RDRAND
       */
       static bool has_rdrand()
@@ -100,7 +94,6 @@ class BOTAN_DLL CPUID
          CPUID_SSSE3_BIT = 41,
          CPUID_SSE41_BIT = 51,
          CPUID_SSE42_BIT = 52,
-         CPUID_MOVBE_BIT = 54,
          CPUID_AESNI_BIT = 57,
          CPUID_AVX_BIT = 60,
          CPUID_RDRAND_BIT = 62

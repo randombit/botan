@@ -16,8 +16,7 @@ maintainer_warning_flags "-Werror -Wall -Wextra -Wstrict-aliasing -Wstrict-overf
 lib_opt_flags "-O3"
 check_opt_flags "-O2"
 shared_flags "-fPIC"
-debug_flags -g
-no_debug_flags "-finline-functions"
+debug_flags "-g -fno-inline-functions"
 
 visibility_build_flags "-fvisibility=hidden"
 visibility_attribute '__attribute__((visibility("default")))'
@@ -39,22 +38,25 @@ hpux    -> "$(CXX) -shared -fPIC -Wl,+h,$(SONAME)"
 solaris -> "$(CXX) -shared -fPIC -Wl,-h,$(SONAME)"
 </so_link_flags>
 
+<isa_flags>
+"sse2"   -> "-msse2"
+"ssse3"  -> "-mssse3"
+"sse4.1" -> "-msse4.1"
+"sse4.2" -> "-msse4.2"
+"avx"    -> "-mavx"
+"aes-ni" -> "-maes"
+</isa_flags>
+
 <mach_opt>
 # Avoid using -march=i[345]86, instead tune for generic
-i386        -> "-mtune=generic -momit-leaf-frame-pointer"
-i486        -> "-mtune=generic -momit-leaf-frame-pointer"
-i586        -> "-mtune=generic -momit-leaf-frame-pointer"
+i386        -> "-mtune=generic"
+i486        -> "-mtune=generic"
+i586        -> "-mtune=generic"
 
 # Translate to GCC-speak
-nehalem     -> "-march=corei7 -momit-leaf-frame-pointer"
-westmere    -> "-march=corei7 -maes -momit-leaf-frame-pointer"
-
-#nehalem      -> "-march=core2 -msse4.1 -msse4.2 -momit-leaf-frame-pointer"
-#westmere     -> "-march=core2 -msse4.1 -msse4.2 -maes -momit-leaf-frame-pointer"
-
-sandybridge -> "-march=corei7-avx -momit-leaf-frame-pointer"
-ivybridge   -> "-march=core-avx-i -momit-leaf-frame-pointer"
-atom32      -> "-march=atom -momit-leaf-frame-pointer"
+nehalem     -> "-march=corei7"
+sandybridge -> "-march=corei7-avx"
+ivybridge   -> "-march=core-avx-i"
 
 ppc601      -> "-mpowerpc -mcpu=601"
 cellppu     -> "-mcpu=cell"
@@ -83,8 +85,11 @@ ppc32     -> "-mcpu=SUBMODEL" ppc
 ppc64     -> "-mcpu=SUBMODEL" ppc
 sparc32   -> "-mcpu=SUBMODEL -Wa,-xarch=v8plus" sparc32-
 sparc64   -> "-mcpu=v9 -mtune=SUBMODEL"
-x86_32    -> "-march=SUBMODEL -momit-leaf-frame-pointer"
-x86_64    -> "-march=SUBMODEL -momit-leaf-frame-pointer"
+x86_32    -> "-march=SUBMODEL"
+x86_64    -> "-march=SUBMODEL"
+
+all_x86_32 -> "-momit-leaf-frame-pointer"
+all_x86_64 -> "-momit-leaf-frame-pointer"
 </mach_opt>
 
 # The 'linking' bit means "use this for both compiling *and* linking"

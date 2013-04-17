@@ -1,5 +1,3 @@
-# Largely copied from the gcc config
-
 macro_name CLANG
 
 binary_name clang++
@@ -11,15 +9,15 @@ add_lib_dir_option -L
 add_lib_option -l
 
 lang_flags "-D_REENTRANT -std=c++11"
-warning_flags "-W -Wall"
+warning_flags "-Wextra -Wall"
 
 makefile_style unix
 
 lib_opt_flags "-O3"
 check_opt_flags "-O2"
 shared_flags "-fPIC"
-debug_flags -g
-no_debug_flags "-finline-functions"
+debug_flags "-g -fno-inline-functions"
+no_debug_flags ""
 
 visibility_build_flags "-fvisibility=hidden"
 visibility_attribute '__attribute__((visibility("default")))'
@@ -31,10 +29,17 @@ default -> "$(CXX) -shared -fPIC -Wl,-soname,$(SONAME)"
 darwin  -> "$(CXX) -dynamiclib -fPIC -install_name $(LIBDIR)/$(SONAME)"
 </so_link_flags>
 
+<isa_flags>
+"aes-ni" -> "-maes"
+"ssse3" -> "-mssse3"
+"sse2" -> "-msse2"
+</isa_flags>
+
 <mach_opt>
-x86_64    -> "-march=SUBMODEL"
-nehalem   -> "-march=corei7"
-westmere  -> "-march=corei7 -maes"
+x86_64      -> "-march=SUBMODEL"
+nehalem     -> "-march=corei7"
+sandybridge -> "-march=corei7-avx"
+ivybridge   -> "-march=core-avx-i"
 </mach_opt>
 
 <mach_abi_linking>

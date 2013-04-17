@@ -7,7 +7,7 @@
 * %{user}@%{hostname} running '%{command_line}'
 *
 * Target
-*  - Compiler: %{cc} %{lib_opt} %{mach_opt}
+*  - Compiler: %{cc} %{lib_opt}
 *  - Arch: %{submodel}/%{arch}
 *  - OS: %{os}
 */

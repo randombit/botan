@@ -25,6 +25,6 @@ g4 -> ppc7450
 powerpcspe -> e500v2 # for Debian
 </submodel_aliases>
 
-<isa_extn>
-altivec:ppc7400,ppc7450
-</isa_extn>
+<isa_extensions>
+altivec
+</isa_extensions>

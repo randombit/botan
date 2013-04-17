@@ -12,12 +12,11 @@ x64
 
 <submodels>
 k8
-k10
+barcelona
 atom
 nocona
 core2
-nehalem
-westmere
+corei7
 sandybridge
 ivybridge
 </submodels>
@@ -27,18 +26,21 @@ core2duo -> core2
 intelcore2 -> core2
 intelcore2duo -> core2
 
+nehalem -> corei7
+westmere -> corei7
+
 sledgehammer -> k8
 opteron -> k8
 amdopteron -> k8
 athlon64 -> k8
-barcelona -> k10
-
-corei5cpum520 -> westmere
-corei7cpu860 -> nehalem
 </submodel_aliases>
 
-<isa_extn>
-sse2:all
-ssse3:core2,nehalem,westmere,atom,sandybridge,ivybridge
-aes-ni:westmere,sandybridge,ivybridge
-</isa_extn>
+<isa_extensions>
+sse2
+ssse3
+sse4.1
+sse4.2
+avx2
+aes-ni
+clmul
+</isa_extensions>

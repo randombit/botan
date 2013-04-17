@@ -8,7 +8,7 @@
 #ifndef BOTAN_SIMD_ALTIVEC_H__
 #define BOTAN_SIMD_ALTIVEC_H__
 
-#if defined(BOTAN_TARGET_CPU_HAS_ALTIVEC)
+#if defined(BOTAN_TARGET_SUPPORTS_ALTIVEC)
 
 #include <botan/loadstor.h>
 #include <botan/cpuid.h>

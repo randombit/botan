@@ -223,20 +223,14 @@ def process_command_line(args):
                             dest='unaligned_mem', action='store_false',
                             help=optparse.SUPPRESS_HELP)
 
-    for isa_extn_name in ['SSE2', 'SSSE3', 'AltiVec', 'AES-NI', 'movbe']:
+    for isa_extn_name in ['SSE2', 'SSSE3', 'AltiVec', 'AES-NI']:
         isa_extn = isa_extn_name.lower()
 
-        target_group.add_option('--enable-%s' % (isa_extn),
-                                help='enable use of %s' % (isa_extn_name),
-                                action='append_const',
-                                const=isa_extn,
-                                dest='enable_isa_extns')
-
         target_group.add_option('--disable-%s' % (isa_extn),
-                                help=optparse.SUPPRESS_HELP,
+                                help='disable use of %s intrinsics' % (isa_extn_name),
                                 action='append_const',
                                 const=isa_extn,
-                                dest='disable_isa_extns')
+                                dest='disable_intrinsics')
 
     build_group = optparse.OptionGroup(parser, 'Build options')
 
@@ -419,33 +413,7 @@ def process_command_line(args):
     options.enabled_modules = parse_multiple_enable(options.enabled_modules)
     options.disabled_modules = parse_multiple_enable(options.disabled_modules)
 
-    options.enable_isa_extns = parse_multiple_enable(options.enable_isa_extns)
-    options.disable_isa_extns = parse_multiple_enable(options.disable_isa_extns)
-
-    def enabled_or_disabled_isa(isa):
-        if isa in options.enable_isa_extns:
-            return True
-        if isa in options.disable_isa_extns:
-            return True
-        return False
-
-    isa_deps = {
-        'ssse3': 'sse2',
-        'aes-ni': 'sse2'
-        }
-
-    if 'sse2' in options.disable_isa_extns:
-        for isa in [k for (k,v) in isa_deps.items() if v == 'sse2']:
-            # If explicitly enabled, allow it even if a dependency
-            # violation; trust the user to know what they want
-            if not enabled_or_disabled_isa(isa):
-                options.disable_isa_extns.append(isa)
-
-    for isa in options.enable_isa_extns:
-        if isa in isa_deps:
-            for dep in isa_deps.get(isa, '').split(','):
-                if not enabled_or_disabled_isa(dep):
-                    options.enable_isa_extns.append(dep)
+    options.disable_intrinsics = parse_multiple_enable(options.disable_intrinsics)
 
     return options
 
@@ -629,14 +597,11 @@ class ModuleInfo(object):
                 return False
 
         if self.need_isa != None:
-            if self.need_isa in options.disable_isa_extns:
+            if self.need_isa in options.disable_intrinsics:
                 return False # explicitly disabled
 
-            if self.need_isa in options.enable_isa_extns:
-                return True # explicitly enabled
-
             # Default to whatever the CPU is supposed to support
-            return self.need_isa in archinfo.isa_extensions_in(cpu_name)
+            return self.need_isa in archinfo.isa_extensions
 
         return True
 
@@ -674,32 +639,15 @@ class ModuleInfo(object):
 class ArchInfo(object):
     def __init__(self, infofile):
         lex_me_harder(infofile, self,
-                      ['aliases', 'submodels', 'submodel_aliases', 'isa_extn'],
+                      ['aliases', 'submodels', 'submodel_aliases', 'isa_extensions'],
                       { 'endian': None,
                         'family': None,
                         'unaligned': 'no'
                         })
 
-        def convert_isa_list(input):
-            isa_info = {}
-            for line in self.isa_extn:
-                (isa,cpus) = line.split(':')
-                for cpu in cpus.split(','):
-                    isa_info.setdefault(cpu, []).append(isa)
-            return isa_info
-
-        self.isa_extn = convert_isa_list(self.isa_extn)
-
         self.submodel_aliases = force_to_dict(self.submodel_aliases)
 
         self.unaligned_ok = (1 if self.unaligned == 'ok' else 0)
-
-    """
-    Return ISA extensions specific to this CPU
-    """
-    def isa_extensions_in(self, cpu_type):
-        return sorted(self.isa_extn.get(cpu_type, []) +
-                      self.isa_extn.get('all', []))
 
     """
     Return a list of all submodels for this arch, ordered longest
@@ -723,14 +671,13 @@ class ArchInfo(object):
         if self.basename != options.cpu:
             macros.append('TARGET_CPU_IS_%s' % (form_macro(options.cpu)))
 
-        enabled_isas = set(self.isa_extensions_in(options.cpu) +
-                           options.enable_isa_extns)
-        disabled_isas = set(options.disable_isa_extns)
+        enabled_isas = set(self.isa_extensions)
+        disabled_isas = set(options.disable_intrinsics)
 
         isa_extensions = sorted(enabled_isas - disabled_isas)
 
         for isa in isa_extensions:
-            macros.append('TARGET_CPU_HAS_%s' % (form_macro(isa)))
+            macros.append('TARGET_SUPPORTS_%s' % (form_macro(isa)))
 
         endian = options.with_endian or self.endian
 
@@ -754,7 +701,7 @@ class ArchInfo(object):
 class CompilerInfo(object):
     def __init__(self, infofile):
         lex_me_harder(infofile, self,
-                      ['so_link_flags', 'mach_opt', 'mach_abi_linking'],
+                      ['so_link_flags', 'mach_opt', 'mach_abi_linking', 'isa_flags'],
                       { 'binary_name': None,
                         'macro_name': None,
                         'compile_option': '-c ',
@@ -778,6 +725,7 @@ class CompilerInfo(object):
 
         self.so_link_flags = force_to_dict(self.so_link_flags)
         self.mach_abi_linking = force_to_dict(self.mach_abi_linking)
+        self.isa_flags = force_to_dict(self.isa_flags)
 
         self.mach_opt_flags = {}
 
@@ -833,37 +781,35 @@ class CompilerInfo(object):
             return ''
         return ' ' + ' '.join(abi_link)
 
-    """
-    Return the flags for MACH_OPT
-    """
-    def mach_opts(self, arch, submodel):
-
-        def submodel_fixup(tup):
-            return tup[0].replace('SUBMODEL', submodel.replace(tup[1], ''))
-
-        if submodel == arch:
-            return ''
-
-        if submodel in self.mach_opt_flags:
-            return submodel_fixup(self.mach_opt_flags[submodel])
-        if arch in self.mach_opt_flags:
-            return submodel_fixup(self.mach_opt_flags[arch])
-
-        return ''
 
     """
-    Return the flags for LIB_OPT
+    Return the optimization flags to use for the library
     """
     def library_opt_flags(self, options):
         def gen_flags():
             if options.debug_build:
                 yield self.debug_flags
+            else:
+                yield self.no_debug_flags
 
-            if not options.no_optimizations:
-                yield self.lib_opt_flags
+            if options.no_optimizations:
+                return
 
-                if not options.debug_build:
-                    yield self.no_debug_flags
+            yield self.lib_opt_flags
+
+            def submodel_fixup(flags, tup):
+                return tup[0].replace('SUBMODEL', flags.replace(tup[1], ''))
+
+            if options.cpu != options.arch:
+                if options.cpu in self.mach_opt_flags:
+                    yield submodel_fixup(options.cpu, self.mach_opt_flags[options.cpu])
+                elif options.arch in self.mach_opt_flags:
+                    yield submodel_fixup(options.cpu, self.mach_opt_flags[options.arch])
+
+            all_arch = 'all_%s' % (options.arch)
+
+            if all_arch in self.mach_opt_flags:
+                yield self.mach_opt_flags[all_arch][0]
 
         return (' '.join(gen_flags())).strip()
 
@@ -1037,7 +983,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
             yield os.path.join(obj_dir, name)
 
-
     def choose_mp_bits():
         mp_bits = [mod.mp_bits for mod in modules if mod.mp_bits != 0]
 
@@ -1051,16 +996,24 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         return mp_bits[0]
 
+    def isa_specific_flags(cc, src):
+        for mod in modules:
+            if src in mod.sources():
+                if mod.need_isa != None:
+                    return cc.isa_flags[mod.need_isa]
+        return ''
+
     """
     Form snippets of makefile for building each source file
     """
     def build_commands(sources, obj_dir, flags):
         for (obj_file,src) in zip(objectfile_list(sources, obj_dir), sources):
-            yield '%s: %s\n\t$(CXX) %s%s $(%s_FLAGS) %s$? %s$@\n' % (
+            yield '%s: %s\n\t$(CXX) %s%s $(%s_FLAGS) %s %s$? %s$@\n' % (
                 obj_file, src,
                 cc.add_include_dir_option,
                 build_config.include_dir,
                 flags,
+                isa_specific_flags(cc, src),
                 cc.compile_option,
                 cc.output_to_option)
 
@@ -1143,7 +1096,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
                                      options.cpu, options.debug_build),
 
         'lib_opt': cc.library_opt_flags(options),
-        'mach_opt': cc.mach_opts(options.arch, options.cpu),
         'check_opt': '' if options.no_optimizations else cc.check_opt_flags,
         'lang_flags': cc.lang_flags,
         'warn_flags': warning_flags(cc.warning_flags,
@@ -1832,7 +1784,7 @@ if __name__ == '__main__':
         main()
     except Exception as e:
         logging.error(e)
-        #import traceback
-        #logging.info(traceback.format_exc())
+        import traceback
+        logging.debug(traceback.format_exc())
         sys.exit(1)
     sys.exit(0)

@@ -24,6 +24,6 @@ cellppu
 cellbroadbandengine -> cellppu
 </submodel_aliases>
 
-<isa_extn>
-altivec:cellppu,ppc970,power6,power7
-</isa_extn>
+<isa_extensions>
+altivec
+</isa_extensions>

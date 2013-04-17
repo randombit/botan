@@ -8,7 +8,7 @@
 #ifndef BOTAN_SIMD_SSE_H__
 #define BOTAN_SIMD_SSE_H__
 
-#if defined(BOTAN_TARGET_CPU_HAS_SSE2)
+#if defined(BOTAN_TARGET_SUPPORTS_SSE2)
 
 #include <botan/cpuid.h>
 #include <emmintrin.h>

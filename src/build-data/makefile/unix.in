@@ -7,6 +7,9 @@ LANG_FLAGS    = %{lang_flags}
 WARN_FLAGS    = %{warn_flags}
 LINK_TO       = %{link_to}
 
+LIB_FLAGS     = $(LIB_OPT) $(MACH_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
+CHECK_FLAGS   = $(CHECK_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
+
 # Version Numbers
 VERSION       = %{version}
 SERIES        = %{version_major}.%{version_minor}
@@ -38,6 +41,14 @@ RANLIB           = %{ranlib_command}
 RM               = @rm -f
 RM_R             = @rm -rf
 
+# Targets
+LIBRARIES     = $(STATIC_LIB)
+
+LIBNAME       = %{lib_prefix}libbotan
+STATIC_LIB    = $(LIBNAME)-$(SERIES).a
+
+all: $(LIBRARIES)
+
 # File Lists
 CHECK         = %{check_prefix}check
 
@@ -46,16 +57,6 @@ HEADERS       = %{include_files}
 LIBOBJS       = %{lib_objs}
 
 CHECKOBJS     = %{check_objs}
-
-LIB_FLAGS     = $(LIB_OPT) $(MACH_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
-CHECK_FLAGS   = $(CHECK_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
-
-LIBRARIES     = $(STATIC_LIB)
-
-LIBNAME       = %{lib_prefix}libbotan
-STATIC_LIB    = $(LIBNAME)-$(SERIES).a
-
-all: $(LIBRARIES)
 
 # Build Commands
 %{lib_build_cmds}

@@ -21,8 +21,6 @@ cellppu   -> "-qarch=cell"
 ppc970   -> "-qarch=ppc970"
 power4   -> "-qarch=pwr4"
 power5   -> "-qarch=pwr5"
-
-cellppu   -> "-qarch=cell"
 </mach_opt>
 
 <so_link_flags>

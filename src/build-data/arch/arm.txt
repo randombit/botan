@@ -38,6 +38,7 @@ cortex-a8 -> armv7-a
 cortex-a9 -> armv7-a
 </submodel_aliases>
 
-<isa_extn>
-neon:armv7-a
-</isa_extn>
+<isa_extensions>
+neon
+</isa_extensions>
+
