@@ -1,3 +1,20 @@
 Version 1.11.4, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* CPU specific extensions are now always compiled if support for the
+  operations is available at build time, and flags enabling use of
+  extra operations (such as SSE2) are only included when compiling
+  files which specifically request support. This means, for instance,
+  that the SSSE3 and AES-NI implementations of AES are always included
+  in x86 builds, relying on runtime cpuid checking to prevent their
+  use on CPUs that do not support those operations.
+
+* Adds a new interface for benchmarking, :cpp:func:`time_algorithm_ops`,
+  which returns a map of operations to operations per second. For
+  instance now both encrypt and decrypt speed of a block cipher can be
+  checked, as well as the key schedule of all keyed algorithms. It
+  additionally supports AEAD modes.
+
+* A new TLS policy :cpp:class:`NSA_Suite_B_128` is available, which
+  will negotiate only the 128-bit security NSA Suite B. See
+  :rfc:`6460` for more information about Suite B.
