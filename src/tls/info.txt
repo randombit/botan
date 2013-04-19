@@ -75,6 +75,7 @@ asn1
 camellia
 cbc
 credentials
+cryptobox
 des
 dh
 dsa
@@ -83,6 +84,7 @@ ecdsa
 eme_pkcs
 emsa3
 hmac
+gcm
 kdf2
 md5
 prf_ssl3
