@@ -19,21 +19,24 @@ namespace Botan {
 */
 void High_Resolution_Timestamp::poll(Entropy_Accumulator& accum)
    {
+   // Don't count the timestamp as contributing any entropy
+   const double ESTIMATED_ENTROPY_PER_BYTE = 0.0;
+
 #if defined(BOTAN_TARGET_OS_HAS_QUERY_PERF_COUNTER)
    {
    LARGE_INTEGER tv;
    ::QueryPerformanceCounter(&tv);
-   accum.add(tv.QuadPart, 0);
+   accum.add(tv.QuadPart, ESTIMATED_ENTROPY_PER_BYTE);
    }
 #endif
 
 #if defined(BOTAN_TARGET_OS_HAS_CLOCK_GETTIME)
 
-#define CLOCK_POLL(src)                     \
-   do {                                     \
-     struct timespec ts;                    \
-     clock_gettime(src, &ts);               \
-     accum.add(&ts, sizeof(ts), 0);         \
+#define CLOCK_POLL(src)                                      \
+   do {                                                      \
+     struct timespec ts;                                     \
+     ::clock_gettime(src, &ts);                              \
+     accum.add(&ts, sizeof(ts), ESTIMATED_ENTROPY_PER_BYTE); \
    } while(0)
 
 #if defined(CLOCK_REALTIME)
@@ -94,8 +97,7 @@ void High_Resolution_Timestamp::poll(Entropy_Accumulator& accum)
 
 #endif
 
-   // Don't count the timestamp as contributing entropy
-   accum.add(rtc, 0);
+   accum.add(rtc, ESTIMATED_ENTROPY_PER_BYTE);
 
 #endif
    }

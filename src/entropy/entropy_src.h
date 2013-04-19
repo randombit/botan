@@ -117,7 +117,7 @@ class BOTAN_DLL Entropy_Accumulator_BufferedComputation :
    };
 
 /**
-* Abstract interface to a source of (hopefully unpredictable) system entropy
+* Abstract interface to a source of entropy
 */
 class BOTAN_DLL EntropySource
    {
