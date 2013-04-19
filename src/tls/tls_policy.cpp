@@ -23,6 +23,8 @@ std::vector<std::string> Policy::allowed_ciphers() const
       "AES-256",
       "AES-128",
       "RC4",
+      //"Camellia-256/GCM",
+      //"Camellia-128/GCM",
       //"Camellia-256",
       //"Camellia-128",
       //"SEED"

@@ -15,7 +15,7 @@ important DTLS features (including timeouts and retransmission during
 handshaking) are not yet implemented.
 
 The TLS implementation does not know anything about sockets or the
-network layer.. Instead, it calls a user provided callback (hereafter
+network layer. Instead, it calls a user provided callback (hereafter
 ``output_fn``) whenever it has data that it would want to send to the
 other party, and whenever the application receives some data from the
 counterparty it passes that information to TLS using
@@ -32,9 +32,10 @@ The callbacks that TLS calls have the signatures
 
  .. cpp:function:: void output_fn(const byte data[], size_t data_len)
 
-    TLS requests that all bytes of *data* be queued up to send.  After
-    this function returns, *data* will be overwritten, so a copy
-    should be made if the callback cannot send the data immediately.
+    TLS requests that all bytes of *data* be queued up to send to the
+    counterparty. After this function returns, *data* will be
+    overwritten, so a copy of the input must be made if the callback
+    cannot send the data immediately.
 
  .. cpp:function:: void proc_fn(const byte data[], size_t data_len, \
                                 const TLS::Alert& alert)
@@ -50,11 +51,18 @@ The callbacks that TLS calls have the signatures
      before the handshake has completed, an attacker can easily insert
      false alert values.
 
+     If TLS heartbeats (see :rfc:`6520`) were negotiated, and we
+     initiated a heartbeat, then if/when the other party responds,
+     ``proc_fn`` will be called with whatever data was included in the
+     heartbeat response (if any) along with a psuedo-alert value of
+     ``HEARTBEAT_PAYLOAD``.
+
      .. note::
 
        Currently, if an alert was passed in then no other data was
-       provided.  This allows an appliction to easily distinguish
-       between data sent before and after the alert was received.
+       provided (except for the psuedo-alert for heartbeats). This
+       allows an appliction to easily distinguish between data sent
+       before and after the alert was received.
 
  .. cpp:function:: bool handshake_complete(const TLS::Session& session)
 
@@ -71,7 +79,6 @@ The callbacks that TLS calls have the signatures
 
 You can of course use tools like ``std::bind`` to bind additional
 parameters to your callback functions.
-
 
 TLS Channels
 ----------------------------------------
@@ -460,32 +467,26 @@ be negotiated during a handshake.
 
 .. cpp:class:: TLS::Policy
 
- .. cpp:function:: bool acceptable_protocol_version(Protocol_Version version)
-
-     Return true if this version of the protocol is one that we are
-     willing to negotiate.
-
-     Default: True for all known protocol versions
-
  .. cpp:function:: std::vector<std::string> allowed_ciphers() const
 
      Returns the list of ciphers we are willing to negotiate, in order
      of preference.
 
-     Default: "AES-256", "AES-128", "ARC4", "3DES"
+     Default: "AES-256/GCM", "AES-128/GCM", "AES-256", "AES-128", "RC4"
 
-     Also allowed: "Camellia-256", "Camellia-128", "SEED"
+     Also allowed: "Camellia-256/GCM", "Camellia-128/GCM",
+     "Camellia-256", "Camellia-128", "SEED", "3DES"
 
      .. note::
 
-        ARC4 will never be negotiated in DTLS due to protocol limitations
+        RC4 will never be negotiated in DTLS due to protocol limitations
 
  .. cpp:function:: std::vector<std::string> allowed_macs() const
 
      Returns the list of algorithms we are willing to use for
      message authentication, in order of preference.
 
-     Default: "SHA-384", "SHA-256", "SHA-1"
+     Default: "AEAD", "SHA-384", "SHA-256", "SHA-1"
 
      Also allowed: "MD5"
 
@@ -538,6 +539,13 @@ be negotiated during a handshake.
 
         TLS compression is not currently supported.
 
+ .. cpp:function:: bool acceptable_protocol_version(Protocol_Version version)
+
+     Return true if this version of the protocol is one that we are
+     willing to negotiate.
+
+     Default: True for all known protocol versions
+
  .. cpp:function:: bool server_uses_own_ciphersuite_preferences() const
 
      If this returns true, a server will pick the cipher it prefers the
@@ -555,7 +563,7 @@ be negotiated during a handshake.
      If this returns true, callers should expect to handle heartbeat
      data in their ``proc_fn``.
 
-     Default
+     Default: false
 
  .. cpp:function:: bool allow_server_initiated_renegotiation() const
 
@@ -627,7 +635,8 @@ TLS Ciphersuites
 
  .. cpp:function:: std::string to_string() const
 
-     Return name of ciphersuite
+     Return the ful name of ciphersuite (for example
+     "RSA_WITH_RC4_128_SHA" or "ECDHE_RSA_WITH_AES_128_GCM_SHA256")
 
  .. cpp:function:: std::string kex_algo() const
 
