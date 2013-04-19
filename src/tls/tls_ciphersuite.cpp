@@ -56,6 +56,27 @@ Ciphersuite Ciphersuite::by_name(const std::string& name)
    return Ciphersuite(); // some unknown ciphersuite
    }
 
+Ciphersuite::Ciphersuite(u16bit ciphersuite_code,
+                         const char* sig_algo,
+                         const char* kex_algo,
+                         const char* cipher_algo,
+                         size_t cipher_keylen,
+                         size_t cipher_ivlen,
+                         const char* mac_algo,
+                         size_t mac_keylen,
+                         const char* prf_algo) :
+   m_ciphersuite_code(ciphersuite_code),
+   m_sig_algo(sig_algo),
+   m_kex_algo(kex_algo),
+   m_cipher_algo(cipher_algo),
+   m_mac_algo(mac_algo),
+   m_prf_algo(prf_algo),
+   m_cipher_keylen(cipher_keylen),
+   m_cipher_ivlen(cipher_ivlen),
+   m_mac_keylen(mac_keylen)
+   {
+   }
+
 bool Ciphersuite::psk_ciphersuite() const
    {
    return (kex_algo() == "PSK" ||
@@ -66,6 +87,16 @@ bool Ciphersuite::psk_ciphersuite() const
 bool Ciphersuite::ecc_ciphersuite() const
    {
    return (kex_algo() == "ECDH" || sig_algo() == "ECDSA");
+   }
+
+bool Ciphersuite::valid() const
+   {
+   if(!m_cipher_keylen)
+      return false;
+
+   // fixme: check that all sub-algorithms are enabled
+
+   return true;
    }
 
 std::string Ciphersuite::to_string() const

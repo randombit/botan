@@ -101,32 +101,21 @@ class BOTAN_DLL Ciphersuite
       /**
       * @return true if this is a valid/known ciphersuite
       */
-      bool valid() const { return (m_cipher_keylen > 0); }
+      bool valid() const;
 
       Ciphersuite() {}
 
    private:
 
       Ciphersuite(u16bit ciphersuite_code,
-                  const std::string& sig_algo,
-                  const std::string& kex_algo,
-                  const std::string& cipher_algo,
+                  const char* sig_algo,
+                  const char* kex_algo,
+                  const char* cipher_algo,
                   size_t cipher_keylen,
                   size_t cipher_ivlen,
-                  const std::string& mac_algo,
+                  const char* mac_algo,
                   size_t mac_keylen,
-                  const std::string& prf_algo = "") :
-         m_ciphersuite_code(ciphersuite_code),
-         m_sig_algo(sig_algo),
-         m_kex_algo(kex_algo),
-         m_cipher_algo(cipher_algo),
-         m_mac_algo(mac_algo),
-         m_prf_algo(prf_algo),
-         m_cipher_keylen(cipher_keylen),
-         m_cipher_ivlen(cipher_ivlen),
-         m_mac_keylen(mac_keylen)
-            {
-            }
+                  const char* prf_algo = "");
 
       u16bit m_ciphersuite_code = 0;
 
