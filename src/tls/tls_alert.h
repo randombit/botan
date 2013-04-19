@@ -56,9 +56,9 @@ class BOTAN_DLL Alert
          BAD_CERTIFICATE_HASH_VALUE      = 114,
          UNKNOWN_PSK_IDENTITY            = 115,
 
-         NULL_ALERT                      = 255,
-
-         HEARTBEAT_PAYLOAD               = 256
+         // pseudo alert values
+         NULL_ALERT                      = 256,
+         HEARTBEAT_PAYLOAD               = 257
       };
 
       /**
