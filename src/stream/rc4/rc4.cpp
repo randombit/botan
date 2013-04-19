@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/arc4.h>
+#include <botan/rc4.h>
 #include <botan/internal/xor_buf.h>
 #include <botan/internal/rounding.h>
 
