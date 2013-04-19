@@ -42076,7 +42076,7 @@ E5F790088393EC494F34AF1B4BE73B63666874BF31D74D64C749A0DD067F6BEC681AA339\
 # A few tests from somewhere (maybe the original reverse engineered code, or
 # the BSAFE vectors that were published soon after? I don't have those posts
 # anymore...), followed by a load of randomly generated vectors by OpenSSL.
-[ARC4]
+[RC4]
 0000000000000000:7494C2E7104B0879:0123456789ABCDEF
 0000000000000000:DE188941A3375D3A:0000000000000000
 00000000000000000000:D6A141A7EC3C38DFBD61:EF012345

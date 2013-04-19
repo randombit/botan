@@ -1,5 +1,5 @@
 /*
-* ARC4
+* RC4
 * (C) 1999-2007 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
@@ -14,7 +14,7 @@ namespace Botan {
 /*
 * Combine cipher stream with message
 */
-void ARC4::cipher(const byte in[], byte out[], size_t length)
+void RC4::cipher(const byte in[], byte out[], size_t length)
    {
    while(length >= buffer.size() - position)
       {
@@ -31,7 +31,7 @@ void ARC4::cipher(const byte in[], byte out[], size_t length)
 /*
 * Generate cipher stream
 */
-void ARC4::generate()
+void RC4::generate()
    {
    byte SX, SY;
    for(size_t i = 0; i != buffer.size(); i += 4)
@@ -57,9 +57,9 @@ void ARC4::generate()
    }
 
 /*
-* ARC4 Key Schedule
+* RC4 Key Schedule
 */
-void ARC4::key_schedule(const byte key[], size_t length)
+void RC4::key_schedule(const byte key[], size_t length)
    {
    state.resize(256);
    buffer.resize(round_up<size_t>(DEFAULT_BUFFERSIZE, 4));
@@ -84,9 +84,9 @@ void ARC4::key_schedule(const byte key[], size_t length)
 /*
 * Return the name of this type
 */
-std::string ARC4::name() const
+std::string RC4::name() const
    {
-   if(SKIP == 0)   return "ARC4";
+   if(SKIP == 0)   return "RC4";
    if(SKIP == 256) return "MARK-4";
    else            return "RC4_skip(" + std::to_string(SKIP) + ")";
    }
@@ -94,7 +94,7 @@ std::string ARC4::name() const
 /*
 * Clear memory of sensitive data
 */
-void ARC4::clear()
+void RC4::clear()
    {
    zap(state);
    zap(buffer);
@@ -102,8 +102,8 @@ void ARC4::clear()
    }
 
 /*
-* ARC4 Constructor
+* RC4 Constructor
 */
-ARC4::ARC4(size_t s) : SKIP(s) {}
+RC4::RC4(size_t s) : SKIP(s) {}
 
 }

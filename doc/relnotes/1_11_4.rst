@@ -18,3 +18,5 @@ Version 1.11.4, Not Yet Released
 * A new TLS policy :cpp:class:`NSA_Suite_B_128` is available, which
   will negotiate only the 128-bit security NSA Suite B. See
   :rfc:`6460` for more information about Suite B.
+
+* Rename ARC4 to RC4

@@ -96,7 +96,7 @@ std::string Ciphersuite::to_string() const
 
    out << "WITH_";
 
-   if(cipher_algo() == "ARC4")
+   if(cipher_algo() == "RC4")
       {
       out << "RC4_128_";
       }

@@ -22,7 +22,7 @@ std::vector<std::string> Policy::allowed_ciphers() const
       "AES-128/GCM",
       "AES-256",
       "AES-128",
-      "ARC4",
+      "RC4",
       //"Camellia-256",
       //"Camellia-128",
       //"SEED"
@@ -228,7 +228,7 @@ std::vector<u16bit> Policy::ciphersuite_list(Protocol_Version version,
       if(!have_srp && suite.kex_algo() == "SRP_SHA")
          continue;
 
-      if(version.is_datagram_protocol() && suite.cipher_algo() == "ARC4")
+      if(version.is_datagram_protocol() && suite.cipher_algo() == "RC4")
          continue;
 
       if(!version.supports_aead_modes() && suite.mac_algo() == "AEAD")

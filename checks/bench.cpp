@@ -77,7 +77,7 @@ const std::string algos[] = {
    "Serpent/XTS",
 
    /* Stream ciphers */
-   "ARC4",
+   "RC4",
    "Salsa20",
 
    /* Checksums */

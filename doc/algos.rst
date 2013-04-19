@@ -57,7 +57,7 @@ Block ciphers
 Stream Ciphers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
- * RC4 of course
+ * RC4
  * Salsa20/XSalsa20
  * CTR and OFB modes also present a stream cipher interface
 

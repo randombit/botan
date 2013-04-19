@@ -42,7 +42,7 @@ def to_ciphersuite_info(code, name):
     cipher = cipher_and_mac[:-1]
 
     cipher_info = {
-        'RC4': ('ARC4',None),
+        'RC4': ('RC4',None),
         'IDEA': ('IDEA',16),
         'DES': ('DES',8),
         '3DES': ('3DES',24),
@@ -59,7 +59,7 @@ def to_ciphersuite_info(code, name):
         'SHA256': 'SHA-256',
         'SHA384': 'SHA-384',
         'SHA512': 'SHA-512',
-        'RC4': 'ARC4',
+        'RC4': 'RC4',
         '3DES': 'TripleDES',
         'DSS': 'DSA',
         'ECDSA': 'ECDSA',
@@ -98,7 +98,7 @@ def to_ciphersuite_info(code, name):
     modestr = ''
     mode = ''
     ivlen = 0
-    if cipher_algo != 'ARC4':
+    if cipher_algo != 'RC4':
         mode = cipher[-1]
         if mode not in ['CBC', 'GCM', 'CCM', 'OCB']:
             print "#warning Unknown mode %s" % (' '.join(cipher))
@@ -108,7 +108,7 @@ def to_ciphersuite_info(code, name):
         if mode != 'CBC':
             cipher_algo += '/' + mode
 
-    if cipher_algo != 'ARC4' and mode != 'CBC':
+    if cipher_algo != 'RC4' and mode != 'CBC':
         return 'Ciphersuite(0x%s, "%s", "%s", "%s", %d, %d, "AEAD", %d, "%s")' % (
             code, sig_algo, kex_algo, cipher_algo, cipher_keylen, 4, 0, mac_algo)
     else:
