@@ -31,8 +31,8 @@ Alert::Alert(const std::vector<byte>& buf)
 std::vector<byte> Alert::serialize() const
    {
    return std::vector<byte>({
-      (is_fatal() ? 2 : 1),
-      (static_cast<byte>(type()))
+      static_cast<byte>(is_fatal() ? 2 : 1),
+      static_cast<byte>(type())
       });
    }
 
