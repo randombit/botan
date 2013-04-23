@@ -2,12 +2,14 @@
 CXX           = %{cc}
 LIB_OPT       = %{lib_opt}
 CHECK_OPT     = %{check_opt}
-MACH_OPT      = %{mach_opt}
 LANG_FLAGS    = %{lang_flags}
 WARN_FLAGS    = %{warn_flags}
 SO_OBJ_FLAGS  = %{shared_flags}
 LIB_LINK_CMD  = %{so_link}
 LINK_TO       = %{link_to}
+
+LIB_FLAGS     = $(LIB_OPT) $(LANG_FLAGS) $(WARN_FLAGS) $(SO_OBJ_FLAGS)
+CHECK_FLAGS   = $(CHECK_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
 
 ### Version Numbers
 VERSION       = %{version}
@@ -36,9 +38,6 @@ HEADERS       = %{include_files}
 LIBOBJS       = %{lib_objs}
 
 CHECKOBJS     = %{check_objs}
-
-LIB_FLAGS     = $(LIB_OPT) $(MACH_OPT) $(LANG_FLAGS) $(WARN_FLAGS) $(SO_OBJ_FLAGS)
-CHECK_FLAGS   = $(CHECK_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
 
 LIBNAME       = botan
 
