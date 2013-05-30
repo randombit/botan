@@ -14,15 +14,14 @@ namespace Botan {
 
 namespace {
 
-secure_vector<byte>
-gcm_multiply(const secure_vector<byte>& x,
-             const secure_vector<byte>& y)
+void gcm_multiply(secure_vector<byte>& x,
+                  const secure_vector<byte>& h)
    {
    static const u64bit R = 0xE100000000000000;
 
-   u64bit V[2] = {
-      load_be<u64bit>(&y[0], 0),
-      load_be<u64bit>(&y[0], 1)
+   u64bit H[2] = {
+      load_be<u64bit>(&h[0], 0),
+      load_be<u64bit>(&h[0], 1)
    };
 
    u64bit Z[2] = { 0, 0 };
@@ -37,20 +36,18 @@ gcm_multiply(const secure_vector<byte>& x,
          {
          if((X >> (63-j)) & 1)
             {
-            Z[0] ^= V[0];
-            Z[1] ^= V[1];
+            Z[0] ^= H[0];
+            Z[1] ^= H[1];
             }
 
-         const u64bit r = (V[1] & 1) ? R : 0;
+         const u64bit r = (H[1] & 1) ? R : 0;
 
-         V[1] = (V[0] << 63) | (V[1] >> 1);
-         V[0] = (V[0] >> 1) ^ r;
+         H[1] = (H[0] << 63) | (H[1] >> 1);
+         H[0] = (H[0] >> 1) ^ r;
          }
       }
 
-   secure_vector<byte> out(16);
-   store_be<u64bit>(&out[0], Z[0], Z[1]);
-   return out;
+   store_be<u64bit>(&x[0], Z[0], Z[1]);
    }
 
 void ghash_update(const secure_vector<byte>& H,
@@ -69,7 +66,7 @@ void ghash_update(const secure_vector<byte>& H,
 
       xor_buf(&ghash[0], &input[0], to_proc);
 
-      ghash = gcm_multiply(ghash, H);
+      gcm_multiply(ghash, H);
 
       input += to_proc;
       length -= to_proc;
