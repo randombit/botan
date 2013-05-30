@@ -145,14 +145,18 @@ algorithm_benchmark(const std::string& name,
                     size_t buf_size)
    {
    const std::vector<std::string> providers = af.providers_of(name);
-   const std::chrono::nanoseconds ns_per_provider = milliseconds / providers.size();
 
    std::map<std::string, double> all_results; // provider -> ops/sec
 
-   for(auto provider : providers)
+   if(!providers.empty())
       {
-      auto results = time_algorithm_ops(name, af, provider, rng, ns_per_provider, buf_size);
-      all_results[provider] = find_first_in(results, { "", "update", "encrypt" });
+      const std::chrono::nanoseconds ns_per_provider = milliseconds / providers.size();
+
+      for(auto provider : providers)
+         {
+         auto results = time_algorithm_ops(name, af, provider, rng, ns_per_provider, buf_size);
+         all_results[provider] = find_first_in(results, { "", "update", "encrypt" });
+         }
       }
 
    return all_results;
