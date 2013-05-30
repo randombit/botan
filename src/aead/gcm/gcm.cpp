@@ -31,11 +31,11 @@ gcm_multiply(const secure_vector<byte>& x,
 
    for(size_t i = 0; i != 2; ++i)
       {
-      u64bit X = load_be<u64bit>(&x[0], i);
+      const u64bit X = load_be<u64bit>(&x[0], i);
 
       for(size_t j = 0; j != 64; ++j)
          {
-         if(X >> 63)
+         if((X >> (63-j)) & 1)
             {
             Z[0] ^= V[0];
             Z[1] ^= V[1];
@@ -45,8 +45,6 @@ gcm_multiply(const secure_vector<byte>& x,
 
          V[1] = (V[0] << 63) | (V[1] >> 1);
          V[0] = (V[0] >> 1) ^ r;
-
-         X <<= 1;
          }
       }
 
