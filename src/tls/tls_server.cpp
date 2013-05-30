@@ -284,7 +284,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
       if(!m_policy.allow_insecure_renegotiation() &&
          !(initial_handshake || secure_renegotiation_supported()))
          {
-         send_alert(Alert(Alert::NO_RENEGOTIATION));
+         send_warning_alert(Alert::NO_RENEGOTIATION);
          return;
          }
 

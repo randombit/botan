@@ -375,7 +375,7 @@ size_t Channel::received_data(const byte input[], size_t input_size)
                }
 
             if(alert_msg.type() == Alert::CLOSE_NOTIFY)
-               send_alert(Alert(Alert::CLOSE_NOTIFY)); // reply in kind
+               send_warning_alert(Alert::CLOSE_NOTIFY); // reply in kind
 
             if(alert_msg.type() == Alert::CLOSE_NOTIFY || alert_msg.is_fatal())
                {
@@ -395,22 +395,22 @@ size_t Channel::received_data(const byte input[], size_t input_size)
       }
    catch(TLS_Exception& e)
       {
-      send_alert(Alert(e.type(), true));
+      send_fatal_alert(e.type());
       throw;
       }
    catch(Integrity_Failure& e)
       {
-      send_alert(Alert(Alert::BAD_RECORD_MAC, true));
+      send_fatal_alert(Alert::BAD_RECORD_MAC);
       throw;
       }
    catch(Decoding_Error& e)
       {
-      send_alert(Alert(Alert::DECODE_ERROR, true));
+      send_fatal_alert(Alert::DECODE_ERROR);
       throw;
       }
    catch(...)
       {
-      send_alert(Alert(Alert::INTERNAL_ERROR, true));
+      send_fatal_alert(Alert::INTERNAL_ERROR);
       throw;
       }
    }

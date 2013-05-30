@@ -168,7 +168,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          (!m_policy.allow_insecure_renegotiation() && !secure_renegotiation_supported()))
          {
          // RFC 5746 section 4.2
-         send_alert(Alert(Alert::NO_RENEGOTIATION));
+         send_warning_alert(Alert::NO_RENEGOTIATION);
          return;
          }
 
