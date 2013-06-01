@@ -1286,7 +1286,7 @@ def choose_modules_to_use(modules, archinfo, options):
         if modules[mod].warning:
             logging.warning('%s: %s' % (mod, modules[mod].warning))
 
-    logging.debug('Loading modules %s', ' '.join(sorted(to_load)))
+    logging.info('Loading modules %s', ' '.join(sorted(to_load)))
 
     return [modules[mod] for mod in to_load]
 
