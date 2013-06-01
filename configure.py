@@ -338,6 +338,9 @@ def process_command_line(args):
     mods_group.add_option('--disable-modules', dest='disabled_modules',
                           metavar='MODS', action='append',
                           help='disable specific modules')
+    mods_group.add_option('--list-modules', dest='list_modules',
+                          action='store_true',
+                          help='list available modules')
     mods_group.add_option('--no-autoload', action='store_true', default=False,
                           help='disable automatic loading')
 
@@ -1661,6 +1664,12 @@ def main(argv = None):
     options.makefile_dir = os.path.join(options.build_data, 'makefile')
 
     (modules, archinfo, ccinfo, osinfo) = load_info_files(options)
+
+    if options.list_modules:
+        print("Listing modules available for enablement:")
+        for k in sorted(modules.keys()):
+            print(" - " + k)
+        sys.exit(0)
 
     if options.chost:
         chost = options.chost.split('-')
