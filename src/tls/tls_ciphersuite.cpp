@@ -1,11 +1,12 @@
 /*
 * TLS Cipher Suite
-* (C) 2004-2010,2012 Jack Lloyd
+* (C) 2004-2010,2012,2013 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
 
 #include <botan/tls_ciphersuite.h>
+#include <botan/libstate.h>
 #include <botan/parsing.h>
 #include <sstream>
 #include <stdexcept>
@@ -24,14 +25,12 @@ std::vector<Ciphersuite> gather_known_ciphersuites()
    {
    std::vector<Ciphersuite> ciphersuites;
 
-   for(size_t i = 0; i != 65536; ++i)
+   for(size_t i = 0; i <= 0xFFFF; ++i)
       {
       Ciphersuite suite = Ciphersuite::by_id(i);
 
-      if(!suite.valid())
-         continue; // not a ciphersuite we know, skip
-
-      ciphersuites.push_back(suite);
+      if(suite.valid())
+         ciphersuites.push_back(suite);
       }
 
    return ciphersuites;
@@ -86,15 +85,90 @@ bool Ciphersuite::psk_ciphersuite() const
 
 bool Ciphersuite::ecc_ciphersuite() const
    {
-   return (kex_algo() == "ECDH" || sig_algo() == "ECDSA");
+   return (sig_algo() == "ECDSA" || kex_algo() == "ECDH" || kex_algo() == "ECDHE_PSK");
    }
 
 bool Ciphersuite::valid() const
    {
-   if(!m_cipher_keylen)
+   if(!m_cipher_keylen) // uninitialized object
       return false;
 
-   // fixme: check that all sub-algorithms are enabled
+   Algorithm_Factory& af = global_state().algorithm_factory();
+
+   if(!af.prototype_hash_function(prf_algo()))
+      return false;
+
+   if(mac_algo() == "AEAD")
+      {
+      auto cipher_and_mode = split_on(cipher_algo(), '/');
+      BOTAN_ASSERT(cipher_and_mode.size() == 2, "Expected format for AEAD algo");
+      if(!af.prototype_block_cipher(cipher_and_mode[0]))
+         return false;
+
+      const auto mode = cipher_and_mode[1];
+
+#if !defined(BOTAN_HAS_AEAD_CCM)
+      if(mode == "CCM")
+         return false;
+#endif
+
+#if !defined(BOTAN_HAS_AEAD_GCM)
+      if(mode == "GCM")
+         return false;
+#endif
+
+#if !defined(BOTAN_HAS_AEAD_OCB)
+      if(mode == "OCB")
+         return false;
+#endif
+      }
+   else
+      {
+      if(!af.prototype_block_cipher(cipher_algo()) &&
+         !af.prototype_stream_cipher(cipher_algo()))
+         return false;
+
+      if(!af.prototype_hash_function(mac_algo()))
+         return false;
+      }
+
+   if(kex_algo() == "SRP_SHA")
+      {
+#if !defined(BOTAN_HAS_SRP6)
+      return false;
+#endif
+      }
+   else if(kex_algo() == "ECDH" || kex_algo() == "ECDHE_PSK")
+      {
+#if !defined(BOTAN_HAS_ECDH)
+      return false;
+#endif
+      }
+   else if(kex_algo() == "DH" || kex_algo() == "DHE_PSK")
+      {
+#if !defined(BOTAN_HAS_DIFFIE_HELLMAN)
+      return false;
+#endif
+      }
+
+   if(sig_algo() == "DSA")
+      {
+#if !defined(BOTAN_HAS_DSA)
+      return false;
+#endif
+      }
+   else if(sig_algo() == "ECDSA")
+      {
+#if !defined(BOTAN_HAS_ECDSA)
+      return false;
+#endif
+      }
+   else if(sig_algo() == "RSA")
+      {
+#if !defined(BOTAN_HAS_RSA)
+      return false;
+#endif
+      }
 
    return true;
    }

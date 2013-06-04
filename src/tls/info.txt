@@ -2,11 +2,6 @@ define TLS
 
 load_on auto
 
-<warning>
-The TLS code is complex, new, and not yet reviewed, there may be
-serious bugs or security issues.
-</warning>
-
 <header:public>
 tls_alert.h
 tls_blocking.h
@@ -70,29 +65,23 @@ tls_version.cpp
 </source>
 
 <requires>
+aead
 aes
 asn1
-camellia
 cbc
 credentials
 cryptobox
-des
 dh
-dsa
 ecdh
-ecdsa
 eme_pkcs
 emsa3
 hmac
-gcm
 kdf2
 md5
 prf_ssl3
 prf_tls
-rc4
 rng
 rsa
-seed
 sha1
 sha2_32
 srp6
