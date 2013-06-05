@@ -1,0 +1,10 @@
+define CRYPTOBOX_PSK
+
+<requires>
+aes
+cbc
+hmac
+kdf2
+rng
+sha2_64
+</requires>

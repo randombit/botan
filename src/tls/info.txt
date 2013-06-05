@@ -70,7 +70,7 @@ aes
 asn1
 cbc
 credentials
-cryptobox
+cryptobox_psk
 dh
 ecdh
 eme_pkcs
