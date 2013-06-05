@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/cryptobox.h>
+#include <botan/cryptobox_psk.h>
 #include <botan/pipe.h>
 #include <botan/lookup.h>
 #include <botan/loadstor.h>
