@@ -62,12 +62,12 @@ inline void set_mem(T* ptr, size_t n, byte val)
 */
 template<typename T> inline bool same_mem(const T* p1, const T* p2, size_t n)
    {
-   bool is_same = true;
+   volatile T difference = 0;
 
    for(size_t i = 0; i != n; ++i)
-      is_same &= (p1[i] == p2[i]);
+      difference |= (p1[i] ^ p2[i]);
 
-   return is_same;
+   return difference == 0;
    }
 
 }
