@@ -173,7 +173,12 @@ void OID::decode_from(BER_Decoder& decoder)
       while(i != obj.value.size() - 1)
          {
          ++i;
+
+         if(component >> (32-7))
+            throw Decoding_Error("OID component overflow");
+
          component = (component << 7) + (obj.value[i] & 0x7F);
+
          if(!(obj.value[i] & 0x80))
             break;
          }
