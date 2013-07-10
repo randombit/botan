@@ -9,7 +9,7 @@ rdrand.h
 </header:internal>
 
 <arch>
-x86
+x86_32
 x86_64
 </arch>
 
