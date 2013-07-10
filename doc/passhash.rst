@@ -113,9 +113,8 @@ Botan also provides a password hashing technique called passhash9, in
    RandomNumberGenerator& rng, u16bit work_factor = 10, byte alg_id = 1)
 
    Functions much like ``generate_bcrypt``. The last parameter,
-   ``alg_id``, specifies which PRF to use. Currently defined values
-   are 0: HMAC(SHA-1), 1: HMAC(SHA-256), 2: CMAC(Blowfish),
-       3: HMAC(SHA-384), 4: HMAC(SHA-512)
+   ``alg_id``, specifies which PRF to use. Currently defined values are
+   0: HMAC(SHA-1), 1: HMAC(SHA-256), 2: CMAC(Blowfish), 3: HMAC(SHA-384), 4: HMAC(SHA-512)
 
    Currently, this performs 10000 * ``work_factor`` PBKDF2 iterations,
    using 96 bits of salt taken from ``rng``. The iteration count is
