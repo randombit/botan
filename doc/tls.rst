@@ -113,6 +113,11 @@ available:
      A close notification is sent to the counterparty, and the
      internal state is cleared.
 
+   .. cpp:function void send_alert(const Alert& alert)
+
+     Some other alert is sent to the counterparty. If the alert is
+     fatal, the internal state is cleared.
+
    .. cpp:function:: bool is_active()
 
      Returns true if and only if a handshake has been completed on
@@ -181,7 +186,8 @@ TLS Clients
          RandomNumberGenerator& rng, \
          const Server_Information& server_info, \
          const Protocol_Version offer_version, \
-         std::function<std::string, std::vector<std::string> > next_protocol)
+         std::function<std::string, std::vector<std::string> > next_protocol, \
+         size_t reserved_io_buffer_size)
 
    Initialize a new TLS client. The constructor will immediately
    initiate a new session.
@@ -249,6 +255,12 @@ TLS Clients
    server advertises, and the client can select from them or return an
    unadvertised protocol.
 
+   The optional *reserved_io_buffer_size* specifies how many bytes to
+   pre-allocate in the I/O buffers. Use this if you want to control
+   how much memory the channel uses initially (the buffers will be
+   resized as needed to process inputs). Otherwise some reasonable
+   default is used.
+
 A simple TLS client example:
 
 .. literalinclude:: examples/tls_client.cpp
@@ -266,11 +278,13 @@ TLS Servers
           Credentials_Manager& creds, \
           const TLS::Policy& policy, \
           RandomNumberGenerator& rng, \
-          const std::vector<std::string>& protocols)
+          const std::vector<std::string>& protocols, \
+          bool reserved_io_buffer_size)
 
-The first 7 arguments are treated similiarly to the :ref:`client
-<tls_client>`.  The final (optional) argument, protocols, specifies
-the protocols the server is willing to advertise it supports.
+The first 7 arguments as well as the final argument
+*reserved_io_buffer_size*, are treated similiarly to the :ref:`client
+<tls_client>`.  The (optional) argument, *protocols*, specifies the
+protocols the server is willing to advertise it supports.
 
 .. cpp:function:: std::string TLS::Server::next_protocol() const
 
@@ -544,7 +558,9 @@ be negotiated during a handshake.
      Return true if this version of the protocol is one that we are
      willing to negotiate.
 
-     Default: True for all known protocol versions
+     Default: True if a known TLS version. DTLS is not accepted by default;
+     to enable DTLS (or combined TLS/DTLS) in your application, override this
+     function.
 
  .. cpp:function:: bool server_uses_own_ciphersuite_preferences() const
 

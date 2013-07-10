@@ -9,14 +9,29 @@ Version 1.11.4, Not Yet Released
   in x86 builds, relying on runtime cpuid checking to prevent their
   use on CPUs that do not support those operations.
 
+* The default TLS policy now only accepts TLS, to minimize surprise
+  for servers which might not expect to negotiate DTLS. Previously a
+  server would by default negotiate either protocol type (clients
+  would only accept the same protocol type as they
+  offered). Applications which use DTLS or combined TLS/DTLS need to
+  override :cpp:func:`Policy::acceptable_protocol_version`.
+
+* The TLS channels now accept a new parameter specifying how many
+  bytes to preallocate for the record handling buffers, which allows
+  an application some control over how much memory is used at runtime
+  for a particular connection.
+
+* Applications can now send arbitrary TLS alert messages using
+  :cpp:func:`TLS::Channel::send_alert`
+
+* A new TLS policy :cpp:class:`NSA_Suite_B_128` is available, which
+  will negotiate only the 128-bit security NSA Suite B. See
+  :rfc:`6460` for more information about Suite B.
+
 * Adds a new interface for benchmarking, :cpp:func:`time_algorithm_ops`,
   which returns a map of operations to operations per second. For
   instance now both encrypt and decrypt speed of a block cipher can be
   checked, as well as the key schedule of all keyed algorithms. It
   additionally supports AEAD modes.
-
-* A new TLS policy :cpp:class:`NSA_Suite_B_128` is available, which
-  will negotiate only the 128-bit security NSA Suite B. See
-  :rfc:`6460` for more information about Suite B.
 
 * Rename ARC4 to RC4

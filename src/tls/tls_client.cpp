@@ -56,8 +56,9 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
                RandomNumberGenerator& rng,
                const Server_Information& info,
                const Protocol_Version offer_version,
-               std::function<std::string (std::vector<std::string>)> next_protocol) :
-   Channel(output_fn, proc_fn, handshake_fn, session_manager, rng),
+               std::function<std::string (std::vector<std::string>)> next_protocol,
+               size_t io_buf_sz) :
+   Channel(output_fn, proc_fn, handshake_fn, session_manager, rng, io_buf_sz),
    m_policy(policy),
    m_creds(creds),
    m_info(info)
@@ -253,9 +254,12 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          {
          // new session
 
-         BOTAN_ASSERT_EQUAL(state.client_hello()->version().is_datagram_protocol(),
-                            state.server_hello()->version().is_datagram_protocol(),
-                            "Server replied with same protocol type client offered");
+         if(state.client_hello()->version().is_datagram_protocol() !=
+            state.server_hello()->version().is_datagram_protocol())
+            {
+            throw TLS_Exception(Alert::PROTOCOL_VERSION,
+                                "Server replied with different protocol type than we offered");
+            }
 
          if(state.version() > state.client_hello()->version())
             {

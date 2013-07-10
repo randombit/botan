@@ -23,15 +23,25 @@ Channel::Channel(std::function<void (const byte[], size_t)> output_fn,
                  std::function<void (const byte[], size_t, Alert)> proc_fn,
                  std::function<bool (const Session&)> handshake_complete,
                  Session_Manager& session_manager,
-                 RandomNumberGenerator& rng) :
+                 RandomNumberGenerator& rng,
+                 size_t reserved_io_buffer_size) :
    m_handshake_fn(handshake_complete),
    m_proc_fn(proc_fn),
    m_output_fn(output_fn),
    m_rng(rng),
    m_session_manager(session_manager)
    {
-   m_writebuf.reserve(16*1024);
-   m_readbuf.reserve(16*1024);
+   m_writebuf.reserve(reserved_io_buffer_size);
+   m_readbuf.reserve(reserved_io_buffer_size);
+   }
+
+void Channel::reset_state()
+   {
+   m_active_state.reset();
+   m_pending_state.reset();
+   m_readbuf.clear();
+   m_write_cipher_states.clear();
+   m_read_cipher_states.clear();
    }
 
 Channel::~Channel()
@@ -379,9 +389,7 @@ size_t Channel::received_data(const byte input[], size_t input_size)
 
             if(alert_msg.type() == Alert::CLOSE_NOTIFY || alert_msg.is_fatal())
                {
-               m_active_state.reset();
-               m_pending_state.reset();
-
+               reset_state();
                return 0;
                }
             }
@@ -530,10 +538,7 @@ void Channel::send_alert(const Alert& alert)
          m_session_manager.remove_entry(active->server_hello()->session_id());
 
    if(alert.type() == Alert::CLOSE_NOTIFY || alert.is_fatal())
-      {
-      m_active_state.reset();
-      m_pending_state.reset();
-      }
+      reset_state();
    }
 
 void Channel::secure_renegotiation_check(const Client_Hello* client_hello)

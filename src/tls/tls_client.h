@@ -52,6 +52,10 @@ class BOTAN_DLL Client : public Channel
       *        and if the server supports NPN the function will be
       *        called with the list of protocols the server advertised;
       *        the client should return the protocol it would like to use.
+      *
+      * @param reserved_io_buffer_size This many bytes of memory will
+      *        be preallocated for the read and write buffers. Smaller
+      *        values just mean reallocations and copies are more likely.
       */
       Client(std::function<void (const byte[], size_t)> socket_output_fn,
              std::function<void (const byte[], size_t, Alert)> proc_fn,
@@ -63,7 +67,9 @@ class BOTAN_DLL Client : public Channel
              const Server_Information& server_info = Server_Information(),
              const Protocol_Version offer_version = Protocol_Version::latest_tls_version(),
              std::function<std::string (std::vector<std::string>)> next_protocol =
-                std::function<std::string (std::vector<std::string>)>());
+                std::function<std::string (std::vector<std::string>)>(),
+             size_t reserved_io_buffer_size = 16*1024
+         );
    private:
       std::vector<X509_Certificate>
          get_peer_cert_chain(const Handshake_State& state) const override;

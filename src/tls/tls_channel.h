@@ -50,6 +50,23 @@ class BOTAN_DLL Channel
       void send(const std::string& string);
 
       /**
+      * Send a TLS alert message. If the alert is fatal, the internal
+      * state (keys, etc) will be reset.
+      * @param alert the Alert to send
+      */
+      void send_alert(const Alert& alert);
+
+      /**
+      * Send a warning alert
+      */
+      void send_warning_alert(Alert::Type type) { send_alert(Alert(type, false)); }
+
+      /**
+      * Send a fatal alert
+      */
+      void send_fatal_alert(Alert::Type type) { send_alert(Alert(type, true)); }
+
+      /**
       * Send a close notification alert
       */
       void close() { send_warning_alert(Alert::CLOSE_NOTIFY); }
@@ -119,7 +136,8 @@ class BOTAN_DLL Channel
               std::function<void (const byte[], size_t, Alert)> proc_fn,
               std::function<bool (const Session&)> handshake_complete,
               Session_Manager& session_manager,
-              RandomNumberGenerator& rng);
+              RandomNumberGenerator& rng,
+              size_t reserved_io_buffer_size);
 
       Channel(const Channel&) = delete;
 
@@ -142,23 +160,6 @@ class BOTAN_DLL Channel
       virtual Handshake_State* new_handshake_state(class Handshake_IO* io) = 0;
 
       Handshake_State& create_handshake_state(Protocol_Version version);
-
-      /**
-      * Send a TLS alert message. If the alert is fatal, the internal
-      * state (keys, etc) will be reset.
-      * @param alert the Alert to send
-      */
-      void send_alert(const Alert& alert);
-
-      /**
-      * Send a warning alert
-      */
-      void send_warning_alert(Alert::Type type) { send_alert(Alert(type, false)); }
-
-      /**
-      * Send a fatal alert
-      */
-      void send_fatal_alert(Alert::Type type) { send_alert(Alert(type, true)); }
 
       void activate_session();
 
@@ -199,6 +200,8 @@ class BOTAN_DLL Channel
       std::shared_ptr<Connection_Cipher_State> read_cipher_state_epoch(u16bit epoch) const;
 
       std::shared_ptr<Connection_Cipher_State> write_cipher_state_epoch(u16bit epoch) const;
+
+      void reset_state();
 
       const Handshake_State* active_state() const { return m_active_state.get(); }
 

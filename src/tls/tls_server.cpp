@@ -215,8 +215,9 @@ Server::Server(std::function<void (const byte[], size_t)> output_fn,
                Credentials_Manager& creds,
                const Policy& policy,
                RandomNumberGenerator& rng,
-               const std::vector<std::string>& next_protocols) :
-   Channel(output_fn, proc_fn, handshake_fn, session_manager, rng),
+               const std::vector<std::string>& next_protocols,
+               size_t io_buf_sz) :
+   Channel(output_fn, proc_fn, handshake_fn, session_manager, rng, io_buf_sz),
    m_policy(policy),
    m_creds(creds),
    m_possible_protocols(next_protocols)

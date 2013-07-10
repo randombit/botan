@@ -32,8 +32,9 @@ class BOTAN_DLL Server : public Channel
              Credentials_Manager& creds,
              const Policy& policy,
              RandomNumberGenerator& rng,
-             const std::vector<std::string>& protocols =
-                std::vector<std::string>());
+             const std::vector<std::string>& protocols = std::vector<std::string>(),
+             size_t reserved_io_buffer_size = 16*1024
+         );
 
       /**
       * Return the protocol notification set by the client (using the

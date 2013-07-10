@@ -134,10 +134,11 @@ u32bit Policy::session_ticket_lifetime() const
 
 bool Policy::acceptable_protocol_version(Protocol_Version version) const
    {
-   return version.known_version(); // accept any version we know about
+   if(!version.known_version())
+      return false;
 
-   // maybe someday...
-   //return version >= Protocol_Version::TLS_V11;
+   // By default require TLS to minimize surprise
+   return !version.is_datagram_protocol();
    }
 
 namespace {
