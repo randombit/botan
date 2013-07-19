@@ -104,17 +104,16 @@ Filter* Filter::get_next() const
 */
 void Filter::set_next(Filter* filters[], size_t size)
    {
-   while(size && filters && filters[size-1] == nullptr)
-      --size;
-
    next.clear();
-   next.resize(size);
 
    port_num = 0;
    filter_owns = 0;
 
-   for(size_t j = 0; j != size; ++j)
-      next[j] = filters[j];
+   while(size && filters && filters[size-1] == 0)
+      --size;
+
+   if(filters && size)
+      next.assign(filters, filters + size);
    }
 
 /*
