@@ -10,6 +10,7 @@
 #include <botan/aes.h>
 #include <botan/loadstor.h>
 #include <botan/rotate.h>
+#include <botan/internal/assert.h>
 
 namespace Botan {
 
@@ -620,6 +621,9 @@ void aes_key_schedule(const byte key[], size_t length,
    SecureVector<u32bit> XEK(length + 32), XDK(length + 32);
 
    const size_t X = length / 4;
+
+   BOTAN_ASSERT(X == 4 || X == 6 || X == 8, "Known AES key size");
+
    for(size_t i = 0; i != X; ++i)
       XEK[i] = load_be<u32bit>(key, i);
 
