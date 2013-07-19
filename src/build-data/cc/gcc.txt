@@ -47,15 +47,16 @@ i386        -> "-mtune=generic -momit-leaf-frame-pointer"
 i486        -> "-mtune=generic -momit-leaf-frame-pointer"
 i586        -> "-mtune=generic -momit-leaf-frame-pointer"
 
-# Translate to GCC-speak
-nehalem     -> "-march=corei7 -momit-leaf-frame-pointer"
-#westmere    -> "-march=corei7 -maes -momit-leaf-frame-pointer"
-
-#nehalem      -> "-march=core2 -msse4.1 -msse4.2 -momit-leaf-frame-pointer"
-#westmere     -> "-march=core2 -msse4.1 -msse4.2 -maes -momit-leaf-frame-pointer"
-
 sandybridge -> "-march=corei7-avx -momit-leaf-frame-pointer"
 atom32      -> "-march=atom -momit-leaf-frame-pointer"
+
+# For recent GCC
+nehalem     -> "-march=corei7 -momit-leaf-frame-pointer"
+westmere    -> "-march=corei7 -maes -momit-leaf-frame-pointer"
+
+# For older GCC
+#nehalem      -> "-march=core2 -msse4.1 -msse4.2 -momit-leaf-frame-pointer"
+#westmere     -> "-march=core2 -msse4.1 -msse4.2 -maes -momit-leaf-frame-pointer"
 
 ppc601      -> "-mpowerpc -mcpu=601"
 cellppu     -> "-mcpu=cell"
