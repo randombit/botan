@@ -184,8 +184,7 @@ Randpool::Randpool(BlockCipher* cipher_in,
       {
       delete cipher;
       delete mac;
-      throw Internal_Error("Randpool: Invalid algorithm combination " +
-                           cipher->name() + "/" + mac->name());
+      throw Internal_Error("Randpool: Invalid algorithm combination");
       }
 
    buffer.resize(BLOCK_SIZE);

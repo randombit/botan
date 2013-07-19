@@ -99,12 +99,13 @@ EMSA2::EMSA2(HashFunction* hash_in) : hash(hash_in)
    {
    empty_hash = hash->final();
 
-   hash_id = ieee1363_hash_id(hash->name());
+   const std::string hash_name = hash->name();
+   hash_id = ieee1363_hash_id(hash_name);
 
    if(hash_id == 0)
       {
       delete hash;
-      throw Encoding_Error("EMSA2 cannot be used with " + hash->name());
+      throw Encoding_Error("EMSA2 cannot be used with " + hash_name);
       }
    }
 
