@@ -90,7 +90,7 @@ void PBE_PKCS5v15::set_key(const std::string& passphrase)
 */
 void PBE_PKCS5v15::new_params(RandomNumberGenerator& rng)
    {
-   iterations = 10000;
+   iterations = 50000;
    salt = rng.random_vec(8);
    }
 
@@ -161,7 +161,7 @@ std::string PBE_PKCS5v15::name() const
 PBE_PKCS5v15::PBE_PKCS5v15(BlockCipher* cipher,
                            HashFunction* hash,
                            Cipher_Dir dir) :
-   direction(dir), block_cipher(cipher), hash_function(hash)
+   direction(dir), block_cipher(cipher), hash_function(hash), iterations(0)
    {
    if(cipher->name() != "DES" && cipher->name() != "RC2")
       {

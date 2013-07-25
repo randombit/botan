@@ -167,7 +167,7 @@ void Pooling_Allocator::deallocate(void* ptr, size_t n)
    const size_t BITMAP_SIZE = Memory_Block::bitmap_size();
    const size_t BLOCK_SIZE = Memory_Block::block_size();
 
-   if(ptr == 0 && n == 0)
+   if(ptr == 0 || n == 0)
       return;
 
    Mutex_Holder lock(mutex);

@@ -92,7 +92,7 @@ void PBE_PKCS5v20::set_key(const std::string& passphrase)
 */
 void PBE_PKCS5v20::new_params(RandomNumberGenerator& rng)
    {
-   iterations = 10000;
+   iterations = 50000;
    key_length = block_cipher->maximum_keylength();
 
    salt = rng.random_vec(12);
@@ -210,7 +210,11 @@ std::string PBE_PKCS5v20::name() const
 */
 PBE_PKCS5v20::PBE_PKCS5v20(BlockCipher* cipher,
                            HashFunction* digest) :
-   direction(ENCRYPTION), block_cipher(cipher), hash_function(digest)
+   direction(ENCRYPTION),
+   block_cipher(cipher),
+   hash_function(digest),
+   iterations(0),
+   key_length(0)
    {
    if(!known_cipher(block_cipher->name()))
       throw Invalid_Argument("PBE-PKCS5 v2.0: Invalid cipher " + cipher->name());

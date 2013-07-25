@@ -27,6 +27,8 @@ PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
    {
    Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
 
+   op = 0;
+
    while(const Engine* engine = i.next())
       {
       op = engine->get_encryption_op(key);
@@ -86,6 +88,8 @@ PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
                                    const std::string& eme_name)
    {
    Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
+
+   op = 0;
 
    while(const Engine* engine = i.next())
       {
@@ -250,6 +254,8 @@ PK_Verifier::PK_Verifier(const Public_Key& key,
    {
    Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
 
+   op = 0;
+
    while(const Engine* engine = i.next())
       {
       op = engine->get_verify_op(key);
@@ -358,6 +364,8 @@ PK_Key_Agreement::PK_Key_Agreement(const PK_Key_Agreement_Key& key,
                                    const std::string& kdf_name)
    {
    Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
+
+   op = 0;
 
    while(const Engine* engine = i.next())
       {

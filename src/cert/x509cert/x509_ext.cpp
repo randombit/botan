@@ -61,6 +61,8 @@ Extensions& Extensions::operator=(const Extensions& other)
          std::make_pair(other.extensions[i].first->copy(),
                         other.extensions[i].second));
 
+   should_throw = other.should_throw;
+
    return (*this);
    }
 

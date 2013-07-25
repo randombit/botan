@@ -134,6 +134,7 @@ Montgomery_Exponentiator::Montgomery_Exponentiator(const BigInt& mod,
    window_bits = 0;
    this->hints = hints;
    modulus = mod;
+   exp_bits = 0;
 
    mod_words = modulus.sig_words();
 

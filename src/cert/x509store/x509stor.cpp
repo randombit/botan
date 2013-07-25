@@ -187,6 +187,7 @@ X509_Store::X509_Store(const X509_Store& other)
    for(size_t j = 0; j != other.stores.size(); ++j)
       stores[j] = other.stores[j]->clone();
    time_slack = other.time_slack;
+   validation_cache_timeout = other.validation_cache_timeout;
    }
 
 /*

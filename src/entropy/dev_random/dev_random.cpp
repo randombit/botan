@@ -21,7 +21,7 @@ Close the device, if open
 */
 void Device_EntropySource::Device_Reader::close()
    {
-   if(fd > 0) { ::close(fd); fd = -1; }
+   if(fd >= 0) { ::close(fd); fd = -1; }
    }
 
 /**
@@ -86,7 +86,7 @@ Device_EntropySource::Device_EntropySource(
    for(size_t i = 0; i != fsnames.size(); ++i)
       {
       Device_Reader::fd_type fd = Device_Reader::open(fsnames[i]);
-      if(fd > 0)
+      if(fd >= 0)
          devices.push_back(Device_Reader(fd));
       }
    }

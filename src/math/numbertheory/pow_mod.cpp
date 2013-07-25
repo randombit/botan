@@ -18,6 +18,7 @@ Power_Mod::Power_Mod(const BigInt& n, Usage_Hints hints)
    {
    core = 0;
    set_modulus(n, hints);
+   hints = NO_HINTS;
    }
 
 /*
@@ -26,6 +27,7 @@ Power_Mod::Power_Mod(const BigInt& n, Usage_Hints hints)
 Power_Mod::Power_Mod(const Power_Mod& other)
    {
    core = 0;
+   hints = other.hints;
    if(other.core)
       core = other.core->copy();
    }

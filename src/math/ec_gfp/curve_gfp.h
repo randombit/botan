@@ -24,7 +24,7 @@ class BOTAN_DLL CurveGFp
       /**
       * Create an uninitialized CurveGFp
       */
-      CurveGFp() {}
+      CurveGFp() : p_words(0), p_dash(0) {}
 
       /**
       * Construct the elliptic curve E: y^2 = x^3 + ax + b over GF(p)

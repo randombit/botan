@@ -74,8 +74,8 @@ void Unix_EntropySource::poll(Entropy_Accumulator& accum)
       {
       struct stat statbuf;
       clear_mem(&statbuf, 1);
-      ::stat(stat_targets[i], &statbuf);
-      accum.add(&statbuf, sizeof(statbuf), .005);
+      if(::stat(stat_targets[i], &statbuf) == 0)
+         accum.add(&statbuf, sizeof(statbuf), .005);
       }
 
    accum.add(::getpid(),  0);
