@@ -156,7 +156,6 @@ in the section marked `<mach_abi_linking>` in
 
   $ ./configure.py --cpu=universalbinary [other options here]
 
-
 On MS Windows
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -188,6 +187,46 @@ compiler to look for both include files and library files in
 ``C:\botan``, and it will find both. Or you can move them to a
 place where they will be in the default compiler search paths (consult
 your documentation and/or local expert for details).
+
+
+For iOS using XCode
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To cross compile for iOS, configure with::
+
+  $ ./configure.py --cpu=armv7 --cc=clang --cc-bin="clang++ -arch armv7 -arch armv7s --sysroot=$(IOS_SYSROOT)"
+
+Along with any additional configuration arguments. Using
+``--no-autoload`` might be helpful as can substantially reduce code
+size.
+
+Edit the makefile and change AR (around line 30) to::
+
+  AR = libtool -static -o
+
+You may also want to edit LIB_OPT to use -Os to optimize for size.
+
+Now build as normal with ``make check``. Confirm the binary is
+compiled for both architectures with::
+
+  $ xcrun -sdk iphoneos lipo -info check
+  Architectures in the fat file: check are: armv7 armv7s
+
+Now sign the test application with::
+
+  $ codesign -fs "Your Name" check
+
+which should allow you to run the library self tests on a jailbroken
+device.
+
+For Android
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+It has been reported several times that the library can be built for
+Android using the NDK, but precise instructions of what was required
+have not been provided. If you successfully build the library for
+Android, please report the exact sequence of steps needed so this
+documentation can be updated.
 
 Other Build-Related Tasks
 ----------------------------------------
