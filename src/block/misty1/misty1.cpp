@@ -264,7 +264,7 @@ MISTY1::MISTY1(size_t rounds)
    {
    if(rounds != 8)
       throw Invalid_Argument("MISTY1: Invalid number of rounds: "
-                             + std::to_string(rounds));
+                             + to_string(rounds));
    }
 
 }

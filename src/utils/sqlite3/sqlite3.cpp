@@ -63,21 +63,21 @@ sqlite3_statement::sqlite3_statement(sqlite3_database* db, const std::string& ba
 
    if(rc != SQLITE_OK)
       throw std::runtime_error("sqlite3_prepare failed " + base_sql +
-                               ", code " + std::to_string(rc));
+                               ", code " + to_string(rc));
    }
 
 void sqlite3_statement::bind(int column, const std::string& val)
    {
    int rc = ::sqlite3_bind_text(m_stmt, column, val.c_str(), -1, SQLITE_TRANSIENT);
    if(rc != SQLITE_OK)
-      throw std::runtime_error("sqlite3_bind_text failed, code " + std::to_string(rc));
+      throw std::runtime_error("sqlite3_bind_text failed, code " + to_string(rc));
    }
 
 void sqlite3_statement::bind(int column, int val)
    {
    int rc = ::sqlite3_bind_int(m_stmt, column, val);
    if(rc != SQLITE_OK)
-      throw std::runtime_error("sqlite3_bind_int failed, code " + std::to_string(rc));
+      throw std::runtime_error("sqlite3_bind_int failed, code " + to_string(rc));
    }
 
 void sqlite3_statement::bind(int column, std::chrono::system_clock::time_point time)
@@ -90,7 +90,7 @@ void sqlite3_statement::bind(int column, const std::vector<byte>& val)
    {
    int rc = ::sqlite3_bind_blob(m_stmt, column, &val[0], val.size(), SQLITE_TRANSIENT);
    if(rc != SQLITE_OK)
-      throw std::runtime_error("sqlite3_bind_text failed, code " + std::to_string(rc));
+      throw std::runtime_error("sqlite3_bind_text failed, code " + to_string(rc));
    }
 
 std::pair<const byte*, size_t> sqlite3_statement::get_blob(int column)

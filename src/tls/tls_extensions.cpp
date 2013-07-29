@@ -215,7 +215,7 @@ std::vector<byte> Maximum_Fragment_Length::serialize() const
 
    if(i == fragment_to_code.end())
       throw std::invalid_argument("Bad setting " +
-                                  std::to_string(m_max_fragment) +
+                                  to_string(m_max_fragment) +
                                   " for maximum fragment size");
 
    return std::vector<byte>(1, i->second);

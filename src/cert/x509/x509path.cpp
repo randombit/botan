@@ -150,7 +150,7 @@ std::string Path_Validation_Result::result_string() const
       }
 
    // default case
-   return "Unknown code " + std::to_string(m_result);
+   return "Unknown code " + to_string(m_result);
    }
 
 Path_Validation_Result x509_path_validate(

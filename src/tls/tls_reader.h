@@ -163,8 +163,8 @@ class TLS_Data_Reader
          {
          if(buf.size() - offset < n)
             {
-            throw Decoding_Error("TLS_Data_Reader: Expected " + std::to_string(n) +
-                                 " bytes remaining, only " + std::to_string(buf.size()-offset) +
+            throw Decoding_Error("TLS_Data_Reader: Expected " + to_string(n) +
+                                 " bytes remaining, only " + to_string(buf.size()-offset) +
                                  " left");
             }
          }

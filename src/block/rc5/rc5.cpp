@@ -119,7 +119,7 @@ void RC5::clear()
 */
 std::string RC5::name() const
    {
-   return "RC5(" + std::to_string(rounds) + ")";
+   return "RC5(" + to_string(rounds) + ")";
    }
 
 /*
@@ -129,7 +129,7 @@ RC5::RC5(size_t r) : rounds(r)
    {
    if(rounds < 8 || rounds > 32 || (rounds % 4 != 0))
       throw Invalid_Argument("RC5: Invalid number of rounds " +
-                             std::to_string(rounds));
+                             to_string(rounds));
    }
 
 }

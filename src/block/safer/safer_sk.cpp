@@ -233,7 +233,7 @@ void SAFER_SK::clear()
 */
 std::string SAFER_SK::name() const
    {
-   return "SAFER-SK(" + std::to_string(rounds) + ")";
+   return "SAFER-SK(" + to_string(rounds) + ")";
    }
 
 /*

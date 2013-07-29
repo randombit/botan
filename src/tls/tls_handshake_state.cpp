@@ -77,7 +77,7 @@ u32bit bitmask_for_handshake_type(Handshake_Type type)
          return 0;
       }
 
-   throw Internal_Error("Unknown handshake type " + std::to_string(type));
+   throw Internal_Error("Unknown handshake type " + to_string(type));
    }
 
 }
@@ -209,9 +209,9 @@ void Handshake_State::confirm_transition_to(Handshake_Type handshake_msg)
 
    if(!ok)
       throw Unexpected_Message("Unexpected state transition in handshake, got " +
-                               std::to_string(handshake_msg) +
-                               " expected " + std::to_string(m_hand_expecting_mask) +
-                               " received " + std::to_string(m_hand_received_mask));
+                               to_string(handshake_msg) +
+                               " expected " + to_string(m_hand_expecting_mask) +
+                               " received " + to_string(m_hand_received_mask));
 
    /* We don't know what to expect next, so force a call to
       set_expected_next; if it doesn't happen, the next transition

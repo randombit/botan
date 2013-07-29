@@ -98,7 +98,7 @@ void X509_Time::set_to(const std::string& time_str)
 void X509_Time::set_to(const std::string& t_spec, ASN1_Tag spec_tag)
    {
    if(spec_tag != GENERALIZED_TIME && spec_tag != UTC_TIME)
-      throw Invalid_Argument("X509_Time: Invalid tag " + std::to_string(spec_tag));
+      throw Invalid_Argument("X509_Time: Invalid tag " + to_string(spec_tag));
 
    if(spec_tag == GENERALIZED_TIME && t_spec.size() != 13 && t_spec.size() != 15)
       throw Invalid_Argument("Invalid GeneralizedTime: " + t_spec);
@@ -193,7 +193,7 @@ std::string X509_Time::as_string() const
       full_year = (year >= 2000) ? (year - 2000) : (year - 1900);
       }
 
-   std::string repr = std::to_string(full_year*10000000000 +
+   std::string repr = to_string(full_year*10000000000 +
                                      month*100000000 +
                                      day*1000000 +
                                      hour*10000 +

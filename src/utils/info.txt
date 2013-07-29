@@ -34,6 +34,7 @@ loadstor.h
 mem_ops.h
 parsing.h
 rotate.h
+to_string.h
 types.h
 version.h
 </header:public>

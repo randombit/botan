@@ -236,7 +236,7 @@ std::vector<byte> PK_Signer::signature(RandomNumberGenerator& rng)
       }
    else
       throw Encoding_Error("PK_Signer: Unknown signature format " +
-                           std::to_string(sig_format));
+                           to_string(sig_format));
    }
 
 /*
@@ -322,7 +322,7 @@ bool PK_Verifier::check_signature(const byte sig[], size_t length)
          }
       else
          throw Decoding_Error("PK_Verifier: Unknown signature format " +
-                              std::to_string(sig_format));
+                              to_string(sig_format));
       }
    catch(Invalid_Argument) { return false; }
    }

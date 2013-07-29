@@ -33,7 +33,7 @@ PKCS5_PBKDF2::key_derivation(size_t key_len,
    catch(Invalid_Key_Length)
       {
       throw Exception(name() + " cannot accept passphrases of length " +
-                      std::to_string(passphrase.length()));
+                      to_string(passphrase.length()));
       }
 
    secure_vector<byte> key(key_len);

@@ -8,6 +8,7 @@
 #ifndef BOTAN_EXCEPTION_H__
 #define BOTAN_EXCEPTION_H__
 
+#include <botan/to_string.h>
 #include <botan/types.h>
 #include <botan/parsing.h>
 #include <exception>
@@ -56,7 +57,7 @@ struct BOTAN_DLL Invalid_Key_Length : public Invalid_Argument
    {
    Invalid_Key_Length(const std::string& name, size_t length) :
       Invalid_Argument(name + " cannot accept a key of length " +
-                       std::to_string(length))
+                       to_string(length))
       {}
    };
 
@@ -78,7 +79,7 @@ struct BOTAN_DLL Invalid_Block_Size : public Invalid_Argument
 struct BOTAN_DLL Invalid_IV_Length : public Invalid_Argument
    {
    Invalid_IV_Length(const std::string& mode, size_t bad_len) :
-      Invalid_Argument("IV length " + std::to_string(bad_len) +
+      Invalid_Argument("IV length " + to_string(bad_len) +
                        " is invalid for " + mode)
       {}
    };

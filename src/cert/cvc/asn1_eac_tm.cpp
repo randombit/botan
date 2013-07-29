@@ -134,7 +134,7 @@ std::string EAC_Time::as_string() const
    if(time_is_set() == false)
       throw Invalid_State("EAC_Time::as_string: No time set");
 
-   return std::to_string(year * 10000 + month * 100 + day);
+   return to_string(year * 10000 + month * 100 + day);
    }
 
 /*

@@ -35,7 +35,7 @@ Dynamically_Loaded_Engine::Dynamically_Loaded_Engine(
       if(mod_version != 20101003)
          throw std::runtime_error("Incompatible version in " +
                                   library_path + " of " +
-                                  std::to_string(mod_version));
+                                  to_string(mod_version));
 
       creator_func creator =
          lib->resolve<creator_func>("create_engine");

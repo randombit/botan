@@ -95,7 +95,7 @@ void X509_Certificate::force_decode()
       .decode(dn_subject);
 
    if(version > 2)
-      throw Decoding_Error("Unknown X.509 cert version " + std::to_string(version));
+      throw Decoding_Error("Unknown X.509 cert version " + to_string(version));
    if(sig_algo != sig_algo_inner)
       throw Decoding_Error("Algorithm identifier mismatch");
 

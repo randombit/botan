@@ -142,10 +142,10 @@ void BER_Object::assert_is_a(ASN1_Tag type_tag, ASN1_Tag class_tag)
    {
    if(this->type_tag != type_tag || this->class_tag != class_tag)
       throw BER_Decoding_Error("Tag mismatch when decoding got " +
-                               std::to_string(this->type_tag) + "/" +
-                               std::to_string(this->class_tag) + " expected " +
-                               std::to_string(type_tag) + "/" +
-                               std::to_string(class_tag));
+                               to_string(this->type_tag) + "/" +
+                               to_string(this->class_tag) + " expected " +
+                               to_string(type_tag) + "/" +
+                               to_string(class_tag));
    }
 
 /*
