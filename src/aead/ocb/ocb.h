@@ -5,8 +5,8 @@
 * Distributed under the terms of the Botan license
 */
 
-#ifndef BOTAN_OCB_H__
-#define BOTAN_OCB_H__
+#ifndef BOTAN_AEAD_OCB_H__
+#define BOTAN_AEAD_OCB_H__
 
 #include <botan/aead.h>
 #include <botan/block_cipher.h>

@@ -1,4 +1,4 @@
-Version 1.11.4, Not Yet Released
+Version 1.11.4, 2013-07-25
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * CPU specific extensions are now always compiled if support for the
