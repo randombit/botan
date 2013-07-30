@@ -1888,6 +1888,6 @@ if __name__ == '__main__':
     except Exception as e:
         logging.error(str(e))
         import traceback
-        traceback.print_exc(file=sys.stderr)
+        logging.debug(traceback.format_exc())
         sys.exit(1)
     sys.exit(0)
