@@ -47,7 +47,16 @@ class BOTAN_DLL Channel
       /**
       * Inject plaintext intended for counterparty
       */
-      void send(const std::string& string);
+      void send(const std::string& val);
+
+      /**
+      * Inject plaintext intended for counterparty
+      */
+      template<typename Alloc>
+         void send(const std::vector<unsigned char, Alloc>& val)
+         {
+         send(&val[0], val.size());
+         }
 
       /**
       * Send a TLS alert message. If the alert is fatal, the internal
