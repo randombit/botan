@@ -87,7 +87,6 @@ class Connection_Cipher_State
       std::unique_ptr<MessageAuthenticationCode> m_mac;
 
       std::unique_ptr<AEAD_Mode> m_aead;
-      size_t m_aead_extra = 0;
       secure_vector<byte> m_nonce, m_ad;
 
       size_t m_block_size = 0;

@@ -424,7 +424,6 @@ class Finished : public Handshake_Message
    private:
       std::vector<byte> serialize() const override;
 
-      Connection_Side m_side;
       std::vector<byte> m_verification_data;
    };
 
