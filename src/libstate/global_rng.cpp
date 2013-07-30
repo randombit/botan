@@ -76,7 +76,7 @@ void add_entropy_sources(RandomNumberGenerator* rng)
 #if defined(BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM)
    rng->add_entropy_source(
       new Device_EntropySource(
-         split_on("/dev/random:/dev/srandom:/dev/urandom", ':')
+         split_on("/dev/urandom:/dev/srandom:/dev/random", ':')
          )
       );
 #endif
