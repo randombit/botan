@@ -19,5 +19,5 @@ mp_core.h
 </header:internal>
 
 <requires>
-mp_x86_64|mp_msvc64|mp_asm64|mp_x86_32|mp_x86_32_msvc|mp_generic
+mp_x86_64|mp_word64|mp_x86_32|mp_x86_32_msvc|mp_generic
 </requires>

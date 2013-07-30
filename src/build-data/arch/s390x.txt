@@ -1,5 +1,6 @@
 endian big
 unaligned ok
+wordsize 64
 
 <submodels>
 s390x

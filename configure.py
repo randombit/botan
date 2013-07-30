@@ -645,12 +645,16 @@ class ArchInfo(object):
                       ['aliases', 'submodels', 'submodel_aliases', 'isa_extensions'],
                       { 'endian': None,
                         'family': None,
-                        'unaligned': 'no'
+                        'unaligned': 'no',
+                        'wordsize': None
                         })
 
         self.submodel_aliases = force_to_dict(self.submodel_aliases)
 
         self.unaligned_ok = (1 if self.unaligned == 'ok' else 0)
+
+        if self.wordsize is not None:
+            self.wordsize = int(self.wordsize)
 
     """
     Return a list of all submodels for this arch, ordered longest
@@ -696,6 +700,12 @@ class ArchInfo(object):
 
         if self.family is not None:
             macros.append('TARGET_CPU_IS_%s_FAMILY' % (self.family.upper()))
+
+        if self.wordsize is not None:
+            macros.append('TARGET_CPU_NATIVE_WORD_SIZE %d' % (self.wordsize))
+
+            if self.wordsize == 64:
+                macros.append('TARGET_CPU_HAS_NATIVE_64BIT')
 
         macros.append('TARGET_UNALIGNED_MEMORY_ACCESS_OK %d' % (unaligned_ok))
 

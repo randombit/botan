@@ -1,3 +1,5 @@
+wordsize 64
+
 <aliases>
 itanium
 itanic

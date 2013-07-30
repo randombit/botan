@@ -1,5 +1,6 @@
 
 family sparc
+wordsize 64
 
 <submodels>
 ultrasparc

@@ -1,5 +1,6 @@
 endian little
 unaligned ok
+wordsize 64
 
 family x86
 
