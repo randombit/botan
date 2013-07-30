@@ -15,7 +15,6 @@ zero_mem.cpp
 
 <header:internal>
 bit_ops.h
-mul128.h
 prefetch.h
 rounding.h
 semaphore.h
@@ -33,6 +32,7 @@ exceptn.h
 get_byte.h
 loadstor.h
 mem_ops.h
+mul128.h
 parsing.h
 rotate.h
 types.h

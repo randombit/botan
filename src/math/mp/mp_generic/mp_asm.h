@@ -1,6 +1,6 @@
 /*
 * Lowest Level MPI Algorithms
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2008,2013 Jack Lloyd
 *     2006 Luca Piccarreta
 *
 * Distributed under the terms of the Botan license
@@ -13,18 +13,6 @@
 
 namespace Botan {
 
-#if (BOTAN_MP_WORD_BITS == 8)
-  typedef u16bit dword;
-#elif (BOTAN_MP_WORD_BITS == 16)
-  typedef u32bit dword;
-#elif (BOTAN_MP_WORD_BITS == 32)
-  typedef u64bit dword;
-#elif (BOTAN_MP_WORD_BITS == 64)
-  #error BOTAN_MP_WORD_BITS can be 64 only with assembly support
-#else
-  #error BOTAN_MP_WORD_BITS must be 8, 16, 32, or 64
-#endif
-
 extern "C" {
 
 /*
@@ -32,9 +20,23 @@ extern "C" {
 */
 inline word word_madd2(word a, word b, word* c)
    {
-   dword z = (dword)a * b + *c;
-   *c = (word)(z >> BOTAN_MP_WORD_BITS);
-   return (word)z;
+#if defined(BOTAN_HAS_MP_DWORD)
+   const dword s = static_cast<dword>(a) * b + *c;
+   *c = static_cast<word>(s >> BOTAN_MP_WORD_BITS);
+   return static_cast<word>(s);
+#else
+   static_assert(BOTAN_MP_WORD_BITS == 64, "Unexpected word size");
+
+   word hi = 0, lo = 0;
+
+   mul64x64_128(a, b, &lo, &hi);
+
+   lo += *c;
+   hi += (lo < *c); // carry?
+
+   *c = hi;
+   return lo;
+#endif
    }
 
 /*
@@ -42,9 +44,26 @@ inline word word_madd2(word a, word b, word* c)
 */
 inline word word_madd3(word a, word b, word c, word* d)
    {
-   dword z = (dword)a * b + c + *d;
-   *d = (word)(z >> BOTAN_MP_WORD_BITS);
-   return (word)z;
+#if defined(BOTAN_HAS_MP_DWORD)
+   const dword s = static_cast<dword>(a) * b + c + *d;
+   *d = static_cast<word>(s >> BOTAN_MP_WORD_BITS);
+   return static_cast<word>(s);
+#else
+   static_assert(BOTAN_MP_WORD_BITS == 64, "Unexpected word size");
+
+   word hi = 0, lo = 0;
+
+   mul64x64_128(a, b, &lo, &hi);
+
+   lo += c;
+   hi += (lo < c); // carry?
+
+   lo += *d;
+   hi += (lo < *d); // carry?
+
+   *d = hi;
+   return lo;
+#endif
    }
 
 }

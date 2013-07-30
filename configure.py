@@ -646,15 +646,14 @@ class ArchInfo(object):
                       { 'endian': None,
                         'family': None,
                         'unaligned': 'no',
-                        'wordsize': None
+                        'wordsize': 32
                         })
 
         self.submodel_aliases = force_to_dict(self.submodel_aliases)
 
         self.unaligned_ok = (1 if self.unaligned == 'ok' else 0)
 
-        if self.wordsize is not None:
-            self.wordsize = int(self.wordsize)
+        self.wordsize = int(self.wordsize)
 
     """
     Return a list of all submodels for this arch, ordered longest
@@ -701,11 +700,10 @@ class ArchInfo(object):
         if self.family is not None:
             macros.append('TARGET_CPU_IS_%s_FAMILY' % (self.family.upper()))
 
-        if self.wordsize is not None:
-            macros.append('TARGET_CPU_NATIVE_WORD_SIZE %d' % (self.wordsize))
+        macros.append('TARGET_CPU_NATIVE_WORD_SIZE %d' % (self.wordsize))
 
-            if self.wordsize == 64:
-                macros.append('TARGET_CPU_HAS_NATIVE_64BIT')
+        if self.wordsize == 64:
+            macros.append('TARGET_CPU_HAS_NATIVE_64BIT')
 
         macros.append('TARGET_UNALIGNED_MEMORY_ACCESS_OK %d' % (unaligned_ok))
 
@@ -1000,13 +998,15 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         mp_bits = [mod.mp_bits for mod in modules if mod.mp_bits != 0]
 
         if mp_bits == []:
-            return 32 # default
+            logging.debug('Using arch default MP bits %d' % (arch.wordsize))
+            return arch.wordsize
 
         # Check that settings are consistent across modules
         for mp_bit in mp_bits[1:]:
             if mp_bit != mp_bits[0]:
                 raise Exception('Incompatible mp_bits settings found')
 
+        logging.debug('Using MP bits %d' % (mp_bits[0]))
         return mp_bits[0]
 
     def isa_specific_flags(cc, src):

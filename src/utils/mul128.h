@@ -118,6 +118,4 @@ inline void mul64x64_128(u64bit a, u64bit b, u64bit* lo, u64bit* hi)
 
 }
 
-}
-
 #endif
