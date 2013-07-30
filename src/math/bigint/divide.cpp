@@ -7,7 +7,7 @@
 
 #include <botan/divide.h>
 #include <botan/internal/mp_core.h>
-#include <botan/internal/mp_asmi.h>
+#include <botan/internal/mp_madd.h>
 
 namespace Botan {
 

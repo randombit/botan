@@ -6,8 +6,8 @@
 * Distributed under the terms of the Botan license
 */
 
-#ifndef BOTAN_MP_ASM_H__
-#define BOTAN_MP_ASM_H__
+#ifndef BOTAN_MP_WORD_MULADD_H__
+#define BOTAN_MP_WORD_MULADD_H__
 
 #include <botan/mp_types.h>
 

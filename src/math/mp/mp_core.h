@@ -1,12 +1,13 @@
 /*
 * MPI Algorithms
 * (C) 1999-2010 Jack Lloyd
+*     2006 Luca Piccarreta
 *
 * Distributed under the terms of the Botan license
 */
 
-#ifndef BOTAN_MP_CORE_H__
-#define BOTAN_MP_CORE_H__
+#ifndef BOTAN_MP_CORE_OPS_H__
+#define BOTAN_MP_CORE_OPS_H__
 
 #include <botan/mp_types.h>
 

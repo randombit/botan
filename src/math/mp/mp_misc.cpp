@@ -6,7 +6,7 @@
 */
 
 #include <botan/internal/mp_core.h>
-#include <botan/internal/mp_asm.h>
+#include <botan/internal/mp_madd.h>
 
 namespace Botan {
 

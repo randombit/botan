@@ -6,11 +6,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/internal/mp_asm.h>
-#include <botan/internal/mp_asmi.h>
 #include <botan/internal/mp_core.h>
-#include <botan/exceptn.h>
-#include <botan/mem_ops.h>
 
 namespace Botan {
 
@@ -21,20 +17,6 @@ extern "C" {
 */
 word bigint_add2_nc(word x[], size_t x_size, const word y[], size_t y_size)
    {
-   word carry = 0;
-
-   const size_t blocks = y_size - (y_size % 8);
-
-   for(size_t i = 0; i != blocks; i += 8)
-      carry = word8_add2(x + i, y + i, carry);
-
-   for(size_t i = blocks; i != y_size; ++i)
-      x[i] = word_add(x[i], y[i], &carry);
-
-   for(size_t i = y_size; i != x_size; ++i)
-      x[i] = word_add(x[i], 0, &carry);
-
-   return carry;
    }
 
 /*
