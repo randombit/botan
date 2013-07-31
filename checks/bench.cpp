@@ -150,8 +150,8 @@ void report_results(const std::string& algo,
 
    std::cout << algo;
 
-#if (defined(__GNUC__) && __GNUC__ <= 3) || defined(__SUNPRO_CC)
-   // Work around GCC 3.x bug, reverse iterators don't work
+#if (defined(__GNUC__) && __GNUC__ <= 3) || defined(__SUNPRO_CC) || defined(__ANDROID__)
+   // Work around bug in various compilers where map rev iterators don't work
    for(std::map<double, std::string>::const_iterator i = results.begin(); i != results.end(); ++i)
 #else
    for(std::map<double, std::string>::const_reverse_iterator i = results.rbegin(); i != results.rend(); ++i)
