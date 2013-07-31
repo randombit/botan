@@ -10,29 +10,32 @@ Series 1.10
 Version 1.10.6, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* In EMSA2 and Randpool, avoid calling name() on objects after deleting
-  them if the provided algorithm objects are not suitable for use.
-  Found by Clang analyzer.
+* In EMSA2 and Randpool, avoid calling name() on objects after deleting them if
+  the provided algorithm objects are not suitable for use.  Found by Clang
+  analyzer, reported by Jeffery Walton.
 
-* If X509_Store was copied, the u32bit containing how long to cache
-  validation results was not initialized, potentially causing results
-  to be cached for significant amounts of time. This could allow a
-  certificate to be considered valid after its issuing CA's cert
-  expired. Expiration of the end-entity cert is always checked, and
-  reading a CRL always causes the status to be reset, so this issue
-  does not affect revocation. Found by Coverity scanner.
+* If X509_Store was copied, the u32bit containing how long to cache validation
+  results was not initialized, potentially causing results to be cached for
+  significant amounts of time. This could allow a certificate to be considered
+  valid after its issuing CA's cert expired. Expiration of the end-entity cert
+  is always checked, and reading a CRL always causes the status to be reset, so
+  this issue does not affect revocation. Found by Coverity scanner.
 
-* Avoid off by one causing a potentially unterminated string to be
-  passed to the connect system call if the library was configured to
-  use a very long path name for the EGD socket. Found by Coverity
-  Scanner.
+* Avoid off by one causing a potentially unterminated string to be passed to
+  the connect system call if the library was configured to use a very long path
+  name for the EGD socket. Found by Coverity Scanner.
 
 * In PK_Encryptor_EME, PK_Decryptor_EME, PK_Verifier, and PK_Key_Agreement,
   avoid dereferencing an unitialized pointer if no engine supported operations
   on the key object given. Found by Coverity scanner.
 
-* Avoid leaking a file descriptor in the /dev/random and EGD entropy sources
-  if stdin (file descriptor 0) was closed. Found by Coverity scanner.
+* Avoid leaking a file descriptor in the /dev/random and EGD entropy sources if
+  stdin (file descriptor 0) was closed. Found by Coverity scanner.
+
+* Avoid a potentially undefined operation in the bit rotation operations.  Not
+  known to have caused problems under any existing compiler, but might have
+  caused problems in the future. Caught by Clang sanitizer, reported by Jeffery
+  Walton.
 
 * Increase default hash iterations from 10000 to 50000 in PBES1 and PBES2
 
