@@ -1,0 +1,11 @@
+Version 1.11.5, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* TLS channels now support sending a ``std::vector``
+
+* Add a generic 64-bit multiply instruction for producing a 128 bit result
+  in mul128.h
+
+* Avoid potentially undefined operations in the bit rotation operations.  Not
+  known to have caused problems under existing compilers but might break in the
+  future. Found by Clang sanitizer, reported by Jeffrey Walton.
