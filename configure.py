@@ -42,30 +42,43 @@ def flatten(l):
     return sum(l, [])
 
 def get_vc_revision():
-    try:
-        mtn = subprocess.Popen(['mtn', 'automate', 'heads'],
-                               stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE,
-                               universal_newlines=True)
 
-        (stdout, stderr) = mtn.communicate()
+    def get_vc_revision(cmdlist):
+        try:
+            cmdname = cmdlist[0]
 
-        if mtn.returncode != 0:
-            logging.debug('Error getting rev from monotone - %d (%s)'
-                          % (mtn.returncode, stderr))
-            return 'unknown'
+            vc = subprocess.Popen(cmdlist,
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE,
+                                  universal_newlines=True)
 
-        rev = str(stdout).strip()
-        logging.debug('Monotone reported revision %s' % (rev))
+            (stdout, stderr) = vc.communicate()
 
-        return 'mtn:' + rev
-    except OSError as e:
-        logging.debug('Error getting rev from monotone - %s' % (e[1]))
-        return 'unknown'
-    except Exception as e:
-        logging.debug('Error getting rev from monotone - %s' % (e))
-        return 'unknown'
+            if vc.returncode != 0:
+                logging.debug('Error getting rev from %s - %d (%s)'
+                              % (cmdname, vc.returncode, stderr))
+                return None
 
+            rev = str(stdout).strip()
+            logging.debug('%s reported revision %s' % (cmdname, rev))
+
+            return '%s:%s' % (cmdname, rev)
+        except OSError as e:
+            logging.debug('Error getting rev from %s - %s' % (cmdname, e.strerror))
+            return None
+        except Exception as e:
+            logging.debug('Error getting rev from %s - %s' % (cmdname, e))
+            return None
+
+    vc_commands = [['mtn', 'automate', 'heads'],
+                   ['git', 'rev-parse', 'HEAD']]
+
+    for vc_cmd in vc_commands:
+        rev = get_vc_revision(vc_cmd)
+        if rev is not None:
+            return rev
+
+    return 'unknown'
 
 class BuildConfigurationInformation(object):
 
