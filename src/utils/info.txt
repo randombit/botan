@@ -38,7 +38,3 @@ rotate.h
 types.h
 version.h
 </header:public>
-
-<libs>
-linux,tru64 -> rt
-</libs>
