@@ -7,3 +7,7 @@ hres_timer.cpp
 <header:internal>
 hres_timer.h
 </header:internal>
+
+<libs>
+linux -> rt
+</libs>
