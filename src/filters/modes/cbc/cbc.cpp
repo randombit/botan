@@ -172,10 +172,7 @@ void CBC_Decryption::buffered_block(const byte input[], size_t length)
 
       xor_buf(&temp[0], &state[0], cipher->block_size());
 
-      for(size_t i = 1; i < to_proc; ++i)
-         xor_buf(&temp[i * cipher->block_size()],
-                 input + (i-1) * cipher->block_size(),
-                 cipher->block_size());
+      xor_buf(&temp[cipher->block_size()], input, (to_proc-1) * cipher->block_size());
 
       copy_mem(&state[0],
                input + (to_proc - 1) * cipher->block_size(),
