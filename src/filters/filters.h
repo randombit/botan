@@ -28,7 +28,7 @@
 namespace Botan {
 
 /**
-* Stream Cipher Filter.
+* Stream Cipher Filter
 */
 class BOTAN_DLL StreamCipher_Filter : public Keyed_Filter
    {
