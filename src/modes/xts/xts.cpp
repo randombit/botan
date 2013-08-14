@@ -6,6 +6,7 @@
 */
 
 #include <botan/xts.h>
+#include <botan/loadstor.h>
 #include <botan/internal/xor_buf.h>
 #include <botan/internal/rounding.h>
 
@@ -13,21 +14,38 @@ namespace Botan {
 
 namespace {
 
-void poly_double(byte tweak[], size_t size)
+void poly_double_128(byte out[], const byte in[])
    {
-   // Use u64bits here?
-   const byte polynomial = (size == 16) ? 0x87 : 0x1B;
+   u64bit X0 = load_le<u64bit>(in, 0);
+   u64bit X1 = load_le<u64bit>(in, 1);
 
-   byte carry = 0;
-   for(size_t i = 0; i != size; ++i)
-      {
-      byte carry2 = (tweak[i] >> 7);
-      tweak[i] = (tweak[i] << 1) | carry;
-      carry = carry2;
-      }
+   const bool carry = (X1 >> 63);
+
+   X1 = (X1 << 1) | (X0 >> 63);
+   X0 = (X0 << 1);
 
    if(carry)
-      tweak[0] ^= polynomial;
+      X0 ^= 0x87;
+
+   store_le(out, X0, X1);
+   }
+
+void poly_double_64(byte out[], const byte in[])
+   {
+   u64bit X = load_le<u64bit>(in, 0);
+   const bool carry = (X >> 63);
+   X <<= 1;
+   if(carry)
+      X ^= 0x1B;
+   store_le(X, out);
+   }
+
+inline void poly_double(byte out[], const byte in[], size_t size)
+   {
+   if(size == 8)
+      poly_double_64(out, in);
+   else
+      poly_double_128(out, in);
    }
 
 }
@@ -55,10 +73,7 @@ std::string XTS_Mode::name() const
 
 size_t XTS_Mode::update_granularity() const
    {
-   /* XTS needs to process at least 2 blocks in parallel
-      because block_size+1 bytes are needed at the end
-   */
-   return std::max<size_t>(cipher().parallel_bytes(), 2 * cipher().block_size());
+   return cipher().parallel_bytes();
    }
 
 size_t XTS_Mode::minimum_final_size() const
@@ -107,13 +122,7 @@ secure_vector<byte> XTS_Mode::start(const byte nonce[], size_t nonce_len)
    copy_mem(&m_tweak[0], nonce, nonce_len);
    m_tweak_cipher->encrypt(&m_tweak[0]);
 
-   //update_tweak(0);
-
-   for(size_t i = 1; i < blocks_in_tweak; ++i)
-      {
-      copy_mem(&m_tweak[i*BS], &m_tweak[(i-1)*BS], BS);
-      poly_double(&m_tweak[i*BS], BS);
-      }
+   update_tweak(0);
 
    return secure_vector<byte>();
    }
@@ -122,17 +131,13 @@ void XTS_Mode::update_tweak(size_t which)
    {
    const size_t BS = m_tweak_cipher->block_size();
 
-   //if(which > 0)
-   copy_mem(&m_tweak[0], &m_tweak[(which-1)*BS], BS);
-   poly_double(&m_tweak[0], BS);
+   if(which > 0)
+      poly_double(&m_tweak[0], &m_tweak[(which-1)*BS], BS);
 
    const size_t blocks_in_tweak = update_granularity() / BS;
 
    for(size_t i = 1; i < blocks_in_tweak; ++i)
-      {
-      copy_mem(&m_tweak[i*BS], &m_tweak[(i-1)*BS], BS);
-      poly_double(&m_tweak[i*BS], BS);
-      }
+      poly_double(&m_tweak[i*BS], &m_tweak[(i-1)*BS], BS);
    }
 
 size_t XTS_Encryption::output_length(size_t input_length) const
@@ -283,39 +288,5 @@ void XTS_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
       buffer += last;
       }
    }
-
-/*
-void XTS_Decryption::buffered_final(const byte input[], size_t length)
-   {
-      size_t leftover_blocks =
-         ((length / BS) - 1) * BS;
-
-      buffered_block(input, leftover_blocks);
-
-      input += leftover_blocks;
-      length -= leftover_blocks;
-
-      secure_vector<byte> temp(input, input + length);
-      secure_vector<byte> tweak_copy(&tweak[0], &tweak[BS]);
-
-      poly_double(&tweak_copy[0], BS);
-
-      xor_buf(temp, tweak_copy, BS);
-      cipher->decrypt(temp);
-      xor_buf(temp, tweak_copy, BS);
-
-      for(size_t i = 0; i != length - BS; ++i)
-         std::swap(temp[i], temp[i + BS]);
-
-      xor_buf(temp, tweak, BS);
-      cipher->decrypt(temp);
-      xor_buf(temp, tweak, BS);
-
-      send(temp, length);
-      }
-
-   buffer_reset();
-   }
-*/
 
 }

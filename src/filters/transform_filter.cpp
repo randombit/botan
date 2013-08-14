@@ -29,7 +29,7 @@ void Transformation_Filter::Nonce_State::update(const InitializationVector& iv)
 
 std::vector<byte> Transformation_Filter::Nonce_State::get()
    {
-   //BOTAN_ASSERT(m_fresh_nonce, "The nonce is fresh for this message");
+   BOTAN_ASSERT(m_fresh_nonce, "The nonce is fresh for this message");
 
    if(!m_nonce.empty())
       m_fresh_nonce = false;
@@ -38,7 +38,6 @@ std::vector<byte> Transformation_Filter::Nonce_State::get()
 
 void Transformation_Filter::set_iv(const InitializationVector& iv)
    {
-   printf("set_iv\n");
    m_nonce.update(iv);
    }
 
