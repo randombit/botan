@@ -36,7 +36,7 @@
   #include <botan/ctr.h>
 #endif
 
-#if defined(BOTAN_HAS_XTS)
+#if defined(BOTAN_HAS_MODE_XTS)
   #include <botan/xts.h>
 #endif
 
@@ -141,13 +141,13 @@ Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
 #endif
       }
 
-#if defined(BOTAN_HAS_XTS)
+#if defined(BOTAN_HAS_MODE_XTS)
    if(mode == "XTS")
       {
       if(direction == ENCRYPTION)
-         return new XTS_Encryption(block_cipher->clone());
+         return new Transformation_Filter(new XTS_Encryption(block_cipher->clone()));
       else
-         return new XTS_Decryption(block_cipher->clone());
+         return new Transformation_Filter(new XTS_Decryption(block_cipher->clone()));
       }
 #endif
 

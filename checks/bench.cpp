@@ -196,9 +196,7 @@ bool bench_algo(const std::string& algo,
             continue;
 
          filt->set_key(Botan::SymmetricKey(&buf[0], cipher_keylen));
-
-         if(filt->valid_iv_length(cipher_ivlen / 2))
-           filt->set_iv(Botan::InitializationVector(&buf[0], cipher_ivlen));
+         filt->set_iv(Botan::InitializationVector(&buf[0], cipher_ivlen));
 
          Botan::Pipe pipe(filt, new Botan::BitBucket);
          pipe.start_msg();

@@ -13,6 +13,7 @@ pipe_io.cpp
 pipe_rw.cpp
 secqueue.cpp
 threaded_fork.cpp
+transform_filter.cpp
 </source>
 
 <header:public>
@@ -25,6 +26,7 @@ filters.h
 key_filt.h
 pipe.h
 secqueue.h
+transform_filter.h
 </header:public>
 
 <header:internal>
