@@ -155,10 +155,7 @@ algorithm_kat(const SCAN_Name& algo_name,
    std::map<std::string, bool> pass_or_fail;
 
    for(auto i : result)
-      {
-      //std::cout << i.first << " " << i.second << "\n";
       pass_or_fail[i.first] = (i.second == "passed");
-      }
 
    return pass_or_fail;
    }
@@ -166,13 +163,13 @@ algorithm_kat(const SCAN_Name& algo_name,
 namespace {
 
 void verify_results(const std::string& algo,
-                    const std::map<std::string, bool>& results)
+                    const std::map<std::string, std::string>& results)
    {
    for(auto i = results.begin(); i != results.end(); ++i)
       {
-      if(!i->second)
-         throw Self_Test_Failure(algo + " self-test failed, provider "+
-                                 i->first);
+      if(i->second != "passed")
+         throw Self_Test_Failure(algo + " self-test failed (" + i->second + ")" +
+                                 " with provider " + i->first);
       }
    }
 
@@ -185,7 +182,7 @@ void hash_test(Algorithm_Factory& af,
    vars["input"] = in;
    vars["output"] = out;
 
-   verify_results(name, algorithm_kat(name, vars, af));
+   verify_results(name, algorithm_kat_detailed(name, vars, af));
    }
 
 void mac_test(Algorithm_Factory& af,
@@ -199,7 +196,7 @@ void mac_test(Algorithm_Factory& af,
    vars["output"] = out;
    vars["key"] = key;
 
-   verify_results(name, algorithm_kat(name, vars, af));
+   verify_results(name, algorithm_kat_detailed(name, vars, af));
    }
 
 /*
@@ -227,20 +224,20 @@ void cipher_kat(Algorithm_Factory& af,
    std::map<std::string, bool> results;
 
    vars["output"] = ecb_out;
-   verify_results(algo + "/ECB", algorithm_kat(algo + "/ECB", vars, af));
+   verify_results(algo + "/ECB", algorithm_kat_detailed(algo + "/ECB", vars, af));
 
    vars["output"] = cbc_out;
    verify_results(algo + "/CBC",
-                  algorithm_kat(algo + "/CBC/NoPadding", vars, af));
+                  algorithm_kat_detailed(algo + "/CBC/NoPadding", vars, af));
 
    vars["output"] = cfb_out;
-   verify_results(algo + "/CFB", algorithm_kat(algo + "/CFB", vars, af));
+   verify_results(algo + "/CFB", algorithm_kat_detailed(algo + "/CFB", vars, af));
 
    vars["output"] = ofb_out;
-   verify_results(algo + "/OFB", algorithm_kat(algo + "/OFB", vars, af));
+   verify_results(algo + "/OFB", algorithm_kat_detailed(algo + "/OFB", vars, af));
 
    vars["output"] = ctr_out;
-   verify_results(algo + "/CTR", algorithm_kat(algo + "/CTR-BE", vars, af));
+   verify_results(algo + "/CTR", algorithm_kat_detailed(algo + "/CTR-BE", vars, af));
    }
 
 }
