@@ -1,6 +1,6 @@
 /*
 * Core Engine
-* (C) 1999-2007,2011 Jack Lloyd
+* (C) 1999-2007,2011,2013 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -16,10 +16,6 @@
   #include <botan/ecb.h>
 #endif
 
-#if defined(BOTAN_HAS_CBC)
-  #include <botan/cbc.h>
-#endif
-
 #if defined(BOTAN_HAS_CTS)
   #include <botan/cts.h>
 #endif
@@ -28,16 +24,20 @@
   #include <botan/cfb.h>
 #endif
 
+#if defined(BOTAN_HAS_MODE_CBC)
+  #include <botan/cbc.h>
+#endif
+
+#if defined(BOTAN_HAS_MODE_XTS)
+  #include <botan/xts.h>
+#endif
+
 #if defined(BOTAN_HAS_OFB)
   #include <botan/ofb.h>
 #endif
 
 #if defined(BOTAN_HAS_CTR_BE)
   #include <botan/ctr.h>
-#endif
-
-#if defined(BOTAN_HAS_MODE_XTS)
-  #include <botan/xts.h>
 #endif
 
 #if defined(BOTAN_HAS_AEAD_FILTER)
@@ -129,13 +129,13 @@ Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
 #endif
          }
 
-#if defined(BOTAN_HAS_CBC)
+#if defined(BOTAN_HAS_MODE_CBC)
       if(direction == ENCRYPTION)
-         return new CBC_Encryption(block_cipher->clone(),
-                                   get_bc_pad(padding, "PKCS7"));
+         return new Transformation_Filter(
+            new CBC_Encryption(block_cipher->clone(), get_bc_pad(padding, "PKCS7")));
       else
-         return new CBC_Decryption(block_cipher->clone(),
-                                   get_bc_pad(padding, "PKCS7"));
+         return new Transformation_Filter(
+            new CBC_Decryption(block_cipher->clone(), get_bc_pad(padding, "PKCS7")));
 #else
       return nullptr;
 #endif

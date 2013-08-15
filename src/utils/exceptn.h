@@ -61,18 +61,6 @@ struct BOTAN_DLL Invalid_Key_Length : public Invalid_Argument
    };
 
 /**
-* Invalid_Block_Size Exception
-*/
-struct BOTAN_DLL Invalid_Block_Size : public Invalid_Argument
-   {
-   Invalid_Block_Size(const std::string& mode,
-                      const std::string& pad) :
-      Invalid_Argument("Padding method " + pad +
-                       " cannot be used with " + mode)
-      {}
-   };
-
-/**
 * Invalid_IV_Length Exception
 */
 struct BOTAN_DLL Invalid_IV_Length : public Invalid_Argument

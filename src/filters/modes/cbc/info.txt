@@ -1,6 +1,0 @@
-define CBC
-
-<requires>
-block
-mode_pad
-</requires>

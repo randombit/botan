@@ -24,7 +24,7 @@ class XTS_Mode : public Transformation
 
       secure_vector<byte> start(const byte nonce[], size_t nonce_len) override;
 
-      size_t update_granularity() const;
+      size_t update_granularity() const override;
 
       size_t minimum_final_size() const override;
 
