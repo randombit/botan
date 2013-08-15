@@ -210,7 +210,7 @@ std::string Ciphersuite::to_string() const
       if(cipher_algo() == "3DES")
          out << "3DES_EDE";
       else if(cipher_algo().find("Camellia") == 0)
-         out << "CAMELLIA_" << std::to_string(8*cipher_keylen());
+         out << "CAMELLIA_" << to_string(8*cipher_keylen());
       else
          out << replace_chars(cipher_algo(), {'-', '/'}, '_');
 

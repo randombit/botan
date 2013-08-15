@@ -114,9 +114,9 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          if(p.bits() < policy.minimum_dh_group_size())
             throw TLS_Exception(Alert::INSUFFICIENT_SECURITY,
                                 "Server sent DH group of " +
-                                std::to_string(p.bits()) +
+                                to_string(p.bits()) +
                                 " bits, policy requires at least " +
-                                std::to_string(policy.minimum_dh_group_size()));
+                                to_string(policy.minimum_dh_group_size()));
 
          /*
          * A basic check for key validity. As we do not know q here we
@@ -164,7 +164,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          const std::string name = Supported_Elliptic_Curves::curve_id_to_name(curve_id);
 
          if(name == "")
-            throw Decoding_Error("Server sent unknown named curve " + std::to_string(curve_id));
+            throw Decoding_Error("Server sent unknown named curve " + to_string(curve_id));
 
          EC_Group group(name);
 

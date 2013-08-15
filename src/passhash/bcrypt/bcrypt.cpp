@@ -112,7 +112,7 @@ std::string make_bcrypt(const std::string& pass,
 
    std::string salt_b64 = bcrypt_base64_encode(&salt[0], salt.size());
 
-   std::string work_factor_str = std::to_string(work_factor);
+   std::string work_factor_str = to_string(work_factor);
    if(work_factor_str.length() == 1)
       work_factor_str = "0" + work_factor_str;
 

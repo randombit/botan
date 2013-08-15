@@ -262,7 +262,7 @@ EAC1_1_CVC sign_request(EAC1_1_CVC const& signer_cert,
       }
    std::string chr_str = signee.get_chr().value();
 
-   std::string seqnr_string = std::to_string(seqnr);
+   std::string seqnr_string = to_string(seqnr);
 
    while(seqnr_string.size() < seqnr_len)
       seqnr_string = '0' + seqnr_string;

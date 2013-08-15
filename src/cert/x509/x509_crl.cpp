@@ -88,7 +88,7 @@ void X509_CRL::force_decode()
 
    if(version != 0 && version != 1)
       throw X509_CRL_Error("Unknown X.509 CRL version " +
-                           std::to_string(version+1));
+                           to_string(version+1));
 
    AlgorithmIdentifier sig_algo_inner;
    tbs_crl.decode(sig_algo_inner);

@@ -77,7 +77,7 @@ ASN1_String::ASN1_String(const std::string& str, ASN1_Tag t) : tag(t)
       tag != UTF8_STRING &&
       tag != BMP_STRING)
       throw Invalid_Argument("ASN1_String: Unknown string type " +
-                             std::to_string(tag));
+                             to_string(tag));
    }
 
 /*

@@ -54,7 +54,7 @@ void PKCS10_Request::force_decode()
    cert_req_info.decode(version);
    if(version != 0)
       throw Decoding_Error("Unknown version code in PKCS #10 request: " +
-                           std::to_string(version));
+                           to_string(version));
 
    X509_DN dn_subject;
    cert_req_info.decode(dn_subject);

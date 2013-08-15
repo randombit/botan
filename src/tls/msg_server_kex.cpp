@@ -188,7 +188,7 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<byte>& buf,
 
       if(name == "")
          throw Decoding_Error("Server_Key_Exchange: Server sent unknown named curve " +
-                              std::to_string(curve_id));
+                              to_string(curve_id));
 
       m_params.push_back(curve_type);
       m_params.push_back(get_byte(0, curve_id));

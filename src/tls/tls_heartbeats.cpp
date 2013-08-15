@@ -68,7 +68,7 @@ Heartbeat_Support_Indicator::Heartbeat_Support_Indicator(TLS_Data_Reader& reader
 
    if(code != 1 && code != 2)
       throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
-                          "Unknown heartbeat code " + std::to_string(code));
+                          "Unknown heartbeat code " + to_string(code));
 
    m_peer_allowed_to_send = (code == 1);
    }

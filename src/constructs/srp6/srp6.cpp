@@ -61,7 +61,7 @@ std::string srp6_group_identifier(const BigInt& N, const BigInt& g)
    */
    try
       {
-      const std::string group_name = "modp/srp/" + std::to_string(N.bits());
+      const std::string group_name = "modp/srp/" + to_string(N.bits());
 
       DL_Group group(group_name);
 

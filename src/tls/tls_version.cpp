@@ -22,13 +22,13 @@ std::string Protocol_Version::to_string() const
       return "SSL v3";
 
    if(maj == 3 && min >= 1) // TLS v1.x
-      return "TLS v1." + std::to_string(min-1);
+      return "TLS v1." + to_string(min-1);
 
    if(maj == 254) // DTLS 1.x
-      return "DTLS v1." + std::to_string(255 - min);
+      return "DTLS v1." + to_string(255 - min);
 
    // Some very new or very old protocol (or bogus data)
-   return "Unknown " + std::to_string(maj) + "." + std::to_string(min);
+   return "Unknown " + to_string(maj) + "." + to_string(min);
    }
 
 bool Protocol_Version::is_datagram_protocol() const

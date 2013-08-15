@@ -52,7 +52,7 @@ std::string OID::as_string() const
    std::string oid_str;
    for(size_t i = 0; i != id.size(); ++i)
       {
-      oid_str += std::to_string(id[i]);
+      oid_str += to_string(id[i]);
       if(i != id.size() - 1)
          oid_str += '.';
       }

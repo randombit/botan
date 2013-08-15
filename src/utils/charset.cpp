@@ -119,7 +119,7 @@ std::string transcode(const std::string& str,
       return ucs2_to_latin1(str);
 
    throw Invalid_Argument("Unknown transcoding operation from " +
-                          std::to_string(from) + " to " + std::to_string(to));
+                          to_string(from) + " to " + to_string(to));
    }
 
 /*

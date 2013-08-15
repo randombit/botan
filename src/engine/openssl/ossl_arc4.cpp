@@ -47,7 +47,7 @@ std::string RC4_OpenSSL::name() const
    {
    if(SKIP == 0)   return "RC4";
    if(SKIP == 256) return "MARK-4";
-   else            return "RC4_skip(" + std::to_string(SKIP) + ")";
+   else            return "RC4_skip(" + to_string(SKIP) + ")";
    }
 
 /*

@@ -166,7 +166,7 @@ OCB_Mode::OCB_Mode(BlockCipher* cipher, size_t tag_size) :
                                   m_cipher->name());
 
    if(m_tag_size != 16) // fixme: 64, 96 bits also supported
-      throw std::invalid_argument("OCB cannot produce a " + std::to_string(m_tag_size) +
+      throw std::invalid_argument("OCB cannot produce a " + to_string(m_tag_size) +
                                   " byte tag");
 
    }

@@ -45,7 +45,7 @@ DL_Group::DL_Group(RandomNumberGenerator& rng,
                    PrimeType type, size_t pbits, size_t qbits)
    {
    if(pbits < 512)
-      throw Invalid_Argument("DL_Group: prime size " + std::to_string(pbits) +
+      throw Invalid_Argument("DL_Group: prime size " + to_string(pbits) +
                              " is too small");
 
    if(type == Strong)
@@ -238,7 +238,7 @@ std::vector<byte> DL_Group::DER_encode(Format format) const
       .get_contents_unlocked();
       }
 
-   throw Invalid_Argument("Unknown DL_Group encoding " + std::to_string(format));
+   throw Invalid_Argument("Unknown DL_Group encoding " + to_string(format));
    }
 
 /*
@@ -255,7 +255,7 @@ std::string DL_Group::PEM_encode(Format format) const
    else if(format == ANSI_X9_42)
       return PEM_Code::encode(encoding, "X942 DH PARAMETERS");
    else
-      throw Invalid_Argument("Unknown DL_Group encoding " + std::to_string(format));
+      throw Invalid_Argument("Unknown DL_Group encoding " + to_string(format));
    }
 
 /*
@@ -290,7 +290,7 @@ void DL_Group::BER_decode(const std::vector<byte>& data,
          .discard_remaining();
       }
    else
-      throw Invalid_Argument("Unknown DL_Group encoding " + std::to_string(format));
+      throw Invalid_Argument("Unknown DL_Group encoding " + to_string(format));
 
    initialize(new_p, new_q, new_g);
    }

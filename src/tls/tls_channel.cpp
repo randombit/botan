@@ -395,7 +395,7 @@ size_t Channel::received_data(const byte input[], size_t input_size)
             }
          else
             throw Unexpected_Message("Unexpected record type " +
-                                     std::to_string(record.type()) +
+                                     to_string(record.type()) +
                                      " from counterparty");
          }
 

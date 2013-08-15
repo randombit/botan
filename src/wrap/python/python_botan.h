@@ -24,8 +24,8 @@ class Bad_Size : public Exception
    public:
       Bad_Size(u32bit got, u32bit expected) :
          Exception("Bad size detected in Python/C++ conversion layer: got " +
-                   std::to_string(got) + " bytes, expected " +
-                   std::to_string(expected))
+                   to_string(got) + " bytes, expected " +
+                   to_string(expected))
          {}
    };
 

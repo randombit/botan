@@ -15,7 +15,7 @@ namespace TLS {
 Alert::Alert(const std::vector<byte>& buf)
    {
    if(buf.size() != 2)
-      throw Decoding_Error("Alert: Bad size " + std::to_string(buf.size()) +
+      throw Decoding_Error("Alert: Bad size " + to_string(buf.size()) +
                            " for alert message");
 
    if(buf[0] == 1)      m_fatal = false;
@@ -115,7 +115,7 @@ std::string Alert::type_string() const
    * compiler can warn us that it is not included in the switch
    * statement.
    */
-   return "unrecognized_alert_" + std::to_string(type());
+   return "unrecognized_alert_" + to_string(type());
    }
 
 }

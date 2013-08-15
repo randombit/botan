@@ -58,7 +58,7 @@ std::string generate_passhash9(const std::string& pass,
 
    if(!prf)
       throw Invalid_Argument("Passhash9: Algorithm id " +
-                             std::to_string(alg_id) +
+                             to_string(alg_id) +
                              " is not defined");
 
    PKCS5_PBKDF2 kdf(prf); // takes ownership of pointer
@@ -124,7 +124,7 @@ bool check_passhash9(const std::string& pass, const std::string& hash)
 
    if(work_factor > 512)
       throw std::invalid_argument("Requested Bcrypt work factor " +
-                                  std::to_string(work_factor) + " too large");
+                                  to_string(work_factor) + " too large");
 
    const size_t kdf_iterations = WORK_FACTOR_SCALE * work_factor;
 

@@ -128,7 +128,7 @@ void Blowfish::eks_key_schedule(const byte key[], size_t length,
    */
    if(workfactor > 18)
       throw std::invalid_argument("Requested Bcrypt work factor " +
-                                  std::to_string(workfactor) + " too large");
+                                  to_string(workfactor) + " too large");
 
    P.resize(18);
    std::copy(P_INIT, P_INIT + 18, P.begin());

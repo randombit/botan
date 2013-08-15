@@ -35,6 +35,7 @@ mem_ops.h
 mul128.h
 parsing.h
 rotate.h
+to_string.h
 types.h
 version.h
 </header:public>

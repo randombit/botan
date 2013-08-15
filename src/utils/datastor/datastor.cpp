@@ -133,7 +133,7 @@ void Data_Store::add(const std::string& key, const std::string& val)
 */
 void Data_Store::add(const std::string& key, u32bit val)
    {
-   add(key, std::to_string(val));
+   add(key, to_string(val));
    }
 
 /*

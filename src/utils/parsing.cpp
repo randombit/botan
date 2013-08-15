@@ -11,11 +11,22 @@
 #include <botan/get_byte.h>
 #include <set>
 
+#ifdef __ANDROID__
+#include <sstream>
+#endif
+
 namespace Botan {
 
 u32bit to_u32bit(const std::string& str)
    {
+#ifdef __ANDROID__
+   std::istringstream stream(str);
+   u32bit result;
+   stream >> result;
+   return result;
+#else
    return std::stoul(str, nullptr);
+#endif
    }
 
 /*
@@ -258,7 +269,7 @@ std::string ipv4_to_string(u32bit ip)
       {
       if(i)
          str += ".";
-      str += std::to_string(get_byte(i, ip));
+      str += to_string(get_byte(i, ip));
       }
 
    return str;
