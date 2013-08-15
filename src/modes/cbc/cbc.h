@@ -78,7 +78,7 @@ class BOTAN_DLL CBC_Decryption : public CBC_Mode
    {
    public:
       CBC_Decryption(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
-         CBC_Mode(cipher, padding) {}
+         CBC_Mode(cipher, padding), m_tempbuf(update_granularity()) {}
 
       void update(secure_vector<byte>& blocks, size_t offset) override;
 
@@ -87,6 +87,8 @@ class BOTAN_DLL CBC_Decryption : public CBC_Mode
       size_t output_length(size_t input_length) const override;
 
       size_t minimum_final_size() const override;
+   private:
+      secure_vector<byte> m_tempbuf;
    };
 
 }

@@ -163,19 +163,17 @@ void CBC_Decryption::update(secure_vector<byte>& buffer, size_t offset)
    BOTAN_ASSERT(sz % BS == 0, "Input is full blocks");
    size_t blocks = sz / BS;
 
-   secure_vector<byte> temp(update_granularity());
-
    while(blocks)
       {
-      const size_t to_proc = std::min(sz, temp.size());
+      const size_t to_proc = std::min(sz, m_tempbuf.size());
 
-      cipher().decrypt_n(buf, &temp[0], to_proc / BS);
+      cipher().decrypt_n(buf, &m_tempbuf[0], to_proc / BS);
 
-      xor_buf(&temp[0], state_ptr(), BS);
-      xor_buf(&temp[BS], buf, to_proc - BS);
+      xor_buf(&m_tempbuf[0], state_ptr(), BS);
+      xor_buf(&m_tempbuf[BS], buf, to_proc - BS);
       copy_mem(state_ptr(), buf + (to_proc - BS), BS);
 
-      copy_mem(buf, &temp[0], to_proc);
+      copy_mem(buf, &m_tempbuf[0], to_proc);
 
       buf += to_proc;
       blocks -= to_proc / BS;
