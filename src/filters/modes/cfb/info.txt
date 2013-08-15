@@ -1,5 +1,0 @@
-define CFB
-
-<requires>
-block
-</requires>

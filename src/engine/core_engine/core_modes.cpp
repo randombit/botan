@@ -16,7 +16,7 @@
   #include <botan/cts.h>
 #endif
 
-#if defined(BOTAN_HAS_CFB)
+#if defined(BOTAN_HAS_MODE_CFB)
   #include <botan/cfb.h>
 #endif
 
@@ -206,13 +206,13 @@ Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
 
 #endif
 
-#if defined(BOTAN_HAS_CFB)
+#if defined(BOTAN_HAS_MODE_CFB)
       if(mode_name == "CFB")
          {
          if(direction == ENCRYPTION)
-            return new CFB_Encryption(block_cipher->clone(), bits);
+            return new Transformation_Filter(new CFB_Encryption(block_cipher->clone(), bits));
          else
-            return new CFB_Decryption(block_cipher->clone(), bits);
+            return new Transformation_Filter(new CFB_Decryption(block_cipher->clone(), bits));
          }
 #endif
 
