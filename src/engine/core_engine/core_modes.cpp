@@ -12,10 +12,6 @@
 #include <botan/mode_pad.h>
 #include <memory>
 
-#if defined(BOTAN_HAS_CTS)
-  #include <botan/cts.h>
-#endif
-
 #if defined(BOTAN_HAS_MODE_CFB)
   #include <botan/cfb.h>
 #endif
@@ -117,19 +113,15 @@ Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
 
    if(mode == "CBC")
       {
+#if defined(BOTAN_HAS_MODE_CBC)
       if(padding == "CTS")
          {
-#if defined(BOTAN_HAS_CTS)
          if(direction == ENCRYPTION)
-            return new CTS_Encryption(block_cipher->clone());
+            return new Transformation_Filter(new CTS_Encryption(block_cipher->clone()));
          else
-            return new CTS_Decryption(block_cipher->clone());
-#else
-         return nullptr;
-#endif
+            return new Transformation_Filter(new CTS_Decryption(block_cipher->clone()));
          }
 
-#if defined(BOTAN_HAS_MODE_CBC)
       if(direction == ENCRYPTION)
          return new Transformation_Filter(
             new CBC_Encryption(block_cipher->clone(), get_bc_pad(padding, "PKCS7")));

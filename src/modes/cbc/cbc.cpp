@@ -10,6 +10,9 @@
 #include <botan/internal/xor_buf.h>
 #include <botan/internal/rounding.h>
 
+#include <iostream>
+#include <botan/hex.h>
+
 namespace Botan {
 
 CBC_Mode::CBC_Mode(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
@@ -17,7 +20,7 @@ CBC_Mode::CBC_Mode(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
    m_padding(padding),
    m_state(m_cipher->block_size())
    {
-   if(!m_padding->valid_blocksize(cipher->block_size()))
+   if(m_padding && !m_padding->valid_blocksize(cipher->block_size()))
       throw std::invalid_argument("Padding " + m_padding->name() +
                                   " cannot be used with " +
                                   cipher->name() + "/CBC");
@@ -31,7 +34,10 @@ void CBC_Mode::clear()
 
 std::string CBC_Mode::name() const
    {
-   return cipher().name() + "/CBC/" + padding().name();
+   if(m_padding)
+      return cipher().name() + "/CBC/" + padding().name();
+   else
+      return cipher().name() + "/CBC/CTS";
    }
 
 size_t CBC_Mode::update_granularity() const
@@ -98,7 +104,7 @@ void CBC_Encryption::update(secure_vector<byte>& buffer, size_t offset)
 
    if(blocks)
       {
-      xor_buf(&buf[0], &state()[0], BS);
+      xor_buf(&buf[0], state_ptr(), BS);
       cipher().encrypt(&buf[0]);
 
       for(size_t i = 1; i != blocks; ++i)
@@ -115,7 +121,6 @@ void CBC_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
-   //byte* buf = &buffer[offset];
 
    const size_t BS = cipher().block_size();
 
@@ -142,9 +147,68 @@ void CBC_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
    update(buffer, offset);
    }
 
+bool CTS_Encryption::valid_nonce_length(size_t n) const
+   {
+   return (n == cipher().block_size());
+   }
+
+size_t CTS_Encryption::minimum_final_size() const
+   {
+   return cipher().block_size() + 1;
+   }
+
+size_t CTS_Encryption::output_length(size_t input_length) const
+   {
+   return input_length; // no ciphertext expansion in CTS
+   }
+
+void CTS_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
+   {
+   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   byte* buf = &buffer[offset];
+   const size_t sz = buffer.size() - offset;
+
+   const size_t BS = cipher().block_size();
+
+   if(sz < BS + 1)
+      throw Encoding_Error(name() + ": insufficient data to encrypt");
+
+   if(sz % BS == 0)
+      {
+      update(buffer, offset);
+
+      // swap last two blocks
+      for(size_t i = 0; i != BS; ++i)
+         std::swap(buffer[buffer.size()-BS+i], buffer[buffer.size()-2*BS+i]);
+      }
+   else
+      {
+      const size_t full_blocks = ((sz / BS) - 1) * BS;
+      const size_t final_bytes = sz - full_blocks;
+      BOTAN_ASSERT(final_bytes > BS && final_bytes < 2*BS, "Left over size in expected range");
+
+      secure_vector<byte> last(buf + full_blocks, buf + full_blocks + final_bytes);
+      buffer.resize(full_blocks + offset);
+      update(buffer, offset);
+
+      xor_buf(&last[0], state_ptr(), BS);
+      cipher().encrypt(&last[0]);
+
+      for(size_t i = 0; i != final_bytes - BS; ++i)
+         {
+         std::swap(last[i], last[i + BS]);
+         last[i] ^= last[i + BS];
+         }
+
+      cipher().encrypt(&last[0]);
+
+      buffer += last;
+      }
+   }
+
 size_t CBC_Decryption::output_length(size_t input_length) const
    {
-   return input_length;
+   return input_length; // precise for CTS, worst case otherwise
    }
 
 size_t CBC_Decryption::minimum_final_size() const
@@ -165,7 +229,7 @@ void CBC_Decryption::update(secure_vector<byte>& buffer, size_t offset)
 
    while(blocks)
       {
-      const size_t to_proc = std::min(sz, m_tempbuf.size());
+      const size_t to_proc = std::min(BS * blocks, m_tempbuf.size());
 
       cipher().decrypt_n(buf, &m_tempbuf[0], to_proc / BS);
 
@@ -194,6 +258,59 @@ void CBC_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
 
    const size_t pad_bytes = BS - padding().unpad(&buffer[buffer.size()-BS], BS);
    buffer.resize(buffer.size() - pad_bytes); // remove padding
+   }
+
+bool CTS_Decryption::valid_nonce_length(size_t n) const
+   {
+   return (n == cipher().block_size());
+   }
+
+size_t CTS_Decryption::minimum_final_size() const
+   {
+   return cipher().block_size() + 1;
+   }
+
+void CTS_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
+   {
+   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   const size_t sz = buffer.size() - offset;
+   byte* buf = &buffer[offset];
+
+   const size_t BS = cipher().block_size();
+
+   if(sz < BS + 1)
+      throw Encoding_Error(name() + ": insufficient data to decrypt");
+
+   if(sz % BS == 0)
+      {
+      // swap last two blocks
+      for(size_t i = 0; i != BS; ++i)
+         std::swap(buffer[buffer.size()-BS+i], buffer[buffer.size()-2*BS+i]);
+
+      update(buffer, offset);
+      }
+   else
+      {
+      const size_t full_blocks = ((sz / BS) - 1) * BS;
+      const size_t final_bytes = sz - full_blocks;
+      BOTAN_ASSERT(final_bytes > BS && final_bytes < 2*BS, "Left over size in expected range");
+
+      secure_vector<byte> last(buf + full_blocks, buf + full_blocks + final_bytes);
+      buffer.resize(full_blocks + offset);
+      update(buffer, offset);
+
+      cipher().decrypt(&last[0]);
+      xor_buf(&last[0], &last[BS], final_bytes - BS);
+
+      for(size_t i = 0; i != final_bytes - BS; ++i)
+         std::swap(last[i], last[i + BS]);
+
+      cipher().decrypt(&last[0]);
+      xor_buf(&last[0], state_ptr(), BS);
+
+      buffer += last;
+      }
+
    }
 
 }

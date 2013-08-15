@@ -39,7 +39,11 @@ class CBC_Mode : public Transformation
 
       const BlockCipher& cipher() const { return *m_cipher; }
 
-      const BlockCipherModePaddingMethod& padding() const { return *m_padding; }
+      const BlockCipherModePaddingMethod& padding() const
+         {
+         BOTAN_ASSERT_NONNULL(m_padding);
+         return *m_padding;
+         }
 
       secure_vector<byte>& state() { return m_state; }
 
@@ -72,6 +76,23 @@ class BOTAN_DLL CBC_Encryption : public CBC_Mode
    };
 
 /**
+* CBC Encryption with ciphertext stealing (CBC-CS3 variant)
+*/
+class BOTAN_DLL CTS_Encryption : public CBC_Encryption
+   {
+   public:
+      CTS_Encryption(BlockCipher* cipher) : CBC_Encryption(cipher, nullptr) {}
+
+      size_t output_length(size_t input_length) const override;
+
+      void finish(secure_vector<byte>& final_block, size_t offset) override;
+
+      size_t minimum_final_size() const override;
+
+      bool valid_nonce_length(size_t n) const;
+   };
+
+/**
 * CBC Decryption
 */
 class BOTAN_DLL CBC_Decryption : public CBC_Mode
@@ -89,6 +110,21 @@ class BOTAN_DLL CBC_Decryption : public CBC_Mode
       size_t minimum_final_size() const override;
    private:
       secure_vector<byte> m_tempbuf;
+   };
+
+/**
+* CBC Decryption with ciphertext stealing (CBC-CS3 variant)
+*/
+class BOTAN_DLL CTS_Decryption : public CBC_Decryption
+   {
+   public:
+      CTS_Decryption(BlockCipher* cipher) : CBC_Decryption(cipher, nullptr) {}
+
+      void finish(secure_vector<byte>& final_block, size_t offset) override;
+
+      size_t minimum_final_size() const override;
+
+      bool valid_nonce_length(size_t n) const;
    };
 
 }
