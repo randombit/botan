@@ -10,9 +10,6 @@
 #include <botan/internal/xor_buf.h>
 #include <botan/internal/rounding.h>
 
-#include <iostream>
-#include <botan/hex.h>
-
 namespace Botan {
 
 CBC_Mode::CBC_Mode(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
@@ -126,23 +123,10 @@ void CBC_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
 
    const size_t bytes_in_final_block = sz % BS;
 
-   const size_t pad_bytes = padding().pad_bytes(BS, bytes_in_final_block);
+   padding().add_padding(buffer, bytes_in_final_block, BS);
 
-   if((pad_bytes + bytes_in_final_block) % BS)
+   if(buffer.size() % BS)
       throw std::runtime_error("Did not pad to full block size in " + name());
-
-#if 0
-   const size_t pad_offset = buffer.size();
-   //buffer.resize(checked_add(buffer.size() + pad_bytes));
-   buffer.resize(buffer.size() + pad_bytes);
-
-   padder().pad(&buffer[pad_offset], BS, bytes_in_final_block);
-#else
-   std::vector<byte> pad(BS);
-   padding().pad(&pad[0], BS, bytes_in_final_block);
-
-   buffer.insert(buffer.end(), pad.begin(), pad.begin() + pad_bytes);
-#endif
 
    update(buffer, offset);
    }

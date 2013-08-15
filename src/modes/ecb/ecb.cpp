@@ -57,7 +57,7 @@ void ECB_Mode::key_schedule(const byte key[], size_t length)
    m_cipher->set_key(key, length);
    }
 
-secure_vector<byte> ECB_Mode::start(const byte nonce[], size_t nonce_len)
+secure_vector<byte> ECB_Mode::start(const byte[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
@@ -93,29 +93,15 @@ void ECB_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
-   //byte* buf = &buffer[offset];
 
    const size_t BS = cipher().block_size();
 
    const size_t bytes_in_final_block = sz % BS;
 
-   const size_t pad_bytes = padding().pad_bytes(BS, bytes_in_final_block);
+   padding().add_padding(buffer, bytes_in_final_block, BS);
 
-   if((pad_bytes + bytes_in_final_block) % BS)
+   if(buffer.size() % BS)
       throw std::runtime_error("Did not pad to full block size in " + name());
-
-#if 0
-   const size_t pad_offset = buffer.size();
-   //buffer.resize(checked_add(buffer.size() + pad_bytes));
-   buffer.resize(buffer.size() + pad_bytes);
-
-   padder().pad(&buffer[pad_offset], BS, bytes_in_final_block);
-#else
-   std::vector<byte> pad(BS);
-   padding().pad(&pad[0], BS, bytes_in_final_block);
-
-   buffer.insert(buffer.end(), pad.begin(), pad.begin() + pad_bytes);
-#endif
 
    update(buffer, offset);
    }
