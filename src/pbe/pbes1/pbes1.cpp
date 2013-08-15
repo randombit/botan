@@ -9,7 +9,7 @@
 #include <botan/pbkdf1.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/cbc.h>
+#include <botan/lookup.h>
 #include <algorithm>
 
 namespace Botan {
@@ -28,14 +28,8 @@ void PBE_PKCS5v15::write(const byte input[], size_t length)
 */
 void PBE_PKCS5v15::start_msg()
    {
-   if(m_direction == ENCRYPTION)
-      m_pipe.append(new CBC_Encryption(m_block_cipher->clone(),
-                                       new PKCS7_Padding,
-                                       m_key, m_iv));
-   else
-      m_pipe.append(new CBC_Decryption(m_block_cipher->clone(),
-                                       new PKCS7_Padding,
-                                       m_key, m_iv));
+   m_pipe.append(get_cipher(m_block_cipher->name() + "/CBC/PKCS7",
+                            m_key, m_iv, m_direction));
 
    m_pipe.start_msg();
    if(m_pipe.message_count() > 1)

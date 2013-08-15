@@ -7,7 +7,6 @@
 
 #include <botan/pbes2.h>
 #include <botan/pbkdf2.h>
-#include <botan/cbc.h>
 #include <botan/algo_factory.h>
 #include <botan/libstate.h>
 #include <botan/der_enc.h>
@@ -15,6 +14,7 @@
 #include <botan/parsing.h>
 #include <botan/alg_id.h>
 #include <botan/oids.h>
+#include <botan/lookup.h>
 #include <algorithm>
 #include <memory>
 
@@ -34,14 +34,8 @@ void PBE_PKCS5v20::write(const byte input[], size_t length)
 */
 void PBE_PKCS5v20::start_msg()
    {
-   if(direction == ENCRYPTION)
-      pipe.append(new CBC_Encryption(block_cipher->clone(),
-                                     new PKCS7_Padding,
-                                     key, iv));
-   else
-      pipe.append(new CBC_Decryption(block_cipher->clone(),
-                                     new PKCS7_Padding,
-                                     key, iv));
+   pipe.append(get_cipher(block_cipher->name() + "/CBC/PKCS7",
+                          key, iv, direction));
 
    pipe.start_msg();
    if(pipe.message_count() > 1)
