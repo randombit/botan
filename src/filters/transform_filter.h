@@ -50,16 +50,17 @@ class BOTAN_DLL Transformation_Filter : public Keyed_Filter,
       class Nonce_State
          {
          public:
+            Nonce_State(bool allow_null_nonce) : m_fresh_nonce(allow_null_nonce) {}
+
             void update(const InitializationVector& iv);
             std::vector<byte> get();
          private:
-            bool m_fresh_nonce = false;
+            bool m_fresh_nonce;
             std::vector<byte> m_nonce;
          };
 
       Nonce_State m_nonce;
       std::unique_ptr<Transformation> m_transform;
-
    };
 
 }

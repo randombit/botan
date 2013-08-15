@@ -1,1 +1,5 @@
 define MODE_CBC
+
+<requires>
+mode_pad
+</requires>

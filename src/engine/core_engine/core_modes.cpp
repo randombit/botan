@@ -12,16 +12,16 @@
 #include <botan/mode_pad.h>
 #include <memory>
 
-#if defined(BOTAN_HAS_ECB)
-  #include <botan/ecb.h>
-#endif
-
 #if defined(BOTAN_HAS_CTS)
   #include <botan/cts.h>
 #endif
 
 #if defined(BOTAN_HAS_CFB)
   #include <botan/cfb.h>
+#endif
+
+#if defined(BOTAN_HAS_MODE_ECB)
+  #include <botan/ecb.h>
 #endif
 
 #if defined(BOTAN_HAS_MODE_CBC)
@@ -103,15 +103,15 @@ Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
       return new StreamCipher_Filter(new CTR_BE(block_cipher->clone()));
 #endif
 
-#if defined(BOTAN_HAS_ECB)
+#if defined(BOTAN_HAS_MODE_ECB)
    if(mode == "ECB" || mode == "")
       {
       if(direction == ENCRYPTION)
-         return new ECB_Encryption(block_cipher->clone(),
-                                   get_bc_pad(padding, "NoPadding"));
+         return new Transformation_Filter(
+            new ECB_Encryption(block_cipher->clone(), get_bc_pad(padding, "NoPadding")));
       else
-         return new ECB_Decryption(block_cipher->clone(),
-                                   get_bc_pad(padding, "NoPadding"));
+         return new Transformation_Filter(
+            new ECB_Decryption(block_cipher->clone(), get_bc_pad(padding, "NoPadding")));
       }
 #endif
 

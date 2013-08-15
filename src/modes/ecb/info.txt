@@ -1,6 +1,5 @@
-define ECB
+define MODE_ECB
 
 <requires>
-block
 mode_pad
 </requires>

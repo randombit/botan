@@ -1,12 +1,12 @@
 /*
-* CBC mode
-* (C) 1999-2007,2013 Jack Lloyd
+* ECB Mode
+* (C) 1999-2009,2013 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
-#ifndef BOTAN_MODE_CBC_H__
-#define BOTAN_MODE_CBC_H__
+#ifndef BOTAN_MODE_ECB_H__
+#define BOTAN_MODE_ECB_H__
 
 #include <botan/transform.h>
 #include <botan/block_cipher.h>
@@ -16,9 +16,9 @@
 namespace Botan {
 
 /**
-* CBC Mode
+* ECB Mode. Only handles full blocks, padding is handled higher up
 */
-class CBC_Mode : public Transformation
+class ECB_Mode : public Transformation
    {
    public:
       secure_vector<byte> start(const byte nonce[], size_t nonce_len) override;
@@ -35,32 +35,27 @@ class CBC_Mode : public Transformation
 
       void clear();
    protected:
-      CBC_Mode(BlockCipher* cipher, BlockCipherModePaddingMethod* padding);
+      ECB_Mode(BlockCipher* cipher, BlockCipherModePaddingMethod* padding);
 
       const BlockCipher& cipher() const { return *m_cipher; }
 
       const BlockCipherModePaddingMethod& padding() const { return *m_padding; }
-
-      secure_vector<byte>& state() { return m_state; }
-
-      byte* state_ptr() { return &m_state[0]; }
 
    private:
       void key_schedule(const byte key[], size_t length) override;
 
       std::unique_ptr<BlockCipher> m_cipher;
       std::unique_ptr<BlockCipherModePaddingMethod> m_padding;
-      secure_vector<byte> m_state;
    };
 
 /**
-* CBC Encryption
+* ECB Encryption
 */
-class BOTAN_DLL CBC_Encryption : public CBC_Mode
+class BOTAN_DLL ECB_Encryption : public ECB_Mode
    {
    public:
-      CBC_Encryption(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
-         CBC_Mode(cipher, padding) {}
+      ECB_Encryption(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
+         ECB_Mode(cipher, padding) {}
 
       void update(secure_vector<byte>& blocks, size_t offset) override;
 
@@ -72,13 +67,13 @@ class BOTAN_DLL CBC_Encryption : public CBC_Mode
    };
 
 /**
-* CBC Decryption
+* ECB Decryption
 */
-class BOTAN_DLL CBC_Decryption : public CBC_Mode
+class BOTAN_DLL ECB_Decryption : public ECB_Mode
    {
    public:
-      CBC_Decryption(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
-         CBC_Mode(cipher, padding) {}
+      ECB_Decryption(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
+         ECB_Mode(cipher, padding) {}
 
       void update(secure_vector<byte>& blocks, size_t offset) override;
 

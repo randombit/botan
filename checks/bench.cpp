@@ -176,11 +176,14 @@ bool bench_algo(const std::string& algo,
       size_t cipher_keylen = proto_cipher->maximum_keylength();
       size_t cipher_ivlen = proto_cipher->block_size();
 
-      // hacks!
+      // hacks! (cipher_ivlen = transform->default_nonce_size())
+
       if(algo_parts[1] == "XTS")
          cipher_keylen *= 2;
       if(algo_parts[1] == "OCB")
          cipher_ivlen -= 1;
+      if(algo_parts[1] == "ECB")
+         cipher_ivlen = 0;
 
       std::vector<byte> buf(16 * 1024);
       rng.randomize(&buf[0], buf.size());
