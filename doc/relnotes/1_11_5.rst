@@ -1,6 +1,12 @@
 Version 1.11.5, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* The interface previously exposed by AEAD modes which allows in-place
+  processing of messages is now used by all cipher modes. An adaptor
+  filter allows them to be used in a pipe.
+
+* Optimized computation of XTS tweaks, producing a substantial speedup
+
 * TLS channels now support sending a ``std::vector``
 
 * Add a generic 64-bit multiply instruction for producing a 128 bit result
