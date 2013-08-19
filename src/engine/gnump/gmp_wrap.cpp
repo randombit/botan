@@ -88,7 +88,7 @@ BigInt GMP_MPZ::to_bigint() const
    BigInt out(BigInt::Positive, (bytes() + sizeof(word) - 1) / sizeof(word));
    size_t dummy = 0;
 
-   const word* reg = out.data();
+   word* reg = out.mutable_data();
 
    mpz_export(reg, &dummy, -1, sizeof(word), 0, 0, value);
 
