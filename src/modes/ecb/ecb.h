@@ -8,7 +8,7 @@
 #ifndef BOTAN_MODE_ECB_H__
 #define BOTAN_MODE_ECB_H__
 
-#include <botan/transform.h>
+#include <botan/cipher_mode.h>
 #include <botan/block_cipher.h>
 #include <botan/mode_pad.h>
 #include <memory>
@@ -16,9 +16,9 @@
 namespace Botan {
 
 /**
-* ECB Mode. Only handles full blocks, padding is handled higher up
+* ECB mode
 */
-class ECB_Mode : public Transformation
+class BOTAN_DLL ECB_Mode : public Cipher_Mode
    {
    public:
       secure_vector<byte> start(const byte nonce[], size_t nonce_len) override;

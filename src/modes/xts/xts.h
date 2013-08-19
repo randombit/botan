@@ -8,7 +8,7 @@
 #ifndef BOTAN_MODE_XTS_H__
 #define BOTAN_MODE_XTS_H__
 
-#include <botan/transform.h>
+#include <botan/cipher_mode.h>
 #include <botan/block_cipher.h>
 #include <memory>
 
@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * IEEE P1619 XTS Mode
 */
-class XTS_Mode : public Transformation
+class BOTAN_DLL XTS_Mode : public Cipher_Mode
    {
    public:
       std::string name() const override;

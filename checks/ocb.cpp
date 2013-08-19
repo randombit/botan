@@ -2,6 +2,7 @@
 #include "validate.h"
 
 #include <botan/ocb.h>
+#include <botan/cbc.h>
 #include <botan/hex.h>
 #include <botan/sha2_32.h>
 #include <botan/aes.h>
@@ -17,6 +18,8 @@ std::vector<byte> ocb_encrypt(const SymmetricKey& key,
                               const byte ad[], size_t ad_len)
    {
    //std::unique_ptr<AEAD_Mode> ocb = get_aead("AES-128/OCB", ENCRYPTION);
+
+   CBC_Encryption cbc(new AES_128, nullptr);
 
    OCB_Encryption ocb(new AES_128);
 

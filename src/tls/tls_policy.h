@@ -146,7 +146,7 @@ class BOTAN_DLL Policy
 /**
 * NSA Suite B 128-bit security level (see @rfc 6460)
 */
-class NSA_Suite_B_128 : public Policy
+class BOTAN_DLL NSA_Suite_B_128 : public Policy
    {
    public:
       std::vector<std::string> allowed_ciphers() const override

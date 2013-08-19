@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * Interface for general transformations on data
 */
-class Transformation : public SymmetricAlgorithm
+class BOTAN_DLL Transformation : public SymmetricAlgorithm
    {
    public:
       /**

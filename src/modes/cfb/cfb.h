@@ -8,7 +8,7 @@
 #ifndef BOTAN_MODE_CFB_H__
 #define BOTAN_MODE_CFB_H__
 
-#include <botan/transform.h>
+#include <botan/cipher_mode.h>
 #include <botan/block_cipher.h>
 #include <botan/mode_pad.h>
 #include <memory>
@@ -18,7 +18,7 @@ namespace Botan {
 /**
 * CFB Mode
 */
-class CFB_Mode : public Transformation
+class BOTAN_DLL CFB_Mode : public Cipher_Mode
    {
    public:
       secure_vector<byte> start(const byte nonce[], size_t nonce_len) override;

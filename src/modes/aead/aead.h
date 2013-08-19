@@ -8,7 +8,7 @@
 #ifndef BOTAN_AEAD_MODE_H__
 #define BOTAN_AEAD_MODE_H__
 
-#include <botan/transform.h>
+#include <botan/cipher_mode.h>
 
 namespace Botan {
 
@@ -19,9 +19,11 @@ namespace Botan {
 * which is not included in the ciphertext (for instance a sequence
 * number).
 */
-class AEAD_Mode : public Transformation
+class BOTAN_DLL AEAD_Mode : public Cipher_Mode
    {
    public:
+      bool authenticated() const override { return true; }
+
       /**
       * Set associated data that is not included in the ciphertext but
       * that should be authenticated. Must be called after set_key
@@ -44,7 +46,7 @@ class AEAD_Mode : public Transformation
 
       /**
       * Default AEAD nonce size (a commonly supported value among AEAD
-      * modes, and, large enough that random collisions are unlikely).
+      * modes, and large enough that random collisions are unlikely).
       */
       size_t default_nonce_size() const override { return 12; }
    };
