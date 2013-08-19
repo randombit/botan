@@ -9,6 +9,7 @@
 #define BOTAN_TRANSFORM_H__
 
 #include <botan/sym_algo.h>
+#include <string>
 
 namespace Botan {
 
@@ -77,6 +78,14 @@ class BOTAN_DLL Transformation : public SymmetricAlgorithm
       * Return true iff nonce_len is a valid length for the nonce
       */
       virtual bool valid_nonce_length(size_t nonce_len) const = 0;
+
+      /**
+      * Return some short name describing the provider of this tranformation.
+      * Useful in cases where multiple implementations are available (eg,
+      * different implementations of AES). Default "core" is used for the
+      * 'standard' implementation included in the library.
+      */
+      virtual std::string provider() const { return "core"; }
 
       virtual ~Transformation() {}
    };
