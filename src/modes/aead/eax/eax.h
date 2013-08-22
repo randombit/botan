@@ -35,6 +35,8 @@ class BOTAN_DLL EAX_Mode : public AEAD_Mode
       // EAX supports arbitrary nonce lengths
       bool valid_nonce_length(size_t) const override { return true; }
 
+      size_t tag_size() const { return m_tag_size; }
+
       void clear();
    protected:
       void key_schedule(const byte key[], size_t length) override;
@@ -44,8 +46,6 @@ class BOTAN_DLL EAX_Mode : public AEAD_Mode
       * @param tag_size is how big the auth tag will be
       */
       EAX_Mode(BlockCipher* cipher, size_t tag_size);
-
-      size_t tag_size() const { return m_tag_size; }
 
       size_t block_size() const { return m_cipher->block_size(); }
 
