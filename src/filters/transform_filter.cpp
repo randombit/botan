@@ -15,6 +15,7 @@ Transformation_Filter::Transformation_Filter(Transformation* transform) :
    Buffered_Filter(transform->update_granularity(),
                    transform->minimum_final_size()),
    m_nonce(transform->default_nonce_size() == 0),
+   m_buffer(transform->update_granularity()),
    m_transform(transform)
    {
    }
@@ -77,16 +78,14 @@ void Transformation_Filter::start_msg()
 
 void Transformation_Filter::buffered_block(const byte input[], size_t input_length)
    {
-   secure_vector<byte> buf;
-
    while(input_length)
       {
       const size_t take = std::min(m_transform->update_granularity(), input_length);
 
-      buf.assign(input, input + take);
-      m_transform->update(buf);
+      m_buffer.assign(input, input + take);
+      m_transform->update(m_buffer);
 
-      send(buf);
+      send(m_buffer);
 
       input += take;
       input_length -= take;
