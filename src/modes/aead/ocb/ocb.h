@@ -42,6 +42,8 @@ class BOTAN_DLL OCB_Mode : public AEAD_Mode
 
       bool valid_nonce_length(size_t) const override;
 
+      size_t tag_size() const { return m_tag_size; }
+
       void clear();
 
       ~OCB_Mode();
@@ -55,8 +57,6 @@ class BOTAN_DLL OCB_Mode : public AEAD_Mode
       OCB_Mode(BlockCipher* cipher, size_t tag_size);
 
       void key_schedule(const byte key[], size_t length) override;
-
-      size_t tag_size() const { return m_tag_size; }
 
       // fixme make these private
       std::unique_ptr<BlockCipher> m_cipher;

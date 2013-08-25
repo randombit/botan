@@ -34,13 +34,13 @@ class BOTAN_DLL GCM_Mode : public AEAD_Mode
       // GCM supports arbitrary nonce lengths
       bool valid_nonce_length(size_t) const override { return true; }
 
+      size_t tag_size() const { return m_tag_size; }
+
       void clear();
    protected:
       void key_schedule(const byte key[], size_t length) override;
 
       GCM_Mode(BlockCipher* cipher, size_t tag_size);
-
-      size_t tag_size() const { return m_tag_size; }
 
       static const size_t BS = 16;
 
