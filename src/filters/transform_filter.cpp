@@ -15,8 +15,8 @@ Transformation_Filter::Transformation_Filter(Transformation* transform) :
    Buffered_Filter(transform->update_granularity(),
                    transform->minimum_final_size()),
    m_nonce(transform->default_nonce_size() == 0),
-   m_buffer(transform->update_granularity()),
    m_transform(transform)
+   m_buffer(m_transform->update_granularity()),
    {
    }
 
