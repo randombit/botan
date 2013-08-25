@@ -16,7 +16,6 @@
 namespace Botan {
 
 class L_computer;
-class Nonce_State;
 
 /**
 * OCB Mode (base class for OCB_Encryption and OCB_Decryption). Note
@@ -48,8 +47,6 @@ class BOTAN_DLL OCB_Mode : public AEAD_Mode
 
       ~OCB_Mode();
    protected:
-      static const size_t BS = 16; // intrinsic to OCB definition
-
       /**
       * @param cipher the 128-bit block cipher to use
       * @param tag_size is how big the auth tag will be
@@ -62,14 +59,17 @@ class BOTAN_DLL OCB_Mode : public AEAD_Mode
       std::unique_ptr<BlockCipher> m_cipher;
       std::unique_ptr<L_computer> m_L;
 
-      size_t m_tag_size = 0;
       size_t m_block_index = 0;
 
-      secure_vector<byte> m_ad_hash;
-      secure_vector<byte> m_offset;
       secure_vector<byte> m_checksum;
+      secure_vector<byte> m_offset;
+      secure_vector<byte> m_ad_hash;
    private:
-      std::unique_ptr<Nonce_State> m_nonce_state;
+      secure_vector<byte> update_nonce(const byte nonce[], size_t nonce_len);
+
+      size_t m_tag_size = 0;
+      secure_vector<byte> m_last_nonce;
+      secure_vector<byte> m_stretch;
    };
 
 class BOTAN_DLL OCB_Encryption : public OCB_Mode

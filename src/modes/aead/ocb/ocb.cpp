@@ -13,6 +13,12 @@
 
 namespace Botan {
 
+namespace {
+
+const size_t BS = 16; // intrinsic to OCB definition
+
+}
+
 // Has to be in Botan namespace so unique_ptr can reference it
 class L_computer
    {
@@ -31,6 +37,22 @@ class L_computer
 
       const secure_vector<byte>& operator()(size_t i) const { return get(i); }
 
+      const secure_vector<byte>& compute_offsets(secure_vector<byte>& offset,
+                                                 size_t block_index,
+                                                 size_t blocks) const
+         {
+         m_offset_buf.resize(blocks*BS);
+
+         for(size_t i = 0; i != blocks; ++i)
+            { // could be done in parallel
+            offset ^= get(ctz(block_index + 1 + i));
+            copy_mem(&m_offset_buf[BS*i], &offset[0], BS);
+            }
+
+         return m_offset_buf;
+         }
+
+   private:
       const secure_vector<byte>& get(size_t i) const
          {
          while(m_L.size() <= i)
@@ -39,7 +61,6 @@ class L_computer
          return m_L.at(i);
          }
 
-   private:
       secure_vector<byte> poly_double(const secure_vector<byte>& in) const
          {
          return CMAC::poly_double(in, 0x87);
@@ -47,64 +68,8 @@ class L_computer
 
       secure_vector<byte> m_L_dollar, m_L_star;
       mutable std::vector<secure_vector<byte>> m_L;
+      mutable secure_vector<byte> m_offset_buf;
    };
-
-class Nonce_State
-   {
-   public:
-      Nonce_State(const BlockCipher& cipher) : m_cipher(cipher) {}
-
-      secure_vector<byte> update_nonce(const byte nonce[],
-                                       size_t nonce_len);
-   private:
-      const BlockCipher& m_cipher;
-      secure_vector<byte> m_last_nonce;
-      secure_vector<byte> m_stretch;
-   };
-
-secure_vector<byte>
-Nonce_State::update_nonce(const byte nonce[], size_t nonce_len)
-   {
-   const size_t BS = 16;
-
-   BOTAN_ASSERT(nonce_len < BS, "Nonce is less than 128 bits");
-
-   secure_vector<byte> nonce_buf(BS);
-
-   copy_mem(&nonce_buf[BS - nonce_len], nonce, nonce_len);
-   nonce_buf[BS - nonce_len - 1] = 1;
-
-   const byte bottom = nonce_buf[15] & 0x3F;
-   nonce_buf[15] &= 0xC0;
-
-   const bool need_new_stretch = (m_last_nonce != nonce_buf);
-
-   if(need_new_stretch)
-      {
-      m_last_nonce = nonce_buf;
-
-      m_cipher.encrypt(nonce_buf);
-
-      for(size_t i = 0; i != 8; ++i)
-         nonce_buf.push_back(nonce_buf[i] ^ nonce_buf[i+1]);
-
-      m_stretch = nonce_buf;
-      }
-
-   // now set the offset from stretch and bottom
-
-   const size_t shift_bytes = bottom / 8;
-   const size_t shift_bits  = bottom % 8;
-
-   secure_vector<byte> offset(BS);
-   for(size_t i = 0; i != BS; ++i)
-      {
-      offset[i]  = (m_stretch[i+shift_bytes] << shift_bits);
-      offset[i] |= (m_stretch[i+shift_bytes+1] >> (8-shift_bits));
-      }
-
-   return offset;
-   }
 
 namespace {
 
@@ -115,8 +80,6 @@ secure_vector<byte> ocb_hash(const L_computer& L,
                              const BlockCipher& cipher,
                              const byte ad[], size_t ad_len)
    {
-   const size_t BS = cipher.block_size();
-
    secure_vector<byte> sum(BS);
    secure_vector<byte> offset(BS);
 
@@ -158,8 +121,10 @@ secure_vector<byte> ocb_hash(const L_computer& L,
 
 OCB_Mode::OCB_Mode(BlockCipher* cipher, size_t tag_size) :
    m_cipher(cipher),
-   m_tag_size(tag_size),
-   m_ad_hash(BS), m_offset(BS), m_checksum(m_cipher->parallel_bytes())
+   m_checksum(m_cipher->parallel_bytes()),
+   m_offset(BS),
+   m_ad_hash(BS),
+   m_tag_size(tag_size)
    {
    if(m_cipher->block_size() != BS)
       throw std::invalid_argument("OCB requires a 128 bit cipher so cannot be used with " +
@@ -177,6 +142,7 @@ void OCB_Mode::clear()
    {
    m_cipher.reset();
    m_L.reset();
+
    zeroise(m_ad_hash);
    zeroise(m_offset);
    zeroise(m_checksum);
@@ -194,7 +160,7 @@ std::string OCB_Mode::name() const
 
 size_t OCB_Mode::update_granularity() const
    {
-   return 8 * m_cipher->parallel_bytes();
+   return m_cipher->parallel_bytes();
    }
 
 Key_Length_Specification OCB_Mode::key_spec() const
@@ -206,7 +172,6 @@ void OCB_Mode::key_schedule(const byte key[], size_t length)
    {
    m_cipher->set_key(key, length);
    m_L.reset(new L_computer(*m_cipher));
-   m_nonce_state.reset(new Nonce_State(*m_cipher));
    }
 
 void OCB_Mode::set_associated_data(const byte ad[], size_t ad_len)
@@ -215,14 +180,56 @@ void OCB_Mode::set_associated_data(const byte ad[], size_t ad_len)
    m_ad_hash = ocb_hash(*m_L, *m_cipher, &ad[0], ad_len);
    }
 
+secure_vector<byte>
+OCB_Mode::update_nonce(const byte nonce[], size_t nonce_len)
+   {
+   BOTAN_ASSERT(nonce_len < BS, "Nonce is less than 128 bits");
+
+   secure_vector<byte> nonce_buf(BS);
+
+   copy_mem(&nonce_buf[BS - nonce_len], nonce, nonce_len);
+   nonce_buf[BS - nonce_len - 1] = 1;
+
+   const byte bottom = nonce_buf[15] & 0x3F;
+   nonce_buf[15] &= 0xC0;
+
+   const bool need_new_stretch = (m_last_nonce != nonce_buf);
+
+   if(need_new_stretch)
+      {
+      m_last_nonce = nonce_buf;
+
+      m_cipher->encrypt(nonce_buf);
+
+      for(size_t i = 0; i != 8; ++i)
+         nonce_buf.push_back(nonce_buf[i] ^ nonce_buf[i+1]);
+
+      m_stretch = nonce_buf;
+      }
+
+   // now set the offset from stretch and bottom
+
+   const size_t shift_bytes = bottom / 8;
+   const size_t shift_bits  = bottom % 8;
+
+   secure_vector<byte> offset(BS);
+   for(size_t i = 0; i != BS; ++i)
+      {
+      offset[i]  = (m_stretch[i+shift_bytes] << shift_bits);
+      offset[i] |= (m_stretch[i+shift_bytes+1] >> (8-shift_bits));
+      }
+
+   return offset;
+   }
+
 secure_vector<byte> OCB_Mode::start(const byte nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
 
-   BOTAN_ASSERT(m_nonce_state, "A key was set");
+   BOTAN_ASSERT(m_L, "A key was set");
 
-   m_offset = m_nonce_state->update_nonce(nonce, nonce_len);
+   m_offset = update_nonce(nonce, nonce_len);
    zeroise(m_checksum);
    m_block_index = 0;
 
@@ -235,21 +242,12 @@ void OCB_Encryption::encrypt(byte buffer[], size_t blocks)
 
    const size_t par_blocks = m_checksum.size() / BS;
 
-   std::vector<byte> offsets(m_checksum.size());
-
-   size_t blocks_left = blocks;
-
-   while(blocks_left)
+   while(blocks)
       {
-      const size_t proc_blocks = std::min(blocks_left, par_blocks);
+      const size_t proc_blocks = std::min(blocks, par_blocks);
       const size_t proc_bytes = proc_blocks * BS;
 
-      for(size_t i = 0; i != proc_blocks; ++i)
-         { // could be done in parallel
-         //xor_buf(&m_offset[0], 
-         m_offset ^= L(ctz(++m_block_index));
-         copy_mem(&offsets[BS*i], &m_offset[0], BS);
-         }
+      const auto& offsets = L.compute_offsets(m_offset, m_block_index, proc_blocks);
 
       xor_buf(&m_checksum[0], &buffer[0], proc_bytes);
 
@@ -258,7 +256,8 @@ void OCB_Encryption::encrypt(byte buffer[], size_t blocks)
       xor_buf(&buffer[0], &offsets[0], proc_bytes);
 
       buffer += proc_bytes;
-      blocks_left -= proc_blocks;
+      blocks -= proc_blocks;
+      m_block_index += proc_blocks;
       }
    }
 
@@ -334,20 +333,12 @@ void OCB_Decryption::decrypt(byte buffer[], size_t blocks)
 
    const size_t par_blocks = par_bytes / BS;
 
-   secure_vector<byte> offsets(par_bytes);
-
-   size_t blocks_left = blocks;
-
-   while(blocks_left)
+   while(blocks)
       {
-      const size_t proc_blocks = std::min(blocks_left, par_blocks);
+      const size_t proc_blocks = std::min(blocks, par_blocks);
       const size_t proc_bytes = proc_blocks * BS;
 
-      for(size_t i = 0; i != proc_blocks; ++i)
-         { // could be done in parallel
-         m_offset ^= L(ctz(++m_block_index));
-         copy_mem(&offsets[BS*i], &m_offset[0], BS);
-         }
+      const auto& offsets = L.compute_offsets(m_offset, m_block_index, proc_blocks);
 
       xor_buf(&buffer[0], &offsets[0], proc_bytes);
       m_cipher->decrypt_n(&buffer[0], &buffer[0], proc_blocks);
@@ -356,7 +347,8 @@ void OCB_Decryption::decrypt(byte buffer[], size_t blocks)
       xor_buf(&m_checksum[0], &buffer[0], proc_bytes);
 
       buffer += proc_bytes;
-      blocks_left -= proc_blocks;
+      blocks -= proc_blocks;
+      m_block_index += proc_blocks;
       }
    }
 
