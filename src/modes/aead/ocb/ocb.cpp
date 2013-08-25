@@ -159,7 +159,7 @@ secure_vector<byte> ocb_hash(const L_computer& L,
 OCB_Mode::OCB_Mode(BlockCipher* cipher, size_t tag_size) :
    m_cipher(cipher),
    m_tag_size(tag_size),
-   m_ad_hash(BS), m_offset(BS), m_checksum(BS)
+   m_ad_hash(BS), m_offset(BS), m_checksum(m_cipher->parallel_bytes())
    {
    if(m_cipher->block_size() != BS)
       throw std::invalid_argument("OCB requires a 128 bit cipher so cannot be used with " +
@@ -233,14 +233,9 @@ void OCB_Encryption::encrypt(byte buffer[], size_t blocks)
    {
    const L_computer& L = *m_L; // convenient name
 
-   const size_t par_bytes = m_cipher->parallel_bytes();
+   const size_t par_blocks = m_checksum.size() / BS;
 
-   BOTAN_ASSERT(par_bytes % BS == 0, "Cipher is parallel in full blocks");
-
-   const size_t par_blocks = par_bytes / BS;
-
-   secure_vector<byte> csum_accum(par_bytes);
-   secure_vector<byte> offsets(par_bytes);
+   std::vector<byte> offsets(m_checksum.size());
 
    size_t blocks_left = blocks;
 
@@ -251,25 +246,20 @@ void OCB_Encryption::encrypt(byte buffer[], size_t blocks)
 
       for(size_t i = 0; i != proc_blocks; ++i)
          { // could be done in parallel
+         //xor_buf(&m_offset[0], 
          m_offset ^= L(ctz(++m_block_index));
          copy_mem(&offsets[BS*i], &m_offset[0], BS);
          }
 
-      xor_buf(&csum_accum[0], &buffer[0], proc_bytes);
+      xor_buf(&m_checksum[0], &buffer[0], proc_bytes);
 
       xor_buf(&buffer[0], &offsets[0], proc_bytes);
-
       m_cipher->encrypt_n(&buffer[0], &buffer[0], proc_blocks);
-
       xor_buf(&buffer[0], &offsets[0], proc_bytes);
 
       buffer += proc_bytes;
       blocks_left -= proc_blocks;
       }
-
-   // fold into checksum
-   for(size_t i = 0; i != csum_accum.size(); ++i)
-      m_checksum[i % BS] ^= csum_accum[i];
    }
 
 void OCB_Encryption::update(secure_vector<byte>& buffer, size_t offset)
@@ -312,9 +302,15 @@ void OCB_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
          }
       }
 
+   secure_vector<byte> checksum(BS);
+
+   // fold checksum
+   for(size_t i = 0; i != m_checksum.size(); ++i)
+      checksum[i % checksum.size()] ^= m_checksum[i];
+
    // now compute the tag
    secure_vector<byte> mac = m_offset;
-   mac ^= m_checksum;
+   mac ^= checksum;
    mac ^= m_L->dollar();
 
    m_cipher->encrypt(mac);
@@ -338,7 +334,6 @@ void OCB_Decryption::decrypt(byte buffer[], size_t blocks)
 
    const size_t par_blocks = par_bytes / BS;
 
-   secure_vector<byte> csum_accum(par_bytes);
    secure_vector<byte> offsets(par_bytes);
 
    size_t blocks_left = blocks;
@@ -355,20 +350,14 @@ void OCB_Decryption::decrypt(byte buffer[], size_t blocks)
          }
 
       xor_buf(&buffer[0], &offsets[0], proc_bytes);
-
       m_cipher->decrypt_n(&buffer[0], &buffer[0], proc_blocks);
-
       xor_buf(&buffer[0], &offsets[0], proc_bytes);
 
-      xor_buf(&csum_accum[0], &buffer[0], proc_bytes);
+      xor_buf(&m_checksum[0], &buffer[0], proc_bytes);
 
       buffer += proc_bytes;
       blocks_left -= proc_blocks;
       }
-
-   // fold into checksum
-   for(size_t i = 0; i != csum_accum.size(); ++i)
-      m_checksum[i % BS] ^= csum_accum[i];
    }
 
 void OCB_Decryption::update(secure_vector<byte>& buffer, size_t offset)
@@ -417,9 +406,15 @@ void OCB_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
          }
       }
 
+   secure_vector<byte> checksum(BS);
+
+   // fold checksum
+   for(size_t i = 0; i != m_checksum.size(); ++i)
+      checksum[i % checksum.size()] ^= m_checksum[i];
+
    // compute the mac
    secure_vector<byte> mac = m_offset;
-   mac ^= m_checksum;
+   mac ^= checksum;
    mac ^= m_L->dollar();
 
    m_cipher->encrypt(mac);
