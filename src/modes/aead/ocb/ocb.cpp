@@ -130,7 +130,7 @@ OCB_Mode::OCB_Mode(BlockCipher* cipher, size_t tag_size) :
       throw std::invalid_argument("OCB requires a 128 bit cipher so cannot be used with " +
                                   m_cipher->name());
 
-   if(m_tag_size != 16) // fixme: 64, 96 bits also supported
+   if(m_tag_size != 8 && m_tag_size != 12 && m_tag_size != 16)
       throw std::invalid_argument("OCB cannot produce a " + std::to_string(m_tag_size) +
                                   " byte tag");
 
@@ -188,6 +188,7 @@ OCB_Mode::update_nonce(const byte nonce[], size_t nonce_len)
    secure_vector<byte> nonce_buf(BS);
 
    copy_mem(&nonce_buf[BS - nonce_len], nonce, nonce_len);
+   nonce_buf[0] = ((tag_size() * 8) % 128) << 1;
    nonce_buf[BS - nonce_len - 1] = 1;
 
    const byte bottom = nonce_buf[15] & 0x3F;

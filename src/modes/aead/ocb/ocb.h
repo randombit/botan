@@ -22,7 +22,7 @@ class L_computer;
 * that OCB is patented, but is freely licensed in some circumstances.
 *
 * @see "The OCB Authenticated-Encryption Algorithm" internet draft
-        http://tools.ietf.org/html/draft-irtf-cfrg-ocb-01
+        http://tools.ietf.org/html/draft-irtf-cfrg-ocb-03
 * @see Free Licenses http://www.cs.ucdavis.edu/~rogaway/ocb/license.htm
 * @see OCB home page http://www.cs.ucdavis.edu/~rogaway/ocb
 */
