@@ -119,8 +119,6 @@ void test_ocb_long(size_t taglen, const std::string &expected)
 
    if(cipher_hex != expected)
       std::cout << "OCB AES-128 long test mistmatch " << cipher_hex << " != " << expected << "\n";
-   else
-      std::cout << "OCB AES-128 long test OK\n";
    }
 
 void test_ocb()
@@ -140,15 +138,12 @@ void test_ocb()
 
    if(ctext_hex != expected)
       std::cout << "OCB/AES-128 encrypt test failure\n" << ctext_hex << " !=\n" << expected << "\n";
-   else
-      std::cout << "OCB/AES-128 encrypt OK\n";
 
    try
       {
       std::vector<byte> dec = ocb_decrypt(key, nonce, ctext, ad);
 
-      if(dec == pt) { std::cout << "OCB decrypts OK\n"; }
-      else { std::cout << "OCB fails to decrypt\n"; }
+      if(dec != pt) std::cout << "OCB fails to decrypt\n";
       }
    catch(std::exception& e)
       {
