@@ -34,8 +34,7 @@ PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
       }
 
    if(!op)
-      throw Lookup_Error("PK_Encryptor_EME: No working engine for " +
-                         key.algo_name());
+      throw Lookup_Error("Encryption with " + key.algo_name() + " not supported");
 
    eme = (eme_name == "Raw") ? nullptr : get_eme(eme_name);
    }
@@ -94,8 +93,7 @@ PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
       }
 
    if(!op)
-      throw Lookup_Error("PK_Decryptor_EME: No working engine for " +
-                         key.algo_name());
+      throw Lookup_Error("Decryption with " + key.algo_name() + " not supported");
 
    eme = (eme_name == "Raw") ? nullptr : get_eme(eme_name);
    }
@@ -145,8 +143,7 @@ PK_Signer::PK_Signer(const Private_Key& key,
       }
 
    if(!op || (!verify_op && prot == ENABLE_FAULT_PROTECTION))
-      throw Lookup_Error("PK_Signer: No working engine for " +
-                         key.algo_name());
+      throw Lookup_Error("Signing with " + key.algo_name() + " not supported");
 
    emsa = get_emsa(emsa_name);
    sig_format = format;
@@ -256,8 +253,7 @@ PK_Verifier::PK_Verifier(const Public_Key& key,
       }
 
    if(!op)
-      throw Lookup_Error("PK_Verifier: No working engine for " +
-                         key.algo_name());
+      throw Lookup_Error("Verification with " + key.algo_name() + " not supported");
 
    emsa = get_emsa(emsa_name);
    sig_format = format;
@@ -340,7 +336,7 @@ bool PK_Verifier::validate_signature(const secure_vector<byte>& msg,
       }
    else
       {
-      Null_RNG rng;
+      RandomNumberGenerator& rng = global_state().global_rng();
 
       secure_vector<byte> encoded =
          emsa->encoding_of(msg, op->max_input_bits(), rng);
@@ -365,8 +361,7 @@ PK_Key_Agreement::PK_Key_Agreement(const PK_Key_Agreement_Key& key,
       }
 
    if(!op)
-      throw Lookup_Error("PK_Key_Agreement: No working engine for " +
-                         key.algo_name());
+      throw Lookup_Error("Key agreement with " + key.algo_name() + " not supported");
 
    kdf = (kdf_name == "Raw") ? nullptr : get_kdf(kdf_name);
    }
