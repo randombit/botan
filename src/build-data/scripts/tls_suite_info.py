@@ -41,6 +41,10 @@ def to_ciphersuite_info(code, name):
     mac_algo = cipher_and_mac[-1]
     cipher = cipher_and_mac[:-1]
 
+    if mac_algo in ['CCM']:
+        cipher += [mac_algo]
+        mac_algo = 'SHA256'
+
     cipher_info = {
         'RC4': ('RC4',None),
         'IDEA': ('IDEA',16),
@@ -59,8 +63,10 @@ def to_ciphersuite_info(code, name):
         'SHA256': 'SHA-256',
         'SHA384': 'SHA-384',
         'SHA512': 'SHA-512',
+
         'RC4': 'RC4',
         '3DES': 'TripleDES',
+
         'DSS': 'DSA',
         'ECDSA': 'ECDSA',
         'RSA': 'RSA',
@@ -123,7 +129,7 @@ def main(args = None):
     weird_crypto = ['ARIA', 'IDEA']
     static_dh = ['ECDH_ECDSA', 'ECDH_RSA', 'DH_DSS', 'DH_RSA']
     protocol_goop = ['SCSV', 'KRB5']
-    just_not_yet = ['RSA_PSK', 'CCM']
+    just_not_yet = ['RSA_PSK', 'CCM_8']
 
     not_supported = weak_crypto + weird_crypto + static_dh + protocol_goop + just_not_yet
 
@@ -148,10 +154,23 @@ def main(args = None):
             if should_use:
                 suites[name] = (code, to_ciphersuite_info(code, name))
 
-    # From http://tools.ietf.org/html/draft-ietf-tls-56-bit-ciphersuites-01
-    suites['DHE_DSS_WITH_RC4_128_SHA'] = ('0066', to_ciphersuite_info('0066', 'DHE_DSS_WITH_RC4_128_SHA'))
+    def define_custom_ciphersuite(name, code):
+        suites[name] = (code, to_ciphersuite_info(code, name))
 
-    #suites['ECDHE_RSA_WITH_AES_128_OCB_SHA256'] = ('FF66', to_ciphersuite_info('FF66', 'ECDHE_RSA_WITH_AES_128_OCB_SHA256'))
+    # From http://tools.ietf.org/html/draft-ietf-tls-56-bit-ciphersuites-01
+    define_custom_ciphersuite('DHE_DSS_WITH_RC4_128_SHA', '0066')
+
+    # Experimental OCB ciphersuites
+    #define_custom_ciphersuite('RSA_WITH_AES_128_OCB_SHA256', 'FF80')
+    #define_custom_ciphersuite('RSA_WITH_AES_256_OCB_SHA384', 'FF81')
+    #define_custom_ciphersuite('ECDHE_RSA_WITH_AES_128_OCB_SHA256', 'FF82')
+    #define_custom_ciphersuite('ECDHE_RSA_WITH_AES_256_OCB_SHA384', 'FF83')
+
+    # Experimental EAX ciphersuites
+    #define_custom_ciphersuite('RSA_WITH_AES_128_EAX_SHA256', 'FF90')
+    #define_custom_ciphersuite('RSA_WITH_AES_256_EAX_SHA384', 'FF91')
+    #define_custom_ciphersuite('ECDHE_RSA_WITH_AES_128_EAX_SHA256', 'FF92')
+    #define_custom_ciphersuite('ECDHE_RSA_WITH_AES_256_EAX_SHA384', 'FF93')
 
     print """/*
 * TLS cipher suite information
