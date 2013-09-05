@@ -8,6 +8,10 @@
 #include <botan/aead.h>
 #include <botan/libstate.h>
 
+#if defined(BOTAN_HAS_AEAD_CCM)
+  #include <botan/ccm.h>
+#endif
+
 #if defined(BOTAN_HAS_AEAD_EAX)
   #include <botan/eax.h>
 #endif
@@ -34,13 +38,28 @@ AEAD_Mode* get_aead(const std::string& algo_spec, Cipher_Dir direction)
       return nullptr;
 
    const std::string cipher_name = algo_parts[0];
-   const std::string mode_name = algo_parts[1];
+   const std::vector<std::string> mode_info = parse_algorithm_name(algo_parts[1]);
 
-   const size_t tag_size = 16; // default for all current AEAD
+   if(mode_info.empty())
+      return nullptr;
+
+   const std::string mode_name = mode_info[0];
+   const size_t tag_size = (mode_info.size() > 1) ? to_u32bit(mode_info[1]) : 16;
 
    const BlockCipher* cipher = af.prototype_block_cipher(cipher_name);
    if(!cipher)
       return nullptr;
+
+#if defined(BOTAN_HAS_AEAD_CCM)
+   if(mode_name == "CCM")
+      {
+      const size_t L = (mode_info.size() > 2) ? to_u32bit(mode_info[2]) : 3;
+      if(direction == ENCRYPTION)
+         return new CCM_Encryption(cipher->clone(), tag_size, L);
+      else
+         return new CCM_Decryption(cipher->clone(), tag_size, L);
+      }
+#endif
 
 #if defined(BOTAN_HAS_AEAD_EAX)
    if(mode_name == "EAX")

@@ -5,6 +5,8 @@ Version 1.11.5, Not Yet Released
   processing of messages is now used by all cipher modes. An adaptor
   filter allows them to be used in a pipe.
 
+* An implementation of CCM mode has been added
+
 * The implementation of OCB mode now supports 64 and 96 bit tags
 
 * Optimized computation of XTS tweaks, producing a substantial speedup

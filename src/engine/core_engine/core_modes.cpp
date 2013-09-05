@@ -40,6 +40,10 @@
 
 #include <botan/aead_filt.h>
 
+#if defined(BOTAN_HAS_AEAD_CCM)
+  #include <botan/ccm.h>
+#endif
+
 #if defined(BOTAN_HAS_AEAD_EAX)
   #include <botan/eax.h>
 #endif
@@ -146,18 +150,25 @@ Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
    if(mode.find("CFB") != std::string::npos ||
       mode.find("EAX") != std::string::npos ||
       mode.find("GCM") != std::string::npos ||
-      mode.find("OCB") != std::string::npos)
+      mode.find("OCB") != std::string::npos ||
+      mode.find("CCM") != std::string::npos)
       {
       std::vector<std::string> algo_info = parse_algorithm_name(mode);
       const std::string mode_name = algo_info[0];
 
-      size_t bits = 0;
-      if(algo_info.size() == 1)
-         bits = 8 * block_cipher->block_size();
-      else if(algo_info.size() == 2)
+      size_t bits = 8 * block_cipher->block_size();
+      if(algo_info.size() > 1)
          bits = to_u32bit(algo_info[1]);
-      else
-         return nullptr;
+
+#if defined(BOTAN_HAS_MODE_CFB)
+      if(mode_name == "CFB")
+         {
+         if(direction == ENCRYPTION)
+            return new Transformation_Filter(new CFB_Encryption(block_cipher->clone(), bits));
+         else
+            return new Transformation_Filter(new CFB_Decryption(block_cipher->clone(), bits));
+         }
+#endif
 
 #if defined(BOTAN_HAS_AEAD_FILTER)
 
@@ -165,6 +176,17 @@ Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
          throw std::invalid_argument("AEAD interface does not support non-octet length tags");
 
       const size_t tag_size = bits / 8;
+
+#if defined(BOTAN_HAS_AEAD_CCM)
+      if(mode_name == "CCM")
+         {
+         const size_t L = (algo_info.size() == 3) ? to_u32bit(algo_info[2]) : 3;
+         if(direction == ENCRYPTION)
+            return new AEAD_Filter(new CCM_Encryption(block_cipher->clone(), tag_size, L));
+         else
+            return new AEAD_Filter(new CCM_Decryption(block_cipher->clone(), tag_size, L));
+         }
+#endif
 
 #if defined(BOTAN_HAS_AEAD_EAX)
       if(mode_name == "EAX")
@@ -197,17 +219,6 @@ Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
 #endif
 
 #endif
-
-#if defined(BOTAN_HAS_MODE_CFB)
-      if(mode_name == "CFB")
-         {
-         if(direction == ENCRYPTION)
-            return new Transformation_Filter(new CFB_Encryption(block_cipher->clone(), bits));
-         else
-            return new Transformation_Filter(new CFB_Decryption(block_cipher->clone(), bits));
-         }
-#endif
-
       }
 
    return nullptr;

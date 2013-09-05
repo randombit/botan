@@ -45,7 +45,7 @@ Hash functions
 Block ciphers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-  * Authenticated cipher modes EAX, OCB, and GCM
+  * Authenticated cipher modes EAX, OCB, GCM, and CCM
   * Unauthenticated cipher modes CTR, CBC, XTS, CFB, OFB, and ECB
   * AES (Rijndael) and AES candidates Serpent, Twofish, MARS, CAST-256, RC6
   * DES, and variants 3DES and DESX
