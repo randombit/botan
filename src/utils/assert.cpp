@@ -30,7 +30,7 @@ void assertion_failure(const char* expr_str,
 
    format << "@" << file << ":" << line;
 
-   throw Internal_Error(format.str());
+   throw std::runtime_error(format.str());
    }
 
 }
