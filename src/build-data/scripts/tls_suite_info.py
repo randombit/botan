@@ -39,10 +39,18 @@ def to_ciphersuite_info(code, name):
     cipher_and_mac = cipher_and_mac.split('_')
 
     mac_algo = cipher_and_mac[-1]
+
     cipher = cipher_and_mac[:-1]
 
-    if mac_algo in ['CCM']:
-        cipher += [mac_algo]
+    if mac_algo == '8' and cipher[-1] == 'CCM':
+        cipher = cipher[:-1]
+        mac_algo = 'CCM_8'
+
+    if mac_algo == 'CCM':
+        cipher += ['CCM(16,3)']
+        mac_algo = 'SHA256'
+    elif mac_algo == 'CCM_8':
+        cipher += ['CCM(8,3)']
         mac_algo = 'SHA256'
 
     cipher_info = {
@@ -78,6 +86,7 @@ def to_ciphersuite_info(code, name):
         '': '',
         'PSK': 'PSK',
         'DHE_PSK': 'DHE_PSK',
+        'PSK_DHE': 'DHE_PSK',
         'ECDHE_PSK': 'ECDHE_PSK',
         }
 
@@ -106,7 +115,7 @@ def to_ciphersuite_info(code, name):
     ivlen = 0
     if cipher_algo != 'RC4':
         mode = cipher[-1]
-        if mode not in ['CBC', 'GCM', 'CCM', 'OCB']:
+        if mode not in ['CBC', 'GCM', 'CCM(8,3)', 'CCM(16,3)', 'OCB']:
             print "#warning Unknown mode %s" % (' '.join(cipher))
 
         ivlen = 8 if cipher_algo == '3DES' else 16
@@ -126,12 +135,11 @@ def main(args = None):
         args = sys.argv
 
     weak_crypto = ['EXPORT', 'RC2', '_DES_', 'WITH_NULL']
-    weird_crypto = ['ARIA', 'IDEA']
     static_dh = ['ECDH_ECDSA', 'ECDH_RSA', 'DH_DSS', 'DH_RSA']
     protocol_goop = ['SCSV', 'KRB5']
-    just_not_yet = ['RSA_PSK', 'CCM_8']
+    maybe_someday = ['IDEA', 'ARIA', 'RSA_PSK']
 
-    not_supported = weak_crypto + weird_crypto + static_dh + protocol_goop + just_not_yet
+    not_supported = weak_crypto + static_dh + protocol_goop + maybe_someday
 
     input = open('tls-parameters.txt')
 
