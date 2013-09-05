@@ -11,7 +11,7 @@
 #include <botan/parsing.h>
 #include <botan/internal/stl_util.h>
 #include <botan/oids.h>
-#include <iostream>
+#include <ostream>
 
 namespace Botan {
 

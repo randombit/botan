@@ -6,8 +6,6 @@
 */
 
 #include <botan/transform_filter.h>
-#include <iostream>
-#include <botan/hex.h>
 
 namespace Botan {
 
