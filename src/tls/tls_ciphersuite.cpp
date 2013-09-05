@@ -108,7 +108,7 @@ bool Ciphersuite::valid() const
       const auto mode = cipher_and_mode[1];
 
 #if !defined(BOTAN_HAS_AEAD_CCM)
-      if(mode == "CCM")
+      if(mode == "CCM(16,3)" || mode == "CCM(8,3)")
          return false;
 #endif
 
@@ -211,6 +211,16 @@ std::string Ciphersuite::to_string() const
          out << "3DES_EDE";
       else if(cipher_algo().find("Camellia") == 0)
          out << "CAMELLIA_" << std::to_string(8*cipher_keylen());
+      else if(cipher_algo().find("/CCM(") != std::string::npos)
+         {
+         const std::string base_algo = cipher_algo().substr(0, cipher_algo().find("/CCM("));
+         out << replace_chars(base_algo, {'-', '/'}, '_');
+
+         if(cipher_algo().find("/CCM(8,3)") != std::string::npos)
+            out << "_CCM_8";
+         else
+            out << "_CCM";
+         }
       else
          out << replace_chars(cipher_algo(), {'-', '/'}, '_');
 
