@@ -318,7 +318,7 @@ size_t Channel::received_data(const byte input[], size_t input_size)
                   sequence_numbers().read_accept(record.sequence());
                }
 
-            m_pending_state->handshake_io().add_record(record);
+            m_pending_state->handshake_io().add_record(record.contents(), record.type(), record.sequence());
 
             while(auto pending = m_pending_state.get())
                {

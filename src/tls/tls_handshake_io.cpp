@@ -39,15 +39,16 @@ Protocol_Version Stream_Handshake_IO::initial_record_version() const
    return Protocol_Version::TLS_V10;
    }
 
-void Stream_Handshake_IO::add_record(const Record& record)
+void Stream_Handshake_IO::add_record(const std::vector<byte>& record,
+                                     Record_Type record_type, u64bit)
    {
-   if(record.type() == HANDSHAKE)
+   if(record_type == HANDSHAKE)
       {
-      m_queue.insert(m_queue.end(), record.bits(), record.bits() + record.size());
+      m_queue.insert(m_queue.end(), record.begin(), record.end());
       }
-   else if(record.type() == CHANGE_CIPHER_SPEC)
+   else if(record_type == CHANGE_CIPHER_SPEC)
       {
-      if(record.size() != 1 || record.bits()[0] != 1)
+      if(record.size() != 1 || record[0] != 1)
          throw Decoding_Error("Invalid ChangeCipherSpec");
 
       // Pretend it's a regular handshake message of zero length
@@ -118,11 +119,13 @@ Protocol_Version Datagram_Handshake_IO::initial_record_version() const
    return Protocol_Version::DTLS_V10;
    }
 
-void Datagram_Handshake_IO::add_record(const Record& record)
+void Datagram_Handshake_IO::add_record(const std::vector<byte>& record,
+                                       Record_Type record_type,
+                                       u64bit record_sequence)
    {
-   const u16bit epoch = static_cast<u16bit>(record.sequence() >> 48);
+   const u16bit epoch = static_cast<u16bit>(record_sequence >> 48);
 
-   if(record.type() == CHANGE_CIPHER_SPEC)
+   if(record_type == CHANGE_CIPHER_SPEC)
       {
       m_ccs_epochs.insert(epoch);
       return;
@@ -130,7 +133,7 @@ void Datagram_Handshake_IO::add_record(const Record& record)
 
    const size_t DTLS_HANDSHAKE_HEADER_LEN = 12;
 
-   const byte* record_bits = record.bits();
+   const byte* record_bits = &record[0];
    size_t record_size = record.size();
 
    while(record_size)
