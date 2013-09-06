@@ -20,15 +20,19 @@ std::vector<std::string> Policy::allowed_ciphers() const
    return std::vector<std::string>({
       "AES-256/GCM",
       "AES-128/GCM",
-      "AES-256",
-      "AES-128",
-      "RC4",
+      "AES-256/CCM(16,3)",
+      "AES-128/CCM(16,3)",
+      "AES-256/CCM(8,3)",
+      "AES-128/CCM(8,3)",
       //"Camellia-256/GCM",
       //"Camellia-128/GCM",
+      "AES-256",
+      "AES-128",
       //"Camellia-256",
       //"Camellia-128",
       //"SEED"
       //"3DES",
+      "RC4",
       });
    }
 
@@ -39,7 +43,7 @@ std::vector<std::string> Policy::allowed_signature_hashes() const
       "SHA-384",
       "SHA-256",
       "SHA-224",
-      "SHA-1",
+      //"SHA-1",
       //"MD5",
       });
    }

@@ -486,7 +486,9 @@ be negotiated during a handshake.
      Returns the list of ciphers we are willing to negotiate, in order
      of preference.
 
-     Default: "AES-256/GCM", "AES-128/GCM", "AES-256", "AES-128", "RC4"
+     Default: "AES-256/GCM", "AES-128/GCM", "AES-256/CCM(16,3)",
+      "AES-128/CCM(16,3)", "AES-256/CCM(8,3)", "AES-128/CCM(8,3)",
+      "AES-256", "AES-128", "RC4"
 
      Also allowed: "Camellia-256/GCM", "Camellia-128/GCM",
      "Camellia-256", "Camellia-128", "SEED", "3DES"
@@ -518,9 +520,9 @@ be negotiated during a handshake.
      Returns the list of algorithms we are willing to use for
      public key signatures, in order of preference.
 
-     Default: "SHA-512", "SHA-384", "SHA-256", "SHA-224", "SHA-1"
+     Default: "SHA-512", "SHA-384", "SHA-256", "SHA-224"
 
-     Also allowed (although **not recommended**): "MD5"
+     Also allowed (although **not recommended**): "MD5", "SHA-1"
 
      .. note::
 

@@ -2,7 +2,7 @@
 * TLS cipher suite information
 *
 * This file was automatically generated from the IANA assignments
-* by ./src/build-data/scripts/tls_suite_info.py on 2013-04-19
+* by ./src/build-data/scripts/tls_suite_info.py on 2013-09-05
 *
 * Released under the terms of the Botan license
 */
@@ -71,6 +71,9 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
       case 0x00B2: // DHE_PSK_WITH_AES_128_CBC_SHA256
          return Ciphersuite(0x00B2, "", "DHE_PSK", "AES-128", 16, 16, "SHA-256", 32);
 
+      case 0xC0A6: // DHE_PSK_WITH_AES_128_CCM
+         return Ciphersuite(0xC0A6, "", "DHE_PSK", "AES-128/CCM(16,3)", 16, 4, "AEAD", 0, "SHA-256");
+
       case 0x00AA: // DHE_PSK_WITH_AES_128_GCM_SHA256
          return Ciphersuite(0x00AA, "", "DHE_PSK", "AES-128/GCM", 16, 4, "AEAD", 0, "SHA-256");
 
@@ -79,6 +82,9 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
 
       case 0x00B3: // DHE_PSK_WITH_AES_256_CBC_SHA384
          return Ciphersuite(0x00B3, "", "DHE_PSK", "AES-256", 32, 16, "SHA-384", 48);
+
+      case 0xC0A7: // DHE_PSK_WITH_AES_256_CCM
+         return Ciphersuite(0xC0A7, "", "DHE_PSK", "AES-256/CCM(16,3)", 32, 4, "AEAD", 0, "SHA-256");
 
       case 0x00AB: // DHE_PSK_WITH_AES_256_GCM_SHA384
          return Ciphersuite(0x00AB, "", "DHE_PSK", "AES-256/GCM", 32, 4, "AEAD", 0, "SHA-384");
@@ -107,6 +113,12 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
       case 0x0067: // DHE_RSA_WITH_AES_128_CBC_SHA256
          return Ciphersuite(0x0067, "RSA", "DH", "AES-128", 16, 16, "SHA-256", 32);
 
+      case 0xC09E: // DHE_RSA_WITH_AES_128_CCM
+         return Ciphersuite(0xC09E, "RSA", "DH", "AES-128/CCM(16,3)", 16, 4, "AEAD", 0, "SHA-256");
+
+      case 0xC0A2: // DHE_RSA_WITH_AES_128_CCM_8
+         return Ciphersuite(0xC0A2, "RSA", "DH", "AES-128/CCM(8,3)", 16, 4, "AEAD", 0, "SHA-256");
+
       case 0x009E: // DHE_RSA_WITH_AES_128_GCM_SHA256
          return Ciphersuite(0x009E, "RSA", "DH", "AES-128/GCM", 16, 4, "AEAD", 0, "SHA-256");
 
@@ -115,6 +127,12 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
 
       case 0x006B: // DHE_RSA_WITH_AES_256_CBC_SHA256
          return Ciphersuite(0x006B, "RSA", "DH", "AES-256", 32, 16, "SHA-256", 32);
+
+      case 0xC09F: // DHE_RSA_WITH_AES_256_CCM
+         return Ciphersuite(0xC09F, "RSA", "DH", "AES-256/CCM(16,3)", 32, 4, "AEAD", 0, "SHA-256");
+
+      case 0xC0A3: // DHE_RSA_WITH_AES_256_CCM_8
+         return Ciphersuite(0xC0A3, "RSA", "DH", "AES-256/CCM(8,3)", 32, 4, "AEAD", 0, "SHA-256");
 
       case 0x009F: // DHE_RSA_WITH_AES_256_GCM_SHA384
          return Ciphersuite(0x009F, "RSA", "DH", "AES-256/GCM", 32, 4, "AEAD", 0, "SHA-384");
@@ -293,6 +311,12 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
       case 0xC016: // ECDH_anon_WITH_RC4_128_SHA
          return Ciphersuite(0xC016, "", "ECDH", "RC4", 16, 0, "SHA-1", 20);
 
+      case 0xC0AA: // PSK_DHE_WITH_AES_128_CCM_8
+         return Ciphersuite(0xC0AA, "", "DHE_PSK", "AES-128/CCM(8,3)", 16, 4, "AEAD", 0, "SHA-256");
+
+      case 0xC0AB: // PSK_DHE_WITH_AES_256_CCM_8
+         return Ciphersuite(0xC0AB, "", "DHE_PSK", "AES-256/CCM(8,3)", 32, 4, "AEAD", 0, "SHA-256");
+
       case 0x008B: // PSK_WITH_3DES_EDE_CBC_SHA
          return Ciphersuite(0x008B, "", "PSK", "3DES", 24, 8, "SHA-1", 20);
 
@@ -302,6 +326,12 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
       case 0x00AE: // PSK_WITH_AES_128_CBC_SHA256
          return Ciphersuite(0x00AE, "", "PSK", "AES-128", 16, 16, "SHA-256", 32);
 
+      case 0xC0A4: // PSK_WITH_AES_128_CCM
+         return Ciphersuite(0xC0A4, "", "PSK", "AES-128/CCM(16,3)", 16, 4, "AEAD", 0, "SHA-256");
+
+      case 0xC0A8: // PSK_WITH_AES_128_CCM_8
+         return Ciphersuite(0xC0A8, "", "PSK", "AES-128/CCM(8,3)", 16, 4, "AEAD", 0, "SHA-256");
+
       case 0x00A8: // PSK_WITH_AES_128_GCM_SHA256
          return Ciphersuite(0x00A8, "", "PSK", "AES-128/GCM", 16, 4, "AEAD", 0, "SHA-256");
 
@@ -310,6 +340,12 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
 
       case 0x00AF: // PSK_WITH_AES_256_CBC_SHA384
          return Ciphersuite(0x00AF, "", "PSK", "AES-256", 32, 16, "SHA-384", 48);
+
+      case 0xC0A5: // PSK_WITH_AES_256_CCM
+         return Ciphersuite(0xC0A5, "", "PSK", "AES-256/CCM(16,3)", 32, 4, "AEAD", 0, "SHA-256");
+
+      case 0xC0A9: // PSK_WITH_AES_256_CCM_8
+         return Ciphersuite(0xC0A9, "", "PSK", "AES-256/CCM(8,3)", 32, 4, "AEAD", 0, "SHA-256");
 
       case 0x00A9: // PSK_WITH_AES_256_GCM_SHA384
          return Ciphersuite(0x00A9, "", "PSK", "AES-256/GCM", 32, 4, "AEAD", 0, "SHA-384");
@@ -338,6 +374,12 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
       case 0x003C: // RSA_WITH_AES_128_CBC_SHA256
          return Ciphersuite(0x003C, "RSA", "RSA", "AES-128", 16, 16, "SHA-256", 32);
 
+      case 0xC09C: // RSA_WITH_AES_128_CCM
+         return Ciphersuite(0xC09C, "RSA", "RSA", "AES-128/CCM(16,3)", 16, 4, "AEAD", 0, "SHA-256");
+
+      case 0xC0A0: // RSA_WITH_AES_128_CCM_8
+         return Ciphersuite(0xC0A0, "RSA", "RSA", "AES-128/CCM(8,3)", 16, 4, "AEAD", 0, "SHA-256");
+
       case 0x009C: // RSA_WITH_AES_128_GCM_SHA256
          return Ciphersuite(0x009C, "RSA", "RSA", "AES-128/GCM", 16, 4, "AEAD", 0, "SHA-256");
 
@@ -346,6 +388,12 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
 
       case 0x003D: // RSA_WITH_AES_256_CBC_SHA256
          return Ciphersuite(0x003D, "RSA", "RSA", "AES-256", 32, 16, "SHA-256", 32);
+
+      case 0xC09D: // RSA_WITH_AES_256_CCM
+         return Ciphersuite(0xC09D, "RSA", "RSA", "AES-256/CCM(16,3)", 32, 4, "AEAD", 0, "SHA-256");
+
+      case 0xC0A1: // RSA_WITH_AES_256_CCM_8
+         return Ciphersuite(0xC0A1, "RSA", "RSA", "AES-256/CCM(8,3)", 32, 4, "AEAD", 0, "SHA-256");
 
       case 0x009D: // RSA_WITH_AES_256_GCM_SHA384
          return Ciphersuite(0x009D, "RSA", "RSA", "AES-256/GCM", 32, 4, "AEAD", 0, "SHA-384");
