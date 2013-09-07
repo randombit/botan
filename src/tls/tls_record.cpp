@@ -297,60 +297,6 @@ size_t fill_buffer_to(secure_vector<byte>& readbuf,
    }
 
 /*
-* MAC scheme used in SSLv3/TLSv1 for RC4 and CBC ciphers
-*/
-bool traditional_mac_check(Record& output_record,
-                           byte record_contents[], size_t record_len,
-                           size_t pad_size,
-                           volatile bool padding_bad,
-                           u64bit record_sequence,
-                           Protocol_Version record_version,
-                           Record_Type record_type,
-                           Connection_Cipher_State& cipherstate)
-   {
-   const size_t mac_size = cipherstate.mac_size();
-   const size_t iv_size = cipherstate.iv_size();
-
-   cipherstate.mac()->update_be(record_sequence);
-   cipherstate.mac()->update(static_cast<byte>(record_type));
-
-   if(cipherstate.mac_includes_record_version())
-      {
-      cipherstate.mac()->update(record_version.major_version());
-      cipherstate.mac()->update(record_version.minor_version());
-      }
-
-   const size_t mac_pad_iv_size = mac_size + pad_size + iv_size;
-
-   if(record_len < mac_pad_iv_size)
-      throw Decoding_Error("Record sent with invalid length");
-
-   const byte* plaintext_block = &record_contents[iv_size];
-   const u16bit plaintext_length = record_len - mac_pad_iv_size;
-
-   cipherstate.mac()->update_be(plaintext_length);
-   cipherstate.mac()->update(plaintext_block, plaintext_length);
-
-   std::vector<byte> mac_buf(mac_size);
-   cipherstate.mac()->final(&mac_buf[0]);
-
-   const size_t mac_offset = record_len - (mac_size + pad_size);
-
-   const bool mac_bad = !same_mem(&record_contents[mac_offset], &mac_buf[0], mac_size);
-
-   if(mac_bad || padding_bad)
-      throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure");
-
-   output_record = Record(record_sequence,
-                          record_version,
-                          record_type,
-                          plaintext_block,
-                          plaintext_length);
-
-   return true;
-   }
-
-/*
 * Checks the TLS padding. Returns 0 if the padding is invalid (we
 * count the padding_length field as part of the padding size so a
 * valid padding will always be at least one byte long), or the length
@@ -436,7 +382,7 @@ void cbc_decrypt_record(byte record_contents[], size_t record_len,
    cipherstate.cbc_state() = last_ciphertext;
    }
 
-bool decrypt_record(Record& output_record,
+void decrypt_record(secure_vector<byte>& output,
                     byte record_contents[], size_t record_len,
                     u64bit record_sequence,
                     Protocol_Version record_version,
@@ -458,57 +404,76 @@ bool decrypt_record(Record& output_record,
          cipherstate.format_ad(record_sequence, record_type, record_version, ptext_size)
          );
 
-      // fixme - making a copy, should steal from Record
-      secure_vector<byte> buffer;
-      buffer += aead->start_vec(nonce);
+      output += aead->start_vec(nonce);
 
-      const size_t offset = buffer.size();
-      buffer += std::make_pair(&msg[0], msg_length);
-      aead->finish(buffer, offset);
+      const size_t offset = output.size();
+      output += std::make_pair(&msg[0], msg_length);
+      aead->finish(output, offset);
 
-      BOTAN_ASSERT(buffer.size() == ptext_size + offset, "Produced expected size");
-
-      output_record = Record(record_sequence,
-                             record_version,
-                             record_type,
-                             &buffer[0],
-                             buffer.size());
-
-      return true;
-      }
-
-   volatile bool padding_bad = false;
-   size_t pad_size = 0;
-
-   if(StreamCipher* sc = cipherstate.stream_cipher())
-      {
-      sc->cipher1(record_contents, record_len);
-      // no padding to check or remove
-      }
-   else if(BlockCipher* bc = cipherstate.block_cipher())
-      {
-      cbc_decrypt_record(record_contents, record_len, cipherstate, *bc);
-
-      pad_size = tls_padding_check(cipherstate.cipher_padding_single_byte(),
-                                   cipherstate.block_size(),
-                                   record_contents, record_len);
-
-      padding_bad = (pad_size == 0);
+      BOTAN_ASSERT(output.size() == ptext_size + offset, "Produced expected size");
       }
    else
       {
-      throw Internal_Error("No cipher state set but needed to decrypt");
-      }
+      // GenericBlockCipher / GenericStreamCipher case
 
-   return traditional_mac_check(output_record,
-                                record_contents,
-                                record_len,
-                                pad_size,
-                                padding_bad,
-                                record_sequence,
-                                record_version,
-                                record_type,
-                                cipherstate);
+      volatile bool padding_bad = false;
+      size_t pad_size = 0;
+
+      if(StreamCipher* sc = cipherstate.stream_cipher())
+         {
+         sc->cipher1(record_contents, record_len);
+         // no padding to check or remove
+         }
+      else if(BlockCipher* bc = cipherstate.block_cipher())
+         {
+         cbc_decrypt_record(record_contents, record_len, cipherstate, *bc);
+
+         pad_size = tls_padding_check(cipherstate.cipher_padding_single_byte(),
+                                      cipherstate.block_size(),
+                                      record_contents, record_len);
+
+         padding_bad = (pad_size == 0);
+         }
+      else
+         {
+         throw Internal_Error("No cipher state set but needed to decrypt");
+         }
+
+      const size_t mac_size = cipherstate.mac_size();
+      const size_t iv_size = cipherstate.iv_size();
+
+      cipherstate.mac()->update_be(record_sequence);
+      cipherstate.mac()->update(static_cast<byte>(record_type));
+
+      if(cipherstate.mac_includes_record_version())
+         {
+         cipherstate.mac()->update(record_version.major_version());
+         cipherstate.mac()->update(record_version.minor_version());
+         }
+
+      const size_t mac_pad_iv_size = mac_size + pad_size + iv_size;
+
+      if(record_len < mac_pad_iv_size)
+         throw Decoding_Error("Record sent with invalid length");
+
+      const byte* plaintext_block = &record_contents[iv_size];
+      const u16bit plaintext_length = record_len - mac_pad_iv_size;
+
+      cipherstate.mac()->update_be(plaintext_length);
+      cipherstate.mac()->update(plaintext_block, plaintext_length);
+
+      std::vector<byte> mac_buf(mac_size);
+      cipherstate.mac()->final(&mac_buf[0]);
+
+      const size_t mac_offset = record_len - (mac_size + pad_size);
+
+      const bool mac_bad = !same_mem(&record_contents[mac_offset], &mac_buf[0], mac_size);
+
+      if(mac_bad || padding_bad)
+         throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure");
+
+      output.assign(plaintext_block, plaintext_block + plaintext_length);
+      }
    }
 
 }
@@ -517,7 +482,10 @@ size_t read_record(secure_vector<byte>& readbuf,
                    const byte input[],
                    size_t input_sz,
                    size_t& consumed,
-                   Record& record,
+                   secure_vector<byte>& record,
+                   u64bit* record_sequence,
+                   Protocol_Version* record_version,
+                   Record_Type* record_type,
                    Connection_Sequence_Numbers* sequence_numbers,
                    std::function<Connection_Cipher_State* (u16bit)> get_cipherstate)
    {
@@ -554,28 +522,26 @@ size_t read_record(secure_vector<byte>& readbuf,
                             "Have the entire SSLv2 hello");
 
          // Fake v3-style handshake message wrapper
-         std::vector<byte> sslv2_hello(4 + readbuf.size() - 2);
+         *record_version = Protocol_Version::TLS_V10;
+         *record_sequence = 0;
+         *record_type = HANDSHAKE;
 
-         sslv2_hello[0] = CLIENT_HELLO_SSLV2;
-         sslv2_hello[1] = 0;
-         sslv2_hello[2] = readbuf[0] & 0x7F;
-         sslv2_hello[3] = readbuf[1];
+         record.resize(4 + readbuf.size() - 2);
 
-         copy_mem(&sslv2_hello[4], &readbuf[2], readbuf.size() - 2);
-
-         record = Record(0,
-                         Protocol_Version::TLS_V10,
-                         HANDSHAKE,
-                         std::move(sslv2_hello));
+         record[0] = CLIENT_HELLO_SSLV2;
+         record[1] = 0;
+         record[2] = readbuf[0] & 0x7F;
+         record[3] = readbuf[1];
+         copy_mem(&record[4], &readbuf[2], readbuf.size() - 2);
 
          readbuf.clear();
          return 0;
          }
       }
 
-   Protocol_Version record_version = Protocol_Version(readbuf[1], readbuf[2]);
+   *record_version = Protocol_Version(readbuf[1], readbuf[2]);
 
-   const bool is_dtls = record_version.is_datagram_protocol();
+   const bool is_dtls = record_version->is_datagram_protocol();
 
    if(is_dtls && readbuf.size() < DTLS_HEADER_SIZE)
       {
@@ -606,41 +572,35 @@ size_t read_record(secure_vector<byte>& readbuf,
                       readbuf.size(),
                       "Have the full record");
 
-   Record_Type record_type = static_cast<Record_Type>(readbuf[0]);
+   *record_type = static_cast<Record_Type>(readbuf[0]);
 
-   u64bit record_sequence = 0;
    u16bit epoch = 0;
 
    if(is_dtls)
       {
-      record_sequence = load_be<u64bit>(&readbuf[3], 0);
-      epoch = (record_sequence >> 48);
+      *record_sequence = load_be<u64bit>(&readbuf[3], 0);
+      epoch = (*record_sequence >> 48);
       }
    else if(sequence_numbers)
       {
-      record_sequence = sequence_numbers->next_read_sequence();
+      *record_sequence = sequence_numbers->next_read_sequence();
       epoch = sequence_numbers->current_read_epoch();
       }
    else
       {
       // server initial handshake case
-      record_sequence = 0;
+      *record_sequence = 0;
       epoch = 0;
       }
 
-   if(sequence_numbers && sequence_numbers->already_seen(record_sequence))
+   if(sequence_numbers && sequence_numbers->already_seen(*record_sequence))
       return 0;
 
    byte* record_contents = &readbuf[header_size];
 
    if(epoch == 0) // Unencrypted initial handshake
       {
-      record = Record(record_sequence,
-                      record_version,
-                      record_type,
-                      &readbuf[header_size],
-                      record_len);
-
+      record.assign(&readbuf[header_size], &readbuf[header_size + record_len]);
       readbuf.clear();
       return 0; // got a full record
       }
@@ -652,16 +612,16 @@ size_t read_record(secure_vector<byte>& readbuf,
 
    BOTAN_ASSERT(cipherstate, "Have cipherstate for this epoch");
 
-   const bool ok = decrypt_record(record,
-                                  record_contents,
-                                  record_len,
-                                  record_sequence,
-                                  record_version,
-                                  record_type,
-                                  *cipherstate);
+   decrypt_record(record,
+                  record_contents,
+                  record_len,
+                  *record_sequence,
+                  *record_version,
+                  *record_type,
+                  *cipherstate);
 
-   if(ok && sequence_numbers)
-      sequence_numbers->read_accept(record_sequence);
+   if(sequence_numbers)
+      sequence_numbers->read_accept(*record_sequence);
 
    readbuf.clear();
    return 0;

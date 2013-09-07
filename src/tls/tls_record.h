@@ -94,51 +94,6 @@ class Connection_Cipher_State
       bool m_is_ssl3 = false;
    };
 
-class Record
-   {
-   public:
-      Record() {}
-
-      Record(u64bit sequence,
-             Protocol_Version version,
-             Record_Type type,
-             const byte contents[],
-             size_t contents_size) :
-         m_sequence(sequence),
-         m_version(version),
-         m_type(type),
-         m_contents(contents, contents + contents_size) {}
-
-      Record(u64bit sequence,
-             Protocol_Version version,
-             Record_Type type,
-             std::vector<byte>&& contents) :
-         m_sequence(sequence),
-         m_version(version),
-         m_type(type),
-         m_contents(contents) {}
-
-      bool is_valid() const { return m_type != NO_RECORD; }
-
-      u64bit sequence() const { return m_sequence; }
-
-      Record_Type type() const { return m_type; }
-
-      Protocol_Version version() const { return m_version; }
-
-      const std::vector<byte>& contents() const { return m_contents; }
-
-      const byte* bits() const { return &m_contents[0]; }
-
-      size_t size() const { return m_contents.size(); }
-
-   private:
-      u64bit m_sequence = 0;
-      Protocol_Version m_version = Protocol_Version();
-      Record_Type m_type = NO_RECORD;
-      std::vector<byte> m_contents;
-   };
-
 /**
 * Create a TLS record
 * @param write_buffer the output record is placed here
@@ -166,7 +121,10 @@ size_t read_record(secure_vector<byte>& read_buffer,
                    const byte input[],
                    size_t input_length,
                    size_t& input_consumed,
-                   Record& output_record,
+                   secure_vector<byte>& record,
+                   u64bit* record_sequence,
+                   Protocol_Version* record_version,
+                   Record_Type* record_type,
                    Connection_Sequence_Numbers* sequence_numbers,
                    std::function<Connection_Cipher_State* (u16bit)> get_cipherstate);
 

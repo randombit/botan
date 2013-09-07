@@ -12,7 +12,7 @@ namespace Botan {
 
 namespace TLS {
 
-Alert::Alert(const std::vector<byte>& buf)
+Alert::Alert(const secure_vector<byte>& buf)
    {
    if(buf.size() != 2)
       throw Decoding_Error("Alert: Bad size " + std::to_string(buf.size()) +

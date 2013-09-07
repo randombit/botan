@@ -278,7 +278,10 @@ size_t Channel::received_data(const byte input[], size_t input_size)
       {
       while(!is_closed() && input_size)
          {
-         Record record;
+         secure_vector<byte> record;
+         u64bit record_sequence = 0;
+         Record_Type record_type = NO_RECORD;
+         Protocol_Version record_version;
 
          size_t consumed = 0;
 
@@ -288,6 +291,9 @@ size_t Channel::received_data(const byte input[], size_t input_size)
                         input_size,
                         consumed,
                         record,
+                        &record_sequence,
+                        &record_version,
+                        &record_type,
                         m_sequence_numbers.get(),
                         get_cipherstate);
 
@@ -303,22 +309,22 @@ size_t Channel::received_data(const byte input[], size_t input_size)
          if(input_size == 0 && needed != 0)
             return needed; // need more data to complete record
 
-         BOTAN_ASSERT(record.is_valid(), "Got a full record");
-
          if(record.size() > max_fragment_size)
             throw TLS_Exception(Alert::RECORD_OVERFLOW,
                                 "Plaintext record is too large");
 
-         if(record.type() == HANDSHAKE || record.type() == CHANGE_CIPHER_SPEC)
+         if(record_type == HANDSHAKE || record_type == CHANGE_CIPHER_SPEC)
             {
             if(!m_pending_state)
                {
-               create_handshake_state(record.version());
-               if(record.version().is_datagram_protocol())
-                  sequence_numbers().read_accept(record.sequence());
+               create_handshake_state(record_version);
+               if(record_version.is_datagram_protocol())
+                  sequence_numbers().read_accept(record_sequence);
                }
 
-            m_pending_state->handshake_io().add_record(record.contents(), record.type(), record.sequence());
+            m_pending_state->handshake_io().add_record(unlock(record),
+                                                       record_type,
+                                                       record_sequence);
 
             while(auto pending = m_pending_state.get())
                {
@@ -331,12 +337,12 @@ size_t Channel::received_data(const byte input[], size_t input_size)
                                      msg.first, msg.second);
                }
             }
-         else if(record.type() == HEARTBEAT && peer_supports_heartbeats())
+         else if(record_type == HEARTBEAT && peer_supports_heartbeats())
             {
             if(!active_state())
                throw Unexpected_Message("Heartbeat sent before handshake done");
 
-            Heartbeat_Message heartbeat(record.contents());
+            Heartbeat_Message heartbeat(unlock(record));
 
             const std::vector<byte>& payload = heartbeat.payload();
 
@@ -356,7 +362,7 @@ size_t Channel::received_data(const byte input[], size_t input_size)
                m_proc_fn(&payload[0], payload.size(), Alert(Alert::HEARTBEAT_PAYLOAD));
                }
             }
-         else if(record.type() == APPLICATION_DATA)
+         else if(record_type == APPLICATION_DATA)
             {
             if(!active_state())
                throw Unexpected_Message("Application data before handshake done");
@@ -367,11 +373,11 @@ size_t Channel::received_data(const byte input[], size_t input_size)
             * following record. Avoid spurious callbacks.
             */
             if(record.size() > 0)
-               m_proc_fn(record.bits(), record.size(), Alert());
+               m_proc_fn(&record[0], record.size(), Alert());
             }
-         else if(record.type() == ALERT)
+         else if(record_type == ALERT)
             {
-            Alert alert_msg(record.contents());
+            Alert alert_msg(record);
 
             if(alert_msg.type() == Alert::NO_RENEGOTIATION)
                m_pending_state.reset();
@@ -395,7 +401,7 @@ size_t Channel::received_data(const byte input[], size_t input_size)
             }
          else
             throw Unexpected_Message("Unexpected record type " +
-                                     std::to_string(record.type()) +
+                                     std::to_string(record_type) +
                                      " from counterparty");
          }
 
