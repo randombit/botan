@@ -114,8 +114,11 @@ Connection_Cipher_State::format_ad(u64bit msg_sequence,
       m_ad.push_back(get_byte(i, msg_sequence));
    m_ad.push_back(msg_type);
 
-   m_ad.push_back(version.major_version());
-   m_ad.push_back(version.minor_version());
+   if(version != Protocol_Version::SSL_V3)
+      {
+      m_ad.push_back(version.major_version());
+      m_ad.push_back(version.minor_version());
+      }
 
    m_ad.push_back(get_byte(0, msg_length));
    m_ad.push_back(get_byte(1, msg_length));
@@ -189,17 +192,10 @@ void write_record(secure_vector<byte>& output,
       return;
       }
 
-   cipherstate->mac()->update_be(msg_sequence);
-   cipherstate->mac()->update(msg_type);
+   cipherstate->mac()->update(
+      cipherstate->format_ad(msg_sequence, msg_type, version, msg_length)
+      );
 
-   if(cipherstate->mac_includes_record_version())
-      {
-      cipherstate->mac()->update(version.major_version());
-      cipherstate->mac()->update(version.minor_version());
-      }
-
-   cipherstate->mac()->update(get_byte<u16bit>(0, msg_length));
-   cipherstate->mac()->update(get_byte<u16bit>(1, msg_length));
    cipherstate->mac()->update(msg, msg_length);
 
    const size_t block_size = cipherstate->block_size();
@@ -442,15 +438,6 @@ void decrypt_record(secure_vector<byte>& output,
       const size_t mac_size = cipherstate.mac_size();
       const size_t iv_size = cipherstate.iv_size();
 
-      cipherstate.mac()->update_be(record_sequence);
-      cipherstate.mac()->update(static_cast<byte>(record_type));
-
-      if(cipherstate.mac_includes_record_version())
-         {
-         cipherstate.mac()->update(record_version.major_version());
-         cipherstate.mac()->update(record_version.minor_version());
-         }
-
       const size_t mac_pad_iv_size = mac_size + pad_size + iv_size;
 
       if(record_len < mac_pad_iv_size)
@@ -459,7 +446,10 @@ void decrypt_record(secure_vector<byte>& output,
       const byte* plaintext_block = &record_contents[iv_size];
       const u16bit plaintext_length = record_len - mac_pad_iv_size;
 
-      cipherstate.mac()->update_be(plaintext_length);
+      cipherstate.mac()->update(
+         cipherstate.format_ad(record_sequence, record_type, record_version, plaintext_length)
+         );
+
       cipherstate.mac()->update(plaintext_block, plaintext_length);
 
       std::vector<byte> mac_buf(mac_size);
