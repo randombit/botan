@@ -307,6 +307,12 @@ std::string Supported_Elliptic_Curves::curve_id_to_name(u16bit id)
          return "secp384r1";
       case 25:
          return "secp521r1";
+      case 26:
+         return "brainpool256r1";
+      case 27:
+         return "brainpool384r1";
+      case 28:
+         return "brainpool512r1";
       default:
          return ""; // something we don't know or support
       }
@@ -336,6 +342,12 @@ u16bit Supported_Elliptic_Curves::name_to_curve_id(const std::string& name)
       return 24;
    if(name == "secp521r1")
       return 25;
+   if(name == "brainpool256r1")
+      return 26;
+   if(name == "brainpool384r1")
+      return 27;
+   if(name == "brainpool512r1")
+      return 28;
 
    throw Invalid_Argument("name_to_curve_id unknown name " + name);
    }

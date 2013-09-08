@@ -85,6 +85,9 @@ std::vector<std::string> Policy::allowed_signature_methods() const
 std::vector<std::string> Policy::allowed_ecc_curves() const
    {
    return std::vector<std::string>({
+      "brainpool512r1",
+      "brainpool384r1",
+      "brainpool256r1",
       "secp521r1",
       "secp384r1",
       "secp256r1",
