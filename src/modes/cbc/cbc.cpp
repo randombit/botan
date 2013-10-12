@@ -117,15 +117,14 @@ void CBC_Encryption::update(secure_vector<byte>& buffer, size_t offset)
 void CBC_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
-   const size_t sz = buffer.size() - offset;
 
    const size_t BS = cipher().block_size();
 
-   const size_t bytes_in_final_block = sz % BS;
+   const size_t bytes_in_final_block = (buffer.size()-offset) % BS;
 
    padding().add_padding(buffer, bytes_in_final_block, BS);
 
-   if(buffer.size() % BS)
+   if((buffer.size()-offset) % BS)
       throw std::runtime_error("Did not pad to full block size in " + name());
 
    update(buffer, offset);
