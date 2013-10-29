@@ -121,7 +121,7 @@ EC_Group::DER_encode(EC_Group_Encoding form) const
          .get_contents();
       }
    else if(form == EC_DOMPAR_ENC_OID)
-      return DER_Encoder().encode(get_oid()).get_contents();
+      return DER_Encoder().encode(OID(get_oid())).get_contents();
    else if(form == EC_DOMPAR_ENC_IMPLICITCA)
       return DER_Encoder().encode_null().get_contents();
    else
