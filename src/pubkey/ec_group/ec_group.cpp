@@ -119,7 +119,7 @@ EC_Group::DER_encode(EC_Group_Encoding form) const
          .get_contents_unlocked();
       }
    else if(form == EC_DOMPAR_ENC_OID)
-      return DER_Encoder().encode(get_oid()).get_contents_unlocked();
+      return DER_Encoder().encode(OID(get_oid())).get_contents_unlocked();
    else if(form == EC_DOMPAR_ENC_IMPLICITCA)
       return DER_Encoder().encode_null().get_contents_unlocked();
    else
