@@ -10,6 +10,9 @@ Series 1.10
 Version 1.10.6, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Fix an encoding error in EC_Group when encoding using EC_DOMPAR_ENC_OID.
+  Reported by fxdupont on github.
+
 * In EMSA2 and Randpool, avoid calling name() on objects after deleting them if
   the provided algorithm objects are not suitable for use.  Found by Clang
   analyzer, reported by Jeffrey Walton.
