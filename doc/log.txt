@@ -10,6 +10,11 @@ Series 1.10
 Version 1.10.6, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* The device reading entropy source now attempts to read from all
+  available devices. Previously it would break out early if a partial
+  read from a blocking source occured, not continuing to read from a
+  non-blocking device. Reported by Rickard Bellgrim.
+
 * Fix an encoding error in EC_Group when encoding using EC_DOMPAR_ENC_OID.
   Reported by fxdupont on github.
 

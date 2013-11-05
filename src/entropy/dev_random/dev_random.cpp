@@ -1,6 +1,6 @@
 /*
-* /dev/random EntropySource
-* (C) 1999-2009 Jack Lloyd
+* Reader of /dev/random and company
+* (C) 1999-2009,2013 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -16,53 +16,9 @@
 
 namespace Botan {
 
-/**
-Close the device, if open
-*/
-void Device_EntropySource::Device_Reader::close()
-   {
-   if(fd >= 0) { ::close(fd); fd = -1; }
-   }
+namespace {
 
-/**
-Read bytes from a device file
-*/
-size_t Device_EntropySource::Device_Reader::get(byte out[], size_t length,
-                                                size_t ms_wait_time)
-   {
-   if(fd < 0)
-      return 0;
-
-   if(fd >= FD_SETSIZE)
-      return 0;
-
-   fd_set read_set;
-   FD_ZERO(&read_set);
-   FD_SET(fd, &read_set);
-
-   struct ::timeval timeout;
-
-   timeout.tv_sec = (ms_wait_time / 1000);
-   timeout.tv_usec = (ms_wait_time % 1000) * 1000;
-
-   if(::select(fd + 1, &read_set, 0, 0, &timeout) < 0)
-      return 0;
-
-   if(!(FD_ISSET(fd, &read_set)))
-      return 0;
-
-   const ssize_t got = ::read(fd, out, length);
-   if(got <= 0)
-      return 0;
-
-   return static_cast<size_t>(got);
-   }
-
-/**
-Attempt to open a device
-*/
-Device_EntropySource::Device_Reader::fd_type
-Device_EntropySource::Device_Reader::open(const std::string& pathname)
+int open_nonblocking(const char* pathname)
    {
 #ifndef O_NONBLOCK
   #define O_NONBLOCK 0
@@ -73,21 +29,22 @@ Device_EntropySource::Device_Reader::open(const std::string& pathname)
 #endif
 
    const int flags = O_RDONLY | O_NONBLOCK | O_NOCTTY;
-   return ::open(pathname.c_str(), flags);
+   return ::open(pathname, flags);
    }
+
+}
 
 /**
 Device_EntropySource constructor
 Open a file descriptor to each (available) device in fsnames
 */
-Device_EntropySource::Device_EntropySource(
-   const std::vector<std::string>& fsnames)
+Device_EntropySource::Device_EntropySource(const std::vector<std::string>& fsnames)
    {
    for(size_t i = 0; i != fsnames.size(); ++i)
       {
-      Device_Reader::fd_type fd = Device_Reader::open(fsnames[i]);
-      if(fd >= 0)
-         devices.push_back(Device_Reader(fd));
+      fd_type fd = open_nonblocking(fsnames[i].c_str());
+      if(fd >= 0 && fd < FD_SETSIZE)
+         devices.push_back(fd);
       }
    }
 
@@ -97,7 +54,7 @@ Device_EntropySource destructor: close all open devices
 Device_EntropySource::~Device_EntropySource()
    {
    for(size_t i = 0; i != devices.size(); ++i)
-      devices[i].close();
+      ::close(devices[i]);
    }
 
 /**
@@ -105,23 +62,38 @@ Device_EntropySource::~Device_EntropySource()
 */
 void Device_EntropySource::poll(Entropy_Accumulator& accum)
    {
-   const size_t ENTROPY_BITS_PER_BYTE = 7;
+   if(devices.empty())
+      return;
 
-   const size_t go_get = std::min<size_t>(
-      accum.desired_remaining_bits() / ENTROPY_BITS_PER_BYTE, 32);
+   const size_t ENTROPY_BITS_PER_BYTE = 8;
+   const size_t MS_WAIT_TIME = 32;
+   const size_t READ_ATTEMPT = accum.desired_remaining_bits() / 4;
 
-   const size_t read_wait_ms = std::max<size_t>(go_get, 100);
-   MemoryRegion<byte>& io_buffer = accum.get_io_buffer(go_get);
+   MemoryRegion<byte>& io_buffer = accum.get_io_buffer(READ_ATTEMPT);
+
+   int max_fd = devices[0];
+   fd_set read_set;
+   FD_ZERO(&read_set);
+   for(size_t i = 0; i != devices.size(); ++i)
+      {
+      FD_SET(devices[i], &read_set);
+      max_fd = std::max(devices[i], max_fd);
+      }
+
+   struct ::timeval timeout;
+
+   timeout.tv_sec = (MS_WAIT_TIME / 1000);
+   timeout.tv_usec = (MS_WAIT_TIME % 1000) * 1000;
+
+   if(::select(max_fd + 1, &read_set, 0, 0, &timeout) < 0)
+      return;
 
    for(size_t i = 0; i != devices.size(); ++i)
       {
-      size_t got = devices[i].get(&io_buffer[0], io_buffer.size(),
-                                  read_wait_ms);
-
-      if(got)
+      if(FD_ISSET(devices[i], &read_set))
          {
+         const ssize_t got = ::read(devices[i], &io_buffer[0], io_buffer.size());
          accum.add(&io_buffer[0], got, ENTROPY_BITS_PER_BYTE);
-         break;
          }
       }
    }
