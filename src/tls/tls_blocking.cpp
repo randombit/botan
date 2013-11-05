@@ -24,8 +24,9 @@ Blocking_Client::Blocking_Client(std::function<size_t (byte[], size_t)> read_fn,
                                  std::function<std::string (std::vector<std::string>)> next_protocol) :
    m_read_fn(read_fn),
    m_channel(write_fn,
-             std::bind(&Blocking_Client::process_data, this, _1, _2, _3),
-             std::bind(&Blocking_Client::handshake_complete, this, _1),
+             std::bind(&Blocking_Client::data_cb, this, _1, _2),
+             std::bind(&Blocking_Client::alert_cb, this, _1, _2, _3),
+             std::bind(&Blocking_Client::handshake_cb, this, _1),
              session_manager,
              creds,
              policy,
@@ -36,18 +37,19 @@ Blocking_Client::Blocking_Client(std::function<size_t (byte[], size_t)> read_fn,
    {
    }
 
-bool Blocking_Client::handshake_complete_cb(const Session& session)
+bool Blocking_Client::handshake_cb(const Session& session)
    {
    return this->handshake_complete(session);
    }
 
-void Blocking_Client::process_data(const byte data[], size_t data_len,
-                                   const Alert& alert)
+void Blocking_Client::alert_cb(const Alert alert, const byte[], size_t)
+   {
+   this->alert_notification(alert);
+   }
+
+void Blocking_Client::data_cb(const byte data[], size_t data_len)
    {
    m_plaintext.insert(m_plaintext.end(), data, data + data_len);
-
-   if(alert.is_valid())
-      alert_notification(alert);
    }
 
 void Blocking_Client::do_handshake()

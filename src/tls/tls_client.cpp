@@ -48,8 +48,9 @@ class Client_Handshake_State : public Handshake_State
 * TLS Client Constructor
 */
 Client::Client(std::function<void (const byte[], size_t)> output_fn,
-               std::function<void (const byte[], size_t, Alert)> proc_fn,
-               std::function<bool (const Session&)> handshake_fn,
+               std::function<void (const byte[], size_t)> proc_cb,
+               std::function<void (Alert, const byte[], size_t)> alert_cb,
+               std::function<bool (const Session&)> handshake_cb,
                Session_Manager& session_manager,
                Credentials_Manager& creds,
                const Policy& policy,
@@ -58,7 +59,7 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
                const Protocol_Version offer_version,
                std::function<std::string (std::vector<std::string>)> next_protocol,
                size_t io_buf_sz) :
-   Channel(output_fn, proc_fn, handshake_fn, session_manager, rng, io_buf_sz),
+   Channel(output_fn, proc_cb, alert_cb, handshake_cb, session_manager, rng, io_buf_sz),
    m_policy(policy),
    m_creds(creds),
    m_info(info)

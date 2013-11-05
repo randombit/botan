@@ -37,7 +37,14 @@ class BOTAN_DLL Channel
       * @return a hint as the how many more bytes we need to process the
       *         current record (this may be 0 if on a record boundary)
       */
-      virtual size_t received_data(const byte buf[], size_t buf_size);
+      size_t received_data(const byte buf[], size_t buf_size);
+
+      /**
+      * Inject TLS traffic received from counterparty
+      * @return a hint as the how many more bytes we need to process the
+      *         current record (this may be 0 if on a record boundary)
+      */
+      size_t received_data(const std::vector<byte>& buf);
 
       /**
       * Inject plaintext intended for counterparty
@@ -142,8 +149,9 @@ class BOTAN_DLL Channel
                                        size_t length) const;
 
       Channel(std::function<void (const byte[], size_t)> socket_output_fn,
-              std::function<void (const byte[], size_t, Alert)> proc_fn,
-              std::function<bool (const Session&)> handshake_complete,
+              std::function<void (const byte[], size_t)> data_cb,
+              std::function<void (Alert, const byte[], size_t)> alert_cb,
+              std::function<bool (const Session&)> handshake_cb,
               Session_Manager& session_manager,
               RandomNumberGenerator& rng,
               size_t reserved_io_buffer_size);
@@ -188,7 +196,7 @@ class BOTAN_DLL Channel
 
       Session_Manager& session_manager() { return m_session_manager; }
 
-      bool save_session(const Session& session) const { return m_handshake_fn(session); }
+      bool save_session(const Session& session) const { return m_handshake_cb(session); }
 
    private:
       size_t maximum_fragment_size() const;
@@ -217,8 +225,9 @@ class BOTAN_DLL Channel
       const Handshake_State* pending_state() const { return m_pending_state.get(); }
 
       /* callbacks */
-      std::function<bool (const Session&)> m_handshake_fn;
-      std::function<void (const byte[], size_t, Alert)> m_proc_fn;
+      std::function<bool (const Session&)> m_handshake_cb;
+      std::function<void (const byte[], size_t)> m_data_cb;
+      std::function<void (Alert, const byte[], size_t)> m_alert_cb;
       std::function<void (const byte[], size_t)> m_output_fn;
 
       /* external state */

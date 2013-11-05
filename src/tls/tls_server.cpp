@@ -209,15 +209,16 @@ get_server_certs(const std::string& hostname,
 * TLS Server Constructor
 */
 Server::Server(std::function<void (const byte[], size_t)> output_fn,
-               std::function<void (const byte[], size_t, Alert)> proc_fn,
-               std::function<bool (const Session&)> handshake_fn,
+               std::function<void (const byte[], size_t)> data_cb,
+               std::function<void (Alert, const byte[], size_t)> alert_cb,
+               std::function<bool (const Session&)> handshake_cb,
                Session_Manager& session_manager,
                Credentials_Manager& creds,
                const Policy& policy,
                RandomNumberGenerator& rng,
                const std::vector<std::string>& next_protocols,
                size_t io_buf_sz) :
-   Channel(output_fn, proc_fn, handshake_fn, session_manager, rng, io_buf_sz),
+   Channel(output_fn, data_cb, alert_cb, handshake_cb, session_manager, rng, io_buf_sz),
    m_policy(policy),
    m_creds(creds),
    m_possible_protocols(next_protocols)

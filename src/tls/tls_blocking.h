@@ -79,10 +79,11 @@ class BOTAN_DLL Blocking_Client
 
    private:
 
-      bool handshake_complete_cb(const Session&);
+      bool handshake_cb(const Session&);
 
-      void process_data(const byte data[], size_t data_len,
-                        const Alert& alert);
+      void data_cb(const byte data[], size_t data_len);
+
+      void alert_cb(const Alert alert, const byte data[], size_t data_len);
 
       std::function<size_t (byte[], size_t)> m_read_fn;
       TLS::Client m_channel;

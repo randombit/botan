@@ -27,9 +27,11 @@ class BOTAN_DLL Client : public Channel
       *
       * @param socket_output_fn is called with data for the outbound socket
       *
-      * @param proc_fn is called when new data (application or alerts) is received
+      * @param proc_cb is called when new application data is received
       *
-      * @param handshake_complete is called when a handshake is completed
+      * @param alert_cb is called when a TLS alert is received
+      *
+      * @param handshake_cb is called when a handshake is completed
       *
       * @param session_manager manages session state
       *
@@ -58,8 +60,9 @@ class BOTAN_DLL Client : public Channel
       *        values just mean reallocations and copies are more likely.
       */
       Client(std::function<void (const byte[], size_t)> socket_output_fn,
-             std::function<void (const byte[], size_t, Alert)> proc_fn,
-             std::function<bool (const Session&)> handshake_complete,
+             std::function<void (const byte[], size_t)> data_cb,
+             std::function<void (Alert, const byte[], size_t)> alert_cb,
+             std::function<bool (const Session&)> handshake_cb,
              Session_Manager& session_manager,
              Credentials_Manager& creds,
              const Policy& policy,

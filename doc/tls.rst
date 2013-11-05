@@ -17,16 +17,16 @@ handshaking) are not yet implemented.
 The TLS implementation does not know anything about sockets or the
 network layer. Instead, it calls a user provided callback (hereafter
 ``output_fn``) whenever it has data that it would want to send to the
-other party, and whenever the application receives some data from the
-counterparty it passes that information to TLS using
-:cpp:func:`TLS::Channel::received_data`. If the data passed in results
-in a handshake completing, then the user provided
-``handshake_complete`` is called, and if some application data being
-received, or a TLS :ref:`alert <tls_alerts>` is received, the another
-user provided callback, hereafter ``proc_fn``, is called. (If the
-reader is familiar with OpenSSL's BIO layer, it might be analagous to
-saying the only way of interacting with the SSL protocol stack is via
-a `BIO_mem` I/O abstraction.)
+other party (for instance, by writing it to a network socket), and
+whenever the application receives some data from the counterparty (for
+instance, by reading from a network socket) it passes that information
+to TLS using :cpp:func:`TLS::Channel::received_data`. If the data
+passed in results in some change in the state, such as a handshake
+completing, or some data or an alert being received from the other
+side, then a user provided callback will be invoked. (If the reader is
+familiar with OpenSSL's BIO layer, it might be analagous to saying the
+only way of interacting with the SSL protocol stack is via a `BIO_mem`
+I/O abstraction.)
 
 The callbacks that TLS calls have the signatures
 
@@ -37,34 +37,24 @@ The callbacks that TLS calls have the signatures
     overwritten, so a copy of the input must be made if the callback
     cannot send the data immediately.
 
- .. cpp:function:: void proc_fn(const byte data[], size_t data_len, \
-                                const TLS::Alert& alert)
+ .. cpp:function:: void data_cb(const byte data[], size_t data_len)
 
-     Called whenever application data or an alert is received from the
-     other side of the connection, in which case *data* and *data_len*
-     specify the data received. This array will be overwritten
-     sometime after the callback returns, so again a copy should be
-     made if need be.
+     Called whenever application data is received from the other side
+     of the connection, in which case *data* and *data_len* specify
+     the data received. This array will be overwritten sometime after
+     the callback returns, so again a copy should be made if need be.
 
-     If :cpp:func:`TLS::Alert::is_valid` is true then *alert*
-     specifies a valid alert that was received. Note that if received
-     before the handshake has completed, an attacker can easily insert
-     false alert values.
+ .. cpp:function:: void alert_cb(Alert alert, const byte data[], size_t data_len)
 
-     If TLS heartbeats (see :rfc:`6520`) were negotiated, and we
+     Called when an alert is received. Normally, data is null and
+     data_len is 0, as most alerts have no associated data. However,
+     if TLS heartbeats (see :rfc:`6520`) were negotiated, and we
      initiated a heartbeat, then if/when the other party responds,
-     ``proc_fn`` will be called with whatever data was included in the
-     heartbeat response (if any) along with a psuedo-alert value of
-     ``HEARTBEAT_PAYLOAD``.
+     ``alert_cb`` will be called with whatever data was included in
+     the heartbeat response (if any) along with a psuedo-alert value
+     of ``HEARTBEAT_PAYLOAD``.
 
-     .. note::
-
-       Currently, if an alert was passed in then no other data was
-       provided (except for the psuedo-alert for heartbeats). This
-       allows an appliction to easily distinguish between data sent
-       before and after the alert was received.
-
- .. cpp:function:: bool handshake_complete(const TLS::Session& session)
+ .. cpp:function:: bool handshake_cb(const TLS::Session& session)
 
      Called whenever a negotiation completes. This can happen more
      than once on any connection. The *session* parameter provides
@@ -133,7 +123,7 @@ available:
 
       Initiates a renegotiation. The counterparty is allowed by the
       protocol to ignore this request. If a successful renegotiation
-      occurs, the *handshake_complete* callback will be called again.
+      occurs, the *handshake_cb* callback will be called again.
 
       If *force_full_renegotiation* is false, then the client will
       attempt to simply renew the current session - this will refresh
@@ -178,8 +168,9 @@ TLS Clients
 
    .. cpp:function:: TLS::Client( \
          std::function<void, const byte*, size_t> output_fn, \
-         std::function<void, const byte*, size_t, TLS::Alert> proc_fn, \
-         std::function<bool, const TLS::Session&> handshake_complete, \
+         std::function<void, const byte*, size_t> data_cb, \
+         std::function<TLS::Alert, const byte*, size_t> alert_cb,
+         std::function<bool, const TLS::Session&> handshake_cb, \
          TLS::Session_Manager& session_manager, \
          Credentials_Manager& credendials_manager, \
          const TLS::Policy& policy, \
@@ -200,14 +191,13 @@ TLS Clients
    callback occurs would block), but should eventually write the data
    to the counterparty *in order*.
 
-   The *proc_fn* will be called with data sent by the counterparty
+   The *data_cb* will be called with data sent by the counterparty
    after it has been processed. The byte array and size_t represent
-   the plaintext; the :cpp:class:`TLS::Alert` value provides
-   notification if the counterparty sent an alert via the TLS alert
-   system. Possible values of alert data are included in the
-   Alert_Type enum. Particularly relevant is the CLOSE_NOTIFY value.
+   the plaintext.
 
-   The *handshake_complete* function is called when a handshake
+   The *alert_cb* will be called if a protocol alert is received.
+
+   The *handshake_cb* function is called when a handshake
    (either initial or renegotiation) is completed. The return value of
    the callback specifies if the session should be cached for later
    resumption. If the function for some reason desires to prevent the
@@ -272,8 +262,8 @@ TLS Servers
 
    .. cpp:function:: TLS::Server( \
           std::function<void, const byte*, size_t> output_fn, \
-          std::function<void, const byte*, size_t, TLS::Alert> proc_fn, \
-          std::function<bool, const TLS::Session&> handshake_complete, \
+          std::function<void, const byte*, size_t> data_cb, \
+          std::function<TLS::Alert, const byte*, size_t> alert_cb,
           TLS::Session_Manager& session_manager, \
           Credentials_Manager& creds, \
           const TLS::Policy& policy, \
@@ -580,7 +570,7 @@ be negotiated during a handshake.
      support.
 
      If this returns true, callers should expect to handle heartbeat
-     data in their ``proc_fn``.
+     data in their ``alert_cb``.
 
      Default: false
 
@@ -678,9 +668,7 @@ TLS Ciphersuites
 TLS Alerts
 ----------------------------------------
 
-A ``TLS::Alert`` is passed to every invocation of a channel's
-*proc_fn*. Most of the time, no alert was sent and so the alert will
-be of type ``NULL_ALERT``.
+A ``TLS::Alert`` is passed to every invocation of a channel's *alert_cb*.
 
 .. cpp:class:: TLS::Alert
 

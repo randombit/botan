@@ -20,13 +20,15 @@ namespace Botan {
 namespace TLS {
 
 Channel::Channel(std::function<void (const byte[], size_t)> output_fn,
-                 std::function<void (const byte[], size_t, Alert)> proc_fn,
-                 std::function<bool (const Session&)> handshake_complete,
+                 std::function<void (const byte[], size_t)> data_cb,
+                 std::function<void (Alert, const byte[], size_t)> alert_cb,
+                 std::function<bool (const Session&)> handshake_cb,
                  Session_Manager& session_manager,
                  RandomNumberGenerator& rng,
                  size_t reserved_io_buffer_size) :
-   m_handshake_fn(handshake_complete),
-   m_proc_fn(proc_fn),
+   m_handshake_cb(handshake_cb),
+   m_data_cb(data_cb),
+   m_alert_cb(alert_cb),
    m_output_fn(output_fn),
    m_rng(rng),
    m_session_manager(session_manager)
@@ -267,6 +269,11 @@ bool Channel::heartbeat_sending_allowed() const
    return false;
    }
 
+size_t Channel::received_data(const std::vector<byte>& buf)
+   {
+   this->received_data(&buf[0], buf.size());
+   }
+
 size_t Channel::received_data(const byte input[], size_t input_size)
    {
    const auto get_cipherstate = [this](u16bit epoch)
@@ -358,8 +365,7 @@ size_t Channel::received_data(const byte input[], size_t input_size)
                }
             else
                {
-               // a response, pass up to the application
-               m_proc_fn(&payload[0], payload.size(), Alert(Alert::HEARTBEAT_PAYLOAD));
+               m_alert_cb(Alert(Alert::HEARTBEAT_PAYLOAD), &payload[0], payload.size());
                }
             }
          else if(record_type == APPLICATION_DATA)
@@ -373,7 +379,7 @@ size_t Channel::received_data(const byte input[], size_t input_size)
             * following record. Avoid spurious callbacks.
             */
             if(record.size() > 0)
-               m_proc_fn(&record[0], record.size(), Alert());
+               m_data_cb(&record[0], record.size());
             }
          else if(record_type == ALERT)
             {
@@ -382,7 +388,7 @@ size_t Channel::received_data(const byte input[], size_t input_size)
             if(alert_msg.type() == Alert::NO_RENEGOTIATION)
                m_pending_state.reset();
 
-            m_proc_fn(nullptr, 0, alert_msg);
+            m_alert_cb(alert_msg, nullptr, 0);
 
             if(alert_msg.is_fatal())
                {

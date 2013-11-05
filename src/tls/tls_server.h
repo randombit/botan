@@ -26,8 +26,9 @@ class BOTAN_DLL Server : public Channel
       * Server initialization
       */
       Server(std::function<void (const byte[], size_t)> socket_output_fn,
-             std::function<void (const byte[], size_t, Alert)> proc_fn,
-             std::function<bool (const Session&)> handshake_complete,
+             std::function<void (const byte[], size_t)> data_cb,
+             std::function<void (Alert, const byte[], size_t)> alert_cb,
+             std::function<bool (const Session&)> handshake_cb,
              Session_Manager& session_manager,
              Credentials_Manager& creds,
              const Policy& policy,

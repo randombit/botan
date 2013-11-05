@@ -63,7 +63,8 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
          m_strand(io_service),
          m_socket(io_service),
          m_tls(boost::bind(&tls_server_session::tls_output_wanted, this, _1, _2),
-               boost::bind(&tls_server_session::tls_data_recv, this, _1, _2, _3),
+               boost::bind(&tls_server_session::tls_data_recv, this, _1, _2),
+               boost::bind(&tls_server_session::tls_alert_cb, this, _1, _2, _3),
                boost::bind(&tls_server_session::tls_handshake_complete, this, _1),
                session_manager,
                credentials,
@@ -134,35 +135,44 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
             }
          }
 
-      void tls_data_recv(const byte buf[], size_t buf_len, Botan::TLS::Alert alert)
+      void tls_alert_cb(Botan::TLS::Alert alert, const byte buf[], size_t buf_len)
          {
-         if(alert.is_valid())
+         if(alert.type() == Botan::TLS::Alert::CLOSE_NOTIFY)
             {
-            if(alert.type() == Botan::TLS::Alert::CLOSE_NOTIFY)
-               {
-               m_tls.close();
-               return;
-               }
-            }
-
-         if(buf_len > 4) // FIXME: ghetto
-            {
-            std::string out;
-            out += "\r\n";
-            out += "HTTP/1.0 200 OK\r\n";
-            out += "Server: Botan ASIO test server\r\n";
-            if(m_hostname != "")
-               out += "Host: " + m_hostname + "\r\n";
-            out += "Content-Type: text/html\r\n";
-            out += "\r\n";
-            out += "<html><body>Greets. You said: ";
-            out += std::string((const char*)buf, buf_len);
-            out += "</body></html>\r\n\r\n";
-
-            m_tls.send(reinterpret_cast<const byte*>(&out[0]),
-                       out.size());
             m_tls.close();
+            return;
             }
+         }
+
+      void tls_data_recv(const byte buf[], size_t buf_len)
+         {
+         m_client_data.insert(m_client_data.end(), buf, buf + buf_len);
+
+         if(ready_to_respond())
+            write_response();
+         }
+
+      bool ready_to_respond()
+         {
+         return true; // parse headers?
+         }
+
+      void write_response()
+         {
+         std::string out;
+         out += "\r\n";
+         out += "HTTP/1.0 200 OK\r\n";
+         out += "Server: Botan ASIO test server\r\n";
+         if(m_hostname != "")
+            out += "Host: " + m_hostname + "\r\n";
+         out += "Content-Type: text/html\r\n";
+         out += "\r\n";
+         out += "<html><body>Greets. You said: ";
+         out += std::string((const char*)&m_client_data[0], m_client_data.size());
+         out += "</body></html>\r\n\r\n";
+
+         m_tls.send(out);
+         m_tls.close();
          }
 
       bool tls_handshake_complete(const Botan::TLS::Session& session)
@@ -184,6 +194,8 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
 
       // used to hold data queued for writing
       std::vector<byte> m_outbox;
+
+      std::vector<byte> m_client_data;
    };
 
 class tls_server

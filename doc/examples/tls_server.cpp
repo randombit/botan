@@ -108,6 +108,11 @@ void stream_socket_write(int sockfd, const byte buf[], size_t length)
       }
    }
 
+void alert_received(TLS::Alert alert, const byte buf[], size_t buf_size)
+   {
+   std::cout << "Alert: " << alert.type_string() << "\n";
+   }
+
 int main(int argc, char* argv[])
    {
    int port = 4433;
@@ -176,11 +181,8 @@ int main(int argc, char* argv[])
 
             pending_output.push_back("Welcome to the best echo server evar\n");
 
-            auto proc_fn = [&](const byte input[], size_t input_len, TLS::Alert alert)
-            {
-               if(alert.is_valid())
-                  std::cout << "Alert: " << alert.type_string() << "\n";
-
+            auto proc_fn = [&](const byte input[], size_t input_len)
+               {
                for(size_t i = 0; i != input_len; ++i)
                   {
                   char c = (char)input[i];
@@ -191,10 +193,11 @@ int main(int argc, char* argv[])
                      s.clear();
                      }
                   }
-            };
+               };
 
             TLS::Server server(socket_write,
                                proc_fn,
+                               alert_received,
                                handshake_complete,
                                session_manager,
                                creds,

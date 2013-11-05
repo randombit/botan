@@ -156,23 +156,26 @@ void test_handshake(RandomNumberGenerator& rng)
       return true;
    };
 
-   auto save_server_data = [&](const byte buf[], size_t sz, TLS::Alert alert)
+   auto print_alert = [&](TLS::Alert alert, const byte buf[], size_t sz)
    {
-      c2s_data.insert(c2s_data.end(), buf, buf+sz);
       if(alert.is_valid())
          std::cout << "Server recvd alert " << alert.type_string() << "\n";
    };
 
-   auto save_client_data = [&](const byte buf[], size_t sz, TLS::Alert alert)
+   auto save_server_data = [&](const byte buf[], size_t sz)
+   {
+      c2s_data.insert(c2s_data.end(), buf, buf+sz);
+   };
+
+   auto save_client_data = [&](const byte buf[], size_t sz)
    {
       s2c_data.insert(s2c_data.end(), buf, buf+sz);
-      if(alert.is_valid())
-         std::cout << "Client recvd alert " << alert.type_string() << "\n";
    };
 
    TLS::Server server([&](const byte buf[], size_t sz)
                       { s2c_q.insert(s2c_q.end(), buf, buf+sz); },
                       save_server_data,
+                      print_alert,
                       handshake_complete,
                       server_sessions,
                       *creds,
@@ -182,6 +185,7 @@ void test_handshake(RandomNumberGenerator& rng)
    TLS::Client client([&](const byte buf[], size_t sz)
                       { c2s_q.insert(c2s_q.end(), buf, buf+sz); },
                       save_client_data,
+                      print_alert,
                       handshake_complete,
                       client_sessions,
                       *creds,

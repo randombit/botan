@@ -105,18 +105,16 @@ void stream_socket_write(int sockfd, const byte buf[], size_t length)
 
 bool got_alert = false;
 
-void process_data(const byte buf[], size_t buf_size, TLS::Alert alert)
+void alert_received(TLS::Alert alert, const byte buf[], size_t buf_size)
    {
-   if(alert.is_valid())
-      {
-      std::cout << "Alert: " << alert.type_string() << "\n";
-      got_alert = true;
-      }
+   std::cout << "Alert: " << alert.type_string() << "\n";
+   got_alert = true;
+   }
 
+void process_data(const byte buf[], size_t buf_size)
+   {
    for(size_t i = 0; i != buf_size; ++i)
-      {
       std::cout << buf[i];
-      }
    }
 
 std::string protocol_chooser(const std::vector<std::string>& protocols)
@@ -168,6 +166,7 @@ int main(int argc, char* argv[])
 
       TLS::Client client(socket_write,
                          process_data,
+                         alert_received,
                          handshake_complete,
                          session_manager,
                          creds,
