@@ -35,6 +35,10 @@ void hmac_prf(MessageAuthenticationCode* prf,
 */
 void HMAC_RNG::randomize(byte out[], size_t length)
    {
+   // Chosen more or less arbitrarily
+   const size_t AUTOMATIC_RESEED_RATE = 16;
+   const size_t AUTOMATIC_RESEED_BITS = 128;
+
    if(!is_seeded())
       throw PRNG_Unseeded(name());
 
@@ -44,6 +48,9 @@ void HMAC_RNG::randomize(byte out[], size_t length)
    while(length)
       {
       hmac_prf(prf, K, counter, "rng");
+
+      if(counter % AUTOMATIC_RESEED_RATE == 0)
+         reseed(AUTOMATIC_RESEED_BITS);
 
       const size_t copied = std::min<size_t>(K.size(), length);
 

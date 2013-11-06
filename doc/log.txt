@@ -13,7 +13,13 @@ Version 1.10.6, Not Yet Released
 * The device reading entropy source now attempts to read from all
   available devices. Previously it would break out early if a partial
   read from a blocking source occured, not continuing to read from a
-  non-blocking device. Reported by Rickard Bellgrim.
+  non-blocking device. This would cause the library to fall back on
+  slower and less reliable techniques for collecting PRNG seed
+  material. Reported by Rickard Bellgrim.
+
+* HMAC_RNG (the default PRNG implementation) now automatically reseeds
+  itself periodically. Previously reseeds only occured on explicit
+  application request.
 
 * Fix an encoding error in EC_Group when encoding using EC_DOMPAR_ENC_OID.
   Reported by fxdupont on github.
