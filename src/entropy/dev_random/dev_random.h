@@ -27,28 +27,9 @@ class Device_EntropySource : public EntropySource
       Device_EntropySource(const std::vector<std::string>& fsnames);
       ~Device_EntropySource();
    private:
+      typedef int fd_type;
 
-      /**
-      A class handling reading from a Unix character device
-      */
-      class Device_Reader
-         {
-         public:
-            typedef int fd_type;
-
-            // Does not own fd, a transient class
-            Device_Reader(fd_type device_fd) : fd(device_fd) {}
-
-            void close();
-
-            size_t get(byte out[], size_t length, size_t ms_wait_time);
-
-            static fd_type open(const std::string& pathname);
-         private:
-            fd_type fd;
-         };
-
-      std::vector<Device_Reader> devices;
+      std::vector<fd_type> devices;
    };
 
 }
