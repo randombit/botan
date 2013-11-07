@@ -44,7 +44,7 @@ class BOTAN_DLL CCM_Mode : public AEAD_Mode
       size_t tag_size() const { return m_tag_size; }
 
    protected:
-      static const size_t BS = 16; // intrinsic to CCM definition
+      const size_t BS = 16; // intrinsic to CCM definition
 
       CCM_Mode(BlockCipher* cipher, size_t tag_size, size_t L);
 
