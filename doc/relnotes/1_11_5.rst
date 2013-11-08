@@ -18,6 +18,11 @@ Version 1.11.5, Not Yet Released
   urandom always occurs, along with however much (if any) output is available
   from blocking sources.
 
+* Previously AutoSeeded_RNG referenced a globally shared PRNG instance.
+  Now each instance has distinct state.
+
+* The Randpool RNG implementation was removed.
+
 * All existing cipher mode implementations (such as CBC and XTS) have been
   converted from filters to using the interface previously provided by
   :ref:`AEAD modes <aead_modes>` which allows for in-place message
@@ -37,7 +42,7 @@ Version 1.11.5, Not Yet Released
 
 * TLS channels now support sending a ``std::vector``
 
-* Add a generic 64-bit multiply instruction for producing a 128 bit result in mul128.h
+* Add a generic 64x64->128 bit multiply instruction operation in mul128.h
 
 * Avoid potentially undefined operations in the bit rotation operations. Not
   known to have caused problems under existing compilers but might break in the

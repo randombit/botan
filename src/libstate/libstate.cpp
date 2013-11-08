@@ -157,6 +157,8 @@ void Library_State::initialize()
 
    algorithm_factory().add_engine(new Core_Engine);
 
+   m_sources = entropy_sources();
+
 #if defined(BOTAN_HAS_SELFTESTS)
    confirm_startup_self_tests(algorithm_factory());
 #endif
@@ -168,7 +170,6 @@ void Library_State::initialize()
 Library_State::Library_State()
    {
    m_algorithm_factory = nullptr;
-
    global_rng_ptr = nullptr;
    }
 

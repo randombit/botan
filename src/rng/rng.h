@@ -11,6 +11,7 @@
 #include <botan/entropy_src.h>
 #include <botan/exceptn.h>
 #include <string>
+#include <memory>
 
 namespace Botan {
 
@@ -22,8 +23,15 @@ class BOTAN_DLL RandomNumberGenerator
    public:
       /**
       * Create a seeded and active RNG object for general application use
+      * Added in 1.8.0
       */
       static RandomNumberGenerator* make_rng();
+
+      /**
+      * Create a seeded and active RNG object for general application use
+      * Added in 1.11.5
+      */
+      static std::unique_ptr<RandomNumberGenerator> make_rng(class Algorithm_Factory& af);
 
       /**
       * Randomize a byte array.
@@ -48,13 +56,18 @@ class BOTAN_DLL RandomNumberGenerator
       * Return a random byte
       * @return random byte
       */
-      byte next_byte();
+      byte next_byte()
+         {
+         byte out;
+         this->randomize(&out, 1);
+         return out;
+         }
 
       /**
       * Check whether this RNG is seeded.
       * @return true if this RNG was already seeded, false otherwise.
       */
-      virtual bool is_seeded() const { return true; }
+      virtual bool is_seeded() const = 0;
 
       /**
       * Clear all internally held values of this RNG.
@@ -74,24 +87,20 @@ class BOTAN_DLL RandomNumberGenerator
       virtual void reseed(size_t bits_to_collect) = 0;
 
       /**
-      * Add this entropy source to the RNG object
-      * @param source the entropy source which will be retained and used by RNG
-      */
-      virtual void add_entropy_source(EntropySource* source) = 0;
-
-      /**
       * Add entropy to this RNG.
       * @param in a byte array containg the entropy to be added
       * @param length the length of the byte array in
       */
       virtual void add_entropy(const byte in[], size_t length) = 0;
 
+      /*
+      * Never copy a RNG, create a new one
+      */
+      RandomNumberGenerator(const RandomNumberGenerator& rng) = delete;
+      RandomNumberGenerator& operator=(const RandomNumberGenerator& rng) = delete;
+
       RandomNumberGenerator() {}
       virtual ~RandomNumberGenerator() {}
-   private:
-      RandomNumberGenerator(const RandomNumberGenerator&) {}
-      RandomNumberGenerator& operator=(const RandomNumberGenerator&)
-         { return (*this); }
    };
 
 /**
@@ -100,14 +109,15 @@ class BOTAN_DLL RandomNumberGenerator
 class BOTAN_DLL Null_RNG : public RandomNumberGenerator
    {
    public:
-      void randomize(byte[], size_t) { throw PRNG_Unseeded("Null_RNG"); }
-      void clear() {}
-      std::string name() const { return "Null_RNG"; }
+      void randomize(byte[], size_t) override { throw PRNG_Unseeded("Null_RNG"); }
 
-      void reseed(size_t) {}
-      bool is_seeded() const { return false; }
-      void add_entropy(const byte[], size_t) {}
-      void add_entropy_source(EntropySource* es) { delete es; }
+      void clear() override {}
+
+      std::string name() const override { return "Null_RNG"; }
+
+      void reseed(size_t) override {}
+      bool is_seeded() const override { return false; }
+      void add_entropy(const byte[], size_t) override {}
    };
 
 }

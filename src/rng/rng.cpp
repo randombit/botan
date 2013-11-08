@@ -6,33 +6,29 @@
 */
 
 #include <botan/rng.h>
-
-#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
-  #include <botan/auto_rng.h>
-#endif
+#include <botan/hmac_rng.h>
+#include <botan/libstate.h>
 
 namespace Botan {
 
-/*
-* Get a single random byte
-*/
-byte RandomNumberGenerator::next_byte()
+RandomNumberGenerator* RandomNumberGenerator::make_rng()
    {
-   byte out;
-   this->randomize(&out, 1);
-   return out;
+   return make_rng(global_state().algorithm_factory()).release();
    }
 
 /*
 * Create and seed a new RNG object
 */
-RandomNumberGenerator* RandomNumberGenerator::make_rng()
+std::unique_ptr<RandomNumberGenerator> RandomNumberGenerator::make_rng(Algorithm_Factory& af)
    {
-#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
-   return new AutoSeeded_RNG;
-#endif
+   std::unique_ptr<RandomNumberGenerator> rng(
+      new HMAC_RNG(af.make_mac("HMAC(SHA-512)"),
+                   af.make_mac("HMAC(SHA-256)"))
+      );
 
-   throw Algorithm_Not_Found("RandomNumberGenerator::make_rng - no RNG found");
+   rng->reseed(256);
+
+   return rng;
    }
 
 }

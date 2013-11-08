@@ -11,11 +11,11 @@
 #include <botan/global_state.h>
 #include <botan/algo_factory.h>
 #include <botan/rng.h>
-
 #include <mutex>
 #include <string>
 #include <vector>
 #include <map>
+#include <memory>
 
 namespace Botan {
 
@@ -42,6 +42,8 @@ class BOTAN_DLL Library_State
       * @return global RandomNumberGenerator
       */
       RandomNumberGenerator& global_rng();
+
+      void poll_available_sources(class Entropy_Accumulator& accum);
 
       /**
       * Set the default allocator
@@ -100,10 +102,15 @@ class BOTAN_DLL Library_State
       static RandomNumberGenerator* make_global_rng(Algorithm_Factory& af,
                                                     std::mutex& mutex);
 
+      static std::vector<std::unique_ptr<EntropySource>> entropy_sources();
+
       void load_default_config();
 
       std::mutex global_rng_lock;
       RandomNumberGenerator* global_rng_ptr;
+
+      std::mutex m_entropy_src_mutex;
+      std::vector<std::unique_ptr<EntropySource>> m_sources;
 
       std::mutex config_lock;
       std::map<std::string, std::string> config;

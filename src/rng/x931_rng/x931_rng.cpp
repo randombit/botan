@@ -81,14 +81,6 @@ void ANSI_X931_RNG::reseed(size_t poll_bits)
    }
 
 /*
-* Add a entropy source to the underlying PRNG
-*/
-void ANSI_X931_RNG::add_entropy_source(EntropySource* src)
-   {
-   prng->add_entropy_source(src);
-   }
-
-/*
 * Add some entropy to the underlying PRNG
 */
 void ANSI_X931_RNG::add_entropy(const byte input[], size_t length)

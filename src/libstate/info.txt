@@ -1,29 +1,6 @@
 load_on always
 
-define LIBSTATE_MODULE
-
-<header:public>
-botan.h
-global_state.h
-init.h
-libstate.h
-lookup.h
-scan_name.h
-</header:public>
-
-<source>
-get_enc.cpp
-global_rng.cpp
-global_state.cpp
-init.cpp
-libstate.cpp
-lookup.cpp
-policy.cpp
-scan_name.cpp
-</source>
-
 <requires>
-aes
 algo_factory
 alloc
 bigint
@@ -33,7 +10,6 @@ engine
 filters
 hash
 hmac
-hmac_rng
 kdf
 mac
 mode_pad
@@ -41,7 +17,5 @@ pbkdf
 pk_pad
 pubkey
 rng
-sha2_32
-sha2_64
 stream
 </requires>

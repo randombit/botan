@@ -7,18 +7,6 @@
 
 #include <botan/libstate.h>
 
-#if defined(BOTAN_HAS_RANDPOOL)
-  #include <botan/randpool.h>
-#endif
-
-#if defined(BOTAN_HAS_HMAC_RNG)
-  #include <botan/hmac_rng.h>
-#endif
-
-#if defined(BOTAN_HAS_X931_RNG)
-  #include <botan/x931_rng.h>
-#endif
-
 #if defined(BOTAN_HAS_ENTROPY_SRC_HIGH_RESOLUTION_TIMER)
   #include <botan/internal/hres_timer.h>
 #endif
@@ -57,57 +45,57 @@
 
 namespace Botan {
 
-namespace {
-
-/**
-* Add any known entropy sources to this RNG
-*/
-void add_entropy_sources(RandomNumberGenerator* rng)
+std::vector<std::unique_ptr<EntropySource>> Library_State::entropy_sources()
    {
+   std::vector<std::unique_ptr<EntropySource>> sources;
+
 #if defined(BOTAN_HAS_ENTROPY_SRC_HIGH_RESOLUTION_TIMER)
-   rng->add_entropy_source(new High_Resolution_Timestamp);
+   sources.push_back(std::unique_ptr<EntropySource>(new High_Resolution_Timestamp));
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_RDRAND)
-   rng->add_entropy_source(new Intel_Rdrand);
+   sources.push_back(std::unique_ptr<EntropySource>(new Intel_Rdrand));
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM)
-   rng->add_entropy_source(
-      new Device_EntropySource(
-         split_on("/dev/random:/dev/srandom:/dev/urandom", ':')
-         )
-      );
+   sources.push_back(std::unique_ptr<EntropySource>(new Device_EntropySource(
+      { "/dev/random", "/dev/srandom", "/dev/urandom" }
+   )));
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_CAPI)
-   rng->add_entropy_source(new Win32_CAPI_EntropySource);
+   sources.push_back(std::unique_ptr<EntropySource>(new Win32_CAPI_EntropySource));
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_FTW)
-   rng->add_entropy_source(new FTW_EntropySource("/proc"));
+   sources.push_back(std::unique_ptr<EntropySource>(new FTW_EntropySource("/proc")));
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_WIN32)
-   rng->add_entropy_source(new Win32_EntropySource);
+   sources.push_back(std::unique_ptr<EntropySource>(new Win32_EntropySource));
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_BEOS)
-   rng->add_entropy_source(new BeOS_EntropySource);
+   sources.push_back(std::unique_ptr<EntropySource>(new BeOS_EntropySource));
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_UNIX)
-   rng->add_entropy_source(
-      new Unix_EntropySource(split_on("/bin:/sbin:/usr/bin:/usr/sbin", ':'))
-      );
+   sources.push_back(std::unique_ptr<EntropySource>(
+      new Unix_EntropySource(
+         { "/bin", "/sbin", "/usr/bin", "/usr/sbin" }
+      )));
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_EGD)
-   rng->add_entropy_source(
-      new EGD_EntropySource(split_on("/var/run/egd-pool:/dev/egd-pool", ':'))
-      );
+   sources.push_back(std::unique_ptr<EntropySource>(
+      new EGD_EntropySource({ "/var/run/egd-pool" "/dev/egd-pool" })
+      ));
 #endif
+
+   return sources;
    }
+
+namespace {
 
 class Serialized_PRNG : public RandomNumberGenerator
    {
@@ -142,12 +130,6 @@ class Serialized_PRNG : public RandomNumberGenerator
          rng->reseed(poll_bits);
          }
 
-      void add_entropy_source(EntropySource* es)
-         {
-         std::lock_guard<std::mutex> lock(mutex);
-         rng->add_entropy_source(es);
-         }
-
       void add_entropy(const byte in[], size_t len)
          {
          std::lock_guard<std::mutex> lock(mutex);
@@ -157,47 +139,41 @@ class Serialized_PRNG : public RandomNumberGenerator
       // We do not own the mutex; Library_State does
       Serialized_PRNG(RandomNumberGenerator* r, std::mutex& m) :
          mutex(m), rng(r) {}
-
-      ~Serialized_PRNG() { delete rng; }
    private:
       std::mutex& mutex;
-      RandomNumberGenerator* rng;
+      std::unique_ptr<RandomNumberGenerator> rng;
    };
 
 }
 
+void Library_State::poll_available_sources(class Entropy_Accumulator& accum)
+   {
+   std::lock_guard<std::mutex> lock(m_entropy_src_mutex);
+
+   const size_t poll_bits = accum.desired_remaining_bits();
+
+   if(!m_sources.empty())
+      {
+      size_t poll_attempt = 0;
+
+      while(!accum.polling_goal_achieved() && poll_attempt < poll_bits)
+         {
+         const size_t src_idx = poll_attempt % m_sources.size();
+         m_sources[src_idx]->poll(accum);
+         ++poll_attempt;
+         }
+      }
+   }
+
 RandomNumberGenerator* Library_State::make_global_rng(Algorithm_Factory& af,
                                                       std::mutex& mutex)
    {
-   RandomNumberGenerator* rng = nullptr;
-
-#if defined(BOTAN_HAS_HMAC_RNG)
-
-   rng = new HMAC_RNG(af.make_mac("HMAC(SHA-512)"),
-                      af.make_mac("HMAC(SHA-256)"));
-
-#elif defined(BOTAN_HAS_RANDPOOL)
-
-   rng = new Randpool(af.make_block_cipher("AES-256"),
-                      af.make_mac("HMAC(SHA-256)"));
-
-#endif
+   auto rng = RandomNumberGenerator::make_rng(af);
 
    if(!rng)
       throw Internal_Error("No usable RNG found enabled in build");
 
-   /* If X9.31 is available, use it to wrap the other RNG as a failsafe */
-#if defined(BOTAN_HAS_X931_RNG)
-
-   rng = new ANSI_X931_RNG(af.make_block_cipher("AES-256"), rng);
-
-#endif
-
-   add_entropy_sources(rng);
-
-   rng->reseed(256);
-
-   return new Serialized_PRNG(rng, mutex);
+   return new Serialized_PRNG(rng.release(), mutex);
    }
 
 }
