@@ -108,7 +108,7 @@ class BOTAN_DLL Entropy_Accumulator_BufferedComputation :
          Entropy_Accumulator(goal), entropy_sink(sink) {}
 
    private:
-      virtual void add_bytes(const byte bytes[], size_t length)
+      void add_bytes(const byte bytes[], size_t length) override
          {
          entropy_sink.update(bytes, length);
          }
