@@ -43,12 +43,24 @@ void High_Resolution_Timestamp::poll(Entropy_Accumulator& accum)
    CLOCK_POLL(CLOCK_REALTIME);
 #endif
 
+#if defined(CLOCK_REALTIME_COARSE)
+   CLOCK_POLL(CLOCK_REALTIME_COARSE);
+#endif
+
 #if defined(CLOCK_MONOTONIC)
    CLOCK_POLL(CLOCK_MONOTONIC);
 #endif
 
+#if defined(CLOCK_MONOTONIC_COARSE)
+   CLOCK_POLL(CLOCK_MONOTONIC_COARSE);
+#endif
+
 #if defined(CLOCK_MONOTONIC_RAW)
    CLOCK_POLL(CLOCK_MONOTONIC_RAW);
+#endif
+
+#if defined(CLOCK_BOOTTIME)
+   CLOCK_POLL(CLOCK_BOOTTIME);
 #endif
 
 #if defined(CLOCK_PROCESS_CPUTIME_ID)
