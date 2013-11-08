@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/dev_random.h>
+#include <botan/internal/rounding.h>
 
 #include <sys/types.h>
 #include <sys/select.h>
@@ -16,9 +17,11 @@
 
 namespace Botan {
 
-namespace {
-
-int open_nonblocking(const char* pathname)
+/**
+Device_EntropySource constructor
+Open a file descriptor to each (available) device in fsnames
+*/
+Device_EntropySource::Device_EntropySource(const std::vector<std::string>& fsnames)
    {
 #ifndef O_NONBLOCK
   #define O_NONBLOCK 0
@@ -29,22 +32,15 @@ int open_nonblocking(const char* pathname)
 #endif
 
    const int flags = O_RDONLY | O_NONBLOCK | O_NOCTTY;
-   return ::open(pathname, flags);
-   }
 
-}
-
-/**
-Device_EntropySource constructor
-Open a file descriptor to each (available) device in fsnames
-*/
-Device_EntropySource::Device_EntropySource(const std::vector<std::string>& fsnames)
-   {
-   for(size_t i = 0; i != fsnames.size(); ++i)
+   for(auto fsname : fsnames)
       {
-      fd_type fd = open_nonblocking(fsnames[i].c_str());
+      fd_type fd = ::open(fsname.c_str(), flags);
+
       if(fd >= 0 && fd < FD_SETSIZE)
          devices.push_back(fd);
+      else if(fd >= 0)
+         ::close(fd);
       }
    }
 
@@ -67,9 +63,7 @@ void Device_EntropySource::poll(Entropy_Accumulator& accum)
 
    const size_t ENTROPY_BITS_PER_BYTE = 8;
    const size_t MS_WAIT_TIME = 32;
-   const size_t READ_ATTEMPT = accum.desired_remaining_bits() / 4;
-
-   secure_vector<byte>& io_buffer = accum.get_io_buffer(READ_ATTEMPT);
+   const size_t READ_ATTEMPT = std::min<size_t>(accum.desired_remaining_bits() / 8, 16);
 
    int max_fd = devices[0];
    fd_set read_set;
@@ -87,6 +81,8 @@ void Device_EntropySource::poll(Entropy_Accumulator& accum)
 
    if(::select(max_fd + 1, &read_set, 0, 0, &timeout) < 0)
       return;
+
+   secure_vector<byte>& io_buffer = accum.get_io_buffer(READ_ATTEMPT);
 
    for(size_t i = 0; i != devices.size(); ++i)
       {
