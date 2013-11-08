@@ -20,7 +20,7 @@ CCM_Mode::CCM_Mode(BlockCipher* cipher, size_t tag_size, size_t L) :
    m_L(L),
    m_cipher(cipher)
    {
-   if(m_cipher->block_size() != 16)
+   if(m_cipher->block_size() != BS)
       throw std::invalid_argument(m_cipher->name() + " cannot be used with CCM mode");
 
    if(L < 2 || L > 8)
@@ -85,7 +85,7 @@ void CCM_Mode::set_associated_data(const byte ad[], size_t length)
       m_ad_buf.push_back(get_byte<u16bit>(0, length));
       m_ad_buf.push_back(get_byte<u16bit>(1, length));
       m_ad_buf += std::make_pair(ad, length);
-      while(m_ad_buf.size() % 16)
+      while(m_ad_buf.size() % BS)
          m_ad_buf.push_back(0); // pad with zeros to full block size
       }
    }
