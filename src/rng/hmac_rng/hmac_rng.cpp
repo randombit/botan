@@ -17,6 +17,10 @@ namespace Botan {
 
 namespace {
 
+// make these build.h constants?
+const size_t BOTAN_RNG_MAX_OUTPUT_BEFORE_RESEED = 512;
+const size_t BOTAN_RNG_RESEED_POLL_BITS = 128;
+
 void hmac_prf(MessageAuthenticationCode& prf,
               secure_vector<byte>& K,
               u32bit& counter,
@@ -96,14 +100,16 @@ void HMAC_RNG::randomize(byte out[], size_t length)
       {
       hmac_prf(*m_prf, m_K, m_counter, "rng");
 
-      if(m_counter % AUTOMATIC_RESEED_RATE == 0)
-         reseed(AUTOMATIC_RESEED_BITS);
-
       const size_t copied = std::min<size_t>(m_K.size() / 2, length);
 
       copy_mem(out, &m_K[0], copied);
       out += copied;
       length -= copied;
+
+      m_output_since_reseed += copied;
+
+      if(m_output_since_reseed >= BOTAN_RNG_MAX_OUTPUT_BEFORE_RESEED)
+         reseed(BOTAN_RNG_RESEED_POLL_BITS);
       }
    }
 
@@ -153,12 +159,18 @@ void HMAC_RNG::reseed(size_t poll_bits)
    zeroise(m_K);
    m_counter = 0;
 
-   /*
-   * Consider ourselves seeded once we've collected an estimated 128 bits of
-   * entropy in a single poll.
-   */
-   if(accum.bits_collected() >= 128)
-      m_seeded = true;
+   m_collected_entropy_estimate =
+      std::min(m_collected_entropy_estimate  + accum.bits_collected(),
+               m_extractor->output_length() * 8);
+
+   m_output_since_reseed = 0;
+   }
+
+bool HMAC_RNG::is_seeded() const
+   {
+   if(m_collected_entropy_estimate >= 256)
+      return true;
+   return false;
    }
 
 /*
@@ -167,7 +179,7 @@ void HMAC_RNG::reseed(size_t poll_bits)
 void HMAC_RNG::add_entropy(const byte input[], size_t length)
    {
    m_extractor->update(input, length);
-   reseed(AUTOMATIC_RESEED_BITS);
+   reseed(BOTAN_RNG_RESEED_POLL_BITS);
    }
 
 /*
@@ -175,7 +187,7 @@ void HMAC_RNG::add_entropy(const byte input[], size_t length)
 */
 void HMAC_RNG::clear()
    {
-   m_seeded = false;
+   m_collected_entropy_estimate = 0;
    m_extractor->clear();
    m_prf->clear();
    zeroise(m_K);

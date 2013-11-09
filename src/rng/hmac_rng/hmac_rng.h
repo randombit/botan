@@ -28,7 +28,7 @@ class BOTAN_DLL HMAC_RNG : public RandomNumberGenerator
    {
    public:
       void randomize(byte buf[], size_t len);
-      bool is_seeded() const { return m_seeded; }
+      bool is_seeded() const;
       void clear();
       std::string name() const;
 
@@ -42,14 +42,11 @@ class BOTAN_DLL HMAC_RNG : public RandomNumberGenerator
       HMAC_RNG(MessageAuthenticationCode* extractor,
                MessageAuthenticationCode* prf);
    private:
-      // make these build.h constants?
-      const size_t AUTOMATIC_RESEED_RATE = 16;
-      const size_t AUTOMATIC_RESEED_BITS = 128;
-
       std::unique_ptr<MessageAuthenticationCode> m_extractor;
       std::unique_ptr<MessageAuthenticationCode> m_prf;
 
-      bool m_seeded = false;
+      size_t m_collected_entropy_estimate = 0;
+      size_t m_output_since_reseed = 0;
 
       secure_vector<byte> m_K;
       u32bit m_counter = 0;
