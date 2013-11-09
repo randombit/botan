@@ -1,14 +1,12 @@
-define ENTROPY_SRC_UNIX
+define ENTROPY_SRC_UNIX_PROCESS_RUNNER
 
 <source>
-es_unix.cpp
-unix_cmd.cpp
-unix_src.cpp
+unix_procs.cpp
+unix_proc_sources.cpp
 </source>
 
 <header:internal>
-es_unix.h
-unix_cmd.h
+unix_procs.h
 </header:internal>
 
 <os>
@@ -25,7 +23,3 @@ qnx
 solaris
 tru64
 </os>
-
-<requires>
-filters
-</requires>
