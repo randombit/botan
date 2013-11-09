@@ -1,11 +1,13 @@
 /*
-* FTW EntropySource
+* Entropy source based on reading files in /proc on the assumption
+* that a remote attacker will have difficulty guessing some of them.
+*
 * (C) 1999-2008,2012 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/internal/es_ftw.h>
+#include <botan/internal/proc_walk.h>
 #include <botan/secmem.h>
 #include <cstring>
 #include <deque>
@@ -129,39 +131,31 @@ int Directory_Walker::next_fd()
 }
 
 /**
-* FTW_EntropySource Constructor
+* ProcWalking_EntropySource Destructor
 */
-FTW_EntropySource::FTW_EntropySource(const std::string& p) : path(p), dir(nullptr)
+ProcWalking_EntropySource::~ProcWalking_EntropySource()
    {
+   // for ~unique_ptr
    }
 
-/**
-* FTW_EntropySource Destructor
-*/
-FTW_EntropySource::~FTW_EntropySource()
-   {
-   delete dir;
-   dir = nullptr;
-   }
-
-void FTW_EntropySource::poll(Entropy_Accumulator& accum)
+void ProcWalking_EntropySource::poll(Entropy_Accumulator& accum)
    {
    const size_t MAX_FILES_READ_PER_POLL = 2048;
 
-   if(!dir)
-      dir = new Directory_Walker(path);
+   if(!m_dir)
+      m_dir = new Directory_Walker(m_path);
 
    secure_vector<byte>& io_buffer = accum.get_io_buffer(4096);
 
    for(size_t i = 0; i != MAX_FILES_READ_PER_POLL; ++i)
       {
-      int fd = dir->next_fd();
+      int fd = m_dir->next_fd();
 
       // If we've exhaused this walk of the directory, halt the poll
       if(fd == -1)
          {
-         delete dir;
-         dir = nullptr;
+         delete m_dir;
+         m_dir = nullptr;
          break;
          }
 

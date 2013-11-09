@@ -1,11 +1,11 @@
-define ENTROPY_SRC_FTW
+define ENTROPY_SRC_PROC_WALKER
 
 <source>
-es_ftw.cpp
+proc_walk.cpp
 </source>
 
 <header:internal>
-es_ftw.h
+proc_walk.h
 </header:internal>
 
 <os>

@@ -29,7 +29,7 @@ class Device_EntropySource : public EntropySource
    private:
       typedef int fd_type;
 
-      std::vector<fd_type> devices;
+      std::vector<fd_type> m_devices;
    };
 
 }

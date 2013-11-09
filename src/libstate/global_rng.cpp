@@ -23,8 +23,8 @@
   #include <botan/internal/es_egd.h>
 #endif
 
-#if defined(BOTAN_HAS_ENTROPY_SRC_UNIX)
-  #include <botan/internal/es_unix.h>
+#if defined(BOTAN_HAS_ENTROPY_SRC_UNIX_PROCESS_RUNNER)
+  #include <botan/internal/unix_procs.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_BEOS)
@@ -39,8 +39,8 @@
   #include <botan/internal/es_win32.h>
 #endif
 
-#if defined(BOTAN_HAS_ENTROPY_SRC_FTW)
-  #include <botan/internal/es_ftw.h>
+#if defined(BOTAN_HAS_ENTROPY_SRC_PROC_WALKER)
+  #include <botan/internal/proc_walk.h>
 #endif
 
 namespace Botan {
@@ -67,8 +67,9 @@ std::vector<std::unique_ptr<EntropySource>> Library_State::entropy_sources()
    sources.push_back(std::unique_ptr<EntropySource>(new Win32_CAPI_EntropySource));
 #endif
 
-#if defined(BOTAN_HAS_ENTROPY_SRC_FTW)
-   sources.push_back(std::unique_ptr<EntropySource>(new FTW_EntropySource("/proc")));
+#if defined(BOTAN_HAS_ENTROPY_SRC_PROC_WALKER)
+   sources.push_back(std::unique_ptr<EntropySource>(
+      new ProcWalking_EntropySource("/proc")));
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_WIN32)
@@ -79,7 +80,7 @@ std::vector<std::unique_ptr<EntropySource>> Library_State::entropy_sources()
    sources.push_back(std::unique_ptr<EntropySource>(new BeOS_EntropySource));
 #endif
 
-#if defined(BOTAN_HAS_ENTROPY_SRC_UNIX)
+#if defined(BOTAN_HAS_ENTROPY_SRC_UNIX_PROCESS_RUNNER)
    sources.push_back(std::unique_ptr<EntropySource>(
       new Unix_EntropySource(
          { "/bin", "/sbin", "/usr/bin", "/usr/sbin" }
@@ -88,7 +89,7 @@ std::vector<std::unique_ptr<EntropySource>> Library_State::entropy_sources()
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_EGD)
    sources.push_back(std::unique_ptr<EntropySource>(
-      new EGD_EntropySource({ "/var/run/egd-pool" "/dev/egd-pool" })
+      new EGD_EntropySource({ "/var/run/egd-pool", "/dev/egd-pool" })
       ));
 #endif
 
