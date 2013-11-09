@@ -271,7 +271,7 @@ bool Channel::heartbeat_sending_allowed() const
 
 size_t Channel::received_data(const std::vector<byte>& buf)
    {
-   this->received_data(&buf[0], buf.size());
+   return this->received_data(&buf[0], buf.size());
    }
 
 size_t Channel::received_data(const byte input[], size_t input_size)
