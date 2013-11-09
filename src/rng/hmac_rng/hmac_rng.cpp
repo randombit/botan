@@ -17,10 +17,6 @@ namespace Botan {
 
 namespace {
 
-// make these build.h constants?
-const size_t BOTAN_RNG_MAX_OUTPUT_BEFORE_RESEED = 512;
-const size_t BOTAN_RNG_RESEED_POLL_BITS = 128;
-
 void hmac_prf(MessageAuthenticationCode& prf,
               secure_vector<byte>& K,
               u32bit& counter,
@@ -91,7 +87,13 @@ HMAC_RNG::HMAC_RNG(MessageAuthenticationCode* extractor,
 void HMAC_RNG::randomize(byte out[], size_t length)
    {
    if(!is_seeded())
-      throw PRNG_Unseeded(name());
+      {
+      reseed(256);
+      if(!is_seeded())
+         throw PRNG_Unseeded(name());
+      }
+
+   const size_t max_per_prf_iter = m_prf->output_length() / 2;
 
    /*
     HMAC KDF as described in E-t-E, using a CTXinfo of "rng"
@@ -100,7 +102,7 @@ void HMAC_RNG::randomize(byte out[], size_t length)
       {
       hmac_prf(*m_prf, m_K, m_counter, "rng");
 
-      const size_t copied = std::min<size_t>(m_K.size() / 2, length);
+      const size_t copied = std::min<size_t>(length, max_per_prf_iter);
 
       copy_mem(out, &m_K[0], copied);
       out += copied;
@@ -168,9 +170,7 @@ void HMAC_RNG::reseed(size_t poll_bits)
 
 bool HMAC_RNG::is_seeded() const
    {
-   if(m_collected_entropy_estimate >= 256)
-      return true;
-   return false;
+   return (m_collected_entropy_estimate >= 256);
    }
 
 /*
