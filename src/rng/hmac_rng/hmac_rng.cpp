@@ -11,6 +11,7 @@
 #include <botan/entropy_src.h>
 #include <botan/internal/xor_buf.h>
 #include <algorithm>
+#include <chrono>
 
 namespace Botan {
 
@@ -21,8 +22,13 @@ void hmac_prf(MessageAuthenticationCode& prf,
               u32bit& counter,
               const std::string& label)
    {
+   typedef std::chrono::high_resolution_clock clock;
+
+   auto timestamp = clock::now().time_since_epoch().count();
+
    prf.update(K);
    prf.update(label);
+   prf.update_be(timestamp);
    prf.update_be(counter);
    prf.final(&K[0]);
 
