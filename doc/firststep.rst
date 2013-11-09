@@ -37,15 +37,6 @@ below), all you need is::
 
 at the start of your ``main``.
 
-The constructor takes an optional string that specifies arguments.
-Currently the only possible argument is "thread_safe", which must have
-an boolean argument (for instance "thread_safe=false" or
-"thread_safe=true"). If "thread_safe" is specified as true the library
-will attempt to register a mutex type to properly guard access to
-shared resources. However these locks do not protect individual Botan
-objects: explicit locking must be used if you wish to share a single
-object between threads.
-
 If you do not create a ``LibraryInitializer`` object, all library
 operations will fail, because it will be unable to do basic things
 like allocate memory or get random bits. You should never create more
