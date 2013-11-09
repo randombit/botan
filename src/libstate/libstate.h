@@ -46,12 +46,6 @@ class BOTAN_DLL Library_State
       void poll_available_sources(class Entropy_Accumulator& accum);
 
       /**
-      * Set the default allocator
-      * @param name the name of the allocator to use as the default
-      */
-      void set_default_allocator(const std::string& name);
-
-      /**
       * Get a parameter value as std::string.
       * @param section the section of the desired key
       * @param key the desired keys name
