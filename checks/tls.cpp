@@ -156,7 +156,7 @@ void test_handshake(RandomNumberGenerator& rng)
       return true;
    };
 
-   auto print_alert = [&](TLS::Alert alert, const byte buf[], size_t sz)
+   auto print_alert = [&](TLS::Alert alert, const byte[], size_t)
    {
       if(alert.is_valid())
          std::cout << "Server recvd alert " << alert.type_string() << "\n";
