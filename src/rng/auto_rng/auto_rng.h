@@ -36,7 +36,6 @@ class BOTAN_DLL AutoSeeded_RNG : public RandomNumberGenerator
       void add_entropy(const byte in[], size_t len)
          { m_rng->add_entropy(in, len); }
 
-      BOTAN_DEPRECATED("Use RandomNumberGenerator::make_rng instead")
       AutoSeeded_RNG() : m_rng(RandomNumberGenerator::make_rng()) {}
    private:
       std::unique_ptr<RandomNumberGenerator> m_rng;
