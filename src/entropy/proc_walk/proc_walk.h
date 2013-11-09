@@ -23,7 +23,8 @@ class ProcWalking_EntropySource : public EntropySource
 
       void poll(Entropy_Accumulator& accum);
 
-      ProcWalking_EntropySource(const std::string& root_dir) : m_path(root_dir) {}
+      ProcWalking_EntropySource(const std::string& root_dir) :
+         m_path(root_dir), m_dir(nullptr) {}
 
       ~ProcWalking_EntropySource();
    private:
