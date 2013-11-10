@@ -46,11 +46,3 @@ creates regular snapshots of trunk, which are available `here
 
    Versions 1.11.0 and later require a mostly-compliant C++11 compiler
    such as Clang 3.1 or GCC 4.7.
-
-Older Stable Series (1.8)
-----------------------------------------
-
-The latest version of the previous stable series, from branch
-``net.randombit.botan.1_8`` is :doc:`relnotes/1_8_14`:
-:tgz:`1.8.14` (:tgz_sig:`sig <1.8.14>`),
-:tbz:`1.8.14` (:tbz_sig:`sig <1.8.14>`)
