@@ -21,6 +21,10 @@ Version 1.11.5, 2013-11-10
 * Previously AutoSeeded_RNG referenced a globally shared PRNG instance.
   Now each instance has distinct state.
 
+* The entropy collector that runs Unix programs to collect statistical
+  data now runs multiple processes in parallel, greatly reducing poll
+  times on some systems.
+
 * The Randpool RNG implementation was removed.
 
 * All existing cipher mode implementations (such as CBC and XTS) have been
