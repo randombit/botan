@@ -1,13 +1,11 @@
 define SSL_TLS
 
-load_on request
+load_on auto
 
-<warning>
-A new TLS API is being developed. This version has numerous
-performance and usability issues and will not be supported in the
-future. Only use it if you need it for compatability with code written
-against previous versions.
-</warning>
+<comment>
+If you are using TLS in your application definitely consider using the
+version in 1.11 instead
+</comment>
 
 uses_tr1 yes
 
