@@ -57,6 +57,10 @@ std::vector<std::unique_ptr<EntropySource>> Library_State::entropy_sources()
    sources.push_back(std::unique_ptr<EntropySource>(new Intel_Rdrand));
 #endif
 
+#if defined(BOTAN_HAS_ENTROPY_SRC_UNIX_PROCESS_RUNNER)
+   sources.push_back(std::unique_ptr<EntropySource>(new UnixProcessInfo_EntropySource));
+#endif
+
 #if defined(BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM)
    sources.push_back(std::unique_ptr<EntropySource>(new Device_EntropySource(
       { "/dev/random", "/dev/srandom", "/dev/urandom" }

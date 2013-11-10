@@ -63,32 +63,13 @@ Unix_EntropySource::Unix_EntropySource(const std::vector<std::string>& trusted_p
    {
    }
 
-void Unix_EntropySource::fast_poll(Entropy_Accumulator& accum)
+void UnixProcessInfo_EntropySource::poll(Entropy_Accumulator& accum)
    {
-   const char* stat_targets[] = {
-      "/",
-      "/tmp",
-      "/var/tmp",
-      "/usr",
-      "/home",
-      "/etc/passwd",
-      ".",
-      "..",
-      nullptr
-   };
-
-   for(size_t i = 0; stat_targets[i]; i++)
-      {
-      struct stat statbuf;
-      clear_mem(&statbuf, 1);
-      ::stat(stat_targets[i], &statbuf);
-      accum.add(&statbuf, sizeof(statbuf), 0.0);
-      }
-
    accum.add(::getpid(),  0.0);
    accum.add(::getppid(), 0.0);
    accum.add(::getuid(),  0.0);
    accum.add(::getgid(),  0.0);
+   accum.add(::getsid(0),  0.0);
    accum.add(::getpgrp(), 0.0);
 
    struct ::rusage usage;
@@ -196,8 +177,6 @@ const std::vector<std::string>& Unix_EntropySource::next_source()
 
 void Unix_EntropySource::poll(Entropy_Accumulator& accum)
    {
-   //fast_poll(accum);
-
    // refuse to run as root (maybe instead setuid to nobody before exec?)
    // fixme: this should also check for setgid
    if(::getuid() == 0 || ::geteuid() == 0)

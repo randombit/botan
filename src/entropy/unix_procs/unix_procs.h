@@ -27,8 +27,6 @@ class Unix_EntropySource : public EntropySource
 
       void poll(Entropy_Accumulator& accum) override;
 
-      void fast_poll(Entropy_Accumulator& accum);
-
       /**
       * @param trusted_paths is a list of directories that are assumed
       *        to contain only 'safe' binaries. If an attacker can write
@@ -76,6 +74,14 @@ class Unix_EntropySource : public EntropySource
       size_t m_sources_idx = 0;
 
       std::vector<Unix_Process> m_procs;
+   };
+
+class UnixProcessInfo_EntropySource : public EntropySource
+   {
+   public:
+      std::string name() const { return "Unix Process Info"; }
+
+      void poll(Entropy_Accumulator& accum);
    };
 
 }
