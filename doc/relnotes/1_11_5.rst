@@ -1,4 +1,4 @@
-Version 1.11.5, Not Yet Released
+Version 1.11.5, 2013-11-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * The TLS callback signatures have changed - there are now two distinct
