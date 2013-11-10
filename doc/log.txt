@@ -7,7 +7,7 @@ Release Notes
 Series 1.10
 ----------------------------------------
 
-Version 1.10.6, Not Yet Released
+Version 1.10.6, 2013-11-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * The device reading entropy source now attempts to read from all
