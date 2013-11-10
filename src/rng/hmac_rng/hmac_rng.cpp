@@ -7,6 +7,7 @@
 
 #include <botan/hmac_rng.h>
 #include <botan/get_byte.h>
+#include <botan/time.h>
 #include <botan/internal/xor_buf.h>
 #include <botan/internal/stl_util.h>
 #include <algorithm>
@@ -23,6 +24,7 @@ void hmac_prf(MessageAuthenticationCode* prf,
    prf->update(K);
    prf->update(label);
    prf->update_be(counter);
+   prf->update_be(get_nanoseconds_clock());
    prf->final(&K[0]);
 
    ++counter;
@@ -35,10 +37,6 @@ void hmac_prf(MessageAuthenticationCode* prf,
 */
 void HMAC_RNG::randomize(byte out[], size_t length)
    {
-   // Chosen more or less arbitrarily
-   const size_t AUTOMATIC_RESEED_RATE = 16;
-   const size_t AUTOMATIC_RESEED_BITS = 128;
-
    if(!is_seeded())
       throw PRNG_Unseeded(name());
 
@@ -49,14 +47,16 @@ void HMAC_RNG::randomize(byte out[], size_t length)
       {
       hmac_prf(prf, K, counter, "rng");
 
-      if(counter % AUTOMATIC_RESEED_RATE == 0)
-         reseed(AUTOMATIC_RESEED_BITS);
-
       const size_t copied = std::min<size_t>(K.size(), length);
 
       copy_mem(out, &K[0], copied);
       out += copied;
       length -= copied;
+
+      output_since_reseed += copied;
+
+      if(output_since_reseed >= BOTAN_RNG_MAX_OUTPUT_BEFORE_RESEED)
+         reseed(BOTAN_RNG_RESEED_POLL_BITS);
       }
    }
 
@@ -116,7 +116,7 @@ void HMAC_RNG::reseed(size_t poll_bits)
    // Reset state
    zeroise(K);
    counter = 0;
-   user_input_len = 0;
+   output_since_reseed = 0;
 
    /*
    Consider ourselves seeded once we've collected an estimated 128 bits of
@@ -126,24 +126,12 @@ void HMAC_RNG::reseed(size_t poll_bits)
       seeded = true;
    }
 
-/*
-* Add user-supplied entropy to the extractor input
-*/
 void HMAC_RNG::add_entropy(const byte input[], size_t length)
    {
-   const size_t USER_ENTROPY_WATERSHED = 64;
+   // Add user-supplied whatever to the extractor input, and then reseed
 
    extractor->update(input, length);
-   user_input_len += length;
-
-   /*
-   * After we've accumulated at least USER_ENTROPY_WATERSHED bytes of
-   * user input, reseed.  This input will automatically have been
-   * included if reseed was called already, as it's just included in
-   * the extractor input.
-   */
-   if(user_input_len >= USER_ENTROPY_WATERSHED)
-      reseed(0);
+   reseed(BOTAN_RNG_RESEED_POLL_BITS);
    }
 
 /*
@@ -163,7 +151,7 @@ void HMAC_RNG::clear()
    prf->clear();
    zeroise(K);
    counter = 0;
-   user_input_len = 0;
+   output_since_reseed = 0;
    seeded = false;
    }
 
@@ -192,7 +180,7 @@ HMAC_RNG::HMAC_RNG(MessageAuthenticationCode* extractor_mac,
    K.resize(prf->output_length());
 
    counter = 0;
-   user_input_len = 0;
+   output_since_reseed = 0;
    seeded = false;
 
    /*
