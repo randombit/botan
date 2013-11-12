@@ -17,6 +17,8 @@
 #include <sys/wait.h>
 #include <sys/resource.h>
 #include <unistd.h>
+#include <signal.h>
+#include <stdlib.h>
 
 namespace Botan {
 
