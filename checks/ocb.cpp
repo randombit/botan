@@ -11,6 +11,7 @@
 using namespace Botan;
 
 // something like this should be in the library
+namespace {
 
 std::vector<byte> ocb_decrypt(const SymmetricKey& key,
                               const std::vector<byte>& nonce,
@@ -120,6 +121,8 @@ void test_ocb_long(size_t taglen, const std::string &expected)
    if(cipher_hex != expected)
       std::cout << "OCB AES-128 long test mistmatch " << cipher_hex << " != " << expected << "\n";
    }
+
+}
 
 void test_ocb()
    {

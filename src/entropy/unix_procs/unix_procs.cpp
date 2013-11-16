@@ -1,4 +1,4 @@
-/*
+ /*
 * Gather entropy by running various system commands in the hopes that
 * some of the output cannot be guessed by a remote attacker.
 *
@@ -236,7 +236,7 @@ void Unix_EntropySource::poll(Entropy_Accumulator& accum)
       timeout.tv_sec = (MS_WAIT_TIME / 1000);
       timeout.tv_usec = (MS_WAIT_TIME % 1000) * 1000;
 
-      if(::select(max_fd + 1, &read_set, 0, 0, &timeout) < 0)
+      if(::select(max_fd + 1, &read_set, nullptr, nullptr, &timeout) < 0)
          return; // or continue?
 
       for(auto& proc : m_procs)

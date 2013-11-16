@@ -27,7 +27,7 @@ namespace Botan {
 
 #define BOTAN_FAST_64X64_MUL(a,b,lo,hi)      \
    do {                                      \
-      const uint128_t r = (uint128_t)a * b;  \
+      const uint128_t r = static_cast<uint128_t>(a) * b;   \
       *hi = (r >> 64) & 0xFFFFFFFFFFFFFFFF;  \
       *lo = (r      ) & 0xFFFFFFFFFFFFFFFF;  \
    } while(0)

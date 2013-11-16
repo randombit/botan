@@ -109,7 +109,7 @@ void Filter::set_next(Filter* filters[], size_t size)
    port_num = 0;
    filter_owns = 0;
 
-   while(size && filters && filters[size-1] == 0)
+   while(size && filters && (filters[size-1] == nullptr))
       --size;
 
    if(filters && size)
