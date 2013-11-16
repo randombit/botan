@@ -41,6 +41,10 @@ import botan_version
 def flatten(l):
     return sum(l, [])
 
+def is_official_release():
+    # Assume a release date implies official release
+    return (botan_version.release_datestamp > 20130000)
+
 def get_vc_revision():
 
     def get_vc_revision(cmdlist):
@@ -320,7 +324,12 @@ def process_command_line(args):
                            dest='with_doxygen', help=optparse.SUPPRESS_HELP)
 
     build_group.add_option('--maintainer-mode', dest='maintainer_mode',
-                           action='store_true', default=False,
+                           action='store_true',
+                           default=not is_official_release(),
+                           help="Enable extra warnings")
+
+    build_group.add_option('--release-mode', dest='maintainer_mode',
+                           action='store_false',
                            help=optparse.SUPPRESS_HELP)
 
     build_group.add_option('--dirty-tree', dest='clean_build_tree',
