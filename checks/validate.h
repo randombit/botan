@@ -32,4 +32,6 @@ size_t do_tls_tests(RandomNumberGenerator& rng);
 
 void test_ocb();
 
+void test_hkdf();
+
 #endif
