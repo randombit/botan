@@ -199,7 +199,7 @@ Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
 #endif
 
 #if defined(BOTAN_HAS_AEAD_OCB)
-   if(mode == "OCB")
+   if(mode_name == "OCB")
       {
       if(direction == ENCRYPTION)
          return new AEAD_Filter(new OCB_Encryption(block_cipher->clone(), tag_size));
@@ -209,7 +209,7 @@ Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
 #endif
 
 #if defined(BOTAN_HAS_AEAD_GCM)
-   if(mode == "GCM")
+   if(mode_name == "GCM")
       {
       if(direction == ENCRYPTION)
          return new AEAD_Filter(new GCM_Encryption(block_cipher->clone(), tag_size));
