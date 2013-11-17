@@ -28,7 +28,12 @@ class BOTAN_DLL KDF : public Algorithm
       */
       secure_vector<byte> derive_key(size_t key_len,
                                     const secure_vector<byte>& secret,
-                                    const std::string& salt = "") const;
+                                    const std::string& salt = "") const
+         {
+         return derive_key(key_len, &secret[0], secret.size(),
+                           reinterpret_cast<const byte*>(salt.data()),
+                           salt.length());
+         }
 
       /**
       * Derive a key
@@ -41,7 +46,8 @@ class BOTAN_DLL KDF : public Algorithm
                                      const std::vector<byte, Alloc>& secret,
                                      const std::vector<byte, Alloc2>& salt) const
          {
-         return derive_key(key_len, &secret[0], secret.size(),
+         return derive_key(key_len,
+                           &secret[0], secret.size(),
                            &salt[0], salt.size());
          }
 
@@ -55,7 +61,12 @@ class BOTAN_DLL KDF : public Algorithm
       secure_vector<byte> derive_key(size_t key_len,
                                     const secure_vector<byte>& secret,
                                     const byte salt[],
-                                    size_t salt_len) const;
+                                    size_t salt_len) const
+         {
+         return derive_key(key_len,
+                           &secret[0], secret.size(),
+                           salt, salt_len);
+         }
 
       /**
       * Derive a key
@@ -67,7 +78,12 @@ class BOTAN_DLL KDF : public Algorithm
       secure_vector<byte> derive_key(size_t key_len,
                                     const byte secret[],
                                     size_t secret_len,
-                                    const std::string& salt = "") const;
+                                    const std::string& salt = "") const
+         {
+         return derive_key(key_len, secret, secret_len,
+                           reinterpret_cast<const byte*>(salt.data()),
+                           salt.length());
+         }
 
       /**
       * Derive a key
@@ -81,7 +97,10 @@ class BOTAN_DLL KDF : public Algorithm
                                     const byte secret[],
                                     size_t secret_len,
                                     const byte salt[],
-                                    size_t salt_len) const;
+                                    size_t salt_len) const
+         {
+         return derive(key_len, secret, secret_len, salt, salt_len);
+         }
 
       void clear() {}
 
