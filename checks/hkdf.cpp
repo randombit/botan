@@ -52,6 +52,40 @@ void hkdf_test(const std::string& algo,
       std::cout << "HKDF got " << got << " expected " << okm << std::endl;
    }
 
+void run_tests(std::istream& src,
+               bool clear_between_cb,
+               const std::string& trigger_key,
+               std::function<void (std::map<std::string, std::string>)> cb)
+   {
+   std::map<std::string, std::string> vars;
+
+   while(src.good())
+      {
+      std::string line;
+      std::getline(src, line);
+
+      if(line == "")
+         continue;
+
+      // FIXME: strip # comments
+
+      // FIXME: Do this right
+
+      const std::string key = line.substr(0, line.find_first_of(' '));
+      const std::string val = line.substr(line.find_last_of(' ') + 1, std::string::npos);
+
+      vars[key] = val;
+
+      if(key == trigger_key)
+         {
+         cb(vars);
+
+         if(clear_between_cb)
+            vars.clear();
+         }
+      }
+   }
+
 }
 
 void test_hkdf()
@@ -59,26 +93,10 @@ void test_hkdf()
    // From RFC 5869
    std::ifstream vec("checks/hkdf.vec");
 
-   std::map<std::string, std::string> vars;
-
-   while(vec.good())
-      {
-      std::string line;
-      std::getline(vec, line);
-
-      if(line == "")
-         continue;
-
-      const std::string key = line.substr(0, line.find_first_of(' '));
-      const std::string val = line.substr(line.find_last_of(' ') + 1, std::string::npos);
-
-      vars[key] = val;
-
-      if(key == "OKM")
-         {
-         hkdf_test(vars["Hash"], vars["IKM"], vars["salt"], vars["info"],
-                   vars["OKM"], to_u32bit(vars["L"]));
-         vars.clear();
-         }
-      }
+   run_tests(vec, true, "OKM",
+             [](std::map<std::string, std::string> m)
+             {
+             hkdf_test(m["Hash"], m["IKM"], m["salt"], m["info"],
+                       m["OKM"], to_u32bit(m["L"]));
+             });
    }
