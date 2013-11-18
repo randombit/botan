@@ -5,6 +5,9 @@
 #include <botan/types.h>
 #include <botan/rng.h>
 #include <string>
+#include <functional>
+#include <istream>
+#include <map>
 
 using Botan::RandomNumberGenerator;
 
@@ -33,5 +36,13 @@ size_t do_tls_tests(RandomNumberGenerator& rng);
 void test_ocb();
 
 void test_hkdf();
+void test_pbkdf();
+void test_kdf();
+
+void run_tests(std::istream& src,
+               const std::string& name_key,
+               const std::string& output_key,
+               bool clear_between_cb,
+               std::function<std::string (std::map<std::string, std::string>)> cb);
 
 #endif

@@ -57,43 +57,6 @@ using namespace Botan;
 
 namespace {
 
-/* A weird little hack to fit PBKDF algorithms into the validation
-* suite You probably wouldn't ever want to actually use the PBKDF
-* algorithms like this, the raw PBKDF interface is more convenient
-* for actually using them
-*/
-class PBKDF_Filter : public Filter
-   {
-   public:
-      std::string name() const { return pbkdf->name(); }
-
-      void write(const byte in[], size_t len)
-         { passphrase += std::string(reinterpret_cast<const char*>(in), len); }
-
-      void end_msg()
-         {
-         SymmetricKey x = pbkdf->derive_key(outlen, passphrase,
-                                          &salt[0], salt.size(),
-                                          iterations);
-         send(x.bits_of());
-         }
-
-      PBKDF_Filter(PBKDF* algo, const SymmetricKey& s, u32bit o, u32bit i)
-         {
-         pbkdf = algo;
-         outlen = o;
-         iterations = i;
-         salt = unlock(s.bits_of());
-         }
-
-      ~PBKDF_Filter() { delete pbkdf; }
-   private:
-      std::string passphrase;
-      PBKDF* pbkdf;
-      std::vector<byte> salt;
-      u32bit outlen, iterations;
-   };
-
 /* Not too useful generally; just dumps random bits for benchmarking */
 class RNG_Filter : public Filter
    {
@@ -108,50 +71,6 @@ class RNG_Filter : public Filter
       RandomNumberGenerator* rng;
    };
 
-class KDF_Filter : public Filter
-   {
-   public:
-      std::string name() const { return "KDF_Filter"; }
-
-      void write(const byte in[], size_t len)
-         { secret += std::make_pair(in, len); }
-
-      void end_msg()
-         {
-         SymmetricKey x = kdf->derive_key(outlen, secret, salt);
-         send(x.bits_of(), x.length());
-         }
-
-      KDF_Filter(KDF* algo, const SymmetricKey& s, u32bit o)
-         {
-         kdf = algo;
-         outlen = o;
-         salt = unlock(s.bits_of());
-         }
-      ~KDF_Filter() { delete kdf; }
-   private:
-      std::vector<byte> secret;
-      std::vector<byte> salt;
-      KDF* kdf;
-      u32bit outlen;
-   };
-
-Filter* lookup_pbkdf(const std::string& algname,
-                   const std::vector<std::string>& params)
-   {
-   PBKDF* pbkdf = nullptr;
-
-   try {
-      pbkdf = get_pbkdf(algname);
-      }
-   catch(...) { }
-
-   if(pbkdf)
-      return new PBKDF_Filter(pbkdf, params[0], to_u32bit(params[1]),
-                              to_u32bit(params[2]));
-   return nullptr;
-   }
-
 void RNG_Filter::write(const byte[], size_t length)
    {
    if(length)
@@ -163,12 +82,10 @@ void RNG_Filter::write(const byte[], size_t length)
 Filter* lookup_rng(const std::string& algname,
                    const std::string& key)
    {
-   RandomNumberGenerator* prng = nullptr;
+   if(algname.find("X9.31-RNG(") == std::string::npos)
+      return nullptr;
 
-#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
-   if(algname == "AutoSeeded")
-      prng = new AutoSeeded_RNG;
-#endif
+   RandomNumberGenerator* prng = nullptr;
 
 #if defined(BOTAN_HAS_X931_RNG)
 
@@ -192,40 +109,6 @@ Filter* lookup_rng(const std::string& algname,
 
 #endif
 
-#if defined(BOTAN_HAS_RANDPOOL) && defined(BOTAN_HAS_AES)
-   if(algname == "Randpool")
-      {
-      prng = new Randpool(new AES_256, new HMAC(new SHA_256));
-
-      prng->add_entropy(reinterpret_cast<const byte*>(key.c_str()),
-                        key.length());
-      }
-#endif
-
-#if defined(BOTAN_HAS_X931_RNG)
-   // these are used for benchmarking: AES-256/SHA-256 matches library
-   // defaults, so benchmark reflects real-world performance (maybe)
-   if(algname == "X9.31-RNG")
-      {
-      RandomNumberGenerator* rng =
-#if defined(BOTAN_HAS_HMAC_RNG)
-         new HMAC_RNG(new HMAC(new SHA_512), new HMAC(new SHA_256));
-#elif defined(BOTAN_HAS_RANDPOOL)
-         new Randpool(new AES_256, new HMAC(new SHA_256));
-#endif
-
-      prng = new ANSI_X931_RNG(new AES_256, rng);
-
-      }
-#endif
-
-#if defined(BOTAN_HAS_HMAC_RNG)
-   if(algname == "HMAC_RNG")
-      {
-      prng = new HMAC_RNG(new HMAC(new SHA_512), new HMAC(new SHA_256));
-      }
-#endif
-
    if(prng)
       {
       prng->add_entropy(reinterpret_cast<const byte*>(key.c_str()),
@@ -233,20 +116,6 @@ Filter* lookup_rng(const std::string& algname,
       return new RNG_Filter(prng);
       }
 
-   return nullptr;
-   }
-
-Filter* lookup_kdf(const std::string& algname, const std::string& salt,
-                   const std::string& params)
-   {
-   KDF* kdf = nullptr;
-   try {
-      kdf = get_kdf(algname);
-      }
-   catch(...) { return nullptr; }
-
-   if(kdf)
-      return new KDF_Filter(kdf, salt, to_u32bit(params));
    return nullptr;
    }
 
@@ -292,16 +161,10 @@ Filter* lookup(const std::string& algname,
 
    // The order of the lookup has to change based on how the names are
    // formatted and parsed.
-   filter = lookup_kdf(algname, key, iv);
-   if(filter) return filter;
-
    filter = lookup_rng(algname, key);
    if(filter) return filter;
 
    filter = lookup_encoder(algname);
-   if(filter) return filter;
-
-   filter = lookup_pbkdf(algname, params);
    if(filter) return filter;
 
    return nullptr;

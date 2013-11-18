@@ -420,6 +420,8 @@ u32bit do_validation_tests(const std::string& filename,
       {
       test_ocb();
       test_hkdf();
+      test_pbkdf();
+      test_kdf();
       }
 
    return errors;
