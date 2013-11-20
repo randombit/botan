@@ -21,6 +21,11 @@ The latest version of the current stable series, from branch
 :tgz:`1.10.6` (:tgz_sig:`sig <1.10.6>`),
 :tbz:`1.10.6` (:tbz_sig:`sig <1.10.6>`)
 
+.. note::
+
+   If you are planning on developing an application using TLS, using
+   the latest 1.11 release instead of 1.10 is highly recommended.
+
 Windows Installer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
