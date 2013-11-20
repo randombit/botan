@@ -171,6 +171,19 @@ class BOTAN_DLL NSA_Suite_B_128 : public Policy
          { return version == Protocol_Version::TLS_V12; }
    };
 
+/**
+* Policy for DTLS. We require DTLS v1.2 and an AEAD mode
+*/
+class BOTAN_DLL Datagram_Policy : public Policy
+   {
+   public:
+      std::vector<std::string> allowed_macs() const override
+         { return std::vector<std::string>({"AEAD"}); }
+
+      bool acceptable_protocol_version(Protocol_Version version) const override
+         { return version == Protocol_Version::DTLS_V12; }
+   };
+
 }
 
 }
