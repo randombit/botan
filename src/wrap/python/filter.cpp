@@ -107,19 +107,19 @@ Filter* make_filter4(const std::string& name,
       name);
    }
 
-void append_filter(Pipe& pipe, std::unique_ptr<Filter> filter)
+void append_filter(Pipe& pipe, std::auto_ptr<Filter> filter)
    {
    pipe.append(filter.get());
    filter.release();
    }
 
-void prepend_filter(Pipe& pipe, std::unique_ptr<Filter> filter)
+void prepend_filter(Pipe& pipe, std::auto_ptr<Filter> filter)
    {
    pipe.prepend(filter.get());
    filter.release();
    }
 
-void do_send(std::unique_ptr<FilterWrapper> filter, const std::string& data)
+void do_send(std::auto_ptr<FilterWrapper> filter, const std::string& data)
    {
    filter->send_str(data);
    }
@@ -128,7 +128,7 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(rallas_ovls, read_all_as_string, 0, 1)
 
 void export_filters()
    {
-   class_<Filter, std::unique_ptr<Filter>, boost::noncopyable>
+   class_<Filter, std::auto_ptr<Filter>, boost::noncopyable>
       ("__Internal_FilterObj", no_init);
 
    def("make_filter", make_filter1,
@@ -142,7 +142,7 @@ void export_filters()
 
    // This might not work - Pipe will delete the filter, but Python
    // might have allocated the space with malloc() or who-knows-what -> bad
-   class_<FilterWrapper, std::unique_ptr<FilterWrapper>,
+   class_<FilterWrapper, std::auto_ptr<FilterWrapper>,
           bases<Filter>, boost::noncopyable>
       ("FilterObj")
       .def("write", pure_virtual(&Py_Filter::write_str))
@@ -150,8 +150,8 @@ void export_filters()
       .def("start_msg", &Filter::start_msg, &FilterWrapper::default_start_msg)
       .def("end_msg", &Filter::end_msg, &FilterWrapper::default_end_msg);
 
-   implicitly_convertible<std::unique_ptr<FilterWrapper>,
-                          std::unique_ptr<Filter> >();
+   implicitly_convertible<std::auto_ptr<FilterWrapper>,
+                          std::auto_ptr<Filter> >();
 
    void (Pipe::*pipe_write_str)(const std::string&) = &Pipe::write;
    void (Pipe::*pipe_process_str)(const std::string&) = &Pipe::process_msg;
