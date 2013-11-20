@@ -6,7 +6,6 @@
 */
 
 #include <botan/rsa.h>
-#include <botan/look_pk.h>
 #include <botan/pubkey.h>
 #include <botan/x509_key.h>
 using namespace Botan;
@@ -41,9 +40,7 @@ class Py_RSA_PrivateKey
       std::string to_ber() const
          {
          secure_vector<byte> bits = PKCS8::BER_encode(*rsa_key);
-
-         return std::string(reinterpret_cast<const char*>(&bits[0]),
-                            bits.size());
+         return std::string(reinterpret_cast<const char*>(&bits[0]), bits.size());
          }
 
       std::string get_N() const { return bigint2str(get_bigint_N()); }
@@ -140,7 +137,7 @@ class Py_RSA_PublicKey
 
       std::string to_ber() const
          {
-         secure_vector<byte> bits = X509::BER_encode(*rsa_key);
+         std::vector<byte> bits = X509::BER_encode(*rsa_key);
 
          return std::string(reinterpret_cast<const char*>(&bits[0]),
                             bits.size());

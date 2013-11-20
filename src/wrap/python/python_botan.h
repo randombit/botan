@@ -34,9 +34,10 @@ inline std::string make_string(const byte input[], u32bit length)
    return std::string((const char*)input, length);
    }
 
-inline std::string make_string(const secure_vector<byte>& in)
+template<typename Alloc>
+inline std::string make_string(const std::vector<byte, Alloc>& in)
    {
-   return make_string(in.begin(), in.size());
+   return make_string(&in[0], in.size());
    }
 
 inline void string2binary(const std::string& from, byte to[], u32bit expected)

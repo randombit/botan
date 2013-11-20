@@ -1,7 +1,7 @@
 CXX           = %{cc}
-CFLAGS        = -Os
+CFLAGS        = -Os %{lang_flags}
 LDFLAGS       =
-WARN_FLAGS    = %{warn_flags}
+WARN_FLAGS    = -Wall -Wextra
 
 SERIES        = %{version_major}.%{version_minor}
 
