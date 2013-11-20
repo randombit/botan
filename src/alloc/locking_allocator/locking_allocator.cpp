@@ -77,8 +77,8 @@ void* mlock_allocator::allocate(size_t num_elems, size_t elem_size)
    if(n / elem_size != num_elems)
       return nullptr; // overflow!
 
-   if(n >= m_poolsize)
-      return nullptr; // bigger than the whole pool!
+   if(n > m_poolsize || n > BOTAN_MLOCK_ALLOCATOR_MAX_ALLOCATION)
+      return nullptr;
 
    std::lock_guard<std::mutex> lock(m_mutex);
 
