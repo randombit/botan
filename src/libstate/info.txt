@@ -19,3 +19,7 @@ pubkey
 rng
 stream
 </requires>
+
+<libs>
+all -> boost_system,boost_filesystem
+</libs>

@@ -1,5 +1,6 @@
 Version 1.11.6, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
- * Add HKDF from :rfc:`5869`
+ * Botan now requires Boost, specifically the filesystem and asio libraries.
 
+ * Add HKDF from :rfc:`5869`

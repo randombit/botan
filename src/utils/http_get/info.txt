@@ -1,0 +1,3 @@
+define HTTP_GET
+
+load_on auto
