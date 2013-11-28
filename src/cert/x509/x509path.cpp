@@ -222,7 +222,7 @@ Path_Validation_Result x509_path_validate(
          {
          const X509_Certificate& subject = cert_path[i];
 
-         if(!trusted_hashes.empty())
+         if(!trusted_hashes.empty() && i != cert_path.size() - 1)
             {
             if(trusted_hashes.count(subject.hash_used_for_signature()) == 0)
                throw PKIX_Validation_Failure(Path_Validation_Result::UNTRUSTED_HASH);
