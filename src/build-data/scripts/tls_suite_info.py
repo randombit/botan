@@ -7,13 +7,12 @@ Used to generate src/tls/tls_suite_info.cpp
 
 Distributed under the terms of the Botan license
 
-First thing,
-  wget https://www.iana.org/assignments/tls-parameters/tls-parameters.txt
 """
 
 import sys
 import re
 import datetime
+import hashlib
 
 def to_ciphersuite_info(code, name):
 
@@ -130,25 +129,43 @@ def to_ciphersuite_info(code, name):
         return 'Ciphersuite(0x%s, "%s", "%s", "%s", %d, %d, "%s", %d)' % (
             code, sig_algo, kex_algo, cipher_algo, cipher_keylen, ivlen, mac_algo, mac_keylen[mac_algo])
 
+def open_input(args):
+    iana_url = 'https://www.iana.org/assignments/tls-parameters/tls-parameters.txt'
+
+    if len(args) == 1:
+        try:
+            return open('tls-parameters.txt')
+        except:
+            pass
+
+        import urllib2
+        return urllib2.urlopen(iana_url)
+    else:
+         return open(args[1])
+
 def main(args = None):
     if args is None:
         args = sys.argv
 
-    weak_crypto = ['EXPORT', 'RC2', '_DES_', 'WITH_NULL']
-    static_dh = ['ECDH_ECDSA', 'ECDH_RSA', 'DH_DSS', 'DH_RSA']
+    weak_crypto = ['EXPORT', 'RC2', 'IDEA', '_DES_', 'WITH_NULL']
+    static_dh = ['ECDH_ECDSA', 'ECDH_RSA', 'DH_DSS', 'DH_RSA'] # not supported
     protocol_goop = ['SCSV', 'KRB5']
-    maybe_someday = ['IDEA', 'ARIA', 'RSA_PSK']
-
+    maybe_someday = ['ARIA', 'RSA_PSK']
     not_supported = weak_crypto + static_dh + protocol_goop + maybe_someday
 
-    input = open('tls-parameters.txt')
+    include_ocb = False
+    include_eax = False
+    save_file = True
 
     ciphersuite_re = re.compile(' +0x([0-9a-fA-F][0-9a-fA-F]),0x([0-9a-fA-F][0-9a-fA-F]) + TLS_([A-Za-z_0-9]+) ')
 
     suites = {}
     suite_codes = {}
 
-    for line in input:
+    contents = ''
+
+    for line in open_input(args):
+        contents += line
         match = ciphersuite_re.match(line)
         if match:
             code = match.group(1) + match.group(2)
@@ -162,34 +179,49 @@ def main(args = None):
             if should_use:
                 suites[name] = (code, to_ciphersuite_info(code, name))
 
+    sha1 = hashlib.sha1()
+    sha1.update(contents)
+    contents_hash = sha1.hexdigest()
+
+    if save_file:
+        out = open('tls-parameters.txt', 'w')
+        out.write(contents)
+        out.close()
+
     def define_custom_ciphersuite(name, code):
         suites[name] = (code, to_ciphersuite_info(code, name))
 
     # From http://tools.ietf.org/html/draft-ietf-tls-56-bit-ciphersuites-01
     define_custom_ciphersuite('DHE_DSS_WITH_RC4_128_SHA', '0066')
 
-    # Experimental OCB ciphersuites
-    #define_custom_ciphersuite('RSA_WITH_AES_128_OCB_SHA256', 'FF80')
-    #define_custom_ciphersuite('RSA_WITH_AES_256_OCB_SHA384', 'FF81')
-    #define_custom_ciphersuite('ECDHE_RSA_WITH_AES_128_OCB_SHA256', 'FF82')
-    #define_custom_ciphersuite('ECDHE_RSA_WITH_AES_256_OCB_SHA384', 'FF83')
+    # Expermental things
+    if include_ocb:
+        define_custom_ciphersuite('ECDHE_ECDSA_AES_128_OCB_SHA256', 'FF80')
+        define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_256_OCB_SHA384', 'FF81')
+        define_custom_ciphersuite('ECDHE_RSA_WITH_AES_128_OCB_SHA256', 'FF82')
+        define_custom_ciphersuite('ECDHE_RSA_WITH_AES_256_OCB_SHA384', 'FF83')
 
-    # Experimental EAX ciphersuites
-    #define_custom_ciphersuite('RSA_WITH_AES_128_EAX_SHA256', 'FF90')
-    #define_custom_ciphersuite('RSA_WITH_AES_256_EAX_SHA384', 'FF91')
-    #define_custom_ciphersuite('ECDHE_RSA_WITH_AES_128_EAX_SHA256', 'FF92')
-    #define_custom_ciphersuite('ECDHE_RSA_WITH_AES_256_EAX_SHA384', 'FF93')
+    if include_eax:
+        define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_128_EAX_SHA256', 'FF90')
+        define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_256_EAX_SHA384', 'FF91')
+        define_custom_ciphersuite('ECDHE_RSA_WITH_AES_128_EAX_SHA256', 'FF92')
+        define_custom_ciphersuite('ECDHE_RSA_WITH_AES_256_EAX_SHA384', 'FF93')
 
-    print """/*
+    def header():
+        return """/*
 * TLS cipher suite information
 *
 * This file was automatically generated from the IANA assignments
+* (tls-parameters.txt hash %s)
 * by %s on %s
 *
 * Released under the terms of the Botan license
 */
+""" % (contents_hash, sys.argv[0], datetime.date.today().strftime("%Y-%m-%d"))
 
-#include <botan/tls_ciphersuite.h>
+    print header()
+
+    print """#include <botan/tls_ciphersuite.h>
 
 namespace Botan {
 
@@ -198,7 +230,7 @@ namespace TLS {
 Ciphersuite Ciphersuite::by_id(u16bit suite)
    {
    switch(suite)
-      {""" % (sys.argv[0], datetime.date.today().strftime("%Y-%m-%d"))
+      {"""
 
     for k in sorted(suites.keys()):
         print "      case 0x%s: // %s" % (suites[k][0], k)
