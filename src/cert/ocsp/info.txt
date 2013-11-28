@@ -3,4 +3,5 @@ define OCSP 20131128
 <requires>
 x509
 sha1
+http_util
 </requires>

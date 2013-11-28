@@ -6,6 +6,7 @@
 */
 
 #include <botan/ocsp.h>
+#include <botan/certstor.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/x509_ext.h>
@@ -13,6 +14,7 @@
 #include <botan/base64.h>
 #include <botan/pubkey.h>
 #include <botan/x509path.h>
+#include <botan/http_util.h>
 #include <memory>
 
 namespace Botan {
@@ -72,7 +74,10 @@ void check_signature(const std::vector<byte>& tbs_response,
                      const Certificate_Store& trusted_roots,
                      const std::vector<X509_Certificate>& certs)
    {
-   if(trusted_roots.certificate_known(certs[0]))
+   if(certs.size() < 1)
+      throw std::invalid_argument("Short cert chain for check_signature");
+
+   if(trusted_roots.certificate_known(certs[0])) // directly signed by 
       return check_signature(tbs_response, sig_algo, signature, certs[0]);
 
    // Otherwise attempt to chain the signing cert to a trust root
@@ -88,7 +93,7 @@ void check_signature(const std::vector<byte>& tbs_response,
    if(!result.successful_validation())
       throw std::runtime_error("Certificate validation failure: " + result.result_string());
 
-   if(!trusted_roots.certificate_known(result.trust_root()))
+   if(!trusted_roots.certificate_known(result.trust_root())) // not needed anymore?
       throw std::runtime_error("Certificate chain roots in unknown/untrusted CA");
 
    const std::vector<X509_Certificate>& cert_path = result.cert_path();
@@ -129,6 +134,9 @@ Response::Response(const Certificate_Store& trusted_roots,
    size_t resp_status = 0;
 
    response_outer.decode(resp_status, ENUMERATED, UNIVERSAL);
+
+   if(resp_status != 0)
+      throw std::runtime_error("OCSP response status " + std::to_string(resp_status));
 
    if(response_outer.more_items())
       {
@@ -197,6 +205,31 @@ bool Response::affirmative_response_for(const X509_Certificate& issuer,
          return true;
 
    return false;
+   }
+
+Response online_check(const X509_Certificate& issuer,
+                      const X509_Certificate& subject,
+                      const Certificate_Store& trusted_roots)
+   {
+   const std::string responder_url = subject.ocsp_responder();
+
+   if(responder_url == "")
+      throw std::runtime_error("No OCSP responder specified");
+
+   OCSP::Request req(issuer, subject);
+
+   auto http = HTTP::POST_sync(responder_url,
+                               "application/ocsp-request",
+                               req.BER_encode());
+
+   if(http.status_code() != 200)
+      throw std::runtime_error("HTTP error: " + http.status_message());
+
+   // Check the MIME type?
+
+   OCSP::Response response(trusted_roots, http.body());
+
+   return response;
    }
 
 }

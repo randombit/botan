@@ -9,9 +9,10 @@
 #define BOTAN_OCSP_H__
 
 #include <botan/ocsp_types.h>
-#include <botan/certstor.h>
 
 namespace Botan {
+
+class Certificate_Store;
 
 namespace OCSP {
 
@@ -47,6 +48,10 @@ class BOTAN_DLL Response
    private:
       std::vector<SingleResponse> m_responses;
    };
+
+BOTAN_DLL Response online_check(const X509_Certificate& issuer,
+                                const X509_Certificate& subject,
+                                const Certificate_Store& trusted_roots);
 
 }
 
