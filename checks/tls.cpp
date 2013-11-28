@@ -25,8 +25,9 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
          m_ca_cert(ca_cert),
          m_key(server_key)
          {
-         m_stores.push_back(new Certificate_Store_In_Memory);
-         m_stores[0]->add_certificate(m_ca_cert);
+         auto store = new Certificate_Store_In_Memory;
+         store->add_certificate(m_ca_cert);
+         m_stores.push_back(store);
          }
 
       std::vector<Certificate_Store*>
@@ -137,8 +138,8 @@ void test_handshake(RandomNumberGenerator& rng)
 
    std::auto_ptr<Credentials_Manager> creds(create_creds(rng));
 
-   TLS::Session_Manager_In_Memory server_sessions;
-   TLS::Session_Manager_In_Memory client_sessions;
+   TLS::Session_Manager_In_Memory server_sessions(rng);
+   TLS::Session_Manager_In_Memory client_sessions(rng);
 
    std::vector<byte> c2s_q, s2c_q, c2s_data, s2c_data;
 
