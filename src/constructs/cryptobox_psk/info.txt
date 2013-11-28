@@ -1,4 +1,4 @@
-define CRYPTOBOX_PSK
+define CRYPTOBOX_PSK 20131128
 
 <requires>
 aes

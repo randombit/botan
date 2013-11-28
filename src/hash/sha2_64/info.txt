@@ -1,4 +1,4 @@
-define SHA2_64
+define SHA2_64 20131128
 
 <requires>
 mdx_hash

@@ -1,4 +1,4 @@
-define ENTROPY_SRC_BEOS
+define ENTROPY_SRC_BEOS 20131128
 
 <source>
 es_beos.cpp

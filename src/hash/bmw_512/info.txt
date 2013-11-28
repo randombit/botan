@@ -1,4 +1,4 @@
-define BMW_512
+define BMW_512 20131128
 
 <requires>
 mdx_hash

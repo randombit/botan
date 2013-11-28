@@ -1,4 +1,4 @@
-define SIMD_SSE2
+define SIMD_SSE2 20131128
 
 need_isa sse2
 

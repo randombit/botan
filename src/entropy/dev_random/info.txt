@@ -1,4 +1,4 @@
-define ENTROPY_SRC_DEV_RANDOM
+define ENTROPY_SRC_DEV_RANDOM 20131128
 
 <source>
 dev_random.cpp

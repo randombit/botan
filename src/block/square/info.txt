@@ -1,1 +1,1 @@
-define SQUARE
+define SQUARE 20131128

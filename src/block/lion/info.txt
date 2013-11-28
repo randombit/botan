@@ -1,4 +1,4 @@
-define LION
+define LION 20131128
 
 <requires>
 hash

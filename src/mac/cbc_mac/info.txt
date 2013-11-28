@@ -1,4 +1,4 @@
-define CBC_MAC
+define CBC_MAC 20131128
 
 <requires>
 block

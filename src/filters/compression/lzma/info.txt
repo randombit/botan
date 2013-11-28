@@ -1,4 +1,4 @@
-define COMPRESSOR_LZMA
+define COMPRESSOR_LZMA 20131128
 
 load_on request
 

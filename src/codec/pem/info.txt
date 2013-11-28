@@ -1,4 +1,4 @@
-define PEM_CODEC
+define PEM_CODEC 20131128
 
 <requires>
 base64

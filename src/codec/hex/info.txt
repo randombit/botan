@@ -1,1 +1,1 @@
-define HEX_CODEC
+define HEX_CODEC 20131128

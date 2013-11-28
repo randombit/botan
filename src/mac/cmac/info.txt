@@ -1,4 +1,4 @@
-define CMAC
+define CMAC 20131128
 
 <requires>
 block

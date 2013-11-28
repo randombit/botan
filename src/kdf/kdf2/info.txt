@@ -1,4 +1,4 @@
-define KDF2
+define KDF2 20131128
 
 <requires>
 hash

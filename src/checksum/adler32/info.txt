@@ -1,4 +1,4 @@
-define ADLER32
+define ADLER32 20131128
 
 <requires>
 hash

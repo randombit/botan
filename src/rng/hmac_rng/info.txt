@@ -1,4 +1,4 @@
-define HMAC_RNG
+define HMAC_RNG 20131128
 
 <requires>
 mac

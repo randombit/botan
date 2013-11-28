@@ -1,4 +1,4 @@
-define ENTROPY_SRC_EGD
+define ENTROPY_SRC_EGD 20131128
 
 <source>
 es_egd.cpp

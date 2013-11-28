@@ -41,6 +41,10 @@ import botan_version
 def flatten(l):
     return sum(l, [])
 
+def chunks(l, n):
+    for i in xrange(0, len(l), n):
+        yield l[i:i+n]
+
 def is_official_release():
     # Assume a release date implies official release
     return (botan_version.release_datestamp > 20130000)
@@ -507,12 +511,14 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
                                      lexer.lineno)
 
         elif token in name_val_pairs.keys():
-            next_val = lexer.get_token()
-
             if type(to_obj.__dict__[token]) is list:
-                to_obj.__dict__[token].append(next_val)
+                to_obj.__dict__[token].append(lexer.get_token())
+
+                # Dirty hack
+                if token == 'define':
+                    to_obj.__dict__[token].append(lexer.get_token())
             else:
-                to_obj.__dict__[token] = next_val
+                to_obj.__dict__[token] = lexer.get_token()
 
         else: # No match -> error
             raise LexerError('Bad token "%s"' % (token), lexer.lineno)
@@ -614,7 +620,7 @@ class ModuleInfo(object):
         return self.header_internal
 
     def defines(self):
-        return ['HAS_' + d for d in self.define]
+        return ['HAS_' + d[0] + ' ' + d[1] for d in chunks(self.define, 2)]
 
     def compatible_cpu(self, archinfo, options):
 

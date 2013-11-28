@@ -1,4 +1,4 @@
-define XTEA_SIMD
+define XTEA_SIMD 20131128
 
 <requires>
 xtea

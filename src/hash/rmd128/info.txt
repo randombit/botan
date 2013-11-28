@@ -1,4 +1,4 @@
-define RIPEMD_128
+define RIPEMD_128 20131128
 
 <requires>
 mdx_hash

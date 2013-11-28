@@ -1,4 +1,4 @@
-define PK_PADDING
+define PK_PADDING 20131128
 
 load_on auto
 

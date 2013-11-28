@@ -1,4 +1,4 @@
-define AUTO_SEEDING_RNG
+define AUTO_SEEDING_RNG 20131128
 
 <requires>
 hmac_rng

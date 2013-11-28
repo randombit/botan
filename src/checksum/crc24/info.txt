@@ -1,4 +1,4 @@
-define CRC24
+define CRC24 20131128
 
 <requires>
 hash

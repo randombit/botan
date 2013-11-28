@@ -1,4 +1,4 @@
-define KDF_BASE
+define KDF_BASE 20131128
 
 <requires>
 alloc

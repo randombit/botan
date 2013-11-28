@@ -1,6 +1,6 @@
 load_on auto
 
-define ALGORITHM_FACTORY
+define ALGORITHM_FACTORY 20131128
 
 <header:public>
 algo_factory.h

@@ -1,4 +1,4 @@
-define SRP6
+define SRP6 20131128
 
 <requires>
 bigint

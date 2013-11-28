@@ -1,1 +1,1 @@
-define GOST_28147_89
+define GOST_28147_89 20131128

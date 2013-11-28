@@ -1,4 +1,4 @@
-define PBKDF2
+define PBKDF2 20131128
 
 <requires>
 mac

@@ -1,4 +1,4 @@
-define CORE_ENGINE
+define CORE_ENGINE 20131128
 
 <header:internal>
 core_engine.h

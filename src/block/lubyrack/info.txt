@@ -1,4 +1,4 @@
-define LUBY_RACKOFF
+define LUBY_RACKOFF 20131128
 
 <requires>
 hash

@@ -1,4 +1,4 @@
-define ECC_PUBLIC_KEY_CRYPTO
+define ECC_PUBLIC_KEY_CRYPTO 20131128
 
 <requires>
 alloc

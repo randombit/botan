@@ -1,1 +1,1 @@
-define MODE_XTS
+define MODE_XTS 20131128

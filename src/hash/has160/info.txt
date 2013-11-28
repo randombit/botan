@@ -1,4 +1,4 @@
-define HAS_160
+define HAS_160 20131128
 
 <requires>
 mdx_hash

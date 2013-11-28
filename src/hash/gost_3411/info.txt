@@ -1,4 +1,4 @@
-define GOST_34_11
+define GOST_34_11 20131128
 
 <requires>
 gost_28147

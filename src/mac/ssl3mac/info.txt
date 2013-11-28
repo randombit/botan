@@ -1,4 +1,4 @@
-define SSL3_MAC
+define SSL3_MAC 20131128
 
 <requires>
 hash

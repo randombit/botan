@@ -1,1 +1,1 @@
-define SALSA20
+define SALSA20 20131128

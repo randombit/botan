@@ -1,4 +1,4 @@
-define AES_SSSE3
+define AES_SSSE3 20131128
 
 load_on auto
 

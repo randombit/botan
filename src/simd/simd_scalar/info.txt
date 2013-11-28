@@ -1,4 +1,4 @@
-define SIMD_SCALAR
+define SIMD_SCALAR 20131128
 
 load_on dep
 

@@ -1,6 +1,6 @@
 load_on auto
 
-define BIGINT
+define BIGINT 20131128
 
 <header:public>
 bigint.h

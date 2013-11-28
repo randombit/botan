@@ -1,4 +1,4 @@
-define CARD_VERIFIABLE_CERTIFICATES
+define CARD_VERIFIABLE_CERTIFICATES 20131128
 load_on request
 
 <header:public>

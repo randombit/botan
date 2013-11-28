@@ -1,4 +1,4 @@
-define BLOCK_CIPHER
+define BLOCK_CIPHER 20131128
 
 <requires>
 algo_base

@@ -1,4 +1,4 @@
-define SERPENT_SIMD
+define SERPENT_SIMD 20131128
 
 <requires>
 serpent

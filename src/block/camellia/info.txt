@@ -1,4 +1,4 @@
-define CAMELLIA
+define CAMELLIA 20131128
 
 <header:internal>
 camellia_sbox.h

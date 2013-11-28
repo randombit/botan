@@ -1,4 +1,4 @@
-define SERPENT
+define SERPENT 20131128
 
 <header:public>
 serpent.h

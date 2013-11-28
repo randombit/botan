@@ -1,4 +1,4 @@
-define ENTROPY_SRC_RDRAND
+define ENTROPY_SRC_RDRAND 20131128
 
 <source>
 rdrand.cpp

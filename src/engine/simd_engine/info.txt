@@ -1,4 +1,4 @@
-define ENGINE_SIMD
+define ENGINE_SIMD 20131128
 
 load_on dep
 

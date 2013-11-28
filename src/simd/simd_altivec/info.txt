@@ -1,4 +1,4 @@
-define SIMD_ALTIVEC
+define SIMD_ALTIVEC 20131128
 
 need_isa altivec
 

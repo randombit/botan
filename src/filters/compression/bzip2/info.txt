@@ -1,4 +1,4 @@
-define COMPRESSOR_BZIP2
+define COMPRESSOR_BZIP2 20131128
 
 load_on request
 

@@ -1,4 +1,4 @@
-define PASSWORD_BASED_ENCRYPTION
+define PASSWORD_BASED_ENCRYPTION 20131128
 
 <requires>
 filters

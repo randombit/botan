@@ -1,5 +1,5 @@
-define TLS_V10_PRF
-define TLS_V12_PRF
+define TLS_V10_PRF 20131128
+define TLS_V12_PRF 20131128
 
 <requires>
 hmac

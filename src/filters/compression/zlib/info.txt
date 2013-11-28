@@ -1,4 +1,4 @@
-define COMPRESSOR_ZLIB
+define COMPRESSOR_ZLIB 20131128
 
 load_on request
 

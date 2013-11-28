@@ -1,4 +1,4 @@
-define PBE_PKCS_V20
+define PBE_PKCS_V20 20131128
 
 <requires>
 algo_factory

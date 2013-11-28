@@ -1,4 +1,4 @@
-define BCRYPT
+define BCRYPT 20131128
 
 <requires>
 libstate

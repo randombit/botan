@@ -1,4 +1,4 @@
-define IF_PUBLIC_KEY_FAMILY
+define IF_PUBLIC_KEY_FAMILY 20131128
 
 load_on dep
 

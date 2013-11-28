@@ -1,4 +1,4 @@
-define BIGINT_MATH
+define BIGINT_MATH 20131128
 
 load_on auto
 

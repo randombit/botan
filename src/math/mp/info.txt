@@ -1,4 +1,4 @@
-define BIGINT_MP
+define BIGINT_MP 20131128
 
 <source>
 mp_asm.cpp

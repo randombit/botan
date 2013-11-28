@@ -1,4 +1,4 @@
-define SHA1_SSE2
+define SHA1_SSE2 20131128
 
 need_isa sse2
 

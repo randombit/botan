@@ -1,4 +1,4 @@
-define SELFTESTS
+define SELFTESTS 20131128
 
 <requires>
 algo_factory

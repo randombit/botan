@@ -1,4 +1,4 @@
-define X931_RNG
+define X931_RNG 20131128
 
 <requires>
 block

@@ -1,4 +1,4 @@
-define SERPENT_X86_32
+define SERPENT_X86_32 20131128
 
 load_on asm_ok
 

@@ -1,4 +1,4 @@
-define SSL_V3_PRF
+define SSL_V3_PRF 20131128
 
 <requires>
 md5

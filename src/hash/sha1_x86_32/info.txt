@@ -1,4 +1,4 @@
-define SHA1_X86_32
+define SHA1_X86_32 20131128
 
 load_on asm_ok
 

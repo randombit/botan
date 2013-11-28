@@ -1,4 +1,4 @@
-define AEAD_EAX
+define AEAD_EAX 20131128
 
 <requires>
 block

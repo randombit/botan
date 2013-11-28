@@ -1,4 +1,4 @@
-define ENGINE_GNU_MP
+define ENGINE_GNU_MP 20131128
 
 load_on request
 

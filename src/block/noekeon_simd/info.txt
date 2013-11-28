@@ -1,4 +1,4 @@
-define NOEKEON_SIMD
+define NOEKEON_SIMD 20131128
 
 <requires>
 noekeon

@@ -1,4 +1,4 @@
-define X942_PRF
+define X942_PRF 20131128
 
 <requires>
 asn1
