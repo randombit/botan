@@ -6,7 +6,6 @@
 */
 
 #include <botan/tls_session_manager.h>
-#include <botan/libstate.h>
 #include <botan/hex.h>
 #include <chrono>
 
@@ -15,10 +14,12 @@ namespace Botan {
 namespace TLS {
 
 Session_Manager_In_Memory::Session_Manager_In_Memory(
-   size_t max_sessions, std::chrono::seconds session_lifetime) :
+   RandomNumberGenerator& rng,
+   size_t max_sessions,
+   std::chrono::seconds session_lifetime) :
    m_max_sessions(max_sessions),
    m_session_lifetime(session_lifetime),
-   m_rng(global_state().global_rng()),
+   m_rng(rng),
    m_session_key(m_rng, 32)
    {}
 

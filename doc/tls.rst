@@ -10,9 +10,12 @@ insecure and obsolete SSL v2 protocol is not supported, beyond
 processing SSL v2 client hellos which some clients still send for
 backwards compatability with ancient servers). There is also some
 initial support for DTLS (v1.0 and v1.2), a variant of TLS adapted for
-operation on datagram sockets such as UDP. However currently many
-important DTLS features (including timeouts and retransmission during
-handshaking) are not yet implemented.
+operation on datagram transports such as UDP and SCTP, though as of
+1.11.6 DTLS handshaking does not support timeouts or retransmissions,
+so it can only be used over reliable datagrams (such as SCTP with
+reliable transmission turned on for DTLS handshake packets). DTLS
+support should be considered as beta quality and further testing is
+invited.
 
 The TLS implementation does not know anything about sockets or the
 network layer. Instead, it calls a user provided callback (hereafter
@@ -23,10 +26,12 @@ instance, by reading from a network socket) it passes that information
 to TLS using :cpp:func:`TLS::Channel::received_data`. If the data
 passed in results in some change in the state, such as a handshake
 completing, or some data or an alert being received from the other
-side, then a user provided callback will be invoked. (If the reader is
+side, then a user provided callback will be invoked. If the reader is
 familiar with OpenSSL's BIO layer, it might be analagous to saying the
-only way of interacting with the SSL protocol stack is via a `BIO_mem`
-I/O abstraction.)
+only way of interacting with Botan's TLS is via a `BIO_mem` I/O
+abstraction. This makes the library completely agnostic to how you
+write your network layer, be it blocking sockets, libevent, asio, a
+message queue, etc.
 
 The callbacks that TLS calls have the signatures
 
@@ -103,7 +108,7 @@ available:
      A close notification is sent to the counterparty, and the
      internal state is cleared.
 
-   .. cpp:function void send_alert(const Alert& alert)
+   .. cpp:function:: void send_alert(const Alert& alert)
 
      Some other alert is sent to the counterparty. If the alert is
      fatal, the internal state is cleared.
@@ -193,9 +198,10 @@ TLS Clients
 
    The *data_cb* will be called with data sent by the counterparty
    after it has been processed. The byte array and size_t represent
-   the plaintext.
+   the plaintext value and size.
 
-   The *alert_cb* will be called if a protocol alert is received.
+   The *alert_cb* will be called when a protocol alert is received,
+   commonly with a close alert during connection teardown.
 
    The *handshake_cb* function is called when a handshake
    (either initial or renegotiation) is completed. The return value of
@@ -420,9 +426,13 @@ The ``TLS::Session_Manager_In_Memory`` implementation saves sessions
 in memory, with an upper bound on the maximum number of sessions and
 the lifetime of a session.
 
-.. cpp:class:: TLS::Session_Manager_In_Memory
+It is safe to share a single object across many threads as it uses a
+lock internally.
 
- .. cpp:function:: Session_Manager_In_Memory(size_t max_sessions = 1000, \
+.. cpp:class:: TLS::Session_Managers_In_Memory
+
+ .. cpp:function:: Session_Manager_In_Memory(RandomNumberGenerator& rng, \
+                                             size_t max_sessions = 1000, \
                                              std::chrono::seconds session_lifetime = 7200)
 
     Limits the maximum number of saved sessions to *max_sessions*, and

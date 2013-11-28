@@ -4,3 +4,6 @@ Version 1.11.6, Not Yet Released
  * Botan now requires Boost, specifically the filesystem and asio libraries.
 
  * Add HKDF from :rfc:`5869`
+
+ * TLS::Session_Manager_In_Memory now requires a rng to be passed to its
+   constructor. Previously it used the global RNG, however 

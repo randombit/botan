@@ -96,7 +96,7 @@ class BOTAN_DLL Session_Manager_Noop : public Session_Manager
    };
 
 /**
-* An implementation of Session_Manager that saves values in memory
+* An implementation of Session_Manager that saves values in memory.
 */
 class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
    {
@@ -107,7 +107,8 @@ class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
       * @param session_lifetime sessions are expired after this many
       *        seconds have elapsed from initial handshake.
       */
-      Session_Manager_In_Memory(size_t max_sessions = 1000,
+      Session_Manager_In_Memory(RandomNumberGenerator& rng,
+                                size_t max_sessions = 1000,
                                 std::chrono::seconds session_lifetime =
                                    std::chrono::seconds(7200));
 
