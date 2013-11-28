@@ -583,6 +583,10 @@ class ModuleInfo(object):
         self.header_internal = [add_dir_name(s) for s in self.header_internal]
         self.header_public = [add_dir_name(s) for s in self.header_public]
 
+        for src in self.source + self.header_internal + self.header_public:
+            if os.access(src, os.R_OK) == False:
+                logging.warning("Missing file %s in %s" % (src, infofile))
+
         self.mp_bits = int(self.mp_bits)
 
         if self.comment != []:

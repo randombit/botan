@@ -58,7 +58,7 @@ tls_policy.cpp
 tls_server.cpp
 tls_session.cpp
 tls_session_key.cpp
-tls_session_manager.cpp
+tls_session_manager_memory.cpp
 tls_suite_info.cpp
 tls_record.cpp
 tls_version.cpp
