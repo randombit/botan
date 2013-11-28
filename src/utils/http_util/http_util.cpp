@@ -51,15 +51,23 @@ Response http_sync(const std::string& verb,
    if(protocol_host_sep == std::string::npos)
       throw std::runtime_error("Invalid URL " + url);
    const std::string protocol = url.substr(0, protocol_host_sep);
-
-   const std::string hostname = url.substr(protocol_host_sep+3, url.find('/', protocol_host_sep + 3));
-
-   std::string loc = url.substr(url.find('/', protocol_host_sep), std::string::npos);
-   if(loc == "")
-      loc = "/";
-
    if(protocol != "http")
       throw std::runtime_error("Unsupported protocol " + protocol);
+
+   const auto host_loc_sep = url.find('/', protocol_host_sep + 3);
+
+   std::string hostname, loc;
+
+   if(host_loc_sep == std::string::npos)
+      {
+      hostname = url.substr(protocol_host_sep + 3, std::string::npos);
+      loc = "/";
+      }
+   else
+      {
+      hostname = url.substr(protocol_host_sep + 3, host_loc_sep-protocol_host_sep-3);
+      loc = url.substr(host_loc_sep, std::string::npos);
+      }
 
    tcp::iostream sock;
 
@@ -68,7 +76,7 @@ Response http_sync(const std::string& verb,
 
    sock.connect(hostname, protocol);
    if(!sock)
-      throw std::runtime_error("Connection to " + hostname + " / " + protocol + " failed");
+      throw std::runtime_error("Connection to " + hostname + " failed");
 
    std::ostringstream outbuf;
 
