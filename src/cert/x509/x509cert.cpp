@@ -521,6 +521,11 @@ std::string X509_Certificate::to_string() const
          out << "   " << ex_constraints[i] << "\n";
       }
 
+   if(ocsp_responder() != "")
+      out << "OCSP responder " << ocsp_responder() << "\n";
+   if(crl_distribution_point() != "")
+      out << "CRL " << crl_distribution_point() << "\n";
+
    out << "Signature algorithm: " <<
       OIDS::lookup(this->signature_algorithm().oid) << "\n";
 
