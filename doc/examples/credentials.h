@@ -105,13 +105,13 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
                return false;
 
             pass.resize(16);
-            Botan::global_state().global_rng().randomize((Botan::byte*)&pass[0], pass.size());
+            rng.randomize((Botan::byte*)&pass[0], pass.size());
             }
 
          group_id = "modp/srp/2048";
 
          salt.resize(16);
-         Botan::global_state().global_rng().randomize(&salt[0], salt.size());
+         rng.randomize(&salt[0], salt.size());
 
          verifier = Botan::generate_srp6_verifier(identifier,
                                                   pass,

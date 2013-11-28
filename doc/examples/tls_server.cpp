@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
 
       TLS::Policy policy;
 
-      TLS::Session_Manager_In_Memory session_manager;
+      TLS::Session_Manager_In_Memory session_manager(rng);
 
       Credentials_Manager_Simple creds(rng);
 

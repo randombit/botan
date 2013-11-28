@@ -205,6 +205,7 @@ class tls_server
 
       tls_server(boost::asio::io_service& io_service, unsigned short port) :
          m_acceptor(io_service, tcp::endpoint(tcp::v4(), port)),
+         m_session_manager(m_rng),
          m_creds(m_rng)
          {
          session::pointer new_session = make_session();

@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
                                                   rng,
                                                   "sessions.db");
 #else
-      TLS::Session_Manager_In_Memory session_manager;
+      TLS::Session_Manager_In_Memory session_manager(rng);
 #endif
 
       Credentials_Manager_Simple creds(rng);
