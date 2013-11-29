@@ -1,6 +1,6 @@
 /*
 * Certificate Store
-* (C) 1999-2010 Jack Lloyd
+* (C) 1999-2010,2013 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -22,34 +22,20 @@ class BOTAN_DLL Certificate_Store
       virtual ~Certificate_Store() {}
 
       /**
-      * Add a certificate; this may fail if the store is write-only
-      */
-      virtual void add_certificate(const X509_Certificate& cert) = 0;
-
-      /**
-      * Add a CRL; this may fail if the store is write-only
-      */
-      virtual void add_crl(const X509_CRL& crl) = 0;
-
-      bool certificate_known(const X509_Certificate& cert) const;
-
-      virtual std::vector<X509_DN> all_subjects() const = 0;
-
-      /**
       * Subject DN and (optionally) key identifier
       */
-      virtual std::vector<X509_Certificate>
-         find_cert_by_subject_and_key_id(
-            const X509_DN& subject_dn,
-            const std::vector<byte>& key_id) const = 0;
+      virtual const X509_Certificate*
+         find_cert(const X509_DN& subject_dn, const std::vector<byte>& key_id) const = 0;
 
-      /**
-      * Find CRLs by the DN and key id of the issuer
-      */
-      virtual std::vector<X509_CRL>
-         find_crl_by_issuer_and_key_id(
-            const X509_DN& issuer_dn,
-            const std::vector<byte>& key_id) const = 0;
+      virtual const X509_CRL* find_crl(const X509_Certificate& subject) const;
+
+      bool certificate_known(const X509_Certificate& cert) const
+         {
+         return find_cert(cert.subject_dn(), cert.subject_key_id());
+         }
+
+      // remove this (used by TLS::Server)
+      virtual std::vector<X509_DN> all_subjects() const = 0;
    };
 
 /**
@@ -58,30 +44,45 @@ class BOTAN_DLL Certificate_Store
 class BOTAN_DLL Certificate_Store_In_Memory : public Certificate_Store
    {
    public:
+      /**
+      * Attempt to parse all files in dir (including subdirectories)
+      * as certificates. Ignores errors.
+      */
+      Certificate_Store_In_Memory(const std::string& dir);
+
       Certificate_Store_In_Memory() {}
 
-      void add_certificate(const X509_Certificate& cert) override;
+      void add_certificate(const X509_Certificate& cert);
 
-      void add_crl(const X509_CRL& crl) override;
+      void add_crl(const X509_CRL& crl);
 
       std::vector<X509_DN> all_subjects() const override;
 
-      std::vector<X509_Certificate> find_cert_by_subject_and_key_id(
+      const X509_Certificate* find_cert(
          const X509_DN& subject_dn,
          const std::vector<byte>& key_id) const override;
 
-      std::vector<X509_CRL> find_crl_by_issuer_and_key_id(
-         const X509_DN& issuer_dn,
-         const std::vector<byte>& key_id) const override;
+      const X509_CRL* find_crl(const X509_Certificate& subject) const override;
    private:
       // TODO: Add indexing on the DN and key id to avoid linear search
       std::vector<X509_Certificate> m_certs;
       std::vector<X509_CRL> m_crls;
    };
 
-// TODO: file backed store
-// TODO: directory backed store (eg /usr/share/ca-certificates)
-// TODO: sqlite3 backed store
+class BOTAN_DLL Certificate_Store_Overlay : public Certificate_Store
+   {
+   public:
+      Certificate_Store_Overlay(const std::vector<X509_Certificate>& certs) :
+         m_certs(certs) {}
+
+      std::vector<X509_DN> all_subjects() const override;
+
+      const X509_Certificate* find_cert(
+         const X509_DN& subject_dn,
+         const std::vector<byte>& key_id) const override;
+   private:
+      const std::vector<X509_Certificate>& m_certs;
+   };
 
 }
 

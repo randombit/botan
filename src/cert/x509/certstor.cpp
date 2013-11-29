@@ -1,21 +1,18 @@
 /*
 * Certificate Store
-* (C) 1999-2010 Jack Lloyd
+* (C) 1999-2010,2013 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
 #include <botan/certstor.h>
+#include <boost/filesystem.hpp>
 
 namespace Botan {
 
-bool Certificate_Store::certificate_known(const X509_Certificate& cert) const
+const X509_CRL* Certificate_Store::find_crl(const X509_Certificate&) const
    {
-   std::vector<X509_Certificate> found =
-      find_cert_by_subject_and_key_id(cert.subject_dn(),
-                                      cert.subject_key_id());
-
-   return !found.empty();
+   return nullptr;
    }
 
 void Certificate_Store_In_Memory::add_certificate(const X509_Certificate& cert)
@@ -37,29 +34,37 @@ std::vector<X509_DN> Certificate_Store_In_Memory::all_subjects() const
    return subjects;
    }
 
-std::vector<X509_Certificate>
-Certificate_Store_In_Memory::find_cert_by_subject_and_key_id(
-   const X509_DN& subject_dn,
-   const std::vector<byte>& key_id) const
-   {
-   std::vector<X509_Certificate> result;
+namespace {
 
-   for(size_t i = 0; i != m_certs.size(); ++i)
+const X509_Certificate*
+cert_search(const X509_DN& subject_dn, const std::vector<byte>& key_id,
+            const std::vector<X509_Certificate>& certs)
+   {
+   for(size_t i = 0; i != certs.size(); ++i)
       {
       // Only compare key ids if set in both call and in the cert
       if(key_id.size())
          {
-         std::vector<byte> skid = m_certs[i].subject_key_id();
+         std::vector<byte> skid = certs[i].subject_key_id();
 
          if(skid.size() && skid != key_id) // no match
             continue;
          }
 
-      if(m_certs[i].subject_dn() == subject_dn)
-         result.push_back(m_certs[i]);
+      if(certs[i].subject_dn() == subject_dn)
+         return &certs[i];
       }
 
-   return result;
+   return nullptr;
+   }
+
+}
+
+const X509_Certificate*
+Certificate_Store_In_Memory::find_cert(const X509_DN& subject_dn,
+                                       const std::vector<byte>& key_id) const
+   {
+   return cert_search(subject_dn, key_id, m_certs);
    }
 
 void Certificate_Store_In_Memory::add_crl(const X509_CRL& crl)
@@ -81,12 +86,9 @@ void Certificate_Store_In_Memory::add_crl(const X509_CRL& crl)
    m_crls.push_back(crl);
    }
 
-std::vector<X509_CRL>
-Certificate_Store_In_Memory::find_crl_by_issuer_and_key_id(
-   const X509_DN& issuer_dn,
-   const std::vector<byte>& key_id) const
+const X509_CRL* Certificate_Store_In_Memory::find_crl(const X509_Certificate& subject) const
    {
-   std::vector<X509_CRL> result;
+   const std::vector<byte>& key_id = subject.authority_key_id();
 
    for(size_t i = 0; i != m_crls.size(); ++i)
       {
@@ -99,11 +101,48 @@ Certificate_Store_In_Memory::find_crl_by_issuer_and_key_id(
             continue;
          }
 
-      if(m_crls[i].issuer_dn() == issuer_dn)
-         result.push_back(m_crls[i]);
+      if(m_crls[i].issuer_dn() == subject.issuer_dn())
+         return &m_crls[i];
       }
 
-   return result;
+   return nullptr;
+   }
+
+Certificate_Store_In_Memory::Certificate_Store_In_Memory(const std::string& dir)
+   {
+   if(dir == "")
+      return;
+
+   boost::filesystem::recursive_directory_iterator i(dir);
+   boost::filesystem::recursive_directory_iterator end;
+
+   while(i != end)
+      {
+      auto path = i->path();
+      ++i;
+
+      try
+         {
+         if(boost::filesystem::is_regular_file(path))
+            m_certs.push_back(X509_Certificate(path.native()));
+         }
+      catch(...) {}
+      }
+   }
+
+const X509_Certificate*
+Certificate_Store_Overlay::find_cert(const X509_DN& subject_dn,
+                                     const std::vector<byte>& key_id) const
+   {
+   return cert_search(subject_dn, key_id, m_certs);
+   }
+
+std::vector<X509_DN> Certificate_Store_Overlay::all_subjects() const
+   {
+   std::vector<X509_DN> subjects;
+   for(size_t i = 0; i != m_certs.size(); ++i)
+      subjects.push_back(m_certs[i].subject_dn());
+   return subjects;
    }
 
 }

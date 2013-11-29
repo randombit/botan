@@ -8,6 +8,7 @@
 #ifndef BOTAN_OCSP_H__
 #define BOTAN_OCSP_H__
 
+#include <botan/cert_status.h>
 #include <botan/ocsp_types.h>
 
 namespace Botan {
@@ -42,8 +43,8 @@ class BOTAN_DLL Response
       Response(const Certificate_Store& trusted_roots,
                const std::vector<byte>& response);
 
-      bool affirmative_response_for(const X509_Certificate& issuer,
-                                    const X509_Certificate& subject) const;
+      Certificate_Status_Code status_for(const X509_Certificate& issuer,
+                                               const X509_Certificate& subject) const;
 
    private:
       std::vector<SingleResponse> m_responses;

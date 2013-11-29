@@ -2,4 +2,6 @@ define X509_CERTIFICATES 20131128
 
 <requires>
 datastor
+http_util
+ocsp
 </requires>

@@ -42,21 +42,20 @@ class BOTAN_DLL CertID : public ASN1_Object
 class BOTAN_DLL SingleResponse : public ASN1_Object
    {
    public:
-      SingleResponse() : m_good_status(false) {}
+      const CertID& certid() const { return m_certid; }
 
-      /**
-      * Return true if and only if this response is one matching
-      * the current issuer and subject AND is a postive affirmation
-      */
-      bool affirmative_response_for(const X509_Certificate& issuer,
-                                    const X509_Certificate& subject) const;
+      size_t cert_status() const { return m_cert_status; }
+
+      X509_Time this_update() const { return m_thisupdate; }
+
+      X509_Time next_update() const { return m_thisupdate; }
 
       void encode_into(class DER_Encoder& to) const override;
 
       void decode_from(class BER_Decoder& from) override;
    private:
       CertID m_certid;
-      bool m_good_status;
+      size_t m_cert_status = 2; // unknown
       X509_Time m_thisupdate;
       X509_Time m_nextupdate;
    };

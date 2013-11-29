@@ -92,27 +92,6 @@ void CertID::decode_from(class BER_Decoder& from)
 
    }
 
-bool SingleResponse::affirmative_response_for(
-   const X509_Certificate& issuer,
-   const X509_Certificate& subject) const
-   {
-   if(!m_good_status)
-      return false;
-
-   if(!m_certid.is_id_for(issuer, subject))
-      return false;
-
-   X509_Time current_time(std::chrono::system_clock::now());
-
-   if(m_thisupdate > current_time)
-      return false; // not yet valid?
-
-   if(m_nextupdate.time_is_set() && current_time > m_nextupdate)
-      return false; // expired, probably replayed
-
-   return true;
-   }
-
 void SingleResponse::encode_into(class DER_Encoder&) const
    {
    throw std::runtime_error("Not implemented (SingleResponse::encode_into)");
@@ -134,7 +113,7 @@ void SingleResponse::decode_from(class BER_Decoder& from)
                        ASN1_Tag(CONTEXT_SPECIFIC | CONSTRUCTED))
       .end_cons();
 
-   m_good_status = (cert_status.type_tag == 0);
+   m_cert_status = cert_status.type_tag;
    }
 
 }

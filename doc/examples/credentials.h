@@ -25,7 +25,11 @@ bool value_exists(const std::vector<std::string>& vec,
 class Credentials_Manager_Simple : public Botan::Credentials_Manager
    {
    public:
-      Credentials_Manager_Simple(Botan::RandomNumberGenerator& rng) : rng(rng) {}
+      Credentials_Manager_Simple(Botan::RandomNumberGenerator& rng) :
+         rng(rng)
+         {
+         m_certstores.push_back(new Botan::Certificate_Store_In_Memory("/usr/share/ca-certificates"));
+         }
 
       std::string srp_identifier(const std::string& type,
                                  const std::string& hostname)
@@ -47,19 +51,8 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
       trusted_certificate_authorities(const std::string& type,
                                       const std::string& hostname)
          {
-
-         std::vector<Botan::Certificate_Store*> certs;
-
-         if(type == "tls-client" && hostname == "twitter.com")
-            {
-            Botan::X509_Certificate verisign("/usr/share/ca-certificates/mozilla/VeriSign_Class_3_Public_Primary_Certification_Authority_-_G5.crt");
-
-            auto store = new Botan::Certificate_Store_In_Memory;
-            store->add_certificate(verisign);
-            certs.push_back(store);
-            }
-
-         return certs;
+         // can very based on hostname eg for pinning
+         return m_certstores;
          }
 
       void verify_certificate_chain(
@@ -291,6 +284,8 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
       Botan::SymmetricKey session_ticket_key;
 
       std::map<Botan::X509_Certificate, Botan::Private_Key*> certs_and_keys;
+
+      std::vector<Botan::Certificate_Store*> m_certstores;
    };
 
 #endif

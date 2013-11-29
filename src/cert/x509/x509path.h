@@ -8,6 +8,7 @@
 #ifndef BOTAN_X509_CERT_PATH_VALIDATION_H__
 #define BOTAN_X509_CERT_PATH_VALIDATION_H__
 
+#include <botan/cert_status.h>
 #include <botan/x509cert.h>
 #include <botan/certstor.h>
 #include <set>
@@ -67,39 +68,6 @@ class BOTAN_DLL Path_Validation_Result
    {
    public:
       /**
-      * X.509 Certificate Validation Result
-      */
-      enum Code {
-         VERIFIED,
-         UNKNOWN_X509_ERROR,
-         CANNOT_ESTABLISH_TRUST,
-         CERT_CHAIN_TOO_LONG,
-         SIGNATURE_ERROR,
-         POLICY_ERROR,
-         INVALID_USAGE,
-
-         SIGNATURE_METHOD_TOO_WEAK,
-         UNTRUSTED_HASH,
-
-         CERT_MULTIPLE_ISSUERS_FOUND,
-
-         CERT_FORMAT_ERROR,
-         CERT_ISSUER_NOT_FOUND,
-         CERT_NOT_YET_VALID,
-         CERT_HAS_EXPIRED,
-         CERT_IS_REVOKED,
-
-         CRL_NOT_FOUND,
-         CRL_FORMAT_ERROR,
-         CRL_NOT_YET_VALID,
-         CRL_HAS_EXPIRED,
-
-         CA_CERT_CANNOT_SIGN,
-         CA_CERT_NOT_FOR_CERT_ISSUER,
-         CA_CERT_NOT_FOR_CRL_ISSUER
-      };
-
-      /**
       * @return the set of hash functions you are implicitly
       * trusting by trusting this result.
       */
@@ -123,7 +91,7 @@ class BOTAN_DLL Path_Validation_Result
       /**
       * @return validation result code
       */
-      Code result() const { return m_result; }
+      Certificate_Status_Code result() const { return m_result; }
 
       /**
       * @return string representation of the validation result
@@ -138,9 +106,9 @@ class BOTAN_DLL Path_Validation_Result
          const Path_Validation_Restrictions& restrictions,
          const std::vector<Certificate_Store*>& certstores);
 
-      void set_result(Code result) { m_result = result; }
+      void set_result(Certificate_Status_Code result) { m_result = result; }
 
-      Code m_result;
+      Certificate_Status_Code m_result;
 
       std::vector<X509_Certificate> m_cert_path;
    };

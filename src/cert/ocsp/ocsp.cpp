@@ -1,6 +1,6 @@
 /*
 * OCSP
-* (C) 2012 Jack Lloyd
+* (C) 2012,2013 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -77,7 +77,7 @@ void check_signature(const std::vector<byte>& tbs_response,
    if(certs.size() < 1)
       throw std::invalid_argument("Short cert chain for check_signature");
 
-   if(trusted_roots.certificate_known(certs[0])) // directly signed by 
+   if(trusted_roots.certificate_known(certs[0]))
       return check_signature(tbs_response, sig_algo, signature, certs[0]);
 
    // Otherwise attempt to chain the signing cert to a trust root
@@ -85,10 +85,7 @@ void check_signature(const std::vector<byte>& tbs_response,
    if(!certs[0].allowed_usage("PKIX.OCSPSigning"))
       throw std::runtime_error("OCSP response cert does not allow OCSP signing");
 
-   Path_Validation_Result result =
-      x509_path_validate(certs,
-                         Path_Validation_Restrictions(),
-                         trusted_roots);
+   auto result = x509_path_validate(certs, Path_Validation_Restrictions(), trusted_roots);
 
    if(!result.successful_validation())
       throw std::runtime_error("Certificate validation failure: " + result.result_string());
@@ -186,8 +183,9 @@ Response::Response(const Certificate_Store& trusted_roots,
 
       if(certs.empty())
          {
-         certs = trusted_roots.find_cert_by_subject_and_key_id(name, std::vector<byte>());
-         if(certs.empty())
+         if(auto cert = trusted_roots.find_cert(name, std::vector<byte>()))
+            certs.push_back(*cert);
+         else
             throw std::runtime_error("Could not find certificate that signed OCSP response");
          }
 
@@ -197,14 +195,31 @@ Response::Response(const Certificate_Store& trusted_roots,
    response_outer.end_cons();
    }
 
-bool Response::affirmative_response_for(const X509_Certificate& issuer,
-                                        const X509_Certificate& subject) const
+Certificate_Status_Code Response::status_for(const X509_Certificate& issuer,
+                                                   const X509_Certificate& subject) const
    {
-   for(auto response : m_responses)
-      if(response.affirmative_response_for(issuer, subject))
-         return true;
+   for(const auto& response : m_responses)
+      {
+      if(response.certid().is_id_for(issuer, subject))
+         {
+         X509_Time current_time(std::chrono::system_clock::now());
 
-   return false;
+         if(response.this_update() > current_time)
+            return Certificate_Status_Code::OCSP_NOT_YET_VALID;
+
+         if(response.next_update().time_is_set() && current_time > response.next_update())
+            return Certificate_Status_Code::OCSP_EXPIRED;
+
+         if(response.cert_status() == 1)
+            return Certificate_Status_Code::CERT_IS_REVOKED;
+         else if(response.cert_status() == 0)
+            return Certificate_Status_Code::OCSP_RESPONSE_GOOD;
+         else
+            return Certificate_Status_Code::OCSP_BAD_STATUS;
+         }
+      }
+
+   return Certificate_Status_Code::OCSP_CERT_NOT_LISTED;
    }
 
 Response online_check(const X509_Certificate& issuer,
