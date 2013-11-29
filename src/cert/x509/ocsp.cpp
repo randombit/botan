@@ -224,7 +224,7 @@ Certificate_Status_Code Response::status_for(const X509_Certificate& issuer,
 
 Response online_check(const X509_Certificate& issuer,
                       const X509_Certificate& subject,
-                      const Certificate_Store& trusted_roots)
+                      const Certificate_Store* trusted_roots)
    {
    const std::string responder_url = subject.ocsp_responder();
 
@@ -237,12 +237,11 @@ Response online_check(const X509_Certificate& issuer,
                                "application/ocsp-request",
                                req.BER_encode());
 
-   if(http.status_code() != 200)
-      throw std::runtime_error("HTTP error: " + http.status_message());
+   http.throw_unless_ok();
 
    // Check the MIME type?
 
-   OCSP::Response response(trusted_roots, http.body());
+   OCSP::Response response(*trusted_roots, http.body());
 
    return response;
    }

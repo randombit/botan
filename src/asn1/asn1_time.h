@@ -26,6 +26,8 @@ class BOTAN_DLL X509_Time : public ASN1_Object
       std::string readable_string() const;
       bool time_is_set() const;
 
+      std::string to_string() const { return readable_string(); }
+
       s32bit cmp(const X509_Time&) const;
 
       void set_to(const std::string&);

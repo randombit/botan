@@ -219,12 +219,12 @@ void do_x509_tests(RandomNumberGenerator& rng)
    store.add_crl(crl2);
 
    result_u1 = x509_path_validate(user1_cert, restrictions, store);
-   if(result_u1.result() != Path_Validation_Result::CERT_IS_REVOKED)
+   if(result_u1.result() != Certificate_Status_Code::CERT_IS_REVOKED)
       std::cout << "FAILED: User cert #1 was not revoked - "
                 << result_u1.result_string() << std::endl;
 
    result_u2 = x509_path_validate(user2_cert, restrictions, store);
-   if(result_u2.result() != Path_Validation_Result::CERT_IS_REVOKED)
+   if(result_u2.result() != Certificate_Status_Code::CERT_IS_REVOKED)
       std::cout << "FAILED: User cert #2 was not revoked - "
                 << result_u2.result_string() << std::endl;
 

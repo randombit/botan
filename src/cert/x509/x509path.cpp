@@ -6,31 +6,22 @@
 */
 
 #include <botan/x509path.h>
+#include <botan/ocsp.h>
+#include <botan/http_util.h>
 #include <botan/parsing.h>
 #include <botan/pubkey.h>
 #include <botan/oids.h>
 #include <algorithm>
 #include <chrono>
 #include <memory>
+#include <iostream>
 
 namespace Botan {
 
 namespace {
 
-class PKIX_Validation_Failure : public std::exception
-   {
-   public:
-      PKIX_Validation_Failure(Certificate_Status_Code code) : m_code(code) {}
-
-      Certificate_Status_Code code() const { return m_code; }
-
-      const char* what() const noexcept { return "PKIX validation failed"; }
-   private:
-      Certificate_Status_Code m_code;
-   };
-
-X509_Certificate find_issuing_cert(const X509_Certificate& cert,
-                                   const std::vector<Certificate_Store*>& certstores)
+const X509_Certificate* find_issuing_cert(const X509_Certificate& cert,
+                                    const std::vector<Certificate_Store*>& certstores)
    {
    const X509_DN issuer_dn = cert.issuer_dn();
    const std::vector<byte> auth_key_id = cert.authority_key_id();
@@ -38,14 +29,14 @@ X509_Certificate find_issuing_cert(const X509_Certificate& cert,
    for(size_t i = 0; i != certstores.size(); ++i)
       {
       if(const X509_Certificate* cert = certstores[i]->find_cert(issuer_dn, auth_key_id))
-         return *cert;
+         return cert;
       }
 
-   throw PKIX_Validation_Failure(Certificate_Status_Code::CERT_ISSUER_NOT_FOUND);
+   return nullptr;
    }
 
 const X509_CRL* find_crls_from(const X509_Certificate& cert,
-                         const std::vector<Certificate_Store*>& certstores)
+                               const std::vector<Certificate_Store*>& certstores)
    {
    const X509_DN issuer_dn = cert.subject_dn();
    const std::vector<byte> auth_key_id = cert.subject_key_id();
@@ -55,6 +46,24 @@ const X509_CRL* find_crls_from(const X509_Certificate& cert,
       if(const X509_CRL* crl = certstores[i]->find_crl(cert))
          return crl;
       }
+
+#if 0
+   const std::string crl_url = cert.crl_distribution_point();
+   if(crl_url != "")
+      {
+      std::cout << "Downloading CRL " << crl_url << "\n";
+      auto http = HTTP::GET_sync(crl_url);
+
+      std::cout << http.status_message() << "\n";
+
+      http.throw_unless_ok();
+      // check the mime type
+
+      std::unique_ptr<X509_CRL> crl(new X509_CRL(http.body()));
+
+      return crl.release();
+      }
+#endif
 
    return nullptr;
    }
@@ -69,9 +78,22 @@ Certificate_Status_Code check_chain(const std::vector<X509_Certificate>& cert_pa
 
    X509_Time current_time(std::chrono::system_clock::now());
 
+   std::vector<std::future<OCSP::Response>> ocsp_responses;
+
    for(size_t i = 0; i != cert_path.size(); ++i)
       {
+      const bool at_self_signed_root = (i == cert_path.size() - 1);
+
       const X509_Certificate& subject = cert_path[i];
+
+      const X509_Certificate& issuer = cert_path[at_self_signed_root ? (i) : (i + 1)];
+
+      const Certificate_Store* trusted = certstores[0]; // fixme
+
+      if(i == 0 || restrictions.ocsp_all_intermediates())
+         ocsp_responses.push_back(
+            std::async(std::launch::async,
+                       OCSP::online_check, issuer, subject, trusted));
 
       // Check all certs for valid time range
       if(current_time < X509_Time(subject.start_time()))
@@ -79,11 +101,6 @@ Certificate_Status_Code check_chain(const std::vector<X509_Certificate>& cert_pa
 
       if(current_time > X509_Time(subject.end_time()))
          return Certificate_Status_Code::CERT_HAS_EXPIRED;
-
-      const bool at_self_signed_root = (i == cert_path.size() - 1);
-
-      const X509_Certificate& issuer =
-         cert_path[at_self_signed_root ? (i) : (i + 1)];
 
       // Check issuer constraints
 
@@ -107,17 +124,42 @@ Certificate_Status_Code check_chain(const std::vector<X509_Certificate>& cert_pa
             return Certificate_Status_Code::UNTRUSTED_HASH;
       }
 
-   for(size_t i = 1; i != cert_path.size(); ++i)
+   for(size_t i = 0; i != cert_path.size() - 1; ++i)
       {
-      const X509_Certificate& subject = cert_path[i-1];
-      const X509_Certificate& ca = cert_path[i];
+      const X509_Certificate& subject = cert_path[i];
+      const X509_Certificate& ca = cert_path[i+1];
+
+      if(i < ocsp_responses.size())
+         {
+         try
+            {
+            OCSP::Response ocsp = ocsp_responses[i].get();
+
+            auto status = ocsp.status_for(ca, subject);
+
+            if(status == CERT_IS_REVOKED)
+               return status;
+
+            if(status == OCSP_RESPONSE_GOOD)
+               {
+               if(i == 0 && !restrictions.ocsp_all_intermediates())
+                  return status; // return immediately to just OCSP end cert
+               else
+                  continue;
+               }
+            }
+         catch(std::exception& e)
+            {
+            }
+         }
 
       const X509_CRL* crl_p = find_crls_from(ca, certstores);
 
       if(!crl_p)
          {
          if(restrictions.require_revocation_information())
-            return Certificate_Status_Code::CRL_NOT_FOUND;
+            return Certificate_Status_Code::NO_REVOCATION_DATA;
+         std::cout << "No revocation information for " << subject.subject_dn() << "\n";
          continue;
          }
 
@@ -147,7 +189,6 @@ Certificate_Status_Code check_chain(const std::vector<X509_Certificate>& cert_pa
 
 }
 
-
 Path_Validation_Result x509_path_validate(
    const std::vector<X509_Certificate>& end_certs,
    const Path_Validation_Restrictions& restrictions,
@@ -158,26 +199,18 @@ Path_Validation_Result x509_path_validate(
 
    std::vector<X509_Certificate> cert_path = end_certs;
 
-   try
+   // iterate until we reach a root or cannot find the issuer
+   while(!cert_path.back().is_self_signed())
       {
-      // iterate until we reach a root or cannot find the issuer
-      while(!cert_path.back().is_self_signed())
-         {
-         cert_path.push_back(
-            find_issuing_cert(cert_path.back(), certstores)
-            );
-         }
-
-      Certificate_Status_Code res = check_chain(cert_path, restrictions, certstores);
-
-      return Path_Validation_Result(res, std::move(cert_path));
-      }
-   catch(PKIX_Validation_Failure& e)
-      {
-      return Path_Validation_Result(e.code());
+      const X509_Certificate* cert = find_issuing_cert(cert_path.back(), certstores);
+      if(!cert)
+         return Path_Validation_Result(Certificate_Status_Code::CERT_ISSUER_NOT_FOUND);
+      cert_path.push_back(*cert);
       }
 
-   return Path_Validation_Result(Certificate_Status_Code::UNKNOWN_X509_ERROR);
+   Certificate_Status_Code res = check_chain(cert_path, restrictions, certstores);
+
+   return Path_Validation_Result(res, std::move(cert_path));
    }
 
 Path_Validation_Result x509_path_validate(
@@ -216,8 +249,10 @@ Path_Validation_Result x509_path_validate(
    }
 
 Path_Validation_Restrictions::Path_Validation_Restrictions(bool require_rev,
-                                                           size_t key_strength) :
+                                                           size_t key_strength,
+                                                           bool ocsp_all) :
    m_require_revocation_information(require_rev),
+   m_ocsp_all_intermediates(ocsp_all),
    m_minimum_key_strength(key_strength)
    {
    if(key_strength <= 80)
@@ -242,7 +277,14 @@ std::set<std::string> Path_Validation_Result::trusted_hashes() const
    return hashes;
    }
 
-std::string Path_Validation_Result::result_string() constmtn
+bool Path_Validation_Result::successful_validation() const
+   {
+   if(status() == VERIFIED || status() == OCSP_RESPONSE_GOOD)
+      return true;
+   return false;
+   }
+
+std::string Path_Validation_Result::result_string() const
    {
    return status_string(m_status);
    }
@@ -283,8 +325,8 @@ std::string Path_Validation_Result::status_string(Certificate_Status_Code code)
          return "Certificate has expired";
       case CERT_IS_REVOKED:
          return "Certificate is revoked";
-      case CRL_NOT_FOUND:
-         return "CRL not found";
+      case NO_REVOCATION_DATA:
+         return "No revocation data available";
       case CRL_FORMAT_ERROR:
          return "CRL format error";
       case CRL_NOT_YET_VALID:

@@ -25,10 +25,12 @@ class BOTAN_DLL Path_Validation_Restrictions
       * @param require_rev if true, revocation information is required
       * @param minimum_key_strength is the minimum strength (in terms of
       *        operations, eg 80 means 2^80) of a signature. Signatures
-      *        weaker than this are rejected.
+      *        weaker than this are rejected. If more than 80, SHA-1
+      *        signatures are also rejected.
       */
       Path_Validation_Restrictions(bool require_rev = false,
-                                   size_t minimum_key_strength = 80);
+                                   size_t minimum_key_strength = 80,
+                                   bool ocsp_all_intermediates = false);
 
       /**
       * @param require_rev if true, revocation information is required
@@ -41,13 +43,18 @@ class BOTAN_DLL Path_Validation_Restrictions
       */
       Path_Validation_Restrictions(bool require_rev,
                                    size_t minimum_key_strength,
+                                   bool ocsp_all_intermediates,
                                    const std::set<std::string>& trusted_hashes) :
          m_require_revocation_information(require_rev),
+         m_ocsp_all_intermediates(ocsp_all_intermediates),
          m_trusted_hashes(trusted_hashes),
          m_minimum_key_strength(minimum_key_strength) {}
 
       bool require_revocation_information() const
          { return m_require_revocation_information; }
+
+      bool ocsp_all_intermediates() const
+         { return m_ocsp_all_intermediates; }
 
       const std::set<std::string>& trusted_hashes() const
          { return m_trusted_hashes; }
@@ -57,6 +64,7 @@ class BOTAN_DLL Path_Validation_Restrictions
 
    private:
       bool m_require_revocation_information;
+      bool m_ocsp_all_intermediates;
       std::set<std::string> m_trusted_hashes;
       size_t m_minimum_key_strength;
    };
@@ -86,7 +94,7 @@ class BOTAN_DLL Path_Validation_Result
       /**
       * @return true iff the validation was succesful
       */
-      bool successful_validation() const { return status() == VERIFIED; }
+      bool successful_validation() const;
 
       /**
       * @return validation result code

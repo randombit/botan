@@ -52,7 +52,7 @@ class BOTAN_DLL Response
 
 BOTAN_DLL Response online_check(const X509_Certificate& issuer,
                                 const X509_Certificate& subject,
-                                const Certificate_Store& trusted_roots);
+                                const Certificate_Store* trusted_roots);
 
 }
 
