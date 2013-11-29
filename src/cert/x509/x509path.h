@@ -86,30 +86,35 @@ class BOTAN_DLL Path_Validation_Result
       /**
       * @return true iff the validation was succesful
       */
-      bool successful_validation() const { return result() == VERIFIED; }
+      bool successful_validation() const { return status() == VERIFIED; }
 
       /**
       * @return validation result code
       */
-      Certificate_Status_Code result() const { return m_result; }
+      Certificate_Status_Code result() const { return m_status; }
+
+      Certificate_Status_Code status() const { return m_status; }
 
       /**
       * @return string representation of the validation result
       */
       std::string result_string() const;
 
-   private:
-      Path_Validation_Result() : m_result(UNKNOWN_X509_ERROR) {}
+      static std::string status_string(Certificate_Status_Code code);
 
+      Path_Validation_Result(Certificate_Status_Code status,
+                             std::vector<X509_Certificate>&& cert_chain) :
+         m_status(status), m_cert_path(cert_chain) {}
+
+      Path_Validation_Result(Certificate_Status_Code status) : m_status(status) {}
+
+   private:
       friend Path_Validation_Result x509_path_validate(
          const std::vector<X509_Certificate>& end_certs,
          const Path_Validation_Restrictions& restrictions,
          const std::vector<Certificate_Store*>& certstores);
 
-      void set_result(Certificate_Status_Code result) { m_result = result; }
-
-      Certificate_Status_Code m_result;
-
+      Certificate_Status_Code m_status;
       std::vector<X509_Certificate> m_cert_path;
    };
 

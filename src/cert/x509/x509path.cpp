@@ -59,7 +59,94 @@ const X509_CRL* find_crls_from(const X509_Certificate& cert,
    return nullptr;
    }
 
+Certificate_Status_Code check_chain(const std::vector<X509_Certificate>& cert_path,
+                                    const Path_Validation_Restrictions& restrictions,
+                                    const std::vector<Certificate_Store*>& certstores)
+   {
+   const std::set<std::string>& trusted_hashes = restrictions.trusted_hashes();
+
+   const bool self_signed_ee_cert = (cert_path.size() == 1);
+
+   X509_Time current_time(std::chrono::system_clock::now());
+
+   for(size_t i = 0; i != cert_path.size(); ++i)
+      {
+      const X509_Certificate& subject = cert_path[i];
+
+      // Check all certs for valid time range
+      if(current_time < X509_Time(subject.start_time()))
+         return Certificate_Status_Code::CERT_NOT_YET_VALID;
+
+      if(current_time > X509_Time(subject.end_time()))
+         return Certificate_Status_Code::CERT_HAS_EXPIRED;
+
+      const bool at_self_signed_root = (i == cert_path.size() - 1);
+
+      const X509_Certificate& issuer =
+         cert_path[at_self_signed_root ? (i) : (i + 1)];
+
+      // Check issuer constraints
+
+      // Don't require CA bit set on self-signed end entity cert
+      if(!issuer.is_CA_cert() && !self_signed_ee_cert)
+         return Certificate_Status_Code::CA_CERT_NOT_FOR_CERT_ISSUER;
+
+      if(issuer.path_limit() < i)
+         return Certificate_Status_Code::CERT_CHAIN_TOO_LONG;
+
+      std::unique_ptr<Public_Key> issuer_key(issuer.subject_public_key());
+
+      if(subject.check_signature(*issuer_key) == false)
+         return Certificate_Status_Code::SIGNATURE_ERROR;
+
+      if(issuer_key->estimated_strength() < restrictions.minimum_key_strength())
+         return Certificate_Status_Code::SIGNATURE_METHOD_TOO_WEAK;
+
+      if(!trusted_hashes.empty() && !at_self_signed_root)
+         if(!trusted_hashes.count(subject.hash_used_for_signature()))
+            return Certificate_Status_Code::UNTRUSTED_HASH;
+      }
+
+   for(size_t i = 1; i != cert_path.size(); ++i)
+      {
+      const X509_Certificate& subject = cert_path[i-1];
+      const X509_Certificate& ca = cert_path[i];
+
+      const X509_CRL* crl_p = find_crls_from(ca, certstores);
+
+      if(!crl_p)
+         {
+         if(restrictions.require_revocation_information())
+            return Certificate_Status_Code::CRL_NOT_FOUND;
+         continue;
+         }
+
+      const X509_CRL& crl = *crl_p;
+
+      if(!ca.allowed_usage(CRL_SIGN))
+         return Certificate_Status_Code::CA_CERT_NOT_FOR_CRL_ISSUER;
+
+      if(current_time < X509_Time(crl.this_update()))
+         return Certificate_Status_Code::CRL_NOT_YET_VALID;
+
+      if(current_time > X509_Time(crl.next_update()))
+         return Certificate_Status_Code::CRL_HAS_EXPIRED;
+
+      if(crl.check_signature(ca.subject_public_key()) == false)
+         return Certificate_Status_Code::SIGNATURE_ERROR;
+
+      if(crl.is_revoked(subject))
+         return Certificate_Status_Code::CERT_IS_REVOKED;
+      }
+
+   if(self_signed_ee_cert)
+      return Certificate_Status_Code::CANNOT_ESTABLISH_TRUST;
+
+   return Certificate_Status_Code::VERIFIED;
+   }
+
 }
+
 
 Path_Validation_Result x509_path_validate(
    const std::vector<X509_Certificate>& end_certs,
@@ -69,13 +156,7 @@ Path_Validation_Result x509_path_validate(
    if(end_certs.empty())
       throw std::invalid_argument("x509_path_validate called with no subjects");
 
-   Path_Validation_Result r;
-
-   r.m_cert_path = end_certs;
-
-   std::vector<X509_Certificate>& cert_path = r.m_cert_path;
-
-   const std::set<std::string>& trusted_hashes = restrictions.trusted_hashes();
+   std::vector<X509_Certificate> cert_path = end_certs;
 
    try
       {
@@ -87,90 +168,16 @@ Path_Validation_Result x509_path_validate(
             );
          }
 
-      const bool self_signed_ee_cert = (cert_path.size() == 1);
+      Certificate_Status_Code res = check_chain(cert_path, restrictions, certstores);
 
-      X509_Time current_time(std::chrono::system_clock::now());
-
-      for(size_t i = 0; i != cert_path.size(); ++i)
-         {
-         const X509_Certificate& subject = cert_path[i];
-
-         // Check all certs for valid time range
-         if(current_time < X509_Time(subject.start_time()))
-            throw PKIX_Validation_Failure(Certificate_Status_Code::CERT_NOT_YET_VALID);
-
-         if(current_time > X509_Time(subject.end_time()))
-            throw PKIX_Validation_Failure(Certificate_Status_Code::CERT_HAS_EXPIRED);
-
-         const bool at_self_signed_root = (i == cert_path.size() - 1);
-
-         const X509_Certificate& issuer =
-            cert_path[at_self_signed_root ? (i) : (i + 1)];
-
-         // Check issuer constraints
-
-         // Don't require CA bit set on self-signed end entity cert
-         if(!issuer.is_CA_cert() && !self_signed_ee_cert)
-            throw PKIX_Validation_Failure(Certificate_Status_Code::CA_CERT_NOT_FOR_CERT_ISSUER);
-
-         if(issuer.path_limit() < i)
-            throw PKIX_Validation_Failure(Certificate_Status_Code::CERT_CHAIN_TOO_LONG);
-
-         std::unique_ptr<Public_Key> issuer_key(issuer.subject_public_key());
-
-         if(subject.check_signature(*issuer_key) == false)
-            throw PKIX_Validation_Failure(Certificate_Status_Code::SIGNATURE_ERROR);
-
-         if(issuer_key->estimated_strength() < restrictions.minimum_key_strength())
-            throw PKIX_Validation_Failure(Certificate_Status_Code::SIGNATURE_METHOD_TOO_WEAK);
-
-         if(!trusted_hashes.empty() && !at_self_signed_root)
-            if(!trusted_hashes.count(subject.hash_used_for_signature()))
-               throw PKIX_Validation_Failure(Certificate_Status_Code::UNTRUSTED_HASH);
-         }
-
-      for(size_t i = 1; i != cert_path.size(); ++i)
-         {
-         const X509_Certificate& subject = cert_path[i-1];
-         const X509_Certificate& ca = cert_path[i];
-
-         const X509_CRL* crl_p = find_crls_from(ca, certstores);
-
-         if(!crl_p)
-            {
-            if(restrictions.require_revocation_information())
-               throw PKIX_Validation_Failure(Certificate_Status_Code::CRL_NOT_FOUND);
-            continue;
-            }
-
-         const X509_CRL& crl = *crl_p;
-
-         if(!ca.allowed_usage(CRL_SIGN))
-            throw PKIX_Validation_Failure(Certificate_Status_Code::CA_CERT_NOT_FOR_CRL_ISSUER);
-
-         if(current_time < X509_Time(crl.this_update()))
-            throw PKIX_Validation_Failure(Certificate_Status_Code::CRL_NOT_YET_VALID);
-
-         if(current_time > X509_Time(crl.next_update()))
-            throw PKIX_Validation_Failure(Certificate_Status_Code::CRL_HAS_EXPIRED);
-
-         if(crl.check_signature(ca.subject_public_key()) == false)
-            throw PKIX_Validation_Failure(Certificate_Status_Code::SIGNATURE_ERROR);
-
-         if(crl.is_revoked(subject))
-            throw PKIX_Validation_Failure(Certificate_Status_Code::CERT_IS_REVOKED);
-         }
-
-      r.set_result(self_signed_ee_cert ?
-                   Certificate_Status_Code::CANNOT_ESTABLISH_TRUST :
-                   Certificate_Status_Code::VERIFIED);
+      return Path_Validation_Result(res, std::move(cert_path));
       }
    catch(PKIX_Validation_Failure& e)
       {
-      r.set_result(e.code());
+      return Path_Validation_Result(e.code());
       }
 
-   return r;
+   return Path_Validation_Result(Certificate_Status_Code::UNKNOWN_X509_ERROR);
    }
 
 Path_Validation_Result x509_path_validate(
@@ -235,9 +242,14 @@ std::set<std::string> Path_Validation_Result::trusted_hashes() const
    return hashes;
    }
 
-std::string Path_Validation_Result::result_string() const
+std::string Path_Validation_Result::result_string() constmtn
    {
-   switch(m_result)
+   return status_string(m_status);
+   }
+
+std::string Path_Validation_Result::status_string(Certificate_Status_Code code)
+   {
+   switch(code)
       {
       case VERIFIED:
          return "verified";
@@ -299,7 +311,7 @@ std::string Path_Validation_Result::result_string() const
       }
 
    // default case
-   return "Unknown code " + std::to_string(m_result);
+   return "Unknown code " + std::to_string(code);
    }
 
 }
