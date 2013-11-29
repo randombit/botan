@@ -488,10 +488,10 @@ be negotiated during a handshake.
 
      Default: "AES-256/GCM", "AES-128/GCM", "AES-256/CCM(16,3)",
       "AES-128/CCM(16,3)", "AES-256/CCM(8,3)", "AES-128/CCM(8,3)",
-      "AES-256", "AES-128", "RC4"
+      "AES-256", "AES-128"
 
      Also allowed: "Camellia-256/GCM", "Camellia-128/GCM",
-     "Camellia-256", "Camellia-128", "SEED", "3DES"
+     "Camellia-256", "Camellia-128", "SEED", "3DES", "RC4"
 
      .. note::
 

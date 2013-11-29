@@ -32,7 +32,7 @@ std::vector<std::string> Policy::allowed_ciphers() const
       //"Camellia-128",
       //"SEED"
       //"3DES",
-      "RC4",
+      //"RC4",
       });
    }
 
