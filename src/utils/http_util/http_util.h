@@ -37,6 +37,13 @@ struct Response
       const std::map<std::string, std::string>& headers() const { return m_headers; }
 
       std::string status_message() const { return m_status_message; }
+
+      void throw_unless_ok()
+         {
+         if(status_code() != 200)
+            throw std::runtime_error("HTTP error: " + status_message());
+         }
+
    private:
       unsigned int m_status_code;
       std::string m_status_message;
@@ -48,20 +55,18 @@ BOTAN_DLL Response http_sync(const std::string& verb,
                              const std::string& url,
                              const std::string& content_type,
                              const std::vector<byte>& body,
-                             std::chrono::milliseconds timeout,
                              size_t allowable_redirects);
 
 BOTAN_DLL Response GET_sync(const std::string& url,
-                            std::chrono::milliseconds timeout = std::chrono::seconds(5),
                             size_t allowable_redirects = 1);
 
 BOTAN_DLL Response POST_sync(const std::string& url,
                              const std::string& content_type,
                              const std::vector<byte>& body,
-                             std::chrono::milliseconds timeout = std::chrono::seconds(5),
                              size_t allowable_redirects = 1);
 
-BOTAN_DLL std::future<Response> BOTAN_DLL GET_async(const std::string& url);
+BOTAN_DLL std::future<Response> BOTAN_DLL GET_async(const std::string& url,
+                                                    size_t allowable_redirects = 1);
 
 BOTAN_DLL std::string url_encode(const std::string& url);
 

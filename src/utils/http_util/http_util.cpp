@@ -42,7 +42,6 @@ Response http_sync(const std::string& verb,
                    const std::string& url,
                    const std::string& content_type,
                    const std::vector<byte>& body,
-                   std::chrono::milliseconds timeout,
                    size_t allowable_redirects)
    {
    using namespace boost::asio::ip;
@@ -51,8 +50,6 @@ Response http_sync(const std::string& verb,
    if(protocol_host_sep == std::string::npos)
       throw std::runtime_error("Invalid URL " + url);
    const std::string protocol = url.substr(0, protocol_host_sep);
-   if(protocol != "http")
-      throw std::runtime_error("Unsupported protocol " + protocol);
 
    const auto host_loc_sep = url.find('/', protocol_host_sep + 3);
 
@@ -71,10 +68,7 @@ Response http_sync(const std::string& verb,
 
    tcp::iostream sock;
 
-   if(timeout.count())
-      sock.expires_from_now(boost::posix_time::milliseconds(timeout.count()));
-
-   sock.connect(hostname, protocol);
+   sock.connect(hostname, "http");
    if(!sock)
       throw std::runtime_error("Connection to " + hostname + " failed");
 
@@ -132,7 +126,7 @@ Response http_sync(const std::string& verb,
       {
       if(allowable_redirects == 0)
          throw std::runtime_error("HTTP redirection count exceeded");
-      return GET_sync(headers["Location"], timeout, allowable_redirects - 1);
+      return GET_sync(headers["Location"], allowable_redirects - 1);
       }
 
    // Use Content-Length if set
@@ -147,28 +141,22 @@ Response http_sync(const std::string& verb,
    return Response(status_code, status_message, resp_body, headers);
    }
 
-Response GET_sync(const std::string& url,
-                  std::chrono::milliseconds timeout,
-                  size_t allowable_redirects)
+Response GET_sync(const std::string& url, size_t allowable_redirects)
    {
-   return http_sync("GET", url, "", std::vector<byte>(),
-                    timeout, allowable_redirects);
+   return http_sync("GET", url, "", std::vector<byte>(), allowable_redirects);
    }
 
 Response POST_sync(const std::string& url,
                    const std::string& content_type,
                    const std::vector<byte>& body,
-                   std::chrono::milliseconds timeout,
                    size_t allowable_redirects)
    {
-   return http_sync("POST", url, content_type, body,
-                    timeout, allowable_redirects);
+   return http_sync("POST", url, content_type, body, allowable_redirects);
    }
 
-std::future<Response> GET_async(const std::string& url)
+std::future<Response> GET_async(const std::string& url, size_t allowable_redirects)
    {
-   return std::async(std::launch::async, GET_sync, url,
-                     std::chrono::seconds(5), 1);
+   return std::async(std::launch::async, GET_sync, url, allowable_redirects);
    }
 
 }
