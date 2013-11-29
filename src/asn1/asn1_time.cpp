@@ -97,14 +97,20 @@ void X509_Time::set_to(const std::string& time_str)
 */
 void X509_Time::set_to(const std::string& t_spec, ASN1_Tag spec_tag)
    {
-   if(spec_tag != GENERALIZED_TIME && spec_tag != UTC_TIME)
-      throw Invalid_Argument("X509_Time: Invalid tag " + std::to_string(spec_tag));
-
-   if(spec_tag == GENERALIZED_TIME && t_spec.size() != 13 && t_spec.size() != 15)
-      throw Invalid_Argument("Invalid GeneralizedTime: " + t_spec);
-
-   if(spec_tag == UTC_TIME && t_spec.size() != 11 && t_spec.size() != 13)
-      throw Invalid_Argument("Invalid UTCTime: " + t_spec);
+   if(spec_tag == GENERALIZED_TIME)
+      {
+      if(t_spec.size() != 13 && t_spec.size() != 15)
+         throw Invalid_Argument("Invalid GeneralizedTime: " + t_spec);
+      }
+   else if(spec_tag == UTC_TIME)
+      {
+      if(t_spec.size() != 11 && t_spec.size() != 13)
+         throw Invalid_Argument("Invalid UTCTime: " + t_spec);
+      }
+   else
+      {
+      throw Invalid_Argument("Invalid time tag " + std::to_string(spec_tag) + " val " + t_spec);
+      }
 
    if(t_spec[t_spec.size()-1] != 'Z')
       throw Invalid_Argument("Invalid time encoding: " + t_spec);
@@ -228,6 +234,8 @@ std::string X509_Time::readable_string() const
 
    std::sprintf(&output[0], "%04d/%02d/%02d %02d:%02d:%02d UTC",
                 year, month, day, hour, minute, second);
+
+   output.resize(23); // remove trailing null
 
    return output;
    }
