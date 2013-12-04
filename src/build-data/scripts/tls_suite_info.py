@@ -46,10 +46,10 @@ def to_ciphersuite_info(code, name):
         mac_algo = 'CCM_8'
 
     if mac_algo == 'CCM':
-        cipher += ['CCM(16,3)']
+        cipher += ['CCM']
         mac_algo = 'SHA256'
     elif mac_algo == 'CCM_8':
-        cipher += ['CCM(8,3)']
+        cipher += ['CCM-8']
         mac_algo = 'SHA256'
 
     cipher_info = {
@@ -114,7 +114,7 @@ def to_ciphersuite_info(code, name):
     ivlen = 0
     if cipher_algo != 'RC4':
         mode = cipher[-1]
-        if mode not in ['CBC', 'GCM', 'CCM(8,3)', 'CCM(16,3)', 'OCB']:
+        if mode not in ['CBC', 'GCM', 'CCM-8', 'CCM', 'OCB']:
             print "#warning Unknown mode %s" % (' '.join(cipher))
 
         ivlen = 8 if cipher_algo == '3DES' else 16

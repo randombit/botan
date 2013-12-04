@@ -486,9 +486,9 @@ be negotiated during a handshake.
      Returns the list of ciphers we are willing to negotiate, in order
      of preference.
 
-     Default: "AES-256/GCM", "AES-128/GCM", "AES-256/CCM(16,3)",
-      "AES-128/CCM(16,3)", "AES-256/CCM(8,3)", "AES-128/CCM(8,3)",
-      "AES-256", "AES-128"
+     Default: "AES-256/GCM", "AES-128/GCM",
+     "AES-256/CCM", "AES-128/CCM", "AES-256/CCM-8", "AES-128/CCM-8",
+     "AES-256", "AES-128"
 
      Also allowed: "Camellia-256/GCM", "Camellia-128/GCM",
      "Camellia-256", "Camellia-128", "SEED", "3DES", "RC4"

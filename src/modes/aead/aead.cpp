@@ -51,9 +51,18 @@ AEAD_Mode* get_aead(const std::string& algo_spec, Cipher_Dir direction)
       return nullptr;
 
 #if defined(BOTAN_HAS_AEAD_CCM)
+   if(mode_name == "CCM-8")
+      {
+      if(direction == ENCRYPTION)
+         return new CCM_Encryption(cipher->clone(), 8, 3);
+      else
+         return new CCM_Decryption(cipher->clone(), 8, 3);
+      }
+
    if(mode_name == "CCM")
       {
       const size_t L = (mode_info.size() > 2) ? to_u32bit(mode_info[2]) : 3;
+
       if(direction == ENCRYPTION)
          return new CCM_Encryption(cipher->clone(), tag_size, L);
       else
