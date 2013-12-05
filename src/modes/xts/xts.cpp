@@ -83,11 +83,7 @@ size_t XTS_Mode::minimum_final_size() const
 
 Key_Length_Specification XTS_Mode::key_spec() const
    {
-   const Key_Length_Specification spec = cipher().key_spec();
-
-   return Key_Length_Specification(2*spec.minimum_keylength(),
-                                   2*spec.maximum_keylength(),
-                                   2*spec.keylength_multiple());
+   return cipher().key_spec().multiple(2);
    }
 
 size_t XTS_Mode::default_nonce_size() const

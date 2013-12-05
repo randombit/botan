@@ -79,6 +79,13 @@ class BOTAN_DLL Key_Length_Specification
          return keylen_mod;
          }
 
+      Key_Length_Specification multiple(size_t n) const
+         {
+         return Key_Length_Specification(n * min_keylen,
+                                         n * max_keylen,
+                                         n * keylen_mod);
+         }
+
    private:
       size_t min_keylen, max_keylen, keylen_mod;
    };
