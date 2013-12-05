@@ -422,6 +422,7 @@ u32bit do_validation_tests(const std::string& filename,
       test_hkdf();
       test_pbkdf();
       test_kdf();
+      test_aead();
       }
 
    return errors;

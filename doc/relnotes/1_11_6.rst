@@ -7,5 +7,7 @@ Version 1.11.6, Not Yet Released
 
  * Add HKDF from :rfc:`5869`
 
+ * Add SIV from :rfc:`5297`
+
  * TLS::Session_Manager_In_Memory now requires a rng to be passed to its
-   constructor. Previously it used the global RNG, however 
+   constructor.

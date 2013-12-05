@@ -20,6 +20,10 @@
   #include <botan/gcm.h>
 #endif
 
+#if defined(BOTAN_HAS_AEAD_SIV)
+  #include <botan/siv.h>
+#endif
+
 #if defined(BOTAN_HAS_AEAD_OCB)
   #include <botan/ocb.h>
 #endif
@@ -59,7 +63,7 @@ AEAD_Mode* get_aead(const std::string& algo_spec, Cipher_Dir direction)
          return new CCM_Decryption(cipher->clone(), 8, 3);
       }
 
-   if(mode_name == "CCM")
+   if(mode_name == "CCM" || mode_name == "CCM-8")
       {
       const size_t L = (mode_info.size() > 2) ? to_u32bit(mode_info[2]) : 3;
 
@@ -77,6 +81,17 @@ AEAD_Mode* get_aead(const std::string& algo_spec, Cipher_Dir direction)
          return new EAX_Encryption(cipher->clone(), tag_size);
       else
          return new EAX_Decryption(cipher->clone(), tag_size);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AEAD_SIV)
+   if(mode_name == "SIV")
+      {
+      BOTAN_ASSERT(tag_size == 16, "Valid tag size for SIV");
+      if(direction == ENCRYPTION)
+         return new SIV_Encryption(cipher->clone());
+      else
+         return new SIV_Decryption(cipher->clone());
       }
 #endif
 
