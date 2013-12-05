@@ -51,8 +51,16 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
       trusted_certificate_authorities(const std::string& type,
                                       const std::string& hostname)
          {
-         // can very based on hostname eg for pinning
-         return m_certstores;
+         if(type == "tls-server")
+            {
+            // don't ask for client cert
+            return std::vector<Botan::Certificate_Store*>();
+            }
+
+         else
+            {
+            return m_certstores;
+            }
          }
 
       void verify_certificate_chain(
