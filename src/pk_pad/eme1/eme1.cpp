@@ -21,7 +21,7 @@ SecureVector<byte> EME1::pad(const byte in[], size_t in_length,
    {
    key_length /= 8;
 
-   if(in_length > key_length - 2*Phash.size() - 1)
+   if(key_length < in_length + 2*Phash.size() + 1)
       throw Invalid_Argument("EME1: Input is too large");
 
    SecureVector<byte> out(key_length);
@@ -82,7 +82,7 @@ SecureVector<byte> EME1::unpad(const byte in[], size_t in_length,
    * to timing analysis. Other compilers, or GCC on other platforms,
    * may or may not.
    */
-   for(size_t i = delim_idx; i != input.size(); ++i)
+   for(size_t i = delim_idx; i < input.size(); ++i)
       {
       const bool zero_p = !input[i];
       const bool one_p = input[i] == 0x01;

@@ -7,6 +7,13 @@ Release Notes
 Series 1.10
 ----------------------------------------
 
+Version 1.10.7, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* OAEP had two bugs, one of which allowed it to be used even if the
+  key was too small, and the other of which would cause a crash due to
+  reading past the end of an array
+
 Version 1.10.6, 2013-11-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
