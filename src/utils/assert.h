@@ -73,6 +73,11 @@ void BOTAN_DLL assertion_failure(const char* expr_str,
                                   __LINE__);               \
    } while(0)
 
+/**
+* Mark variable as unused
+*/
+#define BOTAN_UNUSED(v) static_cast<void>(v)
+
 }
 
 #endif
