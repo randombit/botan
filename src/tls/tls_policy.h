@@ -9,6 +9,7 @@
 #define BOTAN_TLS_POLICY_H__
 
 #include <botan/tls_version.h>
+#include <botan/tls_ciphersuite.h>
 #include <botan/x509cert.h>
 #include <botan/dl_group.h>
 #include <vector>
@@ -126,6 +127,8 @@ class BOTAN_DLL Policy
       * in your application.
       */
       virtual bool acceptable_protocol_version(Protocol_Version version) const;
+
+      virtual bool acceptable_ciphersuite(const Ciphersuite& suite) const;
 
       /**
       * @return true if servers should choose the ciphersuite matching

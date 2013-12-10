@@ -3,7 +3,8 @@ Version 1.11.6, Not Yet Released
 
  * Botan now requires Boost, specifically the filesystem and asio libraries.
 
- * The default TLS policy no longer includes RC4 in the cipher list.
+ * The default TLS policy no longer includes RC4 in the cipher list, and
+   refuses to negotation SSLv3 by default.
 
  * Add HKDF from :rfc:`5869`
 

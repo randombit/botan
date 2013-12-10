@@ -20,10 +20,10 @@ std::vector<std::string> Policy::allowed_ciphers() const
    return std::vector<std::string>({
       "AES-256/GCM",
       "AES-128/GCM",
-      "AES-256/CCM(16,3)",
-      "AES-128/CCM(16,3)",
-      "AES-256/CCM(8,3)",
-      "AES-128/CCM(8,3)",
+      "AES-256/CCM",
+      "AES-128/CCM",
+      "AES-256/CCM-8",
+      "AES-128/CCM-8",
       //"Camellia-256/GCM",
       //"Camellia-128/GCM",
       "AES-256",
@@ -141,11 +141,16 @@ u32bit Policy::session_ticket_lifetime() const
 
 bool Policy::acceptable_protocol_version(Protocol_Version version) const
    {
-   if(!version.known_version())
+   // By default require TLS to minimize surprise
+   if(version.is_datagram_protocol())
       return false;
 
-   // By default require TLS to minimize surprise
-   return !version.is_datagram_protocol();
+   return (version > Protocol_Version::SSL_V3);
+   }
+
+bool Policy::acceptable_ciphersuite(const Ciphersuite&) const
+   {
+   return true;
    }
 
 namespace {
@@ -235,6 +240,9 @@ std::vector<u16bit> Policy::ciphersuite_list(Protocol_Version version,
 
    for(auto suite : Ciphersuite::all_known_ciphersuites())
       {
+      if(!acceptable_ciphersuite(suite))
+         continue;
+
       if(!have_srp && suite.kex_algo() == "SRP_SHA")
          continue;
 
