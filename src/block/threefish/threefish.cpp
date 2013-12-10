@@ -1,5 +1,5 @@
 /*
-* Threefish
+* Threefish-512
 * (C) 2013 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
@@ -34,28 +34,45 @@ void Threefish_512::update(secure_vector<byte>& blocks, size_t offset)
 
    BOTAN_ASSERT(m_T.size() == 3, "Tweak was set");
 
+#define THREEFISH_ROUND(I1,I2,I3,I4,I5,I6,I7,I8,ROT1,ROT2,ROT3,ROT4) \
+   do {                                                              \
+      X##I1 += X##I2; X##I2 = rotate_left(X##I2, ROT1) ^ X##I1;      \
+      X##I3 += X##I4; X##I4 = rotate_left(X##I4, ROT2) ^ X##I3;      \
+      X##I5 += X##I6; X##I6 = rotate_left(X##I6, ROT3) ^ X##I5;      \
+      X##I7 += X##I8; X##I8 = rotate_left(X##I8, ROT4) ^ X##I7;      \
+   } while(0)
+
+#define THREEFISH_INJECT_KEY(r)              \
+   do {                                      \
+      X0 += m_K[(r  ) % 9];                  \
+      X1 += m_K[(r+1) % 9];                  \
+      X2 += m_K[(r+2) % 9];                  \
+      X3 += m_K[(r+3) % 9];                  \
+      X4 += m_K[(r+4) % 9];                  \
+      X5 += m_K[(r+5) % 9] + m_T[(r  ) % 3]; \
+      X6 += m_K[(r+6) % 9] + m_T[(r+1) % 3]; \
+      X7 += m_K[(r+7) % 9] + (r);            \
+   } while(0)
+
+#define THREEFISH_8_ROUNDS(R1,R2)                      \
+   do {                                                \
+      THREEFISH_ROUND(0,1,2,3,4,5,6,7, 46,36,19,37);   \
+      THREEFISH_ROUND(2,1,4,7,6,5,0,3, 33,27,14,42);   \
+      THREEFISH_ROUND(4,1,6,3,0,5,2,7, 17,49,36,39);   \
+      THREEFISH_ROUND(6,1,0,7,2,5,4,3, 44, 9,54,56);   \
+                                                       \
+      THREEFISH_INJECT_KEY(R1);                        \
+                                                       \
+      THREEFISH_ROUND(0,1,2,3,4,5,6,7, 39,30,34,24);   \
+      THREEFISH_ROUND(2,1,4,7,6,5,0,3, 13,50,10,17);   \
+      THREEFISH_ROUND(4,1,6,3,0,5,2,7, 25,29,39,43);   \
+      THREEFISH_ROUND(6,1,0,7,2,5,4,3,  8,35,56,22);   \
+                                                       \
+      THREEFISH_INJECT_KEY(R2);                        \
+   } while(0)
+
    while(sz)
       {
-#define THREEFISH_ROUND(I1,I2,I3,I4,I5,I6,I7,I8,ROT1,ROT2,ROT3,ROT4)   \
-      do {                                                             \
-         X##I1 += X##I2; X##I2 = rotate_left(X##I2, ROT1) ^ X##I1;     \
-         X##I3 += X##I4; X##I4 = rotate_left(X##I4, ROT2) ^ X##I3;     \
-         X##I5 += X##I6; X##I6 = rotate_left(X##I6, ROT3) ^ X##I5;     \
-         X##I7 += X##I8; X##I8 = rotate_left(X##I8, ROT4) ^ X##I7;     \
-      } while(0);
-
-#define THREEFISH_INJECT_KEY(r)                 \
-      do {                                      \
-         X0 += m_K[(r  ) % 9];                  \
-         X1 += m_K[(r+1) % 9];                  \
-         X2 += m_K[(r+2) % 9];                  \
-         X3 += m_K[(r+3) % 9];                  \
-         X4 += m_K[(r+4) % 9];                  \
-         X5 += m_K[(r+5) % 9] + m_T[(r  ) % 3]; \
-         X6 += m_K[(r+6) % 9] + m_T[(r+1) % 3]; \
-         X7 += m_K[(r+7) % 9] + (r);            \
-      } while(0);
-
       u64bit X0 = load_le<u64bit>(buf, 0);
       u64bit X1 = load_le<u64bit>(buf, 1);
       u64bit X2 = load_le<u64bit>(buf, 2);
@@ -66,23 +83,6 @@ void Threefish_512::update(secure_vector<byte>& blocks, size_t offset)
       u64bit X7 = load_le<u64bit>(buf, 7);
 
       THREEFISH_INJECT_KEY(0);
-
-#define THREEFISH_8_ROUNDS(R1,R2)                         \
-      do {                                                \
-         THREEFISH_ROUND(0,1,2,3,4,5,6,7, 46,36,19,37);   \
-         THREEFISH_ROUND(2,1,4,7,6,5,0,3, 33,27,14,42);   \
-         THREEFISH_ROUND(4,1,6,3,0,5,2,7, 17,49,36,39);   \
-         THREEFISH_ROUND(6,1,0,7,2,5,4,3, 44, 9,54,56);   \
-                                                          \
-         THREEFISH_INJECT_KEY(R1);                        \
-                                                          \
-         THREEFISH_ROUND(0,1,2,3,4,5,6,7, 39,30,34,24);   \
-         THREEFISH_ROUND(2,1,4,7,6,5,0,3, 13,50,10,17);   \
-         THREEFISH_ROUND(4,1,6,3,0,5,2,7, 25,29,39,43);   \
-         THREEFISH_ROUND(6,1,0,7,2,5,4,3,  8,35,56,22);   \
-                                                          \
-         THREEFISH_INJECT_KEY(R2);                        \
-      } while(0);
 
       THREEFISH_8_ROUNDS(1,2);
       THREEFISH_8_ROUNDS(3,4);
@@ -99,6 +99,10 @@ void Threefish_512::update(secure_vector<byte>& blocks, size_t offset)
       buf += 64;
       sz -= 64;
       }
+
+#undef THREEFISH_8_ROUNDS
+#undef THREEFISH_INJECT_KEY
+#undef THREEFISH_ROUND
    }
 
 Key_Length_Specification Threefish_512::key_spec() const
