@@ -2,17 +2,6 @@ define UTIL_FUNCTIONS 20131128
 
 load_on always
 
-<source>
-assert.cpp
-calendar.cpp
-charset.cpp
-cpuid.cpp
-parsing.cpp
-semaphore.cpp
-version.cpp
-zero_mem.cpp
-</source>
-
 <header:internal>
 bit_ops.h
 prefetch.h
