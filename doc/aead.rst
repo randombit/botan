@@ -81,3 +81,9 @@ AEAD modes currently available include GCM, OCB, and EAX. All three use a
        Returns true if *nonce_len* is a valid nonce length for this scheme. For
        EAX and GCM, any length nonces are allowed. OCB allows any value between
        8 and 15 bytes.
+
+  .. cpp:function:: size_t default_nonce_length() const
+
+       Returns a reasonable length for the nonce, typically either 96
+       bits, or the only supported length for modes which don't
+       support 96 bit nonces.

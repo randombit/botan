@@ -62,7 +62,7 @@ void time_transform(const std::string& algo)
    AutoSeeded_RNG rng;
 
    tf->set_key(rng.random_vec(tf->maximum_keylength()));
-   tf->start_vec(rng.random_vec(tf->default_nonce_size()));
+   tf->start_vec(rng.random_vec(tf->default_nonce_length()));
 
    for(size_t mult : { 1, 2, 4, 8, 16, 128, 1024 })
       {

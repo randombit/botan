@@ -47,7 +47,7 @@ bool CCM_Mode::valid_nonce_length(size_t n) const
    return (n == (15-L()));
    }
 
-size_t CCM_Mode::default_nonce_size() const
+size_t CCM_Mode::default_nonce_length() const
    {
    return (15-L());
    }

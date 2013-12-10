@@ -142,14 +142,14 @@ size_t Threefish_512::minimum_final_size() const
    return 0;
    }
 
-size_t Threefish_512::default_nonce_size() const
+size_t Threefish_512::default_nonce_length() const
    {
    return 16;
    }
 
 bool Threefish_512::valid_nonce_length(size_t nonce_len) const
    {
-   return default_nonce_size() == nonce_len;
+   return default_nonce_length() == nonce_len;
    }
 
 void Threefish_512::clear()

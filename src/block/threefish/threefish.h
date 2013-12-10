@@ -30,7 +30,7 @@ class BOTAN_DLL Threefish_512 : public Transformation
 
       size_t minimum_final_size() const override;
 
-      size_t default_nonce_size() const override;
+      size_t default_nonce_length() const override;
 
       bool valid_nonce_length(size_t nonce_len) const override;
 

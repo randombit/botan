@@ -72,7 +72,11 @@ class BOTAN_DLL Transformation : public SymmetricAlgorithm
       /**
       * Return the default size for a nonce
       */
-      virtual size_t default_nonce_size() const = 0;
+      virtual size_t default_nonce_length() const = 0;
+
+      BOTAN_DEPRECATED("Use default_nonce_length")
+      size_t default_nonce_size() const
+         { return default_nonce_length(); }
 
       /**
       * Return true iff nonce_len is a valid length for the nonce
