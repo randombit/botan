@@ -17,4 +17,6 @@ bool bench_algo(const std::string& algo_name,
 void bench_pk(Botan::RandomNumberGenerator&,
               const std::string&, double seconds);
 
+void time_transform(const std::string& algo);
+
 #endif

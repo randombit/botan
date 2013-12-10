@@ -39,6 +39,7 @@ void test_hkdf();
 void test_pbkdf();
 void test_kdf();
 void test_aead();
+void test_transform();
 
 void run_tests_bb(std::istream& src,
                   const std::string& name_key,
