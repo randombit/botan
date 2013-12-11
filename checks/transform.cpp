@@ -52,7 +52,7 @@ void test_transform()
                                               hex_decode_locked(m["Input"])));
              });
 
-   time_transform("Threefish-512");
+   //time_transform("Threefish-512");
    }
 
 void time_transform(const std::string& algo)
@@ -64,7 +64,7 @@ void time_transform(const std::string& algo)
    tf->set_key(rng.random_vec(tf->maximum_keylength()));
    tf->start_vec(rng.random_vec(tf->default_nonce_length()));
 
-   for(size_t mult : { 1, 2, 4, 8, 16, 128, 1024 })
+   for(size_t mult : { 1, 2, 4, 8, 16, 128 })
       {
       const size_t buf_size = mult*tf->update_granularity();
 
@@ -78,6 +78,6 @@ void time_transform(const std::string& algo)
 
       const u64bit Mbytes = (res * buf_size) / 1024 / 1024;
 
-      std::cout << Mbytes << " MiB / second in " << buf_size << " blocks\n";
+      std::cout << Mbytes << " MiB / second in " << buf_size << " byte blocks\n";
       }
    }

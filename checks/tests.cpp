@@ -31,10 +31,16 @@ void run_tests_bb(std::istream& src,
       if(key == output_key)
          {
          ++test_cnt;
-         bool passed = cb(vars);
-
-         if(!passed)
+         try
+            {
+            if(!cb(vars))
+               ++test_fail;
+            }
+         catch(std::exception& e)
+            {
+            std::cout << e.what() << "\n";
             ++test_fail;
+            }
 
          if(clear_between_cb)
             vars.clear();
