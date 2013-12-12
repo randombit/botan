@@ -19,6 +19,7 @@ import subprocess
 import sys
 import tarfile
 import datetime
+import hashlib
 
 def check_subprocess_results(subproc, name):
     (stdout, stderr) = subproc.communicate()
@@ -90,14 +91,18 @@ def datestamp(db, rev_id):
     logging.info('Could not retreive date for %s' % (rev_id))
     return 0
 
-def gpg_sign(keyid, passphrase_file, files):
+def gpg_sign(keyid, passphrase_file, files, detached = True):
+
+    options = ['--armor', '--detach-sign'] if detached else ['--clearsign']
+
+    gpg_cmd = ['gpg', '--batch'] + options + ['--local-user', keyid]
+    if passphrase_file != None:
+        gpg_cmd[1:1] = ['--passphrase-file', passphrase_file]
+
     for filename in files:
         logging.info('Signing %s using PGP id %s' % (filename, keyid))
 
-        cmd = ['gpg', '--batch', '--armor', '--detach-sign', '--local-user', keyid, filename]
-
-        if passphrase_file != None:
-            cmd[1:1] = ['--passphrase-file', passphrase_file]
+        cmd = gpg_cmd + [filename]
 
         logging.debug('Running %s' % (' '.join(cmd)))
 
@@ -137,11 +142,14 @@ def parse_args(args):
 
     parser.add_option('--pgp-key-id', metavar='KEYID',
                       default='EFBADFBC',
-                      help='PGP signing key (default %default)')
+                      help='PGP signing key (default %default, "none" to disable)')
 
     parser.add_option('--pgp-passphrase-file', metavar='FILE',
                       default=None,
                       help='PGP signing key passphrase file')
+
+    parser.add_option('--write-hash-file', metavar='FILE', default=None,
+                      help='Write a file with checksums')
 
     return parser.parse_args(args)
 
@@ -238,6 +246,8 @@ def main(args = None):
 
     output_basename = output_name(args)
 
+    logging.debug('Output basename %s' % (output_basename))
+
     if os.access(output_basename, os.X_OK):
         logging.info('Removing existing output dir %s' % (output_basename))
         shutil.rmtree(output_basename)
@@ -285,6 +295,10 @@ def main(args = None):
 
     archives = options.archive_types.split(',') if options.archive_types != '' else []
 
+    hash_file = None
+    if options.write_hash_file != None:
+        hash_file = open(options.write_hash_file, 'w')
+
     for archive in archives:
         logging.debug('Writing archive type "%s"' % (archive))
 
@@ -304,19 +318,31 @@ def main(args = None):
             archive = tarfile.open(output_archive, write_mode())
             archive.add(output_basename)
             archive.close()
+
+            if hash_file != None:
+                sha256 = hashlib.new('sha256')
+                sha256.update(open(output_archive).read())
+                hash_file.write("%s  %s\n" % (sha256.hexdigest(), output_archive))
         else:
             raise Exception('Unknown archive type "%s"' % (archive))
 
         output_files.append(output_archive)
 
+    hash_file.close()
+
     shutil.rmtree(output_basename)
 
     if options.print_output_names:
         for output_file in output_files:
-            print output_file
+            print(output_file)
 
-    if options.pgp_key_id != '':
-        output_files += gpg_sign(options.pgp_key_id, options.pgp_passphrase_file, output_files)
+    if options.pgp_key_id != 'none':
+        if options.write_hash_file != None:
+            output_files += gpg_sign(options.pgp_key_id, options.pgp_passphrase_file,
+                                     [options.write_hash_file], False)
+        else:
+            output_files += gpg_sign(options.pgp_key_id, options.pgp_passphrase_file,
+                                     output_files, True)
 
     if options.output_dir != '.':
         for output_file in output_files:
