@@ -6,8 +6,8 @@ LANG_FLAGS    = %{lang_flags}
 WARN_FLAGS    = %{warn_flags}
 LINK_TO       = %{link_to}
 
-LIB_FLAGS     = $(LIB_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
-CHECK_FLAGS   = $(CHECK_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
+LIB_FLAGS     = $(LANG_FLAGS) $(LIB_OPT) $(WARN_FLAGS)
+CHECK_FLAGS   = $(LANG_FLAGS) $(CHECK_OPT) $(WARN_FLAGS)
 
 # Version Numbers
 VERSION       = %{version}

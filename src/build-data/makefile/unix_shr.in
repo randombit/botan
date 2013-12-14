@@ -8,8 +8,8 @@ SO_OBJ_FLAGS  = %{shared_flags}
 SO_LINK_CMD   = %{so_link}
 LINK_TO       = %{link_to}
 
-LIB_FLAGS     = $(LIB_OPT) $(LANG_FLAGS) $(WARN_FLAGS) $(SO_OBJ_FLAGS)
-CHECK_FLAGS   = $(CHECK_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
+LIB_FLAGS     = $(SO_OBJ_FLAGS) $(LANG_FLAGS) $(LIB_OPT) $(WARN_FLAGS)
+CHECK_FLAGS   = $(LANG_FLAGS) $(CHECK_OPT) $(WARN_FLAGS)
 
 # Version Numbers
 VERSION       = %{version}

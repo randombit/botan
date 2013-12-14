@@ -44,6 +44,8 @@ solaris -> "$(CXX) -shared -fPIC -Wl,-h,$(SONAME)"
 "sse4.2" -> "-msse4.2"
 "avx"    -> "-mavx"
 "aes-ni" -> "-maes"
+"avx2"   -> "-mavx2"
+"bmi2"   -> "-mbmi2"
 </isa_flags>
 
 <mach_opt>
