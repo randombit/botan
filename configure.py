@@ -230,7 +230,8 @@ def process_command_line(args):
                             help='set the name of the compiler binary')
 
     target_group.add_option('--cc-abi-flags', metavar='FLAG',
-                            help='set compiler ABI flags')
+                            help='set compiler ABI flags',
+                            default='')
 
     target_group.add_option('--chost', help=optparse.SUPPRESS_HELP)
 
@@ -1082,9 +1083,10 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     def warning_flags(normal_flags,
                       maintainer_flags,
                       maintainer_mode):
-        if maintainer_mode and maintainer_flags != '':
-            return maintainer_flags
-        return normal_flags
+        if maintainer_mode:
+            return maintainer_flags + normal_flags
+        else:
+            return normal_flags
 
     def innosetup_arch(os, arch):
         if os != 'windows':
