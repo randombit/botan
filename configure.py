@@ -1083,8 +1083,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     def warning_flags(normal_flags,
                       maintainer_flags,
                       maintainer_mode):
-        if maintainer_mode:
-            return maintainer_flags + normal_flags
+        if maintainer_mode and maintainer_flags != '':
+            return maintainer_flags + ' ' + normal_flags
         else:
             return normal_flags
 
