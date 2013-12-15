@@ -830,7 +830,7 @@ class CompilerInfo(object):
 
         if len(abi_link) == 0:
             return ''
-        return ' ' + ' '.join(sorted(list(abi_link)))
+        return ' '.join(sorted(list(abi_link)))
 
 
     """
@@ -1056,7 +1056,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
                     if mod.need_isa not in cc.isa_flags:
                         raise Exception('Compiler does not support %s, required by %s' % (
                             mod.need_isa, src))
-                    return cc.isa_flags[mod.need_isa]
+                    return ' ' + cc.isa_flags[mod.need_isa]
         return ''
 
     """
@@ -1064,7 +1064,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     """
     def build_commands(sources, obj_dir, flags):
         for (obj_file,src) in zip(objectfile_list(sources, obj_dir), sources):
-            yield '%s: %s\n\t$(CXX) %s $(%s_FLAGS) %s%s %s$? %s$@\n' % (
+            yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s%s %s$? %s$@\n' % (
                 obj_file, src,
                 isa_specific_flags(cc, src),
                 flags,
