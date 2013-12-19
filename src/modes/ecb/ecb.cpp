@@ -42,7 +42,7 @@ Key_Length_Specification ECB_Mode::key_spec() const
    return cipher().key_spec();
    }
 
-size_t ECB_Mode::default_nonce_size() const
+size_t ECB_Mode::default_nonce_length() const
    {
    return 0;
    }

@@ -1,3 +1,7 @@
+#include "validate.h"
+
+#if defined(BOTAN_HAS_TLS)
+
 #include <botan/tls_server.h>
 #include <botan/tls_client.h>
 #include <botan/pkcs10.h>
@@ -6,7 +10,6 @@
 #include <botan/x509_ca.h>
 #include <botan/hex.h>
 
-#include "validate.h"
 #include <iostream>
 #include <vector>
 #include <memory>
@@ -268,3 +271,7 @@ size_t do_tls_tests(RandomNumberGenerator& rng)
 
    return errors;
    }
+
+#else
+size_t do_tls_tests(RandomNumberGenerator&) { return 0; }
+#endif

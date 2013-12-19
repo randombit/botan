@@ -80,6 +80,8 @@ SIMD_Engine::find_hash(const SCAN_Name& request,
       return new SHA_160_SSE2;
 #endif
 
+   BOTAN_UNUSED(request);
+
    return nullptr;
    }
 

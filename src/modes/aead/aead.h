@@ -48,7 +48,7 @@ class BOTAN_DLL AEAD_Mode : public Cipher_Mode
       * Default AEAD nonce size (a commonly supported value among AEAD
       * modes, and large enough that random collisions are unlikely).
       */
-      size_t default_nonce_size() const override { return 12; }
+      size_t default_nonce_length() const override { return 12; }
 
       /**
       * Return the size of the authentication tag used (in bytes)

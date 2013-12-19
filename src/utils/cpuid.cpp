@@ -1,6 +1,6 @@
 /*
 * Runtime CPU detection
-* (C) 2009-2010 Jack Lloyd
+* (C) 2009-2010,2013 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -28,89 +28,59 @@
 
 #if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
 
-  #include <intrin.h>
-  #define CALL_CPUID(type, out) do { __cpuid((int*)out, type); } while(0)
+#include <intrin.h>
+
+#define X86_CPUID(type, out) do { __cpuid((int*)out, type); } while(0)
+
+#define X86_CPUID_SUBLEVEL(type, level, out) do { __cpuid((int*)out, type, level); } while(0)
 
 #elif defined(BOTAN_BUILD_COMPILER_IS_INTEL)
 
-  #include <ia32intrin.h>
-  #define CALL_CPUID(type, out) do { __cpuid(out, type); } while(0)
+#include <ia32intrin.h>
 
-#elif defined(BOTAN_BUILD_COMPILER_IS_GCC) && (BOTAN_GCC_VERSION >= 430)
+#define X86_CPUID(type, out) do { __cpuid(out, type); } while(0)
 
-  // Only available starting in GCC 4.3
-  #include <cpuid.h>
+#elif defined(BOTAN_BUILD_COMPILER_IS_GCC) && 0
+
+#include <cpuid.h>
+
+#define X86_CPUID(type, out) do { __get_cpuid(type, out, out+1, out+2, out+3); } while(0)
 
 namespace {
 
-  /*
-  * Prevent inlining to work around GCC bug 44174
-  */
-  void __attribute__((__noinline__)) call_gcc_cpuid(Botan::u32bit type,
-                                                    Botan::u32bit out[4])
-     {
-     __get_cpuid(type, out, out+1, out+2, out+3);
-     }
-
-  #define CALL_CPUID call_gcc_cpuid
+// avoids asm clobber errors in gcc 4.7.3
+void gcc_cpuid(unsigned int type, unsigned int level, unsigned int* eax, unsigned int* ebx,
+               unsigned int* ecx, unsigned int* edx)
+   {
+   __cpuid_count(type, level, eax, ebx, ecx, edx);
+   }
 
 }
 
-#elif defined(BOTAN_TARGET_ARCH_IS_X86_64) && \
-   (defined(BOTAN_BUILD_COMPILER_IS_CLANG) || defined(BOTAN_BUILD_COMPILER_IS_GCC))
+#define X86_CPUID_SUBLEVEL(type, level, out) \
+   do { gcc_cpuid(type, level, out, out+1, out+2, out+3); } while(0)
 
-  /*
-  * We can't safely use this on x86-32 as some 32-bit ABIs use ebx as
-  * a PIC register, and in theory there are some x86-32s still out
-  * there that don't support cpuid at all; it requires strange
-  * contortions to detect them.
-  */
+#elif defined(BOTAN_TARGET_ARCH_IS_X86_64) && BOTAN_USE_GCC_INLINE_ASM
 
-  #define CALL_CPUID(type, out) \
-    asm("cpuid\n\t" : "=a" (out[0]), "=b" (out[1]), "=c" (out[2]), "=d" (out[3]) \
-        : "0" (type))
+#define X86_CPUID(type, out)                                                    \
+   asm("cpuid\n\t" : "=a" (out[0]), "=b" (out[1]), "=c" (out[2]), "=d" (out[3]) \
+       : "0" (type))
 
-#else
-  #warning "No method of calling CPUID for this compiler"
-#endif
+#define X86_CPUID_SUBLEVEL(type, level, out)                                    \
+   asm("cpuid\n\t" : "=a" (out[0]), "=b" (out[1]), "=c" (out[2]), "=d" (out[3]) \
+       : "0" (type), "2" (level))
 
 #endif
 
-#ifndef CALL_CPUID
-  // In all other cases, just zeroize the supposed cpuid output
-  #define CALL_CPUID(type, out) \
-    do { out[0] = out[1] = out[2] = out[3] = 0; } while(0);
 #endif
 
 namespace Botan {
 
-u64bit CPUID::x86_processor_flags = 0;
-size_t CPUID::cache_line = 32;
-bool CPUID::altivec_capable = false;
+u64bit CPUID::m_x86_processor_flags[2] = { 0, 0 };
+size_t CPUID::m_cache_line_size = 0;
+bool CPUID::m_altivec_capable = false;
 
 namespace {
-
-u32bit get_x86_cache_line_size()
-   {
-   const u32bit INTEL_CPUID[3] = { 0x756E6547, 0x6C65746E, 0x49656E69 };
-   const u32bit AMD_CPUID[3] = { 0x68747541, 0x444D4163, 0x69746E65 };
-
-   u32bit cpuid[4] = { 0 };
-   CALL_CPUID(0, cpuid);
-
-   if(same_mem(cpuid + 1, INTEL_CPUID, 3))
-      {
-      CALL_CPUID(1, cpuid);
-      return 8 * get_byte(2, cpuid[1]);
-      }
-   else if(same_mem(cpuid + 1, AMD_CPUID, 3))
-      {
-      CALL_CPUID(0x80000005, cpuid);
-      return get_byte(3, cpuid[2]);
-      }
-   else
-      return 32; // default cache line guess
-   }
 
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
 
@@ -189,27 +159,55 @@ bool altivec_check_pvr_emul()
 
 void CPUID::initialize()
    {
-   u32bit cpuid[4] = { 0 };
-   CALL_CPUID(1, cpuid);
+#if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
+      if(altivec_check_sysctl() || altivec_check_pvr_emul())
+         altivec_capable = true;
+#endif
 
-   x86_processor_flags = (static_cast<u64bit>(cpuid[2]) << 32) | cpuid[3];
+#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+   const u32bit INTEL_CPUID[3] = { 0x756E6547, 0x6C65746E, 0x49656E69 };
+   const u32bit AMD_CPUID[3] = { 0x68747541, 0x444D4163, 0x69746E65 };
+
+   u32bit cpuid[4] = { 0 };
+   X86_CPUID(0, cpuid);
+
+   const u32bit max_supported_sublevel = cpuid[0];
+
+   if(max_supported_sublevel == 0)
+      return;
+
+   const bool is_intel = same_mem(cpuid + 1, INTEL_CPUID, 3);
+   const bool is_amd = same_mem(cpuid + 1, AMD_CPUID, 3);
+
+   X86_CPUID(1, cpuid);
+
+   m_x86_processor_flags[0] = (static_cast<u64bit>(cpuid[2]) << 32) | cpuid[3];
+
+   if(is_intel)
+      m_cache_line_size = 8 * get_byte(2, cpuid[1]);
+
+   if(max_supported_sublevel >= 7)
+      {
+      clear_mem(cpuid, 4);
+      X86_CPUID_SUBLEVEL(7, 0, cpuid);
+      m_x86_processor_flags[1] = (static_cast<u64bit>(cpuid[2]) << 32) | cpuid[1];
+      }
+
+   if(is_amd)
+      {
+      X86_CPUID(0x80000005, cpuid);
+      m_cache_line_size = get_byte(3, cpuid[2]);
+      }
+
+#endif
 
 #if defined(BOTAN_TARGET_ARCH_IS_X86_64)
    /*
    * If we don't have access to CPUID, we can still safely assume that
    * any x86-64 processor has SSE2.
    */
-   if(x86_processor_flags == 0)
-     x86_processor_flags |= (1 << CPUID_SSE2_BIT);
-#endif
-
-   cache_line = get_x86_cache_line_size();
-
-   altivec_capable = false;
-
-#if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
-      if(altivec_check_sysctl() || altivec_check_pvr_emul())
-         altivec_capable = true;
+   if(m_x86_processor_flags[0] == 0)
+      m_x86_processor_flags[0] = (1 << CPUID_SSE2_BIT);
 #endif
    }
 

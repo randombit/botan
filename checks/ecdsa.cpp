@@ -8,7 +8,7 @@
 
 #include "validate.h"
 
-#if defined(BOTAN_HAS_ECDSA)
+#if defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_X509)
 
 #include <botan/botan.h>
 #include <botan/pubkey.h>

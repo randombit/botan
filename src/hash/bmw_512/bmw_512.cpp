@@ -82,6 +82,8 @@ void BMW_512_compress(u64bit H[16], const u64bit M[16], u64bit Q[32])
    Q[14] = S4(Q[30]) + H[15];
    Q[15] = S0(Q[31]) + H[ 0];
 
+   const u64bit EXPANSION_CONSTANT = 0x0555555555555555;
+
    for(size_t i = 16; i != 16 + EXPAND_1_ROUNDS; ++i)
       {
       Q[i] = S1(Q[i-16]) + S2(Q[i-15]) + S3(Q[i-14]) + S0(Q[i-13]) +
@@ -91,7 +93,7 @@ void BMW_512_compress(u64bit H[16], const u64bit M[16], u64bit Q[32])
              ((rotate_left(M[(i-16) % 16], ((i-16)%16) + 1) +
                rotate_left(M[(i-13) % 16], ((i-13)%16) + 1) -
                rotate_left(M[(i- 6) % 16], ((i-6)%16) + 1) +
-               (0x0555555555555555 * i)) ^ H[(i-16+7)%16]);
+               (EXPANSION_CONSTANT * i)) ^ H[(i-16+7)%16]);
       }
 
    for(size_t i = 16 + EXPAND_1_ROUNDS; i != 32; ++i)
@@ -107,7 +109,7 @@ void BMW_512_compress(u64bit H[16], const u64bit M[16], u64bit Q[32])
              ((rotate_left(M[(i-16) % 16], ((i-16)%16 + 1)) +
                rotate_left(M[(i-13) % 16], ((i-13)%16 + 1)) -
                rotate_left(M[(i- 6) % 16], ((i-6)%16 + 1)) +
-               (0x0555555555555555 * i)) ^ H[(i-16+7)%16]);
+               (EXPANSION_CONSTANT * i)) ^ H[(i-16+7)%16]);
       }
 
    u64bit XL = Q[16] ^ Q[17] ^ Q[18] ^ Q[19] ^

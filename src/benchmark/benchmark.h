@@ -50,6 +50,9 @@ BOTAN_DLL algorithm_benchmark(const std::string& name,
                               std::chrono::milliseconds milliseconds,
                               size_t buf_size);
 
+double BOTAN_DLL
+time_op(std::chrono::nanoseconds runtime, std::function<void ()> op);
+
 }
 
 #endif

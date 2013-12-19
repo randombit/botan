@@ -126,33 +126,6 @@ void test_ocb_long(size_t taglen, const std::string &expected)
 
 void test_ocb()
    {
-   SymmetricKey key("000102030405060708090A0B0C0D0E0F");
-
-   std::vector<byte> nonce = hex_decode("000102030405060708090A0B");
-
-   std::vector<byte> pt = hex_decode("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F2021222324252627");
-   std::vector<byte> ad = hex_decode("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F2021222324252627");
-
-   const std::string expected = "BEA5E8798DBE7110031C144DA0B26122CEAAB9B05DF771A657149D53773463CB68C65778B058A635659C623211DEEA0DE30D2C381879F4C8";
-
-   std::vector<byte> ctext = ocb_encrypt(key, nonce, pt, ad);
-
-   const std::string ctext_hex = hex_encode(ctext);
-
-   if(ctext_hex != expected)
-      std::cout << "OCB/AES-128 encrypt test failure\n" << ctext_hex << " !=\n" << expected << "\n";
-
-   try
-      {
-      std::vector<byte> dec = ocb_decrypt(key, nonce, ctext, ad);
-
-      if(dec != pt) std::cout << "OCB fails to decrypt\n";
-      }
-   catch(std::exception& e)
-      {
-      std::cout << "Correct OCB message rejected - " << e.what() << "\n";
-      }
-
    test_ocb_long(128, "B2B41CBF9B05037DA7F16C24A35C1C94");
    test_ocb_long(96, "1A4F0654277709A5BDA0D380");
    test_ocb_long(64, "B7ECE9D381FE437F");

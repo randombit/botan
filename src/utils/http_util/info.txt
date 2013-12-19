@@ -1,3 +1,7 @@
 define HTTP_UTIL 20131128
 
 load_on auto
+
+<libs>
+all -> boost_system
+</libs>

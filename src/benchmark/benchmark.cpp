@@ -18,8 +18,6 @@
 
 namespace Botan {
 
-namespace {
-
 double time_op(std::chrono::nanoseconds runtime, std::function<void ()> op)
    {
    std::chrono::nanoseconds time_used(0);
@@ -40,8 +38,6 @@ double time_op(std::chrono::nanoseconds runtime, std::function<void ()> op)
 
    return reps / seconds_used; // ie, return ops per second
    }
-
-}
 
 std::map<std::string, double>
 time_algorithm_ops(const std::string& name,

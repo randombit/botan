@@ -13,6 +13,10 @@
 #include <vector>
 #include <set>
 
+#include <istream>
+#include <functional>
+#include <map>
+
 namespace Botan {
 
 /**
@@ -111,6 +115,18 @@ BOTAN_DLL u32bit string_to_ipv4(const std::string& ip_str);
 * @return string representation of the IPv4 address
 */
 BOTAN_DLL std::string ipv4_to_string(u32bit ip_addr);
+
+void BOTAN_DLL lex_cfg(std::istream& is,
+                       std::function<void (std::string)> cb);
+
+void BOTAN_DLL lex_cfg_w_headers(std::istream& is,
+                                 std::function<void (std::string)> cb,
+                                 std::function<void (std::string)> header_cb);
+
+std::map<std::string, std::map<std::string, std::string>>
+BOTAN_DLL
+parse_cfg(std::istream& is);
+
 
 }
 

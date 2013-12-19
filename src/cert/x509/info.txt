@@ -5,3 +5,7 @@ define OCSP 20131128
 datastor
 http_util
 </requires>
+
+<libs>
+all -> boost_filesystem
+</libs>

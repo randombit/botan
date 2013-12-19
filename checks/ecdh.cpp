@@ -12,7 +12,7 @@
 #include "validate.h"
 #include "common.h"
 
-#if defined(BOTAN_HAS_ECDH)
+#if defined(BOTAN_HAS_ECDH) &&  defined(BOTAN_HAS_X509)
 
 #include <iostream>
 #include <fstream>

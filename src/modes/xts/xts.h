@@ -30,7 +30,7 @@ class BOTAN_DLL XTS_Mode : public Cipher_Mode
 
       Key_Length_Specification key_spec() const override;
 
-      size_t default_nonce_size() const override;
+      size_t default_nonce_length() const override;
 
       bool valid_nonce_length(size_t n) const override;
 

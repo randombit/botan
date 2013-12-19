@@ -33,7 +33,7 @@ class BOTAN_DLL CFB_Mode : public Cipher_Mode
 
       size_t output_length(size_t input_length) const override;
 
-      size_t default_nonce_size() const override;
+      size_t default_nonce_length() const override;
 
       bool valid_nonce_length(size_t n) const override;
 

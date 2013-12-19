@@ -86,7 +86,7 @@ Key_Length_Specification XTS_Mode::key_spec() const
    return cipher().key_spec().multiple(2);
    }
 
-size_t XTS_Mode::default_nonce_size() const
+size_t XTS_Mode::default_nonce_length() const
    {
    return cipher().block_size();
    }

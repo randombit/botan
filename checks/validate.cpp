@@ -418,6 +418,7 @@ u32bit do_validation_tests(const std::string& filename,
 
    if(should_pass)
       {
+      test_transform();
       test_ocb();
       test_hkdf();
       test_pbkdf();

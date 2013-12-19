@@ -30,9 +30,14 @@ darwin  -> "$(CXX) -dynamiclib -fPIC -install_name $(LIBDIR)/$(SONAME)"
 </so_link_flags>
 
 <isa_flags>
+"sse2"   -> "-msse2"
+"ssse3"  -> "-mssse3"
+"sse4.1" -> "-msse4.1"
+"sse4.2" -> "-msse4.2"
+"avx"    -> "-mavx"
 "aes-ni" -> "-maes"
-"ssse3" -> "-mssse3"
-"sse2" -> "-msse2"
+"avx2"   -> "-mavx2"
+"bmi2"   -> "-mbmi2"
 </isa_flags>
 
 <mach_opt>
@@ -43,7 +48,8 @@ ivybridge   -> "-march=core-avx-i"
 </mach_opt>
 
 <mach_abi_linking>
-all     -> "-stdlib=libc++ -pthread"
+#all     -> "-stdlib=libc++ -pthread"
+all     -> "-stdlib=libstdc++ -pthread"
 
 x86_64  -> "-m64"
 ppc64   -> "-m64"

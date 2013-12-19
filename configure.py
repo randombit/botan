@@ -229,8 +229,11 @@ def process_command_line(args):
                             metavar='BINARY',
                             help='set the name of the compiler binary')
 
-    target_group.add_option('--chost', dest='chost',
-                            help=optparse.SUPPRESS_HELP)
+    target_group.add_option('--cc-abi-flags', metavar='FLAG',
+                            help='set compiler ABI flags',
+                            default='')
+
+    target_group.add_option('--chost', help=optparse.SUPPRESS_HELP)
 
     target_group.add_option('--with-endian', metavar='ORDER', default=None,
                             help='override guess of CPU byte order')
@@ -811,21 +814,23 @@ class CompilerInfo(object):
     """
     Return the machine specific ABI flags
     """
-    def mach_abi_link_flags(self, osname, arch, submodel, debug_p):
-
+    def mach_abi_link_flags(self, options):
         def all():
-            if debug_p:
+            if options.debug_build:
                 return 'all-debug'
             return 'all'
 
         abi_link = set()
-        for what in [all(), osname, arch, submodel]:
+        for what in [all(), options.os, options.arch, options.cpu]:
             if self.mach_abi_linking.get(what) != None:
                 abi_link.add(self.mach_abi_linking.get(what))
 
+        for flag in options.cc_abi_flags.split(' '):
+            abi_link.add(flag)
+
         if len(abi_link) == 0:
             return ''
-        return ' ' + ' '.join(abi_link)
+        return ' ' + ' '.join(sorted(list(abi_link)))
 
 
     """
@@ -1048,6 +1053,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         for mod in modules:
             if src in mod.sources():
                 if mod.need_isa != None:
+                    if mod.need_isa not in cc.isa_flags:
+                        raise Exception('Compiler does not support %s, required by %s' % (
+                            mod.need_isa, src))
                     return cc.isa_flags[mod.need_isa]
         return ''
 
@@ -1056,12 +1064,12 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     """
     def build_commands(sources, obj_dir, flags):
         for (obj_file,src) in zip(objectfile_list(sources, obj_dir), sources):
-            yield '%s: %s\n\t$(CXX) %s%s $(%s_FLAGS) %s %s$? %s$@\n' % (
+            yield '%s: %s\n\t$(CXX) %s $(%s_FLAGS) %s%s %s$? %s$@\n' % (
                 obj_file, src,
+                isa_specific_flags(cc, src),
+                flags,
                 cc.add_include_dir_option,
                 build_config.include_dir,
-                flags,
-                isa_specific_flags(cc, src),
                 cc.compile_option,
                 cc.output_to_option)
 
@@ -1079,8 +1087,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
                       maintainer_flags,
                       maintainer_mode):
         if maintainer_mode and maintainer_flags != '':
-            return maintainer_flags
-        return normal_flags
+            return maintainer_flags + ' ' + normal_flags
+        else:
+            return normal_flags
 
     def innosetup_arch(os, arch):
         if os != 'windows':
@@ -1139,9 +1148,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'mp_bits': choose_mp_bits(),
 
-        'cc': (options.compiler_binary or cc.binary_name) +
-              cc.mach_abi_link_flags(options.os, options.arch,
-                                     options.cpu, options.debug_build),
+        'cc': (options.compiler_binary or cc.binary_name) + cc.mach_abi_link_flags(options),
 
         'lib_opt': cc.library_opt_flags(options),
         'check_opt': '' if options.no_optimizations else cc.check_opt_flags,
