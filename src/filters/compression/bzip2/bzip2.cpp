@@ -12,6 +12,7 @@
 
 #include <map>
 #include <cstring>
+#include <cstdlib>
 #define BZ_NO_STDIO
 #include <bzlib.h>
 

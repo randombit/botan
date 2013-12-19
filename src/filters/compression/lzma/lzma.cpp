@@ -12,6 +12,7 @@
 #include <botan/exceptn.h>
 
 #include <cstring>
+#include <cstdlib>
 #include <map>
 #include <lzma.h>
 
