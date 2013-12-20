@@ -8,8 +8,8 @@
 * Distributed under the terms of the Botan license
 */
 
-#ifndef SERPENT_SBOX_EXPRESSIONS_H__
-#define SERPENT_SBOX_EXPRESSIONS_H__
+#ifndef BOTAN_SERPENT_SBOX_H__
+#define BOTAN_SERPENT_SBOX_H__
 
 #define SBoxE1(B0, B1, B2, B3)                    \
    do {                                           \

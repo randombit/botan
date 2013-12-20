@@ -5,15 +5,15 @@
 * Distributed under the terms of the Botan license
 */
 
+#ifndef BOTAN_UTILS_URLGET_H__
+#define BOTAN_UTILS_URLGET_H__
+
 #include <botan/types.h>
 #include <future>
 #include <vector>
 #include <map>
 #include <chrono>
 #include <string>
-
-#ifndef BOTAN_UTILS_URLGET_H__
-#define BOTAN_UTILS_URLGET_H__
 
 namespace Botan {
 
