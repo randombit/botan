@@ -32,7 +32,7 @@
 
 #define X86_CPUID(type, out) do { __cpuid((int*)out, type); } while(0)
 
-#define X86_CPUID_SUBLEVEL(type, level, out) do { __cpuid((int*)out, type, level); } while(0)
+#define X86_CPUID_SUBLEVEL(type, level, out) do { __cpuidex((int*)out, type, level); } while(0)
 
 #elif defined(BOTAN_BUILD_COMPILER_IS_INTEL)
 
