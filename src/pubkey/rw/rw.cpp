@@ -20,7 +20,7 @@ namespace Botan {
 RW_PrivateKey::RW_PrivateKey(RandomNumberGenerator& rng,
                              size_t bits, size_t exp)
    {
-   if(bits < 512)
+   if(bits < 1024)
       throw Invalid_Argument(algo_name() + ": Can't make a key that is only " +
                              std::to_string(bits) + " bits long");
    if(exp < 2 || exp % 2 == 1)

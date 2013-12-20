@@ -1,6 +1,11 @@
 Version 1.11.6, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* OAEP had two bugs, one of which allowed it to be used even if the
+  key was too small, and the other of which would cause a crash during
+  decoding if the input was too large to have been created for the
+  associated key.
+
  * Botan now requires Boost, specifically the filesystem and asio libraries.
 
  * The default TLS policy no longer includes RC4 in the cipher list, and
