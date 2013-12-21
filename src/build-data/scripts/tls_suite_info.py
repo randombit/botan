@@ -153,6 +153,7 @@ def main(args = None):
     maybe_someday = ['ARIA', 'RSA_PSK']
     not_supported = weak_crypto + static_dh + protocol_goop + maybe_someday
 
+    include_srp_aead = False
     include_ocb = False
     include_eax = False
     save_file = True
@@ -201,11 +202,33 @@ def main(args = None):
         define_custom_ciphersuite('ECDHE_RSA_WITH_AES_128_OCB_SHA256', 'FF82')
         define_custom_ciphersuite('ECDHE_RSA_WITH_AES_256_OCB_SHA384', 'FF83')
 
+        define_custom_ciphersuite('ECDHE_PSK_WITH_AES_128_OCB_SHA256', 'FF85')
+        define_custom_ciphersuite('ECDHE_PSK_WITH_AES_256_OCB_SHA384', 'FF86')
+
     if include_eax:
         define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_128_EAX_SHA256', 'FF90')
         define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_256_EAX_SHA384', 'FF91')
         define_custom_ciphersuite('ECDHE_RSA_WITH_AES_128_EAX_SHA256', 'FF92')
         define_custom_ciphersuite('ECDHE_RSA_WITH_AES_256_EAX_SHA384', 'FF93')
+
+    if include_srp_aead:
+        define_custom_ciphersuite('SRP_SHA_WITH_AES_256_GCM_SHA384', 'FFA0')
+        define_custom_ciphersuite('SRP_SHA_RSA_WITH_AES_256_GCM_SHA384', 'FFA1')
+        define_custom_ciphersuite('SRP_SHA_DSS_WITH_AES_256_GCM_SHA384', 'FFA2')
+        define_custom_ciphersuite('SRP_SHA_ECDSA_WITH_AES_256_GCM_SHA384', 'FFA3')
+
+        if include_ocb:
+            define_custom_ciphersuite('SRP_SHA_WITH_AES_256_OCB_SHA384', 'FFA4')
+            define_custom_ciphersuite('SRP_SHA_RSA_WITH_AES_256_OCB_SHA384', 'FFA5')
+            define_custom_ciphersuite('SRP_SHA_DSS_WITH_AES_256_OCB_SHA384', 'FFA6')
+            define_custom_ciphersuite('SRP_SHA_ECDSA_WITH_AES_256_OCB_SHA384', 'FFA7')
+
+        if include_eax:
+            define_custom_ciphersuite('SRP_SHA_WITH_AES_256_EAX_SHA384', 'FFA8')
+            define_custom_ciphersuite('SRP_SHA_RSA_WITH_AES_256_EAX_SHA384', 'FFA9')
+            define_custom_ciphersuite('SRP_SHA_DSS_WITH_AES_256_EAX_SHA384', 'FFAA')
+            define_custom_ciphersuite('SRP_SHA_ECDSA_WITH_AES_256_EAX_SHA384', 'FFAB')
+
 
     def header():
         return """/*
