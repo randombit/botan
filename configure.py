@@ -830,7 +830,7 @@ class CompilerInfo(object):
 
         if len(abi_link) == 0:
             return ''
-        return ' '.join(sorted(list(abi_link)))
+        return ' ' + ' '.join(sorted(list(abi_link)))
 
 
     """
@@ -1059,6 +1059,16 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
                     return ' ' + cc.isa_flags[mod.need_isa]
         return ''
 
+    def all_isa_specific_flags():
+        isas = set()
+        for mod in modules:
+            if mod.need_isa != None:
+                if mod.need_isa not in cc.isa_flags:
+                    raise Exception('Compiler does not support %s, required by %s' % (mod.need_isa, src))
+                isas.add(cc.isa_flags[mod.need_isa])
+
+        return '' if len(isas) == 0 else (' ' + ' '.join(sorted(list(isas))))
+
     """
     Form snippets of makefile for building each source file
     """
@@ -1148,7 +1158,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'mp_bits': choose_mp_bits(),
 
-        'cc': (options.compiler_binary or cc.binary_name) + cc.mach_abi_link_flags(options),
+        'cc': (options.compiler_binary or cc.binary_name) + cc.mach_abi_link_flags(options) +
+              ('' if not options.via_amalgamation else all_isa_specific_flags()),
 
         'lib_opt': cc.library_opt_flags(options),
         'check_opt': '' if options.no_optimizations else cc.check_opt_flags,
@@ -1556,6 +1567,7 @@ def generate_amalgamation(build_config):
 
     botan_include = re.compile('#include <botan/(.*)>$')
     std_include = re.compile('#include <([^/\.]+|stddef.h)>$')
+    any_include = re.compile('#include <(.*)>$')
 
     class Amalgamation_Generator:
         def __init__(self, input_list):
@@ -1632,9 +1644,11 @@ def generate_amalgamation(build_config):
     botan_h.write(pub_header_amalag.contents)
     botan_h.write("\n#endif\n")
 
-    internal_header_amalag = Amalgamation_Generator(
+    internal_headers = Amalgamation_Generator(
         [s for s in build_config.internal_headers
          if s.find('asm_macr_') == -1])
+
+    headers_written = pub_header_amalag.all_std_includes.union(internal_headers.all_std_includes)
 
     botan_cpp = open(source_name, 'w')
 
@@ -1642,8 +1656,8 @@ def generate_amalgamation(build_config):
 
     botan_cpp.write('\n#include "%s"\n' % (header_name))
 
-    botan_cpp.write(internal_header_amalag.header_includes)
-    botan_cpp.write(internal_header_amalag.contents)
+    botan_cpp.write(internal_headers.header_includes)
+    botan_cpp.write(internal_headers.contents)
 
     for src in build_config.sources:
         if src.endswith('.S'):
@@ -1653,6 +1667,15 @@ def generate_amalgamation(build_config):
         for line in contents:
             if botan_include.search(line):
                 continue
+
+            match = any_include.search(line)
+            if match:
+                header = match.group(1)
+                if header in headers_written:
+                    continue
+
+                botan_cpp.write(line)
+                headers_written.add(header)
             else:
                 botan_cpp.write(line)
 
