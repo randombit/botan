@@ -84,7 +84,7 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
                                const std::string& hostname,
                                const std::string& identifier)
          {
-         if(type == "tls-client" && hostname == "localhost" && identifier == "user")
+         if(type == "tls-client" && hostname == "srp-host" && identifier == "user")
             return "password";
 
          return "";
