@@ -20,7 +20,7 @@
 
 #elif defined(BOTAN_HAS_SIMD_SCALAR)
   #include <botan/internal/simd_scalar.h>
-  namespace Botan { typedef SIMD_4_Scalar<u32bit> SIMD_32; }
+  namespace Botan { typedef SIMD_Scalar<u32bit,4> SIMD_32; }
 
 #else
   #error "No SIMD module defined"
