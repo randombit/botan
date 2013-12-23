@@ -38,14 +38,16 @@ solaris -> "$(CXX) -shared -fPIC -Wl,-h,$(SONAME)"
 </so_link_flags>
 
 <isa_flags>
-"sse2"   -> "-msse2"
-"ssse3"  -> "-mssse3"
-"sse4.1" -> "-msse4.1"
-"sse4.2" -> "-msse4.2"
-"avx"    -> "-mavx"
-"aes-ni" -> "-maes"
-"avx2"   -> "-mavx2"
-"bmi2"   -> "-mbmi2"
+sse2   -> "-msse2"
+ssse3  -> "-mssse3"
+sse4.1 -> "-msse4.1"
+sse4.2 -> "-msse4.2"
+avx2   -> "-mavx2"
+bmi2   -> "-mbmi2"
+aesni  -> "-maes"
+clmul  -> "-mclmul"
+rdrand -> "-mrdrnd"
+sha    -> "-msha"
 </isa_flags>
 
 <mach_opt>

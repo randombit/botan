@@ -42,6 +42,9 @@ ssse3
 sse4.1
 sse4.2
 avx2
-aes-ni
+aesni
 clmul
+rdrand
+sha
+bmi2
 </isa_extensions>

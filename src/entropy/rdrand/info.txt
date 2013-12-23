@@ -1,5 +1,7 @@
 define ENTROPY_SRC_RDRAND 20131128
 
+need_isa rdrand
+
 <source>
 rdrand.cpp
 </source>
