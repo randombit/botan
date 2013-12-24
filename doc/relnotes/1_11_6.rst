@@ -6,14 +6,16 @@ Version 1.11.6, Not Yet Released
   decoding if the input was too large to have been created for the
   associated key.
 
- * Botan now requires Boost, specifically the filesystem and asio libraries.
+* Botan now requires Boost, specifically the filesystem and asio libraries.
 
- * The default TLS policy no longer includes RC4 in the cipher list, and
-   refuses to negotation SSLv3 by default.
+* Add Threefish-512, including an implementation using AVX2
 
- * Add HKDF from :rfc:`5869`
+* Add HKDF from :rfc:`5869`
 
- * Add SIV from :rfc:`5297`
+* Add SIV from :rfc:`5297`
 
- * TLS::Session_Manager_In_Memory now requires a rng to be passed to its
-   constructor.
+* TLS::Session_Manager_In_Memory's constructor now an rng reference argument
+
+* The default TLS policy no longer includes RC4 in the cipher list, and
+  refuses to negotation SSLv3 by default.
+

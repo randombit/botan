@@ -15,16 +15,18 @@ namespace {
 
 Transformation* get_transform(const std::string& algo)
    {
+#if defined(BOTAN_HAS_THREEFISH_512)
    if(algo == "Threefish-512")
       return new Threefish_512;
+#endif
 
    throw std::runtime_error("Unknown transform " + algo);
    }
 
 secure_vector<byte> transform_test(const std::string& algo,
-                              const secure_vector<byte>& nonce,
-                              const secure_vector<byte>& key,
-                              const secure_vector<byte>& in)
+                                   const secure_vector<byte>& nonce,
+                                   const secure_vector<byte>& key,
+                                   const secure_vector<byte>& in)
    {
    std::unique_ptr<Transformation> transform(get_transform(algo));
 
@@ -52,7 +54,11 @@ void test_transform()
                                               hex_decode_locked(m["Input"])));
              });
 
-   //time_transform("Threefish-512");
+   if(true)
+      {
+      time_transform("Threefish-512");
+      //time_transform("Threefish-512-AVX2");
+      }
    }
 
 void time_transform(const std::string& algo)

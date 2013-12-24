@@ -40,6 +40,13 @@ class BOTAN_DLL Threefish_512 : public Transformation
 
       void clear();
 
+      size_t block_size() const { return 64; }
+
+   protected:
+      const secure_vector<u64bit>& get_T() const { return m_T; }
+      const secure_vector<u64bit>& get_K() const { return m_K; }
+
+      virtual void full_inplace_update(byte* buf, size_t sz);
    private:
       void key_schedule(const byte key[], size_t key_len) override;
 

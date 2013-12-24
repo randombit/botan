@@ -25,21 +25,22 @@ secure_vector<byte> Threefish_512::start(const byte tweak[], size_t tweak_len)
    return secure_vector<byte>();
    }
 
-void Threefish_512::update(secure_vector<byte>& blocks, size_t offset)
+void Threefish_512::full_inplace_update(byte* buf, size_t sz)
    {
-   byte* buf = &blocks[offset];
-   size_t sz = blocks.size() - offset;
-
-   BOTAN_ASSERT(sz % update_granularity() == 0, "Block sized input");
-
-   BOTAN_ASSERT(m_T.size() == 3, "Tweak was set");
-
-#define THREEFISH_ROUND(I1,I2,I3,I4,I5,I6,I7,I8,ROT1,ROT2,ROT3,ROT4) \
+#define THREEFISH_ROUND(X0,X1,X2,X3,X4,X5,X6,X7,ROT1,ROT2,ROT3,ROT4) \
    do {                                                              \
-      X##I1 += X##I2; X##I2 = rotate_left(X##I2, ROT1) ^ X##I1;      \
-      X##I3 += X##I4; X##I4 = rotate_left(X##I4, ROT2) ^ X##I3;      \
-      X##I5 += X##I6; X##I6 = rotate_left(X##I6, ROT3) ^ X##I5;      \
-      X##I7 += X##I8; X##I8 = rotate_left(X##I8, ROT4) ^ X##I7;      \
+      X0 += X4;                                                      \
+      X1 += X5;                                                      \
+      X2 += X6;                                                      \
+      X3 += X7;                                                      \
+      X4 = rotate_left(X4, ROT1);                                    \
+      X5 = rotate_left(X5, ROT2);                                    \
+      X6 = rotate_left(X6, ROT3);                                    \
+      X7 = rotate_left(X7, ROT4);                                    \
+      X4 ^= X0;                                                      \
+      X5 ^= X1;                                                      \
+      X6 ^= X2;                                                      \
+      X7 ^= X3;                                                      \
    } while(0)
 
 #define THREEFISH_INJECT_KEY(r)              \
@@ -54,21 +55,21 @@ void Threefish_512::update(secure_vector<byte>& blocks, size_t offset)
       X7 += m_K[(r+7) % 9] + (r);            \
    } while(0)
 
-#define THREEFISH_8_ROUNDS(R1,R2)                      \
-   do {                                                \
-      THREEFISH_ROUND(0,1,2,3,4,5,6,7, 46,36,19,37);   \
-      THREEFISH_ROUND(2,1,4,7,6,5,0,3, 33,27,14,42);   \
-      THREEFISH_ROUND(4,1,6,3,0,5,2,7, 17,49,36,39);   \
-      THREEFISH_ROUND(6,1,0,7,2,5,4,3, 44, 9,54,56);   \
-                                                       \
-      THREEFISH_INJECT_KEY(R1);                        \
-                                                       \
-      THREEFISH_ROUND(0,1,2,3,4,5,6,7, 39,30,34,24);   \
-      THREEFISH_ROUND(2,1,4,7,6,5,0,3, 13,50,10,17);   \
-      THREEFISH_ROUND(4,1,6,3,0,5,2,7, 25,29,39,43);   \
-      THREEFISH_ROUND(6,1,0,7,2,5,4,3,  8,35,56,22);   \
-                                                       \
-      THREEFISH_INJECT_KEY(R2);                        \
+#define THREEFISH_8_ROUNDS(R1,R2)                             \
+   do {                                                       \
+      THREEFISH_ROUND(X0,X2,X4,X6, X1,X3,X5,X7, 46,36,19,37); \
+      THREEFISH_ROUND(X2,X4,X6,X0, X1,X7,X5,X3, 33,27,14,42); \
+      THREEFISH_ROUND(X4,X6,X0,X2, X1,X3,X5,X7, 17,49,36,39); \
+      THREEFISH_ROUND(X6,X0,X2,X4, X1,X7,X5,X3, 44, 9,54,56); \
+                                                              \
+      THREEFISH_INJECT_KEY(R1);                               \
+                                                              \
+      THREEFISH_ROUND(X0,X2,X4,X6, X1,X3,X5,X7, 39,30,34,24); \
+      THREEFISH_ROUND(X2,X4,X6,X0, X1,X7,X5,X3, 13,50,10,17); \
+      THREEFISH_ROUND(X4,X6,X0,X2, X1,X3,X5,X7, 25,29,39,43); \
+      THREEFISH_ROUND(X6,X0,X2,X4, X1,X7,X5,X3,  8,35,56,22); \
+                                                              \
+      THREEFISH_INJECT_KEY(R2);                               \
    } while(0)
 
    while(sz)
@@ -105,6 +106,17 @@ void Threefish_512::update(secure_vector<byte>& blocks, size_t offset)
 #undef THREEFISH_ROUND
    }
 
+void Threefish_512::update(secure_vector<byte>& buf, size_t offset)
+   {
+   BOTAN_ASSERT(m_K.size() == 9, "Key was set");
+   BOTAN_ASSERT(m_T.size() == 3, "Tweak was set");
+
+   const size_t sz = buf.size() - offset;
+   BOTAN_ASSERT(sz % block_size() == 0, "Block sized input");
+
+   full_inplace_update(&buf[offset], sz);
+   }
+
 Key_Length_Specification Threefish_512::key_spec() const
    {
    return Key_Length_Specification(64);
@@ -138,7 +150,7 @@ size_t Threefish_512::output_length(size_t input_length) const
 
 size_t Threefish_512::update_granularity() const
    {
-   return 64; // single block
+   return block_size();
    }
 
 size_t Threefish_512::minimum_final_size() const
@@ -148,6 +160,7 @@ size_t Threefish_512::minimum_final_size() const
 
 size_t Threefish_512::default_nonce_length() const
    {
+   // todo: define encoding for smaller nonces
    return 16;
    }
 
@@ -159,6 +172,7 @@ bool Threefish_512::valid_nonce_length(size_t nonce_len) const
 void Threefish_512::clear()
    {
    zeroise(m_K);
+   zeroise(m_T);
    }
 
 }

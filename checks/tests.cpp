@@ -64,7 +64,7 @@ void run_tests(std::istream& src,
                 const std::string got = cb(vars);
                 if(got != vars[output_key])
                    {
-                   std::cout << name_key << " got " << got
+                   std::cout << name_key << ' ' << vars[name_key] << " got " << got
                              << " expected " << vars[output_key] << std::endl;
                    return false;
                    }
