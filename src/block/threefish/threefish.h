@@ -8,45 +8,29 @@
 #ifndef BOTAN_THREEFISH_H__
 #define BOTAN_THREEFISH_H__
 
-#include <botan/transform.h>
+#include <botan/block_cipher.h>
 
 namespace Botan {
 
 /**
 * Threefish-512
 */
-class BOTAN_DLL Threefish_512 : public Transformation
+class BOTAN_DLL Threefish_512 : public Block_Cipher_Fixed_Params<64, 64>
    {
    public:
-      secure_vector<byte> start(const byte tweak[], size_t tweak_len) override;
+      void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
+      void decrypt_n(const byte in[], byte out[], size_t blocks) const override;
 
-      void update(secure_vector<byte>& blocks, size_t offset) override;
+      void set_tweak(const byte tweak[], size_t len);
 
-      void finish(secure_vector<byte>& final_block, size_t offset) override;
+      void clear() override;
+      std::string name() const override { return "Threefish-512"; }
+      BlockCipher* clone() const override { return new Threefish_512; }
 
-      size_t output_length(size_t input_length) const override;
-
-      size_t update_granularity() const override;
-
-      size_t minimum_final_size() const override;
-
-      size_t default_nonce_length() const override;
-
-      bool valid_nonce_length(size_t nonce_len) const override;
-
-      Key_Length_Specification key_spec() const override;
-
-      std::string name() const { return "Threefish-512"; }
-
-      void clear();
-
-      size_t block_size() const { return 64; }
-
+      Threefish_512() : m_T(3) {}
    protected:
       const secure_vector<u64bit>& get_T() const { return m_T; }
       const secure_vector<u64bit>& get_K() const { return m_K; }
-
-      virtual void full_inplace_update(byte* buf, size_t sz);
    private:
       void key_schedule(const byte key[], size_t key_len) override;
 

@@ -35,7 +35,7 @@ inline void deinterleave_epi64(__m256i& X0, __m256i& X1)
 
 }
 
-void Threefish_512_AVX2::full_inplace_update(byte* buf, size_t sz)
+void Threefish_512_AVX2::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const u64bit* K = &get_K()[0];
    const u64bit* T_64 = &get_T()[0];
@@ -106,14 +106,15 @@ void Threefish_512_AVX2::full_inplace_update(byte* buf, size_t sz)
 
    const __m256i ONE = _mm256_set_epi64x(1, 0, 0, 0);
 
-   while(sz >= 64)
+   const __m256i* in_mm = reinterpret_cast<const __m256i*>(in);
+   __m256i* out_mm = reinterpret_cast<__m256i*>(out);
+
+   for(size_t i = 0; i != blocks; ++i)
       {
-      __m256i* buf_mm = reinterpret_cast<__m256i*>(buf);
+      __m256i X0 = _mm256_loadu_si256(in_mm++);
+      __m256i X1 = _mm256_loadu_si256(in_mm++);
 
-      __m256i X0 = _mm256_loadu_si256(buf_mm);
-      __m256i X1 = _mm256_loadu_si256(buf_mm + 1);
-
-      __m256i T = _mm256_set_epi64x(T_64[0], T_64[1], T_64[2], 0);
+      const __m256i T = _mm256_set_epi64x(T_64[0], T_64[1], T_64[2], 0);
 
       __m256i R = _mm256_set1_epi64x(0);
 
@@ -135,11 +136,8 @@ void Threefish_512_AVX2::full_inplace_update(byte* buf, size_t sz)
 
       deinterleave_epi64(X0, X1);
 
-      _mm256_storeu_si256(buf_mm, X0);
-      _mm256_storeu_si256(buf_mm + 1, X1);
-
-      buf += 64;
-      sz -= 64;
+      _mm256_storeu_si256(out_mm++, X0);
+      _mm256_storeu_si256(out_mm++, X1);
       }
    }
 

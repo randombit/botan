@@ -18,7 +18,8 @@ namespace Botan {
 class BOTAN_DLL Threefish_512_AVX2 : public Threefish_512
    {
    private:
-      void full_inplace_update(byte* buf, size_t sz) override;
+      void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
+      BlockCipher* clone() const override { return new Threefish_512_AVX2; }
    };
 
 }
