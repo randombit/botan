@@ -28,14 +28,14 @@ DL_Group::DL_Group()
 /*
 * DL_Group Constructor
 */
-DL_Group::DL_Group(const std::string& type)
+DL_Group::DL_Group(const std::string& name)
    {
-   const char* grp = lookup(type);
+   const char* pem = PEM_for_named_group(name);
 
-   if(!grp)
-      throw Invalid_Argument("DL_Group: Unknown group " + type);
+   if(!pem)
+      throw Invalid_Argument("DL_Group: Unknown group " + name);
 
-   PEM_decode(grp);
+   PEM_decode(pem);
    }
 
 /*

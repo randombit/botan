@@ -21,8 +21,6 @@ class BOTAN_DLL DL_Group
    {
    public:
 
-      static const char* lookup(const std::string& name);
-
       /**
       * Get the prime p.
       * @return prime p
@@ -153,6 +151,11 @@ class BOTAN_DLL DL_Group
       * @param g the base g
       */
       DL_Group(const BigInt& p, const BigInt& q, const BigInt& g);
+
+      /**
+      * Return PEM representation of named DL group
+      */
+      static const char* PEM_for_named_group(const std::string& name);
    private:
       static BigInt make_dsa_generator(const BigInt&, const BigInt&);
 

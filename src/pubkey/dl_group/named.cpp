@@ -9,7 +9,7 @@
 
 namespace Botan {
 
-const char* DL_Group::lookup(const std::string& name)
+const char* DL_Group::PEM_for_named_group(const std::string& name)
    {
    if(name == "modp/ietf/1024")
       return

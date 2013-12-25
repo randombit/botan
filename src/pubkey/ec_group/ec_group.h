@@ -122,6 +122,11 @@ class BOTAN_DLL EC_Group
                  (get_cofactor() == other.get_cofactor()));
          }
 
+      /**
+      * Return PEM representation of named EC group
+      */
+      static const char* PEM_for_named_group(const std::string& name);
+
    private:
       CurveGFp curve;
       PointGFp base_point;
