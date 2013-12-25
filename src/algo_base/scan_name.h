@@ -91,6 +91,8 @@ class BOTAN_DLL SCAN_Name
       static void add_alias(const std::string& alias, const std::string& basename);
 
       static std::string deref_alias(const std::string& alias);
+
+      static void set_default_aliases();
    private:
       static std::mutex s_alias_map_mutex;
       static std::map<std::string, std::string> s_alias_map;

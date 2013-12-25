@@ -193,4 +193,30 @@ std::string SCAN_Name::deref_alias(const std::string& alias)
    return name;
    }
 
+void SCAN_Name::set_default_aliases()
+   {
+   // common variations worth supporting
+   SCAN_Name::add_alias("EME-PKCS1-v1_5",  "PKCS1v15");
+   SCAN_Name::add_alias("3DES",     "TripleDES");
+   SCAN_Name::add_alias("DES-EDE",  "TripleDES");
+   SCAN_Name::add_alias("CAST5",    "CAST-128");
+   SCAN_Name::add_alias("SHA1",     "SHA-160");
+   SCAN_Name::add_alias("SHA-1",    "SHA-160");
+   SCAN_Name::add_alias("MARK-4",   "RC4(256)");
+   SCAN_Name::add_alias("ARC4",     "RC4");
+   SCAN_Name::add_alias("OMAC",     "CMAC");
+
+   // should be renamed in sources
+   SCAN_Name::add_alias("OAEP-MGF1",       "EME1");
+   SCAN_Name::add_alias("EME-OAEP",        "EME1");
+   SCAN_Name::add_alias("X9.31",           "EMSA2");
+   SCAN_Name::add_alias("EMSA-PKCS1-v1_5", "EMSA3");
+   SCAN_Name::add_alias("PSS-MGF1",        "EMSA4");
+   SCAN_Name::add_alias("EMSA-PSS",        "EMSA4");
+
+   // probably can be removed
+   SCAN_Name::add_alias("GOST",     "GOST-28147-89");
+   SCAN_Name::add_alias("GOST-34.11", "GOST-R-34.11-94");
+   }
+
 }

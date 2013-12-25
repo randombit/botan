@@ -21,6 +21,9 @@ namespace OIDS {
 */
 BOTAN_DLL void add_oid(const OID& oid, const std::string& name);
 
+BOTAN_DLL void add_oid2str(const OID& oid, const std::string& name);
+BOTAN_DLL void add_str2oid(const OID& oid, const std::string& name);
+
 /**
 * See if an OID exists in the internal table.
 * @param oid the oid to check for
@@ -50,6 +53,8 @@ BOTAN_DLL OID lookup(const std::string& name);
 * @return true if the specified OID stands for the specified name
 */
 BOTAN_DLL bool name_of(const OID& oid, const std::string& name);
+
+BOTAN_DLL void set_defaults();
 
 }
 

@@ -9,6 +9,7 @@
 #include <botan/charset.h>
 #include <botan/engine.h>
 #include <botan/cpuid.h>
+#include <botan/oids.h>
 #include <botan/internal/core_engine.h>
 #include <botan/internal/stl_util.h>
 #include <algorithm>
@@ -40,45 +41,6 @@
 namespace Botan {
 
 /*
-* Get a configuration value
-*/
-std::string Library_State::get(const std::string& section,
-                               const std::string& key)
-   {
-   std::lock_guard<std::mutex> lock(config_lock);
-
-   return search_map<std::string, std::string>(config,
-                                               section + "/" + key, "");
-   }
-
-/*
-* See if a particular option has been set
-*/
-bool Library_State::is_set(const std::string& section,
-                           const std::string& key)
-   {
-   std::lock_guard<std::mutex> lock(config_lock);
-
-   return config.count(section + "/" + key) != 0;
-   }
-
-/*
-* Set a configuration value
-*/
-void Library_State::set(const std::string& section, const std::string& key,
-                        const std::string& value, bool overwrite)
-   {
-   std::lock_guard<std::mutex> lock(config_lock);
-
-   std::string full_key = section + "/" + key;
-
-   auto i = config.find(full_key);
-
-   if(overwrite || i == config.end() || i->second == "")
-      config[full_key] = value;
-   }
-
-/*
 * Return a reference to the Algorithm_Factory
 */
 Algorithm_Factory& Library_State::algorithm_factory() const
@@ -103,7 +65,8 @@ void Library_State::initialize()
 
    CPUID::initialize();
 
-   load_default_config();
+   SCAN_Name::set_default_aliases();
+   OIDS::set_defaults();
 
    m_algorithm_factory.reset(new Algorithm_Factory());
 
