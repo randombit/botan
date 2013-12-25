@@ -13,7 +13,7 @@
 #include <botan/ber_dec.h>
 #include <botan/pipe.h>
 #include <botan/pem.h>
-#include <botan/internal/workfactor.h>
+#include <botan/workfactor.h>
 
 namespace Botan {
 
@@ -30,12 +30,12 @@ DL_Group::DL_Group()
 */
 DL_Group::DL_Group(const std::string& type)
    {
-   const std::string grp_contents = global_state().get("dl", type);
+   const char* grp = lookup(type);
 
-   if(grp_contents == "")
+   if(!grp)
       throw Invalid_Argument("DL_Group: Unknown group " + type);
 
-   PEM_decode(grp_contents);
+   PEM_decode(grp);
    }
 
 /*

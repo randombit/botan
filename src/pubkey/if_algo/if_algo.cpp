@@ -7,7 +7,7 @@
 
 #include <botan/if_algo.h>
 #include <botan/numthry.h>
-#include <botan/internal/workfactor.h>
+#include <botan/workfactor.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 

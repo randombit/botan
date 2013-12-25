@@ -17,11 +17,11 @@ pk_ops.h
 pkcs8.h
 pubkey.h
 x509_key.h
+workfactor.h
 </header:public>
 
 <header:internal>
 pk_algs.h
-workfactor.h
 </header:internal>
 
 <requires>

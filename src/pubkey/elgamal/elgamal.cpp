@@ -8,7 +8,7 @@
 #include <botan/elgamal.h>
 #include <botan/numthry.h>
 #include <botan/keypair.h>
-#include <botan/internal/workfactor.h>
+#include <botan/workfactor.h>
 
 namespace Botan {
 

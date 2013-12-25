@@ -20,6 +20,9 @@ namespace Botan {
 class BOTAN_DLL DL_Group
    {
    public:
+
+      static const char* lookup(const std::string& name);
+
       /**
       * Get the prime p.
       * @return prime p

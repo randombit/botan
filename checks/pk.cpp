@@ -728,15 +728,12 @@ void do_pk_keygen_tests(RandomNumberGenerator& rng)
 #endif
 
 #if defined(BOTAN_HAS_DSA)
-   DL_KEY(DSA_PrivateKey, "dsa/jce/512");
-   DL_KEY(DSA_PrivateKey, "dsa/jce/768");
    DL_KEY(DSA_PrivateKey, "dsa/jce/1024");
    DL_KEY(DSA_PrivateKey, "dsa/botan/2048");
    DL_KEY(DSA_PrivateKey, "dsa/botan/3072");
 #endif
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-   DL_KEY(DH_PrivateKey, "modp/ietf/768");
    DL_KEY(DH_PrivateKey, "modp/ietf/1024");
    DL_KEY(DH_PrivateKey, "modp/ietf/2048");
    DL_KEY(DH_PrivateKey, "modp/ietf/4096");
@@ -744,15 +741,12 @@ void do_pk_keygen_tests(RandomNumberGenerator& rng)
 #endif
 
 #if defined(BOTAN_HAS_NYBERG_RUEPPEL)
-   DL_KEY(NR_PrivateKey, "dsa/jce/512");
-   DL_KEY(NR_PrivateKey, "dsa/jce/768");
    DL_KEY(NR_PrivateKey, "dsa/jce/1024");
    DL_KEY(NR_PrivateKey, "dsa/botan/2048");
    DL_KEY(NR_PrivateKey, "dsa/botan/3072");
 #endif
 
 #if defined(BOTAN_HAS_ELGAMAL)
-   DL_KEY(ElGamal_PrivateKey, "modp/ietf/768");
    DL_KEY(ElGamal_PrivateKey, "modp/ietf/1024");
    DL_KEY(ElGamal_PrivateKey, "dsa/jce/1024");
    DL_KEY(ElGamal_PrivateKey, "dsa/botan/2048");
