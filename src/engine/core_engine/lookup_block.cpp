@@ -107,6 +107,10 @@
   #include <botan/twofish.h>
 #endif
 
+#if defined(BOTAN_HAS_THREEFISH_512)
+  #include <botan/threefish.h>
+#endif
+
 #if defined(BOTAN_HAS_XTEA)
   #include <botan/xtea.h>
 #endif
@@ -237,6 +241,11 @@ BlockCipher* Core_Engine::find_block_cipher(const SCAN_Name& request,
 #if defined(BOTAN_HAS_TWOFISH)
    if(request.algo_name() == "Twofish")
       return new Twofish;
+#endif
+
+#if defined(BOTAN_HAS_TWOFISH)
+   if(request.algo_name() == "Threefish-512")
+      return new Threefish_512;
 #endif
 
 #if defined(BOTAN_HAS_XTEA)
