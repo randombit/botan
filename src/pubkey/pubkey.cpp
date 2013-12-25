@@ -25,10 +25,11 @@ PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
                                    const std::string& eme_name)
    {
    Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
+   RandomNumberGenerator& rng = global_state().global_rng();
 
    while(const Engine* engine = i.next())
       {
-      op = engine->get_encryption_op(key);
+      op = engine->get_encryption_op(key, rng);
       if(op)
          break;
       }
@@ -84,10 +85,11 @@ PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
                                    const std::string& eme_name)
    {
    Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
+   RandomNumberGenerator& rng = global_state().global_rng();
 
    while(const Engine* engine = i.next())
       {
-      op = engine->get_decryption_op(key);
+      op = engine->get_decryption_op(key, rng);
       if(op)
          break;
       }
@@ -126,6 +128,7 @@ PK_Signer::PK_Signer(const Private_Key& key,
                      Fault_Protection prot)
    {
    Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
+   RandomNumberGenerator& rng = global_state().global_rng();
 
    op = nullptr;
    verify_op = nullptr;
@@ -133,10 +136,10 @@ PK_Signer::PK_Signer(const Private_Key& key,
    while(const Engine* engine = i.next())
       {
       if(!op)
-         op = engine->get_signature_op(key);
+         op = engine->get_signature_op(key, rng);
 
       if(!verify_op && prot == ENABLE_FAULT_PROTECTION)
-         verify_op = engine->get_verify_op(key);
+         verify_op = engine->get_verify_op(key, rng);
 
       if(op && (verify_op || prot == DISABLE_FAULT_PROTECTION))
          break;
@@ -244,10 +247,11 @@ PK_Verifier::PK_Verifier(const Public_Key& key,
                          Signature_Format format)
    {
    Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
+   RandomNumberGenerator& rng = global_state().global_rng();
 
    while(const Engine* engine = i.next())
       {
-      op = engine->get_verify_op(key);
+      op = engine->get_verify_op(key, rng);
       if(op)
          break;
       }
@@ -352,10 +356,11 @@ PK_Key_Agreement::PK_Key_Agreement(const PK_Key_Agreement_Key& key,
                                    const std::string& kdf_name)
    {
    Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
+   RandomNumberGenerator& rng = global_state().global_rng();
 
    while(const Engine* engine = i.next())
       {
-      op = engine->get_key_agreement_op(key);
+      op = engine->get_key_agreement_op(key, rng);
       if(op)
          break;
       }

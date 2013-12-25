@@ -78,7 +78,8 @@ class BOTAN_DLL DH_PrivateKey : public DH_PublicKey,
 class BOTAN_DLL DH_KA_Operation : public PK_Ops::Key_Agreement
    {
    public:
-      DH_KA_Operation(const DH_PrivateKey& key);
+      DH_KA_Operation(const DH_PrivateKey& key,
+                      RandomNumberGenerator& rng);
 
       secure_vector<byte> agree(const byte w[], size_t w_len);
    private:

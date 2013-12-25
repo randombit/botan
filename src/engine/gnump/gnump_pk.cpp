@@ -271,18 +271,18 @@ class GMP_RSA_Public_Operation : public PK_Ops::Verification,
 }
 
 PK_Ops::Key_Agreement*
-GMP_Engine::get_key_agreement_op(const Private_Key& key) const
+GMP_Engine::get_key_agreement_op(const Private_Key& key, RandomNumberGenerator&) const
    {
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    if(const DH_PrivateKey* dh = dynamic_cast<const DH_PrivateKey*>(&key))
       return new GMP_DH_KA_Operation(*dh);
 #endif
 
-   return 0;
+   return nullptr;
    }
 
 PK_Ops::Signature*
-GMP_Engine::get_signature_op(const Private_Key& key) const
+GMP_Engine::get_signature_op(const Private_Key& key, RandomNumberGenerator&) const
    {
 #if defined(BOTAN_HAS_RSA)
    if(const RSA_PrivateKey* s = dynamic_cast<const RSA_PrivateKey*>(&key))
@@ -294,11 +294,11 @@ GMP_Engine::get_signature_op(const Private_Key& key) const
       return new GMP_DSA_Signature_Operation(*s);
 #endif
 
-   return 0;
+   return nullptr;
    }
 
 PK_Ops::Verification*
-GMP_Engine::get_verify_op(const Public_Key& key) const
+GMP_Engine::get_verify_op(const Public_Key& key, RandomNumberGenerator&) const
    {
 #if defined(BOTAN_HAS_RSA)
    if(const RSA_PublicKey* s = dynamic_cast<const RSA_PublicKey*>(&key))
@@ -310,29 +310,29 @@ GMP_Engine::get_verify_op(const Public_Key& key) const
       return new GMP_DSA_Verification_Operation(*s);
 #endif
 
-   return 0;
+   return nullptr;
    }
 
 PK_Ops::Encryption*
-GMP_Engine::get_encryption_op(const Public_Key& key) const
+GMP_Engine::get_encryption_op(const Public_Key& key, RandomNumberGenerator&) const
    {
 #if defined(BOTAN_HAS_RSA)
    if(const RSA_PublicKey* s = dynamic_cast<const RSA_PublicKey*>(&key))
       return new GMP_RSA_Public_Operation(*s);
 #endif
 
-   return 0;
+   return nullptr;
    }
 
 PK_Ops::Decryption*
-GMP_Engine::get_decryption_op(const Private_Key& key) const
+GMP_Engine::get_decryption_op(const Private_Key& key, RandomNumberGenerator&) const
    {
 #if defined(BOTAN_HAS_RSA)
    if(const RSA_PrivateKey* s = dynamic_cast<const RSA_PrivateKey*>(&key))
       return new GMP_RSA_Private_Operation(*s);
 #endif
 
-   return 0;
+   return nullptr;
    }
 
 }

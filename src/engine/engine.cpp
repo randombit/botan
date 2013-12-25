@@ -59,31 +59,31 @@ Keyed_Filter* Engine::get_cipher(const std::string&,
    }
 
 PK_Ops::Key_Agreement*
-Engine::get_key_agreement_op(const Private_Key&) const
+Engine::get_key_agreement_op(const Private_Key&, RandomNumberGenerator&) const
    {
    return nullptr;
    }
 
 PK_Ops::Signature*
-Engine::get_signature_op(const Private_Key&) const
+Engine::get_signature_op(const Private_Key&, RandomNumberGenerator&) const
    {
    return nullptr;
    }
 
 PK_Ops::Verification*
-Engine::get_verify_op(const Public_Key&) const
+Engine::get_verify_op(const Public_Key&, RandomNumberGenerator&) const
    {
    return nullptr;
    }
 
 PK_Ops::Encryption*
-Engine::get_encryption_op(const Public_Key&) const
+Engine::get_encryption_op(const Public_Key&, RandomNumberGenerator&) const
    {
    return nullptr;
    }
 
 PK_Ops::Decryption*
-Engine::get_decryption_op(const Private_Key&) const
+Engine::get_decryption_op(const Private_Key&, RandomNumberGenerator&) const
    {
    return nullptr;
    }

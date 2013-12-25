@@ -17,6 +17,8 @@ namespace Botan {
 
 namespace TLS {
 
+namespace {
+
 SymmetricKey derive_key(const std::string& passphrase,
                         const byte salt[],
                         size_t salt_len,
@@ -33,6 +35,8 @@ SymmetricKey derive_key(const std::string& passphrase,
    check_val = make_u16bit(x[0], x[1]);
    return SymmetricKey(&x[2], x.size() - 2);
    }
+
+}
 
 Session_Manager_SQLite::Session_Manager_SQLite(const std::string& passphrase,
                                                RandomNumberGenerator& rng,

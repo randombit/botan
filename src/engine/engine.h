@@ -22,6 +22,7 @@ namespace Botan {
 
 class Algorithm_Factory;
 class Keyed_Filter;
+class RandomNumberGenerator;
 
 /**
 * Base class for all engines. All non-pure virtual functions simply
@@ -109,7 +110,7 @@ class BOTAN_DLL Engine
       * @return newly allocated operator object, or NULL
       */
       virtual PK_Ops::Key_Agreement*
-         get_key_agreement_op(const Private_Key& key) const;
+         get_key_agreement_op(const Private_Key& key, RandomNumberGenerator& rng) const;
 
       /**
       * Return a new operator object for this key, if possible
@@ -117,7 +118,7 @@ class BOTAN_DLL Engine
       * @return newly allocated operator object, or NULL
       */
       virtual PK_Ops::Signature*
-         get_signature_op(const Private_Key& key) const;
+         get_signature_op(const Private_Key& key, RandomNumberGenerator& rng) const;
 
       /**
       * Return a new operator object for this key, if possible
@@ -125,7 +126,7 @@ class BOTAN_DLL Engine
       * @return newly allocated operator object, or NULL
       */
       virtual PK_Ops::Verification*
-         get_verify_op(const Public_Key& key) const;
+         get_verify_op(const Public_Key& key, RandomNumberGenerator& rng) const;
 
       /**
       * Return a new operator object for this key, if possible
@@ -133,7 +134,7 @@ class BOTAN_DLL Engine
       * @return newly allocated operator object, or NULL
       */
       virtual PK_Ops::Encryption*
-         get_encryption_op(const Public_Key& key) const;
+         get_encryption_op(const Public_Key& key, RandomNumberGenerator& rng) const;
 
       /**
       * Return a new operator object for this key, if possible
@@ -141,7 +142,7 @@ class BOTAN_DLL Engine
       * @return newly allocated operator object, or NULL
       */
       virtual PK_Ops::Decryption*
-         get_decryption_op(const Private_Key& key) const;
+         get_decryption_op(const Private_Key& key, RandomNumberGenerator& rng) const;
    };
 
 }

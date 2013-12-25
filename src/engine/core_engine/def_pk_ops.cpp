@@ -46,7 +46,7 @@
 namespace Botan {
 
 PK_Ops::Encryption*
-Core_Engine::get_encryption_op(const Public_Key& key) const
+Core_Engine::get_encryption_op(const Public_Key& key, RandomNumberGenerator&) const
    {
 #if defined(BOTAN_HAS_RSA)
    if(const RSA_PublicKey* s = dynamic_cast<const RSA_PublicKey*>(&key))
@@ -62,27 +62,27 @@ Core_Engine::get_encryption_op(const Public_Key& key) const
    }
 
 PK_Ops::Decryption*
-Core_Engine::get_decryption_op(const Private_Key& key) const
+Core_Engine::get_decryption_op(const Private_Key& key, RandomNumberGenerator& rng) const
    {
 #if defined(BOTAN_HAS_RSA)
    if(const RSA_PrivateKey* s = dynamic_cast<const RSA_PrivateKey*>(&key))
-      return new RSA_Private_Operation(*s);
+      return new RSA_Private_Operation(*s, rng);
 #endif
 
 #if defined(BOTAN_HAS_ELGAMAL)
    if(const ElGamal_PrivateKey* s = dynamic_cast<const ElGamal_PrivateKey*>(&key))
-      return new ElGamal_Decryption_Operation(*s);
+      return new ElGamal_Decryption_Operation(*s, rng);
 #endif
 
    return nullptr;
    }
 
 PK_Ops::Key_Agreement*
-Core_Engine::get_key_agreement_op(const Private_Key& key) const
+Core_Engine::get_key_agreement_op(const Private_Key& key, RandomNumberGenerator& rng) const
    {
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    if(const DH_PrivateKey* dh = dynamic_cast<const DH_PrivateKey*>(&key))
-      return new DH_KA_Operation(*dh);
+      return new DH_KA_Operation(*dh, rng);
 #endif
 
 #if defined(BOTAN_HAS_ECDH)
@@ -94,11 +94,11 @@ Core_Engine::get_key_agreement_op(const Private_Key& key) const
    }
 
 PK_Ops::Signature*
-Core_Engine::get_signature_op(const Private_Key& key) const
+Core_Engine::get_signature_op(const Private_Key& key, RandomNumberGenerator& rng) const
    {
 #if defined(BOTAN_HAS_RSA)
    if(const RSA_PrivateKey* s = dynamic_cast<const RSA_PrivateKey*>(&key))
-      return new RSA_Private_Operation(*s);
+      return new RSA_Private_Operation(*s, rng);
 #endif
 
 #if defined(BOTAN_HAS_RW)
@@ -131,7 +131,7 @@ Core_Engine::get_signature_op(const Private_Key& key) const
    }
 
 PK_Ops::Verification*
-Core_Engine::get_verify_op(const Public_Key& key) const
+Core_Engine::get_verify_op(const Public_Key& key, RandomNumberGenerator&) const
    {
 #if defined(BOTAN_HAS_RSA)
    if(const RSA_PublicKey* s = dynamic_cast<const RSA_PublicKey*>(&key))

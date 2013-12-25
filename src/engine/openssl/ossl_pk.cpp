@@ -271,7 +271,7 @@ class OSSL_RSA_Public_Operation : public PK_Ops::Verification,
 }
 
 PK_Ops::Key_Agreement*
-OpenSSL_Engine::get_key_agreement_op(const Private_Key& key) const
+OpenSSL_Engine::get_key_agreement_op(const Private_Key& key, RandomNumberGenerator&) const
    {
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    if(const DH_PrivateKey* dh = dynamic_cast<const DH_PrivateKey*>(&key))
@@ -282,7 +282,7 @@ OpenSSL_Engine::get_key_agreement_op(const Private_Key& key) const
    }
 
 PK_Ops::Signature*
-OpenSSL_Engine::get_signature_op(const Private_Key& key) const
+OpenSSL_Engine::get_signature_op(const Private_Key& key, RandomNumberGenerator&) const
    {
 #if defined(BOTAN_HAS_RSA)
    if(const RSA_PrivateKey* s = dynamic_cast<const RSA_PrivateKey*>(&key))
@@ -298,7 +298,7 @@ OpenSSL_Engine::get_signature_op(const Private_Key& key) const
    }
 
 PK_Ops::Verification*
-OpenSSL_Engine::get_verify_op(const Public_Key& key) const
+OpenSSL_Engine::get_verify_op(const Public_Key& key, RandomNumberGenerator&) const
    {
 #if defined(BOTAN_HAS_RSA)
    if(const RSA_PublicKey* s = dynamic_cast<const RSA_PublicKey*>(&key))
@@ -314,7 +314,7 @@ OpenSSL_Engine::get_verify_op(const Public_Key& key) const
    }
 
 PK_Ops::Encryption*
-OpenSSL_Engine::get_encryption_op(const Public_Key& key) const
+OpenSSL_Engine::get_encryption_op(const Public_Key& key, RandomNumberGenerator&) const
    {
 #if defined(BOTAN_HAS_RSA)
    if(const RSA_PublicKey* s = dynamic_cast<const RSA_PublicKey*>(&key))
@@ -325,7 +325,7 @@ OpenSSL_Engine::get_encryption_op(const Public_Key& key) const
    }
 
 PK_Ops::Decryption*
-OpenSSL_Engine::get_decryption_op(const Private_Key& key) const
+OpenSSL_Engine::get_decryption_op(const Private_Key& key, RandomNumberGenerator&) const
    {
 #if defined(BOTAN_HAS_RSA)
    if(const RSA_PrivateKey* s = dynamic_cast<const RSA_PrivateKey*>(&key))

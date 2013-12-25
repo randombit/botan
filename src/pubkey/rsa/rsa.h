@@ -90,7 +90,8 @@ class BOTAN_DLL RSA_Private_Operation : public PK_Ops::Signature,
                                         public PK_Ops::Decryption
    {
    public:
-      RSA_Private_Operation(const RSA_PrivateKey& rsa);
+      RSA_Private_Operation(const RSA_PrivateKey& rsa,
+                            RandomNumberGenerator& rng);
 
       size_t max_input_bits() const { return (n.bits() - 1); }
 

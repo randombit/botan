@@ -18,40 +18,40 @@ namespace Botan {
 class Core_Engine : public Engine
    {
    public:
-      std::string provider_name() const { return "core"; }
+      std::string provider_name() const override { return "core"; }
 
       PK_Ops::Key_Agreement*
-         get_key_agreement_op(const Private_Key& key) const;
+         get_key_agreement_op(const Private_Key& key, RandomNumberGenerator& rng) const override;
 
       PK_Ops::Signature*
-         get_signature_op(const Private_Key& key) const;
+         get_signature_op(const Private_Key& key, RandomNumberGenerator& rng) const override;
 
-      PK_Ops::Verification* get_verify_op(const Public_Key& key) const;
+      PK_Ops::Verification* get_verify_op(const Public_Key& key, RandomNumberGenerator& rng) const override;
 
-      PK_Ops::Encryption* get_encryption_op(const Public_Key& key) const;
+      PK_Ops::Encryption* get_encryption_op(const Public_Key& key, RandomNumberGenerator& rng) const override;
 
-      PK_Ops::Decryption* get_decryption_op(const Private_Key& key) const;
+      PK_Ops::Decryption* get_decryption_op(const Private_Key& key, RandomNumberGenerator& rng) const override;
 
       Modular_Exponentiator* mod_exp(const BigInt& n,
-                                     Power_Mod::Usage_Hints) const;
+                                     Power_Mod::Usage_Hints) const override;
 
       Keyed_Filter* get_cipher(const std::string&, Cipher_Dir,
                                Algorithm_Factory&);
 
       BlockCipher* find_block_cipher(const SCAN_Name&,
-                                     Algorithm_Factory&) const;
+                                     Algorithm_Factory&) const override;
 
       StreamCipher* find_stream_cipher(const SCAN_Name&,
-                                       Algorithm_Factory&) const;
+                                       Algorithm_Factory&) const override;
 
       HashFunction* find_hash(const SCAN_Name& request,
-                              Algorithm_Factory&) const;
+                              Algorithm_Factory&) const override;
 
       MessageAuthenticationCode* find_mac(const SCAN_Name& request,
-                                          Algorithm_Factory&) const;
+                                          Algorithm_Factory&) const override;
 
       PBKDF* find_pbkdf(const SCAN_Name& algo_spec,
-                        Algorithm_Factory& af) const;
+                        Algorithm_Factory& af) const override;
    };
 
 /**

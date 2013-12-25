@@ -6,7 +6,6 @@
 */
 
 #include <botan/rsa.h>
-#include <botan/libstate.h>
 #include <botan/parsing.h>
 #include <botan/numthry.h>
 #include <botan/keypair.h>
@@ -60,7 +59,8 @@ bool RSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    return KeyPair::signature_consistency_check(rng, *this, "EMSA4(SHA-1)");
    }
 
-RSA_Private_Operation::RSA_Private_Operation(const RSA_PrivateKey& rsa) :
+RSA_Private_Operation::RSA_Private_Operation(const RSA_PrivateKey& rsa,
+                                             RandomNumberGenerator& rng) :
    n(rsa.get_n()),
    q(rsa.get_q()),
    c(rsa.get_c()),
@@ -69,7 +69,7 @@ RSA_Private_Operation::RSA_Private_Operation(const RSA_PrivateKey& rsa) :
    powermod_d2_q(rsa.get_d2(), rsa.get_q()),
    mod_p(rsa.get_p())
    {
-   BigInt k(global_state().global_rng(), std::min<size_t>(160, n.bits() - 1));
+   BigInt k(rng, n.bits() - 1);
    blinder = Blinder(powermod_e_n(k), inverse_mod(k, n), n);
    }
 

@@ -81,7 +81,8 @@ class BOTAN_DLL ElGamal_Decryption_Operation : public PK_Ops::Decryption
    public:
       size_t max_input_bits() const { return mod_p.get_modulus().bits() - 1; }
 
-      ElGamal_Decryption_Operation(const ElGamal_PrivateKey& key);
+      ElGamal_Decryption_Operation(const ElGamal_PrivateKey& key,
+                                   RandomNumberGenerator& rng);
 
       secure_vector<byte> decrypt(const byte msg[], size_t msg_len);
    private:

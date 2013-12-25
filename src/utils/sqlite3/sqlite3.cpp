@@ -43,8 +43,8 @@ size_t sqlite3_database::row_count(const std::string& table_name)
 
 void sqlite3_database::create_table(const std::string& table_schema)
    {
-   char* errmsg = 0;
-   int rc = ::sqlite3_exec(m_db, table_schema.c_str(), 0, 0, &errmsg);
+   char* errmsg = nullptr;
+   int rc = ::sqlite3_exec(m_db, table_schema.c_str(), nullptr, nullptr, &errmsg);
 
    if(rc != SQLITE_OK)
       {
@@ -59,7 +59,7 @@ void sqlite3_database::create_table(const std::string& table_schema)
 
 sqlite3_statement::sqlite3_statement(sqlite3_database* db, const std::string& base_sql)
    {
-   int rc = ::sqlite3_prepare_v2(db->m_db, base_sql.c_str(), -1, &m_stmt, 0);
+   int rc = ::sqlite3_prepare_v2(db->m_db, base_sql.c_str(), -1, &m_stmt, nullptr);
 
    if(rc != SQLITE_OK)
       throw std::runtime_error("sqlite3_prepare failed " + base_sql +

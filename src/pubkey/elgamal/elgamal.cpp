@@ -7,7 +7,6 @@
 
 #include <botan/elgamal.h>
 #include <botan/numthry.h>
-#include <botan/libstate.h>
 #include <botan/keypair.h>
 #include <botan/internal/workfactor.h>
 
@@ -98,14 +97,15 @@ ElGamal_Encryption_Operation::encrypt(const byte msg[], size_t msg_len,
    return output;
    }
 
-ElGamal_Decryption_Operation::ElGamal_Decryption_Operation(const ElGamal_PrivateKey& key)
+ElGamal_Decryption_Operation::ElGamal_Decryption_Operation(const ElGamal_PrivateKey& key,
+                                                           RandomNumberGenerator& rng)
    {
    const BigInt& p = key.group_p();
 
    powermod_x_p = Fixed_Exponent_Power_Mod(key.get_x(), p);
    mod_p = Modular_Reducer(p);
 
-   BigInt k(global_state().global_rng(), std::min<size_t>(160, p.bits() - 1));
+   BigInt k(rng, p.bits() - 1);
    blinder = Blinder(k, powermod_x_p(k), p);
    }
 
