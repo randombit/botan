@@ -33,7 +33,7 @@ class BOTAN_DLL OID : public ASN1_Object
       * Get this OID as list (vector) of its components.
       * @return vector representing this OID
       */
-      std::vector<u32bit> get_id() const { return id; }
+      const std::vector<u32bit>& get_id() const { return id; }
 
       /**
       * Get this OID as a string

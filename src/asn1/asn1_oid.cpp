@@ -104,8 +104,8 @@ bool operator!=(const OID& a, const OID& b)
 */
 bool operator<(const OID& a, const OID& b)
    {
-   std::vector<u32bit> oid1 = a.get_id();
-   std::vector<u32bit> oid2 = b.get_id();
+   const std::vector<u32bit>& oid1 = a.get_id();
+   const std::vector<u32bit>& oid2 = b.get_id();
 
    if(oid1.size() < oid2.size())
       return true;
