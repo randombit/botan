@@ -6,6 +6,7 @@
 */
 
 #include <botan/libstate.h>
+#include <botan/scan_name.h>
 
 namespace Botan {
 
@@ -249,52 +250,37 @@ void set_default_oids(Library_State& config)
    add_oid(config, "1.2.643.2.2.36.0", "gost_256A");
 
    /* CVC */
-   add_oid(config, "0.4.0.127.0.7.3.1.2.1",
-           "CertificateHolderAuthorizationTemplate");
+   add_oid(config, "0.4.0.127.0.7.3.1.2.1", "CertificateHolderAuthorizationTemplate");
    }
 
 /*
 * Set the default algorithm aliases
 */
-void set_default_aliases(Library_State& config)
+void set_default_aliases(Library_State& )
    {
-   config.add_alias("OpenPGP.Cipher.1",  "IDEA");
-   config.add_alias("OpenPGP.Cipher.2",  "TripleDES");
-   config.add_alias("OpenPGP.Cipher.3",  "CAST-128");
-   config.add_alias("OpenPGP.Cipher.4",  "Blowfish");
-   config.add_alias("OpenPGP.Cipher.5",  "SAFER-SK(13)");
-   config.add_alias("OpenPGP.Cipher.7",  "AES-128");
-   config.add_alias("OpenPGP.Cipher.8",  "AES-192");
-   config.add_alias("OpenPGP.Cipher.9",  "AES-256");
-   config.add_alias("OpenPGP.Cipher.10", "Twofish");
+   // common variations worth supporting
+   // SHA-1 alone requires supporting something
+   SCAN_Name::add_alias("EME-PKCS1-v1_5",  "PKCS1v15");
+   SCAN_Name::add_alias("3DES",     "TripleDES");
+   SCAN_Name::add_alias("DES-EDE",  "TripleDES");
+   SCAN_Name::add_alias("CAST5",    "CAST-128");
+   SCAN_Name::add_alias("SHA1",     "SHA-160");
+   SCAN_Name::add_alias("SHA-1",    "SHA-160");
+   SCAN_Name::add_alias("MARK-4",   "RC4(256)");
+   SCAN_Name::add_alias("ARC4",     "RC4");
+   SCAN_Name::add_alias("OMAC",     "CMAC");
 
-   config.add_alias("OpenPGP.Digest.1", "MD5");
-   config.add_alias("OpenPGP.Digest.2", "SHA-1");
-   config.add_alias("OpenPGP.Digest.3", "RIPEMD-160");
-   config.add_alias("OpenPGP.Digest.5", "MD2");
-   config.add_alias("OpenPGP.Digest.6", "Tiger(24,3)");
-   config.add_alias("OpenPGP.Digest.8", "SHA-256");
+   // should be renamed in sources
+   SCAN_Name::add_alias("OAEP-MGF1",       "EME1");
+   SCAN_Name::add_alias("EME-OAEP",        "EME1");
+   SCAN_Name::add_alias("X9.31",           "EMSA2");
+   SCAN_Name::add_alias("EMSA-PKCS1-v1_5", "EMSA3");
+   SCAN_Name::add_alias("PSS-MGF1",        "EMSA4");
+   SCAN_Name::add_alias("EMSA-PSS",        "EMSA4");
 
-   config.add_alias("TLS.Digest.0",     "Parallel(MD5,SHA-160)");
-
-   config.add_alias("EME-PKCS1-v1_5",  "PKCS1v15");
-   config.add_alias("OAEP-MGF1",       "EME1");
-   config.add_alias("EME-OAEP",        "EME1");
-   config.add_alias("X9.31",           "EMSA2");
-   config.add_alias("EMSA-PKCS1-v1_5", "EMSA3");
-   config.add_alias("PSS-MGF1",        "EMSA4");
-   config.add_alias("EMSA-PSS",        "EMSA4");
-
-   config.add_alias("3DES",     "TripleDES");
-   config.add_alias("DES-EDE",  "TripleDES");
-   config.add_alias("CAST5",    "CAST-128");
-   config.add_alias("SHA1",     "SHA-160");
-   config.add_alias("SHA-1",    "SHA-160");
-   config.add_alias("MARK-4",   "RC4(256)");
-   config.add_alias("ARC4",     "RC4");
-   config.add_alias("OMAC",     "CMAC");
-   config.add_alias("GOST",     "GOST-28147-89");
-   config.add_alias("GOST-34.11", "GOST-R-34.11-94");
+   // probably can be removed
+   SCAN_Name::add_alias("GOST",     "GOST-28147-89");
+   SCAN_Name::add_alias("GOST-34.11", "GOST-R-34.11-94");
    }
 
 }

@@ -77,20 +77,6 @@ class BOTAN_DLL Library_State
                const std::string& value,
                bool overwrite = true);
 
-      /**
-      * Add a parameter value to the "alias" section.
-      * @param key the name of the parameter which shall have a new alias
-      * @param value the new alias
-      */
-      void add_alias(const std::string& key,
-                     const std::string& value);
-
-      /**
-      * Resolve an alias.
-      * @param alias the alias to resolve.
-      * @return what the alias stands for
-      */
-      std::string deref_alias(const std::string& alias);
    private:
       static std::vector<std::unique_ptr<EntropySource>> entropy_sources();
 

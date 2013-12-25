@@ -40,7 +40,7 @@ PBE* get_pbe(const std::string& algo_spec,
    if(cipher_spec.size() != 2)
       throw Invalid_Argument("PBE: Invalid cipher spec " + cipher);
 
-   const std::string cipher_algo = global_state().deref_alias(cipher_spec[0]);
+   const std::string cipher_algo = SCAN_Name::deref_alias(cipher_spec[0]);
    const std::string cipher_mode = cipher_spec[1];
 
    if(cipher_mode != "CBC")
@@ -104,7 +104,7 @@ PBE* get_pbe(const OID& pbe_oid,
       if(cipher_spec.size() != 2)
          throw Invalid_Argument("PBE: Invalid cipher spec " + cipher);
 
-      const std::string cipher_algo = global_state().deref_alias(cipher_spec[0]);
+      const std::string cipher_algo = SCAN_Name::deref_alias(cipher_spec[0]);
       const std::string cipher_mode = cipher_spec[1];
 
       if(cipher_mode != "CBC")

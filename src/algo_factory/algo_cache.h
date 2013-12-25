@@ -131,12 +131,11 @@ const T* Algorithm_Cache<T>::get(const std::string& algo_spec,
 
    for(auto i = algo->second.begin(); i != algo->second.end(); ++i)
       {
-      const std::string prov_name = i->first;
-      const size_t prov_weight = static_provider_weight(prov_name);
-
       // preferred prov exists, return immediately
-      if(prov_name == pref_provider)
+      if(i->first == pref_provider)
          return i->second;
+
+      const size_t prov_weight = static_provider_weight(i->first);
 
       if(prototype == nullptr || prov_weight > prototype_prov_weight)
          {

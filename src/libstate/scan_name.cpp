@@ -7,7 +7,6 @@
 
 #include <botan/scan_name.h>
 #include <botan/parsing.h>
-#include <botan/libstate.h>
 #include <botan/exceptn.h>
 #include <stdexcept>
 
@@ -58,10 +57,13 @@ std::pair<size_t, std::string>
 deref_aliases(const std::pair<size_t, std::string>& in)
    {
    return std::make_pair(in.first,
-                         global_state().deref_alias(in.second));
+                         SCAN_Name::deref_alias(in.second));
    }
 
 }
+
+std::mutex SCAN_Name::s_alias_map_mutex;
+std::map<std::string, std::string> SCAN_Name::s_alias_map;
 
 SCAN_Name::SCAN_Name(std::string algo_spec)
    {
@@ -73,7 +75,7 @@ SCAN_Name::SCAN_Name(std::string algo_spec)
 
    std::string decoding_error = "Bad SCAN name '" + algo_spec + "': ";
 
-   algo_spec = global_state().deref_alias(algo_spec);
+   algo_spec = SCAN_Name::deref_alias(algo_spec);
 
    for(size_t i = 0; i != algo_spec.size(); ++i)
       {
@@ -169,6 +171,26 @@ size_t SCAN_Name::arg_as_integer(size_t i, size_t def_value) const
    if(i >= arg_count())
       return def_value;
    return to_u32bit(args[i]);
+   }
+
+void SCAN_Name::add_alias(const std::string& alias, const std::string& basename)
+   {
+   std::lock_guard<std::mutex> lock(s_alias_map_mutex);
+
+   if(s_alias_map.find(alias) == s_alias_map.end())
+      s_alias_map[alias] = basename;
+   }
+
+std::string SCAN_Name::deref_alias(const std::string& alias)
+   {
+   std::lock_guard<std::mutex> lock(s_alias_map_mutex);
+
+   std::string name = alias;
+
+   for(auto i = s_alias_map.find(name); i != s_alias_map.end(); i = s_alias_map.find(name))
+      name = i->second;
+
+   return name;
    }
 
 }

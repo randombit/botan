@@ -79,25 +79,6 @@ void Library_State::set(const std::string& section, const std::string& key,
    }
 
 /*
-* Add an alias
-*/
-void Library_State::add_alias(const std::string& key, const std::string& value)
-   {
-   set("alias", key, value);
-   }
-
-/*
-* Dereference an alias to a fixed name
-*/
-std::string Library_State::deref_alias(const std::string& key)
-   {
-   std::string result = key;
-   while(is_set("alias", result))
-      result = get("alias", result);
-   return result;
-   }
-
-/*
 * Return a reference to the Algorithm_Factory
 */
 Algorithm_Factory& Library_State::algorithm_factory() const

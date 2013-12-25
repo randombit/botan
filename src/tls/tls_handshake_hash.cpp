@@ -33,7 +33,7 @@ secure_vector<byte> Handshake_Hash::final(Protocol_Version version,
          hash.reset(af.make_hash_function(mac_algo));
       }
    else
-      hash.reset(af.make_hash_function("TLS.Digest.0"));
+      hash.reset(af.make_hash_function("Parallel(MD5,SHA-160)"));
 
    hash->update(data);
    return hash->final();

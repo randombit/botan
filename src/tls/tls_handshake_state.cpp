@@ -296,7 +296,7 @@ std::string choose_hash(const std::string& sig_algo,
          return "Raw";
 
       if(sig_algo == "RSA")
-         return "TLS.Digest.0";
+         return "Parallel(MD5,SHA-160)";
 
       if(sig_algo == "DSA")
          return "SHA-1";
@@ -412,7 +412,7 @@ Handshake_State::understand_sig_format(const Public_Key& key,
          }
       else if(!this->version().supports_negotiable_signature_algorithms())
          {
-         hash_algo = "TLS.Digest.0";
+         hash_algo = "Parallel(MD5,SHA-160)";
          }
 
       const std::string padding = "EMSA3(" + hash_algo + ")";

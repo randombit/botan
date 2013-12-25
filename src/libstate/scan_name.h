@@ -11,6 +11,8 @@
 #include <botan/types.h>
 #include <string>
 #include <vector>
+#include <mutex>
+#include <map>
 
 namespace Botan {
 
@@ -86,7 +88,13 @@ class BOTAN_DLL SCAN_Name
       std::string cipher_mode_pad() const
          { return (mode_info.size() >= 2) ? mode_info[1] : ""; }
 
+      static void add_alias(const std::string& alias, const std::string& basename);
+
+      static std::string deref_alias(const std::string& alias);
    private:
+      static std::mutex s_alias_map_mutex;
+      static std::map<std::string, std::string> s_alias_map;
+
       std::string orig_algo_spec;
       std::string alg_name;
       std::vector<std::string> args;

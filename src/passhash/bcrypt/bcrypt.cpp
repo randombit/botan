@@ -7,7 +7,6 @@
 
 #include <botan/bcrypt.h>
 #include <botan/loadstor.h>
-#include <botan/libstate.h>
 #include <botan/blowfish.h>
 #include <botan/base64.h>
 
