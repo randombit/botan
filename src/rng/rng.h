@@ -12,6 +12,7 @@
 #include <botan/exceptn.h>
 #include <string>
 #include <memory>
+#include <mutex>
 
 namespace Botan {
 
@@ -118,6 +119,54 @@ class BOTAN_DLL Null_RNG : public RandomNumberGenerator
       void reseed(size_t) override {}
       bool is_seeded() const override { return false; }
       void add_entropy(const byte[], size_t) override {}
+   };
+
+/**
+* Wraps access to a RNG in a mutex
+*/
+class BOTAN_DLL Serialized_RNG : public RandomNumberGenerator
+   {
+   public:
+      void randomize(byte out[], size_t len)
+         {
+         std::lock_guard<std::mutex> lock(m_mutex);
+         m_rng->randomize(out, len);
+         }
+
+      bool is_seeded() const
+         {
+         std::lock_guard<std::mutex> lock(m_mutex);
+         return m_rng->is_seeded();
+         }
+
+      void clear()
+         {
+         std::lock_guard<std::mutex> lock(m_mutex);
+         m_rng->clear();
+         }
+
+      std::string name() const
+         {
+         std::lock_guard<std::mutex> lock(m_mutex);
+         return m_rng->name();
+         }
+
+      void reseed(size_t poll_bits)
+         {
+         std::lock_guard<std::mutex> lock(m_mutex);
+         m_rng->reseed(poll_bits);
+         }
+
+      void add_entropy(const byte in[], size_t len)
+         {
+         std::lock_guard<std::mutex> lock(m_mutex);
+         m_rng->add_entropy(in, len);
+         }
+
+      Serialized_RNG() : m_rng(RandomNumberGenerator::make_rng()) {}
+   private:
+      mutable std::mutex m_mutex;
+      std::unique_ptr<RandomNumberGenerator> m_rng;
    };
 
 }

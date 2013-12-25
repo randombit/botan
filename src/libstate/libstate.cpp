@@ -112,28 +112,19 @@ Algorithm_Factory& Library_State::algorithm_factory() const
 */
 RandomNumberGenerator& Library_State::global_rng()
    {
-   std::lock_guard<std::mutex> lock(global_rng_lock);
-
-   if(!global_rng_ptr)
-      global_rng_ptr = make_global_rng(algorithm_factory(),
-                                       global_rng_lock);
-
-   return *global_rng_ptr;
+   return *m_global_prng;
    }
 
-/*
-* Load a set of modules
-*/
 void Library_State::initialize()
    {
-   CPUID::initialize();
-
-   if(m_algorithm_factory)
+   if(m_algorithm_factory.get())
       throw Invalid_State("Library_State has already been initialized");
+
+   CPUID::initialize();
 
    load_default_config();
 
-   m_algorithm_factory = new Algorithm_Factory();
+   m_algorithm_factory.reset(new Algorithm_Factory());
 
 #if defined(BOTAN_HAS_ENGINE_GNU_MP)
    algorithm_factory().add_engine(new GMP_Engine);
@@ -159,30 +150,11 @@ void Library_State::initialize()
 
    m_sources = entropy_sources();
 
+   m_global_prng.reset(new Serialized_RNG());
+
 #if defined(BOTAN_HAS_SELFTESTS)
    confirm_startup_self_tests(algorithm_factory());
 #endif
-   }
-
-/*
-* Library_State Constructor
-*/
-Library_State::Library_State()
-   {
-   m_algorithm_factory = nullptr;
-   global_rng_ptr = nullptr;
-   }
-
-/*
-* Library_State Destructor
-*/
-Library_State::~Library_State()
-   {
-   delete m_algorithm_factory;
-   m_algorithm_factory = nullptr;
-
-   delete global_rng_ptr;
-   global_rng_ptr = nullptr;
    }
 
 }

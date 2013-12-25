@@ -100,57 +100,6 @@ std::vector<std::unique_ptr<EntropySource>> Library_State::entropy_sources()
    return sources;
    }
 
-namespace {
-
-class Serialized_PRNG : public RandomNumberGenerator
-   {
-   public:
-      void randomize(byte out[], size_t len)
-         {
-         std::lock_guard<std::mutex> lock(mutex);
-         rng->randomize(out, len);
-         }
-
-      bool is_seeded() const
-         {
-         std::lock_guard<std::mutex> lock(mutex);
-         return rng->is_seeded();
-         }
-
-      void clear()
-         {
-         std::lock_guard<std::mutex> lock(mutex);
-         rng->clear();
-         }
-
-      std::string name() const
-         {
-         std::lock_guard<std::mutex> lock(mutex);
-         return rng->name();
-         }
-
-      void reseed(size_t poll_bits)
-         {
-         std::lock_guard<std::mutex> lock(mutex);
-         rng->reseed(poll_bits);
-         }
-
-      void add_entropy(const byte in[], size_t len)
-         {
-         std::lock_guard<std::mutex> lock(mutex);
-         rng->add_entropy(in, len);
-         }
-
-      // We do not own the mutex; Library_State does
-      Serialized_PRNG(RandomNumberGenerator* r, std::mutex& m) :
-         mutex(m), rng(r) {}
-   private:
-      std::mutex& mutex;
-      std::unique_ptr<RandomNumberGenerator> rng;
-   };
-
-}
-
 void Library_State::poll_available_sources(class Entropy_Accumulator& accum)
    {
    std::lock_guard<std::mutex> lock(m_entropy_src_mutex);
@@ -170,15 +119,5 @@ void Library_State::poll_available_sources(class Entropy_Accumulator& accum)
       }
    }
 
-RandomNumberGenerator* Library_State::make_global_rng(Algorithm_Factory& af,
-                                                      std::mutex& mutex)
-   {
-   auto rng = RandomNumberGenerator::make_rng(af);
-
-   if(!rng)
-      throw Internal_Error("No usable RNG found enabled in build");
-
-   return new Serialized_PRNG(rng.release(), mutex);
-   }
-
 }
+

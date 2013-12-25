@@ -25,8 +25,7 @@ namespace Botan {
 class BOTAN_DLL Library_State
    {
    public:
-      Library_State();
-      ~Library_State();
+      Library_State() {}
 
       Library_State(const Library_State&) = delete;
       Library_State& operator=(const Library_State&) = delete;
@@ -93,15 +92,11 @@ class BOTAN_DLL Library_State
       */
       std::string deref_alias(const std::string& alias);
    private:
-      static RandomNumberGenerator* make_global_rng(Algorithm_Factory& af,
-                                                    std::mutex& mutex);
-
       static std::vector<std::unique_ptr<EntropySource>> entropy_sources();
 
       void load_default_config();
 
-      std::mutex global_rng_lock;
-      RandomNumberGenerator* global_rng_ptr;
+      std::unique_ptr<Serialized_RNG> m_global_prng;
 
       std::mutex m_entropy_src_mutex;
       std::vector<std::unique_ptr<EntropySource>> m_sources;
@@ -109,7 +104,7 @@ class BOTAN_DLL Library_State
       std::mutex config_lock;
       std::map<std::string, std::string> config;
 
-      Algorithm_Factory* m_algorithm_factory;
+      std::unique_ptr<Algorithm_Factory> m_algorithm_factory;
    };
 
 }
