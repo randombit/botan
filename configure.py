@@ -273,7 +273,7 @@ def process_command_line(args):
                            help='disallow use of assembler')
 
     build_group.add_option('--enable-debug', dest='debug_build',
-                           action='store_true', default=False,
+                           action='store_true', default=not is_official_release(),
                            help='enable debug build')
     build_group.add_option('--disable-debug', dest='debug_build',
                            action='store_false', help=optparse.SUPPRESS_HELP)
