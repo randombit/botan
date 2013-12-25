@@ -200,10 +200,10 @@ void CPUID::initialize()
 #if defined(BOTAN_TARGET_ARCH_IS_X86_64)
    /*
    * If we don't have access to CPUID, we can still safely assume that
-   * any x86-64 processor has SSE2.
+   * any x86-64 processor has SSE2 and RDTSC
    */
    if(m_x86_processor_flags[0] == 0)
-      m_x86_processor_flags[0] = (1 << CPUID_SSE2_BIT);
+      m_x86_processor_flags[0] = (1 << CPUID_SSE2_BIT) | (1 << CPUID_RDTSC_BIT);
 #endif
    }
 

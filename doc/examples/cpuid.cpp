@@ -36,11 +36,12 @@ int main()
    print_if_feature("SSE4.1", CPUID::has_sse41());
    print_if_feature("SSE4.2", CPUID::has_sse42());
    print_if_feature("AVX2", CPUID::has_avx2());
-   print_if_feature("BMI2", CPUID::has_bmi2());
+   print_if_feature("AVX-512F", CPUID::has_avx512f());
    print_if_feature("AltiVec", CPUID::has_altivec());
 
    print_header("Other extensions");
    print_if_feature("RDTSC", CPUID::has_rdtsc());
+   print_if_feature("BMI2", CPUID::has_bmi2());
    print_if_feature("PCMUL", CPUID::has_pcmuludq());
    print_if_feature("AES-NI", CPUID::has_aes_ni());
    print_if_feature("RDRAND", CPUID::has_rdrand());
