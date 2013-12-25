@@ -147,34 +147,6 @@ inline PBKDF* get_s2k(const std::string& algo_spec)
    }
 
 /*
-* Get an EMSA/EME/KDF/MGF function
-*/
-// NOTE: these functions create and return new objects, letting the
-// caller assume ownership of them
-
-/**
-* Factory method for EME (message-encoding methods for encryption) objects
-* @param algo_spec the name of the EME to create
-* @return pointer to newly allocated object of that type
-*/
-BOTAN_DLL EME*  get_eme(const std::string& algo_spec);
-
-/**
-* Factory method for EMSA (message-encoding methods for signatures
-* with appendix) objects
-* @param algo_spec the name of the EME to create
-* @return pointer to newly allocated object of that type
-*/
-BOTAN_DLL EMSA* get_emsa(const std::string& algo_spec);
-
-/**
-* Factory method for KDF (key derivation function)
-* @param algo_spec the name of the KDF to create
-* @return pointer to newly allocated object of that type
-*/
-BOTAN_DLL KDF*  get_kdf(const std::string& algo_spec);
-
-/*
 * Get a cipher object
 */
 

@@ -55,6 +55,14 @@ class BOTAN_DLL EMSA
       virtual ~EMSA() {}
    };
 
+/**
+* Factory method for EMSA (message-encoding methods for signatures
+* with appendix) objects
+* @param algo_spec the name of the EME to create
+* @return pointer to newly allocated object of that type
+*/
+BOTAN_DLL EMSA* get_emsa(const std::string& algo_spec);
+
 }
 
 #endif

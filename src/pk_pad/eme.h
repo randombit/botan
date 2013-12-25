@@ -97,6 +97,13 @@ class BOTAN_DLL EME
                                        size_t key_length) const = 0;
    };
 
+/**
+* Factory method for EME (message-encoding methods for encryption) objects
+* @param algo_spec the name of the EME to create
+* @return pointer to newly allocated object of that type
+*/
+BOTAN_DLL EME*  get_eme(const std::string& algo_spec);
+
 }
 
 #endif

@@ -124,6 +124,13 @@ class BOTAN_DLL MGF
       virtual ~MGF() {}
    };
 
+/**
+* Factory method for KDF (key derivation function)
+* @param algo_spec the name of the KDF to create
+* @return pointer to newly allocated object of that type
+*/
+BOTAN_DLL KDF*  get_kdf(const std::string& algo_spec);
+
 }
 
 #endif

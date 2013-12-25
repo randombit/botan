@@ -12,6 +12,19 @@
 namespace Botan {
 
 /*
+* Get a PBKDF algorithm by name
+*/
+PBKDF* get_pbkdf(const std::string& algo_spec)
+   {
+   Algorithm_Factory& af = global_state().algorithm_factory();
+
+   if(PBKDF* pbkdf = af.make_pbkdf(algo_spec))
+      return pbkdf;
+
+   throw Algorithm_Not_Found(algo_spec);
+   }
+
+/*
 * Query if an algorithm exists
 */
 bool have_algorithm(const std::string& name)
