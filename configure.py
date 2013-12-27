@@ -247,7 +247,7 @@ def process_command_line(args):
                             dest='unaligned_mem', action='store_false',
                             help=optparse.SUPPRESS_HELP)
 
-    for isa_extn_name in ['SSE2', 'SSSE3', 'AltiVec', 'AES-NI']:
+    for isa_extn_name in ['SSE2', 'SSSE3', 'AVX2', 'AES-NI', 'AltiVec']:
         isa_extn = isa_extn_name.lower()
 
         target_group.add_option('--disable-%s' % (isa_extn),
@@ -549,7 +549,7 @@ class ModuleInfo(object):
                       {
                         'load_on': 'auto',
                         'define': [],
-                        'need_isa': None,
+                        'need_isa': '',
                         'mp_bits': 0 })
 
         def extract_files_matching(basedir, suffixes):
@@ -562,6 +562,11 @@ class ModuleInfo(object):
                         for suffix in suffixes:
                             if filename.endswith(suffix):
                                 yield filename
+
+        if self.need_isa == '':
+            self.need_isa = []
+        else:
+            self.need_isa = self.need_isa.split(',')
 
         if self.source == []:
             self.source = list(extract_files_matching(self.lives_in, ['.cpp', '.S']))
@@ -637,12 +642,12 @@ class ModuleInfo(object):
             if arch_name not in self.arch and cpu_name not in self.arch:
                 return False
 
-        if self.need_isa != None:
-            if self.need_isa in options.disable_intrinsics:
-                return False # explicitly disabled
+            for isa in self.need_isa:
+                if isa in options.disable_intrinsics:
+                    return False # explicitly disabled
 
-            # Default to whatever the CPU is supposed to support
-            return self.need_isa in archinfo.isa_extensions
+                if isa not in archinfo.isa_extensions:
+                    return False
 
         return True
 
@@ -1049,25 +1054,26 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         logging.debug('Using MP bits %d' % (mp_bits[0]))
         return mp_bits[0]
 
+    def get_isa_specific_flags(cc, isas):
+        flags = []
+        for isa in isas:
+            if isa not in cc.isa_flags:
+                raise Exception('Compiler does not support %s' % (isa))
+            flags.append(cc.isa_flags[isa])
+        return '' if len(flags) == 0 else (' ' + ' '.join(sorted(list(flags))))
+
     def isa_specific_flags(cc, src):
         for mod in modules:
             if src in mod.sources():
-                if mod.need_isa != None:
-                    if mod.need_isa not in cc.isa_flags:
-                        raise Exception('Compiler does not support %s, required by %s' % (
-                            mod.need_isa, src))
-                    return ' ' + cc.isa_flags[mod.need_isa]
+                return get_isa_specific_flags(cc, mod.need_isa)
         return ''
 
     def all_isa_specific_flags():
-        isas = set()
+        all_isas = set()
         for mod in modules:
-            if mod.need_isa != None:
-                if mod.need_isa not in cc.isa_flags:
-                    raise Exception('Compiler does not support %s, required by %s' % (mod.need_isa, src))
-                isas.add(cc.isa_flags[mod.need_isa])
-
-        return '' if len(isas) == 0 else (' ' + ' '.join(sorted(list(isas))))
+            for isa in mod.need_isa:
+                all_isas.add(isa)
+        return get_isa_specific_flags(cc, all_isas)
 
     """
     Form snippets of makefile for building each source file

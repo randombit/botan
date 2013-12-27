@@ -45,7 +45,7 @@ sse4.2 -> "-msse4.2"
 avx2   -> "-mavx2"
 bmi2   -> "-mbmi2"
 aesni  -> "-maes"
-clmul  -> "-mclmul"
+clmul  -> "-mpclmul"
 rdrand -> "-mrdrnd"
 sha    -> "-msha"
 </isa_flags>
