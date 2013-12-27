@@ -83,10 +83,10 @@ class BOTAN_DLL CPUID
          { return x86_processor_flags_has(CPUID_AESNI_BIT); }
 
       /**
-      * Check if the processor supports PCMULUDQ
+      * Check if the processor supports CLMUL
       */
-      static bool has_pcmuludq()
-         { return x86_processor_flags_has(CPUID_PCMUL_BIT); }
+      static bool has_clmul()
+         { return x86_processor_flags_has(CPUID_CLMUL_BIT); }
 
       /**
       * Check if the processor supports Intel SHA extension
@@ -120,7 +120,7 @@ class BOTAN_DLL CPUID
       enum CPUID_bits {
          CPUID_RDTSC_BIT = 4,
          CPUID_SSE2_BIT = 26,
-         CPUID_PCMUL_BIT = 33,
+         CPUID_CLMUL_BIT = 33,
          CPUID_SSSE3_BIT = 41,
          CPUID_SSE41_BIT = 51,
          CPUID_SSE42_BIT = 52,

@@ -15,6 +15,8 @@
 
 namespace Botan {
 
+class GHASH;
+
 /**
 * GCM Mode
 */
@@ -48,11 +50,14 @@ class BOTAN_DLL GCM_Mode : public AEAD_Mode
       const std::string m_cipher_name;
 
       std::unique_ptr<StreamCipher> m_ctr;
+      std::unique_ptr<GHASH> m_ghash;
+#if 0
       secure_vector<byte> m_H;
       secure_vector<byte> m_H_ad;
       secure_vector<byte> m_mac;
       secure_vector<byte> m_enc_y0;
       size_t m_ad_len, m_text_len;
+#endif
    };
 
 /**
@@ -102,6 +107,47 @@ class BOTAN_DLL GCM_Decryption : public GCM_Mode
       void update(secure_vector<byte>& blocks, size_t offset) override;
 
       void finish(secure_vector<byte>& final_block, size_t offset) override;
+   };
+
+/**
+* GCM's GHASH
+* Maybe a Transform?
+*/
+class BOTAN_DLL GHASH : public SymmetricAlgorithm
+   {
+   public:
+      void set_associated_data(const byte ad[], size_t ad_len);
+
+      secure_vector<byte> nonce_hash(const byte nonce[], size_t len);
+
+      void start(const byte nonce[], size_t len);
+
+      /*
+      * Assumes input len is multiple of 16
+      */
+      void update(const byte in[], size_t len);
+
+      secure_vector<byte> final();
+
+      Key_Length_Specification key_spec() const { return Key_Length_Specification(16); }
+
+      void clear();
+
+      std::string name() const { return "GHASH"; }
+   private:
+      void key_schedule(const byte key[], size_t key_len) override;
+
+      void ghash_update(secure_vector<byte>& x,
+                        const byte input[], size_t input_len);
+
+      void add_final_block(secure_vector<byte>& x,
+                           size_t ad_len, size_t pt_len);
+
+      secure_vector<byte> m_H;
+      secure_vector<byte> m_H_ad;
+      secure_vector<byte> m_nonce;
+      secure_vector<byte> m_ghash;
+      size_t m_ad_len = 0, m_text_len = 0;
    };
 
 }
