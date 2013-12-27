@@ -51,13 +51,6 @@ class BOTAN_DLL GCM_Mode : public AEAD_Mode
 
       std::unique_ptr<StreamCipher> m_ctr;
       std::unique_ptr<GHASH> m_ghash;
-#if 0
-      secure_vector<byte> m_H;
-      secure_vector<byte> m_H_ad;
-      secure_vector<byte> m_mac;
-      secure_vector<byte> m_enc_y0;
-      size_t m_ad_len, m_text_len;
-#endif
    };
 
 /**
