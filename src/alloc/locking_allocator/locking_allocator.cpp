@@ -235,7 +235,7 @@ mlock_allocator::mlock_allocator() :
          {
          ::munmap(m_pool, m_poolsize);
          m_pool = nullptr;
-         throw std::runtime_error("Failed to lock pool in memory");
+         throw std::runtime_error("Could not mlock " + std::to_string(m_poolsize) + " bytes");
          }
 
       m_freelist.push_back(std::make_pair(0, m_poolsize));
