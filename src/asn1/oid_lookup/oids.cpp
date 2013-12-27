@@ -93,6 +93,11 @@ void add_oid(const OID& oid, const std::string& name)
    global_oid_map().add_oid(oid, name);
    }
 
+void add_oidstr(const char* oidstr, const char* name)
+   {
+   add_oid(OID(oidstr), name);
+   }
+
 void add_oid2str(const OID& oid, const std::string& name)
    {
    global_oid_map().add_oid2str(oid, name);

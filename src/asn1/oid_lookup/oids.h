@@ -24,6 +24,8 @@ BOTAN_DLL void add_oid(const OID& oid, const std::string& name);
 BOTAN_DLL void add_oid2str(const OID& oid, const std::string& name);
 BOTAN_DLL void add_str2oid(const OID& oid, const std::string& name);
 
+BOTAN_DLL void add_oidstr(const char* oidstr, const char* name);
+
 /**
 * See if an OID exists in the internal table.
 * @param oid the oid to check for
