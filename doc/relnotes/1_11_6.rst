@@ -8,6 +8,8 @@ Version 1.11.6, Not Yet Released
 
 * Botan now requires Boost, specifically the filesystem and asio libraries.
 
+* GCM mode now uses the Intel clmul instruction when available
+
 * Add Threefish-512, including an implementation using AVX2
 
 * Add HKDF from :rfc:`5869`

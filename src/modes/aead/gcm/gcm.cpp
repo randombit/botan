@@ -10,85 +10,16 @@
 #include <botan/internal/xor_buf.h>
 #include <botan/loadstor.h>
 
-#if defined(BOTAN_TARGET_SUPPORTS_CLMUL)
-  #include <immintrin.h>
+#if defined(BOTAN_HAS_GCM_CLMUL)
+  #include <botan/internal/clmul.h>
   #include <botan/cpuid.h>
 #endif
 
 namespace Botan {
 
-namespace {
-
-#if defined(BOTAN_TARGET_SUPPORTS_CLMUL)
-void gcm_multiply_clmul(byte x[16], const byte H[16])
-   {
-   /*
-   * Algorithms 1 and 5 from Intel's CLMUL guide
-   */
-   const __m128i BSWAP_MASK = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
-
-   __m128i a = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&x[0]));
-   __m128i b = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&H[0]));
-
-   a = _mm_shuffle_epi8(a, BSWAP_MASK);
-   b = _mm_shuffle_epi8(b, BSWAP_MASK);
-
-   __m128i T0, T1, T2, T3, T4, T5;
-
-   T0 = _mm_clmulepi64_si128(a, b, 0x00);
-   T1 = _mm_clmulepi64_si128(a, b, 0x01);
-   T2 = _mm_clmulepi64_si128(a, b, 0x10);
-   T3 = _mm_clmulepi64_si128(a, b, 0x11);
-
-   T1 = _mm_xor_si128(T1, T2);
-   T2 = _mm_slli_si128(T1, 8);
-   T1 = _mm_srli_si128(T1, 8);
-   T0 = _mm_xor_si128(T0, T2);
-   T3 = _mm_xor_si128(T3, T1);
-
-   T4 = _mm_srli_epi32(T0, 31);
-   T0 = _mm_slli_epi32(T0, 1);
-
-   T5 = _mm_srli_epi32(T3, 31);
-   T3 = _mm_slli_epi32(T3, 1);
-
-   T2 = _mm_srli_si128(T4, 12);
-   T5 = _mm_slli_si128(T5, 4);
-   T4 = _mm_slli_si128(T4, 4);
-   T0 = _mm_or_si128(T0, T4);
-   T3 = _mm_or_si128(T3, T5);
-   T3 = _mm_or_si128(T3, T2);
-
-   T4 = _mm_slli_epi32(T0, 31);
-   T5 = _mm_slli_epi32(T0, 30);
-   T2 = _mm_slli_epi32(T0, 25);
-
-   T4 = _mm_xor_si128(T4, T5);
-   T4 = _mm_xor_si128(T4, T2);
-   T5 = _mm_srli_si128(T4, 4);
-   T3 = _mm_xor_si128(T3, T5);
-   T4 = _mm_slli_si128(T4, 12);
-   T0 = _mm_xor_si128(T0, T4);
-   T3 = _mm_xor_si128(T3, T0);
-
-   T4 = _mm_srli_epi32(T0, 1);
-   T1 = _mm_srli_epi32(T0, 2);
-   T2 = _mm_srli_epi32(T0, 7);
-   T3 = _mm_xor_si128(T3, T1);
-   T3 = _mm_xor_si128(T3, T2);
-   T3 = _mm_xor_si128(T3, T4);
-
-   T3 = _mm_shuffle_epi8(T3, BSWAP_MASK);
-
-   _mm_storeu_si128(reinterpret_cast<__m128i*>(&x[0]), T3);
-   }
-#endif
-
-}
-
 void GHASH::gcm_multiply(secure_vector<byte>& x) const
    {
-#if defined(BOTAN_TARGET_SUPPORTS_CLMUL)
+#if defined(BOTAN_HAS_GCM_CLMUL)
    if(CPUID::has_clmul())
       return gcm_multiply_clmul(&x[0], &m_H[0]);
 #endif
