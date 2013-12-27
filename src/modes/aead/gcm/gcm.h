@@ -137,6 +137,8 @@ class BOTAN_DLL GHASH : public SymmetricAlgorithm
    private:
       void key_schedule(const byte key[], size_t key_len) override;
 
+      void gcm_multiply(secure_vector<byte>& x) const;
+
       void ghash_update(secure_vector<byte>& x,
                         const byte input[], size_t input_len);
 

@@ -20,12 +20,15 @@ namespace Botan {
 namespace {
 
 #if defined(BOTAN_TARGET_SUPPORTS_CLMUL)
-__m128i gcm_multiply_clmul(__m128i a, __m128i b)
+void gcm_multiply_clmul(byte x[16], const byte H[16])
    {
    /*
    * Algorithms 1 and 5 from Intel's CLMUL guide
    */
-   __m128i BSWAP_MASK = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+   const __m128i BSWAP_MASK = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+
+   __m128i a = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&x[0]));
+   __m128i b = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&H[0]));
 
    a = _mm_shuffle_epi8(a, BSWAP_MASK);
    b = _mm_shuffle_epi8(b, BSWAP_MASK);
@@ -75,31 +78,26 @@ __m128i gcm_multiply_clmul(__m128i a, __m128i b)
    T3 = _mm_xor_si128(T3, T2);
    T3 = _mm_xor_si128(T3, T4);
 
-   return _mm_shuffle_epi8(T3, BSWAP_MASK);
+   T3 = _mm_shuffle_epi8(T3, BSWAP_MASK);
+
+   _mm_storeu_si128(reinterpret_cast<__m128i*>(&x[0]), T3);
    }
 #endif
 
-void gcm_multiply(secure_vector<byte>& x,
-                  const secure_vector<byte>& h)
+}
+
+void GHASH::gcm_multiply(secure_vector<byte>& x) const
    {
 #if defined(BOTAN_TARGET_SUPPORTS_CLMUL)
    if(CPUID::has_clmul())
-      {
-      __m128i xmm = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&x[0]));
-      __m128i hmm = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&h[0]));
-
-      xmm = gcm_multiply_clmul(xmm, hmm);
-
-      _mm_storeu_si128(reinterpret_cast<__m128i*>(&x[0]), xmm);
-      return;
-      }
+      return gcm_multiply_clmul(&x[0], &m_H[0]);
 #endif
 
    static const u64bit R = 0xE100000000000000;
 
    u64bit H[2] = {
-      load_be<u64bit>(&h[0], 0),
-      load_be<u64bit>(&h[0], 1)
+      load_be<u64bit>(&m_H[0], 0),
+      load_be<u64bit>(&m_H[0], 1)
    };
 
    u64bit Z[2] = { 0, 0 };
@@ -128,8 +126,6 @@ void gcm_multiply(secure_vector<byte>& x,
    store_be<u64bit>(&x[0], Z[0], Z[1]);
    }
 
-}
-
 void GHASH::ghash_update(secure_vector<byte>& ghash,
                          const byte input[], size_t length)
    {
@@ -145,7 +141,7 @@ void GHASH::ghash_update(secure_vector<byte>& ghash,
 
       xor_buf(&ghash[0], &input[0], to_proc);
 
-      gcm_multiply(ghash, m_H);
+      gcm_multiply(ghash);
 
       input += to_proc;
       length -= to_proc;
