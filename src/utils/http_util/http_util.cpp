@@ -1,5 +1,5 @@
 /*
-* HTTP utilities
+* Sketchy HTTP client
 * (C) 2013 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
@@ -8,12 +8,45 @@
 #include <botan/http_util.h>
 #include <botan/parsing.h>
 #include <botan/hex.h>
+#include <sstream>
 
+#if defined(BOTAN_HAS_BOOST_ASIO)
 #include <boost/asio.hpp>
+#endif
 
 namespace Botan {
 
 namespace HTTP {
+
+#if defined(BOTAN_HAS_BOOST_ASIO)
+std::string http_transact_asio(const std::string& hostname,
+                               const std::string& message)
+   {
+   using namespace boost::asio::ip;
+
+   boost::asio::ip::tcp::iostream tcp;
+
+   tcp.connect(hostname, "http");
+
+   if(!tcp)
+      throw std::runtime_error("HTTP connection to " + hostname + " failed");
+
+   tcp << message;
+   tcp.flush();
+
+   std::ostringstream oss;
+   oss << tcp.rdbuf();
+
+   return oss.str();
+   }
+#endif
+
+std::string http_transact_fail(const std::string& hostname,
+                               const std::string&)
+   {
+   throw std::runtime_error("Cannot connect to " + hostname +
+                            ": network code disabled in build");
+   }
 
 std::string url_encode(const std::string& in)
    {
@@ -33,19 +66,26 @@ std::string url_encode(const std::string& in)
          out << '%' << hex_encode(reinterpret_cast<byte*>(&c), 1);
       }
 
-   std::cout << "URL(" << in << ") = " << out.str();
-
    return out.str();
    }
 
-Response http_sync(const std::string& verb,
+std::ostream& operator<<(std::ostream& o, const Response& resp)
+   {
+   o << "HTTP " << resp.status_code() << " " << resp.status_message() << "\n";
+   for(auto h : resp.headers())
+      o << "Header '" << h.first << "' = '" << h.second << "'\n";
+   o << "Body " << std::to_string(resp.body().size()) << " bytes:\n";
+   o.write(reinterpret_cast<const char*>(&resp.body()[0]), resp.body().size());
+   return o;
+   }
+
+Response http_sync(http_exch_fn http_transact,
+                   const std::string& verb,
                    const std::string& url,
                    const std::string& content_type,
                    const std::vector<byte>& body,
                    size_t allowable_redirects)
    {
-   using namespace boost::asio::ip;
-
    const auto protocol_host_sep = url.find("://");
    if(protocol_host_sep == std::string::npos)
       throw std::runtime_error("Invalid URL " + url);
@@ -66,12 +106,6 @@ Response http_sync(const std::string& verb,
       loc = url.substr(host_loc_sep, std::string::npos);
       }
 
-   tcp::iostream sock;
-
-   sock.connect(hostname, "http");
-   if(!sock)
-      throw std::runtime_error("Connection to " + hostname + " failed");
-
    std::ostringstream outbuf;
 
    outbuf << verb << " " << loc << " HTTP/1.0\r\n";
@@ -90,12 +124,11 @@ Response http_sync(const std::string& verb,
    outbuf << "Connection: close\r\n\r\n";
    outbuf.write(reinterpret_cast<const char*>(&body[0]), body.size());
 
-   sock << outbuf.str();
-   sock.flush();
+   std::istringstream io(http_transact(hostname, outbuf.str()));
 
    std::string line1;
-   std::getline(sock, line1);
-   if(!sock)
+   std::getline(io, line1);
+   if(!io || line1.empty())
       throw std::runtime_error("No response");
 
    std::stringstream response_stream(line1);
@@ -112,14 +145,18 @@ Response http_sync(const std::string& verb,
 
    std::map<std::string, std::string> headers;
    std::string header_line;
-   while (std::getline(sock, header_line) && header_line != "\r")
+   while (std::getline(io, header_line) && header_line != "\r")
       {
       auto sep = header_line.find(": ");
       if(sep == std::string::npos || sep > header_line.size() - 2)
          throw std::runtime_error("Invalid HTTP header " + header_line);
       const std::string key = header_line.substr(0, sep);
-      const std::string val = header_line.substr(sep + 2, std::string::npos);
-      headers[key] = val;
+
+      if(sep + 2 < header_line.size() - 1)
+         {
+         const std::string val = header_line.substr(sep + 2, (header_line.size() - 1) - (sep + 2));
+         headers[key] = val;
+         }
       }
 
    if(status_code == 301 && headers.count("Location"))
@@ -132,13 +169,32 @@ Response http_sync(const std::string& verb,
    // Use Content-Length if set
    std::vector<byte> resp_body;
    std::vector<byte> buf(4096);
-   while(sock.good())
+   while(io.good())
       {
-      sock.read(reinterpret_cast<char*>(&buf[0]), buf.size());
-      resp_body.insert(resp_body.end(), &buf[0], &buf[sock.gcount()]);
+      io.read(reinterpret_cast<char*>(&buf[0]), buf.size());
+      resp_body.insert(resp_body.end(), &buf[0], &buf[io.gcount()]);
       }
 
    return Response(status_code, status_message, resp_body, headers);
+   }
+
+Response http_sync(const std::string& verb,
+                   const std::string& url,
+                   const std::string& content_type,
+                   const std::vector<byte>& body,
+                   size_t allowable_redirects)
+   {
+   return http_sync(
+#if defined(BOTAN_HAS_BOOST_ASIO)
+      http_transact_asio,
+#else
+      http_transact_fail,
+#endif
+      verb,
+      url,
+      content_type,
+      body,
+      allowable_redirects);
    }
 
 Response GET_sync(const std::string& url, size_t allowable_redirects)

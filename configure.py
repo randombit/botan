@@ -373,7 +373,7 @@ def process_command_line(args):
     mods_group.add_option('--no-autoload', action='store_true', default=False,
                           help='disable automatic loading')
 
-    for mod in ['sqlite3', 'openssl', 'gnump', 'bzip2', 'zlib', 'lzma']:
+    for mod in ['boost', 'sqlite3', 'zlib', 'bzip2', 'lzma', 'gnump', 'openssl']:
 
         mods_group.add_option('--with-%s' % (mod),
                               help='add support for using %s' % (mod),

@@ -16,7 +16,7 @@ def make_into_c_array(ber):
 
 rng = botan.RandomNumberGenerator()
 
-rsa_priv = botan.RSA_PrivateKey(768, rng)
+rsa_priv = botan.RSA_PrivateKey(1024, rng)
 
 print rsa_priv.to_string()
 print int(rsa_priv.get_N())
