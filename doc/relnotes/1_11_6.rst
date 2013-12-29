@@ -1,12 +1,10 @@
-Version 1.11.6, Not Yet Released
+Version 1.11.6, 2013-12-29
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* The Boost filesystem and asio libraries are now being used
-  internally. Using Boost is enabled by default, pass
-  ``--without-boost`` to ``configure.py`` to disable.
+* The Boost filesystem and asio libraries are now being used by default.
+  Pass ``--without-boost`` to ``configure.py`` to disable.
 
-* The default TLS policy no longer includes RC4 in the cipher list, and
-  refuses to negotation SSLv3 by default.
+* The default TLS policy no longer allows SSLv3 or RC4.
 
 * OAEP had two bugs, one of which allowed it to be used even if the
   key was too small, and the other of which would cause a crash during
@@ -14,10 +12,16 @@ Version 1.11.6, Not Yet Released
 
 * GCM mode now uses the Intel clmul instruction when available
 
-* Add Threefish-512, including an implementation using AVX2
+* Add the Threefish-512 tweakable block cipher, including an AVX2 version
 
-* Add HKDF from :rfc:`5869`
+* Add SIV (from :rfc:`5297`) as a nonce-based AEAD
 
-* Add SIV from :rfc:`5297`
+* Add HKDF (from :rfc:`5869`) using an experimental PRF interface
+
+* Add HTTP utility functions and OCSP online checking
+
+* Add TLS::Policy::acceptable_ciphersuite hook to disable ciphersuites
+  on an ad-hoc basis.
 
 * TLS::Session_Manager_In_Memory's constructor now requires a RNG
+
