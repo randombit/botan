@@ -7,12 +7,12 @@ Release Notes
 Series 1.10
 ----------------------------------------
 
-Version 1.10.7, Not Yet Released
+Version 1.10.7, 2013-12-29
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * OAEP had two bugs, one of which allowed it to be used even if the
-  key was too small, and the other of which would cause a crash due to
-  reading past the end of an array
+  key was too small, and the other of which would cause a crash during
+  decryption if the EME data was too large for the associated key.
 
 Version 1.10.6, 2013-11-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
