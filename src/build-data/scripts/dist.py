@@ -328,7 +328,8 @@ def main(args = None):
 
         output_files.append(output_archive)
 
-    hash_file.close()
+    if hash_file != None:
+        hash_file.close()
 
     shutil.rmtree(output_basename)
 
