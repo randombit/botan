@@ -60,12 +60,12 @@ void ubi_512(secure_vector<u64bit>& H,
       u64bit X6 = M[6] + H[6] + T[1];
       u64bit X7 = M[7] + H[7];
 
-#define THREEFISH_ROUND(I1,I2,I3,I4,I5,I6,I7,I8,ROT1,ROT2,ROT3,ROT4)   \
+#define THREEFISH_ROUND(X1,X2,X3,X4,X5,X6,X7,X8,ROT1,ROT2,ROT3,ROT4)   \
       do {                                                             \
-         X##I1 += X##I2; X##I2 = rotate_left(X##I2, ROT1) ^ X##I1;     \
-         X##I3 += X##I4; X##I4 = rotate_left(X##I4, ROT2) ^ X##I3;     \
-         X##I5 += X##I6; X##I6 = rotate_left(X##I6, ROT3) ^ X##I5;     \
-         X##I7 += X##I8; X##I8 = rotate_left(X##I8, ROT4) ^ X##I7;     \
+         X1 += X2; X2 = rotate_left(X2, ROT1) ^ X1;     \
+         X3 += X4; X4 = rotate_left(X4, ROT2) ^ X3;     \
+         X5 += X6; X6 = rotate_left(X6, ROT3) ^ X5;     \
+         X7 += X8; X8 = rotate_left(X8, ROT4) ^ X7;     \
       } while(0);
 
 #define THREEFISH_INJECT_KEY(r)                 \
@@ -82,17 +82,17 @@ void ubi_512(secure_vector<u64bit>& H,
 
 #define THREEFISH_8_ROUNDS(R1,R2)                         \
       do {                                                \
-         THREEFISH_ROUND(0,1,2,3,4,5,6,7, 46,36,19,37);   \
-         THREEFISH_ROUND(2,1,4,7,6,5,0,3, 33,27,14,42);   \
-         THREEFISH_ROUND(4,1,6,3,0,5,2,7, 17,49,36,39);   \
-         THREEFISH_ROUND(6,1,0,7,2,5,4,3, 44, 9,54,56);   \
+         THREEFISH_ROUND(X0,X1,X2,X3,X4,X5,X6,X7, 46,36,19,37);   \
+         THREEFISH_ROUND(X2,X1,X4,X7,X6,X5,X0,X3, 33,27,14,42);   \
+         THREEFISH_ROUND(X4,X1,X6,X3,X0,X5,X2,X7, 17,49,36,39);   \
+         THREEFISH_ROUND(X6,X1,X0,X7,X2,X5,X4,X3, 44, 9,54,56);   \
                                                           \
          THREEFISH_INJECT_KEY(R1);                        \
                                                           \
-         THREEFISH_ROUND(0,1,2,3,4,5,6,7, 39,30,34,24);   \
-         THREEFISH_ROUND(2,1,4,7,6,5,0,3, 13,50,10,17);   \
-         THREEFISH_ROUND(4,1,6,3,0,5,2,7, 25,29,39,43);   \
-         THREEFISH_ROUND(6,1,0,7,2,5,4,3,  8,35,56,22);   \
+         THREEFISH_ROUND(X0,X1,X2,X3,X4,X5,X6,X7, 39,30,34,24);   \
+         THREEFISH_ROUND(X2,X1,X4,X7,X6,X5,X0,X3, 13,50,10,17);   \
+         THREEFISH_ROUND(X4,X1,X6,X3,X0,X5,X2,X7, 25,29,39,43);   \
+         THREEFISH_ROUND(X6,X1,X0,X7,X2,X5,X4,X3,  8,35,56,22);   \
                                                           \
          THREEFISH_INJECT_KEY(R2);                        \
       } while(0);
