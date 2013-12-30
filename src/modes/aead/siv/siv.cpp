@@ -12,9 +12,6 @@
 #include <botan/internal/xor_buf.h>
 #include <algorithm>
 
-#include <iostream>
-#include <botan/hex.h>
-
 namespace Botan {
 
 SIV_Mode::SIV_Mode(BlockCipher* cipher) :
