@@ -48,6 +48,22 @@ class BOTAN_DLL PBKDF : public Algorithm
       * @param output_len the desired length of the key to produce
       * @param passphrase the password to derive the key from
       * @param salt a randomly chosen salt
+      * @param iterations the number of iterations to use (use 10K or more)
+      */
+      template<typename Alloc>
+      OctetString derive_key(size_t output_len,
+                             const std::string& passphrase,
+                             const std::vector<byte, Alloc>& salt,
+                             size_t iterations) const
+         {
+         return derive_key(output_len, passphrase, &salt[0], salt.size(), iterations);
+         }
+
+      /**
+      * Derive a key from a passphrase
+      * @param output_len the desired length of the key to produce
+      * @param passphrase the password to derive the key from
+      * @param salt a randomly chosen salt
       * @param salt_len length of salt in bytes
       * @param msec is how long to run the PBKDF
       * @param iterations is set to the number of iterations used
@@ -57,6 +73,24 @@ class BOTAN_DLL PBKDF : public Algorithm
                              const byte salt[], size_t salt_len,
                              std::chrono::milliseconds msec,
                              size_t& iterations) const;
+
+      /**
+      * Derive a key from a passphrase using a certain amount of time
+      * @param output_len the desired length of the key to produce
+      * @param passphrase the password to derive the key from
+      * @param salt a randomly chosen salt
+      * @param msec is how long to run the PBKDF
+      * @param iterations is set to the number of iterations used
+      */
+      template<typename Alloc>
+      OctetString derive_key(size_t output_len,
+                             const std::string& passphrase,
+                             const std::vector<byte, Alloc>& salt,
+                             std::chrono::milliseconds msec,
+                             size_t& iterations) const
+         {
+         return derive_key(output_len, passphrase, &salt[0], salt.size(), msec, iterations);
+         }
 
       /**
       * Derive a key from a passphrase for a number of iterations
