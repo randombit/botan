@@ -4,13 +4,15 @@
 * Distributed under the terms of the Botan license
 */
 
+#include "tests.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <boost/regex.hpp>
 
-#include <botan/botan.h>
 #include <botan/eax.h>
+#include <botan/hex.h>
+#include <botan/lookup.h>
 
 using namespace Botan;
 
@@ -42,81 +44,61 @@ std::string seq(unsigned n)
    return s;
    }
 
-void eax_test(const std::string& algo,
-              const std::string& key_str,
-              const std::string& nonce_str,
-              const std::string& header_str,
-              const std::string& tag_str,
-              const std::string& plaintext_str,
-              const std::string& ciphertext)
+size_t eax_test(const std::string& algo,
+                const std::string& key_str,
+                const std::string& nonce_str,
+                const std::string& header_str,
+                const std::string& tag_str,
+                const std::string& plaintext_str,
+                const std::string& ciphertext)
    {
-   /*
-   printf("EAX(algo=%s key=%s nonce=%s header=%s tag=%s pt=%s ct=%s)\n",
-          algo.c_str(), key_str.c_str(), nonce_str.c_str(), header_str.c_str(), tag_str.c_str(),
-          plaintext_str.c_str(), ciphertext.c_str());
-   */
-
-   SymmetricKey key(key_str);
-   InitializationVector iv(nonce_str);
-
-   EAX_Encryption* enc;
-
-   Pipe pipe(new Hex_Decoder,
-             enc = new EAX_Encryption(get_block_cipher(algo)),
-             new Hex_Encoder);
-
-   enc->set_key(key);
-   enc->set_iv(iv);
-
-   OctetString header(header_str);
-
-   enc->set_header(header.begin(), header.length());
-
-   pipe.start_msg();
-   pipe.write(plaintext_str);
-   pipe.end_msg();
-
-   std::string out = pipe.read_all_as_string();
-
-   if(out != ciphertext + tag_str)
-      {
-      printf("BAD enc %s '%s' != '%s%s'\n", algo.c_str(),
-             out.c_str(), ciphertext.c_str(), tag_str.c_str());
-      }
-   else
-      printf("OK enc %s\n", algo.c_str());
+   size_t fail = 0;
 
    try
       {
-      EAX_Decryption* dec;
-      Pipe pipe2(new Hex_Decoder,
-                 dec = new EAX_Decryption(get_block_cipher(algo)),
-                 new Hex_Encoder);
+      EAX_Encryption enc(get_block_cipher(algo));
+      EAX_Decryption dec(get_block_cipher(algo));
 
-      dec->set_key(key);
-      dec->set_iv(iv);
+      enc.set_key(hex_decode(key_str));
+      dec.set_key(hex_decode(key_str));
 
-      dec->set_header(header.begin(), header.length());
+      enc.set_associated_data_vec(hex_decode(header_str));
+      dec.set_associated_data_vec(hex_decode(header_str));
 
-      pipe2.start_msg();
-      pipe2.write(ciphertext);
-      pipe2.write(tag_str);
-      pipe2.end_msg();
+      secure_vector<byte> text = hex_decode_locked(plaintext_str);
+      enc.start_vec(hex_decode(nonce_str));
+      enc.finish(text);
 
-      std::string out2 = pipe2.read_all_as_string();
+      const std::string produced = hex_encode(text);
 
-      if(out2 != plaintext_str)
+      if(produced != ciphertext + tag_str)
          {
-         printf("BAD decrypt %s '%s'\n", algo.c_str(), out2.c_str());
+         std::cout << "EAX " << algo << " " << produced << " != expected " << ciphertext << tag_str << "\n";
+         ++fail;
          }
-      else
-         printf("OK decrypt %s\n", algo.c_str());
+
+      text.clear();
+      text = hex_decode_locked(ciphertext);
+      text += hex_decode_locked(tag_str);
+
+      dec.start_vec(hex_decode(nonce_str));
+      dec.finish(text);
+
+      const std::string decrypted = hex_encode(text);
+
+      if(decrypted != plaintext_str)
+         {
+         std::cout << "EAX " << algo << " " << decrypted << " != expected " << plaintext_str << "\n";
+         ++fail;
+         }
       }
    catch(std::exception& e)
       {
-      printf("%s\n", e.what());
+      std::cout << "Exception during EAX test " << e.what() << "\n";
+      ++fail;
       }
 
+   return fail;
    }
 
 std::pair<std::string, int> translate_algo(const std::string& in)
@@ -181,10 +163,13 @@ std::string rep(const std::string& s_in, unsigned n)
    return s_out;
    }
 
-void run_tests(std::istream& in)
+size_t eax_tests(std::istream& in)
    {
    std::string algo;
    std::string key;
+
+   size_t fails = 0;
+   size_t tests = 0;
 
    while(in.good())
       {
@@ -219,31 +204,26 @@ void run_tests(std::istream& in)
             std::string header = seq(n);
             std::string nonce = seq(n);
 
-            eax_test(algo, key, nonce, header, tag,
-                     plaintext, ciphertext);
+            tests += 1;
+
+            fails += eax_test(algo, key, nonce, header, tag,
+                              plaintext, ciphertext);
 
             key = rep(tag, key.size()); // repeat as needed
             }
          }
       }
 
+   test_report("EAX", tests, fails);
 
+   return fails;
    }
 
 }
 
-int main()
+size_t test_eax()
    {
-   std::ifstream in("eax_vecs.txt");
-
-   Botan::LibraryInitializer init;
-
-   if(!in)
-      {
-      std::cerr << "Couldn't read input file\n";
-      return 1;
-      }
-
-   run_tests(in);
-
+   // Uses a set of tests created for libtomcrypt
+   std::ifstream in("checks/eax.vec");
+   return eax_tests(in);
    }

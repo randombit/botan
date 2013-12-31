@@ -37,6 +37,7 @@ size_t test_transform();
 
 // One off tests
 size_t test_ocb();
+size_t test_eax();
 size_t test_keywrap();
 size_t test_bcrypt();
 size_t test_passhash9();

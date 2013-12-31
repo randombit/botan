@@ -71,7 +71,7 @@ CHECKOBJS     = %{check_objs}
 
 # Link Commands
 $(CHECK): $(LIBRARIES) $(CHECKOBJS)
-	$(CXX) $(LDFLAGS) $(CHECKOBJS) $(SHARED_LIB) $(LINK_TO) -o $(CHECK)
+	$(CXX) $(LDFLAGS) $(CHECKOBJS) $(SHARED_LIB) $(LINK_TO) -lboost_regex -o $(CHECK)
 
 $(STATIC_LIB): $(LIBOBJS)
 	$(RM) $(STATIC_LIB)

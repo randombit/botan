@@ -188,6 +188,7 @@ u32bit do_validation_tests(const std::string& filename,
       std::vector<test_fn> all_tests;
       all_tests.push_back(test_aead);
       all_tests.push_back(test_ocb);
+      all_tests.push_back(test_eax);
 
       all_tests.push_back(test_pbkdf);
       all_tests.push_back(test_kdf);
