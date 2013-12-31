@@ -71,6 +71,12 @@ class BOTAN_DLL SymmetricAlgorithm : public Algorithm
             throw Invalid_Key_Length(name(), length);
          key_schedule(key, length);
          }
+
+      template<typename Alloc>
+      void set_key(const std::vector<byte, Alloc>& v)
+         {
+         set_key(&v[0], v.size());
+         }
    private:
       /**
       * Run the key schedule
