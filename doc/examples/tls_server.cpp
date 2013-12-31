@@ -28,6 +28,10 @@ using namespace std::placeholders;
 #include <errno.h>
 #include <fcntl.h>
 
+#if !defined(MSG_NOSIGNAL)
+  #define MSG_NOSIGNAL 0
+#endif
+
 int make_server_socket(const std::string& transport, u16bit port)
    {
    int type = (transport == "tcp") ? SOCK_STREAM : SOCK_DGRAM;
