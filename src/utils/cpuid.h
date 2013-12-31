@@ -9,6 +9,7 @@
 #define BOTAN_CPUID_H__
 
 #include <botan/types.h>
+#include <iosfwd>
 
 namespace Botan {
 
@@ -116,6 +117,8 @@ class BOTAN_DLL CPUID
       * Check if the processor supports AltiVec/VMX
       */
       static bool has_altivec() { return m_altivec_capable; }
+
+      static void print(std::ostream& o);
    private:
       enum CPUID_bits {
          CPUID_RDTSC_BIT = 4,

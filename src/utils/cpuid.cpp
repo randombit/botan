@@ -9,6 +9,7 @@
 #include <botan/types.h>
 #include <botan/get_byte.h>
 #include <botan/mem_ops.h>
+#include <ostream>
 
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
 
@@ -152,6 +153,31 @@ bool altivec_check_pvr_emul()
 #endif
 
 }
+
+void CPUID::print(std::ostream& o)
+   {
+   o << "CPUID flags: ";
+
+#define CPUID_PRINT(flag) do { if(has_##flag()) o << #flag << " "; } while(0)
+   CPUID_PRINT(sse2);
+   CPUID_PRINT(ssse3);
+   CPUID_PRINT(sse41);
+   CPUID_PRINT(sse42);
+   CPUID_PRINT(avx2);
+   CPUID_PRINT(avx512f);
+   CPUID_PRINT(altivec);
+
+   CPUID_PRINT(rdtsc);
+   CPUID_PRINT(bmi2);
+   CPUID_PRINT(clmul);
+   CPUID_PRINT(aes_ni);
+   CPUID_PRINT(rdrand);
+   CPUID_PRINT(rdseed);
+   CPUID_PRINT(intel_sha);
+   CPUID_PRINT(adx);
+#undef CPUID_PRINT
+   o << "\n";
+   }
 
 void CPUID::initialize()
    {
