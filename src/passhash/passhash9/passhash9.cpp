@@ -38,9 +38,9 @@ MessageAuthenticationCode* get_pbkdf_prf(byte alg_id)
       else if(alg_id == 2)
          return af.make_mac("CMAC(Blowfish)");
       else if(alg_id == 3)
-         return af.make_mac("CMAC(SHA-384)");
+         return af.make_mac("HMAC(SHA-384)");
       else if(alg_id == 4)
-         return af.make_mac("CMAC(SHA-512)");
+         return af.make_mac("HMAC(SHA-512)");
       }
    catch(Algorithm_Not_Found) {}
 

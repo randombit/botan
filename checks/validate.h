@@ -33,24 +33,4 @@ void do_x509_tests(RandomNumberGenerator&);
 
 size_t do_tls_tests(RandomNumberGenerator& rng);
 
-void test_ocb();
-
-void test_hkdf();
-void test_pbkdf();
-void test_kdf();
-void test_aead();
-void test_transform();
-
-void run_tests_bb(std::istream& src,
-                  const std::string& name_key,
-                  const std::string& output_key,
-                  bool clear_between_cb,
-                  std::function<bool (std::map<std::string, std::string>)> cb);
-
-void run_tests(std::istream& src,
-               const std::string& name_key,
-               const std::string& output_key,
-               bool clear_between_cb,
-               std::function<std::string (std::map<std::string, std::string>)> cb);
-
 #endif

@@ -1,6 +1,5 @@
-#include "validate.h"
+#include "tests.h"
 
-#include <botan/libstate.h>
 #include <botan/lookup.h>
 #include <botan/hex.h>
 #include <iostream>
@@ -31,11 +30,11 @@ std::string kdf_test(const std::string& algo,
 
 }
 
-void test_kdf()
+size_t test_kdf()
    {
    std::ifstream vec("checks/kdf.vec");
 
-   run_tests(vec, "KDF", "Output", true,
+   return run_tests(vec, "KDF", "Output", true,
              [](std::map<std::string, std::string> m)
              {
              return kdf_test(m["KDF"], to_u32bit(m["OutputLen"]),

@@ -1,6 +1,5 @@
-#include "validate.h"
+#include "tests.h"
 
-#include <botan/libstate.h>
 #include <botan/lookup.h>
 #include <botan/hex.h>
 #include <iostream>
@@ -36,11 +35,11 @@ std::string pbkdf_test(const std::string& algo,
 
 }
 
-void test_pbkdf()
+size_t test_pbkdf()
    {
    std::ifstream vec("checks/pbkdf.vec");
 
-   run_tests(vec, "PBKDF", "Output", true,
+   return run_tests(vec, "PBKDF", "Output", true,
              [](std::map<std::string, std::string> m)
              {
              return pbkdf_test(m["PBKDF"], m["Passphrase"], m["Salt"],

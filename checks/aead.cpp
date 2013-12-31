@@ -1,4 +1,4 @@
-#include "validate.h"
+#include "tests.h"
 
 #include <botan/hex.h>
 #include <botan/siv.h>
@@ -65,11 +65,11 @@ bool aead_test(const std::string& algo,
 
 }
 
-void test_aead()
+size_t test_aead()
    {
    std::ifstream vec("checks/aead.vec");
 
-   run_tests_bb(vec, "AEAD", "Ciphertext", true,
+   return run_tests_bb(vec, "AEAD", "Ciphertext", true,
              [](std::map<std::string, std::string> m)
              {
              return aead_test(m["AEAD"], m["Plaintext"], m["Ciphertext"],

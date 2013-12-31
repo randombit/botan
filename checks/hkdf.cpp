@@ -1,4 +1,4 @@
-#include "validate.h"
+#include "tests.h"
 
 #include <botan/libstate.h>
 #include <botan/hkdf.h>
@@ -56,12 +56,12 @@ bool hkdf_test(const std::string& algo,
 
 }
 
-void test_hkdf()
+size_t test_hkdf()
    {
    // From RFC 5869
    std::ifstream vec("checks/hkdf.vec");
 
-   run_tests_bb(vec, "HKDF", "OKM", true,
+   return run_tests_bb(vec, "HKDF", "OKM", true,
              [](std::map<std::string, std::string> m) -> bool
              {
              return hkdf_test(m["Hash"], m["IKM"], m["salt"], m["info"],

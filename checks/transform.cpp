@@ -1,9 +1,8 @@
-#include "validate.h"
-#include "bench.h"
+#include "tests.h"
 
-#include <botan/libstate.h>
 #include <botan/botan.h>
 #include <botan/transform.h>
+#include <botan/threefish.h>
 #include <botan/benchmark.h>
 #include <botan/hex.h>
 #include <iostream>
@@ -15,7 +14,6 @@ namespace {
 
 Transformation* get_transform(const std::string& algo)
    {
-
    throw std::runtime_error("Unknown transform " + algo);
    }
 
@@ -35,29 +33,7 @@ secure_vector<byte> transform_test(const std::string& algo,
    return out;
    }
 
-}
-
-void test_transform()
-   {
-   return;
-
-   std::ifstream vec("checks/transform.vec");
-
-   run_tests(vec, "Transform", "Output", true,
-             [](std::map<std::string, std::string> m)
-             {
-             return hex_encode(transform_test(m["Transform"],
-                                              hex_decode_locked(m["Nonce"]),
-                                              hex_decode_locked(m["Key"]),
-                                              hex_decode_locked(m["Input"])));
-             });
-
-   if(true)
-      {
-      time_transform("Threefish-512");
-      //time_transform("Threefish-512-AVX2");
-      }
-   }
+namespace {
 
 void time_transform(const std::string& algo)
    {
@@ -84,4 +60,22 @@ void time_transform(const std::string& algo)
 
       std::cout << Mbytes << " MiB / second in " << buf_size << " byte blocks\n";
       }
+   }
+
+}
+
+}
+
+size_t test_transform()
+   {
+   std::ifstream vec("checks/transform.vec");
+
+   return run_tests(vec, "Transform", "Output", true,
+             [](std::map<std::string, std::string> m)
+             {
+             return hex_encode(transform_test(m["Transform"],
+                                              hex_decode_locked(m["Nonce"]),
+                                              hex_decode_locked(m["Key"]),
+                                              hex_decode_locked(m["Input"])));
+             });
    }

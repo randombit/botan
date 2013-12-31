@@ -1,5 +1,5 @@
 
-#include "validate.h"
+#include "tests.h"
 
 #include <botan/ocb.h>
 #include <botan/hex.h>
@@ -93,7 +93,7 @@ std::vector<byte> ocb_encrypt(OCB_Encryption& ocb,
    return unlock(buf);
    }
 
-void test_ocb_long(size_t taglen, const std::string &expected)
+size_t test_ocb_long(size_t taglen, const std::string &expected)
    {
    OCB_Encryption ocb(new AES_128, taglen/8);
 
@@ -119,16 +119,24 @@ void test_ocb_long(size_t taglen, const std::string &expected)
    const std::string cipher_hex = hex_encode(cipher);
 
    if(cipher_hex != expected)
+      {
       std::cout << "OCB AES-128 long test mistmatch " << cipher_hex << " != " << expected << "\n";
+      return 1;
+      }
+
+   return 0;
    }
 
 }
 
-void test_ocb()
+size_t test_ocb()
    {
-   test_ocb_long(128, "B2B41CBF9B05037DA7F16C24A35C1C94");
-   test_ocb_long(96, "1A4F0654277709A5BDA0D380");
-   test_ocb_long(64, "B7ECE9D381FE437F");
+   size_t fails = 0;
+   fails += test_ocb_long(128, "B2B41CBF9B05037DA7F16C24A35C1C94");
+   fails += test_ocb_long(96, "1A4F0654277709A5BDA0D380");
+   fails += test_ocb_long(64, "B7ECE9D381FE437F");
+   test_report("OCB long", 3, fails);
+   return fails;
    }
 
 

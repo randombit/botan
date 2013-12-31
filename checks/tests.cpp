@@ -1,16 +1,28 @@
-#include "validate.h"
+#include "tests.h"
 #include <iostream>
 
-void run_tests_bb(std::istream& src,
-                  const std::string& name_key,
-                  const std::string& output_key,
-                  bool clear_between_cb,
-                  std::function<bool (std::map<std::string, std::string>)> cb)
+size_t run_tests(const std::vector<test_fn>& tests)
+   {
+   size_t fails = 0;
+   for(auto& test : tests)
+      fails += test();
+   return fails;
+   }
+
+void test_report(const std::string& name, size_t ran, size_t failed)
+   {
+   std::cout << name << " tests: " << ran << " completed " << failed << " failed\n";
+   }
+
+size_t run_tests_bb(std::istream& src,
+                    const std::string& name_key,
+                    const std::string& output_key,
+                    bool clear_between_cb,
+                    std::function<bool (std::map<std::string, std::string>)> cb)
    {
    std::map<std::string, std::string> vars;
    size_t test_cnt = 0;
    size_t test_fail = 0;
-   bool verbose = true;
 
    while(src.good())
       {
@@ -47,18 +59,17 @@ void run_tests_bb(std::istream& src,
          }
       }
 
-   if(verbose)
-      std::cout << test_cnt << " " << name_key << " tests completed "
-                << test_fail << " failed\n";
+   test_report(name_key, test_cnt, test_fail);
+   return test_fail;
    }
 
-void run_tests(std::istream& src,
-               const std::string& name_key,
-               const std::string& output_key,
-               bool clear_between_cb,
-               std::function<std::string (std::map<std::string, std::string>)> cb)
+size_t run_tests(std::istream& src,
+                 const std::string& name_key,
+                 const std::string& output_key,
+                 bool clear_between_cb,
+                 std::function<std::string (std::map<std::string, std::string>)> cb)
    {
-   run_tests_bb(src, name_key, output_key, clear_between_cb,
+   return run_tests_bb(src, name_key, output_key, clear_between_cb,
                 [name_key,output_key,cb](std::map<std::string, std::string> vars)
                 {
                 const std::string got = cb(vars);
@@ -71,4 +82,3 @@ void run_tests(std::istream& src,
                 return true;
                 });
    }
-

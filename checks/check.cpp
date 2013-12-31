@@ -31,11 +31,7 @@ using namespace Botan;
 #include "bench.h"
 #include "validate.h"
 #include "common.h"
-
-const std::string VALIDATION_FILE = "checks/validate.dat";
-const std::string BIGINT_VALIDATION_FILE = "checks/mp_valid.dat";
-const std::string PK_VALIDATION_FILE = "checks/pk_valid.dat";
-const std::string EXPECTED_FAIL_FILE = "checks/fail.dat";
+#include "tests.h"
 
 int run_test_suite(RandomNumberGenerator& rng);
 
@@ -224,6 +220,11 @@ int run_test_suite(RandomNumberGenerator& rng)
    u32bit errors = 0;
    try
       {
+      const std::string VALIDATION_FILE = "checks/validate.dat";
+      const std::string BIGINT_VALIDATION_FILE = "checks/mp_valid.dat";
+      const std::string PK_VALIDATION_FILE = "checks/pk_valid.dat";
+      const std::string EXPECTED_FAIL_FILE = "checks/fail.dat";
+
       errors += do_validation_tests(VALIDATION_FILE, rng);
       errors += do_validation_tests(EXPECTED_FAIL_FILE, rng, false);
       errors += do_bigint_tests(BIGINT_VALIDATION_FILE, rng);
@@ -250,6 +251,5 @@ int run_test_suite(RandomNumberGenerator& rng)
       return 1;
       }
 
-   std::cout << "All tests passed!" << std::endl;
    return 0;
    }
