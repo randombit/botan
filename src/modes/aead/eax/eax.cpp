@@ -36,12 +36,12 @@ secure_vector<byte> eax_prf(byte tag, size_t block_size,
 * EAX_Mode Constructor
 */
 EAX_Mode::EAX_Mode(BlockCipher* cipher, size_t tag_size) :
-   m_tag_size(tag_size),
+   m_tag_size(tag_size ? tag_size : cipher->block_size()),
    m_cipher(cipher),
    m_ctr(new CTR_BE(m_cipher->clone())),
    m_cmac(new CMAC(m_cipher->clone()))
    {
-   if(tag_size < 8 || tag_size > m_cmac->output_length())
+   if(m_tag_size < 8 || m_tag_size > m_cmac->output_length())
       throw Invalid_Argument(name() + ": Bad tag size " + std::to_string(tag_size));
    }
 

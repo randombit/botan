@@ -70,7 +70,7 @@ class BOTAN_DLL EAX_Encryption : public EAX_Mode
       * @param cipher a 128-bit block cipher
       * @param tag_size is how big the auth tag will be
       */
-      EAX_Encryption(BlockCipher* cipher, size_t tag_size = 16) :
+      EAX_Encryption(BlockCipher* cipher, size_t tag_size = 0) :
          EAX_Mode(cipher, tag_size) {}
 
       size_t output_length(size_t input_length) const override
@@ -93,7 +93,7 @@ class BOTAN_DLL EAX_Decryption : public EAX_Mode
       * @param cipher a 128-bit block cipher
       * @param tag_size is how big the auth tag will be
       */
-      EAX_Decryption(BlockCipher* cipher, size_t tag_size = 16) :
+      EAX_Decryption(BlockCipher* cipher, size_t tag_size = 0) :
          EAX_Mode(cipher, tag_size) {}
 
       size_t output_length(size_t input_length) const override
