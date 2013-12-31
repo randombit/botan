@@ -4,6 +4,8 @@
 * Distributed under the terms of the Botan license
 */
 
+#include "tests.h"
+
 #include <vector>
 #include <string>
 #include <fstream>
@@ -42,8 +44,10 @@ u32bit do_bigint_tests(const std::string& filename,
    if(!test_data)
       throw Botan::Stream_IO_Error("Couldn't open test file " + filename);
 
+   u32bit total_errors = 0;
    u32bit errors = 0, alg_count = 0;
    std::string algorithm;
+   bool first = true;
    u32bit counter = 0;
 
    while(!test_data.eof())
@@ -71,10 +75,17 @@ u32bit do_bigint_tests(const std::string& filename,
 
       if(line[0] == '[' && line[line.size() - 1] == ']')
          {
+         if(!first)
+            test_report("Bigint " + algorithm, alg_count, errors);
+
          algorithm = line.substr(1, line.size() - 2);
+
+         total_errors += errors;
+         errors = 0;
          alg_count = 0;
          counter = 0;
 
+         first = false;
          continue;
          }
 
@@ -116,7 +127,8 @@ u32bit do_bigint_tests(const std::string& filename,
          std::cout << "ERROR: BigInt " << algorithm << " failed test #"
                    << std::dec << alg_count << std::endl;
       }
-   return errors;
+
+   return total_errors;
    }
 
 namespace {
