@@ -32,7 +32,6 @@
 #include <intrin.h>
 
 #define X86_CPUID(type, out) do { __cpuid((int*)out, type); } while(0)
-
 #define X86_CPUID_SUBLEVEL(type, level, out) do { __cpuidex((int*)out, type, level); } while(0)
 
 #elif defined(BOTAN_BUILD_COMPILER_IS_INTEL)
@@ -40,15 +39,7 @@
 #include <ia32intrin.h>
 
 #define X86_CPUID(type, out) do { __cpuid(out, type); } while(0)
-
-#elif defined(BOTAN_BUILD_COMPILER_IS_GCC)
-
-#include <cpuid.h>
-
-#define X86_CPUID(type, out) do { __get_cpuid(type, out, out+1, out+2, out+3); } while(0)
-
-#define X86_CPUID_SUBLEVEL(type, level, out) \
-   do { __cpuid_count(type, level, out[0], out[1], out[2], out[3]); } while(0)
+#define X86_CPUID_SUBLEVEL(type, level, out) do { __cpuidex((int*)out, type, level); } while(0)
 
 #elif defined(BOTAN_TARGET_ARCH_IS_X86_64) && BOTAN_USE_GCC_INLINE_ASM
 
@@ -60,9 +51,18 @@
    asm("cpuid\n\t" : "=a" (out[0]), "=b" (out[1]), "=c" (out[2]), "=d" (out[3]) \
        : "0" (type), "2" (level))
 
+#elif defined(BOTAN_BUILD_COMPILER_IS_GCC)
+
+#include <cpuid.h>
+
+#define X86_CPUID(type, out) do { __get_cpuid(type, out, out+1, out+2, out+3); } while(0)
+
+#define X86_CPUID_SUBLEVEL(type, level, out) \
+   do { __cpuid_count(type, level, out[0], out[1], out[2], out[3]); } while(0)
+
 #else
 
-#warning "No way of doing cpuid with this compiler"
+#warning "No way of calling cpuid for this compiler"
 
 #define X86_CPUID(type, out) do { clear_mem(out, 4); } while(0)
 #define X86_CPUID_SUBLEVEL(type, level, out) do { clear_mem(out, 4); } while(0)
