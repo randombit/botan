@@ -4,8 +4,11 @@
 * Distributed under the terms of the Botan license
 */
 
+#include "tests.h"
+#include "common.h"
 
 #include <botan/filters.h>
+#include <botan/auto_rng.h>
 
 #if defined(BOTAN_HAS_RSA)
   #include <botan/rsa.h>
@@ -31,8 +34,6 @@ using namespace Botan;
 #include <iostream>
 #include <memory>
 
-#include "validate.h"
-#include "common.h"
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES) && \
     defined(BOTAN_HAS_RSA) && \
@@ -129,34 +130,29 @@ u32bit check_against_copy(const Private_Key& orig,
 
 }
 
-void do_x509_tests(RandomNumberGenerator& rng)
+size_t test_x509()
    {
-   std::cout << "Testing X.509 CA/CRL/cert/cert request: " << std::flush;
+   AutoSeeded_RNG rng;
+   const std::string hash_fn = "SHA-256";
 
-   std::string hash_fn = "SHA-256";
+   size_t fails = 0;
 
    /* Create the CA's key and self-signed cert */
-   std::cout << '.' << std::flush;
    RSA_PrivateKey ca_key(rng, 2048);
 
-   std::cout << '.' << std::flush;
    X509_Certificate ca_cert = X509::create_self_signed_cert(ca_opts(),
                                                             ca_key,
                                                             hash_fn,
                                                             rng);
-   std::cout << '.' << std::flush;
-
    /* Create user #1's key and cert request */
    DSA_PrivateKey user1_key(rng, DL_Group("dsa/botan/2048"));
 
-   std::cout << '.' << std::flush;
    PKCS10_Request user1_req = X509::create_cert_req(req_opts1(),
                                                     user1_key,
                                                     "SHA-1",
                                                     rng);
 
    /* Create user #2's key and cert request */
-   std::cout << '.' << std::flush;
 #if defined(BOTAN_HAS_ECDSA)
    EC_Group ecc_domain(OID("1.2.840.10045.3.1.7"));
    ECDSA_PrivateKey user2_key(rng, ecc_domain);
@@ -164,29 +160,22 @@ void do_x509_tests(RandomNumberGenerator& rng)
    RSA_PrivateKey user2_key(rng, 1536);
 #endif
 
-   std::cout << '.' << std::flush;
    PKCS10_Request user2_req = X509::create_cert_req(req_opts2(),
                                                     user2_key,
                                                     hash_fn,
                                                     rng);
 
    /* Create the CA object */
-   std::cout << '.' << std::flush;
    X509_CA ca(ca_cert, ca_key, hash_fn);
-   std::cout << '.' << std::flush;
 
    /* Sign the requests to create the certs */
-   std::cout << '.' << std::flush;
    X509_Certificate user1_cert =
       ca.sign_request(user1_req, rng,
                       X509_Time("2008-01-01"), X509_Time("2100-01-01"));
 
-   std::cout << '.' << std::flush;
    X509_Certificate user2_cert = ca.sign_request(user2_req, rng,
                                                  X509_Time("2008-01-01"),
                                                  X509_Time("2100-01-01"));
-   std::cout << '.' << std::flush;
-
    X509_CRL crl1 = ca.new_crl(rng);
 
    /* Verify the certs */
@@ -194,19 +183,23 @@ void do_x509_tests(RandomNumberGenerator& rng)
 
    store.add_certificate(ca_cert);
 
-   std::cout << '.' << std::flush;
-
    Path_Validation_Restrictions restrictions;
 
    Path_Validation_Result result_u1 = x509_path_validate(user1_cert, restrictions, store);
    if(!result_u1.successful_validation())
+      {
       std::cout << "FAILED: User cert #1 did not validate - "
                 << result_u1.result_string() << std::endl;
+      ++fails;
+      }
 
    Path_Validation_Result result_u2 = x509_path_validate(user2_cert, restrictions, store);
    if(!result_u2.successful_validation())
+      {
       std::cout << "FAILED: User cert #2 did not validate - "
                 << result_u2.result_string() << std::endl;
+      ++fails;
+      }
 
    store.add_crl(crl1);
 
@@ -220,13 +213,19 @@ void do_x509_tests(RandomNumberGenerator& rng)
 
    result_u1 = x509_path_validate(user1_cert, restrictions, store);
    if(result_u1.result() != Certificate_Status_Code::CERT_IS_REVOKED)
+      {
       std::cout << "FAILED: User cert #1 was not revoked - "
                 << result_u1.result_string() << std::endl;
+      ++fails;
+      }
 
    result_u2 = x509_path_validate(user2_cert, restrictions, store);
    if(result_u2.result() != Certificate_Status_Code::CERT_IS_REVOKED)
+      {
       std::cout << "FAILED: User cert #2 was not revoked - "
                 << result_u2.result_string() << std::endl;
+      ++fails;
+      }
 
    revoked.clear();
    revoked.push_back(CRL_Entry(user1_cert, REMOVE_FROM_CRL));
@@ -236,22 +235,22 @@ void do_x509_tests(RandomNumberGenerator& rng)
 
    result_u1 = x509_path_validate(user1_cert, restrictions, store);
    if(!result_u1.successful_validation())
+      {
       std::cout << "FAILED: User cert #1 was not un-revoked - "
                 << result_u1.result_string() << std::endl;
+      ++fails;
+      }
 
    check_against_copy(ca_key, rng);
    check_against_copy(user1_key, rng);
    check_against_copy(user2_key, rng);
 
-   std::cout << std::endl;
+   return fails;
    }
 
 #else
 
-void do_x509_tests(RandomNumberGenerator&)
-   {
-   std::cout << "Skipping Botan X.509 tests (disabled in build)\n";
-   }
+size_t test_x590() { return 0; }
 
 #endif
 

@@ -5,7 +5,7 @@
 *     2008 Jack Lloyd
 */
 
-#include "validate.h"
+#include "tests.h"
 #include <botan/build.h>
 
 #if defined(BOTAN_HAS_CARD_VERIFIABLE_CERTIFICATES)
@@ -77,8 +77,6 @@ bool helper_files_equal(std::string const& file_path1, std::string const& file_p
 
 void test_enc_gen_selfsigned(RandomNumberGenerator& rng)
    {
-   std::cout << '.' << std::flush;
-
    EAC1_1_CVC_Options opts;
    //opts.cpi = 0;
    opts.chr = ASN1_Chr("my_opt_chr"); // not used
@@ -190,8 +188,6 @@ void test_enc_gen_selfsigned(RandomNumberGenerator& rng)
 
 void test_enc_gen_req(RandomNumberGenerator& rng)
    {
-   std::cout << "." << std::flush;
-
    EAC1_1_CVC_Options opts;
 
    //opts.cpi = 0;
@@ -221,8 +217,6 @@ void test_enc_gen_req(RandomNumberGenerator& rng)
 
 void test_cvc_req_ext(RandomNumberGenerator&)
    {
-   std::cout << "." << std::flush;
-
    EAC1_1_Req req_in(TEST_DATA_DIR "/DE1_flen_chars_cvcRequest_ECDSA.der");
    EC_Group dom_pars(OID("1.3.36.3.3.2.8.1.1.5")); // "german curve"
    //req_in.set_domain_parameters(dom_pars);
@@ -236,8 +230,6 @@ void test_cvc_req_ext(RandomNumberGenerator&)
 
 void test_cvc_ado_ext(RandomNumberGenerator&)
    {
-   std::cout << "." << std::flush;
-
    EAC1_1_ADO req_in(TEST_DATA_DIR "/ado.cvcreq");
    EC_Group dom_pars(OID("1.3.36.3.3.2.8.1.1.5")); // "german curve"
    //cout << "car = " << req_in.get_car().value() << std::endl;
@@ -246,8 +238,6 @@ void test_cvc_ado_ext(RandomNumberGenerator&)
 
 void test_cvc_ado_creation(RandomNumberGenerator& rng)
    {
-   std::cout << "." << std::flush;
-
    EAC1_1_CVC_Options opts;
    //opts.cpi = 0;
    opts.chr = ASN1_Chr("my_opt_chr");
@@ -290,8 +280,6 @@ void test_cvc_ado_creation(RandomNumberGenerator& rng)
 
 void test_cvc_ado_comparison(RandomNumberGenerator& rng)
    {
-   std::cout << "." << std::flush;
-
    EAC1_1_CVC_Options opts;
    //opts.cpi = 0;
    opts.chr = ASN1_Chr("my_opt_chr");
@@ -346,8 +334,6 @@ void test_cvc_ado_comparison(RandomNumberGenerator& rng)
 
 void test_eac_time(RandomNumberGenerator&)
    {
-   std::cout << "." << std::flush;
-
    EAC_Time time(std::chrono::system_clock::now());
    //     std::cout << "time as std::string = " << time.as_string() << std::endl;
    EAC_Time sooner("", ASN1_Tag(99));
@@ -383,8 +369,6 @@ void test_eac_time(RandomNumberGenerator&)
 
 void test_ver_cvca(RandomNumberGenerator&)
    {
-   std::cout << "." << std::flush;
-
    EAC1_1_CVC req_in(TEST_DATA_DIR "/cvca01.cv.crt");
 
    bool exc = false;
@@ -407,8 +391,6 @@ void test_ver_cvca(RandomNumberGenerator&)
 
 void test_copy_and_assignment(RandomNumberGenerator&)
    {
-   std::cout << "." << std::flush;
-
    EAC1_1_CVC cert_in(TEST_DATA_DIR "/cvca01.cv.crt");
    EAC1_1_CVC cert_cp(cert_in);
    EAC1_1_CVC cert_ass = cert_in;
@@ -432,8 +414,6 @@ void test_copy_and_assignment(RandomNumberGenerator&)
 
 void test_eac_str_illegal_values(RandomNumberGenerator&)
    {
-   std::cout << "." << std::flush;
-
    bool exc = false;
    try
       {
@@ -461,8 +441,6 @@ void test_eac_str_illegal_values(RandomNumberGenerator&)
 
 void test_tmp_eac_str_enc(RandomNumberGenerator&)
    {
-   std::cout << "." << std::flush;
-
    bool exc = false;
    try
       {
@@ -482,8 +460,6 @@ void test_tmp_eac_str_enc(RandomNumberGenerator&)
 
 void test_cvc_chain(RandomNumberGenerator& rng)
    {
-   std::cout << "." << std::flush;
-
    EC_Group dom_pars(OID("1.3.36.3.3.2.8.1.1.5")); // "german curve"
    ECDSA_PrivateKey cvca_privk(rng, dom_pars);
    std::string hash("SHA-224");
@@ -573,9 +549,9 @@ void test_cvc_chain(RandomNumberGenerator& rng)
 
 }
 
-u32bit do_cvc_tests(Botan::RandomNumberGenerator& rng)
+size_t test_cvc()
    {
-   std::cout << "Testing CVC: " << std::flush;
+   AutoSeeded_RNG rng;
 
    test_enc_gen_selfsigned(rng);
    test_enc_gen_req(rng);
@@ -589,10 +565,9 @@ u32bit do_cvc_tests(Botan::RandomNumberGenerator& rng)
    test_eac_str_illegal_values(rng);
    test_tmp_eac_str_enc(rng);
    test_cvc_chain(rng);
-   std::cout << std::endl;
 
    return 0;
    }
 #else
-u32bit do_cvc_tests(Botan::RandomNumberGenerator&) { return 0; }
+size_t test_cvc() { return 0; }
 #endif

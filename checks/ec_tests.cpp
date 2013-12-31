@@ -4,11 +4,12 @@
 * Distributed under the terms of the Botan license
 */
 
+#include "tests.h"
 
-#include <botan/rng.h>
+#include "getopt.h"
+#include "common.h"
 
-#if defined(BOTAN_HAS_ECC_GROUP)
-
+#include <botan/auto_rng.h>
 #include <botan/bigint.h>
 #include <botan/numthry.h>
 #include <botan/curve_gfp.h>
@@ -16,19 +17,13 @@
 #include <botan/ec_group.h>
 #include <botan/reducer.h>
 #include <botan/oids.h>
-
-using namespace Botan;
-
 #include <iostream>
 #include <memory>
 
-#include "getopt.h"
-#include "validate.h"
-#include "common.h"
+using namespace Botan;
 
-
-#define CHECK_MESSAGE(expr, print) try { if(!(expr)) std::cout << print << "\n"; } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
-#define CHECK(expr) try { if(!(expr)) std::cout << #expr << "\n"; } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
+#define CHECK_MESSAGE(expr, print) try { if(!(expr)) { ++fails; std::cout << print << "\n"; }} catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
+#define CHECK(expr) try { if(!(expr)) { ++fails; std::cout << #expr << "\n"; } } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
 
 namespace {
 
@@ -62,9 +57,9 @@ PointGFp create_random_point(RandomNumberGenerator& rng,
       }
    }
 
-void test_point_turn_on_sp_red_mul()
+size_t test_point_turn_on_sp_red_mul()
    {
-   std::cout << "." << std::flush;
+   size_t fails = 0;
 
    // setting up expected values
    BigInt exp_Qx(std::string("466448783855397898016055842232266600516272889280"));
@@ -125,11 +120,12 @@ void test_point_turn_on_sp_red_mul()
    r2 += p_G2;
 
    CHECK_MESSAGE(r1 == r2, "error with op+= after extra turn on sp red mul for both operands");
+   return fails;
    }
 
-void test_coordinates()
+size_t test_coordinates()
    {
-   std::cout << "." << std::flush;
+   size_t fails = 0;
 
    BigInt exp_affine_x(std::string("16984103820118642236896513183038186009872590470"));
    BigInt exp_affine_y(std::string("1373093393927139016463695321221277758035357890939"));
@@ -157,6 +153,7 @@ void test_coordinates()
 
    CHECK_MESSAGE( p1.get_affine_x() == exp_affine_x, " p1_x = " << p1.get_affine_x() << "\n" << "exp_x = " << exp_affine_x << "\n");
    CHECK_MESSAGE( p1.get_affine_y() == exp_affine_y, " p1_y = " << p1.get_affine_y() << "\n" << "exp_y = " << exp_affine_y << "\n");
+   return fails;
    }
 
 
@@ -172,9 +169,9 @@ Section 2.1.2
 --------
 */
 
-void test_point_transformation ()
+size_t test_point_transformation ()
    {
-   std::cout << "." << std::flush;
+   size_t fails = 0;
 
    // get a vailid point
    EC_Group dom_pars(OID("1.3.132.0.8"));
@@ -185,11 +182,12 @@ void test_point_transformation ()
 
    CHECK_MESSAGE( p.get_affine_x() == q.get_affine_x(), "affine_x changed during copy");
    CHECK_MESSAGE( p.get_affine_y() == q.get_affine_y(), "affine_y changed during copy");
+   return fails;
    }
 
-void test_point_mult ()
+size_t test_point_mult ()
    {
-   std::cout << "." << std::flush;
+   size_t fails = 0;
 
    EC_Group secp160r1(OIDS::lookup("secp160r1"));
 
@@ -204,11 +202,12 @@ void test_point_mult ()
 
    CHECK(Q_U.get_affine_x() == BigInt("466448783855397898016055842232266600516272889280"));
    CHECK(Q_U.get_affine_y() == BigInt("1110706324081757720403272427311003102474457754220"));
+   return fails;
    }
 
-void test_point_negative()
+size_t test_point_negative()
    {
-   std::cout << "." << std::flush;
+   size_t fails = 0;
 
    // performing calculation to test
    std::string p_secp = "ffffffffffffffffffffffffffffffff7fffffff";
@@ -234,12 +233,12 @@ void test_point_negative()
 
    CHECK(p1_neg.get_affine_x() == BigInt("16984103820118642236896513183038186009872590470"));
    CHECK(p1_neg.get_affine_y() == BigInt("88408243403763901739989511495005261618427168388"));
+   return fails;
    }
 
-void test_zeropoint()
+size_t test_zeropoint()
    {
-   std::cout << "." << std::flush;
-
+   size_t fails = 0;
 
    std::string G_secp_comp = "024a96b5688ef573284664698968c38bb913cbfc82";
    std::vector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
@@ -257,12 +256,12 @@ void test_zeropoint()
    p1 -= p1;
 
    CHECK_MESSAGE(  p1.is_zero(), "p - q with q = p is not zero!");
+   return fails;
    }
 
-void test_zeropoint_enc_dec()
+size_t test_zeropoint_enc_dec()
    {
-   std::cout << "." << std::flush;
-
+   size_t fails = 0;
 
    BigInt bi_p_secp("0xffffffffffffffffffffffffffffffff7fffffff");
    BigInt bi_a_secp("0xffffffffffffffffffffffffffffffff7ffffffc");
@@ -284,11 +283,12 @@ void test_zeropoint_enc_dec()
    sv_p = unlock(EC2OSP(p, PointGFp::HYBRID));
    p_encdec = OS2ECP(sv_p, curve);
    CHECK_MESSAGE(  p == p_encdec, "encoded-decoded (hybrid) point is not equal the original!");
+   return fails;
    }
 
-void test_calc_with_zeropoint()
+size_t test_calc_with_zeropoint()
    {
-   std::cout << "." << std::flush;
+   size_t fails = 0;
 
    std::string G_secp_comp = "024a96b5688ef573284664698968c38bb913cbfc82";
    std::vector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
@@ -316,11 +316,12 @@ void test_calc_with_zeropoint()
 
    res = zero * 32432243;
    CHECK_MESSAGE(  res.is_zero(), "zeropoint * skalar is not a zero-point!");
+   return fails;
    }
 
-void test_add_point()
+size_t test_add_point()
    {
-   std::cout << "." << std::flush;
+   size_t fails = 0;
 
    // precalculation
    std::string p_secp = "ffffffffffffffffffffffffffffffff7fffffff";
@@ -347,11 +348,12 @@ void test_add_point()
                      BigInt("1147993098458695153857594941635310323215433166682"));
 
    CHECK(p1 == expected);
+   return fails;
    }
 
-void test_sub_point()
+size_t test_sub_point()
    {
-   std::cout << "." << std::flush;
+   size_t fails = 0;
 
    //Setting up expected values
    BigInt exp_sub_x(std::string("112913490230515010376958384252467223283065196552"));
@@ -383,11 +385,12 @@ void test_sub_point()
                      BigInt("203520114162904107873991457957346892027982641970"));
 
    CHECK(p1 == expected);
+   return fails;
    }
 
-void test_mult_point()
+size_t test_mult_point()
    {
-   std::cout << "." << std::flush;
+   size_t fails = 0;
 
    //Setting up expected values
    BigInt exp_mult_x(std::string("967697346845926834906555988570157345422864716250"));
@@ -416,11 +419,12 @@ void test_mult_point()
    PointGFp expected(secp160r1, exp_mult_x, exp_mult_y);
 
    CHECK(p1 == expected);
+   return fails;
    }
 
-void test_basic_operations()
+size_t test_basic_operations()
    {
-   std::cout << "." << std::flush;
+   size_t fails = 0;
 
    // precalculation
    std::string p_secp = "ffffffffffffffffffffffffffffffff7fffffff";
@@ -476,12 +480,12 @@ void test_basic_operations()
 
    CHECK(p0.get_affine_x() == BigInt("425826231723888350446541592701409065913635568770"));
    CHECK(p0.get_affine_y() == BigInt("203520114162904107873991457957346892027982641970"));
+   return fails;
    }
 
-void test_enc_dec_compressed_160()
+size_t test_enc_dec_compressed_160()
    {
-   std::cout << "." << std::flush;
-
+   size_t fails = 0;
 
    // Test for compressed conversion (02/03) 160bit
    std::string p_secp = "ffffffffffffffffffffffffffffffff7fffffff";
@@ -505,12 +509,12 @@ void test_enc_dec_compressed_160()
    std::vector<byte> sv_result = unlock(EC2OSP(p_G, PointGFp::COMPRESSED));
 
    CHECK( sv_result == sv_G_secp_comp);
+   return fails;
    }
 
-void test_enc_dec_compressed_256()
+size_t test_enc_dec_compressed_256()
    {
-   std::cout << "." << std::flush;
-
+   size_t fails = 0;
 
    // Test for compressed conversion (02/03) 256bit
    std::string p_secp = "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff";
@@ -534,13 +538,13 @@ void test_enc_dec_compressed_256()
    std::vector<byte> sv_result = unlock(EC2OSP(p_G, PointGFp::COMPRESSED));
 
    CHECK( sv_result == sv_G_secp_comp);
+   return fails;
    }
 
 
-void test_enc_dec_uncompressed_112()
+size_t test_enc_dec_uncompressed_112()
    {
-   std::cout << "." << std::flush;
-
+   size_t fails = 0;
 
    // Test for uncompressed conversion (04) 112bit
 
@@ -565,12 +569,12 @@ void test_enc_dec_uncompressed_112()
    std::vector<byte> sv_result = unlock(EC2OSP(p_G, PointGFp::UNCOMPRESSED));
 
    CHECK( sv_result == sv_G_secp_uncomp);
+   return fails;
    }
 
-void test_enc_dec_uncompressed_521()
+size_t test_enc_dec_uncompressed_521()
    {
-   std::cout << "." << std::flush;
-
+   size_t fails = 0;
 
    // Test for uncompressed conversion(04) with big values(521 bit)
    std::string p_secp = "01ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
@@ -597,12 +601,12 @@ void test_enc_dec_uncompressed_521()
    std::string exp_result = hex_encode(&sv_G_secp_uncomp[0], sv_G_secp_uncomp.size());
 
    CHECK_MESSAGE( sv_result == sv_G_secp_uncomp, "\ncalc. result = " << result << "\nexp. result = " << exp_result << "\n");
+   return fails;
    }
 
-void test_enc_dec_uncompressed_521_prime_too_large()
+size_t test_enc_dec_uncompressed_521_prime_too_large()
    {
-   std::cout << "." << std::flush;
-
+   size_t fails = 0;
 
    // Test for uncompressed conversion(04) with big values(521 bit)
    std::string p_secp = "01ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"; // length increased by "ff"
@@ -635,11 +639,12 @@ void test_enc_dec_uncompressed_521_prime_too_large()
       }
 
    CHECK_MESSAGE(exc, "attempt of creation of point on curve with too high prime did not throw an exception");
+   return fails;
    }
 
-void test_gfp_store_restore()
+size_t test_gfp_store_restore()
    {
-   std::cout << "." << std::flush;
+   size_t fails = 0;
 
    // generate point
    //EC_Group dom_pars = global_config().get_ec_dompar("1.3.132.0.8");
@@ -652,13 +657,14 @@ void test_gfp_store_restore()
    PointGFp new_p = OS2ECP(sv_mes, dom_pars.get_curve());
 
    CHECK_MESSAGE( p == new_p, "original and restored point are different!");
+   return fails;
    }
 
 
 // maybe move this test
-void test_cdc_curve_33()
+size_t test_cdc_curve_33()
    {
-   std::cout << "." << std::flush;
+   size_t fails = 0;
 
    std::string G_secp_uncomp = "04081523d03d4f12cd02879dea4bf6a4f3a7df26ed888f10c5b2235a1274c386a2f218300dee6ed217841164533bcdc903f07a096f9fbf4ee95bac098a111f296f5830fe5c35b3e344d5df3a2256985f64fbe6d0edcc4c61d18bef681dd399df3d0194c5a4315e012e0245ecea56365baa9e8be1f7";
 
@@ -681,11 +687,13 @@ void test_cdc_curve_33()
       exc = true;
       }
    CHECK(!exc);
+   return fails;
    }
 
-void test_more_zeropoint()
+size_t test_more_zeropoint()
    {
-   std::cout << "." << std::flush;
+   size_t fails = 0;
+
    // by Falko
 
    std::string G = "024a96b5688ef573284664698968c38bb913cbfc82";
@@ -722,11 +730,12 @@ void test_more_zeropoint()
    CHECK_MESSAGE(p1 + zero == p1, "addition of zero modified point");
 
    CHECK_MESSAGE(  shouldBeZero.is_zero(), "p - q with q = p is not zero!");
+   return fails;
    }
 
-void test_mult_by_order()
+size_t test_mult_by_order()
    {
-   std::cout << "." << std::flush;
+   size_t fails = 0;
 
    // generate point
    EC_Group dom_pars(OID("1.3.132.0.8"));
@@ -734,11 +743,13 @@ void test_mult_by_order()
    PointGFp shouldBeZero = p * dom_pars.get_order();
 
    CHECK_MESSAGE(shouldBeZero.is_zero(), "G * order != O");
+   return fails;
    }
 
-void test_point_swap(RandomNumberGenerator& rng)
+size_t test_point_swap(RandomNumberGenerator& rng)
    {
-   std::cout << "." << std::flush;
+   size_t fails = 0;
+
 
    EC_Group dom_pars(OID("1.3.132.0.8"));
 
@@ -752,20 +763,21 @@ void test_point_swap(RandomNumberGenerator& rng)
    d.swap(c);
    CHECK(a == d);
    CHECK(b == c);
+   return fails;
    }
 
 /**
 * This test verifies that the side channel attack resistant multiplication function
 * yields the same result as the normal (insecure) multiplication via operator*=
 */
-void test_mult_sec_mass(RandomNumberGenerator& rng)
+size_t test_mult_sec_mass(RandomNumberGenerator& rng)
    {
+   size_t fails = 0;
+
 
    EC_Group dom_pars(OID("1.3.132.0.8"));
    for(int i = 0; i<50; i++)
       {
-      std::cout << "." << std::flush;
-      std::cout.flush();
       PointGFp a(create_random_point(rng, dom_pars.get_curve()));
       BigInt scal(BigInt(rng, 40));
       PointGFp b = a * scal;
@@ -774,54 +786,59 @@ void test_mult_sec_mass(RandomNumberGenerator& rng)
       c *= scal;
       CHECK(b == c);
       }
+   return fails;
    }
 
-void test_curve_cp_ctor()
+size_t test_curve_cp_ctor()
    {
-   std::cout << "." << std::flush;
+   try
+      {
+      EC_Group dom_pars(OID("1.3.132.0.8"));
+      CurveGFp curve(dom_pars.get_curve());
+      }
+   catch(...)
+      {
+      return 1;
 
-   EC_Group dom_pars(OID("1.3.132.0.8"));
-   CurveGFp curve(dom_pars.get_curve());
+      }
+
+   return 0;
    }
 
 }
 
-void do_ec_tests(RandomNumberGenerator& rng)
+size_t test_ecc()
    {
-   std::cout << "Testing ECC: " << std::flush;
+   AutoSeeded_RNG rng;
 
-   test_point_turn_on_sp_red_mul();
-   test_coordinates();
-   test_point_transformation ();
-   test_point_mult ();
-   test_point_negative();
-   test_zeropoint();
-   test_zeropoint_enc_dec();
-   test_calc_with_zeropoint();
-   test_add_point();
-   test_sub_point();
-   test_mult_point();
-   test_basic_operations();
-   test_enc_dec_compressed_160();
-   test_enc_dec_compressed_256();
-   test_enc_dec_uncompressed_112();
-   test_enc_dec_uncompressed_521();
-   test_enc_dec_uncompressed_521_prime_too_large();
-   test_gfp_store_restore();
-   test_cdc_curve_33();
-   test_more_zeropoint();
-   test_mult_by_order();
-   test_point_swap(rng);
-   test_mult_sec_mass(rng);
-   test_curve_cp_ctor();
+   size_t fails = 0;
 
-   std::cout << std::endl;
+   fails += test_point_turn_on_sp_red_mul();
+   fails += test_coordinates();
+   fails += test_point_transformation ();
+   fails += test_point_mult ();
+   fails += test_point_negative();
+   fails += test_zeropoint();
+   fails += test_zeropoint_enc_dec();
+   fails += test_calc_with_zeropoint();
+   fails += test_add_point();
+   fails += test_sub_point();
+   fails += test_mult_point();
+   fails += test_basic_operations();
+   fails += test_enc_dec_compressed_160();
+   fails += test_enc_dec_compressed_256();
+   fails += test_enc_dec_uncompressed_112();
+   fails += test_enc_dec_uncompressed_521();
+   fails += test_enc_dec_uncompressed_521_prime_too_large();
+   fails += test_gfp_store_restore();
+   fails += test_cdc_curve_33();
+   fails += test_more_zeropoint();
+   fails += test_mult_by_order();
+   fails += test_point_swap(rng);
+   fails += test_mult_sec_mass(rng);
+   fails += test_curve_cp_ctor();
+
+   test_report("ECC", 0, fails);
+
+   return fails;
    }
-
-#else
-
-void do_ec_tests(Botan::RandomNumberGenerator& rng)
-   {
-   }
-
-#endif

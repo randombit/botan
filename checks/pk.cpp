@@ -4,6 +4,9 @@
 * Distributed under the terms of the Botan license
 */
 
+#include "tests.h"
+#include "common.h"
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -65,9 +68,6 @@
 #include <botan/numthry.h>
 using namespace Botan;
 
-#include "common.h"
-#include "validate.h"
-
 namespace {
 
 BigInt to_bigint(std::string input)
@@ -96,11 +96,12 @@ void dump_data(const std::vector<byte>& out,
    std::cout << "Exp: " << pipe.read_all_as_string(1) << std::endl;
    }
 
-void validate_save_and_load(const Private_Key* priv_key,
-                            RandomNumberGenerator& rng)
+size_t validate_save_and_load(const Private_Key* priv_key,
+                              RandomNumberGenerator& rng)
    {
    std::string name = priv_key->algo_name();
 
+   size_t fails = 0;
    std::string pub_pem = X509::PEM_encode(*priv_key);
 
    try
@@ -109,15 +110,22 @@ void validate_save_and_load(const Private_Key* priv_key,
       std::auto_ptr<Public_Key> restored_pub(X509::load_key(input_pub));
 
       if(!restored_pub.get())
+         {
          std::cout << "Could not recover " << name << " public key\n";
+         ++fails;
+         }
       else if(restored_pub->check_key(rng, true) == false)
+         {
          std::cout << "Restored pubkey failed self tests " << name << "\n";
+         ++fails;
+         }
       }
    catch(std::exception& e)
       {
       std::cout << "Exception during load of " << name
                 << " key: " << e.what() << "\n";
       std::cout << "PEM for pubkey was:\n" << pub_pem << "\n";
+      ++fails;
       }
 
    std::string priv_pem = PKCS8::PEM_encode(*priv_key);
@@ -129,16 +137,25 @@ void validate_save_and_load(const Private_Key* priv_key,
          PKCS8::load_key(input_priv, rng));
 
       if(!restored_priv.get())
+         {
          std::cout << "Could not recover " << name << " privlic key\n";
+         ++fails;
+         }
       else if(restored_priv->check_key(rng, true) == false)
+         {
          std::cout << "Restored privkey failed self tests " << name << "\n";
+         ++fails;
+         }
       }
    catch(std::exception& e)
       {
       std::cout << "Exception during load of " << name
                 << " key: " << e.what() << "\n";
       std::cout << "PEM for privkey was:\n" << priv_pem << "\n";
+      ++fails;
       }
+
+   return fails;
    }
 
 void validate_decryption(PK_Decryptor& d, const std::string& algo,
@@ -689,32 +706,37 @@ u32bit validate_dlies(const std::string& algo,
 #endif
    }
 
-void do_pk_keygen_tests(RandomNumberGenerator& rng)
+}
+
+size_t test_pk_keygen()
    {
-   std::cout << "Testing PK key generation: " << std::flush;
+   AutoSeeded_RNG rng;
+
+   size_t fails = 0;
 
 #define DL_KEY(TYPE, GROUP)                 \
    {                                        \
    TYPE key(rng, DL_Group(GROUP));          \
    key.check_key(rng, true);                \
-   validate_save_and_load(&key, rng);       \
-   std::cout << '.' << std::flush;          \
+   fails += validate_save_and_load(&key, rng);       \
    }
 
 #define EC_KEY(TYPE, GROUP)                 \
    {                                        \
    TYPE key(rng, EC_Group(OIDS::lookup(GROUP)));        \
    key.check_key(rng, true);                \
-   validate_save_and_load(&key, rng);       \
-   std::cout << '.' << std::flush;          \
+   fails += validate_save_and_load(&key, rng);       \
    }
 
 #if defined(BOTAN_HAS_RSA)
       {
       RSA_PrivateKey rsa1024(rng, 1024);
       rsa1024.check_key(rng, true);
-      validate_save_and_load(&rsa1024, rng);
-      std::cout << '.' << std::flush;
+      fails += validate_save_and_load(&rsa1024, rng);
+
+      RSA_PrivateKey rsa2048(rng, 2048);
+      rsa2048.check_key(rng, true);
+      fails += validate_save_and_load(&rsa2048, rng);
       }
 #endif
 
@@ -722,8 +744,7 @@ void do_pk_keygen_tests(RandomNumberGenerator& rng)
       {
       RW_PrivateKey rw1024(rng, 1024);
       rw1024.check_key(rng, true);
-      validate_save_and_load(&rw1024, rng);
-      std::cout << '.' << std::flush;
+      fails += validate_save_and_load(&rw1024, rng);
       }
 #endif
 
@@ -776,27 +797,26 @@ void do_pk_keygen_tests(RandomNumberGenerator& rng)
    EC_KEY(GOST_3410_PrivateKey, "secp521r1");
 #endif
 
-   std::cout << std::endl;
+   return fails;
    }
 
-}
-
-u32bit do_pk_validation_tests(const std::string& filename,
-                              RandomNumberGenerator& rng)
+size_t test_pubkey()
    {
+   AutoSeeded_RNG rng;
+   const std::string filename = "checks/pk_valid.dat";
    std::ifstream test_data(filename.c_str());
 
    if(!test_data)
       throw Botan::Stream_IO_Error("Couldn't open test file " + filename);
 
-   u32bit errors = 0, alg_count = 0;
+   size_t total_errors = 0;
+   size_t errors = 0, alg_count = 0, total_tests = 0;
    std::string algorithm, print_algorithm;
 
    while(!test_data.eof())
       {
       if(test_data.bad() || test_data.fail())
-         throw Botan::Stream_IO_Error("File I/O error reading from " +
-                                      filename);
+         throw std::runtime_error("File I/O error reading from " + filename);
 
       std::string line;
       std::getline(test_data, line);
@@ -818,7 +838,7 @@ u32bit do_pk_validation_tests(const std::string& filename,
 
       if(line[0] == '[' && line[line.size() - 1] == ']')
          {
-         std::string old_algo = print_algorithm;
+         const std::string old_algo = print_algorithm;
          algorithm = line.substr(1, line.size() - 2);
          print_algorithm = algorithm;
          if(print_algorithm.find("_PKCS8") != std::string::npos)
@@ -830,22 +850,18 @@ u32bit do_pk_validation_tests(const std::string& filename,
 
          if(old_algo != print_algorithm && old_algo != "")
             {
-            std::cout << std::endl;
+            test_report(old_algo, alg_count, errors);
             alg_count = 0;
+            total_errors += errors;
+            errors = 0;
             }
 
-         if(old_algo != print_algorithm)
-            std::cout << "Testing " << print_algorithm << ": ";
          continue;
          }
 
       std::vector<std::string> substr = parse(line);
 
-#if 0
-      std::cout << "Testing: " << print_algorithm << std::endl;
-#endif
-
-      u32bit new_errors = 0;
+      size_t new_errors = 0;
 
       try
          {
@@ -885,38 +901,28 @@ u32bit do_pk_validation_tests(const std::string& filename,
          else if(algorithm.find("DLIES/") == 0)
             new_errors = validate_dlies(algorithm, substr, rng);
          else
+            {
             std::cout << "WARNING: Unknown PK algorithm "
                       << algorithm << std::endl;
-
-         if(new_errors == 0) // OK
-            std::cout << '.';
-         else if(new_errors == 1) // test failed
-            std::cout << 'X';
-         else if(new_errors == 2) // unknown algo
-            std::cout << '?';
-
-         std::cout.flush();
+            ++new_errors;
+            }
 
          alg_count++;
-         if(new_errors == 1)
-            errors += new_errors;
+         total_tests++;
+         errors += new_errors;
          }
       catch(std::exception& e)
          {
          std::cout << "Exception: " << e.what() << "\n";
+         new_errors++;
          }
 
-      if(new_errors == 1)
+      if(new_errors)
          std::cout << "ERROR: \"" << algorithm << "\" failed test #"
                    << std::dec << alg_count << std::endl;
       }
 
-   std::cout << std::endl;
-
-   do_ec_tests(rng);
-   errors += do_ecdsa_tests(rng);
-   errors += do_ecdh_tests(rng);
-   do_pk_keygen_tests(rng);
+   test_report("Pubkey", total_tests, errors);
 
    return errors;
    }

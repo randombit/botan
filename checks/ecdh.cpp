@@ -7,16 +7,14 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/build.h>
+#include "tests.h"
 
-#include "validate.h"
 #include "common.h"
-
-#if defined(BOTAN_HAS_ECDH) &&  defined(BOTAN_HAS_X509)
 
 #include <iostream>
 #include <fstream>
 
+#include <botan/auto_rng.h>
 #include <botan/pubkey.h>
 #include <botan/ecdh.h>
 #include <botan/x509self.h>
@@ -24,14 +22,14 @@
 
 using namespace Botan;
 
-#define CHECK_MESSAGE(expr, print) try { if(!(expr)) std::cout << print << "\n"; } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
-#define CHECK(expr) try { if(!(expr)) std::cout << #expr << "\n"; } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
+#define CHECK_MESSAGE(expr, print) try { if(!(expr)) { ++fails; std::cout << print << "\n"; } } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
+#define CHECK(expr) try { if(!(expr)) { ++fails; std::cout << #expr << "\n"; } } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
 
 namespace {
 
-void test_ecdh_normal_derivation(RandomNumberGenerator& rng)
+size_t test_ecdh_normal_derivation(RandomNumberGenerator& rng)
    {
-   std::cout << "." << std::flush;
+   size_t fails = 0;
 
    EC_Group dom_pars(OID("1.3.132.0.8"));
 
@@ -50,11 +48,16 @@ void test_ecdh_normal_derivation(RandomNumberGenerator& rng)
       std::cout << "The two keys didn't match!\n";
       std::cout << "Alice's key was: " << alice_key.as_string() << "\n";
       std::cout << "Bob's key was: " << bob_key.as_string() << "\n";
+      ++fails;
       }
+
+   return fails;
    }
 
-void test_ecdh_some_dp(RandomNumberGenerator& rng)
+size_t test_ecdh_some_dp(RandomNumberGenerator& rng)
    {
+   size_t fails = 0;
+
    std::vector<std::string> oids;
    oids.push_back("1.2.840.10045.3.1.7");
    oids.push_back("1.3.132.0.8");
@@ -62,8 +65,6 @@ void test_ecdh_some_dp(RandomNumberGenerator& rng)
 
    for(u32bit i = 0; i< oids.size(); i++)
       {
-      std::cout << "." << std::flush;
-
       OID oid(oids[i]);
       EC_Group dom_pars(oid);
 
@@ -79,10 +80,13 @@ void test_ecdh_some_dp(RandomNumberGenerator& rng)
       CHECK_MESSAGE(alice_key == bob_key, "different keys - " << "Alice's key was: " << alice_key.as_string() << ", Bob's key was: " << bob_key.as_string());
       }
 
+   return fails;
    }
 
-void test_ecdh_der_derivation(RandomNumberGenerator& rng)
+size_t test_ecdh_der_derivation(RandomNumberGenerator& rng)
    {
+   size_t fails = 0;
+
    std::vector<std::string> oids;
    oids.push_back("1.2.840.10045.3.1.7");
    oids.push_back("1.3.132.0.8");
@@ -106,25 +110,25 @@ void test_ecdh_der_derivation(RandomNumberGenerator& rng)
       SymmetricKey bob_key = kb.derive_key(32, key_a);
 
       CHECK_MESSAGE(alice_key == bob_key, "different keys - " << "Alice's key was: " << alice_key.as_string() << ", Bob's key was: " << bob_key.as_string());
-      //cout << "key: " << alice_key.as_string() << endl;
+
       }
+
+   return fails;
    }
 
 }
 
-u32bit do_ecdh_tests(RandomNumberGenerator& rng)
+size_t test_ecdh()
    {
-   std::cout << "Testing ECDH (InSiTo unit tests): ";
+   size_t fails = 0;
 
-   test_ecdh_normal_derivation(rng);
-   test_ecdh_some_dp(rng);
-   test_ecdh_der_derivation(rng);
+   AutoSeeded_RNG rng;
 
-   std::cout << std::endl;
+   fails += test_ecdh_normal_derivation(rng);
+   fails += test_ecdh_some_dp(rng);
+   fails += test_ecdh_der_derivation(rng);
 
-   return 0;
+   test_report("ECDH", 3, fails);
+
+   return fails;
    }
-
-#else
-u32bit do_ecdh_tests(RandomNumberGenerator&) { return 0; }
-#endif

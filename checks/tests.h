@@ -54,4 +54,19 @@ size_t test_bcrypt();
 size_t test_passhash9();
 size_t test_cryptobox();
 
+size_t test_bigint();
+
+size_t test_pubkey();
+size_t test_pk_keygen();
+
+size_t test_ecc();
+
+size_t test_ecdsa();
+size_t test_ecdh();
+
+size_t test_x509();
+size_t test_cvc();
+
+size_t test_tls();
+
 #endif

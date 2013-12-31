@@ -6,9 +6,7 @@
 *     2008 Jack Lloyd                                 *
 ******************************************************/
 
-#include "validate.h"
-
-#if defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_X509)
+#include "tests.h"
 
 #include <botan/botan.h>
 #include <botan/pubkey.h>
@@ -27,8 +25,8 @@ using namespace Botan;
 
 #define TEST_DATA_DIR "checks/ecc_testdata"
 
-#define CHECK_MESSAGE(expr, print) try { if(!(expr)) std::cout << print << "\n"; } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
-#define CHECK(expr) try { if(!(expr)) std::cout << #expr << "\n"; } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
+#define CHECK_MESSAGE(expr, print) try { if(!(expr)) { ++fails; std::cout << print << "\n"; } } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
+#define CHECK(expr) try { if(!(expr)) { ++fails; std::cout << #expr << "\n"; } } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
 
 namespace {
 
@@ -44,14 +42,13 @@ std::string to_hex(const std::vector<byte>& bin)
 * value) is larger than n, the order of the base point.  Tests the
 * signing function of the pk signer object */
 
-void test_hash_larger_than_n(RandomNumberGenerator& rng)
+size_t test_hash_larger_than_n(RandomNumberGenerator& rng)
    {
-   std::cout << "." << std::flush;
-
    EC_Group dom_pars(OID("1.3.132.0.8")); // secp160r1
    // n = 0x0100000000000000000001f4c8f927aed3ca752257 (21 bytes)
    // -> shouldn't work with SHA224 which outputs 28 bytes
 
+   size_t fails = 0;
    ECDSA_PrivateKey priv_key(rng, dom_pars);
 
    std::vector<byte> message(20);
@@ -90,14 +87,19 @@ void test_hash_larger_than_n(RandomNumberGenerator& rng)
 
    // verify against EMSA1_BSI
    if(pk_verifier.verify_message(message, signature))
+      {
       std::cout << "Corrupt ECDSA signature verified, should not have\n";
+      ++fails;
+      }
+
+   return fails;
    }
 
-void test_decode_ecdsa_X509()
+size_t test_decode_ecdsa_X509()
    {
-   std::cout << "." << std::flush;
-
    X509_Certificate cert(TEST_DATA_DIR "/CSCA.CSCA.csca-germany.1.crt");
+   size_t fails = 0;
+
    CHECK_MESSAGE(OIDS::lookup(cert.signature_algorithm().oid) == "ECDSA/EMSA1(SHA-224)", "error reading signature algorithm from x509 ecdsa certificate");
 
    CHECK_MESSAGE(to_hex(cert.serial_number()) == "01", "error reading serial from x509 ecdsa certificate");
@@ -107,39 +109,40 @@ void test_decode_ecdsa_X509()
    std::unique_ptr<X509_PublicKey> pubkey(cert.subject_public_key());
    bool ver_ec = cert.check_signature(*pubkey);
    CHECK_MESSAGE(ver_ec, "could not positively verify correct selfsigned x509-ecdsa certificate");
+
+   return fails;
    }
 
-void test_decode_ver_link_SHA256()
+size_t test_decode_ver_link_SHA256()
    {
-   std::cout << "." << std::flush;
-
    X509_Certificate root_cert(TEST_DATA_DIR "/root2_SHA256.cer");
    X509_Certificate link_cert(TEST_DATA_DIR "/link_SHA256.cer");
 
+   size_t fails = 0;
    std::unique_ptr<X509_PublicKey> pubkey(root_cert.subject_public_key());
    bool ver_ec = link_cert.check_signature(*pubkey);
    CHECK_MESSAGE(ver_ec, "could not positively verify correct SHA256 link x509-ecdsa certificate");
-
+   return fails;
    }
-void test_decode_ver_link_SHA1()
-   {
-   std::cout << "." << std::flush;
 
+size_t test_decode_ver_link_SHA1()
+   {
    X509_Certificate root_cert(TEST_DATA_DIR "/root_SHA1.163.crt");
    X509_Certificate link_cert(TEST_DATA_DIR "/link_SHA1.166.crt");
 
+   size_t fails = 0;
    std::unique_ptr<X509_PublicKey> pubkey(root_cert.subject_public_key());
    bool ver_ec = link_cert.check_signature(*pubkey);
    CHECK_MESSAGE(ver_ec, "could not positively verify correct SHA1 link x509-ecdsa certificate");
+   return fails;
    }
 
-void test_sign_then_ver(RandomNumberGenerator& rng)
+size_t test_sign_then_ver(RandomNumberGenerator& rng)
    {
-   std::cout << '.' << std::flush;
-
    EC_Group dom_pars(OID("1.3.132.0.8"));
    ECDSA_PrivateKey ecdsa(rng, dom_pars);
 
+   size_t fails = 0;
    PK_Signer signer(ecdsa, "EMSA1(SHA-1)");
 
    auto msg = hex_decode("12345678901234567890abcdef12");
@@ -150,18 +153,26 @@ void test_sign_then_ver(RandomNumberGenerator& rng)
    bool ok = verifier.verify_message(msg, sig);
 
    if(!ok)
+      {
       std::cout << "ERROR: Could not verify ECDSA signature\n";
+      fails++;
+      }
 
    sig[0]++;
    ok = verifier.verify_message(msg, sig);
 
    if(ok)
+      {
       std::cout << "ERROR: Bogus ECDSA signature verified anyway\n";
+      fails++;
+      }
+
+   return fails;
    }
 
-bool test_ec_sign(RandomNumberGenerator& rng)
+size_t test_ec_sign(RandomNumberGenerator& rng)
    {
-   std::cout << "." << std::flush;
+   size_t fails = 0;
 
    try
       {
@@ -181,7 +192,7 @@ bool test_ec_sign(RandomNumberGenerator& rng)
       if(!verifier.check_signature(sig))
          {
          std::cout << "ECDSA self-test failed!";
-         return false;
+         ++fails;
          }
 
       // now check valid signature, different input
@@ -191,7 +202,7 @@ bool test_ec_sign(RandomNumberGenerator& rng)
       if(verifier.check_signature(sig))
          {
          std::cout << "ECDSA with bad input passed validation";
-         return false;
+         ++fails;
          }
 
       // now check with original input, modified signature
@@ -203,21 +214,22 @@ bool test_ec_sign(RandomNumberGenerator& rng)
       if(verifier.check_signature(sig))
          {
          std::cout << "ECDSA with bad signature passed validation";
-         return false;
+         ++fails;
          }
       }
    catch (std::exception& e)
       {
       std::cout << "Exception in test_ec_sign - " << e.what() << "\n";
-      return false;
+      ++fails;
       }
-   return true;
+
+   return fails;
    }
 
 
-void test_create_pkcs8(RandomNumberGenerator& rng)
+size_t test_create_pkcs8(RandomNumberGenerator& rng)
    {
-   std::cout << "." << std::flush;
+   size_t fails = 0;
 
    try
       {
@@ -239,12 +251,15 @@ void test_create_pkcs8(RandomNumberGenerator& rng)
    catch (std::exception& e)
       {
       std::cout << "Exception: " << e.what() << std::endl;
+      ++fails;
       }
+
+   return fails;
    }
 
-void test_create_and_verify(RandomNumberGenerator& rng)
+size_t test_create_and_verify(RandomNumberGenerator& rng)
    {
-   std::cout << "." << std::flush;
+   size_t fails = 0;
 
    EC_Group dom_pars(OID("1.3.132.0.8"));
    ECDSA_PrivateKey key(rng, dom_pars);
@@ -294,10 +309,13 @@ void test_create_and_verify(RandomNumberGenerator& rng)
    if(!dynamic_cast<ECDSA_PrivateKey*>(loaded_key.get()))
       {
       std::cout << "Failed to reload an ECDSA key with unusual parameter set\n";
+      ++fails;
       }
+
+   return fails;
    }
 
-void test_curve_registry(RandomNumberGenerator& rng)
+size_t test_curve_registry(RandomNumberGenerator& rng)
    {
    std::vector<std::string> oids;
    oids.push_back("1.3.132.0.8");
@@ -320,7 +338,7 @@ void test_curve_registry(RandomNumberGenerator& rng)
    oids.push_back("1.3.132.0.10");
    oids.push_back("1.3.132.0.34");
    oids.push_back("1.3.132.0.35");
-   oids.push_back("1.3.6.1.4.1.8301.3.1.2.9.0.38");
+   //oids.push_back("1.3.6.1.4.1.8301.3.1.2.9.0.38");
    oids.push_back("1.3.36.3.3.2.8.1.1.1");
    oids.push_back("1.3.36.3.3.2.8.1.1.3");
    oids.push_back("1.3.36.3.3.2.8.1.1.5");
@@ -329,11 +347,11 @@ void test_curve_registry(RandomNumberGenerator& rng)
    oids.push_back("1.3.36.3.3.2.8.1.1.11");
    oids.push_back("1.3.36.3.3.2.8.1.1.13");
 
+   size_t fails = 0;
+
    unsigned int i;
    for (i = 0; i < oids.size(); i++)
       {
-      std::cout << "." << std::flush;
-
       try
          {
          OID oid(oids[i]);
@@ -347,21 +365,24 @@ void test_curve_registry(RandomNumberGenerator& rng)
          std::vector<byte> sig = signer.sign_message(msg, rng);
 
          if(!verifier.verify_message(msg, sig))
+            {
             std::cout << "Failed testing ECDSA sig for curve " << oids[i] << "\n";
+            ++fails;
+            }
          }
       catch(Invalid_Argument& e)
          {
          std::cout << "Error testing curve " << oids[i] << " - " << e.what() << "\n";
+         ++fails;
          }
       }
-   //  std::cout << "test_curve_registry finished" << endl;
+   return fails;
    }
 
-void test_read_pkcs8(RandomNumberGenerator& rng)
+size_t test_read_pkcs8(RandomNumberGenerator& rng)
    {
-   std::cout << "." << std::flush;
-
    auto msg = hex_decode("12345678901234567890abcdef12");
+   size_t fails = 0;
 
    try
       {
@@ -380,6 +401,7 @@ void test_read_pkcs8(RandomNumberGenerator& rng)
       }
    catch (std::exception& e)
       {
+      ++fails;
       std::cout << "Exception in test_read_pkcs8 - " << e.what() << "\n";
       }
 
@@ -404,18 +426,24 @@ void test_read_pkcs8(RandomNumberGenerator& rng)
             PKCS8::load_key(TEST_DATA_DIR "/withdompar_private.pkcs8.pem", rng));
 
          std::cout << "Unexpected success: loaded key with unknown OID\n";
+         ++fails;
          }
       catch (std::exception) { /* OK */ }
       }
    catch (std::exception& e)
       {
       std::cout << "Exception in test_read_pkcs8 - " << e.what() << "\n";
+      ++fails;
       }
+
+   return fails;
    }
 
-void test_ecc_key_with_rfc5915_extensions(RandomNumberGenerator& rng)
+size_t test_ecc_key_with_rfc5915_extensions(RandomNumberGenerator& rng)
    {
    const std::string pw = "G3bz1L1gmB5ULietOZdoLPu63D7uwTLMEk";
+
+   size_t fails = 0;
 
    try
       {
@@ -423,37 +451,41 @@ void test_ecc_key_with_rfc5915_extensions(RandomNumberGenerator& rng)
          PKCS8::load_key(TEST_DATA_DIR "/ecc_private_with_rfc5915_ext.pem", rng, pw));
 
       if(!dynamic_cast<ECDSA_PrivateKey*>(pkcs8.get()))
+         {
          std::cout << "Loaded RFC 5915 key, but got something other than an ECDSA key\n";
+         ++fails;
+         }
       }
    catch(std::exception& e)
       {
       std::cout << "Exception in " << __func__ << " - " << e.what() << "\n";
+      ++fails;
       }
+
+   return fails;
    }
 
 }
 
-u32bit do_ecdsa_tests(Botan::RandomNumberGenerator& rng)
+size_t test_ecdsa()
    {
-   std::cout << "Testing ECDSA (InSiTo unit tests): ";
+   size_t fails = 0;
 
-   test_hash_larger_than_n(rng);
-   test_decode_ecdsa_X509();
-   test_decode_ver_link_SHA256();
-   test_decode_ver_link_SHA1();
-   test_sign_then_ver(rng);
-   test_ec_sign(rng);
-   test_create_pkcs8(rng);
-   test_create_and_verify(rng);
-   test_curve_registry(rng);
-   test_read_pkcs8(rng);
+   AutoSeeded_RNG rng;
 
-   test_ecc_key_with_rfc5915_extensions(rng);
+   fails += test_hash_larger_than_n(rng);
+   fails += test_decode_ecdsa_X509();
+   fails += test_decode_ver_link_SHA256();
+   fails += test_decode_ver_link_SHA1();
+   fails += test_sign_then_ver(rng);
+   fails += test_ec_sign(rng);
+   fails += test_create_pkcs8(rng);
+   fails += test_create_and_verify(rng);
+   fails += test_curve_registry(rng);
+   fails += test_read_pkcs8(rng);
+   fails += test_ecc_key_with_rfc5915_extensions(rng);
 
-   std::cout << std::endl;
+   test_report("ECDSA", 11, fails);
 
-   return 0;
+   return fails;
    }
-#else
-u32bit do_ecdsa_tests(Botan::RandomNumberGenerator&) { return 0; }
-#endif

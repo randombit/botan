@@ -5,13 +5,31 @@ size_t run_tests(const std::vector<test_fn>& tests)
    {
    size_t fails = 0;
    for(auto& test : tests)
-      fails += test();
+      {
+      try
+         {
+         fails += test();
+         }
+      catch(std::exception& e)
+         {
+         std::cout << "Exception escaped callback: " << e.what() << "\n";
+         ++fails;
+         }
+      }
    return fails;
    }
 
 void test_report(const std::string& name, size_t ran, size_t failed)
    {
-   std::cout << name << " tests: " << ran << " completed " << failed << " failed\n";
+   std::cout << name << " tests:";
+
+   if(ran > 0)
+      std::cout << " " << ran << " total";
+
+   if(failed)
+      std::cout << " " << failed << " FAILs\n";
+   else
+      std::cout << " all ok\n";
    }
 
 size_t run_tests_bb(std::istream& src,
@@ -27,8 +45,8 @@ size_t run_tests_bb(std::istream& src,
       }
 
    std::map<std::string, std::string> vars;
-   size_t test_cnt = 0;
-   size_t test_fail = 0;
+   size_t test_fails = 0, algo_fail = 0;
+   size_t test_count = 0, algo_count = 0;
 
    std::string fixed_name;
 
@@ -45,6 +63,13 @@ size_t run_tests_bb(std::istream& src,
 
       if(line[0] == '[' && line[line.size()-1] == ']')
          {
+         if(fixed_name != "")
+            test_report(fixed_name, algo_count, algo_fail);
+
+         test_count += algo_count;
+         test_fails += algo_fail;
+         algo_count = 0;
+         algo_fail = 0;
          fixed_name = line.substr(1, line.size() - 2);
          vars[name_key] = fixed_name;
          continue;
@@ -61,19 +86,19 @@ size_t run_tests_bb(std::istream& src,
       if(key == output_key)
          {
          //std::cout << vars[name_key] << " " << test_cnt << "\n";
-         ++test_cnt;
+         ++algo_count;
          try
             {
             if(!cb(vars))
                {
-               std::cout << vars[name_key] << " test " << test_cnt << " failed\n";
-               ++test_fail;
+               std::cout << vars[name_key] << " test " << algo_count << " failed\n";
+               ++algo_fail;
                }
             }
          catch(std::exception& e)
             {
-            std::cout << vars[name_key] << " test " << test_cnt << " failed: " << e.what() << "\n";
-            ++test_fail;
+            std::cout << vars[name_key] << " test " << algo_count << " failed: " << e.what() << "\n";
+            ++algo_fail;
             }
 
          if(clear_between_cb)
@@ -84,9 +109,9 @@ size_t run_tests_bb(std::istream& src,
          }
       }
 
-   test_report(name_key, test_cnt, test_fail);
+   test_report(name_key, test_count, test_fails);
 
-   return test_fail;
+   return test_fails;
    }
 
 size_t run_tests(std::istream& src,
@@ -134,6 +159,17 @@ size_t run_all_tests()
    all_tests.push_back(test_passhash9);
    all_tests.push_back(test_bcrypt);
    all_tests.push_back(test_cryptobox);
+
+   all_tests.push_back(test_bigint);
+   all_tests.push_back(test_pubkey);
+
+   all_tests.push_back(test_ecc);
+   all_tests.push_back(test_ecdsa);
+   all_tests.push_back(test_ecdh);
+   all_tests.push_back(test_pk_keygen);
+   all_tests.push_back(test_cvc);
+   all_tests.push_back(test_x509);
+   all_tests.push_back(test_tls);
 
    return run_tests(all_tests);
    }

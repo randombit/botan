@@ -29,11 +29,8 @@ using namespace Botan;
 
 #include "getopt.h"
 #include "bench.h"
-#include "validate.h"
 #include "common.h"
 #include "tests.h"
-
-int run_test_suite(RandomNumberGenerator& rng);
 
 namespace {
 
@@ -90,6 +87,35 @@ void test_types()
 
    if(!passed)
       std::cout << "Typedefs in include/types.h may be incorrect!\n";
+   }
+
+int run_tests()
+   {
+   size_t errors = 0;
+
+   try
+      {
+      errors += run_all_tests();
+      }
+   catch(std::exception& e)
+      {
+      std::cout << "Exception in test suite " << e.what() << std::endl;
+      ++errors;
+      }
+   catch(...)
+      {
+      std::cout << "Unknown exception caught\n";
+      ++errors;
+      }
+
+   if(errors)
+      {
+      std::cout << errors << " test"  << ((errors == 1) ? "" : "s")
+                << " failed." << std::endl;
+      return 1;
+      }
+
+   return 0;
    }
 
 }
@@ -151,7 +177,7 @@ int main(int argc, char* argv[])
 
       if(opts.is_set("validate") || opts.is_set("test"))
          {
-         return run_test_suite(rng);
+         return run_tests();
          }
       if(opts.is_set("bench-algo") ||
          opts.is_set("benchmark") ||
@@ -213,40 +239,3 @@ int main(int argc, char* argv[])
    return 0;
    }
 
-int run_test_suite(RandomNumberGenerator& rng)
-   {
-   u32bit errors = 0;
-   try
-      {
-      const std::string BIGINT_VALIDATION_FILE = "checks/mp_valid.dat";
-      const std::string PK_VALIDATION_FILE = "checks/pk_valid.dat";
-
-      errors += run_all_tests();
-      //errors += do_validation_tests(VALIDATION_FILE, rng);
-      //errors += do_validation_tests(EXPECTED_FAIL_FILE, rng, false);
-      errors += do_bigint_tests(BIGINT_VALIDATION_FILE, rng);
-      errors += do_pk_validation_tests(PK_VALIDATION_FILE, rng);
-      do_x509_tests(rng);
-      do_tls_tests(rng);
-      //errors += do_cvc_tests(rng);
-      }
-   catch(std::exception& e)
-      {
-      std::cout << "Exception: " << e.what() << std::endl;
-      return 1;
-      }
-   catch(...)
-      {
-      std::cout << "Unknown exception caught." << std::endl;
-      return 1;
-      }
-
-   if(errors)
-      {
-      std::cout << errors << " test"  << ((errors == 1) ? "" : "s")
-                << " failed." << std::endl;
-      return 1;
-      }
-
-   return 0;
-   }

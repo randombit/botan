@@ -38,6 +38,14 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
          void encipher(std::vector<byte, Alloc>& inout)
          { cipher(&inout[0], &inout[0], inout.size()); }
 
+      template<typename Alloc>
+         void encrypt(std::vector<byte, Alloc>& inout)
+         { cipher(&inout[0], &inout[0], inout.size()); }
+
+      template<typename Alloc>
+         void decrypt(std::vector<byte, Alloc>& inout)
+         { cipher(&inout[0], &inout[0], inout.size()); }
+
       /**
       * Resync the cipher using the IV
       * @param iv the initialization vector

@@ -5,6 +5,7 @@
 */
 
 #include "tests.h"
+#include "common.h"
 
 #include <vector>
 #include <string>
@@ -12,43 +13,41 @@
 #include <iostream>
 #include <cstdlib>
 
+#include <botan/auto_rng.h>
 #include <botan/bigint.h>
 #include <botan/exceptn.h>
 #include <botan/numthry.h>
 using namespace Botan;
 
-#include "common.h"
-#include "validate.h"
-
-#define DEBUG 0
-
-u32bit check_add(const std::vector<std::string>&);
-u32bit check_sub(const std::vector<std::string>&);
-u32bit check_mul(const std::vector<std::string>&);
-u32bit check_sqr(const std::vector<std::string>&);
-u32bit check_div(const std::vector<std::string>&);
-u32bit check_mod(const std::vector<std::string>&,
+size_t check_add(const std::vector<std::string>&);
+size_t check_sub(const std::vector<std::string>&);
+size_t check_mul(const std::vector<std::string>&);
+size_t check_sqr(const std::vector<std::string>&);
+size_t check_div(const std::vector<std::string>&);
+size_t check_mod(const std::vector<std::string>&,
                  Botan::RandomNumberGenerator& rng);
-u32bit check_shr(const std::vector<std::string>&);
-u32bit check_shl(const std::vector<std::string>&);
+size_t check_shr(const std::vector<std::string>&);
+size_t check_shl(const std::vector<std::string>&);
 
-u32bit check_powmod(const std::vector<std::string>&);
-u32bit check_primetest(const std::vector<std::string>&,
+size_t check_powmod(const std::vector<std::string>&);
+size_t check_primetest(const std::vector<std::string>&,
                        Botan::RandomNumberGenerator&);
 
-u32bit do_bigint_tests(const std::string& filename,
-                       Botan::RandomNumberGenerator& rng)
+size_t test_bigint()
    {
+   const std::string filename = "checks/mp_valid.dat";
    std::ifstream test_data(filename.c_str());
 
    if(!test_data)
       throw Botan::Stream_IO_Error("Couldn't open test file " + filename);
 
-   u32bit total_errors = 0;
-   u32bit errors = 0, alg_count = 0;
+   size_t total_errors = 0;
+   size_t errors = 0, alg_count = 0;
    std::string algorithm;
    bool first = true;
-   u32bit counter = 0;
+   size_t counter = 0;
+
+   AutoSeeded_RNG rng;
 
    while(!test_data.eof())
       {
@@ -95,7 +94,7 @@ u32bit do_bigint_tests(const std::string& filename,
       std::cout << "Testing: " << algorithm << std::endl;
 #endif
 
-      u32bit new_errors = 0;
+      size_t new_errors = 0;
       if(algorithm.find("Addition") != std::string::npos)
          new_errors = check_add(substr);
       else if(algorithm.find("Subtraction") != std::string::npos)
@@ -134,7 +133,7 @@ u32bit do_bigint_tests(const std::string& filename,
 namespace {
 
 // c==expected, d==a op b, e==a op= b
-u32bit results(std::string op,
+size_t results(std::string op,
                const BigInt& a, const BigInt& b,
                const BigInt& c, const BigInt& d, const BigInt& e)
    {
@@ -167,7 +166,7 @@ u32bit results(std::string op,
 
 }
 
-u32bit check_add(const std::vector<std::string>& args)
+size_t check_add(const std::vector<std::string>& args)
    {
    BigInt a(args[0]);
    BigInt b(args[1]);
@@ -187,7 +186,7 @@ u32bit check_add(const std::vector<std::string>& args)
    return results("+", a, b, c, d, e);
    }
 
-u32bit check_sub(const std::vector<std::string>& args)
+size_t check_sub(const std::vector<std::string>& args)
    {
    BigInt a(args[0]);
    BigInt b(args[1]);
@@ -200,7 +199,7 @@ u32bit check_sub(const std::vector<std::string>& args)
    return results("-", a, b, c, d, e);
    }
 
-u32bit check_mul(const std::vector<std::string>& args)
+size_t check_mul(const std::vector<std::string>& args)
    {
    BigInt a(args[0]);
    BigInt b(args[1]);
@@ -231,7 +230,7 @@ u32bit check_mul(const std::vector<std::string>& args)
    return results("*", a, b, c, d, e);
    }
 
-u32bit check_sqr(const std::vector<std::string>& args)
+size_t check_sqr(const std::vector<std::string>& args)
    {
    BigInt a(args[0]);
    BigInt b(args[1]);
@@ -245,7 +244,7 @@ u32bit check_sqr(const std::vector<std::string>& args)
    return results("sqr", a, a, b, c, d);
    }
 
-u32bit check_div(const std::vector<std::string>& args)
+size_t check_div(const std::vector<std::string>& args)
    {
    BigInt a(args[0]);
    BigInt b(args[1]);
@@ -258,7 +257,7 @@ u32bit check_div(const std::vector<std::string>& args)
    return results("/", a, b, c, d, e);
    }
 
-u32bit check_mod(const std::vector<std::string>& args,
+size_t check_mod(const std::vector<std::string>& args,
                  Botan::RandomNumberGenerator& rng)
    {
    BigInt a(args[0]);
@@ -269,7 +268,7 @@ u32bit check_mod(const std::vector<std::string>& args,
    BigInt e = a;
    e %= b;
 
-   u32bit got = results("%", a, b, c, d, e);
+   size_t got = results("%", a, b, c, d, e);
 
    if(got) return got;
 
@@ -277,7 +276,7 @@ u32bit check_mod(const std::vector<std::string>& args,
 
    /* Won't work for us, just pick one at random */
    while(b_word == 0)
-      for(u32bit j = 0; j != 2*sizeof(word); j++)
+      for(size_t j = 0; j != 2*sizeof(word); j++)
          b_word = (b_word << 4) ^ rng.next_byte();
 
    b = b_word;
@@ -291,10 +290,10 @@ u32bit check_mod(const std::vector<std::string>& args,
    return results("%(word)", a, b, c, d2, e);
    }
 
-u32bit check_shl(const std::vector<std::string>& args)
+size_t check_shl(const std::vector<std::string>& args)
    {
    BigInt a(args[0]);
-   u32bit b = std::atoi(args[1].c_str());
+   size_t b = std::atoi(args[1].c_str());
    BigInt c(args[2]);
 
    BigInt d = a << b;
@@ -304,10 +303,10 @@ u32bit check_shl(const std::vector<std::string>& args)
    return results("<<", a, b, c, d, e);
    }
 
-u32bit check_shr(const std::vector<std::string>& args)
+size_t check_shr(const std::vector<std::string>& args)
    {
    BigInt a(args[0]);
-   u32bit b = std::atoi(args[1].c_str());
+   size_t b = std::atoi(args[1].c_str());
    BigInt c(args[2]);
 
    BigInt d = a >> b;
@@ -318,7 +317,7 @@ u32bit check_shr(const std::vector<std::string>& args)
    }
 
 /* Make sure that (a^b)%m == r */
-u32bit check_powmod(const std::vector<std::string>& args)
+size_t check_powmod(const std::vector<std::string>& args)
    {
    BigInt a(args[0]);
    BigInt b(args[1]);
@@ -341,7 +340,7 @@ u32bit check_powmod(const std::vector<std::string>& args)
    }
 
 /* Make sure that n is prime or not prime, according to should_be_prime */
-u32bit check_primetest(const std::vector<std::string>& args,
+size_t check_primetest(const std::vector<std::string>& args,
                        Botan::RandomNumberGenerator& rng)
    {
    BigInt n(args[0]);

@@ -1,4 +1,5 @@
-#include "validate.h"
+
+#include "tests.h"
 
 #if defined(BOTAN_HAS_TLS)
 
@@ -135,8 +136,9 @@ Credentials_Manager* create_creds(RandomNumberGenerator& rng)
    }
 
 
-void test_handshake(RandomNumberGenerator& rng)
+size_t test_handshake()
    {
+   AutoSeeded_RNG rng;
    TLS::Policy default_policy;
 
    std::auto_ptr<Credentials_Manager> creds(create_creds(rng));
@@ -148,14 +150,17 @@ void test_handshake(RandomNumberGenerator& rng)
 
    auto handshake_complete = [](const TLS::Session& session) -> bool
    {
-      std::cout << "Handshake complete, " << session.version().to_string()
-      << " using " << session.ciphersuite().to_string() << "\n";
+      if(false)
+         {
+         std::cout << "Handshake complete, " << session.version().to_string()
+                   << " using " << session.ciphersuite().to_string() << "\n";
 
-      if(!session.session_id().empty())
-         std::cout << "Session ID " << hex_encode(session.session_id()) << "\n";
+         if(!session.session_id().empty())
+            std::cout << "Session ID " << hex_encode(session.session_id()) << "\n";
 
-      if(!session.session_ticket().empty())
-         std::cout << "Session ticket " << hex_encode(session.session_ticket()) << "\n";
+         if(!session.session_ticket().empty())
+            std::cout << "Session ticket " << hex_encode(session.session_ticket()) << "\n";
+         }
 
       return true;
    };
@@ -239,7 +244,7 @@ void test_handshake(RandomNumberGenerator& rng)
          if(c2s_data[0] != '1')
             {
             std::cout << "Error\n";
-            break;
+            return 1;
             }
          }
 
@@ -248,7 +253,7 @@ void test_handshake(RandomNumberGenerator& rng)
          if(s2c_data[0] != '2')
             {
             std::cout << "Error\n";
-            break;
+            return 1;
             }
          }
 
@@ -259,19 +264,15 @@ void test_handshake(RandomNumberGenerator& rng)
 
 }
 
-size_t do_tls_tests(RandomNumberGenerator& rng)
+size_t test_tls()
    {
    size_t errors = 0;
 
-   std::cout << "TLS tests: ";
-
-   test_handshake(rng);
-
-   std::cout << std::endl;
+   errors += test_handshake(rng);
 
    return errors;
    }
 
 #else
-size_t do_tls_tests(RandomNumberGenerator&) { return 0; }
+size_t test_tls() { return 0; }
 #endif
