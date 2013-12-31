@@ -67,9 +67,9 @@ class BOTAN_DLL CFB_Encryption : public CFB_Mode
       CFB_Encryption(BlockCipher* cipher, size_t feedback_bits) :
          CFB_Mode(cipher, feedback_bits) {}
 
-      void update(secure_vector<byte>& blocks, size_t offset) override;
+      void update(secure_vector<byte>& blocks, size_t offset = 0) override;
 
-      void finish(secure_vector<byte>& final_block, size_t offset) override;
+      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
    };
 
 /**
@@ -81,9 +81,9 @@ class BOTAN_DLL CFB_Decryption : public CFB_Mode
       CFB_Decryption(BlockCipher* cipher, size_t feedback_bits) :
          CFB_Mode(cipher, feedback_bits) {}
 
-      void update(secure_vector<byte>& blocks, size_t offset) override;
+      void update(secure_vector<byte>& blocks, size_t offset = 0) override;
 
-      void finish(secure_vector<byte>& final_block, size_t offset) override;
+      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
    };
 
 }

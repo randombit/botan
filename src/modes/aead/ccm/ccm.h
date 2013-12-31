@@ -25,7 +25,7 @@ class BOTAN_DLL CCM_Mode : public AEAD_Mode
    public:
       secure_vector<byte> start(const byte nonce[], size_t nonce_len) override;
 
-      void update(secure_vector<byte>& blocks, size_t offset) override;
+      void update(secure_vector<byte>& blocks, size_t offset = 0) override;
 
       void set_associated_data(const byte ad[], size_t ad_len) override;
 
@@ -88,7 +88,7 @@ class BOTAN_DLL CCM_Encryption : public CCM_Mode
       CCM_Encryption(BlockCipher* cipher, size_t tag_size = 16, size_t L = 3) :
          CCM_Mode(cipher, tag_size, L) {}
 
-      void finish(secure_vector<byte>& final_block, size_t offset) override;
+      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
 
       size_t output_length(size_t input_length) const override
          { return input_length + tag_size(); }
@@ -112,7 +112,7 @@ class BOTAN_DLL CCM_Decryption : public CCM_Mode
       CCM_Decryption(BlockCipher* cipher, size_t tag_size = 16, size_t L = 3) :
          CCM_Mode(cipher, tag_size, L) {}
 
-      void finish(secure_vector<byte>& final_block, size_t offset) override;
+      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
 
       size_t output_length(size_t input_length) const override
          {

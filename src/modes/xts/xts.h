@@ -59,9 +59,9 @@ class BOTAN_DLL XTS_Encryption : public XTS_Mode
    public:
       XTS_Encryption(BlockCipher* cipher) : XTS_Mode(cipher) {}
 
-      void update(secure_vector<byte>& blocks, size_t offset) override;
+      void update(secure_vector<byte>& blocks, size_t offset = 0) override;
 
-      void finish(secure_vector<byte>& final_block, size_t offset) override;
+      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
 
       size_t output_length(size_t input_length) const override;
    };
@@ -74,9 +74,9 @@ class BOTAN_DLL XTS_Decryption : public XTS_Mode
    public:
       XTS_Decryption(BlockCipher* cipher) : XTS_Mode(cipher) {}
 
-      void update(secure_vector<byte>& blocks, size_t offset) override;
+      void update(secure_vector<byte>& blocks, size_t offset = 0) override;
 
-      void finish(secure_vector<byte>& final_block, size_t offset) override;
+      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
 
       size_t output_length(size_t input_length) const override;
    };

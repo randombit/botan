@@ -24,7 +24,7 @@ class BOTAN_DLL SIV_Mode : public AEAD_Mode
    public:
       secure_vector<byte> start(const byte nonce[], size_t nonce_len) override;
 
-      void update(secure_vector<byte>& blocks, size_t offset) override;
+      void update(secure_vector<byte>& blocks, size_t offset = 0) override;
 
       void set_associated_data_n(size_t n, const byte ad[], size_t ad_len);
 
@@ -79,7 +79,7 @@ class BOTAN_DLL SIV_Encryption : public SIV_Mode
       */
       SIV_Encryption(BlockCipher* cipher) : SIV_Mode(cipher) {}
 
-      void finish(secure_vector<byte>& final_block, size_t offset) override;
+      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
 
       size_t output_length(size_t input_length) const override
          { return input_length + tag_size(); }
@@ -98,7 +98,7 @@ class BOTAN_DLL SIV_Decryption : public SIV_Mode
       */
       SIV_Decryption(BlockCipher* cipher) : SIV_Mode(cipher) {}
 
-      void finish(secure_vector<byte>& final_block, size_t offset) override;
+      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
 
       size_t output_length(size_t input_length) const override
          {

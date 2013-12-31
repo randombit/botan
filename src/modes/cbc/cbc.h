@@ -66,9 +66,9 @@ class BOTAN_DLL CBC_Encryption : public CBC_Mode
       CBC_Encryption(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
          CBC_Mode(cipher, padding) {}
 
-      void update(secure_vector<byte>& blocks, size_t offset) override;
+      void update(secure_vector<byte>& blocks, size_t offset = 0) override;
 
-      void finish(secure_vector<byte>& final_block, size_t offset) override;
+      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
 
       size_t output_length(size_t input_length) const override;
 
@@ -85,7 +85,7 @@ class BOTAN_DLL CTS_Encryption : public CBC_Encryption
 
       size_t output_length(size_t input_length) const override;
 
-      void finish(secure_vector<byte>& final_block, size_t offset) override;
+      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
 
       size_t minimum_final_size() const override;
 
@@ -101,9 +101,9 @@ class BOTAN_DLL CBC_Decryption : public CBC_Mode
       CBC_Decryption(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
          CBC_Mode(cipher, padding), m_tempbuf(update_granularity()) {}
 
-      void update(secure_vector<byte>& blocks, size_t offset) override;
+      void update(secure_vector<byte>& blocks, size_t offset = 0) override;
 
-      void finish(secure_vector<byte>& final_block, size_t offset) override;
+      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
 
       size_t output_length(size_t input_length) const override;
 
@@ -120,7 +120,7 @@ class BOTAN_DLL CTS_Decryption : public CBC_Decryption
    public:
       CTS_Decryption(BlockCipher* cipher) : CBC_Decryption(cipher, nullptr) {}
 
-      void finish(secure_vector<byte>& final_block, size_t offset) override;
+      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
 
       size_t minimum_final_size() const override;
 

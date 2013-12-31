@@ -57,9 +57,9 @@ class BOTAN_DLL ECB_Encryption : public ECB_Mode
       ECB_Encryption(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
          ECB_Mode(cipher, padding) {}
 
-      void update(secure_vector<byte>& blocks, size_t offset) override;
+      void update(secure_vector<byte>& blocks, size_t offset = 0) override;
 
-      void finish(secure_vector<byte>& final_block, size_t offset) override;
+      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
 
       size_t output_length(size_t input_length) const override;
 
@@ -75,9 +75,9 @@ class BOTAN_DLL ECB_Decryption : public ECB_Mode
       ECB_Decryption(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
          ECB_Mode(cipher, padding) {}
 
-      void update(secure_vector<byte>& blocks, size_t offset) override;
+      void update(secure_vector<byte>& blocks, size_t offset = 0) override;
 
-      void finish(secure_vector<byte>& final_block, size_t offset) override;
+      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
 
       size_t output_length(size_t input_length) const override;
 

@@ -78,9 +78,9 @@ class BOTAN_DLL EAX_Encryption : public EAX_Mode
 
       size_t minimum_final_size() const override { return 0; }
 
-      void update(secure_vector<byte>& blocks, size_t offset) override;
+      void update(secure_vector<byte>& blocks, size_t offset = 0) override;
 
-      void finish(secure_vector<byte>& final_block, size_t offset) override;
+      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
    };
 
 /**
@@ -104,9 +104,9 @@ class BOTAN_DLL EAX_Decryption : public EAX_Mode
 
       size_t minimum_final_size() const override { return tag_size(); }
 
-      void update(secure_vector<byte>& blocks, size_t offset) override;
+      void update(secure_vector<byte>& blocks, size_t offset = 0) override;
 
-      void finish(secure_vector<byte>& final_block, size_t offset) override;
+      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
    };
 
 }
