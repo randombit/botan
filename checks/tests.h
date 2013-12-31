@@ -28,7 +28,18 @@ void test_report(const std::string& name, size_t ran, size_t failed);
 
 #define TEST(expr, msg) do { if(!(expr)) { ++fails; std::cout << msg; } while(0)
 
+size_t run_all_tests();
+
 // Tests using reader framework above
+size_t test_block();
+size_t test_stream();
+size_t test_hash();
+size_t test_mac();
+
+size_t test_modes();
+
+size_t test_rngs();
+
 size_t test_hkdf();
 size_t test_pbkdf();
 size_t test_kdf();

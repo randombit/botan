@@ -44,7 +44,6 @@ u32bit do_bigint_tests(const std::string& filename,
 
    u32bit errors = 0, alg_count = 0;
    std::string algorithm;
-   bool first = true;
    u32bit counter = 0;
 
    while(!test_data.eof())
@@ -76,11 +75,6 @@ u32bit do_bigint_tests(const std::string& filename,
          alg_count = 0;
          counter = 0;
 
-         if(!first)
-            std::cout << std::endl;
-         std::cout << "Testing BigInt " << algorithm << ": ";
-         std::cout.flush();
-         first = false;
          continue;
          }
 
@@ -114,11 +108,6 @@ u32bit do_bigint_tests(const std::string& filename,
       else
          std::cout << "Unknown MPI test " << algorithm << std::endl;
 
-      if(counter % 3 == 0)
-         {
-         std::cout << '.';
-         std::cout.flush();
-         }
       counter++;
       alg_count++;
       errors += new_errors;
@@ -127,7 +116,6 @@ u32bit do_bigint_tests(const std::string& filename,
          std::cout << "ERROR: BigInt " << algorithm << " failed test #"
                    << std::dec << alg_count << std::endl;
       }
-   std::cout << std::endl;
    return errors;
    }
 

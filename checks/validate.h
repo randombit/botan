@@ -13,10 +13,6 @@ using Botan::RandomNumberGenerator;
 
 using Botan::u32bit;
 
-u32bit do_validation_tests(const std::string&,
-                           RandomNumberGenerator& rng,
-                           bool = true);
-
 u32bit do_bigint_tests(const std::string&,
                        RandomNumberGenerator& rng);
 

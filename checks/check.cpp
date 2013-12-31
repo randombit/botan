@@ -215,18 +215,15 @@ int main(int argc, char* argv[])
 
 int run_test_suite(RandomNumberGenerator& rng)
    {
-   std::cout << "Beginning tests..." << std::endl;
-
    u32bit errors = 0;
    try
       {
-      const std::string VALIDATION_FILE = "checks/validate.dat";
       const std::string BIGINT_VALIDATION_FILE = "checks/mp_valid.dat";
       const std::string PK_VALIDATION_FILE = "checks/pk_valid.dat";
-      const std::string EXPECTED_FAIL_FILE = "checks/fail.dat";
 
-      errors += do_validation_tests(VALIDATION_FILE, rng);
-      errors += do_validation_tests(EXPECTED_FAIL_FILE, rng, false);
+      errors += run_all_tests();
+      //errors += do_validation_tests(VALIDATION_FILE, rng);
+      //errors += do_validation_tests(EXPECTED_FAIL_FILE, rng, false);
       errors += do_bigint_tests(BIGINT_VALIDATION_FILE, rng);
       errors += do_pk_validation_tests(PK_VALIDATION_FILE, rng);
       do_x509_tests(rng);

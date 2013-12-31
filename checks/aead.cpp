@@ -1,10 +1,10 @@
 #include "tests.h"
 
 #include <botan/hex.h>
-#include <botan/siv.h>
 #include <botan/aead.h>
 #include <iostream>
 #include <fstream>
+#include <memory>
 
 using namespace Botan;
 
