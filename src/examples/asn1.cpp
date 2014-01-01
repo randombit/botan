@@ -1,4 +1,5 @@
-#include <botan/botan.h>
+#include "examples.h"
+
 #include <botan/bigint.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
@@ -6,7 +7,6 @@
 #include <botan/asn1_str.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
-#include <botan/hex.h>
 #include <botan/charset.h>
 using namespace Botan;
 
@@ -28,6 +28,8 @@ void decode(BER_Decoder&, size_t);
 void emit(const std::string&, size_t, size_t, const std::string& = "");
 std::string type_name(ASN1_Tag);
 
+namespace {
+
 std::string url_encode(const std::vector<byte>& in)
    {
    std::ostringstream out;
@@ -43,15 +45,15 @@ std::string url_encode(const std::vector<byte>& in)
    return out.str();
    }
 
-int main(int argc, char* argv[])
+}
+
+int asn1_example(int argc, char* argv[])
    {
    if(argc != 2)
       {
       printf("Usage: %s <file>\n", argv[0]);
       return 1;
       }
-
-   LibraryInitializer init;
 
    try {
       DataSource_Stream in(argv[1]);

@@ -7,7 +7,8 @@
 * primes, and Pollard's Rho algorithm
 */
 
-#include <botan/botan.h>
+#include "examples.h"
+
 #include <botan/reducer.h>
 #include <botan/numthry.h>
 using namespace Botan;
@@ -120,15 +121,13 @@ std::vector<BigInt> factorize(const BigInt& n_in,
 
 }
 
-int main(int argc, char* argv[])
+int factor_example(int argc, char* argv[])
    {
    if(argc != 2)
       {
-      std::cerr << "Usage: " << argv[0] << " integer\n";
+      std::cout << "Usage: " << argv[0] << " <integer>\n";
       return 1;
       }
-
-   Botan::LibraryInitializer init;
 
    try
       {

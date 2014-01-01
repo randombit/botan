@@ -21,6 +21,8 @@
 #include <botan/init.h>
 #include <botan/version.h>
 #include <botan/auto_rng.h>
+#include <botan/cpuid.h>
+#include <botan/http_util.h>
 
 using namespace Botan;
 
@@ -118,10 +120,26 @@ int main(int argc, char* argv[])
          return failures ? 1 : 0;
          }
 
+if(cmd == "cpuid")
+   {
+   CPUID::print(std::cout);
+return 0;
+}
+
+if(cmd == "http_get")
+   {
+auto resp = HTTP::GET_sync(argv[2]);
+std::cout << resp << "\n";
+}
+
       if(cmd == "bcrypt")
-         {
-         bcrypt_example(argc - 1, argv + 1);
-         }
+         return bcrypt_example(argc - 1, argv + 1);
+
+      if(cmd == "factor")
+         return factor_example(argc - 1, argv + 1);
+
+      if(cmd == "asn1")
+         return asn1_example(argc - 1, argv + 1);
 
       if(cmd == "speed")
          {
