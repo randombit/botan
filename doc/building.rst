@@ -140,21 +140,10 @@ self-test program::
 Building Universal Binaries
 &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
-To build a universal binary for OS X, some simple modifications are
-required. First, create a CPU type for the target universalbinary,
-one that doesn't specify any special handlers. This is done by
-creating an empty file in src/build-data/arch::
+To build a universal binary for OS X, you need to set some additional
+build flags. Do this with the --cc-abi-flags option::
 
-  $ touch src/build-data/arch/universalbinary.txt
-
-and then adding a special target for it in gcc, by adding the line::
-
-  universalbinary -> "-force_cpusubtype_ALL -mmacosx-version-min=10.4 -arch i386 -arch ppc"
-
-in the section marked `<mach_abi_linking>` in
-`src/build-data/cc/gcc.txt`. Then configure with::
-
-  $ ./configure.py --cpu=universalbinary [other options here]
+  $ ./configure.py [other arguments] --cc-abi-flags="-force_cpusubtype_ALL -mmacosx-version-min=10.4 -arch i386 -arch ppc"
 
 On MS Windows
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
