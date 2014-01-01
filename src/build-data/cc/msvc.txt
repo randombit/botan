@@ -10,7 +10,7 @@ add_lib_option ""
 
 no_debug_flags "/O2"
 debug_flags "/Od /Zi /DDEBUG"
-test_opt_flags "/O2 /D_CONSOLE"
+app_opt_flags "/O2 /D_CONSOLE"
 lang_flags "/EHs /GR"
 warning_flags "/W3 /wd4275 /wd4267"
 

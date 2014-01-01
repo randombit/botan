@@ -9,7 +9,7 @@ add_lib_dir_option -L
 add_lib_option -l
 
 lib_opt_flags "-O3 -OPT:Ofast:alias=disjoint"
-test_opt_flags "-O2"
+app_opt_flags "-O2"
 lang_flags "-D_REENTRANT -ansi -Wno-long-long"
 warning_flags "-W -Wall"
 

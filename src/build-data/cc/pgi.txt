@@ -9,7 +9,7 @@ add_lib_dir_option -L
 add_lib_option -l
 
 lib_opt_flags "-fast -Minline"
-test_opt_flags "-fast"
+app_opt_flags "-fast"
 shared_flags "-fPIC"
 
 makefile_style unix

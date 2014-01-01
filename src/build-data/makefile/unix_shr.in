@@ -1,7 +1,7 @@
 # Compiler Options
 CXX           = %{cc}
 LIB_OPT       = %{lib_opt}
-TEST_OPT      = %{test_opt}
+APP_OPT      = %{app_opt}
 LANG_FLAGS    = %{lang_flags}
 WARN_FLAGS    = %{warn_flags}
 SO_OBJ_FLAGS  = %{shared_flags}
@@ -9,7 +9,7 @@ SO_LINK_CMD   = %{so_link}
 LINK_TO       = %{link_to}
 
 LIB_FLAGS     = $(SO_OBJ_FLAGS) $(LANG_FLAGS) $(LIB_OPT) $(WARN_FLAGS)
-TEST_FLAGS    = $(LANG_FLAGS) $(TEST_OPT) $(WARN_FLAGS)
+APP_FLAGS    = $(LANG_FLAGS) $(APP_OPT) $(WARN_FLAGS)
 
 # Version Numbers
 VERSION       = %{version}
@@ -43,7 +43,7 @@ RM               = @rm -f
 RM_R             = @rm -rf
 
 # Targets
-TEST         = %{test_prefix}test
+APP         = %{app_prefix}botan
 LIBRARIES     = $(STATIC_LIB) $(SHARED_LIB)
 
 LIBNAME       = %{lib_prefix}libbotan
@@ -54,23 +54,23 @@ SHARED_LIB    = $(SONAME).%{version_patch}
 
 SYMLINK       = $(LIBNAME)-$(SERIES).%{so_suffix}
 
-all: $(TEST)
+all: $(APP)
 
 # File Lists
 HEADERS       = %{include_files}
 
 LIBOBJS       = %{lib_objs}
 
-TESTOBJS     = %{test_objs}
+APPOBJS     = %{app_objs}
 
 # Build Commands
 %{lib_build_cmds}
 
-%{test_build_cmds}
+%{app_build_cmds}
 
 # Link Commands
-$(TEST): $(LIBRARIES) $(TESTOBJS)
-	$(CXX) $(LDFLAGS) $(TESTOBJS) $(SHARED_LIB) $(LINK_TO) -lboost_regex -o $(TEST)
+$(APP): $(LIBRARIES) $(APPOBJS)
+	$(CXX) $(LDFLAGS) $(APPOBJS) $(SHARED_LIB) $(LINK_TO) -lboost_regex -o $(APP)
 
 $(STATIC_LIB): $(LIBOBJS)
 	$(RM) $(STATIC_LIB)
@@ -94,7 +94,7 @@ docs:
 
 clean:
 	$(RM_R) %{build_dir}/lib/* %{build_dir}/tests/*
-	$(RM) $(LIBRARIES) $(SYMLINK) $(SONAME) $(TEST)
+	$(RM) $(LIBRARIES) $(SYMLINK) $(SONAME) $(APP)
 
 distclean: clean
 	$(RM_R) %{build_dir}

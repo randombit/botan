@@ -17,7 +17,6 @@ For the impatient, this works for most systems::
 
   $ ./configure.py [--prefix=/some/directory]
   $ make
-  $ make check
   $ make install
 
 Or using ``nmake``, if you're compiling on Windows with Visual C++. On

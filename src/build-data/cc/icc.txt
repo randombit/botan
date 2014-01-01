@@ -9,7 +9,7 @@ add_lib_dir_option -L
 add_lib_option -l
 
 lib_opt_flags "-O2 -ip -unroll"
-test_opt_flags "-O2"
+app_opt_flags "-O2"
 debug_flags -g
 no_debug_flags "-fomit-frame-pointer"
 lang_flags "-std=c++0x"

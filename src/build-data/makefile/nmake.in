@@ -1,7 +1,7 @@
 ### Compiler Options
 CXX           = %{cc}
 LIB_OPT       = %{lib_opt}
-TEST_OPT      = %{test_opt}
+APP_OPT      = %{app_opt}
 LANG_FLAGS    = %{lang_flags}
 WARN_FLAGS    = %{warn_flags}
 SO_OBJ_FLAGS  = %{shared_flags}
@@ -9,7 +9,7 @@ LIB_LINK_CMD  = %{so_link}
 LINK_TO       = %{link_to}
 
 LIB_FLAGS     = $(LIB_OPT) $(LANG_FLAGS) $(WARN_FLAGS) $(SO_OBJ_FLAGS)
-TEST_FLAGS    = $(TEST_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
+APP_FLAGS    = $(APP_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
 
 ### Version Numbers
 VERSION       = %{version}
@@ -31,13 +31,13 @@ RM_R          = $(RM) /S
 RMDIR         = @rmdir
 
 ### File Lists
-TEST         = test
+APP         = botan
 
 HEADERS       = %{include_files}
 
 LIBOBJS       = %{lib_objs}
 
-TESTOBJS     = %{test_objs}
+APPOBJS     = %{app_objs}
 
 LIBNAME       = botan
 
@@ -46,16 +46,16 @@ LIBRARIES     = $(BOTAN_LIB)
 # This will be either a static lib or the DLL import lib
 BOTAN_LIB     = $(LIBNAME).%{static_suffix}
 
-all: $(TEST)
+all: $(APP)
 
 ### Build Commands
 %{lib_build_cmds}
 
-%{test_build_cmds}
+%{app_build_cmds}
 
 ### Link Commands
-$(TEST): $(LIBRARIES) $(TESTOBJS)
-	$(CXX) /Fe$@ $(TESTOBJS) $(BOTAN_LIB) $(LINK_TO)
+$(APP): $(LIBRARIES) $(APPOBJS)
+	$(CXX) /Fe$@ $(APPOBJS) $(BOTAN_LIB) $(LINK_TO)
 
 $(BOTAN_LIB): $(LIBOBJS)
 !If "$(SO_OBJ_FLAGS)" == ""
@@ -71,7 +71,7 @@ docs:
 clean:
 	$(RM) %{build_dir}\lib\* %{build_dir}\tests\*
 	$(RM) *.manifest *.exp *.dll
-	$(RM) $(LIBRARIES) $(TEST)
+	$(RM) $(LIBRARIES) $(APP)
 
 distclean: clean
 	$(RM_R) %{build_dir}
@@ -80,7 +80,7 @@ distclean: clean
 	$(RMDIR) %{build_dir}\include
 	$(RMDIR) %{build_dir}\lib %{build_dir}\tests
 	$(RMDIR) %{build_dir}
-	$(RM) Makefile $(LIBNAME).* $(TEST).*
+	$(RM) Makefile $(LIBNAME).* $(APP).*
 
 ### Install Commands
 install: $(LIBRARIES)

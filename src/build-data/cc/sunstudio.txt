@@ -9,7 +9,7 @@ add_lib_dir_option -L
 add_lib_option -l
 
 lib_opt_flags "-xO5"
-test_opt_flags "-xO2"
+app_opt_flags "-xO2"
 debug_flags -g
 no_debug_flags ""
 shared_flags "-KPIC"

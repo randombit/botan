@@ -2,7 +2,7 @@
 
 """
 Configuration program for botan (http://botan.randombit.net/)
-  (C) 2009,2010,2011,2012,2013 Jack Lloyd
+  (C) 2009,2010,2011,2012,2013,2014 Jack Lloyd
   Distributed under the terms of the Botan license
 
 Tested with CPython 2.6, 2.7, 3.1 and PyPy 1.5
@@ -114,7 +114,7 @@ class BuildConfigurationInformation(object):
             self.version_vc_rev = get_vc_revision()
 
         self.build_dir = os.path.join(options.with_build_dir, 'build')
-        self.testobj_dir = os.path.join(self.build_dir, 'tests')
+        self.appobj_dir = os.path.join(self.build_dir, 'app')
         self.libobj_dir = os.path.join(self.build_dir, 'lib')
 
         self.doc_output_dir = os.path.join(self.build_dir, 'docs')
@@ -135,14 +135,15 @@ class BuildConfigurationInformation(object):
 
         self.public_headers = sorted(flatten([m.public_headers() for m in modules]))
 
-        self.tests_dir = os.path.join(options.base_dir, 'src/')
+        self.apps_dir = os.path.join(options.base_dir, 'src/')
+
         def find_sources_in(srcdir):
             for (dirpath, dirnames, filenames) in os.walk(srcdir):
                 for filename in filenames:
                     if filename.endswith('.cpp'):
                         yield os.path.join(dirpath, filename)
 
-        self.test_sources = list(find_sources_in(self.tests_dir))
+        self.app_sources = list(find_sources_in(self.apps_dir))
 
         self.boost_python = options.boost_python
         self.python_dir = os.path.join(options.lib_dir, 'wrap', 'python')
@@ -170,7 +171,7 @@ class BuildConfigurationInformation(object):
         self.build_doc_commands = '\n'.join(['\t' + s for s in build_doc_commands()])
 
         def build_dirs():
-            yield self.testobj_dir
+            yield self.appobj_dir
             yield self.libobj_dir
             yield self.botan_include_dir
             yield self.internal_include_dir
@@ -764,7 +765,7 @@ class CompilerInfo(object):
                         'add_lib_dir_option': '-L',
                         'add_lib_option': '-l',
                         'lib_opt_flags': '',
-                        'test_opt_flags': '',
+                        'app_opt_flags': '',
                         'debug_flags': '',
                         'no_debug_flags': '',
                         'shared_flags': '',
@@ -1168,7 +1169,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
               ('' if not options.via_amalgamation else all_isa_specific_flags()),
 
         'lib_opt': cc.library_opt_flags(options),
-        'test_opt': '' if options.no_optimizations else cc.test_opt_flags,
+        'app_opt': '' if options.no_optimizations else cc.app_opt_flags,
         'lang_flags': cc.lang_flags,
         'warn_flags': warning_flags(cc.warning_flags,
                                     cc.maintainer_warning_flags,
@@ -1195,17 +1196,17 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
             objectfile_list(build_config.build_sources,
                             build_config.libobj_dir)),
 
-        'test_objs': makefile_list(
-            objectfile_list(build_config.test_sources,
-                            build_config.testobj_dir)),
+        'app_objs': makefile_list(
+            objectfile_list(build_config.app_sources,
+                            build_config.appobj_dir)),
 
         'lib_build_cmds': '\n'.join(
             build_commands(build_config.build_sources,
                            build_config.libobj_dir, 'LIB')),
 
-        'test_build_cmds': '\n'.join(
-            build_commands(build_config.test_sources,
-                           build_config.testobj_dir, 'TEST')),
+        'app_build_cmds': '\n'.join(
+            build_commands(build_config.app_sources,
+                           build_config.appobj_dir, 'APP')),
 
         'python_obj_dir': build_config.pyobject_dir,
 
@@ -1222,7 +1223,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'install_cmd_exec': osinfo.install_cmd_exec,
         'install_cmd_data': osinfo.install_cmd_data,
 
-        'test_prefix': prefix_with_build_dir(''),
+        'app_prefix': prefix_with_build_dir(''),
         'lib_prefix': prefix_with_build_dir(''),
 
         'static_suffix': osinfo.static_suffix,

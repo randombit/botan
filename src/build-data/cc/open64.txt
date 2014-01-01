@@ -9,7 +9,7 @@ add_lib_dir_option -L
 add_lib_option -l
 
 lib_opt_flags "-O3 -OPT:alias=TYPED"
-test_opt_flags "-O3 -OPT:alias=TYPED"
+app_opt_flags "-O3 -OPT:alias=TYPED"
 debug_flags "-g3"
 no_debug_flags "-fomit-frame-pointer"
 shared_flags "-fPIC"

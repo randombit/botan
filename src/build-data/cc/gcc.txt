@@ -13,7 +13,7 @@ maintainer_warning_flags "-Werror -Wno-error=old-style-cast -Wno-error=zero-as-n
 warning_flags "-Wall -Wextra -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wold-style-cast -Wzero-as-null-pointer-constant"
 
 lib_opt_flags "-O3"
-test_opt_flags "-O2"
+app_opt_flags "-O2"
 shared_flags "-fPIC"
 debug_flags "-g -fno-inline-functions"
 
