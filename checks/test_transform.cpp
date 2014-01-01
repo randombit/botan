@@ -33,37 +33,6 @@ secure_vector<byte> transform_test(const std::string& algo,
    return out;
    }
 
-namespace {
-
-void time_transform(const std::string& algo)
-   {
-   std::unique_ptr<Transformation> tf(get_transform(algo));
-
-   AutoSeeded_RNG rng;
-
-   tf->set_key(rng.random_vec(tf->maximum_keylength()));
-   tf->start_vec(rng.random_vec(tf->default_nonce_length()));
-
-   for(size_t mult : { 1, 2, 4, 8, 16, 128 })
-      {
-      const size_t buf_size = mult*tf->update_granularity();
-
-      secure_vector<byte> buffer(buf_size);
-
-      double res = time_op(std::chrono::seconds(1),
-                           [&tf,&buffer,buf_size]{
-                           tf->update(buffer);
-                           buffer.resize(buf_size);
-                           });
-
-      const u64bit Mbytes = (res * buf_size) / 1024 / 1024;
-
-      std::cout << Mbytes << " MiB / second in " << buf_size << " byte blocks\n";
-      }
-   }
-
-}
-
 }
 
 size_t test_transform()

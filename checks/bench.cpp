@@ -8,6 +8,7 @@
 #include <iomanip>
 
 #include <botan/benchmark.h>
+#include <botan/aead.h>
 #include <botan/libstate.h>
 #include <botan/pipe.h>
 #include <botan/filters.h>
@@ -22,6 +23,8 @@ typedef std::chrono::high_resolution_clock benchmark_clock;
 
 #include "common.h"
 #include "bench.h"
+
+using namespace Botan;
 
 namespace {
 
@@ -56,11 +59,6 @@ const std::string algos[] = {
    "Twofish",
    "XTEA",
 
-   /* Cipher constructions */
-   "Cascade(Serpent,AES-128)",
-   "Lion(SHA-256,Salsa20,8192)",
-   "Luby-Rackoff(SHA-512)",
-
    /* Cipher modes */
    "AES-128/CBC/PKCS7",
    "AES-128/CTR-BE",
@@ -80,23 +78,13 @@ const std::string algos[] = {
    "RC4",
    "Salsa20",
 
-   /* Checksums */
-   "Adler32",
-   "CRC24",
-   "CRC32",
-
    /* Hashes */
-   "BMW-512",
-   "GOST-34.11",
    "HAS-160",
    "Keccak-1600(224)",
    "Keccak-1600(256)",
    "Keccak-1600(384)",
    "Keccak-1600(512)",
-   "MD2",
-   "MD4",
    "MD5",
-   "RIPEMD-128",
    "RIPEMD-160",
    "SHA-160",
    "SHA-256",
@@ -109,7 +97,6 @@ const std::string algos[] = {
    /* MACs */
    "CMAC(AES-128)",
    "HMAC(SHA-1)",
-   "X9.19-MAC",
    "",
 };
 
@@ -138,105 +125,62 @@ void report_results(const std::string& algo,
    std::cout << std::endl;
    }
 
+bool time_transform(const std::string& algo, RandomNumberGenerator& rng)
+   {
+   std::unique_ptr<Transformation> tf(get_aead(algo, ENCRYPTION));
+
+   if(!tf)
+      return false;
+
+   tf->set_key(rng.random_vec(tf->maximum_keylength()));
+   tf->start_vec(rng.random_vec(tf->default_nonce_length()));
+
+   for(size_t mult : { 1, 2, 4, 8, 16, 128 })
+      {
+      const size_t buf_size = mult * tf->update_granularity();
+
+      secure_vector<byte> buffer(buf_size);
+
+      double res = time_op(std::chrono::seconds(1),
+                           [&tf,&buffer,buf_size]{
+                           tf->update(buffer);
+                           buffer.resize(buf_size);
+                           });
+
+      const u64bit Mbytes = (res * buf_size) / 1024 / 1024;
+
+      std::cout << algo << " " << Mbytes << " MiB / sec with " << buf_size << " byte blocks\n";
+      }
+
+   return true;
+   }
+
 }
 
 bool bench_algo(const std::string& algo,
-                Botan::RandomNumberGenerator& rng,
+                RandomNumberGenerator& rng,
                 double seconds,
-                u32bit buf_size)
+                size_t buf_size)
    {
-   Botan::Algorithm_Factory& af = Botan::global_state().algorithm_factory();
+   Algorithm_Factory& af = global_state().algorithm_factory();
 
    std::chrono::milliseconds ms(
       static_cast<std::chrono::milliseconds::rep>(seconds * 1000));
 
-   std::map<std::string, double> speeds =
-      algorithm_benchmark(algo, af, rng, ms, buf_size);
-
-   if(speeds.empty()) // maybe a cipher mode, then?
-      {
-      Botan::Algorithm_Factory::Engine_Iterator i(af);
-
-      std::vector<std::string> algo_parts = Botan::split_on(algo, '/');
-
-      if(algo_parts.size() < 2) // not a cipher mode
-         return false;
-
-      std::string cipher = algo_parts[0];
-
-      const Botan::BlockCipher* proto_cipher =
-         af.prototype_block_cipher(cipher);
-
-      if(!proto_cipher)
-         {
-         std::cout << "Unknown algorithm " << cipher << "\n";
-         return false;
-         }
-
-      size_t cipher_keylen = proto_cipher->maximum_keylength();
-      size_t cipher_ivlen = proto_cipher->block_size();
-
-      // hacks! (cipher_ivlen = transform->default_nonce_size())
-
-      if(algo_parts[1] == "XTS")
-         cipher_keylen *= 2;
-      if(algo_parts[1] == "OCB")
-         cipher_ivlen -= 1;
-      if(algo_parts[1] == "ECB")
-         cipher_ivlen = 0;
-
-      std::vector<byte> buf(16 * 1024);
-      rng.randomize(&buf[0], buf.size());
-
-      while(Botan::Engine* engine = i.next())
-         {
-         u64bit nanoseconds_max = static_cast<u64bit>(seconds * 1000000000.0);
-
-         Botan::Keyed_Filter* filt =
-            engine->get_cipher(algo, Botan::ENCRYPTION, af);
-
-         if(!filt)
-            continue;
-
-         filt->set_key(Botan::SymmetricKey(&buf[0], cipher_keylen));
-         filt->set_iv(Botan::InitializationVector(&buf[0], cipher_ivlen));
-
-         Botan::Pipe pipe(filt, new Botan::BitBucket);
-         pipe.start_msg();
-
-         std::chrono::nanoseconds max_time(nanoseconds_max);
-         std::chrono::nanoseconds time_used(0);
-
-         auto start = benchmark_clock::now();
-
-         u64bit reps = 0;
-
-         while(time_used < max_time)
-            {
-            pipe.write(&buf[0], buf.size());
-            ++reps;
-            time_used = benchmark_clock::now() - start;
-            }
-
-         u64bit nanoseconds_used =
-            std::chrono::duration_cast<std::chrono::nanoseconds>(time_used).count();
-
-         double mbytes_per_second =
-            (953.67 * (buf.size() * reps)) / nanoseconds_used;
-
-         speeds[engine->provider_name()] = mbytes_per_second;
-         }
-      }
+   std::map<std::string, double> speeds = algorithm_benchmark(algo, af, rng, ms, buf_size);
 
    if(!speeds.empty())
+      {
       report_results(algo, speeds);
+      return true;
+      }
 
-   return !speeds.empty();
+   return time_transform(algo, rng);
    }
 
-void benchmark(Botan::RandomNumberGenerator& rng,
-               double seconds, u32bit buf_size)
+void benchmark(RandomNumberGenerator& rng,
+               double seconds, size_t buf_size)
    {
-   for(u32bit i = 0; algos[i] != ""; ++i)
+   for(size_t i = 0; algos[i] != ""; ++i)
       bench_algo(algos[i], rng, seconds, buf_size);
    }

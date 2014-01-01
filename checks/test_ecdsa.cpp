@@ -8,7 +8,8 @@
 
 #include "tests.h"
 
-#include <botan/botan.h>
+#include <botan/hex.h>
+#include <botan/auto_rng.h>
 #include <botan/pubkey.h>
 #include <botan/ecdsa.h>
 #include <botan/rsa.h>

@@ -9,6 +9,7 @@
 #include "getopt.h"
 #include "common.h"
 
+#include <botan/hex.h>
 #include <botan/auto_rng.h>
 #include <botan/bigint.h>
 #include <botan/numthry.h>

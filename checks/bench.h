@@ -7,12 +7,12 @@
 
 void benchmark(Botan::RandomNumberGenerator& rng,
                double seconds,
-               u32bit buf_size);
+               size_t buf_size);
 
 bool bench_algo(const std::string& algo_name,
                 Botan::RandomNumberGenerator& rng,
                 double seconds,
-                u32bit buf_size);
+                size_t buf_size);
 
 void bench_pk(Botan::RandomNumberGenerator&,
               const std::string&, double seconds);
