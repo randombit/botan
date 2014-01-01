@@ -70,7 +70,7 @@ APPOBJS     = %{app_objs}
 
 # Link Commands
 $(APP): $(LIBRARIES) $(APPOBJS)
-	$(CXX) $(LDFLAGS) $(APPOBJS) $(SHARED_LIB) $(LINK_TO) -lboost_regex -o $(APP)
+	$(CXX) $(LDFLAGS) $(APPOBJS) $(SHARED_LIB) $(LINK_TO) -lboost_regex -lboost_thread -o $(APP)
 
 $(STATIC_LIB): $(LIBOBJS)
 	$(RM) $(STATIC_LIB)

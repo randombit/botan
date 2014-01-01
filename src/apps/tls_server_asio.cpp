@@ -1,3 +1,4 @@
+#include "apps.h"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -18,6 +19,8 @@
 
 using Botan::byte;
 using boost::asio::ip::tcp;
+
+namespace {
 
 class tls_server_session : public boost::enable_shared_from_this<tls_server_session>
    {
@@ -198,12 +201,12 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
       std::vector<byte> m_client_data;
    };
 
-class tls_server
+class asio_tls_server
    {
    public:
       typedef tls_server_session session;
 
-      tls_server(boost::asio::io_service& io_service, unsigned short port) :
+      asio_tls_server(boost::asio::io_service& io_service, unsigned short port) :
          m_acceptor(io_service, tcp::endpoint(tcp::v4(), port)),
          m_session_manager(m_rng),
          m_creds(m_rng)
@@ -213,7 +216,7 @@ class tls_server
          m_acceptor.async_accept(
             new_session->socket(),
             boost::bind(
-               &tls_server::handle_accept,
+               &asio_tls_server::handle_accept,
                this,
                new_session,
                boost::asio::placeholders::error)
@@ -244,7 +247,7 @@ class tls_server
             m_acceptor.async_accept(
                new_session->socket(),
                boost::bind(
-                  &tls_server::handle_accept,
+                  &asio_tls_server::handle_accept,
                   this,
                   new_session,
                   boost::asio::placeholders::error)
@@ -270,15 +273,17 @@ size_t choose_thread_count()
    return 2;
    }
 
-int main(int argc, char* argv[])
+}
+
+int tls_server_asio(int argc, char* argv[])
    {
    try
       {
       Botan::LibraryInitializer init("thread_safe=true");
       boost::asio::io_service io_service;
 
-      unsigned short port = 4434;
-      tls_server server(io_service, port);
+      const unsigned short port = 4434;
+      asio_tls_server server(io_service, port);
 
       size_t num_threads = choose_thread_count();
       if(argc == 2)

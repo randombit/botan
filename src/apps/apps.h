@@ -26,4 +26,5 @@ DEFINE_EXAMPLE(read_ssh);
 DEFINE_EXAMPLE(self_sig);
 DEFINE_EXAMPLE(tls_client);
 DEFINE_EXAMPLE(tls_server);
+DEFINE_EXAMPLE(tls_server_asio);
 DEFINE_EXAMPLE(x509);
