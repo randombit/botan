@@ -19,7 +19,7 @@
 
 using namespace Botan;
 
-#include "../../checks/getopt.h"
+#include "../../tests/getopt.h"
 
 class Encoder_Decoder
    {
