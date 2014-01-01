@@ -29,7 +29,7 @@ using namespace Botan;
 #include "common.h"
 #include "speed/speed.h"
 #include "tests/tests.h"
-#include "examples/examples.h"
+#include "apps/apps.h"
 
 // from common.h
 void strip_comments(std::string& line)
@@ -76,6 +76,18 @@ std::vector<std::string> parse(const std::string& line)
    return substr;
    }
 
+namespace {
+
+int help(int , char* argv[])
+   {
+   std::cout << "Usage: " << argv[0] << " subcommand\n";
+   std::cout << "Common commands: help version test speed\n";
+   std::cout << "Other commands: cpuid bcrypt x509 factor tls_client asn1 base64 hash self_sig\n";
+   return 1;
+   }
+
+}
+
 int main(int argc, char* argv[])
    {
    if(BOTAN_VERSION_MAJOR != version_major() ||
@@ -94,23 +106,25 @@ int main(int argc, char* argv[])
 
    try
       {
-      OptionParser opts("help|test|validate|"
-                        "algo=|seconds=|buf-size=");
-      opts.parse(argv);
-
       Botan::LibraryInitializer init;
 
-      if(opts.is_set("help") || argc < 2)
-         {
-         std::cout << "Commands: test version time bcrypt\n";
-         return 1;
-         }
+      if(argc < 2)
+         return help(argc, argv);
 
       const std::string cmd = argv[1];
+
+      if(cmd == "help")
+         return help(argc, argv);
 
       if(cmd == "version")
          {
          std::cout << Botan::version_string() << "\n";
+         return 0;
+         }
+
+      if(cmd == "cpuid")
+         {
+         CPUID::print(std::cout);
          return 0;
          }
 
@@ -120,11 +134,8 @@ int main(int argc, char* argv[])
          return failures ? 1 : 0;
          }
 
-      if(cmd == "cpuid")
-         {
-         CPUID::print(std::cout);
-         return 0;
-         }
+      if(cmd == "speed")
+         return speed_main(argc - 1, argv + 1);
 
       if(cmd == "http_get")
          {
@@ -132,63 +143,24 @@ int main(int argc, char* argv[])
          std::cout << resp << "\n";
          }
 
-      if(cmd == "bcrypt")
-         return bcrypt_example(argc - 1, argv + 1);
+#define CALL_CMD(cmdsym)                           \
+      do { if(cmd == #cmdsym) { return cmdsym (argc - 1, argv + 1); } } while(0)
 
-      if(cmd == "fpe")
-         return fpe_example(argc - 1, argv + 1);
-
-      if(cmd == "read_ssh_key")
-         return read_ssh_example(argc - 1, argv + 1);
-
-      if(cmd == "self_sig")
-         return self_sig_example(argc - 1, argv + 1);
-
-      if(cmd == "x509")
-         return x509_example(argc - 1, argv + 1);
-
-      if(cmd == "factor")
-         return factor_example(argc - 1, argv + 1);
-
-      if(cmd == "asn1")
-         return asn1_example(argc - 1, argv + 1);
-
-      if(cmd == "speed")
-         {
-         double seconds = 5;
-         u32bit buf_size = 16;
-
-         if(opts.is_set("seconds"))
-            {
-            seconds = std::atof(opts.value("seconds").c_str());
-            if(seconds < 0.1 || seconds > (5 * 60))
-               {
-               std::cout << "Invalid argument to --seconds\n";
-               return 2;
-               }
-            }
-
-         if(opts.is_set("buf-size"))
-            {
-            buf_size = std::atoi(opts.value("buf-size").c_str());
-            if(buf_size == 0 || buf_size > 1024)
-               {
-               std::cout << "Invalid argument to --buf-size\n";
-               return 2;
-               }
-            }
-
-         if(opts.is_set("--algo"))
-            {
-            AutoSeeded_RNG rng;
-            for(auto alg: Botan::split_on(opts.value("algo"), ','))
-               bench_algo(alg, rng, seconds, buf_size);
-            }
-         /*
-         else
-            benchmark(seconds, buf_size);
-         */
-         }
+      CALL_CMD(asn1);
+      CALL_CMD(base64);
+      CALL_CMD(bcrypt);
+      CALL_CMD(bzip);
+      CALL_CMD(ca);
+      CALL_CMD(factor);
+      CALL_CMD(fpe);
+      CALL_CMD(hash);
+      CALL_CMD(keygen);
+      CALL_CMD(pkcs10);
+      CALL_CMD(read_ssh);
+      CALL_CMD(self_sig);
+      CALL_CMD(tls_client);
+      CALL_CMD(tls_server);
+      CALL_CMD(x509);
       }
    catch(std::exception& e)
       {

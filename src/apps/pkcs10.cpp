@@ -1,5 +1,4 @@
-#include <botan/init.h>
-#include <botan/auto_rng.h>
+#include "apps.h"
 #include <botan/x509self.h>
 #include <botan/rsa.h>
 #include <botan/dsa.h>
@@ -9,16 +8,14 @@ using namespace Botan;
 #include <fstream>
 #include <memory>
 
-int main(int argc, char* argv[])
+int pkcs10(int argc, char* argv[])
    {
    if(argc != 6)
       {
-      std::cout << "Usage: " << argv[0] <<
-         " passphrase name country_code organization email" << std::endl;
+      std::cout << "Usage: " << argv[0]
+                << " passphrase name country_code organization email" << std::endl;
       return 1;
       }
-
-   Botan::LibraryInitializer init;
 
    try
       {

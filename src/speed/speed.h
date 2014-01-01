@@ -9,6 +9,8 @@
 
 using namespace Botan;
 
+int speed_main(int argc, char* argv[]);
+
 void benchmark(double seconds,
                size_t buf_size);
 

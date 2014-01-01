@@ -5,6 +5,8 @@
 * Distributed under the terms of the Botan license
 */
 
+#include "apps.h"
+
 #include <string>
 #include <cstring>
 #include <vector>
@@ -26,7 +28,7 @@
 
 const std::string SUFFIX = ".bz2";
 
-int main(int argc, char* argv[])
+int bzip(int argc, char* argv[])
    {
    if(argc < 2)
       {
@@ -34,8 +36,6 @@ int main(int argc, char* argv[])
                 << " [-s] [-d] [-1...9] <filenames>" << std::endl;
       return 1;
       }
-
-   Botan::LibraryInitializer init;
 
 #ifdef BOTAN_HAS_COMPRESSOR_BZIP2
    std::vector<std::string> files;
@@ -98,6 +98,7 @@ int main(int argc, char* argv[])
 
          in.close();
          out.close();
+         return 0;
          }
    }
    catch(std::exception& e)
@@ -108,8 +109,7 @@ int main(int argc, char* argv[])
 #else
 
    std::cout << "Sorry, support for bzip2 not compiled into Botan\n";
-
 #endif
 
-   return 0;
+   return 1;
    }

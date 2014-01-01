@@ -8,7 +8,7 @@
 * Example of reading SSH2 format public keys (see RFC 4716)
 */
 
-#include "examples.h"
+#include "apps.h"
 
 #include <botan/x509_key.h>
 #include <botan/filters.h>
@@ -111,7 +111,7 @@ Public_Key* read_ssh_pubkey(const std::string& file)
 
 }
 
-int read_ssh_example(int argc, char* argv[])
+int read_ssh(int argc, char* argv[])
    {
    if(argc != 2)
       {

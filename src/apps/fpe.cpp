@@ -1,4 +1,4 @@
-#include "examples.h"
+#include "apps.h"
 #include <botan/fpe_fe1.h>
 #include <botan/sha160.h>
 
@@ -102,7 +102,7 @@ u64bit decrypt_cc_number(u64bit enc_cc,
 
 }
 
-int fpe_example(int argc, char* argv[])
+int fpe(int argc, char* argv[])
    {
    if(argc != 4)
       {

@@ -1,4 +1,4 @@
-#include "examples.h"
+#include "apps.h"
 #include <botan/x509self.h>
 #include <botan/rsa.h>
 #include <botan/dsa.h>
@@ -8,7 +8,7 @@ using namespace Botan;
 #include <fstream>
 #include <memory>
 
-int self_sig_example(int argc, char* argv[])
+int self_sig(int argc, char* argv[])
    {
    if(argc != 7)
       {

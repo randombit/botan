@@ -7,7 +7,7 @@
 * primes, and Pollard's Rho algorithm
 */
 
-#include "examples.h"
+#include "apps.h"
 
 #include <botan/reducer.h>
 #include <botan/numthry.h>
@@ -121,7 +121,7 @@ std::vector<BigInt> factorize(const BigInt& n_in,
 
 }
 
-int factor_example(int argc, char* argv[])
+int factor(int argc, char* argv[])
    {
    if(argc != 2)
       {

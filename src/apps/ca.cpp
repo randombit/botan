@@ -1,4 +1,5 @@
-#include <botan/botan.h>
+
+#include "apps.h"
 #include <botan/x509_ca.h>
 using namespace Botan;
 
@@ -6,7 +7,7 @@ using namespace Botan;
 #include <memory>
 #include <chrono>
 
-int main(int argc, char* argv[])
+int ca(int argc, char* argv[])
    {
    if(argc != 5)
       {
@@ -14,8 +15,6 @@ int main(int argc, char* argv[])
                 << "<ca cert> <ca key> <pkcs10>" << std::endl;
       return 1;
       }
-
-   Botan::LibraryInitializer init;
 
    try
       {

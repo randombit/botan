@@ -1,7 +1,7 @@
-#include "examples.h"
+#include "apps.h"
 #include <botan/x509cert.h>
 
-int x509_example(int argc, char* argv[])
+int x509(int argc, char* argv[])
    {
    if(argc < 1)
       {

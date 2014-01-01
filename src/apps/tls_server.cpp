@@ -1,4 +1,4 @@
-#include <botan/botan.h>
+#include "apps.h"
 #include <botan/tls_server.h>
 #include <botan/hex.h>
 
@@ -31,6 +31,8 @@ using namespace std::placeholders;
 #if !defined(MSG_NOSIGNAL)
   #define MSG_NOSIGNAL 0
 #endif
+
+namespace {
 
 int make_server_socket(const std::string& transport, u16bit port)
    {
@@ -85,9 +87,9 @@ void dgram_socket_write(int sockfd, const byte buf[], size_t length)
    ssize_t sent = ::send(sockfd, buf, length, MSG_NOSIGNAL);
 
    if(sent == -1)
-      printf("Error writing to socket %s\n", strerror(errno));
-   else if(sent != length)
-      printf("Note: packet of length %d truncated to %d\n", length, sent);
+      std::cout << "Error writing to socket - " << strerror(errno) << "\n";
+   else if(sent != static_cast<ssize_t>(length))
+      std::cout << "Packet of length " << length << " truncated to " << sent << "\n";
    }
 
 void stream_socket_write(int sockfd, const byte buf[], size_t length)
@@ -117,7 +119,9 @@ void alert_received(TLS::Alert alert, const byte buf[], size_t buf_size)
    std::cout << "Alert: " << alert.type_string() << "\n";
    }
 
-int main(int argc, char* argv[])
+}
+
+int tls_server(int argc, char* argv[])
    {
    int port = 4433;
    std::string transport = "tcp";
@@ -129,8 +133,6 @@ int main(int argc, char* argv[])
 
    try
       {
-      LibraryInitializer botan_init;
-
       AutoSeeded_RNG rng;
 
       TLS::Policy policy;
@@ -146,7 +148,7 @@ int main(int argc, char* argv[])
       */
       const std::vector<std::string> protocols = { "echo/1.0", "echo/1.1" };
 
-      printf("Listening for new connection on %s port %d\n", transport.c_str(), port);
+      std::cout << "Listening for new connections on " << transport << " port " << port << "\n";
 
       int server_fd = make_server_socket(transport, port);
 
@@ -173,7 +175,7 @@ int main(int argc, char* argv[])
                fd = server_fd;
                }
 
-            printf("New connection received\n");
+            std::cout << "New connection received\n";
 
             auto socket_write =
                (transport == "tcp") ?
@@ -212,17 +214,17 @@ int main(int argc, char* argv[])
             while(!server.is_closed())
                {
                byte buf[4*1024] = { 0 };
-               size_t got = ::read(fd, buf, sizeof(buf));
+               ssize_t got = ::read(fd, buf, sizeof(buf));
 
                if(got == -1)
                   {
-                  printf("Error in socket read %s\n", strerror(errno));
+                  std::cout << "Error in socket read - " << strerror(errno) << "\n";
                   break;
                   }
 
                if(got == 0)
                   {
-                  printf("EOF on socket\n");
+                  std::cout << "EOF on socket\n";
                   break;
                   }
 
@@ -243,13 +245,18 @@ int main(int argc, char* argv[])
                ::close(fd);
 
             }
-         catch(std::exception& e) { printf("Connection problem: %s\n", e.what()); }
+         catch(std::exception& e)
+            {
+            std::cout << "Connection problem: " << e.what() << "\n";
+            return 1;
+            }
          }
    }
    catch(std::exception& e)
       {
-      printf("%s\n", e.what());
+      std::cout << e.what() << "\n";
       return 1;
       }
+
    return 0;
    }

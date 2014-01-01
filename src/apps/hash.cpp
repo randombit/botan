@@ -4,11 +4,14 @@
 * Distributed under the terms of the Botan license
 */
 
+#include "apps.h"
+#include <botan/lookup.h>
 #include <iostream>
 #include <fstream>
-#include <botan/botan.h>
 
-int main(int argc, char* argv[])
+using namespace Botan;
+
+int hash(int argc, char* argv[])
    {
    if(argc < 3)
       {
@@ -16,25 +19,22 @@ int main(int argc, char* argv[])
       return 1;
       }
 
-   Botan::LibraryInitializer init;
-
    std::string hash = argv[1];
    /* a couple of special cases, kind of a crock */
    if(hash == "sha1") hash = "SHA-1";
    if(hash == "md5")  hash = "MD5";
 
    try {
-      if(!Botan::have_hash(hash))
+      if(!have_hash(hash))
          {
          std::cout << "Unknown hash \"" << argv[1] << "\"" << std::endl;
          return 1;
          }
 
-      Botan::Pipe pipe(new Botan::Hash_Filter(hash),
-                       new Botan::Hex_Encoder);
+      Pipe pipe(new Hash_Filter(hash), new Hex_Encoder);
 
       int skipped = 0;
-      for(int j = 2; argv[j] != 0; j++)
+      for(int j = 2; argv[j] != nullptr; j++)
          {
          std::ifstream file(argv[j], std::ios::binary);
          if(!file)

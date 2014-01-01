@@ -198,3 +198,43 @@ void benchmark(double seconds, size_t buf_size)
    for(size_t i = 0; algos[i] != ""; ++i)
       bench_algo(algos[i], rng, seconds, buf_size);
    }
+
+int speed_main(int , char* argv[])
+   {
+   OptionParser opts("algo=|seconds=|buf-size=");
+   opts.parse(argv);
+
+   double seconds = .5;
+   u32bit buf_size = 16;
+
+   if(opts.is_set("seconds"))
+      {
+      seconds = std::atof(opts.value("seconds").c_str());
+      if(seconds < 0.1 || seconds > (5 * 60))
+         {
+         std::cout << "Invalid argument to --seconds\n";
+         return 2;
+         }
+      }
+
+   if(opts.is_set("buf-size"))
+      {
+      buf_size = std::atoi(opts.value("buf-size").c_str());
+      if(buf_size == 0 || buf_size > 1024)
+         {
+         std::cout << "Invalid argument to --buf-size\n";
+         return 2;
+         }
+      }
+
+   if(opts.is_set("algo"))
+      {
+      AutoSeeded_RNG rng;
+      for(auto alg: Botan::split_on(opts.value("algo"), ','))
+         bench_algo(alg, rng, seconds, buf_size);
+      }
+   else
+      benchmark(seconds, buf_size);
+
+   return 0;
+   }

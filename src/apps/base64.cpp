@@ -5,15 +5,17 @@
 * Distributed under the terms of the Botan license
 */
 
+#include "apps.h"
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
 #include <cstring>
 #include <cstdlib>
-#include <botan/botan.h>
+#include <botan/b64_filt.h>
+#include <botan/pipe.h>
 
-int main(int argc, char* argv[])
+int base64(int argc, char* argv[])
    {
    if(argc < 2)
       {
@@ -25,14 +27,12 @@ int main(int argc, char* argv[])
       return 1;
       }
 
-   Botan::LibraryInitializer init;
-
    int column = 78;
    bool wrap = false;
    bool encoding = true;
    std::vector<std::string> files;
 
-   for(int j = 1; argv[j] != 0; j++)
+   for(int j = 1; argv[j] != nullptr; j++)
       {
       std::string this_arg = argv[j];
 
@@ -66,9 +66,14 @@ int main(int argc, char* argv[])
          continue;
          }
 
-      Botan::Pipe pipe((encoding) ?
-                   ((Botan::Filter*)new Botan::Base64_Encoder(wrap, column)) :
-                   ((Botan::Filter*)new Botan::Base64_Decoder));
+      Botan::Filter* f = nullptr;
+
+      if(encoding)
+         f = new Botan::Base64_Encoder(wrap, column);
+      else
+         f = new Botan::Base64_Decoder;
+
+      Botan::Pipe pipe(f);
       pipe.start_msg();
       *stream >> pipe;
       pipe.end_msg();

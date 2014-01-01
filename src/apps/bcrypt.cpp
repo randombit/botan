@@ -1,7 +1,7 @@
-#include "examples.h"
+#include "apps.h"
 #include <botan/bcrypt.h>
 
-int bcrypt_example(int argc, char* argv[])
+int bcrypt(int argc, char* argv[])
    {
    if(argc == 2)
       {

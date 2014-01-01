@@ -1,4 +1,4 @@
-#include <botan/botan.h>
+#include "apps.h"
 #include <botan/tls_client.h>
 #include <botan/pkcs8.h>
 #include <botan/hex.h>
@@ -29,6 +29,8 @@
 using namespace Botan;
 
 using namespace std::placeholders;
+
+namespace {
 
 int connect_to_host(const std::string& host, u16bit port, const std::string& transport)
    {
@@ -109,7 +111,7 @@ void stream_socket_write(int sockfd, const byte buf[], size_t length)
 
 bool got_alert = false;
 
-void alert_received(TLS::Alert alert, const byte buf[], size_t buf_size)
+void alert_received(TLS::Alert alert, const byte [], size_t )
    {
    std::cout << "Alert: " << alert.type_string() << "\n";
    got_alert = true;
@@ -128,7 +130,9 @@ std::string protocol_chooser(const std::vector<std::string>& protocols)
    return "http/1.1";
    }
 
-int main(int argc, char* argv[])
+}
+
+int tls_client(int argc, char* argv[])
    {
    if(argc != 2 && argc != 3 && argc != 4)
       {
@@ -138,7 +142,6 @@ int main(int argc, char* argv[])
 
    try
       {
-      LibraryInitializer botan_init;
       AutoSeeded_RNG rng;
       TLS::Policy policy;
 

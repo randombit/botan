@@ -13,8 +13,8 @@
 #include <fstream>
 #include <memory>
 
-bool value_exists(const std::vector<std::string>& vec,
-                  const std::string& val)
+inline bool value_exists(const std::vector<std::string>& vec,
+                         const std::string& val)
    {
    for(size_t i = 0; i != vec.size(); ++i)
       if(vec[i] == val)
@@ -42,25 +42,20 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
       bool attempt_srp(const std::string& type,
                        const std::string& hostname)
          {
-         if(hostname == "srp-host")
+         if(hostname == "srp-host" && (type == "tls-client" || type == "tls-server"))
             return true;
          return false;
          }
 
       std::vector<Botan::Certificate_Store*>
       trusted_certificate_authorities(const std::string& type,
-                                      const std::string& hostname)
+                                      const std::string& /*hostname*/)
          {
+         // don't ask for client cert
          if(type == "tls-server")
-            {
-            // don't ask for client cert
             return std::vector<Botan::Certificate_Store*>();
-            }
 
-         else
-            {
-            return m_certstores;
-            }
+         return m_certstores;
          }
 
       void verify_certificate_chain(
@@ -90,7 +85,7 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
          return "";
          }
 
-      bool srp_verifier(const std::string& type,
+      bool srp_verifier(const std::string& /*type*/,
                         const std::string& context,
                         const std::string& identifier,
                         std::string& group_id,
@@ -106,7 +101,7 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
                return false;
 
             pass.resize(16);
-            rng.randomize((Botan::byte*)&pass[0], pass.size());
+            rng.randomize(reinterpret_cast<byte*>(&pass[0]), pass.size());
             }
 
          group_id = "modp/srp/2048";
@@ -132,7 +127,7 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
       std::string psk_identity(const std::string&, const std::string&,
                                const std::string& identity_hint)
          {
-         //return "lloyd";
+         std::cout << "Server sent PSK identity_hint " << identity_hint << "\n";
          return "Client_identity";
          }
 
@@ -187,7 +182,7 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
          opts.email = "root@" + hostname;
          opts.dns = hostname;
 
-         std::auto_ptr<Private_Key> key;
+         std::unique_ptr<Private_Key> key;
          if(key_type == "rsa")
             key.reset(new RSA_PrivateKey(rng, 1024));
          else if(key_type == "dsa")
@@ -280,8 +275,8 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
          }
 
       Botan::Private_Key* private_key_for(const Botan::X509_Certificate& cert,
-                                          const std::string& type,
-                                          const std::string& context)
+                                          const std::string& /*type*/,
+                                          const std::string& /*context*/)
          {
          return certs_and_keys[cert];
          }

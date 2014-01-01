@@ -1,14 +1,14 @@
+#include "apps.h"
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <cstdlib>
 #include <memory>
 
-#include <botan/botan.h>
 #include <botan/rsa.h>
 using namespace Botan;
 
-int main(int argc, char* argv[])
+int keygen(int argc, char* argv[])
    {
    if(argc != 2 && argc != 3)
       {
@@ -26,8 +26,6 @@ int main(int argc, char* argv[])
 
    try
       {
-      Botan::LibraryInitializer init;
-
       std::ofstream pub("rsapub.pem");
       std::ofstream priv("rsapriv.pem");
       if(!priv || !pub)
@@ -50,5 +48,6 @@ int main(int argc, char* argv[])
       {
       std::cout << "Exception caught: " << e.what() << std::endl;
       }
+
    return 0;
    }

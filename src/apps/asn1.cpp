@@ -1,4 +1,4 @@
-#include "examples.h"
+#include "apps.h"
 
 #include <botan/bigint.h>
 #include <botan/der_enc.h>
@@ -47,7 +47,7 @@ std::string url_encode(const std::vector<byte>& in)
 
 }
 
-int asn1_example(int argc, char* argv[])
+int asn1(int argc, char* argv[])
    {
    if(argc != 2)
       {
