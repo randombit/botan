@@ -1,3 +1,4 @@
+#include "apps.h"
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -5,9 +6,9 @@
 #include <string>
 #include <memory>
 
-#include <botan/botan.h>
 #include <botan/pubkey.h>
 #include <botan/dsa.h>
+#include <botan/b64_filt.h>
 using namespace Botan;
 
 namespace {
@@ -21,7 +22,7 @@ secure_vector<byte> b64_decode(const std::string& in)
 
 }
 
-int main(int argc, char* argv[])
+int dsa_verify(int argc, char* argv[])
    {
    if(argc != 4)
       {
@@ -32,8 +33,6 @@ int main(int argc, char* argv[])
 
 
    try {
-      Botan::LibraryInitializer init;
-
       std::ifstream message(argv[2], std::ios::binary);
       if(!message)
          {

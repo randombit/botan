@@ -155,6 +155,8 @@ int main(int argc, char* argv[])
       CALL_CMD(fpe);
       CALL_CMD(hash);
       CALL_CMD(keygen);
+      CALL_CMD(dsa_sign);
+      CALL_CMD(dsa_verify);
       CALL_CMD(pkcs10);
       CALL_CMD(read_ssh);
       CALL_CMD(self_sig);

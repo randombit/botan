@@ -1,4 +1,4 @@
-#include <botan/botan.h>
+#include "apps.h"
 #include <botan/x509cert.h>
 #include <botan/certstor.h>
 #include <botan/x509path.h>
@@ -8,10 +8,13 @@
 
 using namespace Botan;
 
-int main(int argc, char* argv[])
+int ocsp_check(int argc, char* argv[])
    {
    if(argc != 2)
+      {
       std::cout << "Usage: ocsp subject.pem issuer.pem";
+      return 2;
+      }
 
    X509_Certificate subject(argv[1]);
    X509_Certificate issuer(argv[2]);
@@ -23,7 +26,13 @@ int main(int argc, char* argv[])
    auto status = resp.status_for(issuer, subject);
 
    if(status == Certificate_Status_Code::VERIFIED)
+      {
       std::cout << "OCSP check OK\n";
+      return 0;
+      }
    else
+      {
       std::cout << "OCSP check failed " << Path_Validation_Result::status_string(status) << "\n";
+      return 1;
+      }
    }

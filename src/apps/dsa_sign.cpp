@@ -1,10 +1,10 @@
+#include "apps.h"
 #include <iostream>
 #include <iomanip>
 #include <fstream>
 #include <string>
 #include <memory>
 
-#include <botan/botan.h>
 #include <botan/pubkey.h>
 #include <botan/dsa.h>
 #include <botan/base64.h>
@@ -12,7 +12,7 @@ using namespace Botan;
 
 const std::string SUFFIX = ".sig";
 
-int main(int argc, char* argv[])
+int dsa_sign(int argc, char* argv[])
    {
    if(argc != 4)
       {
@@ -20,8 +20,6 @@ int main(int argc, char* argv[])
                 << std::endl;
       return 1;
       }
-
-   Botan::LibraryInitializer init;
 
    try {
       std::string passphrase(argv[3]);

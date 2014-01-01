@@ -5,14 +5,14 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/botan.h>
+#include "apps.h"
 #include <botan/x509cert.h>
 #include <botan/x509path.h>
 #include <iostream>
 
 using namespace Botan;
 
-int main(int argc, char* argv[])
+int cert_verify(int argc, char* argv[])
    {
    if(argc <= 2)
       {
@@ -20,7 +20,6 @@ int main(int argc, char* argv[])
       return 1;
       }
 
-   LibraryInitializer init;
    X509_Certificate subject_cert(argv[1]);
 
    Certificate_Store_In_Memory certs;
