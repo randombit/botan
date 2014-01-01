@@ -9,6 +9,7 @@
 
 #include <botan/benchmark.h>
 #include <botan/aead.h>
+#include <botan/auto_rng.h>
 #include <botan/libstate.h>
 #include <botan/pipe.h>
 #include <botan/filters.h>
@@ -103,6 +104,9 @@ const std::string algos[] = {
 void report_results(const std::string& algo,
                     const std::map<std::string, double>& speeds)
    {
+   if(speeds.empty())
+      return;
+
    // invert, showing fastest impl first
    std::map<double, std::string> results;
 
@@ -125,39 +129,49 @@ void report_results(const std::string& algo,
    std::cout << std::endl;
    }
 
-bool time_transform(const std::string& algo, RandomNumberGenerator& rng)
+std::map<std::string, double> time_transform(std::unique_ptr<Transformation> tf,
+                                             RandomNumberGenerator& rng)
    {
-   std::unique_ptr<Transformation> tf(get_aead(algo, ENCRYPTION));
+   std::map<std::string, double> results;
 
    if(!tf)
-      return false;
+      return results;
 
-   tf->set_key(rng.random_vec(tf->maximum_keylength()));
+   if(tf->maximum_keylength() > 0)
+      tf->set_key(rng.random_vec(tf->maximum_keylength()));
+
    tf->start_vec(rng.random_vec(tf->default_nonce_length()));
 
-   for(size_t mult : { 1, 2, 4, 8, 16, 128 })
-      {
-      const size_t buf_size = mult * tf->update_granularity();
 
+   for(size_t buf_size : { 16, 64, 256, 1024, 8192 })
+      {
       secure_vector<byte> buffer(buf_size);
 
       double res = time_op(std::chrono::seconds(1),
                            [&tf,&buffer,buf_size]{
-                           tf->update(buffer);
+                           tf->finish(buffer);
                            buffer.resize(buf_size);
                            });
 
-      const u64bit Mbytes = (res * buf_size) / 1024 / 1024;
+      const double Mbytes = (res * buf_size) / 1024 / 1024;
 
-      std::cout << algo << " " << Mbytes << " MiB / sec with " << buf_size << " byte blocks\n";
+      results[""] = Mbytes;
+      std::cout << tf->name() << " " << Mbytes << " MiB / sec with " << buf_size << " byte blocks\n";
       }
 
-   return true;
+   return results;
+   }
+
+std::map<std::string, double> time_transform(const std::string& algo, RandomNumberGenerator& rng)
+   {
+   std::unique_ptr<Transformation> tf;
+   tf.reset(get_aead(algo, ENCRYPTION));
+   return time_transform(std::move(tf), rng);
    }
 
 }
 
-bool bench_algo(const std::string& algo,
+void bench_algo(const std::string& algo,
                 RandomNumberGenerator& rng,
                 double seconds,
                 size_t buf_size)
@@ -169,18 +183,19 @@ bool bench_algo(const std::string& algo,
 
    std::map<std::string, double> speeds = algorithm_benchmark(algo, af, rng, ms, buf_size);
 
-   if(!speeds.empty())
-      {
-      report_results(algo, speeds);
-      return true;
-      }
+   if(speeds.empty())
+      speeds = time_transform(algo, rng);
 
-   return time_transform(algo, rng);
+   report_results(algo, speeds);
+
+   if(speeds.empty())
+      bench_pk(rng, algo, seconds);
    }
 
-void benchmark(RandomNumberGenerator& rng,
-               double seconds, size_t buf_size)
+void benchmark(double seconds, size_t buf_size)
    {
+   AutoSeeded_RNG rng;
+
    for(size_t i = 0; algos[i] != ""; ++i)
       bench_algo(algos[i], rng, seconds, buf_size);
    }

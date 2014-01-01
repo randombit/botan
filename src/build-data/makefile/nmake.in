@@ -46,7 +46,7 @@ LIBRARIES     = $(BOTAN_LIB)
 # This will be either a static lib or the DLL import lib
 BOTAN_LIB     = $(LIBNAME).%{static_suffix}
 
-all: $(LIBRARIES)
+all: $(TEST)
 
 ### Build Commands
 %{lib_build_cmds}
@@ -54,8 +54,6 @@ all: $(LIBRARIES)
 %{test_build_cmds}
 
 ### Link Commands
-check: $(TEST)
-
 $(TEST): $(LIBRARIES) $(TESTOBJS)
 	$(CXX) /Fe$@ $(TESTOBJS) $(BOTAN_LIB) $(LINK_TO)
 

@@ -3,20 +3,20 @@
 #define BOTAN_CHECK_BENCHMARK_H__
 
 #include <botan/rng.h>
+#include <botan/transform.h>
 #include <string>
 
-void benchmark(Botan::RandomNumberGenerator& rng,
-               double seconds,
+using namespace Botan;
+
+void benchmark(double seconds,
                size_t buf_size);
 
-bool bench_algo(const std::string& algo_name,
-                Botan::RandomNumberGenerator& rng,
+void bench_algo(const std::string& algo_name,
+                RandomNumberGenerator& rng,
                 double seconds,
                 size_t buf_size);
 
-void bench_pk(Botan::RandomNumberGenerator&,
-              const std::string&, double seconds);
-
-void time_transform(const std::string& algo);
+void bench_pk(RandomNumberGenerator& rng,
+              const std::string& algo, double seconds);
 
 #endif

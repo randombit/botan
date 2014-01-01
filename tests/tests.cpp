@@ -4,6 +4,7 @@
 size_t run_tests(const std::vector<test_fn>& tests)
    {
    size_t fails = 0;
+
    for(auto& test : tests)
       {
       try
@@ -12,19 +13,27 @@ size_t run_tests(const std::vector<test_fn>& tests)
          }
       catch(std::exception& e)
          {
-         std::cout << "Exception escaped callback: " << e.what() << "\n";
+         std::cout << "Exception escaped test: " << e.what() << "\n";
+         ++fails;
+         }
+      catch(...)
+         {
+         std::cout << "Exception escaped test\n";
          ++fails;
          }
       }
+
+   test_report("Tests", 0, fails);
+
    return fails;
    }
 
 void test_report(const std::string& name, size_t ran, size_t failed)
    {
-   std::cout << name << " tests:";
+   std::cout << name;
 
    if(ran > 0)
-      std::cout << " " << ran << " total";
+      std::cout << " " << ran << " tests";
 
    if(failed)
       std::cout << " " << failed << " FAILs\n";

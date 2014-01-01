@@ -43,6 +43,7 @@ RM               = @rm -f
 RM_R             = @rm -rf
 
 # Targets
+TEST         = %{test_prefix}test
 LIBRARIES     = $(STATIC_LIB) $(SHARED_LIB)
 
 LIBNAME       = %{lib_prefix}libbotan
@@ -53,11 +54,9 @@ SHARED_LIB    = $(SONAME).%{version_patch}
 
 SYMLINK       = $(LIBNAME)-$(SERIES).%{so_suffix}
 
-all: $(LIBRARIES)
+all: $(TEST)
 
 # File Lists
-TEST         = %{test_prefix}test
-
 HEADERS       = %{include_files}
 
 LIBOBJS       = %{lib_objs}
@@ -70,8 +69,6 @@ TESTOBJS     = %{test_objs}
 %{test_build_cmds}
 
 # Link Commands
-check: $(TEST)
-
 $(TEST): $(LIBRARIES) $(TESTOBJS)
 	$(CXX) $(LDFLAGS) $(TESTOBJS) $(SHARED_LIB) $(LINK_TO) -lboost_regex -o $(TEST)
 

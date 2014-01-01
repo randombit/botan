@@ -159,62 +159,69 @@ size_t validate_save_and_load(const Private_Key* priv_key,
    return fails;
    }
 
-void validate_decryption(PK_Decryptor& d, const std::string& algo,
+size_t validate_decryption(PK_Decryptor& d, const std::string& algo,
                          const std::vector<byte> ctext,
-                         const std::vector<byte> ptext,
-                         bool& failure)
+                           const std::vector<byte> ptext)
    {
+   size_t fails = 0;
+
    std::vector<byte> decrypted = unlock(d.decrypt(ctext));
+
    if(decrypted != ptext)
       {
       std::cout << "FAILED (decrypt): " << algo << std::endl;
       dump_data(decrypted, ptext);
-      failure = true;
+      ++fails;
       }
+
+   return fails;
    }
 
-void validate_encryption(PK_Encryptor& e, PK_Decryptor& d,
-                         const std::string& algo, const std::string& input,
-                         const std::string& random, const std::string& exp,
-                         bool& failure)
+size_t validate_encryption(PK_Encryptor& e, PK_Decryptor& d,
+                           const std::string& algo, const std::string& input,
+                           const std::string& random, const std::string& exp)
    {
    std::vector<byte> message = hex_decode(input);
    std::vector<byte> expected = hex_decode(exp);
    Fixed_Output_RNG rng(hex_decode(random));
+
+   size_t fails = 0;
 
    std::vector<byte> out = e.encrypt(message, rng);
    if(out != expected)
       {
       std::cout << "FAILED (encrypt): " << algo << std::endl;
       dump_data(out, expected);
-      failure = true;
+      ++fails;
       }
 
-   validate_decryption(d, algo, out, message, failure);
+   fails += validate_decryption(d, algo, out, message);
+
+   return fails;
    }
 
-void validate_signature(PK_Verifier& v, PK_Signer& s, const std::string& algo,
-                        const std::string& input,
-                        RandomNumberGenerator& rng,
-                        const std::string& exp, bool& failure)
+size_t validate_signature(PK_Verifier& v, PK_Signer& s, const std::string& algo,
+                          const std::string& input,
+                          RandomNumberGenerator& rng,
+                          const std::string& exp)
    {
    std::vector<byte> message = hex_decode(input);
-
    std::vector<byte> expected = hex_decode(exp);
-
    std::vector<byte> sig = s.sign_message(message, rng);
+
+   size_t fails = 0;
 
    if(sig != expected)
       {
       std::cout << "FAILED (sign): " << algo << std::endl;
       dump_data(sig, expected);
-      failure = true;
+      ++fails;
       }
 
    if(!v.verify_message(message, sig))
       {
       std::cout << "FAILED (verify): " << algo << std::endl;
-      failure = true;
+      ++fails;
       }
 
    /* This isn't a very thorough testing method, but it will hopefully
@@ -223,44 +230,48 @@ void validate_signature(PK_Verifier& v, PK_Signer& s, const std::string& algo,
    if(v.verify_message(message, sig))
       {
       std::cout << "FAILED (accepted bad sig): " << algo << std::endl;
-      failure = true;
+      ++fails;
       }
+
+   return fails;
    }
 
-void validate_signature(PK_Verifier& v, PK_Signer& s, const std::string& algo,
+size_t validate_signature(PK_Verifier& v, PK_Signer& s, const std::string& algo,
                         const std::string& input,
                         const std::string& random,
-                        const std::string& exp, bool& failure)
+                        const std::string& exp)
    {
    Fixed_Output_RNG rng(hex_decode(random));
 
-   validate_signature(v, s, algo, input, rng, exp, failure);
+   return validate_signature(v, s, algo, input, rng, exp);
    }
 
-void validate_kas(PK_Key_Agreement& kas, const std::string& algo,
-                  const std::vector<byte>& pubkey, const std::string& output,
-                  u32bit keylen, bool& failure)
+size_t validate_kas(PK_Key_Agreement& kas, const std::string& algo,
+                    const std::vector<byte>& pubkey, const std::string& output,
+                    u32bit keylen)
    {
    std::vector<byte> expected = hex_decode(output);
 
-   std::vector<byte> got = unlock(kas.derive_key(keylen,
-                                                 pubkey).bits_of());
+   std::vector<byte> got = unlock(kas.derive_key(keylen, pubkey).bits_of());
+
+   size_t fails = 0;
 
    if(got != expected)
       {
       std::cout << "FAILED: " << algo << std::endl;
       dump_data(got, expected);
-      failure = true;
+      ++fails;
       }
+
+   return fails;
    }
 
-u32bit validate_rsa_enc_pkcs8(const std::string& algo,
+size_t validate_rsa_enc_pkcs8(const std::string& algo,
                               const std::vector<std::string>& str,
                               RandomNumberGenerator& rng)
    {
    if(str.size() != 4 && str.size() != 5)
       throw std::runtime_error("Invalid input from pk_valid.dat");
-
 
 #if defined(BOTAN_HAS_RSA)
    std::string pass;
@@ -284,15 +295,13 @@ u32bit validate_rsa_enc_pkcs8(const std::string& algo,
    PK_Encryptor_EME e(*rsapub, eme);
    PK_Decryptor_EME d(*rsapriv, eme);
 
-   bool failure = false;
-   validate_encryption(e, d, algo, str[1], str[2], str[3], failure);
-   return (failure ? 1 : 0);
+   return validate_encryption(e, d, algo, str[1], str[2], str[3]);
 #endif
 
-   return 2;
+   return 0;
    }
 
-u32bit validate_rsa_enc(const std::string& algo,
+size_t validate_rsa_enc(const std::string& algo,
                         const std::vector<std::string>& str,
                         RandomNumberGenerator& rng)
    {
@@ -311,21 +320,18 @@ u32bit validate_rsa_enc(const std::string& algo,
    PK_Encryptor_EME e(pubkey, eme);
    PK_Decryptor_EME d(privkey, eme);
 
-   bool failure = false;
-   validate_encryption(e, d, algo, str[3], str[4], str[5], failure);
-   return (failure ? 1 : 0);
+   return validate_encryption(e, d, algo, str[3], str[4], str[5]);
 #endif
 
-   return 2;
+   return 0;
    }
 
-u32bit validate_elg_enc(const std::string& algo,
+size_t validate_elg_enc(const std::string& algo,
                         const std::vector<std::string>& str,
                         RandomNumberGenerator& rng)
    {
    if(str.size() != 6 && str.size() != 7)
       throw std::runtime_error("Invalid input from pk_valid.dat");
-
 
 #if defined(BOTAN_HAS_ELGAMAL)
    DL_Group domain(to_bigint(str[0]), to_bigint(str[1]));
@@ -336,28 +342,25 @@ u32bit validate_elg_enc(const std::string& algo,
 
    PK_Decryptor_EME d(privkey, eme);
 
-   bool failure = false;
    if(str.size() == 7)
       {
       PK_Encryptor_EME e(pubkey, eme);
-      validate_encryption(e, d, algo, str[4], str[5], str[6], failure);
+      return validate_encryption(e, d, algo, str[4], str[5], str[6]);
       }
    else
-      validate_decryption(d, algo, hex_decode(str[5]),
-                          hex_decode(str[4]), failure);
-   return (failure ? 1 : 0);
+      return validate_decryption(d, algo, hex_decode(str[5]),
+                                 hex_decode(str[4]));
 #endif
 
-   return 2;
+   return 0;
    }
 
-u32bit validate_rsa_sig(const std::string& algo,
+size_t validate_rsa_sig(const std::string& algo,
                         const std::vector<std::string>& str,
                         RandomNumberGenerator& rng)
    {
    if(str.size() != 6)
       throw std::runtime_error("Invalid input from pk_valid.dat");
-
 
 #if defined(BOTAN_HAS_RSA)
    RSA_PrivateKey privkey(rng,
@@ -370,12 +373,11 @@ u32bit validate_rsa_sig(const std::string& algo,
 
    PK_Verifier v(pubkey, emsa);
    PK_Signer s(privkey, emsa);
-   bool failure = false;
-   validate_signature(v, s, algo, str[3], str[4], str[5], failure);
-   return (failure ? 1 : 0);
+
+   return validate_signature(v, s, algo, str[3], str[4], str[5]);
 #endif
 
-   return 2;
+   return 0;
    }
 
 u32bit validate_rsa_ver(const std::string& algo,
@@ -383,6 +385,8 @@ u32bit validate_rsa_ver(const std::string& algo,
    {
    if(str.size() != 5) /* is actually 4, parse() adds an extra empty one */
       throw std::runtime_error("Invalid input from pk_valid.dat");
+
+   size_t fails = 0;
 
 #if defined(BOTAN_HAS_RSA)
    RSA_PublicKey key(to_bigint(str[1]), to_bigint(str[0]));
@@ -394,19 +398,24 @@ u32bit validate_rsa_ver(const std::string& algo,
    std::vector<byte> msg = hex_decode(str[2]);
    std::vector<byte> sig = hex_decode(str[3]);
 
-   bool passed = true;
-   passed = v.verify_message(msg, sig);
-   return (passed ? 0 : 1);
+   if(!v.verify_message(msg, sig))
+      {
+      std::cout << "RSA verification failed\n";
+      ++fails;
+      }
+
 #endif
 
-   return 2;
+   return fails;
    }
 
-u32bit validate_rsa_ver_x509(const std::string& algo,
+size_t validate_rsa_ver_x509(const std::string& algo,
                              const std::vector<std::string>& str)
    {
    if(str.size() != 5) /* is actually 3, parse() adds extra empty ones */
       throw std::runtime_error("Invalid input from pk_valid.dat");
+
+   size_t fails = 0;
 
 #if defined(BOTAN_HAS_RSA)
    DataSource_Memory keysource(reinterpret_cast<const byte*>(str[0].c_str()),
@@ -426,12 +435,14 @@ u32bit validate_rsa_ver_x509(const std::string& algo,
    std::vector<byte> msg = hex_decode(str[1]);
    std::vector<byte> sig = hex_decode(str[2]);
 
-   bool passed = v.verify_message(msg, sig);
-   return (passed ? 0 : 1);
-
+   if(!v.verify_message(msg, sig))
+      {
+      std::cout << "RSA verification failed\n";
+      ++fails;
+      }
 #endif
 
-   return 2;
+   return fails;
    }
 
 u32bit validate_rw_ver(const std::string& algo,
@@ -475,12 +486,11 @@ u32bit validate_rw_sig(const std::string& algo,
    PK_Verifier v(pubkey, emsa);
    PK_Signer s(privkey, emsa);
 
-   bool failure = false;
-   validate_signature(v, s, algo, str[3], rng, str[4], failure);
-   return (failure ? 1 : 0);
+
+   validate_signature(v, s, algo, str[3], rng, str[4]);
 #endif
 
-   return 2;
+   return 0;
    }
 
 u32bit validate_dsa_sig(const std::string& algo,
@@ -513,12 +523,11 @@ u32bit validate_dsa_sig(const std::string& algo,
    PK_Verifier v(*dsapub, emsa);
    PK_Signer s(*dsapriv, emsa);
 
-   bool failure = false;
-   validate_signature(v, s, algo, str[1], str[2], str[3], failure);
-   return (failure ? 1 : 0);
+
+   validate_signature(v, s, algo, str[1], str[2], str[3]);
 #endif
 
-   return 2;
+   return 0;
    }
 
 u32bit validate_ecdsa_sig(const std::string& algo,
@@ -538,12 +547,10 @@ u32bit validate_ecdsa_sig(const std::string& algo,
    PK_Verifier v(ecdsa, emsa);
    PK_Signer s(ecdsa, emsa);
 
-   bool failure = false;
-   validate_signature(v, s, algo, str[2], str[3], str[4], failure);
-   return (failure ? 1 : 0);
+   validate_signature(v, s, algo, str[2], str[3], str[4]);
 #endif
 
-   return 2;
+   return 0;
    }
 
 u32bit validate_gost_ver(const std::string& algo,
@@ -571,7 +578,7 @@ u32bit validate_gost_ver(const std::string& algo,
    return (passed ? 0 : 1);
 #endif
 
-   return 2;
+   return 0;
    }
 
 u32bit validate_dsa_ver(const std::string& algo,
@@ -583,6 +590,7 @@ u32bit validate_dsa_ver(const std::string& algo,
    DataSource_Memory keysource(reinterpret_cast<const byte*>(str[0].c_str()),
                                str[0].length());
 
+   size_t fails = 0;
 
 #if defined(BOTAN_HAS_DSA)
    std::unique_ptr<Public_Key> key(X509::load_key(keysource));
@@ -590,7 +598,10 @@ u32bit validate_dsa_ver(const std::string& algo,
    DSA_PublicKey* dsakey = dynamic_cast<DSA_PublicKey*>(key.get());
 
    if(!dsakey)
-      throw Invalid_Argument("Bad key load for DSA public key");
+      {
+      ++fails;
+      std::cout << "Unable to load DSA private key during test\n";
+      }
 
    std::string emsa = algo.substr(7, std::string::npos);
 
@@ -600,11 +611,16 @@ u32bit validate_dsa_ver(const std::string& algo,
    std::vector<byte> sig = hex_decode(str[2]);
 
    v.set_input_format(DER_SEQUENCE);
-   bool passed = v.verify_message(msg, sig);
-   return (passed ? 0 : 1);
+
+   bool verified = v.verify_message(msg, sig);
+   if(!verified)
+      {
+      std::cout << "Failed to verify\n";
+      ++fails;
+      }
 #endif
 
-   return 2;
+   return fails;
    }
 
 u32bit validate_nr_sig(const std::string& algo,
@@ -613,7 +629,6 @@ u32bit validate_nr_sig(const std::string& algo,
    {
    if(str.size() != 8)
       throw std::runtime_error("Invalid input from pk_valid.dat");
-
 
 #if defined(BOTAN_HAS_NYBERG_RUEPPEL)
 
@@ -626,12 +641,10 @@ u32bit validate_nr_sig(const std::string& algo,
    PK_Verifier v(pubkey, emsa);
    PK_Signer s(privkey, emsa);
 
-   bool failure = false;
-   validate_signature(v, s, algo, str[5], str[6], str[7], failure);
-   return (failure ? 1 : 0);
+   return validate_signature(v, s, algo, str[5], str[6], str[7]);
 #endif
 
-   return 2;
+   return 0;
    }
 
 u32bit validate_dh(const std::string& algo,
@@ -640,7 +653,6 @@ u32bit validate_dh(const std::string& algo,
    {
    if(str.size() != 5 && str.size() != 6)
       throw std::runtime_error("Invalid input from pk_valid.dat");
-
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    DL_Group domain(to_bigint(str[0]), to_bigint(str[1]));
@@ -656,13 +668,10 @@ u32bit validate_dh(const std::string& algo,
 
    PK_Key_Agreement kas(mykey, kdf);
 
-   bool failure = false;
-   validate_kas(kas, algo, otherkey.public_value(),
-                str[4], keylen, failure);
-   return (failure ? 1 : 0);
+   return validate_kas(kas, algo, otherkey.public_value(), str[4], keylen);
 #endif
 
-   return 2;
+   return 0;
    }
 
 u32bit validate_dlies(const std::string& algo,
@@ -699,12 +708,10 @@ u32bit validate_dlies(const std::string& algo,
    e.set_other_key(to.public_value());
 
    std::string empty = "";
-   bool failure = false;
-   validate_encryption(e, d, algo, str[4], empty, str[5], failure);
-   return (failure ? 1 : 0);
-#else
-   return 2;
+   return validate_encryption(e, d, algo, str[4], empty, str[5]);
 #endif
+
+   return 0;
    }
 
 }
@@ -923,8 +930,7 @@ size_t test_pubkey()
                    << std::dec << alg_count << std::endl;
       }
 
-   test_report("Pubkey", total_tests, errors);
+   test_report("Pubkey", total_tests, total_errors);
 
-   return errors;
+   return total_errors;
    }
-

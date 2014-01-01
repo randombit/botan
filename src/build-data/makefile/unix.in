@@ -41,15 +41,15 @@ RM               = @rm -f
 RM_R             = @rm -rf
 
 # Targets
+TEST         = %{test_prefix}test
 LIBRARIES     = $(STATIC_LIB)
 
 LIBNAME       = %{lib_prefix}libbotan
 STATIC_LIB    = $(LIBNAME)-$(SERIES).a
 
-all: $(LIBRARIES)
+all: $(TEST)
 
 # File Lists
-TEST         = %{test_prefix}test
 
 HEADERS       = %{include_files}
 
@@ -63,8 +63,6 @@ TESTOBJS     = %{test_objs}
 %{test_build_cmds}
 
 # Link Commands
-check: $(TEST)
-
 $(TEST): $(LIBRARIES) $(TESTOBJS)
 	$(CXX) $(TESTOBJS) $(STATIC_LIB) $(LINK_TO) -o $(TEST)
 

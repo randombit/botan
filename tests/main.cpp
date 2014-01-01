@@ -137,53 +137,36 @@ int main(int argc, char* argv[])
 
    try
       {
-      OptionParser opts("help|test|validate|dyn-load=|"
-                        "benchmark|bench-type=|bench-algo=|"
-                        "seconds=|buf-size=");
+      OptionParser opts("help|test|validate|"
+                        "algo=|seconds=|buf-size=");
       opts.parse(argv);
 
       test_types(); // do this always
 
-      Botan::LibraryInitializer init("thread_safe=no");
+      Botan::LibraryInitializer init;
 
-      if(opts.is_set("dyn-load"))
+      if(opts.is_set("help") || argc < 2)
          {
-         const std::string lib = opts.value("dyn-load");
-
-#if defined(BOTAN_HAS_DYNAMICALLY_LOADED_ENGINE)
-         global_state().algorithm_factory().add_engine(
-            new Dynamically_Loaded_Engine(lib));
-#else
-         std::cout << "Can't load " << lib
-                   << "; DLL engines not supported in build\n";
-#endif
-         }
-
-      Botan::AutoSeeded_RNG rng;
-
-      if(opts.is_set("help") || argc <= 1)
-         {
-         std::cerr << "Test driver for "
-                   << Botan::version_string() << "\n"
-                   << "Options:\n"
-                   << "  --test || --validate: Run tests (do this at least once)\n"
-                   << "  --benchmark: Benchmark everything\n"
-                   << "  --seconds=n: Benchmark for n seconds\n"
-                   << "  --init=<str>: Pass <str> to the library\n"
-                   << "  --help: Print this message\n";
+         std::cout << "Commands: test version time\n";
          return 1;
          }
 
-      if(opts.is_set("validate") || opts.is_set("test"))
+      const std::string cmd = argv[1];
+
+      if(cmd == "version")
+         {
+         std::cout << Botan::version_string() << "\n";
+         return 0;
+         }
+
+      if(cmd == "test")
          {
          return run_tests();
          }
-      if(opts.is_set("bench-algo") ||
-         opts.is_set("benchmark") ||
-         opts.is_set("bench-type"))
+
+      if(cmd == "speed")
          {
          double seconds = 5;
-
          u32bit buf_size = 16;
 
          if(opts.is_set("seconds"))
@@ -206,22 +189,16 @@ int main(int argc, char* argv[])
                }
             }
 
-         if(opts.is_set("benchmark"))
+         if(opts.is_set("--algo"))
             {
-            benchmark(rng, seconds, buf_size);
+            AutoSeeded_RNG rng;
+            for(auto alg: Botan::split_on(opts.value("algo"), ','))
+               bench_algo(alg, rng, seconds, buf_size);
             }
-         else if(opts.is_set("bench-algo"))
-            {
-            std::vector<std::string> algs =
-               Botan::split_on(opts.value("bench-algo"), ',');
-
-            for(u32bit j = 0; j != algs.size(); j++)
-               {
-               const std::string alg = algs[j];
-               if(!bench_algo(alg, rng, seconds, buf_size))
-                  bench_pk(rng, alg, seconds);
-               }
-            }
+         /*
+         else
+            benchmark(seconds, buf_size);
+         */
          }
       }
    catch(std::exception& e)

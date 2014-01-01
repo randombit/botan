@@ -4,6 +4,7 @@
 #define BOTAN_CHECK_COMMON_H__
 
 #include <string>
+#include "getopt.h"
 
 void strip_comments(std::string& line);
 void strip_newlines(std::string& line);
