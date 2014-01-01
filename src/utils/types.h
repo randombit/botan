@@ -10,37 +10,26 @@
 
 #include <botan/build.h>
 #include <botan/assert.h>
-#include <stddef.h>
+#include <cstddef>
+#include <cstdint>
 
 /**
 * The primary namespace for the botan library
 */
 namespace Botan {
 
-/**
-* Typedef representing an unsigned 8-bit quantity
-*/
-typedef unsigned char byte;
+using std::uint8_t;
+using std::uint16_t;
+using std::uint32_t;
+using std::uint64_t;
+using std::size_t;
 
-/**
-* Typedef representing an unsigned 16-bit quantity
-*/
-typedef unsigned short u16bit;
+typedef uint8_t byte;
+typedef uint16_t u16bit;
+typedef uint32_t u32bit;
+typedef uint64_t u64bit;
 
-/**
-* Typedef representing an unsigned 32-bit quantity
-*/
-typedef unsigned int u32bit;
-
-/**
-* Typedef representing a signed 32-bit quantity
-*/
-typedef signed int s32bit;
-
-/**
-* Typedef representing an unsigned 64-bit quantity
-*/
-typedef unsigned long long u64bit;
+typedef std::int32_t s32bit;
 
 /**
 * A default buffer size; typically a memory page
