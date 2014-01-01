@@ -110,8 +110,7 @@ int run_tests()
 
    if(errors)
       {
-      std::cout << errors << " test"  << ((errors == 1) ? "" : "s")
-                << " failed." << std::endl;
+      std::cout << errors << " test failures\n";
       return 1;
       }
 

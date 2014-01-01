@@ -110,11 +110,11 @@ size_t run_tests_bb(std::istream& src,
       }
 
    if(fixed_name != "" && (algo_count > 0 || algo_fail > 0))
-      {
       test_report(fixed_name, algo_count, algo_fail);
-      test_count += algo_count;
-      test_fails += algo_fail;
-      }
+
+   test_count += algo_count;
+   test_fails += algo_fail;
+
    test_report(name_key, test_count, test_fails);
 
    return test_fails;

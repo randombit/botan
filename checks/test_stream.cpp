@@ -11,13 +11,15 @@ using namespace Botan;
 namespace {
 
 bool stream_test(const std::string& algo,
-                const std::string& key_hex,
-                const std::string& in_hex,
-                const std::string& out_hex)
+                 const std::string& key_hex,
+                 const std::string& in_hex,
+                 const std::string& out_hex,
+                 const std::string& nonce_hex)
    {
    const secure_vector<byte> key = hex_decode_locked(key_hex);
    const secure_vector<byte> pt = hex_decode_locked(in_hex);
    const secure_vector<byte> ct = hex_decode_locked(out_hex);
+   const secure_vector<byte> nonce = hex_decode_locked(nonce_hex);
 
    Algorithm_Factory& af = global_state().algorithm_factory();
 
@@ -37,6 +39,10 @@ bool stream_test(const std::string& algo,
 
       std::unique_ptr<StreamCipher> cipher(proto->clone());
       cipher->set_key(key);
+
+      if(nonce.size())
+         cipher->set_iv(&nonce[0], nonce.size());
+
       secure_vector<byte> buf = pt;
 
       cipher->encrypt(buf);
@@ -60,6 +66,6 @@ size_t test_stream()
    return run_tests_bb(vec, "StreamCipher", "Out", true,
              [](std::map<std::string, std::string> m) -> bool
              {
-             return stream_test(m["StreamCipher"], m["Key"], m["In"], m["Out"]);
+             return stream_test(m["StreamCipher"], m["Key"], m["In"], m["Out"], m["Nonce"]);
              });
    }
