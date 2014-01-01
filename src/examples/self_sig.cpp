@@ -1,4 +1,4 @@
-#include <botan/botan.h>
+#include "examples.h"
 #include <botan/x509self.h>
 #include <botan/rsa.h>
 #include <botan/dsa.h>
@@ -8,7 +8,7 @@ using namespace Botan;
 #include <fstream>
 #include <memory>
 
-int main(int argc, char* argv[])
+int self_sig_example(int argc, char* argv[])
    {
    if(argc != 7)
       {
@@ -17,8 +17,6 @@ int main(int argc, char* argv[])
                 << std::endl;
       return 1;
       }
-
-   Botan::LibraryInitializer init;
 
    std::string CA_flag = argv[2];
    bool do_CA = false;

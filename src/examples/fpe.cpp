@@ -1,4 +1,4 @@
-#include <botan/botan.h>
+#include "examples.h"
 #include <botan/fpe_fe1.h>
 #include <botan/sha160.h>
 
@@ -102,10 +102,8 @@ u64bit decrypt_cc_number(u64bit enc_cc,
 
 }
 
-int main(int argc, char* argv[])
+int fpe_example(int argc, char* argv[])
    {
-   LibraryInitializer init;
-
    if(argc != 4)
       {
       std::cout << "Usage: " << argv[0] << " cc-number acct-name passwd\n";
@@ -136,5 +134,10 @@ int main(int argc, char* argv[])
              << ' ' << luhn_check(dec_cc) << '\n';
 
    if(dec_cc != cc_number)
+      {
       std::cout << "Something went wrong :( Bad CC checksum?\n";
+      return 2;
+      }
+
+   return 0;
    }

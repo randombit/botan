@@ -120,20 +120,32 @@ int main(int argc, char* argv[])
          return failures ? 1 : 0;
          }
 
-if(cmd == "cpuid")
-   {
-   CPUID::print(std::cout);
-return 0;
-}
+      if(cmd == "cpuid")
+         {
+         CPUID::print(std::cout);
+         return 0;
+         }
 
-if(cmd == "http_get")
-   {
-auto resp = HTTP::GET_sync(argv[2]);
-std::cout << resp << "\n";
-}
+      if(cmd == "http_get")
+         {
+         auto resp = HTTP::GET_sync(argv[2]);
+         std::cout << resp << "\n";
+         }
 
       if(cmd == "bcrypt")
          return bcrypt_example(argc - 1, argv + 1);
+
+      if(cmd == "fpe")
+         return fpe_example(argc - 1, argv + 1);
+
+      if(cmd == "read_ssh_key")
+         return read_ssh_example(argc - 1, argv + 1);
+
+      if(cmd == "self_sig")
+         return self_sig_example(argc - 1, argv + 1);
+
+      if(cmd == "x509")
+         return x509_example(argc - 1, argv + 1);
 
       if(cmd == "factor")
          return factor_example(argc - 1, argv + 1);

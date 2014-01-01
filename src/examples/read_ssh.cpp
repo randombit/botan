@@ -8,6 +8,8 @@
 * Example of reading SSH2 format public keys (see RFC 4716)
 */
 
+#include "examples.h"
+
 #include <botan/x509_key.h>
 #include <botan/filters.h>
 #include <botan/loadstor.h>
@@ -61,7 +63,7 @@ Public_Key* read_ssh_pubkey(const std::string& file)
    std::getline(in, line);
 
    if(line != ssh_header)
-      return 0;
+      return nullptr;
 
    while(in.good())
       {
@@ -86,7 +88,7 @@ Public_Key* read_ssh_pubkey(const std::string& file)
    std::string key_type = read_string(pipe);
 
    if(key_type != "ssh-rsa" && key_type != "ssh-dss")
-      return 0;
+      return nullptr;
 
    if(key_type == "ssh-rsa")
       {
@@ -104,23 +106,25 @@ Public_Key* read_ssh_pubkey(const std::string& file)
       return new DSA_PublicKey(DL_Group(p, q, g), y);
       }
 
-   return 0;
+   return nullptr;
    }
 
 }
 
-#include <botan/init.h>
-#include <iostream>
-
-int main()
+int read_ssh_example(int argc, char* argv[])
    {
-   LibraryInitializer init;
+   if(argc != 2)
+      {
+      std::cout << "Usage: " << argv[0] << " file";
+      return 1;
+      }
 
-   std::unique_ptr<Public_Key> key(read_ssh_pubkey("dsa.ssh"));
+   const std::string filename = argv[1];
+   std::unique_ptr<Public_Key> key(read_ssh_pubkey(filename));
 
    if(key == 0)
       {
-      std::cout << "Failed\n";
+      std::cout << "Failed to read" << filename << "\n";
       return 1;
       }
 
