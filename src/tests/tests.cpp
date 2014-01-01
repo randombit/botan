@@ -174,6 +174,7 @@ size_t run_all_tests()
    all_tests.push_back(test_passhash9);
    all_tests.push_back(test_bcrypt);
    all_tests.push_back(test_cryptobox);
+   all_tests.push_back(test_tss);
 
    all_tests.push_back(test_bigint);
    all_tests.push_back(test_pubkey);
