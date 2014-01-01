@@ -27,6 +27,7 @@ using namespace Botan;
 #include "common.h"
 #include "speed/speed.h"
 #include "tests/tests.h"
+#include "examples/examples.h"
 
 // from common.h
 void strip_comments(std::string& line)
@@ -99,7 +100,7 @@ int main(int argc, char* argv[])
 
       if(opts.is_set("help") || argc < 2)
          {
-         std::cout << "Commands: test version time\n";
+         std::cout << "Commands: test version time bcrypt\n";
          return 1;
          }
 
@@ -115,6 +116,11 @@ int main(int argc, char* argv[])
          {
          const size_t failures = run_all_tests();
          return failures ? 1 : 0;
+         }
+
+      if(cmd == "bcrypt")
+         {
+         bcrypt_example(argc - 1, argv + 1);
          }
 
       if(cmd == "speed")
