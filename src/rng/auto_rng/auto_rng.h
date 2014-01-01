@@ -14,11 +14,6 @@
 
 namespace Botan {
 
-/**
-* An older interface kept for compatability with existing code
-*
-* Use RandomNumberGenerator::make_rng instead
-*/
 class BOTAN_DLL AutoSeeded_RNG : public RandomNumberGenerator
    {
    public:
