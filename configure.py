@@ -157,8 +157,6 @@ class BuildConfigurationInformation(object):
         self.manual_dir = os.path.join(self. doc_output_dir, 'manual')
 
         def build_doc_commands():
-            yield '$(COPY) readme.txt %s' % (self.doc_output_dir)
-
             if options.with_sphinx:
                 yield 'sphinx-build $(SPHINX_OPTS) -b html doc %s' % (
                     self.manual_dir)

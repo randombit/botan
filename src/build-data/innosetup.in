@@ -44,8 +44,7 @@ Source: "..\botan.dll.manifest"; DestDir: "{app}"; Components: dll; Flags: skipi
 
 Source: "include\botan\*"; DestDir: "{app}\include\botan"; Components: includes; AfterInstall: ConvertLineEndings
 
-Source: "..\readme.txt"; DestDir: "{app}\doc"; Components: docs; AfterInstall: ConvertLineEndings
-Source: "..\doc\*.rst"; DestDir: "{app}\doc"; Excludes: "license.txt"; Components: docs; AfterInstall: ConvertLineEndings
+Source: "..\doc\*.rst"; DestDir: "{app}\doc"; Excludes: "license.rst"; Components: docs; AfterInstall: ConvertLineEndings
 
 Source: "..\doc\examples\*.cpp"; DestDir: "{app}\doc\examples"; Components: docs; AfterInstall: ConvertLineEndings
 
