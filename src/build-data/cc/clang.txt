@@ -9,6 +9,7 @@ add_lib_dir_option -L
 add_lib_option -l
 
 lang_flags "-D_REENTRANT -std=c++11"
+maintainer_warning_flags "-Werror"
 warning_flags "-Wextra -Wall"
 
 makefile_style unix
