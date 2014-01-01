@@ -61,7 +61,7 @@ bool stream_test(const std::string& algo,
 
 size_t test_stream()
    {
-   std::ifstream vec("checks/stream.vec");
+   std::ifstream vec(CHECKS_DIR "/stream.vec");
 
    return run_tests_bb(vec, "StreamCipher", "Out", true,
              [](std::map<std::string, std::string> m) -> bool

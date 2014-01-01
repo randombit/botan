@@ -1,7 +1,7 @@
 ### Compiler Options
 CXX           = %{cc}
 LIB_OPT       = %{lib_opt}
-CHECK_OPT     = %{check_opt}
+TEST_OPT      = %{test_opt}
 LANG_FLAGS    = %{lang_flags}
 WARN_FLAGS    = %{warn_flags}
 SO_OBJ_FLAGS  = %{shared_flags}
@@ -9,7 +9,7 @@ LIB_LINK_CMD  = %{so_link}
 LINK_TO       = %{link_to}
 
 LIB_FLAGS     = $(LIB_OPT) $(LANG_FLAGS) $(WARN_FLAGS) $(SO_OBJ_FLAGS)
-CHECK_FLAGS   = $(CHECK_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
+TEST_FLAGS    = $(TEST_OPT) $(LANG_FLAGS) $(WARN_FLAGS)
 
 ### Version Numbers
 VERSION       = %{version}
@@ -31,13 +31,13 @@ RM_R          = $(RM) /S
 RMDIR         = @rmdir
 
 ### File Lists
-CHECK         = check
+TEST         = test
 
 HEADERS       = %{include_files}
 
 LIBOBJS       = %{lib_objs}
 
-CHECKOBJS     = %{check_objs}
+TESTOBJS     = %{test_objs}
 
 LIBNAME       = botan
 
@@ -51,11 +51,13 @@ all: $(LIBRARIES)
 ### Build Commands
 %{lib_build_cmds}
 
-%{check_build_cmds}
+%{test_build_cmds}
 
 ### Link Commands
-$(CHECK): $(LIBRARIES) $(CHECKOBJS)
-	$(CXX) /Fe$@ $(CHECKOBJS) $(BOTAN_LIB) $(LINK_TO)
+check: $(TEST)
+
+$(TEST): $(LIBRARIES) $(TESTOBJS)
+	$(CXX) /Fe$@ $(TESTOBJS) $(BOTAN_LIB) $(LINK_TO)
 
 $(BOTAN_LIB): $(LIBOBJS)
 !If "$(SO_OBJ_FLAGS)" == ""
@@ -69,18 +71,18 @@ docs:
 %{build_doc_commands}
 
 clean:
-	$(RM) %{build_dir}\lib\* %{build_dir}\checks\*
+	$(RM) %{build_dir}\lib\* %{build_dir}\tests\*
 	$(RM) *.manifest *.exp *.dll
-	$(RM) $(LIBRARIES) $(CHECK)
+	$(RM) $(LIBRARIES) $(TEST)
 
 distclean: clean
 	$(RM_R) %{build_dir}
 	$(RMDIR) %{build_dir}\include\botan\internal
 	$(RMDIR) %{build_dir}\include\botan
 	$(RMDIR) %{build_dir}\include
-	$(RMDIR) %{build_dir}\lib %{build_dir}\checks
+	$(RMDIR) %{build_dir}\lib %{build_dir}\tests
 	$(RMDIR) %{build_dir}
-	$(RM) Makefile $(LIBNAME).* $(CHECK).*
+	$(RM) Makefile $(LIBNAME).* $(TEST).*
 
 ### Install Commands
 install: $(LIBRARIES)

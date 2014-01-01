@@ -1,7 +1,7 @@
 #include "tests.h"
 
 #include <botan/libstate.h>
-#include <botan/hash.h>
+#include <botan/mac.h>
 #include <botan/hex.h>
 #include <iostream>
 #include <fstream>
@@ -10,7 +10,8 @@ using namespace Botan;
 
 namespace {
 
-bool hash_test(const std::string& algo,
+bool mac_test(const std::string& algo,
+              const std::string& key_hex,
               const std::string& in_hex,
               const std::string& out_hex)
    {
@@ -21,7 +22,7 @@ bool hash_test(const std::string& algo,
 
    for(auto provider: providers)
       {
-      auto proto = af.prototype_hash_function(algo, provider);
+      auto proto = af.prototype_mac(algo, provider);
 
       if(!proto)
          {
@@ -30,11 +31,12 @@ bool hash_test(const std::string& algo,
          continue;
          }
 
-      std::unique_ptr<HashFunction> hash(proto->clone());
+      std::unique_ptr<MessageAuthenticationCode> mac(proto->clone());
 
-      hash->update(hex_decode(in_hex));
+      mac->set_key(hex_decode(key_hex));
+      mac->update(hex_decode(in_hex));
 
-      auto h = hash->final();
+      auto h = mac->final();
 
       if(h != hex_decode_locked(out_hex))
          {
@@ -48,13 +50,13 @@ bool hash_test(const std::string& algo,
 
 }
 
-size_t test_hash()
+size_t test_mac()
    {
-   std::ifstream vec("checks/hash.vec");
+   std::ifstream vec(CHECKS_DIR "/mac.vec");
 
-   return run_tests_bb(vec, "Hash", "Out", true,
+   return run_tests_bb(vec, "Mac", "Out", true,
              [](std::map<std::string, std::string> m) -> bool
              {
-             return hash_test(m["Hash"], m["In"], m["Out"]);
+             return mac_test(m["Mac"], m["Key"], m["In"], m["Out"]);
              });
    }

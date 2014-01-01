@@ -35,7 +35,7 @@ size_t check_primetest(const std::vector<std::string>&,
 
 size_t test_bigint()
    {
-   const std::string filename = "checks/mp_valid.dat";
+   const std::string filename = CHECKS_DIR "/mp_valid.dat";
    std::ifstream test_data(filename.c_str());
 
    if(!test_data)

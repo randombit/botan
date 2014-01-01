@@ -28,6 +28,8 @@ void test_report(const std::string& name, size_t ran, size_t failed);
 
 #define TEST(expr, msg) do { if(!(expr)) { ++fails; std::cout << msg; } while(0)
 
+#define CHECKS_DIR "tests/"
+
 size_t run_all_tests();
 
 // Tests using reader framework above

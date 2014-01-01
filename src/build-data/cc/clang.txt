@@ -15,7 +15,7 @@ warning_flags "-Wextra -Wall"
 makefile_style unix
 
 lib_opt_flags "-O3"
-check_opt_flags "-O2"
+test_opt_flags "-O2"
 shared_flags "-fPIC"
 debug_flags "-g -fno-inline-functions"
 no_debug_flags ""

@@ -804,7 +804,7 @@ size_t test_pk_keygen()
 size_t test_pubkey()
    {
    AutoSeeded_RNG rng;
-   const std::string filename = "checks/pk_valid.dat";
+   const std::string filename = CHECKS_DIR "/pk_valid.dat";
    std::ifstream test_data(filename.c_str());
 
    if(!test_data)

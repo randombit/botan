@@ -65,7 +65,7 @@ bool block_test(const std::string& algo,
 
 size_t test_block()
    {
-   std::ifstream vec("checks/block.vec");
+   std::ifstream vec(CHECKS_DIR "/block.vec");
 
    return run_tests_bb(vec, "BlockCipher", "Out", true,
              [](std::map<std::string, std::string> m) -> bool

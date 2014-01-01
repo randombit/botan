@@ -115,7 +115,7 @@ class BuildConfigurationInformation(object):
 
         self.build_dir = os.path.join(options.with_build_dir, 'build')
 
-        self.checkobj_dir = os.path.join(self.build_dir, 'checks')
+        self.testobj_dir = os.path.join(self.build_dir, 'tests')
         self.libobj_dir = os.path.join(self.build_dir, 'lib')
 
         self.python_dir = os.path.join(options.src_dir, 'wrap', 'python')
@@ -142,10 +142,10 @@ class BuildConfigurationInformation(object):
 
         self.public_headers = sorted(flatten([m.public_headers() for m in modules]))
 
-        checks_dir = os.path.join(options.base_dir, 'checks')
+        tests_dir = os.path.join(options.base_dir, 'tests')
 
-        self.check_sources = sorted(
-            [os.path.join(checks_dir, file) for file in os.listdir(checks_dir)
+        self.test_sources = sorted(
+            [os.path.join(tests_dir, file) for file in os.listdir(tests_dir)
              if file.endswith('.cpp')])
 
         self.python_sources = sorted(
@@ -170,7 +170,7 @@ class BuildConfigurationInformation(object):
         self.build_doc_commands = '\n'.join(['\t' + s for s in build_doc_commands()])
 
         def build_dirs():
-            yield self.checkobj_dir
+            yield self.testobj_dir
             yield self.libobj_dir
             yield self.botan_include_dir
             yield self.internal_include_dir
@@ -764,7 +764,7 @@ class CompilerInfo(object):
                         'add_lib_dir_option': '-L',
                         'add_lib_option': '-l',
                         'lib_opt_flags': '',
-                        'check_opt_flags': '',
+                        'test_opt_flags': '',
                         'debug_flags': '',
                         'no_debug_flags': '',
                         'shared_flags': '',
@@ -1168,7 +1168,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
               ('' if not options.via_amalgamation else all_isa_specific_flags()),
 
         'lib_opt': cc.library_opt_flags(options),
-        'check_opt': '' if options.no_optimizations else cc.check_opt_flags,
+        'test_opt': '' if options.no_optimizations else cc.test_opt_flags,
         'lang_flags': cc.lang_flags,
         'warn_flags': warning_flags(cc.warning_flags,
                                     cc.maintainer_warning_flags,
@@ -1195,17 +1195,17 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
             objectfile_list(build_config.build_sources,
                             build_config.libobj_dir)),
 
-        'check_objs': makefile_list(
-            objectfile_list(build_config.check_sources,
-                            build_config.checkobj_dir)),
+        'test_objs': makefile_list(
+            objectfile_list(build_config.test_sources,
+                            build_config.testobj_dir)),
 
         'lib_build_cmds': '\n'.join(
             build_commands(build_config.build_sources,
                            build_config.libobj_dir, 'LIB')),
 
-        'check_build_cmds': '\n'.join(
-            build_commands(build_config.check_sources,
-                           build_config.checkobj_dir, 'CHECK')),
+        'test_build_cmds': '\n'.join(
+            build_commands(build_config.test_sources,
+                           build_config.testobj_dir, 'TEST')),
 
         'python_obj_dir': build_config.pyobject_dir,
 
@@ -1222,7 +1222,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'install_cmd_exec': osinfo.install_cmd_exec,
         'install_cmd_data': osinfo.install_cmd_data,
 
-        'check_prefix': prefix_with_build_dir(''),
+        'test_prefix': prefix_with_build_dir(''),
         'lib_prefix': prefix_with_build_dir(''),
 
         'static_suffix': osinfo.static_suffix,

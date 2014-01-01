@@ -59,7 +59,7 @@ bool hkdf_test(const std::string& algo,
 size_t test_hkdf()
    {
    // From RFC 5869
-   std::ifstream vec("checks/hkdf.vec");
+   std::ifstream vec(CHECKS_DIR "/hkdf.vec");
 
    return run_tests_bb(vec, "HKDF", "OKM", true,
              [](std::map<std::string, std::string> m) -> bool

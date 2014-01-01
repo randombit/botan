@@ -37,7 +37,7 @@ secure_vector<byte> transform_test(const std::string& algo,
 
 size_t test_transform()
    {
-   std::ifstream vec("checks/transform.vec");
+   std::ifstream vec(CHECKS_DIR "/transform.vec");
 
    return run_tests(vec, "Transform", "Output", true,
              [](std::map<std::string, std::string> m)

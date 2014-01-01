@@ -24,7 +24,7 @@
 
 using namespace Botan;
 
-#define TEST_DATA_DIR "checks/ecc_testdata"
+#define TEST_DATA_DIR CHECKS_DIR "/ecc_testdata"
 
 #define CHECK_MESSAGE(expr, print) try { if(!(expr)) { ++fails; std::cout << print << "\n"; } } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
 #define CHECK(expr) try { if(!(expr)) { ++fails; std::cout << #expr << "\n"; } } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }

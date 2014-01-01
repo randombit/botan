@@ -53,7 +53,7 @@ bool x931_test(const std::string& algo,
 
 size_t test_rngs()
    {
-   std::ifstream vec("checks/x931.vec");
+   std::ifstream vec(CHECKS_DIR "/x931.vec");
 
    return run_tests_bb(vec, "RNG", "Out", true,
              [](std::map<std::string, std::string> m) -> bool

@@ -28,7 +28,7 @@
 #include <botan/cvc_cert.h>
 #include <botan/cvc_ado.h>
 
-#define TEST_DATA_DIR "checks/ecc_testdata"
+#define TEST_DATA_DIR CHECKS_DIR "/ecc_testdata"
 
 using namespace Botan;
 

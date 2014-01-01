@@ -1,7 +1,7 @@
 # Compiler Options
 CXX           = %{cc}
 LIB_OPT       = %{lib_opt}
-CHECK_OPT     = %{check_opt}
+TEST_OPT      = %{test_opt}
 LANG_FLAGS    = %{lang_flags}
 WARN_FLAGS    = %{warn_flags}
 SO_OBJ_FLAGS  = %{shared_flags}
@@ -9,7 +9,7 @@ SO_LINK_CMD   = %{so_link}
 LINK_TO       = %{link_to}
 
 LIB_FLAGS     = $(SO_OBJ_FLAGS) $(LANG_FLAGS) $(LIB_OPT) $(WARN_FLAGS)
-CHECK_FLAGS   = $(LANG_FLAGS) $(CHECK_OPT) $(WARN_FLAGS)
+TEST_FLAGS    = $(LANG_FLAGS) $(TEST_OPT) $(WARN_FLAGS)
 
 # Version Numbers
 VERSION       = %{version}
@@ -56,22 +56,24 @@ SYMLINK       = $(LIBNAME)-$(SERIES).%{so_suffix}
 all: $(LIBRARIES)
 
 # File Lists
-CHECK         = %{check_prefix}check
+TEST         = %{test_prefix}test
 
 HEADERS       = %{include_files}
 
 LIBOBJS       = %{lib_objs}
 
-CHECKOBJS     = %{check_objs}
+TESTOBJS     = %{test_objs}
 
 # Build Commands
 %{lib_build_cmds}
 
-%{check_build_cmds}
+%{test_build_cmds}
 
 # Link Commands
-$(CHECK): $(LIBRARIES) $(CHECKOBJS)
-	$(CXX) $(LDFLAGS) $(CHECKOBJS) $(SHARED_LIB) $(LINK_TO) -lboost_regex -o $(CHECK)
+check: $(TEST)
+
+$(TEST): $(LIBRARIES) $(TESTOBJS)
+	$(CXX) $(LDFLAGS) $(TESTOBJS) $(SHARED_LIB) $(LINK_TO) -lboost_regex -o $(TEST)
 
 $(STATIC_LIB): $(LIBOBJS)
 	$(RM) $(STATIC_LIB)
@@ -94,8 +96,8 @@ docs:
 %{build_doc_commands}
 
 clean:
-	$(RM_R) %{build_dir}/lib/* %{build_dir}/checks/*
-	$(RM) $(LIBRARIES) $(SYMLINK) $(SONAME) $(CHECK)
+	$(RM_R) %{build_dir}/lib/* %{build_dir}/tests/*
+	$(RM) $(LIBRARIES) $(SYMLINK) $(SONAME) $(TEST)
 
 distclean: clean
 	$(RM_R) %{build_dir}

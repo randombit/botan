@@ -159,7 +159,6 @@ Certificate_Status_Code check_chain(const std::vector<X509_Certificate>& cert_pa
          {
          if(restrictions.require_revocation_information())
             return Certificate_Status_Code::NO_REVOCATION_DATA;
-         std::cout << "No revocation information for " << subject.subject_dn() << "\n";
          continue;
          }
 

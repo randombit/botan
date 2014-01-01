@@ -77,7 +77,7 @@ bool aead_test(const std::string& algo,
 
 size_t test_aead()
    {
-   std::ifstream vec("checks/aead.vec");
+   std::ifstream vec(CHECKS_DIR "/aead.vec");
 
    return run_tests_bb(vec, "AEAD", "Out", true,
              [](std::map<std::string, std::string> m)

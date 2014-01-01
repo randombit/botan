@@ -69,7 +69,7 @@ bool mode_test(const std::string& algo,
 
 size_t test_modes()
    {
-   std::ifstream vec("checks/modes.vec");
+   std::ifstream vec(CHECKS_DIR "/modes.vec");
 
    return run_tests_bb(vec, "Mode", "Out", true,
              [](std::map<std::string, std::string> m)

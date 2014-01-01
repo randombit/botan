@@ -10,7 +10,7 @@ add_lib_option ""
 
 no_debug_flags "-O2"
 debug_flags ""
-check_opt_flags "-O2"
+test_opt_flags "-O2"
 lang_flags ""
 warning_flags ""
 
