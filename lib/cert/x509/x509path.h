@@ -75,6 +75,8 @@ class BOTAN_DLL Path_Validation_Restrictions
 class BOTAN_DLL Path_Validation_Result
    {
    public:
+      typedef Certificate_Status_Code Code;
+
       /**
       * @return the set of hash functions you are implicitly
       * trusting by trusting this result.

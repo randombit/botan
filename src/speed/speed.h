@@ -2,6 +2,7 @@
 #ifndef BOTAN_CHECK_BENCHMARK_H__
 #define BOTAN_CHECK_BENCHMARK_H__
 
+#include "../common.h"
 #include <botan/rng.h>
 #include <botan/transform.h>
 #include <string>

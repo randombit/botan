@@ -332,6 +332,8 @@ std::string Path_Validation_Result::status_string(Certificate_Status_Code code)
          return "CRL is not yet valid";
       case CRL_HAS_EXPIRED:
          return "CRL has expired";
+      case CRL_NOT_FOUND:
+         return "CRL not found";
       case CA_CERT_CANNOT_SIGN:
          return "CA certificate cannot sign";
       case CA_CERT_NOT_FOR_CERT_ISSUER:

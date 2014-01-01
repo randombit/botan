@@ -3,6 +3,7 @@
 
 #if defined(BOTAN_HAS_TLS)
 
+#include <botan/auto_rng.h>
 #include <botan/tls_server.h>
 #include <botan/tls_client.h>
 #include <botan/pkcs10.h>
@@ -260,6 +261,8 @@ size_t test_handshake()
       if(s2c_data.size() && c2s_data.size())
          break;
       }
+
+   return 0;
    }
 
 }
@@ -268,7 +271,7 @@ size_t test_tls()
    {
    size_t errors = 0;
 
-   errors += test_handshake(rng);
+   errors += test_handshake();
 
    return errors;
    }

@@ -6,7 +6,6 @@
 
 #include "tests.h"
 #include "test_rng.h"
-#include "common.h"
 
 #include <iostream>
 #include <fstream>

@@ -18,106 +18,60 @@
 #include <limits>
 #include <memory>
 
-#include <botan/botan.h>
-#include <botan/libstate.h>
-
-#if defined(BOTAN_HAS_DYNAMICALLY_LOADED_ENGINE)
-  #include <botan/dyn_engine.h>
-#endif
+#include <botan/init.h>
+#include <botan/version.h>
+#include <botan/auto_rng.h>
 
 using namespace Botan;
 
-#include "getopt.h"
-#include "bench.h"
 #include "common.h"
-#include "tests.h"
+#include "speed/speed.h"
+#include "tests/tests.h"
 
-namespace {
-
-template<typename T>
-bool test(const char* type, int digits, bool is_signed)
+// from common.h
+void strip_comments(std::string& line)
    {
-   if(std::numeric_limits<T>::is_specialized == false)
-      {
-      std::cout << "Warning: Could not check parameters of " << type
-                << " in std::numeric_limits" << std::endl;
-
-      // assume it's OK (full tests will catch it later)
-      return true;
-      }
-
-   // continue checking after failures
-   bool passed = true;
-
-   if(std::numeric_limits<T>::is_integer == false)
-      {
-      std::cout << "Warning: std::numeric_limits<> says " << type
-                << " is not an integer" << std::endl;
-      passed = false;
-      }
-
-   if(std::numeric_limits<T>::is_signed != is_signed)
-      {
-      std::cout << "Warning: numeric_limits<" << type << ">::is_signed == "
-                << std::boolalpha << std::numeric_limits<T>::is_signed
-                << std::endl;
-      passed = false;
-      }
-
-   if(std::numeric_limits<T>::digits != digits && digits != 0)
-      {
-      std::cout << "Warning: numeric_limits<" << type << ">::digits == "
-                << std::numeric_limits<T>::digits
-                << " expected " << digits << std::endl;
-      passed = false;
-      }
-
-   return passed;
+   if(line.find('#') != std::string::npos)
+      line = line.erase(line.find('#'), std::string::npos);
    }
 
-void test_types()
+void strip_newlines(std::string& line)
    {
-   bool passed = true;
-
-   passed = passed && test<Botan::byte  >("byte",    8, false);
-   passed = passed && test<Botan::u16bit>("u16bit", 16, false);
-   passed = passed && test<Botan::u32bit>("u32bit", 32, false);
-   passed = passed && test<Botan::u64bit>("u64bit", 64, false);
-   passed = passed && test<Botan::s32bit>("s32bit", 31,  true);
-
-   if(!passed)
-      std::cout << "Typedefs in include/types.h may be incorrect!\n";
+   while(line.find('\n') != std::string::npos)
+      line = line.erase(line.find('\n'), 1);
    }
 
-int run_tests()
+/* Strip comments, whitespace, etc */
+void strip(std::string& line)
    {
-   size_t errors = 0;
+   strip_comments(line);
 
-   try
-      {
-      errors += run_all_tests();
-      }
-   catch(std::exception& e)
-      {
-      std::cout << "Exception in test suite " << e.what() << std::endl;
-      ++errors;
-      }
-   catch(...)
-      {
-      std::cout << "Unknown exception caught\n";
-      ++errors;
-      }
+#if 0
+   while(line.find(' ') != std::string::npos)
+      line = line.erase(line.find(' '), 1);
+#endif
 
-   if(errors)
-      {
-      std::cout << errors << " test failures\n";
-      return 1;
-      }
-
-   return 0;
+   while(line.find('\t') != std::string::npos)
+      line = line.erase(line.find('\t'), 1);
    }
 
-}
+std::vector<std::string> parse(const std::string& line)
+   {
+   const char DELIMITER = ':';
+   std::vector<std::string> substr;
+   std::string::size_type start = 0, end = line.find(DELIMITER);
+   while(end != std::string::npos)
+      {
+      substr.push_back(line.substr(start, end-start));
+      start = end+1;
+      end = line.find(DELIMITER, start);
+      }
+   if(line.size() > start)
+      substr.push_back(line.substr(start));
+   while(substr.size() <= 4) // at least 5 substr, some possibly empty
+      substr.push_back("");
+   return substr;
+   }
 
 int main(int argc, char* argv[])
    {
@@ -141,8 +95,6 @@ int main(int argc, char* argv[])
                         "algo=|seconds=|buf-size=");
       opts.parse(argv);
 
-      test_types(); // do this always
-
       Botan::LibraryInitializer init;
 
       if(opts.is_set("help") || argc < 2)
@@ -161,7 +113,8 @@ int main(int argc, char* argv[])
 
       if(cmd == "test")
          {
-         return run_tests();
+         const size_t failures = run_all_tests();
+         return failures ? 1 : 0;
          }
 
       if(cmd == "speed")

@@ -5,7 +5,6 @@
 */
 
 #include "tests.h"
-#include "common.h"
 
 #include <vector>
 #include <string>

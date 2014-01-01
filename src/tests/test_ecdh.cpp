@@ -9,8 +9,6 @@
 
 #include "tests.h"
 
-#include "common.h"
-
 #include <iostream>
 #include <fstream>
 

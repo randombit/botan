@@ -114,17 +114,10 @@ class BuildConfigurationInformation(object):
             self.version_vc_rev = get_vc_revision()
 
         self.build_dir = os.path.join(options.with_build_dir, 'build')
-
         self.testobj_dir = os.path.join(self.build_dir, 'tests')
         self.libobj_dir = os.path.join(self.build_dir, 'lib')
 
-        self.python_dir = os.path.join(options.src_dir, 'wrap', 'python')
-
-        self.boost_python = options.boost_python
-
         self.doc_output_dir = os.path.join(self.build_dir, 'docs')
-
-        self.pyobject_dir = os.path.join(self.build_dir, 'python')
 
         self.include_dir = os.path.join(self.build_dir, 'include')
         self.botan_include_dir = os.path.join(self.include_dir, 'botan')
@@ -142,11 +135,18 @@ class BuildConfigurationInformation(object):
 
         self.public_headers = sorted(flatten([m.public_headers() for m in modules]))
 
-        tests_dir = os.path.join(options.base_dir, 'tests')
+        self.tests_dir = os.path.join(options.base_dir, 'src/')
+        def find_sources_in(srcdir):
+            for (dirpath, dirnames, filenames) in os.walk(srcdir):
+                for filename in filenames:
+                    if filename.endswith('.cpp'):
+                        yield os.path.join(dirpath, filename)
 
-        self.test_sources = sorted(
-            [os.path.join(tests_dir, file) for file in os.listdir(tests_dir)
-             if file.endswith('.cpp')])
+        self.test_sources = list(find_sources_in(self.tests_dir))
+
+        self.boost_python = options.boost_python
+        self.python_dir = os.path.join(options.lib_dir, 'wrap', 'python')
+        self.pyobject_dir = os.path.join(self.build_dir, 'python')
 
         self.python_sources = sorted(
             [os.path.join(self.python_dir, file)
@@ -1020,7 +1020,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         for src in sources:
             (dir,file) = os.path.split(os.path.normpath(src))
 
-            if dir.startswith('src'):
+            if dir.startswith('lib/'):
                 parts = dir.split(os.sep)[1:]
 
                 # Handle src/X/X.cpp -> X.o
@@ -1371,7 +1371,7 @@ def load_info_files(options):
 
     modules = dict([(mod.basename, mod) for mod in
                     [ModuleInfo(info) for info in
-                     find_files_named('info.txt', options.src_dir)]])
+                     find_files_named('info.txt', options.lib_dir)]])
 
     def list_files_in_build_data(subdir):
         for (dirpath, dirnames, filenames) in \
@@ -1740,6 +1740,7 @@ def main(argv = None):
 
     options.base_dir = os.path.dirname(argv[0])
     options.src_dir = os.path.join(options.base_dir, 'src')
+    options.lib_dir = os.path.join(options.base_dir, 'lib')
 
     options.build_data = os.path.join(options.src_dir, 'build-data')
     options.makefile_dir = os.path.join(options.build_data, 'makefile')

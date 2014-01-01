@@ -20,8 +20,6 @@
 #include <fstream>
 #include <memory>
 
-#include "common.h"
-
 using namespace Botan;
 
 #define TEST_DATA_DIR CHECKS_DIR "/ecc_testdata"

@@ -8,6 +8,8 @@
 #include <string>
 #include <vector>
 
+#include "../common.h"
+
 size_t run_tests_bb(std::istream& src,
                     const std::string& name_key,
                     const std::string& output_key,
@@ -28,7 +30,7 @@ void test_report(const std::string& name, size_t ran, size_t failed);
 
 #define TEST(expr, msg) do { if(!(expr)) { ++fails; std::cout << msg; } while(0)
 
-#define CHECKS_DIR "tests/"
+#define CHECKS_DIR "src/test-data/"
 
 size_t run_all_tests();
 
@@ -70,5 +72,6 @@ size_t test_x509();
 size_t test_cvc();
 
 size_t test_tls();
+size_t test_nist_x509();
 
 #endif

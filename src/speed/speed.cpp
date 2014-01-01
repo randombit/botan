@@ -4,6 +4,7 @@
 * Distributed under the terms of the Botan license
 */
 
+#include "speed.h"
 #include <iostream>
 #include <iomanip>
 
@@ -22,8 +23,6 @@
 
 typedef std::chrono::high_resolution_clock benchmark_clock;
 
-#include "common.h"
-#include "bench.h"
 
 using namespace Botan;
 

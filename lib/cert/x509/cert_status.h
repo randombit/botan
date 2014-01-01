@@ -37,6 +37,7 @@ enum Certificate_Status_Code {
    CRL_FORMAT_ERROR,
    CRL_NOT_YET_VALID,
    CRL_HAS_EXPIRED,
+   CRL_NOT_FOUND,
 
    OCSP_CERT_NOT_LISTED,
    OCSP_NOT_YET_VALID,

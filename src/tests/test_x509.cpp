@@ -5,7 +5,6 @@
 */
 
 #include "tests.h"
-#include "common.h"
 
 #include <botan/filters.h>
 #include <botan/auto_rng.h>

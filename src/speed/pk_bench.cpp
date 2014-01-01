@@ -4,6 +4,9 @@
 * Distributed under the terms of the Botan license
 */
 
+#include "speed.h"
+#include "timer.h"
+
 #include <botan/pkcs8.h>
 #include <botan/mem_ops.h>
 #include <botan/parsing.h>
@@ -60,10 +63,6 @@
 #endif
 
 using namespace Botan;
-
-#include "common.h"
-#include "timer.h"
-#include "bench.h"
 
 #include <iostream>
 #include <fstream>
