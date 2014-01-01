@@ -7,11 +7,11 @@
 ^botan.pc$
 ^build$
 callgrind.out.*
-^check$
-^checks/ecc_testdata/dompar_private.pkcs8.pem$
-^checks/ecc_testdata/rsa_private.pkcs8.pem$
-^checks/ecc_testdata/wo_dompar_private.pkcs8.pem$
-^checks/nist_tests/x509test$
+^botan$
+^src/test-data/ecc_testdata/dompar_private.pkcs8.pem$
+^src/test-data/ecc_testdata/rsa_private.pkcs8.pem$
+^src/test-data/ecc_testdata/wo_dompar_private.pkcs8.pem$
+^src/test-data/nist_tests/x509test$
 ^doc/_static$
 ^doc/examples/.*\.pem$
 ^doc/examples/[a-z0-9_]+$
