@@ -6,7 +6,7 @@ import sys, os
 if 'dont_write_bytecode' in sys.__dict__:
     sys.dont_write_bytecode = True
 
-sys.path.insert(0, os.pardir)
+sys.path.insert(0, os.path.join(os.pardir, os.pardir, os.pardir))
 
 import sphinx
 import botan_version
