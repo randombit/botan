@@ -158,8 +158,9 @@ class BuildConfigurationInformation(object):
 
         def build_doc_commands():
             if options.with_sphinx:
-                yield 'sphinx-build $(SPHINX_OPTS) -b html doc %s' % (
-                    self.manual_dir)
+                sphinx_config_dir = os.path.join(options.build_data, 'sphinx')
+                yield 'sphinx-build -c %s $(SPHINX_OPTS) -b html doc %s' % (
+                    sphinx_config_dir, self.manual_dir)
             else:
                 yield '$(COPY) doc/*.rst %s' % (self.manual_dir)
 

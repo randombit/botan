@@ -29,7 +29,7 @@ Version 1.11.5, 2013-11-10
 
 * All existing cipher mode implementations (such as CBC and XTS) have been
   converted from filters to using the interface previously provided by
-  :ref:`AEAD modes <aead_modes>` which allows for in-place message
+  AEAD modes which allows for in-place message
   processing. Code which directly references the filter objects will break, but
   an adaptor filter allows usage through get_cipher as usual.
 

@@ -23,24 +23,7 @@ def check_for_tag(tag):
 is_website_build = check_for_tag('website')
 use_disqus = is_website_build and check_for_tag('disqus')
 
-needs_sphinx = '1.0'
-
-"""
-Assert that we are running under Sphinx 1.0.7 or later. Earlier
-versions have bugs in the C++ domain that cause crashes. And
-needs_sphinx only allows us to assert needing a particular major/minor
-version.
-"""
-def check_sphinx_version():
-    import sphinx
-
-    version = map(int, sphinx.__version__.split('.'))
-    if version[0] == 1 and version[1] == 0 and version[2] < 7:
-        # Exit rather than throwing to avoid a confusing backtrace
-        print "This Sphinx is too old - upgrade to at least 1.0.7"
-        sys.exit(1)
-
-check_sphinx_version()
+needs_sphinx = '1.1'
 
 extensions = ['sphinx.ext.extlinks']
 
@@ -77,7 +60,7 @@ source_encoding = 'utf-8-sig'
 master_doc = 'contents'
 
 project = u'botan'
-copyright = u'2000-2012, Jack Lloyd'
+copyright = u'2000-2014, Jack Lloyd'
 
 version = '%d.%d' % (botan_version.release_major, botan_version.release_minor)
 
