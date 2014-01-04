@@ -841,7 +841,7 @@ class CompilerInfo(object):
     """
     Return the optimization flags to use for the library
     """
-    def library_opt_flags(self, options):
+    def opt_flags(self, who, options):
         def gen_flags():
             if options.debug_build:
                 yield self.debug_flags
@@ -849,6 +849,10 @@ class CompilerInfo(object):
                 yield self.no_debug_flags
 
             if options.no_optimizations:
+                return
+
+            if who != 'lib':
+                yield self.app_opt_flags
                 return
 
             yield self.lib_opt_flags
@@ -1167,8 +1171,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'cc': (options.compiler_binary or cc.binary_name) + cc.mach_abi_link_flags(options) +
               ('' if not options.via_amalgamation else all_isa_specific_flags()),
 
-        'lib_opt': cc.library_opt_flags(options),
-        'app_opt': '' if options.no_optimizations else cc.app_opt_flags,
+        'lib_opt': cc.opt_flags('lib', options),
+        'app_opt': cc.opt_flags('app', options),
         'lang_flags': cc.lang_flags,
         'warn_flags': warning_flags(cc.warning_flags,
                                     cc.maintainer_warning_flags,
