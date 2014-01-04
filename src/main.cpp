@@ -129,10 +129,7 @@ int main(int argc, char* argv[])
          }
 
       if(cmd == "test")
-         {
-         const size_t failures = run_all_tests();
-         return failures ? 1 : 0;
-         }
+         return test_main(argc - 1, argv + 1);
 
       if(cmd == "speed")
          return speed_main(argc - 1, argv + 1);

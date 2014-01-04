@@ -149,43 +149,46 @@ size_t run_tests(std::istream& src,
                 });
    }
 
-size_t run_all_tests()
+int test_main(int argc, char* argv[])
    {
-   std::vector<test_fn> all_tests;
+   //bool verbose = true;
+   std::string target = "all";
+   if(argc == 2)
+      target = argv[1];
 
-   all_tests.push_back(test_block);
-   all_tests.push_back(test_stream);
-   all_tests.push_back(test_hash);
-   all_tests.push_back(test_mac);
+   std::vector<test_fn> tests;
 
-   all_tests.push_back(test_modes);
+#define DEF_TEST(test) do { if(target == "all" || target == #test) \
+      tests.push_back(test_ ## test);                              \
+   } while(0)
 
-   all_tests.push_back(test_aead);
-   all_tests.push_back(test_ocb);
-   all_tests.push_back(test_eax);
+   DEF_TEST(block);
+   DEF_TEST(stream);
+   DEF_TEST(hash);
+   DEF_TEST(mac);
+   DEF_TEST(modes);
+   DEF_TEST(aead);
+   DEF_TEST(ocb);
+   DEF_TEST(eax);
+   DEF_TEST(pbkdf);
+   DEF_TEST(kdf);
+   DEF_TEST(hkdf);
+   DEF_TEST(keywrap);
+   DEF_TEST(transform);
+   DEF_TEST(rngs);
+   DEF_TEST(passhash9);
+   DEF_TEST(bcrypt);
+   DEF_TEST(cryptobox);
+   DEF_TEST(tss);
+   DEF_TEST(bigint);
+   DEF_TEST(pubkey);
+   DEF_TEST(ecc);
+   DEF_TEST(ecdsa);
+   DEF_TEST(ecdh);
+   DEF_TEST(pk_keygen);
+   DEF_TEST(cvc);
+   DEF_TEST(x509);
+   DEF_TEST(tls);
 
-   all_tests.push_back(test_pbkdf);
-   all_tests.push_back(test_kdf);
-   all_tests.push_back(test_hkdf);
-   all_tests.push_back(test_keywrap);
-   all_tests.push_back(test_transform);
-
-   all_tests.push_back(test_rngs);
-   all_tests.push_back(test_passhash9);
-   all_tests.push_back(test_bcrypt);
-   all_tests.push_back(test_cryptobox);
-   all_tests.push_back(test_tss);
-
-   all_tests.push_back(test_bigint);
-   all_tests.push_back(test_pubkey);
-
-   all_tests.push_back(test_ecc);
-   all_tests.push_back(test_ecdsa);
-   all_tests.push_back(test_ecdh);
-   all_tests.push_back(test_pk_keygen);
-   all_tests.push_back(test_cvc);
-   all_tests.push_back(test_x509);
-   all_tests.push_back(test_tls);
-
-   return run_tests(all_tests);
+   return run_tests(tests);
    }

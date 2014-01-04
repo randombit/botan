@@ -32,7 +32,7 @@ void test_report(const std::string& name, size_t ran, size_t failed);
 
 #define CHECKS_DIR "src/test-data/"
 
-size_t run_all_tests();
+int test_main(int argc, char* argv[]);
 
 // Tests using reader framework above
 size_t test_block();
