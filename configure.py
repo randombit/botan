@@ -274,7 +274,7 @@ def process_command_line(args):
 
     build_group.add_option('--enable-debug', dest='debug_build',
                            action='store_true', default=not is_official_release(),
-                           help='enable debug build')
+                           help='enable debug build (default %default)')
     build_group.add_option('--disable-debug', dest='debug_build',
                            action='store_false', help=optparse.SUPPRESS_HELP)
 
