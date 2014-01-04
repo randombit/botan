@@ -15,7 +15,7 @@ warning_flags "-Wall -Wextra -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align 
 lib_opt_flags "-O3"
 app_opt_flags "-O2"
 shared_flags "-fPIC"
-debug_flags "-g -fno-inline-functions"
+debug_flags "-g"
 
 visibility_build_flags "-fvisibility=hidden"
 visibility_attribute '__attribute__((visibility("default")))'

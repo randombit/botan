@@ -17,7 +17,7 @@ makefile_style unix
 lib_opt_flags "-O3"
 app_opt_flags "-O2"
 shared_flags "-fPIC"
-debug_flags "-g -fno-inline-functions"
+debug_flags "-g"
 no_debug_flags ""
 
 visibility_build_flags "-fvisibility=hidden"
