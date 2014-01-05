@@ -1,0 +1,17 @@
+Version 1.11.7, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* The test program is now named `botan` and is also used as a driver
+  to call into various subcommands which can also act as examples of
+  library useful, much in the manner of the `openssl` command. It
+  understands commands such as `version`, `asn1`, `x509`, `bcrypt`,
+  `keygen`, `speed`, `test`, and various others. As part of this
+  change many obsolete, duplicated, or one-off test examples were
+  removed, while others were extended with new functionality.
+  Contributions of new subcommands or new functions in exising ones
+  are welcome.
+
+* The internal directory structure has changed. Now all sources that
+  are built into libbotan are in the new directory `lib`, with `src`
+  containing all other sources such as the command line tool and build
+  scripts.

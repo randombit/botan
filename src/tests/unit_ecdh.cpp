@@ -116,7 +116,7 @@ size_t test_ecdh_der_derivation(RandomNumberGenerator& rng)
 
 }
 
-size_t test_ecdh()
+size_t test_ecdh_unit()
    {
    size_t fails = 0;
 

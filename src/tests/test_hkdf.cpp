@@ -33,7 +33,7 @@ secure_vector<byte> hkdf(const std::string& algo,
    return key;
    }
 
-bool hkdf_test(const std::string& algo,
+size_t hkdf_test(const std::string& algo,
                const std::string& ikm,
                const std::string& salt,
                const std::string& info,
@@ -49,9 +49,12 @@ bool hkdf_test(const std::string& algo,
       );
 
    if(got != okm)
+      {
       std::cout << "HKDF got " << got << " expected " << okm << std::endl;
+      return 1;
+      }
 
-   return (got == okm);
+   return 0;
    }
 
 }
@@ -59,10 +62,10 @@ bool hkdf_test(const std::string& algo,
 size_t test_hkdf()
    {
    // From RFC 5869
-   std::ifstream vec(CHECKS_DIR "/hkdf.vec");
+   std::ifstream vec(TEST_DATA_DIR "/hkdf.vec");
 
    return run_tests_bb(vec, "HKDF", "OKM", true,
-             [](std::map<std::string, std::string> m) -> bool
+             [](std::map<std::string, std::string> m) -> size_t
              {
              return hkdf_test(m["Hash"], m["IKM"], m["salt"], m["info"],
                               m["OKM"], to_u32bit(m["L"]));

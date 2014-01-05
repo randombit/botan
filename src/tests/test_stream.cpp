@@ -10,11 +10,11 @@ using namespace Botan;
 
 namespace {
 
-bool stream_test(const std::string& algo,
-                 const std::string& key_hex,
-                 const std::string& in_hex,
-                 const std::string& out_hex,
-                 const std::string& nonce_hex)
+size_t stream_test(const std::string& algo,
+                   const std::string& key_hex,
+                   const std::string& in_hex,
+                   const std::string& out_hex,
+                   const std::string& nonce_hex)
    {
    const secure_vector<byte> key = hex_decode_locked(key_hex);
    const secure_vector<byte> pt = hex_decode_locked(in_hex);
@@ -54,17 +54,17 @@ bool stream_test(const std::string& algo,
          }
       }
 
-   return (fails == 0);
+   return fails;
    }
 
 }
 
 size_t test_stream()
    {
-   std::ifstream vec(CHECKS_DIR "/stream.vec");
+   std::ifstream vec(TEST_DATA_DIR "/stream.vec");
 
    return run_tests_bb(vec, "StreamCipher", "Out", true,
-             [](std::map<std::string, std::string> m) -> bool
+             [](std::map<std::string, std::string> m) -> size_t
              {
              return stream_test(m["StreamCipher"], m["Key"], m["In"], m["Out"], m["Nonce"]);
              });

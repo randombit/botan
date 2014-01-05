@@ -45,7 +45,7 @@ size_t run_tests_bb(std::istream& src,
                     const std::string& name_key,
                     const std::string& output_key,
                     bool clear_between_cb,
-                    std::function<bool (std::map<std::string, std::string>)> cb)
+                    std::function<size_t (std::map<std::string, std::string>)> cb)
    {
    if(!src.good())
       {
@@ -94,14 +94,16 @@ size_t run_tests_bb(std::istream& src,
 
       if(key == output_key)
          {
-         //std::cout << vars[name_key] << " " << test_cnt << "\n";
+         //std::cout << vars[name_key] << " " << algo_count << "\n";
          ++algo_count;
          try
             {
-            if(!cb(vars))
+            const size_t fails = cb(vars);
+
+            if(fails)
                {
-               std::cout << vars[name_key] << " test " << algo_count << " failed\n";
-               ++algo_fail;
+               std::cout << vars[name_key] << " test " << algo_count << ": " << fails << " failure\n";
+               algo_fail += fails;
                }
             }
          catch(std::exception& e)
@@ -143,9 +145,9 @@ size_t run_tests(std::istream& src,
                    {
                    std::cout << name_key << ' ' << vars[name_key] << " got " << got
                              << " expected " << vars[output_key] << std::endl;
-                   return false;
+                   return 1;
                    }
-                return true;
+                return 0;
                 });
    }
 
@@ -181,10 +183,20 @@ int test_main(int argc, char* argv[])
    DEF_TEST(cryptobox);
    DEF_TEST(tss);
    DEF_TEST(bigint);
-   DEF_TEST(pubkey);
-   DEF_TEST(ecc);
+
+   DEF_TEST(rsa);
+   DEF_TEST(rw);
+   DEF_TEST(dsa);
+   DEF_TEST(nr);
+   DEF_TEST(dh);
+   DEF_TEST(dlies);
+   DEF_TEST(elgamal);
    DEF_TEST(ecdsa);
-   DEF_TEST(ecdh);
+   DEF_TEST(gost_3410);
+
+   DEF_TEST(ecc_unit);
+   DEF_TEST(ecdsa_unit);
+   DEF_TEST(ecdh_unit);
    DEF_TEST(pk_keygen);
    DEF_TEST(cvc);
    DEF_TEST(x509);

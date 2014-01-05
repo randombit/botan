@@ -10,10 +10,10 @@ using namespace Botan;
 
 namespace {
 
-bool block_test(const std::string& algo,
-                const std::string& key_hex,
-                const std::string& in_hex,
-                const std::string& out_hex)
+size_t block_test(const std::string& algo,
+                  const std::string& key_hex,
+                  const std::string& in_hex,
+                  const std::string& out_hex)
    {
    const secure_vector<byte> key = hex_decode_locked(key_hex);
    const secure_vector<byte> pt = hex_decode_locked(in_hex);
@@ -58,17 +58,17 @@ bool block_test(const std::string& algo,
          }
       }
 
-   return (fails == 0);
+   return fails;
    }
 
 }
 
 size_t test_block()
    {
-   std::ifstream vec(CHECKS_DIR "/block.vec");
+   std::ifstream vec(TEST_DATA_DIR "/block.vec");
 
    return run_tests_bb(vec, "BlockCipher", "Out", true,
-             [](std::map<std::string, std::string> m) -> bool
+             [](std::map<std::string, std::string> m) -> size_t
              {
              return block_test(m["BlockCipher"], m["Key"], m["In"], m["Out"]);
              });

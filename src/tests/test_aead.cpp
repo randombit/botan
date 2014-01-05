@@ -29,12 +29,12 @@ secure_vector<byte> aead(const std::string& algo,
    return ct;
    }
 
-bool aead_test(const std::string& algo,
-               const std::string& pt,
-               const std::string& ct,
-               const std::string& nonce_hex,
-               const std::string& ad_hex,
-               const std::string& key_hex)
+size_t aead_test(const std::string& algo,
+                 const std::string& pt,
+                 const std::string& ct,
+                 const std::string& nonce_hex,
+                 const std::string& ad_hex,
+                 const std::string& key_hex)
    {
    auto nonce = hex_decode_locked(nonce_hex);
    auto ad = hex_decode_locked(ad_hex);
@@ -70,14 +70,14 @@ bool aead_test(const std::string& algo,
       ++fail;
       }
 
-   return (ct == ct2) && (pt == pt2);
+   return fail;
    }
 
 }
 
 size_t test_aead()
    {
-   std::ifstream vec(CHECKS_DIR "/aead.vec");
+   std::ifstream vec(TEST_DATA_DIR "/aead.vec");
 
    return run_tests_bb(vec, "AEAD", "Out", true,
              [](std::map<std::string, std::string> m)

@@ -35,14 +35,16 @@ secure_vector<byte> run_mode(const std::string& algo,
    return pipe.read_all();
    }
 
-bool mode_test(const std::string& algo,
-               const std::string& pt,
-               const std::string& ct,
-               const std::string& key_hex,
-               const std::string& nonce_hex)
+size_t mode_test(const std::string& algo,
+                 const std::string& pt,
+                 const std::string& ct,
+                 const std::string& key_hex,
+                 const std::string& nonce_hex)
    {
    auto nonce = hex_decode_locked(nonce_hex);
    auto key = hex_decode_locked(key_hex);
+
+   size_t fails = 0;
 
    const std::string ct2 = hex_encode(run_mode(algo,
                                                ENCRYPTION,
@@ -51,7 +53,10 @@ bool mode_test(const std::string& algo,
                                                key));
 
    if(ct != ct2)
+      {
       std::cout << algo << " got ct " << ct2 << " expected " << ct << "\n";
+      ++fails;
+      }
 
    const std::string pt2 = hex_encode(run_mode(algo,
                                                DECRYPTION,
@@ -60,16 +65,19 @@ bool mode_test(const std::string& algo,
                                                key));
 
    if(pt != pt2)
+      {
       std::cout << algo << " got pt " << pt2 << " expected " << pt << "\n";
+      ++fails;
+      }
 
-   return (ct == ct2) && (pt == pt2);
+   return fails;
    }
 
 }
 
 size_t test_modes()
    {
-   std::ifstream vec(CHECKS_DIR "/modes.vec");
+   std::ifstream vec(TEST_DATA_DIR "/modes.vec");
 
    return run_tests_bb(vec, "Mode", "Out", true,
              [](std::map<std::string, std::string> m)

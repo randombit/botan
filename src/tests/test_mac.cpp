@@ -10,10 +10,10 @@ using namespace Botan;
 
 namespace {
 
-bool mac_test(const std::string& algo,
-              const std::string& key_hex,
-              const std::string& in_hex,
-              const std::string& out_hex)
+size_t mac_test(const std::string& algo,
+                const std::string& key_hex,
+                const std::string& in_hex,
+                const std::string& out_hex)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
 
@@ -45,17 +45,17 @@ bool mac_test(const std::string& algo,
          }
       }
 
-   return (fails == 0);
+   return fails;
    }
 
 }
 
 size_t test_mac()
    {
-   std::ifstream vec(CHECKS_DIR "/mac.vec");
+   std::ifstream vec(TEST_DATA_DIR "/mac.vec");
 
    return run_tests_bb(vec, "Mac", "Out", true,
-             [](std::map<std::string, std::string> m) -> bool
+             [](std::map<std::string, std::string> m) -> size_t
              {
              return mac_test(m["Mac"], m["Key"], m["In"], m["Out"]);
              });

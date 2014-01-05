@@ -10,9 +10,9 @@ using namespace Botan;
 
 namespace {
 
-bool hash_test(const std::string& algo,
-              const std::string& in_hex,
-              const std::string& out_hex)
+size_t hash_test(const std::string& algo,
+                 const std::string& in_hex,
+                 const std::string& out_hex)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
 
@@ -43,17 +43,17 @@ bool hash_test(const std::string& algo,
          }
       }
 
-   return (fails == 0);
+   return fails;
    }
 
 }
 
 size_t test_hash()
    {
-   std::ifstream vec(CHECKS_DIR "/hash.vec");
+   std::ifstream vec(TEST_DATA_DIR "/hash.vec");
 
    return run_tests_bb(vec, "Hash", "Out", true,
-             [](std::map<std::string, std::string> m) -> bool
+             [](std::map<std::string, std::string> m) -> size_t
              {
              return hash_test(m["Hash"], m["In"], m["Out"]);
              });

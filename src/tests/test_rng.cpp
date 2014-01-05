@@ -30,10 +30,10 @@ RandomNumberGenerator* get_x931(const std::string& algo, const std::string& ikm_
    return nullptr;
    }
 
-bool x931_test(const std::string& algo,
-               const std::string& ikm,
-               const std::string& out,
-               size_t L)
+size_t x931_test(const std::string& algo,
+                 const std::string& ikm,
+                 const std::string& out,
+                 size_t L)
    {
    std::unique_ptr<RandomNumberGenerator> x931(get_x931(algo, ikm));
    x931->reseed(0);
@@ -43,20 +43,20 @@ bool x931_test(const std::string& algo,
    if(got != out)
       {
       std::cout << "X9.31 " << got << " != " << out << "\n";
-      return false;
+      return 1;
       }
 
-   return true;
+   return 0;
    }
 
 }
 
 size_t test_rngs()
    {
-   std::ifstream vec(CHECKS_DIR "/x931.vec");
+   std::ifstream vec(TEST_DATA_DIR "/x931.vec");
 
    return run_tests_bb(vec, "RNG", "Out", true,
-             [](std::map<std::string, std::string> m) -> bool
+             [](std::map<std::string, std::string> m) -> size_t
              {
              return x931_test(m["RNG"], m["IKM"], m["Out"], to_u32bit(m["L"]));
              });

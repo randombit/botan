@@ -224,6 +224,6 @@ size_t eax_tests(std::istream& in)
 size_t test_eax()
    {
    // Uses a set of tests created for libtomcrypt
-   std::ifstream in(CHECKS_DIR "/eax.vec");
+   std::ifstream in(TEST_DATA_DIR "/eax.vec");
    return eax_tests(in);
    }

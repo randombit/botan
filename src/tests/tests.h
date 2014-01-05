@@ -14,7 +14,7 @@ size_t run_tests_bb(std::istream& src,
                     const std::string& name_key,
                     const std::string& output_key,
                     bool clear_between_cb,
-                    std::function<bool (std::map<std::string, std::string>)> cb);
+                    std::function<size_t (std::map<std::string, std::string>)> cb);
 
 size_t run_tests(std::istream& src,
                  const std::string& name_key,
@@ -30,7 +30,7 @@ void test_report(const std::string& name, size_t ran, size_t failed);
 
 #define TEST(expr, msg) do { if(!(expr)) { ++fails; std::cout << msg; } while(0)
 
-#define CHECKS_DIR "src/test-data/"
+#define TEST_DATA_DIR "src/tests/data/"
 
 int test_main(int argc, char* argv[]);
 
@@ -47,6 +47,16 @@ size_t test_kdf();
 size_t test_aead();
 size_t test_transform();
 
+size_t test_rsa();
+size_t test_rw();
+size_t test_dsa();
+size_t test_nr();
+size_t test_dh();
+size_t test_dlies();
+size_t test_elgamal();
+size_t test_ecdsa();
+size_t test_gost_3410();
+
 // One off tests
 size_t test_ocb();
 size_t test_eax();
@@ -56,14 +66,13 @@ size_t test_passhash9();
 size_t test_cryptobox();
 size_t test_tss();
 
-// File driven tests
-size_t test_bigint();
-size_t test_pubkey();
 size_t test_pk_keygen();
 
-size_t test_ecc();
-size_t test_ecdsa();
-size_t test_ecdh();
+size_t test_bigint();
+
+size_t test_ecc_unit();
+size_t test_ecdsa_unit();
+size_t test_ecdh_unit();
 
 size_t test_x509();
 size_t test_cvc();

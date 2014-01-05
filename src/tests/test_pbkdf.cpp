@@ -37,7 +37,7 @@ std::string pbkdf_test(const std::string& algo,
 
 size_t test_pbkdf()
    {
-   std::ifstream vec(CHECKS_DIR "/pbkdf.vec");
+   std::ifstream vec(TEST_DATA_DIR "/pbkdf.vec");
 
    return run_tests(vec, "PBKDF", "Output", true,
              [](std::map<std::string, std::string> m)

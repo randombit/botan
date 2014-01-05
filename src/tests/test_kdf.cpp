@@ -32,7 +32,7 @@ std::string kdf_test(const std::string& algo,
 
 size_t test_kdf()
    {
-   std::ifstream vec(CHECKS_DIR "/kdf.vec");
+   std::ifstream vec(TEST_DATA_DIR "/kdf.vec");
 
    return run_tests(vec, "KDF", "Output", true,
              [](std::map<std::string, std::string> m)

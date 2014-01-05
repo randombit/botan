@@ -805,7 +805,7 @@ size_t test_curve_cp_ctor()
 
 }
 
-size_t test_ecc()
+size_t test_ecc_unit()
    {
    AutoSeeded_RNG rng;
 
