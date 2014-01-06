@@ -6,11 +6,12 @@
 ^botan_all\.(cpp|h)$
 ^botan.pc$
 ^build$
+^build.log$
 callgrind.out.*
 ^botan$
-^src/test-data/ecc_testdata/dompar_private.pkcs8.pem$
-^src/test-data/ecc_testdata/rsa_private.pkcs8.pem$
-^src/test-data/ecc_testdata/wo_dompar_private.pkcs8.pem$
+^src/tests/data/ecc/dompar_private.pkcs8.pem$
+^src/tests/data/ecc/rsa_private.pkcs8.pem$
+^src/tests/data/ecc/wo_dompar_private.pkcs8.pem$
 ^src/test-data/nist_tests/x509test$
 ^doc/_static$
 ^doc/examples/.*\.pem$
