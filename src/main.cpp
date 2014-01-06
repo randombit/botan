@@ -27,7 +27,6 @@
 using namespace Botan;
 
 #include "common.h"
-#include "speed/speed.h"
 #include "tests/tests.h"
 #include "apps/apps.h"
 
@@ -122,8 +121,10 @@ int main(int argc, char* argv[])
          std::cout << resp << "\n";
          }
 
+      //return app_main(cmd, argc - 1, argv + 1);
+
 #define CALL_CMD(cmdsym)                           \
-      do { if(cmd == #cmdsym) { return cmdsym (argc - 1, argv + 1); } } while(0)
+      do { if(cmd == #cmdsym) { return cmdsym ##_main (argc - 1, argv + 1); } } while(0)
 
       CALL_CMD(asn1);
       CALL_CMD(base64);

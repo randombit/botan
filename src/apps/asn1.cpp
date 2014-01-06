@@ -47,7 +47,7 @@ std::string url_encode(const std::vector<byte>& in)
 
 }
 
-int asn1(int argc, char* argv[])
+int asn1_main(int argc, char* argv[])
    {
    if(argc != 2)
       {

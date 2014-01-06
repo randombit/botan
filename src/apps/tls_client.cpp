@@ -132,7 +132,7 @@ std::string protocol_chooser(const std::vector<std::string>& protocols)
 
 }
 
-int tls_client(int argc, char* argv[])
+int tls_client_main(int argc, char* argv[])
    {
    if(argc != 2 && argc != 3 && argc != 4)
       {

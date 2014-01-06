@@ -121,7 +121,7 @@ std::vector<BigInt> factorize(const BigInt& n_in,
 
 }
 
-int factor(int argc, char* argv[])
+int factor_main(int argc, char* argv[])
    {
    if(argc != 2)
       {

@@ -111,7 +111,7 @@ Public_Key* read_ssh_pubkey(const std::string& file)
 
 }
 
-int read_ssh(int argc, char* argv[])
+int read_ssh_main(int argc, char* argv[])
    {
    if(argc != 2)
       {

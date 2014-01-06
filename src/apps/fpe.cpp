@@ -102,7 +102,7 @@ u64bit decrypt_cc_number(u64bit enc_cc,
 
 }
 
-int fpe(int argc, char* argv[])
+int fpe_main(int argc, char* argv[])
    {
    if(argc != 4)
       {

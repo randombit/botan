@@ -6,7 +6,7 @@
 
 using namespace Botan;
 
-#define DEFINE_EXAMPLE(cmd) int cmd (int argc, char* argv[]);
+#define DEFINE_EXAMPLE(cmd) int cmd ## _main(int argc, char* argv[]);
 
 DEFINE_EXAMPLE(asn1);
 DEFINE_EXAMPLE(bcrypt);
@@ -28,3 +28,5 @@ DEFINE_EXAMPLE(tls_client);
 DEFINE_EXAMPLE(tls_server);
 DEFINE_EXAMPLE(tls_server_asio);
 DEFINE_EXAMPLE(x509);
+
+int speed_main(int argc, char* argv[]);

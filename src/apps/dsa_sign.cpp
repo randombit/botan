@@ -12,7 +12,7 @@ using namespace Botan;
 
 const std::string SUFFIX = ".sig";
 
-int dsa_sign(int argc, char* argv[])
+int dsa_sign_main(int argc, char* argv[])
    {
    if(argc != 4)
       {

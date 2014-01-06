@@ -11,7 +11,7 @@
 
 using namespace Botan;
 
-int hash(int argc, char* argv[])
+int hash_main(int argc, char* argv[])
    {
    if(argc < 3)
       {

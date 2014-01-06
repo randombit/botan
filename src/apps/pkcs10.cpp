@@ -8,7 +8,7 @@ using namespace Botan;
 #include <fstream>
 #include <memory>
 
-int pkcs10(int argc, char* argv[])
+int pkcs10_main(int argc, char* argv[])
    {
    if(argc != 6)
       {

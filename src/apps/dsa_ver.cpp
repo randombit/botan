@@ -22,7 +22,7 @@ secure_vector<byte> b64_decode(const std::string& in)
 
 }
 
-int dsa_verify(int argc, char* argv[])
+int dsa_verify_main(int argc, char* argv[])
    {
    if(argc != 4)
       {

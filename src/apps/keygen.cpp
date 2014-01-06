@@ -8,7 +8,7 @@
 #include <botan/rsa.h>
 using namespace Botan;
 
-int keygen(int argc, char* argv[])
+int keygen_main(int argc, char* argv[])
    {
    if(argc != 2 && argc != 3)
       {

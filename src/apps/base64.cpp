@@ -15,7 +15,7 @@
 #include <botan/b64_filt.h>
 #include <botan/pipe.h>
 
-int base64(int argc, char* argv[])
+int base64_main(int argc, char* argv[])
    {
    if(argc < 2)
       {

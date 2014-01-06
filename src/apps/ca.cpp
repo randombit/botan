@@ -7,7 +7,7 @@ using namespace Botan;
 #include <memory>
 #include <chrono>
 
-int ca(int argc, char* argv[])
+int ca_main(int argc, char* argv[])
    {
    if(argc != 5)
       {

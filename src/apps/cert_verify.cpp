@@ -12,7 +12,7 @@
 
 using namespace Botan;
 
-int cert_verify(int argc, char* argv[])
+int cert_verify_main(int argc, char* argv[])
    {
    if(argc <= 2)
       {

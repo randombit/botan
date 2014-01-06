@@ -8,7 +8,7 @@ using namespace Botan;
 #include <fstream>
 #include <memory>
 
-int self_sig(int argc, char* argv[])
+int self_sig_main(int argc, char* argv[])
    {
    if(argc != 7)
       {

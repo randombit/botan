@@ -1,7 +1,7 @@
 #include "apps.h"
 #include <botan/bcrypt.h>
 
-int bcrypt(int argc, char* argv[])
+int bcrypt_main(int argc, char* argv[])
    {
    if(argc == 2)
       {

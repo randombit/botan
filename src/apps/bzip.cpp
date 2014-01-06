@@ -28,7 +28,7 @@
 
 const std::string SUFFIX = ".bz2";
 
-int bzip(int argc, char* argv[])
+int bzip_main(int argc, char* argv[])
    {
    if(argc < 2)
       {

@@ -8,7 +8,7 @@
 
 using namespace Botan;
 
-int ocsp_check(int argc, char* argv[])
+int ocsp_check_main(int argc, char* argv[])
    {
    if(argc != 2)
       {

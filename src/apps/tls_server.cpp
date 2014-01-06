@@ -121,7 +121,7 @@ void alert_received(TLS::Alert alert, const byte buf[], size_t buf_size)
 
 }
 
-int tls_server(int argc, char* argv[])
+int tls_server_main(int argc, char* argv[])
    {
    int port = 4433;
    std::string transport = "tcp";

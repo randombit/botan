@@ -275,7 +275,7 @@ size_t choose_thread_count()
 
 }
 
-int tls_server_asio(int argc, char* argv[])
+int tls_server_asio_main(int argc, char* argv[])
    {
    try
       {
