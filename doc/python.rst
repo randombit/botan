@@ -12,10 +12,10 @@ Python Binding
 Botan includes a binding for Python, implemented using Boost.Python.
 
 As you can see, it is not currently documented, though there are a few
-examples under `examples/python`, such as RSA
+examples under `src/scripts/examples`, such as RSA:
 
-.. literalinclude:: examples/python/rsa.py
+.. literalinclude:: ../src/scripts/examples/rsa.py
 
 and EAX encryption using a passphrase:
 
-.. literalinclude:: examples/python/cipher.py
+.. literalinclude:: ../src/scripts/examples/cipher.py

@@ -54,5 +54,4 @@ This example encrypts a credit card number with a valid
 `Luhn checksum <http://en.wikipedia.org/wiki/Luhn_algorithm>`_ to
 another number with the same format, including a correct checksum.
 
-.. literalinclude:: examples/fpe.cpp
-
+.. literalinclude:: ../src/apps/fpe.cpp

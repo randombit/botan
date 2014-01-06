@@ -9,7 +9,7 @@ a ``using`` declaration in your code. All examples will assume a
 
 All library headers are included like so::
 
-  #include <botan/botan.h>
+  #include <botan/auto_rng.h>
 
 Initializing the Library
 ----------------------------------------

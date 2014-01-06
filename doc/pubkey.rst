@@ -93,15 +93,7 @@ into a pair of key files. One is the public key in X.509 format (PEM encoded),
 the private key is in PKCS #8 format (also PEM encoded), either encrypted or
 unencrypted depending on if a password was given.
 
-.. literalinclude:: examples/rsa_kgen.cpp
-
-Generate DSA keys
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-This example generates a 2048 bit DSA key
-
-.. literalinclude:: examples/dsa_kgen.cpp
-
+.. literalinclude:: ../src/apps/keygen.cpp
 
 .. _serializing_private_keys:
 
@@ -489,11 +481,11 @@ Signatures are verified using
 
 Here is an example of DSA signature generation
 
-.. literalinclude:: examples/dsa_sign.cpp
+.. literalinclude:: ../src/apps/dsa_sign.cpp
 
 Here is an example that verifies DSA signatures
 
-.. literalinclude:: examples/dsa_ver.cpp
+.. literalinclude:: ../src/apps/dsa_ver.cpp
 
 Key Agreement
 ---------------------------------
@@ -535,7 +527,3 @@ key agreement algorithm. It returns a ``secure_vector<byte>``.
 in new applications. The X9.42 algorithm may be useful in some
 circumstances, but unless you need X9.42 compatibility, KDF2 is easier
 to use.
-
-An example of using Diffie-Hellman:
-
-.. literalinclude:: examples/dh.cpp
