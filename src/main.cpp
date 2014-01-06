@@ -58,24 +58,6 @@ void strip(std::string& line)
       line = line.erase(line.find('\t'), 1);
    }
 
-std::vector<std::string> parse(const std::string& line)
-   {
-   const char DELIMITER = ':';
-   std::vector<std::string> substr;
-   std::string::size_type start = 0, end = line.find(DELIMITER);
-   while(end != std::string::npos)
-      {
-      substr.push_back(line.substr(start, end-start));
-      start = end+1;
-      end = line.find(DELIMITER, start);
-      }
-   if(line.size() > start)
-      substr.push_back(line.substr(start));
-   while(substr.size() <= 4) // at least 5 substr, some possibly empty
-      substr.push_back("");
-   return substr;
-   }
-
 namespace {
 
 int help(int , char* argv[])

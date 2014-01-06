@@ -13,6 +13,4 @@ void strip(std::string& line);
 inline std::string strip(const std::string& line)
    { std::string s = line; strip(s); return s; }
 
-std::vector<std::string> parse(const std::string& line);
-
 #endif
