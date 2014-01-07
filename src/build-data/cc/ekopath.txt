@@ -18,7 +18,7 @@ ar_command "pathCC -ar -o"
 shared_flags "-fPIC"
 debug_flags -g
 
-makefile_style unix
+makefile_style gmake
 
 <so_link_flags>
 default -> "$(CXX) -shared -fPIC -Wl,-soname,$(SONAME)"

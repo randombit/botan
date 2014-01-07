@@ -14,7 +14,7 @@ lang_flags ""
 debug_flags -g
 no_debug_flags ""
 
-makefile_style unix
+makefile_style gmake
 
 <mach_opt>
 cellppu   -> "-qarch=cell"

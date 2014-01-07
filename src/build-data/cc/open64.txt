@@ -16,7 +16,7 @@ shared_flags "-fPIC"
 lang_flags "-ansi -LANG:ansi-for-init-scope=ON"
 warning_flags "-Wall -W"
 
-makefile_style unix
+makefile_style gmake
 
 <so_link_flags>
 default -> "$(CXX) -shared -Wl,-soname,$(SONAME)"

@@ -12,7 +12,7 @@ lang_flags "-D_REENTRANT -std=c++11"
 maintainer_warning_flags "-Werror"
 warning_flags "-Wextra -Wall"
 
-makefile_style unix
+makefile_style gmake
 
 lib_opt_flags "-O3"
 app_opt_flags "-O2"

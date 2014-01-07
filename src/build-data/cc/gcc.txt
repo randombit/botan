@@ -20,7 +20,7 @@ debug_flags "-g"
 visibility_build_flags "-fvisibility=hidden"
 visibility_attribute '__attribute__((visibility("default")))'
 
-makefile_style unix
+makefile_style gmake
 
 <so_link_flags>
 # The default works for GNU ld and several other Unix linkers

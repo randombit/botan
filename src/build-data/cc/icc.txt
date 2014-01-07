@@ -16,7 +16,7 @@ lang_flags "-std=c++0x"
 warning_flags "-w1"
 shared_flags "-fPIC"
 
-makefile_style unix
+makefile_style gmake
 
 <mach_opt>
 pentium3  -> "-march=pentium3"

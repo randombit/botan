@@ -16,7 +16,7 @@ lang_flags "-AA -ext +eh -z"
 warning_flags "" # +w
 shared_flags "+Z"
 
-makefile_style unix
+makefile_style gmake
 
 <mach_abi_linking>
 hppa1.0 -> "+DAportable"

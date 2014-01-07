@@ -299,7 +299,7 @@ def process_command_line(args):
                            help='choose how links are created')
 
     build_group.add_option('--makefile-style', metavar='STYLE', default=None,
-                           help='choose a makefile style (unix or nmake)')
+                           help='choose a makefile style (gmake or nmake)')
 
     build_group.add_option('--with-local-config',
                            dest='local_config', metavar='FILE',
@@ -1483,8 +1483,8 @@ def setup_build(build_config, options, template_vars):
     def choose_makefile_template(style):
         if style == 'nmake':
             return 'nmake.in'
-        elif style == 'unix':
-            return ('gmake.in')
+        elif style == 'gmake':
+            return 'gmake.in'
         else:
             raise Exception('Unknown makefile style "%s"' % (style))
 

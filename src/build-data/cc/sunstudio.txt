@@ -18,7 +18,7 @@ lang_flags "+p -features=extensions -D__FUNCTION__=__func__"
 
 ar_command "CC -xar -o"
 
-makefile_style unix
+makefile_style gmake
 
 <so_link_flags>
 default -> "$(CXX) -G -h$(SONAME)"
