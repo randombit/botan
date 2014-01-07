@@ -1,18 +1,18 @@
 #!/usr/bin/env python2
 
 """
-Used to generate src/tls/tls_suite_info.cpp
+Used to generate lib/tls/tls_suite_info.cpp from IANA params
 
-(C) 2011, 2012, 2013 Jack Lloyd
+(C) 2011, 2012, 2013, 2014 Jack Lloyd
 
 Distributed under the terms of the Botan license
-
 """
 
 import sys
 import re
 import datetime
 import hashlib
+import optparse
 
 def to_ciphersuite_info(code, name):
 
@@ -143,6 +143,29 @@ def open_input(args):
     else:
          return open(args[1])
 
+"""
+Handle command line options
+"""
+def process_command_line(args):
+
+    parser = optparse.OptionParser()
+
+    parser.add_option('--include-srp-aead', action='store_true', default=False,
+                      help='add custom SRP AEAD suites')
+    parser.add_option('--include-ocb', action='store_true', default=False,
+                      help='add custom OCB AEAD suites')
+    parser.add_option('--include-eax', action='store_true', default=False,
+                      help='add custom EAX AEAD suites')
+
+    parser.add_option('--save-download', action='store_true', default=True,
+                      help='save downloaded tls-parameters.txt')
+
+    parser.add_option('--write-direct', action='store_true', default=False,
+                      help='save output directly to lib/tls/tls_suite_info.cpp')
+
+    return parser.parse_args(args)
+
+
 def main(args = None):
     if args is None:
         args = sys.argv
@@ -153,10 +176,7 @@ def main(args = None):
     maybe_someday = ['ARIA', 'RSA_PSK']
     not_supported = weak_crypto + static_dh + protocol_goop + maybe_someday
 
-    include_srp_aead = False
-    include_ocb = False
-    include_eax = False
-    save_file = True
+    (options, args) = process_command_line(args)
 
     ciphersuite_re = re.compile(' +0x([0-9a-fA-F][0-9a-fA-F]),0x([0-9a-fA-F][0-9a-fA-F]) + TLS_([A-Za-z_0-9]+) ')
 
@@ -184,7 +204,7 @@ def main(args = None):
     sha1.update(contents)
     contents_hash = sha1.hexdigest()
 
-    if save_file:
+    if options.save_download:
         out = open('tls-parameters.txt', 'w')
         out.write(contents)
         out.close()
@@ -196,8 +216,8 @@ def main(args = None):
     define_custom_ciphersuite('DHE_DSS_WITH_RC4_128_SHA', '0066')
 
     # Expermental things
-    if include_ocb:
-        define_custom_ciphersuite('ECDHE_ECDSA_AES_128_OCB_SHA256', 'FF80')
+    if options.include_ocb:
+        define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_128_OCB_SHA256', 'FF80')
         define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_256_OCB_SHA384', 'FF81')
         define_custom_ciphersuite('ECDHE_RSA_WITH_AES_128_OCB_SHA256', 'FF82')
         define_custom_ciphersuite('ECDHE_RSA_WITH_AES_256_OCB_SHA384', 'FF83')
@@ -205,30 +225,31 @@ def main(args = None):
         define_custom_ciphersuite('ECDHE_PSK_WITH_AES_128_OCB_SHA256', 'FF85')
         define_custom_ciphersuite('ECDHE_PSK_WITH_AES_256_OCB_SHA384', 'FF86')
 
-    if include_eax:
+    if options.include_eax:
         define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_128_EAX_SHA256', 'FF90')
         define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_256_EAX_SHA384', 'FF91')
         define_custom_ciphersuite('ECDHE_RSA_WITH_AES_128_EAX_SHA256', 'FF92')
         define_custom_ciphersuite('ECDHE_RSA_WITH_AES_256_EAX_SHA384', 'FF93')
 
-    if include_srp_aead:
+    if options.include_srp_aead:
         define_custom_ciphersuite('SRP_SHA_WITH_AES_256_GCM_SHA384', 'FFA0')
         define_custom_ciphersuite('SRP_SHA_RSA_WITH_AES_256_GCM_SHA384', 'FFA1')
         define_custom_ciphersuite('SRP_SHA_DSS_WITH_AES_256_GCM_SHA384', 'FFA2')
         define_custom_ciphersuite('SRP_SHA_ECDSA_WITH_AES_256_GCM_SHA384', 'FFA3')
 
-        if include_ocb:
+        if options.include_ocb:
             define_custom_ciphersuite('SRP_SHA_WITH_AES_256_OCB_SHA384', 'FFA4')
             define_custom_ciphersuite('SRP_SHA_RSA_WITH_AES_256_OCB_SHA384', 'FFA5')
             define_custom_ciphersuite('SRP_SHA_DSS_WITH_AES_256_OCB_SHA384', 'FFA6')
             define_custom_ciphersuite('SRP_SHA_ECDSA_WITH_AES_256_OCB_SHA384', 'FFA7')
 
-        if include_eax:
+        if options.include_eax:
             define_custom_ciphersuite('SRP_SHA_WITH_AES_256_EAX_SHA384', 'FFA8')
             define_custom_ciphersuite('SRP_SHA_RSA_WITH_AES_256_EAX_SHA384', 'FFA9')
             define_custom_ciphersuite('SRP_SHA_DSS_WITH_AES_256_EAX_SHA384', 'FFAA')
             define_custom_ciphersuite('SRP_SHA_ECDSA_WITH_AES_256_EAX_SHA384', 'FFAB')
 
+    suite_info = ''
 
     def header():
         return """/*
@@ -240,11 +261,12 @@ def main(args = None):
 *
 * Released under the terms of the Botan license
 */
+
 """ % (contents_hash, sys.argv[0], datetime.date.today().strftime("%Y-%m-%d"))
 
-    print header()
+    suite_info += header()
 
-    print """#include <botan/tls_ciphersuite.h>
+    suite_info += """#include <botan/tls_ciphersuite.h>
 
 namespace Botan {
 
@@ -253,21 +275,29 @@ namespace TLS {
 Ciphersuite Ciphersuite::by_id(u16bit suite)
    {
    switch(suite)
-      {"""
+      {
+"""
 
     for k in sorted(suites.keys()):
-        print "      case 0x%s: // %s" % (suites[k][0], k)
-        print "         return %s;" % (suites[k][1])
-        print
+        suite_info += "      case 0x%s: // %s\n" % (suites[k][0], k)
+        suite_info += "         return %s;\n\n" % (suites[k][1])
 
-    print """      }
+    suite_info += """      }
 
    return Ciphersuite(); // some unknown ciphersuite
    }
 
 }
 
-}"""
+}
+"""
+
+    if options.write_direct:
+        out = open('lib/tls/tls_suite_info.cpp', 'w')
+        out.write(suite_info)
+        out.close()
+    else:
+        print suite_info,
 
 if __name__ == '__main__':
     sys.exit(main())

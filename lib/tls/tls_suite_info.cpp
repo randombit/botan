@@ -3,7 +3,7 @@
 *
 * This file was automatically generated from the IANA assignments
 * (tls-parameters.txt hash a794db70c6546a47e3bc3181dc0fd908a322e50c)
-* by ./src/build-data/scripts/tls_suite_info.py on 2013-12-04
+* by ./src/scripts/tls_suite_info.py on 2014-01-07
 *
 * Released under the terms of the Botan license
 */
