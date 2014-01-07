@@ -114,8 +114,10 @@ class BuildConfigurationInformation(object):
             self.version_vc_rev = get_vc_revision()
 
         self.build_dir = os.path.join(options.with_build_dir, 'build')
-        self.appobj_dir = os.path.join(self.build_dir, 'app')
-        self.libobj_dir = os.path.join(self.build_dir, 'lib')
+
+        self.obj_dir = os.path.join(self.build_dir, 'obj')
+        self.appobj_dir = os.path.join(self.obj_dir, 'app')
+        self.libobj_dir = os.path.join(self.obj_dir, 'lib')
 
         self.doc_output_dir = os.path.join(self.build_dir, 'docs')
 
