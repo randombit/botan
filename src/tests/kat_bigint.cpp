@@ -126,6 +126,7 @@ size_t test_make_prime()
          std::cout << "Missing " << PRIMES[j] << "\n";
       }
    */
+   return 0;
    }
 
 // c==expected, d==a op b, e==a op= b

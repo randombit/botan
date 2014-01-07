@@ -193,7 +193,7 @@ std::vector<std::string> dir_listing(const std::string& dir_name)
       {
       struct dirent* dir_ent = readdir(dir);
 
-      if(dir_ent == 0)
+      if(!dir_ent)
          break;
       const std::string entry = dir_ent->d_name;
       if(entry == "." || entry == "..")
