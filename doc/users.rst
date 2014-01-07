@@ -9,7 +9,7 @@ Open Source Software
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * `BIND 10 <http://www.isc.org/bind10>`_ the new version of the BIND
-  DNS server, uses botan internally.
+  DNS server uses botan for various crypto operations.
 
 * `SoftHSM <http://trac.opendnssec.org/wiki/SoftHSM>`_ an open sourced
   software PKCS #11 implementation, which is used as part of the
@@ -29,7 +29,8 @@ Open Source Software
 * `QCA <http://delta.affinix.com/qca/>`_, the Qt Cryptographic
   Architecture (part of KDE4) uses parts of botan as an `embedded
   crypto provider
-  <http://websvn.kde.org/trunk/kdesupport/qca/src/botantools/botan/>`_.
+  <http://quickgit.kde.org/?p=qca.git&a=tree&hb=master&f=src%2Fbotantools%2Fbotan>`_
+  and also has a `qca-botan plugin <http://quickgit.kde.org/?p=qca.git&a=tree&hb=master&f=plugins%2Fqca-botan>`_.
 
 * `TCHead <http://16s.us/TCHead/>`_ is a utility for analyzing
   TrueCrypt volume headers.
