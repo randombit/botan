@@ -1023,8 +1023,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         for src in sources:
             (dir,file) = os.path.split(os.path.normpath(src))
 
-            if dir.startswith('lib/'):
-                parts = dir.split(os.sep)[1:]
+            parts = dir.split(os.sep)[1:]
+            if parts != []:
 
                 # Handle src/X/X.cpp -> X.o
                 if file == parts[-1] + '.cpp':
