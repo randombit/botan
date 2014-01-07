@@ -121,28 +121,15 @@ int main(int argc, char* argv[])
          std::cout << resp << "\n";
          }
 
-      //return app_main(cmd, argc - 1, argv + 1);
+      int e = apps_main(cmd, argc - 1, argv + 1);
 
-#define CALL_CMD(cmdsym)                           \
-      do { if(cmd == #cmdsym) { return cmdsym ##_main (argc - 1, argv + 1); } } while(0)
+      if(e == -1)
+         {
+         std::cout << "Unknown command " << cmd << "\n";
+         return help(argc, argv);
+         }
 
-      CALL_CMD(asn1);
-      CALL_CMD(base64);
-      CALL_CMD(bcrypt);
-      CALL_CMD(bzip);
-      CALL_CMD(ca);
-      CALL_CMD(factor);
-      CALL_CMD(fpe);
-      CALL_CMD(hash);
-      CALL_CMD(keygen);
-      CALL_CMD(dsa_sign);
-      CALL_CMD(dsa_verify);
-      CALL_CMD(pkcs10);
-      CALL_CMD(read_ssh);
-      CALL_CMD(self_sig);
-      CALL_CMD(tls_client);
-      CALL_CMD(tls_server);
-      CALL_CMD(x509);
+      return e;
       }
    catch(std::exception& e)
       {

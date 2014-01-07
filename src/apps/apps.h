@@ -6,27 +6,28 @@
 
 using namespace Botan;
 
-#define DEFINE_EXAMPLE(cmd) int cmd ## _main(int argc, char* argv[]);
+int apps_main(const std::string& cmd, int argc, char* argv[]);
 
-DEFINE_EXAMPLE(asn1);
-DEFINE_EXAMPLE(bcrypt);
-DEFINE_EXAMPLE(bzip);
-DEFINE_EXAMPLE(base64);
-DEFINE_EXAMPLE(ca);
-DEFINE_EXAMPLE(factor);
-DEFINE_EXAMPLE(fpe);
-DEFINE_EXAMPLE(hash);
-DEFINE_EXAMPLE(keygen);
-DEFINE_EXAMPLE(dsa_sign);
-DEFINE_EXAMPLE(dsa_verify);
-DEFINE_EXAMPLE(cert_verify);
-DEFINE_EXAMPLE(ocsp_check);
-DEFINE_EXAMPLE(pkcs10);
-DEFINE_EXAMPLE(read_ssh);
-DEFINE_EXAMPLE(self_sig);
-DEFINE_EXAMPLE(tls_client);
-DEFINE_EXAMPLE(tls_server);
-DEFINE_EXAMPLE(tls_server_asio);
-DEFINE_EXAMPLE(x509);
+#define DEFINE_APP(cmd) int cmd ## _main(int argc, char* argv[]);
 
-int speed_main(int argc, char* argv[]);
+DEFINE_APP(asn1);
+DEFINE_APP(bcrypt);
+DEFINE_APP(bzip);
+DEFINE_APP(base64);
+DEFINE_APP(ca);
+DEFINE_APP(factor);
+DEFINE_APP(fpe);
+DEFINE_APP(hash);
+DEFINE_APP(keygen);
+DEFINE_APP(dsa_sign);
+DEFINE_APP(dsa_verify);
+DEFINE_APP(cert_verify);
+DEFINE_APP(ocsp_check);
+DEFINE_APP(pkcs10);
+DEFINE_APP(read_ssh);
+DEFINE_APP(self_sig);
+DEFINE_APP(tls_client);
+DEFINE_APP(tls_server);
+DEFINE_APP(tls_server_asio);
+DEFINE_APP(x509);
+DEFINE_APP(speed);
