@@ -1,8 +1,9 @@
 
-#include "../common.h"
 #include <botan/auto_rng.h>
 #include <botan/hex.h>
 #include <iostream>
+
+#include "../getopt.h"
 
 using namespace Botan;
 

@@ -26,44 +26,16 @@
 
 using namespace Botan;
 
-#include "common.h"
 #include "tests/tests.h"
 #include "apps/apps.h"
-
-// from common.h
-void strip_comments(std::string& line)
-   {
-   if(line.find('#') != std::string::npos)
-      line = line.erase(line.find('#'), std::string::npos);
-   }
-
-void strip_newlines(std::string& line)
-   {
-   while(line.find('\n') != std::string::npos)
-      line = line.erase(line.find('\n'), 1);
-   }
-
-/* Strip comments, whitespace, etc */
-void strip(std::string& line)
-   {
-   strip_comments(line);
-
-#if 0
-   while(line.find(' ') != std::string::npos)
-      line = line.erase(line.find(' '), 1);
-#endif
-
-   while(line.find('\t') != std::string::npos)
-      line = line.erase(line.find('\t'), 1);
-   }
 
 namespace {
 
 int help(int , char* argv[])
    {
    std::cout << "Usage: " << argv[0] << " subcommand\n";
-   std::cout << "Common commands: help version test speed\n";
-   std::cout << "Other commands: cpuid bcrypt x509 factor tls_client asn1 base64 hash self_sig\n";
+   std::cout << "Common commands: test help version\n";
+   std::cout << "Other commands: speed cpuid bcrypt x509 factor tls_client asn1 base64 hash self_sig\n";
    return 1;
    }
 

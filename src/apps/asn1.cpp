@@ -37,10 +37,10 @@ std::string url_encode(const std::vector<byte>& in)
    for(size_t i = 0; i != in.size(); ++i)
       {
       const int c = in[i];
-      if(isprint((int)c))
-         out << (char)c;
+      if(isprint(c))
+         out << static_cast<char>(c);
       else
-         out << "%" << std::hex << (int)c << std::dec;
+         out << "%" << std::hex << static_cast<char>(c) << std::dec;
       }
    return out.str();
    }
@@ -181,7 +181,7 @@ void decode(BER_Decoder& decoder, size_t level)
 
          std::string str;
          for(size_t i = 0; i != rep.size(); ++i)
-            str += (char)rep[i];
+            str += static_cast<char>(rep[i]);
 
          emit(type_name(type_tag), level, length, str);
          }

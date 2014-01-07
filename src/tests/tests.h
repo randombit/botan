@@ -8,8 +8,6 @@
 #include <string>
 #include <vector>
 
-#include "../common.h"
-
 size_t run_tests_bb(std::istream& src,
                     const std::string& name_key,
                     const std::string& output_key,
