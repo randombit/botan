@@ -1,9 +1,3 @@
-CXX           = %{cc}
-CFLAGS        = -Os %{lang_flags}
-LDFLAGS       =
-WARN_FLAGS    = -Wall -Wextra
-
-SERIES        = %{version_major}.%{version_minor}
 
 PYTHON_ROOT = /usr/lib/python%{python_version}/config
 PYTHON_INC = -I/usr/include/python%{python_version}
@@ -15,19 +9,17 @@ BOTAN_PYTHON_MODDIR = %{python_obj_dir}
 
 PYTHON_OBJS   = %{python_objs}
 
-all: $(BOTAN_PYTHON_MODDIR)/_botan.so
+python: $(BOTAN_PYTHON_MODDIR)/_botan.so
+
+PYTHON_FLAGS   = $(LANG_FLAGS) $(WARN_FLAGS) $(SO_OBJ_FLAGS) -Os -ftemplate-depth=255 $(PYTHON_INC) -Wno-error
 
 %{python_build_cmds}
 
 $(BOTAN_PYTHON_MODDIR)/_botan.so: $(PYTHON_OBJS)
 	cp %{python_dir}/*.py $(BOTAN_PYTHON_MODDIR)
-	$(CXX) -shared -Wl,-soname,$@ $(PYTHON_OBJS) -L. -L$(PYTHON_ROOT) $(LDFLAGS) -lbotan-$(SERIES) -lboost_python -o $@
+	$(CXX) -shared -Wl,-soname,$@ $(PYTHON_OBJS) -L. -L$(PYTHON_ROOT) $(LDFLAGS) -lbotan-$(SERIES) -lboost_python-%{python_version} -o $@
 
-clean:
-	rm -rf $(BOTAN_PYTHON_MODDIR)/*
-	rm -f $(PYTHON_OBJS)
-
-install:
+install_python:
 	mkdir -p $(PYTHON_SITE_PACKAGE_DIR)/botan
 	cp $(BOTAN_PYTHON_MODDIR)/_botan.so $(BOTAN_PYTHON_MODDIR)/*.py $(PYTHON_SITE_PACKAGE_DIR)/botan
 	chmod -R u=rwX,go=rX $(PYTHON_SITE_PACKAGE_DIR)/botan

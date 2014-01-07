@@ -135,24 +135,23 @@ class BuildConfigurationInformation(object):
 
         self.public_headers = sorted(flatten([m.public_headers() for m in modules]))
 
-        self.apps_dir = os.path.join(options.base_dir, 'src/')
+        self.apps_dir = os.path.join(options.base_dir, 'src')
 
-        def find_sources_in(srcdir):
-            for (dirpath, dirnames, filenames) in os.walk(srcdir):
-                for filename in filenames:
-                    if filename.endswith('.cpp'):
-                        yield os.path.join(dirpath, filename)
+        def find_sources_in(basedir, srcdirs):
+            for srcdir in srcdirs:
+                for (dirpath, dirnames, filenames) in os.walk(os.path.join(basedir, srcdir)):
+                    for filename in filenames:
+                        if filename.endswith('.cpp'):
+                            yield os.path.join(dirpath, filename)
 
-        self.app_sources = list(find_sources_in(self.apps_dir))
+        self.app_sources = [os.path.join(self.apps_dir, 'main.cpp')] + \
+                           list(find_sources_in(self.apps_dir, ['apps', 'tests']))
+
+        self.python_sources = list(find_sources_in(self.apps_dir, ['python']))
 
         self.boost_python = options.boost_python
-        self.python_dir = os.path.join(options.lib_dir, 'wrap', 'python')
+        self.python_dir = os.path.join(options.src_dir, 'python')
         self.pyobject_dir = os.path.join(self.build_dir, 'python')
-
-        self.python_sources = sorted(
-            [os.path.join(self.python_dir, file)
-             for file in os.listdir(self.python_dir)
-             if file.endswith('.cpp')])
 
         self.manual_dir = os.path.join(self. doc_output_dir, 'manual')
 
@@ -1125,7 +1124,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         logging.warn('Unknown arch in innosetup_arch %s' % (arch))
         return None
 
-    return {
+    vars = {
         'version_major':  build_config.version_major,
         'version_minor':  build_config.version_minor,
         'version_patch':  build_config.version_patch,
@@ -1244,6 +1243,10 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'python_version': options.python_version
         }
+
+    vars["python_makefile"] = process_template('src/build-data/makefile/python.in', vars)
+
+    return vars
 
 """
 Determine which modules to load based on options, target, etc
@@ -1510,9 +1513,6 @@ def setup_build(build_config, options, template_vars):
 
         if options.os == 'windows':
             yield (options.build_data, 'innosetup.in', 'botan.iss')
-
-        if options.boost_python:
-            yield (options.makefile_dir, 'python.in', 'Makefile.python')
 
     for (template_dir, template, sink) in templates_to_use():
         source = os.path.join(template_dir, template)

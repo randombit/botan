@@ -1,7 +1,7 @@
 # Compiler Options
 CXX           = %{cc}
 LIB_OPT       = %{lib_opt}
-APP_OPT      = %{app_opt}
+APP_OPT       = %{app_opt}
 LANG_FLAGS    = %{lang_flags}
 WARN_FLAGS    = %{warn_flags}
 SO_OBJ_FLAGS  = %{shared_flags}
@@ -49,11 +49,6 @@ LIBRARIES     = $(STATIC_LIB) $(SHARED_LIB)
 LIBNAME       = %{lib_prefix}libbotan
 STATIC_LIB    = $(LIBNAME)-$(SERIES).a
 
-SONAME        = $(LIBNAME)-$(SERIES).%{so_suffix}.%{so_abi_rev}
-SHARED_LIB    = $(SONAME).%{version_patch}
-
-SYMLINK       = $(LIBNAME)-$(SERIES).%{so_suffix}
-
 all: $(APP)
 
 # File Lists
@@ -77,10 +72,16 @@ $(STATIC_LIB): $(LIBOBJS)
 	$(AR) $(STATIC_LIB) $(LIBOBJS)
 	$(RANLIB) $(STATIC_LIB)
 
+SONAME        = $(LIBNAME)-$(SERIES).%{so_suffix}.%{so_abi_rev}
+SHARED_LIB    = $(SONAME).%{version_patch}
+SYMLINK       = $(LIBNAME)-$(SERIES).%{so_suffix}
+
 $(SHARED_LIB): $(LIBOBJS)
 	$(SO_LINK_CMD) $(LDFLAGS) $(LIBOBJS) -o $(SHARED_LIB) $(LINK_TO)
 	$(LN) $(SHARED_LIB) $(SONAME)
 	$(LN) $(SHARED_LIB) $(SYMLINK)
+
+%{python_makefile}
 
 # Fake Targets
 .PHONY = docs clean distclean install static shared

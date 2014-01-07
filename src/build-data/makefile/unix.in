@@ -1,7 +1,7 @@
 # Compiler Options
 CXX           = %{cc}
 LIB_OPT       = %{lib_opt}
-APP_OPT     = %{app_opt}
+APP_OPT       = %{app_opt}
 LANG_FLAGS    = %{lang_flags}
 WARN_FLAGS    = %{warn_flags}
 LINK_TO       = %{link_to}
@@ -70,6 +70,8 @@ $(STATIC_LIB): $(LIBOBJS)
 	$(RM) $(STATIC_LIB)
 	$(AR) $(STATIC_LIB) $(LIBOBJS)
 	$(RANLIB) $(STATIC_LIB)
+
+%{python_makefile}
 
 # Fake Targets
 .PHONY = docs clean distclean install static

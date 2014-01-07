@@ -132,7 +132,7 @@ not support ``LD_LIBRARY_PATH``. Thomas Keller suggests instead
 running ``install_name_tool`` between building and running the
 self-test program::
 
-  $ VERSION=1.10.0 # or whatever the current version is
+  $ VERSION=1.11.11 # or whatever the current version is
   $ install_name_tool -change $(otool -X -D libbotan-$VERSION.dylib) \
        $PWD/libbotan-$VERSION.dylib check
 
@@ -409,11 +409,11 @@ Botan also by default installs a file for ``pkg-config``,
 namespaced by the major and minor versions. So it can be used,
 for instance, as::
 
-  $ pkg-config botan-1.10 --modversion
-  1.10.0
-  $ pkg-config botan-1.10 --cflags
+  $ pkg-config botan-1.11 --modversion
+  1.11.0
+  $ pkg-config botan-1.11 --cflags
   -I/usr/local/include
-  $ pkg-config botan-1.10 --libs
+  $ pkg-config botan-1.11 --libs
   -L/usr/local/lib -lbotan -lm -lbz2 -lpthread -lrt
 
 MS Windows
@@ -433,17 +433,10 @@ Building the Python wrappers
 
 The Python wrappers for Botan use Boost.Python, so you must have Boost
 installed. To build the wrappers, pass the flag
-``--with-boost-python`` to ``configure.py``. This will create a second
-makefile, ``Makefile.python``, with instructions for building the
-Python module. After building the library, execute::
+``--with-boost-python`` to ``configure.py`` and build the ``python``
+target with ``make``.
 
-  $ make -f Makefile.python
-
-to build the module. Currently only Unix systems are supported, and
-the Makefile assumes that the version of Python you want to build
-against is the same one you used to run ``configure.py``.
-
-To install the module, use the ``install`` target.
+To install the module, use the ``install_python`` target.
 
 See :doc:`Python Bindings <python>` for more information about the
 binding.
