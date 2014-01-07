@@ -1,0 +1,10 @@
+SONAME        = $(LIBNAME)-$(BRANCH).%{so_suffix}.%{so_abi_rev}
+SHARED_LIB    = $(SONAME).%{version_patch}
+SYMLINK       = $(LIBNAME)-$(BRANCH).%{so_suffix}
+
+$(SHARED_LIB): $(LIBOBJS)
+	%{so_link} $(LDFLAGS) $(LIBOBJS) $(LIB_LINKS_TO) -o $(SHARED_LIB)
+	$(LN) $(SHARED_LIB) $(SONAME)
+	$(LN) $(SHARED_LIB) $(SYMLINK)
+
+LIBRARIES += $(SHARED_LIB)

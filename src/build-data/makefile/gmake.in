@@ -4,21 +4,23 @@ LIB_OPT       = %{lib_opt}
 APP_OPT       = %{app_opt}
 LANG_FLAGS    = %{lang_flags}
 WARN_FLAGS    = %{warn_flags}
-LINK_TO       = %{link_to}
+SO_OBJ_FLAGS  = %{shared_flags}
+LIB_LINKS_TO  = %{link_to}
+APP_LINKS_TO  = $(LIB_LINKS_TO) -lboost_regex -lboost_thread
 
-LIB_FLAGS     = $(LANG_FLAGS) $(LIB_OPT) $(WARN_FLAGS)
-APP_FLAGS   = $(LANG_FLAGS) $(APP_OPT) $(WARN_FLAGS)
+LIB_FLAGS    = $(SO_OBJ_FLAGS) $(LANG_FLAGS) $(LIB_OPT) $(WARN_FLAGS)
+APP_FLAGS    = $(LANG_FLAGS) $(APP_OPT) $(WARN_FLAGS)
 
 # Version Numbers
 VERSION       = %{version}
-SERIES        = %{version_major}.%{version_minor}
+BRANCH        = %{version_major}.%{version_minor}
 
 # Installation Settings
 DESTDIR       = %{prefix}
 
 BINDIR        = $(DESTDIR)/bin
 LIBDIR        = $(DESTDIR)/%{libdir}
-HEADERDIR     = $(DESTDIR)/%{includedir}/botan-$(SERIES)/botan
+HEADERDIR     = $(DESTDIR)/%{includedir}/botan-$(BRANCH)/botan
 DOCDIR        = $(DESTDIR)/%{docdir}/botan-$(VERSION)
 PKGCONF_DIR   = $(LIBDIR)/pkgconfig
 
@@ -41,17 +43,18 @@ RM               = @rm -f
 RM_R             = @rm -rf
 
 # Targets
-APP         = %{app_prefix}botan
+APP           = %{app_prefix}botan
 LIBRARIES     = $(STATIC_LIB)
 
 LIBNAME       = %{lib_prefix}libbotan
-STATIC_LIB    = $(LIBNAME)-$(SERIES).a
+STATIC_LIB    = $(LIBNAME)-$(BRANCH).a
+
+LIBPATH       = botan-$(BRANCH)
 
 all: $(APP)
 
 # File Lists
-
-HEADERS       = %{include_files}
+INCLUDE_DIR = %{botan_include_dir}
 
 LIBOBJS       = %{lib_objs}
 
@@ -63,8 +66,10 @@ APPOBJS     = %{app_objs}
 %{app_build_cmds}
 
 # Link Commands
+%{shared_makefile}
+
 $(APP): $(LIBRARIES) $(APPOBJS)
-	$(CXX) $(APPOBJS) $(STATIC_LIB) $(LINK_TO) -o $(APP)
+	$(CXX) $(LDFLAGS) $(APPOBJS) -L. -l$(LIBPATH) $(APP_LINKS_TO) -o $(APP)
 
 $(STATIC_LIB): $(LIBOBJS)
 	$(RM) $(STATIC_LIB)
@@ -74,16 +79,14 @@ $(STATIC_LIB): $(LIBOBJS)
 %{python_makefile}
 
 # Fake Targets
-.PHONY = docs clean distclean install static
-
-static: $(STATIC_LIB)
+.PHONY = docs clean distclean install
 
 docs:
 %{build_doc_commands}
 
 clean:
 	$(RM_R) %{build_dir}/lib/* %{build_dir}/tests/*
-	$(RM) $(LIBRARIES) $(SYMLINK) $(APP)
+	$(RM) $(LIBRARIES) $(SYMLINK) $(SONAME) $(APP)
 
 distclean: clean
 	$(RM_R) %{build_dir}
@@ -91,17 +94,22 @@ distclean: clean
 	$(RM) botan_all.cpp botan_all.h
 
 install: $(LIBRARIES) docs
-	$(ECHO) "Installing Botan into $(DESTDIR)... "
 	$(MKDIR_INSTALL) $(DOCDIR)
 	$(COPY_R) %{doc_output_dir}/* $(DOCDIR)
 
 	$(MKDIR_INSTALL) $(HEADERDIR)
-	for i in $(HEADERS); do \
+	for i in $(INCLUDE_DIR)/*.h; do \
 	   $(INSTALL_CMD_DATA) $$i $(HEADERDIR); \
 	 done
 
 	$(MKDIR_INSTALL) $(LIBDIR)
 	$(INSTALL_CMD_DATA) $(STATIC_LIB) $(LIBDIR)
+
+        ifdef $(SHARED_LIB)
+	$(INSTALL_CMD_EXEC) $(SHARED_LIB) $(LIBDIR)
+	$(CD) $(LIBDIR); $(LN) $(SHARED_LIB) $(SYMLINK)
+	$(CD) $(LIBDIR); $(LN) $(SHARED_LIB) $(SONAME)
+        endif
 
 	$(MKDIR_INSTALL) $(BINDIR)
 	$(INSTALL_CMD_EXEC) $(CONFIG_SCRIPT) $(BINDIR)

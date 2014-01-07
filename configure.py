@@ -5,7 +5,7 @@ Configuration program for botan (http://botan.randombit.net/)
   (C) 2009,2010,2011,2012,2013,2014 Jack Lloyd
   Distributed under the terms of the Botan license
 
-Tested with CPython 2.6, 2.7, 3.1 and PyPy 1.5
+Tested with CPython 2.6, 2.7, 3.2 and PyPy 1.5
 
 Python 2.5 works if you change the exception catching syntax:
    perl -pi -e 's/except (.*) as (.*):/except $1, $2:/g' configure.py
@@ -1192,6 +1192,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'target_cpu_defines': make_cpp_macros(arch.defines(options)),
 
+        'botan_include_dir': build_config.botan_include_dir,
+
         'include_files': makefile_list(build_config.public_headers),
 
         'lib_objs': makefile_list(
@@ -1244,7 +1246,15 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'python_version': options.python_version
         }
 
-    vars["python_makefile"] = process_template('src/build-data/makefile/python.in', vars)
+    if options.build_shared_lib:
+        vars["shared_makefile"] = process_template('src/build-data/makefile/shared.in', vars)
+    else:
+        vars["shared_makefile"] = ""
+
+    if options.boost_python:
+        vars["python_makefile"] = process_template('src/build-data/makefile/python.in', vars)
+    else:
+        vars["python_makefile"] = ""
 
     return vars
 
@@ -1474,7 +1484,7 @@ def setup_build(build_config, options, template_vars):
         if style == 'nmake':
             return 'nmake.in'
         elif style == 'unix':
-            return ('unix_shr.in' if options.build_shared_lib else 'unix.in')
+            return ('gmake.in')
         else:
             raise Exception('Unknown makefile style "%s"' % (style))
 

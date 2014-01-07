@@ -33,8 +33,6 @@ RMDIR         = @rmdir
 ### File Lists
 APP         = botan
 
-HEADERS       = %{include_files}
-
 LIBOBJS       = %{lib_objs}
 
 APPOBJS     = %{app_objs}

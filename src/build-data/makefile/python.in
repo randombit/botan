@@ -1,4 +1,5 @@
 
+# Build commands for Python wrapper
 PYTHON_ROOT = /usr/lib/python%{python_version}/config
 PYTHON_INC = -I/usr/include/python%{python_version}
 PYTHON_SITE_PACKAGE_DIR = /usr/lib/python%{python_version}/site-packages/
@@ -17,7 +18,7 @@ PYTHON_FLAGS   = $(LANG_FLAGS) $(WARN_FLAGS) $(SO_OBJ_FLAGS) -Os -ftemplate-dept
 
 $(BOTAN_PYTHON_MODDIR)/_botan.so: $(PYTHON_OBJS)
 	cp %{python_dir}/*.py $(BOTAN_PYTHON_MODDIR)
-	$(CXX) -shared -Wl,-soname,$@ $(PYTHON_OBJS) -L. -L$(PYTHON_ROOT) $(LDFLAGS) -lbotan-$(SERIES) -lboost_python-%{python_version} -o $@
+	$(CXX) -shared -Wl,-soname,$@ $(PYTHON_OBJS) -L. -L$(PYTHON_ROOT) $(LDFLAGS) -lbotan-$(BRANCH) -lboost_python-%{python_version} -o $@
 
 install_python:
 	mkdir -p $(PYTHON_SITE_PACKAGE_DIR)/botan
