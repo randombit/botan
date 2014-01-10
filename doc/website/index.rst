@@ -24,7 +24,7 @@ the library, and related topics are also welcome. If you find what you
 believe to be a bug, please file a ticket in `Bugzilla
 <http://bugs.randombit.net/>`_.
 
-The `manual <http://botan.randombt.net>`_ and
+The `manual <http://botan.randombit.net/manual>`_ and
 `Doxygen reference <http://botan.randombit.net/doxygen>`_ for
 the most recent revision is available online.
 

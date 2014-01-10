@@ -1,4 +1,4 @@
-Version 1.11.7, Not Yet Released
+Version 1.11.7, 2014-01-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Botan's basic numeric types are now defined in terms of the

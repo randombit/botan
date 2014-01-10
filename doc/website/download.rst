@@ -30,9 +30,9 @@ are also available.
 Current Development Series (1.11)
 ----------------------------------------
 
-The latest development release is :doc:`relnotes/1_11_6`:
-:tgz:`1.11.6` (:tgz_sig:`sig <1.11.6>`),
-:tbz:`1.11.6` (:tbz_sig:`sig <1.11.6>`)
+The latest development release is :doc:`relnotes/1_11_7`:
+:tgz:`1.11.7` (:tgz_sig:`sig <1.11.7>`),
+:tbz:`1.11.7` (:tbz_sig:`sig <1.11.7>`)
 
 To access the latest unreleased sources, see :doc:`vcs`. A script also
 creates regular snapshots of trunk, which are available `here
@@ -42,3 +42,4 @@ creates regular snapshots of trunk, which are available `here
 
    Versions 1.11.0 and later require a mostly-compliant C++11 compiler
    such as Clang 3.1 or GCC 4.7.
+ 
