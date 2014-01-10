@@ -9,6 +9,7 @@
 ^build.log$
 callgrind.out.*
 ^botan$
+^botan-test$
 ^src/tests/data/ecc/dompar_private.pkcs8.pem$
 ^src/tests/data/ecc/rsa_private.pkcs8.pem$
 ^src/tests/data/ecc/wo_dompar_private.pkcs8.pem$
