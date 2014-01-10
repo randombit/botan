@@ -50,11 +50,16 @@ size_t hash_test(const std::string& algo,
 
 size_t test_hash()
    {
-   std::ifstream vec(TEST_DATA_DIR "/hash.vec");
+   auto test = [](const std::string& input)
+      {
+      std::ifstream vec(input);
 
-   return run_tests_bb(vec, "Hash", "Out", true,
+      return run_tests_bb(vec, "Hash", "Out", true,
              [](std::map<std::string, std::string> m) -> size_t
              {
              return hash_test(m["Hash"], m["In"], m["Out"]);
              });
+      };
+
+   return run_tests_in_dir(TEST_DATA_DIR "hash", test);
    }

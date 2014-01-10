@@ -6,10 +6,12 @@ LANG_FLAGS    = %{lang_flags}
 WARN_FLAGS    = %{warn_flags}
 SO_OBJ_FLAGS  = %{shared_flags}
 LIB_LINKS_TO  = %{link_to}
-APP_LINKS_TO  = $(LIB_LINKS_TO) -lboost_regex -lboost_thread
+APP_LINKS_TO  = $(LIB_LINKS_TO) -lboost_thread
+TEST_LINKS_TO  = $(LIB_LINKS_TO) -lboost_filesystem
 
 LIB_FLAGS    = $(SO_OBJ_FLAGS) $(LANG_FLAGS) $(LIB_OPT) $(WARN_FLAGS)
 APP_FLAGS    = $(LANG_FLAGS) $(APP_OPT) $(WARN_FLAGS)
+TEST_FLAGS   = $(LANG_FLAGS) $(APP_OPT) $(WARN_FLAGS)
 
 # Version Numbers
 VERSION       = %{version}
@@ -44,6 +46,7 @@ RM_R             = @rm -rf
 
 # Targets
 APP           = %{app_prefix}botan
+TEST          = %{app_prefix}botan-test
 LIBRARIES     = $(STATIC_LIB)
 
 LIBNAME       = %{lib_prefix}libbotan
@@ -51,7 +54,7 @@ STATIC_LIB    = $(LIBNAME)-$(BRANCH).a
 
 LIBPATH       = botan-$(BRANCH)
 
-all: $(APP)
+all: $(APP) $(TEST)
 
 # File Lists
 INCLUDE_DIR = %{botan_include_dir}
@@ -60,16 +63,23 @@ LIBOBJS       = %{lib_objs}
 
 APPOBJS     = %{app_objs}
 
+TESTOBJS     = %{test_objs}
+
 # Build Commands
 %{lib_build_cmds}
 
 %{app_build_cmds}
+
+%{test_build_cmds}
 
 # Link Commands
 %{shared_makefile}
 
 $(APP): $(LIBRARIES) $(APPOBJS)
 	$(CXX) $(LDFLAGS) $(APPOBJS) -L. -l$(LIBPATH) $(APP_LINKS_TO) -o $(APP)
+
+$(TEST): $(LIBRARIES) $(TESTOBJS)
+	$(CXX) $(LDFLAGS) $(TESTOBJS) -L. -l$(LIBPATH) $(TEST_LINKS_TO) -o $(TEST)
 
 $(STATIC_LIB): $(LIBOBJS)
 	$(RM) $(STATIC_LIB)

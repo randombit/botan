@@ -1,5 +1,35 @@
 #include "tests.h"
 #include <iostream>
+#include <boost/filesystem.hpp>
+#include <fstream>
+
+namespace fs = boost::filesystem;
+
+std::vector<std::string> list_dir(const std::string& dir_path)
+   {
+   std::vector<std::string> paths;
+
+   fs::recursive_directory_iterator dir(dir_path), end;
+
+   while (dir != end)
+      {
+      if(dir->path().extension().string() == ".vec")
+         paths.push_back(dir->path().string());
+      ++dir;
+      }
+
+   std::sort(paths.begin(), paths.end());
+
+   return paths;
+   }
+
+size_t run_tests_in_dir(const std::string& dir, std::function<size_t (const std::string&)> fn)
+   {
+   size_t fails = 0;
+   for(auto vec: list_dir(dir))
+      fails += fn(vec);
+   return fails;
+   }
 
 size_t run_tests(const std::vector<test_fn>& tests)
    {
@@ -120,15 +150,32 @@ size_t run_tests_bb(std::istream& src,
          }
       }
 
-   if(fixed_name != "" && (algo_count > 0 || algo_fail > 0))
-      test_report(fixed_name, algo_count, algo_fail);
-
    test_count += algo_count;
    test_fails += algo_fail;
 
-   test_report(name_key, test_count, test_fails);
+   if(fixed_name != "" && (algo_count > 0 || algo_fail > 0))
+      test_report(fixed_name, algo_count, algo_fail);
+   else
+      test_report(name_key, test_count, test_fails);
 
    return test_fails;
+   }
+
+size_t run_tests(const std::string& filename,
+                 const std::string& name_key,
+                 const std::string& output_key,
+                 bool clear_between_cb,
+                 std::function<std::string (std::map<std::string, std::string>)> cb)
+   {
+   std::ifstream vec(filename);
+
+   if(!vec)
+      {
+      std::cout << "Failure opening " << filename << "\n";
+      return 1;
+      }
+
+   return run_tests(vec, name_key, output_key, clear_between_cb, cb);
    }
 
 size_t run_tests(std::istream& src,
@@ -151,12 +198,29 @@ size_t run_tests(std::istream& src,
                 });
    }
 
-int test_main(int argc, char* argv[])
+namespace {
+
+int help(char* argv0)
    {
-   //bool verbose = true;
+   std::cout << "Usage: " << argv0 << " [suite]\n";
+   std::cout << "Suites: all (default), block, hash, bigint, rsa, ecdsa, ...\n";
+   return 1;
+   }
+
+}
+
+int main(int argc, char* argv[])
+   {
+   if(argc != 1 && argc != 2)
+      return help(argv[0]);
+
    std::string target = "all";
+
    if(argc == 2)
       target = argv[1];
+
+   if(target == "-h" || target == "--help" || target == "help")
+      return help(argv[0]);
 
    std::vector<test_fn> tests;
 
@@ -165,13 +229,13 @@ int test_main(int argc, char* argv[])
    } while(0)
 
    DEF_TEST(block);
-   DEF_TEST(stream);
-   DEF_TEST(hash);
-   DEF_TEST(mac);
    DEF_TEST(modes);
    DEF_TEST(aead);
    DEF_TEST(ocb);
-   DEF_TEST(eax);
+
+   DEF_TEST(stream);
+   DEF_TEST(hash);
+   DEF_TEST(mac);
    DEF_TEST(pbkdf);
    DEF_TEST(kdf);
    DEF_TEST(hkdf);
@@ -182,6 +246,7 @@ int test_main(int argc, char* argv[])
    DEF_TEST(bcrypt);
    DEF_TEST(cryptobox);
    DEF_TEST(tss);
+
    DEF_TEST(bigint);
 
    DEF_TEST(rsa);
@@ -201,6 +266,12 @@ int test_main(int argc, char* argv[])
    DEF_TEST(cvc);
    DEF_TEST(x509);
    DEF_TEST(tls);
+
+   if(tests.empty())
+      {
+      std::cout << "No tests selected by target " << target << "\n";
+      return 1;
+      }
 
    return run_tests(tests);
    }

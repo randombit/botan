@@ -72,8 +72,9 @@ void Lion::key_schedule(const byte key[], size_t length)
    {
    clear();
 
-   key1.assign(key,                key + (length / 2));
-   key2.assign(key + (length / 2), key + length);
+   const size_t half = length / 2;
+   copy_mem(&key1[0], key, half);
+   copy_mem(&key2[0], key + half, half);
    }
 
 /*
@@ -99,8 +100,8 @@ BlockCipher* Lion::clone() const
 */
 void Lion::clear()
    {
-   zap(key1);
-   zap(key2);
+   zeroise(key1);
+   zeroise(key2);
    hash->clear();
    cipher->clear();
    }

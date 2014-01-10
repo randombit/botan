@@ -30,14 +30,14 @@ size_t ecdsa_sig_kat(const std::string& group_id,
    PK_Verifier verify(ecdsa, padding);
    PK_Signer sign(ecdsa, padding);
 
-   return validate_signature(verify, sign, "DSA/" + hash, msg, nonce, signature);
+   return validate_signature(verify, sign, "DSA/" + hash, msg, rng, nonce, signature);
    }
 
 }
 
 size_t test_ecdsa()
    {
-   std::ifstream ecdsa_sig(TEST_DATA_DIR "/ecdsa.vec");
+   std::ifstream ecdsa_sig(PK_TEST_DATA_DIR "/ecdsa.vec");
 
    size_t fails = 0;
 

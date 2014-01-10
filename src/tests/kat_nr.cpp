@@ -35,14 +35,14 @@ size_t nr_sig_kat(const std::string& p,
    PK_Verifier verify(pubkey, padding);
    PK_Signer sign(privkey, padding);
 
-   return validate_signature(verify, sign, "nr/" + hash, msg, nonce, signature);
+   return validate_signature(verify, sign, "nr/" + hash, msg, rng, nonce, signature);
    }
 
 }
 
 size_t test_nr()
    {
-   std::ifstream nr_sig(TEST_DATA_DIR "/nr.vec");
+   std::ifstream nr_sig(PK_TEST_DATA_DIR "/nr.vec");
 
    size_t fails = 0;
 

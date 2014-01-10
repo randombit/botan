@@ -44,7 +44,7 @@ size_t elgamal_kat(const std::string& p,
 
 size_t test_elgamal()
    {
-   std::ifstream elgamal_enc(TEST_DATA_DIR "/elgamal.vec");
+   std::ifstream elgamal_enc(PK_TEST_DATA_DIR "/elgamal.vec");
 
    size_t fails = 0;
 

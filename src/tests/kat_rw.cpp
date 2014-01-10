@@ -55,8 +55,8 @@ size_t rw_sig_verify(const std::string& e,
 
 size_t test_rw()
    {
-   std::ifstream rw_sig(TEST_DATA_DIR "/rw_sig.vec");
-   std::ifstream rw_verify(TEST_DATA_DIR "/rw_verify.vec");
+   std::ifstream rw_sig(PK_TEST_DATA_DIR "/rw_sig.vec");
+   std::ifstream rw_verify(PK_TEST_DATA_DIR "/rw_verify.vec");
 
    size_t fails = 0;
 

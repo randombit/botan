@@ -45,7 +45,7 @@ size_t dh_sig_kat(const std::string& p,
 
 size_t test_dh()
    {
-   std::ifstream dh_sig(TEST_DATA_DIR "/dh.vec");
+   std::ifstream dh_sig(PK_TEST_DATA_DIR "/dh.vec");
 
    size_t fails = 0;
 

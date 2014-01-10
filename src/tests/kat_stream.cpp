@@ -61,11 +61,16 @@ size_t stream_test(const std::string& algo,
 
 size_t test_stream()
    {
-   std::ifstream vec(TEST_DATA_DIR "/stream.vec");
+   auto test = [](const std::string& input)
+      {
+      std::ifstream vec(input);
 
-   return run_tests_bb(vec, "StreamCipher", "Out", true,
+      return run_tests_bb(vec, "StreamCipher", "Out", true,
              [](std::map<std::string, std::string> m) -> size_t
              {
              return stream_test(m["StreamCipher"], m["Key"], m["In"], m["Out"], m["Nonce"]);
              });
+      };
+
+   return run_tests_in_dir(TEST_DATA_DIR "/stream", test);
    }

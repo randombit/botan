@@ -62,7 +62,7 @@ size_t dlies_kat(const std::string& p,
 
 size_t test_dlies()
    {
-   std::ifstream dlies(TEST_DATA_DIR "/dlies.vec");
+   std::ifstream dlies(PK_TEST_DATA_DIR "/dlies.vec");
 
    size_t fails = 0;
 

@@ -7,37 +7,24 @@
 
 using namespace Botan;
 
-namespace {
-
-secure_vector<byte> kdf(const std::string& algo,
-                        size_t outlen,
-                        const secure_vector<byte>& secret,
-                        const secure_vector<byte>& salt)
-   {
-   std::unique_ptr<KDF> kdf(get_kdf(algo));
-   return kdf->derive_key(outlen, secret, salt);
-   }
-
-std::string kdf_test(const std::string& algo,
-                     size_t outlen,
-                     const std::string& secret,
-                     const std::string& salt)
-   {
-   return hex_encode(kdf(algo, outlen,
-                         hex_decode_locked(secret),
-                         hex_decode_locked(salt)));
-   }
-
-}
-
 size_t test_kdf()
    {
-   std::ifstream vec(TEST_DATA_DIR "/kdf.vec");
-
-   return run_tests(vec, "KDF", "Output", true,
-             [](std::map<std::string, std::string> m)
+   auto test = [](const std::string& input)
+      {
+      return run_tests(input, "KDF", "Output", true,
+             [](std::map<std::string, std::string> vec)
              {
-             return kdf_test(m["KDF"], to_u32bit(m["OutputLen"]),
-                             m["Secret"], m["Salt"]);
+             std::unique_ptr<KDF> kdf(get_kdf(vec["KDF"]));
+
+             const size_t outlen = to_u32bit(vec["OutputLen"]);
+             const auto salt = hex_decode(vec["Salt"]);
+             const auto secret = hex_decode(vec["Secret"]);
+
+             const auto key = kdf->derive_key(outlen, secret, salt);
+
+             return hex_encode(key);
              });
+      };
+
+   return run_tests_in_dir(TEST_DATA_DIR "kdf", test);
    }

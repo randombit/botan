@@ -10,17 +10,20 @@ using namespace Botan;
 
 namespace {
 
-secure_vector<byte> hkdf(const std::string& algo,
+secure_vector<byte> hkdf(const std::string& hkdf_algo,
                          const secure_vector<byte>& ikm,
                          const secure_vector<byte>& salt,
                          const secure_vector<byte>& info,
                          size_t L)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
+
+   const std::string algo = hkdf_algo.substr(5, hkdf_algo.size()-6);
+
    const MessageAuthenticationCode* mac_proto = af.prototype_mac("HMAC(" + algo + ")");
 
    if(!mac_proto)
-      throw std::invalid_argument("Bad HKDF hash " + algo);
+      throw std::invalid_argument("Bad HKDF hash '" + algo + "'");
 
    HKDF hkdf(mac_proto->clone(), mac_proto->clone());
 
@@ -61,13 +64,12 @@ size_t hkdf_test(const std::string& algo,
 
 size_t test_hkdf()
    {
-   // From RFC 5869
    std::ifstream vec(TEST_DATA_DIR "/hkdf.vec");
 
    return run_tests_bb(vec, "HKDF", "OKM", true,
              [](std::map<std::string, std::string> m) -> size_t
              {
-             return hkdf_test(m["Hash"], m["IKM"], m["salt"], m["info"],
+             return hkdf_test(m["HKDF"], m["IKM"], m["salt"], m["info"],
                               m["OKM"], to_u32bit(m["L"]));
              });
    }

@@ -42,17 +42,18 @@ AEAD_Mode* get_aead(const std::string& algo_spec, Cipher_Dir direction)
       return nullptr;
 
    const std::string cipher_name = algo_parts[0];
+   const BlockCipher* cipher = af.prototype_block_cipher(cipher_name);
+   if(!cipher)
+      return nullptr;
+
    const std::vector<std::string> mode_info = parse_algorithm_name(algo_parts[1]);
 
    if(mode_info.empty())
       return nullptr;
 
    const std::string mode_name = mode_info[0];
-   const size_t tag_size = (mode_info.size() > 1) ? to_u32bit(mode_info[1]) : 16;
 
-   const BlockCipher* cipher = af.prototype_block_cipher(cipher_name);
-   if(!cipher)
-      return nullptr;
+   const size_t tag_size = (mode_info.size() > 1) ? to_u32bit(mode_info[1]) : cipher->block_size();
 
 #if defined(BOTAN_HAS_AEAD_CCM)
    if(mode_name == "CCM-8")

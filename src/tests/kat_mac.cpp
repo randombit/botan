@@ -52,11 +52,16 @@ size_t mac_test(const std::string& algo,
 
 size_t test_mac()
    {
-   std::ifstream vec(TEST_DATA_DIR "/mac.vec");
+   auto test = [](const std::string& input)
+      {
+      std::ifstream vec(input);
 
-   return run_tests_bb(vec, "Mac", "Out", true,
+      return run_tests_bb(vec, "Mac", "Out", true,
              [](std::map<std::string, std::string> m) -> size_t
              {
              return mac_test(m["Mac"], m["Key"], m["In"], m["Out"]);
              });
+      };
+
+   return run_tests_in_dir(TEST_DATA_DIR "mac", test);
    }

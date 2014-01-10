@@ -118,6 +118,7 @@ class BuildConfigurationInformation(object):
         self.obj_dir = os.path.join(self.build_dir, 'obj')
         self.appobj_dir = os.path.join(self.obj_dir, 'app')
         self.libobj_dir = os.path.join(self.obj_dir, 'lib')
+        self.testobj_dir = os.path.join(self.obj_dir, 'test')
 
         self.doc_output_dir = os.path.join(self.build_dir, 'docs')
 
@@ -139,17 +140,16 @@ class BuildConfigurationInformation(object):
 
         self.apps_dir = os.path.join(options.base_dir, 'src')
 
-        def find_sources_in(basedir, srcdirs):
-            for srcdir in srcdirs:
-                for (dirpath, dirnames, filenames) in os.walk(os.path.join(basedir, srcdir)):
-                    for filename in filenames:
-                        if filename.endswith('.cpp'):
-                            yield os.path.join(dirpath, filename)
+        def find_sources_in(basedir, srcdir):
+            for (dirpath, dirnames, filenames) in os.walk(os.path.join(basedir, srcdir)):
+                for filename in filenames:
+                    if filename.endswith('.cpp'):
+                        yield os.path.join(dirpath, filename)
 
-        self.app_sources = [os.path.join(self.apps_dir, 'main.cpp')] + \
-                           list(find_sources_in(self.apps_dir, ['apps', 'tests']))
 
-        self.python_sources = list(find_sources_in(self.apps_dir, ['python']))
+        self.app_sources = list(find_sources_in(self.apps_dir, 'cmd'))
+        self.test_sources = list(find_sources_in(self.apps_dir, 'tests'))
+        self.python_sources = list(find_sources_in(self.apps_dir, 'python'))
 
         self.boost_python = options.boost_python
         self.python_dir = os.path.join(options.src_dir, 'python')
@@ -171,8 +171,9 @@ class BuildConfigurationInformation(object):
         self.build_doc_commands = '\n'.join(['\t' + s for s in build_doc_commands()])
 
         def build_dirs():
-            yield self.appobj_dir
             yield self.libobj_dir
+            yield self.appobj_dir
+            yield self.testobj_dir
             yield self.botan_include_dir
             yield self.internal_include_dir
             yield os.path.join(self.doc_output_dir, 'manual')
@@ -1206,6 +1207,10 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
             objectfile_list(build_config.app_sources,
                             build_config.appobj_dir)),
 
+        'test_objs': makefile_list(
+            objectfile_list(build_config.test_sources,
+                            build_config.testobj_dir)),
+
         'lib_build_cmds': '\n'.join(
             build_commands(build_config.build_sources,
                            build_config.libobj_dir, 'LIB')),
@@ -1213,6 +1218,10 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'app_build_cmds': '\n'.join(
             build_commands(build_config.app_sources,
                            build_config.appobj_dir, 'APP')),
+
+        'test_build_cmds': '\n'.join(
+            build_commands(build_config.test_sources,
+                           build_config.testobj_dir, 'TEST')),
 
         'python_obj_dir': build_config.pyobject_dir,
 

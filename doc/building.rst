@@ -32,10 +32,8 @@ Configuring the Build
 
 The first step is to run ``configure.py``, which is a Python script
 that creates various directories, config files, and a Makefile for
-building everything. The script requires at least Python 2.5; any
-later version of Python 2.x should also work. Python 3.1 will also
-work but requires an extra step; see :ref:`configure_with_python3` for
-details.
+building everything. This script should run under a vanilla install of
+Python 2.6, 2.7, or 3.x.
 
 The script will attempt to guess what kind of system you are trying to
 compile for (and will print messages telling you what it guessed).
@@ -54,10 +52,11 @@ system, and use that. It will print a display at the end showing which
 algorithms have and have not been enabled. For instance on one system
 we might see lines like::
 
-   INFO: Skipping, by request only - bzip2 gnump openssl qt_mutex zlib
-   INFO: Skipping, incompatible CPU - aes_intel aes_ssse3 asm_x86_64 mp_asm64 mp_x86_64 sha1_x86_64
-   INFO: Skipping, incompatible OS - beos_stats cryptoapi_rng win32_crit_section win32_stats
-   INFO: Skipping, incompatible compiler - mp_msvc64 mp_x86_32_msvc
+   INFO: Skipping, by request only - bzip2 cvc gnump lzma openssl sqlite3 zlib
+   INFO: Skipping, dependency failure - sessions_sqlite
+   INFO: Skipping, incompatible CPU - asm_x86_32 md4_x86_32 md5_x86_32 mp_x86_32 serpent_x86_32 sha1_x86_32
+   INFO: Skipping, incompatible OS - beos_stats cryptoapi_rng win32_stats
+   INFO: Skipping, incompatible compiler - mp_x86_32_msvc
 
 The ones that are skipped because they are 'by request only' have to
 be explicitly asked for, because they rely on third party libraries
@@ -89,11 +88,11 @@ The script tries to guess what kind of makefile to generate, and it
 almost always guesses correctly (basically, Visual C++ uses NMAKE with
 Windows commands, and everything else uses Unix make with POSIX
 commands). Just in case, you can override it with
-``--make-style=somestyle``. The styles Botan currently knows about are
-'unix' (normal Unix makefiles), and 'nmake', the make variant commonly
-used by Windows compilers. To add a new variant (eg, a build script
-for VMS), you will need to create a new template file in
-``src/build-data/makefile``.
+``--make-style=X``. The styles Botan currently knows about are 'gmake'
+(GNU make and possibly some other Unix makes), and 'nmake', the make
+variant commonly used by Microsoft compilers. To add a new variant
+(eg, a build script for VMS), you will need to create a new template
+file in ``src/build-data/makefile``.
 
 On Unix
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -102,27 +101,33 @@ The basic build procedure on Unix and Unix-like systems is::
 
    $ ./configure.py [--enable-modules=<list>] [--cc=CC]
    $ make
-   # You may need to set your LD_LIBRARY_PATH or equivalent for ./check to run
-   $ make check # optional, but a good idea
+   $ ./botan test
+
+If that fails with an error about not being able to find libbotan.so,
+you may need to set ``LD_LIBRARY_PATH``:
+
+   $ LD_LIBRARY_PATH=. ./botan test
+
+If the tests look OK, install:
+
    $ make install
 
-On Unix systems the script will default to using GCC; use
-``--cc`` if you want something else. For instance use
-``--cc=icc`` for Intel C++ and ``--cc=clang`` for Clang.
+On Unix systems the script will default to using GCC; use ``--cc`` if
+you want something else. For instance use ``--cc=icc`` for Intel C++
+and ``--cc=clang`` for Clang.
 
-The ``make install`` target has a default directory in which it
-will install Botan (typically ``/usr/local``). You can override
-this by using the ``--prefix`` argument to
-``configure.py``, like so:
+The ``make install`` target has a default directory in which it will
+install Botan (typically ``/usr/local``). You can override this by
+using the ``--prefix`` argument to ``configure.py``, like so:
 
 ``./configure.py --prefix=/opt <other arguments>``
 
 On some systems shared libraries might not be immediately visible to
 the runtime linker. For example, on Linux you may have to edit
-``/etc/ld.so.conf`` and run ``ldconfig`` (as root) in
-order for new shared libraries to be picked up by the linker. An
-alternative is to set your ``LD_LIBRARY_PATH`` shell variable
-to include the directory that the Botan libraries were installed into.
+``/etc/ld.so.conf`` and run ``ldconfig`` (as root) in order for new
+shared libraries to be picked up by the linker. An alternative is to
+set your ``LD_LIBRARY_PATH`` shell variable to include the directory
+that the Botan libraries were installed into.
 
 On Mac OS X
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -157,7 +162,7 @@ shell), and run::
 
    > python configure.py --cc=msvc (or --cc=gcc for MinGW) [--cpu=CPU]
    > nmake
-   > nmake check # optional, but recommended
+   > botan.exe test
    > nmake install
 
 For Win95 pre OSR2, the ``cryptoapi_rng`` module will not work,
@@ -182,11 +187,10 @@ For iOS using XCode
 
 To cross compile for iOS, configure with::
 
-  $ ./configure.py --cpu=armv7 --cc=clang --cc-bin="clang++ -arch armv7 -arch armv7s --sysroot=$(IOS_SYSROOT)"
+  $ ./configure.py --cpu=armv7 --cc=clang --cc-abi-flags="-arch armv7 -arch armv7s --sysroot=$(IOS_SYSROOT)"
 
-Along with any additional configuration arguments. Using
-``--no-autoload`` might be helpful as can substantially reduce code
-size.
+Along with any additional configuration arguments. Using ``--no-autoload``
+might be helpful as can substantially reduce code size.
 
 Edit the makefile and change AR (around line 30) to::
 
@@ -290,33 +294,9 @@ by the user using
 Multiple Builds
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-It may be useful to run multiple builds with different
-configurations. Specify ``--build-dir=<dir>`` to set up a build
-environment in a different directory.
-
-.. _configure_with_python3:
-
-Configuring the Build With Python 3.1
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The versions of Python beginning with 3 are (intentionally)
-incompatible with the (currently more common) 2.x series. If you want
-to use Python 3.1 to set up the build, you'll have to use the
-``2to3`` program (included in the Python distribution) on the
-script; this will convert the script to the Python 3.x dialect::
-
-  $ python ./configure.py
-  File "configure.py", line 860
-    except KeyError, e:
-                   ^
-  SyntaxError: invalid syntax
-  $ # incompatible python version, let's fix it
-  $ 2to3 -w configure.py
-  [...]
-  RefactoringTool: Files that were modified:
-  RefactoringTool: configure.py
-  $ python ./configure.py
-  [...]
+It may be useful to run multiple builds with different configurations.
+Specify ``--build-dir=<dir>`` to set up a build environment in a
+different directory.
 
 Setting Distribution Info
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

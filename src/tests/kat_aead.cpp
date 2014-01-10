@@ -10,64 +10,108 @@ using namespace Botan;
 
 namespace {
 
-secure_vector<byte> aead(const std::string& algo,
-                         Cipher_Dir dir,
-                         const secure_vector<byte>& pt,
-                         const secure_vector<byte>& nonce,
-                         const secure_vector<byte>& ad,
-                         const secure_vector<byte>& key)
-   {
-   std::unique_ptr<AEAD_Mode> aead(get_aead(algo, dir));
-
-   aead->set_key(key);
-   aead->set_associated_data_vec(ad);
-   aead->start_vec(nonce);
-
-   secure_vector<byte> ct = pt;
-   aead->finish(ct);
-
-   return ct;
-   }
-
 size_t aead_test(const std::string& algo,
-                 const std::string& pt,
-                 const std::string& ct,
+                 const std::string& input,
+                 const std::string& expected,
                  const std::string& nonce_hex,
                  const std::string& ad_hex,
                  const std::string& key_hex)
    {
-   auto nonce = hex_decode_locked(nonce_hex);
-   auto ad = hex_decode_locked(ad_hex);
-   auto key = hex_decode_locked(key_hex);
+   const auto nonce = hex_decode_locked(nonce_hex);
+   const auto ad = hex_decode_locked(ad_hex);
+   const auto key = hex_decode_locked(key_hex);
+
+   std::unique_ptr<Cipher_Mode> enc(get_aead(algo, ENCRYPTION));
+   std::unique_ptr<Cipher_Mode> dec(get_aead(algo, DECRYPTION));
+
+   enc->set_key(key);
+   dec->set_key(key);
+
+   if(auto aead_enc = dynamic_cast<AEAD_Mode*>(enc.get()))
+      aead_enc->set_associated_data_vec(ad);
+   if(auto aead_dec = dynamic_cast<AEAD_Mode*>(dec.get()))
+      aead_dec->set_associated_data_vec(ad);
 
    size_t fail = 0;
 
-   //std::cout << algo << " pt=" << pt << " ct=" << ct << " key=" << key_hex << " nonce=" << nonce_hex << " ad=" << ad_hex << "\n";
+   const auto pt = hex_decode_locked(input);
+   const auto expected_ct = hex_decode_locked(expected);
 
-   const std::string ct2 = hex_encode(aead(algo,
-                                           ENCRYPTION,
-                                           hex_decode_locked(pt),
-                                           nonce,
-                                           ad,
-                                           key));
+   auto vec = pt;
+   enc->start_vec(nonce);
+   // should first update if possible
+   enc->finish(vec);
 
-   if(ct != ct2)
+   if(vec != expected_ct)
       {
-      std::cout << algo << " got ct " << ct2 << " expected " << ct << "\n";
+      std::cout << algo << " got ct " << hex_encode(vec) << " expected " << expected << "\n";
+      std::cout << algo << "\n";
       ++fail;
       }
 
-   const std::string pt2 = hex_encode(aead(algo,
-                                           DECRYPTION,
-                                           hex_decode_locked(ct2),
-                                           nonce,
-                                           ad,
-                                           key));
+   vec = expected_ct;
 
-   if(pt != pt2)
+   dec->start_vec(nonce);
+   dec->finish(vec);
+
+   if(vec != pt)
       {
-      std::cout << algo << " got pt " << pt2 << " expected " << pt << "\n";
+      std::cout << algo << " got pt " << hex_encode(vec) << " expected " << input << "\n";
       ++fail;
+      }
+
+   if(enc->authenticated())
+      {
+      vec = expected_ct;
+      vec[0] ^= 1;
+      dec->start_vec(nonce);
+      try
+         {
+         dec->finish(vec);
+         std::cout << algo << " accepted message with modified message\n";
+         ++fail;
+         }
+      catch(...) {}
+
+      if(nonce.size())
+         {
+         auto bad_nonce = nonce;
+         bad_nonce[0] ^= 1;
+         vec = expected_ct;
+
+         dec->start_vec(bad_nonce);
+
+         try
+            {
+            dec->finish(vec);
+            std::cout << algo << " accepted message with modified nonce\n";
+            ++fail;
+            }
+         catch(...) {}
+         }
+
+      if(auto aead_dec = dynamic_cast<AEAD_Mode*>(dec.get()))
+         {
+         auto bad_ad = ad;
+
+         if(ad.size())
+            bad_ad[0] ^= 1;
+         else
+            bad_ad.push_back(0);
+
+         aead_dec->set_associated_data_vec(bad_ad);
+
+         vec = expected_ct;
+         dec->start_vec(nonce);
+
+         try
+            {
+            dec->finish(vec);
+            std::cout << algo << " accepted message with modified AD\n";
+            ++fail;
+            }
+         catch(...) {}
+         }
       }
 
    return fail;
@@ -77,12 +121,17 @@ size_t aead_test(const std::string& algo,
 
 size_t test_aead()
    {
-   std::ifstream vec(TEST_DATA_DIR "/aead.vec");
+   auto test = [](const std::string& input)
+      {
+      std::ifstream vec(input);
 
-   return run_tests_bb(vec, "AEAD", "Out", true,
+      return run_tests_bb(vec, "AEAD", "Out", true,
              [](std::map<std::string, std::string> m)
              {
              return aead_test(m["AEAD"], m["In"], m["Out"],
                               m["Nonce"], m["AD"], m["Key"]);
              });
+      };
+
+   return run_tests_in_dir(TEST_DATA_DIR "aead", test);
    }

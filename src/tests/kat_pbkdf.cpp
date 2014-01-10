@@ -7,42 +7,26 @@
 
 using namespace Botan;
 
-namespace {
-
-secure_vector<byte> pbkdf(const std::string& algo,
-                          const std::string& pass,
-                          const secure_vector<byte>& salt,
-                          size_t iterations, size_t outlen)
-   {
-   std::unique_ptr<PBKDF> pbkdf(get_pbkdf(algo));
-   return pbkdf->derive_key(outlen, pass,
-                            &salt[0], salt.size(),
-                            iterations).bits_of();
-   }
-
-std::string pbkdf_test(const std::string& algo,
-                       const std::string& pass,
-                       const std::string& salt,
-                       size_t iterations,
-                       size_t outlen)
-   {
-   return hex_encode(pbkdf(algo,
-                           pass,
-                           hex_decode_locked(salt),
-                           iterations,
-                           outlen));
-   }
-
-}
-
 size_t test_pbkdf()
    {
-   std::ifstream vec(TEST_DATA_DIR "/pbkdf.vec");
-
-   return run_tests(vec, "PBKDF", "Output", true,
-             [](std::map<std::string, std::string> m)
+   auto test = [](const std::string& input)
+      {
+      return run_tests(input, "PBKDF", "Output", true,
+             [](std::map<std::string, std::string> vec)
              {
-             return pbkdf_test(m["PBKDF"], m["Passphrase"], m["Salt"],
-                               to_u32bit(m["Iterations"]), to_u32bit(m["OutputLen"]));
+             std::unique_ptr<PBKDF> pbkdf(get_pbkdf(vec["PBKDF"]));
+
+             const size_t iterations = to_u32bit(vec["Iterations"]);
+             const size_t outlen = to_u32bit(vec["OutputLen"]);
+             const auto salt = hex_decode(vec["Salt"]);
+             const std::string pass = vec["Passphrase"];
+
+             const auto key = pbkdf->derive_key(outlen, pass,
+                                                &salt[0], salt.size(),
+                                                iterations).bits_of();
+             return hex_encode(key);
              });
+      };
+
+   return run_tests_in_dir(TEST_DATA_DIR "pbkdf", test);
    }

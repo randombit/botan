@@ -220,20 +220,25 @@ The most common stumbling block is a compiler that is buggy or can't
 handle modern C++ (specifically, C++98). Check out the :doc:`build log
 <build_log>` for a sense of which platforms are actively being tested.
 
-Versions 1.11.0 and higher require a C++11 compiler. GCC 4.7.0 and
-Clang 3.1 are known to work well.
+Versions 1.11.0 and higher require a C++11 compiler as well as various
+Boost libraries (especially filesystem but also asio and regex). GCC
+4.7.0 and Clang 3.1 are known to work well.
 
 I'm not feeling this, what can I use instead?
 ------------------------------------------------------------
 
-* `Crypto++ <http://www.cryptopp.com/>`_ is another C++ crypto
-  library. Its API is more heavily based on templates and in general
-  has a very different design philosophy from botan - so if you feel
-  botan's API is not a good match, you may well like Crypto++.
+* `NaCl <http://nacl.cr.yp.to/>`_ (and portable derivatives such as
+  `libsodium <https://github.com/jedisct1/libsodium>`_) provide a
+  small selection of algorithms for ECC key exchange (Curve25519) and
+  message encryption and authentication (XSalsa20+Poly1305) carefully
+  implemented for performance and side channel security. It is an
+  excellent choice if you do not need compatability with any other
+  software.
 
 * `OpenSSL <http://www.openssl.org>`_ is written in C and mostly
   targeted to being an SSL/TLS implementation but there is a lot of
   other stuff in there as well.
 
-* `Adam Shostack <http://www.homeport.org/~adam/crypto/>`_ maintains a
-  (somewhat out of date) list of open source crypto libraries.
+* `Crypto++ <http://www.cryptopp.com/>`_ is a C++ crypto library. Its
+  API is quite different from botans, and it offers a number of
+  algorithms botan does not (such as MQV).

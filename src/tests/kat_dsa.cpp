@@ -35,14 +35,14 @@ size_t dsa_sig_kat(const std::string& p,
    PK_Verifier verify(pubkey, padding);
    PK_Signer sign(privkey, padding);
 
-   return validate_signature(verify, sign, "DSA/" + hash, msg, nonce, signature);
+   return validate_signature(verify, sign, "DSA/" + hash, msg, rng, nonce, signature);
    }
 
 }
 
 size_t test_dsa()
    {
-   std::ifstream dsa_sig(TEST_DATA_DIR "/dsa.vec");
+   std::ifstream dsa_sig(PK_TEST_DATA_DIR "/dsa.vec");
 
    size_t fails = 0;
 

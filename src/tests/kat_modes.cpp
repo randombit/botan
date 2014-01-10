@@ -77,11 +77,16 @@ size_t mode_test(const std::string& algo,
 
 size_t test_modes()
    {
-   std::ifstream vec(TEST_DATA_DIR "/modes.vec");
+   auto test = [](const std::string& input)
+      {
+      std::ifstream vec(input);
 
-   return run_tests_bb(vec, "Mode", "Out", true,
+      return run_tests_bb(vec, "Mode", "Out", true,
              [](std::map<std::string, std::string> m)
              {
              return mode_test(m["Mode"], m["In"], m["Out"], m["Key"], m["Nonce"]);
              });
+      };
+
+   return run_tests_in_dir(TEST_DATA_DIR "modes", test);
    }

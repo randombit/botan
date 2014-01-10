@@ -45,9 +45,8 @@ size_t block_test(const std::string& algo,
          {
          std::cout << algo << " " << provider << " enc " << hex_encode(buf) << " != " << out_hex << "\n";
          ++fails;
+         buf = ct;
          }
-
-      buf = ct;
 
       cipher->decrypt(buf);
 
@@ -65,11 +64,16 @@ size_t block_test(const std::string& algo,
 
 size_t test_block()
    {
-   std::ifstream vec(TEST_DATA_DIR "/block.vec");
+   auto test_bc = [](const std::string& input)
+      {
+      std::ifstream vec(input);
 
-   return run_tests_bb(vec, "BlockCipher", "Out", true,
-             [](std::map<std::string, std::string> m) -> size_t
-             {
-             return block_test(m["BlockCipher"], m["Key"], m["In"], m["Out"]);
-             });
+      return run_tests_bb(vec, "BlockCipher", "Out", true,
+                          [](std::map<std::string, std::string> m) -> size_t
+                          {
+                          return block_test(m["BlockCipher"], m["Key"], m["In"], m["Out"]);
+                          });
+      };
+
+   return run_tests_in_dir(TEST_DATA_DIR "block", test_bc);
    }

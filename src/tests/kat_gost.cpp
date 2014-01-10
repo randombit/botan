@@ -40,7 +40,7 @@ size_t gost_verify(const std::string& group_id,
 
 size_t test_gost_3410()
    {
-   std::ifstream ecdsa_sig(TEST_DATA_DIR "/gost.vec");
+   std::ifstream ecdsa_sig(PK_TEST_DATA_DIR "/gost_3410.vec");
 
    size_t fails = 0;
 
