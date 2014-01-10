@@ -96,7 +96,7 @@ docs:
 
 clean:
 	$(RM_R) %{build_dir}/lib/* %{build_dir}/tests/*
-	$(RM) $(LIBRARIES) $(SYMLINK) $(SONAME) $(APP)
+	$(RM) $(LIBRARIES) $(SYMLINK) $(SONAME) $(APP) $(TEST)
 
 distclean: clean
 	$(RM_R) %{build_dir}

@@ -79,7 +79,7 @@ docs:
 clean:
 	$(RM) %{build_dir}\lib\* %{build_dir}\tests\*
 	$(RM) *.manifest *.exp *.dll
-	$(RM) $(LIBRARIES) $(APP)
+	$(RM) $(LIBRARIES) $(APP) $(TEST)
 
 distclean: clean
 	$(RM_R) %{build_dir}
