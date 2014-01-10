@@ -17,11 +17,6 @@ Version 1.11.7, Not Yet Released
   functionality. Contributions of new subcommands, new bling for
   exising ones, or documentation in any form is welcome.
 
-* The internal directory structure has changed. Now all sources that
-  are built into libbotan are in the new directory `lib`, with `src`
-  containing all other sources such as the command line tool and build
-  scripts.
-
 * Fix a bug in Lion, which was broken by a change in 1.11.0. The
   problem was not noticed before as Lion was also missing a test vector
   in previous releases.

@@ -1031,9 +1031,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
                 # Handle src/X/X.cpp -> X.o
                 if file == parts[-1] + '.cpp':
-                    name = '_'.join(dir.split(os.sep)[1:]) + '.cpp'
+                    name = '_'.join(dir.split(os.sep)[2:]) + '.cpp'
                 else:
-                    name = '_'.join(dir.split(os.sep)[1:]) + '_' + file
+                    name = '_'.join(dir.split(os.sep)[2:]) + '_' + file
 
                 # Special case hack cause I'm lazy
                 name = name.replace('tls_tls_', 'tls_')
@@ -1765,7 +1765,7 @@ def main(argv = None):
 
     options.base_dir = os.path.dirname(argv[0])
     options.src_dir = os.path.join(options.base_dir, 'src')
-    options.lib_dir = os.path.join(options.base_dir, 'lib')
+    options.lib_dir = os.path.join(options.src_dir, 'lib')
 
     options.build_data = os.path.join(options.src_dir, 'build-data')
     options.makefile_dir = os.path.join(options.build_data, 'makefile')
