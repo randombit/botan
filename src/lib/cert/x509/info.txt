@@ -3,6 +3,7 @@ define OCSP 20131128
 
 <requires>
 datastor
+http_util
 </requires>
 
 <libs>

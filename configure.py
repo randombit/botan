@@ -5,7 +5,7 @@ Configuration program for botan (http://botan.randombit.net/)
   (C) 2009,2010,2011,2012,2013,2014 Jack Lloyd
   Distributed under the terms of the Botan license
 
-Tested with CPython 2.6, 2.7, 3.2 and PyPy 1.5
+Tested with CPython 2.6, 2.7, 3.2, 3.3 and PyPy 1.5
 
 Python 2.5 works if you change the exception catching syntax:
    perl -pi -e 's/except (.*) as (.*):/except $1, $2:/g' configure.py
@@ -138,7 +138,8 @@ class BuildConfigurationInformation(object):
 
         self.public_headers = sorted(flatten([m.public_headers() for m in modules]))
 
-        self.apps_dir = os.path.join(options.base_dir, 'src')
+        self.doc_dir = os.path.join(options.base_dir, 'doc')
+        self.src_dir = os.path.join(options.base_dir, 'src')
 
         def find_sources_in(basedir, srcdir):
             for (dirpath, dirnames, filenames) in os.walk(os.path.join(basedir, srcdir)):
@@ -147,23 +148,36 @@ class BuildConfigurationInformation(object):
                         yield os.path.join(dirpath, filename)
 
 
-        self.app_sources = list(find_sources_in(self.apps_dir, 'cmd'))
-        self.test_sources = list(find_sources_in(self.apps_dir, 'tests'))
-        self.python_sources = list(find_sources_in(self.apps_dir, 'python'))
+        self.app_sources = list(find_sources_in(self.src_dir, 'cmd'))
+        self.test_sources = list(find_sources_in(self.src_dir, 'tests'))
+        self.python_sources = list(find_sources_in(self.src_dir, 'python'))
 
         self.boost_python = options.boost_python
         self.python_dir = os.path.join(options.src_dir, 'python')
         self.pyobject_dir = os.path.join(self.build_dir, 'python')
 
-        self.manual_dir = os.path.join(self. doc_output_dir, 'manual')
-
         def build_doc_commands():
-            if options.with_sphinx:
-                sphinx_config_dir = os.path.join(options.build_data, 'sphinx')
-                yield 'sphinx-build -c %s $(SPHINX_OPTS) -b html doc %s' % (
-                    sphinx_config_dir, self.manual_dir)
-            else:
-                yield '$(COPY) doc/*.rst %s' % (self.manual_dir)
+
+            def get_doc_cmd():
+                if options.with_sphinx:
+                    sphinx = 'sphinx-build -c $(SPHINX_CONFIG) $(SPHINX_OPTS) '
+                    if options.quiet:
+                        sphinx += '-q '
+                    sphinx += '%s %s'
+                    return sphinx
+                else:
+                    return '$(COPY) %s/*.rst %s'
+
+            doc_cmd = get_doc_cmd()
+
+            def cmd_for(src):
+                return doc_cmd % (os.path.join(self.doc_dir, src),
+                                  os.path.join(self.doc_output_dir, src))
+
+            yield cmd_for('manual')
+
+            if options.build_relnotes:
+                yield cmd_for('relnotes')
 
             if options.with_doxygen:
                 yield 'doxygen %s/botan.doxy' % (self.build_dir)
@@ -177,6 +191,10 @@ class BuildConfigurationInformation(object):
             yield self.botan_include_dir
             yield self.internal_include_dir
             yield os.path.join(self.doc_output_dir, 'manual')
+
+            if options.build_relnotes:
+                yield os.path.join(self.doc_output_dir, 'relnotes')
+
             if options.with_doxygen:
                 yield os.path.join(self.doc_output_dir, 'doxygen')
 
@@ -315,6 +333,9 @@ def process_command_line(args):
     build_group.add_option('--with-sphinx', action='store_true',
                            default=None,
                            help='Use Sphinx to generate HTML manual')
+
+    build_group.add_option('--build-relnotes', action='store_true', default=False,
+                           help='Use Sphinx to produce HTML release notes')
 
     build_group.add_option('--without-sphinx', action='store_false',
                            dest='with_sphinx', help=optparse.SUPPRESS_HELP)
@@ -997,6 +1018,8 @@ def process_template(template_file, variables):
         return template.substitute(variables)
     except KeyError as e:
         raise Exception('Unbound var %s in template %s' % (e, template_file))
+    except Exception as e:
+        raise Exception('Exception %s in template %s' % (e, template_file))
 
 """
 Create the template variables needed to process the makefile, build.h, etc
@@ -1026,7 +1049,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         for src in sources:
             (dir,file) = os.path.split(os.path.normpath(src))
 
-            parts = dir.split(os.sep)[1:]
+            parts = dir.split(os.sep)[2:]
             if parts != []:
 
                 # Handle src/X/X.cpp -> X.o
@@ -1141,6 +1164,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'version_datestamp': build_config.version_datestamp,
 
+        'src_dir': build_config.src_dir,
+        'doc_dir': build_config.doc_dir,
+
         'timestamp': build_config.timestamp(),
         'user':      build_config.username(),
         'hostname':  build_config.hostname(),
@@ -1161,6 +1187,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'build_doc_commands': build_config.build_doc_commands,
 
         'python_dir': build_config.python_dir,
+        'sphinx_config_dir': os.path.join(options.build_data, 'sphinx'),
 
         'os': options.os,
         'arch': options.arch,
@@ -1257,15 +1284,18 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'python_version': options.python_version
         }
 
+    vars["header_in"] = process_template('src/build-data/makefile/header.in', vars)
+    vars["commands_in"] = process_template('src/build-data/makefile/commands.in', vars)
+
     if options.build_shared_lib:
-        vars["shared_makefile"] = process_template('src/build-data/makefile/shared.in', vars)
+        vars["dso_in"] = process_template('src/build-data/makefile/dso.in', vars)
     else:
-        vars["shared_makefile"] = ""
+        vars["dso_in"] = ""
 
     if options.boost_python:
-        vars["python_makefile"] = process_template('src/build-data/makefile/python.in', vars)
+        vars["python_in"] = process_template('src/build-data/makefile/python.in', vars)
     else:
-        vars["python_makefile"] = ""
+        vars["python_in"] = ""
 
     return vars
 

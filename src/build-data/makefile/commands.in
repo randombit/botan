@@ -1,0 +1,14 @@
+# Program aliases
+AR               = %{ar_command}
+COPY             = cp
+COPY_R           = cp -r
+CD               = @cd
+ECHO             = @echo
+INSTALL_CMD_EXEC = %{install_cmd_exec}
+INSTALL_CMD_DATA = %{install_cmd_data}
+LN               = ln -fs
+MKDIR            = @mkdir
+MKDIR_INSTALL    = @umask 022; mkdir -p -m 755
+RANLIB           = %{ranlib_command}
+RM               = @rm -f
+RM_R             = @rm -rf

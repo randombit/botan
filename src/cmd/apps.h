@@ -7,7 +7,10 @@
 
 using namespace Botan;
 
-int apps_main(const std::string& cmd, int argc, char* argv[]);
+int unimplemented(int argc, char* argv[], const char* what);
+
+#define UNIMPLEMENTED(main, prob) \
+   int main(int argc, char* argv[]) { return unimplemented(argc, argv, prob); }
 
 #define DEFINE_APP(cmd) int cmd ## _main(int argc, char* argv[]);
 

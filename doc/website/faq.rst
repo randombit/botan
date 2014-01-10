@@ -12,6 +12,14 @@ standards and de-facto standards like X.509v3 certificates, and
 various useful constructs like format-preserving encryption, all or
 nothing transforms, and secret splitting.
 
+Who wrote it?
+----------------------------------------
+
+It was started as a personal project by `Jack Lloyd
+<http://www.randombit.net>`_,who continues to be the maintainer and
+release manager. Since the first release in 2001, a number of
+individuals and organizations have :doc:`contributed <credits>`.
+
 .. _devel_vs_stable:
 
 Which release should I use?
@@ -200,29 +208,47 @@ You can do any combination of:
 Does botan support SSL/TLS, SSH, S/MIME, OpenPGP...
 ------------------------------------------------------------
 
-Support for SSL/TLS is included in version 1.9.4 and later. Currently
-SSLv3 and TLS 1.0 and 1.1 are supported. The latest development
-versions also support TLS 1.2.
+The latest development (1.11) releases support TLS up to TLS v1.2.
+The 1.10 releases support up to TLS v1.1 using a different design
+and API; new applications intending to use TLS should use 1.11.
 
 `NetSieben SSH <http://netsieben.com/products/ssh/>`_ is an open
-source SSHv2 implementation that uses botan.
+source SSHv2 client implementation that uses botan.
 
-A preliminary and very incomplete implementation of CMS (the crypto
-layer underlying S/MIME) is included in ``src/cms``, but it needs a
-lot of love and attention before being truly useful.
-
-There is currently no support for OpenPGP.
+There is currently no support for OpenPGP, CMS, OTR, or SSHv2 servers.
 
 Will it work on my platform XYZ??
 ----------------------------------------
 
-The most common stumbling block is a compiler that is buggy or can't
-handle modern C++ (specifically, C++98). Check out the :doc:`build log
-<build_log>` for a sense of which platforms are actively being tested.
+It runs on most common operating systems and can be used with a number
+of different commercial and open source compilers, and is already
+included in most major package distributions, including
+\
+`Fedora <https://admin.fedoraproject.org/pkgdb/acls/name/botan>`_,
+`EPEL <http://dl.fedoraproject.org/pub/epel/6/SRPMS/repoview/botan.html>`_ (for RHEL/CentOS),
+`Debian <http://packages.debian.org/search?keywords=libbotan>`_,
+`Ubuntu <http://packages.ubuntu.com/search?keywords=botan>`_,
+`Gentoo <http://packages.gentoo.org/package/botan>`_,
+`Arch Linux <http://www.archlinux.org/packages/extra/x86_64/botan/>`_,
+`Slackbuild <http://slackbuilds.org/result/?search=Botan>`_,
+`FreeBSD <http://www.freshports.org/security/botan>`_,
+`NetBSD <ftp://ftp.netbsd.org/pub/pkgsrc/current/pkgsrc/security/botan/README.html>`_,
+`Cygwin <http://cygwin.com/packages/botan/>`_,
+`MacPorts <http://www.macports.org/ports.php?by=name&substr=botan>`_,
+`OpenPKG <http://www.openpkg.org/product/packages/?package=botan>`_, and
+`T2 SDE <http://www.t2-project.org/packages/botan.html>`_
 
-Versions 1.11.0 and higher require a C++11 compiler as well as various
-Boost libraries (especially filesystem but also asio and regex). GCC
-4.7.0 and Clang 3.1 are known to work well.
+The most common stumbling block is a compiler that is buggy or can't
+handle modern C++ (specifically, C++98). Most any recent release of
+GCC, Clang, Intel C++, Visual C++, etc are all fine. It is tested most
+heavily on Linux but especially the stable versions are built and
+tested across a range of Unices as well as OS X and Windows.
+
+Versions 1.11.0 and higher require a C++11 compiler as well as Boost
+filesystem (plus optional use of Boost asio). GCC 4.7.0 and Clang 3.1
+or higher should work. Visual C++ 2013 seems to support all the
+required features, but probably needs a bit of work, as Windows has
+not seen much attention.
 
 I'm not feeling this, what can I use instead?
 ------------------------------------------------------------
@@ -237,8 +263,8 @@ I'm not feeling this, what can I use instead?
 
 * `OpenSSL <http://www.openssl.org>`_ is written in C and mostly
   targeted to being an SSL/TLS implementation but there is a lot of
-  other stuff in there as well.
+  other stuff in there as well. BSD plus wonky advertising clause.
 
-* `Crypto++ <http://www.cryptopp.com/>`_ is a C++ crypto library. Its
-  API is quite different from botans, and it offers a number of
-  algorithms botan does not (such as MQV).
+* `Crypto++ <http://www.cryptopp.com/>`_ is a C++ crypto library which
+  is roughly feature comparable to botan but with a very different
+  approach to the API. Boost license.

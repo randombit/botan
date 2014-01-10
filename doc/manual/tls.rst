@@ -259,7 +259,7 @@ TLS Clients
 
 A simple TLS client example:
 
-.. literalinclude:: ../src/apps/tls_client.cpp
+.. literalinclude:: ../../src/cmd/tls_client.cpp
 
 TLS Servers
 ----------------------------------------
@@ -294,7 +294,7 @@ protocols the server is willing to advertise it supports.
 
 A TLS server that can handle concurrent connections using asio:
 
-.. literalinclude:: ../src/apps/tls_server_asio.cpp
+.. literalinclude:: ../../src/cmd/tls_server_asio.cpp
 
 .. _tls_sessions:
 

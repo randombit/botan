@@ -1,9 +1,12 @@
 
-Known Users
+Users
 ========================================
 
-This is a list of some of the known users of botan. If you'd like to
-be added to the list, email the development list.
+This is a list of some of the known users of botan. The open source
+projects might be helpful as an additional reference for library
+usage.
+
+If you'd like to be added to the list, email the development list.
 
 Open Source Software
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

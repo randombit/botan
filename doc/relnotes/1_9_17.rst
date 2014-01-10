@@ -8,7 +8,7 @@ Version 1.9.17, 2011-04-29
   and ``fpe_decrypt``. These were renamed as it is likely that other
   FPE schemes will be included in the future. The header is now
   ``fpe_fe1.h``, and the functions are named ``fe1_encrypt`` and
-  ``fe1_decrypt``. See :doc:`../fpe` for more information.
+  ``fe1_decrypt``.
 
 * New options to ``configure.py`` control what tools are used for
   documentation generation. The ``--with-sphinx`` option enables using

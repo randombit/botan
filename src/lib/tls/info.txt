@@ -73,8 +73,10 @@ credentials
 cryptobox_psk
 dh
 ecdh
+ecdsa
 eme_pkcs
 emsa3
+gcm
 hmac
 kdf2
 md5

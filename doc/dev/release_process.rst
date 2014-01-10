@@ -23,11 +23,11 @@ prefix).
 Build The Release
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The release script is ``src/build-data/scripts/dist.py`` and runs from
+The release script is ``src/scripts/dist.py`` and runs from
 a monotone repository by pulling the revision matching the tag set
 previously. For instance::
 
- $ src/build-data/scripts/dist.py --mtn-db ~/var/mtn/botan.mtn 1.11.8
+ $ src/scripts/dist.py --mtn-db ~/var/mtn/botan.mtn 1.11.8
 
 The ``--mtn-db`` 'option' is mandatory, unless the environmental
 variable ``BOTAN_MTN_DB`` is set, in which case that value is used if
@@ -49,12 +49,7 @@ Build The Windows Installer
 
 On Windows, run ``configure.py`` to setup a build::
 
- $ python ./configure.py --cc=msvc --cpu=$ARCH --enable-ssse3 --distribution-info=unmodified
-
-The ``--enable-ssse3`` looks unsafe, but in fact under Visual C++ we
-do not compile with any special CPU specific flags, so this merely has
-the effect of enabling support for SSE2/SSSE3 optimizations which will
-only be used if ``cpuid`` indicates they are supported.
+ $ python ./configure.py --cc=msvc --cpu=$ARCH --distribution-info=unmodified
 
 After completing the build (and running the tests), use `InnoSetup
 <http://www.jrsoftware.org/isinfo.php>`_ to create the installer.  A
@@ -86,7 +81,7 @@ Post Release Process
 
 Immediately after the new release is created, increment the version
 number in ``botan_version.py`` and add a new release notes file for
-the next release, including a new entry in ``relnotes/index.rst``.
+the next release, including a new entry in ``doc/relnotes/index.rst``.
 
 Use "Not Yet Released" as the placeholder for the release date. Use
 checkin message "Bump for X.Y.Z".

@@ -10,6 +10,7 @@
 #include <botan/filters.h>
 #include <botan/algo_factory.h>
 #include <botan/mode_pad.h>
+#include <botan/transform_filter.h>
 #include <memory>
 
 #if defined(BOTAN_HAS_MODE_CFB)
@@ -170,10 +171,10 @@ Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
          }
 #endif
 
-#if defined(BOTAN_HAS_AEAD_FILTER)
-
       if(bits % 8 != 0)
          throw std::invalid_argument("AEAD interface does not support non-octet length tags");
+
+#if defined(BOTAN_HAS_AEAD_FILTER)
 
       const size_t tag_size = bits / 8;
 

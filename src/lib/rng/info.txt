@@ -1,3 +1,5 @@
 <requires>
 entropy
+auto_rng
+hmac_rng
 </requires>

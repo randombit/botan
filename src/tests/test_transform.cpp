@@ -2,7 +2,6 @@
 
 #include <botan/botan.h>
 #include <botan/transform.h>
-#include <botan/threefish.h>
 #include <botan/benchmark.h>
 #include <botan/hex.h>
 #include <iostream>

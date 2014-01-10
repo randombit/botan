@@ -37,24 +37,21 @@ int help(int , char* argv[])
    return 1;
    }
 
+int config_main(int argc, char* argv[])
+   {
+   return 1;
+   }
+
 }
+
+int unimplemented(int , char* argv[], const char* what)
+   {
+   std::cout << argv[0] << " command not implemented - library missing " << what << "\n";
+   return 1;
+   }
 
 int main(int argc, char* argv[])
    {
-   if(BOTAN_VERSION_MAJOR != version_major() ||
-      BOTAN_VERSION_MINOR != version_minor() ||
-      BOTAN_VERSION_PATCH != version_patch())
-      {
-      std::cout << "Warning: linked version ("
-                << version_major() << '.'
-                << version_minor() << '.'
-                << version_patch()
-                << ") does not match version built against ("
-                << BOTAN_VERSION_MAJOR << '.'
-                << BOTAN_VERSION_MINOR << '.'
-                << BOTAN_VERSION_PATCH << ")\n";
-      }
-
    try
       {
       Botan::LibraryInitializer init;
@@ -67,9 +64,29 @@ int main(int argc, char* argv[])
       if(cmd == "help")
          return help(argc, argv);
 
+      if(cmd == "config")
+         {
+         return config_main(argc - 1, argv + 1);
+         }
+
       if(cmd == "version")
          {
          std::cout << Botan::version_string() << "\n";
+
+         if(BOTAN_VERSION_MAJOR != version_major() ||
+            BOTAN_VERSION_MINOR != version_minor() ||
+            BOTAN_VERSION_PATCH != version_patch())
+            {
+            std::cout << "Warning: linked version ("
+                      << version_major() << '.'
+                      << version_minor() << '.'
+                      << version_patch()
+                      << ") does not match version built against ("
+                      << BOTAN_VERSION_MAJOR << '.'
+                      << BOTAN_VERSION_MINOR << '.'
+                      << BOTAN_VERSION_PATCH << ")\n";
+            }
+
          return 0;
          }
 
@@ -79,24 +96,37 @@ int main(int argc, char* argv[])
          return 0;
          }
 
-      if(cmd == "speed")
-         return speed_main(argc - 1, argv + 1);
-
       if(cmd == "http_get")
          {
          auto resp = HTTP::GET_sync(argv[2]);
          std::cout << resp << "\n";
          }
 
-      int e = apps_main(cmd, argc - 1, argv + 1);
+#define CALL_APP(cmdsym)                           \
+   do { if(cmd == #cmdsym) { return cmdsym ##_main (argc - 1, argv + 1); } } while(0)
 
-      if(e == -1)
-         {
-         std::cout << "Unknown command " << cmd << "\n";
-         return help(argc, argv);
-         }
+      CALL_APP(asn1);
+      CALL_APP(base64);
+      CALL_APP(bcrypt);
+      CALL_APP(bzip);
+      CALL_APP(ca);
+      CALL_APP(factor);
+      CALL_APP(fpe);
+      CALL_APP(hash);
+      CALL_APP(keygen);
+      CALL_APP(dsa_sign);
+      CALL_APP(dsa_verify);
+      CALL_APP(pkcs10);
+      CALL_APP(read_ssh);
+      CALL_APP(self_sig);
+      CALL_APP(tls_client);
+      CALL_APP(tls_server);
+      CALL_APP(tls_server_asio);
+      CALL_APP(x509);
+      CALL_APP(speed);
 
-      return e;
+      std::cout << "Unknown command " << cmd << "\n";
+      return help(argc, argv);
       }
    catch(std::exception& e)
       {

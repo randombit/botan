@@ -1,4 +1,6 @@
 #include "apps.h"
+
+#if defined(BOTAN_HAS_FPE_FE1)
 #include <botan/fpe_fe1.h>
 #include <botan/sha160.h>
 
@@ -141,3 +143,6 @@ int fpe_main(int argc, char* argv[])
 
    return 0;
    }
+#else
+UNIMPLEMENTED(fpe_main, "FPE");
+#endif

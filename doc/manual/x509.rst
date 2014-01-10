@@ -277,7 +277,7 @@ new certificate:
 
 Here's an example:
 
-.. literalinclude ../src/apps/ca.cpp
+.. literalinclude ../../src/cmd/ca.cpp
 
 Generating CRLs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -344,7 +344,7 @@ protocols. The library provides a utility function for this:
 
 An example:
 
-.. literalinclude:: ../src/apps/self_sig.cpp
+.. literalinclude:: ../../src/cmd/self_sig.cpp
 
 Creating PKCS #10 Requests
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -363,7 +363,7 @@ certificate.
 
 An example:
 
-.. literalinclude:: ../src/apps/pkcs10.cpp
+.. literalinclude:: ../../src/cmd/pkcs10.cpp
 
 Certificate Options
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

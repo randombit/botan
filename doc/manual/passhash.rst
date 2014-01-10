@@ -97,7 +97,7 @@ outputs that look like this::
 
 Here is an example of using bcrypt:
 
-.. literalinclude:: ../src/apps/bcrypt.cpp
+.. literalinclude:: ../../src/cmd/bcrypt.cpp
 
 .. _passhash9:
 

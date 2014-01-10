@@ -112,8 +112,6 @@ EME* get_eme(const std::string& algo_spec)
    {
    SCAN_Name request(algo_spec);
 
-   Algorithm_Factory& af = global_state().algorithm_factory();
-
    if(request.algo_name() == "Raw")
       return nullptr; // No padding
 
@@ -123,6 +121,8 @@ EME* get_eme(const std::string& algo_spec)
 #endif
 
 #if defined(BOTAN_HAS_EME1)
+   Algorithm_Factory& af = global_state().algorithm_factory();
+
    if(request.algo_name() == "EME1" && request.arg_count_between(1, 2))
       {
       if(request.arg_count() == 1 ||

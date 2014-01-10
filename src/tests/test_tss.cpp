@@ -7,9 +7,12 @@
 #include "tests.h"
 #include <botan/auto_rng.h>
 #include <botan/hex.h>
-#include <botan/tss.h>
 #include <iostream>
 #include <stdio.h>
+
+#if defined(BOTAN_HAS_THRESHOLD_SECRET_SHARING)
+
+#include <botan/tss.h>
 
 namespace {
 
@@ -59,3 +62,10 @@ size_t test_tss()
 
    return fails;
    }
+#else
+size_t test_tss()
+   {
+   std::cout << "Skipping TSS tests\n";
+   return 1;
+   }
+#endif

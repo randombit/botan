@@ -3,10 +3,14 @@
 
 #include <botan/auto_rng.h>
 #include <botan/pubkey.h>
-#include <botan/elgamal.h>
+#include <botan/dl_group.h>
 #include <botan/hex.h>
 #include <iostream>
 #include <fstream>
+
+#if defined(BOTAN_HAS_ELGAMAL)
+  #include <botan/elgamal.h>
+#endif
 
 using namespace Botan;
 
@@ -27,6 +31,7 @@ size_t elgamal_kat(const std::string& p,
    const BigInt x_bn = BigInt(x);
 
    DL_Group group(p_bn, g_bn);
+#if defined(BOTAN_HAS_ELGAMAL)
    ElGamal_PrivateKey privkey(rng, group, x_bn);
 
    ElGamal_PublicKey pubkey = privkey;
@@ -38,6 +43,9 @@ size_t elgamal_kat(const std::string& p,
    PK_Decryptor_EME dec(privkey, padding);
 
    return validate_encryption(enc, dec, "ElGamal/" + padding, msg, nonce, ciphertext);
+#else
+   return 1;
+#endif
    }
 
 }
@@ -57,4 +65,3 @@ size_t test_elgamal()
 
    return fails;
    }
-

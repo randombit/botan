@@ -11,19 +11,18 @@ Version 1.11.0, 2012-07-19
 TLS and PKI Changes
 """"""""""""""""""""""""""""""""""""""""
 
-There have been many changes and improvements to :doc:`TLS
-<../tls>`. The interface is now purely event driven and does not
-directly interact with sockets.  New TLS features include TLS v1.2
-support, client certificate authentication, renegotiation, session
-tickets, and session resumption. Session information can be saved in
-memory or to an encrypted SQLite3 database. Newly supported TLS
-ciphersuite algorithms include using SHA-2 for message authentication,
-pre shared keys and SRP for authentication and key exchange, ECC
-algorithms for key exchange and signatures, and anonymous DH/ECDH key
-exchange.
+There have been many changes and improvements to TLS.  The interface
+is now purely event driven and does not directly interact with
+sockets.  New TLS features include TLS v1.2 support, client
+certificate authentication, renegotiation, session tickets, and
+session resumption. Session information can be saved in memory or to
+an encrypted SQLite3 database. Newly supported TLS ciphersuite
+algorithms include using SHA-2 for message authentication, pre shared
+keys and SRP for authentication and key exchange, ECC algorithms for
+key exchange and signatures, and anonymous DH/ECDH key exchange.
 
-Support for :doc:`OCSP <../ocsp>` has been added. Currently only
-client-side support exists.
+Support for OCSP has been added. Currently only client-side support
+exists.
 
 The API for X.509 path validation has changed, with
 ``x509_path_validate`` in x509path.h now handles path validation and

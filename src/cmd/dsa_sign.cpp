@@ -5,9 +5,13 @@
 #include <string>
 #include <memory>
 
-#include <botan/pubkey.h>
-#include <botan/dsa.h>
 #include <botan/base64.h>
+#include <botan/pubkey.h>
+
+#if defined(BOTAN_HAS_DSA)
+
+#include <botan/dsa.h>
+
 using namespace Botan;
 
 const std::string SUFFIX = ".sig";
@@ -69,3 +73,6 @@ int dsa_sign_main(int argc, char* argv[])
       }
    return 0;
    }
+#else
+UNIMPLEMENTED(dsa_sign_main, "DSA");
+#endif

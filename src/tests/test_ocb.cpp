@@ -1,12 +1,12 @@
 
 #include "tests.h"
+#include <iostream>
 
+#if defined(BOTAN_HAS_OCB)
 #include <botan/ocb.h>
 #include <botan/hex.h>
 #include <botan/sha2_32.h>
 #include <botan/aes.h>
-#include <iostream>
-//#include <botan/selftest.h>
 
 using namespace Botan;
 
@@ -139,4 +139,12 @@ size_t test_ocb()
    return fails;
    }
 
+#else
 
+size_t test_ocb()
+   {
+   std::cout << "OCB disabled in build\n";
+   return 0;
+   }
+
+#endif

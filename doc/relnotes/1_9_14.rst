@@ -1,8 +1,7 @@
 Version 1.9.14, 2011-03-01
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Add support for bcrypt, OpenBSD's password hashing scheme. It is
-  described in :ref:`bcrypt`.
+* Add support for bcrypt, OpenBSD's password hashing scheme.
 
 * Add support for NIST's AES key wrapping algorithm, as described in
   :rfc:`3394`. It is available by including ``rfc3394.h``.

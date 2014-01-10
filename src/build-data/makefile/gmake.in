@@ -1,48 +1,6 @@
-# Compiler Options
-CXX           = %{cc}
-LIB_OPT       = %{lib_opt}
-APP_OPT       = %{app_opt}
-LANG_FLAGS    = %{lang_flags}
-WARN_FLAGS    = %{warn_flags}
-SO_OBJ_FLAGS  = %{shared_flags}
-LIB_LINKS_TO  = %{link_to}
-APP_LINKS_TO  = $(LIB_LINKS_TO) -lboost_thread
-TEST_LINKS_TO  = $(LIB_LINKS_TO) -lboost_filesystem
+%{header_in}
 
-LIB_FLAGS    = $(SO_OBJ_FLAGS) $(LANG_FLAGS) $(LIB_OPT) $(WARN_FLAGS)
-APP_FLAGS    = $(LANG_FLAGS) $(APP_OPT) $(WARN_FLAGS)
-TEST_FLAGS   = $(LANG_FLAGS) $(APP_OPT) $(WARN_FLAGS)
-
-# Version Numbers
-VERSION       = %{version}
-BRANCH        = %{version_major}.%{version_minor}
-
-# Installation Settings
-DESTDIR       = %{prefix}
-
-BINDIR        = $(DESTDIR)/bin
-LIBDIR        = $(DESTDIR)/%{libdir}
-HEADERDIR     = $(DESTDIR)/%{includedir}/botan-$(BRANCH)/botan
-DOCDIR        = $(DESTDIR)/%{docdir}/botan-$(VERSION)
-PKGCONF_DIR   = $(LIBDIR)/pkgconfig
-
-CONFIG_SCRIPT = %{botan_config}
-PKGCONFIG     = %{botan_pkgconfig}
-
-# Aliases for Common Programs
-AR               = %{ar_command}
-COPY             = cp
-COPY_R           = cp -r
-CD               = @cd
-ECHO             = @echo
-INSTALL_CMD_EXEC = %{install_cmd_exec}
-INSTALL_CMD_DATA = %{install_cmd_data}
-LN               = ln -fs
-MKDIR            = @mkdir
-MKDIR_INSTALL    = @umask 022; mkdir -p -m 755
-RANLIB           = %{ranlib_command}
-RM               = @rm -f
-RM_R             = @rm -rf
+%{commands_in}
 
 # Targets
 APP           = %{app_prefix}botan
@@ -57,13 +15,13 @@ LIBPATH       = botan-$(BRANCH)
 all: $(APP) $(TEST)
 
 # File Lists
-INCLUDE_DIR = %{botan_include_dir}
+INCLUDE_DIR   = %{botan_include_dir}
 
 LIBOBJS       = %{lib_objs}
 
-APPOBJS     = %{app_objs}
+APPOBJS       = %{app_objs}
 
-TESTOBJS     = %{test_objs}
+TESTOBJS      = %{test_objs}
 
 # Build Commands
 %{lib_build_cmds}
@@ -73,7 +31,7 @@ TESTOBJS     = %{test_objs}
 %{test_build_cmds}
 
 # Link Commands
-%{shared_makefile}
+%{dso_in}
 
 $(APP): $(LIBRARIES) $(APPOBJS)
 	$(CXX) $(LDFLAGS) $(APPOBJS) -L. -l$(LIBPATH) $(APP_LINKS_TO) -o $(APP)
@@ -86,22 +44,28 @@ $(STATIC_LIB): $(LIBOBJS)
 	$(AR) $(STATIC_LIB) $(LIBOBJS)
 	$(RANLIB) $(STATIC_LIB)
 
-%{python_makefile}
+%{python_in}
 
 # Fake Targets
-.PHONY = docs clean distclean install
+.PHONY = clean distclean docs website install
 
-docs:
-%{build_doc_commands}
+SPHINX_CONFIG = %{sphinx_config_dir}
+SPHINX_OPTS = -b html
+
+WEBSITE_DIR=%{doc_output_dir}/website
+WEBSITE_SRC_DIR=%{doc_output_dir}/website-src
 
 clean:
-	$(RM_R) %{build_dir}/lib/* %{build_dir}/tests/*
+	$(RM_R) %{build_dir}/obj
 	$(RM) $(LIBRARIES) $(SYMLINK) $(SONAME) $(APP) $(TEST)
 
 distclean: clean
 	$(RM_R) %{build_dir}
 	$(RM) Makefile* $(CONFIG_SCRIPT) $(PKGCONFIG)
 	$(RM) botan_all.cpp botan_all.h
+
+docs:
+%{build_doc_commands}
 
 install: $(LIBRARIES) docs
 	$(MKDIR_INSTALL) $(DOCDIR)
@@ -115,14 +79,27 @@ install: $(LIBRARIES) docs
 	$(MKDIR_INSTALL) $(LIBDIR)
 	$(INSTALL_CMD_DATA) $(STATIC_LIB) $(LIBDIR)
 
-        ifdef $(SHARED_LIB)
+ifneq ($(SHARED_LIB),)
 	$(INSTALL_CMD_EXEC) $(SHARED_LIB) $(LIBDIR)
 	$(CD) $(LIBDIR); $(LN) $(SHARED_LIB) $(SYMLINK)
 	$(CD) $(LIBDIR); $(LN) $(SHARED_LIB) $(SONAME)
-        endif
+endif
 
 	$(MKDIR_INSTALL) $(BINDIR)
 	$(INSTALL_CMD_EXEC) $(CONFIG_SCRIPT) $(BINDIR)
 
 	$(MKDIR_INSTALL) $(PKGCONF_DIR)
 	$(INSTALL_CMD_DATA) $(PKGCONFIG) $(PKGCONF_DIR)
+
+website:
+	rm -rf $(WEBSITE_SRC_DIR)
+	mkdir -p $(WEBSITE_SRC_DIR)
+	cp -r %{doc_dir}/*.rst %{doc_dir}/relnotes %{doc_dir}/website/*.rst $(WEBSITE_SRC_DIR)
+	sphinx-build -q -c $(SPHINX_CONFIG) -b html $(WEBSITE_SRC_DIR) $(WEBSITE_DIR)
+	sphinx-build -q -c $(SPHINX_CONFIG) -b html %{doc_dir}/manual $(WEBSITE_DIR)/manual
+	rm -rf $(WEBSITE_DIR)/.doctrees
+	rm -rf $(WEBSITE_DIR)/manual/.doctrees
+	rm -f $(WEBSITE_DIR)/.buildinfo
+	rm -f $(WEBSITE_DIR)/manual/.buildinfo
+	doxygen %{build_dir}/botan.doxy
+	mv %{doc_output_dir}/doxygen $(WEBSITE_DIR)/doxygen

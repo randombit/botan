@@ -1,7 +1,9 @@
 #include "tests.h"
 
 #include <botan/libstate.h>
-#include <botan/hkdf.h>
+#if defined(BOTAN_HAS_HKDF)
+  #include <botan/hkdf.h>
+#endif
 #include <botan/hex.h>
 #include <iostream>
 #include <fstream>
@@ -25,6 +27,7 @@ secure_vector<byte> hkdf(const std::string& hkdf_algo,
    if(!mac_proto)
       throw std::invalid_argument("Bad HKDF hash '" + algo + "'");
 
+#if defined(BOTAN_HAS_HKDF)
    HKDF hkdf(mac_proto->clone(), mac_proto->clone());
 
    hkdf.start_extract(&salt[0], salt.size());
@@ -34,6 +37,9 @@ secure_vector<byte> hkdf(const std::string& hkdf_algo,
    secure_vector<byte> key(L);
    hkdf.expand(&key[0], key.size(), &info[0], info.size());
    return key;
+#else
+   return "";
+#endif
    }
 
 size_t hkdf_test(const std::string& algo,

@@ -1,0 +1,32 @@
+# Compiler Options
+CXX            = %{cc}
+LIB_OPT        = %{lib_opt}
+APP_OPT        = %{app_opt}
+LANG_FLAGS     = %{lang_flags}
+WARN_FLAGS     = %{warn_flags}
+SO_OBJ_FLAGS   = %{shared_flags}
+
+LIB_LINK_CMD   = %{so_link}
+
+LIB_LINKS_TO   = %{link_to}
+APP_LINKS_TO   = $(LIB_LINKS_TO)
+TEST_LINKS_TO  = $(LIB_LINKS_TO) -lboost_filesystem
+
+LIB_FLAGS      = $(SO_OBJ_FLAGS) $(LANG_FLAGS) $(LIB_OPT) $(WARN_FLAGS)
+APP_FLAGS      = $(LANG_FLAGS) $(APP_OPT) $(WARN_FLAGS)
+TEST_FLAGS     = $(LANG_FLAGS) $(APP_OPT) $(WARN_FLAGS)
+
+# Version Numbers
+VERSION        = %{version}
+BRANCH         = %{version_major}.%{version_minor}
+
+# Installation Settings
+DESTDIR        = %{prefix}
+BINDIR        = $(DESTDIR)/bin
+LIBDIR        = $(DESTDIR)/%{libdir}
+HEADERIR      = $(DESTDIR)/%{includedir}/botan-$(BRANCH)/botan
+DOCDIR        = $(DESTDIR)/%{docdir}/botan-$(VERSION)
+PKGCONF_DIR   = $(LIBDIR)/pkgconfig
+
+CONFIG_SCRIPT = %{botan_config}
+PKGCONFIG     = %{botan_pkgconfig}

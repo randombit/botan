@@ -28,7 +28,7 @@ Version 1.9.16, 2011-04-11
 * The overload of ``generate_passhash9`` that takes an explicit
   algorithm identifier has been merged with the one that does not.
   The algorithm identifier code has been moved from the second
-  parameter to the fourth. See :ref:`passhash9` for details.
+  parameter to the fourth.
 
 * Change shared library versioning to match the normal Unix
   conventions. Instead of ``libbotan-X.Y.Z.so``, the shared lib is

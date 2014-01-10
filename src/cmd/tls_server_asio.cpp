@@ -2,10 +2,11 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <thread>
 #define _GLIBCXX_HAVE_GTHR_DEFAULT
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
-#include <boost/thread.hpp>
+//#include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
@@ -265,7 +266,7 @@ class asio_tls_server
 
 size_t choose_thread_count()
    {
-   size_t result = boost::thread::hardware_concurrency();
+   size_t result = std::thread::hardware_concurrency();
 
    if(result)
       return result;
@@ -291,12 +292,12 @@ int tls_server_asio_main(int argc, char* argv[])
 
       std::cout << "Using " << num_threads << " threads\n";
 
-      std::vector<boost::shared_ptr<boost::thread> > threads;
+      std::vector<boost::shared_ptr<std::thread> > threads;
 
       for(size_t i = 0; i != num_threads; ++i)
          {
-         boost::shared_ptr<boost::thread> thread(
-            new boost::thread(
+         boost::shared_ptr<std::thread> thread(
+            new std::thread(
                boost::bind(&boost::asio::io_service::run, &io_service)));
          threads.push_back(thread);
          }
