@@ -657,20 +657,19 @@ class ModuleInfo(object):
         return ['HAS_' + d[0] + ' ' + d[1] for d in chunks(self.define, 2)]
 
     def compatible_cpu(self, archinfo, options):
-
         arch_name = archinfo.basename
         cpu_name = options.cpu
+
+        for isa in self.need_isa:
+            if isa in options.disable_intrinsics:
+                return False # explicitly disabled
+
+            if isa not in archinfo.isa_extensions:
+                return False
 
         if self.arch != []:
             if arch_name not in self.arch and cpu_name not in self.arch:
                 return False
-
-            for isa in self.need_isa:
-                if isa in options.disable_intrinsics:
-                    return False # explicitly disabled
-
-                if isa not in archinfo.isa_extensions:
-                    return False
 
         return True
 

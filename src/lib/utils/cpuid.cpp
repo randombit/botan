@@ -183,7 +183,7 @@ void CPUID::initialize()
    {
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
       if(altivec_check_sysctl() || altivec_check_pvr_emul())
-         altivec_capable = true;
+         m_altivec_capable = true;
 #endif
 
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
