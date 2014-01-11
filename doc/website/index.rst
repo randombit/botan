@@ -13,8 +13,9 @@ available. In addition to C++ you can use botan from Python or Perl
 (both included in tree), or with `Node.js
 <https://github.com/justinfreitag/node-botan>`_.
 
-See the :doc:`faq` for a list of common questions and answers and
-:doc:`download` for information about getting the latest release.
+See the :doc:`faq` for a list of common questions and answers,
+:doc:`download` for information about getting the latest release,
+and :doc:`manual` for the documentation.
 
 If you need help or have questions, send a mail to the `development
 mailing list
@@ -23,8 +24,4 @@ Patches, "philosophical" bug reports, announcements of programs using
 the library, and related topics are also welcome. If you find what you
 believe to be a bug, please file a ticket in `Bugzilla
 <http://bugs.randombit.net/>`_.
-
-The `manual <http://botan.randombit.net/manual>`_ and
-`Doxygen reference <http://botan.randombit.net/doxygen>`_ for
-the most recent revision is available online.
 

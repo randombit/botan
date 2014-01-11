@@ -150,21 +150,19 @@ def process_command_line(args):
 
     parser = optparse.OptionParser()
 
-    parser.add_option('--include-srp-aead', action='store_true', default=False,
-                      help='add custom SRP AEAD suites')
-    parser.add_option('--include-ocb', action='store_true', default=False,
-                      help='add custom OCB AEAD suites')
-    parser.add_option('--include-eax', action='store_true', default=False,
-                      help='add custom EAX AEAD suites')
+    parser.add_option('--with-srp-aead', action='store_true', default=False,
+                      help='add experimental SRP AEAD suites')
+    parser.add_option('--with-ocb', action='store_true', default=False,
+                      help='add experimental OCB AEAD suites')
+    parser.add_option('--with-eax', action='store_true', default=False,
+                      help='add experimental EAX AEAD suites')
 
     parser.add_option('--save-download', action='store_true', default=True,
                       help='save downloaded tls-parameters.txt')
 
-    parser.add_option('--write-direct', action='store_true', default=False,
-                      help='save output directly to lib/tls/tls_suite_info.cpp')
+    parser.add_option('--output', help='save output to named file instead of stdout')
 
     return parser.parse_args(args)
-
 
 def main(args = None):
     if args is None:
@@ -216,7 +214,7 @@ def main(args = None):
     define_custom_ciphersuite('DHE_DSS_WITH_RC4_128_SHA', '0066')
 
     # Expermental things
-    if options.include_ocb:
+    if options.with_ocb:
         define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_128_OCB_SHA256', 'FF80')
         define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_256_OCB_SHA384', 'FF81')
         define_custom_ciphersuite('ECDHE_RSA_WITH_AES_128_OCB_SHA256', 'FF82')
@@ -225,25 +223,25 @@ def main(args = None):
         define_custom_ciphersuite('ECDHE_PSK_WITH_AES_128_OCB_SHA256', 'FF85')
         define_custom_ciphersuite('ECDHE_PSK_WITH_AES_256_OCB_SHA384', 'FF86')
 
-    if options.include_eax:
+    if options.with_eax:
         define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_128_EAX_SHA256', 'FF90')
         define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_256_EAX_SHA384', 'FF91')
         define_custom_ciphersuite('ECDHE_RSA_WITH_AES_128_EAX_SHA256', 'FF92')
         define_custom_ciphersuite('ECDHE_RSA_WITH_AES_256_EAX_SHA384', 'FF93')
 
-    if options.include_srp_aead:
+    if options.with_srp_aead:
         define_custom_ciphersuite('SRP_SHA_WITH_AES_256_GCM_SHA384', 'FFA0')
         define_custom_ciphersuite('SRP_SHA_RSA_WITH_AES_256_GCM_SHA384', 'FFA1')
         define_custom_ciphersuite('SRP_SHA_DSS_WITH_AES_256_GCM_SHA384', 'FFA2')
         define_custom_ciphersuite('SRP_SHA_ECDSA_WITH_AES_256_GCM_SHA384', 'FFA3')
 
-        if options.include_ocb:
+        if options.with_ocb:
             define_custom_ciphersuite('SRP_SHA_WITH_AES_256_OCB_SHA384', 'FFA4')
             define_custom_ciphersuite('SRP_SHA_RSA_WITH_AES_256_OCB_SHA384', 'FFA5')
             define_custom_ciphersuite('SRP_SHA_DSS_WITH_AES_256_OCB_SHA384', 'FFA6')
             define_custom_ciphersuite('SRP_SHA_ECDSA_WITH_AES_256_OCB_SHA384', 'FFA7')
 
-        if options.include_eax:
+        if options.with_eax:
             define_custom_ciphersuite('SRP_SHA_WITH_AES_256_EAX_SHA384', 'FFA8')
             define_custom_ciphersuite('SRP_SHA_RSA_WITH_AES_256_EAX_SHA384', 'FFA9')
             define_custom_ciphersuite('SRP_SHA_DSS_WITH_AES_256_EAX_SHA384', 'FFAA')
@@ -292,8 +290,8 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
 }
 """
 
-    if options.write_direct:
-        out = open('lib/tls/tls_suite_info.cpp', 'w')
+    if options.output != None:
+        out = open(options.output, 'w')
         out.write(suite_info)
         out.close()
     else:

@@ -7,9 +7,10 @@ Contents
    index
    license
    faq
+   manual
    download
+   vcs
    pgpkey
    credits
    users
-   vcs
-   relnotes/index
+   relnotes/contents

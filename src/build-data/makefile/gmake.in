@@ -92,7 +92,7 @@ endif
 	$(INSTALL_CMD_DATA) $(PKGCONFIG) $(PKGCONF_DIR)
 
 website:
-	rm -rf $(WEBSITE_SRC_DIR)
+	rm -rf $(WEBSITE_SRC_DIR) $(WEBSITE_DIR)
 	mkdir -p $(WEBSITE_SRC_DIR)
 	cp -r %{doc_dir}/*.rst %{doc_dir}/relnotes %{doc_dir}/website/*.rst $(WEBSITE_SRC_DIR)
 	sphinx-build -q -c $(SPHINX_CONFIG) -b html $(WEBSITE_SRC_DIR) $(WEBSITE_DIR)

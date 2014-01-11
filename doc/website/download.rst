@@ -11,22 +11,6 @@ Unsure which release you want? Check the :ref:`FAQ <devel_vs_stable>`.
    If you are planning on developing an application using TLS, using
    the latest 1.11 release instead of 1.10 is highly recommended.
 
-Current Stable Series (1.10)
-----------------------------------------
-
-The latest stable branch release is :doc:`relnotes/1_10_7`:
-:tgz:`1.10.7` (:tgz_sig:`sig <1.10.7>`),
-:tbz:`1.10.7` (:tbz_sig:`sig <1.10.7>`)
-
-Windows Installer
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Windows installers for use with Visual C++ 2010
-:installer_x86_32:`1.10.5` (:installer_sig_x86_32:`sig <1.10.5>`)
-and
-:installer_x86_64:`1.10.5` (:installer_sig_x86_64:`sig <1.10.5>`)
-are also available.
-
 Current Development Series (1.11)
 ----------------------------------------
 
@@ -42,4 +26,20 @@ creates regular snapshots of trunk, which are available `here
 
    Versions 1.11.0 and later require a mostly-compliant C++11 compiler
    such as Clang 3.1 or GCC 4.7.
- 
+
+Current Stable Series (1.10)
+----------------------------------------
+
+The latest stable branch release is :doc:`relnotes/1_10_7`:
+:tgz:`1.10.7` (:tgz_sig:`sig <1.10.7>`),
+:tbz:`1.10.7` (:tbz_sig:`sig <1.10.7>`)
+
+..
+  Windows Installer
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  Windows installers for use with Visual C++ 2010
+  :installer_x86_32:`1.10.5` (:installer_sig_x86_32:`sig <1.10.5>`)
+  and
+  :installer_x86_64:`1.10.5` (:installer_sig_x86_64:`sig <1.10.5>`)
+  are also available.
