@@ -27,10 +27,10 @@ needs_sphinx = '1.1'
 
 extensions = ['sphinx.ext.extlinks']
 
-templates_path = ['_sphinx/templates']
+templates_path = ['templates']
 
 if is_website_build and use_disqus:
-    templates_path += ['_sphinx/disqus']
+    templates_path += ['disqus']
 
 files_dir = 'http://files.randombit.net/botan'
 
