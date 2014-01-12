@@ -1057,8 +1057,17 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
                 else:
                     name = '_'.join(dir.split(os.sep)[2:]) + '_' + file
 
-                # Special case hack cause I'm lazy
-                name = name.replace('tls_tls_', 'tls_')
+                def fixup_obj_name(name):
+                    def remove_dups(parts):
+                        last = None
+                        for part in parts:
+                            if last is None or part != last:
+                                last = part
+                                yield part
+
+                    return '_'.join(remove_dups(name.split('_')))
+
+                name = fixup_obj_name(name)
             else:
                 name = file
 
