@@ -197,10 +197,10 @@ HashFunction* Skein_512::clone() const
 
 void Skein_512::clear()
    {
-   zeroise(H);
-   zeroise(T);
    zeroise(buffer);
    buf_pos = 0;
+
+   initial_block(H, T, output_bits, personalization);
    }
 
 void Skein_512::add_data(const byte input[], size_t length)

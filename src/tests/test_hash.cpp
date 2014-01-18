@@ -41,6 +41,20 @@ size_t hash_test(const std::string& algo,
          std::cout << algo << " " << provider << " got " << hex_encode(h) << " != " << out_hex << "\n";
          ++fails;
          }
+
+      // Test to make sure clear() resets what we need it to
+      hash->update("some discarded input");
+      hash->clear();
+
+      hash->update(hex_decode(in_hex));
+
+      h = hash->final();
+
+      if(h != hex_decode_locked(out_hex))
+         {
+         std::cout << algo << " " << provider << " got " << hex_encode(h) << " != " << out_hex << "\n";
+         ++fails;
+         }
       }
 
    return fails;

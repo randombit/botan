@@ -3,3 +3,8 @@ Version 1.11.8, Not Yet Released
 
 * The antique PBES1 private key encryption scheme (which only supports
   DES or 64-bit RC2) has been removed.
+
+* Skein did not reset its internal state properly if clear() was
+  called, causing it to produce incorrect results for the following
+  message. It was reset correctly in final() so most usages should not
+  be affected.
