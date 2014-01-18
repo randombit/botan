@@ -1,4 +1,5 @@
 #include "tests.h"
+#include <botan/init.h>
 #include <iostream>
 #include <boost/filesystem.hpp>
 #include <fstream>
@@ -272,6 +273,8 @@ int main(int argc, char* argv[])
       std::cout << "No tests selected by target '" << target << "'\n";
       return 1;
       }
+
+   Botan::LibraryInitializer init;
 
    return run_tests(tests);
    }
