@@ -1,12 +1,12 @@
 /*
-* EMSA4
+* PSSR
 * (C) 1999-2007 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
-#ifndef BOTAN_EMSA4_H__
-#define BOTAN_EMSA4_H__
+#ifndef BOTAN_PSSR_H__
+#define BOTAN_PSSR_H__
 
 #include <botan/emsa.h>
 #include <botan/hash.h>
@@ -15,21 +15,18 @@
 namespace Botan {
 
 /**
-* EMSA4 aka PSS-R
+* PSSR (called EMSA4 in IEEE 1363 and in old versions of the library)
 */
-class BOTAN_DLL EMSA4 : public EMSA
+class BOTAN_DLL PSSR : public EMSA
    {
    public:
-      /**
-      * @param hash the hash object to use
-      */
-      EMSA4(HashFunction* hash);
 
       /**
       * @param hash the hash object to use
       * @param salt_size the size of the salt to use in bytes
+      *        or zero to use the default
       */
-      EMSA4(HashFunction* hash, size_t salt_size);
+      PSSR(HashFunction* hash, size_t salt_size = 0);
    private:
       void update(const byte input[], size_t length);
 

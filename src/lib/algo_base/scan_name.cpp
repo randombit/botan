@@ -206,13 +206,20 @@ void SCAN_Name::set_default_aliases()
    SCAN_Name::add_alias("ARC4",     "RC4");
    SCAN_Name::add_alias("OMAC",     "CMAC");
 
+   SCAN_Name::add_alias("EMSA-PSS",        "PSSR");
+   SCAN_Name::add_alias("PSS-MGF1",        "PSSR");
+   SCAN_Name::add_alias("EME-OAEP",        "OAEP");
+
+   SCAN_Name::add_alias("EMSA2",           "EMSA_X931");
+   SCAN_Name::add_alias("EMSA3",           "EMSA_PKCS1");
+   SCAN_Name::add_alias("EMSA-PKCS1-v1_5", "EMSA_PKCS1");
+
    // should be renamed in sources
-   SCAN_Name::add_alias("OAEP-MGF1",       "EME1");
-   SCAN_Name::add_alias("EME-OAEP",        "EME1");
    SCAN_Name::add_alias("X9.31",           "EMSA2");
-   SCAN_Name::add_alias("EMSA-PKCS1-v1_5", "EMSA3");
-   SCAN_Name::add_alias("PSS-MGF1",        "EMSA4");
-   SCAN_Name::add_alias("EMSA-PSS",        "EMSA4");
+
+   // kept for compatability with old library versions
+   SCAN_Name::add_alias("EMSA4",           "PSSR");
+   SCAN_Name::add_alias("EME1",            "OAEP");
 
    // probably can be removed
    SCAN_Name::add_alias("GOST",     "GOST-28147-89");

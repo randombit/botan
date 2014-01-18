@@ -1,11 +1,11 @@
 /*
-* EMSA4
+* PSSR
 * (C) 1999-2007 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/emsa4.h>
+#include <botan/pssr.h>
 #include <botan/mgf1.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/xor_buf.h>
@@ -13,9 +13,9 @@
 namespace Botan {
 
 /*
-* EMSA4 Update Operation
+* PSSR Update Operation
 */
-void EMSA4::update(const byte input[], size_t length)
+void PSSR::update(const byte input[], size_t length)
    {
    hash->update(input, length);
    }
@@ -23,24 +23,24 @@ void EMSA4::update(const byte input[], size_t length)
 /*
 * Return the raw (unencoded) data
 */
-secure_vector<byte> EMSA4::raw_data()
+secure_vector<byte> PSSR::raw_data()
    {
    return hash->final();
    }
 
 /*
-* EMSA4 Encode Operation
+* PSSR Encode Operation
 */
-secure_vector<byte> EMSA4::encoding_of(const secure_vector<byte>& msg,
+secure_vector<byte> PSSR::encoding_of(const secure_vector<byte>& msg,
                                       size_t output_bits,
                                       RandomNumberGenerator& rng)
    {
    const size_t HASH_SIZE = hash->output_length();
 
    if(msg.size() != HASH_SIZE)
-      throw Encoding_Error("EMSA4::encoding_of: Bad input length");
+      throw Encoding_Error("PSSR::encoding_of: Bad input length");
    if(output_bits < 8*HASH_SIZE + 8*SALT_SIZE + 9)
-      throw Encoding_Error("EMSA4::encoding_of: Output length is too small");
+      throw Encoding_Error("PSSR::encoding_of: Output length is too small");
 
    const size_t output_length = (output_bits + 7) / 8;
 
@@ -65,9 +65,9 @@ secure_vector<byte> EMSA4::encoding_of(const secure_vector<byte>& msg,
    }
 
 /*
-* EMSA4 Decode/Verify Operation
+* PSSR Decode/Verify Operation
 */
-bool EMSA4::verify(const secure_vector<byte>& const_coded,
+bool PSSR::verify(const secure_vector<byte>& const_coded,
                    const secure_vector<byte>& raw, size_t key_bits)
    {
    const size_t HASH_SIZE = hash->output_length();
@@ -126,19 +126,8 @@ bool EMSA4::verify(const secure_vector<byte>& const_coded,
    return same_mem(&H[0], &H2[0], HASH_SIZE);
    }
 
-/*
-* EMSA4 Constructor
-*/
-EMSA4::EMSA4(HashFunction* h) :
-   SALT_SIZE(h->output_length()), hash(h)
-   {
-   }
-
-/*
-* EMSA4 Constructor
-*/
-EMSA4::EMSA4(HashFunction* h, size_t salt_size) :
-   SALT_SIZE(salt_size), hash(h)
+PSSR::PSSR(HashFunction* h, size_t salt_size) :
+   SALT_SIZE(salt_size ? salt_size : h->output_length()), hash(h)
    {
    }
 

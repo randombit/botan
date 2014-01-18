@@ -74,8 +74,8 @@ cryptobox_psk
 dh
 ecdh
 ecdsa
-eme_pkcs
-emsa3
+eme_pkcs1
+emsa_pkcs1
 gcm
 hmac
 kdf2

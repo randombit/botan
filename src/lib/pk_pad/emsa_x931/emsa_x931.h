@@ -1,30 +1,31 @@
 /*
-* EMSA2
+* X9.31 EMSA
 * (C) 1999-2007 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
-#ifndef BOTAN_EMSA2_H__
-#define BOTAN_EMSA2_H__
+#ifndef BOTAN_EMSA_X931_H__
+#define BOTAN_EMSA_X931_H__
 
 #include <botan/emsa.h>
 #include <botan/hash.h>
+#include <memory>
 
 namespace Botan {
 
 /**
-* EMSA2 from IEEE 1363
-* Useful for Rabin-Williams
+* EMSA from X9.31 (EMSA2 in IEEE 1363)
+* Useful for Rabin-Williams, also sometimes used with RSA in
+* odd protocols.
 */
-class BOTAN_DLL EMSA2 : public EMSA
+class BOTAN_DLL EMSA_X931 : public EMSA
    {
    public:
       /**
       * @param hash the hash object to use
       */
-      EMSA2(HashFunction* hash);
-      ~EMSA2() { delete hash; }
+      EMSA_X931(HashFunction* hash);
    private:
       void update(const byte[], size_t);
       secure_vector<byte> raw_data();
@@ -35,9 +36,9 @@ class BOTAN_DLL EMSA2 : public EMSA
       bool verify(const secure_vector<byte>&, const secure_vector<byte>&,
                   size_t);
 
-      secure_vector<byte> empty_hash;
-      HashFunction* hash;
-      byte hash_id;
+      secure_vector<byte> m_empty_hash;
+      std::unique_ptr<HashFunction> m_hash;
+      byte m_hash_id;
    };
 
 }

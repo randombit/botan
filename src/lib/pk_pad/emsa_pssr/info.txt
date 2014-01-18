@@ -1,4 +1,4 @@
-define EMSA4 20131128
+define EMSA_PSSR 20131128
 
 <requires>
 hash

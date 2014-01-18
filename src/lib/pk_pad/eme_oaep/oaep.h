@@ -1,12 +1,12 @@
 /*
-* EME1
+* OAEP
 * (C) 1999-2007 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
-#ifndef BOTAN_EME1_H__
-#define BOTAN_EME1_H__
+#ifndef BOTAN_OAEP_H__
+#define BOTAN_OAEP_H__
 
 #include <botan/eme.h>
 #include <botan/kdf.h>
@@ -16,9 +16,9 @@
 namespace Botan {
 
 /**
-* EME1, aka OAEP
+* OAEP (called EME1 in IEEE 1363 and in earlier versions of the library)
 */
-class BOTAN_DLL EME1 : public EME
+class BOTAN_DLL OAEP : public EME
    {
    public:
       size_t maximum_input_size(size_t) const;
@@ -27,7 +27,7 @@ class BOTAN_DLL EME1 : public EME
       * @param hash object to use for hashing (takes ownership)
       * @param P an optional label. Normally empty.
       */
-      EME1(HashFunction* hash, const std::string& P = "");
+      OAEP(HashFunction* hash, const std::string& P = "");
    private:
       secure_vector<byte> pad(const byte[], size_t, size_t,
                              RandomNumberGenerator&) const;

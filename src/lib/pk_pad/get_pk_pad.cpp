@@ -18,24 +18,24 @@
   #include <botan/emsa1_bsi.h>
 #endif
 
-#if defined(BOTAN_HAS_EMSA2)
-  #include <botan/emsa2.h>
+#if defined(BOTAN_HAS_EMSA_X931)
+  #include <botan/emsa_x931.h>
 #endif
 
-#if defined(BOTAN_HAS_EMSA3)
-  #include <botan/emsa3.h>
+#if defined(BOTAN_HAS_EMSA_PKCS1)
+  #include <botan/emsa_pkcs1.h>
 #endif
 
-#if defined(BOTAN_HAS_EMSA4)
-  #include <botan/emsa4.h>
+#if defined(BOTAN_HAS_EMSA_PSSR)
+  #include <botan/pssr.h>
 #endif
 
 #if defined(BOTAN_HAS_EMSA_RAW)
   #include <botan/emsa_raw.h>
 #endif
 
-#if defined(BOTAN_HAS_EME1)
-  #include <botan/eme1.h>
+#if defined(BOTAN_HAS_EME_OAEP)
+  #include <botan/oaep.h>
 #endif
 
 #if defined(BOTAN_HAS_EME_PKCS1v15)
@@ -72,33 +72,33 @@ EMSA* get_emsa(const std::string& algo_spec)
       return new EMSA1_BSI(af.make_hash_function(request.arg(0)));
 #endif
 
-#if defined(BOTAN_HAS_EMSA2)
-   if(request.algo_name() == "EMSA2" && request.arg_count() == 1)
-      return new EMSA2(af.make_hash_function(request.arg(0)));
+#if defined(BOTAN_HAS_EMSA_X931)
+   if(request.algo_name() == "EMSA_X931" && request.arg_count() == 1)
+      return new EMSA_X931(af.make_hash_function(request.arg(0)));
 #endif
 
-#if defined(BOTAN_HAS_EMSA3)
-   if(request.algo_name() == "EMSA3" && request.arg_count() == 1)
+#if defined(BOTAN_HAS_EMSA_PKCS1)
+   if(request.algo_name() == "EMSA_PKCS1" && request.arg_count() == 1)
       {
       if(request.arg(0) == "Raw")
-         return new EMSA3_Raw;
-      return new EMSA3(af.make_hash_function(request.arg(0)));
+         return new EMSA_PKCS1v15_Raw;
+      return new EMSA_PKCS1v15(af.make_hash_function(request.arg(0)));
       }
 #endif
 
-#if defined(BOTAN_HAS_EMSA4)
-   if(request.algo_name() == "EMSA4" && request.arg_count_between(1, 3))
+#if defined(BOTAN_HAS_EMSA_PSSR)
+   if(request.algo_name() == "PSSR" && request.arg_count_between(1, 3))
       {
       // 3 args: Hash, MGF, salt size (MGF is hardcoded MGF1 in Botan)
       if(request.arg_count() == 1)
-         return new EMSA4(af.make_hash_function(request.arg(0)));
+         return new PSSR(af.make_hash_function(request.arg(0)));
 
       if(request.arg_count() == 2 && request.arg(1) != "MGF1")
-         return new EMSA4(af.make_hash_function(request.arg(0)));
+         return new PSSR(af.make_hash_function(request.arg(0)));
 
       if(request.arg_count() == 3)
-         return new EMSA4(af.make_hash_function(request.arg(0)),
-                          request.arg_as_integer(2, 0));
+         return new PSSR(af.make_hash_function(request.arg(0)),
+                         request.arg_as_integer(2, 0));
       }
 #endif
 
@@ -120,15 +120,15 @@ EME* get_eme(const std::string& algo_spec)
       return new EME_PKCS1v15;
 #endif
 
-#if defined(BOTAN_HAS_EME1)
+#if defined(BOTAN_HAS_EME_OAEP)
    Algorithm_Factory& af = global_state().algorithm_factory();
 
-   if(request.algo_name() == "EME1" && request.arg_count_between(1, 2))
+   if(request.algo_name() == "OAEP" && request.arg_count_between(1, 2))
       {
       if(request.arg_count() == 1 ||
          (request.arg_count() == 2 && request.arg(1) == "MGF1"))
          {
-         return new EME1(af.make_hash_function(request.arg(0)));
+         return new OAEP(af.make_hash_function(request.arg(0)));
          }
       }
 #endif

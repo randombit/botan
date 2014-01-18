@@ -1,11 +1,11 @@
 /*
-* EME1 (aka OAEP)
+* OAEP
 * (C) 1999-2010 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/eme1.h>
+#include <botan/oaep.h>
 #include <botan/mgf1.h>
 #include <botan/mem_ops.h>
 #include <memory>
@@ -13,16 +13,16 @@
 namespace Botan {
 
 /*
-* EME1 Pad Operation
+* OAEP Pad Operation
 */
-secure_vector<byte> EME1::pad(const byte in[], size_t in_length,
+secure_vector<byte> OAEP::pad(const byte in[], size_t in_length,
                              size_t key_length,
                              RandomNumberGenerator& rng) const
    {
    key_length /= 8;
 
    if(key_length < in_length + 2*m_Phash.size() + 1)
-      throw Invalid_Argument("EME1: Input is too large");
+      throw Invalid_Argument("OAEP: Input is too large");
 
    secure_vector<byte> out(key_length);
 
@@ -44,9 +44,9 @@ secure_vector<byte> EME1::pad(const byte in[], size_t in_length,
    }
 
 /*
-* EME1 Unpad Operation
+* OAEP Unpad Operation
 */
-secure_vector<byte> EME1::unpad(const byte in[], size_t in_length,
+secure_vector<byte> OAEP::unpad(const byte in[], size_t in_length,
                                size_t key_length) const
    {
    /*
@@ -107,7 +107,7 @@ secure_vector<byte> EME1::unpad(const byte in[], size_t in_length,
    bad_input |= !same_mem(&input[m_Phash.size()], &m_Phash[0], m_Phash.size());
 
    if(bad_input)
-      throw Decoding_Error("Invalid EME1 encoding");
+      throw Decoding_Error("Invalid OAEP encoding");
 
    return secure_vector<byte>(&input[delim_idx + 1], &input[input.size()]);
    }
@@ -115,7 +115,7 @@ secure_vector<byte> EME1::unpad(const byte in[], size_t in_length,
 /*
 * Return the max input size for a given key size
 */
-size_t EME1::maximum_input_size(size_t keybits) const
+size_t OAEP::maximum_input_size(size_t keybits) const
    {
    if(keybits / 8 > 2*m_Phash.size() + 1)
       return ((keybits / 8) - 2*m_Phash.size() - 1);
@@ -124,9 +124,9 @@ size_t EME1::maximum_input_size(size_t keybits) const
    }
 
 /*
-* EME1 Constructor
+* OAEP Constructor
 */
-EME1::EME1(HashFunction* hash, const std::string& P) : m_hash(hash)
+OAEP::OAEP(HashFunction* hash, const std::string& P) : m_hash(hash)
    {
    m_Phash = m_hash->process(P);
    }
