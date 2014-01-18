@@ -9,7 +9,6 @@
 #include <botan/pipe.h>
 #include <botan/lookup.h>
 #include <botan/loadstor.h>
-#include <memory>
 
 namespace Botan {
 

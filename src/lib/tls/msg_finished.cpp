@@ -7,7 +7,6 @@
 
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_handshake_io.h>
-#include <memory>
 
 namespace Botan {
 

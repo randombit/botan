@@ -11,7 +11,6 @@
 #include <botan/sha160.h>
 #include <botan/loadstor.h>
 #include <algorithm>
-#include <memory>
 
 namespace Botan {
 

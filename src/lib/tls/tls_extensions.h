@@ -12,7 +12,6 @@
 #include <botan/tls_magic.h>
 #include <vector>
 #include <string>
-#include <memory>
 #include <map>
 
 namespace Botan {

@@ -11,7 +11,6 @@
 #include <botan/algo_factory.h>
 #include <botan/mode_pad.h>
 #include <botan/transform_filter.h>
-#include <memory>
 
 #if defined(BOTAN_HAS_MODE_CFB)
   #include <botan/cfb.h>

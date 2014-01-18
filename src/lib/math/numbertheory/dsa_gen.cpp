@@ -10,7 +10,6 @@
 #include <botan/hash.h>
 #include <botan/parsing.h>
 #include <algorithm>
-#include <memory>
 
 namespace Botan {
 

@@ -19,7 +19,6 @@
 #include <algorithm>
 #include <iterator>
 #include <sstream>
-#include <memory>
 
 namespace Botan {
 

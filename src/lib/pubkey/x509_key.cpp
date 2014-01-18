@@ -11,7 +11,6 @@
 #include <botan/pem.h>
 #include <botan/alg_id.h>
 #include <botan/internal/pk_algs.h>
-#include <memory>
 
 namespace Botan {
 

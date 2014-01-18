@@ -15,7 +15,6 @@
 #include <botan/stream_cipher.h>
 #include <botan/mac.h>
 #include <vector>
-#include <memory>
 #include <chrono>
 
 namespace Botan {

@@ -9,7 +9,6 @@
 #include <botan/dl_group.h>
 #include <botan/libstate.h>
 #include <botan/numthry.h>
-#include <memory>
 
 namespace Botan {
 

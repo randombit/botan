@@ -8,7 +8,6 @@
 #include <botan/internal/core_engine.h>
 #include <botan/scan_name.h>
 #include <botan/algo_factory.h>
-#include <memory>
 
 #if defined(BOTAN_HAS_ADLER32)
   #include <botan/adler32.h>

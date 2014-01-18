@@ -16,7 +16,6 @@
 #include <botan/oids.h>
 #include <botan/lookup.h>
 #include <algorithm>
-#include <memory>
 
 namespace Botan {
 

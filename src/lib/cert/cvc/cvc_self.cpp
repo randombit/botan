@@ -10,7 +10,6 @@
 #include <botan/point_gfp.h>
 #include <botan/oids.h>
 #include <sstream>
-#include <memory>
 
 namespace Botan {
 

@@ -11,7 +11,6 @@
 #include <botan/hex.h>
 #include <botan/sha2_32.h>
 #include <botan/sha160.h>
-#include <memory>
 
 namespace Botan {
 

@@ -17,7 +17,6 @@
 #include <botan/srp6.h>
 #include <botan/rng.h>
 #include <botan/loadstor.h>
-#include <memory>
 
 namespace Botan {
 

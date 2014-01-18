@@ -13,7 +13,6 @@
 #include <botan/charset.h>
 #include <botan/internal/bit_ops.h>
 #include <algorithm>
-#include <memory>
 
 namespace Botan {
 

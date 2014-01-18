@@ -11,7 +11,6 @@
 #include <botan/transform.h>
 #include <botan/key_filt.h>
 #include <botan/buf_filt.h>
-#include <memory>
 
 namespace Botan {
 

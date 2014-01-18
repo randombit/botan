@@ -11,7 +11,6 @@
 #include <botan/loadstor.h>
 #include <botan/exceptn.h>
 #include <botan/internal/xor_buf.h>
-#include <memory>
 
 namespace Botan {
 

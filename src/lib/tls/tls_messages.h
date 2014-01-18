@@ -18,7 +18,6 @@
 #include <botan/pkcs8.h>
 #include <botan/x509cert.h>
 #include <vector>
-#include <memory>
 #include <string>
 
 namespace Botan {

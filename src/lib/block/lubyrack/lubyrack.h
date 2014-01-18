@@ -10,7 +10,6 @@
 
 #include <botan/block_cipher.h>
 #include <botan/hash.h>
-#include <memory>
 
 namespace Botan {
 

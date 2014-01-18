@@ -15,7 +15,6 @@
 #include <botan/pubkey.h>
 #include <botan/x509path.h>
 #include <botan/http_util.h>
-#include <memory>
 
 namespace Botan {
 

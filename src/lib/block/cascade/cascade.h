@@ -9,7 +9,6 @@
 #define BOTAN_CASCADE_H__
 
 #include <botan/block_cipher.h>
-#include <memory>
 
 namespace Botan {
 

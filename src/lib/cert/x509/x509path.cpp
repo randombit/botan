@@ -13,7 +13,6 @@
 #include <botan/oids.h>
 #include <algorithm>
 #include <chrono>
-#include <memory>
 #include <iostream>
 
 namespace Botan {

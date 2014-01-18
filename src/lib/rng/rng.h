@@ -11,7 +11,6 @@
 #include <botan/entropy_src.h>
 #include <botan/exceptn.h>
 #include <string>
-#include <memory>
 #include <mutex>
 
 namespace Botan {

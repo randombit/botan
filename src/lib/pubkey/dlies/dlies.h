@@ -11,7 +11,6 @@
 #include <botan/pubkey.h>
 #include <botan/mac.h>
 #include <botan/kdf.h>
-#include <memory>
 
 namespace Botan {
 

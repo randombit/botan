@@ -12,7 +12,6 @@
 #include <botan/block_cipher.h>
 #include <botan/stream_cipher.h>
 #include <botan/mac.h>
-#include <memory>
 
 namespace Botan {
 

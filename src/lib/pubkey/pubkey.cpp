@@ -14,7 +14,6 @@
 #include <botan/engine.h>
 #include <botan/lookup.h>
 #include <botan/internal/bit_ops.h>
-#include <memory>
 
 namespace Botan {
 

@@ -8,7 +8,6 @@
 #include <botan/oaep.h>
 #include <botan/mgf1.h>
 #include <botan/mem_ops.h>
-#include <memory>
 
 namespace Botan {
 

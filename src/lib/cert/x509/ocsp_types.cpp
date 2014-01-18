@@ -12,7 +12,6 @@
 #include <botan/lookup.h>
 #include <botan/hash.h>
 #include <botan/oids.h>
-#include <memory>
 
 namespace Botan {
 

@@ -11,7 +11,6 @@
 #include <botan/eme.h>
 #include <botan/kdf.h>
 #include <botan/hash.h>
-#include <memory>
 
 namespace Botan {
 

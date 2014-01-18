@@ -11,7 +11,6 @@
 #include <botan/asn1_str.h>
 #include <botan/pem.h>
 #include <botan/cryptobox_psk.h>
-#include <memory>
 
 namespace Botan {
 

@@ -10,7 +10,6 @@
 #include <botan/hmac.h>
 #include <botan/sha2_32.h>
 #include <stdexcept>
-#include <memory>
 
 namespace Botan {
 

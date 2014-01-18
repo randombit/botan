@@ -10,7 +10,6 @@
 
 #include <botan/rng.h>
 #include <string>
-#include <memory>
 
 namespace Botan {
 

@@ -17,7 +17,6 @@
 #include <algorithm>
 #include <typeinfo>
 #include <iterator>
-#include <memory>
 #include <set>
 
 namespace Botan {

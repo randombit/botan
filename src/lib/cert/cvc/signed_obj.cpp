@@ -9,7 +9,6 @@
 #include <botan/signed_obj.h>
 #include <botan/pubkey.h>
 #include <botan/oids.h>
-#include <memory>
 
 namespace Botan {
 

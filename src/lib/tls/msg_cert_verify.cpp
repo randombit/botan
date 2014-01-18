@@ -9,7 +9,6 @@
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_extensions.h>
 #include <botan/internal/tls_handshake_io.h>
-#include <memory>
 
 namespace Botan {
 

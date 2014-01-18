@@ -15,7 +15,6 @@
 #include <botan/eme.h>
 #include <botan/emsa.h>
 #include <botan/kdf.h>
-#include <memory>
 
 namespace Botan {
 

@@ -13,7 +13,6 @@
 #include <botan/oids.h>
 #include <botan/pem.h>
 #include <botan/internal/pk_algs.h>
-#include <memory>
 
 namespace Botan {
 

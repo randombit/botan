@@ -17,7 +17,6 @@
 #include <botan/rsa.h>
 #include <botan/srp6.h>
 #include <botan/oids.h>
-#include <memory>
 
 namespace Botan {
 

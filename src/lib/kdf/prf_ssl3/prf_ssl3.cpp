@@ -10,7 +10,6 @@
 #include <botan/exceptn.h>
 #include <botan/sha160.h>
 #include <botan/md5.h>
-#include <memory>
 
 namespace Botan {
 

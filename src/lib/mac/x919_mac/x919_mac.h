@@ -10,7 +10,6 @@
 
 #include <botan/mac.h>
 #include <botan/block_cipher.h>
-#include <memory>
 
 namespace Botan {
 

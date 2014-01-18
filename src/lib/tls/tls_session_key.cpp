@@ -9,7 +9,6 @@
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_messages.h>
 #include <botan/lookup.h>
-#include <memory>
 
 namespace Botan {
 

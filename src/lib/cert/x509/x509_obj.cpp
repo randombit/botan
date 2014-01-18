@@ -14,7 +14,6 @@
 #include <botan/parsing.h>
 #include <botan/pem.h>
 #include <algorithm>
-#include <memory>
 
 namespace Botan {
 

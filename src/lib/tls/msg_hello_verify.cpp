@@ -7,7 +7,6 @@
 
 #include <botan/internal/tls_messages.h>
 #include <botan/lookup.h>
-#include <memory>
 
 namespace Botan {
 

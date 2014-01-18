@@ -9,7 +9,6 @@
 #include <botan/tls_exceptn.h>
 #include <botan/libstate.h>
 #include <botan/hash.h>
-#include <memory>
 
 namespace Botan {
 

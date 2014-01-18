@@ -10,7 +10,6 @@
 #include <botan/lookup.h>
 #include <botan/hex.h>
 #include <botan/loadstor.h>
-#include <memory>
 #include <chrono>
 
 namespace Botan {

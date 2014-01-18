@@ -15,7 +15,6 @@
 #include <botan/x509cert.h>
 #include <vector>
 #include <string>
-#include <memory>
 #include <map>
 
 namespace Botan {

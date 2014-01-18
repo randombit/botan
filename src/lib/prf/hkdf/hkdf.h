@@ -10,7 +10,6 @@
 
 #include <botan/mac.h>
 #include <botan/hash.h>
-#include <memory>
 
 namespace Botan {
 

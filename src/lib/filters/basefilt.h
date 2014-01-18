@@ -11,7 +11,6 @@
 
 #include <botan/filter.h>
 #include <thread>
-#include <memory>
 
 namespace Botan {
 

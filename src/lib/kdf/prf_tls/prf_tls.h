@@ -10,7 +10,6 @@
 
 #include <botan/kdf.h>
 #include <botan/mac.h>
-#include <memory>
 
 namespace Botan {
 

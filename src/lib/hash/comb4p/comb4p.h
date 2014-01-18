@@ -9,7 +9,6 @@
 #define BOTAN_COMB4P_H__
 
 #include <botan/hash.h>
-#include <memory>
 
 namespace Botan {
 

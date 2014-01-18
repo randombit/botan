@@ -10,7 +10,6 @@
 
 #include <botan/tls_session_manager.h>
 #include <botan/rng.h>
-#include <memory>
 
 namespace Botan {
 
