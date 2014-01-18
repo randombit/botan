@@ -67,9 +67,9 @@ const T* factory_prototype(const std::string& algo_spec,
                            const std::string& provider,
                            const std::vector<Engine*>& engines,
                            Algorithm_Factory& af,
-                           Algorithm_Cache<T>* cache)
+                           Algorithm_Cache<T>& cache)
    {
-   if(const T* cache_hit = cache->get(algo_spec, provider))
+   if(const T* cache_hit = cache.get(algo_spec, provider))
       return cache_hit;
 
    SCAN_Name scan_name(algo_spec);
@@ -82,11 +82,11 @@ const T* factory_prototype(const std::string& algo_spec,
       if(provider == "" || engines[i]->provider_name() == provider)
          {
          if(T* impl = engine_get_algo<T>(engines[i], scan_name, af))
-            cache->add(impl, algo_spec, engines[i]->provider_name());
+            cache.add(impl, algo_spec, engines[i]->provider_name());
          }
       }
 
-   return cache->get(algo_spec, provider);
+   return cache.get(algo_spec, provider);
    }
 
 }
@@ -96,11 +96,11 @@ const T* factory_prototype(const std::string& algo_spec,
 */
 Algorithm_Factory::Algorithm_Factory()
    {
-   block_cipher_cache = new Algorithm_Cache<BlockCipher>();
-   stream_cipher_cache = new Algorithm_Cache<StreamCipher>();
-   hash_cache = new Algorithm_Cache<HashFunction>();
-   mac_cache = new Algorithm_Cache<MessageAuthenticationCode>();
-   pbkdf_cache = new Algorithm_Cache<PBKDF>();
+   block_cipher_cache.reset(new Algorithm_Cache<BlockCipher>());
+   stream_cipher_cache.reset(new Algorithm_Cache<StreamCipher>());
+   hash_cache.reset(new Algorithm_Cache<HashFunction>());
+   mac_cache.reset(new Algorithm_Cache<MessageAuthenticationCode>());
+   pbkdf_cache.reset(new Algorithm_Cache<PBKDF>());
    }
 
 /*
@@ -108,12 +108,6 @@ Algorithm_Factory::Algorithm_Factory()
 */
 Algorithm_Factory::~Algorithm_Factory()
    {
-   delete block_cipher_cache;
-   delete stream_cipher_cache;
-   delete hash_cache;
-   delete mac_cache;
-   delete pbkdf_cache;
-
    for(auto i = engines.begin(); i != engines.end(); ++i)
       delete *i;
    }
@@ -195,7 +189,7 @@ Algorithm_Factory::prototype_block_cipher(const std::string& algo_spec,
                                           const std::string& provider)
    {
    return factory_prototype<BlockCipher>(algo_spec, provider, engines,
-                                          *this, block_cipher_cache);
+                                          *this, *block_cipher_cache);
    }
 
 /*
@@ -206,7 +200,7 @@ Algorithm_Factory::prototype_stream_cipher(const std::string& algo_spec,
                                            const std::string& provider)
    {
    return factory_prototype<StreamCipher>(algo_spec, provider, engines,
-                                          *this, stream_cipher_cache);
+                                          *this, *stream_cipher_cache);
    }
 
 /*
@@ -217,7 +211,7 @@ Algorithm_Factory::prototype_hash_function(const std::string& algo_spec,
                                            const std::string& provider)
    {
    return factory_prototype<HashFunction>(algo_spec, provider, engines,
-                                          *this, hash_cache);
+                                          *this, *hash_cache);
    }
 
 /*
@@ -229,7 +223,7 @@ Algorithm_Factory::prototype_mac(const std::string& algo_spec,
    {
    return factory_prototype<MessageAuthenticationCode>(algo_spec, provider,
                                                        engines,
-                                                       *this, mac_cache);
+                                                       *this, *mac_cache);
    }
 
 /*
@@ -241,7 +235,7 @@ Algorithm_Factory::prototype_pbkdf(const std::string& algo_spec,
    {
    return factory_prototype<PBKDF>(algo_spec, provider,
                                    engines,
-                                   *this, pbkdf_cache);
+                                   *this, *pbkdf_cache);
    }
 
 /*

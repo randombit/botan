@@ -213,11 +213,11 @@ class BOTAN_DLL Algorithm_Factory
 
       std::vector<Engine*> engines;
 
-      Algorithm_Cache<BlockCipher>* block_cipher_cache;
-      Algorithm_Cache<StreamCipher>* stream_cipher_cache;
-      Algorithm_Cache<HashFunction>* hash_cache;
-      Algorithm_Cache<MessageAuthenticationCode>* mac_cache;
-      Algorithm_Cache<PBKDF>* pbkdf_cache;
+      std::unique_ptr<Algorithm_Cache<BlockCipher>> block_cipher_cache;
+      std::unique_ptr<Algorithm_Cache<StreamCipher>> stream_cipher_cache;
+      std::unique_ptr<Algorithm_Cache<HashFunction>> hash_cache;
+      std::unique_ptr<Algorithm_Cache<MessageAuthenticationCode>> mac_cache;
+      std::unique_ptr<Algorithm_Cache<PBKDF>> pbkdf_cache;
    };
 
 }
