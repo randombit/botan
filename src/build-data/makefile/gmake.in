@@ -56,7 +56,7 @@ WEBSITE_DIR=%{doc_output_dir}/website
 WEBSITE_SRC_DIR=%{doc_output_dir}/website-src
 
 clean:
-	$(RM_R) %{build_dir}/obj
+	$(RM) %{libobj_dir}/* %{testobj_dir}/* %{appobj_dir}/*
 	$(RM) $(LIBRARIES) $(SYMLINK) $(SONAME) $(APP) $(TEST)
 
 distclean: clean

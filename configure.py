@@ -1190,6 +1190,11 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'docdir': options.docdir or osinfo.doc_dir,
 
         'build_dir': build_config.build_dir,
+
+        'appobj_dir': build_config.appobj_dir,
+        'libobj_dir': build_config.libobj_dir,
+        'testobj_dir': build_config.testobj_dir,
+
         'doc_output_dir': build_config.doc_output_dir,
 
         'build_doc_commands': build_config.build_doc_commands,
