@@ -11,6 +11,7 @@
 #include <botan/pubkey.h>
 #include <botan/mac.h>
 #include <botan/kdf.h>
+#include <memory>
 
 namespace Botan {
 
@@ -25,8 +26,6 @@ class BOTAN_DLL DLIES_Encryptor : public PK_Encryptor
                       MessageAuthenticationCode* mac,
                       size_t mac_key_len = 20);
 
-      ~DLIES_Encryptor();
-
       void set_other_key(const std::vector<byte>&);
    private:
       std::vector<byte> enc(const byte[], size_t,
@@ -37,8 +36,8 @@ class BOTAN_DLL DLIES_Encryptor : public PK_Encryptor
       std::vector<byte> other_key, my_key;
 
       PK_Key_Agreement ka;
-      KDF* kdf;
-      MessageAuthenticationCode* mac;
+      std::unique_ptr<KDF> kdf;
+      std::unique_ptr<MessageAuthenticationCode> mac;
       size_t mac_keylen;
    };
 
@@ -53,16 +52,14 @@ class BOTAN_DLL DLIES_Decryptor : public PK_Decryptor
                       MessageAuthenticationCode* mac,
                       size_t mac_key_len = 20);
 
-      ~DLIES_Decryptor();
-
    private:
       secure_vector<byte> dec(const byte[], size_t) const;
 
       std::vector<byte> my_key;
 
       PK_Key_Agreement ka;
-      KDF* kdf;
-      MessageAuthenticationCode* mac;
+      std::unique_ptr<KDF> kdf;
+      std::unique_ptr<MessageAuthenticationCode> mac;
       size_t mac_keylen;
    };
 

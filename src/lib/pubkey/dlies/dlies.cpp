@@ -25,12 +25,6 @@ DLIES_Encryptor::DLIES_Encryptor(const PK_Key_Agreement_Key& key,
    my_key = key.public_value();
    }
 
-DLIES_Encryptor::~DLIES_Encryptor()
-   {
-   delete kdf;
-   delete mac;
-   }
-
 /*
 * DLIES Encryption
 */
@@ -97,12 +91,6 @@ DLIES_Decryptor::DLIES_Decryptor(const PK_Key_Agreement_Key& key,
    mac_keylen(mac_kl)
    {
    my_key = key.public_value();
-   }
-
-DLIES_Decryptor::~DLIES_Decryptor()
-   {
-   delete kdf;
-   delete mac;
    }
 
 /*

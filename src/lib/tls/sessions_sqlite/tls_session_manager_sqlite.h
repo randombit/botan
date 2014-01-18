@@ -10,6 +10,7 @@
 
 #include <botan/tls_session_manager.h>
 #include <botan/rng.h>
+#include <memory>
 
 namespace Botan {
 
@@ -70,7 +71,7 @@ class BOTAN_DLL Session_Manager_SQLite : public Session_Manager
       RandomNumberGenerator& m_rng;
       size_t m_max_sessions;
       std::chrono::seconds m_session_lifetime;
-      sqlite3_database* m_db;
+      std::unique_ptr<sqlite3_database> m_db;
    };
 
 }

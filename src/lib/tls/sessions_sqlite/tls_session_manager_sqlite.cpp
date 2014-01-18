@@ -119,7 +119,6 @@ Session_Manager_SQLite::Session_Manager_SQLite(const std::string& passphrase,
 
 Session_Manager_SQLite::~Session_Manager_SQLite()
    {
-   delete m_db;
    }
 
 bool Session_Manager_SQLite::load_from_session_id(const std::vector<byte>& session_id,
