@@ -14,9 +14,9 @@
 namespace Botan {
 
 /**
-EMSA1_BSI is a variant of EMSA1 specified by the BSI. It accepts only
-hash values which are less or equal than the maximum key length. The
-implementation comes from InSiTo
+* EMSA1_BSI is a variant of EMSA1 specified by the BSI. It accepts
+* only hash values which are less or equal than the maximum key
+* length. The implementation comes from InSiTo
 */
 class BOTAN_DLL EMSA1_BSI : public EMSA1
    {

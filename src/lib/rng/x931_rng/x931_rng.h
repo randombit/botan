@@ -34,15 +34,15 @@ class BOTAN_DLL ANSI_X931_RNG : public RandomNumberGenerator
       */
       ANSI_X931_RNG(BlockCipher* cipher,
                     RandomNumberGenerator* rng);
-      ~ANSI_X931_RNG();
+
    private:
       void rekey();
       void update_buffer();
 
-      BlockCipher* cipher;
-      RandomNumberGenerator* prng;
-      secure_vector<byte> V, R;
-      size_t position;
+      std::unique_ptr<BlockCipher> m_cipher;
+      std::unique_ptr<RandomNumberGenerator> m_prng;
+      secure_vector<byte> m_V, m_R;
+      size_t m_R_pos;
    };
 
 }

@@ -1,8 +1,5 @@
 /*
-* Format Preserving Encryption using the scheme FE1 from the paper
-* "Format-Preserving Encryption" by Bellare, Rogaway, et al
-*    (http://eprint.iacr.org/2009/251)
-*
+* Format Preserving Encryption (FE1 scheme)
 * (C) 2009 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
@@ -13,6 +10,7 @@
 #include <botan/hmac.h>
 #include <botan/sha2_32.h>
 #include <stdexcept>
+#include <memory>
 
 namespace Botan {
 
@@ -86,12 +84,10 @@ class FPE_Encryptor
                     const BigInt& n,
                     const std::vector<byte>& tweak);
 
-      ~FPE_Encryptor() { delete mac; }
-
       BigInt operator()(size_t i, const BigInt& R);
 
    private:
-      MessageAuthenticationCode* mac;
+      std::unique_ptr<MessageAuthenticationCode> mac;
       std::vector<byte> mac_n_t;
    };
 
@@ -99,7 +95,7 @@ FPE_Encryptor::FPE_Encryptor(const SymmetricKey& key,
                              const BigInt& n,
                              const std::vector<byte>& tweak)
    {
-   mac = new HMAC(new SHA_256);
+   mac.reset(new HMAC(new SHA_256));
    mac->set_key(key);
 
    std::vector<byte> n_bin = BigInt::encode(n);

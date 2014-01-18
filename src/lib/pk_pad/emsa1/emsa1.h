@@ -21,26 +21,25 @@ class BOTAN_DLL EMSA1 : public EMSA
    {
    public:
       /**
-      * @param h the hash object to use
+      * @param hash the hash function to use
       */
-      EMSA1(HashFunction* h) : hash(h) {}
-      ~EMSA1() { delete hash; }
+      EMSA1(HashFunction* hash) : m_hash(hash) {}
+
    protected:
-      /**
-      * @return const pointer to the underlying hash
-      */
-      const HashFunction* hash_ptr() const { return hash; }
+      size_t hash_output_length() const { return m_hash->output_length(); }
    private:
       void update(const byte[], size_t);
       secure_vector<byte> raw_data();
 
-      secure_vector<byte> encoding_of(const secure_vector<byte>&, size_t,
-                                     RandomNumberGenerator& rng);
+      secure_vector<byte> encoding_of(const secure_vector<byte>& msg,
+                                      size_t output_bits,
+                                      RandomNumberGenerator& rng);
 
-      bool verify(const secure_vector<byte>&, const secure_vector<byte>&,
-                  size_t);
+      bool verify(const secure_vector<byte>& coded,
+                  const secure_vector<byte>& raw,
+                  size_t key_bits);
 
-      HashFunction* hash;
+      std::unique_ptr<HashFunction> m_hash;
    };
 
 }

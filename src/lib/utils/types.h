@@ -12,6 +12,7 @@
 #include <botan/assert.h>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 
 /**
 * The primary namespace for the botan library

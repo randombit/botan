@@ -40,42 +40,30 @@ secure_vector<byte> emsa1_encoding(const secure_vector<byte>& msg,
 
 }
 
-/*
-* EMSA1 Update Operation
-*/
 void EMSA1::update(const byte input[], size_t length)
    {
-   hash->update(input, length);
+   m_hash->update(input, length);
    }
 
-/*
-* Return the raw (unencoded) data
-*/
 secure_vector<byte> EMSA1::raw_data()
    {
-   return hash->final();
+   return m_hash->final();
    }
 
-/*
-* EMSA1 Encode Operation
-*/
 secure_vector<byte> EMSA1::encoding_of(const secure_vector<byte>& msg,
-                                      size_t output_bits,
-                                      RandomNumberGenerator&)
+                                       size_t output_bits,
+                                       RandomNumberGenerator&)
    {
-   if(msg.size() != hash->output_length())
+   if(msg.size() != hash_output_length())
       throw Encoding_Error("EMSA1::encoding_of: Invalid size for input");
    return emsa1_encoding(msg, output_bits);
    }
 
-/*
-* EMSA1 Decode/Verify Operation
-*/
 bool EMSA1::verify(const secure_vector<byte>& coded,
                    const secure_vector<byte>& raw, size_t key_bits)
    {
    try {
-      if(raw.size() != hash->output_length())
+      if(raw.size() != m_hash->output_length())
          throw Encoding_Error("EMSA1::encoding_of: Invalid size for input");
 
       secure_vector<byte> our_coding = emsa1_encoding(raw, key_bits);
