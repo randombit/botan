@@ -144,12 +144,6 @@ void set_defaults()
    OIDS::add_oidstr("2.5.4.65", "X520.Pseudonym");
 
    OIDS::add_oidstr("1.2.840.113549.1.5.12", "PKCS5.PBKDF2");
-   OIDS::add_oidstr("1.2.840.113549.1.5.1",  "PBE-PKCS5v15(MD2,DES/CBC)");
-   OIDS::add_oidstr("1.2.840.113549.1.5.4",  "PBE-PKCS5v15(MD2,RC2/CBC)");
-   OIDS::add_oidstr("1.2.840.113549.1.5.3",  "PBE-PKCS5v15(MD5,DES/CBC)");
-   OIDS::add_oidstr("1.2.840.113549.1.5.6",  "PBE-PKCS5v15(MD5,RC2/CBC)");
-   OIDS::add_oidstr("1.2.840.113549.1.5.10", "PBE-PKCS5v15(SHA-160,DES/CBC)");
-   OIDS::add_oidstr("1.2.840.113549.1.5.11", "PBE-PKCS5v15(SHA-160,RC2/CBC)");
    OIDS::add_oidstr("1.2.840.113549.1.5.13", "PBE-PKCS5v20");
 
    OIDS::add_oidstr("1.2.840.113549.1.9.1", "PKCS9.EmailAddress");

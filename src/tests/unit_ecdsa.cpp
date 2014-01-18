@@ -440,14 +440,12 @@ size_t test_read_pkcs8(RandomNumberGenerator& rng)
 
 size_t test_ecc_key_with_rfc5915_extensions(RandomNumberGenerator& rng)
    {
-   const std::string pw = "G3bz1L1gmB5ULietOZdoLPu63D7uwTLMEk";
-
    size_t fails = 0;
 
    try
       {
       std::unique_ptr<PKCS8_PrivateKey> pkcs8(
-         PKCS8::load_key(ECC_TEST_DATA_DIR "/ecc_private_with_rfc5915_ext.pem", rng, pw));
+         PKCS8::load_key(ECC_TEST_DATA_DIR "/ecc_private_with_rfc5915_ext.pem", rng));
 
       if(!dynamic_cast<ECDSA_PrivateKey*>(pkcs8.get()))
          {

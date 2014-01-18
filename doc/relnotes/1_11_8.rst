@@ -1,0 +1,5 @@
+Version 1.11.8, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* The antique PBES1 private key encryption scheme (which only supports
+  DES or 64-bit RC2) has been removed.
