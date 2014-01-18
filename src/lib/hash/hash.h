@@ -9,7 +9,6 @@
 #define BOTAN_HASH_FUNCTION_BASE_CLASS_H__
 
 #include <botan/buf_comp.h>
-#include <botan/algo_base.h>
 #include <string>
 
 namespace Botan {
@@ -17,14 +16,17 @@ namespace Botan {
 /**
 * This class represents hash function (message digest) objects
 */
-class BOTAN_DLL HashFunction : public Buffered_Computation,
-                               public Algorithm
+class BOTAN_DLL HashFunction : public Buffered_Computation
    {
    public:
       /**
       * @return new object representing the same algorithm as *this
       */
       virtual HashFunction* clone() const = 0;
+
+      virtual void clear() = 0;
+
+      virtual std::string name() const = 0;
 
       /**
       * @return hash block size as defined for this algorithm

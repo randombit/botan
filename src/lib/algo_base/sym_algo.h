@@ -8,7 +8,6 @@
 #ifndef BOTAN_SYMMETRIC_ALGORITHM_H__
 #define BOTAN_SYMMETRIC_ALGORITHM_H__
 
-#include <botan/algo_base.h>
 #include <botan/key_spec.h>
 #include <botan/exceptn.h>
 #include <botan/symkey.h>
@@ -19,9 +18,13 @@ namespace Botan {
 /**
 * This class represents a symmetric algorithm object.
 */
-class BOTAN_DLL SymmetricAlgorithm : public Algorithm
+class BOTAN_DLL SymmetricAlgorithm
    {
    public:
+      virtual ~SymmetricAlgorithm() {}
+
+      virtual void clear() = 0;
+
       /**
       * @return object describing limits on key size
       */
@@ -58,7 +61,15 @@ class BOTAN_DLL SymmetricAlgorithm : public Algorithm
       * @param key the SymmetricKey to be set.
       */
       void set_key(const SymmetricKey& key)
-         { set_key(key.begin(), key.length()); }
+         {
+         set_key(key.begin(), key.length());
+         }
+
+      template<typename Alloc>
+      void set_key(const std::vector<byte, Alloc>& key)
+         {
+         set_key(&key[0], key.size());
+         }
 
       /**
       * Set the symmetric key of this object.
@@ -72,11 +83,8 @@ class BOTAN_DLL SymmetricAlgorithm : public Algorithm
          key_schedule(key, length);
          }
 
-      template<typename Alloc>
-      void set_key(const std::vector<byte, Alloc>& v)
-         {
-         set_key(&v[0], v.size());
-         }
+      virtual std::string name() const = 0;
+
    private:
       /**
       * Run the key schedule
@@ -85,12 +93,6 @@ class BOTAN_DLL SymmetricAlgorithm : public Algorithm
       */
       virtual void key_schedule(const byte key[], size_t length) = 0;
    };
-
-/**
-* The two possible directions for cipher filters, determining whether they
-* actually perform encryption or decryption.
-*/
-enum Cipher_Dir { ENCRYPTION, DECRYPTION };
 
 }
 

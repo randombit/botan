@@ -36,11 +36,11 @@ int connect_to_host(const std::string& host, u16bit port, const std::string& tra
    {
    hostent* host_addr = ::gethostbyname(host.c_str());
 
-   if(host_addr == 0)
+   if(!host_addr)
       throw std::runtime_error("gethostbyname failed for " + host);
 
    if(host_addr->h_addrtype != AF_INET) // FIXME
-      throw std::runtime_error(host + " has IPv6 address");
+      throw std::runtime_error(host + " has IPv6 address, not supported");
 
    int type = (transport == "tcp") ? SOCK_STREAM : SOCK_DGRAM;
 

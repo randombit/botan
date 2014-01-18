@@ -33,7 +33,7 @@ class BOTAN_DLL ECB_Mode : public Cipher_Mode
 
       bool valid_nonce_length(size_t n) const override;
 
-      void clear();
+      void clear() override;
    protected:
       ECB_Mode(BlockCipher* cipher, BlockCipherModePaddingMethod* padding);
 

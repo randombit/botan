@@ -46,12 +46,17 @@ void Transformation_Filter::set_iv(const InitializationVector& iv)
 
 void Transformation_Filter::set_key(const SymmetricKey& key)
    {
-   m_transform->set_key(key);
+   if(Keyed_Transform* keyed = dynamic_cast<Keyed_Transform*>(m_transform.get()))
+      keyed->set_key(key);
+   else if(key.length() != 0)
+      throw std::runtime_error("Transformation " + name() + " does not accept keys");
    }
 
 Key_Length_Specification Transformation_Filter::key_spec() const
    {
-   return m_transform->key_spec();
+   if(Keyed_Transform* keyed = dynamic_cast<Keyed_Transform*>(m_transform.get()))
+      return keyed->key_spec();
+   return Key_Length_Specification(0);
    }
 
 bool Transformation_Filter::valid_iv_length(size_t length) const

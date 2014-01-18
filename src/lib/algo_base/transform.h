@@ -8,15 +8,19 @@
 #ifndef BOTAN_TRANSFORM_H__
 #define BOTAN_TRANSFORM_H__
 
-#include <botan/sym_algo.h>
+#include <botan/secmem.h>
+#include <botan/key_spec.h>
+#include <botan/exceptn.h>
+#include <botan/symkey.h>
 #include <string>
+#include <vector>
 
 namespace Botan {
 
 /**
 * Interface for general transformations on data
 */
-class BOTAN_DLL Transformation : public SymmetricAlgorithm
+class BOTAN_DLL Transformation
    {
    public:
       /**
@@ -75,10 +79,6 @@ class BOTAN_DLL Transformation : public SymmetricAlgorithm
       */
       virtual size_t default_nonce_length() const = 0;
 
-      BOTAN_DEPRECATED("Use default_nonce_length")
-      size_t default_nonce_size() const
-         { return default_nonce_length(); }
-
       /**
       * Return true iff nonce_len is a valid length for the nonce
       */
@@ -92,7 +92,56 @@ class BOTAN_DLL Transformation : public SymmetricAlgorithm
       */
       virtual std::string provider() const { return "core"; }
 
+      virtual std::string name() const = 0;
+
+      virtual void clear() = 0;
+
       virtual ~Transformation() {}
+   };
+
+class BOTAN_DLL Keyed_Transform : public Transformation
+   {
+   public:
+      /**
+      * @return object describing limits on key size
+      */
+      virtual Key_Length_Specification key_spec() const = 0;
+
+      /**
+      * Check whether a given key length is valid for this algorithm.
+      * @param length the key length to be checked.
+      * @return true if the key length is valid.
+      */
+      bool valid_keylength(size_t length) const
+         {
+         return key_spec().valid_keylength(length);
+         }
+
+      template<typename Alloc>
+      void set_key(const std::vector<byte, Alloc>& key)
+         {
+         set_key(&key[0], key.size());
+         }
+
+      void set_key(const SymmetricKey& key)
+         {
+         set_key(key.begin(), key.length());
+         }
+
+      /**
+      * Set the symmetric key of this transform
+      * @param key contains the key material
+      * @param length in bytes of key param
+      */
+      void set_key(const byte key[], size_t length)
+         {
+         if(!valid_keylength(length))
+            throw Invalid_Key_Length(name(), length);
+         key_schedule(key, length);
+         }
+
+   private:
+      virtual void key_schedule(const byte key[], size_t length) = 0;
    };
 
 }

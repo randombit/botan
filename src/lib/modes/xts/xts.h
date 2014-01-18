@@ -34,7 +34,7 @@ class BOTAN_DLL XTS_Mode : public Cipher_Mode
 
       bool valid_nonce_length(size_t n) const override;
 
-      void clear();
+      void clear() override;
    protected:
       XTS_Mode(BlockCipher* cipher);
 

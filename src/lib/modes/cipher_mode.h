@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * Interface for cipher modes
 */
-class BOTAN_DLL Cipher_Mode : public Transformation
+class BOTAN_DLL Cipher_Mode : public Keyed_Transform
    {
    public:
       /**

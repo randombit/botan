@@ -28,16 +28,16 @@ class BOTAN_DLL EAX_Mode : public AEAD_Mode
 
       std::string name() const override;
 
-      size_t update_granularity() const;
+      size_t update_granularity() const override;
 
       Key_Length_Specification key_spec() const override;
 
       // EAX supports arbitrary nonce lengths
       bool valid_nonce_length(size_t) const override { return true; }
 
-      size_t tag_size() const { return m_tag_size; }
+      size_t tag_size() const override { return m_tag_size; }
 
-      void clear();
+      void clear() override;
    protected:
       void key_schedule(const byte key[], size_t length) override;
 

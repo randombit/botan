@@ -37,7 +37,7 @@ class BOTAN_DLL CFB_Mode : public Cipher_Mode
 
       bool valid_nonce_length(size_t n) const override;
 
-      void clear();
+      void clear() override;
    protected:
       CFB_Mode(BlockCipher* cipher, size_t feedback_bits);
 

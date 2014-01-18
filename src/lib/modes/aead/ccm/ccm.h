@@ -39,7 +39,7 @@ class BOTAN_DLL CCM_Mode : public AEAD_Mode
 
       size_t default_nonce_length() const override;
 
-      void clear();
+      void clear() override;
 
       size_t tag_size() const { return m_tag_size; }
 

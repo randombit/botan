@@ -269,7 +269,7 @@ int main(int argc, char* argv[])
 
    if(tests.empty())
       {
-      std::cout << "No tests selected by target " << target << "\n";
+      std::cout << "No tests selected by target '" << target << "'\n";
       return 1;
       }
 

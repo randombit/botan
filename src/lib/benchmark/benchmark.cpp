@@ -103,7 +103,7 @@ time_algorithm_ops(const std::string& name,
 
       if(enc && dec)
          {
-         const SymmetricKey key(rng, enc->maximum_keylength());
+         const SymmetricKey key(rng, enc->key_spec().maximum_keylength());
 
          return std::map<std::string, double>({
                { "key schedule", time_op(runtime / 4, [&]() { enc->set_key(key); dec->set_key(key); }) / 2 },

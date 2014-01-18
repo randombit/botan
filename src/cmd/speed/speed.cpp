@@ -133,9 +133,6 @@ void time_transform(std::unique_ptr<Transformation> tf,
    if(!tf)
       return;
 
-   if(tf->maximum_keylength() > 0)
-      tf->set_key(rng.random_vec(tf->maximum_keylength()));
-
    for(size_t buf_size : { 16, 64, 256, 1024, 8192 })
       {
       secure_vector<byte> buffer(buf_size);
@@ -158,6 +155,10 @@ void time_transform(const std::string& algo, RandomNumberGenerator& rng)
    {
    std::unique_ptr<Transformation> tf;
    tf.reset(get_aead(algo, ENCRYPTION));
+
+   if(Keyed_Transform* keyed = dynamic_cast<Keyed_Transform*>(tf.get()))
+      keyed->set_key(rng.random_vec(keyed->key_spec().maximum_keylength()));
+
    time_transform(std::move(tf), rng);
    }
 

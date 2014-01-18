@@ -36,9 +36,9 @@ class BOTAN_DLL GCM_Mode : public AEAD_Mode
       // GCM supports arbitrary nonce lengths
       bool valid_nonce_length(size_t) const override { return true; }
 
-      size_t tag_size() const { return m_tag_size; }
+      size_t tag_size() const override { return m_tag_size; }
 
-      void clear();
+      void clear() override;
    protected:
       void key_schedule(const byte key[], size_t length) override;
 
@@ -124,7 +124,7 @@ class BOTAN_DLL GHASH : public SymmetricAlgorithm
 
       Key_Length_Specification key_spec() const { return Key_Length_Specification(16); }
 
-      void clear();
+      void clear() override;
 
       std::string name() const { return "GHASH"; }
    private:

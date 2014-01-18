@@ -35,15 +35,15 @@ class BOTAN_DLL SIV_Mode : public AEAD_Mode
 
       std::string name() const override;
 
-      size_t update_granularity() const;
+      size_t update_granularity() const override;
 
       Key_Length_Specification key_spec() const override;
 
       bool valid_nonce_length(size_t) const override;
 
-      void clear();
+      void clear() override;
 
-      size_t tag_size() const { return 16; }
+      size_t tag_size() const override { return 16; }
 
    protected:
       SIV_Mode(BlockCipher* cipher);

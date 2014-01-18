@@ -33,7 +33,7 @@ class BOTAN_DLL CBC_Mode : public Cipher_Mode
 
       bool valid_nonce_length(size_t n) const override;
 
-      void clear();
+      void clear() override;
    protected:
       CBC_Mode(BlockCipher* cipher, BlockCipherModePaddingMethod* padding);
 

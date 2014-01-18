@@ -8,7 +8,6 @@
 #ifndef BOTAN_KDF_BASE_H__
 #define BOTAN_KDF_BASE_H__
 
-#include <botan/algo_base.h>
 #include <botan/secmem.h>
 #include <botan/types.h>
 
@@ -17,9 +16,13 @@ namespace Botan {
 /**
 * Key Derivation Function
 */
-class BOTAN_DLL KDF : public Algorithm
+class BOTAN_DLL KDF
    {
    public:
+      virtual ~KDF() {}
+
+      virtual std::string name() const = 0;
+
       /**
       * Derive a key
       * @param key_len the desired output length in bytes
@@ -101,8 +104,6 @@ class BOTAN_DLL KDF : public Algorithm
          {
          return derive(key_len, secret, secret_len, salt, salt_len);
          }
-
-      void clear() {}
 
       virtual KDF* clone() const = 0;
    private:

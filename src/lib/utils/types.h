@@ -36,6 +36,12 @@ typedef std::int32_t s32bit;
 */
 static const size_t DEFAULT_BUFFERSIZE = BOTAN_DEFAULT_BUFFER_SIZE;
 
+/**
+* The two possible directions for cipher filters, determining whether they
+* actually perform encryption or decryption.
+*/
+enum Cipher_Dir { ENCRYPTION, DECRYPTION };
+
 }
 
 namespace Botan_types {

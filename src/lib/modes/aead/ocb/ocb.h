@@ -35,15 +35,15 @@ class BOTAN_DLL OCB_Mode : public AEAD_Mode
 
       std::string name() const override;
 
-      size_t update_granularity() const;
+      size_t update_granularity() const override;
 
       Key_Length_Specification key_spec() const override;
 
       bool valid_nonce_length(size_t) const override;
 
-      size_t tag_size() const { return m_tag_size; }
+      size_t tag_size() const override { return m_tag_size; }
 
-      void clear();
+      void clear() override;
 
       ~OCB_Mode();
    protected:
