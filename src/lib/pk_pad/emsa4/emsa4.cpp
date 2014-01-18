@@ -8,6 +8,7 @@
 #include <botan/emsa4.h>
 #include <botan/mgf1.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/xor_buf.h>
 
 namespace Botan {
 
@@ -55,7 +56,7 @@ secure_vector<byte> EMSA4::encoding_of(const secure_vector<byte>& msg,
 
    EM[output_length - HASH_SIZE - SALT_SIZE - 2] = 0x01;
    buffer_insert(EM, output_length - 1 - HASH_SIZE - SALT_SIZE, salt);
-   mgf->mask(&H[0], HASH_SIZE, &EM[0], output_length - HASH_SIZE - 1);
+   mgf1_mask(*hash, &H[0], HASH_SIZE, &EM[0], output_length - HASH_SIZE - 1);
    EM[0] &= 0xFF >> (8 * ((output_bits + 7) / 8) - output_bits);
    buffer_insert(EM, output_length - 1 - HASH_SIZE, H);
    EM[output_length-1] = 0xBC;
@@ -102,7 +103,7 @@ bool EMSA4::verify(const secure_vector<byte>& const_coded,
    const byte* H = &coded[DB_size];
    const size_t H_size = HASH_SIZE;
 
-   mgf->mask(&H[0], H_size, &DB[0], DB_size);
+   mgf1_mask(*hash, &H[0], H_size, &DB[0], DB_size);
    DB[0] &= 0xFF >> TOP_BITS;
 
    size_t salt_offset = 0;
@@ -131,7 +132,6 @@ bool EMSA4::verify(const secure_vector<byte>& const_coded,
 EMSA4::EMSA4(HashFunction* h) :
    SALT_SIZE(h->output_length()), hash(h)
    {
-   mgf = new MGF1(hash->clone());
    }
 
 /*
@@ -140,7 +140,6 @@ EMSA4::EMSA4(HashFunction* h) :
 EMSA4::EMSA4(HashFunction* h, size_t salt_size) :
    SALT_SIZE(salt_size), hash(h)
    {
-   mgf = new MGF1(hash->clone());
    }
 
 }

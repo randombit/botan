@@ -10,7 +10,7 @@
 
 #include <botan/emsa.h>
 #include <botan/hash.h>
-#include <botan/kdf.h>
+#include <memory>
 
 namespace Botan {
 
@@ -30,20 +30,21 @@ class BOTAN_DLL EMSA4 : public EMSA
       * @param salt_size the size of the salt to use in bytes
       */
       EMSA4(HashFunction* hash, size_t salt_size);
-
-      ~EMSA4() { delete hash; delete mgf; }
    private:
-      void update(const byte[], size_t);
+      void update(const byte input[], size_t length);
+
       secure_vector<byte> raw_data();
 
-      secure_vector<byte> encoding_of(const secure_vector<byte>&, size_t,
-                                     RandomNumberGenerator& rng);
-      bool verify(const secure_vector<byte>&, const secure_vector<byte>&,
-                  size_t);
+      secure_vector<byte> encoding_of(const secure_vector<byte>& msg,
+                                      size_t output_bits,
+                                      RandomNumberGenerator& rng);
+
+      bool verify(const secure_vector<byte>& coded,
+                  const secure_vector<byte>& raw,
+                  size_t key_bits);
 
       size_t SALT_SIZE;
-      HashFunction* hash;
-      const MGF* mgf;
+      std::unique_ptr<HashFunction> hash;
    };
 
 }

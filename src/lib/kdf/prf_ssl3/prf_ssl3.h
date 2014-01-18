@@ -9,6 +9,7 @@
 #define BOTAN_SSLV3_PRF_H__
 
 #include <botan/kdf.h>
+#include <memory>
 
 namespace Botan {
 

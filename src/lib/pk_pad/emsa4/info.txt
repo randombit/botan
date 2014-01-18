@@ -2,6 +2,5 @@ define EMSA4 20131128
 
 <requires>
 hash
-kdf
 mgf1
 </requires>

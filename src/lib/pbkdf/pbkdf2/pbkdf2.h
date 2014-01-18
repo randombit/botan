@@ -10,6 +10,7 @@
 
 #include <botan/pbkdf.h>
 #include <botan/mac.h>
+#include <memory>
 
 namespace Botan {
 
@@ -38,16 +39,11 @@ class BOTAN_DLL PKCS5_PBKDF2 : public PBKDF
 
       /**
       * Create a PKCS #5 instance using the specified message auth code
-      * @param mac_fn the MAC to use
+      * @param mac_fn the MAC object to use as PRF
       */
       PKCS5_PBKDF2(MessageAuthenticationCode* mac_fn) : mac(mac_fn) {}
-
-      /**
-      * Destructor
-      */
-      ~PKCS5_PBKDF2() { delete mac; }
    private:
-      MessageAuthenticationCode* mac;
+      std::unique_ptr<MessageAuthenticationCode> mac;
    };
 
 }

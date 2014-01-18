@@ -24,20 +24,6 @@
 
 namespace Botan {
 
-/**
-* Returns file descriptors. Until it doesn't
-*/
-class File_Descriptor_Source
-   {
-   public:
-      /**
-      * @return next file descriptor, or -1 if done
-      */
-      virtual int next_fd() = 0;
-
-      virtual ~File_Descriptor_Source() {}
-   };
-
 namespace {
 
 class Directory_Walker : public File_Descriptor_Source
@@ -130,20 +116,13 @@ int Directory_Walker::next_fd()
 
 }
 
-/**
-* ProcWalking_EntropySource Destructor
-*/
-ProcWalking_EntropySource::~ProcWalking_EntropySource()
-   {
-   // for ~unique_ptr
-   }
-
 void ProcWalking_EntropySource::poll(Entropy_Accumulator& accum)
    {
    const size_t MAX_FILES_READ_PER_POLL = 2048;
+   const double ENTROPY_ESTIMATE = 1.0 / (8*1024);
 
    if(!m_dir)
-      m_dir = new Directory_Walker(m_path);
+      m_dir.reset(new Directory_Walker(m_path));
 
    secure_vector<byte>& io_buffer = accum.get_io_buffer(4096);
 
@@ -154,8 +133,7 @@ void ProcWalking_EntropySource::poll(Entropy_Accumulator& accum)
       // If we've exhaused this walk of the directory, halt the poll
       if(fd == -1)
          {
-         delete m_dir;
-         m_dir = nullptr;
+         m_dir.reset();
          break;
          }
 
@@ -163,7 +141,7 @@ void ProcWalking_EntropySource::poll(Entropy_Accumulator& accum)
       ::close(fd);
 
       if(got > 0)
-         accum.add(&io_buffer[0], got, .001);
+         accum.add(&io_buffer[0], got, ENTROPY_ESTIMATE);
 
       if(accum.polling_goal_achieved())
          break;

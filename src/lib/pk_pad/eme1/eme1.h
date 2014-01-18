@@ -11,6 +11,7 @@
 #include <botan/eme.h>
 #include <botan/kdf.h>
 #include <botan/hash.h>
+#include <memory>
 
 namespace Botan {
 
@@ -27,15 +28,13 @@ class BOTAN_DLL EME1 : public EME
       * @param P an optional label. Normally empty.
       */
       EME1(HashFunction* hash, const std::string& P = "");
-
-      ~EME1() { delete mgf; }
    private:
       secure_vector<byte> pad(const byte[], size_t, size_t,
                              RandomNumberGenerator&) const;
       secure_vector<byte> unpad(const byte[], size_t, size_t) const;
 
-      secure_vector<byte> Phash;
-      MGF* mgf;
+      secure_vector<byte> m_Phash;
+      std::unique_ptr<HashFunction> m_hash;
    };
 
 }

@@ -1,4 +1,4 @@
-define MGF1 20131128
+define MGF1 20140118
 
 <requires>
 hash

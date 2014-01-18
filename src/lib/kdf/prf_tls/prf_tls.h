@@ -10,7 +10,7 @@
 
 #include <botan/kdf.h>
 #include <botan/mac.h>
-#include <botan/hash.h>
+#include <memory>
 
 namespace Botan {
 
@@ -28,10 +28,9 @@ class BOTAN_DLL TLS_PRF : public KDF
       KDF* clone() const { return new TLS_PRF; }
 
       TLS_PRF();
-      ~TLS_PRF();
    private:
-      MessageAuthenticationCode* hmac_md5;
-      MessageAuthenticationCode* hmac_sha1;
+      std::unique_ptr<MessageAuthenticationCode> hmac_md5;
+      std::unique_ptr<MessageAuthenticationCode> hmac_sha1;
    };
 
 /**
@@ -48,9 +47,8 @@ class BOTAN_DLL TLS_12_PRF : public KDF
       KDF* clone() const { return new TLS_12_PRF(hmac->clone()); }
 
       TLS_12_PRF(MessageAuthenticationCode* hmac);
-      ~TLS_12_PRF();
    private:
-      MessageAuthenticationCode* hmac;
+      std::unique_ptr<MessageAuthenticationCode> hmac;
    };
 
 }

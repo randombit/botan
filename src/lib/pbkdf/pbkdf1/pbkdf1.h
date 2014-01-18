@@ -10,6 +10,7 @@
 
 #include <botan/pbkdf.h>
 #include <botan/hash.h>
+#include <memory>
 
 namespace Botan {
 
@@ -26,15 +27,6 @@ class BOTAN_DLL PKCS5_PBKDF1 : public PBKDF
       * @param hash_in pointer to a hash function object to use
       */
       PKCS5_PBKDF1(HashFunction* hash_in) : hash(hash_in) {}
-
-      /**
-      * Copy constructor
-      * @param other the object to copy
-      */
-      PKCS5_PBKDF1(const PKCS5_PBKDF1& other) :
-         PBKDF(), hash(other.hash->clone()) {}
-
-      ~PKCS5_PBKDF1() { delete hash; }
 
       std::string name() const
          {
@@ -53,7 +45,7 @@ class BOTAN_DLL PKCS5_PBKDF1 : public PBKDF
                         size_t iterations,
                         std::chrono::milliseconds msec) const override;
    private:
-      HashFunction* hash;
+      std::unique_ptr<HashFunction> hash;
    };
 
 }

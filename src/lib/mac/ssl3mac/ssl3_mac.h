@@ -10,6 +10,7 @@
 
 #include <botan/hash.h>
 #include <botan/mac.h>
+#include <memory>
 
 namespace Botan {
 
@@ -20,14 +21,14 @@ class BOTAN_DLL SSL3_MAC : public MessageAuthenticationCode
    {
    public:
       std::string name() const;
-      size_t output_length() const { return hash->output_length(); }
+      size_t output_length() const { return m_hash->output_length(); }
       MessageAuthenticationCode* clone() const;
 
       void clear();
 
       Key_Length_Specification key_spec() const
          {
-         return Key_Length_Specification(hash->output_length());
+         return Key_Length_Specification(m_hash->output_length());
          }
 
       /**

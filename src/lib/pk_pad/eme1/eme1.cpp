@@ -21,22 +21,24 @@ secure_vector<byte> EME1::pad(const byte in[], size_t in_length,
    {
    key_length /= 8;
 
-   if(key_length < in_length + 2*Phash.size() + 1)
+   if(key_length < in_length + 2*m_Phash.size() + 1)
       throw Invalid_Argument("EME1: Input is too large");
 
    secure_vector<byte> out(key_length);
 
-   rng.randomize(&out[0], Phash.size());
+   rng.randomize(&out[0], m_Phash.size());
 
-   buffer_insert(out, Phash.size(), &Phash[0], Phash.size());
+   buffer_insert(out, m_Phash.size(), &m_Phash[0], m_Phash.size());
    out[out.size() - in_length - 1] = 0x01;
    buffer_insert(out, out.size() - in_length, in, in_length);
 
-   mgf->mask(&out[0], Phash.size(),
-             &out[Phash.size()], out.size() - Phash.size());
+   mgf1_mask(*m_hash,
+             &out[0], m_Phash.size(),
+             &out[m_Phash.size()], out.size() - m_Phash.size());
 
-   mgf->mask(&out[Phash.size()], out.size() - Phash.size(),
-             &out[0], Phash.size());
+   mgf1_mask(*m_hash,
+             &out[m_Phash.size()], out.size() - m_Phash.size(),
+             &out[0], m_Phash.size());
 
    return out;
    }
@@ -68,14 +70,17 @@ secure_vector<byte> EME1::unpad(const byte in[], size_t in_length,
    secure_vector<byte> input(key_length);
    buffer_insert(input, key_length - in_length, in, in_length);
 
-   mgf->mask(&input[Phash.size()], input.size() - Phash.size(),
-             &input[0], Phash.size());
-   mgf->mask(&input[0], Phash.size(),
-             &input[Phash.size()], input.size() - Phash.size());
+   mgf1_mask(*m_hash,
+             &input[m_Phash.size()], input.size() - m_Phash.size(),
+             &input[0], m_Phash.size());
+
+   mgf1_mask(*m_hash,
+             &input[0], m_Phash.size(),
+             &input[m_Phash.size()], input.size() - m_Phash.size());
 
    bool waiting_for_delim = true;
    bool bad_input = false;
-   size_t delim_idx = 2 * Phash.size();
+   size_t delim_idx = 2 * m_Phash.size();
 
    /*
    * GCC 4.5 on x86-64 compiles this in a way that is still vunerable
@@ -99,7 +104,7 @@ secure_vector<byte> EME1::unpad(const byte in[], size_t in_length,
    // If we never saw any non-zero byte, then it's not valid input
    bad_input |= waiting_for_delim;
 
-   bad_input |= !same_mem(&input[Phash.size()], &Phash[0], Phash.size());
+   bad_input |= !same_mem(&input[m_Phash.size()], &m_Phash[0], m_Phash.size());
 
    if(bad_input)
       throw Decoding_Error("Invalid EME1 encoding");
@@ -112,8 +117,8 @@ secure_vector<byte> EME1::unpad(const byte in[], size_t in_length,
 */
 size_t EME1::maximum_input_size(size_t keybits) const
    {
-   if(keybits / 8 > 2*Phash.size() + 1)
-      return ((keybits / 8) - 2*Phash.size() - 1);
+   if(keybits / 8 > 2*m_Phash.size() + 1)
+      return ((keybits / 8) - 2*m_Phash.size() - 1);
    else
       return 0;
    }
@@ -121,10 +126,9 @@ size_t EME1::maximum_input_size(size_t keybits) const
 /*
 * EME1 Constructor
 */
-EME1::EME1(HashFunction* hash, const std::string& P)
+EME1::EME1(HashFunction* hash, const std::string& P) : m_hash(hash)
    {
-   Phash = hash->process(P);
-   mgf = new MGF1(hash);
+   m_Phash = m_hash->process(P);
    }
 
 }

@@ -10,6 +10,7 @@
 
 #include <botan/kdf.h>
 #include <botan/hash.h>
+#include <memory>
 
 namespace Botan {
 
@@ -27,11 +28,8 @@ class BOTAN_DLL KDF1 : public KDF
       KDF* clone() const { return new KDF1(hash->clone()); }
 
       KDF1(HashFunction* h) : hash(h) {}
-      KDF1(const KDF1& other) : KDF(), hash(other.hash->clone()) {}
-
-      ~KDF1() { delete hash; }
    private:
-      HashFunction* hash;
+      std::unique_ptr<HashFunction> hash;
    };
 
 }

@@ -112,7 +112,7 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
             m_write_buf.clear();
 
             // initiate another write if needed
-            tls_output_wanted(NULL, 0);
+            tls_output_wanted(nullptr, 0);
             }
          else
             {

@@ -1,5 +1,5 @@
 /*
-* KDF/MGF
+* Key Derivation Function interfaces
 * (C) 1999-2007 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
@@ -111,18 +111,6 @@ class BOTAN_DLL KDF
          derive(size_t key_len,
                 const byte secret[], size_t secret_len,
                 const byte salt[], size_t salt_len) const = 0;
-   };
-
-/**
-* Mask Generation Function
-*/
-class BOTAN_DLL MGF
-   {
-   public:
-      virtual void mask(const byte in[], size_t in_len,
-                              byte out[], size_t out_len) const = 0;
-
-      virtual ~MGF() {}
    };
 
 /**
