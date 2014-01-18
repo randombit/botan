@@ -5,7 +5,7 @@
 * Distributed under the terms of the Botan license
 */
 
-#include <botan/lookup.h>
+#include <botan/kdf.h>
 #include <botan/libstate.h>
 #include <botan/scan_name.h>
 

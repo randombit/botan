@@ -12,7 +12,6 @@
 #include <botan/parsing.h>
 #include <botan/libstate.h>
 #include <botan/engine.h>
-#include <botan/lookup.h>
 #include <botan/internal/bit_ops.h>
 
 namespace Botan {
