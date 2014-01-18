@@ -15,6 +15,7 @@
 #include <botan/eme.h>
 #include <botan/emsa.h>
 #include <botan/kdf.h>
+#include <memory>
 
 namespace Botan {
 
@@ -183,7 +184,7 @@ class BOTAN_DLL PK_Signer
       * Set the output format of the signature.
       * @param format the signature format to use
       */
-      void set_output_format(Signature_Format format) { sig_format = format; }
+      void set_output_format(Signature_Format format) { m_sig_format = format; }
 
       /**
       * Construct a PK Signer.
@@ -197,19 +198,14 @@ class BOTAN_DLL PK_Signer
                 const std::string& emsa,
                 Signature_Format format = IEEE_1363,
                 Fault_Protection prot = ENABLE_FAULT_PROTECTION);
-
-      PK_Signer(const PK_Signer&) = delete;
-      PK_Signer& operator=(const PK_Signer&) = delete;
-
-      ~PK_Signer() { delete op; delete verify_op; delete emsa; }
    private:
       bool self_test_signature(const std::vector<byte>& msg,
                                const std::vector<byte>& sig) const;
 
-      PK_Ops::Signature* op;
-      PK_Ops::Verification* verify_op;
-      EMSA* emsa;
-      Signature_Format sig_format;
+      std::unique_ptr<PK_Ops::Signature> m_op;
+      std::unique_ptr<PK_Ops::Verification> m_verify_op;
+      std::unique_ptr<EMSA> m_emsa;
+      Signature_Format m_sig_format;
    };
 
 /**
@@ -303,18 +299,13 @@ class BOTAN_DLL PK_Verifier
       PK_Verifier(const Public_Key& pub_key,
                   const std::string& emsa,
                   Signature_Format format = IEEE_1363);
-
-      PK_Verifier(const PK_Verifier&) = delete;
-      PK_Verifier& operator=(const PK_Verifier&) = delete;
-
-      ~PK_Verifier() { delete op; delete emsa; }
    private:
       bool validate_signature(const secure_vector<byte>& msg,
                               const byte sig[], size_t sig_len);
 
-      PK_Ops::Verification* op;
-      EMSA* emsa;
-      Signature_Format sig_format;
+      std::unique_ptr<PK_Ops::Verification> m_op;
+      std::unique_ptr<EMSA> m_emsa;
+      Signature_Format m_sig_format;
    };
 
 /**
@@ -393,14 +384,9 @@ class BOTAN_DLL PK_Key_Agreement
       */
       PK_Key_Agreement(const PK_Key_Agreement_Key& key,
                        const std::string& kdf);
-
-      PK_Key_Agreement(const PK_Key_Agreement_Key&) = delete;
-      PK_Key_Agreement& operator=(const PK_Key_Agreement&) = delete;
-
-      ~PK_Key_Agreement() { delete op; delete kdf; }
    private:
-      PK_Ops::Key_Agreement* op;
-      KDF* kdf;
+      std::unique_ptr<PK_Ops::Key_Agreement> m_op;
+      std::unique_ptr<KDF> m_kdf;
    };
 
 /**
@@ -418,14 +404,12 @@ class BOTAN_DLL PK_Encryptor_EME : public PK_Encryptor
       */
       PK_Encryptor_EME(const Public_Key& key,
                        const std::string& eme);
-
-      ~PK_Encryptor_EME() { delete op; delete eme; }
    private:
       std::vector<byte> enc(const byte[], size_t,
                              RandomNumberGenerator& rng) const;
 
-      PK_Ops::Encryption* op;
-      const EME* eme;
+      std::unique_ptr<PK_Ops::Encryption> m_op;
+      std::unique_ptr<EME> m_eme;
    };
 
 /**
@@ -441,20 +425,12 @@ class BOTAN_DLL PK_Decryptor_EME : public PK_Decryptor
       */
       PK_Decryptor_EME(const Private_Key& key,
                        const std::string& eme);
-
-      ~PK_Decryptor_EME() { delete op; delete eme; }
    private:
       secure_vector<byte> dec(const byte[], size_t) const;
 
-      PK_Ops::Decryption* op;
-      const EME* eme;
+      std::unique_ptr<PK_Ops::Decryption> m_op;
+      std::unique_ptr<EME> m_eme;
    };
-
-/*
-* Typedefs for compatability with 1.8
-*/
-typedef PK_Encryptor_EME PK_Encryptor_MR_with_EME;
-typedef PK_Decryptor_EME PK_Decryptor_MR_with_EME;
 
 }
 
