@@ -1,11 +1,12 @@
 /*
 * CMAC
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2014 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
 #include <botan/cmac.h>
+#include <botan/loadstor.h>
 #include <botan/internal/xor_buf.h>
 
 namespace Botan {
@@ -13,9 +14,10 @@ namespace Botan {
 /*
 * Perform CMAC's multiplication in GF(2^n)
 */
-secure_vector<byte> CMAC::poly_double(const secure_vector<byte>& in,
-                                     byte polynomial)
+secure_vector<byte> CMAC::poly_double(const secure_vector<byte>& in)
    {
+   const byte polynomial = (in.size() == 16) ? 0x87 : 0x1B;
+
    const byte poly_xor = (in[0] & 0x80) ? polynomial : 0;
 
    secure_vector<byte> out = in;
@@ -38,24 +40,24 @@ secure_vector<byte> CMAC::poly_double(const secure_vector<byte>& in,
 */
 void CMAC::add_data(const byte input[], size_t length)
    {
-   buffer_insert(buffer, position, input, length);
-   if(position + length > output_length())
+   buffer_insert(m_buffer, m_position, input, length);
+   if(m_position + length > output_length())
       {
-      xor_buf(state, buffer, output_length());
-      e->encrypt(state);
-      input += (output_length() - position);
-      length -= (output_length() - position);
+      xor_buf(m_state, m_buffer, output_length());
+      m_cipher->encrypt(m_state);
+      input += (output_length() - m_position);
+      length -= (output_length() - m_position);
       while(length > output_length())
          {
-         xor_buf(state, input, output_length());
-         e->encrypt(state);
+         xor_buf(m_state, input, output_length());
+         m_cipher->encrypt(m_state);
          input += output_length();
          length -= output_length();
          }
-      copy_mem(&buffer[0], input, length);
-      position = 0;
+      copy_mem(&m_buffer[0], input, length);
+      m_position = 0;
       }
-   position += length;
+   m_position += length;
    }
 
 /*
@@ -63,26 +65,26 @@ void CMAC::add_data(const byte input[], size_t length)
 */
 void CMAC::final_result(byte mac[])
    {
-   xor_buf(state, buffer, position);
+   xor_buf(m_state, m_buffer, m_position);
 
-   if(position == output_length())
+   if(m_position == output_length())
       {
-      xor_buf(state, B, output_length());
+      xor_buf(m_state, m_B, output_length());
       }
    else
       {
-      state[position] ^= 0x80;
-      xor_buf(state, P, output_length());
+      m_state[m_position] ^= 0x80;
+      xor_buf(m_state, m_P, output_length());
       }
 
-   e->encrypt(state);
+   m_cipher->encrypt(m_state);
 
    for(size_t i = 0; i != output_length(); ++i)
-      mac[i] = state[i];
+      mac[i] = m_state[i];
 
-   zeroise(state);
-   zeroise(buffer);
-   position = 0;
+   zeroise(m_state);
+   zeroise(m_buffer);
+   m_position = 0;
    }
 
 /*
@@ -91,10 +93,10 @@ void CMAC::final_result(byte mac[])
 void CMAC::key_schedule(const byte key[], size_t length)
    {
    clear();
-   e->set_key(key, length);
-   e->encrypt(B);
-   B = poly_double(B, polynomial);
-   P = poly_double(B, polynomial);
+   m_cipher->set_key(key, length);
+   m_cipher->encrypt(m_B);
+   m_B = poly_double(m_B);
+   m_P = poly_double(m_B);
    }
 
 /*
@@ -102,12 +104,12 @@ void CMAC::key_schedule(const byte key[], size_t length)
 */
 void CMAC::clear()
    {
-   e->clear();
-   zeroise(state);
-   zeroise(buffer);
-   zeroise(B);
-   zeroise(P);
-   position = 0;
+   m_cipher->clear();
+   zeroise(m_state);
+   zeroise(m_buffer);
+   zeroise(m_B);
+   zeroise(m_P);
+   m_position = 0;
    }
 
 /*
@@ -115,7 +117,7 @@ void CMAC::clear()
 */
 std::string CMAC::name() const
    {
-   return "CMAC(" + e->name() + ")";
+   return "CMAC(" + m_cipher->name() + ")";
    }
 
 /*
@@ -123,34 +125,22 @@ std::string CMAC::name() const
 */
 MessageAuthenticationCode* CMAC::clone() const
    {
-   return new CMAC(e->clone());
+   return new CMAC(m_cipher->clone());
    }
 
 /*
 * CMAC Constructor
 */
-CMAC::CMAC(BlockCipher* e_in) : e(e_in)
+CMAC::CMAC(BlockCipher* cipher) : m_cipher(cipher)
    {
-   if(e->block_size() == 16)
-      polynomial = 0x87;
-   else if(e->block_size() == 8)
-      polynomial = 0x1B;
-   else
-      throw Invalid_Argument("CMAC cannot use the cipher " + e->name());
+   if(m_cipher->block_size() != 8 && m_cipher->block_size() != 16)
+      throw Invalid_Argument("CMAC cannot use the cipher " + m_cipher->name());
 
-   state.resize(output_length());
-   buffer.resize(output_length());
-   B.resize(output_length());
-   P.resize(output_length());
-   position = 0;
-   }
-
-/*
-* CMAC Destructor
-*/
-CMAC::~CMAC()
-   {
-   delete e;
+   m_state.resize(output_length());
+   m_buffer.resize(output_length());
+   m_B.resize(output_length());
+   m_P.resize(output_length());
+   m_position = 0;
    }
 
 }

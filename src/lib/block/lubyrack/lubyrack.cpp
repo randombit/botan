@@ -1,6 +1,6 @@
 /*
 * Luby-Rackoff
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2008,2014 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -15,31 +15,31 @@ namespace Botan {
 */
 void LubyRackoff::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   const size_t len = hash->output_length();
+   const size_t len = m_hash->output_length();
 
    secure_vector<byte> buffer_vec(len);
    byte* buffer = &buffer_vec[0];
 
    for(size_t i = 0; i != blocks; ++i)
       {
-      hash->update(K1);
-      hash->update(in, len);
-      hash->final(buffer);
+      m_hash->update(m_K1);
+      m_hash->update(in, len);
+      m_hash->final(buffer);
       xor_buf(out + len, in + len, buffer, len);
 
-      hash->update(K2);
-      hash->update(out + len, len);
-      hash->final(buffer);
+      m_hash->update(m_K2);
+      m_hash->update(out + len, len);
+      m_hash->final(buffer);
       xor_buf(out, in, buffer, len);
 
-      hash->update(K1);
-      hash->update(out, len);
-      hash->final(buffer);
+      m_hash->update(m_K1);
+      m_hash->update(out, len);
+      m_hash->final(buffer);
       xor_buf(out + len, buffer, len);
 
-      hash->update(K2);
-      hash->update(out + len, len);
-      hash->final(buffer);
+      m_hash->update(m_K2);
+      m_hash->update(out + len, len);
+      m_hash->final(buffer);
       xor_buf(out, buffer, len);
 
       in += 2 * len;
@@ -52,31 +52,31 @@ void LubyRackoff::encrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void LubyRackoff::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   const size_t len = hash->output_length();
+   const size_t len = m_hash->output_length();
 
    secure_vector<byte> buffer_vec(len);
    byte* buffer = &buffer_vec[0];
 
    for(size_t i = 0; i != blocks; ++i)
       {
-      hash->update(K2);
-      hash->update(in + len, len);
-      hash->final(buffer);
+      m_hash->update(m_K2);
+      m_hash->update(in + len, len);
+      m_hash->final(buffer);
       xor_buf(out, in, buffer, len);
 
-      hash->update(K1);
-      hash->update(out, len);
-      hash->final(buffer);
+      m_hash->update(m_K1);
+      m_hash->update(out, len);
+      m_hash->final(buffer);
       xor_buf(out + len, in + len, buffer, len);
 
-      hash->update(K2);
-      hash->update(out + len, len);
-      hash->final(buffer);
+      m_hash->update(m_K2);
+      m_hash->update(out + len, len);
+      m_hash->final(buffer);
       xor_buf(out, buffer, len);
 
-      hash->update(K1);
-      hash->update(out, len);
-      hash->final(buffer);
+      m_hash->update(m_K1);
+      m_hash->update(out, len);
+      m_hash->final(buffer);
       xor_buf(out + len, buffer, len);
 
       in += 2 * len;
@@ -89,8 +89,8 @@ void LubyRackoff::decrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void LubyRackoff::key_schedule(const byte key[], size_t length)
    {
-   K1.assign(key, key + (length / 2));
-   K2.assign(key + (length / 2), key + length);
+   m_K1.assign(key, key + (length / 2));
+   m_K2.assign(key + (length / 2), key + length);
    }
 
 /*
@@ -98,9 +98,9 @@ void LubyRackoff::key_schedule(const byte key[], size_t length)
 */
 void LubyRackoff::clear()
    {
-   zap(K1);
-   zap(K2);
-   hash->clear();
+   zap(m_K1);
+   zap(m_K2);
+   m_hash->clear();
    }
 
 /*
@@ -108,7 +108,7 @@ void LubyRackoff::clear()
 */
 BlockCipher* LubyRackoff::clone() const
    {
-   return new LubyRackoff(hash->clone());
+   return new LubyRackoff(m_hash->clone());
    }
 
 /*
@@ -116,14 +116,7 @@ BlockCipher* LubyRackoff::clone() const
 */
 std::string LubyRackoff::name() const
    {
-   return "Luby-Rackoff(" + hash->name() + ")";
-   }
-
-/*
-* Luby-Rackoff Constructor
-*/
-LubyRackoff::LubyRackoff(HashFunction* h) : hash(h)
-   {
+   return "Luby-Rackoff(" + m_hash->name() + ")";
    }
 
 }

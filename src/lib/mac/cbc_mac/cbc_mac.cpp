@@ -16,26 +16,26 @@ namespace Botan {
 */
 void CBC_MAC::add_data(const byte input[], size_t length)
    {
-   size_t xored = std::min(output_length() - position, length);
-   xor_buf(&state[position], input, xored);
-   position += xored;
+   size_t xored = std::min(output_length() - m_position, length);
+   xor_buf(&m_state[m_position], input, xored);
+   m_position += xored;
 
-   if(position < output_length())
+   if(m_position < output_length())
       return;
 
-   e->encrypt(state);
+   m_cipher->encrypt(m_state);
    input += xored;
    length -= xored;
    while(length >= output_length())
       {
-      xor_buf(state, input, output_length());
-      e->encrypt(state);
+      xor_buf(m_state, input, output_length());
+      m_cipher->encrypt(m_state);
       input += output_length();
       length -= output_length();
       }
 
-   xor_buf(state, input, length);
-   position = length;
+   xor_buf(m_state, input, length);
+   m_position = length;
    }
 
 /*
@@ -43,12 +43,12 @@ void CBC_MAC::add_data(const byte input[], size_t length)
 */
 void CBC_MAC::final_result(byte mac[])
    {
-   if(position)
-      e->encrypt(state);
+   if(m_position)
+      m_cipher->encrypt(m_state);
 
-   copy_mem(mac, &state[0], state.size());
-   zeroise(state);
-   position = 0;
+   copy_mem(mac, &m_state[0], m_state.size());
+   zeroise(m_state);
+   m_position = 0;
    }
 
 /*
@@ -56,7 +56,7 @@ void CBC_MAC::final_result(byte mac[])
 */
 void CBC_MAC::key_schedule(const byte key[], size_t length)
    {
-   e->set_key(key, length);
+   m_cipher->set_key(key, length);
    }
 
 /*
@@ -64,9 +64,9 @@ void CBC_MAC::key_schedule(const byte key[], size_t length)
 */
 void CBC_MAC::clear()
    {
-   e->clear();
-   zeroise(state);
-   position = 0;
+   m_cipher->clear();
+   zeroise(m_state);
+   m_position = 0;
    }
 
 /*
@@ -74,7 +74,7 @@ void CBC_MAC::clear()
 */
 std::string CBC_MAC::name() const
    {
-   return "CBC-MAC(" + e->name() + ")";
+   return "CBC-MAC(" + m_cipher->name() + ")";
    }
 
 /*
@@ -82,24 +82,15 @@ std::string CBC_MAC::name() const
 */
 MessageAuthenticationCode* CBC_MAC::clone() const
    {
-   return new CBC_MAC(e->clone());
+   return new CBC_MAC(m_cipher->clone());
    }
 
 /*
 * CBC-MAC Constructor
 */
-CBC_MAC::CBC_MAC(BlockCipher* e_in) :
-   e(e_in), state(e->block_size())
+CBC_MAC::CBC_MAC(BlockCipher* cipher) :
+   m_cipher(cipher), m_state(cipher->block_size())
    {
-   position = 0;
-   }
-
-/*
-* CBC-MAC Destructor
-*/
-CBC_MAC::~CBC_MAC()
-   {
-   delete e;
    }
 
 }

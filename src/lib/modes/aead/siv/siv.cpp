@@ -104,19 +104,19 @@ secure_vector<byte> SIV_Mode::S2V(const byte* text, size_t text_len)
 
    for(size_t i = 0; i != m_ad_macs.size(); ++i)
       {
-      V = CMAC::poly_double(V, 0x87);
+      V = CMAC::poly_double(V);
       V ^= m_ad_macs[i];
       }
 
    if(m_nonce.size())
       {
-      V = CMAC::poly_double(V, 0x87);
+      V = CMAC::poly_double(V);
       V ^= m_nonce;
       }
 
    if(text_len < 16)
       {
-      V = CMAC::poly_double(V, 0x87);
+      V = CMAC::poly_double(V);
       xor_buf(&V[0], text, text_len);
       V[text_len] ^= 0x80;
       return cmac().process(V);

@@ -10,6 +10,7 @@
 
 #include <botan/mac.h>
 #include <botan/block_cipher.h>
+#include <memory>
 
 namespace Botan {
 
@@ -21,7 +22,8 @@ class BOTAN_DLL ANSI_X919_MAC : public MessageAuthenticationCode
    public:
       void clear();
       std::string name() const;
-      size_t output_length() const { return e->block_size(); }
+      size_t output_length() const { return 8; }
+
       MessageAuthenticationCode* clone() const;
 
       Key_Length_Specification key_spec() const
@@ -36,17 +38,14 @@ class BOTAN_DLL ANSI_X919_MAC : public MessageAuthenticationCode
 
       ANSI_X919_MAC(const ANSI_X919_MAC&) = delete;
       ANSI_X919_MAC& operator=(const ANSI_X919_MAC&) = delete;
-
-      ~ANSI_X919_MAC();
    private:
       void add_data(const byte[], size_t);
       void final_result(byte[]);
       void key_schedule(const byte[], size_t);
 
-      BlockCipher* e;
-      BlockCipher* d;
-      secure_vector<byte> state;
-      size_t position;
+      std::unique_ptr<BlockCipher> m_des1, m_des2;
+      secure_vector<byte> m_state;
+      size_t m_position;
    };
 
 }

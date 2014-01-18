@@ -1,6 +1,6 @@
 /*
 * HMAC
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2014 Jack Lloyd
 *     2007 Yves Jerschow
 *
 * Distributed under the terms of the Botan license
@@ -16,7 +16,7 @@ namespace Botan {
 */
 void HMAC::add_data(const byte input[], size_t length)
    {
-   hash->update(input, length);
+   m_hash->update(input, length);
    }
 
 /*
@@ -24,11 +24,11 @@ void HMAC::add_data(const byte input[], size_t length)
 */
 void HMAC::final_result(byte mac[])
    {
-   hash->final(mac);
-   hash->update(o_key);
-   hash->update(mac, output_length());
-   hash->final(mac);
-   hash->update(i_key);
+   m_hash->final(mac);
+   m_hash->update(m_okey);
+   m_hash->update(mac, output_length());
+   m_hash->final(mac);
+   m_hash->update(m_ikey);
    }
 
 /*
@@ -36,27 +36,27 @@ void HMAC::final_result(byte mac[])
 */
 void HMAC::key_schedule(const byte key[], size_t length)
    {
-   hash->clear();
+   m_hash->clear();
 
-   i_key.resize(hash->hash_block_size());
-   o_key.resize(hash->hash_block_size());
+   m_ikey.resize(m_hash->hash_block_size());
+   m_okey.resize(m_hash->hash_block_size());
 
-   std::fill(i_key.begin(), i_key.end(), 0x36);
-   std::fill(o_key.begin(), o_key.end(), 0x5C);
+   std::fill(m_ikey.begin(), m_ikey.end(), 0x36);
+   std::fill(m_okey.begin(), m_okey.end(), 0x5C);
 
-   if(length > hash->hash_block_size())
+   if(length > m_hash->hash_block_size())
       {
-      secure_vector<byte> hmac_key = hash->process(key, length);
-      xor_buf(i_key, hmac_key, hmac_key.size());
-      xor_buf(o_key, hmac_key, hmac_key.size());
+      secure_vector<byte> hmac_key = m_hash->process(key, length);
+      xor_buf(m_ikey, hmac_key, hmac_key.size());
+      xor_buf(m_okey, hmac_key, hmac_key.size());
       }
    else
       {
-      xor_buf(i_key, key, length);
-      xor_buf(o_key, key, length);
+      xor_buf(m_ikey, key, length);
+      xor_buf(m_okey, key, length);
       }
 
-   hash->update(i_key);
+   m_hash->update(m_ikey);
    }
 
 /*
@@ -64,9 +64,9 @@ void HMAC::key_schedule(const byte key[], size_t length)
 */
 void HMAC::clear()
    {
-   hash->clear();
-   zap(i_key);
-   zap(o_key);
+   m_hash->clear();
+   zap(m_ikey);
+   zap(m_okey);
    }
 
 /*
@@ -74,7 +74,7 @@ void HMAC::clear()
 */
 std::string HMAC::name() const
    {
-   return "HMAC(" + hash->name() + ")";
+   return "HMAC(" + m_hash->name() + ")";
    }
 
 /*
@@ -82,16 +82,16 @@ std::string HMAC::name() const
 */
 MessageAuthenticationCode* HMAC::clone() const
    {
-   return new HMAC(hash->clone());
+   return new HMAC(m_hash->clone());
    }
 
 /*
 * HMAC Constructor
 */
-HMAC::HMAC(HashFunction* hash_in) : hash(hash_in)
+HMAC::HMAC(HashFunction* hash) : m_hash(hash)
    {
-   if(hash->hash_block_size() == 0)
-      throw Invalid_Argument("HMAC cannot be used with " + hash->name());
+   if(m_hash->hash_block_size() == 0)
+      throw Invalid_Argument("HMAC cannot be used with " + m_hash->name());
    }
 
 }

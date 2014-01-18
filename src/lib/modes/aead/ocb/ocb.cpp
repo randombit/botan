@@ -63,7 +63,7 @@ class L_computer
 
       secure_vector<byte> poly_double(const secure_vector<byte>& in) const
          {
-         return CMAC::poly_double(in, 0x87);
+         return CMAC::poly_double(in);
          }
 
       secure_vector<byte> m_L_dollar, m_L_star;

@@ -1,6 +1,6 @@
 /*
 * HMAC
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2014 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -10,6 +10,7 @@
 
 #include <botan/mac.h>
 #include <botan/hash.h>
+#include <memory>
 
 namespace Botan {
 
@@ -23,10 +24,11 @@ class BOTAN_DLL HMAC : public MessageAuthenticationCode
       std::string name() const;
       MessageAuthenticationCode* clone() const;
 
-      size_t output_length() const { return hash->output_length(); }
+      size_t output_length() const { return m_hash->output_length(); }
 
       Key_Length_Specification key_spec() const
          {
+         // Absurd max length here is to support PBKDF2
          return Key_Length_Specification(0, 512);
          }
 
@@ -37,15 +39,13 @@ class BOTAN_DLL HMAC : public MessageAuthenticationCode
 
       HMAC(const HMAC&) = delete;
       HMAC& operator=(const HMAC&) = delete;
-
-      ~HMAC() { delete hash; }
    private:
       void add_data(const byte[], size_t);
       void final_result(byte[]);
       void key_schedule(const byte[], size_t);
 
-      HashFunction* hash;
-      secure_vector<byte> i_key, o_key;
+      std::unique_ptr<HashFunction> m_hash;
+      secure_vector<byte> m_ikey, m_okey;
    };
 
 }

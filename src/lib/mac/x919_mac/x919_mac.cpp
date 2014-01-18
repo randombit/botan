@@ -16,25 +16,25 @@ namespace Botan {
 */
 void ANSI_X919_MAC::add_data(const byte input[], size_t length)
    {
-   size_t xored = std::min(8 - position, length);
-   xor_buf(&state[position], input, xored);
-   position += xored;
+   size_t xored = std::min(8 - m_position, length);
+   xor_buf(&m_state[m_position], input, xored);
+   m_position += xored;
 
-   if(position < 8) return;
+   if(m_position < 8) return;
 
-   e->encrypt(state);
+   m_des1->encrypt(m_state);
    input += xored;
    length -= xored;
    while(length >= 8)
       {
-      xor_buf(state, input, 8);
-      e->encrypt(state);
+      xor_buf(m_state, input, 8);
+      m_des1->encrypt(m_state);
       input += 8;
       length -= 8;
       }
 
-   xor_buf(state, input, length);
-   position = length;
+   xor_buf(m_state, input, length);
+   m_position = length;
    }
 
 /*
@@ -42,12 +42,12 @@ void ANSI_X919_MAC::add_data(const byte input[], size_t length)
 */
 void ANSI_X919_MAC::final_result(byte mac[])
    {
-   if(position)
-      e->encrypt(state);
-   d->decrypt(&state[0], mac);
-   e->encrypt(mac);
-   zeroise(state);
-   position = 0;
+   if(m_position)
+      m_des1->encrypt(m_state);
+   m_des2->decrypt(&m_state[0], mac);
+   m_des1->encrypt(mac);
+   zeroise(m_state);
+   m_position = 0;
    }
 
 /*
@@ -55,9 +55,12 @@ void ANSI_X919_MAC::final_result(byte mac[])
 */
 void ANSI_X919_MAC::key_schedule(const byte key[], size_t length)
    {
-   e->set_key(key, 8);
-   if(length == 8) d->set_key(key, 8);
-   else            d->set_key(key + 8, 8);
+   m_des1->set_key(key, 8);
+
+   if(length == 16)
+      key += 8;
+
+   m_des2->set_key(key, 8);
    }
 
 /*
@@ -65,10 +68,10 @@ void ANSI_X919_MAC::key_schedule(const byte key[], size_t length)
 */
 void ANSI_X919_MAC::clear()
    {
-   e->clear();
-   d->clear();
-   zeroise(state);
-   position = 0;
+   m_des1->clear();
+   m_des2->clear();
+   zeroise(m_state);
+   m_position = 0;
    }
 
 std::string ANSI_X919_MAC::name() const
@@ -78,26 +81,17 @@ std::string ANSI_X919_MAC::name() const
 
 MessageAuthenticationCode* ANSI_X919_MAC::clone() const
    {
-   return new ANSI_X919_MAC(e->clone());
+   return new ANSI_X919_MAC(m_des1->clone());
    }
 
 /*
 * ANSI X9.19 MAC Constructor
 */
-ANSI_X919_MAC::ANSI_X919_MAC(BlockCipher* e_in) :
-   e(e_in), d(e->clone()), state(e->block_size()), position(0)
+ANSI_X919_MAC::ANSI_X919_MAC(BlockCipher* cipher) :
+   m_des1(cipher), m_des2(m_des1->clone()), m_state(8), m_position(0)
    {
-   if(e->name() != "DES")
+   if(cipher->name() != "DES")
       throw Invalid_Argument("ANSI X9.19 MAC only supports DES");
-   }
-
-/*
-* ANSI X9.19 MAC Destructor
-le*/
-ANSI_X919_MAC::~ANSI_X919_MAC()
-   {
-   delete e;
-   delete d;
    }
 
 }

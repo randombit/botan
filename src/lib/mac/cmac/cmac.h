@@ -1,6 +1,6 @@
 /*
 * CMAC
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2014 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -10,6 +10,7 @@
 
 #include <botan/mac.h>
 #include <botan/block_cipher.h>
+#include <memory>
 
 namespace Botan {
 
@@ -20,14 +21,14 @@ class BOTAN_DLL CMAC : public MessageAuthenticationCode
    {
    public:
       std::string name() const;
-      size_t output_length() const { return e->block_size(); }
+      size_t output_length() const { return m_cipher->block_size(); }
       MessageAuthenticationCode* clone() const;
 
       void clear();
 
       Key_Length_Specification key_spec() const
          {
-         return e->key_spec();
+         return m_cipher->key_spec();
          }
 
       /**
@@ -35,8 +36,7 @@ class BOTAN_DLL CMAC : public MessageAuthenticationCode
       * @param in the input
       * @param polynomial the byte value of the polynomial
       */
-      static secure_vector<byte> poly_double(const secure_vector<byte>& in,
-                                             byte polynomial);
+      static secure_vector<byte> poly_double(const secure_vector<byte>& in);
 
       /**
       * @param cipher the underlying block cipher to use
@@ -45,17 +45,14 @@ class BOTAN_DLL CMAC : public MessageAuthenticationCode
 
       CMAC(const CMAC&) = delete;
       CMAC& operator=(const CMAC&) = delete;
-
-      ~CMAC();
    private:
       void add_data(const byte[], size_t);
       void final_result(byte[]);
       void key_schedule(const byte[], size_t);
 
-      BlockCipher* e;
-      secure_vector<byte> buffer, state, B, P;
-      size_t position;
-      byte polynomial;
+      std::unique_ptr<BlockCipher> m_cipher;
+      secure_vector<byte> m_buffer, m_state, m_B, m_P;
+      size_t m_position;
    };
 
 }

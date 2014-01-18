@@ -34,14 +34,13 @@ class BOTAN_DLL SSL3_MAC : public MessageAuthenticationCode
       * @param hash the underlying hash to use
       */
       SSL3_MAC(HashFunction* hash);
-      ~SSL3_MAC() { delete hash; }
    private:
       void add_data(const byte[], size_t);
       void final_result(byte[]);
       void key_schedule(const byte[], size_t);
 
-      HashFunction* hash;
-      secure_vector<byte> i_key, o_key;
+      std::unique_ptr<HashFunction> m_hash;
+      secure_vector<byte> m_ikey, m_okey;
    };
 
 }

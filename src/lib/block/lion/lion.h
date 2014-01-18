@@ -1,6 +1,6 @@
 /*
 * Lion
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2014 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -11,6 +11,7 @@
 #include <botan/block_cipher.h>
 #include <botan/stream_cipher.h>
 #include <botan/hash.h>
+#include <memory>
 
 namespace Botan {
 
@@ -25,19 +26,19 @@ namespace Botan {
 class BOTAN_DLL Lion : public BlockCipher
    {
    public:
-      void encrypt_n(const byte in[], byte out[], size_t blocks) const;
-      void decrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
+      void decrypt_n(const byte in[], byte out[], size_t blocks) const override;
 
-      size_t block_size() const { return BLOCK_SIZE; }
+      size_t block_size() const override { return m_block_size; }
 
-      Key_Length_Specification key_spec() const
+      Key_Length_Specification key_spec() const override
          {
-         return Key_Length_Specification(2, 2*hash->output_length(), 2);
+         return Key_Length_Specification(2, 2*m_hash->output_length(), 2);
          }
 
-      void clear();
-      std::string name() const;
-      BlockCipher* clone() const;
+      void clear() override;
+      std::string name() const override;
+      BlockCipher* clone() const override;
 
       /**
       * @param hash the hash to use internally
@@ -47,19 +48,16 @@ class BOTAN_DLL Lion : public BlockCipher
       Lion(HashFunction* hash,
            StreamCipher* cipher,
            size_t block_size);
-
-      Lion(const Lion&) = delete;
-      Lion& operator=(const Lion&) = delete;
-
-      ~Lion() { delete hash; delete cipher; }
    private:
       void key_schedule(const byte[], size_t);
 
-      const size_t BLOCK_SIZE, LEFT_SIZE, RIGHT_SIZE;
+      size_t left_size() const { return m_hash->output_length(); }
+      size_t right_size() const { return m_block_size - left_size(); }
 
-      HashFunction* hash;
-      StreamCipher* cipher;
-      secure_vector<byte> key1, key2;
+      const size_t m_block_size;
+      std::unique_ptr<HashFunction> m_hash;
+      std::unique_ptr<StreamCipher> m_cipher;
+      secure_vector<byte> m_key1, m_key2;
    };
 
 }

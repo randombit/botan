@@ -9,6 +9,7 @@
 #define BOTAN_COMB4P_H__
 
 #include <botan/hash.h>
+#include <memory>
 
 namespace Botan {
 
@@ -25,26 +26,21 @@ class BOTAN_DLL Comb4P : public HashFunction
       */
       Comb4P(HashFunction* h1, HashFunction* h2);
 
-      Comb4P(const Comb4P&) = delete;
-      Comb4P& operator=(const Comb4P&) = delete;
-
-      ~Comb4P() { delete hash1; delete hash2; }
-
       size_t hash_block_size() const;
 
       size_t output_length() const
          {
-         return hash1->output_length() + hash2->output_length();
+         return m_hash1->output_length() + m_hash2->output_length();
          }
 
       HashFunction* clone() const
          {
-         return new Comb4P(hash1->clone(), hash2->clone());
+         return new Comb4P(m_hash1->clone(), m_hash2->clone());
          }
 
       std::string name() const
          {
-         return "Comb4P(" + hash1->name() + "," + hash2->name() + ")";
+         return "Comb4P(" + m_hash1->name() + "," + m_hash2->name() + ")";
          }
 
       void clear();
@@ -52,8 +48,7 @@ class BOTAN_DLL Comb4P : public HashFunction
       void add_data(const byte input[], size_t length);
       void final_result(byte out[]);
 
-      HashFunction* hash1;
-      HashFunction* hash2;
+      std::unique_ptr<HashFunction> m_hash1, m_hash2;
    };
 
 }
