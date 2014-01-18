@@ -99,7 +99,7 @@ void CFB_Encryption::update(secure_vector<byte>& buffer, size_t offset)
 
       // Assumes feedback-sized block except for last input
       copy_mem(&state[0], &state[shift], BS - shift);
-      copy_mem(&state[BS-shift], &buf[0], shift);
+      copy_mem(&state[BS-shift], &buf[0], took);
       cipher().encrypt(state, keystream_buf());
 
       buf += took;
