@@ -139,7 +139,7 @@ self-test program::
 
   $ VERSION=1.11.11 # or whatever the current version is
   $ install_name_tool -change $(otool -X -D libbotan-$VERSION.dylib) \
-       $PWD/libbotan-$VERSION.dylib check
+       $PWD/libbotan-$VERSION.dylib botan-test
 
 Building Universal Binaries
 &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
@@ -198,15 +198,15 @@ Edit the makefile and change AR (around line 30) to::
 
 You may also want to edit LIB_OPT to use -Os to optimize for size.
 
-Now build as normal with ``make check``. Confirm the binary is
-compiled for both architectures with::
+Now build as normal with ``make``. Confirm the binaries are compiled
+for both architectures with::
 
-  $ xcrun -sdk iphoneos lipo -info check
-  Architectures in the fat file: check are: armv7 armv7s
+  $ xcrun -sdk iphoneos lipo -info botan
+  Architectures in the fat file: botan are: armv7 armv7s
 
 Now sign the test application with::
 
-  $ codesign -fs "Your Name" check
+  $ codesign -fs "Your Name" botan-test
 
 which should allow you to run the library self tests on a jailbroken
 device.
