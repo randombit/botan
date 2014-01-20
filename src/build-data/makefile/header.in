@@ -22,11 +22,11 @@ BRANCH         = %{version_major}.%{version_minor}
 
 # Installation Settings
 DESTDIR        = %{prefix}
-BINDIR        = $(DESTDIR)/bin
-LIBDIR        = $(DESTDIR)/%{libdir}
-HEADERIR      = $(DESTDIR)/%{includedir}/botan-$(BRANCH)/botan
-DOCDIR        = $(DESTDIR)/%{docdir}/botan-$(VERSION)
-PKGCONF_DIR   = $(LIBDIR)/pkgconfig
+BINDIR         = $(DESTDIR)/bin
+LIBDIR         = $(DESTDIR)/%{libdir}
+HEADERDIR      = $(DESTDIR)/%{includedir}/botan-$(BRANCH)/botan
+DOCDIR         = $(DESTDIR)/%{docdir}/botan-$(VERSION)
+PKGCONF_DIR    = $(LIBDIR)/pkgconfig
 
 CONFIG_SCRIPT = %{botan_config}
 PKGCONFIG     = %{botan_pkgconfig}
