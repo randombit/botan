@@ -280,7 +280,6 @@ int tls_server_asio_main(int argc, char* argv[])
    {
    try
       {
-      Botan::LibraryInitializer init("thread_safe=true");
       boost::asio::io_service io_service;
 
       const unsigned short port = 4434;
