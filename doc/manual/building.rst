@@ -214,11 +214,8 @@ device.
 For Android
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-It has been reported several times that the library can be built for
-Android using the NDK, but precise instructions of what was required
-have not been provided. If you successfully build the library for
-Android, please report the exact sequence of steps needed so this
-documentation can be updated.
+Instructions for building the library on Android can be found
+`here <http://www.tiwoc.de/blog/2013/03/building-the-botan-library-for-android/>`_.
 
 Other Build-Related Tasks
 ----------------------------------------
