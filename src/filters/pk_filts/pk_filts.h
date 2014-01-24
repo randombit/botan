@@ -19,6 +19,8 @@ namespace Botan {
 class BOTAN_DLL PK_Encryptor_Filter : public Filter
    {
    public:
+      std::string name() const { return "PK Encryptor"; }
+
       void write(const byte[], size_t);
       void end_msg();
       PK_Encryptor_Filter(PK_Encryptor* c,
@@ -37,6 +39,8 @@ class BOTAN_DLL PK_Encryptor_Filter : public Filter
 class BOTAN_DLL PK_Decryptor_Filter : public Filter
    {
    public:
+      std::string name() const { return "PK Decryptor"; }
+
       void write(const byte[], size_t);
       void end_msg();
       PK_Decryptor_Filter(PK_Decryptor* c) : cipher(c) {}
@@ -52,6 +56,8 @@ class BOTAN_DLL PK_Decryptor_Filter : public Filter
 class BOTAN_DLL PK_Signer_Filter : public Filter
    {
    public:
+      std::string name() const { return "PK Signer"; }
+
       void write(const byte[], size_t);
       void end_msg();
 
@@ -71,6 +77,8 @@ class BOTAN_DLL PK_Signer_Filter : public Filter
 class BOTAN_DLL PK_Verifier_Filter : public Filter
    {
    public:
+      std::string name() const { return "PK Verifier"; }
+
       void write(const byte[], size_t);
       void end_msg();
 
