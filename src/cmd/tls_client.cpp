@@ -190,7 +190,7 @@ int tls_client_main(int argc, char* argv[])
          FD_SET(sockfd, &readfds);
          FD_SET(STDIN_FILENO, &readfds);
 
-         ::select(sockfd + 1, &readfds, NULL, NULL, NULL);
+         ::select(sockfd + 1, &readfds, nullptr, nullptr, nullptr);
 
          if(FD_ISSET(sockfd, &readfds))
             {

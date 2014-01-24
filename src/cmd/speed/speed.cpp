@@ -28,8 +28,7 @@ using namespace Botan;
 
 namespace {
 
-const std::string default_benchmark_list[] = {
-
+const std::vector<std::string> default_benchmark_list = {
    /* Block ciphers */
    "AES-128",
    "AES-192",
@@ -38,8 +37,6 @@ const std::string default_benchmark_list[] = {
    "CAST-128",
    "CAST-256",
    "DES",
-   "DESX",
-   "GOST",
    "IDEA",
    "KASUMI",
    "MARS",
@@ -79,11 +76,8 @@ const std::string default_benchmark_list[] = {
    "Salsa20",
 
    /* Hashes */
-   "HAS-160",
    "Keccak-1600(512)",
-   "MD4",
    "MD5",
-   "RIPEMD-128",
    "RIPEMD-160",
    "SHA-160",
    "SHA-256",
@@ -95,8 +89,7 @@ const std::string default_benchmark_list[] = {
 
    /* MACs */
    "CMAC(AES-128)",
-   "HMAC(SHA-1)",
-   "",
+   "HMAC(SHA-1)"
 };
 
 void report_results(const std::string& algo,
@@ -213,11 +206,14 @@ int speed_main(int argc, char* argv[])
          }
       }
 
-   const auto args = opts.arguments();
+   auto args = opts.arguments();
 
-   if(args.empty() || args[0] == "help" || args[0] == "-h")
+   if(args.empty())
+      args = default_benchmark_list;
+
+   if(args[0] == "help" || args[0] == "-h")
       {
-      std::cout << "Help!\n";
+      std::cout << "Usage: " << argv[0] << " [algo name...]\n";
       return 1;
       }
 
