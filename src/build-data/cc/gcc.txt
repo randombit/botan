@@ -48,6 +48,7 @@ aesni  -> "-maes"
 clmul  -> "-mpclmul"
 rdrand -> "-mrdrnd"
 sha    -> "-msha"
+altivec -> "-maltivec"
 </isa_flags>
 
 <mach_opt>

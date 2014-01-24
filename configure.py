@@ -1099,10 +1099,23 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
             flags.append(cc.isa_flags[isa])
         return '' if len(flags) == 0 else (' ' + ' '.join(sorted(list(flags))))
 
+    def simd_dependencies():
+        simd_re = re.compile('simd_(.*)')
+        for mod in modules:
+            if simd_re.match(mod.basename):
+                for isa in mod.need_isa:
+                    yield isa
+
     def isa_specific_flags(cc, src):
+
         for mod in modules:
             if src in mod.sources():
-                return get_isa_specific_flags(cc, mod.need_isa)
+                isas = mod.need_isa
+                if 'simd' in mod.dependencies():
+                    isas += list(simd_dependencies())
+
+                return get_isa_specific_flags(cc, isas)
+
         return ''
 
     def all_isa_specific_flags():
@@ -1428,7 +1441,7 @@ def choose_modules_to_use(modules, archinfo, options):
 
     logging.info('Loading modules %s', ' '.join(sorted(to_load)))
 
-    return [modules[mod] for mod in to_load]
+    return to_load
 
 """
 Load the info files about modules, targets, etc
@@ -1903,14 +1916,14 @@ def main(argv = None):
             logging.info('Disabling assembly code, cannot use in amalgamation')
             options.asm_ok = False
 
-    modules_to_use = choose_modules_to_use(modules,
-                                           archinfo[options.arch],
-                                           options)
+    loaded_mods = choose_modules_to_use(modules, archinfo[options.arch], options)
 
     if not osinfo[options.os].build_shared:
         if options.build_shared_lib:
             logging.info('Disabling shared lib on %s' % (options.os))
             options.build_shared_lib = False
+
+    modules_to_use = [modules[m] for m in loaded_mods]
 
     build_config = BuildConfigurationInformation(options, modules_to_use)
     build_config.public_headers.append(
