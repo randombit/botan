@@ -179,8 +179,8 @@ void CTS_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
 
       for(size_t i = 0; i != final_bytes - BS; ++i)
          {
-         std::swap(last[i], last[i + BS]);
          last[i] ^= last[i + BS];
+         last[i + BS] ^= last[i];
          }
 
       cipher().encrypt(&last[0]);
@@ -286,7 +286,11 @@ void CTS_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
       xor_buf(&last[0], &last[BS], final_bytes - BS);
 
       for(size_t i = 0; i != final_bytes - BS; ++i)
-         std::swap(last[i], last[i + BS]);
+         {
+         last[i] ^= last[i + BS];
+         last[i + BS] ^= last[i];
+         last[i] ^= last[i + BS];
+         }
 
       cipher().decrypt(&last[0]);
       xor_buf(&last[0], state_ptr(), BS);

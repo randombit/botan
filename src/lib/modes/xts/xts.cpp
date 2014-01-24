@@ -197,7 +197,11 @@ void XTS_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
       xor_buf(last, tweak(), BS);
 
       for(size_t i = 0; i != final_bytes - BS; ++i)
-         std::swap(last[i], last[i + BS]);
+         {
+         last[i] ^= last[i + BS];
+         last[i + BS] ^= last[i];
+         last[i] ^= last[i + BS];
+         }
 
       xor_buf(last, tweak() + BS, BS);
       cipher().encrypt(last);
@@ -272,7 +276,11 @@ void XTS_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
       xor_buf(last, tweak() + BS, BS);
 
       for(size_t i = 0; i != final_bytes - BS; ++i)
-         std::swap(last[i], last[i + BS]);
+         {
+         last[i] ^= last[i + BS];
+         last[i + BS] ^= last[i];
+         last[i] ^= last[i + BS];
+         }
 
       xor_buf(last, tweak(), BS);
       cipher().decrypt(last);
