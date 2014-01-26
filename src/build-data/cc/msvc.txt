@@ -21,6 +21,18 @@ ar_command lib
 
 makefile_style nmake
 
+<isa_flags>
+sse2   -> ""
+ssse3  -> ""
+sse4.1 -> ""
+sse4.2 -> ""
+#avx2   -> ""
+bmi2   -> ""
+aesni  -> ""
+clmul  -> ""
+rdrand -> ""
+</isa_flags>
+
 <so_link_flags>
 default -> "$(CXX) /LD"
 </so_link_flags>

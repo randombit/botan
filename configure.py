@@ -676,8 +676,15 @@ class ModuleInfo(object):
     def compatible_os(self, os):
         return self.os == [] or os in self.os
 
-    def compatible_compiler(self, cc):
-        return self.cc == [] or cc in self.cc
+    def compatible_compiler(self, ccinfo, cc):
+        if self.cc != [] and cc not in self.cc:
+            return False
+
+        for isa in self.need_isa:
+            if isa not in ccinfo.isa_flags:
+                return False
+
+        return True
 
     def dependencies(self):
         # utils is an implicit dep (contains types, etc)
@@ -1328,7 +1335,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 """
 Determine which modules to load based on options, target, etc
 """
-def choose_modules_to_use(modules, archinfo, options):
+def choose_modules_to_use(modules, archinfo, ccinfo, options):
 
     for mod in modules.values():
         mod.dependencies_exist(modules)
@@ -1356,7 +1363,7 @@ def choose_modules_to_use(modules, archinfo, options):
 
         elif not module.compatible_os(options.os):
             cannot_use_because(modname, 'incompatible OS')
-        elif not module.compatible_compiler(options.compiler):
+        elif not module.compatible_compiler(ccinfo, options.compiler):
             cannot_use_because(modname, 'incompatible compiler')
         elif not module.compatible_cpu(archinfo, options):
             cannot_use_because(modname, 'incompatible CPU')
@@ -1916,7 +1923,10 @@ def main(argv = None):
             logging.info('Disabling assembly code, cannot use in amalgamation')
             options.asm_ok = False
 
-    loaded_mods = choose_modules_to_use(modules, archinfo[options.arch], options)
+    loaded_mods = choose_modules_to_use(modules,
+                                        archinfo[options.arch],
+                                        cc,
+                                        options)
 
     if not osinfo[options.os].build_shared:
         if options.build_shared_lib:
