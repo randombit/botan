@@ -122,7 +122,7 @@ int read_ssh_main(int argc, char* argv[])
    const std::string filename = argv[1];
    std::unique_ptr<Public_Key> key(read_ssh_pubkey(filename));
 
-   if(key == 0)
+   if(!key)
       {
       std::cout << "Failed to read" << filename << "\n";
       return 1;

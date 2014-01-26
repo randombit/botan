@@ -159,13 +159,13 @@ int tls_server_main(int argc, char* argv[])
             int fd;
 
             if(transport == "tcp")
-               fd = ::accept(server_fd, NULL, NULL);
+               fd = ::accept(server_fd, nullptr, nullptr);
             else
                {
                struct sockaddr_in from;
                socklen_t from_len = sizeof(sockaddr_in);
 
-               if(::recvfrom(server_fd, NULL, 0, MSG_PEEK,
+               if(::recvfrom(server_fd, nullptr, 0, MSG_PEEK,
                              (struct sockaddr*)&from, &from_len) != 0)
                   throw std::runtime_error("Could not peek next packet");
 
