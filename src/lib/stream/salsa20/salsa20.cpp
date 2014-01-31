@@ -1,6 +1,6 @@
 /*
 * Salsa20 / XSalsa20
-* (C) 1999-2010 Jack Lloyd
+* (C) 1999-2010,2014 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -9,6 +9,7 @@
 #include <botan/loadstor.h>
 #include <botan/rotate.h>
 #include <botan/internal/xor_buf.h>
+#include <botan/internal/simd_32.h>
 
 namespace Botan {
 
@@ -98,29 +99,30 @@ void salsa20(byte output[64], const u32bit input[16])
 
 }
 
+#undef SALSA20_QUARTER_ROUND
+
 /*
 * Combine cipher stream with message
 */
 void Salsa20::cipher(const byte in[], byte out[], size_t length)
    {
-   while(length >= buffer.size() - position)
+   while(length >= m_buffer.size() - m_position)
       {
-      xor_buf(out, in, &buffer[position], buffer.size() - position);
-      length -= (buffer.size() - position);
-      in += (buffer.size() - position);
-      out += (buffer.size() - position);
-      salsa20(&buffer[0], &state[0]);
+      xor_buf(out, in, &m_buffer[m_position], m_buffer.size() - m_position);
+      length -= (m_buffer.size() - m_position);
+      in += (m_buffer.size() - m_position);
+      out += (m_buffer.size() - m_position);
+      salsa20(&m_buffer[0], &m_state[0]);
 
-      ++state[8];
-      if(!state[8]) // if overflow in state[8]
-         ++state[9]; // carry to state[9]
+      ++m_state[8];
+      m_state[9] += (m_state[8] == 0);
 
-      position = 0;
+      m_position = 0;
       }
 
-   xor_buf(out, in, &buffer[position], length);
+   xor_buf(out, in, &m_buffer[m_position], length);
 
-   position += length;
+   m_position += length;
    }
 
 /*
@@ -134,41 +136,30 @@ void Salsa20::key_schedule(const byte key[], size_t length)
    static const u32bit SIGMA[] =
       { 0x61707865, 0x3320646e, 0x79622d32, 0x6b206574 };
 
-   state.resize(16);
-   buffer.resize(64);
+   const u32bit* CONSTANTS = (length == 16) ? TAU : SIGMA;
 
-   if(length == 16)
-      {
-      state[0] = TAU[0];
-      state[1] = load_le<u32bit>(key, 0);
-      state[2] = load_le<u32bit>(key, 1);
-      state[3] = load_le<u32bit>(key, 2);
-      state[4] = load_le<u32bit>(key, 3);
-      state[5] = TAU[1];
-      state[10] = TAU[2];
-      state[11] = load_le<u32bit>(key, 0);
-      state[12] = load_le<u32bit>(key, 1);
-      state[13] = load_le<u32bit>(key, 2);
-      state[14] = load_le<u32bit>(key, 3);
-      state[15] = TAU[3];
-      }
-   else if(length == 32)
-      {
-      state[0] = SIGMA[0];
-      state[1] = load_le<u32bit>(key, 0);
-      state[2] = load_le<u32bit>(key, 1);
-      state[3] = load_le<u32bit>(key, 2);
-      state[4] = load_le<u32bit>(key, 3);
-      state[5] = SIGMA[1];
-      state[10] = SIGMA[2];
-      state[11] = load_le<u32bit>(key, 4);
-      state[12] = load_le<u32bit>(key, 5);
-      state[13] = load_le<u32bit>(key, 6);
-      state[14] = load_le<u32bit>(key, 7);
-      state[15] = SIGMA[3];
-      }
+   m_state.resize(16);
+   m_buffer.resize(64);
 
-   position = 0;
+   m_state[0] = CONSTANTS[0];
+   m_state[5] = CONSTANTS[1];
+   m_state[10] = CONSTANTS[2];
+   m_state[15] = CONSTANTS[3];
+
+   m_state[1] = load_le<u32bit>(key, 0);
+   m_state[2] = load_le<u32bit>(key, 1);
+   m_state[3] = load_le<u32bit>(key, 2);
+   m_state[4] = load_le<u32bit>(key, 3);
+
+   if(length == 32)
+      key += 16;
+
+   m_state[11] = load_le<u32bit>(key, 0);
+   m_state[12] = load_le<u32bit>(key, 1);
+   m_state[13] = load_le<u32bit>(key, 2);
+   m_state[14] = load_le<u32bit>(key, 3);
+
+   m_position = 0;
 
    const byte ZERO[8] = { 0 };
    set_iv(ZERO, sizeof(ZERO));
@@ -185,41 +176,40 @@ void Salsa20::set_iv(const byte iv[], size_t length)
    if(length == 8)
       {
       // Salsa20
-      state[6] = load_le<u32bit>(iv, 0);
-      state[7] = load_le<u32bit>(iv, 1);
+      m_state[6] = load_le<u32bit>(iv, 0);
+      m_state[7] = load_le<u32bit>(iv, 1);
       }
    else
       {
       // XSalsa20
-      state[6] = load_le<u32bit>(iv, 0);
-      state[7] = load_le<u32bit>(iv, 1);
-      state[8] = load_le<u32bit>(iv, 2);
-      state[9] = load_le<u32bit>(iv, 3);
+      m_state[6] = load_le<u32bit>(iv, 0);
+      m_state[7] = load_le<u32bit>(iv, 1);
+      m_state[8] = load_le<u32bit>(iv, 2);
+      m_state[9] = load_le<u32bit>(iv, 3);
 
       secure_vector<u32bit> hsalsa(8);
-      hsalsa20(&hsalsa[0], &state[0]);
+      hsalsa20(&hsalsa[0], &m_state[0]);
 
-      state[ 1] = hsalsa[0];
-      state[ 2] = hsalsa[1];
-      state[ 3] = hsalsa[2];
-      state[ 4] = hsalsa[3];
-      state[ 6] = load_le<u32bit>(iv, 4);
-      state[ 7] = load_le<u32bit>(iv, 5);
-      state[11] = hsalsa[4];
-      state[12] = hsalsa[5];
-      state[13] = hsalsa[6];
-      state[14] = hsalsa[7];
+      m_state[ 1] = hsalsa[0];
+      m_state[ 2] = hsalsa[1];
+      m_state[ 3] = hsalsa[2];
+      m_state[ 4] = hsalsa[3];
+      m_state[ 6] = load_le<u32bit>(iv, 4);
+      m_state[ 7] = load_le<u32bit>(iv, 5);
+      m_state[11] = hsalsa[4];
+      m_state[12] = hsalsa[5];
+      m_state[13] = hsalsa[6];
+      m_state[14] = hsalsa[7];
       }
 
-   state[8] = 0;
-   state[9] = 0;
+   m_state[8] = 0;
+   m_state[9] = 0;
 
-   salsa20(&buffer[0], &state[0]);
-   ++state[8];
-   if(!state[8]) // if overflow in state[8]
-      ++state[9]; // carry to state[9]
+   salsa20(&m_buffer[0], &m_state[0]);
+   ++m_state[8];
+   m_state[9] += (m_state[8] == 0);
 
-   position = 0;
+   m_position = 0;
    }
 
 /*
@@ -235,9 +225,9 @@ std::string Salsa20::name() const
 */
 void Salsa20::clear()
    {
-   zap(state);
-   zap(buffer);
-   position = 0;
+   zap(m_state);
+   zap(m_buffer);
+   m_position = 0;
    }
 
 }

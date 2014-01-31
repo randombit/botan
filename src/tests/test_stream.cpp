@@ -26,13 +26,19 @@ size_t stream_test(const std::string& algo,
    const auto providers = af.providers_of(algo);
    size_t fails = 0;
 
+   if(providers.empty())
+      {
+      std::cout << "Unknown algo " << algo << "\n";
+      ++fails;
+      }
+
    for(auto provider: providers)
       {
       const StreamCipher* proto = af.prototype_stream_cipher(algo, provider);
 
       if(!proto)
          {
-         std::cout << "Unable to get " << algo << " from " << provider << "\n";
+         std::cout << "Unable to get " << algo << " from provider '" << provider << "'\n";
          ++fails;
          continue;
          }

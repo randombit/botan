@@ -20,6 +20,12 @@ size_t mac_test(const std::string& algo,
    const auto providers = af.providers_of(algo);
    size_t fails = 0;
 
+   if(providers.empty())
+      {
+      std::cout << "Unknown algo " << algo << "\n";
+      ++fails;
+      }
+
    for(auto provider: providers)
       {
       auto proto = af.prototype_mac(algo, provider);

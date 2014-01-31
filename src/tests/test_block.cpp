@@ -24,6 +24,12 @@ size_t block_test(const std::string& algo,
    const auto providers = af.providers_of(algo);
    size_t fails = 0;
 
+   if(providers.empty())
+      {
+      std::cout << "Unknown algo " << algo << "\n";
+      ++fails;
+      }
+
    for(auto provider: providers)
       {
       const BlockCipher* proto = af.prototype_block_cipher(algo, provider);

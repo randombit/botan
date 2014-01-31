@@ -1,6 +1,8 @@
 Version 1.11.8, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* The ChaCha20 cipher has been added
+
 * The antique PBES1 private key encryption scheme (which only supports
   DES or 64-bit RC2) has been removed.
 
@@ -8,3 +10,13 @@ Version 1.11.8, Not Yet Released
   called, causing it to produce incorrect results for the following
   message. It was reset correctly in final() so most usages should not
   be affected.
+
+* A number of public key padding schemes have been renamed to match
+  the most common notation; for instance EME1 is now called OAEP and
+  EMSA4 is now called PSSR. Aliases are set which should allow all
+  current applications to continue to work unmodified.
+
+* A bug in the CFB encryption caused a few bytes past the end of the
+  final block to be read, though the actual output was not affected.
+
+* Various portability fixes for Visual C++ 2013, OS X, and x86-32.
