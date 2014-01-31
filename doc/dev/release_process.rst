@@ -13,7 +13,7 @@ Confirm that the release notes under ``doc/relnotes`` are accurate and
 complete and that the version number in ``botan_version.py`` is
 correct. Update the release date in the release notes and change the
 entry for the appropriate branch in ``doc/download.rst`` to point to
-the new release.
+the new release. Add the new release to ``relnotes/index.rst``.
 
 Check in these changes (alone, with no other modifications) with a
 checkin message along the lines of "Update for X.Y.Z release", then
@@ -75,13 +75,3 @@ Announce The Release
 
 Send an email to the announce and devel mailing lists noting that a
 new release is available.
-
-Post Release Process
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Immediately after the new release is created, increment the version
-number in ``botan_version.py`` and add a new release notes file for
-the next release, including a new entry in ``doc/relnotes/index.rst``.
-
-Use "Not Yet Released" as the placeholder for the release date. Use
-checkin message "Bump for X.Y.Z".
