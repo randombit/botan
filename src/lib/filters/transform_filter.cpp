@@ -1,16 +1,31 @@
 /*
 * Filter interface for Transformations
-* (C) 2013 Jack Lloyd
+* (C) 2013,2014 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
 #include <botan/transform_filter.h>
+#include <botan/internal/rounding.h>
 
 namespace Botan {
 
+namespace {
+
+size_t choose_update_size(size_t update_granularity)
+   {
+   const size_t target_size = 1024;
+
+   if(update_granularity >= target_size)
+      return update_granularity;
+
+   return round_up(target_size, update_granularity);
+   }
+
+}
+
 Transformation_Filter::Transformation_Filter(Transformation* transform) :
-   Buffered_Filter(transform->update_granularity(),
+   Buffered_Filter(choose_update_size(transform->update_granularity()),
                    transform->minimum_final_size()),
    m_nonce(transform->default_nonce_length() == 0),
    m_transform(transform),
