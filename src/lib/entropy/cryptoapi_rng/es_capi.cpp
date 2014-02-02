@@ -9,6 +9,8 @@
 #include <botan/parsing.h>
 #include <windows.h>
 #include <wincrypt.h>
+#undef min
+#undef max
 
 namespace Botan {
 
