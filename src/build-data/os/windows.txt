@@ -13,9 +13,8 @@ install_cmd_exec "copy"
 <target_features>
 gmtime_s
 loadlibrary
-win32_get_systemtime
-win32_query_perf_counter
-win32_virtual_lock
+query_perf_counter
+virtual_lock
 </target_features>
 
 <aliases>
