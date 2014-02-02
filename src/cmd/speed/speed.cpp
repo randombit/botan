@@ -126,20 +126,35 @@ void time_transform(std::unique_ptr<Transformation> tf,
    if(!tf)
       return;
 
+   const std::chrono::seconds runtime(2);
+
    for(size_t buf_size : { 16, 64, 256, 1024, 8192 })
       {
       secure_vector<byte> buffer(buf_size);
 
-      double res = time_op(std::chrono::seconds(1),
-                           [&tf,&buffer,buf_size,&rng]{
-                           tf->start_vec(rng.random_vec(tf->default_nonce_length()));
-                           tf->finish(buffer);
-                           buffer.resize(buf_size);
-                           });
+      std::chrono::nanoseconds time_used(0);
 
-      const double Mbytes = (res * buf_size) / 1024 / 1024;
+      tf->start_vec(rng.random_vec(tf->default_nonce_length()));
 
-      std::cout << tf->name() << " " << std::setprecision(4) << Mbytes
+      auto start = std::chrono::high_resolution_clock::now();
+
+      secure_vector<byte> buf(buf_size);
+      size_t reps = 0;
+      while(time_used < runtime)
+         {
+         tf->update(buf);
+         buf.resize(buf_size);
+         ++reps;
+         time_used = std::chrono::high_resolution_clock::now() - start;
+         }
+
+      const u64bit nsec_used = std::chrono::duration_cast<std::chrono::nanoseconds>(time_used).count();
+
+      const double seconds_used = static_cast<double>(nsec_used) / 1000000000;
+
+      const double Mbps = ((reps / seconds_used) * buf_size) / 1024 / 1024;
+
+      std::cout << tf->name() << " " << std::setprecision(4) << Mbps
                 << " MiB / sec with " << buf_size << " byte blocks\n";
       }
    }
