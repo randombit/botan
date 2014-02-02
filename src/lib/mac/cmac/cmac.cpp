@@ -16,9 +16,7 @@ namespace Botan {
 */
 secure_vector<byte> CMAC::poly_double(const secure_vector<byte>& in)
    {
-   const byte polynomial = (in.size() == 16) ? 0x87 : 0x1B;
-
-   const byte poly_xor = (in[0] & 0x80) ? polynomial : 0;
+   const bool top_carry = (in[0] & 0x80);
 
    secure_vector<byte> out = in;
 
@@ -30,7 +28,26 @@ secure_vector<byte> CMAC::poly_double(const secure_vector<byte>& in)
       carry = (temp >> 7);
       }
 
-   out[out.size()-1] ^= poly_xor;
+   if(top_carry)
+      {
+      switch(in.size())
+         {
+         case 8:
+            out[out.size()-1] ^= 0x1B;
+            break;
+         case 16:
+            out[out.size()-1] ^= 0x87;
+            break;
+         case 32:
+            out[out.size()-2] ^= 0x4;
+            out[out.size()-1] ^= 0x25;
+            break;
+         case 64:
+            out[out.size()-2] ^= 0x1;
+            out[out.size()-1] ^= 0x25;
+            break;
+         }
+      }
 
    return out;
    }
@@ -133,8 +150,13 @@ MessageAuthenticationCode* CMAC::clone() const
 */
 CMAC::CMAC(BlockCipher* cipher) : m_cipher(cipher)
    {
-   if(m_cipher->block_size() != 8 && m_cipher->block_size() != 16)
-      throw Invalid_Argument("CMAC cannot use the cipher " + m_cipher->name());
+   if(m_cipher->block_size() !=  8 && m_cipher->block_size() != 16 &&
+      m_cipher->block_size() != 32 && m_cipher->block_size() != 64)
+      {
+      throw Invalid_Argument("CMAC cannot use the " +
+                             std::to_string(m_cipher->block_size() * 8) +
+                             " bit cipher " + m_cipher->name());
+      }
 
    m_state.resize(output_length());
    m_buffer.resize(output_length());
