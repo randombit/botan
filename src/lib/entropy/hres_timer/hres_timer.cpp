@@ -7,9 +7,16 @@
 
 #include <botan/internal/hres_timer.h>
 #include <botan/cpuid.h>
+#include <chrono>
 
 #if defined(BOTAN_TARGET_OS_HAS_QUERY_PERF_COUNTER)
   #include <windows.h>
+  #undef min
+  #undef max
+#endif
+
+#if defined(BOTAN_TARGET_OS_HAS_CLOCK_GETTIME)
+  #include <time.h>
 #endif
 
 namespace Botan {
@@ -19,8 +26,20 @@ namespace Botan {
 */
 void High_Resolution_Timestamp::poll(Entropy_Accumulator& accum)
    {
-   // Don't count the timestamp as contributing any entropy
+   // Don't count any timestamps as contributing any entropy
    const double ESTIMATED_ENTROPY_PER_BYTE = 0.0;
+
+#define STD_CHRONO_POLL(clock)                                  \
+   do {                                                         \
+      auto timestamp = clock::now().time_since_epoch().count(); \
+      accum.add(timestamp, ESTIMATED_ENTROPY_PER_BYTE);         \
+   } while(0)
+
+  STD_CHRONO_POLL(std::chrono::high_resolution_clock);
+  STD_CHRONO_POLL(std::chrono::system_clock);
+  STD_CHRONO_POLL(std::chrono::steady_clock);
+
+#undef STD_CHRONO_POLL
 
 #if defined(BOTAN_TARGET_OS_HAS_QUERY_PERF_COUNTER)
    {
@@ -32,7 +51,7 @@ void High_Resolution_Timestamp::poll(Entropy_Accumulator& accum)
 
 #if defined(BOTAN_TARGET_OS_HAS_CLOCK_GETTIME)
 
-#define CLOCK_POLL(src)                                      \
+#define CLOCK_GETTIME_POLL(src)                              \
    do {                                                      \
      struct timespec ts;                                     \
      ::clock_gettime(src, &ts);                              \
@@ -40,38 +59,38 @@ void High_Resolution_Timestamp::poll(Entropy_Accumulator& accum)
    } while(0)
 
 #if defined(CLOCK_REALTIME)
-   CLOCK_POLL(CLOCK_REALTIME);
+   CLOCK_GETTIME_POLL(CLOCK_REALTIME);
 #endif
 
 #if defined(CLOCK_REALTIME_COARSE)
-   CLOCK_POLL(CLOCK_REALTIME_COARSE);
+   CLOCK_GETTIME_POLL(CLOCK_REALTIME_COARSE);
 #endif
 
 #if defined(CLOCK_MONOTONIC)
-   CLOCK_POLL(CLOCK_MONOTONIC);
+   CLOCK_GETTIME_POLL(CLOCK_MONOTONIC);
 #endif
 
 #if defined(CLOCK_MONOTONIC_COARSE)
-   CLOCK_POLL(CLOCK_MONOTONIC_COARSE);
+   CLOCK_GETTIME_POLL(CLOCK_MONOTONIC_COARSE);
 #endif
 
 #if defined(CLOCK_MONOTONIC_RAW)
-   CLOCK_POLL(CLOCK_MONOTONIC_RAW);
+   CLOCK_GETTIME_POLL(CLOCK_MONOTONIC_RAW);
 #endif
 
 #if defined(CLOCK_BOOTTIME)
-   CLOCK_POLL(CLOCK_BOOTTIME);
+   CLOCK_GETTIME_POLL(CLOCK_BOOTTIME);
 #endif
 
 #if defined(CLOCK_PROCESS_CPUTIME_ID)
-   CLOCK_POLL(CLOCK_PROCESS_CPUTIME_ID);
+   CLOCK_GETTIME_POLL(CLOCK_PROCESS_CPUTIME_ID);
 #endif
 
 #if defined(CLOCK_THREAD_CPUTIME_ID)
-   CLOCK_POLL(CLOCK_THREAD_CPUTIME_ID);
+   CLOCK_GETTIME_POLL(CLOCK_THREAD_CPUTIME_ID);
 #endif
 
-#undef CLOCK_POLL
+#undef CLOCK_GETTIME_POLL
 
 #endif
 
