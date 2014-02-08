@@ -2,6 +2,7 @@
 #ifndef BOTAN_TESTS_H__
 #define BOTAN_TESTS_H__
 
+#include <botan/build.h>
 #include <functional>
 #include <istream>
 #include <map>
