@@ -45,9 +45,9 @@ Block ciphers
   * AES candidates Serpent, Twofish, MARS, CAST-256, RC6
   * DES, and variants 3DES and DESX
   * Other block ciphers including Threefish-512, Blowfish, CAST-128, IDEA,
-    Noekeon, TEA, XTEA, RC2, RC5, SAFER-SK, and Square
-  * National/telecom block ciphers SEED, KASUMI, MISTY1, GOST 28147, Skipjack
-  * Block cipher constructions Luby-Rackoff and Lion
+    Noekeon, TEA, XTEA, RC2, RC5, SAFER-SK
+  * National/telecom block ciphers SEED, KASUMI, MISTY1, GOST 28147
+  * Large block cipher construction Lion
 
 Stream Ciphers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

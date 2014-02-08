@@ -1,7 +1,7 @@
 Version 1.11.8, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* The ChaCha20 cipher has been added
+* The ChaCha20 stream cipher has been added.
 
 * CMAC now supports 256 and 512 bit block ciphers, which also allows
   the use of larger block ciphers with EAX mode. In particular this
@@ -9,6 +9,10 @@ Version 1.11.8, Not Yet Released
 
 * The antique PBES1 private key encryption scheme (which only supports
   DES or 64-bit RC2) has been removed.
+
+* The Square, Skipjack, and Luby-Rackoff block ciphers have been removed.
+
+* The Blue Midnight Wish hash function has been removed.
 
 * Skein-512 no longer supports output lengths greater than 512 bits.
 
