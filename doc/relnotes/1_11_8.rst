@@ -3,8 +3,14 @@ Version 1.11.8, Not Yet Released
 
 * The ChaCha20 cipher has been added
 
+* CMAC now supports 256 and 512 bit block ciphers, which also allows
+  the use of larger block ciphers with EAX mode. In particular this
+  allows using Threefish in EAX mode.
+
 * The antique PBES1 private key encryption scheme (which only supports
   DES or 64-bit RC2) has been removed.
+
+* Skein-512 no longer supports output lengths greater than 512 bits.
 
 * Skein did not reset its internal state properly if clear() was
   called, causing it to produce incorrect results for the following
@@ -16,7 +22,7 @@ Version 1.11.8, Not Yet Released
   EMSA4 is now called PSSR. Aliases are set which should allow all
   current applications to continue to work unmodified.
 
-* A bug in the CFB encryption caused a few bytes past the end of the
-  final block to be read, though the actual output was not affected.
+* A bug in CFB encryption caused a few bytes past the end of the final
+  block to be read. The actual output was not affected.
 
 * Various portability fixes for Visual C++ 2013, OS X, and x86-32.

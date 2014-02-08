@@ -1,5 +1,5 @@
 define SKEIN_512 20131128
 
 <requires>
-alloc
+threefish
 </requires>
