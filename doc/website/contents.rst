@@ -13,4 +13,5 @@ Contents
    pgpkey
    credits
    users
+   algos
    relnotes/contents

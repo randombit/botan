@@ -6,12 +6,12 @@ Botan is a crypto library for C++ released under the permissive
 :doc:`BSD-2 license <license>`.
 
 It provides useful things like SSL/TLS, X.509 certificates, ECDSA,
-AES, GCM, and bcrypt, plus a kitchen sink of crypto algorithms of
-various utility. A third party open source implementation of `SSHv2
-<http://www.netsieben.com/products/ssh/>`_ that uses botan is also
-available. In addition to C++ you can use botan from Python or Perl
-(both included in tree), or with `Node.js
-<https://github.com/justinfreitag/node-botan>`_.
+AES, GCM, and bcrypt, plus a :doc:`kitchen sink <algos>` of crypto
+algorithms of various utility. A third party open source
+implementation of `SSHv2 <http://www.netsieben.com/products/ssh/>`_
+that uses botan is also available. In addition to C++ you can use
+(parts of) botan from Python or Perl (both included in tree), or with
+`Node.js <https://github.com/justinfreitag/node-botan>`_.
 
 See the :doc:`faq` for a list of common questions and answers,
 :doc:`download` for information about getting the latest release,
@@ -24,4 +24,3 @@ Patches, "philosophical" bug reports, announcements of programs using
 the library, and related topics are also welcome. If you find what you
 believe to be a bug, please file a ticket in `Bugzilla
 <http://bugs.randombit.net/>`_.
-
