@@ -18,6 +18,7 @@
 #include <vector>
 #include <memory>
 
+#include <botan/auto_rng.h>
 #include <botan/ecdsa.h>
 #include <botan/rsa.h>
 
