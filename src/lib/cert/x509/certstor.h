@@ -27,7 +27,7 @@ class BOTAN_DLL Certificate_Store
       virtual const X509_Certificate*
          find_cert(const X509_DN& subject_dn, const std::vector<byte>& key_id) const = 0;
 
-      virtual const X509_CRL* find_crl(const X509_Certificate& subject) const;
+      virtual const X509_CRL* find_crl_for(const X509_Certificate& subject) const;
 
       bool certificate_known(const X509_Certificate& cert) const
          {
@@ -62,7 +62,7 @@ class BOTAN_DLL Certificate_Store_In_Memory : public Certificate_Store
          const X509_DN& subject_dn,
          const std::vector<byte>& key_id) const override;
 
-      const X509_CRL* find_crl(const X509_Certificate& subject) const override;
+      const X509_CRL* find_crl_for(const X509_Certificate& subject) const override;
    private:
       // TODO: Add indexing on the DN and key id to avoid linear search
       std::vector<X509_Certificate> m_certs;

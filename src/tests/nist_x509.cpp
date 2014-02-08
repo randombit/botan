@@ -9,12 +9,6 @@ Policy extensions are not implemented, so we skip tests #34-#53.
 
 Tests #75 and #76 are skipped as they make use of relatively obscure CRL
 extensions which are not supported.
-
-In addition, please note that some of the tests have their results altered from
-what the test result should be according to NIST's documentation. The changes
-are clearly marked (see x509test.cpp; search for "CHANGE OF TEST RESULT") and
-there are comments explaining why the results where changed. Currently, tests
-#19, #65, and #67 have had their results changed from the official results.
 */
 
 #include "tests.h"
@@ -29,12 +23,32 @@ there are comments explaining why the results where changed. Currently, tests
 #include <vector>
 #include <map>
 #include <cstdlib>
+#include <boost/filesystem.hpp>
 
-#include <dirent.h>
+namespace fs = boost::filesystem;
 
 using namespace Botan;
 
-std::vector<std::string> dir_listing(const std::string&);
+namespace {
+
+std::vector<std::string> dir_listing(const std::string& dir_name)
+   {
+   std::vector<std::string> paths;
+
+   fs::directory_iterator dir(dir_name), end;
+
+   while(dir != end)
+      {
+      paths.push_back(dir->path().string());
+      ++dir;
+      }
+
+   std::sort(paths.begin(), paths.end());
+
+   return paths;
+   }
+
+}
 
 void run_one_test(u32bit, Path_Validation_Result::Code,
                   std::string, std::string,
@@ -48,20 +62,22 @@ void populate_expected_results();
 
 size_t test_nist_x509()
    {
+   const std::string root_test_dir = "src/tests/data/nist_x509/";
+
    unexp_failure = unexp_success = wrong_error = skipped = 0;
+
+   size_t ran = 0;
 
    try {
 
    populate_expected_results();
 
-   const std::string root_test_dir = "src/test-data/nist_x509/";
-   std::vector<std::string> test_dirs = dir_listing(root_test_dir);
-   std::sort(test_dirs.begin(), test_dirs.end());
+   const std::vector<std::string> test_dirs = dir_listing(root_test_dir);
 
-   for(size_t j = 0; j != test_dirs.size(); j++)
+   for(size_t i = 0; i != test_dirs.size(); i++)
       {
-      const std::string test_dir = root_test_dir + test_dirs[j] + "/";
-      std::vector<std::string> all_files = dir_listing(test_dir);
+      const std::string test_dir = test_dirs[i];
+      const std::vector<std::string> all_files = dir_listing(test_dir);
 
       std::vector<std::string> certs, crls;
       std::string root_cert, to_verify;
@@ -69,28 +85,26 @@ size_t test_nist_x509()
       for(size_t k = 0; k != all_files.size(); k++)
          {
          const std::string current = all_files[k];
+
          if(current.find("int") != std::string::npos &&
             current.find(".crt") != std::string::npos)
-            certs.push_back(test_dir + current);
+            certs.push_back(current);
          else if(current.find("root.crt") != std::string::npos)
-            root_cert = test_dir + current;
+            root_cert = current;
          else if(current.find("end.crt") != std::string::npos)
-            to_verify = test_dir + current;
+            to_verify = current;
          else if(current.find(".crl") != std::string::npos)
-            crls.push_back(test_dir + current);
+            crls.push_back(current);
          }
 
-      if(expected_results.find(j+1) == expected_results.end())
+      if(expected_results.find(i+1) == expected_results.end())
          {
-#if 0
-         std::cout << "Testing disabled for test #" << j+1
-                   << " <skipped>" << std::endl;
-#endif
          skipped++;
          continue;
          }
 
-      run_one_test(j+1, expected_results[j+1],
+      ++ran;
+      run_one_test(i+1, expected_results[i+1],
                    root_cert, to_verify, certs, crls);
       }
 
@@ -101,12 +115,11 @@ size_t test_nist_x509()
       return 1;
       }
 
-   std::cout << "Total unexpected failures: " << unexp_failure << std::endl;
-   std::cout << "Total unexpected successes: " << unexp_success << std::endl;
-   std::cout << "Total incorrect failures: " << wrong_error << std::endl;
-   std::cout << "Tests skipped: " << skipped << std::endl;
+   const size_t all_failures = unexp_failure + unexp_success + wrong_error;
 
-   return unexp_failure + unexp_success + wrong_error;
+   test_report("NIST X.509 path validation", ran, all_failures);
+
+   return all_failures;
    }
 
 void run_one_test(u32bit test_no, Path_Validation_Result::Code expected,
@@ -114,32 +127,19 @@ void run_one_test(u32bit test_no, Path_Validation_Result::Code expected,
                   std::vector<std::string> certs,
                   std::vector<std::string> crls)
    {
-   std::cout << "NIST X.509 test #" << test_no << "... ";
-
    Certificate_Store_In_Memory store;
 
    store.add_certificate(X509_Certificate(root_cert));
 
    X509_Certificate end_user(to_verify);
 
-   for(size_t j = 0; j != certs.size(); j++)
-      store.add_certificate(X509_Certificate(certs[j]));
+   for(size_t i = 0; i != certs.size(); i++)
+      store.add_certificate(X509_Certificate(certs[i]));
 
-   for(size_t j = 0; j != crls.size(); j++)
+   for(size_t i = 0; i != crls.size(); i++)
       {
-      DataSource_Stream in(crls[j]);
-
+      DataSource_Stream in(crls[i]);
       X509_CRL crl(in);
-      /*
-      std::vector<CRL_Entry> crl_entries = crl.get_revoked();
-      for(u32bit k = 0; k != crl_entries.size(); k++)
-         {
-         std::cout << "Revoked: " << std::flush;
-         for(u32bit l = 0; l != crl_entries[k].serial.size(); l++)
-            printf("%02X", crl_entries[k].serial[l]);
-         std::cout << std::endl;
-         }
-      */
       store.add_crl(crl);
       }
 
@@ -153,10 +153,9 @@ void run_one_test(u32bit test_no, Path_Validation_Result::Code expected,
    Path_Validation_Result::Code result = validation_result.result();
 
    if(result == expected)
-      {
-      std::cout << "passed" << std::endl;
       return;
-      }
+
+   std::cout << "NIST X.509 test #" << test_no << ": ";
 
    const std::string result_str = Path_Validation_Result::status_string(result);
    const std::string exp_str = Path_Validation_Result::status_string(expected);
@@ -173,37 +172,9 @@ void run_one_test(u32bit test_no, Path_Validation_Result::Code expected,
       }
    else
       {
-      std::cout << "wrong error: " << result_str << "/" << exp_str << std::endl;
+      std::cout << "wrong error, got '" << result_str << "' expected '" << exp_str << "'" << std::endl;
       wrong_error++;
       }
-   }
-
-std::vector<std::string> dir_listing(const std::string& dir_name)
-   {
-   DIR* dir = opendir(dir_name.c_str());
-   if(!dir)
-      {
-      std::cout << "Error, couldn't open dir " << dir_name << std::endl;
-      std::exit(1);
-      }
-
-   std::vector<std::string> listing;
-
-   while(true)
-      {
-      struct dirent* dir_ent = readdir(dir);
-
-      if(!dir_ent)
-         break;
-      const std::string entry = dir_ent->d_name;
-      if(entry == "." || entry == "..")
-         continue;
-
-      listing.push_back(entry);
-      }
-   closedir(dir);
-
-   return listing;
    }
 
 /*
@@ -310,7 +281,7 @@ void populate_expected_results()
    expected_results[62] = Certificate_Status_Code::VERIFIED;
    expected_results[63] = Certificate_Status_Code::VERIFIED;
 
-   expected_results[64] = Certificate_Status_Code::SIGNATURE_ERROR;
+   expected_results[64] = Certificate_Status_Code::CRL_BAD_SIGNATURE;
 
    expected_results[65] = Certificate_Status_Code::CRL_NOT_FOUND;
    expected_results[66] = Certificate_Status_Code::CRL_NOT_FOUND;

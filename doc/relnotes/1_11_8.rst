@@ -4,6 +4,9 @@ Version 1.11.8, Not Yet Released
 * The `botan` command line application introduced in 1.11.7 is now
   installed along with the library.
 
+* A bug in certificate path validation introduced in 1.11.6 which
+  caused all CRL signature checks to fail has been corrected.
+
 * The ChaCha20 stream cipher has been added.
 
 * CMAC now supports 256 and 512 bit block ciphers, which also allows

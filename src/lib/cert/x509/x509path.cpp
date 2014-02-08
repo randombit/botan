@@ -34,15 +34,12 @@ const X509_Certificate* find_issuing_cert(const X509_Certificate& cert,
    return nullptr;
    }
 
-const X509_CRL* find_crls_from(const X509_Certificate& cert,
-                               const std::vector<Certificate_Store*>& certstores)
+const X509_CRL* find_crls_for(const X509_Certificate& cert,
+                              const std::vector<Certificate_Store*>& certstores)
    {
-   const X509_DN issuer_dn = cert.subject_dn();
-   const std::vector<byte> auth_key_id = cert.subject_key_id();
-
    for(size_t i = 0; i != certstores.size(); ++i)
       {
-      if(const X509_CRL* crl = certstores[i]->find_crl(cert))
+      if(const X509_CRL* crl = certstores[i]->find_crl_for(cert))
          return crl;
       }
 
@@ -152,12 +149,12 @@ Certificate_Status_Code check_chain(const std::vector<X509_Certificate>& cert_pa
             }
          }
 
-      const X509_CRL* crl_p = find_crls_from(ca, certstores);
+      const X509_CRL* crl_p = find_crls_for(subject, certstores);
 
       if(!crl_p)
          {
          if(restrictions.require_revocation_information())
-            return Certificate_Status_Code::NO_REVOCATION_DATA;
+            return Certificate_Status_Code::CRL_NOT_FOUND;
          continue;
          }
 
@@ -173,7 +170,7 @@ Certificate_Status_Code check_chain(const std::vector<X509_Certificate>& cert_pa
          return Certificate_Status_Code::CRL_HAS_EXPIRED;
 
       if(crl.check_signature(ca.subject_public_key()) == false)
-         return Certificate_Status_Code::SIGNATURE_ERROR;
+         return Certificate_Status_Code::CRL_BAD_SIGNATURE;
 
       if(crl.is_revoked(subject))
          return Certificate_Status_Code::CERT_IS_REVOKED;
@@ -333,6 +330,8 @@ std::string Path_Validation_Result::status_string(Certificate_Status_Code code)
          return "CRL has expired";
       case CRL_NOT_FOUND:
          return "CRL not found";
+      case CRL_BAD_SIGNATURE:
+         return "CRL has invalid signature";
       case CA_CERT_CANNOT_SIGN:
          return "CA certificate cannot sign";
       case CA_CERT_NOT_FOR_CERT_ISSUER:

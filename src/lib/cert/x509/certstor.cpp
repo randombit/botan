@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-const X509_CRL* Certificate_Store::find_crl(const X509_Certificate&) const
+const X509_CRL* Certificate_Store::find_crl_for(const X509_Certificate&) const
    {
    return nullptr;
    }
@@ -86,7 +86,7 @@ void Certificate_Store_In_Memory::add_crl(const X509_CRL& crl)
    m_crls.push_back(crl);
    }
 
-const X509_CRL* Certificate_Store_In_Memory::find_crl(const X509_Certificate& subject) const
+const X509_CRL* Certificate_Store_In_Memory::find_crl_for(const X509_Certificate& subject) const
    {
    const std::vector<byte>& key_id = subject.authority_key_id();
 

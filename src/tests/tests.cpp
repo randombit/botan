@@ -1,8 +1,8 @@
 #include "tests.h"
 #include <botan/init.h>
 #include <iostream>
-#include <boost/filesystem.hpp>
 #include <fstream>
+#include <boost/filesystem.hpp>
 
 namespace fs = boost::filesystem;
 
@@ -266,6 +266,7 @@ int main(int argc, char* argv[])
    DEF_TEST(pk_keygen);
    DEF_TEST(cvc);
    DEF_TEST(x509);
+   DEF_TEST(nist_x509);
    DEF_TEST(tls);
 
    if(tests.empty())
