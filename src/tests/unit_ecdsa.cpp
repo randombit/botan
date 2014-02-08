@@ -8,12 +8,15 @@
 
 #include "tests.h"
 
+#if defined(BOTAN_HAS_ECDSA)
 #include <botan/hex.h>
 #include <botan/auto_rng.h>
 #include <botan/pubkey.h>
 #include <botan/ecdsa.h>
 #include <botan/rsa.h>
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
 #include <botan/x509cert.h>
+#endif
 #include <botan/oids.h>
 
 #include <iostream>
@@ -94,6 +97,7 @@ size_t test_hash_larger_than_n(RandomNumberGenerator& rng)
    return fails;
    }
 
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
 size_t test_decode_ecdsa_X509()
    {
    X509_Certificate cert(ECC_TEST_DATA_DIR "/CSCA.CSCA.csca-germany.1.crt");
@@ -135,6 +139,7 @@ size_t test_decode_ver_link_SHA1()
    CHECK_MESSAGE(ver_ec, "could not positively verify correct SHA1 link x509-ecdsa certificate");
    return fails;
    }
+#endif
 
 size_t test_sign_then_ver(RandomNumberGenerator& rng)
    {
@@ -471,9 +476,11 @@ size_t test_ecdsa_unit()
    AutoSeeded_RNG rng;
 
    fails += test_hash_larger_than_n(rng);
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
    fails += test_decode_ecdsa_X509();
    fails += test_decode_ver_link_SHA256();
    fails += test_decode_ver_link_SHA1();
+#endif
    fails += test_sign_then_ver(rng);
    fails += test_ec_sign(rng);
    fails += test_create_pkcs8(rng);
@@ -486,3 +493,9 @@ size_t test_ecdsa_unit()
 
    return fails;
    }
+
+#else
+
+size_t test_ecdsa_unit() { return 0; }
+
+#endif

@@ -37,7 +37,7 @@ int help(int , char* argv[])
    return 1;
    }
 
-int config_main(int argc, char* argv[])
+int config_main(int , char* argv[])
    {
    return 1;
    }
@@ -109,20 +109,24 @@ int main(int argc, char* argv[])
       CALL_APP(base64);
       CALL_APP(bcrypt);
       CALL_APP(bzip);
-      CALL_APP(ca);
       CALL_APP(factor);
       CALL_APP(fpe);
       CALL_APP(hash);
       CALL_APP(keygen);
       CALL_APP(dsa_sign);
       CALL_APP(dsa_verify);
-      CALL_APP(pkcs10);
       CALL_APP(read_ssh);
-      CALL_APP(self_sig);
+#if defined(BOTAN_HAS_TLS)
       CALL_APP(tls_client);
       CALL_APP(tls_server);
       CALL_APP(tls_server_asio);
+#endif
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+      CALL_APP(ca);
+      CALL_APP(pkcs10);
+      CALL_APP(self_sig);
       CALL_APP(x509);
+#endif
       CALL_APP(speed);
 
       std::cout << "Unknown command " << cmd << "\n";

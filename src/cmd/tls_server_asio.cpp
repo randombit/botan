@@ -1,4 +1,6 @@
 #include "apps.h"
+
+#if defined(BOTAN_HAS_TLS)
 #include <iostream>
 #include <string>
 #include <vector>
@@ -313,3 +315,4 @@ int tls_server_asio_main(int argc, char* argv[])
    return 0;
    }
 
+#endif

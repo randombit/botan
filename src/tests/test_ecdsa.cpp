@@ -1,6 +1,7 @@
 #include "tests.h"
 #include "test_pubkey.h"
 
+#if defined(BOTAN_HAS_ECDSA)
 #include <botan/auto_rng.h>
 #include <botan/pubkey.h>
 #include <botan/ecdsa.h>
@@ -50,3 +51,8 @@ size_t test_ecdsa()
    return fails;
    }
 
+#else
+
+size_t test_ecdsa() { return 0; }
+
+#endif

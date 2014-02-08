@@ -1,4 +1,5 @@
 #include "apps.h"
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
 #include <botan/x509self.h>
 #include <botan/rsa.h>
 #include <botan/dsa.h>
@@ -68,3 +69,4 @@ int self_sig_main(int argc, char* argv[])
 
    return 0;
    }
+#endif

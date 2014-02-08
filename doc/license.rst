@@ -24,7 +24,7 @@ Botan (http://botan.randombit.net/) is distributed under these terms::
                 2007 Patrick Sona
                 2010 Olivier de Gaalon
                 2012 Vojtech Kral
-                2012 Markus Wanner
+                2012-2014 Markus Wanner
                 2013 Joel Low
   All rights reserved.
 

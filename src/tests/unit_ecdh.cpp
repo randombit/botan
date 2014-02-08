@@ -9,13 +9,16 @@
 
 #include "tests.h"
 
+#if defined(BOTAN_HAS_ECDH)
 #include <iostream>
 #include <fstream>
 
 #include <botan/auto_rng.h>
 #include <botan/pubkey.h>
 #include <botan/ecdh.h>
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
 #include <botan/x509self.h>
+#endif
 #include <botan/der_enc.h>
 
 using namespace Botan;
@@ -130,3 +133,9 @@ size_t test_ecdh_unit()
 
    return fails;
    }
+
+#else
+
+size_t test_ecdh_unit() { return 0; }
+
+#endif

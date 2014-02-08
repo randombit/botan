@@ -249,7 +249,7 @@ size_t test_x509()
 
 #else
 
-size_t test_x590() { return 0; }
+size_t test_x509() { return 0; }
 
 #endif
 

@@ -1,4 +1,5 @@
 #include "apps.h"
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
 #include <botan/x509cert.h>
 
 int x509_main(int argc, char* argv[])
@@ -15,3 +16,4 @@ int x509_main(int argc, char* argv[])
 
    return 0;
    }
+#endif

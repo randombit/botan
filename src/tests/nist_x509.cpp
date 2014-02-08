@@ -13,6 +13,7 @@ extensions which are not supported.
 
 #include "tests.h"
 
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
 #include <botan/x509path.h>
 #include <botan/init.h>
 
@@ -300,3 +301,5 @@ void populate_expected_results()
    //expected_results[75] = ;
    //expected_results[76] = ;
    }
+
+#endif

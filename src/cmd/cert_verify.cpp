@@ -6,6 +6,7 @@
 */
 
 #include "apps.h"
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
 #include <botan/x509cert.h>
 #include <botan/x509path.h>
 #include <iostream>
@@ -41,3 +42,4 @@ int cert_verify_main(int argc, char* argv[])
 
    return 0;
    }
+#endif

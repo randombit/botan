@@ -1,4 +1,6 @@
 #include "apps.h"
+
+#if defined(BOTAN_HAS_TLS)
 #include <botan/tls_server.h>
 #include <botan/hex.h>
 
@@ -260,3 +262,5 @@ int tls_server_main(int argc, char* argv[])
 
    return 0;
    }
+
+#endif

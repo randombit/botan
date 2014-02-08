@@ -1,5 +1,5 @@
-
 #include "apps.h"
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
 #include <botan/x509_ca.h>
 using namespace Botan;
 
@@ -61,3 +61,4 @@ int ca_main(int argc, char* argv[])
       }
    return 0;
    }
+#endif
