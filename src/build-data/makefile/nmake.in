@@ -81,3 +81,9 @@ install: $(LIBRARIES) docs
 	-$(MKDIR) $(DESTDIR)\include\botan
 	$(INSTALL_CMD) botan.* $(DESTDIR)
 	$(INSTALL_CMD) build\include\botan\*.h $(DESTDIR)\include\botan
+
+	-$(MKDIR) $(DESTDIR)\bin
+	$(INSTALL_CMD) $(APP) $(DESTDIR)\bin
+
+	-$(MKDIR) $(DESTDIR)\lib
+	$(INSTALL_CMD) $(LIBRARIES) $(DESTDIR)\lib
