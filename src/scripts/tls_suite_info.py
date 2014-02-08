@@ -54,6 +54,7 @@ def to_ciphersuite_info(code, name):
 
     cipher_info = {
         'RC4': ('RC4',None),
+        'CHACHA': ('ChaCha',32),
         'IDEA': ('IDEA',16),
         'DES': ('DES',8),
         '3DES': ('3DES',24),
@@ -72,6 +73,7 @@ def to_ciphersuite_info(code, name):
         'SHA512': 'SHA-512',
 
         'RC4': 'RC4',
+        'CHACHA': 'ChaCha',
         '3DES': 'TripleDES',
 
         'DSS': 'DSA',
@@ -112,7 +114,10 @@ def to_ciphersuite_info(code, name):
     modestr = ''
     mode = ''
     ivlen = 0
-    if cipher_algo != 'RC4':
+
+    stream_ciphers = ['RC4', 'ChaCha']
+
+    if cipher_algo not in stream_ciphers:
         mode = cipher[-1]
         if mode not in ['CBC', 'GCM', 'CCM-8', 'CCM', 'OCB']:
             print "#warning Unknown mode %s" % (' '.join(cipher))
@@ -122,12 +127,14 @@ def to_ciphersuite_info(code, name):
         if mode != 'CBC':
             cipher_algo += '/' + mode
 
-    if cipher_algo != 'RC4' and mode != 'CBC':
-        return 'Ciphersuite(0x%s, "%s", "%s", "%s", %d, %d, "AEAD", %d, "%s")' % (
-            code, sig_algo, kex_algo, cipher_algo, cipher_keylen, 4, 0, mac_algo)
-    else:
+    if cipher_algo in stream_ciphers or mode == 'CBC':
         return 'Ciphersuite(0x%s, "%s", "%s", "%s", %d, %d, "%s", %d)' % (
             code, sig_algo, kex_algo, cipher_algo, cipher_keylen, ivlen, mac_algo, mac_keylen[mac_algo])
+    else:
+        imp_iv_len = 4
+
+        return 'Ciphersuite(0x%s, "%s", "%s", "%s", %d, %d, "AEAD", %d, "%s")' % (
+            code, sig_algo, kex_algo, cipher_algo, cipher_keylen, imp_iv_len, 0, mac_algo)
 
 def open_input(args):
     iana_url = 'https://www.iana.org/assignments/tls-parameters/tls-parameters.txt'
@@ -156,6 +163,8 @@ def process_command_line(args):
                       help='add experimental OCB AEAD suites')
     parser.add_option('--with-eax', action='store_true', default=False,
                       help='add experimental EAX AEAD suites')
+    parser.add_option('--with-chacha', action='store_true', default=False,
+                      help='add experimental ChaCha suites')
 
     parser.add_option('--save-download', action='store_true', default=True,
                       help='save downloaded tls-parameters.txt')
@@ -228,6 +237,21 @@ def main(args = None):
         define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_256_EAX_SHA384', 'FF91')
         define_custom_ciphersuite('ECDHE_RSA_WITH_AES_128_EAX_SHA256', 'FF92')
         define_custom_ciphersuite('ECDHE_RSA_WITH_AES_256_EAX_SHA384', 'FF93')
+
+    if options.with_chacha:
+        define_custom_ciphersuite('RSA_WITH_CHACHA_SHA', 'CC20')
+        define_custom_ciphersuite('ECDHE_RSA_WITH_CHACHA_SHA', 'CC21')
+        define_custom_ciphersuite('ECDHE_ECDSA_WITH_CHACHA_SHA', 'CC22')
+        define_custom_ciphersuite('DHE_RSA_WITH_CHACHA_SHA', 'CC23')
+
+        define_custom_ciphersuite('DHE_PSK_WITH_CHACHA_SHA', 'CC24')
+        define_custom_ciphersuite('PSK_WITH_CHACHA_SHA', 'CC25')
+        define_custom_ciphersuite('ECDHE_PSK_WITH_CHACHA_SHA', 'CC26')
+        #define_custom_ciphersuite('RSA_PSK_WITH_CHACHA_SHA', 'CC26')
+
+        define_custom_ciphersuite('SRP_SHA_WITH_CHACHA_SHA', 'CC27')
+        define_custom_ciphersuite('SRP_SHA_RSA_WITH_CHACHA_SHA', 'CC28')
+        define_custom_ciphersuite('SRP_SHA_ECDSA_WITH_CHACHA_SHA', 'CC29')
 
     if options.with_srp_aead:
         define_custom_ciphersuite('SRP_SHA_WITH_AES_256_GCM_SHA384', 'FFA0')
