@@ -21,10 +21,6 @@
   #include <botan/crc32.h>
 #endif
 
-#if defined(BOTAN_HAS_BMW_512)
-  #include <botan/bmw_512.h>
-#endif
-
 #if defined(BOTAN_HAS_GOST_34_11)
   #include <botan/gost_3411.h>
 #endif
@@ -110,11 +106,6 @@ HashFunction* Core_Engine::find_hash(const SCAN_Name& request,
 #if defined(BOTAN_HAS_CRC32)
    if(request.algo_name() == "CRC32")
       return new CRC32;
-#endif
-
-#if defined(BOTAN_HAS_BMW_512)
-   if(request.algo_name() == "BMW-512")
-      return new BMW_512;
 #endif
 
 #if defined(BOTAN_HAS_GOST_34_11)

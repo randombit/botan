@@ -51,10 +51,6 @@
   #include <botan/lion.h>
 #endif
 
-#if defined(BOTAN_HAS_LUBY_RACKOFF)
-  #include <botan/lubyrack.h>
-#endif
-
 #if defined(BOTAN_HAS_MARS)
   #include <botan/mars.h>
 #endif
@@ -89,14 +85,6 @@
 
 #if defined(BOTAN_HAS_SERPENT)
   #include <botan/serpent.h>
-#endif
-
-#if defined(BOTAN_HAS_SKIPJACK)
-  #include <botan/skipjack.h>
-#endif
-
-#if defined(BOTAN_HAS_SQUARE)
-  #include <botan/square.h>
 #endif
 
 #if defined(BOTAN_HAS_TEA)
@@ -223,16 +211,6 @@ BlockCipher* Core_Engine::find_block_cipher(const SCAN_Name& request,
       return new Serpent;
 #endif
 
-#if defined(BOTAN_HAS_SKIPJACK)
-   if(request.algo_name() == "Skipjack")
-      return new Skipjack;
-#endif
-
-#if defined(BOTAN_HAS_SQUARE)
-   if(request.algo_name() == "Square")
-      return new Square;
-#endif
-
 #if defined(BOTAN_HAS_TEA)
    if(request.algo_name() == "TEA")
       return new TEA;
@@ -251,16 +229,6 @@ BlockCipher* Core_Engine::find_block_cipher(const SCAN_Name& request,
 #if defined(BOTAN_HAS_XTEA)
    if(request.algo_name() == "XTEA")
       return new XTEA;
-#endif
-
-#if defined(BOTAN_HAS_LUBY_RACKOFF)
-   if(request.algo_name() == "Luby-Rackoff" && request.arg_count() == 1)
-      {
-      const HashFunction* hash = af.prototype_hash_function(request.arg(0));
-
-      if(hash)
-         return new LubyRackoff(hash->clone());
-      }
 #endif
 
 #if defined(BOTAN_HAS_CASCADE)
