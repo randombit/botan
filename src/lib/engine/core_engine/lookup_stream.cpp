@@ -41,16 +41,16 @@ Core_Engine::find_stream_cipher(const SCAN_Name& request,
 #if defined(BOTAN_HAS_OFB)
    if(request.algo_name() == "OFB" && request.arg_count() == 1)
       {
-      const BlockCipher* proto = af.prototype_block_cipher(request.arg(0));
-      return new OFB(proto->clone());
+      if(auto proto = af.prototype_block_cipher(request.arg(0)))
+         return new OFB(proto->clone());
       }
 #endif
 
 #if defined(BOTAN_HAS_CTR_BE)
    if(request.algo_name() == "CTR-BE" && request.arg_count() == 1)
       {
-      const BlockCipher* proto = af.prototype_block_cipher(request.arg(0));
-      return new CTR_BE(proto->clone());
+      if(auto proto = af.prototype_block_cipher(request.arg(0)))
+         return new CTR_BE(proto->clone());
       }
 #endif
 

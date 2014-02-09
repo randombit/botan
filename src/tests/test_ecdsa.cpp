@@ -35,24 +35,21 @@ size_t ecdsa_sig_kat(const std::string& group_id,
    }
 
 }
+#endif
 
 size_t test_ecdsa()
    {
-   std::ifstream ecdsa_sig(PK_TEST_DATA_DIR "/ecdsa.vec");
-
    size_t fails = 0;
+
+#if defined(BOTAN_HAS_ECDSA)
+   std::ifstream ecdsa_sig(PK_TEST_DATA_DIR "/ecdsa.vec");
 
    fails += run_tests_bb(ecdsa_sig, "ECDSA Signature", "Signature", true,
              [](std::map<std::string, std::string> m) -> size_t
              {
              return ecdsa_sig_kat(m["Group"], m["X"], m["Hash"], m["Msg"], m["Nonce"], m["Signature"]);
              });
+#endif
 
    return fails;
    }
-
-#else
-
-size_t test_ecdsa() { return 0; }
-
-#endif

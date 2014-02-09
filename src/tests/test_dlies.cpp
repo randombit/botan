@@ -1,17 +1,21 @@
 #include "tests.h"
 #include "test_pubkey.h"
 
-#include <botan/auto_rng.h>
-#include <botan/pubkey.h>
-#include <botan/lookup.h>
-#include <botan/dlies.h>
-#include <botan/dh.h>
 #include <botan/hex.h>
 #include <iostream>
 #include <fstream>
 
+#if defined(BOTAN_HAS_DLIES)
+ #include <botan/auto_rng.h>
+ #include <botan/pubkey.h>
+ #include <botan/lookup.h>
+ #include <botan/dlies.h>
+ #include <botan/dh.h>
+#endif
+
 using namespace Botan;
 
+#if defined(BOTAN_HAS_DLIES)
 namespace {
 
 size_t dlies_kat(const std::string& p,
@@ -59,18 +63,21 @@ size_t dlies_kat(const std::string& p,
    }
 
 }
+#endif
 
 size_t test_dlies()
    {
-   std::ifstream dlies(PK_TEST_DATA_DIR "/dlies.vec");
-
    size_t fails = 0;
+
+#if defined(BOTAN_HAS_DLIES)
+   std::ifstream dlies(PK_TEST_DATA_DIR "/dlies.vec");
 
    fails += run_tests_bb(dlies, "DLIES Encryption", "Ciphertext", true,
              [](std::map<std::string, std::string> m) -> size_t
              {
              return dlies_kat(m["P"], m["G"], m["X1"], m["X2"], m["Msg"], m["Ciphertext"]);
              });
+#endif
 
    return fails;
    }

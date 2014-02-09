@@ -2,22 +2,25 @@
 #include "test_rng.h"
 
 #include <botan/libstate.h>
-#include <botan/x931_rng.h>
-#include <botan/aes.h>
-#include <botan/des.h>
 #include <botan/hex.h>
 #include <iostream>
 #include <fstream>
-#include <deque>
+
+#if defined(BOTAN_HAS_X931_RNG)
+  #include <botan/x931_rng.h>
+  #include <botan/aes.h>
+  #include <botan/des.h>
+#endif
 
 using namespace Botan;
 
 namespace {
 
-RandomNumberGenerator* get_x931(const std::string& algo, const std::string& ikm_hex)
+RandomNumberGenerator* get_rng(const std::string& algo, const std::string& ikm_hex)
    {
    const auto ikm = hex_decode(ikm_hex);
 
+#if defined(BOTAN_HAS_X931_RNG)
    if(algo == "X9.31-RNG(TripleDES)")
       return new ANSI_X931_RNG(new TripleDES, new Fixed_Output_RNG(ikm));
    else if(algo == "X9.31-RNG(AES-128)")
@@ -26,6 +29,7 @@ RandomNumberGenerator* get_x931(const std::string& algo, const std::string& ikm_
       return new ANSI_X931_RNG(new AES_192, new Fixed_Output_RNG(ikm));
    else if(algo == "X9.31-RNG(AES-256)")
       return new ANSI_X931_RNG(new AES_256, new Fixed_Output_RNG(ikm));
+#endif
 
    return nullptr;
    }
@@ -35,10 +39,14 @@ size_t x931_test(const std::string& algo,
                  const std::string& out,
                  size_t L)
    {
-   std::unique_ptr<RandomNumberGenerator> x931(get_x931(algo, ikm));
-   x931->reseed(0);
+   std::unique_ptr<RandomNumberGenerator> rng(get_rng(algo, ikm));
 
-   const std::string got = hex_encode(x931->random_vec(L));
+   if(!rng)
+      throw std::runtime_error("Unknown RNG " + algo);
+
+   rng->reseed(0);
+
+   const std::string got = hex_encode(rng->random_vec(L));
 
    if(got != out)
       {

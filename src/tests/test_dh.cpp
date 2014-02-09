@@ -1,6 +1,7 @@
 #include "tests.h"
 #include "test_pubkey.h"
 
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
 #include <botan/auto_rng.h>
 #include <botan/pubkey.h>
 #include <botan/dh.h>
@@ -42,18 +43,21 @@ size_t dh_sig_kat(const std::string& p,
    }
 
 }
+#endif
 
 size_t test_dh()
    {
-   std::ifstream dh_sig(PK_TEST_DATA_DIR "/dh.vec");
-
    size_t fails = 0;
+
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
+   std::ifstream dh_sig(PK_TEST_DATA_DIR "/dh.vec");
 
    fails += run_tests_bb(dh_sig, "DH Kex", "K", true,
              [](std::map<std::string, std::string> m) -> size_t
              {
              return dh_sig_kat(m["P"], m["G"], m["X"], m["Y"], m["KDF"], m["OutLen"], m["K"]);
              });
+#endif
 
    return fails;
    }

@@ -1,6 +1,7 @@
 #include "tests.h"
 #include "test_pubkey.h"
 
+#if defined(BOTAN_HAS_GOST_34_10_2001)
 #include <botan/auto_rng.h>
 #include <botan/pubkey.h>
 #include <botan/gost_3410.h>
@@ -37,18 +38,21 @@ size_t gost_verify(const std::string& group_id,
    }
 
 }
+#endif
 
 size_t test_gost_3410()
    {
-   std::ifstream ecdsa_sig(PK_TEST_DATA_DIR "/gost_3410.vec");
-
    size_t fails = 0;
+
+#if defined(BOTAN_HAS_GOST_34_10_2001)
+   std::ifstream ecdsa_sig(PK_TEST_DATA_DIR "/gost_3410.vec");
 
    fails += run_tests_bb(ecdsa_sig, "GOST-34.10 Signature", "Signature", true,
              [](std::map<std::string, std::string> m) -> size_t
              {
              return gost_verify(m["Group"], m["Pubkey"], m["Hash"], m["Msg"], m["Signature"]);
              });
+#endif
 
    return fails;
    }

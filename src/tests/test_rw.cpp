@@ -1,15 +1,19 @@
 #include "tests.h"
 #include "test_pubkey.h"
 
-#include <botan/auto_rng.h>
-#include <botan/pubkey.h>
-#include <botan/rw.h>
 #include <botan/hex.h>
 #include <iostream>
 #include <fstream>
 
+#if defined(BOTAN_HAS_RW)
+  #include <botan/auto_rng.h>
+  #include <botan/pubkey.h>
+  #include <botan/rw.h>
+#endif
+
 using namespace Botan;
 
+#if defined(BOTAN_HAS_RW)
 namespace {
 
 const std::string padding = "EMSA2(SHA-1)";
@@ -52,13 +56,15 @@ size_t rw_sig_verify(const std::string& e,
    }
 
 }
+#endif
 
 size_t test_rw()
    {
+   size_t fails = 0;
+
+#if defined(BOTAN_HAS_RW)
    std::ifstream rw_sig(PK_TEST_DATA_DIR "/rw_sig.vec");
    std::ifstream rw_verify(PK_TEST_DATA_DIR "/rw_verify.vec");
-
-   size_t fails = 0;
 
    fails += run_tests_bb(rw_sig, "RW Signature", "Signature", true,
              [](std::map<std::string, std::string> m) -> size_t
@@ -71,6 +77,7 @@ size_t test_rw()
              {
              return rw_sig_verify(m["E"], m["N"], m["Msg"], m["Signature"]);
              });
+#endif
 
    return fails;
    }

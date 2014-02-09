@@ -1,12 +1,11 @@
 #include "tests.h"
-
-#include <botan/libstate.h>
-#if defined(BOTAN_HAS_HKDF)
-  #include <botan/hkdf.h>
-#endif
 #include <botan/hex.h>
 #include <iostream>
 #include <fstream>
+
+#if defined(BOTAN_HAS_HKDF)
+#include <botan/libstate.h>
+#include <botan/hkdf.h>
 
 using namespace Botan;
 
@@ -27,7 +26,6 @@ secure_vector<byte> hkdf(const std::string& hkdf_algo,
    if(!mac_proto)
       throw std::invalid_argument("Bad HKDF hash '" + algo + "'");
 
-#if defined(BOTAN_HAS_HKDF)
    HKDF hkdf(mac_proto->clone(), mac_proto->clone());
 
    hkdf.start_extract(&salt[0], salt.size());
@@ -37,9 +35,6 @@ secure_vector<byte> hkdf(const std::string& hkdf_algo,
    secure_vector<byte> key(L);
    hkdf.expand(&key[0], key.size(), &info[0], info.size());
    return key;
-#else
-   return "";
-#endif
    }
 
 size_t hkdf_test(const std::string& algo,
@@ -67,9 +62,11 @@ size_t hkdf_test(const std::string& algo,
    }
 
 }
+#endif
 
 size_t test_hkdf()
    {
+#if defined(BOTAN_HAS_HKDF)
    std::ifstream vec(TEST_DATA_DIR "/hkdf.vec");
 
    return run_tests_bb(vec, "HKDF", "OKM", true,
@@ -78,4 +75,7 @@ size_t test_hkdf()
              return hkdf_test(m["HKDF"], m["IKM"], m["salt"], m["info"],
                               m["OKM"], to_u32bit(m["L"]));
              });
+#else
+   return 0;
+#endif
    }

@@ -24,6 +24,9 @@ size_t aead_test(const std::string& algo,
    std::unique_ptr<Cipher_Mode> enc(get_aead(algo, ENCRYPTION));
    std::unique_ptr<Cipher_Mode> dec(get_aead(algo, DECRYPTION));
 
+   if(!enc || !dec)
+      throw std::runtime_error("Unknown AEAD " + algo);
+
    enc->set_key(key);
    dec->set_key(key);
 

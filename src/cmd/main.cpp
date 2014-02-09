@@ -22,7 +22,10 @@
 #include <botan/version.h>
 #include <botan/auto_rng.h>
 #include <botan/cpuid.h>
+
+#if defined(BOTAN_HAS_HTTP_UTIL)
 #include <botan/http_util.h>
+#endif
 
 using namespace Botan;
 
@@ -96,11 +99,13 @@ int main(int argc, char* argv[])
          return 0;
          }
 
+#if defined(BOTAN_HAS_HTTP_UTIL)
       if(cmd == "http_get")
          {
          auto resp = HTTP::GET_sync(argv[2]);
          std::cout << resp << "\n";
          }
+#endif
 
 #define CALL_APP(cmdsym)                           \
    do { if(cmd == #cmdsym) { return cmdsym ##_main (argc - 1, argv + 1); } } while(0)

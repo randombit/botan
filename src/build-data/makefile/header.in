@@ -10,7 +10,7 @@ LIB_LINK_CMD   = %{so_link}
 
 LIB_LINKS_TO   = %{link_to}
 APP_LINKS_TO   = $(LIB_LINKS_TO)
-TEST_LINKS_TO  = $(LIB_LINKS_TO) -lboost_filesystem
+TEST_LINKS_TO  = $(LIB_LINKS_TO) -lboost_filesystem -lboost_system
 
 LIB_FLAGS      = $(SO_OBJ_FLAGS) $(LANG_FLAGS) $(LIB_OPT) $(WARN_FLAGS)
 APP_FLAGS      = $(LANG_FLAGS) $(APP_OPT) $(WARN_FLAGS)

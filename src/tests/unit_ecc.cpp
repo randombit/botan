@@ -7,6 +7,10 @@
 #include "tests.h"
 
 #include <botan/hex.h>
+#include <iostream>
+#include <memory>
+
+#if defined(BOTAN_HAS_ECC_GROUP)
 #include <botan/auto_rng.h>
 #include <botan/bigint.h>
 #include <botan/numthry.h>
@@ -15,8 +19,6 @@
 #include <botan/ec_group.h>
 #include <botan/reducer.h>
 #include <botan/oids.h>
-#include <iostream>
-#include <memory>
 
 using namespace Botan;
 
@@ -744,12 +746,13 @@ size_t test_mult_by_order()
    return fails;
    }
 
-size_t test_point_swap(RandomNumberGenerator& rng)
+size_t test_point_swap()
    {
    size_t fails = 0;
 
-
    EC_Group dom_pars(OID("1.3.132.0.8"));
+
+   AutoSeeded_RNG rng;
 
    PointGFp a(create_random_point(rng, dom_pars.get_curve()));
    PointGFp b(create_random_point(rng, dom_pars.get_curve()));
@@ -768,10 +771,11 @@ size_t test_point_swap(RandomNumberGenerator& rng)
 * This test verifies that the side channel attack resistant multiplication function
 * yields the same result as the normal (insecure) multiplication via operator*=
 */
-size_t test_mult_sec_mass(RandomNumberGenerator& rng)
+size_t test_mult_sec_mass()
    {
    size_t fails = 0;
 
+   RandomNumberGenerator rng;
 
    EC_Group dom_pars(OID("1.3.132.0.8"));
    for(int i = 0; i<50; i++)
@@ -804,12 +808,14 @@ size_t test_curve_cp_ctor()
    }
 
 }
+#endif
 
 size_t test_ecc_unit()
    {
-   AutoSeeded_RNG rng;
-
    size_t fails = 0;
+
+#if defined(BOTAN_HAS_ECC_GROUP)
+   AutoSeeded_RNG rng;
 
    fails += test_point_turn_on_sp_red_mul();
    fails += test_coordinates();
@@ -835,8 +841,8 @@ size_t test_ecc_unit()
    fails += test_point_swap(rng);
    fails += test_mult_sec_mass(rng);
    fails += test_curve_cp_ctor();
-
    test_report("ECC", 0, fails);
+#endif
 
    return fails;
    }

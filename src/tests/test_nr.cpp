@@ -1,12 +1,11 @@
 #include "tests.h"
 #include "test_pubkey.h"
 
-#include <botan/auto_rng.h>
-#include <botan/pubkey.h>
-#include <botan/dl_group.h>
-
 #if defined(BOTAN_HAS_NYBERG_RUEPPEL)
   #include <botan/nr.h>
+  #include <botan/auto_rng.h>
+  #include <botan/pubkey.h>
+  #include <botan/dl_group.h>
 #endif
 
 #include <botan/hex.h>
@@ -14,6 +13,8 @@
 #include <fstream>
 
 using namespace Botan;
+
+#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
 
 namespace {
 
@@ -32,7 +33,6 @@ size_t nr_sig_kat(const std::string& p,
 
    DL_Group group(p_bn, q_bn, g_bn);
 
-#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
    NR_PrivateKey privkey(rng, group, x_bn);
 
    NR_PublicKey pubkey = privkey;
@@ -43,24 +43,24 @@ size_t nr_sig_kat(const std::string& p,
    PK_Signer sign(privkey, padding);
 
    return validate_signature(verify, sign, "nr/" + hash, msg, rng, nonce, signature);
-#else
-   return 1;
-#endif
    }
 
 }
+#endif
 
 size_t test_nr()
    {
-   std::ifstream nr_sig(PK_TEST_DATA_DIR "/nr.vec");
-
    size_t fails = 0;
+
+#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
+   std::ifstream nr_sig(PK_TEST_DATA_DIR "/nr.vec");
 
    fails += run_tests_bb(nr_sig, "NR Signature", "Signature", true,
              [](std::map<std::string, std::string> m) -> size_t
              {
              return nr_sig_kat(m["P"], m["Q"], m["G"], m["X"], m["Hash"], m["Msg"], m["Nonce"], m["Signature"]);
              });
+#endif
 
    return fails;
    }

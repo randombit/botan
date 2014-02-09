@@ -128,23 +128,18 @@ size_t test_ocb_long(size_t taglen, const std::string &expected)
    }
 
 }
+#endif
 
 size_t test_ocb()
    {
    size_t fails = 0;
+
+#if defined(BOTAN_HAS_OCB)
    fails += test_ocb_long(128, "B2B41CBF9B05037DA7F16C24A35C1C94");
    fails += test_ocb_long(96, "1A4F0654277709A5BDA0D380");
    fails += test_ocb_long(64, "B7ECE9D381FE437F");
    test_report("OCB long", 3, fails);
+#endif
+
    return fails;
    }
-
-#else
-
-size_t test_ocb()
-   {
-   std::cout << "OCB disabled in build\n";
-   return 0;
-   }
-
-#endif

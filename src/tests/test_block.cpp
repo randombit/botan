@@ -25,10 +25,7 @@ size_t block_test(const std::string& algo,
    size_t fails = 0;
 
    if(providers.empty())
-      {
-      std::cout << "Unknown algo " << algo << "\n";
-      ++fails;
-      }
+      throw std::runtime_error("Unknown block cipher " + algo);
 
    for(auto provider: providers)
       {

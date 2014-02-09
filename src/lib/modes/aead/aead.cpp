@@ -6,6 +6,7 @@
 */
 
 #include <botan/aead.h>
+#include <botan/block_cipher.h>
 #include <botan/libstate.h>
 
 #if defined(BOTAN_HAS_AEAD_CCM)

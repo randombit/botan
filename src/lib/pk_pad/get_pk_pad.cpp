@@ -58,14 +58,17 @@ EMSA* get_emsa(const std::string& algo_spec)
       return new EMSA_Raw;
 #endif
 
-#if defined(BOTAN_HAS_EMSA1)
    if(request.algo_name() == "EMSA1" && request.arg_count() == 1)
       {
+#if defined(BOTAN_HAS_EMSA_RAW)
       if(request.arg(0) == "Raw")
          return new EMSA_Raw;
-      return new EMSA1(af.make_hash_function(request.arg(0)));
-      }
 #endif
+
+#if defined(BOTAN_HAS_EMSA1)
+      return new EMSA1(af.make_hash_function(request.arg(0)));
+#endif
+      }
 
 #if defined(BOTAN_HAS_EMSA1_BSI)
    if(request.algo_name() == "EMSA1_BSI" && request.arg_count() == 1)
