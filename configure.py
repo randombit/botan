@@ -856,11 +856,13 @@ class CompilerInfo(object):
 
         abi_link = set()
         for what in [all(), options.os, options.arch, options.cpu]:
-            if self.mach_abi_linking.get(what) != None:
-                abi_link.add(self.mach_abi_linking.get(what))
+            flag = self.mach_abi_linking.get(what)
+            if flag != None and flag != '':
+                abi_link.add(flag)
 
         for flag in options.cc_abi_flags.split(' '):
-            abi_link.add(flag)
+            if flag != '':
+                abi_link.add(flag)
 
         if len(abi_link) == 0:
             return ''
