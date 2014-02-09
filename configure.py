@@ -850,7 +850,7 @@ class CompilerInfo(object):
     """
     def mach_abi_link_flags(self, options):
         def all():
-            if options.debug_build:
+            if options.debug_build and 'all-debug' in self.mach_abi_linking:
                 return 'all-debug'
             return 'all'
 
