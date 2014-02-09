@@ -775,7 +775,7 @@ size_t test_mult_sec_mass()
    {
    size_t fails = 0;
 
-   RandomNumberGenerator rng;
+   AutoSeeded_RNG rng;
 
    EC_Group dom_pars(OID("1.3.132.0.8"));
    for(int i = 0; i<50; i++)
@@ -815,8 +815,6 @@ size_t test_ecc_unit()
    size_t fails = 0;
 
 #if defined(BOTAN_HAS_ECC_GROUP)
-   AutoSeeded_RNG rng;
-
    fails += test_point_turn_on_sp_red_mul();
    fails += test_coordinates();
    fails += test_point_transformation ();
@@ -838,8 +836,8 @@ size_t test_ecc_unit()
    fails += test_cdc_curve_33();
    fails += test_more_zeropoint();
    fails += test_mult_by_order();
-   fails += test_point_swap(rng);
-   fails += test_mult_sec_mass(rng);
+   fails += test_point_swap();
+   fails += test_mult_sec_mass();
    fails += test_curve_cp_ctor();
    test_report("ECC", 0, fails);
 #endif
