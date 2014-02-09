@@ -7,6 +7,7 @@
 
 #include <botan/internal/clmul.h>
 #include <immintrin.h>
+#include <wmmintrin.h>
 
 namespace Botan {
 
