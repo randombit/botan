@@ -16,7 +16,6 @@ extensions which are not supported.
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
 
 #include <botan/x509path.h>
-#include <botan/init.h>
 
 #include <algorithm>
 #include <iostream>

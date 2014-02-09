@@ -8,9 +8,10 @@ add_include_dir_option -I
 add_lib_dir_option -L
 add_lib_option -l
 
-lang_flags "-D_REENTRANT -std=c++11"
-maintainer_warning_flags "-Werror"
-warning_flags "-Wextra -Wall"
+lang_flags "-std=c++11 -D_REENTRANT -fstack-protector"
+
+warning_flags "-Wall -Wextra -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wold-style-cast"
+maintainer_warning_flags "-Qunused-arguments -Werror -Wno-error=old-style-cast -Wno-error=unused-parameter -Wno-error=unused-variable"
 
 makefile_style gmake
 

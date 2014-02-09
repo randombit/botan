@@ -16,7 +16,6 @@
 #include <botan/x509cert.h>
 #include <botan/pkcs8.h>
 #include <botan/auto_rng.h>
-#include <botan/init.h>
 
 #include "credentials.h"
 
