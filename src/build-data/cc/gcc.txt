@@ -52,10 +52,11 @@ altivec -> "-maltivec"
 </isa_flags>
 
 <mach_opt>
-# Avoid using -march=i[345]86, instead tune for generic
+# Avoid using -march=i[3456]86, instead tune for generic
 i386        -> "-mtune=generic"
 i486        -> "-mtune=generic"
 i586        -> "-mtune=generic"
+i686        -> "-mtune=generic"
 
 # Translate to GCC-speak
 nehalem     -> "-march=corei7"
