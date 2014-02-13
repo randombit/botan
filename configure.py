@@ -412,13 +412,15 @@ def process_command_line(args):
     install_group = optparse.OptionGroup(parser, 'Installation options')
 
     install_group.add_option('--prefix', metavar='DIR',
-                             help='set the base install directory')
+                             help='set the install prefix')
     install_group.add_option('--docdir', metavar='DIR',
                              help='set the documentation install directory')
     install_group.add_option('--libdir', metavar='DIR',
                              help='set the library install directory')
     install_group.add_option('--includedir', metavar='DIR',
                              help='set the include file install directory')
+    install_group.add_option('--destdir', metavar='DIR',
+                             help='set the install directory')
 
     parser.add_option_group(target_group)
     parser.add_option_group(build_group)
@@ -1209,6 +1211,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'libdir': options.libdir or osinfo.lib_dir,
         'includedir': options.includedir or osinfo.header_dir,
         'docdir': options.docdir or osinfo.doc_dir,
+
+        'destdir': options.destdir or options.prefix or osinfo.install_root,
 
         'build_dir': build_config.build_dir,
 

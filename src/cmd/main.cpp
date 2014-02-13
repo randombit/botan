@@ -40,7 +40,7 @@ int config_main(int argc, char* argv[])
    if(argc != 2)
       {
       std::cout << "Usage: " << argv[0] << " <what>\n"
-                << "   prefix: Print include params\n"
+                << "   prefix: Print install prefix\n"
                 << "   cflags: Print include params\n"
                 << "   ldflags: Print linker params\n"
                 << "   libs: Print libraries\n";

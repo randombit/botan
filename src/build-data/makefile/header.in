@@ -21,7 +21,7 @@ VERSION        = %{version}
 BRANCH         = %{version_major}.%{version_minor}
 
 # Installation Settings
-DESTDIR        = %{prefix}
+DESTDIR        = %{destdir}
 BINDIR         = $(DESTDIR)/bin
 LIBDIR         = $(DESTDIR)/%{libdir}
 HEADERDIR      = $(DESTDIR)/%{includedir}/botan-$(BRANCH)/botan
