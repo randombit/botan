@@ -8,22 +8,10 @@
 #include <botan/auto_rng.h>
 #include <botan/hex.h>
 #include <iostream>
-#include <stdio.h>
 
 #if defined(BOTAN_HAS_THRESHOLD_SECRET_SHARING)
 
 #include <botan/tss.h>
-
-namespace {
-
-void print(const Botan::secure_vector<Botan::byte>& r)
-   {
-   for(Botan::u32bit i = 0; i != r.size(); ++i)
-      printf("%02X", r[i]);
-   printf("\n");
-   }
-
-}
 
 size_t test_tss()
    {

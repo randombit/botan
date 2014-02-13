@@ -4,7 +4,6 @@
 #include <botan/tls_client.h>
 #include <botan/pkcs8.h>
 #include <botan/hex.h>
-#include <stdio.h>
 #include <string>
 #include <iostream>
 #include <memory>

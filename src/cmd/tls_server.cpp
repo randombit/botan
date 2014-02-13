@@ -15,7 +15,6 @@ using namespace Botan;
 
 using namespace std::placeholders;
 
-#include <stdio.h>
 #include <string>
 #include <iostream>
 #include <memory>

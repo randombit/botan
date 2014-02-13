@@ -10,8 +10,9 @@
 #include <botan/charset.h>
 using namespace Botan;
 
+#include <iostream>
+#include <iomanip>
 #include <sstream>
-#include <stdio.h>
 #include <ctype.h>
 
 // Set this if your terminal understands UTF-8; otherwise output is in Latin-1
@@ -34,14 +35,23 @@ std::string url_encode(const std::vector<byte>& in)
    {
    std::ostringstream out;
 
+   size_t unprintable = 0;
+
    for(size_t i = 0; i != in.size(); ++i)
       {
       const int c = in[i];
-      if(isprint(c))
+      if(::isprint(c))
          out << static_cast<char>(c);
       else
-         out << "%" << std::hex << static_cast<char>(c) << std::dec;
+         {
+         out << "%" << std::hex << static_cast<int>(c) << std::dec;
+         ++unprintable;
+         }
       }
+
+   if(unprintable >= in.size() / 4)
+      return hex_encode(in);
+
    return out.str();
    }
 
@@ -51,7 +61,7 @@ int asn1_main(int argc, char* argv[])
    {
    if(argc != 2)
       {
-      printf("Usage: %s <file>\n", argv[0]);
+      std::cout << "Usage: " << argv[0] << " <file>\n";
       return 1;
       }
 
@@ -69,13 +79,13 @@ int asn1_main(int argc, char* argv[])
          BER_Decoder decoder(PEM_Code::decode(in, label));
          decode(decoder, INITIAL_LEVEL);
          }
-
    }
    catch(std::exception& e)
       {
-      printf("%s\n", e.what());
-      return 1;
+      std::cout << "Error: " << e.what() << "\n";
+      return 2;
       }
+
    return 0;
    }
 
@@ -259,8 +269,12 @@ void decode(BER_Decoder& decoder, size_t level)
          emit(type_name(type_tag), level, length, time.readable_string());
          }
       else
-         fprintf(stderr, "Unknown tag: class=%02X, type=%02X\n",
-                 class_tag, type_tag);
+         {
+         std::cout << "Unknown ASN.1 tag class="
+                   << static_cast<int>(class_tag)
+                   << " type="
+                   << static_cast<int>(type_tag) << "\n";
+         }
 
       obj = decoder.get_next_object();
       }
@@ -272,26 +286,34 @@ void emit(const std::string& type, size_t level, size_t length,
    const size_t LIMIT = 128;
    const size_t BIN_LIMIT = 64;
 
-   int written = 0;
-   written += printf("  d=%2d, l=%4d: ", (int)level, (int)length);
+   std::ostringstream out;
+
+   out << "  d=" << std::setw(2) << level
+       << ", l=" << std::setw(4) << length << ": ";
+
    for(size_t i = INITIAL_LEVEL; i != level; ++i)
-      written += printf(" ");
-   written += printf("%s   ", type.c_str());
+      out << ' ';
+
+   out << type;
 
    bool should_skip = false;
-   if(value.length() > LIMIT) should_skip = true;
-   if((type == "OCTET STRING" || type == "BIT STRING") &&
-      value.length() > BIN_LIMIT)
+
+   if(value.length() > LIMIT)
+      should_skip = true;
+
+   if((type == "OCTET STRING" || type == "BIT STRING") && value.length() > BIN_LIMIT)
       should_skip = true;
 
    if(value != "" && !should_skip)
       {
-      if(written % 2 == 0) printf(" ");
-      while(written < 50) written += printf("  ");
-      printf(":%s\n", value.c_str());
+      if(out.tellp() % 2 == 0) out << ' ';
+
+      while(out.tellp() < 50) out << ' ';
+
+      out << value;
       }
-   else
-      printf("\n");
+
+   std::cout << out.str() << "\n";
    }
 
 std::string type_name(ASN1_Tag type)

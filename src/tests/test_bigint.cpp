@@ -28,12 +28,6 @@ void strip_comments(std::string& line)
       line = line.erase(line.find('#'), std::string::npos);
    }
 
-void strip_newlines(std::string& line)
-   {
-   while(line.find('\n') != std::string::npos)
-      line = line.erase(line.find('\n'), 1);
-   }
-
 /* Strip comments, whitespace, etc */
 void strip(std::string& line)
    {
