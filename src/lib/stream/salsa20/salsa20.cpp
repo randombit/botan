@@ -9,7 +9,6 @@
 #include <botan/loadstor.h>
 #include <botan/rotate.h>
 #include <botan/internal/xor_buf.h>
-#include <botan/internal/simd_32.h>
 
 namespace Botan {
 
