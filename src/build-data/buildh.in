@@ -23,6 +23,11 @@
 
 #define BOTAN_DISTRIBUTION_INFO "%{distribution_info}"
 
+#define BOTAN_INSTALL_PREFIX "%{prefix}"
+#define BOTAN_INSTALL_HEADER_DIR "%{includedir}/botan-%{version_major}.%{version_minor}"
+#define BOTAN_INSTALL_LIB_DIR "%{libdir}"
+#define BOTAN_LIB_LINK "%{link_to}"
+
 #ifndef BOTAN_DLL
   #define BOTAN_DLL %{visibility_attribute}
 #endif
