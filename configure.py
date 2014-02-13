@@ -144,9 +144,8 @@ class BuildConfigurationInformation(object):
         def find_sources_in(basedir, srcdir):
             for (dirpath, dirnames, filenames) in os.walk(os.path.join(basedir, srcdir)):
                 for filename in filenames:
-                    if filename.endswith('.cpp'):
+                    if filename.endswith('.cpp') and not filename.startswith('.'):
                         yield os.path.join(dirpath, filename)
-
 
         self.app_sources = list(find_sources_in(self.src_dir, 'cmd'))
         self.test_sources = list(find_sources_in(self.src_dir, 'tests'))
