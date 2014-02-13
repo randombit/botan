@@ -1,12 +1,12 @@
 /*
 * Simple config/test file reader
-* (C) 2013 Jack Lloyd
+* (C) 2013,2014 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
 #include <botan/parsing.h>
-#include <boost/algorithm/string.hpp>
+#include <ctype.h>
 
 namespace Botan {
 
@@ -21,11 +21,18 @@ void lex_cfg(std::istream& is,
 
       while(is.good() && s.back() == '\\')
          {
-         boost::trim_if(s, boost::is_any_of("\\\n"));
+         while(s.size() && (s.back() == '\\' || s.back() == '\n'))
+            s.resize(s.size()-1);
+
          std::string x;
          std::getline(is, x);
-         boost::trim_left(x);
-         s += x;
+
+         size_t i = 0;
+
+         while(i < x.size() && (::isspace(x[i])))
+            ++i;
+
+         s += x.substr(i);
          }
 
       auto comment = s.find('#');
@@ -35,10 +42,9 @@ void lex_cfg(std::istream& is,
       if(s.empty())
          continue;
 
-      std::vector<std::string> parts;
-      boost::split(parts, s, boost::is_any_of(" \t\n"), boost::token_compress_on);
+      auto parts = split_on_pred(s, [](char c) { return ::isspace(c); });
 
-      for(auto p : parts)
+      for(auto& p : parts)
          {
          if(p.empty())
             continue;

@@ -37,6 +37,14 @@ BOTAN_DLL std::vector<std::string> split_on(
    const std::string& str, char delim);
 
 /**
+* Split a string on a character predicate
+* @param str the input string
+*/
+BOTAN_DLL std::vector<std::string>
+split_on_pred(const std::string& str,
+              std::function<bool (char)> pred);
+
+/**
 * Erase characters from a string
 */
 BOTAN_DLL std::string erase_chars(const std::string& str, const std::set<char>& chars);

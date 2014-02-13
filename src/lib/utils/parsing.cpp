@@ -1,6 +1,6 @@
 /*
 * Various string utils and parsing functions
-* (C) 1999-2007,2013 Jack Lloyd
+* (C) 1999-2007,2013,2014 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -105,10 +105,13 @@ std::vector<std::string> parse_algorithm_name(const std::string& namex)
    return elems;
    }
 
-/*
-* Split the string on slashes
-*/
 std::vector<std::string> split_on(const std::string& str, char delim)
+   {
+   return split_on_pred(str, [delim](char c) { return c == delim; });
+   }
+
+std::vector<std::string> split_on_pred(const std::string& str,
+                                       std::function<bool (char)> pred)
    {
    std::vector<std::string> elems;
    if(str == "") return elems;
@@ -116,7 +119,7 @@ std::vector<std::string> split_on(const std::string& str, char delim)
    std::string substr;
    for(auto i = str.begin(); i != str.end(); ++i)
       {
-      if(*i == delim)
+      if(pred(*i))
          {
          if(substr != "")
             elems.push_back(substr);
