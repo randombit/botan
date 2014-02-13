@@ -51,32 +51,28 @@ std::vector<std::string> dir_listing(const std::string& dir_name)
 
 }
 
-void run_one_test(u32bit, Path_Validation_Result::Code,
-                  std::string, std::string,
-                  std::vector<std::string>,
-                  std::vector<std::string>);
-
-std::map<size_t, Path_Validation_Result::Code> expected_results;
-size_t unexp_failure, unexp_success, wrong_error, skipped;
-
-void populate_expected_results();
+std::map<size_t, Path_Validation_Result::Code> get_expected();
 
 size_t test_nist_x509()
    {
    const std::string root_test_dir = "src/tests/data/nist_x509/";
 
-   unexp_failure = unexp_success = wrong_error = skipped = 0;
-
+   size_t unexp_failure = 0;
+   size_t unexp_success = 0;
+   size_t wrong_error = 0;
+   size_t skipped = 0;
    size_t ran = 0;
 
-   try {
+   auto expected_results = get_expected();
 
-   populate_expected_results();
+   try {
 
    const std::vector<std::string> test_dirs = dir_listing(root_test_dir);
 
    for(size_t i = 0; i != test_dirs.size(); i++)
       {
+      const size_t test_no = i+1;
+
       const std::string test_dir = test_dirs[i];
       const std::vector<std::string> all_files = dir_listing(test_dir);
 
@@ -105,10 +101,58 @@ size_t test_nist_x509()
          }
 
       ++ran;
-      run_one_test(i+1, expected_results[i+1],
-                   root_cert, to_verify, certs, crls);
-      }
 
+      Certificate_Store_In_Memory store;
+
+      store.add_certificate(X509_Certificate(root_cert));
+
+      X509_Certificate end_user(to_verify);
+
+      for(size_t i = 0; i != certs.size(); i++)
+         store.add_certificate(X509_Certificate(certs[i]));
+
+      for(size_t i = 0; i != crls.size(); i++)
+         {
+         DataSource_Stream in(crls[i]);
+         X509_CRL crl(in);
+         store.add_crl(crl);
+         }
+
+      Path_Validation_Restrictions restrictions(true);
+
+      Path_Validation_Result validation_result =
+         x509_path_validate(end_user,
+                            restrictions,
+                            store);
+
+      auto expected = expected_results[test_no];
+
+      Path_Validation_Result::Code result = validation_result.result();
+
+      if(result != expected)
+         {
+         std::cout << "NIST X.509 test #" << test_no << ": ";
+
+         const std::string result_str = Path_Validation_Result::status_string(result);
+         const std::string exp_str = Path_Validation_Result::status_string(expected);
+
+         if(expected == Certificate_Status_Code::VERIFIED)
+            {
+            std::cout << "unexpected failure: " << result_str << std::endl;
+            unexp_failure++;
+            }
+         else if(result == Certificate_Status_Code::VERIFIED)
+            {
+            std::cout << "unexpected success, expected " << exp_str << std::endl;
+            unexp_success++;
+            }
+         else
+            {
+            std::cout << "wrong error, got '" << result_str << "' expected '" << exp_str << "'" << std::endl;
+            wrong_error++;
+            }
+         }
+      }
    }
    catch(std::exception& e)
       {
@@ -123,61 +167,6 @@ size_t test_nist_x509()
    return all_failures;
    }
 
-void run_one_test(u32bit test_no, Path_Validation_Result::Code expected,
-                  std::string root_cert, std::string to_verify,
-                  std::vector<std::string> certs,
-                  std::vector<std::string> crls)
-   {
-   Certificate_Store_In_Memory store;
-
-   store.add_certificate(X509_Certificate(root_cert));
-
-   X509_Certificate end_user(to_verify);
-
-   for(size_t i = 0; i != certs.size(); i++)
-      store.add_certificate(X509_Certificate(certs[i]));
-
-   for(size_t i = 0; i != crls.size(); i++)
-      {
-      DataSource_Stream in(crls[i]);
-      X509_CRL crl(in);
-      store.add_crl(crl);
-      }
-
-   Path_Validation_Restrictions restrictions(true);
-
-   Path_Validation_Result validation_result =
-      x509_path_validate(end_user,
-                         restrictions,
-                         store);
-
-   Path_Validation_Result::Code result = validation_result.result();
-
-   if(result == expected)
-      return;
-
-   std::cout << "NIST X.509 test #" << test_no << ": ";
-
-   const std::string result_str = Path_Validation_Result::status_string(result);
-   const std::string exp_str = Path_Validation_Result::status_string(expected);
-
-   if(expected == Certificate_Status_Code::VERIFIED)
-      {
-      std::cout << "unexpected failure: " << result_str << std::endl;
-      unexp_failure++;
-      }
-   else if(result == Certificate_Status_Code::VERIFIED)
-      {
-      std::cout << "unexpected success: " << exp_str << std::endl;
-      unexp_success++;
-      }
-   else
-      {
-      std::cout << "wrong error, got '" << result_str << "' expected '" << exp_str << "'" << std::endl;
-      wrong_error++;
-      }
-   }
-
 /*
   The expected results are essentially the error codes that best coorespond
   to the problem described in the testing documentation.
@@ -187,8 +176,10 @@ void run_one_test(u32bit test_no, Path_Validation_Result::Code expected,
   what they "should" be: these changes are marked as such, and have comments
   explaining the problem at hand.
 */
-void populate_expected_results()
+std::map<size_t, Path_Validation_Result::Code> get_expected()
    {
+   std::map<size_t, Path_Validation_Result::Code> expected_results;
+
    /* OK, not a super great way of doing this... */
    expected_results[1] = Certificate_Status_Code::VERIFIED;
    expected_results[2] = Certificate_Status_Code::SIGNATURE_ERROR;
@@ -300,6 +291,8 @@ void populate_expected_results()
    /* These tests use weird CRL extensions which aren't supported yet */
    //expected_results[75] = ;
    //expected_results[76] = ;
+
+   return expected_results;
    }
 
 #else
