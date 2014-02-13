@@ -140,7 +140,7 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
             }
          }
 
-      void tls_alert_cb(Botan::TLS::Alert alert, const byte buf[], size_t buf_len)
+      void tls_alert_cb(Botan::TLS::Alert alert, const byte[], size_t)
          {
          if(alert.type() == Botan::TLS::Alert::CLOSE_NOTIFY)
             {
@@ -173,7 +173,8 @@ class tls_server_session : public boost::enable_shared_from_this<tls_server_sess
          out += "Content-Type: text/html\r\n";
          out += "\r\n";
          out += "<html><body>Greets. You said: ";
-         out += std::string((const char*)&m_client_data[0], m_client_data.size());
+         out += std::string(reinterpret_cast<const char*>(&m_client_data[0]),
+                            m_client_data.size());
          out += "</body></html>\r\n\r\n";
 
          m_tls.send(out);

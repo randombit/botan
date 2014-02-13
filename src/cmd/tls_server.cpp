@@ -115,7 +115,7 @@ void stream_socket_write(int sockfd, const byte buf[], size_t length)
       }
    }
 
-void alert_received(TLS::Alert alert, const byte buf[], size_t buf_size)
+void alert_received(TLS::Alert alert, const byte[], size_t)
    {
    std::cout << "Alert: " << alert.type_string() << "\n";
    }
@@ -192,7 +192,7 @@ int tls_server_main(int argc, char* argv[])
                {
                for(size_t i = 0; i != input_len; ++i)
                   {
-                  char c = (char)input[i];
+                  const char c = static_cast<char>(input[i]);
                   s += c;
                   if(c == '\n')
                      {

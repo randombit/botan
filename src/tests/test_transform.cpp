@@ -16,7 +16,7 @@ Transformation* get_transform(const std::string& algo)
 
 secure_vector<byte> transform_test(const std::string& algo,
                                    const secure_vector<byte>& nonce,
-                                   const secure_vector<byte>& key,
+                                   const secure_vector<byte>& /*key*/,
                                    const secure_vector<byte>& in)
    {
    std::unique_ptr<Transformation> transform(get_transform(algo));
