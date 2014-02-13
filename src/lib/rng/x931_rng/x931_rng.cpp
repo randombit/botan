@@ -14,7 +14,12 @@ namespace Botan {
 void ANSI_X931_RNG::randomize(byte out[], size_t length)
    {
    if(!is_seeded())
-      throw PRNG_Unseeded(name());
+      {
+      reseed(BOTAN_RNG_RESEED_POLL_BITS);
+
+      if(!is_seeded())
+         throw PRNG_Unseeded(name());
+      }
 
    while(length)
       {

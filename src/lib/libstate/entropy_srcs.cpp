@@ -106,16 +106,16 @@ void Library_State::poll_available_sources(class Entropy_Accumulator& accum)
 
    const size_t poll_bits = accum.desired_remaining_bits();
 
-   if(!m_sources.empty())
-      {
-      size_t poll_attempt = 0;
+   if(m_sources.empty())
+      throw std::runtime_error("No entropy sources enabled at build time, poll failed");
 
-      while(!accum.polling_goal_achieved() && poll_attempt < poll_bits)
-         {
-         const size_t src_idx = poll_attempt % m_sources.size();
-         m_sources[src_idx]->poll(accum);
-         ++poll_attempt;
-         }
+   size_t poll_attempt = 0;
+
+   while(!accum.polling_goal_achieved() && poll_attempt < poll_bits)
+      {
+      const size_t src_idx = poll_attempt % m_sources.size();
+      m_sources[src_idx]->poll(accum);
+      ++poll_attempt;
       }
    }
 
