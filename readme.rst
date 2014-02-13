@@ -1,7 +1,7 @@
 Botan Crypto Library
 ========================================
 
-Botan is a C++ library for crypto and TLS released under the permissive
+Botan is a C++11 library for crypto and TLS released under the permissive
 2-clause BSD license (see ``doc/license.rst`` for the specifics).
 
 You can file bugs in `Bugzilla <http://bugs.randombit.net/>`_ or by sending a
