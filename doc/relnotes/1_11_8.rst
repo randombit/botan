@@ -1,16 +1,19 @@
-Version 1.11.8, Not Yet Released
+Version 1.11.8, 2014-02-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * The `botan` command line application introduced in 1.11.7 is now
   installed along with the library.
 
-* Fix compilation errors in the tests that occured with minimized
-  builds. Contributed by Markus Wanner.
-
 * A bug in certificate path validation introduced in 1.11.6 which
   caused all CRL signature checks to fail has been corrected.
 
 * The ChaCha20 stream cipher has been added.
+
+* The ``Transformation`` class no longer implements an interface for keying,
+  this has been moved to a new subclass ``Keyed_Transformation``.
+
+* The ``Algorithm`` class, which previously acted as a global base for
+  various types (ciphers, hashes, etc) has been removed.
 
 * CMAC now supports 256 and 512 bit block ciphers, which also allows
   the use of larger block ciphers with EAX mode. In particular this
@@ -38,4 +41,16 @@ Version 1.11.8, Not Yet Released
 * A bug in CFB encryption caused a few bytes past the end of the final
   block to be read. The actual output was not affected.
 
-* Various portability fixes for Visual C++ 2013, OS X, and x86-32.
+* Fix compilation errors in the tests that occured with minimized
+  builds. Contributed by Markus Wanner.
+
+* Add a new ``--destdir`` option to ``configure.py`` which controls
+  where the install target will place the output. The ``--prefix``
+  option continues to set the location where the library expects to be
+  eventually installed.
+
+* Many class destructors which previously deleted memory have been
+  removed in favor of using ``unique_ptr``.
+
+* Various portability fixes for Clang, Windows, Visual C++ 2013, OS X,
+  and x86-32.
