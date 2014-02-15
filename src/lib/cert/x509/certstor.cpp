@@ -116,7 +116,7 @@ Certificate_Store_In_Memory::Certificate_Store_In_Memory(const std::string& dir)
    if(dir == "")
       return;
 
-#if defined(BOTAN_HAS_BOOST)
+#if defined(BOTAN_HAS_BOOST_FILESYSTEM)
    boost::filesystem::recursive_directory_iterator i(dir);
    boost::filesystem::recursive_directory_iterator end;
 
