@@ -1,6 +1,6 @@
 
 Supported Algorithms
----------------------------------
+========================================
 
 Botan supports a range of cryptographic algorithms and protocols,
 including:
@@ -24,6 +24,26 @@ Public Key Cryptography
     Rabin-Williams (padding schemes PSS, PKCS #1 v1.5, X9.31)
   * Key agreement techniques Diffie-Hellman and ECDH
 
+Block ciphers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  * Authenticated cipher modes EAX, OCB, GCM, SIV, and CCM
+  * Unauthenticated cipher modes CTR, CBC, XTS, CFB, OFB, and ECB
+  * AES (including constant time SSSE3 and AES-NI versions)
+  * AES candidates Serpent, Twofish, MARS, CAST-256, RC6
+  * DES, 3DES and DESX
+  * National/telecom block ciphers SEED, KASUMI, MISTY1, GOST 28147
+  * Other block ciphers including Threefish-512, Blowfish, CAST-128, IDEA,
+    Noekeon, TEA, XTEA, RC2, RC5, SAFER-SK
+  * Large block cipher construction Lion
+
+Stream Ciphers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  * RC4
+  * Salsa20/XSalsa20
+  * ChaCha20
+
 Hash functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -36,34 +56,13 @@ Hash functions
   * Obsolete or insecure hashes MD5, MD4, MD2
   * Non-cryptographic checksums Adler32, CRC24, CRC32
 
-Block ciphers
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-  * Authenticated cipher modes EAX, OCB, GCM, SIV, and CCM
-  * Unauthenticated cipher modes CTR, CBC, XTS, CFB, OFB, and ECB
-  * AES (including constant time SSSE3 and AES-NI versions)
-  * AES candidates Serpent, Twofish, MARS, CAST-256, RC6
-  * DES, and variants 3DES and DESX
-  * Other block ciphers including Threefish-512, Blowfish, CAST-128, IDEA,
-    Noekeon, TEA, XTEA, RC2, RC5, SAFER-SK
-  * National/telecom block ciphers SEED, KASUMI, MISTY1, GOST 28147
-  * Large block cipher construction Lion
-
-Stream Ciphers
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
- * RC4
- * Salsa20/XSalsa20
- * ChaCha20
- * CTR and OFB modes also present a stream cipher interface
-
 Authentication Codes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
- * HMAC
- * CMAC (aka OMAC1)
- * Obsolete designs CBC-MAC, ANSI X9.19 DES-MAC, and the
-   protocol-specific SSLv3 authentication code
+  * HMAC
+  * CMAC (aka OMAC1)
+  * Obsolete designs CBC-MAC, ANSI X9.19 DES-MAC, and the
+    protocol-specific SSLv3 authentication code
 
 Other Useful Things
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -74,7 +73,7 @@ Other Useful Things
   * PRFs from ANSI X9.42, SSL v3.0, TLS v1.0
 
 Recommended Algorithms
----------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This section is by no means the last word on selecting which algorithms to
 use.  However, botan includes a sometimes bewildering array of possible
