@@ -316,7 +316,13 @@ def main(args = None):
                     return 'w:bz2'
 
             archive = tarfile.open(output_archive, write_mode())
-            archive.add(output_basename)
+
+            for (curdir,_,files) in os.walk(output_basename):
+                all_files += [os.path.join(curdir, f) for f in files]
+            all_files.sort()
+
+            for f in all_files:
+                archive.add(f)
             archive.close()
 
             if hash_file != None:
