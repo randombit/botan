@@ -10,6 +10,7 @@
 #define BOTAN_EAC_ASN1_OBJ_H__
 
 #include <botan/asn1_obj.h>
+#include <chrono>
 
 namespace Botan {
 
