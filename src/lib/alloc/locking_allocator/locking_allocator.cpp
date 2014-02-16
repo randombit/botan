@@ -8,6 +8,8 @@
 #include <botan/locking_allocator.h>
 #include <botan/mem_ops.h>
 #include <algorithm>
+#include <string>
+
 #include <sys/mman.h>
 #include <sys/resource.h>
 
