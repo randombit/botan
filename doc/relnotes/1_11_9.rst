@@ -1,2 +1,5 @@
 Version 1.11.9, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+ * Fix a bug in certificate path validation which prevented successful
+   validation if intermediate certificates were presented out of order.

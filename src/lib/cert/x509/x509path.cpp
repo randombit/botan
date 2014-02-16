@@ -1,6 +1,6 @@
 /*
 * X.509 Certificate Path Validation
-* (C) 2010,2011,2012 Jack Lloyd
+* (C) 2010,2011,2012,2014 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -19,11 +19,16 @@ namespace Botan {
 
 namespace {
 
-const X509_Certificate* find_issuing_cert(const X509_Certificate& cert,
-                                    const std::vector<Certificate_Store*>& certstores)
+const X509_Certificate*
+find_issuing_cert(const X509_Certificate& cert,
+                  Certificate_Store& end_certs,
+                  const std::vector<Certificate_Store*>& certstores)
    {
    const X509_DN issuer_dn = cert.issuer_dn();
    const std::vector<byte> auth_key_id = cert.authority_key_id();
+
+   if(const X509_Certificate* cert = end_certs.find_cert(issuer_dn, auth_key_id))
+      return cert;
 
    for(size_t i = 0; i != certstores.size(); ++i)
       {
@@ -192,14 +197,21 @@ Path_Validation_Result x509_path_validate(
    if(end_certs.empty())
       throw std::invalid_argument("x509_path_validate called with no subjects");
 
-   std::vector<X509_Certificate> cert_path = end_certs;
+   std::vector<X509_Certificate> cert_path;
+   cert_path.push_back(end_certs[0]);
+
+   Certificate_Store_Overlay extra(end_certs);
 
    // iterate until we reach a root or cannot find the issuer
    while(!cert_path.back().is_self_signed())
       {
-      const X509_Certificate* cert = find_issuing_cert(cert_path.back(), certstores);
+      const X509_Certificate* cert = find_issuing_cert(cert_path.back(), extra, certstores);
       if(!cert)
          return Path_Validation_Result(Certificate_Status_Code::CERT_ISSUER_NOT_FOUND);
+
+      if(cert->path_limit() && (cert->path_limit() < cert_path.size()-1))
+         return Path_Validation_Result(Certificate_Status_Code::CERT_CHAIN_TOO_LONG);
+
       cert_path.push_back(*cert);
       }
 
