@@ -3,3 +3,7 @@ Version 1.11.9, Not Yet Released
 
  * Fix a bug in certificate path validation which prevented successful
    validation if intermediate certificates were presented out of order.
+
+ * Fix a bug introduced in 1.11.5 which could cause crashes or other
+   incorrect behavior when a cipher mode filter was followed in the
+   pipe by another filter, and that filter had a non-empty start_msg.

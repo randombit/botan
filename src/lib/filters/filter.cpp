@@ -27,6 +27,9 @@ Filter::Filter()
 */
 void Filter::send(const byte input[], size_t length)
    {
+   if(!length)
+      return;
+
    bool nothing_attached = true;
    for(size_t j = 0; j != total_ports(); ++j)
       if(next[j])
