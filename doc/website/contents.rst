@@ -5,13 +5,14 @@ Contents
 .. toctree::
 
    index
-   license
    faq
-   manual
    download
    vcs
+   license
+   manual
    pgpkey
    credits
    users
    algos
    relnotes/contents
+

@@ -1,5 +1,5 @@
 
-Getting The Latest Sources
+Download
 ========================================
 
 All releases are signed with a :doc:`PGP key <pgpkey>`.
@@ -43,3 +43,23 @@ The latest stable branch release is :doc:`relnotes/1_10_7`:
   and
   :installer_x86_64:`1.10.5` (:installer_sig_x86_64:`sig <1.10.5>`)
   are also available.
+
+From Your Favorite Distribution
+----------------------------------------
+
+Botan is already included in many package distributions,
+including `Fedora <https://admin.fedoraproject.org/pkgdb/acls/name/botan>`_,
+`EPEL <http://dl.fedoraproject.org/pub/epel/6/SRPMS/repoview/botan.html>`_ (for RHEL/CentOS),
+`Debian <http://packages.debian.org/search?keywords=libbotan>`_,
+`Ubuntu <http://packages.ubuntu.com/search?keywords=botan>`_,
+`Gentoo <http://packages.gentoo.org/package/botan>`_,
+`Arch <http://www.archlinux.org/packages/community/x86_64/botan/>`_,
+`Slackbuild <http://slackbuilds.org/result/?search=Botan>`_,
+`FreeBSD <http://www.freshports.org/security/botan110>`_,
+`NetBSD <ftp://ftp.netbsd.org/pub/pkgsrc/current/pkgsrc/security/botan/README.html>`_,
+`Cygwin <http://cygwin.com/packages/x86/botan/>`_,
+`MacPorts <http://www.macports.org/ports.php?by=name&substr=botan>`_,
+`OpenPKG <http://www.openpkg.org/product/packages/?package=botan>`_, and
+`T2 SDE <http://www.t2-project.org/packages/botan.html>`_
+though in some cases the included version lags behind the latest
+release.

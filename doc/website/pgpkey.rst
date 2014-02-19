@@ -1,5 +1,5 @@
 
-PGP Code Signing Key
+Code Signing Key
 ========================================
 
 .. highlight:: none
