@@ -35,8 +35,7 @@ Transformation_Filter::Transformation_Filter(Transformation* transform) :
 
 std::string Transformation_Filter::name() const
    {
-   return "";
-   //return m_transform->name();
+   return m_transform->name();
    }
 
 void Transformation_Filter::Nonce_State::update(const InitializationVector& iv)
