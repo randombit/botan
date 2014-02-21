@@ -11,7 +11,7 @@
 #include <botan/build.h>
 #include <botan/assert.h>
 #include <cstddef>
-#include <cstdint>
+#include <stdint.h>
 #include <memory>
 
 /**
@@ -19,18 +19,20 @@
 */
 namespace Botan {
 
-using std::uint8_t;
-using std::uint16_t;
-using std::uint32_t;
-using std::uint64_t;
-using std::size_t;
+using ::uint8_t;
+using ::uint16_t;
+using ::uint32_t;
+using ::uint64_t;
+using ::int32_t;
+
+using ::size_t;
 
 typedef uint8_t byte;
 typedef uint16_t u16bit;
 typedef uint32_t u32bit;
 typedef uint64_t u64bit;
 
-typedef std::int32_t s32bit;
+typedef int32_t s32bit;
 
 /**
 * A default buffer size; typically a memory page

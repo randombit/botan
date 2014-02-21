@@ -7,3 +7,6 @@ Version 1.11.9, Not Yet Released
  * Fix a bug introduced in 1.11.5 which could cause crashes or other
    incorrect behavior when a cipher mode filter was followed in the
    pipe by another filter, and that filter had a non-empty start_msg.
+
+ * The types.h header now uses stdint.h rather than cstdint to avoid
+   problems with Clang on OS X.
