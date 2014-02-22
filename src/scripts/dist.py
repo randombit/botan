@@ -317,6 +317,7 @@ def main(args = None):
 
             archive = tarfile.open(output_archive, write_mode())
 
+            all_files = []
             for (curdir,_,files) in os.walk(output_basename):
                 all_files += [os.path.join(curdir, f) for f in files]
             all_files.sort()
