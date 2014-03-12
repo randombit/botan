@@ -27,7 +27,8 @@ class BOTAN_DLL HMAC : public MessageAuthenticationCode
 
       Key_Length_Specification key_spec() const
          {
-         return Key_Length_Specification(0, 2*hash->hash_block_size());
+         // Absurd max length here is to support PBKDF2
+         return Key_Length_Specification(0, 512);
          }
 
       /**

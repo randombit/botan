@@ -7,6 +7,12 @@ Release Notes
 Series 1.10
 ----------------------------------------
 
+Version 1.10.8, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* The key length limit on HMAC has been raised to 512 bytes, allowing
+  the use of very long passphrases with PBKDF2.
+
 Version 1.10.7, 2013-12-29
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
