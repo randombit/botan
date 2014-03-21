@@ -54,6 +54,8 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
          }
 
       Fixed_Output_RNG() {}
+   protected:
+      size_t remaining() const { return buf.size(); }
    private:
       std::deque<byte> buf;
    };

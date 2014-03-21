@@ -67,9 +67,9 @@ void test_report(const std::string& name, size_t ran, size_t failed)
       std::cout << " " << ran << " tests";
 
    if(failed)
-      std::cout << " " << failed << " FAILs\n";
+      std::cout << " " << failed << " FAILs" << std::endl;
    else
-      std::cout << " all ok\n";
+      std::cout << " all ok" << std::endl;
    }
 
 size_t run_tests_bb(std::istream& src,
