@@ -1,6 +1,6 @@
 /*
 * EntropySource
-* (C) 2008-2009 Jack Lloyd
+* (C) 2008-2009,2014 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -8,8 +8,9 @@
 #ifndef BOTAN_ENTROPY_SOURCE_BASE_H__
 #define BOTAN_ENTROPY_SOURCE_BASE_H__
 
-#include <botan/buf_comp.h>
+#include <botan/secmem.h>
 #include <string>
+#include <functional>
 
 namespace Botan {
 
@@ -23,8 +24,8 @@ class BOTAN_DLL Entropy_Accumulator
       * Initialize an Entropy_Accumulator
       * @param goal is how many bits we would like to collect
       */
-      Entropy_Accumulator(size_t goal) :
-         entropy_goal(goal), collected_bits(0) {}
+      Entropy_Accumulator(std::function<bool (const byte[], size_t, size_t)> accum) :
+         m_accum_fn(accum), m_done(false) {}
 
       virtual ~Entropy_Accumulator() {}
 
@@ -36,29 +37,16 @@ class BOTAN_DLL Entropy_Accumulator
       * @return cached I/O buffer for repeated polls
       */
       secure_vector<byte>& get_io_buffer(size_t size)
-         { io_buffer.resize(size); return io_buffer; }
-
-      /**
-      * @return number of bits collected so far
-      */
-      size_t bits_collected() const
-         { return static_cast<size_t>(collected_bits); }
+         {
+         m_io_buffer.clear();
+         m_io_buffer.resize(size);
+         return m_io_buffer;
+         }
 
       /**
       * @return if our polling goal has been achieved
       */
-      bool polling_goal_achieved() const
-         { return (collected_bits >= entropy_goal); }
-
-      /**
-      * @return how many bits we need to reach our polling goal
-      */
-      size_t desired_remaining_bits() const
-         {
-         if(collected_bits >= entropy_goal)
-            return 0;
-         return static_cast<size_t>(entropy_goal - collected_bits);
-         }
+      bool polling_goal_achieved() const { return m_done; }
 
       /**
       * Add entropy to the accumulator
@@ -69,8 +57,8 @@ class BOTAN_DLL Entropy_Accumulator
       */
       void add(const void* bytes, size_t length, double entropy_bits_per_byte)
          {
-         add_bytes(reinterpret_cast<const byte*>(bytes), length);
-         collected_bits += entropy_bits_per_byte * length;
+         m_done = m_accum_fn(reinterpret_cast<const byte*>(bytes),
+                             length, entropy_bits_per_byte * length);
          }
 
       /**
@@ -85,35 +73,9 @@ class BOTAN_DLL Entropy_Accumulator
          add(&v, sizeof(T), entropy_bits_per_byte);
          }
    private:
-      virtual void add_bytes(const byte bytes[], size_t length) = 0;
-
-      secure_vector<byte> io_buffer;
-      size_t entropy_goal;
-      double collected_bits;
-   };
-
-/**
-* Entropy accumulator that puts the input into a Buffered_Computation
-*/
-class BOTAN_DLL Entropy_Accumulator_BufferedComputation :
-   public Entropy_Accumulator
-   {
-   public:
-      /**
-      * @param sink the hash or MAC we are feeding the poll data into
-      * @param goal is how many bits we want to collect in this poll
-      */
-      Entropy_Accumulator_BufferedComputation(Buffered_Computation& sink,
-                                              size_t goal) :
-         Entropy_Accumulator(goal), entropy_sink(sink) {}
-
-   private:
-      void add_bytes(const byte bytes[], size_t length) override
-         {
-         entropy_sink.update(bytes, length);
-         }
-
-      Buffered_Computation& entropy_sink;
+      std::function<bool (const byte[], size_t, size_t)> m_accum_fn;
+      bool m_done;
+      secure_vector<byte> m_io_buffer;
    };
 
 /**

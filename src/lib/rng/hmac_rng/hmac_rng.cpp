@@ -128,7 +128,15 @@ void HMAC_RNG::reseed(size_t poll_bits)
    a bad poll doesn't wipe us out.
    */
 
-   Entropy_Accumulator_BufferedComputation accum(*m_extractor, poll_bits);
+   double bits_collected = 0;
+
+   Entropy_Accumulator accum(
+      [&](const byte in[], size_t in_len, double entropy_estimate)
+      {
+      m_extractor->update(in, in_len);
+      bits_collected += entropy_estimate;
+      return (bits_collected >= poll_bits);
+      });
 
    global_state().poll_available_sources(accum);
 
@@ -162,8 +170,8 @@ void HMAC_RNG::reseed(size_t poll_bits)
    m_counter = 0;
 
    m_collected_entropy_estimate =
-      std::min(m_collected_entropy_estimate  + accum.bits_collected(),
-               m_extractor->output_length() * 8);
+      std::min<size_t>(m_collected_entropy_estimate + bits_collected,
+                       m_extractor->output_length() * 8);
 
    m_output_since_reseed = 0;
    }

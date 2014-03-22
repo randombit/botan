@@ -38,6 +38,8 @@ void HMAC_DRBG::randomize(byte out[], size_t length)
       out += to_copy;
       }
 
+   m_reseed_counter += length;
+
    update(nullptr, 0); // additional_data is always empty
    }
 

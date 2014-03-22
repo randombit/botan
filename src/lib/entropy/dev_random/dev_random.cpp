@@ -63,7 +63,7 @@ void Device_EntropySource::poll(Entropy_Accumulator& accum)
 
    const size_t ENTROPY_BITS_PER_BYTE = 8;
    const size_t MS_WAIT_TIME = 32;
-   const size_t READ_ATTEMPT = std::max<size_t>(accum.desired_remaining_bits() / 8, 16);
+   const size_t READ_ATTEMPT = 32;
 
    int max_fd = m_devices[0];
    fd_set read_set;
