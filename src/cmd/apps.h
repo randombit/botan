@@ -29,6 +29,7 @@ DEFINE_APP(cert_verify);
 DEFINE_APP(ocsp_check);
 DEFINE_APP(pkcs10);
 DEFINE_APP(read_ssh);
+DEFINE_APP(rng);
 DEFINE_APP(self_sig);
 DEFINE_APP(tls_client);
 DEFINE_APP(tls_server);

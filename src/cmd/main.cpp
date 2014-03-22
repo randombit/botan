@@ -161,6 +161,7 @@ int main(int argc, char* argv[])
       CALL_APP(fpe);
       CALL_APP(hash);
       CALL_APP(keygen);
+      CALL_APP(rng);
       CALL_APP(read_ssh);
       CALL_APP(speed);
 

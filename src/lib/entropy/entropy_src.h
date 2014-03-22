@@ -24,7 +24,7 @@ class BOTAN_DLL Entropy_Accumulator
       * Initialize an Entropy_Accumulator
       * @param goal is how many bits we would like to collect
       */
-      Entropy_Accumulator(std::function<bool (const byte[], size_t, size_t)> accum) :
+      Entropy_Accumulator(std::function<bool (const byte[], size_t, double)> accum) :
          m_accum_fn(accum), m_done(false) {}
 
       virtual ~Entropy_Accumulator() {}
@@ -73,7 +73,7 @@ class BOTAN_DLL Entropy_Accumulator
          add(&v, sizeof(T), entropy_bits_per_byte);
          }
    private:
-      std::function<bool (const byte[], size_t, size_t)> m_accum_fn;
+      std::function<bool (const byte[], size_t, double)> m_accum_fn;
       bool m_done;
       secure_vector<byte> m_io_buffer;
    };
