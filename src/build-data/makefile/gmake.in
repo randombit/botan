@@ -2,17 +2,13 @@
 
 %{commands_in}
 
-# Targets
-APP           = %{app_prefix}botan
-TEST          = %{app_prefix}botan-test
+# Library targets
 LIBRARIES     = $(STATIC_LIB)
 
 LIBNAME       = %{lib_prefix}libbotan
 STATIC_LIB    = $(LIBNAME)-$(BRANCH).a
 
 LIBPATH       = botan-$(BRANCH)
-
-all: $(APP) $(TEST)
 
 # File Lists
 INCLUDE_DIR   = %{botan_include_dir}

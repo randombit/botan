@@ -13,10 +13,7 @@ RM            = @del /Q
 RM_R          = $(RM) /S
 RMDIR         = @rmdir
 
-### File Lists
-APP          = %{app_prefix}botan
-TEST         = %{app_prefix}botan-test
-
+### Library targets
 LIBOBJS       = %{lib_objs}
 
 APPOBJS       = %{app_objs}
@@ -29,8 +26,6 @@ LIBRARIES     = $(BOTAN_LIB)
 
 # This will be either a static lib or the DLL import lib
 BOTAN_LIB     = $(LIBNAME).%{static_suffix}
-
-all: $(APP) $(TEST)
 
 # Build Commands
 %{lib_build_cmds}

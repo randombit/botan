@@ -411,16 +411,19 @@ def process_command_line(args):
 
     install_group = optparse.OptionGroup(parser, 'Installation options')
 
+    install_group.add_option('--program-suffix', metavar='SUFFIX',
+                             help='append string to program names')
+
     install_group.add_option('--prefix', metavar='DIR',
                              help='set the install prefix')
+    install_group.add_option('--destdir', metavar='DIR',
+                             help='set the install directory')
     install_group.add_option('--docdir', metavar='DIR',
                              help='set the documentation install directory')
     install_group.add_option('--libdir', metavar='DIR',
                              help='set the library install directory')
     install_group.add_option('--includedir', metavar='DIR',
                              help='set the include file install directory')
-    install_group.add_option('--destdir', metavar='DIR',
-                             help='set the install directory')
 
     parser.add_option_group(target_group)
     parser.add_option_group(build_group)
@@ -1163,7 +1166,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
                       maintainer_flags,
                       maintainer_mode):
         if maintainer_mode and maintainer_flags != '':
-            return maintainer_flags + ' ' + normal_flags
+            return normal_flags + ' ' + maintainer_flags
         else:
             return normal_flags
 
@@ -1207,12 +1210,13 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'makefile_path': prefix_with_build_dir('Makefile'),
 
+        'program_suffix': options.program_suffix or '',
+
         'prefix': options.prefix or osinfo.install_root,
+        'destdir': options.destdir or options.prefix or osinfo.install_root,
         'libdir': options.libdir or osinfo.lib_dir,
         'includedir': options.includedir or osinfo.header_dir,
         'docdir': options.docdir or osinfo.doc_dir,
-
-        'destdir': options.destdir or options.prefix or osinfo.install_root,
 
         'build_dir': build_config.build_dir,
 
@@ -1725,7 +1729,7 @@ def generate_amalgamation(build_config):
 
     amalg_header = """/*
 * Botan %s Amalgamation
-* (C) 1999-2013 Jack Lloyd and others
+* (C) 1999-2013,2014 Jack Lloyd and others
 *
 * Distributed under the terms of the Botan license
 */

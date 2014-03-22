@@ -30,3 +30,9 @@ PKGCONF_DIR    = $(LIBDIR)/pkgconfig
 
 CONFIG_SCRIPT = %{botan_config}
 PKGCONFIG     = %{botan_pkgconfig}
+
+# Executable targets
+APP           = %{app_prefix}botan%{program_suffix}
+TEST          = %{app_prefix}botan-test%{program_suffix}
+
+all: $(APP) $(TEST)
