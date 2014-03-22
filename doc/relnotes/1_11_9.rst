@@ -5,6 +5,9 @@ Version 1.11.9, Not Yet Released
    added. Like the X9.31 PRNG implementation, it uses another
    underlying RNG for seeding material.
 
+ * An implementation of the RFC 6979 deterministic nonce generator has
+   been added.
+
  * Fix a bug in certificate path validation which prevented successful
    validation if intermediate certificates were presented out of order.
 

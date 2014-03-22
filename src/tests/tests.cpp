@@ -247,6 +247,7 @@ int main(int argc, char* argv[])
    DEF_TEST(bcrypt);
    DEF_TEST(cryptobox);
    DEF_TEST(tss);
+   DEF_TEST(rfc6979);
 
    DEF_TEST(bigint);
 

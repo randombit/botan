@@ -66,20 +66,23 @@ void HMAC_DRBG::update(const byte input[], size_t input_len)
 
 void HMAC_DRBG::reseed(size_t poll_bits)
    {
-   m_prng->reseed(poll_bits);
-
-   if(m_prng->is_seeded())
+   if(m_prng)
       {
-      secure_vector<byte> input = m_prng->random_vec(m_mac->output_length());
-      update(&input[0], input.size());
-      m_reseed_counter = 1;
+      m_prng->reseed(poll_bits);
+
+      if(m_prng->is_seeded())
+         {
+         secure_vector<byte> input = m_prng->random_vec(m_mac->output_length());
+         update(&input[0], input.size());
+         m_reseed_counter = 1;
+         }
       }
    }
 
 void HMAC_DRBG::add_entropy(const byte input[], size_t length)
    {
-   // Should we also poll the underlying PRNG here?
    update(input, length);
+   m_reseed_counter = 1;
    }
 
 bool HMAC_DRBG::is_seeded() const
@@ -89,10 +92,12 @@ bool HMAC_DRBG::is_seeded() const
 
 void HMAC_DRBG::clear()
    {
-   m_mac->clear();
-   m_prng->clear();
    zeroise(m_V);
-   zeroise(m_K);
+
+   m_mac->clear();
+
+   if(m_prng)
+      m_prng->clear();
    }
 
 std::string HMAC_DRBG::name() const

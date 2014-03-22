@@ -41,7 +41,7 @@ class BOTAN_DLL HMAC_DRBG : public RandomNumberGenerator
       std::unique_ptr<MessageAuthenticationCode> m_mac;
       std::unique_ptr<RandomNumberGenerator> m_prng;
 
-      secure_vector<byte> m_K, m_V;
+      secure_vector<byte> m_V;
       size_t m_reseed_counter;
    };
 

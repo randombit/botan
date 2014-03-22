@@ -74,6 +74,7 @@ size_t test_bcrypt();
 size_t test_passhash9();
 size_t test_cryptobox();
 size_t test_tss();
+size_t test_rfc6979();
 
 size_t test_pk_keygen();
 
