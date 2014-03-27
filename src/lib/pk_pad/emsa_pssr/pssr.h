@@ -22,10 +22,14 @@ class BOTAN_DLL PSSR : public EMSA
 
       /**
       * @param hash the hash object to use
-      * @param salt_size the size of the salt to use in bytes
-      *        or zero to use the default
       */
-      PSSR(HashFunction* hash, size_t salt_size = 0);
+      PSSR(HashFunction* hash);
+
+      /**
+      * @param hash the hash object to use
+      * @param salt_size the size of the salt to use in bytes
+      */
+      PSSR(HashFunction* hash, size_t salt_size);
    private:
       void update(const byte input[], size_t length);
 

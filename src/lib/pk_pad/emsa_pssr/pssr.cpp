@@ -126,8 +126,13 @@ bool PSSR::verify(const secure_vector<byte>& const_coded,
    return same_mem(&H[0], &H2[0], HASH_SIZE);
    }
 
+PSSR::PSSR(HashFunction* h) :
+   SALT_SIZE(h->output_length()), hash(h)
+   {
+   }
+
 PSSR::PSSR(HashFunction* h, size_t salt_size) :
-   SALT_SIZE(salt_size ? salt_size : h->output_length()), hash(h)
+   SALT_SIZE(salt_size), hash(h)
    {
    }
 
