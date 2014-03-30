@@ -18,8 +18,6 @@ namespace Botan {
 */
 BigInt::BigInt(u64bit n)
    {
-   set_sign(Positive);
-
    if(n == 0)
       return;
 
@@ -82,7 +80,6 @@ BigInt::BigInt(const std::string& str)
 */
 BigInt::BigInt(const byte input[], size_t length, Base base)
    {
-   set_sign(Positive);
    *this = decode(input, length, base);
    }
 
@@ -91,7 +88,6 @@ BigInt::BigInt(const byte input[], size_t length, Base base)
 */
 BigInt::BigInt(RandomNumberGenerator& rng, size_t bits)
    {
-   set_sign(Positive);
    randomize(rng, bits);
    }
 

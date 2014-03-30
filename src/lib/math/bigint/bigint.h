@@ -518,7 +518,7 @@ class BOTAN_DLL BigInt
 
    private:
       secure_vector<word> m_reg;
-      Sign m_signedness;
+      Sign m_signedness = Positive;
    };
 
 /*
