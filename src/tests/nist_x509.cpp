@@ -201,7 +201,7 @@ std::map<size_t, Path_Validation_Result::Code> get_expected()
    expected_results[17] = Certificate_Status_Code::VERIFIED;
    expected_results[18] = Certificate_Status_Code::VERIFIED;
 
-   expected_results[19] = Certificate_Status_Code::CRL_NOT_FOUND;
+   expected_results[19] = Certificate_Status_Code::NO_REVOCATION_DATA;
    expected_results[20] = Certificate_Status_Code::CERT_IS_REVOKED;
    expected_results[21] = Certificate_Status_Code::CERT_IS_REVOKED;
 
@@ -275,8 +275,8 @@ std::map<size_t, Path_Validation_Result::Code> get_expected()
 
    expected_results[64] = Certificate_Status_Code::CRL_BAD_SIGNATURE;
 
-   expected_results[65] = Certificate_Status_Code::CRL_NOT_FOUND;
-   expected_results[66] = Certificate_Status_Code::CRL_NOT_FOUND;
+   expected_results[65] = Certificate_Status_Code::NO_REVOCATION_DATA;
+   expected_results[66] = Certificate_Status_Code::NO_REVOCATION_DATA;
 
    expected_results[67] = Certificate_Status_Code::VERIFIED;
 

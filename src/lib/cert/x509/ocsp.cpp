@@ -210,7 +210,7 @@ Certificate_Status_Code Response::status_for(const X509_Certificate& issuer,
             return Certificate_Status_Code::OCSP_NOT_YET_VALID;
 
          if(response.next_update().time_is_set() && current_time > response.next_update())
-            return Certificate_Status_Code::OCSP_EXPIRED;
+            return Certificate_Status_Code::OCSP_HAS_EXPIRED;
 
          if(response.cert_status() == 0)
             return Certificate_Status_Code::OCSP_RESPONSE_GOOD;

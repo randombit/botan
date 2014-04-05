@@ -1,6 +1,15 @@
 Version 1.11.9, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+ * X.509 path validation now returns a set of all errors that occurred
+   during validation, rather than immediately returning the first
+   detected error. This prevents a seemingly innocuous error (such as
+   an expired certificate) from hiding an obviously serious error
+   (such as an invalid signature). The Certificate_Status_Code enum is
+   now ordered by severity, and the most severe error is returned by
+   Path_Validation_Result::result(). The entire set of status codes is
+   available with the new all_statuses call.
+
  * Fixed a bug in OCSP response decoding which would cause an error
    when attempting to decode responses from some widely used
    responders.

@@ -99,24 +99,27 @@ class BOTAN_DLL Path_Validation_Result
       bool successful_validation() const;
 
       /**
-      * @return validation result code
+      * @return overall validation result code
       */
-      Certificate_Status_Code result() const { return m_status; }
+      Certificate_Status_Code result() const { return m_overall; }
 
-      Certificate_Status_Code status() const { return m_status; }
+      /**
+      * Return a set of status codes for each certificate in the chain
+      */
+      const std::vector<std::set<Certificate_Status_Code>>& all_statuses() const
+         { return m_all_status; }
 
       /**
       * @return string representation of the validation result
       */
       std::string result_string() const;
 
-      static std::string status_string(Certificate_Status_Code code);
+      static const char* status_string(Certificate_Status_Code code);
 
-      Path_Validation_Result(Certificate_Status_Code status,
-                             std::vector<X509_Certificate>&& cert_chain) :
-         m_status(status), m_cert_path(cert_chain) {}
+      Path_Validation_Result(std::vector<std::set<Certificate_Status_Code>> status,
+                             std::vector<X509_Certificate>&& cert_chain);
 
-      Path_Validation_Result(Certificate_Status_Code status) : m_status(status) {}
+      Path_Validation_Result(Certificate_Status_Code status) : m_overall(status) {}
 
    private:
       friend Path_Validation_Result x509_path_validate(
@@ -124,7 +127,8 @@ class BOTAN_DLL Path_Validation_Result
          const Path_Validation_Restrictions& restrictions,
          const std::vector<Certificate_Store*>& certstores);
 
-      Certificate_Status_Code m_status;
+      Certificate_Status_Code m_overall;
+      std::vector<std::set<Certificate_Status_Code>> m_all_status;
       std::vector<X509_Certificate> m_cert_path;
    };
 
