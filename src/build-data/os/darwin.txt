@@ -9,7 +9,9 @@ ar_needs_ranlib yes
 doc_dir doc
 
 <target_features>
+dlopen
 gettimeofday
+gmtime_r
 </target_features>
 
 <aliases>
