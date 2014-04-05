@@ -2,8 +2,8 @@
 * TLS cipher suite information
 *
 * This file was automatically generated from the IANA assignments
-* (tls-parameters.txt hash a794db70c6546a47e3bc3181dc0fd908a322e50c)
-* by ./src/scripts/tls_suite_info.py on 2014-01-07
+* (tls-parameters.txt hash 1e63beca8c58c58b71b68c5fd47fd6cffd9f2d79)
+* by ./src/scripts/tls_suite_info.py on 2014-04-05
 *
 * Released under the terms of the Botan license
 */
@@ -213,6 +213,12 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
       case 0xC023: // ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
          return Ciphersuite(0xC023, "ECDSA", "ECDH", "AES-128", 16, 16, "SHA-256", 32);
 
+      case 0xC0AC: // ECDHE_ECDSA_WITH_AES_128_CCM
+         return Ciphersuite(0xC0AC, "ECDSA", "ECDH", "AES-128/CCM", 16, 4, "AEAD", 0, "SHA-256");
+
+      case 0xC0AE: // ECDHE_ECDSA_WITH_AES_128_CCM_8
+         return Ciphersuite(0xC0AE, "ECDSA", "ECDH", "AES-128/CCM-8", 16, 4, "AEAD", 0, "SHA-256");
+
       case 0xC02B: // ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
          return Ciphersuite(0xC02B, "ECDSA", "ECDH", "AES-128/GCM", 16, 4, "AEAD", 0, "SHA-256");
 
@@ -221,6 +227,12 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
 
       case 0xC024: // ECDHE_ECDSA_WITH_AES_256_CBC_SHA384
          return Ciphersuite(0xC024, "ECDSA", "ECDH", "AES-256", 32, 16, "SHA-384", 48);
+
+      case 0xC0AD: // ECDHE_ECDSA_WITH_AES_256_CCM
+         return Ciphersuite(0xC0AD, "ECDSA", "ECDH", "AES-256/CCM", 32, 4, "AEAD", 0, "SHA-256");
+
+      case 0xC0AF: // ECDHE_ECDSA_WITH_AES_256_CCM_8
+         return Ciphersuite(0xC0AF, "ECDSA", "ECDH", "AES-256/CCM-8", 32, 4, "AEAD", 0, "SHA-256");
 
       case 0xC02C: // ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
          return Ciphersuite(0xC02C, "ECDSA", "ECDH", "AES-256/GCM", 32, 4, "AEAD", 0, "SHA-384");
