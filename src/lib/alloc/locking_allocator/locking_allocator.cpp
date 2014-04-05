@@ -17,6 +17,12 @@ namespace Botan {
 
 namespace {
 
+/**
+* Requests for objects of sizeof(T) will be aligned at
+* sizeof(T)*ALIGNMENT_MULTIPLE bytes.
+*/
+const size_t ALIGNMENT_MULTIPLE = 2;
+
 size_t mlock_limit()
    {
    /*
@@ -74,7 +80,7 @@ void* mlock_allocator::allocate(size_t num_elems, size_t elem_size)
       return nullptr;
 
    const size_t n = num_elems * elem_size;
-   const size_t alignment = elem_size;
+   const size_t alignment = ALIGNMENT_MULTIPLE * elem_size;
 
    if(n / elem_size != num_elems)
       return nullptr; // overflow!
@@ -214,6 +220,10 @@ mlock_allocator::mlock_allocator() :
    {
 #if !defined(MAP_NOCORE)
    #define MAP_NOCORE 0
+#endif
+
+#if !defined(MAP_ANONYMOUS)
+   #define MAP_ANONYMOUS MAP_ANON
 #endif
 
    if(m_poolsize)

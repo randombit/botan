@@ -36,7 +36,7 @@
 #define BOTAN_DEFAULT_BUFFER_SIZE 1024
 
 /* Maximum size to allocate out of the mlock pool */
-#define BOTAN_MLOCK_ALLOCATOR_MAX_ALLOCATION 4096
+#define BOTAN_MLOCK_ALLOCATOR_MAX_ALLOCATION 128
 
 /* Multiplier on a block cipher's native parallelism */
 #define BOTAN_BLOCK_CIPHER_PAR_MULT 4
