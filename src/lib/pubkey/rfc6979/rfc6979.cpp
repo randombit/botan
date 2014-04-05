@@ -9,9 +9,6 @@
 #include <botan/hmac_drbg.h>
 #include <botan/libstate.h>
 
-#include <botan/hex.h>
-#include <iostream>
-
 namespace Botan {
 
 BigInt generate_rfc6979_nonce(const BigInt& x,
