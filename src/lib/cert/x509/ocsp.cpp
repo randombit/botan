@@ -170,7 +170,7 @@ Response::Response(const Certificate_Store& trusted_roots,
          .decode_optional(name, ASN1_Tag(1),
                           ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
 
-         .decode_optional_string(key_hash, ASN1_Tag(2),
+         .decode_optional_string(key_hash, OCTET_STRING, 2,
                                  ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
 
          .decode(produced_at)
@@ -203,15 +203,16 @@ Certificate_Status_Code Response::status_for(const X509_Certificate& issuer,
          {
          X509_Time current_time(std::chrono::system_clock::now());
 
+         if(response.cert_status() == 1)
+            return Certificate_Status_Code::CERT_IS_REVOKED;
+
          if(response.this_update() > current_time)
             return Certificate_Status_Code::OCSP_NOT_YET_VALID;
 
          if(response.next_update().time_is_set() && current_time > response.next_update())
             return Certificate_Status_Code::OCSP_EXPIRED;
 
-         if(response.cert_status() == 1)
-            return Certificate_Status_Code::CERT_IS_REVOKED;
-         else if(response.cert_status() == 0)
+         if(response.cert_status() == 0)
             return Certificate_Status_Code::OCSP_RESPONSE_GOOD;
          else
             return Certificate_Status_Code::OCSP_BAD_STATUS;
