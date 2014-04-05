@@ -128,19 +128,26 @@ void Extensions::decode_from(BER_Decoder& from_source)
 
       Certificate_Extension* ext = get_extension(oid);
 
-      if(!ext)
-         {
-         if(!critical || !should_throw)
-            continue;
-
+      if(!ext && critical && m_throw_on_unknown_critical)
          throw Decoding_Error("Encountered unknown X.509 extension marked "
                               "as critical; OID = " + oid.as_string());
+
+      if(ext)
+         {
+         try
+            {
+            ext->decode_inner(value);
+            }
+         catch(std::exception& e)
+            {
+            throw Decoding_Error("Exception while decoding extension " +
+                                 oid.as_string() + ": " + e.what());
+            }
+
+         extensions.push_back(std::make_pair(ext, critical));
          }
-
-      ext->decode_inner(value);
-
-      extensions.push_back(std::make_pair(ext, critical));
       }
+
    sequence.verify_end();
    }
 

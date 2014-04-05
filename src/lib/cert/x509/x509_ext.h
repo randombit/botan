@@ -70,13 +70,13 @@ class BOTAN_DLL Extensions : public ASN1_Object
       Extensions& operator=(const Extensions&);
 
       Extensions(const Extensions&);
-      Extensions(bool st = true) : should_throw(st) {}
+      Extensions(bool st = true) : m_throw_on_unknown_critical(st) {}
       ~Extensions();
    private:
       static Certificate_Extension* get_extension(const OID&);
 
       std::vector<std::pair<Certificate_Extension*, bool> > extensions;
-      bool should_throw;
+      bool m_throw_on_unknown_critical;
    };
 
 namespace Cert_Extension {
