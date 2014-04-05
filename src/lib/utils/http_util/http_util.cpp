@@ -8,6 +8,7 @@
 #include <botan/http_util.h>
 #include <botan/parsing.h>
 #include <botan/hex.h>
+#include <botan/internal/stl_util.h>
 #include <sstream>
 
 #if defined(BOTAN_HAS_BOOST_ASIO)
@@ -166,13 +167,21 @@ Response http_sync(http_exch_fn http_transact,
       return GET_sync(headers["Location"], allowable_redirects - 1);
       }
 
-   // Use Content-Length if set
    std::vector<byte> resp_body;
    std::vector<byte> buf(4096);
    while(io.good())
       {
       io.read(reinterpret_cast<char*>(&buf[0]), buf.size());
       resp_body.insert(resp_body.end(), &buf[0], &buf[io.gcount()]);
+      }
+
+   const std::string header_size = search_map(headers, std::string("Content-Length"));
+
+   if(header_size != "")
+      {
+      if(resp_body.size() != to_u32bit(header_size))
+         throw std::runtime_error("Content-Length disagreement, header says " +
+                                  header_size + " got " + std::to_string(resp_body.size()));
       }
 
    return Response(status_code, status_message, resp_body, headers);
