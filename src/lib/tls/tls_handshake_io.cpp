@@ -64,7 +64,7 @@ Stream_Handshake_IO::get_next_record(bool)
    {
    if(m_queue.size() >= 4)
       {
-      const size_t length = load_be24(&m_queue[1]);
+      const size_t length = make_u32bit(0, m_queue[1], m_queue[2], m_queue[3]);
 
       if(m_queue.size() >= length + 4)
          {
