@@ -10,6 +10,13 @@ Series 1.10
 Version 1.10.8, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Fix a bug in primality testing introduced in 1.8.3 which caused only
+  a single random base, rather than a sequence of random bases, to be
+  used in the Miller-Rabin test. This increased the probability that a
+  non-prime would be accepted, for instance a 1024 bit number would be
+  incorrectly classed as prime with probability around 2^-40. Reported
+  by Jeff Marrison.
+
 * The key length limit on HMAC has been raised to 512 bytes, allowing
   the use of very long passphrases with PBKDF2.
 

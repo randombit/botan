@@ -53,10 +53,8 @@ bool MillerRabin_Test::is_witness(const BigInt& a)
          return false;
       }
 
-   if(y != n_minus_1) // fails Fermat test
-      return true;
-
-   return false;
+   // If we reached here then n fails the Fermat test
+   return true;
    }
 
 /*
@@ -265,7 +263,7 @@ bool primality_test(const BigInt& n,
                     RandomNumberGenerator& rng,
                     size_t level)
    {
-   const size_t PREF_NONCE_BITS = 64;
+   const size_t PREF_NONCE_BITS = 128;
 
    if(n == 2)
       return true;
@@ -295,17 +293,21 @@ bool primality_test(const BigInt& n,
 
    MillerRabin_Test mr(n);
 
+   if(mr.is_witness(2))
+      return false;
+
    const size_t tests = miller_rabin_test_iterations(n.bits(), level);
 
-   BigInt nonce;
    for(size_t i = 0; i != tests; ++i)
       {
+      BigInt nonce;
       while(nonce < 2 || nonce >= (n-1))
          nonce.randomize(rng, NONCE_BITS);
 
       if(mr.is_witness(nonce))
          return false;
       }
+
    return true;
    }
 
