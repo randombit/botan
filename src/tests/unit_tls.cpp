@@ -136,33 +136,20 @@ Credentials_Manager* create_creds(RandomNumberGenerator& rng)
    return new Credentials_Manager_Test(server_cert, ca_cert, server_key);
    }
 
-
-size_t test_handshake()
+size_t basic_test_handshake(RandomNumberGenerator& rng,
+                            TLS::Protocol_Version offer_version,
+                            Credentials_Manager& creds,
+                            TLS::Policy& policy)
    {
-   AutoSeeded_RNG rng;
-   TLS::Policy default_policy;
-
-   std::auto_ptr<Credentials_Manager> creds(create_creds(rng));
-
    TLS::Session_Manager_In_Memory server_sessions(rng);
    TLS::Session_Manager_In_Memory client_sessions(rng);
 
    std::vector<byte> c2s_q, s2c_q, c2s_data, s2c_data;
 
-   auto handshake_complete = [](const TLS::Session& session) -> bool
+   auto handshake_complete = [&](const TLS::Session& session) -> bool
    {
-      if(false)
-         {
-         std::cout << "Handshake complete, " << session.version().to_string()
-                   << " using " << session.ciphersuite().to_string() << "\n";
-
-         if(!session.session_id().empty())
-            std::cout << "Session ID " << hex_encode(session.session_id()) << "\n";
-
-         if(!session.session_ticket().empty())
-            std::cout << "Session ticket " << hex_encode(session.session_ticket()) << "\n";
-         }
-
+      if(session.version() != offer_version)
+         std::cout << "Wrong version negotiated\n";
       return true;
    };
 
@@ -188,9 +175,18 @@ size_t test_handshake()
                       print_alert,
                       handshake_complete,
                       server_sessions,
-                      *creds,
-                      default_policy,
-                      rng);
+                      creds,
+                      policy,
+                      rng,
+                      { "test/1", "test/2" });
+
+   auto next_protocol_chooser = [&](std::vector<std::string> protos) {
+      if(protos.size() != 2)
+         std::cout << "Bad protocol size\n";
+      if(protos[0] != "test/1" || protos[1] != "test/2")
+         std::cout << "Bad protocol values\n";
+      return "test/3";
+   };
 
    TLS::Client client([&](const byte buf[], size_t sz)
                       { c2s_q.insert(c2s_q.end(), buf, buf+sz); },
@@ -198,16 +194,23 @@ size_t test_handshake()
                       print_alert,
                       handshake_complete,
                       client_sessions,
-                      *creds,
-                      default_policy,
-                      rng);
+                      creds,
+                      policy,
+                      rng,
+                      TLS::Server_Information(),
+                      offer_version,
+                      next_protocol_chooser);
 
    while(true)
       {
       if(client.is_active())
          client.send("1");
       if(server.is_active())
+         {
+         if(server.next_protocol() != "test/3")
+            std::cout << "Wrong protocol " << server.next_protocol() << "\n";
          server.send("2");
+         }
 
       /*
       * Use this as a temp value to hold the queues as otherwise they
@@ -265,13 +268,28 @@ size_t test_handshake()
    return 0;
    }
 
+class Test_Policy : public TLS::Policy
+   {
+   public:
+      bool acceptable_protocol_version(TLS::Protocol_Version) const { return true; }
+   };
+
 }
 
 size_t test_tls()
    {
    size_t errors = 0;
 
-   errors += test_handshake();
+   Test_Policy default_policy;
+   AutoSeeded_RNG rng;
+   std::auto_ptr<Credentials_Manager> basic_creds(create_creds(rng));
+
+   errors += basic_test_handshake(rng, TLS::Protocol_Version::SSL_V3, *basic_creds, default_policy);
+   errors += basic_test_handshake(rng, TLS::Protocol_Version::TLS_V10, *basic_creds, default_policy);
+   errors += basic_test_handshake(rng, TLS::Protocol_Version::TLS_V11, *basic_creds, default_policy);
+   errors += basic_test_handshake(rng, TLS::Protocol_Version::TLS_V12, *basic_creds, default_policy);
+
+   test_report("TLS", 4, errors);
 
    return errors;
    }

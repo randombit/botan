@@ -171,7 +171,8 @@ check_chain(const std::vector<X509_Certificate>& cert_path,
 
       if(!crl_p)
          {
-         status.insert(Certificate_Status_Code::NO_REVOCATION_DATA);
+         if(restrictions.require_revocation_information())
+            status.insert(Certificate_Status_Code::NO_REVOCATION_DATA);
          continue;
          }
 

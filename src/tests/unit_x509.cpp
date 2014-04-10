@@ -182,7 +182,7 @@ size_t test_x509()
 
    store.add_certificate(ca_cert);
 
-   Path_Validation_Restrictions restrictions;
+   Path_Validation_Restrictions restrictions(false);
 
    Path_Validation_Result result_u1 = x509_path_validate(user1_cert, restrictions, store);
    if(!result_u1.successful_validation())
