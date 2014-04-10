@@ -1,5 +1,12 @@
-Version 1.11.9, Not Yet Released
+Version 1.11.9, 2014-04-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+ * Fix a bug in primality testing introduced in 1.8.3 which caused
+   only a single random base, rather than a sequence of random bases,
+   to be used in the Miller-Rabin test. This increased the probability
+   that a non-prime would be accepted, for instance a 1024 bit number
+   would be incorrectly classed as prime with probability around
+   2^-40. Reported by Jeff Marrison.
 
  * X.509 path validation now returns a set of all errors that occurred
    during validation, rather than immediately returning the first
