@@ -13,6 +13,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <set>
 
 namespace Botan {
 
@@ -357,6 +358,8 @@ class Heartbeat_Support_Indicator : public Extension
 class Extensions
    {
    public:
+      std::set<Handshake_Extension_Type> extension_types() const;
+
       template<typename T>
       T* get() const
          {

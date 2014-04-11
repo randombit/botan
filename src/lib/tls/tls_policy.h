@@ -78,7 +78,7 @@ class BOTAN_DLL Policy
       /**
       * Attempt to negotiate the use of the heartbeat extension
       */
-      virtual bool negotiate_heartbeat_support() const { return false; }
+      virtual bool negotiate_heartbeat_support() const;
 
       /**
       * Allow renegotiation even if the counterparty doesn't
@@ -92,7 +92,7 @@ class BOTAN_DLL Policy
       /**
       * Allow servers to initiate a new handshake
       */
-      virtual bool allow_server_initiated_renegotiation() const { return true; }
+      virtual bool allow_server_initiated_renegotiation() const;
 
       /**
       * Return the group to use for ephemeral Diffie-Hellman key agreement

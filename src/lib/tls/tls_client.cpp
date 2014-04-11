@@ -209,18 +209,20 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
                              "Server replied with compression method we didn't send");
          }
 
-      if(!state.client_hello()->next_protocol_notification() &&
-         state.server_hello()->next_protocol_notification())
+      auto client_extn = state.client_hello()->extension_types();
+      auto server_extn = state.server_hello()->extension_types();
+
+      std::vector<Handshake_Extension_Type> diff;
+
+      std::set_difference(server_extn.begin(), server_extn.end(),
+                          client_extn.begin(), server_extn.end(),
+                          std::back_inserter(diff));
+
+      for(auto i : diff)
          {
          throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
-                             "Server sent next protocol but we didn't request it");
-         }
-
-      if(state.server_hello()->supports_session_ticket())
-         {
-         if(!state.client_hello()->supports_session_ticket())
-            throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
-                                "Server sent session ticket extension but we did not");
+                             "Server sent extension " + std::to_string(i) +
+                             " but we did not request it");
          }
 
       state.set_version(state.server_hello()->version());

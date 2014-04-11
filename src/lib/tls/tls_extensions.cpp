@@ -115,6 +115,14 @@ std::vector<byte> Extensions::serialize() const
    return buf;
    }
 
+std::set<Handshake_Extension_Type> Extensions::extension_types() const
+   {
+   std::set<Handshake_Extension_Type> offers;
+   for(auto i = extensions.begin(); i != extensions.end(); ++i)
+      offers.insert(i->first);
+   return offers;
+   }
+
 Server_Name_Indicator::Server_Name_Indicator(TLS_Data_Reader& reader,
                                              u16bit extension_size)
    {

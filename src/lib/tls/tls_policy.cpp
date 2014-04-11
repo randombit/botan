@@ -153,6 +153,16 @@ bool Policy::acceptable_ciphersuite(const Ciphersuite&) const
    return true;
    }
 
+bool Policy::negotiate_heartbeat_support() const
+   {
+   return false;
+   }
+
+bool Policy::allow_server_initiated_renegotiation() const
+   {
+   return true;
+   }
+
 namespace {
 
 class Ciphersuite_Preference_Ordering

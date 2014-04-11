@@ -149,6 +149,9 @@ class Client_Hello : public Handshake_Message
 
       void update_hello_cookie(const Hello_Verify_Request& hello_verify);
 
+      std::set<Handshake_Extension_Type> extension_types() const
+         { return m_extensions.extension_types(); }
+
       Client_Hello(Handshake_IO& io,
                    Handshake_Hash& hash,
                    Protocol_Version version,
@@ -250,6 +253,9 @@ class Server_Hello : public Handshake_Message
             return hb->peer_allowed_to_send();
          return false;
          }
+
+      std::set<Handshake_Extension_Type> extension_types() const
+         { return m_extensions.extension_types(); }
 
       Server_Hello(Handshake_IO& io,
                    Handshake_Hash& hash,
