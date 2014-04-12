@@ -197,7 +197,7 @@ std::vector<byte> SRP_Identifier::serialize() const
    }
 
 Renegotiation_Extension::Renegotiation_Extension(TLS_Data_Reader& reader,
-                                               u16bit extension_size)
+                                                 u16bit extension_size)
    {
    reneg_data = reader.get_range<byte>(1, 0, 255);
 

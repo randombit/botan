@@ -16,7 +16,7 @@ namespace TLS {
 
 Heartbeat_Message::Heartbeat_Message(const std::vector<byte>& buf)
    {
-   TLS_Data_Reader reader(buf);
+   TLS_Data_Reader reader("Heartbeat", buf);
 
    const byte type = reader.get_byte();
 

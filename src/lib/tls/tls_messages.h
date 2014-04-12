@@ -549,7 +549,7 @@ class New_Session_Ticket : public Handshake_Message
    private:
       std::vector<byte> serialize() const override;
 
-      u32bit m_ticket_lifetime_hint;
+      u32bit m_ticket_lifetime_hint = 0;
       std::vector<byte> m_ticket;
    };
 

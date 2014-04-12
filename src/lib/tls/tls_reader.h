@@ -1,6 +1,6 @@
 /*
 * TLS Data Reader
-* (C) 2010-2011 Jack Lloyd
+* (C) 2010-2011,2014 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -25,18 +25,18 @@ namespace TLS {
 class TLS_Data_Reader
    {
    public:
-      TLS_Data_Reader(const std::vector<byte>& buf_in) :
-         buf(buf_in), offset(0) {}
+      TLS_Data_Reader(const char* type, const std::vector<byte>& buf_in) :
+         m_typename(type), m_buf(buf_in), m_offset(0) {}
 
       void assert_done() const
          {
          if(has_remaining())
-            throw Decoding_Error("Extra bytes at end of message");
+            throw decode_error("Extra bytes at end of message");
          }
 
       size_t remaining_bytes() const
          {
-         return buf.size() - offset;
+         return m_buf.size() - m_offset;
          }
 
       bool has_remaining() const
@@ -47,31 +47,31 @@ class TLS_Data_Reader
       void discard_next(size_t bytes)
          {
          assert_at_least(bytes);
-         offset += bytes;
+         m_offset += bytes;
          }
 
       u16bit get_u32bit()
          {
          assert_at_least(4);
-         u16bit result = make_u32bit(buf[offset  ], buf[offset+1],
-                                     buf[offset+2], buf[offset+3]);
-         offset += 4;
+         u16bit result = make_u32bit(m_buf[m_offset  ], m_buf[m_offset+1],
+                                     m_buf[m_offset+2], m_buf[m_offset+3]);
+         m_offset += 4;
          return result;
          }
 
       u16bit get_u16bit()
          {
          assert_at_least(2);
-         u16bit result = make_u16bit(buf[offset], buf[offset+1]);
-         offset += 2;
+         u16bit result = make_u16bit(m_buf[m_offset], m_buf[m_offset+1]);
+         m_offset += 2;
          return result;
          }
 
       byte get_byte()
          {
          assert_at_least(1);
-         byte result = buf[offset];
-         offset += 1;
+         byte result = m_buf[m_offset];
+         m_offset += 1;
          return result;
          }
 
@@ -83,9 +83,9 @@ class TLS_Data_Reader
          Container result(num_elems);
 
          for(size_t i = 0; i != num_elems; ++i)
-            result[i] = load_be<T>(&buf[offset], i);
+            result[i] = load_be<T>(&m_buf[m_offset], i);
 
-         offset += num_elems * sizeof(T);
+         m_offset += num_elems * sizeof(T);
 
          return result;
          }
@@ -138,7 +138,7 @@ class TLS_Data_Reader
          else if(len_bytes == 2)
             return get_u16bit();
 
-         throw Decoding_Error("TLS_Data_Reader: Bad length size");
+         throw decode_error("Bad length size");
          }
 
       size_t get_num_elems(size_t len_bytes,
@@ -149,28 +149,33 @@ class TLS_Data_Reader
          const size_t byte_length = get_length_field(len_bytes);
 
          if(byte_length % T_size != 0)
-            throw Decoding_Error("TLS_Data_Reader: Size isn't multiple of T");
+            throw decode_error("Size isn't multiple of T");
 
          const size_t num_elems = byte_length / T_size;
 
          if(num_elems < min_elems || num_elems > max_elems)
-            throw Decoding_Error("TLS_Data_Reader: Range outside paramaters");
+            throw decode_error("Length field outside parameters");
 
          return num_elems;
          }
 
       void assert_at_least(size_t n) const
          {
-         if(buf.size() - offset < n)
-            {
-            throw Decoding_Error("TLS_Data_Reader: Expected " + std::to_string(n) +
-                                 " bytes remaining, only " + std::to_string(buf.size()-offset) +
-                                 " left");
-            }
+         if(m_buf.size() - m_offset < n)
+            throw decode_error("Expected " + std::to_string(n) +
+                               " bytes remaining, only " +
+                               std::to_string(m_buf.size()-m_offset) +
+                               " left");
          }
 
-      const std::vector<byte>& buf;
-      size_t offset;
+      Decode_Error decode_error(const std::string& why) const
+         {
+         return Decode_Error("Invalid " + std::string(m_typename) + ": " + why);
+         }
+
+      const char* m_typename;
+      const std::vector<byte>& m_buf;
+      size_t m_offset;
    };
 
 /**

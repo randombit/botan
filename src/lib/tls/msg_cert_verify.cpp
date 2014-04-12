@@ -54,7 +54,7 @@ Certificate_Verify::Certificate_Verify(Handshake_IO& io,
 Certificate_Verify::Certificate_Verify(const std::vector<byte>& buf,
                                        Protocol_Version version)
    {
-   TLS_Data_Reader reader(buf);
+   TLS_Data_Reader reader("CertificateVerify", buf);
 
    if(version.supports_negotiable_signature_algorithms())
       {

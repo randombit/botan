@@ -235,7 +235,7 @@ void Client_Hello::deserialize(const std::vector<byte>& buf)
    if(buf.size() < 41)
       throw Decoding_Error("Client_Hello: Packet corrupted");
 
-   TLS_Data_Reader reader(buf);
+   TLS_Data_Reader reader("ClientHello", buf);
 
    const byte major_version = reader.get_byte();
    const byte minor_version = reader.get_byte();

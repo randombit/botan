@@ -70,7 +70,7 @@ Server_Hello::Server_Hello(const std::vector<byte>& buf)
    if(buf.size() < 38)
       throw Decoding_Error("Server_Hello: Packet corrupted");
 
-   TLS_Data_Reader reader(buf);
+   TLS_Data_Reader reader("ServerHello", buf);
 
    const byte major_version = reader.get_byte();
    const byte minor_version = reader.get_byte();

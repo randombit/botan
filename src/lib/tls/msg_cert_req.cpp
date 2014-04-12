@@ -81,7 +81,7 @@ Certificate_Req::Certificate_Req(const std::vector<byte>& buf,
    if(buf.size() < 4)
       throw Decoding_Error("Certificate_Req: Bad certificate request");
 
-   TLS_Data_Reader reader(buf);
+   TLS_Data_Reader reader("CertificateRequest", buf);
 
    std::vector<byte> cert_type_codes = reader.get_range_vector<byte>(1, 1, 255);
 

@@ -148,7 +148,7 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<byte>& buf,
    if(buf.size() < 6)
       throw Decoding_Error("Server_Key_Exchange: Packet corrupted");
 
-   TLS_Data_Reader reader(buf);
+   TLS_Data_Reader reader("ServerKeyExchange", buf);
 
    /*
    * We really are just serializing things back to what they were

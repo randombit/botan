@@ -26,19 +26,17 @@ New_Session_Ticket::New_Session_Ticket(Handshake_IO& io,
    }
 
 New_Session_Ticket::New_Session_Ticket(Handshake_IO& io,
-                                       Handshake_Hash& hash) :
-   m_ticket_lifetime_hint(0)
+                                       Handshake_Hash& hash)
    {
    hash.update(io.send(*this));
    }
 
-New_Session_Ticket::New_Session_Ticket(const std::vector<byte>& buf) :
-   m_ticket_lifetime_hint(0)
+New_Session_Ticket::New_Session_Ticket(const std::vector<byte>& buf)
    {
    if(buf.size() < 6)
       throw Decoding_Error("Session ticket message too short to be valid");
 
-   TLS_Data_Reader reader(buf);
+   TLS_Data_Reader reader("SessionTicket", buf);
 
    m_ticket_lifetime_hint = reader.get_u32bit();
    m_ticket = reader.get_range<byte>(2, 0, 65535);

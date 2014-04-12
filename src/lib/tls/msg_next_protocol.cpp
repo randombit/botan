@@ -24,7 +24,7 @@ Next_Protocol::Next_Protocol(Handshake_IO& io,
 
 Next_Protocol::Next_Protocol(const std::vector<byte>& buf)
    {
-   TLS_Data_Reader reader(buf);
+   TLS_Data_Reader reader("NextProtocol", buf);
 
    m_protocol = reader.get_string(1, 0, 255);
 

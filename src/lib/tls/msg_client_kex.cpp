@@ -61,7 +61,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
       if(state.server_kex())
          {
-         TLS_Data_Reader reader(state.server_kex()->params());
+         TLS_Data_Reader reader("ClientKeyExchange", state.server_kex()->params());
          identity_hint = reader.get_string(2, 0, 65535);
          }
 
@@ -82,7 +82,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
       }
    else if(state.server_kex())
       {
-      TLS_Data_Reader reader(state.server_kex()->params());
+      TLS_Data_Reader reader("ClientKeyExchange", state.server_kex()->params());
 
       SymmetricKey psk;
 
@@ -309,7 +309,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
             }
          else
             {
-            TLS_Data_Reader reader(contents);
+            TLS_Data_Reader reader("ClientKeyExchange", contents);
             m_pre_master = decryptor.decrypt(reader.get_range<byte>(2, 0, 65535));
             }
 
@@ -327,7 +327,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
       }
    else
       {
-      TLS_Data_Reader reader(contents);
+      TLS_Data_Reader reader("ClientKeyExchange", contents);
 
       SymmetricKey psk;
 
