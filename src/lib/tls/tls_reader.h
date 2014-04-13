@@ -168,9 +168,9 @@ class TLS_Data_Reader
                                " left");
          }
 
-      Decode_Error decode_error(const std::string& why) const
+      Decoding_Error decode_error(const std::string& why) const
          {
-         return Decode_Error("Invalid " + std::string(m_typename) + ": " + why);
+         return Decoding_Error("Invalid " + std::string(m_typename) + ": " + why);
          }
 
       const char* m_typename;
