@@ -430,7 +430,7 @@ class BOTAN_DLL BigInt
      * @param rng a random number generator
      * @param min the minimum value
      * @param max the maximum value
-     * @return random integer between min and max
+     * @return random integer in [min,max)
      */
      static BigInt random_integer(RandomNumberGenerator& rng,
                                   const BigInt& min,

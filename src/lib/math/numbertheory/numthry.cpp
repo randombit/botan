@@ -13,128 +13,6 @@
 
 namespace Botan {
 
-namespace {
-
-/*
-* Miller-Rabin Primality Tester
-*/
-class MillerRabin_Test
-   {
-   public:
-      bool is_witness(const BigInt& nonce);
-      MillerRabin_Test(const BigInt& num);
-   private:
-      BigInt n, r, n_minus_1;
-      size_t s;
-      Fixed_Exponent_Power_Mod pow_mod;
-      Modular_Reducer reducer;
-   };
-
-/*
-* Miller-Rabin Test, as described in Handbook of Applied Cryptography
-* section 4.24
-*/
-bool MillerRabin_Test::is_witness(const BigInt& a)
-   {
-   if(a < 2 || a >= n_minus_1)
-      throw Invalid_Argument("Bad size for nonce in Miller-Rabin test");
-
-   BigInt y = pow_mod(a);
-   if(y == 1 || y == n_minus_1)
-      return false;
-
-   for(size_t i = 1; i != s; ++i)
-      {
-      y = reducer.square(y);
-
-      if(y == 1) // found a non-trivial square root
-         return true;
-
-      if(y == n_minus_1) // -1, trivial square root, so give up
-         return false;
-      }
-
-   return true; // fails Fermat test
-   }
-
-/*
-* Miller-Rabin Constructor
-*/
-MillerRabin_Test::MillerRabin_Test(const BigInt& num)
-   {
-   if(num.is_even() || num < 3)
-      throw Invalid_Argument("MillerRabin_Test: Invalid number for testing");
-
-   n = num;
-   n_minus_1 = n - 1;
-   s = low_zero_bits(n_minus_1);
-   r = n_minus_1 >> s;
-
-   pow_mod = Fixed_Exponent_Power_Mod(r, n);
-   reducer = Modular_Reducer(n);
-   }
-
-/*
-* Miller-Rabin Iterations
-*/
-size_t miller_rabin_test_iterations(size_t bits, size_t level)
-   {
-   struct mapping { size_t bits; size_t verify_iter; size_t check_iter; };
-
-   const mapping tests[] = {
-      {   50, 55, 25 },
-      {  100, 38, 22 },
-      {  160, 32, 18 },
-      {  163, 31, 17 },
-      {  168, 30, 16 },
-      {  177, 29, 16 },
-      {  181, 28, 15 },
-      {  185, 27, 15 },
-      {  190, 26, 15 },
-      {  195, 25, 14 },
-      {  201, 24, 14 },
-      {  208, 23, 14 },
-      {  215, 22, 13 },
-      {  222, 21, 13 },
-      {  231, 20, 13 },
-      {  241, 19, 12 },
-      {  252, 18, 12 },
-      {  264, 17, 12 },
-      {  278, 16, 11 },
-      {  294, 15, 10 },
-      {  313, 14,  9 },
-      {  334, 13,  8 },
-      {  360, 12,  8 },
-      {  392, 11,  7 },
-      {  430, 10,  7 },
-      {  479,  9,  6 },
-      {  542,  8,  6 },
-      {  626,  7,  5 },
-      {  746,  6,  4 },
-      {  926,  5,  3 },
-      { 1232,  4,  2 },
-      { 1853,  3,  2 },
-      {    0,  0,  0 }
-   };
-
-   for(size_t i = 0; tests[i].bits; ++i)
-      {
-      if(bits <= tests[i].bits)
-         {
-         if(level >= 2)
-            return tests[i].verify_iter;
-         else if(level == 1)
-            return tests[i].check_iter;
-         else if(level == 0)
-            return std::max<size_t>(tests[i].check_iter / 4, 1);
-         }
-      }
-
-   return level > 0 ? 2 : 1; // for large inputs
-   }
-
-}
-
 /*
 * Return the number of 0 bits at the end of n
 */
@@ -352,12 +230,35 @@ BigInt power_mod(const BigInt& base, const BigInt& exp, const BigInt& mod)
    return pow_mod.execute();
    }
 
+namespace {
+
+bool mr_witness(BigInt&& y,
+                const Modular_Reducer& reducer_n,
+                const BigInt& n_minus_1, size_t s)
+   {
+   if(y == 1 || y == n_minus_1)
+      return false;
+
+   for(size_t i = 1; i != s; ++i)
+      {
+      y = reducer_n.square(y);
+
+      if(y == 1) // found a non-trivial square root
+         return true;
+
+      if(y == n_minus_1) // -1, trivial square root, so give up
+         return false;
+      }
+
+   return true; // fails Fermat test
+   }
+
+}
+
 /*
 * Test for primaility using Miller-Rabin
 */
-bool primality_test(const BigInt& n,
-                    RandomNumberGenerator& rng,
-                    size_t level)
+bool check_prime(const BigInt& n, RandomNumberGenerator& rng)
    {
    if(n == 2)
       return true;
@@ -367,40 +268,26 @@ bool primality_test(const BigInt& n,
    // Fast path testing for small numbers (<= 65521)
    if(n <= PRIMES[PRIME_TABLE_SIZE-1])
       {
-      const word num = n.word_at(0);
+      const u16bit num = n.word_at(0);
 
-      for(size_t i = 0; PRIMES[i]; ++i)
-         {
-         if(num == PRIMES[i])
-            return true;
-         if(num < PRIMES[i])
-            return false;
-         }
-
-      return false;
+      return std::binary_search(PRIMES, PRIMES + PRIME_TABLE_SIZE, num);
       }
 
-   if(level > 2)
-      level = 2;
+   const size_t test_iterations = 20;
 
-   const size_t PREF_NONCE_BITS = 192;
+   const BigInt n_minus_1 = n - 1;
+   const size_t s = low_zero_bits(n_minus_1);
 
-   const size_t NONCE_BITS = std::min(n.bits() - 2, PREF_NONCE_BITS);
+   Fixed_Exponent_Power_Mod pow_mod(n_minus_1 >> s, n);
+   Modular_Reducer reducer(n);
 
-   MillerRabin_Test mr(n);
-
-   if(mr.is_witness(2))
-      return false;
-
-   const size_t tests = miller_rabin_test_iterations(n.bits(), level);
-
-   for(size_t i = 0; i != tests; ++i)
+   for(size_t i = 0; i != test_iterations; ++i)
       {
-      BigInt nonce;
-      while(nonce < 2 || nonce >= (n-1))
-         nonce.randomize(rng, NONCE_BITS);
+      const BigInt a = BigInt::random_integer(rng, 2, n_minus_1);
 
-      if(mr.is_witness(nonce))
+      BigInt y = pow_mod(a);
+
+      if(mr_witness(std::move(y), reducer, n_minus_1, s))
          return false;
       }
 

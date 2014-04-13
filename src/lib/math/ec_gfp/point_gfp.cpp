@@ -196,7 +196,8 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
    monty_sqr(z4, monty_sqr(coord_z));
    monty_mult(a_z4, curve.get_a_r(), z4);
 
-   M = 3 * monty_sqr(coord_x);
+   M = monty_sqr(coord_x);
+   M *= 3;
    M += a_z4;
    while(M >= p)
       M -= p;

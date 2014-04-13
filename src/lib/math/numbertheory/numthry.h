@@ -123,44 +123,12 @@ word BOTAN_DLL monty_inverse(word input);
 size_t BOTAN_DLL low_zero_bits(const BigInt& x);
 
 /**
-* Primality Testing
-* @param n a positive integer to test for primality
-* @param rng a random number generator
-* @param level how hard to test
-* @return true if all primality tests passed, otherwise false
-*/
-bool BOTAN_DLL primality_test(const BigInt& n,
-                              RandomNumberGenerator& rng,
-                              size_t level = 1);
-
-/**
-* Quickly check for primality
-* @param n a positive integer to test for primality
-* @param rng a random number generator
-* @return true if all primality tests passed, otherwise false
-*/
-inline bool quick_check_prime(const BigInt& n, RandomNumberGenerator& rng)
-   { return primality_test(n, rng, 0); }
-
-/**
 * Check for primality
 * @param n a positive integer to test for primality
 * @param rng a random number generator
 * @return true if all primality tests passed, otherwise false
 */
-inline bool check_prime(const BigInt& n, RandomNumberGenerator& rng)
-   { return primality_test(n, rng, 1); }
-
-/**
-* Verify primality - this function is slow but useful if you want to
-* ensure that a possibly malicious entity did not provide you with
-* something that 'looks like' a prime
-* @param n a positive integer to test for primality
-* @param rng a random number generator
-* @return true if all primality tests passed, otherwise false
-*/
-inline bool verify_prime(const BigInt& n, RandomNumberGenerator& rng)
-   { return primality_test(n, rng, 2); }
+bool BOTAN_DLL check_prime(const BigInt& n, RandomNumberGenerator& rng);
 
 /**
 * Randomly generate a prime

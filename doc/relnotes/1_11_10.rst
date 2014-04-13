@@ -1,0 +1,5 @@
+Version 1.11.10, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Miller-Rabin tests have changed to use a fixed number of iterations,
+  currently set to 20.
