@@ -1,6 +1,6 @@
 /*
 * Mlock Allocator
-* (C) 2012 Jack Lloyd
+* (C) 2012,2014 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -249,6 +249,10 @@ mlock_allocator::mlock_allocator() :
          m_pool = nullptr;
          throw std::runtime_error("Could not mlock " + std::to_string(m_poolsize) + " bytes");
          }
+
+#if defined(MADV_DONTDUMP)
+      ::madvise(m_pool, m_poolsize, MADV_DONTDUMP);
+#endif
 
       m_freelist.push_back(std::make_pair(0, m_poolsize));
       }
