@@ -209,7 +209,7 @@ a case where that is useful::
    Pipe pipe(new Base64_Decoder,
              get_cipher("AES-128", key, iv, DECRYPTION),
              new Fork(
-                0, // this message gets ciphertext
+                0, // this message gets plaintext
                 new MAC_Filter("HMAC(SHA-1)", mac_key)
              )
       );
