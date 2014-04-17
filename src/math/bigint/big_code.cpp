@@ -111,7 +111,7 @@ BigInt BigInt::decode(const byte buf[], size_t length, Base base)
       if(length % 2)
          {
          // Handle lack of leading 0
-         const char buf0_with_leading_0[2] = { '0', buf[0] };
+         const char buf0_with_leading_0[2] = { '0', static_cast<char>(buf[0]) };
          binary = hex_decode(buf0_with_leading_0, 2);
 
          binary += hex_decode(reinterpret_cast<const char*>(&buf[1]),
