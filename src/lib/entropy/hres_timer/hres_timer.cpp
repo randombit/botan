@@ -37,7 +37,6 @@ void High_Resolution_Timestamp::poll(Entropy_Accumulator& accum)
 
   STD_CHRONO_POLL(std::chrono::high_resolution_clock);
   STD_CHRONO_POLL(std::chrono::system_clock);
-  STD_CHRONO_POLL(std::chrono::steady_clock);
 
 #undef STD_CHRONO_POLL
 
