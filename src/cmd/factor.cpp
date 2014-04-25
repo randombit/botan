@@ -100,7 +100,7 @@ std::vector<BigInt> factorize(const BigInt& n_in,
 
    while(n != 1)
       {
-      if(check_prime(n, rng))
+      if(is_prime(n, rng))
          {
          factors.push_back(n);
          break;

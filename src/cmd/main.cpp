@@ -158,6 +158,7 @@ int main(int argc, char* argv[])
       CALL_APP(dsa_sign);
       CALL_APP(dsa_verify);
       CALL_APP(factor);
+      CALL_APP(is_prime);
       CALL_APP(fpe);
       CALL_APP(hash);
       CALL_APP(keygen);

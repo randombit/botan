@@ -1,5 +1,6 @@
 Version 1.11.10, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Miller-Rabin tests have changed to use a fixed number of iterations,
-  currently set to 20.
+* The Miller-Rabin primality test function now takes a parameter
+  allowing the user to directly specify the maximum false negative
+  probability they are willing to accept.

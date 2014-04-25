@@ -61,7 +61,7 @@ DL_Group::DL_Group(RandomNumberGenerator& rng,
 
       q = random_prime(rng, qbits);
       BigInt X;
-      while(p.bits() != pbits || !check_prime(p, rng))
+      while(p.bits() != pbits || !is_prime(p, rng))
          {
          X.randomize(rng, pbits);
          p = X - (X % (2*q) - 1);
@@ -159,12 +159,11 @@ bool DL_Group::verify_group(RandomNumberGenerator& rng,
    if((q != 0) && ((p - 1) % q != 0))
       return false;
 
-   if(!strong)
-      return true;
+   const size_t prob = (strong) ? 56 : 10;
 
-   if(!check_prime(p, rng))
+   if(!is_prime(p, rng, prob))
       return false;
-   if((q > 0) && !check_prime(q, rng))
+   if((q > 0) && !is_prime(q, rng, prob))
       return false;
    return true;
    }

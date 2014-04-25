@@ -126,9 +126,24 @@ size_t BOTAN_DLL low_zero_bits(const BigInt& x);
 * Check for primality
 * @param n a positive integer to test for primality
 * @param rng a random number generator
+* @param prob chance of false positive is bounded by 1/2**prob
+* @param is_random true if n was randomly chosen by us
 * @return true if all primality tests passed, otherwise false
 */
-bool BOTAN_DLL check_prime(const BigInt& n, RandomNumberGenerator& rng);
+bool BOTAN_DLL is_prime(const BigInt& n,
+                        RandomNumberGenerator& rng,
+                        size_t prob = 56,
+                        bool is_random = false);
+
+inline bool quick_check_prime(const BigInt& n, RandomNumberGenerator& rng)
+   { return is_prime(n, rng, 32); }
+
+inline bool check_prime(const BigInt& n, RandomNumberGenerator& rng)
+   { return is_prime(n, rng, 56); }
+
+inline bool verify_prime(const BigInt& n, RandomNumberGenerator& rng)
+   { return is_prime(n, rng, 80); }
+
 
 /**
 * Randomly generate a prime

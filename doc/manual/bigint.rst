@@ -74,23 +74,33 @@ Number theoretic functions available include:
   Returns the square root modulo a prime, that is, returns a number y
   such that (y*y) % p == x. Returns -1 if no such integer exists.
 
+.. cpp:function:: bool is_prime(BigInt n, RandomNumberGenerator& rng, \
+                                size_t prob = 56, double is_random = false)
+
+  Test *n* for primality using a probablistic algorithm (Miller-Rabin).  With
+  this algorithm, there is some non-zero probability that true will be returned
+  even if *n* is actually composite. Modifying *prob* allows you to decrease the
+  chance of such a false positive, at the cost of increased runtime. Sufficient
+  tests will be run such that the chance *n* is composite is no more than 1 in
+  2\ :sup:`prob`. Set *is_random* to true if (and only if) *n* was randomly
+  chosen (ie, there is no danger it was chosen maliciously) as far fewer tests
+  are needed in that case.
+
 .. cpp:function:: bool quick_check_prime(BigInt n, RandomNumberGenerator& rng)
 
 .. cpp:function:: bool check_prime(BigInt n, RandomNumberGenerator& rng)
 
 .. cpp:function:: bool verify_prime(BigInt n, RandomNumberGenerator& rng)
 
-  Three variations on primality testing. All take an integer to test along with
-  a random number generator, and return true if the integer seems like it might
-  be prime; there is a chance that this function will return true even with
-  a composite number. The probability decreases with the amount of work performed,
-  so it is much less likely that ``verify_prime`` will return a false positive
-  than ``check_prime`` will.
+  Three variations on *is_prime*, with probabilities set to 32, 56, and 80
+  respectively.
 
-.. cpp:function BigInt random_prime(RandomNumberGenerator& rng, \
-   size_t bits, BigInt coprime = 1, size_t equiv = 1, size_t equiv_mod = 2)
+ .. cpp:function:: BigInt random_prime(RandomNumberGenerator& rng, \
+                                       size_t bits, \
+                                       BigInt coprime = 1, \
+                                       size_t equiv = 1, \
+                                       size_t equiv_mod = 2)
 
   Return a random prime number of ``bits`` bits long that is
   relatively prime to ``coprime``, and equivalent to ``equiv`` modulo
   ``equiv_mod``.
-

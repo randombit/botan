@@ -253,12 +253,39 @@ bool mr_witness(BigInt&& y,
    return true; // fails Fermat test
    }
 
+size_t mr_test_iterations(size_t n_bits, size_t prob, bool random)
+   {
+   const size_t base = (prob + 2) / 2; // worst case 4^-t error rate
+
+   /*
+   * For randomly chosen numbers we can use the estimates from
+   * http://www.math.dartmouth.edu/~carlp/PDF/paper88.pdf‎
+   *
+   * These values are derived from the inequality for p(k,t) given on
+   * the second page.
+   */
+   if(random && prob <= 80)
+      {
+      if(n_bits >= 1536)
+         return 2; // < 2^-89
+      if(n_bits >= 1024)
+         return 4; // < 2^-89
+      if(n_bits >= 512)
+         return 5; // < 2^-80
+      if(n_bits >= 256)
+         return 11; // < 2^-80
+      }
+
+   return base;
+   }
+
 }
 
 /*
 * Test for primaility using Miller-Rabin
 */
-bool check_prime(const BigInt& n, RandomNumberGenerator& rng)
+bool is_prime(const BigInt& n, RandomNumberGenerator& rng,
+              size_t prob, bool is_random)
    {
    if(n == 2)
       return true;
@@ -273,7 +300,7 @@ bool check_prime(const BigInt& n, RandomNumberGenerator& rng)
       return std::binary_search(PRIMES, PRIMES + PRIME_TABLE_SIZE, num);
       }
 
-   const size_t test_iterations = 20;
+   const size_t test_iterations = mr_test_iterations(n.bits(), prob, is_random);
 
    const BigInt n_minus_1 = n - 1;
    const size_t s = low_zero_bits(n_minus_1);

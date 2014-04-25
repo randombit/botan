@@ -130,12 +130,12 @@ bool IF_Scheme_PrivateKey::check_key(RandomNumberGenerator& rng,
    if(n < 35 || n.is_even() || e < 2 || d < 2 || p < 3 || q < 3 || p*q != n)
       return false;
 
-   if(!strong)
-      return true;
-
    if(d1 != d % (p - 1) || d2 != d % (q - 1) || c != inverse_mod(q, p))
       return false;
-   if(!check_prime(p, rng) || !check_prime(q, rng))
+
+   const size_t prob = (strong) ? 56 : 12;
+
+   if(!is_prime(p, rng, prob) || !is_prime(q, rng, prob))
       return false;
    return true;
    }

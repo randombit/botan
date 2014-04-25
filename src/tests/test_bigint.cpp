@@ -329,17 +329,17 @@ size_t check_powmod(const std::vector<std::string>& args)
    }
 
 /* Make sure that n is prime or not prime, according to should_be_prime */
-size_t check_primetest(const std::vector<std::string>& args,
+size_t is_primetest(const std::vector<std::string>& args,
                        Botan::RandomNumberGenerator& rng)
    {
    BigInt n(args[0]);
    bool should_be_prime = (args[1] == "1");
 
-   bool is_prime = Botan::verify_prime(n, rng);
+   bool is_prime = Botan::is_prime(n, rng);
 
    if(is_prime != should_be_prime)
       {
-      std::cout << "ERROR: verify_prime" << std::endl;
+      std::cout << "ERROR: is_prime" << std::endl;
       std::cout << "n = " << n << std::endl;
       std::cout << is_prime << " != " << should_be_prime << std::endl;
       }
@@ -429,7 +429,7 @@ size_t test_bigint()
       else if(algorithm.find("ModExp") != std::string::npos)
          new_errors = check_powmod(substr);
       else if(algorithm.find("PrimeTest") != std::string::npos)
-         new_errors = check_primetest(substr, rng);
+         new_errors = is_primetest(substr, rng);
       else
          std::cout << "Unknown MPI test " << algorithm << std::endl;
 
