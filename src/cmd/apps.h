@@ -25,7 +25,6 @@ DEFINE_APP(dsa_verify);
 DEFINE_APP(factor);
 DEFINE_APP(fpe);
 DEFINE_APP(hash);
-DEFINE_APP(is_prime);
 DEFINE_APP(keygen);
 DEFINE_APP(ocsp_check);
 DEFINE_APP(pkcs10);
