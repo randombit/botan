@@ -680,12 +680,12 @@ class ModuleInfo(object):
     def compatible_os(self, os):
         return self.os == [] or os in self.os
 
-    def compatible_compiler(self, ccinfo, cc):
-        if self.cc != [] and cc not in self.cc:
+    def compatible_compiler(self, cc, arch):
+        if self.cc != [] and cc.basename not in self.cc:
             return False
 
         for isa in self.need_isa:
-            if isa not in ccinfo.isa_flags:
+            if cc.isa_flags_for(isa, arch) is None:
                 return False
 
         return True
@@ -831,6 +831,14 @@ class CompilerInfo(object):
             self.mach_opt_flags[proc] = (flags,regex)
 
         del self.mach_opt
+
+    def isa_flags_for(self, isa, arch):
+        if isa in self.isa_flags:
+            return self.isa_flags[isa]
+        arch_isa = '%s:%s' % (arch, isa)
+        if arch_isa in self.isa_flags:
+            return self.isa_flags[arch_isa]
+        return None
 
     """
     Return the shared library build flags, if any
@@ -1107,9 +1115,10 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     def get_isa_specific_flags(cc, isas):
         flags = []
         for isa in isas:
-            if isa not in cc.isa_flags:
-                raise Exception('Compiler does not support %s' % (isa))
-            flags.append(cc.isa_flags[isa])
+            flag = cc.isa_flags_for(isa, arch.basename)
+            if flag is None:
+                raise Exception('Compiler %s does not support %s' % (cc.basename, isa))
+            flags.append(flag)
         return '' if len(flags) == 0 else (' ' + ' '.join(sorted(list(flags))))
 
     def simd_dependencies():
@@ -1372,7 +1381,7 @@ def choose_modules_to_use(modules, archinfo, ccinfo, options):
 
         elif not module.compatible_os(options.os):
             cannot_use_because(modname, 'incompatible OS')
-        elif not module.compatible_compiler(ccinfo, options.compiler):
+        elif not module.compatible_compiler(ccinfo, archinfo.basename):
             cannot_use_because(modname, 'incompatible compiler')
         elif not module.compatible_cpu(archinfo, options):
             cannot_use_because(modname, 'incompatible CPU')
