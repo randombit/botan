@@ -33,6 +33,10 @@ Channel::Channel(std::function<void (const byte[], size_t)> output_fn,
    m_rng(rng),
    m_session_manager(session_manager)
    {
+   /* epoch 0 is plaintext, thus null cipher state */
+   m_write_cipher_states[0] = nullptr;
+   m_read_cipher_states[0] = nullptr;
+
    m_writebuf.reserve(reserved_io_buffer_size);
    m_readbuf.reserve(reserved_io_buffer_size);
    }

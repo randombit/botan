@@ -240,11 +240,9 @@ class BOTAN_DLL Channel
       std::unique_ptr<Handshake_State> m_active_state;
       std::unique_ptr<Handshake_State> m_pending_state;
 
-      /* cipher states for each epoch - epoch 0 is plaintext, thus null cipher state */
-      std::map<u16bit, std::shared_ptr<Connection_Cipher_State>> m_write_cipher_states =
-         { { 0, nullptr } };
-      std::map<u16bit, std::shared_ptr<Connection_Cipher_State>> m_read_cipher_states =
-         { { 0, nullptr } };
+      /* cipher states for each epoch */
+      std::map<u16bit, std::shared_ptr<Connection_Cipher_State>> m_write_cipher_states;
+      std::map<u16bit, std::shared_ptr<Connection_Cipher_State>> m_read_cipher_states;
 
       /* I/O buffers */
       secure_vector<byte> m_writebuf;
