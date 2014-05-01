@@ -40,6 +40,8 @@ class BOTAN_DLL Request
 class BOTAN_DLL Response
    {
    public:
+      Response() {}
+
       Response(const Certificate_Store& trusted_roots,
                const std::vector<byte>& response);
 

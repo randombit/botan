@@ -22,6 +22,8 @@ namespace HTTP {
 struct Response
    {
    public:
+      Response() : m_status_code(0), m_status_message("Uninitialized") {}
+
       Response(unsigned int status_code, const std::string& status_message,
                const std::vector<byte>& body,
                const std::map<std::string, std::string>& headers) :
