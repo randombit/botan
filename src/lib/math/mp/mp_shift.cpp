@@ -1,6 +1,6 @@
 /*
 * MP Shift Algorithms
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2014 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -19,8 +19,7 @@ void bigint_shl1(word x[], size_t x_size, size_t word_shift, size_t bit_shift)
    {
    if(word_shift)
       {
-      for(size_t j = 1; j != x_size + 1; ++j)
-         x[(x_size - j) + word_shift] = x[x_size - j];
+      copy_mem(x + word_shift, x, x_size);
       clear_mem(x, word_shift);
       }
 
