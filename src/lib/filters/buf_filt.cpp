@@ -55,7 +55,7 @@ void Buffered_Filter::write(const byte input[], size_t input_size)
 
       buffer_pos -= total_to_consume;
 
-      copy_mem(&buffer[0], &buffer[total_to_consume], buffer_pos);
+      copy_mem(&buffer[0], &buffer[0] + total_to_consume, buffer_pos);
       }
 
    if(input_size >= final_minimum)
