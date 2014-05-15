@@ -113,6 +113,12 @@
 
 #endif
 
+#if defined(_MSC_VER)
+  #define BOTAN_CURRENT_FUNCTION __FUNCTION__
+#else
+  #define BOTAN_CURRENT_FUNCTION __func__
+#endif
+
 #if !defined(BOTAN_DEPRECATED)
   #define BOTAN_DEPRECATED(msg)
 #endif

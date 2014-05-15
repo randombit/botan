@@ -29,7 +29,7 @@ void BOTAN_DLL assertion_failure(const char* expr_str,
       if(!(expr))                                         \
          Botan::assertion_failure(#expr,                  \
                                   assertion_made,         \
-                                  __func__,               \
+                                  BOTAN_CURRENT_FUNCTION, \
                                   __FILE__,               \
                                   __LINE__);              \
    } while(0)
@@ -42,7 +42,7 @@ void BOTAN_DLL assertion_failure(const char* expr_str,
      if((expr1) != (expr2))                                \
        Botan::assertion_failure(#expr1 " == " #expr2,      \
                                   assertion_made,          \
-                                  __func__,                \
+                                  BOTAN_CURRENT_FUNCTION,  \
                                   __FILE__,                \
                                   __LINE__);               \
    } while(0)
@@ -55,7 +55,7 @@ void BOTAN_DLL assertion_failure(const char* expr_str,
      if((expr1) && !(expr2))                               \
        Botan::assertion_failure(#expr1 " implies " #expr2, \
                                 msg,                       \
-                                  __func__,                \
+                                  BOTAN_CURRENT_FUNCTION,  \
                                   __FILE__,                \
                                   __LINE__);               \
    } while(0)
@@ -68,7 +68,7 @@ void BOTAN_DLL assertion_failure(const char* expr_str,
       if(static_cast<bool>(ptr) == false)                  \
          Botan::assertion_failure(#ptr " is not null",     \
                                   "",                      \
-                                  __func__,                \
+                                  BOTAN_CURRENT_FUNCTION,  \
                                   __FILE__,                \
                                   __LINE__);               \
    } while(0)
