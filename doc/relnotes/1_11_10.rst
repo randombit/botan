@@ -1,6 +1,11 @@
 Version 1.11.10, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Fixed a bug in CCM mode which caused it to produce incorrect tags
+  when used with a value of L other than 2. This affected CCM TLS
+  ciphersuites, which use L=3. Thanks to Manuel Pégourié-Gonnard for
+  the anaylsis and patch. Bugzilla 270.
+
 * The Miller-Rabin primality test function now takes a parameter
   allowing the user to directly specify the maximum false negative
   probability they are willing to accept.

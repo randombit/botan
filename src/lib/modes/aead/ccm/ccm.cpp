@@ -118,7 +118,7 @@ void CCM_Mode::encode_length(size_t len, byte out[])
    BOTAN_ASSERT(len_bytes < sizeof(size_t), "Length field fits");
 
    for(size_t i = 0; i != len_bytes; ++i)
-      out[i] = get_byte(sizeof(size_t)-i, len);
+      out[len_bytes-1-i] = get_byte(sizeof(size_t)-1-i, len);
 
    BOTAN_ASSERT((len >> (len_bytes*8)) == 0, "Message length fits in field");
    }
