@@ -60,69 +60,6 @@ std::vector<std::string> parse(const std::string& line)
    return substr;
    }
 
-size_t test_make_prime()
-   {
-   AutoSeeded_RNG rng;
-
-   std::set<BigInt> primes;
-
-   std::map<int, int> bit_count;
-
-   int not_new = 0;
-
-   while(primes.size() < 10000)
-      {
-      u32bit start_cnt = primes.size();
-
-      u32bit bits = 18;
-
-      if(rng.next_byte() % 128 == 0)
-         bits -= rng.next_byte() % (bits-2);
-
-      bit_count[bits]++;
-
-      //std::cout << "random_prime(" << bits << ")\n";
-
-      BigInt p = random_prime(rng, bits);
-
-      if(p.bits() != bits)
-         {
-         std::cout << "Asked for " << bits << " got " << p
-                   << " " << p.bits() << " bits\n";
-         return 1;
-         }
-
-      primes.insert(random_prime(rng, bits));
-
-      if(primes.size() != start_cnt)
-         std::cout << primes.size() << "\n";
-      else
-         not_new++;
-
-      //std::cout << "miss: " << not_new << "\n";
-
-      if(not_new % 100000 == 0)
-         {
-         for(std::map<int, int>::iterator i = bit_count.begin();
-             i != bit_count.end(); ++i)
-            std::cout << "bit_count[" << i->first << "] = "
-                      << i->second << "\n";
-         std::copy(primes.begin(), primes.end(),
-                   std::ostream_iterator<BigInt>(std::cout, " "));
-         }
-      }
-
-   std::cout << "Generated all? primes\n";
-   /*
-   for(u32bit j = 0; j != PRIME_TABLE_SIZE; ++j)
-      {
-      if(primes.count(PRIMES[j]) != 1)
-         std::cout << "Missing " << PRIMES[j] << "\n";
-      }
-   */
-   return 0;
-   }
-
 // c==expected, d==a op b, e==a op= b
 size_t results(std::string op,
                const BigInt& a, const BigInt& b,
@@ -441,8 +378,6 @@ size_t test_bigint()
          std::cout << "ERROR: BigInt " << algorithm << " failed test #"
                    << std::dec << alg_count << std::endl;
       }
-
-   //total_errors += test_make_prime();
 
    return total_errors;
    }
