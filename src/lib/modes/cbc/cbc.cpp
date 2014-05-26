@@ -99,15 +99,15 @@ void CBC_Encryption::update(secure_vector<byte>& buffer, size_t offset)
    BOTAN_ASSERT(sz % BS == 0, "CBC input is full blocks");
    const size_t blocks = sz / BS;
 
+   const byte* prev_block = state_ptr();
+
    if(blocks)
       {
-      xor_buf(&buf[0], state_ptr(), BS);
-      cipher().encrypt(&buf[0]);
-
-      for(size_t i = 1; i != blocks; ++i)
+      for(size_t i = 0; i != blocks; ++i)
          {
-         xor_buf(&buf[BS*i], &buf[BS*(i-1)], BS);
+         xor_buf(&buf[BS*i], prev_block, BS);
          cipher().encrypt(&buf[BS*i]);
+         prev_block = &buf[BS*i];
          }
 
       state().assign(&buf[BS*(blocks-1)], &buf[BS*blocks]);
@@ -267,6 +267,7 @@ void CTS_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
    if(sz % BS == 0)
       {
       // swap last two blocks
+
       for(size_t i = 0; i != BS; ++i)
          std::swap(buffer[buffer.size()-BS+i], buffer[buffer.size()-2*BS+i]);
 
@@ -283,21 +284,17 @@ void CTS_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
       update(buffer, offset);
 
       cipher().decrypt(&last[0]);
+
       xor_buf(&last[0], &last[BS], final_bytes - BS);
 
       for(size_t i = 0; i != final_bytes - BS; ++i)
-         {
-         last[i] ^= last[i + BS];
-         last[i + BS] ^= last[i];
-         last[i] ^= last[i + BS];
-         }
+         std::swap(last[i], last[i + BS]);
 
       cipher().decrypt(&last[0]);
       xor_buf(&last[0], state_ptr(), BS);
 
       buffer += last;
       }
-
    }
 
 }
