@@ -5,8 +5,8 @@
 * Distributed under the terms of the Botan license
 */
 
-#ifndef BOTAN_RFC6979_GENERATOR__
-#define BOTAN_RFC6979_GENERATOR__
+#ifndef BOTAN_RFC6979_GENERATOR_H__
+#define BOTAN_RFC6979_GENERATOR_H__
 
 #include <botan/bigint.h>
 #include <string>
