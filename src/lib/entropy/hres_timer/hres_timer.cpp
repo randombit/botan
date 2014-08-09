@@ -1,6 +1,6 @@
 /*
 * High Resolution Timestamp Entropy Source
-* (C) 1999-2009,2011 Jack Lloyd
+* (C) 1999-2009,2011,2014 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -29,25 +29,6 @@ void High_Resolution_Timestamp::poll(Entropy_Accumulator& accum)
    // Don't count any timestamps as contributing any entropy
    const double ESTIMATED_ENTROPY_PER_BYTE = 0.0;
 
-#define STD_CHRONO_POLL(clock)                                  \
-   do {                                                         \
-      auto timestamp = clock::now().time_since_epoch().count(); \
-      accum.add(timestamp, ESTIMATED_ENTROPY_PER_BYTE);         \
-   } while(0)
-
-  STD_CHRONO_POLL(std::chrono::high_resolution_clock);
-  STD_CHRONO_POLL(std::chrono::system_clock);
-
-#undef STD_CHRONO_POLL
-
-#if defined(BOTAN_TARGET_OS_HAS_QUERY_PERF_COUNTER)
-   {
-   LARGE_INTEGER tv;
-   ::QueryPerformanceCounter(&tv);
-   accum.add(tv.QuadPart, ESTIMATED_ENTROPY_PER_BYTE);
-   }
-#endif
-
 #if defined(BOTAN_TARGET_OS_HAS_CLOCK_GETTIME)
 
 #define CLOCK_GETTIME_POLL(src)                              \
@@ -61,24 +42,12 @@ void High_Resolution_Timestamp::poll(Entropy_Accumulator& accum)
    CLOCK_GETTIME_POLL(CLOCK_REALTIME);
 #endif
 
-#if defined(CLOCK_REALTIME_COARSE)
-   CLOCK_GETTIME_POLL(CLOCK_REALTIME_COARSE);
-#endif
-
 #if defined(CLOCK_MONOTONIC)
    CLOCK_GETTIME_POLL(CLOCK_MONOTONIC);
 #endif
 
-#if defined(CLOCK_MONOTONIC_COARSE)
-   CLOCK_GETTIME_POLL(CLOCK_MONOTONIC_COARSE);
-#endif
-
 #if defined(CLOCK_MONOTONIC_RAW)
    CLOCK_GETTIME_POLL(CLOCK_MONOTONIC_RAW);
-#endif
-
-#if defined(CLOCK_BOOTTIME)
-   CLOCK_GETTIME_POLL(CLOCK_BOOTTIME);
 #endif
 
 #if defined(CLOCK_PROCESS_CPUTIME_ID)
@@ -90,6 +59,19 @@ void High_Resolution_Timestamp::poll(Entropy_Accumulator& accum)
 #endif
 
 #undef CLOCK_GETTIME_POLL
+
+#else
+
+#define STD_CHRONO_POLL(clock)                                  \
+   do {                                                         \
+      auto timestamp = clock::now().time_since_epoch().count(); \
+      accum.add(timestamp, ESTIMATED_ENTROPY_PER_BYTE);         \
+   } while(0)
+
+  STD_CHRONO_POLL(std::chrono::high_resolution_clock);
+  STD_CHRONO_POLL(std::chrono::system_clock);
+
+#undef STD_CHRONO_POLL
 
 #endif
 
@@ -129,6 +111,14 @@ void High_Resolution_Timestamp::poll(Entropy_Accumulator& accum)
 
    accum.add(rtc, ESTIMATED_ENTROPY_PER_BYTE);
 
+#endif
+
+#if defined(BOTAN_TARGET_OS_HAS_QUERY_PERF_COUNTER)
+   {
+   LARGE_INTEGER tv;
+   ::QueryPerformanceCounter(&tv);
+   accum.add(tv.QuadPart, ESTIMATED_ENTROPY_PER_BYTE);
+   }
 #endif
    }
 
