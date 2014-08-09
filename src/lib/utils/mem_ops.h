@@ -27,7 +27,7 @@ BOTAN_DLL void zero_mem(void* ptr, size_t n);
 */
 template<typename T> inline void clear_mem(T* ptr, size_t n)
    {
-   zero_mem(ptr, sizeof(T)*n);
+   std::memset(ptr, 0, sizeof(T)*n);
    }
 
 /**

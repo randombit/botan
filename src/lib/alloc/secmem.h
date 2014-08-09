@@ -57,7 +57,7 @@ class secure_allocator
 
       void deallocate(pointer p, size_type n)
          {
-         clear_mem(p, n);
+         zero_mem(p, n);
 
 #if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
          if(mlock_allocator::instance().deallocate(p, n, sizeof(T)))
