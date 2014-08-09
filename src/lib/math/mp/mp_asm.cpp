@@ -23,6 +23,8 @@ word bigint_add2_nc(word x[], size_t x_size, const word y[], size_t y_size)
    {
    word carry = 0;
 
+   BOTAN_ASSERT(x_size >= y_size, "Expected sizes");
+
    const size_t blocks = y_size - (y_size % 8);
 
    for(size_t i = 0; i != blocks; i += 8)
@@ -88,6 +90,8 @@ word bigint_sub2(word x[], size_t x_size, const word y[], size_t y_size)
    {
    word borrow = 0;
 
+   BOTAN_ASSERT(x_size >= y_size, "Expected sizes");
+
    const size_t blocks = y_size - (y_size % 8);
 
    for(size_t i = 0; i != blocks; i += 8)
@@ -117,8 +121,7 @@ void bigint_sub2_rev(word x[],  const word y[], size_t y_size)
    for(size_t i = blocks; i != y_size; ++i)
       x[i] = word_sub(y[i], x[i], &borrow);
 
-   if(borrow)
-      throw Internal_Error("bigint_sub2_rev: x >= y");
+   BOTAN_ASSERT(!borrow, "y must be greater than x");
    }
 
 /*
@@ -128,6 +131,8 @@ word bigint_sub3(word z[], const word x[], size_t x_size,
                            const word y[], size_t y_size)
    {
    word borrow = 0;
+
+   BOTAN_ASSERT(x_size >= y_size, "Expected sizes");
 
    const size_t blocks = y_size - (y_size % 8);
 
