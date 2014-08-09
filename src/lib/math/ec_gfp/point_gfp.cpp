@@ -2,85 +2,36 @@
 * Point arithmetic on elliptic curves over GF(p)
 *
 * (C) 2007 Martin Doering, Christoph Ludwig, Falko Strenzke
-*     2008-2011,2012 Jack Lloyd
+*     2008-2011,2012,2014 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
 
 #include <botan/point_gfp.h>
 #include <botan/numthry.h>
-#include <botan/reducer.h>
-#include <botan/internal/mp_core.h>
 
 namespace Botan {
 
 PointGFp::PointGFp(const CurveGFp& curve) :
-   curve(curve), ws(2 * (curve.get_p_words() + 2))
+   curve(curve),
+   coord_x(0),
+   coord_y(1),
+   coord_z(0)
    {
-   coord_x = 0;
-   coord_y = monty_mult(1, curve.get_r2());
-   coord_z = 0;
+   curve.to_rep(coord_x, ws);
+   curve.to_rep(coord_y, ws);
+   curve.to_rep(coord_z, ws);
    }
 
 PointGFp::PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y) :
-   curve(curve), ws(2 * (curve.get_p_words() + 2))
+   curve(curve),
+   coord_x(x),
+   coord_y(y),
+   coord_z(1)
    {
-   coord_x = monty_mult(x, curve.get_r2());
-   coord_y = monty_mult(y, curve.get_r2());
-   coord_z = monty_mult(1, curve.get_r2());
-   }
-
-// Montgomery multiplication
-void PointGFp::monty_mult(BigInt& z, const BigInt& x, const BigInt& y) const
-   {
-   //assert(&z != &x && &z != &y);
-
-   if(x.is_zero() || y.is_zero())
-      {
-      z = 0;
-      return;
-      }
-
-   const BigInt& p = curve.get_p();
-   const size_t p_size = curve.get_p_words();
-   const word p_dash = curve.get_p_dash();
-
-   const size_t output_size = 2*p_size + 1;
-
-   z.grow_to(output_size);
-   z.clear();
-
-   bigint_monty_mul(z.mutable_data(), output_size,
-                    x.data(), x.size(), x.sig_words(),
-                    y.data(), y.size(), y.sig_words(),
-                    p.data(), p_size, p_dash,
-                    &ws[0]);
-   }
-
-// Montgomery squaring
-void PointGFp::monty_sqr(BigInt& z, const BigInt& x) const
-   {
-   //assert(&z != &x);
-
-   if(x.is_zero())
-      {
-      z = 0;
-      return;
-      }
-
-   const BigInt& p = curve.get_p();
-   const size_t p_size = curve.get_p_words();
-   const word p_dash = curve.get_p_dash();
-
-   const size_t output_size = 2*p_size + 1;
-
-   z.grow_to(output_size);
-   z.clear();
-
-   bigint_monty_sqr(z.mutable_data(), output_size,
-                    x.data(), x.size(), x.sig_words(),
-                    p.data(), p_size, p_dash,
-                    &ws[0]);
+   curve.to_rep(coord_x, ws);
+   curve.to_rep(coord_y, ws);
+   curve.to_rep(coord_z, ws);
    }
 
 // Point addition
@@ -109,13 +60,13 @@ void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
    BigInt& H = ws_bn[6];
    BigInt& r = ws_bn[7];
 
-   monty_sqr(rhs_z2, rhs.coord_z);
-   monty_mult(U1, coord_x, rhs_z2);
-   monty_mult(S1, coord_y, monty_mult(rhs.coord_z, rhs_z2));
+   curve_sqr(rhs_z2, rhs.coord_z);
+   curve_mult(U1, coord_x, rhs_z2);
+   curve_mult(S1, coord_y, curve_mult(rhs.coord_z, rhs_z2));
 
-   monty_sqr(lhs_z2, coord_z);
-   monty_mult(U2, rhs.coord_x, lhs_z2);
-   monty_mult(S2, rhs.coord_y, monty_mult(coord_z, lhs_z2));
+   curve_sqr(lhs_z2, coord_z);
+   curve_mult(U2, rhs.coord_x, lhs_z2);
+   curve_mult(S2, rhs.coord_y, curve_mult(coord_z, lhs_z2));
 
    H = U2;
    H -= U1;
@@ -139,13 +90,13 @@ void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
       return;
       }
 
-   monty_sqr(U2, H);
+   curve_sqr(U2, H);
 
-   monty_mult(S2, U2, H);
+   curve_mult(S2, U2, H);
 
-   U2 = monty_mult(U1, U2);
+   U2 = curve_mult(U1, U2);
 
-   monty_sqr(coord_x, r);
+   curve_sqr(coord_x, r);
    coord_x -= S2;
    coord_x -= (U2 << 1);
    while(coord_x.is_negative())
@@ -155,12 +106,12 @@ void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
    if(U2.is_negative())
       U2 += p;
 
-   monty_mult(coord_y, r, U2);
-   coord_y -= monty_mult(S1, S2);
+   curve_mult(coord_y, r, U2);
+   coord_y -= curve_mult(S1, S2);
    if(coord_y.is_negative())
       coord_y += p;
 
-   monty_mult(coord_z, monty_mult(coord_z, rhs.coord_z), H);
+   curve_mult(coord_z, curve_mult(coord_z, rhs.coord_z), H);
    }
 
 // *this *= 2
@@ -186,28 +137,28 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
    BigInt& y = ws_bn[7];
    BigInt& z = ws_bn[8];
 
-   monty_sqr(y_2, coord_y);
+   curve_sqr(y_2, coord_y);
 
-   monty_mult(S, coord_x, y_2);
+   curve_mult(S, coord_x, y_2);
    S <<= 2; // * 4
    while(S >= p)
       S -= p;
 
-   monty_sqr(z4, monty_sqr(coord_z));
-   monty_mult(a_z4, curve.get_a_r(), z4);
+   curve_sqr(z4, curve_sqr(coord_z));
+   curve_mult(a_z4, curve.get_a_rep(), z4);
 
-   M = monty_sqr(coord_x);
+   M = curve_sqr(coord_x);
    M *= 3;
    M += a_z4;
    while(M >= p)
       M -= p;
 
-   monty_sqr(x, M);
+   curve_sqr(x, M);
    x -= (S << 1);
    while(x.is_negative())
       x += p;
 
-   monty_sqr(U, y_2);
+   curve_sqr(U, y_2);
    U <<= 3;
    while(U >= p)
       U -= p;
@@ -216,12 +167,12 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
    while(S.is_negative())
       S += p;
 
-   monty_mult(y, M, S);
+   curve_mult(y, M, S);
    y -= U;
    if(y.is_negative())
       y += p;
 
-   monty_mult(z, coord_y, coord_z);
+   curve_mult(z, coord_y, coord_z);
    z <<= 1;
    if(z >= p)
       z -= p;
@@ -388,6 +339,8 @@ PointGFp operator*(const BigInt& scalar, const PointGFp& point)
    if(scalar.is_negative())
       H.negate();
 
+   //BOTAN_ASSERT(H.on_the_curve(), "Fault detected");
+
    return H;
 #endif
    }
@@ -397,13 +350,11 @@ BigInt PointGFp::get_affine_x() const
    if(is_zero())
       throw Illegal_Transformation("Cannot convert zero point to affine");
 
-   const BigInt& r2 = curve.get_r2();
-
-   BigInt z2 = monty_sqr(coord_z);
+   BigInt z2 = curve_sqr(coord_z);
+   curve.from_rep(z2, ws);
    z2 = inverse_mod(z2, curve.get_p());
 
-   z2 = monty_mult(z2, r2);
-   return monty_mult(coord_x, z2);
+   return curve_mult(z2, coord_x);
    }
 
 BigInt PointGFp::get_affine_y() const
@@ -411,12 +362,11 @@ BigInt PointGFp::get_affine_y() const
    if(is_zero())
       throw Illegal_Transformation("Cannot convert zero point to affine");
 
-   const BigInt& r2 = curve.get_r2();
-
-   BigInt z3 = monty_mult(coord_z, monty_sqr(coord_z));
+   BigInt z3 = curve_mult(coord_z, curve_sqr(coord_z));
    z3 = inverse_mod(z3, curve.get_p());
-   z3 = monty_mult(z3, r2);
-   return monty_mult(coord_y, z3);
+   curve.to_rep(z3, ws);
+
+   return curve_mult(z3, coord_y);
    }
 
 bool PointGFp::on_the_curve() const
@@ -427,32 +377,25 @@ bool PointGFp::on_the_curve() const
    If somehow the state is corrupted, which suggests a fault attack
    (or internal computational error), then return false.
    */
-
    if(is_zero())
       return true;
 
-   BigInt y2 = monty_mult(monty_sqr(coord_y), 1);
-   BigInt x3 = monty_mult(coord_x, monty_sqr(coord_x));
-
-   BigInt ax = monty_mult(coord_x, curve.get_a_r());
-
-   const BigInt& b_r = curve.get_b_r();
-
-   BigInt z2 = monty_sqr(coord_z);
+   const BigInt y2 = curve.from_rep(curve_sqr(coord_y), ws);
+   const BigInt x3 = curve_mult(coord_x, curve_sqr(coord_x));
+   const BigInt ax = curve_mult(coord_x, curve.get_a_rep());
+   const BigInt z2 = curve_sqr(coord_z);
 
    if(coord_z == z2) // Is z equal to 1 (in Montgomery form)?
       {
-      if(y2 != monty_mult(x3 + ax + b_r, 1))
+      if(y2 != curve.from_rep(x3 + ax + curve.get_b_rep(), ws))
          return false;
       }
 
-   BigInt z3 = monty_mult(coord_z, z2);
+   const BigInt z3 = curve_mult(coord_z, z2);
+   const BigInt ax_z4 = curve_mult(ax, curve_sqr(z2));
+   const BigInt b_z6 = curve_mult(curve.get_b_rep(), curve_sqr(z3));
 
-   BigInt ax_z4 = monty_mult(ax, monty_sqr(z2));
-
-   BigInt b_z6 = monty_mult(b_r, monty_sqr(z3));
-
-   if(y2 != monty_mult(x3 + ax_z4 + b_z6, 1))
+   if(y2 != curve.from_rep(x3 + ax_z4 + b_z6, ws))
       return false;
 
    return true;
@@ -525,7 +468,7 @@ secure_vector<byte> EC2OSP(const PointGFp& point, byte format)
       return result;
       }
    else
-      throw Invalid_Argument("illegal point encoding format specification");
+      throw Invalid_Argument("EC2OSP illegal point encoding");
    }
 
 namespace {
@@ -544,7 +487,7 @@ BigInt decompress_point(bool yMod2,
    BigInt z = ressol(g, curve.get_p());
 
    if(z < 0)
-      throw Illegal_Point("error during decompression");
+      throw Illegal_Point("error during EC point decompression");
 
    if(z.get_bit(0) != yMod2)
       z = curve.get_p() - z;

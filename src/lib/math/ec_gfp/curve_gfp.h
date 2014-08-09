@@ -2,7 +2,7 @@
 * Elliptic curves over GF(p)
 *
 * (C) 2007 Martin Doering, Christoph Ludwig, Falko Strenzke
-*     2010-2011,2012 Jack Lloyd
+*     2010-2011,2012,2014 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -11,8 +11,39 @@
 #define BOTAN_GFP_CURVE_H__
 
 #include <botan/numthry.h>
+#include <memory>
 
 namespace Botan {
+
+class CurveGFp_Repr
+   {
+   public:
+      virtual ~CurveGFp_Repr() {}
+
+      virtual const BigInt& get_p() const = 0;
+      virtual const BigInt& get_a() const = 0;
+      virtual const BigInt& get_b() const = 0;
+
+      /*
+      * Returns to_curve_rep(get_a())
+      */
+      virtual const BigInt& get_a_rep() const = 0;
+
+      /*
+      * Returns to_curve_rep(get_b())
+      */
+      virtual const BigInt& get_b_rep() const = 0;
+
+      virtual void to_curve_rep(BigInt& x, secure_vector<word>& ws) const = 0;
+
+      virtual void from_curve_rep(BigInt& x, secure_vector<word>& ws) const = 0;
+
+      virtual void curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
+                             secure_vector<word>& ws) const = 0;
+
+      virtual void curve_sqr(BigInt& z, const BigInt& x,
+                             secure_vector<word>& ws) const = 0;
+   };
 
 /**
 * This class represents an elliptic curve over GF(p)
@@ -33,17 +64,8 @@ class BOTAN_DLL CurveGFp
       * @param b second coefficient
       */
       CurveGFp(const BigInt& p, const BigInt& a, const BigInt& b) :
-         m_p(p),
-         m_a(a),
-         m_b(b),
-         m_p_words(m_p.sig_words()),
-         m_p_dash(monty_inverse(m_p.word_at(0)))
+         m_repr(choose_repr(p, a, b))
          {
-         const BigInt r = BigInt::power_of_2(m_p_words * BOTAN_MP_WORD_BITS);
-
-         m_r2  = (r * r) % p;
-         m_a_r = (a * r) % p;
-         m_b_r = (b * r) % p;
          }
 
       CurveGFp(const CurveGFp&) = default;
@@ -53,93 +75,89 @@ class BOTAN_DLL CurveGFp
       /**
       * @return curve coefficient a
       */
-      const BigInt& get_a() const { return m_a; }
+      const BigInt& get_a() const { return m_repr->get_a(); }
 
       /**
       * @return curve coefficient b
       */
-      const BigInt& get_b() const { return m_b; }
+      const BigInt& get_b() const { return m_repr->get_b(); }
 
       /**
       * Get prime modulus of the field of the curve
       * @return prime modulus of the field of the curve
       */
-      const BigInt& get_p() const { return m_p; }
+      const BigInt& get_p() const { return m_repr->get_p(); }
 
-      /**
-      * @return Montgomery parameter r^2 % p
-      */
-      const BigInt& get_r2() const { return m_r2; }
+      const BigInt& get_a_rep() const { return m_repr->get_a_rep(); }
 
-      /**
-      * @return a * r mod p
-      */
-      const BigInt& get_a_r() const { return m_a_r; }
+      const BigInt& get_b_rep() const { return m_repr->get_b_rep(); }
 
-      /**
-      * @return b * r mod p
-      */
-      const BigInt& get_b_r() const { return m_b_r; }
-
-      /**
-      * @return Montgomery parameter p-dash
-      */
-      word get_p_dash() const { return m_p_dash; }
-
-      /**
-      * @return p.sig_words()
-      */
-      size_t get_p_words() const { return m_p_words; }
-
-      /**
-      * swaps the states of *this and other, does not throw
-      * @param other curve to swap values with
-      */
-      void swap(CurveGFp& other)
+      void to_rep(BigInt& x, secure_vector<word>& ws) const
          {
-         std::swap(m_p, other.m_p);
-
-         std::swap(m_a, other.m_a);
-         std::swap(m_b, other.m_b);
-
-         std::swap(m_a_r, other.m_a_r);
-         std::swap(m_b_r, other.m_b_r);
-
-         std::swap(m_p_words, other.m_p_words);
-
-         std::swap(m_r2, other.m_r2);
-         std::swap(m_p_dash, other.m_p_dash);
+         m_repr->to_curve_rep(x, ws);
          }
 
-      /**
-      * Equality operator
-      * @param other curve to compare with
-      * @return true iff this is the same curve as other
-      */
-      bool operator==(const CurveGFp& other) const
+      void from_rep(BigInt& x, secure_vector<word>& ws) const
          {
-         return (m_p == other.m_p &&
-                 m_a == other.m_a &&
-                 m_b == other.m_b);
+         m_repr->from_curve_rep(x, ws);
+         }
+
+      BigInt from_rep(const BigInt& x, secure_vector<word>& ws) const
+         {
+         BigInt xt(x);
+         m_repr->from_curve_rep(xt, ws);
+         return xt;
+         }
+
+      void mul(BigInt& z, const BigInt& x, const BigInt& y, secure_vector<word>& ws) const
+         {
+         m_repr->curve_mul(z, x, y, ws);
+         }
+
+      BigInt mul(const BigInt& x, const BigInt& y, secure_vector<word>& ws) const
+         {
+         BigInt z;
+         m_repr->curve_mul(z, x, y, ws);
+         return z;
+         }
+
+      void sqr(BigInt& z, const BigInt& x, secure_vector<word>& ws) const
+         {
+         m_repr->curve_sqr(z, x, ws);
+         }
+
+      BigInt sqr(const BigInt& x, secure_vector<word>& ws) const
+         {
+         BigInt z;
+         m_repr->curve_sqr(z, x, ws);
+         return z;
+         }
+
+      void swap(CurveGFp& other)
+         {
+         std::swap(m_repr, other.m_repr);
          }
 
    private:
-      // Curve parameters
-      BigInt m_p, m_a, m_b;
+      static std::shared_ptr<CurveGFp_Repr>
+         choose_repr(const BigInt& p, const BigInt& a, const BigInt& b);
 
-      size_t m_p_words; // cache of m_p.sig_words()
-
-      // Montgomery parameters
-      BigInt m_r2, m_a_r, m_b_r;
-      word m_p_dash;
+      std::shared_ptr<CurveGFp_Repr> m_repr;
    };
 
 /**
 * Equality operator
 * @param lhs a curve
 * @param rhs a curve
-* @return true iff lhs is not the same as rhs
+* @return true iff lhs is the same as rhs
 */
+inline bool operator==(const CurveGFp& lhs, const CurveGFp& rhs)
+   {
+   return (lhs.get_p() == rhs.get_p()) &&
+          (lhs.get_a() == rhs.get_a()) &&
+          (lhs.get_b() == rhs.get_b());
+   }
+
 inline bool operator!=(const CurveGFp& lhs, const CurveGFp& rhs)
    {
    return !(lhs == rhs);

@@ -2,7 +2,7 @@
 * Point arithmetic on elliptic curves over GF(p)
 *
 * (C) 2007 Martin Doering, Christoph Ludwig, Falko Strenzke
-*     2008-2011 Jack Lloyd
+*     2008-2011,2014 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -190,46 +190,29 @@ class BOTAN_DLL PointGFp
       bool operator==(const PointGFp& other) const;
    private:
 
-      /**
-      * Montgomery multiplication/reduction
-      * @param x first multiplicand
-      * @param y second multiplicand
-      * @param workspace temp space
-      */
-      BigInt monty_mult(const BigInt& x, const BigInt& y) const
+      BigInt curve_mult(const BigInt& x, const BigInt& y) const
          {
-         BigInt result;
-         monty_mult(result, x, y);
-         return result;
+         BigInt z;
+         curve.mul(z, x, y, ws);
+         return z;
          }
 
-      /**
-      * Montgomery multiplication/reduction
-      * @warning z cannot alias x or y
-      * @param z output
-      * @param x first multiplicand
-      * @param y second multiplicand
-      */
-      void monty_mult(BigInt& z, const BigInt& x, const BigInt& y) const;
-
-      /**
-      * Montgomery squaring/reduction
-      * @param x multiplicand
-      */
-      BigInt monty_sqr(const BigInt& x) const
+      void curve_mult(BigInt& z, const BigInt& x, const BigInt& y) const
          {
-         BigInt result;
-         monty_sqr(result, x);
-         return result;
+         curve.mul(z, x, y, ws);
          }
 
-      /**
-      * Montgomery squaring/reduction
-      * @warning z cannot alias x
-      * @param z output
-      * @param x multiplicand
-      */
-      void monty_sqr(BigInt& z, const BigInt& x) const;
+      BigInt curve_sqr(const BigInt& x) const
+         {
+         BigInt z;
+         curve.sqr(z, x, ws);
+         return z;
+         }
+
+      void curve_sqr(BigInt& z, const BigInt& x) const
+         {
+         curve.sqr(z, x, ws);
+         }
 
       /**
       * Point addition
