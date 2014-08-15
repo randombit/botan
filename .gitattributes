@@ -1,0 +1,7 @@
+# Git will detect text vs binary files for us.
+*               text=auto
+
+# Force LF line endings for linux-specific files.
+Makefile        eol=lf
+*.mk            eol=lf
+*.sh            eol=lf

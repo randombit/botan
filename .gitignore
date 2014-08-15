@@ -1,0 +1,6 @@
+# Auto-generated or result of build output.
+/build/
+/Makefile
+
+# Visual Studio / MSVC files
+*.pdb
