@@ -123,6 +123,19 @@
   #define BOTAN_DEPRECATED(msg)
 #endif
 
+// 'noexcept' is not supported in MSVC12 directly, so use the version
+// that Microsoft supports here. Credit to the following URL for the
+// solution:
+//
+//      https://github.com/randombit/botan/issues/16
+//
+#if defined(_MSC_VER)
+  #include <yvals.h>
+  #define BOTAN_NOEXCEPT _NOEXCEPT
+#else
+  #define BOTAN_NOEXCEPT noexcept
+#endif
+
 /*
 * Module availability definitions
 */

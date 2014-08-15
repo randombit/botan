@@ -33,14 +33,14 @@ class secure_allocator
       typedef std::size_t     size_type;
       typedef std::ptrdiff_t  difference_type;
 
-      secure_allocator() noexcept {}
+      secure_allocator() BOTAN_NOEXCEPT {}
 
-      ~secure_allocator() noexcept {}
+      ~secure_allocator() BOTAN_NOEXCEPT {}
 
-      pointer address(reference x) const noexcept
+      pointer address(reference x) const BOTAN_NOEXCEPT
          { return std::addressof(x); }
 
-      const_pointer address(const_reference x) const noexcept
+      const_pointer address(const_reference x) const BOTAN_NOEXCEPT
          { return std::addressof(x); }
 
       pointer allocate(size_type n, const void* = 0)
@@ -67,7 +67,7 @@ class secure_allocator
          delete [] p;
          }
 
-      size_type max_size() const noexcept
+      size_type max_size() const BOTAN_NOEXCEPT
          {
          return static_cast<size_type>(-1) / sizeof(T);
          }

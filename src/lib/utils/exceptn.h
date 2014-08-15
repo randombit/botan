@@ -172,7 +172,7 @@ struct BOTAN_DLL Self_Test_Failure : public Internal_Error
 */
 struct BOTAN_DLL Memory_Exhaustion : public std::bad_alloc
    {
-   const char* what() const noexcept
+   const char* what() const BOTAN_NOEXCEPT
       { return "Ran out of memory, allocation failed"; }
    };
 
