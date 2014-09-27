@@ -7,6 +7,17 @@ Release Notes
 Series 1.10
 ----------------------------------------
 
+Version 1.10.9, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* A crash could occur when reading from a blocking random device if
+  the device initially indicated that entropy was available but
+  a concurrent process drained the entropy pool before the
+  read was initiated.
+
+* Fix decoding indefinite length BER constructs that contain a context
+  sensitive tag of zero. Github pull 26 from Janusz Chorko.
+
 Version 1.10.8, 2014-04-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
