@@ -127,7 +127,7 @@ size_t find_eoc(DataSource* ber)
 
       length += item_size + length_size + tag_size;
 
-      if(type_tag == EOC)
+      if(type_tag == EOC && class_tag == UNIVERSAL)
          break;
       }
    return length;
