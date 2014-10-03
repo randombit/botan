@@ -105,7 +105,7 @@ void add_oid2str(const OID& oid, const std::string& name)
 
 void add_str2oid(const OID& oid, const std::string& name)
    {
-   global_oid_map().add_oid2str(oid, name);
+   global_oid_map().add_str2oid(oid, name);
    }
 
 std::string lookup(const OID& oid)
