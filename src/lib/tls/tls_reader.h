@@ -92,8 +92,8 @@ class TLS_Data_Reader
 
       template<typename T>
       std::vector<T> get_range(size_t len_bytes,
-                                size_t min_elems,
-                                size_t max_elems)
+                               size_t min_elems,
+                               size_t max_elems)
          {
          const size_t num_elems =
             get_num_elems(len_bytes, sizeof(T), min_elems, max_elems);

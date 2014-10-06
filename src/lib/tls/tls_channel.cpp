@@ -1,6 +1,6 @@
 /*
 * TLS Channels
-* (C) 2011-2012 Jack Lloyd
+* (C) 2011,2012,2014 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -113,19 +113,22 @@ Handshake_State& Channel::create_handshake_state(Protocol_Version version)
          m_sequence_numbers.reset(new Stream_Sequence_Numbers);
       }
 
+   using namespace std::placeholders;
+
    std::unique_ptr<Handshake_IO> io;
    if(version.is_datagram_protocol())
+      {
+      // default MTU is IPv6 min MTU minus UDP/IP headers (TODO: make configurable)
+      const u16bit mtu = 1280 - 40 - 8;
+
       io.reset(new Datagram_Handshake_IO(
                   sequence_numbers(),
-                  std::bind(&Channel::send_record_under_epoch, this,
-                            std::placeholders::_1,
-                            std::placeholders::_2,
-                            std::placeholders::_3)));
+                  std::bind(&Channel::send_record_under_epoch, this, _1, _2, _3),
+                  mtu));
+      }
    else
       io.reset(new Stream_Handshake_IO(
-                  std::bind(&Channel::send_record, this,
-                            std::placeholders::_1,
-                            std::placeholders::_2)));
+                  std::bind(&Channel::send_record, this, _1, _2)));
 
    m_pending_state.reset(new_handshake_state(io.release()));
 
@@ -133,6 +136,13 @@ Handshake_State& Channel::create_handshake_state(Protocol_Version version)
       m_pending_state->set_version(active->version());
 
    return *m_pending_state.get();
+   }
+
+bool Channel::timeout_check()
+   {
+   if(m_pending_state)
+      return m_pending_state->handshake_io().timeout_check();
+   return false;
    }
 
 void Channel::renegotiate(bool force_full_renegotiation)
@@ -280,9 +290,6 @@ size_t Channel::received_data(const std::vector<byte>& buf)
 
 size_t Channel::received_data(const byte input[], size_t input_size)
    {
-   const auto get_cipherstate = [this](u16bit epoch)
-      { return this->read_cipher_state_epoch(epoch).get(); };
-
    const size_t max_fragment_size = maximum_fragment_size();
 
    try
@@ -306,7 +313,10 @@ size_t Channel::received_data(const byte input[], size_t input_size)
                         &record_version,
                         &record_type,
                         m_sequence_numbers.get(),
-                        get_cipherstate);
+                        std::bind(&TLS::Channel::read_cipher_state_epoch, this,
+                                  std::placeholders::_1));
+
+         BOTAN_ASSERT(consumed > 0, "Got to eat something");
 
          BOTAN_ASSERT(consumed <= input_size,
                       "Record reader consumed sane amount");
@@ -328,24 +338,50 @@ size_t Channel::received_data(const byte input[], size_t input_size)
             {
             if(!m_pending_state)
                {
-               create_handshake_state(record_version);
                if(record_version.is_datagram_protocol())
+                  {
                   sequence_numbers().read_accept(record_sequence);
+
+                  /*
+                  * Might be a peer retransmit under epoch - 1 in which
+                  * case we must retransmit last flight
+                  */
+
+                  const u16bit epoch = record_sequence >> 48;
+
+                  if(epoch == sequence_numbers().current_read_epoch())
+                     {
+                     create_handshake_state(record_version);
+                     }
+                  else if(epoch == sequence_numbers().current_read_epoch() - 1)
+                     {
+                     m_active_state->handshake_io().add_record(unlock(record),
+                                                               record_type,
+                                                               record_sequence);
+                     }
+                  }
+               else
+                  {
+                  create_handshake_state(record_version);
+                  }
                }
 
-            m_pending_state->handshake_io().add_record(unlock(record),
-                                                       record_type,
-                                                       record_sequence);
-
-            while(auto pending = m_pending_state.get())
+            if(m_pending_state)
                {
-               auto msg = pending->get_next_handshake_msg();
+               m_pending_state->handshake_io().add_record(unlock(record),
+                                                          record_type,
+                                                          record_sequence);
 
-               if(msg.first == HANDSHAKE_NONE) // no full handshake yet
-                  break;
+               while(auto pending = m_pending_state.get())
+                  {
+                  auto msg = pending->get_next_handshake_msg();
 
-               process_handshake_msg(active_state(), *pending,
-                                     msg.first, msg.second);
+                  if(msg.first == HANDSHAKE_NONE) // no full handshake yet
+                     break;
+
+                  process_handshake_msg(active_state(), *pending,
+                                        msg.first, msg.second);
+                  }
                }
             }
          else if(record_type == HEARTBEAT && peer_supports_heartbeats())
@@ -450,11 +486,10 @@ void Channel::heartbeat(const byte payload[], size_t payload_size)
       }
    }
 
-void Channel::write_record(Connection_Cipher_State* cipher_state,
+void Channel::write_record(Connection_Cipher_State* cipher_state, u16bit epoch,
                            byte record_type, const byte input[], size_t length)
    {
-   BOTAN_ASSERT(m_pending_state || m_active_state,
-                "Some connection state exists");
+   BOTAN_ASSERT(m_pending_state || m_active_state, "Some connection state exists");
 
    Protocol_Version record_version =
       (m_pending_state) ? (m_pending_state->version()) : (m_active_state->version());
@@ -464,7 +499,7 @@ void Channel::write_record(Connection_Cipher_State* cipher_state,
                      input,
                      length,
                      record_version,
-                     sequence_numbers().next_write_sequence(),
+                     sequence_numbers().next_write_sequence(epoch),
                      cipher_state,
                      m_rng);
 
@@ -492,7 +527,7 @@ void Channel::send_record_array(u16bit epoch, byte type, const byte input[], siz
 
    if(type == APPLICATION_DATA && cipher_state->cbc_without_explicit_iv())
       {
-      write_record(cipher_state.get(), type, &input[0], 1);
+      write_record(cipher_state.get(), epoch, type, &input[0], 1);
       input += 1;
       length -= 1;
       }
@@ -502,7 +537,7 @@ void Channel::send_record_array(u16bit epoch, byte type, const byte input[], siz
    while(length)
       {
       const size_t sending = std::min(length, max_fragment_size);
-      write_record(cipher_state.get(), type, &input[0], sending);
+      write_record(cipher_state.get(), epoch, type, &input[0], sending);
 
       input += sending;
       length -= sending;

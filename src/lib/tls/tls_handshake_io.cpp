@@ -1,6 +1,6 @@
 /*
 * TLS Handshake IO
-* (C) 2012 Jack Lloyd
+* (C) 2012,2014 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -10,6 +10,7 @@
 #include <botan/internal/tls_record.h>
 #include <botan/internal/tls_seq_numbers.h>
 #include <botan/exceptn.h>
+#include <chrono>
 
 namespace Botan {
 
@@ -56,7 +57,7 @@ void Stream_Handshake_IO::add_record(const std::vector<byte>& record,
       m_queue.insert(m_queue.end(), ccs_hs, ccs_hs + sizeof(ccs_hs));
       }
    else
-      throw Decoding_Error("Unknown message type in handshake processing");
+      throw Decoding_Error("Unknown message type " + std::to_string(record_type) + " in handshake processing");
    }
 
 std::pair<Handshake_Type, std::vector<byte>>
@@ -119,6 +120,65 @@ Protocol_Version Datagram_Handshake_IO::initial_record_version() const
    return Protocol_Version::DTLS_V10;
    }
 
+namespace {
+
+// 1 second initial timeout, 60 second max - see RFC 6347 sec 4.2.4.1
+const u64bit INITIAL_TIMEOUT = 1*1000;
+const u64bit MAXIMUM_TIMEOUT = 60*1000;
+
+u64bit steady_clock_ms()
+   {
+   return std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::steady_clock::now().time_since_epoch()).count();
+   }
+
+}
+
+bool Datagram_Handshake_IO::timeout_check()
+   {
+   if(m_last_write == 0 || (m_flights.size() > 1 && !m_flights.rbegin()->empty()))
+      {
+      /*
+      If we haven't written anything yet obviously no timeout.
+      Also no timeout possible if we are mid-flight,
+      */
+      return false;
+      }
+
+   const u64bit ms_since_write = steady_clock_ms() - m_last_write;
+
+   if(ms_since_write < m_next_timeout)
+      return false;
+
+   std::vector<u16bit> flight;
+   if(m_flights.size() == 1)
+      flight = m_flights.at(0); // lost initial client hello
+   else
+      flight = m_flights.at(m_flights.size() - 2);
+
+   BOTAN_ASSERT(flight.size() > 0, "Nonempty flight to retransmit");
+
+   u16bit epoch = m_flight_data[flight[0]].epoch;
+
+   for(auto msg_seq : flight)
+      {
+      auto& msg = m_flight_data[msg_seq];
+
+      if(msg.epoch != epoch)
+         {
+         // Epoch gap: insert the CCS
+         std::vector<byte> ccs(1, 1);
+         m_send_hs(epoch, CHANGE_CIPHER_SPEC, ccs);
+         }
+
+      send_message(msg_seq, msg.epoch, msg.msg_type, msg.msg_bits);
+      epoch = msg.epoch;
+      }
+
+   m_next_timeout = std::min(2 * m_next_timeout, MAXIMUM_TIMEOUT);
+   return true;
+   }
+
 void Datagram_Handshake_IO::add_record(const std::vector<byte>& record,
                                        Record_Type record_type,
                                        u64bit record_sequence)
@@ -127,6 +187,7 @@ void Datagram_Handshake_IO::add_record(const std::vector<byte>& record,
 
    if(record_type == CHANGE_CIPHER_SPEC)
       {
+      // TODO: check this is otherwise empty
       m_ccs_epochs.insert(epoch);
       return;
       }
@@ -161,6 +222,10 @@ void Datagram_Handshake_IO::add_record(const std::vector<byte>& record,
                                               msg_type,
                                               msg_len);
          }
+      else
+         {
+         // TODO: detect retransmitted flight
+         }
 
       record_bits += total_size;
       record_size -= total_size;
@@ -170,6 +235,7 @@ void Datagram_Handshake_IO::add_record(const std::vector<byte>& record,
 std::pair<Handshake_Type, std::vector<byte>>
 Datagram_Handshake_IO::get_next_record(bool expecting_ccs)
    {
+   // Expecting a message means the last flight is concluded
    if(!m_flights.rbegin()->empty())
       m_flights.push_back(std::vector<u16bit>());
 
@@ -215,7 +281,7 @@ void Datagram_Handshake_IO::Handshake_Reassembly::add_fragment(
       }
 
    if(msg_type != m_msg_type || msg_length != m_msg_length || epoch != m_epoch)
-      throw Decoding_Error("Inconsistent values in DTLS handshake header");
+      throw Decoding_Error("Inconsistent values in fragmented DTLS handshake header");
 
    if(fragment_offset > m_msg_length)
       throw Decoding_Error("Fragment offset past end of message");
@@ -327,16 +393,30 @@ Datagram_Handshake_IO::send(const Handshake_Message& msg)
    const u16bit epoch = m_seqs.current_write_epoch();
    const Handshake_Type msg_type = msg.type();
 
-   std::tuple<u16bit, byte, std::vector<byte>> msg_info(epoch, msg_type, msg_bits);
-
    if(msg_type == HANDSHAKE_CCS)
       {
       m_send_hs(epoch, CHANGE_CIPHER_SPEC, msg_bits);
       return std::vector<byte>(); // not included in handshake hashes
       }
 
+   // Note: not saving CCS, instead we know it was there due to change in epoch
+   m_flights.rbegin()->push_back(m_out_message_seq);
+   m_flight_data[m_out_message_seq] = Message_Info(epoch, msg_type, msg_bits);
+
+   m_out_message_seq += 1;
+   m_last_write = steady_clock_ms();
+   m_next_timeout = INITIAL_TIMEOUT;
+
+   return send_message(m_out_message_seq - 1, epoch, msg_type, msg_bits);
+   }
+
+std::vector<byte> Datagram_Handshake_IO::send_message(u16bit msg_seq,
+                                                      u16bit epoch,
+                                                      Handshake_Type msg_type,
+                                                      const std::vector<byte>& msg_bits)
+   {
    const std::vector<byte> no_fragment =
-      format_w_seq(msg_bits, msg_type, m_out_message_seq);
+      format_w_seq(msg_bits, msg_type, msg_seq);
 
    if(no_fragment.size() + DTLS_HEADER_SIZE <= m_mtu)
       m_send_hs(epoch, HANDSHAKE, no_fragment);
@@ -361,21 +441,14 @@ Datagram_Handshake_IO::send(const Handshake_Message& msg)
                                    frag_offset,
                                    msg_bits.size(),
                                    msg_type,
-                                   m_out_message_seq));
+                                   msg_seq));
 
          frag_offset += frag_len;
          }
       }
 
-   // Note: not saving CCS, instead we know it was there due to change in epoch
-   m_flights.rbegin()->push_back(m_out_message_seq);
-   m_flight_data[m_out_message_seq] = msg_info;
-
-   m_out_message_seq += 1;
-
    return no_fragment;
    }
 
 }
-
 }

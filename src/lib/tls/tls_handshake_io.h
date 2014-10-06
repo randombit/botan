@@ -1,6 +1,6 @@
 /*
 * TLS Handshake Serialization
-* (C) 2012 Jack Lloyd
+* (C) 2012,2014 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -17,7 +17,6 @@
 #include <map>
 #include <set>
 #include <utility>
-#include <tuple>
 
 namespace Botan {
 
@@ -34,6 +33,8 @@ class Handshake_IO
       virtual Protocol_Version initial_record_version() const = 0;
 
       virtual std::vector<byte> send(const Handshake_Message& msg) = 0;
+
+      virtual bool timeout_check() = 0;
 
       virtual std::vector<byte> format(
          const std::vector<byte>& handshake_msg,
@@ -69,6 +70,8 @@ class Stream_Handshake_IO : public Handshake_IO
 
       Protocol_Version initial_record_version() const override;
 
+      bool timeout_check() override { return false; }
+
       std::vector<byte> send(const Handshake_Message& msg) override;
 
       std::vector<byte> format(
@@ -93,10 +96,13 @@ class Datagram_Handshake_IO : public Handshake_IO
    {
    public:
       Datagram_Handshake_IO(class Connection_Sequence_Numbers& seq,
-                            std::function<void (u16bit, byte, const std::vector<byte>&)> writer) :
-         m_seqs(seq), m_flights(1), m_send_hs(writer) {}
+                            std::function<void (u16bit, byte, const std::vector<byte>&)> writer,
+                            u16bit mtu) :
+         m_seqs(seq), m_flights(1), m_send_hs(writer), m_mtu(mtu) {}
 
       Protocol_Version initial_record_version() const override;
+
+      bool timeout_check() override;
 
       std::vector<byte> send(const Handshake_Message& msg) override;
 
@@ -124,6 +130,10 @@ class Datagram_Handshake_IO : public Handshake_IO
          Handshake_Type handshake_type,
          u16bit msg_sequence) const;
 
+      std::vector<byte> send_message(u16bit msg_seq, u16bit epoch,
+                                     Handshake_Type msg_type,
+                                     const std::vector<byte>& msg);
+
       class Handshake_Reassembly
          {
          public:
@@ -144,21 +154,40 @@ class Datagram_Handshake_IO : public Handshake_IO
             size_t m_msg_length = 0;
             u16bit m_epoch = 0;
 
+            // vector<bool> m_seen;
+            // vector<byte> m_fragments
             std::map<size_t, byte> m_fragments;
             std::vector<byte> m_message;
+         };
+
+      struct Message_Info
+         {
+         Message_Info(u16bit e, Handshake_Type mt, const std::vector<byte>& msg) :
+            epoch(e), msg_type(mt), msg_bits(msg) {}
+
+         Message_Info(const Message_Info& other) = default;
+
+         Message_Info() : epoch(0xFFFF), msg_type(HANDSHAKE_NONE) {}
+
+         u16bit epoch;
+         Handshake_Type msg_type;
+         std::vector<byte> msg_bits;
          };
 
       class Connection_Sequence_Numbers& m_seqs;
       std::map<u16bit, Handshake_Reassembly> m_messages;
       std::set<u16bit> m_ccs_epochs;
       std::vector<std::vector<u16bit>> m_flights;
-      std::map<u16bit, std::tuple<u16bit, byte, std::vector<byte>>> m_flight_data;
+      std::map<u16bit, Message_Info> m_flight_data;
 
-      // default MTU is IPv6 min MTU minus UDP/IP headers
-      u16bit m_mtu = 1280 - 40 - 8;
+      u64bit m_last_write = 0;
+      u64bit m_next_timeout = 0;
+
       u16bit m_in_message_seq = 0;
       u16bit m_out_message_seq = 0;
+
       std::function<void (u16bit, byte, const std::vector<byte>&)> m_send_hs;
+      u16bit m_mtu;
    };
 
 }

@@ -1,6 +1,6 @@
 /*
 * TLS Record Handling
-* (C) 2012,2013 Jack Lloyd
+* (C) 2012,2013,2014 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -477,7 +477,7 @@ size_t read_record(secure_vector<byte>& readbuf,
                    Protocol_Version* record_version,
                    Record_Type* record_type,
                    Connection_Sequence_Numbers* sequence_numbers,
-                   std::function<Connection_Cipher_State* (u16bit)> get_cipherstate)
+                   std::function<std::shared_ptr<Connection_Cipher_State> (u16bit)> get_cipherstate)
    {
    consumed = 0;
 
@@ -584,7 +584,10 @@ size_t read_record(secure_vector<byte>& readbuf,
       }
 
    if(sequence_numbers && sequence_numbers->already_seen(*record_sequence))
+      {
+      readbuf.clear();
       return 0;
+      }
 
    byte* record_contents = &readbuf[header_size];
 
@@ -596,7 +599,7 @@ size_t read_record(secure_vector<byte>& readbuf,
       }
 
    // Otherwise, decrypt, check MAC, return plaintext
-   Connection_Cipher_State* cipherstate = get_cipherstate(epoch);
+   auto cipherstate = get_cipherstate(epoch);
 
    // FIXME: DTLS reordering might cause us not to have the cipher state
 

@@ -1,6 +1,6 @@
 /*
 * TLS Channel
-* (C) 2011,2012 Jack Lloyd
+* (C) 2011,2012,2014 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -46,17 +46,28 @@ class BOTAN_DLL Channel
       size_t received_data(const std::vector<byte>& buf);
 
       /**
+      * Perform a handshake timeout check. This does nothing unless
+      * this is a DTLS channel with a pending handshake state, in
+      * which case we check for timeout and potentially retransmit
+      * handshake packets.
+      */
+      bool timeout_check();
+
+      /**
       * Inject plaintext intended for counterparty
+      * Throws an exception if is_active() is false
       */
       void send(const byte buf[], size_t buf_size);
 
       /**
       * Inject plaintext intended for counterparty
+      * Throws an exception if is_active() is false
       */
       void send(const std::string& val);
 
       /**
       * Inject plaintext intended for counterparty
+      * Throws an exception if is_active() is false
       */
       template<typename Alloc>
          void send(const std::vector<unsigned char, Alloc>& val)
@@ -209,7 +220,7 @@ class BOTAN_DLL Channel
                              const byte input[], size_t length);
 
       void write_record(Connection_Cipher_State* cipher_state,
-                        byte type, const byte input[], size_t length);
+                        u16bit epoch, byte type, const byte input[], size_t length);
 
       Connection_Sequence_Numbers& sequence_numbers() const;
 
