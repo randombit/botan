@@ -8,14 +8,10 @@ Botan supports both client and server implementations of the SSL/TLS
 protocols, including SSL v3, TLS v1.0, TLS v1.1, and TLS v1.2 (the
 insecure and obsolete SSL v2 protocol is not supported, beyond
 processing SSL v2 client hellos which some clients still send for
-backwards compatability with ancient servers). There is also some
-initial support for DTLS (v1.0 and v1.2), a variant of TLS adapted for
-operation on datagram transports such as UDP and SCTP, though as of
-1.11.6 DTLS handshaking does not support timeouts or retransmissions,
-so it can only be used over reliable datagrams (such as SCTP with
-reliable transmission turned on for DTLS handshake packets). DTLS
-support should be considered as beta quality and further testing is
-invited.
+backwards compatability with ancient servers). There is also support
+for DTLS (v1.0 and v1.2), a variant of TLS adapted for operation on
+datagram transports such as UDP and SCTP. DTLS support should be
+considered as beta quality and further testing is invited.
 
 The TLS implementation does not know anything about sockets or the
 network layer. Instead, it calls a user provided callback (hereafter
@@ -123,6 +119,14 @@ available:
 
       Returns true if and only if either a close notification or a
       fatal alert message have been either sent or received.
+
+   .. cpp:function:: bool timeout_check()
+
+      This function does nothing unless the channel represents a DTLS
+      connection and a handshake is actively in progress. In this case
+      it will check the current timeout state and potentially initiate
+      retransmission of handshake packets. Returns true if a timeout
+      condition occurred.
 
    .. cpp:function:: void renegotiate(bool force_full_renegotiation = false)
 
@@ -742,12 +746,11 @@ The ``TLS::Protocol_Version`` class represents a specific version:
 
  .. cpp:function:: static Protocol_Version latest_tls_version()
 
-      Returns the latest version of the TLS protocol known the the library
+      Returns the latest version of the TLS protocol known to the library
       (currently TLS v1.2)
 
  .. cpp:function:: static Protocol_Version latest_dtls_version()
 
-      Returns the latest version of the DTLS protocol known the the
+      Returns the latest version of the DTLS protocol known to the
       library (currently DTLS v1.2)
-
 
