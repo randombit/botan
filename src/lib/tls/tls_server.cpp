@@ -338,7 +338,8 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
       if(!m_policy.acceptable_protocol_version(negotiated_version))
          {
          throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                             "Client version is unacceptable by policy");
+                             "Client version " + negotiated_version.to_string() +
+                             " is unacceptable by policy");
          }
 
       if(!initial_handshake && state.client_hello()->next_protocol_notification())
