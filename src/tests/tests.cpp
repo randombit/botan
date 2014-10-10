@@ -258,6 +258,7 @@ int main(int argc, char* argv[])
    DEF_TEST(dh);
    DEF_TEST(dlies);
    DEF_TEST(elgamal);
+   DEF_TEST(ecc_pointmul);
    DEF_TEST(ecdsa);
    DEF_TEST(gost_3410);
 

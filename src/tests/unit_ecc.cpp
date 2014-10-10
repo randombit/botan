@@ -22,8 +22,8 @@
 
 using namespace Botan;
 
-#define CHECK_MESSAGE(expr, print) try { if(!(expr)) { ++fails; std::cout << print << "\n"; }} catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
-#define CHECK(expr) try { if(!(expr)) { ++fails; std::cout << #expr << "\n"; } } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
+#define CHECK_MESSAGE(expr, print) try { if(!(expr)) { ++fails; std::cout << "FAILURE: " << print << "\n"; }} catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
+#define CHECK(expr) try { if(!(expr)) { ++fails; std::cout << "FAILURE: " << #expr << "\n"; } } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
 
 namespace {
 
@@ -807,8 +807,80 @@ size_t test_curve_cp_ctor()
    return 0;
    }
 
-}
+size_t randomized_test(RandomNumberGenerator& rng, const EC_Group& group)
+   {
+   const BigInt a = BigInt::random_integer(rng, 2, group.get_order());
+   const BigInt b = BigInt::random_integer(rng, 2, group.get_order());
+   const BigInt c = a + b;
+
+   PointGFp P = group.get_base_point() * a;
+   PointGFp Q = group.get_base_point() * b;
+   PointGFp R = group.get_base_point() * c;
+
+   PointGFp A1 = P + Q;
+   PointGFp A2 = Q + P;
+
+   size_t fails = 0;
+
+   CHECK(A1 == R);
+   CHECK(A2 == R);
+
+   return fails;
+   }
+
+size_t randomized_test()
+   {
+   AutoSeeded_RNG rng;
+   size_t fails = 0;
+
+   const std::vector<std::string> groups = {
+      "brainpool160r1",
+      "brainpool192r1",
+      "brainpool224r1",
+      "brainpool256r1",
+      "brainpool320r1",
+      "brainpool384r1",
+      "brainpool512r1",
+      "gost_256A",
+      "gost_256A",
+      "secp112r1",
+      "secp112r2",
+      "secp128r1",
+      "secp128r2",
+      "secp160k1",
+      "secp160r1",
+      "secp160r2",
+      "secp192k1",
+      "secp192r1",
+      "secp224k1",
+      "secp224r1",
+      "secp256k1",
+      "secp256r1",
+      "secp384r1",
+      "secp521r1",
+      "x962_p192v2",
+      "x962_p192v3",
+      "x962_p239v1",
+      "x962_p239v2",
+      "x962_p239v3"
+   };
+
+   for(auto&& group_name : groups)
+      {
+      EC_Group group(group_name);
+
+      PointGFp inf = group.get_base_point() * group.get_order();
+      CHECK(inf.is_zero());
+
+      for(size_t i = 0; i != 32; ++i)
+         fails += randomized_test(rng, group);
+      }
+
+   return fails;
+   }
 #endif
+
+}
 
 size_t test_ecc_unit()
    {
@@ -839,6 +911,8 @@ size_t test_ecc_unit()
    fails += test_point_swap();
    fails += test_mult_sec_mass();
    fails += test_curve_cp_ctor();
+   fails += randomized_test();
+
    test_report("ECC", 0, fails);
 #endif
 

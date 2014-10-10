@@ -64,6 +64,7 @@ size_t test_nr();
 size_t test_dh();
 size_t test_dlies();
 size_t test_elgamal();
+size_t test_ecc_pointmul();
 size_t test_ecdsa();
 size_t test_gost_3410();
 
