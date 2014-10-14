@@ -567,7 +567,7 @@ be negotiated during a handshake.
 
      Default: True if a known TLS version. DTLS is not accepted by default;
      to enable DTLS (or combined TLS/DTLS) in your application, override this
-     function.
+     function. SSLv3 is also rejected by default.
 
  .. cpp:function:: bool server_uses_own_ciphersuite_preferences() const
 
