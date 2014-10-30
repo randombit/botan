@@ -55,6 +55,12 @@ Ciphersuite Ciphersuite::by_name(const std::string& name)
    return Ciphersuite(); // some unknown ciphersuite
    }
 
+bool Ciphersuite::is_scsv(u16bit suite)
+   {
+   // TODO: derive from IANA file in script
+   return (suite == 0x00FF || suite == 0x5600);
+   }
+
 Ciphersuite::Ciphersuite(u16bit ciphersuite_code,
                          const char* sig_algo,
                          const char* kex_algo,

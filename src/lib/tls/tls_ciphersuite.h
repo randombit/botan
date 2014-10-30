@@ -30,6 +30,11 @@ class BOTAN_DLL Ciphersuite
       static Ciphersuite by_id(u16bit suite);
 
       /**
+      * Returns true iff this suite is a known SCSV
+      */
+      static bool is_scsv(u16bit suite);
+
+      /**
       * Lookup a ciphersuite by name
       * @param name the name (eg TLS_RSA_WITH_RC4_128_SHA)
       * @return ciphersuite object

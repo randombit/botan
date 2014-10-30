@@ -202,6 +202,12 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
                              "Server replied with ciphersuite we didn't send");
          }
 
+      if(Ciphersuite::is_scsv(state.server_hello()->ciphersuite()))
+         {
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                             "Server replied with a signaling ciphersuite");
+         }
+
       if(!value_exists(state.client_hello()->compression_methods(),
                        state.server_hello()->compression_method()))
          {
