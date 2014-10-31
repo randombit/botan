@@ -158,7 +158,7 @@ int tls_client_main(int argc, char* argv[])
 
       std::string host = argv[1];
       u32bit port = argc >= 3 ? Botan::to_u32bit(argv[2]) : 443;
-      std::string transport = argc >= 4 ? argv[3] : "tcp";
+      const std::string transport = argc >= 4 ? argv[3] : "tcp";
 
       int sockfd = connect_to_host(host, port, transport);
 
@@ -167,10 +167,7 @@ int tls_client_main(int argc, char* argv[])
          std::bind(stream_socket_write, sockfd, _1, _2) :
          std::bind(dgram_socket_write, sockfd, _1, _2);
 
-      auto version =
-         (transport == "tcp") ?
-         TLS::Protocol_Version::latest_tls_version() :
-         TLS::Protocol_Version::latest_dtls_version();
+      auto version = policy.latest_supported_version(transport != "tcp");
 
       TLS::Client client(socket_write,
                          process_data,

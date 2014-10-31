@@ -17,7 +17,8 @@ namespace Botan {
 namespace TLS {
 
 enum {
-   TLS_EMPTY_RENEGOTIATION_INFO_SCSV        = 0x00FF
+   TLS_EMPTY_RENEGOTIATION_INFO_SCSV        = 0x00FF,
+   TLS_FALLBACK_SCSV                        = 0x5600
 };
 
 std::vector<byte> make_hello_random(RandomNumberGenerator& rng)
@@ -89,6 +90,12 @@ Client_Hello::Client_Hello(Handshake_IO& io,
 
    if(reneg_info.empty() && next_protocol)
       m_extensions.add(new Next_Protocol_Notification());
+
+   BOTAN_ASSERT(policy.acceptable_protocol_version(version),
+                "Our policy accepts the version we are offering");
+
+   if(policy.send_fallback_scsv(version))
+      m_suites.push_back(TLS_FALLBACK_SCSV);
 
    hash.update(io.send(*this));
    }
@@ -269,6 +276,11 @@ void Client_Hello::deserialize(const std::vector<byte>& buf)
          m_extensions.add(new Renegotiation_Extension());
          }
       }
+   }
+
+bool Client_Hello::sent_fallback_scsv() const
+   {
+   return offered_suite(static_cast<u16bit>(TLS_FALLBACK_SCSV));
    }
 
 /*

@@ -1,6 +1,12 @@
 Version 1.11.10, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Add support for TLS fallback signaling (draft-ietf-tls-downgrade-scsv-00).
+  Clients will send a fallback SCSV if the version passed to the Client
+  constructor is less than the latest version supported by local policy,
+  so applications implementing fallback are protected. Servers always check
+  the SCSV.
+
 * Fixed a bug in CCM mode which caused it to produce incorrect tags
   when used with a value of L other than 2. This affected CCM TLS
   ciphersuites, which use L=3. Thanks to Manuel Pégourié-Gonnard for

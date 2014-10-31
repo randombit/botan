@@ -123,11 +123,32 @@ class BOTAN_DLL Policy
 
       /**
       * @return true if and only if we are willing to accept this version
-      * Default accepts only TLS, so override if you want to enable DTLS
-      * in your application.
+      * Default accepts TLS v1.0 and later.
+
+      * Override if you want to allow negotiating SSLv3 (*not recommended*)
+      * Override if you want to enable DTLS in your application.
       */
       virtual bool acceptable_protocol_version(Protocol_Version version) const;
 
+      /**
+      * Returns the more recent protocol version we are willing to
+      * use, for either TLS or DTLS depending on datagram param.
+      * Shouldn't ever need to override this unless you want to allow
+      * a user to disable use of TLS v1.2 (which is *not recommended*)
+      */
+      virtual Protocol_Version latest_supported_version(bool datagram) const;
+
+      /**
+      * When offering this version, should we send a fallback SCSV?
+      * Default returns true iff version is not the latest version the
+      * policy allows, exists to allow override in case of interop problems.
+      */
+      virtual bool send_fallback_scsv(const Protocol_Version& version) const;
+
+      /**
+      * Allows policy to reject any ciphersuites which are undesirable
+      * for whatever reason without having to reimplement ciphersuite_list
+      */
       virtual bool acceptable_ciphersuite(const Ciphersuite& suite) const;
 
       /**

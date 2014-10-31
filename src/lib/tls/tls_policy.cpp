@@ -139,13 +139,26 @@ u32bit Policy::session_ticket_lifetime() const
    return 86400; // 1 day
    }
 
+bool Policy::send_fallback_scsv(const Protocol_Version& version) const
+   {
+   return version != latest_supported_version(version.is_datagram_protocol());
+   }
+
 bool Policy::acceptable_protocol_version(Protocol_Version version) const
    {
    // By default require TLS to minimize surprise
    if(version.is_datagram_protocol())
       return false;
 
-   return (version > Protocol_Version::SSL_V3);
+   return (version >= Protocol_Version::TLS_V10);
+   }
+
+Protocol_Version Policy::latest_supported_version(bool datagram) const
+   {
+   if(datagram)
+      return Protocol_Version::latest_dtls_version();
+   else
+      return Protocol_Version::latest_tls_version();
    }
 
 bool Policy::acceptable_ciphersuite(const Ciphersuite&) const

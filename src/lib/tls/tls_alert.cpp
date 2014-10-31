@@ -84,6 +84,8 @@ std::string Alert::type_string() const
          return "insufficient_security";
       case INTERNAL_ERROR:
          return "internal_error";
+      case INAPPROPRIATE_FALLBACK:
+         return "inappropriate_fallback";
       case USER_CANCELED:
          return "user_canceled";
       case NO_RENEGOTIATION:

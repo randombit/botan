@@ -82,13 +82,6 @@ class BOTAN_DLL Protocol_Version
       std::string to_string() const;
 
       /**
-      * If this version is known, return that. Otherwise return the
-      * best (most recent) version we know of.
-      * @return best matching protocol version
-      */
-      Protocol_Version best_known_match() const;
-
-      /**
       * @return true iff this is a DTLS version
       */
       bool is_datagram_protocol() const;

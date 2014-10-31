@@ -71,6 +71,8 @@ class Client_Hello : public Handshake_Message
 
       bool offered_suite(u16bit ciphersuite) const;
 
+      bool sent_fallback_scsv() const;
+
       std::vector<std::pair<std::string, std::string>> supported_algos() const
          {
          if(Signature_Algorithms* sigs = m_extensions.get<Signature_Algorithms>())

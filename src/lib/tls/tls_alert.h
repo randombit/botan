@@ -47,6 +47,7 @@ class BOTAN_DLL Alert
          PROTOCOL_VERSION                = 70,
          INSUFFICIENT_SECURITY           = 71,
          INTERNAL_ERROR                  = 80,
+         INAPPROPRIATE_FALLBACK          = 86,
          USER_CANCELED                   = 90,
          NO_RENEGOTIATION                = 100,
          UNSUPPORTED_EXTENSION           = 110,

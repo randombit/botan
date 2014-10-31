@@ -291,9 +291,12 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
 
       state.client_hello(new Client_Hello(contents, type));
 
-      Protocol_Version client_version = state.client_hello()->version();
+      const Protocol_Version client_version = state.client_hello()->version();
 
       Protocol_Version negotiated_version;
+
+      const Protocol_Version latest_supported =
+         m_policy.latest_supported_version(client_version.is_datagram_protocol());
 
       if((initial_handshake && client_version.known_version()) ||
          (!initial_handshake && client_version == active_state->version()))
@@ -329,10 +332,10 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
       else
          {
          /*
-         New negotiation using a version we don't know. Offer
-         them the best we currently know.
+         New negotiation using a version we don't know. Offer them the
+         best we currently know and support
          */
-         negotiated_version = client_version.best_known_match();
+         negotiated_version = latest_supported;
          }
 
       if(!m_policy.acceptable_protocol_version(negotiated_version))
@@ -340,6 +343,13 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
          throw TLS_Exception(Alert::PROTOCOL_VERSION,
                              "Client version " + negotiated_version.to_string() +
                              " is unacceptable by policy");
+         }
+
+      if(state.client_hello()->sent_fallback_scsv())
+         {
+         if(latest_supported > client_version)
+            throw TLS_Exception(Alert::INAPPROPRIATE_FALLBACK,
+                                "Client signalled fallback SCSV, possible attack");
          }
 
       if(!initial_handshake && state.client_hello()->next_protocol_notification())

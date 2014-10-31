@@ -49,17 +49,6 @@ bool Protocol_Version::operator>(const Protocol_Version& other) const
    return m_version > other.m_version;
    }
 
-Protocol_Version Protocol_Version::best_known_match() const
-   {
-   if(known_version())
-      return *this; // known version is its own best match
-
-   if(is_datagram_protocol())
-      return Protocol_Version::DTLS_V12;
-   else
-      return Protocol_Version::TLS_V12;
-   }
-
 bool Protocol_Version::known_version() const
    {
    return (m_version == Protocol_Version::SSL_V3 ||
