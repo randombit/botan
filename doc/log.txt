@@ -10,6 +10,8 @@ Series 1.10
 Version 1.10.9, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* The default TLS policy now disables SSLv3.
+
 * A crash could occur when reading from a blocking random device if
   the device initially indicated that entropy was available but
   a concurrent process drained the entropy pool before the

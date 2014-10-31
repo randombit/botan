@@ -42,7 +42,7 @@ class BOTAN_DLL TLS_Policy
       /*
       * @return the minimum version that we will negotiate
       */
-      virtual Version_Code min_version() const { return SSL_V3; }
+      virtual Version_Code min_version() const { return TLS_V10; }
 
       /*
       * @return the version we would prefer to negotiate
