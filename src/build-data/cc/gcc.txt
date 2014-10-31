@@ -8,11 +8,11 @@ add_include_dir_option -I
 add_lib_dir_option -L
 add_lib_option -l
 
-lang_flags "-std=c++11 -D_REENTRANT -D_FORTIFY_SOURCE=2 -fstack-protector"
+lang_flags "-std=c++11 -D_REENTRANT -fstack-protector"
 maintainer_warning_flags "-Werror -Wno-error=old-style-cast -Wno-error=zero-as-null-pointer-constant -Wno-error=unused-parameter -Wno-error=unused-variable -Wno-error=strict-overflow"
 warning_flags "-Wall -Wextra -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wold-style-cast -Wzero-as-null-pointer-constant"
 
-lib_opt_flags "-O3"
+lib_opt_flags "-O2"
 app_opt_flags "-O2"
 shared_flags "-fPIC"
 debug_flags "-g"
