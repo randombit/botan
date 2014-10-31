@@ -296,9 +296,9 @@ void OCB_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
 
          m_offset ^= m_L->star(); // Offset_*
 
-         secure_vector<byte> buf(BS);
-         m_cipher->encrypt(m_offset, buf);
-         xor_buf(&remainder[0], &buf[0], remainder_bytes);
+         secure_vector<byte> zeros(BS);
+         m_cipher->encrypt(m_offset, zeros);
+         xor_buf(&remainder[0], &zeros[0], remainder_bytes);
          }
       }
 

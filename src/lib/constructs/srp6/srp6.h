@@ -87,9 +87,9 @@ class BOTAN_DLL SRP6_Server_Session
       SymmetricKey step2(const BigInt& A);
 
    private:
-      std::string hash_id;
-      BigInt B, b, v, S, p;
-      size_t p_bytes;
+      std::string m_hash_id;
+      BigInt m_B, m_b, m_v, m_S, m_p;
+      size_t m_p_bytes;
    };
 
 }

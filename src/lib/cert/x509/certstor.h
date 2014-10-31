@@ -31,7 +31,7 @@ class BOTAN_DLL Certificate_Store
 
       bool certificate_known(const X509_Certificate& cert) const
          {
-         return find_cert(cert.subject_dn(), cert.subject_key_id());
+         return find_cert(cert.subject_dn(), cert.subject_key_id()) != nullptr;
          }
 
       // remove this (used by TLS::Server)

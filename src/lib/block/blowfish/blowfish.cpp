@@ -139,7 +139,7 @@ void Blowfish::eks_key_schedule(const byte key[], size_t length,
    key_expansion(key, length, salt);
 
    const byte null_salt[16] = { 0 };
-   const size_t rounds = 1 << workfactor;
+   const size_t rounds = static_cast<size_t>(1) << workfactor;
 
    for(size_t r = 0; r != rounds; ++r)
       {

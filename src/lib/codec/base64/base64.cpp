@@ -168,8 +168,8 @@ size_t base64_decode(byte output[],
          {
          if(decode_buf_pos)
             {
-            for(size_t i = decode_buf_pos; i != 4; ++i)
-               decode_buf[i] = 0;
+            for(size_t j = decode_buf_pos; j != 4; ++j)
+               decode_buf[j] = 0;
             final_truncate = (4 - decode_buf_pos);
             decode_buf_pos = 4;
             }

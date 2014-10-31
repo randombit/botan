@@ -131,32 +131,29 @@ BigInt SRP6_Server_Session::step1(const BigInt& v,
    const BigInt& g = group.get_g();
    const BigInt& p = group.get_p();
 
-   p_bytes = p.bytes();
+   m_p_bytes = p.bytes();
+   m_v = v;
+   m_b = BigInt(rng, 256);
+   m_p = p;
+   m_hash_id = hash_id;
 
-   BigInt k = hash_seq(hash_id, p_bytes, p, g);
+   const BigInt k = hash_seq(hash_id, m_p_bytes, p, g);
 
-   BigInt b(rng, 256);
+   m_B = (v*k + power_mod(g, m_b, p)) % p;
 
-   B = (v*k + power_mod(g, b, p)) % p;
-
-   this->v = v;
-   this->b = b;
-   this->p = p;
-   this->hash_id = hash_id;
-
-   return B;
+   return m_B;
    }
 
 SymmetricKey SRP6_Server_Session::step2(const BigInt& A)
    {
-   if(A <= 0 || A >= p)
+   if(A <= 0 || A >= m_p)
       throw std::runtime_error("Invalid SRP parameter from client");
 
-   BigInt u = hash_seq(hash_id, p_bytes, A, B);
+   const BigInt u = hash_seq(m_hash_id, m_p_bytes, A, m_B);
 
-   BigInt S = power_mod(A * power_mod(v, u, p), b, p);
+   const BigInt S = power_mod(A * power_mod(m_v, u, m_p), m_b, m_p);
 
-   return BigInt::encode_1363(S, p_bytes);
+   return BigInt::encode_1363(S, m_p_bytes);
    }
 
 }

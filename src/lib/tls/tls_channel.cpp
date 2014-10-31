@@ -458,12 +458,12 @@ size_t Channel::received_data(const byte input[], size_t input_size)
       send_fatal_alert(e.type());
       throw;
       }
-   catch(Integrity_Failure& e)
+   catch(Integrity_Failure&)
       {
       send_fatal_alert(Alert::BAD_RECORD_MAC);
       throw;
       }
-   catch(Decoding_Error& e)
+   catch(Decoding_Error&)
       {
       send_fatal_alert(Alert::DECODE_ERROR);
       throw;

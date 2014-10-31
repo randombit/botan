@@ -372,6 +372,12 @@ class Extensions
          return nullptr;
          }
 
+      template<typename T>
+      bool has() const
+         {
+         return get<T>() != nullptr;
+         }
+
       void add(Extension* extn)
          {
          extensions[extn->type()].reset(extn);

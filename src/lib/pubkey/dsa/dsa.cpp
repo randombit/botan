@@ -115,8 +115,6 @@ DSA_Verification_Operation::DSA_Verification_Operation(const DSA_PublicKey& dsa)
 bool DSA_Verification_Operation::verify(const byte msg[], size_t msg_len,
                                         const byte sig[], size_t sig_len)
    {
-   const BigInt& q = mod_q.get_modulus();
-
    if(sig_len != 2*q.bytes() || msg_len > q.bytes())
       return false;
 

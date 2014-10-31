@@ -30,13 +30,13 @@ find_issuing_cert(const X509_Certificate& cert,
    const X509_DN issuer_dn = cert.issuer_dn();
    const std::vector<byte> auth_key_id = cert.authority_key_id();
 
-   if(const X509_Certificate* cert = end_certs.find_cert(issuer_dn, auth_key_id))
-      return cert;
+   if(const X509_Certificate* c = end_certs.find_cert(issuer_dn, auth_key_id))
+      return c;
 
    for(size_t i = 0; i != certstores.size(); ++i)
       {
-      if(const X509_Certificate* cert = certstores[i]->find_cert(issuer_dn, auth_key_id))
-         return cert;
+      if(const X509_Certificate* c = certstores[i]->find_cert(issuer_dn, auth_key_id))
+         return c;
       }
 
    return nullptr;
