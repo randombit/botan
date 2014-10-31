@@ -143,7 +143,7 @@ class BOTAN_DLL Policy
       * Default returns true iff version is not the latest version the
       * policy allows, exists to allow override in case of interop problems.
       */
-      virtual bool send_fallback_scsv(const Protocol_Version& version) const;
+      virtual bool send_fallback_scsv(Protocol_Version version) const;
 
       /**
       * Allows policy to reject any ciphersuites which are undesirable

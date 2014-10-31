@@ -271,7 +271,8 @@ size_t basic_test_handshake(RandomNumberGenerator& rng,
 class Test_Policy : public TLS::Policy
    {
    public:
-      bool acceptable_protocol_version(TLS::Protocol_Version) const { return true; }
+      bool acceptable_protocol_version(TLS::Protocol_Version) const override { return true; }
+      bool send_fallback_scsv(TLS::Protocol_Version) const override { return false; }
    };
 
 }
