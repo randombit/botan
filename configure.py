@@ -1524,7 +1524,7 @@ def setup_build(build_config, options, template_vars):
     def choose_link_method(req_method):
 
         def useable_methods():
-            if 'symlink' in os.__dict__:
+            if 'symlink' in os.__dict__ and options.os != 'windows':
                 yield 'symlink'
             if 'link' in os.__dict__:
                 yield 'hardlink'
@@ -1812,6 +1812,7 @@ def have_program(program):
             if exe_test(path, program + suffix):
                 return True
 
+    logging.debug('Program %s not found' % (program))
     return False
 
 """
@@ -1868,17 +1869,6 @@ def main(argv = None):
         if options.os is None and len(chost) > 2:
             options.os = '-'.join(chost[2:])
 
-    if options.compiler is None:
-        if options.os == 'windows':
-            if have_program('g++') and not have_program('cl'):
-                options.compiler = 'gcc'
-            else:
-                options.compiler = 'msvc'
-        else:
-            options.compiler = 'gcc'
-        logging.info('Guessing to use compiler %s (use --cc to set)' % (
-            options.compiler))
-
     if options.os is None:
         options.os = platform.system().lower()
 
@@ -1890,6 +1880,17 @@ def main(argv = None):
             logging.warning('Detected GCC on Windows; use --os=cygwin or --os=mingw?')
 
         logging.info('Guessing target OS is %s (use --os to set)' % (options.os))
+
+    if options.compiler is None:
+        if options.os == 'windows':
+            if have_program('g++') and not have_program('cl'):
+                options.compiler = 'gcc'
+            else:
+                options.compiler = 'msvc'
+        else:
+            options.compiler = 'gcc'
+        logging.info('Guessing to use compiler %s (use --cc to set)' % (
+            options.compiler))
 
     if options.compiler not in ccinfo:
         raise Exception('Unknown compiler "%s"; available options: %s' % (
