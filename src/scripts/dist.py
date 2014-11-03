@@ -13,7 +13,6 @@ import logging
 import optparse
 import os
 import shlex
-import StringIO
 import shutil
 import subprocess
 import sys

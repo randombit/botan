@@ -63,6 +63,8 @@ Extensions& Extensions::operator=(const Extensions& other)
          std::make_pair(other.extensions[i].first->copy(),
                         other.extensions[i].second));
 
+   m_throw_on_unknown_critical = other.m_throw_on_unknown_critical;
+
    return (*this);
    }
 

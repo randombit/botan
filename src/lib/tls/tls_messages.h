@@ -210,7 +210,7 @@ class Server_Hello : public Handshake_Message
 
       bool secure_renegotiation() const
          {
-         return m_extensions.get<Renegotiation_Extension>();
+         return m_extensions.has<Renegotiation_Extension>();
          }
 
       std::vector<byte> renegotiation_info() const
@@ -222,7 +222,7 @@ class Server_Hello : public Handshake_Message
 
       bool next_protocol_notification() const
          {
-         return m_extensions.get<Next_Protocol_Notification>();
+         return m_extensions.has<Next_Protocol_Notification>();
          }
 
       std::vector<std::string> next_protocols() const
@@ -241,12 +241,12 @@ class Server_Hello : public Handshake_Message
 
       bool supports_session_ticket() const
          {
-         return m_extensions.get<Session_Ticket>();
+         return m_extensions.has<Session_Ticket>();
          }
 
       bool supports_heartbeats() const
          {
-         return m_extensions.get<Heartbeat_Support_Indicator>();
+         return m_extensions.has<Heartbeat_Support_Indicator>();
          }
 
       bool peer_can_send_heartbeats() const

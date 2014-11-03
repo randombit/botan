@@ -122,7 +122,7 @@ class BOTAN_DLL Path_Validation_Result
       Path_Validation_Result(Certificate_Status_Code status) : m_overall(status) {}
 
    private:
-      friend Path_Validation_Result x509_path_validate(
+      friend Path_Validation_Result BOTAN_DLL x509_path_validate(
          const std::vector<X509_Certificate>& end_certs,
          const Path_Validation_Restrictions& restrictions,
          const std::vector<Certificate_Store*>& certstores);

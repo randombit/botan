@@ -231,7 +231,10 @@ void decode(BER_Decoder& decoder, size_t level)
 
          for(size_t i = 0; i != bits.size(); ++i)
             for(size_t j = 0; j != 8; ++j)
-               bit_set.push_back((bool)((bits[bits.size()-i-1] >> (7-j)) & 1));
+               {
+               const bool bit = static_cast<bool>((bits[bits.size()-i-1] >> (7-j)) & 1);
+               bit_set.push_back(bit);
+               }
 
          std::string bit_str;
          for(size_t i = 0; i != bit_set.size(); ++i)

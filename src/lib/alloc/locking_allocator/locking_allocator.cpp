@@ -158,6 +158,12 @@ bool mlock_allocator::deallocate(void* p, size_t num_elems, size_t elem_size)
    if(!m_pool)
       return false;
 
+   /*
+   We do not have to zero the memory here, as
+   secure_allocator::deallocate does that for all arguments before
+   invoking the deallocator (us or delete[])
+   */
+
    size_t n = num_elems * elem_size;
 
    /*

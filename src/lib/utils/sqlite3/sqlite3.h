@@ -56,8 +56,6 @@ class sqlite3_statement
 
       bool step();
 
-      sqlite3_stmt* stmt() { return m_stmt; }
-
       ~sqlite3_statement();
    private:
       sqlite3_stmt* m_stmt;

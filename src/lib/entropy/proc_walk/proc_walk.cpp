@@ -106,7 +106,7 @@ int Directory_Walker::next_fd()
          {
          int fd = ::open(full_path.c_str(), O_RDONLY | O_NOCTTY);
 
-         if(fd > 0)
+         if(fd >= 0)
             return fd;
          }
       }

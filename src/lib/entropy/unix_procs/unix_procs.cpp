@@ -11,6 +11,7 @@
 #include <botan/internal/unix_procs.h>
 #include <botan/parsing.h>
 #include <algorithm>
+#include <atomic>
 
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -67,18 +68,24 @@ Unix_EntropySource::Unix_EntropySource(const std::vector<std::string>& trusted_p
 
 void UnixProcessInfo_EntropySource::poll(Entropy_Accumulator& accum)
    {
-   accum.add(::getpid(),  0.0);
-   accum.add(::getppid(), 0.0);
-   accum.add(::getuid(),  0.0);
-   accum.add(::getgid(),  0.0);
-   accum.add(::getsid(0),  0.0);
-   accum.add(::getpgrp(), 0.0);
+   static std::atomic<int> last_pid;
+ 
+   int pid = ::getpid();
+
+   accum.add(pid, 0.0);
+
+   if(pid != last_pid)
+      {
+      last_pid = pid;
+      accum.add(::getppid(), 0.0);
+      accum.add(::getuid(),  0.0);
+      accum.add(::getgid(),  0.0);
+      accum.add(::getsid(0),  0.0);
+      accum.add(::getpgrp(), 0.0);
+      }
 
    struct ::rusage usage;
    ::getrusage(RUSAGE_SELF, &usage);
-   accum.add(usage, 0.0);
-
-   ::getrusage(RUSAGE_CHILDREN, &usage);
    accum.add(usage, 0.0);
    }
 

@@ -43,7 +43,7 @@ int EGD_EntropySource::EGD_Socket::open_socket(const std::string& path)
       std::memset(&addr, 0, sizeof(addr));
       addr.sun_family = PF_LOCAL;
 
-      if(sizeof(addr.sun_path) < path.length() + 1)
+      if(path.length() >= sizeof(addr.sun_path))
          throw std::invalid_argument("EGD socket path is too long");
 
       std::strncpy(addr.sun_path, path.c_str(), sizeof(addr.sun_path));
@@ -109,7 +109,7 @@ size_t EGD_EntropySource::EGD_Socket::read(byte outbuf[], size_t length)
 
 void EGD_EntropySource::EGD_Socket::close()
    {
-   if(m_fd > 0)
+   if(m_fd >= 0)
       {
       ::close(m_fd);
       m_fd = -1;

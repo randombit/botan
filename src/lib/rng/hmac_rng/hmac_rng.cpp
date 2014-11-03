@@ -95,6 +95,11 @@ void HMAC_RNG::randomize(byte out[], size_t length)
 
    const size_t max_per_prf_iter = m_prf->output_length() / 2;
 
+   m_output_since_reseed += length;
+
+   if(m_output_since_reseed >= BOTAN_RNG_MAX_OUTPUT_BEFORE_RESEED)
+      reseed(BOTAN_RNG_RESEED_POLL_BITS);
+
    /*
     HMAC KDF as described in E-t-E, using a CTXinfo of "rng"
    */
@@ -107,11 +112,6 @@ void HMAC_RNG::randomize(byte out[], size_t length)
       copy_mem(out, &m_K[0], copied);
       out += copied;
       length -= copied;
-
-      m_output_since_reseed += copied;
-
-      if(m_output_since_reseed >= BOTAN_RNG_MAX_OUTPUT_BEFORE_RESEED)
-         reseed(BOTAN_RNG_RESEED_POLL_BITS);
       }
    }
 

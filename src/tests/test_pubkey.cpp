@@ -170,11 +170,11 @@ size_t validate_encryption(PK_Encryptor& e, PK_Decryptor& d,
    {
    std::vector<byte> message = hex_decode(input);
    std::vector<byte> expected = hex_decode(exp);
-   Fixed_Output_RNG rng(hex_decode(random));
+   Fixed_Output_RNG kat_rng(hex_decode(random));
 
    size_t fails = 0;
 
-   const std::vector<byte> ctext = e.encrypt(message, rng);
+   const std::vector<byte> ctext = e.encrypt(message, kat_rng);
    if(ctext != expected)
       {
       std::cout << "FAILED (encrypt): " << algo << std::endl;

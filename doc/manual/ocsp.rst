@@ -37,3 +37,11 @@ OCSP requests is via HTTP, see :rfc:`2560` Appendix A for details.
       is signed correctly, and the response indicates that *subject*
       is not currently revoked.
 
+
+.. cpp:function:: OCSP::Response online_check(const X509_Certificate& issuer, \
+                                              const X509_Certificate& subject, \
+                                              const Certificate_Store* trusted_roots)
+
+      Attempts to contact the OCSP responder specified in the subject certificate
+      and 
+      

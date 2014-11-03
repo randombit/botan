@@ -1641,8 +1641,7 @@ def setup_build(build_config, options, template_vars):
                 portable_symlink(header_file, dir, link_method)
             except OSError as e:
                 if e.errno != errno.EEXIST:
-                    logging.error('Error linking %s into %s: %s' % (
-                        header_file, dir, e))
+                    raise Exception('Error linking %s into %s: %s' % (header_file, dir, e))
 
     link_headers(build_config.public_headers, 'public',
                  build_config.botan_include_dir)

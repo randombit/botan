@@ -4,6 +4,11 @@
 #include <botan/tls_client.h>
 #include <botan/pkcs8.h>
 #include <botan/hex.h>
+
+#if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
+  #include <botan/tls_session_manager_sqlite.h>
+#endif
+
 #include <string>
 #include <iostream>
 #include <memory>
@@ -19,10 +24,6 @@
 
 #if !defined(MSG_NOSIGNAL)
   #define MSG_NOSIGNAL 0
-#endif
-
-#if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
-  #include <botan/tls_session_manager_sqlite.h>
 #endif
 
 #include "credentials.h"
@@ -147,9 +148,12 @@ int tls_client_main(int argc, char* argv[])
       TLS::Policy policy;
 
 #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
-      TLS::Session_Manager_SQLite session_manager("my secret passphrase",
+      const std::string passphrase = "correct horse battery staple";
+      const std::string sessions_db = "sessions.db";
+
+      TLS::Session_Manager_SQLite session_manager(passphrase,
                                                   rng,
-                                                  "sessions.db");
+                                                  sessions_db);
 #else
       TLS::Session_Manager_In_Memory session_manager(rng);
 #endif
@@ -188,7 +192,9 @@ int tls_client_main(int argc, char* argv[])
          FD_SET(sockfd, &readfds);
          FD_SET(STDIN_FILENO, &readfds);
 
-         ::select(sockfd + 1, &readfds, nullptr, nullptr, nullptr);
+         struct timeval timeout = { 1, 0 };
+
+         ::select(sockfd + 1, &readfds, nullptr, nullptr, &timeout);
 
          if(FD_ISSET(sockfd, &readfds))
             {
@@ -246,6 +252,11 @@ int tls_client_main(int argc, char* argv[])
                client.heartbeat(&buf[1], got-1);
             else
                client.send(buf, got);
+            }
+         else
+            {
+            if(client.timeout_check())
+               std::cerr << "Timeout detected\n";
             }
          }
 
