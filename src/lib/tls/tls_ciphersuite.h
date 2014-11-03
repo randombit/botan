@@ -72,24 +72,24 @@ class BOTAN_DLL Ciphersuite
       /**
       * @return key exchange algorithm used by this ciphersuite
       */
-      std::string kex_algo() const { return m_kex_algo; }
+      const std::string& kex_algo() const { return m_kex_algo; }
 
       /**
       * @return signature algorithm used by this ciphersuite
       */
-      std::string sig_algo() const { return m_sig_algo; }
+      const std::string& sig_algo() const { return m_sig_algo; }
 
       /**
       * @return symmetric cipher algorithm used by this ciphersuite
       */
-      std::string cipher_algo() const { return m_cipher_algo; }
+      const std::string& cipher_algo() const { return m_cipher_algo; }
 
       /**
       * @return message authentication algorithm used by this ciphersuite
       */
-      std::string mac_algo() const { return m_mac_algo; }
+      const std::string& mac_algo() const { return m_mac_algo; }
 
-      std::string prf_algo() const
+      const std::string& prf_algo() const
          {
          return (m_prf_algo != "") ? m_prf_algo : m_mac_algo;
          }
@@ -99,7 +99,9 @@ class BOTAN_DLL Ciphersuite
       */
       size_t cipher_keylen() const { return m_cipher_keylen; }
 
-      size_t cipher_ivlen() const { return m_cipher_ivlen; }
+      size_t explicit_nonce_bytes() const { return m_explicit_nonce_bytes; }
+
+      size_t implicit_nonce_bytes() const { return m_implicit_nonce_bytes; }
 
       size_t mac_keylen() const { return m_mac_keylen; }
 
@@ -117,7 +119,8 @@ class BOTAN_DLL Ciphersuite
                   const char* kex_algo,
                   const char* cipher_algo,
                   size_t cipher_keylen,
-                  size_t cipher_ivlen,
+                  size_t explicit_nonce_bytes,
+                  size_t implicit_nonce_bytes,
                   const char* mac_algo,
                   size_t mac_keylen,
                   const char* prf_algo = "");
@@ -126,12 +129,13 @@ class BOTAN_DLL Ciphersuite
 
       std::string m_sig_algo;
       std::string m_kex_algo;
-      std::string m_cipher_algo;
-      std::string m_mac_algo;
       std::string m_prf_algo;
 
+      std::string m_cipher_algo;
       size_t m_cipher_keylen = 0;
-      size_t m_cipher_ivlen = 0;
+      size_t m_explicit_nonce_bytes = 0, m_implicit_nonce_bytes = 0;
+
+      std::string m_mac_algo;
       size_t m_mac_keylen = 0;
    };
 

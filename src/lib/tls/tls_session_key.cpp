@@ -22,9 +22,9 @@ Session_Keys::Session_Keys(const Handshake_State* state,
    {
    const size_t cipher_keylen = state->ciphersuite().cipher_keylen();
    const size_t mac_keylen = state->ciphersuite().mac_keylen();
-   const size_t cipher_ivlen = state->ciphersuite().cipher_ivlen();
+   const size_t cipher_nonce_bytes = state->ciphersuite().explicit_nonce_bytes();
 
-   const size_t prf_gen = 2 * (mac_keylen + cipher_keylen + cipher_ivlen);
+   const size_t prf_gen = 2 * (mac_keylen + cipher_keylen + cipher_nonce_bytes);
 
    const byte MASTER_SECRET_MAGIC[] = {
       0x6D, 0x61, 0x73, 0x74, 0x65, 0x72, 0x20, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74 };
@@ -73,10 +73,10 @@ Session_Keys::Session_Keys(const Handshake_State* state,
    s_cipher = SymmetricKey(key_data, cipher_keylen);
    key_data += cipher_keylen;
 
-   c_iv = InitializationVector(key_data, cipher_ivlen);
-   key_data += cipher_ivlen;
+   c_iv = InitializationVector(key_data, cipher_nonce_bytes);
+   key_data += cipher_nonce_bytes;
 
-   s_iv = InitializationVector(key_data, cipher_ivlen);
+   s_iv = InitializationVector(key_data, cipher_nonce_bytes);
    }
 
 }

@@ -25,6 +25,8 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
                                                  const Ciphersuite& suite,
                                                  const Session_Keys& keys) :
    m_start_time(std::chrono::system_clock::now()),
+   m_implicit_nonce_size(suite.implicit_nonce_bytes()),
+   m_explicit_nonce_size(suite.explicit_nonce_bytes()),
    m_is_ssl3(version == Protocol_Version::SSL_V3)
    {
    SymmetricKey mac_key, cipher_key;
@@ -51,9 +53,9 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
       m_aead.reset(aead);
       m_aead->set_key(cipher_key + mac_key);
 
-      BOTAN_ASSERT(iv.length() == 4, "Using 4/8 partial implicit nonce");
+      BOTAN_ASSERT(iv.length() == explicit_nonce_bytes(), "Matching nonce sizes");
       m_nonce = iv.bits_of();
-      m_nonce.resize(12);
+      m_nonce.resize(implicit_nonce_bytes() + explicit_nonce_bytes());
       return;
       }
 
@@ -87,19 +89,15 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
 
 const secure_vector<byte>& Connection_Cipher_State::aead_nonce(u64bit seq)
    {
-   BOTAN_ASSERT(m_aead, "Using AEAD mode");
-   BOTAN_ASSERT(m_nonce.size() == 12, "Expected nonce size");
-   store_be(seq, &m_nonce[4]);
+   store_be(seq, &m_nonce[explicit_nonce_bytes()]);
    return m_nonce;
    }
 
 const secure_vector<byte>&
 Connection_Cipher_State::aead_nonce(const byte record[], size_t record_len)
    {
-   BOTAN_ASSERT(m_aead, "Using AEAD mode");
-   BOTAN_ASSERT(m_nonce.size() == 12, "Expected nonce size");
-   BOTAN_ASSERT(record_len >= 8, "Record includes nonce");
-   copy_mem(&m_nonce[4], record, 8);
+   BOTAN_ASSERT(record_len >= implicit_nonce_bytes(), "Record includes nonce");
+   copy_mem(&m_nonce[explicit_nonce_bytes()], record, implicit_nonce_bytes());
    return m_nonce;
    }
 
@@ -160,14 +158,14 @@ void write_record(secure_vector<byte>& output,
       const size_t ctext_size = aead->output_length(msg_length);
 
       auto nonce = cipherstate->aead_nonce(msg_sequence);
-      const size_t implicit_nonce_bytes = 4; // FIXME, take from ciphersuite
-      const size_t explicit_nonce_bytes = 8;
+      const size_t implicit_nonce_bytes = cipherstate->implicit_nonce_bytes();
+      const size_t explicit_nonce_bytes = cipherstate->explicit_nonce_bytes();
 
       BOTAN_ASSERT(nonce.size() == implicit_nonce_bytes + explicit_nonce_bytes,
                    "Expected nonce size");
 
       // wrong if start_vec returns something
-      const size_t rec_size = ctext_size + explicit_nonce_bytes;
+      const size_t rec_size = ctext_size + implicit_nonce_bytes;
 
       BOTAN_ASSERT(rec_size <= 0xFFFF, "Ciphertext length fits in field");
 
@@ -178,8 +176,8 @@ void write_record(secure_vector<byte>& output,
          cipherstate->format_ad(msg_sequence, msg_type, version, msg_length)
          );
 
-      output += std::make_pair(&nonce[implicit_nonce_bytes], explicit_nonce_bytes);
-      output += aead->start_vec(nonce);
+      output += std::make_pair(&nonce[explicit_nonce_bytes], implicit_nonce_bytes);
+      BOTAN_ASSERT(aead->start_vec(nonce).empty(), "AEAD doesn't return anything from start");
 
       const size_t offset = output.size();
       output += std::make_pair(&msg[0], msg_length);
@@ -388,7 +386,7 @@ void decrypt_record(secure_vector<byte>& output,
    if(AEAD_Mode* aead = cipherstate.aead())
       {
       auto nonce = cipherstate.aead_nonce(record_contents, record_len);
-      const size_t nonce_length = 8; // fixme, take from ciphersuite
+      const size_t nonce_length = cipherstate.implicit_nonce_bytes();
 
       BOTAN_ASSERT(record_len > nonce_length, "Have data past the nonce");
       const byte* msg = &record_contents[nonce_length];

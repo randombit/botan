@@ -128,13 +128,14 @@ def to_ciphersuite_info(code, name):
             cipher_algo += '/' + mode
 
     if cipher_algo in stream_ciphers or mode == 'CBC':
-        return 'Ciphersuite(0x%s, "%s", "%s", "%s", %d, %d, "%s", %d)' % (
+        return 'Ciphersuite(0x%s, "%s", "%s", "%s", %d, %d, 0, "%s", %d)' % (
             code, sig_algo, kex_algo, cipher_algo, cipher_keylen, ivlen, mac_algo, mac_keylen[mac_algo])
     else:
         imp_iv_len = 4
+        exp_iv_len = 8
 
-        return 'Ciphersuite(0x%s, "%s", "%s", "%s", %d, %d, "AEAD", %d, "%s")' % (
-            code, sig_algo, kex_algo, cipher_algo, cipher_keylen, imp_iv_len, 0, mac_algo)
+        return 'Ciphersuite(0x%s, "%s", "%s", "%s", %d, %d, %d, "AEAD", %d, "%s")' % (
+            code, sig_algo, kex_algo, cipher_algo, cipher_keylen, imp_iv_len, exp_iv_len, 0, mac_algo)
 
 def open_input(args):
     iana_url = 'https://www.iana.org/assignments/tls-parameters/tls-parameters.txt'

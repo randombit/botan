@@ -65,7 +65,9 @@ class Connection_Cipher_State
 
       size_t iv_size() const { return m_iv_size; }
 
-      bool mac_includes_record_version() const { return !m_is_ssl3; }
+      size_t implicit_nonce_bytes() const { return m_implicit_nonce_size; }
+
+      size_t explicit_nonce_bytes() const { return m_explicit_nonce_size; }
 
       bool cipher_padding_single_byte() const { return m_is_ssl3; }
 
@@ -89,6 +91,7 @@ class Connection_Cipher_State
       secure_vector<byte> m_nonce, m_ad;
 
       size_t m_block_size = 0;
+      size_t m_implicit_nonce_size = 0, m_explicit_nonce_size = 0;
       size_t m_iv_size = 0;
       bool m_is_ssl3 = false;
    };
