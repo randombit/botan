@@ -190,7 +190,9 @@ int tls_client_main(int argc, char* argv[])
          fd_set readfds;
          FD_ZERO(&readfds);
          FD_SET(sockfd, &readfds);
-         FD_SET(STDIN_FILENO, &readfds);
+
+         if(client.is_active())
+            FD_SET(STDIN_FILENO, &readfds);
 
          struct timeval timeout = { 1, 0 };
 
@@ -213,10 +215,10 @@ int tls_client_main(int argc, char* argv[])
                continue;
                }
 
-            //std::cout << "Socket - got " << got << " bytes\n";
             client.received_data(buf, got);
             }
-         else if(FD_ISSET(STDIN_FILENO, &readfds))
+
+         if(FD_ISSET(STDIN_FILENO, &readfds))
             {
             byte buf[1024] = { 0 };
             ssize_t got = read(STDIN_FILENO, buf, sizeof(buf));
@@ -253,16 +255,15 @@ int tls_client_main(int argc, char* argv[])
             else
                client.send(buf, got);
             }
-         else
+
+         if(client.timeout_check())
             {
-            if(client.timeout_check())
-               std::cerr << "Timeout detected\n";
+            std::cout << "Timeout detected\n";
             }
          }
 
       ::close(sockfd);
-
-   }
+      }
    catch(std::exception& e)
       {
       std::cout << "Exception: " << e.what() << "\n";
