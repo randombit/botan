@@ -268,7 +268,7 @@ void Client_Hello::deserialize(const std::vector<byte>& buf)
          {
          if(!reneg->renegotiation_info().empty())
             throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
-                                "Client send renegotiation SCSV and non-empty extension");
+                                "Client sent renegotiation SCSV and non-empty extension");
          }
       else
          {
