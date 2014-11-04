@@ -21,15 +21,20 @@ enum {
    TLS_FALLBACK_SCSV                        = 0x5600
 };
 
-std::vector<byte> make_hello_random(RandomNumberGenerator& rng)
+std::vector<byte> make_hello_random(RandomNumberGenerator& rng,
+                                    const Policy& policy)
    {
    std::vector<byte> buf(32);
+   rng.randomize(&buf[0], buf.size());
 
-   const u32bit time32 = static_cast<u32bit>(
-      std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
+   if(policy.include_time_in_hello_random())
+      {
+      const u32bit time32 = static_cast<u32bit>(
+         std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
 
-   store_be(time32, &buf[0]);
-   rng.randomize(&buf[4], buf.size() - 4);
+      store_be(time32, &buf[0]);
+      }
+
    return buf;
    }
 
@@ -71,7 +76,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
                            const std::string& hostname,
                            const std::string& srp_identifier) :
    m_version(version),
-   m_random(make_hello_random(rng)),
+   m_random(make_hello_random(rng, policy)),
    m_suites(policy.ciphersuite_list(m_version, (srp_identifier != ""))),
    m_comp_methods(policy.compression())
    {
@@ -112,7 +117,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
                            bool next_protocol) :
    m_version(session.version()),
    m_session_id(session.session_id()),
-   m_random(make_hello_random(rng)),
+   m_random(make_hello_random(rng, policy)),
    m_suites(policy.ciphersuite_list(m_version, (session.srp_identifier() != ""))),
    m_comp_methods(policy.compression())
    {

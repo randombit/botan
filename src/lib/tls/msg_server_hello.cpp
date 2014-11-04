@@ -36,7 +36,7 @@ Server_Hello::Server_Hello(Handshake_IO& io,
                            RandomNumberGenerator& rng) :
    m_version(ver),
    m_session_id(session_id),
-   m_random(make_hello_random(rng)),
+   m_random(make_hello_random(rng, policy)),
    m_ciphersuite(ciphersuite),
    m_comp_method(compression)
    {

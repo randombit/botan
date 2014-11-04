@@ -502,7 +502,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
       const std::vector<byte>& session_ticket = state.session_ticket();
 
       if(session_id.empty() && !session_ticket.empty())
-         session_id = make_hello_random(rng());
+         session_id = make_hello_random(rng(), m_policy);
 
       Session session_info(
          session_id,

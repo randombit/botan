@@ -90,6 +90,14 @@ class BOTAN_DLL Policy
       virtual bool allow_insecure_renegotiation() const { return false; }
 
       /**
+      * The protocol dictates that the first 32 bits of the random
+      * field are the current time in seconds. However this allows
+      * client fingerprinting attacks. Set to false to disable, in
+      * which case random bytes will be used instead.
+      */
+      virtual bool include_time_in_hello_random() const { return true; }
+
+      /**
       * Allow servers to initiate a new handshake
       */
       virtual bool allow_server_initiated_renegotiation() const;

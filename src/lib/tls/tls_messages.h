@@ -29,7 +29,8 @@ namespace TLS {
 
 class Handshake_IO;
 
-std::vector<byte> make_hello_random(RandomNumberGenerator& rng);
+std::vector<byte> make_hello_random(RandomNumberGenerator& rng,
+                                    const Policy& policy);
 
 /**
 * DTLS Hello Verify Request
