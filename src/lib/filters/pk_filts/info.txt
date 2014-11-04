@@ -1,8 +1,0 @@
-define PUBLIC_KEY_CRYPTO 20131128
-
-load_on auto
-
-<requires>
-pubkey
-filters
-</requires>
