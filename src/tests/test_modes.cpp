@@ -22,7 +22,7 @@ secure_vector<byte> run_mode(const std::string& algo,
    std::unique_ptr<Cipher_Mode> cipher(get_cipher(algo, dir));
 
    cipher->set_key(key);
-   cipher->start_vec(nonce);
+   cipher->start(nonce);
 
    secure_vector<byte> ct = pt;
    cipher->finish(ct);

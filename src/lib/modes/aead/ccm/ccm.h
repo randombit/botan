@@ -22,8 +22,6 @@ namespace Botan {
 class BOTAN_DLL CCM_Mode : public AEAD_Mode
    {
    public:
-      secure_vector<byte> start(const byte nonce[], size_t nonce_len) override;
-
       void update(secure_vector<byte>& blocks, size_t offset = 0) override;
 
       void set_associated_data(const byte ad[], size_t ad_len) override;
@@ -62,6 +60,8 @@ class BOTAN_DLL CCM_Mode : public AEAD_Mode
       secure_vector<byte> format_b0(size_t msg_size);
       secure_vector<byte> format_c0();
    private:
+      secure_vector<byte> start_raw(const byte nonce[], size_t nonce_len) override;
+
       void key_schedule(const byte key[], size_t length) override;
 
       const size_t m_tag_size;

@@ -90,7 +90,7 @@ void CCM_Mode::set_associated_data(const byte ad[], size_t length)
       }
    }
 
-secure_vector<byte> CCM_Mode::start(const byte nonce[], size_t nonce_len)
+secure_vector<byte> CCM_Mode::start_raw(const byte nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);

@@ -21,8 +21,6 @@ class BOTAN_DLL XTS_Mode : public Cipher_Mode
    public:
       std::string name() const override;
 
-      secure_vector<byte> start(const byte nonce[], size_t nonce_len) override;
-
       size_t update_granularity() const override;
 
       size_t minimum_final_size() const override;
@@ -44,6 +42,7 @@ class BOTAN_DLL XTS_Mode : public Cipher_Mode
       void update_tweak(size_t last_used);
 
    private:
+      secure_vector<byte> start_raw(const byte nonce[], size_t nonce_len) override;
       void key_schedule(const byte key[], size_t length) override;
 
       std::unique_ptr<BlockCipher> m_cipher, m_tweak_cipher;

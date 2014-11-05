@@ -107,7 +107,7 @@ void XTS_Mode::key_schedule(const byte key[], size_t length)
    m_tweak_cipher->set_key(&key[key_half], key_half);
    }
 
-secure_vector<byte> XTS_Mode::start(const byte nonce[], size_t nonce_len)
+secure_vector<byte> XTS_Mode::start_raw(const byte nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);

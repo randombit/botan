@@ -90,7 +90,7 @@ void Transformation_Filter::end_msg()
 
 void Transformation_Filter::start_msg()
    {
-   send(m_transform->start_vec(m_nonce.get()));
+   send(m_transform->start(m_nonce.get()));
    }
 
 void Transformation_Filter::buffered_block(const byte input[], size_t input_length)

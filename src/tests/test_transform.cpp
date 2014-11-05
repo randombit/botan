@@ -22,7 +22,7 @@ secure_vector<byte> transform_test(const std::string& algo,
    std::unique_ptr<Transformation> transform(get_transform(algo));
 
    //transform->set_key(key);
-   transform->start_vec(nonce);
+   transform->start(nonce);
 
    secure_vector<byte> out = in;
    transform->update(out, 0);

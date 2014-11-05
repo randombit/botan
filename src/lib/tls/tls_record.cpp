@@ -164,7 +164,7 @@ void write_record(secure_vector<byte>& output,
       BOTAN_ASSERT(nonce.size() == implicit_nonce_bytes + explicit_nonce_bytes,
                    "Expected nonce size");
 
-      // wrong if start_vec returns something
+      // wrong if start returns something
       const size_t rec_size = ctext_size + implicit_nonce_bytes;
 
       BOTAN_ASSERT(rec_size <= 0xFFFF, "Ciphertext length fits in field");
@@ -177,7 +177,7 @@ void write_record(secure_vector<byte>& output,
          );
 
       output += std::make_pair(&nonce[explicit_nonce_bytes], implicit_nonce_bytes);
-      BOTAN_ASSERT(aead->start_vec(nonce).empty(), "AEAD doesn't return anything from start");
+      BOTAN_ASSERT(aead->start(nonce).empty(), "AEAD doesn't return anything from start");
 
       const size_t offset = output.size();
       output += std::make_pair(&msg[0], msg_length);
@@ -398,7 +398,7 @@ void decrypt_record(secure_vector<byte>& output,
          cipherstate.format_ad(record_sequence, record_type, record_version, ptext_size)
          );
 
-      output += aead->start_vec(nonce);
+      output += aead->start(nonce);
 
       const size_t offset = output.size();
       output += std::make_pair(&msg[0], msg_length);

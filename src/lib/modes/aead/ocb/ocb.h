@@ -28,8 +28,6 @@ class L_computer;
 class BOTAN_DLL OCB_Mode : public AEAD_Mode
    {
    public:
-      secure_vector<byte> start(const byte nonce[], size_t nonce_len) override;
-
       void set_associated_data(const byte ad[], size_t ad_len) override;
 
       std::string name() const override;
@@ -64,6 +62,8 @@ class BOTAN_DLL OCB_Mode : public AEAD_Mode
       secure_vector<byte> m_offset;
       secure_vector<byte> m_ad_hash;
    private:
+      secure_vector<byte> start_raw(const byte nonce[], size_t nonce_len) override;
+
       secure_vector<byte> update_nonce(const byte nonce[], size_t nonce_len);
 
       size_t m_tag_size = 0;

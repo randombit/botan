@@ -134,7 +134,7 @@ void time_transform(std::unique_ptr<Transformation> tf,
 
       std::chrono::nanoseconds time_used(0);
 
-      tf->start_vec(rng.random_vec(tf->default_nonce_length()));
+      tf->start(rng.random_vec(tf->default_nonce_length()));
 
       auto start = std::chrono::high_resolution_clock::now();
 

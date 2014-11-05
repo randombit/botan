@@ -28,6 +28,17 @@ class BOTAN_DLL Transformation
       * @param nonce the per message nonce
       */
       template<typename Alloc>
+      secure_vector<byte> start(const std::vector<byte, Alloc>& nonce)
+         {
+         return start(&nonce[0], nonce.size());
+         }
+
+      /**
+      * Begin processing a message.
+      * @param nonce the per message nonce
+      */
+      template<typename Alloc>
+      BOTAN_DEPRECATED("Use Transformation::start")
       secure_vector<byte> start_vec(const std::vector<byte, Alloc>& nonce)
          {
          return start(&nonce[0], nonce.size());
@@ -38,7 +49,20 @@ class BOTAN_DLL Transformation
       * @param nonce the per message nonce
       * @param nonce_len length of nonce
       */
-      virtual secure_vector<byte> start(const byte nonce[], size_t nonce_len) = 0;
+      secure_vector<byte> start(const byte nonce[], size_t nonce_len)
+         {
+         return start_raw(nonce, nonce_len);
+         }
+
+      /**
+      * Begin processing a message.
+      */
+      secure_vector<byte> start()
+         {
+         return start_raw(nullptr, 0);
+         }
+
+      virtual secure_vector<byte> start_raw(const byte nonce[], size_t nonce_len) = 0;
 
       /**
       * Process some data. Input must be in size update_granularity() byte blocks.

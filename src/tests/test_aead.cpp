@@ -41,7 +41,7 @@ size_t aead_test(const std::string& algo,
    const auto expected_ct = hex_decode_locked(expected);
 
    auto vec = pt;
-   enc->start_vec(nonce);
+   enc->start(nonce);
    // should first update if possible
    enc->finish(vec);
 
@@ -54,7 +54,7 @@ size_t aead_test(const std::string& algo,
 
    vec = expected_ct;
 
-   dec->start_vec(nonce);
+   dec->start(nonce);
    dec->finish(vec);
 
    if(vec != pt)
@@ -67,7 +67,7 @@ size_t aead_test(const std::string& algo,
       {
       vec = expected_ct;
       vec[0] ^= 1;
-      dec->start_vec(nonce);
+      dec->start(nonce);
       try
          {
          dec->finish(vec);
@@ -82,7 +82,7 @@ size_t aead_test(const std::string& algo,
          bad_nonce[0] ^= 1;
          vec = expected_ct;
 
-         dec->start_vec(bad_nonce);
+         dec->start(bad_nonce);
 
          try
             {
@@ -105,7 +105,7 @@ size_t aead_test(const std::string& algo,
          aead_dec->set_associated_data_vec(bad_ad);
 
          vec = expected_ct;
-         dec->start_vec(nonce);
+         dec->start(nonce);
 
          try
             {

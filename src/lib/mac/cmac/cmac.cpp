@@ -46,6 +46,8 @@ secure_vector<byte> CMAC::poly_double(const secure_vector<byte>& in)
             out[out.size()-2] ^= 0x1;
             out[out.size()-1] ^= 0x25;
             break;
+         default:
+            throw std::runtime_error("Unsupported CMAC size " + std::to_string(in.size()));
          }
       }
 

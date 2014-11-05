@@ -223,7 +223,7 @@ OCB_Mode::update_nonce(const byte nonce[], size_t nonce_len)
    return offset;
    }
 
-secure_vector<byte> OCB_Mode::start(const byte nonce[], size_t nonce_len)
+secure_vector<byte> OCB_Mode::start_raw(const byte nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);

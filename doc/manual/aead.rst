@@ -35,7 +35,7 @@ AEAD modes currently available include GCM, OCB, and EAX. All three use a
        function more than once, even across multiple calls to :cpp:func:`start`
        and :cpp:func:`finish`.
 
-  .. cpp:function:: secure_vector<byte> start(const byte nonce[], size_t nonce_len)
+  .. cpp:function:: void start(const byte nonce[], size_t nonce_len)
 
        Start processing a message, using *nonce* as the unique per-message
        value.

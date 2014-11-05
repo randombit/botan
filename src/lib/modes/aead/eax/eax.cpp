@@ -92,7 +92,7 @@ void EAX_Mode::set_associated_data(const byte ad[], size_t length)
    m_ad_mac = eax_prf(1, block_size(), *m_cmac, ad, length);
    }
 
-secure_vector<byte> EAX_Mode::start(const byte nonce[], size_t nonce_len)
+secure_vector<byte> EAX_Mode::start_raw(const byte nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);

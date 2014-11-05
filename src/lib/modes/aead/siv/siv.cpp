@@ -71,7 +71,7 @@ void SIV_Mode::set_associated_data_n(size_t n, const byte ad[], size_t length)
    m_ad_macs[n] = m_cmac->process(ad, length);
    }
 
-secure_vector<byte> SIV_Mode::start(const byte nonce[], size_t nonce_len)
+secure_vector<byte> SIV_Mode::start_raw(const byte nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
@@ -100,7 +100,7 @@ secure_vector<byte> SIV_Mode::S2V(const byte* text, size_t text_len)
    {
    const byte zero[16] = { 0 };
 
-   secure_vector<byte> V = cmac().process(zero, 16);
+   secure_vector<byte> V = m_cmac->process(zero, 16);
 
    for(size_t i = 0; i != m_ad_macs.size(); ++i)
       {
@@ -119,14 +119,14 @@ secure_vector<byte> SIV_Mode::S2V(const byte* text, size_t text_len)
       V = CMAC::poly_double(V);
       xor_buf(&V[0], text, text_len);
       V[text_len] ^= 0x80;
-      return cmac().process(V);
+      return m_cmac->process(V);
       }
 
-   cmac().update(text, text_len - 16);
+   m_cmac->update(text, text_len - 16);
    xor_buf(&V[0], &text[text_len - 16], 16);
-   cmac().update(V);
+   m_cmac->update(V);
 
-   return cmac().final();
+   return m_cmac->final();
    }
 
 void SIV_Mode::set_ctr_iv(secure_vector<byte> V)
