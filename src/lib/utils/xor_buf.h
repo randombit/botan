@@ -68,7 +68,8 @@ template<typename T> void xor_buf(T out[],
 
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
 
-inline void xor_buf(byte out[], const byte in[], size_t length)
+template<>
+inline void xor_buf<byte>(byte out[], const byte in[], size_t length)
    {
    while(length >= 8)
       {
@@ -80,10 +81,11 @@ inline void xor_buf(byte out[], const byte in[], size_t length)
       out[i] ^= in[i];
    }
 
-inline void xor_buf(byte out[],
-                    const byte in[],
-                    const byte in2[],
-                    size_t length)
+template<>
+inline void xor_buf<byte>(byte out[],
+                          const byte in[],
+                          const byte in2[],
+                          size_t length)
    {
    while(length >= 8)
       {
