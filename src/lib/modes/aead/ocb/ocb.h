@@ -1,6 +1,6 @@
 /*
 * OCB Mode
-* (C) 2013 Jack Lloyd
+* (C) 2013,2014 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -50,12 +50,13 @@ class BOTAN_DLL OCB_Mode : public AEAD_Mode
       */
       OCB_Mode(BlockCipher* cipher, size_t tag_size);
 
-      void key_schedule(const byte key[], size_t length) override;
+      size_t BS() const { return m_BS; }
 
       // fixme make these private
       std::unique_ptr<BlockCipher> m_cipher;
       std::unique_ptr<L_computer> m_L;
 
+      size_t m_BS;
       size_t m_block_index = 0;
 
       secure_vector<byte> m_checksum;
@@ -63,6 +64,8 @@ class BOTAN_DLL OCB_Mode : public AEAD_Mode
       secure_vector<byte> m_ad_hash;
    private:
       secure_vector<byte> start_raw(const byte nonce[], size_t nonce_len) override;
+
+      void key_schedule(const byte key[], size_t length) override;
 
       secure_vector<byte> update_nonce(const byte nonce[], size_t nonce_len);
 

@@ -2,7 +2,7 @@
 #include "tests.h"
 #include <iostream>
 
-#if defined(BOTAN_HAS_OCB)
+#if defined(BOTAN_HAS_AEAD_OCB)
 #include <botan/ocb.h>
 #include <botan/hex.h>
 #include <botan/sha2_32.h>
@@ -134,7 +134,7 @@ size_t test_ocb()
    {
    size_t fails = 0;
 
-#if defined(BOTAN_HAS_OCB)
+#if defined(BOTAN_HAS_AEAD_OCB)
    fails += test_ocb_long(128, "B2B41CBF9B05037DA7F16C24A35C1C94");
    fails += test_ocb_long(96, "1A4F0654277709A5BDA0D380");
    fails += test_ocb_long(64, "B7ECE9D381FE437F");
