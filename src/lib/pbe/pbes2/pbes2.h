@@ -52,17 +52,15 @@ class BOTAN_DLL PBE_PKCS5v20 : public PBE
                    const std::string& passphrase,
                    std::chrono::milliseconds msec,
                    RandomNumberGenerator& rng);
-
-      ~PBE_PKCS5v20();
    private:
       void flush_pipe(bool);
 
-      Cipher_Dir direction;
-      BlockCipher* block_cipher;
-      MessageAuthenticationCode* m_prf;
-      secure_vector<byte> salt, key, iv;
-      size_t iterations, key_length;
-      Pipe pipe;
+      Cipher_Dir m_direction;
+      std::unique_ptr<BlockCipher> m_block_cipher;
+      std::unique_ptr<MessageAuthenticationCode> m_prf;
+      secure_vector<byte> m_salt, m_key, m_iv;
+      size_t m_iterations, m_key_length;
+      Pipe m_pipe;
    };
 
 }

@@ -24,7 +24,7 @@ namespace Botan {
 */
 void PBE_PKCS5v20::write(const byte input[], size_t length)
    {
-   pipe.write(input, length);
+   m_pipe.write(input, length);
    flush_pipe(true);
    }
 
@@ -33,12 +33,12 @@ void PBE_PKCS5v20::write(const byte input[], size_t length)
 */
 void PBE_PKCS5v20::start_msg()
    {
-   pipe.append(get_cipher(block_cipher->name() + "/CBC/PKCS7",
-                          key, iv, direction));
+   m_pipe.append(get_cipher(m_block_cipher->name() + "/CBC/PKCS7",
+                            m_key, m_iv, m_direction));
 
-   pipe.start_msg();
-   if(pipe.message_count() > 1)
-      pipe.set_default_msg(pipe.default_msg() + 1);
+   m_pipe.start_msg();
+   if(m_pipe.message_count() > 1)
+      m_pipe.set_default_msg(m_pipe.default_msg() + 1);
    }
 
 /*
@@ -46,9 +46,9 @@ void PBE_PKCS5v20::start_msg()
 */
 void PBE_PKCS5v20::end_msg()
    {
-   pipe.end_msg();
+   m_pipe.end_msg();
    flush_pipe(false);
-   pipe.reset();
+   m_pipe.reset();
    }
 
 /*
@@ -56,13 +56,13 @@ void PBE_PKCS5v20::end_msg()
 */
 void PBE_PKCS5v20::flush_pipe(bool safe_to_skip)
    {
-   if(safe_to_skip && pipe.remaining() < 64)
+   if(safe_to_skip && m_pipe.remaining() < 64)
       return;
 
    secure_vector<byte> buffer(DEFAULT_BUFFERSIZE);
-   while(pipe.remaining())
+   while(m_pipe.remaining())
       {
-      const size_t got = pipe.read(&buffer[0], buffer.size());
+      const size_t got = m_pipe.read(&buffer[0], buffer.size());
       send(buffer, got);
       }
    }
@@ -78,9 +78,9 @@ std::vector<byte> PBE_PKCS5v20::encode_params() const
          AlgorithmIdentifier("PKCS5.PBKDF2",
             DER_Encoder()
                .start_cons(SEQUENCE)
-                  .encode(salt, OCTET_STRING)
-                  .encode(iterations)
-                  .encode(key_length)
+                  .encode(m_salt, OCTET_STRING)
+                  .encode(m_iterations)
+                  .encode(m_key_length)
                   .encode_if(
                      m_prf->name() != "HMAC(SHA-160)",
                      AlgorithmIdentifier(m_prf->name(),
@@ -90,8 +90,8 @@ std::vector<byte> PBE_PKCS5v20::encode_params() const
             )
          )
       .encode(
-         AlgorithmIdentifier(block_cipher->name() + "/CBC",
-            DER_Encoder().encode(iv, OCTET_STRING).get_contents_unlocked()
+         AlgorithmIdentifier(m_block_cipher->name() + "/CBC",
+            DER_Encoder().encode(m_iv, OCTET_STRING).get_contents_unlocked()
             )
          )
       .end_cons()
@@ -108,7 +108,7 @@ OID PBE_PKCS5v20::get_oid() const
 
 std::string PBE_PKCS5v20::name() const
    {
-   return "PBE-PKCS5v20(" + block_cipher->name() + "," +
+   return "PBE-PKCS5v20(" + m_block_cipher->name() + "," +
                             m_prf->name() + ")";
    }
 
@@ -120,19 +120,19 @@ PBE_PKCS5v20::PBE_PKCS5v20(BlockCipher* cipher,
                            const std::string& passphrase,
                            std::chrono::milliseconds msec,
                            RandomNumberGenerator& rng) :
-   direction(ENCRYPTION),
-   block_cipher(cipher),
+   m_direction(ENCRYPTION),
+   m_block_cipher(cipher),
    m_prf(mac),
-   salt(rng.random_vec(12)),
-   iv(rng.random_vec(block_cipher->block_size())),
-   iterations(0),
-   key_length(block_cipher->maximum_keylength())
+   m_salt(rng.random_vec(12)),
+   m_iv(rng.random_vec(m_block_cipher->block_size())),
+   m_iterations(0),
+   m_key_length(m_block_cipher->maximum_keylength())
    {
    PKCS5_PBKDF2 pbkdf(m_prf->clone());
 
-   key = pbkdf.derive_key(key_length, passphrase,
-                          &salt[0], salt.size(),
-                          msec, iterations).bits_of();
+   m_key = pbkdf.derive_key(m_key_length, passphrase,
+                            &m_salt[0], m_salt.size(),
+                            msec, m_iterations).bits_of();
    }
 
 /*
@@ -140,8 +140,8 @@ PBE_PKCS5v20::PBE_PKCS5v20(BlockCipher* cipher,
 */
 PBE_PKCS5v20::PBE_PKCS5v20(const std::vector<byte>& params,
                            const std::string& passphrase) :
-   direction(DECRYPTION),
-   block_cipher(nullptr),
+   m_direction(DECRYPTION),
+   m_block_cipher(nullptr),
    m_prf(nullptr)
    {
    AlgorithmIdentifier kdf_algo, enc_algo;
@@ -161,9 +161,9 @@ PBE_PKCS5v20::PBE_PKCS5v20(const std::vector<byte>& params,
 
    BER_Decoder(kdf_algo.parameters)
       .start_cons(SEQUENCE)
-         .decode(salt, OCTET_STRING)
-         .decode(iterations)
-         .decode_optional(key_length, INTEGER, UNIVERSAL)
+         .decode(m_salt, OCTET_STRING)
+         .decode(m_iterations)
+         .decode_optional(m_key_length, INTEGER, UNIVERSAL)
          .decode_optional(prf_algo, SEQUENCE, CONSTRUCTED,
                           AlgorithmIdentifier("HMAC(SHA-160)",
                                               AlgorithmIdentifier::USE_NULL_PARAM))
@@ -181,28 +181,22 @@ PBE_PKCS5v20::PBE_PKCS5v20(const std::vector<byte>& params,
       throw Decoding_Error("PBE-PKCS5 v2.0: Don't know param format for " +
                            cipher);
 
-   BER_Decoder(enc_algo.parameters).decode(iv, OCTET_STRING).verify_end();
+   BER_Decoder(enc_algo.parameters).decode(m_iv, OCTET_STRING).verify_end();
 
-   block_cipher = af.make_block_cipher(cipher_spec[0]);
-   m_prf = af.make_mac(OIDS::lookup(prf_algo.oid));
+   m_block_cipher.reset(af.make_block_cipher(cipher_spec[0]));
+   m_prf.reset(af.make_mac(OIDS::lookup(prf_algo.oid)));
 
-   if(key_length == 0)
-      key_length = block_cipher->maximum_keylength();
+   if(m_key_length == 0)
+      m_key_length = m_block_cipher->maximum_keylength();
 
-   if(salt.size() < 8)
+   if(m_salt.size() < 8)
       throw Decoding_Error("PBE-PKCS5 v2.0: Encoded salt is too small");
 
    PKCS5_PBKDF2 pbkdf(m_prf->clone());
 
-   key = pbkdf.derive_key(key_length, passphrase,
-                          &salt[0], salt.size(),
-                          iterations).bits_of();
-   }
-
-PBE_PKCS5v20::~PBE_PKCS5v20()
-   {
-   delete m_prf;
-   delete block_cipher;
+   m_key = pbkdf.derive_key(m_key_length, passphrase,
+                            &m_salt[0], m_salt.size(),
+                            m_iterations).bits_of();
    }
 
 }
