@@ -95,20 +95,16 @@ algorithm_kat_detailed(const SCAN_Name& algo_name,
       else if(const BlockCipher* proto =
                  af.prototype_block_cipher(algo, provider))
          {
-         Keyed_Filter* enc = get_cipher_mode(proto, ENCRYPTION,
-                                             algo_name.cipher_mode(),
-                                             algo_name.cipher_mode_pad());
+         std::unique_ptr<Keyed_Filter> enc(get_cipher_mode(proto, ENCRYPTION,
+                                                           algo_name.cipher_mode(),
+                                                           algo_name.cipher_mode_pad()));
 
-         Keyed_Filter* dec = get_cipher_mode(proto, DECRYPTION,
-                                             algo_name.cipher_mode(),
-                                             algo_name.cipher_mode_pad());
+         std::unique_ptr<Keyed_Filter> dec(get_cipher_mode(proto, DECRYPTION,
+                                                           algo_name.cipher_mode(),
+                                                           algo_name.cipher_mode_pad()));
 
          if(!enc || !dec)
-            {
-            delete enc;
-            delete dec;
             continue;
-            }
 
          enc->set_key(key);
 
@@ -128,17 +124,17 @@ algorithm_kat_detailed(const SCAN_Name& algo_name,
 
          if(!ad.empty())
             {
-            if(AEAD_Filter* enc_aead = dynamic_cast<AEAD_Filter*>(enc))
+            if(AEAD_Filter* enc_aead = dynamic_cast<AEAD_Filter*>(enc.get()))
                {
                enc_aead->set_associated_data(&ad[0], ad.size());
 
-               if(AEAD_Filter* dec_aead = dynamic_cast<AEAD_Filter*>(dec))
+               if(AEAD_Filter* dec_aead = dynamic_cast<AEAD_Filter*>(dec.get()))
                   dec_aead->set_associated_data(&ad[0], ad.size());
                }
             }
 
-         all_results[provider + " (encrypt)"] = test_filter_kat(enc, input, output);
-         all_results[provider + " (decrypt)"] = test_filter_kat(dec, output, input);
+         all_results[provider + " (encrypt)"] = test_filter_kat(enc.release(), input, output);
+         all_results[provider + " (decrypt)"] = test_filter_kat(dec.release(), output, input);
          }
       }
 

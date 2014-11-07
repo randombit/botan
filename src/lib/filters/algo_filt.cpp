@@ -14,21 +14,20 @@ namespace Botan {
 /*
 * StreamCipher_Filter Constructor
 */
-StreamCipher_Filter::StreamCipher_Filter(StreamCipher* stream_cipher) :
-   buffer(DEFAULT_BUFFERSIZE)
+StreamCipher_Filter::StreamCipher_Filter(StreamCipher* cipher) :
+   buffer(DEFAULT_BUFFERSIZE), m_cipher(cipher)
    {
-   cipher = stream_cipher;
    }
 
 /*
 * StreamCipher_Filter Constructor
 */
-StreamCipher_Filter::StreamCipher_Filter(StreamCipher* stream_cipher,
+StreamCipher_Filter::StreamCipher_Filter(StreamCipher* cipher,
                                          const SymmetricKey& key) :
-   buffer(DEFAULT_BUFFERSIZE)
+   buffer(DEFAULT_BUFFERSIZE),
+   m_cipher(cipher)
    {
-   cipher = stream_cipher;
-   cipher->set_key(key);
+   m_cipher->set_key(key);
    }
 
 /*
@@ -38,7 +37,7 @@ StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name) :
    buffer(DEFAULT_BUFFERSIZE)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
-   cipher = af.make_stream_cipher(sc_name);
+   m_cipher.reset(af.make_stream_cipher(sc_name));
    }
 
 /*
@@ -49,8 +48,8 @@ StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name,
    buffer(DEFAULT_BUFFERSIZE)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
-   cipher = af.make_stream_cipher(sc_name);
-   cipher->set_key(key);
+   m_cipher.reset(af.make_stream_cipher(sc_name));
+   m_cipher->set_key(key);
    }
 
 /*
@@ -58,7 +57,7 @@ StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name,
 */
 void StreamCipher_Filter::set_iv(const InitializationVector& iv)
    {
-   cipher->set_iv(iv.begin(), iv.length());
+   m_cipher->set_iv(iv.begin(), iv.length());
    }
 
 /*
@@ -69,7 +68,7 @@ void StreamCipher_Filter::write(const byte input[], size_t length)
    while(length)
       {
       size_t copied = std::min<size_t>(length, buffer.size());
-      cipher->cipher(input, &buffer[0], copied);
+      m_cipher->cipher(input, &buffer[0], copied);
       send(buffer, copied);
       input += copied;
       length -= copied;
@@ -84,7 +83,7 @@ Hash_Filter::Hash_Filter(const std::string& algo_spec,
    OUTPUT_LENGTH(len)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
-   hash = af.make_hash_function(algo_spec);
+   m_hash.reset(af.make_hash_function(algo_spec));
    }
 
 /*
@@ -92,7 +91,7 @@ Hash_Filter::Hash_Filter(const std::string& algo_spec,
 */
 void Hash_Filter::end_msg()
    {
-   secure_vector<byte> output = hash->final();
+   secure_vector<byte> output = m_hash->final();
    if(OUTPUT_LENGTH)
       send(output, std::min<size_t>(OUTPUT_LENGTH, output.size()));
    else
@@ -106,7 +105,7 @@ MAC_Filter::MAC_Filter(const std::string& mac_name, size_t len) :
    OUTPUT_LENGTH(len)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
-   mac = af.make_mac(mac_name);
+   m_mac.reset(af.make_mac(mac_name));
    }
 
 /*
@@ -116,8 +115,8 @@ MAC_Filter::MAC_Filter(const std::string& mac_name, const SymmetricKey& key,
                        size_t len) : OUTPUT_LENGTH(len)
    {
    Algorithm_Factory& af = global_state().algorithm_factory();
-   mac = af.make_mac(mac_name);
-   mac->set_key(key);
+   m_mac.reset(af.make_mac(mac_name));
+   m_mac->set_key(key);
    }
 
 /*
@@ -125,7 +124,7 @@ MAC_Filter::MAC_Filter(const std::string& mac_name, const SymmetricKey& key,
 */
 void MAC_Filter::end_msg()
    {
-   secure_vector<byte> output = mac->final();
+   secure_vector<byte> output = m_mac->final();
    if(OUTPUT_LENGTH)
       send(output, std::min<size_t>(OUTPUT_LENGTH, output.size()));
    else
