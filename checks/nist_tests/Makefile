@@ -1,7 +1,7 @@
 
 CC=g++
 FLAGS=-g -Os -W -Wall -ansi
-LDFLAGS=-L../.. -lbotan-1.9
+LDFLAGS=-L../.. -lbotan-1.10
 CFLAGS=-I../../build/include
 
 x509test: x509test.cpp
