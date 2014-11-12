@@ -1,15 +1,17 @@
 #include "apps.h"
+
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
 #include <botan/x509self.h>
 #include <botan/rsa.h>
 #include <botan/dsa.h>
 using namespace Botan;
 
-#include <iostream>
 #include <fstream>
 #include <memory>
 
-int pkcs10_main(int argc, char* argv[])
+namespace {
+
+int pkcs10(int argc, char* argv[])
    {
    if(argc != 6)
       {
@@ -47,4 +49,9 @@ int pkcs10_main(int argc, char* argv[])
       }
    return 0;
    }
+
+REGISTER_APP(pkcs10);
+
+}
+
 #endif

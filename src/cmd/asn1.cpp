@@ -1,6 +1,7 @@
 #include "apps.h"
 
 #include <botan/bigint.h>
+#include <botan/hex.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/asn1_time.h>
@@ -24,10 +25,6 @@ using namespace Botan;
    much sense at all.
 */
 #define INITIAL_LEVEL 0
-
-void decode(BER_Decoder&, size_t);
-void emit(const std::string&, size_t, size_t, const std::string& = "");
-std::string type_name(ASN1_Tag);
 
 namespace {
 
@@ -55,38 +52,63 @@ std::string url_encode(const std::vector<byte>& in)
    return out.str();
    }
 
-}
-
-int asn1_main(int argc, char* argv[])
+void emit(const std::string& type, size_t level, size_t length, const std::string& value = "")
    {
-   if(argc != 2)
+   const size_t LIMIT = 4*1024;
+   const size_t BIN_LIMIT = 1024;
+
+   std::ostringstream out;
+
+   out << "  d=" << std::setw(2) << level
+       << ", l=" << std::setw(4) << length << ": ";
+
+   for(size_t i = INITIAL_LEVEL; i != level; ++i)
+      out << ' ';
+
+   out << type;
+
+   bool should_skip = false;
+
+   if(value.length() > LIMIT)
+      should_skip = true;
+
+   if((type == "OCTET STRING" || type == "BIT STRING") && value.length() > BIN_LIMIT)
+      should_skip = true;
+
+   if(value != "" && !should_skip)
       {
-      std::cout << "Usage: " << argv[0] << " <file>\n";
-      return 1;
+      if(out.tellp() % 2 == 0) out << ' ';
+
+      while(out.tellp() < 50) out << ' ';
+
+      out << value;
       }
 
-   try {
-      DataSource_Stream in(argv[1]);
-
-      if(!PEM_Code::matches(in))
-         {
-         BER_Decoder decoder(in);
-         decode(decoder, INITIAL_LEVEL);
-         }
-      else
-         {
-         std::string label; // ignored
-         BER_Decoder decoder(PEM_Code::decode(in, label));
-         decode(decoder, INITIAL_LEVEL);
-         }
+   std::cout << out.str() << "\n";
    }
-   catch(std::exception& e)
-      {
-      std::cout << "Error: " << e.what() << "\n";
-      return 2;
-      }
 
-   return 0;
+std::string type_name(ASN1_Tag type)
+   {
+   if(type == PRINTABLE_STRING) return "PRINTABLE STRING";
+   if(type == NUMERIC_STRING)   return "NUMERIC STRING";
+   if(type == IA5_STRING)       return "IA5 STRING";
+   if(type == T61_STRING)       return "T61 STRING";
+   if(type == UTF8_STRING)      return "UTF8 STRING";
+   if(type == VISIBLE_STRING)   return "VISIBLE STRING";
+   if(type == BMP_STRING)       return "BMP STRING";
+
+   if(type == UTC_TIME)         return "UTC TIME";
+   if(type == GENERALIZED_TIME) return "GENERALIZED TIME";
+
+   if(type == OCTET_STRING)     return "OCTET STRING";
+   if(type == BIT_STRING)       return "BIT STRING";
+
+   if(type == ENUMERATED)       return "ENUMERATED";
+   if(type == INTEGER)          return "INTEGER";
+   if(type == NULL_TAG)         return "NULL";
+   if(type == OBJECT_ID)        return "OBJECT";
+   if(type == BOOLEAN)          return "BOOLEAN";
+   return "(UNKNOWN)";
    }
 
 void decode(BER_Decoder& decoder, size_t level)
@@ -184,7 +206,7 @@ void decode(BER_Decoder& decoder, size_t level)
          std::vector<byte> rep;
 
          /* If it's small, it's probably a number, not a hash */
-         if(number.bits() <= 16)
+         if(number.bits() <= 20)
             rep = BigInt::encode(number, BigInt::Decimal);
          else
             rep = BigInt::encode(number, BigInt::Hexadecimal);
@@ -283,62 +305,38 @@ void decode(BER_Decoder& decoder, size_t level)
       }
    }
 
-void emit(const std::string& type, size_t level, size_t length,
-          const std::string& value)
+int asn1(int argc, char* argv[])
    {
-   const size_t LIMIT = 128;
-   const size_t BIN_LIMIT = 64;
-
-   std::ostringstream out;
-
-   out << "  d=" << std::setw(2) << level
-       << ", l=" << std::setw(4) << length << ": ";
-
-   for(size_t i = INITIAL_LEVEL; i != level; ++i)
-      out << ' ';
-
-   out << type;
-
-   bool should_skip = false;
-
-   if(value.length() > LIMIT)
-      should_skip = true;
-
-   if((type == "OCTET STRING" || type == "BIT STRING") && value.length() > BIN_LIMIT)
-      should_skip = true;
-
-   if(value != "" && !should_skip)
+   if(argc != 2)
       {
-      if(out.tellp() % 2 == 0) out << ' ';
-
-      while(out.tellp() < 50) out << ' ';
-
-      out << value;
+      std::cout << "Usage: " << argv[0] << " <file>\n";
+      return 1;
       }
 
-   std::cout << out.str() << "\n";
+   try {
+      DataSource_Stream in(argv[1]);
+
+      if(!PEM_Code::matches(in))
+         {
+         BER_Decoder decoder(in);
+         decode(decoder, INITIAL_LEVEL);
+         }
+      else
+         {
+         std::string label; // ignored
+         BER_Decoder decoder(PEM_Code::decode(in, label));
+         decode(decoder, INITIAL_LEVEL);
+         }
+   }
+   catch(std::exception& e)
+      {
+      std::cout << "Error: " << e.what() << "\n";
+      return 2;
+      }
+
+   return 0;
    }
 
-std::string type_name(ASN1_Tag type)
-   {
-   if(type == PRINTABLE_STRING) return "PRINTABLE STRING";
-   if(type == NUMERIC_STRING)   return "NUMERIC STRING";
-   if(type == IA5_STRING)       return "IA5 STRING";
-   if(type == T61_STRING)       return "T61 STRING";
-   if(type == UTF8_STRING)      return "UTF8 STRING";
-   if(type == VISIBLE_STRING)   return "VISIBLE STRING";
-   if(type == BMP_STRING)       return "BMP STRING";
+REGISTER_APP(asn1);
 
-   if(type == UTC_TIME)         return "UTC TIME";
-   if(type == GENERALIZED_TIME) return "GENERALIZED TIME";
-
-   if(type == OCTET_STRING)     return "OCTET STRING";
-   if(type == BIT_STRING)       return "BIT STRING";
-
-   if(type == ENUMERATED)       return "ENUMERATED";
-   if(type == INTEGER)          return "INTEGER";
-   if(type == NULL_TAG)         return "NULL";
-   if(type == OBJECT_ID)        return "OBJECT";
-   if(type == BOOLEAN)          return "BOOLEAN";
-   return "(UNKNOWN)";
-   }
+}

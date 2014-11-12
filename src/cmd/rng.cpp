@@ -7,7 +7,9 @@
 #include "apps.h"
 #include <botan/libstate.h>
 
-int rng_main(int argc, char* argv[])
+namespace {
+
+int rng(int argc, char* argv[])
    {
    if(argc == 1)
       {
@@ -49,3 +51,7 @@ int rng_main(int argc, char* argv[])
 
    return 0;
    }
+
+REGISTER_APP(rng);
+
+}

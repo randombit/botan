@@ -7,29 +7,16 @@
 
 #include "apps.h"
 
-#include <string>
-#include <cstring>
-#include <vector>
-#include <fstream>
-#include <iostream>
-#include <botan/botan.h>
-
-/*
-* If Bzip2 isn't included, we know nothing works at compile time, but
-* we wait to fail at runtime. Otherwise I would get 2-3 mails a month
-* about how this was failing to compile (even with an informative
-* #error message explaining the situation) because bzip2 wasn't
-* included in the build.
-*/
-
 #if defined(BOTAN_HAS_COMPRESSOR_BZIP2)
-  #include <botan/bzip2.h>
-#endif
 
-const std::string SUFFIX = ".bz2";
+#include <botan/bzip2.h>
 
-int bzip_main(int argc, char* argv[])
+namespace {
+
+int bzip2(int argc, char* argv[])
    {
+   const std::string SUFFIX = ".bz2";
+
    if(argc < 2)
       {
       std::cout << "Usage: " << argv[0]
@@ -37,7 +24,6 @@ int bzip_main(int argc, char* argv[])
       return 1;
       }
 
-#ifdef BOTAN_HAS_COMPRESSOR_BZIP2
    std::vector<std::string> files;
    bool decompress = false, small = false;
    int level = 9;
@@ -104,12 +90,14 @@ int bzip_main(int argc, char* argv[])
    catch(std::exception& e)
       {
       std::cout << "Exception caught: " << e.what() << std::endl;
-      return 1;
+      return 2;
       }
-#else
-
-   std::cout << "Sorry, support for bzip2 not compiled into Botan\n";
-#endif
 
    return 1;
    }
+
+REGISTER_APP(bzip2);
+
+}
+
+#endif

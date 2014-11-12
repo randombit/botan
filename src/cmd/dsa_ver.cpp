@@ -1,28 +1,17 @@
 #include "apps.h"
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <cstdlib>
-#include <string>
-#include <memory>
 
+#if defined(BOTAN_HAS_DSA)
+
+#include <fstream>
 #include <botan/pubkey.h>
 #include <botan/dsa.h>
-#include <botan/b64_filt.h>
+#include <botan/base64.h>
+
 using namespace Botan;
 
 namespace {
 
-secure_vector<byte> b64_decode(const std::string& in)
-   {
-   Pipe pipe(new Base64_Decoder);
-   pipe.process_msg(in);
-   return pipe.read_all();
-   }
-
-}
-
-int dsa_verify_main(int argc, char* argv[])
+int dsa_verify(int argc, char* argv[])
    {
    if(argc != 4)
       {
@@ -59,7 +48,7 @@ int dsa_verify_main(int argc, char* argv[])
          return 1;
          }
 
-      secure_vector<byte> sig = b64_decode(sigstr);
+      secure_vector<byte> sig = base64_decode(sigstr);
 
       PK_Verifier ver(*dsakey, "EMSA1(SHA-1)");
 
@@ -71,14 +60,26 @@ int dsa_verify_main(int argc, char* argv[])
       const bool ok = ver.check_signature(sig);
 
       if(ok)
+         {
          std::cout << "Signature verified\n";
+         return 0;
+         }
       else
+         {
          std::cout << "Signature did NOT verify\n";
+         return 1;
+         }
    }
    catch(std::exception& e)
       {
       std::cout << "Exception caught: " << e.what() << std::endl;
-      return 1;
+      return 2;
       }
-   return 0;
    }
+
+REGISTER_APP(dsa_verify);
+
+}
+
+#endif
+

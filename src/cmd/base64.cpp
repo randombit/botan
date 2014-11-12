@@ -15,7 +15,9 @@
 #include <botan/b64_filt.h>
 #include <botan/pipe.h>
 
-int base64_main(int argc, char* argv[])
+namespace {
+
+int base64(int argc, char* argv[])
    {
    if(argc < 2)
       {
@@ -83,3 +85,7 @@ int base64_main(int argc, char* argv[])
       }
    return 0;
    }
+
+REGISTER_APP(base64);
+
+}

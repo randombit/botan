@@ -10,7 +10,6 @@
 #endif
 
 #include <string>
-#include <iostream>
 #include <memory>
 
 #include <sys/types.h>
@@ -132,9 +131,7 @@ std::string protocol_chooser(const std::vector<std::string>& protocols)
    return "http/1.1";
    }
 
-}
-
-int tls_client_main(int argc, char* argv[])
+int tls_client(int argc, char* argv[])
    {
    if(argc != 2 && argc != 3 && argc != 4)
       {
@@ -272,4 +269,7 @@ int tls_client_main(int argc, char* argv[])
    return 0;
    }
 
+REGISTER_APP(tls_client);
+
+}
 #endif

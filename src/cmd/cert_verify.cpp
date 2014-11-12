@@ -6,15 +6,17 @@
 */
 
 #include "apps.h"
+
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-#include <botan/x509cert.h>
+
 #include <botan/x509path.h>
-#include <iostream>
 
-using namespace Botan;
+namespace {
 
-int cert_verify_main(int argc, char* argv[])
+int cert_verify(int argc, char* argv[])
    {
+   using namespace Botan;
+
    if(argc <= 2)
       {
       std::cout << "Usage: " << argv[0] << " subject.pem [CA certificates...]\n";
@@ -42,4 +44,9 @@ int cert_verify_main(int argc, char* argv[])
 
    return 0;
    }
+
+}
+
+REGISTER_APP(cert_verify);
+
 #endif

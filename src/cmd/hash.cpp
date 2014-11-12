@@ -11,7 +11,9 @@
 
 using namespace Botan;
 
-int hash_main(int argc, char* argv[])
+namespace {
+
+int hash(int argc, char* argv[])
    {
    if(argc < 3)
       {
@@ -56,3 +58,7 @@ int hash_main(int argc, char* argv[])
       }
    return 0;
    }
+
+REGISTER_APP(hash);
+
+}

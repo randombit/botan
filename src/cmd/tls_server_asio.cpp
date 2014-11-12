@@ -276,9 +276,7 @@ size_t choose_thread_count()
    return 2;
    }
 
-}
-
-int tls_server_asio_main(int argc, char* argv[])
+int tls_server_asio(int argc, char* argv[])
    {
    try
       {
@@ -314,5 +312,9 @@ int tls_server_asio_main(int argc, char* argv[])
 
    return 0;
    }
+
+}
+
+REGISTER_APP(tls_server_asio);
 
 #endif

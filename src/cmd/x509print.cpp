@@ -2,7 +2,9 @@
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
 #include <botan/x509cert.h>
 
-int x509_main(int argc, char* argv[])
+namespace {
+
+int x509print(int argc, char* argv[])
    {
    if(argc < 1)
       {
@@ -16,4 +18,9 @@ int x509_main(int argc, char* argv[])
 
    return 0;
    }
+
+REGISTER_APP(x509print);
+
+}
+
 #endif

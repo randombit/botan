@@ -11,11 +11,12 @@
 
 #include <botan/reducer.h>
 #include <botan/numthry.h>
-using namespace Botan;
 
 #include <algorithm>
 #include <iostream>
 #include <iterator>
+
+using namespace Botan;
 
 namespace {
 
@@ -119,9 +120,7 @@ std::vector<BigInt> factorize(const BigInt& n_in,
    return factors;
    }
 
-}
-
-int factor_main(int argc, char* argv[])
+int factor(int argc, char* argv[])
    {
    if(argc != 2)
       {
@@ -151,3 +150,7 @@ int factor_main(int argc, char* argv[])
       }
    return 0;
    }
+
+REGISTER_APP(factor);
+
+}

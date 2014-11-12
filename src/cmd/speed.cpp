@@ -5,6 +5,7 @@
 */
 
 #include "speed.h"
+#include "apps.h"
 #include <iostream>
 #include <iomanip>
 
@@ -170,8 +171,6 @@ void time_transform(const std::string& algo, RandomNumberGenerator& rng)
    time_transform(std::move(tf), rng);
    }
 
-}
-
 void bench_algo(const std::string& algo,
                 RandomNumberGenerator& rng,
                 double seconds,
@@ -193,7 +192,7 @@ void bench_algo(const std::string& algo,
       bench_pk(rng, algo, seconds);
    }
 
-int speed_main(int argc, char* argv[])
+int speed(int argc, char* argv[])
    {
    OptionParser opts("seconds=|buf-size=");
    opts.parse(argv);
@@ -239,3 +238,7 @@ int speed_main(int argc, char* argv[])
 
    return 0;
    }
+
+REGISTER_APP(speed);
+
+}

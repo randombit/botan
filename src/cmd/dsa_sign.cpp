@@ -1,23 +1,20 @@
 #include "apps.h"
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <string>
-#include <memory>
-
-#include <botan/base64.h>
-#include <botan/pubkey.h>
 
 #if defined(BOTAN_HAS_DSA)
 
 #include <botan/dsa.h>
+#include <botan/pubkey.h>
+#include <botan/base64.h>
+#include <fstream>
 
-using namespace Botan;
+namespace {
 
-const std::string SUFFIX = ".sig";
-
-int dsa_sign_main(int argc, char* argv[])
+int dsa_sign(int argc, char* argv[])
    {
+   using namespace Botan;
+
+   const std::string SUFFIX = ".sig";
+
    if(argc != 4)
       {
       std::cout << "Usage: " << argv[0] << " keyfile messagefile passphrase"
@@ -73,6 +70,9 @@ int dsa_sign_main(int argc, char* argv[])
       }
    return 0;
    }
-#else
-UNIMPLEMENTED(dsa_sign_main, "DSA");
+
+REGISTER_APP(dsa_sign);
+
+}
+
 #endif

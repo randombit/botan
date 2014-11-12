@@ -30,12 +30,30 @@ namespace {
 
 int help(int , char* argv[])
    {
-   std::cout << "Usage: " << argv[0] << " [subcommand]\n";
-   std::cout << "version config speed cpuid bcrypt x509 factor tls_client tls_server asn1 base64 hash self_sig ...\n";
+   std::cout << "Usage: " << argv[0] << " [subcommand] [subcommand-options]\n";
+
+   std::set<std::string> apps = AppRegistrations::instance().all_apps();
+
+   std::cout << "Available commands:\n";
+
+   size_t idx = 1;
+   for(auto&& app: apps)
+      {
+      std::cout << app;
+
+      if(idx % 3 == 0)
+         std::cout << "\n";
+      else
+         std::cout << std::string(18-app.size(), ' ');
+
+      ++idx;
+      }
+   std::cout << "\n";
+
    return 1;
    }
 
-int config_main(int argc, char* argv[])
+int config(int argc, char* argv[])
    {
    if(argc != 2)
       {
@@ -70,8 +88,9 @@ int config_main(int argc, char* argv[])
 
    return 0;
    }
+REGISTER_APP(config);
 
-int version_main(int argc, char* argv[])
+int version(int argc, char* argv[])
    {
    if(BOTAN_VERSION_MAJOR != version_major() ||
       BOTAN_VERSION_MINOR != version_minor() ||
@@ -99,20 +118,39 @@ int version_main(int argc, char* argv[])
       }
    else
       {
-      std::cout << "Usage: " << argv[0] << " [--full]\n";
+      std::cout << "Usage: " << argv[0] << " version [--full]\n";
       return 1;
       }
 
    return 0;
    }
+REGISTER_APP(version);
+
+int cpuid(int, char*[])
+   {
+   CPUID::print(std::cout);
+   return 0;
+   }
+REGISTER_APP(cpuid);
+
+#if defined(BOTAN_HAS_HTTP_UTIL)
+int http_get(int argc, char* argv[])
+   {
+   if(argc != 2)
+      {
+      std::cout << "Usage " << argv[0] << " <url>\n";
+      return 1;
+      }
+
+   auto resp = HTTP::GET_sync(argv[2]);
+   std::cout << resp << "\n";
+   return 0;
+   }
+REGISTER_APP(http_get);
+
+#endif
 
 }
-
-int unimplemented(int , char* argv[], const char* what)
-   {
-   std::cout << argv[0] << " command not implemented - library missing " << what << "\n";
-   return 1;
-   }
 
 int main(int argc, char* argv[])
    {
@@ -125,59 +163,12 @@ int main(int argc, char* argv[])
 
       const std::string cmd = argv[1];
 
-      if(cmd == "help")
+      if(cmd == "help" || cmd == "-h")
          return help(argc, argv);
 
-      if(cmd == "config" && argc > 1)
-         return config_main(argc - 1, argv + 1);
-
-      if(cmd == "version" && argc > 1)
-         return version_main(argc - 1, argv + 1);
-
-      if(cmd == "cpuid")
-         {
-         CPUID::print(std::cout);
-         return 0;
-         }
-
-#if defined(BOTAN_HAS_HTTP_UTIL)
-      if(cmd == "http_get")
-         {
-         auto resp = HTTP::GET_sync(argv[2]);
-         std::cout << resp << "\n";
-         }
-#endif
-
-#define CALL_APP(cmdsym)                           \
-   do { if(cmd == #cmdsym) { return cmdsym ##_main (argc - 1, argv + 1); } } while(0)
-
-      CALL_APP(asn1);
-      CALL_APP(base64);
-      CALL_APP(bcrypt);
-      CALL_APP(bzip);
-      CALL_APP(dsa_sign);
-      CALL_APP(dsa_verify);
-      CALL_APP(factor);
-      CALL_APP(fpe);
-      CALL_APP(hash);
-      CALL_APP(is_prime);
-      CALL_APP(keygen);
-      CALL_APP(read_ssh);
-      CALL_APP(rng);
-      CALL_APP(speed);
-
-#if defined(BOTAN_HAS_TLS)
-      CALL_APP(tls_client);
-      CALL_APP(tls_server);
-      CALL_APP(tls_server_asio);
-#endif
-
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
-      CALL_APP(ca);
-      CALL_APP(pkcs10);
-      CALL_APP(self_sig);
-      CALL_APP(x509);
-#endif
+      AppRegistrations& apps = AppRegistrations::instance();
+      if(apps.has(cmd))
+         return apps.run(cmd, argc - 1, argv + 1);
 
       std::cout << "Unknown command " << cmd << "\n";
       return help(argc, argv);

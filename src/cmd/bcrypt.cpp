@@ -3,7 +3,9 @@
 #if defined(BOTAN_HAS_BCRYPT)
 #include <botan/bcrypt.h>
 
-int bcrypt_main(int argc, char* argv[])
+namespace {
+
+int bcrypt(int argc, char* argv[])
    {
    if(argc == 2)
       {
@@ -32,6 +34,9 @@ int bcrypt_main(int argc, char* argv[])
              << "       " << argv[0] << " password passhash\n";
    return 1;
    }
-#else
-UNIMPLEMENTED(bcrypt_main, "bcrypt");
+
+REGISTER_APP(bcrypt);
+
+}
+
 #endif

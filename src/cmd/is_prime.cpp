@@ -1,7 +1,9 @@
 #include "apps.h"
 #include <botan/numthry.h>
 
-int is_prime_main(int argc, char* argv[])
+namespace {
+
+int is_prime(int argc, char* argv[])
    {
    if(argc != 2 && argc != 3)
       {
@@ -31,3 +33,7 @@ int is_prime_main(int argc, char* argv[])
       return 1;
       }
    }
+
+REGISTER_APP(is_prime);
+
+}

@@ -1,39 +1,64 @@
 
-#include <botan/auto_rng.h>
-#include <botan/hex.h>
 #include <iostream>
-
+#include <functional>
+#include <string>
+#include <set>
+#include <botan/hex.h>
+#include <botan/auto_rng.h>
 #include "getopt.h"
 
 using namespace Botan;
 
-int unimplemented(int argc, char* argv[], const char* what);
+typedef std::function<int (int, char*[])> main_fn;
 
-#define UNIMPLEMENTED(main, prob) \
-   int main(int argc, char* argv[]) { return unimplemented(argc, argv, prob); }
+class AppRegistrations
+   {
+   public:
+      void add(const std::string& name, main_fn fn)
+         {
+         m_cmds[name] = fn;
+         }
 
-#define DEFINE_APP(cmd) int cmd ## _main(int argc, char* argv[]);
+      bool has(const std::string& cmd) const
+         {
+         return m_cmds.count(cmd) > 0;
+         }
 
-DEFINE_APP(asn1);
-DEFINE_APP(base64);
-DEFINE_APP(bcrypt);
-DEFINE_APP(bzip);
-DEFINE_APP(ca);
-DEFINE_APP(cert_verify);
-DEFINE_APP(dsa_sign);
-DEFINE_APP(dsa_verify);
-DEFINE_APP(factor);
-DEFINE_APP(fpe);
-DEFINE_APP(hash);
-DEFINE_APP(is_prime);
-DEFINE_APP(keygen);
-DEFINE_APP(ocsp_check);
-DEFINE_APP(pkcs10);
-DEFINE_APP(read_ssh);
-DEFINE_APP(rng);
-DEFINE_APP(self_sig);
-DEFINE_APP(speed);
-DEFINE_APP(tls_client);
-DEFINE_APP(tls_server);
-DEFINE_APP(tls_server_asio);
-DEFINE_APP(x509);
+      std::set<std::string> all_apps() const
+         {
+         std::set<std::string> apps;
+         for(auto i : m_cmds)
+            apps.insert(i.first);
+         return apps;
+         }
+
+      int run(const std::string& cmd, int argc, char* argv[]) const
+         {
+         auto i = m_cmds.find(cmd);
+         if(i != m_cmds.end())
+            return i->second(argc, argv);
+         return -1;
+         }
+
+      static AppRegistrations& instance()
+         {
+         static AppRegistrations s_apps;
+         return s_apps;
+         }
+
+      class AppRegistration
+         {
+         public:
+            AppRegistration(const std::string& name, main_fn fn)
+               {
+               AppRegistrations::instance().add(name, fn);
+               }
+         };
+
+   private:
+      AppRegistrations() {}
+
+      std::map<std::string, main_fn> m_cmds;
+   };
+
+#define REGISTER_APP(nm) AppRegistrations::AppRegistration g_ ## nm ## _registration(#nm, nm)

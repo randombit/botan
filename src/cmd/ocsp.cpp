@@ -1,15 +1,17 @@
 #include "apps.h"
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
+
+#if defined(BOTAN_HAS_OCSP)
+
 #include <botan/x509cert.h>
 #include <botan/certstor.h>
 #include <botan/x509path.h>
 #include <botan/ocsp.h>
 
-#include <iostream>
-
 using namespace Botan;
 
-int ocsp_check_main(int argc, char* argv[])
+namespace {
+
+int ocsp_check(int argc, char* argv[])
    {
    if(argc != 2)
       {
@@ -37,4 +39,9 @@ int ocsp_check_main(int argc, char* argv[])
       return 1;
       }
    }
+
+REGISTER_APP(ocsp_check);
+
+}
+
 #endif

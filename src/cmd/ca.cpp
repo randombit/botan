@@ -1,14 +1,14 @@
 #include "apps.h"
+
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
 #include <botan/x509_ca.h>
-using namespace Botan;
 
-#include <iostream>
-#include <memory>
-#include <chrono>
+namespace {
 
-int ca_main(int argc, char* argv[])
+int ca(int argc, char* argv[])
    {
+   using namespace Botan;
+
    if(argc != 5)
       {
       std::cout << "Usage: " << argv[0] << " <passphrase> "
@@ -61,4 +61,9 @@ int ca_main(int argc, char* argv[])
       }
    return 0;
    }
+
+REGISTER_APP(ca);
+
+}
+
 #endif

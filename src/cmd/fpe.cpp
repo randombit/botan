@@ -1,13 +1,12 @@
 #include "apps.h"
 
 #if defined(BOTAN_HAS_FPE_FE1)
+
 #include <botan/fpe_fe1.h>
 #include <botan/sha160.h>
+#include <stdexcept>
 
 using namespace Botan;
-
-#include <iostream>
-#include <stdexcept>
 
 namespace {
 
@@ -102,9 +101,7 @@ u64bit decrypt_cc_number(u64bit enc_cc,
    return cc_derank(dec_cc);
    }
 
-}
-
-int fpe_main(int argc, char* argv[])
+int fpe(int argc, char* argv[])
    {
    if(argc != 4)
       {
@@ -143,6 +140,10 @@ int fpe_main(int argc, char* argv[])
 
    return 0;
    }
-#else
-UNIMPLEMENTED(fpe_main, "FPE");
+
+REGISTER_APP(fpe);
+
+}
+
 #endif
+
