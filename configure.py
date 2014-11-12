@@ -175,9 +175,6 @@ class BuildConfigurationInformation(object):
 
             yield cmd_for('manual')
 
-            if options.build_relnotes:
-                yield cmd_for('relnotes')
-
             if options.with_doxygen:
                 yield 'doxygen %s/botan.doxy' % (self.build_dir)
 
@@ -190,9 +187,6 @@ class BuildConfigurationInformation(object):
             yield self.botan_include_dir
             yield self.internal_include_dir
             yield os.path.join(self.doc_output_dir, 'manual')
-
-            if options.build_relnotes:
-                yield os.path.join(self.doc_output_dir, 'relnotes')
 
             if options.with_doxygen:
                 yield os.path.join(self.doc_output_dir, 'doxygen')
@@ -333,9 +327,6 @@ def process_command_line(args):
                            default=None,
                            help='Use Sphinx to generate HTML manual')
 
-    build_group.add_option('--build-relnotes', action='store_true', default=False,
-                           help='Use Sphinx to produce HTML release notes')
-
     build_group.add_option('--without-sphinx', action='store_false',
                            dest='with_sphinx', help=optparse.SUPPRESS_HELP)
 
@@ -420,6 +411,8 @@ def process_command_line(args):
                              help='set the install directory')
     install_group.add_option('--docdir', metavar='DIR',
                              help='set the documentation install directory')
+    install_group.add_option('--bindir', metavar='DIR',
+                             help='set the binary install directory')
     install_group.add_option('--libdir', metavar='DIR',
                              help='set the library install directory')
     install_group.add_option('--includedir', metavar='DIR',
@@ -433,7 +426,6 @@ def process_command_line(args):
 
     # These exist only for autoconf compatability (requested by zw for mtn)
     compat_with_autoconf_options = [
-        'bindir',
         'datadir',
         'datarootdir',
         'dvidir',
@@ -944,6 +936,7 @@ class OsInfo(object):
                         'ar_needs_ranlib': False,
                         'install_root': '/usr/local',
                         'header_dir': 'include',
+                        'bin_dir': 'bin',
                         'lib_dir': 'lib',
                         'doc_dir': 'share/doc',
                         'build_shared': 'yes',
@@ -1223,11 +1216,15 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'prefix': options.prefix or osinfo.install_root,
         'destdir': options.destdir or options.prefix or osinfo.install_root,
+        'bindir': options.bindir or osinfo.bin_dir,
         'libdir': options.libdir or osinfo.lib_dir,
         'includedir': options.includedir or osinfo.header_dir,
         'docdir': options.docdir or osinfo.doc_dir,
 
+        'out_dir': options.with_build_dir or os.path.curdir,
         'build_dir': build_config.build_dir,
+
+        'with_shared_lib': options.build_shared_lib,
 
         'appobj_dir': build_config.appobj_dir,
         'libobj_dir': build_config.libobj_dir,
@@ -1260,6 +1257,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'shared_flags': cc.gen_shared_flags(options),
         'visibility_attribute': cc.gen_visibility_attribute(options),
+
+        'libname': 'botan-%d.%d' % (build_config.version_major, build_config.version_minor),
 
         'so_link': cc.so_link_command_for(osinfo.basename),
 
@@ -1316,24 +1315,23 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'install_cmd_exec': osinfo.install_cmd_exec,
         'install_cmd_data': osinfo.install_cmd_data,
 
-        'app_prefix': prefix_with_build_dir(''),
-        'lib_prefix': prefix_with_build_dir(''),
+        'lib_prefix': 'lib' if options.os != 'windows' else '',
 
         'static_suffix': osinfo.static_suffix,
         'so_suffix': osinfo.so_suffix,
 
-        'botan_config': prefix_with_build_dir(
-            os.path.join(build_config.build_dir,
-                         build_config.config_shell_script())),
-
-        'botan_pkgconfig': prefix_with_build_dir(
-            os.path.join(build_config.build_dir,
-                         build_config.pkg_config_file())),
-
         'mod_list': '\n'.join(sorted([m.basename for m in modules])),
 
-        'python_version': options.python_version
+        'python_version': options.python_version,
+        'with_sphinx': options.with_sphinx
         }
+
+    if options.os != 'windows':
+        vars['botan_config'] = prefix_with_build_dir(os.path.join(build_config.build_dir,
+                                                                  build_config.config_shell_script()))
+        vars['botan_pkgconfig'] = prefix_with_build_dir(os.path.join(build_config.build_dir,
+                                                                     build_config.pkg_config_file()))
+
 
     vars["header_in"] = process_template('src/build-data/makefile/header.in', vars)
     vars["commands_in"] = process_template('src/build-data/makefile/commands.in', vars)
@@ -1648,6 +1646,9 @@ def setup_build(build_config, options, template_vars):
 
     link_headers(build_config.build_internal_headers, 'internal',
                  build_config.internal_include_dir)
+
+    with open(os.path.join(build_config.build_dir, 'build_config.py'), 'w') as f:
+        f.write(str(template_vars))
 
 """
 Generate the amalgamation

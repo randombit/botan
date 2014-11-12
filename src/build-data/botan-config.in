@@ -1,16 +1,9 @@
 #!/bin/sh
 
-# For normal builds:
-guess_prefix=`dirname \`dirname $0\``
+prefix=%{prefix}
 includedir=%{includedir}/botan-%{version_major}.%{version_minor}
 libdir=%{libdir}
 
-#  For workspace builds:
-#guess_prefix=`dirname $0`
-#includedir=build/include
-#libdir=
-
-install_prefix=%{prefix}
 prefix=
 
 usage()
@@ -21,12 +14,6 @@ usage()
 
 if test $# -eq 0; then
     usage
-fi
-
-if test `echo $guess_prefix | cut -c 1` = "/"; then
-   prefix=$guess_prefix
-else
-   prefix=$install_prefix
 fi
 
 while test $# -gt 0; do
@@ -49,7 +36,7 @@ while test $# -gt 0; do
         echo -I$prefix/$includedir
         ;;
     --libs)
-        if [ $prefix != "/usr" -a $prefix != "/usr/local" ]
+        if [ $prefix != "/usr" ]
         then
            echo -L$prefix/$libdir -lbotan-%{version_major}.%{version_minor} %{link_to}
         else

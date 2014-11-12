@@ -3,12 +3,9 @@
 %{commands_in}
 
 # Library targets
+STATIC_LIB    = %{out_dir}/$(LIBNAME).%{static_suffix}
+
 LIBRARIES     = $(STATIC_LIB)
-
-LIBNAME       = %{lib_prefix}libbotan
-STATIC_LIB    = $(LIBNAME)-$(BRANCH).a
-
-LIBPATH       = botan-$(BRANCH)
 
 # File Lists
 INCLUDE_DIR   = %{botan_include_dir}
@@ -30,10 +27,10 @@ TESTOBJS      = %{test_objs}
 %{dso_in}
 
 $(APP): $(LIBRARIES) $(APPOBJS)
-	$(CXX) $(LDFLAGS) $(APPOBJS) -L. -l$(LIBPATH) $(APP_LINKS_TO) -o $(APP)
+	$(CXX) $(LDFLAGS) $(APPOBJS) -L%{out_dir} -l%{libname} $(APP_LINKS_TO) -o $(APP)
 
 $(TEST): $(LIBRARIES) $(TESTOBJS)
-	$(CXX) $(LDFLAGS) $(TESTOBJS) -L. -l$(LIBPATH) $(TEST_LINKS_TO) -o $(TEST)
+	$(CXX) $(LDFLAGS) $(TESTOBJS) -L%{out_dir} -l%{libname} $(TEST_LINKS_TO) -o $(TEST)
 
 $(STATIC_LIB): $(LIBOBJS)
 	$(RM) $(STATIC_LIB)
@@ -64,29 +61,7 @@ docs:
 %{build_doc_commands}
 
 install: $(LIBRARIES) docs
-	$(MKDIR_INSTALL) $(DOCDIR)
-	$(COPY_R) %{doc_output_dir}/* $(DOCDIR)
-
-	$(MKDIR_INSTALL) $(HEADERDIR)
-	for i in $(INCLUDE_DIR)/*.h; do \
-	   $(INSTALL_CMD_DATA) $$i $(HEADERDIR); \
-	 done
-
-	$(MKDIR_INSTALL) $(LIBDIR)
-	$(INSTALL_CMD_DATA) $(STATIC_LIB) $(LIBDIR)
-
-ifneq ($(SHARED_LIB),)
-	$(INSTALL_CMD_EXEC) $(SHARED_LIB) $(LIBDIR)
-	$(CD) $(LIBDIR); $(LN) $(SHARED_LIB) $(SYMLINK)
-	$(CD) $(LIBDIR); $(LN) $(SHARED_LIB) $(SONAME)
-endif
-
-	$(MKDIR_INSTALL) $(BINDIR)
-	$(INSTALL_CMD_EXEC) $(CONFIG_SCRIPT) $(BINDIR)
-	$(INSTALL_CMD_EXEC) $(APP) $(BINDIR)
-
-	$(MKDIR_INSTALL) $(PKGCONF_DIR)
-	$(INSTALL_CMD_DATA) $(PKGCONFIG) $(PKGCONF_DIR)
+	$(SCRIPTS_DIR)/install.py --destdir=%{destdir} --bindir=%{bindir} --libdir=%{libdir} --docdir=%{docdir} --includedir=%{includedir}
 
 website:
 	rm -rf $(WEBSITE_SRC_DIR) $(WEBSITE_DIR)
