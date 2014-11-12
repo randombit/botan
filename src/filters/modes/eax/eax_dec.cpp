@@ -100,11 +100,15 @@ void EAX_Decryption::end_msg()
    if((queue_end - queue_start) != TAG_SIZE)
       throw Decoding_Error(name() + ": Message authentication failure");
 
-   SecureVector<byte> data_mac = cmac->final();
+   const byte* included_mac = &queue[queue_start];
 
-   for(size_t j = 0; j != TAG_SIZE; ++j)
-      if(queue[queue_start+j] != (data_mac[j] ^ nonce_mac[j] ^ header_mac[j]))
-         throw Decoding_Error(name() + ": Message authentication failure");
+   SecureVector<byte> computed_mac = cmac->final();
+
+   xor_buf(&computed_mac[0], &nonce_mac[0], TAG_SIZE);
+   xor_buf(&computed_mac[0], &header_mac[0], TAG_SIZE);
+
+   if(!same_mem(included_mac, &computed_mac[0], TAG_SIZE))
+      throw Decoding_Error(name() + ": Message authentication failure");
 
    queue_start = queue_end = 0;
    }
