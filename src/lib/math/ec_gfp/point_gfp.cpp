@@ -479,18 +479,20 @@ BigInt decompress_point(bool yMod2,
    {
    BigInt xpow3 = x * x * x;
 
+   const BigInt& p = curve.get_p();
+
    BigInt g = curve.get_a() * x;
    g += xpow3;
    g += curve.get_b();
-   g = g % curve.get_p();
+   g = g % p;
 
-   BigInt z = ressol(g, curve.get_p());
+   BigInt z = ressol(g, p);
 
    if(z < 0)
       throw Illegal_Point("error during EC point decompression");
 
    if(z.get_bit(0) != yMod2)
-      z = curve.get_p() - z;
+      z = p - z;
 
    return z;
    }

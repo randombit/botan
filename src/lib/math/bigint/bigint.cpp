@@ -10,6 +10,7 @@
 #include <botan/get_byte.h>
 #include <botan/parsing.h>
 #include <botan/internal/rounding.h>
+#include <botan/internal/bit_ops.h>
 
 namespace Botan {
 
@@ -208,7 +209,6 @@ void BigInt::clear_bit(size_t n)
 void BigInt::mask_bits(size_t n)
    {
    if(n == 0) { clear(); return; }
-   if(n >= bits()) return;
 
    const size_t top_word = n / MP_WORD_BITS;
    const word mask = (static_cast<word>(1) << (n % MP_WORD_BITS)) - 1;
@@ -237,13 +237,8 @@ size_t BigInt::bits() const
    if(words == 0)
       return 0;
 
-   size_t full_words = words - 1, top_bits = MP_WORD_BITS;
-   word top_word = word_at(full_words), mask = MP_WORD_TOP_BIT;
-
-   while(top_bits && ((top_word & mask) == 0))
-      { mask >>= 1; top_bits--; }
-
-   return (full_words * MP_WORD_BITS + top_bits);
+   const size_t full_words = words - 1;
+   return (full_words * MP_WORD_BITS + high_bit(word_at(full_words)));
    }
 
 /*

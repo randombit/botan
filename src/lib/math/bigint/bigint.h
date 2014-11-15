@@ -120,6 +120,11 @@ class BOTAN_DLL BigInt
         std::swap(m_signedness, other.m_signedness);
         }
 
+     void swap_reg(secure_vector<word>& reg)
+        {
+        m_reg.swap(reg);
+        }
+
      /**
      * += operator
      * @param y the BigInt to add to this

@@ -6,6 +6,7 @@
 */
 
 #include <botan/curve_gfp.h>
+#include <botan/internal/curve_nistp.h>
 #include <botan/internal/mp_core.h>
 
 namespace Botan {
@@ -36,6 +37,8 @@ class CurveGFp_Montgomery : public CurveGFp_Repr
       const BigInt& get_a_rep() const override { return m_a_r; }
 
       const BigInt& get_b_rep() const override { return m_b_r; }
+
+      size_t get_p_words() const override { return m_p_words; }
 
       void to_curve_rep(BigInt& x, secure_vector<word>& ws) const override;
 
@@ -113,9 +116,38 @@ void CurveGFp_Montgomery::curve_sqr(BigInt& z, const BigInt& x,
 
 }
 
+// Default implementation
+void CurveGFp_Repr::normalize(BigInt& x, secure_vector<word>& ws, size_t /*bound*/) const
+   {
+   const BigInt& p = get_p();
+
+   while(x.is_negative())
+      x += p;
+
+   const size_t p_words = get_p_words();
+   const word* prime = p.data();
+
+   x.grow_to(p_words + 1);
+
+   if(ws.size() < p_words + 1)
+      ws.resize(p_words + 1);
+
+   //FIXME: take into account bound if > 0
+   while(true)
+      {
+      if(bigint_sub3(&ws[0], x.data(), p_words, prime, p_words)) // borrow?
+         break;
+
+      x.swap_reg(ws);
+      }
+   }
+
 std::shared_ptr<CurveGFp_Repr>
 CurveGFp::choose_repr(const BigInt& p, const BigInt& a, const BigInt& b)
    {
+   if(p == CurveGFp_P521::prime())
+      return std::shared_ptr<CurveGFp_Repr>(new CurveGFp_P521(a, b));
+
    return std::shared_ptr<CurveGFp_Repr>(new CurveGFp_Montgomery(p, a, b));
    }
 

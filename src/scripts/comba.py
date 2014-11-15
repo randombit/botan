@@ -78,7 +78,7 @@ def main(args = None):
 
     print """/*
 * Comba Multiplication and Squaring
-* (C) 1999-2007,2011 Jack Lloyd
+* (C) 1999-2007,2011,2014 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -91,7 +91,7 @@ namespace Botan {
 extern "C" {
 """
 
-    for n in [4,6,8,16]:
+    for n in [4,6,8,9,16]:
         print "/*\n* Comba %dx%d Squaring\n*/" % (n, n)
         print "void bigint_comba_sqr%d(word z[%d], const word x[%d])" % (n, 2*n, n)
         print "   {"

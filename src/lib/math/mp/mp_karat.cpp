@@ -237,6 +237,11 @@ void bigint_mul(word z[], size_t z_size, word workspace[],
       {
       bigint_comba_mul8(z, x, y);
       }
+   else if(x_sw <= 9 && x_size >= 9 &&
+           y_sw <= 9 && y_size >= 9 && z_size >= 18)
+      {
+      bigint_comba_mul9(z, x, y);
+      }
    else if(x_sw <= 16 && x_size >= 16 &&
            y_sw <= 16 && y_size >= 16 && z_size >= 32)
       {
@@ -280,6 +285,10 @@ void bigint_sqr(word z[], size_t z_size, word workspace[],
    else if(x_sw <= 8 && x_size >= 8 && z_size >= 16)
       {
       bigint_comba_sqr8(z, x);
+      }
+   else if(x_sw == 9 && x_size >= 9 && z_size >= 18)
+      {
+      bigint_comba_sqr9(z, x);
       }
    else if(x_sw <= 16 && x_size >= 16 && z_size >= 32)
       {

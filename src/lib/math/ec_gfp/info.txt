@@ -7,6 +7,10 @@ curve_gfp.h
 point_gfp.h
 </header:public>
 
+<header:internal>
+curve_nistp.h
+</header:internal>
+
 <requires>
 numbertheory
 </requires>
