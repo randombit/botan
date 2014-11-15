@@ -17,7 +17,7 @@ Botan (http://botan.randombit.net/) is distributed under these terms::
                 2007 Yves Jerschow
                 2007-2008 FlexSecure GmbH
                 2007-2008 Technische Universitat Darmstadt
-                2007-2008 Falko Strenzke
+                2007-2008,2010 Falko Strenzke
                 2007-2008 Martin Doering
                 2007 Manuel Hartl
                 2007 Christoph Ludwig

@@ -8,6 +8,7 @@ prefetch.h
 rounding.h
 semaphore.h
 stl_util.h
+ta_utils.h
 xor_buf.h
 </header:internal>
 
