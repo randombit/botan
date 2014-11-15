@@ -12,9 +12,24 @@ Version 1.11.10, Not Yet Released
   ciphersuites, which use L=3. Thanks to Manuel Pégourié-Gonnard for
   the anaylsis and patch. Bugzilla 270.
 
+* DTLS now supports timeouts and handshake retransmits.
+
+* Add a TLS policy hook to disable putting the value of the local
+  clock in hello random fields.
+
+* Avoid a crash in low-entropy situations when reading from
+  /dev/random, when select indicated the device was readable but by
+  the time we start the read the entropy pool had been depleted.
+
 * The Miller-Rabin primality test function now takes a parameter
   allowing the user to directly specify the maximum false negative
   probability they are willing to accept.
 
 * Fix decoding indefinite length BER constructs that contain a context
   sensitive tag of zero. Github pull 26 from Janusz Chorko.
+
+* Add a new install script written in Python which replaces shell
+  hackery in the makefiles.
+
+* Various modifications to better support Visual C++ 2013 and 2015.
+  Github issues 11, 17, 18, 21, 22.
