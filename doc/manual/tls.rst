@@ -234,7 +234,7 @@ TLS Clients
 
    Use *offer_version* to control the version of TLS you wish the
    client to offer. Normally, you'll want to offer the most recent
-   version of TLS that is available, however some broken servers are
+   version of (D)TLS that is available, however some broken servers are
    intolerant of certain versions being offered, and for classes of
    applications that have to deal with such servers (typically web
    browsers) it may be necessary to implement a version backdown
@@ -279,24 +279,30 @@ TLS Servers
           const TLS::Policy& policy, \
           RandomNumberGenerator& rng, \
           const std::vector<std::string>& protocols, \
+          bool is_datagram = false, \
           bool reserved_io_buffer_size)
 
 The first 7 arguments as well as the final argument
 *reserved_io_buffer_size*, are treated similiarly to the :ref:`client
 <tls_client>`.  The (optional) argument, *protocols*, specifies the
-protocols the server is willing to advertise it supports.
+protocols the server is willing to advertise it supports.  The
+argument *is_datagram* specifies if this is a TLS or DTLS server;
+unlike clients, which know what type of protocol (TLS vs DTLS) they
+are negotiating from the start via the *offer_version*, servers would
+not until they actually receive a hello without this parameter.
 
 .. cpp:function:: std::string TLS::Server::next_protocol() const
 
    If a handshake has completed, and if the client indicated a next
    protocol (ie, the protocol that it intends to run over this TLS
-   session) this return value will specify it. The next protocol
+   connection) this return value will specify it. The next-protocol
    extension is somewhat unusual in that it applies to the connection
    rather than the session. The next protocol can not change during a
    renegotiation, but might change across different connections using
    that session.
 
-A TLS server that can handle concurrent connections using asio:
+An example TLS server that can handle concurrent connections using
+asio follows:
 
 .. literalinclude:: ../../src/cmd/tls_server_asio.cpp
 
@@ -565,9 +571,8 @@ be negotiated during a handshake.
      Return true if this version of the protocol is one that we are
      willing to negotiate.
 
-     Default: True if a known TLS version. DTLS is not accepted by default;
-     to enable DTLS (or combined TLS/DTLS) in your application, override this
-     function. SSLv3 is also rejected by default.
+     Default: Accepts TLS v1.0 or higher, or DTLS v1.2 Note that SSLv3
+              is rejected by default.
 
  .. cpp:function:: bool server_uses_own_ciphersuite_preferences() const
 

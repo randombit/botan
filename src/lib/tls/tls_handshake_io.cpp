@@ -70,6 +70,7 @@ Stream_Handshake_IO::get_next_record(bool)
       if(m_queue.size() >= length + 4)
          {
          Handshake_Type type = static_cast<Handshake_Type>(m_queue[0]);
+         BOTAN_ASSERT(type < 250, "Not in reserved range");
 
          std::vector<byte> contents(m_queue.begin() + 4,
                                     m_queue.begin() + 4 + length);

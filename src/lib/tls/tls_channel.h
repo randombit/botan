@@ -164,6 +164,7 @@ class BOTAN_DLL Channel
               std::function<bool (const Session&)> handshake_cb,
               Session_Manager& session_manager,
               RandomNumberGenerator& rng,
+              bool is_datagram,
               size_t reserved_io_buffer_size);
 
       Channel(const Channel&) = delete;
@@ -233,6 +234,8 @@ class BOTAN_DLL Channel
       const Handshake_State* active_state() const { return m_active_state.get(); }
 
       const Handshake_State* pending_state() const { return m_pending_state.get(); }
+
+      bool m_is_datagram;
 
       /* callbacks */
       std::function<bool (const Session&)> m_handshake_cb;

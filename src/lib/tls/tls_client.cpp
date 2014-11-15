@@ -59,7 +59,8 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
                const Protocol_Version offer_version,
                std::function<std::string (std::vector<std::string>)> next_protocol,
                size_t io_buf_sz) :
-   Channel(output_fn, proc_cb, alert_cb, handshake_cb, session_manager, rng, io_buf_sz),
+   Channel(output_fn, proc_cb, alert_cb, handshake_cb, session_manager, rng,
+           offer_version.is_datagram_protocol(), io_buf_sz),
    m_policy(policy),
    m_creds(creds),
    m_info(info)

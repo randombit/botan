@@ -216,8 +216,9 @@ Server::Server(std::function<void (const byte[], size_t)> output_fn,
                const Policy& policy,
                RandomNumberGenerator& rng,
                const std::vector<std::string>& next_protocols,
+               bool is_datagram,
                size_t io_buf_sz) :
-   Channel(output_fn, data_cb, alert_cb, handshake_cb, session_manager, rng, io_buf_sz),
+   Channel(output_fn, data_cb, alert_cb, handshake_cb, session_manager, rng, is_datagram, io_buf_sz),
    m_policy(policy),
    m_creds(creds),
    m_possible_protocols(next_protocols)

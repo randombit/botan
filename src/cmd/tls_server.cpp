@@ -205,7 +205,8 @@ int tls_server(int argc, char* argv[])
                                creds,
                                policy,
                                rng,
-                               protocols);
+                               protocols,
+                               (transport != "tcp"));
 
             while(!server.is_closed())
                {

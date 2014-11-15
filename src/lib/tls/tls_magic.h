@@ -27,13 +27,13 @@ enum Size_Limits {
 enum Connection_Side { CLIENT = 1, SERVER = 2 };
 
 enum Record_Type {
-   NO_RECORD          = 0,
-
    CHANGE_CIPHER_SPEC = 20,
    ALERT              = 21,
    HANDSHAKE          = 22,
    APPLICATION_DATA   = 23,
    HEARTBEAT          = 24,
+
+   NO_RECORD          = 256
 };
 
 enum Handshake_Type {

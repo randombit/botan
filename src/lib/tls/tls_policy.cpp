@@ -146,10 +146,8 @@ bool Policy::send_fallback_scsv(Protocol_Version version) const
 
 bool Policy::acceptable_protocol_version(Protocol_Version version) const
    {
-   // By default require TLS to minimize surprise
    if(version.is_datagram_protocol())
-      return false;
-
+      return (version >= Protocol_Version::DTLS_V12);
    return (version >= Protocol_Version::TLS_V10);
    }
 

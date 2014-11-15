@@ -25,7 +25,9 @@ Channel::Channel(std::function<void (const byte[], size_t)> output_fn,
                  std::function<bool (const Session&)> handshake_cb,
                  Session_Manager& session_manager,
                  RandomNumberGenerator& rng,
+                 bool is_datagram,
                  size_t reserved_io_buffer_size) :
+   m_is_datagram(is_datagram),
    m_handshake_cb(handshake_cb),
    m_data_cb(data_cb),
    m_alert_cb(alert_cb),
@@ -142,6 +144,8 @@ bool Channel::timeout_check()
    {
    if(m_pending_state)
       return m_pending_state->handshake_io().timeout_check();
+
+   //FIXME: scan cipher suites and remove epochs older than 2*MSL
    return false;
    }
 
@@ -252,11 +256,7 @@ void Channel::activate_session()
    std::swap(m_active_state, m_pending_state);
    m_pending_state.reset();
 
-   if(m_active_state->version().is_datagram_protocol())
-      {
-      // FIXME, remove old states when we are sure not needed anymore
-      }
-   else
+   if(!m_active_state->version().is_datagram_protocol())
       {
       // TLS is easy just remove all but the current state
       auto current_epoch = sequence_numbers().current_write_epoch();
@@ -307,6 +307,7 @@ size_t Channel::received_data(const byte input[], size_t input_size)
             read_record(m_readbuf,
                         input,
                         input_size,
+                        m_is_datagram,
                         consumed,
                         record,
                         &record_sequence,
@@ -340,24 +341,31 @@ size_t Channel::received_data(const byte input[], size_t input_size)
                {
                if(record_version.is_datagram_protocol())
                   {
-                  sequence_numbers().read_accept(record_sequence);
+                  if(m_sequence_numbers)
+                     {
+                     /*
+                     * Might be a peer retransmit under epoch - 1 in which
+                     * case we must retransmit last flight
+                     */
+                     sequence_numbers().read_accept(record_sequence);
 
-                  /*
-                  * Might be a peer retransmit under epoch - 1 in which
-                  * case we must retransmit last flight
-                  */
+                     const u16bit epoch = record_sequence >> 48;
 
-                  const u16bit epoch = record_sequence >> 48;
-
-                  if(epoch == sequence_numbers().current_read_epoch())
+                     if(epoch == sequence_numbers().current_read_epoch())
+                        {
+                        create_handshake_state(record_version);
+                        }
+                     else if(epoch == sequence_numbers().current_read_epoch() - 1)
+                        {
+                        BOTAN_ASSERT(m_active_state, "Have active state here");
+                        m_active_state->handshake_io().add_record(unlock(record),
+                                                                  record_type,
+                                                                  record_sequence);
+                        }
+                     }
+                  else if(record_sequence == 0)
                      {
                      create_handshake_state(record_version);
-                     }
-                  else if(epoch == sequence_numbers().current_read_epoch() - 1)
-                     {
-                     m_active_state->handshake_io().add_record(unlock(record),
-                                                               record_type,
-                                                               record_sequence);
                      }
                   }
                else
@@ -445,7 +453,7 @@ size_t Channel::received_data(const byte input[], size_t input_size)
                return 0;
                }
             }
-         else
+         else if(record_type != NO_RECORD)
             throw Unexpected_Message("Unexpected record type " +
                                      std::to_string(record_type) +
                                      " from counterparty");

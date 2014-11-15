@@ -34,6 +34,7 @@ class BOTAN_DLL Server : public Channel
              const Policy& policy,
              RandomNumberGenerator& rng,
              const std::vector<std::string>& protocols = std::vector<std::string>(),
+             bool is_datagram = false,
              size_t reserved_io_buffer_size = 16*1024
          );
 
