@@ -36,6 +36,8 @@ Version 1.11.10, Not Yet Released
 * Fix decoding indefinite length BER constructs that contain a context sensitive
   tag of zero. Github pull 26 from Janusz Chorko.
 
+* Added AltiVec detection for POWER8 processors.
+
 * Add a new install script written in Python which replaces shell hackery in the
   makefiles.
 
