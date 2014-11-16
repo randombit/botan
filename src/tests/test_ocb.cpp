@@ -7,49 +7,37 @@
 #include <botan/hex.h>
 #include <botan/sha2_32.h>
 #include <botan/aes.h>
+#include <botan/loadstor.h>
+#include <botan/libstate.h>
 
 using namespace Botan;
 
-// something like this should be in the library
 namespace {
 
-std::vector<byte> ocb_decrypt(const SymmetricKey& key,
+std::vector<byte> ocb_encrypt(OCB_Encryption& enc,
+                              OCB_Decryption& dec,
                               const std::vector<byte>& nonce,
-                              const byte ct[], size_t ct_len,
-                              const byte ad[], size_t ad_len)
+                              const std::vector<byte>& pt,
+                              const std::vector<byte>& ad)
    {
-   OCB_Decryption ocb(new AES_128);
+   enc.set_associated_data(&ad[0], ad.size());
 
-   ocb.set_key(key);
-   ocb.set_associated_data(ad, ad_len);
+   enc.start(&nonce[0], nonce.size());
 
-   ocb.start(&nonce[0], nonce.size());
-
-   secure_vector<byte> buf(ct, ct+ct_len);
-   ocb.finish(buf, 0);
-
-   return unlock(buf);
-   }
-
-std::vector<byte> ocb_encrypt(const SymmetricKey& key,
-                              const std::vector<byte>& nonce,
-                              const byte pt[], size_t pt_len,
-                              const byte ad[], size_t ad_len)
-   {
-   OCB_Encryption ocb(new AES_128);
-
-   ocb.set_key(key);
-   ocb.set_associated_data(ad, ad_len);
-
-   ocb.start(&nonce[0], nonce.size());
-
-   secure_vector<byte> buf(pt, pt+pt_len);
-   ocb.finish(buf, 0);
+   secure_vector<byte> buf(pt.begin(), pt.end());
+   enc.finish(buf, 0);
 
    try
       {
-      std::vector<byte> pt2 = ocb_decrypt(key, nonce, &buf[0], buf.size(), ad, ad_len);
-      if(pt_len != pt2.size() || !same_mem(pt, &pt2[0], pt_len))
+      secure_vector<byte> ct = buf;
+
+      dec.set_associated_data(&ad[0], ad.size());
+
+      dec.start(&nonce[0], nonce.size());
+
+      dec.finish(ct, 0);
+
+      if(ct != pt)
          std::cout << "OCB failed to decrypt correctly\n";
       }
    catch(std::exception& e)
@@ -60,44 +48,23 @@ std::vector<byte> ocb_encrypt(const SymmetricKey& key,
    return unlock(buf);
    }
 
-template<typename Alloc, typename Alloc2>
-std::vector<byte> ocb_encrypt(const SymmetricKey& key,
-                              const std::vector<byte>& nonce,
-                              const std::vector<byte, Alloc>& pt,
-                              const std::vector<byte, Alloc2>& ad)
+size_t test_ocb_long(Algorithm_Factory& af,
+                     size_t keylen, size_t taglen,
+                     const std::string &expected)
    {
-   return ocb_encrypt(key, nonce, &pt[0], pt.size(), &ad[0], ad.size());
-   }
+   // Test from RFC 7253 Appendix A
 
-template<typename Alloc, typename Alloc2>
-std::vector<byte> ocb_decrypt(const SymmetricKey& key,
-                              const std::vector<byte>& nonce,
-                              const std::vector<byte, Alloc>& pt,
-                              const std::vector<byte, Alloc2>& ad)
-   {
-   return ocb_decrypt(key, nonce, &pt[0], pt.size(), &ad[0], ad.size());
-   }
+   const std::string algo = "AES-" + std::to_string(keylen);
 
-std::vector<byte> ocb_encrypt(OCB_Encryption& ocb,
-                              const std::vector<byte>& nonce,
-                              const std::vector<byte>& pt,
-                              const std::vector<byte>& ad)
-   {
-   ocb.set_associated_data(&ad[0], ad.size());
+   OCB_Encryption enc(af.make_block_cipher(algo), taglen / 8);
 
-   ocb.start(&nonce[0], nonce.size());
+   OCB_Decryption dec(af.make_block_cipher(algo), taglen / 8);
 
-   secure_vector<byte> buf(pt.begin(), pt.end());
-   ocb.finish(buf, 0);
+   std::vector<byte> key(keylen/8);
+   key[keylen/8-1] = taglen;
 
-   return unlock(buf);
-   }
-
-size_t test_ocb_long(size_t taglen, const std::string &expected)
-   {
-   OCB_Encryption ocb(new AES_128, taglen/8);
-
-   ocb.set_key(SymmetricKey("00000000000000000000000000000000"));
+   enc.set_key(key);
+   dec.set_key(key);
 
    const std::vector<byte> empty;
    std::vector<byte> N(12);
@@ -106,21 +73,24 @@ size_t test_ocb_long(size_t taglen, const std::string &expected)
    for(size_t i = 0; i != 128; ++i)
       {
       const std::vector<byte> S(i);
-      N[11] = i;
 
-      C += ocb_encrypt(ocb, N, S, S);
-      C += ocb_encrypt(ocb, N, S, empty);
-      C += ocb_encrypt(ocb, N, empty, S);
+      store_be(static_cast<u32bit>(3*i+1), &N[8]);
+      C += ocb_encrypt(enc, dec, N, S, S);
+      store_be(static_cast<u32bit>(3*i+2), &N[8]);
+      C += ocb_encrypt(enc, dec, N, S, empty);
+      store_be(static_cast<u32bit>(3*i+3), &N[8]);
+      C += ocb_encrypt(enc, dec, N, empty, S);
       }
 
-   N[11] = 0;
-   const std::vector<byte> cipher = ocb_encrypt(ocb, N, empty, C);
+   store_be(static_cast<u32bit>(385), &N[8]);
+   const std::vector<byte> cipher = ocb_encrypt(enc, dec, N, empty, C);
 
    const std::string cipher_hex = hex_encode(cipher);
 
    if(cipher_hex != expected)
       {
-      std::cout << "OCB AES-128 long test mistmatch " << cipher_hex << " != " << expected << "\n";
+      std::cout << "OCB " << algo << " long test mistmatch "
+                << cipher_hex << " != " << expected << "\n";
       return 1;
       }
 
@@ -135,10 +105,18 @@ size_t test_ocb()
    size_t fails = 0;
 
 #if defined(BOTAN_HAS_AEAD_OCB)
-   fails += test_ocb_long(128, "B2B41CBF9B05037DA7F16C24A35C1C94");
-   fails += test_ocb_long(96, "1A4F0654277709A5BDA0D380");
-   fails += test_ocb_long(64, "B7ECE9D381FE437F");
-   test_report("OCB long", 3, fails);
+   Algorithm_Factory& af = global_state().algorithm_factory();
+
+   fails += test_ocb_long(af, 128, 128, "67E944D23256C5E0B6C61FA22FDF1EA2");
+   fails += test_ocb_long(af, 192, 128, "F673F2C3E7174AAE7BAE986CA9F29E17");
+   fails += test_ocb_long(af, 256, 128, "D90EB8E9C977C88B79DD793D7FFA161C");
+   fails += test_ocb_long(af, 128, 96, "77A3D8E73589158D25D01209");
+   fails += test_ocb_long(af, 192, 96, "05D56EAD2752C86BE6932C5E");
+   fails += test_ocb_long(af, 256, 96, "5458359AC23B0CBA9E6330DD");
+   fails += test_ocb_long(af, 128, 64, "192C9B7BD90BA06A");
+   fails += test_ocb_long(af, 192, 64, "0066BC6E0EF34E24");
+   fails += test_ocb_long(af, 256, 64, "7D4EA5D445501CBE");
+   test_report("OCB long", 9, fails);
 #endif
 
    return fails;
