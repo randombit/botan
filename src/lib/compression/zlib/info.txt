@@ -1,0 +1,7 @@
+define ZLIB_TRANSFORM 20141118
+
+load_on request
+
+<libs>
+all -> z
+</libs>

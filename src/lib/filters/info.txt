@@ -4,6 +4,7 @@ define FILTERS 20131128
 algo_filt.cpp
 basefilt.cpp
 buf_filt.cpp
+comp_filter.cpp
 data_snk.cpp
 data_src.cpp
 filter.cpp
@@ -20,6 +21,7 @@ transform_filter.cpp
 basefilt.h
 buf_filt.h
 data_snk.h
+comp_filter.h
 data_src.h
 filter.h
 filters.h
