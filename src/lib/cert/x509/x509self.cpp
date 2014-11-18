@@ -10,7 +10,6 @@
 #include <botan/x509_ca.h>
 #include <botan/der_enc.h>
 #include <botan/oids.h>
-#include <botan/pipe.h>
 
 namespace Botan {
 

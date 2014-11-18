@@ -11,7 +11,6 @@
 #include <botan/numthry.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/pipe.h>
 #include <botan/pem.h>
 #include <botan/workfactor.h>
 

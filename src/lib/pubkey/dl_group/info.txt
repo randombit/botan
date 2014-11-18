@@ -3,7 +3,6 @@ define DL_GROUP 20131128
 <requires>
 asn1
 bigint
-filters
 libstate
 numbertheory
 pem

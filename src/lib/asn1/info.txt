@@ -5,6 +5,5 @@ load_on auto
 <requires>
 alloc
 bigint
-filters
 oid_lookup
 </requires>
