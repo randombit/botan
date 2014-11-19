@@ -9,8 +9,7 @@
 #include <botan/loadstor.h>
 #include <botan/libstate.h>
 #include <botan/pbkdf2.h>
-#include <botan/b64_filt.h>
-#include <botan/pipe.h>
+#include <botan/base64.h>
 
 namespace Botan {
 
@@ -68,22 +67,17 @@ std::string generate_passhash9(const std::string& pass,
 
    const size_t kdf_iterations = WORK_FACTOR_SCALE * work_factor;
 
-   secure_vector<byte> pbkdf2_output =
-      kdf.derive_key(PASSHASH9_PBKDF_OUTPUT_LEN,
-                     pass,
-                     &salt[0], salt.size(),
-                     kdf_iterations).bits_of();
+   secure_vector<byte> blob;
+   blob.push_back(alg_id);
+   blob.push_back(get_byte(0, work_factor));
+   blob.push_back(get_byte(1, work_factor));
+   blob += salt;
+   blob += kdf.derive_key(PASSHASH9_PBKDF_OUTPUT_LEN,
+                          pass,
+                          &salt[0], salt.size(),
+                          kdf_iterations).bits_of();
 
-   Pipe pipe(new Base64_Encoder);
-   pipe.start_msg();
-   pipe.write(alg_id);
-   pipe.write(get_byte(0, work_factor));
-   pipe.write(get_byte(1, work_factor));
-   pipe.write(salt);
-   pipe.write(pbkdf2_output);
-   pipe.end_msg();
-
-   return MAGIC_PREFIX + pipe.read_all_as_string();
+   return MAGIC_PREFIX + base64_encode(blob);
    }
 
 bool check_passhash9(const std::string& pass, const std::string& hash)
@@ -104,12 +98,7 @@ bool check_passhash9(const std::string& pass, const std::string& hash)
       if(hash[i] != MAGIC_PREFIX[i])
          return false;
 
-   Pipe pipe(new Base64_Decoder);
-   pipe.start_msg();
-   pipe.write(hash.c_str() + MAGIC_PREFIX.size());
-   pipe.end_msg();
-
-   secure_vector<byte> bin = pipe.read_all();
+   secure_vector<byte> bin = base64_decode(hash.c_str() + MAGIC_PREFIX.size());
 
    if(bin.size() != BINARY_LENGTH)
       return false;
