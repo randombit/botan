@@ -9,6 +9,7 @@
 
 #include <botan/zlib.h>
 #include <botan/internal/comp_util.h>
+#include <ctime>
 #include <zlib.h>
 
 namespace Botan {
@@ -28,16 +29,24 @@ class Zlib_Stream : public Zlib_Style_Stream<z_stream, Bytef>
       u32bit run_flag() const override { return Z_NO_FLUSH; }
       u32bit flush_flag() const override { return Z_FULL_FLUSH; }
       u32bit finish_flag() const override { return Z_FINISH; }
+
+      int compute_window_bits(int wbits, int wbits_offset) const
+         {
+         if(wbits_offset == -1)
+            return -wbits;
+         else
+            return wbits + wbits_offset;
+         }
    };
 
 class Zlib_Compression_Stream : public Zlib_Stream
    {
    public:
-      Zlib_Compression_Stream(size_t level, bool raw_deflate)
+      Zlib_Compression_Stream(size_t level, int wbits, int wbits_offset = 0)
          {
-         // FIXME: allow specifiying memLevel and strategy
          int rc = deflateInit2(streamp(), level, Z_DEFLATED,
-                               (raw_deflate ? -15 : 15), 8, Z_DEFAULT_STRATEGY);
+                               compute_window_bits(wbits, wbits_offset),
+                               8, Z_DEFAULT_STRATEGY);
          if(rc != Z_OK)
             throw std::runtime_error("zlib deflate initialization failed");
          }
@@ -63,9 +72,9 @@ class Zlib_Compression_Stream : public Zlib_Stream
 class Zlib_Decompression_Stream : public Zlib_Stream
    {
    public:
-      Zlib_Decompression_Stream(bool raw_deflate)
+      Zlib_Decompression_Stream(int wbits, int wbits_offset = 0)
          {
-         int rc = inflateInit2(streamp(), (raw_deflate ? -15 : 15));
+         int rc = inflateInit2(streamp(), compute_window_bits(wbits, wbits_offset));
 
          if(rc == Z_MEM_ERROR)
             throw std::bad_alloc();
@@ -91,16 +100,70 @@ class Zlib_Decompression_Stream : public Zlib_Stream
          }
    };
 
+class Deflate_Compression_Stream : public Zlib_Compression_Stream
+   {
+   public:
+      Deflate_Compression_Stream(size_t level, int wbits) :
+         Zlib_Compression_Stream(level, wbits, -1) {}
+   };
+
+class Deflate_Decompression_Stream : public Zlib_Decompression_Stream
+   {
+   public:
+      Deflate_Decompression_Stream(int wbits) : Zlib_Decompression_Stream(wbits, -1) {}
+   };
+
+class Gzip_Compression_Stream : public Zlib_Compression_Stream
+   {
+   public:
+      Gzip_Compression_Stream(size_t level, int wbits, byte os_code) :
+         Zlib_Compression_Stream(level, wbits, 16)
+         {
+         std::memset(&m_header, 0, sizeof(m_header));
+         m_header.os = os_code;
+         m_header.time = std::time(0);
+
+         int rc = deflateSetHeader(streamp(), &m_header);
+         if(rc != Z_OK)
+            throw std::runtime_error("setting gzip header failed");
+         }
+
+   private:
+      ::gz_header m_header;
+   };
+
+class Gzip_Decompression_Stream : public Zlib_Decompression_Stream
+   {
+   public:
+      Gzip_Decompression_Stream(int wbits) : Zlib_Decompression_Stream(wbits, 16) {}
+   };
+
 }
 
 Compression_Stream* Zlib_Compression::make_stream() const
    {
-   return new Zlib_Compression_Stream(m_level, m_raw_deflate);
+   if(m_raw_deflate)
+      return new Deflate_Compression_Stream(m_level, 15);
+   else
+      return new Zlib_Compression_Stream(m_level, 15);
    }
 
 Compression_Stream* Zlib_Decompression::make_stream() const
    {
-   return new Zlib_Decompression_Stream(m_raw_deflate);
+   if(m_raw_deflate)
+      return new Deflate_Decompression_Stream(15);
+   else
+      return new Zlib_Decompression_Stream(15);
+   }
+
+Compression_Stream* Gzip_Compression::make_stream() const
+   {
+   return new Gzip_Compression_Stream(m_level, 15, m_os_code);
+   }
+
+Compression_Stream* Gzip_Decompression::make_stream() const
+   {
+   return new Gzip_Decompression_Stream(15);
    }
 
 }

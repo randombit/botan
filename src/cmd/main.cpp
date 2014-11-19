@@ -170,17 +170,17 @@ int main(int argc, char* argv[])
       if(apps.has(cmd))
          return apps.run(cmd, argc - 1, argv + 1);
 
-      std::cout << "Unknown command " << cmd << "\n";
+      std::cerr << "Unknown command " << cmd << std::endl;
       return help(argc, argv);
       }
    catch(std::exception& e)
       {
-      std::cerr << "Exception: " << e.what() << std::endl;
+      std::cerr << e.what() << std::endl;
       return 1;
       }
    catch(...)
       {
-      std::cerr << "Unknown (...) exception caught" << std::endl;
+      std::cerr << "Unknown exception caught" << std::endl;
       return 1;
       }
 

@@ -32,6 +32,9 @@ class BOTAN_DLL Compressor_Transformation : public Transformation
          }
    };
 
+BOTAN_DLL Compressor_Transformation* make_compressor(const std::string& type, size_t level);
+BOTAN_DLL Compressor_Transformation* make_decompressor(const std::string& type);
+
 class Compression_Stream
    {
    public:

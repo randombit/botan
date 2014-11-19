@@ -6,68 +6,9 @@
 */
 
 #include <botan/comp_filter.h>
-
-#if defined(BOTAN_HAS_ZLIB_TRANSFORM)
-  #include <botan/zlib.h>
-#endif
-
-#if defined(BOTAN_HAS_BZIP_TRANSFORM)
-  #include <botan/bzip.h>
-#endif
-
-#if defined(BOTAN_HAS_LZMA_TRANSFORM)
-  #include <botan/lzma.h>
-#endif
+#include <botan/compression.h>
 
 namespace Botan {
-
-namespace {
-
-Compressor_Transformation* make_compressor(const std::string& type, size_t level)
-   {
-#if defined(BOTAN_HAS_ZLIB_TRANSFORM)
-   if(type == "zlib")
-      return new Zlib_Compression(level, false);
-   if(type == "deflate")
-      return new Zlib_Compression(level, true);
-#endif
-
-#if defined(BOTAN_HAS_BZIP_TRANSFORM)
-   if(type == "bzip2")
-      return new Bzip_Compression(level);
-#endif
-
-#if defined(BOTAN_HAS_LZMA_TRANSFORM)
-   if(type == "lzma")
-      return new LZMA_Compression(level);
-#endif
-
-   throw std::runtime_error("Unknown compression type " + type);
-   }
-
-Compressor_Transformation* make_decompressor(const std::string& type)
-   {
-#if defined(BOTAN_HAS_ZLIB_TRANSFORM)
-   if(type == "zlib")
-      return new Zlib_Decompression(false);
-   if(type == "deflate")
-      return new Zlib_Decompression(true);
-#endif
-
-#if defined(BOTAN_HAS_BZIP_TRANSFORM)
-   if(type == "bzip2")
-      return new Bzip_Decompression;
-#endif
-
-#if defined(BOTAN_HAS_LZMA_TRANSFORM)
-   if(type == "lzma")
-      return new LZMA_Decompression;
-#endif
-
-   throw std::runtime_error("Unknown compression type " + type);
-   }
-
-}
 
 Compression_Filter::Compression_Filter(const std::string& type, size_t level) :
    Compression_Decompression_Filter(make_compressor(type, level))

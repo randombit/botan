@@ -84,7 +84,7 @@ class Bzip_Decompression_Stream : public Bzip_Stream
          BZ2_bzDecompressEnd(streamp());
          }
 
-      bool run(u32bit flags) override
+      bool run(u32bit) override
          {
          int rc = BZ2_bzDecompress(streamp());
 

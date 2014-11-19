@@ -7,7 +7,67 @@
 
 #include <botan/compression.h>
 
+#if defined(BOTAN_HAS_ZLIB_TRANSFORM)
+  #include <botan/zlib.h>
+#endif
+
+#if defined(BOTAN_HAS_BZIP_TRANSFORM)
+  #include <botan/bzip.h>
+#endif
+
+#if defined(BOTAN_HAS_LZMA_TRANSFORM)
+  #include <botan/lzma.h>
+#endif
+
 namespace Botan {
+
+Compressor_Transformation* make_compressor(const std::string& type, size_t level)
+   {
+#if defined(BOTAN_HAS_ZLIB_TRANSFORM)
+   if(type == "zlib")
+      return new Zlib_Compression(level, false);
+   if(type == "deflate")
+      return new Zlib_Compression(level, true);
+   if(type == "gzip" || type == "gz")
+      return new Gzip_Compression(level);
+#endif
+
+#if defined(BOTAN_HAS_BZIP_TRANSFORM)
+   if(type == "bzip2" || type == "bz2")
+      return new Bzip_Compression(level);
+#endif
+
+#if defined(BOTAN_HAS_LZMA_TRANSFORM)
+   if(type == "lzma" || type == "xz")
+      return new LZMA_Compression(level);
+#endif
+
+   throw std::runtime_error("Unknown compression type " + type);
+   }
+
+Compressor_Transformation* make_decompressor(const std::string& type)
+   {
+#if defined(BOTAN_HAS_ZLIB_TRANSFORM)
+   if(type == "zlib")
+      return new Zlib_Decompression(false);
+   if(type == "deflate")
+      return new Zlib_Decompression(true);
+   if(type == "gzip" || type == "gz")
+      return new Gzip_Decompression;
+#endif
+
+#if defined(BOTAN_HAS_BZIP_TRANSFORM)
+   if(type == "bzip2" || type == "bz2")
+      return new Bzip_Decompression;
+#endif
+
+#if defined(BOTAN_HAS_LZMA_TRANSFORM)
+   if(type == "lzma" || type == "xz")
+      return new LZMA_Decompression;
+#endif
+
+   throw std::runtime_error("Unknown compression type " + type);
+   }
 
 void Stream_Compression::clear()
    {
@@ -19,7 +79,6 @@ secure_vector<byte> Stream_Compression::start_raw(const byte[], size_t nonce_len
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
 
-   clear();
    m_stream.reset(make_stream());
    return secure_vector<byte>();
    }
@@ -37,7 +96,7 @@ void Stream_Compression::process(secure_vector<byte>& buf, size_t offset, u32bit
 
    while(true)
       {
-      const bool end = m_stream->run(flags);
+      m_stream->run(flags);
 
       if(m_stream->avail_out() == 0)
          {
@@ -82,7 +141,6 @@ secure_vector<byte> Stream_Decompression::start_raw(const byte[], size_t nonce_l
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
 
-   clear();
    m_stream.reset(make_stream());
 
    return secure_vector<byte>();

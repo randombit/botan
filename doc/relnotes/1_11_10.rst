@@ -25,6 +25,11 @@ Version 1.11.10, Not Yet Released
 * Add a TLS policy hook to disable putting the value of the local clock in hello
   random fields.
 
+* All compression operations previously available as Filters are now
+  performed via the Transformation API, which minimizes memory copies.
+
+* The zlib module now also supports gzip compression and decompression.
+
 * Avoid a crash in low-entropy situations when reading from /dev/random, when
   select indicated the device was readable but by the time we start the read the
   entropy pool had been depleted.

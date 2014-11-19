@@ -9,9 +9,10 @@
 #define BOTAN_COMPRESSION_FILTER_H__
 
 #include <botan/filter.h>
-#include <botan/compression.h>
 
 namespace Botan {
+
+class Compressor_Transformation;
 
 /**
 * Filter interface for compression/decompression
