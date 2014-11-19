@@ -1,7 +1,0 @@
-define PASSWORD_BASED_ENCRYPTION 20131128
-
-<requires>
-filters
-libstate
-oid_lookup
-</requires>

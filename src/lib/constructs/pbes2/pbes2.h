@@ -1,0 +1,50 @@
+/*
+* PKCS #5 v2.0 PBE
+* (C) 1999-2007,2014 Jack Lloyd
+*
+* Distributed under the terms of the Botan license
+*/
+
+#ifndef BOTAN_PBE_PKCS_v20_H__
+#define BOTAN_PBE_PKCS_v20_H__
+
+#include <botan/secmem.h>
+#include <botan/transform.h>
+#include <botan/alg_id.h>
+#include <botan/algo_factory.h>
+#include <chrono>
+
+namespace Botan {
+
+/**
+* Encrypt with PBES2 from PKCS #5 v2.0
+* @param passphrase the passphrase to use for encryption
+* @param msec how many milliseconds to run PBKDF2
+* @param cipher specifies the block cipher to use to encrypt
+* @param digest specifies the PRF to use with PBKDF2 (eg "HMAC(SHA-1)")
+* @param rng a random number generator
+*/
+std::pair<AlgorithmIdentifier, std::vector<byte>>
+BOTAN_DLL pbes2_encrypt(const secure_vector<byte>& key_bits,
+                        const std::string& passphrase,
+                        std::chrono::milliseconds msec,
+                        const std::string& cipher,
+                        const std::string& digest,
+                        RandomNumberGenerator& rng,
+                        Algorithm_Factory& af);
+
+/**
+* Decrypt a PKCS #5 v2.0 encrypted stream
+* @param key_bits the input
+* @param passphrase the passphrase to use for decryption
+* @param params the PBES2 parameters
+*/
+secure_vector<byte>
+BOTAN_DLL pbes2_decrypt(const secure_vector<byte>& key_bits,
+                        const std::string& passphrase,
+                        const std::vector<byte>& params,
+                        Algorithm_Factory& af);
+
+}
+
+#endif

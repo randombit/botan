@@ -6,12 +6,14 @@
 */
 
 #include <botan/pkcs8.h>
-#include <botan/get_pbe.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/alg_id.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
+#include <botan/pbes2.h>
+#include <botan/libstate.h>
+#include <botan/scan_name.h>
 #include <botan/internal/pk_algs.h>
 
 namespace Botan {
@@ -94,10 +96,11 @@ secure_vector<byte> PKCS8_decode(
             if(pass.first == false)
                break;
 
-            Pipe decryptor(get_pbe(pbe_alg_id.oid, pbe_alg_id.parameters, pass.second));
+            if(OIDS::lookup(pbe_alg_id.oid) != "PBE-PKCS5v20")
+               throw std::runtime_error("Unknown PBE type " + pbe_alg_id.oid.as_string());
 
-            decryptor.process_msg(key_data);
-            key = decryptor.read_all();
+            key = pbes2_decrypt(key_data, pass.second, pbe_alg_id.parameters,
+                                global_state().algorithm_factory());
             }
 
          BER_Decoder(key)
@@ -156,23 +159,26 @@ std::vector<byte> BER_encode(const Private_Key& key,
                              std::chrono::milliseconds msec,
                              const std::string& pbe_algo)
    {
-   const std::string DEFAULT_PBE = "PBE-PKCS5v20(SHA-1,AES-256/CBC)";
+   const std::string DEFAULT_PBE = "PBE-PKCS5v20(SHA-256,AES-256/CBC)";
 
-   std::unique_ptr<PBE> pbe(
-      get_pbe(((pbe_algo != "") ? pbe_algo : DEFAULT_PBE),
-              pass,
-              msec,
-              rng));
+   SCAN_Name request(pbe_algo.empty() ? DEFAULT_PBE : pbe_algo);
 
-   AlgorithmIdentifier pbe_algid(pbe->get_oid(), pbe->encode_params());
+   const std::string pbe = request.algo_name();
 
-   Pipe key_encrytor(pbe.release());
-   key_encrytor.process_msg(PKCS8::BER_encode(key));
+   if(pbe != "PBE-PKCS5v20")
+      throw std::runtime_error("Unsupported PBE " + pbe);
+
+   const std::string digest = request.arg(0);
+   const std::string cipher = request.arg(1);
+
+   const std::pair<AlgorithmIdentifier, std::vector<byte>> pbe_info =
+      pbes2_encrypt(PKCS8::BER_encode(key), pass, msec, cipher, digest, rng,
+                    global_state().algorithm_factory());
 
    return DER_Encoder()
          .start_cons(SEQUENCE)
-            .encode(pbe_algid)
-            .encode(key_encrytor.read_all(), OCTET_STRING)
+            .encode(pbe_info.first)
+            .encode(pbe_info.second, OCTET_STRING)
          .end_cons()
       .get_contents_unlocked();
    }

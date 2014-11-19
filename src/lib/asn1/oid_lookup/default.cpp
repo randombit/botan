@@ -49,6 +49,11 @@ void set_defaults()
    OIDS::add_oidstr("2.16.840.1.101.3.4.1.42", "AES-256/CBC");
    OIDS::add_oidstr("1.2.410.200004.1.4", "SEED/CBC"); // RFC 4010
    OIDS::add_oidstr("1.3.6.1.4.1.25258.3.1", "Serpent/CBC");
+   OIDS::add_oidstr("1.3.6.1.4.1.25258.3.2", "Threefish-512/CBC");
+
+   OIDS::add_oidstr("2.16.840.1.101.3.4.1.6", "AES-128/GCM");
+   OIDS::add_oidstr("2.16.840.1.101.3.4.1.26", "AES-192/GCM");
+   OIDS::add_oidstr("2.16.840.1.101.3.4.1.46", "AES-256/GCM");
 
    /* Hash Functions */
    OIDS::add_oidstr("1.2.840.113549.2.5", "MD5");

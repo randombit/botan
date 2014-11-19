@@ -1,14 +1,12 @@
-define PBE_PKCS_V20 20131128
+define PKCS5_PBES2 20141119
 
 <requires>
 algo_factory
 asn1
 block
 cbc
-filters
 hash
 hmac
-libstate
 oid_lookup
 pbkdf2
 </requires>

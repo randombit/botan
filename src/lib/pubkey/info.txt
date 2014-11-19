@@ -33,7 +33,7 @@ filters
 kdf
 libstate
 oid_lookup
-pbe
+pbes2
 pem
 pk_pad
 rng

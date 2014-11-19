@@ -38,6 +38,12 @@ Version 1.11.10, Not Yet Released
   user to directly specify the maximum false negative probability they are
   willing to accept.
 
+* PKCS #8 private keys can now be encrypted using GCM mode instead of
+  unauthenticated CBC. The default remains CBC for compatability.
+
+* The default PKCS #8 encryption scheme has changed to use PBKDF2 with
+  SHA-256 instead of SHA-1
+
 * Fix decoding indefinite length BER constructs that contain a context sensitive
   tag of zero. Github pull 26 from Janusz Chorko.
 
