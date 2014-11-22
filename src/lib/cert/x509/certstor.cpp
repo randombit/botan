@@ -128,7 +128,7 @@ Certificate_Store_In_Memory::Certificate_Store_In_Memory(const std::string& dir)
       try
          {
          if(boost::filesystem::is_regular_file(path))
-            m_certs.push_back(X509_Certificate(path.native()));
+            m_certs.push_back(X509_Certificate(path.string()));
          }
       catch(...) {}
       }
