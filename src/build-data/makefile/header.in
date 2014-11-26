@@ -32,9 +32,6 @@ HEADERDIR      = $(DESTDIR)/%{includedir}/botan-$(BRANCH)/botan
 DOCDIR         = $(DESTDIR)/%{docdir}/botan-$(VERSION)
 PKGCONF_DIR    = $(LIBDIR)/pkgconfig
 
-CONFIG_SCRIPT = %{botan_config}
-PKGCONFIG     = %{botan_pkgconfig}
-
 # Executable targets
 APP           = %{out_dir}/botan%{program_suffix}
 TEST          = %{out_dir}/botan-test%{program_suffix}

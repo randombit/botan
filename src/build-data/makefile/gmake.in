@@ -53,8 +53,8 @@ clean:
 	$(RM) $(LIBRARIES) $(SYMLINK) $(SONAME) $(APP) $(TEST)
 
 distclean: clean
+	$(RM) Makefile
 	$(RM_R) %{build_dir}
-	$(RM) Makefile* $(CONFIG_SCRIPT) $(PKGCONFIG)
 	$(RM) botan_all.cpp botan_all.h
 
 docs:

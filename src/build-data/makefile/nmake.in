@@ -36,16 +36,16 @@ BOTAN_LIB     = $(LIBNAME).%{static_suffix}
 
 # Link Commands
 $(APP): $(LIBRARIES) $(APPOBJS)
-	$(CXX) /Fe$@ $(APPOBJS) $(BOTAN_LIB) $(LINK_TO)
+	$(CXX) /Fe$@ $(APPOBJS) $(BOTAN_LIB) $(APP_LINKS_TO)
 
 $(TEST): $(LIBRARIES) $(TESTOBJS)
-	$(CXX) /Fe$@ $(TESTOBJS) $(BOTAN_LIB) $(LINK_TO)
+	$(CXX) /Fe$@ $(TESTOBJS) $(BOTAN_LIB) $(TEST_LINKS_TO)
 
 $(BOTAN_LIB): $(LIBOBJS)
 !If "$(SO_OBJ_FLAGS)" == ""
 	$(AR) /OUT:$(BOTAN_LIB) $(LIBOBJS)
 !Else
-	$(LIB_LINK_CMD) /Fe$(LIBNAME) $(LIBOBJS) $(LINK_TO)
+	$(LIB_LINK_CMD) /Fe$(LIBNAME) $(LIBOBJS) $(LIB_LINKS_TO)
 !Endif
 
 %{python_in}
