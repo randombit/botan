@@ -21,7 +21,16 @@ namespace TA_CM {
 * @param in an integer
 * @return 0 if in == 0 else 0xFFFFFFFF
 */
-u32bit gen_mask_u32bit(u32bit in);
+u32bit expand_mask_u32bit(u32bit in);
+
+
+/**
+ * Expand an input to a bit mask depending on it being being zero or
+ * non-zero
+ * @ param in the input
+ * @return the mask 0xFFFF if tst is non-zero and 0 otherwise
+ */
+u16bit expand_mask_u16bit(u16bit in);
 
 /**
 * Branch-free maximum

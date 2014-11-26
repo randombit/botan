@@ -80,7 +80,7 @@ snail-mail address (S), and Bitcoin address (B).
   S: Italy
 
   N: Falko Strenzke
-  E: strenzke@flexsecure.de
-  W: http://www.flexsecure.de/
-  D: GF(p) arithmetic, CVC, Shanks-Tonelli algorithm
+  E: fstrenzke@cryptosource.de
+  W: http://www.cryptosource.de
+  D: McEliece, GF(p) arithmetic, CVC, Shanks-Tonelli algorithm
   S: Darmstadt, Germany

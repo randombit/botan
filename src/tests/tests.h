@@ -67,6 +67,7 @@ size_t test_elgamal();
 size_t test_ecc_pointmul();
 size_t test_ecdsa();
 size_t test_gost_3410();
+size_t test_mceliece();
 
 // One off tests
 size_t test_ocb();

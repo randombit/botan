@@ -1,0 +1,17 @@
+define MCELIECE 20141124
+
+<header:public>
+code_based_util.h
+gf2m_rootfind_dcmp.h
+gf2m_small_m.h
+goppa_code.h
+mce_overbeck_cca2.h
+mceliece.h
+mceliece_key.h
+polyn_gf2m.h
+</header:public>
+
+<header:internal>
+binary_matrix.h
+code_based_key_gen.h
+</header:internal>

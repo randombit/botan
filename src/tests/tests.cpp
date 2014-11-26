@@ -261,6 +261,7 @@ int main(int argc, char* argv[])
    DEF_TEST(ecc_pointmul);
    DEF_TEST(ecdsa);
    DEF_TEST(gost_3410);
+   DEF_TEST(mceliece);
 
    DEF_TEST(ecc_unit);
    DEF_TEST(ecdsa_unit);

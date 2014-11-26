@@ -17,15 +17,18 @@ Botan (http://botan.randombit.net/) is distributed under these terms::
                 2007 Yves Jerschow
                 2007-2008 FlexSecure GmbH
                 2007-2008 Technische Universitat Darmstadt
-                2007-2008,2010 Falko Strenzke
+                2007-2008,2010,2014 Falko Strenzke
                 2007-2008 Martin Doering
                 2007 Manuel Hartl
                 2007 Christoph Ludwig
                 2007 Patrick Sona
+                2008 Copyright Projet SECRET, INRIA, Rocquencourt
+                2008 Bhaskar Biswas and Nicolas Sendrier
                 2010 Olivier de Gaalon
                 2012 Vojtech Kral
                 2012-2014 Markus Wanner
                 2013 Joel Low
+                2014 cryptosource GmbH
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
