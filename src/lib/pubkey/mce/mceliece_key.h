@@ -15,7 +15,6 @@
 #include <botan/exceptn.h>
 #include <botan/pk_keys.h>
 #include <botan/polyn_gf2m.h>
-#include <botan/code_based_util.h>
 
 namespace Botan {
 
@@ -47,7 +46,7 @@ class BOTAN_DLL McEliece_PublicKey : public virtual Public_Key
 
       AlgorithmIdentifier algorithm_identifier() const;
 
-      size_t estimated_strength() const { return 0; }
+      size_t estimated_strength() const;
 
       std::vector<byte> x509_subject_public_key() const;
 

@@ -14,12 +14,13 @@
 #include <botan/ber_dec.h>
 #include <botan/secmem.h>
 #include <botan/point_gfp.h>
+#include <botan/workfactor.h>
 
 namespace Botan {
 
 size_t EC_PublicKey::estimated_strength() const
    {
-   return domain().get_curve().get_p().bits() / 2;
+   return ecp_work_factor(domain().get_curve().get_p().bits());
    }
 
 EC_PublicKey::EC_PublicKey(const EC_Group& dom_par,

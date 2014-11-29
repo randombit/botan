@@ -14,10 +14,10 @@
 #include <botan/gf2m_small_m.h>
 #include <botan/mceliece.h>
 #include <botan/internal/code_based_key_gen.h>
-#include <botan/alg_id.h>
+#include <botan/code_based_util.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/oids.h>
+#include <botan/workfactor.h>
 
 namespace Botan {
 
@@ -72,6 +72,11 @@ McEliece_PublicKey::McEliece_PublicKey(const McEliece_PublicKey & other) :
    m_t(other.m_t),
    m_code_length(other.m_code_length)
    {
+   }
+
+size_t McEliece_PublicKey::estimated_strength() const
+   {
+   return mceliece_work_factor(m_t, m_code_length);
    }
 
 McEliece_PublicKey::McEliece_PublicKey(const std::vector<byte>& key_bits)
