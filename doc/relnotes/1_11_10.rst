@@ -50,6 +50,15 @@ Version 1.11.10, Not Yet Released
 * The default PKCS #8 encryption scheme has changed to use PBKDF2 with
   SHA-256 instead of SHA-1
 
+* A specialized reducer for P-521 was added.
+
+* On Linux the mlock allocator will use MADV_DONTDUMP on the pool so
+  that the contents are not included in coredumps.
+
+* A new interface for directly using a system-provided PRNG is
+  available in system_rng.h. Currently only systems with /dev/urandom
+  are supported.
+
 * Fix decoding indefinite length BER constructs that contain a context sensitive
   tag of zero. Github pull 26 from Janusz Chorko.
 

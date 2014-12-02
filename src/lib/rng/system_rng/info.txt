@@ -1,0 +1,19 @@
+define SYSTEM_RNG 20141202
+
+<os>
+aix
+cygwin
+darwin
+dragonfly
+freebsd
+haiku
+hpux
+hurd
+irix
+linux
+netbsd
+openbsd
+qnx
+solaris
+tru64
+</os>

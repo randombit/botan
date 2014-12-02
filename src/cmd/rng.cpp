@@ -7,6 +7,10 @@
 #include "apps.h"
 #include <botan/libstate.h>
 
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+  #include <botan/system_rng.h>
+#endif
+
 namespace {
 
 int rng(int argc, char* argv[])
@@ -21,6 +25,10 @@ int rng(int argc, char* argv[])
       {
       const size_t amt = to_u32bit(argv[argc-1]);
       const bool raw = (argc == 3 && std::string(argv[1]) == "--raw-entropy");
+
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+      std::cout << "System " << hex_encode(system_rng().random_vec(amt)) << "\n";
+#endif
 
       if(!raw)
          {
