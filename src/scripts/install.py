@@ -66,6 +66,20 @@ def makedirs(dirname, exist_ok = True):
         if e.errno != errno.EEXIST or not exist_ok:
             raise e
 
+def license_text(rst_license):
+    end_of_rst = 'terms::'
+    contents = open(rst_license).read()
+    x = contents.find(end_of_rst) + len(end_of_rst)
+
+    lines = contents[x:].split('\n')
+
+    while lines[0] == '':
+        lines.pop(0)
+
+    leading_ws = min([len(l) - len(l.lstrip(' ')) for l in lines if l != ''])
+
+    return '\n'.join([l[leading_ws:] for l in lines])
+
 def main(args = None):
     if args is None:
         args = sys.argv
@@ -138,8 +152,22 @@ def main(args = None):
         copy_executable(shared_lib, os.path.join(lib_dir, os.path.basename(shared_lib)))
 
         prev_cwd = os.getcwd()
+
         try:
             os.chdir(lib_dir)
+
+            try:
+                os.unlink(soname)
+            except OSError as e:
+                if e.errno != errno.ENOENT:
+                    raise e
+
+            try:
+                os.unlink(baselib)
+            except OSError as e:
+                if e.errno != errno.ENOENT:
+                    raise e
+
             os.symlink(shared_lib, soname)
             os.symlink(soname, baselib)
         finally:
@@ -157,7 +185,11 @@ def main(args = None):
         shutil.copyfile(build_vars['botan_pkgconfig'],
                         os.path.join(pkgconfig_dir, os.path.basename(build_vars['botan_pkgconfig'])))
 
+    shutil.rmtree(botan_doc_dir, True)
     shutil.copytree(build_vars['doc_output_dir'], botan_doc_dir)
+
+    with open(os.path.join(botan_doc_dir, 'license.txt'), 'w+') as lic:
+        lic.write(license_text('doc/license.rst'))
 
     logging.info('Botan %s installation complete', build_vars['version'])
 
