@@ -60,6 +60,7 @@ struct gf2m_decomp_rootfind_state
 /*
  * !! Attention: assumes gf2m is 16bit !!
  */
+#if 0
 gf2m brootf_decomp__gray_to_lex(gf2m gray)
 {
   static_assert(sizeof(gf2m) == 2, "Expected size");
@@ -69,6 +70,7 @@ gf2m brootf_decomp__gray_to_lex(gf2m gray)
   result ^= (result >> 1);
   return result;
 }
+#endif
 
 /**
  * calculates ceil((t-4)/5) = outer_summands - 1

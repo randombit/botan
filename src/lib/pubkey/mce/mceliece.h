@@ -27,7 +27,7 @@ namespace Botan {
 
 
 
-  secure_vector<gf2m> create_random_error_positions(unsigned code_length, unsigned error_weight, RandomNumberGenerator& rng);
+secure_vector<gf2m> BOTAN_DLL create_random_error_positions(unsigned code_length, unsigned error_weight, RandomNumberGenerator& rng);
 
 
 class mceliece_message_parts
