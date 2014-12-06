@@ -400,6 +400,9 @@ def process_command_line(args):
                               const=mod,
                               dest='disabled_modules')
 
+    mods_group.add_option('--with-everything', help=optparse.SUPPRESS_HELP,
+                          action='store_true', default=False)
+
     install_group = optparse.OptionGroup(parser, 'Installation options')
 
     install_group.add_option('--program-suffix', metavar='SUFFIX',
@@ -1388,7 +1391,10 @@ def choose_modules_to_use(modules, archinfo, ccinfo, options):
             if module.load_on == 'never':
                 cannot_use_because(modname, 'disabled as buggy')
             elif module.load_on == 'request':
-                cannot_use_because(modname, 'by request only')
+                if options.with_everything:
+                    to_load.append(modname)
+                else:
+                    cannot_use_because(modname, 'by request only')
             elif module.load_on == 'dep':
                 maybe_dep.append(modname)
 
