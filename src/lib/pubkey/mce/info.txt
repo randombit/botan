@@ -6,6 +6,7 @@ gf2m_rootfind_dcmp.h
 gf2m_small_m.h
 goppa_code.h
 mce_overbeck_cca2.h
+mce_kem.h
 mceliece.h
 mceliece_key.h
 polyn_gf2m.h

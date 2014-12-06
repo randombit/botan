@@ -9,9 +9,11 @@
 #include <botan/auto_rng.h>
 #include <botan/hex.h>
 #include <iostream>
-#include <memory>
 
 #include <botan/mce_overbeck_cca2.h>
+#include <botan/mce_kem.h>
+
+#include <memory>
 
 using namespace Botan;
 
@@ -19,6 +21,8 @@ using namespace Botan;
 #define CHECK(expr) do {if(!(expr)) { std::cout << #expr << "\n"; return 1; } }while(0)
 
 namespace {
+
+const size_t MCE_RUNS = 10;
 
 size_t test_mceliece_message_parts(RandomNumberGenerator& rng, size_t code_length, size_t error_weight)
    {
@@ -48,7 +52,6 @@ size_t test_mceliece_message_parts(RandomNumberGenerator& rng, size_t code_lengt
 
    return 0;
    }
-
 
 size_t test_mceliece_overbeck(RandomNumberGenerator& rng, size_t code_length, size_t t )
    {
@@ -133,6 +136,58 @@ size_t test_mceliece_overbeck(RandomNumberGenerator& rng, size_t code_length, si
    return err_cnt;
    }
 
+size_t test_mceliece_kem(RandomNumberGenerator& rng, u32bit code_length, u32bit t)
+   {
+   size_t fails = 0;
+
+   McEliece_PrivateKey sk1(rng, code_length, t);
+   McEliece_PublicKey& pk1 = dynamic_cast<McEliece_PrivateKey&>(sk1);
+
+   const std::vector<byte> pk_enc = pk1.x509_subject_public_key();
+   const secure_vector<byte> sk_enc = sk1.pkcs8_private_key();
+
+   McEliece_PublicKey pk(pk_enc);
+   McEliece_PrivateKey sk(sk_enc);
+
+   if(pk1 != pk)
+      {
+      std::cout << "decoded McEliece public key differs from original one" << std::endl;
+      ++fails;
+      }
+
+   if(sk1 != sk)
+      {
+      std::cout << "decoded McEliece private key differs from original one" << std::endl;
+      ++fails;
+      }
+
+   if(!sk.check_key(rng, false))
+      {
+      std::cout << "error calling check key on McEliece key" << std::endl;
+      ++fails;
+      }
+
+   McEliece_KEM_Encryptor pub_op(pk);
+   McEliece_KEM_Decryptor priv_op(sk);
+
+   for(size_t i = 0; i != MCE_RUNS; i++)
+      {
+      const std::pair<secure_vector<byte>,secure_vector<byte> > ciphertext__sym_key = pub_op.encrypt(rng);
+      const secure_vector<byte>& ciphertext = ciphertext__sym_key.first;
+      const secure_vector<byte>& sym_key_encr = ciphertext__sym_key.second;
+
+      const secure_vector<byte> sym_key_decr = priv_op.decrypt(&ciphertext[0], ciphertext.size());
+
+      if(sym_key_encr != sym_key_decr)
+         {
+         std::cout << "mce KEM test failed, error during encryption/decryption" << std::endl;
+         ++fails;
+         }
+      }
+
+   return fails;
+   }
+
 size_t test_mceliece_raw(RandomNumberGenerator& rng, size_t code_length, size_t t)
    {
    McEliece_PrivateKey sk(rng, code_length, t);
@@ -142,7 +197,7 @@ size_t test_mceliece_raw(RandomNumberGenerator& rng, size_t code_length, size_t 
    McEliece_Public_Operation pub_op(*p_pk, code_length );
    size_t err_cnt = 0;
 
-   for(size_t i = 0; i < 100; i++)
+   for(size_t i = 0; i != MCE_RUNS; i++)
       {
       secure_vector<byte> plaintext((p_pk->get_message_word_bit_length()+7)/8);
       rng.randomize(&plaintext[0], plaintext.size() - 1);
@@ -188,24 +243,6 @@ size_t test_mceliece()
    {
    AutoSeeded_RNG rng;
 
-
-   /*
-   size_t key_gen_loop_limit = 10000;
-   for(size_t i = 0; i < key_gen_loop_limit; i++)
-   {
-   if(i % 100 == 0)
-   {
-   std::cout << "max key gen test : iter " << i << " of " << key_gen_loop_limit << std::endl;
-   }
-   if( test_mceliece_overbeck(rng, 2048, 33))
-   {
-   std::cout << "error in overbeck test" << std::endl;
-   return 1;
-   }
-
-   }
-   */
-
    size_t  err_cnt = 0;
    size_t params__n__t_min_max[] = {
       256, 5, 15,
@@ -238,6 +275,16 @@ size_t test_mceliece()
          try
             {
             err_cnt += test_mceliece_raw(rng, code_length, t);
+            }
+         catch(std::exception& e)
+            {
+            std::cout << e.what();
+            err_cnt++;
+            }
+
+         try
+            {
+            err_cnt += test_mceliece_kem(rng, code_length, t);
             }
          catch(std::exception& e)
             {
