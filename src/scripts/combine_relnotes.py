@@ -1,11 +1,20 @@
 #!/usr/bin/python
 
+"""
+(C) 2014 Jack Lloyd
+
+Distributed under the terms of the Botan license
+"""
+
 import re
 import sys
+import os
 
-def main(args = None):
-    if args is None:
-        args = sys.argv
+def combine_relnotes(relnote_dir):
+
+    relnotes = [p for p in os.listdir(relnote_dir) if p.startswith(('0', '1', '2'))]
+
+    print relnotes
 
     re_version = re.compile('Version (\d+\.\d+\.\d+), ([0-9]{4}-[0-9]{2}-[0-9]{2})$')
     re_nyr = re.compile('Version (\d+\.\d+\.\d+), Not Yet Released$')
@@ -15,8 +24,8 @@ def main(args = None):
     versions = []
     versions_nyr = []
 
-    for f in args[1:]:
-        contents = open(f).readlines()
+    for f in relnotes:
+        contents = open(os.path.join(relnote_dir, f)).readlines()
 
         match = re_version.match(contents[0])
 
@@ -38,9 +47,11 @@ def main(args = None):
     def make_label(v):
         return ".. _v%s:\n" % (v.replace('.', '_'))
 
-    print "Release Notes"
-    print "========================================"
-    print
+    s = ''
+
+    s += "Release Notes\n"
+    s += "========================================\n"
+    s += "\n"
 
     date_to_version = {}
     for (v,d) in version_date.items():
@@ -48,13 +59,23 @@ def main(args = None):
 
     if len(versions_nyr) > 0:
         for v in versions_nyr:
-            print make_label(v)
-            print version_contents[v], "\n"
+            s += make_label(v) + "\n"
+            s += version_contents[v]
+            s += "\n\n"
 
     for d in sorted(date_to_version.keys(), reverse=True):
         for v in sorted(date_to_version[d]):
-            print make_label(v)
-            print version_contents[v], "\n"
+            s += make_label(v) + "\n"
+            s += version_contents[v]
+            s += "\n\n"
+
+    return s
+
+def main(args = None):
+    if args is None:
+        args = sys.argv
+
+    print combine_relnotes(args[1])
 
 if __name__ == '__main__':
     sys.exit(main())

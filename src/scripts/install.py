@@ -8,6 +8,8 @@ import shutil
 import string
 import sys
 
+import combine_relnotes
+
 def parse_command_line(args):
 
     parser = optparse.OptionParser()
@@ -190,6 +192,9 @@ def main(args = None):
 
     with open(os.path.join(botan_doc_dir, 'license.txt'), 'w+') as lic:
         lic.write(license_text('doc/license.rst'))
+
+    with open(os.path.join(botan_doc_dir, 'news.txt'), 'w+') as news:
+        news.write(combine_relnotes.combine_relnotes('doc/relnotes'))
 
     logging.info('Botan %s installation complete', build_vars['version'])
 
