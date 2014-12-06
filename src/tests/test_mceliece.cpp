@@ -6,13 +6,11 @@
 #include <botan/x509cert.h>
 #include <botan/oids.h>
 #include <botan/mceliece.h>
+#include <botan/mce_kem.h>
 #include <botan/auto_rng.h>
 #include <botan/hex.h>
+
 #include <iostream>
-
-#include <botan/mce_overbeck_cca2.h>
-#include <botan/mce_kem.h>
-
 #include <memory>
 
 using namespace Botan;
@@ -51,89 +49,6 @@ size_t test_mceliece_message_parts(RandomNumberGenerator& rng, size_t code_lengt
       }
 
    return 0;
-   }
-
-size_t test_mceliece_overbeck(RandomNumberGenerator& rng, size_t code_length, size_t t )
-   {
-   McEliece_PrivateKey sk1(rng, code_length, t);
-   McEliece_PublicKey pk1(*dynamic_cast<McEliece_PublicKey*>(&sk1));
-
-   McEliece_PublicKey pk(pk1.x509_subject_public_key());
-   McEliece_PrivateKey sk(sk1.pkcs8_private_key());
-
-   if(sk1 != sk)
-      {
-      std::cout << "decoded McEliece private key differs from original one" << std::endl;
-      return 1;
-      }
-
-   if(!sk.check_key(rng, false))
-      {
-      std::cout << "error calling check key on McEliece key" << std::endl;
-      return 1;
-      }
-
-   if(pk1 != pk)
-      {
-      std::cout << "decoded McEliece public key differs from original one" << std::endl;
-      return 1;
-      }
-
-   McEliece_Overbeck_CCA2_Private_Operation priv_op(sk);
-   McEliece_Overbeck_CCA2_Public_Operation pub_op(pk );
-   size_t err_cnt = 0;
-
-   for(size_t i = 0; i < 10; i++)
-      {
-      try
-         {
-         secure_vector<byte> plaintext(64);
-         rng.randomize(&plaintext[0], plaintext.size() - 1);
-
-         secure_vector<byte> ciphertext = pub_op.encrypt(&plaintext[0], plaintext.size(), rng);
-         secure_vector<byte> decrypted = priv_op.decrypt(&ciphertext[0], ciphertext.size() );
-
-         if(plaintext != decrypted)
-            {
-            std::cout << "ciphertext = " << hex_encode(ciphertext) << std::endl;
-            std::cout << "original      plaintext = " << hex_encode(plaintext) << std::endl;
-            std::cout << "decrypted     plaintext = " << hex_encode(decrypted) << std::endl;
-
-            err_cnt++;
-            std::cout << "mce overbeck test " << i << " failed, error during encryption/decryption" << std::endl;
-            return err_cnt;
-            }
-
-#if 0
-         // takes a long time:
-         for(size_t j = 0; j < code_length; j++)
-            {
-            // flip the j-th bit in the ciphertext
-            secure_vector<byte> wrong_ct(ciphertext);
-            size_t byte_pos = j/8;
-            size_t bit_pos = j % 8;
-            wrong_ct[byte_pos] ^= 1 << bit_pos;
-            try
-               {
-               secure_vector<byte> decrypted = priv_op.decrypt(&wrong_ct[0], wrong_ct.size());
-               }
-            catch(const Integrity_Failure)
-               {
-               continue;
-               }
-            std::cout << "manipulation in ciphertext not detected" << std::endl;
-            err_cnt++;
-            }
-#endif
-         }
-      catch(std::exception& e)
-         {
-         std::cout << e.what() << "\n";
-         ++err_cnt;
-         }
-      }
-
-   return err_cnt;
    }
 
 size_t test_mceliece_kem(RandomNumberGenerator& rng, u32bit code_length, u32bit t)
@@ -183,6 +98,29 @@ size_t test_mceliece_kem(RandomNumberGenerator& rng, u32bit code_length, u32bit 
          std::cout << "mce KEM test failed, error during encryption/decryption" << std::endl;
          ++fails;
          }
+
+#if 0
+         // takes a long time:
+         for(size_t j = 0; j < code_length; j++)
+            {
+            // flip the j-th bit in the ciphertext
+            secure_vector<byte> wrong_ct(ciphertext);
+            size_t byte_pos = j/8;
+            size_t bit_pos = j % 8;
+            wrong_ct[byte_pos] ^= 1 << bit_pos;
+            try
+               {
+               secure_vector<byte> decrypted = priv_op.decrypt(&wrong_ct[0], wrong_ct.size());
+               }
+            catch(const Integrity_Failure)
+               {
+               continue;
+               }
+            std::cout << "manipulation in ciphertext not detected" << std::endl;
+            err_cnt++;
+            }
+#endif
+
       }
 
    return fails;
@@ -285,18 +223,6 @@ size_t test_mceliece()
          try
             {
             err_cnt += test_mceliece_kem(rng, code_length, t);
-            }
-         catch(std::exception& e)
-            {
-            std::cout << e.what();
-            err_cnt++;
-            }
-
-         try
-            {
-            // otherwise conversion not applicable because k=dimension would be too small
-            if(code_length >= 2048)
-               err_cnt += test_mceliece_overbeck(rng, code_length, t);
             }
          catch(std::exception& e)
             {

@@ -4,8 +4,11 @@ Version 1.11.10, Not Yet Released
 * An implementation of McEliece code-based public key encryption based
   on INRIA's HyMES was contributed by cryptosource GmbH. The original
   version is LGPL but cryptosource has secured permission to release
-  an adaptation under a BSD license. A CCA2-secure message encoding
-  scheme is also included.
+  an adaptation under a BSD license. A CCA2-secure KEM scheme is also
+  included.
+
+  The implementations is further described in
+  `http://www.cryptosource.de/docs/mceliece_in_botan.pdf`_.
 
 * Add support for TLS fallback signaling (draft-ietf-tls-downgrade-scsv-00).
   Clients will send a fallback SCSV if the version passed to the Client
