@@ -121,7 +121,7 @@ class Gzip_Compression_Stream : public Zlib_Compression_Stream
          {
          std::memset(&m_header, 0, sizeof(m_header));
          m_header.os = os_code;
-         m_header.time = std::time(0);
+         m_header.time = std::time(nullptr);
 
          int rc = deflateSetHeader(streamp(), &m_header);
          if(rc != Z_OK)
