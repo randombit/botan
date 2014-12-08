@@ -37,6 +37,16 @@ class BOTAN_DLL McEliece_KEM_Decryptor
       * returns the derived 512-bit symmetric key
       */
       secure_vector<Botan::byte> decrypt(const byte msg[], size_t msg_len);
+
+      /**
+      * returns the derived 512-bit symmetric key
+      */
+      template<typename Alloc>
+      secure_vector<Botan::byte> decrypt_vec(const std::vector<byte, Alloc>& v)
+         {
+         return decrypt(&v[0], v.size());
+
+         }
    private:
       McEliece_Private_Operation m_raw_priv_op;
   };

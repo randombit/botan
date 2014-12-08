@@ -12,6 +12,7 @@
 #include <botan/parsing.h>
 #include <botan/oids.h>
 #include <map>
+#include <sstream>
 
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
   #include <botan/x509_key.h>
@@ -60,6 +61,11 @@
 
 #if defined(BOTAN_HAS_GOST_34_10_2001)
   #include <botan/gost_3410.h>
+#endif
+
+#if defined(BOTAN_HAS_MCELIECE)
+  #include <botan/mceliece.h>
+  #include <botan/mce_kem.h>
 #endif
 
 using namespace Botan;
@@ -670,6 +676,66 @@ void benchmark_elg(RandomNumberGenerator& rng,
    }
 #endif
 
+#if defined(BOTAN_HAS_MCELIECE)
+void benchmark_mce(RandomNumberGenerator& rng,
+                   double seconds,
+                   Benchmark_Report& report)
+   {
+   const std::vector<std::pair<size_t, size_t>> params = {
+      { 256, 15 },
+      { 512, 33 },
+      { 1024, 35 },
+      { 2048, 50 },
+      { 2960, 56 },
+      { 6624, 115 }
+   };
+
+   const std::string algo_name = "McEliece";
+   const std::string padding = "Raw";
+
+   for(auto& param : params)
+      {
+      Timer keygen_timer("keygen");
+      Timer enc_timer(padding + " encrypt");
+      Timer dec_timer(padding + " decrypt");
+
+      keygen_timer.start();
+      McEliece_PrivateKey priv_key(rng, param.first, param.second);
+      McEliece_PublicKey pub_key(priv_key.x509_subject_public_key());
+      keygen_timer.stop();
+
+      McEliece_KEM_Encryptor enc_kem(pub_key);
+      McEliece_KEM_Decryptor dec_kem(priv_key);
+
+      while(enc_timer.seconds() < seconds ||
+            dec_timer.seconds() < seconds)
+         {
+         enc_timer.start();
+         auto enc_pair = enc_kem.encrypt(rng);
+         enc_timer.stop();
+
+         dec_timer.start();
+         auto dec_key = dec_kem.decrypt_vec(enc_pair.first);
+         dec_timer.stop();
+
+         BOTAN_ASSERT_EQUAL(enc_pair.second, dec_key, "KEM result matches");
+         }
+
+      const std::string nm = algo_name + "-" +
+                             std::to_string(param.first) + "," +
+                             std::to_string(param.second);
+
+      std::ostringstream keysize_report;
+      keysize_report << "(size " << pub_key.x509_subject_public_key().size() << " pub "
+                     << priv_key.pkcs8_private_key().size() << " priv)";
+
+      report.report(nm + " " + keysize_report.str(), keygen_timer);
+      report.report(nm, enc_timer);
+      report.report(nm, dec_timer);
+      }
+   }
+#endif
+
 }
 
 void bench_pk(RandomNumberGenerator& rng,
@@ -751,5 +817,10 @@ void bench_pk(RandomNumberGenerator& rng,
 #if defined(BOTAN_HAS_RW)
    if(algo == "All" || algo == "RW")
       benchmark_rw(rng, seconds, report);
+#endif
+
+#if defined(BOTAN_HAS_MCELIECE)
+   if(algo == "All" || algo == "McEliece")
+      benchmark_mce(rng, seconds, report);
 #endif
    }
