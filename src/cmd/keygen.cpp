@@ -61,12 +61,13 @@ Private_Key* gen_key(RandomNumberGenerator& rng, const std::string& algo, size_t
 
 int keygen(int argc, char* argv[])
    {
-   OptionParser opts("algo=|bits=|passphrase=");
+   OptionParser opts("algo=|bits=|passphrase=|pbe=");
    opts.parse(argv);
 
    const std::string algo = opts.value_or_else("algo", "rsa");
    const size_t bits = opts.int_value_or_else("bits", 1024);
    const std::string pass = opts.value_or_else("passphrase", "");
+   const std::string pbe = opts.value_or_else("pbe", "");
 
    try
       {
@@ -88,7 +89,7 @@ int keygen(int argc, char* argv[])
       if(pass == "")
          priv << PKCS8::PEM_encode(*key);
       else
-         priv << PKCS8::PEM_encode(*key, rng, pass);
+         priv << PKCS8::PEM_encode(*key, rng, pass, std::chrono::milliseconds(300), pbe);
 
       std::cout << "Wrote " << bits << " bit " << algo << " key to public.pem / private.pem\n";
       }

@@ -1,6 +1,6 @@
 /*
 * PKCS #8
-* (C) 1999-2010 Jack Lloyd
+* (C) 1999-2010,2014 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -150,6 +150,24 @@ std::string PEM_encode(const Private_Key& key)
    return PEM_Code::encode(PKCS8::BER_encode(key), "PRIVATE KEY");
    }
 
+namespace {
+
+std::pair<std::string, std::string>
+choose_pbe_params(const std::string& pbe_algo)
+   {
+   if(!pbe_algo.empty())
+      {
+      SCAN_Name request(pbe_algo);
+      if(request.algo_name() != "PBE-PKCS5v20")
+         throw std::runtime_error("Unsupported PBE " + pbe_algo);
+      return std::make_pair(request.arg(1), request.arg(0));
+      }
+
+   return std::make_pair("AES-256/CBC", "SHA-256");
+   }
+
+}
+
 /*
 * BER encode a PKCS #8 private key, encrypted
 */
@@ -159,21 +177,12 @@ std::vector<byte> BER_encode(const Private_Key& key,
                              std::chrono::milliseconds msec,
                              const std::string& pbe_algo)
    {
-   const std::string DEFAULT_PBE = "PBE-PKCS5v20(SHA-256,AES-256/CBC)";
-
-   SCAN_Name request(pbe_algo.empty() ? DEFAULT_PBE : pbe_algo);
-
-   const std::string pbe = request.algo_name();
-
-   if(pbe != "PBE-PKCS5v20")
-      throw std::runtime_error("Unsupported PBE " + pbe);
-
-   const std::string digest = request.arg(0);
-   const std::string cipher = request.arg(1);
+   const auto pbe_params = choose_pbe_params(pbe_algo);
 
    const std::pair<AlgorithmIdentifier, std::vector<byte>> pbe_info =
-      pbes2_encrypt(PKCS8::BER_encode(key), pass, msec, cipher, digest, rng,
-                    global_state().algorithm_factory());
+      pbes2_encrypt(PKCS8::BER_encode(key), pass, msec,
+                    pbe_params.first, pbe_params.second,
+                    rng, global_state().algorithm_factory());
 
    return DER_Encoder()
          .start_cons(SEQUENCE)
