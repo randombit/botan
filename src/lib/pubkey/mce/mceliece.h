@@ -143,6 +143,12 @@ class BOTAN_DLL McEliece_Public_Operation : public PK_Ops::Encryption
   u32bit m_code_length;
 };
 
+/**
+* Estimate work factor for McEliece
+* @return estimated security level for these key parameters
+*/
+BOTAN_DLL size_t mceliece_work_factor(size_t code_size, size_t k, size_t t);
+
 }
 
 

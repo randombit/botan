@@ -76,7 +76,9 @@ McEliece_PublicKey::McEliece_PublicKey(const McEliece_PublicKey & other) :
 
 size_t McEliece_PublicKey::estimated_strength() const
    {
-   return mceliece_work_factor(m_t, m_code_length);
+   const u32bit ext_deg = ceil_log2(m_code_length);
+   const size_t k = m_code_length - ext_deg * m_t;
+   return mceliece_work_factor(m_code_length, k, m_t);
    }
 
 McEliece_PublicKey::McEliece_PublicKey(const std::vector<byte>& key_bits)

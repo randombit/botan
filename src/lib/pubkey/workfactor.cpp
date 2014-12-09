@@ -11,11 +11,6 @@
 
 namespace Botan {
 
-size_t mceliece_work_factor(size_t code_size, size_t t)
-   {
-   return 0;
-   }
-
 size_t ecp_work_factor(size_t bits)
    {
    return bits / 2;

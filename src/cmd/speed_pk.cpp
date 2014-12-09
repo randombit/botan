@@ -682,8 +682,6 @@ void benchmark_mce(RandomNumberGenerator& rng,
                    Benchmark_Report& report)
    {
    const std::vector<std::pair<size_t, size_t>> params = {
-      { 256, 15 },
-      { 512, 33 },
       { 1024, 35 },
       { 2048, 50 },
       { 2960, 56 },
@@ -727,7 +725,8 @@ void benchmark_mce(RandomNumberGenerator& rng,
 
       std::ostringstream keysize_report;
       keysize_report << "(size " << pub_key.x509_subject_public_key().size() << " pub "
-                     << priv_key.pkcs8_private_key().size() << " priv)";
+                     << priv_key.pkcs8_private_key().size() << " priv "
+                     << pub_key.estimated_strength() << " work factor)";
 
       report.report(nm + " " + keysize_report.str(), keygen_timer);
       report.report(nm, enc_timer);
