@@ -11,8 +11,8 @@
   #include <botan/zlib.h>
 #endif
 
-#if defined(BOTAN_HAS_BZIP_TRANSFORM)
-  #include <botan/bzip.h>
+#if defined(BOTAN_HAS_BZIP2_TRANSFORM)
+  #include <botan/bzip2.h>
 #endif
 
 #if defined(BOTAN_HAS_LZMA_TRANSFORM)
@@ -25,16 +25,16 @@ Compressor_Transformation* make_compressor(const std::string& type, size_t level
    {
 #if defined(BOTAN_HAS_ZLIB_TRANSFORM)
    if(type == "zlib")
-      return new Zlib_Compression(level, false);
+      return new Zlib_Compression(level);
    if(type == "deflate")
-      return new Zlib_Compression(level, true);
+      return new Deflate_Compression(level);
    if(type == "gzip" || type == "gz")
       return new Gzip_Compression(level);
 #endif
 
-#if defined(BOTAN_HAS_BZIP_TRANSFORM)
+#if defined(BOTAN_HAS_BZIP2_TRANSFORM)
    if(type == "bzip2" || type == "bz2")
-      return new Bzip_Compression(level);
+      return new Bzip2_Compression(level);
 #endif
 
 #if defined(BOTAN_HAS_LZMA_TRANSFORM)
@@ -49,16 +49,16 @@ Compressor_Transformation* make_decompressor(const std::string& type)
    {
 #if defined(BOTAN_HAS_ZLIB_TRANSFORM)
    if(type == "zlib")
-      return new Zlib_Decompression(false);
+      return new Zlib_Decompression;
    if(type == "deflate")
-      return new Zlib_Decompression(true);
+      return new Deflate_Decompression;
    if(type == "gzip" || type == "gz")
       return new Gzip_Decompression;
 #endif
 
-#if defined(BOTAN_HAS_BZIP_TRANSFORM)
+#if defined(BOTAN_HAS_BZIP2_TRANSFORM)
    if(type == "bzip2" || type == "bz2")
-      return new Bzip_Decompression;
+      return new Bzip2_Decompression;
 #endif
 
 #if defined(BOTAN_HAS_LZMA_TRANSFORM)

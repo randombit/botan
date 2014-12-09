@@ -44,8 +44,9 @@ class Zlib_Compression_Stream : public Zlib_Stream
    public:
       Zlib_Compression_Stream(size_t level, int wbits, int wbits_offset = 0)
          {
-         int rc = deflateInit2(streamp(), level, Z_DEFLATED,
-                               compute_window_bits(wbits, wbits_offset),
+         wbits = compute_window_bits(wbits, wbits_offset);
+
+         int rc = deflateInit2(streamp(), level, Z_DEFLATED, wbits,
                                8, Z_DEFAULT_STRATEGY);
          if(rc != Z_OK)
             throw std::runtime_error("zlib deflate initialization failed");
@@ -142,18 +143,22 @@ class Gzip_Decompression_Stream : public Zlib_Decompression_Stream
 
 Compression_Stream* Zlib_Compression::make_stream() const
    {
-   if(m_raw_deflate)
-      return new Deflate_Compression_Stream(m_level, 15);
-   else
-      return new Zlib_Compression_Stream(m_level, 15);
+   return new Zlib_Compression_Stream(m_level, 15);
    }
 
 Compression_Stream* Zlib_Decompression::make_stream() const
    {
-   if(m_raw_deflate)
-      return new Deflate_Decompression_Stream(15);
-   else
-      return new Zlib_Decompression_Stream(15);
+   return new Zlib_Decompression_Stream(15);
+   }
+
+Compression_Stream* Deflate_Compression::make_stream() const
+   {
+   return new Deflate_Compression_Stream(m_level, 15);
+   }
+
+Compression_Stream* Deflate_Decompression::make_stream() const
+   {
+   return new Deflate_Decompression_Stream(15);
    }
 
 Compression_Stream* Gzip_Compression::make_stream() const

@@ -65,7 +65,6 @@ class BOTAN_DLL Stream_Compression : public Compressor_Transformation
       void finish(secure_vector<byte>& buf, size_t offset = 0) override;
 
       void clear() override;
-
    private:
       secure_vector<byte> start_raw(const byte[], size_t) override;
 

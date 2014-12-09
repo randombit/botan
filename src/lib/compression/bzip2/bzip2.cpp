@@ -1,5 +1,5 @@
 /*
-* Bzip Compressor
+* Bzip2 Compressor
 * (C) 2001 Peter J Jones
 *     2001-2007,2014 Jack Lloyd
 *     2006 Matt Johnston
@@ -17,10 +17,10 @@ namespace Botan {
 
 namespace {
 
-class Bzip_Stream : public Zlib_Style_Stream<bz_stream, char>
+class Bzip2_Stream : public Zlib_Style_Stream<bz_stream, char>
    {
    public:
-      Bzip_Stream()
+      Bzip2_Stream()
          {
          streamp()->opaque = alloc();
          streamp()->bzalloc = Compression_Alloc_Info::malloc<int>;
@@ -32,12 +32,12 @@ class Bzip_Stream : public Zlib_Style_Stream<bz_stream, char>
       u32bit finish_flag() const override { return BZ_FINISH; }
    };
 
-class Bzip_Compression_Stream : public Bzip_Stream
+class Bzip2_Compression_Stream : public Bzip2_Stream
    {
    public:
-      Bzip_Compression_Stream(size_t level)
+      Bzip2_Compression_Stream(size_t block_size)
          {
-         int rc = BZ2_bzCompressInit(streamp(), level, 0, 0);
+         int rc = BZ2_bzCompressInit(streamp(), block_size, 0, 0);
 
          if(rc == BZ_MEM_ERROR)
             throw std::bad_alloc();
@@ -45,7 +45,7 @@ class Bzip_Compression_Stream : public Bzip_Stream
             throw std::runtime_error("bzip compress initialization failed");
          }
 
-      ~Bzip_Compression_Stream()
+      ~Bzip2_Compression_Stream()
          {
          BZ2_bzCompressEnd(streamp());
          }
@@ -61,15 +61,12 @@ class Bzip_Compression_Stream : public Bzip_Stream
 
          return (rc == BZ_STREAM_END);
          }
-
-   private:
-      size_t m_level;
    };
 
-class Bzip_Decompression_Stream : public Bzip_Stream
+class Bzip2_Decompression_Stream : public Bzip2_Stream
    {
    public:
-      Bzip_Decompression_Stream()
+      Bzip2_Decompression_Stream()
          {
          int rc = BZ2_bzDecompressInit(streamp(), 0, 0);
 
@@ -79,7 +76,7 @@ class Bzip_Decompression_Stream : public Bzip_Stream
             throw std::runtime_error("bzip decompress initialization failed");
          }
 
-      ~Bzip_Decompression_Stream()
+      ~Bzip2_Decompression_Stream()
          {
          BZ2_bzDecompressEnd(streamp());
          }
@@ -99,14 +96,14 @@ class Bzip_Decompression_Stream : public Bzip_Stream
 
 }
 
-Compression_Stream* Bzip_Compression::make_stream() const
+Compression_Stream* Bzip2_Compression::make_stream() const
    {
-   return new Bzip_Compression_Stream(m_level);
+   return new Bzip2_Compression_Stream(m_block_size);
    }
 
-Compression_Stream* Bzip_Decompression::make_stream() const
+Compression_Stream* Bzip2_Decompression::make_stream() const
    {
-   return new Bzip_Decompression_Stream;
+   return new Bzip2_Decompression_Stream;
    }
 
 }

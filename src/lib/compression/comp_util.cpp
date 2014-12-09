@@ -22,13 +22,17 @@ void* Compression_Alloc_Info::do_malloc(size_t n, size_t size)
 
 void Compression_Alloc_Info::do_free(void* ptr)
    {
-   auto i = m_current_allocs.find(ptr);
-   if(i == m_current_allocs.end())
-      throw std::runtime_error("Compression_Alloc_Info::free got pointer not allocated by us");
+   if(ptr)
+      {
+      auto i = m_current_allocs.find(ptr);
 
-   std::memset(ptr, 0, i->second);
-   std::free(ptr);
-   m_current_allocs.erase(i);
+      if(i == m_current_allocs.end())
+         throw std::runtime_error("Compression_Alloc_Info::free got pointer not allocated by us");
+
+      std::memset(ptr, 0, i->second);
+      std::free(ptr);
+      m_current_allocs.erase(i);
+      }
    }
 
 }
