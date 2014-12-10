@@ -1,4 +1,4 @@
-Version 1.11.10, Not Yet Released
+Version 1.11.10, 2014-12-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * An implementation of McEliece code-based public key encryption based
@@ -15,30 +15,32 @@ Version 1.11.10, Not Yet Released
 
 * Add support for TLS fallback signaling (draft-ietf-tls-downgrade-scsv-00).
   Clients will send a fallback SCSV if the version passed to the Client
-  constructor is less than the latest version supported by local policy,
-  so applications implementing fallback are protected. Servers always check
-  the SCSV.
+  constructor is less than the latest version supported by local policy, so
+  applications implementing fallback are protected. Servers always check the
+  SCSV.
 
 * In previous versions a TLS::Server could service either TLS or DTLS
   connections depending on policy settings and what type of client hello it
-  received. This has changed and now a Server object is initialized for either
-  TLS or DTLS operation. The default policy previously prohibited DTLS,
-  precisely to prevent a TCP server from being surprised by a DTLS connection.
-  This has changed and the default policy now allows TLS v1.0 or higher or DTLS
-  v1.2.
+  received. This has changed and now a Server object is initialized for
+  either TLS or DTLS operation. The default policy previously prohibited
+  DTLS, precisely to prevent a TCP server from being surprised by a DTLS
+  connection.  The default policy now allows TLS v1.0 or higher or DTLS v1.2.
 
 * Fixed a bug in CCM mode which caused it to produce incorrect tags when used
-  with a value of L other than 2. This affected CCM TLS ciphersuites, which use
-  L=3. Thanks to Manuel Pégourié-Gonnard for the anaylsis and
-  patch. Bugzilla 270.
+  with a value of L other than 2. This affected CCM TLS ciphersuites, which
+  use L=3. Thanks to Manuel Pégourié-Gonnard for the anaylsis and patch.
+  Bugzilla 270.
 
-* DTLS now supports timeouts and handshake retransmits.
+* DTLS now supports timeouts and handshake retransmits. Timeout checking
+  is triggered by the application calling the new TLS::Channel::timeout_check.
 
 * Add a TLS policy hook to disable putting the value of the local clock in hello
   random fields.
 
 * All compression operations previously available as Filters are now
   performed via the Transformation API, which minimizes memory copies.
+  Compression operations are still available through the Filter API
+  using new general compression/decompression filters in comp_filter.h
 
 * The zlib module now also supports gzip compression and decompression.
 
