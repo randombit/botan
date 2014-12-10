@@ -28,7 +28,11 @@ class Credentials_Manager_Simple : public Botan::Credentials_Manager
       Credentials_Manager_Simple(Botan::RandomNumberGenerator& rng) :
          rng(rng)
          {
-         m_certstores.push_back(new Botan::Certificate_Store_In_Memory("/usr/share/ca-certificates"));
+         try
+            {
+            m_certstores.push_back(new Botan::Certificate_Store_In_Memory("/usr/share/ca-certificates"));
+            }
+         catch(...) {}
          }
 
       std::string srp_identifier(const std::string& type,
