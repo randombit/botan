@@ -65,13 +65,13 @@ Engine::get_key_agreement_op(const Private_Key&, RandomNumberGenerator&) const
    }
 
 PK_Ops::Signature*
-Engine::get_signature_op(const Private_Key&, RandomNumberGenerator&) const
+Engine::get_signature_op(const Private_Key&, const std::string&, RandomNumberGenerator&) const
    {
    return nullptr;
    }
 
 PK_Ops::Verification*
-Engine::get_verify_op(const Public_Key&, RandomNumberGenerator&) const
+Engine::get_verify_op(const Public_Key&, const std::string&, RandomNumberGenerator&) const
    {
    return nullptr;
    }

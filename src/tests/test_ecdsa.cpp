@@ -92,7 +92,7 @@ size_t test_ecdsa()
 #if defined(BOTAN_HAS_ECDSA)
    std::ifstream ecdsa_sig(PK_TEST_DATA_DIR "/ecdsa.vec");
 
-   fails += run_tests_bb(ecdsa_sig, "ECDSA Signature", "Signature", true,
+   fails += run_tests_bb(ecdsa_sig, "ECDSA Signature", "Signature", false,
              [](std::map<std::string, std::string> m) -> size_t
              {
              return ecdsa_sig_kat(m["Group"], m["X"], m["Hash"], m["Msg"], m["Nonce"], m["Signature"]);

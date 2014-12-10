@@ -9,6 +9,7 @@
 
 #include <botan/ecdsa.h>
 #include <botan/keypair.h>
+#include <botan/rfc6979.h>
 
 namespace Botan {
 
@@ -24,37 +25,30 @@ bool ECDSA_PrivateKey::check_key(RandomNumberGenerator& rng,
    return KeyPair::signature_consistency_check(rng, *this, "EMSA1(SHA-1)");
    }
 
-ECDSA_Signature_Operation::ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa) :
+ECDSA_Signature_Operation::ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa, const std::string& emsa) :
    base_point(ecdsa.domain().get_base_point()),
    order(ecdsa.domain().get_order()),
    x(ecdsa.private_value()),
-   mod_order(order)
+   mod_order(order),
+   m_hash(hash_for_deterministic_signature(emsa))
    {
    }
 
 secure_vector<byte>
 ECDSA_Signature_Operation::sign(const byte msg[], size_t msg_len,
-                                RandomNumberGenerator& rng)
+                                RandomNumberGenerator&)
    {
-   rng.add_entropy(msg, msg_len);
+   const BigInt m(msg, msg_len);
 
-   BigInt m(msg, msg_len);
+   const BigInt k = generate_rfc6979_nonce(x, order, m, m_hash);
 
-   BigInt r = 0, s = 0;
+   const PointGFp k_times_P = base_point * k;
+   const BigInt r = mod_order.reduce(k_times_P.get_affine_x());
+   const BigInt s = mod_order.multiply(inverse_mod(k, order), mul_add(x, r, m));
 
-   while(r == 0 || s == 0)
-      {
-      // This contortion is necessary for the tests
-      BigInt k;
-      k.randomize(rng, order.bits());
-
-      while(k >= order)
-         k.randomize(rng, order.bits() - 1);
-
-      PointGFp k_times_P = base_point * k;
-      r = mod_order.reduce(k_times_P.get_affine_x());
-      s = mod_order.multiply(inverse_mod(k, order), mul_add(x, r, m));
-      }
+   // With overwhelming probability, a bug rather than actual zero r/s
+   BOTAN_ASSERT(s != 0, "invalid s");
+   BOTAN_ASSERT(r != 0, "invalid r");
 
    secure_vector<byte> output(2*order.bytes());
    r.binary_encode(&output[output.size() / 2 - r.bytes()]);

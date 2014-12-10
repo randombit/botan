@@ -282,7 +282,7 @@ OpenSSL_Engine::get_key_agreement_op(const Private_Key& key, RandomNumberGenerat
    }
 
 PK_Ops::Signature*
-OpenSSL_Engine::get_signature_op(const Private_Key& key, RandomNumberGenerator&) const
+OpenSSL_Engine::get_signature_op(const Private_Key& key, const std::string&, RandomNumberGenerator&) const
    {
 #if defined(BOTAN_HAS_RSA)
    if(const RSA_PrivateKey* s = dynamic_cast<const RSA_PrivateKey*>(&key))
@@ -298,7 +298,7 @@ OpenSSL_Engine::get_signature_op(const Private_Key& key, RandomNumberGenerator&)
    }
 
 PK_Ops::Verification*
-OpenSSL_Engine::get_verify_op(const Public_Key& key, RandomNumberGenerator&) const
+OpenSSL_Engine::get_verify_op(const Public_Key& key, const std::string&, RandomNumberGenerator&) const
    {
 #if defined(BOTAN_HAS_RSA)
    if(const RSA_PublicKey* s = dynamic_cast<const RSA_PublicKey*>(&key))

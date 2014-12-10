@@ -95,7 +95,8 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
 class BOTAN_DLL ECDSA_Signature_Operation : public PK_Ops::Signature
    {
    public:
-      ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa);
+      ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa,
+                                const std::string& hash);
 
       secure_vector<byte> sign(const byte msg[], size_t msg_len,
                               RandomNumberGenerator& rng);
@@ -109,6 +110,7 @@ class BOTAN_DLL ECDSA_Signature_Operation : public PK_Ops::Signature
       const BigInt& order;
       const BigInt& x;
       Modular_Reducer mod_order;
+      std::string m_hash;
    };
 
 /**

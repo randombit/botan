@@ -6,4 +6,5 @@ ec_group
 ecc_key
 numbertheory
 rng
+rfc6979
 </requires>

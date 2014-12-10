@@ -82,15 +82,15 @@ class BOTAN_DLL Dynamically_Loaded_Engine : public Engine
          }
 
       PK_Ops::Signature*
-         get_signature_op(const Private_Key& key, RandomNumberGenerator& rng) const override
+         get_signature_op(const Private_Key& key, const std::string& emsa, RandomNumberGenerator& rng) const override
          {
-         return engine->get_signature_op(key, rng);
+         return engine->get_signature_op(key, emsa, rng);
          }
 
       PK_Ops::Verification*
-         get_verify_op(const Public_Key& key, RandomNumberGenerator& rng) const override
+         get_verify_op(const Public_Key& key, const std::string& emsa, RandomNumberGenerator& rng) const override
          {
-         return engine->get_verify_op(key, rng);
+         return engine->get_verify_op(key, emsa, rng);
          }
 
       PK_Ops::Encryption*

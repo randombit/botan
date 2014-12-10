@@ -6,4 +6,5 @@ dl_group
 keypair
 libstate
 numbertheory
+rfc6979
 </requires>

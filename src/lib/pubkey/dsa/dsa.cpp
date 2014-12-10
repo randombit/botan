@@ -1,6 +1,6 @@
 /*
 * DSA
-* (C) 1999-2010 Jack Lloyd
+* (C) 1999-2010,2014 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -8,7 +8,9 @@
 #include <botan/dsa.h>
 #include <botan/numthry.h>
 #include <botan/keypair.h>
+#include <botan/rfc6979.h>
 #include <future>
+
 namespace Botan {
 
 /*
@@ -65,11 +67,13 @@ bool DSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    return KeyPair::signature_consistency_check(rng, *this, "EMSA1(SHA-1)");
    }
 
-DSA_Signature_Operation::DSA_Signature_Operation(const DSA_PrivateKey& dsa) :
+DSA_Signature_Operation::DSA_Signature_Operation(const DSA_PrivateKey& dsa,
+                                                 const std::string& emsa) :
    q(dsa.group_q()),
    x(dsa.get_x()),
    powermod_g_p(dsa.group_g(), dsa.group_p()),
-   mod_q(dsa.group_q())
+   mod_q(dsa.group_q()),
+   m_hash(hash_for_deterministic_signature(emsa))
    {
    }
 
@@ -80,22 +84,22 @@ DSA_Signature_Operation::sign(const byte msg[], size_t msg_len,
    rng.add_entropy(msg, msg_len);
 
    BigInt i(msg, msg_len);
-   BigInt r = 0, s = 0;
 
-   while(r == 0 || s == 0)
-      {
-      BigInt k;
-      do
-         k.randomize(rng, q.bits());
-      while(k >= q);
+   if(i >= q)
+      i -= q;
 
-      auto future_r = std::async(std::launch::async,
-                            [&]() { return mod_q.reduce(powermod_g_p(k)); });
+   const BigInt k = generate_rfc6979_nonce(x, q, i, m_hash);
 
-      s = inverse_mod(k, q);
-      r = future_r.get();
-      s = mod_q.multiply(s, mul_add(x, r, i));
-      }
+   auto future_r = std::async(std::launch::async,
+                              [&]() { return mod_q.reduce(powermod_g_p(k)); });
+
+   BigInt s = inverse_mod(k, q);
+   const BigInt r = future_r.get();
+   s = mod_q.multiply(s, mul_add(x, r, i));
+
+   // With overwhelming probability, a bug rather than actual zero r/s
+   BOTAN_ASSERT(s != 0, "invalid s");
+   BOTAN_ASSERT(r != 0, "invalid r");
 
    secure_vector<byte> output(2*q.bytes());
    r.binary_encode(&output[output.size() / 2 - r.bytes()]);

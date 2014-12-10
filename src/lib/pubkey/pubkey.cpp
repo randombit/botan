@@ -134,10 +134,10 @@ PK_Signer::PK_Signer(const Private_Key& key,
    while(const Engine* engine = i.next())
       {
       if(!m_op)
-         m_op.reset(engine->get_signature_op(key, rng));
+         m_op.reset(engine->get_signature_op(key, emsa_name, rng));
 
       if(!m_verify_op && prot == ENABLE_FAULT_PROTECTION)
-         m_verify_op.reset(engine->get_verify_op(key, rng));
+         m_verify_op.reset(engine->get_verify_op(key, emsa_name, rng));
 
       if(m_op && (m_verify_op || prot == DISABLE_FAULT_PROTECTION))
          break;
@@ -249,7 +249,7 @@ PK_Verifier::PK_Verifier(const Public_Key& key,
 
    while(const Engine* engine = i.next())
       {
-      m_op.reset(engine->get_verify_op(key, rng));
+      m_op.reset(engine->get_verify_op(key, emsa_name, rng));
       if(m_op)
          break;
       }

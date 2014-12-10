@@ -94,7 +94,7 @@ Core_Engine::get_key_agreement_op(const Private_Key& key, RandomNumberGenerator&
    }
 
 PK_Ops::Signature*
-Core_Engine::get_signature_op(const Private_Key& key, RandomNumberGenerator& rng) const
+Core_Engine::get_signature_op(const Private_Key& key, const std::string& emsa, RandomNumberGenerator& rng) const
    {
 #if defined(BOTAN_HAS_RSA)
    if(const RSA_PrivateKey* s = dynamic_cast<const RSA_PrivateKey*>(&key))
@@ -108,12 +108,12 @@ Core_Engine::get_signature_op(const Private_Key& key, RandomNumberGenerator& rng
 
 #if defined(BOTAN_HAS_DSA)
    if(const DSA_PrivateKey* s = dynamic_cast<const DSA_PrivateKey*>(&key))
-      return new DSA_Signature_Operation(*s);
+      return new DSA_Signature_Operation(*s, emsa);
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)
    if(const ECDSA_PrivateKey* s = dynamic_cast<const ECDSA_PrivateKey*>(&key))
-      return new ECDSA_Signature_Operation(*s);
+      return new ECDSA_Signature_Operation(*s, emsa);
 #endif
 
 #if defined(BOTAN_HAS_GOST_34_10_2001)
@@ -131,7 +131,7 @@ Core_Engine::get_signature_op(const Private_Key& key, RandomNumberGenerator& rng
    }
 
 PK_Ops::Verification*
-Core_Engine::get_verify_op(const Public_Key& key, RandomNumberGenerator&) const
+Core_Engine::get_verify_op(const Public_Key& key, const std::string& emsa, RandomNumberGenerator&) const
    {
 #if defined(BOTAN_HAS_RSA)
    if(const RSA_PublicKey* s = dynamic_cast<const RSA_PublicKey*>(&key))

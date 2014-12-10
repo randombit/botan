@@ -386,10 +386,13 @@ def process_command_line(args):
     mods_group.add_option('--no-autoload', action='store_true', default=False,
                           help='disable automatic loading')
 
-    for mod in ['boost', 'sqlite3', 'zlib', 'bzip2', 'lzma', 'gnump', 'openssl']:
+    third_party = ['boost', 'sqlite3', 'zlib', 'bzip2', 'lzma']
+    hidden_third_party = ['gnump']
+
+    for mod in third_party + hidden_third_party:
 
         mods_group.add_option('--with-%s' % (mod),
-                              help='add support for using %s' % (mod),
+                              help=('add support for using %s' % (mod)) if mod in third_party else optparse.SUPPRESS_HELP,
                               action='append_const',
                               const=mod,
                               dest='enabled_modules')

@@ -25,7 +25,7 @@ size_t dsa_sig_kat(const std::string& p,
    {
    AutoSeeded_RNG rng;
 
-   BigInt p_bn(p), q_bn(q), g_bn(g), x_bn(x);
+   BigInt p_bn("0x" + p), q_bn("0x" + q), g_bn("0x" + g), x_bn("0x" + x);
 
    DL_Group group(p_bn, q_bn, g_bn);
    DSA_PrivateKey privkey(rng, group, x_bn);
@@ -50,7 +50,7 @@ size_t test_dsa()
 #if defined(BOTAN_HAS_DSA)
    std::ifstream dsa_sig(PK_TEST_DATA_DIR "/dsa.vec");
 
-   fails += run_tests_bb(dsa_sig, "DSA Signature", "Signature", true,
+   fails += run_tests_bb(dsa_sig, "DSA Signature", "Signature", false,
              [](std::map<std::string, std::string> m) -> size_t
              {
              return dsa_sig_kat(m["P"], m["Q"], m["G"], m["X"], m["Hash"], m["Msg"], m["Nonce"], m["Signature"]);

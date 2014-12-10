@@ -11,6 +11,8 @@ Version 1.11.10, Not Yet Released
   http://www.cryptosource.de/docs/mceliece_in_botan.pdf and
   http://cryptosource.de/news_mce_in_botan_en.html
 
+* DSA and ECDSA now create RFC 6979 deterministic signatures.
+
 * Add support for TLS fallback signaling (draft-ietf-tls-downgrade-scsv-00).
   Clients will send a fallback SCSV if the version passed to the Client
   constructor is less than the latest version supported by local policy,
@@ -65,6 +67,8 @@ Version 1.11.10, Not Yet Released
 
 * Fix decoding indefinite length BER constructs that contain a context sensitive
   tag of zero. Github pull 26 from Janusz Chorko.
+
+* The GNU MP engine has been removed.
 
 * Added AltiVec detection for POWER8 processors.
 

@@ -63,7 +63,7 @@ class BOTAN_DLL DSA_PrivateKey : public DSA_PublicKey,
 class BOTAN_DLL DSA_Signature_Operation : public PK_Ops::Signature
    {
    public:
-      DSA_Signature_Operation(const DSA_PrivateKey& dsa);
+      DSA_Signature_Operation(const DSA_PrivateKey& dsa, const std::string& hash);
 
       size_t message_parts() const { return 2; }
       size_t message_part_size() const { return q.bytes(); }
@@ -76,6 +76,7 @@ class BOTAN_DLL DSA_Signature_Operation : public PK_Ops::Signature
       const BigInt& x;
       Fixed_Base_Power_Mod powermod_g_p;
       Modular_Reducer mod_q;
+      std::string m_hash;
    };
 
 /**
