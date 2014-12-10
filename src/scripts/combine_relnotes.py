@@ -14,8 +14,6 @@ def combine_relnotes(relnote_dir):
 
     relnotes = [p for p in os.listdir(relnote_dir) if p.startswith(('0', '1', '2'))]
 
-    print relnotes
-
     re_version = re.compile('Version (\d+\.\d+\.\d+), ([0-9]{4}-[0-9]{2}-[0-9]{2})$')
     re_nyr = re.compile('Version (\d+\.\d+\.\d+), Not Yet Released$')
 
