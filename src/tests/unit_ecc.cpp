@@ -42,18 +42,18 @@ PointGFp create_random_point(RandomNumberGenerator& rng,
 
    while(true)
       {
-      BigInt x(rng, p.bits());
+      const BigInt x = BigInt::random_integer(rng, 1, p);
+      const BigInt x3 = mod_p.multiply(x, mod_p.square(x));
+      const BigInt ax = mod_p.multiply(curve.get_a(), x);
+      const BigInt y = mod_p.reduce(x3 + ax + curve.get_b());
+      const BigInt sqrt_y = ressol(y, p);
 
-      BigInt x3 = mod_p.multiply(x, mod_p.square(x));
-
-      BigInt ax = mod_p.multiply(curve.get_a(), x);
-
-      BigInt bx3 = mod_p.multiply(curve.get_b(), x3);
-
-      BigInt y = mod_p.reduce(ax + bx3);
-
-      if(ressol(y, p) > 0)
-         return PointGFp(curve, x, y);
+      if(sqrt_y > 1)
+         {
+         BOTAN_ASSERT_EQUAL(mod_p.square(sqrt_y), y, "Square root is correct");
+         PointGFp point(curve, x, sqrt_y);
+         return point;
+         }
       }
    }
 
@@ -756,7 +756,7 @@ size_t test_point_swap()
 
    PointGFp a(create_random_point(rng, dom_pars.get_curve()));
    PointGFp b(create_random_point(rng, dom_pars.get_curve()));
-   b *= BigInt(20);
+   b *= BigInt(rng, 20);
 
    PointGFp c(a);
    PointGFp d(b);
@@ -764,6 +764,7 @@ size_t test_point_swap()
    d.swap(c);
    CHECK(a == d);
    CHECK(b == c);
+
    return fails;
    }
 
@@ -780,14 +781,23 @@ size_t test_mult_sec_mass()
    EC_Group dom_pars(OID("1.3.132.0.8"));
    for(int i = 0; i<50; i++)
       {
-      PointGFp a(create_random_point(rng, dom_pars.get_curve()));
-      BigInt scal(BigInt(rng, 40));
-      PointGFp b = a * scal;
-      PointGFp c(a);
+      try
+         {
+         PointGFp a(create_random_point(rng, dom_pars.get_curve()));
+         BigInt scal(BigInt(rng, 40));
+         PointGFp b = a * scal;
+         PointGFp c(a);
 
-      c *= scal;
-      CHECK(b == c);
+         c *= scal;
+         CHECK(b == c);
+         }
+      catch(std::exception& e)
+         {
+         std::cout << "test_mult_sec_mass failed: " << e.what() << "\n";
+         ++fails;
+         }
       }
+
    return fails;
    }
 
@@ -807,37 +817,8 @@ size_t test_curve_cp_ctor()
    return 0;
    }
 
-size_t randomized_test(RandomNumberGenerator& rng, const EC_Group& group)
+size_t ecc_randomized_test()
    {
-   const BigInt a = BigInt::random_integer(rng, 2, group.get_order());
-   const BigInt b = BigInt::random_integer(rng, 2, group.get_order());
-   const BigInt c = a + b;
-
-   const PointGFp P = group.get_base_point() * a;
-   const PointGFp Q = group.get_base_point() * b;
-   const PointGFp R = group.get_base_point() * c;
-
-   const PointGFp A1 = P + Q;
-   const PointGFp A2 = Q + P;
-
-   size_t fails = 0;
-
-   CHECK(A1 == R);
-   CHECK(A2 == R);
-   CHECK(P.on_the_curve());
-   CHECK(Q.on_the_curve());
-   CHECK(R.on_the_curve());
-   CHECK(A1.on_the_curve());
-   CHECK(A2.on_the_curve());
-
-   return fails;
-   }
-
-size_t randomized_test()
-   {
-   AutoSeeded_RNG rng;
-   size_t fails = 0;
-
    const std::vector<std::string> groups = {
       "brainpool160r1",
       "brainpool192r1",
@@ -869,17 +850,55 @@ size_t randomized_test()
       "x962_p239v3"
    };
 
+   AutoSeeded_RNG rng;
+   size_t fails = 0;
+   size_t tests = 0;
+
    for(auto&& group_name : groups)
       {
       EC_Group group(group_name);
 
-      PointGFp inf = group.get_base_point() * group.get_order();
-      CHECK(inf.is_zero());
+      const PointGFp& base_point = group.get_base_point();
+      const BigInt& group_order = group.get_order();
 
-      for(size_t i = 0; i != 32; ++i)
-         fails += randomized_test(rng, group);
+      const PointGFp inf = base_point * group_order;
+      CHECK(inf.is_zero());
+      CHECK(inf.on_the_curve());
+
+      try
+         {
+         for(size_t i = 0; i != 10; ++i)
+            {
+            ++tests;
+
+            const BigInt a = BigInt::random_integer(rng, 2, group_order);
+            const BigInt b = BigInt::random_integer(rng, 2, group_order);
+            const BigInt c = a + b;
+
+            const PointGFp P = base_point * a;
+            const PointGFp Q = base_point * b;
+            const PointGFp R = base_point * c;
+
+            const PointGFp A1 = P + Q;
+            const PointGFp A2 = Q + P;
+
+            CHECK(A1 == R);
+            CHECK(A2 == R);
+            CHECK(P.on_the_curve());
+            CHECK(Q.on_the_curve());
+            CHECK(R.on_the_curve());
+            CHECK(A1.on_the_curve());
+            CHECK(A2.on_the_curve());
+            }
+         }
+      catch(std::exception& e)
+         {
+         std::cout << "Testing " << group_name << " failed: " << e.what() << "\n";
+         ++fails;
+         }
       }
 
+   test_report("ECC Randomized", tests, fails);
    return fails;
    }
 #endif
@@ -915,9 +934,10 @@ size_t test_ecc_unit()
    fails += test_point_swap();
    fails += test_mult_sec_mass();
    fails += test_curve_cp_ctor();
-   fails += randomized_test();
 
    test_report("ECC", 0, fails);
+
+   ecc_randomized_test();
 #endif
 
    return fails;

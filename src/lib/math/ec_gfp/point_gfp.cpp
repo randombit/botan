@@ -243,6 +243,8 @@ PointGFp multi_exponentiate(const PointGFp& p1, const BigInt& z1,
 
 PointGFp operator*(const BigInt& scalar, const PointGFp& point)
    {
+   //BOTAN_ASSERT(point.on_the_curve(), "Input is valid");
+
    const CurveGFp& curve = point.get_curve();
 
    if(scalar.is_zero())
@@ -266,8 +268,6 @@ PointGFp operator*(const BigInt& scalar, const PointGFp& point)
       }
 
    const size_t scalar_bits = scalar.bits();
-
-#if 0
 
    PointGFp x1 = PointGFp(curve);
    PointGFp x2 = point;
@@ -296,53 +296,9 @@ PointGFp operator*(const BigInt& scalar, const PointGFp& point)
    if(scalar.is_negative())
       x1.negate();
 
+   //BOTAN_ASSERT(x1.on_the_curve(), "Output is on the curve");
+
    return x1;
-
-#else
-   const size_t window_size = 4;
-
-   std::vector<PointGFp> Ps(1 << window_size);
-   Ps[0] = PointGFp(curve);
-   Ps[1] = point;
-
-   for(size_t i = 2; i != Ps.size(); ++i)
-      {
-      Ps[i] = Ps[i-1];
-      Ps[i].add(point, ws);
-      }
-
-   PointGFp H(curve); // create as zero
-   size_t bits_left = scalar_bits;
-
-   while(bits_left >= window_size)
-      {
-      for(size_t i = 0; i != window_size; ++i)
-         H.mult2(ws);
-
-      const u32bit nibble = scalar.get_substring(bits_left - window_size,
-                                                 window_size);
-
-      H.add(Ps[nibble], ws);
-
-      bits_left -= window_size;
-      }
-
-   while(bits_left)
-      {
-      H.mult2(ws);
-      if(scalar.get_bit(bits_left-1))
-         H.add(point, ws);
-
-      --bits_left;
-      }
-
-   if(scalar.is_negative())
-      H.negate();
-
-   //BOTAN_ASSERT(H.on_the_curve(), "Fault detected");
-
-   return H;
-#endif
    }
 
 BigInt PointGFp::get_affine_x() const
