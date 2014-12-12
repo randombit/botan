@@ -39,6 +39,7 @@ out_buf.h
 alloc
 asn1
 block
+compression
 hash
 libstate
 mac
