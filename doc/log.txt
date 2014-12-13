@@ -7,7 +7,7 @@ Release Notes
 Series 1.10
 ----------------------------------------
 
-Version 1.10.9, Not Yet Released
+Version 1.10.9, 2014-12-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Fixed EAX tag verification to run in constant time
@@ -21,6 +21,11 @@ Version 1.10.9, Not Yet Released
 
 * Fix decoding indefinite length BER constructs that contain a context
   sensitive tag of zero. Github pull 26 from Janusz Chorko.
+
+* The `botan-config` script previously tried to guess its prefix from
+  the location of the binary. However this was error prone, and now
+  the script assumes the final installation prefix matches the value
+  set during the build. Github issue 29.
 
 Version 1.10.8, 2014-04-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
