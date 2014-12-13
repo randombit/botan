@@ -15,8 +15,7 @@ Current Development Series (1.11)
 ----------------------------------------
 
 The latest development release is :doc:`relnotes/1_11_10`:
-:tgz:`1.11.10` (:tgz_sig:`sig <1.11.10>`),
-:tbz:`1.11.10` (:tbz_sig:`sig <1.11.10>`)
+:tgz:`1.11.10` (:tgz_sig:`sig <1.11.10>`)
 
 To access the latest unreleased sources, see :doc:`vcs`. A script also
 creates regular snapshots of trunk, which are available `here
@@ -30,9 +29,8 @@ creates regular snapshots of trunk, which are available `here
 Current Stable Series (1.10)
 ----------------------------------------
 
-The latest stable branch release is :doc:`relnotes/1_10_8`:
-:tgz:`1.10.8` (:tgz_sig:`sig <1.10.8>`),
-:tbz:`1.10.8` (:tbz_sig:`sig <1.10.8>`)
+The latest stable branch release is :doc:`relnotes/1_10_9`:
+:tgz:`1.10.9` (:tgz_sig:`sig <1.10.9>`)
 
 ..
   Windows Installer
