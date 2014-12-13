@@ -95,9 +95,15 @@ available:
 
    .. cpp:function:: void send(const byte buf[], size_t buf_size)
 
-     If the connection has completed the initial handshake process,
-     the data provided is sent to the counterparty as TLS
-     traffic. Otherwise, an exception is thrown.
+     Create one or more new TLS application records containing the
+     provided data and send them. This will eventually result in at
+     least one call to the ``output_fn`` callback before ``send``
+     returns.
+
+     If the current TLS connection state is unable to transmit new
+     application records (for example because a handshake has not
+     yet completed or the connnection has already ended due to an
+     error) an exception will be thrown.
 
    .. cpp:function:: void close()
 
