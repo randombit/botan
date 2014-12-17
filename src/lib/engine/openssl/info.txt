@@ -8,16 +8,12 @@ all -> crypto
 
 <header:internal>
 openssl_engine.h
-bn_wrap.h
 </header:internal>
 
 <source>
-bn_powm.cpp
-bn_wrap.cpp
 ossl_arc4.cpp
 ossl_bc.cpp
 ossl_md.cpp
-ossl_pk.cpp
 </source>
 
 <requires>
