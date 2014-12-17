@@ -32,19 +32,19 @@ templates_path = ['templates']
 if is_website_build and use_disqus:
     templates_path += ['disqus']
 
-files_dir = 'http://files.randombit.net/botan'
+files_dir = 'http://botan.randombit.net/releases'
 
 extlinks = {
-    'pr': ('https://bugs.randombit.net/show_bug.cgi?id=%s', 'PR '),
+    'pr': ('http://bugs.randombit.net/show_bug.cgi?id=%s', 'PR '),
     'wikipedia': ('https://en.wikipedia.org/wiki/%s', ''),
-    'botan-devel': ('https://lists.randombit.net/pipermail/botan-devel/%s.html', None),
+    'botan-devel': ('http://lists.randombit.net/pipermail/botan-devel/%s.html', None),
 
     'cve': ('https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-%s', 'CVE-'),
 
     'tgz': (files_dir + '/Botan-%s.tgz', 'tar/gz for '),
     'tgz_sig': (files_dir + '/Botan-%s.tgz.asc', 'tar/gz sig '),
-    'tbz': (files_dir + '/Botan-%s.tbz', 'tar/bzip for '),
-    'tbz_sig': (files_dir + '/Botan-%s.tbz.asc', 'tar/bzip sig '),
+#    'tbz': (files_dir + '/Botan-%s.tbz', 'tar/bzip for '),
+#    'tbz_sig': (files_dir + '/Botan-%s.tbz.asc', 'tar/bzip sig '),
 
     'installer_x86_32': (files_dir + '/win32/botan-%s-x86_32.exe', 'x86-32 '),
     'installer_x86_64': (files_dir + '/win32/botan-%s-x86_64.exe', 'x86-64 '),
