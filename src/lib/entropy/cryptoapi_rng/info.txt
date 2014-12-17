@@ -17,4 +17,5 @@ cygwin
 
 <libs>
 windows -> advapi32.lib
+mingw -> advapi32.lib
 </libs>

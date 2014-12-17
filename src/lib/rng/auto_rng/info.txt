@@ -5,5 +5,5 @@ hmac_rng
 hmac
 sha2_32
 sha2_64
-dev_random|cryptoapi_rng|unix_procs|proc_walk
+#dev_random|cryptoapi_rng|unix_procs|proc_walk
 </requires>
