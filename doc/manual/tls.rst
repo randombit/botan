@@ -502,12 +502,24 @@ be negotiated during a handshake.
      Returns the list of ciphers we are willing to negotiate, in order
      of preference.
 
-     Default: "AES-256/GCM", "AES-128/GCM",
-     "AES-256/CCM", "AES-128/CCM", "AES-256/CCM-8", "AES-128/CCM-8",
-     "AES-256", "AES-128"
+     Clients send a list of ciphersuites in order of preference,
+     servers are free to choose any of them. Some servers will use the
+     clients preferences, others choose from the clients list
+     prioritizing based on its preferences.
+
+     No export key exchange mechanisms or ciphersuites are supported
+     by botan. The null encryption ciphersuites (which provide only
+     authentication, sending data in cleartext) are also not supported
+     by the implementation and cannot be negotiated.
+
+     Default value: "AES-256/GCM", "AES-128/GCM", "AES-256/CCM",
+     "AES-128/CCM", "AES-256/CCM-8", "AES-128/CCM-8", "AES-256",
+     "AES-128"
 
      Also allowed: "Camellia-256/GCM", "Camellia-128/GCM",
-     "Camellia-256", "Camellia-128", "SEED", "3DES", "RC4"
+     "Camellia-256", "Camellia-128"
+
+     Also allowed (although **not recommended**): "SEED", "3DES", "RC4"
 
      .. note::
 
@@ -520,7 +532,7 @@ be negotiated during a handshake.
 
      Default: "AEAD", "SHA-384", "SHA-256", "SHA-1"
 
-     Also allowed: "MD5"
+     Also allowed (although **not recommended**): "MD5"
 
  .. cpp:function:: std::vector<std::string> allowed_key_exchange_methods() const
 
@@ -557,11 +569,10 @@ be negotiated during a handshake.
      Return a list of ECC curves we are willing to use, in order of preference.
 
      Default: "brainpool512r1", "brainpool384r1", "brainpool256r1",
-              "secp521r1", "secp384r1", "secp256r1",
-              "secp256k1"
+              "secp521r1", "secp384r1", "secp256r1", "secp256k1"
 
-     Also allowed: "secp224r1", "secp224k1", "secp192r1", "secp192k1",
-     "secp160r2", "secp160r1", "secp160k1"
+     Also allowed (disabled by default): "secp224r1", "secp224k1",
+     "secp192r1", "secp192k1", "secp160r2", "secp160r1", "secp160k1"
 
  .. cpp:function:: std::vector<byte> compression() const
 
@@ -577,8 +588,12 @@ be negotiated during a handshake.
      Return true if this version of the protocol is one that we are
      willing to negotiate.
 
-     Default: Accepts TLS v1.0 or higher, or DTLS v1.2 Note that SSLv3
-              is rejected by default.
+     Default: Accepts TLS v1.0 or higher, or DTLS v1.2. Note that
+              SSLv3 is rejected by default; it has serious security
+              flaws which cannot be fixed without protocol changes.
+
+     .. note:: SSLv3 support is deprecated and will be removed in a
+               future release.
 
  .. cpp:function:: bool server_uses_own_ciphersuite_preferences() const
 
