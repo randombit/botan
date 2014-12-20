@@ -1,64 +1,54 @@
 /*
-* SQLite wrapper
-* (C) 2012 Jack Lloyd
+* SQLite3 wrapper
+* (C) 2012,2014 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
 
-#ifndef BOTAN_UTILS_SQLITE_WRAPPER_H__
-#define BOTAN_UTILS_SQLITE_WRAPPER_H__
+#ifndef BOTAN_UTILS_SQLITE3_H__
+#define BOTAN_UTILS_SQLIT3_H__
 
-#include <botan/types.h>
-#include <string>
-#include <chrono>
-#include <vector>
+#include <botan/database.h>
 
 class sqlite3;
 class sqlite3_stmt;
 
 namespace Botan {
 
-class sqlite3_database
+class BOTAN_DLL Sqlite3_Database  : public SQL_Database
    {
    public:
-      sqlite3_database(const std::string& file);
+      Sqlite3_Database(const std::string& file);
 
-      ~sqlite3_database();
+      ~Sqlite3_Database();
 
-      size_t row_count(const std::string& table_name);
+      size_t row_count(const std::string& table_name) override;
 
-      void create_table(const std::string& table_schema);
+      void create_table(const std::string& table_schema) override;
+
+      std::shared_ptr<Statement> new_statement(const std::string& sql) const override;
    private:
-      friend class sqlite3_statement;
+      class Sqlite3_Statement : public Statement
+         {
+         public:
+            void bind(int column, const std::string& val) override;
+            void bind(int column, size_t val) override;
+            void bind(int column, std::chrono::system_clock::time_point time) override;
+            void bind(int column, const std::vector<byte>& val) override;
+
+            std::pair<const byte*, size_t> get_blob(int column) override;
+            size_t get_size_t(int column) override;
+
+            void spin() override;
+            bool step() override;
+
+            Sqlite3_Statement(sqlite3* db, const std::string& base_sql);
+            ~Sqlite3_Statement();
+         private:
+            sqlite3_stmt* m_stmt;
+         };
 
       sqlite3* m_db;
-   };
-
-class sqlite3_statement
-   {
-   public:
-      sqlite3_statement(sqlite3_database* db,
-                        const std::string& base_sql);
-
-      void bind(int column, const std::string& val);
-
-      void bind(int column, int val);
-
-      void bind(int column, std::chrono::system_clock::time_point time);
-
-      void bind(int column, const std::vector<byte>& val);
-
-      std::pair<const byte*, size_t> get_blob(int column);
-
-      size_t get_size_t(int column);
-
-      void spin();
-
-      bool step();
-
-      ~sqlite3_statement();
-   private:
-      sqlite3_stmt* m_stmt;
    };
 
 }

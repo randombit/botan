@@ -18,6 +18,7 @@ bswap.h
 calendar.h
 charset.h
 cpuid.h
+database.h
 exceptn.h
 get_byte.h
 loadstor.h

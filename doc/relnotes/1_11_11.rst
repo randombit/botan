@@ -1,3 +1,15 @@
 Version 1.11.11, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* The Sqlite3 wrapper has been abstracted to a simple interface for
+  SQL dbs in general, though Sqlite3 remains the only implementation.
+  The main logic of the TLS session manager which stored encrypted
+  sessions to a Sqlite3 database (`TLS::Session_Manager_SQLite`) has
+  been moved to the new `TLS::Session_Manager_SQL`. The Sqlite3
+  manager API remains the same but now just subclasses
+  `TLS::Session_Manager_SQL` and has a constructor instantiate the
+  concrete database instance.
+
+  Applications which would like to use a different db can now do so
+  without having to reimplement the session cache logic simply by
+  implementing a database wrapper subtype.

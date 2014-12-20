@@ -5,10 +5,6 @@ load_on request
 all -> sqlite3
 </libs>
 
-<header:internal>
+<header:public>
 sqlite3.h
-</header:internal>
-
-<source>
-sqlite3.cpp
-</source>
+</header:public>
