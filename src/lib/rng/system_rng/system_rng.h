@@ -12,6 +12,11 @@
 
 namespace Botan {
 
+/**
+* Return a shared reference to a global PRNG instance provided by the
+* operating system. For instance might be instantiated by /dev/urandom
+* or CryptGenRandom.
+*/
 BOTAN_DLL RandomNumberGenerator& system_rng();
 
 }

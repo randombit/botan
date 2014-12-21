@@ -7,7 +7,7 @@
 
 #include <botan/system_rng.h>
 
-#if defined(BOTAN_TARGET_OS_IS_WINDOWS)
+#if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
 
 #include <windows.h>
 #include <wincrypt.h>
@@ -45,7 +45,7 @@ class System_RNG : public RandomNumberGenerator
       void add_entropy(const byte[], size_t) {}
    private:
 
-#if defined(BOTAN_TARGET_OS_IS_WINDOWS)
+#if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
       HCRYPTPROV m_prov;
 #else
       int m_fd;
@@ -54,7 +54,7 @@ class System_RNG : public RandomNumberGenerator
 
 System_RNG::System_RNG()
    {
-#if defined(BOTAN_TARGET_OS_IS_WINDOWS)
+#if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
 
    if(!CryptAcquireContext(&m_prov, 0, 0, RSA_FULL, CRYPT_VERIFYCONTEXT))
       throw std::runtime_error("System_RNG failed to acquire crypto provider");
@@ -69,16 +69,17 @@ System_RNG::System_RNG()
 
 System_RNG::~System_RNG()
    {
-#if defined(BOTAN_TARGET_OS_IS_WINDOWS)
+#if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
    ::CryptReleaseContext(m_prov, 0);
 #else
    ::close(m_fd);
+   m_fd = -1;
 #endif
    }
 
 void System_RNG::randomize(byte buf[], size_t len)
    {
-#if defined(BOTAN_TARGET_OS_IS_WINDOWS)
+#if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
    ::CryptGenRandom(m_prov, static_cast<DWORD>(len), buf))
 #else
    while(len)

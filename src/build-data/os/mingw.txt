@@ -20,6 +20,7 @@ mingw32
 </aliases>
 
 <target_features>
+cryptgenrandom
 loadlibrary
 win32_virtual_lock
 win32_get_systemtime

@@ -13,3 +13,13 @@ Version 1.11.11, Not Yet Released
   Applications which would like to use a different db can now do so
   without having to reimplement the session cache logic simply by
   implementing a database wrapper subtype.
+
+* The CryptGenRandom entropy source is now also used on MinGW.
+
+* The system_rng API is now also available on systems with CryptGenRandom
+
+* With GCC use -fstack-protector for linking as well as compiling,
+  as this is required on MinGW. Github issue 34.
+
+* Fix missing dependency in filters that caused compilation problem
+  in amalgamation builds. Github issue 33.

@@ -11,6 +11,7 @@ install_cmd_data "copy"
 install_cmd_exec "copy"
 
 <target_features>
+cryptgenrandom
 gmtime_s
 loadlibrary
 query_perf_counter
