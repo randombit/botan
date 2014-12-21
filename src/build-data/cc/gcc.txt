@@ -8,7 +8,7 @@ add_include_dir_option -I
 add_lib_dir_option -L
 add_lib_option -l
 
-lang_flags "-std=c++11 -D_REENTRANT -fstack-protector"
+lang_flags "-std=c++11 -D_REENTRANT"
 maintainer_warning_flags "-Werror -Wno-error=old-style-cast -Wno-error=zero-as-null-pointer-constant -Wno-error=unused-parameter -Wno-error=unused-variable -Wno-error=strict-overflow"
 warning_flags "-Wall -Wextra -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wold-style-cast -Wzero-as-null-pointer-constant"
 
@@ -96,9 +96,9 @@ all_x86_32 -> "-momit-leaf-frame-pointer"
 all_x86_64 -> "-momit-leaf-frame-pointer"
 </mach_opt>
 
-# The 'linking' bit means "use this for both compiling *and* linking"
+# Flags set here are included at compile and link time
 <mach_abi_linking>
-all     -> "-pthread"
+all     -> "-pthread -fstack-protector"
 
 mips64  -> "-mabi=64"
 s390    -> "-m31"
