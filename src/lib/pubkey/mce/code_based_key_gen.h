@@ -1,4 +1,3 @@
-
 /**
  * (C) Copyright Projet SECRET, INRIA, Rocquencourt
  * (C) Bhaskar Biswas and  Nicolas Sendrier
@@ -9,8 +8,9 @@
  * Distributed under the terms of the Botan license
  *
  */
-#ifndef __code_based_key_gen__H_
-#define __code_based_key_gen__H_
+
+#ifndef BOTAN_CODE_BASED_KEY_GEN_H__
+#define BOTAN_CODE_BASED_KEY_GEN_H__
 
 #include <botan/mceliece_key.h>
 

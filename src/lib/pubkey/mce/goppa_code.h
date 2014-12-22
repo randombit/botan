@@ -9,24 +9,24 @@
  *
  */
 
-#ifndef __goppa_code__H_
-#define __goppa_code__H_
+#ifndef BOTAN_MCE_GOPPA_CODE_H__
+#define BOTAN_MCE_GOPPA_CODE_H__
 
 #include <botan/polyn_gf2m.h>
 #include <botan/mceliece_key.h>
 
+namespace Botan {
 
+std::vector<byte> mceliece_encrypt(const secure_vector<byte>& cleartext,
+                                   const std::vector<byte>& public_matrix,
+                                   const secure_vector<gf2m> & err_pos,
+                                   u32bit code_length);
 
-namespace Botan
-{
+secure_vector<byte> mceliece_decrypt(secure_vector<gf2m> & error_pos,
+                                     const byte *ciphertext,
+                                     u32bit ciphertext_len,
+                                     const McEliece_PrivateKey& key);
 
-  std::vector<byte> mceliece_encrypt( const secure_vector<byte> & cleartext, std::vector<byte> const& public_matrix, const secure_vector<gf2m> & err_pos, u32bit code_length);
+}
 
-
-secure_vector<byte> mceliece_decrypt(
-    secure_vector<gf2m> & error_pos,
-    const byte *ciphertext, u32bit ciphertext_len,
-    const McEliece_PrivateKey & key);
-} //end namepace Botan
-
-#endif /* h-guard */
+#endif

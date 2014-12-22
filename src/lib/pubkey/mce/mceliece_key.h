@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef BOTAN_MCELIECE_KEY_H_
-#define BOTAN_MCELIECE_KEY_H_
+#ifndef BOTAN_MCELIECE_KEY_H__
+#define BOTAN_MCELIECE_KEY_H__
 
 #include <botan/exceptn.h>
 #include <botan/pk_keys.h>
