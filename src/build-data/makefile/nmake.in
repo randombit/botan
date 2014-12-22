@@ -59,7 +59,7 @@ docs:
 %{build_doc_commands}
 
 clean:
-	$(RM) %{build_dir}\lib\* %{build_dir}\tests\*
+	$(RM) %{build_dir}\obj\* %{build_dir}\tests\*
 	$(RM) *.manifest *.exp *.dll
 	$(RM) $(LIBRARIES) $(APP) $(TEST)
 

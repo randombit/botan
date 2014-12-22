@@ -56,7 +56,7 @@ System_RNG::System_RNG()
    {
 #if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
 
-   if(!CryptAcquireContext(&m_prov, 0, 0, RSA_FULL, CRYPT_VERIFYCONTEXT))
+   if(!CryptAcquireContext(&m_prov, 0, 0, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT))
       throw std::runtime_error("System_RNG failed to acquire crypto provider");
 
 #else
@@ -80,7 +80,7 @@ System_RNG::~System_RNG()
 void System_RNG::randomize(byte buf[], size_t len)
    {
 #if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
-   ::CryptGenRandom(m_prov, static_cast<DWORD>(len), buf))
+   ::CryptGenRandom(m_prov, static_cast<DWORD>(len), buf);
 #else
    while(len)
       {
