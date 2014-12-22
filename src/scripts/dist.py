@@ -339,10 +339,6 @@ def main(args = None):
 
     shutil.rmtree(output_basename)
 
-    if options.print_output_names:
-        for output_file in output_files:
-            print(output_file)
-
     if options.pgp_key_id != 'none':
         if options.write_hash_file != None:
             output_files += gpg_sign(options.pgp_key_id, options.pgp_passphrase_file,
@@ -355,6 +351,10 @@ def main(args = None):
         for output_file in output_files:
             logging.debug('Moving %s to %s' % (output_file, options.output_dir))
             shutil.move(output_file, os.path.join(options.output_dir, output_file))
+
+    if options.print_output_names:
+        for output_file in output_files:
+            print(output_file)
 
     return 0
 
