@@ -101,7 +101,7 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
 
    BigInt serial_no(rng, SERIAL_BITS);
 
-   const std::vector<byte> cert = X509_Object::make_signed(
+   return X509_Certificate(X509_Object::make_signed(
       signer, rng, sig_algo,
       DER_Encoder().start_cons(SEQUENCE)
          .start_explicit(0)
@@ -127,9 +127,8 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
              .end_cons()
          .end_explicit()
       .end_cons()
-      .get_contents());
-
-   return X509_Certificate(cert);
+      .get_contents()
+      ));;
    }
 
 /*

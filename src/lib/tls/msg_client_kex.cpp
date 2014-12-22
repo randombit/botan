@@ -65,8 +65,6 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          identity_hint = reader.get_string(2, 0, 65535);
          }
 
-      const std::string hostname = state.client_hello()->sni_hostname();
-
       const std::string psk_identity = creds.psk_identity("tls-client",
                                                           hostname,
                                                           identity_hint);
@@ -89,8 +87,6 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
       if(kex_algo == "DHE_PSK" || kex_algo == "ECDHE_PSK")
          {
          std::string identity_hint = reader.get_string(2, 0, 65535);
-
-         const std::string hostname = state.client_hello()->sni_hostname();
 
          const std::string psk_identity = creds.psk_identity("tls-client",
                                                              hostname,
