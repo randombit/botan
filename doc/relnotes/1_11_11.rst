@@ -1,4 +1,4 @@
-Version 1.11.11, Not Yet Released
+Version 1.11.11, 2014-12-21
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * The Sqlite3 wrapper has been abstracted to a simple interface for
@@ -23,3 +23,6 @@ Version 1.11.11, Not Yet Released
 
 * Fix missing dependency in filters that caused compilation problem
   in amalgamation builds. Github issue 33.
+
+* SSLv3 support is officially deprecated and will be removed in a
+  future release.
