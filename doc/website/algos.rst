@@ -22,7 +22,8 @@ Public Key Cryptography
     (padding schemes OAEP or PKCS #1 v1.5)
   * Signature algorithms RSA, DSA, ECDSA, GOST 34.10-2001, Nyberg-Rueppel,
     Rabin-Williams (padding schemes PSS, PKCS #1 v1.5, X9.31)
-  * Key agreement techniques Diffie-Hellman and ECDH
+  * Diffie-Hellman, ECDH using NIST/Brainpool prime groups, Curve25519
+  * McEliece code based encryption providing a KEM scheme
 
 Block ciphers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
