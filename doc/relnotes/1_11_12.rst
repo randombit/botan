@@ -1,3 +1,7 @@
 Version 1.11.12, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Add Curve25519. The implementation is based on curve25519-donna-c64.c
+  by Adam Langley. New (completely non-standard) OIDs and
+  formats for encrypting Curve25519 keys under PKCS #8 and including
+  them in certificates and CRLs have been defined.

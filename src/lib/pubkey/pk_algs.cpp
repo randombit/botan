@@ -44,6 +44,10 @@
   #include <botan/ecdh.h>
 #endif
 
+#if defined(BOTAN_HAS_CURVE_25519)
+  #include <botan/curve25519.h>
+#endif
+
 namespace Botan {
 
 Public_Key* make_public_key(const AlgorithmIdentifier& alg_id,
@@ -96,6 +100,11 @@ Public_Key* make_public_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_ECDH)
    if(alg_name == "ECDH")
       return new ECDH_PublicKey(alg_id, key_bits);
+#endif
+
+#if defined(BOTAN_HAS_CURVE_25519)
+   if(alg_name == "Curve25519")
+      return new Curve25519_PublicKey(alg_id, key_bits);
 #endif
 
    return nullptr;
@@ -152,6 +161,11 @@ Private_Key* make_private_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_ECDH)
    if(alg_name == "ECDH")
       return new ECDH_PrivateKey(alg_id, key_bits);
+#endif
+
+#if defined(BOTAN_HAS_CURVE_25519)
+   if(alg_name == "Curve25519")
+      return new Curve25519_PrivateKey(alg_id, key_bits, rng);
 #endif
 
    return nullptr;

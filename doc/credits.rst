@@ -55,6 +55,10 @@ snail-mail address (S), and Bitcoin address (B).
   D: LZMA compression module
   S: Czech Republic
 
+  N: Adam Langley
+  E: agl@imperialviolet.org
+  D: Curve25519
+
   N: Jack Lloyd
   E: lloyd@randombit.net
   W: http://www.randombit.net/

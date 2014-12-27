@@ -17,6 +17,10 @@
 #include <botan/ecdsa.h>
 #endif
 
+#if defined(BOTAN_HAS_CURVE_25519)
+#include <botan/curve25519.h>
+#endif
+
 using namespace Botan;
 
 namespace {
@@ -53,6 +57,11 @@ Private_Key* gen_key(RandomNumberGenerator& rng, const std::string& algo, size_t
       EC_Group grp("secp" + std::to_string(bits) + "r1");
       return new ECDSA_PrivateKey(rng, grp);
       }
+#endif
+
+#if defined(BOTAN_HAS_CURVE_25519)
+   if(algo == "curve25519")
+      return new Curve25519_PrivateKey(rng);
 #endif
 
    throw std::runtime_error("Unknown algorithm " + algo);

@@ -32,6 +32,10 @@
   #include <botan/dh.h>
 #endif
 
+#if defined(BOTAN_HAS_CURVE_25519)
+  #include <botan/curve25519.h>
+#endif
+
 #if defined(BOTAN_HAS_NYBERG_RUEPPEL)
   #include <botan/nr.h>
 #endif
@@ -507,6 +511,53 @@ void benchmark_dsa_nr(RandomNumberGenerator& rng,
 #endif
    }
 
+#if defined(BOTAN_HAS_CURVE_25519)
+void benchmark_curve25519(RandomNumberGenerator& rng,
+                          double seconds,
+                          Benchmark_Report& report)
+   {
+   Timer keygen_timer("keygen");
+   Timer kex_timer("key exchange");
+
+   while(kex_timer.seconds() < seconds)
+      {
+      keygen_timer.start();
+      Curve25519_PrivateKey key1(rng);
+      keygen_timer.stop();
+
+      keygen_timer.start();
+      Curve25519_PrivateKey key2(rng);
+      keygen_timer.stop();
+
+      PK_Key_Agreement ka1(key1, "KDF2(SHA-256)");
+      PK_Key_Agreement ka2(key2, "KDF2(SHA-256)");
+
+      SymmetricKey secret1, secret2;
+
+      for(size_t i = 0; i != 1000; ++i)
+         {
+         if(kex_timer.seconds() > seconds)
+            break;
+
+         kex_timer.start();
+         secret1 = ka1.derive_key(32, key2.public_value());
+         kex_timer.stop();
+
+         kex_timer.start();
+         secret2 = ka2.derive_key(32, key1.public_value());
+         kex_timer.stop();
+
+         if(secret1 != secret2)
+            std::cerr << "Curve25519 secrets did not match\n";
+         }
+      }
+
+   const std::string nm = "Curve25519";
+   report.report(nm, keygen_timer);
+   report.report(nm, kex_timer);
+   }
+#endif
+
 #ifdef BOTAN_HAS_DIFFIE_HELLMAN
 void benchmark_dh(RandomNumberGenerator& rng,
                   double seconds,
@@ -791,6 +842,11 @@ void bench_pk(RandomNumberGenerator& rng,
 #if defined(BOTAN_HAS_GOST_34_10_2001)
    if(algo == "All" || algo == "GOST-34.10")
       benchmark_gost_3410(rng, seconds, report);
+#endif
+
+#if defined(BOTAN_HAS_CURVE_25519)
+   if(algo == "All" || algo == "Curve25519")
+      benchmark_curve25519(rng, seconds, report);
 #endif
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
