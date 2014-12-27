@@ -244,6 +244,8 @@ size_t test_x509()
    check_against_copy(user1_key, rng);
    check_against_copy(user2_key, rng);
 
+   test_report("X509", 0, fails);
+   
    return fails;
    }
 
