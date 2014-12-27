@@ -153,17 +153,21 @@ std::string PEM_encode(const Private_Key& key)
 namespace {
 
 std::pair<std::string, std::string>
-choose_pbe_params(const std::string& pbe_algo)
+choose_pbe_params(const std::string& pbe_algo, const std::string& key_algo)
    {
-   if(!pbe_algo.empty())
+   if(pbe_algo == "")
       {
-      SCAN_Name request(pbe_algo);
-      if(request.algo_name() != "PBE-PKCS5v20")
-         throw std::runtime_error("Unsupported PBE " + pbe_algo);
-      return std::make_pair(request.arg(1), request.arg(0));
+      // Defaults:
+      if(key_algo == "Curve25519" || key_algo == "McEliece")
+         return std::make_pair("AES-256/GCM", "SHA-512");
+      else // for everything else (RSA, DSA, ECDSA, GOST, ...)
+         return std::make_pair("AES-256/CBC", "SHA-256");
       }
 
-   return std::make_pair("AES-256/CBC", "SHA-256");
+   SCAN_Name request(pbe_algo);
+   if(request.algo_name() != "PBE-PKCS5v20" || request.arg_count() != 2)
+      throw std::runtime_error("Unsupported PBE " + pbe_algo);
+   return std::make_pair(request.arg(1), request.arg(0));
    }
 
 }
@@ -177,7 +181,7 @@ std::vector<byte> BER_encode(const Private_Key& key,
                              std::chrono::milliseconds msec,
                              const std::string& pbe_algo)
    {
-   const auto pbe_params = choose_pbe_params(pbe_algo);
+   const auto pbe_params = choose_pbe_params(pbe_algo, key.algo_name());
 
    const std::pair<AlgorithmIdentifier, std::vector<byte>> pbe_info =
       pbes2_encrypt(PKCS8::BER_encode(key), pass, msec,

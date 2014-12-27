@@ -1,6 +1,6 @@
 /*
 * OID Registry
-* (C) 1999-2010,2013 Jack Lloyd
+* (C) 1999-2010,2013,2014 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -24,7 +24,8 @@ void set_defaults()
    OIDS::add_oidstr("1.3.6.1.4.1.3029.1.2.1", "ElGamal");
    OIDS::add_oidstr("1.3.6.1.4.1.25258.1.1", "RW");
    OIDS::add_oidstr("1.3.6.1.4.1.25258.1.2", "NR");
-   OIDS::add_oidstr("1.3.6.1.4.1.25258.1.3", "McEliece/BIGGF2M");
+   OIDS::add_oidstr("1.3.6.1.4.1.25258.1.3", "McEliece");
+   OIDS::add_oidstr("1.3.6.1.4.1.25258.1.4", "Curve25519");
 
    // X9.62 ecPublicKey, valid for ECDSA and ECDH (RFC 3279 sec 2.3.5)
    OIDS::add_oidstr("1.2.840.10045.2.1", "ECDSA");
@@ -58,6 +59,12 @@ void set_defaults()
    OIDS::add_oidstr("2.16.840.1.101.3.4.1.46", "AES-256/GCM");
    OIDS::add_oidstr("1.3.6.1.4.1.25258.3.101", "Serpent/GCM");
    OIDS::add_oidstr("1.3.6.1.4.1.25258.3.102", "Twofish/GCM");
+
+   OIDS::add_oidstr("1.3.6.1.4.1.25258.3.2.1", "AES-128/OCB");
+   OIDS::add_oidstr("1.3.6.1.4.1.25258.3.2.2", "AES-192/OCB");
+   OIDS::add_oidstr("1.3.6.1.4.1.25258.3.2.3", "AES-256/OCB");
+   OIDS::add_oidstr("1.3.6.1.4.1.25258.3.2.4", "Serpent/OCB");
+   OIDS::add_oidstr("1.3.6.1.4.1.25258.3.2.5", "Twofish/OCB");
 
    /* Hash Functions */
    OIDS::add_oidstr("1.2.840.113549.2.5", "MD5");

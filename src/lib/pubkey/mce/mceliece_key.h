@@ -32,7 +32,7 @@ class BOTAN_DLL McEliece_PublicKey : public virtual Public_Key
 
       McEliece_PublicKey(const McEliece_PublicKey & other);
 
-      std::string algo_name() const { return "McEliece/BIGGF2M"; }
+      std::string algo_name() const { return "McEliece"; }
 
       /**
       * Get the maximum number of bits allowed to be fed to this key.
