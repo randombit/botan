@@ -86,7 +86,7 @@ class BOTAN_DLL OctetString
       * Create a new OctetString
       * @param in a bytestring
       */
-      OctetString(const std::vector<byte>& in) : bits(&in[0], &in[in.size()]) {}
+      OctetString(const std::vector<byte>& in) : bits(in.begin(), in.end()) {}
    private:
       secure_vector<byte> bits;
    };
