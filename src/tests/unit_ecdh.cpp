@@ -13,7 +13,7 @@
 #include <iostream>
 #include <fstream>
 
-#include <botan/auto_rng.h>
+
 #include <botan/pubkey.h>
 #include <botan/ecdh.h>
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
@@ -123,7 +123,7 @@ size_t test_ecdh_unit()
    {
    size_t fails = 0;
 
-   AutoSeeded_RNG rng;
+   auto& rng = test_rng();
 
    fails += test_ecdh_normal_derivation(rng);
    fails += test_ecdh_some_dp(rng);

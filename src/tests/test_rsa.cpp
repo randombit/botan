@@ -1,7 +1,7 @@
 #include "tests.h"
 #include "test_pubkey.h"
 
-#include <botan/auto_rng.h>
+
 #include <botan/pubkey.h>
 #include <botan/rsa.h>
 #include <botan/hex.h>
@@ -20,7 +20,7 @@ size_t rsaes_kat(const std::string& e,
                  const std::string& nonce,
                  const std::string& output)
    {
-   AutoSeeded_RNG rng;
+   auto& rng = test_rng();
 
    RSA_PrivateKey privkey(rng, BigInt(p), BigInt(q), BigInt(e));
 
@@ -43,7 +43,7 @@ size_t rsa_sig_kat(const std::string& e,
                  const std::string& nonce,
                  const std::string& output)
    {
-   AutoSeeded_RNG rng;
+   auto& rng = test_rng();
 
    RSA_PrivateKey privkey(rng, BigInt(p), BigInt(q), BigInt(e));
 
@@ -64,8 +64,6 @@ size_t rsa_sig_verify(const std::string& e,
                       std::string padding,
                       const std::string& signature)
    {
-   AutoSeeded_RNG rng;
-
    BigInt e_bn(e);
    BigInt n_bn(n);
 

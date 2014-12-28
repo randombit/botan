@@ -7,7 +7,7 @@
 #include <botan/oids.h>
 #include <botan/mceliece.h>
 #include <botan/mce_kem.h>
-#include <botan/auto_rng.h>
+
 #include <botan/hex.h>
 
 #include <iostream>
@@ -179,7 +179,7 @@ size_t test_mceliece_raw(RandomNumberGenerator& rng, size_t code_length, size_t 
 
 size_t test_mceliece()
    {
-   AutoSeeded_RNG rng;
+   auto& rng = test_rng();
 
    size_t  err_cnt = 0;
    size_t params__n__t_min_max[] = {

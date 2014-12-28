@@ -1,6 +1,6 @@
 #include "tests.h"
 
-#include <botan/auto_rng.h>
+
 #include <iostream>
 
 #if defined(BOTAN_HAS_CRYPTO_BOX)
@@ -14,7 +14,7 @@ size_t test_cryptobox()
    size_t fails = 0;
 
 #if defined(BOTAN_HAS_CRYPTO_BOX)
-   AutoSeeded_RNG rng;
+   auto& rng = test_rng();
 
    const byte msg[] = { 0xAA, 0xBB, 0xCC };
    std::string ciphertext = CryptoBox::encrypt(msg, sizeof(msg),

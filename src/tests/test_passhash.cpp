@@ -1,6 +1,6 @@
 #include "tests.h"
 
-#include <botan/auto_rng.h>
+
 #include <iostream>
 
 #if defined(BOTAN_HAS_PASSHASH9)
@@ -34,7 +34,7 @@ size_t test_bcrypt()
       fails++;
       }
 
-   AutoSeeded_RNG rng;
+   auto& rng = test_rng();
 
    for(u16bit level = 1; level != 5; ++level)
       {
@@ -73,7 +73,7 @@ size_t test_passhash9()
       fails++;
       }
 
-   AutoSeeded_RNG rng;
+   auto& rng = test_rng();
 
    for(byte alg_id = 0; alg_id <= 4; ++alg_id)
       {

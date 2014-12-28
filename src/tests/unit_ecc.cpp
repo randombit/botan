@@ -11,7 +11,7 @@
 #include <memory>
 
 #if defined(BOTAN_HAS_ECC_GROUP)
-#include <botan/auto_rng.h>
+
 #include <botan/bigint.h>
 #include <botan/numthry.h>
 #include <botan/curve_gfp.h>
@@ -752,7 +752,7 @@ size_t test_point_swap()
 
    EC_Group dom_pars(OID("1.3.132.0.8"));
 
-   AutoSeeded_RNG rng;
+   auto& rng = test_rng();
 
    PointGFp a(create_random_point(rng, dom_pars.get_curve()));
    PointGFp b(create_random_point(rng, dom_pars.get_curve()));
@@ -776,7 +776,7 @@ size_t test_mult_sec_mass()
    {
    size_t fails = 0;
 
-   AutoSeeded_RNG rng;
+   auto& rng = test_rng();
 
    EC_Group dom_pars(OID("1.3.132.0.8"));
    for(int i = 0; i<50; i++)
@@ -850,7 +850,7 @@ size_t ecc_randomized_test()
       "x962_p239v3"
    };
 
-   AutoSeeded_RNG rng;
+   auto& rng = test_rng();
    size_t fails = 0;
    size_t tests = 0;
 

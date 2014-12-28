@@ -3,7 +3,7 @@
 
 #if defined(BOTAN_HAS_TLS)
 
-#include <botan/auto_rng.h>
+
 #include <botan/tls_server.h>
 #include <botan/tls_client.h>
 #include <botan/pkcs10.h>
@@ -282,7 +282,7 @@ size_t test_tls()
    size_t errors = 0;
 
    Test_Policy default_policy;
-   AutoSeeded_RNG rng;
+   auto& rng = test_rng();
    std::auto_ptr<Credentials_Manager> basic_creds(create_creds(rng));
 
    errors += basic_test_handshake(rng, TLS::Protocol_Version::SSL_V3, *basic_creds, default_policy);

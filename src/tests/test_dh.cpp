@@ -2,7 +2,7 @@
 #include "test_pubkey.h"
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-#include <botan/auto_rng.h>
+
 #include <botan/pubkey.h>
 #include <botan/dh.h>
 #include <botan/hex.h>
@@ -21,7 +21,7 @@ size_t dh_sig_kat(const std::string& p,
                   const std::string& outlen,
                   const std::string& key)
    {
-   AutoSeeded_RNG rng;
+   auto& rng = test_rng();
 
    BigInt p_bn(p), g_bn(g), x_bn(x), y_bn(y);
 

@@ -7,7 +7,7 @@
 
 #if defined(BOTAN_HAS_ELGAMAL)
   #include <botan/elgamal.h>
-  #include <botan/auto_rng.h>
+  
   #include <botan/pubkey.h>
   #include <botan/dl_group.h>
 #endif
@@ -26,7 +26,7 @@ size_t elgamal_kat(const std::string& p,
                    const std::string& nonce,
                    const std::string& ciphertext)
    {
-   AutoSeeded_RNG rng;
+   auto& rng = test_rng();
 
    const BigInt p_bn = BigInt(p);
    const BigInt g_bn = BigInt(g);

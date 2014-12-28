@@ -3,7 +3,7 @@
 
 #if defined(BOTAN_HAS_NYBERG_RUEPPEL)
   #include <botan/nr.h>
-  #include <botan/auto_rng.h>
+  
   #include <botan/pubkey.h>
   #include <botan/dl_group.h>
 #endif
@@ -27,7 +27,7 @@ size_t nr_sig_kat(const std::string& p,
                    const std::string& nonce,
                    const std::string& signature)
    {
-   AutoSeeded_RNG rng;
+   auto& rng = test_rng();
 
    BigInt p_bn(p), q_bn(q), g_bn(g), x_bn(x);
 

@@ -7,7 +7,7 @@
 #include "tests.h"
 
 #include <botan/filters.h>
-#include <botan/auto_rng.h>
+
 
 #if defined(BOTAN_HAS_RSA)
   #include <botan/rsa.h>
@@ -131,7 +131,7 @@ u32bit check_against_copy(const Private_Key& orig,
 
 size_t test_x509()
    {
-   AutoSeeded_RNG rng;
+   auto& rng = test_rng();
    const std::string hash_fn = "SHA-256";
 
    size_t fails = 0;

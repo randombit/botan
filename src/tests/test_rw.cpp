@@ -6,7 +6,7 @@
 #include <fstream>
 
 #if defined(BOTAN_HAS_RW)
-  #include <botan/auto_rng.h>
+  
   #include <botan/pubkey.h>
   #include <botan/rw.h>
 #endif
@@ -24,7 +24,7 @@ size_t rw_sig_kat(const std::string& e,
                  const std::string& msg,
                  const std::string& signature)
    {
-   AutoSeeded_RNG rng;
+   auto& rng = test_rng();
 
    RW_PrivateKey privkey(rng, BigInt(p), BigInt(q), BigInt(e));
 
@@ -41,8 +41,6 @@ size_t rw_sig_verify(const std::string& e,
                       const std::string& msg,
                       const std::string& signature)
    {
-   AutoSeeded_RNG rng;
-
    BigInt e_bn(e);
    BigInt n_bn(n);
 

@@ -21,7 +21,7 @@
   #include <botan/x509_key.h>
   #include <botan/pkcs8.h>
   #include <botan/pubkey.h>
-  #include <botan/auto_rng.h>
+  
 #endif
 
 #if defined(BOTAN_HAS_RSA)
@@ -193,7 +193,7 @@ size_t validate_encryption(PK_Encryptor& e, PK_Decryptor& d,
 
    if(algo.find("/Raw") == std::string::npos)
       {
-      AutoSeeded_RNG rng;
+      auto& rng = test_rng();
 
       for(size_t i = 0; i != ctext.size(); ++i)
          {
@@ -297,7 +297,7 @@ size_t validate_kas(PK_Key_Agreement& kas, const std::string& algo,
 
 size_t test_pk_keygen()
    {
-   AutoSeeded_RNG rng;
+   auto& rng = test_rng();
 
    size_t tests = 0;
    size_t fails = 0;

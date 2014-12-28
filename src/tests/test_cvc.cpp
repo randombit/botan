@@ -18,7 +18,7 @@
 #include <vector>
 #include <memory>
 
-#include <botan/auto_rng.h>
+
 #include <botan/ecdsa.h>
 #include <botan/rsa.h>
 
@@ -552,7 +552,7 @@ void test_cvc_chain(RandomNumberGenerator& rng)
 
 size_t test_cvc()
    {
-   AutoSeeded_RNG rng;
+   auto& rng = test_rng();
 
    test_enc_gen_selfsigned(rng);
    test_enc_gen_req(rng);

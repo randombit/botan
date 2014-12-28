@@ -10,7 +10,7 @@
 
 #if defined(BOTAN_HAS_ECDSA)
 #include <botan/hex.h>
-#include <botan/auto_rng.h>
+
 #include <botan/pubkey.h>
 #include <botan/ecdsa.h>
 #include <botan/rsa.h>
@@ -473,7 +473,7 @@ size_t test_ecdsa_unit()
    {
    size_t fails = 0;
 
-   AutoSeeded_RNG rng;
+   auto& rng = test_rng();
 
    fails += test_hash_larger_than_n(rng);
 #if defined(BOTAN_HAS_X509_CERTIFICATES)

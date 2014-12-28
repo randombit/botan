@@ -13,7 +13,7 @@
 #include <cstdlib>
 #include <iterator>
 
-#include <botan/auto_rng.h>
+
 #include <botan/bigint.h>
 #include <botan/exceptn.h>
 #include <botan/numthry.h>
@@ -299,7 +299,7 @@ size_t test_bigint()
    bool first = true;
    size_t counter = 0;
 
-   AutoSeeded_RNG rng;
+   auto& rng = test_rng();
 
    while(!test_data.eof())
       {

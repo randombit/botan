@@ -2,7 +2,7 @@
 #include "test_pubkey.h"
 
 #if defined(BOTAN_HAS_ECDSA)
-#include <botan/auto_rng.h>
+
 #include <botan/pubkey.h>
 #include <botan/ecdsa.h>
 #include <botan/oids.h>
@@ -21,7 +21,7 @@ size_t ecdsa_sig_kat(const std::string& group_id,
                      const std::string& nonce,
                      const std::string& signature)
    {
-   AutoSeeded_RNG rng;
+   auto& rng = test_rng();
 
    EC_Group group(OIDS::lookup(group_id));
    ECDSA_PrivateKey ecdsa(rng, group, BigInt(x));

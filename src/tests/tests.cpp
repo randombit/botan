@@ -2,9 +2,25 @@
 #include <botan/init.h>
 #include <iostream>
 #include <fstream>
+#include <botan/auto_rng.h>
+
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+  #include <botan/system_rng.h>
+#endif
+
 #include <boost/filesystem.hpp>
 
 namespace fs = boost::filesystem;
+
+Botan::RandomNumberGenerator& test_rng()
+   {
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+   return Botan::system_rng();
+#else
+   static AutoSeeded_RNG rng;
+   return rng;
+#endif
+   }
 
 std::vector<std::string> list_dir(const std::string& dir_path)
    {

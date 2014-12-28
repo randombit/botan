@@ -6,7 +6,7 @@
 #include <fstream>
 
 #if defined(BOTAN_HAS_DLIES)
- #include <botan/auto_rng.h>
+ 
  #include <botan/pubkey.h>
  #include <botan/lookup.h>
  #include <botan/dlies.h>
@@ -25,7 +25,7 @@ size_t dlies_kat(const std::string& p,
                  const std::string& msg,
                  const std::string& ciphertext)
    {
-   AutoSeeded_RNG rng;
+   auto& rng = test_rng();
 
    BigInt p_bn(p);
    BigInt g_bn(g);

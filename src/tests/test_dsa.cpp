@@ -3,7 +3,7 @@
 
 #if defined(BOTAN_HAS_DSA)
 
-#include <botan/auto_rng.h>
+
 #include <botan/pubkey.h>
 #include <botan/dsa.h>
 #include <botan/hex.h>
@@ -23,7 +23,7 @@ size_t dsa_sig_kat(const std::string& p,
                    const std::string& nonce,
                    const std::string& signature)
    {
-   AutoSeeded_RNG rng;
+   auto& rng = test_rng();
 
    BigInt p_bn("0x" + p), q_bn("0x" + q), g_bn("0x" + g), x_bn("0x" + x);
 

@@ -2,7 +2,7 @@
 #include "test_pubkey.h"
 
 #if defined(BOTAN_HAS_GOST_34_10_2001)
-#include <botan/auto_rng.h>
+
 #include <botan/pubkey.h>
 #include <botan/gost_3410.h>
 #include <botan/oids.h>
@@ -20,8 +20,6 @@ size_t gost_verify(const std::string& group_id,
                    const std::string& msg,
                    const std::string& signature)
    {
-   AutoSeeded_RNG rng;
-
    EC_Group group(OIDS::lookup(group_id));
    PointGFp public_point = OS2ECP(hex_decode(x), group.get_curve());
 

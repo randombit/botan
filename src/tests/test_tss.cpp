@@ -5,7 +5,7 @@
 */
 
 #include "tests.h"
-#include <botan/auto_rng.h>
+
 #include <botan/hex.h>
 #include <iostream>
 
@@ -17,7 +17,7 @@ size_t test_tss()
    {
    using namespace Botan;
 
-   AutoSeeded_RNG rng;
+   auto& rng = test_rng();
 
    size_t fails = 0;
 

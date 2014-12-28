@@ -2,12 +2,14 @@
 #ifndef BOTAN_TESTS_H__
 #define BOTAN_TESTS_H__
 
-#include <botan/build.h>
+#include <botan/rng.h>
 #include <functional>
 #include <istream>
 #include <map>
 #include <string>
 #include <vector>
+
+Botan::RandomNumberGenerator& test_rng();
 
 size_t run_tests_bb(std::istream& src,
                     const std::string& name_key,
