@@ -135,8 +135,17 @@ void ChaCha::set_iv(const byte iv[], size_t length)
    m_state[12] = 0;
    m_state[13] = 0;
 
-   m_state[14] = load_le<u32bit>(iv, 0);
-   m_state[15] = load_le<u32bit>(iv, 1);
+   if(length == 8)
+      {
+      m_state[14] = load_le<u32bit>(iv, 0);
+      m_state[15] = load_le<u32bit>(iv, 1);
+      }
+   else if(length == 12)
+      {
+      m_state[13] = load_le<u32bit>(iv, 0);
+      m_state[14] = load_le<u32bit>(iv, 1);
+      m_state[15] = load_le<u32bit>(iv, 2);
+      }
 
    chacha(&m_buffer[0], &m_state[0]);
    ++m_state[12];

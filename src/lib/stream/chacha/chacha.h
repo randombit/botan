@@ -23,7 +23,7 @@ class BOTAN_DLL ChaCha : public StreamCipher
       void set_iv(const byte iv[], size_t iv_len);
 
       bool valid_iv_length(size_t iv_len) const
-         { return (iv_len == 8); }
+         { return (iv_len == 8 || iv_len == 12); }
 
       Key_Length_Specification key_spec() const
          {
