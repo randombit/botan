@@ -545,6 +545,8 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
                 # Dirty hack
                 if token == 'define':
                     nxt = lexer.get_token()
+                    if not nxt:
+                        raise LexerError('No version set for API', lexer.lineno)
                     if not re.match('^[0-9]{8}$', nxt):
                         raise LexerError('Bad API rev "%s"' % (nxt), lexer.lineno)
                     to_obj.__dict__[token].append(nxt)
