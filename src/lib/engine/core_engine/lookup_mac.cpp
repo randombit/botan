@@ -21,6 +21,10 @@
   #include <botan/hmac.h>
 #endif
 
+#if defined(BOTAN_HAS_POLY1305)
+  #include <botan/poly1305.h>
+#endif
+
 #if defined(BOTAN_HAS_SSL3_MAC)
   #include <botan/ssl3_mac.h>
 #endif
@@ -38,10 +42,9 @@ MessageAuthenticationCode*
 Core_Engine::find_mac(const SCAN_Name& request,
                       Algorithm_Factory& af) const
    {
-
-#if defined(BOTAN_HAS_CBC_MAC)
-   if(request.algo_name() == "CBC-MAC" && request.arg_count() == 1)
-      return new CBC_MAC(af.make_block_cipher(request.arg(0)));
+#if defined(BOTAN_HAS_HMAC)
+   if(request.algo_name() == "HMAC" && request.arg_count() == 1)
+      return new HMAC(af.make_hash_function(request.arg(0)));
 #endif
 
 #if defined(BOTAN_HAS_CMAC)
@@ -49,9 +52,14 @@ Core_Engine::find_mac(const SCAN_Name& request,
       return new CMAC(af.make_block_cipher(request.arg(0)));
 #endif
 
-#if defined(BOTAN_HAS_HMAC)
-   if(request.algo_name() == "HMAC" && request.arg_count() == 1)
-      return new HMAC(af.make_hash_function(request.arg(0)));
+#if defined(BOTAN_HAS_POLY1305)
+   if(request.algo_name() == "Poly1305")
+      return new Poly1305;
+#endif
+
+#if defined(BOTAN_HAS_CBC_MAC)
+   if(request.algo_name() == "CBC-MAC" && request.arg_count() == 1)
+      return new CBC_MAC(af.make_block_cipher(request.arg(0)));
 #endif
 
 #if defined(BOTAN_HAS_SSL3_MAC)

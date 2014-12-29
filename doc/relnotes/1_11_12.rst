@@ -6,8 +6,10 @@ Version 1.11.12, Not Yet Released
   encrypting Curve25519 keys under PKCS #8 and including them in
   certificates and CRLs have been defined.
 
+* Add Poly1305, based on the implementation poly1305-donna by
+  Andrew Moon.
+
 * When encrypted as PKCS #8 structures, Curve25519 and McEliece
   private keys default to using AES-256/GCM instead of AES-256/CBC
 
 * Define OIDs for OCB mode with AES, Serpent and Twofish.
-

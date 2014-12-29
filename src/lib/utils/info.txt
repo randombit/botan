@@ -4,6 +4,7 @@ load_on always
 
 <header:internal>
 bit_ops.h
+donna128.h
 prefetch.h
 rounding.h
 semaphore.h

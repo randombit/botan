@@ -62,6 +62,7 @@ Authentication Codes
 
   * HMAC
   * CMAC (aka OMAC1)
+  * Poly1305
   * Obsolete designs CBC-MAC, ANSI X9.19 DES-MAC, and the
     protocol-specific SSLv3 authentication code
 

@@ -30,6 +30,7 @@ Botan (http://botan.randombit.net/) is distributed under these terms::
                 2012-2014 Markus Wanner
                 2013 Joel Low
                 2014 cryptosource GmbH
+                2014 Andrew Moon
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
