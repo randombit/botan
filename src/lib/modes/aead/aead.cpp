@@ -29,10 +29,24 @@
   #include <botan/ocb.h>
 #endif
 
+#if defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305)
+  #include <botan/chacha20poly1305.h>
+#endif
+
 namespace Botan {
 
 AEAD_Mode* get_aead(const std::string& algo_spec, Cipher_Dir direction)
    {
+#if defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305)
+   if(algo_spec == "ChaCha20Poly1305")
+      {
+      if(direction == ENCRYPTION)
+         return new ChaCha20Poly1305_Encryption;
+      else
+         return new ChaCha20Poly1305_Decryption;
+      }
+#endif
+
    Algorithm_Factory& af = global_state().algorithm_factory();
 
    const std::vector<std::string> algo_parts = split_on(algo_spec, '/');
