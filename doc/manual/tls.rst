@@ -512,9 +512,9 @@ be negotiated during a handshake.
      authentication, sending data in cleartext) are also not supported
      by the implementation and cannot be negotiated.
 
-     Default value: "AES-256/GCM", "AES-128/GCM", "AES-256/CCM",
-     "AES-128/CCM", "AES-256/CCM-8", "AES-128/CCM-8", "AES-256",
-     "AES-128"
+     Default value: "ChaCha20Poly1305", "AES-256/GCM", "AES-128/GCM",
+     "AES-256/CCM", "AES-128/CCM", "AES-256/CCM-8", "AES-128/CCM-8",
+     "AES-256", "AES-128"
 
      Also allowed: "Camellia-256/GCM", "Camellia-128/GCM",
      "Camellia-256", "Camellia-128"
@@ -569,7 +569,7 @@ be negotiated during a handshake.
      Return a list of ECC curves we are willing to use, in order of preference.
 
      Default: "brainpool512r1", "brainpool384r1", "brainpool256r1",
-              "secp521r1", "secp384r1", "secp256r1", "secp256k1"
+     "secp521r1", "secp384r1", "secp256r1", "secp256k1"
 
      Also allowed (disabled by default): "secp224r1", "secp224k1",
      "secp192r1", "secp192k1", "secp160r2", "secp160r1", "secp160k1"
@@ -588,12 +588,13 @@ be negotiated during a handshake.
      Return true if this version of the protocol is one that we are
      willing to negotiate.
 
-     Default: Accepts TLS v1.0 or higher, or DTLS v1.2. Note that
-              SSLv3 is rejected by default; it has serious security
-              flaws which cannot be fixed without protocol changes.
+     Default: Accepts TLS v1.0 or higher, or DTLS v1.2.
 
-     .. note:: SSLv3 support is deprecated and will be removed in a
-               future release.
+     .. note::
+
+        SSLv3 is rejected by default; it has serious security flaws
+        which cannot be fixed without protocol changes. SSLv3 support
+        is deprecated and will be removed in a future release.
 
  .. cpp:function:: bool server_uses_own_ciphersuite_preferences() const
 

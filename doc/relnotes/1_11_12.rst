@@ -10,6 +10,9 @@ Version 1.11.12, Not Yet Released
 
 * Add the ChaCha20Poly1305 AEAD defined in draft-irtf-cfrg-chacha20-poly1305-03
 
+* Add ChaCha20Poly1305 ciphersuites for TLS compatible with Google's servers
+  following draft-agl-tls-chacha20poly1305-04
+
 * When encrypted as PKCS #8 structures, Curve25519 and McEliece
   private keys default to using AES-256/GCM instead of AES-256/CBC
 

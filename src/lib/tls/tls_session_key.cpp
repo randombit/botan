@@ -22,7 +22,7 @@ Session_Keys::Session_Keys(const Handshake_State* state,
    {
    const size_t cipher_keylen = state->ciphersuite().cipher_keylen();
    const size_t mac_keylen = state->ciphersuite().mac_keylen();
-   const size_t cipher_nonce_bytes = state->ciphersuite().explicit_nonce_bytes();
+   const size_t cipher_nonce_bytes = state->ciphersuite().nonce_bytes_from_handshake();
 
    const size_t prf_gen = 2 * (mac_keylen + cipher_keylen + cipher_nonce_bytes);
 

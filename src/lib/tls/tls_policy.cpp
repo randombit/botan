@@ -18,6 +18,7 @@ namespace TLS {
 std::vector<std::string> Policy::allowed_ciphers() const
    {
    return std::vector<std::string>({
+      "ChaCha20Poly1305",
       "AES-256/GCM",
       "AES-128/GCM",
       "AES-256/CCM",

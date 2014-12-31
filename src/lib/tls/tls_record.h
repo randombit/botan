@@ -45,7 +45,7 @@ class Connection_Cipher_State
 
       const secure_vector<byte>& aead_nonce(u64bit seq);
 
-      const secure_vector<byte>& aead_nonce(const byte record[], size_t record_len);
+      const secure_vector<byte>& aead_nonce(const byte record[], size_t record_len, u64bit seq);
 
       const secure_vector<byte>& format_ad(u64bit seq, byte type,
                                            Protocol_Version version,
@@ -65,9 +65,9 @@ class Connection_Cipher_State
 
       size_t iv_size() const { return m_iv_size; }
 
-      size_t implicit_nonce_bytes() const { return m_implicit_nonce_size; }
+      size_t nonce_bytes_from_record() const { return m_nonce_bytes_from_record; }
 
-      size_t explicit_nonce_bytes() const { return m_explicit_nonce_size; }
+      size_t nonce_bytes_from_handshake() const { return m_nonce_bytes_from_handshake; }
 
       bool cipher_padding_single_byte() const { return m_is_ssl3; }
 
@@ -91,7 +91,8 @@ class Connection_Cipher_State
       secure_vector<byte> m_nonce, m_ad;
 
       size_t m_block_size = 0;
-      size_t m_implicit_nonce_size = 0, m_explicit_nonce_size = 0;
+      size_t m_nonce_bytes_from_handshake;
+      size_t m_nonce_bytes_from_record;
       size_t m_iv_size = 0;
       bool m_is_ssl3 = false;
    };

@@ -99,9 +99,9 @@ class BOTAN_DLL Ciphersuite
       */
       size_t cipher_keylen() const { return m_cipher_keylen; }
 
-      size_t explicit_nonce_bytes() const { return m_explicit_nonce_bytes; }
+      size_t nonce_bytes_from_record() const { return m_nonce_bytes_from_record; }
 
-      size_t implicit_nonce_bytes() const { return m_implicit_nonce_bytes; }
+      size_t nonce_bytes_from_handshake() const { return m_nonce_bytes_from_handshake; }
 
       size_t mac_keylen() const { return m_mac_keylen; }
 
@@ -119,8 +119,8 @@ class BOTAN_DLL Ciphersuite
                   const char* kex_algo,
                   const char* cipher_algo,
                   size_t cipher_keylen,
-                  size_t explicit_nonce_bytes,
-                  size_t implicit_nonce_bytes,
+                  size_t nonce_bytes_from_handshake,
+                  size_t nonce_bytes_from_record,
                   const char* mac_algo,
                   size_t mac_keylen,
                   const char* prf_algo = "");
@@ -133,7 +133,8 @@ class BOTAN_DLL Ciphersuite
 
       std::string m_cipher_algo;
       size_t m_cipher_keylen = 0;
-      size_t m_explicit_nonce_bytes = 0, m_implicit_nonce_bytes = 0;
+      size_t m_nonce_bytes_from_handshake = 0;
+      size_t m_nonce_bytes_from_record = 0;
 
       std::string m_mac_algo;
       size_t m_mac_keylen = 0;

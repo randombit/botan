@@ -3,7 +3,7 @@
 *
 * This file was automatically generated from the IANA assignments
 * (tls-parameters.txt hash 4bc98b6f75ad5b63952b5f457fa7adbfef60f095)
-* by ./src/scripts/tls_suite_info.py on 2014-11-03
+* by ./src/scripts/tls_suite_info.py on 2014-12-31
 *
 * Released under the terms of the Botan license
 */
@@ -156,6 +156,9 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
       case 0xC07D: // DHE_RSA_WITH_CAMELLIA_256_GCM_SHA384
          return Ciphersuite(0xC07D, "RSA", "DH", "Camellia-256/GCM", 32, 4, 8, "AEAD", 0, "SHA-384");
 
+      case 0xCC15: // DHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+         return Ciphersuite(0xCC15, "RSA", "DH", "ChaCha20Poly1305", 32, 0, 0, "AEAD", 0, "SHA-256");
+
       case 0x009A: // DHE_RSA_WITH_SEED_CBC_SHA
          return Ciphersuite(0x009A, "RSA", "DH", "SEED", 16, 16, 0, "SHA-1", 20);
 
@@ -249,6 +252,9 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
       case 0xC087: // ECDHE_ECDSA_WITH_CAMELLIA_256_GCM_SHA384
          return Ciphersuite(0xC087, "ECDSA", "ECDH", "Camellia-256/GCM", 32, 4, 8, "AEAD", 0, "SHA-384");
 
+      case 0xCC14: // ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256
+         return Ciphersuite(0xCC14, "ECDSA", "ECDH", "ChaCha20Poly1305", 32, 0, 0, "AEAD", 0, "SHA-256");
+
       case 0xC007: // ECDHE_ECDSA_WITH_RC4_128_SHA
          return Ciphersuite(0xC007, "ECDSA", "ECDH", "RC4", 16, 0, 0, "SHA-1", 20);
 
@@ -308,6 +314,9 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
 
       case 0xC08B: // ECDHE_RSA_WITH_CAMELLIA_256_GCM_SHA384
          return Ciphersuite(0xC08B, "RSA", "ECDH", "Camellia-256/GCM", 32, 4, 8, "AEAD", 0, "SHA-384");
+
+      case 0xCC13: // ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+         return Ciphersuite(0xCC13, "RSA", "ECDH", "ChaCha20Poly1305", 32, 0, 0, "AEAD", 0, "SHA-256");
 
       case 0xC011: // ECDHE_RSA_WITH_RC4_128_SHA
          return Ciphersuite(0xC011, "RSA", "ECDH", "RC4", 16, 0, 0, "SHA-1", 20);

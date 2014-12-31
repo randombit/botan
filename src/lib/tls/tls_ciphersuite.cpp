@@ -66,8 +66,8 @@ Ciphersuite::Ciphersuite(u16bit ciphersuite_code,
                          const char* kex_algo,
                          const char* cipher_algo,
                          size_t cipher_keylen,
-                         size_t exp_nonce_bytes,
-                         size_t imp_nonce_bytes,
+                         size_t nonce_bytes_from_handshake,
+                         size_t nonce_bytes_from_record,
                          const char* mac_algo,
                          size_t mac_keylen,
                          const char* prf_algo) :
@@ -77,8 +77,8 @@ Ciphersuite::Ciphersuite(u16bit ciphersuite_code,
    m_prf_algo(prf_algo),
    m_cipher_algo(cipher_algo),
    m_cipher_keylen(cipher_keylen),
-   m_explicit_nonce_bytes(exp_nonce_bytes),
-   m_implicit_nonce_bytes(imp_nonce_bytes),
+   m_nonce_bytes_from_handshake(nonce_bytes_from_handshake),
+   m_nonce_bytes_from_record(nonce_bytes_from_record),
    m_mac_algo(mac_algo),
    m_mac_keylen(mac_keylen)
    {
@@ -108,27 +108,36 @@ bool Ciphersuite::valid() const
 
    if(mac_algo() == "AEAD")
       {
-      auto cipher_and_mode = split_on(cipher_algo(), '/');
-      BOTAN_ASSERT(cipher_and_mode.size() == 2, "Expected format for AEAD algo");
-      if(!af.prototype_block_cipher(cipher_and_mode[0]))
+      if(cipher_algo() == "ChaCha20Poly1305")
+         {
+#if !defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305)
          return false;
+#endif
+         }
+      else
+         {
+         auto cipher_and_mode = split_on(cipher_algo(), '/');
+         BOTAN_ASSERT(cipher_and_mode.size() == 2, "Expected format for AEAD algo");
+         if(!af.prototype_block_cipher(cipher_and_mode[0]))
+            return false;
 
-      const auto mode = cipher_and_mode[1];
+         const auto mode = cipher_and_mode[1];
 
 #if !defined(BOTAN_HAS_AEAD_CCM)
-      if(mode == "CCM" || mode == "CCM-8")
-         return false;
+         if(mode == "CCM" || mode == "CCM-8")
+            return false;
 #endif
 
 #if !defined(BOTAN_HAS_AEAD_GCM)
-      if(mode == "GCM")
-         return false;
+         if(mode == "GCM")
+            return false;
 #endif
 
 #if !defined(BOTAN_HAS_AEAD_OCB)
-      if(mode == "OCB")
-         return false;
+         if(mode == "OCB")
+            return false;
 #endif
+         }
       }
    else
       {
@@ -212,6 +221,10 @@ std::string Ciphersuite::to_string() const
    if(cipher_algo() == "RC4")
       {
       out << "RC4_128_";
+      }
+   else if(cipher_algo() == "ChaCha20Poly1305")
+      {
+      out << "CHACHA20_POLY1305_";
       }
    else
       {

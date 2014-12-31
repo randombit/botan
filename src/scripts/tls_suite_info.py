@@ -54,14 +54,14 @@ def to_ciphersuite_info(code, name):
 
     cipher_info = {
         'RC4': ('RC4',None),
-        'CHACHA': ('ChaCha',32),
+        'CHACHA20': ('ChaCha',32),
         'IDEA': ('IDEA',16),
         'DES': ('DES',8),
         '3DES': ('3DES',24),
         'CAMELLIA': ('Camellia',None),
         'AES': ('AES',None),
         'SEED': ('SEED',16),
-        'ARIA': ('ARIA',16)
+        'ARIA': ('ARIA',16),
         }
 
     tls_to_botan_names = {
@@ -115,7 +115,11 @@ def to_ciphersuite_info(code, name):
     mode = ''
     ivlen = 0
 
-    stream_ciphers = ['RC4', 'ChaCha']
+    if cipher[0] == 'CHACHA20' and cipher[1] == 'POLY1305':
+        return 'Ciphersuite(0x%s, "%s", "%s", "%s", %d, %d, %d, "AEAD", %d, "%s")' % (
+            code, sig_algo, kex_algo, "ChaCha20Poly1305", cipher_keylen, 0, 0, 0, mac_algo)
+
+    stream_ciphers = ['RC4']
 
     if cipher_algo not in stream_ciphers:
         mode = cipher[-1]
@@ -164,13 +168,12 @@ def process_command_line(args):
                       help='add experimental OCB AEAD suites')
     parser.add_option('--with-eax', action='store_true', default=False,
                       help='add experimental EAX AEAD suites')
-    parser.add_option('--with-chacha', action='store_true', default=False,
-                      help='add experimental ChaCha suites')
 
     parser.add_option('--save-download', action='store_true', default=True,
                       help='save downloaded tls-parameters.txt')
 
-    parser.add_option('--output', help='save output to named file instead of stdout')
+    parser.add_option('--output', '-o',
+                      help='save output to named file instead of stdout')
 
     return parser.parse_args(args)
 
@@ -223,6 +226,11 @@ def main(args = None):
     # From http://tools.ietf.org/html/draft-ietf-tls-56-bit-ciphersuites-01
     define_custom_ciphersuite('DHE_DSS_WITH_RC4_128_SHA', '0066')
 
+    # Google servers - draft-agl-tls-chacha20poly1305-04
+    define_custom_ciphersuite('ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256', 'CC13')
+    define_custom_ciphersuite('ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256', 'CC14')
+    define_custom_ciphersuite('DHE_RSA_WITH_CHACHA20_POLY1305_SHA256', 'CC15')
+
     # Expermental things
     if options.with_ocb:
         define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_128_OCB_SHA256', 'FF80')
@@ -238,21 +246,6 @@ def main(args = None):
         define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_256_EAX_SHA384', 'FF91')
         define_custom_ciphersuite('ECDHE_RSA_WITH_AES_128_EAX_SHA256', 'FF92')
         define_custom_ciphersuite('ECDHE_RSA_WITH_AES_256_EAX_SHA384', 'FF93')
-
-    if options.with_chacha:
-        define_custom_ciphersuite('RSA_WITH_CHACHA_SHA', 'CC20')
-        define_custom_ciphersuite('ECDHE_RSA_WITH_CHACHA_SHA', 'CC21')
-        define_custom_ciphersuite('ECDHE_ECDSA_WITH_CHACHA_SHA', 'CC22')
-        define_custom_ciphersuite('DHE_RSA_WITH_CHACHA_SHA', 'CC23')
-
-        define_custom_ciphersuite('DHE_PSK_WITH_CHACHA_SHA', 'CC24')
-        define_custom_ciphersuite('PSK_WITH_CHACHA_SHA', 'CC25')
-        define_custom_ciphersuite('ECDHE_PSK_WITH_CHACHA_SHA', 'CC26')
-        #define_custom_ciphersuite('RSA_PSK_WITH_CHACHA_SHA', 'CC26')
-
-        define_custom_ciphersuite('SRP_SHA_WITH_CHACHA_SHA', 'CC27')
-        define_custom_ciphersuite('SRP_SHA_RSA_WITH_CHACHA_SHA', 'CC28')
-        define_custom_ciphersuite('SRP_SHA_ECDSA_WITH_CHACHA_SHA', 'CC29')
 
     if options.with_srp_aead:
         define_custom_ciphersuite('SRP_SHA_WITH_AES_256_GCM_SHA384', 'FFA0')
