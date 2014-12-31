@@ -26,8 +26,8 @@ class BOTAN_DLL AEAD_Mode : public Cipher_Mode
 
       /**
       * Set associated data that is not included in the ciphertext but
-      * that should be authenticated. Must be called after set_key
-      * and before finish.
+      * that should be authenticated. Must be called after set_key and
+      * before start.
       *
       * Unless reset by another call, the associated data is kept
       * between messages. Thus, if the AD does not change, calling
@@ -40,6 +40,12 @@ class BOTAN_DLL AEAD_Mode : public Cipher_Mode
 
       template<typename Alloc>
       void set_associated_data_vec(const std::vector<byte, Alloc>& ad)
+         {
+         set_associated_data(&ad[0], ad.size());
+         }
+
+      template<typename Alloc>
+      void set_ad(const std::vector<byte, Alloc>& ad)
          {
          set_associated_data(&ad[0], ad.size());
          }
