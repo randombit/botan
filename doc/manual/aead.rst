@@ -65,6 +65,16 @@ AEAD modes currently available include GCM, OCB, and EAX. All three use a
        Note that if you have the entire message in hand, calling finish without
        ever calling update is both efficient and convenient.
 
+       .. note::
+          During decryption, finish will throw an instance of Integrity_Failure
+          if the MAC does not validate. If this occurs, all plaintext previously
+          output via calls to update must be destroyed and not used in any
+          way that an attacker could observe the effects of.
+
+          One simply way to assure this could never happen is to never
+          call update, and instead always marshall the entire message
+          into a single buffer and call finish on it when decrypting.
+
   .. cpp:function:: size_t update_granularity() const
 
        The AEAD interface requires :cpp:func:`update` be called with blocks of
