@@ -17,6 +17,8 @@ namespace Botan {
 /**
 * Base class
 * See draft-irtf-cfrg-chacha20-poly1305-03 for specification
+* If a nonce of 64 bits is used the older version described in
+* draft-agl-tls-chacha20poly1305-04 is used instead.
 */
 class BOTAN_DLL ChaCha20Poly1305_Mode : public AEAD_Mode
    {
@@ -30,8 +32,7 @@ class BOTAN_DLL ChaCha20Poly1305_Mode : public AEAD_Mode
       Key_Length_Specification key_spec() const override
          { return Key_Length_Specification(32); }
 
-      bool valid_nonce_length(size_t n) const override
-         { return (n == 12); }
+      bool valid_nonce_length(size_t n) const override;
 
       size_t tag_size() const override { return 16; }
 
@@ -41,8 +42,10 @@ class BOTAN_DLL ChaCha20Poly1305_Mode : public AEAD_Mode
       std::unique_ptr<MessageAuthenticationCode> m_poly1305;
 
       secure_vector<byte> m_ad;
+      size_t m_nonce_len = 0;
       size_t m_ctext_len = 0;
 
+      bool cfrg_version() const { return m_nonce_len == 12; }
       void update_len(size_t len);
    private:
       secure_vector<byte> start_raw(const byte nonce[], size_t nonce_len) override;

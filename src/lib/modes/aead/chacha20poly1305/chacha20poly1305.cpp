@@ -13,6 +13,11 @@
 
 namespace Botan {
 
+bool ChaCha20Poly1305_Mode::valid_nonce_length(size_t n) const
+   {
+   return (n == 8 || n == 12);
+   }
+
 void ChaCha20Poly1305_Mode::clear()
    {
    m_chacha.reset();
@@ -48,6 +53,7 @@ secure_vector<byte> ChaCha20Poly1305_Mode::start_raw(const byte nonce[], size_t 
       throw Invalid_IV_Length(name(), nonce_len);
 
    m_ctext_len = 0;
+   m_nonce_len = nonce_len;
 
    m_chacha->set_iv(nonce, nonce_len);
 
@@ -60,8 +66,16 @@ secure_vector<byte> ChaCha20Poly1305_Mode::start_raw(const byte nonce[], size_t 
    // Remainder of output is discard
 
    m_poly1305->update(m_ad);
-   for(size_t i = 0; i != 16 - m_ad.size() % 16; ++i)
-      m_poly1305->update(0);
+
+   if(cfrg_version())
+      {
+      for(size_t i = 0; i != 16 - m_ad.size() % 16; ++i)
+         m_poly1305->update(0);
+      }
+   else
+      {
+      update_len(m_ad.size());
+      }
 
    return secure_vector<byte>();
    }
@@ -80,9 +94,12 @@ void ChaCha20Poly1305_Encryption::update(secure_vector<byte>& buffer, size_t off
 void ChaCha20Poly1305_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
    {
    update(buffer, offset);
-   for(size_t i = 0; i != 16 - m_ctext_len % 16; ++i)
-      m_poly1305->update(0);
-   update_len(m_ad.size());
+   if(cfrg_version())
+      {
+      for(size_t i = 0; i != 16 - m_ctext_len % 16; ++i)
+         m_poly1305->update(0);
+      update_len(m_ad.size());
+      }
    update_len(m_ctext_len);
 
    const secure_vector<byte> mac = m_poly1305->final();
@@ -118,9 +135,13 @@ void ChaCha20Poly1305_Decryption::finish(secure_vector<byte>& buffer, size_t off
       m_ctext_len += remaining;
       }
 
-   for(size_t i = 0; i != 16 - m_ctext_len % 16; ++i)
-      m_poly1305->update(0);
-   update_len(m_ad.size());
+   if(cfrg_version())
+      {
+      for(size_t i = 0; i != 16 - m_ctext_len % 16; ++i)
+         m_poly1305->update(0);
+      update_len(m_ad.size());
+      }
+
    update_len(m_ctext_len);
    const secure_vector<byte> mac = m_poly1305->final();
 
