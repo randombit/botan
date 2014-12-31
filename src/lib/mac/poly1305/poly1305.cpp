@@ -60,7 +60,7 @@ void Poly1305::final_result(byte out[])
    if(m_buf_pos != 0)
       {
       m_buf[m_buf_pos] = 1;
-      clear_mem(&m_buf[m_buf_pos+1], m_buf.size() - m_buf_pos);
+      clear_mem(&m_buf[m_buf_pos+1], m_buf.size() - m_buf_pos - 1);
       poly1305_blocks(m_poly, &m_buf[0], 1, true);
       }
 
