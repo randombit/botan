@@ -124,9 +124,6 @@ void ChaCha::key_schedule(const byte key[], size_t length)
    set_iv(ZERO, sizeof(ZERO));
    }
 
-/*
-* Return the name of this type
-*/
 void ChaCha::set_iv(const byte iv[], size_t length)
    {
    if(!valid_iv_length(length))
@@ -154,17 +151,6 @@ void ChaCha::set_iv(const byte iv[], size_t length)
    m_position = 0;
    }
 
-/*
-* Return the name of this type
-*/
-std::string ChaCha::name() const
-   {
-   return "ChaCha";
-   }
-
-/*
-* Clear memory of sensitive data
-*/
 void ChaCha::clear()
    {
    zap(m_state);

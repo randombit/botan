@@ -31,7 +31,7 @@ class BOTAN_DLL ChaCha : public StreamCipher
          }
 
       void clear();
-      std::string name() const;
+      std::string name() const { return "ChaCha"; }
 
       StreamCipher* clone() const { return new ChaCha; }
    protected:
