@@ -12,8 +12,9 @@ Pre Release Checks
 Confirm that the release notes under ``doc/relnotes`` are accurate and
 complete and that the version number in ``botan_version.py`` is
 correct. Update the release date in the release notes and change the
-entry for the appropriate branch in ``doc/download.rst`` to point to
-the new release. Add the new release to ``relnotes/index.rst``.
+entry for the appropriate branch in ``doc/website/download.rst`` to
+point to the new release. Add the new release to
+``doc/relnotes/index.rst``.
 
 Check in these changes (alone, with no other modifications) with a
 checkin message along the lines of "Update for X.Y.Z release", then
