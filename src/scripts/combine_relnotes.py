@@ -10,7 +10,7 @@ import re
 import sys
 import os
 
-def combine_relnotes(relnote_dir):
+def combine_relnotes(relnote_dir, with_rst_labels):
 
     relnotes = [p for p in os.listdir(relnote_dir) if p.startswith(('0', '1', '2'))]
 
@@ -43,7 +43,10 @@ def combine_relnotes(relnote_dir):
         version_contents[version] = (''.join(contents)).strip()
 
     def make_label(v):
-        return ".. _v%s:\n" % (v.replace('.', '_'))
+        if with_rst_labels:
+            return ".. _v%s:\n\n" % (v.replace('.', '_'))
+        else:
+            return ''
 
     s = ''
 
@@ -57,13 +60,13 @@ def combine_relnotes(relnote_dir):
 
     if len(versions_nyr) > 0:
         for v in versions_nyr:
-            s += make_label(v) + "\n"
+            s += make_label(v)
             s += version_contents[v]
             s += "\n\n"
 
     for d in sorted(date_to_version.keys(), reverse=True):
         for v in sorted(date_to_version[d]):
-            s += make_label(v) + "\n"
+            s += make_label(v)
             s += version_contents[v]
             s += "\n\n"
 
@@ -73,7 +76,7 @@ def main(args = None):
     if args is None:
         args = sys.argv
 
-    print combine_relnotes(args[1])
+    print combine_relnotes(args[1], True)
 
 if __name__ == '__main__':
     sys.exit(main())

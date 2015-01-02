@@ -194,7 +194,7 @@ def main(args = None):
         lic.write(license_text('doc/license.rst'))
 
     with open(os.path.join(botan_doc_dir, 'news.txt'), 'w+') as news:
-        news.write(combine_relnotes.combine_relnotes('doc/relnotes'))
+        news.write(combine_relnotes.combine_relnotes('doc/relnotes', False))
 
     logging.info('Botan %s installation complete', build_vars['version'])
 
