@@ -22,7 +22,7 @@ mailing list
 <http://lists.randombit.net/mailman/listinfo/botan-devel/>`_.
 
 You can browse the source online via the
-`GitHub mirror <https://github.com/randombit/botan`_.
+`GitHub mirror <https://github.com/randombit/botan>`_.
 
 To report a bug use
 `Bugzilla <http://bugs.randombit.net/>`_ or
