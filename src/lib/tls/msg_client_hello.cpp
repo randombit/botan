@@ -93,6 +93,9 @@ Client_Hello::Client_Hello(Handshake_IO& io,
       m_extensions.add(new Signature_Algorithms(policy.allowed_signature_hashes(),
                                                 policy.allowed_signature_methods()));
 
+   if(m_version.is_datagram_protocol())
+     m_extensions.add(new SRTP_Protection_Profiles(policy.srtp_profiles()));
+
    if(reneg_info.empty() && next_protocol)
       m_extensions.add(new Next_Protocol_Notification());
 

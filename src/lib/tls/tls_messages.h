@@ -1,6 +1,6 @@
 /*
 * TLS Messages
-* (C) 2004-2011 Jack Lloyd
+* (C) 2004-2011,2015 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -27,6 +27,7 @@ class SRP6_Server_Session;
 
 namespace TLS {
 
+class Session;
 class Handshake_IO;
 
 std::vector<byte> make_hello_random(RandomNumberGenerator& rng,
@@ -150,6 +151,13 @@ class Client_Hello : public Handshake_Message
          return false;
          }
 
+      std::vector<u16bit> srtp_profiles() const
+         {
+         if(SRTP_Protection_Profiles* srtp = m_extensions.get<SRTP_Protection_Profiles>())
+            return srtp->profiles();
+         return std::vector<u16bit>();
+         }
+
       void update_hello_cookie(const Hello_Verify_Request& hello_verify);
 
       std::set<Handshake_Extension_Type> extension_types() const
@@ -257,24 +265,44 @@ class Server_Hello : public Handshake_Message
          return false;
          }
 
+      u16bit srtp_profile() const
+         {
+         if(SRTP_Protection_Profiles* srtp = m_extensions.get<SRTP_Protection_Profiles>())
+            {
+            auto prof = srtp->profiles();
+            if(prof.size() != 1 || prof[0] == 0)
+               throw Decoding_Error("Server sent malformed DTLS-SRTP extension");
+            return prof[0];
+            }
+
+         return 0;
+         }
+
       std::set<Handshake_Extension_Type> extension_types() const
          { return m_extensions.extension_types(); }
 
       Server_Hello(Handshake_IO& io,
                    Handshake_Hash& hash,
                    const Policy& policy,
-                   const std::vector<byte>& session_id,
-                   Protocol_Version ver,
+                   RandomNumberGenerator& rng,
+                   const std::vector<byte>& secure_reneg_info,
+                   const Client_Hello& client_hello,
+                   const std::vector<byte>& new_session_id,
+                   Protocol_Version new_session_version,
                    u16bit ciphersuite,
                    byte compression,
-                   size_t max_fragment_size,
-                   bool client_has_secure_renegotiation,
-                   const std::vector<byte>& reneg_info,
                    bool offer_session_ticket,
-                   bool client_has_npn,
-                   const std::vector<std::string>& next_protocols,
-                   bool client_has_heartbeat,
-                   RandomNumberGenerator& rng);
+                   const std::vector<std::string>& next_protocols);
+
+      Server_Hello(Handshake_IO& io,
+                   Handshake_Hash& hash,
+                   const Policy& policy,
+                   RandomNumberGenerator& rng,
+                   const std::vector<byte>& secure_reneg_info,
+                   const Client_Hello& client_hello,
+                   Session& resumed_session,
+                   bool offer_session_ticket,
+                   const std::vector<std::string>& next_protocols);
 
       Server_Hello(const std::vector<byte>& buf);
    private:

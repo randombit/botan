@@ -130,6 +130,13 @@ class BOTAN_DLL Policy
       virtual u32bit session_ticket_lifetime() const;
 
       /**
+      * If this returns a non-empty vector, and DTLS is negotiated,
+      * then we will also attempt to negotiate the SRTP extension from
+      * RFC 5764 using the returned values as the profile ids.
+      */
+      virtual std::vector<u16bit> srtp_profiles() const;
+
+      /**
       * @return true if and only if we are willing to accept this version
       * Default accepts TLS v1.0 and later.
 

@@ -1,6 +1,6 @@
 ;/*
 * TLS Server Hello and Server Hello Done
-* (C) 2004-2011 Jack Lloyd
+* (C) 2004-2011,2015 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -16,48 +16,102 @@ namespace Botan {
 
 namespace TLS {
 
-/*
-* Create a new Server Hello message
-*/
+// New session case
 Server_Hello::Server_Hello(Handshake_IO& io,
                            Handshake_Hash& hash,
                            const Policy& policy,
-                           const std::vector<byte>& session_id,
-                           Protocol_Version ver,
+                           RandomNumberGenerator& rng,
+                           const std::vector<byte>& reneg_info,
+                           const Client_Hello& client_hello,
+                           const std::vector<byte>& new_session_id,
+                           Protocol_Version new_session_version,
                            u16bit ciphersuite,
                            byte compression,
-                           size_t max_fragment_size,
-                           bool client_has_secure_renegotiation,
-                           const std::vector<byte>& reneg_info,
                            bool offer_session_ticket,
-                           bool client_has_npn,
-                           const std::vector<std::string>& next_protocols,
-                           bool client_has_heartbeat,
-                           RandomNumberGenerator& rng) :
-   m_version(ver),
-   m_session_id(session_id),
+                           const std::vector<std::string>& next_protocols) :
+   m_version(new_session_version),
+   m_session_id(new_session_id),
    m_random(make_hello_random(rng, policy)),
    m_ciphersuite(ciphersuite),
    m_comp_method(compression)
    {
-   if(client_has_heartbeat && policy.negotiate_heartbeat_support())
-      m_extensions.add(new Heartbeat_Support_Indicator(true));
-
    /*
    * Even a client that offered SSLv3 and sent the SCSV will get an
    * extension back. This is probably the right thing to do.
    */
-   if(client_has_secure_renegotiation)
+   if(client_hello.secure_renegotiation())
       m_extensions.add(new Renegotiation_Extension(reneg_info));
 
-   if(max_fragment_size)
+   if(client_hello.supports_session_ticket() && offer_session_ticket)
+      m_extensions.add(new Session_Ticket());
+
+   if(size_t max_fragment_size = client_hello.fragment_size())
       m_extensions.add(new Maximum_Fragment_Length(max_fragment_size));
 
-   if(client_has_npn)
+   if(policy.negotiate_heartbeat_support() && client_hello.supports_heartbeats())
+      m_extensions.add(new Heartbeat_Support_Indicator(true));
+
+   if(client_hello.next_protocol_notification())
       m_extensions.add(new Next_Protocol_Notification(next_protocols));
 
-   if(offer_session_ticket)
+   if(m_version.is_datagram_protocol())
+      {
+      const std::vector<u16bit> server_srtp = policy.srtp_profiles();
+      const std::vector<u16bit> client_srtp = client_hello.srtp_profiles();
+
+      if(!server_srtp.empty() && !client_srtp.empty())
+         {
+         u16bit shared = 0;
+         // always using server preferences for now
+         for(auto s : server_srtp)
+            for(auto c : client_srtp)
+               {
+               if(shared == 0 && s == c)
+                  shared = s;
+               }
+
+         if(shared)
+            m_extensions.add(new SRTP_Protection_Profiles(shared));
+         }
+      }
+
+   hash.update(io.send(*this));
+   }
+
+// Resuming
+Server_Hello::Server_Hello(Handshake_IO& io,
+                           Handshake_Hash& hash,
+                           const Policy& policy,
+                           RandomNumberGenerator& rng,
+                           const std::vector<byte>& reneg_info,
+                           const Client_Hello& client_hello,
+                           Session& resumed_session,
+                           bool offer_session_ticket,
+                           const std::vector<std::string>& next_protocols) :
+   m_version(resumed_session.version()),
+   m_session_id(client_hello.session_id()),
+   m_random(make_hello_random(rng, policy)),
+   m_ciphersuite(resumed_session.ciphersuite_code()),
+   m_comp_method(resumed_session.compression_method())
+   {
+   /*
+   * Even a client that offered SSLv3 and sent the SCSV will get an
+   * extension back. This is probably the right thing to do.
+   */
+   if(client_hello.secure_renegotiation())
+      m_extensions.add(new Renegotiation_Extension(reneg_info));
+
+   if(client_hello.supports_session_ticket() && offer_session_ticket)
       m_extensions.add(new Session_Ticket());
+
+   if(size_t max_fragment_size = resumed_session.fragment_size())
+      m_extensions.add(new Maximum_Fragment_Length(max_fragment_size));
+
+   if(policy.negotiate_heartbeat_support() && client_hello.supports_heartbeats())
+      m_extensions.add(new Heartbeat_Support_Indicator(true));
+
+   if(client_hello.next_protocol_notification())
+      m_extensions.add(new Next_Protocol_Notification(next_protocols));
 
    hash.update(io.send(*this));
    }

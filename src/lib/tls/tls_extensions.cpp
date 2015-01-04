@@ -1,6 +1,6 @@
 /*
 * TLS Extensions
-* (C) 2011,2012 Jack Lloyd
+* (C) 2011,2012,2015 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -38,6 +38,9 @@ Extension* make_extension(TLS_Data_Reader& reader,
 
       case TLSEXT_SIGNATURE_ALGORITHMS:
          return new Signature_Algorithms(reader, size);
+
+        case TLSEXT_USE_SRTP:
+          return new SRTP_Protection_Profiles(reader, size);
 
       case TLSEXT_NEXT_PROTOCOL:
          return new Next_Protocol_Notification(reader, size);
@@ -214,19 +217,21 @@ std::vector<byte> Renegotiation_Extension::serialize() const
 
 std::vector<byte> Maximum_Fragment_Length::serialize() const
    {
-   const std::map<size_t, byte> fragment_to_code = { {  512, 1 },
-                                                     { 1024, 2 },
-                                                     { 2048, 3 },
-                                                     { 4096, 4 } };
-
-   auto i = fragment_to_code.find(m_max_fragment);
-
-   if(i == fragment_to_code.end())
-      throw std::invalid_argument("Bad setting " +
-                                  std::to_string(m_max_fragment) +
-                                  " for maximum fragment size");
-
-   return std::vector<byte>(1, i->second);
+   switch(m_max_fragment)
+      {
+      case 512:
+         return std::vector<byte>(1, 1);
+      case 1024:
+         return std::vector<byte>(1, 2);
+      case 2048:
+         return std::vector<byte>(1, 3);
+      case 4096:
+         return std::vector<byte>(1, 4);
+      default:
+         throw std::invalid_argument("Bad setting " +
+                                     std::to_string(m_max_fragment) +
+                                     " for maximum fragment size");
+      }
    }
 
 Maximum_Fragment_Length::Maximum_Fragment_Length(TLS_Data_Reader& reader,
@@ -234,20 +239,23 @@ Maximum_Fragment_Length::Maximum_Fragment_Length(TLS_Data_Reader& reader,
    {
    if(extension_size != 1)
       throw Decoding_Error("Bad size for maximum fragment extension");
-   byte val = reader.get_byte();
 
-   const std::map<byte, size_t> code_to_fragment = { { 1,  512 },
-                                                     { 2, 1024 },
-                                                     { 3, 2048 },
-                                                     { 4, 4096 } };
+   const byte val = reader.get_byte();
 
-   auto i = code_to_fragment.find(val);
-
-   if(i == code_to_fragment.end())
-      throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
-                          "Bad value in maximum fragment extension");
-
-   m_max_fragment = i->second;
+   switch(val)
+      {
+      case 1:
+         m_max_fragment = 512;
+      case 2:
+         m_max_fragment = 1024;
+      case 3:
+         m_max_fragment = 2048;
+      case 4:
+         m_max_fragment = 4096;
+      default:
+         throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+                             "Bad value " + std::to_string(val) + " for max fragment len");
+      }
    }
 
 Next_Protocol_Notification::Next_Protocol_Notification(TLS_Data_Reader& reader,
@@ -534,6 +542,39 @@ Session_Ticket::Session_Ticket(TLS_Data_Reader& reader,
                                u16bit extension_size)
    {
    m_ticket = reader.get_elem<byte, std::vector<byte> >(extension_size);
+   }
+
+SRTP_Protection_Profiles::SRTP_Protection_Profiles(TLS_Data_Reader& reader,
+                                                   u16bit extension_size)
+   {
+   m_pp = reader.get_range<u16bit>(2, 0, 65535);
+
+   const std::vector<byte> mki = reader.get_range<byte>(1, 0, 255);
+
+   if(m_pp.size() * 2 + mki.size() + 3 != extension_size)
+      throw Decoding_Error("Bad encoding for SRTP protection extension");
+
+   if(!mki.empty())
+      throw Decoding_Error("Unhandled non-empty MKI for SRTP protection extension");
+   }
+
+std::vector<byte> SRTP_Protection_Profiles::serialize() const
+   {
+   std::vector<byte> buf;
+
+   const u16bit pp_len = m_pp.size() * 2;
+   buf.push_back(get_byte(0, pp_len));
+   buf.push_back(get_byte(1, pp_len));
+
+   for(u16bit pp : m_pp)
+      {
+      buf.push_back(get_byte(0, pp));
+      buf.push_back(get_byte(1, pp));
+      }
+
+   buf.push_back(0); // srtp_mki, always empty here
+
+   return buf;
    }
 
 }

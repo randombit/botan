@@ -87,14 +87,14 @@ std::vector<std::string> Policy::allowed_ecc_curves() const
    {
    return std::vector<std::string>({
       "brainpool512r1",
-      "brainpool384r1",
-      "brainpool256r1",
       "secp521r1",
+      "brainpool384r1",
       "secp384r1",
+      "brainpool256r1",
       "secp256r1",
-      "secp256k1",
-      "secp224r1",
-      "secp224k1",
+      //"secp256k1",
+      //"secp224r1",
+      //"secp224k1",
       //"secp192r1",
       //"secp192k1",
       //"secp160r2",
@@ -137,7 +137,7 @@ std::vector<byte> Policy::compression() const
 
 u32bit Policy::session_ticket_lifetime() const
    {
-   return 86400; // 1 day
+   return 86400; // ~1 day
    }
 
 bool Policy::send_fallback_scsv(Protocol_Version version) const
@@ -148,8 +148,9 @@ bool Policy::send_fallback_scsv(Protocol_Version version) const
 bool Policy::acceptable_protocol_version(Protocol_Version version) const
    {
    if(version.is_datagram_protocol())
-      return (version >= Protocol_Version::DTLS_V12);
-   return (version >= Protocol_Version::TLS_V10);
+      return (version >= Protocol_Version::DTLS_V10);
+   else
+      return (version >= Protocol_Version::TLS_V10);
    }
 
 Protocol_Version Policy::latest_supported_version(bool datagram) const
@@ -173,6 +174,12 @@ bool Policy::negotiate_heartbeat_support() const
 bool Policy::allow_server_initiated_renegotiation() const
    {
    return true;
+   }
+
+std::vector<u16bit> Policy::srtp_profiles() const
+   {
+   //return std::vector<u16bit>();
+   return std::vector<u16bit>{1};
    }
 
 namespace {
@@ -260,7 +267,7 @@ std::vector<u16bit> Policy::ciphersuite_list(Protocol_Version version,
 
    std::set<Ciphersuite, Ciphersuite_Preference_Ordering> ciphersuites(order);
 
-   for(auto suite : Ciphersuite::all_known_ciphersuites())
+   for(auto&& suite : Ciphersuite::all_known_ciphersuites())
       {
       if(!acceptable_ciphersuite(suite))
          continue;

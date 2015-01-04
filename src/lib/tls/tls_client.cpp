@@ -233,6 +233,13 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
                              " but we did not request it");
          }
 
+      if(u16bit srtp = state.server_hello()->srtp_profile())
+         {
+         if(!value_exists(state.client_hello()->srtp_profiles(), srtp))
+            throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                                "Server replied with DTLS-SRTP alg we did not send");
+         }
+
       state.set_version(state.server_hello()->version());
 
       secure_renegotiation_check(state.server_hello());
@@ -516,7 +523,8 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          get_peer_cert_chain(state),
          session_ticket,
          m_info,
-         ""
+         "",
+         state.server_hello()->srtp_profile()
          );
 
       const bool should_save = save_session(session_info);

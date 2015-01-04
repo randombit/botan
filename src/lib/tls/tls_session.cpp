@@ -1,6 +1,6 @@
 /*
 * TLS Session State
-* (C) 2011-2012 Jack Lloyd
+* (C) 2011-2012,2015 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -26,7 +26,8 @@ Session::Session(const std::vector<byte>& session_identifier,
                  const std::vector<X509_Certificate>& certs,
                  const std::vector<byte>& ticket,
                  const Server_Information& server_info,
-                 const std::string& srp_identifier) :
+                 const std::string& srp_identifier,
+                 u16bit srtp_profile) :
    m_start_time(std::chrono::system_clock::now()),
    m_identifier(session_identifier),
    m_session_ticket(ticket),
@@ -35,6 +36,7 @@ Session::Session(const std::vector<byte>& session_identifier,
    m_ciphersuite(ciphersuite),
    m_compression_method(compression_method),
    m_connection_side(side),
+   m_srtp_profile(srtp_profile),
    m_fragment_size(fragment_size),
    m_peer_certs(certs),
    m_server_info(server_info),
@@ -44,7 +46,7 @@ Session::Session(const std::vector<byte>& session_identifier,
 
 Session::Session(const std::string& pem)
    {
-   secure_vector<byte> der = PEM_Code::decode_check_label(pem, "SSL SESSION");
+   secure_vector<byte> der = PEM_Code::decode_check_label(pem, "TLS SESSION");
 
    *this = Session(&der[0], der.size());
    }
@@ -60,15 +62,15 @@ Session::Session(const byte ber[], size_t ber_len)
    ASN1_String srp_identifier_str;
 
    byte major_version = 0, minor_version = 0;
-
    std::vector<byte> peer_cert_bits;
 
    size_t start_time = 0;
+   size_t srtp_profile = 0;
 
    BER_Decoder(ber, ber_len)
       .start_cons(SEQUENCE)
         .decode_and_check(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION),
-                          "Unknown version in session structure")
+                          "Unknown version in serialized TLS session")
         .decode_integer_type(start_time)
         .decode_integer_type(major_version)
         .decode_integer_type(minor_version)
@@ -84,12 +86,14 @@ Session::Session(const byte ber[], size_t ber_len)
         .decode(server_service)
         .decode(server_port)
         .decode(srp_identifier_str)
+        .decode(srtp_profile)
       .end_cons()
       .verify_end();
 
    m_version = Protocol_Version(major_version, minor_version);
    m_start_time = std::chrono::system_clock::from_time_t(start_time);
    m_connection_side = static_cast<Connection_Side>(side_code);
+   m_srtp_profile = srtp_profile;
 
    m_server_info = Server_Information(server_hostname.value(),
                                       server_service.value(),
@@ -130,13 +134,14 @@ secure_vector<byte> Session::DER_encode() const
          .encode(ASN1_String(m_server_info.service(), UTF8_STRING))
          .encode(static_cast<size_t>(m_server_info.port()))
          .encode(ASN1_String(m_srp_identifier, UTF8_STRING))
+         .encode(static_cast<size_t>(m_srtp_profile))
       .end_cons()
    .get_contents();
    }
 
 std::string Session::PEM_encode() const
    {
-   return PEM_Code::encode(this->DER_encode(), "SSL SESSION");
+   return PEM_Code::encode(this->DER_encode(), "TLS SESSION");
    }
 
 std::chrono::seconds Session::session_age() const
