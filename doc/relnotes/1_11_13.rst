@@ -1,3 +1,11 @@
 Version 1.11.13, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* The format of TLS sessions has changed. The PEM formatted version
+  now uses "TLS SESSION" instead of "SSL SESSION" as the header,
+  and the version number of the binary format has also changed.
+
+* Add DTLS-SRTP negotiation defined in RFC 5764
+
+* The Python install script in version 1.11.10 failed to place the
+  headers into a versioned subdirectory.
