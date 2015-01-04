@@ -97,12 +97,14 @@ check_chain(const std::vector<X509_Certificate>& cert_path,
 
       const X509_Certificate& issuer = cert_path[at_self_signed_root ? (i) : (i + 1)];
 
-      const Certificate_Store* trusted = certstores[0]; // fixme
-
       if(i == 0 || restrictions.ocsp_all_intermediates())
-         ocsp_responses.push_back(
-            std::async(std::launch::async,
-                       OCSP::online_check, issuer, subject, trusted));
+         {
+         // certstore[0] is treated as trusted for OCSP (FIXME)
+         if(certstores.size() > 1)
+            ocsp_responses.push_back(
+               std::async(std::launch::async,
+                          OCSP::online_check, issuer, subject, certstores[0]));
+         }
 
       // Check all certs for valid time range
       if(current_time < X509_Time(subject.start_time()))
