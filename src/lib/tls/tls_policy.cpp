@@ -148,7 +148,7 @@ bool Policy::send_fallback_scsv(Protocol_Version version) const
 bool Policy::acceptable_protocol_version(Protocol_Version version) const
    {
    if(version.is_datagram_protocol())
-      return (version >= Protocol_Version::DTLS_V10);
+      return (version >= Protocol_Version::DTLS_V12);
    else
       return (version >= Protocol_Version::TLS_V10);
    }
@@ -178,8 +178,7 @@ bool Policy::allow_server_initiated_renegotiation() const
 
 std::vector<u16bit> Policy::srtp_profiles() const
    {
-   //return std::vector<u16bit>();
-   return std::vector<u16bit>{1};
+   return std::vector<u16bit>();
    }
 
 namespace {
