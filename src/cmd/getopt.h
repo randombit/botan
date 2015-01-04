@@ -56,7 +56,7 @@ class OptionParser
 
          for(auto flag : flags)
             {
-            o << flag.name();
+            o << "--" << flag.name();
             if(flag.takes_arg())
                o << "=";
             o << " ";
