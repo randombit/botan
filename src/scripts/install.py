@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python2
 
 import errno
 import logging
@@ -8,6 +8,7 @@ import shutil
 import string
 import sys
 
+from botan_version import release_major, release_minor
 import combine_relnotes
 
 def parse_command_line(args):
@@ -38,10 +39,12 @@ def parse_command_line(args):
     install_group.add_option('--pkgconfigdir', default='pkgconfig', metavar='DIR',
                              help='Set pkgconfig subdir (default %default)')
 
-    install_group.add_option('--include-dir-suffix', metavar='SUFFIX', default='',
-                             help='Set optional suffix on include dir')
-    install_group.add_option('--doc-dir-suffix', metavar='SUFFIX', default='',
-                             help='Set optional suffix on doc dir')
+    install_group.add_option('--versioned-include-dir', metavar='SUFFIX_DIR',
+                             default='botan-%d.%d' % (release_major, release_minor),
+                             help='Name of versioned include dir')
+    install_group.add_option('--doc-dir-suffix', metavar='SUFFIX',
+                             default='-%d.%d' % (release_major, release_minor),
+                             help='Set optional suffix on doc dir (default %default)')
 
     install_group.add_option('--umask', metavar='MASK', default='022',
                              help='Umask to set (default %default)')
@@ -123,17 +126,16 @@ def main(args = None):
     doc_dir = os.path.join(options.destdir, options.docdir)
     include_dir = os.path.join(options.destdir, options.includedir)
     botan_doc_dir = os.path.join(doc_dir, 'botan' + options.doc_dir_suffix)
-    botan_include_dir = os.path.join(include_dir, 'botan' + options.include_dir_suffix)
+
+    versioned_include_dir = os.path.join(include_dir, options.versioned_include_dir)
+
+    botan_include_dir = os.path.join(versioned_include_dir, 'botan')
 
     out_dir = process_template('%{out_dir}')
     app_exe = process_template('botan%{program_suffix}')
 
-    makedirs(options.destdir)
-    makedirs(lib_dir)
-    makedirs(bin_dir)
-    makedirs(doc_dir)
-    makedirs(include_dir)
-    makedirs(botan_include_dir) # False
+    for d in [options.destdir, lib_dir, bin_dir, doc_dir, botan_include_dir]:
+        makedirs(d)
 
     build_include_dir = os.path.join(options.build_dir, 'include', 'botan')
 
