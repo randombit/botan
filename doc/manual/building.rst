@@ -323,7 +323,7 @@ Configuration Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 There are some configuration parameters which you may want to tweak
-before building the library. These can be found in ``config.h``. This
+before building the library. These can be found in ``build.h``. This
 file is overwritten every time the configure script is run (and does
 not exist until after you run the script for the first time).
 

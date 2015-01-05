@@ -17,7 +17,7 @@ set of enabled ones and doing seeding using OS specific
 routines. The main service a RandomNumberGenerator provides is, of
 course, random numbers:
 
-.. cpp:function:: byte RandomNumberGenerator::random()
+.. cpp:function:: byte RandomNumberGenerator::next_byte()
 
   Generates a single random byte and returns it
 
