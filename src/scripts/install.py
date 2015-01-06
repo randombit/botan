@@ -1,4 +1,11 @@
-#!/usr/bin/env python2
+#!/usr/bin/python
+
+"""
+Botan install script
+(C) 2014,2015 Jack Lloyd
+
+Distributed under the terms of the Botan license
+"""
 
 import errno
 import logging
@@ -7,6 +14,9 @@ import os
 import shutil
 import string
 import sys
+
+if 'dont_write_bytecode' in sys.__dict__:
+    sys.dont_write_bytecode = True
 
 from botan_version import release_major, release_minor
 import combine_relnotes
@@ -26,7 +36,7 @@ def parse_command_line(args):
     parser.add_option_group(build_group)
 
     install_group = optparse.OptionGroup(parser, 'Installation options')
-    install_group.add_option('--destdir', default='/tmp/local',
+    install_group.add_option('--destdir', default='/usr/local',
                              help='Set output directory (default %default)')
     install_group.add_option('--bindir', default='bin', metavar='DIR',
                              help='Set binary subdir (default %default)')
@@ -94,13 +104,13 @@ def main(args = None):
 
     (options, args) = parse_command_line(args)
 
-    exe_mode = 0777
+    exe_mode = 0o777
 
     if 'umask' in os.__dict__:
         umask = int(options.umask, 8)
         logging.debug('Setting umask to %s' % oct(umask))
         os.umask(int(options.umask, 8))
-        exe_mode &= (umask ^ 0777)
+        exe_mode &= (umask ^ 0o777)
 
     def copy_executable(src, dest):
         shutil.copyfile(src, dest)
@@ -195,7 +205,7 @@ def main(args = None):
     with open(os.path.join(botan_doc_dir, 'license.txt'), 'w+') as lic:
         lic.write(license_text('doc/license.rst'))
 
-    with open(os.path.join(botan_doc_dir, 'news.txt'), 'w+') as news:
+    with combine_relnotes.open_for_utf8(os.path.join(botan_doc_dir, 'news.txt'), 'w+') as news:
         news.write(combine_relnotes.combine_relnotes('doc/relnotes', False))
 
     logging.info('Botan %s installation complete', build_vars['version'])
@@ -206,5 +216,5 @@ if __name__ == '__main__':
     except Exception as e:
         logging.error('Failure: %s' % (e))
         import traceback
-        logging.debug(traceback.format_exc())
+        logging.info(traceback.format_exc())
         sys.exit(1)

@@ -7,5 +7,8 @@ Version 1.11.13, Not Yet Released
 
 * Add DTLS-SRTP negotiation defined in RFC 5764
 
-* The Python install script in version 1.11.10 failed to place the
-  headers into a versioned subdirectory.
+* The Python install script added in version 1.11.10 failed to place
+  the headers into a versioned subdirectory.
+
+* Fix the install script when running under Python3.
+

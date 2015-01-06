@@ -9,6 +9,13 @@ Distributed under the terms of the Botan license
 import re
 import sys
 import os
+import sys
+
+def open_for_utf8(fsname, mode):
+    if sys.version_info[0] == 3:
+        return open(fsname, mode, encoding='utf-8')
+    else:
+        return open(fsname, mode)
 
 def combine_relnotes(relnote_dir, with_rst_labels):
 
@@ -23,7 +30,7 @@ def combine_relnotes(relnote_dir, with_rst_labels):
     versions_nyr = []
 
     for f in relnotes:
-        contents = open(os.path.join(relnote_dir, f)).readlines()
+        contents = open_for_utf8(os.path.join(relnote_dir, f), 'r').readlines()
 
         match = re_version.match(contents[0])
 
@@ -33,12 +40,12 @@ def combine_relnotes(relnote_dir, with_rst_labels):
             versions.append(version)
             version_date[version] = date
         else:
-            match = re_nyr.match(contents[0])
-            version = match.group(1)
-
-            versions_nyr.append(version)
+            match = re_nyr.match(str(contents[0]))
             if not match:
                 raise Exception('No version match for %s' % (f))
+
+            version = match.group(1)
+            versions_nyr.append(version)
 
         version_contents[version] = (''.join(contents)).strip()
 
@@ -76,7 +83,7 @@ def main(args = None):
     if args is None:
         args = sys.argv
 
-    print combine_relnotes(args[1], True)
+    print(combine_relnotes(args[1], True))
 
 if __name__ == '__main__':
     sys.exit(main())
