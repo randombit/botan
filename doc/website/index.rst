@@ -8,7 +8,7 @@ Botan is a crypto library for C++ released under the permissive
 It provides useful things like TLS, X.509 PKIX (certs, CRLs, OCSP,
 etc), ECDSA, AES, GCM, and bcrypt, plus a :doc:`kitchen sink <algos>`
 of other crypto algorithms of various utility. A third party open source
-implementation of `SSHv2 <http://www.netsieben.com/products/ssh/>`_
+implementation of `SSHv2 <https://github.com/cdesjardins/ne7ssh>`_
 that uses botan is also available. In addition to C++ you can use
 (parts of) botan from Python or Perl (both included in tree), or with
 `Node.js <https://github.com/justinfreitag/node-botan>`_.
