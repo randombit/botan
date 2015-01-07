@@ -16,6 +16,7 @@ gmtime_s
 loadlibrary
 query_perf_counter
 virtual_lock
+rtlsecurezeromemory
 </target_features>
 
 <aliases>
