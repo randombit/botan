@@ -61,7 +61,7 @@ docs:
 %{build_doc_commands}
 
 install: $(LIBRARIES) docs
-	$(SCRIPTS_DIR)/install.py --destdir=%{destdir} --bindir=%{bindir} --libdir=%{libdir} --docdir=%{docdir} --includedir=%{includedir}
+	$(SCRIPTS_DIR)/install.py --destdir=%{destdir} --bindir=%{bindir} --libdir=%{libdir} --docdir=%{docdir} --includedir=%{includedir} --pkgconfigdir=$(PKGCONF_DIR)
 
 website:
 	rm -rf $(WEBSITE_SRC_DIR) $(WEBSITE_DIR)
