@@ -1,6 +1,6 @@
 /*
 * TLS Channels
-* (C) 2011,2012,2014 Jack Lloyd
+* (C) 2011,2012,2014,2015 Jack Lloyd
 *
 * Released under the terms of the Botan license
 */
@@ -405,8 +405,9 @@ size_t Channel::received_data(const byte input[], size_t input_size)
                {
                if(!pending_state())
                   {
+                  const std::vector<byte> padding = unlock(rng().random_vec(16));
                   Heartbeat_Message response(Heartbeat_Message::RESPONSE,
-                                             &payload[0], payload.size());
+                                             &payload[0], payload.size(), padding);
 
                   send_record(HEARTBEAT, response.contents());
                   }
@@ -483,12 +484,13 @@ size_t Channel::received_data(const byte input[], size_t input_size)
       }
    }
 
-void Channel::heartbeat(const byte payload[], size_t payload_size)
+void Channel::heartbeat(const byte payload[], size_t payload_size, size_t pad_size)
    {
    if(heartbeat_sending_allowed())
       {
+      const std::vector<byte> padding = unlock(rng().random_vec(pad_size + 16));
       Heartbeat_Message heartbeat(Heartbeat_Message::REQUEST,
-                                  payload, payload_size);
+                                  payload, payload_size, padding);
 
       send_record(HEARTBEAT, heartbeat.contents());
       }
