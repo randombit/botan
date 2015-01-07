@@ -127,7 +127,7 @@ class BOTAN_DLL DataSource_Memory : public DataSource
       * @param in the MemoryRegion to read from
       */
       DataSource_Memory(const std::vector<byte>& in) :
-         source(&in[0], &in[in.size()]), offset(0) {}
+         source(in.begin(), in.end()), offset(0) {}
 
       virtual size_t get_bytes_read() const { return offset; }
    private:
