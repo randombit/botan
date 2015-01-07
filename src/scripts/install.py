@@ -18,7 +18,7 @@ import sys
 if 'dont_write_bytecode' in sys.__dict__:
     sys.dont_write_bytecode = True
 
-from botan_version import release_major, release_minor
+from botan_version import release_major, release_minor, release_patch
 import combine_relnotes
 
 def parse_command_line(args):
@@ -52,9 +52,9 @@ def parse_command_line(args):
     install_group.add_option('--versioned-include-dir', metavar='SUFFIX_DIR',
                              default='botan-%d.%d' % (release_major, release_minor),
                              help='Name of versioned include dir')
-    install_group.add_option('--doc-dir-suffix', metavar='SUFFIX',
-                             default='-%d.%d' % (release_major, release_minor),
-                             help='Set optional suffix on doc dir (default %default)')
+    install_group.add_option('--doc-dir-suffix', metavar='V',
+                             default='-%d.%d.%d' % (release_major, release_minor, release_patch),
+                             help='Set optional suffix on doc dir (default \'%default\')')
 
     install_group.add_option('--umask', metavar='MASK', default='022',
                              help='Umask to set (default %default)')
@@ -194,7 +194,7 @@ def main(args = None):
                         os.path.join(bin_dir, os.path.basename(build_vars['botan_config'])))
 
     if 'botan_pkgconfig' in build_vars:
-        pkgconfig_dir = os.path.join(options.destdir, options.pkgconfigdir)
+        pkgconfig_dir = os.path.join(options.destdir, options.libdir, options.pkgconfigdir)
         makedirs(pkgconfig_dir)
         shutil.copyfile(build_vars['botan_pkgconfig'],
                         os.path.join(pkgconfig_dir, os.path.basename(build_vars['botan_pkgconfig'])))

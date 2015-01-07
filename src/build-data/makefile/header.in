@@ -24,14 +24,6 @@ BRANCH         = %{version_major}.%{version_minor}
 
 LIBNAME        = %{lib_prefix}botan-%{version_major}.%{version_minor}
 
-# Installation Settings
-DESTDIR        = %{destdir}
-BINDIR         = $(DESTDIR)/bin
-LIBDIR         = $(DESTDIR)/%{libdir}
-HEADERDIR      = $(DESTDIR)/%{includedir}/botan-$(BRANCH)/botan
-DOCDIR         = $(DESTDIR)/%{docdir}/botan-$(VERSION)
-PKGCONF_DIR    = $(LIBDIR)/pkgconfig
-
 # Executable targets
 APP           = %{out_dir}/botan%{program_suffix}
 TEST          = %{out_dir}/botan-test%{program_suffix}
