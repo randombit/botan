@@ -12,6 +12,7 @@
 #include <botan/rng.h>
 #include <botan/secmem.h>
 #include <botan/mp_types.h>
+#include <botan/get_byte.h>
 #include <iosfwd>
 
 namespace Botan {
@@ -277,7 +278,7 @@ class BOTAN_DLL BigInt
      */
      bool get_bit(size_t n) const
         {
-        return ((word_at(n / MP_WORD_BITS) >> (n % MP_WORD_BITS)) & 1);
+        return ((word_at(n / BOTAN_MP_WORD_BITS) >> (n % BOTAN_MP_WORD_BITS)) & 1);
         }
 
      /**
