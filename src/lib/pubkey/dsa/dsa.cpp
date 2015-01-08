@@ -79,13 +79,11 @@ DSA_Signature_Operation::DSA_Signature_Operation(const DSA_PrivateKey& dsa,
 
 secure_vector<byte>
 DSA_Signature_Operation::sign(const byte msg[], size_t msg_len,
-                              RandomNumberGenerator& rng)
+                              RandomNumberGenerator&)
    {
-   rng.add_entropy(msg, msg_len);
-
    BigInt i(msg, msg_len);
 
-   if(i >= q)
+   while(i >= q)
       i -= q;
 
    const BigInt k = generate_rfc6979_nonce(x, q, i, m_hash);
