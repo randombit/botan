@@ -69,6 +69,7 @@ snail-mail address (S), and Bitcoin address (B).
 
   N: Joel Low
   D: DLL symbol visibility and Windows DLL support in general
+  D: Threaded_Fork
 
   N: Christoph Ludwig
   E: ludwig@fh-worms.de
