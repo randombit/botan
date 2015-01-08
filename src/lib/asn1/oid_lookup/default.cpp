@@ -57,6 +57,7 @@ void set_defaults()
    OIDS::add_oidstr("2.16.840.1.101.3.4.1.6", "AES-128/GCM");
    OIDS::add_oidstr("2.16.840.1.101.3.4.1.26", "AES-192/GCM");
    OIDS::add_oidstr("2.16.840.1.101.3.4.1.46", "AES-256/GCM");
+
    OIDS::add_oidstr("1.3.6.1.4.1.25258.3.101", "Serpent/GCM");
    OIDS::add_oidstr("1.3.6.1.4.1.25258.3.102", "Twofish/GCM");
 
@@ -75,6 +76,7 @@ void set_defaults()
    OIDS::add_oidstr("2.16.840.1.101.3.4.2.1", "SHA-256");
    OIDS::add_oidstr("2.16.840.1.101.3.4.2.2", "SHA-384");
    OIDS::add_oidstr("2.16.840.1.101.3.4.2.3", "SHA-512");
+   OIDS::add_oidstr("2.16.840.1.101.3.4.2.6", "SHA-512-256");
 
    /* MACs */
    OIDS::add_oidstr("1.2.840.113549.2.7", "HMAC(SHA-160)");
