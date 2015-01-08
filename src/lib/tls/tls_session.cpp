@@ -10,7 +10,7 @@
 #include <botan/ber_dec.h>
 #include <botan/asn1_str.h>
 #include <botan/pem.h>
-#include <botan/cryptobox_psk.h>
+#include <botan/aead.h>
 
 namespace Botan {
 
@@ -151,26 +151,42 @@ std::chrono::seconds Session::session_age() const
    }
 
 std::vector<byte>
-Session::encrypt(const SymmetricKey& master_key,
-                 RandomNumberGenerator& rng) const
+Session::encrypt(const SymmetricKey& key, RandomNumberGenerator& rng) const
    {
-   const auto der = this->DER_encode();
+   std::unique_ptr<AEAD_Mode> aead(get_aead("AES-256/GCM", ENCRYPTION));
+   const size_t nonce_len = aead->default_nonce_length();
+   aead->set_key(key);
 
-   return CryptoBox::encrypt(&der[0], der.size(), master_key, rng);
+   const secure_vector<byte> nonce = rng.random_vec(nonce_len);
+
+   secure_vector<byte> buf = rng.random_vec(nonce_len);
+   buf += this->DER_encode();
+   aead->start(&buf[0], nonce_len);
+   aead->finish(buf, nonce_len);
+   return unlock(buf);
    }
 
-Session Session::decrypt(const byte buf[], size_t buf_len,
-                         const SymmetricKey& master_key)
+Session Session::decrypt(const byte in[], size_t in_len, const SymmetricKey& key)
    {
    try
       {
-      const auto ber = CryptoBox::decrypt(buf, buf_len, master_key);
+      std::unique_ptr<AEAD_Mode> aead(get_aead("AES-256/GCM", DECRYPTION));
+      const size_t nonce_len = aead->default_nonce_length();
 
-      return Session(&ber[0], ber.size());
+      if(in_len < nonce_len + aead->tag_size())
+         throw Decoding_Error("Encrypted session too short to be valid");
+
+      aead->set_key(key);
+
+      aead->start(in, nonce_len);
+      secure_vector<byte> buf(in + nonce_len, in + in_len);
+      aead->finish(buf, 0);
+
+      return Session(&buf[0], buf.size());
       }
    catch(std::exception& e)
       {
-      throw Decoding_Error("Failed to decrypt encrypted session -" +
+      throw Decoding_Error("Failed to decrypt serialized TLS session: " +
                            std::string(e.what()));
       }
    }

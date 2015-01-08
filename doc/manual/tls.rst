@@ -81,6 +81,7 @@ available:
 .. cpp:class:: TLS::Channel
 
    .. cpp:function:: size_t received_data(const byte buf[], size_t buf_size)
+   .. cpp:function:: size_t received_data(const std::vector<byte>& buf)
 
      This function is used to provide data sent by the counterparty
      (eg data that you read off the socket layer). Depending on the
@@ -94,6 +95,8 @@ available:
      will return 0 instead.
 
    .. cpp:function:: void send(const byte buf[], size_t buf_size)
+   .. cpp:function:: void send(const std::string& str)
+   .. cpp:function:: void send(const std::vector<byte>& vec)
 
      Create one or more new TLS application records containing the
      provided data and send them. This will eventually result in at
@@ -173,7 +176,6 @@ available:
       Per :rfc:`5705`, *label* should begin with "EXPERIMENTAL" unless
       the label has been standardized in an RFC.
 
-
 .. _tls_client:
 
 TLS Clients
@@ -184,7 +186,7 @@ TLS Clients
    .. cpp:function:: TLS::Client( \
          std::function<void, const byte*, size_t> output_fn, \
          std::function<void, const byte*, size_t> data_cb, \
-         std::function<TLS::Alert, const byte*, size_t> alert_cb,
+         std::function<TLS::Alert, const byte*, size_t> alert_cb, \
          std::function<bool, const TLS::Session&> handshake_cb, \
          TLS::Session_Manager& session_manager, \
          Credentials_Manager& credendials_manager, \
@@ -279,7 +281,7 @@ TLS Servers
    .. cpp:function:: TLS::Server( \
           std::function<void, const byte*, size_t> output_fn, \
           std::function<void, const byte*, size_t> data_cb, \
-          std::function<TLS::Alert, const byte*, size_t> alert_cb,
+          std::function<TLS::Alert, const byte*, size_t> alert_cb, \
           TLS::Session_Manager& session_manager, \
           Credentials_Manager& creds, \
           const TLS::Policy& policy, \

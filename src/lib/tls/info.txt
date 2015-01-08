@@ -68,9 +68,7 @@ tls_version.cpp
 aead
 aes
 asn1
-cbc
 credentials
-cryptobox_psk
 dh
 ecdh
 ecdsa

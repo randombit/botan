@@ -1,16 +1,32 @@
 Version 1.11.13, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* The format of TLS sessions has changed. The PEM formatted version
-  now uses "TLS SESSION" instead of "SSL SESSION" as the header,
-  and the version number of the binary format has also changed.
+* Add DTLS-SRTP negotiation defined in RFC 5764
 
 * Add SHA-512/256
 
-* Add DTLS-SRTP negotiation defined in RFC 5764
+* The format of serialized TLS sessions has changed. Additiionally, PEM
+  formatted sessions now use the label of "TLS SESSION" instead of "SSL SESSION".
 
-* The Python install script added in version 1.11.10 failed to place
-  the headers into a versioned subdirectory.
+* Serialized TLS sessions are now encrypted using AES-256/GCM instead of a
+  CBC+HMAC construction.
+
+* The cryptobox_psk module added in 1.11.4 and previously used for TLS session
+  encryption has been removed.
+
+* When sending a TLS heartbeat message, the number of pad bytes to use can now
+  be specified, making it easier to use for PMTU discovery.
+
+* If available, zero_mem now uses RtlSecureZeroMemory or memset_s instead of a
+  byte-at-a-time loop.
+
+* The functions base64_encode and base64_decode would erroneously
+  throw an exception if passed a zero-length input. Github issue 37.
+
+* The Python install script added in version 1.11.10 failed to place the
+  headers into a versioned subdirectory.
 
 * Fix the install script when running under Python3.
 
+* Avoid code that triggers iterator debugging asserts under MSVC 2013. Github
+  pull 36 from Simon Warta.
