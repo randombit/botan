@@ -1,6 +1,6 @@
 /*
 * Base64 Encoding and Decoding
-* (C) 2010 Jack Lloyd
+* (C) 2010,2015 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -78,7 +78,11 @@ size_t base64_encode(char out[],
 std::string base64_encode(const byte input[],
                           size_t input_length)
    {
-   std::string output((round_up<size_t>(input_length, 3) / 3) * 4, 0);
+   if(input_length == 0)
+      return "";
+
+   const size_t output_length = (round_up<size_t>(input_length, 3) / 3) * 4;
+   std::string output(output_length, 0);
 
    size_t consumed = 0;
    size_t produced = base64_encode(&output[0],
@@ -224,6 +228,9 @@ secure_vector<byte> base64_decode(const char input[],
                                  size_t input_length,
                                  bool ignore_ws)
    {
+   if(input_length == 0)
+      return secure_vector<byte>();
+
    secure_vector<byte> bin((round_up<size_t>(input_length, 4) * 3) / 4);
 
    size_t written = base64_decode(&bin[0],
