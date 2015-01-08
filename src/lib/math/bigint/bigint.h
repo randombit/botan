@@ -275,7 +275,10 @@ class BOTAN_DLL BigInt
      * @param n the bit offset to test
      * @result true, if the bit at position n is set, false otherwise
      */
-     bool get_bit(size_t n) const;
+     bool get_bit(size_t n) const
+        {
+        return ((word_at(n / MP_WORD_BITS) >> (n % MP_WORD_BITS)) & 1);
+        }
 
      /**
      * Return (a maximum of) 32 bits of the complete value
@@ -297,7 +300,11 @@ class BOTAN_DLL BigInt
      * @param n the offset to get a byte from
      * @result byte at offset n
      */
-     byte byte_at(size_t n) const;
+     byte byte_at(size_t n) const
+        {
+        return get_byte(sizeof(word) - (n % sizeof(word)) - 1,
+                        word_at(n / sizeof(word)));
+        }
 
      /**
      * Return the word at a specified position of the internal register
