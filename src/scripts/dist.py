@@ -136,7 +136,7 @@ def parse_args(args):
     parser.add_option('--print-output-names', action='store_true',
                       help='Print output archive filenames to stdout')
 
-    parser.add_option('--archive-types', metavar='LIST', default='tbz,tgz',
+    parser.add_option('--archive-types', metavar='LIST', default='tgz',
                       help='Set archive types to generate (default %default)')
 
     parser.add_option('--pgp-key-id', metavar='KEYID',
