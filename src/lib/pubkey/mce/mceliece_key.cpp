@@ -135,19 +135,17 @@ secure_vector<byte> McEliece_PrivateKey::pkcs8_private_key() const
 
 bool McEliece_PrivateKey::check_key(RandomNumberGenerator& rng, bool) const
    {
-   const McEliece_PublicKey* p_pk = dynamic_cast<const McEliece_PublicKey*>(this);
-
    McEliece_Private_Operation priv_op(*this);
-   McEliece_Public_Operation pub_op(*p_pk, p_pk->get_code_length() );
+   McEliece_Public_Operation pub_op(*this, get_code_length());
 
-   secure_vector<byte> plaintext((p_pk->get_message_word_bit_length()+7)/8);
+   secure_vector<byte> plaintext((this->get_message_word_bit_length()+7)/8);
    rng.randomize(&plaintext[0], plaintext.size() - 1);
-   secure_vector<gf2m> err_pos = create_random_error_positions(p_pk->get_code_length(), p_pk->get_t(), rng);
+   const secure_vector<gf2m> err_pos = create_random_error_positions(this->get_code_length(), this->get_t(), rng);
 
-   mceliece_message_parts parts(err_pos, plaintext, p_pk->get_code_length());
+   mceliece_message_parts parts(err_pos, plaintext, this->get_code_length());
    secure_vector<byte> message_and_error_input = parts.get_concat();
    secure_vector<byte> ciphertext = pub_op.encrypt(&message_and_error_input[0], message_and_error_input.size(), rng);
-   secure_vector<byte> message_and_error_output = priv_op.decrypt(&ciphertext[0], ciphertext.size() );
+   secure_vector<byte> message_and_error_output = priv_op.decrypt(&ciphertext[0], ciphertext.size());
 
    return (message_and_error_input == message_and_error_output);
    }
