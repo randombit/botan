@@ -48,6 +48,15 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
 
    clear_mem(workspace, 2*N);
 
+   /*
+   * If either of cmp0 or cmp1 is zero then z0 or z1 resp is zero here,
+   * resulting in a no-op - z0*z1 will be equal to zero so we don't need to do
+   * anything, clear_mem above already set the correct result.
+   *
+   * However we ignore the result of the comparisons and always perform the
+   * subtractions and recursively multiply to avoid the timing channel.
+   */
+
    //if(cmp0 && cmp1)
       {
       if(cmp0 > 0)
@@ -105,6 +114,8 @@ void karatsuba_sqr(word z[], const word x[], size_t N, word workspace[])
    const s32bit cmp = bigint_cmp(x0, N2, x1, N2);
 
    clear_mem(workspace, 2*N);
+
+   // See comment in karatsuba_mul
 
    //if(cmp)
       {

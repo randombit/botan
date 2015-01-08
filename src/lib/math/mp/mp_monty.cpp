@@ -56,11 +56,26 @@ void bigint_monty_redc(word z[],
          }
       }
 
+   /*
+   * The result might need to be reduced mod p. To avoid a timing
+   * channel, always perform the subtraction. If in the compution
+   * of x - p a borrow is required then x was already < p.
+   *
+   * x - p starts at ws[0] and is p_size+1 bytes long
+   * x starts at ws[p_size+1] and is also p_size+1 bytes log
+   * (that's the copy_mem)
+   *
+   * Select which address to copy from indexing off of the final
+   * borrow.
+   */
+
    word borrow = 0;
    for(size_t i = 0; i != p_size; ++i)
       ws[i] = word_sub(z[p_size + i], p[i], &borrow);
 
    ws[p_size] = word_sub(z[p_size+p_size], 0, &borrow);
+
+   BOTAN_ASSERT(borrow == 0 || borrow == 1, "Expected borrow");
 
    copy_mem(ws + p_size + 1, z + p_size, p_size + 1);
 
