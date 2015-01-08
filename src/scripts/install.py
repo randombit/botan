@@ -18,7 +18,6 @@ import sys
 if 'dont_write_bytecode' in sys.__dict__:
     sys.dont_write_bytecode = True
 
-from botan_version import release_major, release_minor, release_patch
 import combine_relnotes
 
 def parse_command_line(args):
@@ -48,13 +47,6 @@ def parse_command_line(args):
                              help='Set documentation subdir (default %default)')
     install_group.add_option('--pkgconfigdir', default='pkgconfig', metavar='DIR',
                              help='Set pkgconfig subdir (default %default)')
-
-    install_group.add_option('--versioned-include-dir', metavar='SUFFIX_DIR',
-                             default='botan-%d.%d' % (release_major, release_minor),
-                             help='Name of versioned include dir')
-    install_group.add_option('--doc-dir-suffix', metavar='V',
-                             default='-%d.%d.%d' % (release_major, release_minor, release_patch),
-                             help='Set optional suffix on doc dir (default \'%default\')')
 
     install_group.add_option('--umask', metavar='MASK', default='022',
                              help='Umask to set (default %default)')
@@ -117,7 +109,7 @@ def main(args = None):
         logging.debug('Copied %s to %s' % (src, dest))
         os.chmod(dest, exe_mode)
 
-    build_vars = eval(open(os.path.join(options.build_dir, 'build_config.py')).read())
+    cfg = eval(open(os.path.join(options.build_dir, 'build_config.py')).read())
 
     def process_template(template_str):
         class PercentSignTemplate(string.Template):
@@ -125,19 +117,23 @@ def main(args = None):
 
         try:
             template = PercentSignTemplate(template_str)
-            return template.substitute(build_vars)
+            return template.substitute(cfg)
         except KeyError as e:
             raise Exception('Unbound var %s in template' % (e))
         except Exception as e:
             raise Exception('Exception %s in template' % (e))
 
+    ver_major = int(cfg['version_major'])
+    ver_minor = int(cfg['version_minor'])
+    ver_patch = int(cfg['version_patch'])
+
     bin_dir = os.path.join(options.destdir, options.bindir)
     lib_dir = os.path.join(options.destdir, options.libdir)
     doc_dir = os.path.join(options.destdir, options.docdir)
     include_dir = os.path.join(options.destdir, options.includedir)
-    botan_doc_dir = os.path.join(doc_dir, 'botan' + options.doc_dir_suffix)
+    botan_doc_dir = os.path.join(doc_dir, 'botan-%d.%d.%d' % (ver_major, ver_minor, ver_patch))
 
-    versioned_include_dir = os.path.join(include_dir, options.versioned_include_dir)
+    versioned_include_dir = os.path.join(include_dir, 'botan-%d.%d' % (ver_major, ver_minor))
 
     botan_include_dir = os.path.join(versioned_include_dir, 'botan')
 
@@ -158,7 +154,7 @@ def main(args = None):
     static_lib = process_template('%{lib_prefix}%{libname}.%{static_suffix}')
     shutil.copyfile(static_lib, os.path.join(lib_dir, os.path.basename(static_lib)))
 
-    if bool(build_vars['with_shared_lib']):
+    if bool(cfg['with_shared_lib']):
         shared_lib = process_template('%{lib_prefix}%{libname}.%{so_suffix}.%{so_abi_rev}.%{version_patch}')
         soname = process_template('%{lib_prefix}%{libname}.%{so_suffix}.%{so_abi_rev}')
         baselib = process_template('%{lib_prefix}%{libname}.%{so_suffix}')
@@ -189,18 +185,18 @@ def main(args = None):
 
     copy_executable(os.path.join(out_dir, app_exe), os.path.join(bin_dir, app_exe))
 
-    if 'botan_config' in build_vars:
-        copy_executable(build_vars['botan_config'],
-                        os.path.join(bin_dir, os.path.basename(build_vars['botan_config'])))
+    if 'botan_config' in cfg:
+        copy_executable(cfg['botan_config'],
+                        os.path.join(bin_dir, os.path.basename(cfg['botan_config'])))
 
-    if 'botan_pkgconfig' in build_vars:
+    if 'botan_pkgconfig' in cfg:
         pkgconfig_dir = os.path.join(options.destdir, options.libdir, options.pkgconfigdir)
         makedirs(pkgconfig_dir)
-        shutil.copyfile(build_vars['botan_pkgconfig'],
-                        os.path.join(pkgconfig_dir, os.path.basename(build_vars['botan_pkgconfig'])))
+        shutil.copyfile(cfg['botan_pkgconfig'],
+                        os.path.join(pkgconfig_dir, os.path.basename(cfg['botan_pkgconfig'])))
 
     shutil.rmtree(botan_doc_dir, True)
-    shutil.copytree(build_vars['doc_output_dir'], botan_doc_dir)
+    shutil.copytree(cfg['doc_output_dir'], botan_doc_dir)
 
     with open(os.path.join(botan_doc_dir, 'license.txt'), 'w+') as lic:
         lic.write(license_text('doc/license.rst'))
@@ -208,7 +204,7 @@ def main(args = None):
     with combine_relnotes.open_for_utf8(os.path.join(botan_doc_dir, 'news.txt'), 'w+') as news:
         news.write(combine_relnotes.combine_relnotes('doc/relnotes', False))
 
-    logging.info('Botan %s installation complete', build_vars['version'])
+    logging.info('Botan %s installation complete', cfg['version'])
 
 if __name__ == '__main__':
     try:
