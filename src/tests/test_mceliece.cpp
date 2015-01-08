@@ -7,6 +7,8 @@
 #include <botan/oids.h>
 #include <botan/mceliece.h>
 #include <botan/mce_kem.h>
+#include <botan/mceies.h>
+#include <botan/loadstor.h>
 
 #include <botan/hex.h>
 
@@ -20,7 +22,7 @@ using namespace Botan;
 
 namespace {
 
-const size_t MCE_RUNS = 10;
+const size_t MCE_RUNS = 5;
 
 size_t test_mceliece_message_parts(RandomNumberGenerator& rng, size_t code_length, size_t error_weight)
    {
@@ -51,36 +53,11 @@ size_t test_mceliece_message_parts(RandomNumberGenerator& rng, size_t code_lengt
    return 0;
    }
 
-size_t test_mceliece_kem(RandomNumberGenerator& rng, u32bit code_length, u32bit t)
+size_t test_mceliece_kem(const McEliece_PrivateKey& sk,
+                         const McEliece_PublicKey& pk,
+                         RandomNumberGenerator& rng)
    {
    size_t fails = 0;
-
-   McEliece_PrivateKey sk1(rng, code_length, t);
-   McEliece_PublicKey& pk1 = dynamic_cast<McEliece_PrivateKey&>(sk1);
-
-   const std::vector<byte> pk_enc = pk1.x509_subject_public_key();
-   const secure_vector<byte> sk_enc = sk1.pkcs8_private_key();
-
-   McEliece_PublicKey pk(pk_enc);
-   McEliece_PrivateKey sk(sk_enc);
-
-   if(pk1 != pk)
-      {
-      std::cout << "decoded McEliece public key differs from original one" << std::endl;
-      ++fails;
-      }
-
-   if(sk1 != sk)
-      {
-      std::cout << "decoded McEliece private key differs from original one" << std::endl;
-      ++fails;
-      }
-
-   if(!sk.check_key(rng, false))
-      {
-      std::cout << "error calling check key on McEliece key" << std::endl;
-      ++fails;
-      }
 
    McEliece_KEM_Encryptor pub_op(pk);
    McEliece_KEM_Decryptor priv_op(sk);
@@ -126,23 +103,23 @@ size_t test_mceliece_kem(RandomNumberGenerator& rng, u32bit code_length, u32bit 
    return fails;
    }
 
-size_t test_mceliece_raw(RandomNumberGenerator& rng, size_t code_length, size_t t)
+size_t test_mceliece_raw(const McEliece_PrivateKey& sk,
+                         const McEliece_PublicKey& pk,
+                         RandomNumberGenerator& rng)
    {
-   McEliece_PrivateKey sk(rng, code_length, t);
-   McEliece_PublicKey* p_pk = dynamic_cast<McEliece_PublicKey*>(&sk);
-
+   const size_t code_length = pk.get_code_length();
    McEliece_Private_Operation priv_op(sk);
-   McEliece_Public_Operation pub_op(*p_pk, code_length );
+   McEliece_Public_Operation pub_op(pk, code_length);
    size_t err_cnt = 0;
 
    for(size_t i = 0; i != MCE_RUNS; i++)
       {
-      secure_vector<byte> plaintext((p_pk->get_message_word_bit_length()+7)/8);
+      secure_vector<byte> plaintext((pk.get_message_word_bit_length()+7)/8);
       rng.randomize(&plaintext[0], plaintext.size() - 1);
-      secure_vector<gf2m> err_pos = create_random_error_positions(p_pk->get_code_length(), p_pk->get_t(), rng);
+      secure_vector<gf2m> err_pos = create_random_error_positions(code_length, pk.get_t(), rng);
 
 
-      mceliece_message_parts parts(err_pos, plaintext, p_pk->get_code_length());
+      mceliece_message_parts parts(err_pos, plaintext, code_length);
       secure_vector<byte> message_and_error_input = parts.get_concat();
       secure_vector<byte> ciphertext = pub_op.encrypt(&message_and_error_input[0], message_and_error_input.size(), rng);
       //std::cout << "ciphertext byte length = " << ciphertext.size() << std::endl;
@@ -174,6 +151,54 @@ size_t test_mceliece_raw(RandomNumberGenerator& rng, size_t code_length, size_t 
    return err_cnt;
    }
 
+size_t test_mceies(const McEliece_PrivateKey& sk,
+                   const McEliece_PublicKey& pk,
+                   RandomNumberGenerator& rng)
+   {
+
+   size_t fails = 0;
+
+   for(size_t i = 0; i != 5; ++i)
+      {
+      byte ad[8];
+      store_be(static_cast<u64bit>(i), ad);
+      const size_t ad_len = sizeof(ad);
+
+      const secure_vector<byte> pt = rng.random_vec(rng.next_byte());
+      const secure_vector<byte> ct = mceies_encrypt(pk, pt, ad, ad_len, rng);
+      const secure_vector<byte> dec = mceies_decrypt(sk, ct, ad, ad_len);
+
+      if(pt != dec)
+         {
+         std::cout << "MCEIES " << hex_encode(pt) << " != " << hex_encode(dec) << "\n";
+         ++fails;
+         }
+
+      secure_vector<byte> bad_ct = ct;
+      for(size_t j = 0; j != 2; ++j)
+         {
+         bad_ct = ct;
+
+         byte nonzero = 0;
+         while(nonzero == 0)
+            nonzero = rng.next_byte();
+
+         bad_ct[rng.next_byte() % bad_ct.size()] ^= nonzero;
+
+         try
+            {
+            mceies_decrypt(sk, bad_ct, ad, ad_len);
+            std::cout << "Successfully decrypted manipulated ciphertext!\n";
+            ++fails;
+            }
+         catch(std::exception& e) { /* Yay */ }
+
+         bad_ct[i] ^= nonzero;
+         }
+      }
+
+   return fails;
+   }
 
 }
 
@@ -181,7 +206,7 @@ size_t test_mceliece()
    {
    auto& rng = test_rng();
 
-   size_t  err_cnt = 0;
+   size_t  fails = 0;
    size_t params__n__t_min_max[] = {
       256, 5, 15,
       512, 5, 33,
@@ -202,38 +227,75 @@ size_t test_mceliece()
 
          try
             {
-            err_cnt += test_mceliece_message_parts(rng, code_length, t);
+            fails += test_mceliece_message_parts(rng, code_length, t);
             }
          catch(std::exception& e)
             {
             std::cout << e.what();
-            err_cnt++;
+            fails++;
+            }
+
+         McEliece_PrivateKey sk1(rng, code_length, t);
+         const McEliece_PublicKey& pk1 = sk1;
+
+         const std::vector<byte> pk_enc = pk1.x509_subject_public_key();
+         const secure_vector<byte> sk_enc = sk1.pkcs8_private_key();
+
+         McEliece_PublicKey pk(pk_enc);
+         McEliece_PrivateKey sk(sk_enc);
+
+         if(pk1 != pk)
+            {
+            std::cout << "Decoded McEliece public key differs from original one" << std::endl;
+            ++fails;
+            }
+
+         if(sk1 != sk)
+            {
+            std::cout << "Decoded McEliece private key differs from original one" << std::endl;
+            ++fails;
+            }
+
+         if(!sk.check_key(rng, false))
+            {
+            std::cout << "Error calling check key on McEliece key" << std::endl;
+            ++fails;
             }
 
          try
             {
-            err_cnt += test_mceliece_raw(rng, code_length, t);
+            fails += test_mceliece_raw(sk, pk, rng);
             }
          catch(std::exception& e)
             {
             std::cout << e.what();
-            err_cnt++;
+            fails++;
             }
 
          try
             {
-            err_cnt += test_mceliece_kem(rng, code_length, t);
+            fails += test_mceliece_kem(sk, pk, rng);
             }
          catch(std::exception& e)
             {
             std::cout << e.what();
-            err_cnt++;
+            fails++;
             }
 
-         tests += 3;
+         try
+            {
+            fails += test_mceies(sk, pk, rng);
+            }
+         catch(std::exception& e)
+            {
+            std::cout << e.what();
+            fails++;
+            }
+
+         tests += 4;
          }
       }
 
-   test_report("McEliece", tests, err_cnt);
-   return err_cnt;
+   test_report("McEliece", tests, fails);
+   return fails;
    }
