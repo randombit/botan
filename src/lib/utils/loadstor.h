@@ -622,6 +622,48 @@ inline void store_be(byte out[], T x0, T x1, T x2, T x3,
    store_be(x7, out + (7 * sizeof(T)));
    }
 
+template<typename T>
+void copy_out_be(byte out[], size_t out_bytes, const T in[])
+   {
+   while(out_bytes >= sizeof(T))
+      {
+      store_be(in[0], out);
+      out += sizeof(T);
+      out_bytes -= sizeof(T);
+      in += 1;
+   }
+
+   for(size_t i = 0; i != out_bytes; ++i)
+      out[i] = get_byte(i%8, in[0]);
+   }
+
+template<typename T, typename Alloc>
+void copy_out_vec_be(byte out[], size_t out_bytes, const std::vector<T, Alloc>& in)
+   {
+   copy_out_be(out, out_bytes, &in[0]);
+   }
+
+template<typename T>
+void copy_out_le(byte out[], size_t out_bytes, const T in[])
+   {
+   while(out_bytes >= sizeof(T))
+      {
+      store_le(in[0], out);
+      out += sizeof(T);
+      out_bytes -= sizeof(T);
+      in += 1;
+   }
+
+   for(size_t i = 0; i != out_bytes; ++i)
+      out[i] = get_byte(sizeof(T) - 1 - (i % 8), in[0]);
+   }
+
+template<typename T, typename Alloc>
+void copy_out_vec_le(byte out[], size_t out_bytes, const std::vector<T, Alloc>& in)
+   {
+   copy_out_le(out, out_bytes, &in[0]);
+   }
+
 }
 
 #endif

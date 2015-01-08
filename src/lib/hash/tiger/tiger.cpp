@@ -75,8 +75,7 @@ void Tiger::compress_n(const byte input[], size_t blocks)
 */
 void Tiger::copy_out(byte output[])
    {
-   for(size_t i = 0; i != output_length(); ++i)
-      output[i] = get_byte(7 - (i % 8), digest[i/8]);
+   copy_out_vec_le(output, output_length(), digest);
    }
 
 /*

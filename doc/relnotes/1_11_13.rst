@@ -5,6 +5,8 @@ Version 1.11.13, Not Yet Released
   now uses "TLS SESSION" instead of "SSL SESSION" as the header,
   and the version number of the binary format has also changed.
 
+* Add SHA-512/256
+
 * Add DTLS-SRTP negotiation defined in RFC 5764
 
 * The Python install script added in version 1.11.10 failed to place

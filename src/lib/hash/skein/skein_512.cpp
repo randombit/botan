@@ -158,10 +158,7 @@ void Skein_512::final_result(byte out[])
    reset_tweak(SKEIN_OUTPUT, true);
    ubi_512(counter, sizeof(counter));
 
-   const size_t out_bytes = output_bits / 8;
-
-   for(size_t i = 0; i != out_bytes; ++i)
-      out[i] = get_byte(7-i%8, m_threefish->m_K[i/8]);
+   copy_out_vec_le(out, output_bits / 8, m_threefish->m_K);
 
    buf_pos = 0;
    initial_block();

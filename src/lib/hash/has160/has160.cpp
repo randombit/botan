@@ -144,8 +144,7 @@ void HAS_160::compress_n(const byte input[], size_t blocks)
 */
 void HAS_160::copy_out(byte output[])
    {
-   for(size_t i = 0; i != output_length(); i += 4)
-      store_le(digest[i/4], output + i);
+   copy_out_vec_le(output, output_length(), digest);
    }
 
 /*

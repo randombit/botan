@@ -140,8 +140,7 @@ void SHA_160::compress_n(const byte input[], size_t blocks)
 */
 void SHA_160::copy_out(byte output[])
    {
-   for(size_t i = 0; i != output_length(); i += 4)
-      store_be(digest[i/4], output + i);
+   copy_out_vec_be(output, output_length(), digest);
    }
 
 /*

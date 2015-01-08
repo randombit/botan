@@ -1,6 +1,6 @@
 /*
 * SHA-{384,512}
-* (C) 1999-2011 Jack Lloyd
+* (C) 1999-2011,2015 Jack Lloyd
 *
 * Distributed under the terms of the Botan license
 */
@@ -173,70 +173,73 @@ void compress(secure_vector<u64bit>& digest,
 
 }
 
-/*
-* SHA-384 compression function
-*/
+void SHA_512_256::compress_n(const byte input[], size_t blocks)
+   {
+   SHA2_64::compress(m_digest, input, blocks);
+   }
+
 void SHA_384::compress_n(const byte input[], size_t blocks)
    {
-   SHA2_64::compress(digest, input, blocks);
+   SHA2_64::compress(m_digest, input, blocks);
    }
 
-/*
-* Copy out the digest
-*/
+void SHA_512::compress_n(const byte input[], size_t blocks)
+   {
+   SHA2_64::compress(m_digest, input, blocks);
+   }
+
+void SHA_512_256::copy_out(byte output[])
+   {
+   copy_out_vec_be(output, output_length(), m_digest);
+   }
+
 void SHA_384::copy_out(byte output[])
    {
-   for(size_t i = 0; i != output_length(); i += 8)
-      store_be(digest[i/8], output + i);
+   copy_out_vec_be(output, output_length(), m_digest);
    }
 
-/*
-* Clear memory of sensitive data
-*/
+void SHA_512::copy_out(byte output[])
+   {
+   copy_out_vec_be(output, output_length(), m_digest);
+   }
+
+void SHA_512_256::clear()
+   {
+   MDx_HashFunction::clear();
+   m_digest[0] = 0x22312194FC2BF72C;
+   m_digest[1] = 0x9F555FA3C84C64C2;
+   m_digest[2] = 0x2393B86B6F53B151;
+   m_digest[3] = 0x963877195940EABD;
+   m_digest[4] = 0x96283EE2A88EFFE3;
+   m_digest[5] = 0xBE5E1E2553863992;
+   m_digest[6] = 0x2B0199FC2C85B8AA;
+   m_digest[7] = 0x0EB72DDC81C52CA2;
+   }
+
 void SHA_384::clear()
    {
    MDx_HashFunction::clear();
-   digest[0] = 0xCBBB9D5DC1059ED8;
-   digest[1] = 0x629A292A367CD507;
-   digest[2] = 0x9159015A3070DD17;
-   digest[3] = 0x152FECD8F70E5939;
-   digest[4] = 0x67332667FFC00B31;
-   digest[5] = 0x8EB44A8768581511;
-   digest[6] = 0xDB0C2E0D64F98FA7;
-   digest[7] = 0x47B5481DBEFA4FA4;
+   m_digest[0] = 0xCBBB9D5DC1059ED8;
+   m_digest[1] = 0x629A292A367CD507;
+   m_digest[2] = 0x9159015A3070DD17;
+   m_digest[3] = 0x152FECD8F70E5939;
+   m_digest[4] = 0x67332667FFC00B31;
+   m_digest[5] = 0x8EB44A8768581511;
+   m_digest[6] = 0xDB0C2E0D64F98FA7;
+   m_digest[7] = 0x47B5481DBEFA4FA4;
    }
 
-/*
-* SHA-512 compression function
-*/
-void SHA_512::compress_n(const byte input[], size_t blocks)
-   {
-   SHA2_64::compress(digest, input, blocks);
-   }
-
-/*
-* Copy out the digest
-*/
-void SHA_512::copy_out(byte output[])
-   {
-   for(size_t i = 0; i != output_length(); i += 8)
-      store_be(digest[i/8], output + i);
-   }
-
-/*
-* Clear memory of sensitive data
-*/
 void SHA_512::clear()
    {
    MDx_HashFunction::clear();
-   digest[0] = 0x6A09E667F3BCC908;
-   digest[1] = 0xBB67AE8584CAA73B;
-   digest[2] = 0x3C6EF372FE94F82B;
-   digest[3] = 0xA54FF53A5F1D36F1;
-   digest[4] = 0x510E527FADE682D1;
-   digest[5] = 0x9B05688C2B3E6C1F;
-   digest[6] = 0x1F83D9ABFB41BD6B;
-   digest[7] = 0x5BE0CD19137E2179;
+   m_digest[0] = 0x6A09E667F3BCC908;
+   m_digest[1] = 0xBB67AE8584CAA73B;
+   m_digest[2] = 0x3C6EF372FE94F82B;
+   m_digest[3] = 0xA54FF53A5F1D36F1;
+   m_digest[4] = 0x510E527FADE682D1;
+   m_digest[5] = 0x9B05688C2B3E6C1F;
+   m_digest[6] = 0x1F83D9ABFB41BD6B;
+   m_digest[7] = 0x5BE0CD19137E2179;
    }
 
 }

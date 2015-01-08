@@ -165,6 +165,8 @@ HashFunction* Core_Engine::find_hash(const SCAN_Name& request,
       return new SHA_384;
    if(request.algo_name() == "SHA-512")
       return new SHA_512;
+   if(request.algo_name() == "SHA-512-256")
+      return new SHA_512_256;
 #endif
 
 #if defined(BOTAN_HAS_TIGER)

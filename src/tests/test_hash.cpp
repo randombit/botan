@@ -58,7 +58,8 @@ size_t hash_test(const std::string& algo,
 
       if(h != hex_decode_locked(out_hex))
          {
-         std::cout << algo << " " << provider << " got " << hex_encode(h) << " != " << out_hex << "\n";
+         std::cout << algo << " " << provider << " got " << hex_encode(h) << " != " << out_hex
+                   << " (with discarded input)\n";
          ++fails;
          }
       }
