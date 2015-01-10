@@ -11,6 +11,8 @@
 #include <botan/asn1_str.h>
 #include <botan/pem.h>
 #include <botan/aead.h>
+#include <botan/sha2_32.h>
+#include <botan/hmac.h>
 
 namespace Botan {
 
@@ -155,12 +157,18 @@ Session::encrypt(const SymmetricKey& key, RandomNumberGenerator& rng) const
    {
    std::unique_ptr<AEAD_Mode> aead(get_aead("AES-256/GCM", ENCRYPTION));
    const size_t nonce_len = aead->default_nonce_length();
-   aead->set_key(key);
 
    const secure_vector<byte> nonce = rng.random_vec(nonce_len);
+   const secure_vector<byte> bits = this->DER_encode();
 
-   secure_vector<byte> buf = rng.random_vec(nonce_len);
-   buf += this->DER_encode();
+   // Support any length key for input
+   HMAC hmac(new SHA_256);
+   hmac.set_key(key);
+   hmac.update(nonce);
+   aead->set_key(hmac.final());
+
+   secure_vector<byte> buf = nonce;
+   buf += bits;
    aead->start(&buf[0], nonce_len);
    aead->finish(buf, nonce_len);
    return unlock(buf);
@@ -176,7 +184,11 @@ Session Session::decrypt(const byte in[], size_t in_len, const SymmetricKey& key
       if(in_len < nonce_len + aead->tag_size())
          throw Decoding_Error("Encrypted session too short to be valid");
 
-      aead->set_key(key);
+      // Support any length key for input
+      HMAC hmac(new SHA_256);
+      hmac.set_key(key);
+      hmac.update(in, nonce_len); // nonce bytes
+      aead->set_key(hmac.final());
 
       aead->start(in, nonce_len);
       secure_vector<byte> buf(in + nonce_len, in + in_len);
