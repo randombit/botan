@@ -269,9 +269,7 @@ TLS Clients
    resized as needed to process inputs). Otherwise some reasonable
    default is used.
 
-A simple TLS client example:
-
-.. literalinclude:: ../../src/cmd/tls_client.cpp
+A TLS client example using BSD sockets is in `src/cmd/tls_client.cpp`
 
 TLS Servers
 ----------------------------------------
@@ -309,10 +307,8 @@ not until they actually receive a hello without this parameter.
    renegotiation, but might change across different connections using
    that session.
 
-An example TLS server that can handle concurrent connections using
-asio follows:
-
-.. literalinclude:: ../../src/cmd/tls_server_asio.cpp
+An example TLS server implementation using asio is available in
+`src/cmd/tls_proxy.cpp`.
 
 .. _tls_sessions:
 

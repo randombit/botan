@@ -1,6 +1,9 @@
 Version 1.11.13, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* The command line tool now has `tls_proxy` which negotiates TLS with
+  clients and forwards the plaintext to a specified port.
+
 * Add MCEIES, a McEliece-based integrated encryption system using
   AES-256 in OCB mode for message encryption/authentication.
 
@@ -9,7 +12,7 @@ Version 1.11.13, Not Yet Released
 * Add SHA-512/256
 
 * The format of serialized TLS sessions has changed. Additiionally, PEM
-  formatted sessions now use the label of "TLS SESSION" instead of "SSL SESSION".
+  formatted sessions now use the label of "TLS SESSION" instead of "SSL SESSION"
 
 * Serialized TLS sessions are now encrypted using AES-256/GCM instead of a
   CBC+HMAC construction.
