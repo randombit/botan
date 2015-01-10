@@ -66,9 +66,9 @@ install: $(LIBRARIES) docs
 website:
 	rm -rf $(WEBSITE_SRC_DIR) $(WEBSITE_DIR)
 	mkdir -p $(WEBSITE_SRC_DIR)
-	cp -r %{doc_dir}/*.rst %{doc_dir}/relnotes %{doc_dir}/website/*.rst $(WEBSITE_SRC_DIR)
-	sphinx-build -q -c $(SPHINX_CONFIG) -b html $(WEBSITE_SRC_DIR) $(WEBSITE_DIR)
-	sphinx-build -q -c $(SPHINX_CONFIG) -b html %{doc_dir}/manual $(WEBSITE_DIR)/manual
+	cp -r %{doc_dir}/*.txt %{doc_dir}/*.rst %{doc_dir}/relnotes %{doc_dir}/website/*.rst $(WEBSITE_SRC_DIR)
+	sphinx-build -c $(SPHINX_CONFIG) -b html $(WEBSITE_SRC_DIR) $(WEBSITE_DIR)
+	sphinx-build -c $(SPHINX_CONFIG) -b html %{doc_dir}/manual $(WEBSITE_DIR)/manual
 	rm -rf $(WEBSITE_DIR)/.doctrees
 	rm -rf $(WEBSITE_DIR)/manual/.doctrees
 	rm -f $(WEBSITE_DIR)/.buildinfo

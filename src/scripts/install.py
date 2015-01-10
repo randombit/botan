@@ -198,8 +198,8 @@ def main(args = None):
     shutil.rmtree(botan_doc_dir, True)
     shutil.copytree(cfg['doc_output_dir'], botan_doc_dir)
 
-    with open(os.path.join(botan_doc_dir, 'license.txt'), 'w+') as lic:
-        lic.write(license_text('doc/license.rst'))
+    for f in [f for f in os.listdir(cfg['doc_dir']) if f.endswith('.txt')]:
+        shutil.copyfile(os.path.join(cfg['doc_dir'], f), os.path.join(botan_doc_dir, f))
 
     with combine_relnotes.open_for_utf8(os.path.join(botan_doc_dir, 'news.txt'), 'w+') as news:
         news.write(combine_relnotes.combine_relnotes('doc/relnotes', False))
