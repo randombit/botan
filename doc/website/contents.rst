@@ -14,5 +14,5 @@ Contents
    credits
    users
    algos
-   relnotes/contents
+   news.rst
 

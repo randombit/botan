@@ -1,5 +1,5 @@
 
-Welcome
+Botan: Crypto and TLS for C++11
 ========================================
 
 Botan is a crypto library for C++ released under the permissive

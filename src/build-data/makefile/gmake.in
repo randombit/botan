@@ -67,6 +67,7 @@ website:
 	rm -rf $(WEBSITE_SRC_DIR) $(WEBSITE_DIR)
 	mkdir -p $(WEBSITE_SRC_DIR)
 	cp -r %{doc_dir}/*.txt %{doc_dir}/*.rst %{doc_dir}/relnotes %{doc_dir}/website/*.rst $(WEBSITE_SRC_DIR)
+	./src/scripts/combine_relnotes.py %{doc_dir}/relnotes > $(WEBSITE_SRC_DIR)/news.rst
 	sphinx-build -c $(SPHINX_CONFIG) -b html $(WEBSITE_SRC_DIR) $(WEBSITE_DIR)
 	sphinx-build -c $(SPHINX_CONFIG) -b html %{doc_dir}/manual $(WEBSITE_DIR)/manual
 	rm -rf $(WEBSITE_DIR)/.doctrees
