@@ -73,20 +73,6 @@ def makedirs(dirname, exist_ok = True):
         if e.errno != errno.EEXIST or not exist_ok:
             raise e
 
-def license_text(rst_license):
-    end_of_rst = 'terms::'
-    contents = open(rst_license).read()
-    x = contents.find(end_of_rst) + len(end_of_rst)
-
-    lines = contents[x:].split('\n')
-
-    while lines[0] == '':
-        lines.pop(0)
-
-    leading_ws = min([len(l) - len(l.lstrip(' ')) for l in lines if l != ''])
-
-    return '\n'.join([l[leading_ws:] for l in lines])
-
 def main(args = None):
     if args is None:
         args = sys.argv
