@@ -2,7 +2,7 @@
 * An algorithm cache (used by Algorithm_Factory)
 * (C) 2008-2009,2011 Jack Lloyd
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #ifndef BOTAN_ALGORITHM_CACHE_TEMPLATE_H__

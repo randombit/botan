@@ -2,7 +2,7 @@
  * Quick and dirty test for SQLite3 encryption codec.
  * (C) 2010 Olivier de Gaalon
  *
- * Distributed under the terms of the Botan license
+ * Botan is released under the Simplified BSD License (see license.txt)
  */
 
 #define SQLITE_HAS_CODEC 1

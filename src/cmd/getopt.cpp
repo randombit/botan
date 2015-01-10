@@ -1,3 +1,9 @@
+/*
+* (C) 2009 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
 #include "getopt.h"
 #include <iostream>
 

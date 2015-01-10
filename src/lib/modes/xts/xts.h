@@ -2,7 +2,7 @@
 * XTS mode, from IEEE P1619
 * (C) 2009,2013 Jack Lloyd
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #ifndef BOTAN_MODE_XTS_H__

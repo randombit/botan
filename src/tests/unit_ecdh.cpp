@@ -4,7 +4,7 @@
 * (C) 2007 Manuel Hartl (hartl@flexsecure.de)
 *     2008 Jack Lloyd
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include "tests.h"

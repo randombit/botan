@@ -3,7 +3,7 @@
 * (C) 2007 FlexSecure GmbH
 *     2008 Jack Lloyd
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #ifndef BOTAN_CVC_EAC_SELF_H__

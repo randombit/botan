@@ -2,7 +2,7 @@
 * EntropySource
 * (C) 2008-2009,2014 Jack Lloyd
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #ifndef BOTAN_ENTROPY_SOURCE_BASE_H__

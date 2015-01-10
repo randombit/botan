@@ -5,7 +5,7 @@
 * (tls-parameters.txt hash 4bc98b6f75ad5b63952b5f457fa7adbfef60f095)
 * by ./src/scripts/tls_suite_info.py on 2014-12-31
 *
-* Released under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/tls_ciphersuite.h>

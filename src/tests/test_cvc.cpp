@@ -3,6 +3,8 @@
 *
 * (C) 2008 Falko Strenzke (strenzke@flexsecure.de)
 *     2008 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include "tests.h"

@@ -2,7 +2,7 @@
 * SQLite3 TLS Session Manager
 * (C) 2012 Jack Lloyd
 *
-* Released under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #ifndef BOTAN_TLS_SQLITE3_SESSION_MANAGER_H__

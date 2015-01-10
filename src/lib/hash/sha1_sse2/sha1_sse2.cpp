@@ -2,7 +2,7 @@
 * SHA-1 using SSE2
 * (C) 2009-2011 Jack Lloyd
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 *
 * Based on public domain code by Dean Gaudet
 *    (http://arctic.org/~dean/crypto/sha1.html)

@@ -4,7 +4,7 @@
 *     2001-2007 Jack Lloyd
 *     2012 Vojtech Kral
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #ifndef BOTAN_LZMA_H__

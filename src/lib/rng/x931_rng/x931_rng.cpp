@@ -2,7 +2,7 @@
 * ANSI X9.31 RNG
 * (C) 1999-2009,2014 Jack Lloyd
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/x931_rng.h>

@@ -3,7 +3,7 @@
 """
 Configuration program for botan (http://botan.randombit.net/)
   (C) 2009,2010,2011,2012,2013,2014 Jack Lloyd
-  Distributed under the terms of the Botan license
+  Botan is released under the Simplified BSD License (see license.txt)
 
 Tested with CPython 2.6, 2.7, 3.2, 3.3 and PyPy 1.5
 
@@ -1751,7 +1751,7 @@ def generate_amalgamation(build_config):
 * Botan %s Amalgamation
 * (C) 1999-2013,2014 Jack Lloyd and others
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 """ % (build_config.version_string)
 

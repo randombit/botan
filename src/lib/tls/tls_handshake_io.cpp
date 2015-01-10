@@ -2,7 +2,7 @@
 * TLS Handshake IO
 * (C) 2012,2014 Jack Lloyd
 *
-* Released under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/internal/tls_handshake_io.h>

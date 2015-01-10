@@ -3,7 +3,7 @@
 * (C) 1999-2007,2011 Jack Lloyd
 *     2012 Markus Wanner
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/internal/out_buf.h>

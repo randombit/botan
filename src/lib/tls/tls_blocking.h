@@ -2,7 +2,7 @@
 * TLS Blocking API
 * (C) 2013 Jack Lloyd
 *
-* Released under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #ifndef BOTAN_TLS_BLOCKING_CHANNELS_H__

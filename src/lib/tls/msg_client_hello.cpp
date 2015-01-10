@@ -2,7 +2,7 @@
 * TLS Hello Request and Client Hello Messages
 * (C) 2004-2011 Jack Lloyd
 *
-* Released under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/internal/tls_messages.h>

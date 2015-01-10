@@ -4,7 +4,7 @@
 *
 * Based on the public domain reference implemenation
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/aes.h>

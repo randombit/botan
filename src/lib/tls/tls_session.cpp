@@ -2,7 +2,7 @@
 * TLS Session State
 * (C) 2011-2012,2015 Jack Lloyd
 *
-* Released under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/tls_session.h>

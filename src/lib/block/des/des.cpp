@@ -5,7 +5,7 @@
 * Based on a public domain implemenation by Phil Karn (who in turn
 * credited Richard Outerbridge and Jim Gillogly)
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/des.h>

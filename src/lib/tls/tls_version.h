@@ -2,7 +2,7 @@
 * TLS Protocol Version Management
 * (C) 2012 Jack Lloyd
 *
-* Released under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #ifndef BOTAN_TLS_PROTOCOL_VERSION_H__

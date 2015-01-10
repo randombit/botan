@@ -2,7 +2,7 @@
 * X.509 Certificate Path Validation
 * (C) 2010,2011,2012,2014 Jack Lloyd
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/x509path.h>

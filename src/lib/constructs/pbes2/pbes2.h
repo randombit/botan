@@ -2,7 +2,7 @@
 * PKCS #5 v2.0 PBE
 * (C) 1999-2007,2014 Jack Lloyd
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #ifndef BOTAN_PBE_PKCS_v20_H__

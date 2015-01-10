@@ -5,7 +5,7 @@ Used to generate lib/tls/tls_suite_info.cpp from IANA params
 
 (C) 2011, 2012, 2013, 2014 Jack Lloyd
 
-Distributed under the terms of the Botan license
+Botan is released under the Simplified BSD License (see license.txt)
 """
 
 import sys

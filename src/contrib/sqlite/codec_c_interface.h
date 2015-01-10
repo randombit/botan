@@ -2,7 +2,7 @@
  * Encryption codec class C interface
  * (C) 2010 Olivier de Gaalon
  *
- * Distributed under the terms of the Botan license
+ * Botan is released under the Simplified BSD License (see license.txt)
  */
 
 #ifndef _CODEC_C_INTERFACE_H_

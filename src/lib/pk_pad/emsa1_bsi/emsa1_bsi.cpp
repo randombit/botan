@@ -3,7 +3,7 @@
 * (C) 1999-2008 Jack Lloyd
 *     2008 Falko Strenzke, FlexSecure GmbH
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/emsa1_bsi.h>

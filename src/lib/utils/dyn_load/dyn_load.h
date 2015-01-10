@@ -2,7 +2,7 @@
 * Dynamically Loaded Object
 * (C) 2010 Jack Lloyd
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #ifndef BOTAN_DYNAMIC_LOADER_H__

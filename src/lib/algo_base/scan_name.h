@@ -2,7 +2,7 @@
 * SCAN Name Abstraction
 * (C) 2008 Jack Lloyd
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #ifndef BOTAN_SCAN_NAME_H__

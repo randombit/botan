@@ -2,7 +2,7 @@
  * (C) 2014 cryptosource GmbH
  * (C) 2014 Falko Strenzke fstrenzke@cryptosource.de
  *
- * Distributed under the terms of the Botan license
+ * Botan is released under the Simplified BSD License (see license.txt)
  */
 
 #ifndef BOTAN_GF2M_ROOTFIND_DCMP_H__

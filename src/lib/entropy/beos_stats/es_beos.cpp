@@ -2,7 +2,7 @@
 * BeOS EntropySource
 * (C) 1999-2008 Jack Lloyd
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/internal/es_beos.h>

@@ -2,7 +2,7 @@
 * RFC 6979 Deterministic Nonce Generator
 * (C) 2014 Jack Lloyd
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #ifndef BOTAN_RFC6979_GENERATOR_H__

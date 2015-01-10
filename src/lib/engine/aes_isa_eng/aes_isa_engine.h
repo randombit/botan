@@ -2,7 +2,7 @@
 * Engine for AES instructions
 * (C) 2009 Jack Lloyd
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #ifndef BOTAN_AES_ISA_ENGINE_H__

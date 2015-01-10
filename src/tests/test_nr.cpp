@@ -1,9 +1,14 @@
+/*
+* (C) 2014,2015 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
 #include "tests.h"
 #include "test_pubkey.h"
 
 #if defined(BOTAN_HAS_NYBERG_RUEPPEL)
   #include <botan/nr.h>
-  
   #include <botan/pubkey.h>
   #include <botan/dl_group.h>
 #endif

@@ -1,3 +1,8 @@
+/*
+* (C) 2014,2015 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
 
 #ifndef BOTAN_TEST_PUBKEY_H__
 #define BOTAN_TEST_PUBKEY_H__

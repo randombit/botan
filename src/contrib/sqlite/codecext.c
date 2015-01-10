@@ -2,7 +2,7 @@
  * Encryption codec implementation
  * (C) 2010 Olivier de Gaalon
  *
- * Distributed under the terms of the Botan license
+ * Botan is released under the Simplified BSD License (see license.txt)
  */
 
 #ifndef SQLITE_OMIT_DISKIO

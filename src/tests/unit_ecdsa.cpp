@@ -1,10 +1,12 @@
-/******************************************************
-* ECDSA tests                                         *
-*                                                     *
-* (C) 2007 Falko Strenzke                             *
-*          Manuel Hartl                               *
-*     2008 Jack Lloyd                                 *
-******************************************************/
+/*
+* ECDSA Tests
+*
+* (C) 2007 Falko Strenzke
+*     2007 Manuel Hartl
+*     2008 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
 
 #include "tests.h"
 

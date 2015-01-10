@@ -1,14 +1,16 @@
 /*
-  Code to run the X.509v3 processing tests described in "Conformance
-  Testing of Relying Party Client Certificate Path Proccessing Logic",
-  which is available on NIST's web site.
-
-Known Failures/Problems
-
-Policy extensions are not implemented, so we skip tests #34-#53.
-
-Tests #75 and #76 are skipped as they make use of relatively obscure CRL
-extensions which are not supported.
+* (C) 2006,2011,2012,2014 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*
+* Code to run the X.509v3 processing tests described in "Conformance
+*  Testing of Relying Party Client Certificate Path Proccessing Logic",
+*  which is available on NIST's web site.
+*
+* Known Failures/Problems:
+*  - Policy extensions are not implemented, so we skip tests #34-#53.
+*  - Tests #75 and #76 are skipped as they make use of relatively
+*    obscure CRL extensions which are not supported.
 */
 
 #include "tests.h"

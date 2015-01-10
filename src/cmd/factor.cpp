@@ -1,7 +1,7 @@
 /*
 * (C) 2009-2010 Jack Lloyd
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 *
 * Factor integers using a combination of trial division by small
 * primes, and Pollard's Rho algorithm

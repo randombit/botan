@@ -2,7 +2,7 @@
 * File Tree Walking EntropySource
 * (C) 1999-2008 Jack Lloyd
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #ifndef BOTAN_ENTROPY_SRC_PROC_WALK_H__

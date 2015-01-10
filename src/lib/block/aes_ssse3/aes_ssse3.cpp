@@ -7,7 +7,7 @@
 * with Vector Permute Instructions" (CHES 2009). His original code is
 * available at http://crypto.stanford.edu/vpaes/
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/aes_ssse3.h>

@@ -2,7 +2,7 @@
 * SSL3-MAC
 * (C) 1999-2004 Jack Lloyd
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #ifndef BOTAN_SSL3_MAC_H__

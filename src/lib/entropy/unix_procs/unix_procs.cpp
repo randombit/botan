@@ -5,7 +5,7 @@
 * (C) 1999-2009,2013 Jack Lloyd
 *     2012 Markus Wanner
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/internal/unix_procs.h>

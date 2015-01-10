@@ -1,11 +1,12 @@
-/**
- * (C) Copyright Projet SECRET, INRIA, Rocquencourt
- * (C) Bhaskar Biswas and  Nicolas Sendrier
- *
- * (C) 2014 cryptosource GmbH
- * (C) 2014 Falko Strenzke fstrenzke@cryptosource.de
- */
-
+/*
+* (C) Copyright Projet SECRET, INRIA, Rocquencourt
+* (C) Bhaskar Biswas and  Nicolas Sendrier
+*
+* (C) 2014 cryptosource GmbH
+* (C) 2014 Falko Strenzke fstrenzke@cryptosource.de
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
 
 #include <botan/gf2m_small_m.h>
 #include <botan/code_based_util.h>

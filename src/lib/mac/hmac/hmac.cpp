@@ -3,7 +3,7 @@
 * (C) 1999-2007,2014 Jack Lloyd
 *     2007 Yves Jerschow
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/hmac.h>

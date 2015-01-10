@@ -1,3 +1,8 @@
+/*
+* (C) 2014 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
 
 #ifndef BOTAN_BENCHMARK_TIMER_H__
 #define BOTAN_BENCHMARK_TIMER_H__

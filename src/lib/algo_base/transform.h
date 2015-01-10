@@ -2,7 +2,7 @@
 * Transformations of data
 * (C) 2013 Jack Lloyd
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #ifndef BOTAN_TRANSFORM_H__

@@ -2,7 +2,7 @@
 * Alert Message
 * (C) 2004-2006,2011,2012 Jack Lloyd
 *
-* Released under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #ifndef BOTAN_TLS_ALERT_H__

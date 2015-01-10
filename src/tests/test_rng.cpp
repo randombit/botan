@@ -1,5 +1,11 @@
-#include "tests.h"
+/*
+* (C) 2014,2015 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
 #include "test_rng.h"
+#include "tests.h"
 
 #include <botan/libstate.h>
 #include <botan/hex.h>

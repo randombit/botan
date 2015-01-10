@@ -2,7 +2,7 @@
 * TLS Client
 * (C) 2004-2011 Jack Lloyd
 *
-* Released under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #ifndef BOTAN_TLS_CLIENT_H__

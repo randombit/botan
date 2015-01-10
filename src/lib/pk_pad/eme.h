@@ -2,7 +2,7 @@
 * EME Classes
 * (C) 1999-2007 Jack Lloyd
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #ifndef BOTAN_PUBKEY_EME_ENCRYPTION_PAD_H__

@@ -2,7 +2,7 @@
 * BigInt Base
 * (C) 1999-2011,2012 Jack Lloyd
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/bigint.h>

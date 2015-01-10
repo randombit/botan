@@ -2,7 +2,7 @@
 * RandomNumberGenerator
 * (C) 1999-2009 Jack Lloyd
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #ifndef BOTAN_RANDOM_NUMBER_GENERATOR_H__

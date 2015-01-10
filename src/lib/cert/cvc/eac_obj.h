@@ -2,7 +2,7 @@
 * EAC1_1 objects
 * (C) 2008 Falko Strenzke
 *
-* Distributed under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #ifndef BOTAN_EAC_OBJ_H__

@@ -1,3 +1,8 @@
+/*
+* (C) 2009 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
 
 #ifndef BOTAN_TESTS_FIXED_RNG_H__
 #define BOTAN_TESTS_FIXED_RNG_H__
