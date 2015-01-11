@@ -4,14 +4,15 @@ Transport Layer Security (TLS)
 
 .. versionadded:: 1.11.0
 
-Botan supports both client and server implementations of the SSL/TLS
-protocols, including SSL v3, TLS v1.0, TLS v1.1, and TLS v1.2 (the
-insecure and obsolete SSL v2 protocol is not supported, beyond
-processing SSL v2 client hellos which some clients still send for
-backwards compatability with ancient servers). There is also support
-for DTLS (v1.0 and v1.2), a variant of TLS adapted for operation on
-datagram transports such as UDP and SCTP. DTLS support should be
-considered as beta quality and further testing is invited.
+Botan has client and server implementations of various versions of the
+TLS protocol, including TLS v1.0, TLS v1.1, and TLS v1.2. As of
+version 1.11.13, support for the insecure SSLv3 protocol has been
+removed.
+
+There is also support for DTLS (v1.0 and v1.2), a variant of TLS
+adapted for operation on datagram transports such as UDP and
+SCTP. DTLS support should be considered as beta quality and further
+testing is invited.
 
 The TLS implementation does not know anything about sockets or the
 network layer. Instead, it calls a user provided callback (hereafter
@@ -369,9 +370,8 @@ There are also functions for serialization and deserializing sessions:
       binary value that can later be passed to ``decrypt``. The key
       may be of any length.
 
-      Currently the implementation uses AES-256 in CBC mode with a
-      SHA-256 HMAC. The keys for these are derived from *key* using
-      KDF2(SHA-256).
+      Currently the implementation encrypts the session using AES-256
+      in GCM mode with a random nonce.
 
    .. cpp:function:: static Session decrypt(const byte ciphertext[], \
                                             size_t length, \
@@ -587,13 +587,7 @@ be negotiated during a handshake.
      Return true if this version of the protocol is one that we are
      willing to negotiate.
 
-     Default: Accepts TLS v1.0 or higher, or DTLS v1.2.
-
-     .. note::
-
-        SSLv3 is rejected by default; it has serious security flaws
-        which cannot be fixed without protocol changes. SSLv3 support
-        is deprecated and will be removed in a future release.
+     Default: Accepts TLS v1.0 or higher and DTLS v1.2 or higher.
 
  .. cpp:function:: bool server_uses_own_ciphersuite_preferences() const
 
@@ -740,8 +734,7 @@ The ``TLS::Protocol_Version`` class represents a specific version:
 
  .. cpp:type:: enum Version_Code
 
-     ``SSL_V3``, ``TLS_V10``, ``TLS_V11``, ``TLS_V12``, ``DTLS_V10``,
-     ``DTLS_V12``
+     ``TLS_V10``, ``TLS_V11``, ``TLS_V12``, ``DTLS_V10``, ``DTLS_V12``
 
  .. cpp:function:: static Protocol_Version latest_tls_version()
 
@@ -767,8 +760,8 @@ The ``TLS::Protocol_Version`` class represents a specific version:
 
  .. cpp:function:: std::string to_string() const
 
-      Returns string description of the version, for instance "SSL v3",
-      "TLS v1.1", or "DTLS v1.0".
+      Returns string description of the version, for instance "TLS
+      v1.1" or "DTLS v1.0".
 
  .. cpp:function:: static Protocol_Version latest_tls_version()
 

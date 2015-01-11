@@ -269,13 +269,10 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
    */
    if(type != HANDSHAKE_CCS && type != FINISHED && type != CERTIFICATE_VERIFY)
       {
-      if(type == CLIENT_HELLO_SSLV2)
-         state.hash().update(contents);
-      else
-         state.hash().update(state.handshake_io().format(contents, type));
+      state.hash().update(state.handshake_io().format(contents, type));
       }
 
-   if(type == CLIENT_HELLO || type == CLIENT_HELLO_SSLV2)
+   if(type == CLIENT_HELLO)
       {
       const bool initial_handshake = !active_state;
 
@@ -286,7 +283,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
          return;
          }
 
-      state.client_hello(new Client_Hello(contents, type));
+      state.client_hello(new Client_Hello(contents));
 
       const Protocol_Version client_version = state.client_hello()->version();
 

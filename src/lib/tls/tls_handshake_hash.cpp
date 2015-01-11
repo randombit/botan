@@ -38,48 +38,6 @@ secure_vector<byte> Handshake_Hash::final(Protocol_Version version,
    return hash->final();
    }
 
-/**
-* Return a SSLv3 Handshake Hash
-*/
-secure_vector<byte> Handshake_Hash::final_ssl3(const secure_vector<byte>& secret) const
-   {
-   const byte PAD_INNER = 0x36, PAD_OUTER = 0x5C;
-
-   Algorithm_Factory& af = global_state().algorithm_factory();
-
-   std::unique_ptr<HashFunction> md5(af.make_hash_function("MD5"));
-   std::unique_ptr<HashFunction> sha1(af.make_hash_function("SHA-1"));
-
-   md5->update(data);
-   sha1->update(data);
-
-   md5->update(secret);
-   sha1->update(secret);
-
-   for(size_t i = 0; i != 48; ++i)
-      md5->update(PAD_INNER);
-   for(size_t i = 0; i != 40; ++i)
-      sha1->update(PAD_INNER);
-
-   secure_vector<byte> inner_md5 = md5->final(), inner_sha1 = sha1->final();
-
-   md5->update(secret);
-   sha1->update(secret);
-
-   for(size_t i = 0; i != 48; ++i)
-      md5->update(PAD_OUTER);
-   for(size_t i = 0; i != 40; ++i)
-      sha1->update(PAD_OUTER);
-
-   md5->update(inner_md5);
-   sha1->update(inner_sha1);
-
-   secure_vector<byte> output;
-   output += md5->final();
-   output += sha1->final();
-   return output;
-   }
-
 }
 
 }

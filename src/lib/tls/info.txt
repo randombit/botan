@@ -78,13 +78,11 @@ gcm
 hmac
 kdf2
 md5
-prf_ssl3
 prf_tls
 rng
 rsa
 sha1
 sha2_32
 srp6
-ssl3mac
 x509
 </requires>

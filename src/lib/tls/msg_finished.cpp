@@ -20,44 +20,25 @@ namespace {
 std::vector<byte> finished_compute_verify(const Handshake_State& state,
                                           Connection_Side side)
    {
-   if(state.version() == Protocol_Version::SSL_V3)
-      {
-      const byte SSL_CLIENT_LABEL[] = { 0x43, 0x4C, 0x4E, 0x54 };
-      const byte SSL_SERVER_LABEL[] = { 0x53, 0x52, 0x56, 0x52 };
+   const byte TLS_CLIENT_LABEL[] = {
+      0x63, 0x6C, 0x69, 0x65, 0x6E, 0x74, 0x20, 0x66, 0x69, 0x6E, 0x69,
+      0x73, 0x68, 0x65, 0x64 };
 
-      Handshake_Hash hash = state.hash(); // don't modify state
+   const byte TLS_SERVER_LABEL[] = {
+      0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x20, 0x66, 0x69, 0x6E, 0x69,
+      0x73, 0x68, 0x65, 0x64 };
 
-      std::vector<byte> ssl3_finished;
+   std::unique_ptr<KDF> prf(state.protocol_specific_prf());
 
-      if(side == CLIENT)
-         hash.update(SSL_CLIENT_LABEL, sizeof(SSL_CLIENT_LABEL));
-      else
-         hash.update(SSL_SERVER_LABEL, sizeof(SSL_SERVER_LABEL));
-
-      return unlock(hash.final_ssl3(state.session_keys().master_secret()));
-      }
+   std::vector<byte> input;
+   if(side == CLIENT)
+      input += std::make_pair(TLS_CLIENT_LABEL, sizeof(TLS_CLIENT_LABEL));
    else
-      {
-      const byte TLS_CLIENT_LABEL[] = {
-         0x63, 0x6C, 0x69, 0x65, 0x6E, 0x74, 0x20, 0x66, 0x69, 0x6E, 0x69,
-         0x73, 0x68, 0x65, 0x64 };
+      input += std::make_pair(TLS_SERVER_LABEL, sizeof(TLS_SERVER_LABEL));
 
-      const byte TLS_SERVER_LABEL[] = {
-         0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x20, 0x66, 0x69, 0x6E, 0x69,
-         0x73, 0x68, 0x65, 0x64 };
+   input += state.hash().final(state.version(), state.ciphersuite().prf_algo());
 
-      std::unique_ptr<KDF> prf(state.protocol_specific_prf());
-
-      std::vector<byte> input;
-      if(side == CLIENT)
-         input += std::make_pair(TLS_CLIENT_LABEL, sizeof(TLS_CLIENT_LABEL));
-      else
-         input += std::make_pair(TLS_SERVER_LABEL, sizeof(TLS_SERVER_LABEL));
-
-      input += state.hash().final(state.version(), state.ciphersuite().prf_algo());
-
-      return unlock(prf->derive_key(12, state.session_keys().master_secret(), input));
-      }
+   return unlock(prf->derive_key(12, state.session_keys().master_secret(), input));
    }
 
 }

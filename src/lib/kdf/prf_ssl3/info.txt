@@ -1,7 +1,0 @@
-define SSL_V3_PRF 20131128
-
-<requires>
-md5
-sha1
-algo_base
-</requires>

@@ -21,10 +21,6 @@
   #include <botan/prf_x942.h>
 #endif
 
-#if defined(BOTAN_HAS_SSL_V3_PRF)
-  #include <botan/prf_ssl3.h>
-#endif
-
 #if defined(BOTAN_HAS_TLS_V10_PRF)
   #include <botan/prf_tls.h>
 #endif
@@ -53,11 +49,6 @@ KDF* get_kdf(const std::string& algo_spec)
 #if defined(BOTAN_HAS_X942_PRF)
    if(request.algo_name() == "X9.42-PRF" && request.arg_count() == 1)
       return new X942_PRF(request.arg(0)); // OID
-#endif
-
-#if defined(BOTAN_HAS_SSL_V3_PRF)
-   if(request.algo_name() == "SSL3-PRF" && request.arg_count() == 0)
-      return new SSL3_PRF;
 #endif
 
 #if defined(BOTAN_HAS_TLS_V10_PRF)

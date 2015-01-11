@@ -51,8 +51,7 @@ bool Protocol_Version::operator>(const Protocol_Version& other) const
 
 bool Protocol_Version::known_version() const
    {
-   return (m_version == Protocol_Version::SSL_V3 ||
-           m_version == Protocol_Version::TLS_V10 ||
+   return (m_version == Protocol_Version::TLS_V10 ||
            m_version == Protocol_Version::TLS_V11 ||
            m_version == Protocol_Version::TLS_V12 ||
            m_version == Protocol_Version::DTLS_V10 ||

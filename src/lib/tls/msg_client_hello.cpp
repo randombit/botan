@@ -152,17 +152,6 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    hash.update(io.send(*this));
    }
 
-/*
-* Read a counterparty client hello
-*/
-Client_Hello::Client_Hello(const std::vector<byte>& buf, Handshake_Type type)
-   {
-   if(type == CLIENT_HELLO)
-      deserialize(buf);
-   else
-      deserialize_sslv2(buf);
-   }
-
 void Client_Hello::update_hello_cookie(const Hello_Verify_Request& hello_verify)
    {
    if(!m_version.is_datagram_protocol())
@@ -201,48 +190,10 @@ std::vector<byte> Client_Hello::serialize() const
    return buf;
    }
 
-void Client_Hello::deserialize_sslv2(const std::vector<byte>& buf)
-   {
-   if(buf.size() < 12 || buf[0] != 1)
-      throw Decoding_Error("Client_Hello: SSLv2 hello corrupted");
-
-   const size_t cipher_spec_len = make_u16bit(buf[3], buf[4]);
-   const size_t m_session_id_len = make_u16bit(buf[5], buf[6]);
-   const size_t challenge_len = make_u16bit(buf[7], buf[8]);
-
-   const size_t expected_size =
-      (9 + m_session_id_len + cipher_spec_len + challenge_len);
-
-   if(buf.size() != expected_size)
-      throw Decoding_Error("Client_Hello: SSLv2 hello corrupted");
-
-   if(m_session_id_len != 0 || cipher_spec_len % 3 != 0 ||
-      (challenge_len < 16 || challenge_len > 32))
-      {
-      throw Decoding_Error("Client_Hello: SSLv2 hello corrupted");
-      }
-
-   m_version = Protocol_Version(buf[1], buf[2]);
-
-   for(size_t i = 9; i != 9 + cipher_spec_len; i += 3)
-      {
-      if(buf[i] != 0) // a SSLv2 cipherspec; ignore it
-         continue;
-
-      m_suites.push_back(make_u16bit(buf[i+1], buf[i+2]));
-      }
-
-   m_random.resize(challenge_len);
-   copy_mem(&m_random[0], &buf[9+cipher_spec_len+m_session_id_len], challenge_len);
-
-   if(offered_suite(static_cast<u16bit>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV)))
-      m_extensions.add(new Renegotiation_Extension());
-   }
-
 /*
-* Deserialize a Client Hello message
+* Read a counterparty client hello
 */
-void Client_Hello::deserialize(const std::vector<byte>& buf)
+Client_Hello::Client_Hello(const std::vector<byte>& buf)
    {
    if(buf.size() == 0)
       throw Decoding_Error("Client_Hello: Packet corrupted");

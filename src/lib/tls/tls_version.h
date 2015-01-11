@@ -22,7 +22,6 @@ class BOTAN_DLL Protocol_Version
    {
    public:
       enum Version_Code {
-         SSL_V3             = 0x0300,
          TLS_V10            = 0x0301,
          TLS_V11            = 0x0302,
          TLS_V12            = 0x0303,

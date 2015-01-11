@@ -8,8 +8,8 @@ including:
 TLS/Public Key Infrastructure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-  * SSL/TLS (from SSL v3 to TLS v1.2), including using preshared
-    keys (TLS-PSK) or passwords (TLS-SRP)
+  * TLS/DTLS (v1.0 to v1.2), including using preshared keys (TLS-PSK) or
+    passwords (TLS-SRP) and most important extensions.
   * X.509 certificates (including generating new self-signed and CA
     certs) and CRLs
   * Certificate path validation and OCSP
@@ -63,8 +63,7 @@ Authentication Codes
   * HMAC
   * CMAC (aka OMAC1)
   * Poly1305
-  * Obsolete designs CBC-MAC, ANSI X9.19 DES-MAC, and the
-    protocol-specific SSLv3 authentication code
+  * Obsolete designs CBC-MAC and ANSI X9.19 DES-MAC
 
 Other Useful Things
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -72,7 +71,6 @@ Other Useful Things
   * Key derivation functions for passwords, including PBKDF2
   * Password hashing functions, including bcrypt
   * General key derivation functions KDF1 and KDF2 from IEEE 1363
-  * PRFs from ANSI X9.42, SSL v3.0, TLS v1.0
 
 Recommended Algorithms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

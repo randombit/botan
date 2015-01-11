@@ -39,7 +39,6 @@ enum Record_Type {
 enum Handshake_Type {
    HELLO_REQUEST        = 0,
    CLIENT_HELLO         = 1,
-   CLIENT_HELLO_SSLV2   = 253, // Not a wire value
    SERVER_HELLO         = 2,
    HELLO_VERIFY_REQUEST = 3,
    NEW_SESSION_TICKET   = 4, // RFC 5077

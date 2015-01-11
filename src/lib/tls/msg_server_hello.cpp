@@ -35,10 +35,6 @@ Server_Hello::Server_Hello(Handshake_IO& io,
    m_ciphersuite(ciphersuite),
    m_comp_method(compression)
    {
-   /*
-   * Even a client that offered SSLv3 and sent the SCSV will get an
-   * extension back. This is probably the right thing to do.
-   */
    if(client_hello.secure_renegotiation())
       m_extensions.add(new Renegotiation_Extension(reneg_info));
 
@@ -94,10 +90,6 @@ Server_Hello::Server_Hello(Handshake_IO& io,
    m_ciphersuite(resumed_session.ciphersuite_code()),
    m_comp_method(resumed_session.compression_method())
    {
-   /*
-   * Even a client that offered SSLv3 and sent the SCSV will get an
-   * extension back. This is probably the right thing to do.
-   */
    if(client_hello.secure_renegotiation())
       m_extensions.add(new Renegotiation_Extension(reneg_info));
 

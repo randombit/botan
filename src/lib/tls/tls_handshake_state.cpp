@@ -29,7 +29,6 @@ u32bit bitmask_for_handshake_type(Handshake_Type type)
       * Same code point for both client hello styles
       */
       case CLIENT_HELLO:
-      case CLIENT_HELLO_SSLV2:
          return (1 << 2);
 
       case SERVER_HELLO:
@@ -258,11 +257,7 @@ std::vector<byte> Handshake_State::session_ticket() const
 
 KDF* Handshake_State::protocol_specific_prf() const
    {
-   if(version() == Protocol_Version::SSL_V3)
-      {
-      return get_kdf("SSL3-PRF");
-      }
-   else if(version().supports_ciphersuite_specific_prf())
+   if(version().supports_ciphersuite_specific_prf())
       {
       const std::string prf_algo = ciphersuite().prf_algo();
 
@@ -291,9 +286,6 @@ std::string choose_hash(const std::string& sig_algo,
    {
    if(!negotiated_version.supports_negotiable_signature_algorithms())
       {
-      if(for_client_auth && negotiated_version == Protocol_Version::SSL_V3)
-         return "Raw";
-
       if(sig_algo == "RSA")
          return "Parallel(MD5,SHA-160)";
 
@@ -405,11 +397,7 @@ Handshake_State::understand_sig_format(const Public_Key& key,
 
    if(algo_name == "RSA")
       {
-      if(for_client_auth && this->version() == Protocol_Version::SSL_V3)
-         {
-         hash_algo = "Raw";
-         }
-      else if(!this->version().supports_negotiable_signature_algorithms())
+      if(!this->version().supports_negotiable_signature_algorithms())
          {
          hash_algo = "Parallel(MD5,SHA-160)";
          }
@@ -419,11 +407,7 @@ Handshake_State::understand_sig_format(const Public_Key& key,
       }
    else if(algo_name == "DSA" || algo_name == "ECDSA")
       {
-      if(algo_name == "DSA" && for_client_auth && this->version() == Protocol_Version::SSL_V3)
-         {
-         hash_algo = "Raw";
-         }
-      else if(!this->version().supports_negotiable_signature_algorithms())
+      if(!this->version().supports_negotiable_signature_algorithms())
          {
          hash_algo = "SHA-1";
          }

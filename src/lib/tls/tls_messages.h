@@ -181,13 +181,10 @@ class Client_Hello : public Handshake_Message
                    const Session& resumed_session,
                    bool next_protocol = false);
 
-      Client_Hello(const std::vector<byte>& buf,
-                   Handshake_Type type);
+      Client_Hello(const std::vector<byte>& buf);
 
    private:
       std::vector<byte> serialize() const override;
-      void deserialize(const std::vector<byte>& buf);
-      void deserialize_sslv2(const std::vector<byte>& buf);
 
       Protocol_Version m_version;
       std::vector<byte> m_session_id;

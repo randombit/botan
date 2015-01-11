@@ -1,6 +1,9 @@
 Version 1.11.13, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* All support for the insecure SSLv3 protocol and the server support
+  for processing SSLv2 client hellos has been removed.
+
 * The command line tool now has `tls_proxy` which negotiates TLS with
   clients and forwards the plaintext to a specified port.
 

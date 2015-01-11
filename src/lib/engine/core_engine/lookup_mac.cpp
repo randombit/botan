@@ -25,10 +25,6 @@
   #include <botan/poly1305.h>
 #endif
 
-#if defined(BOTAN_HAS_SSL3_MAC)
-  #include <botan/ssl3_mac.h>
-#endif
-
 #if defined(BOTAN_HAS_ANSI_X919_MAC)
   #include <botan/x919_mac.h>
 #endif
@@ -60,11 +56,6 @@ Core_Engine::find_mac(const SCAN_Name& request,
 #if defined(BOTAN_HAS_CBC_MAC)
    if(request.algo_name() == "CBC-MAC" && request.arg_count() == 1)
       return new CBC_MAC(af.make_block_cipher(request.arg(0)));
-#endif
-
-#if defined(BOTAN_HAS_SSL3_MAC)
-   if(request.algo_name() == "SSL3-MAC" && request.arg_count() == 1)
-      return new SSL3_MAC(af.make_hash_function(request.arg(0)));
 #endif
 
 #if defined(BOTAN_HAS_ANSI_X919_MAC)

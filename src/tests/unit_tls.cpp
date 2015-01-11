@@ -290,7 +290,6 @@ size_t test_tls()
    auto& rng = test_rng();
    std::auto_ptr<Credentials_Manager> basic_creds(create_creds(rng));
 
-   errors += basic_test_handshake(rng, TLS::Protocol_Version::SSL_V3, *basic_creds, default_policy);
    errors += basic_test_handshake(rng, TLS::Protocol_Version::TLS_V10, *basic_creds, default_policy);
    errors += basic_test_handshake(rng, TLS::Protocol_Version::TLS_V11, *basic_creds, default_policy);
    errors += basic_test_handshake(rng, TLS::Protocol_Version::TLS_V12, *basic_creds, default_policy);

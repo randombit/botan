@@ -239,12 +239,9 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
          PK_Encryptor_EME encryptor(*rsa_pub, "PKCS1v15");
 
-         std::vector<byte> encrypted_key = encryptor.encrypt(m_pre_master, rng);
+         const std::vector<byte> encrypted_key = encryptor.encrypt(m_pre_master, rng);
 
-         if(state.version() == Protocol_Version::SSL_V3)
-            m_key_material = encrypted_key; // no length field
-         else
-            append_tls_length_value(m_key_material, encrypted_key, 2);
+         append_tls_length_value(m_key_material, encrypted_key, 2);
          }
       else
          throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
@@ -299,15 +296,8 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
 
       try
          {
-         if(state.version() == Protocol_Version::SSL_V3)
-            {
-            m_pre_master = decryptor.decrypt(contents);
-            }
-         else
-            {
-            TLS_Data_Reader reader("ClientKeyExchange", contents);
-            m_pre_master = decryptor.decrypt(reader.get_range<byte>(2, 0, 65535));
-            }
+         TLS_Data_Reader reader("ClientKeyExchange", contents);
+         m_pre_master = decryptor.decrypt(reader.get_range<byte>(2, 0, 65535));
 
          if(m_pre_master.size() != 48 ||
             client_version.major_version() != m_pre_master[0] ||

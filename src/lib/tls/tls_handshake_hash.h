@@ -33,10 +33,7 @@ class Handshake_Hash
       secure_vector<byte> final(Protocol_Version version,
                                 const std::string& mac_algo) const;
 
-      secure_vector<byte> final_ssl3(const secure_vector<byte>& master_secret) const;
-
-      const std::vector<byte>& get_contents() const
-         { return data; }
+      const std::vector<byte>& get_contents() const { return data; }
 
       void reset() { data.clear(); }
    private:

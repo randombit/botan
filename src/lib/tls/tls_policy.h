@@ -138,10 +138,7 @@ class BOTAN_DLL Policy
 
       /**
       * @return true if and only if we are willing to accept this version
-      * Default accepts TLS v1.0 and later.
-
-      * Override if you want to allow negotiating SSLv3 (*not recommended*)
-      * Override if you want to enable DTLS in your application.
+      * Default accepts TLS v1.0 and later or DTLS v1.2 or later.
       */
       virtual bool acceptable_protocol_version(Protocol_Version version) const;
 

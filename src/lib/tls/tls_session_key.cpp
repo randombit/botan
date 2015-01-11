@@ -41,10 +41,7 @@ Session_Keys::Session_Keys(const Handshake_State* state,
    else
       {
       secure_vector<byte> salt;
-
-      if(state->version() != Protocol_Version::SSL_V3)
-         salt += std::make_pair(MASTER_SECRET_MAGIC, sizeof(MASTER_SECRET_MAGIC));
-
+      salt += std::make_pair(MASTER_SECRET_MAGIC, sizeof(MASTER_SECRET_MAGIC));
       salt += state->client_hello()->random();
       salt += state->server_hello()->random();
 
@@ -52,8 +49,7 @@ Session_Keys::Session_Keys(const Handshake_State* state,
       }
 
    secure_vector<byte> salt;
-   if(state->version() != Protocol_Version::SSL_V3)
-      salt += std::make_pair(KEY_GEN_MAGIC, sizeof(KEY_GEN_MAGIC));
+   salt += std::make_pair(KEY_GEN_MAGIC, sizeof(KEY_GEN_MAGIC));
    salt += state->server_hello()->random();
    salt += state->client_hello()->random();
 

@@ -26,8 +26,7 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
                                                  const Session_Keys& keys) :
    m_start_time(std::chrono::system_clock::now()),
    m_nonce_bytes_from_handshake(suite.nonce_bytes_from_handshake()),
-   m_nonce_bytes_from_record(suite.nonce_bytes_from_record()),
-   m_is_ssl3(version == Protocol_Version::SSL_V3)
+   m_nonce_bytes_from_record(suite.nonce_bytes_from_record())
    {
    SymmetricKey mac_key, cipher_key;
    InitializationVector iv;
@@ -83,10 +82,7 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
    else
       throw Invalid_Argument("Unknown TLS cipher " + cipher_algo);
 
-   if(version == Protocol_Version::SSL_V3)
-      m_mac.reset(af.make_mac("SSL3-MAC(" + mac_algo + ")"));
-   else
-      m_mac.reset(af.make_mac("HMAC(" + mac_algo + ")"));
+   m_mac.reset(af.make_mac("HMAC(" + mac_algo + ")"));
 
    m_mac->set_key(mac_key);
    }
@@ -128,11 +124,8 @@ Connection_Cipher_State::format_ad(u64bit msg_sequence,
       m_ad.push_back(get_byte(i, msg_sequence));
    m_ad.push_back(msg_type);
 
-   if(version != Protocol_Version::SSL_V3)
-      {
-      m_ad.push_back(version.major_version());
-      m_ad.push_back(version.minor_version());
-      }
+   m_ad.push_back(version.major_version());
+   m_ad.push_back(version.minor_version());
 
    m_ad.push_back(get_byte(0, msg_length));
    m_ad.push_back(get_byte(1, msg_length));
@@ -312,8 +305,7 @@ size_t fill_buffer_to(secure_vector<byte>& readbuf,
 *
 * @fixme This should run in constant time
 */
-size_t tls_padding_check(bool sslv3_padding,
-                         size_t block_size,
+size_t tls_padding_check(size_t block_size,
                          const byte record[],
                          size_t record_len)
    {
@@ -321,18 +313,6 @@ size_t tls_padding_check(bool sslv3_padding,
 
    if(padding_length >= record_len)
       return 0;
-
-   /*
-   * SSL v3 requires that the padding be less than the block size
-   * but not does specify the value of the padding bytes.
-   */
-   if(sslv3_padding)
-      {
-      if(padding_length > 0 && padding_length < block_size)
-         return (padding_length + 1);
-      else
-         return 0;
-      }
 
    /*
    * TLS v1.0 and up require all the padding bytes be the same value
@@ -425,8 +405,7 @@ void decrypt_record(secure_vector<byte>& output,
          {
          cbc_decrypt_record(record_contents, record_len, cs, *bc);
 
-         pad_size = tls_padding_check(cs.cipher_padding_single_byte(),
-                                      cs.block_size(),
+         pad_size = tls_padding_check(cs.block_size(),
                                       record_contents, record_len);
 
          padding_bad = (pad_size == 0);
@@ -488,43 +467,6 @@ size_t read_tls_record(secure_vector<byte>& readbuf,
          return needed;
 
       BOTAN_ASSERT_EQUAL(readbuf.size(), TLS_HEADER_SIZE, "Have an entire header");
-      }
-
-   // Possible SSLv2 format client hello
-   if(!sequence_numbers && (readbuf[0] & 0x80) && (readbuf[2] == 1))
-      {
-      if(readbuf[3] == 0 && readbuf[4] == 2)
-         throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                             "Client claims to only support SSLv2, rejecting");
-
-      if(readbuf[3] >= 3) // SSLv2 mapped TLS hello, then?
-         {
-         const size_t record_len = make_u16bit(readbuf[0], readbuf[1]) & 0x7FFF;
-
-         if(size_t needed = fill_buffer_to(readbuf,
-                                           input, input_sz, consumed,
-                                           record_len + 2))
-            return needed;
-
-         BOTAN_ASSERT_EQUAL(readbuf.size(), (record_len + 2),
-                            "Have the entire SSLv2 hello");
-
-         // Fake v3-style handshake message wrapper
-         *record_version = Protocol_Version::TLS_V10;
-         *record_sequence = 0;
-         *record_type = HANDSHAKE;
-
-         record.resize(4 + readbuf.size() - 2);
-
-         record[0] = CLIENT_HELLO_SSLV2;
-         record[1] = 0;
-         record[2] = readbuf[0] & 0x7F;
-         record[3] = readbuf[1];
-         copy_mem(&record[4], &readbuf[2], readbuf.size() - 2);
-
-         readbuf.clear();
-         return 0;
-         }
       }
 
    *record_version = Protocol_Version(readbuf[1], readbuf[2]);

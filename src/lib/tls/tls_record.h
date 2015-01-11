@@ -69,8 +69,6 @@ class Connection_Cipher_State
 
       size_t nonce_bytes_from_handshake() const { return m_nonce_bytes_from_handshake; }
 
-      bool cipher_padding_single_byte() const { return m_is_ssl3; }
-
       bool cbc_without_explicit_iv() const
          { return (m_block_size > 0) && (m_iv_size == 0); }
 
@@ -94,7 +92,6 @@ class Connection_Cipher_State
       size_t m_nonce_bytes_from_handshake;
       size_t m_nonce_bytes_from_record;
       size_t m_iv_size = 0;
-      bool m_is_ssl3 = false;
    };
 
 /**
