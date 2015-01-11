@@ -25,10 +25,6 @@
 #include <botan/pkcs8.h>
 #include <botan/auto_rng.h>
 
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-  #include <botan/system_rng.h>
-#endif
-
 #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
   #include <botan/tls_session_manager_sqlite.h>
 #endif
@@ -73,7 +69,6 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
                             TLS::Session_Manager& session_manager,
                             Credentials_Manager& credentials,
                             TLS::Policy& policy,
-                            RandomNumberGenerator& rng,
                             tcp::resolver::iterator endpoints)
          {
          return pointer(
@@ -82,7 +77,6 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
                session_manager,
                credentials,
                policy,
-               rng,
                endpoints)
             );
          }
@@ -108,7 +102,6 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
                         TLS::Session_Manager& session_manager,
                         Credentials_Manager& credentials,
                         TLS::Policy& policy,
-                        RandomNumberGenerator& rng,
                         tcp::resolver::iterator endpoints) :
          m_strand(io),
          m_server_endpoints(endpoints),
@@ -121,7 +114,7 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
                session_manager,
                credentials,
                policy,
-               rng)
+               m_rng)
          {
          }
 
@@ -308,6 +301,7 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
       tcp::socket m_client_socket;
       tcp::socket m_server_socket;
 
+      AutoSeeded_RNG m_rng;
       TLS::Server m_tls;
       std::string m_hostname;
 
@@ -329,14 +323,12 @@ class tls_proxy_server
                        tcp::resolver::iterator endpoints,
                        Credentials_Manager& creds,
                        TLS::Policy& policy,
-                       TLS::Session_Manager& session_mgr,
-                       RandomNumberGenerator& rng) :
+                       TLS::Session_Manager& session_mgr) :
          m_acceptor(io, tcp::endpoint(tcp::v4(), port)),
          m_server_endpoints(endpoints),
          m_creds(creds),
          m_policy(policy),
-         m_session_manager(session_mgr),
-         m_rng(rng)
+         m_session_manager(session_mgr)
          {
          session::pointer new_session = make_session();
 
@@ -358,7 +350,6 @@ class tls_proxy_server
             m_session_manager,
             m_creds,
             m_policy,
-            m_rng,
             m_server_endpoints
             );
          }
@@ -419,11 +410,7 @@ int tls_proxy(int argc, char* argv[])
 
    const size_t num_threads = choose_thread_count(); // make configurable
 
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-   RandomNumberGenerator& rng = system_rng();
-#else
-   Serialized_RNG rng;
-#endif
+   AutoSeeded_RNG rng;
    Basic_Credentials_Manager creds(rng, server_crt, server_key);
 
    TLS::Policy policy; // TODO: Read policy from text file
