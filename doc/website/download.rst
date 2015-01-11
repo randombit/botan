@@ -14,8 +14,8 @@ Unsure which release you want? Check the :ref:`FAQ <devel_vs_stable>`.
 Current Development Series (1.11)
 ----------------------------------------
 
-The latest development release is :doc:`relnotes/1_11_12`:
-:tgz:`1.11.12` (:tgz_sig:`sig <1.11.12>`)
+The latest development release is :doc:`relnotes/1_11_13`:
+:tgz:`1.11.13` (:tgz_sig:`sig <1.11.13>`)
 
 To access the latest unreleased sources, see :doc:`vcs`. A script also
 creates regular snapshots of trunk, which are available `here

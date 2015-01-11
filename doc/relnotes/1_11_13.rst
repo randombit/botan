@@ -1,4 +1,4 @@
-Version 1.11.13, Not Yet Released
+Version 1.11.13, 2015-01-11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * All support for the insecure SSLv3 protocol and the server support
