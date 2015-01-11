@@ -60,7 +60,7 @@ distclean: clean
 docs:
 %{build_doc_commands}
 
-install: $(LIBRARIES) docs
+install: $(APP) docs
 	$(SCRIPTS_DIR)/install.py --destdir=%{destdir} --bindir=%{bindir} --libdir=%{libdir} --docdir=%{docdir} --includedir=%{includedir}
 
 website:

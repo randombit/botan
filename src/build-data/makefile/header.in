@@ -16,7 +16,7 @@ LIB_FLAGS      = $(SO_OBJ_FLAGS) $(LANG_FLAGS) $(LIB_OPT) $(WARN_FLAGS)
 APP_FLAGS      = $(LANG_FLAGS) $(APP_OPT) $(WARN_FLAGS)
 TEST_FLAGS     = $(LANG_FLAGS) $(APP_OPT) $(WARN_FLAGS)
 
-SCRIPTS_DIR    = src/scripts
+SCRIPTS_DIR    = %{scripts_dir}
 
 # Version Numbers
 VERSION        = %{version}
