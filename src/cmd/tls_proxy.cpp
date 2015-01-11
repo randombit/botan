@@ -29,23 +29,25 @@
   #include <botan/tls_session_manager_sqlite.h>
 #endif
 
+#include "credentials.h"
+
 using boost::asio::ip::tcp;
 
 namespace Botan {
 
 namespace {
 
-void log_exception(const char* where, const std::exception& e)
+inline void log_exception(const char* where, const std::exception& e)
    {
    std::cout << where << ' ' << e.what() << std::endl;
    }
 
-void log_error(const char* where, const boost::system::error_code& error)
+inline void log_error(const char* where, const boost::system::error_code& error)
    {
    std::cout << where << ' ' << error.message() << std::endl;
    }
 
-void log_binary_message(const char* where, const byte buf[], size_t buf_len)
+inline void log_binary_message(const char* where, const byte buf[], size_t buf_len)
    {
    //std::cout << where << ' ' << hex_encode(buf, buf_len) << std::endl;
    }
@@ -167,12 +169,13 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
             }
 
          m_p2s.clear();
-         tls_proxy_write_to_server(nullptr, 0); // initiate another write if needed
+         proxy_write_to_server(nullptr, 0); // initiate another write if needed
          }
 
       void tls_client_write_to_proxy(const byte buf[], size_t buf_len)
          {
-         tls_proxy_write_to_server(buf, buf_len);
+         // Immediately bounce message to server
+         proxy_write_to_server(buf, buf_len);
          }
 
       void tls_proxy_write_to_client(const byte buf[], size_t buf_len)
@@ -197,7 +200,7 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
             }
          }
 
-      void tls_proxy_write_to_server(const byte buf[], size_t buf_len)
+      void proxy_write_to_server(const byte buf[], size_t buf_len)
          {
          if(buf_len > 0)
             m_p2s_pending.insert(m_p2s_pending.end(), buf, buf + buf_len);
@@ -271,11 +274,9 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
                           log_error("Server connection", ec);
                           return;
                           }
-                       //std::cout << "Connected to " << endpoint->host_name() << ' '
-                       //<< endpoint->service_name() << "\n";
-                       tls_proxy_write_to_server(nullptr, 0);
 
                        server_read(boost::system::error_code(), 0); // start read loop
+                       proxy_write_to_server(nullptr, 0);
                        });
          return true;
          }
@@ -392,139 +393,6 @@ size_t choose_thread_count()
    return 2;
    }
 
-class Proxy_Credentials_Manager : public Credentials_Manager
-   {
-   public:
-      Proxy_Credentials_Manager(RandomNumberGenerator& rng,
-                                const std::string& server_crt,
-                                const std::string& server_key)
-         {
-         try
-            {
-            Certificate_Info cert;
-
-
-            try
-               {
-               cert.key.reset(PKCS8::load_key(server_key, rng));
-               }
-            catch(std::exception& e)
-               {
-               log_exception("Loading server key", e);
-               throw; // fatal
-               }
-
-            try
-               {
-               DataSource_Stream in(server_crt);
-               while(!in.end_of_data())
-                  cert.certs.push_back(X509_Certificate(in));
-               }
-            catch(std::exception& e)
-               {
-               log_exception("Loading certs", e);
-               }
-
-            // TODO: attempt to validate chain ourselves
-
-            m_creds.push_back(cert);
-            }
-         catch(std::exception& e)
-            {
-            log_exception("Loading server key", e);
-            throw; // fatal
-            }
-
-         try
-            {
-            // TODO: make path configurable
-            std::shared_ptr<Certificate_Store> cs(new Certificate_Store_In_Memory("/usr/share/ca-certificates"));
-            m_certstores.push_back(cs);
-            }
-         catch(std::exception& e)
-            {
-            log_exception("Loading CA certs", e);
-            //throw; // not fatal
-            }
-         }
-
-      std::vector<Botan::Certificate_Store*>
-      trusted_certificate_authorities(const std::string& type,
-                                      const std::string& /*hostname*/)
-         {
-         std::vector<Botan::Certificate_Store*> v;
-
-         // don't ask for client certs
-         if(type == "tls-server")
-            return v;
-
-         for(auto&& cs : m_certstores)
-            v.push_back(cs.get());
-
-         return v;
-         }
-
-      void verify_certificate_chain(
-         const std::string& type,
-         const std::string& purported_hostname,
-         const std::vector<X509_Certificate>& cert_chain)
-         {
-         try
-            {
-            Credentials_Manager::verify_certificate_chain(type,
-                                                          purported_hostname,
-                                                          cert_chain);
-            }
-         catch(std::exception& e)
-            {
-            std::cout << "Certificate validation failure: " << e.what() << "\n";
-            throw;
-            }
-         }
-
-      std::vector<X509_Certificate> cert_chain(
-         const std::vector<std::string>& algos,
-         const std::string& type,
-         const std::string& hostname)
-         {
-         for(auto&& i : m_creds)
-            {
-            if(std::find(algos.begin(), algos.end(), i.key->algo_name()) == algos.end())
-               continue;
-
-            if(hostname != "" && !i.certs[0].matches_dns_name(hostname))
-               continue;
-
-            return i.certs;
-            }
-
-         return std::vector<X509_Certificate>();
-         }
-
-      Private_Key* private_key_for(const X509_Certificate& cert,
-                                   const std::string& /*type*/,
-                                   const std::string& /*context*/)
-         {
-         for(auto&& i : m_creds)
-            {
-            if(cert == i.certs[0])
-               return i.key.get();
-            }
-
-         return nullptr;
-         }
-
-   private:
-      struct Certificate_Info
-         {
-         std::vector<X509_Certificate> certs;
-         std::shared_ptr<Private_Key> key;
-         };
-
-      std::vector<Certificate_Info> m_creds;
-      std::vector<std::shared_ptr<Certificate_Store>> m_certstores;
-   };
-
 int tls_proxy(int argc, char* argv[])
    {
    if(argc != 6)
@@ -543,7 +411,7 @@ int tls_proxy(int argc, char* argv[])
    const size_t num_threads = choose_thread_count(); // make configurable
 
    AutoSeeded_RNG rng;
-   Proxy_Credentials_Manager creds(rng, server_crt, server_key);
+   Basic_Credentials_Manager creds(rng, server_crt, server_key);
 
    TLS::Policy policy; // TODO: Read policy from text file
 

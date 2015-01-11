@@ -1,4 +1,5 @@
 /*
+* TLS echo server using BSD sockets
 * (C) 2014 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -6,7 +7,7 @@
 
 #include "apps.h"
 
-#if defined(BOTAN_HAS_TLS)
+#if defined(BOTAN_HAS_TLS) && !defined(BOTAN_TARGET_OS_IS_WINDOWS)
 #include <botan/tls_server.h>
 #include <botan/hex.h>
 
@@ -38,9 +39,9 @@ using namespace std::placeholders;
 
 namespace {
 
-int make_server_socket(const std::string& transport, u16bit port)
+int make_server_socket(bool is_tcp, u16bit port)
    {
-   int type = (transport == "tcp") ? SOCK_STREAM : SOCK_DGRAM;
+   const int type = is_tcp ? SOCK_STREAM : SOCK_DGRAM;
 
    int fd = ::socket(PF_INET, type, 0);
    if(fd == -1)
@@ -60,7 +61,7 @@ int make_server_socket(const std::string& transport, u16bit port)
       throw std::runtime_error("server bind failed");
       }
 
-   if(transport != "udp")
+   if(is_tcp)
       {
       if(::listen(fd, 100) != 0)
          {
@@ -98,22 +99,19 @@ void dgram_socket_write(int sockfd, const byte buf[], size_t length)
 
 void stream_socket_write(int sockfd, const byte buf[], size_t length)
    {
-   size_t offset = 0;
-
    while(length)
       {
-      ssize_t sent = ::send(sockfd, (const char*)buf + offset,
-                            length, MSG_NOSIGNAL);
+      ssize_t sent = ::send(sockfd, buf, length, MSG_NOSIGNAL);
 
       if(sent == -1)
          {
          if(errno == EINTR)
             sent = 0;
          else
-            throw std::runtime_error("Socket::write: Socket write failed");
+            throw std::runtime_error("Socket write failed");
          }
 
-      offset += sent;
+      buf += sent;
       length -= sent;
       }
    }
@@ -125,13 +123,18 @@ void alert_received(TLS::Alert alert, const byte[], size_t)
 
 int tls_server(int argc, char* argv[])
    {
-   int port = 4433;
-   std::string transport = "tcp";
+   if(argc != 4 && argc != 5)
+      {
+      std::cout << "Usage: " << argv[0] << " server.crt server.key port [tcp|udp]\n";
+      return 1;
+      }
 
-   if(argc >= 2)
-      port = to_u32bit(argv[1]);
-   if(argc >= 3)
-      transport = argv[2];
+   const std::string server_crt = argv[1];
+   const std::string server_key = argv[2];
+   const int port = to_u32bit(argv[3]);
+   const std::string transport = (argc >= 5) ? argv[4] : "tcp";
+
+   const bool is_tcp = (transport == "tcp");
 
    try
       {
@@ -141,7 +144,7 @@ int tls_server(int argc, char* argv[])
 
       TLS::Session_Manager_In_Memory session_manager(rng);
 
-      Credentials_Manager_Simple creds(rng);
+      Basic_Credentials_Manager creds(rng, server_crt, server_key);
 
       /*
       * These are the protocols we advertise to the client, but the
@@ -152,7 +155,7 @@ int tls_server(int argc, char* argv[])
 
       std::cout << "Listening for new connections on " << transport << " port " << port << "\n";
 
-      int server_fd = make_server_socket(transport, port);
+      int server_fd = make_server_socket(is_tcp, port);
 
       while(true)
          {
@@ -160,7 +163,7 @@ int tls_server(int argc, char* argv[])
             {
             int fd;
 
-            if(transport == "tcp")
+            if(is_tcp)
                fd = ::accept(server_fd, nullptr, nullptr);
             else
                {
@@ -179,15 +182,11 @@ int tls_server(int argc, char* argv[])
 
             std::cout << "New connection received\n";
 
-            auto socket_write =
-               (transport == "tcp") ?
-               std::bind(stream_socket_write, fd, _1, _2) :
-               std::bind(dgram_socket_write, fd, _1, _2);
+            auto socket_write = is_tcp ? std::bind(stream_socket_write, fd, _1, _2) :
+                                         std::bind(dgram_socket_write, fd, _1, _2);
 
             std::string s;
             std::list<std::string> pending_output;
-
-            pending_output.push_back("Welcome to the best echo server evar\n");
 
             auto proc_fn = [&](const byte input[], size_t input_len)
                {
@@ -212,7 +211,7 @@ int tls_server(int argc, char* argv[])
                                policy,
                                rng,
                                protocols,
-                               (transport != "tcp"));
+                               !is_tcp);
 
             while(!server.is_closed())
                {
@@ -244,7 +243,7 @@ int tls_server(int argc, char* argv[])
                   }
                }
 
-            if(transport == "tcp")
+            if(is_tcp)
                ::close(fd);
 
             }

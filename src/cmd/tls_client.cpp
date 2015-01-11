@@ -6,7 +6,7 @@
 
 #include "apps.h"
 
-#if defined(BOTAN_HAS_TLS)
+#if defined(BOTAN_HAS_TLS) && !defined(BOTAN_TARGET_OS_IS_WINDOWS)
 #include <botan/tls_client.h>
 #include <botan/pkcs8.h>
 #include <botan/hex.h>
@@ -161,7 +161,7 @@ int tls_client(int argc, char* argv[])
       TLS::Session_Manager_In_Memory session_manager(rng);
 #endif
 
-      Credentials_Manager_Simple creds(rng);
+      Basic_Credentials_Manager creds;
 
       std::string host = argv[1];
       u32bit port = argc >= 3 ? Botan::to_u32bit(argv[2]) : 443;
