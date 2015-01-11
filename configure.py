@@ -165,7 +165,7 @@ class BuildConfigurationInformation(object):
                     sphinx += '%s %s'
                     return sphinx
                 else:
-                    return '$(COPY) %s/*.rst %s'
+                    return '$(COPY) %s' + os.sep + '*.rst %s'
 
             doc_cmd = get_doc_cmd()
 
@@ -176,7 +176,7 @@ class BuildConfigurationInformation(object):
             yield cmd_for('manual')
 
             if options.with_doxygen:
-                yield 'doxygen %s/botan.doxy' % (self.build_dir)
+                yield 'doxygen %s'  + os.sep + 'botan.doxy' % (self.build_dir)
 
         self.build_doc_commands = '\n'.join(['\t' + s for s in build_doc_commands()])
 
@@ -1220,7 +1220,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'makefile_path': prefix_with_build_dir('Makefile'),
 
-        'program_suffix': options.program_suffix or '',
+        'program_suffix': options.program_suffix or ('' if options.os != 'windows' else '.exe'),
 
         'prefix': options.prefix or osinfo.install_root,
         'destdir': options.destdir or options.prefix or osinfo.install_root,
