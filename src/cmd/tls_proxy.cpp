@@ -25,6 +25,10 @@
 #include <botan/pkcs8.h>
 #include <botan/auto_rng.h>
 
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+  #include <botan/system_rng.h>
+#endif
+
 #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
   #include <botan/tls_session_manager_sqlite.h>
 #endif
@@ -44,7 +48,7 @@ inline void log_exception(const char* where, const std::exception& e)
 
 inline void log_error(const char* where, const boost::system::error_code& error)
    {
-   std::cout << where << ' ' << error.message() << std::endl;
+   //std::cout << where << ' ' << error.message() << std::endl;
    }
 
 inline void log_binary_message(const char* where, const byte buf[], size_t buf_len)
@@ -92,7 +96,12 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
          client_read(boost::system::error_code(), 0); // start read loop
          }
 
-      void stop() { m_client_socket.close(); }
+      void stop()
+         {
+         m_tls.close();
+         m_client_socket.close();
+         m_server_socket.close();
+         }
 
    private:
       tls_proxy_session(boost::asio::io_service& io,
@@ -410,7 +419,11 @@ int tls_proxy(int argc, char* argv[])
 
    const size_t num_threads = choose_thread_count(); // make configurable
 
-   AutoSeeded_RNG rng;
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+   RandomNumberGenerator& rng = system_rng();
+#else
+   Serialized_RNG rng;
+#endif
    Basic_Credentials_Manager creds(rng, server_crt, server_key);
 
    TLS::Policy policy; // TODO: Read policy from text file
