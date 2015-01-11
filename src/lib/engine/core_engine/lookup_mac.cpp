@@ -25,6 +25,10 @@
   #include <botan/poly1305.h>
 #endif
 
+#if defined(BOTAN_HAS_SIPHASH)
+  #include <botan/siphash.h>
+#endif
+
 #if defined(BOTAN_HAS_ANSI_X919_MAC)
   #include <botan/x919_mac.h>
 #endif
@@ -51,6 +55,12 @@ Core_Engine::find_mac(const SCAN_Name& request,
 #if defined(BOTAN_HAS_POLY1305)
    if(request.algo_name() == "Poly1305")
       return new Poly1305;
+#endif
+
+#if defined(BOTAN_HAS_SIPHASH)
+   if(request.algo_name() == "SipHash")
+      return new SipHash(request.arg_as_integer(0, 2),
+                         request.arg_as_integer(1, 4));
 #endif
 
 #if defined(BOTAN_HAS_CBC_MAC)

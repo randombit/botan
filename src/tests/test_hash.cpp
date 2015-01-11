@@ -42,9 +42,11 @@ size_t hash_test(const std::string& algo,
          continue;
          }
 
+      const std::vector<byte> in = hex_decode(in_hex);
+
       std::unique_ptr<HashFunction> hash(proto->clone());
 
-      hash->update(hex_decode(in_hex));
+      hash->update(in);
 
       auto h = hash->final();
 
@@ -58,7 +60,7 @@ size_t hash_test(const std::string& algo,
       hash->update("some discarded input");
       hash->clear();
 
-      hash->update(hex_decode(in_hex));
+      hash->update(in);
 
       h = hash->final();
 
@@ -67,6 +69,20 @@ size_t hash_test(const std::string& algo,
          std::cout << algo << " " << provider << " got " << hex_encode(h) << " != " << out_hex
                    << " (with discarded input)\n";
          ++fails;
+         }
+
+      if(in.size() > 1)
+         {
+         hash->update(in[0]);
+         hash->update(&in[1], in.size() - 1);
+         h = hash->final();
+
+         if(h != hex_decode_locked(out_hex))
+            {
+            std::cout << algo << " " << provider << " got " << hex_encode(h) << " != " << out_hex
+                      << " (with offset input)\n";
+            ++fails;
+            }
          }
       }
 

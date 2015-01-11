@@ -13,7 +13,6 @@ Basic Algorithms
  * scrypt
  * BLAKE2
  * EdDSA
- * SipHash
  * Skein-MAC
  * IETF standard HKDF (RFC 5869)
  * ARIA (Korean block cipher, RFCs 5794 and 6209)

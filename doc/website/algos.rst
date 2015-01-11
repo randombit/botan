@@ -57,12 +57,13 @@ Hash functions
   * Obsolete or insecure hashes MD5, MD4, MD2
   * Non-cryptographic checksums Adler32, CRC24, CRC32
 
-Authentication Codes
+Authentication Codes and PRFs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * HMAC
   * CMAC (aka OMAC1)
   * Poly1305
+  * SipHash
   * Obsolete designs CBC-MAC and ANSI X9.19 DES-MAC
 
 Other Useful Things

@@ -45,15 +45,35 @@ size_t mac_test(const std::string& algo,
 
       std::unique_ptr<MessageAuthenticationCode> mac(proto->clone());
 
+      const std::vector<byte> in = hex_decode(in_hex);
+      const std::vector<byte> exp = hex_decode(out_hex);
+
       mac->set_key(hex_decode(key_hex));
-      mac->update(hex_decode(in_hex));
 
-      auto h = mac->final();
+      mac->update(in);
 
-      if(h != hex_decode_locked(out_hex))
+      const std::vector<byte> out = unlock(mac->final());
+
+      if(out != exp)
          {
-         std::cout << algo << " " << provider << " got " << hex_encode(h) << " != " << out_hex << "\n";
+         std::cout << algo << " " << provider << " got " << hex_encode(out) << " != " << hex_encode(exp) << "\n";
          ++fails;
+         }
+
+      if(in.size() > 2)
+         {
+         mac->set_key(hex_decode(key_hex));
+         mac->update(in[0]);
+         mac->update(&in[1], in.size() - 2);
+         mac->update(in[in.size()-1]);
+
+         const std::vector<byte> out2 = unlock(mac->final());
+
+         if(out2 != exp)
+            {
+            std::cout << algo << " " << provider << " got " << hex_encode(out2) << " != " << hex_encode(exp) << "\n";
+            ++fails;
+            }
          }
       }
 

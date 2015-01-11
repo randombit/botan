@@ -12,6 +12,8 @@ Version 1.11.13, Not Yet Released
 
 * Add DTLS-SRTP negotiation defined in RFC 5764
 
+* Add SipHash
+
 * Add SHA-512/256
 
 * The format of serialized TLS sessions has changed. Additiionally, PEM
