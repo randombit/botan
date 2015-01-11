@@ -380,7 +380,6 @@ class tls_proxy_server
       Credentials_Manager& m_creds;
       TLS::Policy& m_policy;
       TLS::Session_Manager& m_session_manager;
-      RandomNumberGenerator& m_rng;
    };
 
 size_t choose_thread_count()
@@ -431,7 +430,7 @@ int tls_proxy(int argc, char* argv[])
       TLS::Session_Manager_In_Memory sessions(rng);
 #endif
 
-      tls_proxy_server server(io, listen_port, server_endpoint_iterator, creds, policy, sessions, rng);
+      tls_proxy_server server(io, listen_port, server_endpoint_iterator, creds, policy, sessions);
 
       std::vector<std::shared_ptr<std::thread>> threads;
 
