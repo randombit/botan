@@ -176,7 +176,7 @@ class BuildConfigurationInformation(object):
             yield cmd_for('manual')
 
             if options.with_doxygen:
-                yield 'doxygen %s'  + os.sep + 'botan.doxy' % (self.build_dir)
+                yield 'doxygen %s%sbotan.doxy' % (self.build_dir, os.sep)
 
         self.build_doc_commands = '\n'.join(['\t' + s for s in build_doc_commands()])
 
@@ -1231,6 +1231,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'out_dir': options.with_build_dir or os.path.curdir,
         'build_dir': build_config.build_dir,
+
+        'scripts_dir': os.path.join(build_config.src_dir, 'scripts'),
 
         'with_shared_lib': options.build_shared_lib,
 
