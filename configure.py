@@ -176,7 +176,7 @@ class BuildConfigurationInformation(object):
             yield cmd_for('manual')
 
             if options.with_doxygen:
-                yield 'doxygen %s'  + os.sep + 'botan.doxy' % (self.build_dir)
+                yield 'doxygen %s%sbotan.doxy' % (self.build_dir, os.sep)
 
         self.build_doc_commands = '\n'.join(['\t' + s for s in build_doc_commands()])
 
