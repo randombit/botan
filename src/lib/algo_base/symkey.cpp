@@ -77,7 +77,7 @@ void OctetString::set_odd_parity()
 */
 std::string OctetString::as_string() const
    {
-   return hex_encode(&bits[0], bits.size());
+   return hex_encode(bits.data(), bits.size());
    }
 
 /*

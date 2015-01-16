@@ -232,7 +232,7 @@ secure_vector<byte> base64_decode(const char input[],
            : (round_up<size_t>(input_length, 4) * 3) / 4;
    secure_vector<byte> bin(output_length);
 
-   size_t written = base64_decode(&bin[0],
+   size_t written = base64_decode(bin.data(),
                                   input,
                                   input_length,
                                   ignore_ws);
