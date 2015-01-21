@@ -129,17 +129,24 @@ def to_ciphersuite_info(code, name):
         ivlen = 8 if cipher_algo == '3DES' else 16
 
         if mode != 'CBC':
-            cipher_algo += '/' + mode
+            if mode == 'OCB':
+                cipher_algo += '/OCB(12)'
+            else:
+                cipher_algo += '/' + mode
 
     if cipher_algo in stream_ciphers or mode == 'CBC':
         return 'Ciphersuite(0x%s, "%s", "%s", "%s", %d, %d, 0, "%s", %d)' % (
             code, sig_algo, kex_algo, cipher_algo, cipher_keylen, ivlen, mac_algo, mac_keylen[mac_algo])
-    else:
-        imp_iv_len = 4
-        exp_iv_len = 8
+    elif mode == 'OCB':
 
         return 'Ciphersuite(0x%s, "%s", "%s", "%s", %d, %d, %d, "AEAD", %d, "%s")' % (
-            code, sig_algo, kex_algo, cipher_algo, cipher_keylen, imp_iv_len, exp_iv_len, 0, mac_algo)
+            code, sig_algo, kex_algo, cipher_algo, cipher_keylen, 4, 0, 0, mac_algo)
+    else:
+        iv_bytes_from_hs = 4
+        iv_bytes_from_rec = 8
+
+        return 'Ciphersuite(0x%s, "%s", "%s", "%s", %d, %d, %d, "AEAD", %d, "%s")' % (
+            code, sig_algo, kex_algo, cipher_algo, cipher_keylen, iv_bytes_from_hs, iv_bytes_from_rec, 0, mac_algo)
 
 def open_input(args):
     iana_url = 'https://www.iana.org/assignments/tls-parameters/tls-parameters.txt'
@@ -234,13 +241,19 @@ def main(args = None):
 
     # Expermental things
     if options.with_ocb:
-        define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_128_OCB_SHA256', 'FF80')
-        define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_256_OCB_SHA384', 'FF81')
-        define_custom_ciphersuite('ECDHE_RSA_WITH_AES_128_OCB_SHA256', 'FF82')
-        define_custom_ciphersuite('ECDHE_RSA_WITH_AES_256_OCB_SHA384', 'FF83')
+        define_custom_ciphersuite('ECDHE_RSA_WITH_AES_128_OCB_SHA256', 'FFF0')
+        define_custom_ciphersuite('ECDHE_RSA_WITH_AES_256_OCB_SHA256', 'FFF1')
+        define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_128_OCB_SHA256', 'FFF2')
+        define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_256_OCB_SHA256', 'FFF3')
+        define_custom_ciphersuite('DHE_RSA_WITH_AES_128_OCB_SHA256', 'FFF4')
+        define_custom_ciphersuite('DHE_RSA_WITH_AES_256_OCB_SHA256', 'FFF5')
 
-        define_custom_ciphersuite('ECDHE_PSK_WITH_AES_128_OCB_SHA256', 'FF85')
-        define_custom_ciphersuite('ECDHE_PSK_WITH_AES_256_OCB_SHA384', 'FF86')
+        define_custom_ciphersuite('PSK_WITH_AES_128_OCB_SHA256', 'FFF6')
+        define_custom_ciphersuite('PSK_WITH_AES_256_OCB_SHA256', 'FFF7')
+        define_custom_ciphersuite('ECDHE_PSK_WITH_AES_128_OCB_SHA256', 'FFF8')
+        define_custom_ciphersuite('ECDHE_PSK_WITH_AES_256_OCB_SHA256', 'FFF9')
+        define_custom_ciphersuite('DHE_PSK_WITH_AES_128_OCB_SHA256', 'FFFA')
+        define_custom_ciphersuite('DHE_PSK_WITH_AES_256_OCB_SHA256', 'FFFB')
 
     if options.with_eax:
         define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_128_EAX_SHA256', 'FF90')
@@ -253,12 +266,6 @@ def main(args = None):
         define_custom_ciphersuite('SRP_SHA_RSA_WITH_AES_256_GCM_SHA384', 'FFA1')
         define_custom_ciphersuite('SRP_SHA_DSS_WITH_AES_256_GCM_SHA384', 'FFA2')
         define_custom_ciphersuite('SRP_SHA_ECDSA_WITH_AES_256_GCM_SHA384', 'FFA3')
-
-        if options.with_ocb:
-            define_custom_ciphersuite('SRP_SHA_WITH_AES_256_OCB_SHA384', 'FFA4')
-            define_custom_ciphersuite('SRP_SHA_RSA_WITH_AES_256_OCB_SHA384', 'FFA5')
-            define_custom_ciphersuite('SRP_SHA_DSS_WITH_AES_256_OCB_SHA384', 'FFA6')
-            define_custom_ciphersuite('SRP_SHA_ECDSA_WITH_AES_256_OCB_SHA384', 'FFA7')
 
         if options.with_eax:
             define_custom_ciphersuite('SRP_SHA_WITH_AES_256_EAX_SHA384', 'FFA8')

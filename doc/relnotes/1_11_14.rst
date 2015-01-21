@@ -1,0 +1,9 @@
+1.11.14, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* OCB mode, which provides a fast and constant time AEAD mode without
+  requiring hardware support, is now supported in TLS, following
+  draft-zauner-tls-aes-ocb-00. Because this specification is not yet
+  finalized is not yet enabled by the default policy, and the
+  ciphersuite numbers used are in the experimental range and may
+  conflict with other uses.
