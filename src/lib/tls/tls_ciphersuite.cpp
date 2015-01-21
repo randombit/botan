@@ -134,7 +134,7 @@ bool Ciphersuite::valid() const
 #endif
 
 #if !defined(BOTAN_HAS_AEAD_OCB)
-         if(mode == "OCB")
+         if(mode == "OCB(12)" || mode == "OCB")
             return false;
 #endif
          }
@@ -233,7 +233,13 @@ std::string Ciphersuite::to_string() const
       else if(cipher_algo().find("Camellia") == 0)
          out << "CAMELLIA_" << std::to_string(8*cipher_keylen());
       else
-         out << replace_chars(cipher_algo(), {'-', '/'}, '_');
+         {
+         if(cipher_algo().find("OCB(12)") != std::string::npos)
+            out << replace_chars(cipher_algo().substr(0, cipher_algo().size() - 4),
+                                 {'-', '/'}, '_');
+         else
+            out << replace_chars(cipher_algo(), {'-', '/'}, '_');
+         }
 
       if(cipher_algo().find("/") != std::string::npos)
          out << "_"; // some explicit mode already included

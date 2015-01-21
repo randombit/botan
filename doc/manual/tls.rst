@@ -517,6 +517,9 @@ be negotiated during a handshake.
      Also allowed: "Camellia-256/GCM", "Camellia-128/GCM",
      "Camellia-256", "Camellia-128"
 
+     Also allowed (though currently experimental): "AES-128/OCB(12)",
+     "AES-256/OCB(12)"
+
      Also allowed (although **not recommended**): "SEED", "3DES", "RC4"
 
      .. note::
