@@ -7,8 +7,6 @@ STATIC_LIB    = %{out_dir}/$(LIBNAME).%{static_suffix}
 
 LIBRARIES     = $(STATIC_LIB)
 
-SCRIPTS_DIR    = src/scripts
-
 # File Lists
 INCLUDE_DIR   = %{botan_include_dir}
 

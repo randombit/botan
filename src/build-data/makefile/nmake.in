@@ -20,9 +20,9 @@ APPOBJS       = %{app_objs}
 
 TESTOBJS      = %{test_objs}
 
-LIBRARIES     = $(BOTAN_LIB)
+LIBNAME       = botan
 
-SCRIPTS_DIR    = src\scripts
+LIBRARIES     = $(BOTAN_LIB)
 
 # This will be either a static lib or the DLL import lib
 BOTAN_LIB     = $(LIBNAME).%{static_suffix}
