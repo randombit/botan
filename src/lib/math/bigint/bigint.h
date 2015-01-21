@@ -366,7 +366,7 @@ class BOTAN_DLL BigInt
      */
      size_t sig_words() const
         {
-        const word* x = &m_reg[0];
+        const word* x = m_reg.data();
         size_t sig = m_reg.size();
 
         while(sig && (x[sig-1] == 0))
@@ -390,13 +390,13 @@ class BOTAN_DLL BigInt
      * Return a mutable pointer to the register
      * @result a pointer to the start of the internal register
      */
-     word* mutable_data() { return &m_reg[0]; }
+     word* mutable_data() { return m_reg.data(); }
 
      /**
      * Return a const pointer to the register
      * @result a pointer to the start of the internal register
      */
-     const word* data() const { return &m_reg[0]; }
+     const word* data() const { return m_reg.data(); }
 
      /**
      * Increase internal register buffer to at least n words
