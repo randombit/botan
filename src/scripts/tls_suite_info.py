@@ -173,7 +173,8 @@ def process_command_line(args):
                       help='save downloaded tls-parameters.txt')
 
     parser.add_option('--output', '-o',
-                      help='save output to named file instead of stdout')
+                      help='file to write output to (default %default)',
+                      default='src/lib/tls/tls_suite_info.cpp')
 
     return parser.parse_args(args)
 
@@ -275,7 +276,7 @@ def main(args = None):
 * (tls-parameters.txt hash %s)
 * by %s on %s
 *
-* Released under the terms of the Botan license
+* Botan is released under the Simplified BSD License (see license.txt)
 */
 
 """ % (contents_hash, sys.argv[0], datetime.date.today().strftime("%Y-%m-%d"))
@@ -308,12 +309,12 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
 }
 """
 
-    if options.output != None:
+    if options.output == '-':
+        print suite_info,
+    else:
         out = open(options.output, 'w')
         out.write(suite_info)
         out.close()
-    else:
-        print suite_info,
 
 if __name__ == '__main__':
     sys.exit(main())
