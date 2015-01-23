@@ -31,7 +31,6 @@
 #include <botan/mul128.h>
 #include <botan/internal/donna128.h>
 #include <botan/loadstor.h>
-#include <string.h>
 
 namespace Botan {
 
@@ -288,16 +287,16 @@ fmonty(limb *x2, limb *z2, /* output 2Q */
   limb origx[5], origxprime[5], zzz[5], xx[5], zz[5], xxprime[5],
         zzprime[5], zzzprime[5];
 
-  memcpy(origx, x, 5 * sizeof(limb));
+  copy_mem(origx, x, 5);
   fsum(x, z);
   fdifference_backwards(z, origx);  // does x - z
 
-  memcpy(origxprime, xprime, sizeof(limb) * 5);
+  copy_mem(origxprime, xprime, 5);
   fsum(xprime, zprime);
   fdifference_backwards(zprime, origxprime);
   fmul(xxprime, xprime, z);
   fmul(zzprime, x, zprime);
-  memcpy(origxprime, xxprime, sizeof(limb) * 5);
+  copy_mem(origxprime, xxprime, 5);
   fsum(xxprime, zzprime);
   fdifference_backwards(zzprime, origxprime);
   fsquare_times(x3, xxprime, 1);
@@ -347,7 +346,7 @@ cmult(limb *resultx, limb *resultz, const u8 *n, const limb *q) {
 
   unsigned i, j;
 
-  memcpy(nqpqx, q, sizeof(limb) * 5);
+  copy_mem(nqpqx, q, 5);
 
   for (i = 0; i < 32; ++i) {
     u8 byte = n[31 - i];
@@ -381,8 +380,8 @@ cmult(limb *resultx, limb *resultz, const u8 *n, const limb *q) {
     }
   }
 
-  memcpy(resultx, nqx, sizeof(limb) * 5);
-  memcpy(resultz, nqz, sizeof(limb) * 5);
+  copy_mem(resultx, nqx, 5);
+  copy_mem(resultz, nqz, 5);
 }
 
 

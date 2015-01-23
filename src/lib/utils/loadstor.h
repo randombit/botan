@@ -12,7 +12,7 @@
 #include <botan/types.h>
 #include <botan/bswap.h>
 #include <botan/get_byte.h>
-#include <cstring>
+#include <botan/mem_ops.h>
 #include <vector>
 
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK

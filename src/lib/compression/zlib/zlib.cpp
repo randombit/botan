@@ -120,7 +120,7 @@ class Gzip_Compression_Stream : public Zlib_Compression_Stream
       Gzip_Compression_Stream(size_t level, int wbits, byte os_code) :
          Zlib_Compression_Stream(level, wbits, 16)
          {
-         std::memset(&m_header, 0, sizeof(m_header));
+         clear_mem(&m_header, 1);
          m_header.os = os_code;
          m_header.time = std::time(nullptr);
 

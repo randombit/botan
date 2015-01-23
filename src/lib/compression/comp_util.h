@@ -9,7 +9,6 @@
 #define BOTAN_COMPRESSION_UTILS_H__
 
 #include <botan/compression.h>
-#include <cstring>
 #include <memory>
 #include <unordered_map>
 
@@ -64,13 +63,13 @@ class Zlib_Style_Stream : public Compression_Stream
 
       Zlib_Style_Stream()
          {
-         std::memset(&m_stream, 0, sizeof(stream_t));
+         clear_mem(&m_stream, 1);
          m_allocs.reset(new Compression_Alloc_Info);
          }
 
       ~Zlib_Style_Stream()
          {
-         std::memset(&m_stream, 0, sizeof(stream_t));
+         clear_mem(&m_stream, 1);
          m_allocs.reset();
          }
 

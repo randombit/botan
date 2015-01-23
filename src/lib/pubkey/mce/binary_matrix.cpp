@@ -19,8 +19,7 @@ binary_matrix::binary_matrix (u32bit rown, u32bit coln)
    m_coln = coln;
    m_rown = rown;
    m_rwdcnt = (1 + (m_coln - 1) / BITS_PER_U32);
-   m_alloc_size = m_rown * (*this).m_rwdcnt * sizeof (u32bit);
-   m_elem = std::vector<u32bit>((*this).m_alloc_size/4);
+   m_elem = std::vector<u32bit>(m_rown * m_rwdcnt);
    }
 
 void binary_matrix::row_xor(u32bit a, u32bit b)
