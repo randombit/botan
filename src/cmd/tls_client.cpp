@@ -64,7 +64,7 @@ int connect_to_host(const std::string& host, u16bit port, const std::string& tra
             host_addr->h_addr,
             host_addr->h_length);
 
-   socket_info.sin_addr = *(struct in_addr*)host_addr->h_addr; // FIXME
+   socket_info.sin_addr = *reinterpret_cast<struct in_addr*>(host_addr->h_addr); // FIXME
 
    if(::connect(fd, (sockaddr*)&socket_info, sizeof(struct sockaddr)) != 0)
       {
