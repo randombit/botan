@@ -29,12 +29,9 @@
 
 #include <botan/curve25519.h>
 #include <botan/mul128.h>
+#include <botan/internal/donna128.h>
 #include <botan/loadstor.h>
 #include <string.h>
-
-#if !defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
-  #include <botan/internal/donna128.h>
-#endif
 
 namespace Botan {
 
@@ -44,20 +41,6 @@ typedef limb felem[5];
 
 #if !defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
 typedef donna128 uint128_t;
-
-#else
-
-inline u64bit carry_shift(const uint128_t a, size_t shift)
-   {
-   return static_cast<u64bit>(a >> shift);
-   }
-
-inline u64bit combine_lower(const uint128_t a, size_t s1,
-                            const uint128_t b, size_t s2)
-   {
-   return static_cast<u64bit>((a >> s1) | (b << s2));
-   }
-
 #endif
 
 /* Sum two numbers: output += in */

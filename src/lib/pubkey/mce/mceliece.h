@@ -9,15 +9,13 @@
  *
  */
 
-
+#ifndef BOTAN_MCELIECE_H__
+#define BOTAN_MCELIECE_H__
 
 #include <botan/secmem.h>
 #include <botan/types.h>
 #include <botan/pk_ops.h>
 #include <botan/mceliece_key.h>
-
-#ifndef BOTAN_MCELIECE_H__
-#define BOTAN_MCELIECE_H__
 
 #define MASK_LOG2_BYTE ((1 << 3) - 1)
 #define _BITP_TO_BYTEP(__bit_pos) (__bit_pos >> 3)
