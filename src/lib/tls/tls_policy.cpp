@@ -119,9 +119,9 @@ std::string Policy::choose_curve(const std::vector<std::string>& curve_names) co
    return ""; // no shared curve
    }
 
-DL_Group Policy::dh_group() const
+std::string Policy::dh_group() const
    {
-   return DL_Group("modp/ietf/2048");
+   return "modp/ietf/2048";
    }
 
 size_t Policy::minimum_dh_group_size() const
@@ -309,6 +309,50 @@ std::vector<u16bit> Policy::ciphersuite_list(Protocol_Version version,
    for(auto i : ciphersuites)
       ciphersuite_codes.push_back(i.ciphersuite_code());
    return ciphersuite_codes;
+   }
+
+namespace {
+
+void print_vec(std::ostream& o,
+               const char* key,
+               const std::vector<std::string>& v)
+   {
+   o << key << " = ";
+   for(size_t i = 0; i != v.size(); ++i)
+      {
+      o << v[i];
+      if(i != v.size() - 1)
+         o << ' ';
+      }
+   o << '\n';
+   }
+
+void print_bool(std::ostream& o,
+                const char* key, bool b)
+   {
+   o << key << " = " << (b ? "true" : "false") << '\n';
+   }
+
+}
+
+void Policy::print(std::ostream& o) const
+   {
+   print_vec(o, "ciphers", allowed_ciphers());
+   print_vec(o, "macs", allowed_macs());
+   print_vec(o, "signature_hashes", allowed_signature_hashes());
+   print_vec(o, "signature_methods", allowed_signature_methods());
+   print_vec(o, "key_exchange_methods", allowed_key_exchange_methods());
+   print_vec(o, "ecc_curves", allowed_ecc_curves());
+
+   print_bool(o, "negotiate_heartbeat_support", negotiate_heartbeat_support());
+   print_bool(o, "allow_insecure_renegotiation", allow_insecure_renegotiation());
+   print_bool(o, "include_time_in_hello_random", include_time_in_hello_random());
+   print_bool(o, "allow_server_initiated_renegotiation", allow_server_initiated_renegotiation());
+   print_bool(o, "hide_unknown_users", hide_unknown_users());
+   print_bool(o, "server_uses_own_ciphersuite_preferences", server_uses_own_ciphersuite_preferences());
+   o << "session_ticket_lifetime = " << session_ticket_lifetime() << '\n';
+   o << "dh_group = " << dh_group() << '\n';
+   o << "minimum_dh_group_size = " << minimum_dh_group_size() << '\n';
    }
 
 }

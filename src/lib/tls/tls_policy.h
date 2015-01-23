@@ -102,10 +102,7 @@ class BOTAN_DLL Policy
       */
       virtual bool allow_server_initiated_renegotiation() const;
 
-      /**
-      * Return the group to use for ephemeral Diffie-Hellman key agreement
-      */
-      virtual DL_Group dh_group() const;
+      virtual std::string dh_group() const;
 
       /**
       * Return the minimum DH group size we're willing to use
@@ -176,6 +173,8 @@ class BOTAN_DLL Policy
       virtual std::vector<u16bit> ciphersuite_list(Protocol_Version version,
                                                    bool have_srp) const;
 
+      virtual void print(std::ostream& o) const;
+
       virtual ~Policy() {}
    };
 
@@ -218,6 +217,120 @@ class BOTAN_DLL Datagram_Policy : public Policy
 
       bool acceptable_protocol_version(Protocol_Version version) const override
          { return version == Protocol_Version::DTLS_V12; }
+   };
+
+class BOTAN_DLL Text_Policy : public Policy
+   {
+   public:
+
+      std::vector<std::string> allowed_ciphers() const override
+         { return get_list("ciphers", Policy::allowed_ciphers()); }
+
+      std::vector<std::string> allowed_signature_hashes() const override
+         { return get_list("signature_hashes", Policy::allowed_signature_hashes()); }
+
+      std::vector<std::string> allowed_macs() const override
+         { return get_list("macs", Policy::allowed_macs()); }
+
+      std::vector<std::string> allowed_key_exchange_methods() const override
+         { return get_list("key_exchange_methods", Policy::allowed_key_exchange_methods()); }
+
+      std::vector<std::string> allowed_signature_methods() const override
+         { return get_list("signature_methods", Policy::allowed_signature_methods()); }
+
+      std::vector<std::string> allowed_ecc_curves() const override
+         { return get_list("ecc_curves", Policy::allowed_ecc_curves()); }
+
+      bool negotiate_heartbeat_support() const override
+         { return get_bool("negotiate_heartbeat_support", Policy::negotiate_heartbeat_support()); }
+
+      bool allow_insecure_renegotiation() const override
+         { return get_bool("allow_insecure_renegotiation", Policy::allow_insecure_renegotiation()); }
+
+      bool include_time_in_hello_random() const override
+         { return get_bool("include_time_in_hello_random", Policy::include_time_in_hello_random()); }
+
+      bool allow_server_initiated_renegotiation() const override
+         { return get_bool("allow_server_initiated_renegotiation", Policy::allow_server_initiated_renegotiation()); }
+
+      bool server_uses_own_ciphersuite_preferences() const override
+         { return get_bool("server_uses_own_ciphersuite_preferences", Policy::server_uses_own_ciphersuite_preferences()); }
+
+      std::string dh_group() const override
+         { return get_str("dh_group", Policy::dh_group()); }
+
+      size_t minimum_dh_group_size() const override
+         { return get_len("minimum_dh_group_size", Policy::minimum_dh_group_size()); }
+
+      bool hide_unknown_users() const override
+         { return get_bool("hide_unknown_users", Policy::hide_unknown_users()); }
+
+      u32bit session_ticket_lifetime() const override
+         { return get_len("session_ticket_lifetime", Policy::session_ticket_lifetime()); }
+
+      std::vector<u16bit> srtp_profiles() const override
+         {
+         std::vector<u16bit> r;
+         for(auto&& p : get_list("srtp_profiles", std::vector<std::string>()))
+            {
+            r.push_back(to_u32bit(p));
+            }
+         return r;
+         }
+
+      Text_Policy(std::istream& in)
+         {
+         m_kv = read_cfg(in);
+         }
+
+   private:
+
+      std::vector<std::string> get_list(const std::string& key,
+                                        const std::vector<std::string>& def) const
+         {
+         const std::string v = get_str(key);
+
+         if(v == "")
+            return def;
+
+         return split_on(v, ' ');
+         }
+
+      size_t get_len(const std::string& key, size_t def) const
+         {
+         const std::string v = get_str(key);
+
+         if(v == "")
+            return def;
+
+         return to_u32bit(v);
+         }
+
+      bool get_bool(const std::string& key, bool def) const
+         {
+         const std::string v = get_str(key);
+
+         if(v == "")
+            return def;
+
+         if(v == "true" || v == "True")
+            return true;
+         else if(v == "false" || v == "False")
+            return false;
+         else
+            throw std::runtime_error("Invalid boolean '" + v + "'");
+         }
+
+      std::string get_str(const std::string& key, const std::string& def = "") const
+         {
+         auto i = m_kv.find(key);
+         if(i == m_kv.end())
+            return def;
+
+         return i->second;
+         }
+
+      std::map<std::string, std::string> m_kv;
    };
 
 }
