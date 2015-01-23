@@ -87,7 +87,7 @@ class BOTAN_DLL Policy
       * @warning Changing this to true exposes you to injected
       * plaintext attacks. Read RFC 5746 for background.
       */
-      virtual bool allow_insecure_renegotiation() const { return false; }
+      virtual bool allow_insecure_renegotiation() const;
 
       /**
       * The protocol dictates that the first 32 bits of the random
@@ -95,7 +95,7 @@ class BOTAN_DLL Policy
       * client fingerprinting attacks. Set to false to disable, in
       * which case random bytes will be used instead.
       */
-      virtual bool include_time_in_hello_random() const { return true; }
+      virtual bool include_time_in_hello_random() const;
 
       /**
       * Allow servers to initiate a new handshake
@@ -117,7 +117,7 @@ class BOTAN_DLL Policy
       * proceed, causing the handshake to eventually fail without
       * revealing that the username does not exist on this system.
       */
-      virtual bool hide_unknown_users() const { return false; }
+      virtual bool hide_unknown_users() const;
 
       /**
       * Return the allowed lifetime of a session ticket. If 0, session
@@ -165,7 +165,7 @@ class BOTAN_DLL Policy
       *         their highest preference, rather than the clients.
       *         Has no effect on client side.
       */
-      virtual bool server_uses_own_ciphersuite_preferences() const { return true; }
+      virtual bool server_uses_own_ciphersuite_preferences() const;
 
       /**
       * Return allowed ciphersuites, in order of preference
@@ -217,6 +217,39 @@ class BOTAN_DLL Datagram_Policy : public Policy
 
       bool acceptable_protocol_version(Protocol_Version version) const override
          { return version == Protocol_Version::DTLS_V12; }
+   };
+
+/*
+* This policy requires a secure version of TLS and disables all insecure
+* algorithms. It is compatible with other botan TLSes (including those using the
+* default policy) and with many other recent implementations. It is a great idea
+* to use if you control both sides of the protocol and don't have to worry
+* about ancient and/or bizarre TLS implementations.
+*/
+class BOTAN_DLL Strict_Policy : public Policy
+   {
+   public:
+      std::vector<std::string> allowed_ciphers() const override
+         {
+         return { "ChaCha20Poly1305", "AES-256/GCM", "AES-128/GCM" };
+         }
+
+      std::vector<std::string> allowed_signature_hashes() const override
+         { return { "SHA-512", "SHA-384"}; }
+
+      std::vector<std::string> allowed_macs() const override
+         { return { "AEAD" }; }
+
+      std::vector<std::string> allowed_key_exchange_methods() const override
+         { return { "ECDH" }; }
+
+      bool acceptable_protocol_version(Protocol_Version version) const override
+         {
+         if(version.is_datagram_protocol())
+            return (version >= Protocol_Version::DTLS_V12);
+         else
+            return (version >= Protocol_Version::TLS_V12);
+         }
    };
 
 class BOTAN_DLL Text_Policy : public Policy

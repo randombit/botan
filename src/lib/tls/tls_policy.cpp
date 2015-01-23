@@ -168,15 +168,12 @@ bool Policy::acceptable_ciphersuite(const Ciphersuite&) const
    return true;
    }
 
-bool Policy::negotiate_heartbeat_support() const
-   {
-   return false;
-   }
-
-bool Policy::allow_server_initiated_renegotiation() const
-   {
-   return true;
-   }
+bool Policy::negotiate_heartbeat_support() const { return false; }
+bool Policy::allow_server_initiated_renegotiation() const { return false; }
+bool Policy::allow_insecure_renegotiation() const { return false; }
+bool Policy::include_time_in_hello_random() const { return true; }
+bool Policy::hide_unknown_users() const { return false; }
+bool Policy::server_uses_own_ciphersuite_preferences() const { return true; }
 
 std::vector<u16bit> Policy::srtp_profiles() const
    {
