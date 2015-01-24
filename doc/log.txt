@@ -7,6 +7,14 @@ Release Notes
 Series 1.10
 ----------------------------------------
 
+Version 1.10.10, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* The default TLS policy no longer allows RC4.
+
+* Fix a signed integer overflow in Blue Midnight Wish that may cause
+  incorrect computations or undefined behavior.
+
 Version 1.10.9, 2014-12-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
