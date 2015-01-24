@@ -7,3 +7,12 @@ Version 1.11.14, Not Yet Released
   finalized is not yet enabled by the default policy, and the
   ciphersuite numbers used are in the experimental range and may
   conflict with other uses.
+
+* The memory allocator available on Unix systems which uses mmap and
+  mlock to lock a pool of memory now checks an environment variable
+  BOTAN_MLOCK_POOL_SIZE. If this is set to a smaller value then the
+  library would originally have allocated the user specified size is
+  used. You can also set it to zero to disable the pool entirely.
+  Previously the allocator would consume all available mlocked memory,
+  this allows botan to coexist with an application which wants to
+  mlock memory of its own.
