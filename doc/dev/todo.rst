@@ -5,32 +5,31 @@ These are features either requested by users or that seem like
 potentially useful things to have. Several are quite self-contained
 and could make a quick project.
 
-Send any additions to the mailing list.
+Request a new feature by sending a patch.
 
-Basic Algorithms
+Basic Crypto
 ----------------------------------------
 
- * scrypt
- * BLAKE2
- * EdDSA
- * Skein-MAC
- * IETF standard HKDF (RFC 5869)
- * ARIA (Korean block cipher, RFCs 5794 and 6209)
- * Extend Cascade_Cipher to support arbitrary number of ciphers
+* scrypt
+* BLAKE2
+* EdDSA
+* Skein-MAC
+* IETF standard HKDF (RFC 5869)
+* ARIA (Korean block cipher, RFCs 5794 and 6209)
+* Extend Cascade_Cipher to support arbitrary number of ciphers
 
 TLS
 ----------------------------------------
 
- * Authentication using TOFU
- * Certificate pinning (using TACK?)
- * TLS OCSP stapling (RFC 6066)
- * Compression (deflate, lzma, ...)
- * ALPN (RFC 7301)
- * Encrypt-then-MAC extension (RFC 7366)
- * TLS supplemental authorization data (RFC 4680, RFC 5878)
- * OpenPGP authentication (RFC 5081)
- * DTLS-SCTP (RFC 6083)
- * Perspectives (http://perspectives-project.org/)
+* Encrypt-then-MAC extension (RFC 7366)
+* Authentication using TOFU (sqlite3 storage)
+* Certificate pinning (using TACK?)
+* TLS OCSP stapling (RFC 6066)
+* ALPN (RFC 7301)
+* TLS supplemental authorization data (RFC 4680, RFC 5878)
+* OpenPGP authentication (RFC 5081)
+* DTLS-SCTP (RFC 6083)
+* Perspectives (http://perspectives-project.org/)
 
 PKIX
 ----------------------------------------
@@ -41,7 +40,7 @@ PKIX
 ECC / BigInt / Math
 ----------------------------------------
 
-* Fast reductions for P-256 and P-384
+* Specialized reductions for P-256 and P-384
 * MP asm optimizations - SSE2, ARM/NEON, ...
 
 New Protocols
@@ -66,3 +65,5 @@ FFI
 
 * Expose TLS to Python
 * Expose ECC to Python
+* Expose bcrypt to Python
+
