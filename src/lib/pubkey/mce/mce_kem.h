@@ -52,4 +52,4 @@ class BOTAN_DLL McEliece_KEM_Decryptor
   };
 }
 
-#endif /* h-guard */
+#endif

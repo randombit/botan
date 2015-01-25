@@ -44,6 +44,12 @@
 /* How many bits per limb in a BigInt */
 #define BOTAN_MP_WORD_BITS %{mp_bits}
 
+/*
+If enabled uses memset via volatile function pointer to zero memory,
+otherwise does a byte at a time write via a volatile pointer.
+*/
+#define BOTAN_USE_VOLATILE_MEMSET_FOR_ZERO 1
+
 /* PK key consistency checking toggles */
 #define BOTAN_PUBLIC_KEY_STRONG_CHECKS_ON_LOAD 1
 #define BOTAN_PRIVATE_KEY_STRONG_CHECKS_ON_LOAD 0

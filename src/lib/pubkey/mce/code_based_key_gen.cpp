@@ -173,10 +173,10 @@ McEliece_PrivateKey generate_mceliece_key( RandomNumberGenerator & rng, u32bit e
       {
       Linv[L[i]] = i;
       }
-   std::vector<byte> pubmat (R->m_alloc_size);
-   for(i = 0; i < R->m_alloc_size/4; i++)
+   std::vector<byte> pubmat (R->m_elem.size() * 4);
+   for(i = 0; i < R->m_elem.size(); i++)
       {
-      store_le(R->m_elem[i], &pubmat[i*4] );
+      store_le(R->m_elem[i], &pubmat[i*4]);
       }
 
    return McEliece_PrivateKey(g, H, sqrtmod, Linv, pubmat);

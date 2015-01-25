@@ -26,8 +26,8 @@ void concat_vectors(unsigned char* x, const unsigned char* a, const unsigned cha
    {
    if(dimension % 8 == 0)
       {
-      std::memcpy(x, a, bit_size_to_byte_size(dimension));
-      std::memcpy(((unsigned char *) x) + bit_size_to_byte_size(dimension), b, bit_size_to_byte_size(codimension));
+      copy_mem(x, a, bit_size_to_byte_size(dimension));
+      copy_mem(((unsigned char *) x) + bit_size_to_byte_size(dimension), b, bit_size_to_byte_size(codimension));
       }
    else
       {
@@ -35,7 +35,7 @@ void concat_vectors(unsigned char* x, const unsigned char* a, const unsigned cha
       i = dimension - 8 * (dimension/ 8);
       j = 8 - i;
       l = dimension / 8;
-      std::memcpy(x, a, 1 * (dimension / 8));
+      copy_mem(x, a, 1 * (dimension / 8));
       x[l] = ((byte) (a[l] & ((1 << i) - 1)));
 
       for(k = 0; k < codimension / 8; ++k)
@@ -149,7 +149,7 @@ secure_vector<byte> McEliece_Public_Operation::encrypt(const byte msg[], size_t 
 
    std::vector<byte> ciphertext_tmp = mceliece_encrypt( message_word,  m_pub_key.get_public_matrix(), err_pos, m_code_length);
 
-   std::memcpy(&ciphertext[0], &ciphertext_tmp[0], ciphertext.size());
+   copy_mem(&ciphertext[0], &ciphertext_tmp[0], ciphertext.size());
    return ciphertext;
    }
 

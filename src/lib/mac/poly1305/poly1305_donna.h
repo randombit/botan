@@ -12,10 +12,7 @@
 
 #include <botan/loadstor.h>
 #include <botan/mul128.h>
-
-#if !defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
-  #include <botan/internal/donna128.h>
-#endif
+#include <botan/internal/donna128.h>
 
 namespace Botan {
 
@@ -23,11 +20,6 @@ namespace {
 
 #if !defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
 typedef donna128 uint128_t;
-#else
-inline u64bit carry_shift(const uint128_t a, size_t shift)
-   {
-   return static_cast<u64bit>(a >> shift);
-   }
 #endif
 
 void poly1305_init(secure_vector<u64bit>& X, const byte key[32])

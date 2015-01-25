@@ -491,7 +491,10 @@ TLS Policies
 ----------------------------------------
 
 ``TLS::Policy`` is how an application can control details of what will
-be negotiated during a handshake.
+be negotiated during a handshake. The base class acts as the default
+policy. There is also a ``Strict_Policy`` (which forces only secure
+options, reducing compatability) and ``Text_Policy`` which reads
+policy settings from a file.
 
 .. cpp:class:: TLS::Policy
 
@@ -617,7 +620,7 @@ be negotiated during a handshake.
      server-initiated renegotiation attempt. Otherwise it will send
      the server a non-fatal ``no_renegotiation`` alert.
 
-     Default: true
+     Default: false
 
  .. cpp:function:: bool allow_insecure_renegotiation() const
 
@@ -628,11 +631,11 @@ be negotiated during a handshake.
 
      Default: false
 
- .. cpp:function:: DL_Group dh_group() const
+ .. cpp:function:: std::string dh_group() const
 
      For ephemeral Diffie-Hellman key exchange, the server sends a
-     group parameter. Return the group parameter a server should
-     use.
+     group parameter. Return a string specifying the group parameter a
+     server should use.
 
      Default: 2048 bit IETF IPsec group ("modp/ietf/2048")
 
