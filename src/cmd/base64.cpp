@@ -10,7 +10,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <cstring>
 #include <cstdlib>
 #include <botan/b64_filt.h>
 #include <botan/pipe.h>

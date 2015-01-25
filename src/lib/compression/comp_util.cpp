@@ -6,7 +6,7 @@
 */
 
 #include <botan/internal/comp_util.h>
-#include <cstring>
+#include <botan/mem_ops.h>
 #include <cstdlib>
 
 namespace Botan {
@@ -29,7 +29,7 @@ void Compression_Alloc_Info::do_free(void* ptr)
       if(i == m_current_allocs.end())
          throw std::runtime_error("Compression_Alloc_Info::free got pointer not allocated by us");
 
-      std::memset(ptr, 0, i->second);
+      zero_mem(ptr, i->second);
       std::free(ptr);
       m_current_allocs.erase(i);
       }

@@ -10,9 +10,6 @@
  */
 
 #include <botan/polyn_gf2m.h>
-#include <cstring>
-#include <iostream>
-
 #include <botan/gf2m_rootfind_dcmp.h>
 #include <botan/code_based_util.h>
 #include <botan/gf2m_small_m.h>
@@ -219,7 +216,7 @@ void polyn_gf2m::encode(u32bit min_numo_coeffs, byte* mem, u32bit mem_len) const
 
 void polyn_gf2m::set_to_zero()
    {
-   memset(&this->coeff[0], 0, this->coeff.size() * sizeof (gf2m));
+   clear_mem(&this->coeff[0], this->coeff.size());
    this->m_deg = -1;
    }
 
@@ -304,8 +301,8 @@ std::vector<polyn_gf2m> polyn_gf2m::sqmod_init(const polyn_gf2m & g)
 
    for (; i < d; ++i)
       {
-      memset(&sq[i].coeff[0], 0, 2 * sizeof (gf2m));
-      memcpy(&sq[i].coeff[0] + 2, &sq[i - 1].coeff[0], d * sizeof (gf2m));
+      clear_mem(&sq[i].coeff[0], 2);
+      copy_mem(&sq[i].coeff[0] + 2, &sq[i - 1].coeff[0], d);
       sq[i].set_degree( sq[i - 1].get_degree() + 2);
       polyn_gf2m::remainder(sq[i], g);
       }

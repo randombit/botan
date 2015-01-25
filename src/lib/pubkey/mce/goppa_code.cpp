@@ -179,7 +179,7 @@ secure_vector<byte> mceliece_decrypt(
 
 
    secure_vector<byte> cleartext(cleartext_len);
-   std::memcpy(&cleartext[0], ciphertext, cleartext_len);
+   copy_mem(&cleartext[0], ciphertext, cleartext_len);
 
    for(u32bit i = 0; i < nb_err; i++)
       {

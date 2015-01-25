@@ -29,12 +29,8 @@
 
 #include <botan/curve25519.h>
 #include <botan/mul128.h>
+#include <botan/internal/donna128.h>
 #include <botan/loadstor.h>
-#include <string.h>
-
-#if !defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
-  #include <botan/internal/donna128.h>
-#endif
 
 namespace Botan {
 
@@ -44,20 +40,6 @@ typedef limb felem[5];
 
 #if !defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
 typedef donna128 uint128_t;
-
-#else
-
-inline u64bit carry_shift(const uint128_t a, size_t shift)
-   {
-   return static_cast<u64bit>(a >> shift);
-   }
-
-inline u64bit combine_lower(const uint128_t a, size_t s1,
-                            const uint128_t b, size_t s2)
-   {
-   return static_cast<u64bit>((a >> s1) | (b << s2));
-   }
-
 #endif
 
 /* Sum two numbers: output += in */
@@ -305,16 +287,16 @@ fmonty(limb *x2, limb *z2, /* output 2Q */
   limb origx[5], origxprime[5], zzz[5], xx[5], zz[5], xxprime[5],
         zzprime[5], zzzprime[5];
 
-  memcpy(origx, x, 5 * sizeof(limb));
+  copy_mem(origx, x, 5);
   fsum(x, z);
   fdifference_backwards(z, origx);  // does x - z
 
-  memcpy(origxprime, xprime, sizeof(limb) * 5);
+  copy_mem(origxprime, xprime, 5);
   fsum(xprime, zprime);
   fdifference_backwards(zprime, origxprime);
   fmul(xxprime, xprime, z);
   fmul(zzprime, x, zprime);
-  memcpy(origxprime, xxprime, sizeof(limb) * 5);
+  copy_mem(origxprime, xxprime, 5);
   fsum(xxprime, zzprime);
   fdifference_backwards(zzprime, origxprime);
   fsquare_times(x3, xxprime, 1);
@@ -364,7 +346,7 @@ cmult(limb *resultx, limb *resultz, const u8 *n, const limb *q) {
 
   unsigned i, j;
 
-  memcpy(nqpqx, q, sizeof(limb) * 5);
+  copy_mem(nqpqx, q, 5);
 
   for (i = 0; i < 32; ++i) {
     u8 byte = n[31 - i];
@@ -398,8 +380,8 @@ cmult(limb *resultx, limb *resultz, const u8 *n, const limb *q) {
     }
   }
 
-  memcpy(resultx, nqx, sizeof(limb) * 5);
-  memcpy(resultz, nqz, sizeof(limb) * 5);
+  copy_mem(resultx, nqx, 5);
+  copy_mem(resultz, nqz, 5);
 }
 
 

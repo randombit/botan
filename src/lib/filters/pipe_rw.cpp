@@ -63,8 +63,8 @@ void Pipe::write(DataSource& source)
    secure_vector<byte> buffer(DEFAULT_BUFFERSIZE);
    while(!source.end_of_data())
       {
-      size_t got = source.read(buffer->data(), buffer.size());
-      write(buffer->data(), got);
+      size_t got = source.read(buffer.data(), buffer.size());
+      write(buffer.data(), got);
       }
    }
 
@@ -116,10 +116,10 @@ std::string Pipe::read_all_as_string(message_id msg)
 
    while(true)
       {
-      size_t got = read(buffer->data(), buffer.size(), msg);
+      size_t got = read(buffer.data(), buffer.size(), msg);
       if(got == 0)
          break;
-      str.append(reinterpret_cast<const char*>(buffer->data()), got);
+      str.append(reinterpret_cast<const char*>(buffer.data()), got);
       }
 
    return str;

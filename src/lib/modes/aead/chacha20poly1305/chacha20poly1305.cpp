@@ -69,8 +69,8 @@ secure_vector<byte> ChaCha20Poly1305_Mode::start_raw(const byte nonce[], size_t 
 
    if(cfrg_version())
       {
-      for(size_t i = 0; i != 16 - m_ad.size() % 16; ++i)
-         m_poly1305->update(0);
+      std::vector<byte> padding(16 - m_ad.size() % 16);
+      m_poly1305->update(padding);
       }
    else
       {
@@ -96,8 +96,8 @@ void ChaCha20Poly1305_Encryption::finish(secure_vector<byte>& buffer, size_t off
    update(buffer, offset);
    if(cfrg_version())
       {
-      for(size_t i = 0; i != 16 - m_ctext_len % 16; ++i)
-         m_poly1305->update(0);
+      std::vector<byte> padding(16 - m_ctext_len % 16);
+      m_poly1305->update(padding);
       update_len(m_ad.size());
       }
    update_len(m_ctext_len);

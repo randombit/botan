@@ -1255,10 +1255,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'mp_bits': choose_mp_bits(),
 
-        'cc': (options.compiler_binary or cc.binary_name) + cc.mach_abi_link_flags(options) +
-              ('' if not options.via_amalgamation else all_isa_specific_flags()),
+        'cc': (options.compiler_binary or cc.binary_name) + cc.mach_abi_link_flags(options),
 
-        'lib_opt': cc.opt_flags('lib', options),
+        'lib_opt': cc.opt_flags('lib', options) + (all_isa_specific_flags() if options.via_amalgamation else ''),
         'app_opt': cc.opt_flags('app', options),
         'lang_flags': cc.lang_flags,
         'warn_flags': warning_flags(cc.warning_flags,

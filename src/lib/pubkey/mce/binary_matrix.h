@@ -46,13 +46,12 @@ struct binary_matrix
 
       void set_to_zero()
          {
-         std::memset(&m_elem[0], 0, m_alloc_size);
+         zeroise(m_elem);
          }
 
       u32bit m_rown;  // number of rows.
       u32bit m_coln; // number of columns.
       u32bit m_rwdcnt; // number of words in a row
-      u32bit m_alloc_size; // number of allocated bytes
       std::vector<u32bit> m_elem;
    };
 

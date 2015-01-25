@@ -9,15 +9,13 @@
  *
  */
 
-
+#ifndef BOTAN_MCELIECE_H__
+#define BOTAN_MCELIECE_H__
 
 #include <botan/secmem.h>
 #include <botan/types.h>
 #include <botan/pk_ops.h>
 #include <botan/mceliece_key.h>
-
-#ifndef BOTAN_MCELIECE_H__
-#define BOTAN_MCELIECE_H__
 
 #define MASK_LOG2_BYTE ((1 << 3) - 1)
 #define _BITP_TO_BYTEP(__bit_pos) (__bit_pos >> 3)
@@ -39,7 +37,7 @@ class mceliece_message_parts
     m_code_length(code_length)
   {
     m_message_word.resize(message_length);
-    std::memcpy(&m_message_word[0], message, message_length);
+    copy_mem(&m_message_word[0], message, message_length);
   };
 
     mceliece_message_parts(const secure_vector<gf2m>& err_pos, const secure_vector<byte>& message, unsigned code_length)
@@ -72,16 +70,16 @@ class mceliece_message_parts
       }
       size_t err_vec_start_pos = message_concat_errors_len - err_vec_len;
       m_message_word = secure_vector<byte>(err_vec_start_pos );
-      std::memcpy(&m_message_word[0], &message_concat_errors[0], err_vec_start_pos);
+      copy_mem(&m_message_word[0], &message_concat_errors[0], err_vec_start_pos);
       m_error_vector = secure_vector<byte>(err_vec_len );
-      std::memcpy(&m_error_vector[0],  &message_concat_errors[err_vec_start_pos], err_vec_len);
+      copy_mem(&m_error_vector[0],  &message_concat_errors[err_vec_start_pos], err_vec_len);
 
     };
     secure_vector<byte> get_concat() const
     {
       secure_vector<byte> result(m_error_vector.size() + m_message_word.size());
-      std::memcpy(&result[0], &m_message_word[0], m_message_word.size());
-      std::memcpy(&result[m_message_word.size()], &m_error_vector[0], m_error_vector.size());
+      copy_mem(&result[0], &m_message_word[0], m_message_word.size());
+      copy_mem(&result[m_message_word.size()], &m_error_vector[0], m_error_vector.size());
       return result;
     };
     secure_vector<gf2m> get_error_positions() const

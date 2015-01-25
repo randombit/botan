@@ -23,6 +23,21 @@ namespace {
 */
 const size_t ALIGNMENT_MULTIPLE = 2;
 
+size_t reset_mlock_limit(size_t max_req)
+   {
+   struct rlimit limits;
+   ::getrlimit(RLIMIT_MEMLOCK, &limits);
+
+   if(limits.rlim_cur < limits.rlim_max)
+      {
+      limits.rlim_cur = limits.rlim_max;
+      ::setrlimit(RLIMIT_MEMLOCK, &limits);
+      ::getrlimit(RLIMIT_MEMLOCK, &limits);
+      }
+
+   return std::min<size_t>(limits.rlim_cur, max_req);
+   }
+
 size_t mlock_limit()
    {
    /*
@@ -34,19 +49,22 @@ size_t mlock_limit()
    * programs), but small enough that we should not cause problems
    * even if many processes are mlocking on the same machine.
    */
-   const size_t MLOCK_UPPER_BOUND = 512*1024;
+   size_t mlock_requested = 512;
 
-   struct rlimit limits;
-   ::getrlimit(RLIMIT_MEMLOCK, &limits);
-
-   if(limits.rlim_cur < limits.rlim_max)
+   /*
+   * Allow override via env variable
+   */
+   if(const char* env = ::getenv("BOTAN_MLOCK_POOL_SIZE"))
       {
-      limits.rlim_cur = limits.rlim_max;
-      ::setrlimit(RLIMIT_MEMLOCK, &limits);
-      ::getrlimit(RLIMIT_MEMLOCK, &limits);
+      try
+         {
+         const size_t user_req = std::stoul(env, nullptr);
+         mlock_requested = std::min(user_req, mlock_requested);
+         }
+      catch(std::exception&) { /* ignore it */ }
       }
 
-   return std::min<size_t>(limits.rlim_cur, MLOCK_UPPER_BOUND);
+   return reset_mlock_limit(mlock_requested*1024);
    }
 
 bool ptr_in_pool(const void* pool_ptr, size_t poolsize,

@@ -8,7 +8,7 @@
 #include <botan/internal/es_egd.h>
 #include <botan/parsing.h>
 #include <botan/exceptn.h>
-#include <cstring>
+#include <botan/mem_ops.h>
 #include <stdexcept>
 
 #include <sys/types.h>
@@ -40,7 +40,7 @@ int EGD_EntropySource::EGD_Socket::open_socket(const std::string& path)
    if(fd >= 0)
       {
       sockaddr_un addr;
-      std::memset(&addr, 0, sizeof(addr));
+      clear_mem(&addr, 1);
       addr.sun_family = PF_LOCAL;
 
       if(path.length() >= sizeof(addr.sun_path))
