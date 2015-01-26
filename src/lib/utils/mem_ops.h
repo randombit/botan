@@ -8,8 +8,17 @@
 #ifndef BOTAN_MEMORY_OPS_H__
 #define BOTAN_MEMORY_OPS_H__
 
-#include <botan/types.h>
+#include <botan/build.h>
+
+// This must be positioned after build.h, but before any other include,
+// to prevent another (system) header to include string.h before 
+// defining that we want memset_s.
+#if defined(BOTAN_TARGET_OS_HAS_MEMSET_S)
+  #define __STDC_WANT_LIB_EXT1__ 1
+#endif
 #include <cstring>
+
+#include <botan/types.h>
 
 namespace Botan {
 
