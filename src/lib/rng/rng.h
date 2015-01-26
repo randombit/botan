@@ -48,7 +48,7 @@ class BOTAN_DLL RandomNumberGenerator
       virtual secure_vector<byte> random_vec(size_t bytes)
          {
          secure_vector<byte> output(bytes);
-         randomize(&output[0], output.size());
+         randomize(output.data(), output.size());
          return output;
          }
 

@@ -28,7 +28,7 @@ size_t test_tss()
    const secure_vector<byte> S = hex_decode_locked("7465737400");
 
    std::vector<RTSS_Share> shares =
-      RTSS_Share::split(2, 4, &S[0], S.size(), id, rng);
+      RTSS_Share::split(2, 4, S.data(), S.size(), id, rng);
 
    auto back = RTSS_Share::reconstruct(shares);
 

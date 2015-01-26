@@ -20,7 +20,7 @@ void Lion::encrypt_n(const byte in[], byte out[], size_t blocks) const
    const size_t RIGHT_SIZE = right_size();
 
    secure_vector<byte> buffer_vec(LEFT_SIZE);
-   byte* buffer = &buffer_vec[0];
+   byte* buffer = buffer_vec.data();
 
    for(size_t i = 0; i != blocks; ++i)
       {
@@ -50,7 +50,7 @@ void Lion::decrypt_n(const byte in[], byte out[], size_t blocks) const
    const size_t RIGHT_SIZE = right_size();
 
    secure_vector<byte> buffer_vec(LEFT_SIZE);
-   byte* buffer = &buffer_vec[0];
+   byte* buffer = buffer_vec.data();
 
    for(size_t i = 0; i != blocks; ++i)
       {

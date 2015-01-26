@@ -108,7 +108,7 @@ void idea_op(const byte in[], byte out[], size_t blocks, const u16bit K[52])
 */
 void IDEA::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   idea_op(in, out, blocks, &EK[0]);
+   idea_op(in, out, blocks, EK.data());
    }
 
 /*
@@ -116,7 +116,7 @@ void IDEA::encrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void IDEA::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   idea_op(in, out, blocks, &DK[0]);
+   idea_op(in, out, blocks, DK.data());
    }
 
 /*

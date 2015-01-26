@@ -28,7 +28,7 @@ secure_vector<byte> KDF2::derive(size_t out_len,
       secure_vector<byte> hash_result = hash->final();
 
       size_t added = std::min(hash_result.size(), out_len);
-      output += std::make_pair(&hash_result[0], added);
+      output += std::make_pair(hash_result.data(), added);
       out_len -= added;
 
       ++counter;

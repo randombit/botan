@@ -45,7 +45,7 @@ Hex_Encoder::Hex_Encoder(Case c) : casing(c), line_length(0)
 */
 void Hex_Encoder::encode_and_send(const byte block[], size_t length)
    {
-   hex_encode(reinterpret_cast<char*>(&out[0]),
+   hex_encode(reinterpret_cast<char*>(out.data()),
               block, length,
               casing == Uppercase);
 
@@ -78,7 +78,7 @@ void Hex_Encoder::write(const byte input[], size_t length)
    buffer_insert(in, position, input, length);
    if(position + length >= in.size())
       {
-      encode_and_send(&in[0], in.size());
+      encode_and_send(in.data(), in.size());
       input += (in.size() - position);
       length -= (in.size() - position);
       while(length >= in.size())
@@ -87,7 +87,7 @@ void Hex_Encoder::write(const byte input[], size_t length)
          input += in.size();
          length -= in.size();
          }
-      copy_mem(&in[0], input, length);
+      copy_mem(in.data(), input, length);
       position = 0;
       }
    position += length;
@@ -98,7 +98,7 @@ void Hex_Encoder::write(const byte input[], size_t length)
 */
 void Hex_Encoder::end_msg()
    {
-   encode_and_send(&in[0], position);
+   encode_and_send(in.data(), position);
    if(counter && line_length)
       send('\n');
    counter = position = 0;
@@ -126,8 +126,8 @@ void Hex_Decoder::write(const byte input[], size_t length)
       position += to_copy;
 
       size_t consumed = 0;
-      size_t written = hex_decode(&out[0],
-                                  reinterpret_cast<const char*>(&in[0]),
+      size_t written = hex_decode(out.data(),
+                                  reinterpret_cast<const char*>(in.data()),
                                   position,
                                   consumed,
                                   checking != FULL_CHECK);
@@ -136,7 +136,7 @@ void Hex_Decoder::write(const byte input[], size_t length)
 
       if(consumed != position)
          {
-         copy_mem(&in[0], &in[consumed], position - consumed);
+         copy_mem(in.data(), &in[consumed], position - consumed);
          position = position - consumed;
          }
       else
@@ -153,8 +153,8 @@ void Hex_Decoder::write(const byte input[], size_t length)
 void Hex_Decoder::end_msg()
    {
    size_t consumed = 0;
-   size_t written = hex_decode(&out[0],
-                               reinterpret_cast<const char*>(&in[0]),
+   size_t written = hex_decode(out.data(),
+                               reinterpret_cast<const char*>(in.data()),
                                position,
                                consumed,
                                checking != FULL_CHECK);

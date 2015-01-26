@@ -38,7 +38,7 @@ PKCS5_PBKDF2::key_derivation(size_t key_len,
 
    secure_vector<byte> key(key_len);
 
-   byte* T = &key[0];
+   byte* T = key.data();
 
    secure_vector<byte> U(mac->output_length());
 
@@ -54,9 +54,9 @@ PKCS5_PBKDF2::key_derivation(size_t key_len,
 
       mac->update(salt, salt_len);
       mac->update_be(counter);
-      mac->final(&U[0]);
+      mac->final(U.data());
 
-      xor_buf(T, &U[0], T_size);
+      xor_buf(T, U.data(), T_size);
 
       if(iterations == 0)
          {
@@ -72,8 +72,8 @@ PKCS5_PBKDF2::key_derivation(size_t key_len,
          while(true)
             {
             mac->update(U);
-            mac->final(&U[0]);
-            xor_buf(T, &U[0], T_size);
+            mac->final(U.data());
+            xor_buf(T, U.data(), T_size);
             iterations++;
 
             /*
@@ -95,8 +95,8 @@ PKCS5_PBKDF2::key_derivation(size_t key_len,
          for(size_t i = 1; i != iterations; ++i)
             {
             mac->update(U);
-            mac->final(&U[0]);
-            xor_buf(T, &U[0], T_size);
+            mac->final(U.data());
+            xor_buf(T, U.data(), T_size);
             }
          }
 

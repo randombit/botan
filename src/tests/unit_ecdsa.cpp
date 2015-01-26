@@ -36,7 +36,7 @@ namespace {
 
 std::string to_hex(const std::vector<byte>& bin)
    {
-   return hex_encode(&bin[0], bin.size());
+   return hex_encode(bin.data(), bin.size());
    }
 
 /**
@@ -294,11 +294,11 @@ size_t test_create_and_verify(RandomNumberGenerator& rng)
    auto sv_G_secp_comp = hex_decode ( G_secp_comp );
    auto sv_order_g = hex_decode ( order_g );
 
-   //	BigInt bi_p_secp = BigInt::decode ( &sv_p_secp[0], sv_p_secp.size() );
+   //	BigInt bi_p_secp = BigInt::decode ( sv_p_secp.data(), sv_p_secp.size() );
    BigInt bi_p_secp("2117607112719756483104013348936480976596328609518055062007450442679169492999007105354629105748524349829824407773719892437896937279095106809");
-   BigInt bi_a_secp = BigInt::decode ( &sv_a_secp[0], sv_a_secp.size() );
-   BigInt bi_b_secp = BigInt::decode ( &sv_b_secp[0], sv_b_secp.size() );
-   BigInt bi_order_g = BigInt::decode ( &sv_order_g[0], sv_order_g.size() );
+   BigInt bi_a_secp = BigInt::decode ( sv_a_secp.data(), sv_a_secp.size() );
+   BigInt bi_b_secp = BigInt::decode ( sv_b_secp.data(), sv_b_secp.size() );
+   BigInt bi_order_g = BigInt::decode ( sv_order_g.data(), sv_order_g.size() );
    CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
    PointGFp p_G = OS2ECP ( sv_G_secp_comp, curve );
 

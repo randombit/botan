@@ -99,7 +99,7 @@ pbes2_encrypt(const secure_vector<byte>& key_bits,
 
    secure_vector<byte> iv = rng.random_vec(enc->default_nonce_length());
 
-   enc->set_key(pbkdf.derive_key(key_length, passphrase, &salt[0], salt.size(),
+   enc->set_key(pbkdf.derive_key(key_length, passphrase, salt.data(), salt.size(),
                                 msec, iterations).bits_of());
 
    enc->start(iv);
@@ -175,7 +175,7 @@ pbes2_decrypt(const secure_vector<byte>& key_bits,
    if(key_length == 0)
       key_length = dec->key_spec().maximum_keylength();
 
-   dec->set_key(pbkdf.derive_key(key_length, passphrase, &salt[0], salt.size(),
+   dec->set_key(pbkdf.derive_key(key_length, passphrase, salt.data(), salt.size(),
                                  iterations).bits_of());
 
    dec->start(iv);

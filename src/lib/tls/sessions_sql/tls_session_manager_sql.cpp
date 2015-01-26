@@ -101,7 +101,7 @@ Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
       const size_t iterations = 256 * 1024;
       size_t check_val = 0;
 
-      m_session_key = derive_key(passphrase, &salt[0], salt.size(),
+      m_session_key = derive_key(passphrase, salt.data(), salt.size(),
                                  iterations, check_val);
 
       auto stmt = m_db->new_statement("insert into tls_sessions_metadata values(?1, ?2, ?3)");

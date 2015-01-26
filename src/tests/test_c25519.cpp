@@ -29,7 +29,7 @@ size_t curve25519_scalar_kat(const std::string& secret_h,
    const std::vector<byte> out = hex_decode(out_h);
 
    std::vector<byte> got(32);
-   curve25519_donna(&got[0], &secret[0], &basepoint[0]);
+   curve25519_donna(got.data(), secret.data(), basepoint.data());
 
    if(got != out)
       {

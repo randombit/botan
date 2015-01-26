@@ -674,8 +674,8 @@ void aes_key_schedule(const byte key[], size_t length,
 
    EK.resize(length + 24);
    DK.resize(length + 24);
-   copy_mem(&EK[0], &XEK[0], EK.size());
-   copy_mem(&DK[0], &XDK[0], DK.size());
+   copy_mem(EK.data(), XEK.data(), EK.size());
+   copy_mem(DK.data(), XDK.data(), DK.size());
    }
 
 }

@@ -31,7 +31,7 @@ BigInt& BigInt::operator+=(const BigInt& y)
       if(relative_size < 0)
          {
          secure_vector<word> z(reg_size - 1);
-         bigint_sub3(&z[0], y.data(), reg_size - 1, data(), x_sw);
+         bigint_sub3(z.data(), y.data(), reg_size - 1, data(), x_sw);
          std::swap(m_reg, z);
          set_sign(y.sign());
          }
@@ -119,8 +119,8 @@ BigInt& BigInt::operator*=(const BigInt& y)
       secure_vector<word> z(data(), data() + x_sw);
       secure_vector<word> workspace(size());
 
-      bigint_mul(mutable_data(), size(), &workspace[0],
-                 &z[0], z.size(), x_sw,
+      bigint_mul(mutable_data(), size(), workspace.data(),
+                 z.data(), z.size(), x_sw,
                  y.data(), y.size(), y_sw);
       }
 

@@ -93,7 +93,7 @@ class Py_HashFunction
       std::string final()
          {
          std::string out(output_length(), 0);
-         hash->final(reinterpret_cast<byte*>(&out[0]));
+         hash->final(reinterpret_cast<byte*>(out.data()));
          return out;
          }
 
@@ -134,7 +134,7 @@ class Py_MAC
       std::string final()
          {
          std::string out(output_length(), 0);
-         mac->final(reinterpret_cast<byte*>(&out[0]));
+         mac->final(reinterpret_cast<byte*>(out.data()));
          return out;
          }
    private:

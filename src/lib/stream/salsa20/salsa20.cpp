@@ -111,7 +111,7 @@ void Salsa20::cipher(const byte in[], byte out[], size_t length)
       length -= (m_buffer.size() - m_position);
       in += (m_buffer.size() - m_position);
       out += (m_buffer.size() - m_position);
-      salsa20(&m_buffer[0], &m_state[0]);
+      salsa20(m_buffer.data(), m_state.data());
 
       ++m_state[8];
       m_state[9] += (m_state[8] == 0);
@@ -187,7 +187,7 @@ void Salsa20::set_iv(const byte iv[], size_t length)
       m_state[9] = load_le<u32bit>(iv, 3);
 
       secure_vector<u32bit> hsalsa(8);
-      hsalsa20(&hsalsa[0], &m_state[0]);
+      hsalsa20(hsalsa.data(), m_state.data());
 
       m_state[ 1] = hsalsa[0];
       m_state[ 2] = hsalsa[1];
@@ -204,7 +204,7 @@ void Salsa20::set_iv(const byte iv[], size_t length)
    m_state[8] = 0;
    m_state[9] = 0;
 
-   salsa20(&m_buffer[0], &m_state[0]);
+   salsa20(m_buffer.data(), m_state.data());
    ++m_state[8];
    m_state[9] += (m_state[8] == 0);
 

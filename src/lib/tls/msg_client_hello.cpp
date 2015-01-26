@@ -25,14 +25,14 @@ std::vector<byte> make_hello_random(RandomNumberGenerator& rng,
                                     const Policy& policy)
    {
    std::vector<byte> buf(32);
-   rng.randomize(&buf[0], buf.size());
+   rng.randomize(buf.data(), buf.size());
 
    if(policy.include_time_in_hello_random())
       {
       const u32bit time32 = static_cast<u32bit>(
          std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
 
-      store_be(time32, &buf[0]);
+      store_be(time32, buf.data());
       }
 
    return buf;

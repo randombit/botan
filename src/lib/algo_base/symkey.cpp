@@ -28,7 +28,7 @@ OctetString::OctetString(RandomNumberGenerator& rng,
 OctetString::OctetString(const std::string& hex_string)
    {
    bits.resize(1 + hex_string.length() / 2);
-   bits.resize(hex_decode(&bits[0], hex_string));
+   bits.resize(hex_decode(bits.data(), hex_string));
    }
 
 /*
@@ -77,7 +77,7 @@ void OctetString::set_odd_parity()
 */
 std::string OctetString::as_string() const
    {
-   return hex_encode(&bits[0], bits.size());
+   return hex_encode(bits.data(), bits.size());
    }
 
 /*
@@ -86,7 +86,7 @@ std::string OctetString::as_string() const
 OctetString& OctetString::operator^=(const OctetString& k)
    {
    if(&k == this) { zeroise(bits); return (*this); }
-   xor_buf(&bits[0], k.begin(), std::min(length(), k.length()));
+   xor_buf(bits.data(), k.begin(), std::min(length(), k.length()));
    return (*this);
    }
 
@@ -124,8 +124,8 @@ OctetString operator^(const OctetString& k1, const OctetString& k2)
    {
    secure_vector<byte> ret(std::max(k1.length(), k2.length()));
 
-   copy_mem(&ret[0], k1.begin(), k1.length());
-   xor_buf(&ret[0], k2.begin(), k2.length());
+   copy_mem(ret.data(), k1.begin(), k1.length());
+   xor_buf(ret.data(), k2.begin(), k2.length());
    return OctetString(ret);
    }
 

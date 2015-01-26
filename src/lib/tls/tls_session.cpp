@@ -50,7 +50,7 @@ Session::Session(const std::string& pem)
    {
    secure_vector<byte> der = PEM_Code::decode_check_label(pem, "TLS SESSION");
 
-   *this = Session(&der[0], der.size());
+   *this = Session(der.data(), der.size());
    }
 
 Session::Session(const byte ber[], size_t ber_len)
@@ -105,7 +105,7 @@ Session::Session(const byte ber[], size_t ber_len)
 
    if(!peer_cert_bits.empty())
       {
-      DataSource_Memory certs(&peer_cert_bits[0], peer_cert_bits.size());
+      DataSource_Memory certs(peer_cert_bits.data(), peer_cert_bits.size());
 
       while(!certs.end_of_data())
          m_peer_certs.push_back(X509_Certificate(certs));
@@ -169,7 +169,7 @@ Session::encrypt(const SymmetricKey& key, RandomNumberGenerator& rng) const
 
    secure_vector<byte> buf = nonce;
    buf += bits;
-   aead->start(&buf[0], nonce_len);
+   aead->start(buf.data(), nonce_len);
    aead->finish(buf, nonce_len);
    return unlock(buf);
    }
@@ -194,7 +194,7 @@ Session Session::decrypt(const byte in[], size_t in_len, const SymmetricKey& key
       secure_vector<byte> buf(in + nonce_len, in + in_len);
       aead->finish(buf, 0);
 
-      return Session(&buf[0], buf.size());
+      return Session(buf.data(), buf.size());
       }
    catch(std::exception& e)
       {

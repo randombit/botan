@@ -71,7 +71,7 @@ void ChaCha::cipher(const byte in[], byte out[], size_t length)
       length -= (m_buffer.size() - m_position);
       in += (m_buffer.size() - m_position);
       out += (m_buffer.size() - m_position);
-      chacha(&m_buffer[0], &m_state[0]);
+      chacha(m_buffer.data(), m_state.data());
 
       ++m_state[12];
       m_state[13] += (m_state[12] == 0);
@@ -144,7 +144,7 @@ void ChaCha::set_iv(const byte iv[], size_t length)
       m_state[15] = load_le<u32bit>(iv, 2);
       }
 
-   chacha(&m_buffer[0], &m_state[0]);
+   chacha(m_buffer.data(), m_state.data());
    ++m_state[12];
    m_state[13] += (m_state[12] == 0);
 

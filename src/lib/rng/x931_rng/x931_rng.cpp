@@ -45,10 +45,10 @@ void ANSI_X931_RNG::update_buffer()
    secure_vector<byte> DT = m_prng->random_vec(BLOCK_SIZE);
    m_cipher->encrypt(DT);
 
-   xor_buf(&m_R[0], &m_V[0], &DT[0], BLOCK_SIZE);
+   xor_buf(m_R.data(), m_V.data(), DT.data(), BLOCK_SIZE);
    m_cipher->encrypt(m_R);
 
-   xor_buf(&m_V[0], &m_R[0], &DT[0], BLOCK_SIZE);
+   xor_buf(m_V.data(), m_R.data(), DT.data(), BLOCK_SIZE);
    m_cipher->encrypt(m_V);
 
    m_R_pos = 0;
@@ -67,7 +67,7 @@ void ANSI_X931_RNG::rekey()
 
       if(m_V.size() != BLOCK_SIZE)
          m_V.resize(BLOCK_SIZE);
-      m_prng->randomize(&m_V[0], m_V.size());
+      m_prng->randomize(m_V.data(), m_V.size());
 
       update_buffer();
       }

@@ -179,12 +179,12 @@ DER_Encoder& DER_Encoder::end_explicit()
 */
 DER_Encoder& DER_Encoder::raw_bytes(const secure_vector<byte>& val)
    {
-   return raw_bytes(&val[0], val.size());
+   return raw_bytes(val.data(), val.size());
    }
 
 DER_Encoder& DER_Encoder::raw_bytes(const std::vector<byte>& val)
    {
-   return raw_bytes(&val[0], val.size());
+   return raw_bytes(val.data(), val.size());
    }
 
 /*
@@ -238,7 +238,7 @@ DER_Encoder& DER_Encoder::encode(const BigInt& n)
 DER_Encoder& DER_Encoder::encode(const secure_vector<byte>& bytes,
                                  ASN1_Tag real_type)
    {
-   return encode(&bytes[0], bytes.size(),
+   return encode(bytes.data(), bytes.size(),
                  real_type, real_type, UNIVERSAL);
    }
 
@@ -248,7 +248,7 @@ DER_Encoder& DER_Encoder::encode(const secure_vector<byte>& bytes,
 DER_Encoder& DER_Encoder::encode(const std::vector<byte>& bytes,
                                  ASN1_Tag real_type)
    {
-   return encode(&bytes[0], bytes.size(),
+   return encode(bytes.data(), bytes.size(),
                  real_type, real_type, UNIVERSAL);
    }
 
@@ -311,7 +311,7 @@ DER_Encoder& DER_Encoder::encode(const secure_vector<byte>& bytes,
                                  ASN1_Tag real_type,
                                  ASN1_Tag type_tag, ASN1_Tag class_tag)
    {
-   return encode(&bytes[0], bytes.size(),
+   return encode(bytes.data(), bytes.size(),
                  real_type, type_tag, class_tag);
    }
 
@@ -322,7 +322,7 @@ DER_Encoder& DER_Encoder::encode(const std::vector<byte>& bytes,
                                  ASN1_Tag real_type,
                                  ASN1_Tag type_tag, ASN1_Tag class_tag)
    {
-   return encode(&bytes[0], bytes.size(),
+   return encode(bytes.data(), bytes.size(),
                  real_type, type_tag, class_tag);
    }
 

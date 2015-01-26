@@ -44,7 +44,7 @@ void ANSI_X919_MAC::final_result(byte mac[])
    {
    if(m_position)
       m_des1->encrypt(m_state);
-   m_des2->decrypt(&m_state[0], mac);
+   m_des2->decrypt(m_state.data(), mac);
    m_des1->encrypt(mac);
    zeroise(m_state);
    m_position = 0;

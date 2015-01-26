@@ -51,11 +51,11 @@ void Buffered_Filter::write(const byte input[], size_t input_size)
                              buffer_pos + input_size - final_minimum),
                     main_block_mod);
 
-      buffered_block(&buffer[0], total_to_consume);
+      buffered_block(buffer.data(), total_to_consume);
 
       buffer_pos -= total_to_consume;
 
-      copy_mem(&buffer[0], &buffer[0] + total_to_consume, buffer_pos);
+      copy_mem(buffer.data(), buffer.data() + total_to_consume, buffer_pos);
       }
 
    if(input_size >= final_minimum)
@@ -89,12 +89,12 @@ void Buffered_Filter::end_msg()
    if(spare_blocks)
       {
       size_t spare_bytes = main_block_mod * spare_blocks;
-      buffered_block(&buffer[0], spare_bytes);
+      buffered_block(buffer.data(), spare_bytes);
       buffered_final(&buffer[spare_bytes], buffer_pos - spare_bytes);
       }
    else
       {
-      buffered_final(&buffer[0], buffer_pos);
+      buffered_final(buffer.data(), buffer_pos);
       }
 
    buffer_pos = 0;

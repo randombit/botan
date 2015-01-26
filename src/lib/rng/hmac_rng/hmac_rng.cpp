@@ -30,7 +30,7 @@ void hmac_prf(MessageAuthenticationCode& prf,
    prf.update(label);
    prf.update_be(timestamp);
    prf.update_be(counter);
-   prf.final(&K[0]);
+   prf.final(K.data());
 
    ++counter;
    }
@@ -109,7 +109,7 @@ void HMAC_RNG::randomize(byte out[], size_t length)
 
       const size_t copied = std::min<size_t>(length, max_per_prf_iter);
 
-      copy_mem(out, &m_K[0], copied);
+      copy_mem(out, m_K.data(), copied);
       out += copied;
       length -= copied;
       }

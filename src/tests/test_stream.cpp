@@ -53,7 +53,7 @@ size_t stream_test(const std::string& algo,
       cipher->set_key(key);
 
       if(nonce.size())
-         cipher->set_iv(&nonce[0], nonce.size());
+         cipher->set_iv(nonce.data(), nonce.size());
 
       secure_vector<byte> buf = pt;
 

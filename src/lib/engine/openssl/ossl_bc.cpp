@@ -141,8 +141,8 @@ void EVP_BlockCipher::key_schedule(const byte key[], size_t length)
       EVP_CIPHER_CTX_ctrl(&decrypt, EVP_CTRL_SET_RC2_KEY_BITS, length*8, 0);
       }
 
-   EVP_EncryptInit_ex(&encrypt, 0, 0, &full_key[0], 0);
-   EVP_DecryptInit_ex(&decrypt, 0, 0, &full_key[0], 0);
+   EVP_EncryptInit_ex(&encrypt, 0, 0, full_key.data(), 0);
+   EVP_DecryptInit_ex(&decrypt, 0, 0, full_key.data(), 0);
    }
 
 /*

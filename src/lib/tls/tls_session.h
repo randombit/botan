@@ -98,7 +98,7 @@ class BOTAN_DLL Session
       static inline Session decrypt(const std::vector<byte>& ctext,
                                     const SymmetricKey& key)
          {
-         return Session::decrypt(&ctext[0], ctext.size(), key);
+         return Session::decrypt(ctext.data(), ctext.size(), key);
          }
 
       /**

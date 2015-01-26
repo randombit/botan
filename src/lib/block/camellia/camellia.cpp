@@ -123,7 +123,7 @@ void encrypt(const byte in[], byte out[], size_t blocks,
       u64bit D1 = load_be<u64bit>(in, 0);
       u64bit D2 = load_be<u64bit>(in, 1);
 
-      const u64bit* K = &SK[0];
+      const u64bit* K = SK.data();
 
       D1 ^= *K++;
       D2 ^= *K++;

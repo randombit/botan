@@ -227,7 +227,7 @@ size_t basic_test_handshake(RandomNumberGenerator& rng,
 
       try
          {
-         server.received_data(&input[0], input.size());
+         server.received_data(input.data(), input.size());
          }
       catch(std::exception& e)
          {
@@ -240,7 +240,7 @@ size_t basic_test_handshake(RandomNumberGenerator& rng,
 
       try
          {
-         client.received_data(&input[0], input.size());
+         client.received_data(input.data(), input.size());
          }
       catch(std::exception& e)
          {

@@ -46,13 +46,13 @@ PKCS5_PBKDF1::key_derivation(size_t key_len,
          break;
 
       hash->update(key);
-      hash->final(&key[0]);
+      hash->final(key.data());
 
       ++iterations_performed;
       }
 
    return std::make_pair(iterations_performed,
-                         OctetString(&key[0], std::min(key_len, key.size())));
+                         OctetString(key.data(), std::min(key_len, key.size())));
    }
 
 }

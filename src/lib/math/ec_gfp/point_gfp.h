@@ -268,7 +268,7 @@ PointGFp BOTAN_DLL OS2ECP(const byte data[], size_t data_len,
 
 template<typename Alloc>
 PointGFp OS2ECP(const std::vector<byte, Alloc>& data, const CurveGFp& curve)
-   { return OS2ECP(&data[0], data.size(), curve); }
+   { return OS2ECP(data.data(), data.size(), curve); }
 
 }
 

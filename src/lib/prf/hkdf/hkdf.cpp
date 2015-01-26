@@ -53,7 +53,7 @@ void HKDF::expand(byte output[], size_t output_len,
       T = m_prf->final();
 
       const size_t to_write = std::min(T.size(), output_len);
-      copy_mem(&output[0], &T[0], to_write);
+      copy_mem(&output[0], T.data(), to_write);
       output += to_write;
       output_len -= to_write;
       }

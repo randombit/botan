@@ -54,7 +54,7 @@ PK_Encryptor_EME::enc(const byte in[],
       if(8*(encoded.size() - 1) + high_bit(encoded[0]) > m_op->max_input_bits())
          throw Invalid_Argument("PK_Encryptor_EME: Input is too large");
 
-      return unlock(m_op->encrypt(&encoded[0], encoded.size(), rng));
+      return unlock(m_op->encrypt(encoded.data(), encoded.size(), rng));
       }
    else
       {
@@ -180,7 +180,7 @@ bool PK_Signer::self_test_signature(const std::vector<byte>& msg,
    if(m_verify_op->with_recovery())
       {
       std::vector<byte> recovered =
-         unlock(m_verify_op->verify_mr(&sig[0], sig.size()));
+         unlock(m_verify_op->verify_mr(sig.data(), sig.size()));
 
       if(msg.size() > recovered.size())
          {
@@ -190,14 +190,14 @@ bool PK_Signer::self_test_signature(const std::vector<byte>& msg,
             if(msg[i] != 0)
                return false;
 
-         return same_mem(&msg[extra_0s], &recovered[0], recovered.size());
+         return same_mem(&msg[extra_0s], recovered.data(), recovered.size());
          }
 
       return (recovered == msg);
       }
    else
-      return m_verify_op->verify(&msg[0], msg.size(),
-                               &sig[0], sig.size());
+      return m_verify_op->verify(msg.data(), msg.size(),
+                               sig.data(), sig.size());
    }
 
 /*
@@ -209,7 +209,7 @@ std::vector<byte> PK_Signer::signature(RandomNumberGenerator& rng)
                                                  m_op->max_input_bits(),
                                                         rng));
 
-   std::vector<byte> plain_sig = unlock(m_op->sign(&encoded[0], encoded.size(), rng));
+   std::vector<byte> plain_sig = unlock(m_op->sign(encoded.data(), encoded.size(), rng));
 
    BOTAN_ASSERT(self_test_signature(encoded, plain_sig), "Signature was consistent");
 
@@ -316,7 +316,7 @@ bool PK_Verifier::check_signature(const byte sig[], size_t length)
             throw Decoding_Error("PK_Verifier: signature size invalid");
 
          return validate_signature(m_emsa->raw_data(),
-                                   &real_sig[0], real_sig.size());
+                                   real_sig.data(), real_sig.size());
          }
       else
          throw Decoding_Error("PK_Verifier: Unknown signature format " +
@@ -343,7 +343,7 @@ bool PK_Verifier::validate_signature(const secure_vector<byte>& msg,
       secure_vector<byte> encoded =
          m_emsa->encoding_of(msg, m_op->max_input_bits(), rng);
 
-      return m_op->verify(&encoded[0], encoded.size(), sig, sig_len);
+      return m_op->verify(encoded.data(), encoded.size(), sig, sig_len);
       }
    }
 

@@ -25,19 +25,19 @@ secure_vector<byte> OAEP::pad(const byte in[], size_t in_length,
 
    secure_vector<byte> out(key_length);
 
-   rng.randomize(&out[0], m_Phash.size());
+   rng.randomize(out.data(), m_Phash.size());
 
-   buffer_insert(out, m_Phash.size(), &m_Phash[0], m_Phash.size());
+   buffer_insert(out, m_Phash.size(), m_Phash.data(), m_Phash.size());
    out[out.size() - in_length - 1] = 0x01;
    buffer_insert(out, out.size() - in_length, in, in_length);
 
    mgf1_mask(*m_hash,
-             &out[0], m_Phash.size(),
+             out.data(), m_Phash.size(),
              &out[m_Phash.size()], out.size() - m_Phash.size());
 
    mgf1_mask(*m_hash,
              &out[m_Phash.size()], out.size() - m_Phash.size(),
-             &out[0], m_Phash.size());
+             out.data(), m_Phash.size());
 
    return out;
    }
@@ -71,10 +71,10 @@ secure_vector<byte> OAEP::unpad(const byte in[], size_t in_length,
 
    mgf1_mask(*m_hash,
              &input[m_Phash.size()], input.size() - m_Phash.size(),
-             &input[0], m_Phash.size());
+             input.data(), m_Phash.size());
 
    mgf1_mask(*m_hash,
-             &input[0], m_Phash.size(),
+             input.data(), m_Phash.size(),
              &input[m_Phash.size()], input.size() - m_Phash.size());
 
    bool waiting_for_delim = true;
@@ -103,7 +103,7 @@ secure_vector<byte> OAEP::unpad(const byte in[], size_t in_length,
    // If we never saw any non-zero byte, then it's not valid input
    bad_input |= waiting_for_delim;
 
-   bad_input |= !same_mem(&input[m_Phash.size()], &m_Phash[0], m_Phash.size());
+   bad_input |= !same_mem(&input[m_Phash.size()], m_Phash.data(), m_Phash.size());
 
    if(bad_input)
       throw Decoding_Error("Invalid OAEP encoding");

@@ -23,7 +23,7 @@ secure_vector<byte> curve25519(const secure_vector<byte>& secret,
                                const byte pubval[32])
    {
    secure_vector<byte> out(32);
-   const int rc = curve25519_donna(&out[0], &secret[0], &pubval[0]);
+   const int rc = curve25519_donna(out.data(), secret.data(), &pubval[0]);
    BOTAN_ASSERT_EQUAL(rc, 0, "Return value of curve25519_donna is ok");
    return out;
    }

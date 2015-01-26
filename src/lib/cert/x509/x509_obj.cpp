@@ -39,7 +39,7 @@ X509_Object::X509_Object(const std::string& file, const std::string& labels)
 */
 X509_Object::X509_Object(const std::vector<byte>& vec, const std::string& labels)
    {
-   DataSource_Memory stream(&vec[0], vec.size());
+   DataSource_Memory stream(vec.data(), vec.size());
    init(stream, labels);
    }
 

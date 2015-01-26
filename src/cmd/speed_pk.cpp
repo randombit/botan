@@ -124,7 +124,7 @@ void benchmark_enc_dec(PK_Encryptor& enc, PK_Decryptor& dec,
          // Ensure for Raw, etc, it stays large
          if((i % 100) == 0)
             {
-            rng.randomize(&plaintext[0], plaintext.size());
+            rng.randomize(plaintext.data(), plaintext.size());
             plaintext[0] |= 0x80;
             }
 
@@ -161,7 +161,7 @@ void benchmark_sig_ver(PK_Verifier& ver, PK_Signer& sig,
          if((i % 100) == 0)
             {
             message.resize(48);
-            rng.randomize(&message[0], message.size());
+            rng.randomize(message.data(), message.size());
             }
 
          sig_timer.start();

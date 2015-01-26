@@ -138,7 +138,7 @@ time. A common idiom for this is::
    SecureBuffer<byte, 4096> buffer;
    while(infile.good())
       {
-      infile.read((char*)&buffer[0], buffer.size());
+      infile.read((char*)buffer.data(), buffer.size());
       const size_t got_from_infile = infile.gcount();
       pipe.write(buffer, got_from_infile);
 
@@ -148,7 +148,7 @@ time. A common idiom for this is::
       while(pipe.remaining() > 0)
          {
          const size_t buffered = pipe.read(buffer, buffer.size());
-         outfile.write((const char*)&buffer[0], buffered);
+         outfile.write((const char*)buffer.data(), buffered);
          }
       }
    if(infile.bad() || (infile.fail() && !infile.eof()))

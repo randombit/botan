@@ -61,7 +61,7 @@ class BOTAN_DLL PK_Encryptor
       std::vector<byte> encrypt(const std::vector<byte, Alloc>& in,
                                 RandomNumberGenerator& rng) const
          {
-         return enc(&in[0], in.size(), rng);
+         return enc(in.data(), in.size(), rng);
          }
 
       /**
@@ -107,7 +107,7 @@ class BOTAN_DLL PK_Decryptor
       template<typename Alloc>
       secure_vector<byte> decrypt(const std::vector<byte, Alloc>& in) const
          {
-         return dec(&in[0], in.size());
+         return dec(in.data(), in.size());
          }
 
       PK_Decryptor() {}
@@ -146,11 +146,11 @@ class BOTAN_DLL PK_Signer
       */
       std::vector<byte> sign_message(const std::vector<byte>& in,
                                      RandomNumberGenerator& rng)
-         { return sign_message(&in[0], in.size(), rng); }
+         { return sign_message(in.data(), in.size(), rng); }
 
       std::vector<byte> sign_message(const secure_vector<byte>& in,
                                      RandomNumberGenerator& rng)
-         { return sign_message(&in[0], in.size(), rng); }
+         { return sign_message(in.data(), in.size(), rng); }
 
       /**
       * Add a message part (single byte).
@@ -169,7 +169,7 @@ class BOTAN_DLL PK_Signer
       * Add a message part.
       * @param in the message part to add
       */
-      void update(const std::vector<byte>& in) { update(&in[0], in.size()); }
+      void update(const std::vector<byte>& in) { update(in.data(), in.size()); }
 
       /**
       * Get the signature of the so far processed message (provided by the
@@ -235,8 +235,8 @@ class BOTAN_DLL PK_Verifier
       bool verify_message(const std::vector<byte, Alloc>& msg,
                           const std::vector<byte, Alloc2>& sig)
          {
-         return verify_message(&msg[0], msg.size(),
-                               &sig[0], sig.size());
+         return verify_message(msg.data(), msg.size(),
+                               sig.data(), sig.size());
          }
 
       /**
@@ -260,7 +260,7 @@ class BOTAN_DLL PK_Verifier
       * @param in the new message part
       */
       void update(const std::vector<byte>& in)
-         { update(&in[0], in.size()); }
+         { update(in.data(), in.size()); }
 
       /**
       * Check the signature of the buffered message, i.e. the one build
@@ -280,7 +280,7 @@ class BOTAN_DLL PK_Verifier
       template<typename Alloc>
       bool check_signature(const std::vector<byte, Alloc>& sig)
          {
-         return check_signature(&sig[0], sig.size());
+         return check_signature(sig.data(), sig.size());
          }
 
       /**
@@ -341,7 +341,7 @@ class BOTAN_DLL PK_Key_Agreement
                               const byte params[],
                               size_t params_len) const
          {
-         return derive_key(key_len, &in[0], in.size(),
+         return derive_key(key_len, in.data(), in.size(),
                            params, params_len);
          }
 
@@ -371,7 +371,7 @@ class BOTAN_DLL PK_Key_Agreement
                               const std::vector<byte>& in,
                               const std::string& params = "") const
          {
-         return derive_key(key_len, &in[0], in.size(),
+         return derive_key(key_len, in.data(), in.size(),
                            reinterpret_cast<const byte*>(params.data()),
                            params.length());
          }

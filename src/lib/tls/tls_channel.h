@@ -79,7 +79,7 @@ class BOTAN_DLL Channel
       template<typename Alloc>
          void send(const std::vector<unsigned char, Alloc>& val)
          {
-         send(&val[0], val.size());
+         send(val.data(), val.size());
          }
 
       /**

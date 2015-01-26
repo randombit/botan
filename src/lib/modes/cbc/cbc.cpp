@@ -174,8 +174,8 @@ void CTS_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
       buffer.resize(full_blocks + offset);
       update(buffer, offset);
 
-      xor_buf(&last[0], state_ptr(), BS);
-      cipher().encrypt(&last[0]);
+      xor_buf(last.data(), state_ptr(), BS);
+      cipher().encrypt(last.data());
 
       for(size_t i = 0; i != final_bytes - BS; ++i)
          {
@@ -183,7 +183,7 @@ void CTS_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
          last[i + BS] ^= last[i];
          }
 
-      cipher().encrypt(&last[0]);
+      cipher().encrypt(last.data());
 
       buffer += last;
       }
@@ -214,13 +214,13 @@ void CBC_Decryption::update(secure_vector<byte>& buffer, size_t offset)
       {
       const size_t to_proc = std::min(BS * blocks, m_tempbuf.size());
 
-      cipher().decrypt_n(buf, &m_tempbuf[0], to_proc / BS);
+      cipher().decrypt_n(buf, m_tempbuf.data(), to_proc / BS);
 
-      xor_buf(&m_tempbuf[0], state_ptr(), BS);
+      xor_buf(m_tempbuf.data(), state_ptr(), BS);
       xor_buf(&m_tempbuf[BS], buf, to_proc - BS);
       copy_mem(state_ptr(), buf + (to_proc - BS), BS);
 
-      copy_mem(buf, &m_tempbuf[0], to_proc);
+      copy_mem(buf, m_tempbuf.data(), to_proc);
 
       buf += to_proc;
       blocks -= to_proc / BS;
@@ -283,15 +283,15 @@ void CTS_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
       buffer.resize(full_blocks + offset);
       update(buffer, offset);
 
-      cipher().decrypt(&last[0]);
+      cipher().decrypt(last.data());
 
-      xor_buf(&last[0], &last[BS], final_bytes - BS);
+      xor_buf(last.data(), &last[BS], final_bytes - BS);
 
       for(size_t i = 0; i != final_bytes - BS; ++i)
          std::swap(last[i], last[i + BS]);
 
-      cipher().decrypt(&last[0]);
-      xor_buf(&last[0], state_ptr(), BS);
+      cipher().decrypt(last.data());
+      xor_buf(last.data(), state_ptr(), BS);
 
       buffer += last;
       }

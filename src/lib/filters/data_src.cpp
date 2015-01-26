@@ -112,7 +112,7 @@ size_t DataSource_Stream::peek(byte out[], size_t length, size_t offset) const
    if(offset)
       {
       secure_vector<byte> buf(offset);
-      source.read(reinterpret_cast<char*>(&buf[0]), buf.size());
+      source.read(reinterpret_cast<char*>(buf.data()), buf.size());
       if(source.bad())
          throw Stream_IO_Error("DataSource_Stream::peek: Source failure");
       got = source.gcount();

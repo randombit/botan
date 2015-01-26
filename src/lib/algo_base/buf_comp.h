@@ -39,7 +39,7 @@ class BOTAN_DLL Buffered_Computation
       */
       void update(const secure_vector<byte>& in)
          {
-         add_data(&in[0], in.size());
+         add_data(in.data(), in.size());
          }
 
       /**
@@ -48,7 +48,7 @@ class BOTAN_DLL Buffered_Computation
       */
       void update(const std::vector<byte>& in)
          {
-         add_data(&in[0], in.size());
+         add_data(in.data(), in.size());
          }
 
       /**
@@ -97,7 +97,7 @@ class BOTAN_DLL Buffered_Computation
       secure_vector<byte> final()
          {
          secure_vector<byte> output(output_length());
-         final_result(&output[0]);
+         final_result(output.data());
          return output;
          }
 
@@ -122,7 +122,7 @@ class BOTAN_DLL Buffered_Computation
       */
       secure_vector<byte> process(const secure_vector<byte>& in)
          {
-         add_data(&in[0], in.size());
+         add_data(in.data(), in.size());
          return final();
          }
 
@@ -134,7 +134,7 @@ class BOTAN_DLL Buffered_Computation
       */
       secure_vector<byte> process(const std::vector<byte>& in)
          {
-         add_data(&in[0], in.size());
+         add_data(in.data(), in.size());
          return final();
          }
 

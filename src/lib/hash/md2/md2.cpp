@@ -40,7 +40,7 @@ void MD2::hash(const byte input[])
       0x9F, 0x11, 0x83, 0x14 };
 
    buffer_insert(X, 16, input, hash_block_size());
-   xor_buf(&X[32], &X[0], &X[16], hash_block_size());
+   xor_buf(&X[32], X.data(), &X[16], hash_block_size());
    byte T = 0;
 
    for(size_t i = 0; i != 18; ++i)
@@ -70,7 +70,7 @@ void MD2::add_data(const byte input[], size_t length)
 
    if(position + length >= hash_block_size())
       {
-      hash(&buffer[0]);
+      hash(buffer.data());
       input += (hash_block_size() - position);
       length -= (hash_block_size() - position);
       while(length >= hash_block_size())
@@ -79,7 +79,7 @@ void MD2::add_data(const byte input[], size_t length)
          input += hash_block_size();
          length -= hash_block_size();
          }
-      copy_mem(&buffer[0], input, length);
+      copy_mem(buffer.data(), input, length);
       position = 0;
       }
    position += length;
@@ -93,9 +93,9 @@ void MD2::final_result(byte output[])
    for(size_t i = position; i != hash_block_size(); ++i)
       buffer[i] = static_cast<byte>(hash_block_size() - position);
 
-   hash(&buffer[0]);
-   hash(&checksum[0]);
-   copy_mem(output, &X[0], output_length());
+   hash(buffer.data());
+   hash(checksum.data());
+   copy_mem(output, X.data(), output_length());
    clear();
    }
 

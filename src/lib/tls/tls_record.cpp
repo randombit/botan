@@ -252,7 +252,7 @@ void write_record(secure_vector<byte>& output,
 
       const size_t blocks = buf_size / block_size;
 
-      xor_buf(&buf[0], &cbc_state[0], block_size);
+      xor_buf(&buf[0], cbc_state.data(), block_size);
       bc->encrypt(&buf[0]);
 
       for(size_t i = 1; i < blocks; ++i)
@@ -344,7 +344,7 @@ void cbc_decrypt_record(byte record_contents[], size_t record_len,
    byte* buf = record_contents;
 
    secure_vector<byte> last_ciphertext(block_size);
-   copy_mem(&last_ciphertext[0], &buf[0], block_size);
+   copy_mem(last_ciphertext.data(), &buf[0], block_size);
 
    bc.decrypt(&buf[0]);
    xor_buf(&buf[0], &cs.cbc_state()[0], block_size);
@@ -355,7 +355,7 @@ void cbc_decrypt_record(byte record_contents[], size_t record_len,
       {
       last_ciphertext2.assign(&buf[block_size*i], &buf[block_size*(i+1)]);
       bc.decrypt(&buf[block_size*i]);
-      xor_buf(&buf[block_size*i], &last_ciphertext[0], block_size);
+      xor_buf(&buf[block_size*i], last_ciphertext.data(), block_size);
       std::swap(last_ciphertext, last_ciphertext2);
       }
 
@@ -433,11 +433,11 @@ void decrypt_record(secure_vector<byte>& output,
       cs.mac()->update(plaintext_block, plaintext_length);
 
       std::vector<byte> mac_buf(mac_size);
-      cs.mac()->final(&mac_buf[0]);
+      cs.mac()->final(mac_buf.data());
 
       const size_t mac_offset = record_len - (mac_size + pad_size);
 
-      const bool mac_bad = !same_mem(&record_contents[mac_offset], &mac_buf[0], mac_size);
+      const bool mac_bad = !same_mem(&record_contents[mac_offset], mac_buf.data(), mac_size);
 
       if(mac_bad || padding_bad)
          throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure");

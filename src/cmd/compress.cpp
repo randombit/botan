@@ -20,17 +20,17 @@ void do_compress(Transformation& comp, std::ifstream& in, std::ostream& out)
    while(in.good())
       {
       buf.resize(64*1024);
-      in.read(reinterpret_cast<char*>(&buf[0]), buf.size());
+      in.read(reinterpret_cast<char*>(buf.data()), buf.size());
       buf.resize(in.gcount());
 
       comp.update(buf);
 
-      out.write(reinterpret_cast<const char*>(&buf[0]), buf.size());
+      out.write(reinterpret_cast<const char*>(buf.data()), buf.size());
       }
 
    buf.clear();
    comp.finish(buf);
-   out.write(reinterpret_cast<const char*>(&buf[0]), buf.size());
+   out.write(reinterpret_cast<const char*>(buf.data()), buf.size());
    }
 
 int compress(int argc, char* argv[])

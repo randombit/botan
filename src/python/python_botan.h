@@ -37,7 +37,7 @@ inline std::string make_string(const byte input[], u32bit length)
 template<typename Alloc>
 inline std::string make_string(const std::vector<byte, Alloc>& in)
    {
-   return make_string(&in[0], in.size());
+   return make_string(in.data(), in.size());
    }
 
 inline void string2binary(const std::string& from, byte to[], u32bit expected)
@@ -71,7 +71,7 @@ class Python_RandomNumberGenerator
       std::string gen_random(int n)
          {
          std::string s(n, 0);
-         rng->randomize(reinterpret_cast<byte*>(&s[0]), n);
+         rng->randomize(reinterpret_cast<byte*>(s.data()), n);
          return s;
          }
 

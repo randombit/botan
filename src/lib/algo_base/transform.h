@@ -30,7 +30,7 @@ class BOTAN_DLL Transformation
       template<typename Alloc>
       secure_vector<byte> start(const std::vector<byte, Alloc>& nonce)
          {
-         return start(&nonce[0], nonce.size());
+         return start(nonce.data(), nonce.size());
          }
 
       /**
@@ -41,7 +41,7 @@ class BOTAN_DLL Transformation
       BOTAN_DEPRECATED("Use Transformation::start")
       secure_vector<byte> start_vec(const std::vector<byte, Alloc>& nonce)
          {
-         return start(&nonce[0], nonce.size());
+         return start(nonce.data(), nonce.size());
          }
 
       /**
@@ -144,7 +144,7 @@ class BOTAN_DLL Keyed_Transform : public Transformation
       template<typename Alloc>
       void set_key(const std::vector<byte, Alloc>& key)
          {
-         set_key(&key[0], key.size());
+         set_key(key.data(), key.size());
          }
 
       void set_key(const SymmetricKey& key)

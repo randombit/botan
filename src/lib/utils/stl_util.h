@@ -16,7 +16,7 @@ namespace Botan {
 
 inline std::vector<byte> to_byte_vector(const std::string& s)
    {
-   return std::vector<byte>(reinterpret_cast<const byte*>(&s[0]),
+   return std::vector<byte>(reinterpret_cast<const byte*>(s.data()),
                             reinterpret_cast<const byte*>(&s[s.size()]));
    }
 

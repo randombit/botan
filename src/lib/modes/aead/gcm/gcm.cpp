@@ -21,14 +21,14 @@ void GHASH::gcm_multiply(secure_vector<byte>& x) const
    {
 #if defined(BOTAN_HAS_GCM_CLMUL)
    if(CPUID::has_clmul())
-      return gcm_multiply_clmul(&x[0], &m_H[0]);
+      return gcm_multiply_clmul(x.data(), m_H.data());
 #endif
 
    static const u64bit R = 0xE100000000000000;
 
    u64bit H[2] = {
-      load_be<u64bit>(&m_H[0], 0),
-      load_be<u64bit>(&m_H[0], 1)
+      load_be<u64bit>(m_H.data(), 0),
+      load_be<u64bit>(m_H.data(), 1)
    };
 
    u64bit Z[2] = { 0, 0 };
@@ -37,7 +37,7 @@ void GHASH::gcm_multiply(secure_vector<byte>& x) const
 
    for(size_t i = 0; i != 2; ++i)
       {
-      const u64bit X = load_be<u64bit>(&x[0], i);
+      const u64bit X = load_be<u64bit>(x.data(), i);
 
       for(size_t j = 0; j != 64; ++j)
          {
@@ -54,7 +54,7 @@ void GHASH::gcm_multiply(secure_vector<byte>& x) const
          }
       }
 
-   store_be<u64bit>(&x[0], Z[0], Z[1]);
+   store_be<u64bit>(x.data(), Z[0], Z[1]);
    }
 
 void GHASH::ghash_update(secure_vector<byte>& ghash,
@@ -70,7 +70,7 @@ void GHASH::ghash_update(secure_vector<byte>& ghash,
       {
       const size_t to_proc = std::min(length, BS);
 
-      xor_buf(&ghash[0], &input[0], to_proc);
+      xor_buf(ghash.data(), &input[0], to_proc);
 
       gcm_multiply(ghash);
 
@@ -114,8 +114,8 @@ void GHASH::add_final_block(secure_vector<byte>& hash,
                             size_t ad_len, size_t text_len)
    {
    secure_vector<byte> final_block(16);
-   store_be<u64bit>(&final_block[0], 8*ad_len, 8*text_len);
-   ghash_update(hash, &final_block[0], final_block.size());
+   store_be<u64bit>(final_block.data(), 8*ad_len, 8*text_len);
+   ghash_update(hash, final_block.data(), final_block.size());
    }
 
 secure_vector<byte> GHASH::final()
@@ -194,7 +194,7 @@ void GCM_Mode::key_schedule(const byte key[], size_t keylen)
    m_ctr->set_key(key, keylen);
 
    const std::vector<byte> zeros(BS);
-   m_ctr->set_iv(&zeros[0], zeros.size());
+   m_ctr->set_iv(zeros.data(), zeros.size());
 
    secure_vector<byte> H(BS);
    m_ctr->encipher(H);
@@ -247,7 +247,7 @@ void GCM_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
    {
    update(buffer, offset);
    auto mac = m_ghash->final();
-   buffer += std::make_pair(&mac[0], tag_size());
+   buffer += std::make_pair(mac.data(), tag_size());
    }
 
 void GCM_Decryption::update(secure_vector<byte>& buffer, size_t offset)
@@ -281,7 +281,7 @@ void GCM_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
 
    const byte* included_tag = &buffer[remaining];
 
-   if(!same_mem(&mac[0], included_tag, tag_size()))
+   if(!same_mem(mac.data(), included_tag, tag_size()))
       throw Integrity_Failure("GCM tag check failed");
 
    buffer.resize(offset + remaining);

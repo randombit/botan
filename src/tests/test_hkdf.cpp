@@ -34,12 +34,12 @@ secure_vector<byte> hkdf(const std::string& hkdf_algo,
 
    HKDF hkdf(mac_proto->clone(), mac_proto->clone());
 
-   hkdf.start_extract(&salt[0], salt.size());
-   hkdf.extract(&ikm[0], ikm.size());
+   hkdf.start_extract(salt.data(), salt.size());
+   hkdf.extract(ikm.data(), ikm.size());
    hkdf.finish_extract();
 
    secure_vector<byte> key(L);
-   hkdf.expand(&key[0], key.size(), &info[0], info.size());
+   hkdf.expand(key.data(), key.size(), info.data(), info.size());
    return key;
    }
 

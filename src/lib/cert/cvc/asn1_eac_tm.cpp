@@ -155,7 +155,7 @@ std::string EAC_Time::readable_string() const
 
    std::string output(11, 0);
 
-   std::sprintf(&output[0], "%04d/%02d/%02d", year, month, day);
+   std::sprintf(output.data(), "%04d/%02d/%02d", year, month, day);
 
    return output;
    }

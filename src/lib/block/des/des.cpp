@@ -155,7 +155,7 @@ void DES::encrypt_n(const byte in[], byte out[], size_t blocks) const
       u32bit L = static_cast<u32bit>(T >> 32);
       u32bit R = static_cast<u32bit>(T);
 
-      des_encrypt(L, R, &round_key[0]);
+      des_encrypt(L, R, round_key.data());
 
       T = (DES_FPTAB1[get_byte(0, L)] << 5) | (DES_FPTAB1[get_byte(1, L)] << 3) |
           (DES_FPTAB1[get_byte(2, L)] << 1) | (DES_FPTAB2[get_byte(3, L)] << 1) |
@@ -185,7 +185,7 @@ void DES::decrypt_n(const byte in[], byte out[], size_t blocks) const
       u32bit L = static_cast<u32bit>(T >> 32);
       u32bit R = static_cast<u32bit>(T);
 
-      des_decrypt(L, R, &round_key[0]);
+      des_decrypt(L, R, round_key.data());
 
       T = (DES_FPTAB1[get_byte(0, L)] << 5) | (DES_FPTAB1[get_byte(1, L)] << 3) |
           (DES_FPTAB1[get_byte(2, L)] << 1) | (DES_FPTAB2[get_byte(3, L)] << 1) |
@@ -207,7 +207,7 @@ void DES::decrypt_n(const byte in[], byte out[], size_t blocks) const
 void DES::key_schedule(const byte key[], size_t)
    {
    round_key.resize(32);
-   des_key_schedule(&round_key[0], key);
+   des_key_schedule(round_key.data(), key);
    }
 
 void DES::clear()
@@ -230,7 +230,7 @@ void TripleDES::encrypt_n(const byte in[], byte out[], size_t blocks) const
       u32bit L = static_cast<u32bit>(T >> 32);
       u32bit R = static_cast<u32bit>(T);
 
-      des_encrypt(L, R, &round_key[0]);
+      des_encrypt(L, R, round_key.data());
       des_decrypt(R, L, &round_key[32]);
       des_encrypt(L, R, &round_key[64]);
 
@@ -265,7 +265,7 @@ void TripleDES::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
       des_decrypt(L, R, &round_key[64]);
       des_encrypt(R, L, &round_key[32]);
-      des_decrypt(L, R, &round_key[0]);
+      des_decrypt(L, R, round_key.data());
 
       T = (DES_FPTAB1[get_byte(0, L)] << 5) | (DES_FPTAB1[get_byte(1, L)] << 3) |
           (DES_FPTAB1[get_byte(2, L)] << 1) | (DES_FPTAB2[get_byte(3, L)] << 1) |
@@ -287,13 +287,13 @@ void TripleDES::decrypt_n(const byte in[], byte out[], size_t blocks) const
 void TripleDES::key_schedule(const byte key[], size_t length)
    {
    round_key.resize(3*32);
-   des_key_schedule(&round_key[0], key);
+   des_key_schedule(round_key.data(), key);
    des_key_schedule(&round_key[32], key + 8);
 
    if(length == 24)
       des_key_schedule(&round_key[64], key + 16);
    else
-      copy_mem(&round_key[64], &round_key[0], 32);
+      copy_mem(&round_key[64], round_key.data(), 32);
    }
 
 void TripleDES::clear()

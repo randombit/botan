@@ -45,14 +45,14 @@ std::string encrypt(const byte input[], size_t input_len,
                     RandomNumberGenerator& rng)
    {
    secure_vector<byte> pbkdf_salt(PBKDF_SALT_LEN);
-   rng.randomize(&pbkdf_salt[0], pbkdf_salt.size());
+   rng.randomize(pbkdf_salt.data(), pbkdf_salt.size());
 
    PKCS5_PBKDF2 pbkdf(new HMAC(new SHA_512));
 
    OctetString master_key = pbkdf.derive_key(
       PBKDF_OUTPUT_LEN,
       passphrase,
-      &pbkdf_salt[0],
+      pbkdf_salt.data(),
       pbkdf_salt.size(),
       PBKDF_ITERATIONS);
 
@@ -87,7 +87,7 @@ std::string encrypt(const byte input[], size_t input_len,
    for(size_t i = 0; i != VERSION_CODE_LEN; ++i)
      out_buf[i] = get_byte(i, CRYPTOBOX_VERSION_CODE);
 
-   copy_mem(&out_buf[VERSION_CODE_LEN], &pbkdf_salt[0],  PBKDF_SALT_LEN);
+   copy_mem(&out_buf[VERSION_CODE_LEN], pbkdf_salt.data(),  PBKDF_SALT_LEN);
 
    pipe.read(&out_buf[VERSION_CODE_LEN + PBKDF_SALT_LEN], MAC_OUTPUT_LEN, 1);
    pipe.read(&out_buf[VERSION_CODE_LEN + PBKDF_SALT_LEN + MAC_OUTPUT_LEN],
@@ -153,7 +153,7 @@ std::string decrypt(const byte input[], size_t input_len,
 std::string decrypt(const std::string& input,
                     const std::string& passphrase)
    {
-   return decrypt(reinterpret_cast<const byte*>(&input[0]),
+   return decrypt(reinterpret_cast<const byte*>(input.data()),
                   input.size(),
                   passphrase);
    }

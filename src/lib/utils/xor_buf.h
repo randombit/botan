@@ -107,7 +107,7 @@ void xor_buf(std::vector<byte, Alloc>& out,
              const std::vector<byte, Alloc2>& in,
              size_t n)
    {
-   xor_buf(&out[0], &in[0], n);
+   xor_buf(out.data(), in.data(), n);
    }
 
 template<typename Alloc>
@@ -115,7 +115,7 @@ void xor_buf(std::vector<byte, Alloc>& out,
              const byte* in,
              size_t n)
    {
-   xor_buf(&out[0], in, n);
+   xor_buf(out.data(), in, n);
    }
 
 template<typename Alloc, typename Alloc2>
@@ -124,7 +124,7 @@ void xor_buf(std::vector<byte, Alloc>& out,
              const std::vector<byte, Alloc2>& in2,
              size_t n)
    {
-   xor_buf(&out[0], &in[0], &in2[0], n);
+   xor_buf(out.data(), &in[0], &in2[0], n);
    }
 
 template<typename T, typename Alloc, typename Alloc2>
@@ -135,7 +135,7 @@ operator^=(std::vector<T, Alloc>& out,
    if(out.size() < in.size())
       out.resize(in.size());
 
-   xor_buf(&out[0], &in[0], in.size());
+   xor_buf(out.data(), in.data(), in.size());
    return out;
    }
 

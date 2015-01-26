@@ -49,7 +49,7 @@ void P_hash(secure_vector<byte>& output,
       mac.update(seed, seed_len);
       secure_vector<byte> block = mac.final();
 
-      xor_buf(&output[offset], &block[0], this_block_len);
+      xor_buf(&output[offset], block.data(), this_block_len);
       offset += this_block_len;
       }
    }

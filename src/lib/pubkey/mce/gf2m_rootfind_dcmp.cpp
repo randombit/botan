@@ -312,7 +312,7 @@ secure_vector<gf2m> gf2m_decomp_rootfind_state::find_roots(const polyn_gf2m & si
   }while(1);
 
   // side channel / fault attack countermeasure:
-  root_pos = patch_root_array(&result[0], result.size(), root_pos);
+  root_pos = patch_root_array(result.data(), result.size(), root_pos);
   result.resize(root_pos);
  return result;
 }

@@ -57,7 +57,7 @@ class BOTAN_DLL PBKDF
                              const std::vector<byte, Alloc>& salt,
                              size_t iterations) const
          {
-         return derive_key(output_len, passphrase, &salt[0], salt.size(), iterations);
+         return derive_key(output_len, passphrase, salt.data(), salt.size(), iterations);
          }
 
       /**
@@ -90,7 +90,7 @@ class BOTAN_DLL PBKDF
                              std::chrono::milliseconds msec,
                              size_t& iterations) const
          {
-         return derive_key(output_len, passphrase, &salt[0], salt.size(), msec, iterations);
+         return derive_key(output_len, passphrase, salt.data(), salt.size(), msec, iterations);
          }
 
       /**

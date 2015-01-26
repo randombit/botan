@@ -47,7 +47,7 @@ void GOST_34_11::add_data(const byte input[], size_t length)
 
       if(position + length >= hash_block_size())
          {
-         compress_n(&buffer[0], 1);
+         compress_n(buffer.data(), 1);
          input += (hash_block_size() - position);
          length -= (hash_block_size() - position);
          position = 0;
@@ -81,7 +81,7 @@ void GOST_34_11::compress_n(const byte input[], size_t blocks)
       byte S[32] = { 0 };
 
       u64bit U[4], V[4];
-      load_be(U, &hash[0], 4);
+      load_be(U, hash.data(), 4);
       load_be(V, input + 32*i, 4);
 
       for(size_t j = 0; j != 4; ++j)
@@ -168,7 +168,7 @@ void GOST_34_11::compress_n(const byte input[], size_t blocks)
       S[30] = S2[0];
       S[31] = S2[1];
 
-      xor_buf(S, &hash[0], 32);
+      xor_buf(S, hash.data(), 32);
 
       // 61 rounds of psi
       S2[ 0] = S[ 2] ^ S[ 6] ^ S[14] ^ S[20] ^ S[22] ^ S[26] ^ S[28] ^ S[30];
@@ -210,7 +210,7 @@ void GOST_34_11::compress_n(const byte input[], size_t blocks)
       S2[30] = S[ 2] ^ S[ 4] ^ S[ 8] ^ S[14] ^ S[16] ^ S[18] ^ S[22] ^ S[24] ^ S[28] ^ S[30];
       S2[31] = S[ 3] ^ S[ 5] ^ S[ 9] ^ S[15] ^ S[17] ^ S[19] ^ S[23] ^ S[25] ^ S[29] ^ S[31];
 
-      copy_mem(&hash[0], &S2[0], 32);
+      copy_mem(hash.data(), &S2[0], 32);
       }
    }
 
@@ -221,20 +221,20 @@ void GOST_34_11::final_result(byte out[])
    {
    if(position)
       {
-      clear_mem(&buffer[0] + position, buffer.size() - position);
-      compress_n(&buffer[0], 1);
+      clear_mem(buffer.data() + position, buffer.size() - position);
+      compress_n(buffer.data(), 1);
       }
 
    secure_vector<byte> length_buf(32);
    const u64bit bit_count = count * 8;
-   store_le(bit_count, &length_buf[0]);
+   store_le(bit_count, length_buf.data());
 
    secure_vector<byte> sum_buf = sum;
 
-   compress_n(&length_buf[0], 1);
-   compress_n(&sum_buf[0], 1);
+   compress_n(length_buf.data(), 1);
+   compress_n(sum_buf.data(), 1);
 
-   copy_mem(out, &hash[0], 32);
+   copy_mem(out, hash.data(), 32);
 
    clear();
    }

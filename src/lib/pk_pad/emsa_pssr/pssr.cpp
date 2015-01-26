@@ -56,7 +56,7 @@ secure_vector<byte> PSSR::encoding_of(const secure_vector<byte>& msg,
 
    EM[output_length - HASH_SIZE - SALT_SIZE - 2] = 0x01;
    buffer_insert(EM, output_length - 1 - HASH_SIZE - SALT_SIZE, salt);
-   mgf1_mask(*hash, &H[0], HASH_SIZE, &EM[0], output_length - HASH_SIZE - 1);
+   mgf1_mask(*hash, H.data(), HASH_SIZE, EM.data(), output_length - HASH_SIZE - 1);
    EM[0] &= 0xFF >> (8 * ((output_bits + 7) / 8) - output_bits);
    buffer_insert(EM, output_length - 1 - HASH_SIZE, H);
    EM[output_length-1] = 0xBC;
@@ -97,7 +97,7 @@ bool PSSR::verify(const secure_vector<byte>& const_coded,
    if(TOP_BITS > 8 - high_bit(coded[0]))
       return false;
 
-   byte* DB = &coded[0];
+   byte* DB = coded.data();
    const size_t DB_size = coded.size() - HASH_SIZE - 1;
 
    const byte* H = &coded[DB_size];

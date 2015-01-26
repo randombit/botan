@@ -68,7 +68,7 @@ void StreamCipher_Filter::write(const byte input[], size_t length)
    while(length)
       {
       size_t copied = std::min<size_t>(length, buffer.size());
-      m_cipher->cipher(input, &buffer[0], copied);
+      m_cipher->cipher(input, buffer.data(), copied);
       send(buffer, copied);
       input += copied;
       length -= copied;

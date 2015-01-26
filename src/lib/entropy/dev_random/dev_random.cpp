@@ -87,9 +87,9 @@ void Device_EntropySource::poll(Entropy_Accumulator& accum)
       {
       if(FD_ISSET(m_devices[i], &read_set))
          {
-         const ssize_t got = ::read(m_devices[i], &io_buffer[0], io_buffer.size());
+         const ssize_t got = ::read(m_devices[i], io_buffer.data(), io_buffer.size());
          if(got > 0)
-            accum.add(&io_buffer[0], got, ENTROPY_BITS_PER_BYTE);
+            accum.add(io_buffer.data(), got, ENTROPY_BITS_PER_BYTE);
          }
       }
    }

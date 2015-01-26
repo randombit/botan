@@ -112,8 +112,8 @@ secure_vector<byte> XTS_Mode::start_raw(const byte nonce[], size_t nonce_len)
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
 
-   copy_mem(&m_tweak[0], nonce, nonce_len);
-   m_tweak_cipher->encrypt(&m_tweak[0]);
+   copy_mem(m_tweak.data(), nonce, nonce_len);
+   m_tweak_cipher->encrypt(m_tweak.data());
 
    update_tweak(0);
 
@@ -125,7 +125,7 @@ void XTS_Mode::update_tweak(size_t which)
    const size_t BS = m_tweak_cipher->block_size();
 
    if(which > 0)
-      poly_double(&m_tweak[0], &m_tweak[(which-1)*BS], BS);
+      poly_double(m_tweak.data(), &m_tweak[(which-1)*BS], BS);
 
    const size_t blocks_in_tweak = update_granularity() / BS;
 

@@ -32,7 +32,7 @@ void HMAC_DRBG::randomize(byte out[], size_t length)
       {
       const size_t to_copy = std::min(length, m_V.size());
       m_V = m_mac->process(m_V);
-      copy_mem(&out[0], &m_V[0], to_copy);
+      copy_mem(&out[0], m_V.data(), to_copy);
 
       length -= to_copy;
       out += to_copy;
@@ -75,7 +75,7 @@ void HMAC_DRBG::reseed(size_t poll_bits)
       if(m_prng->is_seeded())
          {
          secure_vector<byte> input = m_prng->random_vec(m_mac->output_length());
-         update(&input[0], input.size());
+         update(input.data(), input.size());
          m_reseed_counter = 1;
          }
       }

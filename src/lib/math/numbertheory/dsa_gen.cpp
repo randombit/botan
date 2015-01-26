@@ -123,7 +123,7 @@ std::vector<byte> generate_dsa_primes(RandomNumberGenerator& rng,
    while(true)
       {
       std::vector<byte> seed(qbits / 8);
-      rng.randomize(&seed[0], seed.size());
+      rng.randomize(seed.data(), seed.size());
 
       if(generate_dsa_primes(rng, af, p, q, pbits, qbits, seed))
          return seed;

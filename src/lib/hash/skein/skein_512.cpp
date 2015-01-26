@@ -97,7 +97,7 @@ void Skein_512::ubi_512(const byte msg[], size_t msg_len)
       const size_t to_proc = std::min<size_t>(msg_len, 64);
       T[0] += to_proc;
 
-      load_le(&M[0], msg, to_proc / 8);
+      load_le(M.data(), msg, to_proc / 8);
 
       if(to_proc % 8)
          {
@@ -125,7 +125,7 @@ void Skein_512::add_data(const byte input[], size_t length)
       buffer_insert(buffer, buf_pos, input, length);
       if(buf_pos + length > 64)
          {
-         ubi_512(&buffer[0], buffer.size());
+         ubi_512(buffer.data(), buffer.size());
 
          input += (64 - buf_pos);
          length -= (64 - buf_pos);
@@ -151,7 +151,7 @@ void Skein_512::final_result(byte out[])
    for(size_t i = buf_pos; i != buffer.size(); ++i)
       buffer[i] = 0;
 
-   ubi_512(&buffer[0], buf_pos);
+   ubi_512(buffer.data(), buf_pos);
 
    const byte counter[8] = { 0 };
 

@@ -28,7 +28,7 @@ size_t test_pbkdf()
              const std::string pass = vec["Passphrase"];
 
              const auto key = pbkdf->derive_key(outlen, pass,
-                                                &salt[0], salt.size(),
+                                                salt.data(), salt.size(),
                                                 iterations).bits_of();
              return hex_encode(key);
              });

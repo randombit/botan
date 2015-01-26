@@ -76,7 +76,7 @@ size_t test_mceliece_kem(const McEliece_PrivateKey& sk,
       const secure_vector<byte>& ciphertext = ciphertext__sym_key.first;
       const secure_vector<byte>& sym_key_encr = ciphertext__sym_key.second;
 
-      const secure_vector<byte> sym_key_decr = priv_op.decrypt(&ciphertext[0], ciphertext.size());
+      const secure_vector<byte> sym_key_decr = priv_op.decrypt(ciphertext.data(), ciphertext.size());
 
       if(sym_key_encr != sym_key_decr)
          {
@@ -95,7 +95,7 @@ size_t test_mceliece_kem(const McEliece_PrivateKey& sk,
             wrong_ct[byte_pos] ^= 1 << bit_pos;
             try
                {
-               secure_vector<byte> decrypted = priv_op.decrypt(&wrong_ct[0], wrong_ct.size());
+               secure_vector<byte> decrypted = priv_op.decrypt(wrong_ct.data(), wrong_ct.size());
                }
             catch(const Integrity_Failure)
                {
@@ -123,22 +123,22 @@ size_t test_mceliece_raw(const McEliece_PrivateKey& sk,
    for(size_t i = 0; i != MCE_RUNS; i++)
       {
       secure_vector<byte> plaintext((pk.get_message_word_bit_length()+7)/8);
-      rng.randomize(&plaintext[0], plaintext.size() - 1);
+      rng.randomize(plaintext.data(), plaintext.size() - 1);
       secure_vector<gf2m> err_pos = create_random_error_positions(code_length, pk.get_t(), rng);
 
 
       mceliece_message_parts parts(err_pos, plaintext, code_length);
       secure_vector<byte> message_and_error_input = parts.get_concat();
-      secure_vector<byte> ciphertext = pub_op.encrypt(&message_and_error_input[0], message_and_error_input.size(), rng);
+      secure_vector<byte> ciphertext = pub_op.encrypt(message_and_error_input.data(), message_and_error_input.size(), rng);
       //std::cout << "ciphertext byte length = " << ciphertext.size() << std::endl;
-      secure_vector<byte> message_and_error_output = priv_op.decrypt(&ciphertext[0], ciphertext.size() );
+      secure_vector<byte> message_and_error_output = priv_op.decrypt(ciphertext.data(), ciphertext.size() );
       if(message_and_error_input != message_and_error_output)
          {
-         mceliece_message_parts combined(&message_and_error_input[0], message_and_error_input.size(), code_length);
+         mceliece_message_parts combined(message_and_error_input.data(), message_and_error_input.size(), code_length);
          secure_vector<byte> orig_pt = combined.get_message_word();
          secure_vector<byte> orig_ev = combined.get_error_vector();
 
-         mceliece_message_parts decr_combined(&message_and_error_output[0], message_and_error_output.size(), code_length);
+         mceliece_message_parts decr_combined(message_and_error_output.data(), message_and_error_output.size(), code_length);
          secure_vector<byte> decr_pt = decr_combined.get_message_word();
          secure_vector<byte> decr_ev = decr_combined.get_error_vector();
          std::cout << "ciphertext = " << hex_encode(ciphertext) << std::endl;

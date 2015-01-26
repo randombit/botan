@@ -69,7 +69,7 @@ secure_vector<byte> X942_PRF::derive(size_t key_len,
 
       secure_vector<byte> digest = hash.final();
       const size_t needed = std::min(digest.size(), key_len - key.size());
-      key += std::make_pair(&digest[0], needed);
+      key += std::make_pair(digest.data(), needed);
 
       ++counter;
       }

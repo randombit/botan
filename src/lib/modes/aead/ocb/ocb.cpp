@@ -41,7 +41,7 @@ class L_computer
          for(size_t i = 0; i != blocks; ++i)
             { // could be done in parallel
             offset ^= get(ctz(block_index + 1 + i));
-            copy_mem(&m_offset_buf[BS*i], &offset[0], BS);
+            copy_mem(&m_offset_buf[BS*i], offset.data(), BS);
             }
 
          return m_offset_buf;
@@ -91,7 +91,7 @@ secure_vector<byte> ocb_hash(const L_computer& L,
       offset ^= L(ctz(i+1));
 
       buf = offset;
-      xor_buf(&buf[0], &ad[BS*i], BS);
+      xor_buf(buf.data(), &ad[BS*i], BS);
 
       cipher.encrypt(buf);
 
@@ -103,7 +103,7 @@ secure_vector<byte> ocb_hash(const L_computer& L,
       offset ^= L.star();
 
       buf = offset;
-      xor_buf(&buf[0], &ad[BS*ad_blocks], ad_remainder);
+      xor_buf(buf.data(), &ad[BS*ad_blocks], ad_remainder);
       buf[ad_len % BS] ^= 0x80;
 
       cipher.encrypt(buf);
@@ -245,11 +245,11 @@ void OCB_Encryption::encrypt(byte buffer[], size_t blocks)
 
       const auto& offsets = m_L->compute_offsets(m_offset, m_block_index, proc_blocks);
 
-      xor_buf(&m_checksum[0], &buffer[0], proc_bytes);
+      xor_buf(m_checksum.data(), &buffer[0], proc_bytes);
 
-      xor_buf(&buffer[0], &offsets[0], proc_bytes);
+      xor_buf(&buffer[0], offsets.data(), proc_bytes);
       m_cipher->encrypt_n(&buffer[0], &buffer[0], proc_blocks);
-      xor_buf(&buffer[0], &offsets[0], proc_bytes);
+      xor_buf(&buffer[0], offsets.data(), proc_bytes);
 
       buffer += proc_bytes;
       blocks -= proc_blocks;
@@ -285,14 +285,14 @@ void OCB_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
          BOTAN_ASSERT(remainder_bytes < BS(), "Only a partial block left");
          byte* remainder = &buf[sz - remainder_bytes];
 
-         xor_buf(&m_checksum[0], &remainder[0], remainder_bytes);
+         xor_buf(m_checksum.data(), &remainder[0], remainder_bytes);
          m_checksum[remainder_bytes] ^= 0x80;
 
          m_offset ^= m_L->star(); // Offset_*
 
          secure_vector<byte> zeros(BS());
          m_cipher->encrypt(m_offset, zeros);
-         xor_buf(&remainder[0], &zeros[0], remainder_bytes);
+         xor_buf(&remainder[0], zeros.data(), remainder_bytes);
          }
       }
 
@@ -311,7 +311,7 @@ void OCB_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
 
    mac ^= m_ad_hash;
 
-   buffer += std::make_pair(&mac[0], tag_size());
+   buffer += std::make_pair(mac.data(), tag_size());
 
    zeroise(m_checksum);
    zeroise(m_offset);
@@ -333,11 +333,11 @@ void OCB_Decryption::decrypt(byte buffer[], size_t blocks)
 
       const auto& offsets = m_L->compute_offsets(m_offset, m_block_index, proc_blocks);
 
-      xor_buf(&buffer[0], &offsets[0], proc_bytes);
+      xor_buf(&buffer[0], offsets.data(), proc_bytes);
       m_cipher->decrypt_n(&buffer[0], &buffer[0], proc_blocks);
-      xor_buf(&buffer[0], &offsets[0], proc_bytes);
+      xor_buf(&buffer[0], offsets.data(), proc_bytes);
 
-      xor_buf(&m_checksum[0], &buffer[0], proc_bytes);
+      xor_buf(m_checksum.data(), &buffer[0], proc_bytes);
 
       buffer += proc_bytes;
       blocks -= proc_blocks;
@@ -384,9 +384,9 @@ void OCB_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
          secure_vector<byte> pad(BS());
          m_cipher->encrypt(m_offset, pad); // P_*
 
-         xor_buf(&remainder[0], &pad[0], final_bytes);
+         xor_buf(&remainder[0], pad.data(), final_bytes);
 
-         xor_buf(&m_checksum[0], &remainder[0], final_bytes);
+         xor_buf(m_checksum.data(), &remainder[0], final_bytes);
          m_checksum[final_bytes] ^= 0x80;
          }
       }
@@ -414,7 +414,7 @@ void OCB_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
    // compare mac
    const byte* included_tag = &buf[remaining];
 
-   if(!same_mem(&mac[0], included_tag, tag_size()))
+   if(!same_mem(mac.data(), included_tag, tag_size()))
       throw Integrity_Failure("OCB tag check failed");
 
    // remove tag from end of message

@@ -125,7 +125,7 @@ void RC2::key_schedule(const byte key[], size_t length)
       0xFE, 0x7F, 0xC1, 0xAD };
 
    secure_vector<byte> L(128);
-   copy_mem(&L[0], key, length);
+   copy_mem(L.data(), key, length);
 
    for(size_t i = length; i != 128; ++i)
       L[i] = TABLE[(L[i-1] + L[i-length]) % 256];
@@ -136,7 +136,7 @@ void RC2::key_schedule(const byte key[], size_t length)
       L[i] = TABLE[L[i+1] ^ L[i+length]];
 
    K.resize(64);
-   load_le<u16bit>(&K[0], &L[0], 64);
+   load_le<u16bit>(K.data(), L.data(), 64);
    }
 
 void RC2::clear()

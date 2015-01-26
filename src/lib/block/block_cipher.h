@@ -80,7 +80,7 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       template<typename Alloc>
       void encrypt(std::vector<byte, Alloc>& block) const
          {
-         return encrypt_n(&block[0], &block[0], block.size() / block_size());
+         return encrypt_n(block.data(), block.data(), block.size() / block_size());
          }
 
       /**
@@ -90,7 +90,7 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       template<typename Alloc>
       void decrypt(std::vector<byte, Alloc>& block) const
          {
-         return decrypt_n(&block[0], &block[0], block.size() / block_size());
+         return decrypt_n(block.data(), block.data(), block.size() / block_size());
          }
 
       /**
@@ -102,7 +102,7 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       void encrypt(const std::vector<byte, Alloc>& in,
                    std::vector<byte, Alloc2>& out) const
          {
-         return encrypt_n(&in[0], &out[0], in.size() / block_size());
+         return encrypt_n(in.data(), out.data(), in.size() / block_size());
          }
 
       /**
@@ -114,7 +114,7 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       void decrypt(const std::vector<byte, Alloc>& in,
                    std::vector<byte, Alloc2>& out) const
          {
-         return decrypt_n(&in[0], &out[0], in.size() / block_size());
+         return decrypt_n(in.data(), out.data(), in.size() / block_size());
          }
 
       /**

@@ -117,13 +117,13 @@ secure_vector<byte> SIV_Mode::S2V(const byte* text, size_t text_len)
    if(text_len < 16)
       {
       V = CMAC::poly_double(V);
-      xor_buf(&V[0], text, text_len);
+      xor_buf(V.data(), text, text_len);
       V[text_len] ^= 0x80;
       return m_cmac->process(V);
       }
 
    m_cmac->update(text, text_len - 16);
-   xor_buf(&V[0], &text[text_len - 16], 16);
+   xor_buf(V.data(), &text[text_len - 16], 16);
    m_cmac->update(V);
 
    return m_cmac->final();
@@ -134,7 +134,7 @@ void SIV_Mode::set_ctr_iv(secure_vector<byte> V)
    V[8] &= 0x7F;
    V[12] &= 0x7F;
 
-   ctr().set_iv(&V[0], V.size());
+   ctr().set_iv(V.data(), V.size());
    }
 
 void SIV_Encryption::finish(secure_vector<byte>& buffer, size_t offset)

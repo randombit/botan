@@ -342,7 +342,7 @@ void AES_128_SSSE3::encrypt_n(const byte in[], byte out[], size_t blocks) const
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
 
-   const __m128i* keys = reinterpret_cast<const __m128i*>(&EK[0]);
+   const __m128i* keys = reinterpret_cast<const __m128i*>(EK.data());
 
    for(size_t i = 0; i != blocks; ++i)
       {
@@ -359,7 +359,7 @@ void AES_128_SSSE3::decrypt_n(const byte in[], byte out[], size_t blocks) const
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
 
-   const __m128i* keys = reinterpret_cast<const __m128i*>(&DK[0]);
+   const __m128i* keys = reinterpret_cast<const __m128i*>(DK.data());
 
    for(size_t i = 0; i != blocks; ++i)
       {
@@ -381,8 +381,8 @@ void AES_128_SSSE3::key_schedule(const byte keyb[], size_t)
    EK.resize(11*4);
    DK.resize(11*4);
 
-   __m128i* EK_mm = reinterpret_cast<__m128i*>(&EK[0]);
-   __m128i* DK_mm = reinterpret_cast<__m128i*>(&DK[0]);
+   __m128i* EK_mm = reinterpret_cast<__m128i*>(EK.data());
+   __m128i* DK_mm = reinterpret_cast<__m128i*>(DK.data());
 
    _mm_storeu_si128(DK_mm + 10, _mm_shuffle_epi8(key, sr[2]));
 
@@ -420,7 +420,7 @@ void AES_192_SSSE3::encrypt_n(const byte in[], byte out[], size_t blocks) const
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
 
-   const __m128i* keys = reinterpret_cast<const __m128i*>(&EK[0]);
+   const __m128i* keys = reinterpret_cast<const __m128i*>(EK.data());
 
    for(size_t i = 0; i != blocks; ++i)
       {
@@ -437,7 +437,7 @@ void AES_192_SSSE3::decrypt_n(const byte in[], byte out[], size_t blocks) const
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
 
-   const __m128i* keys = reinterpret_cast<const __m128i*>(&DK[0]);
+   const __m128i* keys = reinterpret_cast<const __m128i*>(DK.data());
 
    for(size_t i = 0; i != blocks; ++i)
       {
@@ -457,8 +457,8 @@ void AES_192_SSSE3::key_schedule(const byte keyb[], size_t)
    EK.resize(13*4);
    DK.resize(13*4);
 
-   __m128i* EK_mm = reinterpret_cast<__m128i*>(&EK[0]);
-   __m128i* DK_mm = reinterpret_cast<__m128i*>(&DK[0]);
+   __m128i* EK_mm = reinterpret_cast<__m128i*>(EK.data());
+   __m128i* DK_mm = reinterpret_cast<__m128i*>(DK.data());
 
    __m128i key1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(keyb));
    __m128i key2 = _mm_loadu_si128(reinterpret_cast<const __m128i*>((keyb + 8)));
@@ -527,7 +527,7 @@ void AES_256_SSSE3::encrypt_n(const byte in[], byte out[], size_t blocks) const
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
 
-   const __m128i* keys = reinterpret_cast<const __m128i*>(&EK[0]);
+   const __m128i* keys = reinterpret_cast<const __m128i*>(EK.data());
 
    for(size_t i = 0; i != blocks; ++i)
       {
@@ -544,7 +544,7 @@ void AES_256_SSSE3::decrypt_n(const byte in[], byte out[], size_t blocks) const
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
 
-   const __m128i* keys = reinterpret_cast<const __m128i*>(&DK[0]);
+   const __m128i* keys = reinterpret_cast<const __m128i*>(DK.data());
 
    for(size_t i = 0; i != blocks; ++i)
       {
@@ -564,8 +564,8 @@ void AES_256_SSSE3::key_schedule(const byte keyb[], size_t)
    EK.resize(15*4);
    DK.resize(15*4);
 
-   __m128i* EK_mm = reinterpret_cast<__m128i*>(&EK[0]);
-   __m128i* DK_mm = reinterpret_cast<__m128i*>(&DK[0]);
+   __m128i* EK_mm = reinterpret_cast<__m128i*>(EK.data());
+   __m128i* DK_mm = reinterpret_cast<__m128i*>(DK.data());
 
    __m128i key1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(keyb));
    __m128i key2 = _mm_loadu_si128(reinterpret_cast<const __m128i*>((keyb + 16)));

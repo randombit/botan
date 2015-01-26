@@ -50,7 +50,7 @@ ECDSA_Signature decode_concatenation(const std::vector<byte>& concat)
 
    const size_t rs_len = concat.size() / 2;
 
-   BigInt r = BigInt::decode(&concat[0], rs_len);
+   BigInt r = BigInt::decode(concat.data(), rs_len);
    BigInt s = BigInt::decode(&concat[rs_len], rs_len);
 
    return ECDSA_Signature(r, s);

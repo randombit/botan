@@ -52,14 +52,14 @@ void aont_package(RandomNumberGenerator& rng,
                                            input_len - BLOCK_SIZE * i);
 
       zeroise(buf);
-      copy_mem(&buf[0], output + (BLOCK_SIZE * i), left);
+      copy_mem(buf.data(), output + (BLOCK_SIZE * i), left);
 
       for(size_t j = 0; j != sizeof(i); ++j)
          buf[BLOCK_SIZE - 1 - j] ^= get_byte(sizeof(i)-1-j, i);
 
-      cipher->encrypt(&buf[0]);
+      cipher->encrypt(buf.data());
 
-      xor_buf(&final_block[0], &buf[0], BLOCK_SIZE);
+      xor_buf(&final_block[0], buf.data(), BLOCK_SIZE);
       }
 
    // XOR the random package key into the final block
@@ -87,7 +87,7 @@ void aont_unpackage(BlockCipher* cipher,
    secure_vector<byte> buf(BLOCK_SIZE);
 
    // Copy the package key (masked with the block hashes)
-   copy_mem(&package_key[0],
+   copy_mem(package_key.data(),
             input + (input_len - BLOCK_SIZE),
             BLOCK_SIZE);
 
@@ -100,14 +100,14 @@ void aont_unpackage(BlockCipher* cipher,
                                            input_len - BLOCK_SIZE * (i+1));
 
       zeroise(buf);
-      copy_mem(&buf[0], input + (BLOCK_SIZE * i), left);
+      copy_mem(buf.data(), input + (BLOCK_SIZE * i), left);
 
       for(size_t j = 0; j != sizeof(i); ++j)
          buf[BLOCK_SIZE - 1 - j] ^= get_byte(sizeof(i)-1-j, i);
 
-      cipher->encrypt(&buf[0]);
+      cipher->encrypt(buf.data());
 
-      xor_buf(&package_key[0], &buf[0], BLOCK_SIZE);
+      xor_buf(package_key.data(), buf.data(), BLOCK_SIZE);
       }
 
    Pipe pipe(new StreamCipher_Filter(new CTR_BE(cipher), package_key));

@@ -161,14 +161,14 @@ secure_vector<byte> mceliece_decrypt(
       key.get_code_length(),
       bit_size_to_32bit_size(codimension),
       ciphertext,
-      &syndrome_vec[0], syndrome_vec.size() );
+      syndrome_vec.data(), syndrome_vec.size() );
    secure_vector<byte> syndrome_byte_vec(bit_size_to_byte_size(codimension));
    u32bit syndrome_byte_vec_size = syndrome_byte_vec.size();
    for(u32bit i = 0; i < syndrome_byte_vec_size; i++)
       {
       syndrome_byte_vec[i] = syndrome_vec[i/4] >> (8* (i % 4));
       }
-   syndrome_polyn = polyn_gf2m( t-1, &syndrome_byte_vec[0],bit_size_to_byte_size(codimension), key.get_goppa_polyn().get_sp_field());
+   syndrome_polyn = polyn_gf2m( t-1, syndrome_byte_vec.data(),bit_size_to_byte_size(codimension), key.get_goppa_polyn().get_sp_field());
 
 
 
@@ -179,7 +179,7 @@ secure_vector<byte> mceliece_decrypt(
 
 
    secure_vector<byte> cleartext(cleartext_len);
-   copy_mem(&cleartext[0], ciphertext, cleartext_len);
+   copy_mem(cleartext.data(), ciphertext, cleartext_len);
 
    for(u32bit i = 0; i < nb_err; i++)
       {

@@ -34,7 +34,7 @@ RandomNumberGenerator* get_rng(const std::string& algo_str, const std::string& i
          Botan::secure_vector<byte> random_vec(size_t)
             {
             Botan::secure_vector<byte> vec(this->remaining());
-            this->randomize(&vec[0], vec.size());
+            this->randomize(vec.data(), vec.size());
             return vec;
             }
       };
@@ -96,7 +96,7 @@ size_t hmac_drbg_test(std::map<std::string, std::string> m)
 
    // now reseed
    const auto reseed_input = hex_decode(m["EntropyInputReseed"]);
-   rng->add_entropy(&reseed_input[0], reseed_input.size());
+   rng->add_entropy(reseed_input.data(), reseed_input.size());
 
    const std::string out = m["Out"];
 
