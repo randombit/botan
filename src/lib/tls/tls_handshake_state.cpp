@@ -83,9 +83,8 @@ u32bit bitmask_for_handshake_type(Handshake_Type type)
 /*
 * Initialize the SSL/TLS Handshake State
 */
-Handshake_State::Handshake_State(Handshake_IO* io,
-                                 std::function<void (const Handshake_Message&)> msg_callback) :
-   m_msg_callback(msg_callback),
+Handshake_State::Handshake_State(Handshake_IO* io, hs_msg_cb cb) :
+   m_msg_callback(cb),
    m_handshake_io(io),
    m_version(m_handshake_io->initial_record_version())
    {

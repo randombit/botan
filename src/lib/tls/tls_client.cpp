@@ -22,10 +22,8 @@ class Client_Handshake_State : public Handshake_State
    public:
       // using Handshake_State::Handshake_State;
 
-      Client_Handshake_State(Handshake_IO* io,
-                             std::function<void (const Handshake_Message&)> msg_callback =
-                                std::function<void (const Handshake_Message&)>()) :
-         Handshake_State(io, msg_callback) {}
+      Client_Handshake_State(Handshake_IO* io, hs_msg_cb cb = hs_msg_cb()) :
+         Handshake_State(io, cb) {}
 
       const Public_Key& get_server_public_Key() const
          {
@@ -39,7 +37,7 @@ class Client_Handshake_State : public Handshake_State
       std::unique_ptr<Public_Key> server_public_key;
 
       // Used by client using NPN
-      std::function<std::string (std::vector<std::string>)> client_npn_cb;
+      Client::next_protocol_fn client_npn_cb;
    };
 
 }
@@ -47,17 +45,17 @@ class Client_Handshake_State : public Handshake_State
 /*
 * TLS Client Constructor
 */
-Client::Client(std::function<void (const byte[], size_t)> output_fn,
-               std::function<void (const byte[], size_t)> proc_cb,
-               std::function<void (Alert, const byte[], size_t)> alert_cb,
-               std::function<bool (const Session&)> handshake_cb,
+Client::Client(output_fn output_fn,
+               data_cb proc_cb,
+               alert_cb alert_cb,
+               handshake_cb handshake_cb,
                Session_Manager& session_manager,
                Credentials_Manager& creds,
                const Policy& policy,
                RandomNumberGenerator& rng,
                const Server_Information& info,
                const Protocol_Version offer_version,
-               std::function<std::string (std::vector<std::string>)> next_protocol,
+               next_protocol_fn npn,
                size_t io_buf_sz) :
    Channel(output_fn, proc_cb, alert_cb, handshake_cb, session_manager, rng,
            offer_version.is_datagram_protocol(), io_buf_sz),
@@ -68,12 +66,12 @@ Client::Client(std::function<void (const byte[], size_t)> output_fn,
    const std::string srp_identifier = m_creds.srp_identifier("tls-client", m_info.hostname());
 
    Handshake_State& state = create_handshake_state(offer_version);
-   send_client_hello(state, false, offer_version, srp_identifier, next_protocol);
+   send_client_hello(state, false, offer_version, srp_identifier, npn);
    }
 
 Handshake_State* Client::new_handshake_state(Handshake_IO* io)
    {
-   return new Client_Handshake_State(io);
+   return new Client_Handshake_State(io); // , m_hs_msg_cb);
    }
 
 std::vector<X509_Certificate>
@@ -99,7 +97,7 @@ void Client::send_client_hello(Handshake_State& state_base,
                                bool force_full_renegotiation,
                                Protocol_Version version,
                                const std::string& srp_identifier,
-                               std::function<std::string (std::vector<std::string>)> next_protocol)
+                               next_protocol_fn next_protocol)
    {
    Client_Handshake_State& state = dynamic_cast<Client_Handshake_State&>(state_base);
 
@@ -167,15 +165,18 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
       if(state.client_hello())
          return;
 
-      if(!m_policy.allow_server_initiated_renegotiation() ||
-         (!m_policy.allow_insecure_renegotiation() && !secure_renegotiation_supported()))
+      if(m_policy.allow_server_initiated_renegotiation())
+         {
+         if(!secure_renegotiation_supported() && m_policy.allow_insecure_renegotiation() == false)
+            send_warning_alert(Alert::NO_RENEGOTIATION);
+         else
+            this->initiate_handshake(state, false);
+         }
+      else
          {
          // RFC 5746 section 4.2
          send_warning_alert(Alert::NO_RENEGOTIATION);
-         return;
          }
-
-      this->initiate_handshake(state, false);
 
       return;
       }
