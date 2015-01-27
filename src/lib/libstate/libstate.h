@@ -26,6 +26,8 @@ class BOTAN_DLL Library_State
    public:
       Library_State() {}
 
+      ~Library_State();
+
       Library_State(const Library_State&) = delete;
       Library_State& operator=(const Library_State&) = delete;
 

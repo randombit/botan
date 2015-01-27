@@ -1,28 +1,23 @@
 /*
 * Global State Management
-* (C) 2010 Jack Lloyd
+* (C) 2010,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/global_state.h>
 #include <botan/libstate.h>
+#include <memory>
+#include <mutex>
 
 namespace Botan {
 
-/*
-* @todo There should probably be a lock to avoid racy manipulation
-* of the state among different threads
-*/
-
 namespace Global_State_Management {
 
-/*
-* Botan's global state
-*/
 namespace {
 
-Library_State* global_lib_state = nullptr;
+std::mutex g_lib_state_mutex;
+std::unique_ptr<Library_State> g_lib_state;
 
 }
 
@@ -31,41 +26,42 @@ Library_State* global_lib_state = nullptr;
 */
 Library_State& global_state()
    {
+   // @todo use double checked locking? (Is this safe in C++11 mm?)
+   std::lock_guard<std::mutex> lock(g_lib_state_mutex);
+
    /* Lazy initialization. Botan still needs to be deinitialized later
       on or memory might leak.
    */
-   if(!global_lib_state)
+   if(!g_lib_state)
       {
-      global_lib_state = new Library_State;
-      global_lib_state->initialize();
+      g_lib_state.reset(new Library_State);
+      g_lib_state->initialize();
       }
 
-   return (*global_lib_state);
+   return (*g_lib_state);
    }
 
 /*
 * Set a new global state object
 */
-void set_global_state(Library_State* new_state)
+void set_global_state(Library_State* state)
    {
-   delete swap_global_state(new_state);
+   std::lock_guard<std::mutex> lock(g_lib_state_mutex);
+   g_lib_state.reset(state);
    }
 
 /*
 * Set a new global state object unless one already existed
 */
-bool set_global_state_unless_set(Library_State* new_state)
+bool set_global_state_unless_set(Library_State* state)
    {
-   if(global_lib_state)
-      {
-      delete new_state;
+   std::lock_guard<std::mutex> lock(g_lib_state_mutex);
+
+   if(g_lib_state)
       return false;
-      }
-   else
-      {
-      delete swap_global_state(new_state);
-      return true;
-      }
+
+   g_lib_state.reset(state);
+   return true;
    }
 
 /*
@@ -73,8 +69,9 @@ bool set_global_state_unless_set(Library_State* new_state)
 */
 Library_State* swap_global_state(Library_State* new_state)
    {
-   Library_State* old_state = global_lib_state;
-   global_lib_state = new_state;
+   std::lock_guard<std::mutex> lock(g_lib_state_mutex);
+   Library_State* old_state = g_lib_state.release();
+   g_lib_state.reset(new_state);
    return old_state;
    }
 
@@ -83,7 +80,7 @@ Library_State* swap_global_state(Library_State* new_state)
 */
 bool global_state_exists()
    {
-   return (global_lib_state != nullptr);
+   return (g_lib_state != nullptr);
    }
 
 }

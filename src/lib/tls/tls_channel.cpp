@@ -19,10 +19,10 @@ namespace Botan {
 
 namespace TLS {
 
-Channel::Channel(std::function<void (const byte[], size_t)> output_fn,
-                 std::function<void (const byte[], size_t)> data_cb,
-                 std::function<void (Alert, const byte[], size_t)> alert_cb,
-                 std::function<bool (const Session&)> handshake_cb,
+Channel::Channel(output_fn output_fn,
+                 data_cb data_cb,
+                 alert_cb alert_cb,
+                 handshake_cb handshake_cb,
                  Session_Manager& session_manager,
                  RandomNumberGenerator& rng,
                  bool is_datagram,
@@ -124,8 +124,8 @@ Handshake_State& Channel::create_handshake_state(Protocol_Version version)
       const u16bit mtu = 1280 - 40 - 8;
 
       io.reset(new Datagram_Handshake_IO(
-                  sequence_numbers(),
                   std::bind(&Channel::send_record_under_epoch, this, _1, _2, _3),
+                  sequence_numbers(),
                   mtu));
       }
    else

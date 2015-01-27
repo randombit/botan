@@ -113,6 +113,9 @@ void write_record(secure_vector<byte>& write_buffer,
                   Connection_Cipher_State* cipherstate,
                   RandomNumberGenerator& rng);
 
+// epoch -> cipher state
+typedef std::function<std::shared_ptr<Connection_Cipher_State> (u16bit)> get_cipherstate_fn;
+
 /**
 * Decode a TLS record
 * @return zero if full message, else number of bytes still needed
@@ -127,7 +130,7 @@ size_t read_record(secure_vector<byte>& read_buffer,
                    Protocol_Version* record_version,
                    Record_Type* record_type,
                    Connection_Sequence_Numbers* sequence_numbers,
-                   std::function<std::shared_ptr<Connection_Cipher_State> (u16bit)> get_cipherstate);
+                   get_cipherstate_fn get_cipherstate);
 
 }
 

@@ -1,6 +1,6 @@
 /*
-* Default Initialization Function
-* (C) 1999-2009 Jack Lloyd
+* Library initialization
+* (C) 1999-2009.2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -11,37 +11,34 @@
 
 namespace Botan {
 
-/*
-* Library Initialization
-*/
-void LibraryInitializer::initialize(const std::string&)
+LibraryInitializer::LibraryInitializer()
    {
+   /*
+   This two stage initialization process is because Library_State's
+   constructor will implicitly refer to global state through the
+   allocators and so forth, so global_state() has to be a valid
+   reference before initialize() can be called. Yeah, gross.
+   */
+   m_owned = Global_State_Management::set_global_state_unless_set(new Library_State);
 
-   try
+   if(m_owned)
       {
-      /*
-      This two stage initialization process is because Library_State's
-      constructor will implicitly refer to global state through the
-      allocators and so forth, so global_state() has to be a valid
-      reference before initialize() can be called. Yeah, gross.
-      */
-      Global_State_Management::set_global_state(new Library_State);
-
-      global_state().initialize();
-      }
-   catch(...)
-      {
-      deinitialize();
-      throw;
+      try
+         {
+         global_state().initialize();
+         }
+      catch(...)
+         {
+         Global_State_Management::set_global_state(nullptr);
+         throw;
+         }
       }
    }
 
-/*
-* Library Shutdown
-*/
-void LibraryInitializer::deinitialize()
+LibraryInitializer::~LibraryInitializer()
    {
-   Global_State_Management::set_global_state(nullptr);
+   if(m_owned)
+      Global_State_Management::set_global_state(nullptr);
    }
 
 }

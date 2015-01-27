@@ -13,17 +13,17 @@ namespace TLS {
 
 using namespace std::placeholders;
 
-Blocking_Client::Blocking_Client(std::function<size_t (byte[], size_t)> read_fn,
-                                 std::function<void (const byte[], size_t)> write_fn,
+Blocking_Client::Blocking_Client(read_fn reader,
+                                 write_fn writer,
                                  Session_Manager& session_manager,
                                  Credentials_Manager& creds,
                                  const Policy& policy,
                                  RandomNumberGenerator& rng,
                                  const Server_Information& server_info,
                                  const Protocol_Version offer_version,
-                                 std::function<std::string (std::vector<std::string>)> next_protocol) :
-   m_read_fn(read_fn),
-   m_channel(write_fn,
+                                 next_protocol_fn npn) :
+   m_read(reader),
+   m_channel(writer,
              std::bind(&Blocking_Client::data_cb, this, _1, _2),
              std::bind(&Blocking_Client::alert_cb, this, _1, _2, _3),
              std::bind(&Blocking_Client::handshake_cb, this, _1),
@@ -33,7 +33,7 @@ Blocking_Client::Blocking_Client(std::function<size_t (byte[], size_t)> read_fn,
              rng,
              server_info,
              offer_version,
-             next_protocol)
+             npn)
    {
    }
 
@@ -58,7 +58,7 @@ void Blocking_Client::do_handshake()
 
    while(!m_channel.is_closed() && !m_channel.is_active())
       {
-      const size_t from_socket = m_read_fn(readbuf.data(), readbuf.size());
+      const size_t from_socket = m_read(readbuf.data(), readbuf.size());
       m_channel.received_data(readbuf.data(), from_socket);
       }
    }
@@ -69,7 +69,7 @@ size_t Blocking_Client::read(byte buf[], size_t buf_len)
 
    while(m_plaintext.empty() && !m_channel.is_closed())
       {
-      const size_t from_socket = m_read_fn(readbuf.data(), readbuf.size());
+      const size_t from_socket = m_read(readbuf.data(), readbuf.size());
       m_channel.received_data(readbuf.data(), from_socket);
       }
 

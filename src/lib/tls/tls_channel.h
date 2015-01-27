@@ -31,10 +31,15 @@ class Handshake_State;
 class BOTAN_DLL Channel
    {
    public:
-      Channel(std::function<void (const byte[], size_t)> socket_output_fn,
-              std::function<void (const byte[], size_t)> data_cb,
-              std::function<void (Alert, const byte[], size_t)> alert_cb,
-              std::function<bool (const Session&)> handshake_cb,
+      typedef std::function<void (const byte[], size_t)> output_fn;
+      typedef std::function<void (const byte[], size_t)> data_cb;
+      typedef std::function<void (Alert, const byte[], size_t)> alert_cb;
+      typedef std::function<bool (const Session&)> handshake_cb;
+
+      Channel(output_fn out,
+              data_cb app_data_cb,
+              alert_cb alert_cb,
+              handshake_cb hs_cb,
               Session_Manager& session_manager,
               RandomNumberGenerator& rng,
               bool is_datagram,
@@ -240,10 +245,10 @@ class BOTAN_DLL Channel
       bool m_is_datagram;
 
       /* callbacks */
-      std::function<bool (const Session&)> m_handshake_cb;
-      std::function<void (const byte[], size_t)> m_data_cb;
-      std::function<void (Alert, const byte[], size_t)> m_alert_cb;
-      std::function<void (const byte[], size_t)> m_output_fn;
+      handshake_cb m_handshake_cb;
+      data_cb m_data_cb;
+      alert_cb m_alert_cb;
+      output_fn m_output_fn;
 
       /* external state */
       RandomNumberGenerator& m_rng;

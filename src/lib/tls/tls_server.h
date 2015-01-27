@@ -25,10 +25,10 @@ class BOTAN_DLL Server : public Channel
       /**
       * Server initialization
       */
-      Server(std::function<void (const byte[], size_t)> socket_output_fn,
-             std::function<void (const byte[], size_t)> data_cb,
-             std::function<void (Alert, const byte[], size_t)> alert_cb,
-             std::function<bool (const Session&)> handshake_cb,
+      Server(output_fn output,
+             data_cb data_cb,
+             alert_cb alert_cb,
+             handshake_cb handshake_cb,
              Session_Manager& session_manager,
              Credentials_Manager& creds,
              const Policy& policy,
@@ -40,7 +40,9 @@ class BOTAN_DLL Server : public Channel
 
       /**
       * Return the protocol notification set by the client (using the
-      * NPN extension) for this connection, if any
+      * NPN extension) for this connection, if any. This value is not
+      * tied to the session and a later renegotiation of the same
+      * session can choose a new protocol.
       */
       std::string next_protocol() const { return m_next_protocol; }
 

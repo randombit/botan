@@ -39,7 +39,7 @@ using namespace std::placeholders;
 
 namespace {
 
-int connect_to_host(const std::string& host, u16bit port, const std::string& transport)
+int connect_to_host(const std::string& host, u16bit port, bool tcp)
    {
    hostent* host_addr = ::gethostbyname(host.c_str());
 
@@ -49,7 +49,7 @@ int connect_to_host(const std::string& host, u16bit port, const std::string& tra
    if(host_addr->h_addrtype != AF_INET) // FIXME
       throw std::runtime_error(host + " has IPv6 address, not supported");
 
-   int type = (transport == "tcp") ? SOCK_STREAM : SOCK_DGRAM;
+   int type = tcp ? SOCK_STREAM : SOCK_DGRAM;
 
    int fd = ::socket(PF_INET, type, 0);
    if(fd == -1)
@@ -130,13 +130,6 @@ void process_data(const byte buf[], size_t buf_size)
       std::cout << buf[i];
    }
 
-std::string protocol_chooser(const std::vector<std::string>& protocols)
-   {
-   for(size_t i = 0; i != protocols.size(); ++i)
-      std::cout << "Protocol " << i << " = " << protocols[i] << "\n";
-   return "http/1.1";
-   }
-
 int tls_client(int argc, char* argv[])
    {
    if(argc != 2 && argc != 3 && argc != 4)
@@ -144,6 +137,9 @@ int tls_client(int argc, char* argv[])
       std::cout << "Usage " << argv[0] << " host [port] [udp|tcp]\n";
       return 1;
       }
+
+   const bool request_protocol = true;
+   const std::string use_protocol = "http/1.1";
 
    try
       {
@@ -167,14 +163,22 @@ int tls_client(int argc, char* argv[])
       u32bit port = argc >= 3 ? Botan::to_u32bit(argv[2]) : 443;
       const std::string transport = argc >= 4 ? argv[3] : "tcp";
 
-      int sockfd = connect_to_host(host, port, transport);
+      const bool use_tcp = (transport == "tcp");
+
+      int sockfd = connect_to_host(host, port, use_tcp);
+
+      auto protocol_chooser = [use_protocol](const std::vector<std::string>& protocols) -> std::string {
+         for(size_t i = 0; i != protocols.size(); ++i)
+            std::cout << "Server offered protocol " << i << " = " << protocols[i] << "\n";
+         return use_protocol;
+      };
 
       auto socket_write =
-         (transport == "tcp") ?
+         use_tcp ?
          std::bind(stream_socket_write, sockfd, _1, _2) :
          std::bind(dgram_socket_write, sockfd, _1, _2);
 
-      auto version = policy.latest_supported_version(transport != "tcp");
+      auto version = policy.latest_supported_version(!use_tcp);
 
       TLS::Client client(socket_write,
                          process_data,

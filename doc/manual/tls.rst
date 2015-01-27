@@ -30,7 +30,7 @@ abstraction. This makes the library completely agnostic to how you
 write your network layer, be it blocking sockets, libevent, asio, a
 message queue, etc.
 
-The callbacks that TLS calls have the signatures
+The callbacks for TLS have the signatures
 
  .. cpp:function:: void output_fn(const byte data[], size_t data_len)
 
@@ -80,6 +80,13 @@ TLS channel (either client or server object) has these methods
 available:
 
 .. cpp:class:: TLS::Channel
+
+   .. cpp:type:: std::function<void (const byte[], size_t)> output_fn
+   .. cpp:type:: std::function<void (const byte[], size_t)> data_cb
+   .. cpp:type:: std::function<void (Alert, const byte[], size_t)> alert_cb
+   .. cpp:type:: std::function<bool (const Session&)> handshake_cb
+
+     Typedefs used in the code for the functions described above
 
    .. cpp:function:: size_t received_data(const byte buf[], size_t buf_size)
    .. cpp:function:: size_t received_data(const std::vector<byte>& buf)
@@ -185,18 +192,18 @@ TLS Clients
 .. cpp:class:: TLS::Client
 
    .. cpp:function:: TLS::Client( \
-         std::function<void, const byte*, size_t> output_fn, \
-         std::function<void, const byte*, size_t> data_cb, \
-         std::function<TLS::Alert, const byte*, size_t> alert_cb, \
-         std::function<bool, const TLS::Session&> handshake_cb, \
-         TLS::Session_Manager& session_manager, \
-         Credentials_Manager& credendials_manager, \
-         const TLS::Policy& policy, \
-         RandomNumberGenerator& rng, \
-         const Server_Information& server_info, \
-         const Protocol_Version offer_version, \
-         std::function<std::string, std::vector<std::string> > next_protocol, \
-         size_t reserved_io_buffer_size)
+                     output_fn output, \
+                     data_cb data, \
+                     alert_cb alert, \
+                     handshake_cb handshake_complete, \
+                     TLS::Session_Manager& session_manager, \
+                     Credentials_Manager& credendials_manager, \
+                     const TLS::Policy& policy, \
+                     RandomNumberGenerator& rng, \
+                     const Server_Information& server_info, \
+                     const Protocol_Version offer_version, \
+                     next_protocol_fn npn, \
+                     size_t reserved_io_buffer_size)
 
    Initialize a new TLS client. The constructor will immediately
    initiate a new session.
@@ -234,29 +241,29 @@ TLS Clients
 
    The *credentials_manager* is an interface that will be called to
    retrieve any certificates, secret keys, pre-shared keys, or SRP
-   intformation; see :doc:`credentials_manager` for more information.
+   information; see :doc:`credentials_manager` for more information.
 
-   Use *server_info* to specify the DNS name of the server you are
-   attempting to connect to, if you know it. This helps the server
-   select what certificate to use and helps the client validate the
-   connection.
+   Use the optional *server_info* to specify the DNS name of the
+   server you are attempting to connect to, if you know it. This helps
+   the server select what certificate to use and helps the client
+   validate the connection.
 
-   Use *offer_version* to control the version of TLS you wish the
-   client to offer. Normally, you'll want to offer the most recent
-   version of (D)TLS that is available, however some broken servers are
-   intolerant of certain versions being offered, and for classes of
-   applications that have to deal with such servers (typically web
-   browsers) it may be necessary to implement a version backdown
-   strategy if the initial attempt fails.
-
-   Setting *offer_version* is also used to offer DTLS instead of TLS;
-   use :cpp:func:`TLS::Protocol_Version::latest_dtls_version`.
+   Use the optional *offer_version* to control the version of TLS you
+   wish the client to offer. Normally, you'll want to offer the most
+   recent version of (D)TLS that is available, however some broken
+   servers are intolerant of certain versions being offered, and for
+   classes of applications that have to deal with such servers
+   (typically web browsers) it may be necessary to implement a version
+   backdown strategy if the initial attempt fails.
 
    .. warning::
 
      Implementing such a backdown strategy allows an attacker to
      downgrade your connection to the weakest protocol that both you
      and the server support.
+
+   Setting *offer_version* is also used to offer DTLS instead of TLS;
+   use :cpp:func:`TLS::Protocol_Version::latest_dtls_version`.
 
    The optional *next_protocol* callback is called if the server
    indicates it supports the next protocol notification extension.
@@ -270,7 +277,7 @@ TLS Clients
    resized as needed to process inputs). Otherwise some reasonable
    default is used.
 
-A TLS client example using BSD sockets is in `src/cmd/tls_client.cpp`
+Code for a TLS client using BSD sockets is in `src/cmd/tls_client.cpp`
 
 TLS Servers
 ----------------------------------------
@@ -308,8 +315,7 @@ not until they actually receive a hello without this parameter.
    renegotiation, but might change across different connections using
    that session.
 
-An example TLS server implementation using asio is available in
-`src/cmd/tls_proxy.cpp`.
+Code for a TLS server using asio is in `src/cmd/tls_proxy.cpp`.
 
 .. _tls_sessions:
 

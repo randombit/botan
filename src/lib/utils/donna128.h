@@ -111,6 +111,7 @@ inline u64bit combine_lower(const donna128 a, size_t s1,
    return z.lo();
    }
 
+#if defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
 inline u64bit carry_shift(const uint128_t a, size_t shift)
    {
    return static_cast<u64bit>(a >> shift);
@@ -121,6 +122,7 @@ inline u64bit combine_lower(const uint128_t a, size_t s1,
    {
    return static_cast<u64bit>((a >> s1) | (b << s2));
    }
+#endif
 
 }
 

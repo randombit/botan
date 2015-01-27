@@ -60,6 +60,10 @@ void PointGFp::add(const PointGFp& rhs, std::vector<BigInt>& ws_bn)
    BigInt& H = ws_bn[6];
    BigInt& r = ws_bn[7];
 
+   /*
+   http://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#addition-add-1998-cmo-2
+   */
+
    curve_sqr(rhs_z2, rhs.coord_z);
    curve_mult(U1, coord_x, rhs_z2);
    curve_mult(S1, coord_y, curve_mult(rhs.coord_z, rhs_z2));
@@ -124,6 +128,10 @@ void PointGFp::mult2(std::vector<BigInt>& ws_bn)
       *this = PointGFp(curve); // setting myself to zero
       return;
       }
+
+   /*
+   http://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#doubling-dbl-1986-cc
+   */
 
    const BigInt& p = curve.get_p();
 

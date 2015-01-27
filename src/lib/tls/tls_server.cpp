@@ -21,7 +21,8 @@ class Server_Handshake_State : public Handshake_State
    public:
       // using Handshake_State::Handshake_State;
 
-      Server_Handshake_State(Handshake_IO* io) : Handshake_State(io) {}
+      Server_Handshake_State(Handshake_IO* io, hs_msg_cb cb = hs_msg_cb()) :
+         Handshake_State(io, cb) {}
 
       // Used by the server only, in case of RSA key exchange. Not owned
       Private_Key* server_rsa_kex_key = nullptr;
@@ -203,10 +204,10 @@ get_server_certs(const std::string& hostname,
 /*
 * TLS Server Constructor
 */
-Server::Server(std::function<void (const byte[], size_t)> output_fn,
-               std::function<void (const byte[], size_t)> data_cb,
-               std::function<void (Alert, const byte[], size_t)> alert_cb,
-               std::function<bool (const Session&)> handshake_cb,
+Server::Server(output_fn output,
+               data_cb data_cb,
+               alert_cb alert_cb,
+               handshake_cb handshake_cb,
                Session_Manager& session_manager,
                Credentials_Manager& creds,
                const Policy& policy,
@@ -214,7 +215,8 @@ Server::Server(std::function<void (const byte[], size_t)> output_fn,
                const std::vector<std::string>& next_protocols,
                bool is_datagram,
                size_t io_buf_sz) :
-   Channel(output_fn, data_cb, alert_cb, handshake_cb, session_manager, rng, is_datagram, io_buf_sz),
+   Channel(output, data_cb, alert_cb, handshake_cb,
+           session_manager, rng, is_datagram, io_buf_sz),
    m_policy(policy),
    m_creds(creds),
    m_possible_protocols(next_protocols)
