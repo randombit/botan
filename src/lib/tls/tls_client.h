@@ -25,9 +25,9 @@ class BOTAN_DLL Client : public Channel
       /**
       * Set up a new TLS client session
       *
-      * @param socket_output_fn is called with data for the outbound socket
+      * @param output_fn is called with data for the outbound socket
       *
-      * @param proc_cb is called when new application data is received
+      * @param app_data_cb is called when new application data is received
       *
       * @param alert_cb is called when a TLS alert is received
       *
@@ -59,18 +59,20 @@ class BOTAN_DLL Client : public Channel
       *        be preallocated for the read and write buffers. Smaller
       *        values just mean reallocations and copies are more likely.
       */
-      Client(std::function<void (const byte[], size_t)> socket_output_fn,
-             std::function<void (const byte[], size_t)> data_cb,
-             std::function<void (Alert, const byte[], size_t)> alert_cb,
-             std::function<bool (const Session&)> handshake_cb,
+
+      typedef std::function<std::string (std::vector<std::string>)> next_protocol_fn;
+
+      Client(output_fn out,
+             data_cb app_data_cb,
+             alert_cb alert_cb,
+             handshake_cb hs_cb,
              Session_Manager& session_manager,
              Credentials_Manager& creds,
              const Policy& policy,
              RandomNumberGenerator& rng,
              const Server_Information& server_info = Server_Information(),
              const Protocol_Version offer_version = Protocol_Version::latest_tls_version(),
-             std::function<std::string (std::vector<std::string>)> next_protocol =
-                std::function<std::string (std::vector<std::string>)>(),
+             next_protocol_fn next_protocol =  next_protocol_fn(),
              size_t reserved_io_buffer_size = 16*1024
          );
    private:
@@ -84,8 +86,7 @@ class BOTAN_DLL Client : public Channel
                              bool force_full_renegotiation,
                              Protocol_Version version,
                              const std::string& srp_identifier = "",
-                             std::function<std::string (std::vector<std::string>)> next_protocol =
-                                std::function<std::string (std::vector<std::string>)>());
+                             next_protocol_fn next_protocol = next_protocol_fn());
 
       void process_handshake_msg(const Handshake_State* active_state,
                                  Handshake_State& pending_state,

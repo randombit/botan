@@ -58,6 +58,10 @@ RandomNumberGenerator& Library_State::global_rng()
    return *m_global_prng;
    }
 
+Library_State::~Library_State()
+   {
+   }
+
 void Library_State::initialize()
    {
    if(m_algorithm_factory.get())

@@ -455,7 +455,7 @@ size_t read_tls_record(secure_vector<byte>& readbuf,
                        Protocol_Version* record_version,
                        Record_Type* record_type,
                        Connection_Sequence_Numbers* sequence_numbers,
-                       std::function<std::shared_ptr<Connection_Cipher_State> (u16bit)> get_cipherstate)
+                       get_cipherstate_fn get_cipherstate)
    {
    consumed = 0;
 
@@ -543,7 +543,7 @@ size_t read_dtls_record(secure_vector<byte>& readbuf,
                         Protocol_Version* record_version,
                         Record_Type* record_type,
                         Connection_Sequence_Numbers* sequence_numbers,
-                        std::function<std::shared_ptr<Connection_Cipher_State> (u16bit)> get_cipherstate)
+                        get_cipherstate_fn get_cipherstate)
    {
    consumed = 0;
 
@@ -642,7 +642,7 @@ size_t read_record(secure_vector<byte>& readbuf,
                    Protocol_Version* record_version,
                    Record_Type* record_type,
                    Connection_Sequence_Numbers* sequence_numbers,
-                   std::function<std::shared_ptr<Connection_Cipher_State> (u16bit)> get_cipherstate)
+                   get_cipherstate_fn get_cipherstate)
    {
    if(is_datagram)
       return read_dtls_record(readbuf, input, input_sz, consumed,

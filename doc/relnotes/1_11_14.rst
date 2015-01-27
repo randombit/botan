@@ -16,3 +16,11 @@ Version 1.11.14, Not Yet Released
   Previously the allocator would consume all available mlocked memory,
   this allows botan to coexist with an application which wants to
   mlock memory of its own.
+
+* The library can now only be initialized once. If the library is
+  already initialized and a LibraryInitializer is created, it has no
+  effect. If the first library initializer leaves scope then a new
+  initializer can be created.
+
+  LibraryInitializer can now only be used in an RAII fashion; the
+  static `initialize` and `deinitialize` functions have been removed.

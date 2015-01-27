@@ -11,6 +11,7 @@
 #include <botan/mem_ops.h>
 #include <algorithm>
 #include <vector>
+#include <deque>
 
 #if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
   #include <botan/locking_allocator.h>
@@ -90,6 +91,7 @@ operator!=(const secure_allocator<T>&, const secure_allocator<T>&)
    { return false; }
 
 template<typename T> using secure_vector = std::vector<T, secure_allocator<T>>;
+template<typename T> using secure_deque = std::deque<T, secure_allocator<T>>;
 
 template<typename T>
 std::vector<T> unlock(const secure_vector<T>& in)
