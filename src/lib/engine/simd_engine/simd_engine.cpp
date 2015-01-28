@@ -9,10 +9,6 @@
 #include <botan/algo_registry.h>
 #include <botan/cpuid.h>
 
-#if defined(BOTAN_HAS_SHA1_SSE2)
-  #include <botan/sha1_sse2.h>
-#endif
-
 namespace Botan {
 
 BlockCipher*
@@ -40,12 +36,8 @@ HashFunction*
 SIMD_Engine::find_hash(const SCAN_Name& request,
                        Algorithm_Factory&) const
    {
-#if defined(BOTAN_HAS_SHA1_SSE2)
-   if(request.algo_name() == "SHA-160" && CPUID::has_sse2())
-      return new SHA_160_SSE2;
-#endif
-
-   BOTAN_UNUSED(request);
+   if(HashFunction* c = Algo_Registry<HashFunction>::global_registry().make(request, "sse2"))
+      return c;
 
    return nullptr;
    }

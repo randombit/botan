@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Serpent_X86_32, "Serpent", "x86-32");
+BOTAN_REGISTER_NAMED_T_NOARGS(BlockCipher, Serpent_X86_32, "Serpent", "x86-32");
 
 extern "C" {
 

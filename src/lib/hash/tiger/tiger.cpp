@@ -5,12 +5,14 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/hash_utils.h>
 #include <botan/tiger.h>
 #include <botan/exceptn.h>
-#include <botan/loadstor.h>
 #include <botan/parsing.h>
 
 namespace Botan {
+
+BOTAN_REGISTER_NAMED_T_2LEN(HashFunction, Tiger, "Tiger", "builtin", 24, 3);
 
 namespace {
 

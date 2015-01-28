@@ -5,14 +5,21 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/hash_utils.h>
 #include <botan/skein_512.h>
-#include <botan/loadstor.h>
 #include <botan/parsing.h>
 #include <botan/exceptn.h>
 #include <botan/internal/xor_buf.h>
 #include <algorithm>
 
 namespace Botan {
+
+BOTAN_REGISTER_NAMED_T(HashFunction, "Skein-512", Skein_512, Skein_512::make);
+
+Skein_512* Skein_512::make(const Spec& spec)
+   {
+   return new Skein_512(spec.arg_as_integer(0, 512), spec.arg(1, ""));
+   }
 
 Skein_512::Skein_512(size_t arg_output_bits,
                      const std::string& arg_personalization) :

@@ -32,6 +32,8 @@ class BOTAN_DLL Skein_512 : public HashFunction
       size_t hash_block_size() const { return 64; }
       size_t output_length() const { return output_bits / 8; }
 
+      static Skein_512* make(const Spec& spec);
+
       HashFunction* clone() const;
       std::string name() const;
       void clear();

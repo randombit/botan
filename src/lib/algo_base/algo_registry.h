@@ -119,6 +119,12 @@ make_new_T_1len(const typename Algo_Registry<T>::Spec& spec)
    return new T(spec.arg_as_integer(0, DEF_VAL));
    }
 
+template<typename T, size_t DEF1, size_t DEF2> T*
+make_new_T_2len(const typename Algo_Registry<T>::Spec& spec)
+   {
+   return new T(spec.arg_as_integer(0, DEF1), spec.arg_as_integer(1, DEF2));
+   }
+
 template<typename T> T*
 make_new_T_1str(const typename Algo_Registry<T>::Spec& spec, const std::string& def)
    {
@@ -134,8 +140,12 @@ make_new_T_1str(const typename Algo_Registry<T>::Spec& spec, const std::string& 
 #define BOTAN_REGISTER_T_1LEN(T, name, def) \
    namespace { Algo_Registry<T>::Add g_ ## name ## _reg(#name, make_new_T_1len<name, def>); }
 
+#define BOTAN_REGISTER_NAMED_T_NOARGS(T, type, name, provider) \
+   namespace { Algo_Registry<T>::Add g_ ## type ## _reg(name, make_new_T<type>, provider); }
 #define BOTAN_COND_REGISTER_NAMED_T_NOARGS(cond, T, type, name, provider) \
    namespace { Algo_Registry<T>::Add g_ ## type ## _reg(cond, name, make_new_T<type>, provider); }
+#define BOTAN_REGISTER_NAMED_T_2LEN(T, type, name, provider, len1, len2)     \
+   namespace { Algo_Registry<T>::Add g_ ## type ## _reg(name, make_new_T_2len<type, len1, len2>, provider); }
 
 // TODO move elsewhere:
 #define BOTAN_REGISTER_TRANSFORM(name, maker) BOTAN_REGISTER_T(Transform, name, maker)
