@@ -25,6 +25,8 @@ class BOTAN_DLL Cipher_Mode : public Keyed_Transform
       virtual bool authenticated() const { return false; }
    };
 
+BOTAN_DLL Cipher_Mode* get_cipher_mode(const std::string& algo_spec, Cipher_Dir direction);
+
 }
 
 #endif

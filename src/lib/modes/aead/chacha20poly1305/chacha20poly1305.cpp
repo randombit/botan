@@ -5,13 +5,15 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/mode_utils.h>
 #include <botan/chacha20poly1305.h>
 #include <botan/chacha.h>
 #include <botan/poly1305.h>
-#include <botan/loadstor.h>
-#include <algorithm>
 
 namespace Botan {
+
+BOTAN_REGISTER_TRANSFORM_NOARGS(ChaCha20Poly1305_Encryption);
+BOTAN_REGISTER_TRANSFORM_NOARGS(ChaCha20Poly1305_Decryption);
 
 bool ChaCha20Poly1305_Mode::valid_nonce_length(size_t n) const
    {

@@ -5,11 +5,13 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/block_utils.h>
 #include <botan/misty1.h>
-#include <botan/loadstor.h>
 #include <botan/parsing.h>
 
 namespace Botan {
+
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(MISTY1);
 
 namespace {
 
@@ -255,16 +257,6 @@ void MISTY1::clear()
    {
    zap(EK);
    zap(DK);
-   }
-
-/*
-* MISTY1 Constructor
-*/
-MISTY1::MISTY1(size_t rounds)
-   {
-   if(rounds != 8)
-      throw Invalid_Argument("MISTY1: Invalid number of rounds: "
-                             + std::to_string(rounds));
    }
 
 }

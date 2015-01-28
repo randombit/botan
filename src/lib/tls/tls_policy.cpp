@@ -17,7 +17,7 @@ namespace TLS {
 
 std::vector<std::string> Policy::allowed_ciphers() const
    {
-   return std::vector<std::string>({
+   return {
       //"AES-256/OCB(12)",
       //"AES-128/OCB(12)",
       "ChaCha20Poly1305",
@@ -25,8 +25,8 @@ std::vector<std::string> Policy::allowed_ciphers() const
       "AES-128/GCM",
       "AES-256/CCM",
       "AES-128/CCM",
-      "AES-256/CCM-8",
-      "AES-128/CCM-8",
+      "AES-256/CCM(8)",
+      "AES-128/CCM(8)",
       //"Camellia-256/GCM",
       //"Camellia-128/GCM",
       "AES-256",
@@ -36,35 +36,35 @@ std::vector<std::string> Policy::allowed_ciphers() const
       //"SEED"
       //"3DES",
       //"RC4",
-      });
+      };
    }
 
 std::vector<std::string> Policy::allowed_signature_hashes() const
    {
-   return std::vector<std::string>({
+   return {
       "SHA-512",
       "SHA-384",
       "SHA-256",
       "SHA-224",
       //"SHA-1",
       //"MD5",
-      });
+      };
    }
 
 std::vector<std::string> Policy::allowed_macs() const
    {
-   return std::vector<std::string>({
+   return {
       "AEAD",
       "SHA-384",
       "SHA-256",
       "SHA-1",
       //"MD5",
-      });
+      };
    }
 
 std::vector<std::string> Policy::allowed_key_exchange_methods() const
    {
-   return std::vector<std::string>({
+   return {
       "SRP_SHA",
       //"ECDHE_PSK",
       //"DHE_PSK",
@@ -72,22 +72,22 @@ std::vector<std::string> Policy::allowed_key_exchange_methods() const
       "ECDH",
       "DH",
       "RSA",
-      });
+      };
    }
 
 std::vector<std::string> Policy::allowed_signature_methods() const
    {
-   return std::vector<std::string>({
+   return {
       "ECDSA",
       "RSA",
       "DSA",
       //""
-      });
+      };
    }
 
 std::vector<std::string> Policy::allowed_ecc_curves() const
    {
-   return std::vector<std::string>({
+   return {
       "brainpool512r1",
       "secp521r1",
       "brainpool384r1",
@@ -102,7 +102,7 @@ std::vector<std::string> Policy::allowed_ecc_curves() const
       //"secp160r2",
       //"secp160r1",
       //"secp160k1",
-      });
+      };
    }
 
 /*
@@ -350,6 +350,34 @@ void Policy::print(std::ostream& o) const
    o << "session_ticket_lifetime = " << session_ticket_lifetime() << '\n';
    o << "dh_group = " << dh_group() << '\n';
    o << "minimum_dh_group_size = " << minimum_dh_group_size() << '\n';
+   }
+
+std::vector<std::string> Strict_Policy::allowed_ciphers() const
+   {
+   return { "ChaCha20Poly1305", "AES-256/GCM", "AES-128/GCM" };
+   }
+
+std::vector<std::string> Strict_Policy::allowed_signature_hashes() const
+   {
+   return { "SHA-512", "SHA-384"};
+   }
+
+std::vector<std::string> Strict_Policy::allowed_macs() const
+   {
+   return { "AEAD" };
+   }
+
+std::vector<std::string> Strict_Policy::allowed_key_exchange_methods() const
+   {
+   return { "ECDH" };
+   }
+
+bool Strict_Policy::acceptable_protocol_version(Protocol_Version version) const
+   {
+   if(version.is_datagram_protocol())
+      return (version >= Protocol_Version::DTLS_V12);
+   else
+      return (version >= Protocol_Version::TLS_V12);
    }
 
 }

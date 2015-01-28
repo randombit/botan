@@ -5,11 +5,12 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/block_utils.h>
 #include <botan/threefish.h>
-#include <botan/rotate.h>
-#include <botan/loadstor.h>
 
 namespace Botan {
+
+BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(Threefish_512, "Threefish-512");
 
 #define THREEFISH_ROUND(X0,X1,X2,X3,X4,X5,X6,X7,ROT1,ROT2,ROT3,ROT4) \
    do {                                                              \
@@ -223,6 +224,7 @@ void Threefish_512::set_tweak(const byte tweak[], size_t len)
    {
    if(len != 16)
       throw std::runtime_error("Unsupported twofish tweak length");
+   m_T.resize(3);
    m_T[0] = load_le<u64bit>(tweak, 0);
    m_T[1] = load_le<u64bit>(tweak, 1);
    m_T[2] = m_T[0] ^ m_T[1];
@@ -238,6 +240,10 @@ void Threefish_512::key_schedule(const byte key[], size_t)
 
    m_K[8] = m_K[0] ^ m_K[1] ^ m_K[2] ^ m_K[3] ^
             m_K[4] ^ m_K[5] ^ m_K[6] ^ m_K[7] ^ 0x1BD11BDAA9FC1A22;
+
+   // Reset tweak to all zeros on key reset
+   m_T.resize(3);
+   zeroise(m_T);
    }
 
 void Threefish_512::clear()

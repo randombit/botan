@@ -1,5 +1,5 @@
 /*
-* Transformations of data
+* Transforms of data
 * (C) 2013 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -12,6 +12,7 @@
 #include <botan/key_spec.h>
 #include <botan/exceptn.h>
 #include <botan/symkey.h>
+#include <botan/scan_name.h>
 #include <string>
 #include <vector>
 
@@ -20,9 +21,11 @@ namespace Botan {
 /**
 * Interface for general transformations on data
 */
-class BOTAN_DLL Transformation
+class BOTAN_DLL Transform
    {
    public:
+      typedef SCAN_Name Spec;
+
       /**
       * Begin processing a message.
       * @param nonce the per message nonce
@@ -38,7 +41,7 @@ class BOTAN_DLL Transformation
       * @param nonce the per message nonce
       */
       template<typename Alloc>
-      BOTAN_DEPRECATED("Use Transformation::start")
+      BOTAN_DEPRECATED("Use Transform::start")
       secure_vector<byte> start_vec(const std::vector<byte, Alloc>& nonce)
          {
          return start(&nonce[0], nonce.size());
@@ -120,10 +123,10 @@ class BOTAN_DLL Transformation
 
       virtual void clear() = 0;
 
-      virtual ~Transformation() {}
+      virtual ~Transform() {}
    };
 
-class BOTAN_DLL Keyed_Transform : public Transformation
+class BOTAN_DLL Keyed_Transform : public Transform
    {
    public:
       /**
@@ -167,6 +170,12 @@ class BOTAN_DLL Keyed_Transform : public Transformation
    private:
       virtual void key_schedule(const byte key[], size_t length) = 0;
    };
+
+typedef Transform Transformation;
+
+BOTAN_DLL Transform* get_transform(const std::string& specstr,
+                                   const std::string& provider = "",
+                                   const std::string& dirstr = "");
 
 }
 

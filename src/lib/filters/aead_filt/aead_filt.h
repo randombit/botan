@@ -16,10 +16,10 @@ namespace Botan {
 /**
 * Filter interface for AEAD Modes
 */
-class BOTAN_DLL AEAD_Filter : public Transformation_Filter
+class BOTAN_DLL AEAD_Filter : public Transform_Filter
    {
    public:
-      AEAD_Filter(AEAD_Mode* aead) : Transformation_Filter(aead) {}
+      AEAD_Filter(AEAD_Mode* aead) : Transform_Filter(aead) {}
 
       /**
       * Set associated data that is not included in the ciphertext but

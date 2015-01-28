@@ -15,24 +15,20 @@ using namespace Botan;
 
 namespace {
 
-Transformation* get_transform(const std::string& algo)
-   {
-   throw std::runtime_error("Unknown transform " + algo);
-   }
-
 secure_vector<byte> transform_test(const std::string& algo,
                                    const secure_vector<byte>& nonce,
-                                   const secure_vector<byte>& /*key*/,
+                                   const secure_vector<byte>& key,
                                    const secure_vector<byte>& in)
    {
-   std::unique_ptr<Transformation> transform(get_transform(algo));
+   std::unique_ptr<Transform> t(get_transform(algo));
 
-   //transform->set_key(key);
-   transform->start(nonce);
+   if(Keyed_Transform* keyed = dynamic_cast<Keyed_Transform*>(t.get()))
+      keyed->set_key(key);
 
    secure_vector<byte> out = in;
-   transform->update(out, 0);
 
+   t->start(nonce);
+   t->finish(out);
    return out;
    }
 

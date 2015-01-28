@@ -29,19 +29,29 @@ class BOTAN_DLL SCAN_Name
       SCAN_Name(std::string algo_spec);
 
       /**
+      * @param algo_spec A SCAN-format name
+      */
+      SCAN_Name(std::string algo_spec, const std::string& extra);
+
+      /**
       * @return original input string
       */
-      std::string as_string() const { return orig_algo_spec; }
+      const std::string& as_string() const { return orig_algo_spec; }
 
       /**
       * @return algorithm name
       */
-      std::string algo_name() const { return alg_name; }
+      const std::string& algo_name() const { return alg_name; }
 
       /**
       * @return algorithm name plus any arguments
       */
-      std::string algo_name_and_args() const;
+      std::string algo_name_and_args() const { return algo_name() + all_arguments(); }
+
+      /**
+      * @return all arguments
+      */
+      std::string all_arguments() const;
 
       /**
       * @return number of arguments

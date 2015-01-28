@@ -5,14 +5,15 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/block_utils.h>
 #include <botan/safer_sk.h>
-#include <botan/rotate.h>
 #include <botan/parsing.h>
-#include <botan/rotate.h>
 
 namespace Botan {
 
 namespace {
+
+BOTAN_REGISTER_BLOCK_CIPHER_NAMED_1LEN(SAFER_SK, "SAFER-SK", 10);
 
 const byte EXP[256] = {
    0x01, 0x2D, 0xE2, 0x93, 0xBE, 0x45, 0x15, 0xAE, 0x78, 0x03, 0x87, 0xA4,

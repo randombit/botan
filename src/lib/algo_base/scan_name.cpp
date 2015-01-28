@@ -65,6 +65,11 @@ deref_aliases(const std::pair<size_t, std::string>& in)
 std::mutex SCAN_Name::s_alias_map_mutex;
 std::map<std::string, std::string> SCAN_Name::s_alias_map;
 
+SCAN_Name::SCAN_Name(std::string algo_spec, const std::string& extra) : SCAN_Name(algo_spec)
+   {
+   alg_name += extra;
+   }
+
 SCAN_Name::SCAN_Name(std::string algo_spec)
    {
    orig_algo_spec = algo_spec;
@@ -73,7 +78,7 @@ SCAN_Name::SCAN_Name(std::string algo_spec)
    size_t level = 0;
    std::pair<size_t, std::string> accum = std::make_pair(level, "");
 
-   std::string decoding_error = "Bad SCAN name '" + algo_spec + "': ";
+   const std::string decoding_error = "Bad SCAN name '" + algo_spec + "': ";
 
    algo_spec = SCAN_Name::deref_alias(algo_spec);
 
@@ -130,12 +135,9 @@ SCAN_Name::SCAN_Name(std::string algo_spec)
       }
    }
 
-std::string SCAN_Name::algo_name_and_args() const
+std::string SCAN_Name::all_arguments() const
    {
    std::string out;
-
-   out = algo_name();
-
    if(arg_count())
       {
       out += '(';
@@ -146,16 +148,14 @@ std::string SCAN_Name::algo_name_and_args() const
             out += ',';
          }
       out += ')';
-
       }
-
    return out;
    }
 
 std::string SCAN_Name::arg(size_t i) const
    {
    if(i >= arg_count())
-      throw std::range_error("SCAN_Name::argument - i out of range");
+      throw std::range_error("SCAN_Name::arg - i out of range");
    return args[i];
    }
 

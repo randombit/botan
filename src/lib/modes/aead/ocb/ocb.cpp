@@ -5,13 +5,13 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/mode_utils.h>
 #include <botan/ocb.h>
 #include <botan/cmac.h>
-#include <botan/internal/xor_buf.h>
-#include <botan/internal/bit_ops.h>
-#include <algorithm>
 
 namespace Botan {
+
+BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN(OCB_Encryption, OCB_Decryption, 16);
 
 // Has to be in Botan namespace so unique_ptr can reference it
 class L_computer

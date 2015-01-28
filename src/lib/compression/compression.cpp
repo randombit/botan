@@ -6,67 +6,42 @@
 */
 
 #include <botan/compression.h>
-
-#if defined(BOTAN_HAS_ZLIB_TRANSFORM)
-  #include <botan/zlib.h>
-#endif
-
-#if defined(BOTAN_HAS_BZIP2_TRANSFORM)
-  #include <botan/bzip2.h>
-#endif
-
-#if defined(BOTAN_HAS_LZMA_TRANSFORM)
-  #include <botan/lzma.h>
-#endif
+#include <botan/algo_registry.h>
 
 namespace Botan {
 
-Compressor_Transformation* make_compressor(const std::string& type, size_t level)
+Transform* make_compressor(const std::string& type, size_t level)
    {
-#if defined(BOTAN_HAS_ZLIB_TRANSFORM)
+   const std::string comp_suffix = "_Compression(" + std::to_string(level) + ")";
+
    if(type == "zlib")
-      return new Zlib_Compression(level);
+      return get_transform("Zlib" + comp_suffix);
    if(type == "deflate")
-      return new Deflate_Compression(level);
+      return get_transform("Deflate" + comp_suffix);
    if(type == "gzip" || type == "gz")
-      return new Gzip_Compression(level);
-#endif
-
-#if defined(BOTAN_HAS_BZIP2_TRANSFORM)
+      return get_transform("Gzip" + comp_suffix);
    if(type == "bzip2" || type == "bz2")
-      return new Bzip2_Compression(level);
-#endif
-
-#if defined(BOTAN_HAS_LZMA_TRANSFORM)
+      return get_transform("Bzip2", comp_suffix);
    if(type == "lzma" || type == "xz")
-      return new LZMA_Compression(level);
-#endif
+      return get_transform("LZMA", comp_suffix);
 
-   throw std::runtime_error("Unknown compression type " + type);
+   return nullptr;
    }
 
-Compressor_Transformation* make_decompressor(const std::string& type)
+Transform* make_decompressor(const std::string& type)
    {
-#if defined(BOTAN_HAS_ZLIB_TRANSFORM)
    if(type == "zlib")
-      return new Zlib_Decompression;
+      return get_transform("Zlib_Decompression");
    if(type == "deflate")
-      return new Deflate_Decompression;
+      return get_transform("Deflate_Decompression");
    if(type == "gzip" || type == "gz")
-      return new Gzip_Decompression;
-#endif
-
-#if defined(BOTAN_HAS_BZIP2_TRANSFORM)
+      return get_transform("Gzip_Decompression");
    if(type == "bzip2" || type == "bz2")
-      return new Bzip2_Decompression;
-#endif
-
-#if defined(BOTAN_HAS_LZMA_TRANSFORM)
+      return get_transform("Bzip2_Decompression");
    if(type == "lzma" || type == "xz")
-      return new LZMA_Decompression;
-#endif
+      return get_transform("LZMA_Decompression");
 
-   throw std::runtime_error("Unknown compression type " + type);
+   return nullptr;
    }
 
 void Stream_Compression::clear()

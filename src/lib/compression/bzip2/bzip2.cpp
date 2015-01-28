@@ -15,6 +15,8 @@
 
 namespace Botan {
 
+BOTAN_REGISTER_COMPRESSION(Bzip2_Compression, Bzip2_Decompression);
+
 namespace {
 
 class Bzip2_Stream : public Zlib_Style_Stream<bz_stream, char>

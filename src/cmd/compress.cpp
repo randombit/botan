@@ -11,7 +11,7 @@
 
 namespace {
 
-void do_compress(Transformation& comp, std::ifstream& in, std::ostream& out)
+void do_compress(Transform& comp, std::ifstream& in, std::ostream& out)
    {
    secure_vector<byte> buf;
 
@@ -53,7 +53,13 @@ int compress(int argc, char* argv[])
    const size_t level = 9;
    const std::string suffix = argc == 3 ? argv[2] : "gz";
 
-   std::unique_ptr<Transformation> compress(make_compressor(suffix, level));
+   std::unique_ptr<Transform> compress(make_compressor(suffix, level));
+
+   if(!compress)
+      {
+      std::cout << suffix << " compression not supported\n";
+      return 1;
+      }
 
    const std::string out_file = in_file + "." + suffix;
    std::ofstream out(out_file.c_str());
@@ -91,7 +97,13 @@ int uncompress(int argc, char* argv[])
 
    std::ofstream out(out_file.c_str());
 
-   std::unique_ptr<Transformation> decompress(make_decompressor(suffix));
+   std::unique_ptr<Transform> decompress(make_decompressor(suffix));
+
+   if(!decompress)
+      {
+      std::cout << suffix << " decompression not supported\n";
+      return 1;
+      }
 
    do_compress(*decompress, in, out);
 

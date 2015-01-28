@@ -121,7 +121,7 @@ void report_results(const std::string& algo,
    std::cout << std::endl;
    }
 
-void time_transform(std::unique_ptr<Transformation> tf,
+void time_transform(std::unique_ptr<Transform> tf,
                     RandomNumberGenerator& rng)
    {
    if(!tf)
@@ -162,7 +162,7 @@ void time_transform(std::unique_ptr<Transformation> tf,
 
 void time_transform(const std::string& algo, RandomNumberGenerator& rng)
    {
-   std::unique_ptr<Transformation> tf;
+   std::unique_ptr<Transform> tf;
    tf.reset(get_aead(algo, ENCRYPTION));
 
    if(Keyed_Transform* keyed = dynamic_cast<Keyed_Transform*>(tf.get()))

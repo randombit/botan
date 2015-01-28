@@ -13,7 +13,7 @@
 namespace Botan {
 
 /**
-* MISTY1
+* MISTY1 with 8 rounds
 */
 class BOTAN_DLL MISTY1 : public Block_Cipher_Fixed_Params<8, 16>
    {
@@ -24,12 +24,6 @@ class BOTAN_DLL MISTY1 : public Block_Cipher_Fixed_Params<8, 16>
       void clear();
       std::string name() const { return "MISTY1"; }
       BlockCipher* clone() const { return new MISTY1; }
-
-      /**
-      * @param rounds the number of rounds. Must be 8 with the current
-      * implementation
-      */
-      MISTY1(size_t rounds = 8);
    private:
       void key_schedule(const byte[], size_t);
 

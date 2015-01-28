@@ -12,7 +12,8 @@
 
 namespace Botan {
 
-class Compressor_Transformation;
+class Transform;
+class Compressor_Transform;
 
 /**
 * Filter interface for compression/decompression
@@ -27,11 +28,11 @@ class BOTAN_DLL Compression_Decompression_Filter : public Filter
       std::string name() const override;
 
    protected:
-      Compression_Decompression_Filter(Compressor_Transformation* t);
+      Compression_Decompression_Filter(Transform* t);
 
       void flush();
    private:
-      std::unique_ptr<Compressor_Transformation> m_transform;
+      std::unique_ptr<Compressor_Transform> m_transform;
       secure_vector<byte> m_buffer;
    };
 

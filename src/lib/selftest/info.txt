@@ -1,8 +1,0 @@
-define SELFTESTS 20131128
-
-<requires>
-algo_factory
-filters
-aead_filt
-core_engine
-</requires>

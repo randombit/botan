@@ -5,11 +5,35 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/block_utils.h>
 #include <botan/lion.h>
-#include <botan/internal/xor_buf.h>
 #include <botan/parsing.h>
+#include <botan/libstate.h>
 
 namespace Botan {
+
+namespace {
+
+Lion* make_lion(const BlockCipher::Spec& spec)
+   {
+   if(spec.arg_count_between(2, 3))
+      {
+      Algorithm_Factory& af = global_state().algorithm_factory();
+      const HashFunction* hash = af.prototype_hash_function(spec.arg(0));
+      const StreamCipher* stream_cipher = af.prototype_stream_cipher(spec.arg(1));
+
+      if(hash && stream_cipher)
+         {
+         const size_t block_size = spec.arg_as_integer(2, 1024);
+         return new Lion(hash->clone(), stream_cipher->clone(), block_size);
+         }
+      }
+   return nullptr;
+   }
+
+}
+
+BOTAN_REGISTER_NAMED_T(BlockCipher, "Lion", Lion, make_lion);
 
 /*
 * Lion Encryption

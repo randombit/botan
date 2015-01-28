@@ -14,10 +14,6 @@
 #include <botan/internal/stl_util.h>
 #include <algorithm>
 
-#if defined(BOTAN_HAS_SELFTESTS)
-  #include <botan/selftest.h>
-#endif
-
 #if defined(BOTAN_HAS_ENGINE_ASSEMBLER)
   #include <botan/internal/asm_engine.h>
 #endif
@@ -99,10 +95,6 @@ void Library_State::initialize()
    m_sources = entropy_sources();
 
    m_global_prng.reset(new Serialized_RNG());
-
-#if defined(BOTAN_HAS_SELFTESTS)
-   confirm_startup_self_tests(algorithm_factory());
-#endif
    }
 
 }

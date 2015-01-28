@@ -5,9 +5,28 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/block_utils.h>
+#include <botan/algo_registry.h>
 #include <botan/cascade.h>
 
 namespace Botan {
+
+namespace {
+
+Cascade_Cipher* make_cascade(const BlockCipher::Spec& spec)
+   {
+   auto& block_cipher = Algo_Registry<BlockCipher>::global_registry();
+   std::unique_ptr<BlockCipher> c1(block_cipher.make(spec.arg(0)));
+   std::unique_ptr<BlockCipher> c2(block_cipher.make(spec.arg(1)));
+
+   if(c1 && c2)
+      return new Cascade_Cipher(c1.release(), c2.release());
+   return nullptr;
+   }
+
+}
+
+BOTAN_REGISTER_NAMED_T(BlockCipher, "Cascade", Cascade_Cipher, make_cascade);
 
 void Cascade_Cipher::encrypt_n(const byte in[], byte out[],
                                size_t blocks) const

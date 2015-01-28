@@ -5,11 +5,12 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/block_utils.h>
 #include <botan/gost_28147.h>
-#include <botan/loadstor.h>
-#include <botan/rotate.h>
 
 namespace Botan {
+
+BOTAN_REGISTER_BLOCK_CIPHER_NAMED_1STR(GOST_28147_89, "GOST-28147-89", "R3411_94_TestParam");
 
 byte GOST_28147_89_Params::sbox_entry(size_t row, size_t col) const
    {

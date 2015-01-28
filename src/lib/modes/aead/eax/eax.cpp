@@ -5,14 +5,15 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/mode_utils.h>
 #include <botan/eax.h>
 #include <botan/cmac.h>
 #include <botan/ctr.h>
 #include <botan/parsing.h>
-#include <botan/internal/xor_buf.h>
-#include <algorithm>
 
 namespace Botan {
+
+BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN(EAX_Encryption, EAX_Decryption, 0);
 
 namespace {
 

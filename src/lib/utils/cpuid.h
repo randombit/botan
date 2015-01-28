@@ -27,7 +27,7 @@ class BOTAN_DLL CPUID
       /**
       * Return a best guess of the cache line size
       */
-      static size_t cache_line_size() { return m_cache_line_size; }
+      static size_t cache_line_size() { return g_cache_line_size; }
 
       /**
       * Check if the processor supports RDTSC
@@ -116,7 +116,7 @@ class BOTAN_DLL CPUID
       /**
       * Check if the processor supports AltiVec/VMX
       */
-      static bool has_altivec() { return m_altivec_capable; }
+      static bool has_altivec() { return g_altivec_capable; }
 
       static void print(std::ostream& o);
    private:
@@ -140,12 +140,15 @@ class BOTAN_DLL CPUID
 
       static bool x86_processor_flags_has(u64bit bit)
          {
-         return ((m_x86_processor_flags[bit/64] >> (bit % 64)) & 1);
+         if(!g_initialized)
+            initialize();
+         return ((g_x86_processor_flags[bit/64] >> (bit % 64)) & 1);
          }
 
-      static u64bit m_x86_processor_flags[2];
-      static size_t m_cache_line_size;
-      static bool m_altivec_capable;
+      static bool g_initialized;
+      static u64bit g_x86_processor_flags[2];
+      static size_t g_cache_line_size;
+      static bool g_altivec_capable;
    };
 
 }

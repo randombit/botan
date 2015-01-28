@@ -14,6 +14,10 @@
 
 namespace Botan {
 
+BOTAN_REGISTER_COMPRESSION(Zlib_Compression, Zlib_Decompression);
+BOTAN_REGISTER_COMPRESSION(Gzip_Compression, Gzip_Decompression);
+BOTAN_REGISTER_COMPRESSION(Deflate_Compression, Deflate_Decompression);
+
 namespace {
 
 class Zlib_Stream : public Zlib_Style_Stream<z_stream, Bytef>
