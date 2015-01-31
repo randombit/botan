@@ -4,3 +4,11 @@ define KDF_BASE 20131128
 alloc
 libstate
 </requires>
+
+<header:public>
+kdf.h
+</header:public>
+
+<header:internal>
+kdf_utils.h
+</header:internal>

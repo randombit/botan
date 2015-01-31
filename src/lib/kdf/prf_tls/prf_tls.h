@@ -42,12 +42,14 @@ class BOTAN_DLL TLS_12_PRF : public KDF
                                 const byte secret[], size_t secret_len,
                                 const byte seed[], size_t seed_len) const;
 
-      std::string name() const { return "TLSv12-PRF(" + hmac->name() + ")"; }
-      KDF* clone() const { return new TLS_12_PRF(hmac->clone()); }
+      std::string name() const { return "TLS-12-PRF(" + m_mac->name() + ")"; }
+      KDF* clone() const { return new TLS_12_PRF(m_mac->clone()); }
 
-      TLS_12_PRF(MessageAuthenticationCode* hmac);
+      TLS_12_PRF(MessageAuthenticationCode* mac);
+
+      static TLS_12_PRF* make(const Spec& spec);
    private:
-      std::unique_ptr<MessageAuthenticationCode> hmac;
+      std::unique_ptr<MessageAuthenticationCode> m_mac;
    };
 
 }

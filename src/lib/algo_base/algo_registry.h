@@ -38,6 +38,12 @@ class Algo_Registry
             m_maker_fns[name][provider] = fn;
          }
 
+      T* make(const std::string& spec_str)
+         {
+         const Spec spec(spec_str);
+         return make(spec_str, "");
+         }
+
       T* make(const Spec& spec, const std::string& provider = "")
          {
          maker_fn maker = find_maker(spec, provider);
@@ -48,6 +54,7 @@ class Algo_Registry
             }
          catch(std::exception& e)
             {
+            //return nullptr; // ??
             throw std::runtime_error("Creating '" + spec.as_string() + "' failed: " + e.what());
             }
          }
@@ -111,6 +118,19 @@ class Algo_Registry
    };
 
 template<typename T> T*
+make_a(const typename T::Spec& spec, const std::string provider = "")
+   {
+   return Algo_Registry<T>::global_registry().make(spec, provider);
+   }
+
+template<typename T> T*
+make_a(const std::string& spec_str, const std::string provider = "")
+   {
+   typename T::Spec spec(spec_str);
+   return make_a<T>(spec, provider);
+   }
+
+template<typename T> T*
 make_new_T(const typename Algo_Registry<T>::Spec&) { return new T; }
 
 template<typename T, size_t DEF_VAL> T*
@@ -131,7 +151,22 @@ make_new_T_1str(const typename Algo_Registry<T>::Spec& spec, const std::string& 
    return new T(spec.arg(0, def));
    }
 
-#define BOTAN_REGISTER_NAMED_T(T, namestr, type, maker)                     \
+template<typename T> T*
+make_new_T_1str_req(const typename Algo_Registry<T>::Spec& spec)
+   {
+   return new T(spec.arg(0));
+   }
+
+template<typename T, typename X> T*
+make_new_T_1X(const typename Algo_Registry<T>::Spec& spec)
+   {
+   std::unique_ptr<X> x(Algo_Registry<X>::global_registry().make(spec.arg(0)));
+   if(!x)
+      throw std::runtime_error(spec.arg(0));
+   return new T(x.release());
+   }
+
+#define BOTAN_REGISTER_NAMED_T(T, namestr, type, maker)                 \
    namespace { Algo_Registry<T>::Add g_ ## type ## _reg(namestr, maker); }
 #define BOTAN_REGISTER_T(T, name, maker) \
    namespace { Algo_Registry<T>::Add g_ ## name ## _reg(#name, maker); }

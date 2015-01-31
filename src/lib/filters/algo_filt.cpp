@@ -80,7 +80,7 @@ Hash_Filter::Hash_Filter(const std::string& algo_spec,
                          size_t len) :
    OUTPUT_LENGTH(len)
    {
-   m_hash.reset(Algo_Registry<HashFunction>::global_registry().make(sc_name));
+   m_hash.reset(Algo_Registry<HashFunction>::global_registry().make(algo_spec));
    }
 
 /*

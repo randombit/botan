@@ -8,6 +8,7 @@
 #ifndef BOTAN_KDF_BASE_H__
 #define BOTAN_KDF_BASE_H__
 
+#include <botan/scan_name.h>
 #include <botan/secmem.h>
 #include <botan/types.h>
 #include <string>
@@ -107,6 +108,8 @@ class BOTAN_DLL KDF
          }
 
       virtual KDF* clone() const = 0;
+
+      typedef SCAN_Name Spec;
    private:
       virtual secure_vector<byte>
          derive(size_t key_len,

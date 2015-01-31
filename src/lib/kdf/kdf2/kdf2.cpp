@@ -5,9 +5,12 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/kdf_utils.h>
 #include <botan/kdf2.h>
 
 namespace Botan {
+
+BOTAN_REGISTER_KDF_1HASH(KDF2, "KDF2");
 
 /*
 * KDF2 Key Derivation Mechanism

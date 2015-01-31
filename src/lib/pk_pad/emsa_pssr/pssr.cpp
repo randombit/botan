@@ -5,12 +5,29 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/pad_utils.h>
 #include <botan/pssr.h>
 #include <botan/mgf1.h>
 #include <botan/internal/bit_ops.h>
-#include <botan/internal/xor_buf.h>
 
 namespace Botan {
+
+PSSR* PSSR::make(const Spec& request)
+   {
+   if(request.arg(1, "MGF1") != "MGF1")
+      return nullptr;
+
+   auto hash = make_a<HashFunction>(request.arg(0));
+
+   if(!hash)
+      return nullptr;
+
+   const size_t salt_size = request.arg_as_integer(2, hash->output_length());
+
+   return new PSSR(hash, salt_size);
+   }
+
+BOTAN_REGISTER_NAMED_T(EMSA, "PSSR", PSSR, PSSR::make);
 
 /*
 * PSSR Update Operation

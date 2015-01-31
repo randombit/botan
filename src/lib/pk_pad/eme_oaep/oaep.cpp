@@ -5,11 +5,33 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/pad_utils.h>
 #include <botan/oaep.h>
 #include <botan/mgf1.h>
 #include <botan/mem_ops.h>
 
+
 namespace Botan {
+
+OAEP* OAEP::make(const Spec& request)
+   {
+   if(request.algo_name() == "OAEP" && request.arg_count_between(1, 2))
+      {
+      auto& hashes = Algo_Registry<HashFunction>::global_registry();
+
+      if(request.arg_count() == 1 ||
+         (request.arg_count() == 2 && request.arg(1) == "MGF1"))
+         {
+         if(HashFunction* hash = hashes.make(request.arg(0)))
+            return new OAEP(hash);
+         }
+      }
+
+   return nullptr;
+   }
+
+BOTAN_REGISTER_NAMED_T(EME, "OAEP", OAEP, OAEP::make);
+
 
 /*
 * OAEP Pad Operation

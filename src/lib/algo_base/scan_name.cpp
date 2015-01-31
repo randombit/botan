@@ -155,7 +155,8 @@ std::string SCAN_Name::all_arguments() const
 std::string SCAN_Name::arg(size_t i) const
    {
    if(i >= arg_count())
-      throw std::range_error("SCAN_Name::arg - i out of range");
+      throw std::range_error("SCAN_Name::arg " + std::to_string(i) +
+                             " out of range for '" + as_string() + "'");
    return args[i];
    }
 

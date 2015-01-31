@@ -5,13 +5,23 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/kdf_utils.h>
 #include <botan/prf_tls.h>
-#include <botan/internal/xor_buf.h>
 #include <botan/hmac.h>
-#include <botan/md5.h>
-#include <botan/sha160.h>
 
 namespace Botan {
+
+TLS_12_PRF* TLS_12_PRF::make(const Spec& spec)
+   {
+   if(auto mac = make_a<MessageAuthenticationCode>(spec.arg(0)))
+      return new TLS_12_PRF(mac);
+   if(auto hash = make_a<HashFunction>(spec.arg(0)))
+      return new TLS_12_PRF(new HMAC(hash));
+   return nullptr;
+   }
+
+BOTAN_REGISTER_NAMED_T(KDF, "TLS-12-PRF", TLS_12_PRF, TLS_12_PRF::make);
+BOTAN_REGISTER_KDF_NOARGS(TLS_PRF, "TLS-PRF");
 
 namespace {
 
@@ -61,8 +71,8 @@ void P_hash(secure_vector<byte>& output,
 */
 TLS_PRF::TLS_PRF()
    {
-   hmac_md5.reset(new HMAC(new MD5));
-   hmac_sha1.reset(new HMAC(new SHA_160));
+   hmac_md5.reset(make_a<MessageAuthenticationCode>("HMAC(MD5)"));
+   hmac_sha1.reset(make_a<MessageAuthenticationCode>("HMAC(SHA-1)"));
    }
 
 /*
@@ -88,7 +98,7 @@ secure_vector<byte> TLS_PRF::derive(size_t key_len,
 /*
 * TLS v1.2 PRF Constructor and Destructor
 */
-TLS_12_PRF::TLS_12_PRF(MessageAuthenticationCode* mac) : hmac(mac)
+TLS_12_PRF::TLS_12_PRF(MessageAuthenticationCode* mac) : m_mac(mac)
    {
    }
 
@@ -98,7 +108,7 @@ secure_vector<byte> TLS_12_PRF::derive(size_t key_len,
    {
    secure_vector<byte> output(key_len);
 
-   P_hash(output, *hmac, secret, secret_len, seed, seed_len);
+   P_hash(output, *m_mac, secret, secret_len, seed, seed_len);
 
    return output;
    }
