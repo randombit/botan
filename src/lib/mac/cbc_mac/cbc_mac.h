@@ -34,6 +34,7 @@ class BOTAN_DLL CBC_MAC : public MessageAuthenticationCode
       */
       CBC_MAC(BlockCipher* cipher);
 
+      static CBC_MAC* make(const Spec& spec);
    private:
       void add_data(const byte[], size_t);
       void final_result(byte[]);

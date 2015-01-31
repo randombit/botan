@@ -6,6 +6,8 @@
 */
 
 #include <botan/pbes2.h>
+#include <botan/algo_registry.h>
+#include <botan/cipher_mode.h>
 #include <botan/pbkdf2.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
@@ -13,12 +15,7 @@
 #include <botan/alg_id.h>
 #include <botan/oids.h>
 #include <botan/rng.h>
-#include <botan/cbc.h>
 #include <algorithm>
-
-#if defined(BOTAN_HAS_AEAD_GCM)
-  #include <botan/gcm.h>
-#endif
 
 namespace Botan {
 
@@ -70,8 +67,7 @@ pbes2_encrypt(const secure_vector<byte>& key_bits,
               std::chrono::milliseconds msec,
               const std::string& cipher,
               const std::string& digest,
-              RandomNumberGenerator& rng,
-              Algorithm_Factory& af)
+              RandomNumberGenerator& rng)
    {
    const std::string prf = "HMAC(" + digest + ")";
 
@@ -81,18 +77,12 @@ pbes2_encrypt(const secure_vector<byte>& key_bits,
 
    const secure_vector<byte> salt = rng.random_vec(12);
 
-   std::unique_ptr<Keyed_Transform> enc;
-
-   if(cipher_spec[1] == "CBC")
-      enc.reset(new CBC_Encryption(af.make_block_cipher(cipher_spec[0]), new PKCS7_Padding));
-#if defined(BOTAN_HAS_AEAD_GCM)
-   else if(cipher_spec[1] == "GCM")
-      enc.reset(new GCM_Encryption(af.make_block_cipher(cipher_spec[0])));
-#endif
-   else
+   if(cipher_spec[1] != "CBC" && cipher_spec[1] != "GCM")
       throw Decoding_Error("PBE-PKCS5 v2.0: Don't know param format for " + cipher);
 
-   PKCS5_PBKDF2 pbkdf(af.make_mac(prf));
+   std::unique_ptr<Keyed_Transform> enc(get_cipher_mode(cipher, ENCRYPTION));
+
+   PKCS5_PBKDF2 pbkdf(Algo_Registry<MessageAuthenticationCode>::global_registry().make(prf));
 
    const size_t key_length = enc->key_spec().maximum_keylength();
    size_t iterations = 0;
@@ -116,8 +106,7 @@ pbes2_encrypt(const secure_vector<byte>& key_bits,
 secure_vector<byte>
 pbes2_decrypt(const secure_vector<byte>& key_bits,
               const std::string& passphrase,
-              const std::vector<byte>& params,
-              Algorithm_Factory& af)
+              const std::vector<byte>& params)
    {
    AlgorithmIdentifier kdf_algo, enc_algo;
 
@@ -152,6 +141,8 @@ pbes2_decrypt(const secure_vector<byte>& key_bits,
    const std::vector<std::string> cipher_spec = split_on(cipher, '/');
    if(cipher_spec.size() != 2)
       throw Decoding_Error("PBE-PKCS5 v2.0: Invalid cipher spec " + cipher);
+   if(cipher_spec[1] != "CBC" && cipher_spec[1] != "GCM")
+      throw Decoding_Error("PBE-PKCS5 v2.0: Don't know param format for " + cipher);
 
    if(salt.size() < 8)
       throw Decoding_Error("PBE-PKCS5 v2.0: Encoded salt is too small");
@@ -159,18 +150,10 @@ pbes2_decrypt(const secure_vector<byte>& key_bits,
    secure_vector<byte> iv;
    BER_Decoder(enc_algo.parameters).decode(iv, OCTET_STRING).verify_end();
 
-   PKCS5_PBKDF2 pbkdf(af.make_mac(OIDS::lookup(prf_algo.oid)));
+   const std::string prf = OIDS::lookup(prf_algo.oid);
+   PKCS5_PBKDF2 pbkdf(Algo_Registry<MessageAuthenticationCode>::global_registry().make(prf));
 
-   std::unique_ptr<Keyed_Transform> dec;
-
-   if(cipher_spec[1] == "CBC")
-      dec.reset(new CBC_Decryption(af.make_block_cipher(cipher_spec[0]), new PKCS7_Padding));
-#if defined(BOTAN_HAS_AEAD_GCM)
-   else if(cipher_spec[1] == "GCM")
-      dec.reset(new GCM_Decryption(af.make_block_cipher(cipher_spec[0])));
-#endif
-   else
-      throw Decoding_Error("PBE-PKCS5 v2.0: Don't know param format for " + cipher);
+   std::unique_ptr<Keyed_Transform> dec(get_cipher_mode(cipher, DECRYPTION));
 
    if(key_length == 0)
       key_length = dec->key_spec().maximum_keylength();

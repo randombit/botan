@@ -14,17 +14,16 @@ namespace Botan {
 template<typename CBC_T, typename CTS_T>
 Transform* make_cbc_mode(const Transform::Spec& spec)
    {
-   Algorithm_Factory& af = global_state().algorithm_factory();
-   const BlockCipher* bc = af.prototype_block_cipher(spec.arg(0));
+   std::unique_ptr<BlockCipher> bc(Algo_Registry<BlockCipher>::global_registry().make(spec.arg(0)));
 
    if(bc)
       {
       const std::string padding = spec.arg(1, "PKCS7");
 
       if(padding == "CTS")
-         return new CTS_T(bc->clone());
+         return new CTS_T(bc.release());
       else
-         return new CBC_T(bc->clone(), get_bc_pad(padding));
+         return new CBC_T(bc.release(), get_bc_pad(padding));
       }
 
    return nullptr;

@@ -10,6 +10,7 @@
 
 #include <botan/buf_comp.h>
 #include <botan/sym_algo.h>
+#include <botan/scan_name.h>
 #include <string>
 
 namespace Botan {
@@ -39,6 +40,8 @@ class BOTAN_DLL MessageAuthenticationCode : public Buffered_Computation,
       * @return name of this algorithm
       */
       virtual std::string name() const = 0;
+
+      typedef SCAN_Name Spec;
    };
 
 }

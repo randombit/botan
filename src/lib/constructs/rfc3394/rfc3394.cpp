@@ -6,7 +6,7 @@
 */
 
 #include <botan/rfc3394.h>
-#include <botan/algo_factory.h>
+#include <botan/algo_registry.h>
 #include <botan/block_cipher.h>
 #include <botan/loadstor.h>
 #include <botan/exceptn.h>
@@ -16,15 +16,15 @@ namespace Botan {
 
 namespace {
 
-BlockCipher* make_aes(size_t keylength,
-                      Algorithm_Factory& af)
+BlockCipher* make_aes(size_t keylength)
    {
+   auto& block_ciphers = Algo_Registry<BlockCipher>::global_registry();
    if(keylength == 16)
-      return af.make_block_cipher("AES-128");
+      return block_ciphers.make("AES-128");
    else if(keylength == 24)
-      return af.make_block_cipher("AES-192");
+      return block_ciphers.make("AES-192");
    else if(keylength == 32)
-      return af.make_block_cipher("AES-256");
+      return block_ciphers.make("AES-256");
    else
       throw std::invalid_argument("Bad KEK length for NIST keywrap");
    }
@@ -32,13 +32,12 @@ BlockCipher* make_aes(size_t keylength,
 }
 
 secure_vector<byte> rfc3394_keywrap(const secure_vector<byte>& key,
-                                    const SymmetricKey& kek,
-                                    Algorithm_Factory& af)
+                                    const SymmetricKey& kek)
    {
    if(key.size() % 8 != 0)
       throw std::invalid_argument("Bad input key size for NIST key wrap");
 
-   std::unique_ptr<BlockCipher> aes(make_aes(kek.length(), af));
+   std::unique_ptr<BlockCipher> aes(make_aes(kek.length()));
    aes->set_key(kek);
 
    const size_t n = key.size() / 8;
@@ -74,13 +73,12 @@ secure_vector<byte> rfc3394_keywrap(const secure_vector<byte>& key,
    }
 
 secure_vector<byte> rfc3394_keyunwrap(const secure_vector<byte>& key,
-                                     const SymmetricKey& kek,
-                                     Algorithm_Factory& af)
+                                      const SymmetricKey& kek)
    {
    if(key.size() < 16 || key.size() % 8 != 0)
       throw std::invalid_argument("Bad input key size for NIST key unwrap");
 
-   std::unique_ptr<BlockCipher> aes(make_aes(kek.length(), af));
+   std::unique_ptr<BlockCipher> aes(make_aes(kek.length()));
    aes->set_key(kek);
 
    const size_t n = (key.size() - 8) / 8;

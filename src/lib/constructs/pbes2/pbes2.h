@@ -30,8 +30,7 @@ BOTAN_DLL pbes2_encrypt(const secure_vector<byte>& key_bits,
                         std::chrono::milliseconds msec,
                         const std::string& cipher,
                         const std::string& digest,
-                        RandomNumberGenerator& rng,
-                        Algorithm_Factory& af);
+                        RandomNumberGenerator& rng);
 
 /**
 * Decrypt a PKCS #5 v2.0 encrypted stream
@@ -42,8 +41,7 @@ BOTAN_DLL pbes2_encrypt(const secure_vector<byte>& key_bits,
 secure_vector<byte>
 BOTAN_DLL pbes2_decrypt(const secure_vector<byte>& key_bits,
                         const std::string& passphrase,
-                        const std::vector<byte>& params,
-                        Algorithm_Factory& af);
+                        const std::vector<byte>& params);
 
 }
 

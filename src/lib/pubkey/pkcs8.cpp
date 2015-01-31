@@ -99,8 +99,7 @@ secure_vector<byte> PKCS8_decode(
             if(OIDS::lookup(pbe_alg_id.oid) != "PBE-PKCS5v20")
                throw std::runtime_error("Unknown PBE type " + pbe_alg_id.oid.as_string());
 
-            key = pbes2_decrypt(key_data, pass.second, pbe_alg_id.parameters,
-                                global_state().algorithm_factory());
+            key = pbes2_decrypt(key_data, pass.second, pbe_alg_id.parameters);
             }
 
          BER_Decoder(key)
@@ -185,8 +184,7 @@ std::vector<byte> BER_encode(const Private_Key& key,
 
    const std::pair<AlgorithmIdentifier, std::vector<byte>> pbe_info =
       pbes2_encrypt(PKCS8::BER_encode(key), pass, msec,
-                    pbe_params.first, pbe_params.second,
-                    rng, global_state().algorithm_factory());
+                    pbe_params.first, pbe_params.second, rng);
 
    return DER_Encoder()
          .start_cons(SEQUENCE)

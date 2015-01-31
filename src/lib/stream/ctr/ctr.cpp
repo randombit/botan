@@ -5,10 +5,22 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/stream_utils.h>
 #include <botan/ctr.h>
-#include <botan/internal/xor_buf.h>
 
 namespace Botan {
+
+BOTAN_REGISTER_NAMED_T(StreamCipher, "CTR-BE", CTR_BE, CTR_BE::make);
+
+CTR_BE* CTR_BE::make(const Spec& spec)
+   {
+   if(spec.algo_name() == "CTR-BE" && spec.arg_count() == 1)
+      {
+      if(BlockCipher* c = Algo_Registry<BlockCipher>::global_registry().make(spec.arg(0)))
+         return new CTR_BE(c);
+      }
+   return nullptr;
+   }
 
 CTR_BE::CTR_BE(BlockCipher* ciph) :
    m_cipher(ciph),

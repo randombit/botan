@@ -9,6 +9,7 @@
 #define BOTAN_STREAM_CIPHER_H__
 
 #include <botan/sym_algo.h>
+#include <botan/scan_name.h>
 
 namespace Botan {
 
@@ -63,6 +64,8 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       * Get a new object representing the same algorithm as *this
       */
       virtual StreamCipher* clone() const = 0;
+
+      typedef SCAN_Name Spec;
    };
 
 }

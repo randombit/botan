@@ -34,8 +34,8 @@ class Algo_Registry
       void add(const std::string& name, const std::string& provider, maker_fn fn)
          {
          std::unique_lock<std::mutex> lock(m_mutex);
-         // TODO: check for duplicated registrations
-         m_maker_fns[name][provider] = fn;
+         if(!m_maker_fns[name][provider])
+            m_maker_fns[name][provider] = fn;
          }
 
       T* make(const Spec& spec, const std::string& provider = "")

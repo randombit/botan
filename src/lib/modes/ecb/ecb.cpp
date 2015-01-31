@@ -13,11 +13,10 @@ namespace Botan {
 template<typename T>
 Transform* make_ecb_mode(const Transform::Spec& spec)
    {
-   Algorithm_Factory& af = global_state().algorithm_factory();
-   const BlockCipher* bc = af.prototype_block_cipher(spec.arg(0));
-   BlockCipherModePaddingMethod* pad = get_bc_pad(spec.arg(1, "NoPadding"));
+   std::unique_ptr<BlockCipher> bc(Algo_Registry<BlockCipher>::global_registry().make(spec.arg(0)));
+   std::unique_ptr<BlockCipherModePaddingMethod> pad(get_bc_pad(spec.arg(1, "NoPadding")));
    if(bc && pad)
-      return new T(bc->clone(), pad);
+      return new T(bc.release(), pad.release());
    return nullptr;
    }
 

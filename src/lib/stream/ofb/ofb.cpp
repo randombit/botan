@@ -5,10 +5,22 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/stream_utils.h>
 #include <botan/ofb.h>
-#include <botan/internal/xor_buf.h>
 
 namespace Botan {
+
+BOTAN_REGISTER_NAMED_T(StreamCipher, "OFB", OFB, OFB::make);
+
+OFB* OFB::make(const Spec& spec)
+   {
+   if(spec.algo_name() == "OFB" && spec.arg_count() == 1)
+      {
+      if(BlockCipher* c = Algo_Registry<BlockCipher>::global_registry().make(spec.arg(0)))
+         return new OFB(c);
+      }
+   return nullptr;
+   }
 
 OFB::OFB(BlockCipher* cipher) :
    m_cipher(cipher),

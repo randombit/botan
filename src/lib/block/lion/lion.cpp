@@ -8,7 +8,6 @@
 #include <botan/internal/block_utils.h>
 #include <botan/lion.h>
 #include <botan/parsing.h>
-#include <botan/libstate.h>
 
 namespace Botan {
 
@@ -18,14 +17,13 @@ Lion* make_lion(const BlockCipher::Spec& spec)
    {
    if(spec.arg_count_between(2, 3))
       {
-      Algorithm_Factory& af = global_state().algorithm_factory();
-      const HashFunction* hash = af.prototype_hash_function(spec.arg(0));
-      const StreamCipher* stream_cipher = af.prototype_stream_cipher(spec.arg(1));
+      std::unique_ptr<HashFunction> hash(Algo_Registry<HashFunction>::global_registry().make(spec.arg(0)));
+      std::unique_ptr<StreamCipher> stream(Algo_Registry<StreamCipher>::global_registry().make(spec.arg(1)));
 
-      if(hash && stream_cipher)
+      if(hash && stream)
          {
          const size_t block_size = spec.arg_as_integer(2, 1024);
-         return new Lion(hash->clone(), stream_cipher->clone(), block_size);
+         return new Lion(hash.release(), stream.release(), block_size);
          }
       }
    return nullptr;

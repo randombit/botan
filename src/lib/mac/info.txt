@@ -1,3 +1,11 @@
 <requires>
 algo_base
 </requires>
+
+<header:public>
+mac.h
+</header:public>
+
+<header:internal>
+mac_utils.h
+</header:internal>
