@@ -36,9 +36,6 @@ class Core_Engine : public Engine
       Modular_Exponentiator* mod_exp(const BigInt& n,
                                      Power_Mod::Usage_Hints) const override;
 
-      Keyed_Filter* get_cipher(const std::string&, Cipher_Dir,
-                               Algorithm_Factory&);
-
       BlockCipher* find_block_cipher(const SCAN_Name&,
                                      Algorithm_Factory&) const override;
 
@@ -54,18 +51,6 @@ class Core_Engine : public Engine
       PBKDF* find_pbkdf(const SCAN_Name& algo_spec,
                         Algorithm_Factory& af) const override;
    };
-
-/**
-* Create a cipher mode filter object
-* @param block_cipher a block cipher object
-* @param direction are we encrypting or decrypting?
-* @param mode the name of the cipher mode to use
-* @param padding the mode padding to use (only used for ECB, CBC)
-*/
-Keyed_Filter* get_cipher_mode(const BlockCipher* block_cipher,
-                              Cipher_Dir direction,
-                              const std::string& mode,
-                              const std::string& padding);
 
 }
 

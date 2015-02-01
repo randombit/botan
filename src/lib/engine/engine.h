@@ -21,7 +21,6 @@
 namespace Botan {
 
 class Algorithm_Factory;
-class Keyed_Filter;
 class RandomNumberGenerator;
 
 /**
@@ -92,17 +91,6 @@ class BOTAN_DLL Engine
       virtual Modular_Exponentiator*
          mod_exp(const BigInt& n,
                  Power_Mod::Usage_Hints hints) const;
-
-      /**
-      * Return a new cipher object
-      * @param algo_spec the algorithm name/specification
-      * @param dir specifies if encryption or decryption is desired
-      * @param af an algorithm factory object
-      * @return newly allocated object, or NULL
-      */
-      virtual Keyed_Filter* get_cipher(const std::string& algo_spec,
-                                       Cipher_Dir dir,
-                                       Algorithm_Factory& af);
 
       /**
       * Return a new operator object for this key, if possible

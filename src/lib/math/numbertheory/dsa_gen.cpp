@@ -6,7 +6,7 @@
 */
 
 #include <botan/numthry.h>
-#include <botan/algo_factory.h>
+#include <botan/lookup.h>
 #include <botan/hash.h>
 #include <botan/parsing.h>
 #include <algorithm>
@@ -38,7 +38,6 @@ bool fips186_3_valid_size(size_t pbits, size_t qbits)
 * Attempt DSA prime generation with given seed
 */
 bool generate_dsa_primes(RandomNumberGenerator& rng,
-                         Algorithm_Factory& af,
                          BigInt& p, BigInt& q,
                          size_t pbits, size_t qbits,
                          const std::vector<byte>& seed_c)
@@ -53,8 +52,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
          "Generating a DSA parameter set with a " + std::to_string(qbits) +
          "long q requires a seed at least as many bits long");
 
-   std::unique_ptr<HashFunction> hash(
-      af.make_hash_function("SHA-" + std::to_string(qbits)));
+   std::unique_ptr<HashFunction> hash(get_hash("SHA-" + std::to_string(qbits)));
 
    const size_t HASH_SIZE = hash->output_length();
 
@@ -116,7 +114,6 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
 * Generate DSA Primes
 */
 std::vector<byte> generate_dsa_primes(RandomNumberGenerator& rng,
-                                      Algorithm_Factory& af,
                                       BigInt& p, BigInt& q,
                                       size_t pbits, size_t qbits)
    {
@@ -125,7 +122,7 @@ std::vector<byte> generate_dsa_primes(RandomNumberGenerator& rng,
       std::vector<byte> seed(qbits / 8);
       rng.randomize(&seed[0], seed.size());
 
-      if(generate_dsa_primes(rng, af, p, q, pbits, qbits, seed))
+      if(generate_dsa_primes(rng, p, q, pbits, qbits, seed))
          return seed;
       }
    }

@@ -8,12 +8,12 @@
 #include <botan/internal/tls_record.h>
 #include <botan/tls_ciphersuite.h>
 #include <botan/tls_exceptn.h>
-#include <botan/libstate.h>
 #include <botan/loadstor.h>
 #include <botan/internal/tls_seq_numbers.h>
 #include <botan/internal/tls_session_key.h>
 #include <botan/internal/rounding.h>
 #include <botan/internal/xor_buf.h>
+#include <botan/lookup.h>
 
 namespace Botan {
 
@@ -62,9 +62,7 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
       return;
       }
 
-   Algorithm_Factory& af = global_state().algorithm_factory();
-
-   if(const BlockCipher* bc = af.prototype_block_cipher(cipher_algo))
+   if(BlockCipher* bc = get_block_cipher(cipher_algo))
       {
       m_block_cipher.reset(bc->clone());
       m_block_cipher->set_key(cipher_key);
@@ -74,7 +72,7 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
       if(version.supports_explicit_cbc_ivs())
          m_iv_size = m_block_size;
       }
-   else if(const StreamCipher* sc = af.prototype_stream_cipher(cipher_algo))
+   else if(StreamCipher* sc = get_stream_cipher(cipher_algo))
       {
       m_stream_cipher.reset(sc->clone());
       m_stream_cipher->set_key(cipher_key);
@@ -82,7 +80,7 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
    else
       throw Invalid_Argument("Unknown TLS cipher " + cipher_algo);
 
-   m_mac.reset(af.make_mac("HMAC(" + mac_algo + ")"));
+   m_mac.reset(get_mac("HMAC(" + mac_algo + ")"));
 
    m_mac->set_key(mac_key);
    }
@@ -305,9 +303,7 @@ size_t fill_buffer_to(secure_vector<byte>& readbuf,
 *
 * @fixme This should run in constant time
 */
-size_t tls_padding_check(size_t block_size,
-                         const byte record[],
-                         size_t record_len)
+size_t tls_padding_check(const byte record[], size_t record_len)
    {
    const size_t padding_length = record[(record_len-1)];
 
@@ -405,8 +401,7 @@ void decrypt_record(secure_vector<byte>& output,
          {
          cbc_decrypt_record(record_contents, record_len, cs, *bc);
 
-         pad_size = tls_padding_check(cs.block_size(),
-                                      record_contents, record_len);
+         pad_size = tls_padding_check(record_contents, record_len);
 
          padding_bad = (pad_size == 0);
          }

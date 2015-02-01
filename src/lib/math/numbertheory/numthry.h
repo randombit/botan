@@ -168,8 +168,6 @@ BigInt BOTAN_DLL random_prime(RandomNumberGenerator& rng,
 BigInt BOTAN_DLL random_safe_prime(RandomNumberGenerator& rng,
                                    size_t bits);
 
-class Algorithm_Factory;
-
 /**
 * Generate DSA parameters using the FIPS 186 kosherizer
 * @param rng a random number generator
@@ -182,7 +180,6 @@ class Algorithm_Factory;
 */
 std::vector<byte> BOTAN_DLL
 generate_dsa_primes(RandomNumberGenerator& rng,
-                    Algorithm_Factory& af,
                     BigInt& p_out, BigInt& q_out,
                     size_t pbits, size_t qbits);
 
@@ -200,7 +197,6 @@ generate_dsa_primes(RandomNumberGenerator& rng,
 */
 bool BOTAN_DLL
 generate_dsa_primes(RandomNumberGenerator& rng,
-                    Algorithm_Factory& af,
                     BigInt& p_out, BigInt& q_out,
                     size_t pbits, size_t qbits,
                     const std::vector<byte>& seed);

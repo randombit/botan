@@ -5,7 +5,6 @@ core_engine.h
 </header:internal>
 
 <source>
-core_modes.cpp
 def_pk_ops.cpp
 def_powm.cpp
 lookup_block.cpp

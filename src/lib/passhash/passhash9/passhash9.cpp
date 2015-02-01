@@ -7,7 +7,7 @@
 
 #include <botan/passhash9.h>
 #include <botan/loadstor.h>
-#include <botan/libstate.h>
+#include <botan/lookup.h>
 #include <botan/pbkdf2.h>
 #include <botan/base64.h>
 
@@ -26,20 +26,18 @@ const size_t WORK_FACTOR_SCALE = 10000;
 
 MessageAuthenticationCode* get_pbkdf_prf(byte alg_id)
    {
-   Algorithm_Factory& af = global_state().algorithm_factory();
-
    try
       {
       if(alg_id == 0)
-         return af.make_mac("HMAC(SHA-1)");
+         return get_mac("HMAC(SHA-1)");
       else if(alg_id == 1)
-         return af.make_mac("HMAC(SHA-256)");
+         return get_mac("HMAC(SHA-256)");
       else if(alg_id == 2)
-         return af.make_mac("CMAC(Blowfish)");
+         return get_mac("CMAC(Blowfish)");
       else if(alg_id == 3)
-         return af.make_mac("HMAC(SHA-384)");
+         return get_mac("HMAC(SHA-384)");
       else if(alg_id == 4)
-         return af.make_mac("HMAC(SHA-512)");
+         return get_mac("HMAC(SHA-512)");
       }
    catch(Algorithm_Not_Found) {}
 

@@ -68,13 +68,6 @@ class BOTAN_DLL Dynamically_Loaded_Engine : public Engine
          return engine->mod_exp(n, hints);
          }
 
-      Keyed_Filter* get_cipher(const std::string& algo_spec,
-                               Cipher_Dir dir,
-                               Algorithm_Factory& af)
-         {
-         return engine->get_cipher(algo_spec, dir, af);
-         }
-
       PK_Ops::Key_Agreement*
          get_key_agreement_op(const Private_Key& key, RandomNumberGenerator& rng) const override
          {

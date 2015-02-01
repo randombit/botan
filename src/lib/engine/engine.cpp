@@ -51,13 +51,6 @@ Engine::mod_exp(const BigInt&,
    return nullptr;
    }
 
-Keyed_Filter* Engine::get_cipher(const std::string&,
-                                 Cipher_Dir,
-                                 Algorithm_Factory&)
-   {
-   return nullptr;
-   }
-
 PK_Ops::Key_Agreement*
 Engine::get_key_agreement_op(const Private_Key&, RandomNumberGenerator&) const
    {
