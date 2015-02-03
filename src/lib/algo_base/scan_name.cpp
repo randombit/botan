@@ -70,6 +70,10 @@ SCAN_Name::SCAN_Name(std::string algo_spec, const std::string& extra) : SCAN_Nam
    alg_name += extra;
    }
 
+SCAN_Name::SCAN_Name(const char* algo_spec) : SCAN_Name(std::string(algo_spec))
+   {
+   }
+
 SCAN_Name::SCAN_Name(std::string algo_spec)
    {
    orig_algo_spec = algo_spec;

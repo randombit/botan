@@ -256,7 +256,7 @@ bool Server_Key_Exchange::verify(const Public_Key& server_key,
                                  const Handshake_State& state) const
    {
    std::pair<std::string, Signature_Format> format =
-      state.understand_sig_format(server_key, m_hash_algo, m_sig_algo, false);
+      state.understand_sig_format(server_key, m_hash_algo, m_sig_algo);
 
    PK_Verifier verifier(server_key, format.first, format.second);
 

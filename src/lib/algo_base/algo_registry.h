@@ -11,7 +11,9 @@
 #include <functional>
 #include <stdexcept>
 #include <mutex>
+#include <vector>
 #include <map>
+#include <unordered_map>
 
 namespace Botan {
 
@@ -34,14 +36,23 @@ class Algo_Registry
       void add(const std::string& name, const std::string& provider, maker_fn fn)
          {
          std::unique_lock<std::mutex> lock(m_mutex);
+
          if(!m_maker_fns[name][provider])
             m_maker_fns[name][provider] = fn;
          }
 
-      T* make(const std::string& spec_str)
+      std::vector<std::string> providers(const std::string& basename) const
          {
-         const Spec spec(spec_str);
-         return make(spec_str, "");
+         std::unique_lock<std::mutex> lock(m_mutex);
+
+         std::vector<std::string> v;
+         auto i = m_maker_fns.find(basename);
+         if(i != m_maker_fns.end())
+            {
+            for(auto&& prov : i->second)
+               v.push_back(prov);
+            }
+         return v;
          }
 
       T* make(const Spec& spec, const std::string& provider = "")
@@ -82,52 +93,46 @@ class Algo_Registry
          const std::string basename = spec.algo_name();
 
          std::unique_lock<std::mutex> lock(m_mutex);
-         auto providers = m_maker_fns.find(basename);
+         auto makers = m_maker_fns.find(basename);
 
-         if(providers != m_maker_fns.end() && !providers->second.empty())
+         if(makers != m_maker_fns.end() && !makers->second.empty())
             {
-            const std::map<std::string, maker_fn>& prov = providers->second;
+            const auto& providers = makers->second;
 
             if(provider != "")
                {
                // find one explicit provider requested by user, or fail
-               auto i = prov.find(provider);
-               if(i != prov.end())
+               auto i = providers.find(provider);
+               if(i != providers.end())
                   return i->second;
                }
             else
                {
-               if(prov.size() == 1)
+               if(providers.size() == 1)
                   {
-                  return prov.begin()->second;
+                  return providers.begin()->second;
                   }
-               else if(prov.size() > 1)
+               else if(providers.size() > 1)
                   {
                   // TODO choose best of available options (how?)
                   //throw std::runtime_error("multiple choice not implemented");
-                  return prov.begin()->second;
+                  return providers.begin()->second;
                   }
                }
             }
+
          // Default result is a function producing a null pointer
          return [](const Spec&) { return nullptr; };
          }
 
       std::mutex m_mutex;
-      std::map<std::string, std::map<std::string, maker_fn>> m_maker_fns;
+      std::unordered_map<std::string, std::unordered_map<std::string, maker_fn>> m_maker_fns;
    };
 
 template<typename T> T*
 make_a(const typename T::Spec& spec, const std::string provider = "")
    {
    return Algo_Registry<T>::global_registry().make(spec, provider);
-   }
-
-template<typename T> T*
-make_a(const std::string& spec_str, const std::string provider = "")
-   {
-   typename T::Spec spec(spec_str);
-   return make_a<T>(spec, provider);
    }
 
 template<typename T> T*

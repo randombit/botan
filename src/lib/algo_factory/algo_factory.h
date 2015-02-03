@@ -84,12 +84,6 @@ class BOTAN_DLL Algorithm_Factory
                                      const std::string& provider = "");
 
       /**
-      * @param algo the algorithm to add
-      * @param provider the provider of this algorithm
-      */
-      void add_block_cipher(BlockCipher* algo, const std::string& provider);
-
-      /**
       * @param algo_spec the algorithm we want
       * @param provider the provider we would like to use
       * @returns pointer to const prototype object, ready to clone(), or NULL
@@ -105,12 +99,6 @@ class BOTAN_DLL Algorithm_Factory
       */
       StreamCipher* make_stream_cipher(const std::string& algo_spec,
                                        const std::string& provider = "");
-
-      /**
-      * @param algo the algorithm to add
-      * @param provider the provider of this algorithm
-      */
-      void add_stream_cipher(StreamCipher* algo, const std::string& provider);
 
       /**
       * @param algo_spec the algorithm we want
@@ -130,12 +118,6 @@ class BOTAN_DLL Algorithm_Factory
                                        const std::string& provider = "");
 
       /**
-      * @param algo the algorithm to add
-      * @param provider the provider of this algorithm
-      */
-      void add_hash_function(HashFunction* algo, const std::string& provider);
-
-      /**
       * @param algo_spec the algorithm we want
       * @param provider the provider we would like to use
       * @returns pointer to const prototype object, ready to clone(), or NULL
@@ -153,13 +135,6 @@ class BOTAN_DLL Algorithm_Factory
                                           const std::string& provider = "");
 
       /**
-      * @param algo the algorithm to add
-      * @param provider the provider of this algorithm
-      */
-      void add_mac(MessageAuthenticationCode* algo,
-                   const std::string& provider);
-
-      /**
       * @param algo_spec the algorithm we want
       * @param provider the provider we would like to use
       * @returns pointer to const prototype object, ready to clone(), or NULL
@@ -175,38 +150,7 @@ class BOTAN_DLL Algorithm_Factory
       PBKDF* make_pbkdf(const std::string& algo_spec,
                         const std::string& provider = "");
 
-      /**
-      * @param algo the algorithm to add
-      * @param provider the provider of this algorithm
-      */
-      void add_pbkdf(PBKDF* algo, const std::string& provider);
-
-      /**
-      * An iterator for the engines in this factory
-      * @deprecated Avoid in new code
-      */
-      class BOTAN_DLL Engine_Iterator
-         {
-         public:
-            /**
-            * @return next engine in the sequence
-            */
-            Engine* next() { return af.get_engine_n(n++); }
-
-            /**
-            * @param a an algorithm factory
-            */
-            Engine_Iterator(const Algorithm_Factory& a) :
-               af(a) { n = 0; }
-         private:
-            const Algorithm_Factory& af;
-            size_t n;
-         };
-      friend class Engine_Iterator;
-
    private:
-      Engine* get_engine_n(size_t n) const;
-
       std::vector<Engine*> engines;
 
       std::unique_ptr<Algorithm_Cache<BlockCipher>> block_cipher_cache;

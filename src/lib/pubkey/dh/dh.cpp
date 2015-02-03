@@ -5,9 +5,17 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/pk_utils.h>
 #include <botan/dh.h>
-#include <botan/numthry.h>
 #include <botan/workfactor.h>
+#include <botan/pow_mod.h>
+#include <botan/blinding.h>
+
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+  #include <botan/system_rng.h>
+#else
+  #include <botan/auto_rng.h>
+#endif
 
 namespace Botan {
 
@@ -75,10 +83,33 @@ std::vector<byte> DH_PrivateKey::public_value() const
    return DH_PublicKey::public_value();
    }
 
-DH_KA_Operation::DH_KA_Operation(const DH_PrivateKey& dh,
-                                 RandomNumberGenerator& rng) :
+namespace {
+
+/**
+* DH operation
+*/
+class DH_KA_Operation : public PK_Ops::Key_Agreement
+   {
+   public:
+      typedef DH_PrivateKey Key_Type;
+      DH_KA_Operation(const DH_PrivateKey& key, const std::string&);
+
+      secure_vector<byte> agree(const byte w[], size_t w_len);
+   private:
+      const BigInt& p;
+
+      Fixed_Exponent_Power_Mod powermod_x_p;
+      Blinder blinder;
+   };
+
+DH_KA_Operation::DH_KA_Operation(const DH_PrivateKey& dh, const std::string&) :
    p(dh.group_p()), powermod_x_p(dh.get_x(), p)
    {
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+   auto& rng = system_rng();
+#else
+   AutoSeeded_RNG rng;
+#endif
    BigInt k(rng, p.bits() - 1);
    blinder = Blinder(k, powermod_x_p(inverse_mod(k, p)), p);
    }
@@ -94,5 +125,9 @@ secure_vector<byte> DH_KA_Operation::agree(const byte w[], size_t w_len)
 
    return BigInt::encode_1363(r, p.bytes());
    }
+
+}
+
+BOTAN_REGISTER_PK_KEY_AGREE_OP("DH", DH_KA_Operation);
 
 }

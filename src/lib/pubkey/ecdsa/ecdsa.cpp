@@ -7,7 +7,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/pk_utils.h>
 #include <botan/ecdsa.h>
+#include <botan/reducer.h>
 #include <botan/keypair.h>
 #include <botan/rfc6979.h>
 
@@ -25,14 +27,40 @@ bool ECDSA_PrivateKey::check_key(RandomNumberGenerator& rng,
    return KeyPair::signature_consistency_check(rng, *this, "EMSA1(SHA-1)");
    }
 
-ECDSA_Signature_Operation::ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa, const std::string& emsa) :
-   base_point(ecdsa.domain().get_base_point()),
-   order(ecdsa.domain().get_order()),
-   x(ecdsa.private_value()),
-   mod_order(order),
-   m_hash(hash_for_deterministic_signature(emsa))
+namespace {
+
+/**
+* ECDSA signature operation
+*/
+class ECDSA_Signature_Operation : public PK_Ops::Signature
    {
-   }
+   public:
+      typedef ECDSA_PrivateKey Key_Type;
+
+      ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa,
+                                const std::string& emsa) :
+         base_point(ecdsa.domain().get_base_point()),
+         order(ecdsa.domain().get_order()),
+         x(ecdsa.private_value()),
+         mod_order(order),
+         m_hash(hash_for_deterministic_signature(emsa))
+         {
+         }
+
+      secure_vector<byte> sign(const byte msg[], size_t msg_len,
+                              RandomNumberGenerator& rng);
+
+      size_t message_parts() const { return 2; }
+      size_t message_part_size() const { return order.bytes(); }
+      size_t max_input_bits() const { return order.bits(); }
+
+   private:
+      const PointGFp& base_point;
+      const BigInt& order;
+      const BigInt& x;
+      Modular_Reducer mod_order;
+      std::string m_hash;
+   };
 
 secure_vector<byte>
 ECDSA_Signature_Operation::sign(const byte msg[], size_t msg_len,
@@ -56,12 +84,34 @@ ECDSA_Signature_Operation::sign(const byte msg[], size_t msg_len,
    return output;
    }
 
-ECDSA_Verification_Operation::ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa) :
-   base_point(ecdsa.domain().get_base_point()),
-   public_point(ecdsa.public_point()),
-   order(ecdsa.domain().get_order())
+/**
+* ECDSA verification operation
+*/
+class ECDSA_Verification_Operation : public PK_Ops::Verification
    {
-   }
+   public:
+      typedef ECDSA_PublicKey Key_Type;
+      ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa,
+                                   const std::string&) :
+         base_point(ecdsa.domain().get_base_point()),
+         public_point(ecdsa.public_point()),
+         order(ecdsa.domain().get_order())
+         {
+         }
+
+      size_t message_parts() const { return 2; }
+      size_t message_part_size() const { return order.bytes(); }
+      size_t max_input_bits() const { return order.bits(); }
+
+      bool with_recovery() const { return false; }
+
+      bool verify(const byte msg[], size_t msg_len,
+                  const byte sig[], size_t sig_len);
+   private:
+      const PointGFp& base_point;
+      const PointGFp& public_point;
+      const BigInt& order;
+   };
 
 bool ECDSA_Verification_Operation::verify(const byte msg[], size_t msg_len,
                                           const byte sig[], size_t sig_len)
@@ -87,5 +137,10 @@ bool ECDSA_Verification_Operation::verify(const byte msg[], size_t msg_len,
 
    return (R.get_affine_x() % order == r);
    }
+
+BOTAN_REGISTER_PK_SIGNATURE_OP("ECDSA", ECDSA_Signature_Operation);
+BOTAN_REGISTER_PK_VERIFY_OP("ECDSA", ECDSA_Verification_Operation);
+
+}
 
 }

@@ -16,7 +16,6 @@
 #include <botan/pbkdf.h>
 #include <botan/pow_mod.h>
 #include <botan/pk_keys.h>
-#include <botan/pk_ops.h>
 
 namespace Botan {
 
@@ -82,55 +81,6 @@ class BOTAN_DLL Engine
       */
       virtual PBKDF* find_pbkdf(const SCAN_Name& algo_spec,
                                 Algorithm_Factory& af) const;
-
-      /**
-      * @param n the modulus
-      * @param hints any use hints
-      * @return newly allocated object, or NULL
-      */
-      virtual Modular_Exponentiator*
-         mod_exp(const BigInt& n,
-                 Power_Mod::Usage_Hints hints) const;
-
-      /**
-      * Return a new operator object for this key, if possible
-      * @param key the key we want an operator for
-      * @return newly allocated operator object, or NULL
-      */
-      virtual PK_Ops::Key_Agreement*
-         get_key_agreement_op(const Private_Key& key, RandomNumberGenerator& rng) const;
-
-      /**
-      * Return a new operator object for this key, if possible
-      * @param key the key we want an operator for
-      * @return newly allocated operator object, or NULL
-      */
-      virtual PK_Ops::Signature*
-         get_signature_op(const Private_Key& key, const std::string& hash, RandomNumberGenerator& rng) const;
-
-      /**
-      * Return a new operator object for this key, if possible
-      * @param key the key we want an operator for
-      * @return newly allocated operator object, or NULL
-      */
-      virtual PK_Ops::Verification*
-         get_verify_op(const Public_Key& key, const std::string& hash, RandomNumberGenerator& rng) const;
-
-      /**
-      * Return a new operator object for this key, if possible
-      * @param key the key we want an operator for
-      * @return newly allocated operator object, or NULL
-      */
-      virtual PK_Ops::Encryption*
-         get_encryption_op(const Public_Key& key, RandomNumberGenerator& rng) const;
-
-      /**
-      * Return a new operator object for this key, if possible
-      * @param key the key we want an operator for
-      * @return newly allocated operator object, or NULL
-      */
-      virtual PK_Ops::Decryption*
-         get_decryption_op(const Private_Key& key, RandomNumberGenerator& rng) const;
    };
 
 }

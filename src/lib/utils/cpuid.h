@@ -27,7 +27,12 @@ class BOTAN_DLL CPUID
       /**
       * Return a best guess of the cache line size
       */
-      static size_t cache_line_size() { return g_cache_line_size; }
+      static size_t cache_line_size() { initialize(); return g_cache_line_size; }
+
+      /**
+      * Check if the processor supports AltiVec/VMX
+      */
+      static bool has_altivec() { initialize(); return g_altivec_capable; }
 
       /**
       * Check if the processor supports RDTSC
@@ -112,11 +117,6 @@ class BOTAN_DLL CPUID
       */
       static bool has_rdseed()
          { return x86_processor_flags_has(CPUID_RDSEED_BIT); }
-
-      /**
-      * Check if the processor supports AltiVec/VMX
-      */
-      static bool has_altivec() { return g_altivec_capable; }
 
       static void print(std::ostream& o);
    private:

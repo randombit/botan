@@ -146,16 +146,6 @@ void Algorithm_Factory::set_preferred_provider(const std::string& algo_spec,
    }
 
 /*
-* Get an engine out of the list
-*/
-Engine* Algorithm_Factory::get_engine_n(size_t n) const
-   {
-   if(n >= engines.size())
-      return nullptr;
-   return engines[n];
-   }
-
-/*
 * Return the possible providers of a request
 * Note: assumes you don't have different types by the same name
 */
@@ -296,51 +286,6 @@ Algorithm_Factory::make_pbkdf(const std::string& algo_spec,
    if(const PBKDF* proto = prototype_pbkdf(algo_spec, provider))
       return proto->clone();
    throw Algorithm_Not_Found(algo_spec);
-   }
-
-/*
-* Add a new block cipher
-*/
-void Algorithm_Factory::add_block_cipher(BlockCipher* block_cipher,
-                                         const std::string& provider)
-   {
-   block_cipher_cache->add(block_cipher, block_cipher->name(), provider);
-   }
-
-/*
-* Add a new stream cipher
-*/
-void Algorithm_Factory::add_stream_cipher(StreamCipher* stream_cipher,
-                                         const std::string& provider)
-   {
-   stream_cipher_cache->add(stream_cipher, stream_cipher->name(), provider);
-   }
-
-/*
-* Add a new hash
-*/
-void Algorithm_Factory::add_hash_function(HashFunction* hash,
-                                          const std::string& provider)
-   {
-   hash_cache->add(hash, hash->name(), provider);
-   }
-
-/*
-* Add a new mac
-*/
-void Algorithm_Factory::add_mac(MessageAuthenticationCode* mac,
-                                const std::string& provider)
-   {
-   mac_cache->add(mac, mac->name(), provider);
-   }
-
-/*
-* Add a new PBKDF
-*/
-void Algorithm_Factory::add_pbkdf(PBKDF* pbkdf,
-                                  const std::string& provider)
-   {
-   pbkdf_cache->add(pbkdf, pbkdf->name(), provider);
    }
 
 }

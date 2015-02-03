@@ -5,8 +5,6 @@ core_engine.h
 </header:internal>
 
 <source>
-def_pk_ops.cpp
-def_powm.cpp
 lookup_block.cpp
 lookup_hash.cpp
 lookup_mac.cpp
@@ -16,8 +14,5 @@ lookup_pbkdf.cpp
 
 <requires>
 algo_factory
-filters
 libstate
-mode_pad
-numbertheory
 </requires>

@@ -6,8 +6,7 @@
 */
 
 #include <botan/pow_mod.h>
-#include <botan/libstate.h>
-#include <botan/engine.h>
+#include <botan/internal/def_powm.h>
 
 namespace Botan {
 
@@ -48,6 +47,7 @@ Power_Mod& Power_Mod::operator=(const Power_Mod& other)
 Power_Mod::~Power_Mod()
    {
    delete core;
+   core = nullptr;
    }
 
 /*
@@ -56,23 +56,11 @@ Power_Mod::~Power_Mod()
 void Power_Mod::set_modulus(const BigInt& n, Usage_Hints hints) const
    {
    delete core;
-   core = nullptr;
 
-   if(n != 0)
-      {
-      Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
-
-      while(const Engine* engine = i.next())
-         {
-         core = engine->mod_exp(n, hints);
-
-         if(core)
-            break;
-         }
-
-      if(!core)
-         throw Lookup_Error("Power_Mod: Unable to find a working engine");
-      }
+   if(n.is_odd())
+      core = new Montgomery_Exponentiator(n, hints);
+   else if(n != 0)
+      core = new Fixed_Window_Exponentiator(n, hints);
    }
 
 /*

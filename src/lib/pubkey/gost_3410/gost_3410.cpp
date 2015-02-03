@@ -7,6 +7,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/pk_utils.h>
 #include <botan/gost_3410.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
@@ -90,16 +91,30 @@ BigInt decode_le(const byte msg[], size_t msg_len)
    return BigInt(&msg_le[0], msg_le.size());
    }
 
-}
-
-GOST_3410_Signature_Operation::GOST_3410_Signature_Operation(
-   const GOST_3410_PrivateKey& gost_3410) :
-
-   base_point(gost_3410.domain().get_base_point()),
-   order(gost_3410.domain().get_order()),
-   x(gost_3410.private_value())
+/**
+* GOST-34.10 signature operation
+*/
+class GOST_3410_Signature_Operation : public PK_Ops::Signature
    {
-   }
+   public:
+      typedef GOST_3410_PrivateKey Key_Type;
+      GOST_3410_Signature_Operation(const GOST_3410_PrivateKey& gost_3410, const std::string&):
+         base_point(gost_3410.domain().get_base_point()),
+         order(gost_3410.domain().get_order()),
+         x(gost_3410.private_value()) {}
+
+      size_t message_parts() const { return 2; }
+      size_t message_part_size() const { return order.bytes(); }
+      size_t max_input_bits() const { return order.bits(); }
+
+      secure_vector<byte> sign(const byte msg[], size_t msg_len,
+                              RandomNumberGenerator& rng);
+
+   private:
+      const PointGFp& base_point;
+      const BigInt& order;
+      const BigInt& x;
+   };
 
 secure_vector<byte>
 GOST_3410_Signature_Operation::sign(const byte msg[], size_t msg_len,
@@ -117,9 +132,7 @@ GOST_3410_Signature_Operation::sign(const byte msg[], size_t msg_len,
       e = 1;
 
    PointGFp k_times_P = base_point * k;
-
-   BOTAN_ASSERT(k_times_P.on_the_curve(),
-                "GOST 34.10 k*g is on the curve");
+   BOTAN_ASSERT(k_times_P.on_the_curve(), "GOST 34.10 k*g is on the curve");
 
    BigInt r = k_times_P.get_affine_x() % order;
 
@@ -134,12 +147,32 @@ GOST_3410_Signature_Operation::sign(const byte msg[], size_t msg_len,
    return output;
    }
 
-GOST_3410_Verification_Operation::GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost) :
-   base_point(gost.domain().get_base_point()),
-   public_point(gost.public_point()),
-   order(gost.domain().get_order())
+/**
+* GOST-34.10 verification operation
+*/
+class GOST_3410_Verification_Operation : public PK_Ops::Verification
    {
-   }
+   public:
+      typedef GOST_3410_PublicKey Key_Type;
+
+      GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost, const std::string&) :
+         base_point(gost.domain().get_base_point()),
+         public_point(gost.public_point()),
+         order(gost.domain().get_order()) {}
+
+      size_t message_parts() const { return 2; }
+      size_t message_part_size() const { return order.bytes(); }
+      size_t max_input_bits() const { return order.bits(); }
+
+      bool with_recovery() const { return false; }
+
+      bool verify(const byte msg[], size_t msg_len,
+                  const byte sig[], size_t sig_len);
+   private:
+      const PointGFp& base_point;
+      const PointGFp& public_point;
+      const BigInt& order;
+   };
 
 bool GOST_3410_Verification_Operation::verify(const byte msg[], size_t msg_len,
                                               const byte sig[], size_t sig_len)
@@ -172,5 +205,10 @@ bool GOST_3410_Verification_Operation::verify(const byte msg[], size_t msg_len,
 
    return (R.get_affine_x() == r);
    }
+
+}
+
+BOTAN_REGISTER_PK_SIGNATURE_OP("GOST-34.10", GOST_3410_Signature_Operation);
+BOTAN_REGISTER_PK_VERIFY_OP("GOST-34.10", GOST_3410_Verification_Operation);
 
 }

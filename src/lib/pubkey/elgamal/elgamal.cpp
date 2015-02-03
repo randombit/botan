@@ -5,10 +5,18 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/pk_utils.h>
 #include <botan/elgamal.h>
-#include <botan/numthry.h>
 #include <botan/keypair.h>
+#include <botan/reducer.h>
+#include <botan/blinding.h>
 #include <botan/workfactor.h>
+
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+  #include <botan/system_rng.h>
+#else
+  #include <botan/auto_rng.h>
+#endif
 
 namespace Botan {
 
@@ -66,7 +74,30 @@ bool ElGamal_PrivateKey::check_key(RandomNumberGenerator& rng,
    return KeyPair::encryption_consistency_check(rng, *this, "EME1(SHA-1)");
    }
 
-ElGamal_Encryption_Operation::ElGamal_Encryption_Operation(const ElGamal_PublicKey& key)
+namespace {
+
+/**
+* ElGamal encryption operation
+*/
+class ElGamal_Encryption_Operation : public PK_Ops::Encryption
+   {
+   public:
+      typedef ElGamal_PublicKey Key_Type;
+
+      size_t max_input_bits() const { return mod_p.get_modulus().bits() - 1; }
+
+      ElGamal_Encryption_Operation(const ElGamal_PublicKey& key, const std::string&);
+
+      secure_vector<byte> encrypt(const byte msg[], size_t msg_len,
+                                 RandomNumberGenerator& rng);
+
+   private:
+      Fixed_Base_Power_Mod powermod_g_p, powermod_y_p;
+      Modular_Reducer mod_p;
+   };
+
+ElGamal_Encryption_Operation::ElGamal_Encryption_Operation(const ElGamal_PublicKey& key,
+                                                           const std::string&)
    {
    const BigInt& p = key.group_p();
 
@@ -97,14 +128,38 @@ ElGamal_Encryption_Operation::encrypt(const byte msg[], size_t msg_len,
    return output;
    }
 
+/**
+* ElGamal decryption operation
+*/
+class ElGamal_Decryption_Operation : public PK_Ops::Decryption
+   {
+   public:
+      typedef ElGamal_PrivateKey Key_Type;
+
+      size_t max_input_bits() const { return mod_p.get_modulus().bits() - 1; }
+
+      ElGamal_Decryption_Operation(const ElGamal_PrivateKey& key, const std::string& emsa);
+
+      secure_vector<byte> decrypt(const byte msg[], size_t msg_len);
+   private:
+      Fixed_Exponent_Power_Mod powermod_x_p;
+      Modular_Reducer mod_p;
+      Blinder blinder;
+   };
+
 ElGamal_Decryption_Operation::ElGamal_Decryption_Operation(const ElGamal_PrivateKey& key,
-                                                           RandomNumberGenerator& rng)
+                                                           const std::string&)
    {
    const BigInt& p = key.group_p();
 
    powermod_x_p = Fixed_Exponent_Power_Mod(key.get_x(), p);
    mod_p = Modular_Reducer(p);
 
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+         auto& rng = system_rng();
+#else
+         AutoSeeded_RNG rng;
+#endif
    BigInt k(rng, p.bits() - 1);
    blinder = Blinder(k, powermod_x_p(k), p);
    }
@@ -131,5 +186,10 @@ ElGamal_Decryption_Operation::decrypt(const byte msg[], size_t msg_len)
 
    return BigInt::encode_locked(blinder.unblind(r));
    }
+
+BOTAN_REGISTER_PK_ENCRYPTION_OP("ElGamal", ElGamal_Encryption_Operation);
+BOTAN_REGISTER_PK_DECRYPTION_OP("ElGamal", ElGamal_Decryption_Operation);
+
+}
 
 }

@@ -97,8 +97,8 @@ time_algorithm_ops(const std::string& name,
       }
    else
       {
-      std::unique_ptr<AEAD_Mode> enc(get_aead(name, ENCRYPTION));
-      std::unique_ptr<AEAD_Mode> dec(get_aead(name, DECRYPTION));
+      std::unique_ptr<Cipher_Mode> enc(get_cipher_mode(name, ENCRYPTION));
+      std::unique_ptr<Cipher_Mode> dec(get_cipher_mode(name, DECRYPTION));
 
       if(enc && dec)
          {

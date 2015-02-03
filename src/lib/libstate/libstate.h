@@ -38,17 +38,10 @@ class BOTAN_DLL Library_State
       */
       Algorithm_Factory& algorithm_factory() const;
 
-      /**
-      * @return global RandomNumberGenerator
-      */
-      RandomNumberGenerator& global_rng();
-
       void poll_available_sources(class Entropy_Accumulator& accum);
 
    private:
       static std::vector<std::unique_ptr<EntropySource>> entropy_sources();
-
-      std::unique_ptr<Serialized_RNG> m_global_prng;
 
       std::mutex m_entropy_src_mutex;
       std::vector<std::unique_ptr<EntropySource>> m_sources;

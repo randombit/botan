@@ -5,9 +5,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/pk_utils.h>
 #include <botan/nr.h>
-#include <botan/numthry.h>
 #include <botan/keypair.h>
+#include <botan/reducer.h>
 #include <future>
 
 namespace Botan {
@@ -72,13 +73,35 @@ bool NR_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    return KeyPair::signature_consistency_check(rng, *this, "EMSA1(SHA-1)");
    }
 
-NR_Signature_Operation::NR_Signature_Operation(const NR_PrivateKey& nr) :
-   q(nr.group_q()),
-   x(nr.get_x()),
-   powermod_g_p(nr.group_g(), nr.group_p()),
-   mod_q(nr.group_q())
+namespace {
+
+/**
+* Nyberg-Rueppel signature operation
+*/
+class NR_Signature_Operation : public PK_Ops::Signature
    {
-   }
+   public:
+      typedef NR_PrivateKey Key_Type;
+      NR_Signature_Operation(const NR_PrivateKey& nr, const std::string&) :
+         q(nr.group_q()),
+         x(nr.get_x()),
+         powermod_g_p(nr.group_g(), nr.group_p()),
+         mod_q(nr.group_q())
+         {
+         }
+
+      size_t message_parts() const { return 2; }
+      size_t message_part_size() const { return q.bytes(); }
+      size_t max_input_bits() const { return (q.bits() - 1); }
+
+      secure_vector<byte> sign(const byte msg[], size_t msg_len,
+                              RandomNumberGenerator& rng);
+   private:
+      const BigInt& q;
+      const BigInt& x;
+      Fixed_Base_Power_Mod powermod_g_p;
+      Modular_Reducer mod_q;
+   };
 
 secure_vector<byte>
 NR_Signature_Operation::sign(const byte msg[], size_t msg_len,
@@ -110,14 +133,37 @@ NR_Signature_Operation::sign(const byte msg[], size_t msg_len,
    return output;
    }
 
-NR_Verification_Operation::NR_Verification_Operation(const NR_PublicKey& nr) :
-   q(nr.group_q()), y(nr.get_y())
+
+/**
+* Nyberg-Rueppel verification operation
+*/
+class NR_Verification_Operation : public PK_Ops::Verification
    {
-   powermod_g_p = Fixed_Base_Power_Mod(nr.group_g(), nr.group_p());
-   powermod_y_p = Fixed_Base_Power_Mod(y, nr.group_p());
-   mod_p = Modular_Reducer(nr.group_p());
-   mod_q = Modular_Reducer(nr.group_q());
-   }
+   public:
+      typedef NR_PublicKey Key_Type;
+      NR_Verification_Operation(const NR_PublicKey& nr, const std::string&) :
+         q(nr.group_q()), y(nr.get_y())
+         {
+         powermod_g_p = Fixed_Base_Power_Mod(nr.group_g(), nr.group_p());
+         powermod_y_p = Fixed_Base_Power_Mod(y, nr.group_p());
+         mod_p = Modular_Reducer(nr.group_p());
+         mod_q = Modular_Reducer(nr.group_q());
+         }
+
+      size_t message_parts() const { return 2; }
+      size_t message_part_size() const { return q.bytes(); }
+      size_t max_input_bits() const { return (q.bits() - 1); }
+
+      bool with_recovery() const { return true; }
+
+      secure_vector<byte> verify_mr(const byte msg[], size_t msg_len);
+   private:
+      const BigInt& q;
+      const BigInt& y;
+
+      Fixed_Base_Power_Mod powermod_g_p, powermod_y_p;
+      Modular_Reducer mod_p, mod_q;
+   };
 
 secure_vector<byte>
 NR_Verification_Operation::verify_mr(const byte msg[], size_t msg_len)
@@ -139,5 +185,9 @@ NR_Verification_Operation::verify_mr(const byte msg[], size_t msg_len)
    BigInt i = mod_p.multiply(g_d, future_y_c.get());
    return BigInt::encode_locked(mod_q.reduce(c - i));
    }
+}
+
+BOTAN_REGISTER_PK_SIGNATURE_OP("NR", NR_Signature_Operation);
+BOTAN_REGISTER_PK_VERIFY_OP("NR", NR_Verification_Operation);
 
 }

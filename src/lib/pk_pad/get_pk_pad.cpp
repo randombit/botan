@@ -19,7 +19,6 @@ EMSA* get_emsa(const std::string& algo_spec)
    if(EMSA* emsa = make_a<EMSA>(algo_spec))
       return emsa;
 
-   printf("EMSA missing? %s\n", algo_spec.c_str());
    throw Algorithm_Not_Found(algo_spec);
    }
 

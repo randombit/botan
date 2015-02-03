@@ -9,7 +9,6 @@
 #define BOTAN_LOOKUP_H__
 
 #include <botan/libstate.h>
-#include <botan/engine.h>
 #include <botan/filters.h>
 #include <botan/mode_pad.h>
 #include <botan/kdf.h>

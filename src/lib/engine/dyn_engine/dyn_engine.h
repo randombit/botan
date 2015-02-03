@@ -62,42 +62,6 @@ class BOTAN_DLL Dynamically_Loaded_Engine : public Engine
          return engine->find_pbkdf(algo_spec, af);
          }
 
-      Modular_Exponentiator* mod_exp(const BigInt& n,
-                                     Power_Mod::Usage_Hints hints) const override
-         {
-         return engine->mod_exp(n, hints);
-         }
-
-      PK_Ops::Key_Agreement*
-         get_key_agreement_op(const Private_Key& key, RandomNumberGenerator& rng) const override
-         {
-         return engine->get_key_agreement_op(key, rng);
-         }
-
-      PK_Ops::Signature*
-         get_signature_op(const Private_Key& key, const std::string& emsa, RandomNumberGenerator& rng) const override
-         {
-         return engine->get_signature_op(key, emsa, rng);
-         }
-
-      PK_Ops::Verification*
-         get_verify_op(const Public_Key& key, const std::string& emsa, RandomNumberGenerator& rng) const override
-         {
-         return engine->get_verify_op(key, emsa, rng);
-         }
-
-      PK_Ops::Encryption*
-         get_encryption_op(const Public_Key& key, RandomNumberGenerator& rng) const override
-         {
-         return engine->get_encryption_op(key, rng);
-         }
-
-      PK_Ops::Decryption*
-         get_decryption_op(const Private_Key& key, RandomNumberGenerator& rng) const override
-         {
-         return engine->get_decryption_op(key, rng);
-         }
-
    private:
       class Dynamically_Loaded_Library* lib;
       Engine* engine;

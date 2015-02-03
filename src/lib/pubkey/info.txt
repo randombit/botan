@@ -22,6 +22,7 @@ workfactor.h
 
 <header:internal>
 pk_algs.h
+pk_utils.h
 </header:internal>
 
 <requires>

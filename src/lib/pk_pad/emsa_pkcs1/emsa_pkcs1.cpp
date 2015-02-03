@@ -10,7 +10,19 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_EMSA_1HASH(EMSA_PKCS1v15, "EMSA_PKCS1");
+namespace {
+
+EMSA* make_pkcs1v15(const EMSA::Spec& spec)
+   {
+   if(spec.arg(0) == "Raw")
+      return new EMSA_PKCS1v15_Raw;
+   else
+      return new EMSA_PKCS1v15(make_a<HashFunction>(spec.arg(0)));
+   }
+
+}
+
+BOTAN_REGISTER_NAMED_T(EMSA, "EMSA_PKCS1", EMSA_PCS1v15, make_pkcs1v15);
 
 namespace {
 

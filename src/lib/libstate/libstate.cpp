@@ -8,7 +8,6 @@
 #include <botan/libstate.h>
 #include <botan/charset.h>
 #include <botan/engine.h>
-#include <botan/cpuid.h>
 #include <botan/oids.h>
 #include <botan/internal/core_engine.h>
 #include <botan/internal/stl_util.h>
@@ -46,27 +45,17 @@ Algorithm_Factory& Library_State::algorithm_factory() const
    return *m_algorithm_factory;
    }
 
-/*
-* Return a reference to the global PRNG
-*/
-RandomNumberGenerator& Library_State::global_rng()
-   {
-   return *m_global_prng;
-   }
-
 Library_State::~Library_State()
    {
    }
 
 void Library_State::initialize()
    {
-   if(m_algorithm_factory.get())
-      throw Invalid_State("Library_State has already been initialized");
-
-   CPUID::initialize();
-
    SCAN_Name::set_default_aliases();
    OIDS::set_defaults();
+
+   if(m_algorithm_factory.get())
+      throw Invalid_State("Library_State has already been initialized");
 
    m_algorithm_factory.reset(new Algorithm_Factory());
 
@@ -93,8 +82,6 @@ void Library_State::initialize()
    algorithm_factory().add_engine(new Core_Engine);
 
    m_sources = entropy_sources();
-
-   m_global_prng.reset(new Serialized_RNG());
    }
 
 }
