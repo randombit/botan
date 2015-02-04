@@ -6,7 +6,7 @@
 */
 
 #include <botan/filters.h>
-#include <botan/algo_registry.h>
+#include <botan/internal/algo_registry.h>
 #include <algorithm>
 
 namespace Botan {

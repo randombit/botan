@@ -1,7 +1,7 @@
 define COMPRESSION 20141117
 
 <header:internal>
-comp_util.h
+compress_utils.h
 </header:internal>
 
 <header:public>

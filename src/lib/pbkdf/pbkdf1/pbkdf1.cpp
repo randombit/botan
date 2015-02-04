@@ -5,10 +5,13 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/pbkdf_utils.h>
 #include <botan/pbkdf1.h>
 #include <botan/exceptn.h>
 
 namespace Botan {
+
+BOTAN_REGISTER_PBKDF_1HASH(PKCS5_PBKDF1, "PBKDF1")
 
 /*
 * Return a PKCS#5 PBKDF1 derived key

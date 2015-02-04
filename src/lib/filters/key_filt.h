@@ -57,6 +57,52 @@ class BOTAN_DLL Keyed_Filter : public Filter
          { return (length == 0); }
    };
 
+
+
+/*
+* Get a cipher object
+*/
+
+/**
+* Factory method for general symmetric cipher filters.
+* @param algo_spec the name of the desired cipher
+* @param key the key to be used for encryption/decryption performed by
+* the filter
+* @param iv the initialization vector to be used
+* @param direction determines whether the filter will be an encrypting
+* or decrypting filter
+* @return pointer to newly allocated encryption or decryption filter
+*/
+BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
+                                   const SymmetricKey& key,
+                                   const InitializationVector& iv,
+                                   Cipher_Dir direction);
+
+/**
+* Factory method for general symmetric cipher filters.
+* @param algo_spec the name of the desired cipher
+* @param key the key to be used for encryption/decryption performed by
+* the filter
+* @param direction determines whether the filter will be an encrypting
+* or decrypting filter
+* @return pointer to the encryption or decryption filter
+*/
+BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
+                                   const SymmetricKey& key,
+                                   Cipher_Dir direction);
+
+/**
+* Factory method for general symmetric cipher filters. No key will be
+* set in the filter.
+*
+* @param algo_spec the name of the desired cipher
+* @param direction determines whether the filter will be an encrypting or
+* decrypting filter
+* @return pointer to the encryption or decryption filter
+*/
+BOTAN_DLL Keyed_Filter* get_cipher(const std::string& algo_spec,
+                                   Cipher_Dir direction);
+
 }
 
 #endif

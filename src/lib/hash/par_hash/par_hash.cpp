@@ -8,7 +8,7 @@
 #include <botan/internal/hash_utils.h>
 #include <botan/par_hash.h>
 #include <botan/parsing.h>
-#include <botan/algo_registry.h>
+#include <botan/internal/algo_registry.h>
 
 namespace Botan {
 

@@ -9,7 +9,7 @@
 */
 
 #include <botan/lzma.h>
-#include <botan/internal/comp_util.h>
+#include <botan/internal/compress_utils.h>
 #include <lzma.h>
 
 namespace Botan {

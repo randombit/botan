@@ -124,11 +124,18 @@ check_chain(const std::vector<X509_Certificate>& cert_path,
 
       std::unique_ptr<Public_Key> issuer_key(issuer.subject_public_key());
 
-      if(subject.check_signature(*issuer_key) == false)
+      if(!issuer_key)
+         {
          status.insert(Certificate_Status_Code::SIGNATURE_ERROR);
+         }
+      else
+         {
+         if(subject.check_signature(*issuer_key) == false)
+            status.insert(Certificate_Status_Code::SIGNATURE_ERROR);
 
-      if(issuer_key->estimated_strength() < restrictions.minimum_key_strength())
-         status.insert(Certificate_Status_Code::SIGNATURE_METHOD_TOO_WEAK);
+         if(issuer_key->estimated_strength() < restrictions.minimum_key_strength())
+            status.insert(Certificate_Status_Code::SIGNATURE_METHOD_TOO_WEAK);
+         }
 
       // Allow untrusted hashes on self-signed roots
       if(!trusted_hashes.empty() && !at_self_signed_root)

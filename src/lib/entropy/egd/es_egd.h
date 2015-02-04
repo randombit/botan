@@ -41,6 +41,7 @@ class EGD_EntropySource : public EntropySource
             int m_fd; // cached fd
          };
 
+      std::mutex m_mutex;
       std::vector<EGD_Socket> sockets;
    };
 

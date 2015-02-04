@@ -84,6 +84,8 @@ class BOTAN_DLL Entropy_Accumulator
 class BOTAN_DLL EntropySource
    {
    public:
+      static void poll_available_sources(class Entropy_Accumulator& accum);
+
       /**
       * @return name identifying this entropy source
       */

@@ -1,9 +1,7 @@
 define RUNTIME_BENCHMARKING 20131128
 
 <requires>
-algo_factory
 block
-algo_base
 hash
 mac
 rng

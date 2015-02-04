@@ -107,7 +107,7 @@ Public_Key* make_public_key(const AlgorithmIdentifier& alg_id,
       return new Curve25519_PublicKey(alg_id, key_bits);
 #endif
 
-   return nullptr;
+   throw Decoding_Error("Unhandled PK algorithm " + alg_name);
    }
 
 Private_Key* make_private_key(const AlgorithmIdentifier& alg_id,
@@ -168,7 +168,7 @@ Private_Key* make_private_key(const AlgorithmIdentifier& alg_id,
       return new Curve25519_PrivateKey(alg_id, key_bits, rng);
 #endif
 
-   return nullptr;
+   throw Decoding_Error("Unhandled PK algorithm " + alg_name);
    }
 
 }

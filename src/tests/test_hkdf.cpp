@@ -10,8 +10,8 @@
 #include <fstream>
 
 #if defined(BOTAN_HAS_HKDF)
-#include <botan/libstate.h>
 #include <botan/hkdf.h>
+#include <botan/lookup.h>
 
 using namespace Botan;
 
@@ -23,16 +23,13 @@ secure_vector<byte> hkdf(const std::string& hkdf_algo,
                          const secure_vector<byte>& info,
                          size_t L)
    {
-   Algorithm_Factory& af = global_state().algorithm_factory();
-
    const std::string algo = hkdf_algo.substr(5, hkdf_algo.size()-6);
 
-   const MessageAuthenticationCode* mac_proto = af.prototype_mac("HMAC(" + algo + ")");
-
-   if(!mac_proto)
+   MessageAuthenticationCode* mac = get_mac("HMAC(" + algo + ")");
+   if(!mac)
       throw std::invalid_argument("Bad HKDF hash '" + algo + "'");
 
-   HKDF hkdf(mac_proto->clone(), mac_proto->clone());
+   HKDF hkdf(mac->clone(), mac); // HKDF needs 2 MACs, identical here
 
    hkdf.start_extract(&salt[0], salt.size());
    hkdf.extract(&ikm[0], ikm.size());

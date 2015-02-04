@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_avx2(), Threefish_512_AVX2, "Threefish-512", "avx2");
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_avx2(), Threefish_512_AVX2, "Threefish-512", "avx2", 64);
 
 namespace {
 

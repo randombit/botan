@@ -8,7 +8,7 @@
 */
 
 #include <botan/bzip2.h>
-#include <botan/internal/comp_util.h>
+#include <botan/internal/compress_utils.h>
 
 #define BZ_NO_STDIO
 #include <bzlib.h>

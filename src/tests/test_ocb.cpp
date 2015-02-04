@@ -13,7 +13,7 @@
 #include <botan/sha2_32.h>
 #include <botan/aes.h>
 #include <botan/loadstor.h>
-#include <botan/libstate.h>
+#include <botan/lookup.h>
 
 using namespace Botan;
 
@@ -53,17 +53,16 @@ std::vector<byte> ocb_encrypt(OCB_Encryption& enc,
    return unlock(buf);
    }
 
-size_t test_ocb_long(Algorithm_Factory& af,
-                     size_t keylen, size_t taglen,
+size_t test_ocb_long(size_t keylen, size_t taglen,
                      const std::string &expected)
    {
    // Test from RFC 7253 Appendix A
 
    const std::string algo = "AES-" + std::to_string(keylen);
 
-   OCB_Encryption enc(af.make_block_cipher(algo), taglen / 8);
+   OCB_Encryption enc(get_block_cipher(algo), taglen / 8);
 
-   OCB_Decryption dec(af.make_block_cipher(algo), taglen / 8);
+   OCB_Decryption dec(get_block_cipher(algo), taglen / 8);
 
    std::vector<byte> key(keylen/8);
    key[keylen/8-1] = taglen;
@@ -110,17 +109,16 @@ size_t test_ocb()
    size_t fails = 0;
 
 #if defined(BOTAN_HAS_AEAD_OCB)
-   Algorithm_Factory& af = global_state().algorithm_factory();
 
-   fails += test_ocb_long(af, 128, 128, "67E944D23256C5E0B6C61FA22FDF1EA2");
-   fails += test_ocb_long(af, 192, 128, "F673F2C3E7174AAE7BAE986CA9F29E17");
-   fails += test_ocb_long(af, 256, 128, "D90EB8E9C977C88B79DD793D7FFA161C");
-   fails += test_ocb_long(af, 128, 96, "77A3D8E73589158D25D01209");
-   fails += test_ocb_long(af, 192, 96, "05D56EAD2752C86BE6932C5E");
-   fails += test_ocb_long(af, 256, 96, "5458359AC23B0CBA9E6330DD");
-   fails += test_ocb_long(af, 128, 64, "192C9B7BD90BA06A");
-   fails += test_ocb_long(af, 192, 64, "0066BC6E0EF34E24");
-   fails += test_ocb_long(af, 256, 64, "7D4EA5D445501CBE");
+   fails += test_ocb_long(128, 128, "67E944D23256C5E0B6C61FA22FDF1EA2");
+   fails += test_ocb_long(192, 128, "F673F2C3E7174AAE7BAE986CA9F29E17");
+   fails += test_ocb_long(256, 128, "D90EB8E9C977C88B79DD793D7FFA161C");
+   fails += test_ocb_long(128, 96, "77A3D8E73589158D25D01209");
+   fails += test_ocb_long(192, 96, "05D56EAD2752C86BE6932C5E");
+   fails += test_ocb_long(256, 96, "5458359AC23B0CBA9E6330DD");
+   fails += test_ocb_long(128, 64, "192C9B7BD90BA06A");
+   fails += test_ocb_long(192, 64, "0066BC6E0EF34E24");
+   fails += test_ocb_long(256, 64, "7D4EA5D445501CBE");
    test_report("OCB long", 9, fails);
 #endif
 

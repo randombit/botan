@@ -4,7 +4,6 @@ define DSA 20131128
 dl_algo
 dl_group
 keypair
-libstate
 numbertheory
 rfc6979
 </requires>

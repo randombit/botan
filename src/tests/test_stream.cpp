@@ -6,8 +6,8 @@
 
 #include "tests.h"
 
-#include <botan/libstate.h>
 #include <botan/stream_cipher.h>
+#include <botan/lookup.h>
 #include <botan/hex.h>
 #include <iostream>
 #include <fstream>
@@ -27,29 +27,26 @@ size_t stream_test(const std::string& algo,
    const secure_vector<byte> ct = hex_decode_locked(out_hex);
    const secure_vector<byte> nonce = hex_decode_locked(nonce_hex);
 
-   Algorithm_Factory& af = global_state().algorithm_factory();
-
-   const auto providers = af.providers_of(algo);
+   const std::vector<std::string> providers = get_stream_cipher_providers(algo);
    size_t fails = 0;
 
    if(providers.empty())
       {
-      std::cout << "Unknown algo " << algo << "\n";
+      std::cout << "Unknown stream cipher " << algo << "\n";
       ++fails;
       }
 
    for(auto provider: providers)
       {
-      const StreamCipher* proto = af.prototype_stream_cipher(algo, provider);
+      std::unique_ptr<StreamCipher> cipher(get_stream_cipher(algo, provider));
 
-      if(!proto)
+      if(!cipher)
          {
-         std::cout << "Unable to get " << algo << " from provider '" << provider << "'\n";
+         std::cout << "Unable to get " << algo << " from " << provider << "\n";
          ++fails;
          continue;
          }
 
-      std::unique_ptr<StreamCipher> cipher(proto->clone());
       cipher->set_key(key);
 
       if(nonce.size())

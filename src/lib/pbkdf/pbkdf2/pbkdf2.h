@@ -10,6 +10,7 @@
 
 #include <botan/pbkdf.h>
 #include <botan/mac.h>
+#include <botan/hash.h>
 
 namespace Botan {
 
@@ -41,6 +42,8 @@ class BOTAN_DLL PKCS5_PBKDF2 : public PBKDF
       * @param mac_fn the MAC object to use as PRF
       */
       PKCS5_PBKDF2(MessageAuthenticationCode* mac_fn) : mac(mac_fn) {}
+
+      static PKCS5_PBKDF2* make(const Spec& spec);
    private:
       std::unique_ptr<MessageAuthenticationCode> mac;
    };

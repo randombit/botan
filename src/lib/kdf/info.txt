@@ -1,8 +1,7 @@
 define KDF_BASE 20131128
 
 <requires>
-alloc
-libstate
+base
 </requires>
 
 <header:public>

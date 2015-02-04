@@ -3,7 +3,6 @@ define SERPENT_SIMD 20131128
 <requires>
 serpent
 simd
-simd_engine
 </requires>
 
 <source>

@@ -12,12 +12,6 @@
 #include <botan/blinding.h>
 #include <botan/workfactor.h>
 
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-  #include <botan/system_rng.h>
-#else
-  #include <botan/auto_rng.h>
-#endif
-
 namespace Botan {
 
 /*
@@ -155,13 +149,9 @@ ElGamal_Decryption_Operation::ElGamal_Decryption_Operation(const ElGamal_Private
    powermod_x_p = Fixed_Exponent_Power_Mod(key.get_x(), p);
    mod_p = Modular_Reducer(p);
 
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-         auto& rng = system_rng();
-#else
-         AutoSeeded_RNG rng;
-#endif
-   BigInt k(rng, p.bits() - 1);
-   blinder = Blinder(k, powermod_x_p(k), p);
+   blinder = Blinder(p,
+                     [](const BigInt& k) { return k; },
+                     [this](const BigInt& k) { return powermod_x_p(k); });
    }
 
 secure_vector<byte>

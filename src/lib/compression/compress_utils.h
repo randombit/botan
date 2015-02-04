@@ -1,5 +1,5 @@
 /*
-* Shared code for compression libraries
+* Compression utility header
 * (C) 2014 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -9,7 +9,7 @@
 #define BOTAN_COMPRESSION_UTILS_H__
 
 #include <botan/compression.h>
-#include <botan/algo_registry.h>
+#include <botan/internal/algo_registry.h>
 #include <memory>
 #include <unordered_map>
 

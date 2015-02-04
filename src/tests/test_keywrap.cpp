@@ -6,7 +6,6 @@
 
 #include "tests.h"
 
-#include <botan/libstate.h>
 #include <botan/hex.h>
 
 #if defined(BOTAN_HAS_RFC3394_KEYWRAP)

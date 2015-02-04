@@ -1,12 +1,12 @@
 /*
-* (C) 2014 Jack Lloyd
+* (C) 2014,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include "tests.h"
 
-#include <botan/libstate.h>
+#include <botan/lookup.h>
 #include <botan/hash.h>
 #include <botan/hex.h>
 #include <iostream>
@@ -20,22 +20,21 @@ size_t hash_test(const std::string& algo,
                  const std::string& in_hex,
                  const std::string& out_hex)
    {
-   Algorithm_Factory& af = global_state().algorithm_factory();
-
-   const auto providers = af.providers_of(algo);
    size_t fails = 0;
+
+   const std::vector<std::string> providers = get_hash_function_providers(algo);
 
    if(providers.empty())
       {
-      std::cout << "Unknown algo " << algo << "\n";
+      std::cout << "Unknown hash '" << algo << "'\n";
       ++fails;
       }
 
    for(auto provider: providers)
       {
-      auto proto = af.prototype_hash_function(algo, provider);
+      std::unique_ptr<HashFunction> hash(get_hash(algo, provider));
 
-      if(!proto)
+      if(!hash)
          {
          std::cout << "Unable to get " << algo << " from " << provider << "\n";
          ++fails;
@@ -43,8 +42,6 @@ size_t hash_test(const std::string& algo,
          }
 
       const std::vector<byte> in = hex_decode(in_hex);
-
-      std::unique_ptr<HashFunction> hash(proto->clone());
 
       hash->update(in);
 

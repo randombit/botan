@@ -126,6 +126,8 @@ BOTAN_DLL std::string ipv4_to_string(u32bit ip_addr);
 
 std::map<std::string, std::string> BOTAN_DLL read_cfg(std::istream& is);
 
+std::string BOTAN_DLL clean_ws(const std::string& s);
+
 
 }
 

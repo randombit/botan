@@ -17,8 +17,6 @@
 
 namespace Botan {
 
-size_t static_provider_weight(const std::string& prov_name);
-
 template<typename T>
 class Algo_Registry
    {
@@ -33,26 +31,19 @@ class Algo_Registry
          return g_registry;
          }
 
-      void add(const std::string& name, const std::string& provider, maker_fn fn)
+      void add(const std::string& name, const std::string& provider, maker_fn fn, byte pref)
          {
          std::unique_lock<std::mutex> lock(m_mutex);
-
-         if(!m_maker_fns[name][provider])
-            m_maker_fns[name][provider] = fn;
+         m_algo_info[name].add_provider(provider, fn, pref);
          }
 
-      std::vector<std::string> providers(const std::string& basename) const
+      std::vector<std::string> providers_of(const Spec& spec)
          {
          std::unique_lock<std::mutex> lock(m_mutex);
-
-         std::vector<std::string> v;
-         auto i = m_maker_fns.find(basename);
-         if(i != m_maker_fns.end())
-            {
-            for(auto&& prov : i->second)
-               v.push_back(prov);
-            }
-         return v;
+         auto i = m_algo_info.find(spec.algo_name());
+         if(i != m_algo_info.end())
+            return i->second.providers();
+         return std::vector<std::string>();
          }
 
       T* make(const Spec& spec, const std::string& provider = "")
@@ -65,7 +56,6 @@ class Algo_Registry
             }
          catch(std::exception& e)
             {
-            //return nullptr; // ??
             throw std::runtime_error("Creating '" + spec.as_string() + "' failed: " + e.what());
             }
          }
@@ -73,15 +63,15 @@ class Algo_Registry
       class Add
          {
          public:
-            Add(const std::string& basename, maker_fn fn, const std::string& provider = "builtin")
+            Add(const std::string& basename, maker_fn fn, const std::string& provider = "builtin", byte pref = 128)
                {
-               Algo_Registry<T>::global_registry().add(basename, provider, fn);
+               Algo_Registry<T>::global_registry().add(basename, provider, fn, pref);
                }
 
-            Add(bool cond, const std::string& basename, maker_fn fn, const std::string& provider)
+            Add(bool cond, const std::string& basename, maker_fn fn, const std::string& provider, byte pref)
                {
                if(cond)
-                  Algo_Registry<T>::global_registry().add(basename, provider, fn);
+                  Algo_Registry<T>::global_registry().add(basename, provider, fn, pref);
                }
          };
 
@@ -90,49 +80,78 @@ class Algo_Registry
 
       maker_fn find_maker(const Spec& spec, const std::string& provider)
          {
-         const std::string basename = spec.algo_name();
-
          std::unique_lock<std::mutex> lock(m_mutex);
-         auto makers = m_maker_fns.find(basename);
-
-         if(makers != m_maker_fns.end() && !makers->second.empty())
-            {
-            const auto& providers = makers->second;
-
-            if(provider != "")
-               {
-               // find one explicit provider requested by user, or fail
-               auto i = providers.find(provider);
-               if(i != providers.end())
-                  return i->second;
-               }
-            else
-               {
-               if(providers.size() == 1)
-                  {
-                  return providers.begin()->second;
-                  }
-               else if(providers.size() > 1)
-                  {
-                  // TODO choose best of available options (how?)
-                  //throw std::runtime_error("multiple choice not implemented");
-                  return providers.begin()->second;
-                  }
-               }
-            }
-
-         // Default result is a function producing a null pointer
-         return [](const Spec&) { return nullptr; };
+         return m_algo_info[spec.algo_name()].get_maker(provider);
          }
 
+      struct Algo_Info
+         {
+         public:
+            void add_provider(const std::string& provider, maker_fn fn, byte pref = 128)
+               {
+               if(m_maker_fns.count(provider) > 0)
+                  throw std::runtime_error("Duplicated registration of '" + provider + "'");
+
+               m_maker_fns[provider] = std::make_pair(pref, fn);
+               }
+
+            std::vector<std::string> providers() const
+               {
+               std::vector<std::string> v;
+               for(auto&& k : m_maker_fns)
+                  v.push_back(k.first);
+               return v;
+               }
+
+            void set_pref(const std::string& provider, byte val)
+               {
+               m_maker_fns[provider].first = val;
+               }
+
+            maker_fn get_maker(const std::string& req_provider)
+               {
+               maker_fn null_result = [](const Spec&) { return nullptr; };
+
+               if(req_provider != "")
+                  {
+                  // find one explicit provider requested by user or fail
+                  auto i = m_maker_fns.find(req_provider);
+                  if(i != m_maker_fns.end())
+                     return i->second.second;
+                  return null_result;
+                  }
+
+               size_t pref = 255;
+               maker_fn result = null_result;
+
+               for(auto&& i : m_maker_fns)
+                  {
+                  if(i.second.first < pref)
+                     {
+                     pref = i.second.first;
+                     result = i.second.second;
+                     }
+                  }
+
+               return result;
+               }
+         private:
+            std::unordered_map<std::string, std::pair<byte, maker_fn>> m_maker_fns; // provider -> (pref, creator fn)
+         };
+
       std::mutex m_mutex;
-      std::unordered_map<std::string, std::unordered_map<std::string, maker_fn>> m_maker_fns;
+      std::unordered_map<std::string, Algo_Info> m_algo_info;
    };
 
 template<typename T> T*
 make_a(const typename T::Spec& spec, const std::string provider = "")
    {
    return Algo_Registry<T>::global_registry().make(spec, provider);
+   }
+
+template<typename T> std::vector<std::string> providers_of(const typename T::Spec& spec)
+   {
+   return Algo_Registry<T>::global_registry().providers_of(spec);
    }
 
 template<typename T> T*
@@ -182,8 +201,8 @@ make_new_T_1X(const typename Algo_Registry<T>::Spec& spec)
 
 #define BOTAN_REGISTER_NAMED_T_NOARGS(T, type, name, provider) \
    namespace { Algo_Registry<T>::Add g_ ## type ## _reg(name, make_new_T<type>, provider); }
-#define BOTAN_COND_REGISTER_NAMED_T_NOARGS(cond, T, type, name, provider) \
-   namespace { Algo_Registry<T>::Add g_ ## type ## _reg(cond, name, make_new_T<type>, provider); }
+#define BOTAN_COND_REGISTER_NAMED_T_NOARGS(cond, T, type, name, provider, pref) \
+   namespace { Algo_Registry<T>::Add g_ ## type ## _reg(cond, name, make_new_T<type>, provider, pref); }
 #define BOTAN_REGISTER_NAMED_T_2LEN(T, type, name, provider, len1, len2)     \
    namespace { Algo_Registry<T>::Add g_ ## type ## _reg(name, make_new_T_2len<type, len1, len2>, provider); }
 

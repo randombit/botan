@@ -107,7 +107,7 @@ void poly1305_finish(secure_vector<u64bit>& X, byte mac[16])
    /* compute h + -p */
    u64bit g0 = h0 + 5; c = (g0 >> 44); g0 &= 0xfffffffffff;
    u64bit g1 = h1 + c; c = (g1 >> 44); g1 &= 0xfffffffffff;
-   u64bit g2 = h2 + c - ((u64bit)1 << 42);
+   u64bit g2 = h2 + c - (static_cast<u64bit>(1) << 42);
 
    /* select h if h < p, or h + -p if h >= p */
    c = (g2 >> ((sizeof(u64bit) * 8) - 1)) - 1;

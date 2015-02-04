@@ -6,16 +6,19 @@
 */
 
 #include <botan/benchmark.h>
+#include <botan/internal/algo_registry.h>
 #include <botan/buf_comp.h>
+#include <botan/cipher_mode.h>
 #include <botan/block_cipher.h>
 #include <botan/stream_cipher.h>
-#include <botan/aead.h>
 #include <botan/hash.h>
 #include <botan/mac.h>
 #include <vector>
 #include <chrono>
 
 namespace Botan {
+
+namespace {
 
 double time_op(std::chrono::nanoseconds runtime, std::function<void ()> op)
    {
@@ -40,7 +43,6 @@ double time_op(std::chrono::nanoseconds runtime, std::function<void ()> op)
 
 std::map<std::string, double>
 time_algorithm_ops(const std::string& name,
-                   Algorithm_Factory& af,
                    const std::string& provider,
                    RandomNumberGenerator& rng,
                    std::chrono::nanoseconds runtime,
@@ -53,9 +55,9 @@ time_algorithm_ops(const std::string& name,
 
    const double mb_mult = buffer.size() / static_cast<double>(Mebibyte);
 
-   if(const BlockCipher* proto = af.prototype_block_cipher(name, provider))
+   if(BlockCipher* p = make_a<BlockCipher>(name, provider))
       {
-      std::unique_ptr<BlockCipher> bc(proto->clone());
+      std::unique_ptr<BlockCipher> bc(p);
 
       const SymmetricKey key(rng, bc->maximum_keylength());
 
@@ -65,9 +67,9 @@ time_algorithm_ops(const std::string& name,
             { "decrypt", mb_mult * time_op(runtime / 2, [&]() { bc->decrypt(buffer); }) },
          });
       }
-   else if(const StreamCipher* proto = af.prototype_stream_cipher(name, provider))
+   else if(StreamCipher* p = make_a<StreamCipher>(name, provider))
       {
-      std::unique_ptr<StreamCipher> sc(proto->clone());
+      std::unique_ptr<StreamCipher> sc(p);
 
       const SymmetricKey key(rng, sc->maximum_keylength());
 
@@ -76,17 +78,17 @@ time_algorithm_ops(const std::string& name,
             { "", mb_mult * time_op(runtime, [&]() { sc->encipher(buffer); }) },
          });
       }
-   else if(const HashFunction* proto = af.prototype_hash_function(name, provider))
+   else if(HashFunction* p = make_a<HashFunction>(name, provider))
       {
-      std::unique_ptr<HashFunction> h(proto->clone());
+      std::unique_ptr<HashFunction> h(p);
 
       return std::map<std::string, double>({
             { "", mb_mult * time_op(runtime, [&]() { h->update(buffer); }) },
          });
       }
-   else if(const MessageAuthenticationCode* proto = af.prototype_mac(name, provider))
+   else if(MessageAuthenticationCode* p = make_a<MessageAuthenticationCode>(name, provider))
       {
-      std::unique_ptr<MessageAuthenticationCode> mac(proto->clone());
+      std::unique_ptr<MessageAuthenticationCode> mac(p);
 
       const SymmetricKey key(rng, mac->maximum_keylength());
 
@@ -115,8 +117,6 @@ time_algorithm_ops(const std::string& name,
    return std::map<std::string, double>();
    }
 
-namespace {
-
 double find_first_in(const std::map<std::string, double>& m,
                      const std::vector<std::string>& keys)
    {
@@ -127,19 +127,33 @@ double find_first_in(const std::map<std::string, double>& m,
          return i->second;
       }
 
-   throw std::runtime_error("algorithm_factory no usable keys found in result");
+   throw std::runtime_error("In algo benchmark no usable keys found in result");
+   }
+
+std::set<std::string> get_all_providers_of(const std::string& algo)
+   {
+   std::set<std::string> provs;
+
+   auto add_to_set = [&provs](const std::vector<std::string>& str) { for(auto&& s : str) { provs.insert(s); } };
+
+   add_to_set(Algo_Registry<BlockCipher>::global_registry().providers_of(algo));
+   add_to_set(Algo_Registry<StreamCipher>::global_registry().providers_of(algo));
+   add_to_set(Algo_Registry<HashFunction>::global_registry().providers_of(algo));
+   add_to_set(Algo_Registry<MessageAuthenticationCode>::global_registry().providers_of(algo));
+
+   return provs;
    }
 
 }
 
 std::map<std::string, double>
 algorithm_benchmark(const std::string& name,
-                    Algorithm_Factory& af,
                     RandomNumberGenerator& rng,
                     std::chrono::milliseconds milliseconds,
                     size_t buf_size)
    {
-   const std::vector<std::string> providers = af.providers_of(name);
+   //Algorithm_Factory& af = global_state().algorithm_factory();
+   const auto providers = get_all_providers_of(name);
 
    std::map<std::string, double> all_results; // provider -> ops/sec
 
@@ -149,7 +163,7 @@ algorithm_benchmark(const std::string& name,
 
       for(auto provider : providers)
          {
-         auto results = time_algorithm_ops(name, af, provider, rng, ns_per_provider, buf_size);
+         auto results = time_algorithm_ops(name, provider, rng, ns_per_provider, buf_size);
          all_results[provider] = find_first_in(results, { "", "update", "encrypt" });
          }
       }

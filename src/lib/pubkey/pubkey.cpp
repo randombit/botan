@@ -10,7 +10,7 @@
 #include <botan/ber_dec.h>
 #include <botan/bigint.h>
 #include <botan/parsing.h>
-#include <botan/algo_registry.h>
+#include <botan/internal/algo_registry.h>
 #include <botan/internal/bit_ops.h>
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)

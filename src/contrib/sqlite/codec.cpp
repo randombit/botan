@@ -6,7 +6,6 @@
  */
 
 #include "codec.h"
-#include <botan/init.h>
 
 Codec::Codec(void *db)
 {
@@ -155,7 +154,6 @@ const char* Codec::GetAndResetError()
 #include "codec_c_interface.h"
 
 void InitializeBotan() {
-    LibraryInitializer::initialize();
 }
 void* InitializeNewCodec(void *db) {
     return new Codec(db);

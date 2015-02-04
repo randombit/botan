@@ -14,6 +14,7 @@
 #include <botan/internal/rounding.h>
 #include <botan/internal/xor_buf.h>
 #include <botan/lookup.h>
+#include <botan/rng.h>
 
 namespace Botan {
 

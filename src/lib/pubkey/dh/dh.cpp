@@ -11,12 +11,6 @@
 #include <botan/pow_mod.h>
 #include <botan/blinding.h>
 
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-  #include <botan/system_rng.h>
-#else
-  #include <botan/auto_rng.h>
-#endif
-
 namespace Botan {
 
 /*
@@ -96,34 +90,31 @@ class DH_KA_Operation : public PK_Ops::Key_Agreement
 
       secure_vector<byte> agree(const byte w[], size_t w_len);
    private:
-      const BigInt& p;
+      const BigInt& m_p;
 
-      Fixed_Exponent_Power_Mod powermod_x_p;
-      Blinder blinder;
+      Fixed_Exponent_Power_Mod m_powermod_x_p;
+      Blinder m_blinder;
    };
 
 DH_KA_Operation::DH_KA_Operation(const DH_PrivateKey& dh, const std::string&) :
-   p(dh.group_p()), powermod_x_p(dh.get_x(), p)
+   m_p(dh.group_p()),
+   m_powermod_x_p(dh.get_x(), m_p),
+   m_blinder(m_p,
+             [](const BigInt& k) { return k; },
+             [this](const BigInt& k) { return m_powermod_x_p(inverse_mod(k, m_p)); })
    {
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-   auto& rng = system_rng();
-#else
-   AutoSeeded_RNG rng;
-#endif
-   BigInt k(rng, p.bits() - 1);
-   blinder = Blinder(k, powermod_x_p(inverse_mod(k, p)), p);
    }
 
 secure_vector<byte> DH_KA_Operation::agree(const byte w[], size_t w_len)
    {
    BigInt input = BigInt::decode(w, w_len);
 
-   if(input <= 1 || input >= p - 1)
+   if(input <= 1 || input >= m_p - 1)
       throw Invalid_Argument("DH agreement - invalid key provided");
 
-   BigInt r = blinder.unblind(powermod_x_p(blinder.blind(input)));
+   BigInt r = m_blinder.unblind(m_powermod_x_p(m_blinder.blind(input)));
 
-   return BigInt::encode_1363(r, p.bytes());
+   return BigInt::encode_1363(r, m_p.bytes());
    }
 
 }

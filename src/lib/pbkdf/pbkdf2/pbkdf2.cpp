@@ -5,12 +5,27 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/pbkdf_utils.h>
 #include <botan/pbkdf2.h>
 #include <botan/get_byte.h>
+#include <botan/hmac.h>
 #include <botan/internal/xor_buf.h>
 #include <botan/internal/rounding.h>
 
 namespace Botan {
+
+BOTAN_REGISTER_NAMED_T(PBKDF, "PBKDF2", PKCS5_PBKDF2, PKCS5_PBKDF2::make);
+
+PKCS5_PBKDF2* PKCS5_PBKDF2::make(const Spec& spec)
+   {
+   if(auto mac = make_a<MessageAuthenticationCode>(spec.arg(0)))
+      return new PKCS5_PBKDF2(mac);
+
+   if(auto hash = make_a<HashFunction>(spec.arg(0)))
+      return new PKCS5_PBKDF2(new HMAC(hash));
+
+   return nullptr;
+   }
 
 /*
 * Return a PKCS #5 PBKDF2 derived key

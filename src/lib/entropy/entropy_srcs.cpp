@@ -1,11 +1,11 @@
 /*
-* Global PRNG
-* (C) 2008-2010 Jack Lloyd
+* Entropy Source Polling
+* (C) 2008-2010,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/libstate.h>
+#include <botan/entropy_src.h>
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_HIGH_RESOLUTION_TIMER)
   #include <botan/internal/hres_timer.h>
@@ -45,7 +45,9 @@
 
 namespace Botan {
 
-std::vector<std::unique_ptr<EntropySource>> Library_State::entropy_sources()
+namespace {
+
+std::vector<std::unique_ptr<EntropySource>> get_default_entropy_sources()
    {
    std::vector<std::unique_ptr<EntropySource>> sources;
 
@@ -100,19 +102,22 @@ std::vector<std::unique_ptr<EntropySource>> Library_State::entropy_sources()
    return sources;
    }
 
-void Library_State::poll_available_sources(class Entropy_Accumulator& accum)
-   {
-   std::lock_guard<std::mutex> lock(m_entropy_src_mutex);
+}
 
-   if(m_sources.empty())
+//static
+void EntropySource::poll_available_sources(class Entropy_Accumulator& accum)
+   {
+   static std::vector<std::unique_ptr<EntropySource>> g_sources(get_default_entropy_sources());
+
+   if(g_sources.empty())
       throw std::runtime_error("No entropy sources enabled at build time, poll failed");
 
    size_t poll_attempt = 0;
 
    while(!accum.polling_goal_achieved() && poll_attempt < 16)
       {
-      const size_t src_idx = poll_attempt % m_sources.size();
-      m_sources[src_idx]->poll(accum);
+      const size_t src_idx = poll_attempt % g_sources.size();
+      g_sources[src_idx]->poll(accum);
       ++poll_attempt;
       }
    }

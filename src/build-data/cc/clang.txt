@@ -10,8 +10,8 @@ add_lib_option -l
 
 lang_flags "-std=c++11 -D_REENTRANT -fstack-protector"
 
-warning_flags "-Wall -Wextra -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wold-style-cast -Wunreachable-code"
-maintainer_warning_flags "-Qunused-arguments -Werror -Wno-error=old-style-cast -Wno-error=unused-parameter -Wno-error=unused-variable -Wno-error=unreachable-code"
+warning_flags "-Wall -Wextra -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wunreachable-code"
+maintainer_warning_flags "-Qunused-arguments -Werror -Wno-error=unused-parameter -Wno-error=unused-variable -Wno-error=unreachable-code"
 
 makefile_style gmake
 

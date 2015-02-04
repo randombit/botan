@@ -8,7 +8,7 @@
 */
 
 #include <botan/zlib.h>
-#include <botan/internal/comp_util.h>
+#include <botan/internal/compress_utils.h>
 #include <ctime>
 #include <zlib.h>
 

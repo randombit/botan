@@ -8,6 +8,7 @@ comp_filter.cpp
 data_snk.cpp
 data_src.cpp
 filter.cpp
+key_filt.cpp
 out_buf.cpp
 pipe.cpp
 pipe_io.cpp
@@ -36,14 +37,6 @@ out_buf.h
 </header:internal>
 
 <requires>
-alloc
-asn1
-block
 compression
-hash
-libstate
-mac
-rng
-stream
-algo_base
+modes
 </requires>

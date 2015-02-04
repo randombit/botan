@@ -9,7 +9,7 @@
 #define BOTAN_MODE_UTILS_H__
 
 #include <botan/cipher_mode.h>
-#include <botan/algo_registry.h>
+#include <botan/internal/algo_registry.h>
 #include <botan/block_cipher.h>
 #include <botan/loadstor.h>
 #include <botan/internal/xor_buf.h>
@@ -52,17 +52,17 @@ T* make_block_cipher_mode_len2(const Transform::Spec& spec)
    return nullptr;
    }
 
-#define BOTAN_REGISTER_BLOCK_CIPHER_MODE(E, D) \
-   namespace { Algo_Registry<Transform>::Add g_ ## E ## _reg(#E, make_block_cipher_mode<E>); \
-               Algo_Registry<Transform>::Add g_ ## D ## _reg(#D, make_block_cipher_mode<D>); }
+#define BOTAN_REGISTER_BLOCK_CIPHER_MODE(E, D)                          \
+   BOTAN_REGISTER_NAMED_T(Transform, #E, E, make_block_cipher_mode<E>); \
+   BOTAN_REGISTER_NAMED_T(Transform, #D, D, make_block_cipher_mode<D>);
 
-#define BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN(E, D, LEN) \
-   namespace { Algo_Registry<Transform>::Add g_ ## E ## _reg(#E, make_block_cipher_mode_len<E, LEN>); \
-               Algo_Registry<Transform>::Add g_ ## D ## _reg(#D, make_block_cipher_mode_len<D, LEN>); }
+#define BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN(E, D, LEN)                          \
+   BOTAN_REGISTER_NAMED_T(Transform, #E, E, (make_block_cipher_mode_len<E, LEN>)); \
+   BOTAN_REGISTER_NAMED_T(Transform, #D, D, (make_block_cipher_mode_len<D, LEN>));
 
-#define BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN2(E, D, LEN1, LEN2)               \
-   namespace { Algo_Registry<Transform>::Add g_ ## E ## _reg(#E, make_block_cipher_mode_len2<E, LEN1, LEN2>); \
-               Algo_Registry<Transform>::Add g_ ## D ## _reg(#D, make_block_cipher_mode_len2<D, LEN1, LEN2>); }
+#define BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN2(E, D, LEN1, LEN2)                          \
+   BOTAN_REGISTER_NAMED_T(Transform, #E, E, (make_block_cipher_mode_len2<E, LEN1, LEN2>)); \
+   BOTAN_REGISTER_NAMED_T(Transform, #D, D, (make_block_cipher_mode_len2<D, LEN1, LEN2>));
 
 }
 

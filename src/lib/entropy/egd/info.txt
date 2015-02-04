@@ -1,5 +1,7 @@
 define ENTROPY_SRC_EGD 20131128
 
+load_on request
+
 <source>
 es_egd.cpp
 </source>

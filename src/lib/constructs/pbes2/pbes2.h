@@ -11,7 +11,6 @@
 #include <botan/secmem.h>
 #include <botan/transform.h>
 #include <botan/alg_id.h>
-#include <botan/algo_factory.h>
 #include <chrono>
 
 namespace Botan {

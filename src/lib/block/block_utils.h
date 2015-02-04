@@ -5,10 +5,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_BLOCK_CIPHER_UTIL_H__
-#define BOTAN_BLOCK_CIPHER_UTIL_H__
+#ifndef BOTAN_BLOCK_CIPHER_UTILS_H__
+#define BOTAN_BLOCK_CIPHER_UTILS_H__
 
-#include <botan/algo_registry.h>
+#include <botan/internal/algo_registry.h>
 #include <botan/loadstor.h>
 #include <botan/rotate.h>
 #include <botan/internal/xor_buf.h>
@@ -28,8 +28,8 @@ namespace Botan {
 #define BOTAN_REGISTER_BLOCK_CIPHER_NAMED_1STR(type, name, def) \
    BOTAN_REGISTER_NAMED_T(BlockCipher, name, type, std::bind(make_new_T_1str<type>, std::placeholders::_1, def));
 
-#define BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(cond, type, name, provider) \
-   BOTAN_COND_REGISTER_NAMED_T_NOARGS(cond, BlockCipher, type, name, provider)
+#define BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(cond, type, name, provider, pref) \
+   BOTAN_COND_REGISTER_NAMED_T_NOARGS(cond, BlockCipher, type, name, provider, pref)
 
 }
 

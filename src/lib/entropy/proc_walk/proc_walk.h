@@ -34,6 +34,7 @@ class ProcWalking_EntropySource : public EntropySource
 
    private:
       const std::string m_path;
+      std::mutex m_mutex;
       std::unique_ptr<File_Descriptor_Source> m_dir;
    };
 

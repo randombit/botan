@@ -10,6 +10,7 @@
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/stl_util.h>
 #include <iterator>
+#include <sstream>
 
 namespace Botan {
 
@@ -227,11 +228,15 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
                           client_extn.begin(), server_extn.end(),
                           std::back_inserter(diff));
 
-      for(auto i : diff)
+      if(!diff.empty())
          {
-         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
-                             "Server sent extension " + std::to_string(i) +
-                             " but we did not request it");
+         // Server sent us back an extension we did not send!
+
+         std::ostringstream msg;
+         msg << "Server replied with " << diff.size() << " unsupported extensions:";
+         for(auto&& d : diff)
+            msg << " " << static_cast<int>(d);
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE, msg.str());
          }
 
       if(u16bit srtp = state.server_hello()->srtp_profile())

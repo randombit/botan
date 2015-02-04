@@ -1,13 +1,13 @@
 /*
-* (C) 2014 Jack Lloyd
+* (C) 2014,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include "tests.h"
 
-#include <botan/libstate.h>
 #include <botan/block_cipher.h>
+#include <botan/lookup.h>
 #include <botan/hex.h>
 #include <iostream>
 #include <fstream>
@@ -25,9 +25,7 @@ size_t block_test(const std::string& algo,
    const secure_vector<byte> pt = hex_decode_locked(in_hex);
    const secure_vector<byte> ct = hex_decode_locked(out_hex);
 
-   Algorithm_Factory& af = global_state().algorithm_factory();
-
-   const auto providers = af.providers_of(algo);
+   const std::vector<std::string> providers = get_block_cipher_providers(algo);
    size_t fails = 0;
 
    if(providers.empty())
@@ -35,16 +33,15 @@ size_t block_test(const std::string& algo,
 
    for(auto provider: providers)
       {
-      const BlockCipher* proto = af.prototype_block_cipher(algo, provider);
+      std::unique_ptr<BlockCipher> cipher(get_block_cipher(algo, provider));
 
-      if(!proto)
+      if(!cipher)
          {
          std::cout << "Unable to get " << algo << " from " << provider << "\n";
          ++fails;
          continue;
          }
 
-      std::unique_ptr<BlockCipher> cipher(proto->clone());
       cipher->set_key(key);
       secure_vector<byte> buf = pt;
 

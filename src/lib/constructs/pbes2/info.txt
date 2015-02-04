@@ -1,7 +1,6 @@
 define PKCS5_PBES2 20141119
 
 <requires>
-algo_factory
 asn1
 block
 cbc

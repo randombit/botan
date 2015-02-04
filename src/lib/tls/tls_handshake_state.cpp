@@ -265,13 +265,9 @@ KDF* Handshake_State::protocol_specific_prf() const
 
       return get_kdf("TLS-12-PRF(" + prf_algo + ")");
       }
-   else
-      {
-      // TLS v1.0, v1.1 and DTLS v1.0
-      return get_kdf("TLS-PRF");
-      }
 
-   throw Internal_Error("Unknown version code " + version().to_string());
+   // Old PRF used in TLS v1.0, v1.1 and DTLS v1.0
+   return get_kdf("TLS-PRF");
    }
 
 namespace {

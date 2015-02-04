@@ -691,8 +691,8 @@ class ModuleInfo(object):
         return True
 
     def dependencies(self):
-        # utils is an implicit dep (contains types, etc)
-        deps = self.requires + ['utils']
+        # base is an implicit dep for all submodules
+        deps = self.requires + ['base']
         if self.parent_module != None:
             deps.append(self.parent_module)
         return deps

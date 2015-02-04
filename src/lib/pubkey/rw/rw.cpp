@@ -80,7 +80,10 @@ class RW_Signature_Operation : public PK_Ops::Signature
          c(rw.get_c()),
          powermod_d1_p(rw.get_d1(), rw.get_p()),
          powermod_d2_q(rw.get_d2(), rw.get_q()),
-         mod_p(rw.get_p())
+         mod_p(rw.get_p()),
+         blinder(n,
+                 [this](const BigInt& k) { return power_mod(k, e, n); },
+                 [this](const BigInt& k) { return inverse_mod(k, n); })
          {
          }
 
@@ -101,16 +104,8 @@ class RW_Signature_Operation : public PK_Ops::Signature
 
 secure_vector<byte>
 RW_Signature_Operation::sign(const byte msg[], size_t msg_len,
-                             RandomNumberGenerator& rng)
+                             RandomNumberGenerator&)
    {
-   rng.add_entropy(msg, msg_len);
-
-   if(!blinder.initialized())
-      {
-      BigInt k(rng, std::min<size_t>(160, n.bits() - 1));
-      blinder = Blinder(power_mod(k, e, n), inverse_mod(k, n), n);
-      }
-
    BigInt i(msg, msg_len);
 
    if(i >= n || i % 16 != 12)

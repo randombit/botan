@@ -5,6 +5,5 @@ alloc
 asn1
 ec_group
 ecc_key
-libstate
 numbertheory
 </requires>

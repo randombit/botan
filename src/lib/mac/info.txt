@@ -1,7 +1,3 @@
-<requires>
-algo_base
-</requires>
-
 <header:public>
 mac.h
 </header:public>

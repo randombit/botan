@@ -6,7 +6,7 @@
 */
 
 #include <botan/pbes2.h>
-#include <botan/algo_registry.h>
+#include <botan/internal/algo_registry.h>
 #include <botan/cipher_mode.h>
 #include <botan/pbkdf2.h>
 #include <botan/der_enc.h>

@@ -69,7 +69,7 @@ Unix_EntropySource::Unix_EntropySource(const std::vector<std::string>& trusted_p
 void UnixProcessInfo_EntropySource::poll(Entropy_Accumulator& accum)
    {
    static std::atomic<int> last_pid;
- 
+
    int pid = ::getpid();
 
    accum.add(pid, 0.0);
@@ -186,10 +186,11 @@ const std::vector<std::string>& Unix_EntropySource::next_source()
 
 void Unix_EntropySource::poll(Entropy_Accumulator& accum)
    {
-   // refuse to run as root (maybe instead setuid to nobody before exec?)
-   // fixme: this should also check for setgid
-   if(::getuid() == 0 || ::geteuid() == 0)
+   // refuse to run setuid or setgid, or as root
+   if((getuid() != geteuid()) || (getgid() != getegid()) || (geteuid() == 0))
       return;
+
+   std::lock_guard<std::mutex> lock(m_mutex);
 
    if(m_sources.empty())
       {

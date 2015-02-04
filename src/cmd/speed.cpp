@@ -12,10 +12,6 @@
 #include <botan/benchmark.h>
 #include <botan/aead.h>
 #include <botan/auto_rng.h>
-#include <botan/libstate.h>
-#include <botan/pipe.h>
-#include <botan/filters.h>
-#include <botan/engine.h>
 #include <botan/parsing.h>
 #include <botan/symkey.h>
 #include <botan/hex.h>
@@ -163,7 +159,7 @@ void time_transform(std::unique_ptr<Transform> tf,
 void time_transform(const std::string& algo, RandomNumberGenerator& rng)
    {
    std::unique_ptr<Transform> tf;
-   tf.reset(get_aead(algo, ENCRYPTION));
+   tf.reset(get_cipher_mode(algo, ENCRYPTION));
 
    if(Keyed_Transform* keyed = dynamic_cast<Keyed_Transform*>(tf.get()))
       keyed->set_key(rng.random_vec(keyed->key_spec().maximum_keylength()));
@@ -176,12 +172,10 @@ void bench_algo(const std::string& algo,
                 double seconds,
                 size_t buf_size)
    {
-   Algorithm_Factory& af = global_state().algorithm_factory();
-
    std::chrono::milliseconds ms(
       static_cast<std::chrono::milliseconds::rep>(seconds * 1000));
 
-   std::map<std::string, double> speeds = algorithm_benchmark(algo, af, rng, ms, buf_size);
+   std::map<std::string, double> speeds = algorithm_benchmark(algo, rng, ms, buf_size);
 
    report_results(algo, speeds);
 

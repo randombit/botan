@@ -56,7 +56,7 @@ BOTAN_DLL OID lookup(const std::string& name);
 */
 BOTAN_DLL bool name_of(const OID& oid, const std::string& name);
 
-BOTAN_DLL void set_defaults();
+BOTAN_DLL const char* default_oid_list();
 
 }
 

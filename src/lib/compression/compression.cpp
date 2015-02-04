@@ -6,9 +6,35 @@
 */
 
 #include <botan/compression.h>
-#include <botan/algo_registry.h>
+#include <botan/internal/compress_utils.h>
+#include <botan/mem_ops.h>
+#include <cstdlib>
 
 namespace Botan {
+
+void* Compression_Alloc_Info::do_malloc(size_t n, size_t size)
+   {
+   const size_t total_sz = n * size;
+
+   void* ptr = std::malloc(total_sz);
+   m_current_allocs[ptr] = total_sz;
+   return ptr;
+   }
+
+void Compression_Alloc_Info::do_free(void* ptr)
+   {
+   if(ptr)
+      {
+      auto i = m_current_allocs.find(ptr);
+
+      if(i == m_current_allocs.end())
+         throw std::runtime_error("Compression_Alloc_Info::free got pointer not allocated by us");
+
+      zero_mem(ptr, i->second);
+      std::free(ptr);
+      m_current_allocs.erase(i);
+      }
+   }
 
 Transform* make_compressor(const std::string& type, size_t level)
    {

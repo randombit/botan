@@ -14,7 +14,6 @@ extern "C" {
 #include <botan/asn1_alt_name.h>
 #include <botan/asn1_oid.h>
 #include <botan/filters.h>
-#include <botan/init.h>
 #include <botan/oids.h>
 #include <botan/x509cert.h>
 #include <botan/x509_ext.h>
@@ -68,12 +67,6 @@ public:
 /* Constant object in initial state - template */
 
 ObjectInfo const oi_init;
-
-
-/* Botan library initializer ... */
-
-Botan::LibraryInitializer botan_init;
-
 
 
 /*============================================================================*/

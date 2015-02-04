@@ -1,6 +1,6 @@
 /*
 * SCAN Name Abstraction
-* (C) 2008-2009 Jack Lloyd
+* (C) 2008-2009,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -61,9 +61,6 @@ deref_aliases(const std::pair<size_t, std::string>& in)
    }
 
 }
-
-std::mutex SCAN_Name::s_alias_map_mutex;
-std::map<std::string, std::string> SCAN_Name::s_alias_map;
 
 SCAN_Name::SCAN_Name(std::string algo_spec, const std::string& extra) : SCAN_Name(algo_spec)
    {
@@ -178,57 +175,47 @@ size_t SCAN_Name::arg_as_integer(size_t i, size_t def_value) const
    return to_u32bit(args[i]);
    }
 
+std::mutex SCAN_Name::g_alias_map_mutex;
+std::map<std::string, std::string> SCAN_Name::g_alias_map = {
+   { "3DES",            "TripleDES" },
+   { "ARC4",            "RC4" },
+   { "CAST5",           "CAST-128" },
+   { "DES-EDE",         "TripleDES" },
+   { "EME-OAEP",        "OAEP" },
+   { "EME-PKCS1-v1_5",  "PKCS1v15" },
+   { "EME1",            "OAEP" },
+   { "EMSA-PKCS1-v1_5", "EMSA_PKCS1" },
+   { "EMSA-PSS",        "PSSR" },
+   { "EMSA2",           "EMSA_X931" },
+   { "EMSA3",           "EMSA_PKCS1" },
+   { "EMSA4",           "PSSR" },
+   { "GOST-34.11",      "GOST-R-34.11-94" },
+   { "MARK-4",          "RC4(256)" },
+   { "OMAC",            "CMAC" },
+   { "PSS-MGF1",        "PSSR" },
+   { "SHA-1",           "SHA-160" },
+   { "SHA1",            "SHA-160" },
+   { "X9.31",           "EMSA2" }
+};
+
 void SCAN_Name::add_alias(const std::string& alias, const std::string& basename)
    {
-   std::lock_guard<std::mutex> lock(s_alias_map_mutex);
+   std::lock_guard<std::mutex> lock(g_alias_map_mutex);
 
-   if(s_alias_map.find(alias) == s_alias_map.end())
-      s_alias_map[alias] = basename;
+   if(g_alias_map.find(alias) == g_alias_map.end())
+      g_alias_map[alias] = basename;
    }
 
 std::string SCAN_Name::deref_alias(const std::string& alias)
    {
-   std::lock_guard<std::mutex> lock(s_alias_map_mutex);
+   std::lock_guard<std::mutex> lock(g_alias_map_mutex);
 
    std::string name = alias;
 
-   for(auto i = s_alias_map.find(name); i != s_alias_map.end(); i = s_alias_map.find(name))
+   for(auto i = g_alias_map.find(name); i != g_alias_map.end(); i = g_alias_map.find(name))
       name = i->second;
 
    return name;
-   }
-
-void SCAN_Name::set_default_aliases()
-   {
-   // common variations worth supporting
-   SCAN_Name::add_alias("EME-PKCS1-v1_5",  "PKCS1v15");
-   SCAN_Name::add_alias("3DES",     "TripleDES");
-   SCAN_Name::add_alias("DES-EDE",  "TripleDES");
-   SCAN_Name::add_alias("CAST5",    "CAST-128");
-   SCAN_Name::add_alias("SHA1",     "SHA-160");
-   SCAN_Name::add_alias("SHA-1",    "SHA-160");
-   SCAN_Name::add_alias("MARK-4",   "RC4(256)");
-   SCAN_Name::add_alias("ARC4",     "RC4");
-   SCAN_Name::add_alias("OMAC",     "CMAC");
-
-   SCAN_Name::add_alias("EMSA-PSS",        "PSSR");
-   SCAN_Name::add_alias("PSS-MGF1",        "PSSR");
-   SCAN_Name::add_alias("EME-OAEP",        "OAEP");
-
-   SCAN_Name::add_alias("EMSA2",           "EMSA_X931");
-   SCAN_Name::add_alias("EMSA3",           "EMSA_PKCS1");
-   SCAN_Name::add_alias("EMSA-PKCS1-v1_5", "EMSA_PKCS1");
-
-   // should be renamed in sources
-   SCAN_Name::add_alias("X9.31",           "EMSA2");
-
-   // kept for compatability with old library versions
-   SCAN_Name::add_alias("EMSA4",           "PSSR");
-   SCAN_Name::add_alias("EME1",            "OAEP");
-
-   // probably can be removed
-   SCAN_Name::add_alias("GOST",     "GOST-28147-89");
-   SCAN_Name::add_alias("GOST-34.11", "GOST-R-34.11-94");
    }
 
 }

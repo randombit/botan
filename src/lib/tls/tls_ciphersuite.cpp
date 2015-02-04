@@ -6,8 +6,12 @@
 */
 
 #include <botan/tls_ciphersuite.h>
-#include <botan/libstate.h>
 #include <botan/parsing.h>
+#include <botan/internal/algo_registry.h>
+#include <botan/block_cipher.h>
+#include <botan/stream_cipher.h>
+#include <botan/hash.h>
+#include <botan/mac.h>
 #include <sstream>
 #include <stdexcept>
 
@@ -96,14 +100,32 @@ bool Ciphersuite::ecc_ciphersuite() const
    return (sig_algo() == "ECDSA" || kex_algo() == "ECDH" || kex_algo() == "ECDHE_PSK");
    }
 
+namespace {
+
+bool have_hash(const std::string& prf)
+   {
+   if(Algo_Registry<HashFunction>::global_registry().providers_of(prf).size() > 0)
+      return true;
+   return false;
+   }
+
+bool have_cipher(const std::string& cipher)
+   {
+   if(Algo_Registry<BlockCipher>::global_registry().providers_of(cipher).size() > 0)
+      return true;
+   if(Algo_Registry<StreamCipher>::global_registry().providers_of(cipher).size() > 0)
+      return true;
+   return false;
+   }
+
+}
+
 bool Ciphersuite::valid() const
    {
    if(!m_cipher_keylen) // uninitialized object
       return false;
 
-   Algorithm_Factory& af = global_state().algorithm_factory();
-
-   if(!af.prototype_hash_function(prf_algo()))
+   if(!have_hash(prf_algo()))
       return false;
 
    if(mac_algo() == "AEAD")
@@ -118,7 +140,7 @@ bool Ciphersuite::valid() const
          {
          auto cipher_and_mode = split_on(cipher_algo(), '/');
          BOTAN_ASSERT(cipher_and_mode.size() == 2, "Expected format for AEAD algo");
-         if(!af.prototype_block_cipher(cipher_and_mode[0]))
+         if(!have_cipher(cipher_and_mode[0]))
             return false;
 
          const auto mode = cipher_and_mode[1];
@@ -141,11 +163,10 @@ bool Ciphersuite::valid() const
       }
    else
       {
-      if(!af.prototype_block_cipher(cipher_algo()) &&
-         !af.prototype_stream_cipher(cipher_algo()))
+      // Old non-AEAD schemes
+      if(!have_cipher(cipher_algo()))
          return false;
-
-      if(!af.prototype_hash_function(mac_algo()))
+      if(!have_hash(mac_algo())) // HMAC
          return false;
       }
 

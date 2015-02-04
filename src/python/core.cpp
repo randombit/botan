@@ -5,7 +5,6 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/init.h>
 #include <botan/pipe.h>
 #include <botan/lookup.h>
 #include <botan/cryptobox.h>
@@ -191,9 +190,6 @@ std::string python_kdf2(const std::string& param,
 
 BOOST_PYTHON_MODULE(_botan)
    {
-   python::class_<LibraryInitializer>("LibraryInitializer")
-      .def(python::init< python::optional<std::string> >());
-
    python::class_<Python_RandomNumberGenerator>("RandomNumberGenerator")
       .def(python::init<>())
       .def("__str__", &Python_RandomNumberGenerator::name)

@@ -11,6 +11,5 @@ dh.cpp
 <requires>
 dl_algo
 dl_group
-libstate
 numbertheory
 </requires>

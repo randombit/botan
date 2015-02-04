@@ -8,9 +8,7 @@
 #ifndef BOTAN_BOTAN_H__
 #define BOTAN_BOTAN_H__
 
-#include <botan/init.h>
 #include <botan/lookup.h>
-#include <botan/libstate.h>
 #include <botan/version.h>
 #include <botan/parsing.h>
 

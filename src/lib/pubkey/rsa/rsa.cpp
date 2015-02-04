@@ -13,12 +13,6 @@
 #include <botan/reducer.h>
 #include <future>
 
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-  #include <botan/system_rng.h>
-#else
-  #include <botan/auto_rng.h>
-#endif
-
 namespace Botan {
 
 /*
@@ -84,15 +78,11 @@ class RSA_Private_Operation
          m_powermod_e_n(rsa.get_e(), rsa.get_n()),
          m_powermod_d1_p(rsa.get_d1(), rsa.get_p()),
          m_powermod_d2_q(rsa.get_d2(), rsa.get_q()),
-         m_mod_p(rsa.get_p())
+         m_mod_p(rsa.get_p()),
+         m_blinder(n,
+                   [this](const BigInt& k) { return m_powermod_e_n(k); },
+                   [this](const BigInt& k) { return inverse_mod(k, n); })
          {
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-         auto& rng = system_rng();
-#else
-         AutoSeeded_RNG rng;
-#endif
-         BigInt k(rng, n.bits() - 1);
-         m_blinder = Blinder(m_powermod_e_n(k), inverse_mod(k, n), n);
          }
 
       BigInt blinded_private_op(const BigInt& m) const

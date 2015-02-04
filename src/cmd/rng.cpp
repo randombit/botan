@@ -5,7 +5,8 @@
 */
 
 #include "apps.h"
-#include <botan/libstate.h>
+#include <botan/entropy_src.h>
+#include <botan/auto_rng.h>
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
   #include <botan/system_rng.h>
@@ -48,7 +49,7 @@ int rng(int argc, char* argv[])
             return total_collected >= amt;
             });
 
-         global_state().poll_available_sources(accum);
+         EntropySource::poll_available_sources(accum);
          }
       }
    catch(std::exception& e)

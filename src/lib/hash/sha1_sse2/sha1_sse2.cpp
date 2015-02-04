@@ -14,7 +14,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_HASH_NOARGS_IF(CPUID::has_sse2(), SHA_160_SSE2, "SHA-160", "sse2");
+BOTAN_REGISTER_HASH_NOARGS_IF(CPUID::has_sse2(), SHA_160_SSE2, "SHA-160", "sse2", 64);
 
 namespace SHA1_SSE2_F {
 

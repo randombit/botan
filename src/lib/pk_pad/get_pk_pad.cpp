@@ -8,7 +8,7 @@
 #include <botan/emsa.h>
 #include <botan/eme.h>
 #include <botan/scan_name.h>
-#include <botan/algo_registry.h>
+#include <botan/internal/algo_registry.h>
 
 namespace Botan {
 

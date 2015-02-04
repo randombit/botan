@@ -9,6 +9,7 @@
 #define BOTAN_PBKDF_H__
 
 #include <botan/symkey.h>
+#include <botan/scan_name.h>
 #include <chrono>
 
 namespace Botan {
@@ -23,6 +24,8 @@ class BOTAN_DLL PBKDF
    public:
 
       virtual ~PBKDF() {}
+
+      typedef SCAN_Name Spec;
 
       /**
       * @return new instance of this same algorithm

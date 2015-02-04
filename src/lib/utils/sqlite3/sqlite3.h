@@ -6,7 +6,7 @@
 */
 
 #ifndef BOTAN_UTILS_SQLITE3_H__
-#define BOTAN_UTILS_SQLIT3_H__
+#define BOTAN_UTILS_SQLITE3_H__
 
 #include <botan/database.h>
 

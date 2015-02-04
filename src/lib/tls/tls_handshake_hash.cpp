@@ -7,7 +7,7 @@
 
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/tls_exceptn.h>
-#include <botan/algo_registry.h>
+#include <botan/internal/algo_registry.h>
 #include <botan/hash.h>
 
 namespace Botan {

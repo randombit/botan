@@ -6,7 +6,9 @@
 */
 
 #include <botan/oids.h>
+#include <botan/parsing.h>
 #include <mutex>
+#include <sstream>
 
 namespace Botan {
 
@@ -74,23 +76,65 @@ class OID_Map
          return m_str2oid.find(str) != m_str2oid.end();
          }
 
+      static OID_Map& global_registry()
+         {
+         static OID_Map g_map;
+         return g_map;
+         }
+
+      void read_cfg(std::istream& cfg, const std::string& source);
+
    private:
+
+      OID_Map()
+         {
+         std::istringstream cfg(default_oid_list());
+         read_cfg(cfg, "builtin");
+         }
+
       std::mutex m_mutex;
       std::map<std::string, OID> m_str2oid;
       std::map<OID, std::string> m_oid2str;
    };
 
-OID_Map& global_oid_map()
+void OID_Map::read_cfg(std::istream& cfg, const std::string& source)
    {
-   static OID_Map map;
-   return map;
+   std::lock_guard<std::mutex> lock(m_mutex);
+
+   size_t line = 0;
+
+   while(cfg.good())
+      {
+      std::string s;
+      std::getline(cfg, s);
+      ++line;
+
+      if(s == "" || s[0] == '#')
+         continue;
+
+      s = clean_ws(s.substr(0, s.find('#')));
+
+      if(s == "")
+         continue;
+
+      auto eq = s.find("=");
+
+      if(eq == std::string::npos || eq == 0 || eq == s.size() - 1)
+         throw std::runtime_error("Bad config line '" + s + "' in " + source + " line " + std::to_string(line));
+
+      const std::string oid = clean_ws(s.substr(0, eq));
+      const std::string name = clean_ws(s.substr(eq + 1, std::string::npos));
+
+      m_str2oid.insert(std::make_pair(name, oid));
+      m_oid2str.insert(std::make_pair(oid, name));
+      }
    }
 
 }
 
 void add_oid(const OID& oid, const std::string& name)
    {
-   global_oid_map().add_oid(oid, name);
+   OID_Map::global_registry().add_oid(oid, name);
    }
 
 void add_oidstr(const char* oidstr, const char* name)
@@ -100,27 +144,27 @@ void add_oidstr(const char* oidstr, const char* name)
 
 void add_oid2str(const OID& oid, const std::string& name)
    {
-   global_oid_map().add_oid2str(oid, name);
+   OID_Map::global_registry().add_oid2str(oid, name);
    }
 
 void add_str2oid(const OID& oid, const std::string& name)
    {
-   global_oid_map().add_str2oid(oid, name);
+   OID_Map::global_registry().add_str2oid(oid, name);
    }
 
 std::string lookup(const OID& oid)
    {
-   return global_oid_map().lookup(oid);
+   return OID_Map::global_registry().lookup(oid);
    }
 
 OID lookup(const std::string& name)
    {
-   return global_oid_map().lookup(name);
+   return OID_Map::global_registry().lookup(name);
    }
 
 bool have_oid(const std::string& name)
    {
-   return global_oid_map().have_oid(name);
+   return OID_Map::global_registry().have_oid(name);
    }
 
 bool name_of(const OID& oid, const std::string& name)

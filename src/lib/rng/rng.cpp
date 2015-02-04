@@ -7,7 +7,7 @@
 
 #include <botan/rng.h>
 #include <botan/hmac_rng.h>
-#include <botan/algo_registry.h>
+#include <botan/internal/algo_registry.h>
 
 namespace Botan {
 

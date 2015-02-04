@@ -6,6 +6,7 @@
 
 #include "apps.h"
 #include <botan/lookup.h>
+#include <botan/filters.h>
 #include <iostream>
 #include <fstream>
 
@@ -27,12 +28,6 @@ int hash(int argc, char* argv[])
    if(hash == "md5")  hash = "MD5";
 
    try {
-      if(!have_hash(hash))
-         {
-         std::cout << "Unknown hash \"" << argv[1] << "\"" << std::endl;
-         return 1;
-         }
-
       Pipe pipe(new Hash_Filter(hash), new Hex_Encoder);
 
       int skipped = 0;

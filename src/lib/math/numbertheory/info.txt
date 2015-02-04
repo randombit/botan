@@ -27,9 +27,7 @@ ressol.cpp
 </source>
 
 <requires>
-algo_factory
 bigint
 hash
-libstate
 rng
 </requires>

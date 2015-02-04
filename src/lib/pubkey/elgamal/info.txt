@@ -4,6 +4,5 @@ define ELGAMAL 20131128
 dl_algo
 dl_group
 keypair
-libstate
 numbertheory
 </requires>

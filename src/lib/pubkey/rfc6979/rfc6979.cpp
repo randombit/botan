@@ -8,7 +8,7 @@
 #include <botan/rfc6979.h>
 #include <botan/hmac_drbg.h>
 #include <botan/scan_name.h>
-#include <botan/algo_registry.h>
+#include <botan/internal/algo_registry.h>
 
 namespace Botan {
 

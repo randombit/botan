@@ -29,14 +29,12 @@ pk_utils.h
 alloc
 asn1
 bigint
-engine
 filters
 kdf
-libstate
 oid_lookup
 pbes2
 pem
 pk_pad
 rng
-algo_base
+base
 </requires>

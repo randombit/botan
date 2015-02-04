@@ -6,7 +6,7 @@
 */
 
 #include <botan/kdf.h>
-#include <botan/algo_registry.h>
+#include <botan/internal/algo_registry.h>
 #include <botan/exceptn.h>
 
 namespace Botan {

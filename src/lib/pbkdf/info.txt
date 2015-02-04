@@ -1,3 +1,11 @@
 <requires>
-algo_base
+base
 </requires>
+
+<header:public>
+pbkdf.h
+</header:public>
+
+<header:internal>
+pbkdf_utils.h
+</header:internal>

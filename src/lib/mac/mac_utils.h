@@ -5,10 +5,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_MAC_UTIL_H__
-#define BOTAN_MAC_UTIL_H__
+#ifndef BOTAN_MAC_UTILS_H__
+#define BOTAN_MAC_UTILS_H__
 
-#include <botan/algo_registry.h>
+#include <botan/internal/algo_registry.h>
 #include <botan/internal/xor_buf.h>
 #include <botan/loadstor.h>
 #include <botan/rotate.h>

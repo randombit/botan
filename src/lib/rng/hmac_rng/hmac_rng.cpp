@@ -1,12 +1,11 @@
 /*
 * HMAC_RNG
-* (C) 2008-2009,2013 Jack Lloyd
+* (C) 2008-2009,2013,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/hmac_rng.h>
-#include <botan/libstate.h>
 #include <botan/get_byte.h>
 #include <botan/entropy_src.h>
 #include <botan/internal/xor_buf.h>
@@ -138,7 +137,7 @@ void HMAC_RNG::reseed(size_t poll_bits)
       return (bits_collected >= poll_bits);
       });
 
-   global_state().poll_available_sources(accum);
+   EntropySource::poll_available_sources(accum);
 
    /*
    * It is necessary to feed forward poll data. Otherwise, a good poll

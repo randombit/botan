@@ -35,6 +35,8 @@ int help(int , char* argv[])
 
    std::cout << "Available commands:\n";
 
+   Botan::LibraryInitializer init;
+   
    size_t idx = 1;
    for(auto&& app: apps)
       {
@@ -155,8 +157,6 @@ int main(int argc, char* argv[])
    {
    try
       {
-      Botan::LibraryInitializer init;
-
       if(argc < 2)
          return help(argc, argv);
 

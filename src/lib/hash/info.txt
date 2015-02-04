@@ -1,7 +1,3 @@
-<requires>
-algo_base
-</requires>
-
 <header:internal>
 hash_utils.h
 </header:internal>

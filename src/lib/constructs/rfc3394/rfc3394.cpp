@@ -6,7 +6,7 @@
 */
 
 #include <botan/rfc3394.h>
-#include <botan/algo_registry.h>
+#include <botan/internal/algo_registry.h>
 #include <botan/block_cipher.h>
 #include <botan/loadstor.h>
 #include <botan/exceptn.h>

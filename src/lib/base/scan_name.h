@@ -1,6 +1,6 @@
 /*
 * SCAN Name Abstraction
-* (C) 2008 Jack Lloyd
+* (C) 2008,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -106,11 +106,9 @@ class BOTAN_DLL SCAN_Name
       static void add_alias(const std::string& alias, const std::string& basename);
 
       static std::string deref_alias(const std::string& alias);
-
-      static void set_default_aliases();
    private:
-      static std::mutex s_alias_map_mutex;
-      static std::map<std::string, std::string> s_alias_map;
+      static std::mutex g_alias_map_mutex;
+      static std::map<std::string, std::string> g_alias_map;
 
       std::string orig_algo_spec;
       std::string alg_name;
