@@ -35,9 +35,9 @@ void do_compress(Transform& comp, std::ifstream& in, std::ostream& out)
 
 int compress(int argc, char* argv[])
    {
-   if(argc != 2 && argc != 3)
+   if(argc != 2 && argc != 3 && argc != 4)
       {
-      std::cout << "Usage: " << argv[0] << " input [type]\n";
+      std::cout << "Usage: " << argv[0] << " input [type] [level]\n";
       return 1;
       }
 
@@ -50,8 +50,8 @@ int compress(int argc, char* argv[])
       return 1;
       }
 
-   const size_t level = 9;
-   const std::string suffix = argc == 3 ? argv[2] : "gz";
+   const std::string suffix = argc >= 3 ? argv[2] : "gz";
+   const size_t level = argc >= 4 ? to_u32bit(argv[3]) : 9;
 
    std::unique_ptr<Transform> compress(make_compressor(suffix, level));
 

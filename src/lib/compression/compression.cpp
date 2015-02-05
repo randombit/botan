@@ -47,9 +47,9 @@ Transform* make_compressor(const std::string& type, size_t level)
    if(type == "gzip" || type == "gz")
       return get_transform("Gzip" + comp_suffix);
    if(type == "bzip2" || type == "bz2")
-      return get_transform("Bzip2", comp_suffix);
+      return get_transform("Bzip2" + comp_suffix);
    if(type == "lzma" || type == "xz")
-      return get_transform("LZMA", comp_suffix);
+      return get_transform("LZMA" + comp_suffix);
 
    return nullptr;
    }
