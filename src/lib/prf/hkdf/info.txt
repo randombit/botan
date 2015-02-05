@@ -1,6 +1,0 @@
-define HKDF 20131128
-
-<requires>
-mac
-hash
-</requires>

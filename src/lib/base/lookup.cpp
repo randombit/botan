@@ -8,7 +8,6 @@
 #include <botan/lookup.h>
 #include <botan/internal/algo_registry.h>
 #include <botan/cipher_mode.h>
-#include <botan/transform_filter.h>
 #include <botan/block_cipher.h>
 #include <botan/stream_cipher.h>
 #include <botan/hash.h>

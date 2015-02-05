@@ -1,6 +1,1 @@
 define LION 20131128
-
-<requires>
-hash
-stream
-</requires>

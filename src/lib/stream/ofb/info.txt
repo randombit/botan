@@ -1,6 +1,1 @@
 define OFB 20131128
-
-<requires>
-block
-stream
-</requires>

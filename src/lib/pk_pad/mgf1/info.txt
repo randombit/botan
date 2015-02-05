@@ -1,5 +1,1 @@
 define MGF1 20140118
-
-<requires>
-hash
-</requires>

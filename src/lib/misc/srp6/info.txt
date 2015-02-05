@@ -2,6 +2,5 @@ define SRP6 20131128
 
 <requires>
 bigint
-hash
 dl_group
 </requires>

@@ -1,5 +1,1 @@
 define HMAC 20131128
-
-<requires>
-hash
-</requires>

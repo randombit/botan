@@ -1,6 +1,5 @@
 define EMSA_PSSR 20131128
 
 <requires>
-hash
 mgf1
 </requires>

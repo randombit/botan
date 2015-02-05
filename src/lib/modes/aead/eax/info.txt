@@ -1,7 +1,6 @@
 define AEAD_EAX 20131128
 
 <requires>
-block
 cmac
 ctr
 </requires>

@@ -2,9 +2,7 @@ define PKCS5_PBES2 20141119
 
 <requires>
 asn1
-block
 cbc
-hash
 hmac
 oid_lookup
 pbkdf2

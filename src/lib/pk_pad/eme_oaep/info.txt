@@ -1,8 +1,5 @@
 define EME_OAEP 20140118
 
-load_on auto
-
 <requires>
-hash
 mgf1
 </requires>

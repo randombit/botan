@@ -1,6 +1,5 @@
 define EMSA_X931 20140118
 
 <requires>
-hash
 hash_id
 </requires>
