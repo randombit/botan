@@ -6,6 +6,7 @@
 */
 
 #include <botan/cipher_mode.h>
+#include <botan/stream_mode.h>
 #include <botan/lookup.h>
 #include <sstream>
 

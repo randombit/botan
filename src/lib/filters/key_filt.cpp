@@ -5,7 +5,6 @@
 */
 
 #include <botan/key_filt.h>
-#include <botan/cipher_mode.h>
 #include <botan/transform_filter.h>
 
 namespace Botan {

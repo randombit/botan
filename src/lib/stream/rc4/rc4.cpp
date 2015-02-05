@@ -7,7 +7,6 @@
 
 #include <botan/internal/stream_utils.h>
 #include <botan/rc4.h>
-#include <botan/internal/rounding.h>
 
 namespace Botan {
 
@@ -73,7 +72,7 @@ void RC4::generate()
 void RC4::key_schedule(const byte key[], size_t length)
    {
    state.resize(256);
-   buffer.resize(round_up<size_t>(DEFAULT_BUFFERSIZE, 4));
+   buffer.resize(256);
 
    position = X = Y = 0;
 
