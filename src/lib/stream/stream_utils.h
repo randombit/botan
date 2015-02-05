@@ -8,6 +8,7 @@
 #ifndef BOTAN_STREAM_CIPHER_UTILS_H__
 #define BOTAN_STREAM_CIPHER_UTILS_H__
 
+#include <botan/stream_cipher.h>
 #include <botan/internal/algo_registry.h>
 #include <botan/loadstor.h>
 #include <botan/rotate.h>

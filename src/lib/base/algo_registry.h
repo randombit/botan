@@ -63,7 +63,7 @@ class Algo_Registry
       class Add
          {
          public:
-            Add(const std::string& basename, maker_fn fn, const std::string& provider = "builtin", byte pref = 128)
+            Add(const std::string& basename, maker_fn fn, const std::string& provider, byte pref)
                {
                Algo_Registry<T>::global_registry().add(basename, provider, fn, pref);
                }
@@ -190,21 +190,30 @@ make_new_T_1X(const typename Algo_Registry<T>::Spec& spec)
    return new T(x.release());
    }
 
-#define BOTAN_REGISTER_NAMED_T(T, namestr, type, maker)                 \
-   namespace { Algo_Registry<T>::Add g_ ## type ## _reg(namestr, maker); }
-#define BOTAN_REGISTER_T(T, name, maker) \
-   namespace { Algo_Registry<T>::Add g_ ## name ## _reg(#name, maker); }
-#define BOTAN_REGISTER_T_NOARGS(T, name)                                \
-   namespace { Algo_Registry<T>::Add g_ ## name ## _reg(#name, make_new_T<name>); }
-#define BOTAN_REGISTER_T_1LEN(T, name, def) \
-   namespace { Algo_Registry<T>::Add g_ ## name ## _reg(#name, make_new_T_1len<name, def>); }
+#define BOTAN_REGISTER_TYPE(T, type, name, maker, provider, pref)        \
+   namespace { Algo_Registry<T>::Add g_ ## type ## _reg(name, maker, provider, pref); }
+
+#define BOTAN_REGISTER_TYPE_COND(cond, T, type, name, maker, provider, pref) \
+   namespace { Algo_Registry<T>::Add g_ ## type ## _reg(cond, name, maker, provider, pref); }
+
+#define BOTAN_REGISTER_NAMED_T(T, name, type, maker)                 \
+   BOTAN_REGISTER_TYPE(T, type, name, maker, "builtin", 128)
+
+#define BOTAN_REGISTER_T(T, type, maker)                                \
+   BOTAN_REGISTER_TYPE(T, type, #type, maker, "builtin", 128)
+
+#define BOTAN_REGISTER_T_NOARGS(T, type) \
+   BOTAN_REGISTER_TYPE(T, type, #type, make_new_T<type>, "builtin", 128)
+#define BOTAN_REGISTER_T_1LEN(T, type, def) \
+   BOTAN_REGISTER_TYPE(T, type, #type, (make_new_T_1len<type,def>), "builtin", 128)
 
 #define BOTAN_REGISTER_NAMED_T_NOARGS(T, type, name, provider) \
-   namespace { Algo_Registry<T>::Add g_ ## type ## _reg(name, make_new_T<type>, provider); }
+   BOTAN_REGISTER_TYPE(T, type, name, make_new_T<type>, provider, 128)
 #define BOTAN_COND_REGISTER_NAMED_T_NOARGS(cond, T, type, name, provider, pref) \
-   namespace { Algo_Registry<T>::Add g_ ## type ## _reg(cond, name, make_new_T<type>, provider, pref); }
-#define BOTAN_REGISTER_NAMED_T_2LEN(T, type, name, provider, len1, len2)     \
-   namespace { Algo_Registry<T>::Add g_ ## type ## _reg(name, make_new_T_2len<type, len1, len2>, provider); }
+   BOTAN_REGISTER_TYPE_COND(cond, T, type, name, make_new_T<type>, provider, pref)
+
+#define BOTAN_REGISTER_NAMED_T_2LEN(T, type, name, provider, len1, len2) \
+   BOTAN_REGISTER_TYPE(T, type, name, (make_new_T_2len<type,len1,len2>), provider, 128)
 
 // TODO move elsewhere:
 #define BOTAN_REGISTER_TRANSFORM(name, maker) BOTAN_REGISTER_T(Transform, name, maker)

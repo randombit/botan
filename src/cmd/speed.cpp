@@ -120,9 +120,6 @@ void report_results(const std::string& algo,
 void time_transform(std::unique_ptr<Transform> tf,
                     RandomNumberGenerator& rng)
    {
-   if(!tf)
-      return;
-
    const std::chrono::seconds runtime(2);
 
    for(size_t buf_size : { 16, 64, 256, 1024, 8192 })
@@ -156,15 +153,18 @@ void time_transform(std::unique_ptr<Transform> tf,
       }
    }
 
-void time_transform(const std::string& algo, RandomNumberGenerator& rng)
+bool time_transform(const std::string& algo, RandomNumberGenerator& rng)
    {
    std::unique_ptr<Transform> tf;
    tf.reset(get_cipher_mode(algo, ENCRYPTION));
+   if(!tf)
+      return false;
 
    if(Keyed_Transform* keyed = dynamic_cast<Keyed_Transform*>(tf.get()))
       keyed->set_key(rng.random_vec(keyed->key_spec().maximum_keylength()));
 
    time_transform(std::move(tf), rng);
+   return true;
    }
 
 void bench_algo(const std::string& algo,
@@ -175,15 +175,18 @@ void bench_algo(const std::string& algo,
    std::chrono::milliseconds ms(
       static_cast<std::chrono::milliseconds::rep>(seconds * 1000));
 
+   if(time_transform(algo, rng))
+      return;
+
    std::map<std::string, double> speeds = algorithm_benchmark(algo, rng, ms, buf_size);
 
-   report_results(algo, speeds);
+   if(!speeds.empty())
+      {
+      report_results(algo, speeds);
+      return;
+      }
 
-   if(speeds.empty())
-      time_transform(algo, rng);
-
-   if(speeds.empty())
-      bench_pk(rng, algo, seconds);
+   bench_pk(rng, algo, seconds);
    }
 
 int speed(int argc, char* argv[])

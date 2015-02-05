@@ -8,6 +8,7 @@
 #ifndef BOTAN_BLOCK_CIPHER_UTILS_H__
 #define BOTAN_BLOCK_CIPHER_UTILS_H__
 
+#include <botan/block_cipher.h>
 #include <botan/internal/algo_registry.h>
 #include <botan/loadstor.h>
 #include <botan/rotate.h>
