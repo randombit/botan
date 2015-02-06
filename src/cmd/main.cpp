@@ -83,7 +83,7 @@ int config(int argc, char* argv[])
 
    else
       {
-      std::cerr << "Unknown option " << arg << " to botan-config\n";
+      std::cerr << "Unknown option " << arg << " to botan config\n";
       return 1;
       }
 

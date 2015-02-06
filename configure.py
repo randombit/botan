@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
 """
-Configuration program for botan (http://botan.randombit.net/)
-  (C) 2009,2010,2011,2012,2013,2014 Jack Lloyd
-  Botan is released under the Simplified BSD License (see license.txt)
+Configuration program for botan
+
+(C) 2009,2010,2011,2012,2013,2014,2015 Jack Lloyd
+
+Botan is released under the Simplified BSD License (see license.txt)
 
 Tested with CPython 2.6, 2.7, 3.2, 3.3 and PyPy 1.5
 
@@ -200,10 +202,6 @@ class BuildConfigurationInformation(object):
         return 'botan-%d.%d.pc' % (self.version_major,
                                    self.version_minor)
 
-    def config_shell_script(self):
-        return 'botan-config-%d.%d' % (self.version_major,
-                                       self.version_minor)
-
     def username(self):
         return getpass.getuser()
 
@@ -356,7 +354,7 @@ def process_command_line(args):
                            action='store_false', default=True,
                            help=optparse.SUPPRESS_HELP)
 
-    wrapper_group = optparse.OptionGroup(parser, 'Wrapper options')
+    wrapper_group = optparse.OptionGroup(parser, 'Python FFI options')
 
     wrapper_group.add_option('--with-boost-python', dest='boost_python',
                              default=False, action='store_true',
@@ -386,13 +384,12 @@ def process_command_line(args):
     mods_group.add_option('--no-autoload', action='store_true', default=False,
                           help='disable automatic loading')
 
-    third_party = ['boost', 'sqlite3', 'openssl', 'zlib', 'bzip2', 'lzma']
-    hidden_third_party = ['gnump']
+    # Should be derived from info.txt but this runs too early
+    third_party  = ['boost', 'bzip2', 'lzma', 'openssl', 'sqlite3', 'zlib']
 
-    for mod in third_party + hidden_third_party:
-
+    for mod in third_party:
         mods_group.add_option('--with-%s' % (mod),
-                              help=('add support for using %s' % (mod)) if mod in third_party else optparse.SUPPRESS_HELP,
+                              help=('use %s' % (mod)) if mod in third_party else optparse.SUPPRESS_HELP,
                               action='append_const',
                               const=mod,
                               dest='enabled_modules')
@@ -1336,8 +1333,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         }
 
     if options.os != 'windows':
-        vars['botan_config'] = prefix_with_build_dir(os.path.join(build_config.build_dir,
-                                                                  build_config.config_shell_script()))
         vars['botan_pkgconfig'] = prefix_with_build_dir(os.path.join(build_config.build_dir,
                                                                      build_config.pkg_config_file()))
 
@@ -1401,6 +1396,11 @@ def choose_modules_to_use(modules, archinfo, ccinfo, options):
                     to_load.append(modname)
                 else:
                     cannot_use_because(modname, 'by request only')
+            elif module.load_on == 'vendor':
+                if options.with_everything:
+                    to_load.append(modname)
+                else:
+                    cannot_use_because(modname, 'requires external dependency')
             elif module.load_on == 'dep':
                 maybe_dep.append(modname)
 
@@ -1474,7 +1474,8 @@ def choose_modules_to_use(modules, archinfo, ccinfo, options):
         if modules[mod].warning:
             logging.warning('%s: %s' % (mod, modules[mod].warning))
 
-    logging.info('Loading modules %s', ' '.join(sorted(to_load)))
+    to_load.sort()
+    logging.info('Loading modules %s', ' '.join(to_load))
 
     return to_load
 
@@ -1621,7 +1622,6 @@ def setup_build(build_config, options, template_vars):
 
         if options.os != 'windows':
             yield (options.build_data, 'botan.pc.in', build_config.pkg_config_file())
-            yield (options.build_data, 'botan-config.in', build_config.config_shell_script())
 
         if options.os == 'windows':
             yield (options.build_data, 'innosetup.in', 'botan.iss')
@@ -1837,6 +1837,9 @@ def main(argv = None):
     logging.basicConfig(stream = sys.stdout,
                         format = '%(levelname) 7s: %(message)s')
 
+    NOTICE_LOGLEVEL = 25
+    logging.addLevelName('NOTICE', NOTICE_LOGLEVEL)
+
     options = process_command_line(argv[1:])
 
     def log_level():
@@ -1867,9 +1870,8 @@ def main(argv = None):
     (modules, archinfo, ccinfo, osinfo) = load_info_files(options)
 
     if options.list_modules:
-        print("Listing modules available for enablement:")
         for k in sorted(modules.keys()):
-            print(" - " + k)
+            print(k)
         sys.exit(0)
 
     if options.chost:
@@ -1958,6 +1960,10 @@ def main(argv = None):
                                         archinfo[options.arch],
                                         cc,
                                         options)
+
+    for m in loaded_mods:
+        if modules[m].load_on == 'vendor':
+            logging.log(NOTICE_LOGLEVEL, 'Enabling use of external dependency %s' % (m))
 
     if not osinfo[options.os].build_shared:
         if options.build_shared_lib:

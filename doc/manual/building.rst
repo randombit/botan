@@ -350,48 +350,30 @@ Unix
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Botan usually links in several different system libraries (such as
-``librt`` and ``libz``), depending on which modules are
-configured at compile time. In many environments, particularly ones
-using static libraries, an application has to link against the same
-libraries as Botan for the linking step to succeed. But how does it
-figure out what libraries it *is* linked against?
+``librt`` or ``libz``), depending on which modules are configured at
+compile time. In many environments, particularly ones using static
+libraries, an application has to link against the same libraries as
+Botan for the linking step to succeed. But how does it figure out what
+libraries it *is* linked against?
 
-The answer is to ask the ``botan-config`` script. This
-basically solves the same problem all the other ``*-config``
-scripts solve, and in basically the same manner.
+The answer is to ask the ``botan`` command line tool using
+the ``config`` and ``version`` commands.
 
-There are 4 options:
+``botan version``: Print the Botan version number.
 
-``--prefix[=DIR]``: If no argument, print the prefix where Botan
-is installed (such as ``/opt`` or ``/usr/local``). If an
-argument is specified, other options given with the same command will
-execute as if Botan as actually installed at ``DIR`` and not
-where it really is; or at least where ``botan-config`` thinks
-it really is. I should mention that it
+``botan config prefix``: If no argument, print the prefix where Botan is
+installed (such as ``/opt`` or ``/usr/local``).
 
-``--version``: Print the Botan version number.
+``botan config cflags``: Print options that should be passed to the
+compiler whenever a C++ file is compiled. Typically this is used for
+setting include paths.
 
-``--cflags``: Print options that should be passed to the compiler
-whenever a C++ file is compiled. Typically this is used for setting
-include paths.
+``botan config libs``: Print options for which libraries to link to
+(this will include a reference to the botan library iself).
 
-``--libs``: Print options for which libraries to link to (this includes
-``-lbotan``).
-
-Your ``Makefile`` can run ``botan-config`` and get the
-options necessary for getting your application to compile and link,
-regardless of whatever crazy libraries Botan might be linked against.
-
-Botan also by default installs a file for ``pkg-config``,
-namespaced by the major and minor versions. So it can be used,
-for instance, as::
-
-  $ pkg-config botan-1.11 --modversion
-  1.11.0
-  $ pkg-config botan-1.11 --cflags
-  -I/usr/local/include
-  $ pkg-config botan-1.11 --libs
-  -L/usr/local/lib -lbotan -lm -lbz2 -lpthread -lrt
+Your ``Makefile`` can run ``botan config`` and get the options
+necessary for getting your application to compile and link, regardless
+of whatever crazy libraries Botan might be linked against.
 
 MS Windows
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -421,10 +403,10 @@ binding.
 Building the Perl XS wrappers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To build the Perl XS wrappers, change your directory to
-``src/wrap/perl-xs`` and run ``perl Makefile.PL``, then run
-``make`` to build the module and ``make test`` to run the test
-suite::
+To build the Perl XS wrappers, after building the main library change
+your directory to ``src/contrib/perl-xs`` and run ``perl Makefile.PL``,
+then run ``make`` to build the module and ``make test`` to run the
+test suite::
 
   $ perl Makefile.PL
   Checking if your kit is complete...

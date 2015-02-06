@@ -1,4 +1,4 @@
-load_on request
+load_on vendor
 
 <libs>
 all -> crypto

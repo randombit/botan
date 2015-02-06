@@ -20,3 +20,8 @@ Version 1.11.14, Not Yet Released
   Previously the allocator would consume all available mlocked memory,
   this allows botan to coexist with an application which wants to
   mlock memory of its own.
+
+* The botan-config script previously installed on Unix systems has
+  been removed. Its functionality is replaced by the `config` command
+  of the `botan` tool executable, for example `botan config cflags`
+  instead of `botan-config --cflags`.
