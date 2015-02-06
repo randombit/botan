@@ -74,8 +74,7 @@ gf2m random_code_element(unsigned code_length, Botan::RandomNumberGenerator& rng
    gf2m result;
    do
       {
-      rng.randomize((byte*)&result, sizeof(result));
-
+      rng.randomize(reinterpret_cast<byte*>(&result), sizeof(result));
       result &= mask;
       } while(result >= code_length); // rejection sampling
    return result;
@@ -98,7 +97,7 @@ std::string polyn_gf2m::to_string() const
    {
    int d = get_degree();
    std::string result;
-   for(int i = 0; i < d + 1; i ++)
+   for(int i = 0; i <= d; i ++)
       {
       result += std::to_string(this->coeff[i]);
       if(i != d)
@@ -280,12 +279,11 @@ void polyn_gf2m::remainder(polyn_gf2m &p, const polyn_gf2m & g)
 std::vector<polyn_gf2m> polyn_gf2m::sqmod_init(const polyn_gf2m & g)
    {
    std::vector<polyn_gf2m> sq;
-   int signed_deg = g.get_degree();
+   const int signed_deg = g.get_degree();
    if(signed_deg <= 0)
-      {
       throw Invalid_Argument("cannot compute sqmod for such low degree");
-      }
-   u32bit d = (u32bit) signed_deg;
+
+   const u32bit d = static_cast<u32bit>(signed_deg);
    u32bit t = g.m_deg;
    // create t zero polynomials
    u32bit i;

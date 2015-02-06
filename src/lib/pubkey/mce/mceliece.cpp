@@ -21,12 +21,14 @@
 namespace Botan {
 
 namespace {
-void concat_vectors(unsigned char* x, const unsigned char* a, const unsigned char* b, u32bit dimension, u32bit codimension)
+
+void concat_vectors(byte* x, const byte* a, const byte* b, u32bit dimension, u32bit codimension)
    {
    if(dimension % 8 == 0)
       {
-      copy_mem(x, a, bit_size_to_byte_size(dimension));
-      copy_mem(((unsigned char *) x) + bit_size_to_byte_size(dimension), b, bit_size_to_byte_size(codimension));
+      const size_t dim_bytes = bit_size_to_byte_size(dimension);
+      copy_mem(x, a, dim_bytes);
+      copy_mem(x + dim_bytes, b, bit_size_to_byte_size(codimension));
       }
    else
       {
@@ -35,15 +37,15 @@ void concat_vectors(unsigned char* x, const unsigned char* a, const unsigned cha
       j = 8 - i;
       l = dimension / 8;
       copy_mem(x, a, 1 * (dimension / 8));
-      x[l] = ((byte) (a[l] & ((1 << i) - 1)));
+      x[l] = static_cast<byte>(a[l] & ((1 << i) - 1));
 
       for(k = 0; k < codimension / 8; ++k)
          {
-         x[l] ^= ((byte) ( b[k] << i));
+         x[l] ^= static_cast<byte>(b[k] << i);
          ++l;
-         x[l] = ((byte) (b[k] >> j));
+         x[l] = static_cast<byte>(b[k] >> j);
          }
-      x[l] ^= ((byte) ( b[k] << i));
+      x[l] ^= static_cast<byte>(b[k] << i);
       }
    }
 

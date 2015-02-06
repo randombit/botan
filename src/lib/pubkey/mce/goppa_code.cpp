@@ -141,7 +141,7 @@ secure_vector<byte> mceliece_decrypt(
    u32bit t = key.get_goppa_polyn().get_degree();
    polyn_gf2m syndrome_polyn(key.get_goppa_polyn().get_sp_field()); // init as zero polyn
    const unsigned unused_pt_bits = dimension % 8;
-   const unsigned char unused_pt_bits_mask = (1 << unused_pt_bits) - 1;
+   const byte unused_pt_bits_mask = (1 << unused_pt_bits) - 1;
 
    if(ciphertext_len != (key.get_code_length()+7)/8)
       {
