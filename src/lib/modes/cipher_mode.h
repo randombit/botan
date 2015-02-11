@@ -24,6 +24,11 @@ class BOTAN_DLL Cipher_Mode : public Keyed_Transform
       * confidentiality.
       */
       virtual bool authenticated() const { return false; }
+
+      /**
+      * Return the size of the authentication tag used (in bytes)
+      */
+      virtual size_t tag_size() const { return 0; }
    };
 
 /**

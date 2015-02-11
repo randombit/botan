@@ -24,6 +24,8 @@ namespace Botan {
 */
 BOTAN_DLL std::string version_string();
 
+BOTAN_DLL const char* version_cstr();
+
 /**
 * Return the date this version of botan was released, in an integer of
 * the form YYYYMMDD. For instance a version released on May 21, 2013

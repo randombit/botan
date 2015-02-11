@@ -11,6 +11,7 @@
 #include <botan/entropy_src.h>
 #include <string>
 #include <vector>
+#include <mutex>
 
 namespace Botan {
 

@@ -10,7 +10,7 @@
 
 #include <botan/entropy_src.h>
 #include <vector>
-#include <sys/types.h>
+#include <mutex>
 
 namespace Botan {
 
