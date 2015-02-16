@@ -101,6 +101,13 @@ class BOTAN_DLL Buffered_Computation
          return output;
          }
 
+      template<typename Alloc>
+         void final(std::vector<byte, Alloc>& out)
+         {
+         out.resize(output_length());
+         final_result(&out[0]);
+         }
+
       /**
       * Update and finalize computation. Does the same as calling update()
       * and final() consecutively.

@@ -324,7 +324,7 @@ bool PK_Verifier::validate_signature(const secure_vector<byte>& msg,
 /*
 * PK_Key_Agreement Constructor
 */
-PK_Key_Agreement::PK_Key_Agreement(const PK_Key_Agreement_Key& key,
+PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key,
                                    const std::string& kdf_name)
    {
    m_op.reset(get_pk_op<PK_Ops::Key_Agreement>(key, kdf_name));

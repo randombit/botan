@@ -80,7 +80,7 @@ pbes2_encrypt(const secure_vector<byte>& key_bits,
    if(cipher_spec[1] != "CBC" && cipher_spec[1] != "GCM")
       throw Decoding_Error("PBE-PKCS5 v2.0: Don't know param format for " + cipher);
 
-   std::unique_ptr<Keyed_Transform> enc(get_cipher_mode(cipher, ENCRYPTION));
+   std::unique_ptr<Cipher_Mode> enc(get_cipher_mode(cipher, ENCRYPTION));
 
    PKCS5_PBKDF2 pbkdf(Algo_Registry<MessageAuthenticationCode>::global_registry().make(prf));
 
@@ -153,7 +153,7 @@ pbes2_decrypt(const secure_vector<byte>& key_bits,
    const std::string prf = OIDS::lookup(prf_algo.oid);
    PKCS5_PBKDF2 pbkdf(Algo_Registry<MessageAuthenticationCode>::global_registry().make(prf));
 
-   std::unique_ptr<Keyed_Transform> dec(get_cipher_mode(cipher, DECRYPTION));
+   std::unique_ptr<Cipher_Mode> dec(get_cipher_mode(cipher, DECRYPTION));
 
    if(key_length == 0)
       key_length = dec->key_spec().maximum_keylength();

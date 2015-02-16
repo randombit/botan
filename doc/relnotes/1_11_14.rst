@@ -5,6 +5,12 @@ Version 1.11.14, Not Yet Released
   removed and no form of initialization is required to use the library.
   LibraryInitializer remains as a stub.
 
+* The new `ffi` submodule provides a simple C API/ABI for a number of
+  useful operations (hashing, ciphers, public key operations, etc)
+  which is easily accessed using the FFI modules included in many
+  languages. A new Python wrapper using the Python `ctypes` module
+  is available. The old Boost.Python wrapper has been removed.
+
 * OCB mode, which provides a fast and constant time AEAD mode without
   requiring hardware support, is now supported in TLS, following
   draft-zauner-tls-aes-ocb-01. Because this specification is not yet

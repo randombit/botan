@@ -51,6 +51,13 @@ def is_official_release():
     # Assume a release date implies official release
     return (botan_version.release_datestamp > 20130000)
 
+def maintainer_mode_default():
+    if is_official_release():
+        return False
+    if os.getenv('GO_ENVIRONMENT_NAME') == 'Botan':
+        return True # running under CI
+    return False
+
 def get_vc_revision():
 
     def get_vc_revision(cmdlist):
@@ -151,11 +158,8 @@ class BuildConfigurationInformation(object):
 
         self.app_sources = list(find_sources_in(self.src_dir, 'cmd'))
         self.test_sources = list(find_sources_in(self.src_dir, 'tests'))
-        self.python_sources = list(find_sources_in(self.src_dir, 'python'))
 
-        self.boost_python = options.boost_python
         self.python_dir = os.path.join(options.src_dir, 'python')
-        self.pyobject_dir = os.path.join(self.build_dir, 'python')
 
         def build_doc_commands():
 
@@ -192,9 +196,6 @@ class BuildConfigurationInformation(object):
 
             if options.with_doxygen:
                 yield os.path.join(self.doc_output_dir, 'doxygen')
-
-            if self.boost_python:
-                yield self.pyobject_dir
 
         self.build_dirs = list(build_dirs())
 
@@ -284,7 +285,7 @@ def process_command_line(args):
                            help='disallow use of assembler')
 
     build_group.add_option('--enable-debug', dest='debug_build',
-                           action='store_true', default=not is_official_release(),
+                           action='store_true', default=False,
                            help='enable debug build (default %default)')
     build_group.add_option('--disable-debug', dest='debug_build',
                            action='store_false', help=optparse.SUPPRESS_HELP)
@@ -343,8 +344,8 @@ def process_command_line(args):
 
     build_group.add_option('--maintainer-mode', dest='maintainer_mode',
                            action='store_true',
-                           default=not is_official_release(),
-                           help="Enable extra warnings")
+                           default=maintainer_mode_default(),
+                           help="Maintainer mode build")
 
     build_group.add_option('--release-mode', dest='maintainer_mode',
                            action='store_false',
@@ -356,19 +357,10 @@ def process_command_line(args):
 
     wrapper_group = optparse.OptionGroup(parser, 'Python FFI options')
 
-    wrapper_group.add_option('--with-boost-python', dest='boost_python',
-                             default=False, action='store_true',
-                             help='enable Boost.Python wrapper')
-
-    wrapper_group.add_option('--without-boost-python',
-                             dest='boost_python',
-                             action='store_false',
-                             help=optparse.SUPPRESS_HELP)
-
     wrapper_group.add_option('--with-python-version', dest='python_version',
                              metavar='N.M',
                              default='.'.join(map(str, sys.version_info[0:2])),
-                             help='specify Python to build against (eg %default)')
+                             help='specify Python version (def %default)')
 
     mods_group = optparse.OptionGroup(parser, 'Module selection')
 
@@ -1306,16 +1298,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
             build_commands(build_config.test_sources,
                            build_config.testobj_dir, 'TEST')),
 
-        'python_obj_dir': build_config.pyobject_dir,
-
-        'python_objs': makefile_list(
-            objectfile_list(build_config.python_sources,
-                            build_config.pyobject_dir)),
-
-        'python_build_cmds': '\n'.join(
-            build_commands(build_config.python_sources,
-                           build_config.pyobject_dir, 'PYTHON')),
-
         'ar_command': cc.ar_command or osinfo.ar_command,
         'ranlib_command': osinfo.ranlib_command(),
         'install_cmd_exec': osinfo.install_cmd_exec,
@@ -1344,11 +1326,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         vars["dso_in"] = process_template('src/build-data/makefile/dso.in', vars)
     else:
         vars["dso_in"] = ""
-
-    if options.boost_python:
-        vars["python_in"] = process_template('src/build-data/makefile/python.in', vars)
-    else:
-        vars["python_in"] = ""
 
     return vars
 
@@ -1843,7 +1820,7 @@ def main(argv = None):
     options = process_command_line(argv[1:])
 
     def log_level():
-        if options.verbose:
+        if options.verbose or options.maintainer_mode:
             return logging.DEBUG
         if options.quiet:
             return logging.WARNING

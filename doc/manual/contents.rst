@@ -25,4 +25,5 @@ Contents
    srp
    fpe
    versions
+   ffi
    python

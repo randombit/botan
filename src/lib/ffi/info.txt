@@ -1,0 +1,12 @@
+define FFI 20150210
+
+<requires>
+aead
+filters
+kdf
+pbkdf
+pubkey
+auto_rng
+system_rng
+</requires>
+

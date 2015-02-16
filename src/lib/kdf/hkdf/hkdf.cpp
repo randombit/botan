@@ -11,7 +11,12 @@ namespace Botan {
 
 std::string HKDF::name() const
    {
-   return "HKDF(" + m_prf->name() + ")";
+   const std::string prf = m_prf->name();
+   const std::string ext = m_extractor->name();
+
+   if(prf == ext)
+      return "HKDF(" + prf + ")";
+   return "HKDF(" + ext + "," + prf + ")";
    }
 
 void HKDF::clear()
@@ -50,7 +55,7 @@ void HKDF::expand(byte output[], size_t output_len,
       m_prf->update(T);
       m_prf->update(info, info_len);
       m_prf->update(counter++);
-      T = m_prf->final();
+      m_prf->final(T);
 
       const size_t to_write = std::min(T.size(), output_len);
       copy_mem(&output[0], &T[0], to_write);
