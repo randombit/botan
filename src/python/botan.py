@@ -44,7 +44,7 @@ RNG
 """
 class rng(object):
     # Can also use type "system"
-    def __init__(self, rng_type = 'user'):
+    def __init__(self, rng_type = 'system'):
         botan.botan_rng_init.argtypes = [c_void_p, c_char_p]
         self.rng = c_void_p(0)
         rc = botan.botan_rng_init(byref(self.rng), rng_type)
@@ -155,12 +155,6 @@ class cipher(object):
         botan.botan_cipher_destroy.argtypes = [c_void_p]
         botan.botan_cipher_destroy(self.cipher)
 
-    def tag_length(self):
-        botan.botan_cipher_tag_length.argtypes = [c_void_p,POINTER(c_size_t)]
-        l = c_size_t(0)
-        botan.botan_cipher_tag_size(self.cipher, byref(l))
-        return l.value
-
     def default_nonce_length(self):
         botan.botan_cipher_default_nonce_length.argtypes = [c_void_p, POINTER(c_size_t)]
         l = c_size_t(0)
@@ -234,14 +228,19 @@ class cipher(object):
 Bcrypt
 TODO: might not be enabled - handle that gracefully!
 """
-def generate_bcrypt(passwd, rng, work_factor = 10):
-    botan.botan_bcrypt_generate.argtypes = [POINTER(c_char), c_size_t, c_char_p, c_void_p, c_size_t]
-    out = create_string_buffer(61)
-    rc = botan.botan_bcrypt_generate(out, sizeof(out), passwd, rng.rng, c_size_t(work_factor))
-
+def bcrypt(passwd, rng, work_factor = 10):
+    botan.botan_bcrypt_generate.argtypes = [POINTER(c_char), POINTER(c_size_t),
+                                            c_char_p, c_void_p, c_size_t, c_uint32]
+    out_len = c_size_t(64)
+    out = create_string_buffer(out_len.value)
+    flags = c_uint32(0)
+    rc = botan.botan_bcrypt_generate(out, byref(out_len), passwd, rng.rng, c_size_t(work_factor), flags)
     if rc != 0:
         raise Exception('botan bcrypt failed, error %s' % (rc))
-    return str(out.raw)
+    b = out.raw[0:out_len.value]
+    if b[-1] == '\x00':
+        b = b[:-1]
+    return b
 
 def check_bcrypt(passwd, bcrypt):
     rc = botan.botan_bcrypt_is_valid(passwd, bcrypt)
@@ -250,17 +249,16 @@ def check_bcrypt(passwd, bcrypt):
 """
 PBKDF
 """
-def pbkdf(algo, password, out_len, iterations, salt):
+def pbkdf(algo, password, out_len, iterations = 10000, salt = rng().get(12)):
     botan.botan_pbkdf.argtypes = [c_char_p, POINTER(c_char), c_size_t, c_char_p, c_void_p, c_size_t, c_size_t]
     out_buf = create_string_buffer(out_len)
     botan.botan_pbkdf(algo, out_buf, out_len, password, salt, len(salt), iterations)
-    return out_buf.raw
+    return (salt,iterations,out_buf.raw)
 
-def pbkdf_timed(algo, password, out_len, rng, ms_to_run, salt_len = 12):
+def pbkdf_timed(algo, password, out_len, ms_to_run = 300, salt = rng().get(12))
     botan.botan_pbkdf_timed.argtypes = [c_char_p, POINTER(c_char), c_size_t, c_char_p,
                                         c_void_p, c_size_t, c_size_t, POINTER(c_size_t)]
     out_buf = create_string_buffer(out_len)
-    salt = rng.get(salt_len)
     iterations = c_size_t(0)
     botan.botan_pbkdf_timed(algo, out_buf, out_len, password, salt, len(salt), ms_to_run, byref(iterations))
     return (salt,iterations.value,out_buf.raw)
@@ -434,10 +432,48 @@ class pk_op_verify(object):
             return True
         return False
 
+class pk_op_key_agreement(object):
+    def __init__(self, key, kdf):
+        botan.botan_pk_op_key_agreement_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
+        botan.botan_pk_op_key_agreement_export_public.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
+        self.op = c_void_p(0)
+        flags = 0 # always zero in this ABI
+        botan.botan_pk_op_key_agreement_create(byref(self.op), key.privkey, kdf, flags)
+        if not self.op:
+            raise Exception("No key agreement for you")
+
+        pub = create_string_buffer(4096)
+        pub_len = c_size_t(len(pub))
+        botan.botan_pk_op_key_agreement_export_public(key.privkey, pub, byref(pub_len))
+        self.m_public_value = pub.raw[0:pub_len.value]
+
+    def __del__(self):
+        botan.botan_pk_op_key_agreement_destroy.argtypes = [c_void_p]
+        botan.botan_pk_op_key_agreement_destroy(self.op)
+
+    def public_value(self):
+        return self.m_public_value
+
+    def agree(self, other, key_len, salt):
+        botan.botan_pk_op_key_agreement.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t),
+                                                    POINTER(c_char), c_size_t, POINTER(c_char), c_size_t]
+
+        outbuf_sz = c_size_t(key_len)
+        outbuf = create_string_buffer(outbuf_sz.value)
+        rc = botan.botan_pk_op_key_agreement(self.op, outbuf, byref(outbuf_sz), other, len(other), salt, len(salt))
+
+        if rc == -1 and outbuf_sz.value > len(outbuf):
+            outbuf = create_string_buffer(outbuf_sz.value)
+            botan.botan_pk_op_key_agreement(self.op, outbuf, byref(outbuf_sz), other, len(other), salt, len(salt))
+        return outbuf.raw[0:outbuf_sz.value]
+
 """
 Tests and examples
 """
 def test():
+    r = rng("user")
+
+
     print version_string()
     print version_major(), version_minor(), version_patch()
 
@@ -447,7 +483,6 @@ def test():
     print pbkdf('PBKDF2(SHA-1)', '', 32, 10000, '0001020304050607'.decode('hex')).encode('hex').upper()
     print '59B2B1143B4CB1059EC58D9722FB1C72471E0D85C6F7543BA5228526375B0127'
 
-    r = rng("user")
     (salt,iterations,psk) = pbkdf_timed('PBKDF2(SHA-256)', 'xyz', 32, r, 200, 12)
     print salt.encode('hex'), iterations
     print 'x', psk.encode('hex')
@@ -483,8 +518,8 @@ def test():
 
     signer = pk_op_sign(rsapriv, 'EMSA4(SHA-384)')
 
-    signer.update('mess')
-    signer.update('age')
+    signer.update('messa')
+    signer.update('ge')
     sig = signer.finish(r)
 
     r.reseed(200)
@@ -494,14 +529,34 @@ def test():
 
     verify.update('mess')
     verify.update('age')
-    print "correct sig accepted?", verify.check_signature(sig)
+    print "good sig accepted?", verify.check_signature(sig)
 
     verify.update('mess of things')
     verify.update('age')
     print "bad sig accepted?", verify.check_signature(sig)
 
-    key = private_key('ecdsa', 'secp256r1', r)
-    blob = key.export()
+    verify.update('message')
+    print "good sig accepted?", verify.check_signature(sig)
+
+    dh_grp = 'secp256r1'
+    #dh_grp = 'curve25519'
+    dh_kdf = 'KDF2(SHA-384)'
+    a_dh_priv = private_key('ecdh', dh_grp, r)
+    a_dh_pub = a_dh_priv.get_public_key()
+
+    b_dh_priv = private_key('ecdh', dh_grp, r)
+    b_dh_pub = b_dh_priv.get_public_key()
+
+    a_dh = pk_op_key_agreement(a_dh_priv, dh_kdf)
+    b_dh = pk_op_key_agreement(b_dh_priv, dh_kdf)
+
+    print "dh pubs", a_dh.public_value().encode('hex'), b_dh.public_value().encode('hex')
+
+    a_key = a_dh.agree(b_dh.public_value(), 20, 'salt')
+    b_key = b_dh.agree(a_dh.public_value(), 20, 'salt')
+
+    print "dh shared", a_key.encode('hex'), b_key.encode('hex')
+
 
     #f = open('key.ber','wb')
     #f.write(blob)

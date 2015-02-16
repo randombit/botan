@@ -6,6 +6,7 @@ Contents
 
    index
    building
+   python
    firststep
    secmem
    rng
@@ -26,4 +27,4 @@ Contents
    fpe
    versions
    ffi
-   python
+

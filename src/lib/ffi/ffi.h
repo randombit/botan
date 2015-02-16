@@ -38,6 +38,11 @@ BOTAN_DLL uint32_t botan_version_datestamp();
 /*
 * Error handling
 */
+#define BOTAN_FFI_ERROR_EXCEPTION_THROWN (-20)
+#define BOTAN_FFI_ERROR_BAD_FLAG (-30)
+#define BOTAN_FFI_ERROR_NULL_POINTER (-31)
+#define BOTAN_FFI_ERROR_NULL_POINTER (-31)
+
 //const char* botan_error_description(int err);
 
 /*
@@ -146,10 +151,11 @@ BOTAN_DLL int botan_kdf(const char* kdf_algo,
 */
 #if defined(BOTAN_HAS_BCRYPT)
 
-BOTAN_DLL int botan_bcrypt_generate(char* out, size_t out_len,
+BOTAN_DLL int botan_bcrypt_generate(uint8_t* out, size_t* out_len,
                                     const char* pass,
                                     botan_rng_t rng,
-                                    size_t work_factor);
+                                    size_t work_factor,
+                                    uint32_t flags);
 
 /**
 * Returns 0 if if this password/hash combination is valid
@@ -289,6 +295,9 @@ BOTAN_DLL int botan_pk_op_key_agreement_create(botan_pk_op_ka_t* op,
                                                const char* kdf,
                                                uint32_t flags);
 BOTAN_DLL int botan_pk_op_key_agreement_destroy(botan_pk_op_ka_t op);
+
+BOTAN_DLL int botan_pk_op_key_agreement_export_public(botan_privkey_t key,
+                                                      uint8_t out[], size_t* out_len);
 
 BOTAN_DLL int botan_pk_op_key_agreement(botan_pk_op_ka_t op,
                                         uint8_t out[], size_t* out_len,

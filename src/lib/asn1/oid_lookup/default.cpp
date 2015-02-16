@@ -28,7 +28,7 @@ const char* default_oid_list()
 
       // X9.62 ecPublicKey, valid for ECDSA and ECDH (RFC 3279 sec 2.3.5)
       "1.2.840.10045.2.1 = ECDSA" "\n"
-      //"1.3.132.1.12 = ECDH" "\n"
+      "1.3.132.1.12 = ECDH" "\n"
 
       "1.2.643.2.2.19 = GOST-34.10" "\n"
 

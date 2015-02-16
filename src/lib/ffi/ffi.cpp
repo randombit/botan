@@ -31,6 +31,10 @@
   #include <botan/ecdh.h>
 #endif
 
+#if defined(BOTAN_HAS_CURVE_25519)
+  #include <botan/curve25519.h>
+#endif
+
 #if defined(BOTAN_HAS_BCRYPT)
   #include <botan/bcrypt.h>
 #endif
@@ -49,7 +53,9 @@ struct botan_struct
 
       T* get() const
          {
-         BOTAN_ASSERT_EQUAL(m_magic, MAGIC, "Bad magic value - memory corruption?");
+         if(m_magic != MAGIC)
+            throw std::runtime_error("Bad magic " + std::to_string(m_magic) +
+                                     " in ffi object expected" + std::to_string(MAGIC));
          return m_obj.get();
          }
    private:
@@ -59,7 +65,7 @@ struct botan_struct
 
 void log_exception(const char* func_name, const char* what)
    {
-   printf("botan ffi %s: %s\n", func_name, what);
+   fprintf(stderr, "%s: %s\n", func_name, what);
    }
 
 template<typename T, uint32_t M>
@@ -96,18 +102,30 @@ int apply_fn(botan_struct<T, M>* o, const char* func_name, F func)
    return -1;
    }
 
-template<typename Alloc>
-int write_output(uint8_t out[], size_t* out_len, const std::vector<uint8_t, Alloc>& buf)
+int write_output(uint8_t out[], size_t* out_len, const uint8_t buf[], size_t buf_len)
    {
    Botan::clear_mem(out, *out_len);
    const size_t avail = *out_len;
-   *out_len = buf.size();
-   if(avail >= buf.size())
+   *out_len = buf_len;
+   if(avail >= buf_len)
       {
-      Botan::copy_mem(out, &buf[0], buf.size());
+      Botan::copy_mem(out, &buf[0], buf_len);
       return 0;
       }
    return -1;
+   }
+
+template<typename Alloc>
+int write_vec_output(uint8_t out[], size_t* out_len, const std::vector<uint8_t, Alloc>& buf)
+   {
+   return write_output(out, out_len, &buf[0], buf.size());
+   }
+
+int write_str_output(uint8_t out[], size_t* out_len, const std::string& str)
+   {
+   return write_output(out, out_len,
+                       reinterpret_cast<const uint8_t*>(str.c_str()),
+                       str.size() + 1);
    }
 
 #define BOTAN_FFI_DO(T, obj, block) apply_fn(obj, BOTAN_CURRENT_FUNCTION, [=](T& obj) { do { block } while(0); return 0; })
@@ -261,8 +279,10 @@ int botan_hash_init(botan_hash_t* hash, const char* hash_name, uint32_t flags)
    {
    try
       {
-      if(!hash || !hash_name || flags != 0)
-         return -1;
+      if(hash == nullptr || hash_name == nullptr || *hash_name == 0)
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      if(flags != 0)
+         return BOTAN_FFI_ERROR_BAD_FLAG;
 
       if(auto h = Botan::get_hash_function(hash_name))
          {
@@ -279,7 +299,7 @@ int botan_hash_init(botan_hash_t* hash, const char* hash_name, uint32_t flags)
       log_exception(BOTAN_CURRENT_FUNCTION, "unknown");
       }
 
-   return -2;
+   return BOTAN_FFI_ERROR_EXCEPTION_THROWN;
    }
 
 int botan_hash_destroy(botan_hash_t hash)
@@ -634,25 +654,26 @@ int botan_kdf(const char* kdf_algo,
    }
 
 #if defined(BOTAN_HAS_BCRYPT)
-int botan_bcrypt_generate(char* out, size_t out_len, const char* pass,
-                          botan_rng_t rng_obj, size_t wf)
+int botan_bcrypt_generate(uint8_t* out, size_t* out_len,
+                          const char* pass,
+                          botan_rng_t rng_obj, size_t wf,
+                          uint32_t flags)
    {
    try
       {
       BOTAN_ASSERT_ARG_NON_NULL(out);
+      BOTAN_ASSERT_ARG_NON_NULL(out_len);
       BOTAN_ASSERT_ARG_NON_NULL(pass);
+
+      if(flags != 0)
+         return BOTAN_FFI_ERROR_BAD_FLAG;
 
       if(wf < 2 || wf > 30)
          throw std::runtime_error("Bad bcrypt work factor " + std::to_string(wf));
 
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
-
-      std::memset(out, 0, out_len);
-      const std::string c = Botan::generate_bcrypt(pass, rng, wf);
-      if(out_len <= c.size())
-         return ENOMEM;
-      std::memcpy(out, c.c_str(), c.size());
-      return 0;
+      const std::string bcrypt = Botan::generate_bcrypt(pass, rng, wf);
+      return write_str_output(out, out_len, bcrypt);
       }
    catch(std::exception& e)
       {
@@ -663,7 +684,7 @@ int botan_bcrypt_generate(char* out, size_t out_len, const char* pass,
       log_exception(BOTAN_CURRENT_FUNCTION, "unknown");
       }
 
-   return -1;
+   return BOTAN_FFI_ERROR_EXCEPTION_THROWN;
    }
 
 int botan_bcrypt_is_valid(const char* pass, const char* hash)
@@ -683,21 +704,26 @@ int botan_bcrypt_is_valid(const char* pass, const char* hash)
       log_exception(BOTAN_CURRENT_FUNCTION, "unknown");
       }
 
-   return -1;
+   return BOTAN_FFI_ERROR_EXCEPTION_THROWN;
    }
 
 #endif
 
-int botan_privkey_create_rsa(botan_privkey_t* key, botan_rng_t rng_obj, size_t n_bits)
+int botan_privkey_create_rsa(botan_privkey_t* key_obj, botan_rng_t rng_obj, size_t n_bits)
    {
    try
       {
-      *key = nullptr;
+      if(key_obj == nullptr || rng_obj == nullptr)
+         return -1;
+      if(n_bits < 1024 || n_bits > 16*1024)
+         return -2;
+
+      *key_obj = nullptr;
 
 #if defined(BOTAN_HAS_RSA)
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
-      std::unique_ptr<Botan::RSA_PrivateKey> rsa(new Botan::RSA_PrivateKey(rng, n_bits));
-      *key = new botan_privkey_struct(rsa.release());
+      std::unique_ptr<Botan::Private_Key> key(new Botan::RSA_PrivateKey(rng, n_bits));
+      *key_obj = new botan_privkey_struct(key.release());
       return 0;
 #endif
       }
@@ -706,19 +732,24 @@ int botan_privkey_create_rsa(botan_privkey_t* key, botan_rng_t rng_obj, size_t n
       log_exception(BOTAN_CURRENT_FUNCTION, e.what());
       }
 
-   return -1;
+   return BOTAN_FFI_ERROR_EXCEPTION_THROWN;
    }
 
 
-int botan_privkey_create_ecdsa(botan_privkey_t* key, botan_rng_t rng_obj, const char* params)
+int botan_privkey_create_ecdsa(botan_privkey_t* key_obj, botan_rng_t rng_obj, const char* param_str)
    {
    try
       {
+      if(key_obj == nullptr || rng_obj == nullptr || param_str == nullptr || *param_str == 0)
+         return -1;
+
+      *key_obj = nullptr;
+
 #if defined(BOTAN_HAS_ECDSA)
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
-      Botan::EC_Group grp(params);
-      std::unique_ptr<Botan::ECDSA_PrivateKey> ecdsa(new Botan::ECDSA_PrivateKey(rng, grp));
-      *key = new botan_privkey_struct(ecdsa.release());
+      Botan::EC_Group grp(param_str);
+      std::unique_ptr<Botan::Private_Key> key(new Botan::ECDSA_PrivateKey(rng, grp));
+      *key_obj = new botan_privkey_struct(key.release());
       return 0;
 #endif
       }
@@ -727,18 +758,33 @@ int botan_privkey_create_ecdsa(botan_privkey_t* key, botan_rng_t rng_obj, const 
       log_exception(BOTAN_CURRENT_FUNCTION, e.what());
       }
 
-   return -1;
+   return BOTAN_FFI_ERROR_EXCEPTION_THROWN;
    }
 
-int botan_privkey_create_ecdh(botan_privkey_t* key, botan_rng_t rng_obj, const char* params)
+int botan_privkey_create_ecdh(botan_privkey_t* key_obj, botan_rng_t rng_obj, const char* param_str)
    {
    try
       {
+      if(key_obj == nullptr || rng_obj == nullptr || param_str == nullptr || *param_str == 0)
+         return -1;
+
+      *key_obj = nullptr;
+
+      const std::string params(param_str);
+
+#if defined(BOTAN_HAS_CURVE_25519)
+      if(params == "curve25519")
+         {
+         std::unique_ptr<Botan::Private_Key> key(new Botan::Curve25519_PrivateKey(safe_get(rng_obj)));
+         *key_obj = new botan_privkey_struct(key.release());
+         return 0;
+         }
+#endif
+
 #if defined(BOTAN_HAS_ECDH)
-      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
       Botan::EC_Group grp(params);
-      std::unique_ptr<Botan::ECDH_PrivateKey> ecdh(new Botan::ECDH_PrivateKey(rng, grp));
-      *key = new botan_privkey_struct(ecdh.release());
+      std::unique_ptr<Botan::Private_Key> key(new Botan::ECDH_PrivateKey(safe_get(rng_obj), grp));
+      *key_obj = new botan_privkey_struct(key.release());
       return 0;
 #endif
       }
@@ -747,7 +793,7 @@ int botan_privkey_create_ecdh(botan_privkey_t* key, botan_rng_t rng_obj, const c
       log_exception(BOTAN_CURRENT_FUNCTION, e.what());
       }
 
-   return -1;
+   return BOTAN_FFI_ERROR_EXCEPTION_THROWN;
    }
 
 int botan_privkey_load(botan_privkey_t* key, botan_rng_t rng_obj,
@@ -779,7 +825,7 @@ int botan_privkey_load(botan_privkey_t* key, botan_rng_t rng_obj,
 
    return -1;
    *key = nullptr;
-   return -1;
+   return BOTAN_FFI_ERROR_EXCEPTION_THROWN;
    }
 
 int botan_privkey_destroy(botan_privkey_t key)
@@ -809,7 +855,7 @@ int botan_privkey_export_pubkey(botan_pubkey_t* pubout, botan_privkey_t key_obj)
       log_exception(BOTAN_CURRENT_FUNCTION, e.what());
       }
 
-   return -1;
+   return BOTAN_FFI_ERROR_EXCEPTION_THROWN;
    }
 
 int botan_pubkey_algo_name(botan_pubkey_t key, char out[], size_t* out_len)
@@ -833,29 +879,44 @@ int botan_pubkey_algo_name(botan_pubkey_t key, char out[], size_t* out_len)
 int botan_pubkey_export(botan_pubkey_t key, uint8_t out[], size_t* out_len, uint32_t flags)
    {
    return BOTAN_FFI_DO(Botan::Public_Key, key, {
-      return write_output(out, out_len, Botan::X509::BER_encode(key));
+      if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_DER)
+         return write_vec_output(out, out_len, Botan::X509::BER_encode(key));
+      else if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_PEM)
+         return write_str_output(out, out_len, Botan::X509::PEM_encode(key));
+      else
+         return -2;
       });
    }
 
 int botan_privkey_export(botan_privkey_t key, uint8_t out[], size_t* out_len, uint32_t flags)
    {
    return BOTAN_FFI_DO(Botan::Private_Key, key, {
-      return write_output(out, out_len, Botan::PKCS8::BER_encode(key));
+      if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_DER)
+         return write_vec_output(out, out_len, Botan::PKCS8::BER_encode(key));
+      else if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_PEM)
+         return write_str_output(out, out_len, Botan::PKCS8::PEM_encode(key));
+      else
+         return -2;
       });
    }
 
 int botan_privkey_export_encrypted(botan_privkey_t key,
                                    uint8_t out[], size_t* out_len,
                                    botan_rng_t rng_obj,
-                                   const char* passphrase,
-                                   const char* encryption_algo,
+                                   const char* pass,
+                                   const char* pbe,
                                    uint32_t flags)
    {
    return BOTAN_FFI_DO(Botan::Private_Key, key, {
-      auto ber = Botan::PKCS8::BER_encode(key, safe_get(rng_obj), passphrase,
-                                          std::chrono::milliseconds(300),
-                                          encryption_algo);
-      return write_output(out, out_len, ber);
+      auto pbkdf_time = std::chrono::milliseconds(300);
+      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
+
+      if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_DER)
+         return write_vec_output(out, out_len, Botan::PKCS8::BER_encode(key, rng, pass, pbkdf_time, pbe));
+      else if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_PEM)
+         return write_str_output(out, out_len, Botan::PKCS8::PEM_encode(key, rng, pass, pbkdf_time, pbe));
+      else
+         return -2;
       });
    }
 
@@ -876,8 +937,6 @@ int botan_pubkey_fingerprint(botan_pubkey_t key, const char* hash_fn,
                    Botan::copy_mem(out, &z[0], *out_len);
                    return 0;
                    });
-   *out_len = 0;
-   return -1;
    }
 
 int botan_pk_op_encrypt_create(botan_pk_op_encrypt_t* op,
@@ -890,7 +949,7 @@ int botan_pk_op_encrypt_create(botan_pk_op_encrypt_t* op,
       BOTAN_ASSERT_NONNULL(op);
 
       if(flags != 0)
-         return -2;
+         return BOTAN_FFI_ERROR_BAD_FLAG;
 
       std::unique_ptr<Botan::PK_Encryptor> pk(new Botan::PK_Encryptor_EME(safe_get(key_obj), padding));
       *op = new botan_pk_op_encrypt_struct(pk.release());
@@ -916,7 +975,7 @@ int botan_pk_op_encrypt(botan_pk_op_encrypt_t op,
                         const uint8_t plaintext[], size_t plaintext_len)
    {
    return BOTAN_FFI_DO(Botan::PK_Encryptor, op, {
-      return write_output(out, out_len, op.encrypt(plaintext, plaintext_len, safe_get(rng_obj)));
+      return write_vec_output(out, out_len, op.encrypt(plaintext, plaintext_len, safe_get(rng_obj)));
       });
    }
 
@@ -933,7 +992,7 @@ int botan_pk_op_decrypt_create(botan_pk_op_decrypt_t* op,
       BOTAN_ASSERT_NONNULL(op);
 
       if(flags != 0)
-         return -2;
+         return BOTAN_FFI_ERROR_BAD_FLAG;
 
       std::unique_ptr<Botan::PK_Decryptor> pk(new Botan::PK_Decryptor_EME(safe_get(key_obj), padding));
       *op = new botan_pk_op_decrypt_struct(pk.release());
@@ -958,7 +1017,7 @@ int botan_pk_op_decrypt(botan_pk_op_decrypt_t op,
                         uint8_t ciphertext[], size_t ciphertext_len)
    {
    return BOTAN_FFI_DO(Botan::PK_Decryptor, op, {
-      return write_output(out, out_len, op.decrypt(ciphertext, ciphertext_len));
+      return write_vec_output(out, out_len, op.decrypt(ciphertext, ciphertext_len));
       });
    }
 
@@ -975,7 +1034,7 @@ int botan_pk_op_sign_create(botan_pk_op_sign_t* op,
       BOTAN_ASSERT_NONNULL(op);
 
       if(flags != 0)
-         return -2;
+         return BOTAN_FFI_ERROR_BAD_FLAG;
 
       std::unique_ptr<Botan::PK_Signer> pk(new Botan::PK_Signer(safe_get(key_obj), hash));
       *op = new botan_pk_op_sign_struct(pk.release());
@@ -986,7 +1045,7 @@ int botan_pk_op_sign_create(botan_pk_op_sign_t* op,
       log_exception(BOTAN_CURRENT_FUNCTION, e.what());
       }
 
-   return -1;
+   return BOTAN_FFI_ERROR_EXCEPTION_THROWN;
    }
 
 int botan_pk_op_sign_destroy(botan_pk_op_sign_t op)
@@ -1003,7 +1062,7 @@ int botan_pk_op_sign_update(botan_pk_op_sign_t op, const uint8_t in[], size_t in
 int botan_pk_op_sign_finish(botan_pk_op_sign_t op, botan_rng_t rng_obj, uint8_t out[], size_t* out_len)
    {
    return BOTAN_FFI_DO(Botan::PK_Signer, op, {
-      return write_output(out, out_len, op.signature(safe_get(rng_obj)));
+      return write_vec_output(out, out_len, op.signature(safe_get(rng_obj)));
       });
    }
 
@@ -1017,7 +1076,7 @@ int botan_pk_op_verify_create(botan_pk_op_verify_t* op,
       BOTAN_ASSERT_NONNULL(op);
 
       if(flags != 0)
-         return -2;
+         return BOTAN_FFI_ERROR_BAD_FLAG;
 
       std::unique_ptr<Botan::PK_Verifier> pk(new Botan::PK_Verifier(safe_get(key_obj), hash));
       *op = new botan_pk_op_verify_struct(pk.release());
@@ -1064,7 +1123,7 @@ int botan_pk_op_key_agreement_create(botan_pk_op_ka_t* op,
       BOTAN_ASSERT_NONNULL(op);
 
       if(flags != 0)
-         return -2;
+         return BOTAN_FFI_ERROR_BAD_FLAG;
 
       std::unique_ptr<Botan::PK_Key_Agreement> pk(new Botan::PK_Key_Agreement(safe_get(key_obj), kdf));
       *op = new botan_pk_op_ka_struct(pk.release());
@@ -1084,6 +1143,27 @@ int botan_pk_op_key_agreement_destroy(botan_pk_op_ka_t op)
    return 0;
    }
 
+int botan_pk_op_key_agreement_export_public(botan_privkey_t key,
+                                            uint8_t out[], size_t* out_len)
+   {
+   return BOTAN_FFI_DO(Botan::Private_Key, key, {
+      auto kak = dynamic_cast<const Botan::PK_Key_Agreement_Key*>(&key);
+      if(!kak)
+         return -2;
+      const std::vector<uint8_t> pv = kak->public_value();
+      const size_t avail = *out_len;
+      *out_len = pv.size();
+
+      if(pv.size() <= avail)
+         {
+         Botan::copy_mem(out, &pv[0], pv.size());
+         return 0;
+         }
+
+      return -1;
+      });
+   }
+
 int botan_pk_op_key_agreement(botan_pk_op_ka_t op,
                               uint8_t out[], size_t* out_len,
                               const uint8_t other_key[], size_t other_key_len,
@@ -1091,7 +1171,7 @@ int botan_pk_op_key_agreement(botan_pk_op_ka_t op,
    {
    return BOTAN_FFI_DO(Botan::PK_Key_Agreement, op, {
       auto k = op.derive_key(*out_len, other_key, other_key_len, salt, salt_len).bits_of();
-      return write_output(out, out_len, k);
+      return write_vec_output(out, out_len, k);
       });
    }
 
