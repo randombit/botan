@@ -18,6 +18,8 @@ Version 1.11.14, Not Yet Released
   ciphersuite numbers used are in the experimental range and may
   conflict with other uses.
 
+* The memory usage of the counter mode implementation has been reduced.
+
 * The memory allocator available on Unix systems which uses mmap and
   mlock to lock a pool of memory now checks an environment variable
   BOTAN_MLOCK_POOL_SIZE. If this is set to a smaller value then the
