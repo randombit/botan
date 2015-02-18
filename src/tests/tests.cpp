@@ -260,7 +260,6 @@ int main(int argc, char* argv[])
    DEF_TEST(mac);
    DEF_TEST(pbkdf);
    DEF_TEST(kdf);
-   DEF_TEST(hkdf);
    DEF_TEST(keywrap);
    DEF_TEST(transform);
    DEF_TEST(rngs);

@@ -8,7 +8,6 @@
 #include <botan/internal/pbkdf_utils.h>
 #include <botan/pbkdf2.h>
 #include <botan/get_byte.h>
-#include <botan/hmac.h>
 #include <botan/internal/xor_buf.h>
 #include <botan/internal/rounding.h>
 
@@ -21,8 +20,8 @@ PKCS5_PBKDF2* PKCS5_PBKDF2::make(const Spec& spec)
    if(auto mac = make_a<MessageAuthenticationCode>(spec.arg(0)))
       return new PKCS5_PBKDF2(mac);
 
-   if(auto hash = make_a<HashFunction>(spec.arg(0)))
-      return new PKCS5_PBKDF2(new HMAC(hash));
+   if(auto mac = make_a<MessageAuthenticationCode>("HMAC(" + spec.arg(0) + ")"))
+      return new PKCS5_PBKDF2(mac);
 
    return nullptr;
    }
