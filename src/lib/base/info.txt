@@ -23,6 +23,7 @@ hash
 hex
 mac
 modes
+pbkdf
 rng
 stream
 utils

@@ -44,14 +44,14 @@ std::vector<byte> DLIES_Encryptor::enc(const byte in[], size_t length,
    vz += ka.derive_key(0, other_key).bits_of();
 
    const size_t K_LENGTH = length + mac_keylen;
-   OctetString K = kdf->derive_key(K_LENGTH, vz);
+   secure_vector<byte> K = kdf->derive_key(K_LENGTH, vz);
 
-   if(K.length() != K_LENGTH)
+   if(K.size() != K_LENGTH)
       throw Encoding_Error("DLIES: KDF did not provide sufficient output");
    byte* C = &out[my_key.size()];
 
-   xor_buf(C, K.begin() + mac_keylen, length);
-   mac->set_key(K.begin(), mac_keylen);
+   mac->set_key(&K[0], mac_keylen);
+   xor_buf(C, &K[mac_keylen], length);
 
    mac->update(C, length);
    for(size_t j = 0; j != 8; ++j)
@@ -114,11 +114,11 @@ secure_vector<byte> DLIES_Decryptor::dec(const byte msg[], size_t length) const
    vz += ka.derive_key(0, v).bits_of();
 
    const size_t K_LENGTH = C.size() + mac_keylen;
-   OctetString K = kdf->derive_key(K_LENGTH, vz);
-   if(K.length() != K_LENGTH)
+   secure_vector<byte> K = kdf->derive_key(K_LENGTH, vz);
+   if(K.size() != K_LENGTH)
       throw Encoding_Error("DLIES: KDF did not provide sufficient output");
 
-   mac->set_key(K.begin(), mac_keylen);
+   mac->set_key(&K[0], mac_keylen);
    mac->update(C);
    for(size_t j = 0; j != 8; ++j)
       mac->update(0);
@@ -126,7 +126,7 @@ secure_vector<byte> DLIES_Decryptor::dec(const byte msg[], size_t length) const
    if(T != T2)
       throw Decoding_Error("DLIES: message authentication failed");
 
-   xor_buf(C, K.begin() + mac_keylen, C.size());
+   xor_buf(C, &K[0] + mac_keylen, C.size());
 
    return C;
    }

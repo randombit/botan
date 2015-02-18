@@ -14,6 +14,14 @@
 
 namespace Botan {
 
+BOTAN_DLL size_t pbkdf2(MessageAuthenticationCode& prf,
+                        byte out[],
+                        size_t out_len,
+                        const std::string& passphrase,
+                        const byte salt[], size_t salt_len,
+                        size_t iterations,
+                        std::chrono::milliseconds msec);
+
 /**
 * PKCS #5 PBKDF2
 */
@@ -30,12 +38,11 @@ class BOTAN_DLL PKCS5_PBKDF2 : public PBKDF
          return new PKCS5_PBKDF2(mac->clone());
          }
 
-      std::pair<size_t, OctetString>
-         key_derivation(size_t output_len,
-                        const std::string& passphrase,
-                        const byte salt[], size_t salt_len,
-                        size_t iterations,
-                        std::chrono::milliseconds msec) const override;
+      size_t pbkdf(byte output_buf[], size_t output_len,
+                   const std::string& passphrase,
+                   const byte salt[], size_t salt_len,
+                   size_t iterations,
+                   std::chrono::milliseconds msec) const override;
 
       /**
       * Create a PKCS #5 instance using the specified message auth code

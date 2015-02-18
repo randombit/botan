@@ -13,22 +13,18 @@ namespace Botan {
 
 BOTAN_REGISTER_PBKDF_1HASH(PKCS5_PBKDF1, "PBKDF1")
 
-/*
-* Return a PKCS#5 PBKDF1 derived key
-*/
-std::pair<size_t, OctetString>
-PKCS5_PBKDF1::key_derivation(size_t key_len,
-                             const std::string& passphrase,
-                             const byte salt[], size_t salt_len,
-                             size_t iterations,
-                             std::chrono::milliseconds msec) const
+size_t PKCS5_PBKDF1::pbkdf(byte output_buf[], size_t output_len,
+                           const std::string& passphrase,
+                           const byte salt[], size_t salt_len,
+                           size_t iterations,
+                           std::chrono::milliseconds msec) const
    {
-   if(key_len > hash->output_length())
+   if(output_len > m_hash->output_length())
       throw Invalid_Argument("PKCS5_PBKDF1: Requested output length too long");
 
-   hash->update(passphrase);
-   hash->update(salt, salt_len);
-   secure_vector<byte> key = hash->final();
+   m_hash->update(passphrase);
+   m_hash->update(salt, salt_len);
+   secure_vector<byte> key = m_hash->final();
 
    const auto start = std::chrono::high_resolution_clock::now();
    size_t iterations_performed = 1;
@@ -48,14 +44,14 @@ PKCS5_PBKDF1::key_derivation(size_t key_len,
       else if(iterations_performed == iterations)
          break;
 
-      hash->update(key);
-      hash->final(&key[0]);
+      m_hash->update(key);
+      m_hash->final(&key[0]);
 
       ++iterations_performed;
       }
 
-   return std::make_pair(iterations_performed,
-                         OctetString(&key[0], std::min(key_len, key.size())));
+   copy_mem(output_buf, &key[0], output_len);
+   return iterations_performed;
    }
 
 }

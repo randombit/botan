@@ -128,6 +128,11 @@ int write_str_output(uint8_t out[], size_t* out_len, const std::string& str)
                        str.size() + 1);
    }
 
+int write_str_output(char out[], size_t* out_len, const std::string& str)
+   {
+   return write_str_output(reinterpret_cast<uint8_t*>(out), out_len, str);
+   }
+
 #define BOTAN_FFI_DO(T, obj, block) apply_fn(obj, BOTAN_CURRENT_FUNCTION, [=](T& obj) { do { block } while(0); return 0; })
 
 }
@@ -582,15 +587,7 @@ int botan_pbkdf(const char* pbkdf_algo, uint8_t out[], size_t out_len,
    try
       {
       std::unique_ptr<Botan::PBKDF> pbkdf(Botan::get_pbkdf(pbkdf_algo));
-
-      auto r = pbkdf->derive_key(out_len, pass, salt, salt_len, iterations).bits_of();
-
-      if(r.size() != out_len)
-         throw std::runtime_error(std::string(pbkdf_algo) + " produced " +
-                                  std::to_string(r.size()) + " asked for " +
-                                  std::to_string(out_len));
-
-      Botan::copy_mem(out, &r[0], out_len);
+      pbkdf->pbkdf_iterations(out, out_len, pass, salt, salt_len, iterations);
       }
    catch(std::exception& e)
       {
@@ -610,17 +607,9 @@ int botan_pbkdf_timed(const char* pbkdf_algo,
    try
       {
       std::unique_ptr<Botan::PBKDF> pbkdf(Botan::get_pbkdf(pbkdf_algo));
-
-      auto r = pbkdf->derive_key(out_len, password, salt, salt_len,
-                                 std::chrono::milliseconds(ms_to_run),
-                                 *iterations_used).bits_of();
-
-      if(r.size() != out_len)
-         throw std::runtime_error(std::string(pbkdf_algo) + " produced " +
-                                  std::to_string(r.size()) + " asked for " +
-                                  std::to_string(out_len));
-
-      Botan::copy_mem(out, &r[0], out_len);
+      pbkdf->pbkdf_timed(out, out_len, password, salt, salt_len,
+                         std::chrono::milliseconds(ms_to_run),
+                         *iterations_used);
       }
    catch(std::exception& e)
       {
@@ -638,12 +627,7 @@ int botan_kdf(const char* kdf_algo,
    try
       {
       std::unique_ptr<Botan::KDF> kdf(Botan::get_kdf(kdf_algo));
-      auto r = kdf->derive_key(out_len, secret, secret_len, salt, salt_len);
-      if(r.size() != out_len)
-         throw std::runtime_error(std::string(kdf_algo) + " produced " +
-                                  std::to_string(r.size()) + " asked for " +
-                                  std::to_string(out_len));
-      Botan::copy_mem(out, &r[0], out_len);
+      kdf->kdf(out, out_len, secret, secret_len, salt, salt_len);
       }
    catch(std::exception& e)
       {
@@ -860,20 +844,7 @@ int botan_privkey_export_pubkey(botan_pubkey_t* pubout, botan_privkey_t key_obj)
 
 int botan_pubkey_algo_name(botan_pubkey_t key, char out[], size_t* out_len)
    {
-   return apply_fn(key, BOTAN_CURRENT_FUNCTION,
-                   [out,out_len](Botan::Public_Key& k)
-                   {
-                   const std::string name = k.algo_name();
-                   const size_t avail = *out_len;
-                   *out_len = name.size() + 1;
-                   if(avail > 1 + name.size())
-                      {
-                      Botan::copy_mem(out, name.data(), name.size());
-                      out[name.size()] = 0;
-                      return 0;
-                      }
-                   return -1;
-                   });
+   return BOTAN_FFI_DO(Botan::Public_Key, key, { return write_str_output(out, out_len, key.algo_name()); });
    }
 
 int botan_pubkey_export(botan_pubkey_t key, uint8_t out[], size_t* out_len, uint32_t flags)
@@ -1147,20 +1118,9 @@ int botan_pk_op_key_agreement_export_public(botan_privkey_t key,
                                             uint8_t out[], size_t* out_len)
    {
    return BOTAN_FFI_DO(Botan::Private_Key, key, {
-      auto kak = dynamic_cast<const Botan::PK_Key_Agreement_Key*>(&key);
-      if(!kak)
-         return -2;
-      const std::vector<uint8_t> pv = kak->public_value();
-      const size_t avail = *out_len;
-      *out_len = pv.size();
-
-      if(pv.size() <= avail)
-         {
-         Botan::copy_mem(out, &pv[0], pv.size());
-         return 0;
-         }
-
-      return -1;
+      if(auto kak = dynamic_cast<const Botan::PK_Key_Agreement_Key*>(&key))
+         return write_vec_output(out, out_len, kak->public_value());
+      return -2;
       });
    }
 

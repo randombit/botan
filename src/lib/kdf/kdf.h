@@ -25,6 +25,30 @@ class BOTAN_DLL KDF
 
       virtual std::string name() const = 0;
 
+      virtual size_t kdf(byte key[], size_t key_len,
+                         const byte secret[], size_t secret_len,
+                         const byte salt[], size_t salt_len) const = 0;
+
+
+      /**
+      * Derive a key
+      * @param key_len the desired output length in bytes
+      * @param secret the secret input
+      * @param secret_len size of secret in bytes
+      * @param salt a diversifier
+      * @param salt_len size of salt in bytes
+      */
+      secure_vector<byte> derive_key(size_t key_len,
+                                    const byte secret[],
+                                    size_t secret_len,
+                                    const byte salt[],
+                                    size_t salt_len) const
+         {
+         secure_vector<byte> key(key_len);
+         key.resize(kdf(&key[0], key.size(), secret, secret_len, salt, salt_len));
+         return key;
+         }
+
       /**
       * Derive a key
       * @param key_len the desired output length in bytes
@@ -90,31 +114,10 @@ class BOTAN_DLL KDF
                            salt.length());
          }
 
-      /**
-      * Derive a key
-      * @param key_len the desired output length in bytes
-      * @param secret the secret input
-      * @param secret_len size of secret in bytes
-      * @param salt a diversifier
-      * @param salt_len size of salt in bytes
-      */
-      secure_vector<byte> derive_key(size_t key_len,
-                                    const byte secret[],
-                                    size_t secret_len,
-                                    const byte salt[],
-                                    size_t salt_len) const
-         {
-         return derive(key_len, secret, secret_len, salt, salt_len);
-         }
-
       virtual KDF* clone() const = 0;
 
       typedef SCAN_Name Spec;
-   private:
-      virtual secure_vector<byte>
-         derive(size_t key_len,
-                const byte secret[], size_t secret_len,
-                const byte salt[], size_t salt_len) const = 0;
+
    };
 
 /**

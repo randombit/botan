@@ -12,16 +12,22 @@ namespace Botan {
 
 BOTAN_REGISTER_KDF_1HASH(KDF1, "KDF1");
 
-/*
-* KDF1 Key Derivation Mechanism
-*/
-secure_vector<byte> KDF1::derive(size_t,
-                                const byte secret[], size_t secret_len,
-                                const byte P[], size_t P_len) const
+size_t KDF1::kdf(byte key[], size_t key_len,
+                 const byte secret[], size_t secret_len,
+                 const byte salt[], size_t salt_len) const
    {
-   hash->update(secret, secret_len);
-   hash->update(P, P_len);
-   return hash->final();
+   m_hash->update(secret, secret_len);
+   m_hash->update(salt, salt_len);
+
+   if(key_len < m_hash->output_length())
+      {
+      secure_vector<byte> v = m_hash->final();
+      copy_mem(key, &v[0], key_len);
+      return key_len;
+      }
+
+   m_hash->final(key);
+   return m_hash->output_length();
    }
 
 }

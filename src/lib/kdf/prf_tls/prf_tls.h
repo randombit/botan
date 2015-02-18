@@ -19,17 +19,18 @@ namespace Botan {
 class BOTAN_DLL TLS_PRF : public KDF
    {
    public:
-      secure_vector<byte> derive(size_t key_len,
-                                const byte secret[], size_t secret_len,
-                                const byte seed[], size_t seed_len) const;
-
       std::string name() const { return "TLS-PRF"; }
+
       KDF* clone() const { return new TLS_PRF; }
+
+      size_t kdf(byte key[], size_t key_len,
+                 const byte secret[], size_t secret_len,
+                 const byte salt[], size_t salt_len) const override;
 
       TLS_PRF();
    private:
-      std::unique_ptr<MessageAuthenticationCode> hmac_md5;
-      std::unique_ptr<MessageAuthenticationCode> hmac_sha1;
+      std::unique_ptr<MessageAuthenticationCode> m_hmac_md5;
+      std::unique_ptr<MessageAuthenticationCode> m_hmac_sha1;
    };
 
 /**
@@ -38,14 +39,15 @@ class BOTAN_DLL TLS_PRF : public KDF
 class BOTAN_DLL TLS_12_PRF : public KDF
    {
    public:
-      secure_vector<byte> derive(size_t key_len,
-                                const byte secret[], size_t secret_len,
-                                const byte seed[], size_t seed_len) const;
-
       std::string name() const { return "TLS-12-PRF(" + m_mac->name() + ")"; }
+
       KDF* clone() const { return new TLS_12_PRF(m_mac->clone()); }
 
-      TLS_12_PRF(MessageAuthenticationCode* mac);
+      size_t kdf(byte key[], size_t key_len,
+                 const byte secret[], size_t secret_len,
+                 const byte salt[], size_t salt_len) const override;
+
+      TLS_12_PRF(MessageAuthenticationCode* mac) : m_mac(mac) {}
 
       static TLS_12_PRF* make(const Spec& spec);
    private:
