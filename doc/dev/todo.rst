@@ -14,7 +14,6 @@ Basic Crypto
 * BLAKE2
 * EdDSA
 * Skein-MAC
-* IETF standard HKDF (RFC 5869)
 * ARIA (Korean block cipher, RFCs 5794 and 6209)
 * Extend Cascade_Cipher to support arbitrary number of ciphers
 
@@ -54,16 +53,14 @@ New Protocols
 Accelerators / backends
 ----------------------------------------
 
+* Improve OpenSSL provider (add cipher modes, RSA, etc)
 * /dev/crypto
 * Windows CryptoAPI
 * Apple CommonCrypto
 * ARMv8 crypto extensions
 * Intel Skylake SHA-1/SHA-2
 
-FFI
+Python
 ----------------------------------------
 
-* Expose TLS to Python
-* Expose ECC to Python
-* Expose bcrypt to Python
-
+* TLS, ECDSA, bcrypt, ...

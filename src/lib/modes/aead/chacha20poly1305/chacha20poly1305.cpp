@@ -5,13 +5,13 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/mode_utils.h>
 #include <botan/chacha20poly1305.h>
-#include <botan/chacha.h>
-#include <botan/poly1305.h>
-#include <botan/loadstor.h>
-#include <algorithm>
 
 namespace Botan {
+
+BOTAN_REGISTER_TRANSFORM_NOARGS(ChaCha20Poly1305_Encryption);
+BOTAN_REGISTER_TRANSFORM_NOARGS(ChaCha20Poly1305_Decryption);
 
 bool ChaCha20Poly1305_Mode::valid_nonce_length(size_t n) const
    {
@@ -29,7 +29,7 @@ void ChaCha20Poly1305_Mode::clear()
 void ChaCha20Poly1305_Mode::key_schedule(const byte key[], size_t length)
    {
    if(!m_chacha.get())
-      m_chacha.reset(new ChaCha);
+      m_chacha.reset(make_a<StreamCipher>("ChaCha"));
    m_chacha->set_key(key, length);
    }
 
@@ -61,7 +61,7 @@ secure_vector<byte> ChaCha20Poly1305_Mode::start_raw(const byte nonce[], size_t 
    m_chacha->encrypt(zeros);
 
    if(!m_poly1305.get())
-      m_poly1305.reset(new Poly1305);
+      m_poly1305.reset(make_a<MessageAuthenticationCode>("Poly1305"));
    m_poly1305->set_key(&zeros[0], 32);
    // Remainder of output is discard
 

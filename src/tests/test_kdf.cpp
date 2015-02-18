@@ -6,6 +6,7 @@
 
 #include "tests.h"
 
+#include <botan/kdf.h>
 #include <botan/lookup.h>
 #include <botan/hex.h>
 #include <iostream>

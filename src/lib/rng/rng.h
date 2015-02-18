@@ -28,12 +28,6 @@ class BOTAN_DLL RandomNumberGenerator
       static RandomNumberGenerator* make_rng();
 
       /**
-      * Create a seeded and active RNG object for general application use
-      * Added in 1.11.5
-      */
-      static std::unique_ptr<RandomNumberGenerator> make_rng(class Algorithm_Factory& af);
-
-      /**
       * Randomize a byte array.
       * @param output the byte array to hold the random output.
       * @param length the length of the byte array output.

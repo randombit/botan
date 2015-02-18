@@ -5,9 +5,11 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/pk_utils.h>
 #include <botan/dsa.h>
-#include <botan/numthry.h>
 #include <botan/keypair.h>
+#include <botan/pow_mod.h>
+#include <botan/reducer.h>
 #include <botan/rfc6979.h>
 #include <future>
 
@@ -67,15 +69,37 @@ bool DSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    return KeyPair::signature_consistency_check(rng, *this, "EMSA1(SHA-1)");
    }
 
-DSA_Signature_Operation::DSA_Signature_Operation(const DSA_PrivateKey& dsa,
-                                                 const std::string& emsa) :
-   q(dsa.group_q()),
-   x(dsa.get_x()),
-   powermod_g_p(dsa.group_g(), dsa.group_p()),
-   mod_q(dsa.group_q()),
-   m_hash(hash_for_deterministic_signature(emsa))
+namespace {
+
+/**
+* Object that can create a DSA signature
+*/
+class DSA_Signature_Operation : public PK_Ops::Signature
    {
-   }
+   public:
+      typedef DSA_PrivateKey Key_Type;
+      DSA_Signature_Operation(const DSA_PrivateKey& dsa, const std::string& emsa) :
+         q(dsa.group_q()),
+         x(dsa.get_x()),
+         powermod_g_p(dsa.group_g(), dsa.group_p()),
+         mod_q(dsa.group_q()),
+         m_hash(hash_for_deterministic_signature(emsa))
+         {
+         }
+
+      size_t message_parts() const override { return 2; }
+      size_t message_part_size() const override { return q.bytes(); }
+      size_t max_input_bits() const override { return q.bits(); }
+
+      secure_vector<byte> sign(const byte msg[], size_t msg_len,
+                              RandomNumberGenerator& rng) override;
+   private:
+      const BigInt& q;
+      const BigInt& x;
+      Fixed_Base_Power_Mod powermod_g_p;
+      Modular_Reducer mod_q;
+      std::string m_hash;
+   };
 
 secure_vector<byte>
 DSA_Signature_Operation::sign(const byte msg[], size_t msg_len,
@@ -105,14 +129,38 @@ DSA_Signature_Operation::sign(const byte msg[], size_t msg_len,
    return output;
    }
 
-DSA_Verification_Operation::DSA_Verification_Operation(const DSA_PublicKey& dsa) :
-   q(dsa.group_q()), y(dsa.get_y())
+/**
+* Object that can verify a DSA signature
+*/
+class DSA_Verification_Operation : public PK_Ops::Verification
    {
-   powermod_g_p = Fixed_Base_Power_Mod(dsa.group_g(), dsa.group_p());
-   powermod_y_p = Fixed_Base_Power_Mod(y, dsa.group_p());
-   mod_p = Modular_Reducer(dsa.group_p());
-   mod_q = Modular_Reducer(dsa.group_q());
-   }
+   public:
+      typedef DSA_PublicKey Key_Type;
+      DSA_Verification_Operation(const DSA_PublicKey& dsa,
+                                 const std::string&) :
+         q(dsa.group_q()), y(dsa.get_y())
+         {
+         powermod_g_p = Fixed_Base_Power_Mod(dsa.group_g(), dsa.group_p());
+         powermod_y_p = Fixed_Base_Power_Mod(y, dsa.group_p());
+         mod_p = Modular_Reducer(dsa.group_p());
+         mod_q = Modular_Reducer(dsa.group_q());
+         }
+
+      size_t message_parts() const { return 2; }
+      size_t message_part_size() const { return q.bytes(); }
+      size_t max_input_bits() const { return q.bits(); }
+
+      bool with_recovery() const override { return false; }
+
+      bool verify(const byte msg[], size_t msg_len,
+                  const byte sig[], size_t sig_len) override;
+   private:
+      const BigInt& q;
+      const BigInt& y;
+
+      Fixed_Base_Power_Mod powermod_g_p, powermod_y_p;
+      Modular_Reducer mod_p, mod_q;
+   };
 
 bool DSA_Verification_Operation::verify(const byte msg[], size_t msg_len,
                                         const byte sig[], size_t sig_len)
@@ -139,5 +187,10 @@ bool DSA_Verification_Operation::verify(const byte msg[], size_t msg_len,
 
    return (mod_q.reduce(s) == r);
    }
+
+BOTAN_REGISTER_PK_SIGNATURE_OP("DSA", DSA_Signature_Operation);
+BOTAN_REGISTER_PK_VERIFY_OP("DSA", DSA_Verification_Operation);
+
+}
 
 }

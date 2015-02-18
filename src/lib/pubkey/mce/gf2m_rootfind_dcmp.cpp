@@ -181,7 +181,7 @@ void gf2m_decomp_rootfind_state::calc_next_Aij()
   {
     gf2m delta_offs = 5;
     diff = this->m_j_gray ^ new_j_gray;
-    while(((((gf2m)1) << delta_offs) & diff) == 0)
+    while(((static_cast<gf2m>(1) << delta_offs) & diff) == 0)
     {
       delta_offs++;
 
@@ -206,7 +206,7 @@ void gf2m_decomp_rootfind_state::calc_LiK(const polyn_gf2m & sigma)
   {
     u32bit Lik_pos_base = k * this->m_outer_summands;
     gf2m alpha_l_k_tt2_ttj[4];
-    alpha_l_k_tt2_ttj[0] = sp_field->gf_l_from_n( ((gf2m)1) << k);
+    alpha_l_k_tt2_ttj[0] = sp_field->gf_l_from_n(static_cast<gf2m>(1) << k);
     alpha_l_k_tt2_ttj[1] = sp_field->gf_mul_rrr(alpha_l_k_tt2_ttj[0], alpha_l_k_tt2_ttj[0]);
     alpha_l_k_tt2_ttj[2] = sp_field->gf_mul_rrr(alpha_l_k_tt2_ttj[1],alpha_l_k_tt2_ttj[1] );
 
@@ -220,7 +220,7 @@ void gf2m_decomp_rootfind_state::calc_LiK(const polyn_gf2m & sigma)
       for(j = 0; j <= 3; j++)
       {
         gf2m f, x;
-        u32bit f_ind = five_i + ((u32bit)1<<j);
+        u32bit f_ind = five_i + (static_cast<u32bit>(1) << j);
         if(f_ind > d)
         {
           break;

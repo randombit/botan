@@ -5,10 +5,13 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/mac_utils.h>
 #include <botan/poly1305.h>
 #include <botan/internal/poly1305_donna.h>
 
 namespace Botan {
+
+BOTAN_REGISTER_MAC_NOARGS(Poly1305);
 
 void Poly1305::clear()
    {
@@ -17,7 +20,7 @@ void Poly1305::clear()
    m_buf_pos = 0;
    }
 
-void Poly1305::key_schedule(const byte key[], size_t key_len)
+void Poly1305::key_schedule(const byte key[], size_t)
    {
    m_buf_pos = 0;
    m_buf.resize(16);

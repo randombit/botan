@@ -6,7 +6,6 @@
 */
 
 #include <botan/dl_group.h>
-#include <botan/libstate.h>
 #include <botan/parsing.h>
 #include <botan/numthry.h>
 #include <botan/der_enc.h>
@@ -72,10 +71,7 @@ DL_Group::DL_Group(RandomNumberGenerator& rng,
       {
       qbits = qbits ? qbits : ((pbits <= 1024) ? 160 : 256);
 
-      generate_dsa_primes(rng,
-                          global_state().algorithm_factory(),
-                          p, q,
-                          pbits, qbits);
+      generate_dsa_primes(rng, p, q, pbits, qbits);
 
       g = make_dsa_generator(p, q);
       }
@@ -90,9 +86,7 @@ DL_Group::DL_Group(RandomNumberGenerator& rng,
                    const std::vector<byte>& seed,
                    size_t pbits, size_t qbits)
    {
-   if(!generate_dsa_primes(rng,
-                           global_state().algorithm_factory(),
-                           p, q, pbits, qbits, seed))
+   if(!generate_dsa_primes(rng, p, q, pbits, qbits, seed))
       throw Invalid_Argument("DL_Group: The seed given does not "
                              "generate a DSA group");
 

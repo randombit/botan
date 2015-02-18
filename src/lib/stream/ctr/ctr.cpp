@@ -5,14 +5,26 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/stream_utils.h>
 #include <botan/ctr.h>
-#include <botan/internal/xor_buf.h>
 
 namespace Botan {
 
+BOTAN_REGISTER_NAMED_T(StreamCipher, "CTR-BE", CTR_BE, CTR_BE::make);
+
+CTR_BE* CTR_BE::make(const Spec& spec)
+   {
+   if(spec.algo_name() == "CTR-BE" && spec.arg_count() == 1)
+      {
+      if(BlockCipher* c = Algo_Registry<BlockCipher>::global_registry().make(spec.arg(0)))
+         return new CTR_BE(c);
+      }
+   return nullptr;
+   }
+
 CTR_BE::CTR_BE(BlockCipher* ciph) :
    m_cipher(ciph),
-   m_counter(256 * m_cipher->block_size()),
+   m_counter(m_cipher->parallel_bytes()),
    m_pad(m_counter.size()),
    m_pad_pos(0)
    {
@@ -62,10 +74,11 @@ void CTR_BE::set_iv(const byte iv[], size_t iv_len)
 
    zeroise(m_counter);
 
+   const size_t n_wide = m_counter.size() / m_cipher->block_size();
    buffer_insert(m_counter, 0, iv, iv_len);
 
-   // Set m_counter blocks to IV, IV + 1, ... IV + 255
-   for(size_t i = 1; i != 256; ++i)
+   // Set m_counter blocks to IV, IV + 1, ... IV + n
+   for(size_t i = 1; i != n_wide; ++i)
       {
       buffer_insert(m_counter, i*bs, &m_counter[(i-1)*bs], bs);
 
@@ -74,7 +87,7 @@ void CTR_BE::set_iv(const byte iv[], size_t iv_len)
             break;
       }
 
-   m_cipher->encrypt_n(&m_counter[0], &m_pad[0], 256);
+   m_cipher->encrypt_n(&m_counter[0], &m_pad[0], n_wide);
    m_pad_pos = 0;
    }
 
@@ -84,20 +97,21 @@ void CTR_BE::set_iv(const byte iv[], size_t iv_len)
 void CTR_BE::increment_counter()
    {
    const size_t bs = m_cipher->block_size();
+   const size_t n_wide = m_counter.size() / bs;
 
-   /*
-   * Each counter value always needs to be incremented by 256,
-   * so we don't touch the lowest byte and instead treat it as
-   * an increment of one starting with the next byte.
-   */
-   for(size_t i = 0; i != 256; ++i)
+   for(size_t i = 0; i != n_wide; ++i)
       {
-      for(size_t j = 1; j != bs; ++j)
-         if(++m_counter[i*bs + (bs - 1 - j)])
-            break;
+      uint16_t carry = n_wide;
+      for(size_t j = 0; carry && j != bs; ++j)
+         {
+         const size_t off = i*bs + (bs-1-j);
+         const uint16_t cnt = static_cast<uint16_t>(m_counter[off]) + carry;
+         m_counter[off] = static_cast<byte>(cnt);
+         carry = (cnt >> 8);
+         }
       }
 
-   m_cipher->encrypt_n(&m_counter[0], &m_pad[0], 256);
+   m_cipher->encrypt_n(&m_counter[0], &m_pad[0], n_wide);
    m_pad_pos = 0;
    }
 

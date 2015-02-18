@@ -5,10 +5,24 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/pad_utils.h>
 #include <botan/emsa_pkcs1.h>
-#include <botan/hash_id.h>
 
 namespace Botan {
+
+namespace {
+
+EMSA* make_pkcs1v15(const EMSA::Spec& spec)
+   {
+   if(spec.arg(0) == "Raw")
+      return new EMSA_PKCS1v15_Raw;
+   else
+      return new EMSA_PKCS1v15(make_a<HashFunction>(spec.arg(0)));
+   }
+
+}
+
+BOTAN_REGISTER_NAMED_T(EMSA, "EMSA_PKCS1", EMSA_PCS1v15, make_pkcs1v15);
 
 namespace {
 

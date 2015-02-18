@@ -6,9 +6,8 @@
 */
 
 #include <botan/gcm.h>
+#include <botan/internal/mode_utils.h>
 #include <botan/ctr.h>
-#include <botan/internal/xor_buf.h>
-#include <botan/loadstor.h>
 
 #if defined(BOTAN_HAS_GCM_CLMUL)
   #include <botan/internal/clmul.h>
@@ -16,6 +15,8 @@
 #endif
 
 namespace Botan {
+
+BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN(GCM_Encryption, GCM_Decryption, 16);
 
 void GHASH::gcm_multiply(secure_vector<byte>& x) const
    {

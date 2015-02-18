@@ -1,6 +1,6 @@
 define LZMA_TRANSFORM 20141118
 
-load_on request
+load_on vendor
 
 <libs>
 all -> lzma

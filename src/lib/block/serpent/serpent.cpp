@@ -5,17 +5,18 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/block_utils.h>
 #include <botan/serpent.h>
 #include <botan/internal/serpent_sbox.h>
-#include <botan/loadstor.h>
-#include <botan/rotate.h>
 
 namespace Botan {
+
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Serpent);
 
 namespace {
 
 /*
-* Serpent's Linear Transformation
+* Serpent's Linear Transform
 */
 inline void transform(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    {
@@ -27,7 +28,7 @@ inline void transform(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    }
 
 /*
-* Serpent's Inverse Linear Transformation
+* Serpent's Inverse Linear Transform
 */
 inline void i_transform(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
    {

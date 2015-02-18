@@ -5,7 +5,6 @@
 */
 
 #include "tests.h"
-#include <botan/init.h>
 #include <iostream>
 #include <fstream>
 #include <botan/auto_rng.h>
@@ -261,7 +260,6 @@ int main(int argc, char* argv[])
    DEF_TEST(mac);
    DEF_TEST(pbkdf);
    DEF_TEST(kdf);
-   DEF_TEST(hkdf);
    DEF_TEST(keywrap);
    DEF_TEST(transform);
    DEF_TEST(rngs);
@@ -300,8 +298,6 @@ int main(int argc, char* argv[])
       std::cout << "No tests selected by target '" << target << "'\n";
       return 1;
       }
-
-   Botan::LibraryInitializer init;
 
    return run_tests(tests);
    }

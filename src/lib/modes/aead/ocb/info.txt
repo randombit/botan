@@ -1,6 +1,5 @@
 define AEAD_OCB 20131128
 
 <requires>
-block
 cmac
 </requires>

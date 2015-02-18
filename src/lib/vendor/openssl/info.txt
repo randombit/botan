@@ -1,0 +1,5 @@
+load_on vendor
+
+<libs>
+all -> crypto
+</libs>

@@ -4,10 +4,6 @@ load_on auto
 
 need_isa ssse3
 
-<requires>
-simd_engine
-</requires>
-
 # Intel C++ can't deal with syntax for defining constants :(
 <cc>
 gcc

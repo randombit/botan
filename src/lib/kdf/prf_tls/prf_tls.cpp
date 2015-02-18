@@ -5,23 +5,39 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/kdf_utils.h>
 #include <botan/prf_tls.h>
-#include <botan/internal/xor_buf.h>
 #include <botan/hmac.h>
-#include <botan/md5.h>
-#include <botan/sha160.h>
 
 namespace Botan {
+
+TLS_12_PRF* TLS_12_PRF::make(const Spec& spec)
+   {
+   if(auto mac = make_a<MessageAuthenticationCode>(spec.arg(0)))
+      return new TLS_12_PRF(mac);
+   if(auto hash = make_a<HashFunction>(spec.arg(0)))
+      return new TLS_12_PRF(new HMAC(hash));
+   return nullptr;
+   }
+
+BOTAN_REGISTER_NAMED_T(KDF, "TLS-12-PRF", TLS_12_PRF, TLS_12_PRF::make);
+BOTAN_REGISTER_KDF_NOARGS(TLS_PRF, "TLS-PRF");
+
+TLS_PRF::TLS_PRF()
+   {
+   m_hmac_md5.reset(make_a<MessageAuthenticationCode>("HMAC(MD5)"));
+   m_hmac_sha1.reset(make_a<MessageAuthenticationCode>("HMAC(SHA-1)"));
+   }
 
 namespace {
 
 /*
 * TLS PRF P_hash function
 */
-void P_hash(secure_vector<byte>& output,
+void P_hash(byte out[], size_t out_len,
             MessageAuthenticationCode& mac,
             const byte secret[], size_t secret_len,
-            const byte seed[], size_t seed_len)
+            const byte salt[], size_t salt_len)
    {
    try
       {
@@ -34,73 +50,47 @@ void P_hash(secure_vector<byte>& output,
                            " bytes is too long for the PRF");
       }
 
-   secure_vector<byte> A(seed, seed + seed_len);
+   secure_vector<byte> A(salt, salt + salt_len);
+   secure_vector<byte> h;
 
    size_t offset = 0;
 
-   while(offset != output.size())
+   while(offset != out_len)
       {
-      const size_t this_block_len =
-         std::min<size_t>(mac.output_length(), output.size() - offset);
-
       A = mac.process(A);
 
       mac.update(A);
-      mac.update(seed, seed_len);
-      secure_vector<byte> block = mac.final();
+      mac.update(salt, salt_len);
+      mac.final(h);
 
-      xor_buf(&output[offset], &block[0], this_block_len);
-      offset += this_block_len;
+      const size_t writing = std::min(h.size(), out_len - offset);
+      xor_buf(&out[offset], &h[0], writing);
+      offset += writing;
       }
    }
 
 }
 
-/*
-* TLS PRF Constructor and Destructor
-*/
-TLS_PRF::TLS_PRF()
+size_t TLS_PRF::kdf(byte key[], size_t key_len,
+                    const byte secret[], size_t secret_len,
+                    const byte salt[], size_t salt_len) const
    {
-   hmac_md5.reset(new HMAC(new MD5));
-   hmac_sha1.reset(new HMAC(new SHA_160));
-   }
-
-/*
-* TLS PRF
-*/
-secure_vector<byte> TLS_PRF::derive(size_t key_len,
-                                   const byte secret[], size_t secret_len,
-                                   const byte seed[], size_t seed_len) const
-   {
-   secure_vector<byte> output(key_len);
-
-   size_t S1_len = (secret_len + 1) / 2,
-          S2_len = (secret_len + 1) / 2;
+   const size_t S1_len = (secret_len + 1) / 2,
+                S2_len = (secret_len + 1) / 2;
    const byte* S1 = secret;
    const byte* S2 = secret + (secret_len - S2_len);
 
-   P_hash(output, *hmac_md5,  S1, S1_len, seed, seed_len);
-   P_hash(output, *hmac_sha1, S2, S2_len, seed, seed_len);
-
-   return output;
+   P_hash(key, key_len, *m_hmac_md5,  S1, S1_len, salt, salt_len);
+   P_hash(key, key_len, *m_hmac_sha1, S2, S2_len, salt, salt_len);
+   return key_len;
    }
 
-/*
-* TLS v1.2 PRF Constructor and Destructor
-*/
-TLS_12_PRF::TLS_12_PRF(MessageAuthenticationCode* mac) : hmac(mac)
+size_t TLS_12_PRF::kdf(byte key[], size_t key_len,
+                       const byte secret[], size_t secret_len,
+                       const byte salt[], size_t salt_len) const
    {
-   }
-
-secure_vector<byte> TLS_12_PRF::derive(size_t key_len,
-                                      const byte secret[], size_t secret_len,
-                                      const byte seed[], size_t seed_len) const
-   {
-   secure_vector<byte> output(key_len);
-
-   P_hash(output, *hmac, secret, secret_len, seed, seed_len);
-
-   return output;
+   P_hash(key, key_len, *m_mac, secret, secret_len, salt, salt_len);
+   return key_len;
    }
 
 }

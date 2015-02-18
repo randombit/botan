@@ -5,36 +5,34 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/kdf_utils.h>
 #include <botan/kdf2.h>
 
 namespace Botan {
 
-/*
-* KDF2 Key Derivation Mechanism
-*/
-secure_vector<byte> KDF2::derive(size_t out_len,
-                                const byte secret[], size_t secret_len,
-                                const byte P[], size_t P_len) const
+BOTAN_REGISTER_KDF_1HASH(KDF2, "KDF2");
+
+size_t KDF2::kdf(byte key[], size_t key_len,
+                 const byte secret[], size_t secret_len,
+                 const byte salt[], size_t salt_len) const
    {
-   secure_vector<byte> output;
    u32bit counter = 1;
+   secure_vector<byte> h;
 
-   while(out_len && counter)
+   size_t offset = 0;
+   while(offset != key_len && counter != 0)
       {
-      hash->update(secret, secret_len);
-      hash->update_be(counter);
-      hash->update(P, P_len);
+      m_hash->update(secret, secret_len);
+      m_hash->update_be(counter++);
+      m_hash->update(salt, salt_len);
+      m_hash->final(h);
 
-      secure_vector<byte> hash_result = hash->final();
-
-      size_t added = std::min(hash_result.size(), out_len);
-      output += std::make_pair(&hash_result[0], added);
-      out_len -= added;
-
-      ++counter;
+      const size_t added = std::min(h.size(), key_len - offset);
+      copy_mem(&key[offset], &h[0], added);
+      offset += added;
       }
 
-   return output;
+   return offset;
    }
 
 }

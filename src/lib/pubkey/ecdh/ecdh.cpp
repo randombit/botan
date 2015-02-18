@@ -7,17 +7,34 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/pk_utils.h>
 #include <botan/ecdh.h>
 
 namespace Botan {
 
-ECDH_KA_Operation::ECDH_KA_Operation(const ECDH_PrivateKey& key) :
-   curve(key.domain().get_curve()),
-   cofactor(key.domain().get_cofactor())
+namespace {
+
+/**
+* ECDH operation
+*/
+class ECDH_KA_Operation : public PK_Ops::Key_Agreement
    {
-   l_times_priv = inverse_mod(cofactor, key.domain().get_order()) *
-                  key.private_value();
-   }
+   public:
+      typedef ECDH_PrivateKey Key_Type;
+
+      ECDH_KA_Operation(const ECDH_PrivateKey& key, const std::string&) :
+         curve(key.domain().get_curve()),
+         cofactor(key.domain().get_cofactor())
+         {
+         l_times_priv = inverse_mod(cofactor, key.domain().get_order()) * key.private_value();
+         }
+
+      secure_vector<byte> agree(const byte w[], size_t w_len);
+   private:
+      const CurveGFp& curve;
+      const BigInt& cofactor;
+      BigInt l_times_priv;
+   };
 
 secure_vector<byte> ECDH_KA_Operation::agree(const byte w[], size_t w_len)
    {
@@ -31,5 +48,9 @@ secure_vector<byte> ECDH_KA_Operation::agree(const byte w[], size_t w_len)
    return BigInt::encode_1363(S.get_affine_x(),
                               curve.get_p().bytes());
    }
+
+}
+
+BOTAN_REGISTER_PK_KEY_AGREE_OP("ECDH", ECDH_KA_Operation);
 
 }

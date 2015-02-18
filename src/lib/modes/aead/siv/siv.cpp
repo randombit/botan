@@ -5,14 +5,15 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/mode_utils.h>
 #include <botan/siv.h>
 #include <botan/cmac.h>
 #include <botan/ctr.h>
 #include <botan/parsing.h>
-#include <botan/internal/xor_buf.h>
-#include <algorithm>
 
 namespace Botan {
+
+BOTAN_REGISTER_BLOCK_CIPHER_MODE(SIV_Encryption, SIV_Decryption);
 
 SIV_Mode::SIV_Mode(BlockCipher* cipher) :
    m_name(cipher->name() + "/SIV"),
@@ -44,7 +45,7 @@ size_t SIV_Mode::update_granularity() const
    /*
    This value does not particularly matter as regardless SIV_Mode::update
    buffers all input, so in theory this could be 1. However as for instance
-   Transformation_Filter creates update_granularity() byte buffers, use a
+   Transform_Filter creates update_granularity() byte buffers, use a
    somewhat large size to avoid bouncing on a tiny buffer.
    */
    return 128;

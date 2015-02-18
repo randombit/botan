@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-class BOTAN_DLL Compressor_Transformation : public Transformation
+class BOTAN_DLL Compressor_Transform : public Transform
    {
    public:
       size_t update_granularity() const override { return 1; }
@@ -32,8 +32,8 @@ class BOTAN_DLL Compressor_Transformation : public Transformation
          }
    };
 
-BOTAN_DLL Compressor_Transformation* make_compressor(const std::string& type, size_t level);
-BOTAN_DLL Compressor_Transformation* make_decompressor(const std::string& type);
+BOTAN_DLL Transform* make_compressor(const std::string& type, size_t level);
+BOTAN_DLL Transform* make_decompressor(const std::string& type);
 
 class Compression_Stream
    {
@@ -55,7 +55,7 @@ class Compression_Stream
       virtual bool run(u32bit flags) = 0;
    };
 
-class BOTAN_DLL Stream_Compression : public Compressor_Transformation
+class BOTAN_DLL Stream_Compression : public Compressor_Transform
    {
    public:
       void update(secure_vector<byte>& buf, size_t offset = 0) override;
@@ -76,7 +76,7 @@ class BOTAN_DLL Stream_Compression : public Compressor_Transformation
       std::unique_ptr<Compression_Stream> m_stream;
    };
 
-class BOTAN_DLL Stream_Decompression : public Compressor_Transformation
+class BOTAN_DLL Stream_Decompression : public Compressor_Transform
    {
    public:
       void update(secure_vector<byte>& buf, size_t offset = 0) override;

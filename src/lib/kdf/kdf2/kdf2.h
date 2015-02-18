@@ -19,15 +19,17 @@ namespace Botan {
 class BOTAN_DLL KDF2 : public KDF
    {
    public:
-      secure_vector<byte> derive(size_t, const byte[], size_t,
-                                const byte[], size_t) const;
+      std::string name() const override { return "KDF2(" + m_hash->name() + ")"; }
 
-      std::string name() const { return "KDF2(" + hash->name() + ")"; }
-      KDF* clone() const { return new KDF2(hash->clone()); }
+      KDF* clone() const override { return new KDF2(m_hash->clone()); }
 
-      KDF2(HashFunction* h) : hash(h) {}
+      size_t kdf(byte key[], size_t key_len,
+                 const byte secret[], size_t secret_len,
+                 const byte salt[], size_t salt_len) const override;
+
+      KDF2(HashFunction* h) : m_hash(h) {}
    private:
-      std::unique_ptr<HashFunction> hash;
+      std::unique_ptr<HashFunction> m_hash;
    };
 
 }

@@ -5,10 +5,12 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/pk_utils.h>
 #include <botan/rw.h>
-#include <botan/numthry.h>
 #include <botan/keypair.h>
 #include <botan/parsing.h>
+#include <botan/reducer.h>
+#include <botan/blinding.h>
 #include <algorithm>
 #include <future>
 
@@ -60,29 +62,50 @@ bool RW_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    return KeyPair::signature_consistency_check(rng, *this, "EMSA2(SHA-1)");
    }
 
-RW_Signature_Operation::RW_Signature_Operation(const RW_PrivateKey& rw) :
-   n(rw.get_n()),
-   e(rw.get_e()),
-   q(rw.get_q()),
-   c(rw.get_c()),
-   powermod_d1_p(rw.get_d1(), rw.get_p()),
-   powermod_d2_q(rw.get_d2(), rw.get_q()),
-   mod_p(rw.get_p())
+namespace {
+
+/**
+* Rabin-Williams Signature Operation
+*/
+class RW_Signature_Operation : public PK_Ops::Signature
    {
-   }
+   public:
+      typedef RW_PrivateKey Key_Type;
+
+      RW_Signature_Operation(const RW_PrivateKey& rw,
+                             const std::string&) :
+         n(rw.get_n()),
+         e(rw.get_e()),
+         q(rw.get_q()),
+         c(rw.get_c()),
+         powermod_d1_p(rw.get_d1(), rw.get_p()),
+         powermod_d2_q(rw.get_d2(), rw.get_q()),
+         mod_p(rw.get_p()),
+         blinder(n,
+                 [this](const BigInt& k) { return power_mod(k, e, n); },
+                 [this](const BigInt& k) { return inverse_mod(k, n); })
+         {
+         }
+
+      size_t max_input_bits() const { return (n.bits() - 1); }
+
+      secure_vector<byte> sign(const byte msg[], size_t msg_len,
+                              RandomNumberGenerator& rng);
+   private:
+      const BigInt& n;
+      const BigInt& e;
+      const BigInt& q;
+      const BigInt& c;
+
+      Fixed_Exponent_Power_Mod powermod_d1_p, powermod_d2_q;
+      Modular_Reducer mod_p;
+      Blinder blinder;
+   };
 
 secure_vector<byte>
 RW_Signature_Operation::sign(const byte msg[], size_t msg_len,
-                             RandomNumberGenerator& rng)
+                             RandomNumberGenerator&)
    {
-   rng.add_entropy(msg, msg_len);
-
-   if(!blinder.initialized())
-      {
-      BigInt k(rng, std::min<size_t>(160, n.bits() - 1));
-      blinder = Blinder(power_mod(k, e, n), inverse_mod(k, n), n);
-      }
-
    BigInt i(msg, msg_len);
 
    if(i >= n || i % 16 != 12)
@@ -103,6 +126,28 @@ RW_Signature_Operation::sign(const byte msg[], size_t msg_len,
 
    return BigInt::encode_1363(std::min(r, n - r), n.bytes());
    }
+
+/**
+* Rabin-Williams Verification Operation
+*/
+class RW_Verification_Operation : public PK_Ops::Verification
+   {
+   public:
+      typedef RW_PublicKey Key_Type;
+
+      RW_Verification_Operation(const RW_PublicKey& rw, const std::string&) :
+         n(rw.get_n()), powermod_e_n(rw.get_e(), rw.get_n())
+         {}
+
+      size_t max_input_bits() const { return (n.bits() - 1); }
+      bool with_recovery() const { return true; }
+
+      secure_vector<byte> verify_mr(const byte msg[], size_t msg_len);
+
+   private:
+      const BigInt& n;
+      Fixed_Exponent_Power_Mod powermod_e_n;
+   };
 
 secure_vector<byte>
 RW_Verification_Operation::verify_mr(const byte msg[], size_t msg_len)
@@ -126,5 +171,10 @@ RW_Verification_Operation::verify_mr(const byte msg[], size_t msg_len)
 
    throw Invalid_Argument("RW signature verification: Invalid signature");
    }
+
+BOTAN_REGISTER_PK_SIGNATURE_OP("RW", RW_Signature_Operation);
+BOTAN_REGISTER_PK_VERIFY_OP("RW", RW_Verification_Operation);
+
+}
 
 }

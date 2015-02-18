@@ -37,8 +37,6 @@ $(STATIC_LIB): $(LIBOBJS)
 	$(AR) $(STATIC_LIB) $(LIBOBJS)
 	$(RANLIB) $(STATIC_LIB)
 
-%{python_in}
-
 # Fake Targets
 .PHONY = clean distclean docs website install
 

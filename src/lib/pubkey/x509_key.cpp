@@ -72,9 +72,9 @@ Public_Key* load_key(DataSource& source)
 
       return make_public_key(alg_id, key_bits);
       }
-   catch(Decoding_Error)
+   catch(Decoding_Error& e)
       {
-      throw Decoding_Error("X.509 public key decoding failed");
+      throw Decoding_Error("X.509 public key decoding failed: " + std::string(e.what()));
       }
    }
 

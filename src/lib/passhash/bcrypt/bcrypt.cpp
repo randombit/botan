@@ -140,11 +140,13 @@ bool check_bcrypt(const std::string& pass, const std::string& hash)
 
    const u16bit workfactor = to_u32bit(hash.substr(4, 2));
 
-   std::vector<byte> salt = bcrypt_base64_decode(hash.substr(7, 22));
+   const std::vector<byte> salt = bcrypt_base64_decode(hash.substr(7, 22));
+   if(salt.size() != 16)
+      return false;
 
    const std::string compare = make_bcrypt(pass, salt, workfactor);
 
-   return (hash == compare);
+   return same_mem(hash.data(), compare.data(), compare.size());
    }
 
 }

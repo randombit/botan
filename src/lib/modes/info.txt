@@ -1,4 +1,8 @@
+<header:public>
+cipher_mode.h
+stream_mode.h
+</header:public>
 
-<requires>
-block
-</requires>
+<header:internal>
+mode_utils.h
+</header:internal>

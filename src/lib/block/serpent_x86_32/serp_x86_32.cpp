@@ -5,10 +5,12 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/block_utils.h>
 #include <botan/serp_x86_32.h>
-#include <botan/loadstor.h>
 
 namespace Botan {
+
+BOTAN_REGISTER_NAMED_T_NOARGS(BlockCipher, Serpent_X86_32, "Serpent", "x86-32");
 
 extern "C" {
 

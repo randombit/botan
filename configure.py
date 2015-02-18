@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
 """
-Configuration program for botan (http://botan.randombit.net/)
-  (C) 2009,2010,2011,2012,2013,2014 Jack Lloyd
-  Botan is released under the Simplified BSD License (see license.txt)
+Configuration program for botan
+
+(C) 2009,2010,2011,2012,2013,2014,2015 Jack Lloyd
+
+Botan is released under the Simplified BSD License (see license.txt)
 
 Tested with CPython 2.6, 2.7, 3.2, 3.3 and PyPy 1.5
 
@@ -48,6 +50,13 @@ def chunks(l, n):
 def is_official_release():
     # Assume a release date implies official release
     return (botan_version.release_datestamp > 20130000)
+
+def maintainer_mode_default():
+    if is_official_release():
+        return False
+    if os.getenv('GO_ENVIRONMENT_NAME') == 'Botan':
+        return True # running under CI
+    return False
 
 def get_vc_revision():
 
@@ -149,11 +158,8 @@ class BuildConfigurationInformation(object):
 
         self.app_sources = list(find_sources_in(self.src_dir, 'cmd'))
         self.test_sources = list(find_sources_in(self.src_dir, 'tests'))
-        self.python_sources = list(find_sources_in(self.src_dir, 'python'))
 
-        self.boost_python = options.boost_python
         self.python_dir = os.path.join(options.src_dir, 'python')
-        self.pyobject_dir = os.path.join(self.build_dir, 'python')
 
         def build_doc_commands():
 
@@ -191,18 +197,11 @@ class BuildConfigurationInformation(object):
             if options.with_doxygen:
                 yield os.path.join(self.doc_output_dir, 'doxygen')
 
-            if self.boost_python:
-                yield self.pyobject_dir
-
         self.build_dirs = list(build_dirs())
 
     def pkg_config_file(self):
         return 'botan-%d.%d.pc' % (self.version_major,
                                    self.version_minor)
-
-    def config_shell_script(self):
-        return 'botan-config-%d.%d' % (self.version_major,
-                                       self.version_minor)
 
     def username(self):
         return getpass.getuser()
@@ -286,7 +285,7 @@ def process_command_line(args):
                            help='disallow use of assembler')
 
     build_group.add_option('--enable-debug', dest='debug_build',
-                           action='store_true', default=not is_official_release(),
+                           action='store_true', default=False,
                            help='enable debug build (default %default)')
     build_group.add_option('--disable-debug', dest='debug_build',
                            action='store_false', help=optparse.SUPPRESS_HELP)
@@ -345,8 +344,8 @@ def process_command_line(args):
 
     build_group.add_option('--maintainer-mode', dest='maintainer_mode',
                            action='store_true',
-                           default=not is_official_release(),
-                           help="Enable extra warnings")
+                           default=maintainer_mode_default(),
+                           help="Maintainer mode build")
 
     build_group.add_option('--release-mode', dest='maintainer_mode',
                            action='store_false',
@@ -356,21 +355,12 @@ def process_command_line(args):
                            action='store_false', default=True,
                            help=optparse.SUPPRESS_HELP)
 
-    wrapper_group = optparse.OptionGroup(parser, 'Wrapper options')
-
-    wrapper_group.add_option('--with-boost-python', dest='boost_python',
-                             default=False, action='store_true',
-                             help='enable Boost.Python wrapper')
-
-    wrapper_group.add_option('--without-boost-python',
-                             dest='boost_python',
-                             action='store_false',
-                             help=optparse.SUPPRESS_HELP)
+    wrapper_group = optparse.OptionGroup(parser, 'Python FFI options')
 
     wrapper_group.add_option('--with-python-version', dest='python_version',
                              metavar='N.M',
                              default='.'.join(map(str, sys.version_info[0:2])),
-                             help='specify Python to build against (eg %default)')
+                             help='specify Python version (def %default)')
 
     mods_group = optparse.OptionGroup(parser, 'Module selection')
 
@@ -386,13 +376,12 @@ def process_command_line(args):
     mods_group.add_option('--no-autoload', action='store_true', default=False,
                           help='disable automatic loading')
 
-    third_party = ['boost', 'sqlite3', 'zlib', 'bzip2', 'lzma']
-    hidden_third_party = ['gnump']
+    # Should be derived from info.txt but this runs too early
+    third_party  = ['boost', 'bzip2', 'lzma', 'openssl', 'sqlite3', 'zlib']
 
-    for mod in third_party + hidden_third_party:
-
+    for mod in third_party:
         mods_group.add_option('--with-%s' % (mod),
-                              help=('add support for using %s' % (mod)) if mod in third_party else optparse.SUPPRESS_HELP,
+                              help=('use %s' % (mod)) if mod in third_party else optparse.SUPPRESS_HELP,
                               action='append_const',
                               const=mod,
                               dest='enabled_modules')
@@ -691,8 +680,8 @@ class ModuleInfo(object):
         return True
 
     def dependencies(self):
-        # utils is an implicit dep (contains types, etc)
-        deps = self.requires + ['utils']
+        # base is an implicit dep for all submodules
+        deps = self.requires + ['base']
         if self.parent_module != None:
             deps.append(self.parent_module)
         return deps
@@ -1309,16 +1298,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
             build_commands(build_config.test_sources,
                            build_config.testobj_dir, 'TEST')),
 
-        'python_obj_dir': build_config.pyobject_dir,
-
-        'python_objs': makefile_list(
-            objectfile_list(build_config.python_sources,
-                            build_config.pyobject_dir)),
-
-        'python_build_cmds': '\n'.join(
-            build_commands(build_config.python_sources,
-                           build_config.pyobject_dir, 'PYTHON')),
-
         'ar_command': cc.ar_command or osinfo.ar_command,
         'ranlib_command': osinfo.ranlib_command(),
         'install_cmd_exec': osinfo.install_cmd_exec,
@@ -1336,8 +1315,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         }
 
     if options.os != 'windows':
-        vars['botan_config'] = prefix_with_build_dir(os.path.join(build_config.build_dir,
-                                                                  build_config.config_shell_script()))
         vars['botan_pkgconfig'] = prefix_with_build_dir(os.path.join(build_config.build_dir,
                                                                      build_config.pkg_config_file()))
 
@@ -1349,11 +1326,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         vars["dso_in"] = process_template('src/build-data/makefile/dso.in', vars)
     else:
         vars["dso_in"] = ""
-
-    if options.boost_python:
-        vars["python_in"] = process_template('src/build-data/makefile/python.in', vars)
-    else:
-        vars["python_in"] = ""
 
     return vars
 
@@ -1401,6 +1373,11 @@ def choose_modules_to_use(modules, archinfo, ccinfo, options):
                     to_load.append(modname)
                 else:
                     cannot_use_because(modname, 'by request only')
+            elif module.load_on == 'vendor':
+                if options.with_everything:
+                    to_load.append(modname)
+                else:
+                    cannot_use_because(modname, 'requires external dependency')
             elif module.load_on == 'dep':
                 maybe_dep.append(modname)
 
@@ -1474,7 +1451,8 @@ def choose_modules_to_use(modules, archinfo, ccinfo, options):
         if modules[mod].warning:
             logging.warning('%s: %s' % (mod, modules[mod].warning))
 
-    logging.info('Loading modules %s', ' '.join(sorted(to_load)))
+    to_load.sort()
+    logging.info('Loading modules %s', ' '.join(to_load))
 
     return to_load
 
@@ -1621,7 +1599,6 @@ def setup_build(build_config, options, template_vars):
 
         if options.os != 'windows':
             yield (options.build_data, 'botan.pc.in', build_config.pkg_config_file())
-            yield (options.build_data, 'botan-config.in', build_config.config_shell_script())
 
         if options.os == 'windows':
             yield (options.build_data, 'innosetup.in', 'botan.iss')
@@ -1837,10 +1814,13 @@ def main(argv = None):
     logging.basicConfig(stream = sys.stdout,
                         format = '%(levelname) 7s: %(message)s')
 
+    NOTICE_LOGLEVEL = 25
+    logging.addLevelName('NOTICE', NOTICE_LOGLEVEL)
+
     options = process_command_line(argv[1:])
 
     def log_level():
-        if options.verbose:
+        if options.verbose or options.maintainer_mode:
             return logging.DEBUG
         if options.quiet:
             return logging.WARNING
@@ -1867,9 +1847,8 @@ def main(argv = None):
     (modules, archinfo, ccinfo, osinfo) = load_info_files(options)
 
     if options.list_modules:
-        print("Listing modules available for enablement:")
         for k in sorted(modules.keys()):
-            print(" - " + k)
+            print(k)
         sys.exit(0)
 
     if options.chost:
@@ -1958,6 +1937,10 @@ def main(argv = None):
                                         archinfo[options.arch],
                                         cc,
                                         options)
+
+    for m in loaded_mods:
+        if modules[m].load_on == 'vendor':
+            logging.log(NOTICE_LOGLEVEL, 'Enabling use of external dependency %s' % (m))
 
     if not osinfo[options.os].build_shared:
         if options.build_shared_lib:

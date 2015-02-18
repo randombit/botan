@@ -9,9 +9,6 @@
 #define BOTAN_DSA_H__
 
 #include <botan/dl_algo.h>
-#include <botan/pk_ops.h>
-#include <botan/reducer.h>
-#include <botan/pow_mod.h>
 
 namespace Botan {
 
@@ -55,52 +52,6 @@ class BOTAN_DLL DSA_PrivateKey : public DSA_PublicKey,
                      const BigInt& private_key = 0);
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const;
-   };
-
-/**
-* Object that can create a DSA signature
-*/
-class BOTAN_DLL DSA_Signature_Operation : public PK_Ops::Signature
-   {
-   public:
-      DSA_Signature_Operation(const DSA_PrivateKey& dsa, const std::string& hash);
-
-      size_t message_parts() const { return 2; }
-      size_t message_part_size() const { return q.bytes(); }
-      size_t max_input_bits() const { return q.bits(); }
-
-      secure_vector<byte> sign(const byte msg[], size_t msg_len,
-                              RandomNumberGenerator& rng);
-   private:
-      const BigInt& q;
-      const BigInt& x;
-      Fixed_Base_Power_Mod powermod_g_p;
-      Modular_Reducer mod_q;
-      std::string m_hash;
-   };
-
-/**
-* Object that can verify a DSA signature
-*/
-class BOTAN_DLL DSA_Verification_Operation : public PK_Ops::Verification
-   {
-   public:
-      DSA_Verification_Operation(const DSA_PublicKey& dsa);
-
-      size_t message_parts() const { return 2; }
-      size_t message_part_size() const { return q.bytes(); }
-      size_t max_input_bits() const { return q.bits(); }
-
-      bool with_recovery() const { return false; }
-
-      bool verify(const byte msg[], size_t msg_len,
-                  const byte sig[], size_t sig_len);
-   private:
-      const BigInt& q;
-      const BigInt& y;
-
-      Fixed_Base_Power_Mod powermod_g_p, powermod_y_p;
-      Modular_Reducer mod_p, mod_q;
    };
 
 }

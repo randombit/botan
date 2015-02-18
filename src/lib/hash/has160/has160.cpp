@@ -5,11 +5,12 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/hash_utils.h>
 #include <botan/has160.h>
-#include <botan/loadstor.h>
-#include <botan/rotate.h>
 
 namespace Botan {
+
+BOTAN_REGISTER_HASH_NAMED_NOARGS(HAS_160, "HAS-160");
 
 namespace HAS_160_F {
 

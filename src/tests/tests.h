@@ -58,7 +58,6 @@ size_t test_hash();
 size_t test_mac();
 size_t test_modes();
 size_t test_rngs();
-size_t test_hkdf();
 size_t test_pbkdf();
 size_t test_kdf();
 size_t test_aead();

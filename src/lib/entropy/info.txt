@@ -1,3 +1,1 @@
-<requires>
-algo_base
-</requires>
+define ENTROPY_SOURCE 20150201

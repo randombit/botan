@@ -6,7 +6,7 @@
 */
 
 #include <botan/filters.h>
-#include <botan/libstate.h>
+#include <botan/internal/algo_registry.h>
 #include <algorithm>
 
 namespace Botan {
@@ -36,8 +36,7 @@ StreamCipher_Filter::StreamCipher_Filter(StreamCipher* cipher,
 StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name) :
    buffer(DEFAULT_BUFFERSIZE)
    {
-   Algorithm_Factory& af = global_state().algorithm_factory();
-   m_cipher.reset(af.make_stream_cipher(sc_name));
+   m_cipher.reset(Algo_Registry<StreamCipher>::global_registry().make(sc_name));
    }
 
 /*
@@ -47,8 +46,7 @@ StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name,
                                          const SymmetricKey& key) :
    buffer(DEFAULT_BUFFERSIZE)
    {
-   Algorithm_Factory& af = global_state().algorithm_factory();
-   m_cipher.reset(af.make_stream_cipher(sc_name));
+   m_cipher.reset(Algo_Registry<StreamCipher>::global_registry().make(sc_name));
    m_cipher->set_key(key);
    }
 
@@ -82,8 +80,7 @@ Hash_Filter::Hash_Filter(const std::string& algo_spec,
                          size_t len) :
    OUTPUT_LENGTH(len)
    {
-   Algorithm_Factory& af = global_state().algorithm_factory();
-   m_hash.reset(af.make_hash_function(algo_spec));
+   m_hash.reset(Algo_Registry<HashFunction>::global_registry().make(algo_spec));
    }
 
 /*
@@ -104,8 +101,7 @@ void Hash_Filter::end_msg()
 MAC_Filter::MAC_Filter(const std::string& mac_name, size_t len) :
    OUTPUT_LENGTH(len)
    {
-   Algorithm_Factory& af = global_state().algorithm_factory();
-   m_mac.reset(af.make_mac(mac_name));
+   m_mac.reset(Algo_Registry<MessageAuthenticationCode>::global_registry().make(mac_name));
    }
 
 /*
@@ -114,8 +110,7 @@ MAC_Filter::MAC_Filter(const std::string& mac_name, size_t len) :
 MAC_Filter::MAC_Filter(const std::string& mac_name, const SymmetricKey& key,
                        size_t len) : OUTPUT_LENGTH(len)
    {
-   Algorithm_Factory& af = global_state().algorithm_factory();
-   m_mac.reset(af.make_mac(mac_name));
+   m_mac.reset(Algo_Registry<MessageAuthenticationCode>::global_registry().make(mac_name));
    m_mac->set_key(key);
    }
 

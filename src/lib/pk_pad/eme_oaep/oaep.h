@@ -22,6 +22,8 @@ class BOTAN_DLL OAEP : public EME
    public:
       size_t maximum_input_size(size_t) const;
 
+      static OAEP* make(const Spec& spec);
+
       /**
       * @param hash object to use for hashing (takes ownership)
       * @param P an optional label. Normally empty.

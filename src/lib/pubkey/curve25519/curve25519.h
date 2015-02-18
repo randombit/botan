@@ -9,7 +9,6 @@
 #define BOTAN_CURVE_25519_H__
 
 #include <botan/pk_keys.h>
-#include <botan/pk_ops.h>
 
 namespace Botan {
 
@@ -63,22 +62,6 @@ class BOTAN_DLL Curve25519_PrivateKey : public Curve25519_PublicKey,
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
    private:
       secure_vector<byte> m_private;
-   };
-
-/**
-* Curve25519 operation
-*/
-class BOTAN_DLL Curve25519_KA_Operation : public PK_Ops::Key_Agreement
-   {
-   public:
-      Curve25519_KA_Operation(const Curve25519_PrivateKey& key) : m_key(key) {}
-
-      secure_vector<byte> agree(const byte w[], size_t w_len)
-         {
-         return m_key.agree(w, w_len);
-         }
-   private:
-      const Curve25519_PrivateKey& m_key;
    };
 
 /*

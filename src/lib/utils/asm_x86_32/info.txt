@@ -23,7 +23,3 @@ gcc
 clang
 icc
 </cc>
-
-<requires>
-asm_engine
-</requires>

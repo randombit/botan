@@ -21,6 +21,11 @@ namespace Botan {
 */
 std::string version_string()
    {
+   return std::string(version_cstr());
+   }
+
+const char* version_cstr()
+   {
 #define QUOTE(name) #name
 #define STR(macro) QUOTE(macro)
 

@@ -50,20 +50,19 @@ double nb_iter(size_t n, size_t k, size_t w, size_t p, size_t l)
 
 double cout_iter(size_t n, size_t k, size_t p, size_t l)
    {
-   // x <- binomial(k/2,p)
    double x = binomial(k / 2, p);
-   // i <- log[2](binomial(k/2,p))
-   size_t i = (size_t) (std::log(x) / std::log(2)); // normalement i < 2^31
-   // res <- 2*p*(n-k-l)*binomial(k/2,p)^2/2^l
+   const size_t i = static_cast<size_t>(std::log(x) / std::log(2));
    double res = 2 * p * (n - k - l) * ldexp(x * x, -l);
+
    // x <- binomial(k/2,p)*2*(2*l+log[2](binomial(k/2,p)))
    x *= 2 * (2 * l + i);
+
    // res <- k*(n-k)/2 +
    // binomial(k/2,p)*2*(2*l+log[2](binomial(k/2,p))) +
    // 2*p*(n-k-l)*binomial(k/2,p)^2/2^l
    res += x + k * ((n - k) / 2.0);
 
-   return std::log(res) / std::log(2);
+   return std::log(res) / std::log(2); // convert to bits
    }
 
 double cout_total(size_t n, size_t k, size_t w, size_t p, size_t l)
@@ -76,18 +75,13 @@ double best_wf(size_t n, size_t k, size_t w, size_t p)
    if(p >= k / 2)
       return -1;
 
-   // On part de l = u, en faisant croitre l.
-   // On s'arrète dés que le work factor croit.
-   // Puis on explore les valeurs <u, mais en tenant de la convexite'
-
    double min = cout_total(n, k, w, p, 0);
+
    for(size_t l = 1; l < n - k; ++l)
       {
-      double lwf = cout_total(n, k, w, p, l);
+      const double lwf = cout_total(n, k, w, p, l);
       if(lwf < min)
-         {
          min = lwf;
-         }
       else
          break;
       }

@@ -8,42 +8,50 @@
 #include <botan/blinding.h>
 #include <botan/numthry.h>
 
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+  #include <botan/system_rng.h>
+#else
+  #include <botan/auto_rng.h>
+#endif
+
 namespace Botan {
 
-/*
-* Blinder Constructor
-*/
-Blinder::Blinder(const BigInt& e, const BigInt& d, const BigInt& n)
-   {
-   if(e < 1 || d < 1 || n < 1)
-      throw Invalid_Argument("Blinder: Arguments too small");
+// TODO: use Montgomery
 
-   reducer = Modular_Reducer(n);
-   this->e = e;
-   this->d = d;
+Blinder::Blinder(const BigInt& modulus,
+                 std::function<BigInt (const BigInt&)> fwd_func,
+                 std::function<BigInt (const BigInt&)> inv_func)
+   {
+   m_reducer = Modular_Reducer(modulus);
+
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+   auto& rng = system_rng();
+#else
+   AutoSeeded_RNG rng;
+#endif
+
+   const BigInt k(rng, modulus.bits() - 1);
+
+   m_e = fwd_func(k);
+   m_d = inv_func(k);
    }
 
-/*
-* Blind a number
-*/
 BigInt Blinder::blind(const BigInt& i) const
    {
-   if(!reducer.initialized())
-      return i;
+   if(!m_reducer.initialized())
+      throw std::runtime_error("Blinder not initialized, cannot blind");
 
-   e = reducer.square(e);
-   d = reducer.square(d);
-   return reducer.multiply(i, e);
+   m_e = m_reducer.square(m_e);
+   m_d = m_reducer.square(m_d);
+   return m_reducer.multiply(i, m_e);
    }
 
-/*
-* Unblind a number
-*/
 BigInt Blinder::unblind(const BigInt& i) const
    {
-   if(!reducer.initialized())
-      return i;
-   return reducer.multiply(i, d);
+   if(!m_reducer.initialized())
+      throw std::runtime_error("Blinder not initialized, cannot unblind");
+
+   return m_reducer.multiply(i, m_d);
    }
 
 }

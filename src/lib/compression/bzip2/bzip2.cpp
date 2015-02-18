@@ -8,12 +8,14 @@
 */
 
 #include <botan/bzip2.h>
-#include <botan/internal/comp_util.h>
+#include <botan/internal/compress_utils.h>
 
 #define BZ_NO_STDIO
 #include <bzlib.h>
 
 namespace Botan {
+
+BOTAN_REGISTER_COMPRESSION(Bzip2_Compression, Bzip2_Decompression);
 
 namespace {
 

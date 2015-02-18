@@ -1,0 +1,7 @@
+define THRESHOLD_SECRET_SHARING 20131128
+
+<requires>
+rng
+filters
+hex
+</requires>

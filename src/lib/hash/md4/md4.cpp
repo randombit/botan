@@ -5,11 +5,12 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/hash_utils.h>
 #include <botan/md4.h>
-#include <botan/loadstor.h>
-#include <botan/rotate.h>
 
 namespace Botan {
+
+BOTAN_REGISTER_HASH_NOARGS(MD4);
 
 namespace {
 

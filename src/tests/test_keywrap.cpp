@@ -6,7 +6,6 @@
 
 #include "tests.h"
 
-#include <botan/libstate.h>
 #include <botan/hex.h>
 
 #if defined(BOTAN_HAS_RFC3394_KEYWRAP)
@@ -32,9 +31,7 @@ size_t keywrap_test(const char* key_str,
       SymmetricKey expected(expected_str);
       SymmetricKey kek(kek_str);
 
-      Algorithm_Factory& af = global_state().algorithm_factory();
-
-      secure_vector<byte> enc = rfc3394_keywrap(key.bits_of(), kek, af);
+      secure_vector<byte> enc = rfc3394_keywrap(key.bits_of(), kek);
 
       if(enc != expected.bits_of())
          {
@@ -43,7 +40,7 @@ size_t keywrap_test(const char* key_str,
          fail++;
          }
 
-      secure_vector<byte> dec = rfc3394_keyunwrap(expected.bits_of(), kek, af);
+      secure_vector<byte> dec = rfc3394_keyunwrap(expected.bits_of(), kek);
 
       if(dec != key.bits_of())
          {

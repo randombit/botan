@@ -5,6 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/pk_utils.h>
 #include <botan/curve25519.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
@@ -108,8 +109,33 @@ bool Curve25519_PrivateKey::check_key(RandomNumberGenerator&, bool) const
 secure_vector<byte> Curve25519_PrivateKey::agree(const byte w[], size_t w_len) const
    {
    size_check(w_len, "public value");
-
    return curve25519(m_private, w);
    }
+
+namespace {
+
+/**
+* Curve25519 operation
+*/
+class Curve25519_KA_Operation : public PK_Ops::Key_Agreement
+   {
+   public:
+      typedef Curve25519_PrivateKey Key_Type;
+
+      Curve25519_KA_Operation(const Curve25519_PrivateKey& key, const std::string&) :
+         m_key(key) {}
+
+      secure_vector<byte> agree(const byte w[], size_t w_len)
+         {
+         return m_key.agree(w, w_len);
+         }
+   private:
+      const Curve25519_PrivateKey& m_key;
+   };
+
+BOTAN_REGISTER_PK_KEY_AGREE_OP("Curve25519", Curve25519_KA_Operation);
+
+}
+
 
 }

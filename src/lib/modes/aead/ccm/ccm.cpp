@@ -5,12 +5,13 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/mode_utils.h>
 #include <botan/ccm.h>
 #include <botan/parsing.h>
-#include <botan/internal/xor_buf.h>
-#include <algorithm>
 
 namespace Botan {
+
+BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN2(CCM_Encryption, CCM_Decryption, 16, 3);
 
 /*
 * CCM_Mode Constructor
@@ -57,7 +58,7 @@ size_t CCM_Mode::update_granularity() const
    /*
    This value does not particularly matter as regardless CCM_Mode::update
    buffers all input, so in theory this could be 1. However as for instance
-   Transformation_Filter creates update_granularity() byte buffers, use a
+   Transform_Filter creates update_granularity() byte buffers, use a
    somewhat large size to avoid bouncing on a tiny buffer.
    */
    return m_cipher->parallel_bytes();

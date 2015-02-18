@@ -48,8 +48,6 @@ $(BOTAN_LIB): $(LIBOBJS)
 	$(LIB_LINK_CMD) /Fe$(LIBNAME) $(LIBOBJS) $(LIB_LINKS_TO)
 !Endif
 
-%{python_in}
-
 # Fake Targets
 
 SPHINX_CONFIG = %{sphinx_config_dir}

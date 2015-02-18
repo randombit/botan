@@ -1,6 +1,5 @@
 define AEAD_GCM 20131128
 
 <requires>
-block
 ctr
 </requires>

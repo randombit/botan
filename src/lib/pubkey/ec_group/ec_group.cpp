@@ -10,7 +10,6 @@
 #include <botan/ec_group.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
-#include <botan/libstate.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
 

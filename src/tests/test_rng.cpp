@@ -7,8 +7,8 @@
 #include "test_rng.h"
 #include "tests.h"
 
-#include <botan/libstate.h>
 #include <botan/hex.h>
+#include <botan/lookup.h>
 #include <iostream>
 #include <fstream>
 
@@ -41,21 +41,18 @@ RandomNumberGenerator* get_rng(const std::string& algo_str, const std::string& i
 
    const auto ikm = hex_decode(ikm_hex);
 
-   Algorithm_Factory& af = global_state().algorithm_factory();
-
    const auto algo_name = parse_algorithm_name(algo_str);
 
    const std::string rng_name = algo_name[0];
 
 #if defined(BOTAN_HAS_HMAC_DRBG)
    if(rng_name == "HMAC_DRBG")
-      return new HMAC_DRBG(af.make_mac("HMAC(" + algo_name[1] + ")"),
-                               new AllOnce_RNG(ikm));
+      return new HMAC_DRBG(get_mac("HMAC(" + algo_name[1] + ")"), new AllOnce_RNG(ikm));
 #endif
 
 #if defined(BOTAN_HAS_X931_RNG)
    if(rng_name == "X9.31-RNG")
-      return new ANSI_X931_RNG(af.make_block_cipher(algo_name[1]),
+      return new ANSI_X931_RNG(get_block_cipher(algo_name[1]),
                                new Fixed_Output_RNG(ikm));
 #endif
 

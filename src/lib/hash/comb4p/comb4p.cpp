@@ -5,11 +5,14 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/hash_utils.h>
 #include <botan/comb4p.h>
 #include <botan/internal/xor_buf.h>
 #include <stdexcept>
 
 namespace Botan {
+
+BOTAN_REGISTER_NAMED_T(HashFunction, "Comb4P", Comb4P, Comb4P::make);
 
 namespace {
 
@@ -33,6 +36,20 @@ void comb4p_round(secure_vector<byte>& out,
    }
 
 }
+
+Comb4P* Comb4P::make(const Spec& spec)
+   {
+   if(spec.arg_count() == 2)
+      {
+      auto& hashes = Algo_Registry<HashFunction>::global_registry();
+      std::unique_ptr<HashFunction> h1(hashes.make(spec.arg(0)));
+      std::unique_ptr<HashFunction> h2(hashes.make(spec.arg(1)));
+
+      if(h1 && h2)
+         return new Comb4P(h1.release(), h2.release());
+      }
+   return nullptr;
+   }
 
 Comb4P::Comb4P(HashFunction* h1, HashFunction* h2) :
    m_hash1(h1), m_hash2(h2)

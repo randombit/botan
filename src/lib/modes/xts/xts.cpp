@@ -5,12 +5,12 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/mode_utils.h>
 #include <botan/xts.h>
-#include <botan/loadstor.h>
-#include <botan/internal/xor_buf.h>
-#include <botan/internal/rounding.h>
 
 namespace Botan {
+
+BOTAN_REGISTER_BLOCK_CIPHER_MODE(XTS_Encryption, XTS_Decryption);
 
 namespace {
 

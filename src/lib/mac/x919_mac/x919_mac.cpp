@@ -5,11 +5,12 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/mac_utils.h>
 #include <botan/x919_mac.h>
-#include <botan/internal/xor_buf.h>
-#include <algorithm>
 
 namespace Botan {
+
+BOTAN_REGISTER_MAC_NAMED_NOARGS(ANSI_X919_MAC, "X9.19-MAC");
 
 /*
 * Update an ANSI X9.19 MAC Calculation
@@ -81,17 +82,17 @@ std::string ANSI_X919_MAC::name() const
 
 MessageAuthenticationCode* ANSI_X919_MAC::clone() const
    {
-   return new ANSI_X919_MAC(m_des1->clone());
+   return new ANSI_X919_MAC;
    }
 
 /*
 * ANSI X9.19 MAC Constructor
 */
-ANSI_X919_MAC::ANSI_X919_MAC(BlockCipher* cipher) :
-   m_des1(cipher), m_des2(m_des1->clone()), m_state(8), m_position(0)
+ANSI_X919_MAC::ANSI_X919_MAC() : m_state(8), m_position(0)
    {
-   if(cipher->name() != "DES")
-      throw Invalid_Argument("ANSI X9.19 MAC only supports DES");
+   auto& ciphers = Algo_Registry<BlockCipher>::global_registry();
+   m_des1.reset(ciphers.make(BlockCipher::Spec("DES"), ""));
+   m_des2.reset(m_des1->clone());
    }
 
 }

@@ -381,8 +381,7 @@ class BOTAN_DLL PK_Key_Agreement
       * @param key the key to use
       * @param kdf name of the KDF to use (or 'Raw' for no KDF)
       */
-      PK_Key_Agreement(const PK_Key_Agreement_Key& key,
-                       const std::string& kdf);
+      PK_Key_Agreement(const Private_Key& key, const std::string& kdf);
    private:
       std::unique_ptr<PK_Ops::Key_Agreement> m_op;
       std::unique_ptr<KDF> m_kdf;

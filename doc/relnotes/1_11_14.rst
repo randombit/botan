@@ -1,12 +1,24 @@
 Version 1.11.14, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* The global state object previously used by the library has been
+  removed and no form of initialization is required to use the library.
+  LibraryInitializer remains as a stub.
+
+* The new `ffi` submodule provides a simple C API/ABI for a number of
+  useful operations (hashing, ciphers, public key operations, etc)
+  which is easily accessed using the FFI modules included in many
+  languages. A new Python wrapper using the Python `ctypes` module
+  is available. The old Boost.Python wrapper has been removed.
+
 * OCB mode, which provides a fast and constant time AEAD mode without
   requiring hardware support, is now supported in TLS, following
   draft-zauner-tls-aes-ocb-01. Because this specification is not yet
   finalized is not yet enabled by the default policy, and the
   ciphersuite numbers used are in the experimental range and may
   conflict with other uses.
+
+* The memory usage of the counter mode implementation has been reduced.
 
 * The memory allocator available on Unix systems which uses mmap and
   mlock to lock a pool of memory now checks an environment variable
@@ -17,10 +29,7 @@ Version 1.11.14, Not Yet Released
   this allows botan to coexist with an application which wants to
   mlock memory of its own.
 
-* The library can now only be initialized once. If the library is
-  already initialized and a LibraryInitializer is created, it has no
-  effect. If the first library initializer leaves scope then a new
-  initializer can be created.
-
-  LibraryInitializer can now only be used in an RAII fashion; the
-  static `initialize` and `deinitialize` functions have been removed.
+* The botan-config script previously installed on Unix systems has
+  been removed. Its functionality is replaced by the `config` command
+  of the `botan` tool executable, for example `botan config cflags`
+  instead of `botan-config --cflags`.

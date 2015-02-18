@@ -1,5 +1,7 @@
 define DYNAMIC_LOADER 20131128
 
+load_on dep
+
 <os>
 freebsd
 linux

@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/tls_messages.h>
+#include <botan/mac.h>
 #include <botan/lookup.h>
 
 namespace Botan {

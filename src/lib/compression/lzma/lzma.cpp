@@ -9,10 +9,12 @@
 */
 
 #include <botan/lzma.h>
-#include <botan/internal/comp_util.h>
+#include <botan/internal/compress_utils.h>
 #include <lzma.h>
 
 namespace Botan {
+
+BOTAN_REGISTER_COMPRESSION(LZMA_Compression, LZMA_Decompression);
 
 namespace {
 
@@ -21,10 +23,11 @@ class LZMA_Stream : public Zlib_Style_Stream<lzma_stream, byte>
    public:
       LZMA_Stream()
          {
-         streamp()->allocator = new ::lzma_allocator;
-         streamp()->allocator->opaque = alloc();
-         streamp()->allocator->alloc = Compression_Alloc_Info::malloc<size_t>;
-         streamp()->allocator->free = Compression_Alloc_Info::free;
+         auto a = new ::lzma_allocator;
+         a->opaque = alloc();
+         a->alloc = Compression_Alloc_Info::malloc<size_t>;
+         a->free = Compression_Alloc_Info::free;
+         streamp()->allocator = a;
          }
 
       ~LZMA_Stream()

@@ -2,6 +2,5 @@ define DLIES 20131128
 
 <requires>
 kdf
-libstate
 mac
 </requires>

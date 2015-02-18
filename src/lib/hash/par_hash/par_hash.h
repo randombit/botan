@@ -29,11 +29,15 @@ class BOTAN_DLL Parallel : public HashFunction
       * @param hashes a set of hashes to compute in parallel
       */
       Parallel(const std::vector<HashFunction*>& hashes);
-      ~Parallel();
+
+      static Parallel* make(const Spec& spec);
    private:
+      Parallel() {}
+
       void add_data(const byte[], size_t);
       void final_result(byte[]);
-      std::vector<HashFunction*> hashes;
+
+      std::vector<std::unique_ptr<HashFunction>> hashes;
    };
 
 }

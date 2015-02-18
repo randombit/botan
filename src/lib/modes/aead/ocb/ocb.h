@@ -10,7 +10,6 @@
 
 #include <botan/aead.h>
 #include <botan/block_cipher.h>
-#include <botan/buf_filt.h>
 
 namespace Botan {
 

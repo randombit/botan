@@ -10,12 +10,20 @@
 #include <botan/charset.h>
 #include <botan/get_byte.h>
 #include <set>
+#include <stdexcept>
 
 namespace Botan {
 
 u32bit to_u32bit(const std::string& str)
    {
-   return std::stoul(str, nullptr);
+   try
+      {
+      return std::stoul(str, nullptr);
+      }
+   catch(std::exception&)
+      {
+      throw std::runtime_error("Could not read '" + str + "' as decimal string");
+      }
    }
 
 /*

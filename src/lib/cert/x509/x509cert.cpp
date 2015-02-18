@@ -15,6 +15,7 @@
 #include <botan/lookup.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
+#include <botan/hash.h>
 #include <botan/hex.h>
 #include <algorithm>
 #include <iterator>

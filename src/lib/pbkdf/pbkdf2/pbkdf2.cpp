@@ -5,6 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/pbkdf_utils.h>
 #include <botan/pbkdf2.h>
 #include <botan/get_byte.h>
 #include <botan/internal/xor_buf.h>
@@ -12,51 +13,62 @@
 
 namespace Botan {
 
-/*
-* Return a PKCS #5 PBKDF2 derived key
-*/
-std::pair<size_t, OctetString>
-PKCS5_PBKDF2::key_derivation(size_t key_len,
-                             const std::string& passphrase,
-                             const byte salt[], size_t salt_len,
-                             size_t iterations,
-                             std::chrono::milliseconds msec) const
+BOTAN_REGISTER_NAMED_T(PBKDF, "PBKDF2", PKCS5_PBKDF2, PKCS5_PBKDF2::make);
+
+PKCS5_PBKDF2* PKCS5_PBKDF2::make(const Spec& spec)
    {
-   if(key_len == 0)
-      return std::make_pair(iterations, OctetString());
+   if(auto mac = make_a<MessageAuthenticationCode>(spec.arg(0)))
+      return new PKCS5_PBKDF2(mac);
+
+   if(auto mac = make_a<MessageAuthenticationCode>("HMAC(" + spec.arg(0) + ")"))
+      return new PKCS5_PBKDF2(mac);
+
+   return nullptr;
+   }
+
+size_t
+pbkdf2(MessageAuthenticationCode& prf,
+       byte out[],
+       size_t out_len,
+       const std::string& passphrase,
+       const byte salt[], size_t salt_len,
+       size_t iterations,
+       std::chrono::milliseconds msec)
+   {
+   clear_mem(out, out_len);
+
+   if(out_len == 0)
+      return 0;
 
    try
       {
-      mac->set_key(reinterpret_cast<const byte*>(passphrase.data()),
-                   passphrase.length());
+      prf.set_key(reinterpret_cast<const byte*>(passphrase.data()), passphrase.size());
       }
    catch(Invalid_Key_Length)
       {
-      throw Exception(name() + " cannot accept passphrases of length " +
-                      std::to_string(passphrase.length()));
+      throw std::runtime_error("PBKDF2 with " + prf.name() +
+                               " cannot accept passphrases of length " +
+                               std::to_string(passphrase.size()));
       }
 
-   secure_vector<byte> key(key_len);
+   const size_t prf_sz = prf.output_length();
+   secure_vector<byte> U(prf_sz);
 
-   byte* T = &key[0];
-
-   secure_vector<byte> U(mac->output_length());
-
-   const size_t blocks_needed = round_up(key_len, mac->output_length()) / mac->output_length();
+   const size_t blocks_needed = round_up(out_len, prf_sz) / prf_sz;
 
    std::chrono::microseconds usec_per_block =
       std::chrono::duration_cast<std::chrono::microseconds>(msec) / blocks_needed;
 
    u32bit counter = 1;
-   while(key_len)
+   while(out_len)
       {
-      size_t T_size = std::min<size_t>(mac->output_length(), key_len);
+      const size_t prf_output = std::min<size_t>(prf_sz, out_len);
 
-      mac->update(salt, salt_len);
-      mac->update_be(counter);
-      mac->final(&U[0]);
+      prf.update(salt, salt_len);
+      prf.update_be(counter++);
+      prf.final(&U[0]);
 
-      xor_buf(T, &U[0], T_size);
+      xor_buf(out, &U[0], prf_output);
 
       if(iterations == 0)
          {
@@ -71,9 +83,9 @@ PKCS5_PBKDF2::key_derivation(size_t key_len,
 
          while(true)
             {
-            mac->update(U);
-            mac->final(&U[0]);
-            xor_buf(T, &U[0], T_size);
+            prf.update(U);
+            prf.final(&U[0]);
+            xor_buf(out, &U[0], prf_output);
             iterations++;
 
             /*
@@ -94,18 +106,28 @@ PKCS5_PBKDF2::key_derivation(size_t key_len,
          {
          for(size_t i = 1; i != iterations; ++i)
             {
-            mac->update(U);
-            mac->final(&U[0]);
-            xor_buf(T, &U[0], T_size);
+            prf.update(U);
+            prf.final(&U[0]);
+            xor_buf(out, &U[0], prf_output);
             }
          }
 
-      key_len -= T_size;
-      T += T_size;
-      ++counter;
+      out_len -= prf_output;
+      out += prf_output;
       }
 
-   return std::make_pair(iterations, key);
+   return iterations;
    }
+
+size_t
+PKCS5_PBKDF2::pbkdf(byte key[], size_t key_len,
+                    const std::string& passphrase,
+                    const byte salt[], size_t salt_len,
+                    size_t iterations,
+                    std::chrono::milliseconds msec) const
+   {
+   return pbkdf2(*mac.get(), key, key_len, passphrase, salt, salt_len, iterations, msec);
+   }
+
 
 }

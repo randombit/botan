@@ -265,13 +265,9 @@ KDF* Handshake_State::protocol_specific_prf() const
 
       return get_kdf("TLS-12-PRF(" + prf_algo + ")");
       }
-   else
-      {
-      // TLS v1.0, v1.1 and DTLS v1.0
-      return get_kdf("TLS-PRF");
-      }
 
-   throw Internal_Error("Unknown version code " + version().to_string());
+   // Old PRF used in TLS v1.0, v1.1 and DTLS v1.0
+   return get_kdf("TLS-PRF");
    }
 
 namespace {
@@ -367,8 +363,7 @@ Handshake_State::choose_sig_format(const Private_Key& key,
 std::pair<std::string, Signature_Format>
 Handshake_State::understand_sig_format(const Public_Key& key,
                                        std::string hash_algo,
-                                       std::string sig_algo,
-                                       bool for_client_auth) const
+                                       std::string sig_algo) const
    {
    const std::string algo_name = key.algo_name();
 

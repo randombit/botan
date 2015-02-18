@@ -13,6 +13,7 @@
 #include <botan/parsing.h>
 #include <botan/lookup.h>
 #include <botan/oids.h>
+#include <botan/hash.h>
 #include <botan/key_constraint.h>
 #include <algorithm>
 #include <typeinfo>
@@ -218,17 +219,16 @@ PK_Signer* choose_sig_format(const Private_Key& key,
                              const std::string& hash_fn,
                              AlgorithmIdentifier& sig_algo)
    {
-   std::string padding;
-
    const std::string algo_name = key.algo_name();
 
-   const HashFunction* proto_hash = retrieve_hash(hash_fn);
-   if(!proto_hash)
+   std::unique_ptr<HashFunction> hash(get_hash(hash_fn));
+   if(!hash)
       throw Algorithm_Not_Found(hash_fn);
 
-   if(key.max_input_bits() < proto_hash->output_length()*8)
+   if(key.max_input_bits() < hash->output_length() * 8)
       throw Invalid_Argument("Key is too small for chosen hash function");
 
+   std::string padding;
    if(algo_name == "RSA")
       padding = "EMSA3";
    else if(algo_name == "DSA")
@@ -238,10 +238,9 @@ PK_Signer* choose_sig_format(const Private_Key& key,
    else
       throw Invalid_Argument("Unknown X.509 signing key type: " + algo_name);
 
-   Signature_Format format =
-      (key.message_parts() > 1) ? DER_SEQUENCE : IEEE_1363;
+   const Signature_Format format = (key.message_parts() > 1) ? DER_SEQUENCE : IEEE_1363;
 
-   padding = padding + '(' + proto_hash->name() + ')';
+   padding = padding + '(' + hash->name() + ')';
 
    sig_algo.oid = OIDS::lookup(algo_name + "/" + padding);
    sig_algo.parameters = key.algorithm_identifier().parameters;

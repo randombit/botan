@@ -5,11 +5,19 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/mac_utils.h>
 #include <botan/cmac.h>
-#include <botan/loadstor.h>
-#include <botan/internal/xor_buf.h>
 
 namespace Botan {
+
+CMAC* CMAC::make(const Spec& spec)
+   {
+   if(spec.arg_count() == 1)
+      return new CMAC(Algo_Registry<BlockCipher>::global_registry().make(spec.arg(0)));
+   return nullptr;
+   }
+
+BOTAN_REGISTER_NAMED_T(MessageAuthenticationCode, "CMAC", CMAC, CMAC::make);
 
 /*
 * Perform CMAC's multiplication in GF(2^n)

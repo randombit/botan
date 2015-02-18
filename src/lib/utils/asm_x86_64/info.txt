@@ -21,7 +21,3 @@ netbsd
 openbsd
 solaris
 </os>
-
-<requires>
-asm_engine
-</requires>

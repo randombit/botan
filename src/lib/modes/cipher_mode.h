@@ -9,6 +9,7 @@
 #define BOTAN_CIPHER_MODE_H__
 
 #include <botan/transform.h>
+#include <botan/stream_cipher.h>
 
 namespace Botan {
 
@@ -23,7 +24,20 @@ class BOTAN_DLL Cipher_Mode : public Keyed_Transform
       * confidentiality.
       */
       virtual bool authenticated() const { return false; }
+
+      /**
+      * Return the size of the authentication tag used (in bytes)
+      */
+      virtual size_t tag_size() const { return 0; }
    };
+
+/**
+* The two possible directions for cipher filters, determining whether they
+* actually perform encryption or decryption.
+*/
+enum Cipher_Dir { ENCRYPTION, DECRYPTION };
+
+BOTAN_DLL Cipher_Mode* get_cipher_mode(const std::string& algo_spec, Cipher_Dir direction);
 
 }
 

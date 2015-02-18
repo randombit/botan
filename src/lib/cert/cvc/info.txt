@@ -29,7 +29,6 @@ asn1
 bigint
 ecdsa
 filters
-libstate
 oid_lookup
 pem
 pubkey

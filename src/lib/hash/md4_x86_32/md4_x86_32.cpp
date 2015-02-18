@@ -5,9 +5,12 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/hash_utils.h>
 #include <botan/md4_x86_32.h>
 
 namespace Botan {
+
+BOTAN_REGISTER_NAMED_T_NOARGS(HashFunction, MD4_X86_32, "MD4", "x86-32");
 
 /**
 * MD4 compression function in x86-32 asm

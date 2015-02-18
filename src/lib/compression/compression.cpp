@@ -6,67 +6,68 @@
 */
 
 #include <botan/compression.h>
-
-#if defined(BOTAN_HAS_ZLIB_TRANSFORM)
-  #include <botan/zlib.h>
-#endif
-
-#if defined(BOTAN_HAS_BZIP2_TRANSFORM)
-  #include <botan/bzip2.h>
-#endif
-
-#if defined(BOTAN_HAS_LZMA_TRANSFORM)
-  #include <botan/lzma.h>
-#endif
+#include <botan/internal/compress_utils.h>
+#include <botan/mem_ops.h>
+#include <cstdlib>
 
 namespace Botan {
 
-Compressor_Transformation* make_compressor(const std::string& type, size_t level)
+void* Compression_Alloc_Info::do_malloc(size_t n, size_t size)
    {
-#if defined(BOTAN_HAS_ZLIB_TRANSFORM)
-   if(type == "zlib")
-      return new Zlib_Compression(level);
-   if(type == "deflate")
-      return new Deflate_Compression(level);
-   if(type == "gzip" || type == "gz")
-      return new Gzip_Compression(level);
-#endif
+   const size_t total_sz = n * size;
 
-#if defined(BOTAN_HAS_BZIP2_TRANSFORM)
-   if(type == "bzip2" || type == "bz2")
-      return new Bzip2_Compression(level);
-#endif
-
-#if defined(BOTAN_HAS_LZMA_TRANSFORM)
-   if(type == "lzma" || type == "xz")
-      return new LZMA_Compression(level);
-#endif
-
-   throw std::runtime_error("Unknown compression type " + type);
+   void* ptr = std::malloc(total_sz);
+   m_current_allocs[ptr] = total_sz;
+   return ptr;
    }
 
-Compressor_Transformation* make_decompressor(const std::string& type)
+void Compression_Alloc_Info::do_free(void* ptr)
    {
-#if defined(BOTAN_HAS_ZLIB_TRANSFORM)
+   if(ptr)
+      {
+      auto i = m_current_allocs.find(ptr);
+
+      if(i == m_current_allocs.end())
+         throw std::runtime_error("Compression_Alloc_Info::free got pointer not allocated by us");
+
+      zero_mem(ptr, i->second);
+      std::free(ptr);
+      m_current_allocs.erase(i);
+      }
+   }
+
+Transform* make_compressor(const std::string& type, size_t level)
+   {
+   const std::string comp_suffix = "_Compression(" + std::to_string(level) + ")";
+
    if(type == "zlib")
-      return new Zlib_Decompression;
+      return get_transform("Zlib" + comp_suffix);
    if(type == "deflate")
-      return new Deflate_Decompression;
+      return get_transform("Deflate" + comp_suffix);
    if(type == "gzip" || type == "gz")
-      return new Gzip_Decompression;
-#endif
-
-#if defined(BOTAN_HAS_BZIP2_TRANSFORM)
+      return get_transform("Gzip" + comp_suffix);
    if(type == "bzip2" || type == "bz2")
-      return new Bzip2_Decompression;
-#endif
-
-#if defined(BOTAN_HAS_LZMA_TRANSFORM)
+      return get_transform("Bzip2" + comp_suffix);
    if(type == "lzma" || type == "xz")
-      return new LZMA_Decompression;
-#endif
+      return get_transform("LZMA" + comp_suffix);
 
-   throw std::runtime_error("Unknown compression type " + type);
+   return nullptr;
+   }
+
+Transform* make_decompressor(const std::string& type)
+   {
+   if(type == "zlib")
+      return get_transform("Zlib_Decompression");
+   if(type == "deflate")
+      return get_transform("Deflate_Decompression");
+   if(type == "gzip" || type == "gz")
+      return get_transform("Gzip_Decompression");
+   if(type == "bzip2" || type == "bz2")
+      return get_transform("Bzip2_Decompression");
+   if(type == "lzma" || type == "xz")
+      return get_transform("LZMA_Decompression");
+
+   return nullptr;
    }
 
 void Stream_Compression::clear()

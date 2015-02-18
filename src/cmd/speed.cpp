@@ -12,10 +12,6 @@
 #include <botan/benchmark.h>
 #include <botan/aead.h>
 #include <botan/auto_rng.h>
-#include <botan/libstate.h>
-#include <botan/pipe.h>
-#include <botan/filters.h>
-#include <botan/engine.h>
 #include <botan/parsing.h>
 #include <botan/symkey.h>
 #include <botan/hex.h>
@@ -121,12 +117,9 @@ void report_results(const std::string& algo,
    std::cout << std::endl;
    }
 
-void time_transform(std::unique_ptr<Transformation> tf,
+void time_transform(std::unique_ptr<Transform> tf,
                     RandomNumberGenerator& rng)
    {
-   if(!tf)
-      return;
-
    const std::chrono::seconds runtime(2);
 
    for(size_t buf_size : { 16, 64, 256, 1024, 8192 })
@@ -160,15 +153,18 @@ void time_transform(std::unique_ptr<Transformation> tf,
       }
    }
 
-void time_transform(const std::string& algo, RandomNumberGenerator& rng)
+bool time_transform(const std::string& algo, RandomNumberGenerator& rng)
    {
-   std::unique_ptr<Transformation> tf;
-   tf.reset(get_aead(algo, ENCRYPTION));
+   std::unique_ptr<Transform> tf;
+   tf.reset(get_cipher_mode(algo, ENCRYPTION));
+   if(!tf)
+      return false;
 
    if(Keyed_Transform* keyed = dynamic_cast<Keyed_Transform*>(tf.get()))
       keyed->set_key(rng.random_vec(keyed->key_spec().maximum_keylength()));
 
    time_transform(std::move(tf), rng);
+   return true;
    }
 
 void bench_algo(const std::string& algo,
@@ -176,20 +172,21 @@ void bench_algo(const std::string& algo,
                 double seconds,
                 size_t buf_size)
    {
-   Algorithm_Factory& af = global_state().algorithm_factory();
-
    std::chrono::milliseconds ms(
       static_cast<std::chrono::milliseconds::rep>(seconds * 1000));
 
-   std::map<std::string, double> speeds = algorithm_benchmark(algo, af, rng, ms, buf_size);
+   if(time_transform(algo, rng))
+      return;
 
-   report_results(algo, speeds);
+   std::map<std::string, double> speeds = algorithm_benchmark(algo, rng, ms, buf_size);
 
-   if(speeds.empty())
-      time_transform(algo, rng);
+   if(!speeds.empty())
+      {
+      report_results(algo, speeds);
+      return;
+      }
 
-   if(speeds.empty())
-      bench_pk(rng, algo, seconds);
+   bench_pk(rng, algo, seconds);
    }
 
 int speed(int argc, char* argv[])

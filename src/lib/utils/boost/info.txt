@@ -1,8 +1,0 @@
-define BOOST_FILESYSTEM 20131228
-define BOOST_ASIO 20131228
-
-<libs>
-all -> boost_system,boost_filesystem
-</libs>
-
-load_on request

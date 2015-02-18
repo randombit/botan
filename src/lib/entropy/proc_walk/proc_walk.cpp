@@ -120,6 +120,8 @@ void ProcWalking_EntropySource::poll(Entropy_Accumulator& accum)
    const size_t MAX_FILES_READ_PER_POLL = 2048;
    const double ENTROPY_ESTIMATE = 1.0 / (8*1024);
 
+   std::lock_guard<std::mutex> lock(m_mutex);
+
    if(!m_dir)
       m_dir.reset(new Directory_Walker(m_path));
 

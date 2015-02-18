@@ -5,14 +5,15 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/hash_utils.h>
 #include <botan/keccak.h>
-#include <botan/loadstor.h>
 #include <botan/parsing.h>
 #include <botan/exceptn.h>
-#include <botan/rotate.h>
 #include <botan/internal/xor_buf.h>
 
 namespace Botan {
+
+BOTAN_REGISTER_HASH_NAMED_1LEN(Keccak_1600, "Keccak-1600", 512);
 
 namespace {
 

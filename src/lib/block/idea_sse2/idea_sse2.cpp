@@ -5,10 +5,14 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/block_utils.h>
 #include <botan/idea_sse2.h>
+#include <botan/cpuid.h>
 #include <emmintrin.h>
 
 namespace Botan {
+
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_sse2(), IDEA_SSE2, "IDEA", "sse2", 64);
 
 namespace {
 

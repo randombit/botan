@@ -1,18 +1,20 @@
 /*
 * SHA-1 using SSE2
+* Based on public domain code by Dean Gaudet
+*    (http://arctic.org/~dean/crypto/sha1.html)
 * (C) 2009-2011 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
-*
-* Based on public domain code by Dean Gaudet
-*    (http://arctic.org/~dean/crypto/sha1.html)
 */
 
+#include <botan/internal/hash_utils.h>
 #include <botan/sha1_sse2.h>
-#include <botan/rotate.h>
+#include <botan/cpuid.h>
 #include <emmintrin.h>
 
 namespace Botan {
+
+BOTAN_REGISTER_HASH_NOARGS_IF(CPUID::has_sse2(), SHA_160_SSE2, "SHA-160", "sse2", 64);
 
 namespace SHA1_SSE2_F {
 

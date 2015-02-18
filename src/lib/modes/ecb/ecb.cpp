@@ -5,12 +5,23 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/mode_utils.h>
 #include <botan/ecb.h>
-#include <botan/loadstor.h>
-#include <botan/internal/xor_buf.h>
-#include <botan/internal/rounding.h>
 
 namespace Botan {
+
+template<typename T>
+Transform* make_ecb_mode(const Transform::Spec& spec)
+   {
+   std::unique_ptr<BlockCipher> bc(Algo_Registry<BlockCipher>::global_registry().make(spec.arg(0)));
+   std::unique_ptr<BlockCipherModePaddingMethod> pad(get_bc_pad(spec.arg(1, "NoPadding")));
+   if(bc && pad)
+      return new T(bc.release(), pad.release());
+   return nullptr;
+   }
+
+BOTAN_REGISTER_TRANSFORM(ECB_Encryption, make_ecb_mode<ECB_Encryption>);
+BOTAN_REGISTER_TRANSFORM(ECB_Decryption, make_ecb_mode<ECB_Decryption>);
 
 ECB_Mode::ECB_Mode(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
    m_cipher(cipher),

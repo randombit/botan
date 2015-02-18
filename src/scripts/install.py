@@ -171,10 +171,6 @@ def main(args = None):
 
     copy_executable(os.path.join(out_dir, app_exe), os.path.join(bin_dir, app_exe))
 
-    if 'botan_config' in cfg:
-        copy_executable(cfg['botan_config'],
-                        os.path.join(bin_dir, os.path.basename(cfg['botan_config'])))
-
     if 'botan_pkgconfig' in cfg:
         pkgconfig_dir = os.path.join(options.destdir, options.libdir, options.pkgconfigdir)
         makedirs(pkgconfig_dir)

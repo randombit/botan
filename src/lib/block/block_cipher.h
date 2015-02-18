@@ -8,6 +8,7 @@
 #ifndef BOTAN_BLOCK_CIPHER_H__
 #define BOTAN_BLOCK_CIPHER_H__
 
+#include <botan/scan_name.h>
 #include <botan/sym_algo.h>
 
 namespace Botan {
@@ -18,6 +19,7 @@ namespace Botan {
 class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
    {
    public:
+      typedef SCAN_Name Spec;
 
       /**
       * @return block size of this algorithm

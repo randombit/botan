@@ -1,7 +1,0 @@
-define TRANSFORM 20131209
-
-<requires>
-alloc
-hex
-rng
-</requires>

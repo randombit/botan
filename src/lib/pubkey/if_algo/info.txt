@@ -5,6 +5,5 @@ load_on dep
 <requires>
 asn1
 bigint
-libstate
 numbertheory
 </requires>

@@ -1,6 +1,1 @@
 define CTR_BE 20131128
-
-<requires>
-block
-stream
-</requires>

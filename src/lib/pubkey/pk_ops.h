@@ -8,12 +8,31 @@
 #ifndef BOTAN_PK_OPERATIONS_H__
 #define BOTAN_PK_OPERATIONS_H__
 
+#include <botan/pk_keys.h>
 #include <botan/secmem.h>
 #include <botan/rng.h>
 
 namespace Botan {
 
 namespace PK_Ops {
+
+template<typename Key>
+struct PK_Spec
+   {
+   public:
+      PK_Spec(const Key& key, const std::string& pad) :
+         m_key(key), m_pad(pad) {}
+
+      std::string algo_name() const { return m_key.algo_name(); }
+
+      std::string as_string() const { return algo_name() + "/" + padding(); }
+
+      const Key& key() const { return m_key; }
+      const std::string& padding() const { return m_pad; }
+   private:
+      const Key& m_key;
+      const std::string m_pad;
+   };
 
 /**
 * Public key encryption interface
@@ -23,8 +42,9 @@ class BOTAN_DLL Encryption
    public:
       virtual size_t max_input_bits() const = 0;
 
-      virtual secure_vector<byte> encrypt(const byte msg[], size_t msg_len,
-                                         RandomNumberGenerator& rng) = 0;
+      virtual secure_vector<byte> encrypt(const byte msg[], size_t msg_len, RandomNumberGenerator& rng) = 0;
+
+      typedef PK_Spec<Public_Key> Spec;
 
       virtual ~Encryption() {}
    };
@@ -37,8 +57,9 @@ class BOTAN_DLL Decryption
    public:
       virtual size_t max_input_bits() const = 0;
 
-      virtual secure_vector<byte> decrypt(const byte msg[],
-                                         size_t msg_len) = 0;
+      virtual secure_vector<byte> decrypt(const byte msg[],  size_t msg_len) = 0;
+
+      typedef PK_Spec<Private_Key> Spec;
 
       virtual ~Decryption() {}
    };
@@ -75,6 +96,8 @@ class BOTAN_DLL Signature
       */
       virtual secure_vector<byte> sign(const byte msg[], size_t msg_len,
                                       RandomNumberGenerator& rng) = 0;
+
+      typedef PK_Spec<Private_Key> Spec;
 
       virtual ~Signature() {}
    };
@@ -136,6 +159,8 @@ class BOTAN_DLL Verification
          throw Invalid_State("Message recovery not supported");
          }
 
+      typedef PK_Spec<Public_Key> Spec;
+
       virtual ~Verification() {}
    };
 
@@ -152,6 +177,8 @@ class BOTAN_DLL Key_Agreement
       * @returns the agreed key
       */
       virtual secure_vector<byte> agree(const byte w[], size_t w_len) = 0;
+
+      typedef PK_Spec<Private_Key> Spec;
 
       virtual ~Key_Agreement() {}
    };

@@ -10,11 +10,26 @@
 #include <botan/ber_dec.h>
 #include <botan/bigint.h>
 #include <botan/parsing.h>
-#include <botan/libstate.h>
-#include <botan/engine.h>
+#include <botan/internal/algo_registry.h>
 #include <botan/internal/bit_ops.h>
 
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+  #include <botan/system_rng.h>
+#else
+  #include <botan/auto_rng.h>
+#endif
+
 namespace Botan {
+
+namespace {
+
+template<typename T, typename Key>
+T* get_pk_op(const Key& key, const std::string& pad)
+   {
+   return Algo_Registry<T>::global_registry().make(typename T::Spec(key, pad));
+   }
+
+}
 
 /*
 * PK_Encryptor_EME Constructor
@@ -22,15 +37,7 @@ namespace Botan {
 PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
                                    const std::string& eme_name)
    {
-   Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
-   RandomNumberGenerator& rng = global_state().global_rng();
-
-   while(const Engine* engine = i.next())
-      {
-      m_op.reset(engine->get_encryption_op(key, rng));
-      if(m_op)
-         break;
-      }
+   m_op.reset(get_pk_op<PK_Ops::Encryption>(key, eme_name));
 
    if(!m_op)
       throw Lookup_Error("Encryption with " + key.algo_name() + " not supported");
@@ -82,19 +89,7 @@ size_t PK_Encryptor_EME::maximum_input_size() const
 PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
                                    const std::string& eme_name)
    {
-   Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
-   RandomNumberGenerator& rng = global_state().global_rng();
-
-   while(const Engine* engine = i.next())
-      {
-      m_op.reset(engine->get_decryption_op(key, rng));
-      if(m_op)
-         break;
-      }
-
-   if(!m_op)
-      throw Lookup_Error("Decryption with " + key.algo_name() + " not supported");
-
+   m_op.reset(get_pk_op<PK_Ops::Decryption>(key, eme_name));
    m_eme.reset(get_eme(eme_name));
    }
 
@@ -105,7 +100,7 @@ secure_vector<byte> PK_Decryptor_EME::dec(const byte msg[],
                                           size_t length) const
    {
    try {
-      secure_vector<byte> decrypted = m_op->decrypt(msg, length);
+      const secure_vector<byte> decrypted = m_op->decrypt(msg, length);
       if(m_eme)
          return m_eme->decode(decrypted, m_op->max_input_bits());
       else
@@ -125,25 +120,12 @@ PK_Signer::PK_Signer(const Private_Key& key,
                      Signature_Format format,
                      Fault_Protection prot)
    {
-   Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
-   RandomNumberGenerator& rng = global_state().global_rng();
+   m_op.reset(get_pk_op<PK_Ops::Signature>(key, emsa_name));
 
-   m_op = nullptr;
-   m_verify_op = nullptr;
+   if(prot == ENABLE_FAULT_PROTECTION)
+      m_verify_op.reset(get_pk_op<PK_Ops::Verification>(key, emsa_name));
 
-   while(const Engine* engine = i.next())
-      {
-      if(!m_op)
-         m_op.reset(engine->get_signature_op(key, emsa_name, rng));
-
-      if(!m_verify_op && prot == ENABLE_FAULT_PROTECTION)
-         m_verify_op.reset(engine->get_verify_op(key, emsa_name, rng));
-
-      if(m_op && (m_verify_op || prot == DISABLE_FAULT_PROTECTION))
-         break;
-      }
-
-   if(!m_op || (!m_verify_op && prot == ENABLE_FAULT_PROTECTION))
+   if(!m_op || (prot == ENABLE_FAULT_PROTECTION && !m_verify_op))
       throw Lookup_Error("Signing with " + key.algo_name() + " not supported");
 
    m_emsa.reset(get_emsa(emsa_name));
@@ -244,15 +226,7 @@ PK_Verifier::PK_Verifier(const Public_Key& key,
                          const std::string& emsa_name,
                          Signature_Format format)
    {
-   Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
-   RandomNumberGenerator& rng = global_state().global_rng();
-
-   while(const Engine* engine = i.next())
-      {
-      m_op.reset(engine->get_verify_op(key, emsa_name, rng));
-      if(m_op)
-         break;
-      }
+   m_op.reset(get_pk_op<PK_Ops::Verification>(key, emsa_name));
 
    if(!m_op)
       throw Lookup_Error("Verification with " + key.algo_name() + " not supported");
@@ -338,7 +312,7 @@ bool PK_Verifier::validate_signature(const secure_vector<byte>& msg,
       }
    else
       {
-      RandomNumberGenerator& rng = global_state().global_rng();
+      Null_RNG rng;
 
       secure_vector<byte> encoded =
          m_emsa->encoding_of(msg, m_op->max_input_bits(), rng);
@@ -350,18 +324,10 @@ bool PK_Verifier::validate_signature(const secure_vector<byte>& msg,
 /*
 * PK_Key_Agreement Constructor
 */
-PK_Key_Agreement::PK_Key_Agreement(const PK_Key_Agreement_Key& key,
+PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key,
                                    const std::string& kdf_name)
    {
-   Algorithm_Factory::Engine_Iterator i(global_state().algorithm_factory());
-   RandomNumberGenerator& rng = global_state().global_rng();
-
-   while(const Engine* engine = i.next())
-      {
-      m_op.reset(engine->get_key_agreement_op(key, rng));
-      if(m_op)
-         break;
-      }
+   m_op.reset(get_pk_op<PK_Ops::Key_Agreement>(key, kdf_name));
 
    if(!m_op)
       throw Lookup_Error("Key agreement with " + key.algo_name() + " not supported");

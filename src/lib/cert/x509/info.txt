@@ -2,6 +2,7 @@ define X509_CERTIFICATES 20131128
 define OCSP 20131128
 
 <requires>
+asn1
 datastor
 http_util
 </requires>

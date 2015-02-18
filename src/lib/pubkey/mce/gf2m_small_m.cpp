@@ -104,10 +104,10 @@ Gf2m_Field::Gf2m_Field(size_t extdeg)
 
 gf2m Gf2m_Field::gf_div(gf2m x, gf2m y)
    {
-   s32bit sub_res = ((s32bit)m_gf_log_table[x]) - ((s32bit) m_gf_log_table[y]);
-   s32bit modq_res = ((s32bit)_gf_modq_1(sub_res));
-   s32bit div_res = (((s32bit)x) ? ((s32bit) m_gf_exp_table[modq_res]) : 0  );
-   return (gf2m) div_res;
+   s32bit sub_res = static_cast<s32bit>(m_gf_log_table[x]) - static_cast<s32bit>( m_gf_log_table[y]);
+   s32bit modq_res = static_cast<s32bit>(_gf_modq_1(sub_res));
+   s32bit div_res = static_cast<s32bit>(x) ? static_cast<s32bit>(m_gf_exp_table[modq_res]) : 0;
+   return static_cast<gf2m>(div_res);
    }
 
 // we suppose i >= 0. Par convention 0^0 = 1

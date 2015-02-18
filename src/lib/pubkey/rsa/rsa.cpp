@@ -5,10 +5,12 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/pk_utils.h>
 #include <botan/rsa.h>
 #include <botan/parsing.h>
-#include <botan/numthry.h>
 #include <botan/keypair.h>
+#include <botan/blinding.h>
+#include <botan/reducer.h>
 #include <future>
 
 namespace Botan {
@@ -59,63 +61,178 @@ bool RSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    return KeyPair::signature_consistency_check(rng, *this, "EMSA4(SHA-1)");
    }
 
-RSA_Private_Operation::RSA_Private_Operation(const RSA_PrivateKey& rsa,
-                                             RandomNumberGenerator& rng) :
-   n(rsa.get_n()),
-   q(rsa.get_q()),
-   c(rsa.get_c()),
-   powermod_e_n(rsa.get_e(), rsa.get_n()),
-   powermod_d1_p(rsa.get_d1(), rsa.get_p()),
-   powermod_d2_q(rsa.get_d2(), rsa.get_q()),
-   mod_p(rsa.get_p())
-   {
-   BigInt k(rng, n.bits() - 1);
-   blinder = Blinder(powermod_e_n(k), inverse_mod(k, n), n);
-   }
+namespace {
 
-BigInt RSA_Private_Operation::private_op(const BigInt& m) const
-   {
-   if(m >= n)
-      throw Invalid_Argument("RSA private op - input is too large");
-
-   auto future_j1 = std::async(std::launch::async, powermod_d1_p, m);
-   BigInt j2 = powermod_d2_q(m);
-   BigInt j1 = future_j1.get();
-
-   j1 = mod_p.reduce(sub_mul(j1, j2, c));
-
-   return mul_add(j1, q, j2);
-   }
-
-secure_vector<byte>
-RSA_Private_Operation::sign(const byte msg[], size_t msg_len,
-                            RandomNumberGenerator& rng)
-   {
-   rng.add_entropy(msg, msg_len);
-
-   /* We don't check signatures against powermod_e_n here because
-      PK_Signer checks verification consistency for all signature
-      algorithms.
-   */
-
-   const BigInt m(msg, msg_len);
-   const BigInt x = blinder.unblind(private_op(blinder.blind(m)));
-   return BigInt::encode_1363(x, n.bytes());
-   }
-
-/*
-* RSA Decryption Operation
+/**
+* RSA private (decrypt/sign) operation
 */
-secure_vector<byte>
-RSA_Private_Operation::decrypt(const byte msg[], size_t msg_len)
+class RSA_Private_Operation
    {
-   const BigInt m(msg, msg_len);
-   const BigInt x = blinder.unblind(private_op(blinder.blind(m)));
+   protected:
+      size_t get_max_input_bits() const { return (n.bits() - 1); }
 
-   BOTAN_ASSERT(m == powermod_e_n(x),
-                "RSA decrypt passed consistency check");
+      RSA_Private_Operation(const RSA_PrivateKey& rsa) :
+         n(rsa.get_n()),
+         q(rsa.get_q()),
+         c(rsa.get_c()),
+         m_powermod_e_n(rsa.get_e(), rsa.get_n()),
+         m_powermod_d1_p(rsa.get_d1(), rsa.get_p()),
+         m_powermod_d2_q(rsa.get_d2(), rsa.get_q()),
+         m_mod_p(rsa.get_p()),
+         m_blinder(n,
+                   [this](const BigInt& k) { return m_powermod_e_n(k); },
+                   [this](const BigInt& k) { return inverse_mod(k, n); })
+         {
+         }
 
-   return BigInt::encode_locked(x);
-   }
+      BigInt blinded_private_op(const BigInt& m) const
+         {
+         return m_blinder.unblind(private_op(m_blinder.blind(m)));
+         }
+
+      BigInt private_op(const BigInt& m) const
+         {
+         if(m >= n)
+            throw Invalid_Argument("RSA private op - input is too large");
+
+         auto future_j1 = std::async(std::launch::async, m_powermod_d1_p, m);
+         BigInt j2 = m_powermod_d2_q(m);
+         BigInt j1 = future_j1.get();
+
+         j1 = m_mod_p.reduce(sub_mul(j1, j2, c));
+
+         return mul_add(j1, q, j2);
+         }
+
+      const BigInt& n;
+      const BigInt& q;
+      const BigInt& c;
+      Fixed_Exponent_Power_Mod m_powermod_e_n, m_powermod_d1_p, m_powermod_d2_q;
+      Modular_Reducer m_mod_p;
+      Blinder m_blinder;
+   };
+
+class RSA_Signature_Operation : public PK_Ops::Signature,
+                                private RSA_Private_Operation
+   {
+   public:
+      typedef RSA_PrivateKey Key_Type;
+
+      size_t max_input_bits() const override { return get_max_input_bits(); };
+
+      RSA_Signature_Operation(const RSA_PrivateKey& rsa, const std::string&) :
+         RSA_Private_Operation(rsa)
+         {
+         }
+
+      secure_vector<byte> sign(const byte msg[], size_t msg_len,
+                              RandomNumberGenerator&) override
+         {
+         /* We don't check signatures against powermod_e_n here because
+         PK_Signer checks verification consistency for all signature
+         algorithms.
+         */
+         const BigInt m(msg, msg_len);
+         const BigInt x = blinded_private_op(m);
+         return BigInt::encode_1363(x, n.bytes());
+         }
+   };
+
+class RSA_Decryption_Operation : public PK_Ops::Decryption,
+                                 private RSA_Private_Operation
+   {
+   public:
+      typedef RSA_PrivateKey Key_Type;
+
+      size_t max_input_bits() const override { return get_max_input_bits(); };
+
+      RSA_Decryption_Operation(const RSA_PrivateKey& rsa, const std::string&) :
+         RSA_Private_Operation(rsa)
+         {
+         }
+
+      secure_vector<byte> decrypt(const byte msg[], size_t msg_len) override
+         {
+         const BigInt m(msg, msg_len);
+         const BigInt x = blinded_private_op(m);
+         BOTAN_ASSERT(m == m_powermod_e_n(x), "RSA decrypt consistency check");
+         return BigInt::encode_locked(x);
+         }
+   };
+
+
+/**
+* RSA public (encrypt/verify) operation
+*/
+class RSA_Public_Operation
+   {
+   public:
+      RSA_Public_Operation(const RSA_PublicKey& rsa) :
+         n(rsa.get_n()), powermod_e_n(rsa.get_e(), rsa.get_n())
+         {}
+
+      size_t get_max_input_bits() const { return (n.bits() - 1); }
+
+   protected:
+      BigInt public_op(const BigInt& m) const
+         {
+         if(m >= n)
+            throw Invalid_Argument("RSA public op - input is too large");
+         return powermod_e_n(m);
+         }
+
+      const BigInt& n;
+      Fixed_Exponent_Power_Mod powermod_e_n;
+   };
+
+class RSA_Encryption_Operation : public PK_Ops::Encryption,
+                                 private RSA_Public_Operation
+   {
+   public:
+      typedef RSA_PublicKey Key_Type;
+
+      RSA_Encryption_Operation(const RSA_PublicKey& rsa, const std::string&) :
+         RSA_Public_Operation(rsa)
+         {
+         }
+
+      size_t max_input_bits() const override { return get_max_input_bits(); };
+
+      secure_vector<byte> encrypt(const byte msg[], size_t msg_len,
+                                  RandomNumberGenerator&)
+         {
+         BigInt m(msg, msg_len);
+         return BigInt::encode_1363(public_op(m), n.bytes());
+         }
+   };
+
+class RSA_Verify_Operation : public PK_Ops::Verification,
+                             private RSA_Public_Operation
+   {
+   public:
+      typedef RSA_PublicKey Key_Type;
+
+      size_t max_input_bits() const override { return get_max_input_bits(); };
+
+      RSA_Verify_Operation(const RSA_PublicKey& rsa, const std::string&) :
+         RSA_Public_Operation(rsa)
+         {
+         }
+
+      bool with_recovery() const override { return true; }
+
+      secure_vector<byte> verify_mr(const byte msg[], size_t msg_len) override
+         {
+         BigInt m(msg, msg_len);
+         return BigInt::encode_locked(public_op(m));
+         }
+   };
+
+BOTAN_REGISTER_PK_ENCRYPTION_OP("RSA", RSA_Encryption_Operation);
+BOTAN_REGISTER_PK_DECRYPTION_OP("RSA", RSA_Decryption_Operation);
+BOTAN_REGISTER_PK_SIGNATURE_OP("RSA", RSA_Signature_Operation);
+BOTAN_REGISTER_PK_VERIFY_OP("RSA", RSA_Verify_Operation);
+
+}
 
 }

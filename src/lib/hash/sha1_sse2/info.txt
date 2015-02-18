@@ -4,5 +4,4 @@ need_isa sse2
 
 <requires>
 sha1
-simd_engine
 </requires>

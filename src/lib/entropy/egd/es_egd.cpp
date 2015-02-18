@@ -139,6 +139,8 @@ void EGD_EntropySource::poll(Entropy_Accumulator& accum)
    {
    const size_t READ_ATTEMPT = 32;
 
+   std::lock_guard<std::mutex> lock(m_mutex);
+
    secure_vector<byte>& io_buffer = accum.get_io_buffer(READ_ATTEMPT);
 
    for(size_t i = 0; i != sockets.size(); ++i)

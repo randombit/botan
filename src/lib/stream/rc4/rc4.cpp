@@ -5,11 +5,21 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/stream_utils.h>
 #include <botan/rc4.h>
-#include <botan/internal/xor_buf.h>
-#include <botan/internal/rounding.h>
 
 namespace Botan {
+
+BOTAN_REGISTER_NAMED_T(StreamCipher, "RC4", RC4, RC4::make);
+
+RC4* RC4::make(const Spec& spec)
+   {
+   if(spec.algo_name() == "RC4")
+      return new RC4(spec.arg_as_integer(0, 0));
+   if(spec.algo_name() == "RC4_drop")
+      return new RC4(768);
+   return nullptr;
+   }
 
 /*
 * Combine cipher stream with message
@@ -62,7 +72,7 @@ void RC4::generate()
 void RC4::key_schedule(const byte key[], size_t length)
    {
    state.resize(256);
-   buffer.resize(round_up<size_t>(DEFAULT_BUFFERSIZE, 4));
+   buffer.resize(256);
 
    position = X = Y = 0;
 

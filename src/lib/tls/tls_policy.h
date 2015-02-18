@@ -229,27 +229,15 @@ class BOTAN_DLL Datagram_Policy : public Policy
 class BOTAN_DLL Strict_Policy : public Policy
    {
    public:
-      std::vector<std::string> allowed_ciphers() const override
-         {
-         return { "ChaCha20Poly1305", "AES-256/GCM", "AES-128/GCM" };
-         }
+      std::vector<std::string> allowed_ciphers() const override;
 
-      std::vector<std::string> allowed_signature_hashes() const override
-         { return { "SHA-512", "SHA-384"}; }
+      std::vector<std::string> allowed_signature_hashes() const override;
 
-      std::vector<std::string> allowed_macs() const override
-         { return { "AEAD" }; }
+      std::vector<std::string> allowed_macs() const override;
 
-      std::vector<std::string> allowed_key_exchange_methods() const override
-         { return { "ECDH" }; }
+      std::vector<std::string> allowed_key_exchange_methods() const override;
 
-      bool acceptable_protocol_version(Protocol_Version version) const override
-         {
-         if(version.is_datagram_protocol())
-            return (version >= Protocol_Version::DTLS_V12);
-         else
-            return (version >= Protocol_Version::TLS_V12);
-         }
+      bool acceptable_protocol_version(Protocol_Version version) const override;
    };
 
 class BOTAN_DLL Text_Policy : public Policy

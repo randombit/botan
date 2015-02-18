@@ -10,6 +10,26 @@
 
 namespace Botan {
 
+/**
+* Get a block cipher padding method by name
+*/
+BlockCipherModePaddingMethod* get_bc_pad(const std::string& algo_spec)
+   {
+   if(algo_spec == "NoPadding")
+      return new Null_Padding;
+
+   if(algo_spec == "PKCS7")
+      return new PKCS7_Padding;
+
+   if(algo_spec == "OneAndZeros")
+      return new OneAndZeros_Padding;
+
+   if(algo_spec == "X9.23")
+      return new ANSI_X923_Padding;
+
+   return nullptr;
+   }
+
 /*
 * Pad with PKCS #7 Method
 */

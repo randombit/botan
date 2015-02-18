@@ -5,11 +5,13 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/internal/mode_utils.h>
 #include <botan/cfb.h>
 #include <botan/parsing.h>
-#include <botan/internal/xor_buf.h>
 
 namespace Botan {
+
+BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN(CFB_Encryption, CFB_Decryption, 0);
 
 CFB_Mode::CFB_Mode(BlockCipher* cipher, size_t feedback_bits) :
    m_cipher(cipher),

@@ -6,3 +6,12 @@ load_on auto
 alloc
 rng
 </requires>
+
+<header:public>
+eme.h
+emsa.h
+</header:public>
+
+<header:internal>
+pad_utils.h
+</header:internal>

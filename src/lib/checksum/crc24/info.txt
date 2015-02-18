@@ -1,5 +1,0 @@
-define CRC24 20131128
-
-<requires>
-hash
-</requires>

@@ -119,6 +119,8 @@ class BOTAN_DLL Null_Padding : public BlockCipherModePaddingMethod
       std::string name() const { return "NoPadding"; }
    };
 
+BlockCipherModePaddingMethod* get_bc_pad(const std::string& algo_spec);
+
 }
 
 #endif

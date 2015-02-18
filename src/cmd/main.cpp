@@ -35,6 +35,8 @@ int help(int , char* argv[])
 
    std::cout << "Available commands:\n";
 
+   Botan::LibraryInitializer init;
+   
    size_t idx = 1;
    for(auto&& app: apps)
       {
@@ -81,7 +83,7 @@ int config(int argc, char* argv[])
 
    else
       {
-      std::cerr << "Unknown option " << arg << " to botan-config\n";
+      std::cerr << "Unknown option " << arg << " to botan config\n";
       return 1;
       }
 
@@ -155,8 +157,6 @@ int main(int argc, char* argv[])
    {
    try
       {
-      Botan::LibraryInitializer init;
-
       if(argc < 2)
          return help(argc, argv);
 
