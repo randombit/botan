@@ -1,35 +1,49 @@
 Version 1.11.14, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* The global state object previously used by the library has been
-  removed and no form of initialization is required to use the library.
-  LibraryInitializer remains as a stub.
+* The global state object previously used by the library has been removed and no
+  form of initialization is required to use the library.  The global PRNG has
+  also been removed. LibraryInitializer remains as a stub.
 
-* The new `ffi` submodule provides a simple C API/ABI for a number of
-  useful operations (hashing, ciphers, public key operations, etc)
-  which is easily accessed using the FFI modules included in many
-  languages. A new Python wrapper using the Python `ctypes` module
-  is available. The old Boost.Python wrapper has been removed.
+  The engine code has also been removed, replaced by a much lighter-weight
+  object registry system which provides lookups in faster time and with less
+  memory overhead than the previous approach.
 
-* OCB mode, which provides a fast and constant time AEAD mode without
-  requiring hardware support, is now supported in TLS, following
-  draft-zauner-tls-aes-ocb-01. Because this specification is not yet
-  finalized is not yet enabled by the default policy, and the
-  ciphersuite numbers used are in the experimental range and may
-  conflict with other uses.
+* The new `ffi` submodule provides a simple C API/ABI for a number of useful
+  operations (hashing, ciphers, public key operations, etc) which is easily
+  accessed using the FFI modules included in many languages. A new Python
+  wrapper using the Python `ctypes` module is available. The old Boost.Python
+  wrapper has been removed.
+
+* PBKDF and KDF operations now provide a way to write the desired output
+  directly to an application-specified area rather than always allocating a new
+  heap buffer.
+
+* HKDF, previously provided using a non-standard interface, now uses the
+  standard KDF interface and is retreivable using get_kdf.
+
+* OCB mode, which provides a fast and constant time AEAD mode without requiring
+  hardware support, is now supported in TLS, following
+  draft-zauner-tls-aes-ocb-01. Because this specification is not yet finalized
+  is not yet enabled by the default policy, and the ciphersuite numbers used are
+  in the experimental range and may conflict with other uses.
+
+* Add ability to read TLS policy from text file
+
+* Remove use of memset_s which caused problems with amalgamation on OS X.
+  Github 42, 45
 
 * The memory usage of the counter mode implementation has been reduced.
 
-* The memory allocator available on Unix systems which uses mmap and
-  mlock to lock a pool of memory now checks an environment variable
-  BOTAN_MLOCK_POOL_SIZE. If this is set to a smaller value then the
-  library would originally have allocated the user specified size is
-  used. You can also set it to zero to disable the pool entirely.
-  Previously the allocator would consume all available mlocked memory,
-  this allows botan to coexist with an application which wants to
-  mlock memory of its own.
+* The memory allocator available on Unix systems which uses mmap and mlock to
+  lock a pool of memory now checks an environment variable
+  BOTAN_MLOCK_POOL_SIZE. If this is set to a smaller value then the library
+  would originally have allocated the user specified size is used. You can also
+  set it to zero to disable the pool entirely.  Previously the allocator would
+  consume all available mlocked memory, this allows botan to coexist with an
+  application which wants to mlock memory of its own.
 
-* The botan-config script previously installed on Unix systems has
-  been removed. Its functionality is replaced by the `config` command
-  of the `botan` tool executable, for example `botan config cflags`
-  instead of `botan-config --cflags`.
+* The botan-config script previously installed on Unix systems has been
+  removed. Its functionality is replaced by the `config` command of the `botan`
+  tool executable, for example `botan config cflags` instead of `botan-config
+  --cflags`.

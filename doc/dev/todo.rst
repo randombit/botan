@@ -5,13 +5,16 @@ These are features either requested by users or that seem like
 potentially useful things to have. Several are quite self-contained
 and could make a quick project.
 
-Request a new feature by sending a patch.
+Request a new feature by sending a patch to this file or by writing to
+the mailing list.
 
 Basic Crypto
 ----------------------------------------
 
+* Bitsliced AES or Camellia
+* Serpent using AVX2
 * scrypt
-* BLAKE2
+* BLAKE2b
 * EdDSA
 * Skein-MAC
 * ARIA (Korean block cipher, RFCs 5794 and 6209)
@@ -36,18 +39,20 @@ PKIX
 * OCSP responder logic
 * X.509 attribute certificates (RFC 5755)
 
-ECC / BigInt / Math
+Public Key Crypto, Math, Algorithms
 ----------------------------------------
 
-* Specialized reductions for P-256 and P-384
-* MP asm optimizations - SSE2, ARM/NEON, ...
+* Add specialized reductions for P-256 and P-384
+* Optimizations for BigInt using SSE2, ARM/NEON, AVX2, ...
+* Fast new implementations/algorithms for ECC point operations,
+  Montgomery multiplication, multi-exponentiation, ...
 
 New Protocols
 ----------------------------------------
 
 * Off-The-Record message protocol
 * Some useful subset of OpenPGP
-* SSHv2 server
+* SSHv2 client and/or server
 * Cash schemes (such as Lucre, credlib, bitcoin?)
 
 Accelerators / backends
@@ -60,7 +65,12 @@ Accelerators / backends
 * ARMv8 crypto extensions
 * Intel Skylake SHA-1/SHA-2
 
-Python
+Python/FFI
 ----------------------------------------
 
-* TLS, ECDSA, bcrypt, ...
+* Expose TLS
+
+Build
+----------------------------------------
+
+* Code signing for Windows installers

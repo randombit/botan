@@ -202,7 +202,7 @@ Public Key
 
 Public Key Operations
 ----------------------------------------
-.. py:class:: pk_op_encrypt(pubkey, padding, rng)
+.. py:class:: pk_op_encrypt(pubkey, padding)
 
     .. py:method:: encrypt(msg, rng)
 
