@@ -56,10 +56,9 @@ BOTAN_DLL int botan_same_mem(const uint8_t* x, const uint8_t* y, size_t len);
 typedef struct botan_rng_struct* botan_rng_t;
 
 BOTAN_DLL int botan_rng_init(botan_rng_t* rng, const char* rng_type);
-BOTAN_DLL int botan_rng_destroy(botan_rng_t rng);
-
 BOTAN_DLL int botan_rng_get(botan_rng_t rng, uint8_t* out, size_t out_len);
 BOTAN_DLL int botan_rng_reseed(botan_rng_t rng, size_t bits);
+BOTAN_DLL int botan_rng_destroy(botan_rng_t rng);
 
 /*
 * Hashing
@@ -67,12 +66,11 @@ BOTAN_DLL int botan_rng_reseed(botan_rng_t rng, size_t bits);
 typedef struct botan_hash_struct* botan_hash_t;
 
 BOTAN_DLL int botan_hash_init(botan_hash_t* hash, const char* hash_name, uint32_t flags);
-BOTAN_DLL int botan_hash_destroy(botan_hash_t hash);
-BOTAN_DLL int botan_hash_clear(botan_hash_t hash);
-
+BOTAN_DLL int botan_hash_output_length(botan_hash_t hash, size_t* output_length);
 BOTAN_DLL int botan_hash_update(botan_hash_t hash, const uint8_t* in, size_t in_len);
 BOTAN_DLL int botan_hash_final(botan_hash_t hash, uint8_t out[]);
-BOTAN_DLL int botan_hash_output_length(botan_hash_t hash, size_t* output_length);
+BOTAN_DLL int botan_hash_clear(botan_hash_t hash);
+BOTAN_DLL int botan_hash_destroy(botan_hash_t hash);
 
 /*
 * Message Authentication
@@ -80,13 +78,12 @@ BOTAN_DLL int botan_hash_output_length(botan_hash_t hash, size_t* output_length)
 typedef struct botan_mac_struct* botan_mac_t;
 
 BOTAN_DLL int botan_mac_init(botan_mac_t* mac, const char* mac_name, uint32_t flags);
-BOTAN_DLL int botan_mac_destroy(botan_mac_t mac);
-BOTAN_DLL int botan_mac_clear(botan_mac_t hash);
-
+BOTAN_DLL int botan_mac_output_length(botan_mac_t mac, size_t* output_length);
 BOTAN_DLL int botan_mac_set_key(botan_mac_t mac, const uint8_t* key, size_t key_len);
 BOTAN_DLL int botan_mac_update(botan_mac_t mac, const uint8_t* buf, size_t len);
 BOTAN_DLL int botan_mac_final(botan_mac_t mac, uint8_t out[]);
-BOTAN_DLL int botan_mac_output_length(botan_mac_t mac, size_t* output_length);
+BOTAN_DLL int botan_mac_clear(botan_mac_t hash);
+BOTAN_DLL int botan_mac_destroy(botan_mac_t mac);
 
 /*
 * Cipher modes
@@ -94,8 +91,6 @@ BOTAN_DLL int botan_mac_output_length(botan_mac_t mac, size_t* output_length);
 typedef struct botan_cipher_struct* botan_cipher_t;
 
 BOTAN_DLL int botan_cipher_init(botan_cipher_t* cipher, const char* name, uint32_t flags);
-BOTAN_DLL int botan_cipher_destroy(botan_cipher_t cipher);
-BOTAN_DLL int botan_cipher_clear(botan_cipher_t hash);
 
 BOTAN_DLL int botan_cipher_valid_nonce_length(botan_cipher_t cipher, size_t nl);
 BOTAN_DLL int botan_cipher_get_tag_length(botan_cipher_t cipher, size_t* tag_size);
@@ -121,6 +116,8 @@ BOTAN_DLL int botan_cipher_update(botan_cipher_t cipher,
                                   size_t input_size,
                                   size_t* input_consumed);
 
+BOTAN_DLL int botan_cipher_clear(botan_cipher_t hash);
+BOTAN_DLL int botan_cipher_destroy(botan_cipher_t cipher);
 
 /*
 * PBKDF
@@ -159,8 +156,8 @@ BOTAN_DLL int botan_bcrypt_generate(uint8_t* out, size_t* out_len,
 
 /**
 * Returns 0 if if this password/hash combination is valid
-* Returns 1 if the combination is not valid
-* Returns -1 on error
+* Returns 1 if the combination is not valid (but otherwise well formed)
+* Returns negative on error
 */
 BOTAN_DLL int botan_bcrypt_is_valid(const char* pass, const char* hash);
 
@@ -305,20 +302,22 @@ BOTAN_DLL int botan_pk_op_key_agreement(botan_pk_op_ka_t op,
                                         const uint8_t salt[], size_t salt_len);
 
 /*
-* TLS (not yet implemented)
+* TLS (WIP)
 */
 #if defined(BOTAN_HAS_TLS) && 0
 
 typedef struct botan_tls_session_struct* botan_tls_session_t;
 
-// TODO: getters on session_t
+BOTAN_DLL int botan_tls_session_get_version(botan_tls_session_t* session, uint16_t* tls_version);
+BOTAN_DLL int botan_tls_session_get_ciphersuite(botan_tls_session_t* session, uint16_t* ciphersuite);
+// TODO: peer certs, validation, ...
 
 typedef struct botan_tls_channel_struct* botan_tls_channel_t;
 
-typedef void (*botan_tls_channel_output_fn)(void, const uin8_t*, size_t);
-typedef void (*botan_tls_channel_data_cb)(void, const uin8_t*, size_t);
-typedef void (*botan_tls_channel_alert_cb)(void, u16bit, const char*);
-typedef void (*botan_tls_channel_session_established)(void, botan_tls_session_t);
+typedef void (*botan_tls_channel_output_fn)(void*, const uint8_t*, size_t);
+typedef void (*botan_tls_channel_data_cb)(void*, const uint8_t*, size_t);
+typedef void (*botan_tls_channel_alert_cb)(void*, uint16_t, const char*);
+typedef void (*botan_tls_channel_session_established)(void*, botan_tls_session_t);
 
 BOTAN_DLL int botan_tls_channel_init_client(botan_tls_channel_t* channel,
                                             botan_tls_channel_output_fn output_fn,
@@ -339,8 +338,9 @@ BOTAN_DLL int botan_tls_channel_received_data(botan_tls_channel_t chan,
 BOTAN_DLL int botan_tls_channel_send(botan_tls_channel_t chan,
                                      const uint8_t input[], size_t len);
 
-BOTAN_DLL int botan_tls_channel_send_alert(botan_tls_channel_t chan,
-                                           uint16_t alert, bool fatal);
+BOTAN_DLL int botan_tls_channel_close(botan_tls_channel_t chan);
+
+BOTAN_DLL int botan_tls_channel_destroy(botan_tls_channel_t chan);
 
 #endif
 

@@ -102,7 +102,7 @@ int apply_fn(botan_struct<T, M>* o, const char* func_name, F func)
    return -1;
    }
 
-int write_output(uint8_t out[], size_t* out_len, const uint8_t buf[], size_t buf_len)
+inline int write_output(uint8_t out[], size_t* out_len, const uint8_t buf[], size_t buf_len)
    {
    Botan::clear_mem(out, *out_len);
    const size_t avail = *out_len;
@@ -121,14 +121,14 @@ int write_vec_output(uint8_t out[], size_t* out_len, const std::vector<uint8_t, 
    return write_output(out, out_len, &buf[0], buf.size());
    }
 
-int write_str_output(uint8_t out[], size_t* out_len, const std::string& str)
+inline int write_str_output(uint8_t out[], size_t* out_len, const std::string& str)
    {
    return write_output(out, out_len,
                        reinterpret_cast<const uint8_t*>(str.c_str()),
                        str.size() + 1);
    }
 
-int write_str_output(char out[], size_t* out_len, const std::string& str)
+inline int write_str_output(char out[], size_t* out_len, const std::string& str)
    {
    return write_str_output(reinterpret_cast<uint8_t*>(out), out_len, str);
    }
@@ -899,15 +899,10 @@ int botan_pubkey_estimated_strength(botan_pubkey_t key, size_t* estimate)
 int botan_pubkey_fingerprint(botan_pubkey_t key, const char* hash_fn,
                              uint8_t out[], size_t* out_len)
    {
-   return apply_fn(key, BOTAN_CURRENT_FUNCTION,
-                   [hash_fn,out,out_len](Botan::Public_Key& k)
-                   {
-                   std::unique_ptr<Botan::HashFunction> h(Botan::get_hash(hash_fn));
-                   auto z = h->process(k.x509_subject_public_key());
-                   *out_len = std::min(z.size(), *out_len);
-                   Botan::copy_mem(out, &z[0], *out_len);
-                   return 0;
-                   });
+   return BOTAN_FFI_DO(Botan::Public_Key, key, {
+      std::unique_ptr<Botan::HashFunction> h(Botan::get_hash(hash_fn));
+      return write_vec_output(out, out_len, h->process(key.x509_subject_public_key()));
+      });
    }
 
 int botan_pk_op_encrypt_create(botan_pk_op_encrypt_t* op,
