@@ -72,7 +72,7 @@ Hash function
 class hash_function(object):
     def __init__(self, algo):
         botan.botan_hash_init.argtypes = [c_void_p, c_char_p, c_uint32]
-        flags = 0 # always zero in this API version
+        flags = c_uint32(0) # always zero in this API version
         self.hash = c_void_p(0)
         rc = botan.botan_hash_init(byref(self.hash), algo, flags)
         if rc != 0 or self.hash is None:
@@ -108,7 +108,7 @@ Message authentication codes
 class message_authentication_code(object):
     def __init__(self, algo):
         botan.botan_mac_init.argtypes = [c_void_p, c_char_p, c_uint32]
-        flags = 0 # always zero in this API version
+        flags = c_uint32(0) # always zero in this API version
         self.mac = c_void_p(0)
         rc = botan.botan_mac_init(byref(self.mac), algo, flags)
         if rc != 0 or self.hash is None:
@@ -191,6 +191,9 @@ class cipher(object):
         botan.botan_cipher_set_key.argtypes = [c_void_p, POINTER(c_char), c_size_t]
         botan.botan_cipher_set_key(self.cipher, key, len(key))
 
+    def set_assoc_data(self, ad):
+        botan.botan_cipher_set_associated_data.argtypes = [c_void_p, POINTER(c_char), c_size_t]
+        botan.botan_cipher_set_associated_data(self.cipher, ad, len(ad))
 
     def start(self, nonce):
         botan.botan_cipher_start.argtypes = [c_void_p, POINTER(c_char), c_size_t]
@@ -255,7 +258,7 @@ def pbkdf(algo, password, out_len, iterations = 10000, salt = rng().get(12)):
     botan.botan_pbkdf(algo, out_buf, out_len, password, salt, len(salt), iterations)
     return (salt,iterations,out_buf.raw)
 
-def pbkdf_timed(algo, password, out_len, ms_to_run = 300, salt = rng().get(12))
+def pbkdf_timed(algo, password, out_len, ms_to_run = 300, salt = rng().get(12)):
     botan.botan_pbkdf_timed.argtypes = [c_char_p, POINTER(c_char), c_size_t, c_char_p,
                                         c_void_p, c_size_t, c_size_t, POINTER(c_size_t)]
     out_buf = create_string_buffer(out_len)
@@ -339,10 +342,10 @@ class private_key(object):
 
 
 class pk_op_encrypt(object):
-    def __init__(self, key, padding, rng):
+    def __init__(self, key, padding):
         botan.botan_pk_op_encrypt_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
         self.op = c_void_p(0)
-        flags = 0 # always zero in this ABI
+        flags = c_uint32(0) # always zero in this ABI
         botan.botan_pk_op_encrypt_create(byref(self.op), key.pubkey, padding, flags)
         if not self.op:
             raise Exception("No pk op for you")
@@ -365,7 +368,7 @@ class pk_op_decrypt(object):
     def __init__(self, key, padding):
         botan.botan_pk_op_decrypt_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
         self.op = c_void_p(0)
-        flags = 0 # always zero in this ABI
+        flags = c_uint32(0) # always zero in this ABI
         botan.botan_pk_op_decrypt_create(byref(self.op), key.privkey, padding, flags)
         if not self.op:
             raise Exception("No pk op for you")
@@ -388,7 +391,7 @@ class pk_op_sign(object):
     def __init__(self, key, padding):
         botan.botan_pk_op_sign_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
         self.op = c_void_p(0)
-        flags = 0 # always zero in this ABI
+        flags = c_uint32(0) # always zero in this ABI
         botan.botan_pk_op_sign_create(byref(self.op), key.privkey, padding, flags)
         if not self.op:
             raise Exception("No pk op for you")
@@ -412,7 +415,7 @@ class pk_op_verify(object):
     def __init__(self, key, padding):
         botan.botan_pk_op_verify_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
         self.op = c_void_p(0)
-        flags = 0 # always zero in this ABI
+        flags = c_uint32(0) # always zero in this ABI
         botan.botan_pk_op_verify_create(byref(self.op), key.pubkey, padding, flags)
         if not self.op:
             raise Exception("No pk op for you")
@@ -437,7 +440,7 @@ class pk_op_key_agreement(object):
         botan.botan_pk_op_key_agreement_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
         botan.botan_pk_op_key_agreement_export_public.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
         self.op = c_void_p(0)
-        flags = 0 # always zero in this ABI
+        flags = c_uint32(0) # always zero in this ABI
         botan.botan_pk_op_key_agreement_create(byref(self.op), key.privkey, kdf, flags)
         if not self.op:
             raise Exception("No key agreement for you")
@@ -460,11 +463,13 @@ class pk_op_key_agreement(object):
 
         outbuf_sz = c_size_t(key_len)
         outbuf = create_string_buffer(outbuf_sz.value)
-        rc = botan.botan_pk_op_key_agreement(self.op, outbuf, byref(outbuf_sz), other, len(other), salt, len(salt))
+        rc = botan.botan_pk_op_key_agreement(self.op, outbuf, byref(outbuf_sz),
+                                             other, len(other), salt, len(salt))
 
         if rc == -1 and outbuf_sz.value > len(outbuf):
             outbuf = create_string_buffer(outbuf_sz.value)
-            botan.botan_pk_op_key_agreement(self.op, outbuf, byref(outbuf_sz), other, len(other), salt, len(salt))
+            botan.botan_pk_op_key_agreement(self.op, outbuf, byref(outbuf_sz),
+                                            other, len(other), salt, len(salt))
         return outbuf.raw[0:outbuf_sz.value]
 
 """
@@ -510,7 +515,7 @@ def test():
     rsapub = rsapriv.get_public_key()
     print rsapub.fingerprint("SHA-1")
 
-    enc = pk_op_encrypt(rsapub, "EME1(SHA-256)", r)
+    enc = pk_op_encrypt(rsapub, "EME1(SHA-256)")
 
     ctext = enc.encrypt('foof', r)
     print ctext.encode('hex')
