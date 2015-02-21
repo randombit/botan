@@ -8,47 +8,27 @@
 #include <iostream>
 #include <fstream>
 #include <botan/auto_rng.h>
+#include <botan/fs.h>
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
   #include <botan/system_rng.h>
 #endif
-
-#include <boost/filesystem.hpp>
-
-namespace fs = boost::filesystem;
 
 Botan::RandomNumberGenerator& test_rng()
    {
 #if defined(BOTAN_HAS_SYSTEM_RNG)
    return Botan::system_rng();
 #else
-   static AutoSeeded_RNG rng;
+   static Botan::AutoSeeded_RNG rng;
    return rng;
 #endif
-   }
-
-std::vector<std::string> list_dir(const std::string& dir_path)
-   {
-   std::vector<std::string> paths;
-
-   fs::recursive_directory_iterator dir(dir_path), end;
-
-   while (dir != end)
-      {
-      if(dir->path().extension().string() == ".vec")
-         paths.push_back(dir->path().string());
-      ++dir;
-      }
-
-   std::sort(paths.begin(), paths.end());
-
-   return paths;
    }
 
 size_t run_tests_in_dir(const std::string& dir, std::function<size_t (const std::string&)> fn)
    {
    size_t fails = 0;
-   for(auto vec: list_dir(dir))
+
+   for(auto vec: Botan::list_all_readable_files_in_or_under(dir))
       fails += fn(vec);
    return fails;
    }

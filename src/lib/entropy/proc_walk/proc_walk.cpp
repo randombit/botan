@@ -43,11 +43,6 @@ class Directory_Walker : public File_Descriptor_Source
 
       int next_fd();
    private:
-      void add_directory(const std::string& dirname)
-         {
-         m_dirlist.push_back(dirname);
-         }
-
       std::pair<struct dirent*, std::string> get_next_dirent();
 
       std::pair<DIR*, std::string> m_cur_dir;
@@ -99,7 +94,7 @@ int Directory_Walker::next_fd()
 
       if(S_ISDIR(stat_buf.st_mode))
          {
-         add_directory(full_path);
+         m_dirlist.push_back(full_path);
          }
       else if(S_ISREG(stat_buf.st_mode) && (stat_buf.st_mode & S_IROTH))
          {

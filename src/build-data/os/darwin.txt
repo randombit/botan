@@ -13,6 +13,7 @@ dlopen
 gettimeofday
 gmtime_r
 memset_s
+readdir
 </target_features>
 
 <aliases>

@@ -6,10 +6,7 @@
 */
 
 #include <botan/certstor.h>
-
-#if defined(BOTAN_HAS_BOOST_FILESYSTEM)
-#include <boost/filesystem.hpp>
-#endif
+#include <botan/fs.h>
 
 namespace Botan {
 
@@ -116,25 +113,17 @@ Certificate_Store_In_Memory::Certificate_Store_In_Memory(const std::string& dir)
    if(dir == "")
       return;
 
-#if defined(BOTAN_HAS_BOOST_FILESYSTEM)
-   boost::filesystem::recursive_directory_iterator i(dir);
-   boost::filesystem::recursive_directory_iterator end;
-
-   while(i != end)
+   std::vector<std::string> maybe_certs = list_all_readable_files_in_or_under(dir);
+   for(auto&& cert_file : maybe_certs)
       {
-      auto path = i->path();
-      ++i;
-
       try
          {
-         if(boost::filesystem::is_regular_file(path))
-            m_certs.push_back(X509_Certificate(path.string()));
+         m_certs.push_back(X509_Certificate(cert_file));
          }
-      catch(...) {}
+      catch(std::exception&)
+         {
+         }
       }
-#else
-   throw std::runtime_error("Certificate_Store_In_Memory: FS access disabled");
-#endif
    }
 
 const X509_Certificate*

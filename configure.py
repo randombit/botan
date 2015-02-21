@@ -259,6 +259,9 @@ def process_command_line(args):
                             dest='unaligned_mem', action='store_false',
                             help=optparse.SUPPRESS_HELP)
 
+    target_group.add_option('--with-os-features', action='append', help=optparse.SUPPRESS_HELP)
+    target_group.add_option('--without-os-features', action='append', help=optparse.SUPPRESS_HELP)
+
     for isa_extn_name in ['SSE2', 'SSSE3', 'AVX2', 'AES-NI', 'AltiVec']:
         isa_extn = isa_extn_name.lower()
 
@@ -458,6 +461,9 @@ def process_command_line(args):
 
     options.enabled_modules = parse_multiple_enable(options.enabled_modules)
     options.disabled_modules = parse_multiple_enable(options.disabled_modules)
+
+    options.with_os_features = parse_multiple_enable(options.with_os_features)
+    options.without_os_features = parse_multiple_enable(options.without_os_features)
 
     options.disable_intrinsics = parse_multiple_enable(options.disable_intrinsics)
 
@@ -948,10 +954,15 @@ class OsInfo(object):
     def ranlib_command(self):
         return ('ranlib' if self.ar_needs_ranlib else 'true')
 
-    def defines(self):
-        return ['TARGET_OS_IS_%s' % (self.basename.upper())] + \
-               ['TARGET_OS_HAS_' + feat.upper()
-                for feat in sorted(self.target_features)]
+    def defines(self, options):
+        r = []
+        for feat in self.target_features:
+            if feat not in options.without_os_features:
+                r += ['TARGET_OS_HAS_' + feat.upper()]
+        for feat in options.with_os_features:
+            if feat not in self.target_features:
+                r += ['TARGET_OS_HAS_' + feat.upper()]
+        return ['TARGET_OS_IS_%s' % (self.basename.upper())] + sorted(r)
 
 def fixup_proc_name(proc):
     proc = proc.lower().replace(' ', '')
@@ -1264,7 +1275,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'module_defines': make_cpp_macros(sorted(flatten([m.defines() for m in modules]))),
 
-        'target_os_defines': make_cpp_macros(osinfo.defines()),
+        'target_os_defines': make_cpp_macros(osinfo.defines(options)),
 
         'target_compiler_defines': make_cpp_macros(cc.defines()),
 

@@ -21,6 +21,7 @@ charset.h
 cpuid.h
 database.h
 exceptn.h
+fs.h
 get_byte.h
 loadstor.h
 mem_ops.h

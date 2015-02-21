@@ -32,7 +32,7 @@ class Basic_Credentials_Manager : public Credentials_Manager
    public:
       Basic_Credentials_Manager()
          {
-
+         load_certstores();
          }
 
       Basic_Credentials_Manager(RandomNumberGenerator& rng,

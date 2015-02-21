@@ -18,6 +18,7 @@
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
 
 #include <botan/x509path.h>
+#include <botan/fs.h>
 
 #include <algorithm>
 #include <iostream>
@@ -26,38 +27,15 @@
 #include <vector>
 #include <map>
 #include <cstdlib>
-#include <boost/filesystem.hpp>
-
-namespace fs = boost::filesystem;
 
 using namespace Botan;
-
-namespace {
-
-std::vector<std::string> dir_listing(const std::string& dir_name)
-   {
-   std::vector<std::string> paths;
-
-   fs::directory_iterator dir(dir_name), end;
-
-   while(dir != end)
-      {
-      paths.push_back(dir->path().string());
-      ++dir;
-      }
-
-   std::sort(paths.begin(), paths.end());
-
-   return paths;
-   }
-
-}
 
 std::map<size_t, Path_Validation_Result::Code> get_expected();
 
 size_t test_nist_x509()
    {
    const std::string root_test_dir = "src/tests/data/nist_x509/";
+   const size_t total_tests = 76;
 
    size_t unexp_failure = 0;
    size_t unexp_success = 0;
@@ -69,14 +47,10 @@ size_t test_nist_x509()
 
    try {
 
-   const std::vector<std::string> test_dirs = dir_listing(root_test_dir);
-
-   for(size_t i = 0; i != test_dirs.size(); i++)
+   for(size_t test_no = 1; test_no <= total_tests; ++test_no)
       {
-      const size_t test_no = i+1;
-
-      const std::string test_dir = test_dirs[i];
-      const std::vector<std::string> all_files = dir_listing(test_dir);
+      const std::string test_dir = root_test_dir + "/test" + (test_no <= 9 ? "0" : "") + std::to_string(test_no);
+      const std::vector<std::string> all_files = list_all_readable_files_in_or_under(test_dir);
 
       std::vector<std::string> certs, crls;
       std::string root_cert, to_verify;
@@ -96,7 +70,7 @@ size_t test_nist_x509()
             crls.push_back(current);
          }
 
-      if(expected_results.find(i+1) == expected_results.end())
+      if(expected_results.find(test_no) == expected_results.end())
          {
          skipped++;
          continue;

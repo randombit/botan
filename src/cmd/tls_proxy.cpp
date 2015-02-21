@@ -7,7 +7,7 @@
 
 #include "apps.h"
 
-#if defined(BOTAN_HAS_TLS)
+#if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_BOOST_ASIO)
 
 #include <iostream>
 #include <string>

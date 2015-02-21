@@ -6,7 +6,3 @@ asn1
 datastor
 http_util
 </requires>
-
-<libs>
-all -> boost_filesystem
-</libs>
