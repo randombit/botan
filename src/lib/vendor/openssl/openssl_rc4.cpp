@@ -31,12 +31,12 @@ class OpenSSL_RC4 : public StreamCipher
    private:
       void cipher(const byte in[], byte out[], size_t length)
          {
-         RC4(&m_rc4, length, in, out);
+         ::RC4(&m_rc4, length, in, out);
          }
 
       void key_schedule(const byte key[], size_t length)
          {
-         RC4_set_key(&m_rc4, length, key);
+         ::RC4_set_key(&m_rc4, length, key);
          }
 
       RC4_KEY m_rc4;

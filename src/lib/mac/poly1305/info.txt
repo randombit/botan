@@ -3,7 +3,3 @@ define POLY1305 20141227
 <header:public>
 poly1305.h
 </header:public>
-
-<header:internal>
-poly1305_donna.h
-</header:internal>
