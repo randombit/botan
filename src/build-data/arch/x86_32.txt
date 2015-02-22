@@ -69,7 +69,6 @@ sse4.2
 avx2
 bmi2
 aesni
-clmul
 rdrand
 sha
 </isa_extensions>

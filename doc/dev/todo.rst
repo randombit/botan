@@ -8,17 +8,26 @@ and could make a quick project.
 Request a new feature by sending a patch to this file or by writing to
 the mailing list.
 
-Basic Crypto
+Symmetric Algorithms, Hashes, ...
 ----------------------------------------
 
 * Bitsliced AES or Camellia
+* Camellia with AES-NI
 * Serpent using AVX2
 * scrypt
 * BLAKE2b
-* EdDSA
 * Skein-MAC
 * ARIA (Korean block cipher, RFCs 5794 and 6209)
 * Extend Cascade_Cipher to support arbitrary number of ciphers
+
+Public Key Crypto, Math
+----------------------------------------
+
+* EdDSA
+* Ed448-Goldilocks
+* Add specialized reductions for other NIST primes
+* Fast new implementations/algorithms for ECC point operations,
+  Montgomery multiplication, multi-exponentiation, ...
 
 TLS
 ----------------------------------------
@@ -38,14 +47,6 @@ PKIX
 
 * OCSP responder logic
 * X.509 attribute certificates (RFC 5755)
-
-Public Key Crypto, Math, Algorithms
-----------------------------------------
-
-* Add specialized reductions for P-256 and P-384
-* Optimizations for BigInt using SSE2, ARM/NEON, AVX2, ...
-* Fast new implementations/algorithms for ECC point operations,
-  Montgomery multiplication, multi-exponentiation, ...
 
 New Protocols
 ----------------------------------------

@@ -177,6 +177,13 @@ def main(args = None):
         shutil.copyfile(cfg['botan_pkgconfig'],
                         os.path.join(pkgconfig_dir, os.path.basename(cfg['botan_pkgconfig'])))
 
+    if 'ffi' in cfg['mod_list'].split('\n'):
+        logging.debug('FFI enabled - installing Python module')
+        def make_py_lib_path(py_ver):
+            print sys.path
+        python_dir = cfg['python_dir']
+        logging.debug('Python dir %s' % (python_dir))
+
     shutil.rmtree(botan_doc_dir, True)
     shutil.copytree(cfg['doc_output_dir'], botan_doc_dir)
 

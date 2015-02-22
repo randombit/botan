@@ -135,6 +135,7 @@ class BuildConfigurationInformation(object):
         self.botan_include_dir = os.path.join(self.include_dir, 'botan')
         self.internal_include_dir = os.path.join(self.botan_include_dir, 'internal')
 
+        self.modules = modules
         self.sources = sorted(flatten([mod.sources() for mod in modules]))
         self.internal_headers = sorted(flatten([m.internal_headers() for m in modules]))
 
@@ -1139,14 +1140,11 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
                 return get_isa_specific_flags(cc, isas)
 
-        return ''
+        if src.startswith('botan_all_'):
+            isa =  src.replace('botan_all_','').replace('.cpp', '').split('_')
+            return get_isa_specific_flags(cc, isa)
 
-    def all_isa_specific_flags():
-        all_isas = set()
-        for mod in modules:
-            for isa in mod.need_isa:
-                all_isas.add(isa)
-        return get_isa_specific_flags(cc, all_isas)
+        return ''
 
     """
     Form snippets of makefile for building each source file
@@ -1257,7 +1255,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'cc': (options.compiler_binary or cc.binary_name) + cc.mach_abi_link_flags(options),
 
-        'lib_opt': cc.opt_flags('lib', options) + (all_isa_specific_flags() if options.via_amalgamation else ''),
+        'lib_opt': cc.opt_flags('lib', options),
         'app_opt': cc.opt_flags('app', options),
         'lang_flags': cc.lang_flags,
         'warn_flags': warning_flags(cc.warning_flags,
@@ -1653,7 +1651,7 @@ def setup_build(build_config, options, template_vars):
 """
 Generate the amalgamation
 """
-def generate_amalgamation(build_config):
+def generate_amalgamation(build_config, options):
     def strip_header_goop(header_name, contents):
         header_guard = re.compile('^#define BOTAN_.*_H__$')
 
@@ -1693,11 +1691,11 @@ def generate_amalgamation(build_config):
                 self.file_contents[os.path.basename(f)] = contents
 
             self.contents = ''
-            for name in self.file_contents:
+            for name in sorted(self.file_contents):
                 self.contents += ''.join(list(self.header_contents(name)))
 
             self.header_includes = ''
-            for std_header in self.all_std_includes:
+            for std_header in sorted(self.all_std_includes):
                 self.header_includes += '#include <%s>\n' % (std_header)
             self.header_includes += '\n'
 
@@ -1728,17 +1726,18 @@ def generate_amalgamation(build_config):
     amalg_basename = 'botan_all'
 
     header_name = '%s.h' % (amalg_basename)
-    source_name = '%s.cpp' % (amalg_basename)
+    header_int_name = '%s_internal.h' % (amalg_basename)
 
-    logging.info('Writing amalgamation to %s and %s' % (header_name, source_name))
+    logging.info('Writing amalgamation header to %s' % (header_name))
 
     botan_h = open(header_name, 'w')
+    botan_int_h = open(header_int_name, 'w')
 
     pub_header_amalag = Amalgamation_Generator(build_config.public_headers)
 
     amalg_header = """/*
 * Botan %s Amalgamation
-* (C) 1999-2013,2014 Jack Lloyd and others
+* (C) 1999-2013,2014,2015 Jack Lloyd and others
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -1760,36 +1759,63 @@ def generate_amalgamation(build_config):
         [s for s in build_config.internal_headers
          if s.find('asm_macr_') == -1])
 
+    botan_int_h.write("""
+#ifndef BOTAN_AMALGAMATION_INTERNAL_H__
+#define BOTAN_AMALGAMATION_INTERNAL_H__
+
+""")
+    botan_int_h.write(internal_headers.header_includes)
+    botan_int_h.write(internal_headers.contents)
+    botan_int_h.write("\n#endif\n")
+
     headers_written = pub_header_amalag.all_std_includes.union(internal_headers.all_std_includes)
 
-    botan_cpp = open(source_name, 'w')
+    src_files = []
 
-    botan_cpp.write(amalg_header)
+    def open_amalg_file(tgt):
+        fsname = '%s%s.cpp' % (amalg_basename, '_' + tgt if tgt else '' )
+        src_files.append(fsname)
+        logging.info('Writing amalgamation source to %s' % (fsname))
+        f = open(fsname, 'w')
+        f.write(amalg_header)
 
-    botan_cpp.write('\n#include "%s"\n' % (header_name))
+        f.write('\n#include "%s"\n' % (header_name))
+        f.write('#include "%s"\n\n' % (header_int_name))
 
-    botan_cpp.write(internal_headers.header_includes)
-    botan_cpp.write(internal_headers.contents)
+        return f
 
-    for src in build_config.sources:
-        if src.endswith('.S'):
-            continue
+    botan_amalgs = {}
+    botan_amalgs[''] = open_amalg_file('')
 
-        contents = open(src).readlines()
-        for line in contents:
-            if botan_include.search(line):
-                continue
+    for mod in build_config.modules:
+        tgt = ''
 
-            match = any_include.search(line)
-            if match:
-                header = match.group(1)
-                if header in headers_written:
+        if mod.need_isa != []:
+            tgt = '_'.join(sorted(mod.need_isa))
+            if tgt == 'sse2' and options.arch == 'x86_64':
+                tgt = '' # always available
+
+        if tgt not in botan_amalgs:
+            botan_amalgs[tgt] = open_amalg_file(tgt)
+        for src in sorted(mod.source):
+            contents = open(src).readlines()
+            for line in contents:
+                if botan_include.search(line):
                     continue
 
-                botan_cpp.write(line)
-                headers_written.add(header)
-            else:
-                botan_cpp.write(line)
+                match = any_include.search(line)
+                if match:
+                    header = match.group(1)
+                    if header in headers_written:
+                        continue
+
+                    botan_amalgs[tgt].write(line)
+                    headers_written.add(header)
+                else:
+                    botan_amalgs[tgt].write(line)
+
+    if options.via_amalgamation:
+        build_config.build_sources = src_files
 
 """
 Test for the existence of a program
@@ -1964,6 +1990,9 @@ def main(argv = None):
     build_config.public_headers.append(
         os.path.join(build_config.build_dir, 'build.h'))
 
+    if options.gen_amalgamation:
+        generate_amalgamation(build_config, options)
+
     template_vars = create_template_vars(build_config, options,
                                          modules_to_use,
                                          cc,
@@ -1972,9 +2001,6 @@ def main(argv = None):
 
     # Performs the I/O
     setup_build(build_config, options, template_vars)
-
-    if options.gen_amalgamation:
-        generate_amalgamation(build_config)
 
     def release_date(datestamp):
         if datestamp == 0:
