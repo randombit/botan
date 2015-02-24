@@ -287,6 +287,21 @@ class public_key(object):
         botan.botan_pubkey_destroy.argtypes = [c_void_p]
         botan.botan_pubkey_destroy(self.pubkey)
 
+    def estimated_strength(self):
+        botan.botan_pubkey_estimated_strength.argtypes = [c_void_p, POINTER(c_size_t)]
+        r = c_size_t(0)
+        botan.botan_pubkey_estimated_strength(self.pubkey, byref(r))
+        return r.value
+
+    def algo_name(self):
+        botan.botan_pubkey_algo_name.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
+
+        buf = create_string_buffer(64)
+        buf_len = c_size_t(len(buf))
+        botan.botan_pubkey_algo_name(self.pubkey, buf, byref(buf_len))
+        assert buf_len.value <= len(buf)
+        return buf.raw[0:buf_len.value]
+
     def fingerprint(self, hash = 'SHA-256'):
         botan.botan_pubkey_fingerprint.argtypes = [c_void_p, c_char_p,
                                                    POINTER(c_char), POINTER(c_size_t)]
@@ -485,13 +500,13 @@ def test():
 
     print kdf('KDF2(SHA-1)', '701F3480DFE95F57941F804B1B2413EF'.decode('hex'), 7, '55A4E9DD5F4CA2EF82'.decode('hex')).encode('hex')
 
-    print pbkdf('PBKDF2(SHA-1)', '', 32, 10000, '0001020304050607'.decode('hex')).encode('hex').upper()
+    print pbkdf('PBKDF2(SHA-1)', '', 32, 10000, '0001020304050607'.decode('hex'))[2].encode('hex').upper()
     print '59B2B1143B4CB1059EC58D9722FB1C72471E0D85C6F7543BA5228526375B0127'
 
-    (salt,iterations,psk) = pbkdf_timed('PBKDF2(SHA-256)', 'xyz', 32, r, 200, 12)
+    (salt,iterations,psk) = pbkdf_timed('PBKDF2(SHA-256)', 'xyz', 32, 200)
     print salt.encode('hex'), iterations
     print 'x', psk.encode('hex')
-    print 'y', pbkdf('PBKDF2(SHA-256)', 'xyz', 32, iterations, salt).encode('hex')
+    print 'y', pbkdf('PBKDF2(SHA-256)', 'xyz', 32, iterations, salt)[2].encode('hex')
 
     print r.get(42).encode('hex'), r.get(13).encode('hex'), r.get(9).encode('hex')
 
@@ -514,6 +529,7 @@ def test():
 
     rsapub = rsapriv.get_public_key()
     print rsapub.fingerprint("SHA-1")
+    print rsapub.algo_name(), rsapub.estimated_strength()
 
     enc = pk_op_encrypt(rsapub, "EME1(SHA-256)")
 

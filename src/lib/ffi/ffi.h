@@ -166,7 +166,6 @@ BOTAN_DLL int botan_bcrypt_is_valid(const char* pass, const char* hash);
 /*
 * Public/private key creation, import, ...
 */
-typedef struct botan_pubkey_struct* botan_pubkey_t;
 typedef struct botan_privkey_struct* botan_privkey_t;
 
 BOTAN_DLL int botan_privkey_create_rsa(botan_privkey_t* key, botan_rng_t rng, size_t n_bits);
@@ -178,17 +177,12 @@ BOTAN_DLL int botan_privkey_create_ecdh(botan_privkey_t* key, botan_rng_t rng, c
 
 /*
 * Input currently assumed to be PKCS #8 structure;
+* Set password to NULL to indicate no encryption expected
 */
 BOTAN_DLL int botan_privkey_load(botan_privkey_t* key, botan_rng_t rng,
                                  const uint8_t bits[], size_t len,
                                  const char* password);
-BOTAN_DLL int botan_pubkey_load(botan_privkey_t* key,
-                                const uint8_t bits[], size_t len,
-                                const char* password);
 
-BOTAN_DLL int botan_privkey_export_pubkey(botan_pubkey_t* out, botan_privkey_t in);
-
-BOTAN_DLL int botan_pubkey_destroy(botan_privkey_t key);
 BOTAN_DLL int botan_privkey_destroy(botan_privkey_t key);
 
 #define BOTAN_PRIVKEY_EXPORT_FLAG_DER 0
@@ -201,11 +195,12 @@ BOTAN_DLL int botan_privkey_destroy(botan_privkey_t key);
 * Returns 0 on success and sets
 * If some other error occurs a negative integer is returned.
 */
-BOTAN_DLL int botan_pubkey_export(botan_pubkey_t key, uint8_t out[], size_t* out_len, uint32_t flags);
-BOTAN_DLL int botan_privkey_export(botan_privkey_t key, uint8_t out[], size_t* out_len, uint32_t flags);
+BOTAN_DLL int botan_privkey_export(botan_privkey_t key,
+                                   uint8_t out[], size_t* out_len,
+                                   uint32_t flags);
 
 /*
-* Set encryption_algo to NULL to have the library choose a default (recommended)
+* Set encryption_algo to NULL or "" to have the library choose a default (recommended)
 */
 BOTAN_DLL int botan_privkey_export_encrypted(botan_privkey_t key,
                                              uint8_t out[], size_t* out_len,
@@ -214,12 +209,23 @@ BOTAN_DLL int botan_privkey_export_encrypted(botan_privkey_t key,
                                              const char* encryption_algo,
                                              uint32_t flags);
 
+typedef struct botan_pubkey_struct* botan_pubkey_t;
+
+BOTAN_DLL int botan_pubkey_load(botan_pubkey_t* key, const uint8_t bits[], size_t len);
+
+BOTAN_DLL int botan_privkey_export_pubkey(botan_pubkey_t* out, botan_privkey_t in);
+
+BOTAN_DLL int botan_pubkey_export(botan_pubkey_t key, uint8_t out[], size_t* out_len, uint32_t flags);
+
 BOTAN_DLL int botan_pubkey_algo_name(botan_pubkey_t key, char out[], size_t* out_len);
 
 BOTAN_DLL int botan_pubkey_estimated_strength(botan_pubkey_t key, size_t* estimate);
 
 BOTAN_DLL int botan_pubkey_fingerprint(botan_pubkey_t key, const char* hash,
                                        uint8_t out[], size_t* out_len);
+
+BOTAN_DLL int botan_pubkey_destroy(botan_privkey_t key);
+
 
 /*
 * Public Key Encryption
