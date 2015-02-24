@@ -9,6 +9,7 @@
 #define BOTAN_ENTROPY_SRC_PROC_WALK_H__
 
 #include <botan/entropy_src.h>
+#include <mutex>
 
 namespace Botan {
 
