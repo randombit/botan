@@ -24,6 +24,7 @@ using ::uint16_t;
 using ::uint32_t;
 using ::uint64_t;
 using ::int32_t;
+using ::int64_t;
 
 using ::size_t;
 

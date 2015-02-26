@@ -52,6 +52,83 @@ class CurveGFp_NIST : public CurveGFp_Repr
       size_t m_p_words; // cache of m_p.sig_words()
    };
 
+#if (BOTAN_MP_WORD_BITS == 32) || (BOTAN_MP_WORD_BITS == 64)
+
+#define BOTAN_HAS_CURVEGFP_NISTP_M32
+
+/**
+* The NIST P-192 curve
+*/
+class CurveGFp_P192 : public CurveGFp_NIST
+   {
+   public:
+      CurveGFp_P192(const BigInt& a, const BigInt& b) : CurveGFp_NIST(192, a, b) {}
+
+      static const BigInt& prime();
+
+      const BigInt& get_p() const override { return CurveGFp_P192::prime(); }
+
+   private:
+      void redc(BigInt& x, secure_vector<word>& ws) const override;
+
+      size_t max_redc_subtractions() const override { return 3; }
+   };
+
+/**
+* The NIST P-224 curve
+*/
+class CurveGFp_P224 : public CurveGFp_NIST
+   {
+   public:
+      CurveGFp_P224(const BigInt& a, const BigInt& b) : CurveGFp_NIST(224, a, b) {}
+
+      static const BigInt& prime();
+
+      const BigInt& get_p() const override { return CurveGFp_P224::prime(); }
+   private:
+      void redc(BigInt& x, secure_vector<word>& ws) const override;
+
+      size_t max_redc_subtractions() const override { return 3; }
+   };
+
+/**
+* The NIST P-256 curve
+*/
+class CurveGFp_P256 : public CurveGFp_NIST
+   {
+   public:
+      CurveGFp_P256(const BigInt& a, const BigInt& b) : CurveGFp_NIST(256, a, b) {}
+
+      static const BigInt& prime();
+
+      const BigInt& get_p() const override { return CurveGFp_P256::prime(); }
+
+   private:
+      void redc(BigInt& x, secure_vector<word>& ws) const override;
+
+      size_t max_redc_subtractions() const override { return 10; }
+   };
+
+/**
+* The NIST P-384 curve
+*/
+class CurveGFp_P384 : public CurveGFp_NIST
+   {
+   public:
+      CurveGFp_P384(const BigInt& a, const BigInt& b) : CurveGFp_NIST(384, a, b) {}
+
+      static const BigInt& prime();
+
+      const BigInt& get_p() const override { return CurveGFp_P384::prime(); }
+
+   private:
+      void redc(BigInt& x, secure_vector<word>& ws) const override;
+
+      size_t max_redc_subtractions() const override { return 4; }
+   };
+
+#endif
+
 /**
 * The NIST P-521 curve
 */

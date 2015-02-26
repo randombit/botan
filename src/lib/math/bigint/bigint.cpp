@@ -1,6 +1,6 @@
 /*
 * BigInt Base
-* (C) 1999-2011,2012 Jack Lloyd
+* (C) 1999-2011,2012,2014 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -93,15 +93,6 @@ BigInt::BigInt(RandomNumberGenerator& rng, size_t bits)
    }
 
 /*
-* Grow the internal storage
-*/
-void BigInt::grow_to(size_t n)
-   {
-   if(n > size())
-      m_reg.resize(round_up<size_t>(n, 8));
-   }
-
-/*
 * Comparison Function
 */
 s32bit BigInt::cmp(const BigInt& other, bool check_signs) const
@@ -155,8 +146,8 @@ u32bit BigInt::to_u32bit() const
       throw Encoding_Error("BigInt::to_u32bit: Number is too big to convert");
 
    u32bit out = 0;
-   for(u32bit j = 0; j != 4; ++j)
-      out = (out << 8) | byte_at(3-j);
+   for(size_t i = 0; i != 4; ++i)
+      out = (out << 8) | byte_at(3-i);
    return out;
    }
 
@@ -180,30 +171,6 @@ void BigInt::clear_bit(size_t n)
    const word mask = static_cast<word>(1) << (n % MP_WORD_BITS);
    if(which < size())
       m_reg[which] &= ~mask;
-   }
-
-/*
-* Clear all but the lowest n bits
-*/
-void BigInt::mask_bits(size_t n)
-   {
-   if(n == 0) { clear(); return; }
-
-   const size_t top_word = n / MP_WORD_BITS;
-   const word mask = (static_cast<word>(1) << (n % MP_WORD_BITS)) - 1;
-
-   if(top_word < size())
-      clear_mem(&m_reg[top_word+1], size() - (top_word + 1));
-
-   m_reg[top_word] &= mask;
-   }
-
-/*
-* Count how many bytes are being used
-*/
-size_t BigInt::bytes() const
-   {
-   return (bits() + 7) / 8;
    }
 
 /*

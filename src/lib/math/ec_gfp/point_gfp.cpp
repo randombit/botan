@@ -277,17 +277,16 @@ PointGFp operator*(const BigInt& scalar, const PointGFp& point)
 
    const size_t scalar_bits = scalar.bits();
 
-   PointGFp x1 = PointGFp(curve);
-   PointGFp x2 = point;
+   PointGFp x1(curve); // zero
 
    size_t bits_left = scalar_bits;
 
-   // Montgomery Ladder
+#if BOTAN_CURVE_GFP_USE_MONTGOMERY_LADDER
+
+   PointGFp x2 = point;
    while(bits_left)
       {
-      const bool bit_set = scalar.get_bit(bits_left - 1);
-
-      if(bit_set)
+      if(scalar.get_bit(bits_left - 1))
          {
          x1.add(x2, ws);
          x2.mult2(ws);
@@ -300,6 +299,39 @@ PointGFp operator*(const BigInt& scalar, const PointGFp& point)
 
       --bits_left;
       }
+
+#else
+   const size_t window_bits = 4;
+
+   std::vector<PointGFp> Ps(1 << window_bits);
+   Ps[0] = x1;
+   Ps[1] = point;
+
+   for(size_t i = 2; i < Ps.size(); ++i)
+      {
+      Ps[i] = Ps[i-1];
+      Ps[i].add(point, ws);
+      }
+
+   while(bits_left >= window_bits)
+      {
+      for(size_t i = 0; i != window_bits; ++i)
+         x1.mult2(ws);
+
+      const u32bit nibble = scalar.get_substring(bits_left - window_bits, window_bits);
+      x1.add(Ps[nibble], ws);
+      bits_left -= window_bits;
+      }
+
+   while(bits_left)
+      {
+      x1.mult2(ws);
+      if(scalar.get_bit(bits_left-1))
+         x1.add(point, ws);
+      --bits_left;
+      }
+
+#endif
 
    if(scalar.is_negative())
       x1.negate();

@@ -269,7 +269,19 @@ class BOTAN_DLL BigInt
      * Clear all but the lowest n bits
      * @param n amount of bits to keep
      */
-     void mask_bits(size_t n);
+     void mask_bits(size_t n)
+        {
+        if(n == 0) { clear(); return; }
+
+        const size_t top_word = n / BOTAN_MP_WORD_BITS;
+        const word mask = (static_cast<word>(1) << (n % BOTAN_MP_WORD_BITS)) - 1;
+
+        if(top_word < size())
+           {
+           clear_mem(&m_reg[top_word+1], size() - (top_word + 1));
+           m_reg[top_word] &= mask;
+           }
+        }
 
      /**
      * Return bit value at specified position
@@ -314,6 +326,12 @@ class BOTAN_DLL BigInt
      */
      word word_at(size_t n) const
         { return ((n < size()) ? m_reg[n] : 0); }
+
+     void set_word_at(size_t i, word w)
+        {
+        grow_to(i + 1);
+        m_reg[i] = w;
+        }
 
      /**
      * Tests if the sign of the integer is negative
@@ -378,7 +396,7 @@ class BOTAN_DLL BigInt
      * Give byte length of the integer
      * @result byte length of the represented integer value
      */
-     size_t bytes() const;
+     size_t bytes() const { return (bits() + 7) / 8; }
 
      /**
      * Get the bit length of the integer
@@ -398,11 +416,18 @@ class BOTAN_DLL BigInt
      */
      const word* data() const { return &m_reg[0]; }
 
+     secure_vector<word>& get_word_vector() { return m_reg; }
+     const secure_vector<word>& get_word_vector() const { return m_reg; }
+
      /**
      * Increase internal register buffer to at least n words
      * @param n new size of register
      */
-     void grow_to(size_t n);
+     void grow_to(size_t n)
+        {
+        if(n > size())
+           m_reg.resize(n + (8 - n % 8));
+        }
 
      /**
      * Fill BigInt with a random number with size of bitsize
