@@ -18,6 +18,7 @@ power4
 power5
 power6
 power7
+power8
 cellppu
 </submodels>
 
