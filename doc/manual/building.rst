@@ -237,12 +237,20 @@ target ``docs``.
 The Amalgamation Build
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can also configure Botan to be built using only a single source
-file; this is quite convenient if you plan to embed the library into
-another application. To do so, run ``configure.py`` with whatever
-arguments you would ordinarily use, along with the option
+You can also configure Botan to be built using only a single source file; this
+is quite convenient if you plan to embed the library into another application.
+
+To generate the amalgamation, run ``configure.py`` with whatever
+options you would ordinarily use, along with the option
 ``--gen-amalgamation``. This will create two (rather large) files,
-``botan_all.h`` and ``botan_all.cpp``.
+``botan_all.h`` and ``botan_all.cpp``, plus (unless the option
+``--single-amalgmation-file`` is used) also some number of files like
+``botan_all_aesni.cpp`` and ``botan_all_sse2.cpp`` which need to be
+compiled with the appropriate compiler flags to enable that
+instruction set. The ISA specific files are only generated if there is
+code that requires them, so you can simplify your build The
+``--no-autoload`` option (described elsewhere in this documentation)
+is also quite useful with the amalgamation.
 
 Whenever you would have included a botan header, you can then include
 ``botan_all.h``, and include ``botan_all.cpp`` along with the rest of

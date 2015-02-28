@@ -82,8 +82,11 @@ available:
 .. cpp:class:: TLS::Channel
 
    .. cpp:type:: std::function<void (const byte[], size_t)> output_fn
+
    .. cpp:type:: std::function<void (const byte[], size_t)> data_cb
+
    .. cpp:type:: std::function<void (Alert, const byte[], size_t)> alert_cb
+
    .. cpp:type:: std::function<bool (const Session&)> handshake_cb
 
      Typedefs used in the code for the functions described above
