@@ -40,6 +40,8 @@ if 'dont_write_bytecode' in sys.__dict__:
 
 import botan_version
 
+NOTICE_LOGLEVEL = 25
+
 def flatten(l):
     return sum(l, [])
 
@@ -230,7 +232,7 @@ def process_command_line(args):
     target_group = optparse.OptionGroup(parser, 'Target options')
 
     target_group.add_option('--cpu',
-                            help='set the target processor type/model')
+                            help='set the target CPU type/model')
 
     target_group.add_option('--os',
                             help='set the target operating system')
@@ -240,7 +242,7 @@ def process_command_line(args):
 
     target_group.add_option('--cc-bin', dest='compiler_binary',
                             metavar='BINARY',
-                            help='set the name of the compiler binary')
+                            help='set path to compiler binary')
 
     target_group.add_option('--cc-abi-flags', metavar='FLAG',
                             help='set compiler ABI flags',
@@ -249,25 +251,27 @@ def process_command_line(args):
     target_group.add_option('--chost', help=optparse.SUPPRESS_HELP)
 
     target_group.add_option('--with-endian', metavar='ORDER', default=None,
-                            help='override guess of CPU byte order')
+                            help='override byte order guess')
 
     target_group.add_option('--with-unaligned-mem',
                             dest='unaligned_mem', action='store_true',
                             default=None,
-                            help='enable unaligned memory accesses')
+                            help='use unaligned memory accesses')
 
     target_group.add_option('--without-unaligned-mem',
                             dest='unaligned_mem', action='store_false',
                             help=optparse.SUPPRESS_HELP)
 
-    target_group.add_option('--with-os-features', action='append', help=optparse.SUPPRESS_HELP)
-    target_group.add_option('--without-os-features', action='append', help=optparse.SUPPRESS_HELP)
+    target_group.add_option('--with-os-features', action='append', metavar='FEAT',
+                            help='specify OS features to use')
+    target_group.add_option('--without-os-features', action='append', metavar='FEAT',
+                            help='specify OS features to disable')
 
     for isa_extn_name in ['SSE2', 'SSSE3', 'AVX2', 'AES-NI', 'AltiVec']:
         isa_extn = isa_extn_name.lower()
 
         target_group.add_option('--disable-%s' % (isa_extn),
-                                help='disable use of %s intrinsics' % (isa_extn_name),
+                                help='disable %s intrinsics' % (isa_extn_name),
                                 action='append_const',
                                 const=isa_extn,
                                 dest='disable_intrinsics')
@@ -279,7 +283,7 @@ def process_command_line(args):
                             help=optparse.SUPPRESS_HELP)
     build_group.add_option('--disable-shared', dest='build_shared_lib',
                            action='store_false',
-                           help='disable building a shared library')
+                           help='disable building shared library')
 
     build_group.add_option('--enable-asm', dest='asm_ok',
                            action='store_true', default=True,
@@ -290,7 +294,7 @@ def process_command_line(args):
 
     build_group.add_option('--enable-debug', dest='debug_build',
                            action='store_true', default=False,
-                           help='enable debug build (default %default)')
+                           help='enable debug build')
     build_group.add_option('--disable-debug', dest='debug_build',
                            action='store_false', help=optparse.SUPPRESS_HELP)
 
@@ -306,6 +310,9 @@ def process_command_line(args):
                            default=False, action='store_true',
                            help='build via amalgamation')
 
+    build_group.add_option('--single-amalgamation-file', default=False, action='store_true',
+                           help='build single file instead of splitting on ABI')
+
     build_group.add_option('--with-build-dir',
                            metavar='DIR', default='',
                            help='setup the build in DIR')
@@ -316,19 +323,18 @@ def process_command_line(args):
                            help='choose how links are created')
 
     build_group.add_option('--makefile-style', metavar='STYLE', default=None,
-                           help='choose a makefile style (gmake or nmake)')
+                           help='makefile type (gmake or nmake)')
 
     build_group.add_option('--with-local-config',
                            dest='local_config', metavar='FILE',
                            help='include the contents of FILE into build.h')
 
     build_group.add_option('--distribution-info', metavar='STRING',
-                           help='set distribution specific versioning',
+                           help='distribution specific version',
                            default='unspecified')
 
     build_group.add_option('--with-sphinx', action='store_true',
-                           default=None,
-                           help='Use Sphinx to generate HTML manual')
+                           default=None, help='Use Sphinx')
 
     build_group.add_option('--without-sphinx', action='store_false',
                            dest='with_sphinx', help=optparse.SUPPRESS_HELP)
@@ -340,8 +346,7 @@ def process_command_line(args):
                            dest='with_visibility', help=optparse.SUPPRESS_HELP)
 
     build_group.add_option('--with-doxygen', action='store_true',
-                           default=False,
-                           help='Use Doxygen to generate HTML API docs')
+                           default=False, help='Use Doxygen')
 
     build_group.add_option('--without-doxygen', action='store_false',
                            dest='with_doxygen', help=optparse.SUPPRESS_HELP)
@@ -364,7 +369,7 @@ def process_command_line(args):
     wrapper_group.add_option('--with-python-version', dest='python_version',
                              metavar='N.M',
                              default='.'.join(map(str, sys.version_info[0:2])),
-                             help='specify Python version (def %default)')
+                             help='set Python version (def %default)')
 
     mods_group = optparse.OptionGroup(parser, 'Module selection')
 
@@ -409,13 +414,13 @@ def process_command_line(args):
     install_group.add_option('--destdir', metavar='DIR',
                              help='set the install directory')
     install_group.add_option('--docdir', metavar='DIR',
-                             help='set the documentation install directory')
+                             help='set the doc install dir')
     install_group.add_option('--bindir', metavar='DIR',
-                             help='set the binary install directory')
+                             help='set the binary install dir')
     install_group.add_option('--libdir', metavar='DIR',
-                             help='set the library install directory')
+                             help='set the library install dir')
     install_group.add_option('--includedir', metavar='DIR',
-                             help='set the include file install directory')
+                             help='set the include file install dir')
 
     parser.add_option_group(target_group)
     parser.add_option_group(build_group)
@@ -1728,7 +1733,7 @@ def generate_amalgamation(build_config, options):
     header_name = '%s.h' % (amalg_basename)
     header_int_name = '%s_internal.h' % (amalg_basename)
 
-    logging.info('Writing amalgamation header to %s' % (header_name))
+    logging.log(NOTICE_LOGLEVEL, 'Writing amalgamation header to %s' % (header_name))
 
     botan_h = open(header_name, 'w')
     botan_int_h = open(header_int_name, 'w')
@@ -1775,7 +1780,7 @@ def generate_amalgamation(build_config, options):
     def open_amalg_file(tgt):
         fsname = '%s%s.cpp' % (amalg_basename, '_' + tgt if tgt else '' )
         src_files.append(fsname)
-        logging.info('Writing amalgamation source to %s' % (fsname))
+        logging.log(NOTICE_LOGLEVEL, 'Writing amalgamation source to %s' % (fsname))
         f = open(fsname, 'w')
         f.write(amalg_header)
 
@@ -1790,10 +1795,10 @@ def generate_amalgamation(build_config, options):
     for mod in build_config.modules:
         tgt = ''
 
-        if mod.need_isa != []:
+        if not options.single_amalgamation_file and mod.need_isa != []:
             tgt = '_'.join(sorted(mod.need_isa))
             if tgt == 'sse2' and options.arch == 'x86_64':
-                tgt = '' # always available
+                tgt = '' # SSE2 is always available on x86-64
 
         if tgt not in botan_amalgs:
             botan_amalgs[tgt] = open_amalg_file(tgt)
@@ -1851,7 +1856,6 @@ def main(argv = None):
     logging.basicConfig(stream = sys.stdout,
                         format = '%(levelname) 7s: %(message)s')
 
-    NOTICE_LOGLEVEL = 25
     logging.addLevelName('NOTICE', NOTICE_LOGLEVEL)
 
     options = process_command_line(argv[1:])
