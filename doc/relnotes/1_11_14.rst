@@ -1,26 +1,34 @@
-Version 1.11.14, Not Yet Released
+Version 1.11.14, 2015-02-27
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* The global state object previously used by the library has been removed and no
-  form of initialization is required to use the library.  The global PRNG has
-  also been removed. LibraryInitializer remains as a stub.
+* The global state object previously used by the library has been removed.
+  This includes the global PRNG. The library can be safely initialized
+  multiple times without harm.
 
   The engine code has also been removed, replaced by a much lighter-weight
   object registry system which provides lookups in faster time and with less
   memory overhead than the previous approach.
 
+  One caveat of the current system with regards to static linking: because only
+  symbols already mentioned elsewhere in the program are included in the final
+  link step, few algorithms will be available through the lookup system by
+  default, even though they were compiled into the library. Your application
+  must explicitly reference the types you require or they will not end up
+  being available in the final binary. See also Github issue #52
+
+  If you intend to build your application against a static library and don't
+  want to explicitly reference each algo object you might attempt to look up by
+  string, consider either building with `--via-amalgamation`, or else (much
+  simpler) using the amalgamation directly.
+
 * The new `ffi` submodule provides a simple C API/ABI for a number of useful
   operations (hashing, ciphers, public key operations, etc) which is easily
-  accessed using the FFI modules included in many languages. A new Python
-  wrapper using the Python `ctypes` module is available. The old Boost.Python
-  wrapper has been removed.
+  accessed using the FFI modules included in many languages.
 
-* PBKDF and KDF operations now provide a way to write the desired output
-  directly to an application-specified area rather than always allocating a new
-  heap buffer.
+* A new Python wrapper (in `src/lib/python/botan.py`) using `ffi` and the Python
+  `ctypes` module is available. The old Boost.Python wrapper has been removed.
 
-* HKDF, previously provided using a non-standard interface, now uses the
-  standard KDF interface and is retreivable using get_kdf.
+* Add specialized reducers for P-192, P-224, P-256, and P-384
 
 * OCB mode, which provides a fast and constant time AEAD mode without requiring
   hardware support, is now supported in TLS, following
@@ -28,22 +36,48 @@ Version 1.11.14, Not Yet Released
   is not yet enabled by the default policy, and the ciphersuite numbers used are
   in the experimental range and may conflict with other uses.
 
-* Add ability to read TLS policy from text file
+* Add ability to read TLS policy from a text file using `TLS::Text_Policy`.
+
+* The amalgamation now splits off any ISA specific code (for instance, that
+  requiring SSSE3 instruction sets) into a new file named (for instance)
+  `botan_all_ssse3.cpp`. This allows the main amalgamation file to be compiled
+  without any special flags, so `--via-amalgamation` builds actually work now.
+  This is disabled with the build option `--single-amalgamation-file`
+
+* PBKDF and KDF operations now provide a way to write the desired output
+  directly to an application-specified area rather than always allocating a new
+  heap buffer.
+
+* HKDF, previously provided using a non-standard interface, now uses the
+  standard KDF interface and is retrievable using get_kdf.
+
+* It is once again possible to build the complete test suite without requiring
+  any boost libraries. This is currently only supported on systems supporting
+  the readdir interface.
 
 * Remove use of memset_s which caused problems with amalgamation on OS X.
   Github 42, 45
 
 * The memory usage of the counter mode implementation has been reduced.
+  Previously it encrypted 256 blocks in parallel as this leads to a slightly
+  faster counter increment operation. Instead CTR_BE simply encrypts a buffer
+  equal in size to the advertised parallelism of the cipher implementation.
+  This is not measurably slower, and dramatically reduces the memory use of
+  CTR mode.
 
 * The memory allocator available on Unix systems which uses mmap and mlock to
-  lock a pool of memory now checks an environment variable
-  BOTAN_MLOCK_POOL_SIZE. If this is set to a smaller value then the library
-  would originally have allocated the user specified size is used. You can also
-  set it to zero to disable the pool entirely.  Previously the allocator would
-  consume all available mlocked memory, this allows botan to coexist with an
-  application which wants to mlock memory of its own.
+  lock a pool of memory now checks environment variable BOTAN_MLOCK_POOL_SIZE
+  and interprets it as an integer. If the value set to a smaller value then the
+  library would originally have allocated (based on resource limits) the user
+  specified size is used instead. You can also set the variable to 0 to
+  disable the pool entirely. Previously the allocator would consume all
+  available mlocked memory, this allows botan to coexist with an application
+  which wants to mlock memory for its own uses.
 
 * The botan-config script previously installed on Unix systems has been
-  removed. Its functionality is replaced by the `config` command of the `botan`
-  tool executable, for example `botan config cflags` instead of `botan-config
-  --cflags`.
+  removed.  Its functionality is replaced by the `config` command of the
+  `botan` tool executable, for example `botan config cflags` instead of
+  `botan-config --cflags`.
+
+* Added a target for POWER8 processors
+
