@@ -135,7 +135,7 @@ void poly1305_finish(secure_vector<u64bit>& X, byte mac[16])
    store_le(&mac[0], h0, h1);
 
    /* zero out the state */
-   zero_mem(&X[0], X.size());
+   clear_mem(&X[0], X.size());
    }
 
 }
