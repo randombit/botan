@@ -90,10 +90,14 @@ def main(args = None):
         os.umask(int(options.umask, 8))
         exe_mode &= (umask ^ 0o777)
 
-    def copy_executable(src, dest):
-        shutil.copyfile(src, dest)
-        logging.debug('Copied %s to %s' % (src, dest))
-        os.chmod(dest, exe_mode)
+    def copy_file(src, dst):
+        shutil.copyfile(src, dst)
+        #logging.debug('Copied %s to %s' % (src, dst))
+
+    def copy_executable(src, dst):
+        copy_file(src, dst)
+        logging.debug('Copied %s to %s' % (src, dst))
+        os.chmod(dst, exe_mode)
 
     cfg = eval(open(os.path.join(options.build_dir, 'build_config.py')).read())
 
@@ -131,14 +135,14 @@ def main(args = None):
 
     build_include_dir = os.path.join(options.build_dir, 'include', 'botan')
 
-    for include in os.listdir(build_include_dir):
+    for include in sorted(os.listdir(build_include_dir)):
         if include == 'internal':
             continue
-        shutil.copyfile(os.path.join(build_include_dir, include),
-                        os.path.join(botan_include_dir, include))
+        copy_file(os.path.join(build_include_dir, include),
+                  os.path.join(botan_include_dir, include))
 
     static_lib = process_template('%{lib_prefix}%{libname}.%{static_suffix}')
-    shutil.copyfile(static_lib, os.path.join(lib_dir, os.path.basename(static_lib)))
+    copy_file(static_lib, os.path.join(lib_dir, os.path.basename(static_lib)))
 
     if bool(cfg['with_shared_lib']):
         shared_lib = process_template('%{lib_prefix}%{libname}.%{so_suffix}.%{so_abi_rev}.%{version_patch}')
@@ -174,21 +178,21 @@ def main(args = None):
     if 'botan_pkgconfig' in cfg:
         pkgconfig_dir = os.path.join(options.destdir, options.libdir, options.pkgconfigdir)
         makedirs(pkgconfig_dir)
-        shutil.copyfile(cfg['botan_pkgconfig'],
-                        os.path.join(pkgconfig_dir, os.path.basename(cfg['botan_pkgconfig'])))
+        copy_file(cfg['botan_pkgconfig'],
+                  os.path.join(pkgconfig_dir, os.path.basename(cfg['botan_pkgconfig'])))
 
     if 'ffi' in cfg['mod_list'].split('\n'):
-        logging.debug('FFI enabled - installing Python module')
-        def make_py_lib_path(py_ver):
-            print sys.path
-        python_dir = cfg['python_dir']
-        logging.debug('Python dir %s' % (python_dir))
+        py_lib_path = os.path.join(lib_dir, 'python%s' % (cfg['python_version']), 'site-packages')
+        logging.debug('Installing python module to %s' % (py_lib_path))
+        makedirs(py_lib_path)
+        for py in ['botan.py']:
+            copy_file(os.path.join(cfg['python_dir'], py), os.path.join(py_lib_path, py))
 
     shutil.rmtree(botan_doc_dir, True)
     shutil.copytree(cfg['doc_output_dir'], botan_doc_dir)
 
     for f in [f for f in os.listdir(cfg['doc_dir']) if f.endswith('.txt')]:
-        shutil.copyfile(os.path.join(cfg['doc_dir'], f), os.path.join(botan_doc_dir, f))
+        copy_file(os.path.join(cfg['doc_dir'], f), os.path.join(botan_doc_dir, f))
 
     with combine_relnotes.open_for_utf8(os.path.join(botan_doc_dir, 'news.txt'), 'w+') as news:
         news.write(combine_relnotes.combine_relnotes('doc/relnotes', False))
