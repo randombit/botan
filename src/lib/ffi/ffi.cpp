@@ -393,7 +393,8 @@ int botan_cipher_init(botan_cipher_t* cipher, const char* cipher_name, uint32_t 
    {
    try
       {
-      Botan::Cipher_Dir dir = (flags & 0) ? Botan::DECRYPTION : Botan::ENCRYPTION;
+      const bool encrypt_p = ((flags & BOTAN_CIPHER_INIT_FLAG_MASK_DIRECTION) == BOTAN_CIPHER_INIT_FLAG_ENCRYPT);
+      const Botan::Cipher_Dir dir = encrypt_p ? Botan::ENCRYPTION : Botan::DECRYPTION;
       std::unique_ptr<Botan::Cipher_Mode> mode(Botan::get_cipher_mode(cipher_name, dir));
       if(!mode)
          return -1;
@@ -469,6 +470,7 @@ int botan_cipher_update(botan_cipher_t cipher_obj,
          {
          mbuf.assign(input, input + input_size);
          *input_consumed = input_size;
+         *output_written = 0;
 
          try
             {

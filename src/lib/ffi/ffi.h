@@ -90,6 +90,10 @@ BOTAN_DLL int botan_mac_destroy(botan_mac_t mac);
 */
 typedef struct botan_cipher_struct* botan_cipher_t;
 
+#define BOTAN_CIPHER_INIT_FLAG_MASK_DIRECTION 1
+#define BOTAN_CIPHER_INIT_FLAG_ENCRYPT 0
+#define BOTAN_CIPHER_INIT_FLAG_DECRYPT 1
+
 BOTAN_DLL int botan_cipher_init(botan_cipher_t* cipher, const char* name, uint32_t flags);
 
 BOTAN_DLL int botan_cipher_valid_nonce_length(botan_cipher_t cipher, size_t nl);

@@ -517,11 +517,22 @@ def test():
     print "md5", h.final().encode('hex')
 
     gcm = cipher('AES-128/GCM')
-    gcm.set_key('00000000000000000000000000000000'.decode('hex'))
-    gcm.start('000000000000000000000000'.decode('hex'))
-    gcm.update('')
-    gcm.update('')
-    print 'gcm', gcm.finish('00000000000000000000000000000000'.decode('hex')).encode('hex')
+    gcm_dec = cipher('AES-128/GCM', encrypt=False)
+
+    iv = r.get(12)
+    key = r.get(16)
+    pt = r.get(21)
+    gcm.set_key(key)
+    gcm.start(iv)
+    assert len(gcm.update('')) == 0
+    ct = gcm.finish(pt)
+    print "gcm ct", ct.encode('hex')
+
+    gcm_dec.set_key(key)
+    gcm_dec.start(iv)
+    dec = gcm_dec.finish(ct)
+    print "gcm pt", pt.encode('hex'), len(pt)
+    print "gcm de", dec.encode('hex'), len(dec)
 
     rsapriv = private_key('rsa', 1536, r)
 
