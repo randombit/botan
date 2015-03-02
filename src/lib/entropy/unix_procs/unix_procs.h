@@ -62,7 +62,7 @@ class Unix_EntropySource : public EntropySource
             Unix_Process& operator=(const Unix_Process&) = delete;
          private:
             int m_fd = -1;
-            pid_t m_pid = -1;
+            int m_pid = -1;
          };
 
       const std::vector<std::string>& next_source();
