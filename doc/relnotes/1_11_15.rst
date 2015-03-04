@@ -3,3 +3,7 @@ Version 1.11.15, Not Yet Released
 
 * A bug in ffi.cpp meant Python could only encrypt. Github issue 53.
 
+* When comparing two ASN.1 algorithm identifiers, consider empty and
+  NULL parameters the same.
+
+* Fix compilation problem on OS X

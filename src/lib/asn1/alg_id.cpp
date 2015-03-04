@@ -63,13 +63,27 @@ AlgorithmIdentifier::AlgorithmIdentifier(const std::string& alg_id,
 /*
 * Compare two AlgorithmIdentifiers
 */
+namespace {
+
+bool param_null_or_empty(const std::vector<byte>& p)
+   {
+   if(p.size() == 2 && (p[0] == 0x05) && (p[1] == 0x00))
+      return true;
+   return p.empty();
+   }
+
+}
+
 bool operator==(const AlgorithmIdentifier& a1, const AlgorithmIdentifier& a2)
    {
    if(a1.oid != a2.oid)
       return false;
-   if(a1.parameters != a2.parameters)
-      return false;
-   return true;
+
+   if(param_null_or_empty(a1.parameters) &&
+      param_null_or_empty(a2.parameters))
+      return true;
+
+   return (a1.parameters == a2.parameters);
    }
 
 /*
