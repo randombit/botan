@@ -17,8 +17,8 @@ Lion* make_lion(const BlockCipher::Spec& spec)
    {
    if(spec.arg_count_between(2, 3))
       {
-      std::unique_ptr<HashFunction> hash(Algo_Registry<HashFunction>::global_registry().make(spec.arg(0)));
-      std::unique_ptr<StreamCipher> stream(Algo_Registry<StreamCipher>::global_registry().make(spec.arg(1)));
+      std::unique_ptr<HashFunction> hash(get_hash_function(spec.arg(0)));
+      std::unique_ptr<StreamCipher> stream(get_stream_cipher(spec.arg(1)));
 
       if(hash && stream)
          {

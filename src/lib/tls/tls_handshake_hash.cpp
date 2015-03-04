@@ -7,7 +7,7 @@
 
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/tls_exceptn.h>
-#include <botan/internal/algo_registry.h>
+#include <botan/lookup.h>
 #include <botan/hash.h>
 
 namespace Botan {
@@ -20,18 +20,16 @@ namespace TLS {
 secure_vector<byte> Handshake_Hash::final(Protocol_Version version,
                                           const std::string& mac_algo) const
    {
-   std::unique_ptr<HashFunction> hash;
+   auto choose_hash = [=]() {
+      if(!version.supports_ciphersuite_specific_prf())
+         return "Parallel(MD5,SHA-160)";;
 
-   if(version.supports_ciphersuite_specific_prf())
-      {
       if(mac_algo == "MD5" || mac_algo == "SHA-1")
-         hash.reset(make_a<HashFunction>("SHA-256"));
-      else
-         hash.reset(make_a<HashFunction>(mac_algo));
-      }
-   else
-      hash.reset(make_a<HashFunction>("Parallel(MD5,SHA-160)"));
+         return "SHA-256";
+      return mac_algo.c_str();
+   };
 
+   std::unique_ptr<HashFunction> hash(make_hash_function(choose_hash()));
    hash->update(data);
    return hash->final();
    }

@@ -7,16 +7,15 @@
 
 #include <botan/rng.h>
 #include <botan/hmac_rng.h>
-#include <botan/internal/algo_registry.h>
+#include <botan/lookup.h>
 
 namespace Botan {
 
 RandomNumberGenerator* RandomNumberGenerator::make_rng()
    {
-   std::unique_ptr<RandomNumberGenerator> rng(
-      new HMAC_RNG(make_a<MessageAuthenticationCode>("HMAC(SHA-512)"),
-                   make_a<MessageAuthenticationCode>("HMAC(SHA-256)"))
-      );
+   std::unique_ptr<MessageAuthenticationCode> h1(make_message_auth("HMAC(SHA-512"));
+   std::unique_ptr<MessageAuthenticationCode> h2(h1->clone());
+   std::unique_ptr<RandomNumberGenerator> rng(new HMAC_RNG(h1.release(), h2.release()));
 
    rng->reseed(256);
 

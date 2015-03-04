@@ -23,6 +23,7 @@ class BOTAN_DLL OctetString
       * @return size of this octet string in bytes
       */
       size_t length() const { return bits.size(); }
+      size_t size() const { return bits.size(); }
 
       /**
       * @return this object as a secure_vector<byte>

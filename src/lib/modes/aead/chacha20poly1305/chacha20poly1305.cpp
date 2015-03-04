@@ -13,6 +13,11 @@ namespace Botan {
 BOTAN_REGISTER_TRANSFORM_NOARGS(ChaCha20Poly1305_Encryption);
 BOTAN_REGISTER_TRANSFORM_NOARGS(ChaCha20Poly1305_Decryption);
 
+ChaCha20Poly1305_Mode::ChaCha20Poly1305_Mode() :
+   m_chacha(make_stream_cipher("ChaCha")),
+   m_poly1305(make_message_auth("Poly1305"))
+   {}
+
 bool ChaCha20Poly1305_Mode::valid_nonce_length(size_t n) const
    {
    return (n == 8 || n == 12);
@@ -20,16 +25,14 @@ bool ChaCha20Poly1305_Mode::valid_nonce_length(size_t n) const
 
 void ChaCha20Poly1305_Mode::clear()
    {
-   m_chacha.reset();
-   m_poly1305.reset();
+   m_chacha->clear();
+   m_poly1305->clear();
    m_ad.clear();
    m_ctext_len = 0;
    }
 
 void ChaCha20Poly1305_Mode::key_schedule(const byte key[], size_t length)
    {
-   if(!m_chacha.get())
-      m_chacha.reset(make_a<StreamCipher>("ChaCha"));
    m_chacha->set_key(key, length);
    }
 
@@ -60,8 +63,6 @@ secure_vector<byte> ChaCha20Poly1305_Mode::start_raw(const byte nonce[], size_t 
    secure_vector<byte> zeros(64);
    m_chacha->encrypt(zeros);
 
-   if(!m_poly1305.get())
-      m_poly1305.reset(make_a<MessageAuthenticationCode>("Poly1305"));
    m_poly1305->set_key(&zeros[0], 32);
    // Remainder of output is discard
 

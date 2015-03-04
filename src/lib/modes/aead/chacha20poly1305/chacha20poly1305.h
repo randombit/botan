@@ -41,6 +41,8 @@ class BOTAN_DLL ChaCha20Poly1305_Mode : public AEAD_Mode
       std::unique_ptr<StreamCipher> m_chacha;
       std::unique_ptr<MessageAuthenticationCode> m_poly1305;
 
+      ChaCha20Poly1305_Mode();
+
       secure_vector<byte> m_ad;
       size_t m_nonce_len = 0;
       size_t m_ctext_len = 0;

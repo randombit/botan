@@ -14,7 +14,7 @@ namespace Botan {
 template<typename CBC_T, typename CTS_T>
 Transform* make_cbc_mode(const Transform::Spec& spec)
    {
-   std::unique_ptr<BlockCipher> bc(Algo_Registry<BlockCipher>::global_registry().make(spec.arg(0)));
+   std::unique_ptr<BlockCipher> bc(get_block_cipher(spec.arg(0)));
 
    if(bc)
       {

@@ -1,6 +1,6 @@
 /*
 * Filters
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -50,7 +50,10 @@ class BOTAN_DLL StreamCipher_Filter : public Keyed_Filter
       * Set the initialization vector for this filter.
       * @param iv the initialization vector to set
       */
-      void set_iv(const InitializationVector& iv);
+      void set_iv(const InitializationVector& iv)
+         {
+         m_cipher->set_iv(iv.begin(), iv.length());
+         }
 
       /**
       * Set the key of this filter.
@@ -86,7 +89,7 @@ class BOTAN_DLL StreamCipher_Filter : public Keyed_Filter
       */
       StreamCipher_Filter(const std::string& cipher, const SymmetricKey& key);
    private:
-      secure_vector<byte> buffer;
+      secure_vector<byte> m_buffer;
       std::unique_ptr<StreamCipher> m_cipher;
    };
 
@@ -110,7 +113,7 @@ class BOTAN_DLL Hash_Filter : public Filter
       * output of the hash algorithm will be cut off.
       */
       Hash_Filter(HashFunction* hash, size_t len = 0) :
-         OUTPUT_LENGTH(len), m_hash(hash) {}
+         m_hash(hash), m_out_len(len) {}
 
       /**
       * Construct a hash filter.
@@ -123,8 +126,8 @@ class BOTAN_DLL Hash_Filter : public Filter
       Hash_Filter(const std::string& request, size_t len = 0);
 
    private:
-      const size_t OUTPUT_LENGTH;
       std::unique_ptr<HashFunction> m_hash;
+      const size_t m_out_len;
    };
 
 /**
@@ -156,8 +159,8 @@ class BOTAN_DLL MAC_Filter : public Keyed_Filter
       */
       MAC_Filter(MessageAuthenticationCode* mac,
                  size_t out_len = 0) :
-         OUTPUT_LENGTH(out_len),
-         m_mac(mac)
+         m_mac(mac),
+         m_out_len(out_len)
          {
          }
 
@@ -173,8 +176,8 @@ class BOTAN_DLL MAC_Filter : public Keyed_Filter
       MAC_Filter(MessageAuthenticationCode* mac,
                  const SymmetricKey& key,
                  size_t out_len = 0) :
-         OUTPUT_LENGTH(out_len),
-         m_mac(mac)
+         m_mac(mac),
+         m_out_len(out_len)
          {
          m_mac->set_key(key);
          }
@@ -201,8 +204,8 @@ class BOTAN_DLL MAC_Filter : public Keyed_Filter
       MAC_Filter(const std::string& mac, const SymmetricKey& key,
                  size_t len = 0);
    private:
-      const size_t OUTPUT_LENGTH;
       std::unique_ptr<MessageAuthenticationCode> m_mac;
+      const size_t m_out_len;
    };
 
 }

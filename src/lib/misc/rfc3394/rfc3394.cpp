@@ -6,7 +6,7 @@
 */
 
 #include <botan/rfc3394.h>
-#include <botan/internal/algo_registry.h>
+#include <botan/lookup.h>
 #include <botan/block_cipher.h>
 #include <botan/loadstor.h>
 #include <botan/exceptn.h>
@@ -14,30 +14,16 @@
 
 namespace Botan {
 
-namespace {
-
-BlockCipher* make_aes(size_t keylength)
-   {
-   auto& block_ciphers = Algo_Registry<BlockCipher>::global_registry();
-   if(keylength == 16)
-      return block_ciphers.make("AES-128");
-   else if(keylength == 24)
-      return block_ciphers.make("AES-192");
-   else if(keylength == 32)
-      return block_ciphers.make("AES-256");
-   else
-      throw std::invalid_argument("Bad KEK length for NIST keywrap");
-   }
-
-}
-
 secure_vector<byte> rfc3394_keywrap(const secure_vector<byte>& key,
                                     const SymmetricKey& kek)
    {
    if(key.size() % 8 != 0)
       throw std::invalid_argument("Bad input key size for NIST key wrap");
 
-   std::unique_ptr<BlockCipher> aes(make_aes(kek.length()));
+   if(kek.size() != 16 && kek.size() != 24 && kek.size() != 32)
+      throw std::invalid_argument("Bad KEK length " + std::to_string(kek.size()) + " for NIST key wrap");
+
+   std::unique_ptr<BlockCipher> aes(make_block_cipher("AES-" + std::to_string(8*kek.size())));
    aes->set_key(kek);
 
    const size_t n = key.size() / 8;
@@ -78,7 +64,10 @@ secure_vector<byte> rfc3394_keyunwrap(const secure_vector<byte>& key,
    if(key.size() < 16 || key.size() % 8 != 0)
       throw std::invalid_argument("Bad input key size for NIST key unwrap");
 
-   std::unique_ptr<BlockCipher> aes(make_aes(kek.length()));
+   if(kek.size() != 16 && kek.size() != 24 && kek.size() != 32)
+      throw std::invalid_argument("Bad KEK length " + std::to_string(kek.size()) + " for NIST key unwrap");
+
+   std::unique_ptr<BlockCipher> aes(make_block_cipher("AES-" + std::to_string(8*kek.size())));
    aes->set_key(kek);
 
    const size_t n = (key.size() - 8) / 8;

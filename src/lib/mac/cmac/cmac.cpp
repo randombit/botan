@@ -13,7 +13,10 @@ namespace Botan {
 CMAC* CMAC::make(const Spec& spec)
    {
    if(spec.arg_count() == 1)
-      return new CMAC(Algo_Registry<BlockCipher>::global_registry().make(spec.arg(0)));
+      {
+      if(BlockCipher* bc = get_block_cipher(spec.arg(0)))
+         return new CMAC(bc);
+      }
    return nullptr;
    }
 

@@ -7,7 +7,7 @@
 #ifndef BOTAN_ALGO_REGISTRY_H__
 #define BOTAN_ALGO_REGISTRY_H__
 
-#include <botan/types.h>
+#include <botan/lookup.h>
 #include <functional>
 #include <stdexcept>
 #include <mutex>

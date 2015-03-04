@@ -44,6 +44,38 @@ MessageAuthenticationCode* get_mac(const std::string& algo_spec, const std::stri
    return make_a<MessageAuthenticationCode>(algo_spec, provider);
    }
 
+std::unique_ptr<BlockCipher> make_block_cipher(const std::string& algo_spec,
+                                               const std::string& provider)
+   {
+   if(auto x = get_block_cipher(algo_spec, provider))
+      return std::unique_ptr<BlockCipher>(x);
+   throw Algorithm_Not_Found(algo_spec);
+   }
+
+std::unique_ptr<StreamCipher> make_stream_cipher(const std::string& algo_spec,
+                                                 const std::string& provider)
+   {
+   if(auto x = get_stream_cipher(algo_spec, provider))
+      return std::unique_ptr<StreamCipher>(x);
+   throw Algorithm_Not_Found(algo_spec);
+   }
+
+std::unique_ptr<HashFunction> make_hash_function(const std::string& algo_spec,
+                                                 const std::string& provider)
+   {
+   if(auto x = get_hash_function(algo_spec, provider))
+      return std::unique_ptr<HashFunction>(x);
+   throw Algorithm_Not_Found(algo_spec);
+   }
+
+std::unique_ptr<MessageAuthenticationCode> make_message_auth(const std::string& algo_spec,
+                                                             const std::string& provider)
+   {
+   if(auto x = get_mac(algo_spec, provider))
+      return std::unique_ptr<MessageAuthenticationCode>(x);
+   throw Algorithm_Not_Found(algo_spec);
+   }
+
 std::vector<std::string> get_block_cipher_providers(const std::string& algo_spec)
    {
    return providers_of<BlockCipher>(BlockCipher::Spec(algo_spec));

@@ -14,9 +14,8 @@ BOTAN_REGISTER_NAMED_T(BlockCipher, "Cascade", Cascade_Cipher, Cascade_Cipher::m
 
 Cascade_Cipher* Cascade_Cipher::make(const BlockCipher::Spec& spec)
    {
-   auto& block_cipher = Algo_Registry<BlockCipher>::global_registry();
-   std::unique_ptr<BlockCipher> c1(block_cipher.make(spec.arg(0)));
-   std::unique_ptr<BlockCipher> c2(block_cipher.make(spec.arg(1)));
+   std::unique_ptr<BlockCipher> c1(get_block_cipher(spec.arg(0)));
+   std::unique_ptr<BlockCipher> c2(get_block_cipher(spec.arg(1)));
 
    if(c1 && c2)
       return new Cascade_Cipher(c1.release(), c2.release());

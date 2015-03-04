@@ -16,7 +16,7 @@ OFB* OFB::make(const Spec& spec)
    {
    if(spec.algo_name() == "OFB" && spec.arg_count() == 1)
       {
-      if(BlockCipher* c = Algo_Registry<BlockCipher>::global_registry().make(spec.arg(0)))
+      if(BlockCipher* c = get_block_cipher(spec.arg(0)))
          return new OFB(c);
       }
    return nullptr;

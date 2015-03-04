@@ -41,9 +41,8 @@ Comb4P* Comb4P::make(const Spec& spec)
    {
    if(spec.arg_count() == 2)
       {
-      auto& hashes = Algo_Registry<HashFunction>::global_registry();
-      std::unique_ptr<HashFunction> h1(hashes.make(spec.arg(0)));
-      std::unique_ptr<HashFunction> h2(hashes.make(spec.arg(1)));
+      std::unique_ptr<HashFunction> h1(make_hash_function(spec.arg(0)));
+      std::unique_ptr<HashFunction> h2(make_hash_function(spec.arg(1)));
 
       if(h1 && h2)
          return new Comb4P(h1.release(), h2.release());

@@ -13,7 +13,10 @@ namespace Botan {
 CBC_MAC* CBC_MAC::make(const Spec& spec)
    {
    if(spec.arg_count() == 1)
-      return new CBC_MAC(Algo_Registry<BlockCipher>::global_registry().make(spec.arg(0)));
+      {
+      if(auto bc = make_block_cipher(spec.arg(0)))
+         return new CBC_MAC(bc.release());
+      }
    return nullptr;
    }
 

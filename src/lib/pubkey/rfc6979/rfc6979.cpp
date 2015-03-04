@@ -8,7 +8,7 @@
 #include <botan/rfc6979.h>
 #include <botan/hmac_drbg.h>
 #include <botan/scan_name.h>
-#include <botan/internal/algo_registry.h>
+#include <botan/lookup.h>
 
 namespace Botan {
 
@@ -30,8 +30,7 @@ BigInt generate_rfc6979_nonce(const BigInt& x,
                               const BigInt& h,
                               const std::string& hash)
    {
-   auto& macs = Algo_Registry<MessageAuthenticationCode>::global_registry();
-   HMAC_DRBG rng(macs.make("HMAC(" + hash + ")"), nullptr);
+   HMAC_DRBG rng(make_message_auth("HMAC(" + hash + ")").release(), nullptr);
 
    const size_t qlen = q.bits();
    const size_t rlen = qlen / 8 + (qlen % 8 ? 1 : 0);

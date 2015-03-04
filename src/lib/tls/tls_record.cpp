@@ -65,7 +65,7 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
 
    if(BlockCipher* bc = get_block_cipher(cipher_algo))
       {
-      m_block_cipher.reset(bc->clone());
+      m_block_cipher.reset(bc);
       m_block_cipher->set_key(cipher_key);
       m_block_cipher_cbc_state = iv.bits_of();
       m_block_size = bc->block_size();
@@ -75,7 +75,7 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
       }
    else if(StreamCipher* sc = get_stream_cipher(cipher_algo))
       {
-      m_stream_cipher.reset(sc->clone());
+      m_stream_cipher.reset(sc);
       m_stream_cipher->set_key(cipher_key);
       }
    else

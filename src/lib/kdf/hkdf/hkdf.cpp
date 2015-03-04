@@ -14,10 +14,10 @@ BOTAN_REGISTER_NAMED_T(KDF, "HKDF", HKDF, HKDF::make);
 
 HKDF* HKDF::make(const Spec& spec)
    {
-   if(auto mac = make_a<MessageAuthenticationCode>(spec.arg(0)))
+   if(auto mac = get_mac(spec.arg(0)))
       return new HKDF(mac);
 
-   if(auto mac = make_a<MessageAuthenticationCode>("HMAC(" + spec.arg(0) + ")"))
+   if(auto mac = get_mac("HMAC(" + spec.arg(0) + ")"))
       return new HKDF(mac);
 
    return nullptr;

@@ -35,7 +35,7 @@ size_t X942_PRF::kdf(byte key[], size_t key_len,
                      const byte secret[], size_t secret_len,
                      const byte salt[], size_t salt_len) const
    {
-   std::unique_ptr<HashFunction> hash(make_a<HashFunction>("SHA-160"));
+   std::unique_ptr<HashFunction> hash(make_hash_function("SHA-160"));
    const OID kek_algo(m_key_wrap_oid);
 
    secure_vector<byte> h;

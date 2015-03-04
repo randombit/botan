@@ -17,7 +17,11 @@ EMSA* make_pkcs1v15(const EMSA::Spec& spec)
    if(spec.arg(0) == "Raw")
       return new EMSA_PKCS1v15_Raw;
    else
-      return new EMSA_PKCS1v15(make_a<HashFunction>(spec.arg(0)));
+      {
+      if(HashFunction* h = get_hash_function(spec.arg(0)))
+         return new EMSA_PKCS1v15(h);
+      }
+   return nullptr;
    }
 
 }

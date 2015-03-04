@@ -17,10 +17,10 @@ BOTAN_REGISTER_NAMED_T(PBKDF, "PBKDF2", PKCS5_PBKDF2, PKCS5_PBKDF2::make);
 
 PKCS5_PBKDF2* PKCS5_PBKDF2::make(const Spec& spec)
    {
-   if(auto mac = make_a<MessageAuthenticationCode>(spec.arg(0)))
+   if(auto mac = get_mac(spec.arg(0)))
       return new PKCS5_PBKDF2(mac);
 
-   if(auto mac = make_a<MessageAuthenticationCode>("HMAC(" + spec.arg(0) + ")"))
+   if(auto mac = get_mac("HMAC(" + spec.arg(0) + ")"))
       return new PKCS5_PBKDF2(mac);
 
    return nullptr;

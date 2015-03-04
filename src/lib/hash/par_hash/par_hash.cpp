@@ -8,7 +8,6 @@
 #include <botan/internal/hash_utils.h>
 #include <botan/par_hash.h>
 #include <botan/parsing.h>
-#include <botan/internal/algo_registry.h>
 
 namespace Botan {
 
@@ -16,14 +15,11 @@ BOTAN_REGISTER_NAMED_T(HashFunction, "Parallel", Parallel, Parallel::make);
 
 Parallel* Parallel::make(const Spec& spec)
    {
-   auto& hash_fns = Algo_Registry<HashFunction>::global_registry();
-
    std::vector<std::unique_ptr<HashFunction>> hashes;
 
    for(size_t i = 0; i != spec.arg_count(); ++i)
       {
-      std::unique_ptr<HashFunction> h(hash_fns.make(spec.arg(i)));
-
+      std::unique_ptr<HashFunction> h(get_hash_function(spec.arg(i)));
       if(!h)
          return nullptr;
       hashes.push_back(std::move(h));

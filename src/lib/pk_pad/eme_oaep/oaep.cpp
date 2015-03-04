@@ -17,12 +17,10 @@ OAEP* OAEP::make(const Spec& request)
    {
    if(request.algo_name() == "OAEP" && request.arg_count_between(1, 2))
       {
-      auto& hashes = Algo_Registry<HashFunction>::global_registry();
-
       if(request.arg_count() == 1 ||
          (request.arg_count() == 2 && request.arg(1) == "MGF1"))
          {
-         if(HashFunction* hash = hashes.make(request.arg(0)))
+         if(HashFunction* hash = get_hash_function(request.arg(0)))
             return new OAEP(hash);
          }
       }

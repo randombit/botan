@@ -6,7 +6,7 @@
 */
 
 #include <botan/benchmark.h>
-#include <botan/internal/algo_registry.h>
+#include <botan/lookup.h>
 #include <botan/buf_comp.h>
 #include <botan/cipher_mode.h>
 #include <botan/block_cipher.h>
@@ -55,7 +55,7 @@ time_algorithm_ops(const std::string& name,
 
    const double mb_mult = buffer.size() / static_cast<double>(Mebibyte);
 
-   if(BlockCipher* p = make_a<BlockCipher>(name, provider))
+   if(BlockCipher* p = get_block_cipher(name, provider))
       {
       std::unique_ptr<BlockCipher> bc(p);
 
@@ -67,7 +67,7 @@ time_algorithm_ops(const std::string& name,
             { "decrypt", mb_mult * time_op(runtime / 2, [&]() { bc->decrypt(buffer); }) },
          });
       }
-   else if(StreamCipher* p = make_a<StreamCipher>(name, provider))
+   else if(StreamCipher* p = get_stream_cipher(name, provider))
       {
       std::unique_ptr<StreamCipher> sc(p);
 
@@ -78,7 +78,7 @@ time_algorithm_ops(const std::string& name,
             { "", mb_mult * time_op(runtime, [&]() { sc->encipher(buffer); }) },
          });
       }
-   else if(HashFunction* p = make_a<HashFunction>(name, provider))
+   else if(HashFunction* p = get_hash_function(name, provider))
       {
       std::unique_ptr<HashFunction> h(p);
 
@@ -86,7 +86,7 @@ time_algorithm_ops(const std::string& name,
             { "", mb_mult * time_op(runtime, [&]() { h->update(buffer); }) },
          });
       }
-   else if(MessageAuthenticationCode* p = make_a<MessageAuthenticationCode>(name, provider))
+   else if(MessageAuthenticationCode* p = get_mac(name, provider))
       {
       std::unique_ptr<MessageAuthenticationCode> mac(p);
 
@@ -136,10 +136,10 @@ std::set<std::string> get_all_providers_of(const std::string& algo)
 
    auto add_to_set = [&provs](const std::vector<std::string>& str) { for(auto&& s : str) { provs.insert(s); } };
 
-   add_to_set(Algo_Registry<BlockCipher>::global_registry().providers_of(algo));
-   add_to_set(Algo_Registry<StreamCipher>::global_registry().providers_of(algo));
-   add_to_set(Algo_Registry<HashFunction>::global_registry().providers_of(algo));
-   add_to_set(Algo_Registry<MessageAuthenticationCode>::global_registry().providers_of(algo));
+   add_to_set(get_block_cipher_providers(algo));
+   add_to_set(get_stream_cipher_providers(algo));
+   add_to_set(get_hash_function_providers(algo));
+   add_to_set(get_mac_providers(algo));
 
    return provs;
    }

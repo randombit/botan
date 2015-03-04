@@ -22,18 +22,18 @@ namespace Botan {
 template<typename T>
 T* make_block_cipher_mode(const Transform::Spec& spec)
    {
-   if(BlockCipher* bc = Algo_Registry<BlockCipher>::global_registry().make(spec.arg(0)))
-      return new T(bc->clone());
+   if(BlockCipher* bc = get_block_cipher(spec.arg(0)))
+      return new T(bc);
    return nullptr;
    }
 
 template<typename T, size_t LEN1>
 T* make_block_cipher_mode_len(const Transform::Spec& spec)
    {
-   if(BlockCipher* bc = Algo_Registry<BlockCipher>::global_registry().make(spec.arg(0)))
+   if(BlockCipher* bc = get_block_cipher(spec.arg(0)))
       {
       const size_t len1 = spec.arg_as_integer(1, LEN1);
-      return new T(bc->clone(), len1);
+      return new T(bc, len1);
       }
 
    return nullptr;
@@ -42,11 +42,11 @@ T* make_block_cipher_mode_len(const Transform::Spec& spec)
 template<typename T, size_t LEN1, size_t LEN2>
 T* make_block_cipher_mode_len2(const Transform::Spec& spec)
    {
-   if(BlockCipher* bc = Algo_Registry<BlockCipher>::global_registry().make(spec.arg(0)))
+   if(BlockCipher* bc = get_block_cipher(spec.arg(0)))
       {
       const size_t len1 = spec.arg_as_integer(1, LEN1);
       const size_t len2 = spec.arg_as_integer(2, LEN2);
-      return new T(bc->clone(), len1, len2);
+      return new T(bc, len1, len2);
       }
 
    return nullptr;

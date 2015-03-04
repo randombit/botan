@@ -6,9 +6,9 @@
 */
 
 #include <botan/pbes2.h>
-#include <botan/internal/algo_registry.h>
 #include <botan/cipher_mode.h>
-#include <botan/pbkdf2.h>
+#include <botan/lookup.h>
+#include <botan/pbkdf.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/parsing.h>
@@ -82,15 +82,15 @@ pbes2_encrypt(const secure_vector<byte>& key_bits,
 
    std::unique_ptr<Cipher_Mode> enc(get_cipher_mode(cipher, ENCRYPTION));
 
-   PKCS5_PBKDF2 pbkdf(Algo_Registry<MessageAuthenticationCode>::global_registry().make(prf));
+   std::unique_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(" + prf + ")"));
 
    const size_t key_length = enc->key_spec().maximum_keylength();
    size_t iterations = 0;
 
    secure_vector<byte> iv = rng.random_vec(enc->default_nonce_length());
 
-   enc->set_key(pbkdf.derive_key(key_length, passphrase, &salt[0], salt.size(),
-                                msec, iterations).bits_of());
+   enc->set_key(pbkdf->derive_key(key_length, passphrase, &salt[0], salt.size(),
+                                  msec, iterations).bits_of());
 
    enc->start(iv);
    secure_vector<byte> buf = key_bits;
@@ -151,15 +151,15 @@ pbes2_decrypt(const secure_vector<byte>& key_bits,
    BER_Decoder(enc_algo.parameters).decode(iv, OCTET_STRING).verify_end();
 
    const std::string prf = OIDS::lookup(prf_algo.oid);
-   PKCS5_PBKDF2 pbkdf(Algo_Registry<MessageAuthenticationCode>::global_registry().make(prf));
+
+   std::unique_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(" + prf + ")"));
 
    std::unique_ptr<Cipher_Mode> dec(get_cipher_mode(cipher, DECRYPTION));
 
    if(key_length == 0)
       key_length = dec->key_spec().maximum_keylength();
 
-   dec->set_key(pbkdf.derive_key(key_length, passphrase, &salt[0], salt.size(),
-                                 iterations).bits_of());
+   dec->set_key(pbkdf->pbkdf_iterations(key_length, passphrase, &salt[0], salt.size(), iterations));
 
    dec->start(iv);
 

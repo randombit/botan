@@ -13,9 +13,9 @@ namespace Botan {
 
 TLS_12_PRF* TLS_12_PRF::make(const Spec& spec)
    {
-   if(auto mac = make_a<MessageAuthenticationCode>(spec.arg(0)))
+   if(auto mac = get_mac(spec.arg(0)))
       return new TLS_12_PRF(mac);
-   if(auto hash = make_a<HashFunction>(spec.arg(0)))
+   if(auto hash = get_hash_function(spec.arg(0)))
       return new TLS_12_PRF(new HMAC(hash));
    return nullptr;
    }
@@ -23,10 +23,10 @@ TLS_12_PRF* TLS_12_PRF::make(const Spec& spec)
 BOTAN_REGISTER_NAMED_T(KDF, "TLS-12-PRF", TLS_12_PRF, TLS_12_PRF::make);
 BOTAN_REGISTER_KDF_NOARGS(TLS_PRF, "TLS-PRF");
 
-TLS_PRF::TLS_PRF()
+TLS_PRF::TLS_PRF() :
+   m_hmac_md5(make_message_auth("HMAC(MD5)")),
+   m_hmac_sha1(make_message_auth("HMAC(SHA-1)"))
    {
-   m_hmac_md5.reset(make_a<MessageAuthenticationCode>("HMAC(MD5)"));
-   m_hmac_sha1.reset(make_a<MessageAuthenticationCode>("HMAC(SHA-1)"));
    }
 
 namespace {

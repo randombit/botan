@@ -90,8 +90,7 @@ MessageAuthenticationCode* ANSI_X919_MAC::clone() const
 */
 ANSI_X919_MAC::ANSI_X919_MAC() : m_state(8), m_position(0)
    {
-   auto& ciphers = Algo_Registry<BlockCipher>::global_registry();
-   m_des1.reset(ciphers.make(BlockCipher::Spec("DES"), ""));
+   m_des1.reset(get_block_cipher("DES"));
    m_des2.reset(m_des1->clone());
    }
 

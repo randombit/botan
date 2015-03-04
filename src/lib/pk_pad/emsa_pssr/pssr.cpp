@@ -17,14 +17,13 @@ PSSR* PSSR::make(const Spec& request)
    if(request.arg(1, "MGF1") != "MGF1")
       return nullptr;
 
-   auto hash = make_a<HashFunction>(request.arg(0));
+   if(HashFunction* hash = get_hash_function(request.arg(0)))
+      {
+      const size_t salt_size = request.arg_as_integer(2, hash->output_length());
+      return new PSSR(hash, salt_size);
+      }
 
-   if(!hash)
-      return nullptr;
-
-   const size_t salt_size = request.arg_as_integer(2, hash->output_length());
-
-   return new PSSR(hash, salt_size);
+   return nullptr;
    }
 
 BOTAN_REGISTER_NAMED_T(EMSA, "PSSR", PSSR, PSSR::make);

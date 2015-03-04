@@ -14,7 +14,10 @@ namespace Botan {
 HMAC* HMAC::make(const Spec& spec)
    {
    if(spec.arg_count() == 1)
-      return new HMAC(Algo_Registry<HashFunction>::global_registry().make(spec.arg(0)));
+      {
+      if(HashFunction* h = get_hash_function(spec.arg(0)))
+         return new HMAC(h);
+      }
    return nullptr;
    }
 
