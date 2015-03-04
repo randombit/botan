@@ -7,6 +7,8 @@
 #include <botan/fs.h>
 #include <algorithm>
 #include <deque>
+#include <functional>
+#include <memory>
 
 #if defined(BOTAN_HAS_BOOST_FILESYSTEM)
   #include <boost/filesystem.hpp>
