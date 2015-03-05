@@ -38,7 +38,7 @@ $(STATIC_LIB): $(LIBOBJS)
 	$(RANLIB) $(STATIC_LIB)
 
 # Fake Targets
-.PHONY = clean distclean docs website install
+.PHONY = clean distclean docs website install valgrind
 
 SPHINX_CONFIG = %{sphinx_config_dir}
 SPHINX_OPTS = -b html
@@ -54,6 +54,9 @@ distclean: clean
 	$(RM) Makefile
 	$(RM_R) %{build_dir}
 	$(RM) botan_all.cpp botan_all.h
+
+valgrind:
+	valgrind --log-file=botan.%%p.log -v --track-origins=yes --leak-check=full --show-reachable=yes ./botan-test
 
 docs:
 %{build_doc_commands}
