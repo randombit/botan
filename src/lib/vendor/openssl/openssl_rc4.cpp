@@ -26,7 +26,7 @@ class OpenSSL_RC4 : public StreamCipher
          return Key_Length_Specification(1, 32);
          }
 
-      OpenSSL_RC4() { clear(); }
+      OpenSSL_RC4(size_t skip = 0) : m_skip(skip) { clear(); }
       ~OpenSSL_RC4() { clear(); }
    private:
       void cipher(const byte in[], byte out[], size_t length)
@@ -37,13 +37,17 @@ class OpenSSL_RC4 : public StreamCipher
       void key_schedule(const byte key[], size_t length)
          {
          ::RC4_set_key(&m_rc4, length, key);
+         byte d = 0;
+         for(size_t i = 0; i != m_skip; ++i)
+            ::RC4(&m_rc4, 1, &d, &d);
          }
 
+      size_t m_skip;
       RC4_KEY m_rc4;
    };
 
 }
 
-BOTAN_REGISTER_TYPE(StreamCipher, OpenSSL_RC4, "RC4", make_new_T<OpenSSL_RC4>, "openssl", 64);
+BOTAN_REGISTER_TYPE(StreamCipher, OpenSSL_RC4, "RC4", (make_new_T_1len<OpenSSL_RC4,0>), "openssl", 64);
 
 }

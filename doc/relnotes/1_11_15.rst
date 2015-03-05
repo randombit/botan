@@ -8,4 +8,7 @@ Version 1.11.15, Not Yet Released
 
 * Fixed memory leaks in TLS and cipher modes introduced in 1.11.14
 
+* MARK-4 failed when OpenSSL was enabled in the build in 1.11.14
+  because the OpenSSL version ignored the skip parameter.
+
 * Fix compilation problem on OS X
