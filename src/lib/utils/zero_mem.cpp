@@ -17,9 +17,9 @@ void zero_mem(void* ptr, size_t n)
    {
 #if defined(BOTAN_TARGET_OS_HAS_RTLSECUREZEROMEMORY)
    ::RtlSecureZeroMemory(ptr, n);
-#elif defined(BOTAN_USE_VOLATILE_MEMSET) && (BOTAN_USE_VOLATILE_MEMSET == 1)
+#elif defined(BOTAN_USE_VOLATILE_MEMSET_FOR_ZERO) && (BOTAN_USE_VOLATILE_MEMSET_FOR_ZERO == 1)
    static void* (*const volatile memset_ptr)(void*, int, size_t) = std::memset;
-   (memset_ptr)(p, 0, n);
+   (memset_ptr)(ptr, 0, n);
 #else
    volatile byte* p = reinterpret_cast<volatile byte*>(ptr);
 
