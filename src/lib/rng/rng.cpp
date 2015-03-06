@@ -13,7 +13,7 @@ namespace Botan {
 
 RandomNumberGenerator* RandomNumberGenerator::make_rng()
    {
-   std::unique_ptr<MessageAuthenticationCode> h1(make_message_auth("HMAC(SHA-512"));
+   std::unique_ptr<MessageAuthenticationCode> h1(make_message_auth("HMAC(SHA-512)"));
    std::unique_ptr<MessageAuthenticationCode> h2(h1->clone());
    std::unique_ptr<RandomNumberGenerator> rng(new HMAC_RNG(h1.release(), h2.release()));
 
