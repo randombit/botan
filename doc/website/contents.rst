@@ -5,7 +5,6 @@ Contents
 .. toctree::
 
    index
-   faq
    download
    vcs
    license

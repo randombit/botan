@@ -13,8 +13,7 @@ that uses botan is also available. In addition to C++ you can use
 (parts of) botan from Python or Perl (both included in tree), or with
 `Node.js <https://github.com/justinfreitag/node-botan>`_.
 
-See the :doc:`faq` for a list of common questions and answers,
-:doc:`download` for information about getting the latest release,
+See :doc:`download` for information about getting the latest release,
 and :doc:`manual` for the documentation.
 
 If you need help or have questions, send a mail to the `development

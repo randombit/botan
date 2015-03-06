@@ -28,7 +28,7 @@ Public Key Cryptography
 Block ciphers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-  * Authenticated cipher modes EAX, OCB, GCM, SIV, and CCM
+  * Authenticated cipher modes EAX, OCB, GCM, SIV, CCM, and ChaCha20Poly1305
   * Unauthenticated cipher modes CTR, CBC, XTS, CFB, OFB, and ECB
   * AES (including constant time SSSE3 and AES-NI versions)
   * AES candidates Serpent, Twofish, MARS, CAST-256, RC6

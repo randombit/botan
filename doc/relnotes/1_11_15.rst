@@ -1,6 +1,9 @@
 Version 1.11.15, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Support for RC4 in TLS, already disabled by default, is now deprecated.
+  The RC4 ciphersuites will be removed entirely in a future release.
+
 * A bug in ffi.cpp meant Python could only encrypt. Github issue 53.
 
 * When comparing two ASN.1 algorithm identifiers, consider empty and
@@ -11,4 +14,4 @@ Version 1.11.15, Not Yet Released
 * MARK-4 failed when OpenSSL was enabled in the build in 1.11.14
   because the OpenSSL version ignored the skip parameter.
 
-* Fix compilation problem on OS X
+* Fix compilation problem on OS X/clang
