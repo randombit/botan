@@ -135,6 +135,14 @@ otherwise does a byte at a time write via a volatile pointer.
   #define BOTAN_DEPRECATED(msg)
 #endif
 
+#if defined(_MSC_VER)
+  // noexcept is not supported in VS 2013
+  #include <yvals.h>
+  #define BOTAN_NOEXCEPT _NOEXCEPT
+#else
+  #define BOTAN_NOEXCEPT noexcept
+#endif
+
 /*
 * Module availability definitions
 */

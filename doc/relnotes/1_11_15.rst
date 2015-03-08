@@ -15,3 +15,6 @@ Version 1.11.15, Not Yet Released
   because the OpenSSL version ignored the skip parameter.
 
 * Fix compilation problem on OS X/clang
+
+* Use BOTAN_NOEXCEPT macro to work around lack of noexcept in VS 2013
+  
