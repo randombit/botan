@@ -93,7 +93,7 @@ size_t validate_save_and_load(const Private_Key* priv_key,
    try
       {
       DataSource_Memory input_pub(pub_pem);
-      std::auto_ptr<Public_Key> restored_pub(X509::load_key(input_pub));
+      std::unique_ptr<Public_Key> restored_pub(X509::load_key(input_pub));
 
       if(!restored_pub.get())
          {
@@ -119,7 +119,7 @@ size_t validate_save_and_load(const Private_Key* priv_key,
    try
       {
       DataSource_Memory input_priv(priv_pem);
-      std::auto_ptr<Private_Key> restored_priv(
+      std::unique_ptr<Private_Key> restored_priv(
          PKCS8::load_key(input_priv, rng));
 
       if(!restored_priv.get())

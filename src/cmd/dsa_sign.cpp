@@ -49,7 +49,7 @@ int dsa_sign(int argc, char* argv[])
 
       AutoSeeded_RNG rng;
 
-      std::auto_ptr<PKCS8_PrivateKey> key(
+      std::unique_ptr<PKCS8_PrivateKey> key(
          PKCS8::load_key(argv[1], rng, passphrase)
          );
 

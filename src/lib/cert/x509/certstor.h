@@ -50,6 +50,8 @@ class BOTAN_DLL Certificate_Store_In_Memory : public Certificate_Store
       */
       Certificate_Store_In_Memory(const std::string& dir);
 
+      Certificate_Store_In_Memory(const X509_Certificate& cert);
+
       Certificate_Store_In_Memory() {}
 
       void add_certificate(const X509_Certificate& cert);

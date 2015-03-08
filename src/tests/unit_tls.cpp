@@ -35,16 +35,18 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
          m_ca_cert(ca_cert),
          m_key(server_key)
          {
-         auto store = new Certificate_Store_In_Memory;
-         store->add_certificate(m_ca_cert);
-         m_stores.push_back(store);
+         std::unique_ptr<Certificate_Store> store(new Certificate_Store_In_Memory(m_ca_cert));
+         m_stores.push_back(std::move(store));
          }
 
       std::vector<Certificate_Store*>
       trusted_certificate_authorities(const std::string&,
                                       const std::string&) override
          {
-         return m_stores;
+         std::vector<Certificate_Store*> v;
+         for(auto&& store : m_stores)
+            v.push_back(store.get());
+         return v;
          }
 
       std::vector<X509_Certificate> cert_chain(
@@ -92,17 +94,17 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
                                    const std::string&,
                                    const std::string&) override
          {
-         return m_key;
+         return m_key.get();
          }
    public:
       X509_Certificate m_server_cert, m_ca_cert;
-      Private_Key* m_key;
-      std::vector<Certificate_Store*> m_stores;
+      std::unique_ptr<Private_Key> m_key;
+      std::vector<std::unique_ptr<Certificate_Store>> m_stores;
    };
 
 Credentials_Manager* create_creds(RandomNumberGenerator& rng)
    {
-   std::auto_ptr<Private_Key> ca_key(new RSA_PrivateKey(rng, 1024));
+   std::unique_ptr<Private_Key> ca_key(new RSA_PrivateKey(rng, 1024));
 
    X509_Cert_Options ca_opts;
    ca_opts.common_name = "Test CA";
@@ -288,13 +290,13 @@ size_t test_tls()
 
    Test_Policy default_policy;
    auto& rng = test_rng();
-   std::auto_ptr<Credentials_Manager> basic_creds(create_creds(rng));
+   std::unique_ptr<Credentials_Manager> basic_creds(create_creds(rng));
 
    errors += basic_test_handshake(rng, TLS::Protocol_Version::TLS_V10, *basic_creds, default_policy);
    errors += basic_test_handshake(rng, TLS::Protocol_Version::TLS_V11, *basic_creds, default_policy);
    errors += basic_test_handshake(rng, TLS::Protocol_Version::TLS_V12, *basic_creds, default_policy);
 
-   test_report("TLS", 4, errors);
+   test_report("TLS", 3, errors);
 
    return errors;
    }

@@ -33,7 +33,7 @@ int ca(int argc, char* argv[])
 
       X509_Certificate ca_cert(arg_ca_cert);
 
-      std::auto_ptr<PKCS8_PrivateKey> privkey(
+      std::unique_ptr<PKCS8_PrivateKey> privkey(
          PKCS8::load_key(arg_ca_key, rng, arg_passphrase)
          );
 

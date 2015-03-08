@@ -97,7 +97,7 @@ int keygen(int argc, char* argv[])
 
       AutoSeeded_RNG rng;
 
-      std::auto_ptr<Private_Key> key(gen_key(rng, algo, bits));
+      std::unique_ptr<Private_Key> key(gen_key(rng, algo, bits));
 
       pub << X509::PEM_encode(*key);
 

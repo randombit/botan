@@ -45,7 +45,7 @@ int dsa_verify(int argc, char* argv[])
       std::string sigstr;
       getline(sigfile, sigstr);
 
-      std::auto_ptr<X509_PublicKey> key(X509::load_key(argv[1]));
+      std::unique_ptr<X509_PublicKey> key(X509::load_key(argv[1]));
       DSA_PublicKey* dsakey = dynamic_cast<DSA_PublicKey*>(key.get());
 
       if(!dsakey)

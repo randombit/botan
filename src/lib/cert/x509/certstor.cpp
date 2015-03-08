@@ -108,6 +108,11 @@ const X509_CRL* Certificate_Store_In_Memory::find_crl_for(const X509_Certificate
    return nullptr;
    }
 
+Certificate_Store_In_Memory::Certificate_Store_In_Memory(const X509_Certificate& cert)
+   {
+   add_certificate(cert);
+   }
+
 Certificate_Store_In_Memory::Certificate_Store_In_Memory(const std::string& dir)
    {
    if(dir == "")
