@@ -786,6 +786,8 @@ int botan_privkey_load(botan_privkey_t* key, botan_rng_t rng_obj,
                        const uint8_t bits[], size_t len,
                        const char* password)
    {
+   *key = nullptr;
+
    try
       {
       Botan::DataSource_Memory src(bits, len);
@@ -810,8 +812,6 @@ int botan_privkey_load(botan_privkey_t* key, botan_rng_t rng_obj,
       }
 
    return -1;
-   *key = nullptr;
-   return BOTAN_FFI_ERROR_EXCEPTION_THROWN;
    }
 
 int botan_privkey_destroy(botan_privkey_t key)

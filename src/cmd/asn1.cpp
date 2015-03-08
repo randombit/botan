@@ -287,11 +287,15 @@ void decode(BER_Decoder& decoder, size_t level)
          ASN1_String str;
          data.decode(str);
          if(UTF8_TERMINAL)
+            {
             emit(type_name(type_tag), level, length,
                  Charset::transcode(str.iso_8859(),
                                     LATIN1_CHARSET, UTF8_CHARSET));
+            }
          else
+            {
             emit(type_name(type_tag), level, length, str.iso_8859());
+            }
          }
       else if(type_tag == UTC_TIME || type_tag == GENERALIZED_TIME)
          {
