@@ -1,4 +1,4 @@
-Version 1.11.15, Not Yet Released
+Version 1.11.15, 2015-03-08
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Support for RC4 in TLS, already disabled by default, is now deprecated.
@@ -17,4 +17,3 @@ Version 1.11.15, Not Yet Released
 * Fix compilation problem on OS X/clang
 
 * Use BOTAN_NOEXCEPT macro to work around lack of noexcept in VS 2013
-  
