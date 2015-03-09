@@ -141,58 +141,58 @@ extern "C" {
 
 struct botan_rng_struct : public botan_struct<Botan::RandomNumberGenerator, 0x4901F9C1>
    {
-   using botan_struct::botan_struct;
+	   explicit botan_rng_struct( Botan::RandomNumberGenerator* rng ) : botan_struct( rng ) { }
    };
 
 struct botan_hash_struct : public botan_struct<Botan::HashFunction, 0x1F0A4F84>
    {
-   using botan_struct::botan_struct;
+	   explicit botan_hash_struct( Botan::HashFunction* hf ) : botan_struct( hf ) { }
    };
 
 struct botan_mac_struct : public botan_struct<Botan::MessageAuthenticationCode, 0xA06E8FC1>
    {
-   using botan_struct::botan_struct;
+	   explicit botan_mac_struct( Botan::MessageAuthenticationCode* mac ) : botan_struct( mac ) { }
    };
 
 struct botan_cipher_struct : public botan_struct<Botan::Cipher_Mode, 0xB4A2BF9C>
    {
-   using botan_struct::botan_struct;
-   Botan::secure_vector<uint8_t> m_buf;
+	   explicit botan_cipher_struct( Botan::Cipher_Mode* cm ) : botan_struct( cm ) { }
+	   Botan::secure_vector<uint8_t> m_buf;
    };
 
 struct botan_pubkey_struct : public botan_struct<Botan::Public_Key, 0x2C286519>
    {
-   using botan_struct::botan_struct;
+	   explicit botan_pubkey_struct( Botan::Public_Key* pubKey ) : botan_struct( pubKey ) { }
    };
 
 struct botan_privkey_struct : public botan_struct<Botan::Private_Key, 0x7F96385E>
    {
-   using botan_struct::botan_struct;
+	   explicit botan_privkey_struct( Botan::Private_Key* privKey ) : botan_struct( privKey ) { }
    };
 
 struct botan_pk_op_encrypt_struct : public botan_struct<Botan::PK_Encryptor, 0x891F3FC3>
    {
-   using botan_struct::botan_struct;
+	   explicit botan_pk_op_encrypt_struct( Botan::PK_Encryptor* pkEncryptor ) : botan_struct( pkEncryptor ) { }
    };
 
 struct botan_pk_op_decrypt_struct : public botan_struct<Botan::PK_Decryptor, 0x912F3C37>
    {
-   using botan_struct::botan_struct;
+	   explicit botan_pk_op_decrypt_struct( Botan::PK_Decryptor* pkDecryptor ) : botan_struct( pkDecryptor ) { }
    };
 
 struct botan_pk_op_sign_struct : public botan_struct<Botan::PK_Signer, 0x1AF0C39F>
    {
-   using botan_struct::botan_struct;
+	   explicit botan_pk_op_sign_struct( Botan::PK_Signer* pkSigner ) : botan_struct( pkSigner ) { }
    };
 
 struct botan_pk_op_verify_struct : public botan_struct<Botan::PK_Verifier, 0x2B91F936>
    {
-   using botan_struct::botan_struct;
+	   explicit botan_pk_op_verify_struct( Botan::PK_Verifier* pkVerifier ) : botan_struct( pkVerifier ) { }
    };
 
 struct botan_pk_op_ka_struct : public botan_struct<Botan::PK_Key_Agreement, 0x2939CAB1>
    {
-   using botan_struct::botan_struct;
+	   explicit botan_pk_op_ka_struct( Botan::PK_Key_Agreement* pkKeyAgreement ) : botan_struct( pkKeyAgreement ) { }
    };
 
 /*
@@ -798,7 +798,7 @@ int botan_privkey_load(botan_privkey_t* key, botan_rng_t rng_obj,
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
 
       std::unique_ptr<Botan::PKCS8_PrivateKey> pkcs8;
-      pkcs8.reset(Botan::PKCS8::load_key(src, rng, password));
+      pkcs8.reset(Botan::PKCS8::load_key(src, rng, static_cast<std::string>( password ) ));
 
       if(pkcs8)
          {
