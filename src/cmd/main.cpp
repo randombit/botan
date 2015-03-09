@@ -34,8 +34,6 @@ int help(int , char* argv[])
    std::set<std::string> apps = AppRegistrations::instance().all_apps();
 
    std::cout << "Available commands:\n";
-
-   Botan::LibraryInitializer init;
    
    size_t idx = 1;
    for(auto&& app: apps)
