@@ -187,7 +187,7 @@ namespace std {
 
 template<> inline
 void swap<Botan::CurveGFp>(Botan::CurveGFp& curve1,
-                           Botan::CurveGFp& curve2) noexcept
+                           Botan::CurveGFp& curve2) BOTAN_NOEXCEPT
    {
    curve1.swap(curve2);
    }
