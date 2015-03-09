@@ -577,6 +577,11 @@ int botan_cipher_get_default_nonce_length(botan_cipher_t cipher, size_t* nl)
    return BOTAN_FFI_DO(Botan::Cipher_Mode, cipher, { *nl = cipher.default_nonce_length(); });
    }
 
+int botan_cipher_get_update_granularity(botan_cipher_t cipher, size_t* ug)
+   {
+   return BOTAN_FFI_DO(Botan::Cipher_Mode, cipher, { *ug = cipher.update_granularity(); });
+   }
+
 int botan_cipher_get_tag_length(botan_cipher_t cipher, size_t* tl)
    {
    return BOTAN_FFI_DO(Botan::Cipher_Mode, cipher, { *tl = cipher.tag_size(); });

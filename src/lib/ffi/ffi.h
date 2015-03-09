@@ -99,6 +99,7 @@ BOTAN_DLL int botan_cipher_init(botan_cipher_t* cipher, const char* name, uint32
 BOTAN_DLL int botan_cipher_valid_nonce_length(botan_cipher_t cipher, size_t nl);
 BOTAN_DLL int botan_cipher_get_tag_length(botan_cipher_t cipher, size_t* tag_size);
 BOTAN_DLL int botan_cipher_get_default_nonce_length(botan_cipher_t cipher, size_t* nl);
+BOTAN_DLL int botan_cipher_get_update_granularity(botan_cipher_t cipher, size_t* ug);
 
 BOTAN_DLL int botan_cipher_set_key(botan_cipher_t cipher,
                                    const uint8_t* key, size_t key_len);

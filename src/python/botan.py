@@ -156,15 +156,15 @@ class cipher(object):
         botan.botan_cipher_destroy(self.cipher)
 
     def default_nonce_length(self):
-        botan.botan_cipher_default_nonce_length.argtypes = [c_void_p, POINTER(c_size_t)]
+        botan.botan_cipher_get_default_nonce_length.argtypes = [c_void_p, POINTER(c_size_t)]
         l = c_size_t(0)
-        botan.botan_cipher_default_nonce_length(self.cipher, byref(l))
+        botan.botan_cipher_get_default_nonce_length(self.cipher, byref(l))
         return l.value
 
     def update_granularity(self):
-        botan.botan_cipher_update_granularity.argtypes = [c_void_p, POINTER(c_size_t)]
+        botan.botan_cipher_get_update_granularity.argtypes = [c_void_p, POINTER(c_size_t)]
         l = c_size_t(0)
-        botan.botan_cipher_update_granularity(self.cipher, byref(l))
+        botan.botan_cipher_get_update_granularity(self.cipher, byref(l))
         return l.value
 
     def tag_length(self):
@@ -517,6 +517,7 @@ def test():
     print "md5", h.final().encode('hex')
 
     gcm = cipher('AES-128/GCM')
+    print gcm.default_nonce_length(), gcm.update_granularity()
     gcm_dec = cipher('AES-128/GCM', encrypt=False)
 
     iv = r.get(12)
