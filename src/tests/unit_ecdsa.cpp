@@ -462,7 +462,11 @@ size_t test_ecc_key_with_rfc5915_extensions(RandomNumberGenerator& rng)
       }
    catch(std::exception& e)
       {
+#ifndef _MSC_VER
       std::cout << "Exception in " << __func__ << " - " << e.what() << "\n";
+#else
+	  std::cout << "Exception in " << __FUNCTION__  << " - " << e.what() << "\n";
+#endif
       ++fails;
       }
 

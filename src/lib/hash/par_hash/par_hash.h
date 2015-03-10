@@ -19,6 +19,9 @@ namespace Botan {
 class BOTAN_DLL Parallel : public HashFunction
    {
    public:
+      Parallel(const Parallel&) = delete;
+	  Parallel& operator=(const Parallel&) = delete;
+   
       void clear();
       std::string name() const;
       HashFunction* clone() const;
