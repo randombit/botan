@@ -109,7 +109,8 @@ Ciphers
 
     .. py:method:: update_granularity()
 
-                   Returns update block size
+                   Returns update block size. Call to update() must provide
+                  input of exactly this many bytes
 
     .. py:method:: is_authenticated()
 
@@ -134,15 +135,17 @@ Ciphers
 
     .. py:method:: update(txt)
 
-                   Consumes input text and returns output
+                   Consumes input text and returns output. Input text must be
+                   of update_granularity() length.  Alternately, always call
+                   finish with the entire message, avoiding calls to update
+                   entirely
 
     .. py:method:: finish(txt = None)
 
-       Finish processing (with an optional final input). May throw if
-       message authentication checks fail, in which case all plaintext
-       previously processed must be discarded. Alternately, always
-       call finish with the entire message, avoiding calls to update
-       entirely.
+                   Finish processing (with an optional final input). May throw
+                   if message authentication checks fail, in which case all
+                   plaintext previously processed must be discarded. You may
+                   call finish() with the entire message
 
 Bcrypt
 ----------------------------------------
