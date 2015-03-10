@@ -19,7 +19,7 @@ namespace Botan {
 * case, and this class is no longer needed and kept only for backwards
 * compatability.
 */
-class BOTAN_DLL LibraryInitializer
+class LibraryInitializer
    {
    public:
       LibraryInitializer(const std::string& = "") {}
