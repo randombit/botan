@@ -1994,9 +1994,6 @@ def main(argv = None):
     build_config.public_headers.append(
         os.path.join(build_config.build_dir, 'build.h'))
 
-    if options.gen_amalgamation:
-        generate_amalgamation(build_config, options)
-
     template_vars = create_template_vars(build_config, options,
                                          modules_to_use,
                                          cc,
@@ -2005,6 +2002,9 @@ def main(argv = None):
 
     # Performs the I/O
     setup_build(build_config, options, template_vars)
+
+    if options.gen_amalgamation:
+        generate_amalgamation(build_config, options)
 
     def release_date(datestamp):
         if datestamp == 0:
