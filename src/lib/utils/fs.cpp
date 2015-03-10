@@ -70,7 +70,11 @@ list_all_readable_files_in_or_under(const std::string& dir_path)
          }
       }
 #else
+#if defined(_MSC_VER)
+  #pragma message ( "No filesystem access enabled" )
+#else
   #warning "No filesystem access enabled"
+#endif
 #endif
 
    std::sort(paths.begin(), paths.end());

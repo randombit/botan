@@ -35,8 +35,6 @@ int help(int , char* argv[])
 
    std::cout << "Available commands:\n";
 
-   Botan::LibraryInitializer init;
-   
    size_t idx = 1;
    for(auto&& app: apps)
       {
@@ -165,6 +163,8 @@ int main(int argc, char* argv[])
       if(cmd == "help" || cmd == "-h")
          return help(argc, argv);
 
+      Botan::LibraryInitializer init;
+
       AppRegistrations& apps = AppRegistrations::instance();
       if(apps.has(cmd))
          return apps.run(cmd, argc - 1, argv + 1);
@@ -185,4 +185,3 @@ int main(int argc, char* argv[])
 
    return 0;
    }
-

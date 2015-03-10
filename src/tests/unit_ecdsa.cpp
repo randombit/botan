@@ -462,7 +462,7 @@ size_t test_ecc_key_with_rfc5915_extensions(RandomNumberGenerator& rng)
       }
    catch(std::exception& e)
       {
-      std::cout << "Exception in " << __func__ << " - " << e.what() << "\n";
+      std::cout << "Exception in " << BOTAN_CURRENT_FUNCTION << " - " << e.what() << "\n";
       ++fails;
       }
 

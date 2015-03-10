@@ -30,6 +30,9 @@ class BOTAN_DLL Parallel : public HashFunction
       */
       Parallel(const std::vector<HashFunction*>& hashes);
 
+      Parallel(const Parallel&) = delete;
+      Parallel& operator=(const Parallel&) = delete;
+
       static Parallel* make(const Spec& spec);
    private:
       Parallel() {}
