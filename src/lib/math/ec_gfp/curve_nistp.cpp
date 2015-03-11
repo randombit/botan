@@ -113,8 +113,10 @@ inline u32bit get_u32bit(const BigInt& x, size_t i)
 * Treating this MPI as a sequence of 32-bit words in big-endian
 * order, set word i to the value x
 */
-inline void set_u32bit(BigInt& x, size_t i, u32bit v)
+template<typename T>
+inline void set_u32bit(BigInt& x, size_t i, T v_in)
    {
+   const u32bit v = static_cast<u32bit>(v_in);
 #if (BOTAN_MP_WORD_BITS == 32)
    x.set_word_at(i, v);
 #elif (BOTAN_MP_WORD_BITS == 64)

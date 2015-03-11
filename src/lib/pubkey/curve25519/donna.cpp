@@ -322,7 +322,7 @@ fmonty(limb *x2, limb *z2, /* output 2Q */
 static void
 swap_conditional(limb a[5], limb b[5], limb iswap) {
   unsigned i;
-  const limb swap = -iswap;
+  const limb swap = static_cast<limb>(-iswap);
 
   for (i = 0; i < 5; ++i) {
     const limb x = swap & (a[i] ^ b[i]);
