@@ -554,6 +554,8 @@ class BOTAN_DLL BigInt
      */
      static secure_vector<byte> encode_1363(const BigInt& n, size_t bytes);
 
+     static void encode_1363(byte out[], size_t bytes, const BigInt& n);
+
    private:
       secure_vector<word> m_reg;
       Sign m_signedness = Positive;
