@@ -1,0 +1,11 @@
+Version 1.11.16, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Optimized ECDSA signature verification thanks to an observation by
+  Dr. Falko Strenzke. On some systems verifications are between 1.5
+  and 2 times faster than in 1.11.15.
+
+* Fixed Python cipher update_granularity() and default_nonce_length()
+  functions
+
+* The library now builds on Visual C++ 2013
