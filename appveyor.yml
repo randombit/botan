@@ -1,0 +1,8 @@
+os: Windows Server 2012 R2
+
+install:
+  - call "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat"
+
+build_script:
+  - python configure.py --cpu=x86_32
+  - nmake
