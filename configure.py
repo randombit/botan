@@ -1156,7 +1156,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     """
     def build_commands(sources, obj_dir, flags):
         for (obj_file,src) in zip(objectfile_list(sources, obj_dir), sources):
-            yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s%s %s%s %s%s\n' % (
+            yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s%s %s%s %s$@\n' % (
                 obj_file, src,
                 isa_specific_flags(cc, src),
                 flags,
@@ -1164,8 +1164,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
                 build_config.include_dir,
                 cc.compile_option,
                 src,
-                cc.output_to_option,
-                obj_file)
+                cc.output_to_option)
 
     def makefile_list(items):
         items = list(items) # force evaluation so we can slice it
