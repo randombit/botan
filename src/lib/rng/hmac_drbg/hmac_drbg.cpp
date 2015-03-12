@@ -1,6 +1,6 @@
 /*
 * HMAC_DRBG
-* (C) 2014 Jack Lloyd
+* (C) 2014,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -17,7 +17,7 @@ HMAC_DRBG::HMAC_DRBG(MessageAuthenticationCode* mac,
    m_V(m_mac->output_length(), 0x01),
    m_reseed_counter(0)
    {
-   m_mac->set_key(secure_vector<byte>(m_mac->output_length(), 0x00));
+   m_mac->set_key(std::vector<byte>(m_mac->output_length(), 0x00));
    }
 
 void HMAC_DRBG::randomize(byte out[], size_t length)
@@ -94,9 +94,11 @@ bool HMAC_DRBG::is_seeded() const
 
 void HMAC_DRBG::clear()
    {
-   zeroise(m_V);
+   m_reseed_counter = 0;
+   for(size_t i = 0; i != m_V.size(); ++i)
+      m_V[i] = 0x01;
 
-   m_mac->clear();
+   m_mac->set_key(std::vector<byte>(m_mac->output_length(), 0x00));
 
    if(m_prng)
       m_prng->clear();

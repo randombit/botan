@@ -182,7 +182,7 @@ std::string GCM_Mode::name() const
 
 size_t GCM_Mode::update_granularity() const
    {
-   return 4096; // CTR-BE's internal block size
+   return BS;
    }
 
 Key_Length_Specification GCM_Mode::key_spec() const

@@ -81,15 +81,20 @@ secure_vector<byte> BigInt::encode_locked(const BigInt& n, Base base)
 */
 secure_vector<byte> BigInt::encode_1363(const BigInt& n, size_t bytes)
    {
+   secure_vector<byte> output(bytes);
+   encode_1363(&output[0], output.size(), n);
+   return output;
+   }
+
+//static
+void BigInt::encode_1363(byte output[], size_t bytes, const BigInt& n)
+   {
    const size_t n_bytes = n.bytes();
    if(n_bytes > bytes)
       throw Encoding_Error("encode_1363: n is too large to encode properly");
 
    const size_t leading_0s = bytes - n_bytes;
-
-   secure_vector<byte> output(bytes);
    encode(&output[leading_0s], n, Binary);
-   return output;
    }
 
 /*

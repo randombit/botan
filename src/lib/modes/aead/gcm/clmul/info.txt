@@ -1,7 +1,7 @@
 
 define GCM_CLMUL 20131227
 
-need_isa clmul,ssse3
+need_isa aesni,ssse3
 
 <header:internal>
 clmul.h
