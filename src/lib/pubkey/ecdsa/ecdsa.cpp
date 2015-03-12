@@ -93,30 +93,34 @@ class ECDSA_Verification_Operation : public PK_Ops::Verification
       typedef ECDSA_PublicKey Key_Type;
       ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa,
                                    const std::string&) :
-         base_point(ecdsa.domain().get_base_point()),
-         public_point(ecdsa.public_point()),
-         order(ecdsa.domain().get_order())
+         m_base_point(ecdsa.domain().get_base_point()),
+         m_public_point(ecdsa.public_point()),
+         m_order(ecdsa.domain().get_order()),
+         m_mod_order(m_order)
          {
+         //m_public_point.precompute_multiples();
          }
 
       size_t message_parts() const { return 2; }
-      size_t message_part_size() const { return order.bytes(); }
-      size_t max_input_bits() const { return order.bits(); }
+      size_t message_part_size() const { return m_order.bytes(); }
+      size_t max_input_bits() const { return m_order.bits(); }
 
       bool with_recovery() const { return false; }
 
       bool verify(const byte msg[], size_t msg_len,
                   const byte sig[], size_t sig_len);
    private:
-      const PointGFp& base_point;
-      const PointGFp& public_point;
-      const BigInt& order;
+      const PointGFp& m_base_point;
+      const PointGFp& m_public_point;
+      const BigInt& m_order;
+      // FIXME: should be offered by curve
+      Modular_Reducer m_mod_order;
    };
 
 bool ECDSA_Verification_Operation::verify(const byte msg[], size_t msg_len,
                                           const byte sig[], size_t sig_len)
    {
-   if(sig_len != order.bytes()*2)
+   if(sig_len != m_order.bytes()*2)
       return false;
 
    BigInt e(msg, msg_len);
@@ -124,18 +128,20 @@ bool ECDSA_Verification_Operation::verify(const byte msg[], size_t msg_len,
    BigInt r(sig, sig_len / 2);
    BigInt s(sig + sig_len / 2, sig_len / 2);
 
-   if(r <= 0 || r >= order || s <= 0 || s >= order)
+   if(r <= 0 || r >= m_order || s <= 0 || s >= m_order)
       return false;
 
-   BigInt w = inverse_mod(s, order);
+   BigInt w = inverse_mod(s, m_order);
 
-   PointGFp R = w * multi_exponentiate(base_point, e,
-                                       public_point, r);
+   const BigInt u1 = m_mod_order.reduce(e * w);
+   const BigInt u2 = m_mod_order.reduce(r * w);
+   const PointGFp R = multi_exponentiate(m_base_point, u1, m_public_point, u2);
 
    if(R.is_zero())
       return false;
 
-   return (R.get_affine_x() % order == r);
+   const BigInt v = m_mod_order.reduce(R.get_affine_x());
+   return (v == r);
    }
 
 BOTAN_REGISTER_PK_SIGNATURE_OP("ECDSA", ECDSA_Signature_Operation);
