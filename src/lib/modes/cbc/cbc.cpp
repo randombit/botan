@@ -112,7 +112,7 @@ void CBC_Encryption::update(secure_vector<byte>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
-   byte* buf = &buffer[offset];
+   byte* buf = buffer.data();
 
    const size_t BS = cipher().block_size();
 

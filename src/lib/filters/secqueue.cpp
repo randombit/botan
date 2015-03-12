@@ -25,7 +25,7 @@ class SecureQueueNode
       size_t write(const byte input[], size_t length)
          {
          size_t copied = std::min<size_t>(length, buffer.size() - end);
-         copy_mem(&buffer[end], input, copied);
+         copy_mem(buffer.data() + end, input, copied);
          end += copied;
          return copied;
          }
@@ -33,7 +33,7 @@ class SecureQueueNode
       size_t read(byte output[], size_t length)
          {
          size_t copied = std::min(length, end - start);
-         copy_mem(output, &buffer[start], copied);
+         copy_mem(output, buffer.data() + start, copied);
          start += copied;
          return copied;
          }
@@ -43,7 +43,7 @@ class SecureQueueNode
          const size_t left = end - start;
          if(offset >= left) return 0;
          size_t copied = std::min(length, left - offset);
-         copy_mem(output, &buffer[start + offset], copied);
+         copy_mem(output, buffer.data() + (start + offset), copied);
          return copied;
          }
 
@@ -78,7 +78,7 @@ SecureQueue::SecureQueue(const SecureQueue& input) :
    SecureQueueNode* temp = input.head;
    while(temp)
       {
-      write(&temp->buffer[temp->start], temp->end - temp->start);
+      write(temp->buffer.data() + (temp->start), temp->end - temp->start);
       temp = temp->next;
       }
    }
@@ -108,7 +108,7 @@ SecureQueue& SecureQueue::operator=(const SecureQueue& input)
    SecureQueueNode* temp = input.head;
    while(temp)
       {
-      write(&temp->buffer[temp->start], temp->end - temp->start);
+      write(temp->buffer.data() + (temp->start), temp->end - temp->start);
       temp = temp->next;
       }
    return (*this);
