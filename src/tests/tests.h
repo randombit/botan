@@ -34,7 +34,6 @@ size_t run_tests(const std::string& filename,
                  bool clear_between_cb,
                  std::function<std::string (std::map<std::string, std::string>)> cb);
 
-std::vector<std::string> list_dir(const std::string& dir_path);
 size_t run_tests_in_dir(const std::string& dir, std::function<size_t (const std::string&)> fn);
 
 // Run a list of tests

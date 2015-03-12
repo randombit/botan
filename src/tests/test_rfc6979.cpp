@@ -22,9 +22,11 @@ size_t rfc6979_testcase(const std::string& q_str,
                         const std::string& hash,
                         size_t testcase)
    {
-   using namespace Botan;
+   size_t fails = 0;
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
+
+   using namespace Botan;
 
    const BigInt q(q_str);
    const BigInt x(x_str);
@@ -37,12 +39,38 @@ size_t rfc6979_testcase(const std::string& q_str,
       {
       std::cout << "RFC 6979 test #" << testcase << " failed; generated k="
                 << std::hex << gen_k << "\n";
-      return 1;
+      ++fails;
+      }
+
+   RFC6979_Nonce_Generator gen(hash, q, x);
+
+   const BigInt gen_0 = gen.nonce_for(h);
+   if(gen_0 != exp_k)
+      {
+      std::cout << "RFC 6979 test #" << testcase << " failed; generated k="
+                << std::hex << gen_k << " (gen_0)\n";
+      ++fails;
+      }
+
+   const BigInt gen_1 = gen.nonce_for(h+1);
+   if(gen_1 == exp_k)
+      {
+      std::cout << "RFC 6979 test #" << testcase << " failed; generated k="
+                << std::hex << gen_1 << " (gen_1)\n";
+      ++fails;
+      }
+
+   const BigInt gen_2 = gen.nonce_for(h);
+   if(gen_2 != exp_k)
+      {
+      std::cout << "RFC 6979 test #" << testcase << " failed; generated k="
+                << std::hex << gen_2 << " (gen_2)\n";
+      ++fails;
       }
 
 #endif
 
-   return 0;
+   return fails;
    }
 
 }
