@@ -1,6 +1,9 @@
 Botan Crypto Library
 ========================================
 
+.. image:: https://travis-ci.org/neusdan/botan.svg?branch=net.randombit.botan
+    :target: https://travis-ci.org/neusdan/botan
+
 Botan is a C++11 library for crypto and TLS released under the permissive
 2-clause BSD license (see ``doc/license.txt`` for the specifics).
 
