@@ -82,7 +82,7 @@ secure_vector<byte> BigInt::encode_locked(const BigInt& n, Base base)
 secure_vector<byte> BigInt::encode_1363(const BigInt& n, size_t bytes)
    {
    secure_vector<byte> output(bytes);
-   encode_1363(&output[0], output.size(), n);
+   BigInt::encode_1363(&output[0], output.size(), n);
    return output;
    }
 
