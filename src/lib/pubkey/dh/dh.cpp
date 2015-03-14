@@ -82,13 +82,13 @@ namespace {
 /**
 * DH operation
 */
-class DH_KA_Operation : public PK_Ops::Key_Agreement
+class DH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
    {
    public:
       typedef DH_PrivateKey Key_Type;
-      DH_KA_Operation(const DH_PrivateKey& key, const std::string&);
+      DH_KA_Operation(const DH_PrivateKey& key, const std::string& kdf);
 
-      secure_vector<byte> agree(const byte w[], size_t w_len);
+      secure_vector<byte> raw_agree(const byte w[], size_t w_len);
    private:
       const BigInt& m_p;
 
@@ -96,7 +96,8 @@ class DH_KA_Operation : public PK_Ops::Key_Agreement
       Blinder m_blinder;
    };
 
-DH_KA_Operation::DH_KA_Operation(const DH_PrivateKey& dh, const std::string&) :
+DH_KA_Operation::DH_KA_Operation(const DH_PrivateKey& dh, const std::string& kdf) :
+   PK_Ops::Key_Agreement_with_KDF(kdf),
    m_p(dh.group_p()),
    m_powermod_x_p(dh.get_x(), m_p),
    m_blinder(m_p,
@@ -105,7 +106,7 @@ DH_KA_Operation::DH_KA_Operation(const DH_PrivateKey& dh, const std::string&) :
    {
    }
 
-secure_vector<byte> DH_KA_Operation::agree(const byte w[], size_t w_len)
+secure_vector<byte> DH_KA_Operation::raw_agree(const byte w[], size_t w_len)
    {
    BigInt input = BigInt::decode(w, w_len);
 

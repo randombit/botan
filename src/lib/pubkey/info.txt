@@ -4,6 +4,7 @@ define PUBLIC_KEY_CRYPTO 20131128
 blinding.cpp
 pk_algs.cpp
 pk_keys.cpp
+pk_ops.cpp
 pkcs8.cpp
 pubkey.cpp
 workfactor.cpp

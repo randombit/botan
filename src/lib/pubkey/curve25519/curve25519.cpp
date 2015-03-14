@@ -117,15 +117,16 @@ namespace {
 /**
 * Curve25519 operation
 */
-class Curve25519_KA_Operation : public PK_Ops::Key_Agreement
+class Curve25519_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
    {
    public:
       typedef Curve25519_PrivateKey Key_Type;
 
-      Curve25519_KA_Operation(const Curve25519_PrivateKey& key, const std::string&) :
+      Curve25519_KA_Operation(const Curve25519_PrivateKey& key, const std::string& kdf) :
+         PK_Ops::Key_Agreement_with_KDF(kdf),
          m_key(key) {}
 
-      secure_vector<byte> agree(const byte w[], size_t w_len)
+      secure_vector<byte> raw_agree(const byte w[], size_t w_len)
          {
          return m_key.agree(w, w_len);
          }

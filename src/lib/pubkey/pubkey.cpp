@@ -1,6 +1,5 @@
 /*
-* Public Key Base
-* (C) 1999-2010 Jack Lloyd
+* (C) 1999-2010,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -31,104 +30,66 @@ T* get_pk_op(const Key& key, const std::string& pad)
 
 }
 
-/*
-* PK_Encryptor_EME Constructor
-*/
-PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
-                                   const std::string& eme_name)
+PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key, const std::string& eme)
    {
-   m_op.reset(get_pk_op<PK_Ops::Encryption>(key, eme_name));
-
+   m_op.reset(get_pk_op<PK_Ops::Encryption>(key, eme));
    if(!m_op)
-      throw Lookup_Error("Encryption with " + key.algo_name() + " not supported");
-
-   m_eme.reset(get_eme(eme_name));
+      throw Lookup_Error("Encryption with " + key.algo_name() + "/" + eme + " not supported");
    }
 
-/*
-* Encrypt a message
-*/
 std::vector<byte>
-PK_Encryptor_EME::enc(const byte in[],
-                      size_t length,
-                      RandomNumberGenerator& rng) const
+PK_Encryptor_EME::enc(const byte in[], size_t length, RandomNumberGenerator& rng) const
    {
-   if(m_eme)
-      {
-      secure_vector<byte> encoded =
-         m_eme->encode(in, length, m_op->max_input_bits(), rng);
-
-      if(8*(encoded.size() - 1) + high_bit(encoded[0]) > m_op->max_input_bits())
-         throw Invalid_Argument("PK_Encryptor_EME: Input is too large");
-
-      return unlock(m_op->encrypt(&encoded[0], encoded.size(), rng));
-      }
-   else
-      {
-      if(8*(length - 1) + high_bit(in[0]) > m_op->max_input_bits())
-         throw Invalid_Argument("PK_Encryptor_EME: Input is too large");
-
-      return unlock(m_op->encrypt(&in[0], length, rng));
-      }
+   return unlock(m_op->encrypt(in, length, rng));
    }
 
-/*
-* Return the max size, in bytes, of a message
-*/
 size_t PK_Encryptor_EME::maximum_input_size() const
    {
-   if(!m_eme)
-      return (m_op->max_input_bits() / 8);
-   else
-      return m_eme->maximum_input_size(m_op->max_input_bits());
+   return m_op->max_input_bits() / 8;
    }
 
-/*
-* PK_Decryptor_EME Constructor
-*/
-PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
-                                   const std::string& eme_name)
+PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key, const std::string& eme)
    {
-   m_op.reset(get_pk_op<PK_Ops::Decryption>(key, eme_name));
-   m_eme.reset(get_eme(eme_name));
+   m_op.reset(get_pk_op<PK_Ops::Decryption>(key, eme));
+   if(!m_op)
+      throw Lookup_Error("Decryption with " + key.algo_name() + "/" + eme + " not supported");
    }
 
-/*
-* Decrypt a message
-*/
-secure_vector<byte> PK_Decryptor_EME::dec(const byte msg[],
-                                          size_t length) const
+secure_vector<byte> PK_Decryptor_EME::dec(const byte msg[], size_t length) const
    {
-   try {
-      const secure_vector<byte> decrypted = m_op->decrypt(msg, length);
-      if(m_eme)
-         return m_eme->decode(decrypted, m_op->max_input_bits());
-      else
-         return decrypted;
-      }
-   catch(Invalid_Argument)
-      {
-      throw Decoding_Error("PK_Decryptor_EME: Input is invalid");
-      }
+   return m_op->decrypt(msg, length);
+   }
+
+PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key, const std::string& kdf_name)
+   {
+   m_op.reset(get_pk_op<PK_Ops::Key_Agreement>(key, kdf_name));
+   }
+
+SymmetricKey PK_Key_Agreement::derive_key(size_t key_len,
+                                          const byte in[], size_t in_len,
+                                          const byte salt[],
+                                          size_t salt_len) const
+   {
+   return m_op->agree(key_len, in, in_len, salt, salt_len);
    }
 
 /*
 * PK_Signer Constructor
 */
 PK_Signer::PK_Signer(const Private_Key& key,
-                     const std::string& emsa_name,
+                     const std::string& emsa,
                      Signature_Format format,
                      Fault_Protection prot)
    {
-   m_op.reset(get_pk_op<PK_Ops::Signature>(key, emsa_name));
+   m_op.reset(get_pk_op<PK_Ops::Signature>(key, emsa));
 
    if(prot == ENABLE_FAULT_PROTECTION)
-      m_verify_op.reset(get_pk_op<PK_Ops::Verification>(key, emsa_name));
+      m_verify_op.reset(get_pk_op<PK_Ops::Verification>(key, emsa));
 
    if(!m_op || (prot == ENABLE_FAULT_PROTECTION && !m_verify_op))
       throw Lookup_Error("Signing with " + key.algo_name() + " not supported");
 
-   m_emsa.reset(get_emsa(emsa_name));
+   m_emsa.reset(get_emsa(emsa));
    m_sig_format = format;
    }
 
@@ -319,32 +280,6 @@ bool PK_Verifier::validate_signature(const secure_vector<byte>& msg,
 
       return m_op->verify(&encoded[0], encoded.size(), sig, sig_len);
       }
-   }
-
-/*
-* PK_Key_Agreement Constructor
-*/
-PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key,
-                                   const std::string& kdf_name)
-   {
-   m_op.reset(get_pk_op<PK_Ops::Key_Agreement>(key, kdf_name));
-
-   if(!m_op)
-      throw Lookup_Error("Key agreement with " + key.algo_name() + " not supported");
-
-   m_kdf.reset(get_kdf(kdf_name));
-   }
-
-SymmetricKey PK_Key_Agreement::derive_key(size_t key_len, const byte in[],
-                                          size_t in_len, const byte params[],
-                                          size_t params_len) const
-   {
-   secure_vector<byte> z = m_op->agree(in, in_len);
-
-   if(!m_kdf)
-      return z;
-
-   return m_kdf->derive_key(key_len, z, params, params_len);
    }
 
 }
