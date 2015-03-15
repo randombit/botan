@@ -202,9 +202,16 @@ class BuildConfigurationInformation(object):
 
         self.build_dirs = list(build_dirs())
 
+    def src_info(self, typ):
+        if typ == 'lib':
+            return (self.build_sources, self.libobj_dir)
+        elif typ == 'app':
+            return (self.app_sources, self.appobj_dir)
+        elif typ == 'test':
+            return (self.test_sources, self.testobj_dir)
+
     def pkg_config_file(self):
-        return 'botan-%d.%d.pc' % (self.version_major,
-                                   self.version_minor)
+        return 'botan-%d.%d.pc' % (self.version_major, self.version_minor)
 
     def username(self):
         return getpass.getuser()
@@ -1048,29 +1055,42 @@ def process_template(template_file, variables):
     except Exception as e:
         raise Exception('Exception %s in template %s' % (e, template_file))
 
-"""
-Create the template variables needed to process the makefile, build.h, etc
-"""
-def create_template_vars(build_config, options, modules, cc, arch, osinfo):
-    def make_cpp_macros(macros):
-        return '\n'.join(['#define BOTAN_' + macro for macro in macros])
+def makefile_list(items):
+    items = list(items) # force evaluation so we can slice it
+    return (' '*16).join([item + ' \\\n' for item in items[:-1]] + [items[-1]])
 
-    """
-    Figure out what external libraries are needed based on selected modules
-    """
-    def link_to():
-        libs = set()
-        for module in modules:
-            for (osname,link_to) in module.libs.items():
-                if osname == 'all' or osname == osinfo.basename:
-                    libs |= set(link_to)
-                else:
-                    match = re.match('^all!(.*)', osname)
-                    if match is not None:
-                        exceptions = match.group(1).split(',')
-                        if osinfo.basename not in exceptions:
-                            libs |= set(link_to)
-        return sorted(libs)
+def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
+    def get_isa_specific_flags(cc, isas):
+        flags = []
+        for isa in isas:
+            flag = cc.isa_flags_for(isa, arch.basename)
+            if flag is None:
+                raise Exception('Compiler %s does not support %s' % (cc.basename, isa))
+            flags.append(flag)
+        return '' if len(flags) == 0 else (' ' + ' '.join(sorted(list(flags))))
+
+    def isa_specific_flags(cc, src):
+
+        def simd_dependencies():
+            simd_re = re.compile('simd_(.*)')
+            for mod in modules:
+                if simd_re.match(mod.basename):
+                    for isa in mod.need_isa:
+                        yield isa
+
+        for mod in modules:
+            if src in mod.sources():
+                isas = mod.need_isa
+                if 'simd' in mod.dependencies():
+                    isas += list(simd_dependencies())
+
+                return get_isa_specific_flags(cc, isas)
+
+        if src.startswith('botan_all_'):
+            isa =  src.replace('botan_all_','').replace('.cpp', '').split('_')
+            return get_isa_specific_flags(cc, isa)
+
+        return ''
 
     def objectfile_list(sources, obj_dir):
         for src in sources:
@@ -1104,6 +1124,52 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
             yield os.path.join(obj_dir, name)
 
+    """
+    Form snippets of makefile for building each source file
+    """
+    def build_commands(sources, obj_dir, flags):
+        for (obj_file,src) in zip(objectfile_list(sources, obj_dir), sources):
+            yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s%s %s$? %s$@\n' % (
+                obj_file, src,
+                isa_specific_flags(cc, src),
+                flags,
+                cc.add_include_dir_option,
+                build_config.include_dir,
+                cc.compile_option,
+                cc.output_to_option)
+
+
+    for t in ['lib', 'app', 'test']:
+        obj_key = '%s_objs' % (t)
+        src_list, src_dir = build_config.src_info(t)
+        var[obj_key] = makefile_list(objectfile_list(src_list, src_dir))
+        build_key = '%s_build_cmds' % (t)
+        var[build_key] = '\n'.join(build_commands(src_list, src_dir, t.upper()))
+
+"""
+Create the template variables needed to process the makefile, build.h, etc
+"""
+def create_template_vars(build_config, options, modules, cc, arch, osinfo):
+    def make_cpp_macros(macros):
+        return '\n'.join(['#define BOTAN_' + macro for macro in macros])
+
+    """
+    Figure out what external libraries are needed based on selected modules
+    """
+    def link_to():
+        libs = set()
+        for module in modules:
+            for (osname,link_to) in module.libs.items():
+                if osname == 'all' or osname == osinfo.basename:
+                    libs |= set(link_to)
+                else:
+                    match = re.match('^all!(.*)', osname)
+                    if match is not None:
+                        exceptions = match.group(1).split(',')
+                        if osinfo.basename not in exceptions:
+                            libs |= set(link_to)
+        return sorted(libs)
+
     def choose_mp_bits():
         mp_bits = [mod.mp_bits for mod in modules if mod.mp_bits != 0]
 
@@ -1119,57 +1185,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         logging.debug('Using MP bits %d' % (mp_bits[0]))
         return mp_bits[0]
 
-    def get_isa_specific_flags(cc, isas):
-        flags = []
-        for isa in isas:
-            flag = cc.isa_flags_for(isa, arch.basename)
-            if flag is None:
-                raise Exception('Compiler %s does not support %s' % (cc.basename, isa))
-            flags.append(flag)
-        return '' if len(flags) == 0 else (' ' + ' '.join(sorted(list(flags))))
-
-    def simd_dependencies():
-        simd_re = re.compile('simd_(.*)')
-        for mod in modules:
-            if simd_re.match(mod.basename):
-                for isa in mod.need_isa:
-                    yield isa
-
-    def isa_specific_flags(cc, src):
-
-        for mod in modules:
-            if src in mod.sources():
-                isas = mod.need_isa
-                if 'simd' in mod.dependencies():
-                    isas += list(simd_dependencies())
-
-                return get_isa_specific_flags(cc, isas)
-
-        if src.startswith('botan_all_'):
-            isa =  src.replace('botan_all_','').replace('.cpp', '').split('_')
-            return get_isa_specific_flags(cc, isa)
-
-        return ''
-
-    """
-    Form snippets of makefile for building each source file
-    """
-    def build_commands(sources, obj_dir, flags):
-        for (obj_file,src) in zip(objectfile_list(sources, obj_dir), sources):
-            yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s%s %s$? %s$@\n' % (
-                obj_file, src,
-                isa_specific_flags(cc, src),
-                flags,
-                cc.add_include_dir_option,
-                build_config.include_dir,
-                cc.compile_option,
-                cc.output_to_option)
-
-    def makefile_list(items):
-        items = list(items) # force evaluation so we can slice it
-        return (' '*16).join([item + ' \\\n' for item in items[:-1]] +
-                             [items[-1]])
-
     def prefix_with_build_dir(path):
         if options.with_build_dir != None:
             return os.path.join(options.with_build_dir, path)
@@ -1184,17 +1199,12 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
             return normal_flags
 
     def innosetup_arch(os, arch):
-        if os != 'windows':
-            return None
-
-        if arch == 'x86_32':
-            return '' # allow 32-bit installs on 64 bit systems
-        elif arch == 'x86_64':
-            return 'x64'
-        elif arch == 'ia64':
-            return 'ia64'
-
-        logging.warn('Unknown arch in innosetup_arch %s' % (arch))
+        if os == 'windows':
+            inno_arch = { 'x86_32': '', 'x86_64': 'x64', 'ia64': 'ia64' }
+            if arch in inno_arch:
+                return inno_arch[arch]
+            else:
+                logging.warn('Unknown arch in innosetup_arch %s' % (arch))
         return None
 
     vars = {
@@ -1288,30 +1298,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'include_files': makefile_list(build_config.public_headers),
 
-        'lib_objs': makefile_list(
-            objectfile_list(build_config.build_sources,
-                            build_config.libobj_dir)),
-
-        'app_objs': makefile_list(
-            objectfile_list(build_config.app_sources,
-                            build_config.appobj_dir)),
-
-        'test_objs': makefile_list(
-            objectfile_list(build_config.test_sources,
-                            build_config.testobj_dir)),
-
-        'lib_build_cmds': '\n'.join(
-            build_commands(build_config.build_sources,
-                           build_config.libobj_dir, 'LIB')),
-
-        'app_build_cmds': '\n'.join(
-            build_commands(build_config.app_sources,
-                           build_config.appobj_dir, 'APP')),
-
-        'test_build_cmds': '\n'.join(
-            build_commands(build_config.test_sources,
-                           build_config.testobj_dir, 'TEST')),
-
         'ar_command': cc.ar_command or osinfo.ar_command,
         'ranlib_command': osinfo.ranlib_command(),
         'install_cmd_exec': osinfo.install_cmd_exec,
@@ -1328,10 +1314,11 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'with_sphinx': options.with_sphinx
         }
 
+    gen_makefile_lists(vars, build_config, options, modules, cc, arch, osinfo)
+
     if options.os != 'windows':
         vars['botan_pkgconfig'] = prefix_with_build_dir(os.path.join(build_config.build_dir,
                                                                      build_config.pkg_config_file()))
-
 
     vars["header_in"] = process_template('src/build-data/makefile/header.in', vars)
     vars["commands_in"] = process_template('src/build-data/makefile/commands.in', vars)
@@ -1515,143 +1502,58 @@ def load_info_files(options):
 
     return (modules, archinfo, ccinfo, osinfo)
 
+
 """
-Perform the filesystem operations needed to setup the build
+Choose the link method based on system availablity and user request
 """
-def setup_build(build_config, options, template_vars):
+def choose_link_method(options):
 
-    """
-    Choose the link method based on system availablity and user request
-    """
-    def choose_link_method(req_method):
+    def useable_methods():
+        if 'symlink' in os.__dict__ and options.os != 'windows':
+            yield 'symlink'
+        if 'link' in os.__dict__:
+            yield 'hardlink'
+        yield 'copy'
 
-        def useable_methods():
-            if 'symlink' in os.__dict__ and options.os != 'windows':
-                yield 'symlink'
-            if 'link' in os.__dict__:
-                yield 'hardlink'
-            yield 'copy'
+    req = options.link_method
 
-        for method in useable_methods():
-            if req_method is None or req_method == method:
-                return method
+    for method in useable_methods():
+        if req is None or req == method:
+            logging.info('Using %s to link files into build dir ' \
+                         '(use --link-method to change)' % (method))
+            return method
 
-        logging.warning('Could not use requested link method "%s", defaulting to copy' % (req_method))
-        return 'copy'
+    logging.warning('Could not use link method "%s", will copy instead' % (req))
+    return 'copy'
 
-    """
-    Copy or link the file, depending on what the platform offers
-    """
-    def portable_symlink(filename, target_dir, method):
+"""
+Copy or link the file, depending on what the platform offers
+"""
+def portable_symlink(filename, target_dir, method):
 
-        if not os.access(filename, os.R_OK):
-            logging.warning('Missing file %s' % (filename))
-            return
+    if not os.access(filename, os.R_OK):
+        logging.warning('Missing file %s' % (filename))
+        return
 
-        if method == 'symlink':
-            def count_dirs(dir, accum = 0):
-                if dir in ['', '/', os.path.curdir]:
-                    return accum
-                (dir,basename) = os.path.split(dir)
-                return accum + 1 + count_dirs(dir)
+    if method == 'symlink':
+        def count_dirs(dir, accum = 0):
+            if dir in ['', '/', os.path.curdir]:
+                return accum
+            (dir,basename) = os.path.split(dir)
+            return accum + 1 + count_dirs(dir)
 
-            dirs_up = count_dirs(target_dir)
+        dirs_up = count_dirs(target_dir)
+        source = os.path.join(os.path.join(*[os.path.pardir] * dirs_up), filename)
+        target = os.path.join(target_dir, os.path.basename(filename))
+        os.symlink(source, target)
 
-            source = os.path.join(os.path.join(*[os.path.pardir]*dirs_up),
-                                  filename)
+    elif method == 'hardlink':
+        os.link(filename, os.path.join(target_dir, os.path.basename(filename)))
 
-            target = os.path.join(target_dir, os.path.basename(filename))
-
-            os.symlink(source, target)
-
-        elif method == 'hardlink':
-            os.link(filename,
-                    os.path.join(target_dir, os.path.basename(filename)))
-
-        elif method == 'copy':
-            shutil.copy(filename, target_dir)
-
-        else:
-            raise Exception('Unknown link method %s' % (method))
-
-    def choose_makefile_template(style):
-        if style == 'nmake':
-            return 'nmake.in'
-        elif style == 'gmake':
-            return 'gmake.in'
-        else:
-            raise Exception('Unknown makefile style "%s"' % (style))
-
-    # First delete the build tree, if existing
-    try:
-        if options.clean_build_tree:
-            shutil.rmtree(build_config.build_dir)
-    except OSError as e:
-        if e.errno != errno.ENOENT:
-            logging.error('Problem while removing build dir: %s' % (e))
-
-    for dir in build_config.build_dirs:
-        try:
-            os.makedirs(dir)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                logging.error('Error while creating "%s": %s' % (dir, e))
-
-    makefile_template = os.path.join(
-        options.makefile_dir,
-        choose_makefile_template(template_vars['makefile_style']))
-
-    logging.debug('Using makefile template %s' % (makefile_template))
-
-    templates_to_proc = {
-        makefile_template: template_vars['makefile_path']
-        }
-
-    def templates_to_use():
-        yield (options.build_data, 'buildh.in', 'build.h')
-        yield (options.build_data, 'botan.doxy.in', 'botan.doxy')
-
-        if options.os != 'windows':
-            yield (options.build_data, 'botan.pc.in', build_config.pkg_config_file())
-
-        if options.os == 'windows':
-            yield (options.build_data, 'innosetup.in', 'botan.iss')
-
-    for (template_dir, template, sink) in templates_to_use():
-        source = os.path.join(template_dir, template)
-        if template_dir == options.build_data:
-            sink = os.path.join(build_config.build_dir, sink)
-        templates_to_proc[source] = sink
-
-    for (template, sink) in templates_to_proc.items():
-        try:
-            f = open(sink, 'w')
-            f.write(process_template(template, template_vars))
-        finally:
-            f.close()
-
-    link_method = choose_link_method(options.link_method)
-    logging.info('Using %s to link files into build directory (use --link-method to change)' % (link_method))
-
-    def link_headers(header_list, type, dir):
-        logging.debug('Linking %d %s header files in %s' % (
-            len(header_list), type, dir))
-
-        for header_file in header_list:
-            try:
-                portable_symlink(header_file, dir, link_method)
-            except OSError as e:
-                if e.errno != errno.EEXIST:
-                    raise Exception('Error linking %s into %s: %s' % (header_file, dir, e))
-
-    link_headers(build_config.public_headers, 'public',
-                 build_config.botan_include_dir)
-
-    link_headers(build_config.build_internal_headers, 'internal',
-                 build_config.internal_include_dir)
-
-    with open(os.path.join(build_config.build_dir, 'build_config.py'), 'w') as f:
-        f.write(str(template_vars))
+    elif method == 'copy':
+        shutil.copy(filename, target_dir)
+    else:
+        raise Exception('Unknown link method %s' % (method))
 
 """
 Generate the amalgamation
@@ -1775,11 +1677,11 @@ def generate_amalgamation(build_config, options):
 
     headers_written = pub_header_amalag.all_std_includes.union(internal_headers.all_std_includes)
 
-    src_files = []
+    botan_amalgs_fs = []
 
     def open_amalg_file(tgt):
         fsname = '%s%s.cpp' % (amalg_basename, '_' + tgt if tgt else '' )
-        src_files.append(fsname)
+        botan_amalgs_fs.append(fsname)
         logging.log(NOTICE_LOGLEVEL, 'Writing amalgamation source to %s' % (fsname))
         f = open(fsname, 'w')
         f.write(amalg_header)
@@ -1819,8 +1721,7 @@ def generate_amalgamation(build_config, options):
                 else:
                     botan_amalgs[tgt].write(line)
 
-    if options.via_amalgamation:
-        build_config.build_sources = src_files
+    return botan_amalgs_fs
 
 """
 Test for the existence of a program
@@ -1872,8 +1773,11 @@ def main(argv = None):
     logging.debug('%s invoked with options "%s"' % (
         argv[0], ' '.join(argv[1:])))
 
-    logging.debug('Platform: OS="%s" machine="%s" proc="%s"' % (
+    logging.info('Platform: OS="%s" machine="%s" proc="%s"' % (
         platform.system(), platform.machine(), platform.processor()))
+
+    if options.maintainer_mode:
+        logging.log(NOTICE_LOGLEVEL, 'Enabling maintainer mode build (use --release-mode to disable)')
 
     if options.os == "java":
         raise Exception("Jython detected: need --os and --cpu to set target")
@@ -1885,7 +1789,7 @@ def main(argv = None):
     options.build_data = os.path.join(options.src_dir, 'build-data')
     options.makefile_dir = os.path.join(options.build_data, 'makefile')
 
-    (modules, archinfo, ccinfo, osinfo) = load_info_files(options)
+    (modules, info_arch, info_cc, info_os) = load_info_files(options)
 
     if options.list_modules:
         for k in sorted(modules.keys()):
@@ -1924,46 +1828,47 @@ def main(argv = None):
         logging.info('Guessing to use compiler %s (use --cc to set)' % (
             options.compiler))
 
-    if options.compiler not in ccinfo:
+    if options.compiler not in info_cc:
         raise Exception('Unknown compiler "%s"; available options: %s' % (
-            options.compiler, ' '.join(sorted(ccinfo.keys()))))
+            options.compiler, ' '.join(sorted(info_cc.keys()))))
 
-    if options.os not in osinfo:
+    if options.os not in info_os:
 
         def find_canonical_os_name(os):
-            for (name, info) in osinfo.items():
+            for (name, info) in info_os.items():
                 if os in info.aliases:
                     return name
             return os # not found
 
         options.os = find_canonical_os_name(options.os)
 
-        if options.os not in osinfo:
+        if options.os not in info_os:
             raise Exception('Unknown OS "%s"; available options: %s' % (
-                options.os, ' '.join(sorted(osinfo.keys()))))
+                options.os, ' '.join(sorted(info_os.keys()))))
 
     if options.cpu is None:
-        (options.arch, options.cpu) = guess_processor(archinfo)
+        (options.arch, options.cpu) = guess_processor(info_arch)
         logging.info('Guessing target processor is a %s/%s (use --cpu to set)' % (
             options.arch, options.cpu))
     else:
         cpu_from_user = options.cpu
-        (options.arch, options.cpu) = canon_processor(archinfo, options.cpu)
+        (options.arch, options.cpu) = canon_processor(info_arch, options.cpu)
         logging.info('Canonicalizized CPU target %s to %s/%s' % (
             cpu_from_user, options.arch, options.cpu))
 
     logging.info('Target is %s-%s-%s-%s' % (
         options.compiler, options.os, options.arch, options.cpu))
 
-    cc = ccinfo[options.compiler]
+    cc = info_cc[options.compiler]
+    arch = info_arch[options.arch]
+    osinfo = info_os[options.os]
 
     if options.with_visibility is None:
         options.with_visibility = True
 
     if options.with_sphinx is None:
         if have_program('sphinx-build'):
-            logging.info('Found sphinx-build, will use it ' +
-                         '(use --without-sphinx to disable)')
+            logging.info('Found sphinx-build (use --without-sphinx to disable)')
             options.with_sphinx = True
 
     if options.via_amalgamation:
@@ -1974,37 +1879,91 @@ def main(argv = None):
             logging.info('Disabling assembly code, cannot use in amalgamation')
             options.asm_ok = False
 
-    loaded_mods = choose_modules_to_use(modules,
-                                        archinfo[options.arch],
-                                        cc,
-                                        options)
+    loaded_mods = choose_modules_to_use(modules, arch, cc, options)
 
     for m in loaded_mods:
         if modules[m].load_on == 'vendor':
             logging.log(NOTICE_LOGLEVEL, 'Enabling use of external dependency %s' % (m))
 
-    if not osinfo[options.os].build_shared:
-        if options.build_shared_lib:
-            logging.info('Disabling shared lib on %s' % (options.os))
-            options.build_shared_lib = False
+        if not osinfo.build_shared:
+            if options.build_shared_lib:
+                logging.info('Disabling shared lib on %s' % (options.os))
+                options.build_shared_lib = False
 
-    modules_to_use = [modules[m] for m in loaded_mods]
+    using_mods = [modules[m] for m in loaded_mods]
 
-    build_config = BuildConfigurationInformation(options, modules_to_use)
-    build_config.public_headers.append(
-        os.path.join(build_config.build_dir, 'build.h'))
+    build_config = BuildConfigurationInformation(options, using_mods)
+    build_config.public_headers.append(os.path.join(build_config.build_dir, 'build.h'))
 
-    template_vars = create_template_vars(build_config, options,
-                                         modules_to_use,
-                                         cc,
-                                         archinfo[options.arch],
-                                         osinfo[options.os])
+    template_vars = create_template_vars(build_config, options, using_mods, cc, arch, osinfo)
 
-    # Performs the I/O
-    setup_build(build_config, options, template_vars)
+    makefile_template = os.path.join(options.makefile_dir, '%s.in' % (template_vars['makefile_style']))
+    logging.debug('Using makefile template %s' % (makefile_template))
+
+    # Now begin the actual IO to setup the build
+
+    try:
+        if options.clean_build_tree:
+            shutil.rmtree(build_config.build_dir)
+    except OSError as e:
+        if e.errno != errno.ENOENT:
+            logging.error('Problem while removing build dir: %s' % (e))
+
+    for dir in build_config.build_dirs:
+        try:
+            os.makedirs(dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                logging.error('Error while creating "%s": %s' % (dir, e))
+
+    def write_template(sink, template):
+        try:
+            f = open(sink, 'w')
+            f.write(process_template(template, template_vars))
+        finally:
+            f.close()
+
+    def in_build_dir(p):
+        return os.path.join(build_config.build_dir, p)
+    def in_build_data(p):
+        return os.path.join(options.build_data, p)
+
+    write_template(in_build_dir('build.h'), in_build_data('buildh.in'))
+    write_template(in_build_dir('botan.doxy'), in_build_data('botan.doxy.in'))
+
+    if options.os != 'windows':
+        write_template(in_build_dir(build_config.pkg_config_file()), in_build_data('botan.pc.in'))
+
+    if options.os == 'windows':
+        write_template(in_build_dir('botan.iss'), in_build_data('innosetup.in'))
+
+    link_method = choose_link_method(options)
+
+    def link_headers(headers, type, dir):
+        logging.debug('Linking %d %s header files in %s' % (len(headers), type, dir))
+
+        for header_file in headers:
+            try:
+                portable_symlink(header_file, dir, link_method)
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise Exception('Error linking %s into %s: %s' % (header_file, dir, e))
+
+    link_headers(build_config.public_headers, 'public', build_config.botan_include_dir)
+
+    link_headers(build_config.build_internal_headers, 'internal',
+                 build_config.internal_include_dir)
+
+    with open(os.path.join(build_config.build_dir, 'build_config.py'), 'w') as f:
+        f.write(str(template_vars))
 
     if options.gen_amalgamation:
-        generate_amalgamation(build_config, options)
+        fs = generate_amalgamation(build_config, options)
+        if options.via_amalgamation:
+            build_config.build_sources = fs
+            gen_makefile_lists(template_vars, build_config, options, using_mods, cc, arch, osinfo)
+
+    write_template(template_vars['makefile_path'], makefile_template)
 
     def release_date(datestamp):
         if datestamp == 0:
