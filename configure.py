@@ -1823,6 +1823,9 @@ def main(argv = None):
                 options.compiler = 'gcc'
             else:
                 options.compiler = 'msvc'
+        elif options.os == 'darwin':
+            if have_program('clang++'):
+                options.compiler = 'clang'
         else:
             options.compiler = 'gcc'
         logging.info('Guessing to use compiler %s (use --cc to set)' % (
