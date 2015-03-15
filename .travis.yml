@@ -14,9 +14,13 @@ install:
 
 script:
   - $CXX --version
-  - python configure.py
+  - python configure.py $CONFIGURE_OPTS
   - "make"
   - "LD_LIBRARY_PATH=. ./botan-test"
 
 os:
   - linux
+  
+env:
+  - CONFIGURE_OPTS=""
+  - CONFIGURE_OPTS="--via-amalgamation --disable-shared"
