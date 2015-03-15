@@ -138,20 +138,21 @@ class RSA_Signature_Operation : public PK_Ops::Signature,
          }
    };
 
-class RSA_Decryption_Operation : public PK_Ops::Decryption,
+class RSA_Decryption_Operation : public PK_Ops::Decryption_with_EME,
                                  private RSA_Private_Operation
    {
    public:
       typedef RSA_PrivateKey Key_Type;
 
-      size_t max_input_bits() const override { return get_max_input_bits(); };
+      size_t max_raw_input_bits() const override { return get_max_input_bits(); };
 
-      RSA_Decryption_Operation(const RSA_PrivateKey& rsa, const std::string&) :
+      RSA_Decryption_Operation(const RSA_PrivateKey& rsa, const std::string& eme) :
+         PK_Ops::Decryption_with_EME(eme),
          RSA_Private_Operation(rsa)
          {
          }
 
-      secure_vector<byte> decrypt(const byte msg[], size_t msg_len) override
+      secure_vector<byte> raw_decrypt(const byte msg[], size_t msg_len) override
          {
          const BigInt m(msg, msg_len);
          const BigInt x = blinded_private_op(m);
@@ -185,21 +186,22 @@ class RSA_Public_Operation
       Fixed_Exponent_Power_Mod powermod_e_n;
    };
 
-class RSA_Encryption_Operation : public PK_Ops::Encryption,
+class RSA_Encryption_Operation : public PK_Ops::Encryption_with_EME,
                                  private RSA_Public_Operation
    {
    public:
       typedef RSA_PublicKey Key_Type;
 
-      RSA_Encryption_Operation(const RSA_PublicKey& rsa, const std::string&) :
+      RSA_Encryption_Operation(const RSA_PublicKey& rsa, const std::string& eme) :
+         PK_Ops::Encryption_with_EME(eme),
          RSA_Public_Operation(rsa)
          {
          }
 
-      size_t max_input_bits() const override { return get_max_input_bits(); };
+      size_t max_raw_input_bits() const override { return get_max_input_bits(); };
 
-      secure_vector<byte> encrypt(const byte msg[], size_t msg_len,
-                                  RandomNumberGenerator&)
+      secure_vector<byte> raw_encrypt(const byte msg[], size_t msg_len,
+                                      RandomNumberGenerator&) override
          {
          BigInt m(msg, msg_len);
          return BigInt::encode_1363(public_op(m), n.bytes());

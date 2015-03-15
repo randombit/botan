@@ -79,7 +79,7 @@ class BOTAN_DLL PK_Encryptor
 
    private:
       virtual std::vector<byte> enc(const byte[], size_t,
-                                     RandomNumberGenerator&) const = 0;
+                                    RandomNumberGenerator&) const = 0;
    };
 
 /**
@@ -384,7 +384,6 @@ class BOTAN_DLL PK_Key_Agreement
       PK_Key_Agreement(const Private_Key& key, const std::string& kdf);
    private:
       std::unique_ptr<PK_Ops::Key_Agreement> m_op;
-      std::unique_ptr<KDF> m_kdf;
    };
 
 /**
@@ -407,7 +406,6 @@ class BOTAN_DLL PK_Encryptor_EME : public PK_Encryptor
                              RandomNumberGenerator& rng) const;
 
       std::unique_ptr<PK_Ops::Encryption> m_op;
-      std::unique_ptr<EME> m_eme;
    };
 
 /**
@@ -427,7 +425,6 @@ class BOTAN_DLL PK_Decryptor_EME : public PK_Decryptor
       secure_vector<byte> dec(const byte[], size_t) const;
 
       std::unique_ptr<PK_Ops::Decryption> m_op;
-      std::unique_ptr<EME> m_eme;
    };
 
 }

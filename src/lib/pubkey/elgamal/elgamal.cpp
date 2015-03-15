@@ -73,17 +73,17 @@ namespace {
 /**
 * ElGamal encryption operation
 */
-class ElGamal_Encryption_Operation : public PK_Ops::Encryption
+class ElGamal_Encryption_Operation : public PK_Ops::Encryption_with_EME
    {
    public:
       typedef ElGamal_PublicKey Key_Type;
 
-      size_t max_input_bits() const { return mod_p.get_modulus().bits() - 1; }
+      size_t max_raw_input_bits() const override { return mod_p.get_modulus().bits() - 1; }
 
-      ElGamal_Encryption_Operation(const ElGamal_PublicKey& key, const std::string&);
+      ElGamal_Encryption_Operation(const ElGamal_PublicKey& key, const std::string& eme);
 
-      secure_vector<byte> encrypt(const byte msg[], size_t msg_len,
-                                 RandomNumberGenerator& rng);
+      secure_vector<byte> raw_encrypt(const byte msg[], size_t msg_len,
+                                      RandomNumberGenerator& rng) override;
 
    private:
       Fixed_Base_Power_Mod powermod_g_p, powermod_y_p;
@@ -91,7 +91,8 @@ class ElGamal_Encryption_Operation : public PK_Ops::Encryption
    };
 
 ElGamal_Encryption_Operation::ElGamal_Encryption_Operation(const ElGamal_PublicKey& key,
-                                                           const std::string&)
+                                                           const std::string& eme) :
+   PK_Ops::Encryption_with_EME(eme)
    {
    const BigInt& p = key.group_p();
 
@@ -101,8 +102,8 @@ ElGamal_Encryption_Operation::ElGamal_Encryption_Operation(const ElGamal_PublicK
    }
 
 secure_vector<byte>
-ElGamal_Encryption_Operation::encrypt(const byte msg[], size_t msg_len,
-                                      RandomNumberGenerator& rng)
+ElGamal_Encryption_Operation::raw_encrypt(const byte msg[], size_t msg_len,
+                                          RandomNumberGenerator& rng)
    {
    const BigInt& p = mod_p.get_modulus();
 
@@ -125,16 +126,16 @@ ElGamal_Encryption_Operation::encrypt(const byte msg[], size_t msg_len,
 /**
 * ElGamal decryption operation
 */
-class ElGamal_Decryption_Operation : public PK_Ops::Decryption
+class ElGamal_Decryption_Operation : public PK_Ops::Decryption_with_EME
    {
    public:
       typedef ElGamal_PrivateKey Key_Type;
 
-      size_t max_input_bits() const { return mod_p.get_modulus().bits() - 1; }
+      size_t max_raw_input_bits() const { return mod_p.get_modulus().bits() - 1; }
 
-      ElGamal_Decryption_Operation(const ElGamal_PrivateKey& key, const std::string& emsa);
+      ElGamal_Decryption_Operation(const ElGamal_PrivateKey& key, const std::string& eme);
 
-      secure_vector<byte> decrypt(const byte msg[], size_t msg_len);
+      secure_vector<byte> raw_decrypt(const byte msg[], size_t msg_len) override;
    private:
       Fixed_Exponent_Power_Mod powermod_x_p;
       Modular_Reducer mod_p;
@@ -142,7 +143,8 @@ class ElGamal_Decryption_Operation : public PK_Ops::Decryption
    };
 
 ElGamal_Decryption_Operation::ElGamal_Decryption_Operation(const ElGamal_PrivateKey& key,
-                                                           const std::string&)
+                                                           const std::string& eme) :
+   PK_Ops::Decryption_with_EME(eme)
    {
    const BigInt& p = key.group_p();
 
@@ -155,7 +157,7 @@ ElGamal_Decryption_Operation::ElGamal_Decryption_Operation(const ElGamal_Private
    }
 
 secure_vector<byte>
-ElGamal_Decryption_Operation::decrypt(const byte msg[], size_t msg_len)
+ElGamal_Decryption_Operation::raw_decrypt(const byte msg[], size_t msg_len)
    {
    const BigInt& p = mod_p.get_modulus();
 

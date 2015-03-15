@@ -19,4 +19,5 @@ readdir
 <aliases>
 macos
 macosx
+osx
 </aliases>

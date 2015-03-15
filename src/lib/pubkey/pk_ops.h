@@ -1,6 +1,6 @@
 /*
 * PK Operation Types
-* (C) 2010 Jack Lloyd
+* (C) 2010,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -13,6 +13,10 @@
 #include <botan/rng.h>
 
 namespace Botan {
+
+class EME;
+class KDF;
+class EMSA;
 
 namespace PK_Ops {
 
@@ -49,6 +53,25 @@ class BOTAN_DLL Encryption
       virtual ~Encryption() {}
    };
 
+class BOTAN_DLL Encryption_with_EME : public Encryption
+   {
+   public:
+      size_t max_input_bits() const override;
+
+      secure_vector<byte> encrypt(const byte msg[], size_t msg_len,
+                                  RandomNumberGenerator& rng) override;
+
+      ~Encryption_with_EME();
+   protected:
+      Encryption_with_EME(const std::string& eme);
+   private:
+      virtual size_t max_raw_input_bits() const = 0;
+
+      virtual secure_vector<byte> raw_encrypt(const byte msg[], size_t len,
+                                              RandomNumberGenerator& rng) = 0;
+      std::unique_ptr<EME> m_eme;
+   };
+
 /**
 * Public key decryption interface
 */
@@ -63,6 +86,23 @@ class BOTAN_DLL Decryption
 
       virtual ~Decryption() {}
    };
+
+class BOTAN_DLL Decryption_with_EME : public Decryption
+   {
+   public:
+      size_t max_input_bits() const override;
+
+      secure_vector<byte> decrypt(const byte msg[], size_t msg_len) override;
+
+      ~Decryption_with_EME();
+   protected:
+      Decryption_with_EME(const std::string& eme);
+   private:
+      virtual size_t max_raw_input_bits() const = 0;
+      virtual secure_vector<byte> raw_decrypt(const byte msg[], size_t len) = 0;
+      std::unique_ptr<EME> m_eme;
+   };
+
 
 /**
 * Public key signature creation interface
@@ -165,22 +205,33 @@ class BOTAN_DLL Verification
    };
 
 /**
-* A generic key agreement Operation (eg DH or ECDH)
+* A generic key agreement operation (eg DH or ECDH)
 */
 class BOTAN_DLL Key_Agreement
    {
    public:
-      /*
-      * Perform a key agreement operation
-      * @param w the other key value
-      * @param w_len the length of w in bytes
-      * @returns the agreed key
-      */
-      virtual secure_vector<byte> agree(const byte w[], size_t w_len) = 0;
+      virtual secure_vector<byte> agree(size_t key_len,
+                                        const byte other_key[], size_t other_key_len,
+                                        const byte salt[], size_t salt_len) = 0;
 
       typedef PK_Spec<Private_Key> Spec;
 
       virtual ~Key_Agreement() {}
+   };
+
+class BOTAN_DLL Key_Agreement_with_KDF : public Key_Agreement
+   {
+   public:
+      secure_vector<byte> agree(size_t key_len,
+                                const byte other_key[], size_t other_key_len,
+                                const byte salt[], size_t salt_len) override;
+
+   protected:
+      Key_Agreement_with_KDF(const std::string& kdf);
+      ~Key_Agreement_with_KDF();
+   private:
+      virtual secure_vector<byte> raw_agree(const byte w[], size_t w_len) = 0;
+      std::unique_ptr<KDF> m_kdf;
    };
 
 }
