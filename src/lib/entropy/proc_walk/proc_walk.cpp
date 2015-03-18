@@ -120,7 +120,7 @@ void ProcWalking_EntropySource::poll(Entropy_Accumulator& accum)
    if(!m_dir)
       m_dir.reset(new Directory_Walker(m_path));
 
-   secure_vector<byte>& io_buffer = accum.get_io_buffer(4096);
+   m_buf.resize(4096);
 
    for(size_t i = 0; i != MAX_FILES_READ_PER_POLL; ++i)
       {
@@ -133,13 +133,13 @@ void ProcWalking_EntropySource::poll(Entropy_Accumulator& accum)
          break;
          }
 
-      ssize_t got = ::read(fd, &io_buffer[0], io_buffer.size());
+      ssize_t got = ::read(fd, &m_buf[0], m_buf.size());
       ::close(fd);
 
       if(got > 0)
-         accum.add(&io_buffer[0], got, ENTROPY_ESTIMATE);
+         accum.add(&m_buf[0], got, ENTROPY_ESTIMATE);
 
-      if(accum.polling_goal_achieved())
+      if(accum.polling_finished())
          break;
       }
    }

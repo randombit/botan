@@ -55,7 +55,7 @@ void BeOS_EntropySource::poll(Entropy_Accumulator& accum)
       while(get_next_area_info(id, &cookie, &info_area) == B_OK)
          accum.add(info_area, 2);
 
-      if(accum.polling_goal_achieved())
+      if(accum.polling_finished())
          break;
       }
    }

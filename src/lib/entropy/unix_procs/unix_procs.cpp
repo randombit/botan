@@ -213,9 +213,9 @@ void Unix_EntropySource::poll(Entropy_Accumulator& accum)
    const size_t MS_WAIT_TIME = 32;
    const double ENTROPY_ESTIMATE = 1.0 / 1024;
 
-   secure_vector<byte>& io_buffer = accum.get_io_buffer(4*1024); // page
+   m_buf.resize(4096);
 
-   while(!accum.polling_goal_achieved())
+   while(!accum.polling_finished())
       {
       while(m_procs.size() < m_concurrent)
          m_procs.emplace_back(Unix_Process(next_source()));
@@ -253,9 +253,9 @@ void Unix_EntropySource::poll(Entropy_Accumulator& accum)
 
          if(FD_ISSET(fd, &read_set))
             {
-            const ssize_t got = ::read(fd, &io_buffer[0], io_buffer.size());
+            const ssize_t got = ::read(fd, &m_buf[0], m_buf.size());
             if(got > 0)
-               accum.add(&io_buffer[0], got, ENTROPY_ESTIMATE);
+               accum.add(&m_buf[0], got, ENTROPY_ESTIMATE);
             else
                proc.spawn(next_source());
             }

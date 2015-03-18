@@ -29,6 +29,7 @@ class Device_EntropySource : public EntropySource
    private:
       typedef int fd_type;
 
+      secure_vector<byte> m_buf;
       std::vector<fd_type> m_devices;
    };
 

@@ -81,15 +81,15 @@ void Device_EntropySource::poll(Entropy_Accumulator& accum)
    if(::select(max_fd + 1, &read_set, nullptr, nullptr, &timeout) < 0)
       return;
 
-   secure_vector<byte>& io_buffer = accum.get_io_buffer(READ_ATTEMPT);
+   m_buf.resize(READ_ATTEMPT);
 
    for(size_t i = 0; i != m_devices.size(); ++i)
       {
       if(FD_ISSET(m_devices[i], &read_set))
          {
-         const ssize_t got = ::read(m_devices[i], &io_buffer[0], io_buffer.size());
+         const ssize_t got = ::read(m_devices[i], &m_buf[0], m_buf.size());
          if(got > 0)
-            accum.add(&io_buffer[0], got, ENTROPY_BITS_PER_BYTE);
+            accum.add(&m_buf[0], got, ENTROPY_BITS_PER_BYTE);
          }
       }
    }

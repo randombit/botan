@@ -141,15 +141,15 @@ void EGD_EntropySource::poll(Entropy_Accumulator& accum)
 
    std::lock_guard<std::mutex> lock(m_mutex);
 
-   secure_vector<byte>& io_buffer = accum.get_io_buffer(READ_ATTEMPT);
+   m_buf.resize(READ_ATTEMPT);
 
    for(size_t i = 0; i != sockets.size(); ++i)
       {
-      size_t got = sockets[i].read(&io_buffer[0], io_buffer.size());
+      size_t got = sockets[i].read(&m_buf[0], m_buf.size());
 
       if(got)
          {
-         accum.add(&io_buffer[0], got, 6);
+         accum.add(&m_buf[0], got, 6);
          break;
          }
       }

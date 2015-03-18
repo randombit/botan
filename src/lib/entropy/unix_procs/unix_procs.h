@@ -75,6 +75,7 @@ class Unix_EntropySource : public EntropySource
       size_t m_sources_idx = 0;
 
       std::vector<Unix_Process> m_procs;
+      secure_vector<byte> m_buf;
    };
 
 class UnixProcessInfo_EntropySource : public EntropySource

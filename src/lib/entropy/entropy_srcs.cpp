@@ -74,8 +74,7 @@ std::vector<std::unique_ptr<EntropySource>> get_default_entropy_sources()
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_PROC_WALKER)
-   sources.push_back(std::unique_ptr<EntropySource>(
-      new ProcWalking_EntropySource("/proc")));
+   sources.push_back(std::unique_ptr<EntropySource>(new ProcWalking_EntropySource("/proc")));
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_WIN32)
@@ -87,8 +86,7 @@ std::vector<std::unique_ptr<EntropySource>> get_default_entropy_sources()
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_UNIX_PROCESS_RUNNER)
-   sources.push_back(std::unique_ptr<EntropySource>(
-      new Unix_EntropySource(
+   sources.push_back(std::unique_ptr<EntropySource>(new Unix_EntropySource(
          { "/bin", "/sbin", "/usr/bin", "/usr/sbin" }
       )));
 #endif
@@ -110,11 +108,11 @@ void EntropySource::poll_available_sources(class Entropy_Accumulator& accum)
    static std::vector<std::unique_ptr<EntropySource>> g_sources(get_default_entropy_sources());
 
    if(g_sources.empty())
-      throw std::runtime_error("No entropy sources enabled at build time, poll failed");
+      throw std::runtime_error("No entropy sources enabled at build time, RNG poll failed");
 
    size_t poll_attempt = 0;
 
-   while(!accum.polling_goal_achieved() && poll_attempt < 16)
+   while(!accum.polling_finished() && poll_attempt < 16)
       {
       const size_t src_idx = poll_attempt % g_sources.size();
       g_sources[src_idx]->poll(accum);

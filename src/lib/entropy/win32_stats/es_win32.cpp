@@ -54,7 +54,7 @@ void Win32_EntropySource::poll(Entropy_Accumulator& accum)
    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, 0);
 
 #define TOOLHELP32_ITER(DATA_TYPE, FUNC_FIRST, FUNC_NEXT) \
-   if(!accum.polling_goal_achieved())                     \
+   if(!accum.polling_finished())                     \
       {                                                   \
       DATA_TYPE info;                                     \
       info.dwSize = sizeof(DATA_TYPE);                    \
@@ -73,7 +73,7 @@ void Win32_EntropySource::poll(Entropy_Accumulator& accum)
 
 #undef TOOLHELP32_ITER
 
-   if(!accum.polling_goal_achieved())
+   if(!accum.polling_finished())
       {
       size_t heap_lists_found = 0;
       HEAPLIST32 heap_list;
@@ -105,7 +105,7 @@ void Win32_EntropySource::poll(Entropy_Accumulator& accum)
                   } while(Heap32Next(&heap_entry));
                }
 
-            if(accum.polling_goal_achieved())
+            if(accum.polling_finished())
                break;
 
             } while(Heap32ListNext(snapshot, &heap_list));

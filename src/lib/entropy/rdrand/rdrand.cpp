@@ -1,6 +1,6 @@
 /*
 * Entropy Source Using Intel's rdrand instruction
-* (C) 2012 Jack Lloyd
+* (C) 2012,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -23,20 +23,16 @@ void Intel_Rdrand::poll(Entropy_Accumulator& accum)
       return;
 
    /*
-   * Put an upper bound on the total entropy we're willing to claim
-   * for any one polling of rdrand to prevent it from swamping our
-   * poll. Internally, the rdrand system is a DRGB that reseeds at a
-   * somewhat unpredictable rate (the current conditions are
-   * documented, but that might not be true for different
-   * implementations, eg on Haswell or a future AMD chip, so I don't
-   * want to assume). This limit ensures we're going to poll at least
-   * one other source so we have some diversity in our inputs.
-   */
+   Don't consider rdrand as contributing any entropy to the poll. It doesn't
+   make sense to trust uninspectible hardware.
 
-   const size_t POLL_UPPER_BOUND = 96;
+   Even if backdoored, rdrand cannot harm us because the HMAC_RNG poll process
+   is designed to handle arbitrarily large amounts of attacker known/chosen
+   input (or even a reseed where every bit we reseeded with was attacker chosen),
+   as long as at least one seed occured with enough unknown-to-attacker entropy.
+   */
+   const double ENTROPY_ESTIMATE = 0.0;
    const size_t RDRAND_POLLS = 32;
-   const double ENTROPY_PER_POLL =
-      static_cast<double>(POLL_UPPER_BOUND) / (RDRAND_POLLS * 4);
 
    for(size_t i = 0; i != RDRAND_POLLS; ++i)
       {
@@ -53,7 +49,7 @@ void Intel_Rdrand::poll(Entropy_Accumulator& accum)
 #endif
 
       if(cf == 1)
-         accum.add(r, ENTROPY_PER_POLL);
+         accum.add(r, ENTROPY_ESTIMATE);
       }
    }
 
