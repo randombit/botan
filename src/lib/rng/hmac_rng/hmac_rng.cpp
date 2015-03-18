@@ -1,6 +1,6 @@
 /*
 * HMAC_RNG
-* (C) 2008-2009,2013,2015 Jack Lloyd
+* (C) 2008,2009,2013,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -14,28 +14,6 @@
 
 namespace Botan {
 
-namespace {
-
-void hmac_prf(MessageAuthenticationCode& prf,
-              secure_vector<byte>& K,
-              u32bit& counter,
-              const std::string& label)
-   {
-   typedef std::chrono::high_resolution_clock clock;
-
-   auto timestamp = clock::now().time_since_epoch().count();
-
-   prf.update(K);
-   prf.update(label);
-   prf.update_be(timestamp);
-   prf.update_be(counter);
-   prf.final(&K[0]);
-
-   ++counter;
-   }
-
-}
-
 /*
 * HMAC_RNG Constructor
 */
@@ -45,12 +23,23 @@ HMAC_RNG::HMAC_RNG(MessageAuthenticationCode* extractor,
    {
    if(!m_prf->valid_keylength(m_extractor->output_length()) ||
       !m_extractor->valid_keylength(m_prf->output_length()))
+      {
       throw Invalid_Argument("HMAC_RNG: Bad algo combination " +
                              m_extractor->name() + " and " +
                              m_prf->name());
+      }
+
+   this->clear();
+   }
+
+void HMAC_RNG::clear()
+   {
+   m_collected_entropy_estimate = 0;
+   m_counter = 0;
 
    // First PRF inputs are all zero, as specified in section 2
    m_K.resize(m_prf->output_length());
+   zeroise(m_K);
 
    /*
    Normally we want to feedback PRF outputs to the extractor function
@@ -65,8 +54,8 @@ HMAC_RNG::HMAC_RNG(MessageAuthenticationCode* extractor,
    The PRF key will not be used to generate outputs until after reseed
    sets m_seeded to true.
    */
-   secure_vector<byte> prf_key(m_extractor->output_length());
-   m_prf->set_key(prf_key);
+   std::vector<byte> prf_zero_key(m_extractor->output_length());
+   m_prf->set_key(&prf_zero_key[0], prf_zero_key.size());
 
    /*
    Use PRF("Botan HMAC_RNG XTS") as the intitial XTS key.
@@ -75,9 +64,20 @@ HMAC_RNG::HMAC_RNG(MessageAuthenticationCode* extractor,
    after this one are generated using the PRF.
 
    If I understand the E-t-E paper correctly (specifically Section 4),
-   using this fixed extractor key is safe to do.
+   using this fixed initial extractor key is safe to do.
    */
-   m_extractor->set_key(prf->process("Botan HMAC_RNG XTS"));
+   m_extractor->set_key(m_prf->process("Botan HMAC_RNG XTS"));
+   }
+
+void HMAC_RNG::new_K_value(byte label)
+   {
+   typedef std::chrono::high_resolution_clock clock;
+
+   m_prf->update(m_K);
+   m_prf->update_be(clock::now().time_since_epoch().count());
+   m_prf->update_be(m_counter++);
+   m_prf->update(label);
+   m_prf->final(&m_K[0]);
    }
 
 /*
@@ -97,14 +97,14 @@ void HMAC_RNG::randomize(byte out[], size_t length)
    m_output_since_reseed += length;
 
    if(m_output_since_reseed >= BOTAN_RNG_MAX_OUTPUT_BEFORE_RESEED)
-      reseed(BOTAN_RNG_RESEED_POLL_BITS);
+      reseed_with_timeout(BOTAN_RNG_RESEED_POLL_BITS, BOTAN_RNG_AUTO_RESEED_TIMEOUT);
 
    /*
     HMAC KDF as described in E-t-E, using a CTXinfo of "rng"
    */
    while(length)
       {
-      hmac_prf(*m_prf, m_K, m_counter, "rng");
+      new_K_value(Running);
 
       const size_t copied = std::min<size_t>(length, max_per_prf_iter);
 
@@ -119,6 +119,11 @@ void HMAC_RNG::randomize(byte out[], size_t length)
 */
 void HMAC_RNG::reseed(size_t poll_bits)
    {
+   reseed_with_timeout(poll_bits, BOTAN_RNG_RESEED_DEFAULT_TIMEOUT);
+   }
+
+void HMAC_RNG::reseed_with_timeout(size_t poll_bits, std::chrono::milliseconds timeout)
+   {
    /*
    Using the terminology of E-t-E, XTR is the MAC function (normally
    HMAC) seeded with XTS (below) and we form SKM, the key material, by
@@ -129,12 +134,15 @@ void HMAC_RNG::reseed(size_t poll_bits)
 
    double bits_collected = 0;
 
+   typedef std::chrono::high_resolution_clock clock;
+   auto deadline = clock::now() + timeout;
+
    Entropy_Accumulator accum(
       [&](const byte in[], size_t in_len, double entropy_estimate)
       {
       m_extractor->update(in, in_len);
       bits_collected += entropy_estimate;
-      return (bits_collected >= poll_bits);
+      return (bits_collected >= poll_bits || clock::now() > deadline);
       });
 
    EntropySource::poll_available_sources(accum);
@@ -145,15 +153,8 @@ void HMAC_RNG::reseed(size_t poll_bits)
    * bad one (collecting little) would be unsafe. Do this by
    * generating new PRF outputs using the previous key and feeding
    * them into the extractor function.
-   *
-   * Cycle the RNG once (CTXinfo="rng"), then generate a new PRF
-   * output using the CTXinfo "reseed". Provide these values as input
-   * to the extractor function.
    */
-   hmac_prf(*m_prf, m_K, m_counter, "rng");
-   m_extractor->update(m_K); // K is the CTXinfo=rng PRF output
-
-   hmac_prf(*m_prf, m_K, m_counter, "reseed");
+   new_K_value(Reseed);
    m_extractor->update(m_K); // K is the CTXinfo=reseed PRF output
 
    /* Now derive the new PRK using everything that has been fed into
@@ -161,7 +162,7 @@ void HMAC_RNG::reseed(size_t poll_bits)
    m_prf->set_key(m_extractor->final());
 
    // Now generate a new PRF output to use as the XTS extractor salt
-   hmac_prf(*m_prf, m_K, m_counter, "xts");
+   new_K_value(ExtractorSeed);
    m_extractor->set_key(m_K);
 
    // Reset state
@@ -186,19 +187,7 @@ bool HMAC_RNG::is_seeded() const
 void HMAC_RNG::add_entropy(const byte input[], size_t length)
    {
    m_extractor->update(input, length);
-   reseed(BOTAN_RNG_RESEED_POLL_BITS);
-   }
-
-/*
-* Clear memory of sensitive data
-*/
-void HMAC_RNG::clear()
-   {
-   m_collected_entropy_estimate = 0;
-   m_extractor->clear();
-   m_prf->clear();
-   zeroise(m_K);
-   m_counter = 0;
+   reseed_with_timeout(BOTAN_RNG_RESEED_POLL_BITS, BOTAN_RNG_AUTO_RESEED_TIMEOUT);
    }
 
 /*
