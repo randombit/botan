@@ -57,17 +57,15 @@ class CSP_Handle
 */
 void Win32_CAPI_EntropySource::poll(Entropy_Accumulator& accum)
    {
-   secure_vector<byte>& io_buffer = accum.get_io_buffer(32);
+   m_buf.resize(32);
 
    for(size_t i = 0; i != prov_types.size(); ++i)
       {
       CSP_Handle csp(prov_types[i]);
 
-      size_t got = csp.gen_random(&io_buffer[0], io_buffer.size());
-
-      if(got)
+      if(size_t got = csp.gen_random(&m_buf[0], m_buf.size()))
          {
-         accum.add(&io_buffer[0], io_buffer.size(), 6);
+         accum.add(&m_buf[0], got, 6);
          break;
          }
       }
