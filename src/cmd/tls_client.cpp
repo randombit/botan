@@ -138,9 +138,6 @@ int tls_client(int argc, char* argv[])
       return 1;
       }
 
-   const bool request_protocol = true;
-   const std::string use_protocol = "http/1.1";
-
    try
       {
       AutoSeeded_RNG rng;
@@ -165,13 +162,9 @@ int tls_client(int argc, char* argv[])
 
       const bool use_tcp = (transport == "tcp");
 
-      int sockfd = connect_to_host(host, port, use_tcp);
+      const std::vector<std::string> protocols_to_offer = { "test/9.9", "http/1.1", "echo/9.1" };
 
-      auto protocol_chooser = [use_protocol](const std::vector<std::string>& protocols) -> std::string {
-         for(size_t i = 0; i != protocols.size(); ++i)
-            std::cout << "Server offered protocol " << i << " = " << protocols[i] << "\n";
-         return use_protocol;
-      };
+      int sockfd = connect_to_host(host, port, use_tcp);
 
       auto socket_write =
          use_tcp ?
@@ -190,7 +183,9 @@ int tls_client(int argc, char* argv[])
                          rng,
                          TLS::Server_Information(host, port),
                          version,
-                         protocol_chooser);
+                         protocols_to_offer);
+
+      bool first_active = true;
 
       while(!client.is_closed())
          {
@@ -199,7 +194,16 @@ int tls_client(int argc, char* argv[])
          FD_SET(sockfd, &readfds);
 
          if(client.is_active())
+            {
             FD_SET(STDIN_FILENO, &readfds);
+            if(first_active && !protocols_to_offer.empty())
+               {
+               std::string app = client.application_protocol();
+               if(app != "")
+                  std::cout << "Server choose protocol: " << client.application_protocol() << "\n";
+               first_active = false;
+               }
+            }
 
          struct timeval timeout = { 1, 0 };
 

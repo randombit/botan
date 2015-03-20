@@ -36,7 +36,6 @@ TLS
 * Authentication using TOFU (sqlite3 storage)
 * Certificate pinning (using TACK?)
 * TLS OCSP stapling (RFC 6066)
-* ALPN (RFC 7301)
 * TLS supplemental authorization data (RFC 4680, RFC 5878)
 * OpenPGP authentication (RFC 5081)
 * DTLS-SCTP (RFC 6083)

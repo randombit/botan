@@ -212,14 +212,14 @@ Server::Server(output_fn output,
                Credentials_Manager& creds,
                const Policy& policy,
                RandomNumberGenerator& rng,
-               const std::vector<std::string>& next_protocols,
+               next_protocol_fn next_proto,
                bool is_datagram,
                size_t io_buf_sz) :
    Channel(output, data_cb, alert_cb, handshake_cb,
            session_manager, rng, is_datagram, io_buf_sz),
    m_policy(policy),
    m_creds(creds),
-   m_possible_protocols(next_protocols)
+   m_choose_next_protocol(next_proto)
    {
    }
 
@@ -348,10 +348,6 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
                                 "Client signalled fallback SCSV, possible attack");
          }
 
-      if(!initial_handshake && state.client_hello()->next_protocol_notification())
-         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
-                             "Client included NPN extension for renegotiation");
-
       secure_renegotiation_check(state.client_hello());
 
       state.set_version(negotiated_version);
@@ -374,6 +370,10 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
          }
       catch(...) {}
 
+      m_next_protocol = "";
+      if(state.client_hello()->supports_alpn())
+         m_next_protocol = m_choose_next_protocol(state.client_hello()->next_protocols());
+
       if(resuming)
          {
          // Only offer a resuming client a new ticket if they didn't send one this time,
@@ -393,7 +393,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
                *state.client_hello(),
                session_info,
                offer_new_session_ticket,
-               m_possible_protocols
+               m_next_protocol
             ));
 
          secure_renegotiation_check(state.server_hello());
@@ -440,10 +440,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
 
          change_cipher_spec_writer(SERVER);
 
-         state.server_finished(
-            new Finished(state.handshake_io(), state, SERVER)
-            );
-
+         state.server_finished(new Finished(state.handshake_io(), state, SERVER));
          state.set_expected_next(HANDSHAKE_CCS);
          }
       else // new session
@@ -481,7 +478,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
                choose_ciphersuite(m_policy, state.version(), m_creds, cert_chains, state.client_hello()),
                choose_compression(m_policy, state.client_hello()->compression_methods()),
                have_session_ticket_key,
-               m_possible_protocols)
+               m_next_protocol)
             );
 
          secure_renegotiation_check(state.server_hello());
@@ -494,11 +491,9 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
             BOTAN_ASSERT(!cert_chains[sig_algo].empty(),
                          "Attempting to send empty certificate chain");
 
-            state.server_certs(
-               new Certificate(state.handshake_io(),
-                               state.hash(),
-                               cert_chains[sig_algo])
-               );
+            state.server_certs(new Certificate(state.handshake_io(),
+                                               state.hash(),
+                                               cert_chains[sig_algo]));
             }
 
          Private_Key* private_key = nullptr;
@@ -538,12 +533,8 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
          if(!client_auth_CAs.empty() && state.ciphersuite().sig_algo() != "")
             {
             state.cert_req(
-               new Certificate_Req(state.handshake_io(),
-                                   state.hash(),
-                                   m_policy,
-                                   client_auth_CAs,
-                                   state.version())
-               );
+               new Certificate_Req(state.handshake_io(), state.hash(),
+                                   m_policy, client_auth_CAs, state.version()));
 
             state.set_expected_next(CERTIFICATE);
             }
@@ -555,9 +546,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
          */
          state.set_expected_next(CLIENT_KEX);
 
-         state.server_hello_done(
-            new Server_Hello_Done(state.handshake_io(), state.hash())
-            );
+         state.server_hello_done(new Server_Hello_Done(state.handshake_io(), state.hash()));
          }
       }
    else if(type == CERTIFICATE)
@@ -614,21 +603,8 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
       }
    else if(type == HANDSHAKE_CCS)
       {
-      if(state.server_hello()->next_protocol_notification())
-         state.set_expected_next(NEXT_PROTOCOL);
-      else
-         state.set_expected_next(FINISHED);
-
-      change_cipher_spec_reader(SERVER);
-      }
-   else if(type == NEXT_PROTOCOL)
-      {
       state.set_expected_next(FINISHED);
-
-      state.next_protocol(new Next_Protocol(contents));
-
-      // should this be a callback?
-      m_next_protocol = state.next_protocol()->protocol();
+      change_cipher_spec_reader(SERVER);
       }
    else if(type == FINISHED)
       {
@@ -694,9 +670,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
 
          change_cipher_spec_writer(SERVER);
 
-         state.server_finished(
-            new Finished(state.handshake_io(), state, SERVER)
-            );
+         state.server_finished(new Finished(state.handshake_io(), state, SERVER));
          }
 
       activate_session();

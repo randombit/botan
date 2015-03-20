@@ -58,17 +58,14 @@ u32bit bitmask_for_handshake_type(Handshake_Type type)
       case CLIENT_KEX:
          return (1 << 11);
 
-      case NEXT_PROTOCOL:
+      case NEW_SESSION_TICKET:
          return (1 << 12);
 
-      case NEW_SESSION_TICKET:
+      case HANDSHAKE_CCS:
          return (1 << 13);
 
-      case HANDSHAKE_CCS:
-         return (1 << 14);
-
       case FINISHED:
-         return (1 << 15);
+         return (1 << 14);
 
       // allow explicitly disabling new handshakes
       case HANDSHAKE_NONE:
@@ -155,12 +152,6 @@ void Handshake_State::client_verify(Certificate_Verify* client_verify)
    {
    m_client_verify.reset(client_verify);
    note_message(*m_client_verify);
-   }
-
-void Handshake_State::next_protocol(Next_Protocol* next_protocol)
-   {
-   m_next_protocol.reset(next_protocol);
-   note_message(*m_next_protocol);
    }
 
 void Handshake_State::new_session_ticket(New_Session_Ticket* new_session_ticket)

@@ -36,7 +36,6 @@ class Server_Hello_Done;
 class Certificate;
 class Client_Key_Exchange;
 class Certificate_Verify;
-class Next_Protocol;
 class New_Session_Ticket;
 class Finished;
 
@@ -111,7 +110,6 @@ class Handshake_State
       void client_certs(Certificate* client_certs);
       void client_kex(Client_Key_Exchange* client_kex);
       void client_verify(Certificate_Verify* client_verify);
-      void next_protocol(Next_Protocol* next_protocol);
       void new_session_ticket(New_Session_Ticket* new_session_ticket);
       void server_finished(Finished* server_finished);
       void client_finished(Finished* client_finished);
@@ -142,9 +140,6 @@ class Handshake_State
 
       const Certificate_Verify* client_verify() const
          { return m_client_verify.get(); }
-
-      const Next_Protocol* next_protocol() const
-         { return m_next_protocol.get(); }
 
       const New_Session_Ticket* new_session_ticket() const
          { return m_new_session_ticket.get(); }
@@ -195,7 +190,6 @@ class Handshake_State
       std::unique_ptr<Certificate> m_client_certs;
       std::unique_ptr<Client_Key_Exchange> m_client_kex;
       std::unique_ptr<Certificate_Verify> m_client_verify;
-      std::unique_ptr<Next_Protocol> m_next_protocol;
       std::unique_ptr<New_Session_Ticket> m_new_session_ticket;
       std::unique_ptr<Finished> m_server_finished;
       std::unique_ptr<Finished> m_client_finished;

@@ -146,12 +146,11 @@ int tls_server(int argc, char* argv[])
 
       Basic_Credentials_Manager creds(rng, server_crt, server_key);
 
-      /*
-      * These are the protocols we advertise to the client, but the
-      * client will send back whatever it actually plans on talking,
-      * which may or may not take into account what we advertise.
-      */
-      const std::vector<std::string> protocols = { "echo/1.0", "echo/1.1" };
+      auto protocol_chooser = [](const std::vector<std::string>& protocols) -> std::string {
+         for(size_t i = 0; i != protocols.size(); ++i)
+            std::cout << "Client offered protocol " << i << " = " << protocols[i] << "\n";
+         return "echo/1.0"; // too bad
+      };
 
       std::cout << "Listening for new connections on " << transport << " port " << port << "\n";
 
@@ -210,7 +209,7 @@ int tls_server(int argc, char* argv[])
                                creds,
                                policy,
                                rng,
-                               protocols,
+                               protocol_chooser,
                                !is_tcp);
 
             while(!server.is_closed())

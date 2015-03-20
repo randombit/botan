@@ -1,4 +1,4 @@
-define TLS 20131128
+define TLS 20150319
 
 load_on auto
 
@@ -31,38 +31,6 @@ tls_record.h
 tls_seq_numbers.h
 tls_session_key.h
 </header:internal>
-
-<source>
-msg_cert_req.cpp
-msg_cert_verify.cpp
-msg_certificate.cpp
-msg_client_hello.cpp
-msg_client_kex.cpp
-msg_finished.cpp
-msg_hello_verify.cpp
-msg_next_protocol.cpp
-msg_server_hello.cpp
-msg_server_kex.cpp
-msg_session_ticket.cpp
-tls_alert.cpp
-tls_blocking.cpp
-tls_channel.cpp
-tls_ciphersuite.cpp
-tls_client.cpp
-tls_extensions.cpp
-tls_handshake_hash.cpp
-tls_handshake_io.cpp
-tls_handshake_state.cpp
-tls_heartbeats.cpp
-tls_policy.cpp
-tls_server.cpp
-tls_session.cpp
-tls_session_key.cpp
-tls_session_manager_memory.cpp
-tls_suite_info.cpp
-tls_record.cpp
-tls_version.cpp
-</source>
 
 <requires>
 aead

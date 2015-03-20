@@ -57,6 +57,8 @@ class BOTAN_DLL Alert
          BAD_CERTIFICATE_HASH_VALUE      = 114,
          UNKNOWN_PSK_IDENTITY            = 115,
 
+         NO_APPLICATION_PROTOCOL         = 120, // RFC 7301
+
          // pseudo alert values
          NULL_ALERT                      = 256,
          HEARTBEAT_PAYLOAD               = 257

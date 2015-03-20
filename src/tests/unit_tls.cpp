@@ -176,6 +176,15 @@ size_t basic_test_handshake(RandomNumberGenerator& rng,
       s2c_data.insert(s2c_data.end(), buf, buf+sz);
    };
 
+   auto next_protocol_chooser = [&](std::vector<std::string> protos) {
+      if(protos.size() != 2)
+         std::cout << "Bad protocol size\n";
+      if(protos[0] != "test/1" || protos[1] != "test/2")
+         std::cout << "Bad protocol values\n";
+      return "test/3";
+   };
+   const std::vector<std::string> protocols_offered = { "test/1", "test/2" };
+
    TLS::Server server([&](const byte buf[], size_t sz)
                       { s2c_q.insert(s2c_q.end(), buf, buf+sz); },
                       save_server_data,
@@ -185,15 +194,7 @@ size_t basic_test_handshake(RandomNumberGenerator& rng,
                       creds,
                       policy,
                       rng,
-                      { "test/1", "test/2" });
-
-   auto next_protocol_chooser = [&](std::vector<std::string> protos) {
-      if(protos.size() != 2)
-         std::cout << "Bad protocol size\n";
-      if(protos[0] != "test/1" || protos[1] != "test/2")
-         std::cout << "Bad protocol values\n";
-      return "test/3";
-   };
+                      next_protocol_chooser);
 
    TLS::Client client([&](const byte buf[], size_t sz)
                       { c2s_q.insert(c2s_q.end(), buf, buf+sz); },
@@ -206,7 +207,7 @@ size_t basic_test_handshake(RandomNumberGenerator& rng,
                       rng,
                       TLS::Server_Information(),
                       offer_version,
-                      next_protocol_chooser);
+                      protocols_offered);
 
    while(true)
       {

@@ -21,7 +21,7 @@ Blocking_Client::Blocking_Client(read_fn reader,
                                  RandomNumberGenerator& rng,
                                  const Server_Information& server_info,
                                  const Protocol_Version offer_version,
-                                 next_protocol_fn npn) :
+                                 const std::vector<std::string>& next) :
    m_read(reader),
    m_channel(writer,
              std::bind(&Blocking_Client::data_cb, this, _1, _2),
@@ -33,7 +33,7 @@ Blocking_Client::Blocking_Client(read_fn reader,
              rng,
              server_info,
              offer_version,
-             npn)
+             next)
    {
    }
 

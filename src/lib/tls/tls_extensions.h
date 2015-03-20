@@ -35,10 +35,9 @@ enum Handshake_Extension_Type {
    TLSEXT_SIGNATURE_ALGORITHMS   = 13,
    TLSEXT_USE_SRTP               = 14,
    TLSEXT_HEARTBEAT_SUPPORT      = 15,
+   TLSEXT_ALPN                   = 16,
 
    TLSEXT_SESSION_TICKET         = 35,
-
-   TLSEXT_NEXT_PROTOCOL          = 13172,
 
    TLSEXT_SAFE_RENEGOTIATION     = 65281,
 };
@@ -181,41 +180,37 @@ class Maximum_Fragment_Length : public Extension
    };
 
 /**
-* Next Protocol Negotiation
-* http://technotes.googlecode.com/git/nextprotoneg.html
-*
-* This implementation requires the semantics defined in the Google
-* spec (implemented in Chromium); the internet draft leaves the format
-* unspecified.
+* ALPN (RFC 7301)
 */
-class Next_Protocol_Notification : public Extension
+class Application_Layer_Protocol_Notification : public Extension
    {
    public:
-      static Handshake_Extension_Type static_type()
-         { return TLSEXT_NEXT_PROTOCOL; }
+      static Handshake_Extension_Type static_type() { return TLSEXT_ALPN; }
 
       Handshake_Extension_Type type() const { return static_type(); }
 
-      const std::vector<std::string>& protocols() const
-         { return m_protocols; }
+      const std::vector<std::string>& protocols() const { return m_protocols; }
+
+      const std::string& single_protocol() const;
 
       /**
-      * Empty extension, used by client
+      * Single protocol, used by server
       */
-      Next_Protocol_Notification() {}
+      Application_Layer_Protocol_Notification(const std::string& protocol) :
+         m_protocols(1, protocol) {}
 
       /**
-      * List of protocols, used by server
+      * List of protocols, used by client
       */
-      Next_Protocol_Notification(const std::vector<std::string>& protocols) :
+      Application_Layer_Protocol_Notification(const std::vector<std::string>& protocols) :
          m_protocols(protocols) {}
 
-      Next_Protocol_Notification(TLS_Data_Reader& reader,
-                                 u16bit extension_size);
+      Application_Layer_Protocol_Notification(TLS_Data_Reader& reader,
+                                              u16bit extension_size);
 
       std::vector<byte> serialize() const;
 
-      bool empty() const { return false; }
+      bool empty() const { return m_protocols.empty(); }
    private:
       std::vector<std::string> m_protocols;
    };

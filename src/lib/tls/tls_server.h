@@ -22,6 +22,8 @@ namespace TLS {
 class BOTAN_DLL Server : public Channel
    {
    public:
+      typedef std::function<std::string (std::vector<std::string>)> next_protocol_fn;
+
       /**
       * Server initialization
       */
@@ -33,7 +35,7 @@ class BOTAN_DLL Server : public Channel
              Credentials_Manager& creds,
              const Policy& policy,
              RandomNumberGenerator& rng,
-             const std::vector<std::string>& protocols = std::vector<std::string>(),
+             next_protocol_fn next_proto = next_protocol_fn(),
              bool is_datagram = false,
              size_t reserved_io_buffer_size = 16*1024
          );
@@ -63,7 +65,7 @@ class BOTAN_DLL Server : public Channel
       const Policy& m_policy;
       Credentials_Manager& m_creds;
 
-      std::vector<std::string> m_possible_protocols;
+      next_protocol_fn m_choose_next_protocol;
       std::string m_next_protocol;
    };
 

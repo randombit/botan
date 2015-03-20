@@ -32,17 +32,15 @@ class BOTAN_DLL Blocking_Client
       typedef std::function<size_t (byte[], size_t)> read_fn;
       typedef std::function<void (const byte[], size_t)> write_fn;
 
-      typedef Client::next_protocol_fn next_protocol_fn;
-
-       Blocking_Client(read_fn reader,
-                       write_fn writer,
-                       Session_Manager& session_manager,
-                       Credentials_Manager& creds,
-                       const Policy& policy,
-                       RandomNumberGenerator& rng,
-                       const Server_Information& server_info = Server_Information(),
-                       const Protocol_Version offer_version = Protocol_Version::latest_tls_version(),
-                       next_protocol_fn npn = next_protocol_fn());
+      Blocking_Client(read_fn reader,
+                      write_fn writer,
+                      Session_Manager& session_manager,
+                      Credentials_Manager& creds,
+                      const Policy& policy,
+                      RandomNumberGenerator& rng,
+                      const Server_Information& server_info = Server_Information(),
+                      const Protocol_Version offer_version = Protocol_Version::latest_tls_version(),
+                      const std::vector<std::string>& next_protos = {});
 
       /**
       * Completes full handshake then returns

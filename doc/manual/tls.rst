@@ -205,7 +205,7 @@ TLS Clients
                      RandomNumberGenerator& rng, \
                      const Server_Information& server_info, \
                      const Protocol_Version offer_version, \
-                     next_protocol_fn npn, \
+                     const std::vector<std::string>& app_protocols,
                      size_t reserved_io_buffer_size)
 
    Initialize a new TLS client. The constructor will immediately
@@ -268,11 +268,8 @@ TLS Clients
    Setting *offer_version* is also used to offer DTLS instead of TLS;
    use :cpp:func:`TLS::Protocol_Version::latest_dtls_version`.
 
-   The optional *next_protocol* callback is called if the server
-   indicates it supports the next protocol notification extension.
-   The callback wlil be called with a list of protocol names that the
-   server advertises, and the client can select from them or return an
-   unadvertised protocol.
+   Optionally, the client will advertise *app_protocols* to the
+   server using the ALPN extension.
 
    The optional *reserved_io_buffer_size* specifies how many bytes to
    pre-allocate in the I/O buffers. Use this if you want to control
@@ -295,28 +292,26 @@ TLS Servers
           Credentials_Manager& creds, \
           const TLS::Policy& policy, \
           RandomNumberGenerator& rng, \
+          std::function<std::string, std::vector<std::string> > proto_chooser,
           const std::vector<std::string>& protocols, \
           bool is_datagram = false, \
           bool reserved_io_buffer_size)
 
 The first 7 arguments as well as the final argument
 *reserved_io_buffer_size*, are treated similiarly to the :ref:`client
-<tls_client>`.  The (optional) argument, *protocols*, specifies the
-protocols the server is willing to advertise it supports.  The
-argument *is_datagram* specifies if this is a TLS or DTLS server;
-unlike clients, which know what type of protocol (TLS vs DTLS) they
-are negotiating from the start via the *offer_version*, servers would
-not until they actually receive a hello without this parameter.
+<tls_client>`.
 
-.. cpp:function:: std::string TLS::Server::next_protocol() const
+The (optional) argument, *proto_chooser*, is a function called if the
+client sent the ALPN extension to negotiate an application
+protocol. In that case, the function should choose a protocol to use
+and return it. Alternately it can throw an exception to abort the
+exchange; the ALPN specification says that if this occurs the alert
+should be of type `NO_APPLICATION_PROTOCOL`.
 
-   If a handshake has completed, and if the client indicated a next
-   protocol (ie, the protocol that it intends to run over this TLS
-   connection) this return value will specify it. The next-protocol
-   extension is somewhat unusual in that it applies to the connection
-   rather than the session. The next protocol can not change during a
-   renegotiation, but might change across different connections using
-   that session.
+The optional argument *is_datagram* specifies if this is a TLS or DTLS
+server; unlike clients, which know what type of protocol (TLS vs DTLS)
+they are negotiating from the start via the *offer_version*, servers
+would not until they actually received a hello without this parameter.
 
 Code for a TLS server using asio is in `src/cmd/tls_proxy.cpp`.
 

@@ -72,7 +72,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
                            const Policy& policy,
                            RandomNumberGenerator& rng,
                            const std::vector<byte>& reneg_info,
-                           bool next_protocol,
+                           const std::vector<std::string>& next_protocols,
                            const std::string& hostname,
                            const std::string& srp_identifier) :
    m_version(version),
@@ -96,8 +96,8 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    if(m_version.is_datagram_protocol())
      m_extensions.add(new SRTP_Protection_Profiles(policy.srtp_profiles()));
 
-   if(reneg_info.empty() && next_protocol)
-      m_extensions.add(new Next_Protocol_Notification());
+   if(reneg_info.empty() && !next_protocols.empty())
+      m_extensions.add(new Application_Layer_Protocol_Notification(next_protocols));
 
    BOTAN_ASSERT(policy.acceptable_protocol_version(version),
                 "Our policy accepts the version we are offering");
@@ -117,7 +117,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
                            RandomNumberGenerator& rng,
                            const std::vector<byte>& reneg_info,
                            const Session& session,
-                           bool next_protocol) :
+                           const std::vector<std::string>& next_protocols) :
    m_version(session.version()),
    m_session_id(session.session_id()),
    m_random(make_hello_random(rng, policy)),
@@ -146,8 +146,8 @@ Client_Hello::Client_Hello(Handshake_IO& io,
       m_extensions.add(new Signature_Algorithms(policy.allowed_signature_hashes(),
                                                 policy.allowed_signature_methods()));
 
-   if(reneg_info.empty() && next_protocol)
-      m_extensions.add(new Next_Protocol_Notification());
+   if(reneg_info.empty() && !next_protocols.empty())
+      m_extensions.add(new Application_Layer_Protocol_Notification(next_protocols));
 
    hash.update(io.send(*this));
    }

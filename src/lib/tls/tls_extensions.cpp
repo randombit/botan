@@ -42,8 +42,8 @@ Extension* make_extension(TLS_Data_Reader& reader,
         case TLSEXT_USE_SRTP:
           return new SRTP_Protection_Profiles(reader, size);
 
-      case TLSEXT_NEXT_PROTOCOL:
-         return new Next_Protocol_Notification(reader, size);
+      case TLSEXT_ALPN:
+         return new Application_Layer_Protocol_Notification(reader, size);
 
       case TLSEXT_HEARTBEAT_SUPPORT:
          return new Heartbeat_Support_Indicator(reader, size);
@@ -258,20 +258,25 @@ Maximum_Fragment_Length::Maximum_Fragment_Length(TLS_Data_Reader& reader,
       }
    }
 
-Next_Protocol_Notification::Next_Protocol_Notification(TLS_Data_Reader& reader,
-                                                       u16bit extension_size)
+Application_Layer_Protocol_Notification::Application_Layer_Protocol_Notification(TLS_Data_Reader& reader,
+                                                                                 u16bit extension_size)
    {
    if(extension_size == 0)
       return; // empty extension
 
-   size_t bytes_remaining = extension_size;
+   const u16bit name_bytes = reader.get_u16bit();
+
+   size_t bytes_remaining = extension_size - 2;
+
+   if(name_bytes != bytes_remaining)
+      throw Decoding_Error("Bad encoding of ALPN extension, bad length field");
 
    while(bytes_remaining)
       {
       const std::string p = reader.get_string(1, 0, 255);
 
       if(bytes_remaining < p.size() + 1)
-         throw Decoding_Error("Bad encoding for next protocol extension");
+         throw Decoding_Error("Bad encoding of ALPN, length field too long");
 
       bytes_remaining -= (p.size() + 1);
 
@@ -279,20 +284,32 @@ Next_Protocol_Notification::Next_Protocol_Notification(TLS_Data_Reader& reader,
       }
    }
 
-std::vector<byte> Next_Protocol_Notification::serialize() const
+const std::string& Application_Layer_Protocol_Notification::single_protocol() const
    {
-   std::vector<byte> buf;
+   if(m_protocols.size() != 1)
+      throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                          "Server sent " + std::to_string(m_protocols.size()) +
+                          " protocols in ALPN extension response");
+   return m_protocols[0];
+   }
 
-   for(size_t i = 0; i != m_protocols.size(); ++i)
+std::vector<byte> Application_Layer_Protocol_Notification::serialize() const
+   {
+   std::vector<byte> buf(2);
+
+   for(auto&& p: m_protocols)
       {
-      const std::string p = m_protocols[i];
-
+      if(p.length() >= 256)
+         throw TLS_Exception(Alert::INTERNAL_ERROR, "ALPN name too long");
       if(p != "")
          append_tls_length_value(buf,
                                  reinterpret_cast<const byte*>(p.data()),
                                  p.size(),
                                  1);
       }
+
+   buf[0] = get_byte<u16bit>(0, buf.size()-2);
+   buf[1] = get_byte<u16bit>(1, buf.size()-2);
 
    return buf;
    }

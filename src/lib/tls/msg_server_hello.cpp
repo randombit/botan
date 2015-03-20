@@ -28,7 +28,7 @@ Server_Hello::Server_Hello(Handshake_IO& io,
                            u16bit ciphersuite,
                            byte compression,
                            bool offer_session_ticket,
-                           const std::vector<std::string>& next_protocols) :
+                           const std::string next_protocol) :
    m_version(new_session_version),
    m_session_id(new_session_id),
    m_random(make_hello_random(rng, policy)),
@@ -47,8 +47,8 @@ Server_Hello::Server_Hello(Handshake_IO& io,
    if(policy.negotiate_heartbeat_support() && client_hello.supports_heartbeats())
       m_extensions.add(new Heartbeat_Support_Indicator(true));
 
-   if(client_hello.next_protocol_notification())
-      m_extensions.add(new Next_Protocol_Notification(next_protocols));
+   if(next_protocol != "" && client_hello.supports_alpn())
+      m_extensions.add(new Application_Layer_Protocol_Notification(next_protocol));
 
    if(m_version.is_datagram_protocol())
       {
@@ -83,7 +83,7 @@ Server_Hello::Server_Hello(Handshake_IO& io,
                            const Client_Hello& client_hello,
                            Session& resumed_session,
                            bool offer_session_ticket,
-                           const std::vector<std::string>& next_protocols) :
+                           const std::string& next_protocol) :
    m_version(resumed_session.version()),
    m_session_id(client_hello.session_id()),
    m_random(make_hello_random(rng, policy)),
@@ -102,8 +102,8 @@ Server_Hello::Server_Hello(Handshake_IO& io,
    if(policy.negotiate_heartbeat_support() && client_hello.supports_heartbeats())
       m_extensions.add(new Heartbeat_Support_Indicator(true));
 
-   if(client_hello.next_protocol_notification())
-      m_extensions.add(new Next_Protocol_Notification(next_protocols));
+   if(next_protocol != "" && client_hello.supports_alpn())
+      m_extensions.add(new Application_Layer_Protocol_Notification(next_protocol));
 
    hash.update(io.send(*this));
    }

@@ -103,6 +103,8 @@ std::string Alert::type_string() const
          return "bad_certificate_hash_value";
       case UNKNOWN_PSK_IDENTITY:
          return "unknown_psk_identity";
+      case NO_APPLICATION_PROTOCOL:
+         return "no_application_protocol";
 
       case NULL_ALERT:
          return "none";

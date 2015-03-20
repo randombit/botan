@@ -115,11 +115,6 @@ class Client_Hello : public Handshake_Message
          return std::vector<byte>();
          }
 
-      bool next_protocol_notification() const
-         {
-         return m_extensions.has<Next_Protocol_Notification>();
-         }
-
       size_t fragment_size() const
          {
          if(Maximum_Fragment_Length* frag = m_extensions.get<Maximum_Fragment_Length>())
@@ -137,6 +132,18 @@ class Client_Hello : public Handshake_Message
          if(Session_Ticket* ticket = m_extensions.get<Session_Ticket>())
             return ticket->contents();
          return std::vector<byte>();
+         }
+
+      bool supports_alpn() const
+         {
+         return m_extensions.has<Application_Layer_Protocol_Notification>();
+         }
+
+      std::vector<std::string> next_protocols() const
+         {
+         if(auto alpn = m_extensions.get<Application_Layer_Protocol_Notification>())
+            return alpn->protocols();
+         return std::vector<std::string>();
          }
 
       bool supports_heartbeats() const
@@ -169,7 +176,7 @@ class Client_Hello : public Handshake_Message
                    const Policy& policy,
                    RandomNumberGenerator& rng,
                    const std::vector<byte>& reneg_info,
-                   bool next_protocol = false,
+                   const std::vector<std::string>& next_protocols,
                    const std::string& hostname = "",
                    const std::string& srp_identifier = "");
 
@@ -179,7 +186,7 @@ class Client_Hello : public Handshake_Message
                    RandomNumberGenerator& rng,
                    const std::vector<byte>& reneg_info,
                    const Session& resumed_session,
-                   bool next_protocol = false);
+                   const std::vector<std::string>& next_protocols);
 
       Client_Hello(const std::vector<byte>& buf);
 
@@ -226,18 +233,6 @@ class Server_Hello : public Handshake_Message
          return std::vector<byte>();
          }
 
-      bool next_protocol_notification() const
-         {
-         return m_extensions.has<Next_Protocol_Notification>();
-         }
-
-      std::vector<std::string> next_protocols() const
-         {
-         if(Next_Protocol_Notification* npn = m_extensions.get<Next_Protocol_Notification>())
-            return npn->protocols();
-         return std::vector<std::string>();
-         }
-
       size_t fragment_size() const
          {
          if(Maximum_Fragment_Length* frag = m_extensions.get<Maximum_Fragment_Length>())
@@ -257,14 +252,14 @@ class Server_Hello : public Handshake_Message
 
       bool peer_can_send_heartbeats() const
          {
-         if(Heartbeat_Support_Indicator* hb = m_extensions.get<Heartbeat_Support_Indicator>())
+         if(auto hb = m_extensions.get<Heartbeat_Support_Indicator>())
             return hb->peer_allowed_to_send();
          return false;
          }
 
       u16bit srtp_profile() const
          {
-         if(SRTP_Protection_Profiles* srtp = m_extensions.get<SRTP_Protection_Profiles>())
+         if(auto srtp = m_extensions.get<SRTP_Protection_Profiles>())
             {
             auto prof = srtp->profiles();
             if(prof.size() != 1 || prof[0] == 0)
@@ -273,6 +268,13 @@ class Server_Hello : public Handshake_Message
             }
 
          return 0;
+         }
+
+      std::string next_protocol() const
+         {
+         if(auto alpn = m_extensions.get<Application_Layer_Protocol_Notification>())
+            return alpn->single_protocol();
+         return "";
          }
 
       std::set<Handshake_Extension_Type> extension_types() const
@@ -289,7 +291,7 @@ class Server_Hello : public Handshake_Message
                    u16bit ciphersuite,
                    byte compression,
                    bool offer_session_ticket,
-                   const std::vector<std::string>& next_protocols);
+                   const std::string next_protocol);
 
       Server_Hello(Handshake_IO& io,
                    Handshake_Hash& hash,
@@ -299,7 +301,7 @@ class Server_Hello : public Handshake_Message
                    const Client_Hello& client_hello,
                    Session& resumed_session,
                    bool offer_session_ticket,
-                   const std::vector<std::string>& next_protocols);
+                   const std::string& next_protocol);
 
       Server_Hello(const std::vector<byte>& buf);
    private:
@@ -531,27 +533,6 @@ class Server_Hello_Done : public Handshake_Message
       Server_Hello_Done(const std::vector<byte>& buf);
    private:
       std::vector<byte> serialize() const override;
-   };
-
-/**
-* Next Protocol Message
-*/
-class Next_Protocol : public Handshake_Message
-   {
-   public:
-      Handshake_Type type() const override { return NEXT_PROTOCOL; }
-
-      std::string protocol() const { return m_protocol; }
-
-      Next_Protocol(Handshake_IO& io,
-                    Handshake_Hash& hash,
-                    const std::string& protocol);
-
-      Next_Protocol(const std::vector<byte>& buf);
-   private:
-      std::vector<byte> serialize() const override;
-
-      std::string m_protocol;
    };
 
 /**

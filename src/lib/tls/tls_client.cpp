@@ -36,9 +36,6 @@ class Client_Handshake_State : public Handshake_State
       secure_vector<byte> resume_master_secret;
 
       std::unique_ptr<Public_Key> server_public_key;
-
-      // Used by client using NPN
-      Client::next_protocol_fn client_npn_cb;
    };
 
 }
@@ -56,7 +53,7 @@ Client::Client(output_fn output_fn,
                RandomNumberGenerator& rng,
                const Server_Information& info,
                const Protocol_Version offer_version,
-               next_protocol_fn npn,
+               const std::vector<std::string>& next_protos,
                size_t io_buf_sz) :
    Channel(output_fn, proc_cb, alert_cb, handshake_cb, session_manager, rng,
            offer_version.is_datagram_protocol(), io_buf_sz),
@@ -67,7 +64,7 @@ Client::Client(output_fn output_fn,
    const std::string srp_identifier = m_creds.srp_identifier("tls-client", m_info.hostname());
 
    Handshake_State& state = create_handshake_state(offer_version);
-   send_client_hello(state, false, offer_version, srp_identifier, npn);
+   send_client_hello(state, false, offer_version, srp_identifier, next_protos);
    }
 
 Handshake_State* Client::new_handshake_state(Handshake_IO* io)
@@ -89,26 +86,20 @@ Client::get_peer_cert_chain(const Handshake_State& state) const
 void Client::initiate_handshake(Handshake_State& state,
                                 bool force_full_renegotiation)
    {
-   send_client_hello(state,
-                     force_full_renegotiation,
-                     state.version());
+   send_client_hello(state, force_full_renegotiation, state.version());
    }
 
 void Client::send_client_hello(Handshake_State& state_base,
                                bool force_full_renegotiation,
                                Protocol_Version version,
                                const std::string& srp_identifier,
-                               next_protocol_fn next_protocol)
+                               const std::vector<std::string>& next_protocols)
    {
    Client_Handshake_State& state = dynamic_cast<Client_Handshake_State&>(state_base);
 
    if(state.version().is_datagram_protocol())
       state.set_expected_next(HELLO_VERIFY_REQUEST); // optional
    state.set_expected_next(SERVER_HELLO);
-
-   state.client_npn_cb = next_protocol;
-
-   const bool send_npn_request = static_cast<bool>(next_protocol);
 
    if(!force_full_renegotiation && !m_info.empty())
       {
@@ -124,7 +115,7 @@ void Client::send_client_hello(Handshake_State& state_base,
                rng(),
                secure_renegotiation_data_for_client_hello(),
                session_info,
-               send_npn_request));
+               next_protocols));
 
             state.resume_master_secret = session_info.master_secret();
             }
@@ -140,7 +131,7 @@ void Client::send_client_hello(Handshake_State& state_base,
          m_policy,
          rng(),
          secure_renegotiation_data_for_client_hello(),
-         send_npn_request,
+         next_protocols,
          m_info.hostname(),
          srp_identifier));
       }
@@ -247,6 +238,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          }
 
       state.set_version(state.server_hello()->version());
+      m_application_protocol = state.server_hello()->next_protocol();
 
       secure_renegotiation_check(state.server_hello());
 
@@ -389,20 +381,15 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
    else if(type == CERTIFICATE_REQUEST)
       {
       state.set_expected_next(SERVER_HELLO_DONE);
-      state.cert_req(
-         new Certificate_Req(contents, state.version())
-         );
+      state.cert_req(new Certificate_Req(contents, state.version()));
       }
    else if(type == SERVER_HELLO_DONE)
       {
-      state.server_hello_done(
-         new Server_Hello_Done(contents)
-         );
+      state.server_hello_done(new Server_Hello_Done(contents));
 
       if(state.received_handshake_msg(CERTIFICATE_REQUEST))
          {
-         const std::vector<std::string>& types =
-            state.cert_req()->acceptable_cert_types();
+         const auto& types = state.cert_req()->acceptable_cert_types();
 
          std::vector<X509_Certificate> client_certs =
             m_creds.cert_chain(types,
@@ -449,19 +436,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
 
       change_cipher_spec_writer(CLIENT);
 
-      if(state.server_hello()->next_protocol_notification())
-         {
-         const std::string protocol = state.client_npn_cb(
-            state.server_hello()->next_protocols());
-
-         state.next_protocol(
-            new Next_Protocol(state.handshake_io(), state.hash(), protocol)
-            );
-         }
-
-      state.client_finished(
-         new Finished(state.handshake_io(), state, CLIENT)
-         );
+      state.client_finished(new Finished(state.handshake_io(), state, CLIENT));
 
       if(state.server_hello()->supports_session_ticket())
          state.set_expected_next(NEW_SESSION_TICKET);
@@ -493,22 +468,8 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
       if(!state.client_finished()) // session resume case
          {
          state.handshake_io().send(Change_Cipher_Spec());
-
          change_cipher_spec_writer(CLIENT);
-
-         if(state.server_hello()->next_protocol_notification())
-            {
-            const std::string protocol = state.client_npn_cb(
-                  state.server_hello()->next_protocols());
-
-            state.next_protocol(
-               new Next_Protocol(state.handshake_io(), state.hash(), protocol)
-               );
-            }
-
-         state.client_finished(
-            new Finished(state.handshake_io(), state, CLIENT)
-            );
+         state.client_finished(new Finished(state.handshake_io(), state, CLIENT));
          }
 
       std::vector<byte> session_id = state.server_hello()->session_id();
