@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/pk_ops.h>
+#include <botan/internal/pk_ops_impl.h>
 #include <botan/eme.h>
 #include <botan/kdf.h>
 #include <botan/emsa.h>
@@ -17,7 +17,7 @@ PK_Ops::Encryption_with_EME::Encryption_with_EME(const std::string& eme)
    {
    m_eme.reset(get_eme(eme));
    if(!m_eme.get())
-      throw std::runtime_error("EME " + eme + " not found");
+      throw Algorithm_Not_Found(eme);
    }
 
 PK_Ops::Encryption_with_EME::~Encryption_with_EME() {}
@@ -44,7 +44,7 @@ PK_Ops::Decryption_with_EME::Decryption_with_EME(const std::string& eme)
    {
    m_eme.reset(get_eme(eme));
    if(!m_eme.get())
-      throw std::runtime_error("EME " + eme + " not found");
+      throw Algorithm_Not_Found(eme);
    }
 
 PK_Ops::Decryption_with_EME::~Decryption_with_EME() {}
@@ -76,5 +76,57 @@ secure_vector<byte> PK_Ops::Key_Agreement_with_KDF::agree(size_t key_len,
       return m_kdf->derive_key(key_len, z, salt, salt_len);
    return z;
   }
+
+PK_Ops::Signature_with_EMSA::Signature_with_EMSA(const std::string& emsa)
+   {
+   m_emsa.reset(get_emsa(emsa));
+   if(!m_emsa)
+      throw Algorithm_Not_Found(emsa);
+   }
+
+PK_Ops::Signature_with_EMSA::~Signature_with_EMSA() {}
+
+void PK_Ops::Signature_with_EMSA::update(const byte msg[], size_t msg_len)
+   {
+   m_emsa->update(msg, msg_len);
+   }
+
+secure_vector<byte> PK_Ops::Signature_with_EMSA::sign(RandomNumberGenerator& rng)
+   {
+   const secure_vector<byte> msg = m_emsa->raw_data();
+   const auto padded = m_emsa->encoding_of(msg, this->max_input_bits(), rng);
+   return raw_sign(&padded[0], padded.size(), rng);
+   }
+
+PK_Ops::Verification_with_EMSA::Verification_with_EMSA(const std::string& emsa)
+   {
+   m_emsa.reset(get_emsa(emsa));
+   if(!m_emsa)
+      throw Algorithm_Not_Found(emsa);
+   }
+
+PK_Ops::Verification_with_EMSA::~Verification_with_EMSA() {}
+
+void PK_Ops::Verification_with_EMSA::update(const byte msg[], size_t msg_len)
+   {
+   m_emsa->update(msg, msg_len);
+   }
+
+bool PK_Ops::Verification_with_EMSA::is_valid_signature(const byte sig[], size_t sig_len)
+   {
+   const secure_vector<byte> msg = m_emsa->raw_data();
+
+   if(with_recovery())
+      {
+      secure_vector<byte> output_of_key = verify_mr(sig, sig_len);
+      return m_emsa->verify(output_of_key, msg, max_input_bits());
+      }
+   else
+      {
+      Null_RNG rng;
+      secure_vector<byte> encoded = m_emsa->encoding_of(msg, max_input_bits(), rng);
+      return verify(&encoded[0], encoded.size(), sig, sig_len);
+      }
+   }
 
 }

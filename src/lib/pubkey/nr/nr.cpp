@@ -78,11 +78,12 @@ namespace {
 /**
 * Nyberg-Rueppel signature operation
 */
-class NR_Signature_Operation : public PK_Ops::Signature
+class NR_Signature_Operation : public PK_Ops::Signature_with_EMSA
    {
    public:
       typedef NR_PrivateKey Key_Type;
-      NR_Signature_Operation(const NR_PrivateKey& nr, const std::string&) :
+      NR_Signature_Operation(const NR_PrivateKey& nr, const std::string& emsa) :
+         PK_Ops::Signature_with_EMSA(emsa),
          q(nr.group_q()),
          x(nr.get_x()),
          powermod_g_p(nr.group_g(), nr.group_p()),
@@ -90,12 +91,12 @@ class NR_Signature_Operation : public PK_Ops::Signature
          {
          }
 
-      size_t message_parts() const { return 2; }
-      size_t message_part_size() const { return q.bytes(); }
-      size_t max_input_bits() const { return (q.bits() - 1); }
+      size_t message_parts() const override { return 2; }
+      size_t message_part_size() const override { return q.bytes(); }
+      size_t max_input_bits() const override { return (q.bits() - 1); }
 
-      secure_vector<byte> sign(const byte msg[], size_t msg_len,
-                              RandomNumberGenerator& rng);
+      secure_vector<byte> raw_sign(const byte msg[], size_t msg_len,
+                                   RandomNumberGenerator& rng) override;
    private:
       const BigInt& q;
       const BigInt& x;
@@ -104,8 +105,8 @@ class NR_Signature_Operation : public PK_Ops::Signature
    };
 
 secure_vector<byte>
-NR_Signature_Operation::sign(const byte msg[], size_t msg_len,
-                             RandomNumberGenerator& rng)
+NR_Signature_Operation::raw_sign(const byte msg[], size_t msg_len,
+                                 RandomNumberGenerator& rng)
    {
    rng.add_entropy(msg, msg_len);
 
@@ -137,11 +138,12 @@ NR_Signature_Operation::sign(const byte msg[], size_t msg_len,
 /**
 * Nyberg-Rueppel verification operation
 */
-class NR_Verification_Operation : public PK_Ops::Verification
+class NR_Verification_Operation : public PK_Ops::Verification_with_EMSA
    {
    public:
       typedef NR_PublicKey Key_Type;
-      NR_Verification_Operation(const NR_PublicKey& nr, const std::string&) :
+      NR_Verification_Operation(const NR_PublicKey& nr, const std::string& emsa) :
+         PK_Ops::Verification_with_EMSA(emsa),
          q(nr.group_q()), y(nr.get_y())
          {
          powermod_g_p = Fixed_Base_Power_Mod(nr.group_g(), nr.group_p());
@@ -150,13 +152,13 @@ class NR_Verification_Operation : public PK_Ops::Verification
          mod_q = Modular_Reducer(nr.group_q());
          }
 
-      size_t message_parts() const { return 2; }
-      size_t message_part_size() const { return q.bytes(); }
-      size_t max_input_bits() const { return (q.bits() - 1); }
+      size_t message_parts() const override { return 2; }
+      size_t message_part_size() const override { return q.bytes(); }
+      size_t max_input_bits() const override { return (q.bits() - 1); }
 
-      bool with_recovery() const { return true; }
+      bool with_recovery() const override { return true; }
 
-      secure_vector<byte> verify_mr(const byte msg[], size_t msg_len);
+      secure_vector<byte> verify_mr(const byte msg[], size_t msg_len) override;
    private:
       const BigInt& q;
       const BigInt& y;

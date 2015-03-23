@@ -112,7 +112,7 @@ class RSA_Private_Operation
       Blinder m_blinder;
    };
 
-class RSA_Signature_Operation : public PK_Ops::Signature,
+class RSA_Signature_Operation : public PK_Ops::Signature_with_EMSA,
                                 private RSA_Private_Operation
    {
    public:
@@ -120,20 +120,18 @@ class RSA_Signature_Operation : public PK_Ops::Signature,
 
       size_t max_input_bits() const override { return get_max_input_bits(); };
 
-      RSA_Signature_Operation(const RSA_PrivateKey& rsa, const std::string&) :
+      RSA_Signature_Operation(const RSA_PrivateKey& rsa, const std::string& emsa) :
+         PK_Ops::Signature_with_EMSA(emsa),
          RSA_Private_Operation(rsa)
          {
          }
 
-      secure_vector<byte> sign(const byte msg[], size_t msg_len,
-                              RandomNumberGenerator&) override
+      secure_vector<byte> raw_sign(const byte msg[], size_t msg_len,
+                                   RandomNumberGenerator&) override
          {
-         /* We don't check signatures against powermod_e_n here because
-         PK_Signer checks verification consistency for all signature
-         algorithms.
-         */
          const BigInt m(msg, msg_len);
          const BigInt x = blinded_private_op(m);
+         BOTAN_ASSERT(m == m_powermod_e_n(x), "RSA sign consistency check");
          return BigInt::encode_1363(x, n.bytes());
          }
    };
@@ -160,7 +158,6 @@ class RSA_Decryption_Operation : public PK_Ops::Decryption_with_EME,
          return BigInt::encode_locked(x);
          }
    };
-
 
 /**
 * RSA public (encrypt/verify) operation
@@ -208,7 +205,7 @@ class RSA_Encryption_Operation : public PK_Ops::Encryption_with_EME,
          }
    };
 
-class RSA_Verify_Operation : public PK_Ops::Verification,
+class RSA_Verify_Operation : public PK_Ops::Verification_with_EMSA,
                              private RSA_Public_Operation
    {
    public:
@@ -216,7 +213,8 @@ class RSA_Verify_Operation : public PK_Ops::Verification,
 
       size_t max_input_bits() const override { return get_max_input_bits(); };
 
-      RSA_Verify_Operation(const RSA_PublicKey& rsa, const std::string&) :
+      RSA_Verify_Operation(const RSA_PublicKey& rsa, const std::string& emsa) :
+         PK_Ops::Verification_with_EMSA(emsa),
          RSA_Public_Operation(rsa)
          {
          }

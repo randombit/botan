@@ -94,21 +94,23 @@ BigInt decode_le(const byte msg[], size_t msg_len)
 /**
 * GOST-34.10 signature operation
 */
-class GOST_3410_Signature_Operation : public PK_Ops::Signature
+class GOST_3410_Signature_Operation : public PK_Ops::Signature_with_EMSA
    {
    public:
       typedef GOST_3410_PrivateKey Key_Type;
-      GOST_3410_Signature_Operation(const GOST_3410_PrivateKey& gost_3410, const std::string&):
+      GOST_3410_Signature_Operation(const GOST_3410_PrivateKey& gost_3410,
+                                    const std::string& emsa) :
+         PK_Ops::Signature_with_EMSA(emsa),
          base_point(gost_3410.domain().get_base_point()),
          order(gost_3410.domain().get_order()),
          x(gost_3410.private_value()) {}
 
-      size_t message_parts() const { return 2; }
-      size_t message_part_size() const { return order.bytes(); }
-      size_t max_input_bits() const { return order.bits(); }
+      size_t message_parts() const override { return 2; }
+      size_t message_part_size() const override { return order.bytes(); }
+      size_t max_input_bits() const override { return order.bits(); }
 
-      secure_vector<byte> sign(const byte msg[], size_t msg_len,
-                              RandomNumberGenerator& rng);
+      secure_vector<byte> raw_sign(const byte msg[], size_t msg_len,
+                                   RandomNumberGenerator& rng) override;
 
    private:
       const PointGFp& base_point;
@@ -117,8 +119,8 @@ class GOST_3410_Signature_Operation : public PK_Ops::Signature
    };
 
 secure_vector<byte>
-GOST_3410_Signature_Operation::sign(const byte msg[], size_t msg_len,
-                                    RandomNumberGenerator& rng)
+GOST_3410_Signature_Operation::raw_sign(const byte msg[], size_t msg_len,
+                                        RandomNumberGenerator& rng)
    {
    BigInt k;
    do
@@ -150,21 +152,23 @@ GOST_3410_Signature_Operation::sign(const byte msg[], size_t msg_len,
 /**
 * GOST-34.10 verification operation
 */
-class GOST_3410_Verification_Operation : public PK_Ops::Verification
+class GOST_3410_Verification_Operation : public PK_Ops::Verification_with_EMSA
    {
    public:
       typedef GOST_3410_PublicKey Key_Type;
 
-      GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost, const std::string&) :
+      GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost,
+                                       const std::string& emsa) :
+         PK_Ops::Verification_with_EMSA(emsa),
          base_point(gost.domain().get_base_point()),
          public_point(gost.public_point()),
          order(gost.domain().get_order()) {}
 
-      size_t message_parts() const { return 2; }
-      size_t message_part_size() const { return order.bytes(); }
-      size_t max_input_bits() const { return order.bits(); }
+      size_t message_parts() const override { return 2; }
+      size_t message_part_size() const override { return order.bytes(); }
+      size_t max_input_bits() const override { return order.bits(); }
 
-      bool with_recovery() const { return false; }
+      bool with_recovery() const override { return false; }
 
       bool verify(const byte msg[], size_t msg_len,
                   const byte sig[], size_t sig_len);

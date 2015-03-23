@@ -67,13 +67,14 @@ namespace {
 /**
 * Rabin-Williams Signature Operation
 */
-class RW_Signature_Operation : public PK_Ops::Signature
+class RW_Signature_Operation : public PK_Ops::Signature_with_EMSA
    {
    public:
       typedef RW_PrivateKey Key_Type;
 
       RW_Signature_Operation(const RW_PrivateKey& rw,
-                             const std::string&) :
+                             const std::string& emsa) :
+         PK_Ops::Signature_with_EMSA(emsa),
          n(rw.get_n()),
          e(rw.get_e()),
          q(rw.get_q()),
@@ -87,10 +88,10 @@ class RW_Signature_Operation : public PK_Ops::Signature
          {
          }
 
-      size_t max_input_bits() const { return (n.bits() - 1); }
+      size_t max_input_bits() const override { return (n.bits() - 1); }
 
-      secure_vector<byte> sign(const byte msg[], size_t msg_len,
-                              RandomNumberGenerator& rng);
+      secure_vector<byte> raw_sign(const byte msg[], size_t msg_len,
+                                   RandomNumberGenerator& rng) override;
    private:
       const BigInt& n;
       const BigInt& e;
@@ -103,8 +104,8 @@ class RW_Signature_Operation : public PK_Ops::Signature
    };
 
 secure_vector<byte>
-RW_Signature_Operation::sign(const byte msg[], size_t msg_len,
-                             RandomNumberGenerator&)
+RW_Signature_Operation::raw_sign(const byte msg[], size_t msg_len,
+                                 RandomNumberGenerator&)
    {
    BigInt i(msg, msg_len);
 
@@ -130,12 +131,13 @@ RW_Signature_Operation::sign(const byte msg[], size_t msg_len,
 /**
 * Rabin-Williams Verification Operation
 */
-class RW_Verification_Operation : public PK_Ops::Verification
+class RW_Verification_Operation : public PK_Ops::Verification_with_EMSA
    {
    public:
       typedef RW_PublicKey Key_Type;
 
-      RW_Verification_Operation(const RW_PublicKey& rw, const std::string&) :
+      RW_Verification_Operation(const RW_PublicKey& rw, const std::string& emsa) :
+         PK_Ops::Verification_with_EMSA(emsa),
          n(rw.get_n()), powermod_e_n(rw.get_e(), rw.get_n())
          {}
 

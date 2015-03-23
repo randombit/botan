@@ -32,13 +32,14 @@ namespace {
 /**
 * ECDSA signature operation
 */
-class ECDSA_Signature_Operation : public PK_Ops::Signature
+class ECDSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
    {
    public:
       typedef ECDSA_PrivateKey Key_Type;
 
       ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa,
                                 const std::string& emsa) :
+         PK_Ops::Signature_with_EMSA(emsa),
          base_point(ecdsa.domain().get_base_point()),
          order(ecdsa.domain().get_order()),
          x(ecdsa.private_value()),
@@ -47,12 +48,12 @@ class ECDSA_Signature_Operation : public PK_Ops::Signature
          {
          }
 
-      secure_vector<byte> sign(const byte msg[], size_t msg_len,
-                              RandomNumberGenerator& rng);
+      secure_vector<byte> raw_sign(const byte msg[], size_t msg_len,
+                                   RandomNumberGenerator& rng) override;
 
-      size_t message_parts() const { return 2; }
-      size_t message_part_size() const { return order.bytes(); }
-      size_t max_input_bits() const { return order.bits(); }
+      size_t message_parts() const override { return 2; }
+      size_t message_part_size() const override { return order.bytes(); }
+      size_t max_input_bits() const override { return order.bits(); }
 
    private:
       const PointGFp& base_point;
@@ -63,8 +64,8 @@ class ECDSA_Signature_Operation : public PK_Ops::Signature
    };
 
 secure_vector<byte>
-ECDSA_Signature_Operation::sign(const byte msg[], size_t msg_len,
-                                RandomNumberGenerator&)
+ECDSA_Signature_Operation::raw_sign(const byte msg[], size_t msg_len,
+                                    RandomNumberGenerator&)
    {
    const BigInt m(msg, msg_len);
 
@@ -87,12 +88,13 @@ ECDSA_Signature_Operation::sign(const byte msg[], size_t msg_len,
 /**
 * ECDSA verification operation
 */
-class ECDSA_Verification_Operation : public PK_Ops::Verification
+class ECDSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
    {
    public:
       typedef ECDSA_PublicKey Key_Type;
       ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa,
-                                   const std::string&) :
+                                   const std::string& emsa) :
+         PK_Ops::Verification_with_EMSA(emsa),
          m_base_point(ecdsa.domain().get_base_point()),
          m_public_point(ecdsa.public_point()),
          m_order(ecdsa.domain().get_order()),
@@ -101,14 +103,14 @@ class ECDSA_Verification_Operation : public PK_Ops::Verification
          //m_public_point.precompute_multiples();
          }
 
-      size_t message_parts() const { return 2; }
-      size_t message_part_size() const { return m_order.bytes(); }
-      size_t max_input_bits() const { return m_order.bits(); }
+      size_t message_parts() const override { return 2; }
+      size_t message_part_size() const override { return m_order.bytes(); }
+      size_t max_input_bits() const override { return m_order.bits(); }
 
-      bool with_recovery() const { return false; }
+      bool with_recovery() const override { return false; }
 
       bool verify(const byte msg[], size_t msg_len,
-                  const byte sig[], size_t sig_len);
+                  const byte sig[], size_t sig_len) override;
    private:
       const PointGFp& m_base_point;
       const PointGFp& m_public_point;

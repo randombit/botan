@@ -21,7 +21,7 @@ class EMSA;
 namespace PK_Ops {
 
 template<typename Key>
-struct PK_Spec
+class PK_Spec
    {
    public:
       PK_Spec(const Key& key, const std::string& pad) :
@@ -38,6 +38,9 @@ struct PK_Spec
       const std::string m_pad;
    };
 
+typedef PK_Spec<Public_Key> PK_Spec_Public_Key;
+typedef PK_Spec<Private_Key> PK_Spec_Private_Key;
+
 /**
 * Public key encryption interface
 */
@@ -48,28 +51,9 @@ class BOTAN_DLL Encryption
 
       virtual secure_vector<byte> encrypt(const byte msg[], size_t msg_len, RandomNumberGenerator& rng) = 0;
 
-      typedef PK_Spec<Public_Key> Spec;
+      typedef PK_Spec_Public_Key Spec;
 
       virtual ~Encryption() {}
-   };
-
-class BOTAN_DLL Encryption_with_EME : public Encryption
-   {
-   public:
-      size_t max_input_bits() const override;
-
-      secure_vector<byte> encrypt(const byte msg[], size_t msg_len,
-                                  RandomNumberGenerator& rng) override;
-
-      ~Encryption_with_EME();
-   protected:
-      Encryption_with_EME(const std::string& eme);
-   private:
-      virtual size_t max_raw_input_bits() const = 0;
-
-      virtual secure_vector<byte> raw_encrypt(const byte msg[], size_t len,
-                                              RandomNumberGenerator& rng) = 0;
-      std::unique_ptr<EME> m_eme;
    };
 
 /**
@@ -78,68 +62,13 @@ class BOTAN_DLL Encryption_with_EME : public Encryption
 class BOTAN_DLL Decryption
    {
    public:
+      typedef PK_Spec_Private_Key Spec;
+
       virtual size_t max_input_bits() const = 0;
 
       virtual secure_vector<byte> decrypt(const byte msg[],  size_t msg_len) = 0;
 
-      typedef PK_Spec<Private_Key> Spec;
-
       virtual ~Decryption() {}
-   };
-
-class BOTAN_DLL Decryption_with_EME : public Decryption
-   {
-   public:
-      size_t max_input_bits() const override;
-
-      secure_vector<byte> decrypt(const byte msg[], size_t msg_len) override;
-
-      ~Decryption_with_EME();
-   protected:
-      Decryption_with_EME(const std::string& eme);
-   private:
-      virtual size_t max_raw_input_bits() const = 0;
-      virtual secure_vector<byte> raw_decrypt(const byte msg[], size_t len) = 0;
-      std::unique_ptr<EME> m_eme;
-   };
-
-
-/**
-* Public key signature creation interface
-*/
-class BOTAN_DLL Signature
-   {
-   public:
-      /**
-      * Find out the number of message parts supported by this scheme.
-      * @return number of message parts
-      */
-      virtual size_t message_parts() const { return 1; }
-
-      /**
-      * Find out the message part size supported by this scheme/key.
-      * @return size of the message parts
-      */
-      virtual size_t message_part_size() const { return 0; }
-
-      /**
-      * Get the maximum message size in bits supported by this public key.
-      * @return maximum message in bits
-      */
-      virtual size_t max_input_bits() const = 0;
-
-      /*
-      * Perform a signature operation
-      * @param msg the message
-      * @param msg_len the length of msg in bytes
-      * @param rng a random number generator
-      */
-      virtual secure_vector<byte> sign(const byte msg[], size_t msg_len,
-                                      RandomNumberGenerator& rng) = 0;
-
-      typedef PK_Spec<Private_Key> Spec;
-
-      virtual ~Signature() {}
    };
 
 /**
@@ -148,6 +77,21 @@ class BOTAN_DLL Signature
 class BOTAN_DLL Verification
    {
    public:
+      typedef PK_Spec_Public_Key Spec;
+
+      /*
+      * Add more data to the message currently being signed
+      * @param msg the message
+      * @param msg_len the length of msg in bytes
+      */
+      virtual void update(const byte msg[], size_t msg_len) = 0;
+
+      /*
+      * Perform a signature operation
+      * @param rng a random number generator
+      */
+      virtual bool is_valid_signature(const byte sig[], size_t sig_len) = 0;
+
       /**
       * Get the maximum message size in bits supported by this public key.
       * @return maximum message in bits
@@ -166,42 +110,43 @@ class BOTAN_DLL Verification
       */
       virtual size_t message_part_size() const { return 0; }
 
-      /**
-      * @return boolean specifying if this key type supports message
-      * recovery and thus if you need to call verify() or verify_mr()
-      */
-      virtual bool with_recovery() const = 0;
-
-      /*
-      * Perform a signature check operation
-      * @param msg the message
-      * @param msg_len the length of msg in bytes
-      * @param sig the signature
-      * @param sig_len the length of sig in bytes
-      * @returns if signature is a valid one for message
-      */
-      virtual bool verify(const byte[], size_t,
-                          const byte[], size_t)
-         {
-         throw Invalid_State("Message recovery required");
-         }
-
-      /*
-      * Perform a signature operation (with message recovery)
-      * Only call this if with_recovery() returns true
-      * @param msg the message
-      * @param msg_len the length of msg in bytes
-      * @returns recovered message
-      */
-      virtual secure_vector<byte> verify_mr(const byte[],
-                                           size_t)
-         {
-         throw Invalid_State("Message recovery not supported");
-         }
-
-      typedef PK_Spec<Public_Key> Spec;
-
       virtual ~Verification() {}
+   };
+
+/**
+* Public key signature creation interface
+*/
+class BOTAN_DLL Signature
+   {
+   public:
+      typedef PK_Spec_Private_Key Spec;
+
+      /**
+      * Find out the number of message parts supported by this scheme.
+      * @return number of message parts
+      */
+      virtual size_t message_parts() const { return 1; }
+
+      /**
+      * Find out the message part size supported by this scheme/key.
+      * @return size of the message parts
+      */
+      virtual size_t message_part_size() const { return 0; }
+
+      /*
+      * Add more data to the message currently being signed
+      * @param msg the message
+      * @param msg_len the length of msg in bytes
+      */
+      virtual void update(const byte msg[], size_t msg_len) = 0;
+
+      /*
+      * Perform a signature operation
+      * @param rng a random number generator
+      */
+      virtual secure_vector<byte> sign(RandomNumberGenerator& rng) = 0;
+
+      virtual ~Signature() {}
    };
 
 /**
@@ -210,28 +155,13 @@ class BOTAN_DLL Verification
 class BOTAN_DLL Key_Agreement
    {
    public:
+      typedef PK_Spec_Private_Key Spec;
+
       virtual secure_vector<byte> agree(size_t key_len,
                                         const byte other_key[], size_t other_key_len,
                                         const byte salt[], size_t salt_len) = 0;
 
-      typedef PK_Spec<Private_Key> Spec;
-
       virtual ~Key_Agreement() {}
-   };
-
-class BOTAN_DLL Key_Agreement_with_KDF : public Key_Agreement
-   {
-   public:
-      secure_vector<byte> agree(size_t key_len,
-                                const byte other_key[], size_t other_key_len,
-                                const byte salt[], size_t salt_len) override;
-
-   protected:
-      Key_Agreement_with_KDF(const std::string& kdf);
-      ~Key_Agreement_with_KDF();
-   private:
-      virtual secure_vector<byte> raw_agree(const byte w[], size_t w_len) = 0;
-      std::unique_ptr<KDF> m_kdf;
    };
 
 }

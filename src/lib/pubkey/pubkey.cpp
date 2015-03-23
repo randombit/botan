@@ -5,18 +5,10 @@
 */
 
 #include <botan/pubkey.h>
+#include <botan/internal/algo_registry.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/bigint.h>
-#include <botan/parsing.h>
-#include <botan/internal/algo_registry.h>
-#include <botan/internal/bit_ops.h>
-
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-  #include <botan/system_rng.h>
-#else
-  #include <botan/auto_rng.h>
-#endif
 
 namespace Botan {
 
@@ -73,132 +65,88 @@ SymmetricKey PK_Key_Agreement::derive_key(size_t key_len,
    return m_op->agree(key_len, in, in_len, salt, salt_len);
    }
 
-/*
-* PK_Signer Constructor
-*/
+namespace {
+
+std::vector<byte> der_encode_signature(const std::vector<byte>& sig, size_t parts)
+   {
+   if(sig.size() % parts)
+      throw Encoding_Error("PK_Signer: strange signature size found");
+   const size_t SIZE_OF_PART = sig.size() / parts;
+
+   std::vector<BigInt> sig_parts(parts);
+   for(size_t j = 0; j != sig_parts.size(); ++j)
+      sig_parts[j].binary_decode(&sig[SIZE_OF_PART*j], SIZE_OF_PART);
+
+   return DER_Encoder()
+      .start_cons(SEQUENCE)
+      .encode_list(sig_parts)
+      .end_cons()
+      .get_contents_unlocked();
+   }
+
+std::vector<byte> der_decode_signature(const byte sig[], size_t len,
+                                       size_t part_size, size_t parts)
+   {
+   std::vector<byte> real_sig;
+   BER_Decoder decoder(sig, len);
+   BER_Decoder ber_sig = decoder.start_cons(SEQUENCE);
+
+   size_t count = 0;
+   while(ber_sig.more_items())
+      {
+      BigInt sig_part;
+      ber_sig.decode(sig_part);
+      real_sig += BigInt::encode_1363(sig_part, part_size);
+      ++count;
+      }
+
+   if(count != parts)
+      throw Decoding_Error("PK_Verifier: signature size invalid");
+   return real_sig;
+   }
+
+}
+
 PK_Signer::PK_Signer(const Private_Key& key,
                      const std::string& emsa,
-                     Signature_Format format,
-                     Fault_Protection prot)
+                     Signature_Format format)
    {
    m_op.reset(get_pk_op<PK_Ops::Signature>(key, emsa));
-
-   if(prot == ENABLE_FAULT_PROTECTION)
-      m_verify_op.reset(get_pk_op<PK_Ops::Verification>(key, emsa));
-
-   if(!m_op || (prot == ENABLE_FAULT_PROTECTION && !m_verify_op))
-      throw Lookup_Error("Signing with " + key.algo_name() + " not supported");
-
-   m_emsa.reset(get_emsa(emsa));
+   if(!m_op)
+      throw Lookup_Error("Signing with " + key.algo_name() + "/" + emsa + " not supported");
    m_sig_format = format;
    }
 
-/*
-* Sign a message
-*/
-std::vector<byte> PK_Signer::sign_message(const byte msg[], size_t length,
-                                           RandomNumberGenerator& rng)
-   {
-   update(msg, length);
-   return signature(rng);
-   }
-
-/*
-* Add more to the message to be signed
-*/
 void PK_Signer::update(const byte in[], size_t length)
    {
-   m_emsa->update(in, length);
+   m_op->update(in, length);
    }
 
-/*
-* Check the signature we just created, to help prevent fault attacks
-*/
-bool PK_Signer::self_test_signature(const std::vector<byte>& msg,
-                                    const std::vector<byte>& sig) const
-   {
-   if(!m_verify_op)
-      return true; // checking disabled, assume ok
-
-   if(m_verify_op->with_recovery())
-      {
-      std::vector<byte> recovered =
-         unlock(m_verify_op->verify_mr(&sig[0], sig.size()));
-
-      if(msg.size() > recovered.size())
-         {
-         size_t extra_0s = msg.size() - recovered.size();
-
-         for(size_t i = 0; i != extra_0s; ++i)
-            if(msg[i] != 0)
-               return false;
-
-         return same_mem(&msg[extra_0s], &recovered[0], recovered.size());
-         }
-
-      return (recovered == msg);
-      }
-   else
-      return m_verify_op->verify(&msg[0], msg.size(),
-                               &sig[0], sig.size());
-   }
-
-/*
-* Create a signature
-*/
 std::vector<byte> PK_Signer::signature(RandomNumberGenerator& rng)
    {
-   std::vector<byte> encoded = unlock(m_emsa->encoding_of(m_emsa->raw_data(),
-                                                 m_op->max_input_bits(),
-                                                        rng));
+   const std::vector<byte> plain_sig = unlock(m_op->sign(rng));
+   const size_t parts = m_op->message_parts();
 
-   std::vector<byte> plain_sig = unlock(m_op->sign(&encoded[0], encoded.size(), rng));
-
-   BOTAN_ASSERT(self_test_signature(encoded, plain_sig), "Signature was consistent");
-
-   if(m_op->message_parts() == 1 || m_sig_format == IEEE_1363)
+   if(parts == 1 || m_sig_format == IEEE_1363)
       return plain_sig;
-
-   if(m_sig_format == DER_SEQUENCE)
-      {
-      if(plain_sig.size() % m_op->message_parts())
-         throw Encoding_Error("PK_Signer: strange signature size found");
-      const size_t SIZE_OF_PART = plain_sig.size() / m_op->message_parts();
-
-      std::vector<BigInt> sig_parts(m_op->message_parts());
-      for(size_t j = 0; j != sig_parts.size(); ++j)
-         sig_parts[j].binary_decode(&plain_sig[SIZE_OF_PART*j], SIZE_OF_PART);
-
-      return DER_Encoder()
-         .start_cons(SEQUENCE)
-            .encode_list(sig_parts)
-         .end_cons()
-      .get_contents_unlocked();
-      }
+   else if(m_sig_format == DER_SEQUENCE)
+      return der_encode_signature(plain_sig, parts);
    else
       throw Encoding_Error("PK_Signer: Unknown signature format " +
                            std::to_string(m_sig_format));
    }
 
-/*
-* PK_Verifier Constructor
-*/
 PK_Verifier::PK_Verifier(const Public_Key& key,
                          const std::string& emsa_name,
                          Signature_Format format)
    {
    m_op.reset(get_pk_op<PK_Ops::Verification>(key, emsa_name));
-
    if(!m_op)
       throw Lookup_Error("Verification with " + key.algo_name() + " not supported");
 
-   m_emsa.reset(get_emsa(emsa_name));
    m_sig_format = format;
    }
 
-/*
-* Set the signature format
-*/
 void PK_Verifier::set_input_format(Signature_Format format)
    {
    if(m_op->message_parts() == 1 && format != IEEE_1363)
@@ -206,9 +154,6 @@ void PK_Verifier::set_input_format(Signature_Format format)
    m_sig_format = format;
    }
 
-/*
-* Verify a message
-*/
 bool PK_Verifier::verify_message(const byte msg[], size_t msg_length,
                                  const byte sig[], size_t sig_length)
    {
@@ -216,70 +161,31 @@ bool PK_Verifier::verify_message(const byte msg[], size_t msg_length,
    return check_signature(sig, sig_length);
    }
 
-/*
-* Append to the message
-*/
 void PK_Verifier::update(const byte in[], size_t length)
    {
-   m_emsa->update(in, length);
+   m_op->update(in, length);
    }
 
-/*
-* Check a signature
-*/
 bool PK_Verifier::check_signature(const byte sig[], size_t length)
    {
    try {
       if(m_sig_format == IEEE_1363)
-         return validate_signature(m_emsa->raw_data(), sig, length);
+         {
+         return m_op->is_valid_signature(sig, length);
+         }
       else if(m_sig_format == DER_SEQUENCE)
          {
-         BER_Decoder decoder(sig, length);
-         BER_Decoder ber_sig = decoder.start_cons(SEQUENCE);
+         std::vector<byte> real_sig = der_decode_signature(sig, length,
+                                                           m_op->message_part_size(),
+                                                           m_op->message_parts());
 
-         size_t count = 0;
-         std::vector<byte> real_sig;
-         while(ber_sig.more_items())
-            {
-            BigInt sig_part;
-            ber_sig.decode(sig_part);
-            real_sig += BigInt::encode_1363(sig_part, m_op->message_part_size());
-            ++count;
-            }
-
-         if(count != m_op->message_parts())
-            throw Decoding_Error("PK_Verifier: signature size invalid");
-
-         return validate_signature(m_emsa->raw_data(),
-                                   &real_sig[0], real_sig.size());
+         return m_op->is_valid_signature(&real_sig[0], real_sig.size());
          }
       else
          throw Decoding_Error("PK_Verifier: Unknown signature format " +
                               std::to_string(m_sig_format));
       }
    catch(Invalid_Argument) { return false; }
-   }
-
-/*
-* Verify a signature
-*/
-bool PK_Verifier::validate_signature(const secure_vector<byte>& msg,
-                                     const byte sig[], size_t sig_len)
-   {
-   if(m_op->with_recovery())
-      {
-      secure_vector<byte> output_of_key = m_op->verify_mr(sig, sig_len);
-      return m_emsa->verify(output_of_key, msg, m_op->max_input_bits());
-      }
-   else
-      {
-      Null_RNG rng;
-
-      secure_vector<byte> encoded =
-         m_emsa->encoding_of(msg, m_op->max_input_bits(), rng);
-
-      return m_op->verify(&encoded[0], encoded.size(), sig, sig_len);
-      }
    }
 
 }

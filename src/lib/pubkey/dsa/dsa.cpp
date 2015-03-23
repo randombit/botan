@@ -74,11 +74,12 @@ namespace {
 /**
 * Object that can create a DSA signature
 */
-class DSA_Signature_Operation : public PK_Ops::Signature
+class DSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
    {
    public:
       typedef DSA_PrivateKey Key_Type;
       DSA_Signature_Operation(const DSA_PrivateKey& dsa, const std::string& emsa) :
+         PK_Ops::Signature_with_EMSA(emsa),
          q(dsa.group_q()),
          x(dsa.get_x()),
          powermod_g_p(dsa.group_g(), dsa.group_p()),
@@ -91,8 +92,8 @@ class DSA_Signature_Operation : public PK_Ops::Signature
       size_t message_part_size() const override { return q.bytes(); }
       size_t max_input_bits() const override { return q.bits(); }
 
-      secure_vector<byte> sign(const byte msg[], size_t msg_len,
-                              RandomNumberGenerator& rng) override;
+      secure_vector<byte> raw_sign(const byte msg[], size_t msg_len,
+                                   RandomNumberGenerator& rng) override;
    private:
       const BigInt& q;
       const BigInt& x;
@@ -102,8 +103,8 @@ class DSA_Signature_Operation : public PK_Ops::Signature
    };
 
 secure_vector<byte>
-DSA_Signature_Operation::sign(const byte msg[], size_t msg_len,
-                              RandomNumberGenerator&)
+DSA_Signature_Operation::raw_sign(const byte msg[], size_t msg_len,
+                                  RandomNumberGenerator&)
    {
    BigInt i(msg, msg_len);
 
@@ -132,12 +133,13 @@ DSA_Signature_Operation::sign(const byte msg[], size_t msg_len,
 /**
 * Object that can verify a DSA signature
 */
-class DSA_Verification_Operation : public PK_Ops::Verification
+class DSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
    {
    public:
       typedef DSA_PublicKey Key_Type;
       DSA_Verification_Operation(const DSA_PublicKey& dsa,
-                                 const std::string&) :
+                                 const std::string& emsa) :
+         PK_Ops::Verification_with_EMSA(emsa),
          q(dsa.group_q()), y(dsa.get_y())
          {
          powermod_g_p = Fixed_Base_Power_Mod(dsa.group_g(), dsa.group_p());

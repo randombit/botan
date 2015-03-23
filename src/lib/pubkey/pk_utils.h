@@ -9,7 +9,7 @@
 #define BOTAN_PK_UTILS_H__
 
 #include <botan/internal/algo_registry.h>
-#include <botan/pk_ops.h>
+#include <botan/internal/pk_ops_impl.h>
 #include <botan/numthry.h>
 #include <algorithm>
 
