@@ -35,7 +35,11 @@
 /* How much to allocate for a buffer of no particular size */
 #define BOTAN_DEFAULT_BUFFER_SIZE 1024
 
-/* Maximum size to allocate out of the mlock pool */
+/* Minimum and maximum sizes to allocate out of the mlock pool (bytes)
+   Default min is 16 as smaller values are easily bruteforceable and thus
+   likely not cryptographic keys.
+*/
+#define BOTAN_MLOCK_ALLOCATOR_MIN_ALLOCATION 16
 #define BOTAN_MLOCK_ALLOCATOR_MAX_ALLOCATION 128
 
 /* Multiplier on a block cipher's native parallelism */
@@ -67,7 +71,7 @@
 */
 #define BOTAN_RNG_MAX_OUTPUT_BEFORE_RESEED 512
 #define BOTAN_RNG_RESEED_POLL_BITS 128
-#define BOTAN_RNG_AUTO_RESEED_TIMEOUT std::chrono::milliseconds(20)
+#define BOTAN_RNG_AUTO_RESEED_TIMEOUT std::chrono::milliseconds(10)
 #define BOTAN_RNG_RESEED_DEFAULT_TIMEOUT std::chrono::milliseconds(100)
 
 /* Should we use GCC-style inline assembler? */
