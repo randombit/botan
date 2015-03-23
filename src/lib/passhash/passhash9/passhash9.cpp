@@ -26,21 +26,16 @@ const size_t WORK_FACTOR_SCALE = 10000;
 
 MessageAuthenticationCode* get_pbkdf_prf(byte alg_id)
    {
-   try
-      {
-      if(alg_id == 0)
-         return get_mac("HMAC(SHA-1)");
-      else if(alg_id == 1)
-         return get_mac("HMAC(SHA-256)");
-      else if(alg_id == 2)
-         return get_mac("CMAC(Blowfish)");
-      else if(alg_id == 3)
-         return get_mac("HMAC(SHA-384)");
-      else if(alg_id == 4)
-         return get_mac("HMAC(SHA-512)");
-      }
-   catch(Algorithm_Not_Found) {}
-
+   if(alg_id == 0)
+      return get_mac("HMAC(SHA-1)");
+   else if(alg_id == 1)
+      return get_mac("HMAC(SHA-256)");
+   else if(alg_id == 2)
+      return get_mac("CMAC(Blowfish)");
+   else if(alg_id == 3)
+      return get_mac("HMAC(SHA-384)");
+   else if(alg_id == 4)
+      return get_mac("HMAC(SHA-512)");
    return nullptr;
    }
 

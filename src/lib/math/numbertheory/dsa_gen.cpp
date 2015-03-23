@@ -52,7 +52,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
          "Generating a DSA parameter set with a " + std::to_string(qbits) +
          "long q requires a seed at least as many bits long");
 
-   std::unique_ptr<HashFunction> hash(get_hash("SHA-" + std::to_string(qbits)));
+   std::unique_ptr<HashFunction> hash(make_hash_function("SHA-" + std::to_string(qbits)));
 
    const size_t HASH_SIZE = hash->output_length();
 
