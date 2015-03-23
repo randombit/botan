@@ -1,19 +1,35 @@
 Version 1.11.16, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* TLS has changed from using the non-standard and now deprecated NPN extension
-  to the standard ALPN extension for negotiating an application-level protocol.
+* TLS has changed from using the non-standard NPN extension to the IETF
+  standardized ALPN extension for negotiating an application-level protocol.
   Unfortunately the semantics of the exchange have changed with ALPN. Using
   NPN, the server offered a list of protocols it advertised, and then the
-  client chose its favorite. With ALPN the client offers a list of protocols
-  and the server chooses. Thus the signatures of both the TLS::Client and
-  TLS::Server constructors have changed.
+  client chose its favorite. With ALPN, the client offers a list of protocols
+  and the server chooses. The the signatures of both the TLS::Client and
+  TLS::Server constructors have changed to support this new flow.
 
 * Optimized ECDSA signature verification thanks to an observation by
   Dr. Falko Strenzke. On some systems verifications are between 1.5
   and 2 times faster than in 1.11.15.
 
+* RSA encrypt and decrypt operations using OpenSSL have been added.
+
+* Public key operation types now handle all aspects of the operation,
+  such as hashing and padding for signatures. This change allows
+  supporting specialized implementations which only support particular
+  padding types.
+
+* Added global timeout to HMAC_RNG entropy reseed.
+
 * Fixed Python cipher update_granularity() and default_nonce_length()
   functions
 
 * The library now builds on Visual C++ 2013
+
+* The GCM update granularity was reduced from 4096 to 16 bytes.
+
+* Fix a bug that prevented building the amalgamation until a non-amalgamation
+  configuration was performed first in the same directory.
+
+* Add Travis CI integration. Github pull 60.
