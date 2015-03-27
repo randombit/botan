@@ -1,4 +1,5 @@
 compiler:
+  - clang
   - gcc
 
 language: cpp
@@ -8,13 +9,17 @@ before_install:
   - sudo apt-get update -qq
 
 install:
-  - sudo apt-get install -qq g++-4.8
+  - sudo apt-get install -y g++-4.8
+  - sudo apt-get install -y libboost-all-dev
+  - sudo apt-get install -y libssl-dev
+  - sudo apt-get install -y libz-dev
+  - sudo apt-get install -y libsqlite3-dev
   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
   - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 90
 
 script:
   - $CXX --version
-  - python configure.py $CONFIGURE_OPTS
+  - python configure.py $BUILD_MODE --cc-bin=$CXX --with-boost --with-openssl --with-sqlite --with-zlib
   - "make"
   - "LD_LIBRARY_PATH=. ./botan-test"
 
@@ -22,5 +27,5 @@ os:
   - linux
 
 env:
-  - CONFIGURE_OPTS=""
-  - CONIFGURE_OPTS="--via-amalgamation --disable-shared"
+  - BUILD_MODE=""
+  - BUILD_MODE="--via-amalgamation --disable-shared"
