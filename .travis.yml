@@ -13,6 +13,7 @@ install:
   - sudo apt-get install -y libssl-dev
   - sudo apt-get install -y libz-dev
   - sudo apt-get install -y libsqlite3-dev
+  - sudo apt-get install -y gcc-multilib
   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
   - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 90
 
