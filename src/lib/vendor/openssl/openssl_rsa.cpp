@@ -139,9 +139,9 @@ class OpenSSL_RSA_Decryption_Operation : public PK_Ops::Decryption
    };
 
 BOTAN_REGISTER_TYPE(PK_Ops::Encryption, OpenSSL_RSA_Encryption_Operation, "RSA",
-                    OpenSSL_RSA_Encryption_Operation::make, "openssl", 96);
+                    OpenSSL_RSA_Encryption_Operation::make, "openssl", 255);
 BOTAN_REGISTER_TYPE(PK_Ops::Decryption, OpenSSL_RSA_Decryption_Operation, "RSA",
-                    OpenSSL_RSA_Decryption_Operation::make, "openssl", 96);
+                    OpenSSL_RSA_Decryption_Operation::make, "openssl", 255);
 
 }
 
