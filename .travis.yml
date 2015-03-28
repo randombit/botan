@@ -18,7 +18,7 @@ install:
 
 script:
   - $CXX --version
-  - python configure.py $BUILD_MODE --cc=$CC --cc-bin=$CXX --with-openssl --with-sqlite --with-zlib
+  - python configure.py $BUILD_MODE --cpu=$CPU --cc=$CC --cc-abi-flags=$CC_ABI_FLAGS --cc-bin=$CXX --with-openssl --with-sqlite --with-zlib
   - "make"
   - "LD_LIBRARY_PATH=. ./botan-test"
 
@@ -29,5 +29,7 @@ os:
   - linux
 
 env:
-  - BUILD_MODE=""
-  - BUILD_MODE="--via-amalgamation --disable-shared"
+  - CPU="x86_64" BUILD_MODE=""
+  - CPU="x86_64" BUILD_MODE="--via-amalgamation --disable-shared"
+  - CPU="x86_32" CC_ABI_FLAGS="-m32" BUILD_MODE=""
+  - CPU="x86_32" CC_ABI_FLAGS="-m32" BUILD_MODE="--via-amalgamation --disable-shared"
