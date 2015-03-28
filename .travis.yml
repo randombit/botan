@@ -1,8 +1,8 @@
+language: cpp
+
 compiler:
   - clang
   - gcc
-
-language: cpp
 
 before_install:
   - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
@@ -10,7 +10,6 @@ before_install:
 
 install:
   - sudo apt-get install -y g++-4.8
-  - sudo apt-get install -y libboost-all-dev
   - sudo apt-get install -y libssl-dev
   - sudo apt-get install -y libz-dev
   - sudo apt-get install -y libsqlite3-dev
@@ -19,9 +18,12 @@ install:
 
 script:
   - $CXX --version
-  - python configure.py $BUILD_MODE --cc-bin=$CXX --with-boost --with-openssl --with-sqlite --with-zlib
+  - python configure.py $BUILD_MODE --cc=$CC --cc-bin=$CXX --with-openssl --with-sqlite --with-zlib
   - "make"
   - "LD_LIBRARY_PATH=. ./botan-test"
+
+notifications:
+  email: lloyd@randombit.net
 
 os:
   - linux
