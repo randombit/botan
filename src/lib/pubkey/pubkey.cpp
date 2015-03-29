@@ -15,18 +15,19 @@ namespace Botan {
 namespace {
 
 template<typename T, typename Key>
-T* get_pk_op(const Key& key, const std::string& pad)
+T* get_pk_op(const std::string& what, const Key& key, const std::string& pad)
    {
-   return Algo_Registry<T>::global_registry().make(typename T::Spec(key, pad));
+   T* p = Algo_Registry<T>::global_registry().make(typename T::Spec(key, pad));
+   if(!p)
+      throw Lookup_Error(what + " with " + key.algo_name() + "/" + pad + " not supported");
+   return p;
    }
 
 }
 
 PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key, const std::string& eme)
    {
-   m_op.reset(get_pk_op<PK_Ops::Encryption>(key, eme));
-   if(!m_op)
-      throw Lookup_Error("Encryption with " + key.algo_name() + "/" + eme + " not supported");
+   m_op.reset(get_pk_op<PK_Ops::Encryption>("Encryption", key, eme));
    }
 
 std::vector<byte>
@@ -42,9 +43,7 @@ size_t PK_Encryptor_EME::maximum_input_size() const
 
 PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key, const std::string& eme)
    {
-   m_op.reset(get_pk_op<PK_Ops::Decryption>(key, eme));
-   if(!m_op)
-      throw Lookup_Error("Decryption with " + key.algo_name() + "/" + eme + " not supported");
+   m_op.reset(get_pk_op<PK_Ops::Decryption>("Decryption", key, eme));
    }
 
 secure_vector<byte> PK_Decryptor_EME::dec(const byte msg[], size_t length) const
@@ -52,9 +51,9 @@ secure_vector<byte> PK_Decryptor_EME::dec(const byte msg[], size_t length) const
    return m_op->decrypt(msg, length);
    }
 
-PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key, const std::string& kdf_name)
+PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key, const std::string& kdf)
    {
-   m_op.reset(get_pk_op<PK_Ops::Key_Agreement>(key, kdf_name));
+   m_op.reset(get_pk_op<PK_Ops::Key_Agreement>("Key agreement", key, kdf));
    }
 
 SymmetricKey PK_Key_Agreement::derive_key(size_t key_len,
@@ -111,9 +110,7 @@ PK_Signer::PK_Signer(const Private_Key& key,
                      const std::string& emsa,
                      Signature_Format format)
    {
-   m_op.reset(get_pk_op<PK_Ops::Signature>(key, emsa));
-   if(!m_op)
-      throw Lookup_Error("Signing with " + key.algo_name() + "/" + emsa + " not supported");
+   m_op.reset(get_pk_op<PK_Ops::Signature>("Signing", key, emsa));
    m_sig_format = format;
    }
 
@@ -140,10 +137,7 @@ PK_Verifier::PK_Verifier(const Public_Key& key,
                          const std::string& emsa_name,
                          Signature_Format format)
    {
-   m_op.reset(get_pk_op<PK_Ops::Verification>(key, emsa_name));
-   if(!m_op)
-      throw Lookup_Error("Verification with " + key.algo_name() + " not supported");
-
+   m_op.reset(get_pk_op<PK_Ops::Verification>("Verification", key, emsa_name));
    m_sig_format = format;
    }
 
