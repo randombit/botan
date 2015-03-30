@@ -8,14 +8,15 @@ Unsure which release you want? Check the :ref:`FAQ <devel_vs_stable>`.
 
 .. note::
 
-   If you are planning on developing an application using TLS, using
-   the latest 1.11 release instead of 1.10 is highly recommended.
+   All users, especially for new applications, are encouraged to use
+   the latest 1.11 release instead of 1.10, though some API changes
+   are still likely to occur before a new stable release based on 1.11.
 
 Current Development Series (1.11)
 ----------------------------------------
 
-The latest development release is :doc:`relnotes/1_11_15`:
-:tgz:`1.11.15` (:tgz_sig:`sig <1.11.15>`)
+The latest development release is :doc:`relnotes/1_11_16`:
+:tgz:`1.11.16` (:tgz_sig:`sig <1.11.16>`)
 
 To access the latest unreleased sources, see :doc:`vcs`. A script also
 creates regular snapshots of trunk, which are available `here

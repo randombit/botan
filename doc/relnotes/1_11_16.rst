@@ -1,4 +1,4 @@
-Version 1.11.16, Not Yet Released
+Version 1.11.16, 2015-03-29
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * TLS has changed from using the non-standard NPN extension to the IETF
@@ -20,7 +20,10 @@ Version 1.11.16, Not Yet Released
   supporting specialized implementations which only support particular
   padding types.
 
-* Added global timeout to HMAC_RNG entropy reseed.
+* Added global timeout to HMAC_RNG entropy reseed. The defaults are
+  the values set in the build.h macros `BOTAN_RNG_AUTO_RESEED_TIMEOUT`
+  and `BOTAN_RNG_RESEED_DEFAULT_TIMEOUT`, but can be overriden
+  on a specific poll with the new API call reseed_with_timeout.
 
 * Fixed Python cipher update_granularity() and default_nonce_length()
   functions
