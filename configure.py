@@ -363,6 +363,9 @@ def process_command_line(args):
                            default=maintainer_mode_default(),
                            help="Maintainer mode build")
 
+    build_group.add_option('--enable-gcov', action='store_true',
+                           dest='enable_gcov', default=False, help='enable gcov support')
+
     build_group.add_option('--release-mode', dest='maintainer_mode',
                            action='store_false',
                            help=optparse.SUPPRESS_HELP)
@@ -1315,6 +1318,13 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'with_sphinx': options.with_sphinx
         }
 
+    if options.enable_gcov:
+        if options.compiler == 'gcc' or options.compiler == 'clang':
+            vars["shared_flags"] += ' --coverage'
+            vars["so_link"] += ' --coverage'
+        else:
+            raise Exception('gcov only supported for gcc and clang')
+
     gen_makefile_lists(vars, build_config, options, modules, cc, arch, osinfo)
 
     if options.os != 'windows':
@@ -1882,6 +1892,13 @@ def main(argv = None):
         if options.asm_ok:
             logging.info('Disabling assembly code, cannot use in amalgamation')
             options.asm_ok = False
+
+    if options.enable_gcov:
+        logging.info('Enabling gcov support')
+        logging.info('Enabling debug build, required for gcov')
+        options.debug_build = True
+        logging.info('Disabling optimizations, cannot use with gcov')
+        options.no_optimizations = True
 
     loaded_mods = choose_modules_to_use(modules, arch, cc, options)
 
