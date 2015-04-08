@@ -27,7 +27,7 @@ BOTAN_REGISTER_NAMED_T(MessageAuthenticationCode, "CMAC", CMAC, CMAC::make);
 */
 secure_vector<byte> CMAC::poly_double(const secure_vector<byte>& in)
    {
-   const bool top_carry = static_cast<bool>(in[0] & 0x80);
+   const bool top_carry = static_cast<bool>((in[0] & 0x80) != 0);
 
    secure_vector<byte> out = in;
 

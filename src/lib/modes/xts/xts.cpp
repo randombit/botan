@@ -19,7 +19,7 @@ void poly_double_128(byte out[], const byte in[])
    u64bit X0 = load_le<u64bit>(in, 0);
    u64bit X1 = load_le<u64bit>(in, 1);
 
-   const bool carry = static_cast<bool>(X1 >> 63);
+   const bool carry = static_cast<bool>((X1 >> 63) != 0);
 
    X1 = (X1 << 1) | (X0 >> 63);
    X0 = (X0 << 1);
@@ -33,7 +33,7 @@ void poly_double_128(byte out[], const byte in[])
 void poly_double_64(byte out[], const byte in[])
    {
    u64bit X = load_le<u64bit>(in, 0);
-   const bool carry = static_cast<bool>(X >> 63);
+   const bool carry = static_cast<bool>((X >> 63) != 0);
    X <<= 1;
    if(carry)
       X ^= 0x1B;
