@@ -53,12 +53,14 @@ def is_official_release():
     # Assume a release date implies official release
     return (botan_version.release_datestamp > 20130000)
 
-def maintainer_mode_default():
+def default_build_mode():
+    if os.getenv('CONTINUOUS_INTEGRATION') == 'true' or \
+       os.getenv('GO_ENVIRONMENT_NAME') == 'Botan':
+        return 'maintainer'
+
     if is_official_release():
-        return False
-    if os.getenv('GO_ENVIRONMENT_NAME') == 'Botan':
-        return True # running under CI
-    return False
+        return 'release'
+    return 'debug'
 
 def get_vc_revision():
 
@@ -285,6 +287,10 @@ def process_command_line(args):
 
     build_group = optparse.OptionGroup(parser, 'Build options')
 
+    modes = ['release', 'debug', 'coverage']
+    build_group.add_option('--build-mode', default='release', metavar='MODE',
+                           help="Build type (one of %s; default %%default)" % (', '.join(modes)))
+
     build_group.add_option('--enable-shared', dest='build_shared_lib',
                            action='store_true', default=True,
                             help=optparse.SUPPRESS_HELP)
@@ -299,12 +305,6 @@ def process_command_line(args):
                            action='store_false',
                            help='disallow use of assembler')
 
-    build_group.add_option('--enable-debug', dest='debug_build',
-                           action='store_true', default=False,
-                           help='enable debug build')
-    build_group.add_option('--disable-debug', dest='debug_build',
-                           action='store_false', help=optparse.SUPPRESS_HELP)
-
     build_group.add_option('--no-optimizations', dest='no_optimizations',
                            action='store_true', default=False,
                            help=optparse.SUPPRESS_HELP)
@@ -317,16 +317,14 @@ def process_command_line(args):
                            default=False, action='store_true',
                            help='build via amalgamation')
 
-    build_group.add_option('--single-amalgamation-file', default=False, action='store_true',
+    build_group.add_option('--single-amalgamation-file',
+                           default=False, action='store_true',
                            help='build single file instead of splitting on ABI')
 
-    build_group.add_option('--with-build-dir',
-                           metavar='DIR', default='',
+    build_group.add_option('--with-build-dir', metavar='DIR', default='',
                            help='setup the build in DIR')
 
-    build_group.add_option('--link-method',
-                           default=None,
-                           metavar='METHOD',
+    build_group.add_option('--link-method', default=None, metavar='METHOD',
                            help='choose how links are created')
 
     build_group.add_option('--makefile-style', metavar='STYLE', default=None,
@@ -359,14 +357,8 @@ def process_command_line(args):
                            dest='with_doxygen', help=optparse.SUPPRESS_HELP)
 
     build_group.add_option('--maintainer-mode', dest='maintainer_mode',
-                           action='store_true',
-                           default=maintainer_mode_default(),
-                           help="Maintainer mode build")
-
-    build_group.add_option('--release-mode', dest='maintainer_mode',
-                           action='store_false',
-                           help=optparse.SUPPRESS_HELP)
-
+                           action='store_true', default=False,
+                           help="Enable extra warnings")
     build_group.add_option('--dirty-tree', dest='clean_build_tree',
                            action='store_false', default=True,
                            help=optparse.SUPPRESS_HELP)
@@ -808,6 +800,7 @@ class CompilerInfo(object):
                         'app_opt_flags': '',
                         'debug_flags': '',
                         'no_debug_flags': '',
+                        'coverage_flags': '',
                         'shared_flags': '',
                         'lang_flags': '',
                         'warning_flags': '',
@@ -870,7 +863,7 @@ class CompilerInfo(object):
     """
     def mach_abi_link_flags(self, options):
         def all():
-            if options.debug_build and 'all-debug' in self.mach_abi_linking:
+            if 'all-debug' in self.mach_abi_linking and options.build_mode == 'debug':
                 return 'all-debug'
             return 'all'
 
@@ -886,20 +879,26 @@ class CompilerInfo(object):
 
         if len(abi_link) == 0:
             return ''
-        return ' ' + ' '.join(sorted(list(abi_link)))
+        abi_flags = ' '.join(sorted(list(abi_link)))
 
+        if options.build_mode == 'coverage':
+            if self.coverage_flags == '':
+                raise Exception('No coverage handling for %s' % (self.basename))
+            return ' ' + self.coverage_flags + ' ' + abi_flags
+
+        return ' ' + abi_flags
 
     """
-    Return the optimization flags to use for the library
+    Return the optimization flags to use
     """
     def opt_flags(self, who, options):
         def gen_flags():
-            if options.debug_build:
+            if options.build_mode in ['debug', 'coverage']:
                 yield self.debug_flags
             else:
                 yield self.no_debug_flags
 
-            if options.no_optimizations:
+            if options.no_optimizations or options.build_mode == 'coverage':
                 return
 
             if who != 'lib':
@@ -1323,6 +1322,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
     vars["header_in"] = process_template('src/build-data/makefile/header.in', vars)
     vars["commands_in"] = process_template('src/build-data/makefile/commands.in', vars)
+
+    vars["coverage_in"] = process_template('src/build-data/makefile/coverage.in', vars) \
+                          if options.build_mode == 'coverage' else ''
 
     if options.build_shared_lib:
         vars["dso_in"] = process_template('src/build-data/makefile/dso.in', vars)
@@ -1763,7 +1765,7 @@ def main(argv = None):
     options = process_command_line(argv[1:])
 
     def log_level():
-        if options.verbose or options.maintainer_mode:
+        if options.verbose:
             return logging.DEBUG
         if options.quiet:
             return logging.WARNING
@@ -1776,9 +1778,6 @@ def main(argv = None):
 
     logging.info('Platform: OS="%s" machine="%s" proc="%s"' % (
         platform.system(), platform.machine(), platform.processor()))
-
-    if options.maintainer_mode:
-        logging.log(NOTICE_LOGLEVEL, 'Enabling maintainer mode build (use --release-mode to disable)')
 
     if options.os == "java":
         raise Exception("Jython detected: need --os and --cpu to set target")

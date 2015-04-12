@@ -20,6 +20,7 @@ app_opt_flags "-O2"
 shared_flags "-fPIC"
 debug_flags "-g"
 no_debug_flags ""
+coverage_flags "--coverage"
 
 visibility_build_flags "-fvisibility=hidden"
 visibility_attribute '__attribute__((visibility("default")))'
