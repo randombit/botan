@@ -116,8 +116,11 @@ def to_ciphersuite_info(code, name):
     ivlen = 0
 
     if cipher[0] == 'CHACHA20' and cipher[1] == 'POLY1305':
+        iv_len = 4
+        if (code[0:2] == 'CC'):
+            iv_len = 0
         return 'Ciphersuite(0x%s, "%s", "%s", "%s", %d, %d, %d, "AEAD", %d, "%s")' % (
-            code, sig_algo, kex_algo, "ChaCha20Poly1305", cipher_keylen, 0, 0, 0, mac_algo)
+            code, sig_algo, kex_algo, "ChaCha20Poly1305", cipher_keylen, iv_len, 0, 0, mac_algo)
 
     stream_ciphers = ['RC4']
 
@@ -169,10 +172,18 @@ def process_command_line(args):
 
     parser = optparse.OptionParser()
 
+    parser.add_option('--with-chacha', action='store_true', default=True,
+                      help='enable experimental ChaCha suites')
+    parser.add_option('--without-chacha', action='store_false', dest='with_chacha',
+                      help='disable experimental ChaCha suites')
+
+    parser.add_option('--with-ocb', action='store_true', default=True,
+                      help='enable experimental OCB AEAD suites')
+    parser.add_option('--without-ocb', action='store_false', dest='with_ocb',
+                      help='disable experimental OCB AEAD suites')
+
     parser.add_option('--with-srp-aead', action='store_true', default=False,
                       help='add experimental SRP AEAD suites')
-    parser.add_option('--with-ocb', action='store_true', default=False,
-                      help='add experimental OCB AEAD suites')
     parser.add_option('--with-eax', action='store_true', default=False,
                       help='add experimental EAX AEAD suites')
 
@@ -234,10 +245,21 @@ def main(args = None):
     # From http://tools.ietf.org/html/draft-ietf-tls-56-bit-ciphersuites-01
     define_custom_ciphersuite('DHE_DSS_WITH_RC4_128_SHA', '0066')
 
-    # Google servers - draft-agl-tls-chacha20poly1305-04
-    define_custom_ciphersuite('ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256', 'CC13')
-    define_custom_ciphersuite('ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256', 'CC14')
-    define_custom_ciphersuite('DHE_RSA_WITH_CHACHA20_POLY1305_SHA256', 'CC15')
+    if options.with_chacha and False:
+        # Google servers - draft-agl-tls-chacha20poly1305-04
+        define_custom_ciphersuite('ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256', 'CC13')
+        define_custom_ciphersuite('ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256', 'CC14')
+        define_custom_ciphersuite('DHE_RSA_WITH_CHACHA20_POLY1305_SHA256', 'CC15')
+
+    if options.with_chacha:
+        # Provisional IETF ChaCha suites:
+        define_custom_ciphersuite('RSA_WITH_CHACHA20_POLY1305_SHA256', 'CD30')
+        define_custom_ciphersuite('ECDSA_RSA_WITH_CHACHA20_POLY1305_SHA256', 'CD31')
+        define_custom_ciphersuite('ECDSA_ECDSA_WITH_CHACHA20_POLY1305_SHA256', 'CD32')
+        define_custom_ciphersuite('DHE_RSA_WITH_CHACHA20_POLY1305_SHA256', 'CD33')
+        define_custom_ciphersuite('DHE_PSK_WITH_CHACHA20_POLY1305_SHA256', 'CD34')
+        define_custom_ciphersuite('PSK_WITH_CHACHA20_POLY1305_SHA256', 'CD35')
+        define_custom_ciphersuite('ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256', 'CD36')
 
     # Expermental things
     if options.with_ocb:
