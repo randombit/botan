@@ -311,7 +311,7 @@ bool is_prime(const BigInt& n, RandomNumberGenerator& rng,
    for(size_t i = 0; i != test_iterations; ++i)
       {
       const BigInt a = BigInt::random_integer(rng, 2, n_minus_1);
-      const BigInt y = pow_mod(a);
+      BigInt y = pow_mod(a);
 
       if(mr_witness(std::move(y), reducer, n_minus_1, s))
          return false;
