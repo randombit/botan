@@ -259,7 +259,7 @@ size_t mr_test_iterations(size_t n_bits, size_t prob, bool random)
 
    /*
    * For randomly chosen numbers we can use the estimates from
-   * http://www.math.dartmouth.edu/~carlp/PDF/paper88.pdf‎
+   * http://www.math.dartmouth.edu/~carlp/PDF/paper88.pdf
    *
    * These values are derived from the inequality for p(k,t) given on
    * the second page.
@@ -311,8 +311,7 @@ bool is_prime(const BigInt& n, RandomNumberGenerator& rng,
    for(size_t i = 0; i != test_iterations; ++i)
       {
       const BigInt a = BigInt::random_integer(rng, 2, n_minus_1);
-
-      BigInt y = pow_mod(a);
+      const BigInt y = pow_mod(a);
 
       if(mr_witness(std::move(y), reducer, n_minus_1, s))
          return false;

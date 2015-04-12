@@ -7,16 +7,11 @@ Configuration program for botan
 
 Botan is released under the Simplified BSD License (see license.txt)
 
-Tested with CPython 2.6, 2.7, 3.2, 3.3 and PyPy 1.5
+Tested with CPython 2.6, 2.7, and 3.3
 
-Python 2.5 works if you change the exception catching syntax:
-   perl -pi -e 's/except (.*) as (.*):/except $1, $2:/g' configure.py
+CPython 2.5 and earlier are not supported
 
 Jython - Target detection does not work (use --os and --cpu)
-
-CPython 2.4 and earlier are not supported
-
-Has not been tested with IronPython
 """
 
 import sys
@@ -1688,7 +1683,7 @@ def generate_amalgamation(build_config, options):
         fsname = '%s%s.cpp' % (amalg_basename, '_' + tgt if tgt else '' )
         botan_amalgs_fs.append(fsname)
         logging.info('Writing amalgamation source to %s' % (fsname))
-        f = open(fsname, 'w', encoding='latin1')
+        f = open(fsname, 'w')
         f.write(amalg_header)
 
         f.write('\n#include "%s"\n' % (header_name))
@@ -1710,7 +1705,7 @@ def generate_amalgamation(build_config, options):
         if tgt not in botan_amalgs:
             botan_amalgs[tgt] = open_amalg_file(tgt)
         for src in sorted(mod.source):
-            contents = open(src, encoding='latin1').readlines()
+            contents = open(src, 'r').readlines()
             for line in contents:
                 if botan_include.search(line):
                     continue
