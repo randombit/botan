@@ -40,8 +40,6 @@ if 'dont_write_bytecode' in sys.__dict__:
 
 import botan_version
 
-NOTICE_LOGLEVEL = 25
-
 def flatten(l):
     return sum(l, [])
 
@@ -1638,7 +1636,7 @@ def generate_amalgamation(build_config, options):
     header_name = '%s.h' % (amalg_basename)
     header_int_name = '%s_internal.h' % (amalg_basename)
 
-    logging.log(NOTICE_LOGLEVEL, 'Writing amalgamation header to %s' % (header_name))
+    logging.info('Writing amalgamation header to %s' % (header_name))
 
     botan_h = open(header_name, 'w')
     botan_int_h = open(header_int_name, 'w')
@@ -1685,8 +1683,8 @@ def generate_amalgamation(build_config, options):
     def open_amalg_file(tgt):
         fsname = '%s%s.cpp' % (amalg_basename, '_' + tgt if tgt else '' )
         botan_amalgs_fs.append(fsname)
-        logging.log(NOTICE_LOGLEVEL, 'Writing amalgamation source to %s' % (fsname))
-        f = open(fsname, 'w')
+        logging.info('Writing amalgamation source to %s' % (fsname))
+        f = open(fsname, 'w', encoding='latin1')
         f.write(amalg_header)
 
         f.write('\n#include "%s"\n' % (header_name))
@@ -1708,7 +1706,7 @@ def generate_amalgamation(build_config, options):
         if tgt not in botan_amalgs:
             botan_amalgs[tgt] = open_amalg_file(tgt)
         for src in sorted(mod.source):
-            contents = open(src).readlines()
+            contents = open(src, encoding='latin1').readlines()
             for line in contents:
                 if botan_include.search(line):
                     continue
@@ -1759,8 +1757,6 @@ def main(argv = None):
 
     logging.basicConfig(stream = sys.stdout,
                         format = '%(levelname) 7s: %(message)s')
-
-    logging.addLevelName('NOTICE', NOTICE_LOGLEVEL)
 
     options = process_command_line(argv[1:])
 
@@ -1886,7 +1882,7 @@ def main(argv = None):
 
     for m in loaded_mods:
         if modules[m].load_on == 'vendor':
-            logging.log(NOTICE_LOGLEVEL, 'Enabling use of external dependency %s' % (m))
+            logging.info('Enabling use of external dependency %s' % (m))
 
         if not osinfo.build_shared:
             if options.build_shared_lib:
