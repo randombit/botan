@@ -25,7 +25,7 @@ LIBNAME       = botan
 LIBRARIES     = $(BOTAN_LIB)
 
 # This will be either a static lib or the DLL import lib
-BOTAN_LIB     = $(LIBNAME).%{static_suffix}
+BOTAN_LIB     = %{out_dir}\$(LIBNAME).%{static_suffix}
 
 # Build Commands
 %{lib_build_cmds}
@@ -45,7 +45,7 @@ $(BOTAN_LIB): $(LIBOBJS)
 !If "$(SO_OBJ_FLAGS)" == ""
 	$(AR) /OUT:$(BOTAN_LIB) $(LIBOBJS)
 !Else
-	$(LIB_LINK_CMD) /Fe$(LIBNAME) $(LIBOBJS) $(LIB_LINKS_TO)
+	$(LIB_LINK_CMD) /Fe%{out_dir}\$(LIBNAME) $(LIBOBJS) $(LIB_LINKS_TO)
 !Endif
 
 # Fake Targets
