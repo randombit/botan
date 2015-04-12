@@ -287,7 +287,11 @@ def process_command_line(args):
 
     modes = ['release', 'debug', 'coverage']
     build_group.add_option('--build-mode', default='release', metavar='MODE',
-                           help="Build type (one of %s; default %%default)" % (', '.join(modes)))
+                           help="Build mode (one of %s; default %%default)" % (', '.join(modes)))
+
+    build_group.add_option('--debug-mode', action='store_const',
+                           const='debug', dest='build_mode',
+                           help='enable debugging build')
 
     build_group.add_option('--enable-shared', dest='build_shared_lib',
                            action='store_true', default=True,
