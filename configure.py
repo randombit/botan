@@ -1279,7 +1279,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'libname': 'botan-%d.%d' % (build_config.version_major, build_config.version_minor),
 
-        'so_link_cmd': cc.so_link_command_for(osinfo.basename),
+        'lib_link_cmd': cc.so_link_command_for(osinfo.basename),
         'app_link_cmd': '$(CXX) -Wl,-rpath=\$$ORIGIN' if options.os == 'linux' else '$(CXX)',
         'test_link_cmd': '$(CXX) -Wl,-rpath=\$$ORIGIN' if options.os == 'linux' else '$(CXX)',
 
