@@ -7,7 +7,7 @@
 
 #include "apps.h"
 
-#if defined(BOTAN_HAS_TLS) && !defined(BOTAN_TARGET_OS_IS_WINDOWS)
+#if defined(BOTAN_HAS_TLS) && !defined(BOTAN_TARGET_OS_IS_WINDOWS) && !defined(BOTAN_TARGET_OS_IS_MINGW)
 #include <botan/tls_server.h>
 #include <botan/hex.h>
 
