@@ -1230,7 +1230,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'makefile_path': prefix_with_build_dir('Makefile'),
 
-        'program_suffix': options.program_suffix or ('' if options.os != 'windows' else '.exe'),
+        'program_suffix': options.program_suffix or ('.exe' if options.os in ('windows', 'mingw', 'cygwin') else ''),
 
         'prefix': options.prefix or osinfo.install_root,
         'destdir': options.destdir or options.prefix or osinfo.install_root,
