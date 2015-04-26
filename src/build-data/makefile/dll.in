@@ -1,0 +1,7 @@
+DLL_NAME      = botan-%{version_major}.%{version_minor}.dll
+IMP_LIB       = %{lib_prefix}botan-%{version_major}.%{version_minor}.dll.a
+
+$(DLL_NAME): $(LIBOBJS)
+	$(LIB_LINK_CMD) $(LDFLAGS) $(LIBOBJS) $(LIB_LINKS_TO) -o $(DLL_NAME) -Wl,--out-implib,${IMP_LIB}
+
+LIBRARIES += $(DLL_NAME)

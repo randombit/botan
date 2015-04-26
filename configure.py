@@ -1324,10 +1324,12 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     vars["coverage_in"] = process_template('src/build-data/makefile/coverage.in', vars) \
                           if options.build_mode == 'coverage' else ''
 
-    if options.build_shared_lib:
-        vars["dso_in"] = process_template('src/build-data/makefile/dso.in', vars)
-    else:
+    if not options.build_shared_lib:
         vars["dso_in"] = ""
+    elif options.os in ('windows', 'mingw', 'cygwin'):
+        vars["dso_in"] = process_template('src/build-data/makefile/dll.in', vars)
+    else:
+        vars["dso_in"] = process_template('src/build-data/makefile/dso.in', vars)
 
     return vars
 

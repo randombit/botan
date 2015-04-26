@@ -144,7 +144,12 @@ def main(args = None):
     static_lib = process_template('%{lib_prefix}%{libname}.%{static_suffix}')
     copy_file(static_lib, os.path.join(lib_dir, os.path.basename(static_lib)))
 
-    if bool(cfg['with_shared_lib']):
+    if cfg['os'] in ('cygwin', 'mingw', 'windows') and bool(cfg['with_shared_lib']):
+        dll_name = process_template('%{libname}.dll')
+        imp_lib = process_template('%{lib_prefix}%{libname}.dll.a')
+        copy_executable(dll_name, os.path.join(bin_dir, os.path.basename(dll_name)))
+        copy_file(imp_lib, os.path.join(lib_dir, os.path.basename(imp_lib)))
+    elif bool(cfg['with_shared_lib']):
         shared_lib = process_template('%{lib_prefix}%{libname}.%{so_suffix}.%{so_abi_rev}.%{version_patch}')
         soname = process_template('%{lib_prefix}%{libname}.%{so_suffix}.%{so_abi_rev}')
         baselib = process_template('%{lib_prefix}%{libname}.%{so_suffix}')

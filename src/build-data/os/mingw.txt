@@ -5,7 +5,7 @@ obj_suffix o
 so_suffix dll
 static_suffix a
 
-build_shared no
+build_shared yes
 
 ar_command "ar crs"
 ar_needs_ranlib yes

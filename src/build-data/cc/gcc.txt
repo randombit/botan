@@ -18,8 +18,8 @@ shared_flags "-fPIC"
 debug_flags "-g"
 coverage_flags "--coverage"
 
-visibility_build_flags "-fvisibility=hidden"
-visibility_attribute '__attribute__((visibility("default")))'
+visibility_build_flags "-DBOTAN_DLL=__declspec'(dllexport)'"
+visibility_attribute "__declspec(dllimport)"
 
 makefile_style gmake
 
