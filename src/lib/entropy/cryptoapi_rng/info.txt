@@ -13,9 +13,10 @@ es_capi.h
 <os>
 windows
 cygwin
+mingw
 </os>
 
 <libs>
 windows -> advapi32.lib
-mingw -> advapi32.lib
+mingw -> advapi32
 </libs>
