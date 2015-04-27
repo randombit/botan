@@ -5,6 +5,7 @@ family arm
 <aliases>
 armel # For Debian
 armhf # For Debian
+evbarm # For NetBSD
 </aliases>
 
 <submodels>
