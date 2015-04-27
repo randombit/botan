@@ -12,6 +12,7 @@ haiku
 hpux
 irix
 linux
+mingw
 netbsd
 openbsd
 qnx
