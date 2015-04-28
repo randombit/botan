@@ -1,0 +1,9 @@
+os: Windows Server 2012 R2
+
+install:
+  - call "%ProgramFiles(x86)%\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x86
+
+build_script:
+  - python configure.py --via-amalgamation --cpu=x86_32 --cc=msvc --cc-abi-flags="/bigobj"
+  - nmake
+  - botan-test
