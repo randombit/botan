@@ -941,6 +941,7 @@ class OsInfo(object):
         lex_me_harder(infofile, self,
                       ['aliases', 'target_features'],
                       { 'os_type': None,
+                        'program_suffix': '',
                         'obj_suffix': 'o',
                         'so_suffix': 'so',
                         'static_suffix': 'a',
@@ -1230,7 +1231,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'makefile_path': prefix_with_build_dir('Makefile'),
 
-        'program_suffix': options.program_suffix or ('' if options.os != 'windows' else '.exe'),
+        'program_suffix': options.program_suffix or osinfo.program_suffix,
 
         'prefix': options.prefix or osinfo.install_root,
         'destdir': options.destdir or options.prefix or osinfo.install_root,
