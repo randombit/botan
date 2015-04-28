@@ -211,7 +211,11 @@ size_t validate_encryption(PK_Encryptor& e, PK_Decryptor& d,
             std::cout << hex_encode(ctext) << " -> " << hex_encode(decrypted) << "\n";
 
             // Ignore PKCS #1 failures as they do occur occasionally (million message attack)
-            if(algo.find("/EME-PKCS1-v1_5") != std::string::npos)
+            const bool is_pkcs1 = algo.find("/EME-PKCS1-v1_5") != std::string::npos;
+
+            if(is_pkcs1)
+               std::cout << "Ignoring PKCS #1 failure\n";
+            else
                ++fails;
             }
          catch(...) {}
