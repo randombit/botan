@@ -1,5 +1,6 @@
 os_type windows
 
+program_suffix .exe
 obj_suffix o
 so_suffix dll
 static_suffix a
