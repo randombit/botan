@@ -1,6 +1,6 @@
 /*
 * Filter interface for compression
-* (C) 2014 Jack Lloyd
+* (C) 2014,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10,18 +10,19 @@
 
 namespace Botan {
 
-Compression_Filter::Compression_Filter(const std::string& type, size_t level) :
-   Compression_Decompression_Filter(make_compressor(type, level))
+Compression_Filter::Compression_Filter(const std::string& type, size_t level, size_t bs) :
+   Compression_Decompression_Filter(make_compressor(type, level), bs)
    {
    }
 
-Decompression_Filter::Decompression_Filter(const std::string& type) :
-   Compression_Decompression_Filter(make_decompressor(type))
+Decompression_Filter::Decompression_Filter(const std::string& type, size_t bs) :
+   Compression_Decompression_Filter(make_decompressor(type), bs)
    {
    }
 
-Compression_Decompression_Filter::Compression_Decompression_Filter(Transform* transform)
+Compression_Decompression_Filter::Compression_Decompression_Filter(Transform* transform, size_t bs)
    {
+   m_buffer.resize(std::min<size_t>(256, bs));
    m_transform.reset(dynamic_cast<Compressor_Transform*>(transform));
    if(!m_transform)
       throw std::invalid_argument("Transform " + transform->name() + " is not a compressor");
@@ -41,7 +42,8 @@ void Compression_Decompression_Filter::write(const byte input[], size_t input_le
    {
    while(input_length)
       {
-      const size_t take = std::min<size_t>({4096, m_buffer.capacity(), input_length});
+      const size_t take = std::min(m_buffer.size(), input_length);
+      BOTAN_ASSERT(take > 0, "Consumed something");
 
       m_buffer.assign(input, input + take);
       m_transform->update(m_buffer);
