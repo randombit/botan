@@ -57,7 +57,9 @@ docs:
 %{build_doc_commands}
 
 clean:
-	-$(RM) %{build_dir}\obj\* %{build_dir}\tests\*
+	-$(RM) %{libobj_dir}\*
+	-$(RM) %{testobj_dir}\*
+	-$(RM) %{appobj_dir}\*
 	-$(RM) %{out_dir}\*.manifest
 	-$(RM) %{out_dir}\*.exp
 	-$(RM) %{out_dir}\*.dll
