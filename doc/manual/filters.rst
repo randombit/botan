@@ -693,48 +693,6 @@ letters for its output.
 You can find the declarations for these types in ``hex_filt.h`` and
 ``b64_filt.h``.
 
-Compressors
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-There are two compression algorithms supported by Botan, zlib and
-bzip2. Only lossless compression algorithms are currently supported by
-Botan, because they tend to be the most useful for
-cryptography. However, it is very reasonable to consider supporting
-something like GSM speech encoding (which is lossy), for use in
-encrypted voice applications.
-
-You should always compress *before* you encrypt, because encryption seeks
-to hide the redundancy that compression is supposed to try to find and remove.
-
-To test for Bzip2, check to see if ``BOTAN_HAS_COMPRESSOR_BZIP2`` is
-defined. If so, you can include ``botan/bzip2.h``, which will declare
-a pair of ``Filter`` objects: ``Bzip2_Compression`` and
-``Bzip2_Decompression``.
-
-You should be prepared to take an exception when using the
-decompressing filter, for if the input is not valid bzip2 data, that
-is what you will receive. You can specify the desired level of
-compression to ``Bzip2_Compression``'s constructor as an integer
-between 1 and 9, 1 meaning worst compression, and 9 meaning the
-best. The default is to use 9, since small values take the same amount
-of time, just use a little less memory.
-
-Zlib compression works much like Bzip2 compression. The only
-differences in this case are that the macro is
-``BOTAN_HAS_COMPRESSOR_ZLIB``, the header you need to include is
-called ``botan/zlib.h`` (remember that you shouldn't just ``#include
-<zlib.h>``, or you'll get the regular zlib API, which is not what you
-want). The Botan classes for zlib compression/decompression are called
-``Zlib_Compression`` and ``Zlib_Decompression``.
-
-Like Bzip2, a ``Zlib_Decompression`` object will throw an exception if
-invalid (in the sense of not being in the Zlib format) data is passed
-into it.
-
-While the zlib compression library uses the same compression algorithm
-as the gzip and zip programs, the format is different. The zlib format
-is defined in RFC 1950.
-
 Writing New Filters
 ---------------------------------
 
