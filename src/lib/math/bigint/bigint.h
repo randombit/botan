@@ -396,7 +396,7 @@ class BOTAN_DLL BigInt
      * Give byte length of the integer
      * @result byte length of the represented integer value
      */
-     size_t bytes() const { return (bits() + 7) / 8; }
+     size_t bytes() const;
 
      /**
      * Get the bit length of the integer

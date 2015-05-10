@@ -173,6 +173,8 @@ void BigInt::clear_bit(size_t n)
       m_reg[which] &= ~mask;
    }
 
+size_t BigInt::bytes() const { return (bits() + 7) / 8; }
+
 /*
 * Count how many bits are being used
 */

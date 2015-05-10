@@ -114,6 +114,13 @@ PK_Signer::PK_Signer(const Private_Key& key,
    m_sig_format = format;
    }
 
+std::vector<byte> PK_Signer::sign_message(const byte in[], size_t length,
+    RandomNumberGenerator& rng)
+{
+    this->update(in, length);
+    return this->signature(rng);
+}
+
 void PK_Signer::update(const byte in[], size_t length)
    {
    m_op->update(in, length);

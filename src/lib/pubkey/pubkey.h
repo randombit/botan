@@ -128,11 +128,8 @@ class BOTAN_DLL PK_Signer
       * @return signature
       */
       std::vector<byte> sign_message(const byte in[], size_t length,
-                                     RandomNumberGenerator& rng)
-         {
-         this->update(in, length);
-         return this->signature(rng);
-         }
+                                     RandomNumberGenerator& rng);
+
 
       /**
       * Sign a message.
