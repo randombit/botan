@@ -31,7 +31,7 @@ class Zlib_Stream : public Zlib_Style_Stream<z_stream, Bytef>
          }
 
       u32bit run_flag() const override { return Z_NO_FLUSH; }
-      u32bit flush_flag() const override { return Z_FULL_FLUSH; }
+      u32bit flush_flag() const override { return Z_SYNC_FLUSH; }
       u32bit finish_flag() const override { return Z_FINISH; }
 
       int compute_window_bits(int wbits, int wbits_offset) const
