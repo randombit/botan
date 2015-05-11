@@ -30,7 +30,7 @@ CI Status
 .. image:: https://travis-ci.org/randombit/botan.svg?branch=net.randombit.botan
     :target: https://travis-ci.org/randombit/botan
 
-.. image:: https://ci.appveyor.com/api/projects/status/5t1osr48aq000yri?svg=true
+.. image:: https://ci.appveyor.com/api/projects/status/n9f94dljd03j2lce?svg=true
     :target: https://ci.appveyor.com/project/randombit/botan
 
 .. image:: https://coveralls.io/repos/randombit/botan/badge.svg
