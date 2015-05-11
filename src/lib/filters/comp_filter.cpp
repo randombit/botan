@@ -20,9 +20,9 @@ Decompression_Filter::Decompression_Filter(const std::string& type, size_t bs) :
    {
    }
 
-Compression_Decompression_Filter::Compression_Decompression_Filter(Transform* transform, size_t bs)
+Compression_Decompression_Filter::Compression_Decompression_Filter(Transform* transform, size_t bs) :
+   m_buffersize(std::max<size_t>(256, bs)), m_buffer(m_buffersize)
    {
-   m_buffer.resize(std::min<size_t>(256, bs));
    m_transform.reset(dynamic_cast<Compressor_Transform*>(transform));
    if(!m_transform)
       throw std::invalid_argument("Transform " + transform->name() + " is not a compressor");
@@ -42,7 +42,7 @@ void Compression_Decompression_Filter::write(const byte input[], size_t input_le
    {
    while(input_length)
       {
-      const size_t take = std::min(m_buffer.size(), input_length);
+      const size_t take = std::min(m_buffersize, input_length);
       BOTAN_ASSERT(take > 0, "Consumed something");
 
       m_buffer.assign(input, input + take);
