@@ -3,7 +3,7 @@
 set -ev
 
 if [ "$BUILD_MODE" = "static" ]; then
-    CFG_FLAGS="--disabled-shared --via-amalgamation"
+    CFG_FLAGS="--disable-shared --via-amalgamation"
 elif [ "$BUILD_MODE" = "shared" ]; then
    CFG_FLAGS="--build-mode=shared"
 elif [ "$BUILD_MODE" = "coverage" ]; then
