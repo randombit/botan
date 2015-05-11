@@ -1,7 +1,5 @@
 #!/bin/sh
 
-BUILD_MODE=$1
-
 set -ev
 
 if [ "$BUILD_MODE" = "coverage" ]
