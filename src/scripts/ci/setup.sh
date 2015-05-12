@@ -10,8 +10,7 @@ update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
 update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 90
 update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-4.8 90
 
-if [ "$BUILD_MODE" = "coverage" ]
-then
+if [ "$BUILD_MODE" = "coverage" ]; then
    wget http://ftp.de.debian.org/debian/pool/main/l/lcov/lcov_1.11.orig.tar.gz
    tar -xvf lcov_1.11.orig.tar.gz
    make -C lcov-1.11/ install
