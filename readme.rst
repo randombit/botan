@@ -33,8 +33,8 @@ CI Status
 .. image:: https://ci.appveyor.com/api/projects/status/n9f94dljd03j2lce?svg=true
     :target: https://ci.appveyor.com/project/randombit/botan
 
-.. image:: https://coveralls.io/repos/randombit/botan/badge.svg
-    :target: https://coveralls.io/r/randombit/botan
+.. image:: https://coveralls.io/repos/randombit/botan/badge.svg?branch=net.randombit.botan
+    :target: https://coveralls.io/r/randombit/botan?branch=net.randombit.botan
 
 Kullo GmbH hosts a CI building botan on Linux, OS X, and Windows at
 https://botan-ci.kullo.net/
