@@ -41,7 +41,7 @@ size_t test_nist_x509()
       {
       std::cout << "No FS access, skipping NIST X.509 validation tests\n";
       test_report("NIST X.509 path validation", 0, 0);
-      return;
+      return 0;
       }
 
    size_t unexp_failure = 0;
@@ -140,7 +140,7 @@ size_t test_nist_x509()
    catch(std::exception& e)
       {
       std::cout << e.what() << std::endl;
-      ++unexp_failures;
+      ++unexp_failure;
       }
 
    const size_t all_failures = unexp_failure + unexp_success + wrong_error;
