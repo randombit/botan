@@ -37,6 +37,13 @@ size_t test_nist_x509()
    const std::string root_test_dir = "src/tests/data/nist_x509/";
    const size_t total_tests = 76;
 
+   if(list_all_readable_files_in_or_under(root_test_dir).empty())
+      {
+      std::cout << "No FS access, skipping NIST X.509 validation tests\n";
+      test_report("NIST X.509 path validation", 0, 0);
+      return 0;
+      }
+
    size_t unexp_failure = 0;
    size_t unexp_success = 0;
    size_t wrong_error = 0;
@@ -133,7 +140,7 @@ size_t test_nist_x509()
    catch(std::exception& e)
       {
       std::cout << e.what() << std::endl;
-      return 1;
+      ++unexp_failure;
       }
 
    const size_t all_failures = unexp_failure + unexp_success + wrong_error;
