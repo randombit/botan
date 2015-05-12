@@ -22,7 +22,7 @@ before_install:
   - sudo apt-get update -qq
 
 install:
-  - sudo ./src/scripts/ci/setup.sh
+  - ./src/scripts/ci/setup.sh
 
 script:
   - ./src/scripts/ci/build.sh
