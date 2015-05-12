@@ -36,38 +36,48 @@ void Compression_Alloc_Info::do_free(void* ptr)
       }
    }
 
-Transform* make_compressor(const std::string& type, size_t level)
+namespace {
+
+Compressor_Transform* do_make_compressor(const std::string& type, const std::string suffix)
    {
-   const std::string comp_suffix = "_Compression(" + std::to_string(level) + ")";
+   const std::map<std::string, std::string> trans{
+      {"zlib", "Zlib"},
+      {"deflate", "Deflate"},
+      {"gzip", "Gzip"},
+      {"gz", "Gzip"},
+      {"bzip2", "Bzip2"},
+      {"bz2", "Bzip2"},
+      {"lzma", "LZMA"},
+      {"xz", "LZMA"}};
 
-   if(type == "zlib")
-      return get_transform("Zlib" + comp_suffix);
-   if(type == "deflate")
-      return get_transform("Deflate" + comp_suffix);
-   if(type == "gzip" || type == "gz")
-      return get_transform("Gzip" + comp_suffix);
-   if(type == "bzip2" || type == "bz2")
-      return get_transform("Bzip2" + comp_suffix);
-   if(type == "lzma" || type == "xz")
-      return get_transform("LZMA" + comp_suffix);
+   auto i = trans.find(type);
 
-   return nullptr;
+   if(i == trans.end())
+      return nullptr;
+
+   const std::string t_name = i->second + suffix;
+
+   std::unique_ptr<Transform> t(get_transform(t_name));
+
+   Compressor_Transform* r = dynamic_cast<Compressor_Transform*>(t.get());
+
+   if(!r)
+      throw std::runtime_error("Bad cast of compression object " + t_name);
+
+   t.release();
+   return r;
    }
 
-Transform* make_decompressor(const std::string& type)
-   {
-   if(type == "zlib")
-      return get_transform("Zlib_Decompression");
-   if(type == "deflate")
-      return get_transform("Deflate_Decompression");
-   if(type == "gzip" || type == "gz")
-      return get_transform("Gzip_Decompression");
-   if(type == "bzip2" || type == "bz2")
-      return get_transform("Bzip2_Decompression");
-   if(type == "lzma" || type == "xz")
-      return get_transform("LZMA_Decompression");
+}
 
-   return nullptr;
+Compressor_Transform* make_compressor(const std::string& type, size_t level)
+   {
+   return do_make_compressor(type, "_Compression(" + std::to_string(level) + ")");
+   }
+
+Compressor_Transform* make_decompressor(const std::string& type)
+   {
+   return do_make_compressor(type, "_Decompression");
    }
 
 void Stream_Compression::clear()
