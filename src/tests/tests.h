@@ -99,4 +99,7 @@ size_t test_tls();
 
 size_t test_nist_x509();
 
+size_t test_srp6();
+size_t test_compression();
+
 #endif

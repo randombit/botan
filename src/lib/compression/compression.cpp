@@ -128,16 +128,19 @@ void Stream_Compression::process(secure_vector<byte>& buf, size_t offset, u32bit
 
 void Stream_Compression::update(secure_vector<byte>& buf, size_t offset)
    {
+   BOTAN_ASSERT(m_stream, "Initialized");
    process(buf, offset, m_stream->run_flag());
    }
 
 void Stream_Compression::flush(secure_vector<byte>& buf, size_t offset)
    {
+   BOTAN_ASSERT(m_stream, "Initialized");
    process(buf, offset, m_stream->flush_flag());
    }
 
 void Stream_Compression::finish(secure_vector<byte>& buf, size_t offset)
    {
+   BOTAN_ASSERT(m_stream, "Initialized");
    process(buf, offset, m_stream->finish_flag());
    clear();
    }

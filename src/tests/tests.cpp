@@ -248,6 +248,7 @@ int main(int argc, char* argv[])
    DEF_TEST(cryptobox);
    DEF_TEST(tss);
    DEF_TEST(rfc6979);
+   DEF_TEST(srp6);
 
    DEF_TEST(bigint);
 
@@ -272,6 +273,7 @@ int main(int argc, char* argv[])
    DEF_TEST(x509);
    DEF_TEST(nist_x509);
    DEF_TEST(tls);
+   DEF_TEST(compression);
 
    if(tests.empty())
       {
