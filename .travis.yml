@@ -13,8 +13,8 @@ env:
   - BUILD_MODE="coverage"
 
   global:
-   # Coverity token
-   - secure: "g5vrCKeJwv+Brjlf1yuv/3FsJBVF9jVB+TmIyzXqTVzUk2LLFMNax04LaMTrQKHVrkXX/r/XdiTIl8/9EMqQGDx/kAPZpde5uJqy1aV8fE2IvYRj7sNSRm2smKNaioZnFYH6sm8dthoDARjxBY/nPmop0F6LVqSyRdZZVT9I/QY="
+    # Coverity token
+    - secure: "g5vrCKeJwv+Brjlf1yuv/3FsJBVF9jVB+TmIyzXqTVzUk2LLFMNax04LaMTrQKHVrkXX/r/XdiTIl8/9EMqQGDx/kAPZpde5uJqy1aV8fE2IvYRj7sNSRm2smKNaioZnFYH6sm8dthoDARjxBY/nPmop0F6LVqSyRdZZVT9I/QY="
 
 
 matrix:
