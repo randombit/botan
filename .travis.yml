@@ -12,6 +12,11 @@ env:
   - BUILD_MODE="static"
   - BUILD_MODE="coverage"
 
+  global:
+   # Coverity token
+   - secure: "g5vrCKeJwv+Brjlf1yuv/3FsJBVF9jVB+TmIyzXqTVzUk2LLFMNax04LaMTrQKHVrkXX/r/XdiTIl8/9EMqQGDx/kAPZpde5uJqy1aV8fE2IvYRj7sNSRm2smKNaioZnFYH6sm8dthoDARjxBY/nPmop0F6LVqSyRdZZVT9I/QY="
+
+
 matrix:
   exclude:
     - compiler: clang
@@ -33,12 +38,6 @@ after_success:
 notifications:
   email: lloyd@randombit.net
 
-env:
-  global:
-   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
-   #   via the "travis encrypt" command using the project repo's public key
-   - secure: "g5vrCKeJwv+Brjlf1yuv/3FsJBVF9jVB+TmIyzXqTVzUk2LLFMNax04LaMTrQKHVrkXX/r/XdiTIl8/9EMqQGDx/kAPZpde5uJqy1aV8fE2IvYRj7sNSRm2smKNaioZnFYH6sm8dthoDARjxBY/nPmop0F6LVqSyRdZZVT9I/QY="
-
 addons:
   coverity_scan:
     project:
@@ -47,4 +46,4 @@ addons:
     notification_email: lloyd@randombit.net
     build_command_prepend: "./configure.py"
     build_command: "make -j 4"
-    branch_pattern: coverity_scan
+    branch_pattern: master
