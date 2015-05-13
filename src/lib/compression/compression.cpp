@@ -59,8 +59,10 @@ Compressor_Transform* do_make_compressor(const std::string& type, const std::str
 
    std::unique_ptr<Transform> t(get_transform(t_name));
 
-   Compressor_Transform* r = dynamic_cast<Compressor_Transform*>(t.get());
+   if(!t)
+      return nullptr;
 
+   Compressor_Transform* r = dynamic_cast<Compressor_Transform*>(t.get());
    if(!r)
       throw std::runtime_error("Bad cast of compression object " + t_name);
 
