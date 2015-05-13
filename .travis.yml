@@ -8,9 +8,10 @@ compiler:
   - gcc
 
 env:
-  - BUILD_MODE="shared"
-  - BUILD_MODE="static"
-  - BUILD_MODE="coverage"
+  matrix:
+    - BUILD_MODE="shared"
+    - BUILD_MODE="static"
+    - BUILD_MODE="coverage"
 
   global:
     # Coverity token
@@ -42,7 +43,6 @@ addons:
   coverity_scan:
     project:
       name: "randombit/botan"
-      description: "Build submitted via Travis CI"
     notification_email: lloyd@randombit.net
     build_command_prepend: "./configure.py"
     build_command: "make -j 4"
