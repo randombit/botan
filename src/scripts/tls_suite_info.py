@@ -200,7 +200,7 @@ def main(args = None):
     if args is None:
         args = sys.argv
 
-    weak_crypto = ['EXPORT', 'RC2', 'IDEA', '_DES_', 'WITH_NULL']
+    weak_crypto = ['EXPORT', 'RC2', 'IDEA', 'RC4', '_DES_', 'WITH_NULL']
     static_dh = ['ECDH_ECDSA', 'ECDH_RSA', 'DH_DSS', 'DH_RSA'] # not supported
     protocol_goop = ['SCSV', 'KRB5']
     maybe_someday = ['ARIA', 'RSA_PSK']
@@ -245,14 +245,14 @@ def main(args = None):
     # From http://tools.ietf.org/html/draft-ietf-tls-56-bit-ciphersuites-01
     define_custom_ciphersuite('DHE_DSS_WITH_RC4_128_SHA', '0066')
 
-    if options.with_chacha and False:
+    if options.with_chacha:
         # Google servers - draft-agl-tls-chacha20poly1305-04
         define_custom_ciphersuite('ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256', 'CC13')
         define_custom_ciphersuite('ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256', 'CC14')
         define_custom_ciphersuite('DHE_RSA_WITH_CHACHA20_POLY1305_SHA256', 'CC15')
 
-    if options.with_chacha:
-        # Provisional IETF ChaCha suites:
+    if options.with_chacha and False:
+        # Provisional IETF ChaCha suites
         define_custom_ciphersuite('RSA_WITH_CHACHA20_POLY1305_SHA256', 'CD30')
         define_custom_ciphersuite('ECDSA_RSA_WITH_CHACHA20_POLY1305_SHA256', 'CD31')
         define_custom_ciphersuite('ECDSA_ECDSA_WITH_CHACHA20_POLY1305_SHA256', 'CD32')

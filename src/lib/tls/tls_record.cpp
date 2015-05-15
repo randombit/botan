@@ -1,6 +1,6 @@
 /*
 * TLS Record Handling
-* (C) 2012,2013,2014 Jack Lloyd
+* (C) 2012,2013,2014,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -72,11 +72,6 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
 
       if(version.supports_explicit_cbc_ivs())
          m_iv_size = m_block_size;
-      }
-   else if(StreamCipher* sc = get_stream_cipher(cipher_algo))
-      {
-      m_stream_cipher.reset(sc);
-      m_stream_cipher->set_key(cipher_key);
       }
    else
       throw Invalid_Argument("Unknown TLS cipher " + cipher_algo);
@@ -236,11 +231,7 @@ void write_record(secure_vector<byte>& output,
    BOTAN_ASSERT_EQUAL(buf_size + header_size, output.size(),
                       "Output buffer is sized properly");
 
-   if(StreamCipher* sc = cs->stream_cipher())
-      {
-      sc->cipher1(&output[header_size], buf_size);
-      }
-   else if(BlockCipher* bc = cs->block_cipher())
+   if(BlockCipher* bc = cs->block_cipher())
       {
       secure_vector<byte>& cbc_state = cs->cbc_state();
 
@@ -388,17 +379,12 @@ void decrypt_record(secure_vector<byte>& output,
       }
    else
       {
-      // GenericBlockCipher / GenericStreamCipher case
+      // GenericBlockCipher case
 
       volatile bool padding_bad = false;
       size_t pad_size = 0;
 
-      if(StreamCipher* sc = cs.stream_cipher())
-         {
-         sc->cipher1(record_contents, record_len);
-         // no padding to check or remove
-         }
-      else if(BlockCipher* bc = cs.block_cipher())
+      if(BlockCipher* bc = cs.block_cipher())
          {
          cbc_decrypt_record(record_contents, record_len, cs, *bc);
 
