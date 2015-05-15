@@ -80,24 +80,11 @@ void UnixProcessInfo_EntropySource::poll(Entropy_Accumulator& accum)
    accum.add(usage, 0.0);
    }
 
-namespace {
-
-void do_exec(const std::vector<std::string>& args)
-   {
-   // cleaner way to do this?
-   const char* arg0 = (args.size() > 0) ? args[0].c_str() : nullptr;
-   const char* arg1 = (args.size() > 1) ? args[1].c_str() : nullptr;
-   const char* arg2 = (args.size() > 2) ? args[2].c_str() : nullptr;
-   const char* arg3 = (args.size() > 3) ? args[3].c_str() : nullptr;
-   const char* arg4 = (args.size() > 4) ? args[4].c_str() : nullptr;
-
-   ::execl(arg0, arg0, arg1, arg2, arg3, arg4, NULL);
-   }
-
-}
-
 void Unix_EntropySource::Unix_Process::spawn(const std::vector<std::string>& args)
    {
+   if(args.empty())
+      throw std::invalid_argument("Cannot spawn process without path");
+
    shutdown();
 
    int pipe[2];
@@ -126,7 +113,13 @@ void Unix_EntropySource::Unix_Process::spawn(const std::vector<std::string>& arg
       if(close(STDERR_FILENO) != 0)
          ::exit(127);
 
-      do_exec(args);
+      const char* arg0 = args[0].c_str();
+      const char* arg1 = (args.size() > 1) ? args[1].c_str() : nullptr;
+      const char* arg2 = (args.size() > 2) ? args[2].c_str() : nullptr;
+      const char* arg3 = (args.size() > 3) ? args[3].c_str() : nullptr;
+      const char* arg4 = (args.size() > 4) ? args[4].c_str() : nullptr;
+
+      ::execl(arg0, arg0, arg1, arg2, arg3, arg4, NULL);
       ::exit(127);
       }
    }

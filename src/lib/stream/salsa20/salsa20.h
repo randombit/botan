@@ -38,7 +38,7 @@ class BOTAN_DLL Salsa20 : public StreamCipher
 
       secure_vector<u32bit> m_state;
       secure_vector<byte> m_buffer;
-      size_t m_position;
+      size_t m_position = 0;
    };
 
 }

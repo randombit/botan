@@ -137,6 +137,7 @@ Montgomery_Exponentiator::Montgomery_Exponentiator(const BigInt& mod,
    const BigInt r = BigInt::power_of_2(m_mod_words * BOTAN_MP_WORD_BITS);
    m_R_mod = r % m_modulus;
    m_R2_mod = (m_R_mod * m_R_mod) % m_modulus;
+   m_exp_bits = 0;
    }
 
 }

@@ -37,6 +37,7 @@ class BOTAN_DLL Session
          m_ciphersuite(0),
          m_compression_method(0),
          m_connection_side(static_cast<Connection_Side>(0)),
+         m_srtp_profile(0),
          m_fragment_size(0)
             {}
 
