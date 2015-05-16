@@ -33,6 +33,7 @@ class BOTAN_DLL Compression_Decompression_Filter : public Filter
       void flush();
    private:
       std::unique_ptr<Compressor_Transform> m_transform;
+      std::size_t m_buffersize;
       secure_vector<byte> m_buffer;
    };
 
