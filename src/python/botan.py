@@ -111,7 +111,7 @@ class message_authentication_code(object):
         flags = c_uint32(0) # always zero in this API version
         self.mac = c_void_p(0)
         rc = botan.botan_mac_init(byref(self.mac), algo, flags)
-        if rc != 0 or self.hash is None:
+        if rc != 0 or self.mac is None:
             raise Exception("No mac " + algo + " for you!")
 
     def __del__(self):
