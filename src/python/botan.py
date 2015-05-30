@@ -111,7 +111,7 @@ class message_authentication_code(object):
         flags = c_uint32(0) # always zero in this API version
         self.mac = c_void_p(0)
         rc = botan.botan_mac_init(byref(self.mac), algo, flags)
-        if rc != 0 or self.hash is None:
+        if rc != 0 or self.mac is None:
             raise Exception("No mac " + algo + " for you!")
 
     def __del__(self):
@@ -130,7 +130,7 @@ class message_authentication_code(object):
 
     def set_key(self, key):
         botan.botan_mac_set_key.argtypes = [c_void_p, POINTER(c_char), c_size_t]
-        return botan.botan_mac_set_key(self.mac, k, len(k))
+        return botan.botan_mac_set_key(self.mac, key, len(key))
 
     def update(self, x):
         botan.botan_mac_update.argtypes = [c_void_p, POINTER(c_char), c_size_t]
@@ -507,6 +507,16 @@ def test():
     print salt.encode('hex'), iterations
     print 'x', psk.encode('hex')
     print 'y', pbkdf('PBKDF2(SHA-256)', 'xyz', 32, iterations, salt)[2].encode('hex')
+
+    hmac = message_authentication_code('HMAC(SHA-256)')
+    hmac.set_key('0102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F20'.decode('hex'))
+    hmac.update('616263'.decode('hex'))
+
+    hmac_output = hmac.final()
+
+    print hmac_output.encode('hex')
+    if hmac_output != 'A21B1F5D4CF4F73A4DD939750F7A066A7F98CC131CB16A6692759021CFAB8181'.decode('hex'):
+        print 'Bad HMAC'
 
     print r.get(42).encode('hex'), r.get(13).encode('hex'), r.get(9).encode('hex')
 
