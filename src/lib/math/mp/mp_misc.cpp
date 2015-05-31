@@ -7,6 +7,7 @@
 
 #include <botan/internal/mp_core.h>
 #include <botan/internal/mp_madd.h>
+#include <stdexcept>
 
 namespace Botan {
 
