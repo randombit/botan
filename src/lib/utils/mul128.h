@@ -69,6 +69,10 @@ namespace Botan {
    *lo = a * b;                                                   \
 } while(0)
 
+#else
+
+#error "BOTAN_USE_GCC_INLINE_ASM set but no implementation of BOTAN_FAST_64X64_MUL available"
+
 #endif
 
 #endif

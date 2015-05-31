@@ -38,7 +38,7 @@ void Intel_Rdrand::poll(Entropy_Accumulator& accum)
       {
       unsigned int r = 0;
 
-#if BOTAN_USE_GCC_INLINE_ASM
+#if defined(BOTAN_USE_GCC_INLINE_ASM)
       int cf = 0;
 
       // Encoding of rdrand %eax
