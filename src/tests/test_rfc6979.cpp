@@ -48,7 +48,7 @@ size_t rfc6979_testcase(const std::string& q_str,
    if(gen_0 != exp_k)
       {
       std::cout << "RFC 6979 test #" << testcase << " failed; generated k="
-                << std::hex << gen_k << " (gen_0)\n";
+                << std::hex << gen_0 << " (gen_0)\n";
       ++fails;
       }
 

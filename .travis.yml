@@ -8,9 +8,10 @@ compiler:
   - gcc
 
 env:
-  - BUILD_MODE="shared"
-  - BUILD_MODE="static"
-  - BUILD_MODE="coverage"
+  matrix:
+    - BUILD_MODE="shared"
+    - BUILD_MODE="static"
+    - BUILD_MODE="coverage"
 
 matrix:
   exclude:
@@ -33,3 +34,11 @@ after_success:
 notifications:
   email: lloyd@randombit.net
 
+addons:
+  coverity_scan:
+    project:
+      name: "randombit/botan"
+    notification_email: lloyd@randombit.net
+    build_command_prepend: "./configure.py"
+    build_command: "make -j4"
+    branch_pattern: coverity_scan

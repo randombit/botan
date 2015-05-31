@@ -47,10 +47,14 @@ std::ostream& operator<<(std::ostream& out, Timer& timer)
 
    std::string op_or_ops = (timer.events() == 1) ? "op" : "ops";
 
+   const std::ios::fmtflags flags = out.flags();
+
    out << std::setprecision(2) << std::fixed
        << timer.ms_per_event() << " ms/op"
        << " (" << timer.events() << " " << op_or_ops << " in "
        << timer.milliseconds() << " ms)";
+
+   out.flags(flags);
 
    return out;
    }

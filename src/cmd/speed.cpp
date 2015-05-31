@@ -109,12 +109,14 @@ void report_results(const std::string& algo,
 
    std::cout << algo;
 
+   const std::ios::fmtflags flags = std::cout.flags();
    for(auto i = results.rbegin(); i != results.rend(); ++i)
       {
       std::cout << " [" << i->second << "] "
                 << std::fixed << std::setprecision(2) << i->first;
       }
    std::cout << std::endl;
+   std::cout.flags(flags);
    }
 
 void time_transform(std::unique_ptr<Transform> tf,

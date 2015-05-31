@@ -246,12 +246,16 @@ Maximum_Fragment_Length::Maximum_Fragment_Length(TLS_Data_Reader& reader,
       {
       case 1:
          m_max_fragment = 512;
+         break;
       case 2:
          m_max_fragment = 1024;
+         break;
       case 3:
          m_max_fragment = 2048;
+         break;
       case 4:
          m_max_fragment = 4096;
+         break;
       default:
          throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
                              "Bad value " + std::to_string(val) + " for max fragment len");

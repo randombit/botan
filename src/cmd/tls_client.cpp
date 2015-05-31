@@ -91,7 +91,10 @@ bool handshake_complete(const TLS::Session& session)
 
 void dgram_socket_write(int sockfd, const byte buf[], size_t length)
    {
-   send(sockfd, buf, length, MSG_NOSIGNAL);
+   int r = send(sockfd, buf, length, MSG_NOSIGNAL);
+
+   if(r == -1)
+      throw std::runtime_error("Socket write failed errno=" + std::to_string(errno));
    }
 
 void stream_socket_write(int sockfd, const byte buf[], size_t length)
@@ -108,7 +111,7 @@ void stream_socket_write(int sockfd, const byte buf[], size_t length)
          if(errno == EINTR)
             sent = 0;
          else
-            throw std::runtime_error("Socket::write: Socket write failed");
+            throw std::runtime_error("Socket write failed errno=" + std::to_string(errno));
          }
 
       offset += sent;

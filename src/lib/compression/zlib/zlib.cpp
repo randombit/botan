@@ -67,8 +67,8 @@ class Zlib_Compression_Stream : public Zlib_Stream
 
          if(rc == Z_MEM_ERROR)
             throw std::bad_alloc();
-         else if(rc != Z_OK && rc != Z_STREAM_END)
-            throw std::runtime_error("zlib deflate error");
+         else if(rc != Z_OK && rc != Z_STREAM_END && rc != Z_BUF_ERROR)
+            throw std::runtime_error("zlib deflate error " + std::to_string(rc));
 
          return (rc == Z_STREAM_END);
          }
@@ -98,8 +98,8 @@ class Zlib_Decompression_Stream : public Zlib_Stream
 
          if(rc == Z_MEM_ERROR)
             throw std::bad_alloc();
-         else if(rc != Z_OK && rc != Z_STREAM_END)
-            throw std::runtime_error("zlib deflate error");
+         else if(rc != Z_OK && rc != Z_STREAM_END && rc != Z_BUF_ERROR)
+            throw std::runtime_error("zlib inflate error " + std::to_string(rc));
 
          return (rc == Z_STREAM_END);
          }

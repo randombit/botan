@@ -527,11 +527,11 @@ policy settings from a file.
      Also allowed (though currently experimental): "AES-128/OCB(12)",
      "AES-256/OCB(12)"
 
-     Also allowed (although **not recommended**): "SEED", "3DES", "RC4"
+     Also allowed (although **not recommended**): "SEED", "3DES"
 
      .. note::
 
-        RC4 will never be negotiated in DTLS due to protocol limitations
+        Support for the broken RC4 cipher was removed in 1.11.17
 
  .. cpp:function:: std::vector<std::string> allowed_macs() const
 

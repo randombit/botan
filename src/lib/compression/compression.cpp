@@ -59,8 +59,10 @@ Compressor_Transform* do_make_compressor(const std::string& type, const std::str
 
    std::unique_ptr<Transform> t(get_transform(t_name));
 
-   Compressor_Transform* r = dynamic_cast<Compressor_Transform*>(t.get());
+   if(!t)
+      return nullptr;
 
+   Compressor_Transform* r = dynamic_cast<Compressor_Transform*>(t.get());
    if(!r)
       throw std::runtime_error("Bad cast of compression object " + t_name);
 
@@ -128,16 +130,19 @@ void Stream_Compression::process(secure_vector<byte>& buf, size_t offset, u32bit
 
 void Stream_Compression::update(secure_vector<byte>& buf, size_t offset)
    {
+   BOTAN_ASSERT(m_stream, "Initialized");
    process(buf, offset, m_stream->run_flag());
    }
 
 void Stream_Compression::flush(secure_vector<byte>& buf, size_t offset)
    {
+   BOTAN_ASSERT(m_stream, "Initialized");
    process(buf, offset, m_stream->flush_flag());
    }
 
 void Stream_Compression::finish(secure_vector<byte>& buf, size_t offset)
    {
+   BOTAN_ASSERT(m_stream, "Initialized");
    process(buf, offset, m_stream->finish_flag());
    clear();
    }

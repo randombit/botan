@@ -43,6 +43,9 @@ s32bit bigint_cmp(const word x[], size_t x_size,
 */
 word bigint_divop(word n1, word n0, word d)
    {
+   if(d == 0)
+      throw std::runtime_error("bigint_divop divide by zero");
+
    word high = n1 % d, quotient = 0;
 
    for(size_t i = 0; i != MP_WORD_BITS; ++i)

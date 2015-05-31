@@ -27,14 +27,14 @@ is also available as a resource.
 CI Status
 ----------------------------------------
 
-.. image:: https://travis-ci.org/randombit/botan.svg?branch=net.randombit.botan
+.. image:: https://travis-ci.org/randombit/botan.svg?branch=master
     :target: https://travis-ci.org/randombit/botan
 
 .. image:: https://ci.appveyor.com/api/projects/status/n9f94dljd03j2lce?svg=true
-    :target: https://ci.appveyor.com/project/randombit/botan
+    :target: https://ci.appveyor.com/project/randombit/botan/branch/master
 
-.. image:: https://coveralls.io/repos/randombit/botan/badge.svg?branch=net.randombit.botan
-    :target: https://coveralls.io/r/randombit/botan?branch=net.randombit.botan
+.. image:: https://coveralls.io/repos/randombit/botan/badge.svg?branch=master
+    :target: https://coveralls.io/r/randombit/botan?branch=master
 
 Kullo GmbH hosts a CI building botan on Linux, OS X, and Windows at
 https://botan-ci.kullo.net/

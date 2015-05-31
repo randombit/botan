@@ -3,7 +3,7 @@
 *
 * This file was automatically generated from the IANA assignments
 * (tls-parameters.txt hash 4bc98b6f75ad5b63952b5f457fa7adbfef60f095)
-* by ./src/scripts/tls_suite_info.py on 2015-01-30
+* by ./src/scripts/tls_suite_info.py on 2015-05-11
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -108,9 +108,6 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
       case 0xC091: // DHE_PSK_WITH_CAMELLIA_256_GCM_SHA384
          return Ciphersuite(0xC091, "", "DHE_PSK", "Camellia-256/GCM", 32, 4, 8, "AEAD", 0, "SHA-384");
 
-      case 0x008E: // DHE_PSK_WITH_RC4_128_SHA
-         return Ciphersuite(0x008E, "", "DHE_PSK", "RC4", 16, 0, 0, "SHA-1", 20);
-
       case 0x0016: // DHE_RSA_WITH_3DES_EDE_CBC_SHA
          return Ciphersuite(0x0016, "RSA", "DH", "3DES", 24, 8, 0, "SHA-1", 20);
 
@@ -213,9 +210,6 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
       case 0xC085: // DH_anon_WITH_CAMELLIA_256_GCM_SHA384
          return Ciphersuite(0xC085, "", "DH", "Camellia-256/GCM", 32, 4, 8, "AEAD", 0, "SHA-384");
 
-      case 0x0018: // DH_anon_WITH_RC4_128_MD5
-         return Ciphersuite(0x0018, "", "DH", "RC4", 16, 0, 0, "MD5", 16);
-
       case 0x009B: // DH_anon_WITH_SEED_CBC_SHA
          return Ciphersuite(0x009B, "", "DH", "SEED", 16, 16, 0, "SHA-1", 20);
 
@@ -273,9 +267,6 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
       case 0xCC14: // ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256
          return Ciphersuite(0xCC14, "ECDSA", "ECDH", "ChaCha20Poly1305", 32, 0, 0, "AEAD", 0, "SHA-256");
 
-      case 0xC007: // ECDHE_ECDSA_WITH_RC4_128_SHA
-         return Ciphersuite(0xC007, "ECDSA", "ECDH", "RC4", 16, 0, 0, "SHA-1", 20);
-
       case 0xC034: // ECDHE_PSK_WITH_3DES_EDE_CBC_SHA
          return Ciphersuite(0xC034, "", "ECDHE_PSK", "3DES", 24, 8, 0, "SHA-1", 20);
 
@@ -302,9 +293,6 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
 
       case 0xC09B: // ECDHE_PSK_WITH_CAMELLIA_256_CBC_SHA384
          return Ciphersuite(0xC09B, "", "ECDHE_PSK", "Camellia-256", 32, 16, 0, "SHA-384", 48);
-
-      case 0xC033: // ECDHE_PSK_WITH_RC4_128_SHA
-         return Ciphersuite(0xC033, "", "ECDHE_PSK", "RC4", 16, 0, 0, "SHA-1", 20);
 
       case 0xC012: // ECDHE_RSA_WITH_3DES_EDE_CBC_SHA
          return Ciphersuite(0xC012, "RSA", "ECDH", "3DES", 24, 8, 0, "SHA-1", 20);
@@ -348,9 +336,6 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
       case 0xCC13: // ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
          return Ciphersuite(0xCC13, "RSA", "ECDH", "ChaCha20Poly1305", 32, 0, 0, "AEAD", 0, "SHA-256");
 
-      case 0xC011: // ECDHE_RSA_WITH_RC4_128_SHA
-         return Ciphersuite(0xC011, "RSA", "ECDH", "RC4", 16, 0, 0, "SHA-1", 20);
-
       case 0xC017: // ECDH_anon_WITH_3DES_EDE_CBC_SHA
          return Ciphersuite(0xC017, "", "ECDH", "3DES", 24, 8, 0, "SHA-1", 20);
 
@@ -359,9 +344,6 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
 
       case 0xC019: // ECDH_anon_WITH_AES_256_CBC_SHA
          return Ciphersuite(0xC019, "", "ECDH", "AES-256", 32, 16, 0, "SHA-1", 20);
-
-      case 0xC016: // ECDH_anon_WITH_RC4_128_SHA
-         return Ciphersuite(0xC016, "", "ECDH", "RC4", 16, 0, 0, "SHA-1", 20);
 
       case 0xC0AA: // PSK_DHE_WITH_AES_128_CCM_8
          return Ciphersuite(0xC0AA, "", "DHE_PSK", "AES-128/CCM(8)", 16, 4, 8, "AEAD", 0, "SHA-256");
@@ -420,9 +402,6 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
       case 0xC08F: // PSK_WITH_CAMELLIA_256_GCM_SHA384
          return Ciphersuite(0xC08F, "", "PSK", "Camellia-256/GCM", 32, 4, 8, "AEAD", 0, "SHA-384");
 
-      case 0x008A: // PSK_WITH_RC4_128_SHA
-         return Ciphersuite(0x008A, "", "PSK", "RC4", 16, 0, 0, "SHA-1", 20);
-
       case 0x000A: // RSA_WITH_3DES_EDE_CBC_SHA
          return Ciphersuite(0x000A, "RSA", "RSA", "3DES", 24, 8, 0, "SHA-1", 20);
 
@@ -473,12 +452,6 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
 
       case 0xC07B: // RSA_WITH_CAMELLIA_256_GCM_SHA384
          return Ciphersuite(0xC07B, "RSA", "RSA", "Camellia-256/GCM", 32, 4, 8, "AEAD", 0, "SHA-384");
-
-      case 0x0004: // RSA_WITH_RC4_128_MD5
-         return Ciphersuite(0x0004, "RSA", "RSA", "RC4", 16, 0, 0, "MD5", 16);
-
-      case 0x0005: // RSA_WITH_RC4_128_SHA
-         return Ciphersuite(0x0005, "RSA", "RSA", "RC4", 16, 0, 0, "SHA-1", 20);
 
       case 0x0096: // RSA_WITH_SEED_CBC_SHA
          return Ciphersuite(0x0096, "RSA", "RSA", "SEED", 16, 16, 0, "SHA-1", 20);
