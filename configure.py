@@ -947,6 +947,7 @@ class OsInfo(object):
                         'static_suffix': 'a',
                         'ar_command': 'ar crs',
                         'ar_needs_ranlib': False,
+                        'sep': '/',
                         'install_root': '/usr/local',
                         'header_dir': 'include',
                         'bin_dir': 'bin',
@@ -1232,6 +1233,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'makefile_path': prefix_with_build_dir('Makefile'),
 
         'program_suffix': options.program_suffix or osinfo.program_suffix,
+        'sep': osinfo.sep,
 
         'prefix': options.prefix or osinfo.install_root,
         'destdir': options.destdir or options.prefix or osinfo.install_root,

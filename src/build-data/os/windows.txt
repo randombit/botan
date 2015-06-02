@@ -5,6 +5,7 @@ obj_suffix obj
 so_suffix dll
 static_suffix lib
 
+sep \\
 install_root c:\\Botan
 doc_dir docs
 
