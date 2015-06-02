@@ -48,8 +48,11 @@ WEBSITE_SRC_DIR=%{doc_output_dir}/website-src
 .PHONY = clean distclean docs website install valgrind
 
 clean:
-	$(RM) %{libobj_dir}/* %{testobj_dir}/* %{appobj_dir}/*
-	$(RM) $(LIBRARIES) $(SYMLINK) $(SONAME) $(APP) $(TEST)
+	-$(RM) %{libobj_dir}/*
+	-$(RM) %{testobj_dir}/*
+	-$(RM) %{appobj_dir}/*
+	-$(RM) $(SONAME) $(SYMLINK)
+	-$(RM) $(LIBRARIES) $(APP) $(TEST)
 
 distclean: clean
 	$(RM) Makefile
