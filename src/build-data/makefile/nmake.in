@@ -57,9 +57,13 @@ docs:
 %{build_doc_commands}
 
 clean:
-	$(RM) %{build_dir}\obj\* %{build_dir}\tests\*
-	$(RM) *.manifest *.exp *.dll
-	$(RM) $(LIBRARIES) $(APP) $(TEST)
+	-$(RM) %{libobj_dir}\*
+	-$(RM) %{testobj_dir}\*
+	-$(RM) %{appobj_dir}\*
+	-$(RM) %{out_dir}\*.manifest
+	-$(RM) %{out_dir}\*.exp
+	-$(RM) %{out_dir}\*.dll
+	-$(RM) $(LIBRARIES) $(APP) $(TEST)
 
 distclean: clean
 	$(RM_R) %{build_dir}
