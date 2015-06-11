@@ -1,0 +1,16 @@
+Version 1.11.17, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* All support for the insecure RC4 stream cipher has been removed
+  from the TLS implementation.
+
+* Fix decoding of TLS maximum fragment length. Regardless of what
+  value was actually negotiated, TLS would treat it as a negotiated
+  limit of 4096.
+
+* Fix the configure.py flag `--disable-aes-ni` which did nothing of
+  the sort.
+
+* Fixed nmake clean target. GitHub #104
+
+* Correct buffering logic in `Compression_Filter`. GitHub #93 and #95
