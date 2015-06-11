@@ -22,7 +22,7 @@ SCRIPTS_DIR    = %{scripts_dir}
 VERSION        = %{version}
 BRANCH         = %{version_major}.%{version_minor}
 
-LIBNAME        = %{lib_prefix}botan-%{version_major}.%{version_minor}
+LIBNAME        = %{lib_prefix}botan-%{version_major}%{version_minor}
 
 # Executable targets
 APP           = %{out_dir}/botan%{program_suffix}
