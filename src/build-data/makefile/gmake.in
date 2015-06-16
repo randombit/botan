@@ -73,7 +73,7 @@ docs:
 %{build_doc_commands}
 
 install: $(APP) docs
-	$(SCRIPTS_DIR)/install.py --destdir=%{destdir} --bindir=%{bindir} --libdir=%{libdir} --docdir=%{docdir} --includedir=%{includedir}
+	$(SCRIPTS_DIR)/install.py --destdir=%{destdir} --build-dir="%{build_dir}" --bindir=%{bindir} --libdir=%{libdir} --docdir=%{docdir} --includedir=%{includedir}
 
 website:
 	rm -rf $(WEBSITE_SRC_DIR) $(WEBSITE_DIR)
