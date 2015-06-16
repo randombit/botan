@@ -14,8 +14,8 @@ RM_R          = $(RM) /S
 RMDIR         = @rmdir
 
 # Executable targets
-APP           = %{out_dir}\botan.exe
-TEST          = %{out_dir}\botan-test.exe
+APP           = %{out_dir}\botan%{program_suffix}
+TEST          = %{out_dir}\botan-test%{program_suffix}
 
 # Library targets
 # LIB_FILENAME is either a static lib or the DLL

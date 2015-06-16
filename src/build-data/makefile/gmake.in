@@ -3,8 +3,8 @@
 %{commands_in}
 
 # Executable targets
-APP           = %{out_dir}/botan
-TEST          = %{out_dir}/botan-test
+APP           = %{out_dir}/botan%{program_suffix}
+TEST          = %{out_dir}/botan-test%{program_suffix}
 
 # Library targets
 LIB_BASENAME  = %{lib_prefix}botan-%{version_major}.%{version_minor}
