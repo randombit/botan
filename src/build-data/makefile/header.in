@@ -19,7 +19,3 @@ TEST_FLAGS     = $(LANG_FLAGS) $(APP_OPT) $(WARN_FLAGS)
 SCRIPTS_DIR    = %{scripts_dir}
 
 LIBNAME        = %{lib_prefix}botan-%{version_major}.%{version_minor}
-
-# Executable targets
-APP           = %{out_dir}/botan%{program_suffix}
-TEST          = %{out_dir}/botan-test%{program_suffix}

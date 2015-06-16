@@ -13,7 +13,11 @@ RM            = @del /Q
 RM_R          = $(RM) /S
 RMDIR         = @rmdir
 
-### Library targets
+# Executable targets
+APP           = %{out_dir}\botan.exe
+TEST          = %{out_dir}\botan-test.exe
+
+# Library targets
 LIBOBJS       = %{lib_objs}
 
 APPOBJS       = %{app_objs}

@@ -2,6 +2,10 @@
 
 %{commands_in}
 
+# Executable targets
+APP           = %{out_dir}/botan
+TEST          = %{out_dir}/botan-test
+
 # Library targets
 STATIC_LIB    = %{out_dir}/$(LIBNAME).%{static_suffix}
 
