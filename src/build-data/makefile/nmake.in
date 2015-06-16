@@ -26,6 +26,8 @@ LIBRARIES     = $(BOTAN_LIB)
 
 # This will be either a static lib or the DLL import lib
 BOTAN_LIB     = $(LIBNAME).%{static_suffix}
+# First make target. Will be used by default
+all: $(APP) $(TEST)
 
 # Build Commands
 %{lib_build_cmds}

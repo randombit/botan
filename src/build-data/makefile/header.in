@@ -23,5 +23,3 @@ LIBNAME        = %{lib_prefix}botan-%{version_major}.%{version_minor}
 # Executable targets
 APP           = %{out_dir}/botan%{program_suffix}
 TEST          = %{out_dir}/botan-test%{program_suffix}
-
-all: $(APP) $(TEST)

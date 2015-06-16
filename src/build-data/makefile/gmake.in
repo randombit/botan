@@ -16,6 +16,9 @@ APPOBJS       = %{app_objs}
 
 TESTOBJS      = %{test_objs}
 
+# First make target. Will be used by default
+all: $(APP) $(TEST)
+
 # Build Commands
 %{lib_build_cmds}
 
