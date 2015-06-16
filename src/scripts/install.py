@@ -119,18 +119,18 @@ def main(args = None):
 
     bin_dir = os.path.join(options.destdir, options.bindir)
     lib_dir = os.path.join(options.destdir, options.libdir)
-    doc_dir = os.path.join(options.destdir, options.docdir)
-    include_dir = os.path.join(options.destdir, options.includedir)
-    botan_doc_dir = os.path.join(doc_dir, 'botan-%d.%d.%d' % (ver_major, ver_minor, ver_patch))
-
-    versioned_include_dir = os.path.join(include_dir, 'botan-%d.%d' % (ver_major, ver_minor))
-
-    botan_include_dir = os.path.join(versioned_include_dir, 'botan')
+    target_doc_dir = os.path.join(options.destdir,
+                                  options.docdir,
+                                  'botan-%d.%d.%d' % (ver_major, ver_minor, ver_patch))
+    target_include_dir = os.path.join(options.destdir,
+                                      options.includedir,
+                                      'botan-%d.%d' % (ver_major, ver_minor),
+                                      'botan')
 
     out_dir = process_template('%{out_dir}')
     app_exe = process_template('botan%{program_suffix}')
 
-    for d in [options.destdir, lib_dir, bin_dir, doc_dir, botan_include_dir]:
+    for d in [options.destdir, lib_dir, bin_dir, target_doc_dir, target_include_dir]:
         makedirs(d)
 
     build_include_dir = os.path.join(options.build_dir, 'include', 'botan')
@@ -139,7 +139,7 @@ def main(args = None):
         if include == 'internal':
             continue
         copy_file(os.path.join(build_include_dir, include),
-                  os.path.join(botan_include_dir, include))
+                  os.path.join(target_include_dir, include))
 
     static_lib = process_template('%{lib_prefix}%{libname}.%{static_suffix}')
     copy_file(os.path.join(out_dir, static_lib),
@@ -195,13 +195,13 @@ def main(args = None):
         for py in ['botan.py']:
             copy_file(os.path.join(cfg['python_dir'], py), os.path.join(py_lib_path, py))
 
-    shutil.rmtree(botan_doc_dir, True)
-    shutil.copytree(cfg['doc_output_dir'], botan_doc_dir)
+    shutil.rmtree(target_doc_dir, True)
+    shutil.copytree(cfg['doc_output_dir'], target_doc_dir)
 
     for f in [f for f in os.listdir(cfg['doc_dir']) if f.endswith('.txt')]:
-        copy_file(os.path.join(cfg['doc_dir'], f), os.path.join(botan_doc_dir, f))
+        copy_file(os.path.join(cfg['doc_dir'], f), os.path.join(target_doc_dir, f))
 
-    with combine_relnotes.open_for_utf8(os.path.join(botan_doc_dir, 'news.txt'), 'w+') as news:
+    with combine_relnotes.open_for_utf8(os.path.join(target_doc_dir, 'news.txt'), 'w+') as news:
         news.write(combine_relnotes.combine_relnotes('doc/relnotes', False))
 
     logging.info('Botan %s installation complete', cfg['version'])
