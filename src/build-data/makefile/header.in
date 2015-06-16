@@ -18,10 +18,6 @@ TEST_FLAGS     = $(LANG_FLAGS) $(APP_OPT) $(WARN_FLAGS)
 
 SCRIPTS_DIR    = %{scripts_dir}
 
-# Version Numbers
-VERSION        = %{version}
-BRANCH         = %{version_major}.%{version_minor}
-
 LIBNAME        = %{lib_prefix}botan-%{version_major}.%{version_minor}
 
 # Executable targets
