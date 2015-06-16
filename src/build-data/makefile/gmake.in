@@ -7,7 +7,7 @@ APP           = %{out_dir}/botan%{program_suffix}
 TEST          = %{out_dir}/botan-test%{program_suffix}
 
 # Library targets
-LIB_BASENAME  = %{lib_prefix}botan-%{version_major}.%{version_minor}
+LIB_BASENAME  = %{lib_prefix}%{libname}
 STATIC_LIB    = %{out_dir}/$(LIB_BASENAME).%{static_suffix}
 LIBRARIES     = $(STATIC_LIB)
 

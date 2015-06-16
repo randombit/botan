@@ -19,7 +19,7 @@ TEST          = %{out_dir}\botan-test%{program_suffix}
 
 # Library targets
 # LIB_FILENAME is either a static lib or the DLL
-LIB_BASENAME  = botan
+LIB_BASENAME  = %{libname}
 LIB_FILENAME  = %{out_dir}\$(LIB_BASENAME).%{static_suffix}
 LIBRARIES     = $(LIB_FILENAME)
 
