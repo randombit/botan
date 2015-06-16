@@ -20,6 +20,8 @@ APPOBJS       = %{app_objs}
 
 TESTOBJS      = %{test_objs}
 
+LIBNAME       = botan
+
 LIBRARIES     = $(BOTAN_LIB)
 
 # This will be either a static lib or the DLL import lib
