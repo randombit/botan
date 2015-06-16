@@ -146,34 +146,39 @@ def main(args = None):
               os.path.join(lib_dir, os.path.basename(static_lib)))
 
     if bool(cfg['with_shared_lib']):
-        shared_lib = process_template('%{lib_prefix}%{libname}.%{so_suffix}.%{so_abi_rev}.%{version_patch}')
-        soname = process_template('%{lib_prefix}%{libname}.%{so_suffix}.%{so_abi_rev}')
-        baselib = process_template('%{lib_prefix}%{libname}.%{so_suffix}')
+        if str(cfg['os']) == "windows":
+            shared_lib = process_template('%{lib_prefix}%{libname}.%{so_suffix}') # botan.dll
+            copy_executable(os.path.join(out_dir, shared_lib),
+                            os.path.join(lib_dir, os.path.basename(shared_lib)))
+        else:
+            shared_lib = process_template('%{lib_prefix}%{libname}.%{so_suffix}.%{so_abi_rev}.%{version_patch}')
+            soname = process_template('%{lib_prefix}%{libname}.%{so_suffix}.%{so_abi_rev}')
+            baselib = process_template('%{lib_prefix}%{libname}.%{so_suffix}')
 
-        copy_executable(os.path.join(out_dir, shared_lib),
-                        os.path.join(lib_dir, os.path.basename(shared_lib)))
+            copy_executable(os.path.join(out_dir, shared_lib),
+                            os.path.join(lib_dir, os.path.basename(shared_lib)))
 
-        prev_cwd = os.getcwd()
-
-        try:
-            os.chdir(lib_dir)
-
-            try:
-                os.unlink(soname)
-            except OSError as e:
-                if e.errno != errno.ENOENT:
-                    raise e
+            prev_cwd = os.getcwd()
 
             try:
-                os.unlink(baselib)
-            except OSError as e:
-                if e.errno != errno.ENOENT:
-                    raise e
+                os.chdir(lib_dir)
 
-            os.symlink(shared_lib, soname)
-            os.symlink(soname, baselib)
-        finally:
-            os.chdir(prev_cwd)
+                try:
+                    os.unlink(soname)
+                except OSError as e:
+                    if e.errno != errno.ENOENT:
+                        raise e
+
+                try:
+                    os.unlink(baselib)
+                except OSError as e:
+                    if e.errno != errno.ENOENT:
+                        raise e
+
+                os.symlink(shared_lib, soname)
+                os.symlink(soname, baselib)
+            finally:
+                os.chdir(prev_cwd)
 
     copy_executable(os.path.join(out_dir, app_exe), os.path.join(bin_dir, app_exe))
 
