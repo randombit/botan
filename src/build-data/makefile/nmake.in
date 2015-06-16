@@ -18,8 +18,9 @@ APP           = %{out_dir}\botan.exe
 TEST          = %{out_dir}\botan-test.exe
 
 # Library targets
+# LIB_FILENAME is either a static lib or the DLL
 LIB_BASENAME  = botan
-LIB_FILENAME  = %{out_dir}\$(LIB_BASENAME).%{static_suffix} # This will be either a static lib or the DLL import lib
+LIB_FILENAME  = %{out_dir}\$(LIB_BASENAME).%{static_suffix}
 LIBRARIES     = $(LIB_FILENAME)
 
 # File Lists
