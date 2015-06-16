@@ -51,7 +51,7 @@ $(LIB_FILENAME): $(LIBOBJS)
 !If "$(SO_OBJ_FLAGS)" == ""
 	$(AR) /OUT:$(LIB_FILENAME) $(LIBOBJS)
 !Else
-	$(LIB_LINK_CMD) /Fe$(LIB_BASENAME) $(LIBOBJS) $(LIB_LINKS_TO)
+	$(LIB_LINK_CMD) /Fe%{out_dir}\$(LIB_BASENAME) $(LIBOBJS) $(LIB_LINKS_TO)
 !Endif
 
 # Fake Targets
