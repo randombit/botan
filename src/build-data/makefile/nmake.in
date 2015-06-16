@@ -18,18 +18,17 @@ APP           = %{out_dir}\botan.exe
 TEST          = %{out_dir}\botan-test.exe
 
 # Library targets
+LIB_BASENAME  = botan
+LIB_FILENAME  = %{out_dir}\$(LIB_BASENAME).%{static_suffix} # This will be either a static lib or the DLL import lib
+LIBRARIES     = $(LIB_FILENAME)
+
+# File Lists
 LIBOBJS       = %{lib_objs}
 
 APPOBJS       = %{app_objs}
 
 TESTOBJS      = %{test_objs}
 
-LIBNAME       = botan
-
-LIBRARIES     = $(BOTAN_LIB)
-
-# This will be either a static lib or the DLL import lib
-BOTAN_LIB     = $(LIBNAME).%{static_suffix}
 # First make target. Will be used by default
 all: $(APP) $(TEST)
 
@@ -42,16 +41,16 @@ all: $(APP) $(TEST)
 
 # Link Commands
 $(APP): $(LIBRARIES) $(APPOBJS)
-	$(CXX) /Fe$@ $(APPOBJS) $(BOTAN_LIB) $(APP_LINKS_TO)
+	$(CXX) /Fe$@ $(APPOBJS) $(LIB_FILENAME_LIB) $(APP_LINKS_TO)
 
 $(TEST): $(LIBRARIES) $(TESTOBJS)
-	$(CXX) /Fe$@ $(TESTOBJS) $(BOTAN_LIB) $(TEST_LINKS_TO)
+	$(CXX) /Fe$@ $(TESTOBJS) $(LIB_FILENAME) $(TEST_LINKS_TO)
 
-$(BOTAN_LIB): $(LIBOBJS)
+$(LIB_FILENAME): $(LIBOBJS)
 !If "$(SO_OBJ_FLAGS)" == ""
-	$(AR) /OUT:$(BOTAN_LIB) $(LIBOBJS)
+	$(AR) /OUT:$(LIB_FILENAME) $(LIBOBJS)
 !Else
-	$(LIB_LINK_CMD) /Fe$(LIBNAME) $(LIBOBJS) $(LIB_LINKS_TO)
+	$(LIB_LINK_CMD) /Fe$(LIB_BASENAME) $(LIBOBJS) $(LIB_LINKS_TO)
 !Endif
 
 # Fake Targets
@@ -78,7 +77,7 @@ distclean: clean
 	$(RMDIR) %{build_dir}\include
 	$(RMDIR) %{build_dir}\lib %{build_dir}\tests
 	$(RMDIR) %{build_dir}
-	$(RM) Makefile $(LIBNAME).* $(APP).*
+	$(RM) Makefile $(LIB_BASENAME).* $(APP).*
 
 install: $(APP) docs
 	$(SCRIPTS_DIR)\install.py --destdir=%{destdir} --bindir=%{bindir} --libdir=%{libdir} --docdir=%{docdir} --includedir=%{includedir}

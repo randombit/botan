@@ -1,6 +1,6 @@
-SHARED_LIB    = $(LIBNAME).%{so_suffix}.%{so_abi_rev}.%{version_patch}
-SONAME        = $(LIBNAME).%{so_suffix}.%{so_abi_rev}
-SYMLINK       = $(LIBNAME).%{so_suffix}
+SHARED_LIB    = $(LIB_BASENAME).%{so_suffix}.%{so_abi_rev}.%{version_patch}
+SONAME        = $(LIB_BASENAME).%{so_suffix}.%{so_abi_rev}
+SYMLINK       = $(LIB_BASENAME).%{so_suffix}
 
 $(SHARED_LIB): $(LIBOBJS)
 	$(LIB_LINK_CMD) $(LDFLAGS) $(LIBOBJS) $(LIB_LINKS_TO) -o $(SHARED_LIB)
