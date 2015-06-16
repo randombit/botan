@@ -142,14 +142,16 @@ def main(args = None):
                   os.path.join(botan_include_dir, include))
 
     static_lib = process_template('%{lib_prefix}%{libname}.%{static_suffix}')
-    copy_file(static_lib, os.path.join(lib_dir, os.path.basename(static_lib)))
+    copy_file(os.path.join(out_dir, static_lib),
+              os.path.join(lib_dir, os.path.basename(static_lib)))
 
     if bool(cfg['with_shared_lib']):
         shared_lib = process_template('%{lib_prefix}%{libname}.%{so_suffix}.%{so_abi_rev}.%{version_patch}')
         soname = process_template('%{lib_prefix}%{libname}.%{so_suffix}.%{so_abi_rev}')
         baselib = process_template('%{lib_prefix}%{libname}.%{so_suffix}')
 
-        copy_executable(shared_lib, os.path.join(lib_dir, os.path.basename(shared_lib)))
+        copy_executable(os.path.join(out_dir, shared_lib),
+                        os.path.join(lib_dir, os.path.basename(shared_lib)))
 
         prev_cwd = os.getcwd()
 
