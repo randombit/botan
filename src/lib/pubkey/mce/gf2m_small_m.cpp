@@ -11,6 +11,7 @@
 #include <botan/gf2m_small_m.h>
 #include <botan/code_based_util.h>
 #include <string>
+#include <stdexcept>
 
 namespace Botan {
 

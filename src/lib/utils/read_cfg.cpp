@@ -6,6 +6,7 @@
 */
 
 #include <botan/parsing.h>
+#include <stdexcept>
 
 namespace Botan {
 
