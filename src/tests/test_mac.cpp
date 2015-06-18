@@ -26,7 +26,7 @@ size_t mac_test(const std::string& algo,
 
    if(providers.empty())
       {
-      std::cout << "Unknown algo " << algo << "\n";
+      std::cout << "Unknown algo " << algo << std::endl;
       ++fails;
       }
 
@@ -36,7 +36,7 @@ size_t mac_test(const std::string& algo,
 
       if(!mac)
          {
-         std::cout << "Unable to get " << algo << " from " << provider << "\n";
+         std::cout << "Unable to get " << algo << " from " << provider << std::endl;
          ++fails;
          continue;
          }
@@ -52,7 +52,7 @@ size_t mac_test(const std::string& algo,
 
       if(out != exp)
          {
-         std::cout << algo << " " << provider << " got " << hex_encode(out) << " != " << hex_encode(exp) << "\n";
+         std::cout << algo << " " << provider << " got " << hex_encode(out) << " != " << hex_encode(exp) << std::endl;
          ++fails;
          }
 
@@ -67,7 +67,7 @@ size_t mac_test(const std::string& algo,
 
          if(out2 != exp)
             {
-            std::cout << algo << " " << provider << " got " << hex_encode(out2) << " != " << hex_encode(exp) << "\n";
+            std::cout << algo << " " << provider << " got " << hex_encode(out2) << " != " << hex_encode(exp) << std::endl;
             ++fails;
             }
          }

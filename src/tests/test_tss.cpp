@@ -34,7 +34,7 @@ size_t test_tss()
 
    if(S != back)
       {
-      std::cout << "TSS-0: " << hex_encode(S) << " != " << hex_encode(back) << "\n";
+      std::cout << "TSS-0: " << hex_encode(S) << " != " << hex_encode(back) << std::endl;
       ++fails;
       }
 
@@ -44,7 +44,7 @@ size_t test_tss()
 
    if(S != back)
       {
-      std::cout << "TSS-1: " << hex_encode(S) << " != " << hex_encode(back) << "\n";
+      std::cout << "TSS-1: " << hex_encode(S) << " != " << hex_encode(back) << std::endl;
       ++fails;
       }
 
@@ -53,7 +53,7 @@ size_t test_tss()
 #else
 size_t test_tss()
    {
-   std::cout << "Skipping TSS tests\n";
+   std::cout << "Skipping TSS tests" << std::endl;
    return 1;
    }
 #endif
