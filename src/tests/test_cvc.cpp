@@ -35,8 +35,8 @@
 
 using namespace Botan;
 
-#define CHECK_MESSAGE(expr, print) try { if(!(expr)) std::cout << print << "\n"; } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
-#define CHECK(expr) try { if(!(expr)) std::cout << #expr << "\n"; } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
+#define CHECK_MESSAGE(expr, print) try { if(!(expr)) std::cout << print << std::endl; } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << std::endl; }
+#define CHECK(expr) try { if(!(expr)) std::cout << #expr << std::endl; } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << std::endl; }
 
 namespace {
 
@@ -134,7 +134,7 @@ void test_enc_gen_selfsigned(RandomNumberGenerator& rng)
    CHECK(sv1.size() > 10);
    CHECK_MESSAGE(sv1 == sv2, "reencoded file of cert without domain parameters is different from original");
 
-   //cout << "reading cert again\n";
+   //cout << "reading cert again" << std::endl;
    CHECK(cert_in.get_car().value() == "my_opt_car");
    CHECK(cert_in.get_chr().value() == "my_opt_car");
    CHECK(cert_in.get_ced().as_string() == "20100727");
@@ -161,7 +161,7 @@ void test_enc_gen_selfsigned(RandomNumberGenerator& rng)
       ill_date_exc2 = true;
       }
    CHECK(ill_date_exc2);
-   //cout << "readable = '" << cert_in.get_ced().readable_string() << "'\n";
+   //cout << "readable = '" << cert_in.get_ced().readable_string() << "'" << std::endl;
    std::unique_ptr<Public_Key> p_pk(cert_in.subject_public_key());
    ECDSA_PublicKey* p_ecdsa_pk = dynamic_cast<ECDSA_PublicKey*>(p_pk.get());
 

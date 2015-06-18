@@ -22,8 +22,8 @@
 
 using namespace Botan;
 
-#define CHECK_MESSAGE(expr, print) try { if(!(expr)) { ++fails; std::cout << "FAILURE: " << print << "\n"; }} catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
-#define CHECK(expr) try { if(!(expr)) { ++fails; std::cout << "FAILURE: " << #expr << "\n"; } } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
+#define CHECK_MESSAGE(expr, print) try { if(!(expr)) { ++fails; std::cout << "FAILURE: " << print << std::endl; }} catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << std::endl; }
+#define CHECK(expr) try { if(!(expr)) { ++fails; std::cout << "FAILURE: " << #expr << std::endl; } } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << std::endl; }
 
 namespace {
 
@@ -151,8 +151,8 @@ size_t test_coordinates()
    if(!point_exp.on_the_curve())
       throw Internal_Error("Point not on the curve");
 
-   CHECK_MESSAGE( p1.get_affine_x() == exp_affine_x, " p1_x = " << p1.get_affine_x() << "\n" << "exp_x = " << exp_affine_x << "\n");
-   CHECK_MESSAGE( p1.get_affine_y() == exp_affine_y, " p1_y = " << p1.get_affine_y() << "\n" << "exp_y = " << exp_affine_y << "\n");
+   CHECK_MESSAGE(p1.get_affine_x() == exp_affine_x, "p1_x = " << p1.get_affine_x() << "\n" << "exp_x = " << exp_affine_x);
+   CHECK_MESSAGE(p1.get_affine_y() == exp_affine_y, "p1_y = " << p1.get_affine_y() << "\n" << "exp_y = " << exp_affine_y);
    return fails;
    }
 
@@ -460,7 +460,7 @@ size_t test_basic_operations()
                            BigInt("704859595002530890444080436569091156047721708633"),
                            BigInt("1147993098458695153857594941635310323215433166682"));
    if(simplePlus != exp_simplePlus)
-      std::cout << simplePlus << " != " << exp_simplePlus << "\n";
+      std::cout << simplePlus << " != " << exp_simplePlus << std::endl;
 
    PointGFp simpleMinus= p1 - p0;
    PointGFp exp_simpleMinus(secp160r1,
@@ -600,7 +600,7 @@ size_t test_enc_dec_uncompressed_521()
    std::string result = hex_encode(&sv_result[0], sv_result.size());
    std::string exp_result = hex_encode(&sv_G_secp_uncomp[0], sv_G_secp_uncomp.size());
 
-   CHECK_MESSAGE( sv_result == sv_G_secp_uncomp, "\ncalc. result = " << result << "\nexp. result = " << exp_result << "\n");
+   CHECK_MESSAGE(sv_result == sv_G_secp_uncomp, "calc. result = " << result << "\nexp. result = " << exp_result);
    return fails;
    }
 
@@ -793,7 +793,7 @@ size_t test_mult_sec_mass()
          }
       catch(std::exception& e)
          {
-         std::cout << "test_mult_sec_mass failed: " << e.what() << "\n";
+         std::cout << "test_mult_sec_mass failed: " << e.what() << std::endl;
          ++fails;
          }
       }
@@ -893,7 +893,7 @@ size_t ecc_randomized_test()
          }
       catch(std::exception& e)
          {
-         std::cout << "Testing " << group_name << " failed: " << e.what() << "\n";
+         std::cout << "Testing " << group_name << " failed: " << e.what() << std::endl;
          ++fails;
          }
       }
