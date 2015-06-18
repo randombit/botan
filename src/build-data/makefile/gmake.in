@@ -2,9 +2,13 @@
 
 %{commands_in}
 
-# Library targets
-STATIC_LIB    = %{out_dir}/$(LIBNAME).%{static_suffix}
+# Executable targets
+APP           = %{out_dir}/botan%{program_suffix}
+TEST          = %{out_dir}/botan-test%{program_suffix}
 
+# Library targets
+LIB_BASENAME  = %{lib_prefix}%{libname}
+STATIC_LIB    = %{out_dir}/$(LIB_BASENAME).%{static_suffix}
 LIBRARIES     = $(STATIC_LIB)
 
 # File Lists
@@ -15,6 +19,9 @@ LIBOBJS       = %{lib_objs}
 APPOBJS       = %{app_objs}
 
 TESTOBJS      = %{test_objs}
+
+# First make target. Will be used by default
+all: $(APP) $(TEST)
 
 # Build Commands
 %{lib_build_cmds}
@@ -66,7 +73,7 @@ docs:
 %{build_doc_commands}
 
 install: $(APP) docs
-	$(SCRIPTS_DIR)/install.py --destdir=%{destdir} --bindir=%{bindir} --libdir=%{libdir} --docdir=%{docdir} --includedir=%{includedir}
+	$(SCRIPTS_DIR)/install.py --destdir=%{destdir} --build-dir="%{build_dir}" --bindir=%{bindir} --libdir=%{libdir} --docdir=%{docdir} --includedir=%{includedir}
 
 website:
 	rm -rf $(WEBSITE_SRC_DIR) $(WEBSITE_DIR)

@@ -1278,7 +1278,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'shared_flags': cc.gen_shared_flags(options),
         'visibility_attribute': cc.gen_visibility_attribute(options),
 
-        'libname': 'botan-%d.%d' % (build_config.version_major, build_config.version_minor),
+        # 'botan' or 'botan-1.11'. Used in Makefile and install script
+        # This can be made constistent over all platforms in the future
+        'libname': 'botan' if options.os == 'windows' else 'botan-%d.%d' % (build_config.version_major, build_config.version_minor),
 
         'so_link': cc.so_link_command_for(osinfo.basename),
 
