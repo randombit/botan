@@ -106,7 +106,7 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
       * @return PKCS #8 AlgorithmIdentifier for this key
       * Might be different from the X.509 identifier, but normally is not
       */
-      virtual AlgorithmIdentifier pkcs8_algorithm_identifier() const
+      virtual AlgorithmIdentifier pkcs8_algorithm_identifier() const 
          { return algorithm_identifier(); }
 
    protected:
