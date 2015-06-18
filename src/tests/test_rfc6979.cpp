@@ -38,7 +38,7 @@ size_t rfc6979_testcase(const std::string& q_str,
    if(gen_k != exp_k)
       {
       std::cout << "RFC 6979 test #" << testcase << " failed; generated k="
-                << std::hex << gen_k << "\n";
+                << std::hex << gen_k << std::endl
       ++fails;
       }
 
@@ -48,7 +48,7 @@ size_t rfc6979_testcase(const std::string& q_str,
    if(gen_0 != exp_k)
       {
       std::cout << "RFC 6979 test #" << testcase << " failed; generated k="
-                << std::hex << gen_0 << " (gen_0)\n";
+                << std::hex << gen_0 << " (gen_0)" << std::endl;
       ++fails;
       }
 
@@ -56,7 +56,7 @@ size_t rfc6979_testcase(const std::string& q_str,
    if(gen_1 == exp_k)
       {
       std::cout << "RFC 6979 test #" << testcase << " failed; generated k="
-                << std::hex << gen_1 << " (gen_1)\n";
+                << std::hex << gen_1 << " (gen_1)" << std::endl;
       ++fails;
       }
 
@@ -64,7 +64,7 @@ size_t rfc6979_testcase(const std::string& q_str,
    if(gen_2 != exp_k)
       {
       std::cout << "RFC 6979 test #" << testcase << " failed; generated k="
-                << std::hex << gen_2 << " (gen_2)\n";
+                << std::hex << gen_2 << " (gen_2)" << std::endl;
       ++fails;
       }
 

@@ -28,7 +28,7 @@ size_t test_srp6()
 
    if(client.second != server_K)
       {
-      std::cout << "SRP6 computed different keys\n";
+      std::cout << "SRP6 computed different keys" << std::endl;
       ++fails;
       }
 
