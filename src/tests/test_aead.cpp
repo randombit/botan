@@ -53,8 +53,8 @@ size_t aead_test(const std::string& algo,
 
    if(vec != expected_ct)
       {
-      std::cout << algo << " got ct " << hex_encode(vec) << " expected " << expected << std::endl
-      std::cout << algo << std::endl
+      std::cout << algo << " got ct " << hex_encode(vec) << " expected " << expected << "\n";
+      std::cout << algo << "\n";
       ++fail;
       }
 
@@ -65,7 +65,7 @@ size_t aead_test(const std::string& algo,
 
    if(vec != pt)
       {
-      std::cout << algo << " got pt " << hex_encode(vec) << " expected " << input << std::endl
+      std::cout << algo << " got pt " << hex_encode(vec) << " expected " << input << "\n";
       ++fail;
       }
 
@@ -77,7 +77,7 @@ size_t aead_test(const std::string& algo,
       try
          {
          dec->finish(vec);
-         std::cout << algo << " accepted message with modified message" << std::endl;
+         std::cout << algo << " accepted message with modified message\n";
          ++fail;
          }
       catch(...) {}
@@ -93,7 +93,7 @@ size_t aead_test(const std::string& algo,
          try
             {
             dec->finish(vec);
-            std::cout << algo << " accepted message with modified nonce" << std::endl;
+            std::cout << algo << " accepted message with modified nonce\n";
             ++fail;
             }
          catch(...) {}
@@ -116,7 +116,7 @@ size_t aead_test(const std::string& algo,
          try
             {
             dec->finish(vec);
-            std::cout << algo << " accepted message with modified AD" << std::endl;
+            std::cout << algo << " accepted message with modified AD\n";
             ++fail;
             }
          catch(...) {}

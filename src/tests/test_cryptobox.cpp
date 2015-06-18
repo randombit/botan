@@ -38,7 +38,7 @@ size_t test_cryptobox()
       }
    catch(std::exception& e)
       {
-      std::cout << "Error during Cryptobox test " << e.what() << std::endl
+      std::cout << "Error during Cryptobox test " << e.what() << "\n";
       ++fails;
       }
 

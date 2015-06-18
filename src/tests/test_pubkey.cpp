@@ -97,20 +97,20 @@ size_t validate_save_and_load(const Private_Key* priv_key,
 
       if(!restored_pub.get())
          {
-         std::cout << "Could not recover " << name << " public key" << std::endl;
+         std::cout << "Could not recover " << name << " public key\n";
          ++fails;
          }
       else if(restored_pub->check_key(rng, true) == false)
          {
-         std::cout << "Restored pubkey failed self tests " << name << std::endl
+         std::cout << "Restored pubkey failed self tests " << name << "\n";
          ++fails;
          }
       }
    catch(std::exception& e)
       {
       std::cout << "Exception during load of " << name
-                << " key: " << e.what() << std::endl
-      std::cout << "PEM for pubkey was:\n" << pub_pem << std::endl
+                << " key: " << e.what() << "\n";
+      std::cout << "PEM for pubkey was:\n" << pub_pem << "\n";
       ++fails;
       }
 
@@ -124,20 +124,20 @@ size_t validate_save_and_load(const Private_Key* priv_key,
 
       if(!restored_priv.get())
          {
-         std::cout << "Could not recover " << name << " privlic key" << std::endl;
+         std::cout << "Could not recover " << name << " privlic key\n";
          ++fails;
          }
       else if(restored_priv->check_key(rng, true) == false)
          {
-         std::cout << "Restored privkey failed self tests " << name << std::endl
+         std::cout << "Restored privkey failed self tests " << name << "\n";
          ++fails;
          }
       }
    catch(std::exception& e)
       {
       std::cout << "Exception during load of " << name
-                << " key: " << e.what() << std::endl
-      std::cout << "PEM for privkey was:\n" << priv_pem << std::endl
+                << " key: " << e.what() << "\n";
+      std::cout << "PEM for privkey was:\n" << priv_pem << "\n";
       ++fails;
       }
 
@@ -159,7 +159,7 @@ byte nonzero_byte(RandomNumberGenerator& rng)
       const bool test_result = expr;                           \
       if(!test_result)                                           \
          {                                             \
-         std::cout << "Test " << #expr << " failed: " << msg << std::endl \
+         std::cout << "Test " << #expr << " failed: " << msg << "\n"; \
          ++fails;                                      \
          }                                             \
    } while(0)
@@ -206,15 +206,15 @@ size_t validate_encryption(PK_Encryptor& e, PK_Decryptor& d,
          try
             {
             auto bad_ptext = unlock(d.decrypt(bad_ctext));
-            std::cout << algo << " failed - decrypted bad data" << std::endl;
-            std::cout << hex_encode(bad_ctext) << " -> " << hex_encode(bad_ptext) << std::endl
-            std::cout << hex_encode(ctext) << " -> " << hex_encode(decrypted) << std::endl
+            std::cout << algo << " failed - decrypted bad data\n";
+            std::cout << hex_encode(bad_ctext) << " -> " << hex_encode(bad_ptext) << "\n";
+            std::cout << hex_encode(ctext) << " -> " << hex_encode(decrypted) << "\n";
 
             // Ignore PKCS #1 failures as they do occur occasionally (million message attack)
             const bool is_pkcs1 = algo.find("/EME-PKCS1-v1_5") != std::string::npos;
 
             if(is_pkcs1)
-               std::cout << "Ignoring PKCS #1 failure" << std::endl;
+               std::cout << "Ignoring PKCS #1 failure\n";
             else
                ++fails;
             }

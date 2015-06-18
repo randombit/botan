@@ -60,7 +60,7 @@ size_t mode_test(const std::string& algo,
 
    if(ct != ct2)
       {
-      std::cout << algo << " got ct " << ct2 << " expected " << ct << std::endl
+      std::cout << algo << " got ct " << ct2 << " expected " << ct << "\n";
       ++fails;
       }
 
@@ -72,7 +72,7 @@ size_t mode_test(const std::string& algo,
 
    if(pt != pt2)
       {
-      std::cout << algo << " got pt " << pt2 << " expected " << pt << std::endl
+      std::cout << algo << " got pt " << pt2 << " expected " << pt << "\n";
       ++fails;
       }
 

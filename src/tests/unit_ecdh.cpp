@@ -23,8 +23,8 @@
 
 using namespace Botan;
 
-#define CHECK_MESSAGE(expr, print) try { if(!(expr)) { ++fails; std::cout << print << std::endl } } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << std::endl }
-#define CHECK(expr) try { if(!(expr)) { ++fails; std::cout << #expr << std::endl } } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << std::endl }
+#define CHECK_MESSAGE(expr, print) try { if(!(expr)) { ++fails; std::cout << print << "\n"; } } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
+#define CHECK(expr) try { if(!(expr)) { ++fails; std::cout << #expr << "\n"; } } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
 
 namespace {
 
@@ -46,9 +46,9 @@ size_t test_ecdh_normal_derivation(RandomNumberGenerator& rng)
 
    if(alice_key != bob_key)
       {
-      std::cout << "The two keys didn't match!" << std::endl;
-      std::cout << "Alice's key was: " << alice_key.as_string() << std::endl
-      std::cout << "Bob's key was: " << bob_key.as_string() << std::endl
+      std::cout << "The two keys didn't match!\n";
+      std::cout << "Alice's key was: " << alice_key.as_string() << "\n";
+      std::cout << "Bob's key was: " << bob_key.as_string() << "\n";
       ++fails;
       }
 

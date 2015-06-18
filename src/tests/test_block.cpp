@@ -37,7 +37,7 @@ size_t block_test(const std::string& algo,
 
       if(!cipher)
          {
-         std::cout << "Unable to get " << algo << " from " << provider << std::endl
+         std::cout << "Unable to get " << algo << " from " << provider << "\n";
          ++fails;
          continue;
          }
@@ -49,7 +49,7 @@ size_t block_test(const std::string& algo,
 
       if(buf != ct)
          {
-         std::cout << algo << " " << provider << " enc " << hex_encode(buf) << " != " << out_hex << std::endl
+         std::cout << algo << " " << provider << " enc " << hex_encode(buf) << " != " << out_hex << "\n";
          ++fails;
          buf = ct;
          }
@@ -58,7 +58,7 @@ size_t block_test(const std::string& algo,
 
       if(buf != pt)
          {
-         std::cout << algo << " " << provider << " dec " << hex_encode(buf) << " != " << out_hex << std::endl
+         std::cout << algo << " " << provider << " dec " << hex_encode(buf) << " != " << out_hex << "\n";
          ++fails;
          }
       }

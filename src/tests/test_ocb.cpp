@@ -43,11 +43,11 @@ std::vector<byte> ocb_encrypt(OCB_Encryption& enc,
       dec.finish(ct, 0);
 
       if(ct != pt)
-         std::cout << "OCB failed to decrypt correctly" << std::endl;
+         std::cout << "OCB failed to decrypt correctly\n";
       }
    catch(std::exception& e)
       {
-      std::cout << "OCB round trip error - " << e.what() << std::endl
+      std::cout << "OCB round trip error - " << e.what() << "\n";
       }
 
    return unlock(buf);
@@ -94,7 +94,7 @@ size_t test_ocb_long(size_t keylen, size_t taglen,
    if(cipher_hex != expected)
       {
       std::cout << "OCB " << algo << " long test mistmatch "
-                << cipher_hex << " != " << expected << std::endl
+                << cipher_hex << " != " << expected << "\n";
       return 1;
       }
 

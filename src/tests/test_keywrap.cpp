@@ -36,7 +36,7 @@ size_t keywrap_test(const char* key_str,
       if(enc != expected.bits_of())
          {
          std::cout << "NIST key wrap encryption failure: "
-                   << hex_encode(enc) << " != " << hex_encode(expected.bits_of()) << std::endl
+                   << hex_encode(enc) << " != " << hex_encode(expected.bits_of()) << "\n";
          fail++;
          }
 
@@ -45,13 +45,13 @@ size_t keywrap_test(const char* key_str,
       if(dec != key.bits_of())
          {
          std::cout << "NIST key wrap decryption failure: "
-                   << hex_encode(dec) << " != " << hex_encode(key.bits_of()) << std::endl
+                   << hex_encode(dec) << " != " << hex_encode(key.bits_of()) << "\n";
          fail++;
          }
       }
    catch(std::exception& e)
       {
-      std::cout << e.what() << std::endl
+      std::cout << e.what() << "\n";
       fail++;
       }
 #endif

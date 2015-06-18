@@ -39,7 +39,7 @@ size_t test_nist_x509()
 
    if(list_all_readable_files_in_or_under(root_test_dir).empty())
       {
-      std::cout << "No FS access, skipping NIST X.509 validation tests" << std::endl;
+      std::cout << "No FS access, skipping NIST X.509 validation tests\n";
       test_report("NIST X.509 path validation", 0, 0);
       return 0;
       }

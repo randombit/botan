@@ -29,8 +29,8 @@ using namespace Botan;
 
 #define ECC_TEST_DATA_DIR TEST_DATA_DIR "/ecc"
 
-#define CHECK_MESSAGE(expr, print) try { if(!(expr)) { ++fails; std::cout << print << std::endl } } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << std::endl }
-#define CHECK(expr) try { if(!(expr)) { ++fails; std::cout << #expr << std::endl } } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << std::endl }
+#define CHECK_MESSAGE(expr, print) try { if(!(expr)) { ++fails; std::cout << print << "\n"; } } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
+#define CHECK(expr) try { if(!(expr)) { ++fails; std::cout << #expr << "\n"; } } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << "\n"; }
 
 namespace {
 
@@ -92,7 +92,7 @@ size_t test_hash_larger_than_n(RandomNumberGenerator& rng)
    // verify against EMSA1_BSI
    if(pk_verifier.verify_message(message, signature))
       {
-      std::cout << "Corrupt ECDSA signature verified, should not have" << std::endl;
+      std::cout << "Corrupt ECDSA signature verified, should not have\n";
       ++fails;
       }
 
@@ -160,7 +160,7 @@ size_t test_sign_then_ver(RandomNumberGenerator& rng)
 
    if(!ok)
       {
-      std::cout << "ERROR: Could not verify ECDSA signature" << std::endl;
+      std::cout << "ERROR: Could not verify ECDSA signature\n";
       fails++;
       }
 
@@ -169,7 +169,7 @@ size_t test_sign_then_ver(RandomNumberGenerator& rng)
 
    if(ok)
       {
-      std::cout << "ERROR: Bogus ECDSA signature verified anyway" << std::endl;
+      std::cout << "ERROR: Bogus ECDSA signature verified anyway\n";
       fails++;
       }
 
@@ -225,7 +225,7 @@ size_t test_ec_sign(RandomNumberGenerator& rng)
       }
    catch (std::exception& e)
       {
-      std::cout << "Exception in test_ec_sign - " << e.what() << std::endl
+      std::cout << "Exception in test_ec_sign - " << e.what() << "\n";
       ++fails;
       }
 
@@ -241,7 +241,7 @@ size_t test_create_pkcs8(RandomNumberGenerator& rng)
       {
       RSA_PrivateKey rsa_key(rng, 1024);
       //RSA_PrivateKey rsa_key2(1024);
-      //cout << "\nequal: " <<  (rsa_key == rsa_key2) << std::endl
+      //cout << "\nequal: " <<  (rsa_key == rsa_key2) << "\n";
       //DSA_PrivateKey key(DL_Group("dsa/jce/1024"));
 
       std::ofstream rsa_priv_key(ECC_TEST_DATA_DIR "/rsa_private.pkcs8.pem");
@@ -314,7 +314,7 @@ size_t test_create_and_verify(RandomNumberGenerator& rng)
 
    if(!dynamic_cast<ECDSA_PrivateKey*>(loaded_key.get()))
       {
-      std::cout << "Failed to reload an ECDSA key with unusual parameter set" << std::endl;
+      std::cout << "Failed to reload an ECDSA key with unusual parameter set\n";
       ++fails;
       }
 
@@ -372,13 +372,13 @@ size_t test_curve_registry(RandomNumberGenerator& rng)
 
          if(!verifier.verify_message(msg, sig))
             {
-            std::cout << "Failed testing ECDSA sig for curve " << oids[i] << std::endl
+            std::cout << "Failed testing ECDSA sig for curve " << oids[i] << "\n";
             ++fails;
             }
          }
       catch(Invalid_Argument& e)
          {
-         std::cout << "Error testing curve " << oids[i] << " - " << e.what() << std::endl
+         std::cout << "Error testing curve " << oids[i] << " - " << e.what() << "\n";
          ++fails;
          }
       }
@@ -408,7 +408,7 @@ size_t test_read_pkcs8(RandomNumberGenerator& rng)
    catch (std::exception& e)
       {
       ++fails;
-      std::cout << "Exception in test_read_pkcs8 - " << e.what() << std::endl
+      std::cout << "Exception in test_read_pkcs8 - " << e.what() << "\n";
       }
 
    try
@@ -431,14 +431,14 @@ size_t test_read_pkcs8(RandomNumberGenerator& rng)
          std::unique_ptr<PKCS8_PrivateKey> loaded_key_withdp(
             PKCS8::load_key(ECC_TEST_DATA_DIR "/withdompar_private.pkcs8.pem", rng));
 
-         std::cout << "Unexpected success: loaded key with unknown OID" << std::endl;
+         std::cout << "Unexpected success: loaded key with unknown OID\n";
          ++fails;
          }
       catch (std::exception) { /* OK */ }
       }
    catch (std::exception& e)
       {
-      std::cout << "Exception in test_read_pkcs8 - " << e.what() << std::endl
+      std::cout << "Exception in test_read_pkcs8 - " << e.what() << "\n";
       ++fails;
       }
 
@@ -456,13 +456,13 @@ size_t test_ecc_key_with_rfc5915_extensions(RandomNumberGenerator& rng)
 
       if(!dynamic_cast<ECDSA_PrivateKey*>(pkcs8.get()))
          {
-         std::cout << "Loaded RFC 5915 key, but got something other than an ECDSA key" << std::endl;
+         std::cout << "Loaded RFC 5915 key, but got something other than an ECDSA key\n";
          ++fails;
          }
       }
    catch(std::exception& e)
       {
-      std::cout << "Exception in " << BOTAN_CURRENT_FUNCTION << " - " << e.what() << std::endl
+      std::cout << "Exception in " << BOTAN_CURRENT_FUNCTION << " - " << e.what() << "\n";
       ++fails;
       }
 
