@@ -73,7 +73,7 @@ size_t x931_test(const std::string& algo,
 
    if(got != out)
       {
-      std::cout << "X9.31 " << got << " != " << out << "\n";
+      std::cout << "X9.31 " << got << " != " << out << std::endl
       return 1;
       }
 
@@ -105,7 +105,7 @@ size_t hmac_drbg_test(std::map<std::string, std::string> m)
 
    if(got != out)
       {
-      std::cout << algo << " " << got << " != " << out << "\n";
+      std::cout << algo << " " << got << " != " << out << std::endl
       return 1;
       }
 

@@ -25,8 +25,8 @@
 
 using namespace Botan;
 
-#define CHECK_MESSAGE(expr, print)  do {if(!(expr)) {std::cout << print << "\n"; return 1;} }while(0)
-#define CHECK(expr) do {if(!(expr)) { std::cout << #expr << "\n"; return 1; } }while(0)
+#define CHECK_MESSAGE(expr, print)  do {if(!(expr)) {std::cout << print << std::endl return 1;} }while(0)
+#define CHECK(expr) do {if(!(expr)) { std::cout << #expr << std::endl return 1; } }while(0)
 
 namespace {
 
@@ -178,7 +178,7 @@ size_t test_mceies(const McEliece_PrivateKey& sk,
 
       if(pt != dec)
          {
-         std::cout << "MCEIES " << hex_encode(pt) << " != " << hex_encode(dec) << "\n";
+         std::cout << "MCEIES " << hex_encode(pt) << " != " << hex_encode(dec) << std::endl
          ++fails;
          }
 
@@ -196,7 +196,7 @@ size_t test_mceies(const McEliece_PrivateKey& sk,
          try
             {
             mceies_decrypt(sk, bad_ct, ad, ad_len);
-            std::cout << "Successfully decrypted manipulated ciphertext!\n";
+            std::cout << "Successfully decrypted manipulated ciphertext!" << std::endl;
             ++fails;
             }
          catch(std::exception& e) { /* Yay */ }

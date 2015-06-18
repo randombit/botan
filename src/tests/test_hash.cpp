@@ -26,7 +26,7 @@ size_t hash_test(const std::string& algo,
 
    if(providers.empty())
       {
-      std::cout << "Unknown hash '" << algo << "'\n";
+      std::cout << "Unknown hash '" << algo << "'" << std::endl;
       ++fails;
       }
 
@@ -36,7 +36,7 @@ size_t hash_test(const std::string& algo,
 
       if(!hash)
          {
-         std::cout << "Unable to get " << algo << " from " << provider << "\n";
+         std::cout << "Unable to get " << algo << " from " << provider << std::endl
          ++fails;
          continue;
          }
@@ -49,7 +49,7 @@ size_t hash_test(const std::string& algo,
 
       if(h != hex_decode_locked(out_hex))
          {
-         std::cout << algo << " " << provider << " got " << hex_encode(h) << " != " << out_hex << "\n";
+         std::cout << algo << " " << provider << " got " << hex_encode(h) << " != " << out_hex << std::endl
          ++fails;
          }
 
@@ -64,7 +64,7 @@ size_t hash_test(const std::string& algo,
       if(h != hex_decode_locked(out_hex))
          {
          std::cout << algo << " " << provider << " got " << hex_encode(h) << " != " << out_hex
-                   << " (with discarded input)\n";
+                   << " (with discarded input)" << std::endl;
          ++fails;
          }
 
@@ -77,7 +77,7 @@ size_t hash_test(const std::string& algo,
          if(h != hex_decode_locked(out_hex))
             {
             std::cout << algo << " " << provider << " got " << hex_encode(h) << " != " << out_hex
-                      << " (with offset input)\n";
+                      << " (with offset input)" << std::endl;
             ++fails;
             }
          }
