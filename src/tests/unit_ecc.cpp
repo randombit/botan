@@ -151,8 +151,8 @@ size_t test_coordinates()
    if(!point_exp.on_the_curve())
       throw Internal_Error("Point not on the curve");
 
-   CHECK_MESSAGE( p1.get_affine_x() == exp_affine_x, " p1_x = " << p1.get_affine_x() << "\n" << "exp_x = " << exp_affine_x << "\n");
-   CHECK_MESSAGE( p1.get_affine_y() == exp_affine_y, " p1_y = " << p1.get_affine_y() << "\n" << "exp_y = " << exp_affine_y << "\n");
+   CHECK_MESSAGE(p1.get_affine_x() == exp_affine_x, "p1_x = " << p1.get_affine_x() << "\n" << "exp_x = " << exp_affine_x);
+   CHECK_MESSAGE(p1.get_affine_y() == exp_affine_y, "p1_y = " << p1.get_affine_y() << "\n" << "exp_y = " << exp_affine_y);
    return fails;
    }
 
@@ -600,7 +600,7 @@ size_t test_enc_dec_uncompressed_521()
    std::string result = hex_encode(&sv_result[0], sv_result.size());
    std::string exp_result = hex_encode(&sv_G_secp_uncomp[0], sv_G_secp_uncomp.size());
 
-   CHECK_MESSAGE( sv_result == sv_G_secp_uncomp, "\ncalc. result = " << result << "\nexp. result = " << exp_result << "\n");
+   CHECK_MESSAGE(sv_result == sv_G_secp_uncomp, "calc. result = " << result << "\nexp. result = " << exp_result);
    return fails;
    }
 
