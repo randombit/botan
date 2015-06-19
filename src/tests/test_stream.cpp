@@ -32,7 +32,7 @@ size_t stream_test(const std::string& algo,
 
    if(providers.empty())
       {
-      std::cout << "Unknown stream cipher " << algo << "\n";
+      std::cout << "Unknown stream cipher " << algo << std::endl;
       ++fails;
       }
 
@@ -42,7 +42,7 @@ size_t stream_test(const std::string& algo,
 
       if(!cipher)
          {
-         std::cout << "Unable to get " << algo << " from " << provider << "\n";
+         std::cout << "Unable to get " << algo << " from " << provider << std::endl;
          ++fails;
          continue;
          }
@@ -58,7 +58,7 @@ size_t stream_test(const std::string& algo,
 
       if(buf != ct)
          {
-         std::cout << algo << " " << provider << " enc " << hex_encode(buf) << " != " << out_hex << "\n";
+         std::cout << algo << " " << provider << " enc " << hex_encode(buf) << " != " << out_hex << std::endl;
          ++fails;
          }
       }

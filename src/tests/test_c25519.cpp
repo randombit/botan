@@ -33,7 +33,7 @@ size_t curve25519_scalar_kat(const std::string& secret_h,
 
    if(got != out)
       {
-      std::cout << "Got " << hex_encode(got) << " exp " << hex_encode(out) << "\n";
+      std::cout << "Got " << hex_encode(got) << " exp " << hex_encode(out) << std::endl;
       return 1;
       }
 
