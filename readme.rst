@@ -1,15 +1,14 @@
 Botan Crypto Library
 ========================================
 
-
 Botan is a C++11 library for crypto and TLS released under the permissive
 2-clause BSD license (see ``doc/license.txt`` for the specifics).
 
 For all the details on building the library read ``doc/manual/building.rst``,
 but basically::
 
-  $ configure.py --help
-  $ configure.py [probably some options]
+  $ ./configure.py --help
+  $ ./configure.py [probably some options]
   $ make
   $ ./botan-test
   # test output
