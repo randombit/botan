@@ -25,7 +25,7 @@ size_t run_compression(Compressor_Transform& c, Transform& d,
    if(msg != decompressed)
       {
       std::cout << hex_encode(msg) << " compressed to " << hex_encode(compressed)
-                << " but did not roundtrip - " << hex_encode(decompressed) << "\n";
+                << " but did not roundtrip - " << hex_encode(decompressed) << std::endl;
       }
 
    return c_size;
@@ -103,7 +103,7 @@ size_t test_compression()
          const size_t c1_t = run_compression(*c1, *d, text);
          const size_t c9_t = run_compression(*c9, *d, text);
 
-#define BOTAN_TEST_GTE(x, y, msg) if(x < y) { ++fails; std::cout << "FAIL: " << x << " " << y << " " << msg << '\n'; }
+#define BOTAN_TEST_GTE(x, y, msg) if(x < y) { ++fails; std::cout << "FAIL: " << x << " " << y << " " << msg << std::endl; }
 
          BOTAN_TEST_GTE(c1_z, c9_z, "Level 9 compresses at least as well as level 1");
          BOTAN_TEST_GTE(c1_t, c9_t, "Level 9 compresses at least as well as level 1");
@@ -114,7 +114,7 @@ size_t test_compression()
          }
       catch(std::exception& e)
          {
-         std::cout << "Failure testing " << algo << " - " << e.what() << "\n";
+         std::cout << "Failure testing " << algo << " - " << e.what() << std::endl;
          ++fails;
          }
       }

@@ -58,13 +58,13 @@ size_t ecc_point_mul(const std::string& group_id,
 
    if(p.get_affine_x() != X)
       {
-      std::cout << p.get_affine_x() << " != " << X << "\n";
+      std::cout << p.get_affine_x() << " != " << X << std::endl;
       ++fails;
       }
 
    if(p.get_affine_y() != Y)
       {
-      std::cout << p.get_affine_y() << " != " << Y << "\n";
+      std::cout << p.get_affine_y() << " != " << Y << std::endl;
       ++fails;
       }
 

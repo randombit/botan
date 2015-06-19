@@ -45,12 +45,12 @@ size_t run_tests(const std::vector<test_fn>& tests)
          }
       catch(std::exception& e)
          {
-         std::cout << "Exception escaped test: " << e.what() << "\n";
+         std::cout << "Exception escaped test: " << e.what() << std::endl;
          ++fails;
          }
       catch(...)
          {
-         std::cout << "Exception escaped test\n";
+         std::cout << "Exception escaped test" << std::endl;
          ++fails;
          }
       }
@@ -81,7 +81,7 @@ size_t run_tests_bb(std::istream& src,
    {
    if(!src.good())
       {
-      std::cout << "Could not open input file for " << name_key << "\n";
+      std::cout << "Could not open input file for " << name_key << std::endl;
       return 1;
       }
 
@@ -126,7 +126,7 @@ size_t run_tests_bb(std::istream& src,
 
       if(key == output_key)
          {
-         //std::cout << vars[name_key] << " " << algo_count << "\n";
+         //std::cout << vars[name_key] << " " << algo_count << std::endl;
          ++algo_count;
          try
             {
@@ -134,13 +134,13 @@ size_t run_tests_bb(std::istream& src,
 
             if(fails)
                {
-               std::cout << vars[name_key] << " test " << algo_count << ": " << fails << " failure\n";
+               std::cout << vars[name_key] << " test " << algo_count << ": " << fails << " failure" << std::endl;
                algo_fail += fails;
                }
             }
          catch(std::exception& e)
             {
-            std::cout << vars[name_key] << " test " << algo_count << " failed: " << e.what() << "\n";
+            std::cout << vars[name_key] << " test " << algo_count << " failed: " << e.what() << std::endl;
             ++algo_fail;
             }
 
@@ -173,7 +173,7 @@ size_t run_tests(const std::string& filename,
 
    if(!vec)
       {
-      std::cout << "Failure opening " << filename << "\n";
+      std::cout << "Failure opening " << filename << std::endl;
       return 1;
       }
 
@@ -204,8 +204,8 @@ namespace {
 
 int help(char* argv0)
    {
-   std::cout << "Usage: " << argv0 << " [suite]\n";
-   std::cout << "Suites: all (default), block, hash, bigint, rsa, ecdsa, ...\n";
+   std::cout << "Usage: " << argv0 << " [suite]" << std::endl;
+   std::cout << "Suites: all (default), block, hash, bigint, rsa, ecdsa, ..." << std::endl;
    return 1;
    }
 
@@ -277,7 +277,7 @@ int main(int argc, char* argv[])
 
    if(tests.empty())
       {
-      std::cout << "No tests selected by target '" << target << "'\n";
+      std::cout << "No tests selected by target '" << target << "'" << std::endl;
       return 1;
       }
 

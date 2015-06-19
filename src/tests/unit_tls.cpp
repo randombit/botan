@@ -86,7 +86,7 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
             }
          catch(std::exception& e)
             {
-            std::cout << "Certificate verification failed - " << e.what() << " - but will ignore\n";
+            std::cout << "Certificate verification failed - " << e.what() << " - but will ignore" << std::endl;
             }
          }
 
@@ -157,14 +157,14 @@ size_t basic_test_handshake(RandomNumberGenerator& rng,
    {
       if(session.version() != offer_version)
          std::cout << "Offered " << offer_version.to_string()
-                   << " got " << session.version().to_string() << "\n";
+                   << " got " << session.version().to_string() << std::endl;
       return true;
    };
 
    auto print_alert = [&](TLS::Alert alert, const byte[], size_t)
    {
       if(alert.is_valid())
-         std::cout << "Server recvd alert " << alert.type_string() << "\n";
+         std::cout << "Server recvd alert " << alert.type_string() << std::endl;
    };
 
    auto save_server_data = [&](const byte buf[], size_t sz)
@@ -179,9 +179,9 @@ size_t basic_test_handshake(RandomNumberGenerator& rng,
 
    auto next_protocol_chooser = [&](std::vector<std::string> protos) {
       if(protos.size() != 2)
-         std::cout << "Bad protocol size\n";
+         std::cout << "Bad protocol size" << std::endl;
       if(protos[0] != "test/1" || protos[1] != "test/2")
-         std::cout << "Bad protocol values\n";
+         std::cout << "Bad protocol values" << std::endl;
       return "test/3";
    };
    const std::vector<std::string> protocols_offered = { "test/1", "test/2" };
@@ -218,7 +218,7 @@ size_t basic_test_handshake(RandomNumberGenerator& rng,
       if(server.is_active())
          {
          if(server.next_protocol() != "test/3")
-            std::cout << "Wrong protocol " << server.next_protocol() << "\n";
+            std::cout << "Wrong protocol " << server.next_protocol() << std::endl;
          server.send("2");
          }
 
@@ -236,7 +236,7 @@ size_t basic_test_handshake(RandomNumberGenerator& rng,
          }
       catch(std::exception& e)
          {
-         std::cout << "Server error - " << e.what() << "\n";
+         std::cout << "Server error - " << e.what() << std::endl;
          break;
          }
 
@@ -249,7 +249,7 @@ size_t basic_test_handshake(RandomNumberGenerator& rng,
          }
       catch(std::exception& e)
          {
-         std::cout << "Client error - " << e.what() << "\n";
+         std::cout << "Client error - " << e.what() << std::endl;
          break;
          }
 
@@ -257,7 +257,7 @@ size_t basic_test_handshake(RandomNumberGenerator& rng,
          {
          if(c2s_data[0] != '1')
             {
-            std::cout << "Error\n";
+            std::cout << "Error" << std::endl;
             return 1;
             }
          }
@@ -266,7 +266,7 @@ size_t basic_test_handshake(RandomNumberGenerator& rng,
          {
          if(s2c_data[0] != '2')
             {
-            std::cout << "Error\n";
+            std::cout << "Error" << std::endl;
             return 1;
             }
          }
