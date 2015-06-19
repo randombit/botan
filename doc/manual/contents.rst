@@ -25,6 +25,6 @@ Contents
    cryptobox
    srp
    fpe
+   compression
    versions
    ffi
-
