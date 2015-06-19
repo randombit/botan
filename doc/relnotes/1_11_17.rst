@@ -1,4 +1,4 @@
-Version 1.11.17, Not Yet Released
+Version 1.11.17, 2015-06-18
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * All support for the insecure RC4 stream cipher has been removed
