@@ -156,7 +156,8 @@ size_t basic_test_handshake(RandomNumberGenerator& rng,
    auto handshake_complete = [&](const TLS::Session& session) -> bool
    {
       if(session.version() != offer_version)
-         std::cout << "Wrong version negotiated\n";
+         std::cout << "Offered " << offer_version.to_string()
+                   << " got " << session.version().to_string() << "\n";
       return true;
    };
 
@@ -194,7 +195,8 @@ size_t basic_test_handshake(RandomNumberGenerator& rng,
                       creds,
                       policy,
                       rng,
-                      next_protocol_chooser);
+                      next_protocol_chooser,
+                      offer_version.is_datagram_protocol());
 
    TLS::Client client([&](const byte buf[], size_t sz)
                       { c2s_q.insert(c2s_q.end(), buf, buf+sz); },
@@ -296,8 +298,10 @@ size_t test_tls()
    errors += basic_test_handshake(rng, TLS::Protocol_Version::TLS_V10, *basic_creds, default_policy);
    errors += basic_test_handshake(rng, TLS::Protocol_Version::TLS_V11, *basic_creds, default_policy);
    errors += basic_test_handshake(rng, TLS::Protocol_Version::TLS_V12, *basic_creds, default_policy);
+   errors += basic_test_handshake(rng, TLS::Protocol_Version::DTLS_V10, *basic_creds, default_policy);
+   errors += basic_test_handshake(rng, TLS::Protocol_Version::DTLS_V12, *basic_creds, default_policy);
 
-   test_report("TLS", 3, errors);
+   test_report("TLS", 5, errors);
 
    return errors;
    }
