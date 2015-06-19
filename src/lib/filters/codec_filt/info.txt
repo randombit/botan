@@ -1,5 +1,6 @@
 define CODEC_FILTERS 20131128
 
 <requires>
+base64
 filters
 </requires>
