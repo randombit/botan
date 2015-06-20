@@ -38,7 +38,7 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
                     m_g[0].data(), m_g[0].size(), m_g[0].sig_words(),
                     m_R2_mod.data(), m_R2_mod.size(), m_R2_mod.sig_words(),
                     m_modulus.data(), m_mod_words, m_mod_prime,
-                    &workspace[0]);
+                    workspace.data());
 
    m_g[0] = z;
 
@@ -48,7 +48,7 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
                     m_g[1].data(), m_g[1].size(), m_g[1].sig_words(),
                     m_R2_mod.data(), m_R2_mod.size(), m_R2_mod.sig_words(),
                     m_modulus.data(), m_mod_words, m_mod_prime,
-                    &workspace[0]);
+                    workspace.data());
 
    m_g[1] = z;
 
@@ -64,7 +64,7 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
                        x.data(), x.size(), x_sig,
                        y.data(), y.size(), y_sig,
                        m_modulus.data(), m_mod_words, m_mod_prime,
-                       &workspace[0]);
+                       workspace.data());
 
       m_g[i] = z;
       }
@@ -91,7 +91,7 @@ BigInt Montgomery_Exponentiator::execute() const
          bigint_monty_sqr(z.mutable_data(), z_size,
                           x.data(), x.size(), x.sig_words(),
                           m_modulus.data(), m_mod_words, m_mod_prime,
-                          &workspace[0]);
+                          workspace.data());
 
          x = z;
          }
@@ -104,7 +104,7 @@ BigInt Montgomery_Exponentiator::execute() const
                        x.data(), x.size(), x.sig_words(),
                        y.data(), y.size(), y.sig_words(),
                        m_modulus.data(), m_mod_words, m_mod_prime,
-                       &workspace[0]);
+                       workspace.data());
 
       x = z;
       }
@@ -113,7 +113,7 @@ BigInt Montgomery_Exponentiator::execute() const
 
    bigint_monty_redc(x.mutable_data(),
                      m_modulus.data(), m_mod_words, m_mod_prime,
-                     &workspace[0]);
+                     workspace.data());
 
    return x;
    }

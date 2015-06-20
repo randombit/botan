@@ -90,7 +90,7 @@ void CurveGFp_Montgomery::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
                     x.data(), x.size(), x.sig_words(),
                     y.data(), y.size(), y.sig_words(),
                     m_p.data(), m_p_words, m_p_dash,
-                    &ws[0]);
+                    ws.data());
    }
 
 void CurveGFp_Montgomery::curve_sqr(BigInt& z, const BigInt& x,
@@ -112,7 +112,7 @@ void CurveGFp_Montgomery::curve_sqr(BigInt& z, const BigInt& x,
    bigint_monty_sqr(z.mutable_data(), output_size,
                     x.data(), x.size(), x.sig_words(),
                     m_p.data(), m_p_words, m_p_dash,
-                    &ws[0]);
+                    ws.data());
    }
 
 }

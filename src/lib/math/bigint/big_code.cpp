@@ -24,10 +24,10 @@ void BigInt::encode(byte output[], const BigInt& n, Base base)
    else if(base == Hexadecimal)
       {
       secure_vector<byte> binary(n.encoded_size(Binary));
-      n.binary_encode(&binary[0]);
+      n.binary_encode(binary.data());
 
       hex_encode(reinterpret_cast<char*>(output),
-                 &binary[0], binary.size());
+                 binary.data(), binary.size());
       }
    else if(base == Decimal)
       {
@@ -54,7 +54,7 @@ void BigInt::encode(byte output[], const BigInt& n, Base base)
 std::vector<byte> BigInt::encode(const BigInt& n, Base base)
    {
    std::vector<byte> output(n.encoded_size(base));
-   encode(&output[0], n, base);
+   encode(output.data(), n, base);
    if(base != Binary)
       for(size_t j = 0; j != output.size(); ++j)
          if(output[j] == 0)
@@ -68,7 +68,7 @@ std::vector<byte> BigInt::encode(const BigInt& n, Base base)
 secure_vector<byte> BigInt::encode_locked(const BigInt& n, Base base)
    {
    secure_vector<byte> output(n.encoded_size(base));
-   encode(&output[0], n, base);
+   encode(output.data(), n, base);
    if(base != Binary)
       for(size_t j = 0; j != output.size(); ++j)
          if(output[j] == 0)
@@ -82,7 +82,7 @@ secure_vector<byte> BigInt::encode_locked(const BigInt& n, Base base)
 secure_vector<byte> BigInt::encode_1363(const BigInt& n, size_t bytes)
    {
    secure_vector<byte> output(bytes);
-   BigInt::encode_1363(&output[0], output.size(), n);
+   BigInt::encode_1363(output.data(), output.size(), n);
    return output;
    }
 
@@ -125,7 +125,7 @@ BigInt BigInt::decode(const byte buf[], size_t length, Base base)
          binary = hex_decode_locked(reinterpret_cast<const char*>(buf),
                                     length, false);
 
-      r.binary_decode(&binary[0], binary.size());
+      r.binary_decode(binary.data(), binary.size());
       }
    else if(base == Decimal)
       {

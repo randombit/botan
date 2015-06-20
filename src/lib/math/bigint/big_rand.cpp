@@ -27,7 +27,7 @@ void BigInt::randomize(RandomNumberGenerator& rng,
       if(bitsize % 8)
          array[0] &= 0xFF >> (8 - (bitsize % 8));
       array[0] |= 0x80 >> ((bitsize % 8) ? (8 - bitsize % 8) : 0);
-      binary_decode(&array[0], array.size());
+      binary_decode(array.data(), array.size());
       }
    }
 
