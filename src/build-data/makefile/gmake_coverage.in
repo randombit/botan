@@ -1,4 +1,3 @@
-
 lcov:
 	lcov --directory build/obj/lib/ --directory src/lib --no-external --capture --output-file botan.info
 	genhtml botan.info -o coverage/

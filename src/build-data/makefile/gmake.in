@@ -1,6 +1,6 @@
 %{header_in}
 
-%{commands_in}
+%{gmake_commands_in}
 
 # Executable targets
 APP           = %{out_dir}/botan%{program_suffix}
@@ -31,7 +31,7 @@ all: $(APP) $(TEST)
 %{test_build_cmds}
 
 # Link Commands
-%{dso_in}
+%{gmake_dso_in}
 
 $(APP): $(LIBRARIES) $(APPOBJS)
 	$(CXX) $(LDFLAGS) $(APPOBJS) -L%{out_dir} -l%{libname} $(APP_LINKS_TO) -o $(APP)
@@ -44,7 +44,7 @@ $(STATIC_LIB): $(LIBOBJS)
 	$(AR) $(STATIC_LIB) $(LIBOBJS)
 	$(RANLIB) $(STATIC_LIB)
 
-%{coverage_in}
+%{gmake_coverage_in}
 
 SPHINX_CONFIG = %{sphinx_config_dir}
 SPHINX_OPTS = -b html
