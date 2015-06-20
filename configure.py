@@ -1321,15 +1321,13 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
                                                                      build_config.pkg_config_file()))
 
     vars["header_in"] = process_template('src/build-data/makefile/header.in', vars)
-    vars["commands_in"] = process_template('src/build-data/makefile/commands.in', vars)
 
-    vars["coverage_in"] = process_template('src/build-data/makefile/coverage.in', vars) \
-                          if options.build_mode == 'coverage' else ''
-
-    if options.build_shared_lib:
-        vars["dso_in"] = process_template('src/build-data/makefile/dso.in', vars)
-    else:
-        vars["dso_in"] = ""
+    if vars["makefile_style"] == "gmake":
+        vars["gmake_commands_in"] = process_template('src/build-data/makefile/gmake_commands.in', vars)
+        vars["gmake_dso_in"]      = process_template('src/build-data/makefile/gmake_dso.in', vars) \
+                                    if options.build_shared_lib else ''
+        vars["gmake_coverage_in"] = process_template('src/build-data/makefile/gmake_coverage.in', vars) \
+                                    if options.build_mode == 'coverage' else ''
 
     return vars
 
