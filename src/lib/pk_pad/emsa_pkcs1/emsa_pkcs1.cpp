@@ -46,7 +46,7 @@ secure_vector<byte> emsa3_encoding(const secure_vector<byte>& msg,
    set_mem(&T[1], P_LENGTH, 0xFF);
    T[P_LENGTH+1] = 0x00;
    buffer_insert(T, P_LENGTH+2, hash_id, hash_id_length);
-   buffer_insert(T, output_length-msg.size(), &msg[0], msg.size());
+   buffer_insert(T, output_length-msg.size(), msg.data(), msg.size());
    return T;
    }
 
@@ -71,7 +71,7 @@ EMSA_PKCS1v15::encoding_of(const secure_vector<byte>& msg,
       throw Encoding_Error("EMSA_PKCS1v15::encoding_of: Bad input length");
 
    return emsa3_encoding(msg, output_bits,
-                         &m_hash_id[0], m_hash_id.size());
+                         m_hash_id.data(), m_hash_id.size());
    }
 
 bool EMSA_PKCS1v15::verify(const secure_vector<byte>& coded,
@@ -84,7 +84,7 @@ bool EMSA_PKCS1v15::verify(const secure_vector<byte>& coded,
    try
       {
       return (coded == emsa3_encoding(raw, key_bits,
-                                      &m_hash_id[0], m_hash_id.size()));
+                                      m_hash_id.data(), m_hash_id.size()));
       }
    catch(...)
       {
