@@ -97,7 +97,7 @@ void Threaded_Fork::set_next(Filter* f[], size_t n)
 void Threaded_Fork::send(const byte input[], size_t length)
    {
    if(write_queue.size())
-      thread_delegate_work(&write_queue[0], write_queue.size());
+      thread_delegate_work(write_queue.data(), write_queue.size());
    thread_delegate_work(input, length);
 
    bool nothing_attached = true;

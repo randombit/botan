@@ -19,7 +19,7 @@ int operator<<(int fd, Pipe& pipe)
    secure_vector<byte> buffer(DEFAULT_BUFFERSIZE);
    while(pipe.remaining())
       {
-      size_t got = pipe.read(&buffer[0], buffer.size());
+      size_t got = pipe.read(buffer.data(), buffer.size());
       size_t position = 0;
       while(got)
          {
@@ -41,11 +41,11 @@ int operator>>(int fd, Pipe& pipe)
    secure_vector<byte> buffer(DEFAULT_BUFFERSIZE);
    while(true)
       {
-      ssize_t ret = read(fd, &buffer[0], buffer.size());
+      ssize_t ret = read(fd, buffer.data(), buffer.size());
       if(ret == 0) break;
       if(ret == -1)
          throw Stream_IO_Error("Pipe input operator (unixfd) has failed");
-      pipe.write(&buffer[0], ret);
+      pipe.write(buffer.data(), ret);
       }
    return fd;
    }
