@@ -1,3 +1,6 @@
-lcov:
-	lcov --directory build/obj/lib/ --directory src/lib --no-external --capture --output-file botan.info
-	genhtml botan.info -o coverage/
+%{out_dir}/coverage/index.html: $(TEST)
+	LD_LIBRARY_PATH=%{out_dir} $(TEST)
+	lcov --directory "%{build_dir}/obj/lib" --base-directory "%{src_dir}" --no-external --capture --output-file "%{out_dir}/coverage.info"
+	genhtml "%{out_dir}/coverage.info" -o "%{out_dir}/coverage"
+
+lcov: %{out_dir}/coverage/index.html

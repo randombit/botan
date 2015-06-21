@@ -44,6 +44,9 @@ $(STATIC_LIB): $(LIBOBJS)
 	$(AR) $(STATIC_LIB) $(LIBOBJS)
 	$(RANLIB) $(STATIC_LIB)
 
+# Fake targets
+.PHONY = clean distclean docs website install valgrind lcov
+
 %{gmake_coverage_in}
 
 SPHINX_CONFIG = %{sphinx_config_dir}
@@ -51,8 +54,6 @@ SPHINX_OPTS = -b html
 
 WEBSITE_DIR=%{doc_output_dir}/website
 WEBSITE_SRC_DIR=%{doc_output_dir}/website-src
-
-.PHONY = clean distclean docs website install valgrind
 
 clean:
 	-$(RM) %{libobj_dir}/*
