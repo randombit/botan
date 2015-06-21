@@ -23,7 +23,7 @@ BigInt square(const BigInt& x)
    secure_vector<word> workspace(z.size());
 
    bigint_sqr(z.mutable_data(), z.size(),
-              &workspace[0],
+              workspace.data(),
               x.data(), x.size(), x_sw);
    return z;
    }
@@ -48,7 +48,7 @@ BigInt mul_add(const BigInt& a, const BigInt& b, const BigInt& c)
    secure_vector<word> workspace(r.size());
 
    bigint_mul(r.mutable_data(), r.size(),
-              &workspace[0],
+              workspace.data(),
               a.data(), a.size(), a_sw,
               b.data(), b.size(), b_sw);
 

@@ -26,7 +26,7 @@ void CurveGFp_NIST::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
    z.grow_to(output_size);
    z.clear();
 
-   bigint_mul(z.mutable_data(), output_size, &ws[0],
+   bigint_mul(z.mutable_data(), output_size, ws.data(),
               x.data(), x.size(), x.sig_words(),
               y.data(), y.size(), y.sig_words());
 
@@ -50,7 +50,7 @@ void CurveGFp_NIST::curve_sqr(BigInt& z, const BigInt& x,
    z.grow_to(output_size);
    z.clear();
 
-   bigint_sqr(z.mutable_data(), output_size, &ws[0],
+   bigint_sqr(z.mutable_data(), output_size, ws.data(),
               x.data(), x.size(), x.sig_words());
 
    this->redc(z, ws);
@@ -80,12 +80,12 @@ void CurveGFp_P521::redc(BigInt& x, secure_vector<word>& ws) const
    if(ws.size() < p_words + 1)
       ws.resize(p_words + 1);
 
-   clear_mem(&ws[0], ws.size());
-   bigint_shr2(&ws[0], x.data(), x_sw, shift_words, shift_bits);
+   clear_mem(ws.data(), ws.size());
+   bigint_shr2(ws.data(), x.data(), x_sw, shift_words, shift_bits);
 
    x.mask_bits(521);
 
-   bigint_add3(x.mutable_data(), x.data(), p_words, &ws[0], p_words);
+   bigint_add3(x.mutable_data(), x.data(), p_words, ws.data(), p_words);
 
    normalize(x, ws, max_redc_subtractions());
    }

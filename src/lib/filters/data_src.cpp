@@ -47,7 +47,7 @@ size_t DataSource::discard_next(size_t n)
 size_t DataSource_Memory::read(byte out[], size_t length)
    {
    size_t got = std::min<size_t>(source.size() - offset, length);
-   copy_mem(out, &source[offset], got);
+   copy_mem(out, source.data() + offset, got);
    offset += got;
    return got;
    }
@@ -112,7 +112,7 @@ size_t DataSource_Stream::peek(byte out[], size_t length, size_t offset) const
    if(offset)
       {
       secure_vector<byte> buf(offset);
-      source.read(reinterpret_cast<char*>(&buf[0]), buf.size());
+      source.read(reinterpret_cast<char*>(buf.data()), buf.size());
       if(source.bad())
          throw Stream_IO_Error("DataSource_Stream::peek: Source failure");
       got = source.gcount();

@@ -62,7 +62,7 @@ bool EMSA_Raw::verify(const secure_vector<byte>& coded,
       if(raw[i])
          same_modulo_leading_zeros = false;
 
-   if(!same_mem(&coded[0], &raw[leading_zeros_expected], coded.size()))
+   if(!same_mem(coded.data(), raw.data() + leading_zeros_expected, coded.size()))
       same_modulo_leading_zeros = false;
 
    return same_modulo_leading_zeros;

@@ -18,8 +18,8 @@ std::ostream& operator<<(std::ostream& stream, Pipe& pipe)
    secure_vector<byte> buffer(DEFAULT_BUFFERSIZE);
    while(stream.good() && pipe.remaining())
       {
-      size_t got = pipe.read(&buffer[0], buffer.size());
-      stream.write(reinterpret_cast<const char*>(&buffer[0]), got);
+      size_t got = pipe.read(buffer.data(), buffer.size());
+      stream.write(reinterpret_cast<const char*>(buffer.data()), got);
       }
    if(!stream.good())
       throw Stream_IO_Error("Pipe output operator (iostream) has failed");
@@ -34,8 +34,8 @@ std::istream& operator>>(std::istream& stream, Pipe& pipe)
    secure_vector<byte> buffer(DEFAULT_BUFFERSIZE);
    while(stream.good())
       {
-      stream.read(reinterpret_cast<char*>(&buffer[0]), buffer.size());
-      pipe.write(&buffer[0], stream.gcount());
+      stream.read(reinterpret_cast<char*>(buffer.data()), buffer.size());
+      pipe.write(buffer.data(), stream.gcount());
       }
    if(stream.bad() || (stream.fail() && !stream.eof()))
       throw Stream_IO_Error("Pipe input operator (iostream) has failed");

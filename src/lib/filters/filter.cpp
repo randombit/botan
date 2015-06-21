@@ -35,7 +35,7 @@ void Filter::send(const byte input[], size_t length)
       if(next[j])
          {
          if(write_queue.size())
-            next[j]->write(&write_queue[0], write_queue.size());
+            next[j]->write(write_queue.data(), write_queue.size());
          next[j]->write(input, length);
          nothing_attached = false;
          }

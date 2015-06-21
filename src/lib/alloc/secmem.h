@@ -97,7 +97,7 @@ template<typename T>
 std::vector<T> unlock(const secure_vector<T>& in)
    {
    std::vector<T> out(in.size());
-   copy_mem(&out[0], &in[0], in.size());
+   copy_mem(out.data(), in.data(), in.size());
    return out;
    }
 
@@ -118,7 +118,7 @@ size_t buffer_insert(std::vector<T, Alloc>& buf,
                      const std::vector<T, Alloc2>& input)
    {
    const size_t to_copy = std::min(input.size(), buf.size() - buf_offset);
-   copy_mem(&buf[buf_offset], &input[0], to_copy);
+   copy_mem(&buf[buf_offset], input.data(), to_copy);
    return to_copy;
    }
 
@@ -129,7 +129,7 @@ operator+=(std::vector<T, Alloc>& out,
    {
    const size_t copy_offset = out.size();
    out.resize(out.size() + in.size());
-   copy_mem(&out[copy_offset], &in[0], in.size());
+   copy_mem(&out[copy_offset], in.data(), in.size());
    return out;
    }
 
@@ -167,7 +167,7 @@ std::vector<T, Alloc>& operator+=(std::vector<T, Alloc>& out,
 template<typename T, typename Alloc>
 void zeroise(std::vector<T, Alloc>& vec)
    {
-   clear_mem(&vec[0], vec.size());
+   clear_mem(vec.data(), vec.size());
    }
 
 /**
