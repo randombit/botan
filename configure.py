@@ -1317,6 +1317,13 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'with_sphinx': options.with_sphinx
         }
 
+    if options.os == 'darwin':
+        vars['app_post_link_cmd']  = 'install_name_tool -change "/$(SONAME)" "@executable_path/$(SONAME)" $(APP)'
+        vars['test_post_link_cmd'] = 'install_name_tool -change "/$(SONAME)" "@executable_path/$(SONAME)" $(TEST)'
+    else:
+        vars['app_post_link_cmd'] = ''
+        vars['test_post_link_cmd'] = ''
+
     gen_makefile_lists(vars, build_config, options, modules, cc, arch, osinfo)
 
     if options.os != 'windows':

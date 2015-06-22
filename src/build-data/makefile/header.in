@@ -19,3 +19,6 @@ APP_FLAGS      = $(LANG_FLAGS) $(APP_OPT) $(WARN_FLAGS)
 TEST_FLAGS     = $(LANG_FLAGS) $(APP_OPT) $(WARN_FLAGS)
 
 SCRIPTS_DIR    = %{scripts_dir}
+
+APP_POST_LINK_CMD  = %{app_post_link_cmd}
+TEST_POST_LINK_CMD = %{test_post_link_cmd}

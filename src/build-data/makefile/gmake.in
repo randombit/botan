@@ -35,9 +35,11 @@ all: $(APP) $(TEST)
 
 $(APP): $(LIBRARIES) $(APPOBJS)
 	$(APP_LINK_CMD) $(LDFLAGS) $(APPOBJS) -L%{out_dir} -l%{libname} $(APP_LINKS_TO) -o $(APP)
+	$(APP_POST_LINK_CMD)
 
 $(TEST): $(LIBRARIES) $(TESTOBJS)
 	$(TEST_LINK_CMD) $(LDFLAGS) $(TESTOBJS) -L%{out_dir} -l%{libname} $(TEST_LINKS_TO) -o $(TEST)
+	$(TEST_POST_LINK_CMD)
 
 $(STATIC_LIB): $(LIBOBJS)
 	$(RM) $(STATIC_LIB)
