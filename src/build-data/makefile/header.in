@@ -6,7 +6,9 @@ LANG_FLAGS     = %{lang_flags}
 WARN_FLAGS     = %{warn_flags}
 SO_OBJ_FLAGS   = %{shared_flags}
 
-LIB_LINK_CMD   = %{so_link}
+LIB_LINK_CMD   = %{lib_link_cmd}
+APP_LINK_CMD   = %{app_link_cmd}
+TEST_LINK_CMD  = %{test_link_cmd}
 
 LIB_LINKS_TO   = %{link_to}
 APP_LINKS_TO   = $(LIB_LINKS_TO)

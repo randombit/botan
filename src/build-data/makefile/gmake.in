@@ -34,10 +34,10 @@ all: $(APP) $(TEST)
 %{gmake_dso_in}
 
 $(APP): $(LIBRARIES) $(APPOBJS)
-	$(CXX) $(LDFLAGS) $(APPOBJS) -L%{out_dir} -l%{libname} $(APP_LINKS_TO) -o $(APP)
+	$(APP_LINK_CMD) $(LDFLAGS) $(APPOBJS) -L%{out_dir} -l%{libname} $(APP_LINKS_TO) -o $(APP)
 
 $(TEST): $(LIBRARIES) $(TESTOBJS)
-	$(CXX) $(LDFLAGS) $(TESTOBJS) -L%{out_dir} -l%{libname} $(TEST_LINKS_TO) -o $(TEST)
+	$(TEST_LINK_CMD) $(LDFLAGS) $(TESTOBJS) -L%{out_dir} -l%{libname} $(TEST_LINKS_TO) -o $(TEST)
 
 $(STATIC_LIB): $(LIBOBJS)
 	$(RM) $(STATIC_LIB)

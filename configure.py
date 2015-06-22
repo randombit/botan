@@ -1283,7 +1283,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         # This can be made constistent over all platforms in the future
         'libname': 'botan' if options.os == 'windows' else 'botan-%d.%d' % (build_config.version_major, build_config.version_minor),
 
-        'so_link': cc.so_link_command_for(osinfo.basename),
+        'lib_link_cmd': cc.so_link_command_for(osinfo.basename),
+        'app_link_cmd': '$(CXX) -Wl,-rpath=\$$ORIGIN' if options.os == 'linux' else '$(CXX)',
+        'test_link_cmd': '$(CXX) -Wl,-rpath=\$$ORIGIN' if options.os == 'linux' else '$(CXX)',
 
         'link_to': ' '.join([cc.add_lib_option + lib for lib in link_to()]),
 
