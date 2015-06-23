@@ -119,7 +119,7 @@ Certificate_Req::Certificate_Req(const std::vector<byte>& buf,
       {
       std::vector<byte> name_bits = reader.get_range_vector<byte>(2, 0, 65535);
 
-      BER_Decoder decoder(&name_bits[0], name_bits.size());
+      BER_Decoder decoder(name_bits.data(), name_bits.size());
       X509_DN name;
       decoder.decode(name);
       m_names.push_back(name);

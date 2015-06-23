@@ -151,7 +151,7 @@ void write_record(secure_vector<byte>& output,
       output.push_back(get_byte<u16bit>(0, msg_length));
       output.push_back(get_byte<u16bit>(1, msg_length));
 
-      output.insert(output.end(), &msg[0], &msg[msg_length]);
+      output.insert(output.end(), msg, msg + msg_length);
 
       return;
       }
@@ -175,7 +175,7 @@ void write_record(secure_vector<byte>& output,
       BOTAN_ASSERT(aead->start(nonce).empty(), "AEAD doesn't return anything from start");
 
       const size_t offset = output.size();
-      output += std::make_pair(&msg[0], msg_length);
+      output += std::make_pair(msg, msg_length);
       aead->finish(output, offset);
 
       BOTAN_ASSERT(output.size() == offset + ctext_size, "Expected size");
@@ -211,7 +211,7 @@ void write_record(secure_vector<byte>& output,
       rng.randomize(&output[output.size() - iv_size], iv_size);
       }
 
-   output.insert(output.end(), &msg[0], &msg[msg_length]);
+   output.insert(output.end(), msg, msg + msg_length);
 
    output.resize(output.size() + mac_size);
    cs->mac()->final(&output[output.size() - mac_size]);
@@ -242,8 +242,8 @@ void write_record(secure_vector<byte>& output,
 
       const size_t blocks = buf_size / block_size;
 
-      xor_buf(&buf[0], &cbc_state[0], block_size);
-      bc->encrypt(&buf[0]);
+      xor_buf(buf, cbc_state.data(), block_size);
+      bc->encrypt(buf);
 
       for(size_t i = 1; i < blocks; ++i)
          {
@@ -271,7 +271,7 @@ size_t fill_buffer_to(secure_vector<byte>& readbuf,
 
    const size_t taken = std::min(input_size, desired - readbuf.size());
 
-   readbuf.insert(readbuf.end(), &input[0], &input[taken]);
+   readbuf.insert(readbuf.end(), input, input + taken);
    input_consumed += taken;
    input_size -= taken;
    input += taken;
@@ -332,10 +332,10 @@ void cbc_decrypt_record(byte record_contents[], size_t record_len,
    byte* buf = record_contents;
 
    secure_vector<byte> last_ciphertext(block_size);
-   copy_mem(&last_ciphertext[0], &buf[0], block_size);
+   copy_mem(last_ciphertext.data(), buf, block_size);
 
-   bc.decrypt(&buf[0]);
-   xor_buf(&buf[0], &cs.cbc_state()[0], block_size);
+   bc.decrypt(buf);
+   xor_buf(buf, &cs.cbc_state()[0], block_size);
 
    secure_vector<byte> last_ciphertext2;
 
@@ -343,7 +343,7 @@ void cbc_decrypt_record(byte record_contents[], size_t record_len,
       {
       last_ciphertext2.assign(&buf[block_size*i], &buf[block_size*(i+1)]);
       bc.decrypt(&buf[block_size*i]);
-      xor_buf(&buf[block_size*i], &last_ciphertext[0], block_size);
+      xor_buf(&buf[block_size*i], last_ciphertext.data(), block_size);
       std::swap(last_ciphertext, last_ciphertext2);
       }
 
@@ -372,7 +372,7 @@ void decrypt_record(secure_vector<byte>& output,
       output += aead->start(nonce);
 
       const size_t offset = output.size();
-      output += std::make_pair(&msg[0], msg_length);
+      output += std::make_pair(msg, msg_length);
       aead->finish(output, offset);
 
       BOTAN_ASSERT(output.size() == ptext_size + offset, "Produced expected size");
@@ -415,11 +415,11 @@ void decrypt_record(secure_vector<byte>& output,
       cs.mac()->update(plaintext_block, plaintext_length);
 
       std::vector<byte> mac_buf(mac_size);
-      cs.mac()->final(&mac_buf[0]);
+      cs.mac()->final(mac_buf.data());
 
       const size_t mac_offset = record_len - (mac_size + pad_size);
 
-      const bool mac_bad = !same_mem(&record_contents[mac_offset], &mac_buf[0], mac_size);
+      const bool mac_bad = !same_mem(&record_contents[mac_offset], mac_buf.data(), mac_size);
 
       if(mac_bad || padding_bad)
          throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure");

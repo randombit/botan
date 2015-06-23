@@ -285,7 +285,7 @@ bool Channel::heartbeat_sending_allowed() const
 
 size_t Channel::received_data(const std::vector<byte>& buf)
    {
-   return this->received_data(&buf[0], buf.size());
+   return this->received_data(buf.data(), buf.size());
    }
 
 size_t Channel::received_data(const byte input[], size_t input_size)
@@ -407,14 +407,14 @@ size_t Channel::received_data(const byte input[], size_t input_size)
                   {
                   const std::vector<byte> padding = unlock(rng().random_vec(16));
                   Heartbeat_Message response(Heartbeat_Message::RESPONSE,
-                                             &payload[0], payload.size(), padding);
+                                             payload.data(), payload.size(), padding);
 
                   send_record(HEARTBEAT, response.contents());
                   }
                }
             else
                {
-               m_alert_cb(Alert(Alert::HEARTBEAT_PAYLOAD), &payload[0], payload.size());
+               m_alert_cb(Alert(Alert::HEARTBEAT_PAYLOAD), payload.data(), payload.size());
                }
             }
          else if(record_type == APPLICATION_DATA)
@@ -428,7 +428,7 @@ size_t Channel::received_data(const byte input[], size_t input_size)
             * following record. Avoid spurious callbacks.
             */
             if(record.size() > 0)
-               m_data_cb(&record[0], record.size());
+               m_data_cb(record.data(), record.size());
             }
          else if(record_type == ALERT)
             {
@@ -513,7 +513,7 @@ void Channel::write_record(Connection_Cipher_State* cipher_state, u16bit epoch,
                      cipher_state,
                      m_rng);
 
-   m_output_fn(&m_writebuf[0], m_writebuf.size());
+   m_output_fn(m_writebuf.data(), m_writebuf.size());
    }
 
 void Channel::send_record_array(u16bit epoch, byte type, const byte input[], size_t length)
@@ -537,7 +537,7 @@ void Channel::send_record_array(u16bit epoch, byte type, const byte input[], siz
 
    if(type == APPLICATION_DATA && cipher_state->cbc_without_explicit_iv())
       {
-      write_record(cipher_state.get(), epoch, type, &input[0], 1);
+      write_record(cipher_state.get(), epoch, type, input, 1);
       input += 1;
       length -= 1;
       }
@@ -547,7 +547,7 @@ void Channel::send_record_array(u16bit epoch, byte type, const byte input[], siz
    while(length)
       {
       const size_t sending = std::min(length, max_fragment_size);
-      write_record(cipher_state.get(), epoch, type, &input[0], sending);
+      write_record(cipher_state.get(), epoch, type, input, sending);
 
       input += sending;
       length -= sending;
@@ -557,13 +557,13 @@ void Channel::send_record_array(u16bit epoch, byte type, const byte input[], siz
 void Channel::send_record(byte record_type, const std::vector<byte>& record)
    {
    send_record_array(sequence_numbers().current_write_epoch(),
-                     record_type, &record[0], record.size());
+                     record_type, record.data(), record.size());
    }
 
 void Channel::send_record_under_epoch(u16bit epoch, byte record_type,
                                       const std::vector<byte>& record)
    {
-   send_record_array(epoch, record_type, &record[0], record.size());
+   send_record_array(epoch, record_type, record.data(), record.size());
    }
 
 void Channel::send(const byte buf[], size_t buf_size)

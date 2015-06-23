@@ -95,7 +95,7 @@ Stream_Handshake_IO::format(const std::vector<byte>& msg,
 
    store_be24(&send_buf[1], buf_size);
 
-   copy_mem(&send_buf[4], &msg[0], msg.size());
+   copy_mem(&send_buf[4], msg.data(), msg.size());
 
    return send_buf;
    }
@@ -194,7 +194,7 @@ void Datagram_Handshake_IO::add_record(const std::vector<byte>& record,
 
    const size_t DTLS_HANDSHAKE_HEADER_LEN = 12;
 
-   const byte* record_bits = &record[0];
+   const byte* record_bits = record.data();
    size_t record_size = record.size();
 
    while(record_size)
@@ -350,7 +350,7 @@ Datagram_Handshake_IO::format_fragment(const byte fragment[],
    store_be24(&send_buf[6], frag_offset);
    store_be24(&send_buf[9], frag_len);
 
-   copy_mem(&send_buf[12], &fragment[0], frag_len);
+   copy_mem(&send_buf[12], fragment, frag_len);
 
    return send_buf;
    }
@@ -360,7 +360,7 @@ Datagram_Handshake_IO::format_w_seq(const std::vector<byte>& msg,
                                     Handshake_Type type,
                                     u16bit msg_sequence) const
    {
-   return format_fragment(&msg[0], msg.size(), 0, msg.size(), type, msg_sequence);
+   return format_fragment(msg.data(), msg.size(), 0, msg.size(), type, msg_sequence);
    }
 
 std::vector<byte>

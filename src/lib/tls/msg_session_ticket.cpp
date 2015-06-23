@@ -45,7 +45,7 @@ New_Session_Ticket::New_Session_Ticket(const std::vector<byte>& buf)
 std::vector<byte> New_Session_Ticket::serialize() const
    {
    std::vector<byte> buf(4);
-   store_be(m_ticket_lifetime_hint, &buf[0]);
+   store_be(m_ticket_lifetime_hint, buf.data());
    append_tls_length_value(buf, m_ticket, 2);
    return buf;
    }
