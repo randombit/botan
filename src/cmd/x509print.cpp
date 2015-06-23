@@ -14,13 +14,13 @@ int x509print(int argc, char* argv[])
    {
    if(argc < 1)
       {
-      std::cout << "Usage: " << argv[0] << " cert.pem\n";
+      std::cout << "Usage: " << argv[0] << " cert.pem" << std::endl;
       return 1;
       }
 
    X509_Certificate cert(argv[1]);
 
-   std::cout << cert.to_string() << "\n";
+   std::cout << cert.to_string() << std::endl;
 
    return 0;
    }

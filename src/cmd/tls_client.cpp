@@ -78,13 +78,13 @@ int connect_to_host(const std::string& host, u16bit port, bool tcp)
 bool handshake_complete(const TLS::Session& session)
    {
    std::cout << "Handshake complete, " << session.version().to_string()
-             << " using " << session.ciphersuite().to_string() << "\n";
+             << " using " << session.ciphersuite().to_string() << std::endl;
 
    if(!session.session_id().empty())
-      std::cout << "Session ID " << hex_encode(session.session_id()) << "\n";
+      std::cout << "Session ID " << hex_encode(session.session_id()) << std::endl;
 
    if(!session.session_ticket().empty())
-      std::cout << "Session ticket " << hex_encode(session.session_ticket()) << "\n";
+      std::cout << "Session ticket " << hex_encode(session.session_ticket()) << std::endl;
 
    return true;
    }
@@ -123,7 +123,7 @@ bool got_alert = false;
 
 void alert_received(TLS::Alert alert, const byte [], size_t )
    {
-   std::cout << "Alert: " << alert.type_string() << "\n";
+   std::cout << "Alert: " << alert.type_string() << std::endl;
    got_alert = true;
    }
 
@@ -137,7 +137,7 @@ int tls_client(int argc, char* argv[])
    {
    if(argc != 2 && argc != 3 && argc != 4)
       {
-      std::cout << "Usage " << argv[0] << " host [port] [udp|tcp]\n";
+      std::cout << "Usage " << argv[0] << " host [port] [udp|tcp]" << std::endl;
       return 1;
       }
 
@@ -203,7 +203,7 @@ int tls_client(int argc, char* argv[])
                {
                std::string app = client.application_protocol();
                if(app != "")
-                  std::cout << "Server choose protocol: " << client.application_protocol() << "\n";
+                  std::cout << "Server choose protocol: " << client.application_protocol() << std::endl;
                first_active = false;
                }
             }
@@ -220,12 +220,12 @@ int tls_client(int argc, char* argv[])
 
             if(got == 0)
                {
-               std::cout << "EOF on socket\n";
+               std::cout << "EOF on socket" << std::endl;
                break;
                }
             else if(got == -1)
                {
-               std::cout << "Socket error: " << errno << " " << strerror(errno) << "\n";
+               std::cout << "Socket error: " << errno << " " << strerror(errno) << std::endl;
                continue;
                }
 
@@ -239,13 +239,13 @@ int tls_client(int argc, char* argv[])
 
             if(got == 0)
                {
-               std::cout << "EOF on stdin\n";
+               std::cout << "EOF on stdin" << std::endl;
                client.close();
                break;
                }
             else if(got == -1)
                {
-               std::cout << "Stdin error: " << errno << " " << strerror(errno) << "\n";
+               std::cout << "Stdin error: " << errno << " " << strerror(errno) << std::endl;
                continue;
                }
 
@@ -255,12 +255,12 @@ int tls_client(int argc, char* argv[])
 
                if(cmd == 'R' || cmd == 'r')
                   {
-                  std::cout << "Client initiated renegotiation\n";
+                  std::cout << "Client initiated renegotiation" << std::endl;
                   client.renegotiate(cmd == 'R');
                   }
                else if(cmd == 'Q')
                   {
-                  std::cout << "Client initiated close\n";
+                  std::cout << "Client initiated close" << std::endl;
                   client.close();
                   }
                }
@@ -272,7 +272,7 @@ int tls_client(int argc, char* argv[])
 
          if(client.timeout_check())
             {
-            std::cout << "Timeout detected\n";
+            std::cout << "Timeout detected" << std::endl;
             }
          }
 
@@ -280,7 +280,7 @@ int tls_client(int argc, char* argv[])
       }
    catch(std::exception& e)
       {
-      std::cout << "Exception: " << e.what() << "\n";
+      std::cout << "Exception: " << e.what() << std::endl;
       return 1;
       }
    return 0;

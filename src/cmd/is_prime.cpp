@@ -13,7 +13,7 @@ int is_prime(int argc, char* argv[])
    {
    if(argc != 2 && argc != 3)
       {
-      std::cerr << "Usage: " << argv[0] << " n <prob>\n";
+      std::cerr << "Usage: " << argv[0] << " n <prob>" << std::endl;
       return 2;
       }
 
@@ -30,12 +30,12 @@ int is_prime(int argc, char* argv[])
 
    if(prime)
       {
-      std::cout << n << " is prime\n";
+      std::cout << n << " is prime" << std::endl;
       return 0;
       }
    else
       {
-      std::cout << n << " is not prime\n";
+      std::cout << n << " is not prime" << std::endl;
       return 1;
       }
    }

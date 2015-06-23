@@ -18,7 +18,7 @@ int rng(int argc, char* argv[])
    {
    if(argc == 1)
       {
-      std::cout << "Usage: " << argv[0] << " [--raw-entropy] [n]\n";
+      std::cout << "Usage: " << argv[0] << " [--raw-entropy] [n]" << std::endl;
       return 1;
       }
 
@@ -28,13 +28,13 @@ int rng(int argc, char* argv[])
       const bool raw = (argc == 3 && std::string(argv[1]) == "--raw-entropy");
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
-      std::cout << "System " << hex_encode(system_rng().random_vec(amt)) << "\n";
+      std::cout << "System " << hex_encode(system_rng().random_vec(amt)) << std::endl;
 #endif
 
       if(!raw)
          {
          AutoSeeded_RNG rng;
-         std::cout << hex_encode(rng.random_vec(amt)) << "\n";
+         std::cout << hex_encode(rng.random_vec(amt)) << std::endl;
          }
       else
          {
@@ -44,7 +44,7 @@ int rng(int argc, char* argv[])
             [amt,&total_collected](const byte in[], size_t in_len, double entropy_estimate)
             {
             std::cout << "Collected estimated "<< entropy_estimate << " bits in "
-                      << hex_encode(in, in_len) << "\n";
+                      << hex_encode(in, in_len) << std::endl;
             total_collected += entropy_estimate;
             return total_collected >= amt;
             });
@@ -54,7 +54,7 @@ int rng(int argc, char* argv[])
       }
    catch(std::exception& e)
       {
-      std::cout << "Error: " << e.what() << "\n";
+      std::cout << "Error: " << e.what() << std::endl;
       return 1;
       }
 

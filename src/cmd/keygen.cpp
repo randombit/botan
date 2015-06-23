@@ -106,7 +106,7 @@ int keygen(int argc, char* argv[])
       else
          priv << PKCS8::PEM_encode(*key, rng, pass, std::chrono::milliseconds(300), pbe);
 
-      std::cout << "Wrote " << bits << " bit " << algo << " key to public.pem / private.pem\n";
+      std::cout << "Wrote " << bits << " bit " << algo << " key to public.pem / private.pem" << std::endl;
       }
    catch(std::exception& e)
       {

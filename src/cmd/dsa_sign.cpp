@@ -57,7 +57,7 @@ int dsa_sign(int argc, char* argv[])
 
       if(!dsakey)
          {
-         std::cout << "The loaded key is not a DSA key!\n";
+         std::cout << "The loaded key is not a DSA key!" << std::endl;
          return 1;
          }
 
@@ -68,7 +68,7 @@ int dsa_sign(int argc, char* argv[])
       while(size_t got = in.read(buf, sizeof(buf)))
          signer.update(buf, got);
 
-      sigfile << base64_encode(signer.signature(rng)) << "\n";
+      sigfile << base64_encode(signer.signature(rng)) << std::endl;
    }
    catch(std::exception& e)
       {

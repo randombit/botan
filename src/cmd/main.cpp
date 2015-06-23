@@ -29,11 +29,11 @@ namespace {
 
 int help(int , char* argv[])
    {
-   std::cout << "Usage: " << argv[0] << " [subcommand] [subcommand-options]\n";
+   std::cout << "Usage: " << argv[0] << " [subcommand] [subcommand-options]" << std::endl;
 
    std::set<std::string> apps = AppRegistrations::instance().all_apps();
 
-   std::cout << "Available commands:\n";
+   std::cout << "Available commands:" << std::endl;
 
    size_t idx = 1;
    for(auto&& app: apps)
@@ -41,13 +41,13 @@ int help(int , char* argv[])
       std::cout << app;
 
       if(idx % 3 == 0)
-         std::cout << "\n";
+         std::cout << std::endl;
       else
          std::cout << std::string(18-app.size(), ' ');
 
       ++idx;
       }
-   std::cout << "\n";
+   std::cout << std::endl;
 
    return 1;
    }
@@ -60,28 +60,28 @@ int config(int argc, char* argv[])
                 << "   prefix: Print install prefix\n"
                 << "   cflags: Print include params\n"
                 << "   ldflags: Print linker params\n"
-                << "   libs: Print libraries\n";
+                << "   libs: Print libraries" << std::endl;
       return 1;
       }
 
    const std::string arg = argv[1];
 
    if(arg == "prefix")
-      std::cout << BOTAN_INSTALL_PREFIX << "\n";
+      std::cout << BOTAN_INSTALL_PREFIX << std::endl;
 
    else if(arg == "cflags")
-      std::cout << "-I" << BOTAN_INSTALL_PREFIX << "/" << BOTAN_INSTALL_HEADER_DIR << "\n";
+      std::cout << "-I" << BOTAN_INSTALL_PREFIX << "/" << BOTAN_INSTALL_HEADER_DIR << std::endl;
 
    else if(arg == "ldflags")
-      std::cout << "-L" << BOTAN_INSTALL_PREFIX << "/" << BOTAN_INSTALL_LIB_DIR << "\n";
+      std::cout << "-L" << BOTAN_INSTALL_PREFIX << "/" << BOTAN_INSTALL_LIB_DIR << std::endl;
 
    else if(arg == "libs")
       std::cout << "-lbotan-" << version_major() << "." << version_minor()
-                << " " << BOTAN_LIB_LINK << "\n";
+                << " " << BOTAN_LIB_LINK << std::endl;
 
    else
       {
-      std::cerr << "Unknown option " << arg << " to botan config\n";
+      std::cerr << "Unknown option " << arg << " to botan config" << std::endl;
       return 1;
       }
 
@@ -102,22 +102,22 @@ int version(int argc, char* argv[])
                 << ") does not match version built against ("
                 << BOTAN_VERSION_MAJOR << '.'
                 << BOTAN_VERSION_MINOR << '.'
-                << BOTAN_VERSION_PATCH << ")\n";
+                << BOTAN_VERSION_PATCH << ")" << std::endl;
       }
 
    if(argc == 1)
       {
       std::cout << Botan::version_major() << "."
                 << Botan::version_minor() << "."
-                << Botan::version_patch() << "\n";
+                << Botan::version_patch() << std::endl;
       }
    else if(argc == 2 && std::string(argv[1]) == "--full")
       {
-      std::cout << Botan::version_string() << "\n";
+      std::cout << Botan::version_string() << std::endl;
       }
    else
       {
-      std::cout << "Usage: " << argv[0] << " version [--full]\n";
+      std::cout << "Usage: " << argv[0] << " version [--full]" << std::endl;
       return 1;
       }
 
@@ -137,12 +137,12 @@ int http_get(int argc, char* argv[])
    {
    if(argc != 2)
       {
-      std::cout << "Usage " << argv[0] << " <url>\n";
+      std::cout << "Usage " << argv[0] << " <url>" << std::endl;
       return 1;
       }
 
    auto resp = HTTP::GET_sync(argv[2]);
-   std::cout << resp << "\n";
+   std::cout << resp << std::endl;
    return 0;
    }
 REGISTER_APP(http_get);

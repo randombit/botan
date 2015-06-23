@@ -36,12 +36,12 @@ int ocsp_check(int argc, char* argv[])
 
    if(status == Certificate_Status_Code::VERIFIED)
       {
-      std::cout << "OCSP check OK\n";
+      std::cout << "OCSP check OK" << std::endl;
       return 0;
       }
    else
       {
-      std::cout << "OCSP check failed " << Path_Validation_Result::status_string(status) << "\n";
+      std::cout << "OCSP check failed " << Path_Validation_Result::status_string(status) << std::endl;
       return 1;
       }
    }
