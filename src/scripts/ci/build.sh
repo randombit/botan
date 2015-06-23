@@ -11,7 +11,10 @@ elif [ "$BUILD_MODE" = "coverage" ]; then
    CFG_FLAGS="--build-mode=coverage --link-method=copy"
 fi
 
+CORES=$(nproc)
+echo "$CORES"
+
 $CXX --version
 python configure.py $CFG_FLAGS --cc=$CC --cc-bin=$CXX --with-openssl --with-sqlite --with-zlib
-make -j 4
+make -j "$CORES"
 LD_LIBRARY_PATH=. ./botan-test
