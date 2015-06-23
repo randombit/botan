@@ -21,10 +21,10 @@ int base64(int argc, char* argv[])
    if(argc < 2)
       {
       std::cout << "Usage: " << argv[0] << " [-w] [-c n] [-e|-d] files...\n"
-                   "   -e  : Encode input to base64 strings (default) \n"
+                   "   -e  : Encode input to base64 strings (default)\n"
                    "   -d  : Decode base64 input\n"
                    "   -w  : Wrap lines\n"
-                   "   -c n: Wrap lines at column n, default 78\n";
+                   "   -c n: Wrap lines at column n, default 78" << std::endl;
       return 1;
       }
 

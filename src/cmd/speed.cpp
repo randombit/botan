@@ -151,7 +151,7 @@ void time_transform(std::unique_ptr<Transform> tf,
       const double Mbps = ((reps / seconds_used) * buf_size) / 1024 / 1024;
 
       std::cout << tf->name() << " " << std::setprecision(4) << Mbps
-                << " MiB / sec with " << buf_size << " byte blocks\n";
+                << " MiB / sec with " << buf_size << " byte blocks" << std::endl;
       }
    }
 
@@ -204,7 +204,7 @@ int speed(int argc, char* argv[])
       seconds = std::atof(opts.value("seconds").c_str());
       if(seconds < 0.1 || seconds > (5 * 60))
          {
-         std::cout << "Invalid argument to --seconds\n";
+         std::cout << "Invalid argument to --seconds" << std::endl;
          return 2;
          }
       }
@@ -214,7 +214,7 @@ int speed(int argc, char* argv[])
       buf_size = std::atoi(opts.value("buf-size").c_str());
       if(buf_size == 0 || buf_size > 1024)
          {
-         std::cout << "Invalid argument to --buf-size\n";
+         std::cout << "Invalid argument to --buf-size" << std::endl;
          return 2;
          }
       }
@@ -226,7 +226,7 @@ int speed(int argc, char* argv[])
 
    if(args[0] == "help" || args[0] == "-h")
       {
-      std::cout << "Usage: " << argv[0] << " [algo name...]\n";
+      std::cout << "Usage: " << argv[0] << " [algo name...]" << std::endl;
       return 1;
       }
 

@@ -50,7 +50,7 @@ int dsa_verify(int argc, char* argv[])
 
       if(!dsakey)
          {
-         std::cout << "The loaded key is not a DSA key!\n";
+         std::cout << "The loaded key is not a DSA key!" << std::endl;
          return 1;
          }
 
@@ -67,12 +67,12 @@ int dsa_verify(int argc, char* argv[])
 
       if(ok)
          {
-         std::cout << "Signature verified\n";
+         std::cout << "Signature verified" << std::endl;
          return 0;
          }
       else
          {
-         std::cout << "Signature did NOT verify\n";
+         std::cout << "Signature did NOT verify" << std::endl;
          return 1;
          }
    }

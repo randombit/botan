@@ -19,7 +19,7 @@ int cert_verify(int argc, char* argv[])
 
    if(argc <= 2)
       {
-      std::cout << "Usage: " << argv[0] << " subject.pem [CA certificates...]\n";
+      std::cout << "Usage: " << argv[0] << " subject.pem [CA certificates...]" << std::endl;
       return 1;
       }
 
@@ -38,9 +38,9 @@ int cert_verify(int argc, char* argv[])
                          certs);
 
    if(result.successful_validation())
-      std::cout << "Certificate validated\n";
+      std::cout << "Certificate validated" << std::endl;
    else
-      std::cout << "Certificate did not validate - " << result.result_string() << "\n";
+      std::cout << "Certificate did not validate - " << result.result_string() << std::endl;
 
    return 0;
    }

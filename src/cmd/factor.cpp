@@ -124,7 +124,7 @@ int factor(int argc, char* argv[])
    {
    if(argc != 2)
       {
-      std::cout << "Usage: " << argv[0] << " <integer>\n";
+      std::cout << "Usage: " << argv[0] << " <integer>" << std::endl;
       return 1;
       }
 
@@ -141,7 +141,7 @@ int factor(int argc, char* argv[])
       std::copy(factors.begin(),
                 factors.end(),
                 std::ostream_iterator<BigInt>(std::cout, " "));
-      std::cout << "\n";
+      std::cout << std::endl;
       }
    catch(std::exception& e)
       {

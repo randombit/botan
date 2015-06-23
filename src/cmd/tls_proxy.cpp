@@ -261,12 +261,12 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
 
       bool tls_handshake_complete(const TLS::Session& session)
          {
-         //std::cout << "Handshake from client complete\n";
+         //std::cout << "Handshake from client complete" << std::endl;
 
          m_hostname = session.server_info().hostname();
 
          if(m_hostname != "")
-            std::cout << "Client requested hostname '" << m_hostname << "'\n";
+            std::cout << "Client requested hostname '" << m_hostname << "'" << std::endl;
 
          async_connect(m_server_socket, m_server_endpoints,
                        [this](boost::system::error_code ec, tcp::resolver::iterator endpoint)
@@ -291,7 +291,7 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
             return;
             }
          else
-            std::cout << "Alert " << alert.type_string() << "\n";
+            std::cout << "Alert " << alert.type_string() << std::endl;
          }
 
       boost::asio::io_service::strand m_strand;
@@ -396,7 +396,7 @@ int tls_proxy(int argc, char* argv[])
    {
    if(argc != 6)
       {
-      std::cout << "Usage: " << argv[0] << " listen_port target_host target_port server_cert server_key\n";
+      std::cout << "Usage: " << argv[0] << " listen_port target_host target_port server_cert server_key" << std::endl;
       return 1;
       }
 

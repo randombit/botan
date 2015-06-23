@@ -37,7 +37,7 @@ int compress(int argc, char* argv[])
    {
    if(argc != 2 && argc != 3 && argc != 4)
       {
-      std::cout << "Usage: " << argv[0] << " input [type] [level]\n";
+      std::cout << "Usage: " << argv[0] << " input [type] [level]" << std::endl;
       return 1;
       }
 
@@ -46,7 +46,7 @@ int compress(int argc, char* argv[])
 
    if(!in.good())
       {
-      std::cout << "Couldn't read " << in_file << "\n";
+      std::cout << "Couldn't read " << in_file << std::endl;
       return 1;
       }
 
@@ -57,7 +57,7 @@ int compress(int argc, char* argv[])
 
    if(!compress)
       {
-      std::cout << suffix << " compression not supported\n";
+      std::cout << suffix << " compression not supported" << std::endl;
       return 1;
       }
 
@@ -88,7 +88,7 @@ int uncompress(int argc, char* argv[])
 
    if(!in.good())
       {
-      std::cout << "Couldn't read " << argv[1] << "\n";
+      std::cout << "Couldn't read '" << argv[1] << "'" << std::endl;
       return 1;
       }
 
@@ -101,7 +101,7 @@ int uncompress(int argc, char* argv[])
 
    if(!decompress)
       {
-      std::cout << suffix << " decompression not supported\n";
+      std::cout << suffix << " decompression not supported" << std::endl;
       return 1;
       }
 

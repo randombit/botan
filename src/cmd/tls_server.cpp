@@ -76,13 +76,13 @@ int make_server_socket(bool is_tcp, u16bit port)
 bool handshake_complete(const TLS::Session& session)
    {
    std::cout << "Handshake complete, " << session.version().to_string()
-             << " using " << session.ciphersuite().to_string() << "\n";
+             << " using " << session.ciphersuite().to_string() << std::endl;
 
    if(!session.session_id().empty())
-      std::cout << "Session ID " << hex_encode(session.session_id()) << "\n";
+      std::cout << "Session ID " << hex_encode(session.session_id()) << std::endl;
 
    if(!session.session_ticket().empty())
-      std::cout << "Session ticket " << hex_encode(session.session_ticket()) << "\n";
+      std::cout << "Session ticket " << hex_encode(session.session_ticket()) << std::endl;
 
    return true;
    }
@@ -92,9 +92,9 @@ void dgram_socket_write(int sockfd, const byte buf[], size_t length)
    ssize_t sent = ::send(sockfd, buf, length, MSG_NOSIGNAL);
 
    if(sent == -1)
-      std::cout << "Error writing to socket - " << strerror(errno) << "\n";
+      std::cout << "Error writing to socket - " << strerror(errno) << std::endl;
    else if(sent != static_cast<ssize_t>(length))
-      std::cout << "Packet of length " << length << " truncated to " << sent << "\n";
+      std::cout << "Packet of length " << length << " truncated to " << sent << std::endl;
    }
 
 void stream_socket_write(int sockfd, const byte buf[], size_t length)
@@ -118,14 +118,14 @@ void stream_socket_write(int sockfd, const byte buf[], size_t length)
 
 void alert_received(TLS::Alert alert, const byte[], size_t)
    {
-   std::cout << "Alert: " << alert.type_string() << "\n";
+   std::cout << "Alert: " << alert.type_string() << std::endl;
    }
 
 int tls_server(int argc, char* argv[])
    {
    if(argc != 4 && argc != 5)
       {
-      std::cout << "Usage: " << argv[0] << " server.crt server.key port [tcp|udp]\n";
+      std::cout << "Usage: " << argv[0] << " server.crt server.key port [tcp|udp]" << std::endl;
       return 1;
       }
 
@@ -148,11 +148,11 @@ int tls_server(int argc, char* argv[])
 
       auto protocol_chooser = [](const std::vector<std::string>& protocols) -> std::string {
          for(size_t i = 0; i != protocols.size(); ++i)
-            std::cout << "Client offered protocol " << i << " = " << protocols[i] << "\n";
+            std::cout << "Client offered protocol " << i << " = " << protocols[i] << std::endl;
          return "echo/1.0"; // too bad
       };
 
-      std::cout << "Listening for new connections on " << transport << " port " << port << "\n";
+      std::cout << "Listening for new connections on " << transport << " port " << port << std::endl;
 
       int server_fd = make_server_socket(is_tcp, port);
 
@@ -179,7 +179,7 @@ int tls_server(int argc, char* argv[])
                fd = server_fd;
                }
 
-            std::cout << "New connection received\n";
+            std::cout << "New connection received" << std::endl;
 
             auto socket_write = is_tcp ? std::bind(stream_socket_write, fd, _1, _2) :
                                          std::bind(dgram_socket_write, fd, _1, _2);
@@ -219,13 +219,13 @@ int tls_server(int argc, char* argv[])
 
                if(got == -1)
                   {
-                  std::cout << "Error in socket read - " << strerror(errno) << "\n";
+                  std::cout << "Error in socket read - " << strerror(errno) << std::endl;
                   break;
                   }
 
                if(got == 0)
                   {
-                  std::cout << "EOF on socket\n";
+                  std::cout << "EOF on socket" << std::endl;
                   break;
                   }
 
@@ -248,14 +248,14 @@ int tls_server(int argc, char* argv[])
             }
          catch(std::exception& e)
             {
-            std::cout << "Connection problem: " << e.what() << "\n";
+            std::cout << "Connection problem: " << e.what() << std::endl;
             return 1;
             }
          }
    }
    catch(std::exception& e)
       {
-      std::cout << e.what() << "\n";
+      std::cout << e.what() << std::endl;
       return 1;
       }
 
