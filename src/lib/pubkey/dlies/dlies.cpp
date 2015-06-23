@@ -50,7 +50,7 @@ std::vector<byte> DLIES_Encryptor::enc(const byte in[], size_t length,
       throw Encoding_Error("DLIES: KDF did not provide sufficient output");
    byte* C = &out[my_key.size()];
 
-   mac->set_key(&K[0], mac_keylen);
+   mac->set_key(K.data(), mac_keylen);
    xor_buf(C, &K[mac_keylen], length);
 
    mac->update(C, length);
@@ -118,7 +118,7 @@ secure_vector<byte> DLIES_Decryptor::dec(const byte msg[], size_t length) const
    if(K.size() != K_LENGTH)
       throw Encoding_Error("DLIES: KDF did not provide sufficient output");
 
-   mac->set_key(&K[0], mac_keylen);
+   mac->set_key(K.data(), mac_keylen);
    mac->update(C);
    for(size_t j = 0; j != 8; ++j)
       mac->update(0);
@@ -126,7 +126,7 @@ secure_vector<byte> DLIES_Decryptor::dec(const byte msg[], size_t length) const
    if(T != T2)
       throw Decoding_Error("DLIES: message authentication failed");
 
-   xor_buf(C, &K[0] + mac_keylen, C.size());
+   xor_buf(C, K.data() + mac_keylen, C.size());
 
    return C;
    }

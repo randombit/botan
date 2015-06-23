@@ -30,15 +30,15 @@ class mceliece_message_parts
    public:
 
       mceliece_message_parts(const secure_vector<gf2m>& err_pos, const byte* message, u32bit message_length, u32bit code_length) :
-         m_error_vector(error_vector_from_error_positions(&err_pos[0], err_pos.size(), code_length)),
+         m_error_vector(error_vector_from_error_positions(err_pos.data(), err_pos.size(), code_length)),
          m_code_length(code_length)
          {
          m_message_word.resize(message_length);
-         copy_mem(&m_message_word[0], message, message_length);
+         copy_mem(m_message_word.data(), message, message_length);
          }
 
       mceliece_message_parts(const secure_vector<gf2m>& err_pos, const secure_vector<byte>& message, unsigned code_length) :
-         m_error_vector(error_vector_from_error_positions(&err_pos[0], err_pos.size(), code_length)),
+         m_error_vector(error_vector_from_error_positions(err_pos.data(), err_pos.size(), code_length)),
          m_message_word(message),
          m_code_length(code_length)
          {}
@@ -68,17 +68,17 @@ class mceliece_message_parts
             throw Invalid_Argument("cannot split McEliece message parts");
             }
          size_t err_vec_start_pos = message_concat_errors_len - err_vec_len;
-         m_message_word = secure_vector<byte>(err_vec_start_pos );
-         copy_mem(&m_message_word[0], &message_concat_errors[0], err_vec_start_pos);
-         m_error_vector = secure_vector<byte>(err_vec_len );
-         copy_mem(&m_error_vector[0],  &message_concat_errors[err_vec_start_pos], err_vec_len);
+         m_message_word = secure_vector<byte>(err_vec_start_pos);
+         copy_mem(m_message_word.data(), message_concat_errors, err_vec_start_pos);
+         m_error_vector = secure_vector<byte>(err_vec_len);
+         copy_mem(m_error_vector.data(), &message_concat_errors[err_vec_start_pos], err_vec_len);
          }
 
       secure_vector<byte> get_concat() const
          {
          secure_vector<byte> result(m_error_vector.size() + m_message_word.size());
-         copy_mem(&result[0], &m_message_word[0], m_message_word.size());
-         copy_mem(&result[m_message_word.size()], &m_error_vector[0], m_error_vector.size());
+         copy_mem(result.data(), m_message_word.data(), m_message_word.size());
+         copy_mem(&result[m_message_word.size()], m_error_vector.data(), m_error_vector.size());
          return result;
          }
 

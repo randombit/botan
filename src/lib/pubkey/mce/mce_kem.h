@@ -44,7 +44,7 @@ class BOTAN_DLL McEliece_KEM_Decryptor
       template<typename Alloc>
       secure_vector<Botan::byte> decrypt_vec(const std::vector<byte, Alloc>& v)
          {
-         return decrypt(&v[0], v.size());
+         return decrypt(v.data(), v.size());
 
          }
    private:

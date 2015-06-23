@@ -173,7 +173,7 @@ bool PK_Verifier::check_signature(const byte sig[], size_t length)
                                                            m_op->message_part_size(),
                                                            m_op->message_parts());
 
-         return m_op->is_valid_signature(&real_sig[0], real_sig.size());
+         return m_op->is_valid_signature(real_sig.data(), real_sig.size());
          }
       else
          throw Decoding_Error("PK_Verifier: Unknown signature format " +
