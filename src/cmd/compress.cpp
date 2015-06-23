@@ -83,6 +83,12 @@ void parse_extension(const std::string& in_file,
 
 int uncompress(int argc, char* argv[])
    {
+   if(argc != 2)
+      {
+      std::cout << "Usage: " << argv[0] << " <file>" << std::endl;
+      return 1;
+      }
+
    const std::string in_file = argv[1];
    std::ifstream in(in_file);
 
