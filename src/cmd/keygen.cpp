@@ -76,6 +76,7 @@ Private_Key* gen_key(RandomNumberGenerator& rng, const std::string& algo, size_t
 
 int keygen(int argc, char* argv[])
    {
+   BOTAN_UNUSED(argc);
    OptionParser opts("algo=|bits=|passphrase=|pbe=");
    opts.parse(argv);
 

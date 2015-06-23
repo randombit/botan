@@ -193,6 +193,7 @@ void bench_algo(const std::string& algo,
 
 int speed(int argc, char* argv[])
    {
+   BOTAN_UNUSED(argc);
    OptionParser opts("seconds=|buf-size=");
    opts.parse(argv);
 
