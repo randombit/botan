@@ -155,9 +155,8 @@ std::string DataSource_Stream::id() const
 DataSource_Stream::DataSource_Stream(const std::string& path,
                                      bool use_binary) :
    identifier(path),
-   source_p(new std::ifstream(
-               path.c_str(),
-               use_binary ? std::ios::binary : std::ios::in)),
+   source_p(new std::ifstream(path,
+                              use_binary ? std::ios::binary : std::ios::in)),
    source(*source_p),
    total_read(0)
    {

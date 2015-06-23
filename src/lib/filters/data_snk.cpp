@@ -40,9 +40,8 @@ DataSink_Stream::DataSink_Stream(std::ostream& out,
 DataSink_Stream::DataSink_Stream(const std::string& path,
                                  bool use_binary) :
    identifier(path),
-   sink_p(new std::ofstream(
-             path.c_str(),
-             use_binary ? std::ios::binary : std::ios::out)),
+   sink_p(new std::ofstream(path,
+                            use_binary ? std::ios::binary : std::ios::out)),
    sink(*sink_p)
    {
    if(!sink.good())

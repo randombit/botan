@@ -42,7 +42,7 @@ int compress(int argc, char* argv[])
       }
 
    const std::string in_file = argv[1];
-   std::ifstream in(in_file.c_str());
+   std::ifstream in(in_file);
 
    if(!in.good())
       {
@@ -62,7 +62,7 @@ int compress(int argc, char* argv[])
       }
 
    const std::string out_file = in_file + "." + suffix;
-   std::ofstream out(out_file.c_str());
+   std::ofstream out(out_file);
 
    do_compress(*compress, in, out);
 
@@ -84,7 +84,7 @@ void parse_extension(const std::string& in_file,
 int uncompress(int argc, char* argv[])
    {
    const std::string in_file = argv[1];
-   std::ifstream in(in_file.c_str());
+   std::ifstream in(in_file);
 
    if(!in.good())
       {
@@ -95,7 +95,7 @@ int uncompress(int argc, char* argv[])
    std::string out_file, suffix;
    parse_extension(in_file, out_file, suffix);
 
-   std::ofstream out(out_file.c_str());
+   std::ofstream out(out_file);
 
    std::unique_ptr<Transform> decompress(make_decompressor(suffix));
 
