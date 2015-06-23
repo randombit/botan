@@ -107,7 +107,7 @@ class BOTAN_DLL PBKDF
                              const std::vector<byte, Alloc>& salt,
                              size_t iterations) const
          {
-         return pbkdf_iterations(out_len, passphrase, &salt[0], salt.size(), iterations);
+         return pbkdf_iterations(out_len, passphrase, salt.data(), salt.size(), iterations);
          }
 
       /**
@@ -143,7 +143,7 @@ class BOTAN_DLL PBKDF
                              std::chrono::milliseconds msec,
                              size_t& iterations) const
          {
-         return pbkdf_timed(out_len, passphrase, &salt[0], salt.size(), msec, iterations);
+         return pbkdf_timed(out_len, passphrase, salt.data(), salt.size(), msec, iterations);
          }
    };
 

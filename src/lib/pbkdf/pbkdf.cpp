@@ -39,7 +39,7 @@ secure_vector<byte> PBKDF::pbkdf_iterations(size_t out_len,
                                             size_t iterations) const
    {
    secure_vector<byte> out(out_len);
-   pbkdf_iterations(&out[0], out_len, passphrase, salt, salt_len, iterations);
+   pbkdf_iterations(out.data(), out_len, passphrase, salt, salt_len, iterations);
    return out;
    }
 
@@ -50,7 +50,7 @@ secure_vector<byte> PBKDF::pbkdf_timed(size_t out_len,
                                        size_t& iterations) const
    {
    secure_vector<byte> out(out_len);
-   pbkdf_timed(&out[0], out_len, passphrase, salt, salt_len, msec, iterations);
+   pbkdf_timed(out.data(), out_len, passphrase, salt, salt_len, msec, iterations);
    return out;
    }
 

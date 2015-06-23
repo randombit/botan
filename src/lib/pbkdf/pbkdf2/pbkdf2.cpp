@@ -66,9 +66,9 @@ pbkdf2(MessageAuthenticationCode& prf,
 
       prf.update(salt, salt_len);
       prf.update_be(counter++);
-      prf.final(&U[0]);
+      prf.final(U.data());
 
-      xor_buf(out, &U[0], prf_output);
+      xor_buf(out, U.data(), prf_output);
 
       if(iterations == 0)
          {
@@ -84,8 +84,8 @@ pbkdf2(MessageAuthenticationCode& prf,
          while(true)
             {
             prf.update(U);
-            prf.final(&U[0]);
-            xor_buf(out, &U[0], prf_output);
+            prf.final(U.data());
+            xor_buf(out, U.data(), prf_output);
             iterations++;
 
             /*
@@ -107,8 +107,8 @@ pbkdf2(MessageAuthenticationCode& prf,
          for(size_t i = 1; i != iterations; ++i)
             {
             prf.update(U);
-            prf.final(&U[0]);
-            xor_buf(out, &U[0], prf_output);
+            prf.final(U.data());
+            xor_buf(out, U.data(), prf_output);
             }
          }
 
