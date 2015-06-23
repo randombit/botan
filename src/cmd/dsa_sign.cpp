@@ -39,7 +39,7 @@ int dsa_sign(int argc, char* argv[])
          }
 
       std::string outfile = argv[2] + SUFFIX;
-      std::ofstream sigfile(outfile.c_str());
+      std::ofstream sigfile(outfile);
       if(!sigfile)
          {
          std::cout << "Couldn't write the signature to "

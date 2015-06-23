@@ -59,7 +59,7 @@ int base64(int argc, char* argv[])
       {
       std::istream* stream;
       if(files[j] == "-") stream = &std::cin;
-      else                stream = new std::ifstream(files[j].c_str());
+      else                stream = new std::ifstream(files[j]);
 
       if(!*stream)
          {

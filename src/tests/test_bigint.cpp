@@ -288,7 +288,7 @@ size_t is_primetest(const std::vector<std::string>& args,
 size_t test_bigint()
    {
    const std::string filename = TEST_DATA_DIR "/mp_valid.dat";
-   std::ifstream test_data(filename.c_str());
+   std::ifstream test_data(filename);
 
    if(!test_data)
       throw Botan::Stream_IO_Error("Couldn't open test file " + filename);

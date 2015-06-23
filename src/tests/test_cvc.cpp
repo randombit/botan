@@ -44,15 +44,15 @@ namespace {
 void helper_write_file(EAC_Signed_Object const& to_write, std::string const& file_path)
    {
    std::vector<byte> sv = to_write.BER_encode();
-   std::ofstream cert_file(file_path.c_str(), std::ios::binary);
+   std::ofstream cert_file(file_path, std::ios::binary);
    cert_file.write((char*)&sv[0], sv.size());
    cert_file.close();
    }
 
 bool helper_files_equal(std::string const& file_path1, std::string const& file_path2)
    {
-   std::ifstream cert_1_in(file_path1.c_str());
-   std::ifstream cert_2_in(file_path2.c_str());
+   std::ifstream cert_1_in(file_path1);
+   std::ifstream cert_2_in(file_path2);
    std::vector<byte> sv1;
    std::vector<byte> sv2;
    if (!cert_1_in || !cert_2_in)

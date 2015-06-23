@@ -14,7 +14,7 @@ namespace Botan {
 
 SRP6_Authenticator_File::SRP6_Authenticator_File(const std::string& filename)
    {
-   std::ifstream in(filename.c_str());
+   std::ifstream in(filename);
 
    if(!in)
       return; // no entries
