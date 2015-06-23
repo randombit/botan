@@ -55,7 +55,7 @@ void HMAC_RNG::clear()
    sets m_seeded to true.
    */
    std::vector<byte> prf_zero_key(m_extractor->output_length());
-   m_prf->set_key(&prf_zero_key[0], prf_zero_key.size());
+   m_prf->set_key(prf_zero_key.data(), prf_zero_key.size());
 
    /*
    Use PRF("Botan HMAC_RNG XTS") as the intitial XTS key.
@@ -77,7 +77,7 @@ void HMAC_RNG::new_K_value(byte label)
    m_prf->update_be(clock::now().time_since_epoch().count());
    m_prf->update_be(m_counter++);
    m_prf->update(label);
-   m_prf->final(&m_K[0]);
+   m_prf->final(m_K.data());
    }
 
 /*
@@ -108,7 +108,7 @@ void HMAC_RNG::randomize(byte out[], size_t length)
 
       const size_t copied = std::min<size_t>(length, max_per_prf_iter);
 
-      copy_mem(out, &m_K[0], copied);
+      copy_mem(out, m_K.data(), copied);
       out += copied;
       length -= copied;
       }
