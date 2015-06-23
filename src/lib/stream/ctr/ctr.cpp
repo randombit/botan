@@ -87,7 +87,7 @@ void CTR_BE::set_iv(const byte iv[], size_t iv_len)
             break;
       }
 
-   m_cipher->encrypt_n(&m_counter[0], &m_pad[0], n_wide);
+   m_cipher->encrypt_n(m_counter.data(), m_pad.data(), n_wide);
    m_pad_pos = 0;
    }
 
@@ -111,7 +111,7 @@ void CTR_BE::increment_counter()
          }
       }
 
-   m_cipher->encrypt_n(&m_counter[0], &m_pad[0], n_wide);
+   m_cipher->encrypt_n(m_counter.data(), m_pad.data(), n_wide);
    m_pad_pos = 0;
    }
 
