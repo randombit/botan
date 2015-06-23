@@ -56,7 +56,7 @@ std::string generate_passhash9(const std::string& pass,
    PKCS5_PBKDF2 kdf(prf); // takes ownership of pointer
 
    secure_vector<byte> salt(SALT_BYTES);
-   rng.randomize(&salt[0], salt.size());
+   rng.randomize(salt.data(), salt.size());
 
    const size_t kdf_iterations = WORK_FACTOR_SCALE * work_factor;
 
@@ -67,7 +67,7 @@ std::string generate_passhash9(const std::string& pass,
    blob += salt;
    blob += kdf.derive_key(PASSHASH9_PBKDF_OUTPUT_LEN,
                           pass,
-                          &salt[0], salt.size(),
+                          salt.data(), salt.size(),
                           kdf_iterations).bits_of();
 
    return MAGIC_PREFIX + base64_encode(blob);
@@ -123,7 +123,7 @@ bool check_passhash9(const std::string& pass, const std::string& hash)
       &bin[ALGID_BYTES + WORKFACTOR_BYTES], SALT_BYTES,
       kdf_iterations).bits_of();
 
-   return same_mem(&cmp[0],
+   return same_mem(cmp.data(),
                    &bin[ALGID_BYTES + WORKFACTOR_BYTES + SALT_BYTES],
                    PASSHASH9_PBKDF_OUTPUT_LEN);
    }

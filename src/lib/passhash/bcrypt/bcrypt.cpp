@@ -103,13 +103,13 @@ std::string make_bcrypt(const std::string& pass,
    // Include the trailing NULL byte
    blowfish.eks_key_schedule(reinterpret_cast<const byte*>(pass.c_str()),
                              pass.length() + 1,
-                             &salt[0],
+                             salt.data(),
                              work_factor);
 
    for(size_t i = 0; i != 64; ++i)
-      blowfish.encrypt_n(&ctext[0], &ctext[0], 3);
+      blowfish.encrypt_n(ctext.data(), ctext.data(), 3);
 
-   std::string salt_b64 = bcrypt_base64_encode(&salt[0], salt.size());
+   std::string salt_b64 = bcrypt_base64_encode(salt.data(), salt.size());
 
    std::string work_factor_str = std::to_string(work_factor);
    if(work_factor_str.length() == 1)
@@ -117,7 +117,7 @@ std::string make_bcrypt(const std::string& pass,
 
    return "$2a$" + work_factor_str +
           "$" + salt_b64.substr(0, 22) +
-          bcrypt_base64_encode(&ctext[0], ctext.size() - 1);
+          bcrypt_base64_encode(ctext.data(), ctext.size() - 1);
    }
 
 }
