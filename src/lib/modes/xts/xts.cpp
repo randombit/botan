@@ -103,7 +103,7 @@ void XTS_Mode::key_schedule(const byte key[], size_t length)
    if(length % 2 == 1 || !m_cipher->valid_keylength(key_half))
       throw Invalid_Key_Length(name(), length);
 
-   m_cipher->set_key(&key[0], key_half);
+   m_cipher->set_key(key, key_half);
    m_tweak_cipher->set_key(&key[key_half], key_half);
    }
 
@@ -112,8 +112,8 @@ secure_vector<byte> XTS_Mode::start_raw(const byte nonce[], size_t nonce_len)
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
 
-   copy_mem(&m_tweak[0], nonce, nonce_len);
-   m_tweak_cipher->encrypt(&m_tweak[0]);
+   copy_mem(m_tweak.data(), nonce, nonce_len);
+   m_tweak_cipher->encrypt(m_tweak.data());
 
    update_tweak(0);
 
@@ -125,7 +125,7 @@ void XTS_Mode::update_tweak(size_t which)
    const size_t BS = m_tweak_cipher->block_size();
 
    if(which > 0)
-      poly_double(&m_tweak[0], &m_tweak[(which-1)*BS], BS);
+      poly_double(m_tweak.data(), &m_tweak[(which-1)*BS], BS);
 
    const size_t blocks_in_tweak = update_granularity() / BS;
 
@@ -142,7 +142,7 @@ void XTS_Encryption::update(secure_vector<byte>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
-   byte* buf = &buffer[offset];
+   byte* buf = buffer.data() + offset;
 
    const size_t BS = cipher().block_size();
 
@@ -171,7 +171,7 @@ void XTS_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
-   byte* buf = &buffer[offset];
+   byte* buf = buffer.data() + offset;
 
    BOTAN_ASSERT(sz >= minimum_final_size(), "Have sufficient final input");
 
@@ -221,7 +221,7 @@ void XTS_Decryption::update(secure_vector<byte>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
-   byte* buf = &buffer[offset];
+   byte* buf = buffer.data() + offset;
 
    const size_t BS = cipher().block_size();
 
@@ -250,7 +250,7 @@ void XTS_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
-   byte* buf = &buffer[offset];
+   byte* buf = buffer.data() + offset;
 
    BOTAN_ASSERT(sz >= minimum_final_size(), "Have sufficient final input");
 

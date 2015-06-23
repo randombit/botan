@@ -91,7 +91,7 @@ void SIV_Mode::update(secure_vector<byte>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
-   byte* buf = &buffer[offset];
+   byte* buf = buffer.data() + offset;
 
    m_msg_buf.insert(m_msg_buf.end(), buf, buf + sz);
    buffer.resize(offset); // truncate msg
@@ -118,13 +118,13 @@ secure_vector<byte> SIV_Mode::S2V(const byte* text, size_t text_len)
    if(text_len < 16)
       {
       V = CMAC::poly_double(V);
-      xor_buf(&V[0], text, text_len);
+      xor_buf(V.data(), text, text_len);
       V[text_len] ^= 0x80;
       return m_cmac->process(V);
       }
 
    m_cmac->update(text, text_len - 16);
-   xor_buf(&V[0], &text[text_len - 16], 16);
+   xor_buf(V.data(), &text[text_len - 16], 16);
    m_cmac->update(V);
 
    return m_cmac->final();
@@ -135,7 +135,7 @@ void SIV_Mode::set_ctr_iv(secure_vector<byte> V)
    V[8] &= 0x7F;
    V[12] &= 0x7F;
 
-   ctr().set_iv(&V[0], V.size());
+   ctr().set_iv(V.data(), V.size());
    }
 
 void SIV_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
@@ -144,7 +144,7 @@ void SIV_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
 
    buffer.insert(buffer.begin() + offset, msg_buf().begin(), msg_buf().end());
 
-   secure_vector<byte> V = S2V(&buffer[offset], buffer.size() - offset);
+   secure_vector<byte> V = S2V(buffer.data() + offset, buffer.size() - offset);
 
    buffer.insert(buffer.begin() + offset, V.begin(), V.end());
 
@@ -162,15 +162,15 @@ void SIV_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
 
    BOTAN_ASSERT(sz >= tag_size(), "We have the tag");
 
-   secure_vector<byte> V(&buffer[offset], &buffer[offset + 16]);
+   secure_vector<byte> V(buffer.data() + offset, buffer.data() + offset + 16);
 
    set_ctr_iv(V);
 
-   ctr().cipher(&buffer[offset + V.size()],
-                &buffer[offset],
+   ctr().cipher(buffer.data() + offset + V.size(),
+                buffer.data() + offset,
                 buffer.size() - offset - V.size());
 
-   secure_vector<byte> T = S2V(&buffer[offset], buffer.size() - offset - V.size());
+   secure_vector<byte> T = S2V(buffer.data() + offset, buffer.size() - offset - V.size());
 
    if(T != V)
       throw Integrity_Failure("SIV tag check failed");

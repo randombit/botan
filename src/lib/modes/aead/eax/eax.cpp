@@ -100,7 +100,7 @@ secure_vector<byte> EAX_Mode::start_raw(const byte nonce[], size_t nonce_len)
 
    m_nonce_mac = eax_prf(0, block_size(), *m_cmac, nonce, nonce_len);
 
-   m_ctr->set_iv(&m_nonce_mac[0], m_nonce_mac.size());
+   m_ctr->set_iv(m_nonce_mac.data(), m_nonce_mac.size());
 
    for(size_t i = 0; i != block_size() - 1; ++i)
       m_cmac->update(0);
@@ -113,7 +113,7 @@ void EAX_Encryption::update(secure_vector<byte>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
-   byte* buf = &buffer[offset];
+   byte* buf = buffer.data() + offset;
 
    m_ctr->cipher(buf, buf, sz);
    m_cmac->update(buf, sz);
@@ -127,14 +127,14 @@ void EAX_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
    xor_buf(data_mac, m_nonce_mac, data_mac.size());
    xor_buf(data_mac, m_ad_mac, data_mac.size());
 
-   buffer += std::make_pair(&data_mac[0], tag_size());
+   buffer += std::make_pair(data_mac.data(), tag_size());
    }
 
 void EAX_Decryption::update(secure_vector<byte>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
-   byte* buf = &buffer[offset];
+   byte* buf = buffer.data() + offset;
 
    m_cmac->update(buf, sz);
    m_ctr->cipher(buf, buf, sz);
@@ -144,7 +144,7 @@ void EAX_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
-   byte* buf = &buffer[offset];
+   byte* buf = buffer.data() + offset;
 
    BOTAN_ASSERT(sz >= tag_size(), "Have the tag as part of final input");
 
@@ -162,7 +162,7 @@ void EAX_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
    mac ^= m_nonce_mac;
    mac ^= m_ad_mac;
 
-   if(!same_mem(&mac[0], included_tag, tag_size()))
+   if(!same_mem(mac.data(), included_tag, tag_size()))
       throw Integrity_Failure("EAX tag check failed");
 
    buffer.resize(offset + remaining);

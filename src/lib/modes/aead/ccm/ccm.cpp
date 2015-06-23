@@ -106,7 +106,7 @@ void CCM_Mode::update(secure_vector<byte>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
-   byte* buf = &buffer[offset];
+   byte* buf = buffer.data() + offset;
 
    m_msg_buf.insert(m_msg_buf.end(), buf, buf + sz);
    buffer.resize(offset); // truncate msg
@@ -138,7 +138,7 @@ secure_vector<byte> CCM_Mode::format_b0(size_t sz)
    const byte b_flags = (m_ad_buf.size() ? 64 : 0) + (((tag_size()/2)-1) << 3) + (L()-1);
 
    B0[0] = b_flags;
-   copy_mem(&B0[1], &m_nonce[0], m_nonce.size());
+   copy_mem(&B0[1], m_nonce.data(), m_nonce.size());
    encode_length(sz, &B0[m_nonce.size()+1]);
 
    return B0;
@@ -151,7 +151,7 @@ secure_vector<byte> CCM_Mode::format_c0()
    const byte a_flags = L()-1;
 
    C[0] = a_flags;
-   copy_mem(&C[1], &m_nonce[0], m_nonce.size());
+   copy_mem(&C[1], m_nonce.data(), m_nonce.size());
 
    return C;
    }
@@ -163,7 +163,7 @@ void CCM_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
    buffer.insert(buffer.begin() + offset, msg_buf().begin(), msg_buf().end());
 
    const size_t sz = buffer.size() - offset;
-   byte* buf = &buffer[offset];
+   byte* buf = buffer.data() + offset;
 
    const secure_vector<byte>& ad = ad_buf();
    BOTAN_ASSERT(ad.size() % BS == 0, "AD is block size multiple");
@@ -175,7 +175,7 @@ void CCM_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
 
    for(size_t i = 0; i != ad.size(); i += BS)
       {
-      xor_buf(&T[0], &ad[i], BS);
+      xor_buf(T.data(), &ad[i], BS);
       E.encrypt(T);
       }
 
@@ -192,11 +192,11 @@ void CCM_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
       {
       const size_t to_proc = std::min<size_t>(BS, buf_end - buf);
 
-      xor_buf(&T[0], buf, to_proc);
+      xor_buf(T.data(), buf, to_proc);
       E.encrypt(T);
 
       E.encrypt(C, X);
-      xor_buf(buf, &X[0], to_proc);
+      xor_buf(buf, X.data(), to_proc);
       inc(C);
 
       buf += to_proc;
@@ -204,7 +204,7 @@ void CCM_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
 
    T ^= S0;
 
-   buffer += std::make_pair(&T[0], tag_size());
+   buffer += std::make_pair(T.data(), tag_size());
    }
 
 void CCM_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
@@ -214,7 +214,7 @@ void CCM_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
    buffer.insert(buffer.begin() + offset, msg_buf().begin(), msg_buf().end());
 
    const size_t sz = buffer.size() - offset;
-   byte* buf = &buffer[offset];
+   byte* buf = buffer.data() + offset;
 
    BOTAN_ASSERT(sz >= tag_size(), "We have the tag");
 
@@ -228,7 +228,7 @@ void CCM_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
 
    for(size_t i = 0; i != ad.size(); i += BS)
       {
-      xor_buf(&T[0], &ad[i], BS);
+      xor_buf(T.data(), &ad[i], BS);
       E.encrypt(T);
       }
 
@@ -247,10 +247,10 @@ void CCM_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
       const size_t to_proc = std::min<size_t>(BS, buf_end - buf);
 
       E.encrypt(C, X);
-      xor_buf(buf, &X[0], to_proc);
+      xor_buf(buf, X.data(), to_proc);
       inc(C);
 
-      xor_buf(&T[0], buf, to_proc);
+      xor_buf(T.data(), buf, to_proc);
       E.encrypt(T);
 
       buf += to_proc;
@@ -258,7 +258,7 @@ void CCM_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
 
    T ^= S0;
 
-   if(!same_mem(&T[0], buf_end, tag_size()))
+   if(!same_mem(T.data(), buf_end, tag_size()))
       throw Integrity_Failure("CCM tag check failed");
 
    buffer.resize(buffer.size() - tag_size());

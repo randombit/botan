@@ -44,7 +44,7 @@ class BOTAN_DLL CBC_Mode : public Cipher_Mode
 
       secure_vector<byte>& state() { return m_state; }
 
-      byte* state_ptr() { return &m_state[0]; }
+      byte* state_ptr() { return m_state.data(); }
 
    private:
       secure_vector<byte> start_raw(const byte nonce[], size_t nonce_len) override;
