@@ -641,7 +641,7 @@ void copy_out_be(byte out[], size_t out_bytes, const T in[])
 template<typename T, typename Alloc>
 void copy_out_vec_be(byte out[], size_t out_bytes, const std::vector<T, Alloc>& in)
    {
-   copy_out_be(out, out_bytes, &in[0]);
+   copy_out_be(out, out_bytes, in.data());
    }
 
 template<typename T>
@@ -662,7 +662,7 @@ void copy_out_le(byte out[], size_t out_bytes, const T in[])
 template<typename T, typename Alloc>
 void copy_out_vec_le(byte out[], size_t out_bytes, const std::vector<T, Alloc>& in)
    {
-   copy_out_le(out, out_bytes, &in[0]);
+   copy_out_le(out, out_bytes, in.data());
    }
 
 }

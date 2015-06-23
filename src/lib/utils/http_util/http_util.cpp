@@ -123,7 +123,7 @@ Response http_sync(http_exch_fn http_transact,
    if(content_type != "")
       outbuf << "Content-Type: " << content_type << "\r\n";
    outbuf << "Connection: close\r\n\r\n";
-   outbuf.write(reinterpret_cast<const char*>(&body[0]), body.size());
+   outbuf.write(reinterpret_cast<const char*>(body.data()), body.size());
 
    std::istringstream io(http_transact(hostname, outbuf.str()));
 
@@ -171,8 +171,8 @@ Response http_sync(http_exch_fn http_transact,
    std::vector<byte> buf(4096);
    while(io.good())
       {
-      io.read(reinterpret_cast<char*>(&buf[0]), buf.size());
-      resp_body.insert(resp_body.end(), &buf[0], &buf[io.gcount()]);
+      io.read(reinterpret_cast<char*>(buf.data()), buf.size());
+      resp_body.insert(resp_body.end(), buf.data(), &buf[io.gcount()]);
       }
 
    const std::string header_size = search_map(headers, std::string("Content-Length"));

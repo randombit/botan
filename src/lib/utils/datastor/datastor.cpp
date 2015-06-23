@@ -141,12 +141,12 @@ void Data_Store::add(const std::string& key, u32bit val)
 */
 void Data_Store::add(const std::string& key, const secure_vector<byte>& val)
    {
-   add(key, hex_encode(&val[0], val.size()));
+   add(key, hex_encode(val.data(), val.size()));
    }
 
 void Data_Store::add(const std::string& key, const std::vector<byte>& val)
    {
-   add(key, hex_encode(&val[0], val.size()));
+   add(key, hex_encode(val.data(), val.size()));
    }
 
 /*
