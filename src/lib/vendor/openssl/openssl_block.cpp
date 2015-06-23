@@ -113,8 +113,8 @@ void OpenSSL_BlockCipher::key_schedule(const byte key[], size_t length)
          throw Invalid_Argument("OpenSSL_BlockCipher: Bad key length for " +
                                 cipher_name);
 
-   EVP_EncryptInit_ex(&encrypt, nullptr, nullptr, &full_key[0], nullptr);
-   EVP_DecryptInit_ex(&decrypt, nullptr, nullptr, &full_key[0], nullptr);
+   EVP_EncryptInit_ex(&encrypt, nullptr, nullptr, full_key.data(), nullptr);
+   EVP_DecryptInit_ex(&decrypt, nullptr, nullptr, full_key.data(), nullptr);
    }
 
 /*
