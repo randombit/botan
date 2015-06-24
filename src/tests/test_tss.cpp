@@ -48,6 +48,8 @@ size_t test_tss()
       ++fails;
       }
 
+   test_report("TSS", 2, fails);
+
    return fails;
    }
 #else
