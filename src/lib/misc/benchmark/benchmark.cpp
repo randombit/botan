@@ -51,7 +51,7 @@ time_algorithm_ops(const std::string& name,
    const size_t Mebibyte = 1024*1024;
 
    secure_vector<byte> buffer(buf_size * 1024);
-   rng.randomize(&buffer[0], buffer.size());
+   rng.randomize(buffer.data(), buffer.size());
 
    const double mb_mult = buffer.size() / static_cast<double>(Mebibyte);
 

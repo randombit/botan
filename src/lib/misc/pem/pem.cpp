@@ -123,7 +123,7 @@ bool matches(DataSource& source, const std::string& extra,
    const std::string PEM_HEADER = "-----BEGIN " + extra;
 
    secure_vector<byte> search_buf(search_range);
-   size_t got = source.peek(&search_buf[0], search_buf.size(), 0);
+   size_t got = source.peek(search_buf.data(), search_buf.size(), 0);
 
    if(got < PEM_HEADER.length())
       return false;

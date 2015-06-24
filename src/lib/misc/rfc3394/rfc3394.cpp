@@ -34,7 +34,7 @@ secure_vector<byte> rfc3394_keywrap(const secure_vector<byte>& key,
    for(size_t i = 0; i != 8; ++i)
       A[i] = 0xA6;
 
-   copy_mem(&R[8], &key[0], key.size());
+   copy_mem(&R[8], key.data(), key.size());
 
    for(size_t j = 0; j <= 5; ++j)
       {
@@ -44,16 +44,16 @@ secure_vector<byte> rfc3394_keywrap(const secure_vector<byte>& key,
 
          copy_mem(&A[8], &R[8*i], 8);
 
-         aes->encrypt(&A[0]);
+         aes->encrypt(A.data());
          copy_mem(&R[8*i], &A[8], 8);
 
          byte t_buf[4] = { 0 };
          store_be(t, t_buf);
-         xor_buf(&A[4], &t_buf[0], 4);
+         xor_buf(&A[4], t_buf, 4);
          }
       }
 
-   copy_mem(&R[0], &A[0], 8);
+   copy_mem(R.data(), A.data(), 8);
 
    return R;
    }
@@ -78,7 +78,7 @@ secure_vector<byte> rfc3394_keyunwrap(const secure_vector<byte>& key,
    for(size_t i = 0; i != 8; ++i)
       A[i] = key[i];
 
-   copy_mem(&R[0], &key[8], key.size() - 8);
+   copy_mem(R.data(), &key[8], key.size() - 8);
 
    for(size_t j = 0; j <= 5; ++j)
       {
@@ -89,17 +89,17 @@ secure_vector<byte> rfc3394_keyunwrap(const secure_vector<byte>& key,
          byte t_buf[4] = { 0 };
          store_be(t, t_buf);
 
-         xor_buf(&A[4], &t_buf[0], 4);
+         xor_buf(&A[4], t_buf, 4);
 
          copy_mem(&A[8], &R[8*(i-1)], 8);
 
-         aes->decrypt(&A[0]);
+         aes->decrypt(A.data());
 
          copy_mem(&R[8*(i-1)], &A[8], 8);
          }
       }
 
-   if(load_be<u64bit>(&A[0], 0) != 0xA6A6A6A6A6A6A6A6)
+   if(load_be<u64bit>(A.data(), 0) != 0xA6A6A6A6A6A6A6A6)
       throw Integrity_Failure("NIST key unwrap failed");
 
    return R;
