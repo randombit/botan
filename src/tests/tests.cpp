@@ -55,6 +55,7 @@ size_t run_tests(const std::vector<test_fn>& tests)
          }
       }
 
+   // Summary for test suite
    test_report("Tests", 0, fails);
 
    return fails;
