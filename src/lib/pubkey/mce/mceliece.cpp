@@ -60,7 +60,7 @@ std::vector<byte> mult_by_pubkey(const byte *cleartext,
    u32bit dimension = code_length - codimension;
    std::vector<byte> cR(bit_size_to_32bit_size(codimension)* sizeof(u32bit));
 
-   const byte* pt = &public_matrix[0];
+   const byte* pt = public_matrix.data();
 
    for(i = 0; i < dimension / 8; ++i)
       {
@@ -68,7 +68,7 @@ std::vector<byte> mult_by_pubkey(const byte *cleartext,
          {
          if(cleartext[i] & (1 << j))
             {
-            xor_buf(&cR[0], pt, cR.size());
+            xor_buf(cR.data(), pt, cR.size());
             }
          pt += bit_size_to_32bit_size(codimension) * sizeof(u32bit);
          }
@@ -78,12 +78,12 @@ std::vector<byte> mult_by_pubkey(const byte *cleartext,
       {
       if(cleartext[i] & (1 << j))
          {
-         xor_buf(&cR[0], pt, bit_size_to_byte_size(codimension));
+         xor_buf(cR.data(), pt, bit_size_to_byte_size(codimension));
          }
       pt += bit_size_to_32bit_size(codimension) * sizeof(u32bit);
       }
 
-   concat_vectors( &ciphertext[0],  cleartext, &cR[0], dimension, codimension);
+   concat_vectors(ciphertext.data(), cleartext, cR.data(), dimension, codimension);
    return ciphertext;
    }
 
@@ -150,7 +150,7 @@ secure_vector<byte> McEliece_Public_Operation::encrypt(const byte msg[], size_t 
 
    std::vector<byte> ciphertext_tmp = mceliece_encrypt( message_word,  m_pub_key.get_public_matrix(), err_pos, m_code_length);
 
-   copy_mem(&ciphertext[0], &ciphertext_tmp[0], ciphertext.size());
+   copy_mem(ciphertext.data(), ciphertext_tmp.data(), ciphertext.size());
    return ciphertext;
    }
 
@@ -159,7 +159,7 @@ std::vector<byte> mceliece_encrypt(const secure_vector<byte> & cleartext,
                                    const secure_vector<gf2m> & err_pos,
                                    u32bit code_length)
    {
-   std::vector<byte> ciphertext = mult_by_pubkey(&cleartext[0], public_matrix, code_length, err_pos.size());
+   std::vector<byte> ciphertext = mult_by_pubkey(cleartext.data(), public_matrix, code_length, err_pos.size());
 
    // flip t error positions
    for(size_t i = 0; i < err_pos.size(); ++i)

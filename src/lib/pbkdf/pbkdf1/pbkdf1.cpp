@@ -45,12 +45,12 @@ size_t PKCS5_PBKDF1::pbkdf(byte output_buf[], size_t output_len,
          break;
 
       m_hash->update(key);
-      m_hash->final(&key[0]);
+      m_hash->final(key.data());
 
       ++iterations_performed;
       }
 
-   copy_mem(output_buf, &key[0], output_len);
+   copy_mem(output_buf, key.data(), output_len);
    return iterations_performed;
    }
 

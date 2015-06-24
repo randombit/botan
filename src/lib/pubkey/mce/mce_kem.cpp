@@ -21,7 +21,7 @@ McEliece_KEM_Encryptor::encrypt(RandomNumberGenerator& rng)
    {
    const McEliece_PublicKey& key = m_raw_pub_op.get_key();
    secure_vector<Botan::byte> plaintext((key.get_message_word_bit_length()+7)/8);
-   rng.randomize(&plaintext[0], plaintext.size() );
+   rng.randomize(plaintext.data(), plaintext.size());
 
    // unset unused bits in the last plaintext byte
    u32bit used = key.get_message_word_bit_length() % 8;
@@ -39,7 +39,7 @@ McEliece_KEM_Encryptor::encrypt(RandomNumberGenerator& rng)
    SHA_512 hash;
    hash.update(message_and_error_input);
    secure_vector<byte> sym_key = hash.final();
-   secure_vector<byte> ciphertext = m_raw_pub_op.encrypt(&message_and_error_input[0],
+   secure_vector<byte> ciphertext = m_raw_pub_op.encrypt(message_and_error_input.data(),
                                                          message_and_error_input.size(), rng);
 
    return std::make_pair(ciphertext, sym_key);
@@ -53,7 +53,7 @@ McEliece_KEM_Decryptor::McEliece_KEM_Decryptor(const McEliece_PrivateKey& mce_ke
 
 secure_vector<Botan::byte> McEliece_KEM_Decryptor::decrypt(const byte msg[], size_t msg_len)
    {
-   secure_vector<Botan::byte> message_and_error = m_raw_priv_op.decrypt(&msg[0], msg_len );
+   secure_vector<Botan::byte> message_and_error = m_raw_priv_op.decrypt(msg, msg_len);
 
    SHA_512 hash;
    hash.update(message_and_error);

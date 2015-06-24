@@ -70,7 +70,7 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
       std::swap(bits[part_size+i], bits[2*part_size-1-i]);
       }
 
-   BigInt x(&bits[0], part_size);
+   BigInt x(bits.data(), part_size);
    BigInt y(&bits[part_size], part_size);
 
    public_key = PointGFp(domain().get_curve(), x, y);
@@ -88,7 +88,7 @@ BigInt decode_le(const byte msg[], size_t msg_len)
    for(size_t i = 0; i != msg_le.size() / 2; ++i)
       std::swap(msg_le[i], msg_le[msg_le.size()-1-i]);
 
-   return BigInt(&msg_le[0], msg_le.size());
+   return BigInt(msg_le.data(), msg_le.size());
    }
 
 /**

@@ -37,7 +37,7 @@ secure_vector<byte> PK_Ops::Encryption_with_EME::encrypt(const byte msg[], size_
    if(8*(encoded.size() - 1) + high_bit(encoded[0]) > max_raw)
       throw std::runtime_error("Input is too large to encrypt with this key");
 
-   return raw_encrypt(&encoded[0], encoded.size(), rng);
+   return raw_encrypt(encoded.data(), encoded.size(), rng);
    }
 
 PK_Ops::Decryption_with_EME::Decryption_with_EME(const std::string& eme)
@@ -95,7 +95,7 @@ secure_vector<byte> PK_Ops::Signature_with_EMSA::sign(RandomNumberGenerator& rng
    {
    const secure_vector<byte> msg = m_emsa->raw_data();
    const auto padded = m_emsa->encoding_of(msg, this->max_input_bits(), rng);
-   return raw_sign(&padded[0], padded.size(), rng);
+   return raw_sign(padded.data(), padded.size(), rng);
    }
 
 PK_Ops::Verification_with_EMSA::Verification_with_EMSA(const std::string& emsa)
@@ -125,7 +125,7 @@ bool PK_Ops::Verification_with_EMSA::is_valid_signature(const byte sig[], size_t
       {
       Null_RNG rng;
       secure_vector<byte> encoded = m_emsa->encoding_of(msg, max_input_bits(), rng);
-      return verify(&encoded[0], encoded.size(), sig, sig_len);
+      return verify(encoded.data(), encoded.size(), sig, sig_len);
       }
    }
 

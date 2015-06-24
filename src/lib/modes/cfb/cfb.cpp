@@ -87,7 +87,7 @@ void CFB_Encryption::update(secure_vector<byte>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    size_t sz = buffer.size() - offset;
-   byte* buf = &buffer[offset];
+   byte* buf = buffer.data() + offset;
 
    const size_t BS = cipher().block_size();
 
@@ -97,11 +97,11 @@ void CFB_Encryption::update(secure_vector<byte>& buffer, size_t offset)
    while(sz)
       {
       const size_t took = std::min(shift, sz);
-      xor_buf(&buf[0], &keystream_buf()[0], took);
+      xor_buf(buf, &keystream_buf()[0], took);
 
       // Assumes feedback-sized block except for last input
-      copy_mem(&state[0], &state[shift], BS - shift);
-      copy_mem(&state[BS-shift], &buf[0], took);
+      copy_mem(state.data(), &state[shift], BS - shift);
+      copy_mem(&state[BS-shift], buf, took);
       cipher().encrypt(state, keystream_buf());
 
       buf += took;
@@ -118,7 +118,7 @@ void CFB_Decryption::update(secure_vector<byte>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    size_t sz = buffer.size() - offset;
-   byte* buf = &buffer[offset];
+   byte* buf = buffer.data() + offset;
 
    const size_t BS = cipher().block_size();
 
@@ -130,11 +130,11 @@ void CFB_Decryption::update(secure_vector<byte>& buffer, size_t offset)
       const size_t took = std::min(shift, sz);
 
       // first update shift register with ciphertext
-      copy_mem(&state[0], &state[shift], BS - shift);
-      copy_mem(&state[BS-shift], &buf[0], took);
+      copy_mem(state.data(), &state[shift], BS - shift);
+      copy_mem(&state[BS-shift], buf, took);
 
       // then decrypt
-      xor_buf(&buf[0], &keystream_buf()[0], took);
+      xor_buf(buf, &keystream_buf()[0], took);
 
       // then update keystream
       cipher().encrypt(state, keystream_buf());

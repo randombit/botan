@@ -63,7 +63,7 @@ secure_vector<byte> ChaCha20Poly1305_Mode::start_raw(const byte nonce[], size_t 
    secure_vector<byte> zeros(64);
    m_chacha->encrypt(zeros);
 
-   m_poly1305->set_key(&zeros[0], 32);
+   m_poly1305->set_key(zeros.data(), 32);
    // Remainder of output is discard
 
    m_poly1305->update(m_ad);
@@ -85,7 +85,7 @@ void ChaCha20Poly1305_Encryption::update(secure_vector<byte>& buffer, size_t off
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
-   byte* buf = &buffer[offset];
+   byte* buf = buffer.data() + offset;
 
    m_chacha->cipher1(buf, sz);
    m_poly1305->update(buf, sz); // poly1305 of ciphertext
@@ -104,7 +104,7 @@ void ChaCha20Poly1305_Encryption::finish(secure_vector<byte>& buffer, size_t off
    update_len(m_ctext_len);
 
    const secure_vector<byte> mac = m_poly1305->final();
-   buffer += std::make_pair(&mac[0], tag_size());
+   buffer += std::make_pair(mac.data(), tag_size());
    m_ctext_len = 0;
    }
 
@@ -112,7 +112,7 @@ void ChaCha20Poly1305_Decryption::update(secure_vector<byte>& buffer, size_t off
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
-   byte* buf = &buffer[offset];
+   byte* buf = buffer.data() + offset;
 
    m_poly1305->update(buf, sz); // poly1305 of ciphertext
    m_chacha->cipher1(buf, sz);
@@ -123,7 +123,7 @@ void ChaCha20Poly1305_Decryption::finish(secure_vector<byte>& buffer, size_t off
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
-   byte* buf = &buffer[offset];
+   byte* buf = buffer.data() + offset;
 
    BOTAN_ASSERT(sz >= tag_size(), "Have the tag as part of final input");
 
@@ -150,7 +150,7 @@ void ChaCha20Poly1305_Decryption::finish(secure_vector<byte>& buffer, size_t off
 
    m_ctext_len = 0;
 
-   if(!same_mem(&mac[0], included_tag, tag_size()))
+   if(!same_mem(mac.data(), included_tag, tag_size()))
       throw Integrity_Failure("ChaCha20Poly1305 tag check failed");
    buffer.resize(offset + remaining);
    }

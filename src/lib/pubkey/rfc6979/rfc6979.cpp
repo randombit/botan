@@ -35,19 +35,19 @@ RFC6979_Nonce_Generator::RFC6979_Nonce_Generator(const std::string& hash,
    m_rng_in(m_rlen * 2),
    m_rng_out(m_rlen)
    {
-   BigInt::encode_1363(&m_rng_in[0], m_rlen, x);
+   BigInt::encode_1363(m_rng_in.data(), m_rlen, x);
    }
 
 const BigInt& RFC6979_Nonce_Generator::nonce_for(const BigInt& m)
    {
    BigInt::encode_1363(&m_rng_in[m_rlen], m_rlen, m);
    m_hmac_drbg->clear();
-   m_hmac_drbg->add_entropy(&m_rng_in[0], m_rng_in.size());
+   m_hmac_drbg->add_entropy(m_rng_in.data(), m_rng_in.size());
 
    do
       {
-      m_hmac_drbg->randomize(&m_rng_out[0], m_rng_out.size());
-      m_k.binary_decode(&m_rng_out[0], m_rng_out.size());
+      m_hmac_drbg->randomize(m_rng_out.data(), m_rng_out.size());
+      m_k.binary_decode(m_rng_out.data(), m_rng_out.size());
       m_k >>= (8*m_rlen - m_qlen);
       }
    while(m_k == 0 || m_k >= m_order);
