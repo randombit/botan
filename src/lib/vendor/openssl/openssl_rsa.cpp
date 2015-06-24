@@ -61,7 +61,7 @@ class OpenSSL_RSA_Encryption_Operation : public PK_Ops::Encryption
          m_openssl_rsa(nullptr, ::RSA_free), m_padding(pad)
          {
          const std::vector<byte> der = rsa.x509_subject_public_key();
-         const byte* der_ptr = &der[0];
+         const byte* der_ptr = der.data();
          m_openssl_rsa.reset(d2i_RSAPublicKey(nullptr, &der_ptr, der.size()));
          if(!m_openssl_rsa)
             throw OpenSSL_Error("d2i_RSAPublicKey");
@@ -76,7 +76,7 @@ class OpenSSL_RSA_Encryption_Operation : public PK_Ops::Encryption
          {
 
          secure_vector<byte> buf(::RSA_size(m_openssl_rsa.get()));
-         int rc = ::RSA_public_encrypt(msg_len, msg, &buf[0], m_openssl_rsa.get(), m_padding);
+         int rc = ::RSA_public_encrypt(msg_len, msg, buf.data(), m_openssl_rsa.get(), m_padding);
          if(rc < 0)
             throw OpenSSL_Error("RSA_public_encrypt");
          return buf;
@@ -112,7 +112,7 @@ class OpenSSL_RSA_Decryption_Operation : public PK_Ops::Decryption
          m_openssl_rsa(nullptr, ::RSA_free), m_padding(pad)
          {
          const secure_vector<byte> der = rsa.pkcs8_private_key();
-         const byte* der_ptr = &der[0];
+         const byte* der_ptr = der.data();
          m_openssl_rsa.reset(d2i_RSAPrivateKey(nullptr, &der_ptr, der.size()));
          if(!m_openssl_rsa)
             throw OpenSSL_Error("d2i_RSAPrivateKey");
@@ -125,7 +125,7 @@ class OpenSSL_RSA_Decryption_Operation : public PK_Ops::Decryption
       secure_vector<byte> decrypt(const byte msg[], size_t msg_len) override
          {
          secure_vector<byte> buf(::RSA_size(m_openssl_rsa.get()));
-         int rc = ::RSA_private_decrypt(msg_len, msg, &buf[0], m_openssl_rsa.get(), m_padding);
+         int rc = ::RSA_private_decrypt(msg_len, msg, buf.data(), m_openssl_rsa.get(), m_padding);
          if(rc < 0 || static_cast<size_t>(rc) > buf.size())
             throw OpenSSL_Error("RSA_private_decrypt");
          buf.resize(rc);

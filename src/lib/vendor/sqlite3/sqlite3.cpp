@@ -94,7 +94,7 @@ void Sqlite3_Database::Sqlite3_Statement::bind(int column, std::chrono::system_c
 
 void Sqlite3_Database::Sqlite3_Statement::bind(int column, const std::vector<byte>& val)
    {
-   int rc = ::sqlite3_bind_blob(m_stmt, column, &val[0], val.size(), SQLITE_TRANSIENT);
+   int rc = ::sqlite3_bind_blob(m_stmt, column, val.data(), val.size(), SQLITE_TRANSIENT);
    if(rc != SQLITE_OK)
       throw std::runtime_error("sqlite3_bind_text failed, code " + std::to_string(rc));
    }
