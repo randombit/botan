@@ -282,6 +282,7 @@ def process_command_line(args):
 
     modes = ['release', 'debug', 'coverage']
     build_group.add_option('--build-mode', default='release', metavar='MODE',
+                           choices=modes,
                            help="Build mode (one of %s; default %%default)" % (', '.join(modes)))
 
     build_group.add_option('--debug-mode', action='store_const',
@@ -290,7 +291,7 @@ def process_command_line(args):
 
     build_group.add_option('--enable-shared', dest='build_shared_lib',
                            action='store_true', default=True,
-                            help=optparse.SUPPRESS_HELP)
+                           help=optparse.SUPPRESS_HELP)
     build_group.add_option('--disable-shared', dest='build_shared_lib',
                            action='store_false',
                            help='disable building shared library')
@@ -324,8 +325,10 @@ def process_command_line(args):
     build_group.add_option('--link-method', default=None, metavar='METHOD',
                            help='choose how links are created')
 
+    makefile_styles = ['gmake', 'nmake']
     build_group.add_option('--makefile-style', metavar='STYLE', default=None,
-                           help='makefile type (gmake or nmake)')
+                           choices=makefile_styles,
+                           help='makefile type (%s)' % ' or '.join(makefile_styles))
 
     build_group.add_option('--with-local-config',
                            dest='local_config', metavar='FILE',
@@ -356,6 +359,7 @@ def process_command_line(args):
     build_group.add_option('--maintainer-mode', dest='maintainer_mode',
                            action='store_true', default=False,
                            help="Enable extra warnings")
+
     build_group.add_option('--dirty-tree', dest='clean_build_tree',
                            action='store_false', default=True,
                            help=optparse.SUPPRESS_HELP)
