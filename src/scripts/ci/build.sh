@@ -3,9 +3,9 @@
 set -ev
 
 if [ "$BUILD_MODE" = "static" ]; then
-    CFG_FLAGS="--disable-shared --via-amalgamation"
+   CFG_FLAGS="--disable-shared --via-amalgamation"
 elif [ "$BUILD_MODE" = "shared" ]; then
-   CFG_FLAGS="--build-mode=shared"
+   CFG_FLAGS=""
 elif [ "$BUILD_MODE" = "coverage" ]; then
    # lcov gets confused by symlinks
    CFG_FLAGS="--build-mode=coverage --link-method=copy"
