@@ -81,7 +81,7 @@ int keygen(int argc, char* argv[])
    opts.parse(argv);
 
    const std::string algo = opts.value_or_else("algo", "rsa");
-   const size_t bits = opts.int_value_or_else("bits", 1024);
+   const size_t bits = opts.int_value_or_else("bits", 2048);
    const std::string pass = opts.value_or_else("passphrase", "");
    const std::string pbe = opts.value_or_else("pbe", "");
 
