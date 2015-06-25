@@ -28,7 +28,7 @@ size_t KDF2::kdf(byte key[], size_t key_len,
       m_hash->final(h);
 
       const size_t added = std::min(h.size(), key_len - offset);
-      copy_mem(&key[offset], &h[0], added);
+      copy_mem(&key[offset], h.data(), added);
       offset += added;
       }
 

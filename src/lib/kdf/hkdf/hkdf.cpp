@@ -41,7 +41,7 @@ size_t HKDF::kdf(byte out[], size_t out_len,
       m_prf->final(h);
 
       const size_t written = std::min(h.size(), out_len - offset);
-      copy_mem(&out[offset], &h[0], written);
+      copy_mem(&out[offset], h.data(), written);
       offset += written;
       }
 

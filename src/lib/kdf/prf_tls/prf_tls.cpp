@@ -64,7 +64,7 @@ void P_hash(byte out[], size_t out_len,
       mac.final(h);
 
       const size_t writing = std::min(h.size(), out_len - offset);
-      xor_buf(&out[offset], &h[0], writing);
+      xor_buf(&out[offset], h.data(), writing);
       offset += writing;
       }
    }

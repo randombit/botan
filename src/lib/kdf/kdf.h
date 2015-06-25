@@ -45,7 +45,7 @@ class BOTAN_DLL KDF
                                     size_t salt_len) const
          {
          secure_vector<byte> key(key_len);
-         key.resize(kdf(&key[0], key.size(), secret, secret_len, salt, salt_len));
+         key.resize(kdf(key.data(), key.size(), secret, secret_len, salt, salt_len));
          return key;
          }
 
@@ -59,7 +59,7 @@ class BOTAN_DLL KDF
                                     const secure_vector<byte>& secret,
                                     const std::string& salt = "") const
          {
-         return derive_key(key_len, &secret[0], secret.size(),
+         return derive_key(key_len, secret.data(), secret.size(),
                            reinterpret_cast<const byte*>(salt.data()),
                            salt.length());
          }
@@ -76,8 +76,8 @@ class BOTAN_DLL KDF
                                      const std::vector<byte, Alloc2>& salt) const
          {
          return derive_key(key_len,
-                           &secret[0], secret.size(),
-                           &salt[0], salt.size());
+                           secret.data(), secret.size(),
+                           salt.data(), salt.size());
          }
 
       /**
@@ -93,7 +93,7 @@ class BOTAN_DLL KDF
                                     size_t salt_len) const
          {
          return derive_key(key_len,
-                           &secret[0], secret.size(),
+                           secret.data(), secret.size(),
                            salt, salt_len);
          }
 
