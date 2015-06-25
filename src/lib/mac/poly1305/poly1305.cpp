@@ -132,10 +132,10 @@ void poly1305_finish(secure_vector<u64bit>& X, byte mac[16])
    h0 = ((h0      ) | (h1 << 44));
    h1 = ((h1 >> 20) | (h2 << 24));
 
-   store_le(&mac[0], h0, h1);
+   store_le(mac, h0, h1);
 
    /* zero out the state */
-   clear_mem(&X[0], X.size());
+   clear_mem(X.data(), X.size());
    }
 
 }
@@ -166,7 +166,7 @@ void Poly1305::add_data(const byte input[], size_t length)
 
       if(m_buf_pos + length >= m_buf.size())
          {
-         poly1305_blocks(m_poly, &m_buf[0], 1);
+         poly1305_blocks(m_poly, m_buf.data(), 1);
          input += (m_buf.size() - m_buf_pos);
          length -= (m_buf.size() - m_buf_pos);
          m_buf_pos = 0;
@@ -191,7 +191,7 @@ void Poly1305::final_result(byte out[])
       {
       m_buf[m_buf_pos] = 1;
       clear_mem(&m_buf[m_buf_pos+1], m_buf.size() - m_buf_pos - 1);
-      poly1305_blocks(m_poly, &m_buf[0], 1, true);
+      poly1305_blocks(m_poly, m_buf.data(), 1, true);
       }
 
    poly1305_finish(m_poly, out);
