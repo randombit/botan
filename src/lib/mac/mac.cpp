@@ -20,7 +20,7 @@ bool MessageAuthenticationCode::verify_mac(const byte mac[], size_t length)
    if(our_mac.size() != length)
       return false;
 
-   return same_mem(&our_mac[0], &mac[0], length);
+   return same_mem(our_mac.data(), mac, length);
    }
 
 }

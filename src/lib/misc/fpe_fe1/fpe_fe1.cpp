@@ -103,10 +103,10 @@ FPE_Encryptor::FPE_Encryptor(const SymmetricKey& key,
       throw std::runtime_error("N is too large for FPE encryption");
 
    mac->update_be(static_cast<u32bit>(n_bin.size()));
-   mac->update(&n_bin[0], n_bin.size());
+   mac->update(n_bin.data(), n_bin.size());
 
    mac->update_be(static_cast<u32bit>(tweak.size()));
-   mac->update(&tweak[0], tweak.size());
+   mac->update(tweak.data(), tweak.size());
 
    mac_n_t = unlock(mac->final());
    }
@@ -119,10 +119,10 @@ BigInt FPE_Encryptor::operator()(size_t round_no, const BigInt& R)
    mac->update_be(static_cast<u32bit>(round_no));
 
    mac->update_be(static_cast<u32bit>(r_bin.size()));
-   mac->update(&r_bin[0], r_bin.size());
+   mac->update(r_bin.data(), r_bin.size());
 
    secure_vector<byte> X = mac->final();
-   return BigInt(&X[0], X.size());
+   return BigInt(X.data(), X.size());
    }
 
 }

@@ -22,7 +22,7 @@ size_t KDF1::kdf(byte key[], size_t key_len,
    if(key_len < m_hash->output_length())
       {
       secure_vector<byte> v = m_hash->final();
-      copy_mem(key, &v[0], key_len);
+      copy_mem(key, v.data(), key_len);
       return key_len;
       }
 

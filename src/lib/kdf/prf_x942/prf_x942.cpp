@@ -70,7 +70,7 @@ size_t X942_PRF::kdf(byte key[], size_t key_len,
 
       hash->final(h);
       const size_t copied = std::min(h.size(), key_len - offset);
-      copy_mem(&key[offset], &h[0], copied);
+      copy_mem(&key[offset], h.data(), copied);
       offset += copied;
 
       ++counter;

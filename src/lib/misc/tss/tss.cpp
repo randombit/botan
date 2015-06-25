@@ -118,7 +118,7 @@ byte RTSS_Share::share_id() const
 
 std::string RTSS_Share::to_string() const
    {
-   return hex_encode(&contents[0], contents.size());
+   return hex_encode(contents.data(), contents.size());
    }
 
 std::vector<RTSS_Share>
@@ -155,7 +155,7 @@ RTSS_Share::split(byte M, byte N,
    for(size_t i = 0; i != secret.size(); ++i)
       {
       std::vector<byte> coefficients(M-1);
-      rng.randomize(&coefficients[0], coefficients.size());
+      rng.randomize(coefficients.data(), coefficients.size());
 
       for(byte j = 0; j != N; ++j)
          {
@@ -248,14 +248,14 @@ RTSS_Share::reconstruct(const std::vector<RTSS_Share>& shares)
    if(secret.size() != secret_len + hash->output_length())
       throw Decoding_Error("Bad length in RTSS output");
 
-   hash->update(&secret[0], secret_len);
+   hash->update(secret.data(), secret_len);
    secure_vector<byte> hash_check = hash->final();
 
-   if(!same_mem(&hash_check[0],
+   if(!same_mem(hash_check.data(),
                 &secret[secret_len], hash->output_length()))
       throw Decoding_Error("RTSS hash check failed");
 
-   return secure_vector<byte>(&secret[0], &secret[secret_len]);
+   return secure_vector<byte>(secret.cbegin(), secret.cbegin() + secret_len);
    }
 
 }
