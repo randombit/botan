@@ -48,7 +48,7 @@ void MDx_HashFunction::add_data(const byte input[], size_t length)
 
       if(position + length >= buffer.size())
          {
-         compress_n(&buffer[0], 1);
+         compress_n(buffer.data(), 1);
          input += (buffer.size() - position);
          length -= (buffer.size() - position);
          position = 0;
@@ -76,13 +76,13 @@ void MDx_HashFunction::final_result(byte output[])
 
    if(position >= buffer.size() - COUNT_SIZE)
       {
-      compress_n(&buffer[0], 1);
+      compress_n(buffer.data(), 1);
       zeroise(buffer);
       }
 
    write_count(&buffer[buffer.size() - COUNT_SIZE]);
 
-   compress_n(&buffer[0], 1);
+   compress_n(buffer.data(), 1);
    copy_out(output);
    clear();
    }

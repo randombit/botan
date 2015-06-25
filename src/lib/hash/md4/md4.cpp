@@ -52,7 +52,7 @@ void MD4::compress_n(const byte input[], size_t blocks)
 
    for(size_t i = 0; i != blocks; ++i)
       {
-      load_le(&M[0], input, M.size());
+      load_le(M.data(), input, M.size());
 
       FF(A,B,C,D,M[ 0], 3);   FF(D,A,B,C,M[ 1], 7);
       FF(C,D,A,B,M[ 2],11);   FF(B,C,D,A,M[ 3],19);

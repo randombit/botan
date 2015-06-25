@@ -171,7 +171,7 @@ void Keccak_1600::add_data(const byte input[], size_t length)
 
       if(S_pos == bitrate / 8)
          {
-         keccak_f_1600(&S[0]);
+         keccak_f_1600(S.data());
          S_pos = 0;
          }
       }
@@ -184,7 +184,7 @@ void Keccak_1600::final_result(byte output[])
    padding[0] = 0x01;
    padding[padding.size()-1] |= 0x80;
 
-   add_data(&padding[0], padding.size());
+   add_data(padding.data(), padding.size());
 
    /*
    * We never have to run the permutation again because we only support
