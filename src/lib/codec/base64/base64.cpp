@@ -84,9 +84,14 @@ std::string base64_encode(const byte input[],
    std::string output(output_length, 0);
 
    size_t consumed = 0;
-   size_t produced = base64_encode(&output[0],
-                                   input, input_length,
-                                   consumed, true);
+   size_t produced = 0;
+   
+   if (output_length > 0)
+   {
+      produced = base64_encode(&output.front(),
+                               input, input_length,
+                               consumed, true);
+   }
 
    BOTAN_ASSERT_EQUAL(consumed, input_length, "Consumed the entire input");
    BOTAN_ASSERT_EQUAL(produced, output.size(), "Produced expected size");
@@ -232,7 +237,7 @@ secure_vector<byte> base64_decode(const char input[],
            : (round_up<size_t>(input_length, 4) * 3) / 4;
    secure_vector<byte> bin(output_length);
 
-   size_t written = base64_decode(&bin[0],
+   size_t written = base64_decode(bin.data(),
                                   input,
                                   input_length,
                                   ignore_ws);
