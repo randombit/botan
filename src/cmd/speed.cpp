@@ -4,16 +4,20 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "speed.h"
 #include "apps.h"
+
+#if defined(BOTAN_HAS_RUNTIME_BENCHMARKING)
+
+#include "speed.h"
 #include <iostream>
 #include <iomanip>
 
 #include <botan/benchmark.h>
-#include <botan/aead.h>
 #include <botan/auto_rng.h>
+#include <botan/cipher_mode.h>
 #include <botan/parsing.h>
 #include <botan/symkey.h>
+#include <botan/transform.h>
 #include <botan/hex.h>
 
 #include <chrono>
@@ -188,7 +192,9 @@ void bench_algo(const std::string& algo,
       return;
       }
 
+#if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
    bench_pk(rng, algo, seconds);
+#endif
    }
 
 int speed(int argc, char* argv[])
@@ -242,3 +248,4 @@ int speed(int argc, char* argv[])
 REGISTER_APP(speed);
 
 }
+#endif // BOTAN_HAS_RUNTIME_BENCHMARKING

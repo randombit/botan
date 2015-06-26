@@ -1,4 +1,7 @@
 #include "tests.h"
+
+#if defined(BOTAN_HAS_COMPRESSION)
+
 #include <botan/compression.h>
 #include <botan/hex.h>
 #include <iostream>
@@ -123,3 +126,9 @@ size_t test_compression()
 
    return fails;
    }
+
+#else
+
+SKIP_TEST(compression);
+
+#endif // BOTAN_HAS_COMPRESSION

@@ -6,6 +6,8 @@
 
 #include "apps.h"
 
+#if defined(BOTAN_HAS_ASN1) && defined(BOTAN_HAS_PEM_CODEC)
+
 #include <botan/bigint.h>
 #include <botan/hex.h>
 #include <botan/der_enc.h>
@@ -350,3 +352,5 @@ int asn1(int argc, char* argv[])
 REGISTER_APP(asn1);
 
 }
+
+#endif // BOTAN_HAS_ASN1 && BOTAN_HAS_PEM_CODEC

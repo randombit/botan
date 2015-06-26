@@ -6,7 +6,15 @@
 
 #include "tests.h"
 
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+
+#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_DSA)
+
 #include <botan/filters.h>
+#include <botan/x509self.h>
+#include <botan/x509path.h>
+#include <botan/x509_ca.h>
+#include <botan/pkcs10.h>
 
 
 #if defined(BOTAN_HAS_RSA)
@@ -21,22 +29,10 @@
   #include <botan/ecdsa.h>
 #endif
 
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
-  #include <botan/x509self.h>
-  #include <botan/x509path.h>
-  #include <botan/x509_ca.h>
-  #include <botan/pkcs10.h>
-#endif
-
 using namespace Botan;
 
 #include <iostream>
 #include <memory>
-
-
-#if defined(BOTAN_HAS_X509_CERTIFICATES) && \
-    defined(BOTAN_HAS_RSA) && \
-    defined(BOTAN_HAS_DSA)
 
 namespace {
 
@@ -251,7 +247,12 @@ size_t test_x509()
 
 #else
 
-size_t test_x509() { return 0; }
+UNTESTED_WARNING(x509);
 
-#endif
+#endif // BOTAN_HAS_RSA && BOTAN_HAS_DSA
 
+#else
+
+SKIP_TEST(x509);
+
+#endif // BOTAN_HAS_X509_CERTIFICATES

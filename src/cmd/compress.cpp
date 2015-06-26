@@ -6,6 +6,8 @@
 
 #include "apps.h"
 
+#if defined(BOTAN_HAS_COMPRESSION)
+
 #include <botan/compression.h>
 #include <fstream>
 
@@ -120,3 +122,5 @@ REGISTER_APP(compress);
 REGISTER_APP(uncompress);
 
 }
+
+#endif // BOTAN_HAS_COMPRESSION

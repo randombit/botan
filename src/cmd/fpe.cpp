@@ -6,7 +6,7 @@
 
 #include "apps.h"
 
-#if defined(BOTAN_HAS_FPE_FE1)
+#if defined(BOTAN_HAS_FPE_FE1) && defined(BOTAN_HAS_SHA1)
 
 #include <botan/fpe_fe1.h>
 #include <botan/sha160.h>
@@ -151,5 +151,4 @@ REGISTER_APP(fpe);
 
 }
 
-#endif
-
+#endif // BOTAN_HAS_FPE_FE1 && BOTAN_HAS_SHA1

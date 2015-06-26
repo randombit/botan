@@ -8,6 +8,8 @@
 
 #include "tests.h"
 
+#if defined(BOTAN_HAS_MCELIECE)
+
 #include <botan/pubkey.h>
 #include <botan/ecdsa.h>
 #include <botan/rsa.h>
@@ -307,3 +309,9 @@ size_t test_mceliece()
    test_report("McEliece", tests, fails);
    return fails;
    }
+
+#else
+
+SKIP_TEST(mceliece);
+
+#endif // BOTAN_HAS_MCELIECE

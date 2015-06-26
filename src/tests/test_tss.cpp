@@ -6,11 +6,10 @@
 
 #include "tests.h"
 
-#include <botan/hex.h>
-#include <iostream>
-
 #if defined(BOTAN_HAS_THRESHOLD_SECRET_SHARING)
 
+#include <iostream>
+#include <botan/hex.h>
 #include <botan/tss.h>
 
 size_t test_tss()
@@ -53,9 +52,7 @@ size_t test_tss()
    return fails;
    }
 #else
-size_t test_tss()
-   {
-   std::cout << "Skipping TSS tests" << std::endl;
-   return 1;
-   }
-#endif
+
+SKIP_TEST(tss);
+
+#endif // BOTAN_HAS_THRESHOLD_SECRET_SHARING

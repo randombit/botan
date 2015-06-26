@@ -6,13 +6,12 @@
 
 #include "tests.h"
 
-#include <botan/hex.h>
-#include <iostream>
-#include <memory>
-
 #if defined(BOTAN_HAS_ECC_GROUP)
 
+#include <iostream>
+#include <memory>
 #include <botan/bigint.h>
+#include <botan/hex.h>
 #include <botan/numthry.h>
 #include <botan/curve_gfp.h>
 #include <botan/point_gfp.h>
@@ -901,7 +900,6 @@ size_t ecc_randomized_test()
    test_report("ECC Randomized", tests, fails);
    return fails;
    }
-#endif
 
 }
 
@@ -909,7 +907,6 @@ size_t test_ecc_unit()
    {
    size_t fails = 0;
 
-#if defined(BOTAN_HAS_ECC_GROUP)
    fails += test_point_turn_on_sp_red_mul();
    fails += test_coordinates();
    fails += test_point_transformation ();
@@ -938,7 +935,12 @@ size_t test_ecc_unit()
    test_report("ECC", 0, fails);
 
    ecc_randomized_test();
-#endif
 
    return fails;
    }
+
+#else
+
+SKIP_TEST(ecc_unit);
+
+#endif // BOTAN_HAS_ECC_GROUP

@@ -5,6 +5,9 @@
 */
 
 #include "apps.h"
+
+#if defined(BOTAN_HAS_CODEC_FILTERS)
+
 #include <botan/lookup.h>
 #include <botan/filters.h>
 #include <iostream>
@@ -57,3 +60,5 @@ int hash(int argc, char* argv[])
 REGISTER_APP(hash);
 
 }
+
+#endif // BOTAN_HAS_CODEC_FILTERS

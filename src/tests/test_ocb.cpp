@@ -5,9 +5,12 @@
 */
 
 #include "tests.h"
-#include <iostream>
 
 #if defined(BOTAN_HAS_AEAD_OCB)
+
+#if defined(BOTAN_HAS_AES)
+
+#include <iostream>
 #include <botan/ocb.h>
 #include <botan/hex.h>
 #include <botan/sha2_32.h>
@@ -102,13 +105,10 @@ size_t test_ocb_long(size_t keylen, size_t taglen,
    }
 
 }
-#endif
 
 size_t test_ocb()
    {
    size_t fails = 0;
-
-#if defined(BOTAN_HAS_AEAD_OCB)
 
    fails += test_ocb_long(128, 128, "67E944D23256C5E0B6C61FA22FDF1EA2");
    fails += test_ocb_long(192, 128, "F673F2C3E7174AAE7BAE986CA9F29E17");
@@ -120,7 +120,18 @@ size_t test_ocb()
    fails += test_ocb_long(192, 64, "0066BC6E0EF34E24");
    fails += test_ocb_long(256, 64, "7D4EA5D445501CBE");
    test_report("OCB long", 9, fails);
-#endif
 
    return fails;
    }
+
+#else
+
+UNTESTED_WARNING(ocb);
+
+#endif // BOTAN_HAS_AES
+
+#else
+
+SKIP_TEST(ocb);
+
+#endif // BOTAN_HAS_AEAD_OCB

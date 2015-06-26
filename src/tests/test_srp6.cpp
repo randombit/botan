@@ -1,4 +1,7 @@
 #include "tests.h"
+
+#if defined(BOTAN_HAS_SRP6)
+
 #include <botan/srp6.h>
 #include <iostream>
 
@@ -37,3 +40,9 @@ size_t test_srp6()
    return fails;
 
    }
+
+#else
+
+SKIP_TEST(srp6);
+
+#endif // BOTAN_HAS_SRP6

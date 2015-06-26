@@ -6,14 +6,14 @@
 
 #include "apps.h"
 
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
+#if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_HAS_RSA)
+
 #include <botan/x509self.h>
 #include <botan/rsa.h>
-#include <botan/dsa.h>
-using namespace Botan;
-
 #include <fstream>
 #include <memory>
+
+using namespace Botan;
 
 namespace {
 
@@ -45,7 +45,6 @@ int self_sig(int argc, char* argv[])
       RSA_PrivateKey key(rng, 2048);
       //DL_Group group(rng, DL_Group::DSA_Kosherizer, 2048, 256);
 
-      //DSA_PrivateKey key(rng, group);
 
       std::ofstream priv_key("private.pem");
       priv_key << PKCS8::PEM_encode(key, rng, argv[1]);
@@ -82,4 +81,4 @@ REGISTER_APP(self_sig);
 
 }
 
-#endif
+#endif // BOTAN_HAS_X509_CERTIFICATES && BOTAN_HAS_RSA

@@ -4,21 +4,20 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include "apps.h"
+
+#if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
+
 #include "speed.h"
 #include "timer.h"
 
-#include <botan/pkcs8.h>
-#include <botan/mem_ops.h>
-#include <botan/parsing.h>
-#include <botan/oids.h>
 #include <map>
 #include <sstream>
-
-#if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
-  #include <botan/x509_key.h>
-  #include <botan/pkcs8.h>
-  #include <botan/pubkey.h>
-#endif
+#include <botan/mem_ops.h>
+#include <botan/parsing.h>
+#include <botan/pkcs8.h>
+#include <botan/pubkey.h>
+#include <botan/x509_key.h>
 
 #if defined(BOTAN_HAS_RSA)
   #include <botan/rsa.h>
@@ -876,3 +875,4 @@ void bench_pk(RandomNumberGenerator& rng,
       benchmark_mce(rng, seconds, report);
 #endif
    }
+#endif // BOTAN_HAS_PUBLIC_KEY_CRYPTO

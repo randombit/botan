@@ -6,6 +6,8 @@
 
 #include "tests.h"
 
+#if defined(BOTAN_HAS_PBKDF)
+
 #include <botan/pbkdf.h>
 #include <botan/lookup.h>
 #include <botan/hex.h>
@@ -37,3 +39,9 @@ size_t test_pbkdf()
 
    return run_tests_in_dir(TEST_DATA_DIR "pbkdf", test);
    }
+
+#else
+
+SKIP_TEST(pbkdf);
+
+#endif // BOTAN_HAS_PBKDF

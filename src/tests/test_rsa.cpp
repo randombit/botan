@@ -5,6 +5,9 @@
 */
 
 #include "tests.h"
+
+#if defined(BOTAN_HAS_RSA)
+
 #include "test_pubkey.h"
 
 #include <botan/pubkey.h>
@@ -118,3 +121,8 @@ size_t test_rsa()
    return fails;
    }
 
+#else
+
+SKIP_TEST(rsa);
+
+#endif // BOTAN_HAS_RSA

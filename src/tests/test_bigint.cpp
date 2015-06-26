@@ -6,6 +6,10 @@
 
 #include "tests.h"
 
+#if defined(BOTAN_HAS_BIGINT)
+
+#if defined(BOTAN_HAS_NUMBERTHEORY)
+
 #include <vector>
 #include <string>
 #include <fstream>
@@ -380,3 +384,14 @@ size_t test_bigint()
    return total_errors;
    }
 
+#else
+
+UNTESTED_WARNING(bigint);
+
+#endif // BOTAN_HAS_NUMBERTHEORY
+
+#else
+
+SKIP_TEST(bigint);
+
+#endif // BOTAN_HAS_BIGINT

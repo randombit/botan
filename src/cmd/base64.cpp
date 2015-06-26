@@ -6,6 +6,9 @@
 */
 
 #include "apps.h"
+
+#if defined(BOTAN_HAS_CODEC_FILTERS)
+
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -88,3 +91,4 @@ int base64(int argc, char* argv[])
 REGISTER_APP(base64);
 
 }
+#endif // BOTAN_HAS_CODEC_FILTERS

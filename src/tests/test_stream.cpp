@@ -6,6 +6,8 @@
 
 #include "tests.h"
 
+#if defined(BOTAN_HAS_STREAM_CIPHER)
+
 #include <botan/stream_cipher.h>
 #include <botan/lookup.h>
 #include <botan/hex.h>
@@ -83,3 +85,9 @@ size_t test_stream()
 
    return run_tests_in_dir(TEST_DATA_DIR "/stream", test);
    }
+
+#else
+
+SKIP_TEST(stream);
+
+#endif // BOTAN_HAS_STREAM_CIPHER

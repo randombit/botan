@@ -8,9 +8,10 @@
 */
 
 #include "tests.h"
-#include <botan/build.h>
 
 #if defined(BOTAN_HAS_CARD_VERIFIABLE_CERTIFICATES)
+
+#if defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_RSA)
 
 #include <iosfwd>
 #include <iostream>
@@ -571,6 +572,15 @@ size_t test_cvc()
 
    return 0;
    }
+
 #else
-size_t test_cvc() { return 0; }
-#endif
+
+UNTESTED_WARNING(cvc);
+
+#endif // BOTAN_HAS_ECDSA && BOTAN_HAS_RSA
+
+#else
+
+SKIP_TEST(cvc);
+
+#endif // BOTAN_HAS_CARD_VERIFIABLE_CERTIFICATES

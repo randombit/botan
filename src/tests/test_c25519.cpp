@@ -5,18 +5,17 @@
 */
 
 #include "tests.h"
-#include "test_pubkey.h"
 
 #if defined(BOTAN_HAS_CURVE_25519)
+
+#include "test_pubkey.h"
+
 #include <botan/curve25519.h>
 #include <botan/hex.h>
 #include <iostream>
 #include <fstream>
-#endif
 
 using namespace Botan;
-
-#if defined(BOTAN_HAS_CURVE_25519)
 
 namespace {
 
@@ -41,13 +40,11 @@ size_t curve25519_scalar_kat(const std::string& secret_h,
    }
 
 }
-#endif
 
 size_t test_curve25519()
    {
    size_t fails = 0;
 
-#if defined(BOTAN_HAS_CURVE_25519)
    std::ifstream c25519_scalar(PK_TEST_DATA_DIR "/c25519_scalar.vec");
 
    fails += run_tests_bb(c25519_scalar, "Curve25519 ScalarMult", "Out", true,
@@ -55,8 +52,12 @@ size_t test_curve25519()
              {
              return curve25519_scalar_kat(m["Secret"], m["Basepoint"], m["Out"]);
              });
-#endif
 
    return fails;
    }
 
+#else
+
+SKIP_TEST(curve25519);
+
+#endif // BOTAN_HAS_CURVE_25519

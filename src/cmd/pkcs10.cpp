@@ -6,14 +6,14 @@
 
 #include "apps.h"
 
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
+#if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_HAS_RSA)
+
 #include <botan/x509self.h>
 #include <botan/rsa.h>
-#include <botan/dsa.h>
-using namespace Botan;
-
 #include <fstream>
 #include <memory>
+
+using namespace Botan;
 
 namespace {
 
@@ -60,4 +60,4 @@ REGISTER_APP(pkcs10);
 
 }
 
-#endif
+#endif // BOTAN_HAS_X509_CERTIFICATES && BOTAN_HAS_RSA

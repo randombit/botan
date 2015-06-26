@@ -5,10 +5,10 @@
 */
 
 #include "tests.h"
-#include "test_pubkey.h"
 
 #if defined(BOTAN_HAS_DSA)
 
+#include "test_pubkey.h"
 
 #include <botan/pubkey.h>
 #include <botan/dsa.h>
@@ -47,13 +47,11 @@ size_t dsa_sig_kat(const std::string& p,
    }
 
 }
-#endif
 
 size_t test_dsa()
    {
    size_t fails = 0;
 
-#if defined(BOTAN_HAS_DSA)
    std::ifstream dsa_sig(PK_TEST_DATA_DIR "/dsa.vec");
 
    fails += run_tests_bb(dsa_sig, "DSA Signature", "Signature", false,
@@ -61,8 +59,12 @@ size_t test_dsa()
              {
              return dsa_sig_kat(m["P"], m["Q"], m["G"], m["X"], m["Hash"], m["Msg"], m["Nonce"], m["Signature"]);
              });
-#endif
 
    return fails;
    }
 
+#else
+
+SKIP_TEST(dsa);
+
+#endif // BOTAN_HAS_DSA

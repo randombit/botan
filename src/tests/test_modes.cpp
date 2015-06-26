@@ -6,6 +6,10 @@
 
 #include "tests.h"
 
+#if defined(BOTAN_HAS_MODES)
+
+#if defined(BOTAN_HAS_FILTERS)
+
 #include <botan/hex.h>
 #include <botan/lookup.h>
 #include <botan/cipher_mode.h>
@@ -96,3 +100,15 @@ size_t test_modes()
 
    return run_tests_in_dir(TEST_DATA_DIR "modes", test);
    }
+
+#else
+
+UNTESTED_WARNING(modes);
+
+#endif // BOTAN_HAS_FILTERS
+
+#else
+
+SKIP_TEST(modes);
+
+#endif // BOTAN_HAS_MODES

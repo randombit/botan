@@ -6,6 +6,8 @@
 
 #include "tests.h"
 
+#if defined(BOTAN_HAS_MAC)
+
 #include <botan/lookup.h>
 #include <botan/mac.h>
 #include <botan/hex.h>
@@ -93,3 +95,9 @@ size_t test_mac()
 
    return run_tests_in_dir(TEST_DATA_DIR "mac", test);
    }
+
+#else
+
+SKIP_TEST(mac);
+
+#endif // BOTAN_HAS_MAC
