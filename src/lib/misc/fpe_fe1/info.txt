@@ -1,7 +1,8 @@
 define FPE_FE1 20131128
 
 <requires>
-hmac
-sha2_32
 bigint
+hmac
+numbertheory
+sha2_32
 </requires>
