@@ -237,9 +237,9 @@ void Unix_EntropySource::poll(Entropy_Accumulator& accum)
 
          if(FD_ISSET(fd, &read_set))
             {
-            const ssize_t got = ::read(fd, &m_buf[0], m_buf.size());
+            const ssize_t got = ::read(fd, m_buf.data(), m_buf.size());
             if(got > 0)
-               accum.add(&m_buf[0], got, ENTROPY_ESTIMATE);
+               accum.add(m_buf.data(), got, ENTROPY_ESTIMATE);
             else
                proc.spawn(next_source());
             }

@@ -63,9 +63,9 @@ void Win32_CAPI_EntropySource::poll(Entropy_Accumulator& accum)
       {
       CSP_Handle csp(prov_types[i]);
 
-      if(size_t got = csp.gen_random(&m_buf[0], m_buf.size()))
+      if(size_t got = csp.gen_random(m_buf.data(), m_buf.size()))
          {
-         accum.add(&m_buf[0], got, 6);
+         accum.add(m_buf.data(), got, 6);
          break;
          }
       }

@@ -133,11 +133,11 @@ void ProcWalking_EntropySource::poll(Entropy_Accumulator& accum)
          break;
          }
 
-      ssize_t got = ::read(fd, &m_buf[0], m_buf.size());
+      ssize_t got = ::read(fd, m_buf.data(), m_buf.size());
       ::close(fd);
 
       if(got > 0)
-         accum.add(&m_buf[0], got, ENTROPY_ESTIMATE);
+         accum.add(m_buf.data(), got, ENTROPY_ESTIMATE);
 
       if(accum.polling_finished())
          break;
