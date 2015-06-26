@@ -124,7 +124,7 @@ void Stream_Compression::process(secure_vector<byte>& buf, size_t offset, u32bit
          }
       }
 
-   copy_mem(&m_buffer[0], &buf[0], offset);
+   copy_mem(m_buffer.data(), buf.data(), offset);
    buf.swap(m_buffer);
    }
 
@@ -205,7 +205,7 @@ void Stream_Decompression::process(secure_vector<byte>& buf, size_t offset, u32b
          }
       }
 
-   copy_mem(&m_buffer[0], &buf[0], offset);
+   copy_mem(m_buffer.data(), buf.data(), offset);
    buf.swap(m_buffer);
    }
 
