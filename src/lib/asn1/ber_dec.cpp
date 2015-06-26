@@ -103,11 +103,11 @@ size_t find_eoc(DataSource* ber)
 
    while(true)
       {
-      const size_t got = ber->peek(&buffer[0], buffer.size(), data.size());
+      const size_t got = ber->peek(buffer.data(), buffer.size(), data.size());
       if(got == 0)
          break;
 
-      data += std::make_pair(&buffer[0], got);
+      data += std::make_pair(buffer.data(), got);
       }
 
    DataSource_Memory source(data);
@@ -309,7 +309,7 @@ BER_Decoder::BER_Decoder(const secure_vector<byte>& data)
 */
 BER_Decoder::BER_Decoder(const std::vector<byte>& data)
    {
-   source = new DataSource_Memory(&data[0], data.size());
+   source = new DataSource_Memory(data.data(), data.size());
    owns = true;
    pushed.type_tag = pushed.class_tag = NO_OBJECT;
    parent = nullptr;
@@ -391,7 +391,7 @@ BER_Decoder& BER_Decoder::decode_octet_string_bigint(BigInt& out)
    {
    secure_vector<byte> out_vec;
    decode(out_vec, OCTET_STRING);
-   out = BigInt::decode(&out_vec[0], out_vec.size());
+   out = BigInt::decode(out_vec.data(), out_vec.size());
    return (*this);
    }
 
@@ -530,7 +530,7 @@ BER_Decoder& BER_Decoder::decode(secure_vector<byte>& buffer,
          throw BER_Decoding_Error("Bad number of unused bits in BIT STRING");
 
       buffer.resize(obj.value.size() - 1);
-      copy_mem(&buffer[0], &obj.value[1], obj.value.size() - 1);
+      copy_mem(buffer.data(), &obj.value[1], obj.value.size() - 1);
       }
    return (*this);
    }
@@ -553,7 +553,7 @@ BER_Decoder& BER_Decoder::decode(std::vector<byte>& buffer,
          throw BER_Decoding_Error("Bad number of unused bits in BIT STRING");
 
       buffer.resize(obj.value.size() - 1);
-      copy_mem(&buffer[0], &obj.value[1], obj.value.size() - 1);
+      copy_mem(buffer.data(), &obj.value[1], obj.value.size() - 1);
       }
    return (*this);
    }
