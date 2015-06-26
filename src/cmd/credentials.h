@@ -109,7 +109,7 @@ class Basic_Credentials_Manager : public Credentials_Manager
             }
          catch(std::exception& e)
             {
-            std::cout << e.what() << "\n";
+            std::cout << e.what() << std::endl;
             //throw;
             }
          }
@@ -119,6 +119,8 @@ class Basic_Credentials_Manager : public Credentials_Manager
          const std::string& type,
          const std::string& hostname)
          {
+         BOTAN_UNUSED(type);
+
          for(auto&& i : m_creds)
             {
             if(std::find(algos.begin(), algos.end(), i.key->algo_name()) == algos.end())
