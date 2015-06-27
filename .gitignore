@@ -1,0 +1,15 @@
+Makefile*
+libbotan*.so.*
+botan_all.cpp
+botan_all.h
+*.a
+*.so
+*.exp
+*.lib
+*.dll
+*.exe
+*.manifest
+build
+build.log
+botan
+botan-test
