@@ -783,10 +783,12 @@ class CompilerInfo(object):
                         'add_include_dir_option': '-I',
                         'add_lib_dir_option': '-L',
                         'add_lib_option': '-l',
-                        'lib_opt_flags': '',
-                        'app_opt_flags': '',
-                        'debug_flags': '',
-                        'no_debug_flags': '',
+                        'compile_flags_release': '',
+                        'compile_flags_debug': '',
+                        'lib_opt_flags_release': '',
+                        'lib_opt_flags_debug': '',
+                        'app_opt_flags_release': '',
+                        'app_opt_flags_debug': '',
                         'coverage_flags': '',
                         'sanitizer_flags': '',
                         'shared_flags': '',
@@ -886,18 +888,27 @@ class CompilerInfo(object):
     def opt_flags(self, who, options):
         def gen_flags():
             if options.build_mode in ['debug', 'coverage']:
-                yield self.debug_flags
+                yield self.compile_flags_debug
             else:
-                yield self.no_debug_flags
+                yield self.compile_flags_release
 
             if options.no_optimizations or options.build_mode == 'coverage':
                 return
 
-            if who != 'lib':
-                yield self.app_opt_flags
+            if who == 'app':
+                if options.build_mode == 'release':
+                    yield self.app_opt_flags_release
+                else:
+                    yield self.app_opt_flags_debug
                 return
-
-            yield self.lib_opt_flags
+            elif who == 'lib':
+                if options.build_mode == 'release':
+                    yield self.lib_opt_flags_release
+                else:
+                    yield self.lib_opt_flags_debug
+                return
+            else:
+                raise Exception("Invalid value of parameter 'who'.")
 
             def submodel_fixup(flags, tup):
                 return tup[0].replace('SUBMODEL', flags.replace(tup[1], ''))

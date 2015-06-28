@@ -8,10 +8,11 @@ add_include_dir_option -I
 add_lib_dir_option -L
 add_lib_option -l
 
-lib_opt_flags "+O2"
-app_opt_flags "+O2"
-debug_flags -g
-no_debug_flags ""
+compile_flags_release ""
+compile_flags_debug "-g"
+lib_opt_flags_release "+O2"
+app_opt_flags_release "+O2"
+
 lang_flags "-AA -ext +eh -z"
 warning_flags "" # +w
 shared_flags "+Z"

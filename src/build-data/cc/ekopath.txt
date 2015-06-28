@@ -8,15 +8,16 @@ add_include_dir_option -I
 add_lib_dir_option -L
 add_lib_option -l
 
-lib_opt_flags "-O3 -OPT:Ofast:alias=disjoint"
-app_opt_flags "-O2"
+compile_flags_debug "-g"
+lib_opt_flags_release "-O3 -OPT:Ofast:alias=disjoint"
+app_opt_flags_release "-O2"
+
 lang_flags "-D_REENTRANT -ansi -Wno-long-long"
 warning_flags "-W -Wall"
 
 ar_command "pathCC -ar -o"
 
 shared_flags "-fPIC"
-debug_flags -g
 
 makefile_style gmake
 

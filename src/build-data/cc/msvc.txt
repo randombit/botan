@@ -8,9 +8,11 @@ add_include_dir_option "/I"
 add_lib_dir_option -L
 add_lib_option ""
 
-no_debug_flags "/O2"
-debug_flags "/Od /Zi /DDEBUG"
-app_opt_flags "/D_CONSOLE"
+compile_flags_release "/O2"
+compile_flags_debug   "/Od /Zi /DDEBUG"
+app_opt_flags_release "/D_CONSOLE"
+app_opt_flags_debug   "/D_CONSOLE"
+
 lang_flags "/EHs /GR"
 warning_flags "/W3 /wd4275 /wd4267"
 
