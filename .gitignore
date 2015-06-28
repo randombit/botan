@@ -1,7 +1,5 @@
 Makefile*
 libbotan*.so.*
-botan_all.cpp
-botan_all.h
 *.a
 *.so
 *.exp
@@ -13,3 +11,9 @@ build
 build.log
 botan
 botan-test
+
+# Amalgamation code
+botan_all.h
+botan_all_internal.h
+botan_all.cpp
+botan_all_*.cpp
