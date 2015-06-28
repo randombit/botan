@@ -22,6 +22,9 @@ module Botan : sig
     val reseed : t -> int -> unit
   end
 
+  val bcrypt : string -> RNG.t -> int -> string
+  val check_bcrypt : string -> string -> bool
+
   module Hash : sig
     type t
     val create : string -> t
