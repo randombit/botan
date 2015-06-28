@@ -50,12 +50,23 @@ BOTAN_DLL uint32_t botan_version_datestamp();
 */
 BOTAN_DLL int botan_same_mem(const uint8_t* x, const uint8_t* y, size_t len);
 
+#define BOTAN_FFI_HEX_LOWER_CASE 1
+
+BOTAN_DLL int botan_hex_encode(const uint8_t* x, size_t len, char* out, uint32_t flags);
+
 /*
 * RNG
 */
 typedef struct botan_rng_struct* botan_rng_t;
 
+/**
+* TODO: replace rng_type with simple flags? 
+*/
 BOTAN_DLL int botan_rng_init(botan_rng_t* rng, const char* rng_type);
+
+/**
+* TODO: better name
+*/
 BOTAN_DLL int botan_rng_get(botan_rng_t rng, uint8_t* out, size_t out_len);
 BOTAN_DLL int botan_rng_reseed(botan_rng_t rng, size_t bits);
 BOTAN_DLL int botan_rng_destroy(botan_rng_t rng);
@@ -65,12 +76,48 @@ BOTAN_DLL int botan_rng_destroy(botan_rng_t rng);
 */
 typedef struct botan_hash_struct* botan_hash_t;
 
+/**
+* Initialize a hash object:
+*   botan_hash_t hash
+*   botan_hash_init(&hash, "SHA-384", 0);
+*
+* Flags should be 0 in current API revision, all other uses are reserved.
+*  and return BOTAN_FFI_ERROR_BAD_FLAG.
+
+* TODO: since output_length is effectively required to use this API,
+* return it from init as an output parameter
+*/
 BOTAN_DLL int botan_hash_init(botan_hash_t* hash, const char* hash_name, uint32_t flags);
+
+/**
+* Writes the output length of the hash object to *output_length
+*/
 BOTAN_DLL int botan_hash_output_length(botan_hash_t hash, size_t* output_length);
+
+/**
+* Send more input to the hash function.
+*/
 BOTAN_DLL int botan_hash_update(botan_hash_t hash, const uint8_t* in, size_t in_len);
+
+/**
+* Finalizes the hash computation and writes the output to
+* out[0:botan_hash_output_length()] then reinitializes for computing
+* another digest as if botan_hash_clear had been called.
+*/
 BOTAN_DLL int botan_hash_final(botan_hash_t hash, uint8_t out[]);
+
+/**
+* Reinitializes the state of the hash computation. A hash can
+* be computed (with update/final) immediately.
+*/
 BOTAN_DLL int botan_hash_clear(botan_hash_t hash);
+
+/**
+* Frees all resources of this object
+*/
 BOTAN_DLL int botan_hash_destroy(botan_hash_t hash);
+
+BOTAN_DLL int botan_hash_name(botan_hash_t hash, char* name, size_t name_len);
 
 /*
 * Message Authentication

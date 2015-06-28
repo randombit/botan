@@ -15,6 +15,7 @@
 #include <botan/version.h>
 #include <botan/pubkey.h>
 #include <botan/data_src.h>
+#include <botan/hex.h>
 #include <botan/mem_ops.h>
 #include <cstring>
 #include <memory>
@@ -176,6 +177,27 @@ uint32_t botan_version_major() { return Botan::version_major(); }
 uint32_t botan_version_minor() { return Botan::version_minor(); }
 uint32_t botan_version_patch() { return Botan::version_patch(); }
 uint32_t botan_version_datestamp()  { return Botan::version_datestamp(); }
+
+int botan_same_mem(const uint8_t* x, const uint8_t* y, size_t len)
+   {
+   return Botan::same_mem(x, y, len) ? 0 : 1;
+   }
+
+int botan_hex_encode(const uint8_t* in, size_t len, char* out, uint32_t flags)
+   {
+   try
+      {
+      const bool uppercase = (flags & BOTAN_FFI_HEX_LOWER_CASE) == 0;
+      Botan::hex_encode(out, in, len, uppercase);
+      return 0;
+      }
+   catch(std::exception& e)
+      {
+      log_exception(BOTAN_CURRENT_FUNCTION, e.what());
+      }
+
+   return 1;
+   }
 
 int botan_rng_init(botan_rng_t* rng_out, const char* rng_type)
    {
