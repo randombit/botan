@@ -11,6 +11,8 @@
 #include <botan/charset.h>
 #include <botan/parsing.h>
 #include <botan/calendar.h>
+#include <sstream>
+#include <iomanip>
 
 namespace Botan {
 
@@ -230,14 +232,17 @@ std::string X509_Time::readable_string() const
    if(time_is_set() == false)
       throw Invalid_State("X509_Time::readable_string: No time set");
 
-   std::string output(24, 0);
-
-   std::sprintf(&output[0], "%04d/%02d/%02d %02d:%02d:%02d UTC",
-                year, month, day, hour, minute, second);
-
-   output.resize(23); // remove trailing null
-
-   return output;
+   // desired format: "%04d/%02d/%02d %02d:%02d:%02d UTC"
+   std::stringstream output;
+      {
+      using namespace std;
+      output << setfill('0')
+             << setw(4) << year << "/" << setw(2) << month << "/" << setw(2) << day
+             << " "
+             << setw(2) << hour << ":" << setw(2) << minute << ":" << setw(2) << second
+             << " UTC";
+      }
+   return output.str();
    }
 
 /*

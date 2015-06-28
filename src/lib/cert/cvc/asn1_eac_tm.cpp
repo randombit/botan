@@ -13,6 +13,8 @@
 #include <botan/parsing.h>
 #include <botan/internal/rounding.h>
 #include <botan/calendar.h>
+#include <sstream>
+#include <iomanip>
 
 namespace Botan {
 
@@ -153,11 +155,13 @@ std::string EAC_Time::readable_string() const
    if(time_is_set() == false)
       throw Invalid_State("EAC_Time::readable_string: No time set");
 
-   std::string output(11, 0);
-
-   std::sprintf(&output[0], "%04d/%02d/%02d", year, month, day);
-
-   return output;
+   // desired format: "%04d/%02d/%02d"
+   std::stringstream output;
+   output << std::setfill('0')
+          << std::setw(4) << year << "/"
+          << std::setw(2) << month << "/"
+          << std::setw(2) << day;
+   return output.str();
    }
 
 /*

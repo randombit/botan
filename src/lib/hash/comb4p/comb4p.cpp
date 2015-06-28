@@ -25,14 +25,14 @@ void comb4p_round(secure_vector<byte>& out,
    h1.update(round_no);
    h2.update(round_no);
 
-   h1.update(&in[0], in.size());
-   h2.update(&in[0], in.size());
+   h1.update(in.data(), in.size());
+   h2.update(in.data(), in.size());
 
    secure_vector<byte> h_buf = h1.final();
-   xor_buf(&out[0], &h_buf[0], std::min(out.size(), h_buf.size()));
+   xor_buf(out.data(), h_buf.data(), std::min(out.size(), h_buf.size()));
 
    h_buf = h2.final();
-   xor_buf(&out[0], &h_buf[0], std::min(out.size(), h_buf.size()));
+   xor_buf(out.data(), h_buf.data(), std::min(out.size(), h_buf.size()));
    }
 
 }
@@ -98,7 +98,7 @@ void Comb4P::final_result(byte out[])
    secure_vector<byte> h2 = m_hash2->final();
 
    // First round
-   xor_buf(&h1[0], &h2[0], std::min(h1.size(), h2.size()));
+   xor_buf(h1.data(), h2.data(), std::min(h1.size(), h2.size()));
 
    // Second round
    comb4p_round(h2, h1, 1, *m_hash1, *m_hash2);
@@ -106,8 +106,8 @@ void Comb4P::final_result(byte out[])
    // Third round
    comb4p_round(h1, h2, 2, *m_hash1, *m_hash2);
 
-   copy_mem(out            , &h1[0], h1.size());
-   copy_mem(out + h1.size(), &h2[0], h2.size());
+   copy_mem(out            , h1.data(), h1.size());
+   copy_mem(out + h1.size(), h2.data(), h2.size());
 
    // Prep for processing next message, if any
    m_hash1->update(0);

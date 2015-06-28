@@ -19,9 +19,9 @@ void DESX::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    for(size_t i = 0; i != blocks; ++i)
       {
-      xor_buf(out, in, &K1[0], BLOCK_SIZE);
+      xor_buf(out, in, K1.data(), BLOCK_SIZE);
       des.encrypt(out);
-      xor_buf(out, &K2[0], BLOCK_SIZE);
+      xor_buf(out, K2.data(), BLOCK_SIZE);
 
       in += BLOCK_SIZE;
       out += BLOCK_SIZE;
@@ -35,9 +35,9 @@ void DESX::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    for(size_t i = 0; i != blocks; ++i)
       {
-      xor_buf(out, in, &K2[0], BLOCK_SIZE);
+      xor_buf(out, in, K2.data(), BLOCK_SIZE);
       des.decrypt(out);
-      xor_buf(out, &K1[0], BLOCK_SIZE);
+      xor_buf(out, K1.data(), BLOCK_SIZE);
 
       in += BLOCK_SIZE;
       out += BLOCK_SIZE;

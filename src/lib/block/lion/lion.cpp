@@ -42,11 +42,11 @@ void Lion::encrypt_n(const byte in[], byte out[], size_t blocks) const
    const size_t RIGHT_SIZE = right_size();
 
    secure_vector<byte> buffer_vec(LEFT_SIZE);
-   byte* buffer = &buffer_vec[0];
+   byte* buffer = buffer_vec.data();
 
    for(size_t i = 0; i != blocks; ++i)
       {
-      xor_buf(buffer, in, &m_key1[0], LEFT_SIZE);
+      xor_buf(buffer, in, m_key1.data(), LEFT_SIZE);
       m_cipher->set_key(buffer, LEFT_SIZE);
       m_cipher->cipher(in + LEFT_SIZE, out + LEFT_SIZE, RIGHT_SIZE);
 
@@ -54,7 +54,7 @@ void Lion::encrypt_n(const byte in[], byte out[], size_t blocks) const
       m_hash->final(buffer);
       xor_buf(out, in, buffer, LEFT_SIZE);
 
-      xor_buf(buffer, out, &m_key2[0], LEFT_SIZE);
+      xor_buf(buffer, out, m_key2.data(), LEFT_SIZE);
       m_cipher->set_key(buffer, LEFT_SIZE);
       m_cipher->cipher1(out + LEFT_SIZE, RIGHT_SIZE);
 
@@ -72,11 +72,11 @@ void Lion::decrypt_n(const byte in[], byte out[], size_t blocks) const
    const size_t RIGHT_SIZE = right_size();
 
    secure_vector<byte> buffer_vec(LEFT_SIZE);
-   byte* buffer = &buffer_vec[0];
+   byte* buffer = buffer_vec.data();
 
    for(size_t i = 0; i != blocks; ++i)
       {
-      xor_buf(buffer, in, &m_key2[0], LEFT_SIZE);
+      xor_buf(buffer, in, m_key2.data(), LEFT_SIZE);
       m_cipher->set_key(buffer, LEFT_SIZE);
       m_cipher->cipher(in + LEFT_SIZE, out + LEFT_SIZE, RIGHT_SIZE);
 
@@ -84,7 +84,7 @@ void Lion::decrypt_n(const byte in[], byte out[], size_t blocks) const
       m_hash->final(buffer);
       xor_buf(out, in, buffer, LEFT_SIZE);
 
-      xor_buf(buffer, out, &m_key1[0], LEFT_SIZE);
+      xor_buf(buffer, out, m_key1.data(), LEFT_SIZE);
       m_cipher->set_key(buffer, LEFT_SIZE);
       m_cipher->cipher1(out + LEFT_SIZE, RIGHT_SIZE);
 
@@ -101,8 +101,8 @@ void Lion::key_schedule(const byte key[], size_t length)
    clear();
 
    const size_t half = length / 2;
-   copy_mem(&m_key1[0], key, half);
-   copy_mem(&m_key2[0], key + half, half);
+   copy_mem(m_key1.data(), key, half);
+   copy_mem(m_key2.data(), key + half, half);
    }
 
 /*

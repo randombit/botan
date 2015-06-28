@@ -110,7 +110,7 @@ inline int write_output(uint8_t out[], size_t* out_len, const uint8_t buf[], siz
    *out_len = buf_len;
    if(avail >= buf_len)
       {
-      Botan::copy_mem(out, &buf[0], buf_len);
+      Botan::copy_mem(out, buf, buf_len);
       return 0;
       }
    return -1;
@@ -119,7 +119,7 @@ inline int write_output(uint8_t out[], size_t* out_len, const uint8_t buf[], siz
 template<typename Alloc>
 int write_vec_output(uint8_t out[], size_t* out_len, const std::vector<uint8_t, Alloc>& buf)
    {
-   return write_output(out, out_len, &buf[0], buf.size());
+   return write_output(out, out_len, buf.data(), buf.size());
    }
 
 inline int write_str_output(uint8_t out[], size_t* out_len, const std::string& str)
@@ -472,7 +472,7 @@ int botan_cipher_update(botan_cipher_t cipher_obj,
 
          if(mbuf.size() <= output_size)
             {
-            copy_mem(output, &mbuf[0], mbuf.size());
+            copy_mem(output, mbuf.data(), mbuf.size());
             mbuf.clear();
             return 0;
             }
@@ -486,7 +486,7 @@ int botan_cipher_update(botan_cipher_t cipher_obj,
          *output_written = mbuf.size();
          if(output_size >= mbuf.size())
             {
-            copy_mem(output, &mbuf[0], mbuf.size());
+            copy_mem(output, mbuf.data(), mbuf.size());
             mbuf.clear();
             return 0;
             }
@@ -504,7 +504,7 @@ int botan_cipher_update(botan_cipher_t cipher_obj,
          const size_t taken = round_down(input_size, ud);
          *input_consumed = taken;
          *output_size = taken;
-         copy_mem(&output[0], input, taken);
+         copy_mem(output, input, taken);
          ocm->update_in_place(output, taken);
          return 0;
          }
@@ -515,7 +515,7 @@ int botan_cipher_update(botan_cipher_t cipher_obj,
 
       while(input_size >= ud && output_size >= ud)
          {
-         copy_mem(&mbuf[0], input, ud);
+         copy_mem(mbuf.data(), input, ud);
          cipher.update(mbuf);
 
          input_size -= ud;
