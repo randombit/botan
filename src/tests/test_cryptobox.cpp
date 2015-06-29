@@ -32,7 +32,7 @@ size_t test_cryptobox()
                                                  "secret password");
 
       if(plaintext.size() != sizeof(msg) ||
-         !same_mem(reinterpret_cast<const byte*>(&plaintext[0]), msg, sizeof(msg)))
+         !same_mem(reinterpret_cast<const byte*>(plaintext.data()), msg, sizeof(msg)))
          ++fails;
 
       }
