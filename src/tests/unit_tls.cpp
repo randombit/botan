@@ -237,7 +237,7 @@ size_t basic_test_handshake(RandomNumberGenerator& rng,
       catch(std::exception& e)
          {
          std::cout << "Server error - " << e.what() << std::endl;
-         break;
+         return 1;
          }
 
       input.clear();
@@ -250,7 +250,7 @@ size_t basic_test_handshake(RandomNumberGenerator& rng,
       catch(std::exception& e)
          {
          std::cout << "Client error - " << e.what() << std::endl;
-         break;
+         return 1;
          }
 
       if(c2s_data.size())
