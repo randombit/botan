@@ -220,7 +220,7 @@ BER_Object BER_Decoder::get_next_object()
 
    size_t length = decode_length(source);
    next.value.resize(length);
-   if(source->read(&next.value[0], length) != length)
+   if(source->read(next.value.data(), length) != length)
       throw BER_Decoding_Error("Value truncated");
 
    if(next.type_tag == EOC && next.class_tag == UNIVERSAL)
@@ -254,7 +254,7 @@ BER_Decoder BER_Decoder::start_cons(ASN1_Tag type_tag,
    BER_Object obj = get_next_object();
    obj.assert_is_a(type_tag, ASN1_Tag(class_tag | CONSTRUCTED));
 
-   BER_Decoder result(&obj.value[0], obj.value.size());
+   BER_Decoder result(obj.value.data(), obj.value.size());
    result.parent = this;
    return result;
    }

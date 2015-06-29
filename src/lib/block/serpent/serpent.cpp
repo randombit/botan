@@ -195,7 +195,7 @@ void Serpent::key_schedule(const byte key[], size_t length)
    SBoxE6(W[128],W[129],W[130],W[131]); SBoxE5(W[132],W[133],W[134],W[135]);
    SBoxE4(W[136],W[137],W[138],W[139]);
 
-   round_key.assign(&W[8], &W[140]);
+   round_key.assign(W.begin() + 8, W.end());
    }
 
 void Serpent::clear()

@@ -58,8 +58,8 @@ mceies_encrypt(const McEliece_PublicKey& pubkey,
 
    secure_vector<byte> msg(mce_ciphertext.size() + nonce.size() + pt.size());
    copy_mem(msg.data(), mce_ciphertext.data(), mce_ciphertext.size());
-   copy_mem(&msg[mce_ciphertext.size()], nonce.data(), nonce.size());
-   copy_mem(&msg[mce_ciphertext.size() + nonce.size()], pt.data(), pt.size());
+   copy_mem(msg.data() + mce_ciphertext.size(), nonce.data(), nonce.size());
+   copy_mem(msg.data() + mce_ciphertext.size() + nonce.size(), pt.data(), pt.size());
 
    aead->start(nonce);
    aead->finish(msg, mce_ciphertext.size() + nonce.size());
@@ -91,7 +91,7 @@ mceies_decrypt(const McEliece_PrivateKey& privkey,
       aead->set_key(aead_key(mce_key, *aead));
       aead->set_associated_data(ad, ad_len);
 
-      secure_vector<byte> pt(&ct[mce_code_bytes + nonce_len], &ct[ct.size()]);
+      secure_vector<byte> pt(ct.begin() + mce_code_bytes + nonce_len, ct.end());
 
       aead->start(&ct[mce_code_bytes], nonce_len);
       aead->finish(pt, 0);
