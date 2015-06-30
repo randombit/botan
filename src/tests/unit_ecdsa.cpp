@@ -34,11 +34,6 @@ using namespace Botan;
 
 namespace {
 
-std::string to_hex(const std::vector<byte>& bin)
-   {
-   return hex_encode(bin.data(), bin.size());
-   }
-
 /**
 
 * Tests whether the the signing routine will work correctly in case
@@ -107,9 +102,9 @@ size_t test_decode_ecdsa_X509()
 
    CHECK_MESSAGE(OIDS::lookup(cert.signature_algorithm().oid) == "ECDSA/EMSA1(SHA-224)", "error reading signature algorithm from x509 ecdsa certificate");
 
-   CHECK_MESSAGE(to_hex(cert.serial_number()) == "01", "error reading serial from x509 ecdsa certificate");
-   CHECK_MESSAGE(to_hex(cert.authority_key_id()) == "0096452DE588F966C4CCDF161DD1F3F5341B71E7", "error reading authority key id from x509 ecdsa certificate");
-   CHECK_MESSAGE(to_hex(cert.subject_key_id()) == "0096452DE588F966C4CCDF161DD1F3F5341B71E7", "error reading Subject key id from x509 ecdsa certificate");
+   CHECK_MESSAGE(hex_encode(cert.serial_number()) == "01", "error reading serial from x509 ecdsa certificate");
+   CHECK_MESSAGE(hex_encode(cert.authority_key_id()) == "0096452DE588F966C4CCDF161DD1F3F5341B71E7", "error reading authority key id from x509 ecdsa certificate");
+   CHECK_MESSAGE(hex_encode(cert.subject_key_id()) == "0096452DE588F966C4CCDF161DD1F3F5341B71E7", "error reading Subject key id from x509 ecdsa certificate");
 
    std::unique_ptr<X509_PublicKey> pubkey(cert.subject_public_key());
    bool ver_ec = cert.check_signature(*pubkey);
