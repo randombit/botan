@@ -13,5 +13,5 @@ fi
 
 $CXX --version
 python configure.py $CFG_FLAGS --cc=$CC --cc-bin=$CXX --with-openssl --with-sqlite --with-zlib
-make -j 4
-LD_LIBRARY_PATH=. ./botan-test
+make -j 2
+./botan-test
