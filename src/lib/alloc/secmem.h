@@ -108,7 +108,10 @@ size_t buffer_insert(std::vector<T, Alloc>& buf,
                      size_t input_length)
    {
    const size_t to_copy = std::min(input_length, buf.size() - buf_offset);
-   copy_mem(&buf[buf_offset], input, to_copy);
+   if (to_copy > 0)
+      {
+      copy_mem(&buf[buf_offset], input, to_copy);
+      }
    return to_copy;
    }
 
@@ -118,7 +121,10 @@ size_t buffer_insert(std::vector<T, Alloc>& buf,
                      const std::vector<T, Alloc2>& input)
    {
    const size_t to_copy = std::min(input.size(), buf.size() - buf_offset);
-   copy_mem(&buf[buf_offset], input.data(), to_copy);
+   if (to_copy > 0)
+      {
+      copy_mem(&buf[buf_offset], input.data(), to_copy);
+      }
    return to_copy;
    }
 
@@ -129,7 +135,10 @@ operator+=(std::vector<T, Alloc>& out,
    {
    const size_t copy_offset = out.size();
    out.resize(out.size() + in.size());
-   copy_mem(&out[copy_offset], in.data(), in.size());
+   if (in.size() > 0)
+      {
+      copy_mem(&out[copy_offset], in.data(), in.size());
+      }
    return out;
    }
 
@@ -146,7 +155,10 @@ std::vector<T, Alloc>& operator+=(std::vector<T, Alloc>& out,
    {
    const size_t copy_offset = out.size();
    out.resize(out.size() + in.second);
-   copy_mem(&out[copy_offset], in.first, in.second);
+   if (in.second > 0)
+      {
+      copy_mem(&out[copy_offset], in.first, in.second);
+      }
    return out;
    }
 
@@ -156,7 +168,10 @@ std::vector<T, Alloc>& operator+=(std::vector<T, Alloc>& out,
    {
    const size_t copy_offset = out.size();
    out.resize(out.size() + in.second);
-   copy_mem(&out[copy_offset], in.first, in.second);
+   if (in.second > 0)
+      {
+      copy_mem(&out[copy_offset], in.first, in.second);
+      }
    return out;
    }
 

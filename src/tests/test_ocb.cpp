@@ -25,9 +25,9 @@ std::vector<byte> ocb_encrypt(OCB_Encryption& enc,
                               const std::vector<byte>& pt,
                               const std::vector<byte>& ad)
    {
-   enc.set_associated_data(&ad[0], ad.size());
+   enc.set_associated_data(ad.data(), ad.size());
 
-   enc.start(&nonce[0], nonce.size());
+   enc.start(nonce.data(), nonce.size());
 
    secure_vector<byte> buf(pt.begin(), pt.end());
    enc.finish(buf, 0);
@@ -36,9 +36,9 @@ std::vector<byte> ocb_encrypt(OCB_Encryption& enc,
       {
       secure_vector<byte> ct = buf;
 
-      dec.set_associated_data(&ad[0], ad.size());
+      dec.set_associated_data(ad.data(), ad.size());
 
-      dec.start(&nonce[0], nonce.size());
+      dec.start(nonce.data(), nonce.size());
 
       dec.finish(ct, 0);
 

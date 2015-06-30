@@ -190,7 +190,11 @@ void Poly1305::final_result(byte out[])
    if(m_buf_pos != 0)
       {
       m_buf[m_buf_pos] = 1;
-      clear_mem(&m_buf[m_buf_pos+1], m_buf.size() - m_buf_pos - 1);
+      const auto len = m_buf.size() - m_buf_pos - 1;
+      if (len > 0)
+         {
+         clear_mem(&m_buf[m_buf_pos+1], len);
+         }
       poly1305_blocks(m_poly, m_buf.data(), 1, true);
       }
 

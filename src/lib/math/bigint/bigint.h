@@ -278,7 +278,11 @@ class BOTAN_DLL BigInt
 
         if(top_word < size())
            {
-           clear_mem(&m_reg[top_word+1], size() - (top_word + 1));
+           const auto len = size() - (top_word + 1);
+           if (len > 0)
+              {
+              clear_mem(&m_reg[top_word+1], len);
+              }
            m_reg[top_word] &= mask;
            }
         }

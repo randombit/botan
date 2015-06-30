@@ -100,7 +100,10 @@ void CFB_Encryption::update(secure_vector<byte>& buffer, size_t offset)
       xor_buf(buf, &keystream_buf()[0], took);
 
       // Assumes feedback-sized block except for last input
-      copy_mem(state.data(), &state[shift], BS - shift);
+      if (BS - shift > 0)
+         {
+         copy_mem(state.data(), &state[shift], BS - shift);
+         }
       copy_mem(&state[BS-shift], buf, took);
       cipher().encrypt(state, keystream_buf());
 
@@ -130,7 +133,10 @@ void CFB_Decryption::update(secure_vector<byte>& buffer, size_t offset)
       const size_t took = std::min(shift, sz);
 
       // first update shift register with ciphertext
-      copy_mem(state.data(), &state[shift], BS - shift);
+      if (BS - shift > 0)
+         {
+         copy_mem(state.data(), &state[shift], BS - shift);
+         }
       copy_mem(&state[BS-shift], buf, took);
 
       // then decrypt

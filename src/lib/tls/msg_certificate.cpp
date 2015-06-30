@@ -41,9 +41,9 @@ Certificate::Certificate(const std::vector<byte>& buf)
    if(total_size != buf.size() - 3)
       throw Decoding_Error("Certificate: Message malformed");
 
-   const byte* certs = &buf[3];
+   const byte* certs = buf.data() + 3;
 
-   while(size_t remaining_bytes = &buf[buf.size()] - certs)
+   while(size_t remaining_bytes = buf.data() + buf.size() - certs)
       {
       if(remaining_bytes < 3)
          throw Decoding_Error("Certificate: Message malformed");

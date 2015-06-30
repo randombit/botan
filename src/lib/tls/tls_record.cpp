@@ -491,7 +491,7 @@ size_t read_tls_record(secure_vector<byte>& readbuf,
 
    if(epoch == 0) // Unencrypted initial handshake
       {
-      record.assign(&readbuf[TLS_HEADER_SIZE], &readbuf[TLS_HEADER_SIZE + record_len]);
+      record.assign(readbuf.begin() + TLS_HEADER_SIZE, readbuf.begin() + TLS_HEADER_SIZE + record_len);
       readbuf.clear();
       return 0; // got a full record
       }
@@ -578,7 +578,7 @@ size_t read_dtls_record(secure_vector<byte>& readbuf,
 
    if(epoch == 0) // Unencrypted initial handshake
       {
-      record.assign(&readbuf[DTLS_HEADER_SIZE], &readbuf[DTLS_HEADER_SIZE + record_len]);
+      record.assign(readbuf.begin() + DTLS_HEADER_SIZE, readbuf.begin() + DTLS_HEADER_SIZE + record_len);
       readbuf.clear();
       return 0; // got a full record
       }

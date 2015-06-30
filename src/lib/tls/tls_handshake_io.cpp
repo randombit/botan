@@ -95,7 +95,10 @@ Stream_Handshake_IO::format(const std::vector<byte>& msg,
 
    store_be24(&send_buf[1], buf_size);
 
-   copy_mem(&send_buf[4], msg.data(), msg.size());
+   if (msg.size() > 0)
+      {
+      copy_mem(&send_buf[4], msg.data(), msg.size());
+      }
 
    return send_buf;
    }
@@ -350,7 +353,10 @@ Datagram_Handshake_IO::format_fragment(const byte fragment[],
    store_be24(&send_buf[6], frag_offset);
    store_be24(&send_buf[9], frag_len);
 
-   copy_mem(&send_buf[12], fragment, frag_len);
+   if (frag_len > 0)
+      {
+      copy_mem(&send_buf[12], fragment, frag_len);
+      }
 
    return send_buf;
    }
