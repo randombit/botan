@@ -1597,9 +1597,9 @@ def generate_amalgamation(build_config, options):
 
         return contents
 
-    botan_include = re.compile('#include <botan/(.*)>$')
-    std_include = re.compile('#include <([^/\.]+|stddef.h)>$')
-    any_include = re.compile('#include <(.*)>$')
+    botan_include_matcher = re.compile('#include <botan/(.*)>$')
+    std_include_matcher = re.compile('#include <([^/\.]+|stddef.h)>$')
+    any_include_matcher = re.compile('#include <(.*)>$')
 
     class Amalgamation_Generator:
         def __init__(self, input_list):
@@ -1633,12 +1633,12 @@ def generate_amalgamation(build_config, options):
                 return
 
             for line in self.file_contents[name]:
-                match = botan_include.search(line)
+                match = botan_include_matcher.search(line)
                 if match:
                     for c in self.header_contents(match.group(1)):
                         yield c
                 else:
-                    match = std_include.search(line)
+                    match = std_include_matcher.search(line)
 
                     if match:
                         self.all_std_includes.add(match.group(1))
@@ -1690,7 +1690,7 @@ def generate_amalgamation(build_config, options):
     botan_int_h.write(internal_headers.contents)
     botan_int_h.write("\n#endif\n")
 
-    headers_written = pub_header_amalag.all_std_includes.union(internal_headers.all_std_includes)
+    headers_written_in_h_files = pub_header_amalag.all_std_includes | internal_headers.all_std_includes
 
     botan_amalgs_fs = []
 
@@ -1706,8 +1706,8 @@ def generate_amalgamation(build_config, options):
 
         return f
 
-    botan_amalgs = {}
-    botan_amalgs[''] = open_amalg_file('')
+    botan_amalg_files = {}
+    headers_written = {}
 
     for mod in build_config.modules:
         tgt = ''
@@ -1717,24 +1717,27 @@ def generate_amalgamation(build_config, options):
             if tgt == 'sse2' and options.arch == 'x86_64':
                 tgt = '' # SSE2 is always available on x86-64
 
-        if tgt not in botan_amalgs:
-            botan_amalgs[tgt] = open_amalg_file(tgt)
+        if tgt not in botan_amalg_files:
+            botan_amalg_files[tgt] = open_amalg_file(tgt)
+        if tgt not in headers_written:
+            headers_written[tgt] = headers_written_in_h_files.copy()
+
         for src in sorted(mod.source):
             contents = open(src, 'r').readlines()
             for line in contents:
-                if botan_include.search(line):
+                if botan_include_matcher.search(line):
                     continue
 
-                match = any_include.search(line)
+                match = any_include_matcher.search(line)
                 if match:
                     header = match.group(1)
-                    if header in headers_written:
+                    if header in headers_written[tgt]:
                         continue
 
-                    botan_amalgs[tgt].write(line)
-                    headers_written.add(header)
+                    botan_amalg_files[tgt].write(line)
+                    headers_written[tgt].add(header)
                 else:
-                    botan_amalgs[tgt].write(line)
+                    botan_amalg_files[tgt].write(line)
 
     return botan_amalgs_fs
 
