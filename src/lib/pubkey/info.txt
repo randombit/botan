@@ -36,6 +36,6 @@ oid_lookup
 pbes2
 pem
 pk_pad
+numbertheory
 rng
-base
 </requires>
