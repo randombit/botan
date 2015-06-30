@@ -1,5 +1,16 @@
 #!/usr/bin/env python
 
+"""
+Show Botan module dependencies as a list or graph.
+
+Requires graphviz from pip when graphical output is selected:
+https://pypi.python.org/pypi/graphviz
+
+(C) 2015 Simon Warta (Kullo GmbH)
+
+Botan is released under the Simplified BSD License (see license.txt)
+"""
+
 # global
 import argparse
 import sys
