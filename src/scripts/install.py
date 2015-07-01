@@ -146,7 +146,7 @@ def main(args = None):
     copy_file(os.path.join(out_dir, static_lib),
               os.path.join(lib_dir, os.path.basename(static_lib)))
 
-    if bool(cfg['with_shared_lib']):
+    if bool(cfg['build_shared_lib']):
         if str(cfg['os']) == "windows":
             shared_lib = process_template('%{lib_prefix}%{libname}.%{so_suffix}') # botan.dll
             copy_executable(os.path.join(out_dir, shared_lib),
