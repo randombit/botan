@@ -1,5 +1,5 @@
 # Compiler Options
-CXX            = %{cc}
+CXX            = %{cxx}
 LIB_OPT        = %{lib_opt}
 APP_OPT        = %{app_opt}
 LANG_FLAGS     = %{lang_flags}

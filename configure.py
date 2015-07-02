@@ -1273,7 +1273,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'mp_bits': choose_mp_bits(),
 
-        'cc': (options.compiler_binary or cc.binary_name) + cc.mach_abi_link_flags(options),
+        'cxx': (options.compiler_binary or cc.binary_name) + cc.mach_abi_link_flags(options),
 
         'lib_opt': cc.opt_flags('lib', options),
         'app_opt': cc.opt_flags('app', options),
