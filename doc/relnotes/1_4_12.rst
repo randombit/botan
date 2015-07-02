@@ -1,8 +1,0 @@
-Version 1.4.12, 2006-01-15
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Fixed an off-by-one memory read in MISTY1::key()
-* Fixed a nasty memory leak in Output_Buffers::retire()
-* Changed maximum HMAC keylength to 1024 bits
-* Fixed a build problem in the hardware timer module on 64-bit PowerPC
-

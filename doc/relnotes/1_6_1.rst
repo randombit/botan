@@ -1,8 +1,0 @@
-Version 1.6.1, 2007-01-20
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Fix some base64 decoder bugs
-* Add a new option to base64 encoding, to always append a newline
-* Fix some build problems under Visual Studio with debug enabled
-* Fix a bug in BER_Decoder that was triggered under some compilers
-

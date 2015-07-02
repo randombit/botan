@@ -1,8 +1,0 @@
-Version 1.8.2, 2009-04-07
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Make entropy polling more flexible and in most cases faster
-* GOST 28147 now supports multiple sbox parameters
-* Added the GOST 34.11 hash function
-* Fix botan-config problems on MacOS X
-

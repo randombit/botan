@@ -35,7 +35,6 @@ if is_website_build and use_disqus:
 files_dir = 'http://botan.randombit.net/releases'
 
 extlinks = {
-    'pr': ('http://bugs.randombit.net/show_bug.cgi?id=%s', 'PR '),
     'wikipedia': ('https://en.wikipedia.org/wiki/%s', ''),
     'botan-devel': ('http://lists.randombit.net/pipermail/botan-devel/%s.html', None),
 

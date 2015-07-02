@@ -1,5 +1,0 @@
-Version 1.6.4, 2008-03-08
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Fix a compilation problem with Visual Studio C++ 2003
-

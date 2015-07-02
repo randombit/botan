@@ -1,7 +1,0 @@
-Version 1.9.12, 2010-12-13
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Add the Keccak hash function
-* Fix compilation problems in Python wrappers
-* Fix compilation problem in OpenSSL engine
-* Update SQLite3 database encryption codec

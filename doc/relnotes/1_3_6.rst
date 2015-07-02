@@ -1,8 +1,0 @@
-Version 1.3.6, 2003-12-07
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Added a new module 'minimal', which disables most algorithms
-* SecureAllocator allocates a few blocks at startup
-* A few minor MPI cleanups
-* RPM spec file cleanups and fixes
-

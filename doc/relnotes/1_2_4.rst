@@ -1,8 +1,0 @@
-Version 1.2.4, 2003-05-29
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Fixed a bug in EMSA1 affecting NR signature verification
-* Fixed a few latent bugs in BigInt related to word size
-* Removed an unused function, mp_add2_nc, from the MPI implementation
-* Reorganized the core MPI files
-

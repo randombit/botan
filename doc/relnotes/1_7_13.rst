@@ -1,9 +1,0 @@
-Version 1.7.13, 2008-09-27
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Add SSLv3 MAC, SSLv3 PRF, and TLS v1.0 PRF from Ajisai
-* Allow all examples to compile even if compression not enabled
-* Make CMAC's polynomial doubling operation a public class method
-* Use the -m64 flag when compiling with Sun Forte on x86-64
-* Clean up and slightly optimize CMAC::final_result
-

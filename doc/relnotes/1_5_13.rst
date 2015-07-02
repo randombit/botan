@@ -1,6 +1,0 @@
-Version 1.5.13, 2006-12-10
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Compilation fixes for the bzip2, zlib, and GNU MP modules
-* Better support for Intel C++ and EKOpath C++ on x86-64
-

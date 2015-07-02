@@ -1,7 +1,0 @@
-Version 1.6.2, 2007-03-24
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Fix autodection on Athlon64s running Linux
-* Fix builds on QNX and compilers using STLport
-* Remove a call to abort() that crept into production
-

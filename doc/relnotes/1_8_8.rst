@@ -1,8 +1,0 @@
-Version 1.8.8, 2009-11-03
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Alter Skein-512 to match the tweaked 1.2 specification
-* Fix use of inline asm for access to x86 bswap function
-* Allow building the library without AES enabled
-* Add 'powerpc64' alias to ppc64 arch for Gentoo ebuild
-

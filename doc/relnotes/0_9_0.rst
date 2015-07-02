@@ -1,8 +1,0 @@
-Version 0.9.0, 2002-08-03
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* EMSA4 supports variable salt size
-* PK_* can take a string naming the encoding method to use
-* Started writing some internals documentation
-
-

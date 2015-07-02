@@ -1,9 +1,0 @@
-Version 1.9.6, 2010-04-09
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* TLS: Add support for TLS v1.1
-* TLS: Support server name indicator extension
-* TLS: Fix server handshake
-* TLS: Fix server using DSA certificates
-* TLS: Avoid timing channel between CBC padding check and MAC verification
-

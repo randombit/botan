@@ -1,8 +1,0 @@
-Version 1.1.5, 2002-11-17
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Added the discrete logarithm integrated encryption system (DLIES)
-* Various optimizations for BigInt
-* Added support for assembler optimizations in modules
-* Added BigInt x86 optimizations module (mpi_ia32)
-

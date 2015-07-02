@@ -1,6 +1,0 @@
-Version 1.0.2, 2003-01-12
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Fixed an obscure SEGFAULT causing bug in Pipe
-* Fixed an obscure but dangerous bug in SecureVector::swap
-

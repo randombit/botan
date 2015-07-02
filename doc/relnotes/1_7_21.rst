@@ -1,9 +1,0 @@
-Version 1.7.21, 2008-11-11
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Make algorithm lookup much more configuable
-* Add facilities for runtime performance testing of algorithms
-* Drop use of entropy estimation in the PRNGs
-* Increase intervals between HMAC_RNG automatic reseeding
-* Drop InitializerOptions class, all options but thread safety
-

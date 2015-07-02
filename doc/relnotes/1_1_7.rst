@@ -1,8 +1,0 @@
-Version 1.1.7, 2003-01-12
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Fixed an obscure but dangerous bug in SecureVector::swap
-* Consolidated SHA-384 and SHA-512 to save code space
-* Added SSL3-MAC and SSL3-PRF
-* Documentation updates, including a new tutorial
-

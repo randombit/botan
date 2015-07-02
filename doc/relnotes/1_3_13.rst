@@ -1,9 +1,0 @@
-Version 1.3.13, 2004-05-15
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Major fixes for Cygwin builds
-* Minor MacOS X install fixes
-* The configure script is a little better at picking the right modules
-* Removed ml_unix from the 'unix' module set for Cygwin compatibility
-* Fixed a stupid compile problem in pkcs10.h
-

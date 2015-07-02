@@ -1,6 +1,0 @@
-Version 1.6.5, 2008-08-27
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Add noexec stack marker for GNU linker in assembly code
-* Fix autoconfiguration problem on x86 with GCC 4.2 and 4.3
-

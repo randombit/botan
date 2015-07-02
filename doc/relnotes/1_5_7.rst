@@ -1,8 +1,0 @@
-Version 1.5.7, 2006-05-28
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Further, major changes to the BER/DER coding system
-* Updated the Qt mutex module to use Mutex_Factory
-* Moved the library global state object into an anonymous namespace
-* Drop the Visual C++ x86 assembly module due to bugs
-

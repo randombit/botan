@@ -1,9 +1,0 @@
-Version 1.4.4, 2004-12-02
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Further tweaks to the pooling allocator
-* Modified EMSA3 to support SSL/TLS signatures
-* Changes to support Qt/QCA, from Justin Karneges
-* Moved mux_qt module code into mod_qt
-* Fixes for HP-UX from Mike Desjardins
-

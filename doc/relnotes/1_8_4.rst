@@ -1,5 +1,0 @@
-Version 1.8.4, 2009-07-12
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Fix a bug in nonce generation in the Miller-Rabin test
-

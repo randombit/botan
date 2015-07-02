@@ -1,6 +1,0 @@
-Version 1.6.3, 2007-07-23
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Fix a race condition in the algorithm lookup cache
-* Fix problems building the memory pool on some versions of Visual C++
-

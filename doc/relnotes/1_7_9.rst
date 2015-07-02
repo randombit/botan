@@ -1,9 +1,0 @@
-Version 1.7.9, 2008-08-27
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Make clear() in most algorithm base classes a pure virtual
-* Add noexec stack marker for GNU linker in assembly code
-* Avoid string operations in ressol
-* Compilation fixes for MinGW and Visual Studio C++ 2008
-* Some autoconfiguration fixes for Windows
-

@@ -1,9 +1,0 @@
-Version 1.2.0, 2003-04-28
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Tweaked the Karatsuba cut-off points
-* Increased the allowed keylength of HMAC and Blowfish
-* Removed the 'mpi_ia32' module, pending rewrite
-* Workaround a GCC 2.95.x bug in eme1.cpp
-
-

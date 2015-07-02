@@ -1,8 +1,0 @@
-Version 1.7.20, 2008-11-09
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Namespace pkg-config file by major and minor versions
-* Cache device descriptors in Device_EntropySource
-* Split base.h into {block_cipher,stream_cipher,mac,hash}.h
-* Removed get_mgf function from lookup.h
-

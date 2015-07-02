@@ -1,8 +1,0 @@
-Version 1.8.5, 2009-07-23
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Change configure.py to work on stock Python 2.4
-* Avoid a crash in Skein_512::add_data processing a zero-length input
-* Small build fixes for SPARC, ARM, and HP-PA processors
-* The test suite now returns an error code from main() if any tests failed
-

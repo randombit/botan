@@ -1,8 +1,0 @@
-Version 1.0.1, 2002-09-14
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Fixed a minor bug in Randpool::random()
-* Added some new aliases and typedefs for 1.1.x compatibility
-* The 4096-bit RSA benchmark key was decimal instead of hex
-* EMAC was returning an incorrect name
-

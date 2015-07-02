@@ -1,8 +1,0 @@
-Version 1.8.1, 2009-01-20
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Avoid a valgrind warning in es_unix.cpp on 32-bit Linux
-* Fix memory leak in PKCS8 load_key and encrypt_key
-* Relicense api.tex from CC-By-SA 2.5 to BSD
-* Fix botan-config on MacOS X, Solaris
-

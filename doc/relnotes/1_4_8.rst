@@ -1,9 +1,0 @@
-Version 1.4.8, 2005-10-16
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Resolved a bad performance problem in the allocators; fix by Matt Johnston
-* Worked around a Visual Studio 2003 compilation problem introduced in 1.4.7
-* Renamed OMAC to CMAC to match the official NIST naming
-* Added single byte versions of update() to PK_Signer and PK_Verifier
-* Removed the unused reverse_bits and reverse_bytes functions
-

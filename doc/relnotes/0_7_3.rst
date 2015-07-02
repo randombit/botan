@@ -1,9 +1,0 @@
-Version 0.7.3, 2001-06-08
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* Fix build problems on Solaris/SPARC
-* Fix build problems with Perl versions < 5.6
-* Fixed some stupid code that broke on a few compilers
-* Added string handling functions to Pipe
-* MISTY1 optimizations
-
