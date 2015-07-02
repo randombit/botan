@@ -5,7 +5,7 @@ Version 1.11.18, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * In this release Botan has switched VCS from `monotone` to `git`,
-  and is now hosted on github at https://github.com/randombt/botan
+  and is now hosted on github at https://github.com/randombit/botan
 
 Version 1.11.17, 2015-06-18
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -646,7 +646,7 @@ Version 1.11.4, 2013-07-25
   server would by default negotiate either protocol type (clients
   would only accept the same protocol type as they
   offered). Applications which use DTLS or combined TLS/DTLS need to
-  override :cpp:func:`Policy::acceptable_protocol_version`.
+  override `Policy::acceptable_protocol_version`.
 
 * The TLS channels now accept a new parameter specifying how many
   bytes to preallocate for the record handling buffers, which allows
@@ -654,13 +654,13 @@ Version 1.11.4, 2013-07-25
   for a particular connection.
 
 * Applications can now send arbitrary TLS alert messages using
-  :cpp:func:`TLS::Channel::send_alert`
+  `TLS::Channel::send_alert`
 
-* A new TLS policy :cpp:class:`NSA_Suite_B_128` is available, which
+* A new TLS policy `NSA_Suite_B_128` is available, which
   will negotiate only the 128-bit security NSA Suite B. See
   :rfc:`6460` for more information about Suite B.
 
-* Adds a new interface for benchmarking, :cpp:func:`time_algorithm_ops`,
+* Adds a new interface for benchmarking, `time_algorithm_ops`,
   which returns a map of operations to operations per second. For
   instance now both encrypt and decrypt speed of a block cipher can be
   checked, as well as the key schedule of all keyed algorithms. It
@@ -671,7 +671,7 @@ Version 1.11.4, 2013-07-25
 Version 1.11.3, 2013-04-11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Add a new interface for AEAD modes (:cpp:class:`AEAD_Mode`).
+* Add a new interface for AEAD modes (`AEAD_Mode`).
 
 * Implementations of the OCB and GCM authenticated cipher modes are
   now included.
@@ -679,14 +679,14 @@ Version 1.11.3, 2013-04-11
 * Support for TLS GCM ciphersuites is now available.
 
 * A new TLS policy mechanism
-  :cpp:func:`TLS::Policy::server_uses_own_ciphersuite_preferences`
+  `TLS::Policy::server_uses_own_ciphersuite_preferences`
   controls how a server chooses a ciphersuite. Previously it always
   chose its most preferred cipher out of the client's list, but this
   can allow configuring a server to choose by the client's preferences
   instead.
 
-* :cpp:class:`Keyed_Filter` now supports returning a
-  :cpp:class:`Key_Length_Specification` so the full details of what
+* `Keyed_Filter` now supports returning a
+  `Key_Length_Specification` so the full details of what
   keylengths are supported is now available in keyed filters.
 
 * The experimental and rarely used Turing and WiderWAKE stream ciphers
@@ -695,9 +695,9 @@ Version 1.11.3, 2013-04-11
 * New functions for symmetric encryption are included in cryptobox.h
   though interfaces and formats are subject to change.
 
-* A new function :cpp:func:`algorithm_kat_detailed` returns a string
+* A new function `algorithm_kat_detailed` returns a string
   providing information about failures, instead of just a pass/fail
-  indicator as in :cpp:func:`algorithm_kat`.
+  indicator as in `algorithm_kat`.
 
 Version 1.10.5, 2013-03-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -735,8 +735,8 @@ Memory Zeroization Changes
 New Parallel Filter
 """"""""""""""""""""""""""""""""""""""""
 
-* The new filter :cpp:class:`Threaded_Fork` acts like a normal
-  :cpp:class:`Fork`, sending its input to a number of different
+* The new filter `Threaded_Fork` acts like a normal
+  `Fork`, sending its input to a number of different
   filters, but each subchain of filters in the fork runs in its own
   thread. Contributed by Joel Low.
 
@@ -747,7 +747,7 @@ TLS Enhancements and Bug Fixes
   3DES by default. Now the default policy is to negotiate only either
   AES or RC4, and to prefer RC4.
 
-* New TLS :cpp:class:`Blocking_Client` provides a thread per
+* New TLS `Blocking_Client` provides a thread per
   connection style API similar to that provided in 1.10
 
 Other API Changes
@@ -789,23 +789,23 @@ Initial support for DTLS (both v1.0 and v1.2) is available in this
 release, though it should be considered highly experimental. Currently
 timeouts and retransmissions are not handled.
 
-The :cpp:class:`TLS::Client` constructor now takes the version to
-offer to the server. The policy hook :cpp:class:`TLS::Policy` function
+The `TLS::Client` constructor now takes the version to
+offer to the server. The policy hook `TLS::Policy` function
 `pref_version`, which previously controlled this, has been removed.
 
-:cpp:class:`TLS::Session_Manager_In_Memory` now chooses a random
+`TLS::Session_Manager_In_Memory` now chooses a random
 256-bit key at startup and encrypts all sessions (using the existing
-:cpp:func:`TLS::Session::encrypt` mechanism) while they are stored in
+`TLS::Session::encrypt` mechanism) while they are stored in
 memory. This is primarily to reduce pressure on locked memory, as each
 session normally requires 48 bytes of locked memory for the master
 secret, whereas now only 32 bytes are needed total. This change may
 also make it slightly harder for an attacker to extract session data
 from memory dumps (eg with a cold boot attack).
 
-The keys used in :cpp:func:`session encryption <TLS::Session::encrypt>`
-were previously uniquely determined by the master key. Now the
-encrypted session blob includes two 80 bit salts which are used in the
-derivation of the cipher and MAC keys.
+The keys used in TLS session encryption were previously uniquely
+determined by the master key. Now the encrypted session blob includes
+two 80 bit salts which are used in the derivation of the cipher and
+MAC keys.
 
 The ``secure_renegotiation`` flag is now considered an aspect of the
 connection rather than the session, which matches the behavior of
@@ -814,9 +814,9 @@ persistent storage by 1.11.0 will not load in this version and vice
 versa. In either case this will not cause any errors, the session will
 simply not resume and instead a full handshake will occur.
 
-New policy hooks :cpp:func:`TLS::Policy::acceptable_protocol_version`,
-:cpp:func:`TLS::Policy::allow_server_initiated_renegotiation`, and
-:cpp:func:`TLS::Policy::negotiate_heartbeat_support` were added.
+New policy hooks `TLS::Policy::acceptable_protocol_version`,
+`TLS::Policy::allow_server_initiated_renegotiation`, and
+`TLS::Policy::negotiate_heartbeat_support` were added.
 
 TLS clients were not sending a next protocol message during a session
 resumption, which would cause resumption failures with servers that
@@ -827,21 +827,21 @@ handshake to be passed to the application callback as if they were
 heartbeat responses.
 
 Support for TLS key material export as specified in :rfc:`5705` has
-been added, available via :cpp:func:`TLS::Channel::key_material_export`
+been added, available via `TLS::Channel::key_material_export`
 
 New Feature: Public Key Strength Checking
 """"""""""""""""""""""""""""""""""""""""""
 
-A new function :cpp:func:`Public_Key::estimated_strength` returns
+A new function `Public_Key::estimated_strength` returns
 an estimate for the upper bound of the strength of the key. For
 instance for an RSA key, it will return an estimate of how many
 operations GNFS would take to factor the key.
 
-A new :cpp:class:`Path_Validation_Result` code has been added
+A new `Path_Validation_Result` code has been added
 ``SIGNATURE_METHOD_TOO_WEAK``. By default signatures created with keys
 below 80 bits of strength (as estimated by ``estimated_strength``) are
 rejected. This level can be modified using a parameter to the
-:cpp:class:`Path_Validation_Restrictions` constructor.
+`Path_Validation_Restrictions` constructor.
 
 SRP6 Is Picker About Values
 """"""""""""""""""""""""""""""""""""""""
@@ -856,7 +856,7 @@ are not normally used and probably signal something fishy.
 Removal of Various BigInt Functions
 """"""""""""""""""""""""""""""""""""""""
 
-Several :cpp:class:`BigInt` functions have been removed, including
+Several `BigInt` functions have been removed, including
 ``operator[]``, ``assign``, ``get_reg``, and ``grow_reg``. The version
 of ``data`` that returns a mutable pointer has been renamed
 ``mutable_data``.  Support for octal conversions has been removed.
@@ -1040,9 +1040,7 @@ Version 1.10.1, 2011-07-11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * A race condition in `Algorithm_Factory` could cause crashes in
-  multithreaded code. See
-  :botan-devel:`this thread on botan-devel <2011-July/001455>`
-  for details and workarounds.
+  multithreaded code.
 
 * The return value of ``name`` has changed for GOST 28147-89 and
   Skein-512.  GOST's ``name`` now includes the name of the sbox, and
@@ -1061,8 +1059,7 @@ Version 1.8.13, 2011-07-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * A race condition in `Algorithm_Factory` could cause crashes in
-  multithreaded code. See :botan-devel:`this thread on botan-devel
-  <2011-July/001455>` for details and workarounds.
+  multithreaded code.
 
 Version 1.10.0, 2011-06-20
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
