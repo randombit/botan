@@ -1,9 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 """
 Release script for botan (http://botan.randombit.net/)
 
-(C) 2011, 2012, 2013 Jack Lloyd
+(C) 2011, 2012, 2013, 2015 Jack Lloyd
 
 Botan is released under the Simplified BSD License (see license.txt)
 """
@@ -12,19 +12,17 @@ import errno
 import logging
 import optparse
 import os
-import shlex
 import shutil
 import subprocess
 import sys
 import tarfile
 import datetime
 import hashlib
+import re
+import StringIO
 
 def check_subprocess_results(subproc, name):
     (stdout, stderr) = subproc.communicate()
-
-    stdout = stdout.strip()
-    stderr = stderr.strip()
 
     if subproc.returncode != 0:
         if stdout != '':
@@ -38,57 +36,31 @@ def check_subprocess_results(subproc, name):
 
     return stdout
 
-def run_monotone(db, args):
-    cmd = ['mtn', '--db', db] + args
-
+def run_git(args):
+    cmd = ['git'] + args
     logging.debug('Running %s' % (' '.join(cmd)))
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return check_subprocess_results(proc, 'git')
 
-    mtn = subprocess.Popen(cmd,
-                           stdout=subprocess.PIPE,
-                           stderr=subprocess.PIPE)
+def datestamp(tag):
+    ts = run_git(['show', '--no-patch', '--format=%ai', tag])
 
-    return check_subprocess_results(mtn, 'mtn')
+    ts_matcher = re.compile('^(\d{4})-(\d{2})-(\d{2}) \d{2}:\d{2}:\d{2} .*')
+    match = ts_matcher.match(ts)
 
-def get_certs(db, rev_id):
-    tokens = shlex.split(run_monotone(db, ['automate', 'certs', rev_id]))
+    if match is None:
+        logging.error('Failed parsing timestamp "%s" of tag %s' % (ts, tag))
+        return 0
 
-    def usable_cert(cert):
-        if 'signature' not in cert or cert['signature'] != 'ok':
-            return False
-        if 'trust' not in cert or cert['trust'] != 'trusted':
-            return False
-        if 'name' not in cert or 'value' not in cert:
-            return False
-        return True
+    return int(match.group(1) + match.group(2) + match.group(3))
 
-    def cert_builder(tokens):
-        pairs = zip(tokens[::2], tokens[1::2])
-        current_cert = {}
-        for pair in pairs:
-            if pair[0] == 'trust':
-                if usable_cert(current_cert):
-                    name = current_cert['name']
-                    value = current_cert['value']
-                    current_cert = {}
+def revision_of(tag):
+    return run_git(['show', '--no-patch', '--format=%H', tag]).strip()
 
-                    logging.debug('Cert %s "%s" for rev %s' % (name, value, rev_id))
-                    yield (name, value)
-
-            current_cert[pair[0]] = pair[1]
-
-    certs = dict(cert_builder(tokens))
-    return certs
-
-def datestamp(db, rev_id):
-    certs = get_certs(db, rev_id)
-
-    if 'date' in certs:
-        datestamp = int(certs['date'].replace('-','')[0:8])
-        logging.info('Using datestamp %s for rev %s' % (datestamp, rev_id))
-        return datestamp
-
-    logging.info('Could not retreive date for %s' % (rev_id))
-    return 0
+def extract_revision(revision, to):
+    tar_val = run_git(['archive', '--format=tar', '--prefix=%s/' % (to), revision])
+    tar_f = tarfile.open(fileobj=StringIO.StringIO(tar_val))
+    tar_f.extractall()
 
 def gpg_sign(keyid, passphrase_file, files, detached = True):
 
@@ -125,13 +97,8 @@ def parse_args(args):
     parser.add_option('--quiet', action='store_true',
                       default=False, help='Only show errors')
 
-    parser.add_option('--output-dir', metavar='DIR',
-                      default='.',
+    parser.add_option('--output-dir', metavar='DIR', default='.',
                       help='Where to place output (default %default)')
-
-    parser.add_option('--mtn-db', metavar='DB',
-                      default=os.getenv('BOTAN_MTN_DB', ''),
-                      help='Set monotone db (default \'%default\')')
 
     parser.add_option('--print-output-names', action='store_true',
                       help='Print output archive filenames to stdout')
@@ -176,28 +143,20 @@ def main(args = None):
                         format = '%(levelname) 7s: %(message)s',
                         level = log_level())
 
-    if options.mtn_db == '':
-        logging.error('No monotone db set (use --mtn-db)')
-        return 1
-
-    if not os.access(options.mtn_db, os.R_OK):
-        logging.error('Monotone db %s not found' % (options.mtn_db))
-        return 1
-
-    if len(args) == 0 or len(args) >= 3:
+    if len(args) == 0 or len(args) > 2:
         logging.error('Usage error, try --help')
         return 1
 
-    # Sanity check arguments
+    is_snapshot = args[0] == 'snapshot'
+    target_version = None
 
-    if args[0] == 'snapshot':
-
+    if is_snapshot:
         if len(args) == 1:
             logging.error('Missing branch name for snapshot command')
             return 1
 
         logging.info('Creating snapshot release from branch %s', args[1])
-
+        target_version = 'HEAD'
     elif len(args) == 1:
         try:
             logging.info('Creating release for version %s' % (args[0]))
@@ -205,29 +164,21 @@ def main(args = None):
             (major,minor,patch) = map(int, args[0].split('.'))
 
             assert args[0] == '%d.%d.%d' % (major,minor,patch)
+            target_version = args[0]
         except:
             logging.error('Invalid version number %s' % (args[0]))
             return 1
-
     else:
         logging.error('Usage error, try --help')
         return 1
 
-    def selector(args):
-        if args[0] == 'snapshot':
-            return 'h:' + args[1]
-        else:
-            return 't:' + args[0]
-
     def output_name(args):
-        if args[0] == 'snapshot':
+        if is_snapshot:
             datestamp = datetime.date.today().isoformat().replace('-', '')
 
             def snapshot_name(branch):
-                if branch == 'net.randombit.botan':
+                if branch == 'master':
                     return 'trunk'
-                elif branch == 'net.randombit.botan.1_10':
-                    return '1.10'
                 else:
                     return branch
 
@@ -235,13 +186,16 @@ def main(args = None):
         else:
             return 'Botan-' + args[0]
 
-    rev_id = run_monotone(options.mtn_db, ['automate', 'select', selector(args)])
+    logging.info('Creating release for version %s' % (target_version))
+
+    rev_id = revision_of(target_version)
+    rel_date = datestamp(target_version)
 
     if rev_id == '':
-        logging.error('No revision matching %s found' % (selector(args)))
+        logging.error('No tag matching %s found' % (target_version))
         return 2
 
-    logging.info('Found revision id %s' % (rev_id))
+    logging.info('Found %s at revision id %s released %d' % (target_version, rev_id, rel_date))
 
     output_basename = output_name(args)
 
@@ -251,11 +205,7 @@ def main(args = None):
         logging.info('Removing existing output dir %s' % (output_basename))
         shutil.rmtree(output_basename)
 
-    run_monotone(options.mtn_db,
-                 ['checkout', '--quiet', '-r', rev_id, output_basename])
-
-    shutil.rmtree(os.path.join(output_basename, '_MTN'))
-    remove_file_if_exists(os.path.join(output_basename, '.mtn-ignore'))
+    extract_revision(rev_id, output_basename)
 
     version_file = os.path.join(output_basename, 'botan_version.py')
 
@@ -267,9 +217,9 @@ def main(args = None):
         def content_rewriter():
             for line in contents:
                 if line == 'release_vc_rev = None\n':
-                    yield 'release_vc_rev = \'mtn:%s\'\n' % (rev_id)
+                    yield 'release_vc_rev = \'git:%s\'\n' % (rev_id)
                 elif line == 'release_datestamp = 0\n':
-                    yield 'release_datestamp = %d\n' % (datestamp(options.mtn_db, rev_id))
+                    yield 'release_datestamp = %d\n' % (rel_date)
                 elif line == "release_type = \'unreleased\'\n":
                     if args[0] == 'snapshot':
                         yield "release_type = 'snapshot'\n"
@@ -280,7 +230,7 @@ def main(args = None):
 
         open(version_file, 'w').write(''.join(list(content_rewriter())))
     else:
-        logging.error('Cannot find %s' % (version_file))
+        logging.error('Cannot read %s' % (version_file))
         return 2
 
     try:
