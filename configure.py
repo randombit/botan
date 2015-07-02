@@ -777,6 +777,7 @@ class CompilerInfo(object):
         lex_me_harder(infofile, self,
                       ['so_link_flags', 'mach_opt', 'mach_abi_linking', 'isa_flags'],
                       { 'binary_name': None,
+                        'linker_name': None,
                         'macro_name': None,
                         'compile_option': '-c ',
                         'output_to_option': '-o ',
@@ -929,11 +930,17 @@ class CompilerInfo(object):
     """
     Return the command needed to link a shared object
     """
-    def so_link_command_for(self, osname):
-        if osname in self.so_link_flags:
-            return self.so_link_flags[osname]
-        if 'default' in self.so_link_flags:
-            return self.so_link_flags['default']
+    def so_link_command_for(self, osname, options):
+        if options.build_mode == 'debug':
+            if osname + "-debug" in self.so_link_flags:
+                return self.so_link_flags[osname + "-debug"]
+            if 'default-debug' in self.so_link_flags:
+                return self.so_link_flags['default-debug']
+        else:
+            if osname in self.so_link_flags:
+                return self.so_link_flags[osname]
+            if 'default' in self.so_link_flags:
+                return self.so_link_flags['default']
         return ''
 
     """
@@ -1274,6 +1281,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'mp_bits': choose_mp_bits(),
 
         'cxx': (options.compiler_binary or cc.binary_name) + cc.mach_abi_link_flags(options),
+        'linker': cc.linker_name or '$(CXX)',
 
         'lib_opt': cc.opt_flags('lib', options),
         'app_opt': cc.opt_flags('app', options),
@@ -1289,9 +1297,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         # This can be made constistent over all platforms in the future
         'libname': 'botan' if options.os == 'windows' else 'botan-%d.%d' % (build_config.version_major, build_config.version_minor),
 
-        'lib_link_cmd': cc.so_link_command_for(osinfo.basename),
-        'app_link_cmd': '$(CXX) -Wl,-rpath=\$$ORIGIN' if options.os == 'linux' else '$(CXX)',
-        'test_link_cmd': '$(CXX) -Wl,-rpath=\$$ORIGIN' if options.os == 'linux' else '$(CXX)',
+        'lib_link_cmd': cc.so_link_command_for(osinfo.basename, options),
+        'app_link_cmd': '$(LINKER) -Wl,-rpath=\$$ORIGIN' if options.os == 'linux' else '$(LINKER)',
+        'test_link_cmd': '$(LINKER) -Wl,-rpath=\$$ORIGIN' if options.os == 'linux' else '$(LINKER)',
 
         'link_to': ' '.join([cc.add_lib_option + lib for lib in link_to()]),
 

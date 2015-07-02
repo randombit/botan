@@ -1,6 +1,7 @@
 macro_name MSVC
 
 binary_name cl
+linker_name link
 
 compile_option "/nologo /c "
 output_to_option "/Fo"
@@ -36,7 +37,8 @@ rdrand -> ""
 </isa_flags>
 
 <so_link_flags>
-default -> "$(CXX) /LD"
+default       -> "$(LINKER) /DLL"
+default-debug -> "$(LINKER) /DLL /DEBUG"
 </so_link_flags>
 
 <mach_abi_linking>

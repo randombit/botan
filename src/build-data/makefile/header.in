@@ -1,5 +1,6 @@
 # Compiler Options
 CXX            = %{cxx}
+LINKER         = %{linker}
 LIB_OPT        = %{lib_opt}
 APP_OPT        = %{app_opt}
 LANG_FLAGS     = %{lang_flags}
