@@ -1,0 +1,5 @@
+Version 1.11.18, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* In this release Botan has switched VCS from `monotone` to `git`,
+  and is now hosted on github at https://github.com/randombt/botan

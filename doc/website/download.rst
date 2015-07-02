@@ -4,6 +4,9 @@ Download
 
 All releases are signed with a :doc:`PGP key <pgpkey>`.
 
+You can access the latest development sources on `GitHub
+<https://github.com/randombit/botan>`_.
+
 .. note::
 
    All users, especially for new applications, are encouraged to use

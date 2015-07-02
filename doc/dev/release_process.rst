@@ -18,24 +18,18 @@ point to the new release. Add the new release to
 
 Check in these changes (alone, with no other modifications) with a
 checkin message along the lines of "Update for X.Y.Z release", then
-tag the release with the version in monotone (eg tag '1.11.8', no
-prefix).
+tag the release with the version in git (eg tag '1.11.8', no prefix).
 
 Build The Release
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The release script is ``src/scripts/dist.py`` and runs from
-a monotone repository by pulling the revision matching the tag set
-previously. For instance::
+The release script is ``src/scripts/dist.py`` and must be
+run from a git workspace.
 
- $ src/scripts/dist.py --mtn-db ~/var/mtn/botan.mtn 1.11.8
+ $ src/scripts/dist.py 1.11.8
 
-The ``--mtn-db`` 'option' is mandatory, unless the environmental
-variable ``BOTAN_MTN_DB`` is set, in which case that value is used if
-``--mtn-db`` is not provided.
-
-Another useful option is ``--output-dir``, which specifies where
-the output will be placed.
+One useful option is ``--output-dir``, which specifies where the
+output will be placed.
 
 The ``--pgp-key-id`` option is used to specifiy a PGP keyid. If set,
 the script assumes that it can execute GnuPG and will attempt to

@@ -18,12 +18,6 @@ and :doc:`manual` for the documentation.
 
 If you need help or have questions, send a mail to the `development
 mailing list
-<http://lists.randombit.net/mailman/listinfo/botan-devel/>`_.
-
-You can browse the source online via the
-`GitHub mirror <https://github.com/randombit/botan>`_.
-
-To report a bug use
-`Bugzilla <http://bugs.randombit.net/>`_ or
+<http://lists.randombit.net/mailman/listinfo/botan-devel/>`_ or
+open a ticket on
 `GitHub Issues <https://github.com/randombit/botan/issues>`_.
-
