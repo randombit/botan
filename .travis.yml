@@ -2,6 +2,7 @@ language: cpp
 
 os:
   - linux
+  - osx
 
 compiler:
   - clang
@@ -15,12 +16,12 @@ env:
 
 matrix:
   exclude:
+    - os: osx
+      compiler: gcc
     - compiler: clang
       env: BUILD_MODE="coverage"
 
-before_install:
-  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-  - sudo apt-get update -qq
+sudo: required
 
 install:
   - ./src/scripts/ci/setup.sh
