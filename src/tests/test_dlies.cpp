@@ -8,6 +8,8 @@
 
 #if defined(BOTAN_HAS_DLIES)
 
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
+
 #include "test_pubkey.h"
 
 #include <iostream>
@@ -83,6 +85,12 @@ size_t test_dlies()
 
    return fails;
    }
+
+#else
+
+UNTESTED_WARNING(dlies);
+
+#endif // BOTAN_HAS_DIFFIE_HELLMAN
 
 #else
 
