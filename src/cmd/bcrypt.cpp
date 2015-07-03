@@ -7,6 +7,7 @@
 #include "apps.h"
 
 #if defined(BOTAN_HAS_BCRYPT)
+
 #include <botan/bcrypt.h>
 
 namespace {

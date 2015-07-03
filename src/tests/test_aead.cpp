@@ -6,6 +6,8 @@
 
 #include "tests.h"
 
+#if defined(BOTAN_HAS_AEAD_MODES)
+
 #include <botan/hex.h>
 #include <botan/aead.h>
 #include <iostream>
@@ -143,3 +145,9 @@ size_t test_aead()
 
    return run_tests_in_dir(TEST_DATA_DIR "aead", test);
    }
+
+#else
+
+SKIP_TEST(aead);
+
+#endif // BOTAN_HAS_AEAD_MODES

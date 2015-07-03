@@ -5,22 +5,19 @@
 */
 
 #include "tests.h"
+
+#if defined(BOTAN_HAS_ELGAMAL)
+
 #include "test_pubkey.h"
 
 #include <botan/hex.h>
+#include <botan/elgamal.h>
+#include <botan/pubkey.h>
+#include <botan/dl_group.h>
 #include <iostream>
 #include <fstream>
 
-#if defined(BOTAN_HAS_ELGAMAL)
-  #include <botan/elgamal.h>
-  
-  #include <botan/pubkey.h>
-  #include <botan/dl_group.h>
-#endif
-
 using namespace Botan;
-
-#if defined(BOTAN_HAS_ELGAMAL)
 
 namespace {
 
@@ -53,13 +50,11 @@ size_t elgamal_kat(const std::string& p,
    }
 
 }
-#endif
 
 size_t test_elgamal()
    {
    size_t fails = 0;
 
-#if defined(BOTAN_HAS_ELGAMAL)
    std::ifstream elgamal_enc(PK_TEST_DATA_DIR "/elgamal.vec");
 
    fails += run_tests_bb(elgamal_enc, "ElGamal Encryption", "Ciphertext", true,
@@ -68,7 +63,12 @@ size_t test_elgamal()
              return elgamal_kat(m["P"], m["G"], m["X"], m["Msg"],
                               m["Padding"], m["Nonce"], m["Ciphertext"]);
              });
-#endif
 
    return fails;
    }
+
+#else
+
+SKIP_TEST(elgamal);
+
+#endif // BOTAN_HAS_ELGAMAL

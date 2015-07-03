@@ -1,3 +1,5 @@
+define MODES 20150626
+
 <header:public>
 cipher_mode.h
 stream_mode.h

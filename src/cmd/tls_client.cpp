@@ -6,7 +6,11 @@
 
 #include "apps.h"
 
-#if defined(BOTAN_HAS_TLS) && !defined(BOTAN_TARGET_OS_IS_WINDOWS) && !defined(BOTAN_TARGET_OS_IS_MINGW)
+#if defined(BOTAN_HAS_TLS) \
+   && defined(BOTAN_HAS_DSA) \
+   && !defined(BOTAN_TARGET_OS_IS_WINDOWS) \
+   && !defined(BOTAN_TARGET_OS_IS_MINGW)
+
 #include <botan/tls_client.h>
 #include <botan/pkcs8.h>
 #include <botan/hex.h>
@@ -289,4 +293,5 @@ int tls_client(int argc, char* argv[])
 REGISTER_APP(tls_client);
 
 }
+
 #endif

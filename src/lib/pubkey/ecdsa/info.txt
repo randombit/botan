@@ -4,6 +4,7 @@ define ECDSA 20131128
 asn1
 ec_group
 ecc_key
+keypair
 numbertheory
 rng
 rfc6979

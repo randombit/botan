@@ -5,9 +5,10 @@
 */
 
 #include "tests.h"
-#include "test_pubkey.h"
 
 #if defined(BOTAN_HAS_ECDSA)
+
+#include "test_pubkey.h"
 
 #include <botan/pubkey.h>
 #include <botan/ecdsa.h>
@@ -41,62 +42,12 @@ size_t ecdsa_sig_kat(const std::string& group_id,
                              msg, rng, nonce, signature);
    }
 
-size_t ecc_point_mul(const std::string& group_id,
-                     const std::string& m_s,
-                     const std::string& X_s,
-                     const std::string& Y_s)
-   {
-   EC_Group group(OIDS::lookup(group_id));
-
-   const BigInt m(m_s);
-   const BigInt X(X_s);
-   const BigInt Y(Y_s);
-
-   PointGFp p = group.get_base_point() * m;
-
-   size_t fails = 0;
-
-   if(p.get_affine_x() != X)
-      {
-      std::cout << p.get_affine_x() << " != " << X << std::endl;
-      ++fails;
-      }
-
-   if(p.get_affine_y() != Y)
-      {
-      std::cout << p.get_affine_y() << " != " << Y << std::endl;
-      ++fails;
-      }
-
-   return fails;
-   }
-
 }
-
-#endif
-
-size_t test_ecc_pointmul()
-   {
-   size_t fails = 0;
-
-#if defined(BOTAN_HAS_ECC_GROUP)
-   std::ifstream ecc_mul(PK_TEST_DATA_DIR "/ecc.vec");
-
-   fails += run_tests_bb(ecc_mul, "ECC Point Mult", "Y", false,
-             [](std::map<std::string, std::string> m) -> size_t
-             {
-             return ecc_point_mul(m["Group"], m["m"], m["X"], m["Y"]);
-             });
-#endif
-
-   return fails;
-   }
 
 size_t test_ecdsa()
    {
    size_t fails = 0;
 
-#if defined(BOTAN_HAS_ECDSA)
    std::ifstream ecdsa_sig(PK_TEST_DATA_DIR "/ecdsa.vec");
 
    fails += run_tests_bb(ecdsa_sig, "ECDSA Signature", "Signature", false,
@@ -104,7 +55,12 @@ size_t test_ecdsa()
              {
              return ecdsa_sig_kat(m["Group"], m["X"], m["Hash"], m["Msg"], m["Nonce"], m["Signature"]);
              });
-#endif
 
    return fails;
    }
+
+#else
+
+SKIP_TEST(ecdsa);
+
+#endif // BOTAN_HAS_ECDSA

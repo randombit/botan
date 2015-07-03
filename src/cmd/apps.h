@@ -8,6 +8,7 @@
 #include <functional>
 #include <string>
 #include <set>
+#include <botan/build.h>
 #include <botan/hex.h>
 #include <botan/auto_rng.h>
 #include "getopt.h"

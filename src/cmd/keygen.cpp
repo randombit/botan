@@ -5,11 +5,16 @@
 */
 
 #include "apps.h"
+
+#if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO) && defined(BOTAN_HAS_X509_CERTIFICATES)
+
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <cstdlib>
 #include <memory>
+#include <botan/pk_keys.h>
+#include <botan/pkcs8.h>
 
 #if defined(BOTAN_HAS_RSA)
 #include <botan/rsa.h>
@@ -120,3 +125,5 @@ int keygen(int argc, char* argv[])
 REGISTER_APP(keygen);
 
 }
+
+#endif // BOTAN_HAS_PUBLIC_KEY_CRYPTO && BOTAN_HAS_X509_CERTIFICATES

@@ -9,6 +9,8 @@
 
 #include "apps.h"
 
+#if defined(BOTAN_HAS_NUMBERTHEORY)
+
 #include <botan/reducer.h>
 #include <botan/numthry.h>
 
@@ -154,3 +156,5 @@ int factor(int argc, char* argv[])
 REGISTER_APP(factor);
 
 }
+
+#endif // BOTAN_HAS_NUMBERTHEORY

@@ -5,6 +5,9 @@
 */
 
 #include "apps.h"
+
+#if defined(BOTAN_HAS_NUMBERTHEORY)
+
 #include <botan/numthry.h>
 
 namespace {
@@ -43,3 +46,5 @@ int is_prime(int argc, char* argv[])
 REGISTER_APP(is_prime);
 
 }
+
+#endif // BOTAN_HAS_NUMBERTHEORY

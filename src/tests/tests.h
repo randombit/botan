@@ -1,5 +1,6 @@
 /*
 * (C) 2014,2015 Jack Lloyd
+* (C) 2015 Simon Warta (Kullo GmbH)
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -7,12 +8,14 @@
 #ifndef BOTAN_TESTS_H__
 #define BOTAN_TESTS_H__
 
+#include <botan/build.h>
 #include <botan/rng.h>
 #include <functional>
 #include <istream>
 #include <map>
 #include <string>
 #include <vector>
+#include <iostream>
 
 Botan::RandomNumberGenerator& test_rng();
 
@@ -101,5 +104,32 @@ size_t test_nist_x509();
 
 size_t test_srp6();
 size_t test_compression();
+
+#define SKIP_TEST(testname) \
+   size_t test_ ## testname() {                                    \
+      std::cout << "Skipping tests: " << # testname  << std::endl; \
+      return 0; \
+   } \
+
+/*
+ * Warn if a test requires loading more modules than necessary to build
+ * the lib. E.g.
+ *    $ ./configure.py --no-autoload --enable-modules='ocb'
+ *    $ make
+ *    $ ./botan-test ocb
+ * warns the user whereas 
+ *    $ ./configure.py --no-autoload --enable-modules='ocb,aes'
+ *    $ make
+ *    $ ./botan-test ocb
+ * runs the test.
+ */
+#define UNTESTED_WARNING(testname) \
+   size_t test_ ## testname() {                                       \
+      std::cout << "Skipping tests: " << # testname << std::endl;     \
+      std::cout << "WARNING: " << # testname << " has been compiled " \
+                << "but is not tested due to other missing modules."  \
+                << std::endl; \
+      return 0; \
+   } \
 
 #endif

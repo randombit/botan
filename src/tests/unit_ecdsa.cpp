@@ -11,15 +11,18 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_ECDSA)
-#include <botan/hex.h>
 
+#if defined(BOTAN_HAS_RSA)
+
+#include <botan/hex.h>
 #include <botan/pubkey.h>
 #include <botan/ecdsa.h>
 #include <botan/rsa.h>
+#include <botan/oids.h>
+
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
 #include <botan/x509cert.h>
 #endif
-#include <botan/oids.h>
 
 #include <iostream>
 #include <fstream>
@@ -493,6 +496,12 @@ size_t test_ecdsa_unit()
 
 #else
 
-size_t test_ecdsa_unit() { return 0; }
+UNTESTED_WARNING(ecdsa_unit);
 
-#endif
+#endif // BOTAN_HAS_RSA
+
+#else
+
+SKIP_TEST(ecdsa_unit);
+
+#endif // BOTAN_HAS_ECDSA

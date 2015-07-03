@@ -45,8 +45,8 @@ int cert_verify(int argc, char* argv[])
    return 0;
    }
 
-}
-
 REGISTER_APP(cert_verify);
 
-#endif
+}
+
+#endif // BOTAN_HAS_X509_CERTIFICATES
