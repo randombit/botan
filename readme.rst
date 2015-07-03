@@ -1,4 +1,4 @@
-Introduction
+Botan: Crypto and TLS for C++11
 ========================================
 
 Botan (Japanese for peony) is a C++ cryptography library
@@ -14,7 +14,7 @@ and contributions are welcome.
 .. highlight:: none
 
 For all the details on building the library, read the
-`manual <http://botan.randombit.net/manual>`_, but basically::
+`users manual <http://botan.randombit.net/manual>`_, but basically::
 
   $ ./configure.py --help
   $ ./configure.py [probably some options]
@@ -59,7 +59,7 @@ There is also a third party open source implementation of
     :target: https://coveralls.io/r/randombit/botan?branch=master
 
 Download
-========================================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The 1.11 releases are highly recommended, especially for new development.
 
@@ -104,7 +104,7 @@ Botan is already included in many package distributions, including
 `MacPorts <http://www.macports.org/ports.php?by=name&substr=botan>`_.
 
 Books and other resources
-========================================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 It's a very good idea if you have some knowledge of cryptography
 *before* trying to use the library. This is an area where it is very
@@ -134,7 +134,7 @@ crypto lists. And (if possible) pay a professional cryptographer or
 security company to review your design and code.
 
 Supported Algorithms/Protocols/RFCs
-========================================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 TLS/Public Key Infrastructure
 ----------------------------------------
