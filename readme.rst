@@ -61,7 +61,9 @@ There is also a third party open source implementation of
 Download
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The 1.11 releases are highly recommended, especially for new development.
+The 1.11 branch are highly recommended, especially for new development.
+But be warned the API is still subject to change before the 2.0 stable
+release.
 
 All releases are signed with a
 `PGP key <http://botan.randombit.net/pgpkey.txt>`_::
@@ -70,12 +72,24 @@ All releases are signed with a
         Key fingerprint = 621D AF64 11E1 851C 4CF9  A2E1 6211 EBF1 EFBA DFBC
   uid                  Botan Distribution Key
 
+Botan may already be included in your favorite distribution, such as
+`Fedora <https://admin.fedoraproject.org/pkgdb/packages/botan>`_,
+`EPEL <http://dl.fedoraproject.org/pub/epel/7/SRPMS/repoview/botan.html>`_ (for RHEL/CentOS),
+`Debian <http://packages.debian.org/search?keywords=libbotan>`_,
+`Ubuntu <http://packages.ubuntu.com/search?keywords=botan>`_,
+`Gentoo <http://packages.gentoo.org/package/botan>`_,
+`Arch <http://www.archlinux.org/packages/community/x86_64/botan/>`_,
+`Slackbuild <http://slackbuilds.org/result/?search=Botan>`_,
+`FreeBSD ports <http://www.freshports.org/security/botan110>`_, or
+`MacPorts <http://www.macports.org/ports.php?by=name&substr=botan>`_.
+
 Current Development Series (1.11)
 ----------------------------------------
 
 The latest development release is
 `1.11.17 <http://botan.randombit.net/releases/Botan-1.11.17.tgz>`_
 `(sig) <http://botan.randombit.net/releases/Botan-1.11.17.tgz.asc>`_
+released 2015-06-18
 
 Botan 1.11 requires a working C++11 compiler; GCC 4.8 and later,
 Clang 3.4 and later, and MSVC 2013 are regularly tested.
@@ -86,33 +100,19 @@ Current Stable Series (1.10)
 The latest stable branch release is
 `1.10.9 <http://botan.randombit.net/releases/Botan-1.10.9.tgz>`_
 `(sig) <http://botan.randombit.net/releases/Botan-1.10.9.tgz.asc>`_
+released 2014-12-13
 
-1.10 is the last version of botan written in C++98.
-
-From Your Favorite Distribution
-----------------------------------------
-
-Botan is already included in many package distributions, including
-`Fedora <https://admin.fedoraproject.org/pkgdb/packages/botan>`_,
-`EPEL <http://dl.fedoraproject.org/pub/epel/7/SRPMS/repoview/botan.html>`_ (for RHEL/CentOS),
-`Debian <http://packages.debian.org/search?keywords=libbotan>`_,
-`Ubuntu <http://packages.ubuntu.com/search?keywords=botan>`_,
-`Gentoo <http://packages.gentoo.org/package/botan>`_,
-`Arch <http://www.archlinux.org/packages/community/x86_64/botan/>`_,
-`Slackbuild <http://slackbuilds.org/result/?search=Botan>`_,
-`FreeBSD ports <http://www.freshports.org/security/botan110>`_, and
-`MacPorts <http://www.macports.org/ports.php?by=name&substr=botan>`_.
+Botan 1.10 is the last version written in C++98.
 
 Books and other resources
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-It's a very good idea if you have some knowledge of cryptography
-*before* trying to use the library. This is an area where it is very
-easy to make mistakes, and where things are often subtle and/or
-counterintuitive. Obviously the library tries to provide things at a
-high level precisely to minimize the number of ways things can go
-wrong, but naive use will almost certainly not result in a secure
-system.
+You should have some knowledge of cryptography *before* trying to use
+the library. This is an area where it is very easy to make mistakes,
+and where things are often subtle and/or counterintuitive. Obviously
+the library tries to provide things at a high level precisely to
+minimize the number of ways things can go wrong, but naive use will
+almost certainly not result in a secure system.
 
 Especially recommended are:
 
