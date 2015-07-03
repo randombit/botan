@@ -110,7 +110,7 @@ Ciphers
     .. py:method:: update_granularity()
 
                    Returns update block size. Call to update() must provide
-                  input of exactly this many bytes
+                   input of exactly this many bytes
 
     .. py:method:: is_authenticated()
 

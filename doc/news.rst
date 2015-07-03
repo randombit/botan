@@ -4,7 +4,7 @@ Release Notes
 Version 1.11.18, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* In this release Botan has switched VCS from `monotone` to `git`,
+* In this release Botan has switched VCS from ``monotone`` to ``git``,
   and is now hosted on github at https://github.com/randombit/botan
 
 Version 1.11.17, 2015-06-18
@@ -17,12 +17,12 @@ Version 1.11.17, 2015-06-18
   value was actually negotiated, TLS would treat it as a negotiated
   limit of 4096.
 
-* Fix the configure.py flag `--disable-aes-ni` which did nothing of
+* Fix the configure.py flag ``--disable-aes-ni`` which did nothing of
   the sort.
 
 * Fixed nmake clean target. GitHub #104
 
-* Correct buffering logic in `Compression_Filter`. GitHub #93 and #95
+* Correct buffering logic in ``Compression_Filter``. GitHub #93 and #95
 
 Version 1.11.16, 2015-03-29
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -47,8 +47,8 @@ Version 1.11.16, 2015-03-29
   padding types.
 
 * Added global timeout to HMAC_RNG entropy reseed. The defaults are
-  the values set in the build.h macros `BOTAN_RNG_AUTO_RESEED_TIMEOUT`
-  and `BOTAN_RNG_RESEED_DEFAULT_TIMEOUT`, but can be overriden
+  the values set in the build.h macros ``BOTAN_RNG_AUTO_RESEED_TIMEOUT``
+  and ``BOTAN_RNG_RESEED_DEFAULT_TIMEOUT``, but can be overriden
   on a specific poll with the new API call reseed_with_timeout.
 
 * Fixed Python cipher update_granularity() and default_nonce_length()
@@ -103,15 +103,15 @@ Version 1.11.14, 2015-02-27
 
   If you intend to build your application against a static library and don't
   want to explicitly reference each algo object you might attempt to look up by
-  string, consider either building with `--via-amalgamation`, or else (much
+  string, consider either building with ``--via-amalgamation``, or else (much
   simpler) using the amalgamation directly.
 
-* The new `ffi` submodule provides a simple C API/ABI for a number of useful
+* The new ``ffi`` submodule provides a simple C API/ABI for a number of useful
   operations (hashing, ciphers, public key operations, etc) which is easily
   accessed using the FFI modules included in many languages.
 
-* A new Python wrapper (in `src/lib/python/botan.py`) using `ffi` and the Python
-  `ctypes` module is available. The old Boost.Python wrapper has been removed.
+* A new Python wrapper (in ``src/lib/python/botan.py``) using ``ffi`` and the Python
+  ``ctypes`` module is available. The old Boost.Python wrapper has been removed.
 
 * Add specialized reducers for P-192, P-224, P-256, and P-384
 
@@ -121,13 +121,13 @@ Version 1.11.14, 2015-02-27
   is not yet enabled by the default policy, and the ciphersuite numbers used are
   in the experimental range and may conflict with other uses.
 
-* Add ability to read TLS policy from a text file using `TLS::Text_Policy`.
+* Add ability to read TLS policy from a text file using ``TLS::Text_Policy``.
 
 * The amalgamation now splits off any ISA specific code (for instance, that
   requiring SSSE3 instruction sets) into a new file named (for instance)
-  `botan_all_ssse3.cpp`. This allows the main amalgamation file to be compiled
-  without any special flags, so `--via-amalgamation` builds actually work now.
-  This is disabled with the build option `--single-amalgamation-file`
+  ``botan_all_ssse3.cpp``. This allows the main amalgamation file to be compiled
+  without any special flags, so ``--via-amalgamation`` builds actually work now.
+  This is disabled with the build option ``--single-amalgamation-file``
 
 * PBKDF and KDF operations now provide a way to write the desired output
   directly to an application-specified area rather than always allocating a new
@@ -160,9 +160,9 @@ Version 1.11.14, 2015-02-27
   which wants to mlock memory for its own uses.
 
 * The botan-config script previously installed on Unix systems has been
-  removed.  Its functionality is replaced by the `config` command of the
-  `botan` tool executable, for example `botan config cflags` instead of
-  `botan-config --cflags`.
+  removed.  Its functionality is replaced by the ``config`` command of the
+  ``botan`` tool executable, for example ``botan config cflags`` instead of
+  ``botan-config --cflags``.
 
 * Added a target for POWER8 processors
 
@@ -172,7 +172,7 @@ Version 1.11.13, 2015-01-11
 * All support for the insecure SSLv3 protocol and the server support
   for processing SSLv2 client hellos has been removed.
 
-* The command line tool now has `tls_proxy` which negotiates TLS with
+* The command line tool now has ``tls_proxy`` which negotiates TLS with
   clients and forwards the plaintext to a specified port.
 
 * Add MCEIES, a McEliece-based integrated encryption system using
@@ -237,10 +237,10 @@ Version 1.11.11, 2014-12-21
 * The Sqlite3 wrapper has been abstracted to a simple interface for
   SQL dbs in general, though Sqlite3 remains the only implementation.
   The main logic of the TLS session manager which stored encrypted
-  sessions to a Sqlite3 database (`TLS::Session_Manager_SQLite`) has
-  been moved to the new `TLS::Session_Manager_SQL`. The Sqlite3
+  sessions to a Sqlite3 database (``TLS::Session_Manager_SQLite``) has
+  been moved to the new ``TLS::Session_Manager_SQL``. The Sqlite3
   manager API remains the same but now just subclasses
-  `TLS::Session_Manager_SQL` and has a constructor instantiate the
+  ``TLS::Session_Manager_SQL`` and has a constructor instantiate the
   concrete database instance.
 
   Applications which would like to use a different db can now do so
@@ -275,7 +275,7 @@ Version 1.10.9, 2014-12-13
 * Fix decoding indefinite length BER constructs that contain a context
   sensitive tag of zero. Github pull 26 from Janusz Chorko.
 
-* The `botan-config` script previously tried to guess its prefix from
+* The ``botan-config`` script previously tried to guess its prefix from
   the location of the binary. However this was error prone, and now
   the script assumes the final installation prefix matches the value
   set during the build. Github issue 29.
@@ -416,7 +416,7 @@ Version 1.11.9, 2014-04-10
 Version 1.11.8, 2014-02-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* The `botan` command line application introduced in 1.11.7 is now
+* The ``botan`` command line application introduced in 1.11.7 is now
   installed along with the library.
 
 * A bug in certificate path validation introduced in 1.11.6 which
@@ -474,17 +474,17 @@ Version 1.11.7, 2014-01-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Botan's basic numeric types are now defined in terms of the
-  C99/C++11 standard integer types. For instance `u32bit` is now a
-  typedef for `uint32_t`, and both names are included in the library
+  C99/C++11 standard integer types. For instance ``u32bit`` is now a
+  typedef for ``uint32_t``, and both names are included in the library
   namespace. This should not result in any application-visible
   changes.
 
-* There are now two executable outputs of the build, `botan-test`,
-  which runs the tests, and `botan` which is used as a driver to call
+* There are now two executable outputs of the build, ``botan-test``,
+  which runs the tests, and ``botan`` which is used as a driver to call
   into various subcommands which can also act as examples of library
-  use, much in the manner of the `openssl` command. It understands the
-  commands `base64`, `asn1`, `x509`, `tls_client`, `tls_server`,
-  `bcrypt`, `keygen`, `speed`, and various others. As part of this
+  use, much in the manner of the ``openssl`` command. It understands the
+  commands ``base64``, ``asn1``, ``x509``, ``tls_client``, ``tls_server``,
+  ``bcrypt``, ``keygen``, ``speed``, and various others. As part of this
   change many obsolete, duplicated, or one-off examples were removed,
   while others were extended with new functionality. Contributions of
   new subcommands, new bling for exising ones, or documentation in any
@@ -646,7 +646,7 @@ Version 1.11.4, 2013-07-25
   server would by default negotiate either protocol type (clients
   would only accept the same protocol type as they
   offered). Applications which use DTLS or combined TLS/DTLS need to
-  override `Policy::acceptable_protocol_version`.
+  override ``Policy::acceptable_protocol_version``.
 
 * The TLS channels now accept a new parameter specifying how many
   bytes to preallocate for the record handling buffers, which allows
@@ -654,13 +654,13 @@ Version 1.11.4, 2013-07-25
   for a particular connection.
 
 * Applications can now send arbitrary TLS alert messages using
-  `TLS::Channel::send_alert`
+  ``TLS::Channel::send_alert``
 
-* A new TLS policy `NSA_Suite_B_128` is available, which
+* A new TLS policy ``NSA_Suite_B_128`` is available, which
   will negotiate only the 128-bit security NSA Suite B. See
   :rfc:`6460` for more information about Suite B.
 
-* Adds a new interface for benchmarking, `time_algorithm_ops`,
+* Adds a new interface for benchmarking, ``time_algorithm_ops``,
   which returns a map of operations to operations per second. For
   instance now both encrypt and decrypt speed of a block cipher can be
   checked, as well as the key schedule of all keyed algorithms. It
@@ -671,7 +671,7 @@ Version 1.11.4, 2013-07-25
 Version 1.11.3, 2013-04-11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Add a new interface for AEAD modes (`AEAD_Mode`).
+* Add a new interface for AEAD modes (``AEAD_Mode``).
 
 * Implementations of the OCB and GCM authenticated cipher modes are
   now included.
@@ -679,14 +679,14 @@ Version 1.11.3, 2013-04-11
 * Support for TLS GCM ciphersuites is now available.
 
 * A new TLS policy mechanism
-  `TLS::Policy::server_uses_own_ciphersuite_preferences`
+  ``TLS::Policy::server_uses_own_ciphersuite_preferences``
   controls how a server chooses a ciphersuite. Previously it always
   chose its most preferred cipher out of the client's list, but this
   can allow configuring a server to choose by the client's preferences
   instead.
 
-* `Keyed_Filter` now supports returning a
-  `Key_Length_Specification` so the full details of what
+* ``Keyed_Filter`` now supports returning a
+  ``Key_Length_Specification`` so the full details of what
   keylengths are supported is now available in keyed filters.
 
 * The experimental and rarely used Turing and WiderWAKE stream ciphers
@@ -695,9 +695,9 @@ Version 1.11.3, 2013-04-11
 * New functions for symmetric encryption are included in cryptobox.h
   though interfaces and formats are subject to change.
 
-* A new function `algorithm_kat_detailed` returns a string
+* A new function ``algorithm_kat_detailed`` returns a string
   providing information about failures, instead of just a pass/fail
-  indicator as in `algorithm_kat`.
+  indicator as in ``algorithm_kat``.
 
 Version 1.10.5, 2013-03-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -716,50 +716,38 @@ Version 1.10.5, 2013-03-02
 Version 1.11.2, 2013-03-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* A bug in the release script caused the `botan_version.py` included
-  in 1.11.1` to be invalid, which required a manual edit to fix
+* A bug in the release script caused the ``botan_version.py`` included
+  in 1.11.1`` to be invalid, which required a manual edit to fix
   (Bugzilla 226)
 
-Memory Zeroization Changes
-""""""""""""""""""""""""""""""""""""""""
-
-* Previously `clear_mem` was implemented by an inlined call to
-  `std::memset`. However an optimizing compiler might notice cases
+* Previously ``clear_mem`` was implemented by an inlined call to
+  ``std::memset``. However an optimizing compiler might notice cases
   where the memset could be skipped in cases allowed by the standard.
-  Now `clear_mem` calls `zero_mem` which is compiled separately and
+  Now ``clear_mem`` calls ``zero_mem`` which is compiled separately and
   which zeros out the array through a volatile pointer. It is possible
   some compiler with some optimization setting (especially with
   something like LTO) might still skip the writes. It would be nice if
   there was an automated way to test this.
 
-New Parallel Filter
-""""""""""""""""""""""""""""""""""""""""
-
-* The new filter `Threaded_Fork` acts like a normal
-  `Fork`, sending its input to a number of different
+* The new filter ``Threaded_Fork`` acts like a normal
+  ``Fork``, sending its input to a number of different
   filters, but each subchain of filters in the fork runs in its own
   thread. Contributed by Joel Low.
-
-TLS Enhancements and Bug Fixes
-""""""""""""""""""""""""""""""""""""""""
 
 * The default TLS policy formerly preferred AES over RC4, and allowed
   3DES by default. Now the default policy is to negotiate only either
   AES or RC4, and to prefer RC4.
 
-* New TLS `Blocking_Client` provides a thread per
+* New TLS ``Blocking_Client`` provides a thread per
   connection style API similar to that provided in 1.10
 
-Other API Changes
-""""""""""""""""""""""""""""""""""""""""
-
-* The API of `Credentials_Manager::trusted_certificate_authorities`
-  has changed to return a vector of `Certificate_Store*` instead of
-  `X509_Certificate`. This allows the list of trusted CAs to be
+* The API of ``Credentials_Manager::trusted_certificate_authorities``
+  has changed to return a vector of ``Certificate_Store*`` instead of
+  ``X509_Certificate``. This allows the list of trusted CAs to be
   more easily updated dynamically or loaded lazily.
 
-* The `asn1_int.h` header was split into `asn1_alt_name.h`,
-  `asn1_attribute.h` and `asn1_time.h`.
+* The ``asn1_int.h`` header was split into ``asn1_alt_name.h``,
+  ``asn1_attribute.h`` and ``asn1_time.h``.
 
 Version 1.10.4, 2013-01-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -782,20 +770,17 @@ Version 1.10.4, 2013-01-07
 Version 1.11.1, 2012-10-30
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-TLS Enhancements and Bug Fixes
-""""""""""""""""""""""""""""""""""""""""
-
 Initial support for DTLS (both v1.0 and v1.2) is available in this
 release, though it should be considered highly experimental. Currently
 timeouts and retransmissions are not handled.
 
-The `TLS::Client` constructor now takes the version to
-offer to the server. The policy hook `TLS::Policy` function
-`pref_version`, which previously controlled this, has been removed.
+The ``TLS::Client`` constructor now takes the version to
+offer to the server. The policy hook ``TLS::Policy`` function
+`pref_version``, which previously controlled this, has been removed.
 
-`TLS::Session_Manager_In_Memory` now chooses a random
+`TLS::Session_Manager_In_Memory`` now chooses a random
 256-bit key at startup and encrypts all sessions (using the existing
-`TLS::Session::encrypt` mechanism) while they are stored in
+`TLS::Session::encrypt`` mechanism) while they are stored in
 memory. This is primarily to reduce pressure on locked memory, as each
 session normally requires 48 bytes of locked memory for the master
 secret, whereas now only 32 bytes are needed total. This change may
@@ -814,9 +799,9 @@ persistent storage by 1.11.0 will not load in this version and vice
 versa. In either case this will not cause any errors, the session will
 simply not resume and instead a full handshake will occur.
 
-New policy hooks `TLS::Policy::acceptable_protocol_version`,
-`TLS::Policy::allow_server_initiated_renegotiation`, and
-`TLS::Policy::negotiate_heartbeat_support` were added.
+New policy hooks ``TLS::Policy::acceptable_protocol_version``,
+`TLS::Policy::allow_server_initiated_renegotiation``, and
+`TLS::Policy::negotiate_heartbeat_support`` were added.
 
 TLS clients were not sending a next protocol message during a session
 resumption, which would cause resumption failures with servers that
@@ -827,24 +812,18 @@ handshake to be passed to the application callback as if they were
 heartbeat responses.
 
 Support for TLS key material export as specified in :rfc:`5705` has
-been added, available via `TLS::Channel::key_material_export`
+been added, available via ``TLS::Channel::key_material_export``
 
-New Feature: Public Key Strength Checking
-""""""""""""""""""""""""""""""""""""""""""
-
-A new function `Public_Key::estimated_strength` returns
+A new function ``Public_Key::estimated_strength`` returns
 an estimate for the upper bound of the strength of the key. For
 instance for an RSA key, it will return an estimate of how many
 operations GNFS would take to factor the key.
 
-A new `Path_Validation_Result` code has been added
+A new ``Path_Validation_Result`` code has been added
 ``SIGNATURE_METHOD_TOO_WEAK``. By default signatures created with keys
 below 80 bits of strength (as estimated by ``estimated_strength``) are
 rejected. This level can be modified using a parameter to the
-`Path_Validation_Restrictions` constructor.
-
-SRP6 Is Picker About Values
-""""""""""""""""""""""""""""""""""""""""
+``Path_Validation_Restrictions`` constructor.
 
 The SRP6 code was checking for invalid values as specified in
 :rfc:`5054`, ones equal to zero mod p, however it would accept
@@ -853,19 +832,13 @@ occur in a normal run of the protocol. These values are now
 rejected. Credits to Timothy Prepscius for pointing out these values
 are not normally used and probably signal something fishy.
 
-Removal of Various BigInt Functions
-""""""""""""""""""""""""""""""""""""""""
-
-Several `BigInt` functions have been removed, including
+Several ``BigInt`` functions have been removed, including
 ``operator[]``, ``assign``, ``get_reg``, and ``grow_reg``. The version
 of ``data`` that returns a mutable pointer has been renamed
 ``mutable_data``.  Support for octal conversions has been removed.
 
 The constructor ``BigInt(NumberType type, size_t n)`` has been
 removed, replaced by ``BigInt::power_of_2``.
-
-AES-NI Crash Fixed
-""""""""""""""""""""""""""""""""""""""""
 
 In 1.11.0, when compiled by GCC, the AES-NI implementation of AES-192
 would crash if the mlock-based allocator was used due to an alignment
@@ -880,9 +853,6 @@ Version 1.11.0, 2012-07-19
   library. Currently GCC 4.7 and Clang 3.1 are known to work well.
   This version of the library cannot be compiled by or used with a
   C++98 compiler.
-
-TLS and PKI Changes
-""""""""""""""""""""""""""""""""""""""""
 
 There have been many changes and improvements to TLS.  The interface
 is now purely event driven and does not directly interact with
@@ -901,9 +871,6 @@ The API for X.509 path validation has changed, with
 ``x509_path_validate`` in x509path.h now handles path validation and
 ``Certificate_Store`` handles storage of certificates and CRLs.
 
-Memory Container Changes
-""""""""""""""""""""""""""""""""""""""""
-
 The memory container types have changed substantially.  The
 ``MemoryVector`` and ``SecureVector`` container types have been
 removed, and an alias of ``std::vector`` using an allocator that
@@ -917,15 +884,9 @@ using a best-fit allocator and all metadata held outside the mmap'ed
 range, in an effort to make best use of the very limited amount of
 memory current Linux kernels allow unpriveledged users to lock.
 
-New LZMA Compression Filter
-""""""""""""""""""""""""""""""""""""""""
-
 A filter using LZMA was contributed by Vojtech Kral. It is available
 if LZMA support was enabled at compilation time by passing
 ``--with-lzma`` to ``configure.py``.
-
-ECC Key Decoding Problem Resolved
-""""""""""""""""""""""""""""""""""""""""
 
 :rfc:`5915` adds some extended information which can be included in
 ECC private keys which the ECC key decoder did not expect, causing an
@@ -1019,8 +980,8 @@ GCC on Windows will cause the configure.py to warn that likely you
 wanted to configure for either MinGW or Cygwin, not the generic
 Windows target.
 
-A bug in configure.py would cause it to interpret `--cpu=s390x` as
-`s390`. This may have affected other CPUs as well. Now configure.py
+A bug in configure.py would cause it to interpret ``--cpu=s390x`` as
+``s390``. This may have affected other CPUs as well. Now configure.py
 searches for an exact match, and only if no exact match is found will
 it search for substring matches.
 
@@ -1039,7 +1000,7 @@ Note that Python 2.4 is not supported at all.
 Version 1.10.1, 2011-07-11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* A race condition in `Algorithm_Factory` could cause crashes in
+* A race condition in ``Algorithm_Factory`` could cause crashes in
   multithreaded code.
 
 * The return value of ``name`` has changed for GOST 28147-89 and
@@ -1058,7 +1019,7 @@ Version 1.10.1, 2011-07-11
 Version 1.8.13, 2011-07-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* A race condition in `Algorithm_Factory` could cause crashes in
+* A race condition in ``Algorithm_Factory`` could cause crashes in
   multithreaded code.
 
 Version 1.10.0, 2011-06-20
@@ -1200,7 +1161,7 @@ Version 1.9.17, 2011-04-29
   AES-NI instruction set have been renamed from AES_XXX_Intel to
   AES_XXX_NI.
 
-* Systems that are identified as `sun4u` will default to compiling for
+* Systems that are identified as ``sun4u`` will default to compiling for
   32-bit SPARCv9 code rather than 64-bit. This matches the still
   common convention for 32-bit SPARC userspaces. If you want 64-bit
   code on such as system, use ``--cpu=sparc64``.
@@ -1224,7 +1185,7 @@ Version 1.9.16, 2011-04-11
 * The class ``EC_Domain_Params`` has been renamed ``EC_Group``, with a
   typedef for backwards compatability.
 
-* ``EC_Group``'s string constructor didn't understand the standard
+* The ``EC_Group`` string constructor didn't understand the standard
   names like "secp160r1", forcing use of the OIDs.
 
 * Two constructors for ECDSA private keys, the one that creates a new
@@ -1410,7 +1371,6 @@ Version 1.9.10, 2010-08-12
   addition to being constant time, it is also significantly faster
   than the table-based implementation on some processors. The current
   code has been tested with GCC 4.5, Visual C++ 2008, and Clang 2.8.
-
 
 * Support for dynamically loading Engine objects at runtime was also
   added. Currently only system that use ``dlopen``-style dynamic
@@ -2484,7 +2444,7 @@ Version 1.3.8, 2003-12-30
 Version 1.3.7, 2003-12-12
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Fixed a big security problem in es_unix
+* Fixed a big security problem in es_unix (use of untrusted PATH)
 * Fixed several stability problems in es_unix
 * Expanded the list of programs es_unix will try to use
 * SecureAllocator now only preallocates blocks in special cases

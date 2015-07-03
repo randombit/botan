@@ -39,7 +39,7 @@ Versioning
 Hash Functions
 ----------------------------------------
 
-.. cpp:type:: typedef struct botan_hash_struct* botan_hash_t
+.. cpp:type:: opaque* botan_hash_t
 
     An opaque data type for a hash. Don't mess with it.
 
@@ -72,7 +72,7 @@ Hash Functions
 
 Authentication Codes
 ----------------------------------------
-.. cpp:type:: typedef struct botan_mac_struct* botan_mac_t
+.. cpp:type:: opaque* botan_mac_t
 
     An opaque data type for a MAC. Don't mess with it, but do remember
     to set a random key first.
@@ -87,15 +87,14 @@ Authentication Codes
 
 .. cpp:function:: int botan_mac_update(botan_mac_t mac, uint8_t buf[], size_t len)
 
-.. cpp:function:: int botan_mac_final(botan_mac_t mac, uint8_t out[], size_t* ou
-t_len)
+.. cpp:function:: int botan_mac_final(botan_mac_t mac, uint8_t out[], size_t* out_len)
 
 .. cpp:function:: size_t botan_mac_output_length(botan_mac_t mac)
 
 Ciphers
 ----------------------------------------
 
-.. cpp:type:: typedef struct botan_cipher_struct* botan_cipher_t
+.. cpp:type:: opaque* botan_cipher_t
 
     An opaque data type for a MAC. Don't mess with it, but do remember
     to set a random key first. And please use an AEAD.
@@ -111,22 +110,20 @@ Ciphers
 
 .. cpp:function:: int botan_cipher_clear(botan_cipher_t hash)
 
-.. cpp:function:: int botan_cipher_set_key(botan_cipher_t cipher,
-                                   const uint8_t* key, size_t key_len)
+.. cpp:function:: int botan_cipher_set_key(botan_cipher_t cipher, \
+                  const uint8_t* key, size_t key_len)
 
-.. cpp:function:: int botan_cipher_set_associated_data(botan_cipher_t cipher,
-                                               const uint8_t* ad,
-                                               size_t ad_len)
+.. cpp:function:: int botan_cipher_set_associated_data(botan_cipher_t cipher, \
+                                               const uint8_t* ad, size_t ad_len)
 
-.. cpp:function:: int botan_cipher_start(botan_cipher_t cipher,
+.. cpp:function:: int botan_cipher_start(botan_cipher_t cipher, \
                                  const uint8_t* nonce, size_t nonce_len)
 
 .. cpp:function:: int botan_cipher_is_authenticated(botan_cipher_t cipher)
 
 .. cpp:function:: size_t botan_cipher_tag_size(botan_cipher_t cipher)
 
-.. cpp:function:: int botan_cipher_valid_nonce_length(botan_cipher_t cipher, siz
-e_t nl)
+.. cpp:function:: int botan_cipher_valid_nonce_length(botan_cipher_t cipher, size_t nl)
 
 .. cpp:function:: size_t botan_cipher_default_nonce_length(botan_cipher_t cipher)
 

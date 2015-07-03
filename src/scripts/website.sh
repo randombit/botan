@@ -1,0 +1,26 @@
+#!/bin/sh
+
+#set +x
+SPHINX_CONFIG=./src/build-data/sphinx
+SPHINX_OPTS='-b html'
+
+WEBSITE_DIR=./www-botan
+WEBSITE_SRC_DIR=./www-src
+
+rm -rf $WEBSITE_SRC_DIR $WEBSITE_DIR
+mkdir -p $WEBSITE_SRC_DIR
+
+cp readme.rst $WEBSITE_SRC_DIR/index.rst
+cp -r doc/news.rst $WEBSITE_SRC_DIR
+echo -e ".. toctree::\n\n   index\n   news\n" > $WEBSITE_SRC_DIR/contents.rst
+
+sphinx-build -t website -c $SPHINX_CONFIG $SPHINX_OPTS $WEBSITE_SRC_DIR $WEBSITE_DIR
+sphinx-build -t website -c $SPHINX_CONFIG $SPHINX_OPTS doc/manual $WEBSITE_DIR/manual
+rm -rf $WEBSITE_DIR/.doctrees
+rm -f $WEBSITE_DIR/.buildinfo
+rm -rf $WEBSITE_DIR/manual/.doctrees
+rm -f $WEBSITE_DIR/manual/.buildinfo
+cp doc/license.txt doc/pgpkey.txt $WEBSITE_DIR
+
+doxygen build/botan.doxy
+mv build/docs/doxygen $WEBSITE_DIR/doxygen

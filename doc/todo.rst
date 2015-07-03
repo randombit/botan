@@ -5,8 +5,7 @@ These are features either requested by users or that seem like
 potentially useful things to have. Several are quite self-contained
 and could make a quick project.
 
-Request a new feature by sending a patch to this file or by writing to
-the mailing list.
+Request a new feature by opening a pull request to update this file.
 
 Symmetric Algorithms, Hashes, ...
 ----------------------------------------
@@ -25,7 +24,6 @@ Public Key Crypto, Math
 
 * EdDSA
 * Ed448-Goldilocks
-* Add specialized reductions for other NIST primes
 * Fast new implementations/algorithms for ECC point operations,
   Montgomery multiplication, multi-exponentiation, ...
 
@@ -65,7 +63,7 @@ Accelerators / backends
 * ARMv8 crypto extensions
 * Intel Skylake SHA-1/SHA-2
 
-Python/FFI
+FFI (Python, OCaml)
 ----------------------------------------
 
 * Expose TLS

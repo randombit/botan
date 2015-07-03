@@ -112,8 +112,8 @@ html_theme_options = {
     'headercolor1': 'darkblue',
     'headercolor2': 'darkblue',
     'textalign': 'left',
-    'pagewidth': '80em',
-    'documentwidth': '60em'
+    'pagewidth': '70em',
+    'documentwidth': '50em'
     }
 
 # Add any paths that contain custom themes here, relative to this directory.
@@ -121,7 +121,7 @@ html_theme_options = {
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-html_title = 'Botan'
+html_title = 'Botan: Crypto and TLS for C++11'
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #html_short_title = None

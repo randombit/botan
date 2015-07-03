@@ -11,13 +11,13 @@ snapshots are made directly from it. Every once in a while a new even-numbered
 branch is forked. All development continues on the main trunk, with fixes and
 occasionally small features backported to the stable branch. Stability of API
 and ABI is very important in the stable branches, whereas in trunk ABI changes
-happen with no warning and API changes are made whenever it would serve the
+happen with no warning, and API changes are made whenever it would serve the
 ends of justice.
 
 Current Status
 ----------------------------------------
 
-Currently (as of 2015-01-08) trunk is numbered 1.11 and is written in C++11,
+Currently (as of 2015-07-03) trunk is numbered 1.11 and is written in C++11,
 unlike earlier versions which used C++98. In due time a new stable 2.0 branch
 will be made off of trunk and afterwards trunk will be renumbered as 2.1. The
 2.0 releases will be maintained with security and bug fixes at least until a
@@ -40,17 +40,16 @@ released.
 Supported Targets
 ----------------------------------------
 
-The primary supported target (ie, what the main developer uses and tests with
-regularly) is a recent GCC or Clang on Linux with an x86-64 CPU. Occasionally
-Linux systems using POWER, MIPS, and ARM processors are also checked. Testing
-and fixes for Windows, MinGW, OS X, OpenBSD, Visual C++, iOS, etc comes
-primarily from users.
+The primary supported targets, which are tested with every commit by
+continous integration, are GCC and Clang on Linux, Clang on OS X, and
+MSVC 2013 on Windows, all on some form of x86.
+
+Other processors, like ARM, MIPS, and POWER processors, and OSes, such
+as OpenBSD, MinGW, or iOS are occasionally tested on an ad-hoc basis,
+but breakage is somewhat more likely.
 
 Ongoing Issues
 ----------------------------------------
-
-Currently sources are kept in :doc:`Monotone <vcs>`, which likely discourages
-some would-be developers. The github mirror may be helping somewhat here.
 
 Some infrastructure, scripts and such still exists only on the machines of the
 primary developer.
