@@ -139,55 +139,55 @@ Supported Algorithms/Protocols/RFCs
 TLS/Public Key Infrastructure
 ----------------------------------------
 
-  * TLS/DTLS (v1.0 to v1.2), including using preshared keys (TLS-PSK)
-    or passwords (TLS-SRP) and most important extensions (including
-    secure renegotiation, session tickets, SNI, and ALPN)
-  * X.509 certificates (including generating new self-signed and CA
-    certs) and CRLs
-  * PKIX certificate path validation, OCSP requests, PKCS #10 CSRs
+* TLS/DTLS (v1.0 to v1.2), including using preshared keys (TLS-PSK)
+  or passwords (TLS-SRP) and most important extensions (including
+  secure renegotiation, session tickets, SNI, and ALPN)
+* X.509 certificates (including generating new self-signed and CA
+  certs) and CRLs
+* PKIX certificate path validation, OCSP requests, PKCS #10 CSRs
 
 Public Key Cryptography
 ----------------------------------------
 
-  * Encryption algorithms RSA and ElGamal (with OAEP or PKCS #1 v1.5)
-  * Signature algorithms RSA, DSA, ECDSA, GOST 34.10-2001, Nyberg-Rueppel,
-    Rabin-Williams (with PSS, PKCS #1 v1.5, or X9.31)
-  * Diffie-Hellman, ECDH using NIST/Brainpool prime groups, Curve25519
-  * McEliece code based encryption providing a KEM scheme
+* Encryption algorithms RSA and ElGamal (with OAEP or PKCS #1 v1.5)
+* Signature algorithms RSA, DSA, ECDSA, GOST 34.10-2001, Nyberg-Rueppel,
+  Rabin-Williams (with PSS, PKCS #1 v1.5, or X9.31)
+* Diffie-Hellman, ECDH using NIST/Brainpool prime groups, Curve25519
+* McEliece code based encryption providing a KEM scheme
 
 Ciphers and cipher modes
 ----------------------------------------
 
-  * Authenticated cipher modes EAX, OCB, GCM, SIV, CCM, and ChaCha20Poly1305
-  * Unauthenticated cipher modes CTR, CBC, XTS, CFB, OFB, and ECB
-  * AES (including constant time SSSE3 and AES-NI versions)
-  * AES candidates Serpent, Twofish, MARS, CAST-256, RC6
-  * Stream ciphers Salsa20/XSalsa20, ChaCha20, and RC4
-  * DES, 3DES and DESX
-  * National/telecom block ciphers SEED, KASUMI, MISTY1, GOST 28147
-  * Other block ciphers including Threefish-512, Blowfish, CAST-128, IDEA,
-    Noekeon, TEA, XTEA, RC2, RC5, SAFER-SK
-  * Large block cipher construction Lion
+* Authenticated cipher modes EAX, OCB, GCM, SIV, CCM, and ChaCha20Poly1305
+* Unauthenticated cipher modes CTR, CBC, XTS, CFB, OFB, and ECB
+* AES (including constant time SSSE3 and AES-NI versions)
+* AES candidates Serpent, Twofish, MARS, CAST-256, RC6
+* Stream ciphers Salsa20/XSalsa20, ChaCha20, and RC4
+* DES, 3DES and DESX
+* National/telecom block ciphers SEED, KASUMI, MISTY1, GOST 28147
+* Other block ciphers including Threefish-512, Blowfish, CAST-128, IDEA,
+  Noekeon, TEA, XTEA, RC2, RC5, SAFER-SK
+* Large block cipher construction Lion
 
 Hash functions and MACs
 ----------------------------------------
 
-  * SHA-1, SHA-224, SHA-256, SHA-384, and SHA-512
-  * SHA-3 winner Keccak-1600
-  * SHA-3 candidate Skein-512
-  * Authentication codes HMAC, CMAC, Poly1305, SipHash
-  * RIPEMD-160, RIPEMD-128, Tiger, Whirlpool
-  * Hash function combiners (Parallel and Comb4P)
-  * National standard hashes HAS-160 and GOST 34.11
-  * Non-cryptographic checksums Adler32, CRC24, CRC32
-  * Obsolete algorithms MD5, MD4, MD2, CBC-MAC, X9.19 DES-MAC
+* SHA-1, SHA-224, SHA-256, SHA-384, and SHA-512
+* SHA-3 winner Keccak-1600
+* SHA-3 candidate Skein-512
+* Authentication codes HMAC, CMAC, Poly1305, SipHash
+* RIPEMD-160, RIPEMD-128, Tiger, Whirlpool
+* Hash function combiners (Parallel and Comb4P)
+* National standard hashes HAS-160 and GOST 34.11
+* Non-cryptographic checksums Adler32, CRC24, CRC32
+* Obsolete algorithms MD5, MD4, MD2, CBC-MAC, X9.19 DES-MAC
 
 Other Useful Things
 ----------------------------------------
 
-  * Key derivation functions for passwords, including PBKDF2
-  * Password hashing functions, including bcrypt
-  * General key derivation functions KDF1 and KDF2 from IEEE 1363
+* Key derivation functions for passwords, including PBKDF2
+* Password hashing functions, including bcrypt
+* General key derivation functions KDF1 and KDF2 from IEEE 1363
 
 Recommended Algorithms
 ----------------------------------------
