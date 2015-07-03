@@ -47,7 +47,7 @@
   #include <botan/elgamal.h>
 #endif
 
-#if defined(BOTAN_HAS_DLIES)
+#if defined(BOTAN_HAS_DLIES) && defined(BOTAN_HAS_KDF2)
   #include <botan/dlies.h>
   #include <botan/kdf2.h>
   #include <botan/hmac.h>
@@ -614,7 +614,7 @@ void benchmark_dh(RandomNumberGenerator& rng,
    }
 #endif
 
-#if defined(BOTAN_HAS_DIFFIE_HELLMAN) && defined(BOTAN_HAS_DLIES)
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN) && defined(BOTAN_HAS_DLIES) && defined(BOTAN_HAS_KDF2)
 void benchmark_dlies(RandomNumberGenerator& rng,
                      double seconds,
                      Benchmark_Report& report)
@@ -850,7 +850,7 @@ void bench_pk(RandomNumberGenerator& rng,
       benchmark_dh(rng, seconds, report);
 #endif
 
-#if defined(BOTAN_HAS_DIFFIE_HELLMAN) && defined(BOTAN_HAS_DLIES)
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN) && defined(BOTAN_HAS_DLIES) && defined(BOTAN_HAS_KDF2)
    if(algo == "All" || algo == "DLIES")
       benchmark_dlies(rng, seconds, report);
 #endif
