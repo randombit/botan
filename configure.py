@@ -1250,7 +1250,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'scripts_dir': os.path.join(build_config.src_dir, 'scripts'),
 
-        'with_shared_lib': options.build_shared_lib,
+        'build_shared_lib': options.build_shared_lib,
 
         'appobj_dir': build_config.appobj_dir,
         'libobj_dir': build_config.libobj_dir,

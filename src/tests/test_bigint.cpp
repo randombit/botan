@@ -342,9 +342,7 @@ size_t test_bigint()
 
       std::vector<std::string> substr = parse(line);
 
-#if DEBUG
-      std::cout << "Testing: " << algorithm << std::endl;
-#endif
+      // std::cout << "Testing: " << algorithm << std::endl;
 
       size_t new_errors = 0;
       if(algorithm.find("Addition") != std::string::npos)

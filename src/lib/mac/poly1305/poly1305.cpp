@@ -190,7 +190,7 @@ void Poly1305::final_result(byte out[])
    if(m_buf_pos != 0)
       {
       m_buf[m_buf_pos] = 1;
-      const auto len = m_buf.size() - m_buf_pos - 1;
+      const size_t len = m_buf.size() - m_buf_pos - 1;
       if (len > 0)
          {
          clear_mem(&m_buf[m_buf_pos+1], len);
