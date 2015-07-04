@@ -11,6 +11,7 @@
 #include "test_pubkey.h"
 
 #include <botan/curve25519.h>
+#include <botan/pkcs8.h>
 #include <botan/hex.h>
 #include <iostream>
 #include <fstream>
@@ -39,10 +40,67 @@ size_t curve25519_scalar_kat(const std::string& secret_h,
    return 0;
    }
 
+size_t c25519_roundtrip()
+   {
+   auto& rng = test_rng();
+
+   try
+      {
+      // First create keys
+      Curve25519_PrivateKey a_priv_gen(rng);
+      Curve25519_PrivateKey b_priv_gen(rng);
+
+      // Then serialize to encrypted storage
+      const auto pbe_time = std::chrono::milliseconds(10);
+      const std::string a_priv_pem = PKCS8::PEM_encode(a_priv_gen, rng, "alice pass", pbe_time);
+      const std::string b_priv_pem = PKCS8::PEM_encode(b_priv_gen, rng, "bob pass", pbe_time);
+
+      // Reload back into memory
+      DataSource_Memory a_priv_ds(a_priv_pem);
+      DataSource_Memory b_priv_ds(b_priv_pem);
+
+      std::unique_ptr<Private_Key> a_priv(PKCS8::load_key(a_priv_ds, rng, []() { return "alice pass"; }));
+      std::unique_ptr<Private_Key> b_priv(PKCS8::load_key(b_priv_ds, rng, "bob pass"));
+
+      // Export public keys as PEM
+      const std::string a_pub_pem = X509::PEM_encode(*a_priv);
+      const std::string b_pub_pem = X509::PEM_encode(*b_priv);
+
+      DataSource_Memory a_pub_ds(a_pub_pem);
+      DataSource_Memory b_pub_ds(b_pub_pem);
+
+      std::unique_ptr<Public_Key> a_pub(X509::load_key(a_pub_ds));
+      std::unique_ptr<Public_Key> b_pub(X509::load_key(b_pub_ds));
+
+      Curve25519_PublicKey* a_pub_key = dynamic_cast<Curve25519_PublicKey*>(a_pub.get());
+      Curve25519_PublicKey* b_pub_key = dynamic_cast<Curve25519_PublicKey*>(b_pub.get());
+
+      PK_Key_Agreement a_ka(*a_priv, "KDF2(SHA-256)");
+      PK_Key_Agreement b_ka(*b_priv, "KDF2(SHA-256)");
+
+      const std::string context = "shared context value";
+      SymmetricKey a_key = a_ka.derive_key(32, b_pub_key->public_value(), context);
+      SymmetricKey b_key = b_ka.derive_key(32, a_pub_key->public_value(), context);
+
+      if(a_key != b_key)
+         return 1;
+      }
+   catch(std::exception& e)
+      {
+      std::cout << "C25519 rt fail: " << e.what() << std::endl;
+      return 1;
+      }
+
+   return 0;
+   }
+
+
 }
 
 size_t test_curve25519()
    {
+   test_report("Curve25519", 1, c25519_roundtrip());
+
    size_t fails = 0;
 
    std::ifstream c25519_scalar(PK_TEST_DATA_DIR "/c25519_scalar.vec");
