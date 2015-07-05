@@ -96,6 +96,16 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
          {
          return m_key.get();
          }
+
+      SymmetricKey psk(const std::string& type,
+                       const std::string& context,
+                       const std::string&) override
+         {
+         if(type == "tls-server" && context == "session-ticket")
+            return SymmetricKey("AABBCCDDEEFF012345678012345678");
+         throw Exception("No PSK set for " + context);
+         }
+
    public:
       X509_Certificate m_server_cert, m_ca_cert;
       std::unique_ptr<Private_Key> m_key;
@@ -213,6 +223,9 @@ size_t basic_test_handshake(RandomNumberGenerator& rng,
 
    while(true)
       {
+      if(client.is_closed() && server.is_closed())
+         break;
+
       if(client.is_active())
          client.send("1");
       if(server.is_active())
@@ -272,7 +285,16 @@ size_t basic_test_handshake(RandomNumberGenerator& rng,
          }
 
       if(s2c_data.size() && c2s_data.size())
-         break;
+         {
+         SymmetricKey client_key = client.key_material_export("label", "context", 32);
+         SymmetricKey server_key = server.key_material_export("label", "context", 32);
+
+         if(client_key != server_key)
+            return 1;
+
+         server.close();
+         client.close();
+         }
       }
 
    return 0;
