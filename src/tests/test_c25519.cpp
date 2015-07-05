@@ -50,18 +50,20 @@ size_t c25519_roundtrip()
       Curve25519_PrivateKey a_priv_gen(rng);
       Curve25519_PrivateKey b_priv_gen(rng);
 
+      const std::string a_pass = "alice pass";
+      const std::string b_pass = "bob pass";
+
       // Then serialize to encrypted storage
       const auto pbe_time = std::chrono::milliseconds(10);
-      const std::string a_priv_pem = PKCS8::PEM_encode(a_priv_gen, rng, "alice pass", pbe_time);
-      const std::string b_priv_pem = PKCS8::PEM_encode(b_priv_gen, rng, "bob pass", pbe_time);
+      const std::string a_priv_pem = PKCS8::PEM_encode(a_priv_gen, rng, a_pass, pbe_time);
+      const std::string b_priv_pem = PKCS8::PEM_encode(b_priv_gen, rng, b_pass, pbe_time);
 
       // Reload back into memory
       DataSource_Memory a_priv_ds(a_priv_pem);
       DataSource_Memory b_priv_ds(b_priv_pem);
 
-      std::function<std::string ()> a_pass_fn = []() { return "alice pass"; };
-      std::unique_ptr<Private_Key> a_priv(PKCS8::load_key(a_priv_ds, rng, a_pass_fn));
-      std::unique_ptr<Private_Key> b_priv(PKCS8::load_key(b_priv_ds, rng, "bob pass"));
+      std::unique_ptr<Private_Key> a_priv(PKCS8::load_key(a_priv_ds, rng, [a_pass]() { return a_pass; }));
+      std::unique_ptr<Private_Key> b_priv(PKCS8::load_key(b_priv_ds, rng, b_pass));
 
       // Export public keys as PEM
       const std::string a_pub_pem = X509::PEM_encode(*a_priv);
