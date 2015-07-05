@@ -15,6 +15,7 @@
 #include <botan/x509self.h>
 #include <botan/rsa.h>
 #include <botan/x509_ca.h>
+#include <botan/auto_rng.h>
 #include <botan/hex.h>
 
 #include <iostream>
@@ -112,8 +113,9 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
       std::vector<std::unique_ptr<Certificate_Store>> m_stores;
    };
 
-Credentials_Manager* create_creds(RandomNumberGenerator& rng)
+Credentials_Manager* create_creds()
    {
+   AutoSeeded_RNG rng;
    std::unique_ptr<Private_Key> ca_key(new RSA_PrivateKey(rng, 1024));
 
    X509_Cert_Options ca_opts;
@@ -130,7 +132,7 @@ Credentials_Manager* create_creds(RandomNumberGenerator& rng)
    Private_Key* server_key = new RSA_PrivateKey(rng, 1024);
 
    X509_Cert_Options server_opts;
-   server_opts.common_name = "localhost";
+   server_opts.common_name = "server.example.com";
    server_opts.country = "US";
 
    PKCS10_Request req = X509::create_cert_req(server_opts,
@@ -217,7 +219,7 @@ size_t basic_test_handshake(RandomNumberGenerator& rng,
                       creds,
                       policy,
                       rng,
-                      TLS::Server_Information(),
+                      TLS::Server_Information("server.example.com"),
                       offer_version,
                       protocols_offered);
 
@@ -315,7 +317,7 @@ size_t test_tls()
 
    Test_Policy default_policy;
    auto& rng = test_rng();
-   std::unique_ptr<Credentials_Manager> basic_creds(create_creds(rng));
+   std::unique_ptr<Credentials_Manager> basic_creds(create_creds());
 
    errors += basic_test_handshake(rng, TLS::Protocol_Version::TLS_V10, *basic_creds, default_policy);
    errors += basic_test_handshake(rng, TLS::Protocol_Version::TLS_V11, *basic_creds, default_policy);
