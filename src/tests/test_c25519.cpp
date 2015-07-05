@@ -59,7 +59,8 @@ size_t c25519_roundtrip()
       DataSource_Memory a_priv_ds(a_priv_pem);
       DataSource_Memory b_priv_ds(b_priv_pem);
 
-      std::unique_ptr<Private_Key> a_priv(PKCS8::load_key(a_priv_ds, rng, []() { return "alice pass"; }));
+      std::function<std::string ()> a_pass_fn = []() { return "alice pass"; };
+      std::unique_ptr<Private_Key> a_priv(PKCS8::load_key(a_priv_ds, rng, a_pass_fn));
       std::unique_ptr<Private_Key> b_priv(PKCS8::load_key(b_priv_ds, rng, "bob pass"));
 
       // Export public keys as PEM
