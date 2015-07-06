@@ -280,10 +280,10 @@ def process_command_line(args):
 
     build_group = optparse.OptionGroup(parser, 'Build options')
 
-    modes = ['release', 'debug', 'coverage']
+    build_modes = ['release', 'debug', 'coverage', 'sanitizer']
     build_group.add_option('--build-mode', default='release', metavar='MODE',
-                           choices=modes,
-                           help="Build mode (one of %s; default %%default)" % (', '.join(modes)))
+                           choices=build_modes,
+                           help="Build mode (one of %s; default %%default)" % (', '.join(build_modes)))
 
     build_group.add_option('--debug-mode', action='store_const',
                            const='debug', dest='build_mode',
@@ -802,6 +802,7 @@ class CompilerInfo(object):
                         'debug_flags': '',
                         'no_debug_flags': '',
                         'coverage_flags': '',
+                        'sanitizer_flags': '',
                         'shared_flags': '',
                         'lang_flags': '',
                         'warning_flags': '',
@@ -886,6 +887,10 @@ class CompilerInfo(object):
             if self.coverage_flags == '':
                 raise Exception('No coverage handling for %s' % (self.basename))
             return ' ' + self.coverage_flags + ' ' + abi_flags
+        elif options.build_mode == 'sanitizer':
+            if self.sanitizer_flags == '':
+                raise Exception('No sanitizer handling for %s' % (self.basename))
+            return ' ' + self.sanitizer_flags + ' ' + abi_flags
 
         return ' ' + abi_flags
 

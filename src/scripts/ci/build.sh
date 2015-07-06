@@ -10,7 +10,7 @@ elif [ "$BUILD_MODE" = "coverage" ]; then
    # lcov gets confused by symlinks
    CFG_FLAGS="--build-mode=coverage --link-method=copy"
 elif [ "$BUILD_MODE" = "sanitizer" ]; then
-   CFG_FLAGS="--cc-abi-flags='-D_GLIBCXX_DEBUG -fsanitize=address -fsanitize=undefined'"
+   CFG_FLAGS="--build-mode=sanitizer"
 fi
 
 $CXX --version
