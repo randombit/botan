@@ -156,7 +156,7 @@ McEliece_PrivateKey generate_mceliece_key( RandomNumberGenerator & rng, u32bit e
          {
          k = (l * ext_deg) / 32;
          j = (l * ext_deg) % 32;
-         sk[k] ^= F[i].get_coef( l) << j;
+         sk[k] ^= static_cast<u32bit>(F[i].get_coef(l)) << j;
          if (j + ext_deg > 32)
             {
             sk[k + 1] ^= F[i].get_coef( l) >> (32 - j);
