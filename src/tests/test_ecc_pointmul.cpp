@@ -8,6 +8,8 @@
 
 #if defined(BOTAN_HAS_ECC_GROUP)
 
+#if defined(BOTAN_HAS_ECDSA)
+
 #include "test_pubkey.h"
 
 #include <botan/pubkey.h>
@@ -67,6 +69,12 @@ size_t test_ecc_pointmul()
 
    return fails;
    }
+
+#else
+
+UNTESTED_WARNING(ecc_pointmul);
+
+#endif // BOTAN_HAS_ECDSA
 
 #else
 
