@@ -9,7 +9,6 @@
 #define BOTAN_OAEP_H__
 
 #include <botan/eme.h>
-#include <botan/kdf.h>
 #include <botan/hash.h>
 
 namespace Botan {
