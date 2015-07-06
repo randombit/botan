@@ -51,6 +51,7 @@ size_t test_tss()
 
    return fails;
    }
+
 #else
 
 SKIP_TEST(tss);
