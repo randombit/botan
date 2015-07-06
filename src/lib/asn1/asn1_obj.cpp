@@ -10,6 +10,7 @@
 #include <botan/ber_dec.h>
 #include <botan/data_src.h>
 #include <botan/parsing.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -45,8 +46,7 @@ std::vector<byte> put_in_sequence(const std::vector<byte>& contents)
 */
 std::string to_string(const BER_Object& obj)
    {
-   return std::string(reinterpret_cast<const char*>(&obj.value[0]),
-                      obj.value.size());
+   return to_string(obj.value);
    }
 
 /*
