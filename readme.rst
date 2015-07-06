@@ -61,9 +61,9 @@ There is also a third party open source implementation of
 Download
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The 1.11 branch are highly recommended, especially for new development.
-But be warned the API is still subject to change before the 2.0 stable
-release.
+The 1.11 branch is highly recommended, especially for new development.
+But be warned the API is still subject to some change before the 2.0
+stable release.
 
 All releases are signed with a
 `PGP key <http://botan.randombit.net/pgpkey.txt>`_::
@@ -87,9 +87,9 @@ Current Development Series (1.11)
 ----------------------------------------
 
 The latest development release is
-`1.11.17 <http://botan.randombit.net/releases/Botan-1.11.17.tgz>`_
-`(sig) <http://botan.randombit.net/releases/Botan-1.11.17.tgz.asc>`_
-released 2015-06-18
+`1.11.18 <http://botan.randombit.net/releases/Botan-1.11.18.tgz>`_
+`(sig) <http://botan.randombit.net/releases/Botan-1.11.18.tgz.asc>`_
+released 2015-07-05
 
 Botan 1.11 requires a working C++11 compiler; GCC 4.8 and later,
 Clang 3.4 and later, and MSVC 2013 are regularly tested.

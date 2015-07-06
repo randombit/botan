@@ -1,11 +1,16 @@
 Release Notes
 ========================================
 
-Version 1.11.18, Not Yet Released
+Version 1.11.18, 2015-07-05
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * In this release Botan has switched VCS from ``monotone`` to ``git``,
   and is now hosted on github at https://github.com/randombit/botan
+
+* The TLS client called ``std::set_difference`` on an invalid iterator
+  pair. This could potentially lead to a crash depending on the
+  compiler and STL implementation. It also would trigger assertion
+  failures when using checked iterators. GH #73
 
 * Remove code constructs which triggered errors under MSVC and GCC
   debug iterators. The primary of these was an idiom of ``&vec[x]`` to
