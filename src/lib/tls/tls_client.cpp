@@ -216,7 +216,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
       std::vector<Handshake_Extension_Type> diff;
 
       std::set_difference(server_extn.begin(), server_extn.end(),
-                          client_extn.begin(), server_extn.end(),
+                          client_extn.begin(), client_extn.end(),
                           std::back_inserter(diff));
 
       if(!diff.empty())
