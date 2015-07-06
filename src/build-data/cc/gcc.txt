@@ -17,7 +17,8 @@ app_opt_flags "-O2"
 shared_flags "-fPIC"
 debug_flags "-g"
 coverage_flags "--coverage"
-sanitizer_flags "-D_GLIBCXX_DEBUG -fsanitize=address -fsanitize=undefined"
+#sanitizer_flags "-D_GLIBCXX_DEBUG -fsanitize=address -fsanitize=undefined"
+sanitizer_flags "-D_GLIBCXX_DEBUG -fsanitize=address"
 
 visibility_build_flags "-fvisibility=hidden"
 visibility_attribute '__attribute__((visibility("default")))'
