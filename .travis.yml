@@ -13,6 +13,7 @@ env:
     - BUILD_MODE="shared"
     - BUILD_MODE="static"
     - BUILD_MODE="coverage"
+    - BUILD_MODE="sanitizer"
 
 matrix:
   exclude:
@@ -20,6 +21,7 @@ matrix:
       compiler: gcc
     - compiler: clang
       env: BUILD_MODE="coverage"
+      env: BUILD_MODE="sanitizer"
 
 sudo: required
 
