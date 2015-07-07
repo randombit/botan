@@ -88,10 +88,10 @@ void Blowfish::decrypt_n(const byte in[], byte out[], size_t blocks) const
 void Blowfish::key_schedule(const byte key[], size_t length)
    {
    P.resize(18);
-   std::copy(P_INIT, P_INIT + 18, P.begin());
+   copy_mem(P.data(), P_INIT, 18);
 
    S.resize(1024);
-   std::copy(S_INIT, S_INIT + 1024, S.begin());
+   copy_mem(S.data(), S_INIT, 1024);
 
    const byte null_salt[16] = { 0 };
 
@@ -133,10 +133,10 @@ void Blowfish::eks_key_schedule(const byte key[], size_t length,
                                   std::to_string(workfactor) + " too large");
 
    P.resize(18);
-   std::copy(P_INIT, P_INIT + 18, P.begin());
+   copy_mem(P.data(), P_INIT, 18);
 
    S.resize(1024);
-   std::copy(S_INIT, S_INIT + 1024, S.begin());
+   copy_mem(S.data(), S_INIT, 1024);
 
    key_expansion(key, length, salt);
 
