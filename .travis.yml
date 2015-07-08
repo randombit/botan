@@ -30,7 +30,7 @@ install:
   - ./src/scripts/ci/setup.sh
 
 script:
-  - ./src/scripts/ci/build.sh
+  - if [ "${COVERITY_SCAN_BRANCH}" != 1 ]; then ./src/scripts/ci/build.sh ; fi
 
 after_success:
   - ./src/scripts/ci/after_success.sh
@@ -44,5 +44,5 @@ addons:
       name: "randombit/botan"
     notification_email: lloyd@randombit.net
     build_command_prepend: "./configure.py"
-    build_command: "make -j4"
+    build_command: "make -j2"
     branch_pattern: coverity_scan
