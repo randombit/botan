@@ -10,6 +10,11 @@
 #include <botan/auto_rng.h>
 #include <botan/fs.h>
 
+#define CATCH_CONFIG_RUNNER
+#define CATCH_CONFIG_CONSOLE_WIDTH 60
+#define CATCH_CONFIG_COLOUR_NONE
+#include "catchy/catch.hpp"
+
 #if defined(BOTAN_HAS_SYSTEM_RNG)
   #include <botan/system_rng.h>
 #endif
@@ -219,6 +224,17 @@ int help(char* argv0)
    return 1;
    }
 
+int test_catchy()
+   {
+   // drop arc and arv for now
+   int catchy_result = Catch::Session().run();
+   if (catchy_result != 0)
+      {
+      std::exit(EXIT_FAILURE);
+      }
+   return 0;
+   }
+
 }
 
 int main(int argc, char* argv[])
@@ -239,6 +255,9 @@ int main(int argc, char* argv[])
 #define DEF_TEST(test) do { if(target == "all" || target == #test) \
       tests.push_back(std::make_pair(#test, test_ ## test));       \
    } while(0)
+
+   // unittesting framework in sub-folder tests/catchy
+   DEF_TEST(catchy);
 
    DEF_TEST(block);
    DEF_TEST(modes);
