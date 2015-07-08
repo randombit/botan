@@ -13,10 +13,12 @@
 #include <botan/mac.h>
 #include <botan/pbkdf.h>
 #include <botan/version.h>
+#include <botan/pkcs8.h>
 #include <botan/pubkey.h>
 #include <botan/data_src.h>
 #include <botan/hex.h>
 #include <botan/mem_ops.h>
+#include <botan/x509_key.h>
 #include <cstring>
 #include <memory>
 

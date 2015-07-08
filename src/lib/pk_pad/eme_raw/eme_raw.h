@@ -8,8 +8,6 @@
 #define BOTAN_EME_RAW_H__
 
 #include <botan/eme.h>
-#include <botan/kdf.h>
-#include <botan/hash.h>
 
 namespace Botan {
 

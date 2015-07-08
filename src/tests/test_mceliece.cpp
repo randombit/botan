@@ -11,19 +11,17 @@
 #if defined(BOTAN_HAS_MCELIECE)
 
 #include <botan/pubkey.h>
-#include <botan/ecdsa.h>
-#include <botan/rsa.h>
-#include <botan/x509cert.h>
 #include <botan/oids.h>
 #include <botan/mceliece.h>
 #include <botan/mce_kem.h>
-#include <botan/mceies.h>
 #include <botan/loadstor.h>
-
 #include <botan/hex.h>
-
 #include <iostream>
 #include <memory>
+
+#if defined(BOTAN_HAS_MCEIES)
+#include <botan/mceies.h>
+#endif
 
 using namespace Botan;
 
@@ -161,11 +159,11 @@ size_t test_mceliece_raw(const McEliece_PrivateKey& sk,
    return err_cnt;
    }
 
+#if defined(BOTAN_HAS_MCEIES)
 size_t test_mceies(const McEliece_PrivateKey& sk,
                    const McEliece_PublicKey& pk,
                    RandomNumberGenerator& rng)
    {
-
    size_t fails = 0;
 
    for(size_t i = 0; i != 5; ++i)
@@ -209,6 +207,7 @@ size_t test_mceies(const McEliece_PrivateKey& sk,
 
    return fails;
    }
+#endif // BOTAN_HAS_MCEIES
 
 }
 
@@ -216,7 +215,7 @@ size_t test_mceliece()
    {
    auto& rng = test_rng();
 
-   size_t  fails = 0;
+   size_t fails = 0;
    size_t params__n__t_min_max[] = {
       256, 5, 15,
       512, 5, 33,
@@ -241,9 +240,10 @@ size_t test_mceliece()
             }
          catch(std::exception& e)
             {
-            std::cout << e.what();
+            std::cout << e.what() << std::endl;
             fails++;
             }
+         tests += 1;
 
          McEliece_PrivateKey sk1(rng, code_length, t);
          const McEliece_PublicKey& pk1 = sk1;
@@ -278,9 +278,10 @@ size_t test_mceliece()
             }
          catch(std::exception& e)
             {
-            std::cout << e.what();
+            std::cout << e.what() << std::endl;
             fails++;
             }
+         tests += 1;
 
          try
             {
@@ -288,21 +289,24 @@ size_t test_mceliece()
             }
          catch(std::exception& e)
             {
-            std::cout << e.what();
+            std::cout << e.what() << std::endl;
             fails++;
             }
+         tests += 1;
 
+#if defined(BOTAN_HAS_MCEIES)
          try
             {
             fails += test_mceies(sk, pk, rng);
             }
          catch(std::exception& e)
             {
-            std::cout << e.what();
+            std::cout << e.what() << std::endl;
             fails++;
             }
+         tests += 1;
+#endif // BOTAN_HAS_MCEIES
 
-         tests += 4;
          }
       }
 

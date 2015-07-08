@@ -3,6 +3,7 @@ define OPENPGP_CODEC 20131128
 load_on auto
 
 <requires>
+codec_filt
 crc24
 filters
 </requires>

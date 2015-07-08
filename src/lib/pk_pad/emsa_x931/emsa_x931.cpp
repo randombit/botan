@@ -7,6 +7,7 @@
 
 #include <botan/internal/pad_utils.h>
 #include <botan/emsa_x931.h>
+#include <botan/hash_id.h>
 
 namespace Botan {
 
