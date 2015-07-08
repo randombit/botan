@@ -1,5 +1,21 @@
 language: cpp
 
+sudo: required
+
+# BEGIN BUILD MATRIX
+#
+# Build matrix must be smaller on branch coverity_scan because quota allows
+# only 5 Coverity Scan jobs at once. Thus we have different versions of this
+# file on branch master and coverity_scan.
+#
+# Please keep this file as much in sync as possible to allow easy merging
+# from master into coverity_scan and only have differences in the build
+# matrix block.
+#
+# Check the difference as follows:
+#   $ git checkout master
+#   $ git checkout coverity_scan
+#   $ git difftool master coverity_scan .travis.yml
 os:
   - linux
   - osx
@@ -23,8 +39,7 @@ matrix:
       env: BUILD_MODE="coverage"
     - compiler: clang
       env: BUILD_MODE="sanitizer"
-
-sudo: required
+# END BUILD MATRIX
 
 install:
   - ./src/scripts/ci/setup.sh
