@@ -55,6 +55,9 @@ There is also a third party open source implementation of
 .. image:: https://botan-ci.kullo.net/badge/tests
     :target: https://botan-ci.kullo.net/
 
+.. image:: https://scan.coverity.com/projects/624/badge.svg
+    :target: https://scan.coverity.com/projects/624
+
 .. image:: https://coveralls.io/repos/randombit/botan/badge.svg?branch=master
     :target: https://coveralls.io/r/randombit/botan?branch=master
 
