@@ -23,6 +23,12 @@ matrix:
       env: BUILD_MODE="coverage"
     - compiler: clang
       env: BUILD_MODE="sanitizer"
+# Limit coverity buid configurations to a minimum
+# since coverity scan allows only 5 builds at once
+    - env: COVERITY_SCAN_BRANCH=1 BUILD_MODE="sanitizer"
+    - env: COVERITY_SCAN_BRANCH=1 BUILD_MODE="coverage"
+    - env: COVERITY_SCAN_BRANCH=1
+      os: osx
 
 sudo: required
 
