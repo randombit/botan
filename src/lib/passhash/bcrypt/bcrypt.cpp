@@ -90,13 +90,13 @@ std::string make_bcrypt(const std::string& pass,
                         const std::vector<byte>& salt,
                         u16bit work_factor)
    {
-   const byte magic[24] = {
+   auto magic = std::vector<byte>{
       0x4F, 0x72, 0x70, 0x68, 0x65, 0x61, 0x6E, 0x42,
       0x65, 0x68, 0x6F, 0x6C, 0x64, 0x65, 0x72, 0x53,
       0x63, 0x72, 0x79, 0x44, 0x6F, 0x75, 0x62, 0x74
    };
 
-   std::vector<byte> ctext(magic, magic + sizeof(magic));
+   std::vector<byte> ctext = magic;
 
    Blowfish blowfish;
 
