@@ -16,11 +16,6 @@ import shutil
 import string
 import sys
 
-if 'dont_write_bytecode' in sys.__dict__:
-    sys.dont_write_bytecode = True
-
-import combine_relnotes
-
 def parse_command_line(args):
 
     parser = optparse.OptionParser()
@@ -202,8 +197,7 @@ def main(args = None):
     for f in [f for f in os.listdir(cfg['doc_dir']) if f.endswith('.txt')]:
         copy_file(os.path.join(cfg['doc_dir'], f), os.path.join(target_doc_dir, f))
 
-    with combine_relnotes.open_for_utf8(os.path.join(target_doc_dir, 'news.txt'), 'w+') as news:
-        news.write(combine_relnotes.combine_relnotes('doc/relnotes', False))
+    copy_file(os.path.join(cfg['doc_dir'], 'news.rst'), os.path.join(target_doc_dir, 'news.txt'))
 
     logging.info('Botan %s installation complete', cfg['version'])
 
