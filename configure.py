@@ -126,10 +126,8 @@ class BuildConfigurationInformation(object):
 
         if options.via_amalgamation:
             self.build_sources = ['botan_all.cpp']
-            self.build_internal_headers = []
         else:
             self.build_sources = self.sources
-            self.build_internal_headers = self.internal_headers
 
         self.public_headers = sorted(flatten([m.public_headers() for m in modules]))
 
@@ -1971,9 +1969,10 @@ def main(argv = None):
                 if e.errno != errno.EEXIST:
                     raise Exception('Error linking %s into %s: %s' % (header_file, dir, e))
 
-    link_headers(build_config.public_headers, 'public', build_config.botan_include_dir)
+    link_headers(build_config.public_headers, 'public',
+                 build_config.botan_include_dir)
 
-    link_headers(build_config.build_internal_headers, 'internal',
+    link_headers(build_config.internal_headers, 'internal',
                  build_config.internal_include_dir)
 
     with open(os.path.join(build_config.build_dir, 'build_config.py'), 'w') as f:
