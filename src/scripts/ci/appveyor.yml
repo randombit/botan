@@ -7,3 +7,4 @@ build_script:
   - python configure.py --disable-shared --via-amalgamation --cpu=x86_32 --cc=msvc --cc-abi-flags="/bigobj"
   - nmake
   - botan-test
+  - nmake install
