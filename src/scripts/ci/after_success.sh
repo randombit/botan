@@ -9,3 +9,5 @@ if [ "$BUILD_MODE" = "coverage" ]; then
   # Assume that $COVERALLS_REPO_TOKEN might not be set (e.g. pull requests)
   coveralls-lcov --repo-token="$COVERALLS_REPO_TOKEN" coverage.info
 fi
+
+sudo make install
