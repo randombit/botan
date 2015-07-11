@@ -13,7 +13,14 @@ elif [ "$BUILD_MODE" = "sanitizer" ]; then
    CFG_FLAGS="--build-mode=sanitizer"
 fi
 
+if [ "$MODULES" = "min" ]; then
+   CFG_FLAGS="$CFG_FLAGS --no-autoload --enable-modules=base"
+fi
+
 $CXX --version
 python configure.py $CFG_FLAGS --cc=$CC --cc-bin=$CXX --with-openssl --with-sqlite --with-zlib
 make -j 2
-./botan-test
+
+if [ "$MODULES" != "min" ]; then
+    ./botan-test
+fi

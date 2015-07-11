@@ -26,19 +26,26 @@ compiler:
 
 env:
   matrix:
-    - BUILD_MODE="shared"
-    - BUILD_MODE="static"
-    - BUILD_MODE="coverage"
-    - BUILD_MODE="sanitizer"
+    - MODULES="all" BUILD_MODE="shared"
+    - MODULES="all" BUILD_MODE="static"
+    - MODULES="all" BUILD_MODE="coverage"
+    - MODULES="all" BUILD_MODE="sanitizer"
+
+    - MODULES="min" BUILD_MODE="shared"
+    - MODULES="min" BUILD_MODE="static"
 
 matrix:
   exclude:
     - os: osx
       compiler: gcc
     - compiler: clang
-      env: BUILD_MODE="coverage"
+      env: MODULES="all" BUILD_MODE="coverage"
     - compiler: clang
-      env: BUILD_MODE="sanitizer"
+      env: MODULES="all" BUILD_MODE="sanitizer"
+    - compiler: clang
+      env: MODULES="min" BUILD_MODE="shared"
+    - compiler: clang
+      env: MODULES="min" BUILD_MODE="static"
 # END BUILD MATRIX
 
 install:
