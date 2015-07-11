@@ -15,6 +15,13 @@ botan-test
 # Text file backups (e.g. gedit, joe)
 *~
 
+# Patch files
+*.patch
+*.diff
+*.orig
+*.rej
+
+
 # Amalgamation code
 botan_all.h
 botan_all_internal.h
