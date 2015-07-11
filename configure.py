@@ -42,19 +42,6 @@ def chunks(l, n):
     for i in range(0, len(l), n):
         yield l[i:i+n]
 
-def is_official_release():
-    # Assume a release date implies official release
-    return (botan_version.release_datestamp > 20130000)
-
-def default_build_mode():
-    if os.getenv('CONTINUOUS_INTEGRATION') == 'true' or \
-       os.getenv('GO_ENVIRONMENT_NAME') == 'Botan':
-        return 'maintainer'
-
-    if is_official_release():
-        return 'release'
-    return 'debug'
-
 def get_vc_revision():
 
     def get_vc_revision(cmdlist):
