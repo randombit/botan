@@ -1,7 +1,5 @@
 language: cpp
 
-sudo: required
-
 # BEGIN BUILD MATRIX
 #
 # Build matrix must be smaller on branch coverity_scan because quota allows
@@ -48,8 +46,12 @@ matrix:
       env: MODULES="min" BUILD_MODE="static"
 # END BUILD MATRIX
 
+cache:
+  directories:
+    - $HOME/.ccache
+
 install:
-  - ./src/scripts/ci/setup.sh
+  - ./src/scripts/ci/install.sh
 
 script:
   - if [ "${COVERITY_SCAN_BRANCH}" != 1 ]; then ./src/scripts/ci/build.sh ; fi
@@ -61,6 +63,16 @@ notifications:
   email: lloyd@randombit.net
 
 addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - ccache
+    - g++-4.8
+    - libssl-dev
+    - libsqlite3-dev
+    - zlib1g-dev
+
   coverity_scan:
     project:
       name: "randombit/botan"
