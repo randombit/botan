@@ -5,14 +5,22 @@
 */
 
 #include "apps.h"
+#include <fstream>
+#include <botan/auto_rng.h>
+
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
 #include <botan/x509cert.h>
 #include <botan/x509_crl.h>
 #include <botan/pkcs8.h>
+#endif
+
+#if defined(BOTAN_HAS_TLS)
 #include <botan/tls_client.h>
-#include <botan/system_rng.h>
-#include <fstream>
+#endif
 
 namespace {
+
+#if defined(BOTAN_HAS_TLS)
 
 class Fuzzer_Creds : public Credentials_Manager
    {
@@ -38,6 +46,8 @@ class Fuzzer_Creds : public Credentials_Manager
          }
    };
 
+#endif
+
 int fuzzer(int argc, char* argv[])
    {
    if(argc != 3)
@@ -51,21 +61,31 @@ int fuzzer(int argc, char* argv[])
    const std::string type = argv[1];
    const std::string input = argv[2];
 
-   auto& rng = system_rng();
+   AutoSeeded_RNG rng;
 
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
    if(type == "cert")
       {
       X509_Certificate cert(input);
+      return 0;
       }
-   else if(type == "crl")
+
+   if(type == "crl")
       {
       X509_CRL crl(input);
+      return 0;
       }
-   else if(type == "privkey")
+
+   if(type == "privkey")
       {
       std::unique_ptr<Private_Key>(PKCS8::load_key(input, rng));
+      return 0;
       }
-   else if(type == "tls_client")
+
+#endif
+
+#if defined(BOTAN_HAS_TLS)
+   if(type == "tls_client")
       {
       auto dev_null = [](const byte[], size_t) {};
 
@@ -106,15 +126,14 @@ int fuzzer(int argc, char* argv[])
          }
       catch(std::exception& e)
          {
+         return 0;
          }
+      return 0;
       }
-   else
-      {
-      std::cout << "Unhandled type " << type << "\n";
-      return 1;
-      }
+#endif
 
-   return 0;
+   std::cout << "Unknown type '" << type << "'\n";
+   return 1;
    }
 
 REGISTER_APP(fuzzer);
