@@ -4,6 +4,7 @@
 Configuration program for botan
 
 (C) 2009,2010,2011,2012,2013,2014,2015 Jack Lloyd
+(C) 2015 Simon Warta (Kullo GmbH)
 
 Botan is released under the Simplified BSD License (see license.txt)
 
@@ -1764,8 +1765,17 @@ def main(argv = None):
     if argv is None:
         argv = sys.argv
 
-    logging.basicConfig(stream = sys.stdout,
-                        format = '%(levelname) 7s: %(message)s')
+    class BotanConfigureLogHandler(logging.StreamHandler):
+        def emit(self, record):
+            # Do the default stuff first
+            super(BotanConfigureLogHandler, self).emit(record)
+            # Exit script if and ERROR or worse occurred
+            if record.levelno >= logging.ERROR:
+                sys.exit(1)
+
+    lh = BotanConfigureLogHandler(stream = sys.stdout)
+    lh.setFormatter(logging.Formatter('%(levelname) 7s: %(message)s'))
+    logging.getLogger().addHandler(lh)
 
     options = process_command_line(argv[1:])
 
@@ -1987,8 +1997,7 @@ if __name__ == '__main__':
     try:
         main()
     except Exception as e:
-        logging.error(e)
         import traceback
         logging.debug(traceback.format_exc())
-        sys.exit(1)
+        logging.error(e)
     sys.exit(0)
