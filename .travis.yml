@@ -77,6 +77,6 @@ addons:
     project:
       name: "randombit/botan"
     notification_email: lloyd@randombit.net
-    build_command_prepend: "./configure.py"
+    build_command_prepend: "./configure.py --cc-bin=/usr/bin/g++-4.8"
     build_command: "make -j2"
     branch_pattern: coverity_scan
