@@ -1897,6 +1897,10 @@ def main(argv = None):
             logging.info('Disabling assembly code, cannot use in amalgamation')
             options.asm_ok = False
 
+    if not options.build_shared_lib and not options.gen_amalgamation:
+        raise Exception('Static build is only supported using amalgamation. '
+                'Add --via-amalgamation.')
+
     loaded_mods = choose_modules_to_use(modules, arch, cc, options)
 
     for m in loaded_mods:
