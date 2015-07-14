@@ -49,9 +49,15 @@ struct BOTAN_DLL calendar_point
    */
    calendar_point(u32bit y, byte mon, byte d, byte h, byte min, byte sec) :
       year(y), month(mon), day(d), hour(h), minutes(min), seconds(sec) {}
+
+   /**
+   * Returns an STL timepoint object
+   */
+   std::chrono::system_clock::time_point to_std_timepoint();
    };
 
-/*
+/**
+* Convert a time_point to a calendar_point
 * @param time_point a time point from the system clock
 * @return calendar_point object representing this time point
 */

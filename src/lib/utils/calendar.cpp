@@ -33,9 +33,30 @@ std::tm do_gmtime(std::time_t time_val)
 
 }
 
-/*
-* Convert a time_point to a calendar_point
-*/
+std::chrono::system_clock::time_point calendar_point::to_std_timepoint()
+   {
+   if (year < 1900)
+      throw Invalid_Argument("calendar_point::to_std_timepoint() does not support years before 1990.");
+
+   std::tm tm;
+   tm.tm_sec   = seconds;
+   tm.tm_min   = minutes;
+   tm.tm_hour  = hour;
+   tm.tm_mday  = day;
+   tm.tm_mon   = month - 1;
+   tm.tm_year  = year - 1900;
+
+   // Convert std::tm to std::time_t
+   // http://stackoverflow.com/questions/16647819/timegm-cross-platform
+   #if defined(BOTAN_TARGET_OS_IS_WINDOWS)
+   #define timegm _mkgmtime
+   #endif
+   std::time_t tt = timegm(&tm);
+
+   return std::chrono::system_clock::from_time_t(tt);
+   }
+
+
 calendar_point calendar_value(
    const std::chrono::system_clock::time_point& time_point)
    {
