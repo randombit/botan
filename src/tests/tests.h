@@ -51,6 +51,8 @@ void test_report(const std::string& name, size_t ran, size_t failed);
 #define TEST_DATA_DIR_PK  "src/tests/data/pubkey"
 #define TEST_DATA_DIR_ECC "src/tests/data/ecc"
 
+#define TEST_OUTDATA_DIR  "src/tests/outdata"
+
 int test_main(int argc, char* argv[]);
 
 // Tests using reader framework above

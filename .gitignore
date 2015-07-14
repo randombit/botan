@@ -31,3 +31,6 @@ botan_all_*.cpp
 # Coverage output
 coverage.info
 coverage/
+
+# Test output
+src/tests/outdata/*.pem

@@ -240,14 +240,14 @@ size_t test_create_pkcs8(RandomNumberGenerator& rng)
       //cout << "\nequal: " <<  (rsa_key == rsa_key2) << std::endl;
       //DSA_PrivateKey key(DL_Group("dsa/jce/1024"));
 
-      std::ofstream rsa_priv_key(TEST_DATA_DIR_ECC "/rsa_private.pkcs8.pem");
+      std::ofstream rsa_priv_key(TEST_OUTDATA_DIR "/rsa_private.pkcs8.pem");
       rsa_priv_key << PKCS8::PEM_encode(rsa_key);
 
       EC_Group dom_pars(OID("1.3.132.0.8"));
       ECDSA_PrivateKey key(rng, dom_pars);
 
       // later used by other tests :(
-      std::ofstream priv_key(TEST_DATA_DIR_ECC "/wo_dompar_private.pkcs8.pem");
+      std::ofstream priv_key(TEST_OUTDATA_DIR "/wo_dompar_private.pkcs8.pem");
       priv_key << PKCS8::PEM_encode(key);
       }
    catch (std::exception& e)
@@ -265,14 +265,14 @@ size_t test_create_and_verify(RandomNumberGenerator& rng)
 
    EC_Group dom_pars(OID("1.3.132.0.8"));
    ECDSA_PrivateKey key(rng, dom_pars);
-   std::ofstream priv_key(TEST_DATA_DIR_ECC "/dompar_private.pkcs8.pem");
+   std::ofstream priv_key(TEST_OUTDATA_DIR "/dompar_private.pkcs8.pem");
    priv_key << PKCS8::PEM_encode(key);
 
-   std::unique_ptr<PKCS8_PrivateKey> loaded_key(PKCS8::load_key(TEST_DATA_DIR_ECC "/wo_dompar_private.pkcs8.pem", rng));
+   std::unique_ptr<PKCS8_PrivateKey> loaded_key(PKCS8::load_key(TEST_OUTDATA_DIR "/wo_dompar_private.pkcs8.pem", rng));
    ECDSA_PrivateKey* loaded_ec_key = dynamic_cast<ECDSA_PrivateKey*>(loaded_key.get());
    CHECK_MESSAGE(loaded_ec_key, "the loaded key could not be converted into an ECDSA_PrivateKey");
 
-   std::unique_ptr<PKCS8_PrivateKey> loaded_key_1(PKCS8::load_key(TEST_DATA_DIR_ECC "/rsa_private.pkcs8.pem", rng));
+   std::unique_ptr<PKCS8_PrivateKey> loaded_key_1(PKCS8::load_key(TEST_OUTDATA_DIR "/rsa_private.pkcs8.pem", rng));
    ECDSA_PrivateKey* loaded_rsa_key = dynamic_cast<ECDSA_PrivateKey*>(loaded_key_1.get());
    CHECK_MESSAGE(!loaded_rsa_key, "the loaded key is ECDSA_PrivateKey -> shouldn't be, is a RSA-Key");
 
@@ -388,7 +388,7 @@ size_t test_read_pkcs8(RandomNumberGenerator& rng)
 
    try
       {
-      std::unique_ptr<PKCS8_PrivateKey> loaded_key(PKCS8::load_key(TEST_DATA_DIR_ECC "/wo_dompar_private.pkcs8.pem", rng));
+      std::unique_ptr<PKCS8_PrivateKey> loaded_key(PKCS8::load_key(TEST_OUTDATA_DIR "/wo_dompar_private.pkcs8.pem", rng));
       ECDSA_PrivateKey* ecdsa = dynamic_cast<ECDSA_PrivateKey*>(loaded_key.get());
       CHECK_MESSAGE(ecdsa, "the loaded key could not be converted into an ECDSA_PrivateKey");
 
