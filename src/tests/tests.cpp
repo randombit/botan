@@ -28,8 +28,14 @@ size_t run_tests_in_dir(const std::string& dir, std::function<size_t (const std:
    {
    size_t fails = 0;
 
-   for(auto vec: Botan::list_all_readable_files_in_or_under(dir))
-      fails += fn(vec);
+   auto files = Botan::list_all_readable_files_in_or_under(dir);
+   if (files.empty())
+      {
+      std::cout << "Warning: No test files found in '" << dir << "'" << std::endl;
+      }
+
+   for(const auto file: files)
+      fails += fn(file);
    return fails;
    }
 
