@@ -33,24 +33,26 @@ size_t run_tests_in_dir(const std::string& dir, std::function<size_t (const std:
    return fails;
    }
 
-size_t run_tests(const std::vector<test_fn>& tests)
+size_t run_tests(const std::vector<std::pair<std::string, test_fn>>& tests)
    {
    size_t fails = 0;
 
-   for(auto& test : tests)
+   for(const auto& row : tests)
       {
+      auto name = row.first;
+      auto test = row.second;
       try
          {
          fails += test();
          }
       catch(std::exception& e)
          {
-         std::cout << "Exception escaped test: " << e.what() << std::endl;
+         std::cout << name << ": Exception escaped test: " << e.what() << std::endl;
          ++fails;
          }
       catch(...)
          {
-         std::cout << "Exception escaped test" << std::endl;
+         std::cout << name << ": Exception escaped test" << std::endl;
          ++fails;
          }
       }
@@ -226,10 +228,10 @@ int main(int argc, char* argv[])
    if(target == "-h" || target == "--help" || target == "help")
       return help(argv[0]);
 
-   std::vector<test_fn> tests;
+   std::vector<std::pair<std::string, test_fn>> tests;
 
 #define DEF_TEST(test) do { if(target == "all" || target == #test) \
-      tests.push_back(test_ ## test);                              \
+      tests.push_back(std::make_pair(#test, test_ ## test));       \
    } while(0)
 
    DEF_TEST(block);
