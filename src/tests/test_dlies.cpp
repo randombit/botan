@@ -75,7 +75,7 @@ size_t test_dlies()
    {
    size_t fails = 0;
 
-   std::ifstream dlies(PK_TEST_DATA_DIR "/dlies.vec");
+   std::ifstream dlies(TEST_DATA_DIR_PK "/dlies.vec");
 
    fails += run_tests_bb(dlies, "DLIES Encryption", "Ciphertext", true,
              [](std::map<std::string, std::string> m) -> size_t

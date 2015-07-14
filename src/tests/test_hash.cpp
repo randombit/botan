@@ -101,5 +101,5 @@ size_t test_hash()
              });
       };
 
-   return run_tests_in_dir(TEST_DATA_DIR "hash", test);
+   return run_tests_in_dir(TEST_DATA_DIR "/hash", test);
    }

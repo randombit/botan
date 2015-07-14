@@ -55,7 +55,7 @@ size_t test_dh()
    {
    size_t fails = 0;
 
-   std::ifstream dh_sig(PK_TEST_DATA_DIR "/dh.vec");
+   std::ifstream dh_sig(TEST_DATA_DIR_PK "/dh.vec");
 
    fails += run_tests_bb(dh_sig, "DH Kex", "K", true,
              [](std::map<std::string, std::string> m) -> size_t

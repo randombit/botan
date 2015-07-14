@@ -81,5 +81,5 @@ size_t test_block()
                           });
       };
 
-   return run_tests_in_dir(TEST_DATA_DIR "block", test_bc);
+   return run_tests_in_dir(TEST_DATA_DIR "/block", test_bc);
    }

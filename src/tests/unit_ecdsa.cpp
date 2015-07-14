@@ -30,8 +30,6 @@
 
 using namespace Botan;
 
-#define ECC_TEST_DATA_DIR TEST_DATA_DIR "/ecc"
-
 #define CHECK_MESSAGE(expr, print) try { if(!(expr)) { ++fails; std::cout << print << std::endl; } } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << std::endl; }
 #define CHECK(expr) try { if(!(expr)) { ++fails; std::cout << #expr << std::endl; } } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << std::endl; }
 
@@ -100,7 +98,7 @@ size_t test_hash_larger_than_n(RandomNumberGenerator& rng)
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
 size_t test_decode_ecdsa_X509()
    {
-   X509_Certificate cert(ECC_TEST_DATA_DIR "/CSCA.CSCA.csca-germany.1.crt");
+   X509_Certificate cert(TEST_DATA_DIR_ECC "/CSCA.CSCA.csca-germany.1.crt");
    size_t fails = 0;
 
    CHECK_MESSAGE(OIDS::lookup(cert.signature_algorithm().oid) == "ECDSA/EMSA1(SHA-224)", "error reading signature algorithm from x509 ecdsa certificate");
@@ -118,8 +116,8 @@ size_t test_decode_ecdsa_X509()
 
 size_t test_decode_ver_link_SHA256()
    {
-   X509_Certificate root_cert(ECC_TEST_DATA_DIR "/root2_SHA256.cer");
-   X509_Certificate link_cert(ECC_TEST_DATA_DIR "/link_SHA256.cer");
+   X509_Certificate root_cert(TEST_DATA_DIR_ECC "/root2_SHA256.cer");
+   X509_Certificate link_cert(TEST_DATA_DIR_ECC "/link_SHA256.cer");
 
    size_t fails = 0;
    std::unique_ptr<X509_PublicKey> pubkey(root_cert.subject_public_key());
@@ -130,8 +128,8 @@ size_t test_decode_ver_link_SHA256()
 
 size_t test_decode_ver_link_SHA1()
    {
-   X509_Certificate root_cert(ECC_TEST_DATA_DIR "/root_SHA1.163.crt");
-   X509_Certificate link_cert(ECC_TEST_DATA_DIR "/link_SHA1.166.crt");
+   X509_Certificate root_cert(TEST_DATA_DIR_ECC "/root_SHA1.163.crt");
+   X509_Certificate link_cert(TEST_DATA_DIR_ECC "/link_SHA1.166.crt");
 
    size_t fails = 0;
    std::unique_ptr<X509_PublicKey> pubkey(root_cert.subject_public_key());
@@ -242,14 +240,14 @@ size_t test_create_pkcs8(RandomNumberGenerator& rng)
       //cout << "\nequal: " <<  (rsa_key == rsa_key2) << std::endl;
       //DSA_PrivateKey key(DL_Group("dsa/jce/1024"));
 
-      std::ofstream rsa_priv_key(ECC_TEST_DATA_DIR "/rsa_private.pkcs8.pem");
+      std::ofstream rsa_priv_key(TEST_DATA_DIR_ECC "/rsa_private.pkcs8.pem");
       rsa_priv_key << PKCS8::PEM_encode(rsa_key);
 
       EC_Group dom_pars(OID("1.3.132.0.8"));
       ECDSA_PrivateKey key(rng, dom_pars);
 
       // later used by other tests :(
-      std::ofstream priv_key(ECC_TEST_DATA_DIR "/wo_dompar_private.pkcs8.pem");
+      std::ofstream priv_key(TEST_DATA_DIR_ECC "/wo_dompar_private.pkcs8.pem");
       priv_key << PKCS8::PEM_encode(key);
       }
    catch (std::exception& e)
@@ -267,14 +265,14 @@ size_t test_create_and_verify(RandomNumberGenerator& rng)
 
    EC_Group dom_pars(OID("1.3.132.0.8"));
    ECDSA_PrivateKey key(rng, dom_pars);
-   std::ofstream priv_key(ECC_TEST_DATA_DIR "/dompar_private.pkcs8.pem");
+   std::ofstream priv_key(TEST_DATA_DIR_ECC "/dompar_private.pkcs8.pem");
    priv_key << PKCS8::PEM_encode(key);
 
-   std::unique_ptr<PKCS8_PrivateKey> loaded_key(PKCS8::load_key(ECC_TEST_DATA_DIR "/wo_dompar_private.pkcs8.pem", rng));
+   std::unique_ptr<PKCS8_PrivateKey> loaded_key(PKCS8::load_key(TEST_DATA_DIR_ECC "/wo_dompar_private.pkcs8.pem", rng));
    ECDSA_PrivateKey* loaded_ec_key = dynamic_cast<ECDSA_PrivateKey*>(loaded_key.get());
    CHECK_MESSAGE(loaded_ec_key, "the loaded key could not be converted into an ECDSA_PrivateKey");
 
-   std::unique_ptr<PKCS8_PrivateKey> loaded_key_1(PKCS8::load_key(ECC_TEST_DATA_DIR "/rsa_private.pkcs8.pem", rng));
+   std::unique_ptr<PKCS8_PrivateKey> loaded_key_1(PKCS8::load_key(TEST_DATA_DIR_ECC "/rsa_private.pkcs8.pem", rng));
    ECDSA_PrivateKey* loaded_rsa_key = dynamic_cast<ECDSA_PrivateKey*>(loaded_key_1.get());
    CHECK_MESSAGE(!loaded_rsa_key, "the loaded key is ECDSA_PrivateKey -> shouldn't be, is a RSA-Key");
 
@@ -390,7 +388,7 @@ size_t test_read_pkcs8(RandomNumberGenerator& rng)
 
    try
       {
-      std::unique_ptr<PKCS8_PrivateKey> loaded_key(PKCS8::load_key(ECC_TEST_DATA_DIR "/wo_dompar_private.pkcs8.pem", rng));
+      std::unique_ptr<PKCS8_PrivateKey> loaded_key(PKCS8::load_key(TEST_DATA_DIR_ECC "/wo_dompar_private.pkcs8.pem", rng));
       ECDSA_PrivateKey* ecdsa = dynamic_cast<ECDSA_PrivateKey*>(loaded_key.get());
       CHECK_MESSAGE(ecdsa, "the loaded key could not be converted into an ECDSA_PrivateKey");
 
@@ -411,7 +409,7 @@ size_t test_read_pkcs8(RandomNumberGenerator& rng)
 
    try
       {
-      std::unique_ptr<PKCS8_PrivateKey> loaded_key_nodp(PKCS8::load_key(ECC_TEST_DATA_DIR "/nodompar_private.pkcs8.pem", rng));
+      std::unique_ptr<PKCS8_PrivateKey> loaded_key_nodp(PKCS8::load_key(TEST_DATA_DIR_ECC "/nodompar_private.pkcs8.pem", rng));
       // anew in each test with unregistered domain-parameters
       ECDSA_PrivateKey* ecdsa_nodp = dynamic_cast<ECDSA_PrivateKey*>(loaded_key_nodp.get());
       CHECK_MESSAGE(ecdsa_nodp, "the loaded key could not be converted into an ECDSA_PrivateKey");
@@ -427,7 +425,7 @@ size_t test_read_pkcs8(RandomNumberGenerator& rng)
       try
          {
          std::unique_ptr<PKCS8_PrivateKey> loaded_key_withdp(
-            PKCS8::load_key(ECC_TEST_DATA_DIR "/withdompar_private.pkcs8.pem", rng));
+            PKCS8::load_key(TEST_DATA_DIR_ECC "/withdompar_private.pkcs8.pem", rng));
 
          std::cout << "Unexpected success: loaded key with unknown OID" << std::endl;
          ++fails;
@@ -450,7 +448,7 @@ size_t test_ecc_key_with_rfc5915_extensions(RandomNumberGenerator& rng)
    try
       {
       std::unique_ptr<PKCS8_PrivateKey> pkcs8(
-         PKCS8::load_key(ECC_TEST_DATA_DIR "/ecc_private_with_rfc5915_ext.pem", rng));
+         PKCS8::load_key(TEST_DATA_DIR_ECC "/ecc_private_with_rfc5915_ext.pem", rng));
 
       if(!dynamic_cast<ECDSA_PrivateKey*>(pkcs8.get()))
          {

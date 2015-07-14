@@ -52,7 +52,7 @@ size_t test_dsa()
    {
    size_t fails = 0;
 
-   std::ifstream dsa_sig(PK_TEST_DATA_DIR "/dsa.vec");
+   std::ifstream dsa_sig(TEST_DATA_DIR_PK "/dsa.vec");
 
    fails += run_tests_bb(dsa_sig, "DSA Signature", "Signature", false,
              [](std::map<std::string, std::string> m) -> size_t

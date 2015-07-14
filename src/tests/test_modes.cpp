@@ -98,7 +98,7 @@ size_t test_modes()
              });
       };
 
-   return run_tests_in_dir(TEST_DATA_DIR "modes", test);
+   return run_tests_in_dir(TEST_DATA_DIR "/modes", test);
    }
 
 #else

@@ -37,7 +37,7 @@ size_t test_pbkdf()
              });
       };
 
-   return run_tests_in_dir(TEST_DATA_DIR "pbkdf", test);
+   return run_tests_in_dir(TEST_DATA_DIR "/pbkdf", test);
    }
 
 #else
