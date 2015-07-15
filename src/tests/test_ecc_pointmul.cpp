@@ -59,7 +59,7 @@ size_t test_ecc_pointmul()
    {
    size_t fails = 0;
 
-   std::ifstream ecc_mul(PK_TEST_DATA_DIR "/ecc.vec");
+   std::ifstream ecc_mul(TEST_DATA_DIR_PK "/ecc.vec");
 
    fails += run_tests_bb(ecc_mul, "ECC Point Mult", "Y", false,
              [](std::map<std::string, std::string> m) -> size_t

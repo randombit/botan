@@ -48,7 +48,7 @@ size_t test_ecdsa()
    {
    size_t fails = 0;
 
-   std::ifstream ecdsa_sig(PK_TEST_DATA_DIR "/ecdsa.vec");
+   std::ifstream ecdsa_sig(TEST_DATA_DIR_PK "/ecdsa.vec");
 
    fails += run_tests_bb(ecdsa_sig, "ECDSA Signature", "Signature", false,
              [](std::map<std::string, std::string> m) -> size_t

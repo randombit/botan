@@ -35,7 +35,7 @@ size_t test_kdf()
              });
       };
 
-   return run_tests_in_dir(TEST_DATA_DIR "kdf", test);
+   return run_tests_in_dir(TEST_DATA_DIR "/kdf", test);
    }
 
 #else

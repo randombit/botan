@@ -106,7 +106,7 @@ size_t test_curve25519()
 
    size_t fails = 0;
 
-   std::ifstream c25519_scalar(PK_TEST_DATA_DIR "/c25519_scalar.vec");
+   std::ifstream c25519_scalar(TEST_DATA_DIR_PK "/c25519_scalar.vec");
 
    fails += run_tests_bb(c25519_scalar, "Curve25519 ScalarMult", "Out", true,
              [](std::map<std::string, std::string> m) -> size_t

@@ -93,7 +93,7 @@ size_t test_mac()
              });
       };
 
-   return run_tests_in_dir(TEST_DATA_DIR "mac", test);
+   return run_tests_in_dir(TEST_DATA_DIR "/mac", test);
    }
 
 #else

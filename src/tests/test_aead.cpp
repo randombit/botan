@@ -143,7 +143,7 @@ size_t test_aead()
              });
       };
 
-   return run_tests_in_dir(TEST_DATA_DIR "aead", test);
+   return run_tests_in_dir(TEST_DATA_DIR "/aead", test);
    }
 
 #else

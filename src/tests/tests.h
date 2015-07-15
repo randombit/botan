@@ -42,14 +42,16 @@ size_t run_tests_in_dir(const std::string& dir, std::function<size_t (const std:
 // Run a list of tests
 typedef std::function<size_t ()> test_fn;
 
-size_t run_tests(const std::vector<test_fn>& tests);
+size_t run_tests(const std::vector<std::pair<std::string, test_fn>>& tests);
 void test_report(const std::string& name, size_t ran, size_t failed);
 
 #define TEST(expr, msg) do { if(!(expr)) { ++fails; std::cout << msg; } while(0)
 
-#define LIB_SRC_DIR "lib/"
-#define TEST_DATA_DIR "src/tests/data/"
-#define PK_TEST_DATA_DIR "src/tests/data/pubkey"
+#define TEST_DATA_DIR     "src/tests/data"
+#define TEST_DATA_DIR_PK  "src/tests/data/pubkey"
+#define TEST_DATA_DIR_ECC "src/tests/data/ecc"
+
+#define TEST_OUTDATA_DIR  "src/tests/outdata"
 
 int test_main(int argc, char* argv[]);
 

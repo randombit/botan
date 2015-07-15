@@ -54,7 +54,7 @@ size_t test_nr()
    {
    size_t fails = 0;
 
-   std::ifstream nr_sig(PK_TEST_DATA_DIR "/nr.vec");
+   std::ifstream nr_sig(TEST_DATA_DIR_PK "/nr.vec");
 
    fails += run_tests_bb(nr_sig, "NR Signature", "Signature", true,
              [](std::map<std::string, std::string> m) -> size_t

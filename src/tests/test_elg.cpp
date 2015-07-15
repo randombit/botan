@@ -55,7 +55,7 @@ size_t test_elgamal()
    {
    size_t fails = 0;
 
-   std::ifstream elgamal_enc(PK_TEST_DATA_DIR "/elgamal.vec");
+   std::ifstream elgamal_enc(TEST_DATA_DIR_PK "/elgamal.vec");
 
    fails += run_tests_bb(elgamal_enc, "ElGamal Encryption", "Ciphertext", true,
              [](std::map<std::string, std::string> m) -> size_t

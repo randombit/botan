@@ -48,7 +48,7 @@ size_t test_gost_3410()
    {
    size_t fails = 0;
 
-   std::ifstream ecdsa_sig(PK_TEST_DATA_DIR "/gost_3410.vec");
+   std::ifstream ecdsa_sig(TEST_DATA_DIR_PK "/gost_3410.vec");
 
    fails += run_tests_bb(ecdsa_sig, "GOST-34.10 Signature", "Signature", true,
              [](std::map<std::string, std::string> m) -> size_t

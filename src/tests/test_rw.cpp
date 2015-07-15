@@ -63,8 +63,8 @@ size_t test_rw()
    {
    size_t fails = 0;
 
-   std::ifstream rw_sig(PK_TEST_DATA_DIR "/rw_sig.vec");
-   std::ifstream rw_verify(PK_TEST_DATA_DIR "/rw_verify.vec");
+   std::ifstream rw_sig(TEST_DATA_DIR_PK "/rw_sig.vec");
+   std::ifstream rw_verify(TEST_DATA_DIR_PK "/rw_verify.vec");
 
    fails += run_tests_bb(rw_sig, "RW Signature", "Signature", true,
              [](std::map<std::string, std::string> m) -> size_t
