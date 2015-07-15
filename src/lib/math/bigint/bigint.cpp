@@ -34,7 +34,7 @@ BigInt::BigInt(u64bit n)
 */
 BigInt::BigInt(Sign s, size_t size)
    {
-   m_reg.resize(round_up<size_t>(size, 8));
+   m_reg.resize(round_up(size, 8));
    m_signedness = s;
    }
 
@@ -271,7 +271,7 @@ void BigInt::binary_decode(const byte buf[], size_t length)
    const size_t WORD_BYTES = sizeof(word);
 
    clear();
-   m_reg.resize(round_up<size_t>((length / WORD_BYTES) + 1, 8));
+   m_reg.resize(round_up((length / WORD_BYTES) + 1, 8));
 
    for(size_t i = 0; i != length / WORD_BYTES; ++i)
       {

@@ -135,6 +135,7 @@ void XTS_Mode::update_tweak(size_t which)
 
 size_t XTS_Encryption::output_length(size_t input_length) const
    {
+   BOTAN_ASSERT(input_length != 0, "XTS_Encryption::output_length() call");
    return round_up(input_length, cipher().block_size());
    }
 
