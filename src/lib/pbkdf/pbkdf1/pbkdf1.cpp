@@ -11,7 +11,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_PBKDF_1HASH(PKCS5_PBKDF1, "PBKDF1")
+BOTAN_REGISTER_PBKDF_1HASH(PKCS5_PBKDF1, "PBKDF1");
 
 size_t PKCS5_PBKDF1::pbkdf(byte output_buf[], size_t output_len,
                            const std::string& passphrase,
