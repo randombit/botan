@@ -49,10 +49,7 @@ There is also a third party open source implementation of
 .. image:: https://ci.appveyor.com/api/projects/status/n9f94dljd03j2lce?svg=true
     :target: https://ci.appveyor.com/project/randombit/botan/branch/master
 
-.. image:: https://botan-ci.kullo.net/badge/build
-    :target: https://botan-ci.kullo.net/
-
-.. image:: https://botan-ci.kullo.net/badge/tests
+.. image:: https://botan-ci.kullo.net/badge
     :target: https://botan-ci.kullo.net/
 
 .. image:: https://scan.coverity.com/projects/624/badge.svg

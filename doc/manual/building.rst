@@ -1,10 +1,9 @@
-
 Building The Library
 =================================
 
-This document describes how to build Botan on Unix/POSIX and MS
-Windows systems. The POSIX oriented descriptions should apply to most
-common Unix systems (including MacOS X), along with POSIX-ish systems
+This document describes how to build Botan on Unix/POSIX and Windows
+systems. The POSIX oriented descriptions should apply to most
+common Unix systems (including OS X), along with POSIX-ish systems
 like BeOS, QNX, and Plan 9. Currently, systems other than Windows and
 POSIX (such as VMS, MacOS 9, OS/390, OS/400, ...) are not supported by
 the build system, primarily due to lack of access. Please contact the
@@ -101,14 +100,14 @@ The basic build procedure on Unix and Unix-like systems is::
 
    $ ./configure.py [--enable-modules=<list>] [--cc=CC]
    $ make
-   $ ./botan test
+   $ ./botan-test
 
 If that fails with an error about not being able to find libbotan.so,
-you may need to set ``LD_LIBRARY_PATH``:
+you may need to set ``LD_LIBRARY_PATH``::
 
-   $ LD_LIBRARY_PATH=. ./botan test
+   $ LD_LIBRARY_PATH=. ./botan-test
 
-If the tests look OK, install:
+If the tests look OK, install::
 
    $ make install
 
@@ -118,9 +117,9 @@ and ``--cc=clang`` for Clang.
 
 The ``make install`` target has a default directory in which it will
 install Botan (typically ``/usr/local``). You can override this by
-using the ``--prefix`` argument to ``configure.py``, like so:
+using the ``--prefix`` argument to ``configure.py``, like so::
 
-``./configure.py --prefix=/opt <other arguments>``
+   $ ./configure.py --prefix=/opt <other arguments>
 
 On some systems shared libraries might not be immediately visible to
 the runtime linker. For example, on Linux you may have to edit
@@ -129,7 +128,7 @@ shared libraries to be picked up by the linker. An alternative is to
 set your ``LD_LIBRARY_PATH`` shell variable to include the directory
 that the Botan libraries were installed into.
 
-On Mac OS X
+On OS X
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In general the Unix instructions above should apply, however OS X does
@@ -149,21 +148,20 @@ build flags. Do this with the --cc-abi-flags option::
 
   $ ./configure.py [other arguments] --cc-abi-flags="-force_cpusubtype_ALL -mmacosx-version-min=10.4 -arch i386 -arch ppc"
 
-On MS Windows
+On Windows
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If you don't want to deal with building botan on Windows, check the
-website; commonly prebuilt Windows binaries with installers are
-available, especially for stable versions.
 
 You need to have a copy of Python installed, and have both Python and
 your chosen compiler in your path. Open a command shell (or the SDK
 shell), and run::
 
-   > python configure.py --cc=msvc (or --cc=gcc for MinGW) [--cpu=CPU]
-   > nmake
-   > botan.exe test
-   > nmake install
+   $ python configure.py --cc=msvc (or --cc=gcc for MinGW) [--cpu=CPU]
+   $ nmake
+   $ botan-test.exe
+   $ nmake install
+
+Botan supports the nmake replacement `Jom <https://wiki.qt.io/Jom>`_
+which enables you to run multiple build jobs in parallel.
 
 For Win95 pre OSR2, the ``cryptoapi_rng`` module will not work,
 because CryptoAPI didn't exist. And all versions of NT4 lack the
@@ -187,26 +185,26 @@ For iOS using XCode
 
 To cross compile for iOS, configure with::
 
-  $ ./configure.py --cpu=armv7 --cc=clang --cc-abi-flags="-arch armv7 -arch armv7s --sysroot=$(IOS_SYSROOT)"
+   $ ./configure.py --cpu=armv7 --cc=clang --cc-abi-flags="-arch armv7 -arch armv7s --sysroot=$(IOS_SYSROOT)"
 
 Along with any additional configuration arguments. Using ``--no-autoload``
 might be helpful as can substantially reduce code size.
 
 Edit the makefile and change AR (around line 30) to::
 
-  AR = libtool -static -o
+   AR = libtool -static -o
 
 You may also want to edit LIB_OPT to use -Os to optimize for size.
 
 Now build as normal with ``make``. Confirm the binaries are compiled
 for both architectures with::
 
-  $ xcrun -sdk iphoneos lipo -info botan
-  Architectures in the fat file: botan are: armv7 armv7s
+   $ xcrun -sdk iphoneos lipo -info botan
+   Architectures in the fat file: botan are: armv7 armv7s
 
 Now sign the test application with::
 
-  $ codesign -fs "Your Name" botan-test
+   $ codesign -fs "Your Name" botan-test
 
 which should allow you to run the library self tests on a jailbroken
 device.
@@ -383,7 +381,7 @@ Your ``Makefile`` can run ``botan config`` and get the options
 necessary for getting your application to compile and link, regardless
 of whatever crazy libraries Botan might be linked against.
 
-MS Windows
+Windows
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 No special help exists for building applications on Windows. However,
