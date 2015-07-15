@@ -31,7 +31,7 @@ Lion* make_lion(const BlockCipher::Spec& spec)
 
 }
 
-BOTAN_REGISTER_NAMED_T(BlockCipher, "Lion", Lion, make_lion);
+BOTAN_REGISTER_NAMED_T(BlockCipher, "Lion", Lion, make_lion)
 
 /*
 * Lion Encryption

@@ -189,7 +189,7 @@ NR_Verification_Operation::verify_mr(const byte msg[], size_t msg_len)
    }
 }
 
-BOTAN_REGISTER_PK_SIGNATURE_OP("NR", NR_Signature_Operation);
-BOTAN_REGISTER_PK_VERIFY_OP("NR", NR_Verification_Operation);
+BOTAN_REGISTER_PK_SIGNATURE_OP("NR", NR_Signature_Operation)
+BOTAN_REGISTER_PK_VERIFY_OP("NR", NR_Verification_Operation)
 
 }

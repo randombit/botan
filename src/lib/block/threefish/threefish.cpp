@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(Threefish_512, "Threefish-512");
+BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(Threefish_512, "Threefish-512")
 
 #define THREEFISH_ROUND(X0,X1,X2,X3,X4,X5,X6,X7,ROT1,ROT2,ROT3,ROT4) \
    do {                                                              \

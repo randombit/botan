@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_HASH_NOARGS(CRC32);
+BOTAN_REGISTER_HASH_NOARGS(CRC32)
 
 /*
 * Update a CRC32 Checksum

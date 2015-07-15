@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_BLOCK_CIPHER_MODE(XTS_Encryption, XTS_Decryption);
+BOTAN_REGISTER_BLOCK_CIPHER_MODE(XTS_Encryption, XTS_Decryption)
 
 namespace {
 

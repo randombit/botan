@@ -146,8 +146,8 @@ bool ECDSA_Verification_Operation::verify(const byte msg[], size_t msg_len,
    return (v == r);
    }
 
-BOTAN_REGISTER_PK_SIGNATURE_OP("ECDSA", ECDSA_Signature_Operation);
-BOTAN_REGISTER_PK_VERIFY_OP("ECDSA", ECDSA_Verification_Operation);
+BOTAN_REGISTER_PK_SIGNATURE_OP("ECDSA", ECDSA_Signature_Operation)
+BOTAN_REGISTER_PK_VERIFY_OP("ECDSA", ECDSA_Verification_Operation)
 
 }
 

@@ -11,7 +11,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN(CFB_Encryption, CFB_Decryption, 0);
+BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN(CFB_Encryption, CFB_Decryption, 0)
 
 CFB_Mode::CFB_Mode(BlockCipher* cipher, size_t feedback_bits) :
    m_cipher(cipher),

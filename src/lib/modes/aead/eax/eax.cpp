@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN(EAX_Encryption, EAX_Decryption, 0);
+BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN(EAX_Encryption, EAX_Decryption, 0)
 
 namespace {
 

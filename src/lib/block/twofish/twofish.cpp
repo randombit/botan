@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Twofish);
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Twofish)
 
 /*
 * Twofish Encryption

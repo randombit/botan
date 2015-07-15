@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_EMSA_1HASH(EMSA1, "EMSA1");
+BOTAN_REGISTER_EMSA_1HASH(EMSA1, "EMSA1")
 
 namespace {
 

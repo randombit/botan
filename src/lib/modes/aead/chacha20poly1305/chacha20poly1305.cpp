@@ -10,8 +10,8 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_TRANSFORM_NOARGS(ChaCha20Poly1305_Encryption);
-BOTAN_REGISTER_TRANSFORM_NOARGS(ChaCha20Poly1305_Decryption);
+BOTAN_REGISTER_TRANSFORM_NOARGS(ChaCha20Poly1305_Encryption)
+BOTAN_REGISTER_TRANSFORM_NOARGS(ChaCha20Poly1305_Decryption)
 
 ChaCha20Poly1305_Mode::ChaCha20Poly1305_Mode() :
    m_chacha(make_stream_cipher("ChaCha")),

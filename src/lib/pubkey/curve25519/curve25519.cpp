@@ -134,7 +134,7 @@ class Curve25519_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
       const Curve25519_PrivateKey& m_key;
    };
 
-BOTAN_REGISTER_PK_KEY_AGREE_OP("Curve25519", Curve25519_KA_Operation);
+BOTAN_REGISTER_PK_KEY_AGREE_OP("Curve25519", Curve25519_KA_Operation)
 
 }
 

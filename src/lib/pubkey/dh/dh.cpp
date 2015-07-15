@@ -120,6 +120,6 @@ secure_vector<byte> DH_KA_Operation::raw_agree(const byte w[], size_t w_len)
 
 }
 
-BOTAN_REGISTER_PK_KEY_AGREE_OP("DH", DH_KA_Operation);
+BOTAN_REGISTER_PK_KEY_AGREE_OP("DH", DH_KA_Operation)
 
 }

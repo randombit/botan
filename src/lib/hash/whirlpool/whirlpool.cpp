@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_HASH_NOARGS(Whirlpool);
+BOTAN_REGISTER_HASH_NOARGS(Whirlpool)
 
 /*
 * Whirlpool Compression Function

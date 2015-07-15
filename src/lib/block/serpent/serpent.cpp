@@ -11,7 +11,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Serpent);
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Serpent)
 
 namespace {
 

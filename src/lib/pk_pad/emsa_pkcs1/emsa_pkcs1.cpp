@@ -27,7 +27,7 @@ EMSA* make_pkcs1v15(const EMSA::Spec& spec)
 
 }
 
-BOTAN_REGISTER_NAMED_T(EMSA, "EMSA_PKCS1", EMSA_PCS1v15, make_pkcs1v15);
+BOTAN_REGISTER_NAMED_T(EMSA, "EMSA_PKCS1", EMSA_PCS1v15, make_pkcs1v15)
 
 namespace {
 

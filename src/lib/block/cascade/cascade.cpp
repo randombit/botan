@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_NAMED_T(BlockCipher, "Cascade", Cascade_Cipher, Cascade_Cipher::make);
+BOTAN_REGISTER_NAMED_T(BlockCipher, "Cascade", Cascade_Cipher, Cascade_Cipher::make)
 
 Cascade_Cipher* Cascade_Cipher::make(const BlockCipher::Spec& spec)
    {

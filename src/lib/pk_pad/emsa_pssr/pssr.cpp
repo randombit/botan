@@ -26,7 +26,7 @@ PSSR* PSSR::make(const Spec& request)
    return nullptr;
    }
 
-BOTAN_REGISTER_NAMED_T(EMSA, "PSSR", PSSR, PSSR::make);
+BOTAN_REGISTER_NAMED_T(EMSA, "PSSR", PSSR, PSSR::make)
 
 /*
 * PSSR Update Operation

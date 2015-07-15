@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_HASH_NOARGS(MD5);
+BOTAN_REGISTER_HASH_NOARGS(MD5)
 
 namespace {
 

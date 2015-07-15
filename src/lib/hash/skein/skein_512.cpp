@@ -14,7 +14,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_NAMED_T(HashFunction, "Skein-512", Skein_512, Skein_512::make);
+BOTAN_REGISTER_NAMED_T(HashFunction, "Skein-512", Skein_512, Skein_512::make)
 
 Skein_512* Skein_512::make(const Spec& spec)
    {

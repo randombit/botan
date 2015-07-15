@@ -11,7 +11,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN(OCB_Encryption, OCB_Decryption, 16);
+BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN(OCB_Encryption, OCB_Decryption, 16)
 
 // Has to be in Botan namespace so unique_ptr can reference it
 class L_computer

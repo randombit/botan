@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_BLOCK_CIPHER_NAMED_1STR(GOST_28147_89, "GOST-28147-89", "R3411_94_TestParam");
+BOTAN_REGISTER_BLOCK_CIPHER_NAMED_1STR(GOST_28147_89, "GOST-28147-89", "R3411_94_TestParam")
 
 byte GOST_28147_89_Params::sbox_entry(size_t row, size_t col) const
    {

@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_NAMED_T_NOARGS(HashFunction, MD5_X86_32, "MD5", "x86-32");
+BOTAN_REGISTER_NAMED_T_NOARGS(HashFunction, MD5_X86_32, "MD5", "x86-32")
 
 namespace {
 

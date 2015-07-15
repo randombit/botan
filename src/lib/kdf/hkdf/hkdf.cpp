@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_NAMED_T(KDF, "HKDF", HKDF, HKDF::make);
+BOTAN_REGISTER_NAMED_T(KDF, "HKDF", HKDF, HKDF::make)
 
 HKDF* HKDF::make(const Spec& spec)
    {

@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_NAMED_T_NOARGS(HashFunction, MD4_X86_32, "MD4", "x86-32");
+BOTAN_REGISTER_NAMED_T_NOARGS(HashFunction, MD4_X86_32, "MD4", "x86-32")
 
 /**
 * MD4 compression function in x86-32 asm

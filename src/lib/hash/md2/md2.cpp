@@ -11,7 +11,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_HASH_NOARGS(MD2);
+BOTAN_REGISTER_HASH_NOARGS(MD2)
 
 /**
 * MD2 Compression Function

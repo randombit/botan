@@ -29,8 +29,8 @@ Transform* make_cbc_mode(const Transform::Spec& spec)
    return nullptr;
    }
 
-BOTAN_REGISTER_TRANSFORM(CBC_Encryption, (make_cbc_mode<CBC_Encryption,CTS_Encryption>));
-BOTAN_REGISTER_TRANSFORM(CBC_Decryption, (make_cbc_mode<CBC_Decryption,CTS_Decryption>));
+BOTAN_REGISTER_TRANSFORM(CBC_Encryption, (make_cbc_mode<CBC_Encryption,CTS_Encryption>))
+BOTAN_REGISTER_TRANSFORM(CBC_Decryption, (make_cbc_mode<CBC_Decryption,CTS_Decryption>))
 
 CBC_Mode::CBC_Mode(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
    m_cipher(cipher),
