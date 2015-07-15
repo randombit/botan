@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_EMSA_NAMED_NOARGS(EMSA_Raw, "Raw");
+BOTAN_REGISTER_EMSA_NAMED_NOARGS(EMSA_Raw, "Raw")
 
 /*
 * EMSA-Raw Encode Operation

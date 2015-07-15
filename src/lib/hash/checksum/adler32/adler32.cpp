@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_HASH_NOARGS(Adler32);
+BOTAN_REGISTER_HASH_NOARGS(Adler32)
 
 namespace {
 

@@ -20,8 +20,8 @@ Transform* make_ecb_mode(const Transform::Spec& spec)
    return nullptr;
    }
 
-BOTAN_REGISTER_TRANSFORM(ECB_Encryption, make_ecb_mode<ECB_Encryption>);
-BOTAN_REGISTER_TRANSFORM(ECB_Decryption, make_ecb_mode<ECB_Decryption>);
+BOTAN_REGISTER_TRANSFORM(ECB_Encryption, make_ecb_mode<ECB_Encryption>)
+BOTAN_REGISTER_TRANSFORM(ECB_Decryption, make_ecb_mode<ECB_Decryption>)
 
 ECB_Mode::ECB_Mode(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
    m_cipher(cipher),

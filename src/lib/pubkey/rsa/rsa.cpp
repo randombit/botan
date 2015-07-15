@@ -228,10 +228,10 @@ class RSA_Verify_Operation : public PK_Ops::Verification_with_EMSA,
          }
    };
 
-BOTAN_REGISTER_PK_ENCRYPTION_OP("RSA", RSA_Encryption_Operation);
-BOTAN_REGISTER_PK_DECRYPTION_OP("RSA", RSA_Decryption_Operation);
-BOTAN_REGISTER_PK_SIGNATURE_OP("RSA", RSA_Signature_Operation);
-BOTAN_REGISTER_PK_VERIFY_OP("RSA", RSA_Verify_Operation);
+BOTAN_REGISTER_PK_ENCRYPTION_OP("RSA", RSA_Encryption_Operation)
+BOTAN_REGISTER_PK_DECRYPTION_OP("RSA", RSA_Decryption_Operation)
+BOTAN_REGISTER_PK_SIGNATURE_OP("RSA", RSA_Signature_Operation)
+BOTAN_REGISTER_PK_VERIFY_OP("RSA", RSA_Verify_Operation)
 
 }
 

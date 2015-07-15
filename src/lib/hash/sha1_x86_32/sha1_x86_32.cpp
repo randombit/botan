@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_NAMED_T_NOARGS(HashFunction, SHA_160_X86_32, "SHA-160", "x86-32");
+BOTAN_REGISTER_NAMED_T_NOARGS(HashFunction, SHA_160_X86_32, "SHA-160", "x86-32")
 
 namespace {
 

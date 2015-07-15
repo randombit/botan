@@ -28,7 +28,7 @@ OAEP* OAEP::make(const Spec& request)
    return nullptr;
    }
 
-BOTAN_REGISTER_NAMED_T(EME, "OAEP", OAEP, OAEP::make);
+BOTAN_REGISTER_NAMED_T(EME, "OAEP", OAEP, OAEP::make)
 
 
 /*

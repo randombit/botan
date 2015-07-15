@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_NAMED_T(StreamCipher, "OFB", OFB, OFB::make);
+BOTAN_REGISTER_NAMED_T(StreamCipher, "OFB", OFB, OFB::make)
 
 OFB* OFB::make(const Spec& spec)
    {

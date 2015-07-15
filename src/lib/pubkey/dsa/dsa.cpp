@@ -190,8 +190,8 @@ bool DSA_Verification_Operation::verify(const byte msg[], size_t msg_len,
    return (mod_q.reduce(s) == r);
    }
 
-BOTAN_REGISTER_PK_SIGNATURE_OP("DSA", DSA_Signature_Operation);
-BOTAN_REGISTER_PK_VERIFY_OP("DSA", DSA_Verification_Operation);
+BOTAN_REGISTER_PK_SIGNATURE_OP("DSA", DSA_Signature_Operation)
+BOTAN_REGISTER_PK_VERIFY_OP("DSA", DSA_Verification_Operation)
 
 }
 

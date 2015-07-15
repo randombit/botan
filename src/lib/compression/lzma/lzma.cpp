@@ -14,7 +14,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_COMPRESSION(LZMA_Compression, LZMA_Decompression);
+BOTAN_REGISTER_COMPRESSION(LZMA_Compression, LZMA_Decompression)
 
 namespace {
 

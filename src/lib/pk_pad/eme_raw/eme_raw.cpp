@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_EME_NAMED_NOARGS(EME_Raw, "Raw");
+BOTAN_REGISTER_EME_NAMED_NOARGS(EME_Raw, "Raw")
 
 secure_vector<byte> EME_Raw::pad(const byte in[], size_t in_length,
                                  size_t key_bits,

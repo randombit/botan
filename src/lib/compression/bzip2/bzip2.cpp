@@ -15,7 +15,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_COMPRESSION(Bzip2_Compression, Bzip2_Decompression);
+BOTAN_REGISTER_COMPRESSION(Bzip2_Compression, Bzip2_Decompression)
 
 namespace {
 

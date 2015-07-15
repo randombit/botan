@@ -11,7 +11,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN2(CCM_Encryption, CCM_Decryption, 16, 3);
+BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN2(CCM_Encryption, CCM_Decryption, 16, 3)
 
 /*
 * CCM_Mode Constructor

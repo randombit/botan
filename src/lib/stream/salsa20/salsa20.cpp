@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_STREAM_CIPHER_NOARGS(Salsa20);
+BOTAN_REGISTER_STREAM_CIPHER_NOARGS(Salsa20)
 
 namespace {
 

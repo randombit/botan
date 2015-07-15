@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Blowfish);
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Blowfish)
 
 /*
 * Blowfish Encryption

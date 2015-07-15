@@ -20,7 +20,7 @@ CBC_MAC* CBC_MAC::make(const Spec& spec)
    return nullptr;
    }
 
-BOTAN_REGISTER_NAMED_T(MessageAuthenticationCode, "CBC-MAC", CBC_MAC, CBC_MAC::make);
+BOTAN_REGISTER_NAMED_T(MessageAuthenticationCode, "CBC-MAC", CBC_MAC, CBC_MAC::make)
 
 /*
 * Update an CBC-MAC Calculation

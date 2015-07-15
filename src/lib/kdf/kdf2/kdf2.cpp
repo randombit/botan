@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_KDF_1HASH(KDF2, "KDF2");
+BOTAN_REGISTER_KDF_1HASH(KDF2, "KDF2")
 
 size_t KDF2::kdf(byte key[], size_t key_len,
                  const byte secret[], size_t secret_len,

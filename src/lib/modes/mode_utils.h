@@ -53,16 +53,16 @@ T* make_block_cipher_mode_len2(const Transform::Spec& spec)
    }
 
 #define BOTAN_REGISTER_BLOCK_CIPHER_MODE(E, D)                          \
-   BOTAN_REGISTER_NAMED_T(Transform, #E, E, make_block_cipher_mode<E>); \
-   BOTAN_REGISTER_NAMED_T(Transform, #D, D, make_block_cipher_mode<D>);
+   BOTAN_REGISTER_NAMED_T(Transform, #E, E, make_block_cipher_mode<E>) \
+   BOTAN_REGISTER_NAMED_T(Transform, #D, D, make_block_cipher_mode<D>)
 
 #define BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN(E, D, LEN)                          \
-   BOTAN_REGISTER_NAMED_T(Transform, #E, E, (make_block_cipher_mode_len<E, LEN>)); \
-   BOTAN_REGISTER_NAMED_T(Transform, #D, D, (make_block_cipher_mode_len<D, LEN>));
+   BOTAN_REGISTER_NAMED_T(Transform, #E, E, (make_block_cipher_mode_len<E, LEN>)) \
+   BOTAN_REGISTER_NAMED_T(Transform, #D, D, (make_block_cipher_mode_len<D, LEN>))
 
 #define BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN2(E, D, LEN1, LEN2)                          \
-   BOTAN_REGISTER_NAMED_T(Transform, #E, E, (make_block_cipher_mode_len2<E, LEN1, LEN2>)); \
-   BOTAN_REGISTER_NAMED_T(Transform, #D, D, (make_block_cipher_mode_len2<D, LEN1, LEN2>));
+   BOTAN_REGISTER_NAMED_T(Transform, #E, E, (make_block_cipher_mode_len2<E, LEN1, LEN2>)) \
+   BOTAN_REGISTER_NAMED_T(Transform, #D, D, (make_block_cipher_mode_len2<D, LEN1, LEN2>))
 
 }
 

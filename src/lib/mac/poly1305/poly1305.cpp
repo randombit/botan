@@ -16,7 +16,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_MAC_NOARGS(Poly1305);
+BOTAN_REGISTER_MAC_NOARGS(Poly1305)
 
 namespace {
 

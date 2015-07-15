@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_HASH_NAMED_1LEN(Keccak_1600, "Keccak-1600", 512);
+BOTAN_REGISTER_HASH_NAMED_1LEN(Keccak_1600, "Keccak-1600", 512)
 
 namespace {
 

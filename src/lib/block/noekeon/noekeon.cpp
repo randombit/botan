@@ -10,7 +10,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Noekeon);
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Noekeon)
 
 namespace {
 

@@ -212,7 +212,7 @@ bool GOST_3410_Verification_Operation::verify(const byte msg[], size_t msg_len,
 
 }
 
-BOTAN_REGISTER_PK_SIGNATURE_OP("GOST-34.10", GOST_3410_Signature_Operation);
-BOTAN_REGISTER_PK_VERIFY_OP("GOST-34.10", GOST_3410_Verification_Operation);
+BOTAN_REGISTER_PK_SIGNATURE_OP("GOST-34.10", GOST_3410_Signature_Operation)
+BOTAN_REGISTER_PK_VERIFY_OP("GOST-34.10", GOST_3410_Verification_Operation)
 
 }

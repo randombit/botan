@@ -174,8 +174,8 @@ RW_Verification_Operation::verify_mr(const byte msg[], size_t msg_len)
    throw Invalid_Argument("RW signature verification: Invalid signature");
    }
 
-BOTAN_REGISTER_PK_SIGNATURE_OP("RW", RW_Signature_Operation);
-BOTAN_REGISTER_PK_VERIFY_OP("RW", RW_Verification_Operation);
+BOTAN_REGISTER_PK_SIGNATURE_OP("RW", RW_Signature_Operation)
+BOTAN_REGISTER_PK_VERIFY_OP("RW", RW_Verification_Operation)
 
 }
 

@@ -11,7 +11,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_NAMED_T(HashFunction, "Parallel", Parallel, Parallel::make);
+BOTAN_REGISTER_NAMED_T(HashFunction, "Parallel", Parallel, Parallel::make)
 
 Parallel* Parallel::make(const Spec& spec)
    {

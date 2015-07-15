@@ -21,7 +21,7 @@ HMAC* HMAC::make(const Spec& spec)
    return nullptr;
    }
 
-BOTAN_REGISTER_NAMED_T(MessageAuthenticationCode, "HMAC", HMAC, HMAC::make);
+BOTAN_REGISTER_NAMED_T(MessageAuthenticationCode, "HMAC", HMAC, HMAC::make)
 
 /*
 * Update a HMAC Calculation

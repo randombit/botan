@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_NAMED_T(HashFunction, "Comb4P", Comb4P, Comb4P::make);
+BOTAN_REGISTER_NAMED_T(HashFunction, "Comb4P", Comb4P, Comb4P::make)
 
 namespace {
 

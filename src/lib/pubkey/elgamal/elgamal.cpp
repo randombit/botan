@@ -179,8 +179,8 @@ ElGamal_Decryption_Operation::raw_decrypt(const byte msg[], size_t msg_len)
    return BigInt::encode_locked(blinder.unblind(r));
    }
 
-BOTAN_REGISTER_PK_ENCRYPTION_OP("ElGamal", ElGamal_Encryption_Operation);
-BOTAN_REGISTER_PK_DECRYPTION_OP("ElGamal", ElGamal_Decryption_Operation);
+BOTAN_REGISTER_PK_ENCRYPTION_OP("ElGamal", ElGamal_Encryption_Operation)
+BOTAN_REGISTER_PK_DECRYPTION_OP("ElGamal", ElGamal_Decryption_Operation)
 
 }
 

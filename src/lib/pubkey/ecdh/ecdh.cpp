@@ -45,6 +45,6 @@ class ECDH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
 
 }
 
-BOTAN_REGISTER_PK_KEY_AGREE_OP("ECDH", ECDH_KA_Operation);
+BOTAN_REGISTER_PK_KEY_AGREE_OP("ECDH", ECDH_KA_Operation)
 
 }
