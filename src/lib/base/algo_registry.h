@@ -212,11 +212,17 @@ make_new_T_1X(const typename Algo_Registry<T>::Spec& spec)
    return new T(x.release());
    }
 
+// Append to macros living outside of functions, so that invocations must end with a semicolon.
+// The struct is only declared to force the semicolon, it is never defined.
+#define BOTAN_FORCE_SEMICOLON struct BOTAN_DUMMY_STRUCT
+
 #define BOTAN_REGISTER_TYPE(T, type, name, maker, provider, pref)        \
-   namespace { Algo_Registry<T>::Add g_ ## type ## _reg(name, maker, provider, pref); }
+   namespace { Algo_Registry<T>::Add g_ ## type ## _reg(name, maker, provider, pref); } \
+   BOTAN_FORCE_SEMICOLON
 
 #define BOTAN_REGISTER_TYPE_COND(cond, T, type, name, maker, provider, pref) \
-   namespace { Algo_Registry<T>::Add g_ ## type ## _reg(cond, name, maker, provider, pref); }
+   namespace { Algo_Registry<T>::Add g_ ## type ## _reg(cond, name, maker, provider, pref); } \
+   BOTAN_FORCE_SEMICOLON
 
 #define BOTAN_REGISTER_NAMED_T(T, name, type, maker)                 \
    BOTAN_REGISTER_TYPE(T, type, name, maker, "base", 128)
