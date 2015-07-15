@@ -27,7 +27,13 @@ int pkcs8(int argc, char* argv[])
    const std::string passin = opts.value_or_else("passin", "");
    const std::string passout = opts.value_or_else("passout", "");
    const std::string pbe = opts.value_or_else("pbe", "");
-       
+
+   if(argc < 3)
+      {
+      opts.help( std::cout, "pkcs8" );
+      return 1;
+      }
+
    try
       {
       std::ofstream out_key(opts.value("out"));
