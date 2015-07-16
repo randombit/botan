@@ -805,6 +805,7 @@ class CompilerInfo(object):
         self.mach_abi_linking = force_to_dict(self.mach_abi_linking)
         self.isa_flags = force_to_dict(self.isa_flags)
 
+        self.infofile = infofile
         self.mach_opt_flags = {}
 
         while self.mach_opt != []:
@@ -940,7 +941,8 @@ class CompilerInfo(object):
                 return self.so_link_flags[osname]
             if 'default' in self.so_link_flags:
                 return self.so_link_flags['default']
-        return ''
+        raise Exception("No library link command found for target '%s' in compiler settings '%s'" %
+                    (osname, self.infofile))
 
     """
     Return defines for build.h
