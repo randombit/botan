@@ -172,11 +172,11 @@ size_t test_x509()
    /* Sign the requests to create the certs */
    X509_Certificate user1_cert =
       ca.sign_request(user1_req, rng,
-                      from_date(2008, 01, 01), from_date(2100, 01, 01));
+                      from_date(2008, 01, 01), from_date(2033, 01, 01));
 
    X509_Certificate user2_cert = ca.sign_request(user2_req, rng,
                                                  from_date(2008, 01, 01),
-                                                 from_date(2100, 01, 01));
+                                                 from_date(2033, 01, 01));
    X509_CRL crl1 = ca.new_crl(rng);
 
    /* Verify the certs */

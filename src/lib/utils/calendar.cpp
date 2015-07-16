@@ -1,6 +1,7 @@
 /*
 * Calendar Functions
 * (C) 1999-2010 Jack Lloyd
+* (C) 2015 Simon Warta (Kullo GmbH)
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -8,6 +9,8 @@
 #include <botan/calendar.h>
 #include <botan/exceptn.h>
 #include <ctime>
+#include <sstream>
+#include <iomanip>
 
 namespace Botan {
 
@@ -38,6 +41,13 @@ std::chrono::system_clock::time_point calendar_point::to_std_timepoint()
    if (year < 1900)
       throw Invalid_Argument("calendar_point::to_std_timepoint() does not support years before 1990.");
 
+   // 32 bit time_t ends at January 19, 2038
+   // https://msdn.microsoft.com/en-us/library/2093ets1.aspx
+   // For consistency reasons, throw after 2037 as long as
+   // no other implementation is available.
+   if (year > 2037)
+      throw Invalid_Argument("calendar_point::to_std_timepoint() does not support years after 2037.");
+
    std::tm tm;
    tm.tm_sec   = seconds;
    tm.tm_min   = minutes;
@@ -52,8 +62,24 @@ std::chrono::system_clock::time_point calendar_point::to_std_timepoint()
    #define timegm _mkgmtime
    #endif
    std::time_t tt = timegm(&tm);
+   if (tt == -1)
+      throw Invalid_Argument("calendar_point couldn't be converted: " + to_string());
 
    return std::chrono::system_clock::from_time_t(tt);
+   }
+
+std::string calendar_point::to_string() const
+   {
+   // desired format: <YYYY>-<MM>-<dd>T<HH>:<mm>:<ss>
+   std::stringstream output;
+      {
+      using namespace std;
+      output << setfill('0')
+             << setw(4) << year << "-" << setw(2) << month << "-" << setw(2) << day
+             << "T"
+             << setw(2) << hour << ":" << setw(2) << minutes << ":" << setw(2) << seconds;
+      }
+   return output.str();
    }
 
 
