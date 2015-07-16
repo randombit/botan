@@ -8,7 +8,7 @@
 #include <iostream>
 #include <fstream>
 #include <botan/auto_rng.h>
-#include <botan/fs.h>
+#include <botan/internal/filesystem.h>
 
 #define CATCH_CONFIG_RUNNER
 #define CATCH_CONFIG_CONSOLE_WIDTH 60
@@ -18,6 +18,8 @@
 #if defined(BOTAN_HAS_SYSTEM_RNG)
   #include <botan/system_rng.h>
 #endif
+
+using namespace Botan;
 
 Botan::RandomNumberGenerator& test_rng()
    {
@@ -33,14 +35,21 @@ size_t run_tests_in_dir(const std::string& dir, std::function<size_t (const std:
    {
    size_t fails = 0;
 
-   auto files = Botan::list_all_readable_files_in_or_under(dir);
-   if (files.empty())
+   try
       {
-      std::cout << "Warning: No test files found in '" << dir << "'" << std::endl;
+      auto files = get_files_recursive(dir);
+      
+      if (files.empty())
+         std::cout << "Warning: No test files found in '" << dir << "'" << std::endl;
+      
+      for(const auto file: files)
+         fails += fn(file);
+      }
+   catch(No_Filesystem_Access)
+      {
+      std::cout << "Warning: No filesystem access available to read test files in '" << dir << "'" << std::endl;
       }
 
-   for(const auto file: files)
-      fails += fn(file);
    return fails;
    }
 

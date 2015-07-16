@@ -4,40 +4,46 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/fs.h>
+#include <botan/exceptn.h>
+#include <botan/internal/filesystem.h>
 #include <algorithm>
-#include <deque>
-#include <functional>
-#include <memory>
 
 #if defined(BOTAN_HAS_BOOST_FILESYSTEM)
   #include <boost/filesystem.hpp>
-
 #elif defined(BOTAN_TARGET_OS_HAS_READDIR)
   #include <sys/types.h>
   #include <sys/stat.h>
   #include <dirent.h>
+  #include <deque>
+  #include <memory>
+  #include <functional>
 #endif
 
 namespace Botan {
 
-std::vector<std::string>
-list_all_readable_files_in_or_under(const std::string& dir_path)
-   {
-   std::vector<std::string> paths;
+namespace {
 
 #if defined(BOTAN_HAS_BOOST_FILESYSTEM)
+std::vector<std::string> impl_boost_filesystem(const std::string& dir_path)
+{
    namespace fs = boost::filesystem;
 
-   fs::recursive_directory_iterator end;
-   for(fs::recursive_directory_iterator dir(dir_path); dir != end; ++dir)
+   std::vector<std::string> out;
+
+   for(fs::recursive_directory_iterator dir(dir_path), end; dir != end; ++dir)
       {
       if(fs::is_regular_file(dir->path()))
-         paths.push_back(dir->path().string());
+         {
+         out.push_back(dir->path().string());
+         }
       }
 
+   return out;
+}
 #elif defined(BOTAN_TARGET_OS_HAS_READDIR)
-
+std::vector<std::string> impl_readdir(const std::string& dir_path)
+   {
+   std::vector<std::string> out;
    std::deque<std::string> dir_list;
    dir_list.push_back(dir_path);
 
@@ -65,22 +71,32 @@ list_all_readable_files_in_or_under(const std::string& dir_path)
             if(S_ISDIR(stat_buf.st_mode))
                dir_list.push_back(full_path);
             else if(S_ISREG(stat_buf.st_mode))
-               paths.push_back(full_path);
+               out.push_back(full_path);
             }
          }
       }
-#else
-#if defined(_MSC_VER)
-  #pragma message ( "No filesystem access enabled" )
-#else
-  #warning "No filesystem access enabled"
-#endif
-#endif
 
-   std::sort(paths.begin(), paths.end());
-
-   return paths;
+   return out;
    }
+#endif
 
 }
 
+std::vector<std::string> get_files_recursive(const std::string& dir)
+   {
+   std::vector<std::string> files;
+
+#if defined(BOTAN_HAS_BOOST_FILESYSTEM)
+   files = impl_boost_filesystem(dir);
+#elif defined(BOTAN_TARGET_OS_HAS_READDIR)
+   files = impl_readdir(dir);
+#else
+   throw No_Filesystem_Access();
+#endif
+
+   std::sort(files.begin(), files.end());
+
+   return files;
+   }
+
+}

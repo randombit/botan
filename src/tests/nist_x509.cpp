@@ -18,7 +18,7 @@
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
 
 #include <botan/x509path.h>
-#include <botan/fs.h>
+#include <botan/internal/filesystem.h>
 
 #include <algorithm>
 #include <iostream>
@@ -37,10 +37,14 @@ size_t test_nist_x509()
    const std::string root_test_dir = "src/tests/data/nist_x509/";
    const size_t total_tests = 76;
 
-   if(list_all_readable_files_in_or_under(root_test_dir).empty())
+   try
       {
-      std::cout << "No FS access, skipping NIST X.509 validation tests" << std::endl;
-      test_report("NIST X.509 path validation", 0, 0);
+      // Do nothing, just test filesystem access
+      get_files_recursive(root_test_dir);
+      }
+   catch(No_Filesystem_Access)
+      {
+      std::cout << "Warning: No filesystem access, skipping NIST X.509 validation tests" << std::endl;
       return 0;
       }
 
@@ -57,17 +61,17 @@ size_t test_nist_x509()
    for(size_t test_no = 1; test_no <= total_tests; ++test_no)
       {
       const std::string test_dir = root_test_dir + "/test" + (test_no <= 9 ? "0" : "") + std::to_string(test_no);
-      const std::vector<std::string> all_files = list_all_readable_files_in_or_under(test_dir);
+      
+      const std::vector<std::string> all_files = get_files_recursive(test_dir);    
+      if (all_files.empty())
+         std::cout << "Warning: No test files found in '" << test_dir << "'" << std::endl;
 
       std::vector<std::string> certs, crls;
       std::string root_cert, to_verify;
 
-      for(size_t k = 0; k != all_files.size(); k++)
+      for(const auto &current : all_files)
          {
-         const std::string current = all_files[k];
-
-         if(current.find("int") != std::string::npos &&
-            current.find(".crt") != std::string::npos)
+         if(current.find("int") != std::string::npos && current.find(".crt") != std::string::npos)
             certs.push_back(current);
          else if(current.find("root.crt") != std::string::npos)
             root_cert = current;

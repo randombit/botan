@@ -158,6 +158,14 @@ struct BOTAN_DLL Stream_IO_Error : public Exception
    };
 
 /**
+* No_Filesystem_Access Exception
+*/
+struct BOTAN_DLL No_Filesystem_Access : public Exception
+   {
+   No_Filesystem_Access() : Exception("No filesystem access enabled.") {}
+   };
+
+/**
 * Self Test Failure Exception
 */
 struct BOTAN_DLL Self_Test_Failure : public Internal_Error
