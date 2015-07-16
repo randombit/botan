@@ -18,6 +18,7 @@ loadlibrary
 query_perf_counter
 virtual_lock
 rtlsecurezeromemory
+stl_filesystem_msvc
 </target_features>
 
 <aliases>

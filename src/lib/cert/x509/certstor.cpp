@@ -6,7 +6,7 @@
 */
 
 #include <botan/certstor.h>
-#include <botan/fs.h>
+#include <botan/internal/filesystem.h>
 
 namespace Botan {
 
@@ -118,7 +118,7 @@ Certificate_Store_In_Memory::Certificate_Store_In_Memory(const std::string& dir)
    if(dir == "")
       return;
 
-   std::vector<std::string> maybe_certs = list_all_readable_files_in_or_under(dir);
+   std::vector<std::string> maybe_certs = get_files_recursive(dir);
    for(auto&& cert_file : maybe_certs)
       {
       try

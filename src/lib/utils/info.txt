@@ -2,17 +2,6 @@ define UTIL_FUNCTIONS 20140123
 
 load_on always
 
-<header:internal>
-bit_ops.h
-donna128.h
-prefetch.h
-rounding.h
-semaphore.h
-stl_util.h
-ta_utils.h
-xor_buf.h
-</header:internal>
-
 <header:public>
 assert.h
 bswap.h
@@ -21,7 +10,6 @@ charset.h
 cpuid.h
 database.h
 exceptn.h
-fs.h
 get_byte.h
 loadstor.h
 mem_ops.h
@@ -31,3 +19,15 @@ rotate.h
 types.h
 version.h
 </header:public>
+
+<header:internal>
+bit_ops.h
+donna128.h
+filesystem.h
+prefetch.h
+rounding.h
+semaphore.h
+stl_util.h
+ta_utils.h
+xor_buf.h
+</header:internal>
