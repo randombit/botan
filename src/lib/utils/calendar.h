@@ -11,6 +11,7 @@
 
 #include <botan/types.h>
 #include <chrono>
+#include <string>
 
 namespace Botan {
 
