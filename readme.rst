@@ -86,6 +86,8 @@ Botan may already be included in your favorite distribution, such as
 Current Development Series (1.11)
 ----------------------------------------
 
+A new development release is made on the first Monday of every month.
+
 The latest development release is
 `1.11.18 <http://botan.randombit.net/releases/Botan-1.11.18.tgz>`_
 `(sig) <http://botan.randombit.net/releases/Botan-1.11.18.tgz.asc>`_
