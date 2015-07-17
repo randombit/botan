@@ -21,5 +21,4 @@ linux
 netbsd
 qnx
 solaris
-tru64
 </os>

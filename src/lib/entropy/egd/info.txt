@@ -28,5 +28,4 @@ netbsd
 openbsd
 qnx
 solaris
-tru64
 </os>

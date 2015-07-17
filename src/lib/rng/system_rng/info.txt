@@ -18,6 +18,5 @@ netbsd
 openbsd
 qnx
 solaris
-tru64
 windows
 </os>
