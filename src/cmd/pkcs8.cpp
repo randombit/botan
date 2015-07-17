@@ -10,6 +10,8 @@
 #include <string>
 #include <memory>
 #include <chrono>
+
+#if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
 #include <botan/pk_keys.h>
 #include <botan/pkcs8.h>
 #include <botan/x509_key.h>
@@ -71,3 +73,5 @@ int pkcs8(int argc, char* argv[])
 REGISTER_APP(pkcs8);
 
 }
+
+#endif
