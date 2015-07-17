@@ -23,6 +23,7 @@ mingw32
 <target_features>
 cryptgenrandom
 loadlibrary
+mkgmtime
 win32_virtual_lock
 win32_get_systemtime
 </target_features>
