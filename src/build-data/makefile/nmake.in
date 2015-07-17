@@ -18,15 +18,19 @@ APP           = %{out_dir}\botan%{program_suffix}
 TEST          = %{out_dir}\botan-test%{program_suffix}
 
 # Library targets
-# LIB_FILENAME is either a static lib or the DLL
+#
+# LIB_FILENAME is always the .lib file, that is either a static lib or a
+# by-product of the DLL creation used to link the DLL into applications
 LIB_BASENAME  = %{libname}
 LIB_FILENAME  = %{out_dir}\$(LIB_BASENAME).lib
 
 !If "$(SO_OBJ_FLAGS)" == ""
+# static lib
 LIBRARIES     = $(LIB_FILENAME)
 !Else
-SHARED_LIB    = %{out_dir}\$(LIB_BASENAME).dll
-LIBRARIES     = $(LIB_FILENAME) $(SHARED_LIB)
+# shared lib
+SO_FILENAME   = %{out_dir}\$(LIB_BASENAME).dll
+LIBRARIES     = $(SO_FILENAME)
 !Endif
 
 
@@ -57,11 +61,14 @@ $(TEST): $(LIBRARIES) $(TESTOBJS)
 	$(TEST_POST_LINK_CMD)
 
 !If "$(SO_OBJ_FLAGS)" == ""
+# static lib
 $(LIB_FILENAME): $(LIBOBJS)
-	$(AR) /OUT:$(LIB_FILENAME) $(LIBOBJS)
+	$(AR) /OUT:$@ $(LIBOBJS)
 !Else
-$(SHARED_LIB): $(LIBOBJS)
-	$(LIB_LINK_CMD) /OUT:$(LIB_FILENAME) $(LIBOBJS) $(LIB_LINKS_TO)
+# shared lib
+# Creates the DLL $(SO_FILENAME) and the .lib $(LIB_FILENAME)
+$(SO_FILENAME): $(LIBOBJS)
+	$(LIB_LINK_CMD) /OUT:$@ $(LIBOBJS) $(LIB_LINKS_TO)
 !Endif
 
 # Fake Targets
