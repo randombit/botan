@@ -100,7 +100,7 @@ size_t test_nist_x509()
 
       for(size_t i = 0; i != crls.size(); i++)
          {
-         DataSource_Stream in(crls[i]);
+         DataSource_Stream in(crls[i], true);
          X509_CRL crl(in);
          store.add_crl(crl);
          }
