@@ -12,4 +12,5 @@ doc_dir docs
 
 <target_features>
 gettimeofday
+getsid
 </target_features>

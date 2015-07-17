@@ -10,6 +10,7 @@ dev_random.h
 
 <os>
 aix
+android
 cygwin
 darwin
 dragonfly
@@ -23,5 +24,4 @@ netbsd
 openbsd
 qnx
 solaris
-tru64
 </os>

@@ -7,5 +7,4 @@ posix_mlock
 gmtime_r
 dlopen
 readdir
-getsid
 </target_features>

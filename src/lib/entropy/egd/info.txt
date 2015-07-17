@@ -16,6 +16,7 @@ qnx -> socket
 </libs>
 
 <os>
+android
 aix
 cygwin
 darwin
@@ -28,5 +29,4 @@ netbsd
 openbsd
 qnx
 solaris
-tru64
 </os>

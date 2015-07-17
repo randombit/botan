@@ -3,6 +3,7 @@ define SYSTEM_RNG 20141202
 # Any system with /dev/random or CryptGenRandom
 
 <os>
+android
 aix
 cygwin
 darwin
@@ -18,6 +19,5 @@ netbsd
 openbsd
 qnx
 solaris
-tru64
 windows
 </os>

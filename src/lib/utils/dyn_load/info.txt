@@ -3,6 +3,7 @@ define DYNAMIC_LOADER 20131128
 load_on dep
 
 <os>
+android
 freebsd
 linux
 netbsd
@@ -13,6 +14,7 @@ windows
 </os>
 
 <libs>
+android -> dl
 linux -> dl
 solaris -> dl
 </libs>

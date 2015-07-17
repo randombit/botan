@@ -10,6 +10,7 @@ unix_procs.h
 </header:internal>
 
 <os>
+android
 aix
 cygwin
 darwin
@@ -21,5 +22,4 @@ linux
 netbsd
 qnx
 solaris
-tru64
 </os>

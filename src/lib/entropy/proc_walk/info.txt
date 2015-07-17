@@ -9,6 +9,7 @@ proc_walk.h
 </header:internal>
 
 <os>
+android
 aix
 cygwin
 darwin
@@ -22,7 +23,6 @@ netbsd
 openbsd
 qnx
 solaris
-tru64
 </os>
 
 <requires>

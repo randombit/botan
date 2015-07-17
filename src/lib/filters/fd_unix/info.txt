@@ -3,6 +3,7 @@ define PIPE_UNIXFD_IO 20131128
 load_on auto
 
 <os>
+android
 aix
 cygwin
 darwin
@@ -17,5 +18,4 @@ netbsd
 openbsd
 qnx
 solaris
-tru64
 </os>
