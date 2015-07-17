@@ -2,4 +2,5 @@ os_type unix
 
 <target_features>
 gettimeofday
+getsid
 </target_features>

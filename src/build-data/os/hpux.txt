@@ -4,6 +4,7 @@ so_suffix sl
 
 <target_features>
 gettimeofday
+getsid
 </target_features>
 
 <aliases>

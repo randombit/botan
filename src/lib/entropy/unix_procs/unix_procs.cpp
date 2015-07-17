@@ -72,7 +72,9 @@ void UnixProcessInfo_EntropySource::poll(Entropy_Accumulator& accum)
    accum.add(::getppid(), 0.0);
    accum.add(::getuid(),  0.0);
    accum.add(::getgid(),  0.0);
+#if defined(BOTAN_TARGET_OS_HAS_GETSID)
    accum.add(::getsid(0),  0.0);
+#endif
    accum.add(::getpgrp(), 0.0);
 
    struct ::rusage usage;
