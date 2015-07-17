@@ -28,7 +28,7 @@ visibility_attribute '__attribute__((visibility("default")))'
 
 makefile_style gmake
 
-<so_link_flags>
+<so_link_commands>
 # The default works for GNU ld and several other Unix linkers
 default       -> "$(CXX) -shared -fPIC -Wl,-soname,$(SONAME)"
 default-debug -> "$(CXX) -shared -fPIC -Wl,-soname,$(SONAME)"
@@ -41,14 +41,14 @@ solaris -> "$(CXX) -shared -fPIC -Wl,-h,$(SONAME)"
 # AIX and OpenBSD don't use sonames at all
 aix     -> "$(CXX) -shared -fPIC"
 openbsd -> "$(CXX) -shared -fPIC"
-</so_link_flags>
+</so_link_commands>
 
-<binary_link_command>
+<binary_link_commands>
 linux         -> "$(LINKER) -Wl,-rpath=\$$ORIGIN"
 linux-debug   -> "$(LINKER) -Wl,-rpath=\$$ORIGIN"
 default       -> "$(LINKER)"
 default-debug -> "$(LINKER)"
-</binary_link_command>
+</binary_link_commands>
 
 <isa_flags>
 sse2    -> "-msse2"

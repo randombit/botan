@@ -15,10 +15,10 @@ shared_flags "-fPIC"
 
 makefile_style gmake
 
-<so_link_flags>
+<so_link_commands>
 linux   -> "$(CXX) -shared -fPIC -Wl,-soname,$(SONAME)"
 solaris -> "$(CXX) -G -fPIC -Wl,-h,$(SONAME)"
-</so_link_flags>
+</so_link_commands>
 
 <mach_opt>
 i586     -> "-tp p5"

@@ -35,15 +35,15 @@ clmul  -> ""
 rdrand -> ""
 </isa_flags>
 
-<so_link_flags>
+<so_link_commands>
 default       -> "$(LINKER) /DLL"
 default-debug -> "$(LINKER) /DLL /DEBUG"
-</so_link_flags>
+</so_link_commands>
 
-<binary_link_command>
+<binary_link_commands>
 default       -> "$(LINKER)"
 default-debug -> "$(LINKER) /DEBUG"
-</binary_link_command>
+</binary_link_commands>
 
 <mach_abi_linking>
 all       -> "/MD"

@@ -775,7 +775,7 @@ class ArchInfo(object):
 class CompilerInfo(object):
     def __init__(self, infofile):
         lex_me_harder(infofile, self,
-                      ['so_link_flags', 'binary_link_command', 'mach_opt', 'mach_abi_linking', 'isa_flags'],
+                      ['so_link_commands', 'binary_link_commands', 'mach_opt', 'mach_abi_linking', 'isa_flags'],
                       { 'binary_name': None,
                         'linker_name': None,
                         'macro_name': None,
@@ -801,10 +801,10 @@ class CompilerInfo(object):
                         'makefile_style': ''
                         })
 
-        self.so_link_flags       = force_to_dict(self.so_link_flags)
-        self.binary_link_command = force_to_dict(self.binary_link_command)
-        self.mach_abi_linking    = force_to_dict(self.mach_abi_linking)
-        self.isa_flags           = force_to_dict(self.isa_flags)
+        self.so_link_commands     = force_to_dict(self.so_link_commands)
+        self.binary_link_commands = force_to_dict(self.binary_link_commands)
+        self.mach_abi_linking     = force_to_dict(self.mach_abi_linking)
+        self.isa_flags            = force_to_dict(self.isa_flags)
 
         self.infofile = infofile
         self.mach_opt_flags = {}
@@ -938,10 +938,10 @@ class CompilerInfo(object):
             search_for = [osname, 'default']
 
         for s in search_for:
-            if s in self.so_link_flags:
-                return self.so_link_flags[s]
+            if s in self.so_link_commands:
+                return self.so_link_commands[s]
 
-        raise Exception("No library link command found for target '%s' in compiler settings '%s'. Searched for: %s" %
+        raise Exception("No shared library link command found for target '%s' in compiler settings '%s'. Searched for: %s" %
                     (osname, self.infofile, ", ".join(search_for)))
 
     """
@@ -954,8 +954,8 @@ class CompilerInfo(object):
             search_for = [osname, 'default']
 
         for s in search_for:
-            if s in self.binary_link_command:
-                return self.binary_link_command[s]
+            if s in self.binary_link_commands:
+                return self.binary_link_commands[s]
 
         raise Exception("No binary link command found for target '%s' in compiler settings '%s'. Searched for: %s" %
                     (osname, self.infofile, ", ".join(search_for)))

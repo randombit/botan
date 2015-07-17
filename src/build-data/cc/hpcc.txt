@@ -24,6 +24,6 @@ hppa1.1 -> "+DA1.1"
 hppa2.0 -> "+DA2.0W"
 </mach_abi_linking>
 
-<so_link_flags>
+<so_link_commands>
 default -> "$(CXX) +Z -b -Wl,+h,$(SONAME)" # Documented in cc(1), but not CC(1) (?)
-</so_link_flags>
+</so_link_commands>

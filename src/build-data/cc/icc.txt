@@ -29,6 +29,6 @@ nehalem   -> "-march=core2"
 westmere  -> "-march=core2"
 </mach_opt>
 
-<so_link_flags>
+<so_link_commands>
 default -> "$(CXX) -fPIC -shared -Wl,-soname,$(SONAME)"
-</so_link_flags>
+</so_link_commands>

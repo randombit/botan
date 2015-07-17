@@ -23,6 +23,6 @@ power4   -> "-qarch=pwr4"
 power5   -> "-qarch=pwr5"
 </mach_opt>
 
-<so_link_flags>
+<so_link_commands>
 default -> "$(CXX) -qmkshrobj"
-</so_link_flags>
+</so_link_commands>

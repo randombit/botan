@@ -21,9 +21,9 @@ shared_flags "-fPIC"
 
 makefile_style gmake
 
-<so_link_flags>
+<so_link_commands>
 default -> "$(CXX) -shared -fPIC -Wl,-soname,$(SONAME)"
-</so_link_flags>
+</so_link_commands>
 
 <mach_opt>
 athlon   -> "-mcpu=athlon"
