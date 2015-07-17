@@ -10,6 +10,7 @@ x86_32
 
 # ELF systems
 <os>
+android
 linux
 freebsd
 dragonfly

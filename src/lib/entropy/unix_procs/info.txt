@@ -10,6 +10,7 @@ unix_procs.h
 </header:internal>
 
 <os>
+android
 aix
 cygwin
 darwin

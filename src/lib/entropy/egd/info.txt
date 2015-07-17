@@ -16,6 +16,7 @@ qnx -> socket
 </libs>
 
 <os>
+android
 aix
 cygwin
 darwin

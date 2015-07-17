@@ -10,6 +10,7 @@ dev_random.h
 
 <os>
 aix
+android
 cygwin
 darwin
 dragonfly

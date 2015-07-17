@@ -9,6 +9,7 @@ proc_walk.h
 </header:internal>
 
 <os>
+android
 aix
 cygwin
 darwin

@@ -16,6 +16,7 @@ icc
 
 # ELF systems
 <os>
+android
 linux
 netbsd
 openbsd

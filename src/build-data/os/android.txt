@@ -1,0 +1,10 @@
+os_type unix
+
+<target_features>
+clock_gettime
+gettimeofday
+posix_mlock
+gmtime_r
+dlopen
+readdir
+</target_features>
