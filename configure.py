@@ -775,7 +775,7 @@ class ArchInfo(object):
 class CompilerInfo(object):
     def __init__(self, infofile):
         lex_me_harder(infofile, self,
-                      ['so_link_flags', 'mach_opt', 'mach_abi_linking', 'isa_flags'],
+                      ['so_link_flags', 'binary_link_command', 'mach_opt', 'mach_abi_linking', 'isa_flags'],
                       { 'binary_name': None,
                         'linker_name': None,
                         'macro_name': None,
@@ -801,9 +801,10 @@ class CompilerInfo(object):
                         'makefile_style': ''
                         })
 
-        self.so_link_flags = force_to_dict(self.so_link_flags)
-        self.mach_abi_linking = force_to_dict(self.mach_abi_linking)
-        self.isa_flags = force_to_dict(self.isa_flags)
+        self.so_link_flags       = force_to_dict(self.so_link_flags)
+        self.binary_link_command = force_to_dict(self.binary_link_command)
+        self.mach_abi_linking    = force_to_dict(self.mach_abi_linking)
+        self.isa_flags           = force_to_dict(self.isa_flags)
 
         self.infofile = infofile
         self.mach_opt_flags = {}
@@ -932,17 +933,32 @@ class CompilerInfo(object):
     """
     def so_link_command_for(self, osname, options):
         if options.build_mode == 'debug':
-            if osname + "-debug" in self.so_link_flags:
-                return self.so_link_flags[osname + "-debug"]
-            if 'default-debug' in self.so_link_flags:
-                return self.so_link_flags['default-debug']
+            search_for = [osname + "-debug", 'default-debug']
         else:
-            if osname in self.so_link_flags:
-                return self.so_link_flags[osname]
-            if 'default' in self.so_link_flags:
-                return self.so_link_flags['default']
-        raise Exception("No library link command found for target '%s' in compiler settings '%s'" %
-                    (osname, self.infofile))
+            search_for = [osname, 'default']
+
+        for s in search_for:
+            if s in self.so_link_flags:
+                return self.so_link_flags[s]
+
+        raise Exception("No library link command found for target '%s' in compiler settings '%s'. Searched for: %s" %
+                    (osname, self.infofile, ", ".join(search_for)))
+
+    """
+    Return the command needed to link an app/test object
+    """
+    def binary_link_command_for(self, osname, options):
+        if options.build_mode == 'debug':
+            search_for = [osname + "-debug", 'default-debug']
+        else:
+            search_for = [osname, 'default']
+
+        for s in search_for:
+            if s in self.binary_link_command:
+                return self.binary_link_command[s]
+
+        raise Exception("No binary link command found for target '%s' in compiler settings '%s'. Searched for: %s" %
+                    (osname, self.infofile, ", ".join(search_for)))
 
     """
     Return defines for build.h
@@ -1297,9 +1313,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         # This can be made constistent over all platforms in the future
         'libname': 'botan' if options.os == 'windows' else 'botan-%d.%d' % (build_config.version_major, build_config.version_minor),
 
-        'lib_link_cmd': cc.so_link_command_for(osinfo.basename, options),
-        'app_link_cmd': '$(LINKER) -Wl,-rpath=\$$ORIGIN' if options.os == 'linux' else '$(LINKER)',
-        'test_link_cmd': '$(LINKER) -Wl,-rpath=\$$ORIGIN' if options.os == 'linux' else '$(LINKER)',
+        'lib_link_cmd':  cc.so_link_command_for(osinfo.basename, options),
+        'app_link_cmd':  cc.binary_link_command_for(osinfo.basename, options),
+        'test_link_cmd': cc.binary_link_command_for(osinfo.basename, options),
 
         'link_to': ' '.join([cc.add_lib_option + lib for lib in link_to()]),
 

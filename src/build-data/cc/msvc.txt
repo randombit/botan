@@ -40,6 +40,11 @@ default       -> "$(LINKER) /DLL"
 default-debug -> "$(LINKER) /DLL /DEBUG"
 </so_link_flags>
 
+<binary_link_command>
+default       -> "$(LINKER)"
+default-debug -> "$(LINKER) /DEBUG"
+</binary_link_command>
+
 <mach_abi_linking>
 all       -> "/MD"
 all-debug -> "/MDd"

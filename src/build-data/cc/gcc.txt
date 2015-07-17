@@ -43,6 +43,13 @@ aix     -> "$(CXX) -shared -fPIC"
 openbsd -> "$(CXX) -shared -fPIC"
 </so_link_flags>
 
+<binary_link_command>
+linux         -> "$(LINKER) -Wl,-rpath=\$$ORIGIN"
+linux-debug   -> "$(LINKER) -Wl,-rpath=\$$ORIGIN"
+default       -> "$(LINKER)"
+default-debug -> "$(LINKER)"
+</binary_link_command>
+
 <isa_flags>
 sse2    -> "-msse2"
 ssse3   -> "-mssse3"
