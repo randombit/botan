@@ -58,7 +58,7 @@ struct botan_struct
          {
          if(m_magic != MAGIC)
             throw std::runtime_error("Bad magic " + std::to_string(m_magic) +
-                                     " in ffi object expected" + std::to_string(MAGIC));
+                                     " in ffi object expected " + std::to_string(MAGIC));
          return m_obj.get();
          }
    private:
@@ -583,6 +583,7 @@ int botan_pbkdf(const char* pbkdf_algo, uint8_t out[], size_t out_len,
       {
       std::unique_ptr<Botan::PBKDF> pbkdf(Botan::get_pbkdf(pbkdf_algo));
       pbkdf->pbkdf_iterations(out, out_len, pass, salt, salt_len, iterations);
+      return 0;
       }
    catch(std::exception& e)
       {
@@ -605,6 +606,7 @@ int botan_pbkdf_timed(const char* pbkdf_algo,
       pbkdf->pbkdf_timed(out, out_len, password, salt, salt_len,
                          std::chrono::milliseconds(ms_to_run),
                          *iterations_used);
+      return 0;
       }
    catch(std::exception& e)
       {
@@ -623,6 +625,7 @@ int botan_kdf(const char* kdf_algo,
       {
       std::unique_ptr<Botan::KDF> kdf(Botan::get_kdf(kdf_algo));
       kdf->kdf(out, out_len, secret, secret_len, salt, salt_len);
+      return 0;
       }
    catch(std::exception& e)
       {
