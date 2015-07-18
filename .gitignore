@@ -21,6 +21,8 @@ botan-test
 *.orig
 *.rej
 
+# Python cache
+*.pyc
 
 # Amalgamation code
 botan_all.h
