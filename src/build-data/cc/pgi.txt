@@ -2,12 +2,13 @@ macro_name PORTLAND_GROUP
 
 binary_name pgCC
 
-compile_option "-c "
 output_to_option "-o "
 add_include_dir_option -I
 add_lib_dir_option -L
 add_lib_option -l
 
+compile_flags_release "-c"
+compile_flags_debug "-c"
 lib_opt_flags_release "-fast -Minline"
 app_opt_flags_release "-fast"
 shared_flags "-fPIC"

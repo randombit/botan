@@ -3,14 +3,13 @@ macro_name MSVC
 binary_name cl
 linker_name link
 
-compile_option "/nologo /c "
 output_to_option "/Fo"
 add_include_dir_option "/I"
 add_lib_dir_option -L
 add_lib_option ""
 
-compile_flags_release "/bigobj /O2"
-compile_flags_debug   "/bigobj /Od /Zi /FS /DEBUG"
+compile_flags_release "/nologo /c /bigobj /O2"
+compile_flags_debug   "/nologo /c /bigobj /Od /Zi /FS /DEBUG"
 app_opt_flags_release "/D_CONSOLE"
 app_opt_flags_debug   "/D_CONSOLE"
 

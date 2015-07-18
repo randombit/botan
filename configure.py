@@ -779,7 +779,6 @@ class CompilerInfo(object):
                       { 'binary_name': None,
                         'linker_name': None,
                         'macro_name': None,
-                        'compile_option': '-c ',
                         'output_to_option': '-o ',
                         'add_include_dir_option': '-I',
                         'add_lib_dir_option': '-L',
@@ -1139,13 +1138,12 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
     """
     def build_commands(sources, obj_dir, flags):
         for (obj_file,src) in zip(objectfile_list(sources, obj_dir), sources):
-            yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s%s %s%s %s$@\n' % (
+            yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s%s %s %s$@\n' % (
                 obj_file, src,
                 isa_specific_flags(cc, src),
                 flags,
                 cc.add_include_dir_option,
                 build_config.include_dir,
-                cc.compile_option,
                 src,
                 cc.output_to_option)
 

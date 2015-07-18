@@ -2,13 +2,13 @@ macro_name PATHSCALE
 
 binary_name pathCC
 
-compile_option "-c "
 output_to_option "-o "
 add_include_dir_option -I
 add_lib_dir_option -L
 add_lib_option -l
 
-compile_flags_debug "-g"
+compile_flags_release "-c"
+compile_flags_debug "-c -g"
 lib_opt_flags_release "-O3 -OPT:Ofast:alias=disjoint"
 app_opt_flags_release "-O2"
 

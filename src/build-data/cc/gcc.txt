@@ -2,7 +2,6 @@ macro_name GCC
 
 binary_name g++
 
-compile_option "-c "
 output_to_option "-o "
 add_include_dir_option -I
 add_lib_dir_option -L
@@ -12,8 +11,8 @@ lang_flags "-std=c++11 -D_REENTRANT"
 maintainer_warning_flags "-Wold-style-cast -Werror -Wno-error=old-style-cast -Wno-error=zero-as-null-pointer-constant -Wno-error=unused-parameter -Wno-error=unused-variable -Wno-error=strict-overflow"
 warning_flags "-Wall -Wextra -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wzero-as-null-pointer-constant"
 
-compile_flags_release ""
-compile_flags_debug   "-g"
+compile_flags_release "-c"
+compile_flags_debug   "-c -g"
 lib_opt_flags_release "-O2"
 lib_opt_flags_debug   "-O0"
 app_opt_flags_release "-O2"
