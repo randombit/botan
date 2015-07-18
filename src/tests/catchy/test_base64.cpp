@@ -3,6 +3,8 @@
 
 #include "catch.hpp"
 
+#include <botan/build.h>
+
 #if defined(BOTAN_HAS_BASE64_CODEC)
 
 #include <botan/base64.h>
