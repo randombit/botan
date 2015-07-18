@@ -4,7 +4,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "catchy/catch.hpp"
+#include "catchy/catchy_tests.h"
 #include <botan/version.h>
 
 #if defined(BOTAN_HAS_FFI)

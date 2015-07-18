@@ -1,0 +1,52 @@
+// (C) 2015 Simon Warta (Kullo GmbH)
+// Botan is released under the Simplified BSD License (see license.txt)
+
+#ifndef BOTAN_CATCHY_TESTS_H__
+#define BOTAN_CATCHY_TESTS_H__
+
+#include "catch.hpp"
+#include <botan/build.h>
+
+
+// BEGIN CATCH STD::VECTOR IMPLEMENTATION
+// This is basically https://github.com/philsquared/Catch/pull/466
+#include <vector>
+
+namespace Catch {
+
+namespace Matchers {
+    namespace Impl {
+
+    namespace StdVector {
+        template<typename T, typename Alloc>
+        struct Equals : MatcherImpl<Equals<T, Alloc>, std::vector<T, Alloc> > {
+            Equals( std::vector<T, Alloc> const& vec ) : m_vector( vec ){}
+            Equals( Equals const& other ) : m_vector( other.m_vector ){}
+
+            virtual ~Equals() {};
+
+            virtual bool match( std::vector<T, Alloc> const& expr ) const {
+                return m_vector == expr;
+            }
+            virtual std::string toString() const {
+                return "equals: std::vector of length " + Catch::toString(m_vector.size());
+            }
+
+            std::vector<T, Alloc> m_vector;
+        };
+    } // namespace StdVector
+
+    } // namespace Impl
+
+    // The following functions create the actual matcher objects.
+    // This allows the types to be inferred
+    template <typename T, typename Alloc>
+    inline Impl::StdVector::Equals<T, Alloc>      Equals( std::vector<T, Alloc> const& vec ) {
+        return Impl::StdVector::Equals<T, Alloc>( vec );
+    }
+
+} // namespace Matchers
+} // namespace Catch
+// END CATCH STD::VECTOR IMPLEMENTATION
+
+#endif // BOTAN_CATCHY_TESTS_H__
