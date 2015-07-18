@@ -134,7 +134,7 @@ TEST_CASE("FFI PBKDF", "[ffi]")
 
    INFO("Iterations " << iters_10ms << " " << iters_100ms);
    const double ratio = static_cast<double>(iters_100ms) / iters_10ms;
-   CHECK(ratio >= 5);
+   CHECK(ratio >= 3);
    CHECK(ratio <= 15);
    }
 
