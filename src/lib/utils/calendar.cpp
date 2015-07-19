@@ -26,7 +26,7 @@ std::tm do_gmtime(std::time_t time_val)
    gmtime_r(&time_val, &tm); // Unix/SUSv2
 #else
    std::tm* tm_p = std::gmtime(&time_val);
-   if (tm_p == 0)
+   if (tm_p == nullptr)
       throw Encoding_Error("time_t_to_tm could not convert");
    tm = *tm_p;
 #endif
