@@ -13,6 +13,10 @@
 #include <iomanip>
 #include <mutex>
 
+#if defined(BOTAN_HAS_BOOST_DATETIME)
+#include <boost/date_time/posix_time/posix_time_types.hpp>
+#endif
+
 namespace Botan {
 
 namespace {
@@ -36,6 +40,34 @@ std::tm do_gmtime(std::time_t time_val)
    }
 
 #if !defined(BOTAN_TARGET_OS_HAS_TIMEGM) && !defined(BOTAN_TARGET_OS_HAS_MKGMTIME)
+
+#if defined(BOTAN_HAS_BOOST_DATETIME)
+
+std::time_t boost_timegm(std::tm *tm)
+   {
+   const int sec  = tm->tm_sec;
+   const int min  = tm->tm_min;
+   const int hour = tm->tm_hour;
+   const int day  = tm->tm_mday;
+   const int mon  = tm->tm_mon + 1;
+   const int year = tm->tm_year + 1900;
+
+   std::time_t out;
+
+      {
+      using namespace boost::posix_time;
+      using namespace boost::gregorian;
+      const auto epoch = ptime(date(1970, 01, 01));
+      const auto time = ptime(date(year, mon, day), 
+                              hours(hour) + minutes(min) + seconds(sec));
+      const time_duration diff(time - epoch);
+      out = diff.ticks() / diff.ticks_per_second();
+      }
+
+   return out;
+   }
+
+#else
 
 #pragma message "Caution! A fallback version of timegm() is used which is not thread-safe"
 
@@ -75,6 +107,8 @@ std::time_t fallback_timegm(std::tm *tm)
 
    return out;
 }
+#endif // BOTAN_HAS_BOOST_DATETIME
+
 #endif
 
 }
@@ -107,6 +141,8 @@ std::chrono::system_clock::time_point calendar_point::to_std_timepoint()
    #elif defined(BOTAN_TARGET_OS_HAS_MKGMTIME)
    // http://stackoverflow.com/questions/16647819/timegm-cross-platform
    std::time_t (&botan_timegm)(std::tm *tm) = _mkgmtime;
+   #elif defined(BOTAN_HAS_BOOST_DATETIME)
+   std::time_t (&botan_timegm)(std::tm *tm) = boost_timegm;
    #else
    std::time_t (&botan_timegm)(std::tm *tm) = fallback_timegm;
    #endif
