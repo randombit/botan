@@ -100,6 +100,7 @@ TEST_CASE("calendar_point constructor works", "[utils]")
 
 TEST_CASE("calendar_point to stl timepoint and back", "[utils]")
    {
+   SECTION("default test")
       {
       auto in = calendar_point(1988, 04, 23, 14, 37, 28);
       auto out = calendar_value(in.to_std_timepoint());
@@ -111,7 +112,20 @@ TEST_CASE("calendar_point to stl timepoint and back", "[utils]")
       CHECK(( out.seconds == 28 ));
       }
 
-      SECTION("latest possible time point")
+   // _mkgmtime on Windows does not work for dates before 1970
+   SECTION("first possible time point")
+      {
+      auto in = calendar_point(1970, 01, 01, 00, 00, 00);
+      auto out = calendar_value(in.to_std_timepoint());
+      CHECK(( out.year    == 1970 ));
+      CHECK(( out.month   == 01 ));
+      CHECK(( out.day     == 01 ));
+      CHECK(( out.hour    == 00 ));
+      CHECK(( out.minutes == 00 ));
+      CHECK(( out.seconds == 00 ));
+      }
+
+   SECTION("latest possible time point")
       {
       auto in = calendar_point(2037, 12, 31, 23, 59, 59);
       auto out = calendar_value(in.to_std_timepoint());
@@ -123,13 +137,30 @@ TEST_CASE("calendar_point to stl timepoint and back", "[utils]")
       CHECK(( out.seconds == 59 ));
       }
 
-      SECTION("year too early")
+   SECTION("year too early")
       {
-      auto in = calendar_point(1800, 01, 01, 0, 0, 0);
-      CHECK_THROWS( in.to_std_timepoint() );
+         {
+         auto in = calendar_point(1800, 01, 01, 0, 0, 0);
+         CHECK_THROWS( in.to_std_timepoint() );
+         }
+
+         {
+         auto in = calendar_point(1899, 12, 31, 23, 59, 59);
+         CHECK_THROWS( in.to_std_timepoint() );
+         }
+
+         {
+         auto in = calendar_point(1969, 12, 31, 23, 59, 58); // time_t = -2
+         CHECK_THROWS( in.to_std_timepoint() );
+         }
+
+         {
+         auto in = calendar_point(1969, 12, 31, 23, 59, 59); // time_t = -1
+         CHECK_THROWS( in.to_std_timepoint() );
+         }
       }
 
-      SECTION("year too late")
+   SECTION("year too late")
       {
       auto in = calendar_point(2038, 01, 01, 0, 0, 0);
       CHECK_THROWS( in.to_std_timepoint() );
