@@ -1,4 +1,4 @@
-;/*
+/*
 * TLS Server Hello and Server Hello Done
 * (C) 2004-2011,2015 Jack Lloyd
 *

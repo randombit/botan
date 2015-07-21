@@ -34,7 +34,7 @@ McEliece_PrivateKey::McEliece_PrivateKey(polyn_gf2m const& goppa_polyn,
    m_codimension(ceil_log2(inverse_support.size()) * goppa_polyn.get_degree()),
    m_dimension(inverse_support.size() - m_codimension)
    {
-   };
+   }
 
 McEliece_PrivateKey::McEliece_PrivateKey(RandomNumberGenerator& rng, size_t code_length, size_t t)
    {
