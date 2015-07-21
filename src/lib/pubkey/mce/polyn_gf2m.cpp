@@ -146,7 +146,7 @@ polyn_gf2m::polyn_gf2m( std::shared_ptr<gf2m_small_m::Gf2m_Field> sp_field )
    : m_deg(-1),
      coeff(1),
      msp_field(sp_field)
-   {};
+   {}
 
 polyn_gf2m::polyn_gf2m(int degree, const unsigned  char* mem, u32bit mem_byte_len, std::shared_ptr<gf2m_small_m::Gf2m_Field> sp_field)
    :msp_field(sp_field)
