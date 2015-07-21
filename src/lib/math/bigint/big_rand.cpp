@@ -7,6 +7,7 @@
 
 #include <botan/bigint.h>
 #include <botan/parsing.h>
+#include <botan/internal/rounding.h>
 
 namespace Botan {
 
@@ -19,15 +20,18 @@ void BigInt::randomize(RandomNumberGenerator& rng,
    set_sign(Positive);
 
    if(bitsize == 0)
+      {
       clear();
+      }
    else
       {
-      secure_vector<byte> array = rng.random_vec((bitsize + 7) / 8);
+      secure_vector<byte> array = rng.random_vec(round_up(bitsize, 8) / 8);
 
       if(bitsize % 8)
          array[0] &= 0xFF >> (8 - (bitsize % 8));
       array[0] |= 0x80 >> ((bitsize % 8) ? (8 - bitsize % 8) : 0);
-      binary_decode(array.data(), array.size());
+
+      binary_decode(array);
       }
    }
 

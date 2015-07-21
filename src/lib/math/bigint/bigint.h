@@ -42,7 +42,7 @@ class BOTAN_DLL BigInt
      /**
      * Create empty BigInt
      */
-     BigInt() { m_signedness = Positive; }
+     BigInt() {}
 
      /**
      * Create BigInt from 64 bit integer
@@ -400,7 +400,7 @@ class BOTAN_DLL BigInt
      * Give byte length of the integer
      * @result byte length of the represented integer value
      */
-     size_t bytes() const { return (bits() + 7) / 8; }
+     size_t bytes() const;
 
      /**
      * Get the bit length of the integer
@@ -427,11 +427,7 @@ class BOTAN_DLL BigInt
      * Increase internal register buffer to at least n words
      * @param n new size of register
      */
-     void grow_to(size_t n)
-        {
-        if(n > size())
-           m_reg.resize(n + (8 - n % 8));
-        }
+     void grow_to(size_t n);
 
      /**
      * Fill BigInt with a random number with size of bitsize
