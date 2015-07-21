@@ -2,7 +2,6 @@ macro_name CLANG
 
 binary_name clang++
 
-compile_option "-c "
 output_to_option "-o "
 add_include_dir_option -I
 add_lib_dir_option -L
@@ -13,24 +12,32 @@ lang_flags "-std=c++11 -D_REENTRANT -fstack-protector"
 warning_flags "-Wall -Wextra -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wunreachable-code"
 maintainer_warning_flags "-Qunused-arguments -Werror -Wno-error=unused-parameter -Wno-error=unused-variable -Wno-error=unreachable-code"
 
-makefile_style gmake
+compile_flags_release "-c"
+compile_flags_debug   "-c -g"
+lib_opt_flags_release "-O3"
+app_opt_flags_release "-O2"
 
-lib_opt_flags "-O3"
-app_opt_flags "-O2"
 shared_flags "-fPIC"
-debug_flags "-g"
-no_debug_flags ""
 coverage_flags "--coverage"
 
 visibility_build_flags "-fvisibility=hidden"
 visibility_attribute '__attribute__((visibility("default")))'
 
-<so_link_flags>
+makefile_style gmake
+
+<so_link_commands>
 # The default works for GNU ld and several other Unix linkers
 default -> "$(CXX) -shared -fPIC -Wl,-soname,$(SONAME)"
 
 darwin  -> "$(CXX) -dynamiclib -fPIC -install_name $(LIBDIR)/$(SONAME)"
-</so_link_flags>
+</so_link_commands>
+
+<binary_link_commands>
+linux         -> "$(LINKER) -Wl,-rpath=\$$ORIGIN"
+linux-debug   -> "$(LINKER) -Wl,-rpath=\$$ORIGIN"
+default       -> "$(LINKER)"
+default-debug -> "$(LINKER)"
+</binary_link_commands>
 
 <isa_flags>
 sse2   -> "-msse2"

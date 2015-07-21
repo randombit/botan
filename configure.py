@@ -775,18 +775,20 @@ class ArchInfo(object):
 class CompilerInfo(object):
     def __init__(self, infofile):
         lex_me_harder(infofile, self,
-                      ['so_link_flags', 'mach_opt', 'mach_abi_linking', 'isa_flags'],
+                      ['so_link_commands', 'binary_link_commands', 'mach_opt', 'mach_abi_linking', 'isa_flags'],
                       { 'binary_name': None,
+                        'linker_name': None,
                         'macro_name': None,
-                        'compile_option': '-c ',
                         'output_to_option': '-o ',
                         'add_include_dir_option': '-I',
                         'add_lib_dir_option': '-L',
                         'add_lib_option': '-l',
-                        'lib_opt_flags': '',
-                        'app_opt_flags': '',
-                        'debug_flags': '',
-                        'no_debug_flags': '',
+                        'compile_flags_release': '',
+                        'compile_flags_debug': '',
+                        'lib_opt_flags_release': '',
+                        'lib_opt_flags_debug': '',
+                        'app_opt_flags_release': '',
+                        'app_opt_flags_debug': '',
                         'coverage_flags': '',
                         'sanitizer_flags': '',
                         'shared_flags': '',
@@ -799,10 +801,12 @@ class CompilerInfo(object):
                         'makefile_style': ''
                         })
 
-        self.so_link_flags = force_to_dict(self.so_link_flags)
-        self.mach_abi_linking = force_to_dict(self.mach_abi_linking)
-        self.isa_flags = force_to_dict(self.isa_flags)
+        self.so_link_commands     = force_to_dict(self.so_link_commands)
+        self.binary_link_commands = force_to_dict(self.binary_link_commands)
+        self.mach_abi_linking     = force_to_dict(self.mach_abi_linking)
+        self.isa_flags            = force_to_dict(self.isa_flags)
 
+        self.infofile = infofile
         self.mach_opt_flags = {}
 
         while self.mach_opt != []:
@@ -886,18 +890,27 @@ class CompilerInfo(object):
     def opt_flags(self, who, options):
         def gen_flags():
             if options.build_mode in ['debug', 'coverage']:
-                yield self.debug_flags
+                yield self.compile_flags_debug
             else:
-                yield self.no_debug_flags
+                yield self.compile_flags_release
 
             if options.no_optimizations or options.build_mode == 'coverage':
                 return
 
-            if who != 'lib':
-                yield self.app_opt_flags
+            if who == 'app':
+                if options.build_mode == 'release':
+                    yield self.app_opt_flags_release
+                else:
+                    yield self.app_opt_flags_debug
                 return
-
-            yield self.lib_opt_flags
+            elif who == 'lib':
+                if options.build_mode == 'release':
+                    yield self.lib_opt_flags_release
+                else:
+                    yield self.lib_opt_flags_debug
+                return
+            else:
+                raise Exception("Invalid value of parameter 'who'.")
 
             def submodel_fixup(flags, tup):
                 return tup[0].replace('SUBMODEL', flags.replace(tup[1], ''))
@@ -918,12 +931,34 @@ class CompilerInfo(object):
     """
     Return the command needed to link a shared object
     """
-    def so_link_command_for(self, osname):
-        if osname in self.so_link_flags:
-            return self.so_link_flags[osname]
-        if 'default' in self.so_link_flags:
-            return self.so_link_flags['default']
-        return ''
+    def so_link_command_for(self, osname, options):
+        if options.build_mode == 'debug':
+            search_for = [osname + "-debug", 'default-debug']
+        else:
+            search_for = [osname, 'default']
+
+        for s in search_for:
+            if s in self.so_link_commands:
+                return self.so_link_commands[s]
+
+        raise Exception("No shared library link command found for target '%s' in compiler settings '%s'. Searched for: %s" %
+                    (osname, self.infofile, ", ".join(search_for)))
+
+    """
+    Return the command needed to link an app/test object
+    """
+    def binary_link_command_for(self, osname, options):
+        if options.build_mode == 'debug':
+            search_for = [osname + "-debug", 'default-debug']
+        else:
+            search_for = [osname, 'default']
+
+        for s in search_for:
+            if s in self.binary_link_commands:
+                return self.binary_link_commands[s]
+
+        raise Exception("No binary link command found for target '%s' in compiler settings '%s'. Searched for: %s" %
+                    (osname, self.infofile, ", ".join(search_for)))
 
     """
     Return defines for build.h
@@ -1121,13 +1156,12 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
     """
     def build_commands(sources, obj_dir, flags):
         for (obj_file,src) in zip(objectfile_list(sources, obj_dir), sources):
-            yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s%s %s%s %s$@\n' % (
+            yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s%s %s %s$@\n' % (
                 obj_file, src,
                 isa_specific_flags(cc, src),
                 flags,
                 cc.add_include_dir_option,
                 build_config.include_dir,
-                cc.compile_option,
                 src,
                 cc.output_to_option)
 
@@ -1262,7 +1296,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'mp_bits': choose_mp_bits(),
 
-        'cc': (options.compiler_binary or cc.binary_name) + cc.mach_abi_link_flags(options),
+        'cxx': (options.compiler_binary or cc.binary_name) + cc.mach_abi_link_flags(options),
+        'linker': cc.linker_name or '$(CXX)',
 
         'lib_opt': cc.opt_flags('lib', options),
         'app_opt': cc.opt_flags('app', options),
@@ -1278,9 +1313,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         # This can be made constistent over all platforms in the future
         'libname': 'botan' if options.os == 'windows' else 'botan-%d.%d' % (build_config.version_major, build_config.version_minor),
 
-        'lib_link_cmd': cc.so_link_command_for(osinfo.basename),
-        'app_link_cmd': '$(CXX) -Wl,-rpath=\$$ORIGIN' if options.os == 'linux' else '$(CXX)',
-        'test_link_cmd': '$(CXX) -Wl,-rpath=\$$ORIGIN' if options.os == 'linux' else '$(CXX)',
+        'lib_link_cmd':  cc.so_link_command_for(osinfo.basename, options),
+        'app_link_cmd':  cc.binary_link_command_for(osinfo.basename, options),
+        'test_link_cmd': cc.binary_link_command_for(osinfo.basename, options),
 
         'link_to': ' '.join([cc.add_lib_option + lib for lib in link_to()]),
 

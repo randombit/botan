@@ -2,22 +2,23 @@ macro_name PORTLAND_GROUP
 
 binary_name pgCC
 
-compile_option "-c "
 output_to_option "-o "
 add_include_dir_option -I
 add_lib_dir_option -L
 add_lib_option -l
 
-lib_opt_flags "-fast -Minline"
-app_opt_flags "-fast"
+compile_flags_release "-c"
+compile_flags_debug "-c"
+lib_opt_flags_release "-fast -Minline"
+app_opt_flags_release "-fast"
 shared_flags "-fPIC"
 
 makefile_style gmake
 
-<so_link_flags>
+<so_link_commands>
 linux   -> "$(CXX) -shared -fPIC -Wl,-soname,$(SONAME)"
 solaris -> "$(CXX) -G -fPIC -Wl,-h,$(SONAME)"
-</so_link_flags>
+</so_link_commands>
 
 <mach_opt>
 i586     -> "-tp p5"

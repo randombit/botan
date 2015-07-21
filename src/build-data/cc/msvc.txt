@@ -1,16 +1,18 @@
 macro_name MSVC
 
 binary_name cl
+linker_name link
 
-compile_option "/nologo /c "
 output_to_option "/Fo"
 add_include_dir_option "/I"
 add_lib_dir_option -L
 add_lib_option ""
 
-no_debug_flags "/O2"
-debug_flags "/Od /Zi /DDEBUG"
-app_opt_flags "/D_CONSOLE"
+compile_flags_release "/nologo /c /bigobj /O2"
+compile_flags_debug   "/nologo /c /bigobj /Od /Zi /FS /DEBUG"
+app_opt_flags_release "/D_CONSOLE"
+app_opt_flags_debug   "/D_CONSOLE"
+
 lang_flags "/EHs /GR"
 warning_flags "/W3 /wd4275 /wd4267"
 
@@ -33,9 +35,15 @@ clmul  -> ""
 rdrand -> ""
 </isa_flags>
 
-<so_link_flags>
-default -> "$(CXX) /LD"
-</so_link_flags>
+<so_link_commands>
+default       -> "$(LINKER) /DLL"
+default-debug -> "$(LINKER) /DLL /DEBUG"
+</so_link_commands>
+
+<binary_link_commands>
+default       -> "$(LINKER)"
+default-debug -> "$(LINKER) /DEBUG"
+</binary_link_commands>
 
 <mach_abi_linking>
 all       -> "/MD"

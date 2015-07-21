@@ -2,17 +2,17 @@ macro_name IBM_XLC
 
 binary_name xlC
 
-compile_option "-c "
 output_to_option "-o "
 add_include_dir_option -I
 add_lib_dir_option -L
 add_lib_option -l
 
-lib_opt_flags "-O2"
-app_opt_flags "-O2"
+compile_flags_release "-c"
+compile_flags_debug "-c -g"
+lib_opt_flags_release "-O2"
+app_opt_flags_release "-O2"
+
 lang_flags ""
-debug_flags -g
-no_debug_flags ""
 
 makefile_style gmake
 
@@ -23,6 +23,6 @@ power4   -> "-qarch=pwr4"
 power5   -> "-qarch=pwr5"
 </mach_opt>
 
-<so_link_flags>
+<so_link_commands>
 default -> "$(CXX) -qmkshrobj"
-</so_link_flags>
+</so_link_commands>

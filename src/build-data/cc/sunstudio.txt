@@ -2,16 +2,16 @@ macro_name SUN_STUDIO
 
 binary_name CC
 
-compile_option "-c "
 output_to_option "-o "
 add_include_dir_option -I
 add_lib_dir_option -L
 add_lib_option -l
 
-lib_opt_flags "-xO5"
-app_opt_flags "-xO2"
-debug_flags -g
-no_debug_flags ""
+compile_flags_release "-c"
+compile_flags_debug "-c -g"
+lib_opt_flags_release "-xO5"
+app_opt_flags_release "-xO2"
+
 shared_flags "-KPIC"
 warning_flags "+w -erroff=truncwarn,wnoretvalue"
 lang_flags "+p -features=extensions -D__FUNCTION__=__func__"
@@ -20,9 +20,9 @@ ar_command "CC -xar -o"
 
 makefile_style gmake
 
-<so_link_flags>
+<so_link_commands>
 default -> "$(CXX) -G -h$(SONAME)"
-</so_link_flags>
+</so_link_commands>
 
 <mach_opt>
 i386       -> "-xtarget=486"

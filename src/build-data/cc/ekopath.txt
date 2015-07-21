@@ -2,27 +2,28 @@ macro_name PATHSCALE
 
 binary_name pathCC
 
-compile_option "-c "
 output_to_option "-o "
 add_include_dir_option -I
 add_lib_dir_option -L
 add_lib_option -l
 
-lib_opt_flags "-O3 -OPT:Ofast:alias=disjoint"
-app_opt_flags "-O2"
+compile_flags_release "-c"
+compile_flags_debug "-c -g"
+lib_opt_flags_release "-O3 -OPT:Ofast:alias=disjoint"
+app_opt_flags_release "-O2"
+
 lang_flags "-D_REENTRANT -ansi -Wno-long-long"
 warning_flags "-W -Wall"
 
 ar_command "pathCC -ar -o"
 
 shared_flags "-fPIC"
-debug_flags -g
 
 makefile_style gmake
 
-<so_link_flags>
+<so_link_commands>
 default -> "$(CXX) -shared -fPIC -Wl,-soname,$(SONAME)"
-</so_link_flags>
+</so_link_commands>
 
 <mach_opt>
 athlon   -> "-mcpu=athlon"

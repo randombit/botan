@@ -18,10 +18,21 @@ APP           = %{out_dir}\botan%{program_suffix}
 TEST          = %{out_dir}\botan-test%{program_suffix}
 
 # Library targets
-# LIB_FILENAME is either a static lib or the DLL
+#
+# LIB_FILENAME is always the .lib file, that is either a static lib or a
+# by-product of the DLL creation used to link the DLL into applications
 LIB_BASENAME  = %{libname}
-LIB_FILENAME  = %{out_dir}\$(LIB_BASENAME).%{static_suffix}
+LIB_FILENAME  = %{out_dir}\$(LIB_BASENAME).lib
+
+!If "$(SO_OBJ_FLAGS)" == ""
+# static lib
 LIBRARIES     = $(LIB_FILENAME)
+!Else
+# shared lib
+SO_FILENAME   = %{out_dir}\$(LIB_BASENAME).dll
+LIBRARIES     = $(SO_FILENAME)
+!Endif
+
 
 # File Lists
 LIBOBJS       = %{lib_objs}
@@ -42,18 +53,22 @@ all: $(APP) $(TEST)
 
 # Link Commands
 $(APP): $(LIBRARIES) $(APPOBJS)
-	$(APP_LINK_CMD) /Fe$@ $(APPOBJS) $(LIB_FILENAME) $(APP_LINKS_TO)
+	$(APP_LINK_CMD) /OUT:$@ $(APPOBJS) $(LIB_FILENAME) $(APP_LINKS_TO)
 	$(APP_POST_LINK_CMD)
 
 $(TEST): $(LIBRARIES) $(TESTOBJS)
-	$(TEST_LINK_CMD) /Fe$@ $(TESTOBJS) $(LIB_FILENAME) $(TEST_LINKS_TO)
+	$(TEST_LINK_CMD) /OUT:$@ $(TESTOBJS) $(LIB_FILENAME) $(TEST_LINKS_TO)
 	$(TEST_POST_LINK_CMD)
 
-$(LIB_FILENAME): $(LIBOBJS)
 !If "$(SO_OBJ_FLAGS)" == ""
-	$(AR) /OUT:$(LIB_FILENAME) $(LIBOBJS)
+# static lib
+$(LIB_FILENAME): $(LIBOBJS)
+	$(AR) /OUT:$@ $(LIBOBJS)
 !Else
-	$(LIB_LINK_CMD) /Fe%{out_dir}\$(LIB_BASENAME) $(LIBOBJS) $(LIB_LINKS_TO)
+# shared lib
+# Creates the DLL $(SO_FILENAME) and the .lib $(LIB_FILENAME)
+$(SO_FILENAME): $(LIBOBJS)
+	$(LIB_LINK_CMD) /OUT:$@ $(LIBOBJS) $(LIB_LINKS_TO)
 !Endif
 
 # Fake Targets

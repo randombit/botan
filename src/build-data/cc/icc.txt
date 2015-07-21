@@ -2,16 +2,16 @@ macro_name INTEL
 
 binary_name icpc
 
-compile_option "-c "
 output_to_option "-o "
 add_include_dir_option -I
 add_lib_dir_option -L
 add_lib_option -l
 
-lib_opt_flags "-O2 -ip -unroll"
-app_opt_flags "-O2"
-debug_flags -g
-no_debug_flags "-fomit-frame-pointer"
+compile_flags_release "-c -fomit-frame-pointer"
+compile_flags_debug "-c -g"
+lib_opt_flags_release "-O2 -ip -unroll"
+app_opt_flags_release "-O2"
+
 lang_flags "-std=c++0x"
 warning_flags "-w1"
 shared_flags "-fPIC"
@@ -29,6 +29,6 @@ nehalem   -> "-march=core2"
 westmere  -> "-march=core2"
 </mach_opt>
 
-<so_link_flags>
+<so_link_commands>
 default -> "$(CXX) -fPIC -shared -Wl,-soname,$(SONAME)"
-</so_link_flags>
+</so_link_commands>

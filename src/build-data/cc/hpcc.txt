@@ -2,16 +2,16 @@ macro_name HP_ACC
 
 binary_name aCC
 
-compile_option "-c "
 output_to_option "-o "
 add_include_dir_option -I
 add_lib_dir_option -L
 add_lib_option -l
 
-lib_opt_flags "+O2"
-app_opt_flags "+O2"
-debug_flags -g
-no_debug_flags ""
+compile_flags_release "-c"
+compile_flags_debug "-c -g"
+lib_opt_flags_release "+O2"
+app_opt_flags_release "+O2"
+
 lang_flags "-AA -ext +eh -z"
 warning_flags "" # +w
 shared_flags "+Z"
@@ -24,6 +24,6 @@ hppa1.1 -> "+DA1.1"
 hppa2.0 -> "+DA2.0W"
 </mach_abi_linking>
 
-<so_link_flags>
+<so_link_commands>
 default -> "$(CXX) +Z -b -Wl,+h,$(SONAME)" # Documented in cc(1), but not CC(1) (?)
-</so_link_flags>
+</so_link_commands>
