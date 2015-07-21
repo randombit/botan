@@ -1,6 +1,6 @@
 #!/bin/sh
-
 set -ev
+which shellcheck > /dev/null && shellcheck "$0" # Run shellcheck on this if available
 
 if [ "$BUILD_MODE" = "coverage" ]; then
    GCOV="/usr/bin/gcov-4.8"
