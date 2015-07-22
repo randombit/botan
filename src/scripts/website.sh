@@ -1,8 +1,9 @@
-#!/bin/sh
+#!/bin/bash
+set -e
+which shellcheck > /dev/null && shellcheck "$0" # Run shellcheck on this if available
 
-#set +x
 SPHINX_CONFIG=./src/build-data/sphinx
-SPHINX_OPTS='-b html'
+SPHINX_BUILDER="html"
 
 WEBSITE_DIR=./www-botan
 WEBSITE_SRC_DIR=./www-src
@@ -14,8 +15,8 @@ cp readme.rst $WEBSITE_SRC_DIR/index.rst
 cp -r doc/news.rst $WEBSITE_SRC_DIR
 echo -e ".. toctree::\n\n   index\n   news\n" > $WEBSITE_SRC_DIR/contents.rst
 
-sphinx-build -t website -c $SPHINX_CONFIG $SPHINX_OPTS $WEBSITE_SRC_DIR $WEBSITE_DIR
-sphinx-build -t website -c $SPHINX_CONFIG $SPHINX_OPTS doc/manual $WEBSITE_DIR/manual
+sphinx-build -t website -c "$SPHINX_CONFIG" -b "$SPHINX_BUILDER" $WEBSITE_SRC_DIR $WEBSITE_DIR
+sphinx-build -t website -c "$SPHINX_CONFIG" -b "$SPHINX_BUILDER" doc/manual $WEBSITE_DIR/manual
 rm -rf $WEBSITE_DIR/.doctrees
 rm -f $WEBSITE_DIR/.buildinfo
 rm -rf $WEBSITE_DIR/manual/.doctrees

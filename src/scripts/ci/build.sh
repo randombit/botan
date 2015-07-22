@@ -1,20 +1,20 @@
-#!/bin/sh
-
+#!/bin/bash
 set -ev
+which shellcheck > /dev/null && shellcheck "$0" # Run shellcheck on this if available
 
 if [ "$BUILD_MODE" = "static" ]; then
-   CFG_FLAGS="--disable-shared --via-amalgamation"
+   CFG_FLAGS=(--disable-shared --via-amalgamation)
 elif [ "$BUILD_MODE" = "shared" ]; then
-   CFG_FLAGS=""
+   CFG_FLAGS=()
 elif [ "$BUILD_MODE" = "coverage" ]; then
    # lcov gets confused by symlinks
-   CFG_FLAGS="--build-mode=coverage --link-method=copy"
+   CFG_FLAGS=(--build-mode=coverage --link-method=copy)
 elif [ "$BUILD_MODE" = "sanitizer" ]; then
-   CFG_FLAGS="--build-mode=sanitizer"
+   CFG_FLAGS=(--build-mode=sanitizer)
 fi
 
 if [ "$MODULES" = "min" ]; then
-   CFG_FLAGS="$CFG_FLAGS --no-autoload --enable-modules=base"
+   CFG_FLAGS+=(--no-autoload --enable-modules=base)
 fi
 
 # Workaround for missing update-alternatives
@@ -32,7 +32,7 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
 fi
 
 $CXX --version
-./configure.py $CFG_FLAGS --cc="$CC" --cc-bin="$CXX" \
+./configure.py "${CFG_FLAGS[@]}" --cc="$CC" --cc-bin="$CXX" \
     --with-openssl --with-sqlite --with-zlib \
     --prefix=/tmp/botan-installation
 make -j 2

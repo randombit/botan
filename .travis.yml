@@ -71,6 +71,7 @@ addons:
     - g++-4.8
     - libssl-dev
     - libsqlite3-dev
+    - shellcheck
     - zlib1g-dev
 
   coverity_scan:
