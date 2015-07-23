@@ -1388,11 +1388,11 @@ def choose_modules_to_use(modules, archinfo, ccinfo, options):
 
     for modname in options.enabled_modules:
         if modname not in modules:
-            logging.warning("Unknown enabled module %s" % (modname))
+            logging.error("Module not found: %s" % (modname))
 
     for modname in options.disabled_modules:
         if modname not in modules:
-            logging.warning("Unknown disabled module %s" % (modname))
+            logging.warning("Disabled module not found: %s" % (modname))
 
     for (modname, module) in modules.items():
         if modname in options.disabled_modules:
