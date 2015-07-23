@@ -87,9 +87,9 @@ BigInt::BigInt(const byte input[], size_t length, Base base)
 /*
 * Construct a BigInt from an encoded BigInt
 */
-BigInt::BigInt(RandomNumberGenerator& rng, size_t bits)
+BigInt::BigInt(RandomNumberGenerator& rng, size_t bits, bool set_high_bit)
    {
-   randomize(rng, bits);
+   randomize(rng, bits, set_high_bit);
    }
 
 /*
