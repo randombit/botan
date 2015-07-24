@@ -42,7 +42,7 @@ class BOTAN_DLL BigInt
      /**
      * Create empty BigInt
      */
-     BigInt() { m_signedness = Positive; }
+     BigInt() {}
 
      /**
      * Create BigInt from 64 bit integer
@@ -74,11 +74,15 @@ class BOTAN_DLL BigInt
      BigInt(const byte buf[], size_t length, Base base = Binary);
 
      /**
-     * Create a random BigInt of the specified size
+     * \brief Create a random BigInt of the specified size
+     *
      * @param rng random number generator
      * @param bits size in bits
+     * @param set_high_bit if true, the highest bit is always set
+     *
+     * @see randomize
      */
-     BigInt(RandomNumberGenerator& rng, size_t bits);
+     BigInt(RandomNumberGenerator& rng, size_t bits, bool set_high_bit = true);
 
      /**
      * Create BigInt of specified size, all zeros
@@ -400,7 +404,7 @@ class BOTAN_DLL BigInt
      * Give byte length of the integer
      * @result byte length of the represented integer value
      */
-     size_t bytes() const { return (bits() + 7) / 8; }
+     size_t bytes() const;
 
      /**
      * Get the bit length of the integer
@@ -427,18 +431,20 @@ class BOTAN_DLL BigInt
      * Increase internal register buffer to at least n words
      * @param n new size of register
      */
-     void grow_to(size_t n)
-        {
-        if(n > size())
-           m_reg.resize(n + (8 - n % 8));
-        }
+     void grow_to(size_t n);
 
      /**
      * Fill BigInt with a random number with size of bitsize
+     *
+     * If \p set_high_bit is true, the highest bit will be set, which causes
+     * the entropy to be \a bits-1. Otherwise the highest bit is randomly choosen
+     * by the rng, causing the entropy to be \a bits.
+     *
      * @param rng the random number generator to use
      * @param bitsize number of bits the created random value should have
+     * @param set_high_bit if true, the highest bit is always set
      */
-     void randomize(RandomNumberGenerator& rng, size_t bitsize = 0);
+     void randomize(RandomNumberGenerator& rng, size_t bitsize, bool set_high_bit = true);
 
      /**
      * Store BigInt-value in a given byte array

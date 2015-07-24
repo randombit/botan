@@ -87,9 +87,9 @@ BigInt::BigInt(const byte input[], size_t length, Base base)
 /*
 * Construct a BigInt from an encoded BigInt
 */
-BigInt::BigInt(RandomNumberGenerator& rng, size_t bits)
+BigInt::BigInt(RandomNumberGenerator& rng, size_t bits, bool set_high_bit)
    {
-   randomize(rng, bits);
+   randomize(rng, bits, set_high_bit);
    }
 
 /*
@@ -173,6 +173,11 @@ void BigInt::clear_bit(size_t n)
       m_reg[which] &= ~mask;
    }
 
+size_t BigInt::bytes() const
+   {
+   return round_up(bits(), 8) / 8;
+   }
+
 /*
 * Count how many bits are being used
 */
@@ -251,6 +256,12 @@ BigInt BigInt::abs() const
    BigInt x = (*this);
    x.set_sign(Positive);
    return x;
+   }
+
+void BigInt::grow_to(size_t n)
+   {
+   if(n > size())
+      m_reg.resize(round_up(n, 8));
    }
 
 /*
