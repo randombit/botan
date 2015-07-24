@@ -33,42 +33,44 @@ void test_failure(const char* function, const char* file, int line,
              << what_failed << std::endl;
    }
 
-#define BOTAN_TEST(lhs, rhs, msg) try {                                    \
+#define BOTAN_CONFIRM_NOTHROW(block) do {                              \
+   try { block }                                                        \
+   catch(std::exception& e) {                                           \
+      test_failure(BOTAN_CURRENT_FUNCTION, __FILE__, __LINE__, e.what());   \
+      ++tests_failed;                                                   \
+   } } while(0)                                                         \
+
+#define BOTAN_TEST(lhs, rhs, msg) do {                                     \
    ++tests_run;                                                            \
-   const auto lhs_val = lhs;                                               \
-   const auto rhs_val = rhs;                                               \
-   const bool cmp = lhs_val == rhs_val;                                    \
-   if(!cmp)                                                                \
-      {                                                                    \
-      std::ostringstream fmt;                                              \
-      fmt << "expr '" << #lhs << " == " << #rhs << "' false, "             \
-          << "actually " << lhs_val << " " << rhs_val                      \
-          << " (" << msg << ")";                                           \
-      test_failure(BOTAN_CURRENT_FUNCTION, __FILE__, __LINE__, fmt.str()); \
-      ++tests_failed;                                                      \
-      }                                                                    \
-   }                                                                       \
-   catch(std::exception& e)                                                \
-      {                                                                    \
-      std::ostringstream fmt;                                              \
-      fmt << "exception '" << e.what() << "' (" << msg << ")";             \
-      test_failure(BOTAN_CURRENT_FUNCTION, __FILE__, __LINE__, fmt.str()); \
-      ++tests_failed;                                                      \
-      }
+   BOTAN_CONFIRM_NOTHROW({                                              \
+      const auto lhs_val = lhs;                                         \
+      const auto rhs_val = rhs;                                         \
+      const bool cmp = lhs_val == rhs_val;                              \
+      if(!cmp)                                                          \
+         {                                                              \
+         std::ostringstream fmt;                                        \
+         fmt << "expr '" << #lhs << " == " << #rhs << "' false, "       \
+             << "actually " << lhs_val << " " << rhs_val                \
+             << " (" << msg << ")";                                     \
+         test_failure(BOTAN_CURRENT_FUNCTION, __FILE__, __LINE__, fmt.str()); \
+         ++tests_failed;                                                \
+         }                                                              \
+      });                                                               \
+   } while(0)
 
-size_t test_bigint_to_u32bit()
-   {
-   size_t tests_run = 0, tests_failed = 0;
+#define BOTAN_TEST_CASE(name, block) size_t test_ ## name() {              \
+   size_t tests_run = 0, tests_failed = 0;                                 \
+   BOTAN_CONFIRM_NOTHROW(block);                                           \
+   return tests_failed;                                                    \
+   }
 
+BOTAN_TEST_CASE(bigint_to_u32bit, {
    for(size_t i = 0; i != 32; ++i)
       {
       const u32bit in = 1 << i;
-      BOTAN_TEST(in, BigInt(in).to_u32bit(), "In range round trips");
+      BOTAN_TEST(in, BigInt(in).to_u32bit(), "in range round trips");
       }
-
-   test_report("BigInt to_u32bit", tests_run, tests_failed);
-   return tests_failed;
-   }
+   });
 
 void strip_comments(std::string& line)
    {
