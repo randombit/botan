@@ -497,7 +497,7 @@ TLS Policies
 ``TLS::Policy`` is how an application can control details of what will
 be negotiated during a handshake. The base class acts as the default
 policy. There is also a ``Strict_Policy`` (which forces only secure
-options, reducing compatability) and ``Text_Policy`` which reads
+options, reducing compatibility) and ``Text_Policy`` which reads
 policy settings from a file.
 
 .. cpp:class:: TLS::Policy

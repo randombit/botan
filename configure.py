@@ -414,7 +414,7 @@ def process_command_line(args):
     parser.add_option_group(wrapper_group)
     parser.add_option_group(install_group)
 
-    # These exist only for autoconf compatability (requested by zw for mtn)
+    # These exist only for autoconf compatibility (requested by zw for mtn)
     compat_with_autoconf_options = [
         'datadir',
         'datarootdir',

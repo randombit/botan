@@ -437,7 +437,7 @@ class BOTAN_DLL BigInt
      * Fill BigInt with a random number with size of bitsize
      *
      * If \p set_high_bit is true, the highest bit will be set, which causes
-     * the entropy to be \a bits-1. Otherwise the highest bit is randomly choosen
+     * the entropy to be \a bits-1. Otherwise the highest bit is randomly chosen
      * by the rng, causing the entropy to be \a bits.
      *
      * @param rng the random number generator to use

@@ -69,7 +69,7 @@ class BOTAN_DLL Transform
 
       /**
       * Process some data. Input must be in size update_granularity() byte blocks.
-      * @param blocks in/out paramter which will possibly be resized
+      * @param blocks in/out parameter which will possibly be resized
       * @param offset an offset into blocks to begin processing
       */
       virtual void update(secure_vector<byte>& blocks, size_t offset = 0) = 0;
