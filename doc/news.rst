@@ -27,7 +27,7 @@ Version 1.11.18, 2015-07-05
   analysis tools. From Simon Warta and Daniel Seither. GH #125
 
 * Several incorrect or missing module dependencies have been fixed. These
-  often prevented a succesful build of a minimized amalgamation when
+  often prevented a successful build of a minimized amalgamation when
   only a small set of algorithms were specified. GH #71
   From Simon Warta.
 
@@ -370,7 +370,7 @@ Version 1.11.10, 2014-12-10
   willing to accept.
 
 * PKCS #8 private keys can now be encrypted using GCM mode instead of
-  unauthenticated CBC. The default remains CBC for compatability.
+  unauthenticated CBC. The default remains CBC for compatibility.
 
 * The default PKCS #8 encryption scheme has changed to use PBKDF2 with
   SHA-256 instead of SHA-1
@@ -491,7 +491,7 @@ Version 1.11.8, 2014-02-13
 * A bug in CFB encryption caused a few bytes past the end of the final
   block to be read. The actual output was not affected.
 
-* Fix compilation errors in the tests that occured with minimized
+* Fix compilation errors in the tests that occurred with minimized
   builds. Contributed by Markus Wanner.
 
 * Add a new ``--destdir`` option to ``configure.py`` which controls
@@ -568,13 +568,13 @@ Version 1.10.6, 2013-11-10
 
 * The device reading entropy source now attempts to read from all
   available devices. Previously it would break out early if a partial
-  read from a blocking source occured, not continuing to read from a
+  read from a blocking source occurred, not continuing to read from a
   non-blocking device. This would cause the library to fall back on
   slower and less reliable techniques for collecting PRNG seed
   material. Reported by Rickard Bellgrim.
 
 * HMAC_RNG (the default PRNG implementation) now automatically reseeds
-  itself periodically. Previously reseeds only occured on explicit
+  itself periodically. Previously reseeds only occurred on explicit
   application request.
 
 * Fix an encoding error in EC_Group when encoding using EC_DOMPAR_ENC_OID.
@@ -746,7 +746,7 @@ Version 1.10.5, 2013-03-02
 
 * Use correct flags for creating a shared library on OS X under Clang.
 
-* Fix a compile time incompatability with Visual C++ 2012.
+* Fix a compile time incompatibility with Visual C++ 2012.
 
 Version 1.11.2, 2013-03-02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -930,7 +930,7 @@ of OpenSSL use these fields. Now these fields are decoded properly,
 and if the public key value is included it is used, as otherwise the
 public key needs to be rederived from the private key. However the
 library does not include these fields on encoding keys for
-compatability with software that does not expect them (including older
+compatibility with software that does not expect them (including older
 versions of botan).
 
 Version 1.8.14, 2012-07-18
@@ -1020,7 +1020,7 @@ A bug in configure.py would cause it to interpret ``--cpu=s390x`` as
 searches for an exact match, and only if no exact match is found will
 it search for substring matches.
 
-An incompatability in configure.py with the subprocess module included
+An incompatibility in configure.py with the subprocess module included
 in Python 3.1 has been fixed (Bugzilla 157).
 
 The exception catching syntax of configure.py has been changed to the
@@ -1218,7 +1218,7 @@ Version 1.9.16, 2011-04-11
   expanded.
 
 * The class ``EC_Domain_Params`` has been renamed ``EC_Group``, with a
-  typedef for backwards compatability.
+  typedef for backwards compatibility.
 
 * The ``EC_Group`` string constructor didn't understand the standard
   names like "secp160r1", forcing use of the OIDs.
@@ -1242,7 +1242,7 @@ Version 1.9.16, 2011-04-11
   conventions. Instead of ``libbotan-X.Y.Z.so``, the shared lib is
   named ``libbotan-X.Y.so.Z``; this allows the runtime linker to do
   its runtime linky magic. It can be safely presumed that any change
-  in the major or minor version indicates ABI incompatability.
+  in the major or minor version indicates ABI incompatibility.
 
 * Remove the socket wrapper code; it was not actually used by anything
   in the library, only in the examples, and you can use whatever kind
@@ -1340,7 +1340,7 @@ Version 1.9.11, 2010-11-29
   it to a client or server object. Please remember that the TLS
   interface/API is currently unstable and will very likely change
   further before TLS is included in a stable release. A handshake
-  failure that occured when RC4 was negotiated has also been fixed.
+  failure that occurred when RC4 was negotiated has also been fixed.
 
 * Some possible timing channels in the implementations of Montgomery
   reduction and the IDEA key schedule were removed. The table-based
@@ -1381,7 +1381,7 @@ Version 1.8.11, 2010-11-02
 * Fix a number of CRL encoding and decoding bugs
 * When building a debug library under VC++, use the debug runtime
 * Fix compilation under Sun Studio on Linux and Solaris
-* Add several functions for compatability with 1.9
+* Add several functions for compatibility with 1.9
 * In the examples, read most input files as binary
 * The Perl build script has been removed in this release
 
@@ -1391,7 +1391,7 @@ Version 1.8.10, 2010-08-31
 * Switch default PKCS #8 encryption algorithm from 3DES to AES-256
 * Increase default hash iterations from 2048 to 10000 in PBES1 and PBES2
 * Use small tables in the first round of AES
-* Add PBKDF typedef and get_pbkdf for better compatability with 1.9
+* Add PBKDF typedef and get_pbkdf for better compatibility with 1.9
 * Add version of S2K::derive_key taking salt and iteration count
 * Enable the /proc-walking entropy source on NetBSD
 * Fix the doxygen makefile target

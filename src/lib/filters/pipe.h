@@ -39,7 +39,7 @@ class BOTAN_DLL Pipe : public DataSource
       struct BOTAN_DLL Invalid_Message_Number : public Invalid_Argument
          {
          /**
-         * @param where the error occured
+         * @param where the error occurred
          * @param msg the invalid message id that was used
          */
          Invalid_Message_Number(const std::string& where, message_id msg) :

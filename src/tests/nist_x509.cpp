@@ -212,14 +212,14 @@ std::map<size_t, Path_Validation_Result::Code> get_expected()
 
     In the case of the tests currently in the suite, the default
     method (with acceptable policy being "any-policy" and with no
-    explict policy required), will almost always result in a verified
+    explicit policy required), will almost always result in a verified
     status. This is not particularly helpful. So, we should do several
     different tests for each test set:
 
        1) With the user policy as any-policy and no explicit policy
        2) With the user policy as any-policy and an explicit policy required
        3) With the user policy as test-policy-1 (2.16.840.1.101.3.1.48.1) and
-          an explict policy required
+          an explicit policy required
        4) With the user policy as either test-policy-1 or test-policy-2 and an
           explicit policy required
 
@@ -238,9 +238,9 @@ std::map<size_t, Path_Validation_Result::Code> get_expected()
    expected_results[43] = Certificate_Status_Code::VERIFIED;
    expected_results[44] = Certificate_Status_Code::VERIFIED;
 
-   //expected_results[45] = Certificate_Status_Code::EXPLICT_POLICY_REQUIRED;
+   //expected_results[45] = Certificate_Status_Code::EXPLICIT_POLICY_REQUIRED;
    //expected_results[46] = Certificate_Status_Code::ACCEPT;
-   //expected_results[47] = Certificate_Status_Code::EXPLICT_POLICY_REQUIRED;
+   //expected_results[47] = Certificate_Status_Code::EXPLICIT_POLICY_REQUIRED;
 
    expected_results[48] = Certificate_Status_Code::VERIFIED;
    expected_results[49] = Certificate_Status_Code::VERIFIED;

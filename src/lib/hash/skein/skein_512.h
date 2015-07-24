@@ -23,7 +23,7 @@ class BOTAN_DLL Skein_512 : public HashFunction
    public:
       /**
       * @param output_bits the output size of Skein in bits
-      * @param personalization is a string that will paramaterize the
+      * @param personalization is a string that will parameterize the
       * hash output
       */
       Skein_512(size_t output_bits = 512,

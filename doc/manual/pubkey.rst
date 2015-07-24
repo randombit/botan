@@ -66,7 +66,7 @@ Nyberg-Rueppel key pairs with
 .. cpp:function:: ElGamal_PrivateKey::ElGamal_PrivateKey(RandomNumberGenerator& rng, \
    const DL_Group& group, const BigInt& x = 0)
 
-  The optional *x* parameter to each of these contructors is a private key
+  The optional *x* parameter to each of these constructors is a private key
   value. This allows you to create keys where the private key is formed by
   some special technique; for instance you can use the hash of a password (see
   :ref:`pbkdf` for how to do that) as a private key value. Normally, you would
@@ -162,7 +162,7 @@ decrypt, if necessary) a PKCS #8 private key:
 These functions will return an object allocated key object based on the data
 from whatever source it is using (assuming, of course, the source is in fact
 storing a representation of a private key, and the decryption was
-sucessful). The encoding used (PEM or BER) need not be specified; the format
+successful). The encoding used (PEM or BER) need not be specified; the format
 will be detected automatically. The key is allocated with ``new``, and should
 be released with ``delete`` when you are done with it. The first takes a
 generic ``DataSource`` that you have to create - the other is a simple wrapper
@@ -286,7 +286,7 @@ where *format* is any of
 * ``ANSI_X9_42`` (or ``DH_PARAMETERS``) for modp groups
 * ``ANSI_X9_57`` (or ``DSA_PARAMETERS``) for DSA-style groups
 * ``PKCS_3`` is an older format for modp groups; it should only
-  be used for backwards compatability.
+  be used for backwards compatibility.
 
 You can reload a serialized group using
 
@@ -366,7 +366,7 @@ these use the EME class:
      method to use is specified in *eme*.
 
      The recommended values for *eme* is "EME1(SHA-1)" or "EME1(SHA-256)". If
-     you need compatability with protocols using the PKCS #1 v1.5 standard,
+     you need compatibility with protocols using the PKCS #1 v1.5 standard,
      you can also use "EME-PKCS1-v1_5".
 
 .. cpp:class:: DLIES_Encryptor
@@ -409,7 +409,7 @@ Signature generation is performed using
      fail. Raw is not useful except in very specialized applications. Examples
      are "EMSA1(SHA-1)" and "EMSA4(SHA-256)".
 
-     For RSA, use EMSA4 (also called PSS) unless you need compatability with
+     For RSA, use EMSA4 (also called PSS) unless you need compatibility with
      software that uses the older PKCS #1 v1.5 standard, in which case use
      EMSA3 (also called "EMSA-PKCS1-v1_5"). For DSA, ECDSA, GOST 34.10-2001,
      and Nyberg-Rueppel, you should use EMSA1.

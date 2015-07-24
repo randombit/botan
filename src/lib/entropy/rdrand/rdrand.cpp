@@ -29,7 +29,7 @@ void Intel_Rdrand::poll(Entropy_Accumulator& accum)
    Even if backdoored, rdrand cannot harm us because the HMAC_RNG poll process
    is designed to handle arbitrarily large amounts of attacker known/chosen
    input (or even a reseed where every bit we reseeded with was attacker chosen),
-   as long as at least one seed occured with enough unknown-to-attacker entropy.
+   as long as at least one seed occurred with enough unknown-to-attacker entropy.
    */
    const double ENTROPY_ESTIMATE = 0.0;
    const size_t RDRAND_POLLS = 32;

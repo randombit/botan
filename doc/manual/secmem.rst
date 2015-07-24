@@ -14,7 +14,7 @@ allocator, it has an identical API to the ``std::vector`` you know and
 love.
 
 Some operating systems offer the ability to lock memory into RAM,
-preventing swapping from occuring. Typically this operation is
+preventing swapping from occurring. Typically this operation is
 restricted to privledged users (root or admin), however some OSes
 including Linux and FreeBSD allow normal users to lock a small amount
 of memory. On these systems, allocations first attempt to allocate out

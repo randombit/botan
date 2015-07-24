@@ -276,7 +276,7 @@ The result of the validation is returned as a class:
 
   .. cpp:function:: Certificate_Status_Code result() const
 
-     Returns the 'worst' error that occured during validation.  For
+     Returns the 'worst' error that occurred during validation. For
      instance, we do not want an expired certificate with an invalid
      signature to be reported to the user as being simply expired (a
      relativly innocuous and common error) when the signature isn't

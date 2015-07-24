@@ -94,7 +94,7 @@ class BOTAN_DLL Path_Validation_Result
       const std::vector<X509_Certificate>& cert_path() const { return m_cert_path; }
 
       /**
-      * @return true iff the validation was succesful
+      * @return true iff the validation was successful
       */
       bool successful_validation() const;
 

@@ -46,17 +46,17 @@ secure_vector<byte> EME_PKCS1v15::unpad(const byte in[], size_t inlen,
    if(inlen != key_len / 8 || inlen < 10 || in[0] != 0x02)
       throw Decoding_Error("PKCS1::unpad");
 
-   size_t seperator = 0;
+   size_t separator = 0;
    for(size_t j = 0; j != inlen; ++j)
       if(in[j] == 0)
          {
-         seperator = j;
+         separator = j;
          break;
          }
-   if(seperator < 9)
+   if(separator < 9)
       throw Decoding_Error("PKCS1::unpad");
 
-   return secure_vector<byte>(&in[seperator + 1], &in[inlen]);
+   return secure_vector<byte>(&in[separator + 1], &in[inlen]);
    }
 
 /*
