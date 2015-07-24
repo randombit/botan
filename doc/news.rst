@@ -4,6 +4,9 @@ Release Notes
 Version 1.11.19, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* BigInt::to_u32bit would fail if the value was exactly 32 bits.
+  GH #220
+
 Version 1.11.18, 2015-07-05
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

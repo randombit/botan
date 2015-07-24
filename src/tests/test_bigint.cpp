@@ -17,7 +17,7 @@
 #include <cstdlib>
 #include <iterator>
 
-
+#include <sstream>
 #include <botan/bigint.h>
 #include <botan/exceptn.h>
 #include <botan/numthry.h>
@@ -25,6 +25,50 @@
 using namespace Botan;
 
 namespace {
+
+void test_failure(const char* function, const char* file, int line,
+                  const std::string& what_failed)
+   {
+   std::cout << "FAIL " << function << " " << file << ":" << line << " "
+             << what_failed << std::endl;
+   }
+
+#define BOTAN_TEST(lhs, rhs, msg) try {                                    \
+   ++tests_run;                                                            \
+   const auto lhs_val = lhs;                                               \
+   const auto rhs_val = rhs;                                               \
+   const bool cmp = lhs_val == rhs_val;                                    \
+   if(!cmp)                                                                \
+      {                                                                    \
+      std::ostringstream fmt;                                              \
+      fmt << "expr '" << #lhs << " == " << #rhs << "' false, "             \
+          << "actually " << lhs_val << " " << rhs_val                      \
+          << " (" << msg << ")";                                           \
+      test_failure(BOTAN_CURRENT_FUNCTION, __FILE__, __LINE__, fmt.str()); \
+      ++tests_failed;                                                      \
+      }                                                                    \
+   }                                                                       \
+   catch(std::exception& e)                                                \
+      {                                                                    \
+      std::ostringstream fmt;                                              \
+      fmt << "exception '" << e.what() << "' (" << msg << ")";             \
+      test_failure(BOTAN_CURRENT_FUNCTION, __FILE__, __LINE__, fmt.str()); \
+      ++tests_failed;                                                      \
+      }
+
+size_t test_bigint_to_u32bit()
+   {
+   size_t tests_run = 0, tests_failed = 0;
+
+   for(size_t i = 0; i != 32; ++i)
+      {
+      const u32bit in = 1 << i;
+      BOTAN_TEST(in, BigInt(in).to_u32bit(), "In range round trips");
+      }
+
+   test_report("BigInt to_u32bit", tests_run, tests_failed);
+   return tests_failed;
+   }
 
 void strip_comments(std::string& line)
    {
@@ -302,6 +346,8 @@ size_t test_bigint()
    std::string algorithm;
    bool first = true;
    size_t counter = 0;
+
+   total_errors += test_bigint_to_u32bit();
 
    auto& rng = test_rng();
 
