@@ -4,10 +4,16 @@ Release Notes
 Version 1.11.19, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* The x86-32 assembly versions of MD4, MD5, SHA-1, and Serpent and the
+  x86-64 version of SHA-1 have been removed. With compilers from this
+  decade the C++ versions are significantly faster. The SSE2 versions
+  of SHA-1 and Serpent remain, as they are still the fastest version
+  for processors with SIMD extensions. GH #216
+
 * BigInt::to_u32bit would fail if the value was exactly 32 bits.
   GH #220
 
-Version 1.11.18, 2015-07-05
+  Version 1.11.18, 2015-07-05
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * In this release Botan has switched VCS from ``monotone`` to ``git``,
