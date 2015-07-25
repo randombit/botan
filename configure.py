@@ -282,13 +282,6 @@ def process_command_line(args):
                            action='store_false',
                            help='disable building shared library')
 
-    build_group.add_option('--enable-asm', dest='asm_ok',
-                           action='store_true', default=True,
-                           help=optparse.SUPPRESS_HELP)
-    build_group.add_option('--disable-asm', dest='asm_ok',
-                           action='store_false',
-                           help='disallow use of assembler')
-
     build_group.add_option('--no-optimizations', dest='no_optimizations',
                            action='store_true', default=False,
                            help=optparse.SUPPRESS_HELP)
@@ -583,7 +576,7 @@ class ModuleInfo(object):
             self.need_isa = self.need_isa.split(',')
 
         if self.source == []:
-            self.source = list(extract_files_matching(self.lives_in, ['.cpp', '.S']))
+            self.source = list(extract_files_matching(self.lives_in, ['.cpp']))
 
         if self.header_internal == [] and self.header_public == []:
             self.header_public = list(extract_files_matching(self.lives_in, ['.h']))
@@ -1426,15 +1419,6 @@ def choose_modules_to_use(modules, archinfo, ccinfo, options):
             elif module.load_on == 'always':
                 to_load.append(modname)
 
-            elif module.load_on == 'asm_ok':
-                if options.asm_ok:
-                    if options.no_autoload:
-                        maybe_dep.append(modname)
-                    else:
-                        to_load.append(modname)
-                else:
-                    cannot_use_because(modname,
-                                       'uses assembly and --disable-asm set')
             elif module.load_on == 'auto':
                 if options.no_autoload:
                     maybe_dep.append(modname)
@@ -1703,9 +1687,7 @@ def generate_amalgamation(build_config, options):
     botan_h.write(pub_header_amalag.contents)
     botan_h.write("\n#endif\n")
 
-    internal_headers = Amalgamation_Generator(
-        [s for s in build_config.internal_headers
-         if s.find('asm_macr_') == -1])
+    internal_headers = Amalgamation_Generator([s for s in build_config.internal_headers])
 
     botan_int_h.write("""
 #ifndef BOTAN_AMALGAMATION_INTERNAL_H__
@@ -1924,11 +1906,6 @@ def main(argv = None):
 
     if options.via_amalgamation:
         options.gen_amalgamation = True
-
-    if options.gen_amalgamation:
-        if options.asm_ok:
-            logging.info('Disabling assembly code, cannot use in amalgamation')
-            options.asm_ok = False
 
     if not options.build_shared_lib and not options.via_amalgamation:
         raise Exception('Static build is only supported using amalgamation. '
