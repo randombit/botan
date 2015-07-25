@@ -4,6 +4,10 @@ Release Notes
 Version 1.11.19, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* The TLS heartbeat extension is deprecated and unless strong arguments
+  are raised in its favor it will be removed in a future release.
+  Comment at https://github.com/randombit/botan/issues/187
+
 * The x86-32 assembly versions of MD4, MD5, SHA-1, and Serpent and the
   x86-64 version of SHA-1 have been removed. With compilers from this
   decade the C++ versions are significantly faster. The SSE2 versions
