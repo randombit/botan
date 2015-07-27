@@ -8,11 +8,8 @@ Configuration program for botan
 
 Botan is released under the Simplified BSD License (see license.txt)
 
-Tested with CPython 2.6, 2.7, and 3.3
-
-CPython 2.5 and earlier are not supported
-
-Jython - Target detection does not work (use --os and --cpu)
+Tested with CPython 2.7 and 3.4. CPython 2.6 and earlier are not supported.
+On Jython target detection does not work (use --os and --cpu).
 """
 
 import sys
@@ -72,15 +69,12 @@ def get_vc_revision():
             logging.debug('Error getting rev from %s - %s' % (cmdname, e))
             return None
 
-    vc_commands = [['mtn', 'automate', 'heads'],
-                   ['git', 'rev-parse', 'HEAD']]
-
-    for vc_cmd in vc_commands:
-        rev = get_vc_revision(vc_cmd)
-        if rev is not None:
-            return rev
-
-    return 'unknown'
+    vc_command = ['git', 'rev-parse', 'HEAD']
+    rev = get_vc_revision(vc_command)
+    if rev is not None:
+        return rev
+    else:
+        return 'unknown'
 
 class BuildConfigurationInformation(object):
 
@@ -301,8 +295,10 @@ def process_command_line(args):
     build_group.add_option('--with-build-dir', metavar='DIR', default='',
                            help='setup the build in DIR')
 
+    link_methods = ['symlink', 'hardlink', 'copy']
     build_group.add_option('--link-method', default=None, metavar='METHOD',
-                           help='choose how links are created')
+                           choices=link_methods,
+                           help='choose how links to include headers are created (%s)' % ', '.join(link_methods))
 
     makefile_styles = ['gmake', 'nmake']
     build_group.add_option('--makefile-style', metavar='STYLE', default=None,
