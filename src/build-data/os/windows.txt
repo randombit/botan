@@ -15,6 +15,7 @@ install_cmd_exec "copy"
 cryptgenrandom
 gmtime_s
 loadlibrary
+mkgmtime
 query_perf_counter
 virtual_lock
 rtlsecurezeromemory

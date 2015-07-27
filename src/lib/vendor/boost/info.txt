@@ -1,5 +1,6 @@
 define BOOST_FILESYSTEM 20131228
 define BOOST_ASIO 20131228
+define BOOST_DATETIME 20150720
 
 load_on vendor
 
