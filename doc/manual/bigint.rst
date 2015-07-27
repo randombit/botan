@@ -95,11 +95,11 @@ Number theoretic functions available include:
   Three variations on *is_prime*, with probabilities set to 32, 56, and 80
   respectively.
 
- .. cpp:function:: BigInt random_prime(RandomNumberGenerator& rng, \
-                                       size_t bits, \
-                                       BigInt coprime = 1, \
-                                       size_t equiv = 1, \
-                                       size_t equiv_mod = 2)
+.. cpp:function:: BigInt random_prime(RandomNumberGenerator& rng, \
+                                      size_t bits, \
+                                      BigInt coprime = 1, \
+                                      size_t equiv = 1, \
+                                      size_t equiv_mod = 2)
 
   Return a random prime number of ``bits`` bits long that is
   relatively prime to ``coprime``, and equivalent to ``equiv`` modulo
