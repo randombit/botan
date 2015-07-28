@@ -20,11 +20,11 @@ namespace Botan {
 class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
    {
    public:
-      bool check_key(RandomNumberGenerator& rng, bool) const;
+      bool check_key(RandomNumberGenerator& rng, bool) const override;
 
-      AlgorithmIdentifier algorithm_identifier() const;
+      AlgorithmIdentifier algorithm_identifier() const override;
 
-      std::vector<byte> x509_subject_public_key() const;
+      std::vector<byte> x509_subject_public_key() const override;
 
       /**
       * Get the DL domain parameters of this key.
@@ -88,7 +88,7 @@ class BOTAN_DLL DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
                                        public virtual Private_Key
    {
    public:
-      bool check_key(RandomNumberGenerator& rng, bool) const;
+      bool check_key(RandomNumberGenerator& rng, bool) const override;
 
       /**
       * Get the secret key x.

@@ -44,7 +44,7 @@ class BOTAN_DLL McEliece_PublicKey : public virtual Public_Key
          return get_message_word_bit_length();
          };
 
-      AlgorithmIdentifier algorithm_identifier() const;
+      AlgorithmIdentifier algorithm_identifier() const override;
 
       size_t estimated_strength() const;
 

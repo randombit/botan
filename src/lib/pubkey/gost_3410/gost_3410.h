@@ -42,7 +42,7 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey
       */
       std::string algo_name() const { return "GOST-34.10"; }
 
-      AlgorithmIdentifier algorithm_identifier() const;
+      AlgorithmIdentifier algorithm_identifier() const override;
 
       std::vector<byte> x509_subject_public_key() const;
 
@@ -86,7 +86,7 @@ class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
                            const BigInt& x = 0) :
          EC_PrivateKey(rng, domain, x) {}
 
-      AlgorithmIdentifier pkcs8_algorithm_identifier() const
+      AlgorithmIdentifier pkcs8_algorithm_identifier() const override
          { return EC_PublicKey::algorithm_identifier(); }
    };
 
