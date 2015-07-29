@@ -13,6 +13,7 @@ Botan is released under the Simplified BSD License (see license.txt)
 
 # global
 import argparse
+import copy
 import sys
 import subprocess
 from collections import OrderedDict
@@ -44,6 +45,9 @@ parser.add_argument('--engine',
                     choices=["fdp", "dot"],
                     default="fdp",
                     help='The graph engine (drawing mode only)')
+parser.add_argument('--all', dest='all', action='store_const',
+                    const=True, default=False,
+                    help='Show all dependencies. Default: direct dependencies only. (list mode only)')
 parser.add_argument('--verbose', dest='verbose', action='store_const',
                     const=True, default=False,
                     help='Verbose output (default: false)')
@@ -96,35 +100,65 @@ if args.verbose:
 if args.verbose:
     print("resolving dependencies ...")
 
+def cartinality(depdict):
+    return sum([len(depdict[k]) for k in depdict])
+
+registered_dependencies = dict()
 all_dependencies = dict()
 direct_dependencies = dict()
 
 for module in modules:
     lst = module.dependencies()
-    direct_dependencies[module.basename] = set(lst)
+    registered_dependencies[module.basename] = set(lst) - set([module.basename])
 
-all_dependencies = direct_dependencies.copy()
+# Get all_dependencies from registered_dependencies
+def add_dependency():
+    for key in all_dependencies:
+        potentially_new_modules_for_key = None
+        new_modules_for_key = None
+        for currently_in in all_dependencies[key]:
+            if currently_in in all_dependencies:
+                potentially_new_modules_for_key = all_dependencies[currently_in] - set([key])
+                if not potentially_new_modules_for_key <= all_dependencies[key]:
+                    new_modules_for_key = potentially_new_modules_for_key.copy()
+                    break
+        if new_modules_for_key:
+            all_dependencies[key] |= new_modules_for_key
+            return
+
+
+all_dependencies = copy.deepcopy(registered_dependencies)
+direct_dependencies = copy.deepcopy(registered_dependencies)
+
+# Sort
+all_dependencies = OrderedDict(sorted(all_dependencies.items()))
+direct_dependencies = OrderedDict(sorted(direct_dependencies.items()))
 
 #print(direct_dependencies)
 
-def cartinality(depdict):
-    return sum([len(depdict[k]) for k in depdict])
+last_card = -1
+while True:
+    card = cartinality(all_dependencies)
+    # print(card)
+    if card == last_card:
+        break;
+    last_card = card
+    add_dependency()
 
-# Sort
-direct_dependencies = OrderedDict(sorted(direct_dependencies.items()))
-
+# Return true iff a depends on b,
+# i.e. b is in the dependencies of a
 def depends_on(a, b):
-    if not a in all_dependencies:
+    if not a in direct_dependencies:
         return False
     else:
-        return b in all_dependencies[a]
+        return b in direct_dependencies[a]
 
 def remove_indirect_dependencies():
     for mod in direct_dependencies:
         for one in direct_dependencies[mod]:
             others = direct_dependencies[mod] - set([one])
             for other in others:
-                if depends_on(one, other):
+                if depends_on(other, one):
                     direct_dependencies[mod].remove(one)
                     return
                     # Go to next mod
@@ -148,8 +182,12 @@ if args.verbose:
     print("Done resolving dependencies.")
 
 if args.mode == "list":
-    for key in direct_dependencies:
-        print(key.ljust(17) + " : " + ", ".join(sorted(direct_dependencies[key])))
+    if args.all:
+        for key in all_dependencies:
+            print(key.ljust(17) + " : " + ", ".join(sorted(all_dependencies[key])))
+    else:
+        for key in direct_dependencies:
+            print(key.ljust(17) + " : " + ", ".join(sorted(direct_dependencies[key])))
 
 if args.mode == "draw":
     import graphviz as gv
