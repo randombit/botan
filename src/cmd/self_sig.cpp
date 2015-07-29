@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_HAS_RSA)
 
+#include <botan/pkcs8.h>
 #include <botan/x509self.h>
 #include <botan/rsa.h>
 #include <fstream>

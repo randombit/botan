@@ -10,7 +10,6 @@
 
 #include <botan/bigint.h>
 #include <botan/x509_key.h>
-#include <botan/pkcs8.h>
 
 namespace Botan {
 

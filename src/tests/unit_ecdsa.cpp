@@ -15,6 +15,7 @@
 #if defined(BOTAN_HAS_RSA)
 
 #include <botan/hex.h>
+#include <botan/pkcs8.h>
 #include <botan/pubkey.h>
 #include <botan/ecdsa.h>
 #include <botan/rsa.h>

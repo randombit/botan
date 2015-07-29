@@ -10,6 +10,7 @@
 
 #include <botan/dsa.h>
 #include <botan/pubkey.h>
+#include <botan/pkcs8.h>
 #include <botan/base64.h>
 #include <fstream>
 

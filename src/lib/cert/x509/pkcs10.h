@@ -10,7 +10,6 @@
 
 #include <botan/x509_obj.h>
 #include <botan/x509_dn.h>
-#include <botan/pkcs8.h>
 #include <botan/datastor.h>
 #include <botan/key_constraint.h>
 #include <botan/asn1_attribute.h>
