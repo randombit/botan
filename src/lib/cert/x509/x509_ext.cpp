@@ -449,14 +449,14 @@ class Policy_Information : public ASN1_Object
       Policy_Information() {}
       Policy_Information(const OID& oid) : oid(oid) {}
 
-      void encode_into(DER_Encoder& codec) const
+      void encode_into(DER_Encoder& codec) const override
          {
          codec.start_cons(SEQUENCE)
             .encode(oid)
             .end_cons();
          }
 
-      void decode_from(BER_Decoder& codec)
+      void decode_from(BER_Decoder& codec) override
          {
          codec.start_cons(SEQUENCE)
             .decode(oid)

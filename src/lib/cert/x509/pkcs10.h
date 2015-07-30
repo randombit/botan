@@ -100,7 +100,7 @@ class BOTAN_DLL PKCS10_Request : public X509_Object
       */
       PKCS10_Request(const std::vector<byte>& vec);
    private:
-      void force_decode();
+      void force_decode() override;
       void handle_attribute(const Attribute&);
 
       Data_Store info;
