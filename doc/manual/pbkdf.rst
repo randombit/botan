@@ -19,10 +19,10 @@ The purpose of the iteration count is to make the algorithm take
 longer to compute the final key (reducing the speed of brute-force
 attacks of various kinds). Most standards recommend an iteration count
 of at least 10000. Currently defined PBKDF algorithms are
-"PBKDF1(digest)", "PBKDF2(digest)", and "OpenPGP-S2K(digest)"; you can
-retrieve any of these using the ``get_pbkdf``, found in
-``lookup.h``. As of this writing, "PBKDF2(SHA-256)" with 10000
-iterations and a 16 byte salt is recommend for new applications.
+"PBKDF1(digest)", "PBKDF2(digest)"; you can retrieve any of these
+using the ``get_pbkdf``, found in ``lookup.h``. As of this writing,
+"PBKDF2(SHA-256)" with at least 100000 iterations and a 16 byte salt
+is recommend for new applications.
 
 .. cpp:function:: OctetString PBKDF::derive_key( \
    size_t output_len, const std::string& passphrase, \

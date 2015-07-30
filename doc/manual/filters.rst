@@ -630,36 +630,6 @@ reason you name something that doesn't exist, an exception will be thrown.
   "CMAC(AES-128)", along with a key to use. The optional ``outlen``
   works the same as in ``Hash_Filter``.
 
-PK Filters
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-There are four classes in this category, ``PK_Encryptor_Filter``,
-``PK_Decryptor_Filter``, ``PK_Signer_Filter``, and
-``PK_Verifier_Filter``. Each takes a pointer to an object of the
-appropriate type (``PK_Encryptor``, ``PK_Decryptor``, etc) that is
-deleted by the destructor. These classes are found in ``pk_filts.h``.
-
-Three of these, for encryption, decryption, and signing are much the
-same in terms of dataflow - ach of them buffers its input until the
-end of the message is marked with a call to the ``end_msg``
-function. Then they encrypt, decrypt, or sign the entire input as a
-single blob and send the output (the ciphertext, the plaintext, or the
-signature) into the next filter.
-
-Signature verification works a little differently, because it needs to
-know what the signature is in order to check it. You can either pass
-this in along with the constructor, or call the function
-``set_signature`` -- with this second method, you need to keep
-a pointer to the filter around so you can send it this command. In
-either case, after ``end_msg`` is called, it will try to
-verify the signature (if the signature has not been set by either
-method, an exception will be thrown here). It will then send a single
-byte onto the next filter -- a 1 or a 0, which specifies whether the
-signature verified or not (respectively).
-
-For more information about PK algorithms (including creating the
-appropriate objects to pass to the constructors), see :doc:`pubkey`.
-
 Encoders
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

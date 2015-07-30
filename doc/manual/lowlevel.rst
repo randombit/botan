@@ -16,29 +16,28 @@ Basic Algorithm Abilities
 There are a small handful of functions implemented by most of Botan's
 algorithm objects. Among these are:
 
-.. cpp:function:: std::string Algorithm::name()
+.. cpp:function:: std::string name()
 
 Returns a human-readable string of the name of this
 algorithm. Examples of names returned are "AES-128" and
 "HMAC(SHA-512)". You can turn names back into algorithm objects using
 the functions in ``lookup.h``.
 
-.. cpp:function:: void Algorithm::clear()
+.. cpp:function:: void clear()
 
 Clear out the algorithm's internal state. A block cipher object will
 "forget" its key, a hash function will "forget" any data put into it,
 etc. The object will look and behave as it did when you initially
 allocated it.
 
-.. cpp:function:: T* Algorithm::clone()
+.. cpp:function:: T* clone()
 
-This function is central to Botan's name-based interface. The
-``clone`` has many different return types, such as ``BlockCipher``\*
-and ``HashFunction``\*, depending on what kind of object it is called
-on. Note that unlike Java's clone, this returns a new object in a
-"pristine" state; that is, operations done on the initial object
-before calling ``clone`` do not affect the initial state of the new
-clone.
+The ``clone`` has many different return types, such as
+``BlockCipher``\* and ``HashFunction``\*, depending on what kind of
+object it is called on. Note that unlike Java's clone, this returns a
+new object in a "pristine" state; that is, operations done on the
+initial object before calling ``clone`` do not affect the initial
+state of the new clone.
 
 Cloned objects can (and should) be deallocated with the C++ ``delete``
 operator.
