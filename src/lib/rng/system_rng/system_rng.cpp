@@ -34,14 +34,14 @@ class System_RNG : public RandomNumberGenerator
       System_RNG();
       ~System_RNG();
 
-      void randomize(byte buf[], size_t len);
+      void randomize(byte buf[], size_t len) override;
 
-      bool is_seeded() const { return true; }
-      void clear() {}
-      std::string name() const { return "system"; }
+      bool is_seeded() const override { return true; }
+      void clear() override {}
+      std::string name() const override { return "system"; }
 
-      void reseed(size_t) {}
-      void add_entropy(const byte[], size_t) {}
+      void reseed(size_t) override {}
+      void add_entropy(const byte[], size_t) override {}
    private:
 
 #if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)

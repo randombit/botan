@@ -120,37 +120,37 @@ class BOTAN_DLL Null_RNG : public RandomNumberGenerator
 class BOTAN_DLL Serialized_RNG : public RandomNumberGenerator
    {
    public:
-      void randomize(byte out[], size_t len)
+      void randomize(byte out[], size_t len) override
          {
          std::lock_guard<std::mutex> lock(m_mutex);
          m_rng->randomize(out, len);
          }
 
-      bool is_seeded() const
+      bool is_seeded() const override
          {
          std::lock_guard<std::mutex> lock(m_mutex);
          return m_rng->is_seeded();
          }
 
-      void clear()
+      void clear() override
          {
          std::lock_guard<std::mutex> lock(m_mutex);
          m_rng->clear();
          }
 
-      std::string name() const
+      std::string name() const override
          {
          std::lock_guard<std::mutex> lock(m_mutex);
          return m_rng->name();
          }
 
-      void reseed(size_t poll_bits)
+      void reseed(size_t poll_bits) override
          {
          std::lock_guard<std::mutex> lock(m_mutex);
          m_rng->reseed(poll_bits);
          }
 
-      void add_entropy(const byte in[], size_t len)
+      void add_entropy(const byte in[], size_t len) override
          {
          std::lock_guard<std::mutex> lock(m_mutex);
          m_rng->add_entropy(in, len);
