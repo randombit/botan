@@ -145,7 +145,7 @@ class BOTAN_DLL Pipe : public DataSource
       * @param length the length of the byte array output
       * @return number of bytes actually read into output
       */
-      size_t read(byte output[], size_t length);
+      size_t read(byte output[], size_t length) override;
 
       /**
       * Read a specified message from the pipe. Moves the internal
@@ -191,7 +191,7 @@ class BOTAN_DLL Pipe : public DataSource
       * @param offset the offset from the current position in message
       * @return number of bytes actually peeked and written into output
       */
-      size_t peek(byte output[], size_t length, size_t offset) const;
+      size_t peek(byte output[], size_t length, size_t offset) const override;
 
       /** Read from the specified message but do not modify the
       * internal offset. Consecutive calls to peek() will return
@@ -219,7 +219,7 @@ class BOTAN_DLL Pipe : public DataSource
       /**
       * @return the number of bytes read from the default message.
       */
-      size_t get_bytes_read() const;
+      size_t get_bytes_read() const override;
 
       /**
       * @return the number of bytes read from the specified message.
@@ -248,7 +248,7 @@ class BOTAN_DLL Pipe : public DataSource
       * Test whether this pipe has any data that can be read from.
       * @return true if there is more data to read, false otherwise
       */
-      bool end_of_data() const;
+      bool end_of_data() const override;
 
       /**
       * Start a new message in the pipe. A potential other message in this pipe

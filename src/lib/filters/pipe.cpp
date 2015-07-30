@@ -20,10 +20,10 @@ namespace {
 class Null_Filter : public Filter
    {
    public:
-      void write(const byte input[], size_t length)
+      void write(const byte input[], size_t length) override
          { send(input, length); }
 
-      std::string name() const { return "Null"; }
+      std::string name() const override { return "Null"; }
    };
 
 }
