@@ -18,7 +18,7 @@ using Botan::byte;
 class Fixed_Output_RNG : public Botan::RandomNumberGenerator
    {
    public:
-      bool is_seeded() const { return !buf.empty(); }
+      bool is_seeded() const override { return !buf.empty(); }
 
       byte random()
          {
@@ -30,22 +30,22 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
          return out;
          }
 
-      void reseed(size_t) {}
+      void reseed(size_t) override {}
 
-      void randomize(byte out[], size_t len)
+      void randomize(byte out[], size_t len) override
          {
          for(size_t j = 0; j != len; j++)
             out[j] = random();
          }
 
-      void add_entropy(const byte b[], size_t s)
+      void add_entropy(const byte b[], size_t s) override
          {
          buf.insert(buf.end(), b, b + s);
          }
 
-      std::string name() const { return "Fixed_Output_RNG"; }
+      std::string name() const override { return "Fixed_Output_RNG"; }
 
-      void clear() throw() {}
+      void clear() throw() override {}
 
       Fixed_Output_RNG(const std::vector<byte>& in)
          {

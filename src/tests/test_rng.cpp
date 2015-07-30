@@ -31,7 +31,7 @@ RandomNumberGenerator* get_rng(const std::string& algo_str, const std::string& i
       public:
          AllOnce_RNG(const std::vector<byte>& in) : Fixed_Output_RNG(in) {}
 
-         Botan::secure_vector<byte> random_vec(size_t)
+         Botan::secure_vector<byte> random_vec(size_t) override
             {
             Botan::secure_vector<byte> vec(this->remaining());
             this->randomize(vec.data(), vec.size());
