@@ -38,9 +38,9 @@ class Fuzzer_Creds : public Credentials_Manager
          catch(std::exception& e) {}
          }
 
-      std::string psk_identity_hint(const std::string&, const std::string&) { return "psk_hint"; }
+      std::string psk_identity_hint(const std::string&, const std::string&) override { return "psk_hint"; }
       std::string psk_identity(const std::string&, const std::string&) { return "psk_id"; }
-      SymmetricKey psk(const std::string&, const std::string&, const std::string&)
+      SymmetricKey psk(const std::string&, const std::string&, const std::string&) override
          {
          return SymmetricKey("AABBCCDDEEFF00112233445566778899");
          }
