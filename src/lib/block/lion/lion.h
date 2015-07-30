@@ -48,7 +48,7 @@ class BOTAN_DLL Lion : public BlockCipher
            StreamCipher* cipher,
            size_t block_size);
    private:
-      void key_schedule(const byte[], size_t);
+      void key_schedule(const byte[], size_t) override;
 
       size_t left_size() const { return m_hash->output_length(); }
       size_t right_size() const { return m_block_size - left_size(); }
