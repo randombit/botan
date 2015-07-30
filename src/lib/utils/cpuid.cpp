@@ -51,7 +51,7 @@
    asm("cpuid\n\t" : "=a" (out[0]), "=b" (out[1]), "=c" (out[2]), "=d" (out[3]) \
        : "0" (type), "2" (level))
 
-#elif defined(BOTAN_BUILD_COMPILER_IS_GCC)
+#elif defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
 
 #include <cpuid.h>
 
