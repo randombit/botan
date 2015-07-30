@@ -35,12 +35,6 @@ class BOTAN_DLL MessageAuthenticationCode : public Buffered_Computation,
       */
       virtual MessageAuthenticationCode* clone() const = 0;
 
-      /**
-      * Get the name of this algorithm.
-      * @return name of this algorithm
-      */
-      virtual std::string name() const = 0;
-
       typedef SCAN_Name Spec;
    };
 
