@@ -20,9 +20,9 @@ namespace Botan {
 class Device_EntropySource : public EntropySource
    {
    public:
-      std::string name() const { return "RNG Device Reader"; }
+      std::string name() const override { return "RNG Device Reader"; }
 
-      void poll(Entropy_Accumulator& accum);
+      void poll(Entropy_Accumulator& accum) override;
 
       Device_EntropySource(const std::vector<std::string>& fsnames);
       ~Device_EntropySource();
