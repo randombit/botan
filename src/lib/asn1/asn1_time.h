@@ -19,8 +19,8 @@ namespace Botan {
 class BOTAN_DLL X509_Time : public ASN1_Object
    {
    public:
-      void encode_into(class DER_Encoder&) const;
-      void decode_from(class BER_Decoder&);
+      void encode_into(class DER_Encoder&) const override;
+      void decode_from(class BER_Decoder&) override;
 
       std::string as_string() const;
       std::string readable_string() const;
