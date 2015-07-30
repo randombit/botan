@@ -108,16 +108,16 @@ TEST_CASE("Bigint random_integer", "[bigint]")
       INFO( debug.str() )
 
       // Have ~ 10 % on each digit from 0-9
-      CHECK(( 0.09 < ratios[0] )); CHECK(( ratios[0] < 0.11 ));
-      CHECK(( 0.09 < ratios[1] )); CHECK(( ratios[1] < 0.11 ));
-      CHECK(( 0.09 < ratios[2] )); CHECK(( ratios[2] < 0.11 ));
-      CHECK(( 0.09 < ratios[3] )); CHECK(( ratios[3] < 0.11 ));
-      CHECK(( 0.09 < ratios[4] )); CHECK(( ratios[4] < 0.11 ));
-      CHECK(( 0.09 < ratios[5] )); CHECK(( ratios[5] < 0.11 ));
-      CHECK(( 0.09 < ratios[6] )); CHECK(( ratios[6] < 0.11 ));
-      CHECK(( 0.09 < ratios[7] )); CHECK(( ratios[7] < 0.11 ));
-      CHECK(( 0.09 < ratios[8] )); CHECK(( ratios[8] < 0.11 ));
-      CHECK(( 0.09 < ratios[9] )); CHECK(( ratios[9] < 0.11 ));
+      CHECK(( 0.085 <= ratios[0] )); CHECK(( ratios[0] <= 0.115 ));
+      CHECK(( 0.085 <= ratios[1] )); CHECK(( ratios[1] <= 0.115 ));
+      CHECK(( 0.085 <= ratios[2] )); CHECK(( ratios[2] <= 0.115 ));
+      CHECK(( 0.085 <= ratios[3] )); CHECK(( ratios[3] <= 0.115 ));
+      CHECK(( 0.085 <= ratios[4] )); CHECK(( ratios[4] <= 0.115 ));
+      CHECK(( 0.085 <= ratios[5] )); CHECK(( ratios[5] <= 0.115 ));
+      CHECK(( 0.085 <= ratios[6] )); CHECK(( ratios[6] <= 0.115 ));
+      CHECK(( 0.085 <= ratios[7] )); CHECK(( ratios[7] <= 0.115 ));
+      CHECK(( 0.085 <= ratios[8] )); CHECK(( ratios[8] <= 0.115 ));
+      CHECK(( 0.085 <= ratios[9] )); CHECK(( ratios[9] <= 0.115 ));
       //CHECK( false );
       }
 
@@ -154,16 +154,16 @@ TEST_CASE("Bigint random_integer", "[bigint]")
       INFO( debug.str() )
 
       // Have ~ 10 % on each digit from 10-19
-      CHECK(( 0.09 < ratios[10] )); CHECK(( ratios[10] < 0.11 ));
-      CHECK(( 0.09 < ratios[11] )); CHECK(( ratios[11] < 0.11 ));
-      CHECK(( 0.09 < ratios[12] )); CHECK(( ratios[12] < 0.11 ));
-      CHECK(( 0.09 < ratios[13] )); CHECK(( ratios[13] < 0.11 ));
-      CHECK(( 0.09 < ratios[14] )); CHECK(( ratios[14] < 0.11 ));
-      CHECK(( 0.09 < ratios[15] )); CHECK(( ratios[15] < 0.11 ));
-      CHECK(( 0.09 < ratios[16] )); CHECK(( ratios[16] < 0.11 ));
-      CHECK(( 0.09 < ratios[17] )); CHECK(( ratios[17] < 0.11 ));
-      CHECK(( 0.09 < ratios[18] )); CHECK(( ratios[18] < 0.11 ));
-      CHECK(( 0.09 < ratios[19] )); CHECK(( ratios[19] < 0.11 ));
+      CHECK(( 0.085 <= ratios[10] )); CHECK(( ratios[10] <= 0.115 ));
+      CHECK(( 0.085 <= ratios[11] )); CHECK(( ratios[11] <= 0.115 ));
+      CHECK(( 0.085 <= ratios[12] )); CHECK(( ratios[12] <= 0.115 ));
+      CHECK(( 0.085 <= ratios[13] )); CHECK(( ratios[13] <= 0.115 ));
+      CHECK(( 0.085 <= ratios[14] )); CHECK(( ratios[14] <= 0.115 ));
+      CHECK(( 0.085 <= ratios[15] )); CHECK(( ratios[15] <= 0.115 ));
+      CHECK(( 0.085 <= ratios[16] )); CHECK(( ratios[16] <= 0.115 ));
+      CHECK(( 0.085 <= ratios[17] )); CHECK(( ratios[17] <= 0.115 ));
+      CHECK(( 0.085 <= ratios[18] )); CHECK(( ratios[18] <= 0.115 ));
+      CHECK(( 0.085 <= ratios[19] )); CHECK(( ratios[19] <= 0.115 ));
       //CHECK( false );
       }
    }
