@@ -30,7 +30,7 @@ class ECDH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
          l_times_priv = inverse_mod(cofactor, key.domain().get_order()) * key.private_value();
          }
 
-      secure_vector<byte> raw_agree(const byte w[], size_t w_len)
+      secure_vector<byte> raw_agree(const byte w[], size_t w_len) override
          {
          PointGFp point = OS2ECP(w, w_len, curve);
          PointGFp S = (cofactor * point) * l_times_priv;

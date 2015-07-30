@@ -126,7 +126,7 @@ class Curve25519_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
          PK_Ops::Key_Agreement_with_KDF(kdf),
          m_key(key) {}
 
-      secure_vector<byte> raw_agree(const byte w[], size_t w_len)
+      secure_vector<byte> raw_agree(const byte w[], size_t w_len) override
          {
          return m_key.agree(w, w_len);
          }
