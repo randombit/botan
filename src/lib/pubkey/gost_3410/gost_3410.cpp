@@ -171,7 +171,7 @@ class GOST_3410_Verification_Operation : public PK_Ops::Verification_with_EMSA
       bool with_recovery() const override { return false; }
 
       bool verify(const byte msg[], size_t msg_len,
-                  const byte sig[], size_t sig_len);
+                  const byte sig[], size_t sig_len) override;
    private:
       const PointGFp& base_point;
       const PointGFp& public_point;

@@ -88,7 +88,7 @@ class BOTAN_DLL CTS_Encryption : public CBC_Encryption
 
       size_t minimum_final_size() const override;
 
-      bool valid_nonce_length(size_t n) const;
+      bool valid_nonce_length(size_t n) const override;
    };
 
 /**
@@ -123,7 +123,7 @@ class BOTAN_DLL CTS_Decryption : public CBC_Decryption
 
       size_t minimum_final_size() const override;
 
-      bool valid_nonce_length(size_t n) const;
+      bool valid_nonce_length(size_t n) const override;
    };
 
 }

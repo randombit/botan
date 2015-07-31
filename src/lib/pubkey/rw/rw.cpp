@@ -141,10 +141,10 @@ class RW_Verification_Operation : public PK_Ops::Verification_with_EMSA
          n(rw.get_n()), powermod_e_n(rw.get_e(), rw.get_n())
          {}
 
-      size_t max_input_bits() const { return (n.bits() - 1); }
-      bool with_recovery() const { return true; }
+      size_t max_input_bits() const override { return (n.bits() - 1); }
+      bool with_recovery() const override { return true; }
 
-      secure_vector<byte> verify_mr(const byte msg[], size_t msg_len);
+      secure_vector<byte> verify_mr(const byte msg[], size_t msg_len) override;
 
    private:
       const BigInt& n;

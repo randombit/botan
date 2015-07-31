@@ -20,15 +20,15 @@ namespace Botan {
 class BOTAN_DLL SecureQueue : public Fanout_Filter, public DataSource
    {
    public:
-      std::string name() const { return "Queue"; }
+      std::string name() const override { return "Queue"; }
 
-      void write(const byte[], size_t);
+      void write(const byte[], size_t) override;
 
-      size_t read(byte[], size_t);
-      size_t peek(byte[], size_t, size_t = 0) const;
-      size_t get_bytes_read() const;
+      size_t read(byte[], size_t) override;
+      size_t peek(byte[], size_t, size_t = 0) const override;
+      size_t get_bytes_read() const override;
 
-      bool end_of_data() const;
+      bool end_of_data() const override;
 
       bool empty() const;
 
@@ -37,7 +37,7 @@ class BOTAN_DLL SecureQueue : public Fanout_Filter, public DataSource
       */
       size_t size() const;
 
-      bool attachable() { return false; }
+      bool attachable() override { return false; }
 
       /**
       * SecureQueue assignment

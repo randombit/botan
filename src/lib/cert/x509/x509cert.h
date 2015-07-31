@@ -221,7 +221,7 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       X509_Certificate(const std::vector<byte>& in);
 
    private:
-      void force_decode();
+      void force_decode() override;
       friend class X509_CA;
       friend class BER_Decoder;
 

@@ -18,8 +18,8 @@ namespace Botan {
 class Win32_EntropySource : public EntropySource
    {
    public:
-      std::string name() const { return "Win32 Statistics"; }
-      void poll(Entropy_Accumulator& accum);
+      std::string name() const override { return "Win32 Statistics"; }
+      void poll(Entropy_Accumulator& accum) override;
    };
 
 }

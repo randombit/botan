@@ -32,25 +32,25 @@ class BOTAN_DLL McEliece_PublicKey : public virtual Public_Key
 
       McEliece_PublicKey(const McEliece_PublicKey & other);
 
-      std::string algo_name() const { return "McEliece"; }
+      std::string algo_name() const override { return "McEliece"; }
 
       /**
       * Get the maximum number of bits allowed to be fed to this key.
       * This is the bitlength of the order of the base point.
       * @result the maximum number of input bits
       */
-      size_t max_input_bits() const
+      size_t max_input_bits() const override
          {
          return get_message_word_bit_length();
          };
 
-      AlgorithmIdentifier algorithm_identifier() const;
+      AlgorithmIdentifier algorithm_identifier() const override;
 
-      size_t estimated_strength() const;
+      size_t estimated_strength() const override;
 
-      std::vector<byte> x509_subject_public_key() const;
+      std::vector<byte> x509_subject_public_key() const override;
 
-      bool check_key(RandomNumberGenerator&, bool) const
+      bool check_key(RandomNumberGenerator&, bool) const override
          { return true; }
 
       u32bit get_t() const { return m_t; }
@@ -78,7 +78,7 @@ class BOTAN_DLL McEliece_PrivateKey : public virtual McEliece_PublicKey,
       * This is the bitlength of the order of the base point.
       * @result the maximum number of input bits
       */
-      size_t max_input_bits() const {
+      size_t max_input_bits() const override {
       return m_Linv.size();
       };
 
@@ -91,7 +91,7 @@ class BOTAN_DLL McEliece_PrivateKey : public virtual McEliece_PublicKey,
                           std::vector<byte> const& public_matrix );
 
       McEliece_PrivateKey(RandomNumberGenerator& rng, size_t code_length, size_t t);
-      bool check_key(RandomNumberGenerator& rng, bool strong) const;
+      bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
       polyn_gf2m const& get_goppa_polyn() const { return m_g; };
       std::vector<u32bit> const& get_H_coeffs() const { return m_coeffs; };
@@ -105,7 +105,7 @@ class BOTAN_DLL McEliece_PrivateKey : public virtual McEliece_PublicKey,
          { return m_codimension; };
 
 
-      secure_vector<byte> pkcs8_private_key() const;
+      secure_vector<byte> pkcs8_private_key() const override;
 
       bool operator==(const McEliece_PrivateKey & other) const;
 

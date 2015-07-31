@@ -23,7 +23,7 @@ namespace Botan {
 class Unix_EntropySource : public EntropySource
    {
    public:
-      std::string name() const { return "Unix Process Runner"; }
+      std::string name() const override { return "Unix Process Runner"; }
 
       void poll(Entropy_Accumulator& accum) override;
 
@@ -81,9 +81,9 @@ class Unix_EntropySource : public EntropySource
 class UnixProcessInfo_EntropySource : public EntropySource
    {
    public:
-      std::string name() const { return "Unix Process Info"; }
+      std::string name() const override { return "Unix Process Info"; }
 
-      void poll(Entropy_Accumulator& accum);
+      void poll(Entropy_Accumulator& accum) override;
    };
 
 }

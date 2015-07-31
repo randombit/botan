@@ -88,7 +88,7 @@ class DH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
       typedef DH_PrivateKey Key_Type;
       DH_KA_Operation(const DH_PrivateKey& key, const std::string& kdf);
 
-      secure_vector<byte> raw_agree(const byte w[], size_t w_len);
+      secure_vector<byte> raw_agree(const byte w[], size_t w_len) override;
    private:
       const BigInt& m_p;
 

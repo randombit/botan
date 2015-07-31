@@ -131,7 +131,8 @@ class ElGamal_Decryption_Operation : public PK_Ops::Decryption_with_EME
    public:
       typedef ElGamal_PrivateKey Key_Type;
 
-      size_t max_raw_input_bits() const { return mod_p.get_modulus().bits() - 1; }
+      size_t max_raw_input_bits() const override
+         { return mod_p.get_modulus().bits() - 1; }
 
       ElGamal_Decryption_Operation(const ElGamal_PrivateKey& key, const std::string& eme);
 

@@ -41,7 +41,7 @@ class Directory_Walker : public File_Descriptor_Source
             ::closedir(m_cur_dir.first);
          }
 
-      int next_fd();
+      int next_fd() override;
    private:
       std::pair<struct dirent*, std::string> get_next_dirent();
 

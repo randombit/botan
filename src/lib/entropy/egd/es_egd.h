@@ -21,9 +21,9 @@ namespace Botan {
 class EGD_EntropySource : public EntropySource
    {
    public:
-      std::string name() const { return "EGD/PRNGD"; }
+      std::string name() const override { return "EGD/PRNGD"; }
 
-      void poll(Entropy_Accumulator& accum);
+      void poll(Entropy_Accumulator& accum) override;
 
       EGD_EntropySource(const std::vector<std::string>&);
       ~EGD_EntropySource();

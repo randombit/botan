@@ -377,7 +377,7 @@ class BOTAN_DLL PK_Key_Agreement
 class BOTAN_DLL PK_Encryptor_EME : public PK_Encryptor
    {
    public:
-      size_t maximum_input_size() const;
+      size_t maximum_input_size() const override;
 
       /**
       * Construct an instance.
@@ -388,7 +388,7 @@ class BOTAN_DLL PK_Encryptor_EME : public PK_Encryptor
                        const std::string& eme);
    private:
       std::vector<byte> enc(const byte[], size_t,
-                             RandomNumberGenerator& rng) const;
+                             RandomNumberGenerator& rng) const override;
 
       std::unique_ptr<PK_Ops::Encryption> m_op;
    };
@@ -407,7 +407,7 @@ class BOTAN_DLL PK_Decryptor_EME : public PK_Decryptor
       PK_Decryptor_EME(const Private_Key& key,
                        const std::string& eme);
    private:
-      secure_vector<byte> dec(const byte[], size_t) const;
+      secure_vector<byte> dec(const byte[], size_t) const override;
 
       std::unique_ptr<PK_Ops::Decryption> m_op;
    };

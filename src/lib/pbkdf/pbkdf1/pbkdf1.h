@@ -27,12 +27,12 @@ class BOTAN_DLL PKCS5_PBKDF1 : public PBKDF
       */
       PKCS5_PBKDF1(HashFunction* hash) : m_hash(hash) {}
 
-      std::string name() const
+      std::string name() const override
          {
          return "PBKDF1(" + m_hash->name() + ")";
          }
 
-      PBKDF* clone() const
+      PBKDF* clone() const override
          {
          return new PKCS5_PBKDF1(m_hash->clone());
          }

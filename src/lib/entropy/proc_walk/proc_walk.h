@@ -26,9 +26,9 @@ class File_Descriptor_Source
 class ProcWalking_EntropySource : public EntropySource
    {
    public:
-      std::string name() const { return "Proc Walker"; }
+      std::string name() const override { return "Proc Walker"; }
 
-      void poll(Entropy_Accumulator& accum);
+      void poll(Entropy_Accumulator& accum) override;
 
       ProcWalking_EntropySource(const std::string& root_dir) :
          m_path(root_dir), m_dir(nullptr) {}

@@ -151,9 +151,9 @@ class Block_Cipher_Fixed_Params : public BlockCipher
    {
    public:
       enum { BLOCK_SIZE = BS };
-      size_t block_size() const { return BS; }
+      size_t block_size() const override { return BS; }
 
-      Key_Length_Specification key_spec() const
+      Key_Length_Specification key_spec() const override
          {
          return Key_Length_Specification(KMIN, KMAX, KMOD);
          }

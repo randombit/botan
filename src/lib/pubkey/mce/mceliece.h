@@ -112,9 +112,9 @@ class BOTAN_DLL McEliece_Private_Operation : public PK_Ops::Decryption
    public:
       McEliece_Private_Operation(const McEliece_PrivateKey& mce_key);
 
-      size_t max_input_bits() const { return m_priv_key.max_input_bits();  }
+      size_t max_input_bits() const override { return m_priv_key.max_input_bits();  }
 
-      secure_vector<byte> decrypt(const byte msg[], size_t msg_len);
+      secure_vector<byte> decrypt(const byte msg[], size_t msg_len) override;
 
       McEliece_PrivateKey const& get_key() const { return m_priv_key; }
 
@@ -127,8 +127,8 @@ class BOTAN_DLL McEliece_Public_Operation : public PK_Ops::Encryption
    public:
       McEliece_Public_Operation(const McEliece_PublicKey& public_key, u32bit code_length);
 
-      size_t max_input_bits() const { return m_pub_key.max_input_bits(); }
-      secure_vector<byte> encrypt(const byte msg[], size_t msg_len, RandomNumberGenerator&);
+      size_t max_input_bits() const override { return m_pub_key.max_input_bits(); }
+      secure_vector<byte> encrypt(const byte msg[], size_t msg_len, RandomNumberGenerator&) override;
 
       McEliece_PublicKey const& get_key() const { return m_pub_key; }
 

@@ -19,8 +19,8 @@ namespace Botan {
 class Intel_Rdrand : public EntropySource
    {
    public:
-      std::string name() const { return "Intel Rdrand"; }
-      void poll(Entropy_Accumulator& accum);
+      std::string name() const override { return "Intel Rdrand"; }
+      void poll(Entropy_Accumulator& accum) override;
    };
 
 }
