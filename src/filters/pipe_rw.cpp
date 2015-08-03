@@ -140,6 +140,16 @@ size_t Pipe::remaining(message_id msg) const
    return outputs->remaining(get_message_no("remaining", msg));
    }
 
+bool Pipe::check_available(size_t n)
+   {
+   return (n <= remaining(DEFAULT_MESSAGE));
+   }
+
+bool Pipe::check_available_msg(size_t n, message_id msg)
+   {
+   return (n <= remaining(msg));
+   }
+
 /*
 * Peek at some data in the pipe
 */

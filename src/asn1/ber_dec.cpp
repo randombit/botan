@@ -205,7 +205,10 @@ BER_Object BER_Decoder::get_next_object()
    if(next.type_tag == NO_OBJECT)
       return next;
 
-   size_t length = decode_length(source);
+   const size_t length = decode_length(source);
+   if(!source->check_available(length))
+      throw BER_Decoding_Error("Value truncated");
+
    next.value.resize(length);
    if(source->read(&next.value[0], length) != length)
       throw BER_Decoding_Error("Value truncated");
@@ -457,6 +460,8 @@ BER_Decoder& BER_Decoder::decode(MemoryRegion<byte>& buffer,
       buffer = obj.value;
    else
       {
+      if(obj.value.empty())
+         throw BER_Decoding_Error("Invalid BIT STRING");
       if(obj.value[0] >= 8)
          throw BER_Decoding_Error("Bad number of unused bits in BIT STRING");
 

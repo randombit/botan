@@ -35,6 +35,8 @@ class BOTAN_DLL SecureQueue : public Fanout_Filter, public DataSource
 
       bool attachable() { return false; }
 
+      bool check_available(size_t n) { return n <= size(); }
+
       /**
       * SecureQueue assignment
       * @param other the queue to copy

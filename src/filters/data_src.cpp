@@ -101,6 +101,11 @@ DataSource_Memory::DataSource_Memory(const std::string& in) :
    offset = 0;
    }
 
+bool DataSource_Memory::check_available(size_t n)
+   {
+   return (n <= (source.size() - offset));
+   }
+
 /*
 * Read from a stream
 */
@@ -113,6 +118,15 @@ size_t DataSource_Stream::read(byte out[], size_t length)
    size_t got = source.gcount();
    total_read += got;
    return got;
+   }
+
+bool DataSource_Stream::check_available(size_t n)
+   {
+   const std::streampos orig_pos = source.tellg();
+   source.seekg(0, std::ios::end);
+   const size_t avail = source.tellg() - orig_pos;
+   source.seekg(orig_pos);
+   return (avail >= n);
    }
 
 /*

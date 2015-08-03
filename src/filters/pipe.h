@@ -200,6 +200,9 @@ class BOTAN_DLL Pipe : public DataSource
       size_t peek(byte& output, size_t offset,
                   message_id msg = DEFAULT_MESSAGE) const;
 
+      bool check_available(size_t n);
+      bool check_available_msg(size_t n, message_id msg);
+
       /**
       * @return currently set default message
       */

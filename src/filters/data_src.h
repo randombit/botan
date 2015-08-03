@@ -56,6 +56,8 @@ class BOTAN_DLL DataSource
       */
       virtual std::string id() const { return ""; }
 
+      virtual bool check_available(size_t n) = 0;
+
       /**
       * Read one byte.
       * @param out the byte to read to
@@ -94,6 +96,7 @@ class BOTAN_DLL DataSource_Memory : public DataSource
    public:
       size_t read(byte[], size_t);
       size_t peek(byte[], size_t, size_t) const;
+      bool check_available(size_t n);
       bool end_of_data() const;
 
       /**
@@ -127,6 +130,7 @@ class BOTAN_DLL DataSource_Stream : public DataSource
    public:
       size_t read(byte[], size_t);
       size_t peek(byte[], size_t, size_t) const;
+      bool check_available(size_t n);
       bool end_of_data() const;
       std::string id() const;
 

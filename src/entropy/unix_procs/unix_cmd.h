@@ -51,6 +51,7 @@ class DataSource_Command : public DataSource
    public:
       size_t read(byte[], size_t);
       size_t peek(byte[], size_t, size_t) const;
+      bool check_available(size_t n);
       bool end_of_data() const;
       std::string id() const;
 

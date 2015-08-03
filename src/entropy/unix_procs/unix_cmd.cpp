@@ -99,6 +99,11 @@ size_t DataSource_Command::peek(byte[], size_t, size_t) const
    throw Stream_IO_Error("Cannot peek/seek on a command pipe");
    }
 
+bool DataSource_Command::check_available(size_t)
+   {
+   throw Stream_IO_Error("Cannot check available bytes on a pipe");
+   }
+
 /**
 * Check if we reached EOF
 */
