@@ -1,13 +1,13 @@
 Release Notes
 ========================================
 
-Version 1.11.19, Not Yet Released
+Version 1.11.19, 2015-08-03
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* SECURIY: The BER decoder would crash due to reading from offset 0 of
-  an empty vector if it encountered a BIT STRING which did not contain
-  any data at all. As the type requires a 1 byte field this is not
-  valid BER but could occur in malformed data. Found with afl.
+* SECURITY: The BER decoder would crash due to reading from offset 0
+  of an empty vector if it encountered a BIT STRING which did not
+  contain any data at all. As the type requires a 1 byte field this is
+  not valid BER but could occur in malformed data. Found with afl.
 
 * SECURITY: The BER decoder would allocate a fairly arbitrary amount
   of memory in a length field, even if there was no chance the read
@@ -27,7 +27,29 @@ Version 1.11.19, Not Yet Released
 * BigInt::to_u32bit would fail if the value was exactly 32 bits.
   GH #220
 
-  Version 1.11.18, 2015-07-05
+Version 1.10.10, 2015-08-03
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* SECURITY: The BER decoder would crash due to reading from offset 0
+  of an empty vector if it encountered a BIT STRING which did not
+  contain any data at all. As the type requires a 1 byte field this is
+  not valid BER but could occur in malformed data. Found with afl.
+
+* SECURITY: The BER decoder would allocate a fairly arbitrary amount
+  of memory in a length field, even if there was no chance the read
+  request would succeed. This might cause the process to run out of
+  memory or invoke the OOM killer. Found with afl.
+
+* Due to an ABI incompatible (though not API incompatible) change in
+  this release, the version number of the shared object has been
+  increased.
+
+* The default TLS policy no longer allows RC4.
+
+* Fix a signed integer overflow in Blue Midnight Wish that may cause
+  incorrect computations or undefined behavior.
+
+Version 1.11.18, 2015-07-05
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * In this release Botan has switched VCS from ``monotone`` to ``git``,
