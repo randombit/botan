@@ -7,7 +7,7 @@ Release Notes
 Series 1.10
 ----------------------------------------
 
-Version 1.10.10, Not Yet Released
+Version 1.10.10, 2015-08-03
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * SECURITY: The BER decoder would crash due to reading from offset 0
@@ -19,6 +19,10 @@ Version 1.10.10, Not Yet Released
   of memory in a length field, even if there was no chance the read
   request would succeed. This might cause the process to run out of
   memory or invoke the OOM killer. Found with afl.
+
+* Due to an ABI incompatible (though not API incompatible) change in
+  this release, the version number of the shared object has been
+  increased.
 
 * The default TLS policy no longer allows RC4.
 
