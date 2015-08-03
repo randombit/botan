@@ -7,6 +7,7 @@
 #ifndef EXAMPLE_CREDENTIALS_MANAGER_H__
 #define EXAMPLE_CREDENTIALS_MANAGER_H__
 
+#include <botan/pkcs8.h>
 #include <botan/credentials_manager.h>
 #include <botan/x509self.h>
 #include <botan/rsa.h>

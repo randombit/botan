@@ -12,10 +12,11 @@
 
 #include <botan/calendar.h>
 #include <botan/filters.h>
+#include <botan/pkcs8.h>
+#include <botan/pkcs10.h>
 #include <botan/x509self.h>
 #include <botan/x509path.h>
 #include <botan/x509_ca.h>
-#include <botan/pkcs10.h>
 
 #if defined(BOTAN_HAS_RSA)
   #include <botan/rsa.h>

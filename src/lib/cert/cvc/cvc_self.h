@@ -9,7 +9,6 @@
 #ifndef BOTAN_CVC_EAC_SELF_H__
 #define BOTAN_CVC_EAC_SELF_H__
 
-#include <botan/pkcs8.h>
 #include <botan/cvc_cert.h>
 #include <botan/ecdsa.h>
 #include <botan/asn1_obj.h>
