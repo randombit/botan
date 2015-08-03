@@ -107,6 +107,8 @@ size_t test_nist_x509();
 size_t test_srp6();
 size_t test_compression();
 
+size_t test_fuzzer();
+
 #define SKIP_TEST(testname) \
    size_t test_ ## testname() {                                    \
       std::cout << "Skipping tests: " << # testname  << std::endl; \

@@ -224,7 +224,10 @@ class BOTAN_DLL Pipe : public DataSource
       /**
       * @return the number of bytes read from the specified message.
       */
-      size_t get_bytes_read(message_id msg = DEFAULT_MESSAGE) const;
+      size_t get_bytes_read(message_id msg) const;
+
+      bool check_available(size_t n) override;
+      bool check_available_msg(size_t n, message_id msg);
 
       /**
       * @return currently set default message

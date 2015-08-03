@@ -32,6 +32,8 @@ class BOTAN_DLL DataSource
       */
       virtual size_t read(byte out[], size_t length) = 0;
 
+      virtual bool check_available(size_t n) = 0;
+
       /**
       * Read from the source but do not modify the internal
       * offset. Consecutive calls to peek() will return portions of
@@ -99,6 +101,7 @@ class BOTAN_DLL DataSource_Memory : public DataSource
    public:
       size_t read(byte[], size_t) override;
       size_t peek(byte[], size_t, size_t) const override;
+      bool check_available(size_t n) override;
       bool end_of_data() const override;
 
       /**
@@ -143,6 +146,7 @@ class BOTAN_DLL DataSource_Stream : public DataSource
    public:
       size_t read(byte[], size_t) override;
       size_t peek(byte[], size_t, size_t) const override;
+      bool check_available(size_t n) override;
       bool end_of_data() const override;
       std::string id() const override;
 

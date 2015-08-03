@@ -312,6 +312,7 @@ int main(int argc, char* argv[])
    DEF_TEST(nist_x509);
    DEF_TEST(tls);
    DEF_TEST(compression);
+   DEF_TEST(fuzzer);
 
    if(tests.empty())
       {

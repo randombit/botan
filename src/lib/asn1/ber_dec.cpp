@@ -1,6 +1,7 @@
+
 /*
 * BER Decoder
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2008,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -218,7 +219,10 @@ BER_Object BER_Decoder::get_next_object()
    if(next.type_tag == NO_OBJECT)
       return next;
 
-   size_t length = decode_length(source);
+   const size_t length = decode_length(source);
+   if(!source->check_available(length))
+      throw BER_Decoding_Error("Value truncated");
+
    next.value.resize(length);
    if(source->read(next.value.data(), length) != length)
       throw BER_Decoding_Error("Value truncated");
@@ -526,6 +530,8 @@ BER_Decoder& BER_Decoder::decode(secure_vector<byte>& buffer,
       buffer = obj.value;
    else
       {
+      if(obj.value.empty())
+         throw BER_Decoding_Error("Invalid BIT STRING");
       if(obj.value[0] >= 8)
          throw BER_Decoding_Error("Bad number of unused bits in BIT STRING");
 
@@ -549,6 +555,8 @@ BER_Decoder& BER_Decoder::decode(std::vector<byte>& buffer,
       buffer = unlock(obj.value);
    else
       {
+      if(obj.value.empty())
+         throw BER_Decoding_Error("Invalid BIT STRING");
       if(obj.value[0] >= 8)
          throw BER_Decoding_Error("Bad number of unused bits in BIT STRING");
 

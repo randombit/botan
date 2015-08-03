@@ -168,4 +168,14 @@ size_t Pipe::get_bytes_read(message_id msg) const
    return outputs->get_bytes_read(msg);
    }
 
+bool Pipe::check_available(size_t n)
+   {
+   return (n <= remaining(DEFAULT_MESSAGE));
+   }
+
+bool Pipe::check_available_msg(size_t n, message_id msg)
+   {
+   return (n <= remaining(msg));
+   }
+
 }

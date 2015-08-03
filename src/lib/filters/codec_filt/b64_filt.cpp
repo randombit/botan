@@ -126,6 +126,11 @@ void Base64_Decoder::write(const byte input[], size_t length)
    while(length)
       {
       size_t to_copy = std::min<size_t>(length, in.size() - position);
+      if(to_copy == 0)
+         {
+         in.resize(in.size()*2);
+         out.resize(out.size()*2);
+         }
       copy_mem(&in[position], input, to_copy);
       position += to_copy;
 

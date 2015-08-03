@@ -4,6 +4,16 @@ Release Notes
 Version 1.11.19, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* SECURIY: The BER decoder would crash due to reading from offset 0 of
+  an empty vector if it encountered a BIT STRING which did not contain
+  any data at all. As the type requires a 1 byte field this is not
+  valid BER but could occur in malformed data. Found with afl.
+
+* SECURITY: The BER decoder would allocate a fairly arbitrary amount
+  of memory in a length field, even if there was no chance the read
+  request would succeed. This might cause the process to run out of
+  memory or invoke the OOM killer. Found with afl.
+
 * The TLS heartbeat extension is deprecated and unless strong arguments
   are raised in its favor it will be removed in a future release.
   Comment at https://github.com/randombit/botan/issues/187
