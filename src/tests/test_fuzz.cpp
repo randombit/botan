@@ -5,20 +5,28 @@
 */
 
 #include "tests.h"
+#include <chrono>
+#include <iostream>
+
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+
 #include <botan/x509cert.h>
 #include <botan/x509_crl.h>
 #include <botan/internal/filesystem.h>
 #include <botan/base64.h>
-#include <chrono>
-#include <iostream>
+
+#endif
 
 namespace {
 
 size_t test_x509_fuzz()
    {
-   const std::string fuzz_data = TEST_DATA_DIR "/fuzz";
+   size_t fails = 0;
 
-   size_t tests = 0, fails = 0;
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+
+   size_t tests = 0;
+   const std::string fuzz_data = TEST_DATA_DIR "/fuzz";
 
    for(auto vec: Botan::get_files_recursive(fuzz_data + "/x509"))
       {
@@ -45,6 +53,7 @@ size_t test_x509_fuzz()
       }
 
    test_report("Fuzz Checks", tests, fails);
+#endif
 
    return fails;
    }
