@@ -8,11 +8,13 @@ Version 1.11.19, 2015-08-03
   of an empty vector if it encountered a BIT STRING which did not
   contain any data at all. As the type requires a 1 byte field this is
   not valid BER but could occur in malformed data. Found with afl.
+  CVE-2015-5726
 
 * SECURITY: The BER decoder would allocate a fairly arbitrary amount
   of memory in a length field, even if there was no chance the read
   request would succeed. This might cause the process to run out of
   memory or invoke the OOM killer. Found with afl.
+  CVE-2015-5727
 
 * The TLS heartbeat extension is deprecated and unless strong arguments
   are raised in its favor it will be removed in a future release.
@@ -34,11 +36,13 @@ Version 1.10.10, 2015-08-03
   of an empty vector if it encountered a BIT STRING which did not
   contain any data at all. As the type requires a 1 byte field this is
   not valid BER but could occur in malformed data. Found with afl.
+  CVE-2015-5726
 
 * SECURITY: The BER decoder would allocate a fairly arbitrary amount
   of memory in a length field, even if there was no chance the read
   request would succeed. This might cause the process to run out of
   memory or invoke the OOM killer. Found with afl.
+  CVE-2015-5727
 
 * Due to an ABI incompatible (though not API incompatible) change in
   this release, the version number of the shared object has been
@@ -442,12 +446,12 @@ Version 1.11.10, 2014-12-10
 Version 1.10.8, 2014-04-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Fix a bug in primality testing introduced in 1.8.3 which caused only
-  a single random base, rather than a sequence of random bases, to be
-  used in the Miller-Rabin test. This increased the probability that a
-  non-prime would be accepted, for instance a 1024 bit number would be
-  incorrectly classed as prime with probability around 2^-40. Reported
-  by Jeff Marrison.
+* SECURITY: Fix a bug in primality testing introduced in 1.8.3 which
+  caused only a single random base, rather than a sequence of random
+  bases, to be used in the Miller-Rabin test. This increased the
+  probability that a non-prime would be accepted, for instance a 1024
+  bit number would be incorrectly classed as prime with probability
+  around 2^-40. Reported by Jeff Marrison. CVE-2014-9742
 
 * The key length limit on HMAC has been raised to 512 bytes, allowing
   the use of very long passphrases with PBKDF2.
@@ -455,10 +459,12 @@ Version 1.10.8, 2014-04-10
 Version 1.11.9, 2014-04-10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Fix a bug in primality testing introduced in 1.8.3 which caused
-  only a single random base, rather than a sequence of random bases,
-  to be used in the Miller-Rabin test. This increased the probability
-  that a non-prime would be accepted. Reported by Jeff Marrison.
+* SECURITY: Fix a bug in primality testing introduced in 1.8.3 which
+  caused only a single random base, rather than a sequence of random
+  bases, to be used in the Miller-Rabin test. This increased the
+  probability that a non-prime would be accepted, for instance a 1024
+  bit number would be incorrectly classed as prime with probability
+  around 2^-40. Reported by Jeff Marrison. CVE-2014-9742
 
 * X.509 path validation now returns a set of all errors that occurred
   during validation, rather than immediately returning the first
