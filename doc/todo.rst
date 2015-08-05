@@ -27,6 +27,7 @@ Public Key Crypto, Math
 
 * EdDSA
 * Ed448-Goldilocks
+* FHMQV
 * Support mixed hashes and non-empty param strings in OAEP
 * Fast new implementations/algorithms for ECC point operations,
   Montgomery multiplication, multi-exponentiation, ...
