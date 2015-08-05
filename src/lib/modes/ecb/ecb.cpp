@@ -83,8 +83,10 @@ size_t ECB_Encryption::minimum_final_size() const
 
 size_t ECB_Encryption::output_length(size_t input_length) const
    {
-   BOTAN_ASSERT(input_length != 0, "ECB_Encryption::output_length() call");
-   return round_up(input_length, cipher().block_size());
+   if(input_length == 0)
+      return cipher().block_size();
+   else
+      return round_up(input_length, cipher().block_size());
    }
 
 void ECB_Encryption::update(secure_vector<byte>& buffer, size_t offset)
