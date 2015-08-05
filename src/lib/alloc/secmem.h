@@ -36,6 +36,9 @@ class secure_allocator
 
       secure_allocator() BOTAN_NOEXCEPT {}
 
+      template<typename U>
+      secure_allocator(const secure_allocator<U>&) BOTAN_NOEXCEPT {}
+
       ~secure_allocator() BOTAN_NOEXCEPT {}
 
       pointer address(reference x) const BOTAN_NOEXCEPT
