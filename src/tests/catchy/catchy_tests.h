@@ -12,6 +12,8 @@
 // This is basically https://github.com/philsquared/Catch/pull/466
 #include <vector>
 
+#include <type_traits>
+
 namespace Catch {
 
 namespace Matchers {
@@ -36,6 +38,43 @@ namespace Matchers {
         };
     } // namespace StdVector
 
+    namespace Boolean {
+        struct Equals : MatcherImpl<Equals, bool> {
+            Equals( const bool expected ) : m_expected( expected ){}
+            Equals( Equals const& other ) : m_expected( other.m_expected ){}
+
+            virtual ~Equals() override {};
+
+            virtual bool match( bool const& expr ) const {
+                return m_expected == expr;
+            }
+            virtual std::string toString() const {
+                return " == " + Catch::toString(m_expected);
+            }
+
+            bool m_expected;
+        };
+    } // Boolean
+
+    namespace Integer {
+        template<typename T>
+        struct Equals : MatcherImpl<Equals<T>, T> {
+            Equals( const T expected ) : m_expected( expected ){}
+            Equals( Equals const& other ) : m_expected( other.m_expected ){}
+
+            virtual ~Equals() override {};
+
+            virtual bool match( T const& expr ) const {
+                return m_expected == expr;
+            }
+            virtual std::string toString() const {
+                return "== " + Catch::toString(m_expected);
+            }
+
+            T m_expected;
+        };
+    } // namespace Integer
+
     } // namespace Impl
 
     // The following functions create the actual matcher objects.
@@ -43,6 +82,16 @@ namespace Matchers {
     template <typename T, typename Alloc>
     inline Impl::StdVector::Equals<T, Alloc>      Equals( std::vector<T, Alloc> const& vec ) {
         return Impl::StdVector::Equals<T, Alloc>( vec );
+    }
+
+    template <typename T,
+              typename = typename std::enable_if<std::numeric_limits<T>::is_integer, T>::type>
+    inline Impl::Integer::Equals<T>    Equals( T expected ) {
+        return Impl::Integer::Equals<T>( expected );
+    }
+
+    inline Impl::Boolean::Equals          Equals( bool expected ) {
+        return Impl::Boolean::Equals( expected );
     }
 
 } // namespace Matchers
