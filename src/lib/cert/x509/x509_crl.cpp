@@ -102,8 +102,8 @@ void X509_CRL::force_decode()
 
    X509_Time start, end;
    tbs_crl.decode(start).decode(end);
-   info.add("X509.CRL.start", start.readable_string());
-   info.add("X509.CRL.end", end.readable_string());
+   info.add("X509.CRL.start", start.to_string());
+   info.add("X509.CRL.end", end.to_string());
 
    BER_Object next = tbs_crl.get_next_object();
 
@@ -177,7 +177,7 @@ u32bit X509_CRL::crl_number() const
 */
 X509_Time X509_CRL::this_update() const
    {
-   return info.get1("X509.CRL.start");
+   return X509_Time(info.get1("X509.CRL.start"), ASN1_Tag::UTC_TIME);
    }
 
 /*
@@ -185,7 +185,7 @@ X509_Time X509_CRL::this_update() const
 */
 X509_Time X509_CRL::next_update() const
    {
-   return info.get1("X509.CRL.end");
+   return X509_Time(info.get1("X509.CRL.end"), ASN1_Tag::UTC_TIME);
    }
 
 }

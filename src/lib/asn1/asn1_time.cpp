@@ -16,98 +16,148 @@
 
 namespace Botan {
 
-/*
-* Create an X509_Time
-*/
-X509_Time::X509_Time(const std::string& time_str)
-   {
-   set_to(time_str);
-   }
-
-/*
-* Create a X509_Time from a time point
-*/
 X509_Time::X509_Time(const std::chrono::system_clock::time_point& time)
    {
    calendar_point cal = calendar_value(time);
 
-   year   = cal.year;
-   month  = cal.month;
-   day    = cal.day;
-   hour   = cal.hour;
-   minute = cal.minutes;
-   second = cal.seconds;
+   m_year   = cal.year;
+   m_month  = cal.month;
+   m_day    = cal.day;
+   m_hour   = cal.hour;
+   m_minute = cal.minutes;
+   m_second = cal.seconds;
 
-   tag = (year >= 2050) ? GENERALIZED_TIME : UTC_TIME;
+   m_tag = (m_year >= 2050) ? GENERALIZED_TIME : UTC_TIME;
    }
 
-/*
-* Create an X509_Time
-*/
-X509_Time::X509_Time(const std::string& t_spec, ASN1_Tag t) : tag(t)
+X509_Time::X509_Time(const std::string& t_spec, ASN1_Tag tag)
    {
    set_to(t_spec, tag);
    }
 
+
+
 /*
-* Set the time with a human readable string
+* DER encode a X509_Time
 */
-void X509_Time::set_to(const std::string& time_str)
+void X509_Time::encode_into(DER_Encoder& der) const
    {
-   if(time_str == "")
-      {
-      year = month = day = hour = minute = second = 0;
-      tag = NO_OBJECT;
-      return;
-      }
+   if(m_tag != GENERALIZED_TIME && m_tag != UTC_TIME)
+      throw Invalid_Argument("X509_Time: Bad encoding tag");
 
-   std::vector<std::string> params;
-   std::string current;
-
-   for(size_t j = 0; j != time_str.size(); ++j)
-      {
-      if(Charset::is_digit(time_str[j]))
-         current += time_str[j];
-      else
-         {
-         if(current != "")
-            params.push_back(current);
-         current.clear();
-         }
-      }
-   if(current != "")
-      params.push_back(current);
-
-   if(params.size() < 3 || params.size() > 6)
-      throw Invalid_Argument("Invalid time specification " + time_str);
-
-   year   = to_u32bit(params[0]);
-   month  = to_u32bit(params[1]);
-   day    = to_u32bit(params[2]);
-   hour   = (params.size() >= 4) ? to_u32bit(params[3]) : 0;
-   minute = (params.size() >= 5) ? to_u32bit(params[4]) : 0;
-   second = (params.size() == 6) ? to_u32bit(params[5]) : 0;
-
-   tag = (year >= 2050) ? GENERALIZED_TIME : UTC_TIME;
-
-   if(!passes_sanity_check())
-      throw Invalid_Argument("Invalid time specification " + time_str);
+   der.add_object(m_tag, UNIVERSAL,
+                  Charset::transcode(to_string(),
+                                     LOCAL_CHARSET,
+                                     LATIN1_CHARSET));
    }
 
 /*
-* Set the time with an ISO time format string
+* Decode a BER encoded X509_Time
 */
+void X509_Time::decode_from(BER_Decoder& source)
+   {
+   BER_Object ber_time = source.get_next_object();
+
+   set_to(Charset::transcode(ASN1::to_string(ber_time),
+                             LATIN1_CHARSET,
+                             LOCAL_CHARSET),
+          ber_time.type_tag);
+   }
+
+std::string X509_Time::to_string() const
+   {
+   if(time_is_set() == false)
+      throw Invalid_State("X509_Time::as_string: No time set");
+
+   u32bit full_year = m_year;
+
+   if(m_tag == UTC_TIME)
+      {
+      if(m_year < 1950 || m_year >= 2050)
+         throw Encoding_Error("X509_Time: The time " + readable_string() +
+                              " cannot be encoded as a UTCTime");
+
+      full_year = (m_year >= 2000) ? (m_year - 2000) : (m_year - 1900);
+      }
+
+   const auto factor_y = uint64_t{10000000000ull}; // literal exceeds 32bit int range
+   const auto factor_m = uint64_t{100000000ull};
+   const auto factor_d = uint64_t{1000000ull};
+   const auto factor_h = uint64_t{10000ull};
+   const auto factor_i = uint64_t{100ull};
+
+   std::string repr = std::to_string(factor_y * full_year +
+                                     factor_m * m_month +
+                                     factor_d * m_day +
+                                     factor_h * m_hour +
+                                     factor_i * m_minute +
+                                     m_second) + "Z";
+
+   u32bit desired_size = (m_tag == UTC_TIME) ? 13 : 15;
+
+   while(repr.size() < desired_size)
+      repr = "0" + repr;
+
+   return repr;
+   }
+
+std::string X509_Time::readable_string() const
+   {
+   if(time_is_set() == false)
+      throw Invalid_State("X509_Time::readable_string: No time set");
+
+   // desired format: "%04d/%02d/%02d %02d:%02d:%02d UTC"
+   std::stringstream output;
+      {
+      using namespace std;
+      output << setfill('0')
+             << setw(4) << m_year << "/" << setw(2) << m_month << "/" << setw(2) << m_day
+             << " "
+             << setw(2) << m_hour << ":" << setw(2) << m_minute << ":" << setw(2) << m_second
+             << " UTC";
+      }
+   return output.str();
+   }
+
+bool X509_Time::time_is_set() const
+   {
+   return (m_year != 0);
+   }
+
+s32bit X509_Time::cmp(const X509_Time& other) const
+   {
+   if(time_is_set() == false)
+      throw Invalid_State("X509_Time::cmp: No time set");
+
+   const s32bit EARLIER = -1, LATER = 1, SAME_TIME = 0;
+
+   if(m_year < other.m_year)     return EARLIER;
+   if(m_year > other.m_year)     return LATER;
+   if(m_month < other.m_month)   return EARLIER;
+   if(m_month > other.m_month)   return LATER;
+   if(m_day < other.m_day)       return EARLIER;
+   if(m_day > other.m_day)       return LATER;
+   if(m_hour < other.m_hour)     return EARLIER;
+   if(m_hour > other.m_hour)     return LATER;
+   if(m_minute < other.m_minute) return EARLIER;
+   if(m_minute > other.m_minute) return LATER;
+   if(m_second < other.m_second) return EARLIER;
+   if(m_second > other.m_second) return LATER;
+
+   return SAME_TIME;
+   }
+
 void X509_Time::set_to(const std::string& t_spec, ASN1_Tag spec_tag)
    {
    if(spec_tag == GENERALIZED_TIME)
       {
       if(t_spec.size() != 13 && t_spec.size() != 15)
-         throw Invalid_Argument("Invalid GeneralizedTime: " + t_spec);
+         throw Invalid_Argument("Invalid GeneralizedTime string: '" + t_spec + "'");
       }
    else if(spec_tag == UTC_TIME)
       {
       if(t_spec.size() != 11 && t_spec.size() != 13)
-         throw Invalid_Argument("Invalid UTCTime: " + t_spec);
+         throw Invalid_Argument("Invalid UTCTime string: '" + t_spec + "'");
       }
    else
       {
@@ -137,112 +187,22 @@ void X509_Time::set_to(const std::string& t_spec, ASN1_Tag spec_tag)
          }
       }
 
-   year   = to_u32bit(params[0]);
-   month  = to_u32bit(params[1]);
-   day    = to_u32bit(params[2]);
-   hour   = to_u32bit(params[3]);
-   minute = to_u32bit(params[4]);
-   second = (params.size() == 6) ? to_u32bit(params[5]) : 0;
-   tag    = spec_tag;
+   m_year   = to_u32bit(params[0]);
+   m_month  = to_u32bit(params[1]);
+   m_day    = to_u32bit(params[2]);
+   m_hour   = to_u32bit(params[3]);
+   m_minute = to_u32bit(params[4]);
+   m_second = (params.size() == 6) ? to_u32bit(params[5]) : 0;
+   m_tag    = spec_tag;
 
    if(spec_tag == UTC_TIME)
       {
-      if(year >= 50) year += 1900;
-      else           year += 2000;
+      if(m_year >= 50) m_year += 1900;
+      else             m_year += 2000;
       }
 
    if(!passes_sanity_check())
-      throw Invalid_Argument("Invalid time specification " + t_spec);
-   }
-
-/*
-* DER encode a X509_Time
-*/
-void X509_Time::encode_into(DER_Encoder& der) const
-   {
-   if(tag != GENERALIZED_TIME && tag != UTC_TIME)
-      throw Invalid_Argument("X509_Time: Bad encoding tag");
-
-   der.add_object(tag, UNIVERSAL,
-                  Charset::transcode(as_string(),
-                                     LOCAL_CHARSET,
-                                     LATIN1_CHARSET));
-   }
-
-/*
-* Decode a BER encoded X509_Time
-*/
-void X509_Time::decode_from(BER_Decoder& source)
-   {
-   BER_Object ber_time = source.get_next_object();
-
-   set_to(Charset::transcode(ASN1::to_string(ber_time),
-                             LATIN1_CHARSET,
-                             LOCAL_CHARSET),
-          ber_time.type_tag);
-   }
-
-/*
-* Return a string representation of the time
-*/
-std::string X509_Time::as_string() const
-   {
-   if(time_is_set() == false)
-      throw Invalid_State("X509_Time::as_string: No time set");
-
-   u32bit full_year = year;
-
-   if(tag == UTC_TIME)
-      {
-      if(year < 1950 || year >= 2050)
-         throw Encoding_Error("X509_Time: The time " + readable_string() +
-                              " cannot be encoded as a UTCTime");
-
-      full_year = (year >= 2000) ? (year - 2000) : (year - 1900);
-      }
-
-   std::string repr = std::to_string(full_year*10000000000 +
-                                     month*100000000 +
-                                     day*1000000 +
-                                     hour*10000 +
-                                     minute*100 +
-                                     second) + "Z";
-
-   u32bit desired_size = (tag == UTC_TIME) ? 13 : 15;
-
-   while(repr.size() < desired_size)
-      repr = "0" + repr;
-
-   return repr;
-   }
-
-/*
-* Return if the time has been set somehow
-*/
-bool X509_Time::time_is_set() const
-   {
-   return (year != 0);
-   }
-
-/*
-* Return a human readable string representation
-*/
-std::string X509_Time::readable_string() const
-   {
-   if(time_is_set() == false)
-      throw Invalid_State("X509_Time::readable_string: No time set");
-
-   // desired format: "%04d/%02d/%02d %02d:%02d:%02d UTC"
-   std::stringstream output;
-      {
-      using namespace std;
-      output << setfill('0')
-             << setw(4) << year << "/" << setw(2) << month << "/" << setw(2) << day
-             << " "
-             << setw(2) << hour << ":" << setw(2) << minute << ":" << setw(2) << second
-             << " UTC";
-      }
-   return output.str();
+      throw Invalid_Argument("Time did not pass sanity check: " + t_spec);
    }
 
 /*
@@ -250,41 +210,15 @@ std::string X509_Time::readable_string() const
 */
 bool X509_Time::passes_sanity_check() const
    {
-   if(year < 1950 || year > 2100)
+   if(m_year < 1950 || m_year > 2100)
       return false;
-   if(month == 0 || month > 12)
+   if(m_month == 0 || m_month > 12)
       return false;
-   if(day == 0 || day > 31)
+   if(m_day == 0 || m_day > 31)
       return false;
-   if(hour >= 24 || minute > 60 || second > 60)
+   if(m_hour >= 24 || m_minute > 60 || m_second > 60)
       return false;
    return true;
-   }
-
-/*
-* Compare this time against another
-*/
-s32bit X509_Time::cmp(const X509_Time& other) const
-   {
-   if(time_is_set() == false)
-      throw Invalid_State("X509_Time::cmp: No time set");
-
-   const s32bit EARLIER = -1, LATER = 1, SAME_TIME = 0;
-
-   if(year < other.year)     return EARLIER;
-   if(year > other.year)     return LATER;
-   if(month < other.month)   return EARLIER;
-   if(month > other.month)   return LATER;
-   if(day < other.day)       return EARLIER;
-   if(day > other.day)       return LATER;
-   if(hour < other.hour)     return EARLIER;
-   if(hour > other.hour)     return LATER;
-   if(minute < other.minute) return EARLIER;
-   if(minute > other.minute) return LATER;
-   if(second < other.second) return EARLIER;
-   if(second > other.second) return LATER;
-
-   return SAME_TIME;
    }
 
 /*
