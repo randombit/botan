@@ -1,8 +1,8 @@
 // (C) 2015 Simon Warta (Kullo GmbH)
 // Botan is released under the Simplified BSD License (see license.txt)
 
-#include "catch.hpp"
-#include <botan/types.h>
+#include "catchy_tests.h"
+
 #include <botan/internal/stl_util.h>
 
 TEST_CASE("secure vector to string", "[STL_Util]")
@@ -14,8 +14,8 @@ TEST_CASE("secure vector to string", "[STL_Util]")
    // echo -n "ö" | hexdump -C
    auto utf8  = secure_vector<byte>{ 0xc3, 0xb6 };
 
-   CHECK(( to_string(empty) == "" ));
-   CHECK(( to_string(one)   == "^" ));
-   CHECK(( to_string(some)  == "Hello" ));
-   CHECK(( to_string(utf8)  == "ö" ));
+   CHECK_THAT(to_string(empty), Equals(""));
+   CHECK_THAT(to_string(one),   Equals("^"));
+   CHECK_THAT(to_string(some),  Equals("Hello"));
+   CHECK_THAT(to_string(utf8),  Equals("ö"));
    }

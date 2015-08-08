@@ -32,7 +32,7 @@ class BOTAN_DLL SecureQueue : public Fanout_Filter, public DataSource
 
       bool empty() const;
 
-      bool check_available(size_t n) { return n <= size(); }
+      bool check_available(size_t n) override { return n <= size(); }
 
       /**
       * @return number of bytes available in the queue
@@ -59,11 +59,12 @@ class BOTAN_DLL SecureQueue : public Fanout_Filter, public DataSource
       SecureQueue(const SecureQueue& other);
 
       ~SecureQueue() { destroy(); }
+
    private:
-      size_t bytes_read;
       void destroy();
-      class SecureQueueNode* head;
-      class SecureQueueNode* tail;
+      size_t m_bytes_read;
+      class SecureQueueNode* m_head;
+      class SecureQueueNode* m_tail;
    };
 
 }
