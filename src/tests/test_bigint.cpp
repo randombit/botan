@@ -88,7 +88,7 @@ BOTAN_TEST_CASE(bigint_to_u32bit, "BigInt to_u32bit", {
       }
    });
 
-BigInt test_integer(RandomNumberGenerator& rng, size_t bits)
+BigInt test_integer(RandomNumberGenerator& rng, size_t bits, BigInt max)
    {
    /*
    Produces integers with long runs of ones and zeros, for testing for
@@ -119,7 +119,16 @@ BigInt test_integer(RandomNumberGenerator& rng, size_t bits)
          active = !active;
       }
 
-   //std::cout << std::hex << x << "\n";
+   if(max > 0)
+      {
+      while(x >= max)
+         {
+         const size_t b = x.bits() - 1;
+         BOTAN_ASSERT(x.get_bit(b) == true, "Set");
+         x.clear_bit(b);
+         }
+      }
+
    return x;
    }
 
@@ -131,6 +140,7 @@ void nist_redc_test(Test_State& _test,
                     std::function<void (BigInt&, secure_vector<word>&)> redc_fn)
    {
    auto& rng = test_rng();
+   const BigInt p2 = p*p;
    const size_t trials = 100;
    const size_t p_bits = p.bits();
 
@@ -139,7 +149,7 @@ void nist_redc_test(Test_State& _test,
 
    for(size_t i = 0; i != trials; ++i)
       {
-      const BigInt x = test_integer(rng, 2*p_bits);
+      const BigInt x = test_integer(rng, 2*p_bits, p2);
 
       // TODO: time and report all three approaches
       const BigInt v1 = x % p;
