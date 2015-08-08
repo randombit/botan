@@ -12,20 +12,6 @@ reducer.h
 def_powm.h
 </header:internal>
 
-<source>
-dsa_gen.cpp
-jacobi.cpp
-make_prm.cpp
-mp_numth.cpp
-numthry.cpp
-pow_mod.cpp
-powm_fw.cpp
-powm_mnt.cpp
-primes.cpp
-reducer.cpp
-ressol.cpp
-</source>
-
 <requires>
 bigint
 hash

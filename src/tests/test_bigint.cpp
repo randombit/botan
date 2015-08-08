@@ -21,27 +21,43 @@
 #include <botan/bigint.h>
 #include <botan/exceptn.h>
 #include <botan/numthry.h>
+#include <botan/reducer.h>
+
+#if defined(BOTAN_HAS_EC_CURVE_GFP)
+#include <botan/curve_nistp.h>
+#endif
 
 using namespace Botan;
 
 namespace {
 
-void test_failure(const char* function, const char* file, int line,
-                  const std::string& what_failed)
+class Test_State
    {
-   std::cout << "FAIL " << function << " " << file << ":" << line << " "
-             << what_failed << std::endl;
-   }
+   public:
+      void started(const std::string& /*msg*/) { m_tests_run++; }
+
+      void test_ran(const char* msg);
+
+      void failure(const char* test, const std::string& what_failed)
+         {
+         std::cout << "FAIL " << test << " " << what_failed << "\n";
+         m_tests_failed++;
+         }
+
+      size_t ran() const { return m_tests_run; }
+      size_t failed() const { return m_tests_failed; }
+   private:
+      size_t m_tests_run = 0, m_tests_failed = 0;
+   };
 
 #define BOTAN_CONFIRM_NOTHROW(block) do {                              \
    try { block }                                                        \
    catch(std::exception& e) {                                           \
-      test_failure(BOTAN_CURRENT_FUNCTION, __FILE__, __LINE__, e.what());   \
-      ++tests_failed;                                                   \
+      _test.failure(BOTAN_CURRENT_FUNCTION, e.what());  \
    } } while(0)                                                         \
 
 #define BOTAN_TEST(lhs, rhs, msg) do {                                     \
-   ++tests_run;                                                            \
+   _test.started(msg);                                                  \
    BOTAN_CONFIRM_NOTHROW({                                              \
       const auto lhs_val = lhs;                                         \
       const auto rhs_val = rhs;                                         \
@@ -52,25 +68,119 @@ void test_failure(const char* function, const char* file, int line,
          fmt << "expr '" << #lhs << " == " << #rhs << "' false, "       \
              << "actually " << lhs_val << " " << rhs_val                \
              << " (" << msg << ")";                                     \
-         test_failure(BOTAN_CURRENT_FUNCTION, __FILE__, __LINE__, fmt.str()); \
-         ++tests_failed;                                                \
+         _test.failure(BOTAN_CURRENT_FUNCTION, fmt.str()); \
          }                                                              \
       });                                                               \
    } while(0)
 
-#define BOTAN_TEST_CASE(name, block) size_t test_ ## name() {              \
-   size_t tests_run = 0, tests_failed = 0;                                 \
+#define BOTAN_TEST_CASE(name, descr, block) size_t test_ ## name() {     \
+   Test_State _test;                                                    \
    BOTAN_CONFIRM_NOTHROW(block);                                           \
-   return tests_failed;                                                    \
+   test_report(descr, _test.ran(), _test.failed());                     \
+   return _test.failed();                                   \
    }
 
-BOTAN_TEST_CASE(bigint_to_u32bit, {
+BOTAN_TEST_CASE(bigint_to_u32bit, "BigInt to_u32bit", {
    for(size_t i = 0; i != 32; ++i)
       {
       const u32bit in = 1 << i;
       BOTAN_TEST(in, BigInt(in).to_u32bit(), "in range round trips");
       }
    });
+
+BigInt test_integer(RandomNumberGenerator& rng, size_t bits)
+   {
+   /*
+   Produces integers with long runs of ones and zeros, for testing for
+   carry handling problems.
+   */
+   BigInt x = 0;
+
+   auto flip_prob = [](size_t i) {
+      if(i % 64 == 0)
+         return .5;
+      if(i % 32 == 0)
+         return .4;
+      if(i % 8 == 0)
+         return .05;
+      return .01;
+   };
+
+   bool active = rng.next_byte() % 2;
+   for(size_t i = 0; i != bits; ++i)
+      {
+      x <<= 1;
+      x += static_cast<int>(active);
+
+      const double prob = flip_prob(i);
+      const double sample = double(rng.next_byte() % 100) / 100.0; // biased
+
+      if(sample < prob)
+         active = !active;
+      }
+
+   //std::cout << std::hex << x << "\n";
+   return x;
+   }
+
+#if defined(BOTAN_HAS_EC_CURVE_GFP)
+
+void nist_redc_test(Test_State& _test,
+                    const std::string& prime_name,
+                    const BigInt& p,
+                    std::function<void (BigInt&, secure_vector<word>&)> redc_fn)
+   {
+   auto& rng = test_rng();
+   const size_t trials = 100;
+   const size_t p_bits = p.bits();
+
+   Modular_Reducer p_redc(p);
+   secure_vector<word> ws;
+
+   for(size_t i = 0; i != trials; ++i)
+      {
+      const BigInt x = test_integer(rng, 2*p_bits);
+
+      // TODO: time and report all three approaches
+      const BigInt v1 = x % p;
+      const BigInt v2 = p_redc.reduce(x);
+
+      BigInt v3 = x;
+      redc_fn(v3, ws);
+
+      BOTAN_TEST(v1, v2, "reference");
+      BOTAN_TEST(v2, v3, "specialized");
+
+      if(v1 != v2 || v2 != v3)
+         std::cout << "Prime " << prime_name << " input " << x << "\n";
+      }
+   }
+
+#if defined(BOTAN_HAS_NIST_PRIME_REDUCERS_W32)
+
+BOTAN_TEST_CASE(bigint_redc_p192, "P-192 reduction", {
+   nist_redc_test(_test, "P-192", prime_p192(), redc_p192);
+   });
+
+BOTAN_TEST_CASE(bigint_redc_p224, "P-224 reduction", {
+   nist_redc_test(_test, "P-224", prime_p224(), redc_p224);
+   });
+
+BOTAN_TEST_CASE(bigint_redc_p256, "P-256 reduction", {
+   nist_redc_test(_test, "P-256", prime_p256(), redc_p256);
+   });
+
+BOTAN_TEST_CASE(bigint_redc_p384, "P-384 reduction", {
+   nist_redc_test(_test, "P-384", prime_p384(), redc_p384);
+   });
+
+#endif
+
+BOTAN_TEST_CASE(bigint_redc_p521, "P-521 reduction", {
+   nist_redc_test(_test, "P-521", prime_p521(), redc_p521);
+   });
+
+#endif
 
 void strip_comments(std::string& line)
    {
@@ -349,8 +459,6 @@ size_t test_bigint()
    bool first = true;
    size_t counter = 0;
 
-   total_errors += test_bigint_to_u32bit();
-
    auto& rng = test_rng();
 
    while(!test_data.eof())
@@ -428,6 +536,20 @@ size_t test_bigint()
          std::cout << "ERROR: BigInt " << algorithm << " failed test #"
                    << std::dec << alg_count << std::endl;
       }
+
+   total_errors += test_bigint_to_u32bit();
+
+#if defined(BOTAN_HAS_EC_CURVE_GFP)
+
+#if defined(BOTAN_HAS_NIST_PRIME_REDUCERS_W32)
+   total_errors += test_bigint_redc_p192();
+   total_errors += test_bigint_redc_p224();
+   total_errors += test_bigint_redc_p256();
+   total_errors += test_bigint_redc_p384();
+ #endif
+
+   total_errors += test_bigint_redc_p521();
+#endif
 
    return total_errors;
    }

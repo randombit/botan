@@ -1,63 +1,51 @@
 /*
-* NIST curve reduction
+* NIST prime reductions
 * (C) 2014,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/curve_nistp.h>
+#include <botan/curve_nistp.h>
 #include <botan/internal/mp_core.h>
+#include <botan/internal/mp_asmi.h>
 
 namespace Botan {
 
-void CurveGFp_NIST::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
-                              secure_vector<word>& ws) const
+namespace {
+
+void normalize(const BigInt& p, BigInt& x, secure_vector<word>& ws, size_t bound)
    {
-   if(x.is_zero() || y.is_zero())
+   const word* prime = p.data();
+   const size_t p_words = p.sig_words();
+
+   while(x.is_negative())
+      x += p;
+
+   // TODO: provide a high level function for this compare-and-sub operation
+   x.grow_to(p_words + 1);
+
+   if(ws.size() < p_words + 1)
+      ws.resize(p_words + 1);
+
+   for(size_t i = 0; bound == 0 || i < bound; ++i)
       {
-      z = 0;
-      return;
+      const word* xd = x.data();
+      word borrow = 0;
+
+      for(size_t i = 0; i != p_words; ++i)
+         ws[i] = word_sub(xd[i], prime[i], &borrow);
+      ws[p_words] = word_sub(xd[p_words], 0, &borrow);
+
+      if(borrow)
+         break;
+
+      x.swap_reg(ws);
       }
-
-   const size_t p_words = get_p_words();
-   const size_t output_size = 2*p_words + 1;
-   ws.resize(2*(p_words+2));
-
-   z.grow_to(output_size);
-   z.clear();
-
-   bigint_mul(z.mutable_data(), output_size, ws.data(),
-              x.data(), x.size(), x.sig_words(),
-              y.data(), y.size(), y.sig_words());
-
-   this->redc(z, ws);
    }
 
-void CurveGFp_NIST::curve_sqr(BigInt& z, const BigInt& x,
-                              secure_vector<word>& ws) const
-   {
-   if(x.is_zero())
-      {
-      z = 0;
-      return;
-      }
+}
 
-   const size_t p_words = get_p_words();
-   const size_t output_size = 2*p_words + 1;
-
-   ws.resize(2*(p_words+2));
-
-   z.grow_to(output_size);
-   z.clear();
-
-   bigint_sqr(z.mutable_data(), output_size, ws.data(),
-              x.data(), x.size(), x.sig_words());
-
-   this->redc(z, ws);
-   }
-
-//static
-const BigInt& CurveGFp_P521::prime()
+const BigInt& prime_p521()
    {
    static const BigInt p521("0x1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
                                "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
@@ -65,12 +53,11 @@ const BigInt& CurveGFp_P521::prime()
    return p521;
    }
 
-void CurveGFp_P521::redc(BigInt& x, secure_vector<word>& ws) const
+void redc_p521(BigInt& x, secure_vector<word>& ws)
    {
-   const size_t p_words = get_p_words();
-
-   const size_t shift_words = 521 / MP_WORD_BITS,
-                shift_bits  = 521 % MP_WORD_BITS;
+   const size_t p_full_words = 521 / MP_WORD_BITS;
+   const size_t p_top_bits = 521 % MP_WORD_BITS;
+   const size_t p_words = p_full_words + 1;
 
    const size_t x_sw = x.sig_words();
 
@@ -81,16 +68,16 @@ void CurveGFp_P521::redc(BigInt& x, secure_vector<word>& ws) const
       ws.resize(p_words + 1);
 
    clear_mem(ws.data(), ws.size());
-   bigint_shr2(ws.data(), x.data(), x_sw, shift_words, shift_bits);
+   bigint_shr2(ws.data(), x.data(), x_sw, p_full_words, p_top_bits);
 
    x.mask_bits(521);
 
    bigint_add3(x.mutable_data(), x.data(), p_words, ws.data(), p_words);
 
-   normalize(x, ws, max_redc_subtractions());
+   normalize(prime_p521(), x, ws, 1);
    }
 
-#if defined(BOTAN_HAS_CURVEGFP_NISTP_M32)
+#if defined(BOTAN_HAS_NIST_PRIME_REDUCERS_W32)
 
 namespace {
 
@@ -130,14 +117,13 @@ inline void set_u32bit(BigInt& x, size_t i, T v_in)
 
 }
 
-//static
-const BigInt& CurveGFp_P192::prime()
+const BigInt& prime_p192()
    {
    static const BigInt p192("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFF");
    return p192;
    }
 
-void CurveGFp_P192::redc(BigInt& x, secure_vector<word>& ws) const
+void redc_p192(BigInt& x, secure_vector<word>& ws)
    {
    const u32bit X6 = get_u32bit(x, 6);
    const u32bit X7 = get_u32bit(x, 7);
@@ -192,17 +178,16 @@ void CurveGFp_P192::redc(BigInt& x, secure_vector<word>& ws) const
 
    // No underflow possible
 
-   normalize(x, ws, max_redc_subtractions());
+   normalize(prime_p192(), x, ws, 3);
    }
 
-//static
-const BigInt& CurveGFp_P224::prime()
+const BigInt& prime_p224()
    {
    static const BigInt p224("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000000000000000000001");
    return p224;
    }
 
-void CurveGFp_P224::redc(BigInt& x, secure_vector<word>& ws) const
+void redc_p224(BigInt& x, secure_vector<word>& ws)
    {
    const u32bit X7 = get_u32bit(x, 7);
    const u32bit X8 = get_u32bit(x, 8);
@@ -271,17 +256,16 @@ void CurveGFp_P224::redc(BigInt& x, secure_vector<word>& ws) const
 
    BOTAN_ASSERT_EQUAL(S >> 32, 0, "No underflow");
 
-   normalize(x, ws, max_redc_subtractions());
+   normalize(prime_p224(), x, ws, 3);
    }
 
-//static
-const BigInt& CurveGFp_P256::prime()
+const BigInt& prime_p256()
    {
    static const BigInt p256("0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF");
    return p256;
    }
 
-void CurveGFp_P256::redc(BigInt& x, secure_vector<word>& ws) const
+void redc_p256(BigInt& x, secure_vector<word>& ws)
    {
    const u32bit X8 = get_u32bit(x, 8);
    const u32bit X9 = get_u32bit(x, 9);
@@ -396,34 +380,35 @@ void CurveGFp_P256::redc(BigInt& x, secure_vector<word>& ws) const
 
    BOTAN_ASSERT_EQUAL(S >> 32, 0, "No underflow");
 
+   #if 0
    if(S >= 2)
       {
       BOTAN_ASSERT(S <= 10, "Expected overflow");
       static const BigInt P256_mults[9] = {
-         2*get_p(),
-         3*get_p(),
-         4*get_p(),
-         5*get_p(),
-         6*get_p(),
-         7*get_p(),
-         8*get_p(),
-         9*get_p(),
-         10*get_p()
+         2*CurveGFp_P256::prime(),
+         3*CurveGFp_P256::prime(),
+         4*CurveGFp_P256::prime(),
+         5*CurveGFp_P256::prime(),
+         6*CurveGFp_P256::prime(),
+         7*CurveGFp_P256::prime(),
+         8*CurveGFp_P256::prime(),
+         9*CurveGFp_P256::prime(),
+         10*CurveGFp_P256::prime()
       };
       x -= P256_mults[S - 2];
       }
+   #endif
 
-   normalize(x, ws, max_redc_subtractions());
+   normalize(prime_p256(), x, ws, 10);
    }
 
-//static
-const BigInt& CurveGFp_P384::prime()
+const BigInt& prime_p384()
    {
    static const BigInt p384("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFF0000000000000000FFFFFFFF");
    return p384;
    }
 
-void CurveGFp_P384::redc(BigInt& x, secure_vector<word>& ws) const
+void redc_p384(BigInt& x, secure_vector<word>& ws)
    {
    const u32bit X12 = get_u32bit(x, 12);
    const u32bit X13 = get_u32bit(x, 13);
@@ -569,20 +554,22 @@ void CurveGFp_P384::redc(BigInt& x, secure_vector<word>& ws) const
    BOTAN_ASSERT_EQUAL(S >> 32, 0, "No underflow");
    set_u32bit(x, 12, S);
 
+   #if 0
    if(S >= 2)
       {
       BOTAN_ASSERT(S <= 4, "Expected overflow");
 
       static const BigInt P384_mults[3] = {
-         2*get_p(),
-         3*get_p(),
-         4*get_p()
+         2*CurveGFp_P384::prime(),
+         3*CurveGFp_P384::prime(),
+         4*CurveGFp_P384::prime()
       };
 
       x -= P384_mults[S - 2];
       }
+   #endif
 
-   normalize(x, ws, max_redc_subtractions());
+   normalize(prime_p384(), x, ws, 4);
    }
 
 #endif
