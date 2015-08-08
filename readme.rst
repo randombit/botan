@@ -49,6 +49,9 @@ There is also a third party open source implementation of
 .. image:: https://ci.appveyor.com/api/projects/status/n9f94dljd03j2lce?svg=true
     :target: https://ci.appveyor.com/project/randombit/botan/branch/master
 
+.. image:: https://circleci.com/gh/randombit/botan.svg?style=shield
+    :target: https://circleci.com/gh/randombit/botan
+
 .. image:: https://botan-ci.kullo.net/badge
     :target: https://botan-ci.kullo.net/
 
