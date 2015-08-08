@@ -141,7 +141,25 @@ s32bit X509_Time::cmp(const X509_Time& other) const
 
 void X509_Time::set_to(const std::string& t_spec, ASN1_Tag spec_tag)
    {
-   if(spec_tag == GENERALIZED_TIME)
+   if(spec_tag == UTC_OR_GENERALIZED_TIME)
+      {
+      try
+         {
+         set_to(t_spec, GENERALIZED_TIME);
+         return;
+         }
+      catch(Invalid_Argument) {} // Not a generalized time. Continue
+
+      try
+         {
+         set_to(t_spec, UTC_TIME);
+         return;
+         }
+      catch(Invalid_Argument) {} // Not a UTC time. Continue
+
+      throw Invalid_Argument("Time string could not be parsed as GeneralizedTime or UTCTime.");
+      }
+   else if(spec_tag == GENERALIZED_TIME)
       {
       if(t_spec.size() != 13 && t_spec.size() != 15)
          throw Invalid_Argument("Invalid GeneralizedTime string: '" + t_spec + "'");

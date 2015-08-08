@@ -107,10 +107,10 @@ check_chain(const std::vector<X509_Certificate>& cert_path,
          }
 
       // Check all certs for valid time range
-      if(current_time < X509_Time(subject.start_time(), ASN1_Tag::UTC_TIME))
+      if(current_time < X509_Time(subject.start_time(), ASN1_Tag::UTC_OR_GENERALIZED_TIME))
          status.insert(Certificate_Status_Code::CERT_NOT_YET_VALID);
 
-      if(current_time > X509_Time(subject.end_time(), ASN1_Tag::UTC_TIME))
+      if(current_time > X509_Time(subject.end_time(), ASN1_Tag::UTC_OR_GENERALIZED_TIME))
          status.insert(Certificate_Status_Code::CERT_HAS_EXPIRED);
 
       // Check issuer constraints

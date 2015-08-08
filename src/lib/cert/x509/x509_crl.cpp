@@ -177,7 +177,7 @@ u32bit X509_CRL::crl_number() const
 */
 X509_Time X509_CRL::this_update() const
    {
-   return X509_Time(info.get1("X509.CRL.start"), ASN1_Tag::UTC_TIME);
+   return X509_Time(info.get1("X509.CRL.start"), ASN1_Tag::UTC_OR_GENERALIZED_TIME);
    }
 
 /*
@@ -185,7 +185,7 @@ X509_Time X509_CRL::this_update() const
 */
 X509_Time X509_CRL::next_update() const
    {
-   return X509_Time(info.get1("X509.CRL.end"), ASN1_Tag::UTC_TIME);
+   return X509_Time(info.get1("X509.CRL.end"), ASN1_Tag::UTC_OR_GENERALIZED_TIME);
    }
 
 }

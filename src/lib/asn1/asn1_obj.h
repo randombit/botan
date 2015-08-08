@@ -47,8 +47,9 @@ enum ASN1_Tag {
    VISIBLE_STRING   = 0x1A,
    BMP_STRING       = 0x1E,
 
-   UTC_TIME         = 0x17,
-   GENERALIZED_TIME = 0x18,
+   UTC_TIME                = 0x17,
+   GENERALIZED_TIME        = 0x18,
+   UTC_OR_GENERALIZED_TIME = 0x19,
 
    NO_OBJECT        = 0xFF00,
    DIRECTORY_STRING = 0xFF01
