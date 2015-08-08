@@ -19,6 +19,25 @@ namespace Catch {
 namespace Matchers {
     namespace Impl {
 
+    namespace Generic {
+        template<typename ExpressionT>
+        struct Not : public MatcherImpl<Not<ExpressionT>, ExpressionT>
+        {
+            Not( Matcher<ExpressionT> const& matcher ) : m_matcher(matcher.clone()) {}
+            Not( Not const& other ) : m_matcher( other.m_matcher ) {}
+
+            virtual bool match( ExpressionT const& expr ) const
+            {
+                return !m_matcher->match( expr );
+            }
+            virtual std::string toString() const {
+                return "not " + m_matcher->toString();
+            }
+
+            Ptr<Matcher<ExpressionT>> m_matcher;
+        };
+    } // namespace Generic
+
     namespace StdVector {
         template<typename T, typename Alloc>
         struct Equals : MatcherImpl<Equals<T, Alloc>, std::vector<T, Alloc> >
@@ -82,6 +101,11 @@ namespace Matchers {
 
     // The following functions create the actual matcher objects.
     // This allows the types to be inferred
+    template<typename ExpressionT>
+    inline Impl::Generic::Not<ExpressionT> Not( Impl::Matcher<ExpressionT> const& m ) {
+        return Impl::Generic::Not<ExpressionT>( m );
+    }
+
     template <typename T, typename Alloc>
     inline Impl::StdVector::Equals<T, Alloc>      Equals( std::vector<T, Alloc> const& vec ) {
         return Impl::StdVector::Equals<T, Alloc>( vec );
