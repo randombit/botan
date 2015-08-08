@@ -48,11 +48,11 @@ size_t test_x509_fuzz()
 
       if(duration > 100)
          {
-         std::cout << "Fuzz test " << vec << " took " << duration << " ms\n";
+         std::cout << "Fuzzer test " << vec << " took " << duration << " ms" << std::endl;
          }
       }
 
-   test_report("Fuzz Checks", tests, fails);
+   test_report("Fuzzer checks", tests, fails);
 #endif
 
    return fails;
