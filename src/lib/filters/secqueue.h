@@ -59,11 +59,12 @@ class BOTAN_DLL SecureQueue : public Fanout_Filter, public DataSource
       SecureQueue(const SecureQueue& other);
 
       ~SecureQueue() { destroy(); }
+
    private:
-      size_t bytes_read;
       void destroy();
-      class SecureQueueNode* head;
-      class SecureQueueNode* tail;
+      size_t m_bytes_read;
+      class SecureQueueNode* m_head;
+      class SecureQueueNode* m_tail;
    };
 
 }
