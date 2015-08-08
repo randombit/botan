@@ -1,7 +1,7 @@
 // (C) 2015 Simon Warta (Kullo GmbH)
 // Botan is released under the Simplified BSD License (see license.txt)
 
-#include "catch.hpp"
+#include "catchy_tests.h"
 
 #include <botan/calendar.h>
 #include <botan/internal/rounding.h>

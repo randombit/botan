@@ -1,8 +1,7 @@
 // (C) 2015 Simon Warta (Kullo GmbH)
 // Botan is released under the Simplified BSD License (see license.txt)
 
-#include "catch.hpp"
-#include <botan/build.h>
+#include "catchy_tests.h"
 
 // deacticate due to
 // https://github.com/randombit/botan/issues/185
