@@ -8,6 +8,7 @@
 #include <botan/asn1_time.h>
 
 using namespace Botan;
+using namespace Catch;
 
 TEST_CASE("human readable time", "[X509]")
    {
@@ -22,6 +23,22 @@ TEST_CASE("human readable time", "[X509]")
    CHECK_THAT(time1.readable_string(), Equals("2008/02/01 00:00:00 UTC"));
    CHECK_THAT(time2.readable_string(), Equals("2008/02/01 17:24:00 UTC"));
    CHECK_THAT(time3.readable_string(), Equals("2004/06/14 23:34:30 UTC"));
+   }
+
+TEST_CASE("Implicit copy constructor", "[X509]")
+   {
+   auto time_orig = X509_Time("0802010000Z", ASN1_Tag::UTC_TIME);
+   auto time_copy = time_orig;
+
+   // Check that implicit copy and assignment work:
+   // time_copy and time_orig must have the same data but
+   // must sit at different places in memory
+   CHECK((time_orig == time_copy));
+
+   auto address1 = reinterpret_cast<uintptr_t>(&time_orig);
+   auto address2 = reinterpret_cast<uintptr_t>(&time_copy);
+
+   CHECK_THAT(address1, Not(Equals(address2)));
    }
 
 TEST_CASE("no time", "[X509]")
