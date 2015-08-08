@@ -35,11 +35,6 @@ X509_Time::X509_Time(const std::string& t_spec, ASN1_Tag tag)
    set_to(t_spec, tag);
    }
 
-
-
-/*
-* DER encode a X509_Time
-*/
 void X509_Time::encode_into(DER_Encoder& der) const
    {
    if(m_tag != GENERALIZED_TIME && m_tag != UTC_TIME)
@@ -51,9 +46,6 @@ void X509_Time::encode_into(DER_Encoder& der) const
                                      LATIN1_CHARSET));
    }
 
-/*
-* Decode a BER encoded X509_Time
-*/
 void X509_Time::decode_from(BER_Decoder& source)
    {
    BER_Object ber_time = source.get_next_object();
