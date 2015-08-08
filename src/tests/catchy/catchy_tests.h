@@ -21,11 +21,12 @@ namespace Matchers {
 
     namespace StdVector {
         template<typename T, typename Alloc>
-        struct Equals : MatcherImpl<Equals<T, Alloc>, std::vector<T, Alloc> > {
+        struct Equals : MatcherImpl<Equals<T, Alloc>, std::vector<T, Alloc> >
+        {
             Equals( std::vector<T, Alloc> const& vec ) : m_vector( vec ){}
             Equals( Equals const& other ) : m_vector( other.m_vector ){}
 
-            virtual ~Equals() {};
+            virtual ~Equals() {}
 
             virtual bool match( std::vector<T, Alloc> const& expr ) const {
                 return m_vector == expr;
@@ -39,17 +40,18 @@ namespace Matchers {
     } // namespace StdVector
 
     namespace Boolean {
-        struct Equals : MatcherImpl<Equals, bool> {
+        struct Equals : MatcherImpl<Equals, bool>
+        {
             Equals( const bool expected ) : m_expected( expected ){}
             Equals( Equals const& other ) : m_expected( other.m_expected ){}
 
-            virtual ~Equals() override {};
+            virtual ~Equals() override {}
 
             virtual bool match( bool const& expr ) const {
                 return m_expected == expr;
             }
             virtual std::string toString() const {
-                return " == " + Catch::toString(m_expected);
+                return "== " + Catch::toString(m_expected);
             }
 
             bool m_expected;
@@ -58,11 +60,12 @@ namespace Matchers {
 
     namespace Integer {
         template<typename T>
-        struct Equals : MatcherImpl<Equals<T>, T> {
+        struct Equals : MatcherImpl<Equals<T>, T>
+        {
             Equals( const T expected ) : m_expected( expected ){}
             Equals( Equals const& other ) : m_expected( other.m_expected ){}
 
-            virtual ~Equals() override {};
+            virtual ~Equals() override {}
 
             virtual bool match( T const& expr ) const {
                 return m_expected == expr;
