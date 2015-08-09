@@ -9,6 +9,7 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/charset.h>
+#include <botan/exceptn.h>
 #include <botan/parsing.h>
 #include <botan/calendar.h>
 #include <sstream>
@@ -159,7 +160,16 @@ void X509_Time::set_to(const std::string& t_spec, ASN1_Tag spec_tag)
 
       throw Invalid_Argument("Time string could not be parsed as GeneralizedTime or UTCTime.");
       }
-   else if(spec_tag == GENERALIZED_TIME)
+
+   BOTAN_ASSERT(spec_tag == UTC_TIME || spec_tag == GENERALIZED_TIME, "Invalid tag.");
+
+   if(t_spec.empty())
+      throw Invalid_Argument("Time string must not be empty.");
+
+   if(t_spec.back() != 'Z')
+      throw Unsupported_Argument("Botan does not support times with timezones other than Z: " + t_spec);
+
+   if(spec_tag == GENERALIZED_TIME)
       {
       if(t_spec.size() != 13 && t_spec.size() != 15)
          throw Invalid_Argument("Invalid GeneralizedTime string: '" + t_spec + "'");
@@ -169,13 +179,6 @@ void X509_Time::set_to(const std::string& t_spec, ASN1_Tag spec_tag)
       if(t_spec.size() != 11 && t_spec.size() != 13)
          throw Invalid_Argument("Invalid UTCTime string: '" + t_spec + "'");
       }
-   else
-      {
-      throw Invalid_Argument("Invalid time tag " + std::to_string(spec_tag) + " val " + t_spec);
-      }
-
-   if(t_spec[t_spec.size()-1] != 'Z')
-      throw Invalid_Argument("Invalid time encoding: " + t_spec);
 
    const size_t YEAR_SIZE = (spec_tag == UTC_TIME) ? 2 : 4;
 
@@ -228,6 +231,18 @@ bool X509_Time::passes_sanity_check() const
       return false;
    if(m_hour >= 24 || m_minute > 60 || m_second > 60)
       return false;
+
+   if (m_tag == UTC_TIME)
+      {
+      // UTCTime limits the value of components such that leap seconds are not covered.
+      // See "UNIVERSAL 23" in "Information technology – Abstract Syntax Notation One (ASN.1): Specification of basic notation"
+      // http://www.itu.int/ITU-T/studygroups/com17/languages/
+      if (m_hour > 23 || m_minute > 59 || m_second > 59)
+         {
+         return false;
+         }       
+      }
+
    return true;
    }
 

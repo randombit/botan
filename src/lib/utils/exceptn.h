@@ -20,6 +20,17 @@ typedef std::runtime_error Exception;
 typedef std::invalid_argument Invalid_Argument;
 
 /**
+* Unsupported_Argument Exception
+*
+* An argument that is invalid because it is not supported by Botan.
+* It might or might not be valid in another context like a standard.
+*/
+struct BOTAN_DLL Unsupported_Argument : public Invalid_Argument
+   {
+   Unsupported_Argument(const std::string& msg) : Invalid_Argument(msg) {}
+   };
+
+/**
 * Invalid_State Exception
 */
 struct BOTAN_DLL Invalid_State : public Exception
