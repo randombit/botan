@@ -26,6 +26,9 @@ botan-test
 # Python cache
 *.pyc
 
+# CMake
+CMakeLists.txt.user
+
 # Amalgamation code
 botan_all.h
 botan_all_internal.h
