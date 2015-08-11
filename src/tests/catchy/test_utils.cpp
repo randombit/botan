@@ -190,13 +190,16 @@ TEST_CASE("uint32 parsing valid", "[utils]")
    CHECK_THAT(to_u32bit("0000000000000000000000000010"), Equals(10));
 
    // leading and trailing whitespace
-   CHECK_THAT(to_u32bit(" 1"), Equals(1));
-   CHECK_THAT(to_u32bit(" 1 "), Equals(1));
-   CHECK_THAT(to_u32bit("\n1"), Equals(1));
-   CHECK_THAT(to_u32bit("1\n"), Equals(1));
-   CHECK_THAT(to_u32bit("1 5"), Equals(1));
-   CHECK_THAT(to_u32bit("1\t5"), Equals(1));
-   CHECK_THAT(to_u32bit("1\n5"), Equals(1));
+   CHECK_THROWS(to_u32bit(" 1"));
+   CHECK_THROWS(to_u32bit(" 1 "));
+   CHECK_THROWS(to_u32bit("\n1"));
+   CHECK_THROWS(to_u32bit("1\n"));
+   CHECK_THROWS(to_u32bit("1 5"));
+   CHECK_THROWS(to_u32bit("1\t5"));
+   CHECK_THROWS(to_u32bit("1\n5"));
+
+   // Other stuff that is no digit
+   CHECK_THROWS(to_u32bit("1Z"));
 
    // invalid input
    CHECK_THROWS(to_u32bit(""));
