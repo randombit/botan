@@ -1,6 +1,7 @@
 /*
 * Various string utils and parsing functions
 * (C) 1999-2007,2013,2014 Jack Lloyd
+* (C) 2015 Simon Warta (Kullo GmbH)
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -9,6 +10,7 @@
 #include <botan/exceptn.h>
 #include <botan/charset.h>
 #include <botan/get_byte.h>
+#include <limits>
 #include <set>
 #include <stdexcept>
 
@@ -18,11 +20,22 @@ u32bit to_u32bit(const std::string& str)
    {
    try
       {
-      return std::stoul(str, nullptr);
+      const auto integerValue = std::stoul(str);
+
+      // integerValue might be uint64
+      if (integerValue > std::numeric_limits<u32bit>::max())
+         {
+         throw Invalid_Argument("Integer value exceeds 32 bit range: " + std::to_string(integerValue));
+         }
+
+      return integerValue;
       }
-   catch(std::exception&)
+   catch(std::exception& e)
       {
-      throw std::runtime_error("Could not read '" + str + "' as decimal string");
+      auto message = std::string("Could not read '" + str + "' as decimal string");
+      auto exceptionMessage = std::string(e.what());
+      if (!exceptionMessage.empty()) message += ": " + exceptionMessage;
+      throw std::runtime_error(message);
       }
    }
 
