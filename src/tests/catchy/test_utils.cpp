@@ -4,6 +4,7 @@
 #include "catchy_tests.h"
 
 #include <botan/calendar.h>
+#include <botan/parsing.h>
 #include <botan/internal/rounding.h>
 
 using namespace Botan;
@@ -165,4 +166,45 @@ TEST_CASE("calendar_point to stl timepoint and back", "[utils]")
       auto in = calendar_point(2038, 01, 01, 0, 0, 0);
       CHECK_THROWS( in.to_std_timepoint() );
       }
+   }
+
+TEST_CASE("uint32 parsing valid", "[utils]")
+   {
+   CHECK_THAT(to_u32bit("0"), Equals(0));
+   CHECK_THAT(to_u32bit("1"), Equals(1));
+   CHECK_THAT(to_u32bit("2"), Equals(2));
+   CHECK_THAT(to_u32bit("10"), Equals(10));
+   CHECK_THAT(to_u32bit("100"), Equals(100));
+   CHECK_THAT(to_u32bit("1000"), Equals(1000));
+   CHECK_THAT(to_u32bit("10000"), Equals(10000));
+   CHECK_THAT(to_u32bit("100000"), Equals(100000));
+   CHECK_THAT(to_u32bit("1000000"), Equals(1000000));
+   // biggest allowed value
+   CHECK_THAT(to_u32bit("4294967295"), Equals(4294967295));
+
+   // leading zeros
+   CHECK_THAT(to_u32bit("00"), Equals(0));
+   CHECK_THAT(to_u32bit("01"), Equals(1));
+   CHECK_THAT(to_u32bit("02"), Equals(2));
+   CHECK_THAT(to_u32bit("010"), Equals(10));
+   CHECK_THAT(to_u32bit("0000000000000000000000000010"), Equals(10));
+
+   // leading and trailing whitespace
+   CHECK_THAT(to_u32bit(" 1"), Equals(1));
+   CHECK_THAT(to_u32bit(" 1 "), Equals(1));
+   CHECK_THAT(to_u32bit("\n1"), Equals(1));
+   CHECK_THAT(to_u32bit("1\n"), Equals(1));
+   CHECK_THAT(to_u32bit("1 5"), Equals(1));
+   CHECK_THAT(to_u32bit("1\t5"), Equals(1));
+   CHECK_THAT(to_u32bit("1\n5"), Equals(1));
+
+   // invalid input
+   CHECK_THROWS(to_u32bit(""));
+   CHECK_THROWS(to_u32bit(" "));
+   CHECK_THROWS(to_u32bit("!"));
+   //CHECK_THROWS(to_u32bit("1!"));
+   CHECK_THROWS(to_u32bit("!1"));
+
+   // Avoid overflow: value too big for uint32
+   CHECK_THROWS(to_u32bit("4294967296"));
    }
