@@ -1,10 +1,11 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 """
 Python wrapper of the botan crypto library
 http://botan.randombit.net
 
 (C) 2015 Jack Lloyd
+(C) 2015 Uri  Blumenthal (extensions and patches)
 
 Botan is released under the Simplified BSD License (see license.txt)
 """
@@ -15,7 +16,7 @@ from ctypes import *
 """
 Module initialization
 """
-botan = CDLL('libbotan-1.11.so')
+botan = CDLL('libbotan-1.11.dylib')
 
 expected_api_rev = 20150210
 botan_api_rev = botan.botan_ffi_api_version()
@@ -494,40 +495,51 @@ def test():
     r = rng("user")
 
 
-    print version_string()
-    print version_major(), version_minor(), version_patch()
+    print("\n%s" % version_string())
+    print("v%d.%d.%d\n" % (version_major(), version_minor(), version_patch()))
 
 
-    print kdf('KDF2(SHA-1)', '701F3480DFE95F57941F804B1B2413EF'.decode('hex'), 7, '55A4E9DD5F4CA2EF82'.decode('hex')).encode('hex')
+    print("KDF2(SHA-1)   %s" %
+          kdf('KDF2(SHA-1)', '701F3480DFE95F57941F804B1B2413EF'.decode('hex'), 7,
+              '55A4E9DD5F4CA2EF82'.decode('hex')).encode('hex'))
 
-    print pbkdf('PBKDF2(SHA-1)', '', 32, 10000, '0001020304050607'.decode('hex'))[2].encode('hex').upper()
-    print '59B2B1143B4CB1059EC58D9722FB1C72471E0D85C6F7543BA5228526375B0127'
+    print("PBKDF2(SHA-1) %s" %
+          pbkdf('PBKDF2(SHA-1)', '', 32, 10000,
+                '0001020304050607'.decode('hex'))[2].encode('hex').upper())
+    print("good output   %s\n" %
+          '59B2B1143B4CB1059EC58D9722FB1C72471E0D85C6F7543BA5228526375B0127')
 
     (salt,iterations,psk) = pbkdf_timed('PBKDF2(SHA-256)', 'xyz', 32, 200)
-    print salt.encode('hex'), iterations
-    print 'x', psk.encode('hex')
-    print 'y', pbkdf('PBKDF2(SHA-256)', 'xyz', 32, iterations, salt)[2].encode('hex')
+    print("PBKDF2(SHA-256) x=timed, y=iterated; salt = %s  #iterations = %d\n" %
+          (salt.encode('hex'), iterations))
+    print('x %s' % psk.encode('hex'))
+    print('y %s\n' %
+          (pbkdf('PBKDF2(SHA-256)', 'xyz', 32, iterations, salt)[2].encode('hex')))
 
     hmac = message_authentication_code('HMAC(SHA-256)')
     hmac.set_key('0102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F20'.decode('hex'))
     hmac.update('616263'.decode('hex'))
-
+    
     hmac_output = hmac.final()
-
-    print hmac_output.encode('hex')
+    
     if hmac_output != 'A21B1F5D4CF4F73A4DD939750F7A066A7F98CC131CB16A6692759021CFAB8181'.decode('hex'):
-        print 'Bad HMAC'
-
-    print r.get(42).encode('hex'), r.get(13).encode('hex'), r.get(9).encode('hex')
+        print('Bad HMAC\n')
+    else:
+        print("HMAC output (good): %s\n" % hmac_output.encode('hex'))
+    
+    print("rng output:\n\t%s\n\t%s\n\t%s\n" %
+          (r.get(42).encode('hex'), r.get(13).encode('hex'), r.get(9).encode('hex')))
 
     h = hash_function('MD5')
     assert h.output_length() == 16
     h.update('h')
     h.update('i')
-    print "md5", h.final().encode('hex')
+    print("md5 hash: %s\n" % (h.final().encode('hex')))
+
 
     gcm = cipher('AES-128/GCM')
-    print gcm.default_nonce_length(), gcm.update_granularity()
+    print("AES-128/GCM: default nonce=%d update_size=%d" %
+          (gcm.default_nonce_length(), gcm.update_granularity()))
     gcm_dec = cipher('AES-128/GCM', encrypt=False)
 
     iv = r.get(12)
@@ -537,27 +549,48 @@ def test():
     gcm.start(iv)
     assert len(gcm.update('')) == 0
     ct = gcm.finish(pt)
-    print "gcm ct", ct.encode('hex')
+    print("GCM ct %s" % ct.encode('hex'))
 
     gcm_dec.set_key(key)
     gcm_dec.start(iv)
     dec = gcm_dec.finish(ct)
-    print "gcm pt", pt.encode('hex'), len(pt)
-    print "gcm de", dec.encode('hex'), len(dec)
+    print("GCM pt %s %d"   % (pt.encode('hex'), len(pt)))
+    print("GCM de %s %d\n" % (dec.encode('hex'), len(dec)))
+
+    ocb = cipher('AES-128/OCB')
+    print("AES-128/OCB: default nonce=%d update_size=%d" %
+          (ocb.default_nonce_length(), ocb.update_granularity()))
+    ocb_dec = cipher('AES-128/OCB', encrypt=False)
+
+    iv = r.get(12)
+    key = r.get(16)
+    pt = r.get(21)
+    ocb.set_key(key)
+    ocb.start(iv)
+    assert len(ocb.update('')) == 0
+    ct = ocb.finish(pt)
+    print("OCB ct %s" % ct.encode('hex'))
+
+    ocb_dec.set_key(key)
+    ocb_dec.start(iv)
+    dec = ocb_dec.finish(ct)
+    print("OCB pt %s %d"   % (pt.encode('hex'), len(pt)))
+    print("OCB de %s %d\n" % (dec.encode('hex'), len(dec)))
 
     rsapriv = private_key('rsa', 1536, r)
 
     dec = pk_op_decrypt(rsapriv, "EME1(SHA-256)")
 
     rsapub = rsapriv.get_public_key()
-    print rsapub.fingerprint("SHA-1")
-    print rsapub.algo_name(), rsapub.estimated_strength()
+    print("rsapub %s/SHA-1 fingerprint: %s (estimated strength %s)" %
+          (rsapub.algo_name(), rsapub.fingerprint("SHA-1"), rsapub.estimated_strength()))
 
     enc = pk_op_encrypt(rsapub, "EME1(SHA-256)")
 
     ctext = enc.encrypt('foof', r)
-    print ctext.encode('hex')
-    print dec.decrypt(ctext)
+    print("ptext  \'%s\'" % 'foof') 
+    print("ctext   \'%s\'" % ctext.encode('hex'))
+    print("decrypt \'%s\'\n" % dec.decrypt(ctext))
 
     signer = pk_op_sign(rsapriv, 'EMSA4(SHA-384)')
 
@@ -566,20 +599,20 @@ def test():
     sig = signer.finish(r)
 
     r.reseed(200)
-    print sig.encode('hex')
+    print("EMSA4(SHA-384) signature: %s" % sig.encode('hex'))
 
     verify = pk_op_verify(rsapub, 'EMSA4(SHA-384)')
 
     verify.update('mess')
     verify.update('age')
-    print "good sig accepted?", verify.check_signature(sig)
+    print("good sig accepted? %s" % verify.check_signature(sig))
 
     verify.update('mess of things')
     verify.update('age')
-    print "bad sig accepted?", verify.check_signature(sig)
+    print("bad sig accepted? %s" % verify.check_signature(sig))
 
     verify.update('message')
-    print "good sig accepted?", verify.check_signature(sig)
+    print("good sig accepted? %s\n" % verify.check_signature(sig))
 
     dh_grp = 'secp256r1'
     #dh_grp = 'curve25519'
@@ -593,12 +626,13 @@ def test():
     a_dh = pk_op_key_agreement(a_dh_priv, dh_kdf)
     b_dh = pk_op_key_agreement(b_dh_priv, dh_kdf)
 
-    print "dh pubs", a_dh.public_value().encode('hex'), b_dh.public_value().encode('hex')
+    print("dh pubs\n\t%s\n\t%s\n" %
+          (a_dh.public_value().encode('hex'), b_dh.public_value().encode('hex')))
 
     a_key = a_dh.agree(b_dh.public_value(), 20, 'salt')
     b_key = b_dh.agree(a_dh.public_value(), 20, 'salt')
 
-    print "dh shared", a_key.encode('hex'), b_key.encode('hex')
+    print("dh shared\n\t%s\n\t%s\n" % (a_key.encode('hex'), b_key.encode('hex')))
 
 
     #f = open('key.ber','wb')
