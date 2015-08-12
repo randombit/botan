@@ -16,7 +16,7 @@ from ctypes import *
 """
 Module initialization
 """
-botan = CDLL('libbotan-1.11.dylib')
+botan = CDLL('libbotan-1.11.so')
 
 expected_api_rev = 20150210
 botan_api_rev = botan.botan_ffi_api_version()
