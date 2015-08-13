@@ -20,6 +20,16 @@ u32bit to_u32bit(const std::string& str)
    {
    try
       {
+      // std::stoul is not strict enough. Ensure that str is digit only [0-9]*
+      for (const char chr : str)
+         {
+         if (chr < '0' || chr > '9')
+            {
+            auto chrAsString = std::string(1, chr);
+            throw Invalid_Argument("String contains non-digit char: " + chrAsString);
+            }
+         }
+
       const auto integerValue = std::stoul(str);
 
       // integerValue might be uint64

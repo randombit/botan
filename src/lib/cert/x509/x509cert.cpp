@@ -136,8 +136,8 @@ void X509_Certificate::force_decode()
 
    subject.add("X509.Certificate.version", version);
    subject.add("X509.Certificate.serial", BigInt::encode(serial_bn));
-   subject.add("X509.Certificate.start", start.readable_string());
-   subject.add("X509.Certificate.end", end.readable_string());
+   subject.add("X509.Certificate.start", start.to_string());
+   subject.add("X509.Certificate.end", end.to_string());
 
    issuer.add("X509.Certificate.v2.key_id", v2_issuer_key_id);
    subject.add("X509.Certificate.v2.key_id", v2_subject_key_id);

@@ -1,10 +1,15 @@
 os: Windows Server 2012 R2
 
+platform:
+  - x86
+  - x86_amd64
+
 install:
-  - call "%ProgramFiles(x86)%\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x86
+  - call "%ProgramFiles(x86)%\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" %PLATFORM%
+  - cl # check compiler version
 
 build_script:
-  - python configure.py --disable-shared --via-amalgamation --cpu=x86_32 --cc=msvc
+  - python configure.py --disable-shared --via-amalgamation --cpu=%PLATFORM% --cc=msvc
   - nmake
   - botan-test
   - nmake install
