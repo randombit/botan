@@ -12,8 +12,6 @@
 
 namespace Botan {
 
-extern "C" {
-
 /*
 * Simple O(N^2) Multiplication
 */
@@ -71,7 +69,5 @@ void bigint_simple_sqr(word z[], const word x[], size_t x_size)
       z[x_size+i] = carry;
       }
    }
-
-}
 
 }

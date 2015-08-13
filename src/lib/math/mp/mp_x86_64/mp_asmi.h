@@ -13,8 +13,6 @@
 
 namespace Botan {
 
-extern "C" {
-
 /*
 * Helper Macros for x86-64 Assembly
 */
@@ -233,7 +231,6 @@ inline void word3_muladd_2(word* w2, word* w1, word* w0, word x, word y)
       : "cc");
    }
 
-
 #undef ASM
 #undef DO_8_TIMES
 #undef ADD_OR_SUBTRACT
@@ -244,5 +241,4 @@ inline void word3_muladd_2(word* w2, word* w1, word* w0, word x, word y)
 
 }
 
-}
 #endif

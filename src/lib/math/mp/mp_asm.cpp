@@ -14,8 +14,6 @@
 
 namespace Botan {
 
-extern "C" {
-
 /*
 * Two Operand Addition, No Carry
 */
@@ -183,7 +181,5 @@ void bigint_linmul3(word z[], const word x[], size_t x_size, word y)
 
    z[x_size] = carry;
    }
-
-}
 
 }
