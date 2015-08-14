@@ -1,6 +1,12 @@
 Botan: Crypto and TLS for C++11
 ========================================
 
+### What is different about this fork
+
+This work has been introduced primarily to deal with Python, particularly Python-3 compatibility.
+Currently it updated only one file: src/python/botan.py
+This file now works with both v2.7 and v3+ versions of Python (tested on Python-2.7.10 and Python-3.4.3).
+
 Botan (Japanese for peony) is a C++ cryptography library
 released under the permissive
 `Simplified BSD <http://botan.randombit.net/license.txt>`_ license.
