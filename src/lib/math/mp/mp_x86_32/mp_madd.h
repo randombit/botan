@@ -17,8 +17,6 @@
 
 namespace Botan {
 
-extern "C" {
-
 /*
 * Helper Macros for x86 Assembly
 */
@@ -59,8 +57,6 @@ inline word word_madd3(word a, word b, word c, word* d)
 
    return a;
    }
-
-}
 
 }
 

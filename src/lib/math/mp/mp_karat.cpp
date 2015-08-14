@@ -13,8 +13,8 @@ namespace Botan {
 
 namespace {
 
-static const size_t KARATSUBA_MULTIPLY_THRESHOLD = 32;
-static const size_t KARATSUBA_SQUARE_THRESHOLD = 32;
+const size_t KARATSUBA_MULTIPLY_THRESHOLD = 32;
+const size_t KARATSUBA_SQUARE_THRESHOLD = 32;
 
 /*
 * Karatsuba Multiplication Operation

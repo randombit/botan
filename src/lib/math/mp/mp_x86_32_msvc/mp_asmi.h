@@ -13,8 +13,6 @@
 
 namespace Botan {
 
-extern "C" {
-
 /*
 * Word Addition
 */
@@ -534,8 +532,6 @@ inline void word3_muladd_2(word* w2, word* w1, word* w0, word a, word b)
    *w1 = word_add(*w1, b, &carry);
    *w2 = word_add(*w2, top, &carry);
    }
-
-}
 
 }
 

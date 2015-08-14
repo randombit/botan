@@ -10,8 +10,6 @@
 
 namespace Botan {
 
-extern "C" {
-
 /*
 * Comba 4x4 Squaring
 */
@@ -1126,7 +1124,5 @@ void bigint_comba_mul16(word z[32], const word x[16], const word y[16])
    z[30] = w0;
    z[31] = w1;
    }
-
-}
 
 }

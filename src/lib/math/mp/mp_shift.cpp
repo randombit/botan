@@ -10,8 +10,6 @@
 
 namespace Botan {
 
-extern "C" {
-
 /*
 * Single Operand Left Shift
 */
@@ -131,7 +129,5 @@ void bigint_shr2(word y[], const word x[], size_t x_size,
          }
       }
    }
-
-}
 
 }
