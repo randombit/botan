@@ -13,15 +13,15 @@ Botan is released under the Simplified BSD License (see license.txt)
 import sys
 from ctypes import *
 from binascii import hexlify, unhexlify
-import base64
+
 
 """
 Module initialization
 """
 if sys.platform == 'darwin':
-	botan = CDLL('libbotan-1.11.dylib')
+    botan = CDLL('libbotan-1.11.dylib')
 else:
-	botan = CDLL('libbotan-1.11.so')
+    botan = CDLL('libbotan-1.11.so')
 
 expected_api_rev = 20150210
 botan_api_rev = botan.botan_ffi_api_version()
@@ -546,7 +546,7 @@ def test():
 
 
     print("KDF2(SHA-1)   %s" %
-          base64.b16encode(kdf('KDF2(SHA-1)'.encode('ascii'), unhexlify('701F3480DFE95F57941F804B1B2413EF'), 7,
+          hexlify(kdf('KDF2(SHA-1)'.encode('ascii'), unhexlify('701F3480DFE95F57941F804B1B2413EF'), 7,
                       unhexlify('55A4E9DD5F4CA2EF82'))
           ).decode('ascii')
     )
@@ -569,7 +569,7 @@ def test():
               (hexlify(salt), len(salt), iterations)   )
     else:
         print("PBKDF2(SHA-256) x=timed, y=iterated; salt = %s (len=%d)  #iterations = %d\n" %
-              (base64.b16encode(salt).decode('ascii'), len(salt), iterations)   )
+              (hexlify(salt).decode('ascii'), len(salt), iterations)   )
         
     print('x %s' % hexlify(psk).decode('utf-8'))
     print('y %s\n' %
