@@ -87,8 +87,6 @@ def main(args = None):
 #include <botan/internal/mp_asmi.h>
 
 namespace Botan {
-
-extern "C" {
 """
 
     for n in [4,6,8,9,16]:
@@ -110,7 +108,7 @@ extern "C" {
 
         print "   }\n"
 
-    print "}\n\n}"
+    print "}"
 
 if __name__ == '__main__':
     sys.exit(main())
