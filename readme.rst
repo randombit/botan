@@ -1,7 +1,7 @@
 Botan: Crypto and TLS for C++11
 ========================================
 
-### What is different about this fork
+What is different about this fork
 
 This work has been introduced primarily to deal with Python, particularly Python-3 compatibility.
 Currently it updated only one file: src/python/botan.py
