@@ -4,7 +4,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "apps.h"
+#include "../apps.h"
 
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
 
@@ -784,8 +784,8 @@ void benchmark_mce(RandomNumberGenerator& rng,
 
 }
 
-void bench_pk(RandomNumberGenerator& rng,
-              const std::string& algo, double seconds)
+void benchmark_public_key(RandomNumberGenerator& rng,
+                          const std::string& algo, double seconds)
    {
    /*
      There is some strangeness going on here. It looks like algorithms
