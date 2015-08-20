@@ -8,33 +8,33 @@ endif()
 
 # botan-tests
 add_executable(${PROJECT_NAME}
-    ./self_sig.cpp
-    ./speed.cpp
-    ./ocsp.cpp
-    ./is_prime.cpp
-    ./rng.cpp
     ./asn1.cpp
-    ./dsa_sign.cpp
-    ./keygen.cpp
-    ./timer.cpp
+    ./base64.cpp
     ./bcrypt.cpp
-    ./getopt.cpp
-    ./factor.cpp
-    ./x509print.cpp
-    ./speed_pk.cpp
     ./ca.cpp
     ./cert_verify.cpp
-    ./tls_client.cpp
-    ./pkcs10.cpp
-    ./fpe.cpp
-    ./dsa_ver.cpp
-    ./main.cpp
-    ./tls_server.cpp
-    ./hash.cpp
-    ./fuzzer.cpp
-    ./tls_proxy.cpp
-    ./base64.cpp
     ./compress.cpp
+    ./dsa_sign.cpp
+    ./dsa_ver.cpp
+    ./factor.cpp
+    ./fpe.cpp
+    ./fuzzer.cpp
+    ./getopt.cpp
+    ./hash.cpp
+    ./is_prime.cpp
+    ./keygen.cpp
+    ./main.cpp
+    ./ocsp.cpp
+    ./pkcs10.cpp
+    ./rng.cpp
+    ./self_sig.cpp
+    ./speed.cpp
+    ./timer.cpp
+    ./speed_pk.cpp
+    ./tls_client.cpp
+    ./tls_proxy.cpp
+    ./tls_server.cpp
+    ./x509print.cpp
 )
 
 #find_package( LZMA REQUIRED )
