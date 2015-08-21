@@ -29,12 +29,14 @@ add_executable(${PROJECT_NAME}
     ./rng.cpp
     ./self_sig.cpp
     ./speed.cpp
-    ./timer.cpp
-    ./speed_pk.cpp
     ./tls_client.cpp
     ./tls_proxy.cpp
     ./tls_server.cpp
     ./x509print.cpp
+    ./implementation/speed_public_key.cpp
+    ./implementation/speed_prime.cpp
+    ./implementation/speed_transform.cpp
+    ./implementation/timer.cpp
 )
 
 #find_package( LZMA REQUIRED )
