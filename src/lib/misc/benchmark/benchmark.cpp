@@ -6,6 +6,7 @@
 */
 
 #include <botan/benchmark.h>
+#include <botan/exceptn.h>
 #include <botan/lookup.h>
 #include <botan/buf_comp.h>
 #include <botan/cipher_mode.h>
@@ -153,19 +154,18 @@ algorithm_benchmark(const std::string& name,
                     size_t buf_size)
    {
    //Algorithm_Factory& af = global_state().algorithm_factory();
-   const auto providers = get_all_providers_of(name);
+   const auto provider_names = get_all_providers_of(name);
+   if (provider_names.empty())
+      throw No_Provider_Found(name);
 
    std::map<std::string, double> all_results; // provider -> ops/sec
 
-   if(!providers.empty())
-      {
-      const std::chrono::nanoseconds ns_per_provider = milliseconds / providers.size();
+   const std::chrono::nanoseconds ns_per_provider = milliseconds / provider_names.size();
 
-      for(auto provider : providers)
-         {
-         auto results = time_algorithm_ops(name, provider, rng, ns_per_provider, buf_size);
-         all_results[provider] = find_first_in(results, { "", "update", "encrypt" });
-         }
+   for(auto provider : provider_names)
+      {
+      auto results = time_algorithm_ops(name, provider, rng, ns_per_provider, buf_size);
+      all_results[provider] = find_first_in(results, { "", "update", "encrypt" });
       }
 
    return all_results;
