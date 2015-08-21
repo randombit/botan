@@ -1,6 +1,12 @@
 Release Notes
 ========================================
 
+Version 1.11.20, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Additional countermeasures were added to ECC point multiplications
+  to help protect against side channel attacks.
+
 Version 1.11.19, 2015-08-03
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
