@@ -13,8 +13,6 @@
 
 namespace Botan {
 
-extern "C" {
-
 /*
 * Montgomery Reduction Algorithm
 */
@@ -110,7 +108,5 @@ void bigint_monty_sqr(word z[], size_t z_size,
                      &p[0], p_size, p_dash,
                      &ws[0]);
    }
-
-}
 
 }

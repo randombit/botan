@@ -11,8 +11,6 @@
 
 namespace Botan {
 
-extern "C" {
-
 /*
 * Compare two MP integers
 */
@@ -77,7 +75,5 @@ word bigint_modop(word n1, word n0, word d)
    z = word_madd2(z, d, &dummy);
    return (n0-z);
    }
-
-}
 
 }
