@@ -2,14 +2,13 @@
 * ECDSA implemenation
 * (C) 2007 Manuel Hartl, FlexSecure GmbH
 *     2007 Falko Strenzke, FlexSecure GmbH
-*     2008-2010 Jack Lloyd
+*     2008-2010,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/internal/pk_utils.h>
 #include <botan/ecdsa.h>
-#include <botan/reducer.h>
 #include <botan/keypair.h>
 #include <botan/rfc6979.h>
 
@@ -41,9 +40,10 @@ class ECDSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
                                 const std::string& emsa) :
          PK_Ops::Signature_with_EMSA(emsa),
          base_point(ecdsa.domain().get_base_point()),
-         order(ecdsa.domain().get_order()),
-         x(ecdsa.private_value()),
-         mod_order(order),
+         m_order(ecdsa.domain().get_order()),
+         m_base_point(ecdsa.domain().get_base_point(), m_order),
+         m_x(ecdsa.private_value()),
+         m_mod_order(m_order),
          m_hash(hash_for_deterministic_signature(emsa))
          {
          }
@@ -52,34 +52,36 @@ class ECDSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
                                    RandomNumberGenerator& rng) override;
 
       size_t message_parts() const override { return 2; }
-      size_t message_part_size() const override { return order.bytes(); }
-      size_t max_input_bits() const override { return order.bits(); }
+      size_t message_part_size() const override { return m_order.bytes(); }
+      size_t max_input_bits() const override { return m_order.bits(); }
 
    private:
       const PointGFp& base_point;
-      const BigInt& order;
-      const BigInt& x;
-      Modular_Reducer mod_order;
+      const BigInt& m_order;
+      Blinded_Point_Multiply m_base_point;
+      const BigInt& m_x;
+      Modular_Reducer m_mod_order;
       std::string m_hash;
    };
 
 secure_vector<byte>
 ECDSA_Signature_Operation::raw_sign(const byte msg[], size_t msg_len,
-                                    RandomNumberGenerator&)
+                                    RandomNumberGenerator& rng)
    {
    const BigInt m(msg, msg_len);
 
-   const BigInt k = generate_rfc6979_nonce(x, order, m, m_hash);
+   const BigInt k = generate_rfc6979_nonce(m_x, m_order, m, m_hash);
 
-   const PointGFp k_times_P = base_point * k;
-   const BigInt r = mod_order.reduce(k_times_P.get_affine_x());
-   const BigInt s = mod_order.multiply(inverse_mod(k, order), mul_add(x, r, m));
+   //const PointGFp k_times_P = base_point * k;
+   const PointGFp k_times_P = m_base_point.blinded_multiply(k, rng);
+   const BigInt r = m_mod_order.reduce(k_times_P.get_affine_x());
+   const BigInt s = m_mod_order.multiply(inverse_mod(k, m_order), mul_add(m_x, r, m));
 
    // With overwhelming probability, a bug rather than actual zero r/s
    BOTAN_ASSERT(s != 0, "invalid s");
    BOTAN_ASSERT(r != 0, "invalid r");
 
-   secure_vector<byte> output(2*order.bytes());
+   secure_vector<byte> output(2*m_order.bytes());
    r.binary_encode(&output[output.size() / 2 - r.bytes()]);
    s.binary_encode(&output[output.size() - s.bytes()]);
    return output;

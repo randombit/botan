@@ -25,7 +25,6 @@ size_t ecdsa_sig_kat(const std::string& group_id,
                      const std::string& x,
                      const std::string& hash,
                      const std::string& msg,
-                     const std::string& nonce,
                      const std::string& signature)
    {
    auto& rng = test_rng();
@@ -39,7 +38,7 @@ size_t ecdsa_sig_kat(const std::string& group_id,
    PK_Signer sign(ecdsa, padding);
 
    return validate_signature(verify, sign, "ECDSA/" + group_id + '/' + hash,
-                             msg, rng, nonce, signature);
+                             msg, rng, signature);
    }
 
 }
@@ -53,7 +52,7 @@ size_t test_ecdsa()
    fails += run_tests_bb(ecdsa_sig, "ECDSA Signature", "Signature", false,
              [](std::map<std::string, std::string> m) -> size_t
              {
-             return ecdsa_sig_kat(m["Group"], m["X"], m["Hash"], m["Msg"], m["Nonce"], m["Signature"]);
+             return ecdsa_sig_kat(m["Group"], m["X"], m["Hash"], m["Msg"], m["Signature"]);
              });
 
    return fails;

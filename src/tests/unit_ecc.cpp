@@ -816,9 +816,9 @@ size_t test_curve_cp_ctor()
    return 0;
    }
 
-size_t ecc_randomized_test()
-   {
-   const std::vector<std::string> groups = {
+namespace {
+
+const std::vector<std::string> ec_groups = {
       "brainpool160r1",
       "brainpool192r1",
       "brainpool224r1",
@@ -849,11 +849,16 @@ size_t ecc_randomized_test()
       "x962_p239v3"
    };
 
+}
+
+}
+
+BOTAN_TEST_CASE(ecc_randomized, "ECC Randomized", {
    auto& rng = test_rng();
    size_t fails = 0;
    size_t tests = 0;
 
-   for(auto&& group_name : groups)
+   for(auto&& group_name : ec_groups)
       {
       EC_Group group(group_name);
 
@@ -861,14 +866,17 @@ size_t ecc_randomized_test()
       const BigInt& group_order = group.get_order();
 
       const PointGFp inf = base_point * group_order;
-      CHECK(inf.is_zero());
-      CHECK(inf.on_the_curve());
+      BOTAN_CONFIRM(inf.is_zero(), "Group math ok");
+      BOTAN_CONFIRM(inf.on_the_curve(), "Infinity still on the curve");
 
       try
          {
          for(size_t i = 0; i != 10; ++i)
             {
             ++tests;
+
+            const size_t h = 1 + (rng.next_byte() % 8);
+            Blinded_Point_Multiply blind(base_point, group_order, h);
 
             const BigInt a = BigInt::random_integer(rng, 2, group_order);
             const BigInt b = BigInt::random_integer(rng, 2, group_order);
@@ -878,16 +886,24 @@ size_t ecc_randomized_test()
             const PointGFp Q = base_point * b;
             const PointGFp R = base_point * c;
 
+            const PointGFp P1 = blind.blinded_multiply(a, rng);
+            const PointGFp Q1 = blind.blinded_multiply(b, rng);
+            const PointGFp R1 = blind.blinded_multiply(c, rng);
+
             const PointGFp A1 = P + Q;
             const PointGFp A2 = Q + P;
 
-            CHECK(A1 == R);
-            CHECK(A2 == R);
-            CHECK(P.on_the_curve());
-            CHECK(Q.on_the_curve());
-            CHECK(R.on_the_curve());
-            CHECK(A1.on_the_curve());
-            CHECK(A2.on_the_curve());
+            BOTAN_TEST(A1, R, "Addition");
+            BOTAN_TEST(A2, R, "Addition");
+            BOTAN_CONFIRM(P.on_the_curve(), "On the curve");
+            BOTAN_CONFIRM(Q.on_the_curve(), "On the curve");
+            BOTAN_CONFIRM(R.on_the_curve(), "On the curve");
+            BOTAN_CONFIRM(A1.on_the_curve(), "On the curve");
+            BOTAN_CONFIRM(A2.on_the_curve(), "On the curve");
+
+            BOTAN_TEST(P, P1, "P1");
+            BOTAN_TEST(Q, Q1, "Q1");
+            BOTAN_TEST(R, R1, "R1");
             }
          }
       catch(std::exception& e)
@@ -896,12 +912,8 @@ size_t ecc_randomized_test()
          ++fails;
          }
       }
+   });
 
-   test_report("ECC Randomized", tests, fails);
-   return fails;
-   }
-
-}
 
 size_t test_ecc_unit()
    {
@@ -933,8 +945,6 @@ size_t test_ecc_unit()
    fails += test_curve_cp_ctor();
 
    test_report("ECC", 0, fails);
-
-   ecc_randomized_test();
 
    return fails;
    }

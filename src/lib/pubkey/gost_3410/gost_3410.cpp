@@ -2,7 +2,7 @@
 * GOST 34.10-2001 implemenation
 * (C) 2007 Falko Strenzke, FlexSecure GmbH
 *          Manuel Hartl, FlexSecure GmbH
-* (C) 2008-2010 Jack Lloyd
+* (C) 2008-2010,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -16,7 +16,6 @@ namespace Botan {
 
 std::vector<byte> GOST_3410_PublicKey::x509_subject_public_key() const
    {
-   // Trust CryptoPro to come up with something obnoxious
    const BigInt x = public_point().get_affine_x();
    const BigInt y = public_point().get_affine_y();
 
@@ -53,7 +52,7 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
    {
    OID ecc_param_id;
 
-   // Also includes hash and cipher OIDs... brilliant design guys
+   // The parameters also includes hash and cipher OIDs
    BER_Decoder(alg_id.parameters).start_cons(SEQUENCE).decode(ecc_param_id);
 
    domain_params = EC_Group(ecc_param_id);
@@ -101,21 +100,23 @@ class GOST_3410_Signature_Operation : public PK_Ops::Signature_with_EMSA
       GOST_3410_Signature_Operation(const GOST_3410_PrivateKey& gost_3410,
                                     const std::string& emsa) :
          PK_Ops::Signature_with_EMSA(emsa),
-         base_point(gost_3410.domain().get_base_point()),
-         order(gost_3410.domain().get_order()),
-         x(gost_3410.private_value()) {}
+         m_order(gost_3410.domain().get_order()),
+         m_mod_order(m_order),
+         m_base_point(gost_3410.domain().get_base_point(), m_order),
+         m_x(gost_3410.private_value()) {}
 
       size_t message_parts() const override { return 2; }
-      size_t message_part_size() const override { return order.bytes(); }
-      size_t max_input_bits() const override { return order.bits(); }
+      size_t message_part_size() const override { return m_order.bytes(); }
+      size_t max_input_bits() const override { return m_order.bits(); }
 
       secure_vector<byte> raw_sign(const byte msg[], size_t msg_len,
                                    RandomNumberGenerator& rng) override;
 
    private:
-      const PointGFp& base_point;
-      const BigInt& order;
-      const BigInt& x;
+      const BigInt& m_order;
+      Modular_Reducer m_mod_order;
+      Blinded_Point_Multiply m_base_point;
+      const BigInt& m_x;
    };
 
 secure_vector<byte>
@@ -124,26 +125,25 @@ GOST_3410_Signature_Operation::raw_sign(const byte msg[], size_t msg_len,
    {
    BigInt k;
    do
-      k.randomize(rng, order.bits()-1);
-   while(k >= order);
+      k.randomize(rng, m_order.bits()-1);
+   while(k >= m_order);
 
    BigInt e = decode_le(msg, msg_len);
 
-   e %= order;
+   e = m_mod_order.reduce(e);
    if(e == 0)
       e = 1;
 
-   PointGFp k_times_P = base_point * k;
+   const PointGFp k_times_P = m_base_point.blinded_multiply(k, rng);
    BOTAN_ASSERT(k_times_P.on_the_curve(), "GOST 34.10 k*g is on the curve");
 
-   BigInt r = k_times_P.get_affine_x() % order;
-
-   BigInt s = (r*x + k*e) % order;
+   const BigInt r = m_mod_order.reduce(k_times_P.get_affine_x());
+   const BigInt s = m_mod_order.reduce(r*m_x + k*e);
 
    if(r == 0 || s == 0)
       throw Invalid_State("GOST 34.10: r == 0 || s == 0");
 
-   secure_vector<byte> output(2*order.bytes());
+   secure_vector<byte> output(2*m_order.bytes());
    s.binary_encode(&output[output.size() / 2 - s.bytes()]);
    r.binary_encode(&output[output.size() - r.bytes()]);
    return output;
