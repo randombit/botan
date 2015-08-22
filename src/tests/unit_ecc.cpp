@@ -952,5 +952,6 @@ size_t test_ecc_unit()
 #else
 
 SKIP_TEST(ecc_unit);
+SKIP_TEST(ecc_randomized);
 
 #endif // BOTAN_HAS_ECC_GROUP
