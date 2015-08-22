@@ -962,7 +962,9 @@ class OsInfo(object):
                       { 'os_type': None,
                         'program_suffix': '',
                         'obj_suffix': 'o',
-                        'so_suffix': 'so',
+                        'soname_pattern_patch': '',
+                        'soname_pattern_abi': '',
+                        'soname_pattern_base': '',
                         'static_suffix': 'a',
                         'ar_command': 'ar crs',
                         'ar_needs_ranlib': False,
@@ -1328,7 +1330,22 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'lib_prefix': 'lib' if options.os != 'windows' else '',
 
         'static_suffix': osinfo.static_suffix,
-        'so_suffix': osinfo.so_suffix,
+
+        'soname_base': osinfo.soname_pattern_base.format(
+                            version_major = build_config.version_major,
+                            version_minor = build_config.version_minor,
+                            version_patch = build_config.version_patch,
+                            abi_rev       = build_config.version_so_rev),
+        'soname_abi': osinfo.soname_pattern_abi.format(
+                            version_major = build_config.version_major,
+                            version_minor = build_config.version_minor,
+                            version_patch = build_config.version_patch,
+                            abi_rev       = build_config.version_so_rev),
+        'soname_patch': osinfo.soname_pattern_patch.format(
+                            version_major = build_config.version_major,
+                            version_minor = build_config.version_minor,
+                            version_patch = build_config.version_patch,
+                            abi_rev       = build_config.version_so_rev),
 
         'mod_list': '\n'.join(sorted([m.basename for m in modules])),
 
@@ -1337,8 +1354,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         }
 
     if options.os == 'darwin' and options.build_shared_lib:
-        vars['app_post_link_cmd']  = 'install_name_tool -change "/$(SONAME)" "@executable_path/$(SONAME)" $(APP)'
-        vars['test_post_link_cmd'] = 'install_name_tool -change "/$(SONAME)" "@executable_path/$(SONAME)" $(TEST)'
+        vars['app_post_link_cmd']  = 'install_name_tool -change "/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(APP)'
+        vars['test_post_link_cmd'] = 'install_name_tool -change "/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(TEST)'
     else:
         vars['app_post_link_cmd'] = ''
         vars['test_post_link_cmd'] = ''

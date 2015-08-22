@@ -6,6 +6,9 @@ Version 1.11.20, Not Yet Released
 
 * Additional countermeasures were added to ECC point multiplications
   to help protect against side channel attacks.
+  
+* On OS X, rename libs to avoid trailing version numbers, e.g.
+  libbotan-1.11.dylib.19 -> libbotan-1.11.19.dylib. Gh #241
 
 Version 1.11.19, 2015-08-03
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

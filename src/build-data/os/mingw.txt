@@ -2,8 +2,11 @@ os_type windows
 
 program_suffix .exe
 obj_suffix o
-so_suffix dll
 static_suffix a
+
+soname_pattern_base  "libbotan-{version_major}.{version_minor}.dll"
+soname_pattern_abi   "libbotan-{version_major}.{version_minor}.dll.{abi_rev}"
+soname_pattern_patch "libbotan-{version_major}.{version_minor}.dll.{abi_rev}.{version_patch}"
 
 build_shared no
 
