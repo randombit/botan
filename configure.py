@@ -1716,10 +1716,14 @@ def generate_amalgamation(build_config, options):
     for mod in build_config.modules:
         tgt = ''
 
-        if not options.single_amalgamation_file and mod.need_isa != []:
-            tgt = '_'.join(sorted(mod.need_isa))
-            if tgt == 'sse2' and options.arch == 'x86_64':
-                tgt = '' # SSE2 is always available on x86-64
+        if not options.single_amalgamation_file:
+            if mod.need_isa != []:
+                tgt = '_'.join(sorted(mod.need_isa))
+                if tgt == 'sse2' and options.arch == 'x86_64':
+                    tgt = '' # SSE2 is always available on x86-64
+
+            if options.arch == 'x86_32' and 'simd' in mod.requires:
+                tgt = 'sse2'
 
         if tgt not in botan_amalg_files:
             botan_amalg_files[tgt] = open_amalg_file(tgt)
