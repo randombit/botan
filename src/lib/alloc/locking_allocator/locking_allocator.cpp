@@ -26,7 +26,9 @@ const size_t ALIGNMENT_MULTIPLE = 2;
 
 size_t reset_mlock_limit(size_t max_req)
    {
+#if defined(RLIMIT_MEMLOCK)
    struct rlimit limits;
+
    ::getrlimit(RLIMIT_MEMLOCK, &limits);
 
    if(limits.rlim_cur < limits.rlim_max)
@@ -37,6 +39,9 @@ size_t reset_mlock_limit(size_t max_req)
       }
 
    return std::min<size_t>(limits.rlim_cur, max_req);
+#endif
+
+   return 0;
    }
 
 size_t mlock_limit()
