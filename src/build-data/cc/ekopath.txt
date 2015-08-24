@@ -22,7 +22,7 @@ shared_flags "-fPIC"
 makefile_style gmake
 
 <so_link_commands>
-default -> "$(CXX) -shared -fPIC -Wl,-soname,$(SONAME)"
+default -> "$(CXX) -shared -fPIC -Wl,-soname,$(SONAME_ABI)"
 </so_link_commands>
 
 <mach_opt>

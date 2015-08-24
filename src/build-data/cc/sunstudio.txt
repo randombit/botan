@@ -21,7 +21,7 @@ ar_command "CC -xar -o"
 makefile_style gmake
 
 <so_link_commands>
-default -> "$(CXX) -G -h$(SONAME)"
+default -> "$(CXX) -G -h$(SONAME_ABI)"
 </so_link_commands>
 
 <mach_opt>
