@@ -104,6 +104,14 @@ void Stream_Compression::process(secure_vector<byte>& buf, size_t offset, u32bit
    if(m_buffer.size() < buf.size() + offset)
       m_buffer.resize(buf.size() + offset);
 
+   // If the output buffer has zero length, .data() might return nullptr. This would
+   // make some compression algorithms (notably those provided by zlib) fail.
+   // Any small positive value works fine, but we choose 32 as it is the smallest power
+   // of two that is large enough to hold all the headers and trailers of the common
+   // formats, preventing further resizings to make room for output data.
+   if(m_buffer.size() == 0)
+      m_buffer.resize(32);
+
    m_stream->next_in(buf.data() + offset, buf.size() - offset);
    m_stream->next_out(m_buffer.data() + offset, m_buffer.size() - offset);
 
