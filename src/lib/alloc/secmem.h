@@ -85,12 +85,12 @@ class secure_allocator
       template<typename U> void destroy(U* p) { p->~U(); }
    };
 
-template<typename T> inline bool
-operator==(const secure_allocator<T>&, const secure_allocator<T>&)
+template<typename T, typename U> inline bool
+operator==(const secure_allocator<T>&, const secure_allocator<U>&)
    { return true; }
 
-template<typename T> inline bool
-operator!=(const secure_allocator<T>&, const secure_allocator<T>&)
+template<typename T, typename U> inline bool
+operator!=(const secure_allocator<T>&, const secure_allocator<U>&)
    { return false; }
 
 template<typename T> using secure_vector = std::vector<T, secure_allocator<T>>;
