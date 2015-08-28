@@ -848,19 +848,19 @@ class CompilerInfo(object):
                 return 'all-debug'
             return 'all'
 
-        abi_link = set()
+        abi_link = list()
         for what in [all(), options.os, options.arch, options.cpu]:
             flag = self.mach_abi_linking.get(what)
             if flag != None and flag != '':
-                abi_link.add(flag)
+                abi_link.append(flag)
 
         for flag in options.cc_abi_flags.split(' '):
             if flag != '':
-                abi_link.add(flag)
+                abi_link.append(flag)
 
         if len(abi_link) == 0:
             return ''
-        abi_flags = ' '.join(sorted(list(abi_link)))
+        abi_flags = ' '.join(abi_link)
 
         if options.build_mode == 'coverage':
             if self.coverage_flags == '':
