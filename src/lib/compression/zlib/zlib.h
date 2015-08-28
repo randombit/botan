@@ -30,7 +30,7 @@ class BOTAN_DLL Zlib_Compression : public Stream_Compression
       std::string name() const override { return "Zlib_Compression"; }
 
    private:
-      Compression_Stream* make_stream() const;
+      Compression_Stream* make_stream() const override;
 
       const size_t m_level;
    };
@@ -44,7 +44,7 @@ class BOTAN_DLL Zlib_Decompression : public Stream_Decompression
       std::string name() const override { return "Zlib_Decompression"; }
 
    private:
-      Compression_Stream* make_stream() const;
+      Compression_Stream* make_stream() const override;
    };
 
 /**
@@ -63,7 +63,7 @@ class BOTAN_DLL Deflate_Compression : public Stream_Compression
       std::string name() const override { return "Deflate_Compression"; }
 
    private:
-      Compression_Stream* make_stream() const;
+      Compression_Stream* make_stream() const override;
 
       const size_t m_level;
    };
@@ -77,7 +77,7 @@ class BOTAN_DLL Deflate_Decompression : public Stream_Decompression
       std::string name() const override { return "Deflate_Decompression"; }
 
    private:
-      Compression_Stream* make_stream() const;
+      Compression_Stream* make_stream() const override;
    };
 
 /**
@@ -97,7 +97,7 @@ class BOTAN_DLL Gzip_Compression : public Stream_Compression
       std::string name() const override { return "Gzip_Compression"; }
 
    private:
-      Compression_Stream* make_stream() const;
+      Compression_Stream* make_stream() const override;
 
       const size_t m_level;
       const byte m_os_code;
@@ -112,7 +112,7 @@ class BOTAN_DLL Gzip_Decompression : public Stream_Decompression
       std::string name() const override { return "Gzip_Decompression"; }
 
    private:
-      Compression_Stream* make_stream() const;
+      Compression_Stream* make_stream() const override;
    };
 
 }
