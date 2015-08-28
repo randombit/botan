@@ -104,8 +104,16 @@ void Stream_Compression::process(secure_vector<byte>& buf, size_t offset, u32bit
    if(m_buffer.size() < buf.size() + offset)
       m_buffer.resize(buf.size() + offset);
 
-   m_stream->next_in(&buf[offset], buf.size() - offset);
-   m_stream->next_out(&m_buffer[offset], m_buffer.size() - offset);
+   // If the output buffer has zero length, .data() might return nullptr. This would
+   // make some compression algorithms (notably those provided by zlib) fail.
+   // Any small positive value works fine, but we choose 32 as it is the smallest power
+   // of two that is large enough to hold all the headers and trailers of the common
+   // formats, preventing further resizings to make room for output data.
+   if(m_buffer.size() == 0)
+      m_buffer.resize(32);
+
+   m_stream->next_in(buf.data() + offset, buf.size() - offset);
+   m_stream->next_out(m_buffer.data() + offset, m_buffer.size() - offset);
 
    while(true)
       {
@@ -115,7 +123,7 @@ void Stream_Compression::process(secure_vector<byte>& buf, size_t offset, u32bit
          {
          const size_t added = 8 + m_buffer.size();
          m_buffer.resize(m_buffer.size() + added);
-         m_stream->next_out(&m_buffer[m_buffer.size() - added], added);
+         m_stream->next_out(m_buffer.data() + m_buffer.size() - added, added);
          }
       else if(m_stream->avail_in() == 0)
          {
@@ -170,8 +178,8 @@ void Stream_Decompression::process(secure_vector<byte>& buf, size_t offset, u32b
    if(m_buffer.size() < buf.size() + offset)
       m_buffer.resize(buf.size() + offset);
 
-   m_stream->next_in(&buf[offset], buf.size() - offset);
-   m_stream->next_out(&m_buffer[offset], m_buffer.size() - offset);
+   m_stream->next_in(buf.data() + offset, buf.size() - offset);
+   m_stream->next_out(m_buffer.data() + offset, m_buffer.size() - offset);
 
    while(true)
       {
@@ -189,14 +197,14 @@ void Stream_Decompression::process(secure_vector<byte>& buf, size_t offset, u32b
          // More data follows: try to process as a following stream
          const size_t read = (buf.size() - offset) - m_stream->avail_in();
          start();
-         m_stream->next_in(&buf[offset + read], buf.size() - offset - read);
+         m_stream->next_in(buf.data() + offset + read, buf.size() - offset - read);
          }
 
       if(m_stream->avail_out() == 0)
          {
          const size_t added = 8 + m_buffer.size();
          m_buffer.resize(m_buffer.size() + added);
-         m_stream->next_out(&m_buffer[m_buffer.size() - added], added);
+         m_stream->next_out(m_buffer.data() + m_buffer.size() - added, added);
          }
       else if(m_stream->avail_in() == 0)
          {
