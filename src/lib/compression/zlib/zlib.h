@@ -106,7 +106,7 @@ class BOTAN_DLL Gzip_Compression : public Stream_Compression
 /**
 * Gzip Decompression
 */
-class BOTAN_DLL Gzip_Decompression : public Stream_Compression
+class BOTAN_DLL Gzip_Decompression : public Stream_Decompression
    {
    public:
       std::string name() const override { return "Gzip_Decompression"; }
