@@ -93,12 +93,15 @@ size_t test_compression()
 
          const size_t text_len = strlen(text_str);
 
+         const secure_vector<byte> empty;
          const secure_vector<byte> all_zeros(text_len, 0);
          const secure_vector<byte> random_binary = test_rng().random_vec(text_len);
 
          const byte* textb = reinterpret_cast<const byte*>(text_str);
          const secure_vector<byte> text(textb, textb + text_len);
 
+         const size_t c1_e = run_compression(*c1, *d, empty);
+         const size_t c9_e = run_compression(*c9, *d, empty);
          const size_t c1_z = run_compression(*c1, *d, all_zeros);
          const size_t c9_z = run_compression(*c9, *d, all_zeros);
          const size_t c1_r = run_compression(*c1, *d, random_binary);
@@ -108,6 +111,10 @@ size_t test_compression()
 
 #define BOTAN_TEST_GTE(x, y, msg) if(x < y) { ++fails; std::cout << "FAIL: " << x << " " << y << " " << msg << std::endl; }
 
+         BOTAN_TEST_GTE(c1_e, 1, "Empty input compresses to non-empty output");
+         BOTAN_TEST_GTE(c9_e, 1, "Empty input compresses to non-empty output");
+
+         BOTAN_TEST_GTE(c1_e, c9_e, "Level 9 compresses at least as well as level 1");
          BOTAN_TEST_GTE(c1_z, c9_z, "Level 9 compresses at least as well as level 1");
          BOTAN_TEST_GTE(c1_t, c9_t, "Level 9 compresses at least as well as level 1");
          BOTAN_TEST_GTE(c1_r, c9_r, "Level 9 compresses at least as well as level 1");
