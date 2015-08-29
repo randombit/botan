@@ -3,6 +3,7 @@ define TLS 20150319
 load_on auto
 
 <header:public>
+credentials_manager.h
 tls_alert.h
 tls_blocking.h
 tls_channel.h
@@ -36,7 +37,6 @@ tls_session_key.h
 aead
 aes
 asn1
-credentials
 dh
 ecdh
 ecdsa
