@@ -194,10 +194,11 @@ class OpenSSL_ECDSA_Signing_Operation : public PK_Ops::Signature_with_EMSA
 
 BOTAN_REGISTER_TYPE(PK_Ops::Verification, OpenSSL_ECDSA_Verification_Operation, "ECDSA",
                     OpenSSL_ECDSA_Verification_Operation::make,
-                    "openssl", 255);
+                    "openssl", BOTAN_OPENSSL_ECDSA_PRIO);
 
 BOTAN_REGISTER_TYPE(PK_Ops::Signature, OpenSSL_ECDSA_Signing_Operation, "ECDSA",
-                    OpenSSL_ECDSA_Signing_Operation::make, "openssl", 255);
+                    OpenSSL_ECDSA_Signing_Operation::make,
+                    "openssl", BOTAN_OPENSSL_ECDSA_PRIO);
 
 }
 

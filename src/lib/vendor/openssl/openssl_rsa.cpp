@@ -59,11 +59,11 @@ class OpenSSL_RSA_Encryption_Operation : public PK_Ops::Encryption
          {
          const std::vector<byte> der = rsa.x509_subject_public_key();
          const byte* der_ptr = der.data();
-         m_openssl_rsa.reset(d2i_RSAPublicKey(nullptr, &der_ptr, der.size()));
+         m_openssl_rsa.reset(::d2i_RSAPublicKey(nullptr, &der_ptr, der.size()));
          if(!m_openssl_rsa)
             throw OpenSSL_Error("d2i_RSAPublicKey");
 
-         m_bits = 8 * (RSA_size(m_openssl_rsa.get()) - pad_overhead);
+         m_bits = 8 * n_size() - pad_overhead;
          }
 
       size_t max_input_bits() const override { return m_bits; };
@@ -71,15 +71,35 @@ class OpenSSL_RSA_Encryption_Operation : public PK_Ops::Encryption
       secure_vector<byte> encrypt(const byte msg[], size_t msg_len,
                                   RandomNumberGenerator&) override
          {
+         const size_t mod_sz = n_size();
 
-         secure_vector<byte> buf(::RSA_size(m_openssl_rsa.get()));
-         int rc = ::RSA_public_encrypt(msg_len, msg, buf.data(), m_openssl_rsa.get(), m_padding);
+         if(msg_len > mod_sz)
+            throw Invalid_Argument("Input too large for RSA key");
+
+         secure_vector<byte> outbuf(mod_sz);
+
+         secure_vector<byte> inbuf;
+
+         if(m_padding == RSA_NO_PADDING)
+            {
+            inbuf.resize(mod_sz);
+            copy_mem(&inbuf[mod_sz - msg_len], msg, msg_len);
+            }
+         else
+            {
+            inbuf.assign(msg, msg + msg_len);
+            }
+
+         int rc = ::RSA_public_encrypt(inbuf.size(), inbuf.data(), outbuf.data(),
+                                       m_openssl_rsa.get(), m_padding);
          if(rc < 0)
             throw OpenSSL_Error("RSA_public_encrypt");
-         return buf;
+
+         return outbuf;
          }
 
    private:
+      size_t n_size() const { return ::RSA_size(m_openssl_rsa.get()); }
       std::unique_ptr<RSA, std::function<void (RSA*)>> m_openssl_rsa;
       size_t m_bits = 0;
       int m_padding = 0;
@@ -114,7 +134,7 @@ class OpenSSL_RSA_Decryption_Operation : public PK_Ops::Decryption
          if(!m_openssl_rsa)
             throw OpenSSL_Error("d2i_RSAPrivateKey");
 
-         m_bits = 8 * RSA_size(m_openssl_rsa.get());
+         m_bits = 8 * ::RSA_size(m_openssl_rsa.get());
          }
 
       size_t max_input_bits() const override { return m_bits; };
@@ -126,6 +146,17 @@ class OpenSSL_RSA_Decryption_Operation : public PK_Ops::Decryption
          if(rc < 0 || static_cast<size_t>(rc) > buf.size())
             throw OpenSSL_Error("RSA_private_decrypt");
          buf.resize(rc);
+
+         if(m_padding == RSA_NO_PADDING)
+            {
+            size_t leading_0s = 0;
+            while(leading_0s < buf.size() && buf[leading_0s] == 0)
+               leading_0s++;
+
+            if(leading_0s)
+               return secure_vector<byte>(&buf[leading_0s], &buf[buf.size()]);
+            }
+
          return buf;
          }
 
@@ -136,9 +167,9 @@ class OpenSSL_RSA_Decryption_Operation : public PK_Ops::Decryption
    };
 
 BOTAN_REGISTER_TYPE(PK_Ops::Encryption, OpenSSL_RSA_Encryption_Operation, "RSA",
-                    OpenSSL_RSA_Encryption_Operation::make, "openssl", 255);
+                    OpenSSL_RSA_Encryption_Operation::make, "openssl", BOTAN_OPENSSL_RSA_PRIO);
 BOTAN_REGISTER_TYPE(PK_Ops::Decryption, OpenSSL_RSA_Decryption_Operation, "RSA",
-                    OpenSSL_RSA_Decryption_Operation::make, "openssl", 255);
+                    OpenSSL_RSA_Decryption_Operation::make, "openssl", BOTAN_OPENSSL_RSA_PRIO);
 
 }
 
