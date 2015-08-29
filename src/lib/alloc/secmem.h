@@ -36,6 +36,9 @@ class secure_allocator
 
       secure_allocator() BOTAN_NOEXCEPT {}
 
+      template<typename U>
+      secure_allocator(const secure_allocator<U>&) BOTAN_NOEXCEPT {}
+
       ~secure_allocator() BOTAN_NOEXCEPT {}
 
       pointer address(reference x) const BOTAN_NOEXCEPT
@@ -82,12 +85,12 @@ class secure_allocator
       template<typename U> void destroy(U* p) { p->~U(); }
    };
 
-template<typename T> inline bool
-operator==(const secure_allocator<T>&, const secure_allocator<T>&)
+template<typename T, typename U> inline bool
+operator==(const secure_allocator<T>&, const secure_allocator<U>&)
    { return true; }
 
-template<typename T> inline bool
-operator!=(const secure_allocator<T>&, const secure_allocator<T>&)
+template<typename T, typename U> inline bool
+operator!=(const secure_allocator<T>&, const secure_allocator<U>&)
    { return false; }
 
 template<typename T> using secure_vector = std::vector<T, secure_allocator<T>>;
