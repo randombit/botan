@@ -82,12 +82,15 @@ using namespace Botan;
 namespace {
 
 const char* ec_domains[] = {
-   "secp160r2",
-   "secp192r1",
-   "secp224r1",
+   //   "secp160r2",
+   //   "secp192r1",
+   //   "secp224r1",
    "secp256r1",
    "secp384r1",
    "secp521r1",
+   //"brainpool256r1",
+   //"brainpool384r1",
+   //"brainpool512r1",
    nullptr
 };
 
@@ -159,6 +162,8 @@ void benchmark_sig_ver(PK_Verifier& ver, PK_Signer& sig,
             message.resize(48);
             rng.randomize(&message[0], message.size());
             }
+         else
+            message[0]++;
 
          sig_timer.start();
          signature = sig.sign_message(message, rng);
@@ -350,7 +355,7 @@ void benchmark_ecdsa(RandomNumberGenerator& rng,
                            sig_timer, rng, 1000, seconds);
          }
 
-      const std::string nm = "ECDSA-" + std::to_string(pbits);
+      const std::string nm = std::string("ECDSA ") + ec_domains[j];
 
       report.report(nm, keygen_timer);
       report.report(nm, verify_timer);
