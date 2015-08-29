@@ -18,7 +18,6 @@ divide.cpp
 </source>
 
 <requires>
-alloc
 mp
 hex
 rng

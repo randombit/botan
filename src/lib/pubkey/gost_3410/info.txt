@@ -3,7 +3,6 @@ define GOST_34_10_2001 20131128
 load_on auto
 
 <requires>
-alloc
 asn1
 ec_group
 ecc_key

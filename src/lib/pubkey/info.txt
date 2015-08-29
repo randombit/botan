@@ -28,7 +28,6 @@ pk_ops_impl.h
 </header:internal>
 
 <requires>
-alloc
 asn1
 bigint
 kdf
