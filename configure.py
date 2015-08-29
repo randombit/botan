@@ -851,16 +851,14 @@ class CompilerInfo(object):
         abi_link = list()
         for what in [all(), options.os, options.arch, options.cpu]:
             flag = self.mach_abi_linking.get(what)
-            if flag != None and flag != '':
+            if flag != None and flag != '' and flag not in abi_link:
                 abi_link.append(flag)
 
-        for flag in options.cc_abi_flags.split(' '):
-            if flag != '':
-                abi_link.append(flag)
-
-        if len(abi_link) == 0:
-            return ''
-        abi_flags = ' '.join(abi_link)
+        abi_flags = ''
+        if len(abi_link) > 0:
+            abi_flags += ' '.join(sorted(abi_link))
+        if options.cc_abi_flags != '':
+            abi_flags += ' ' + options.cc_abi_flags
 
         if options.build_mode == 'coverage':
             if self.coverage_flags == '':
