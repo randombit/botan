@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/block_utils.h>
+#include <botan/internal/openssl.h>
 #include <openssl/evp.h>
 
 namespace Botan {
@@ -165,14 +166,16 @@ make_evp_block_maker_keylen(const EVP_CIPHER* cipher, const char* algo,
       };
    }
 
+#define BOTAN_OPENSSL_BLOCK_PRIO 150
+
 #define BOTAN_REGISTER_OPENSSL_EVP_BLOCK(NAME, EVP)                            \
    BOTAN_REGISTER_TYPE(BlockCipher, EVP_BlockCipher ## EVP, NAME,              \
-                       make_evp_block_maker(EVP(), NAME), "openssl", 96);
+                       make_evp_block_maker(EVP(), NAME), "openssl", BOTAN_OPENSSL_BLOCK_PRIO);
 
 #define BOTAN_REGISTER_OPENSSL_EVP_BLOCK_KEYLEN(NAME, EVP, KMIN, KMAX, KMOD)       \
    BOTAN_REGISTER_TYPE(BlockCipher, OpenSSL_BlockCipher ## EVP, NAME,              \
                        make_evp_block_maker_keylen(EVP(), NAME, KMIN, KMAX, KMOD), \
-                       "openssl", 96);
+                       "openssl", BOTAN_OPENSSL_BLOCK_PRIO);
 
 #if !defined(OPENSSL_NO_AES)
    BOTAN_REGISTER_OPENSSL_EVP_BLOCK("AES-128", EVP_aes_128_ecb);

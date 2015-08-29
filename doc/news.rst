@@ -9,6 +9,13 @@ Version 1.11.20, Not Yet Released
 
 * An ECDSA provider using OpenSSL has been added.
 
+* The ordering of algorithm priorities has been reversed. Previously
+  255 was the lowest priority and 0 was the highest priority. Now it
+  is the reverse, with 0 being lowest priority and 255 being highest.
+  The default priority for the base algorithms is 100. This only
+  affects external providers or applications which directly set
+  provider preferences.
+
 * On OS X, rename libs to avoid trailing version numbers, e.g.
   libbotan-1.11.dylib.19 -> libbotan-1.11.19.dylib. Gh #241
 

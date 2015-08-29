@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/hash_utils.h>
+#include <botan/internal/openssl.h>
 #include <openssl/evp.h>
 
 namespace Botan {
@@ -78,7 +79,7 @@ make_evp_hash_maker(const EVP_MD* md, const char* algo)
 
 #define BOTAN_REGISTER_OPENSSL_EVP_HASH(NAME, EVP)                      \
    BOTAN_REGISTER_TYPE(HashFunction, OpenSSL_HashFunction ## EVP, NAME, \
-                       make_evp_hash_maker(EVP(), NAME), "openssl", 32);
+                       make_evp_hash_maker(EVP(), NAME), "openssl", BOTAN_OPENSSL_HASH_PRIO);
 
 #if !defined(OPENSSL_NO_SHA)
    BOTAN_REGISTER_OPENSSL_EVP_HASH("SHA-160", EVP_sha1);
