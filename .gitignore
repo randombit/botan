@@ -17,6 +17,9 @@ botan-test
 \#*\#
 .\#*
 
+# Logs
+*.log
+
 # Patch files
 *.patch
 *.diff
@@ -35,6 +38,10 @@ botan_all_*.cpp
 # Coverage output
 coverage.info
 coverage/
+
+# Profiler outputs
+cachegrind.*
+callgrind.*
 
 # Test output
 src/tests/outdata/*.pem
