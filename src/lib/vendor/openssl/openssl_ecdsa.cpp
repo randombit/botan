@@ -5,13 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/build.h>
-#include <botan/internal/pk_utils.h>
-#include <functional>
-#include <memory>
-
+#include <botan/internal/openssl.h>
 #include <openssl/x509.h>
-#include <openssl/err.h>
 
 #if defined(BOTAN_HAS_ECDSA) && !defined(OPENSSL_NO_ECDSA)
 
@@ -19,6 +14,7 @@
 #include <botan/ecdsa.h>
 #include <botan/pkcs8.h>
 #include <botan/oids.h>
+#include <botan/internal/pk_utils.h>
 
 #include <openssl/ecdsa.h>
 #include <openssl/ec.h>
@@ -46,13 +42,6 @@ secure_vector<byte> PKCS8_for_openssl(const EC_PrivateKey& ec)
       .end_cons()
       .get_contents();
    }
-
-class OpenSSL_Error : public Exception
-   {
-   public:
-      OpenSSL_Error(const std::string& what) :
-         Exception(what + " failed: " + ERR_error_string(ERR_get_error(), nullptr)) {}
-   };
 
 int OpenSSL_EC_nid_for(const OID& oid)
    {

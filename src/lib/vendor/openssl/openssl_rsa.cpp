@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/build.h>
+#include <botan/internal/openssl.h>
 
 #if defined(BOTAN_HAS_RSA)
 
@@ -33,13 +33,6 @@ std::pair<int, size_t> get_openssl_enc_pad(const std::string& eme)
    else
       throw Lookup_Error("OpenSSL RSA does not support EME " + eme);
    }
-
-class OpenSSL_Error : public Exception
-   {
-   public:
-      OpenSSL_Error(const std::string& what) :
-         Exception(what + " failed: " + ERR_error_string(ERR_get_error(), nullptr)) {}
-   };
 
 class OpenSSL_RSA_Encryption_Operation : public PK_Ops::Encryption
    {
