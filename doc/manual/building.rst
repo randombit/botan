@@ -185,7 +185,7 @@ For iOS using XCode
 
 To cross compile for iOS, configure with::
 
-   $ ./configure.py --cpu=armv7 --cc=clang --cc-abi-flags="-arch armv7 -arch armv7s --sysroot=$(IOS_SYSROOT)"
+   $ ./configure.py --cpu=armv7 --cc=clang --cc-abi-flags="-arch armv7 -arch armv7s -stdlib=libc++ --sysroot=$(IOS_SYSROOT)"
 
 Along with any additional configuration arguments. Using ``--no-autoload``
 might be helpful as can substantially reduce code size.
