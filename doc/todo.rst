@@ -1,11 +1,51 @@
-Todos
+Projects
 ========================================
 
-These are features either requested by users or that seem like
-potentially useful things to have. Several are quite self-contained
-and could make a quick project.
-
 Request a new feature by opening a pull request to update this file.
+
+TLS
+----------------------------------------
+
+* Encrypt-then-MAC extension (RFC 7366)
+* Authentication using TOFU (sqlite3 storage)
+* Certificate pinning (using TACK?)
+* TLS OCSP stapling (RFC 6066)
+* TLS supplemental authorization data (RFC 4680, RFC 5878)
+* OpenPGP authentication (RFC 5081)
+* DTLS-SCTP (RFC 6083)
+* Perspectives (http://perspectives-project.org/)
+
+PKIX
+----------------------------------------
+
+* Support multiple DNS names in certificates
+* X.509 name constraints
+* X.509 policy constraints
+* OCSP responder logic
+* X.509 attribute certificates (RFC 5755)
+
+New Protocols
+----------------------------------------
+
+* Off-The-Record message protocol
+* Some useful subset of OpenPGP
+* SSHv2 client and/or server
+* Cash schemes (such as Lucre, credlib, bitcoin?)
+
+  Accelerators / backends
+----------------------------------------
+
+* Extend OpenSSL provider (cipher modes, ECDH, HMAC)
+* /dev/crypto
+* Windows CryptoAPI
+* Apple CommonCrypto
+* ARMv8 crypto extensions
+* Intel Skylake SHA-1/SHA-2
+
+FFI (Python, OCaml)
+----------------------------------------
+
+* Expose TLS
 
 Symmetric Algorithms, Hashes, ...
 ----------------------------------------
@@ -37,55 +77,11 @@ Public Key Crypto, Math
 * Have BigInt '%' and '/' operators compute and cache the Barrett
   reduction value on the BigInt.
 
-TLS
-----------------------------------------
-
-* Encrypt-then-MAC extension (RFC 7366)
-* Authentication using TOFU (sqlite3 storage)
-* Certificate pinning (using TACK?)
-* TLS OCSP stapling (RFC 6066)
-* TLS supplemental authorization data (RFC 4680, RFC 5878)
-* OpenPGP authentication (RFC 5081)
-* DTLS-SCTP (RFC 6083)
-* Perspectives (http://perspectives-project.org/)
-
-PKIX
-----------------------------------------
-
-* Support multiple DNS names in certificates
-* X.509 name constraints
-* X.509 policy constraints
-* OCSP responder logic
-* X.509 attribute certificates (RFC 5755)
-
-New Protocols
-----------------------------------------
-
-* Off-The-Record message protocol
-* Some useful subset of OpenPGP
-* SSHv2 client and/or server
-* Cash schemes (such as Lucre, credlib, bitcoin?)
-
 Library Infrastructure
 ----------------------------------------
 * Add logging callbacks
 * Add latency tracing framework
 * Compute cycles/byte estimates for benchmark output
-
-Accelerators / backends
-----------------------------------------
-
-* Extend OpenSSL provider (cipher modes, ECDH, ECDSA, HMAC)
-* /dev/crypto
-* Windows CryptoAPI
-* Apple CommonCrypto
-* ARMv8 crypto extensions
-* Intel Skylake SHA-1/SHA-2
-
-FFI (Python, OCaml)
-----------------------------------------
-
-* Expose TLS
 
 Build
 ----------------------------------------
