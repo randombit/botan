@@ -39,7 +39,6 @@ class ECDSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
       ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa,
                                 const std::string& emsa) :
          PK_Ops::Signature_with_EMSA(emsa),
-         base_point(ecdsa.domain().get_base_point()),
          m_order(ecdsa.domain().get_order()),
          m_base_point(ecdsa.domain().get_base_point(), m_order),
          m_x(ecdsa.private_value()),
@@ -56,7 +55,6 @@ class ECDSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
       size_t max_input_bits() const override { return m_order.bits(); }
 
    private:
-      const PointGFp& base_point;
       const BigInt& m_order;
       Blinded_Point_Multiply m_base_point;
       const BigInt& m_x;
@@ -72,7 +70,6 @@ ECDSA_Signature_Operation::raw_sign(const byte msg[], size_t msg_len,
 
    const BigInt k = generate_rfc6979_nonce(m_x, m_order, m, m_hash);
 
-   //const PointGFp k_times_P = base_point * k;
    const PointGFp k_times_P = m_base_point.blinded_multiply(k, rng);
    const BigInt r = m_mod_order.reduce(k_times_P.get_affine_x());
    const BigInt s = m_mod_order.multiply(inverse_mod(k, m_order), mul_add(m_x, r, m));
