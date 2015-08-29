@@ -253,11 +253,7 @@ size_t validate_signature(PK_Verifier& v, PK_Signer& s, const std::string& algo,
 
    PK_TEST(v.verify_message(message, sig), "Correct signature is valid");
 
-   zero_mem(sig.data(), sig.size());
-
-   PK_TEST(!v.verify_message(message, sig), "All-zero signature is invalid");
-
-   for(size_t i = 0; i != 3; ++i)
+   for(size_t i = 0; i != 5; ++i)
       {
       auto bad_sig = sig;
 
@@ -266,6 +262,10 @@ size_t validate_signature(PK_Verifier& v, PK_Signer& s, const std::string& algo,
 
       PK_TEST(!v.verify_message(message, bad_sig), "Incorrect signature is invalid");
       }
+
+   zero_mem(sig.data(), sig.size());
+
+   PK_TEST(!v.verify_message(message, sig), "All-zero signature is invalid");
 
    return fails;
    }
