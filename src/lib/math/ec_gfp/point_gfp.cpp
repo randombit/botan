@@ -10,13 +10,10 @@
 #include <botan/point_gfp.h>
 #include <botan/numthry.h>
 #include <botan/loadstor.h>
+#include <botan/internal/rounding.h>
 
 namespace Botan {
 
-const size_t BOTAN_POINTGFP_MONTGOMERY_BLINDING_BITS = 20;
-const size_t BOTAN_POINTGFP_RANDOMIZE_BLINDING_BITS = 48;
-
-#define BOTAN_POINTGFP_BLINDED_MULTIPLY_USE_MONTGOMERY_LADDER 1
 
 PointGFp::PointGFp(const CurveGFp& curve) :
    m_curve(curve),
@@ -42,15 +39,20 @@ PointGFp::PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y) :
 
 void PointGFp::randomize_repr(RandomNumberGenerator& rng)
    {
-   BigInt mask(rng, BOTAN_POINTGFP_RANDOMIZE_BLINDING_BITS, false);
+   if(BOTAN_POINTGFP_RANDOMIZE_BLINDING_BITS > 1)
+      {
+      BigInt mask;
+      while(mask.is_zero())
+         mask.randomize(rng, BOTAN_POINTGFP_RANDOMIZE_BLINDING_BITS, false);
 
-   m_curve.to_rep(mask, m_monty_ws);
-   const BigInt mask2 = curve_mult(mask, mask);
-   const BigInt mask3 = curve_mult(mask2, mask);
+      m_curve.to_rep(mask, m_monty_ws);
+      const BigInt mask2 = curve_mult(mask, mask);
+      const BigInt mask3 = curve_mult(mask2, mask);
 
-   m_coord_x = curve_mult(m_coord_x, mask2);
-   m_coord_y = curve_mult(m_coord_y, mask3);
-   m_coord_z = curve_mult(m_coord_z, mask);
+      m_coord_x = curve_mult(m_coord_x, mask2);
+      m_coord_y = curve_mult(m_coord_y, mask3);
+      m_coord_z = curve_mult(m_coord_z, mask);
+      }
    }
 
 // Point addition
@@ -317,7 +319,7 @@ PointGFp operator*(const BigInt& scalar, const PointGFp& point)
    }
 
 Blinded_Point_Multiply::Blinded_Point_Multiply(const PointGFp& base, const BigInt& order, size_t h) :
-   m_order(order), m_h(h ? h : 4), m_ws(9)
+   m_h(h > 0 ? h : 4), m_order(order), m_ws(9)
    {
    // Upper bound is a sanity check rather than hard limit
    if(m_h < 1 || m_h > 8)
@@ -362,9 +364,14 @@ PointGFp Blinded_Point_Multiply::blinded_multiply(const BigInt& scalar_in,
    if(scalar_in.is_negative())
       throw std::invalid_argument("Blinded_Point_Multiply scalar must be positive");
 
+#if BOTAN_POINTGFP_SCALAR_BLINDING_BITS > 0
    // Choose a small mask m and use k' = k + m*order (Coron's 1st countermeasure)
-   const u64bit mask = rng.gen_mask(BOTAN_POINTGFP_MONTGOMERY_BLINDING_BITS);
+   const BigInt mask(rng, BOTAN_POINTGFP_SCALAR_BLINDING_BITS, false);
    const BigInt scalar = scalar_in + m_order * mask;
+#else
+   const BigInt& scalar = scalar_in;
+#endif
+
    const size_t scalar_bits = scalar.bits();
 
    // Randomize each point representation (Coron's 3rd countermeasure)
@@ -403,26 +410,34 @@ PointGFp Blinded_Point_Multiply::blinded_multiply(const BigInt& scalar_in,
 
 #else
 
-   size_t bits_left = scalar_bits;
+   // N-bit windowing exponentiation:
+
+   size_t windows = round_up(scalar_bits, m_h) / m_h;
 
    PointGFp R = m_U[0];
 
-   while(bits_left >= m_h)
+   if(windows > 0)
       {
-      for(size_t i = 0; i != m_h; ++i)
-         R.mult2(m_ws);
-
-      const u32bit nibble = scalar.get_substring(bits_left - m_h, m_h);
+      windows--;
+      const u32bit nibble = scalar.get_substring(windows*m_h, m_h);
       R.add(m_U[nibble], m_ws);
-      bits_left -= m_h;
-      }
 
-   while(bits_left)
-      {
-      R.mult2(m_ws);
-      if(scalar.get_bit(bits_left-1))
-         R.add(m_U[1], m_ws);
-      --bits_left;
+      /*
+      Randomize after adding the first nibble as before the addition R
+      is zero, and we cannot effectively randomize the point
+      representation of the zero point.
+      */
+      R.randomize_repr(rng);
+
+      while(windows)
+         {
+         for(size_t i = 0; i != m_h; ++i)
+            R.mult2(m_ws);
+
+         const u32bit nibble = scalar.get_substring((windows-1)*m_h, m_h);
+         R.add(m_U[nibble], m_ws);
+         windows--;
+         }
       }
 #endif
 

@@ -293,8 +293,8 @@ class BOTAN_DLL Blinded_Point_Multiply
 
       PointGFp blinded_multiply(const BigInt& scalar, RandomNumberGenerator& rng);
    private:
-      const BigInt& m_order;
       const size_t m_h;
+      const BigInt& m_order;
       std::vector<BigInt> m_ws;
       std::vector<PointGFp> m_U;
    };

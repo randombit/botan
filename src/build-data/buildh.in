@@ -57,6 +57,22 @@
 * If enabled the ECC implementation will use Montgomery ladder
 * instead of a fixed window implementation.
 */
+#define BOTAN_POINTGFP_BLINDED_MULTIPLY_USE_MONTGOMERY_LADDER 0
+
+/*
+* Set number of bits used to generate mask for blinding the scalar of
+* a point multiplication. Set to zero to disable this side-channel
+* countermeasure.
+*/
+#define BOTAN_POINTGFP_SCALAR_BLINDING_BITS 20
+
+/*
+* Set number of bits used to generate mask for blinding the
+* representation of an ECC point. Set to zero to diable this
+* side-channel countermeasure.
+*/
+#define BOTAN_POINTGFP_RANDOMIZE_BLINDING_BITS 64
+
 #define BOTAN_CURVE_GFP_USE_MONTGOMERY_LADDER 0
 
 /* PK key consistency checking toggles */
