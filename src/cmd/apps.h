@@ -68,3 +68,9 @@ class AppRegistrations
    };
 
 #define REGISTER_APP(nm) AppRegistrations::AppRegistration g_ ## nm ## _registration(#nm, nm)
+
+#if defined(BOTAN_TARGET_OS_IS_WINDOWS) || defined(BOTAN_TARGET_OS_IS_MINGW)
+  #undef BOTAN_TARGET_OS_HAS_SOCKETS
+#else
+  #define BOTAN_TARGET_OS_HAS_SOCKETS
+#endif
