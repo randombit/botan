@@ -81,8 +81,8 @@ void client_check_state(Handshake_Type new_msg, Handshake_State* state)
 /**
 * TLS Client Constructor
 */
-TLS_Client::TLS_Client(std::tr1::function<size_t (byte[], size_t)> input_fn,
-                       std::tr1::function<void (const byte[], size_t)> output_fn,
+TLS_Client::TLS_Client(std::tr1::function<size_t (unsigned char[], size_t)> input_fn,
+                       std::tr1::function<void (const unsigned char[], size_t)> output_fn,
                        const TLS_Policy& policy,
                        RandomNumberGenerator& rng) :
    input_fn(input_fn),

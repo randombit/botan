@@ -113,7 +113,7 @@ SecureVector<byte> rfc3394_keyunwrap(const MemoryRegion<byte>& key,
          }
       }
 
-   if(load_be<u64bit>(&A[0], 0) != 0xA6A6A6A6A6A6A6A6)
+   if(load_be<u64bit>(&A[0], 0) != 0xA6A6A6A6A6A6A6A6uLL)
       throw Integrity_Failure("NIST key unwrap failed");
 
    return R;

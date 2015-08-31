@@ -30,6 +30,27 @@
 
   #include <intrin.h>
   #define CALL_CPUID(type, out) do { __cpuid((int*)out, type); } while(0)
+  
+#elif defined(BOTAN_BUILD_COMPILER_IS_BORLAND) && defined(BOTAN_TARGET_ARCH_IS_X86_32)
+
+namespace {
+
+  void __cpuid(Botan::u32bit type, Botan::u32bit out[4])
+   {
+   asm
+      {
+      mov eax, [ebp+08h]
+      cpuid
+      mov edi, [ebp+0Ch]
+      mov [edi], eax
+      mov [edi+04h], ebx
+      mov [edi+08h], ecx
+      mov [edi+0Ch], edx
+      }
+   }
+	
+	#define CALL_CPUID(type, out) do { __cpuid(type, out); } while(0)
+}
 
 #elif defined(BOTAN_BUILD_COMPILER_IS_INTEL)
 

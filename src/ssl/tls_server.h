@@ -36,8 +36,8 @@ class BOTAN_DLL TLS_Server : public TLS_Connection
       * FIXME: support cert chains (!)
       * FIXME: support anonymous servers
       */
-      TLS_Server(std::tr1::function<size_t (byte[], size_t)> input_fn,
-                 std::tr1::function<void (const byte[], size_t)> output_fn,
+      TLS_Server(std::tr1::function<size_t (unsigned char[], size_t)> input_fn,
+                 std::tr1::function<void (const unsigned char[], size_t)> output_fn,
                  const TLS_Policy& policy,
                  RandomNumberGenerator& rng,
                  const X509_Certificate& cert,
@@ -53,7 +53,7 @@ class BOTAN_DLL TLS_Server : public TLS_Connection
 
       void process_handshake_msg(Handshake_Type, const MemoryRegion<byte>&);
 
-      std::tr1::function<size_t (byte[], size_t)> input_fn;
+      std::tr1::function<size_t (unsigned char[], size_t)> input_fn;
 
       const TLS_Policy& policy;
       RandomNumberGenerator& rng;

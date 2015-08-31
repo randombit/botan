@@ -33,31 +33,31 @@ T* engine_get_algo(Engine*,
    { return 0; }
 
 template<>
-BlockCipher* engine_get_algo(Engine* engine,
+BlockCipher* engine_get_algo<BlockCipher>(Engine* engine,
                              const SCAN_Name& request,
                              Algorithm_Factory& af)
    { return engine->find_block_cipher(request, af); }
 
 template<>
-StreamCipher* engine_get_algo(Engine* engine,
+StreamCipher* engine_get_algo<StreamCipher>(Engine* engine,
                               const SCAN_Name& request,
                               Algorithm_Factory& af)
    { return engine->find_stream_cipher(request, af); }
 
 template<>
-HashFunction* engine_get_algo(Engine* engine,
+HashFunction* engine_get_algo<HashFunction>(Engine* engine,
                               const SCAN_Name& request,
                               Algorithm_Factory& af)
    { return engine->find_hash(request, af); }
 
 template<>
-MessageAuthenticationCode* engine_get_algo(Engine* engine,
+MessageAuthenticationCode* engine_get_algo<MessageAuthenticationCode>(Engine* engine,
                                            const SCAN_Name& request,
                                            Algorithm_Factory& af)
    { return engine->find_mac(request, af); }
 
 template<>
-PBKDF* engine_get_algo(Engine* engine,
+PBKDF* engine_get_algo<PBKDF>(Engine* engine,
                        const SCAN_Name& request,
                        Algorithm_Factory& af)
    { return engine->find_pbkdf(request, af); }

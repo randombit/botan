@@ -16,14 +16,14 @@ namespace Botan {
 /**
 * Exception Base Class
 */
-class BOTAN_DLL TLS_Exception : public Exception
+class BOTAN_DLL TLS_Exception : public Botan::Exception
    {
    public:
       Alert_Type type() const throw() { return alert_type; }
 
       TLS_Exception(Alert_Type type,
                     const std::string& err_msg = "Unknown error") :
-         Exception(err_msg), alert_type(type) {}
+         Botan::Exception(err_msg), alert_type(type) {}
 
    private:
       Alert_Type alert_type;

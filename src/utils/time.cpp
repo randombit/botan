@@ -47,12 +47,14 @@ u64bit combine_timers(u32bit seconds, u32bit parts, u32bit parts_hz)
    return res;
    }
 
-std::tm do_gmtime(time_t time_val)
+std::tm do_gmtime(std::time_t time_val)
    {
    std::tm tm;
 
-#if defined(BOTAN_TARGET_OS_HAS_GMTIME_S)
+#if defined(BOTAN_TARGET_OS_HAS_GMTIME_S) && !defined(BOTAN_BUILD_COMPILER_IS_BORLAND)
    gmtime_s(&tm, &time_val); // Windows
+#elif defined(BOTAN_TARGET_OS_HAS_GMTIME_S) && defined(BOTAN_BUILD_COMPILER_IS_BORLAND)
+   gmtime_s(&time_val, &tm); // BCC32
 #elif defined(BOTAN_TARGET_OS_HAS_GMTIME_R)
    gmtime_r(&time_val, &tm); // Unix/SUSv2
 #else
