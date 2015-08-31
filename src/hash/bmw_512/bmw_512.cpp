@@ -82,7 +82,7 @@ void BMW_512_compress(u64bit H[16], const u64bit M[16], u64bit Q[32])
    Q[14] = S4(Q[30]) + H[15];
    Q[15] = S0(Q[31]) + H[ 0];
 
-   static const u64bit x55 = 0x0555555555555555;
+   static const u64bit x55 = 0x0555555555555555uLL;
 
    for(size_t i = 16; i != 16 + EXPAND_1_ROUNDS; ++i)
       {

@@ -47,7 +47,7 @@ void ubi_512(MemoryRegion<u64bit>& H,
          }
 
       H[8] = H[0] ^ H[1] ^ H[2] ^ H[3] ^
-             H[4] ^ H[5] ^ H[6] ^ H[7] ^ 0x1BD11BDAA9FC1A22;
+             H[4] ^ H[5] ^ H[6] ^ H[7] ^ 0x1BD11BDAA9FC1A22uLL;
 
       T[2] = T[0] ^ T[1];
 
