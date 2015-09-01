@@ -19,7 +19,7 @@ namespace {
 */
 inline void mix(MemoryRegion<u64bit>& X)
    {
-   X[0] -= X[7] ^ 0xA5A5A5A5A5A5A5A5uLL;
+   X[0] -= X[7] ^ 0xA5A5A5A5A5A5A5A5;
    X[1] ^= X[0];
    X[2] += X[1];
    X[3] -= X[2] ^ ((~X[1]) << 19);
@@ -35,7 +35,7 @@ inline void mix(MemoryRegion<u64bit>& X)
    X[4] -= X[3] ^ ((~X[2]) >> 23);
    X[5] ^= X[4];
    X[6] += X[5];
-   X[7] -= X[6] ^ 0x0123456789ABCDEFuLL;
+   X[7] -= X[6] ^ 0x0123456789ABCDEF;
    }
 
 }
@@ -150,9 +150,9 @@ void Tiger::clear()
    {
    MDx_HashFunction::clear();
    zeroise(X);
-   digest[0] = 0x0123456789ABCDEFuLL;
-   digest[1] = 0xFEDCBA9876543210uLL;
-   digest[2] = 0xF096A5B4C3B2E187uLL;
+   digest[0] = 0x0123456789ABCDEF;
+   digest[1] = 0xFEDCBA9876543210;
+   digest[2] = 0xF096A5B4C3B2E187;
    }
 
 /*

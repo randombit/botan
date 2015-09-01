@@ -215,12 +215,12 @@ u64bit left_rot_lo(u64bit h, u64bit l, size_t shift)
 */
 void key_schedule(SecureVector<u64bit>& SK, const byte key[], size_t length)
    {
-   const u64bit Sigma1 = 0xA09E667F3BCC908BuLL;
-   const u64bit Sigma2 = 0xB67AE8584CAA73B2uLL;
-   const u64bit Sigma3 = 0xC6EF372FE94F82BEuLL;
-   const u64bit Sigma4 = 0x54FF53A5F1D36F1CuLL;
-   const u64bit Sigma5 = 0x10E527FADE682D1DuLL;
-   const u64bit Sigma6 = 0xB05688C2B3E6C1FDuLL;
+   const u64bit Sigma1 = 0xA09E667F3BCC908B;
+   const u64bit Sigma2 = 0xB67AE8584CAA73B2;
+   const u64bit Sigma3 = 0xC6EF372FE94F82BE;
+   const u64bit Sigma4 = 0x54FF53A5F1D36F1C;
+   const u64bit Sigma5 = 0x10E527FADE682D1D;
+   const u64bit Sigma6 = 0xB05688C2B3E6C1FD;
 
    const u64bit KL_H = load_be<u64bit>(key, 0);
    const u64bit KL_L = load_be<u64bit>(key, 1);
