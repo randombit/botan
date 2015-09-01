@@ -4,7 +4,6 @@ include_directories(${INCLUDE_DIR})
 
 # libbotan
 add_library(botan SHARED
-    alloc/locking_allocator/locking_allocator.cpp
     asn1/alg_id.cpp
     asn1/asn1_alt_name.cpp
     asn1/asn1_attribute.cpp
@@ -76,7 +75,6 @@ add_library(botan SHARED
     compression/bzip2/bzip2.cpp
     compression/compression.cpp
     compression/zlib/zlib.cpp
-    credentials/credentials_manager.cpp
     entropy/dev_random/dev_random.cpp
     entropy/egd/es_egd.cpp
     entropy/entropy_srcs.cpp
@@ -261,6 +259,7 @@ add_library(botan SHARED
     stream/ofb/ofb.cpp
     stream/rc4/rc4.cpp
     stream/salsa20/salsa20.cpp
+    tls/credentials_manager.cpp
     tls/msg_certificate.cpp
     tls/msg_cert_req.cpp
     tls/msg_cert_verify.cpp
@@ -297,6 +296,7 @@ add_library(botan SHARED
     utils/dyn_load/dyn_load.cpp
     utils/filesystem.cpp
     utils/http_util/http_util.cpp
+    utils/locking_allocator/locking_allocator.cpp
     utils/parsing.cpp
     utils/read_cfg.cpp
     utils/semaphore.cpp
