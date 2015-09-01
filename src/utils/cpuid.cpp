@@ -48,8 +48,8 @@ namespace {
       mov [edi+0Ch], edx
       }
    }
-	
-	#define CALL_CPUID(type, out) do { __cpuid(type, out); } while(0)
+
+   #define CALL_CPUID(type, out) do { __cpuid(type, out); } while(0)
 }
 
 #elif defined(BOTAN_BUILD_COMPILER_IS_INTEL)
