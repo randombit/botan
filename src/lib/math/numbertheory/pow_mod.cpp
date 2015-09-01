@@ -15,7 +15,7 @@ namespace Botan {
 */
 Power_Mod::Power_Mod(const BigInt& n, Usage_Hints hints)
    {
-   core = nullptr;
+   m_core = nullptr;
    set_modulus(n, hints);
    }
 
@@ -24,9 +24,9 @@ Power_Mod::Power_Mod(const BigInt& n, Usage_Hints hints)
 */
 Power_Mod::Power_Mod(const Power_Mod& other)
    {
-   core = nullptr;
-   if(other.core)
-      core = other.core->copy();
+   m_core = nullptr;
+   if(other.m_core)
+      m_core = other.m_core->copy();
    }
 
 /*
@@ -34,10 +34,10 @@ Power_Mod::Power_Mod(const Power_Mod& other)
 */
 Power_Mod& Power_Mod::operator=(const Power_Mod& other)
    {
-   delete core;
-   core = nullptr;
-   if(other.core)
-      core = other.core->copy();
+   delete m_core;
+   m_core = nullptr;
+   if(other.m_core)
+      m_core = other.m_core->copy();
    return (*this);
    }
 
@@ -46,8 +46,8 @@ Power_Mod& Power_Mod::operator=(const Power_Mod& other)
 */
 Power_Mod::~Power_Mod()
    {
-   delete core;
-   core = nullptr;
+   delete m_core;
+   m_core = nullptr;
    }
 
 /*
@@ -55,12 +55,12 @@ Power_Mod::~Power_Mod()
 */
 void Power_Mod::set_modulus(const BigInt& n, Usage_Hints hints) const
    {
-   delete core;
+   delete m_core;
 
    if(n.is_odd())
-      core = new Montgomery_Exponentiator(n, hints);
+      m_core = new Montgomery_Exponentiator(n, hints);
    else if(n != 0)
-      core = new Fixed_Window_Exponentiator(n, hints);
+      m_core = new Fixed_Window_Exponentiator(n, hints);
    }
 
 /*
@@ -71,9 +71,9 @@ void Power_Mod::set_base(const BigInt& b) const
    if(b.is_zero() || b.is_negative())
       throw Invalid_Argument("Power_Mod::set_base: arg must be > 0");
 
-   if(!core)
-      throw Internal_Error("Power_Mod::set_base: core was NULL");
-   core->set_base(b);
+   if(!m_core)
+      throw Internal_Error("Power_Mod::set_base: m_core was NULL");
+   m_core->set_base(b);
    }
 
 /*
@@ -84,9 +84,9 @@ void Power_Mod::set_exponent(const BigInt& e) const
    if(e.is_negative())
       throw Invalid_Argument("Power_Mod::set_exponent: arg must be > 0");
 
-   if(!core)
-      throw Internal_Error("Power_Mod::set_exponent: core was NULL");
-   core->set_exponent(e);
+   if(!m_core)
+      throw Internal_Error("Power_Mod::set_exponent: m_core was NULL");
+   m_core->set_exponent(e);
    }
 
 /*
@@ -94,9 +94,9 @@ void Power_Mod::set_exponent(const BigInt& e) const
 */
 BigInt Power_Mod::execute() const
    {
-   if(!core)
-      throw Internal_Error("Power_Mod::execute: core was NULL");
-   return core->execute();
+   if(!m_core)
+      throw Internal_Error("Power_Mod::execute: m_core was NULL");
+   return m_core->execute();
    }
 
 /*

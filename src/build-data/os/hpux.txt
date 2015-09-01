@@ -1,7 +1,5 @@
 os_type unix
 
-so_suffix sl
-
 <target_features>
 gettimeofday
 getsid

@@ -848,19 +848,17 @@ class CompilerInfo(object):
                 return 'all-debug'
             return 'all'
 
-        abi_link = set()
+        abi_link = list()
         for what in [all(), options.os, options.arch, options.cpu]:
             flag = self.mach_abi_linking.get(what)
-            if flag != None and flag != '':
-                abi_link.add(flag)
+            if flag != None and flag != '' and flag not in abi_link:
+                abi_link.append(flag)
 
-        for flag in options.cc_abi_flags.split(' '):
-            if flag != '':
-                abi_link.add(flag)
-
-        if len(abi_link) == 0:
-            return ''
-        abi_flags = ' '.join(sorted(list(abi_link)))
+        abi_flags = ''
+        if len(abi_link) > 0:
+            abi_flags += ' '.join(sorted(abi_link))
+        if options.cc_abi_flags != '':
+            abi_flags += ' ' + options.cc_abi_flags
 
         if options.build_mode == 'coverage':
             if self.coverage_flags == '':
@@ -962,7 +960,9 @@ class OsInfo(object):
                       { 'os_type': None,
                         'program_suffix': '',
                         'obj_suffix': 'o',
-                        'so_suffix': 'so',
+                        'soname_pattern_patch': '',
+                        'soname_pattern_abi': '',
+                        'soname_pattern_base': '',
                         'static_suffix': 'a',
                         'ar_command': 'ar crs',
                         'ar_needs_ranlib': False,
@@ -1328,7 +1328,22 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'lib_prefix': 'lib' if options.os != 'windows' else '',
 
         'static_suffix': osinfo.static_suffix,
-        'so_suffix': osinfo.so_suffix,
+
+        'soname_base': osinfo.soname_pattern_base.format(
+                            version_major = build_config.version_major,
+                            version_minor = build_config.version_minor,
+                            version_patch = build_config.version_patch,
+                            abi_rev       = build_config.version_so_rev),
+        'soname_abi': osinfo.soname_pattern_abi.format(
+                            version_major = build_config.version_major,
+                            version_minor = build_config.version_minor,
+                            version_patch = build_config.version_patch,
+                            abi_rev       = build_config.version_so_rev),
+        'soname_patch': osinfo.soname_pattern_patch.format(
+                            version_major = build_config.version_major,
+                            version_minor = build_config.version_minor,
+                            version_patch = build_config.version_patch,
+                            abi_rev       = build_config.version_so_rev),
 
         'mod_list': '\n'.join(sorted([m.basename for m in modules])),
 
@@ -1337,8 +1352,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         }
 
     if options.os == 'darwin' and options.build_shared_lib:
-        vars['app_post_link_cmd']  = 'install_name_tool -change "/$(SONAME)" "@executable_path/$(SONAME)" $(APP)'
-        vars['test_post_link_cmd'] = 'install_name_tool -change "/$(SONAME)" "@executable_path/$(SONAME)" $(TEST)'
+        vars['app_post_link_cmd']  = 'install_name_tool -change "/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(APP)'
+        vars['test_post_link_cmd'] = 'install_name_tool -change "/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(TEST)'
     else:
         vars['app_post_link_cmd'] = ''
         vars['test_post_link_cmd'] = ''
@@ -1716,10 +1731,14 @@ def generate_amalgamation(build_config, options):
     for mod in build_config.modules:
         tgt = ''
 
-        if not options.single_amalgamation_file and mod.need_isa != []:
-            tgt = '_'.join(sorted(mod.need_isa))
-            if tgt == 'sse2' and options.arch == 'x86_64':
-                tgt = '' # SSE2 is always available on x86-64
+        if not options.single_amalgamation_file:
+            if mod.need_isa != []:
+                tgt = '_'.join(sorted(mod.need_isa))
+                if tgt == 'sse2' and options.arch == 'x86_64':
+                    tgt = '' # SSE2 is always available on x86-64
+
+            if options.arch == 'x86_32' and 'simd' in mod.requires:
+                tgt = 'sse2'
 
         if tgt not in botan_amalg_files:
             botan_amalg_files[tgt] = open_amalg_file(tgt)

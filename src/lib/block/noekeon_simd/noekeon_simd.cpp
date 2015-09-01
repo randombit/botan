@@ -11,7 +11,8 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(SIMD_32::enabled(), Noekeon_SIMD, "Noekeon", "simd32", 64);
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(SIMD_32::enabled(), Noekeon_SIMD, "Noekeon",
+                                      "simd32", BOTAN_SIMD_ALGORITHM_PRIO);
 
 /*
 * Noekeon's Theta Operation

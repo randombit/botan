@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/stream_utils.h>
+#include <botan/internal/openssl.h>
 #include <botan/parsing.h>
 #include <openssl/rc4.h>
 
@@ -48,6 +49,7 @@ class OpenSSL_RC4 : public StreamCipher
 
 }
 
-BOTAN_REGISTER_TYPE(StreamCipher, OpenSSL_RC4, "RC4", (make_new_T_1len<OpenSSL_RC4,0>), "openssl", 64);
+BOTAN_REGISTER_TYPE(StreamCipher, OpenSSL_RC4, "RC4", (make_new_T_1len<OpenSSL_RC4,0>),
+                    "openssl", BOTAN_OPENSSL_RC4_PRIO);
 
 }

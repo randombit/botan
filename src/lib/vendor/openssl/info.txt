@@ -1,4 +1,10 @@
+define OPENSSL 20150829
+
 load_on vendor
+
+<header:internal>
+openssl.h
+</header:internal>
 
 <libs>
 all -> crypto

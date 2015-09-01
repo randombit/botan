@@ -234,13 +234,17 @@ bool X509_Time::passes_sanity_check() const
 
    if (m_tag == UTC_TIME)
       {
-      // UTCTime limits the value of components such that leap seconds are not covered.
-      // See "UNIVERSAL 23" in "Information technology – Abstract Syntax Notation One (ASN.1): Specification of basic notation"
-      // http://www.itu.int/ITU-T/studygroups/com17/languages/
+      /*
+      UTCTime limits the value of components such that leap seconds
+      are not covered. See "UNIVERSAL 23" in "Information technology
+      Abstract Syntax Notation One (ASN.1): Specification of basic notation"
+
+      http://www.itu.int/ITU-T/studygroups/com17/languages/
+      */
       if (m_hour > 23 || m_minute > 59 || m_second > 59)
          {
          return false;
-         }       
+         }
       }
 
    return true;

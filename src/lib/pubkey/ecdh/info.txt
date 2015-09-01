@@ -1,7 +1,6 @@
 define ECDH 20131128
 
 <requires>
-alloc
 asn1
 ec_group
 ecc_key

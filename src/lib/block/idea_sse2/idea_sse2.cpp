@@ -12,7 +12,8 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_sse2(), IDEA_SSE2, "IDEA", "sse2", 64);
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_sse2(), IDEA_SSE2, "IDEA",
+                                      "sse2", BOTAN_SIMD_ALGORITHM_PRIO);
 
 namespace {
 

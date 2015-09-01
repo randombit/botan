@@ -304,6 +304,7 @@ int main(int argc, char* argv[])
    DEF_TEST(mceliece);
 
    DEF_TEST(ecc_unit);
+   DEF_TEST(ecc_randomized);
    DEF_TEST(ecdsa_unit);
    DEF_TEST(ecdh_unit);
    DEF_TEST(pk_keygen);

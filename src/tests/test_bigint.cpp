@@ -31,55 +31,6 @@ using namespace Botan;
 
 namespace {
 
-class Test_State
-   {
-   public:
-      void started(const std::string& /*msg*/) { m_tests_run++; }
-
-      void test_ran(const char* msg);
-
-      void failure(const char* test, const std::string& what_failed)
-         {
-         std::cout << "FAIL " << test << " " << what_failed << "\n";
-         m_tests_failed++;
-         }
-
-      size_t ran() const { return m_tests_run; }
-      size_t failed() const { return m_tests_failed; }
-   private:
-      size_t m_tests_run = 0, m_tests_failed = 0;
-   };
-
-#define BOTAN_CONFIRM_NOTHROW(block) do {                              \
-   try { block }                                                        \
-   catch(std::exception& e) {                                           \
-      _test.failure(BOTAN_CURRENT_FUNCTION, e.what());  \
-   } } while(0)                                                         \
-
-#define BOTAN_TEST(lhs, rhs, msg) do {                                     \
-   _test.started(msg);                                                  \
-   BOTAN_CONFIRM_NOTHROW({                                              \
-      const auto lhs_val = lhs;                                         \
-      const auto rhs_val = rhs;                                         \
-      const bool cmp = lhs_val == rhs_val;                              \
-      if(!cmp)                                                          \
-         {                                                              \
-         std::ostringstream fmt;                                        \
-         fmt << "expr '" << #lhs << " == " << #rhs << "' false, "       \
-             << "actually " << lhs_val << " " << rhs_val                \
-             << " (" << msg << ")";                                     \
-         _test.failure(BOTAN_CURRENT_FUNCTION, fmt.str()); \
-         }                                                              \
-      });                                                               \
-   } while(0)
-
-#define BOTAN_TEST_CASE(name, descr, block) size_t test_ ## name() {     \
-   Test_State _test;                                                    \
-   BOTAN_CONFIRM_NOTHROW(block);                                           \
-   test_report(descr, _test.ran(), _test.failed());                     \
-   return _test.failed();                                   \
-   }
-
 BOTAN_TEST_CASE(bigint_to_u32bit, "BigInt to_u32bit", {
    for(size_t i = 0; i != 32; ++i)
       {

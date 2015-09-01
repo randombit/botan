@@ -371,7 +371,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
       catch(...) {}
 
       m_next_protocol = "";
-      if(state.client_hello()->supports_alpn())
+      if(m_choose_next_protocol && state.client_hello()->supports_alpn())
          m_next_protocol = m_choose_next_protocol(state.client_hello()->next_protocols());
 
       if(resuming)

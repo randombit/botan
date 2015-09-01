@@ -47,15 +47,33 @@ class BOTAN_DLL RandomNumberGenerator
          }
 
       /**
+      * Only usable with POD types, only useful with integers
+      * get_random<u64bit>()
+      */
+      template<typename T> T get_random()
+         {
+         T r;
+         this->randomize(reinterpret_cast<byte*>(&r), sizeof(r));
+         return r;
+         }
+
+      /**
+      * Return a value in range [0,2^bits)
+      */
+      u64bit gen_mask(size_t bits)
+         {
+         if(bits == 0 || bits > 64)
+            throw std::invalid_argument("RandomNumberGenerator::gen_mask invalid argument");
+
+         const u64bit mask = ((1 << bits) - 1);
+         return this->get_random<u64bit>() & mask;
+         }
+
+      /**
       * Return a random byte
       * @return random byte
       */
-      byte next_byte()
-         {
-         byte out;
-         this->randomize(&out, 1);
-         return out;
-         }
+      byte next_byte() { return get_random<byte>(); }
 
       /**
       * Check whether this RNG is seeded.

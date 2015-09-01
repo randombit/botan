@@ -1,21 +1,27 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 """
 Python wrapper of the botan crypto library
 http://botan.randombit.net
 
 (C) 2015 Jack Lloyd
+(C) 2015 Uri  Blumenthal (extensions and patches)
 
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
 import sys
 from ctypes import *
+from binascii import hexlify, unhexlify
+
 
 """
 Module initialization
 """
-botan = CDLL('libbotan-1.11.so')
+if sys.platform == 'darwin':
+    botan = CDLL('libbotan-1.11.dylib')
+else:
+    botan = CDLL('libbotan-1.11.so')
 
 expected_api_rev = 20150210
 botan_api_rev = botan.botan_ffi_api_version()
@@ -47,7 +53,11 @@ class rng(object):
     def __init__(self, rng_type = 'system'):
         botan.botan_rng_init.argtypes = [c_void_p, c_char_p]
         self.rng = c_void_p(0)
-        rc = botan.botan_rng_init(byref(self.rng), rng_type)
+        if sys.version_info[0] < 3:
+            rc = botan.botan_rng_init(byref(self.rng), rng_type)
+        else:
+            rc = botan.botan_rng_init(byref(self.rng), rng_type.encode('ascii'))
+                
         if rc != 0 or self.rng is None:
             raise Exception("No rng " + algo + " for you!")
 
@@ -64,7 +74,10 @@ class rng(object):
         out = create_string_buffer(length)
         l = c_size_t(length)
         rc = botan.botan_rng_get(self.rng, out, l)
-        return str(out.raw)
+        if sys.version_info[0] < 3:
+            return str(out.raw)
+        else:
+            return out.raw
 
 """
 Hash function
@@ -74,7 +87,10 @@ class hash_function(object):
         botan.botan_hash_init.argtypes = [c_void_p, c_char_p, c_uint32]
         flags = c_uint32(0) # always zero in this API version
         self.hash = c_void_p(0)
-        rc = botan.botan_hash_init(byref(self.hash), algo, flags)
+        if sys.version_info[0] < 3:
+            rc = botan.botan_hash_init(byref(self.hash), algo, flags)
+        else:
+            rc = botan.botan_hash_init(byref(self.hash), algo.encode('utf-8'), flags)
         if rc != 0 or self.hash is None:
             raise Exception("No hash " + algo + " for you!")
 
@@ -100,7 +116,10 @@ class hash_function(object):
         botan.botan_hash_final.argtypes = [c_void_p, POINTER(c_char)]
         out = create_string_buffer(self.output_length())
         botan.botan_hash_final(self.hash, out)
-        return str(out.raw)
+        if sys.version_info[0] < 3:
+            return str(out.raw)
+        else:
+            return out.raw
 
 """
 Message authentication codes
@@ -140,14 +159,20 @@ class message_authentication_code(object):
         botan.botan_mac_final.argtypes = [c_void_p, POINTER(c_char)]
         out = create_string_buffer(self.output_length())
         botan.botan_mac_final(self.mac, out)
-        return str(out.raw)
+        if sys.version_info[0] < 3:
+            return str(out.raw)
+        else:
+            return out.raw
 
 class cipher(object):
     def __init__(self, algo, encrypt = True):
         botan.botan_cipher_init.argtypes = [c_void_p,c_char_p, c_uint32]
         flags = 0 if encrypt else 1
         self.cipher = c_void_p(0)
-        rc = botan.botan_cipher_init(byref(self.cipher), algo, flags)
+        if sys.version_info[0] < 3:
+            rc = botan.botan_cipher_init(byref(self.cipher), algo, flags)
+        else:
+            rc = botan.botan_cipher_init(byref(self.cipher), algo.encode('utf-8'), flags)
         if rc != 0 or self.cipher is None:
             raise Exception("No cipher " + algo + " for you!")
 
@@ -206,6 +231,8 @@ class cipher(object):
 
         inp = txt if txt else ''
         inp_sz = c_size_t(len(inp))
+        if sys.version_info[0] >= 3:
+            inp = cast(inp, c_char_p)
         inp_consumed = c_size_t(0)
         out = create_string_buffer(inp_sz.value + (self.tag_length() if final else 0))
         out_sz = c_size_t(len(out))
@@ -309,8 +336,11 @@ class public_key(object):
         n = hash_function(hash).output_length()
         buf = create_string_buffer(n)
         buf_len = c_size_t(n)
+        if sys.version_info[0] > 2:
+            hash = hash.encode('utf-8')
+    
         botan.botan_pubkey_fingerprint(self.pubkey, hash, buf, byref(buf_len))
-        return buf[0:buf_len.value].encode('hex')
+        return hexlify(buf[0:buf_len.value])
 
 class private_key(object):
     def __init__(self, alg, param, rng):
@@ -361,6 +391,8 @@ class pk_op_encrypt(object):
         botan.botan_pk_op_encrypt_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
         self.op = c_void_p(0)
         flags = c_uint32(0) # always zero in this ABI
+        if sys.version_info[0] > 2:
+            padding = cast(padding, c_char_p)
         botan.botan_pk_op_encrypt_create(byref(self.op), key.pubkey, padding, flags)
         if not self.op:
             raise Exception("No pk op for you")
@@ -376,14 +408,23 @@ class pk_op_encrypt(object):
 
         outbuf_sz = c_size_t(4096) #?!?!
         outbuf = create_string_buffer(outbuf_sz.value)
-        botan.botan_pk_op_encrypt(self.op, rng.rng, outbuf, byref(outbuf_sz), msg, len(msg))
+        ll = len(msg)
+        #print("encrypt: len=%d" % ll)
+        if sys.version_info[0] > 2:
+            msg = cast(msg, c_char_p)
+            ll = c_size_t(ll)
+        botan.botan_pk_op_encrypt(self.op, rng.rng, outbuf, byref(outbuf_sz), msg, ll)
+        #print("encrypt: outbuf_sz.value=%d" % outbuf_sz.value)
         return outbuf.raw[0:outbuf_sz.value]
 
+    
 class pk_op_decrypt(object):
     def __init__(self, key, padding):
         botan.botan_pk_op_decrypt_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
         self.op = c_void_p(0)
         flags = c_uint32(0) # always zero in this ABI
+        if sys.version_info[0] > 2:
+            padding = cast(padding, c_char_p)
         botan.botan_pk_op_decrypt_create(byref(self.op), key.privkey, padding, flags)
         if not self.op:
             raise Exception("No pk op for you")
@@ -399,7 +440,11 @@ class pk_op_decrypt(object):
 
         outbuf_sz = c_size_t(4096) #?!?!
         outbuf = create_string_buffer(outbuf_sz.value)
-        botan.botan_pk_op_decrypt(self.op, outbuf, byref(outbuf_sz), msg, len(msg))
+        ll = len(msg)
+        if sys.version_info[0] > 2:
+            msg = cast(msg, c_char_p)
+            ll  = c_size_t(ll)
+        botan.botan_pk_op_decrypt(self.op, outbuf, byref(outbuf_sz), msg, ll)
         return outbuf.raw[0:outbuf_sz.value]
 
 class pk_op_sign(object):
@@ -407,6 +452,8 @@ class pk_op_sign(object):
         botan.botan_pk_op_sign_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
         self.op = c_void_p(0)
         flags = c_uint32(0) # always zero in this ABI
+        if sys.version_info[0] > 2:
+            padding = cast(padding, c_char_p)
         botan.botan_pk_op_sign_create(byref(self.op), key.privkey, padding, flags)
         if not self.op:
             raise Exception("No pk op for you")
@@ -494,40 +541,70 @@ def test():
     r = rng("user")
 
 
-    print version_string()
-    print version_major(), version_minor(), version_patch()
+    print("\n%s" % version_string().decode('utf-8'))
+    print("v%d.%d.%d\n" % (version_major(), version_minor(), version_patch()))
 
 
-    print kdf('KDF2(SHA-1)', '701F3480DFE95F57941F804B1B2413EF'.decode('hex'), 7, '55A4E9DD5F4CA2EF82'.decode('hex')).encode('hex')
+    print("KDF2(SHA-1)   %s" %
+          hexlify(kdf('KDF2(SHA-1)'.encode('ascii'), unhexlify('701F3480DFE95F57941F804B1B2413EF'), 7,
+                      unhexlify('55A4E9DD5F4CA2EF82'))
+          ).decode('ascii')
+    )
 
-    print pbkdf('PBKDF2(SHA-1)', '', 32, 10000, '0001020304050607'.decode('hex'))[2].encode('hex').upper()
-    print '59B2B1143B4CB1059EC58D9722FB1C72471E0D85C6F7543BA5228526375B0127'
+    print("PBKDF2(SHA-1) %s" %
+          hexlify(pbkdf('PBKDF2(SHA-1)'.encode('ascii'), ''.encode('ascii'), 32, 10000,
+                        unhexlify('0001020304050607'))
+                  [2]
+          ).upper().decode('ascii'))
+    print("good output   %s\n" %
+          '59B2B1143B4CB1059EC58D9722FB1C72471E0D85C6F7543BA5228526375B0127')
 
-    (salt,iterations,psk) = pbkdf_timed('PBKDF2(SHA-256)', 'xyz', 32, 200)
-    print salt.encode('hex'), iterations
-    print 'x', psk.encode('hex')
-    print 'y', pbkdf('PBKDF2(SHA-256)', 'xyz', 32, iterations, salt)[2].encode('hex')
 
-    hmac = message_authentication_code('HMAC(SHA-256)')
-    hmac.set_key('0102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F20'.decode('hex'))
-    hmac.update('616263'.decode('hex'))
+        
+    (salt,iterations,psk) = pbkdf_timed('PBKDF2(SHA-256)'.encode('ascii'),
+                                        'xyz'.encode('utf-8'), 32, 200)
 
+    if sys.version_info[0] < 3:        
+        print("PBKDF2(SHA-256) x=timed, y=iterated; salt = %s (len=%d)  #iterations = %d\n" %
+              (hexlify(salt), len(salt), iterations)   )
+    else:
+        print("PBKDF2(SHA-256) x=timed, y=iterated; salt = %s (len=%d)  #iterations = %d\n" %
+              (hexlify(salt).decode('ascii'), len(salt), iterations)   )
+        
+    print('x %s' % hexlify(psk).decode('utf-8'))
+    print('y %s\n' %
+          (hexlify(pbkdf('PBKDF2(SHA-256)'.encode('utf-8'),
+                         'xyz'.encode('ascii'), 32, iterations, salt)[2]).decode('utf-8')))
+
+    hmac = message_authentication_code('HMAC(SHA-256)'.encode('ascii'))
+    hmac.set_key(unhexlify('0102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F20'))
+    hmac.update(unhexlify('616263'))
+    
     hmac_output = hmac.final()
 
-    print hmac_output.encode('hex')
-    if hmac_output != 'A21B1F5D4CF4F73A4DD939750F7A066A7F98CC131CB16A6692759021CFAB8181'.decode('hex'):
-        print 'Bad HMAC'
-
-    print r.get(42).encode('hex'), r.get(13).encode('hex'), r.get(9).encode('hex')
+    if hmac_output != unhexlify('A21B1F5D4CF4F73A4DD939750F7A066A7F98CC131CB16A6692759021CFAB8181'):
+        print("Bad HMAC:\t%s" % hexlify(bytes(hmac_output, 'utf-8')).decode('utf-8'))
+        print("vs good: \tA21B1F5D4CF4F73A4DD939750F7A066A7F98CC131CB16A6692759021CFAB8181");
+    else:
+        print("HMAC output (good): %s\n" % hexlify(hmac_output).decode('utf-8'))
+    
+    print("rng output:\n\t%s\n\t%s\n\t%s\n" %
+          (hexlify(r.get(42)).decode('utf-8'),
+           hexlify(r.get(13)).decode('utf-8'),
+           hexlify(r.get(9)).decode('utf-8')
+          )
+    )
 
     h = hash_function('MD5')
     assert h.output_length() == 16
-    h.update('h')
-    h.update('i')
-    print "md5", h.final().encode('hex')
+    h.update('h'.encode('utf-8'))
+    h.update('i'.encode('utf-8'))
+    print("md5 hash: %s\n" % (hexlify(h.final())).decode('utf-8'))
+
 
     gcm = cipher('AES-128/GCM')
-    print gcm.default_nonce_length(), gcm.update_granularity()
+    print("AES-128/GCM: default nonce=%d update_size=%d" %
+          (gcm.default_nonce_length(), gcm.update_granularity()))
     gcm_dec = cipher('AES-128/GCM', encrypt=False)
 
     iv = r.get(12)
@@ -537,53 +614,78 @@ def test():
     gcm.start(iv)
     assert len(gcm.update('')) == 0
     ct = gcm.finish(pt)
-    print "gcm ct", ct.encode('hex')
+    print("GCM ct %s" % hexlify(ct).decode('utf-8'))
 
     gcm_dec.set_key(key)
     gcm_dec.start(iv)
     dec = gcm_dec.finish(ct)
-    print "gcm pt", pt.encode('hex'), len(pt)
-    print "gcm de", dec.encode('hex'), len(dec)
+    print("GCM pt %s %d"   % (hexlify(pt).decode('utf-8'),   len(pt)))
+    print("GCM de %s %d\n" % (hexlify(dec).decode('utf-8'), len(dec)))
+
+    ocb = cipher('AES-128/OCB')
+    print("AES-128/OCB: default nonce=%d update_size=%d" %
+          (ocb.default_nonce_length(), ocb.update_granularity()))
+    ocb_dec = cipher('AES-128/OCB', encrypt=False)
+
+    iv = r.get(12)
+    key = r.get(16)
+    pt = r.get(21)
+    ocb.set_key(key)
+    ocb.start(iv)
+    assert len(ocb.update('')) == 0
+    ct = ocb.finish(pt)
+    print("OCB ct %s" % hexlify(ct).decode('utf-8'))
+
+    ocb_dec.set_key(key)
+    ocb_dec.start(iv)
+    dec = ocb_dec.finish(ct)
+    print("OCB pt %s %d"   % (hexlify(pt).decode('utf-8'),  len(pt)))
+    print("OCB de %s %d\n" % (hexlify(dec).decode('utf-8'), len(dec)))
 
     rsapriv = private_key('rsa', 1536, r)
 
-    dec = pk_op_decrypt(rsapriv, "EME1(SHA-256)")
-
     rsapub = rsapriv.get_public_key()
-    print rsapub.fingerprint("SHA-1")
-    print rsapub.algo_name(), rsapub.estimated_strength()
+    
+    print("rsapub %s/SHA-1 fingerprint: %s (estimated strength %s)" %
+          (rsapub.algo_name().decode('utf-8'), rsapub.fingerprint("SHA-1").decode('utf-8'),
+           rsapub.estimated_strength()
+          )
+    )
 
-    enc = pk_op_encrypt(rsapub, "EME1(SHA-256)")
+    dec = pk_op_decrypt(rsapriv, "EME1(SHA-256)".encode('utf-8'))
+    enc = pk_op_encrypt(rsapub, "EME1(SHA-256)".encode('utf-8'))
 
-    ctext = enc.encrypt('foof', r)
-    print ctext.encode('hex')
-    print dec.decrypt(ctext)
+    ctext = enc.encrypt('foof'.encode('utf-8'), r)
+    print("ptext  \'%s\'" % 'foof') 
+    print("ctext   \'%s\'" % hexlify(ctext).decode('utf-8'))
+    print("decrypt \'%s\'\n" % dec.decrypt(ctext).decode('utf-8'))
 
-    signer = pk_op_sign(rsapriv, 'EMSA4(SHA-384)')
+    signer = pk_op_sign(rsapriv, 'EMSA4(SHA-384)'.encode('utf-8'))
 
-    signer.update('messa')
-    signer.update('ge')
+    signer.update('messa'.encode('utf-8'))
+    signer.update('ge'.encode('utf-8'))
     sig = signer.finish(r)
 
     r.reseed(200)
-    print sig.encode('hex')
+    print("EMSA4(SHA-384) signature: %s" % hexlify(sig).decode('utf-8'))
 
-    verify = pk_op_verify(rsapub, 'EMSA4(SHA-384)')
+    
+    verify = pk_op_verify(rsapub, 'EMSA4(SHA-384)'.encode('utf-8'))
 
-    verify.update('mess')
-    verify.update('age')
-    print "good sig accepted?", verify.check_signature(sig)
+    verify.update('mess'.encode('utf-8'))
+    verify.update('age'.encode('utf-8'))
+    print("good sig accepted? %s" % verify.check_signature(sig))
 
-    verify.update('mess of things')
-    verify.update('age')
-    print "bad sig accepted?", verify.check_signature(sig)
+    verify.update('mess of things'.encode('utf-8'))
+    verify.update('age'.encode('utf-8'))
+    print("bad sig accepted? %s" % verify.check_signature(sig))
 
-    verify.update('message')
-    print "good sig accepted?", verify.check_signature(sig)
+    verify.update('message'.encode('utf-8'))
+    print("good sig accepted? %s\n" % verify.check_signature(sig))
 
-    dh_grp = 'secp256r1'
-    #dh_grp = 'curve25519'
-    dh_kdf = 'KDF2(SHA-384)'
+    dh_grp = 'secp256r1'.encode('utf-8')
+    #dh_grp = 'curve25519'.encode('utf-8')
+    dh_kdf = 'KDF2(SHA-384)'.encode('utf-8')
     a_dh_priv = private_key('ecdh', dh_grp, r)
     a_dh_pub = a_dh_priv.get_public_key()
 
@@ -593,12 +695,15 @@ def test():
     a_dh = pk_op_key_agreement(a_dh_priv, dh_kdf)
     b_dh = pk_op_key_agreement(b_dh_priv, dh_kdf)
 
-    print "dh pubs", a_dh.public_value().encode('hex'), b_dh.public_value().encode('hex')
+    print("ecdh pubs:\n  %s\n  %s\n" %
+          (hexlify(a_dh.public_value()).decode('utf-8'),
+           hexlify(b_dh.public_value()).decode('utf-8')))
 
-    a_key = a_dh.agree(b_dh.public_value(), 20, 'salt')
-    b_key = b_dh.agree(a_dh.public_value(), 20, 'salt')
+    a_key = a_dh.agree(b_dh.public_value(), 20, 'salt'.encode('utf-8'))
+    b_key = b_dh.agree(a_dh.public_value(), 20, 'salt'.encode('utf-8'))
 
-    print "dh shared", a_key.encode('hex'), b_key.encode('hex')
+    print("ecdh shared:\n  %s\n  %s\n" %
+          (hexlify(a_key).decode('utf-8'), hexlify(b_key).decode('utf-8')))
 
 
     #f = open('key.ber','wb')

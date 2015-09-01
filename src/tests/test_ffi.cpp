@@ -152,15 +152,14 @@ TEST_CASE("FFI PBKDF", "[ffi]")
                                 passphrase.c_str(), salt.data(), salt.size(), 100, &iters_100ms),
               Equals(0));
 
+   CHECK(iters_10ms >= 10000);
+
    /*
     * Tests deactivated due to consistetly failing in debug mode where -W0 is set
     * (./configure.py --build-mode=debug).
     * See also: https://github.com/randombit/botan/commit/30b0e3c88e94ba04c1843798f7ac74a008e01d9b
     */
-
    /*
-   CHECK(iters_10ms >= 10000);
-
    INFO("Iterations " << iters_10ms << " " << iters_100ms);
    const double ratio = static_cast<double>(iters_100ms) / iters_10ms;
    // Loose timing to avoid false positives on CI
