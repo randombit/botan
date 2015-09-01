@@ -31,7 +31,7 @@ class BOTAN_DLL Bzip2_Compression : public Stream_Compression
       std::string name() const override { return "Bzip2_Compression"; }
 
    private:
-      Compression_Stream* make_stream() const;
+      Compression_Stream* make_stream() const override;
 
       const size_t m_block_size;
    };
