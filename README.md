@@ -27,6 +27,7 @@ Requirements
 
 * CMake 2.8 which is the default in the Ubuntu 14.04 LTS tool chain. It is unlikely to get rid of this requirement in the near future.
 * GCC 4.8
+* Ubuntu packages: liblzma-dev
 
 Todo
 ----

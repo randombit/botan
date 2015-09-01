@@ -73,8 +73,9 @@ add_library(botan SHARED
     codec/base64/base64.cpp
     codec/hex/hex.cpp
     compression/bzip2/bzip2.cpp
-    compression/compression.cpp
+    compression/lzma/lzma.cpp
     compression/zlib/zlib.cpp
+    compression/compression.cpp
     entropy/dev_random/dev_random.cpp
     entropy/egd/es_egd.cpp
     entropy/entropy_srcs.cpp
@@ -313,6 +314,11 @@ set_source_files_properties(block/aes_ssse3/aes_ssse3.cpp PROPERTIES COMPILE_FLA
 set_source_files_properties(block/aes_ni/aes_ni.cpp        PROPERTIES COMPILE_FLAGS "-maes -mpclmul -mssse3")
 set_source_files_properties(modes/aead/gcm/clmul/clmul.cpp PROPERTIES COMPILE_FLAGS "-maes -mpclmul -mssse3")
 
+find_package( LZMA REQUIRED )
+if ( LZMA_FOUND )
+    include_directories(${LZMA_INCLUDE_DIR})
+    target_link_libraries(botan ${LZMA_LIBRARIES})
+endif( LZMA_FOUND )
 
 find_package( BZip2 REQUIRED )
 if ( BZIP2_FOUND )
