@@ -17,7 +17,7 @@ Version 1.11.20, Not Yet Released
   provider preferences.
 
 * On OS X, rename libs to avoid trailing version numbers, e.g.
-  libbotan-1.11.dylib.19 -> libbotan-1.11.19.dylib. Gh #241
+  libbotan-1.11.dylib.19 -> libbotan-1.11.19.dylib. GH #241
 
 Version 1.11.19, 2015-08-03
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -46,6 +46,22 @@ Version 1.11.19, 2015-08-03
 
 * BigInt::to_u32bit would fail if the value was exactly 32 bits.
   GH #220
+
+* Botan is now fully compaitible with _GLIBCXX_DEBUG. GH #73
+
+* BigInt::random_integer distribution was not uniform. GH #108
+
+* Added unit testing framework Catch. GH #169
+
+* Fix `make install`. GH #181, #186
+
+* Public header `fs.h` moved to `internal/filesystem.h`. Added filesystem
+  support for MSVC 2013 when boost is not available, allowing tests to run on
+  those systems. GH #198, #199
+
+* Added os "android" and fix Android compilation issues. GH #203
+
+* Drop support for Python 2.6 for all Botan Python scripts. GH #217
 
 Version 1.10.10, 2015-08-03
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
