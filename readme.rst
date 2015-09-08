@@ -92,9 +92,9 @@ Current Development Series (1.11)
 A new development release is made on the first Monday of every month.
 
 The latest development release is
-`1.11.19 <http://botan.randombit.net/releases/Botan-1.11.19.tgz>`_
-`(sig) <http://botan.randombit.net/releases/Botan-1.11.19.tgz.asc>`_
-released 2015-08-03
+`1.11.19 <http://botan.randombit.net/releases/Botan-1.11.20.tgz>`_
+`(sig) <http://botan.randombit.net/releases/Botan-1.11.20.tgz.asc>`_
+released 2015-09-07
 
 Botan 1.11 requires a working C++11 compiler; GCC 4.8 and later,
 Clang 3.4 and later, and MSVC 2013 are regularly tested.
