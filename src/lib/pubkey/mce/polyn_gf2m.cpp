@@ -512,7 +512,7 @@ std::pair<polyn_gf2m, polyn_gf2m> polyn_gf2m::eea_with_coefficients( const polyn
          else
             {
             /* t odd */
-            cond1 =  r0.get_degree() <= break_deg - 1;
+            cond1 =  r0.get_degree() < break_deg;
             cond2 =  u0.get_degree() < break_deg - 1;
             cond1 &= cond2;
             }
