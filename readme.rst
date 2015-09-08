@@ -92,7 +92,7 @@ Current Development Series (1.11)
 A new development release is made on the first Monday of every month.
 
 The latest development release is
-`1.11.19 <http://botan.randombit.net/releases/Botan-1.11.20.tgz>`_
+`1.11.20 <http://botan.randombit.net/releases/Botan-1.11.20.tgz>`_
 `(sig) <http://botan.randombit.net/releases/Botan-1.11.20.tgz.asc>`_
 released 2015-09-07
 
