@@ -1,11 +1,12 @@
 Release Notes
 ========================================
 
-Version 1.11.20, Not Yet Released
+Version 1.11.20, 2015-09-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Additional countermeasures were added to ECC point multiplications
-  to help protect against side channel attacks.
+  including exponent blinding and randomization of the point
+  representation to help protect against side channel attacks.
 
 * An ECDSA provider using OpenSSL has been added.
 
@@ -18,21 +19,21 @@ Version 1.11.20, Not Yet Released
 
 * On OS X, rename libs to avoid trailing version numbers, e.g.
   libbotan-1.11.dylib.19 -> libbotan-1.11.19.dylib. This was requested
-  by the Homebrew project packge audit. GH #241, #260
+  by the Homebrew project package audit. GH #241, #260
 
 * Enable use of CPUID interface with clang. GH #232
 
 * Add support for MSVC 2015 debug builds by satisfying C++ allocator
-  requeirements. SO 31802806, GH #236
+  requirements. SO 31802806, GH #236
 
 * Make `X509_Time` string parsing and `to_u32bit()` more strict to avoid
   integer overflows and other potentially dangerous misinterpretations.
   GH #240, #243
 
 * Remove all 'extern "C"' declarations from src/lib/math/mp/ because some
-  of those did throw exxceptions and thus cannot be C methods. GH #249
+  of those did throw exceptions and thus cannot be C methods. GH #249
 
-* Fix build confuguration for clang debug on Linux. GH #250
+* Fix build configuration for clang debug on Linux. GH #250
 
 * Fix zlib error when compressing an empty buffer. GH #265
 
