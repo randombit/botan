@@ -971,14 +971,14 @@ class OsInfo(object):
                         'bin_dir': 'bin',
                         'lib_dir': 'lib',
                         'doc_dir': 'share/doc',
-                        'build_shared': 'yes',
+                        'building_shared_supported': 'yes',
                         'install_cmd_data': 'install -m 644',
                         'install_cmd_exec': 'install -m 755'
                         })
 
         self.ar_needs_ranlib = bool(self.ar_needs_ranlib)
 
-        self.build_shared = (True if self.build_shared == 'yes' else False)
+        self.building_shared_supported = (True if self.building_shared_supported == 'yes' else False)
 
     def ranlib_command(self):
         return ('ranlib' if self.ar_needs_ranlib else 'true')
@@ -1926,16 +1926,15 @@ def main(argv = None):
         raise Exception('Static build is only supported using amalgamation. '
                 'Add --via-amalgamation.')
 
+    if options.build_shared_lib and not osinfo.building_shared_supported:
+        raise Exception('Botan does not support building as shared library on the target os. '
+                'Build static using --disable-shared.')
+
     loaded_mods = choose_modules_to_use(modules, arch, cc, options)
 
     for m in loaded_mods:
         if modules[m].load_on == 'vendor':
             logging.info('Enabling use of external dependency %s' % (m))
-
-        if not osinfo.build_shared:
-            if options.build_shared_lib:
-                logging.info('Disabling shared lib on %s' % (options.os))
-                options.build_shared_lib = False
 
     using_mods = [modules[m] for m in loaded_mods]
 

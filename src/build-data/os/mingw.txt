@@ -4,11 +4,7 @@ program_suffix .exe
 obj_suffix o
 static_suffix a
 
-soname_pattern_base  "libbotan-{version_major}.{version_minor}.dll"
-soname_pattern_abi   "libbotan-{version_major}.{version_minor}.dll.{abi_rev}"
-soname_pattern_patch "libbotan-{version_major}.{version_minor}.dll.{abi_rev}.{version_patch}"
-
-build_shared no
+building_shared_supported no
 
 ar_command "ar crs"
 ar_needs_ranlib yes
