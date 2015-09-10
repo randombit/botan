@@ -912,6 +912,8 @@ int botan_pk_op_encrypt_create(botan_pk_op_encrypt_t* op,
       {
       BOTAN_ASSERT_NONNULL(op);
 
+      *op = nullptr;
+
       if(flags != 0)
          return BOTAN_FFI_ERROR_BAD_FLAG;
 
@@ -955,6 +957,8 @@ int botan_pk_op_decrypt_create(botan_pk_op_decrypt_t* op,
       {
       BOTAN_ASSERT_NONNULL(op);
 
+      *op = nullptr;
+
       if(flags != 0)
          return BOTAN_FFI_ERROR_BAD_FLAG;
 
@@ -996,6 +1000,8 @@ int botan_pk_op_sign_create(botan_pk_op_sign_t* op,
    try
       {
       BOTAN_ASSERT_NONNULL(op);
+
+      *op = nullptr;
 
       if(flags != 0)
          return BOTAN_FFI_ERROR_BAD_FLAG;
@@ -1085,6 +1091,8 @@ int botan_pk_op_key_agreement_create(botan_pk_op_ka_t* op,
    try
       {
       BOTAN_ASSERT_NONNULL(op);
+
+      *op = nullptr;
 
       if(flags != 0)
          return BOTAN_FFI_ERROR_BAD_FLAG;
