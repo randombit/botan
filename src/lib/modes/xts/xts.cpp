@@ -10,8 +10,6 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_BLOCK_CIPHER_MODE(XTS_Encryption, XTS_Decryption);
-
 namespace {
 
 void poly_double_128(byte out[], const byte in[])

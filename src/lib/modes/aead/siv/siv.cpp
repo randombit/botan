@@ -13,8 +13,6 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_BLOCK_CIPHER_MODE(SIV_Encryption, SIV_Decryption);
-
 SIV_Mode::SIV_Mode(BlockCipher* cipher) :
    m_name(cipher->name() + "/SIV"),
    m_ctr(new CTR_BE(cipher->clone())),
