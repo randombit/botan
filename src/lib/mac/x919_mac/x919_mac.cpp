@@ -10,8 +10,6 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_MAC_NAMED_NOARGS(ANSI_X919_MAC, "X9.19-MAC");
-
 /*
 * Update an ANSI X9.19 MAC Calculation
 */

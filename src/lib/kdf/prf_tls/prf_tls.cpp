@@ -20,9 +20,6 @@ TLS_12_PRF* TLS_12_PRF::make(const Spec& spec)
    return nullptr;
    }
 
-BOTAN_REGISTER_NAMED_T(KDF, "TLS-12-PRF", TLS_12_PRF, TLS_12_PRF::make);
-BOTAN_REGISTER_KDF_NOARGS(TLS_PRF, "TLS-PRF");
-
 TLS_PRF::TLS_PRF() :
    m_hmac_md5(make_message_auth("HMAC(MD5)")),
    m_hmac_sha1(make_message_auth("HMAC(SHA-1)"))

@@ -10,8 +10,6 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_NAMED_T(StreamCipher, "CTR-BE", CTR_BE, CTR_BE::make);
-
 CTR_BE* CTR_BE::make(const Spec& spec)
    {
    if(spec.algo_name() == "CTR-BE" && spec.arg_count() == 1)

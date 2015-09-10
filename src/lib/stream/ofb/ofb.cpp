@@ -10,8 +10,6 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_NAMED_T(StreamCipher, "OFB", OFB, OFB::make);
-
 OFB* OFB::make(const Spec& spec)
    {
    if(spec.algo_name() == "OFB" && spec.arg_count() == 1)

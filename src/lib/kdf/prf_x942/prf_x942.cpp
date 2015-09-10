@@ -15,8 +15,6 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_KDF_NAMED_1STR(X942_PRF, "X9.42-PRF");
-
 namespace {
 
 /*

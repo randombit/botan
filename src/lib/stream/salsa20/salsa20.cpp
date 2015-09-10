@@ -10,8 +10,6 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_STREAM_CIPHER_NOARGS(Salsa20);
-
 namespace {
 
 #define SALSA20_QUARTER_ROUND(x1, x2, x3, x4)    \

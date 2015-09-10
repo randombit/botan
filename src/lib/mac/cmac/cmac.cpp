@@ -20,8 +20,6 @@ CMAC* CMAC::make(const Spec& spec)
    return nullptr;
    }
 
-BOTAN_REGISTER_NAMED_T(MessageAuthenticationCode, "CMAC", CMAC, CMAC::make);
-
 /*
 * Perform CMAC's multiplication in GF(2^n)
 */

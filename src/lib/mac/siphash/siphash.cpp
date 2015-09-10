@@ -10,8 +10,6 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_NAMED_T_2LEN(MessageAuthenticationCode, SipHash, "SipHash", "base", 2, 4);
-
 namespace {
 
 void SipRounds(u64bit M, secure_vector<u64bit>& V, size_t r)

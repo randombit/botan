@@ -13,8 +13,6 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_HASH_NAMED_1LEN(Keccak_1600, "Keccak-1600", 512);
-
 namespace {
 
 void keccak_f_1600(u64bit A[25])

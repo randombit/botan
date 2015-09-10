@@ -1,0 +1,61 @@
+/*
+* Stream Ciphers
+* (C) 2015 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+#include <botan/stream_cipher.h>
+#include <botan/internal/stream_utils.h>
+
+#if defined(BOTAN_HAS_CHACHA)
+#include <botan/chacha.h>
+#endif
+
+#if defined(BOTAN_HAS_SALSA20)
+#include <botan/salsa20.h>
+#endif
+
+#if defined(BOTAN_HAS_CTR_BE)
+#include <botan/ctr.h>
+#endif
+
+#if defined(BOTAN_HAS_OFB)
+#include <botan/ofb.h>
+#endif
+
+#if defined(BOTAN_HAS_RC4)
+#include <botan/rc4.h>
+#endif
+
+namespace Botan {
+
+StreamCipher::~StreamCipher() {}
+
+void StreamCipher::set_iv(const byte[], size_t iv_len)
+   {
+   if(!valid_iv_length(iv_len))
+      throw Invalid_IV_Length(name(), iv_len);
+   }
+
+#if defined(BOTAN_HAS_CHACHA)
+BOTAN_REGISTER_STREAM_CIPHER_NOARGS(ChaCha);
+#endif
+
+#if defined(BOTAN_HAS_SALSA20)
+BOTAN_REGISTER_STREAM_CIPHER_NOARGS(Salsa20);
+#endif
+
+#if defined(BOTAN_HAS_CTR_BE)
+BOTAN_REGISTER_NAMED_T(StreamCipher, "CTR-BE", CTR_BE, CTR_BE::make);
+#endif
+
+#if defined(BOTAN_HAS_OFB)
+BOTAN_REGISTER_NAMED_T(StreamCipher, "OFB", OFB, OFB::make);
+#endif
+
+#if defined(BOTAN_HAS_RC4)
+BOTAN_REGISTER_NAMED_T(StreamCipher, "RC4", RC4, RC4::make);
+#endif
+
+}

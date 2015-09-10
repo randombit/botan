@@ -12,8 +12,6 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_NAMED_T(HashFunction, "Comb4P", Comb4P, Comb4P::make);
-
 namespace {
 
 void comb4p_round(secure_vector<byte>& out,

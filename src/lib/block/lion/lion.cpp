@@ -5,15 +5,14 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/block_utils.h>
 #include <botan/lion.h>
+#include <botan/lookup.h>
 #include <botan/parsing.h>
+#include <botan/internal/xor_buf.h>
 
 namespace Botan {
 
-namespace {
-
-Lion* make_lion(const BlockCipher::Spec& spec)
+Lion* Lion::make(const BlockCipher::Spec& spec)
    {
    if(spec.arg_count_between(2, 3))
       {
@@ -28,10 +27,6 @@ Lion* make_lion(const BlockCipher::Spec& spec)
       }
    return nullptr;
    }
-
-}
-
-BOTAN_REGISTER_NAMED_T(BlockCipher, "Lion", Lion, make_lion);
 
 /*
 * Lion Encryption

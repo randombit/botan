@@ -10,8 +10,6 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_HASH_NAMED_NOARGS(RIPEMD_160, "RIPEMD-160");
-
 namespace {
 
 /*

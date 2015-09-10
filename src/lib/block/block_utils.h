@@ -1,20 +1,15 @@
 /*
-* Block Cipher Utility Header
+* Internal Block Cipher Utility Header
 * (C) 2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_BLOCK_CIPHER_UTILS_H__
-#define BOTAN_BLOCK_CIPHER_UTILS_H__
+#ifndef BOTAN_INTERNAL_BLOCK_CIPHER_UTILS_H__
+#define BOTAN_INTERNAL_BLOCK_CIPHER_UTILS_H__
 
 #include <botan/block_cipher.h>
 #include <botan/internal/algo_registry.h>
-#include <botan/loadstor.h>
-#include <botan/rotate.h>
-#include <botan/internal/xor_buf.h>
-#include <algorithm>
-#include <functional>
 
 namespace Botan {
 

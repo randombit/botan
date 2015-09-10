@@ -11,8 +11,6 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_NAMED_T(HashFunction, "Parallel", Parallel, Parallel::make);
-
 Parallel* Parallel::make(const Spec& spec)
    {
    std::vector<std::unique_ptr<HashFunction>> hashes;

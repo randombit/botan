@@ -20,6 +20,8 @@ namespace Botan {
 class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
    {
    public:
+      typedef SCAN_Name Spec;
+
       /**
       * Encrypt or decrypt a message
       * @param in the plaintext
@@ -53,11 +55,7 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       * @param iv the initialization vector
       * @param iv_len the length of the IV in bytes
       */
-      virtual void set_iv(const byte[], size_t iv_len)
-         {
-         if(iv_len)
-            throw Invalid_IV_Length(name(), iv_len);
-         }
+      virtual void set_iv(const byte[], size_t iv_len);
 
       /**
       * @param iv_len the length of the IV in bytes
@@ -70,7 +68,7 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       */
       virtual StreamCipher* clone() const = 0;
 
-      typedef SCAN_Name Spec;
+      virtual ~StreamCipher();
    };
 
 }

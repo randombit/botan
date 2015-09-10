@@ -16,8 +16,6 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_MAC_NOARGS(Poly1305);
-
 namespace {
 
 void poly1305_init(secure_vector<u64bit>& X, const byte key[32])

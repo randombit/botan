@@ -12,8 +12,6 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_NAMED_T_2LEN(HashFunction, Tiger, "Tiger", "base", 24, 3);
-
 namespace {
 
 /*

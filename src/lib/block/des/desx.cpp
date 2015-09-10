@@ -5,12 +5,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/block_utils.h>
 #include <botan/desx.h>
+#include <botan/internal/xor_buf.h>
 
 namespace Botan {
-
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(DESX);
 
 /*
 * DESX Encryption

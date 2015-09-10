@@ -14,8 +14,6 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_NAMED_T(HashFunction, "Skein-512", Skein_512, Skein_512::make);
-
 Skein_512* Skein_512::make(const Spec& spec)
    {
    return new Skein_512(spec.arg_as_integer(0, 512), spec.arg(1, ""));

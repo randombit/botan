@@ -141,6 +141,8 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * @return new object representing the same algorithm as *this
       */
       virtual BlockCipher* clone() const = 0;
+
+      virtual ~BlockCipher();
    };
 
 /**

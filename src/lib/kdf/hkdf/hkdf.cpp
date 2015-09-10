@@ -10,8 +10,6 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_NAMED_T(KDF, "HKDF", HKDF, HKDF::make);
-
 HKDF* HKDF::make(const Spec& spec)
    {
    if(auto mac = get_mac(spec.arg(0)))

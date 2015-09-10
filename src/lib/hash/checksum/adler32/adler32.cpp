@@ -10,8 +10,6 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_HASH_NOARGS(Adler32);
-
 namespace {
 
 void adler32_update(const byte input[], size_t length,

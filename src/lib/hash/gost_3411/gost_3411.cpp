@@ -11,8 +11,6 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_HASH_NAMED_NOARGS(GOST_34_11, "GOST-R-34.11-94");
-
 /**
 * GOST 34.11 Constructor
 */

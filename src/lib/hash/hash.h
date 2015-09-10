@@ -20,10 +20,14 @@ namespace Botan {
 class BOTAN_DLL HashFunction : public Buffered_Computation
    {
    public:
+      typedef SCAN_Name Spec;
+
       /**
       * @return new object representing the same algorithm as *this
       */
       virtual HashFunction* clone() const = 0;
+
+      virtual ~HashFunction();
 
       virtual void clear() = 0;
 
@@ -33,8 +37,6 @@ class BOTAN_DLL HashFunction : public Buffered_Computation
       * @return hash block size as defined for this algorithm
       */
       virtual size_t hash_block_size() const { return 0; }
-
-      typedef SCAN_Name Spec;
    };
 
 }

@@ -11,8 +11,6 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_HASH_NOARGS(CRC24);
-
 /*
 * Update a CRC24 Checksum
 */

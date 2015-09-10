@@ -5,12 +5,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/block_utils.h>
 #include <botan/cascade.h>
+#include <botan/lookup.h>
 
 namespace Botan {
-
-BOTAN_REGISTER_NAMED_T(BlockCipher, "Cascade", Cascade_Cipher, Cascade_Cipher::make);
 
 Cascade_Cipher* Cascade_Cipher::make(const BlockCipher::Spec& spec)
    {

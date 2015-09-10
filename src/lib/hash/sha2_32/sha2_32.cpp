@@ -11,9 +11,6 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_HASH_NAMED_NOARGS(SHA_224, "SHA-224");
-BOTAN_REGISTER_HASH_NAMED_NOARGS(SHA_256, "SHA-256");
-
 namespace {
 
 namespace SHA2_32 {

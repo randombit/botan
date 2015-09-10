@@ -10,8 +10,6 @@
 
 namespace Botan {
 
-BOTAN_REGISTER_NAMED_T(StreamCipher, "RC4", RC4, RC4::make);
-
 RC4* RC4::make(const Spec& spec)
    {
    if(spec.algo_name() == "RC4")

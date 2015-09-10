@@ -22,6 +22,10 @@ class BOTAN_DLL MessageAuthenticationCode : public Buffered_Computation,
                                             public SymmetricAlgorithm
    {
    public:
+      typedef SCAN_Name Spec;
+
+      virtual ~MessageAuthenticationCode();
+
       /**
       * Verify a MAC.
       * @param in the MAC to verify as a byte array
@@ -34,8 +38,6 @@ class BOTAN_DLL MessageAuthenticationCode : public Buffered_Computation,
       * Get a new object representing the same algorithm as *this
       */
       virtual MessageAuthenticationCode* clone() const = 0;
-
-      typedef SCAN_Name Spec;
    };
 
 }
