@@ -21,7 +21,7 @@ namespace Botan {
 class BOTAN_DLL KDF
    {
    public:
-      virtual ~KDF() {}
+      virtual ~KDF();
 
       virtual std::string name() const = 0;
 

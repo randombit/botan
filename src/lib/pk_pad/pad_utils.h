@@ -9,9 +9,6 @@
 #define BOTAN_PK_PAD_UTILS_H__
 
 #include <botan/internal/algo_registry.h>
-#include <botan/internal/xor_buf.h>
-#include <botan/loadstor.h>
-#include <algorithm>
 
 namespace Botan {
 

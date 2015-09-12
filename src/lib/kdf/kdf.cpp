@@ -34,6 +34,8 @@
 
 namespace Botan {
 
+KDF::~KDF() {}
+
 KDF* get_kdf(const std::string& algo_spec)
    {
    SCAN_Name request(algo_spec);

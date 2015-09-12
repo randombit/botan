@@ -1922,10 +1922,6 @@ def main(argv = None):
     if options.via_amalgamation:
         options.gen_amalgamation = True
 
-    if not options.build_shared_lib and not options.via_amalgamation:
-        raise Exception('Static build is only supported using amalgamation. '
-                'Add --via-amalgamation.')
-
     if options.build_shared_lib and not osinfo.building_shared_supported:
         raise Exception('Botan does not support building as shared library on the target os. '
                 'Build static using --disable-shared.')

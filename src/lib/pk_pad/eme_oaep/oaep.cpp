@@ -5,11 +5,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/pad_utils.h>
 #include <botan/oaep.h>
 #include <botan/mgf1.h>
 #include <botan/mem_ops.h>
-
+#include <botan/lookup.h>
 
 namespace Botan {
 
@@ -27,9 +26,6 @@ OAEP* OAEP::make(const Spec& request)
 
    return nullptr;
    }
-
-BOTAN_REGISTER_NAMED_T(EME, "OAEP", OAEP, OAEP::make);
-
 
 /*
 * OAEP Pad Operation

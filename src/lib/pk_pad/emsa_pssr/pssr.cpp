@@ -5,10 +5,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/pad_utils.h>
 #include <botan/pssr.h>
 #include <botan/mgf1.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/lookup.h>
 
 namespace Botan {
 
@@ -25,8 +25,6 @@ PSSR* PSSR::make(const Spec& request)
 
    return nullptr;
    }
-
-BOTAN_REGISTER_NAMED_T(EMSA, "PSSR", PSSR, PSSR::make);
 
 /*
 * PSSR Update Operation

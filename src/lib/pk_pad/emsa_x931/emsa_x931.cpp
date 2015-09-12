@@ -5,13 +5,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/pad_utils.h>
 #include <botan/emsa_x931.h>
 #include <botan/hash_id.h>
 
 namespace Botan {
-
-BOTAN_REGISTER_EMSA_1HASH(EMSA_X931, "EMSA_X931");
 
 namespace {
 
