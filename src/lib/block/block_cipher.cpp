@@ -7,8 +7,11 @@
 
 #include <botan/block_cipher.h>
 #include <botan/cpuid.h>
-#include <botan/internal/simd_32.h>
 #include <botan/internal/block_utils.h>
+
+#if defined(BOTAN_HAS_SIMD_32)
+#include <botan/internal/simd_32.h>
+#endif
 
 #if defined(BOTAN_HAS_AES)
   #include <botan/aes.h>
