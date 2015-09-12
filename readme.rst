@@ -1,15 +1,19 @@
 Botan: Crypto and TLS for C++11
 ========================================
 
-Botan (Japanese for peony) is a C++ cryptography library
-released under the permissive
-`Simplified BSD <http://botan.randombit.net/license.txt>`_ license.
-It provides useful things like TLS, X.509 certificates, ECDSA, AES,
-GCM, ChaCha20Poly1305, and bcrypt, plus a kitchen sink of other crypto
-algorithms of various utility; see the full list below.
+Botan (Japanese for peony) is a C++ cryptography library released
+under the permissive `Simplified BSD
+<http://botan.randombit.net/license.txt>`_ license.
+
+It provides TLS, X.509 certificates, OCSP, ECDSA, AES, GCM,
+ChaCha20Poly1305, and bcrypt, and quite a few other things. It also
+provides a `botan` command line tool for various cryptographic
+operations, the source for which also helps demonstrate usage of the
+library.
 
 Development is coordinated on `GitHub <https://github.com/randombit/botan>`_
-and contributions are welcome.
+and contributions are welcome. Read `doc/hacking.rst` for more
+about how to contribute.
 
 .. highlight:: none
 
@@ -25,6 +29,9 @@ For all the details on building the library, read the
   $ ./botan
   # shows available commands
   $ make install
+
+The library can also be built into a single-file amalgamation for easy
+inclusion into external build systems.
 
 If you need help or have questions, send a mail to the
 `mailing list <http://lists.randombit.net/mailman/listinfo/botan-devel/>`_
