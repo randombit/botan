@@ -7,6 +7,7 @@
 
 #include <botan/internal/stream_utils.h>
 #include <botan/ctr.h>
+#include <botan/lookup.h>
 
 namespace Botan {
 

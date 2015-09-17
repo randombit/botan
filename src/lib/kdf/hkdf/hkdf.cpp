@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/kdf_utils.h>
 #include <botan/hkdf.h>
+#include <botan/lookup.h>
 
 namespace Botan {
 

@@ -8,6 +8,7 @@
 
 #include <botan/internal/mac_utils.h>
 #include <botan/hmac.h>
+#include <botan/lookup.h>
 
 namespace Botan {
 

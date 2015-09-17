@@ -7,7 +7,3 @@ base
 <header:public>
 kdf.h
 </header:public>
-
-<header:internal>
-kdf_utils.h
-</header:internal>

@@ -5,12 +5,12 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/kdf_utils.h>
 #include <botan/prf_x942.h>
 #include <botan/der_enc.h>
 #include <botan/oids.h>
 #include <botan/hash.h>
 #include <botan/loadstor.h>
+#include <botan/lookup.h>
 #include <algorithm>
 
 namespace Botan {

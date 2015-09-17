@@ -23,6 +23,19 @@ class BOTAN_DLL KDF
    public:
       virtual ~KDF();
 
+      /**
+      * Create an instance based on a name
+      * Will return a null pointer if the algo/provider combination cannot
+      * be found. If providers is empty then best available is chosen.
+      */
+      static std::unique_ptr<KDF> create(const std::string& algo_spec,
+                                         const std::string& provider = "");
+
+      /**
+      * Returns the list of available providers for this algorithm, empty if not available
+      */
+      static std::vector<std::string> providers(const std::string& algo_spec);
+
       virtual std::string name() const = 0;
 
       virtual size_t kdf(byte key[], size_t key_len,

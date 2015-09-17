@@ -10,6 +10,7 @@
 
 #include <botan/cipher_mode.h>
 #include <botan/internal/algo_registry.h>
+#include <botan/lookup.h>
 #include <botan/block_cipher.h>
 #include <botan/loadstor.h>
 #include <botan/internal/xor_buf.h>

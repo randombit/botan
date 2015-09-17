@@ -151,6 +151,17 @@ namespace Botan {
 
 BlockCipher::~BlockCipher() {}
 
+std::unique_ptr<BlockCipher> BlockCipher::create(const std::string& algo_spec,
+                                                 const std::string& provider)
+   {
+   return std::unique_ptr<BlockCipher>(make_a<BlockCipher>(algo_spec, provider));
+   }
+
+std::vector<std::string> BlockCipher::providers(const std::string& algo_spec)
+   {
+   return providers_of<BlockCipher>(BlockCipher::Spec(algo_spec));
+   }
+
 #if defined(BOTAN_HAS_AES)
 BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(AES_128, "AES-128");
 BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(AES_192, "AES-192");

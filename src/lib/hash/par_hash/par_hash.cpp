@@ -17,7 +17,7 @@ Parallel* Parallel::make(const Spec& spec)
 
    for(size_t i = 0; i != spec.arg_count(); ++i)
       {
-      std::unique_ptr<HashFunction> h(get_hash_function(spec.arg(i)));
+      auto h = HashFunction::create(spec.arg(i));
       if(!h)
          return nullptr;
       hashes.push_back(std::move(h));

@@ -6,6 +6,7 @@
 
 #include <botan/internal/mode_utils.h>
 #include <botan/aead.h>
+#include <botan/lookup.h>
 
 #if defined(BOTAN_HAS_AEAD_CCM)
 #include <botan/ccm.h>

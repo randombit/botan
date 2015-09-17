@@ -35,6 +35,17 @@
 
 namespace Botan {
 
+std::unique_ptr<MessageAuthenticationCode> MessageAuthenticationCode::create(const std::string& algo_spec,
+                                                                             const std::string& provider)
+   {
+   return std::unique_ptr<MessageAuthenticationCode>(make_a<MessageAuthenticationCode>(algo_spec, provider));
+   }
+
+std::vector<std::string> MessageAuthenticationCode::providers(const std::string& algo_spec)
+   {
+   return providers_of<MessageAuthenticationCode>(MessageAuthenticationCode::Spec(algo_spec));
+   }
+
 MessageAuthenticationCode::~MessageAuthenticationCode() {}
 
 /*

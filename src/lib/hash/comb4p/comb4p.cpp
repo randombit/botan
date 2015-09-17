@@ -5,7 +5,6 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/hash_utils.h>
 #include <botan/comb4p.h>
 #include <botan/internal/xor_buf.h>
 #include <stdexcept>
@@ -39,8 +38,8 @@ Comb4P* Comb4P::make(const Spec& spec)
    {
    if(spec.arg_count() == 2)
       {
-      std::unique_ptr<HashFunction> h1(make_hash_function(spec.arg(0)));
-      std::unique_ptr<HashFunction> h2(make_hash_function(spec.arg(1)));
+      std::unique_ptr<HashFunction> h1(HashFunction::create(spec.arg(0)));
+      std::unique_ptr<HashFunction> h2(HashFunction::create(spec.arg(1)));
 
       if(h1 && h2)
          return new Comb4P(h1.release(), h2.release());

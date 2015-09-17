@@ -5,9 +5,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/kdf_utils.h>
 #include <botan/prf_tls.h>
 #include <botan/hmac.h>
+#include <botan/lookup.h>
+#include <botan/internal/xor_buf.h>
 
 namespace Botan {
 

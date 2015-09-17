@@ -8,6 +8,7 @@
 #include <botan/internal/pad_utils.h>
 #include <botan/emsa_pkcs1.h>
 #include <botan/hash_id.h>
+#include <botan/lookup.h>
 
 namespace Botan {
 

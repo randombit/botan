@@ -30,6 +30,19 @@ BOTAN_REGISTER_PBKDF_1HASH(PKCS5_PBKDF1, "PBKDF1");
 BOTAN_REGISTER_NAMED_T(PBKDF, "PBKDF2", PKCS5_PBKDF2, PKCS5_PBKDF2::make);
 #endif
 
+PBKDF::~PBKDF() {}
+
+std::unique_ptr<PBKDF> PBKDF::create(const std::string& algo_spec,
+                                     const std::string& provider)
+   {
+   return std::unique_ptr<PBKDF>(make_a<PBKDF>(algo_spec, provider));
+   }
+
+std::vector<std::string> PBKDF::providers(const std::string& algo_spec)
+   {
+   return providers_of<PBKDF>(PBKDF::Spec(algo_spec));
+   }
+
 void PBKDF::pbkdf_timed(byte out[], size_t out_len,
                         const std::string& passphrase,
                         const byte salt[], size_t salt_len,

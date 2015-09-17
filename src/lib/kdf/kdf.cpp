@@ -6,7 +6,7 @@
 */
 
 #include <botan/kdf.h>
-#include <botan/internal/kdf_utils.h>
+#include <botan/internal/algo_registry.h>
 
 #if defined(BOTAN_HAS_HKDF)
 #include <botan/hkdf.h>
@@ -32,9 +32,28 @@
 #include <botan/prf_x942.h>
 #endif
 
+#define BOTAN_REGISTER_KDF_NOARGS(type, name)                    \
+   BOTAN_REGISTER_NAMED_T(KDF, name, type, (make_new_T<type>))
+#define BOTAN_REGISTER_KDF_1HASH(type, name)                    \
+   BOTAN_REGISTER_NAMED_T(KDF, name, type, (make_new_T_1X<type, HashFunction>))
+
+#define BOTAN_REGISTER_KDF_NAMED_1STR(type, name) \
+   BOTAN_REGISTER_NAMED_T(KDF, name, type, (make_new_T_1str_req<type>))
+
 namespace Botan {
 
 KDF::~KDF() {}
+
+std::unique_ptr<KDF> KDF::create(const std::string& algo_spec,
+                                                 const std::string& provider)
+   {
+   return std::unique_ptr<KDF>(make_a<KDF>(algo_spec, provider));
+   }
+
+std::vector<std::string> KDF::providers(const std::string& algo_spec)
+   {
+   return providers_of<KDF>(KDF::Spec(algo_spec));
+   }
 
 KDF* get_kdf(const std::string& algo_spec)
    {
@@ -43,9 +62,10 @@ KDF* get_kdf(const std::string& algo_spec)
    if(request.algo_name() == "Raw")
       return nullptr; // No KDF
 
-   if(KDF* kdf = make_a<KDF>(algo_spec))
-      return kdf;
-   throw Algorithm_Not_Found(algo_spec);
+   auto kdf = KDF::create(algo_spec);
+   if(!kdf)
+      throw Algorithm_Not_Found(algo_spec);
+   return kdf.release();
    }
 
 #if defined(BOTAN_HAS_HKDF)
