@@ -13,7 +13,7 @@
 #include <botan/hmac.h>
 #include <botan/pbkdf2.h>
 #include <botan/pem.h>
-#include <botan/get_byte.h>
+#include <botan/loadstor.h>
 #include <botan/mem_ops.h>
 
 namespace Botan {

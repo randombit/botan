@@ -13,7 +13,6 @@
 #include <botan/lookup.h>
 #include <botan/block_cipher.h>
 #include <botan/loadstor.h>
-#include <botan/internal/xor_buf.h>
 #include <botan/internal/rounding.h>
 #include <botan/internal/bit_ops.h>
 #include <algorithm>

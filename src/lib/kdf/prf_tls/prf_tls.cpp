@@ -8,7 +8,6 @@
 #include <botan/prf_tls.h>
 #include <botan/hmac.h>
 #include <botan/lookup.h>
-#include <botan/internal/xor_buf.h>
 
 namespace Botan {
 

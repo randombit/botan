@@ -6,7 +6,6 @@
 */
 
 #include <botan/comb4p.h>
-#include <botan/internal/xor_buf.h>
 #include <stdexcept>
 
 namespace Botan {

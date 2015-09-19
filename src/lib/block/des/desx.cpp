@@ -6,7 +6,6 @@
 */
 
 #include <botan/desx.h>
-#include <botan/internal/xor_buf.h>
 
 namespace Botan {
 

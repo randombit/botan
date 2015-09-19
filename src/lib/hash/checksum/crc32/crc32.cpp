@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/hash_utils.h>
 #include <botan/crc32.h>
+#include <botan/loadstor.h>
 
 namespace Botan {
 

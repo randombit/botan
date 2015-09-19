@@ -7,7 +7,7 @@
 
 #include <botan/block_cipher.h>
 #include <botan/cpuid.h>
-#include <botan/internal/block_utils.h>
+#include <botan/internal/algo_registry.h>
 
 #if defined(BOTAN_HAS_SIMD_32)
 #include <botan/internal/simd_32.h>
@@ -161,6 +161,21 @@ std::vector<std::string> BlockCipher::providers(const std::string& algo_spec)
    {
    return providers_of<BlockCipher>(BlockCipher::Spec(algo_spec));
    }
+
+#define BOTAN_REGISTER_BLOCK_CIPHER(name, maker) BOTAN_REGISTER_T(BlockCipher, name, maker)
+#define BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(name) BOTAN_REGISTER_T_NOARGS(BlockCipher, name)
+
+#define BOTAN_REGISTER_BLOCK_CIPHER_1LEN(name, def) BOTAN_REGISTER_T_1LEN(BlockCipher, name, def)
+
+#define BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(type, name) \
+   BOTAN_REGISTER_NAMED_T(BlockCipher, name, type, make_new_T<type>)
+#define BOTAN_REGISTER_BLOCK_CIPHER_NAMED_1LEN(type, name, def) \
+   BOTAN_REGISTER_NAMED_T(BlockCipher, name, type, (make_new_T_1len<type,def>))
+#define BOTAN_REGISTER_BLOCK_CIPHER_NAMED_1STR(type, name, def) \
+   BOTAN_REGISTER_NAMED_T(BlockCipher, name, type, std::bind(make_new_T_1str<type>, std::placeholders::_1, def))
+
+#define BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(cond, type, name, provider, pref) \
+   BOTAN_COND_REGISTER_NAMED_T_NOARGS(cond, BlockCipher, type, name, provider, pref)
 
 #if defined(BOTAN_HAS_AES)
 BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(AES_128, "AES-128");

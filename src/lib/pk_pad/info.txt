@@ -10,7 +10,3 @@ rng
 eme.h
 emsa.h
 </header:public>
-
-<header:internal>
-pad_utils.h
-</header:internal>

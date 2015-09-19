@@ -5,7 +5,7 @@
 */
 
 #include <botan/emsa.h>
-#include <botan/internal/pad_utils.h>
+#include <botan/internal/algo_registry.h>
 
 #if defined(BOTAN_HAS_EMSA1)
   #include <botan/emsa1.h>
@@ -44,6 +44,15 @@ EMSA* get_emsa(const std::string& algo_spec)
 
    throw Algorithm_Not_Found(algo_spec);
    }
+
+#define BOTAN_REGISTER_EMSA_NAMED_NOARGS(type, name) \
+   BOTAN_REGISTER_NAMED_T(EMSA, name, type, make_new_T<type>)
+
+#define BOTAN_REGISTER_EMSA(name, maker) BOTAN_REGISTER_T(EMSA, name, maker)
+#define BOTAN_REGISTER_EMSA_NOARGS(name) BOTAN_REGISTER_T_NOARGS(EMSA, name)
+
+#define BOTAN_REGISTER_EMSA_1HASH(type, name)                    \
+   BOTAN_REGISTER_NAMED_T(EMSA, name, type, (make_new_T_1X<type, HashFunction>))
 
 #if defined(BOTAN_HAS_EMSA1)
 BOTAN_REGISTER_EMSA_1HASH(EMSA1, "EMSA1");

@@ -8,7 +8,6 @@
 #include <botan/lion.h>
 #include <botan/lookup.h>
 #include <botan/parsing.h>
-#include <botan/internal/xor_buf.h>
 
 namespace Botan {
 

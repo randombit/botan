@@ -1,11 +1,11 @@
 /*
-* OpenSSL Block Cipher
+* Block Ciphers via OpenSSL
 * (C) 1999-2010,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/block_utils.h>
+#include <botan/block_cipher.h>
 #include <botan/internal/openssl.h>
 #include <openssl/evp.h>
 

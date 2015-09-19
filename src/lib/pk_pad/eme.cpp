@@ -6,7 +6,7 @@
 */
 
 #include <botan/eme.h>
-#include <botan/internal/pad_utils.h>
+#include <botan/internal/algo_registry.h>
 
 #if defined(BOTAN_HAS_EME_OAEP)
 #include <botan/oaep.h>
@@ -21,6 +21,12 @@
 #endif
 
 namespace Botan {
+
+#define BOTAN_REGISTER_EME(name, maker) BOTAN_REGISTER_T(EME, name, maker)
+#define BOTAN_REGISTER_EME_NOARGS(name) BOTAN_REGISTER_T_NOARGS(EME, name)
+
+#define BOTAN_REGISTER_EME_NAMED_NOARGS(type, name) \
+   BOTAN_REGISTER_NAMED_T(EME, name, type, make_new_T<type>)
 
 #if defined(BOTAN_HAS_EME_OAEP)
 BOTAN_REGISTER_NAMED_T(EME, "OAEP", OAEP, OAEP::make);

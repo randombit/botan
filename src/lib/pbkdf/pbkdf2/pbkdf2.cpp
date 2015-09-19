@@ -7,8 +7,7 @@
 
 #include <botan/pbkdf2.h>
 #include <botan/lookup.h>
-#include <botan/get_byte.h>
-#include <botan/internal/xor_buf.h>
+#include <botan/loadstor.h>
 #include <botan/internal/rounding.h>
 
 namespace Botan {

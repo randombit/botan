@@ -7,7 +7,7 @@
 
 #include <botan/hash.h>
 #include <botan/cpuid.h>
-#include <botan/internal/hash_utils.h>
+#include <botan/internal/algo_registry.h>
 
 #if defined(BOTAN_HAS_ADLER32)
   #include <botan/adler32.h>
@@ -105,6 +105,19 @@ std::vector<std::string> HashFunction::providers(const std::string& algo_spec)
 HashFunction::HashFunction() {}
 
 HashFunction::~HashFunction() {}
+
+#define BOTAN_REGISTER_HASH(name, maker) BOTAN_REGISTER_T(HashFunction, name, maker)
+#define BOTAN_REGISTER_HASH_NOARGS(name) BOTAN_REGISTER_T_NOARGS(HashFunction, name)
+
+#define BOTAN_REGISTER_HASH_1LEN(name, def) BOTAN_REGISTER_T_1LEN(HashFunction, name, def)
+
+#define BOTAN_REGISTER_HASH_NAMED_NOARGS(type, name) \
+   BOTAN_REGISTER_NAMED_T(HashFunction, name, type, make_new_T<type>)
+#define BOTAN_REGISTER_HASH_NAMED_1LEN(type, name, def) \
+   BOTAN_REGISTER_NAMED_T(HashFunction, name, type, (make_new_T_1len<type,def>))
+
+#define BOTAN_REGISTER_HASH_NOARGS_IF(cond, type, name, provider, pref)      \
+   BOTAN_COND_REGISTER_NAMED_T_NOARGS(cond, HashFunction, type, name, provider, pref)
 
 #if defined(BOTAN_HAS_ADLER32)
 BOTAN_REGISTER_HASH_NOARGS(Adler32);

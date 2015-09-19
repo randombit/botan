@@ -12,7 +12,6 @@
 #include <botan/internal/tls_seq_numbers.h>
 #include <botan/internal/tls_session_key.h>
 #include <botan/internal/rounding.h>
-#include <botan/internal/xor_buf.h>
 #include <botan/lookup.h>
 #include <botan/rng.h>
 

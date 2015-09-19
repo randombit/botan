@@ -6,7 +6,7 @@
 */
 
 #include <botan/mac.h>
-#include <botan/internal/mac_utils.h>
+#include <botan/internal/algo_registry.h>
 #include <botan/mem_ops.h>
 
 #if defined(BOTAN_HAS_CBC_MAC)
@@ -61,7 +61,6 @@ bool MessageAuthenticationCode::verify_mac(const byte mac[], size_t length)
    return same_mem(our_mac.data(), mac, length);
    }
 
-
 #if defined(BOTAN_HAS_CBC_MAC)
 BOTAN_REGISTER_NAMED_T(MessageAuthenticationCode, "CBC-MAC", CBC_MAC, CBC_MAC::make);
 #endif
@@ -75,7 +74,7 @@ BOTAN_REGISTER_NAMED_T(MessageAuthenticationCode, "HMAC", HMAC, HMAC::make);
 #endif
 
 #if defined(BOTAN_HAS_POLY1305)
-BOTAN_REGISTER_MAC_NOARGS(Poly1305);
+BOTAN_REGISTER_T_NOARGS(MessageAuthenticationCode, Poly1305);
 #endif
 
 #if defined(BOTAN_HAS_SIPHASH)
@@ -83,7 +82,7 @@ BOTAN_REGISTER_NAMED_T_2LEN(MessageAuthenticationCode, SipHash, "SipHash", "base
 #endif
 
 #if defined(BOTAN_HAS_ANSI_X919_MAC)
-BOTAN_REGISTER_MAC_NAMED_NOARGS(ANSI_X919_MAC, "X9.19-MAC");
+BOTAN_REGISTER_NAMED_T(MessageAuthenticationCode, "X9.19-MAC", ANSI_X919_MAC, make_new_T<ANSI_X919_MAC>);
 #endif
 
 }

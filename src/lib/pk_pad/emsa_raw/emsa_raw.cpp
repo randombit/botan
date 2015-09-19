@@ -5,7 +5,6 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/pad_utils.h>
 #include <botan/emsa_raw.h>
 
 namespace Botan {

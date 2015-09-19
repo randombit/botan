@@ -5,9 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/hash_utils.h>
 #include <botan/md2.h>
-#include <botan/internal/xor_buf.h>
 
 namespace Botan {
 

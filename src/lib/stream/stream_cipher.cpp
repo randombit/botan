@@ -6,7 +6,7 @@
 */
 
 #include <botan/stream_cipher.h>
-#include <botan/internal/stream_utils.h>
+#include <botan/internal/algo_registry.h>
 
 #if defined(BOTAN_HAS_CHACHA)
 #include <botan/chacha.h>
@@ -51,11 +51,11 @@ void StreamCipher::set_iv(const byte[], size_t iv_len)
    }
 
 #if defined(BOTAN_HAS_CHACHA)
-BOTAN_REGISTER_STREAM_CIPHER_NOARGS(ChaCha);
+BOTAN_REGISTER_T_NOARGS(StreamCipher, ChaCha);
 #endif
 
 #if defined(BOTAN_HAS_SALSA20)
-BOTAN_REGISTER_STREAM_CIPHER_NOARGS(Salsa20);
+BOTAN_REGISTER_T_NOARGS(StreamCipher, Salsa20);
 #endif
 
 #if defined(BOTAN_HAS_CTR_BE)

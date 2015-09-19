@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/stream_utils.h>
 #include <botan/salsa20.h>
+#include <botan/loadstor.h>
 
 namespace Botan {
 

@@ -5,7 +5,6 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/mac_utils.h>
 #include <botan/cmac.h>
 #include <botan/lookup.h>
 
