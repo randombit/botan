@@ -107,6 +107,7 @@ size_t test_decode_ecdsa_X509()
    CHECK_MESSAGE(hex_encode(cert.serial_number()) == "01", "error reading serial from x509 ecdsa certificate");
    CHECK_MESSAGE(hex_encode(cert.authority_key_id()) == "0096452DE588F966C4CCDF161DD1F3F5341B71E7", "error reading authority key id from x509 ecdsa certificate");
    CHECK_MESSAGE(hex_encode(cert.subject_key_id()) == "0096452DE588F966C4CCDF161DD1F3F5341B71E7", "error reading Subject key id from x509 ecdsa certificate");
+   CHECK_MESSAGE(cert.fingerprint("SHA-1") == "32:42:1C:C3:EC:54:D7:E9:43:EC:51:F0:19:23:BD:85:1D:F2:1B:B9", "Incorrect fingerprint");
 
    std::unique_ptr<X509_PublicKey> pubkey(cert.subject_public_key());
    bool ver_ec = cert.check_signature(*pubkey);
