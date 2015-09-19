@@ -5,6 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/stream_cipher.h>
 #include <botan/internal/algo_registry.h>
 #include <botan/internal/openssl.h>
 #include <botan/parsing.h>

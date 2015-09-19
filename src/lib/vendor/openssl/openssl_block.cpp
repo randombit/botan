@@ -6,6 +6,7 @@
 */
 
 #include <botan/block_cipher.h>
+#include <botan/internal/algo_registry.h>
 #include <botan/internal/openssl.h>
 #include <openssl/evp.h>
 
