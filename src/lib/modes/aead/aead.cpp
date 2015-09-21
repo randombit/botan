@@ -9,27 +9,27 @@
 #include <botan/lookup.h>
 
 #if defined(BOTAN_HAS_AEAD_CCM)
-#include <botan/ccm.h>
+  #include <botan/ccm.h>
 #endif
 
 #if defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305)
-#include <botan/chacha20poly1305.h>
+  #include <botan/chacha20poly1305.h>
 #endif
 
 #if defined(BOTAN_HAS_AEAD_EAX)
-#include <botan/eax.h>
+  #include <botan/eax.h>
 #endif
 
 #if defined(BOTAN_HAS_AEAD_GCM)
-#include <botan/gcm.h>
+  #include <botan/gcm.h>
 #endif
 
 #if defined(BOTAN_HAS_AEAD_OCB)
-#include <botan/ocb.h>
+  #include <botan/ocb.h>
 #endif
 
 #if defined(BOTAN_HAS_AEAD_SIV)
-#include <botan/siv.h>
+  #include <botan/siv.h>
 #endif
 
 namespace Botan {

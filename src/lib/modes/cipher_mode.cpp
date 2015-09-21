@@ -12,19 +12,19 @@
 #include <sstream>
 
 #if defined(BOTAN_HAS_MODE_ECB)
-#include <botan/ecb.h>
+  #include <botan/ecb.h>
 #endif
 
 #if defined(BOTAN_HAS_MODE_CBC)
-#include <botan/cbc.h>
+  #include <botan/cbc.h>
 #endif
 
 #if defined(BOTAN_HAS_MODE_CFB)
-#include <botan/cfb.h>
+  #include <botan/cfb.h>
 #endif
 
 #if defined(BOTAN_HAS_MODE_XTS)
-#include <botan/xts.h>
+  #include <botan/xts.h>
 #endif
 
 namespace Botan {

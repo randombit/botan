@@ -10,7 +10,7 @@
 #include <botan/internal/algo_registry.h>
 
 #if defined(BOTAN_HAS_SIMD_32)
-#include <botan/internal/simd_32.h>
+  #include <botan/internal/simd_32.h>
 #endif
 
 #if defined(BOTAN_HAS_AES)

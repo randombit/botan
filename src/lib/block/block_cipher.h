@@ -24,7 +24,7 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       /**
       * Create an instance based on a name
       * Will return a null pointer if the algo/provider combination cannot
-      * be found. If providers is empty then best available is chosen.
+      * be found. If provider is empty then best available is chosen.
       */
       static std::unique_ptr<BlockCipher> create(const std::string& algo_spec,
                                                  const std::string& provider = "");

@@ -9,23 +9,23 @@
 #include <botan/internal/algo_registry.h>
 
 #if defined(BOTAN_HAS_CHACHA)
-#include <botan/chacha.h>
+  #include <botan/chacha.h>
 #endif
 
 #if defined(BOTAN_HAS_SALSA20)
-#include <botan/salsa20.h>
+  #include <botan/salsa20.h>
 #endif
 
 #if defined(BOTAN_HAS_CTR_BE)
-#include <botan/ctr.h>
+  #include <botan/ctr.h>
 #endif
 
 #if defined(BOTAN_HAS_OFB)
-#include <botan/ofb.h>
+  #include <botan/ofb.h>
 #endif
 
 #if defined(BOTAN_HAS_RC4)
-#include <botan/rc4.h>
+  #include <botan/rc4.h>
 #endif
 
 namespace Botan {
