@@ -4,6 +4,9 @@ Release Notes
 Version 1.11.21, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* The OCaml module is now a separate project at
+  https://github.com/randombit/botan-ocaml
+
 Version 1.11.20, 2015-09-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

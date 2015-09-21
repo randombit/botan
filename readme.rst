@@ -42,10 +42,11 @@ The `GitHub wiki <https://github.com/randombit/botan/wiki>`_
 and `Doxygen docs <https://botan.randombit.net/doxygen>`_
 may also prove useful resources.
 
-In addition to C++ there are (partial, in-progress) bindings for C89,
-Python and OCaml included along with the library, and
-`Node.js <https://github.com/justinfreitag/node-botan>`_ wrapper also
-exists.
+In addition to C++, botan has a C89 API specifically designed to be easy
+to call from other languages. A Python binding using ctypes is included,
+there are also bindings for
+`Node.js <https://github.com/justinfreitag/node-botan>`_ and
+`OCaml <https://github.com/randombit/botan-ocaml>`_
 
 There is also a third party open source implementation of
 `SSHv2 <https://github.com/cdesjardins/cppssh>`_ using the library.
