@@ -10,19 +10,11 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/block_utils.h>
 #include <botan/aes_ssse3.h>
 #include <botan/cpuid.h>
 #include <tmmintrin.h>
 
 namespace Botan {
-
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_ssse3(), AES_128_SSSE3, "AES-128",
-                                      "ssse3", BOTAN_SIMD_ALGORITHM_PRIO);
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_ssse3(), AES_192_SSSE3, "AES-192",
-                                      "ssse3", BOTAN_SIMD_ALGORITHM_PRIO);
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_ssse3(), AES_256_SSSE3, "AES-256",
-                                      "ssse3", BOTAN_SIMD_ALGORITHM_PRIO);
 
 namespace {
 

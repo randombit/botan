@@ -5,13 +5,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/hash_utils.h>
 #include <botan/par_hash.h>
 #include <botan/parsing.h>
 
 namespace Botan {
-
-BOTAN_REGISTER_NAMED_T(HashFunction, "Parallel", Parallel, Parallel::make);
 
 Parallel* Parallel::make(const Spec& spec)
    {
@@ -19,7 +16,7 @@ Parallel* Parallel::make(const Spec& spec)
 
    for(size_t i = 0; i != spec.arg_count(); ++i)
       {
-      std::unique_ptr<HashFunction> h(get_hash_function(spec.arg(i)));
+      auto h = HashFunction::create(spec.arg(i));
       if(!h)
          return nullptr;
       hashes.push_back(std::move(h));

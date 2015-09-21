@@ -8,7 +8,6 @@
 #include <botan/tls_session_manager_sql.h>
 #include <botan/database.h>
 #include <botan/pbkdf.h>
-#include <botan/lookup.h>
 #include <botan/hex.h>
 #include <botan/loadstor.h>
 #include <chrono>

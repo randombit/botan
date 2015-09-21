@@ -6,7 +6,6 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/mac_utils.h>
 #include <botan/hmac.h>
 
 namespace Botan {
@@ -15,13 +14,11 @@ HMAC* HMAC::make(const Spec& spec)
    {
    if(spec.arg_count() == 1)
       {
-      if(HashFunction* h = get_hash_function(spec.arg(0)))
-         return new HMAC(h);
+      if(auto h = HashFunction::create(spec.arg(0)))
+         return new HMAC(h.release());
       }
    return nullptr;
    }
-
-BOTAN_REGISTER_NAMED_T(MessageAuthenticationCode, "HMAC", HMAC, HMAC::make);
 
 /*
 * Update a HMAC Calculation

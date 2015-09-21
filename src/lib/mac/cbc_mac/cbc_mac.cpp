@@ -5,7 +5,6 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/mac_utils.h>
 #include <botan/cbc_mac.h>
 
 namespace Botan {
@@ -14,13 +13,11 @@ CBC_MAC* CBC_MAC::make(const Spec& spec)
    {
    if(spec.arg_count() == 1)
       {
-      if(auto bc = make_block_cipher(spec.arg(0)))
+      if(auto bc = BlockCipher::create(spec.arg(0)))
          return new CBC_MAC(bc.release());
       }
    return nullptr;
    }
-
-BOTAN_REGISTER_NAMED_T(MessageAuthenticationCode, "CBC-MAC", CBC_MAC, CBC_MAC::make);
 
 /*
 * Update an CBC-MAC Calculation

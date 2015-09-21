@@ -7,7 +7,7 @@
 
 #include <botan/cpuid.h>
 #include <botan/types.h>
-#include <botan/get_byte.h>
+#include <botan/loadstor.h>
 #include <botan/mem_ops.h>
 #include <ostream>
 

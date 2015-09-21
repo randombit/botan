@@ -11,7 +11,6 @@
 #if defined(BOTAN_HAS_FILTERS)
 
 #include <botan/hex.h>
-#include <botan/lookup.h>
 #include <botan/cipher_mode.h>
 #include <botan/filters.h>
 #include <iostream>

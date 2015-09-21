@@ -5,13 +5,11 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/block_utils.h>
 #include <botan/misty1.h>
+#include <botan/loadstor.h>
 #include <botan/parsing.h>
 
 namespace Botan {
-
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(MISTY1);
 
 namespace {
 

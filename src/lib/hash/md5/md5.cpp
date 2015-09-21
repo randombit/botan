@@ -5,12 +5,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/hash_utils.h>
 #include <botan/md5.h>
 
 namespace Botan {
-
-BOTAN_REGISTER_HASH_NOARGS(MD5);
 
 namespace {
 

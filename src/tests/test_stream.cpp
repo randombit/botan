@@ -9,7 +9,6 @@
 #if defined(BOTAN_HAS_STREAM_CIPHER)
 
 #include <botan/stream_cipher.h>
-#include <botan/lookup.h>
 #include <botan/hex.h>
 #include <iostream>
 #include <fstream>
@@ -29,7 +28,7 @@ size_t stream_test(const std::string& algo,
    const secure_vector<byte> ct = hex_decode_locked(out_hex);
    const secure_vector<byte> nonce = hex_decode_locked(nonce_hex);
 
-   const std::vector<std::string> providers = get_stream_cipher_providers(algo);
+   const std::vector<std::string> providers = StreamCipher::providers(algo);
    size_t fails = 0;
 
    if(providers.empty())
@@ -40,7 +39,7 @@ size_t stream_test(const std::string& algo,
 
    for(auto provider: providers)
       {
-      std::unique_ptr<StreamCipher> cipher(get_stream_cipher(algo, provider));
+      std::unique_ptr<StreamCipher> cipher(StreamCipher::create(algo, provider));
 
       if(!cipher)
          {

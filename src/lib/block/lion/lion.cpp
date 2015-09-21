@@ -5,20 +5,17 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/block_utils.h>
 #include <botan/lion.h>
 #include <botan/parsing.h>
 
 namespace Botan {
 
-namespace {
-
-Lion* make_lion(const BlockCipher::Spec& spec)
+Lion* Lion::make(const BlockCipher::Spec& spec)
    {
    if(spec.arg_count_between(2, 3))
       {
-      std::unique_ptr<HashFunction> hash(get_hash_function(spec.arg(0)));
-      std::unique_ptr<StreamCipher> stream(get_stream_cipher(spec.arg(1)));
+      std::unique_ptr<HashFunction> hash(HashFunction::create(spec.arg(0)));
+      std::unique_ptr<StreamCipher> stream(StreamCipher::create(spec.arg(1)));
 
       if(hash && stream)
          {
@@ -28,10 +25,6 @@ Lion* make_lion(const BlockCipher::Spec& spec)
       }
    return nullptr;
    }
-
-}
-
-BOTAN_REGISTER_NAMED_T(BlockCipher, "Lion", Lion, make_lion);
 
 /*
 * Lion Encryption

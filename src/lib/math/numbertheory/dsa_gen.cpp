@@ -6,7 +6,6 @@
 */
 
 #include <botan/numthry.h>
-#include <botan/lookup.h>
 #include <botan/hash.h>
 #include <botan/parsing.h>
 #include <algorithm>
@@ -52,7 +51,10 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
          "Generating a DSA parameter set with a " + std::to_string(qbits) +
          "long q requires a seed at least as many bits long");
 
-   std::unique_ptr<HashFunction> hash(make_hash_function("SHA-" + std::to_string(qbits)));
+   const std::string hash_name = "SHA-" + std::to_string(qbits);
+   std::unique_ptr<HashFunction> hash(HashFunction::create(hash_name));
+   if(!hash)
+      throw Algorithm_Not_Found(hash_name);
 
    const size_t HASH_SIZE = hash->output_length();
 

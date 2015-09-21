@@ -6,8 +6,52 @@
 */
 
 #include <botan/eme.h>
+#include <botan/internal/algo_registry.h>
+
+#if defined(BOTAN_HAS_EME_OAEP)
+#include <botan/oaep.h>
+#endif
+
+#if defined(BOTAN_HAS_EME_PKCS1v15)
+#include <botan/eme_pkcs.h>
+#endif
+
+#if defined(BOTAN_HAS_EME_RAW)
+#include <botan/eme_raw.h>
+#endif
 
 namespace Botan {
+
+#define BOTAN_REGISTER_EME(name, maker) BOTAN_REGISTER_T(EME, name, maker)
+#define BOTAN_REGISTER_EME_NOARGS(name) BOTAN_REGISTER_T_NOARGS(EME, name)
+
+#define BOTAN_REGISTER_EME_NAMED_NOARGS(type, name) \
+   BOTAN_REGISTER_NAMED_T(EME, name, type, make_new_T<type>)
+
+#if defined(BOTAN_HAS_EME_OAEP)
+BOTAN_REGISTER_NAMED_T(EME, "OAEP", OAEP, OAEP::make);
+#endif
+
+#if defined(BOTAN_HAS_EME_PKCS1v15)
+BOTAN_REGISTER_EME_NAMED_NOARGS(EME_PKCS1v15, "PKCS1v15");
+#endif
+
+#if defined(BOTAN_HAS_EME_RAW)
+BOTAN_REGISTER_EME_NAMED_NOARGS(EME_Raw, "Raw");
+#endif
+
+EME* get_eme(const std::string& algo_spec)
+   {
+   SCAN_Name request(algo_spec);
+
+   if(EME* eme = make_a<EME>(algo_spec))
+      return eme;
+
+   if(request.algo_name() == "Raw")
+      return nullptr; // No padding
+
+   throw Algorithm_Not_Found(algo_spec);
+   }
 
 /*
 * Encode a message

@@ -6,12 +6,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/pad_utils.h>
 #include <botan/emsa1_bsi.h>
 
 namespace Botan {
-
-BOTAN_REGISTER_EMSA_1HASH(EMSA1_BSI, "EMSA1_BSI");
 
 /*
 * EMSA1 BSI Encode Operation

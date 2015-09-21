@@ -7,15 +7,11 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/hash_utils.h>
 #include <botan/sha1_sse2.h>
 #include <botan/cpuid.h>
 #include <emmintrin.h>
 
 namespace Botan {
-
-BOTAN_REGISTER_HASH_NOARGS_IF(CPUID::has_sse2(), SHA_160_SSE2, "SHA-160",
-                              "sse2", BOTAN_SIMD_ALGORITHM_PRIO);
 
 namespace SHA1_SSE2_F {
 

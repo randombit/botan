@@ -7,7 +7,7 @@
 #ifndef BOTAN_ALGO_REGISTRY_H__
 #define BOTAN_ALGO_REGISTRY_H__
 
-#include <botan/lookup.h>
+#include <botan/types.h>
 #include <functional>
 #include <stdexcept>
 #include <mutex>
@@ -35,7 +35,8 @@ class Algo_Registry
       void add(const std::string& name, const std::string& provider, maker_fn fn, byte pref)
          {
          std::unique_lock<std::mutex> lock(m_mutex);
-         m_algo_info[name].add_provider(provider, fn, pref);
+         if(!m_algo_info[name].add_provider(provider, fn, pref))
+            throw std::runtime_error("Duplicated registration of " + name + "/" + provider);
          }
 
       std::vector<std::string> providers_of(const Spec& spec)
@@ -102,13 +103,14 @@ class Algo_Registry
       struct Algo_Info
          {
          public:
-            void add_provider(const std::string& provider, maker_fn fn, byte pref)
+            bool add_provider(const std::string& provider, maker_fn fn, byte pref)
                {
                if(m_maker_fns.count(provider) > 0)
-                  throw std::runtime_error("Duplicated registration of '" + provider + "'");
+                  return false;
 
                m_maker_fns[provider] = fn;
                m_prefs.insert(std::make_pair(pref, provider));
+               return true;
                }
 
             std::vector<std::string> providers() const

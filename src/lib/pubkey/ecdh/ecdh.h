@@ -56,7 +56,7 @@ class BOTAN_DLL ECDH_PublicKey : public virtual EC_PublicKey
          { return unlock(EC2OSP(public_point(), PointGFp::UNCOMPRESSED)); }
 
    protected:
-      ECDH_PublicKey() {}
+      ECDH_PublicKey();
    };
 
 /**

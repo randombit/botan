@@ -5,12 +5,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/mac_utils.h>
 #include <botan/siphash.h>
 
 namespace Botan {
-
-BOTAN_REGISTER_NAMED_T_2LEN(MessageAuthenticationCode, SipHash, "SipHash", "base", 2, 4);
 
 namespace {
 

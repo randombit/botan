@@ -5,12 +5,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/hash_utils.h>
 #include <botan/adler32.h>
+#include <botan/loadstor.h>
 
 namespace Botan {
-
-BOTAN_REGISTER_HASH_NOARGS(Adler32);
 
 namespace {
 
