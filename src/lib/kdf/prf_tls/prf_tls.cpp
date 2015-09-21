@@ -7,23 +7,26 @@
 
 #include <botan/prf_tls.h>
 #include <botan/hmac.h>
-#include <botan/lookup.h>
 
 namespace Botan {
 
 TLS_12_PRF* TLS_12_PRF::make(const Spec& spec)
    {
-   if(auto mac = get_mac(spec.arg(0)))
-      return new TLS_12_PRF(mac);
-   if(auto hash = get_hash_function(spec.arg(0)))
-      return new TLS_12_PRF(new HMAC(hash));
+   if(auto mac = MessageAuthenticationCode::create(spec.arg(0)))
+      return new TLS_12_PRF(mac.release());
+
+   if(auto mac = MessageAuthenticationCode::create("HMAC(" + spec.arg(0) + ")"))
+      return new TLS_12_PRF(mac.release());
+
    return nullptr;
    }
 
 TLS_PRF::TLS_PRF() :
-   m_hmac_md5(make_message_auth("HMAC(MD5)")),
-   m_hmac_sha1(make_message_auth("HMAC(SHA-1)"))
+   m_hmac_md5(MessageAuthenticationCode::create("HMAC(MD5)")),
+   m_hmac_sha1(MessageAuthenticationCode::create("HMAC(SHA-1)"))
    {
+   if(!m_hmac_md5 || !m_hmac_sha1)
+      throw Algorithm_Not_Found("TLS_PRF HMACs not available");
    }
 
 namespace {

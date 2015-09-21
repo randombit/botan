@@ -8,7 +8,6 @@
 #include <botan/pssr.h>
 #include <botan/mgf1.h>
 #include <botan/internal/bit_ops.h>
-#include <botan/lookup.h>
 
 namespace Botan {
 
@@ -17,10 +16,10 @@ PSSR* PSSR::make(const Spec& request)
    if(request.arg(1, "MGF1") != "MGF1")
       return nullptr;
 
-   if(HashFunction* hash = get_hash_function(request.arg(0)))
+   if(auto h = HashFunction::create(request.arg(0)))
       {
-      const size_t salt_size = request.arg_as_integer(2, hash->output_length());
-      return new PSSR(hash, salt_size);
+      const size_t salt_size = request.arg_as_integer(2, h->output_length());
+      return new PSSR(h.release(), salt_size);
       }
 
    return nullptr;

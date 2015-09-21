@@ -7,7 +7,6 @@
 */
 
 #include <botan/hmac.h>
-#include <botan/lookup.h>
 
 namespace Botan {
 
@@ -15,8 +14,8 @@ HMAC* HMAC::make(const Spec& spec)
    {
    if(spec.arg_count() == 1)
       {
-      if(HashFunction* h = get_hash_function(spec.arg(0)))
-         return new HMAC(h);
+      if(auto h = HashFunction::create(spec.arg(0)))
+         return new HMAC(h.release());
       }
    return nullptr;
    }

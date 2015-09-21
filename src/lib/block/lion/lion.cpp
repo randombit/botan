@@ -6,7 +6,6 @@
 */
 
 #include <botan/lion.h>
-#include <botan/lookup.h>
 #include <botan/parsing.h>
 
 namespace Botan {
@@ -15,8 +14,8 @@ Lion* Lion::make(const BlockCipher::Spec& spec)
    {
    if(spec.arg_count_between(2, 3))
       {
-      std::unique_ptr<HashFunction> hash(get_hash_function(spec.arg(0)));
-      std::unique_ptr<StreamCipher> stream(get_stream_cipher(spec.arg(1)));
+      std::unique_ptr<HashFunction> hash(HashFunction::create(spec.arg(0)));
+      std::unique_ptr<StreamCipher> stream(StreamCipher::create(spec.arg(1)));
 
       if(hash && stream)
          {

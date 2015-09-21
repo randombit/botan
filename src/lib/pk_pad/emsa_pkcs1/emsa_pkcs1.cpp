@@ -7,7 +7,6 @@
 
 #include <botan/emsa_pkcs1.h>
 #include <botan/hash_id.h>
-#include <botan/lookup.h>
 
 namespace Botan {
 
@@ -17,8 +16,8 @@ EMSA* EMSA_PKCS1v15::make(const EMSA::Spec& spec)
       return new EMSA_PKCS1v15_Raw;
    else
       {
-      if(HashFunction* h = get_hash_function(spec.arg(0)))
-         return new EMSA_PKCS1v15(h);
+      if(auto h = HashFunction::create(spec.arg(0)))
+         return new EMSA_PKCS1v15(h.release());
       }
    return nullptr;
    }

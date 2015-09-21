@@ -12,7 +12,6 @@
 #include <botan/internal/tls_seq_numbers.h>
 #include <botan/internal/tls_session_key.h>
 #include <botan/internal/rounding.h>
-#include <botan/lookup.h>
 #include <botan/rng.h>
 
 namespace Botan {
@@ -62,20 +61,17 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
       return;
       }
 
-   if(BlockCipher* bc = get_block_cipher(cipher_algo))
-      {
-      m_block_cipher.reset(bc);
-      m_block_cipher->set_key(cipher_key);
-      m_block_cipher_cbc_state = iv.bits_of();
-      m_block_size = bc->block_size();
-
-      if(version.supports_explicit_cbc_ivs())
-         m_iv_size = m_block_size;
-      }
-   else
+   m_block_cipher = BlockCipher::create(cipher_algo);
+   m_mac = MessageAuthenticationCode::create("HMAC(" + mac_algo + ")");
+   if(!m_block_cipher)
       throw Invalid_Argument("Unknown TLS cipher " + cipher_algo);
 
-   m_mac.reset(get_mac("HMAC(" + mac_algo + ")"));
+   m_block_cipher->set_key(cipher_key);
+   m_block_cipher_cbc_state = iv.bits_of();
+   m_block_size = m_block_cipher->block_size();
+
+   if(version.supports_explicit_cbc_ivs())
+      m_iv_size = m_block_size;
 
    m_mac->set_key(mac_key);
    }

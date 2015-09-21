@@ -11,9 +11,12 @@
 namespace Botan {
 
 ChaCha20Poly1305_Mode::ChaCha20Poly1305_Mode() :
-   m_chacha(make_stream_cipher("ChaCha")),
-   m_poly1305(make_message_auth("Poly1305"))
-   {}
+   m_chacha(StreamCipher::create("ChaCha")),
+   m_poly1305(MessageAuthenticationCode::create("Poly1305"))
+   {
+   if(!m_chacha || !m_poly1305)
+      throw Algorithm_Not_Found("ChaCha20Poly1305");
+   }
 
 bool ChaCha20Poly1305_Mode::valid_nonce_length(size_t n) const
    {

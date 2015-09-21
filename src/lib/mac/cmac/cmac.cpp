@@ -6,7 +6,6 @@
 */
 
 #include <botan/cmac.h>
-#include <botan/lookup.h>
 
 namespace Botan {
 
@@ -14,8 +13,8 @@ CMAC* CMAC::make(const Spec& spec)
    {
    if(spec.arg_count() == 1)
       {
-      if(BlockCipher* bc = get_block_cipher(spec.arg(0)))
-         return new CMAC(bc);
+      if(auto bc = BlockCipher::create(spec.arg(0)))
+         return new CMAC(bc.release());
       }
    return nullptr;
    }

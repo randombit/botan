@@ -6,7 +6,6 @@
 */
 
 #include <botan/x919_mac.h>
-#include <botan/lookup.h>
 
 namespace Botan {
 
@@ -86,10 +85,11 @@ MessageAuthenticationCode* ANSI_X919_MAC::clone() const
 /*
 * ANSI X9.19 MAC Constructor
 */
-ANSI_X919_MAC::ANSI_X919_MAC() : m_state(8), m_position(0)
+ANSI_X919_MAC::ANSI_X919_MAC() :
+   m_des1(BlockCipher::create("DES")),
+   m_des2(BlockCipher::create("DES")),
+   m_state(8), m_position(0)
    {
-   m_des1.reset(get_block_cipher("DES"));
-   m_des2.reset(m_des1->clone());
    }
 
 }

@@ -8,7 +8,6 @@
 
 #if defined(BOTAN_HAS_MAC)
 
-#include <botan/lookup.h>
 #include <botan/mac.h>
 #include <botan/hex.h>
 #include <iostream>
@@ -23,7 +22,7 @@ size_t mac_test(const std::string& algo,
                 const std::string& in_hex,
                 const std::string& out_hex)
    {
-   const std::vector<std::string> providers = get_mac_providers(algo);
+   const std::vector<std::string> providers = MessageAuthenticationCode::providers(algo);
    size_t fails = 0;
 
    if(providers.empty())
@@ -34,7 +33,7 @@ size_t mac_test(const std::string& algo,
 
    for(auto provider: providers)
       {
-      std::unique_ptr<MessageAuthenticationCode> mac(get_mac(algo, provider));
+      std::unique_ptr<MessageAuthenticationCode> mac(MessageAuthenticationCode::create(algo, provider));
 
       if(!mac)
          {

@@ -6,7 +6,6 @@
 */
 
 #include <botan/ofb.h>
-#include <botan/lookup.h>
 
 namespace Botan {
 
@@ -14,8 +13,8 @@ OFB* OFB::make(const Spec& spec)
    {
    if(spec.algo_name() == "OFB" && spec.arg_count() == 1)
       {
-      if(BlockCipher* c = get_block_cipher(spec.arg(0)))
-         return new OFB(c);
+      if(auto c = BlockCipher::create(spec.arg(0)))
+         return new OFB(c.release());
       }
    return nullptr;
    }

@@ -7,7 +7,6 @@
 
 #include <botan/cipher_mode.h>
 #include <botan/stream_mode.h>
-#include <botan/lookup.h>
 #include <botan/internal/mode_utils.h>
 #include <sstream>
 
@@ -34,7 +33,7 @@ namespace Botan {
 template<typename T>
 Transform* make_ecb_mode(const Transform::Spec& spec)
    {
-   std::unique_ptr<BlockCipher> bc(get_block_cipher(spec.arg(0)));
+   std::unique_ptr<BlockCipher> bc(BlockCipher::create(spec.arg(0)));
    std::unique_ptr<BlockCipherModePaddingMethod> pad(get_bc_pad(spec.arg(1, "NoPadding")));
    if(bc && pad)
       return new T(bc.release(), pad.release());
@@ -50,7 +49,7 @@ BOTAN_REGISTER_TRANSFORM(ECB_Decryption, make_ecb_mode<ECB_Decryption>);
 template<typename CBC_T, typename CTS_T>
 Transform* make_cbc_mode(const Transform::Spec& spec)
    {
-   std::unique_ptr<BlockCipher> bc(get_block_cipher(spec.arg(0)));
+   std::unique_ptr<BlockCipher> bc(BlockCipher::create(spec.arg(0)));
 
    if(bc)
       {
@@ -131,8 +130,8 @@ Cipher_Mode* get_cipher_mode(const std::string& algo_spec, Cipher_Dir direction)
       return cipher;
       }
 
-   if(StreamCipher* stream_cipher = get_stream_cipher(mode_name, provider))
-      return new Stream_Cipher_Mode(stream_cipher);
+   if(auto sc = StreamCipher::create(mode_name, provider))
+      return new Stream_Cipher_Mode(sc.release());
 
    return nullptr;
    }

@@ -6,14 +6,13 @@
 */
 
 #include <botan/cascade.h>
-#include <botan/lookup.h>
 
 namespace Botan {
 
 Cascade_Cipher* Cascade_Cipher::make(const BlockCipher::Spec& spec)
    {
-   std::unique_ptr<BlockCipher> c1(get_block_cipher(spec.arg(0)));
-   std::unique_ptr<BlockCipher> c2(get_block_cipher(spec.arg(1)));
+   std::unique_ptr<BlockCipher> c1(BlockCipher::create(spec.arg(0)));
+   std::unique_ptr<BlockCipher> c2(BlockCipher::create(spec.arg(1)));
 
    if(c1 && c2)
       return new Cascade_Cipher(c1.release(), c2.release());

@@ -9,7 +9,6 @@
 #if defined(BOTAN_HAS_PBKDF)
 
 #include <botan/pbkdf.h>
-#include <botan/lookup.h>
 #include <botan/hex.h>
 #include <iostream>
 #include <fstream>

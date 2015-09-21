@@ -6,7 +6,6 @@
 */
 
 #include <botan/rfc3394.h>
-#include <botan/lookup.h>
 #include <botan/block_cipher.h>
 #include <botan/loadstor.h>
 #include <botan/exceptn.h>
@@ -22,7 +21,10 @@ secure_vector<byte> rfc3394_keywrap(const secure_vector<byte>& key,
    if(kek.size() != 16 && kek.size() != 24 && kek.size() != 32)
       throw std::invalid_argument("Bad KEK length " + std::to_string(kek.size()) + " for NIST key wrap");
 
-   std::unique_ptr<BlockCipher> aes(make_block_cipher("AES-" + std::to_string(8*kek.size())));
+   const std::string cipher_name = "AES-" + std::to_string(8*kek.size());
+   std::unique_ptr<BlockCipher> aes(BlockCipher::create(cipher_name));
+   if(!aes)
+      throw Algorithm_Not_Found(cipher_name);
    aes->set_key(kek);
 
    const size_t n = key.size() / 8;
@@ -66,7 +68,10 @@ secure_vector<byte> rfc3394_keyunwrap(const secure_vector<byte>& key,
    if(kek.size() != 16 && kek.size() != 24 && kek.size() != 32)
       throw std::invalid_argument("Bad KEK length " + std::to_string(kek.size()) + " for NIST key unwrap");
 
-   std::unique_ptr<BlockCipher> aes(make_block_cipher("AES-" + std::to_string(8*kek.size())));
+   const std::string cipher_name = "AES-" + std::to_string(8*kek.size());
+   std::unique_ptr<BlockCipher> aes(BlockCipher::create(cipher_name));
+   if(!aes)
+      throw Algorithm_Not_Found(cipher_name);
    aes->set_key(kek);
 
    const size_t n = (key.size() - 8) / 8;

@@ -6,7 +6,6 @@
 */
 
 #include <botan/ctr.h>
-#include <botan/lookup.h>
 
 namespace Botan {
 
@@ -14,8 +13,8 @@ CTR_BE* CTR_BE::make(const Spec& spec)
    {
    if(spec.algo_name() == "CTR-BE" && spec.arg_count() == 1)
       {
-      if(BlockCipher* c = get_block_cipher(spec.arg(0)))
-         return new CTR_BE(c);
+      if(auto c = BlockCipher::create(spec.arg(0)))
+         return new CTR_BE(c.release());
       }
    return nullptr;
    }

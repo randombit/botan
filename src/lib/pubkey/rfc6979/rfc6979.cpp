@@ -7,8 +7,8 @@
 
 #include <botan/rfc6979.h>
 #include <botan/hmac_drbg.h>
+#include <botan/mac.h>
 #include <botan/scan_name.h>
-#include <botan/lookup.h>
 
 namespace Botan {
 
@@ -31,7 +31,7 @@ RFC6979_Nonce_Generator::RFC6979_Nonce_Generator(const std::string& hash,
    m_order(order),
    m_qlen(m_order.bits()),
    m_rlen(m_qlen / 8 + (m_qlen % 8 ? 1 : 0)),
-   m_hmac_drbg(new HMAC_DRBG(make_message_auth("HMAC(" + hash + ")").release())),
+   m_hmac_drbg(new HMAC_DRBG(MessageAuthenticationCode::create("HMAC(" + hash + ")").release())),
    m_rng_in(m_rlen * 2),
    m_rng_out(m_rlen)
    {

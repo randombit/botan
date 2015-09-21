@@ -8,7 +8,6 @@
 #include <botan/oaep.h>
 #include <botan/mgf1.h>
 #include <botan/mem_ops.h>
-#include <botan/lookup.h>
 
 namespace Botan {
 
@@ -19,8 +18,8 @@ OAEP* OAEP::make(const Spec& request)
       if(request.arg_count() == 1 ||
          (request.arg_count() == 2 && request.arg(1) == "MGF1"))
          {
-         if(HashFunction* hash = get_hash_function(request.arg(0)))
-            return new OAEP(hash);
+         if(auto hash = HashFunction::create(request.arg(0)))
+            return new OAEP(hash.release());
          }
       }
 
