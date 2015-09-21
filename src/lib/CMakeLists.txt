@@ -3,7 +3,7 @@ set(INCLUDE_DIR "../../build/include")
 include_directories(${INCLUDE_DIR})
 
 # libbotan
-add_library(botan SHARED
+add_library(botan STATIC
     asn1/alg_id.cpp
     asn1/asn1_alt_name.cpp
     asn1/asn1_attribute.cpp
@@ -17,9 +17,10 @@ add_library(botan SHARED
     asn1/oid_lookup/oids.cpp
     asn1/x509_dn.cpp
     base/init.cpp
-    base/lookup.cpp
     base/scan_name.cpp
     base/symkey.cpp
+    base/transform.cpp
+    block/block_cipher.cpp
     block/aes/aes.cpp
     block/aes_ni/aes_ni.cpp
     block/aes_ssse3/aes_ssse3.cpp
@@ -109,6 +110,7 @@ add_library(botan SHARED
     hash/comb4p/comb4p.cpp
     hash/gost_3411/gost_3411.cpp
     hash/has160/has160.cpp
+    hash/hash.cpp
     hash/keccak/keccak.cpp
     hash/md2/md2.cpp
     hash/md4/md4.cpp
@@ -201,13 +203,13 @@ add_library(botan SHARED
     pk_pad/eme_oaep/oaep.cpp
     pk_pad/eme_pkcs1/eme_pkcs.cpp
     pk_pad/eme_raw/eme_raw.cpp
+    pk_pad/emsa.cpp
     pk_pad/emsa1_bsi/emsa1_bsi.cpp
     pk_pad/emsa1/emsa1.cpp
     pk_pad/emsa_pkcs1/emsa_pkcs1.cpp
     pk_pad/emsa_pssr/pssr.cpp
     pk_pad/emsa_raw/emsa_raw.cpp
     pk_pad/emsa_x931/emsa_x931.cpp
-    pk_pad/get_pk_pad.cpp
     pk_pad/hash_id/hash_id.cpp
     pk_pad/mgf1/mgf1.cpp
     pubkey/blinding.cpp
@@ -260,6 +262,7 @@ add_library(botan SHARED
     stream/ofb/ofb.cpp
     stream/rc4/rc4.cpp
     stream/salsa20/salsa20.cpp
+    stream/stream_cipher.cpp
     tls/credentials_manager.cpp
     tls/msg_certificate.cpp
     tls/msg_cert_req.cpp

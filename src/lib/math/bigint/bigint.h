@@ -12,7 +12,7 @@
 #include <botan/rng.h>
 #include <botan/secmem.h>
 #include <botan/mp_types.h>
-#include <botan/get_byte.h>
+#include <botan/loadstor.h>
 #include <iosfwd>
 
 namespace Botan {

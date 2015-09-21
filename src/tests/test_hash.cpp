@@ -6,7 +6,6 @@
 
 #include "tests.h"
 
-#include <botan/lookup.h>
 #include <botan/hash.h>
 #include <botan/hex.h>
 #include <iostream>
@@ -22,7 +21,7 @@ size_t hash_test(const std::string& algo,
    {
    size_t fails = 0;
 
-   const std::vector<std::string> providers = get_hash_function_providers(algo);
+   const std::vector<std::string> providers = HashFunction::providers(algo);
 
    if(providers.empty())
       {
@@ -32,7 +31,7 @@ size_t hash_test(const std::string& algo,
 
    for(auto provider: providers)
       {
-      std::unique_ptr<HashFunction> hash(get_hash(algo, provider));
+      std::unique_ptr<HashFunction> hash(HashFunction::create(algo, provider));
 
       if(!hash)
          {

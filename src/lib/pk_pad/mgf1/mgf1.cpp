@@ -7,7 +7,6 @@
 
 #include <botan/mgf1.h>
 #include <botan/exceptn.h>
-#include <botan/internal/xor_buf.h>
 #include <algorithm>
 
 namespace Botan {

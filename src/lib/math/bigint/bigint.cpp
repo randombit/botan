@@ -7,7 +7,7 @@
 
 #include <botan/bigint.h>
 #include <botan/internal/mp_core.h>
-#include <botan/get_byte.h>
+#include <botan/loadstor.h>
 #include <botan/parsing.h>
 #include <botan/internal/rounding.h>
 #include <botan/internal/bit_ops.h>

@@ -5,14 +5,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/hash_utils.h>
 #include <botan/sha2_64.h>
 
 namespace Botan {
-
-BOTAN_REGISTER_HASH_NAMED_NOARGS(SHA_384, "SHA-384");
-BOTAN_REGISTER_HASH_NAMED_NOARGS(SHA_512, "SHA-512");
-BOTAN_REGISTER_HASH_NAMED_NOARGS(SHA_512_256, "SHA-512-256");
 
 namespace {
 

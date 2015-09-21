@@ -5,13 +5,11 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/block_utils.h>
 #include <botan/serpent.h>
+#include <botan/loadstor.h>
 #include <botan/internal/serpent_sbox.h>
 
 namespace Botan {
-
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Serpent);
 
 namespace {
 

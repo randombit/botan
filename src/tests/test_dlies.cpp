@@ -19,7 +19,6 @@
 #include <botan/dh.h>
 #include <botan/hex.h>
 #include <botan/pubkey.h>
-#include <botan/lookup.h>
 
 using namespace Botan;
 
@@ -54,13 +53,13 @@ size_t dlies_kat(const std::string& p,
    const size_t mac_key_len = to_u32bit(options[2]);
 
    DLIES_Encryptor e(from,
-                     get_kdf(options[0]),
-                     get_mac(options[1]),
+                     KDF::create(options[0]).release(),
+                     MessageAuthenticationCode::create(options[1]).release(),
                      mac_key_len);
 
    DLIES_Decryptor d(to,
-                     get_kdf(options[0]),
-                     get_mac(options[1]),
+                     KDF::create(options[0]).release(),
+                     MessageAuthenticationCode::create(options[1]).release(),
                      mac_key_len);
 
    e.set_other_key(to.public_value());

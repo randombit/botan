@@ -9,7 +9,7 @@
 #define BOTAN_BUFFERED_COMPUTATION_H__
 
 #include <botan/secmem.h>
-#include <botan/get_byte.h>
+#include <botan/loadstor.h>
 #include <string>
 
 namespace Botan {

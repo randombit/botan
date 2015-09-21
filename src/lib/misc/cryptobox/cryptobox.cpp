@@ -8,12 +8,11 @@
 #include <botan/cryptobox.h>
 #include <botan/filters.h>
 #include <botan/pipe.h>
-#include <botan/lookup.h>
 #include <botan/sha2_64.h>
 #include <botan/hmac.h>
 #include <botan/pbkdf2.h>
 #include <botan/pem.h>
-#include <botan/get_byte.h>
+#include <botan/loadstor.h>
 #include <botan/mem_ops.h>
 
 namespace Botan {

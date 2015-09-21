@@ -7,7 +7,6 @@
 #include "tests.h"
 
 #include <botan/block_cipher.h>
-#include <botan/lookup.h>
 #include <botan/hex.h>
 #include <iostream>
 #include <fstream>
@@ -25,7 +24,7 @@ size_t block_test(const std::string& algo,
    const secure_vector<byte> pt = hex_decode_locked(in_hex);
    const secure_vector<byte> ct = hex_decode_locked(out_hex);
 
-   const std::vector<std::string> providers = get_block_cipher_providers(algo);
+   const std::vector<std::string> providers = BlockCipher::providers(algo);
    size_t fails = 0;
 
    if(providers.empty())
@@ -33,7 +32,7 @@ size_t block_test(const std::string& algo,
 
    for(auto provider: providers)
       {
-      std::unique_ptr<BlockCipher> cipher(get_block_cipher(algo, provider));
+      std::unique_ptr<BlockCipher> cipher(BlockCipher::create(algo, provider));
 
       if(!cipher)
          {

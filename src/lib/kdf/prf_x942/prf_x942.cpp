@@ -5,7 +5,6 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/kdf_utils.h>
 #include <botan/prf_x942.h>
 #include <botan/der_enc.h>
 #include <botan/oids.h>
@@ -14,8 +13,6 @@
 #include <algorithm>
 
 namespace Botan {
-
-BOTAN_REGISTER_KDF_NAMED_1STR(X942_PRF, "X9.42-PRF");
 
 namespace {
 
@@ -35,7 +32,7 @@ size_t X942_PRF::kdf(byte key[], size_t key_len,
                      const byte secret[], size_t secret_len,
                      const byte salt[], size_t salt_len) const
    {
-   std::unique_ptr<HashFunction> hash(make_hash_function("SHA-160"));
+   std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-160"));
    const OID kek_algo(m_key_wrap_oid);
 
    secure_vector<byte> h;

@@ -10,7 +10,6 @@
  */
 
 #include <botan/internal/binary_matrix.h>
-#include <botan/internal/xor_buf.h>
 
 namespace Botan {
 

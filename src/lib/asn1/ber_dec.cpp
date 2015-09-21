@@ -8,7 +8,7 @@
 
 #include <botan/ber_dec.h>
 #include <botan/bigint.h>
-#include <botan/get_byte.h>
+#include <botan/loadstor.h>
 
 namespace Botan {
 

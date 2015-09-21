@@ -12,7 +12,6 @@
 #include <botan/internal/stl_util.h>
 #include <botan/parsing.h>
 #include <botan/bigint.h>
-#include <botan/lookup.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
 #include <botan/hash.h>
@@ -369,7 +368,7 @@ bool cert_subject_dns_match(const std::string& name,
 
 std::string X509_Certificate::fingerprint(const std::string& hash_name) const
    {
-   std::unique_ptr<HashFunction> hash(get_hash(hash_name));
+   std::unique_ptr<HashFunction> hash(HashFunction::create(hash_name));
    hash->update(this->BER_encode());
    const auto hex_print = hex_encode(hash->final());
 

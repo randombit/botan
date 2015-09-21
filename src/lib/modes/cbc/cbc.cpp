@@ -11,27 +11,6 @@
 
 namespace Botan {
 
-template<typename CBC_T, typename CTS_T>
-Transform* make_cbc_mode(const Transform::Spec& spec)
-   {
-   std::unique_ptr<BlockCipher> bc(get_block_cipher(spec.arg(0)));
-
-   if(bc)
-      {
-      const std::string padding = spec.arg(1, "PKCS7");
-
-      if(padding == "CTS")
-         return new CTS_T(bc.release());
-      else
-         return new CBC_T(bc.release(), get_bc_pad(padding));
-      }
-
-   return nullptr;
-   }
-
-BOTAN_REGISTER_TRANSFORM(CBC_Encryption, (make_cbc_mode<CBC_Encryption,CTS_Encryption>));
-BOTAN_REGISTER_TRANSFORM(CBC_Decryption, (make_cbc_mode<CBC_Decryption,CTS_Decryption>));
-
 CBC_Mode::CBC_Mode(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
    m_cipher(cipher),
    m_padding(padding),

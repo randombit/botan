@@ -11,7 +11,6 @@
 #include <botan/ber_dec.h>
 #include <botan/bigint.h>
 #include <botan/parsing.h>
-#include <botan/lookup.h>
 #include <botan/oids.h>
 #include <botan/hash.h>
 #include <botan/key_constraint.h>
@@ -102,6 +101,7 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
 
    BigInt serial_no(rng, SERIAL_BITS);
 
+   // clang-format off
    return X509_Certificate(X509_Object::make_signed(
       signer, rng, sig_algo,
       DER_Encoder().start_cons(SEQUENCE)
@@ -130,6 +130,7 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
       .end_cons()
       .get_contents()
       ));;
+   // clang-format on
    }
 
 /*
@@ -179,6 +180,7 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
       new Cert_Extension::Authority_Key_ID(cert.subject_key_id()));
    extensions.add(new Cert_Extension::CRL_Number(crl_number));
 
+   // clang-format off
    const std::vector<byte> crl = X509_Object::make_signed(
       signer, rng, ca_sig_algo,
       DER_Encoder().start_cons(SEQUENCE)
@@ -200,6 +202,7 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
          .end_explicit()
       .end_cons()
       .get_contents());
+   // clang-format on
 
    return X509_CRL(crl);
    }
@@ -221,7 +224,7 @@ PK_Signer* choose_sig_format(const Private_Key& key,
    {
    const std::string algo_name = key.algo_name();
 
-   std::unique_ptr<HashFunction> hash(get_hash(hash_fn));
+   std::unique_ptr<HashFunction> hash(HashFunction::create(hash_fn));
    if(!hash)
       throw Algorithm_Not_Found(hash_fn);
 

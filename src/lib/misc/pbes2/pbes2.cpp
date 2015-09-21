@@ -7,7 +7,6 @@
 
 #include <botan/pbes2.h>
 #include <botan/cipher_mode.h>
-#include <botan/lookup.h>
 #include <botan/pbkdf.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>

@@ -1,7 +1,3 @@
-<header:internal>
-hash_utils.h
-</header:internal>
-
 <header:public>
 hash.h
 </header:public>

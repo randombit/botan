@@ -7,7 +7,6 @@
 #include <botan/ffi.h>
 #include <botan/system_rng.h>
 #include <botan/auto_rng.h>
-#include <botan/lookup.h>
 #include <botan/aead.h>
 #include <botan/hash.h>
 #include <botan/mac.h>
@@ -277,9 +276,10 @@ int botan_hash_init(botan_hash_t* hash, const char* hash_name, uint32_t flags)
       if(flags != 0)
          return BOTAN_FFI_ERROR_BAD_FLAG;
 
-      if(auto h = Botan::get_hash_function(hash_name))
+      auto h = Botan::HashFunction::create(hash_name);
+      if(h)
          {
-         *hash = new botan_hash_struct(h);
+         *hash = new botan_hash_struct(h.release());
          return 0;
          }
       }
@@ -328,9 +328,10 @@ int botan_mac_init(botan_mac_t* mac, const char* mac_name, uint32_t flags)
       if(!mac || !mac_name || flags != 0)
          return -1;
 
-      if(auto m = Botan::get_mac(mac_name))
+      auto m = Botan::MessageAuthenticationCode::create(mac_name);
+      if(m)
          {
-         *mac = new botan_mac_struct(m);
+         *mac = new botan_mac_struct(m.release());
          return 0;
          }
       }
@@ -898,7 +899,7 @@ int botan_pubkey_fingerprint(botan_pubkey_t key, const char* hash_fn,
                              uint8_t out[], size_t* out_len)
    {
    return BOTAN_FFI_DO(Botan::Public_Key, key, {
-      std::unique_ptr<Botan::HashFunction> h(Botan::get_hash(hash_fn));
+      std::unique_ptr<Botan::HashFunction> h(Botan::HashFunction::create(hash_fn));
       return write_vec_output(out, out_len, h->process(key.x509_subject_public_key()));
       });
    }

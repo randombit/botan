@@ -9,7 +9,6 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/x509_ext.h>
-#include <botan/lookup.h>
 #include <botan/hash.h>
 #include <botan/oids.h>
 
@@ -24,7 +23,7 @@ CertID::CertID(const X509_Certificate& issuer,
    In practice it seems some responders, including, notably,
    ocsp.verisign.com, will reject anything but SHA-1 here
    */
-   std::unique_ptr<HashFunction> hash(get_hash("SHA-160"));
+   std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-160"));
 
    m_hash_id = AlgorithmIdentifier(hash->name(), AlgorithmIdentifier::USE_NULL_PARAM);
    m_issuer_key_hash = unlock(hash->process(extract_key_bitstr(issuer)));
@@ -54,7 +53,7 @@ bool CertID::is_id_for(const X509_Certificate& issuer,
       if(BigInt::decode(subject.serial_number()) != m_subject_serial)
          return false;
 
-      std::unique_ptr<HashFunction> hash(get_hash(OIDS::lookup(m_hash_id.oid)));
+      std::unique_ptr<HashFunction> hash(HashFunction::create(OIDS::lookup(m_hash_id.oid)));
 
       if(m_issuer_dn_hash != unlock(hash->process(subject.raw_issuer_dn())))
          return false;

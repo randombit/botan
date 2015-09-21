@@ -16,7 +16,6 @@
 #include <botan/sha2_32.h>
 #include <botan/aes.h>
 #include <botan/loadstor.h>
-#include <botan/lookup.h>
 
 using namespace Botan;
 
@@ -63,9 +62,12 @@ size_t test_ocb_long(size_t keylen, size_t taglen,
 
    const std::string algo = "AES-" + std::to_string(keylen);
 
-   OCB_Encryption enc(get_block_cipher(algo), taglen / 8);
+   std::unique_ptr<BlockCipher> aes(BlockCipher::create(algo));
+   if(!aes)
+      throw Algorithm_Not_Found(algo);
 
-   OCB_Decryption dec(get_block_cipher(algo), taglen / 8);
+   OCB_Encryption enc(aes->clone(), taglen / 8);
+   OCB_Decryption dec(aes->clone(), taglen / 8);
 
    std::vector<byte> key(keylen/8);
    key[keylen/8-1] = taglen;

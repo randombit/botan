@@ -7,7 +7,6 @@
 
 #include <botan/tls_ciphersuite.h>
 #include <botan/parsing.h>
-#include <botan/lookup.h>
 #include <botan/block_cipher.h>
 #include <botan/stream_cipher.h>
 #include <botan/hash.h>
@@ -104,16 +103,13 @@ namespace {
 
 bool have_hash(const std::string& prf)
    {
-   return (!get_hash_function_providers(prf).empty());
+   return (HashFunction::providers(prf).size() > 0);
    }
 
 bool have_cipher(const std::string& cipher)
    {
-   if(!get_block_cipher_providers(cipher).empty())
-      return true;
-   if(!get_stream_cipher_providers(cipher).empty())
-      return true;
-   return false;
+   return (BlockCipher::providers(cipher).size() > 0) ||
+      (StreamCipher::providers(cipher).size() > 0);
    }
 
 }

@@ -1,4 +1,4 @@
-define UTIL_FUNCTIONS 20140123
+define UTIL_FUNCTIONS 20150919
 
 load_on always
 
@@ -10,7 +10,6 @@ charset.h
 cpuid.h
 database.h
 exceptn.h
-get_byte.h
 loadstor.h
 mem_ops.h
 mul128.h
@@ -29,5 +28,4 @@ rounding.h
 semaphore.h
 stl_util.h
 ta_utils.h
-xor_buf.h
 </header:internal>

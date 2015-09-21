@@ -3,7 +3,3 @@ define MAC 20150626
 <header:public>
 mac.h
 </header:public>
-
-<header:internal>
-mac_utils.h
-</header:internal>

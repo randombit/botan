@@ -346,9 +346,9 @@ TEST_CASE("FFI ECDH", "[ffi]")
    botan_rng_init(&rng, "system");
 
    botan_privkey_t priv1;
-   CHECK_THAT(botan_privkey_create_ecdh(&priv1, rng, "secp256r1"), Equals(0));
+   REQUIRE_THAT(botan_privkey_create_ecdh(&priv1, rng, "secp256r1"), Equals(0));
    botan_privkey_t priv2;
-   CHECK_THAT(botan_privkey_create_ecdh(&priv2, rng, "secp256r1"), Equals(0));
+   REQUIRE_THAT(botan_privkey_create_ecdh(&priv2, rng, "secp256r1"), Equals(0));
 
    botan_pubkey_t pub1;
    CHECK_THAT(botan_privkey_export_pubkey(&pub1, priv1), Equals(0));
@@ -356,9 +356,9 @@ TEST_CASE("FFI ECDH", "[ffi]")
    CHECK_THAT(botan_privkey_export_pubkey(&pub2, priv2), Equals(0));
 
    botan_pk_op_ka_t ka1;
-   CHECK_THAT(botan_pk_op_key_agreement_create(&ka1, priv1, "KDF2(SHA-256)", 0), Equals(0));
+   REQUIRE_THAT(botan_pk_op_key_agreement_create(&ka1, priv1, "KDF2(SHA-256)", 0), Equals(0));
    botan_pk_op_ka_t ka2;
-   CHECK_THAT(botan_pk_op_key_agreement_create(&ka2, priv2, "KDF2(SHA-256)", 0), Equals(0));
+   REQUIRE_THAT(botan_pk_op_key_agreement_create(&ka2, priv2, "KDF2(SHA-256)", 0), Equals(0));
 
    std::vector<uint8_t> pubkey1(256); // length problem again
    size_t pubkey1_len = pubkey1.size();
@@ -371,7 +371,7 @@ TEST_CASE("FFI ECDH", "[ffi]")
    pubkey2.resize(pubkey2_len);
 
    std::vector<uint8_t> salt(32);
-   CHECK_THAT(botan_rng_get(rng, salt.data(), salt.size()), Equals(0));
+   REQUIRE_THAT(botan_rng_get(rng, salt.data(), salt.size()), Equals(0));
 
    const size_t shared_key_len = 64;
 

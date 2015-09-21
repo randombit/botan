@@ -5,12 +5,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/stream_utils.h>
 #include <botan/rc4.h>
 
 namespace Botan {
-
-BOTAN_REGISTER_NAMED_T(StreamCipher, "RC4", RC4, RC4::make);
 
 RC4* RC4::make(const Spec& spec)
    {

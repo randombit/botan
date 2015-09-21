@@ -16,7 +16,6 @@
 #include <botan/code_based_util.h>
 #include <botan/goppa_code.h>
 #include <botan/internal/bit_ops.h>
-#include <botan/internal/xor_buf.h>
 
 namespace Botan {
 

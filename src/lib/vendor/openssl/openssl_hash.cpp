@@ -5,8 +5,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/hash_utils.h>
+#include <botan/hash.h>
 #include <botan/internal/openssl.h>
+#include <botan/internal/algo_registry.h>
 #include <openssl/evp.h>
 
 namespace Botan {
