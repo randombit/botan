@@ -7,6 +7,8 @@ Version 1.11.21, Not Yet Released
 * The OCaml module is now a separate project at
   https://github.com/randombit/botan-ocaml
 
+* The Perl XS module has been removed as it was no longer maintained.
+
 Version 1.11.20, 2015-09-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
