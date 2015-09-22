@@ -243,7 +243,7 @@ PK_Signer* choose_sig_format(const Private_Key& key,
 
    const Signature_Format format = (key.message_parts() > 1) ? DER_SEQUENCE : IEEE_1363;
 
-   padding = padding + '(' + hash->name() + ')';
+   padding = padding + "(" + hash->name() + ")";
 
    sig_algo.oid = OIDS::lookup(algo_name + "/" + padding);
    sig_algo.parameters = key.algorithm_identifier().parameters;

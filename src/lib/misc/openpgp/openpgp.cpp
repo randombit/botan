@@ -28,16 +28,16 @@ std::string PGP_encode(
    std::string pgp_encoded = PGP_HEADER;
 
    if(headers.find("Version") != headers.end())
-      pgp_encoded += "Version: " + headers.find("Version")->second + '\n';
+      pgp_encoded += "Version: " + headers.find("Version")->second + "\n";
 
    std::map<std::string, std::string>::const_iterator i = headers.begin();
    while(i != headers.end())
       {
       if(i->first != "Version")
-         pgp_encoded += i->first + ": " + i->second + '\n';
+         pgp_encoded += i->first + ": " + i->second + "\n";
       ++i;
       }
-   pgp_encoded += '\n';
+   pgp_encoded += "\n";
 
    Pipe pipe(new Fork(
                 new Base64_Encoder(true, PGP_WIDTH),
@@ -48,7 +48,7 @@ std::string PGP_encode(
    pipe.process_msg(input, length);
 
    pgp_encoded += pipe.read_all_as_string(0);
-   pgp_encoded += '=' + pipe.read_all_as_string(1) + '\n';
+   pgp_encoded += "=" + pipe.read_all_as_string(1) + "\n";
    pgp_encoded += PGP_TRAILER;
 
    return pgp_encoded;

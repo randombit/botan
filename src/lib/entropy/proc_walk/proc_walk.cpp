@@ -86,7 +86,7 @@ int Directory_Walker::next_fd()
       if(filename == "." || filename == "..")
          continue;
 
-      const std::string full_path = entry.second + '/' + filename;
+      const std::string full_path = entry.second + "/" + filename;
 
       struct stat stat_buf;
       if(::lstat(full_path.c_str(), &stat_buf) == -1)
