@@ -8,6 +8,7 @@
 #include <botan/cipher_mode.h>
 #include <botan/stream_mode.h>
 #include <botan/internal/mode_utils.h>
+#include <botan/internal/algo_registry.h>
 #include <sstream>
 
 #if defined(BOTAN_HAS_MODE_ECB)
