@@ -23,12 +23,12 @@ HMAC_DRBG::HMAC_DRBG(MessageAuthenticationCode* mac,
 HMAC_DRBG::HMAC_DRBG(const std::string& mac_name,
                      RandomNumberGenerator* prng) :
    m_prng(prng),
-   m_V(m_mac->output_length(), 0x01),
    m_reseed_counter(0)
    {
    m_mac = MessageAuthenticationCode::create(mac_name);
    if(!m_mac)
       throw Algorithm_Not_Found(mac_name);
+   m_V = secure_vector<byte>(m_mac->output_length(), 0x01),
    m_mac->set_key(std::vector<byte>(m_mac->output_length(), 0x00));
    }
 

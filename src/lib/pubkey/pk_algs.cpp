@@ -48,6 +48,10 @@
   #include <botan/curve25519.h>
 #endif
 
+#if defined(BOTAN_HAS_MCELIECE)
+  #include <botan/mceliece.h>
+#endif
+
 namespace Botan {
 
 Public_Key* make_public_key(const AlgorithmIdentifier& alg_id,
@@ -105,6 +109,11 @@ Public_Key* make_public_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_CURVE_25519)
    if(alg_name == "Curve25519")
       return new Curve25519_PublicKey(alg_id, key_bits);
+#endif
+
+#if defined(BOTAN_HAS_MCELIECE)
+   if(alg_name == "McEliece")
+      return new McEliece_PublicKey(unlock(key_bits));
 #endif
 
    throw Decoding_Error("Unhandled PK algorithm " + alg_name);
@@ -166,6 +175,11 @@ Private_Key* make_private_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_CURVE_25519)
    if(alg_name == "Curve25519")
       return new Curve25519_PrivateKey(alg_id, key_bits, rng);
+#endif
+
+#if defined(BOTAN_HAS_MCELIECE)
+   if(alg_name == "McEliece")
+      return new McEliece_PrivateKey(key_bits);
 #endif
 
    throw Decoding_Error("Unhandled PK algorithm " + alg_name);

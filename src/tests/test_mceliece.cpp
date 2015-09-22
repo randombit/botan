@@ -13,6 +13,7 @@
 #include <botan/pubkey.h>
 #include <botan/oids.h>
 #include <botan/mceliece.h>
+#include <botan/internal/code_based_util.h>
 #include <botan/mce_kem.h>
 #include <botan/loadstor.h>
 #include <botan/hex.h>
@@ -31,35 +32,6 @@ using namespace Botan;
 namespace {
 
 const size_t MCE_RUNS = 5;
-
-size_t test_mceliece_message_parts(RandomNumberGenerator& rng, size_t code_length, size_t error_weight)
-   {
-   secure_vector<gf2m> err_pos1 = create_random_error_positions(code_length, error_weight, rng);
-   secure_vector<byte> message1((code_length+7)/8);
-   rng.randomize(message1.data(), message1.size() - 1);
-   mceliece_message_parts parts1(err_pos1, message1, code_length);
-   secure_vector<byte> err_vec1 = parts1.get_error_vector();
-
-   secure_vector<byte> concat1 = parts1.get_concat();
-
-   mceliece_message_parts parts2( concat1.data(), concat1.size(), code_length);
-
-   secure_vector<byte> err_vec2 = parts2.get_error_vector();
-   if(err_vec1 != err_vec2)
-      {
-      std::cout << "error with error vector from message parts" << std::endl;
-      return 1;
-      }
-
-   secure_vector<byte> message2 = parts2.get_message_word();
-   if(message1 != message2)
-      {
-      std::cout << "error with message word from message parts" << std::endl;
-      return 1;
-      }
-
-   return 0;
-   }
 
 size_t test_mceliece_kem(const McEliece_PrivateKey& sk,
                          const McEliece_PublicKey& pk,
@@ -83,49 +55,25 @@ size_t test_mceliece_kem(const McEliece_PrivateKey& sk,
          std::cout << "mce KEM test failed, error during encryption/decryption" << std::endl;
          ++fails;
          }
-
-#if 0
-         // takes a long time:
-         for(size_t j = 0; j < code_length; j++)
-            {
-            // flip the j-th bit in the ciphertext
-            secure_vector<byte> wrong_ct(ciphertext);
-            size_t byte_pos = j/8;
-            size_t bit_pos = j % 8;
-            wrong_ct[byte_pos] ^= 1 << bit_pos;
-            try
-               {
-               secure_vector<byte> decrypted = priv_op.decrypt(wrong_ct.data(), wrong_ct.size());
-               }
-            catch(const Integrity_Failure)
-               {
-               continue;
-               }
-            std::cout << "manipulation in ciphertext not detected" << std::endl;
-            err_cnt++;
-            }
-#endif
-
       }
 
    return fails;
    }
 
+/*
 size_t test_mceliece_raw(const McEliece_PrivateKey& sk,
                          const McEliece_PublicKey& pk,
                          RandomNumberGenerator& rng)
    {
    const size_t code_length = pk.get_code_length();
    McEliece_Private_Operation priv_op(sk);
-   McEliece_Public_Operation pub_op(pk, code_length);
+   McEliece_Public_Operation pub_op(pk);
    size_t err_cnt = 0;
 
    for(size_t i = 0; i != MCE_RUNS; i++)
       {
-      secure_vector<byte> plaintext((pk.get_message_word_bit_length()+7)/8);
-      rng.randomize(plaintext.data(), plaintext.size() - 1);
+      const secure_vector<byte> plaintext = pk.random_plaintext_element(rng);
       secure_vector<gf2m> err_pos = create_random_error_positions(code_length, pk.get_t(), rng);
-
 
       mceliece_message_parts parts(err_pos, plaintext, code_length);
       secure_vector<byte> message_and_error_input = parts.get_concat();
@@ -158,6 +106,7 @@ size_t test_mceliece_raw(const McEliece_PrivateKey& sk,
 
    return err_cnt;
    }
+*/
 
 #if defined(BOTAN_HAS_MCEIES)
 size_t test_mceies(const McEliece_PrivateKey& sk,
@@ -173,8 +122,8 @@ size_t test_mceies(const McEliece_PrivateKey& sk,
       const size_t ad_len = sizeof(ad);
 
       const secure_vector<byte> pt = rng.random_vec(rng.next_byte());
-      const secure_vector<byte> ct = mceies_encrypt(pk, pt, ad, ad_len, rng);
-      const secure_vector<byte> dec = mceies_decrypt(sk, ct, ad, ad_len);
+      const secure_vector<byte> ct = mceies_encrypt(pk, pt.data(), pt.size(), ad, ad_len, rng);
+      const secure_vector<byte> dec = mceies_decrypt(sk, ct.data(), ct.size(), ad, ad_len);
 
       if(pt != dec)
          {
@@ -195,7 +144,7 @@ size_t test_mceies(const McEliece_PrivateKey& sk,
 
          try
             {
-            mceies_decrypt(sk, bad_ct, ad, ad_len);
+            mceies_decrypt(sk, bad_ct.data(), bad_ct.size(), ad, ad_len);
             std::cout << "Successfully decrypted manipulated ciphertext!" << std::endl;
             ++fails;
             }
@@ -232,18 +181,7 @@ size_t test_mceliece()
       size_t code_length = params__n__t_min_max[i];
       for(size_t t = params__n__t_min_max[i+1]; t <= params__n__t_min_max[i+2]; t++)
          {
-         //std::cout << "testing parameters n = " << code_length << ", t = " << t << std::endl;
-
-         try
-            {
-            fails += test_mceliece_message_parts(rng, code_length, t);
-            }
-         catch(std::exception& e)
-            {
-            std::cout << e.what() << std::endl;
-            fails++;
-            }
-         tests += 1;
+         std::cout << "testing parameters n = " << code_length << ", t = " << t << std::endl;
 
          McEliece_PrivateKey sk1(rng, code_length, t);
          const McEliece_PublicKey& pk1 = sk1;
@@ -271,17 +209,6 @@ size_t test_mceliece()
             std::cout << "Error calling check key on McEliece key" << std::endl;
             ++fails;
             }
-
-         try
-            {
-            fails += test_mceliece_raw(sk, pk, rng);
-            }
-         catch(std::exception& e)
-            {
-            std::cout << e.what() << std::endl;
-            fails++;
-            }
-         tests += 1;
 
          try
             {

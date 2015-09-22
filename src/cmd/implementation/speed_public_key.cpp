@@ -734,20 +734,21 @@ void benchmark_mce(RandomNumberGenerator& rng,
                    Benchmark_Report& report)
    {
    const std::vector<std::pair<size_t, size_t>> params = {
-      { 1024, 35 },
-      { 2048, 50 },
-      { 2960, 56 },
+      { 1632, 33 },
+      { 2480, 45 },
+      { 2960, 57 },
+      { 3408, 67 },
+      { 4264, 95 },
       { 6624, 115 }
    };
 
    const std::string algo_name = "McEliece";
-   const std::string padding = "Raw";
 
    for(auto& param : params)
       {
       Timer keygen_timer("keygen");
-      Timer enc_timer(padding + " encrypt");
-      Timer dec_timer(padding + " decrypt");
+      Timer enc_timer("encrypt");
+      Timer dec_timer("decrypt");
 
       keygen_timer.start();
       McEliece_PrivateKey priv_key(rng, param.first, param.second);
@@ -776,9 +777,9 @@ void benchmark_mce(RandomNumberGenerator& rng,
                              std::to_string(param.second);
 
       std::ostringstream keysize_report;
-      keysize_report << "(size " << pub_key.x509_subject_public_key().size() << " pub "
-                     << priv_key.pkcs8_private_key().size() << " priv "
-                     << pub_key.estimated_strength() << " work factor)";
+      keysize_report << "(work factor " << pub_key.estimated_strength() << ", "
+                     << "pub bytes " << pub_key.x509_subject_public_key().size() << " "
+                     << "priv bytes " << priv_key.pkcs8_private_key().size() << ")";
 
       report.report(nm + " " + keysize_report.str(), keygen_timer);
       report.report(nm, enc_timer);

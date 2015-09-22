@@ -8,6 +8,7 @@
  */
 
 #include <botan/mceliece.h>
+#include <botan/internal/bit_ops.h>
 #include <cmath>
 
 namespace Botan {
@@ -91,8 +92,10 @@ double best_wf(size_t n, size_t k, size_t w, size_t p)
 
 }
 
-size_t mceliece_work_factor(size_t n, size_t k, size_t t)
+size_t mceliece_work_factor(size_t n, size_t t)
    {
+   const size_t k = n - ceil_log2(n) * t;
+
    double min = cout_total(n, k, t, 0, 0); // correspond a p=1
    for(size_t p = 0; p != t / 2; ++p)
       {
