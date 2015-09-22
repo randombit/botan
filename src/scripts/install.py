@@ -181,11 +181,12 @@ def main(args = None):
                   os.path.join(pkgconfig_dir, os.path.basename(cfg['botan_pkgconfig'])))
 
     if 'ffi' in cfg['mod_list'].split('\n'):
-        py_lib_path = os.path.join(lib_dir, 'python%s' % (cfg['python_version']), 'site-packages')
-        logging.debug('Installing python module to %s' % (py_lib_path))
-        makedirs(py_lib_path)
-        for py in ['botan.py']:
-            copy_file(os.path.join(cfg['python_dir'], py), os.path.join(py_lib_path, py))
+        for ver in cfg['python_version'].split(','):
+            py_lib_path = os.path.join(lib_dir, 'python%s' % (ver), 'site-packages')
+            logging.debug('Installing python module to %s' % (py_lib_path))
+            makedirs(py_lib_path)
+            for py in ['botan.py']:
+                copy_file(os.path.join(cfg['python_dir'], py), os.path.join(py_lib_path, py))
 
     shutil.rmtree(target_doc_dir, True)
     shutil.copytree(cfg['doc_output_dir'], target_doc_dir)
