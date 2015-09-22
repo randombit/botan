@@ -339,12 +339,10 @@ def process_command_line(args):
                            action='store_false', default=True,
                            help=optparse.SUPPRESS_HELP)
 
-    wrapper_group = optparse.OptionGroup(parser, 'Python FFI options')
-
-    wrapper_group.add_option('--with-python-version', dest='python_version',
-                             metavar='N.M',
-                             default='.'.join(map(str, sys.version_info[0:2])),
-                             help='set Python version (def %default)')
+    build_group.add_option('--with-python-versions', dest='python_version',
+                           metavar='N.M',
+                           default='.'.join(map(str, sys.version_info[0:2])),
+                           help='where to install botan.py (def %default)')
 
     mods_group = optparse.OptionGroup(parser, 'Module selection')
 
@@ -400,7 +398,6 @@ def process_command_line(args):
     parser.add_option_group(target_group)
     parser.add_option_group(build_group)
     parser.add_option_group(mods_group)
-    parser.add_option_group(wrapper_group)
     parser.add_option_group(install_group)
 
     # These exist only for autoconf compatibility (requested by zw for mtn)
