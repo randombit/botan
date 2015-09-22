@@ -35,6 +35,9 @@ class BOTAN_DLL HMAC_DRBG : public RandomNumberGenerator
       HMAC_DRBG(MessageAuthenticationCode* mac,
                 RandomNumberGenerator* underlying_rng = nullptr);
 
+      HMAC_DRBG(const std::string& mac,
+                RandomNumberGenerator* underlying_rng = nullptr);
+
    private:
       void update(const byte input[], size_t input_len);
 
