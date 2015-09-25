@@ -152,7 +152,6 @@ size_t test_mceliece_raw(const McEliece_PrivateKey& sk,
          for(size_t j = 0; j < err_pos.size(); j++) std::printf("%u, ", err_pos[j]);
          printf("\n");
          return 1;
-         continue;
          }
       }
 
