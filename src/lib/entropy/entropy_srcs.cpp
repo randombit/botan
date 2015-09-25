@@ -43,6 +43,10 @@
   #include <botan/internal/proc_walk.h>
 #endif
 
+#if defined(BOTAN_HAS_ENTROPY_SRC_DARWIN_SECRANDOM)
+  #include <botan/internal/darwin_secrandom.h>
+#endif
+
 namespace Botan {
 
 namespace {
@@ -95,6 +99,10 @@ std::vector<std::unique_ptr<EntropySource>> get_default_entropy_sources()
    sources.push_back(std::unique_ptr<EntropySource>(
       new EGD_EntropySource({ "/var/run/egd-pool", "/dev/egd-pool" })
       ));
+#endif
+
+#if defined(BOTAN_HAS_ENTROPY_SRC_DARWIN_SECRANDOM)
+   sources.push_back(std::unique_ptr<EntropySource>(new Darwin_SecRandom));
 #endif
 
    return sources;
