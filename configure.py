@@ -545,7 +545,7 @@ class ModuleInfo(object):
         lex_me_harder(infofile, self,
                       ['source', 'header:internal', 'header:public',
                        'requires', 'os', 'arch', 'cc', 'libs',
-                       'comment', 'warning'],
+                       'frameworks', 'comment', 'warning'],
                       {
                         'load_on': 'auto',
                         'define': [],
@@ -584,6 +584,7 @@ class ModuleInfo(object):
             return result
 
         self.libs = convert_lib_list(self.libs)
+        self.frameworks = convert_lib_list(self.frameworks)
 
         def add_dir_name(filename):
             if filename.count(':') == 0:
@@ -769,6 +770,7 @@ class CompilerInfo(object):
                         'add_include_dir_option': '-I',
                         'add_lib_dir_option': '-L',
                         'add_lib_option': '-l',
+                        'add_framework_option': '-framework ',
                         'compile_flags_release': '',
                         'compile_flags_debug': '',
                         'lib_opt_flags_release': '',
@@ -1170,9 +1172,18 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     Figure out what external libraries are needed based on selected modules
     """
     def link_to():
+        return do_link_to('libs')
+
+    """
+    Figure out what external frameworks are needed based on selected modules
+    """
+    def link_to_frameworks():
+        return do_link_to('frameworks')
+
+    def do_link_to(module_member_name):
         libs = set()
         for module in modules:
-            for (osname,link_to) in module.libs.items():
+            for (osname,link_to) in getattr(module, module_member_name).items():
                 if osname == 'all' or osname == osinfo.basename:
                     libs |= set(link_to)
                 else:
@@ -1303,7 +1314,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'app_link_cmd':  cc.binary_link_command_for(osinfo.basename, options),
         'test_link_cmd': cc.binary_link_command_for(osinfo.basename, options),
 
-        'link_to': ' '.join([cc.add_lib_option + lib for lib in link_to()]),
+        'link_to': ' '.join([cc.add_lib_option + lib for lib in link_to()] + [cc.add_framework_option + fw for fw in link_to_frameworks()]),
 
         'module_defines': make_cpp_macros(sorted(flatten([m.defines() for m in modules]))),
 
