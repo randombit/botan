@@ -66,10 +66,10 @@ namespace Matchers {
 
             virtual ~Equals() override {}
 
-            virtual bool match( bool const& expr ) const {
+            virtual bool match( bool const& expr ) const override {
                 return m_expected == expr;
             }
-            virtual std::string toString() const {
+            virtual std::string toString() const override {
                 return "== " + Catch::toString(m_expected);
             }
 
@@ -86,10 +86,10 @@ namespace Matchers {
 
             virtual ~Equals() override {}
 
-            virtual bool match( T const& expr ) const {
+            virtual bool match( T const& expr ) const override {
                 return m_expected == expr;
             }
-            virtual std::string toString() const {
+            virtual std::string toString() const override {
                 return "== " + Catch::toString(m_expected);
             }
 
