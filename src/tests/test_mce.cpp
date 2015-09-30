@@ -6,6 +6,8 @@
 
 #include "tests.h"
 
+#if defined(BOTAN_HAS_MCELIECE)
+
 #include <botan/mceliece.h>
 #include <botan/mce_kem.h>
 #include <botan/hmac_drbg.h>
@@ -94,3 +96,9 @@ size_t test_mce()
                                        m["SharedKey"]);
                        });
    }
+
+#else
+
+SKIP_TEST(mce);
+
+#endif
