@@ -6,6 +6,7 @@ filters
 kdf
 pbkdf
 pubkey
+x509
 auto_rng
 system_rng
 </requires>

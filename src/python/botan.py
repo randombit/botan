@@ -29,6 +29,40 @@ botan_api_rev = botan.botan_ffi_api_version()
 if botan_api_rev != expected_api_rev:
     raise Exception("Bad botan API rev got %d expected %d" % (botan_api_rev, expected_api_rev))
 
+# Internal utilities
+def _call_fn_returning_string(guess, fn):
+
+    buf = create_string_buffer(guess)
+    buf_len = c_size_t(len(buf))
+
+    rc = fn(buf, byref(buf_len))
+    if rc < 0:
+        if buf_len.value > len(buf):
+            #print("Calling again with %d" % (buf_len.value))
+            return _call_fn_returning_string(buf_len.value, fn)
+        else:
+            raise Exception("Call failed: %d" % (rc))
+
+    assert buf_len.value <= len(buf)
+    return buf.raw[0:buf_len.value]
+
+def _call_fn_returning_vec(guess, fn):
+
+    buf = create_string_buffer(guess)
+    buf_len = c_size_t(len(buf))
+
+    rc = fn(buf, byref(buf_len))
+    if rc < 0:
+        if buf_len.value > len(buf):
+            #print("Calling again with %d" % (buf_len.value))
+            return _call_fn_returning_vec(buf_len.value, fn)
+        else:
+            raise Exception("Call failed: %d" % (rc))
+
+    assert buf_len.value <= len(buf)
+    return buf.raw[0:buf_len.value]
+
+
 """
 Versions
 """
@@ -57,7 +91,7 @@ class rng(object):
             rc = botan.botan_rng_init(byref(self.rng), rng_type)
         else:
             rc = botan.botan_rng_init(byref(self.rng), rng_type.encode('ascii'))
-                
+
         if rc != 0 or self.rng is None:
             raise Exception("No rng " + algo + " for you!")
 
@@ -256,7 +290,6 @@ class cipher(object):
 
 """
 Bcrypt
-TODO: might not be enabled - handle that gracefully!
 """
 def bcrypt(passwd, rng, work_factor = 10):
     botan.botan_bcrypt_generate.argtypes = [POINTER(c_char), POINTER(c_size_t),
@@ -322,12 +355,7 @@ class public_key(object):
 
     def algo_name(self):
         botan.botan_pubkey_algo_name.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-
-        buf = create_string_buffer(64)
-        buf_len = c_size_t(len(buf))
-        botan.botan_pubkey_algo_name(self.pubkey, buf, byref(buf_len))
-        assert buf_len.value <= len(buf)
-        return buf.raw[0:buf_len.value]
+        return _call_fn_returning_string(32, lambda b,bl: botan.botan_pubkey_algo_name(self.pubkey, b, bl))
 
     def fingerprint(self, hash = 'SHA-256'):
         botan.botan_pubkey_fingerprint.argtypes = [c_void_p, c_char_p,
@@ -338,7 +366,7 @@ class public_key(object):
         buf_len = c_size_t(n)
         if sys.version_info[0] > 2:
             hash = hash.encode('utf-8')
-    
+
         botan.botan_pubkey_fingerprint(self.pubkey, hash, buf, byref(buf_len))
         return hexlify(buf[0:buf_len.value])
 
@@ -385,7 +413,6 @@ class private_key(object):
             botan.botan_privkey_export(self.privkey, buf, byref(buf_len))
         return buf[0:buf_len.value]
 
-
 class pk_op_encrypt(object):
     def __init__(self, key, padding):
         botan.botan_pk_op_encrypt_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
@@ -417,7 +444,7 @@ class pk_op_encrypt(object):
         #print("encrypt: outbuf_sz.value=%d" % outbuf_sz.value)
         return outbuf.raw[0:outbuf_sz.value]
 
-    
+
 class pk_op_decrypt(object):
     def __init__(self, key, padding):
         botan.botan_pk_op_decrypt_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
@@ -534,16 +561,67 @@ class pk_op_key_agreement(object):
                                             other, len(other), salt, len(salt))
         return outbuf.raw[0:outbuf_sz.value]
 
+class x509_cert(object):
+    def __init__(self, filename):
+        botan.botan_x509_cert_load_file.argtypes = [POINTER(c_void_p), c_char_p]
+        self.x509_cert = c_void_p(0)
+        if sys.version_info[0] > 2:
+            filename = cast(filename, c_char_p)
+        botan.botan_x509_cert_load_file(byref(self.x509_cert), filename)
+
+    def __del__(self):
+        botan.botan_x509_cert_destroy.argtypes = [c_void_p]
+        botan.botan_x509_cert_destroy(self.x509_cert)
+
+    # TODO: have these convert to a python datetime
+    def time_starts(self):
+        botan.botan_x509_cert_get_time_starts.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
+        return _call_fn_returning_string(16, lambda b,bl: botan.botan_x509_cert_get_time_starts(self.x509_cert, b, bl))
+
+    def time_expires(self):
+        botan.botan_x509_cert_get_time_expires.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
+        return _call_fn_returning_string(16, lambda b,bl: botan.botan_x509_cert_get_time_expires(self.x509_cert, b, bl))
+
+    def to_string(self):
+        botan.botan_x509_cert_to_string.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
+        return _call_fn_returning_string(0, lambda b,bl: botan.botan_x509_cert_to_string(self.x509_cert, b, bl))
+
+    def fingerprint(self, hash_algo = 'SHA-256'):
+        botan.botan_x509_cert_get_fingerprint.argtypes = [c_void_p, c_char_p,
+                                                          POINTER(c_char), POINTER(c_size_t)]
+
+        n = hash_function(hash_algo).output_length() * 3
+        if sys.version_info[0] > 2:
+            hash_algo = hash_algo.encode('utf-8')
+
+        return _call_fn_returning_string(n, lambda b,bl: botan.botan_x509_cert_get_fingerprint(self.x509_cert, hash_algo, b, bl))
+
+    def serial_number(self):
+        botan.botan_x509_cert_get_serial_number.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
+        return _call_fn_returning_vec(0, lambda b,bl: botan.botan_x509_cert_get_serial_number(self.x509_cert, b, bl))
+
+    def authority_key_id(self):
+        botan.botan_x509_cert_get_authority_key_id.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
+        return _call_fn_returning_vec(0, lambda b,bl: botan.botan_x509_cert_get_authority_key_id(self.x509_cert, b, bl))
+
+    def subject_key_id(self):
+        botan.botan_x509_cert_get_subject_key_id.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
+        return _call_fn_returning_vec(0, lambda b,bl: botan.botan_x509_cert_get_subject_key_id(self.x509_cert, b, bl))
+
+    def subject_public_key_bits(self):
+        botan.botan_x509_cert_get_public_key_bits.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
+        return _call_fn_returning_vec(0, lambda b,bl: botan.botan_x509_cert_get_public_key_bits(self.x509_cert, b, bl))
+
+
 """
 Tests and examples
 """
 def test():
-    r = rng("user")
 
+    r = rng("user")
 
     print("\n%s" % version_string().decode('utf-8'))
     print("v%d.%d.%d\n" % (version_major(), version_minor(), version_patch()))
-
 
     print("KDF2(SHA-1)   %s" %
           hexlify(kdf('KDF2(SHA-1)'.encode('ascii'), unhexlify('701F3480DFE95F57941F804B1B2413EF'), 7,
@@ -559,18 +637,16 @@ def test():
     print("good output   %s\n" %
           '59B2B1143B4CB1059EC58D9722FB1C72471E0D85C6F7543BA5228526375B0127')
 
-
-        
     (salt,iterations,psk) = pbkdf_timed('PBKDF2(SHA-256)'.encode('ascii'),
                                         'xyz'.encode('utf-8'), 32, 200)
 
-    if sys.version_info[0] < 3:        
+    if sys.version_info[0] < 3:
         print("PBKDF2(SHA-256) x=timed, y=iterated; salt = %s (len=%d)  #iterations = %d\n" %
               (hexlify(salt), len(salt), iterations)   )
     else:
         print("PBKDF2(SHA-256) x=timed, y=iterated; salt = %s (len=%d)  #iterations = %d\n" %
               (hexlify(salt).decode('ascii'), len(salt), iterations)   )
-        
+
     print('x %s' % hexlify(psk).decode('utf-8'))
     print('y %s\n' %
           (hexlify(pbkdf('PBKDF2(SHA-256)'.encode('utf-8'),
@@ -579,7 +655,7 @@ def test():
     hmac = message_authentication_code('HMAC(SHA-256)'.encode('ascii'))
     hmac.set_key(unhexlify('0102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F20'))
     hmac.update(unhexlify('616263'))
-    
+
     hmac_output = hmac.final()
 
     if hmac_output != unhexlify('A21B1F5D4CF4F73A4DD939750F7A066A7F98CC131CB16A6692759021CFAB8181'):
@@ -587,7 +663,7 @@ def test():
         print("vs good: \tA21B1F5D4CF4F73A4DD939750F7A066A7F98CC131CB16A6692759021CFAB8181");
     else:
         print("HMAC output (good): %s\n" % hexlify(hmac_output).decode('utf-8'))
-    
+
     print("rng output:\n\t%s\n\t%s\n\t%s\n" %
           (hexlify(r.get(42)).decode('utf-8'),
            hexlify(r.get(13)).decode('utf-8'),
@@ -645,7 +721,7 @@ def test():
     rsapriv = private_key('rsa', 1536, r)
 
     rsapub = rsapriv.get_public_key()
-    
+
     print("rsapub %s/SHA-1 fingerprint: %s (estimated strength %s)" %
           (rsapub.algo_name().decode('utf-8'), rsapub.fingerprint("SHA-1").decode('utf-8'),
            rsapub.estimated_strength()
@@ -656,7 +732,7 @@ def test():
     enc = pk_op_encrypt(rsapub, "EME1(SHA-256)".encode('utf-8'))
 
     ctext = enc.encrypt('foof'.encode('utf-8'), r)
-    print("ptext  \'%s\'" % 'foof') 
+    print("ptext  \'%s\'" % 'foof')
     print("ctext   \'%s\'" % hexlify(ctext).decode('utf-8'))
     print("decrypt \'%s\'\n" % dec.decrypt(ctext).decode('utf-8'))
 
@@ -669,7 +745,7 @@ def test():
     r.reseed(200)
     print("EMSA4(SHA-384) signature: %s" % hexlify(sig).decode('utf-8'))
 
-    
+
     verify = pk_op_verify(rsapub, 'EMSA4(SHA-384)'.encode('utf-8'))
 
     verify.update('mess'.encode('utf-8'))
@@ -683,32 +759,44 @@ def test():
     verify.update('message'.encode('utf-8'))
     print("good sig accepted? %s\n" % verify.check_signature(sig))
 
-    dh_grp = 'secp256r1'.encode('utf-8')
-    #dh_grp = 'curve25519'.encode('utf-8')
-    dh_kdf = 'KDF2(SHA-384)'.encode('utf-8')
-    a_dh_priv = private_key('ecdh', dh_grp, r)
-    a_dh_pub = a_dh_priv.get_public_key()
+    for dh_grps in ['secp256r1', 'curve25519']:
+        dh_grp = dh_grps.encode('utf-8')
+        dh_kdf = 'KDF2(SHA-384)'.encode('utf-8')
+        a_dh_priv = private_key('ecdh', dh_grp, r)
+        a_dh_pub = a_dh_priv.get_public_key()
 
-    b_dh_priv = private_key('ecdh', dh_grp, r)
-    b_dh_pub = b_dh_priv.get_public_key()
+        b_dh_priv = private_key('ecdh', dh_grp, r)
+        b_dh_pub = b_dh_priv.get_public_key()
 
-    a_dh = pk_op_key_agreement(a_dh_priv, dh_kdf)
-    b_dh = pk_op_key_agreement(b_dh_priv, dh_kdf)
+        a_dh = pk_op_key_agreement(a_dh_priv, dh_kdf)
+        b_dh = pk_op_key_agreement(b_dh_priv, dh_kdf)
 
-    print("ecdh pubs:\n  %s\n  %s\n" %
-          (hexlify(a_dh.public_value()).decode('utf-8'),
-           hexlify(b_dh.public_value()).decode('utf-8')))
+        print("ecdh %s pubs:\n  %s\n  %s\n" %
+              (dh_grps,
+               hexlify(a_dh.public_value()).decode('utf-8'),
+               hexlify(b_dh.public_value()).decode('utf-8')))
 
-    a_key = a_dh.agree(b_dh.public_value(), 20, 'salt'.encode('utf-8'))
-    b_key = b_dh.agree(a_dh.public_value(), 20, 'salt'.encode('utf-8'))
+        a_key = a_dh.agree(b_dh.public_value(), 20, 'salt'.encode('utf-8'))
+        b_key = b_dh.agree(a_dh.public_value(), 20, 'salt'.encode('utf-8'))
 
-    print("ecdh shared:\n  %s\n  %s\n" %
-          (hexlify(a_key).decode('utf-8'), hexlify(b_key).decode('utf-8')))
+        print("ecdh %s shared:\n  %s\n  %s\n" %
+              (dh_grps, hexlify(a_key).decode('utf-8'), hexlify(b_key).decode('utf-8')))
 
+    cert = x509_cert("src/tests/data/ecc/CSCA.CSCA.csca-germany.1.crt")
+    print(cert.fingerprint("SHA-1"))
+    print("32:42:1C:C3:EC:54:D7:E9:43:EC:51:F0:19:23:BD:85:1D:F2:1B:B9")
 
-    #f = open('key.ber','wb')
-    #f.write(blob)
-    #f.close()
+    print(cert.time_starts())
+    print(cert.time_expires())
+
+    print(hexlify(cert.serial_number()))
+    print(hexlify(cert.authority_key_id()))
+    print(hexlify(cert.subject_key_id()))
+    print(hexlify(cert.subject_public_key_bits()))
+
+    print(cert.to_string())
+
+    return
 
 
 def main(args = None):
