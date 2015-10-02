@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 """
 Python wrapper of the botan crypto library
@@ -44,7 +44,7 @@ def _call_fn_returning_string(guess, fn):
             raise Exception("Call failed: %d" % (rc))
 
     assert buf_len.value <= len(buf)
-    return buf.raw[0:buf_len.value]
+    return str(buf.raw[0:buf_len.value])
 
 def _call_fn_returning_vec(guess, fn):
 
@@ -357,6 +357,16 @@ class public_key(object):
         botan.botan_pubkey_algo_name.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
         return _call_fn_returning_string(32, lambda b,bl: botan.botan_pubkey_algo_name(self.pubkey, b, bl))
 
+    def encoding(self, pem = False):
+        botan.botan_pubkey_export.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t), c_uint32]
+
+        flag = 1 if pem else 0
+
+        if pem:
+            return _call_fn_returning_string(0, lambda b,bl: botan.botan_pubkey_export(self.pubkey, b, bl, 1))
+        else:
+            return _call_fn_returning_string(0, lambda b,bl: botan.botan_pubkey_export(self.pubkey, b, bl, 0))
+
     def fingerprint(self, hash = 'SHA-256'):
         botan.botan_pubkey_fingerprint.argtypes = [c_void_p, c_char_p,
                                                    POINTER(c_char), POINTER(c_size_t)]
@@ -375,6 +385,7 @@ class private_key(object):
         botan.botan_privkey_create_rsa.argtypes = [c_void_p, c_void_p, c_size_t]
         botan.botan_privkey_create_ecdsa.argtypes = [c_void_p, c_void_p, c_char_p]
         botan.botan_privkey_create_ecdh.argtypes = [c_void_p, c_void_p, c_char_p]
+        botan.botan_privkey_create_mceliece.argtypes = [c_void_p, c_void_p, c_size_t, c_size_t]
 
         self.privkey = c_void_p(0)
         if alg == 'rsa':
@@ -383,6 +394,8 @@ class private_key(object):
             botan.botan_privkey_create_ecdsa(byref(self.privkey), rng.rng, param)
         elif alg == 'ecdh':
             botan.botan_privkey_create_ecdh(byref(self.privkey), rng.rng, param)
+        elif alg in ['mce', 'mceliece']:
+            botan.botan_privkey_create_mceliece(byref(self.privkey), rng.rng, param[0], param[1])
         else:
             raise Exception('Unknown public key algo ' + alg)
 
@@ -524,6 +537,24 @@ class pk_op_verify(object):
             return True
         return False
 
+"""
+MCEIES encryption
+Must be used with McEliece keys
+"""
+def mceies_encrypt(mce, rng, aead, pt, ad):
+    botan.botan_mceies_encrypt.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_char), c_size_t,
+                                           POINTER(c_char), c_size_t, POINTER(c_char), POINTER(c_size_t)]
+
+    return _call_fn_returning_string(0, lambda b,bl:
+                                     botan.botan_mceies_encrypt(mce.pubkey, rng.rng, aead, pt, len(pt), ad, len(ad), b, bl))
+
+def mceies_decrypt(mce, aead, pt, ad):
+    botan.botan_mceies_decrypt.argtypes = [c_void_p, c_char_p, POINTER(c_char), c_size_t,
+                                           POINTER(c_char), c_size_t, POINTER(c_char), POINTER(c_size_t)]
+
+    return _call_fn_returning_string(0, lambda b,bl:
+                                     botan.botan_mceies_decrypt(mce.privkey, aead, pt, len(pt), ad, len(ad), b, bl))
+
 class pk_op_key_agreement(object):
     def __init__(self, key, kdf):
         botan.botan_pk_op_key_agreement_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
@@ -534,10 +565,7 @@ class pk_op_key_agreement(object):
         if not self.op:
             raise Exception("No key agreement for you")
 
-        pub = create_string_buffer(4096)
-        pub_len = c_size_t(len(pub))
-        botan.botan_pk_op_key_agreement_export_public(key.privkey, pub, byref(pub_len))
-        self.m_public_value = pub.raw[0:pub_len.value]
+        self.m_public_value = _call_fn_returning_string(0, lambda b, bl: botan.botan_pk_op_key_agreement_export_public(key.privkey, b, bl))
 
     def __del__(self):
         botan.botan_pk_op_key_agreement_destroy.argtypes = [c_void_p]
@@ -550,16 +578,10 @@ class pk_op_key_agreement(object):
         botan.botan_pk_op_key_agreement.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t),
                                                     POINTER(c_char), c_size_t, POINTER(c_char), c_size_t]
 
-        outbuf_sz = c_size_t(key_len)
-        outbuf = create_string_buffer(outbuf_sz.value)
-        rc = botan.botan_pk_op_key_agreement(self.op, outbuf, byref(outbuf_sz),
-                                             other, len(other), salt, len(salt))
-
-        if rc == -1 and outbuf_sz.value > len(outbuf):
-            outbuf = create_string_buffer(outbuf_sz.value)
-            botan.botan_pk_op_key_agreement(self.op, outbuf, byref(outbuf_sz),
-                                            other, len(other), salt, len(salt))
-        return outbuf.raw[0:outbuf_sz.value]
+        return _call_fn_returning_string(key_len,
+                                         lambda b,bl: botan.botan_pk_op_key_agreement(self.op, b, bl,
+                                                                                      other, len(other),
+                                                                                      salt, len(salt)))
 
 class x509_cert(object):
     def __init__(self, filename):
@@ -640,12 +662,8 @@ def test():
     (salt,iterations,psk) = pbkdf_timed('PBKDF2(SHA-256)'.encode('ascii'),
                                         'xyz'.encode('utf-8'), 32, 200)
 
-    if sys.version_info[0] < 3:
-        print("PBKDF2(SHA-256) x=timed, y=iterated; salt = %s (len=%d)  #iterations = %d\n" %
-              (hexlify(salt), len(salt), iterations)   )
-    else:
-        print("PBKDF2(SHA-256) x=timed, y=iterated; salt = %s (len=%d)  #iterations = %d\n" %
-              (hexlify(salt).decode('ascii'), len(salt), iterations)   )
+    print("PBKDF2(SHA-256) x=timed, y=iterated; salt = %s (len=%d)  #iterations = %d\n" %
+          (hexlify(salt).decode('ascii'), len(salt), iterations))
 
     print('x %s' % hexlify(psk).decode('utf-8'))
     print('y %s\n' %
@@ -718,13 +736,31 @@ def test():
     print("OCB pt %s %d"   % (hexlify(pt).decode('utf-8'),  len(pt)))
     print("OCB de %s %d\n" % (hexlify(dec).decode('utf-8'), len(dec)))
 
+
+    mce_priv = private_key('mce', [2960,57], r)
+    mce_pub = mce_priv.get_public_key()
+
+    mce_plaintext = 'mce plaintext'
+    mce_ad = 'mce AD'
+    mce_ciphertext = mceies_encrypt(mce_pub, r, 'ChaCha20Poly1305', mce_plaintext, mce_ad)
+
+    print "mce", len(mce_plaintext), len(mce_ciphertext)
+
+    mce_decrypt = mceies_decrypt(mce_priv, 'ChaCha20Poly1305', mce_ciphertext, mce_ad)
+
+    print("mce_pub %s/SHA-1 fingerprint: %s (estimated strength %s) (len %d)" %
+          (mce_pub.algo_name().decode('utf-8'), mce_pub.fingerprint("SHA-1").decode('utf-8'),
+           mce_pub.estimated_strength(), len(mce_pub.encoding())
+          )
+    )
+
     rsapriv = private_key('rsa', 1536, r)
 
     rsapub = rsapriv.get_public_key()
 
-    print("rsapub %s/SHA-1 fingerprint: %s (estimated strength %s)" %
+    print("rsapub %s SHA-1 fingerprint: %s estimated strength %d len %d" %
           (rsapub.algo_name().decode('utf-8'), rsapub.fingerprint("SHA-1").decode('utf-8'),
-           rsapub.estimated_strength()
+           rsapub.estimated_strength(), len(rsapub.encoding())
           )
     )
 

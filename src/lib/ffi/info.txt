@@ -1,4 +1,4 @@
-define FFI 20150210
+define FFI 20151001
 
 <requires>
 aead
@@ -7,6 +7,7 @@ kdf
 pbkdf
 pubkey
 x509
+#tls
 auto_rng
 system_rng
 </requires>
