@@ -54,7 +54,7 @@ There is also a third party open source implementation of
 .. image:: https://travis-ci.org/randombit/botan.svg?branch=master
     :target: https://travis-ci.org/randombit/botan
 
-.. image:: https://ci.appveyor.com/api/projects/status/n9f94dljd03j2lce?svg=true
+.. image:: https://ci.appveyor.com/api/projects/status/n9f94dljd03j2lce/branch/master?svg=true
     :target: https://ci.appveyor.com/project/randombit/botan/branch/master
 
 .. image:: https://circleci.com/gh/randombit/botan.svg?style=shield
