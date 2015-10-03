@@ -269,9 +269,11 @@ BOTAN_DLL int botan_kdf(const char* kdf_algo,
 
 /*
 * Bcrypt
+* *out_len should be 64 bytes
+* Output is formatted bcrypt $2a$...
 */
 BOTAN_DLL int botan_bcrypt_generate(uint8_t* out, size_t* out_len,
-                                    const char* pass,
+                                    const char* password,
                                     botan_rng_t rng,
                                     size_t work_factor,
                                     uint32_t flags);

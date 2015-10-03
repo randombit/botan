@@ -193,7 +193,7 @@ TEST_CASE("FFI bcrypt", "[ffi]")
    CHECK_THAT(botan_bcrypt_generate(outbuf.data(), &ol, "password", rng, 10, 0), Equals(0));
    botan_rng_destroy(rng);
 
-   CHECK_THAT(botan_bcrypt_is_valid("wrong", reinterpret_cast<const char*>(outbuf.data())), Equals(1));
+   REQUIRE(botan_bcrypt_is_valid("wrong", reinterpret_cast<const char*>(outbuf.data())) < 0);
    CHECK_THAT(botan_bcrypt_is_valid("password", reinterpret_cast<const char*>(outbuf.data())), Equals(0));
    }
 
