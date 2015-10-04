@@ -66,8 +66,8 @@ There is also a third party open source implementation of
 .. image:: https://scan.coverity.com/projects/624/badge.svg
     :target: https://scan.coverity.com/projects/624
 
-.. image:: https://coveralls.io/repos/randombit/botan/badge.svg?branch=master
-    :target: https://coveralls.io/r/randombit/botan?branch=master
+.. image:: https://codecov.io/github/randombit/botan/coverage.svg?branch=master
+    :target: https://codecov.io/github/randombit/botan
 
 Download
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
