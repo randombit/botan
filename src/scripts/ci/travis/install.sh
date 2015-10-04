@@ -7,7 +7,8 @@ if [ "$BUILD_MODE" = "coverage" ]; then
     tar -xvf lcov_1.11.orig.tar.gz
     export PREFIX="/tmp"
     make -C lcov-1.11/ install
-    gem install coveralls-lcov
+
+    pip install --user codecov
 fi
 
 if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$TARGETOS" != "ios" ]; then
