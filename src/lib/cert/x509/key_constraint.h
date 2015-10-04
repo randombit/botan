@@ -14,6 +14,7 @@ namespace Botan {
 
 /**
 * X.509v3 Key Constraints.
+* If updating update copy in ffi.h
 */
 enum Key_Constraints {
    NO_CONSTRAINTS     = 0,

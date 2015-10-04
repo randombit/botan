@@ -180,7 +180,7 @@ size_t test_mceliece()
       size_t code_length = params__n__t_min_max[i];
       for(size_t t = params__n__t_min_max[i+1]; t <= params__n__t_min_max[i+2]; t++)
          {
-         std::cout << "testing parameters n = " << code_length << ", t = " << t << std::endl;
+         //std::cout << "testing parameters n = " << code_length << ", t = " << t << std::endl;
 
          McEliece_PrivateKey sk1(rng, code_length, t);
          const McEliece_PublicKey& pk1 = sk1;
