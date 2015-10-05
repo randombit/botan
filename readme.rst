@@ -6,8 +6,8 @@ under the permissive `Simplified BSD
 <http://botan.randombit.net/license.txt>`_ license.
 
 It provides TLS, X.509 certificates, OCSP, ECDSA, AES, GCM,
-ChaCha20Poly1305, and bcrypt, and quite a few other things. It also
-provides a `botan` command line tool for various cryptographic
+ChaCha20Poly1305, McEliece, bcrypt, and quite a few other things. It
+also provides a `botan` command line tool for various cryptographic
 operations, the source for which also helps demonstrate usage of the
 library.
 
@@ -72,10 +72,6 @@ There is also a third party open source implementation of
 Download
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The 1.11 branch is highly recommended, especially for new development.
-But be warned the API is still subject to some change before the 2.0
-stable release.
-
 All releases are signed with a
 `PGP key <http://botan.randombit.net/pgpkey.txt>`_::
 
@@ -94,28 +90,31 @@ Botan may already be included in your favorite distribution, such as
 `FreeBSD ports <http://www.freshports.org/security/botan110>`_, or
 `MacPorts <http://www.macports.org/ports.php?by=name&substr=botan>`_.
 
-Current Development Series (1.11)
+Current Development Work (1.11)
 ----------------------------------------
+
+The 1.11 branch is highly recommended, especially for new projects.
+Versions 1.11 and later require a working C++11 compiler; GCC 4.8 and
+later, Clang 3.4 and later, and MSVC 2013 are regularly tested.
 
 A new development release is made on the first Monday of every month.
 
 The latest development release is
 `1.11.20 <http://botan.randombit.net/releases/Botan-1.11.20.tgz>`_
 `(sig) <http://botan.randombit.net/releases/Botan-1.11.20.tgz.asc>`_
-released 2015-09-07
+released on 2015-09-07
 
-Botan 1.11 requires a working C++11 compiler; GCC 4.8 and later,
-Clang 3.4 and later, and MSVC 2013 are regularly tested.
-
-Current Stable Series (1.10)
+Old Stable Series (1.10)
 ----------------------------------------
 
-The latest stable branch release is
+The 1.10 branch is the last version of the library written in C++98
+and is the most commonly packaged version. It is still supported for
+security patches, but all development efforts are focused on 1.11.
+
+The latest 1.10 release is
 `1.10.10 <http://botan.randombit.net/releases/Botan-1.10.10.tgz>`_
 `(sig) <http://botan.randombit.net/releases/Botan-1.10.10.tgz.asc>`_
-released 2015-08-03
-
-Botan 1.10 is the last version written in C++98.
+released on 2015-08-03
 
 Books and other resources
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

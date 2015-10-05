@@ -3,6 +3,11 @@ Projects
 
 Request a new feature by opening a pull request to update this file.
 
+Commands
+----------------------------------------
+
+* `encrypt` / `decrypt` tools
+
 TLS
 ----------------------------------------
 
