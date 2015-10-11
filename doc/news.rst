@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 1.11.21, Not Yet Released
+Version 1.11.21, 2015-10-11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Add new methods for creating types such as BlockCiphers or HashFunctions,

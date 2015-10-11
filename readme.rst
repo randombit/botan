@@ -100,9 +100,9 @@ later, Clang 3.4 and later, and MSVC 2013 are regularly tested.
 A new development release is made on the first Monday of every month.
 
 The latest development release is
-`1.11.20 <http://botan.randombit.net/releases/Botan-1.11.20.tgz>`_
-`(sig) <http://botan.randombit.net/releases/Botan-1.11.20.tgz.asc>`_
-released on 2015-09-07
+`1.11.21 <http://botan.randombit.net/releases/Botan-1.11.21.tgz>`_
+`(sig) <http://botan.randombit.net/releases/Botan-1.11.21.tgz.asc>`_
+released on 2015-10-11
 
 Old Stable Series (1.10)
 ----------------------------------------
