@@ -67,7 +67,10 @@ size_t x931_test(const std::string& algo,
    std::unique_ptr<RandomNumberGenerator> rng(get_rng(algo, ikm));
 
    if(!rng)
-      throw std::runtime_error("Unknown RNG " + algo);
+      {
+      std::cout << "Unknown RNG " + algo + " skipping test\n";
+      return 0;
+      }
 
    const std::string got = hex_encode(rng->random_vec(L));
 
@@ -87,7 +90,10 @@ size_t hmac_drbg_test(std::map<std::string, std::string> m)
 
    std::unique_ptr<RandomNumberGenerator> rng(get_rng(algo, ikm));
    if(!rng)
-      throw std::runtime_error("Unknown RNG " + algo);
+      {
+      std::cout << "Unknown RNG " + algo + " skipping test\n";
+      return 0;
+      }
 
    rng->reseed(0); // force initialization
 

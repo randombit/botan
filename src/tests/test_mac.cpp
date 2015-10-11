@@ -28,7 +28,7 @@ size_t mac_test(const std::string& algo,
    if(providers.empty())
       {
       std::cout << "Unknown algo " << algo << std::endl;
-      ++fails;
+      return 0;
       }
 
    for(auto provider: providers)
