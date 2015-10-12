@@ -81,6 +81,9 @@ pbes2_encrypt(const secure_vector<byte>& key_bits,
 
    std::unique_ptr<Cipher_Mode> enc(get_cipher_mode(cipher, ENCRYPTION));
 
+   if(!enc)
+      throw Decoding_Error("PBE-PKCS5 cannot decrypt no cipher " + cipher);
+
    std::unique_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(" + prf + ")"));
 
    const size_t key_length = enc->key_spec().maximum_keylength();

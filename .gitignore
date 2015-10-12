@@ -2,6 +2,7 @@ Makefile*
 libbotan*.so.*
 *.a
 *.so
+*.dylib
 *.exp
 *.lib
 *.dll
@@ -26,8 +27,10 @@ botan-test
 *.orig
 *.rej
 
-# Python cache
+# Cache and temporary files
 *.pyc
+.DS_Store
+*.swp
 
 # CMake
 CMakeLists.txt.user

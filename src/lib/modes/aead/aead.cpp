@@ -4,8 +4,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/mode_utils.h>
 #include <botan/aead.h>
+#include <botan/internal/mode_utils.h>
+#include <botan/internal/algo_registry.h>
 
 #if defined(BOTAN_HAS_AEAD_CCM)
   #include <botan/ccm.h>

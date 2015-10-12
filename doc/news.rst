@@ -1,8 +1,38 @@
 Release Notes
 ========================================
 
-Version 1.11.21, Not Yet Released
+Version 1.11.22, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Version 1.11.21, 2015-10-11
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Add new methods for creating types such as BlockCiphers or HashFunctions,
+  T::providers() returning list of provider for a type, and T::create() creating
+  a new object of a specified provider. The functions in lookup.h forward to
+  these new APIs. A change to the lookup system in 1.11.14 had caused problems
+  with static libraries (GH #52). These problems have been fixed as part of these
+  changes. GH #279
+
+* Fix loading McEliece public or private keys with PKCS::load_key / X509::load_key
+
+* Add `mce` command line tool for McEliece key generation and file encryption
+
+* Add Darwin_SecRandom entropy source which uses `SecRandomCopyBytes`
+  API call for OS X and iOS, as this call is accessible even from a
+  sandboxed application. GH #288
+
+* Add new HMAC_DRBG constructor taking a name for the MAC to use, rather
+  than a pointer to an object.
+
+* The OCaml module is now a separate project at
+  https://github.com/randombit/botan-ocaml
+
+* The encrypted sqlite database support in contrib has moved to
+  https://github.com/randombit/botan-sqlite
+
+* The Perl XS module has been removed as it was no longer maintained.
 
 Version 1.11.20, 2015-09-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

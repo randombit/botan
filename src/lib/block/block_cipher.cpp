@@ -9,10 +9,6 @@
 #include <botan/cpuid.h>
 #include <botan/internal/algo_registry.h>
 
-#if defined(BOTAN_HAS_SIMD_32)
-  #include <botan/internal/simd_32.h>
-#endif
-
 #if defined(BOTAN_HAS_AES)
   #include <botan/aes.h>
 #endif
@@ -249,7 +245,7 @@ BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Noekeon);
 #endif
 
 #if defined(BOTAN_HAS_NOEKEON_SIMD)
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(SIMD_32::enabled(), Noekeon_SIMD, "Noekeon",
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_simd_32(), Noekeon_SIMD, "Noekeon",
                                       "simd32", BOTAN_SIMD_ALGORITHM_PRIO);
 #endif
 
@@ -278,7 +274,7 @@ BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Serpent);
 #endif
 
 #if defined(BOTAN_HAS_SERPENT_SIMD)
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(SIMD_32::enabled(), Serpent_SIMD, "Serpent",
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_simd_32(), Serpent_SIMD, "Serpent",
                                       "simd32", BOTAN_SIMD_ALGORITHM_PRIO);
 #endif
 
@@ -304,7 +300,7 @@ BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(XTEA);
 #endif
 
 #if defined(BOTAN_HAS_XTEA_SIMD)
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(SIMD_32::enabled(), XTEA_SIMD, "XTEA",
+BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_simd_32(), XTEA_SIMD, "XTEA",
                                       "simd32", BOTAN_SIMD_ALGORITHM_PRIO);
 #endif
 

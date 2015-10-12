@@ -142,7 +142,9 @@ size_t test_ecc_random();
 size_t test_ecdsa();
 size_t test_gost_3410();
 size_t test_curve25519();
+size_t test_gf2m();
 size_t test_mceliece();
+size_t test_mce();
 
 // One off tests
 size_t test_ocb();

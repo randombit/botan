@@ -37,7 +37,7 @@ size_t ecdsa_sig_kat(const std::string& group_id,
    PK_Verifier verify(ecdsa, padding);
    PK_Signer sign(ecdsa, padding);
 
-   return validate_signature(verify, sign, "ECDSA/" + group_id + '/' + hash,
+   return validate_signature(verify, sign, "ECDSA/" + group_id + "/" + hash,
                              msg, rng, signature);
    }
 

@@ -12,6 +12,7 @@ Contents
    rng
    filters
    pubkey
+   mceliece
    x509
    ocsp
    tls

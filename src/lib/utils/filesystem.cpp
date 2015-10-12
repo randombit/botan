@@ -86,7 +86,7 @@ std::vector<std::string> impl_readdir(const std::string& dir_path)
             const std::string filename = dirent->d_name;
             if(filename == "." || filename == "..")
                continue;
-            const std::string full_path = cur_path + '/' + filename;
+            const std::string full_path = cur_path + "/" + filename;
 
             struct stat stat_buf;
 

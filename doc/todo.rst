@@ -3,6 +3,11 @@ Projects
 
 Request a new feature by opening a pull request to update this file.
 
+Commands
+----------------------------------------
+
+* `encrypt` / `decrypt` tools
+
 TLS
 ----------------------------------------
 
@@ -45,6 +50,7 @@ New Protocols
 FFI (Python, OCaml)
 ----------------------------------------
 
+* Expose certificates
 * Expose TLS
 
 Symmetric Algorithms, Hashes, ...
@@ -55,8 +61,8 @@ Symmetric Algorithms, Hashes, ...
 * Serpent using AVX2
 * Serpent using SSSE3 pshufb for sboxes
 * ChaCha20 using SSE2 or AVX2
-* SHA-512 using SSE2 (to access 64-bit math on x86-32)
 * scrypt
+* bcrypt PBKDF
 * BLAKE2b
 * Skein-MAC
 * ARIA (Korean block cipher, RFCs 5794 and 6209)
@@ -65,7 +71,7 @@ Symmetric Algorithms, Hashes, ...
 Public Key Crypto, Math
 ----------------------------------------
 
-* EdDSA
+* EdDSA (GH #283)
 * Ed448-Goldilocks
 * FHMQV
 * Support mixed hashes and non-empty param strings in OAEP

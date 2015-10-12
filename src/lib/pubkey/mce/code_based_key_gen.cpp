@@ -9,26 +9,139 @@
  *
  */
 
-#include <botan/internal/code_based_key_gen.h>
-#include <botan/code_based_util.h>
-#include <botan/gf2m_rootfind_dcmp.h>
-#include <botan/internal/binary_matrix.h>
+#include <botan/mceliece.h>
+#include <botan/internal/code_based_util.h>
 #include <botan/loadstor.h>
-#include <botan/polyn_gf2m.h>
 
 namespace Botan {
 
 namespace {
 
+struct binary_matrix
+   {
+   public:
+      binary_matrix(u32bit m_rown, u32bit m_coln);
+
+      void row_xor(u32bit a, u32bit b);
+      secure_vector<int> row_reduced_echelon_form();
+
+      /**
+      * return the coefficient out of F_2
+      */
+      u32bit coef(u32bit i, u32bit j)
+         {
+         return (m_elem[(i) * m_rwdcnt + (j) / 32] >> (j % 32)) & 1;
+         };
+
+      void set_coef_to_one(u32bit i, u32bit j)
+         {
+         m_elem[(i) * m_rwdcnt + (j) / 32] |= (static_cast<u32bit>(1) << ((j) % 32)) ;
+         };
+
+      void toggle_coeff(u32bit i, u32bit j)
+         {
+         m_elem[(i) * m_rwdcnt + (j) / 32] ^= (static_cast<u32bit>(1) << ((j) % 32)) ;
+         }
+
+      void set_to_zero()
+         {
+         zeroise(m_elem);
+         }
+
+      //private:
+      u32bit m_rown;  // number of rows.
+      u32bit m_coln; // number of columns.
+      u32bit m_rwdcnt; // number of words in a row
+      std::vector<u32bit> m_elem;
+   };
+
+binary_matrix::binary_matrix (u32bit rown, u32bit coln)
+   {
+   m_coln = coln;
+   m_rown = rown;
+   m_rwdcnt = 1 + ((m_coln - 1) / 32);
+   m_elem = std::vector<u32bit>(m_rown * m_rwdcnt);
+   }
+
+void binary_matrix::row_xor(u32bit a, u32bit b)
+   {
+   u32bit i;
+   for(i=0;i<m_rwdcnt;i++)
+      {
+      m_elem[a*m_rwdcnt+i]^=m_elem[b*m_rwdcnt+i];
+      }
+   }
+
+//the matrix is reduced from LSB...(from right)
+secure_vector<int> binary_matrix::row_reduced_echelon_form()
+   {
+   u32bit i, failcnt, findrow, max=m_coln - 1;
+
+   secure_vector<int> perm(m_coln);
+   for(i=0;i<m_coln;i++)
+      {
+      perm[i]=i;//initialize permutation.
+      }
+   failcnt = 0;
+
+   for(i=0;i<m_rown;i++,max--)
+      {
+      findrow=0;
+      for(u32bit j=i;j<m_rown;j++)
+         {
+         if(coef(j,max))
+            {
+            if (i!=j)//not needed as ith row is 0 and jth row is 1.
+               row_xor(i,j);//xor to the row.(swap)?
+            findrow=1;
+            break;
+            }//largest value found (end if)
+         }
+
+      if(!findrow)//if no row with a 1 found then swap last column and the column with no 1 down.
+         {
+         perm[m_coln - m_rown - 1 - failcnt] = max;
+         failcnt++;
+         if (!max)
+            {
+            //CSEC_FREE_MEM_CHK_SET_NULL(*p_perm);
+            //CSEC_THR_RETURN();
+            perm.resize(0);
+            }
+         i--;
+         }
+      else
+         {
+         perm[i+m_coln - m_rown] = max;
+         for(u32bit j=i+1;j<m_rown;j++)//fill the column downwards with 0's
+            {
+            if(coef(j,(max)))
+               {
+               row_xor(j,i);//check the arg. order.
+               }
+            }
+
+         for(int j=i-1;j>=0;j--)//fill the column with 0's upwards too.
+            {
+            if(coef(j,(max)))
+               {
+               row_xor(j,i);
+               }
+            }
+         }
+      }//end for(i)
+   return perm;
+   }
+
 void randomize_support(u32bit n, std::vector<gf2m> & L, RandomNumberGenerator & rng)
    {
    unsigned int i, j;
-   gf2m_small_m::gf2m tmp;
+   gf2m tmp;
 
    for (i = 0; i < n; ++i)
       {
 
-      gf2m_small_m::gf2m rnd;
+      gf2m rnd;
       rng.randomize(reinterpret_cast<byte*>(&rnd), sizeof(rnd));
       j = rnd % n; // no rejection sampling, but for useful code-based parameters with n <= 13 this seem tolerable
 
@@ -38,14 +151,14 @@ void randomize_support(u32bit n, std::vector<gf2m> & L, RandomNumberGenerator & 
       }
    }
 
-std::unique_ptr<binary_matrix> generate_R(std::vector<gf2m> &L, polyn_gf2m* g, std::shared_ptr<gf2m_small_m::Gf2m_Field> sp_field, u32bit code_length, u32bit t )
+std::unique_ptr<binary_matrix> generate_R(std::vector<gf2m> &L, polyn_gf2m* g, std::shared_ptr<GF2m_Field> sp_field, u32bit code_length, u32bit t )
    {
    //L- Support
    //t- Number of errors
    //n- Length of the Goppa code
    //m- The extension degree of the GF
    //g- The generator polynomial.
-   gf2m_small_m::gf2m x,y;
+   gf2m x,y;
    u32bit i,j,k,r,n;
    std::vector<int> Laux(code_length);
    n=code_length;
@@ -112,7 +225,7 @@ McEliece_PrivateKey generate_mceliece_key( RandomNumberGenerator & rng, u32bit e
       {
       throw Invalid_Argument("invalid McEliece parameters");
       }
-   std::shared_ptr<gf2m_small_m::Gf2m_Field> sp_field ( new Gf2m_Field(ext_deg ));
+   std::shared_ptr<GF2m_Field> sp_field ( new GF2m_Field(ext_deg ));
 
    //pick the support.........
    std::vector<gf2m> L(code_length);

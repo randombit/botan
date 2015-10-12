@@ -28,20 +28,20 @@ secure_vector<byte> run_mode(const std::string& algo,
                              const secure_vector<byte>& key)
    {
 #if 0
-   std::unique_ptr<Cipher_Mode> cipher(get_cipher(algo, dir));
+   std::unique_ptr<Cipher_Mode> cipher(get_cipher_mode(algo, dir));
 
    cipher->set_key(key);
    cipher->start(nonce);
 
    secure_vector<byte> ct = pt;
    cipher->finish(ct);
-#endif
-
+#else
    Pipe pipe(get_cipher(algo, SymmetricKey(key), InitializationVector(nonce), dir));
 
    pipe.process_msg(pt);
 
    return pipe.read_all();
+#endif
    }
 
 size_t mode_test(const std::string& algo,

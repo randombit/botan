@@ -9,7 +9,6 @@
 #define BOTAN_MODE_UTILS_H__
 
 #include <botan/cipher_mode.h>
-#include <botan/internal/algo_registry.h>
 #include <botan/block_cipher.h>
 #include <botan/loadstor.h>
 #include <botan/internal/rounding.h>

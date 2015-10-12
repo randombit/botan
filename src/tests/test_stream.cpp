@@ -34,7 +34,7 @@ size_t stream_test(const std::string& algo,
    if(providers.empty())
       {
       std::cout << "Unknown stream cipher " << algo << std::endl;
-      ++fails;
+      return 0;
       }
 
    for(auto provider: providers)
