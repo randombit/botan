@@ -58,7 +58,7 @@ def revision_of(tag):
     return run_git(['show', '--no-patch', '--format=%H', tag]).strip()
 
 def extract_revision(revision, to):
-    tar_val = run_git(['archive', '--format=tar', '--prefix=%s/' % (to), revision])
+    tar_val = run_git(['archive', '--format=tar', '--install-prefix=%s/' % (to), revision])
     tar_f = tarfile.open(fileobj=StringIO.StringIO(tar_val))
     tar_f.extractall()
 

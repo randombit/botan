@@ -6,7 +6,7 @@ static_suffix lib
 
 soname_pattern_base "botan.dll"
 
-install_root c:\\Botan
+install_prefix c:\\Botan
 doc_dir docs
 
 install_cmd_data "copy"
