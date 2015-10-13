@@ -31,7 +31,7 @@ inline u16bit reverse_bytes(u16bit val)
 */
 inline u32bit reverse_bytes(u32bit val)
    {
-#if BOTAN_GCC_VERSION >= 430 && !defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
+#if BOTAN_GCC_VERSION >= 430 && !defined(BOTAN_TARGET_ARCH_IS_ARM32)
    /*
    GCC intrinsic added in 4.3, works for a number of CPUs
 
@@ -47,7 +47,7 @@ inline u32bit reverse_bytes(u32bit val)
    asm("bswapl %0" : "=r" (val) : "0" (val));
    return val;
 
-#elif defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
+#elif defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_ARCH_IS_ARM32)
 
    asm ("eor r3, %1, %1, ror #16\n\t"
         "bic r3, r3, #0x00FF0000\n\t"
