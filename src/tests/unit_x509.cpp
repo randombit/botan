@@ -12,6 +12,7 @@
 
 #include <botan/calendar.h>
 #include <botan/pkcs8.h>
+#include <botan/hash.h>
 #include <botan/pkcs10.h>
 #include <botan/x509self.h>
 #include <botan/x509path.h>
@@ -49,7 +50,7 @@ u64bit key_id(const Public_Key* key)
    hash->update(key->algorithm_identifier().parameters);
    hash->update(key->x509_subject_public_key());
    secure_vector<byte> output = hash->final();
-   return load_be<u64bit>(output.data());
+   return load_be<u64bit>(output.data(), 0);
    }
 
 

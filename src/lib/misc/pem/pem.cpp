@@ -8,6 +8,7 @@
 #include <botan/pem.h>
 #include <botan/base64.h>
 #include <botan/parsing.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
 
