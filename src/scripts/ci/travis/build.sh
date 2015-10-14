@@ -14,7 +14,7 @@ elif [ "$BUILD_MODE" = "sanitizer" ]; then
 fi
 
 if [ "$MODULES" = "min" ]; then
-    CFG_FLAGS+=(--no-autoload --enable-modules=base)
+    CFG_FLAGS+=(--minimized-build --enable-modules=base)
 fi
 
 # Workaround for missing update-alternatives

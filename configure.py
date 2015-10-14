@@ -356,7 +356,9 @@ def process_command_line(args):
                           action='store_true',
                           help='list available modules')
     mods_group.add_option('--no-autoload', action='store_true', default=False,
-                          help='disable automatic loading')
+                          help=optparse.SUPPRESS_HELP)
+    mods_group.add_option('--minimized-build', action='store_true', dest='no_autoload',
+                          help='minimize build')
 
     # Should be derived from info.txt but this runs too early
     third_party  = ['boost', 'bzip2', 'lzma', 'openssl', 'sqlite3', 'zlib']

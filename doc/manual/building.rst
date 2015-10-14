@@ -67,7 +67,7 @@ You can control which algorithms and modules are built using the
 options ``--enable-modules=MODS`` and ``--disable-modules=MODS``, for
 instance ``--enable-modules=zlib`` and ``--disable-modules=rc5,idea``.
 Modules not listed on the command line will simply be loaded if needed
-or if configured to load by default. If you use ``--no-autoload``,
+or if configured to load by default. If you use ``--minimized-build``,
 only the most core modules will be included; you can then explicitly
 enable things that you want to use with ``--enable-modules``. This is
 useful for creating a minimal build targeting to a specific
@@ -76,7 +76,7 @@ see :ref:`amalgamation`.
 
 For instance::
 
- $ ./configure.py --no-autoload --enable-modules=rsa,ecdsa,eme1,emsa1,emsa4
+ $ ./configure.py --minimized-build --enable-modules=rsa,ecdsa,eme1,emsa1,emsa4
 
 will set up a build that only includes RSA, ECDSA, and some padding
 modes, along with their dependencies. A small subset of core features,
@@ -187,7 +187,7 @@ To cross compile for iOS, configure with::
 
    $ ./configure.py --cpu=armv7 --cc=clang --cc-abi-flags="-arch armv7 -arch armv7s -stdlib=libc++ --sysroot=$(IOS_SYSROOT)"
 
-Along with any additional configuration arguments. Using ``--no-autoload``
+Along with any additional configuration arguments. Using ``--minimized-build``
 might be helpful as can substantially reduce code size.
 
 Edit the makefile and change AR (around line 30) to::
@@ -247,7 +247,7 @@ options you would ordinarily use, along with the option
 compiled with the appropriate compiler flags to enable that
 instruction set. The ISA specific files are only generated if there is
 code that requires them, so you can simplify your build The
-``--no-autoload`` option (described elsewhere in this documentation)
+``--minimized-build`` option (described elsewhere in this documentation)
 is also quite useful with the amalgamation.
 
 Whenever you would have included a botan header, you can then include

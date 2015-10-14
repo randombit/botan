@@ -4,6 +4,8 @@ Release Notes
 Version 1.11.22, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* The `configure.py` option `--no-autoload` is now also available
+  under the more understandable name `--minimized-build`.
 
 Version 1.11.21, 2015-10-11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
