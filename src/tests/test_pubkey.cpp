@@ -22,6 +22,7 @@
 #include <botan/x509_key.h>
 #include <botan/pkcs8.h>
 #include <botan/pubkey.h>
+#include <botan/hex.h>
 
 #if defined(BOTAN_HAS_RSA)
   #include <botan/rsa.h>
@@ -64,8 +65,8 @@
   #include <botan/kdf.h>
 #endif
 
-#include <botan/filters.h>
 #include <botan/numthry.h>
+
 using namespace Botan;
 
 namespace {
@@ -73,12 +74,8 @@ namespace {
 void dump_data(const std::vector<byte>& out,
                const std::vector<byte>& expected)
    {
-   Pipe pipe(new Hex_Encoder);
-
-   pipe.process_msg(out);
-   pipe.process_msg(expected);
-   std::cout << "Got: " << pipe.read_all_as_string(0) << std::endl;
-   std::cout << "Exp: " << pipe.read_all_as_string(1) << std::endl;
+   std::cout << "Got: " << hex_encode(out) << std::endl;
+   std::cout << "Exp: " << hex_encode(expected) << std::endl;
    }
 
 size_t validate_save_and_load(const Private_Key* priv_key,

@@ -6,7 +6,6 @@ basefilt.cpp
 buf_filt.cpp
 comp_filter.cpp
 data_snk.cpp
-data_src.cpp
 filter.cpp
 key_filt.cpp
 out_buf.cpp
@@ -23,7 +22,6 @@ basefilt.h
 buf_filt.h
 data_snk.h
 comp_filter.h
-data_src.h
 filter.h
 filters.h
 key_filt.h

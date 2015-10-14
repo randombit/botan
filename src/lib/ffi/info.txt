@@ -2,7 +2,6 @@ define FFI 20151001
 
 <requires>
 aead
-filters
 kdf
 pbkdf
 pubkey

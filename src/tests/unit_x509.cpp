@@ -11,7 +11,6 @@
 #if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_DSA)
 
 #include <botan/calendar.h>
-#include <botan/filters.h>
 #include <botan/pkcs8.h>
 #include <botan/pkcs10.h>
 #include <botan/x509self.h>
@@ -45,22 +44,12 @@ X509_Time from_date(const int y, const int m, const int d)
 
 u64bit key_id(const Public_Key* key)
    {
-   Pipe pipe(new Hash_Filter("SHA-1", 8));
-   pipe.start_msg();
-   pipe.write(key->algo_name());
-   pipe.write(key->algorithm_identifier().parameters);
-   pipe.write(key->x509_subject_public_key());
-   pipe.end_msg();
-
-   secure_vector<byte> output = pipe.read_all();
-
-   if(output.size() != 8)
-      throw Internal_Error("Public_Key::key_id: Incorrect output size");
-
-   u64bit id = 0;
-   for(u32bit j = 0; j != 8; ++j)
-      id = (id << 8) | output[j];
-   return id;
+   std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-1"));
+   hash->update(key->algo_name());
+   hash->update(key->algorithm_identifier().parameters);
+   hash->update(key->x509_subject_public_key());
+   secure_vector<byte> output = hash->final();
+   return load_be<u64bit>(output.data());
    }
 
 
