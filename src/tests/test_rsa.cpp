@@ -37,7 +37,7 @@ size_t rsaes_kat(const std::string& e,
    if(padding == "")
       padding = "Raw";
 
-   PK_Encryptor_EME enc(pubkey, padding);
+   PK_Encryptor_EME enc(pubkey, padding, "base");
    PK_Decryptor_EME dec(privkey, padding);
 
    return validate_encryption(enc, dec, "RSAES/" + padding, msg, nonce, output);
@@ -61,7 +61,7 @@ size_t rsa_sig_kat(const std::string& e,
       padding = "Raw";
 
    PK_Verifier verify(pubkey, padding);
-   PK_Signer sign(privkey, padding);
+   PK_Signer sign(privkey, padding, IEEE_1363, "base");
 
    return validate_signature(verify, sign, "RSA/" + padding, msg, rng, nonce, output);
    }

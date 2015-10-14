@@ -24,11 +24,12 @@ namespace {
 
 std::pair<int, size_t> get_openssl_enc_pad(const std::string& eme)
    {
+   ERR_load_crypto_strings();
    if(eme == "Raw")
       return std::make_pair(RSA_NO_PADDING, 0);
    else if(eme == "EME-PKCS1-v1_5")
       return std::make_pair(RSA_PKCS1_PADDING, 11);
-   else if(eme == "EME1(SHA-1)")
+   else if(eme == "OAEP(SHA-1)")
       return std::make_pair(RSA_PKCS1_OAEP_PADDING, 41);
    else
       throw Lookup_Error("OpenSSL RSA does not support EME " + eme);
@@ -63,10 +64,10 @@ class OpenSSL_RSA_Encryption_Operation : public PK_Ops::Encryption
          if(!m_openssl_rsa)
             throw OpenSSL_Error("d2i_RSAPublicKey");
 
-         m_bits = 8 * n_size() - pad_overhead;
+         m_bits = 8 * (n_size() - pad_overhead);
          }
 
-      size_t max_input_bits() const override { return m_bits; };
+      size_t max_input_bits() const override { return m_bits - 1; };
 
       secure_vector<byte> encrypt(const byte msg[], size_t msg_len,
                                   RandomNumberGenerator&) override
@@ -137,7 +138,7 @@ class OpenSSL_RSA_Decryption_Operation : public PK_Ops::Decryption
          m_bits = 8 * ::RSA_size(m_openssl_rsa.get());
          }
 
-      size_t max_input_bits() const override { return m_bits; };
+      size_t max_input_bits() const override { return m_bits - 1; }
 
       secure_vector<byte> decrypt(const byte msg[], size_t msg_len) override
          {

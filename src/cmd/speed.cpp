@@ -118,6 +118,7 @@ void report_results(const std::string& algo,
    }
 
 void bench_algo(const std::string& algo,
+                const std::string& provider,
                 RandomNumberGenerator& rng,
                 double seconds,
                 size_t buf_size)
@@ -151,7 +152,7 @@ void bench_algo(const std::string& algo,
    catch (No_Provider_Found)
       {
       #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
-      benchmark_public_key(rng, algo, seconds);
+      benchmark_public_key(rng, algo, provider, seconds);
       #endif
       }
    }
@@ -159,7 +160,7 @@ void bench_algo(const std::string& algo,
 int speed(int argc, char* argv[])
    {
    BOTAN_UNUSED(argc);
-   OptionParser opts("seconds=|buf-size=");
+   OptionParser opts("seconds=|buf-size=|provider=");
    opts.parse(argv);
 
    double seconds = .5;
@@ -185,7 +186,9 @@ int speed(int argc, char* argv[])
          }
       }
 
-   auto args = opts.arguments();
+   const std::string provider = opts.value_if_set("provider");
+
+   std::vector<std::string> args = opts.arguments();
 
    if(args.empty())
       args = default_benchmark_list;
@@ -199,7 +202,9 @@ int speed(int argc, char* argv[])
    AutoSeeded_RNG rng;
 
    for(auto alg: args)
-      bench_algo(alg, rng, seconds, buf_size);
+      {
+      bench_algo(alg, provider, rng, seconds, buf_size);
+      }
 
    return 0;
    }

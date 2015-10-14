@@ -120,6 +120,19 @@ class BOTAN_DLL PK_Decryptor
 class BOTAN_DLL PK_Signer
    {
    public:
+
+      /**
+      * Construct a PK Signer.
+      * @param key the key to use inside this signer
+      * @param emsa the EMSA to use
+      * An example would be "EMSA1(SHA-224)".
+      * @param format the signature format to use
+      */
+      PK_Signer(const Private_Key& key,
+                const std::string& emsa,
+                Signature_Format format = IEEE_1363,
+                const std::string& provider = "");
+
       /**
       * Sign a message.
       * @param in the message to sign as a byte array
@@ -180,17 +193,6 @@ class BOTAN_DLL PK_Signer
       * @param format the signature format to use
       */
       void set_output_format(Signature_Format format) { m_sig_format = format; }
-
-      /**
-      * Construct a PK Signer.
-      * @param key the key to use inside this signer
-      * @param emsa the EMSA to use
-      * An example would be "EMSA1(SHA-224)".
-      * @param format the signature format to use
-      */
-      PK_Signer(const Private_Key& key,
-                const std::string& emsa,
-                Signature_Format format = IEEE_1363);
    private:
       std::unique_ptr<PK_Ops::Signature> m_op;
       Signature_Format m_sig_format;
@@ -204,6 +206,17 @@ class BOTAN_DLL PK_Signer
 class BOTAN_DLL PK_Verifier
    {
    public:
+      /**
+      * Construct a PK Verifier.
+      * @param pub_key the public key to verify against
+      * @param emsa the EMSA to use (eg "EMSA3(SHA-1)")
+      * @param format the signature format to use
+      */
+      PK_Verifier(const Public_Key& pub_key,
+                  const std::string& emsa,
+                  Signature_Format format = IEEE_1363,
+                  const std::string& provider = "");
+
       /**
       * Verify a signature.
       * @param msg the message that the signature belongs to, as a byte array
@@ -278,15 +291,6 @@ class BOTAN_DLL PK_Verifier
       */
       void set_input_format(Signature_Format format);
 
-      /**
-      * Construct a PK Verifier.
-      * @param pub_key the public key to verify against
-      * @param emsa the EMSA to use (eg "EMSA3(SHA-1)")
-      * @param format the signature format to use
-      */
-      PK_Verifier(const Public_Key& pub_key,
-                  const std::string& emsa,
-                  Signature_Format format = IEEE_1363);
    private:
       std::unique_ptr<PK_Ops::Verification> m_op;
       Signature_Format m_sig_format;
@@ -298,6 +302,13 @@ class BOTAN_DLL PK_Verifier
 class BOTAN_DLL PK_Key_Agreement
    {
    public:
+
+      /**
+      * Construct a PK Key Agreement.
+      * @param key the key to use
+      * @param kdf name of the KDF to use (or 'Raw' for no KDF)
+      */
+      PK_Key_Agreement(const Private_Key& key, const std::string& kdf);
 
       /*
       * Perform Key Agreement Operation
@@ -361,18 +372,13 @@ class BOTAN_DLL PK_Key_Agreement
                            params.length());
          }
 
-      /**
-      * Construct a PK Key Agreement.
-      * @param key the key to use
-      * @param kdf name of the KDF to use (or 'Raw' for no KDF)
-      */
-      PK_Key_Agreement(const Private_Key& key, const std::string& kdf);
    private:
       std::unique_ptr<PK_Ops::Key_Agreement> m_op;
    };
 
 /**
-* Encryption with an MR algorithm and an EME.
+* Encryption using a standard message recovery algorithm like RSA or
+* ElGamal, paired with an encoding scheme like OAEP.
 */
 class BOTAN_DLL PK_Encryptor_EME : public PK_Encryptor
    {
@@ -382,10 +388,11 @@ class BOTAN_DLL PK_Encryptor_EME : public PK_Encryptor
       /**
       * Construct an instance.
       * @param key the key to use inside the decryptor
-      * @param eme the EME to use
+      * @param padding the message encoding scheme to use (eg "OAEP(SHA-256)")
       */
       PK_Encryptor_EME(const Public_Key& key,
-                       const std::string& eme);
+                       const std::string& padding,
+                       const std::string& provider = "");
    private:
       std::vector<byte> enc(const byte[], size_t,
                              RandomNumberGenerator& rng) const override;
@@ -405,7 +412,8 @@ class BOTAN_DLL PK_Decryptor_EME : public PK_Decryptor
       * @param eme the EME to use
       */
       PK_Decryptor_EME(const Private_Key& key,
-                       const std::string& eme);
+                       const std::string& eme,
+                       const std::string& provider = "");
    private:
       secure_vector<byte> dec(const byte[], size_t) const override;
 

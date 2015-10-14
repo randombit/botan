@@ -202,7 +202,8 @@ void benchmark_sig_ver(PK_Verifier& ver, PK_Signer& sig,
 */
 
 #if defined(BOTAN_HAS_RSA)
-void benchmark_rsa(RandomNumberGenerator& rng,
+void benchmark_rsa(const std::string& provider,
+                   RandomNumberGenerator& rng,
                    double seconds,
                    Benchmark_Report& report)
    {
@@ -213,8 +214,8 @@ void benchmark_rsa(RandomNumberGenerator& rng,
       {
       size_t keylen = keylens[i];
 
-      //const std::string sig_padding = "EMSA4(SHA-1)";
-      //const std::string enc_padding = "EME1(SHA-1)";
+      //const std::string sig_padding = "PSSR(SHA-256)";
+      //const std::string enc_padding = "OAEP(SHA-1)";
       const std::string sig_padding = "EMSA-PKCS1-v1_5(SHA-1)";
       const std::string enc_padding = "EME-PKCS1-v1_5";
 
@@ -243,14 +244,14 @@ void benchmark_rsa(RandomNumberGenerator& rng,
          while(verify_timer.seconds() < seconds ||
                sig_timer.seconds() < seconds)
             {
-            PK_Encryptor_EME enc(key, enc_padding);
-            PK_Decryptor_EME dec(key, enc_padding);
+            PK_Encryptor_EME enc(key, enc_padding, provider);
+            PK_Decryptor_EME dec(key, enc_padding, provider);
 
             benchmark_enc_dec(enc, dec, enc_timer, dec_timer,
                               rng, 10000, seconds);
 
-            PK_Signer sig(key, sig_padding);
-            PK_Verifier ver(key, sig_padding);
+            PK_Signer sig(key, sig_padding, IEEE_1363);
+            PK_Verifier ver(key, sig_padding, IEEE_1363);
 
             benchmark_sig_ver(ver, sig, verify_timer,
                               sig_timer, rng, 10000, seconds);
@@ -318,7 +319,8 @@ void benchmark_rw(RandomNumberGenerator& rng,
 
 #if defined(BOTAN_HAS_ECDSA)
 
-void benchmark_ecdsa(RandomNumberGenerator& rng,
+void benchmark_ecdsa(const std::string& provider,
+                     RandomNumberGenerator& rng,
                      double seconds,
                      Benchmark_Report& report)
    {
@@ -348,8 +350,8 @@ void benchmark_ecdsa(RandomNumberGenerator& rng,
          ECDSA_PrivateKey key(rng, params);
          keygen_timer.stop();
 
-         PK_Signer sig(key, padding, IEEE_1363);
-         PK_Verifier ver(key, padding);
+         PK_Signer sig(key, padding, IEEE_1363, provider);
+         PK_Verifier ver(key, padding, IEEE_1363, provider);
 
          benchmark_sig_ver(ver, sig, verify_timer,
                            sig_timer, rng, 1000, seconds);
@@ -791,7 +793,9 @@ void benchmark_mce(RandomNumberGenerator& rng,
 }
 
 void benchmark_public_key(RandomNumberGenerator& rng,
-                          const std::string& algo, double seconds)
+                          const std::string& algo,
+                          const std::string& provider,
+                          double seconds)
    {
    /*
      There is some strangeness going on here. It looks like algorithms
@@ -823,7 +827,7 @@ void benchmark_public_key(RandomNumberGenerator& rng,
 
 #if defined(BOTAN_HAS_RSA)
    if(algo == "All" || algo == "RSA")
-      benchmark_rsa(rng, seconds, report);
+      benchmark_rsa(provider, rng, seconds, report);
 #endif
 
 #if defined(BOTAN_HAS_DSA)
@@ -833,7 +837,7 @@ void benchmark_public_key(RandomNumberGenerator& rng,
 
 #if defined(BOTAN_HAS_ECDSA)
    if(algo == "All" || algo == "ECDSA")
-      benchmark_ecdsa(rng, seconds, report);
+      benchmark_ecdsa(provider, rng, seconds, report);
 #endif
 
 #if defined(BOTAN_HAS_ECDH)

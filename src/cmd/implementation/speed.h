@@ -13,7 +13,9 @@
 #include <chrono>
 
 void benchmark_public_key(Botan::RandomNumberGenerator& rng,
-                          const std::string& algo, double seconds);
+                          const std::string& algo,
+                          const std::string& provider,
+                          double seconds);
 
 std::map<std::string, double> benchmark_is_prime(Botan::RandomNumberGenerator &rng,
                                                  const std::chrono::milliseconds runtime);
