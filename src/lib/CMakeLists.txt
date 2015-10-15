@@ -3,7 +3,7 @@ set(INCLUDE_DIR "../../build/include")
 include_directories(${INCLUDE_DIR})
 
 # libbotan
-add_library(botan STATIC
+set(BOTAN_SRC
     asn1/alg_id.cpp
     asn1/asn1_alt_name.cpp
     asn1/asn1_attribute.cpp
@@ -307,6 +307,7 @@ add_library(botan STATIC
     utils/version.cpp
     utils/zero_mem.cpp
 )
+add_library(botan STATIC ${BOTAN_SRC})
 
 # AVX2
 set_source_files_properties(block/threefish_avx2/threefish_avx2.cpp PROPERTIES COMPILE_FLAGS "-mavx2")

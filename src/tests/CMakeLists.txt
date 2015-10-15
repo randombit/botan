@@ -31,11 +31,13 @@ add_executable(${PROJECT_NAME}-tests
     ./test_elg.cpp
     ./test_ffi.cpp
     ./test_fuzzer.cpp
+    ./test_gf2m.cpp
     ./test_gost_3410.cpp
     ./test_hash.cpp
     ./test_kdf.cpp
     ./test_keywrap.cpp
     ./test_mac.cpp
+    ./test_mce.cpp
     ./test_mceliece.cpp
     ./test_modes.cpp
     ./test_nr.cpp
