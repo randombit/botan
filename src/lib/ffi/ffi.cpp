@@ -228,21 +228,6 @@ int botan_hex_encode(const uint8_t* in, size_t len, char* out, uint32_t flags)
 
 int botan_rng_init(botan_rng_t* rng_out, const char* rng_type)
    {
-   // Just gives unique_ptr something to delete, really
-   class RNG_Wrapper : public Botan::RandomNumberGenerator
-      {
-      public:
-         RNG_Wrapper(Botan::RandomNumberGenerator& rng) : m_rng(rng) {}
-         void randomize(Botan::byte out[], size_t len) override { m_rng.randomize(out, len); }
-         bool is_seeded() const override { return m_rng.is_seeded(); }
-         void clear() override { m_rng.clear(); }
-         std::string name() const override { return m_rng.name(); }
-         void reseed(size_t poll_bits = 256) override { m_rng.reseed(poll_bits); }
-         void add_entropy(const Botan::byte in[], size_t len) override { m_rng.add_entropy(in, len); }
-      private:
-         Botan::RandomNumberGenerator& m_rng;
-      };
-
    try
       {
       BOTAN_ASSERT_ARG_NON_NULL(rng_out);
@@ -255,7 +240,7 @@ int botan_rng_init(botan_rng_t* rng_out, const char* rng_type)
       std::unique_ptr<Botan::RandomNumberGenerator> rng;
 
       if(rng_type_s == "system")
-         rng.reset(new RNG_Wrapper(Botan::system_rng()));
+         rng.reset(new Botan::System_RNG);
       else if(rng_type_s == "user")
          rng.reset(new Botan::AutoSeeded_RNG);
 

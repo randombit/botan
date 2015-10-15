@@ -1,6 +1,6 @@
 /*
 * System RNG
-* (C) 2014 Jack Lloyd
+* (C) 2014,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -28,11 +28,11 @@ namespace Botan {
 
 namespace {
 
-class System_RNG : public RandomNumberGenerator
+class System_RNG_Impl : public RandomNumberGenerator
    {
    public:
-      System_RNG();
-      ~System_RNG();
+      System_RNG_Impl();
+      ~System_RNG_Impl();
 
       void randomize(byte buf[], size_t len) override;
 
@@ -51,7 +51,7 @@ class System_RNG : public RandomNumberGenerator
 #endif
    };
 
-System_RNG::System_RNG()
+System_RNG_Impl::System_RNG_Impl()
    {
 #if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
 
@@ -66,7 +66,7 @@ System_RNG::System_RNG()
 #endif
    }
 
-System_RNG::~System_RNG()
+System_RNG_Impl::~System_RNG_Impl()
    {
 #if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
    ::CryptReleaseContext(m_prov, 0);
@@ -76,7 +76,7 @@ System_RNG::~System_RNG()
 #endif
    }
 
-void System_RNG::randomize(byte buf[], size_t len)
+void System_RNG_Impl::randomize(byte buf[], size_t len)
    {
 #if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
    ::CryptGenRandom(m_prov, static_cast<DWORD>(len), buf);
@@ -104,7 +104,7 @@ void System_RNG::randomize(byte buf[], size_t len)
 
 RandomNumberGenerator& system_rng()
    {
-   static System_RNG g_system_rng;
+   static System_RNG_Impl g_system_rng;
    return g_system_rng;
    }
 
