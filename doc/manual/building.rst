@@ -14,7 +14,7 @@ Botan's build is controlled by configure.py, which is a `Python
 
 For the impatient, this works for most systems::
 
-  $ ./configure.py [--prefix=/some/directory]
+  $ ./configure.py [--install-prefix=/some/directory]
   $ make
   $ make install
 
@@ -117,9 +117,9 @@ and ``--cc=clang`` for Clang.
 
 The ``make install`` target has a default directory in which it will
 install Botan (typically ``/usr/local``). You can override this by
-using the ``--prefix`` argument to ``configure.py``, like so::
+using the ``--install-prefix`` argument to ``configure.py``, like so::
 
-   $ ./configure.py --prefix=/opt <other arguments>
+   $ ./configure.py --install-prefix=/opt <other arguments>
 
 On some systems shared libraries might not be immediately visible to
 the runtime linker. For example, on Linux you may have to edit
@@ -171,7 +171,7 @@ load under NT4. Later versions of Windows support both methods, so
 this shouldn't be much of an issue anymore.
 
 By default the install target will be ``C:\botan``; you can modify
-this with the ``--prefix`` option.
+this with the ``--install-prefix`` option.
 
 When building your applications, all you have to do is tell the
 compiler to look for both include files and library files in

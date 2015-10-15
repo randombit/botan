@@ -1,6 +1,6 @@
 os_type unix
 
-install_root /boot
+install_prefix /boot
 header_dir develop/headers
 lib_dir system/lib
 doc_dir system/documentation

@@ -384,18 +384,16 @@ def process_command_line(args):
     install_group.add_option('--program-suffix', metavar='SUFFIX',
                              help='append string to program names')
 
-    install_group.add_option('--prefix', metavar='DIR',
-                             help='set the install prefix')
-    install_group.add_option('--destdir', metavar='DIR',
+    install_group.add_option('--install-prefix', metavar='DIR',
                              help='set the install directory')
     install_group.add_option('--docdir', metavar='DIR',
-                             help='set the doc install dir')
+                             help='set the doc install dir (relative to --install-prefix)')
     install_group.add_option('--bindir', metavar='DIR',
-                             help='set the binary install dir')
+                             help='set the binary install dir (relative to --install-prefix)')
     install_group.add_option('--libdir', metavar='DIR',
-                             help='set the library install dir')
+                             help='set the library install dir (relative to --install-prefix)')
     install_group.add_option('--includedir', metavar='DIR',
-                             help='set the include file install dir')
+                             help='set the include file install dir (relative to --install-prefix)')
 
     parser.add_option_group(target_group)
     parser.add_option_group(build_group)
@@ -967,7 +965,7 @@ class OsInfo(object):
                         'static_suffix': 'a',
                         'ar_command': 'ar crs',
                         'ar_needs_ranlib': False,
-                        'install_root': '/usr/local',
+                        'install_prefix': '/usr/local',
                         'header_dir': 'include',
                         'bin_dir': 'bin',
                         'lib_dir': 'lib',
@@ -1261,8 +1259,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'program_suffix': options.program_suffix or osinfo.program_suffix,
 
-        'prefix': options.prefix or osinfo.install_root,
-        'destdir': options.destdir or options.prefix or osinfo.install_root,
+        'install_prefix': options.install_prefix or osinfo.install_prefix,
         'bindir': options.bindir or osinfo.bin_dir,
         'libdir': options.libdir or osinfo.lib_dir,
         'includedir': options.includedir or osinfo.header_dir,

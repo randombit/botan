@@ -1,4 +1,4 @@
-prefix=%{prefix}
+prefix=%{install_prefix}
 exec_prefix=${prefix}
 libdir=${prefix}/%{libdir}
 includedir=${prefix}/include/botan-%{version_major}.%{version_minor}

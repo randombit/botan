@@ -7,7 +7,7 @@ program_suffix .exe
 # So until I can figure out a work-around, it's disabled.
 building_shared_supported no
 
-install_root c:\Botan
+install_prefix c:\Botan
 doc_dir docs
 
 <target_features>

@@ -98,4 +98,4 @@ distclean: clean
 	$(RM) Makefile $(LIB_BASENAME).* $(APP).*
 
 install: $(APP) docs
-	$(SCRIPTS_DIR)\install.py --destdir=%{destdir} --build-dir="%{build_dir}" --bindir=%{bindir} --libdir=%{libdir} --docdir=%{docdir} --includedir=%{includedir}
+	$(SCRIPTS_DIR)\install.py --install-prefix=%{install_prefix} --build-dir="%{build_dir}" --bindir=%{bindir} --libdir=%{libdir} --docdir=%{docdir} --includedir=%{includedir}

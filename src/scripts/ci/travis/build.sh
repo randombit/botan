@@ -34,12 +34,12 @@ fi
 if [ "$TARGETOS" = "ios" ]; then
     ./configure.py "${CFG_FLAGS[@]}" --cpu=armv7 --cc=clang \
         --cc-abi-flags="-arch armv7 -arch armv7s -stdlib=libc++ --sysroot=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.4.sdk/" \
-        --prefix=/tmp/botan-installation
+        --install-prefix=/tmp/botan-installation
 else
     $CXX --version
     ./configure.py "${CFG_FLAGS[@]}" --cc="$CC" --cc-bin="$CXX" \
         --with-bzip2 --with-lzma --with-openssl --with-sqlite --with-zlib \
-        --prefix=/tmp/botan-installation
+        --install-prefix=/tmp/botan-installation
 fi
 
 make -j 2
