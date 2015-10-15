@@ -230,7 +230,6 @@ add_library(botan STATIC
     pubkey/gost_3410/gost_3410.cpp
     pubkey/if_algo/if_algo.cpp
     pubkey/keypair/keypair.cpp
-    pubkey/mce/binary_matrix.cpp
     pubkey/mce/code_based_key_gen.cpp
     pubkey/mce/gf2m_rootfind_dcmp.cpp
     pubkey/mce/gf2m_small_m.cpp
