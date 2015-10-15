@@ -12,7 +12,9 @@ Version 1.11.22, Not Yet Released
 * The blinding code used for RSA, Diffie-Hellman, ElGamal and Rabin-Williams now
   periodically reinitializes the sequence of blinding values instead of always
   deriving the next value by squaring the previous ones. The reinitializion
-  interval can be controlled by 
+  interval can be controlled by the build.h parameter BOTAN_BLINDING_REINIT_INTERVAL.
+
+* DL_Group now prohibits creating a group smaller than 1024 bits.
 
 * Add System_RNG type. Previously the global system RNG was only accessible via
   `system_rng` which returned a reference to the object. However is at times
