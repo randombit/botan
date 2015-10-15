@@ -12,8 +12,8 @@ rm -rf $WEBSITE_SRC_DIR $WEBSITE_DIR
 mkdir -p $WEBSITE_SRC_DIR
 
 cp readme.rst $WEBSITE_SRC_DIR/index.rst
-cp -r doc/news.rst $WEBSITE_SRC_DIR
-echo -e ".. toctree::\n\n   index\n   news\n" > $WEBSITE_SRC_DIR/contents.rst
+cp doc/news.rst doc/security.rst $WEBSITE_SRC_DIR
+echo -e ".. toctree::\n\n   index\n   news\n   security\n" > $WEBSITE_SRC_DIR/contents.rst
 
 sphinx-build -t website -c "$SPHINX_CONFIG" -b "$SPHINX_BUILDER" $WEBSITE_SRC_DIR $WEBSITE_DIR
 sphinx-build -t website -c "$SPHINX_CONFIG" -b "$SPHINX_BUILDER" doc/manual $WEBSITE_DIR/manual
