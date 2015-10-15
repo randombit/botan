@@ -20,8 +20,6 @@
 #include <botan/hex.h>
 #include <botan/mem_ops.h>
 #include <botan/x509_key.h>
-#include <botan/tls_client.h>
-#include <botan/tls_server.h>
 #include <cstring>
 #include <memory>
 
@@ -49,9 +47,13 @@
   #include <botan/mceies.h>
 #endif
 
-
 #if defined(BOTAN_HAS_BCRYPT)
   #include <botan/bcrypt.h>
+#endif
+
+#if defined(BOTAN_HAS_TLS)
+  #include <botan/tls_client.h>
+  #include <botan/tls_server.h>
 #endif
 
 namespace {
@@ -185,7 +187,10 @@ BOTAN_FFI_DECLARE_STRUCT(botan_pk_op_verify_struct, Botan::PK_Verifier, 0x2B91F9
 BOTAN_FFI_DECLARE_STRUCT(botan_pk_op_ka_struct, Botan::PK_Key_Agreement, 0x2939CAB1);
 
 BOTAN_FFI_DECLARE_STRUCT(botan_x509_cert_struct, Botan::X509_Certificate, 0x8F628937);
+
+#if defined(BOTAN_HAS_TLS)
 BOTAN_FFI_DECLARE_STRUCT(botan_tls_channel_struct, Botan::TLS::Channel, 0x0212FE99);
+#endif
 
 /*
 * Versioning
