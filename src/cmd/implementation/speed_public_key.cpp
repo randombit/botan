@@ -250,8 +250,8 @@ void benchmark_rsa(const std::string& provider,
             benchmark_enc_dec(enc, dec, enc_timer, dec_timer,
                               rng, 10000, seconds);
 
-            PK_Signer sig(key, sig_padding, IEEE_1363);
-            PK_Verifier ver(key, sig_padding, IEEE_1363);
+            PK_Signer sig(key, sig_padding, IEEE_1363, provider);
+            PK_Verifier ver(key, sig_padding, IEEE_1363, provider);
 
             benchmark_sig_ver(ver, sig, verify_timer,
                               sig_timer, rng, 10000, seconds);

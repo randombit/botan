@@ -4,6 +4,12 @@ Release Notes
 Version 1.11.22, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Public key operations can now be used with specified providers
+  by passing an additional parameter to the constructor of
+  the PK operation.
+
+* OpenSSL RSA provider now supports signatures and verification.
+
 * The `configure.py` option `--no-autoload` is now also available
   under the more understandable name `--minimized-build`.
 

@@ -35,6 +35,22 @@ std::pair<int, size_t> get_openssl_enc_pad(const std::string& eme)
       throw Lookup_Error("OpenSSL RSA does not support EME " + eme);
    }
 
+secure_vector<byte> strip_leading_zeros(const secure_vector<byte>& input)
+   {
+   size_t leading_zeros = 0;
+
+   for(size_t i = 0; i != input.size(); ++i)
+      {
+      if(input[i] != 0)
+         break;
+      ++leading_zeros;
+      }
+
+   secure_vector<byte> output(&input[leading_zeros],
+                              &input[input.size()]);
+   return output;
+   }
+
 class OpenSSL_RSA_Encryption_Operation : public PK_Ops::Encryption
    {
    public:
@@ -64,10 +80,10 @@ class OpenSSL_RSA_Encryption_Operation : public PK_Ops::Encryption
          if(!m_openssl_rsa)
             throw OpenSSL_Error("d2i_RSAPublicKey");
 
-         m_bits = 8 * (n_size() - pad_overhead);
+         m_bits = 8 * (n_size() - pad_overhead) - 1;
          }
 
-      size_t max_input_bits() const override { return m_bits - 1; };
+      size_t max_input_bits() const override { return m_bits; };
 
       secure_vector<byte> encrypt(const byte msg[], size_t msg_len,
                                   RandomNumberGenerator&) override
@@ -134,11 +150,9 @@ class OpenSSL_RSA_Decryption_Operation : public PK_Ops::Decryption
          m_openssl_rsa.reset(d2i_RSAPrivateKey(nullptr, &der_ptr, der.size()));
          if(!m_openssl_rsa)
             throw OpenSSL_Error("d2i_RSAPrivateKey");
-
-         m_bits = 8 * ::RSA_size(m_openssl_rsa.get());
          }
 
-      size_t max_input_bits() const override { return m_bits - 1; }
+      size_t max_input_bits() const override { return ::BN_num_bits(m_openssl_rsa->n) - 1; }
 
       secure_vector<byte> decrypt(const byte msg[], size_t msg_len) override
          {
@@ -150,25 +164,129 @@ class OpenSSL_RSA_Decryption_Operation : public PK_Ops::Decryption
 
          if(m_padding == RSA_NO_PADDING)
             {
-            size_t leading_0s = 0;
-            while(leading_0s < buf.size() && buf[leading_0s] == 0)
-               leading_0s++;
-
-            if(leading_0s)
-               return secure_vector<byte>(&buf[leading_0s], &buf[buf.size()]);
+            return strip_leading_zeros(buf);
             }
-
          return buf;
          }
 
    private:
       std::unique_ptr<RSA, std::function<void (RSA*)>> m_openssl_rsa;
-      size_t m_bits = 0;
       int m_padding = 0;
    };
 
+class OpenSSL_RSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
+   {
+   public:
+      typedef RSA_PublicKey Key_Type;
+
+      static OpenSSL_RSA_Verification_Operation* make(const Spec& spec)
+         {
+         if(const RSA_PublicKey* rsa = dynamic_cast<const RSA_PublicKey*>(&spec.key()))
+            {
+            return new OpenSSL_RSA_Verification_Operation(*rsa, spec.padding());
+            }
+
+         return nullptr;
+         }
+
+      OpenSSL_RSA_Verification_Operation(const RSA_PublicKey& rsa, const std::string& emsa) :
+         PK_Ops::Verification_with_EMSA(emsa),
+         m_openssl_rsa(nullptr, ::RSA_free)
+         {
+         const std::vector<byte> der = rsa.x509_subject_public_key();
+         const byte* der_ptr = der.data();
+         m_openssl_rsa.reset(::d2i_RSAPublicKey(nullptr, &der_ptr, der.size()));
+         }
+
+      size_t max_input_bits() const override { return ::BN_num_bits(m_openssl_rsa->n) - 1; }
+
+      bool with_recovery() const override { return true; }
+
+      secure_vector<byte> verify_mr(const byte msg[], size_t msg_len) override
+         {
+         const size_t mod_sz = ::RSA_size(m_openssl_rsa.get());
+
+         if(msg_len > mod_sz)
+            throw Invalid_Argument("OpenSSL RSA verify input too large");
+
+         secure_vector<byte> inbuf(mod_sz);
+         copy_mem(&inbuf[mod_sz - msg_len], msg, msg_len);
+
+         secure_vector<byte> outbuf(mod_sz);
+
+         int rc = ::RSA_public_decrypt(inbuf.size(), inbuf.data(), outbuf.data(),
+                                       m_openssl_rsa.get(), RSA_NO_PADDING);
+         if(rc < 0)
+            throw Invalid_Argument("RSA_public_decrypt");
+
+         return strip_leading_zeros(outbuf);
+         }
+   private:
+      std::unique_ptr<RSA, std::function<void (RSA*)>> m_openssl_rsa;
+   };
+
+class OpenSSL_RSA_Signing_Operation : public PK_Ops::Signature_with_EMSA
+   {
+   public:
+      typedef RSA_PrivateKey Key_Type;
+
+      static OpenSSL_RSA_Signing_Operation* make(const Spec& spec)
+         {
+         if(const RSA_PrivateKey* rsa = dynamic_cast<const RSA_PrivateKey*>(&spec.key()))
+            {
+            return new OpenSSL_RSA_Signing_Operation(*rsa, spec.padding());
+            }
+
+         return nullptr;
+         }
+
+      OpenSSL_RSA_Signing_Operation(const RSA_PrivateKey& rsa, const std::string& emsa) :
+         PK_Ops::Signature_with_EMSA(emsa),
+         m_openssl_rsa(nullptr, ::RSA_free)
+         {
+         const secure_vector<byte> der = rsa.pkcs8_private_key();
+         const byte* der_ptr = der.data();
+         m_openssl_rsa.reset(d2i_RSAPrivateKey(nullptr, &der_ptr, der.size()));
+         if(!m_openssl_rsa)
+            throw OpenSSL_Error("d2i_RSAPrivateKey");
+         }
+
+      secure_vector<byte> raw_sign(const byte msg[], size_t msg_len,
+                                   RandomNumberGenerator&) override
+         {
+         const size_t mod_sz = ::RSA_size(m_openssl_rsa.get());
+
+         if(msg_len > mod_sz)
+            throw Invalid_Argument("OpenSSL RSA sign input too large");
+
+         secure_vector<byte> inbuf(mod_sz);
+         copy_mem(&inbuf[mod_sz - msg_len], msg, msg_len);
+
+         secure_vector<byte> outbuf(mod_sz);
+
+         int rc = ::RSA_private_encrypt(inbuf.size(), inbuf.data(), outbuf.data(),
+                                        m_openssl_rsa.get(), RSA_NO_PADDING);
+         if(rc < 0)
+            throw OpenSSL_Error("RSA_private_encrypt");
+
+         return outbuf;
+         }
+
+      size_t max_input_bits() const override { return ::BN_num_bits(m_openssl_rsa->n) - 1; }
+
+   private:
+      std::unique_ptr<RSA, std::function<void (RSA*)>> m_openssl_rsa;
+   };
+
+BOTAN_REGISTER_TYPE(PK_Ops::Verification, OpenSSL_RSA_Verification_Operation, "RSA",
+                    OpenSSL_RSA_Verification_Operation::make, "openssl", BOTAN_OPENSSL_RSA_PRIO);
+
+BOTAN_REGISTER_TYPE(PK_Ops::Signature, OpenSSL_RSA_Signing_Operation, "RSA",
+                    OpenSSL_RSA_Signing_Operation::make, "openssl", BOTAN_OPENSSL_RSA_PRIO);
+
 BOTAN_REGISTER_TYPE(PK_Ops::Encryption, OpenSSL_RSA_Encryption_Operation, "RSA",
                     OpenSSL_RSA_Encryption_Operation::make, "openssl", BOTAN_OPENSSL_RSA_PRIO);
+
 BOTAN_REGISTER_TYPE(PK_Ops::Decryption, OpenSSL_RSA_Decryption_Operation, "RSA",
                     OpenSSL_RSA_Decryption_Operation::make, "openssl", BOTAN_OPENSSL_RSA_PRIO);
 
