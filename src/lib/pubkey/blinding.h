@@ -34,6 +34,10 @@ class BOTAN_DLL Blinder
               std::function<BigInt (const BigInt&)> fwd_func,
               std::function<BigInt (const BigInt&)> inv_func);
 
+      Blinder(const Blinder&) = delete;
+
+      Blinder& operator=(const Blinder&) = delete;
+
    private:
       BigInt blinding_nonce() const;
 

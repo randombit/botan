@@ -145,16 +145,13 @@ class ElGamal_Decryption_Operation : public PK_Ops::Decryption_with_EME
 
 ElGamal_Decryption_Operation::ElGamal_Decryption_Operation(const ElGamal_PrivateKey& key,
                                                            const std::string& eme) :
-   PK_Ops::Decryption_with_EME(eme)
+   PK_Ops::Decryption_with_EME(eme),
+   powermod_x_p(Fixed_Exponent_Power_Mod(key.get_x(), key.group_p())),
+   mod_p(Modular_Reducer(key.group_p())),
+   blinder(key.group_p(),
+           [](const BigInt& k) { return k; },
+           [this](const BigInt& k) { return powermod_x_p(k); })
    {
-   const BigInt& p = key.group_p();
-
-   powermod_x_p = Fixed_Exponent_Power_Mod(key.get_x(), p);
-   mod_p = Modular_Reducer(p);
-
-   blinder = Blinder(p,
-                     [](const BigInt& k) { return k; },
-                     [this](const BigInt& k) { return powermod_x_p(k); });
    }
 
 secure_vector<byte>
