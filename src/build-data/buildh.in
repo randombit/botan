@@ -71,9 +71,20 @@
 * representation of an ECC point. Set to zero to diable this
 * side-channel countermeasure.
 */
-#define BOTAN_POINTGFP_RANDOMIZE_BLINDING_BITS 64
+#define BOTAN_POINTGFP_RANDOMIZE_BLINDING_BITS 80
 
-#define BOTAN_CURVE_GFP_USE_MONTGOMERY_LADDER 0
+/*
+* Normally blinding is performed by choosing a random starting point (plus
+* its inverse, of a form appropriate to the algorithm being blinded), and
+* then choosing new blinding operands by successive squaring of both
+* values. This is much faster than computing a new starting point but
+* introduces some possible coorelation
+*
+* To avoid possible leakage problems in long-running processes, the blinder
+* periodically reinitializes the sequence. This value specifies how often
+* a new sequence should be started.
+*/
+#define BOTAN_BLINDING_REINIT_INTERVAL 32
 
 /* PK key consistency checking toggles */
 #define BOTAN_PUBLIC_KEY_STRONG_CHECKS_ON_LOAD 1

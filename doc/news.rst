@@ -4,11 +4,21 @@ Release Notes
 Version 1.11.22, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Public key operations can now be used with specified providers
-  by passing an additional parameter to the constructor of
-  the PK operation.
+* Public key operations can now be used with specified providers by passing an
+  additional parameter to the constructor of the PK operation.
 
-* OpenSSL RSA provider now supports signatures and verification.
+* OpenSSL RSA provider now supports signature creation and verification.
+
+* The blinding code used for RSA, Diffie-Hellman, ElGamal and Rabin-Williams now
+  periodically reinitializes the sequence of blinding values instead of always
+  deriving the next value by squaring the previous ones. The reinitializion
+  interval can be controlled by 
+
+* Add System_RNG type. Previously the global system RNG was only accessible via
+  `system_rng` which returned a reference to the object. However is at times
+  useful to have a unique_ptr<RandomNumberGenerator> which will be either the
+  system RNG or an AutoSeeded_RNG, depending on availability, which this
+  additional type allows.
 
 * The `configure.py` option `--no-autoload` is now also available
   under the more understandable name `--minimized-build`.

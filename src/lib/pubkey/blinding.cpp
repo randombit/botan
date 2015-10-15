@@ -1,6 +1,6 @@
 /*
 * Blinding for public key operations
-* (C) 1999-2010 Jack Lloyd
+* (C) 1999-2010,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -16,24 +16,28 @@
 
 namespace Botan {
 
-// TODO: use Montgomery
-
 Blinder::Blinder(const BigInt& modulus,
-                 std::function<BigInt (const BigInt&)> fwd_func,
-                 std::function<BigInt (const BigInt&)> inv_func)
+                 std::function<BigInt (const BigInt&)> fwd,
+                 std::function<BigInt (const BigInt&)> inv) :
+   m_fwd_fn(fwd), m_inv_fn(inv)
    {
    m_reducer = Modular_Reducer(modulus);
+   m_modulus_bits = modulus.bits();
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
-   auto& rng = system_rng();
+   m_rng.reset(new System_RNG);
 #else
-   AutoSeeded_RNG rng;
+   m_rng.reset(new AutoSeeded_RNG);
 #endif
 
-   const BigInt k(rng, modulus.bits() - 1);
+   const BigInt k = blinding_nonce();
+   m_e = m_fwd_fn(k);
+   m_d = m_inv_fn(k);
+   }
 
-   m_e = fwd_func(k);
-   m_d = inv_func(k);
+BigInt Blinder::blinding_nonce() const
+   {
+   return BigInt(*m_rng, m_modulus_bits - 1);
    }
 
 BigInt Blinder::blind(const BigInt& i) const
@@ -41,8 +45,20 @@ BigInt Blinder::blind(const BigInt& i) const
    if(!m_reducer.initialized())
       throw std::runtime_error("Blinder not initialized, cannot blind");
 
-   m_e = m_reducer.square(m_e);
-   m_d = m_reducer.square(m_d);
+   ++m_counter;
+
+   if(BOTAN_BLINDING_REINIT_INTERVAL > 0 && (m_counter % BOTAN_BLINDING_REINIT_INTERVAL == 0))
+      {
+      const BigInt k = blinding_nonce();
+      m_e = m_fwd_fn(k);
+      m_d = m_inv_fn(k);
+      }
+   else
+      {
+      m_e = m_reducer.square(m_e);
+      m_d = m_reducer.square(m_d);
+      }
+
    return m_reducer.multiply(i, m_e);
    }
 
