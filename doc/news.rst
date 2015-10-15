@@ -22,6 +22,8 @@ Version 1.11.22, Not Yet Released
   system RNG or an AutoSeeded_RNG, depending on availability, which this
   additional type allows.
 
+* New command line tools `dl_group` and `prime`
+
 * The `configure.py` option `--no-autoload` is now also available
   under the more understandable name `--minimized-build`.
 
