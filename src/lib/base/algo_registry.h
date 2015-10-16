@@ -34,14 +34,12 @@ class Algo_Registry
 
       void add(const std::string& name, const std::string& provider, maker_fn fn, byte pref)
          {
-         std::unique_lock<std::mutex> lock(m_mutex);
          if(!m_algo_info[name].add_provider(provider, fn, pref))
             throw std::runtime_error("Duplicated registration of " + name + "/" + provider);
          }
 
       std::vector<std::string> providers_of(const Spec& spec)
          {
-         std::unique_lock<std::mutex> lock(m_mutex);
          auto i = m_algo_info.find(spec.algo_name());
          if(i != m_algo_info.end())
             return i->second.providers();
@@ -50,7 +48,6 @@ class Algo_Registry
 
       void set_provider_preference(const Spec& spec, const std::string& provider, byte pref)
          {
-         std::unique_lock<std::mutex> lock(m_mutex);
          auto i = m_algo_info.find(spec.algo_name());
          if(i != m_algo_info.end())
             i->second.set_pref(provider, pref);
@@ -96,7 +93,6 @@ class Algo_Registry
 
       std::vector<maker_fn> get_makers(const Spec& spec, const std::string& provider)
          {
-         std::unique_lock<std::mutex> lock(m_mutex);
          return m_algo_info[spec.algo_name()].get_makers(provider);
          }
 
@@ -158,7 +154,6 @@ class Algo_Registry
             std::unordered_map<std::string, maker_fn> m_maker_fns;
          };
 
-      std::mutex m_mutex;
       std::unordered_map<std::string, Algo_Info> m_algo_info;
    };
 
