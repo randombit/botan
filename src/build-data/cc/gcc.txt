@@ -91,7 +91,8 @@ sh4         -> "-m4 -mieee"
 # *removed* from the submodel name before it's put into SUBMODEL.
 
 alpha     -> "-mcpu=SUBMODEL" alpha-
-arm       -> "-march=SUBMODEL"
+arm32     -> "-march=SUBMODEL"
+arm64     -> "-march=SUBMODEL"
 superh    -> "-mSUBMODEL" sh
 hppa      -> "-march=SUBMODEL" hppa
 ia64      -> "-mtune=SUBMODEL"

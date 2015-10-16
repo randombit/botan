@@ -23,7 +23,7 @@ if [ "$CXX" = "g++" ]; then
     export CXX="/usr/bin/g++-4.8"
 fi
 
-#enable ccache
+# enable ccache
 if [ "$TRAVIS_OS_NAME" = "linux" ]; then
     ccache --max-size=30M
     ccache --show-stats
@@ -31,10 +31,17 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
     export CXX="ccache $CXX"
 fi
 
-if [ "$TARGETOS" = "ios" ]; then
+# configure
+if [ "$TARGETOS" = "ios32" ]; then
     ./configure.py "${CFG_FLAGS[@]}" --cpu=armv7 --cc=clang \
-        --cc-abi-flags="-arch armv7 -arch armv7s -stdlib=libc++ --sysroot=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.4.sdk/" \
+        --cc-abi-flags="-arch armv7 -arch armv7s -stdlib=libc++" \
         --prefix=/tmp/botan-installation
+
+elif [ "$TARGETOS" = "ios64" ]; then
+    ./configure.py "${CFG_FLAGS[@]}" --cpu=armv8-a --cc=clang \
+        --cc-abi-flags="-arch arm64 -stdlib=libc++" \
+        --prefix=/tmp/botan-installation
+
 else
     $CXX --version
     ./configure.py "${CFG_FLAGS[@]}" --cc="$CC" --cc-bin="$CXX" \
@@ -42,9 +49,14 @@ else
         --prefix=/tmp/botan-installation
 fi
 
-make -j 2
+# build
+if [ "${TARGETOS:0:3}" = "ios" ]; then
+    xcrun --sdk iphoneos make -j 2
+else
+    make -j 2
+fi
 
-if [ "$MODULES" != "min" ] && [ "$TARGETOS" != "ios" ]; then
+if [ "$MODULES" != "min" ] && [ "${TARGETOS:0:3}" != "ios" ]; then
     ./botan-test
 fi
 

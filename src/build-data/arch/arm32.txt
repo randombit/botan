@@ -1,8 +1,8 @@
-
 endian little
 family arm
 
 <aliases>
+arm
 armel # For Debian
 armhf # For Debian
 evbarm # For NetBSD

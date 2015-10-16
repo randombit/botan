@@ -18,7 +18,7 @@ os:
   - linux
   - osx
 
-osx_image: xcode6.4
+osx_image: xcode7
 
 compiler:
   - clang
@@ -34,8 +34,8 @@ env:
     - TARGETOS="desktop" MODULES="min" BUILD_MODE="shared"
     - TARGETOS="desktop" MODULES="min" BUILD_MODE="static"
 
-    - TARGETOS="ios" MODULES="all" BUILD_MODE="shared"
-    - TARGETOS="ios" MODULES="all" BUILD_MODE="static"
+    - TARGETOS="ios32" MODULES="all" BUILD_MODE="static"
+    - TARGETOS="ios64" MODULES="all" BUILD_MODE="static"
 
 matrix:
   exclude:
@@ -50,9 +50,9 @@ matrix:
     - compiler: clang
       env: TARGETOS="desktop" MODULES="min" BUILD_MODE="static"
     - os: linux
-      env: TARGETOS="ios" MODULES="all" BUILD_MODE="shared"
+      env: TARGETOS="ios32" MODULES="all" BUILD_MODE="static"
     - os: linux
-      env: TARGETOS="ios" MODULES="all" BUILD_MODE="static"
+      env: TARGETOS="ios64" MODULES="all" BUILD_MODE="static"
 # END BUILD MATRIX
 
 cache:
