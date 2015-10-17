@@ -3,7 +3,7 @@ set(INCLUDE_DIR "../../build/include")
 include_directories(${INCLUDE_DIR})
 
 # libbotan
-add_library(botan STATIC
+set(BOTAN_SRC
     asn1/alg_id.cpp
     asn1/asn1_alt_name.cpp
     asn1/asn1_attribute.cpp
@@ -73,9 +73,6 @@ add_library(botan STATIC
     cert/x509/x509self.cpp
     codec/base64/base64.cpp
     codec/hex/hex.cpp
-    compression/bzip2/bzip2.cpp
-    compression/lzma/lzma.cpp
-    compression/zlib/zlib.cpp
     compression/compression.cpp
     entropy/dev_random/dev_random.cpp
     entropy/egd/es_egd.cpp
@@ -230,7 +227,6 @@ add_library(botan STATIC
     pubkey/gost_3410/gost_3410.cpp
     pubkey/if_algo/if_algo.cpp
     pubkey/keypair/keypair.cpp
-    pubkey/mce/binary_matrix.cpp
     pubkey/mce/code_based_key_gen.cpp
     pubkey/mce/gf2m_rootfind_dcmp.cpp
     pubkey/mce/gf2m_small_m.cpp
@@ -317,22 +313,28 @@ set_source_files_properties(block/aes_ssse3/aes_ssse3.cpp PROPERTIES COMPILE_FLA
 set_source_files_properties(block/aes_ni/aes_ni.cpp        PROPERTIES COMPILE_FLAGS "-maes -mpclmul -mssse3")
 set_source_files_properties(modes/aead/gcm/clmul/clmul.cpp PROPERTIES COMPILE_FLAGS "-maes -mpclmul -mssse3")
 
-find_package( LZMA REQUIRED )
+find_package( LZMA )
 if ( LZMA_FOUND )
     include_directories(${LZMA_INCLUDE_DIR})
-    target_link_libraries(botan ${LZMA_LIBRARIES})
+    set(BOTAN_LIBRARIES ${BOTAN_LIBRARIES} ${LZMA_LIBRARIES})
+    set(BOTAN_SRC ${BOTAN_SRC}
+        compression/lzma/lzma.cpp)
 endif( LZMA_FOUND )
 
-find_package( BZip2 REQUIRED )
+find_package( BZip2 )
 if ( BZIP2_FOUND )
     include_directories(${BZIP_INCLUDE_DIRS})
-    target_link_libraries(botan ${BZIP2_LIBRARIES})
+    set(BOTAN_LIBRARIES ${BOTAN_LIBRARIES} ${BZIP2_LIBRARIES})
+    set(BOTAN_SRC ${BOTAN_SRC}
+        compression/bzip2/bzip2.cpp)
 endif( BZIP2_FOUND )
 
-find_package( ZLIB REQUIRED )
+find_package( ZLIB )
 if ( ZLIB_FOUND )
     include_directories(${ZLIB_INCLUDE_DIRS})
-    target_link_libraries(botan ${ZLIB_LIBRARIES})
+    set(BOTAN_LIBRARIES ${BOTAN_LIBRARIES} ${ZLIB_LIBRARIES})
+    set(BOTAN_SRC ${BOTAN_SRC}
+        compression/zlib/zlib.cpp)
 endif( ZLIB_FOUND )
 
 set(extra_link_libraries)
@@ -340,5 +342,19 @@ if(NOT WIN32)
     list(APPEND extra_link_libraries rt dl pthread)
 endif()
 
-target_link_libraries(botan ${extra_link_libraries})
+# add a new target to show help for options that we add
+# use add_custom_command(TARGET Botan-help ...) to extend the help text
+add_custom_target(Botan-help)
+
+if (NOT LIB_TYPE)
+    set(LIB_TYPE STATIC)
+endif()
+
+add_custom_command(TARGET Botan-help
+    COMMAND echo "  To build a static or shared Botan library use: cmake -DLIB_TYPE=STATIC or -DLIB_TYPE=SHARED")
+
+message(STATUS "Building with LIB_TYPE=${LIB_TYPE}")
+add_library(botan ${LIB_TYPE} ${BOTAN_SRC})
+
+target_link_libraries(botan ${BOTAN_LIBRARIES} ${extra_link_libraries})
 
