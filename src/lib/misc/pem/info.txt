@@ -1,5 +1,5 @@
 define PEM_CODEC 20131128
 
 <requires>
-codec_filt
+base64
 </requires>

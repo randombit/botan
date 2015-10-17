@@ -90,7 +90,6 @@ set(BOTAN_SRC
     filters/codec_filt/hex_filt.cpp
     filters/comp_filter.cpp
     filters/data_snk.cpp
-    filters/data_src.cpp
     filters/fd_unix/fd_unix.cpp
     filters/filter.cpp
     filters/key_filt.cpp
@@ -292,6 +291,7 @@ set(BOTAN_SRC
     utils/calendar.cpp
     utils/charset.cpp
     utils/cpuid.cpp
+    utils/data_src.cpp
     utils/datastor/datastor.cpp
     utils/dyn_load/dyn_load.cpp
     utils/filesystem.cpp

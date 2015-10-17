@@ -6,25 +6,46 @@
 */
 
 #include <botan/pem.h>
-#include <botan/filters.h>
+#include <botan/base64.h>
 #include <botan/parsing.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
 
 namespace PEM_Code {
 
+namespace {
+
+std::string linewrap(size_t width, const std::string& in)
+   {
+   std::string out;
+   for(size_t i = 0; i != in.size(); ++i)
+      {
+      if(i > 0 && i % width == 0)
+         {
+         out.push_back('\n');
+         }
+      out.push_back(in[i]);
+      }
+   if(out.size() > 0 && out[out.size()-1] != '\n')
+      {
+      out.push_back('\n');
+      }
+
+   return out;
+   }
+
+}
+
 /*
 * PEM encode BER/DER-encoded objects
 */
-std::string encode(const byte der[], size_t length, const std::string& label,
-                   size_t width)
+std::string encode(const byte der[], size_t length, const std::string& label, size_t width)
    {
    const std::string PEM_HEADER = "-----BEGIN " + label + "-----\n";
    const std::string PEM_TRAILER = "-----END " + label + "-----\n";
 
-   Pipe pipe(new Base64_Encoder(true, width));
-   pipe.process_msg(der, length);
-   return (PEM_HEADER + pipe.read_all_as_string() + PEM_TRAILER);
+   return (PEM_HEADER + linewrap(width, base64_encode(der, length)) + PEM_TRAILER);
    }
 
 /*
@@ -79,8 +100,7 @@ secure_vector<byte> decode(DataSource& source, std::string& label)
          label += static_cast<char>(b);
       }
 
-   Pipe base64(new Base64_Decoder);
-   base64.start_msg();
+   std::vector<char> b64;
 
    const std::string PEM_TRAILER = "-----END " + label + "-----";
    position = 0;
@@ -95,10 +115,10 @@ secure_vector<byte> decode(DataSource& source, std::string& label)
          throw Decoding_Error("PEM: Malformed PEM trailer");
 
       if(position == 0)
-         base64.write(b);
+         b64.push_back(b);
       }
-   base64.end_msg();
-   return base64.read_all();
+
+   return base64_decode(b64.data(), b64.size());
    }
 
 secure_vector<byte> decode_check_label(const std::string& pem,

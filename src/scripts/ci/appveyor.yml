@@ -4,12 +4,18 @@ platform:
   - x86
   - x86_amd64
 
+environment:
+  matrix:
+    - MODE: --enable-shared
+    - MODE: --disable-shared
+
 install:
   - call "%ProgramFiles(x86)%\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" %PLATFORM%
   - cl # check compiler version
 
+# always build via amalgamation due to build time constraints on appveyor
 build_script:
-  - python configure.py --disable-shared --via-amalgamation --cpu=%PLATFORM% --cc=msvc
+  - python configure.py --cc=msvc --via-amalgamation --cpu=%PLATFORM% %MODE%
   - nmake
   - botan-test
   - nmake install

@@ -1,0 +1,12 @@
+endian little
+wordsize 64
+
+family arm
+
+<aliases>
+aarch64
+</aliases>
+
+<submodels>
+armv8-a
+</submodels>

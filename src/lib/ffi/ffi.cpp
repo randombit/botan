@@ -20,8 +20,6 @@
 #include <botan/hex.h>
 #include <botan/mem_ops.h>
 #include <botan/x509_key.h>
-#include <botan/tls_client.h>
-#include <botan/tls_server.h>
 #include <cstring>
 #include <memory>
 
@@ -49,9 +47,13 @@
   #include <botan/mceies.h>
 #endif
 
-
 #if defined(BOTAN_HAS_BCRYPT)
   #include <botan/bcrypt.h>
+#endif
+
+#if defined(BOTAN_HAS_TLS)
+  #include <botan/tls_client.h>
+  #include <botan/tls_server.h>
 #endif
 
 namespace {
@@ -185,7 +187,10 @@ BOTAN_FFI_DECLARE_STRUCT(botan_pk_op_verify_struct, Botan::PK_Verifier, 0x2B91F9
 BOTAN_FFI_DECLARE_STRUCT(botan_pk_op_ka_struct, Botan::PK_Key_Agreement, 0x2939CAB1);
 
 BOTAN_FFI_DECLARE_STRUCT(botan_x509_cert_struct, Botan::X509_Certificate, 0x8F628937);
+
+#if defined(BOTAN_HAS_TLS)
 BOTAN_FFI_DECLARE_STRUCT(botan_tls_channel_struct, Botan::TLS::Channel, 0x0212FE99);
+#endif
 
 /*
 * Versioning
@@ -228,21 +233,6 @@ int botan_hex_encode(const uint8_t* in, size_t len, char* out, uint32_t flags)
 
 int botan_rng_init(botan_rng_t* rng_out, const char* rng_type)
    {
-   // Just gives unique_ptr something to delete, really
-   class RNG_Wrapper : public Botan::RandomNumberGenerator
-      {
-      public:
-         RNG_Wrapper(Botan::RandomNumberGenerator& rng) : m_rng(rng) {}
-         void randomize(Botan::byte out[], size_t len) override { m_rng.randomize(out, len); }
-         bool is_seeded() const override { return m_rng.is_seeded(); }
-         void clear() override { m_rng.clear(); }
-         std::string name() const override { return m_rng.name(); }
-         void reseed(size_t poll_bits = 256) override { m_rng.reseed(poll_bits); }
-         void add_entropy(const Botan::byte in[], size_t len) override { m_rng.add_entropy(in, len); }
-      private:
-         Botan::RandomNumberGenerator& m_rng;
-      };
-
    try
       {
       BOTAN_ASSERT_ARG_NON_NULL(rng_out);
@@ -255,7 +245,7 @@ int botan_rng_init(botan_rng_t* rng_out, const char* rng_type)
       std::unique_ptr<Botan::RandomNumberGenerator> rng;
 
       if(rng_type_s == "system")
-         rng.reset(new RNG_Wrapper(Botan::system_rng()));
+         rng.reset(new Botan::System_RNG);
       else if(rng_type_s == "user")
          rng.reset(new Botan::AutoSeeded_RNG);
 

@@ -4,6 +4,28 @@ Release Notes
 Version 1.11.22, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Public key operations can now be used with specified providers by passing an
+  additional parameter to the constructor of the PK operation.
+
+* OpenSSL RSA provider now supports signature creation and verification.
+
+* The blinding code used for RSA, Diffie-Hellman, ElGamal and Rabin-Williams now
+  periodically reinitializes the sequence of blinding values instead of always
+  deriving the next value by squaring the previous ones. The reinitializion
+  interval can be controlled by the build.h parameter BOTAN_BLINDING_REINIT_INTERVAL.
+
+* DL_Group now prohibits creating a group smaller than 1024 bits.
+
+* Add System_RNG type. Previously the global system RNG was only accessible via
+  `system_rng` which returned a reference to the object. However is at times
+  useful to have a unique_ptr<RandomNumberGenerator> which will be either the
+  system RNG or an AutoSeeded_RNG, depending on availability, which this
+  additional type allows.
+
+* New command line tools `dl_group` and `prime`
+
+* The `configure.py` option `--no-autoload` is now also available
+  under the more understandable name `--minimized-build`.
 
 Version 1.11.21, 2015-10-11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
