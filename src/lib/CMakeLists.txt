@@ -3,7 +3,7 @@ set(INCLUDE_DIR "../../build/include")
 include_directories(${INCLUDE_DIR})
 
 # libbotan
-add_library(botan STATIC
+set(BOTAN_SRC
     asn1/alg_id.cpp
     asn1/asn1_alt_name.cpp
     asn1/asn1_attribute.cpp
@@ -307,6 +307,20 @@ add_library(botan STATIC
     utils/version.cpp
     utils/zero_mem.cpp
 )
+
+# add a new target to show help for options that we add
+# use add_custom_command(TARGET Botan-help ...) to extend the help text
+add_custom_target(Botan-help)
+
+if (NOT LIB_TYPE)
+    set(LIB_TYPE STATIC)
+endif()
+
+add_custom_command(TARGET Botan-help
+    COMMAND echo "  To build a static or shared Botan library use: cmake -DLIB_TYPE=STATIC or -DLIB_TYPE=SHARED")
+
+message(STATUS "Building with LIB_TYPE=${LIB_TYPE}")
+add_library(botan ${LIB_TYPE} ${BOTAN_SRC})
 
 # AVX2
 set_source_files_properties(block/threefish_avx2/threefish_avx2.cpp PROPERTIES COMPILE_FLAGS "-mavx2")
