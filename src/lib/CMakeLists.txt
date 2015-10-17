@@ -73,9 +73,6 @@ set(BOTAN_SRC
     cert/x509/x509self.cpp
     codec/base64/base64.cpp
     codec/hex/hex.cpp
-    compression/bzip2/bzip2.cpp
-    compression/lzma/lzma.cpp
-    compression/zlib/zlib.cpp
     compression/compression.cpp
     entropy/dev_random/dev_random.cpp
     entropy/egd/es_egd.cpp
@@ -308,6 +305,43 @@ set(BOTAN_SRC
     utils/zero_mem.cpp
 )
 
+# AVX2
+set_source_files_properties(block/threefish_avx2/threefish_avx2.cpp PROPERTIES COMPILE_FLAGS "-mavx2")
+# SSSE3
+set_source_files_properties(block/aes_ssse3/aes_ssse3.cpp PROPERTIES COMPILE_FLAGS "-mssse3")
+# AES-NI
+set_source_files_properties(block/aes_ni/aes_ni.cpp        PROPERTIES COMPILE_FLAGS "-maes -mpclmul -mssse3")
+set_source_files_properties(modes/aead/gcm/clmul/clmul.cpp PROPERTIES COMPILE_FLAGS "-maes -mpclmul -mssse3")
+
+find_package( LZMA )
+if ( LZMA_FOUND )
+    include_directories(${LZMA_INCLUDE_DIR})
+    set(BOTAN_LIBRARIES ${BOTAN_LIBRARIES} ${LZMA_LIBRARIES})
+    set(BOTAN_SRC ${BOTAN_SRC}
+        compression/lzma/lzma.cpp)
+endif( LZMA_FOUND )
+
+find_package( BZip2 )
+if ( BZIP2_FOUND )
+    include_directories(${BZIP_INCLUDE_DIRS})
+    set(BOTAN_LIBRARIES ${BOTAN_LIBRARIES} ${BZIP2_LIBRARIES})
+    set(BOTAN_SRC ${BOTAN_SRC}
+        compression/bzip2/bzip2.cpp)
+endif( BZIP2_FOUND )
+
+find_package( ZLIB )
+if ( ZLIB_FOUND )
+    include_directories(${ZLIB_INCLUDE_DIRS})
+    set(BOTAN_LIBRARIES ${BOTAN_LIBRARIES} ${ZLIB_LIBRARIES})
+    set(BOTAN_SRC ${BOTAN_SRC}
+        compression/zlib/zlib.cpp)
+endif( ZLIB_FOUND )
+
+set(extra_link_libraries)
+if(NOT WIN32)
+    list(APPEND extra_link_libraries rt dl pthread)
+endif()
+
 # add a new target to show help for options that we add
 # use add_custom_command(TARGET Botan-help ...) to extend the help text
 add_custom_target(Botan-help)
@@ -322,36 +356,5 @@ add_custom_command(TARGET Botan-help
 message(STATUS "Building with LIB_TYPE=${LIB_TYPE}")
 add_library(botan ${LIB_TYPE} ${BOTAN_SRC})
 
-# AVX2
-set_source_files_properties(block/threefish_avx2/threefish_avx2.cpp PROPERTIES COMPILE_FLAGS "-mavx2")
-# SSSE3
-set_source_files_properties(block/aes_ssse3/aes_ssse3.cpp PROPERTIES COMPILE_FLAGS "-mssse3")
-# AES-NI
-set_source_files_properties(block/aes_ni/aes_ni.cpp        PROPERTIES COMPILE_FLAGS "-maes -mpclmul -mssse3")
-set_source_files_properties(modes/aead/gcm/clmul/clmul.cpp PROPERTIES COMPILE_FLAGS "-maes -mpclmul -mssse3")
-
-find_package( LZMA REQUIRED )
-if ( LZMA_FOUND )
-    include_directories(${LZMA_INCLUDE_DIR})
-    target_link_libraries(botan ${LZMA_LIBRARIES})
-endif( LZMA_FOUND )
-
-find_package( BZip2 REQUIRED )
-if ( BZIP2_FOUND )
-    include_directories(${BZIP_INCLUDE_DIRS})
-    target_link_libraries(botan ${BZIP2_LIBRARIES})
-endif( BZIP2_FOUND )
-
-find_package( ZLIB REQUIRED )
-if ( ZLIB_FOUND )
-    include_directories(${ZLIB_INCLUDE_DIRS})
-    target_link_libraries(botan ${ZLIB_LIBRARIES})
-endif( ZLIB_FOUND )
-
-set(extra_link_libraries)
-if(NOT WIN32)
-    list(APPEND extra_link_libraries rt dl pthread)
-endif()
-
-target_link_libraries(botan ${extra_link_libraries})
+target_link_libraries(botan ${BOTAN_LIBRARIES} ${extra_link_libraries})
 
