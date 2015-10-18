@@ -61,7 +61,7 @@ secure_vector<byte> OAEP::pad(const byte in[], size_t in_length,
 * OAEP Unpad Operation
 */
 secure_vector<byte> OAEP::unpad(const byte in[], size_t in_length,
-                               size_t key_length) const
+                                size_t key_length) const
    {
    /*
    Must be careful about error messages here; if an attacker can
@@ -84,17 +84,19 @@ secure_vector<byte> OAEP::unpad(const byte in[], size_t in_length,
    secure_vector<byte> input(key_length);
    buffer_insert(input, key_length - in_length, in, in_length);
 
-   mgf1_mask(*m_hash,
-             &input[m_Phash.size()], input.size() - m_Phash.size(),
-             input.data(), m_Phash.size());
-
-   mgf1_mask(*m_hash,
-             input.data(), m_Phash.size(),
-             &input[m_Phash.size()], input.size() - m_Phash.size());
-
    BOTAN_CONST_TIME_POISON(input.data(), input.size());
 
-   size_t delim_idx = 2 * m_Phash.size();
+   const size_t hlen = m_Phash.size();
+
+   mgf1_mask(*m_hash,
+             &input[hlen], input.size() - hlen,
+             input.data(), hlen);
+
+   mgf1_mask(*m_hash,
+             input.data(), hlen,
+             &input[hlen], input.size() - hlen);
+
+   size_t delim_idx = 2 * hlen;
    byte waiting_for_delim = 0xFF;
    byte bad_input = 0;
 
@@ -114,7 +116,7 @@ secure_vector<byte> OAEP::unpad(const byte in[], size_t in_length,
 
    // If we never saw any non-zero byte, then it's not valid input
    bad_input |= waiting_for_delim;
-   bad_input |= ct_expand_mask_8(!same_mem(&input[m_Phash.size()], m_Phash.data(), m_Phash.size()));
+   bad_input |= ct_expand_mask_8(!same_mem(&input[hlen], m_Phash.data(), hlen));
 
    BOTAN_CONST_TIME_UNPOISON(input.data(), input.size());
    BOTAN_CONST_TIME_UNPOISON(&bad_input, sizeof(bad_input));
