@@ -167,8 +167,6 @@ make_evp_block_maker_keylen(const EVP_CIPHER* cipher, const char* algo,
       };
    }
 
-#define BOTAN_OPENSSL_BLOCK_PRIO 150
-
 #define BOTAN_REGISTER_OPENSSL_EVP_BLOCK(NAME, EVP)                            \
    BOTAN_REGISTER_TYPE(BlockCipher, EVP_BlockCipher ## EVP, NAME,              \
                        make_evp_block_maker(EVP(), NAME), "openssl", BOTAN_OPENSSL_BLOCK_PRIO);

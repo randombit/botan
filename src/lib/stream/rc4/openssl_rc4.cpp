@@ -6,6 +6,9 @@
 */
 
 #include <botan/stream_cipher.h>
+
+#if defined(BOTAN_HAS_OPENSSL)
+
 #include <botan/internal/algo_registry.h>
 #include <botan/internal/openssl.h>
 #include <botan/parsing.h>
@@ -54,3 +57,5 @@ BOTAN_REGISTER_TYPE(StreamCipher, OpenSSL_RC4, "RC4", (make_new_T_1len<OpenSSL_R
                     "openssl", BOTAN_OPENSSL_RC4_PRIO);
 
 }
+
+#endif

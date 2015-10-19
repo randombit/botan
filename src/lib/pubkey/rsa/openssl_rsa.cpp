@@ -1,15 +1,15 @@
 /*
-* OpenSSL RSA interface
+* RSA operations provided by OpenSSL
 * (C) 2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/openssl.h>
-
-#if defined(BOTAN_HAS_RSA)
-
 #include <botan/rsa.h>
+
+#if defined(BOTAN_HAS_OPENSSL)
+
+#include <botan/internal/openssl.h>
 #include <botan/internal/pk_utils.h>
 #include <functional>
 #include <memory>
@@ -294,4 +294,4 @@ BOTAN_REGISTER_TYPE(PK_Ops::Decryption, OpenSSL_RSA_Decryption_Operation, "RSA",
 
 }
 
-#endif // BOTAN_HAS_RSA
+#endif // BOTAN_HAS_OPENSSL
