@@ -30,6 +30,7 @@
 #include <botan/curve25519.h>
 #include <botan/mul128.h>
 #include <botan/internal/donna128.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/loadstor.h>
 
 namespace Botan {
@@ -418,6 +419,10 @@ crecip(felem out, const felem z) {
 
 int
 curve25519_donna(u8 *mypublic, const u8 *secret, const u8 *basepoint) {
+
+  BOTAN_CONST_TIME_POISON(secret, 32);
+  BOTAN_CONST_TIME_POISON(basepoint, 32);
+
   limb bp[5], x[5], z[5], zmone[5];
   uint8_t e[32];
   int i;
@@ -432,6 +437,10 @@ curve25519_donna(u8 *mypublic, const u8 *secret, const u8 *basepoint) {
   crecip(zmone, z);
   fmul(z, x, zmone);
   fcontract(mypublic, z);
+
+  BOTAN_CONST_TIME_UNPOISON(secret, 32);
+  BOTAN_CONST_TIME_UNPOISON(basepoint, 32);
+  BOTAN_CONST_TIME_UNPOISON(mypublic, 32);
   return 0;
 }
 

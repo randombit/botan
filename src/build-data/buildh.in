@@ -92,6 +92,12 @@
 #define BOTAN_PRIVATE_KEY_STRONG_CHECKS_ON_GENERATE 1
 
 /*
+* Define BOTAN_USE_CTGRIND to enable checking constant time
+* annotations using ctgrind https://github.com/agl/ctgrind
+*/
+//#define BOTAN_USE_CTGRIND
+
+/*
 * RNGs will automatically poll the system for additional seed material
 * after producing this many bytes of output.
 */

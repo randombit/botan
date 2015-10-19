@@ -1,12 +1,13 @@
 /*
 * IDEA
-* (C) 1999-2010 Jack Lloyd
+* (C) 1999-2010,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/idea.h>
 #include <botan/loadstor.h>
+#include <botan/internal/ct_utils.h>
 
 namespace Botan {
 
@@ -19,8 +20,7 @@ inline u16bit mul(u16bit x, u16bit y)
    {
    const u32bit P = static_cast<u32bit>(x) * y;
 
-   // P ? 0xFFFF : 0
-   const u16bit P_mask = !P - 1;
+   const u16bit Z_mask = static_cast<u16bit>(ct_expand_mask_32(P) & 0xFFFF);
 
    const u32bit P_hi = P >> 16;
    const u32bit P_lo = P & 0xFFFF;
@@ -28,7 +28,7 @@ inline u16bit mul(u16bit x, u16bit y)
    const u16bit r_1 = (P_lo - P_hi) + (P_lo < P_hi);
    const u16bit r_2 = 1 - x - y;
 
-   return (r_1 & P_mask) | (r_2 & ~P_mask);
+   return ct_select_mask_16(Z_mask, r_1, r_2);
    }
 
 /*
@@ -62,12 +62,16 @@ void idea_op(const byte in[], byte out[], size_t blocks, const u16bit K[52])
    {
    const size_t BLOCK_SIZE = 8;
 
+   BOTAN_CONST_TIME_POISON(in, blocks * 8);
+   BOTAN_CONST_TIME_POISON(out, blocks * 8);
+   BOTAN_CONST_TIME_POISON(K, 52 * 2);
+
    for(size_t i = 0; i != blocks; ++i)
       {
-      u16bit X1 = load_be<u16bit>(in, 0);
-      u16bit X2 = load_be<u16bit>(in, 1);
-      u16bit X3 = load_be<u16bit>(in, 2);
-      u16bit X4 = load_be<u16bit>(in, 3);
+      u16bit X1 = load_be<u16bit>(in + BLOCK_SIZE*i, 0);
+      u16bit X2 = load_be<u16bit>(in + BLOCK_SIZE*i, 1);
+      u16bit X3 = load_be<u16bit>(in + BLOCK_SIZE*i, 2);
+      u16bit X4 = load_be<u16bit>(in + BLOCK_SIZE*i, 3);
 
       for(size_t j = 0; j != 8; ++j)
          {
@@ -94,11 +98,12 @@ void idea_op(const byte in[], byte out[], size_t blocks, const u16bit K[52])
       X3 += K[49];
       X4  = mul(X4, K[51]);
 
-      store_be(out, X1, X3, X2, X4);
-
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      store_be(out + BLOCK_SIZE*i, X1, X3, X2, X4);
       }
+
+   BOTAN_CONST_TIME_UNPOISON(in, blocks * 8);
+   BOTAN_CONST_TIME_UNPOISON(out, blocks * 8);
+   BOTAN_CONST_TIME_UNPOISON(K, 52 * 2);
    }
 
 }
@@ -126,6 +131,10 @@ void IDEA::key_schedule(const byte key[], size_t)
    {
    EK.resize(52);
    DK.resize(52);
+
+   BOTAN_CONST_TIME_POISON(key, 16);
+   BOTAN_CONST_TIME_POISON(EK.data(), 52 * 2);
+   BOTAN_CONST_TIME_POISON(DK.data(), 52 * 2);
 
    for(size_t i = 0; i != 8; ++i)
       EK[i] = load_be<u16bit>(key, i);
@@ -158,6 +167,10 @@ void IDEA::key_schedule(const byte key[], size_t)
    DK[2] = -EK[50];
    DK[1] = -EK[49];
    DK[0] = mul_inv(EK[48]);
+
+   BOTAN_CONST_TIME_UNPOISON(key, 16);
+   BOTAN_CONST_TIME_UNPOISON(EK.data(), 52 * 2);
+   BOTAN_CONST_TIME_UNPOISON(DK.data(), 52 * 2);
    }
 
 void IDEA::clear()
