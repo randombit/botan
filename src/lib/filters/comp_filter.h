@@ -47,7 +47,7 @@ class BOTAN_DLL Compression_Filter : public Compression_Decompression_Filter
       using Compression_Decompression_Filter::flush;
    };
 
-class Decompression_Filter : public Compression_Decompression_Filter
+class BOTAN_DLL Decompression_Filter : public Compression_Decompression_Filter
    {
    public:
       Decompression_Filter(const std::string& type,
